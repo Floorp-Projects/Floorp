@@ -41,7 +41,7 @@
 #include "nsISupports.idl"
 
 %{ C++
-class nsIPresContext;
+class nsPresContext;
 class nsIPresShell;
 %}
 
@@ -49,7 +49,7 @@ class nsIPresShell;
  * The nsIDocShell interface.
  */
 
-[ptr] native nsIPresContext(nsIPresContext);
+[ptr] native nsPresContext(nsPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
 
 interface nsIURI;
@@ -177,7 +177,7 @@ interface nsIDocShell : nsISupports
   /**
    * Presentation context for the currently loaded document.  This may be null.
    */
-  [noscript] readonly attribute nsIPresContext presContext;
+  [noscript] readonly attribute nsPresContext presContext;
 
   /**
    * Presentation shell for the currently loaded document.  This may be null.

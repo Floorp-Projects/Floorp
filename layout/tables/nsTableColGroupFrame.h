@@ -73,7 +73,7 @@ public:
   /** sets defaults for the colgroup.
     * @see nsIFrame::Init
     */
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -82,7 +82,7 @@ public:
   /** Initialize the colgroup frame with a set of children.
     * @see nsIFrame::SetInitialChildList
     */
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
@@ -115,16 +115,16 @@ public:
 
   /** @see nsIFrame::AppendFrames, InsertFrames, RemoveFrame
     */
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
@@ -137,14 +137,14 @@ public:
     * @param aResetSubsequentColIndices - if true the columns that follow
     *                                     after aChild will be reenumerated
     */
-  void RemoveChild(nsIPresContext&  aPresContext,
+  void RemoveChild(nsPresContext&  aPresContext,
                    nsTableColFrame& aChild,
                    PRBool           aResetSubsequentColIndices);
 
   /** @see nsIFrame::Paint
     * all the table painting is done in nsTablePainter.cpp
     */
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -155,7 +155,7 @@ public:
 
   /** @see nsIFrame::GetFrameForPoint
     */
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
@@ -166,7 +166,7 @@ public:
     * don't play directly in the rendering game.  They do however
     * maintain important state that effects table and cell layout.
     */
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -194,7 +194,7 @@ public:
     * @result            - if there is no table frame or the table frame is not
     *                      the first in flow it will return an error
     */
-  nsresult AddColsToTable(nsIPresContext&  aPresContext,
+  nsresult AddColsToTable(nsPresContext&  aPresContext,
                           PRInt32          aFirstColIndex,
                           PRBool           aResetSubsequentColIndices,
                           nsIFrame*        aFirstFrame,
@@ -263,7 +263,7 @@ public:
 protected:
   nsTableColGroupFrame();
 
-  void InsertColsReflow(nsIPresContext& aPresContext,
+  void InsertColsReflow(nsPresContext& aPresContext,
                         nsIPresShell&   aPresShell,
                         PRInt32         aColIndex,
                         nsIFrame*       aFirstFrame,
@@ -272,23 +272,23 @@ protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
-  NS_IMETHOD IncrementalReflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD IncrementalReflow(nsPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext*          aPresContext,
+  NS_IMETHOD IR_TargetIsMe(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_StyleChanged(nsIPresContext*          aPresContext,
+  NS_IMETHOD IR_StyleChanged(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus);
 
 
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext*          aPresContext,
+  NS_IMETHOD IR_TargetIsChild(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus,

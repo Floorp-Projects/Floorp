@@ -80,7 +80,7 @@ nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 }
 
 NS_IMETHODIMP
-nsListItemFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsListItemFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                      const nsPoint& aPoint, 
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame**     aFrame)

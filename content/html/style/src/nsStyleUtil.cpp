@@ -118,7 +118,7 @@ float nsStyleUtil::GetScalingFactor(PRInt32 aScaler)
 
 nscoord
 nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
-                               float aScalingFactor, nsIPresContext* aPresContext,
+                               float aScalingFactor, nsPresContext* aPresContext,
                                nsFontSizeType aFontSizeType)
 {
 #define sFontSizeTableMin  9 
@@ -255,7 +255,7 @@ nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 //------------------------------------------------------------------------------
 
 nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                             float aScalingFactor, nsIPresContext* aPresContext,
+                                             float aScalingFactor, nsPresContext* aPresContext,
                                              nsFontSizeType aFontSizeType)
 {
   PRInt32 index;
@@ -323,7 +323,7 @@ nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
 //------------------------------------------------------------------------------
 
 nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                            float aScalingFactor, nsIPresContext* aPresContext,
+                                            float aScalingFactor, nsPresContext* aPresContext,
                                             nsFontSizeType aFontSizeType)
 {
   PRInt32 index;
@@ -416,7 +416,7 @@ nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
 
 
 /*static*/
-PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresContext *aPresContext, nsLinkState *aState)
+PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContext *aPresContext, nsLinkState *aState)
 {
   NS_ASSERTION(aContent && aState, "null arg in IsHTMLLink");
 
@@ -470,7 +470,7 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresConte
 }
 
 /*static*/ 
-PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresContext, nsLinkState *aState)
+PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsPresContext *aPresContext, nsLinkState *aState)
 {
   // XXX PERF This function will cause serious performance problems on
   // pages with lots of XLinks.  We should be caching the visited

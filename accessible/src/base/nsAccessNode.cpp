@@ -53,7 +53,7 @@
 #include "nsIFrame.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
@@ -230,13 +230,13 @@ already_AddRefed<nsIPresShell> nsAccessNode::GetPresShell()
   return resultShell;
 }
 
-already_AddRefed<nsIPresContext> nsAccessNode::GetPresContext()
+already_AddRefed<nsPresContext> nsAccessNode::GetPresContext()
 {
   nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   if (!presShell) {
     return nsnull;
   }
-  nsIPresContext *presContext;
+  nsPresContext *presContext;
   presShell->GetPresContext(&presContext);  // Addref'd
   return presContext;
 }
@@ -412,7 +412,7 @@ NS_IMETHODIMP
 nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString& aPropertyName, nsAString& aValue)
 {
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIPresContext> presContext(GetPresContext());
+  nsCOMPtr<nsPresContext> presContext(GetPresContext());
   NS_ENSURE_TRUE(domElement && presContext, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISupports> container = presContext->GetContainer();

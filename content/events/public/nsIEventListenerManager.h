@@ -42,7 +42,7 @@
 #include "nsISupports.h"
 #include "nsVoidArray.h"
 
-class nsIPresContext;
+class nsPresContext;
 class nsIDOMEventListener;
 class nsIScriptContext;
 class nsIDOMEventTarget;
@@ -130,7 +130,7 @@ public:
   * Event flags live in nsGUIEvent.h
   * @param an event listener
   */
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsEvent* aEvent,
                          nsIDOMEvent** aDOMEvent,
                          nsIDOMEventTarget* aCurrentTarget,
@@ -142,7 +142,7 @@ public:
   * (used rarely in the situation where methods on the event need to be
   * invoked prior to the processing of the event).
   */
-  NS_IMETHOD CreateEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateEvent(nsPresContext* aPresContext,
                          nsEvent* aEvent,
                          const nsAString& aEventType,
                          nsIDOMEvent** aDOMEvent) = 0;

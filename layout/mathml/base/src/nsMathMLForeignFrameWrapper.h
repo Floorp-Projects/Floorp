@@ -56,7 +56,7 @@ public:
   // Overloaded nsIMathMLFrame methods
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                     PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
@@ -69,7 +69,7 @@ public:
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsIPresContext* aPresContext,
+  ReResolveScriptStyle(nsPresContext* aPresContext,
                        PRInt32         aParentScriptLevel)
   {
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
@@ -79,7 +79,7 @@ public:
   // overloaded nsBlockFrame methods
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
+  Init(nsPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
@@ -87,7 +87,7 @@ public:
 
 #ifdef NS_DEBUG
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
+  SetInitialChildList(nsPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
@@ -101,14 +101,14 @@ public:
 #endif
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
   // we are just a wrapper and these methods shouldn't be called
   NS_IMETHOD
-  AppendFrames(nsIPresContext* aPresContext,
+  AppendFrames(nsPresContext* aPresContext,
                nsIPresShell&   aPresShell,
                nsIAtom*        aListName,
                nsIFrame*       aFrameList)
@@ -118,7 +118,7 @@ public:
   }
 
   NS_IMETHOD
-  InsertFrames(nsIPresContext* aPresContext,
+  InsertFrames(nsPresContext* aPresContext,
                nsIPresShell&   aPresShell,
                nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
@@ -132,7 +132,7 @@ public:
   // as two operations: remove & insert; In our case, removing the child will
   // remove us too... so we have to operate from our parent's perspective
   NS_IMETHOD
-  ReplaceFrame(nsIPresContext* aPresContext,
+  ReplaceFrame(nsPresContext* aPresContext,
                nsIPresShell&   aPresShell,
                nsIAtom*        aListName,
                nsIFrame*       aOldFrame,
@@ -149,7 +149,7 @@ public:
   // Our life is bound to the life of our unique child.
   // When our child goes away, we ask our parent to delete us
   NS_IMETHOD
-  RemoveFrame(nsIPresContext* aPresContext,
+  RemoveFrame(nsPresContext* aPresContext,
               nsIPresShell&   aPresShell,
               nsIAtom*        aListName,
               nsIFrame*       aOldFrame)

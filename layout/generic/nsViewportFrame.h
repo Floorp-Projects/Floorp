@@ -39,7 +39,7 @@
 
 #include "nsContainerFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsReflowPath.h"
 #include "nsIPresShell.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -65,29 +65,29 @@ public:
 
   virtual ~ViewportFrame() { } // useful for debugging
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext*   aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext*   aPresContext,
                               const nsPoint&    aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**        aFrame);
 
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
 
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
@@ -96,7 +96,7 @@ public:
 
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);

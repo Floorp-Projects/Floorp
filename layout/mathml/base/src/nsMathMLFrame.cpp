@@ -62,7 +62,7 @@ static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 NS_IMPL_QUERY_INTERFACE1(nsMathMLFrame, nsIMathMLFrame)
 
 NS_IMETHODIMP
-nsMathMLFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                     nsIFrame*       aParent) 
 {
   mEmbellishData.flags = 0;
@@ -93,7 +93,7 @@ nsMathMLFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLFrame::UpdatePresentationData(nsIPresContext* aPresContext,
+nsMathMLFrame::UpdatePresentationData(nsPresContext* aPresContext,
                                       PRInt32         aScriptLevelIncrement,
                                       PRUint32        aFlagsValues,
                                       PRUint32        aFlagsToUpdate)
@@ -125,7 +125,7 @@ nsMathMLFrame::UpdatePresentationData(nsIPresContext* aPresContext,
 // extra leaf style contexts given to the MathMLChars are acessible to
 // the Style System via the Get/Set AdditionalStyleContext() APIs.
 /* static */ void
-nsMathMLFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
+nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                                       nsIContent*      aContent,
                                       nsStyleContext*  aParentStyleContext,
                                       nsMathMLChar*    aMathMLChar,
@@ -405,7 +405,7 @@ nsMathMLFrame::ParseNumericValue(nsString&   aString,
 }
 
 /* static */ nscoord
-nsMathMLFrame::CalcLength(nsIPresContext*   aPresContext,
+nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
                           nsStyleContext*   aStyleContext,
                           const nsCSSValue& aCSSValue)
 {
@@ -515,7 +515,7 @@ nsCSSMapping {
 };
 
 static void
-GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
+GetMathMLAttributeStyleSheet(nsPresContext* aPresContext,
                              nsIStyleSheet** aSheet)
 {
   static const char kTitle[] = "Internal MathML/CSS Attribute Style Sheet";
@@ -568,7 +568,7 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
 }
 
 /* static */ PRInt32
-nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
+nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
                                     nsIContent*     aContent)
 {
   // normal case, quick return if there are no attributes
@@ -701,7 +701,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
 }
 
 /* static */ PRInt32
-nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
+nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
                                     nsIFrame*       aFrame)
 {
   PRInt32 ruleCount = MapAttributesIntoCSS(aPresContext, aFrame->GetContent());

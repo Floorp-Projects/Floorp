@@ -41,7 +41,7 @@
 #include "nsISVGLibartBitmap.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsRect.h"
 #include "nsIComponentManager.h"
 #include "nsDrawingSurfaceGTK.h"
@@ -61,7 +61,7 @@ public:
   nsSVGLibartBitmapGdk();
   ~nsSVGLibartBitmapGdk();
   nsresult Init(nsIRenderingContext *ctx,
-                nsIPresContext* presContext,
+                nsPresContext* presContext,
                 const nsRect & rect);
 
   // nsISupports interface:
@@ -105,7 +105,7 @@ nsSVGLibartBitmapGdk::~nsSVGLibartBitmapGdk()
 
 nsresult
 nsSVGLibartBitmapGdk::Init(nsIRenderingContext* ctx,
-                           nsIPresContext* presContext,
+                           nsPresContext* presContext,
                            const nsRect & rect)
 {
   mRenderingContext = ctx;
@@ -119,7 +119,7 @@ nsSVGLibartBitmapGdk::Init(nsIRenderingContext* ctx,
 nsresult
 NS_NewSVGLibartBitmap(nsISVGLibartBitmap **result,
                       nsIRenderingContext *ctx,
-                      nsIPresContext* presContext,
+                      nsPresContext* presContext,
                       const nsRect & rect)
 {
   nsSVGLibartBitmapGdk* bm = new nsSVGLibartBitmapGdk();

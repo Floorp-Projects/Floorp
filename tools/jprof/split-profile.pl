@@ -51,8 +51,8 @@
 # The input file format looks like the following:
 #
 #   poll g_main_poll
-#   GetRuleCascade CSSRuleProcessor::GetRuleCascade(nsIPresContext *, nsIAtom *)
-#   RuleProcessorData RuleProcessorData::RuleProcessorData(nsIPresContext *, nsIContent *, nsRuleWalker *, nsCompatibility *)
+#   GetRuleCascade CSSRuleProcessor::GetRuleCascade(nsPresContext *, nsIAtom *)
+#   RuleProcessorData RuleProcessorData::RuleProcessorData(nsPresContext *, nsIContent *, nsRuleWalker *, nsCompatibility *)
 #
 # From this input file, the script will construct a profile called
 # 00.html that contains the whole profile, a profile called 01-poll.html

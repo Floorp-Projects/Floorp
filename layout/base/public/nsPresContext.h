@@ -34,8 +34,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsIPresContext_h___
-#define nsIPresContext_h___
+#ifndef nsPresContext_h___
+#define nsPresContext_h___
 
 #include "nsISupports.h"
 #include "nsColor.h"
@@ -117,13 +117,13 @@ const PRUint8 kPresContext_DefaultFixedFont_ID    = 0x01; // kGenericFont_moz_fi
 // objects that provide an outer context for a presentation shell.
 
 // hack to make egcs / gcc 2.95.2 happy
-class nsIPresContext_base : public nsIObserver
+class nsPresContext_base : public nsIObserver
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRESCONTEXT_IID)
 };
 
-class nsIPresContext : public nsIPresContext_base {
+class nsPresContext : public nsPresContext_base {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -135,7 +135,7 @@ public:
     eContext_Print         // paginated printer presentation
   };
 
-  nsIPresContext(nsPresContextType aType) NS_HIDDEN;
+  nsPresContext(nsPresContextType aType) NS_HIDDEN;
 
   /**
    * Initialize the presentation context from a particular device.
@@ -681,7 +681,7 @@ protected:
 
 private:
 
-  ~nsIPresContext() NS_HIDDEN;
+  ~nsPresContext() NS_HIDDEN;
 
   // these are private, use the list in nsFont.h if you want a public list
   enum {
@@ -724,4 +724,4 @@ private:
 #define DO_GLOBAL_REFLOW_COUNT_DSP_J(_name, _rend, _just)
 #endif // MOZ_REFLOW_PERF_DSP
 
-#endif /* nsIPresContext_h___ */
+#endif /* nsPresContext_h___ */

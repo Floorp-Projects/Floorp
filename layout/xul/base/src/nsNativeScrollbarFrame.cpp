@@ -100,7 +100,7 @@ nsNativeScrollbarFrame::~nsNativeScrollbarFrame ( )
 // Pass along to our parent, but also create the native widget that we wrap. 
 //
 NS_IMETHODIMP
-nsNativeScrollbarFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
+nsNativeScrollbarFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
                                nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
@@ -169,7 +169,7 @@ nsNativeScrollbarFrame::FindScrollbar(nsIFrame* start, nsIFrame** outFrame,
 }
 
 NS_IMETHODIMP
-nsNativeScrollbarFrame::Reflow(nsIPresContext*          aPresContext,
+nsNativeScrollbarFrame::Reflow(nsPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
@@ -198,7 +198,7 @@ nsNativeScrollbarFrame::Reflow(nsIPresContext*          aPresContext,
 // our native scrollbar with the correct values.
 //
 NS_IMETHODIMP
-nsNativeScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsNativeScrollbarFrame::AttributeChanged(nsPresContext* aPresContext,
                                          nsIContent* aChild,
                                          PRInt32 aNameSpaceID,
                                          nsIAtom* aAttribute,

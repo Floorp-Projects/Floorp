@@ -59,7 +59,7 @@ struct nsStyleText;
 
 class nsLineLayout {
 public:
-  nsLineLayout(nsIPresContext* aPresContext,
+  nsLineLayout(nsPresContext* aPresContext,
                nsSpaceManager* aSpaceManager,
                const nsHTMLReflowState* aOuterReflowState,
                PRBool aComputeMaxElementWidth);
@@ -223,7 +223,7 @@ public:
     }
   }
 
-  nsIFrame* FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  nsIFrame* FindNextText(nsPresContext* aPresContext, nsIFrame* aFrame);
 
   PRBool CanPlaceFloatNow() const;
 
@@ -280,13 +280,13 @@ public:
 
   static PRBool IsPercentageUnitSides(const nsStyleSides* aSides);
 
-  static PRBool IsPercentageAwareReplacedElement(nsIPresContext *aPresContext, 
+  static PRBool IsPercentageAwareReplacedElement(nsPresContext *aPresContext, 
                                                  nsIFrame       *aFrame);
 
 
   //----------------------------------------
 
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
 
 protected:
   // This state is constant for a given block frame doing line layout

@@ -167,7 +167,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   if (!window) return NS_OK;
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
 
   float p2t;

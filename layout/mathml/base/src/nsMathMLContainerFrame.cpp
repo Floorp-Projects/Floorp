@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsUnitConversion.h"
@@ -82,7 +82,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLContainerFrame, nsHTMLContainerFrame,
 // error handlers
 // provide a feedback to the user when a frame with bad markup can not be rendered
 nsresult
-nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
+nsMathMLContainerFrame::ReflowError(nsPresContext*      aPresContext,
                                     nsIRenderingContext& aRenderingContext,
                                     nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -126,7 +126,7 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
 }
 
 nsresult
-nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
+nsMathMLContainerFrame::PaintError(nsPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    const nsRect&        aDirtyRect,
                                    nsFramePaintLayer    aWhichLayer)
@@ -194,7 +194,7 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
 // helper to get the preferred size that a container frame should use to fire
 // the stretch on its stretchy child frames.
 void
-nsMathMLContainerFrame::GetPreferredStretchSize(nsIPresContext*      aPresContext,
+nsMathMLContainerFrame::GetPreferredStretchSize(nsPresContext*      aPresContext,
                                                 nsIRenderingContext& aRenderingContext,
                                                 PRUint32             aOptions,
                                                 nsStretchDirection   aStretchDirection,
@@ -283,7 +283,7 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsIPresContext*      aPresContex
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
+nsMathMLContainerFrame::Stretch(nsPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsStretchDirection   aStretchDirection,
                                 nsBoundingMetrics&   aContainerSize,
@@ -428,7 +428,7 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
 }
 
 nsresult
-nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
+nsMathMLContainerFrame::FinalizeReflow(nsPresContext*      aPresContext,
                                        nsIRenderingContext& aRenderingContext,
                                        nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -523,7 +523,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
 // helper to let the update of presentation data pass through
 // a subtree that may contain non-mathml container frames
 /* static */ void
-nsMathMLContainerFrame::PropagatePresentationDataFor(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::PropagatePresentationDataFor(nsPresContext* aPresContext,
                                                      nsIFrame*       aFrame,
                                                      PRInt32         aScriptLevelIncrement,
                                                      PRUint32        aFlagsValues,
@@ -554,7 +554,7 @@ nsMathMLContainerFrame::PropagatePresentationDataFor(nsIPresContext* aPresContex
 }
 
 /* static */ void
-nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                                              nsIFrame*       aParentFrame,
                                                              PRInt32         aFirstChildIndex,
                                                              PRInt32         aLastChildIndex,
@@ -584,7 +584,7 @@ nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIPresContext* aPr
 // to do about it at the moment. For background on the problem @see 
 // http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
 /* static */ void
-nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::PropagateScriptStyleFor(nsPresContext* aPresContext,
                                                 nsIFrame*       aFrame,
                                                 PRInt32         aParentScriptLevel)
 {
@@ -707,7 +707,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
 // with a wrapper. One must either use the parent (or the unique child)
 // for such operations (@see nsMathMLForeignFrameWrapper).
 nsresult
-nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
+nsMathMLContainerFrame::WrapForeignFrames(nsPresContext* aPresContext)
 {
   nsIFrame* next = mFrames.FirstChild();
   nsFrameManager *frameManager = aPresContext->FrameManager();
@@ -744,7 +744,7 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
+nsMathMLContainerFrame::Paint(nsPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect&        aDirtyRect,
                               nsFramePaintLayer    aWhichLayer,
@@ -795,7 +795,7 @@ nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
 // This method is called in a top-down manner, as we descend the frame tree
 // during its construction
 NS_IMETHODIMP
-nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
+nsMathMLContainerFrame::Init(nsPresContext*  aPresContext,
                              nsIContent*      aContent,
                              nsIFrame*        aParent,
                              nsStyleContext*  aContext,
@@ -813,7 +813,7 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
 // This method is called in a bottom-up manner, as we ascend the frame tree
 // after its construction
 NS_IMETHODIMP
-nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::SetInitialChildList(nsPresContext* aPresContext,
                                             nsIAtom*        aListName,
                                             nsIFrame*       aChildList)
 {
@@ -842,7 +842,7 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
 // in aParentFrame itself (except for those particular operations that the
 // parent frame may do in its TransmitAutomaticData()).
 /* static */ void
-nsMathMLContainerFrame::RebuildAutomaticDataForChildren(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::RebuildAutomaticDataForChildren(nsPresContext* aPresContext,
                                                         nsIFrame*       aParentFrame)
 {
   // 1. As we descend the tree, make each child frame inherit data from
@@ -867,7 +867,7 @@ nsMathMLContainerFrame::RebuildAutomaticDataForChildren(nsIPresContext* aPresCon
 }
 
 /* static */ nsresult
-nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::ReLayoutChildren(nsPresContext* aPresContext,
                                          nsIFrame*       aParentFrame)
 {
   // walk-up to the first frame that is a MathML frame, stop if we reach <math>
@@ -942,7 +942,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
 // Hence for things to work, callers must use Append/Insert/etc wisely.
 
 nsresult
-nsMathMLContainerFrame::ChildListChanged(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::ChildListChanged(nsPresContext* aPresContext,
                                          PRInt32         aModType)
 {
   if (aModType != nsIDOMMutationEvent::REMOVAL) {
@@ -953,7 +953,7 @@ nsMathMLContainerFrame::ChildListChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::AppendFrames(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::AppendFrames(nsPresContext* aPresContext,
                                      nsIPresShell&   aPresShell,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aFrameList)
@@ -969,7 +969,7 @@ nsMathMLContainerFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::InsertFrames(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::InsertFrames(nsPresContext* aPresContext,
                                      nsIPresShell&   aPresShell,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aPrevFrame,
@@ -987,7 +987,7 @@ nsMathMLContainerFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::RemoveFrame(nsPresContext* aPresContext,
                                     nsIPresShell&   aPresShell,
                                     nsIAtom*        aListName,
                                     nsIFrame*       aOldFrame)
@@ -1001,7 +1001,7 @@ nsMathMLContainerFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::ReplaceFrame(nsPresContext* aPresContext,
                                      nsIPresShell&   aPresShell,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aOldFrame,
@@ -1017,7 +1017,7 @@ nsMathMLContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMathMLContainerFrame::AttributeChanged(nsPresContext* aPresContext,
                                          nsIContent*     aChild,
                                          PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
@@ -1062,7 +1062,7 @@ nsMathMLContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aCh
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLContainerFrame::Reflow(nsPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
@@ -1285,7 +1285,7 @@ GetInterFrameSpacing(PRInt32           aScriptLevel,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
+nsMathMLContainerFrame::Place(nsPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               PRBool               aPlaceOrigin,
                               nsHTMLReflowMetrics& aDesiredSize)
@@ -1402,7 +1402,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
 // e.g., it fixes <math> <mi>f</mi> <mo>q</mo> <mi>f</mi> <mo>I</mo> </math>
 
 static nscoord
-GetInterFrameSpacingFor(nsIPresContext* aPresContext,
+GetInterFrameSpacingFor(nsPresContext* aPresContext,
                         PRInt32         aScriptLevel,
                         nsIFrame*       aParentFrame,
                         nsIFrame*       aChildFrame)
@@ -1437,7 +1437,7 @@ GetInterFrameSpacingFor(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsMathMLContainerFrame::FixInterFrameSpacing(nsIPresContext*      aPresContext,
+nsMathMLContainerFrame::FixInterFrameSpacing(nsPresContext*      aPresContext,
                                              nsHTMLReflowMetrics& aDesiredSize)
 {
   nsIContent* parentContent = mParent->GetContent();

@@ -46,7 +46,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScrollbarFrame.h"
 
@@ -187,7 +187,7 @@ nsTreeBodyFrame::Release(void)
   return NS_OK;
 }
 
-static nsIFrame* InitScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* aCurrFrame, nsIScrollbarMediator* aSM)
+static nsIFrame* InitScrollbarFrame(nsPresContext* aPresContext, nsIFrame* aCurrFrame, nsIScrollbarMediator* aSM)
 {
   // Check ourselves
   nsCOMPtr<nsIScrollbarFrame> sf(do_QueryInterface(aCurrFrame));
@@ -224,7 +224,7 @@ AdjustForBorderPadding(nsStyleContext* aContext, nsRect& aRect)
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
+nsTreeBodyFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
                       nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   mPresContext = aPresContext;
@@ -324,7 +324,7 @@ nsTreeBodyFrame::CalcMaxRowWidth()
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::Destroy(nsIPresContext* aPresContext)
+nsTreeBodyFrame::Destroy(nsPresContext* aPresContext)
 {
   // Make sure we cancel any posted callbacks. 
   if (mReflowCallbackPosted) {
@@ -1859,7 +1859,7 @@ void nsTreeBodyFrame::CalcInnerBox()
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::GetCursor(nsIPresContext* aPresContext,
+nsTreeBodyFrame::GetCursor(nsPresContext* aPresContext,
                            nsPoint& aPoint,
                            PRInt32& aCursor)
 {
@@ -1885,7 +1885,7 @@ nsTreeBodyFrame::GetCursor(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::HandleEvent(nsIPresContext* aPresContext,
+nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
                              nsGUIEvent* aEvent,
                              nsEventStatus* aEventStatus)
 {
@@ -2065,7 +2065,7 @@ nsLineStyle nsTreeBodyFrame::ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle)
 
 // Painting routines
 NS_IMETHODIMP
-nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
+nsTreeBodyFrame::Paint(nsPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer,
@@ -2163,7 +2163,7 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
 void
 nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
                              const nsRect&        aColumnRect,
-                             nsIPresContext*      aPresContext,
+                             nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect)
 {
@@ -2188,7 +2188,7 @@ nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
 void
 nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
                           const nsRect&        aRowRect,
-                          nsIPresContext*      aPresContext,
+                          nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect)
 {
@@ -2307,7 +2307,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
 void
 nsTreeBodyFrame::PaintSeparator(PRInt32              aRowIndex,
                                 const nsRect&        aSeparatorRect,
-                                nsIPresContext*      aPresContext,
+                                nsPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect&        aDirtyRect)
 {
@@ -2358,7 +2358,7 @@ void
 nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
                            nsTreeColumn*        aColumn,
                            const nsRect&        aCellRect,
-                           nsIPresContext*      aPresContext,
+                           nsPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            nscoord&             aCurrX)
@@ -2530,7 +2530,7 @@ void
 nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
                              nsTreeColumn*        aColumn,
                              const nsRect&        aTwistyRect,
-                             nsIPresContext*      aPresContext,
+                             nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nscoord&             aRemainingWidth,
@@ -2642,7 +2642,7 @@ void
 nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
                             nsTreeColumn*        aColumn,
                             const nsRect&        aImageRect,
-                            nsIPresContext*      aPresContext,
+                            nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nscoord&             aRemainingWidth,
@@ -2715,7 +2715,7 @@ void
 nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
                            nsTreeColumn*        aColumn,
                            const nsRect&        aTextRect,
-                           nsIPresContext*      aPresContext,
+                           nsPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            nscoord&             aCurrX)
@@ -2928,7 +2928,7 @@ void
 nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
                                nsTreeColumn*        aColumn,
                                const nsRect&        aCheckboxRect,
-                               nsIPresContext*      aPresContext,
+                               nsPresContext*      aPresContext,
                                nsIRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect)
 {
@@ -2982,7 +2982,7 @@ void
 nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
                                     nsTreeColumn*        aColumn,
                                     const nsRect&        aProgressMeterRect,
-                                    nsIPresContext*      aPresContext,
+                                    nsPresContext*      aPresContext,
                                     nsIRenderingContext& aRenderingContext,
                                     const nsRect&        aDirtyRect)
 {
@@ -3047,7 +3047,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
 
 void
 nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
-                                   nsIPresContext*      aPresContext,
+                                   nsPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    const nsRect&        aDirtyRect)
 {
@@ -3138,7 +3138,7 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
 
 void
 nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
-                                      nsIPresContext*      aPresContext,
+                                      nsPresContext*      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aRect,
                                       const nsRect&        aDirtyRect)

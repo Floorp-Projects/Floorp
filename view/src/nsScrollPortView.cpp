@@ -39,7 +39,7 @@
 #include "nsScrollPortView.h"
 #include "nsIWidget.h"
 #include "nsUnitConversion.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"

@@ -40,7 +40,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIImage.h"
@@ -243,7 +243,7 @@ NS_IMETHODIMP_(nsrefcnt) nsImageFrame::Release(void)
 }
 
 NS_IMETHODIMP
-nsImageFrame::Destroy(nsIPresContext* aPresContext)
+nsImageFrame::Destroy(nsPresContext* aPresContext)
 {
   // Tell our image map, if there is one, to clean up
   // This causes the nsImageMap to unregister itself as
@@ -271,7 +271,7 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
 
 
 NS_IMETHODIMP
-nsImageFrame::Init(nsIPresContext*  aPresContext,
+nsImageFrame::Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
@@ -529,7 +529,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
    *   one frame = 1
    *   one loop = 2
    */
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
   aImage->SetAnimationMode(presContext->ImageAnimationMode());
   // Ensure the animation (if any) is started.
   aImage->StartAnimation();
@@ -610,7 +610,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
                            nsresult aStatus,
                            const PRUnichar *aStatusArg)
 {
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
   nsIPresShell *presShell = presContext->GetPresShell();
   NS_ASSERTION(presShell, "No PresShell.");
 
@@ -701,7 +701,7 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
         : (_value)))
 
 void
-nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsImageFrame::GetDesiredSize(nsPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -889,7 +889,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 void
-nsImageFrame::GetInnerArea(nsIPresContext* aPresContext,
+nsImageFrame::GetInnerArea(nsPresContext* aPresContext,
                            nsRect& aInnerArea) const
 {
   aInnerArea.x = mBorderPadding.left;
@@ -924,7 +924,7 @@ nsImageFrame::GetContinuationOffset(nscoord* aWidth) const
 }
 
 NS_IMETHODIMP
-nsImageFrame::Reflow(nsIPresContext*          aPresContext,
+nsImageFrame::Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -1083,7 +1083,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
 // Formats the alt-text to fit within the specified rectangle. Breaks lines
 // between words if a word would extend past the edge of the rectangle
 void
-nsImageFrame::DisplayAltText(nsIPresContext*      aPresContext,
+nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsString&      aAltText,
                              const nsRect&        aRect)
@@ -1150,7 +1150,7 @@ struct nsRecessedBorder : public nsStyleBorder {
 };
 
 void
-nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
+nsImageFrame::DisplayAltFeedback(nsPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  imgIRequest*         aRequest)
 {
@@ -1260,7 +1260,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
 }
 
 NS_METHOD
-nsImageFrame::Paint(nsIPresContext*      aPresContext,
+nsImageFrame::Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
@@ -1468,14 +1468,14 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsImageFrame::GetImageMap(nsIPresContext *aPresContext, nsIImageMap **aImageMap)
+nsImageFrame::GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap)
 {
   nsImageMap *map = GetImageMap(aPresContext);
   return CallQueryInterface(map, aImageMap);
 }
 
 nsImageMap*
-nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
+nsImageFrame::GetImageMap(nsPresContext* aPresContext)
 {
   if (!mImageMap) {
     nsIDocument* doc = mContent->GetDocument();
@@ -1500,7 +1500,7 @@ nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
 }
 
 void
-nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
+nsImageFrame::TriggerLink(nsPresContext* aPresContext,
                           nsIURI* aURI,
                           const nsString& aTargetSpec,
                           PRBool aClick)
@@ -1558,7 +1558,7 @@ nsImageFrame::IsServerImageMap()
 // view) into a localized pixel coordinate that is relative to the
 // content area of this frame (inside the border+padding).
 void
-nsImageFrame::TranslateEventCoords(nsIPresContext* aPresContext,
+nsImageFrame::TranslateEventCoords(nsPresContext* aPresContext,
                                    const nsPoint& aPoint,
                                    nsPoint& aResult)
 {
@@ -1631,7 +1631,7 @@ nsImageFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
 
 
 NS_IMETHODIMP  
-nsImageFrame::GetContentForEvent(nsIPresContext* aPresContext,
+nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIContent** aContent)
 {
@@ -1659,7 +1659,7 @@ nsImageFrame::GetContentForEvent(nsIPresContext* aPresContext,
 
 // XXX what should clicks on transparent pixels do?
 NS_METHOD
-nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
+nsImageFrame::HandleEvent(nsPresContext* aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus* aEventStatus)
 {
@@ -1725,7 +1725,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
 //XXX This will need to be rewritten once we have content for areas
 //XXXbz We have content for areas now.... 
 NS_METHOD
-nsImageFrame::GetCursor(nsIPresContext* aPresContext,
+nsImageFrame::GetCursor(nsPresContext* aPresContext,
                         nsPoint& aPoint,
                         PRInt32& aCursor)
 {
@@ -1748,7 +1748,7 @@ nsImageFrame::GetCursor(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsImageFrame::AttributeChanged(nsPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
@@ -1778,7 +1778,7 @@ nsImageFrame::GetType() const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsImageFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsImageFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -1823,7 +1823,7 @@ nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
 
 nsresult
 nsImageFrame::LoadIcon(const nsAString& aSpec,
-                       nsIPresContext *aPresContext,
+                       nsPresContext *aPresContext,
                        imgIRequest** aRequest)
 {
   nsresult rv = NS_OK;
@@ -1887,7 +1887,7 @@ nsImageFrame::SpecToURI(const nsAString& aSpec, nsIIOService *aIOService,
 }
 
 void
-nsImageFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup)
+nsImageFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup)
 {
   if (!aPresContext)
     return;
@@ -1907,7 +1907,7 @@ nsImageFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGro
   *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
 }
 
-nsresult nsImageFrame::LoadIcons(nsIPresContext *aPresContext)
+nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
 {
   NS_ASSERTION(!gIconLoad, "called LoadIcons twice");
 
@@ -1980,7 +1980,7 @@ void nsImageFrame::InvalidateIcon()
 {
   // invalidate the inner area, where the icon lives
 
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
   float   p2t = presContext->ScaledPixelsToTwips();
   nsRect inner;
   GetInnerArea(presContext, inner);

@@ -4881,7 +4881,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   // Get the computed -moz-binding directly from the style context
-  nsCOMPtr<nsIPresContext> pctx;
+  nsCOMPtr<nsPresContext> pctx;
   shell->GetPresContext(getter_AddRefs(pctx));
   NS_ENSURE_TRUE(pctx, NS_ERROR_UNEXPECTED);
 

@@ -48,28 +48,28 @@ public:
 
   nsTitleBarFrame(nsIPresShell* aPresShell);
 
-  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD  Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
-  virtual void MouseClicked (nsIPresContext* aPresContext);
+  virtual void MouseClicked (nsPresContext* aPresContext);
 
 protected:
 
-  NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext,PRBool aGrabMouseEvents);
+  NS_IMETHOD CaptureMouseEvents(nsPresContext* aPresContext,PRBool aGrabMouseEvents);
 
 protected:
 	PRBool mTrackingMouseMove;	

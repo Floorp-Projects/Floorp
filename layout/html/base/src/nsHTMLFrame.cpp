@@ -40,7 +40,7 @@
 #include "nsCSSRendering.h"
 #include "nsIDocument.h"
 #include "nsReflowPath.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsViewsCID.h"
 #include "nsIView.h"
@@ -91,41 +91,41 @@ public:
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
   virtual PRBool IsContainingBlock() const { return PR_TRUE; }
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -148,7 +148,7 @@ public:
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-  NS_IMETHOD GetContentForEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD GetContentForEvent(nsPresContext* aPresContext,
                                 nsEvent* aEvent,
                                 nsIContent** aContent);
 
@@ -208,7 +208,7 @@ CanvasFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-CanvasFrame::Init(nsIPresContext*  aPresContext,
+CanvasFrame::Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -228,7 +228,7 @@ CanvasFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-CanvasFrame::Destroy(nsIPresContext* aPresContext)
+CanvasFrame::Destroy(nsPresContext* aPresContext)
 {
   nsIScrollableView* scrollingView = nsnull;
   mViewManager->GetRootScrollableView(&scrollingView);
@@ -248,7 +248,7 @@ CanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX
     nsCOMPtr<nsIViewObserver> observer;
     mViewManager->GetViewObserver(*getter_AddRefs(observer));
     nsCOMPtr<nsIPresShell> shell = do_QueryInterface(observer);
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     shell->GetPresContext(getter_AddRefs(context));
     nsCOMPtr<nsISupports> container;
     context->GetContainer(getter_AddRefs(container));
@@ -274,7 +274,7 @@ CanvasFrame::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX,
 }
 
 NS_IMETHODIMP
-CanvasFrame::AppendFrames(nsIPresContext* aPresContext,
+CanvasFrame::AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList)
@@ -310,7 +310,7 @@ CanvasFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-CanvasFrame::InsertFrames(nsIPresContext* aPresContext,
+CanvasFrame::InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
@@ -331,7 +331,7 @@ CanvasFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-CanvasFrame::RemoveFrame(nsIPresContext* aPresContext,
+CanvasFrame::RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame)
@@ -368,7 +368,7 @@ CanvasFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-CanvasFrame::Paint(nsIPresContext*      aPresContext,
+CanvasFrame::Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -464,7 +464,7 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-CanvasFrame::Reflow(nsIPresContext*          aPresContext,
+CanvasFrame::Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
@@ -607,7 +607,7 @@ CanvasFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-CanvasFrame::HandleEvent(nsIPresContext* aPresContext, 
+CanvasFrame::HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus)
 {
@@ -634,7 +634,7 @@ CanvasFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-CanvasFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+CanvasFrame::GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame)
@@ -650,7 +650,7 @@ CanvasFrame::GetType() const
 }
 
 NS_IMETHODIMP 
-CanvasFrame::GetContentForEvent(nsIPresContext* aPresContext,
+CanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
                                 nsEvent* aEvent,
                                 nsIContent** aContent)
 {

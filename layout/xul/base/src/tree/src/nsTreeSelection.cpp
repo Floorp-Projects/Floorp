@@ -47,7 +47,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
@@ -750,7 +750,7 @@ nsTreeSelection::FireOnSelectHandler()
   nsIPresShell *shell = document->GetShellAt(0);
   if (shell) {
     // Retrieve the context in which our DOM event will fire.
-    nsCOMPtr<nsIPresContext> aPresContext;
+    nsCOMPtr<nsPresContext> aPresContext;
     shell->GetPresContext(getter_AddRefs(aPresContext));
 
     nsEventStatus status = nsEventStatus_eIgnore;

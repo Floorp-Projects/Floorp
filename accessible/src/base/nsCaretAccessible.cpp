@@ -105,7 +105,7 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
 
   nsIFrame *frame = nsnull;
   presShell->GetPrimaryFrameFor(content, &frame);
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   if (!frame || !presContext)
     return NS_ERROR_FAILURE;
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
                                       nsIAccessibleEvent::EVENT_HIDE, this, nsnull);
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   nsIViewManager* viewManager = presShell->GetViewManager();
   if (!presContext || !viewManager)

@@ -40,7 +40,7 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
@@ -201,7 +201,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 }
 
 
-nsStyleFont::nsStyleFont(nsIPresContext* aPresContext)
+nsStyleFont::nsStyleFont(nsPresContext* aPresContext)
   : mFlags(NS_STYLE_FONT_DEFAULT),
     mFont(*(aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID)))
 {
@@ -209,7 +209,7 @@ nsStyleFont::nsStyleFont(nsIPresContext* aPresContext)
 }
 
 void* 
-nsStyleFont::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+nsStyleFont::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
   void* result = aContext->AllocateFromShell(sz);
   if (result)
     memset(result, 0, sz);
@@ -217,7 +217,7 @@ nsStyleFont::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
 }
   
 void 
-nsStyleFont::Destroy(nsIPresContext* aContext) {
+nsStyleFont::Destroy(nsPresContext* aContext) {
   this->~nsStyleFont();
   aContext->FreeToShell(sizeof(nsStyleFont), this);
 }
@@ -231,7 +231,7 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
 }
 
 inline float
-TextZoomFor(nsIPresContext* aPresContext)
+TextZoomFor(nsPresContext* aPresContext)
 {
   float textZoom;
   aPresContext->DeviceContext()->GetTextZoom(textZoom);
@@ -239,13 +239,13 @@ TextZoomFor(nsIPresContext* aPresContext)
 }
 
 /* static */ nscoord
-nsStyleFont::ZoomText(nsIPresContext *aPresContext, nscoord aSize)
+nsStyleFont::ZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
   return nscoord(float(aSize) * TextZoomFor(aPresContext));
 }
 
 /* static */ nscoord
-nsStyleFont::UnZoomText(nsIPresContext *aPresContext, nscoord aSize)
+nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
   return nscoord(float(aSize) / TextZoomFor(aPresContext));
 }
@@ -315,7 +315,7 @@ nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc) {
 }
 
 void* 
-nsStyleMargin::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+nsStyleMargin::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
   void* result = aContext->AllocateFromShell(sz);
   if (result)
     memset(result, 0, sz);
@@ -323,7 +323,7 @@ nsStyleMargin::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
 }
   
 void 
-nsStyleMargin::Destroy(nsIPresContext* aContext) {
+nsStyleMargin::Destroy(nsPresContext* aContext) {
   this->~nsStyleMargin();
   aContext->FreeToShell(sizeof(nsStyleMargin), this);
 }
@@ -372,7 +372,7 @@ nsStylePadding::nsStylePadding(const nsStylePadding& aSrc) {
 }
 
 void* 
-nsStylePadding::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+nsStylePadding::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
   void* result = aContext->AllocateFromShell(sz);
   if (result)
     memset(result, 0, sz);
@@ -380,7 +380,7 @@ nsStylePadding::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW 
 }
   
 void 
-nsStylePadding::Destroy(nsIPresContext* aContext) {
+nsStylePadding::Destroy(nsPresContext* aContext) {
   this->~nsStylePadding();
   aContext->FreeToShell(sizeof(nsStylePadding), this);
 }
@@ -417,7 +417,7 @@ nsStylePadding::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const
   }
 }
 
-nsStyleBorder::nsStyleBorder(nsIPresContext* aPresContext)
+nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
 {
   // XXX support mBorderWidths until deprecated methods are removed
   float pixelsToTwips = 20.0f;
@@ -470,7 +470,7 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
 }
 
 void* 
-nsStyleBorder::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+nsStyleBorder::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
   void* result = aContext->AllocateFromShell(sz);
   if (result)
     memset(result, 0, sz);
@@ -478,7 +478,7 @@ nsStyleBorder::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
 }
   
 void 
-nsStyleBorder::Destroy(nsIPresContext* aContext) {
+nsStyleBorder::Destroy(nsPresContext* aContext) {
   this->~nsStyleBorder();
   aContext->FreeToShell(sizeof(nsStyleBorder), this);
 }
@@ -598,7 +598,7 @@ nsStyleBorder::CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide, nscoord& aWi
   aWidth = CalcSideFor(aFrame, coord, NS_SPACING_BORDER, aSide, mBorderWidths, 3);
 }
 
-nsStyleOutline::nsStyleOutline(nsIPresContext* aPresContext)
+nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
   // XXX support mBorderWidths until deprecated methods are removed
   float pixelsToTwips = 20.0f;
@@ -959,7 +959,7 @@ nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
 // -----------------------
 // nsStyleTableBorder
 
-nsStyleTableBorder::nsStyleTableBorder(nsIPresContext* aPresContext) 
+nsStyleTableBorder::nsStyleTableBorder(nsPresContext* aPresContext) 
 { 
   mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
 
@@ -1008,7 +1008,7 @@ nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther
 // nsStyleColor
 //
 
-nsStyleColor::nsStyleColor(nsIPresContext* aPresContext)
+nsStyleColor::nsStyleColor(nsPresContext* aPresContext)
 {
   mColor = aPresContext->DefaultColor();
 }
@@ -1029,7 +1029,7 @@ nsChangeHint nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
 // nsStyleBackground
 //
 
-nsStyleBackground::nsStyleBackground(nsIPresContext* aPresContext)
+nsStyleBackground::nsStyleBackground(nsPresContext* aPresContext)
   : mBackgroundFlags(NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE),
     mBackgroundAttachment(NS_STYLE_BG_ATTACHMENT_SCROLL),
     mBackgroundClip(NS_STYLE_BG_CLIP_BORDER),
@@ -1162,7 +1162,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 // nsStyleVisibility
 //
 
-nsStyleVisibility::nsStyleVisibility(nsIPresContext* aPresContext)
+nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
 {
   PRUint32 bidiOptions = aPresContext->GetBidi();
   if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL)

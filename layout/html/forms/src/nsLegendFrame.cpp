@@ -87,7 +87,7 @@ nsLegendFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsLegendFrame::Destroy(nsIPresContext *aPresContext)
+nsLegendFrame::Destroy(nsPresContext *aPresContext)
 {
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   return nsAreaFrame::Destroy(aPresContext);
@@ -109,7 +109,7 @@ nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_IMETHODIMP 
-nsLegendFrame::Reflow(nsIPresContext*          aPresContext,
+nsLegendFrame::Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -125,7 +125,7 @@ nsLegendFrame::Reflow(nsIPresContext*          aPresContext,
 
 
 NS_IMETHODIMP
-nsLegendFrame::Paint(nsIPresContext*      aPresContext,
+nsLegendFrame::Paint(nsPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer,

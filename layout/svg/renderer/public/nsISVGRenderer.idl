@@ -54,7 +54,7 @@ interface nsISVGRendererGlyphGeometry;
 interface nsISVGRendererCanvas;
 interface nsIRenderingContext;
 interface nsISVGRendererRegion;
-interface nsIPresContext;
+interface nsPresContext;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -78,7 +78,7 @@ interface nsIPresContext;
 [scriptable, uuid(8a1398db-fb25-4711-85fc-4f5665ea7d17)]
 interface nsISVGRenderer : nsISupports
 {
-  // void Init(in nsIPresContext presContext);
+  // void Init(in nsPresContext presContext);
   
   /**
    * Create a rendering engine-native path geometry object for the
@@ -121,7 +121,7 @@ interface nsISVGRenderer : nsISupports
    * @return A rendering engine-native canvas object.
    */
   [noscript] nsISVGRendererCanvas createCanvas(in nsIRenderingContext ctx,
-                                               in nsIPresContext presContext,
+                                               in nsPresContext presContext,
                                                [const] in nsRectRef dirtyRect);
 
   /**

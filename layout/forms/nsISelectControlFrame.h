@@ -60,13 +60,13 @@ public:
    * Adds an option to the list at index
    */
 
-  NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index) = 0;
+  NS_IMETHOD AddOption(nsPresContext* aPresContext, PRInt32 index) = 0;
 
   /**
    * Removes the option at index
    */
 
-  NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index) = 0; 
+  NS_IMETHOD RemoveOption(nsPresContext* aPresContext, PRInt32 index) = 0; 
 
   /**
    * Sets the select state of the option at index
@@ -82,7 +82,7 @@ public:
   /**
    * Notify the frame when an option is selected
    */
-  NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
+  NS_IMETHOD OnOptionSelected(nsPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected) = 0;
 

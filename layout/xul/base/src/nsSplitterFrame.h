@@ -64,19 +64,19 @@ public:
 
 
   // nsIFrame overrides
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
+  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
                        nsPoint&        aPoint,
                        PRInt32&        aCursor);
 
@@ -86,27 +86,27 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
 
-  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
@@ -120,7 +120,7 @@ private:
   friend class nsSplitterFrameInner;
   nsSplitterFrameInner* mInner;
   // XXX Hack
-  nsIPresContext* mPresContext;  // weak reference
+  nsPresContext* mPresContext;  // weak reference
 
 }; // class nsSplitterFrame
 

@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -76,7 +76,7 @@ nsMathMLmsupFrame::~nsMathMLmsupFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsupFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmsupFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // if our base is an embellished operator, its flags bubble to us
   nsIFrame* baseFrame = mFrames.FirstChild();
@@ -97,7 +97,7 @@ nsMathMLmsupFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
+nsMathMLmsupFrame::Place(nsPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          PRBool               aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize)
@@ -128,7 +128,7 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
 // exported routine that both mover and msup share.
 // mover uses this when movablelimits is set.
 nsresult
-nsMathMLmsupFrame::PlaceSuperScript(nsIPresContext*      aPresContext,
+nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
                                     nsIRenderingContext& aRenderingContext,
                                     PRBool               aPlaceOrigin,
                                     nsHTMLReflowMetrics& aDesiredSize,

@@ -41,7 +41,7 @@
 #include "nsEvent.h"
 #include "nsISupports.h"
 
-class nsIPresContext;
+class nsPresContext;
 
 /*
  * Event listener manager interface.
@@ -72,10 +72,10 @@ public:
 
 nsresult
 NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
-                 nsIPresContext* aPresContext, const nsAString& aEventType,
+                 nsPresContext* aPresContext, const nsAString& aEventType,
                  nsEvent *aEvent);
 nsresult
-NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsIPresContext* aPresContext, 
+NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, 
                        nsEvent* aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

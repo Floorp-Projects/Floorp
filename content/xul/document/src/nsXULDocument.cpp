@@ -1061,7 +1061,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
             nsCOMPtr<nsIPresShell> shell =
                 NS_STATIC_CAST(nsIPresShell*, mPresShells[j]);
 
-            nsCOMPtr<nsIPresContext> aPresContext;
+            nsCOMPtr<nsPresContext> aPresContext;
             shell->GetPresContext(getter_AddRefs(aPresContext));
 
             // Handle the DOM event
@@ -1201,7 +1201,7 @@ nsXULDocument::ContentRemoved(nsIContent* aContainer,
 }
 
 nsresult
-nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
+nsXULDocument::HandleDOMEvent(nsPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
@@ -1610,7 +1610,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
         }
 
         // Convert from twips to pixels
-        nsCOMPtr<nsIPresContext> context;
+        nsCOMPtr<nsPresContext> context;
         result = aShell->GetPresContext(getter_AddRefs(context));
 
         if (NS_SUCCEEDED(result)) {
@@ -2121,7 +2121,7 @@ nsXULDocument::StartLayout(void)
         nsIPresShell *shell = GetShellAt(i);
 
         // Resize-reflow this time
-        nsCOMPtr<nsIPresContext> cx;
+        nsCOMPtr<nsPresContext> cx;
         shell->GetPresContext(getter_AddRefs(cx));
         NS_ASSERTION(cx != nsnull, "no pres context");
         if (! cx)

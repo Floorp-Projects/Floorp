@@ -80,19 +80,19 @@ public:
       mNext->Destroy(mNext->mRuleNode->mPresContext);
   }
 
-  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   };
   void operator delete(void* aPtr) {} // Does nothing. The arena will free us up when the rule tree
                                       // dies.
 
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this->~nsRuleList();
     aContext->FreeToShell(sizeof(nsRuleList), this);
   }
 
   // Destroy this node, but not its rule node or the rest of the list.
-  nsRuleList* DestroySelf(nsIPresContext* aContext) {
+  nsRuleList* DestroySelf(nsPresContext* aContext) {
     nsRuleList *next = mNext;
     MOZ_COUNT_DTOR(nsRuleList); // hack
     aContext->FreeToShell(sizeof(nsRuleList), this);
@@ -189,7 +189,7 @@ nsString& Unquote(nsString& aString)
 nscoord CalcLength(const nsCSSValue& aValue,
                    const nsFont* aFont, 
                    nsStyleContext* aStyleContext,
-                   nsIPresContext* aPresContext,
+                   nsPresContext* aPresContext,
                    PRBool& aInherited)
 {
   NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
@@ -260,7 +260,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
                        const nsStyleCoord& aParentCoord,
                        PRInt32 aMask, nsStyleContext* aStyleContext,
-                       nsIPresContext* aPresContext, PRBool& aInherited)
+                       nsPresContext* aPresContext, PRBool& aInherited)
 {
   PRBool  result = PR_TRUE;
   if (aValue.GetUnit() == eCSSUnit_Null) {
@@ -310,7 +310,7 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
 }
 
 static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, 
-                       nsIPresContext* aPresContext, nscolor& aResult, PRBool& aInherited)
+                       nsPresContext* aPresContext, nscolor& aResult, PRBool& aInherited)
 {
   PRBool  result = PR_FALSE;
   nsCSSUnit unit = aValue.GetUnit();
@@ -365,7 +365,7 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void* 
-nsRuleNode::operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW
+nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
   return aPresContext->AllocateFromShell(sz);
@@ -384,14 +384,14 @@ nsRuleNode::Destroy()
   mPresContext->FreeToShell(sizeof(nsRuleNode), this);
 }
 
-nsRuleNode* nsRuleNode::CreateRootNode(nsIPresContext* aPresContext)
+nsRuleNode* nsRuleNode::CreateRootNode(nsPresContext* aPresContext)
 {
   return new (aPresContext) nsRuleNode(aPresContext, nsnull, nsnull);
 }
 
 nsILanguageAtomService* nsRuleNode::gLangService = nsnull;
 
-nsRuleNode::nsRuleNode(nsIPresContext* aContext, nsIStyleRule* aRule, nsRuleNode* aParent)
+nsRuleNode::nsRuleNode(nsPresContext* aContext, nsIStyleRule* aRule, nsRuleNode* aParent)
   : mPresContext(aContext),
     mParent(aParent),
     mRule(aRule),
@@ -1375,7 +1375,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 }
 
 static PRBool
-IsChrome(nsIPresContext* aPresContext)
+IsChrome(nsPresContext* aPresContext)
 {
   PRBool isChrome = PR_FALSE;
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
@@ -1620,7 +1620,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
 }
   
 /* static */ void
-nsRuleNode::SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
+nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                     nscoord aMinFontSize, PRBool aUseDocumentFonts,
                     PRBool aIsGeneric, const nsRuleDataFont& aFontData,
                     const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
@@ -1873,7 +1873,7 @@ nsRuleNode::SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
 //    up to the root where default values come from the presentation context)
 //  - re-apply cascading rules from there without caching intermediate values
 /* static */ void
-nsRuleNode::SetGenericFont(nsIPresContext* aPresContext,
+nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
                            nsStyleContext* aContext,
                            const nsRuleDataFont& aFontData,
                            PRUint8 aGenericFontID, nscoord aMinFontSize,
@@ -4300,7 +4300,7 @@ nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
 #ifdef MOZ_SVG
 static void
 SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
-            nsIPresContext* aPresContext, nsStyleSVGPaint& aResult, PRBool& aInherited)
+            nsPresContext* aPresContext, nsStyleSVGPaint& aResult, PRBool& aInherited)
 {
   if (aValue.GetUnit() == eCSSUnit_Inherit) {
     aResult = parentPaint;
@@ -4326,7 +4326,7 @@ SetSVGOpacity(const nsCSSValue& aValue, float parentOpacity, float& opacity, PRB
 
 static void
 SetSVGLength(const nsCSSValue& aValue, float parentLength, float& length,
-             nsStyleContext* aContext, nsIPresContext* aPresContext, PRBool& aInherited)
+             nsStyleContext* aContext, nsPresContext* aPresContext, PRBool& aInherited)
 {
   nsStyleCoord coord;
   PRBool dummy;

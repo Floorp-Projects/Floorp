@@ -60,7 +60,7 @@
 #include "nsIMediaList.h"
 #include "nsIStyledContent.h"
 #include "nsIDocument.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
@@ -2967,7 +2967,7 @@ NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
 MOZ_DECL_CTOR_COUNTER(RuleProcessorData)
 
-RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
+RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
                                      nsIContent* aContent, 
                                      nsRuleWalker* aRuleWalker,
                                      nsCompatibility* aCompat /*= nsnull*/)
@@ -4197,7 +4197,7 @@ static void PutRulesInList(nsObjectHashtable* aRuleArrays,
 }
 
 RuleCascadeData*
-nsCSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext,
+nsCSSRuleProcessor::GetRuleCascade(nsPresContext* aPresContext,
                                    nsIAtom* aMedium)
 {
   RuleCascadeData **cascadep = &mRuleCascades;

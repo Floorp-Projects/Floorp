@@ -66,13 +66,13 @@ public:
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
-  NS_IMETHOD OnChecked(nsIPresContext* aPresContext, PRBool aChecked);
+  NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked);
 
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
   //
@@ -81,13 +81,13 @@ public:
   // Expect this code to repackaged and moved to a new location in the future.
   //
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
-  virtual void PaintRadioButton(nsIPresContext* aPresContext,
+  virtual void PaintRadioButton(nsPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect);
 
@@ -96,7 +96,7 @@ public:
 
   ///XXX: End o the temporary methods
 #ifdef DEBUG_rodsXXX
-  NS_IMETHOD Reflow(nsIPresContext*          aCX,
+  NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);

@@ -39,7 +39,7 @@
 
 #include "imgIDecoderObserver.h"
 
-class nsIPresContext;
+class nsPresContext;
 class nsIFrame;
 class nsIURI;
 
@@ -56,7 +56,7 @@ public:
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_IMGICONTAINEROBSERVER
 
-  void Init(nsIFrame *aFrame, nsIPresContext *aPresContext);
+  void Init(nsIFrame *aFrame, nsPresContext *aPresContext);
   nsresult Load(imgIRequest *aImage);
 
   void Destroy();
@@ -69,6 +69,6 @@ private:
 
 private:
   nsIFrame *mFrame;
-  nsIPresContext *mPresContext;
+  nsPresContext *mPresContext;
   nsCOMPtr<imgIRequest> mRequest;
 };

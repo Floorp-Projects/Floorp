@@ -49,7 +49,7 @@
 #include "nsReflowPath.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCRT.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEvent.h"
@@ -118,7 +118,7 @@ static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 //non Hack prototypes
 #if 0
-static void RefreshContentFrames(nsIPresContext* aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
+static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 #endif
 
 #include "prenv.h"
@@ -214,7 +214,7 @@ nsIFrameDebug::GetLogModuleInfo()
 }
 
 void
-nsIFrameDebug::RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
+nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   if((nsnull == aPresContext) || (nsnull == out))
     return;
@@ -510,7 +510,7 @@ nsrefcnt nsFrame::Release(void)
 // nsIFrame
 
 NS_IMETHODIMP
-nsFrame::Init(nsIPresContext*  aPresContext,
+nsFrame::Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -544,7 +544,7 @@ nsFrame::Init(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsFrame::SetInitialChildList(nsPresContext* aPresContext,
                                            nsIAtom*        aListName,
                                            nsIFrame*       aChildList)
 {
@@ -560,7 +560,7 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::AppendFrames(nsIPresContext* aPresContext,
+nsFrame::AppendFrames(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aFrameList)
@@ -570,7 +570,7 @@ nsFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::InsertFrames(nsIPresContext* aPresContext,
+nsFrame::InsertFrames(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aPrevFrame,
@@ -581,7 +581,7 @@ nsFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsFrame::RemoveFrame(nsPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
@@ -591,7 +591,7 @@ nsFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsFrame::ReplaceFrame(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aOldFrame,
@@ -602,7 +602,7 @@ nsFrame::ReplaceFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::Destroy(nsIPresContext* aPresContext)
+nsFrame::Destroy(nsPresContext* aPresContext)
 {
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
@@ -660,7 +660,7 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 }
 
 // Subclass hook for style post processing
-NS_IMETHODIMP nsFrame::DidSetStyleContext(nsIPresContext* aPresContext)
+NS_IMETHODIMP nsFrame::DidSetStyleContext(nsPresContext* aPresContext)
 {
   return NS_OK;
 }
@@ -714,7 +714,7 @@ nsFrame::GetFirstChild(nsIAtom* aListName) const
 }
 
 PRInt16
-nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
+nsFrame::DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn)
 {
   PRInt16 selType = nsISelectionController::SELECTION_OFF;
 
@@ -788,7 +788,7 @@ static void RefreshAllContentFrames(nsIFrame* aFrame, nsIContent* aContent)
 *********************************************************/
 
 NS_IMETHODIMP
-nsFrame::Paint(nsIPresContext*      aPresContext,
+nsFrame::Paint(nsPresContext*      aPresContext,
                nsIRenderingContext& aRenderingContext,
                const nsRect&        aDirtyRect,
                nsFramePaintLayer    aWhichLayer,
@@ -888,7 +888,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 void
-nsFrame::PaintSelf(nsIPresContext*      aPresContext,
+nsFrame::PaintSelf(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    PRIntn               aSkipSides,
@@ -927,7 +927,7 @@ nsFrame::PaintSelf(nsIPresContext*      aPresContext,
   *
  */
 NS_IMETHODIMP  
-nsFrame::GetContentForEvent(nsIPresContext* aPresContext,
+nsFrame::GetContentForEvent(nsPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIContent** aContent)
 {
@@ -940,7 +940,7 @@ nsFrame::GetContentForEvent(nsIPresContext* aPresContext,
   *
  */
 NS_IMETHODIMP
-nsFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsFrame::HandleEvent(nsPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
@@ -1175,7 +1175,7 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
 }
 
 PRBool
-ContentContainsPoint(nsIPresContext *aPresContext,
+ContentContainsPoint(nsPresContext *aPresContext,
                      nsIContent *aContent,
                      nsPoint *aPoint,
                      nsIView *aRelativeView)
@@ -1252,7 +1252,7 @@ ContentContainsPoint(nsIPresContext *aPresContext,
   * Handles the Mouse Press Event for the frame
  */
 NS_IMETHODIMP
-nsFrame::HandlePress(nsIPresContext* aPresContext, 
+nsFrame::HandlePress(nsPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
@@ -1551,7 +1551,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   * Wouldn't it be nice if this didn't have to be hardwired into Frame code?
  */
 NS_IMETHODIMP
-nsFrame::HandleMultiplePress(nsIPresContext* aPresContext, 
+nsFrame::HandleMultiplePress(nsPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
                              nsEventStatus*  aEventStatus)
 {
@@ -1612,7 +1612,7 @@ NS_IMETHODIMP
 nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                                 nsSelectionAmount aAmountForward,
                                 PRInt32 aStartPos,
-                                nsIPresContext* aPresContext,
+                                nsPresContext* aPresContext,
                                 PRBool aJumpLines)
 {
   nsCOMPtr<nsISelectionController> selcon;
@@ -1710,7 +1710,7 @@ static nsIView* GetNearestCapturingView(nsIFrame* aFrame) {
   return view;
 }
 
-NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext, 
+NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext, 
                                   nsGUIEvent*     aEvent,
                                   nsEventStatus*  aEventStatus)
 {
@@ -1792,7 +1792,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext, 
+NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext, 
                                      nsGUIEvent*     aEvent,
                                      nsEventStatus*  aEventStatus)
 {
@@ -1906,7 +1906,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
 }
 
 
-nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                                 const nsPoint&  aPoint,
                                                 nsIContent **   aNewContent,
                                                 PRInt32&        aContentOffset,
@@ -2078,7 +2078,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 }
 
 NS_IMETHODIMP
-nsFrame::GetCursor(nsIPresContext* aPresContext,
+nsFrame::GetCursor(nsPresContext* aPresContext,
                    nsPoint& aPoint,
                    PRInt32& aCursor)
 {
@@ -2090,7 +2090,7 @@ nsFrame::GetCursor(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsFrame::GetFrameForPoint(nsPresContext* aPresContext,
                           const nsPoint& aPoint,
                           nsFramePaintLayer aWhichLayer,
                           nsIFrame** aFrame)
@@ -2110,7 +2110,7 @@ nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 // nsIHTMLReflow member functions
 
 NS_IMETHODIMP
-nsFrame::WillReflow(nsIPresContext* aPresContext)
+nsFrame::WillReflow(nsPresContext* aPresContext)
 {
 #ifdef DEBUG_dbaron_off
   // bug 81268
@@ -2125,7 +2125,7 @@ nsFrame::WillReflow(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsFrame::DidReflow(nsIPresContext*           aPresContext,
+nsFrame::DidReflow(nsPresContext*           aPresContext,
                    const nsHTMLReflowState*  aReflowState,
                    nsDidReflowStatus         aStatus)
 {
@@ -2169,7 +2169,7 @@ nsFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
 }
 
 NS_IMETHODIMP
-nsFrame::Reflow(nsIPresContext*          aPresContext,
+nsFrame::Reflow(nsPresContext*          aPresContext,
                 nsHTMLReflowMetrics&     aDesiredSize,
                 const nsHTMLReflowState& aReflowState,
                 nsReflowStatus&          aStatus)
@@ -2195,7 +2195,7 @@ nsFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 }
 
 NS_IMETHODIMP
-nsFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
+nsFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                 nsIRenderingContext& aRC,
                                 nscoord& aDeltaWidth)
 {
@@ -2204,7 +2204,7 @@ nsFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::CharacterDataChanged(nsIPresContext* aPresContext,
+nsFrame::CharacterDataChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRBool          aAppend)
 {
@@ -2213,7 +2213,7 @@ nsFrame::CharacterDataChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsFrame::AttributeChanged(nsPresContext* aPresContext,
                           nsIContent*     aChild,
                           PRInt32         aNameSpaceID,
                           nsIAtom*        aAttribute,
@@ -2325,7 +2325,7 @@ nsIFrame* nsIFrame::GetAncestorWithView() const
 
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
-NS_IMETHODIMP nsFrame::GetOffsetFromView(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPresContext* aPresContext,
                                          nsPoint&        aOffset,
                                          nsIView**       aView) const
 {
@@ -2364,7 +2364,7 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsIPresContext* aPresContext,
 // not a descendant of the frame's parent view (ex: scrolling popup menu),
 // the offset returned will be (0,0).
 
-NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsPresContext* aPresContext,
                                              nsPoint&        aOffset,
                                              nsIView**       aView) const
 {
@@ -2535,7 +2535,7 @@ nsIFrame::GetOutlineRect(PRBool* aAnyOutline, nsSize *aUseSize) const
 }
 
 void
-nsFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
+nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize,
                                    const nsHTMLReflowState& aReflowState)
 {
@@ -2647,7 +2647,7 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
  * List a single frame to stdout. Meant to be called from gdb.
  */
 void
-DebugListFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
+DebugListFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   ((nsFrame*) aFrame)->List(aPresContext, stdout, 0);
   printf("\n");
@@ -2657,7 +2657,7 @@ DebugListFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
  * List a frame tree to stdout. Meant to be called from gdb.
  */
 void
-DebugListFrameTree(nsIPresContext* aPresContext, nsIFrame* aFrame)
+DebugListFrameTree(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   nsIFrameDebug* fdbg;
   aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg);
@@ -2670,7 +2670,7 @@ DebugListFrameTree(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
 // Debugging
 NS_IMETHODIMP
-nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -2791,7 +2791,7 @@ nsFrame::ParentDisablesSelection() const
 }
 
 nsresult 
-nsFrame::GetSelectionForVisCheck(nsIPresContext * aPresContext, nsISelection** aSelection)
+nsFrame::GetSelectionForVisCheck(nsPresContext * aPresContext, nsISelection** aSelection)
 {
   *aSelection = nsnull;
   nsresult rv = NS_OK;
@@ -2823,7 +2823,7 @@ nsFrame::GetSelectionForVisCheck(nsIPresContext * aPresContext, nsISelection** a
 
 
 NS_IMETHODIMP
-nsFrame::IsVisibleForPainting(nsIPresContext *     aPresContext, 
+nsFrame::IsVisibleForPainting(nsPresContext *     aPresContext, 
                               nsIRenderingContext& aRenderingContext,
                               PRBool               aCheckVis,
                               PRBool*              aIsVisible)
@@ -2859,7 +2859,7 @@ nsFrame::IsEmpty()
 }
 
 NS_IMETHODIMP
-nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon)
+nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon)
 {
   if (!aPresContext || !aSelCon)
     return NS_ERROR_INVALID_ARG;
@@ -2890,7 +2890,7 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsFrame::DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
+nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
 {
   IndentBy(out, aIndent);
   fprintf(out, "<frame va=\"%ld\" type=\"", PRUptrdiff(this));
@@ -2912,7 +2912,7 @@ nsFrame::DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
 }
 
 void
-nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
+nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
 {
   if (nsnull != mNextSibling) {
     IndentBy(out, aIndent);
@@ -2993,7 +2993,7 @@ nsFrame::VerifyTree() const
 /*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
   it will not update immediately.*/
 NS_IMETHODIMP
-nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelected, nsSpread aSpread)
+nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelected, nsSpread aSpread)
 {
 /*
   if (aSelected && ParentDisablesSelection())
@@ -3055,7 +3055,7 @@ nsFrame::GetSelected(PRBool *aSelected) const
 }
 
 NS_IMETHODIMP
-nsFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
+nsFrame::GetPointFromOffset(nsPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
 {
   NS_PRECONDITION(outPoint != nsnull, "Null parameter");
   nsPoint bottomLeft(0, 0);
@@ -3102,7 +3102,7 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, P
 // the end (if > 0) or beginning (if < 0).
 //
 nsresult
-nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
+nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                         nsPeekOffsetStruct *aPos,
                                         nsIFrame *aBlockFrame, 
                                         PRInt32 aLineStart, 
@@ -3214,7 +3214,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       nsISupports *isupports = nsnull;
       nsIFrame *storeOldResultFrame = resultFrame;
       while ( !found ){
-        nsCOMPtr<nsIPresContext> context;
+        nsCOMPtr<nsPresContext> context;
         result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
         if (NS_FAILED(result))
           return result;
@@ -3306,7 +3306,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
                                       aPresContext, resultFrame, aPos->mScrollViewStop);
       }
       while ( !found ){
-        nsCOMPtr<nsIPresContext> context;
+        nsCOMPtr<nsPresContext> context;
         result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
 
         nsPoint point;
@@ -3398,7 +3398,7 @@ GetBlockFrameAndLineIter(nsIFrame* aFrame, nsIFrame** aBlockFrame)
 }
 
 nsresult
-nsFrame::PeekOffsetParagraph(nsIPresContext* aPresContext,
+nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
                              nsPeekOffsetStruct *aPos)
 {
 #ifdef DEBUG_paragraph
@@ -3524,7 +3524,7 @@ nsFrame::PeekOffsetParagraph(nsIPresContext* aPresContext,
 static nsresult
 DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
                      nsRect& aUsedRect,
-                     nsIPresContext* aPresContext, nsPeekOffsetStruct* aPos)
+                     nsPresContext* aPresContext, nsPeekOffsetStruct* aPos)
 {
   if (!aFrame)
     return NS_ERROR_UNEXPECTED;
@@ -3563,7 +3563,7 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
     // This doesn't seem very efficient since GetPosition
     // has to do a binary search.
 
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     rv = aPos->mTracker->GetPresContext(getter_AddRefs(context));
     if (NS_FAILED(rv)) return rv;
     PRInt32 endoffset;
@@ -3588,7 +3588,7 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
 
 
 NS_IMETHODIMP
-nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
+nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
   if (!aPos || !aPos->mTracker )
     return NS_ERROR_NULL_POINTER;
@@ -3640,7 +3640,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     }//drop into no amount
     case eSelectNoAmount:
     {
-      nsCOMPtr<nsIPresContext> context;
+      nsCOMPtr<nsPresContext> context;
       result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
       if (NS_FAILED(result) || !context)
         return result;
@@ -3819,7 +3819,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
       if (eSelectBeginLine == aPos->mAmount)
       {
-        nsCOMPtr<nsIPresContext> context;
+        nsCOMPtr<nsPresContext> context;
         result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
         if (NS_FAILED(result) || !context)
           return result;
@@ -3867,7 +3867,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
 
 NS_IMETHODIMP
-nsFrame::CheckVisibility(nsIPresContext* , PRInt32 , PRInt32 , PRBool , PRBool *, PRBool *)
+nsFrame::CheckVisibility(nsPresContext* , PRInt32 , PRInt32 , PRBool , PRBool *, PRBool *)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -3903,7 +3903,7 @@ nsFrame::GetLineNumber(nsIFrame *aFrame)
 //this should change to use geometry and also look to ALL the child lists
 //we need to set up line information to make sure we dont jump across line boundaries
 NS_IMETHODIMP
-nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
+nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
   nsIFrame *blockFrame = this;
   nsIFrame *thisBlock;
@@ -4209,7 +4209,7 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
 
 // Destructor function for the overflow area property
 static void
-DestroyRectFunc(nsIPresContext* aPresContext,
+DestroyRectFunc(nsPresContext* aPresContext,
                 nsIFrame*       aFrame,
                 nsIAtom*        aPropertyName,
                 void*           aPropertyValue)
@@ -4279,7 +4279,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 }
 
 void
-nsFrame::ConsiderChildOverflow(nsIPresContext* aPresContext,
+nsFrame::ConsiderChildOverflow(nsPresContext* aPresContext,
                                nsRect&         aOverflowArea,
                                nsIFrame*       aChildFrame)
 {
@@ -4301,7 +4301,7 @@ nsFrame::ConsiderChildOverflow(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
+nsFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
                                     nsIFrame**      aProviderFrame,
                                     PRBool*         aIsChild)
 {
@@ -4319,7 +4319,7 @@ nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
  * touched.
  */
 static nsresult
-GetIBSpecialSibling(nsIPresContext* aPresContext,
+GetIBSpecialSibling(nsPresContext* aPresContext,
                     nsIFrame* aFrame,
                     nsIFrame** aSpecialSibling)
 {
@@ -4360,7 +4360,7 @@ GetIBSpecialSibling(nsIPresContext* aPresContext,
  * outer scroll frame.
  */
 static nsresult
-GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
+GetCorrectedParent(nsPresContext* aPresContext, nsIFrame* aFrame,
                    nsIFrame** aSpecialParent)
 {
   nsIFrame *parent = aFrame->GetParent();
@@ -4391,7 +4391,7 @@ GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
 }
 
 nsresult
-nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
+nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
                                       nsIFrame**      aProviderFrame,
                                       PRBool*         aIsChild)
 {
@@ -4440,7 +4440,7 @@ nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
 
 
 void
-nsFrame::GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
+nsFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
 {
   if (!aFrame || !*aFrame)
     return;
@@ -4458,7 +4458,7 @@ nsFrame::GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
 }
 
 void
-nsFrame::GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
+nsFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
 {
   if (!aFrame || !*aFrame)
     return;
@@ -4500,7 +4500,7 @@ nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell* aPresShell,
 }
 
 NS_IMETHODIMP
-nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
+nsFrame::CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
   // get its view
   nsIView* view = GetNearestCapturingView(this);
@@ -4525,7 +4525,7 @@ nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 }
 
 PRBool
-nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
+nsFrame::IsMouseCaptured(nsPresContext* aPresContext)
 {
     // get its view
   nsIView* view = GetNearestCapturingView(this);
@@ -4673,7 +4673,7 @@ nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
 
 MOZ_DECL_CTOR_COUNTER(DR_cookie)
 
-DR_cookie::DR_cookie(nsIPresContext*          aPresContext,
+DR_cookie::DR_cookie(nsPresContext*          aPresContext,
                      nsIFrame*                aFrame, 
                      const nsHTMLReflowState& aReflowState,
                      nsHTMLReflowMetrics&     aMetrics,
@@ -5250,7 +5250,7 @@ CheckPixelError(nscoord aSize,
   }
 }
 
-static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
+static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
                                     nsIFrame*                aFrame,
                                     const nsHTMLReflowState& aReflowState,
                                     DR_FrameTreeNode&        aTreeNode,
@@ -5314,7 +5314,7 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
   }
 }
 
-void* nsFrame::DisplayReflowEnter(nsIPresContext*          aPresContext,
+void* nsFrame::DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
                                   const nsHTMLReflowState& aReflowState)
 {
@@ -5330,7 +5330,7 @@ void* nsFrame::DisplayReflowEnter(nsIPresContext*          aPresContext,
   return treeNode;
 }
 
-void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
+void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
                                 nsIFrame*            aFrame,
                                 nsHTMLReflowMetrics& aMetrics,
                                 nsReflowStatus       aStatus,

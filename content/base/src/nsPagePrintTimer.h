@@ -43,7 +43,7 @@
 
 // Interfaces
 #include "nsIDocumentViewerPrint.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPrintSettings.h"
 
 // Other Includes
@@ -72,14 +72,14 @@ public:
 
   void Init(nsPrintEngine*          aPrintEngine,
             nsIDocumentViewerPrint* aDocViewerPrint,
-            nsIPresContext*         aPresContext,
+            nsPresContext*         aPresContext,
             nsIPrintSettings*       aPrintSettings,
             nsPrintObject*          aPO,
             PRUint32                aDelay);
 
   nsresult Start(nsPrintEngine*          aPrintEngine,
                  nsIDocumentViewerPrint* aDocViewerPrint,
-                 nsIPresContext*     aPresContext,
+                 nsPresContext*     aPresContext,
                  nsIPrintSettings*   aPrintSettings,
                  nsPrintObject*      aPO,
                  PRUint32            aDelay);
@@ -88,7 +88,7 @@ public:
 private:
   nsPrintEngine*             mPrintEngine;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
-  nsIPresContext*            mPresContext;
+  nsPresContext*            mPresContext;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsITimer>         mTimer;
   PRUint32                   mDelay;

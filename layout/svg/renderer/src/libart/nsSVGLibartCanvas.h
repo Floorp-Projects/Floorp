@@ -41,13 +41,13 @@
 
 class nsIRenderingContext;
 class nsISVGRendererCanvas;
-class nsIPresContext;
+class nsPresContext;
 struct nsRect;
 
 nsresult
 NS_NewSVGLibartCanvas(nsISVGRendererCanvas **result,
                       nsIRenderingContext *ctx,
-                      nsIPresContext *presContext,
+                      nsPresContext *presContext,
                       const nsRect & dirtyRect);
 
 #endif // __NS_SVGLIBART_CANVAS_H__

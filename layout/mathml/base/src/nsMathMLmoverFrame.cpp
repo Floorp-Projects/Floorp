@@ -41,7 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -80,7 +80,7 @@ nsMathMLmoverFrame::~nsMathMLmoverFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMathMLmoverFrame::AttributeChanged(nsPresContext* aPresContext,
                                      nsIContent*     aContent,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
@@ -98,7 +98,7 @@ nsMathMLmoverFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::UpdatePresentationData(nsIPresContext* aPresContext,
+nsMathMLmoverFrame::UpdatePresentationData(nsPresContext* aPresContext,
                                            PRInt32         aScriptLevelIncrement,
                                            PRUint32        aFlagsValues,
                                            PRUint32        aFlagsToUpdate)
@@ -117,7 +117,7 @@ nsMathMLmoverFrame::UpdatePresentationData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+nsMathMLmoverFrame::UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                                       PRInt32         aFirstIndex,
                                                       PRInt32         aLastIndex,
                                                       PRInt32         aScriptLevelIncrement,
@@ -157,7 +157,7 @@ nsMathMLmoverFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresConte
 }
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmoverFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                          nsIFrame*       aParent)
 {
   // let the base class get the default from our parent
@@ -169,7 +169,7 @@ nsMathMLmoverFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmoverFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // At this stage, all our children are in sync and we can fully
   // resolve our own mEmbellishData struct
@@ -273,7 +273,7 @@ i.e.:
 */
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
+nsMathMLmoverFrame::Place(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)

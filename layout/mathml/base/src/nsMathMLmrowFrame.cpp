@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -76,7 +76,7 @@ nsMathMLmrowFrame::~nsMathMLmrowFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmrowFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmrowFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                             nsIFrame*       aParent)
 {
   // let the base class get the default from our parent

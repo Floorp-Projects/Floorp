@@ -62,7 +62,7 @@ nsStyleSet::nsStyleSet()
 }
 
 nsresult
-nsStyleSet::Init(nsIPresContext *aPresContext)
+nsStyleSet::Init(nsPresContext *aPresContext)
 {
   if (!gQuirkURI) {
     static const char kQuirk_href[] = "resource://gre/res/quirk.css";
@@ -301,7 +301,7 @@ nsStyleSet::EnableQuirkStyleSheet(PRBool aEnable)
 }
 
 struct RulesMatchingData : public ElementRuleProcessorData {
-  RulesMatchingData(nsIPresContext* aPresContext,
+  RulesMatchingData(nsPresContext* aPresContext,
                     nsIContent* aContent,
                     nsRuleWalker* aRuleWalker)
     : ElementRuleProcessorData(aPresContext, aContent, aRuleWalker),
@@ -327,7 +327,7 @@ EnumRulesMatching(nsIStyleRuleProcessor* aProcessor, void* aData)
  * |aParentContext| could itself be a shared context.)
  */
 already_AddRefed<nsStyleContext>
-nsStyleSet::GetContext(nsIPresContext* aPresContext, 
+nsStyleSet::GetContext(nsPresContext* aPresContext, 
                        nsStyleContext* aParentContext, 
                        nsIAtom* aPseudoTag)
 {
@@ -507,7 +507,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
     (*aFunc)(mRuleProcessors[eOverrideSheet], aData);
 }
 
-PRBool nsStyleSet::BuildDefaultStyleData(nsIPresContext* aPresContext)
+PRBool nsStyleSet::BuildDefaultStyleData(nsPresContext* aPresContext)
 {
   NS_ASSERTION(!mDefaultStyleData.mResetData &&
                !mDefaultStyleData.mInheritedData,
@@ -545,7 +545,7 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
                             nsStyleContext* aParentContext)
 {
   nsStyleContext*  result = nsnull;
-  nsIPresContext* presContext = PresContext();
+  nsPresContext* presContext = PresContext();
 
   NS_ASSERTION(aContent, "must have content");
   NS_ASSERTION(aContent->IsContentOfType(nsIContent::eELEMENT),
@@ -575,7 +575,7 @@ already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 {
   nsStyleContext* result = nsnull;
-  nsIPresContext *presContext = PresContext();
+  nsPresContext *presContext = PresContext();
 
   if (presContext) {
     if (mRuleProcessors[eAgentSheet]        ||
@@ -596,7 +596,7 @@ nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 
 
 struct PseudoRulesMatchingData : public PseudoRuleProcessorData {
-  PseudoRulesMatchingData(nsIPresContext* aPresContext,
+  PseudoRulesMatchingData(nsPresContext* aPresContext,
                           nsIContent* aParentContent,
                           nsIAtom* aPseudoTag,
                           nsICSSPseudoComparator* aComparator,
@@ -625,7 +625,7 @@ nsStyleSet::ResolvePseudoStyleFor(nsIContent* aParentContent,
                                   nsICSSPseudoComparator* aComparator)
 {
   nsStyleContext*  result = nsnull;
-  nsIPresContext *presContext = PresContext();
+  nsPresContext *presContext = PresContext();
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
   NS_ASSERTION(!aParentContent ||
@@ -660,7 +660,7 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
                                 nsStyleContext* aParentContext)
 {
   nsStyleContext*  result = nsnull;
-  nsIPresContext *presContext = PresContext();
+  nsPresContext *presContext = PresContext();
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
   NS_ASSERTION(!aParentContent ||
@@ -707,14 +707,14 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
 }
 
 void
-nsStyleSet::BeginShutdown(nsIPresContext* aPresContext)
+nsStyleSet::BeginShutdown(nsPresContext* aPresContext)
 {
   mInShutdown = 1;
   mRoots.Clear(); // no longer valid, since we won't keep it up to date
 }
 
 void
-nsStyleSet::Shutdown(nsIPresContext* aPresContext)
+nsStyleSet::Shutdown(nsPresContext* aPresContext)
 {
   delete mRuleWalker;
   mRuleWalker = nsnull;
@@ -728,7 +728,7 @@ nsStyleSet::Shutdown(nsIPresContext* aPresContext)
 static const PRInt32 kGCInterval = 1000;
 
 void
-nsStyleSet::NotifyStyleContextDestroyed(nsIPresContext* aPresContext,
+nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
                                         nsStyleContext* aStyleContext)
 {
   if (mInShutdown)
@@ -761,7 +761,7 @@ nsStyleSet::NotifyStyleContextDestroyed(nsIPresContext* aPresContext,
 }
 
 void
-nsStyleSet::ClearStyleData(nsIPresContext* aPresContext)
+nsStyleSet::ClearStyleData(nsPresContext* aPresContext)
 {
   mRuleTree->ClearStyleData();
 
@@ -771,7 +771,7 @@ nsStyleSet::ClearStyleData(nsIPresContext* aPresContext)
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ReParentStyleContext(nsIPresContext* aPresContext,
+nsStyleSet::ReParentStyleContext(nsPresContext* aPresContext,
                                  nsStyleContext* aStyleContext, 
                                  nsStyleContext* aNewParentContext)
 {
@@ -799,7 +799,7 @@ nsStyleSet::ReParentStyleContext(nsIPresContext* aPresContext,
 }
 
 struct StatefulData : public StateRuleProcessorData {
-  StatefulData(nsIPresContext* aPresContext,
+  StatefulData(nsPresContext* aPresContext,
                nsIContent* aContent, PRInt32 aStateMask)
     : StateRuleProcessorData(aPresContext, aContent, aStateMask),
       mMedium(aPresContext->Medium()),
@@ -821,7 +821,7 @@ static PRBool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
 
 // Test if style is dependent on content state
 nsReStyleHint
-nsStyleSet::HasStateDependentStyle(nsIPresContext* aPresContext,
+nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
                                    nsIContent*     aContent,
                                    PRInt32         aStateMask)
 {
@@ -844,7 +844,7 @@ nsStyleSet::HasStateDependentStyle(nsIPresContext* aPresContext,
 }
 
 struct AttributeData : public AttributeRuleProcessorData {
-  AttributeData(nsIPresContext* aPresContext,
+  AttributeData(nsPresContext* aPresContext,
                 nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType)
     : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType),
       mMedium(aPresContext->Medium()),
@@ -866,7 +866,7 @@ SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 
 // Test if style is dependent on content state
 nsReStyleHint
-nsStyleSet::HasAttributeDependentStyle(nsIPresContext* aPresContext,
+nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
                                        nsIContent*     aContent,
                                        nsIAtom*        aAttribute,
                                        PRInt32         aModType)

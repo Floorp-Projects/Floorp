@@ -43,7 +43,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIChangeManager.h"
 #include "nsIMenuCommandDispatcher.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsSupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
@@ -64,7 +64,7 @@ class nsIDOMNode;
 namespace MenuHelpersX
 {
     // utility routine for getting a PresContext out of a webShell
-  nsresult WebShellToPresContext ( nsIWebShell* inWebShell, nsIPresContext** outContext ) ;
+  nsresult WebShellToPresContext ( nsIWebShell* inWebShell, nsPresContext** outContext ) ;
   nsEventStatus DispatchCommandTo(nsIWeakReference* aWebShellWeakRef,
                                   nsIContent* aTargetContent);
 

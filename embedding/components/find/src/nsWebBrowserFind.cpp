@@ -58,7 +58,7 @@
 #include "nsIEnumerator.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -390,7 +390,7 @@ FocusElementButNotDocument(nsIDocument* aDocument, nsIContent* aContent)
   focusController->SetFocusedElement(newFocusedElement);
 
   nsIPresShell* presShell = aDocument->GetShellAt(0);
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   nsIEventStateManager* esm = presContext->EventStateManager();
 
@@ -457,7 +457,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
       FocusElementButNotDocument(doc, content);
     }
     else {
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));
       PRBool isSelectionWithFocus;
       presContext->EventStateManager()->
@@ -835,7 +835,7 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
   // text input controls have their independent selection controllers
   // that we must use when they have focus.
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
 
   nsIFrame *frame = nsnull;

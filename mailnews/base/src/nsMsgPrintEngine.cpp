@@ -53,7 +53,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDocumentViewer.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIMsgMessageService.h"

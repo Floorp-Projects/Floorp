@@ -923,7 +923,7 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
       // If not, make sure the selection is in sync with the focus, so we can 
       // start our search from there.
       nsCOMPtr<nsIContent> focusedContent;
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
       NS_ENSURE_TRUE(presShell, NS_OK);
       presShell->GetPresContext(getter_AddRefs(presContext));
@@ -1209,7 +1209,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
     }
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
 
   if (!presContext) {
@@ -1448,7 +1448,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
                                      PRBool aIsFirstVisiblePreferred,
                                      PRBool aCanUseDocSelection,
                                      nsIPresShell **aPresShell,
-                                     nsIPresContext **aPresContext)
+                                     nsPresContext **aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aContainer);
   NS_ENSURE_ARG_POINTER(aPresShell);
@@ -1462,7 +1462,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   nsCOMPtr<nsIPresShell> presShell;
 
   docShell->GetPresShell(getter_AddRefs(presShell));
@@ -1719,7 +1719,7 @@ nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsInterfacePointer *aC
   nsCOMPtr<nsIPresShell> typeAheadPresShell(do_QueryReferent(mFocusedWeakShell));
   NS_ENSURE_TRUE(typeAheadPresShell, NS_OK);
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   typeAheadPresShell->GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_OK);
 
@@ -2492,9 +2492,9 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
-  if (presContext->Type() == nsIPresContext::eContext_PrintPreview) {
+  if (presContext->Type() == nsPresContext::eContext_PrintPreview) {
     // Typeaheadfind is not designed to work in print preview.
     // You can't navigate through the links there.
     if (lastShell != presShell) {
@@ -2518,7 +2518,7 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
   // if aCurrentNode is nsnull, get selection for document
   *aDOMSel = nsnull;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   aPresShell->GetPresContext(getter_AddRefs(presContext));
 
   nsIFrame *frame = nsnull;
@@ -2536,7 +2536,7 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
 
 PRBool
 nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
-                                nsIPresContext *aPresContext,
+                                nsPresContext *aPresContext,
                                 nsIDOMRange *aRange, PRBool aMustBeInViewPort,
                                 PRBool aGetTopVisibleLeaf,
                                 nsIDOMRange **aFirstVisibleRange)
@@ -2719,7 +2719,7 @@ nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent,
     return;
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
     return;
@@ -2989,7 +2989,7 @@ nsTypeAheadController::EnsureContentWindow(nsIDOMWindowInternal *aFocusedWin,
         NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-        nsCOMPtr<nsIPresContext> presContext;
+        nsCOMPtr<nsPresContext> presContext;
         docShell->GetPresContext(getter_AddRefs(presContext));
         NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 

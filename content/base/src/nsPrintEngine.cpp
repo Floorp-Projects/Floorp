@@ -318,7 +318,7 @@ nsresult nsPrintEngine::Initialize(nsIDocumentViewer*      aDocViewer,
                                    nsISupports*            aContainer,
                                    nsIDocument*            aDocument,
                                    nsIDeviceContext*       aDevContext,
-                                   nsIPresContext*         aPresContext,
+                                   nsPresContext*         aPresContext,
                                    nsIWidget*              aWindow,
                                    nsIWidget*              aParentWidget,
                                    FILE*                   aDebugFile)
@@ -370,7 +370,7 @@ nsPrintEngine::Cancelled()
 //-------------------------------------------------------
 void
 nsPrintEngine::CachePresentation(nsIPresShell*   aShell, 
-                                 nsIPresContext* aPC,
+                                 nsPresContext* aPC,
                                  nsIViewManager* aVM, 
                                  nsIWidget*      aW)
 {
@@ -381,7 +381,7 @@ nsPrintEngine::CachePresentation(nsIPresShell*   aShell,
 //-------------------------------------------------------
 void
 nsPrintEngine::GetCachedPresentation(nsCOMPtr<nsIPresShell>& aShell, 
-                                     nsCOMPtr<nsIPresContext>& aPC, 
+                                     nsCOMPtr<nsPresContext>& aPC, 
                                      nsCOMPtr<nsIViewManager>& aVM, 
                                      nsCOMPtr<nsIWidget>& aW)
 {
@@ -394,7 +394,7 @@ nsPrintEngine::GetCachedPresentation(nsCOMPtr<nsIPresShell>& aShell,
 //------------------------------------------------------------
 void
 nsPrintEngine::GetNewPresentation(nsCOMPtr<nsIPresShell>& aShell, 
-                                  nsCOMPtr<nsIPresContext>& aPC, 
+                                  nsCOMPtr<nsPresContext>& aPC, 
                                   nsCOMPtr<nsIViewManager>& aVM, 
                                   nsCOMPtr<nsIWidget>& aW)
 {
@@ -541,10 +541,10 @@ static int RemoveFilesInDir(const char * aDir);
 static void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLStr);
 static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD);
 static void DumpPrintObjectsList(nsVoidArray * aDocList);
-static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent);
 static void DumpViews(nsIDocShell* aDocShell, FILE* out);
 static void DumpLayoutData(char* aTitleStr, char* aURLStr,
-                           nsIPresContext* aPresContext,
+                           nsPresContext* aPresContext,
                            nsIDeviceContext * aDC, nsIFrame * aRootFrame,
                            nsIWebShell * aWebShell, FILE* aFD);
 #endif
@@ -2561,9 +2561,9 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
   // create the PresContext
   PRBool containerIsSet = PR_FALSE;
-  aPO->mPresContext = new nsIPresContext(mIsCreatingPrintPreview ?
-                                         nsIPresContext::eContext_PrintPreview:
-                                         nsIPresContext::eContext_Print);
+  aPO->mPresContext = new nsPresContext(mIsCreatingPrintPreview ?
+                                         nsPresContext::eContext_PrintPreview:
+                                         nsPresContext::eContext_Print);
   NS_ENSURE_TRUE(aPO->mPresContext, NS_ERROR_OUT_OF_MEMORY);
   aPO->mPresContext->SetPrintSettings(mPrt->mPrintSettings);
 
@@ -3064,7 +3064,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
 
   nsIWebShell*    webShell      = aPO->mWebShell.get();
   nsIPresShell*   poPresShell   = aPO->mPresShell;
-  nsIPresContext* poPresContext = aPO->mPresContext;
+  nsPresContext* poPresContext = aPO->mPresContext;
   nsIView*        poRootView    = aPO->mRootView;
 
   NS_ASSERTION(webShell, "The WebShell can't be NULL!");
@@ -3304,7 +3304,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
           return NS_ERROR_FAILURE;
         }
 
-        if (poPresContext->Type() != nsIPresContext::eContext_PrintPreview) {
+        if (poPresContext->Type() != nsPresContext::eContext_PrintPreview) {
           nscoord sheight = seqFrame->GetSize().height;
 
           nsRect r = poRootView->GetBounds();
@@ -3407,7 +3407,7 @@ nsPrintEngine::ElipseLongString(PRUnichar *& aStr, const PRUint32 aLen, PRBool a
 
 //-------------------------------------------------------
 PRBool
-nsPrintEngine::PrintPage(nsIPresContext*   aPresContext,
+nsPrintEngine::PrintPage(nsPresContext*   aPresContext,
                               nsIPrintSettings* aPrintSettings,
                               nsPrintObject*      aPO,
                               PRBool&           aInRange)
@@ -3618,7 +3618,7 @@ nsPrintEngine::DoProgressForSeparateFrames()
  *  Find by checking content's tag type
  */
 nsIFrame * 
-nsPrintEngine::FindFrameByType(nsIPresContext* aPresContext,
+nsPrintEngine::FindFrameByType(nsPresContext* aPresContext,
                                nsIFrame *      aParentFrame,
                                nsIAtom *       aType,
                                nsRect&         aRect,
@@ -3652,7 +3652,7 @@ nsPrintEngine::FindFrameByType(nsIPresContext* aPresContext,
  *  Find by checking frames type
  */
 nsresult 
-nsPrintEngine::FindSelectionBoundsWithList(nsIPresContext* aPresContext,
+nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
                                            nsIRenderingContext& aRC,
                                            nsIAtom*        aList,
                                            nsIFrame *      aParentFrame,
@@ -3698,7 +3698,7 @@ nsPrintEngine::FindSelectionBoundsWithList(nsIPresContext* aPresContext,
 //-------------------------------------------------------
 // Find the Frame that is XMost
 nsresult 
-nsPrintEngine::FindSelectionBounds(nsIPresContext* aPresContext,
+nsPrintEngine::FindSelectionBounds(nsPresContext* aPresContext,
                                    nsIRenderingContext& aRC,
                                    nsIFrame *      aParentFrame,
                                    nsRect&         aRect,
@@ -3729,7 +3729,7 @@ nsPrintEngine::FindSelectionBounds(nsIPresContext* aPresContext,
  */
 nsresult 
 nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
-                                        nsIPresContext*       aPresContext,
+                                        nsPresContext*       aPresContext,
                                         nsIRenderingContext&  aRC,
                                         nsISelection*         aSelection,
                                         nsIPageSequenceFrame* aPageSeqFrame,
@@ -4471,7 +4471,7 @@ nsPrintEngine::FinishPrintPreview()
 
   // Turning off the scaling of twips so any of the UI scrollbars
   // will not get scaled
-  if (mPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+  if (mPresContext->Type() == nsPresContext::eContext_PrintPreview) {
     mPresContext->SetScalingOfTwips(PR_FALSE);
     mDeviceContext->SetCanonicalPixelScale(mPrtPreview->mOrigDCScale);
   }
@@ -4488,7 +4488,7 @@ nsPrintEngine::FinishPrintPreview()
 
 /*=============== Timer Related Code ======================*/
 nsresult
-nsPrintEngine::StartPagePrintTimer(nsIPresContext * aPresContext,
+nsPrintEngine::StartPagePrintTimer(nsPresContext * aPresContext,
                                         nsIPrintSettings* aPrintSettings,
                                         nsPrintObject*     aPOect,
                                         PRUint32         aDelay)
@@ -4660,7 +4660,7 @@ int RemoveFilesInDir(const char * aDir)
 /** ---------------------------------------------------
  *  Dumps Frames for Printing
  */
-static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
+static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   if (!aPresContext || !out)
     return;
@@ -4682,7 +4682,7 @@ static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aInde
  *  Dumps Frames for Printing
  */
 static void DumpFrames(FILE*                 out,
-                       nsIPresContext*       aPresContext,
+                       nsPresContext*       aPresContext,
                        nsIRenderingContext * aRendContext,
                        nsIFrame *            aFrame,
                        PRInt32               aLevel)
@@ -4764,7 +4764,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
  */
 void DumpLayoutData(char*              aTitleStr,
                     char*              aURLStr,
-                    nsIPresContext*    aPresContext,
+                    nsPresContext*    aPresContext,
                     nsIDeviceContext * aDC,
                     nsIFrame *         aRootFrame,
                     nsIWebShell *      aWebShell,
@@ -4777,7 +4777,7 @@ void DumpLayoutData(char*              aTitleStr,
   }
 
 #ifdef NS_PRINT_PREVIEW
-  if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+  if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
     return;
   }
 #endif

@@ -39,7 +39,7 @@
 
 #include "nsTextFragment.h"
 #include "nsISupports.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIObserver.h"
 #ifdef IBMBIDI
 #include "nsBidi.h"
@@ -144,7 +144,7 @@ public:
   // breaker and work breaker objects
   nsTextTransformer(nsILineBreaker* aLineBreaker,
                     nsIWordBreaker* aWordBreaker,
-                    nsIPresContext* aPresContext);
+                    nsPresContext* aPresContext);
 
   ~nsTextTransformer();
 
@@ -330,7 +330,7 @@ protected:
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
 
 #ifdef IBMBIDI
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
   nsCharType      mCharType;
 #endif
 
@@ -356,7 +356,7 @@ protected:
 #ifdef DEBUG
   static void SelfTest(nsILineBreaker* aLineBreaker,
                        nsIWordBreaker* aWordBreaker,
-                       nsIPresContext* aPresContext);
+                       nsPresContext* aPresContext);
 
   nsresult Init2(const nsTextFragment* aFrag,
                  PRInt32 aStartingOffset,

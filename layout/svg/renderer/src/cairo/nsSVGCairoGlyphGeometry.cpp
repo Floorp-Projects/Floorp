@@ -50,7 +50,7 @@
 #include "nsPromiseFlatString.h"
 #include "nsSVGCairoGlyphMetrics.h"
 #include "nsISVGCairoGlyphMetrics.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsMemory.h"
 #include <cairo.h>
 

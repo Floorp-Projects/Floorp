@@ -52,7 +52,7 @@
 
 class nsISupportsArray;
 class nsIPresShell;
-class nsIPresContext;
+class nsPresContext;
 class nsIContent;
 class nsStyleContext;
 
@@ -71,11 +71,11 @@ public:
   }
 #endif
 
-  NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
+  NS_IMETHOD Init(nsPresContext* aPresContext, nsIContent* aContent,
                     nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
            
   // nsIFrame overrides
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext, nsIContent* aChild,
                               PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                               PRInt32 aModType);
 
@@ -83,7 +83,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);

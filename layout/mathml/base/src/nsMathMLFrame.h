@@ -39,7 +39,7 @@
 #define nsMathMLFrame_h___
 
 #include "nsCOMPtr.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsStyleContext.h"
@@ -96,7 +96,7 @@ public:
   }
 
   NS_IMETHOD
-  Stretch(nsIPresContext*      aPresContext,
+  Stretch(nsPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
@@ -106,7 +106,7 @@ public:
   }
 
   NS_IMETHOD
-  Place(nsIPresContext*      aPresContext,
+  Place(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize)
@@ -139,23 +139,23 @@ public:
   }
 
   NS_IMETHOD
-  InheritAutomaticData(nsIPresContext* aPresContext,
+  InheritAutomaticData(nsPresContext* aPresContext,
                        nsIFrame*       aParent);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext)
+  TransmitAutomaticData(nsPresContext* aPresContext)
   {
     return NS_OK;
   }
 
   NS_IMETHOD
-  UpdatePresentationData(nsIPresContext* aPresContext,
+  UpdatePresentationData(nsPresContext* aPresContext,
                          PRInt32         aScriptLevelIncrement,
                          PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                     PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
@@ -166,7 +166,7 @@ public:
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsIPresContext* aPresContext,
+  ReResolveScriptStyle(nsPresContext* aPresContext,
                        PRInt32         aParentScriptLevel)
   {
     return NS_OK;
@@ -176,7 +176,7 @@ public:
   // MathMLChar. Frame classes that use this should make the extra style contexts
   // accessible to the Style System via Get/Set AdditionalStyleContext.
   static void
-  ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
+  ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsStyleContext*  aParenStyleContext,
                          nsMathMLChar*    aMathMLChar,
@@ -226,7 +226,7 @@ public:
                     nsCSSValue& aCSSValue);
 
   static nscoord 
-  CalcLength(nsIPresContext*   aPresContext,
+  CalcLength(nsPresContext*   aPresContext,
              nsStyleContext*   aStyleContext,
              const nsCSSValue& aCSSValue);
 
@@ -263,7 +263,7 @@ public:
 
   // helper methods for getting sup/subdrop's from a child
   static void 
-  GetSubDropFromChild(nsIPresContext* aPresContext,
+  GetSubDropFromChild(nsPresContext* aPresContext,
                       nsIFrame*       aChild, 
                       nscoord&        aSubDrop) 
   {
@@ -273,7 +273,7 @@ public:
   }
 
   static void 
-  GetSupDropFromChild(nsIPresContext* aPresContext,
+  GetSupDropFromChild(nsPresContext* aPresContext,
                       nsIFrame*       aChild, 
                       nscoord&        aSupDrop) 
   {
@@ -283,7 +283,7 @@ public:
   }
 
   static void
-  GetSkewCorrectionFromChild(nsIPresContext* aPresContext,
+  GetSkewCorrectionFromChild(nsPresContext* aPresContext,
                              nsIFrame*       aChild, 
                              nscoord&        aSkewCorrection) 
   {
@@ -427,10 +427,10 @@ public:
   // helpers to map attributes into CSS rules (work-around to bug 69409 which
   // is not scheduled to be fixed anytime soon)
   static PRInt32
-  MapAttributesIntoCSS(nsIPresContext* aPresContext,
+  MapAttributesIntoCSS(nsPresContext* aPresContext,
                        nsIContent*     aContent);
   static PRInt32
-  MapAttributesIntoCSS(nsIPresContext* aPresContext,
+  MapAttributesIntoCSS(nsPresContext* aPresContext,
                        nsIFrame*       aFrame);
 
 protected:

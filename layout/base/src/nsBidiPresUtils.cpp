@@ -41,7 +41,7 @@
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsLayoutAtoms.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIServiceManager.h"
 #include "nsFrameManager.h"
@@ -98,7 +98,7 @@ nsBidiPresUtils::IsSuccessful() const
 /* Some helper methods for Resolve() */
 
 static nsresult
-CreateBidiContinuation(nsIPresContext* aPresContext,
+CreateBidiContinuation(nsPresContext* aPresContext,
                        nsIContent*     aContent,
                        nsIFrame*       aFrame,
                        nsIFrame**      aNewFrame)
@@ -167,7 +167,7 @@ CreateBidiContinuation(nsIPresContext* aPresContext,
  *  EnsureBidiContinuation() in previous reflows.
  */
 nsresult
-nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
+nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
                          nsIFrame*       aBlockFrame,
                          nsIFrame*       aFirstChild,
                          PRBool&         aForceReflow,
@@ -356,7 +356,7 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
+nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
                                   nsIFrame*       aCurrentFrame,
                                   nsIFrame*       aNextInFlow,
                                   PRBool          aAddMarkers)
@@ -435,7 +435,7 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
 }
 
 void
-nsBidiPresUtils::CreateBlockBuffer(nsIPresContext* aPresContext)
+nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
 {
   mBuffer.SetLength(0);
 
@@ -486,7 +486,7 @@ nsBidiPresUtils::CreateBlockBuffer(nsIPresContext* aPresContext)
 }
 
 void
-nsBidiPresUtils::ReorderFrames(nsIPresContext*      aPresContext,
+nsBidiPresUtils::ReorderFrames(nsPresContext*      aPresContext,
                                nsIRenderingContext* aRendContext,
                                nsIFrame*            aFirstChild,
                                nsIFrame*            aNextInFlow,
@@ -506,7 +506,7 @@ nsBidiPresUtils::ReorderFrames(nsIPresContext*      aPresContext,
 }
 
 nsresult
-nsBidiPresUtils::Reorder(nsIPresContext* aPresContext,
+nsBidiPresUtils::Reorder(nsPresContext* aPresContext,
                          PRBool&         aBidiEnabled)
 {
   aBidiEnabled = PR_FALSE;
@@ -568,7 +568,7 @@ nsBidiPresUtils::Reorder(nsIPresContext* aPresContext,
 }
 
 void
-nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
+nsBidiPresUtils::RepositionInlineFrames(nsPresContext*      aPresContext,
                                         nsIRenderingContext* aRendContext,
                                         nsIFrame*            aFirstChild,
                                         PRInt32              aChildCount) const
@@ -673,7 +673,7 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
 }
 
 void
-nsBidiPresUtils::RepositionContainerFrame(nsIPresContext* aPresContext,
+nsBidiPresUtils::RepositionContainerFrame(nsPresContext* aPresContext,
                                           nsIFrame* aContainer,
                                           PRInt32& aMinX,
                                           PRInt32& aMaxX) const
@@ -716,7 +716,7 @@ nsBidiPresUtils::RepositionContainerFrame(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsBidiPresUtils::EnsureBidiContinuation(nsIPresContext* aPresContext,
+nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
                                         nsIContent*     aContent,
                                         nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
@@ -751,7 +751,7 @@ nsBidiPresUtils::EnsureBidiContinuation(nsIPresContext* aPresContext,
 }
 
 void
-nsBidiPresUtils::RemoveBidiContinuation(nsIPresContext* aPresContext,
+nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
                                         nsIFrame*       aFrame,
                                         PRInt32         aFirstIndex,
                                         PRInt32         aLastIndex,
@@ -808,7 +808,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
+nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
                                    PRUnichar*       aText,
                                    PRInt32&         aTextLength,
                                    nsCharType       aCharType,
@@ -1032,7 +1032,7 @@ nsresult nsBidiPresUtils::GetBidiEngine(nsBidi** aBidiEngine)
 nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
                                      PRInt32              aLength,
                                      nsBidiDirection      aBaseDirection,
-                                     nsIPresContext*      aPresContext,
+                                     nsPresContext*      aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      nscoord              aX,
                                      nscoord              aY)

@@ -44,13 +44,13 @@
 
 class nsIRenderingContext;
 class nsISVGRendererCanvas;
-class nsIPresContext;
+class nsPresContext;
 struct nsRect;
 
 nsresult
 NS_NewSVGCairoCanvas(nsISVGRendererCanvas **result,
                      nsIRenderingContext *ctx,
-                     nsIPresContext *presContext,
+                     nsPresContext *presContext,
                      const nsRect & dirtyRect);
 
 #endif // __NS_SVGCAIRO_CANVAS_H__

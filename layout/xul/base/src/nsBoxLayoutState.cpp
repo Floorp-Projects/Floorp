@@ -48,9 +48,9 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
-nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aPresContext), 
+nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext):mPresContext(aPresContext), 
                                                                  mReflowState(nsnull), 
                                                                  mType(Dirty),
                                                                  mMaxElementWidth(nsnull),
@@ -85,7 +85,7 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull),
    NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
 
-nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, 
+nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext, 
                                    const nsHTMLReflowState& aReflowState, 
                                    nsHTMLReflowMetrics& aDesiredSize):mPresContext(aPresContext),
                                                                       mReflowState(&aReflowState),                                                                    

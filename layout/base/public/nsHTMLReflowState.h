@@ -41,7 +41,7 @@
 #include "nsStyleCoord.h"
 
 class nsIFrame;
-class nsIPresContext;
+class nsPresContext;
 class nsReflowPath;
 class nsIRenderingContext;
 class nsSpaceManager;
@@ -267,7 +267,7 @@ struct nsHTMLReflowState {
 
   // Initialize a <b>root</b> reflow state with a rendering context to
   // use for measuring things.
-  nsHTMLReflowState(nsIPresContext*          aPresContext,
+  nsHTMLReflowState(nsPresContext*          aPresContext,
                     nsIFrame*                aFrame,
                     nsReflowReason           aReason,
                     nsIRenderingContext*     aRenderingContext,
@@ -275,7 +275,7 @@ struct nsHTMLReflowState {
 
   // Initialize a <b>root</b> reflow state for an <b>incremental</b>
   // reflow.
-  nsHTMLReflowState(nsIPresContext*          aPresContext,
+  nsHTMLReflowState(nsPresContext*          aPresContext,
                     nsIFrame*                aFrame,
                     nsReflowPath*            aReflowPath,
                     nsIRenderingContext*     aRenderingContext,
@@ -284,7 +284,7 @@ struct nsHTMLReflowState {
   // Initialize a reflow state for a child frames reflow. Some state
   // is copied from the parent reflow state; the remaining state is
   // computed. 
-  nsHTMLReflowState(nsIPresContext*          aPresContext,
+  nsHTMLReflowState(nsPresContext*          aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
@@ -293,14 +293,14 @@ struct nsHTMLReflowState {
 
   // Same as the previous except that the reason is taken from the
   // parent's reflow state.
-  nsHTMLReflowState(nsIPresContext*          aPresContext,
+  nsHTMLReflowState(nsPresContext*          aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace);
 
   // Used when you want to override the default containing block
   // width and height. Used by absolute positioning code
-  nsHTMLReflowState(nsIPresContext*          aPresContext,
+  nsHTMLReflowState(nsPresContext*          aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
@@ -310,7 +310,7 @@ struct nsHTMLReflowState {
 
   // This method initializes various data members. It is automatically
   // called by the various constructors
-  void Init(nsIPresContext* aPresContext,
+  void Init(nsPresContext* aPresContext,
             nscoord         aContainingBlockWidth = -1,
             nscoord         aContainingBlockHeight = -1,
             nsMargin*       aBorder = nsnull,
@@ -346,7 +346,7 @@ struct nsHTMLReflowState {
    * value, if line-height was applied and is valid will be >= 0. Otherwise,
    * the return value will be <0 which is illegal (CSS2 spec: section 10.8.1).
    */
-  static nscoord CalcLineHeight(nsIPresContext* aPresContext,
+  static nscoord CalcLineHeight(nsPresContext* aPresContext,
                                 nsIRenderingContext* aRenderingContext,
                                 nsIFrame* aFrame);
 
@@ -354,7 +354,7 @@ struct nsHTMLReflowState {
 
   void InitFrameType();
 
-  void ComputeContainingBlockRectangle(nsIPresContext*          aPresContext,
+  void ComputeContainingBlockRectangle(nsPresContext*          aPresContext,
                                        const nsHTMLReflowState* aContainingBlockRS,
                                        nscoord&                 aContainingBlockWidth,
                                        nscoord&                 aContainingBlockHeight);
@@ -367,20 +367,20 @@ protected:
 
   void InitCBReflowState();
 
-  void InitConstraints(nsIPresContext* aPresContext,
+  void InitConstraints(nsPresContext* aPresContext,
                        nscoord         aContainingBlockWidth,
                        nscoord         aContainingBlockHeight,
                        nsMargin*       aBorder,
                        nsMargin*       aPadding);
 
-  void CalculateHypotheticalBox(nsIPresContext*    aPresContext,
+  void CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                 nsIFrame*          aPlaceholderFrame,
                                 nsIFrame*          aBlockFrame,
                                 nsMargin&          aBlockContentArea,
                                 const nsHTMLReflowState* cbrs,
                                 nsHypotheticalBox& aHypotheticalBox);
 
-  void InitAbsoluteConstraints(nsIPresContext* aPresContext,
+  void InitAbsoluteConstraints(nsPresContext* aPresContext,
                                const nsHTMLReflowState* cbrs,
                                nscoord aContainingBlockWidth,
                                nscoord aContainingBlockHeight);
@@ -389,7 +389,7 @@ protected:
                               nscoord aContainingBlockWidth,
                               nscoord aContainingBlockHeight);
 
-  void ComputeBlockBoxData(nsIPresContext* aPresContext,
+  void ComputeBlockBoxData(nsPresContext* aPresContext,
                            const nsHTMLReflowState* cbrs,
                            nsStyleUnit aWidthUnit,
                            nsStyleUnit aHeightUnit,
@@ -442,7 +442,7 @@ protected:
    * @param aPresContext the pres context
    * @return whether the frame is a BIDI form control
    */
-  PRBool IsBidiFormControl(nsIPresContext* aPresContext);
+  PRBool IsBidiFormControl(nsPresContext* aPresContext);
 #endif
 };
 

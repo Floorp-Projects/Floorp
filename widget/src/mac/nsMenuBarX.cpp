@@ -941,7 +941,7 @@ nsMenuBarX :: Unregister ( PRUint32 inCommandID )
 // sending an event into the dom.
 //
 nsresult
-MenuHelpersX::WebShellToPresContext (nsIWebShell* inWebShell, nsIPresContext** outContext )
+MenuHelpersX::WebShellToPresContext (nsIWebShell* inWebShell, nsPresContext** outContext )
 {
   NS_ENSURE_ARG_POINTER(outContext);
   *outContext = nsnull;
@@ -977,7 +977,7 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aWebShellWeakRef,
   nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(aWebShellWeakRef);
   if (!webShell)
     return nsEventStatus_eConsumeNoDefault;
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
 
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;

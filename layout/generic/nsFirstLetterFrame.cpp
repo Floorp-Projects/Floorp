@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsLineLayout.h"
@@ -52,31 +52,31 @@ class nsFirstLetterFrame : public nsFirstLetterFrameSuper {
 public:
   nsFirstLetterFrame();
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   virtual nsIAtom* GetType() const;
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
 
-  NS_IMETHOD SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+  NS_IMETHOD SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
 
 //override of nsFrame method
   NS_IMETHOD GetChildFrameContainingOffset(PRInt32 inContentOffset,
@@ -87,7 +87,7 @@ public:
 protected:
   virtual PRIntn GetSkipSides() const;
 
-  void DrainOverflowFrames(nsIPresContext* aPresContext);
+  void DrainOverflowFrames(nsPresContext* aPresContext);
 };
 
 nsresult
@@ -130,7 +130,7 @@ nsFirstLetterFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::Init(nsIPresContext*  aPresContext,
+nsFirstLetterFrame::Init(nsPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
@@ -156,7 +156,7 @@ nsFirstLetterFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsFirstLetterFrame::SetInitialChildList(nsPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
@@ -170,7 +170,7 @@ nsFirstLetterFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+nsFirstLetterFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
@@ -200,7 +200,7 @@ nsFirstLetterFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::Paint(nsIPresContext*      aPresContext,
+nsFirstLetterFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -222,7 +222,7 @@ nsFirstLetterFrame::Paint(nsIPresContext*      aPresContext,
 
 
 NS_IMETHODIMP
-nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
+nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aMetrics,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aReflowStatus)
@@ -336,7 +336,7 @@ nsFirstLetterFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
 }
 
 void
-nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
+nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
 {
   nsIFrame* overflowFrames;
 

@@ -65,7 +65,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIObserverService.h"
 #include "nsIPluginInstance.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsITextContent.h"
 #include "nsIWebNavigation.h"
@@ -523,7 +523,7 @@ nsAccessibilityService::CreateHTMLCheckboxAccessibleXBL(nsIDOMNode *aNode, nsIAc
 NS_IMETHODIMP 
 nsAccessibilityService::CreateHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
+  nsCOMPtr<nsPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
   nsCOMPtr<nsIWeakReference> weakShell =
@@ -590,7 +590,7 @@ nsAccessibilityService::CreateHTMLGroupboxAccessible(nsISupports *aFrame, nsIAcc
 NS_IMETHODIMP 
 nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
+  nsCOMPtr<nsPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
   nsCOMPtr<nsIWeakReference> weakShell =
@@ -701,7 +701,7 @@ nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode,
                                                          nsISupports* aPresContext, 
                                                          nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
+  nsCOMPtr<nsPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
   nsCOMPtr<nsIWeakReference> weakShell =
@@ -839,7 +839,7 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
     return NS_ERROR_FAILURE; 
 
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(weakShell));
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
   PRInt32 index = 0;

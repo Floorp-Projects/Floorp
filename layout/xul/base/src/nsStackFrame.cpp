@@ -44,7 +44,7 @@
 
 #include "nsStackFrame.h"
 #include "nsStyleContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
@@ -89,7 +89,7 @@ nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManage
 
 
 NS_IMETHODIMP  
-nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsStackFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,    
                                nsIFrame** aFrame)
@@ -102,7 +102,7 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 /* virtual */ nsresult
-nsStackFrame::GetFrameForPointChild(nsIPresContext*   aPresContext,
+nsStackFrame::GetFrameForPointChild(nsPresContext*   aPresContext,
                                     const nsPoint&    aPoint,
                                     nsFramePaintLayer aWhichLayer,    
                                     nsIFrame*         aChild,
@@ -123,7 +123,7 @@ nsStackFrame::GetFrameForPointChild(nsIPresContext*   aPresContext,
 }
 
 void
-nsStackFrame::PaintChildren(nsIPresContext*      aPresContext,
+nsStackFrame::PaintChildren(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer,
@@ -140,7 +140,7 @@ nsStackFrame::PaintChildren(nsIPresContext*      aPresContext,
 
 // Paint one child frame
 void
-nsStackFrame::PaintChild(nsIPresContext*      aPresContext,
+nsStackFrame::PaintChild(nsPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect,
                          nsIFrame*            aFrame,

@@ -44,7 +44,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsRect.h"
 #include "libart-incs.h"
 
@@ -61,7 +61,7 @@ class nsSVGLibartCanvas : public nsISVGLibartCanvas
 public:
   nsSVGLibartCanvas();
   ~nsSVGLibartCanvas();
-  nsresult Init(nsIRenderingContext* ctx, nsIPresContext* presContext,
+  nsresult Init(nsIRenderingContext* ctx, nsPresContext* presContext,
                 const nsRect & dirtyRect);
 
   // nsISupports interface:
@@ -78,7 +78,7 @@ public:
   
 private:
   nsCOMPtr<nsIRenderingContext> mRenderingContext;
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
   nsCOMPtr<nsISVGLibartBitmap> mBitmap;
   nsRect mDirtyRect;
 
@@ -99,7 +99,7 @@ nsSVGLibartCanvas::~nsSVGLibartCanvas()
 
 nsresult
 nsSVGLibartCanvas::Init(nsIRenderingContext* ctx,
-                        nsIPresContext* presContext,
+                        nsPresContext* presContext,
                         const nsRect & dirtyRect)
 {
   mPresContext = presContext;
@@ -121,7 +121,7 @@ nsSVGLibartCanvas::Init(nsIRenderingContext* ctx,
 nsresult
 NS_NewSVGLibartCanvas(nsISVGRendererCanvas **result,
                       nsIRenderingContext *ctx,
-                      nsIPresContext *presContext,
+                      nsPresContext *presContext,
                       const nsRect & dirtyRect)
 {
   nsSVGLibartCanvas* pg = new nsSVGLibartCanvas();
@@ -175,9 +175,9 @@ nsSVGLibartCanvas::UnlockRenderingContext()
   return NS_OK;
 }
 
-/** Implements nsIPresContext getPresContext(); */
+/** Implements nsPresContext getPresContext(); */
 NS_IMETHODIMP
-nsSVGLibartCanvas::GetPresContext(nsIPresContext **_retval)
+nsSVGLibartCanvas::GetPresContext(nsPresContext **_retval)
 {
   *_retval = mPresContext;
   NS_IF_ADDREF(*_retval);

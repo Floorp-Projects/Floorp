@@ -45,7 +45,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsBoxFrame.h"
 #include "nsStyleContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
 #include "nsHTMLAtoms.h"
@@ -317,7 +317,7 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
   nsresult rv = NS_OK;
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
   if (reflowState) {
-    nsIPresContext* presContext = aState.PresContext();
+    nsPresContext* presContext = aState.PresContext();
     nsReflowStatus status = NS_FRAME_COMPLETE;
     nsHTMLReflowMetrics desiredSize(PR_FALSE);
     nsReflowReason reason;
@@ -607,7 +607,7 @@ nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
   GetBounds(ourRect);
 
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
-  nsIPresContext* presContext = aState.PresContext();
+  nsPresContext* presContext = aState.PresContext();
   nsReflowStatus status = NS_FRAME_COMPLETE;
   nsHTMLReflowMetrics desiredSize(PR_FALSE);
   nsresult rv = NS_OK;
@@ -685,7 +685,7 @@ PruneReflowPathFor(nsIFrame *aFrame, nsReflowPath *aReflowPath)
 
 nsresult
 nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
-                     nsIPresContext*          aPresContext,
+                     nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,

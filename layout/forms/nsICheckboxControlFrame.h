@@ -40,7 +40,7 @@
 
 #include "nsISupports.h"
 class nsStyleContext;
-class nsIPresContext;
+class nsPresContext;
 
 // IID for the nsICheckControlFrame class
 // {401347ED-0101-11d4-9706-0060B0FB9956}
@@ -66,7 +66,7 @@ public:
   /**
    * Called by content when checkbox "checked" changes
    */
-  NS_IMETHOD OnChecked(nsIPresContext* aPresContext, PRBool aChecked) = 0;
+  NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked) = 0;
 };
 
 #endif

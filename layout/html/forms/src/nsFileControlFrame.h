@@ -61,7 +61,7 @@ public:
   virtual ~nsFileControlFrame();
 
   // XXX Hack so we can squirrel away the pres context pointer
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -70,35 +70,35 @@ public:
     return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   }
 
-  virtual void MouseClicked(nsIPresContext* aPresContext) {}
+  virtual void MouseClicked(nsPresContext* aPresContext) {}
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
       // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD OnContentReset();
 
-  NS_IMETHOD Reflow(nsIPresContext*          aCX,
+  NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  virtual void RemovedAsPrimaryFrame(nsIPresContext* aPresContext);
+  virtual void RemovedAsPrimaryFrame(nsPresContext* aPresContext);
 
-  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+  NS_IMETHOD Destroy(nsPresContext *aPresContext);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) { return NS_OK; };
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -107,21 +107,21 @@ public:
   NS_IMETHOD     GetName(nsAString* aName);
   NS_IMETHOD_(PRInt32) GetFormControlType() const;
   void           SetFocus(PRBool aOn, PRBool aRepaint);
-  void           ScrollIntoView(nsIPresContext* aPresContext);
+  void           ScrollIntoView(nsPresContext* aPresContext);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
   // from nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
@@ -200,7 +200,7 @@ protected:
    * The current pres context.
    * XXX Hack: pres context needed by function MouseClick() and SetFocus()
    */
-  nsIPresContext*     mPresContext;  // weak reference
+  nsPresContext*     mPresContext;  // weak reference
 
 private:
   /**
@@ -213,7 +213,7 @@ private:
    * @param aStart the parent frame to search children of
    * @return the text control frame, or null if not found
    */
-  nsNewFrame* GetTextControlFrame(nsIPresContext* aPresContext,
+  nsNewFrame* GetTextControlFrame(nsPresContext* aPresContext,
                                   nsIFrame* aStart);
 
   /**
@@ -230,7 +230,7 @@ private:
    * We call this when we are being destroyed or removed from the PFM.
    * @param aPresContext the current pres context
    */
-  void PreDestroy(nsIPresContext* aPresContext);
+  void PreDestroy(nsPresContext* aPresContext);
 
   NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }

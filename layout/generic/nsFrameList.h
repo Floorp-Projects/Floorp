@@ -56,7 +56,7 @@ public:
   ~nsFrameList() {
   }
 
-  void DestroyFrames(nsIPresContext* aPresContext);
+  void DestroyFrames(nsPresContext* aPresContext);
 
   void SetFrames(nsIFrame* aFrameList) {
     mFirstChild = aFrameList;
@@ -84,7 +84,7 @@ public:
   // Take aFrame out of the frame list and then destroy it. This also
   // disconnects aFrame from the sibling list. This will return
   // PR_FALSE if aFrame is nsnull or if aFrame is not in the list.
-  PRBool DestroyFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  PRBool DestroyFrame(nsPresContext* aPresContext, nsIFrame* aFrame);
 
   void InsertFrame(nsIFrame* aParent,
                    nsIFrame* aPrevSibling,
@@ -100,7 +100,7 @@ public:
     aFrameList.mFirstChild = nsnull;
   }
 
-  PRBool ReplaceFrame(nsIPresContext* aPresContext,
+  PRBool ReplaceFrame(nsPresContext* aPresContext,
                       nsIFrame* aParent,
                       nsIFrame* aOldFrame,
                       nsIFrame* aNewFrame,
@@ -149,7 +149,7 @@ public:
   void VerifyParent(nsIFrame* aParent) const;
 
 #ifdef NS_DEBUG
-  void List(nsIPresContext* aPresContext, FILE* out) const;
+  void List(nsPresContext* aPresContext, FILE* out) const;
 #endif
 
 private:

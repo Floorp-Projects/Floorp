@@ -53,7 +53,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"

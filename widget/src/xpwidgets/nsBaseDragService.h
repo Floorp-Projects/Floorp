@@ -47,7 +47,7 @@
 
 class nsIDOMNode;
 class nsIFrame;
-class nsIPresContext;
+class nsPresContext;
 
 
 /**
@@ -71,7 +71,7 @@ public:
 protected:
 
   virtual void GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
-                                   nsIPresContext** outContext ) ;
+                                   nsPresContext** outContext ) ;
 
   nsCOMPtr<nsISupportsArray> mTransArray;
   PRBool             mCanDrop;

@@ -52,7 +52,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIFrame.h"
 #include "nsIFrameDebug.h"
@@ -289,7 +289,7 @@ nsWebCrawler::DumpRegressionData()
       nsIFrame* root;
       shell->GetRootFrame(&root);
       if (nsnull != root) {
-        nsCOMPtr<nsIPresContext> presContext;
+        nsCOMPtr<nsPresContext> presContext;
         shell->GetPresContext(getter_AddRefs(presContext));
         
         if (mOutputDir.Length() > 0) {
@@ -915,7 +915,7 @@ nsWebCrawler::GetPresShell(nsIWebShell* aWebShell)
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &docv);
       if (nsnull != docv) {
-        nsCOMPtr<nsIPresContext> cx;
+        nsCOMPtr<nsPresContext> cx;
         docv->GetPresContext(getter_AddRefs(cx));
         if (nsnull != cx) {
           NS_IF_ADDREF(shell = cx->GetPresShell());

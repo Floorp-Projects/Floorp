@@ -39,7 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsAreaFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -116,7 +116,7 @@ struct nsValueList
 // The code doesn't include hooks for AttributeChanged() notifications.
 
 static void
-DestroyValueListFunc(nsIPresContext* aPresContext,
+DestroyValueListFunc(nsPresContext* aPresContext,
                      nsIFrame*       aFrame,
                      nsIAtom*        aPropertyName,
                      void*           aPropertyValue)
@@ -125,7 +125,7 @@ DestroyValueListFunc(nsIPresContext* aPresContext,
 }
 
 static PRUnichar*
-GetValueAt(nsIPresContext* aPresContext,
+GetValueAt(nsPresContext* aPresContext,
            nsIFrame*       aTableOrRowFrame,
            nsIAtom*        aAttributeAtom,
            PRInt32         aRowOrColIndex)
@@ -167,7 +167,7 @@ GetValueAt(nsIPresContext* aPresContext,
 #endif
 
 static void
-MapAttributesInto(nsIPresContext* aPresContext,
+MapAttributesInto(nsPresContext* aPresContext,
                   nsIContent*     aCellContent,
                   nsIFrame*       aCellFrame,
                   nsIFrame*       aCellInnerFrame)
@@ -385,7 +385,7 @@ nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmtableOuterFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                                nsIFrame*       aParent)
 {
   // XXX the REC says that by default, displaystyle=false in <mtable>
@@ -409,7 +409,7 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
+nsMathMLmtableOuterFrame::Init(nsPresContext*  aPresContext,
                                nsIContent*      aContent,
                                nsIFrame*        aParent,
                                nsStyleContext*  aContext,
@@ -421,7 +421,7 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
 }
 
 nsIFrame*
-nsMathMLmtableOuterFrame::GetRowFrameAt(nsIPresContext* aPresContext,
+nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
                                         PRInt32         aRowIndex)
 {
   // To find the row at the given index, we will iterate downwards or
@@ -455,7 +455,7 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
                                  const nsHTMLReflowState& aReflowState,
                                  nsReflowStatus&          aStatus)
@@ -675,7 +675,7 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
+nsMathMLmtdInnerFrame::Init(nsPresContext*  aPresContext,
                             nsIContent*      aContent,
                             nsIFrame*        aParent,
                             nsStyleContext*  aContext,
@@ -690,7 +690,7 @@ nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmtdInnerFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmtdInnerFrame::Reflow(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)

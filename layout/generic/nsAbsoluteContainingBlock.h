@@ -43,7 +43,7 @@
 
 class nsIAtom;
 class nsIFrame;
-class nsIPresContext;
+class nsPresContext;
 
 /**
  * This class contains the logic for being an absolute containing block.
@@ -70,27 +70,27 @@ public:
                       nsIFrame**      aFirstChild) const;
   
   nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
-                               nsIPresContext* aPresContext,
+                               nsPresContext* aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList);
   nsresult AppendFrames(nsIFrame*       aDelegatingFrame,
-                        nsIPresContext* aPresContext,
+                        nsPresContext* aPresContext,
                         nsIPresShell&   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aFrameList);
   nsresult InsertFrames(nsIFrame*       aDelegatingFrame,
-                        nsIPresContext* aPresContext,
+                        nsPresContext* aPresContext,
                         nsIPresShell&   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aPrevFrame,
                         nsIFrame*       aFrameList);
   nsresult RemoveFrame(nsIFrame*       aDelegatingFrame,
-                       nsIPresContext* aPresContext,
+                       nsPresContext* aPresContext,
                        nsIPresShell&   aPresShell,
                        nsIAtom*        aListName,
                        nsIFrame*       aOldFrame);
   nsresult ReplaceFrame(nsIFrame*       aDelegatingFrame,
-                        nsIPresContext* aPresContext,
+                        nsPresContext* aPresContext,
                         nsIPresShell&   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aOldFrame,
@@ -104,7 +104,7 @@ public:
   // bounding rect of the absolutely positioned child elements taking into 
   // account their overflow area (if it is visible)
   nsresult Reflow(nsIFrame*                aDelegatingFrame,
-                  nsIPresContext*          aPresContext,
+                  nsPresContext*          aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nscoord                  aContainingBlockWidth,
                   nscoord                  aContainingBlockHeight,
@@ -118,22 +118,22 @@ public:
   // positioned child elements taking into account their overflow area (if it
   // is visible). This is only set if the reflow command was handled
   nsresult IncrementalReflow(nsIFrame*                aDelegatingFrame,
-                             nsIPresContext*          aPresContext,
+                             nsPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nscoord                  aContainingBlockWidth,
                              nscoord                  aContainingBlockHeight,
                              PRBool&                  aWasHandled);
 
   void DestroyFrames(nsIFrame*       aDelegatingFrame,
-                     nsIPresContext* aPresContext);
+                     nsPresContext* aPresContext);
 
   PRBool  HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
 
-  void CalculateChildBounds(nsIPresContext* aPresContext, nsRect& aChildBounds);
+  void CalculateChildBounds(nsPresContext* aPresContext, nsRect& aChildBounds);
 
 protected:
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
-                               nsIPresContext*          aPresContext,
+                               nsPresContext*          aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nscoord                  aContainingBlockWidth,
                                nscoord                  aContainingBlockHeight,

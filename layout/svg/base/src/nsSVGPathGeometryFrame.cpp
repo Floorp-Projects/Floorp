@@ -87,7 +87,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrameBase)
 // nsIFrame methods
   
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::Init(nsIPresContext*  aPresContext,
+nsSVGPathGeometryFrame::Init(nsPresContext*  aPresContext,
                              nsIContent*      aContent,
                              nsIFrame*        aParent,
                              nsStyleContext*  aContext,
@@ -108,7 +108,7 @@ nsSVGPathGeometryFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsSVGPathGeometryFrame::AttributeChanged(nsPresContext* aPresContext,
                                          nsIContent*     aChild,
                                          PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
@@ -131,7 +131,7 @@ nsSVGPathGeometryFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::DidSetStyleContext(nsIPresContext* aPresContext)
+nsSVGPathGeometryFrame::DidSetStyleContext(nsPresContext* aPresContext)
 {
   // XXX: we'd like to use the style_hint mechanism and the
   // ContentStateChanged/AttributeChanged functions for style changes
@@ -252,9 +252,9 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable)
 //----------------------------------------------------------------------
 // nsISVGGeometrySource methods:
 
-/* [noscript] readonly attribute nsIPresContext presContext; */
+/* [noscript] readonly attribute nsPresContext presContext; */
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::GetPresContext(nsIPresContext * *aPresContext)
+nsSVGPathGeometryFrame::GetPresContext(nsPresContext * *aPresContext)
 {
   // XXX gcc 3.2.2 requires the explicit 'nsSVGPathGeometryFrameBase::' qualification
   *aPresContext = nsSVGPathGeometryFrameBase::GetPresContext();

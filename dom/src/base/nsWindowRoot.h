@@ -64,7 +64,7 @@ public:
   NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_NSIDOM3EVENTTARGET
 
-  NS_IMETHOD HandleChromeEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleChromeEvent(nsPresContext* aPresContext,
                                nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                PRUint32 aFlags, nsEventStatus* aEventStatus);
 

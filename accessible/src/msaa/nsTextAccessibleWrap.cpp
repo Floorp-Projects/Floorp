@@ -44,7 +44,7 @@
 #include "nsIAccessibleDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIRenderingContext.h"
 #include "nsISelection.h"
@@ -172,7 +172,7 @@ STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
     return E_FAIL;  // This accessible has been shut down
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   nsCOMPtr<nsIDOMRange> scrollToRange = do_CreateInstance(kRangeCID);
   nsCOMPtr<nsISelectionController> selCon;
@@ -200,7 +200,7 @@ STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
 }
 
 nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame, 
-                                                nsIPresContext *aPresContext,
+                                                nsPresContext *aPresContext,
                                                 nsIRenderingContext *aRendContext,
                                                 PRInt32 aOffset, 
                                                 nsPoint& aOutPoint)
@@ -226,7 +226,7 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
   float t2p = presContext->TwipsToPixels();

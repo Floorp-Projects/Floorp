@@ -43,7 +43,7 @@ class nsACString;
 class nsIURI;
 class nsIInputStream;
 class nsIHTMLContent;
-class nsIPresContext;
+class nsPresContext;
 class nsIContent;
 class nsIFormControl;
 class nsIDOMHTMLElement;
@@ -83,7 +83,7 @@ public:
    * @param aRequest (out param) the Request for the submission
    */
   virtual nsresult SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
-                            nsIContent* aSource, nsIPresContext* aPresContext,
+                            nsIContent* aSource, nsPresContext* aPresContext,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest) = 0;
 
@@ -130,7 +130,7 @@ public:
  * @param aFormSubmission the form submission object (out param)
  */
 nsresult GetSubmissionFromForm(nsIHTMLContent* aForm,
-                               nsIPresContext* aPresContext,
+                               nsPresContext* aPresContext,
                                nsIFormSubmission** aFormSubmission);
 
 

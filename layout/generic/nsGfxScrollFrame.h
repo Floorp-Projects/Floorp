@@ -45,7 +45,7 @@
 
 class nsISupportsArray;
 class nsIScrollableView;
-class nsIPresContext;
+class nsPresContext;
 class nsIPresShell;
 class nsIContent;
 class nsIAtom;
@@ -78,7 +78,7 @@ public:
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
 
   // This gets called when the 'curpos' attribute on one of the scrollbars changes
-  nsresult CurPosAttributeChanged(nsIPresContext* aPresContext,
+  nsresult CurPosAttributeChanged(nsPresContext* aPresContext,
                                   nsIContent* aChild,
                                   PRInt32 aModType);
 
@@ -122,11 +122,11 @@ public:
     return frame;
   }
 
-  void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+  void ScrollbarChanged(nsPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
   void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
 
-  NS_IMETHOD GetScrolledSize(nsIPresContext* aPresContext, 
+  NS_IMETHOD GetScrolledSize(nsPresContext* aPresContext, 
                          nscoord *aWidth, 
                          nscoord *aHeight) const;
   void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, PRBool& aSetBack);
@@ -175,42 +175,42 @@ public:
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                   nsHTMLReflowMetrics&     aDesiredSize,
                   const nsHTMLReflowState& aReflowState,
                   nsReflowStatus&          aStatus);
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
-  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame,
                      nsIFrame*       aNewFrame);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
@@ -222,9 +222,9 @@ public:
   }
 
   // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aAnonymousItems);
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
@@ -240,23 +240,23 @@ public:
   NS_IMETHOD GetPadding(nsMargin& aPadding);
 
   // nsIScrollableFrame
-  NS_IMETHOD GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
-  NS_IMETHOD GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult);
+  NS_IMETHOD GetScrolledFrame(nsPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
+  NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult);
 
-  NS_IMETHOD GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const;
-  NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+  NS_IMETHOD GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const;
+  NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
-  NS_IMETHOD SetScrollbarVisibility(nsIPresContext* aPresContext,
+  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
                                     PRBool aVerticalVisible,
                                     PRBool aHorizontalVisible);
 
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
 
-  NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
                                     nsIContent* aChild,
                                     PRInt32 aModType);
 
-  NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
+  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();
@@ -306,42 +306,42 @@ public:
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                   nsHTMLReflowMetrics&     aDesiredSize,
                   const nsHTMLReflowState& aReflowState,
                   nsReflowStatus&          aStatus);
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
-  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame,
                      nsIFrame*       aNewFrame);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
@@ -353,9 +353,9 @@ public:
   }
 
   // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aAnonymousItems);
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
@@ -371,23 +371,23 @@ public:
   NS_IMETHOD GetPadding(nsMargin& aPadding);
 
   // nsIScrollableFrame
-  NS_IMETHOD  GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
-  NS_IMETHOD GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult);
+  NS_IMETHOD  GetScrolledFrame(nsPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
+  NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult);
 
-  NS_IMETHOD GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const;
-  NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+  NS_IMETHOD GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const;
+  NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
-  NS_IMETHOD SetScrollbarVisibility(nsIPresContext* aPresContext,
+  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
                                     PRBool aVerticalVisible,
                                     PRBool aHorizontalVisible);
 
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
 
-  NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
                                     nsIContent* aChild,
                                     PRInt32 aModType);
 
-  NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
+  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();

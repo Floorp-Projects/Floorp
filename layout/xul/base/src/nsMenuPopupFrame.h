@@ -116,25 +116,25 @@ public:
   NS_IMETHOD CreateDismissalListener();
 
   // Overridden methods
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
@@ -144,12 +144,12 @@ public:
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild);
 
   void GetViewOffset(nsIView* aView, nsPoint& aPoint);
-  static void GetRootViewForPopup(nsIPresContext* aPresContext,
+  static void GetRootViewForPopup(nsPresContext* aPresContext,
                                   nsIFrame* aStartFrame,
                                   PRBool aStopAtViewManagerRoot,
                                   nsIView** aResult);
 
-  nsresult SyncViewWithFrame(nsIPresContext* aPresContext, const nsString& aPopupAnchor,
+  nsresult SyncViewWithFrame(nsPresContext* aPresContext, const nsString& aPopupAnchor,
                              const nsString& aPopupAlign,
                              nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
 
@@ -215,7 +215,7 @@ protected:
 
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
   // XXX Hack
-  nsIPresContext* mPresContext;  // weak reference
+  nsPresContext* mPresContext;  // weak reference
 
   nsMenuListener* mKeyboardNavigator; // The listener that tells us about key events.
   nsIDOMEventReceiver* mTarget;

@@ -58,7 +58,7 @@
 #include "nsISimpleEnumerator.h"
 
 // Interfaces needed to be included
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContextMenuListener.h"
 #include "nsIContextMenuListener2.h"
 #include "nsITooltipListener.h"
@@ -89,7 +89,7 @@
 #include "nsIContent.h"
 #include "imgIContainer.h"
 #include "nsContextMenuInfo.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
 //
 // GetEventReceiver
@@ -467,7 +467,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    Set the preferred size on the aShellItem.
    */
 
-   nsCOMPtr<nsIPresContext> presContext;
+   nsCOMPtr<nsPresContext> presContext;
    mWebBrowser->mDocShell->GetPresContext(getter_AddRefs(presContext));
    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 

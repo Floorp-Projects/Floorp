@@ -48,7 +48,7 @@
 #include "nsLineLayout.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
@@ -129,7 +129,7 @@ static NS_DEFINE_CID(kLECID, NS_ULE_CID);
 
 // checks to see if the text can be lightened..
 // text is darkend
-inline PRBool CanDarken(nsIPresContext* aPresContext)
+inline PRBool CanDarken(nsPresContext* aPresContext)
 {
   PRBool darken;
 
@@ -213,7 +213,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  void AddFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  void AddFrame(nsPresContext* aPresContext, nsIFrame* aFrame);
 
   PRBool RemoveFrame(nsIFrame* aFrame);
 
@@ -225,7 +225,7 @@ public:
 
   NS_DECL_NSITIMERCALLBACK
 
-  static nsresult AddBlinkFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  static nsresult AddBlinkFrame(nsPresContext* aPresContext, nsIFrame* aFrame);
   static nsresult RemoveBlinkFrame(nsIFrame* aFrame);
   
   static PRBool   GetBlinkIsOff() { return sState == 3; }
@@ -233,18 +233,18 @@ public:
 protected:
 
   struct FrameData {
-    nsIPresContext* mPresContext;  // pres context associated with the frame
+    nsPresContext* mPresContext;  // pres context associated with the frame
     nsIFrame*       mFrame;
 
 
-    FrameData(nsIPresContext* aPresContext,
+    FrameData(nsPresContext* aPresContext,
               nsIFrame*       aFrame)
       : mPresContext(aPresContext), mFrame(aFrame) {}
   };
 
   nsCOMPtr<nsITimer> mTimer;
   nsVoidArray     mFrames;
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
 
 protected:
 
@@ -288,7 +288,7 @@ void nsBlinkTimer::Stop()
 
 NS_IMPL_ISUPPORTS1(nsBlinkTimer, nsITimerCallback)
 
-void nsBlinkTimer::AddFrame(nsIPresContext* aPresContext, nsIFrame* aFrame) {
+void nsBlinkTimer::AddFrame(nsPresContext* aPresContext, nsIFrame* aFrame) {
   FrameData* frameData = new FrameData(aPresContext, aFrame);
   mFrames.AppendElement(frameData);
   if (1 == mFrames.Count()) {
@@ -353,7 +353,7 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
 
 
 // static
-nsresult nsBlinkTimer::AddBlinkFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
+nsresult nsBlinkTimer::AddBlinkFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   if (!sTextBlinker)
   {
@@ -389,19 +389,19 @@ public:
   nsTextFrame();
 
   // nsIFrame
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const                nsRect& aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
+  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
                        nsPoint& aPoint,
                        PRInt32& aCursor);
 
-  NS_IMETHOD CharacterDataChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD CharacterDataChanged(nsPresContext* aPresContext,
                                   nsIContent*     aChild,
                                   PRBool          aAppend);
 
@@ -428,39 +428,39 @@ public:
   virtual nsIAtom* GetType() const;
   
 #ifdef DEBUG
-  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  NS_IMETHOD GetPosition(nsIPresContext* aCX,
+  NS_IMETHOD GetPosition(nsPresContext* aCX,
                          const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd);
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                          const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd,
                          PRBool&         aBeginFrameContent);
 
-  NS_IMETHOD GetPositionSlowly(nsIPresContext* aCX,
+  NS_IMETHOD GetPositionSlowly(nsPresContext* aCX,
                          nsIRenderingContext * aRendContext,
                          const nsPoint&        aPoint,
                          nsIContent **         aNewContent,
                          PRInt32&              aOffset);
 
 
-  NS_IMETHOD SetSelected(nsIPresContext* aPresContext,
+  NS_IMETHOD SetSelected(nsPresContext* aPresContext,
                          nsIDOMRange *aRange,
                          PRBool aSelected,
                          nsSpread aSpread);
 
-  NS_IMETHOD PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos);
-  NS_IMETHOD CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
+  NS_IMETHOD PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos);
+  NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 
@@ -468,7 +468,7 @@ public:
 
   virtual void AdjustOffsetsForBidi(PRInt32 start, PRInt32 end);
 
-  NS_IMETHOD GetPointFromOffset(nsIPresContext*         inPresContext,
+  NS_IMETHOD GetPointFromOffset(nsPresContext*         inPresContext,
                                 nsIRenderingContext*    inRendContext,
                                 PRInt32                 inOffset,
                                 nsPoint*                outPoint);
@@ -478,7 +478,7 @@ public:
                                 PRInt32*                outFrameContentOffset,
                                 nsIFrame*               *outChildFrame);
 
-  NS_IMETHOD IsVisibleForPainting(nsIPresContext *     aPresContext, 
+  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
@@ -490,13 +490,13 @@ public:
 #endif
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
-  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
+  NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
 
@@ -518,7 +518,7 @@ public:
     nscoord mExtraSpacePerSpace;
     PRInt32 mNumSpacesReceivingExtraJot;
 
-    TextStyle(nsIPresContext* aPresContext,
+    TextStyle(nsPresContext* aPresContext,
               nsIRenderingContext& aRenderingContext,
               nsStyleContext* sc)
     {
@@ -593,7 +593,7 @@ public:
     nscolor mSelectionTextColor;
     nscolor mSelectionBGColor;
 
-    TextPaintStyle(nsIPresContext* aPresContext,
+    TextPaintStyle(nsPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    nsStyleContext* sc)
       : TextStyle(aPresContext, aRenderingContext, sc)
@@ -655,7 +655,7 @@ public:
     {}
   };
 
-  already_AddRefed<nsIDocument> GetDocument(nsIPresContext* aPresContext);
+  already_AddRefed<nsIDocument> GetDocument(nsPresContext* aPresContext);
 
   PRIntn PrepareUnicodeText(nsTextTransformer& aTransformer,
                             nsAutoIndexBuffer* aIndexBuffer,
@@ -668,7 +668,7 @@ public:
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             nsStyleContext* aStyleContext,
-                            nsIPresContext* aPresContext,
+                            nsPresContext* aPresContext,
                             TextPaintStyle& aStyle,
                             nscoord aX, nscoord aY, nscoord aWidth,
                             PRUnichar* aText = nsnull,
@@ -677,7 +677,7 @@ public:
                             PRUint32 aLength = 0,
                             const nscoord* aSpacing = nsnull);
 
-  void PaintTextSlowly(nsIPresContext* aPresContext,
+  void PaintTextSlowly(nsPresContext* aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        nsStyleContext* aStyleContext,
                        TextPaintStyle& aStyle,
@@ -685,7 +685,7 @@ public:
 
   void RenderString(nsIRenderingContext& aRenderingContext,
                     nsStyleContext* aStyleContext,
-                    nsIPresContext* aPresContext,
+                    nsPresContext* aPresContext,
                     TextPaintStyle& aStyle,
                     PRUnichar* aBuffer, PRInt32 aLength,
                     nscoord aX, nscoord aY,
@@ -701,7 +701,7 @@ public:
   PRUint32 EstimateNumChars(PRUint32 aAvailableWidth,
                             PRUint32 aAverageCharWidth);
 
-  nsReflowStatus MeasureText(nsIPresContext*          aPresContext,
+  nsReflowStatus MeasureText(nsPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsTextTransformer&       aTx,
                              nsILineBreaker*          aLb,
@@ -721,10 +721,10 @@ public:
                 PRUnichar* aBuffer, PRInt32 aLength,
                 nscoord aWidth);
 
-  PRBool IsTextInSelection(nsIPresContext* aPresContext,
+  PRBool IsTextInSelection(nsPresContext* aPresContext,
                            nsIRenderingContext& aRenderingContext);
 
-  nsresult GetTextInfoForPainting(nsIPresContext*          aPresContext,
+  nsresult GetTextInfoForPainting(nsPresContext*          aPresContext,
                                   nsIRenderingContext&     aRenderingContext,
                                   nsIPresShell**           aPresShell,
                                   nsISelectionController** aSelectionController,
@@ -734,19 +734,19 @@ public:
                                   PRInt16&                 aSelectionValue,
                                   nsILineBreaker**         aLineBreaker);
 
-  void PaintUnicodeText(nsIPresContext* aPresContext,
+  void PaintUnicodeText(nsPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nsStyleContext* aStyleContext,
                         TextPaintStyle& aStyle,
                         nscoord dx, nscoord dy);
 
-  void PaintAsciiText(nsIPresContext* aPresContext,
+  void PaintAsciiText(nsPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nsStyleContext* aStyleContext,
                       TextPaintStyle& aStyle,
                       nscoord dx, nscoord dy);
 
-  nsTextDimensions ComputeTotalWordDimensions(nsIPresContext* aPresContext,
+  nsTextDimensions ComputeTotalWordDimensions(nsPresContext* aPresContext,
                                 nsILineBreaker* aLineBreaker,
                                 nsLineLayout& aLineLayout,
                                 const nsHTMLReflowState& aReflowState,
@@ -757,7 +757,7 @@ public:
                                 PRUint32   aWordBufSize,
                                 PRBool     aCanBreakBefore);
 
-  nsTextDimensions ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
+  nsTextDimensions ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                    nsILineBreaker* aLineBreaker,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
@@ -788,7 +788,7 @@ protected:
                 PRUnichar* aBuffer, PRInt32 aLength,
                 nsTextDimensions* aDimensionsResult,
                 PRBool aGetTextDimensions/* true=get dimensions false = return length up to aDimensionsResult->width size*/);
-  nsresult GetContentAndOffsetsForSelection(nsIPresContext*  aPresContext,nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength);
+  nsresult GetContentAndOffsetsForSelection(nsPresContext*  aPresContext,nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength);
 
   // prefs used to configure the double-click word selection behavior
   static PRPackedBool sWordSelectPrefInited;            // have we read the prefs yet?
@@ -825,7 +825,7 @@ PRPackedBool nsTextFrame::sWordSelectEatSpaceAfter = PR_TRUE;
 
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
-nsTextFrame::Destroy(nsIPresContext* aPresContext)
+nsTextFrame::Destroy(nsPresContext* aPresContext)
 {
   if (mNextInFlow) {
     mNextInFlow->SetPrevInFlow(nsnull);
@@ -836,13 +836,13 @@ nsTextFrame::Destroy(nsIPresContext* aPresContext)
 
 class nsContinuingTextFrame : public nsTextFrame {
 public:
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD GetPrevInFlow(nsIFrame** aPrevInFlow) const {
     *aPrevInFlow = mPrevInFlow;
@@ -859,7 +859,7 @@ protected:
 };
 
 NS_IMETHODIMP
-nsContinuingTextFrame::Init(nsIPresContext*  aPresContext,
+nsContinuingTextFrame::Init(nsPresContext*  aPresContext,
                             nsIContent*      aContent,
                             nsIFrame*        aParent,
                             nsStyleContext*  aContext,
@@ -902,7 +902,7 @@ nsContinuingTextFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsContinuingTextFrame::Destroy(nsIPresContext* aPresContext)
+nsContinuingTextFrame::Destroy(nsPresContext* aPresContext)
 {
   if (mPrevInFlow || mNextInFlow) {
     nsSplittableFrame::RemoveFromFlow(this);
@@ -947,7 +947,7 @@ class DrawSelectionIterator
 public:
   DrawSelectionIterator(nsIContent *aContent, const SelectionDetails *aSelDetails, PRUnichar *aText,
                         PRUint32 aTextLength, nsTextFrame::TextPaintStyle &aTextStyle,
-                        PRInt16 aSelectionStatus, nsIPresContext *aPresContext,
+                        PRInt16 aSelectionStatus, nsPresContext *aPresContext,
                         nsStyleContext *aStyleContext);
   ~DrawSelectionIterator();
   PRBool      First();
@@ -992,7 +992,7 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
                                              PRUint32 aTextLength, 
                                              nsTextFrame::TextPaintStyle &aTextStyle, 
                                              PRInt16 aSelectionStatus, 
-                                             nsIPresContext *aPresContext,
+                                             nsPresContext *aPresContext,
                                              nsStyleContext *aStyleContext)
                                              :mOldStyle(aTextStyle)
 {
@@ -1326,7 +1326,7 @@ nsTextFrame::~nsTextFrame()
 }
 
 already_AddRefed<nsIDocument>
-nsTextFrame::GetDocument(nsIPresContext* aPresContext)
+nsTextFrame::GetDocument(nsPresContext* aPresContext)
 {
   nsIDocument* result = nsnull;
   if (mContent) {
@@ -1339,7 +1339,7 @@ nsTextFrame::GetDocument(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsTextFrame::GetCursor(nsIPresContext* aPresContext,
+nsTextFrame::GetCursor(nsPresContext* aPresContext,
                        nsPoint& aPoint,
                        PRInt32& aCursor)
 {
@@ -1379,7 +1379,7 @@ nsTextFrame::GetLastInFlow() const
 }
 
 NS_IMETHODIMP
-nsTextFrame::CharacterDataChanged(nsIPresContext* aPresContext,
+nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
                                   nsIContent*     aChild,
                                   PRBool          aAppend)
 {
@@ -1420,7 +1420,7 @@ nsTextFrame::CharacterDataChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextFrame::Paint(nsIPresContext*      aPresContext,
+nsTextFrame::Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -1745,7 +1745,7 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 void 
 nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                   nsStyleContext* aStyleContext,
-                                  nsIPresContext* aPresContext,
+                                  nsPresContext* aPresContext,
                                   TextPaintStyle& aTextStyle,
                                   nscoord aX, nscoord aY, nscoord aWidth,
                                   PRUnichar *aText, /*=nsnull*/
@@ -1948,7 +1948,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
 
 
 nsresult
-nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength)
+nsTextFrame::GetContentAndOffsetsForSelection(nsPresContext *aPresContext, nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength)
 {
   if (!aContent || !aOffset || !aLength)
     return NS_ERROR_NULL_POINTER;
@@ -2000,7 +2000,7 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIC
 }
 
 //---------------------------------------------------------
-nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresContext,
+nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*          aPresContext,
                                              nsIRenderingContext&     aRenderingContext,
                                              nsIPresShell**           aPresShell,
                                              nsISelectionController** aSelectionController,
@@ -2059,7 +2059,7 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
 }
 
 PRBool
-nsTextFrame::IsTextInSelection(nsIPresContext* aPresContext,
+nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
                                nsIRenderingContext& aRenderingContext)
 {
   nsCOMPtr<nsISelectionController> selCon;
@@ -2155,7 +2155,7 @@ nsTextFrame::IsTextInSelection(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextFrame::IsVisibleForPainting(nsIPresContext *     aPresContext, 
+nsTextFrame::IsVisibleForPainting(nsPresContext *     aPresContext, 
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible)
@@ -2188,7 +2188,7 @@ nsTextFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
 }
 
 void
-nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
+nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsStyleContext* aStyleContext,
                               TextPaintStyle& aTextStyle,
@@ -2444,7 +2444,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 
 //measure Spaced Textvoid
 nsresult
-nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
+nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
                                nsIRenderingContext* aRendContext,
                                const nsPoint& aPoint,
                                nsIContent** aNewContent,
@@ -2584,7 +2584,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
 void
 nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
                           nsStyleContext* aStyleContext,
-                          nsIPresContext* aPresContext,
+                          nsPresContext* aPresContext,
                           TextPaintStyle& aTextStyle,
                           PRUnichar* aBuffer, PRInt32 aLength,
                           nscoord aX, nscoord aY,
@@ -2893,7 +2893,7 @@ nsTextFrame::ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingCon
 }
 
 void
-nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
+nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              nsStyleContext* aStyleContext,
                              TextPaintStyle& aTextStyle,
@@ -3069,7 +3069,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 }
 
 void
-nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
+nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             nsStyleContext* aStyleContext,
                             TextPaintStyle& aTextStyle,
@@ -3351,7 +3351,7 @@ BinarySearchForPosition(nsIRenderingContext* acx,
 // display of selection is based on the compressed text.
 //---------------------------------------------------------------------------
 NS_IMETHODIMP
-nsTextFrame::GetPosition(nsIPresContext* aCX,
+nsTextFrame::GetPosition(nsPresContext* aCX,
                          const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
@@ -3505,7 +3505,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
 }
 
 NS_IMETHODIMP
-nsTextFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+nsTextFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
@@ -3541,7 +3541,7 @@ void ForceDrawFrame(nsFrame * aFrame);
 
 //null range means the whole thing
 NS_IMETHODIMP
-nsTextFrame::SetSelected(nsIPresContext* aPresContext,
+nsTextFrame::SetSelected(nsPresContext* aPresContext,
                          nsIDOMRange *aRange,
                          PRBool aSelected,
                          nsSpread aSpread)
@@ -3690,7 +3690,7 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
+nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
                                 nsIRenderingContext* inRendContext,
                                 PRInt32 inOffset,
                                 nsPoint* outPoint)
@@ -3866,7 +3866,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
 
 
 NS_IMETHODIMP
-nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) 
+nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos) 
 {
 #ifdef IBMBIDI
   PRBool isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
@@ -4283,7 +4283,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 }
 
 NS_IMETHODIMP
-nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext, 
+nsTextFrame::HandleMultiplePress(nsPresContext* aPresContext, 
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus*  aEventStatus)
 {
@@ -4314,7 +4314,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsTextFrame::CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)
+nsTextFrame::CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)
 {
   if (!aFinished || !_retval)
     return NS_ERROR_NULL_POINTER;
@@ -4498,7 +4498,7 @@ DEFINE_CCMAP(gPuncCharsCCMap, const);
 #define IsPunctuationMark(ch) (CCMAP_HAS_CHAR(gPuncCharsCCMap, ch))
 
 nsReflowStatus
-nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
+nsTextFrame::MeasureText(nsPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsTextTransformer&       aTx,
                          nsILineBreaker*          aLb,
@@ -5131,7 +5131,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextFrame::Reflow(nsIPresContext*          aPresContext,
+nsTextFrame::Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
@@ -5477,7 +5477,7 @@ nsTextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 }
 
 NS_IMETHODIMP
-nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
+nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth)
 {
@@ -5549,7 +5549,7 @@ RevertSpacesToNBSP(PRUnichar* aBuffer, PRInt32 aWordLen)
 }
 
 nsTextDimensions
-nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
+nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
                                    nsILineBreaker* aLineBreaker,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
@@ -5652,7 +5652,7 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
 }
                                     
 nsTextDimensions
-nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
+nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                       nsILineBreaker* aLineBreaker,
                                       nsLineLayout& aLineLayout,
                                       const nsHTMLReflowState& aReflowState,
@@ -5851,7 +5851,7 @@ nsTextFrame::GetFrameName(nsAString& aResult) const
 }
 
 NS_IMETHODIMP
-nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsTextFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   // Output the tag
   IndentBy(out, aIndent);

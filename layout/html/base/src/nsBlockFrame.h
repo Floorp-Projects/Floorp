@@ -100,40 +100,40 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   virtual PRBool IsContainingBlock() const;
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG
-  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD VerifyTree() const;
@@ -167,19 +167,19 @@ public:
   // are non-decreasing.
   void SetupLineCursor();
 
-  nsresult GetFrameForPointUsing(nsIPresContext* aPresContext,
+  nsresult GetFrameForPointUsing(nsPresContext* aPresContext,
                                  const nsPoint& aPoint,
                                  nsIAtom*       aList,
                                  nsFramePaintLayer aWhichLayer,
                                  PRBool         aConsiderSelf,
                                  nsIFrame**     aFrame);
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
-  NS_IMETHOD IsVisibleForPainting(nsIPresContext *     aPresContext, 
+  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
@@ -187,23 +187,23 @@ public:
   virtual PRBool IsEmpty();
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
 
 #ifdef DO_SELECTION
-  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus* aEventStatus);
 
-  NS_IMETHOD  HandleDrag(nsIPresContext* aPresContext, 
+  NS_IMETHOD  HandleDrag(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
@@ -213,14 +213,14 @@ public:
 
 #endif
 
-  virtual void DeleteNextInFlowChild(nsIPresContext* aPresContext,
+  virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
                                      nsIFrame*       aNextInFlow);
 
   /** return the topmost block child based on y-index.
     * almost always the first or second line, if there is one.
     * accounts for lines that hold only compressed white space, etc.
     */
-  nsIFrame* GetTopBlockChild(nsIPresContext *aPresContext);
+  nsIFrame* GetTopBlockChild(nsPresContext *aPresContext);
 
   // Returns the line containing aFrame, or end_lines() if the frame
   // isn't in the block.
@@ -232,12 +232,12 @@ public:
 
   // Create a contination for aPlaceholder and its out of flow frame and
   // add it to the list of overflow floats
-  nsresult SplitPlaceholder(nsIPresContext& aPresContext, nsIFrame& aPlaceholder);
+  nsresult SplitPlaceholder(nsPresContext& aPresContext, nsIFrame& aPlaceholder);
 
   void UndoSplitPlaceholders(nsBlockReflowState& aState,
                              nsIFrame*           aLastPlaceholder);
   
-  virtual void PaintChild(nsIPresContext*      aPresContext,
+  virtual void PaintChild(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsIFrame*            aFrame,
@@ -251,7 +251,7 @@ protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
 
-  already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsIPresContext* aPresContext)
+  already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext)
   {
     return aPresContext->StyleSet()->
       ProbePseudoStyleFor(mContent,
@@ -303,7 +303,7 @@ protected:
     * part of this block's mLines list.
     * @return PR_TRUE if any lines were drained.
     */
-  PRBool DrainOverflowLines(nsIPresContext* aPresContext);
+  PRBool DrainOverflowLines(nsPresContext* aPresContext);
 
   virtual PRIntn GetSkipSides() const;
 
@@ -320,7 +320,7 @@ protected:
     * contains aPrevSibling and add aFrameList after aPrevSibling on that line.
     * new lines are created as necessary to handle block data in aFrameList.
     */
-  nsresult AddFrames(nsIPresContext* aPresContext,
+  nsresult AddFrames(nsPresContext* aPresContext,
                      nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
 
@@ -329,11 +329,11 @@ protected:
     * handled continued frames
     * marks lines dirty as needed
     */
-  nsresult DoRemoveFrame(nsIPresContext* aPresContext,
+  nsresult DoRemoveFrame(nsPresContext* aPresContext,
                          nsIFrame* aDeletedFrame);
 
   // Remove a float, abs, rel positioned frame from the appropriate block's list
-  static void DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
+  static void DoRemoveOutOfFlowFrame(nsPresContext* aPresContext,
                                      nsIFrame*       aFrame);
 
   /** set up the conditions necessary for an initial reflow */
@@ -494,13 +494,13 @@ protected:
 
   //----------------------------------------
   //XXX
-  virtual void PaintChildren(nsIPresContext*      aPresContext,
+  virtual void PaintChildren(nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer,
                              PRUint32             aFlags = 0);
 
-  void PaintFloats(nsIPresContext* aPresContext,
+  void PaintFloats(nsPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
@@ -513,14 +513,14 @@ protected:
   //----------------------------------------
   // List handling kludge
 
-  void RenumberLists(nsIPresContext* aPresContext);
+  void RenumberLists(nsPresContext* aPresContext);
 
-  PRBool RenumberListsInBlock(nsIPresContext* aPresContext,
+  PRBool RenumberListsInBlock(nsPresContext* aPresContext,
                               nsBlockFrame* aContainerFrame,
                               PRInt32* aOrdinal,
                               PRInt32 aDepth);
 
-  PRBool RenumberListsFor(nsIPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
+  PRBool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
 
   PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 

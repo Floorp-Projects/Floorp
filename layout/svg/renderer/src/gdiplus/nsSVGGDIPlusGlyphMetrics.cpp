@@ -49,7 +49,7 @@ using namespace Gdiplus;
 #include "nsISVGGlyphMetricsSource.h"
 #include "nsPromiseFlatString.h"
 #include "nsFont.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsDeviceContextWin.h"
 #include "nsISVGGDIPlusGlyphMetrics.h"
 #include "nsSVGGDIPlusGlyphMetrics.h"
@@ -72,7 +72,7 @@ using namespace Gdiplus;
  */
 class nsWindowsDC {
 public:
-  nsWindowsDC(nsIPresContext* presContext);
+  nsWindowsDC(nsPresContext* presContext);
   ~nsWindowsDC();
   operator HDC() { return mHDC; }
 private:
@@ -84,7 +84,7 @@ private:
 /** @} */
 
 
-nsWindowsDC::nsWindowsDC(nsIPresContext* presContext)
+nsWindowsDC::nsWindowsDC(nsPresContext* presContext)
 {
   nsIDeviceContext* devicecontext = presContext->DeviceContext();
 
@@ -390,7 +390,7 @@ NS_IMETHODIMP_(void)
 nsSVGGDIPlusGlyphMetrics::GetSubBoundingRect(PRUint32 charoffset, PRUint32 count,
                                              RectF* retval)
 {
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mSource->GetPresContext(getter_AddRefs(presContext));
   NS_ASSERTION(presContext, "null prescontext");
 
@@ -524,7 +524,7 @@ nsSVGGDIPlusGlyphMetrics::InitializeFontInfo()
 {
   if (mFont) return; // already initialized
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mSource->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
     NS_ERROR("null prescontext");
@@ -617,7 +617,7 @@ nsSVGGDIPlusGlyphMetrics::PrepareGraphics(Graphics &g)
 float
 nsSVGGDIPlusGlyphMetrics::GetPixelScale()
 {
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mSource->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
     NS_ERROR("null prescontext");

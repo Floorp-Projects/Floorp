@@ -40,7 +40,7 @@
 #include "nsISupports.h"
 struct nsSize;
 class imgIRequest;
-class nsIPresContext;
+class nsPresContext;
 class nsIImageMap;
 
 // {B261A0D5-E696-11d4-9885-00C04FA0CF4B}
@@ -53,7 +53,7 @@ public:
 
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize) = 0;
 
-  NS_IMETHOD GetImageMap(nsIPresContext *aPresContext, nsIImageMap **aImageMap) = 0;
+  NS_IMETHOD GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap) = 0;
 };
 
 #endif /* nsIImageFrame_h___ */

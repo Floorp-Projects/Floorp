@@ -87,7 +87,7 @@
 #include "nsIImage.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIFrame.h"

@@ -50,7 +50,7 @@ class nsIFrame;
 class nsIHTMLContent;
 class nsIHTMLContentSink;
 class nsIHTMLFragmentContentSink;
-class nsIPresContext;
+class nsPresContext;
 class nsITextContent;
 class nsIURI;
 class nsString;
@@ -74,7 +74,7 @@ class nsIChannel;
 // Factory method for creating a content iterator for generated
 // content
 nsresult
-NS_NewFrameContentIterator(nsIPresContext*      aPresContext,
+NS_NewFrameContentIterator(nsPresContext*      aPresContext,
                            nsIFrame*            aFrame,
                            nsIContentIterator** aIterator);
 

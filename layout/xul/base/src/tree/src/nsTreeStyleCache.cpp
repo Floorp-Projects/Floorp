@@ -44,7 +44,7 @@
 // The style context cache impl
 nsStyleContext*
 nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
-                                  nsIPresContext* aPresContext,
+                                  nsPresContext* aPresContext,
                                   nsIContent* aContent, 
                                   nsStyleContext* aContext,
                                   nsIAtom* aPseudoElement,

@@ -103,7 +103,7 @@ public:
   *        of the frame, on output the size after stretching.
   */
   NS_IMETHOD 
-  Stretch(nsIPresContext*      aPresContext,
+  Stretch(nsPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
@@ -140,7 +140,7 @@ public:
   *        space you want for border/padding in the desired size you return.  
   */
   NS_IMETHOD
-  Place(nsIPresContext*      aPresContext,
+  Place(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) = 0;
@@ -207,11 +207,11 @@ public:
    */
 
   NS_IMETHOD
-  InheritAutomaticData(nsIPresContext* aPresContext,
+  InheritAutomaticData(nsPresContext* aPresContext,
                        nsIFrame*       aParent) = 0;
 
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext) = 0;
+  TransmitAutomaticData(nsPresContext* aPresContext) = 0;
 
  /* UpdatePresentationData :
   * Increments the scriptlevel of the frame, and updates its displaystyle and
@@ -243,7 +243,7 @@ public:
   *        update some flags in the frame, leaving the other flags unchanged.
   */
   NS_IMETHOD
-  UpdatePresentationData(nsIPresContext* aPresContext,
+  UpdatePresentationData(nsPresContext* aPresContext,
                          PRInt32         aScriptLevelIncrement,
                          PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate) = 0;
@@ -279,7 +279,7 @@ public:
   *        for more details about this parameter.
   */
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                     PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
@@ -315,7 +315,7 @@ public:
   * http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
   */
   NS_IMETHOD
-  ReResolveScriptStyle(nsIPresContext* aPresContext,
+  ReResolveScriptStyle(nsPresContext* aPresContext,
                        PRInt32         aParentScriptLevel) = 0;
 };
 

@@ -43,7 +43,7 @@
 #include "nsVoidArray.h"
 
 class nsIContent;
-class nsIPresContext;
+class nsPresContext;
 class nsIDOMEvent;
 class nsIFrame;
 class nsIView;
@@ -66,13 +66,13 @@ public:
 
   NS_IMETHOD Init() = 0;
 
-  NS_IMETHOD PreHandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD PreHandleEvent(nsPresContext* aPresContext, 
                             nsEvent *aEvent, 
                             nsIFrame* aTargetFrame,
                             nsEventStatus* aStatus,
                             nsIView* aView) = 0;
 
-  NS_IMETHOD PostHandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD PostHandleEvent(nsPresContext* aPresContext, 
                              nsEvent *aEvent, 
                              nsIFrame* aTargetFrame,
                              nsEventStatus* aStatus,
@@ -83,7 +83,7 @@ public:
   NS_IMETHOD SetCurrentEvent(nsEvent *aEvent) = 0;
   NS_IMETHOD GetCurrentEvent(nsEvent **aEvent) = 0; // 0 if none
 
-  NS_IMETHOD SetPresContext(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD SetPresContext(nsPresContext* aPresContext) = 0;
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame) = 0;

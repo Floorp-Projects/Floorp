@@ -38,7 +38,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContentIterator.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsIEnumerator.h"
@@ -47,7 +47,7 @@
 class nsFrameContentIterator : public nsIContentIterator
 {
 public:
-  nsFrameContentIterator(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  nsFrameContentIterator(nsPresContext* aPresContext, nsIFrame* aFrame);
   virtual ~nsFrameContentIterator();
 
   // nsISupports
@@ -67,13 +67,13 @@ public:
   virtual nsresult PositionAt(nsIContent* aCurNode);
 
 private:
-  nsCOMPtr<nsIPresContext>  mPresContext;
+  nsCOMPtr<nsPresContext>  mPresContext;
   nsIFrame*                 mParentFrame;
   nsIFrame*                 mCurrentChild;
   PRBool                    mIsDone;
 };
 
-nsFrameContentIterator::nsFrameContentIterator(nsIPresContext* aPresContext,
+nsFrameContentIterator::nsFrameContentIterator(nsPresContext* aPresContext,
                                                nsIFrame*       aFrame)
   : mPresContext(aPresContext), mParentFrame(aFrame), mIsDone(PR_FALSE)
 {
@@ -109,7 +109,7 @@ nsFrameContentIterator::First()
 
 
 static nsIFrame*
-GetNextChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
+GetNextChildFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null pointer");
 
@@ -167,7 +167,7 @@ nsFrameContentIterator::Next()
 }
 
 static nsIFrame*
-GetPrevChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
+GetPrevChildFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null pointer");
 
@@ -265,7 +265,7 @@ nsFrameContentIterator::PositionAt(nsIContent* aCurNode)
 }
 
 nsresult
-NS_NewFrameContentIterator(nsIPresContext*      aPresContext,
+NS_NewFrameContentIterator(nsPresContext*      aPresContext,
                            nsIFrame*            aFrame,
                            nsIContentIterator** aIterator)
 {

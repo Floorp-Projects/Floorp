@@ -39,7 +39,7 @@
 #include "plarena.h"
 
 #include "BasicTableLayoutStrategy.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"

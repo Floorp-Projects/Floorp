@@ -45,7 +45,7 @@
 #include "nsProgressMeterFrame.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
@@ -91,7 +91,7 @@ nsProgressMeterFrame :: ~nsProgressMeterFrame ( )
 }
 
 NS_IMETHODIMP
-nsProgressMeterFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsProgressMeterFrame::SetInitialChildList(nsPresContext* aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aChildList)
 { 
@@ -102,7 +102,7 @@ nsProgressMeterFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsProgressMeterFrame::AttributeChanged(nsPresContext* aPresContext,
                                        nsIContent* aChild,
                                        PRInt32 aNameSpaceID,
                                        nsIAtom* aAttribute,

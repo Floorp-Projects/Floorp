@@ -40,7 +40,7 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIRenderingContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
@@ -153,7 +153,7 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
 }
 
 nsresult
-nsTableRowGroupFrame::InitRepeatedFrame(nsIPresContext*       aPresContext,
+nsTableRowGroupFrame::InitRepeatedFrame(nsPresContext*       aPresContext,
                                         nsTableRowGroupFrame* aHeaderFooterFrame)
 {
   nsTableRowFrame* copyRowFrame = GetFirstRow();
@@ -185,7 +185,7 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsIPresContext*       aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
+NS_METHOD nsTableRowGroupFrame::Paint(nsPresContext*      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect,
                                       nsFramePaintLayer    aWhichLayer,
@@ -240,7 +240,7 @@ nsTableRowGroupFrame::GetSkipSides() const
 
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTableRowGroupFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                    const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
@@ -252,7 +252,7 @@ nsTableRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 // Position and size aKidFrame and update our reflow state. The origin of
 // aKidRect is relative to the upper-left origin of our frame
 void 
-nsTableRowGroupFrame::PlaceChild(nsIPresContext*        aPresContext,
+nsTableRowGroupFrame::PlaceChild(nsPresContext*        aPresContext,
                                  nsRowGroupReflowState& aReflowState,
                                  nsIFrame*              aKidFrame,
                                  nsHTMLReflowMetrics&   aDesiredSize)
@@ -270,7 +270,7 @@ nsTableRowGroupFrame::PlaceChild(nsIPresContext*        aPresContext,
 }
 
 void
-nsTableRowGroupFrame::InitChildReflowState(nsIPresContext&    aPresContext, 
+nsTableRowGroupFrame::InitChildReflowState(nsPresContext&    aPresContext, 
                                            PRBool             aBorderCollapse,
                                            float              aPixelsToTwips,
                                            nsHTMLReflowState& aReflowState)                                    
@@ -292,7 +292,7 @@ nsTableRowGroupFrame::InitChildReflowState(nsIPresContext&    aPresContext,
 // Reflow the frames we've already created. If aDirtyOnly is set then only
 // reflow dirty frames. This assumes that all of the dirty frames are contiguous.
 NS_METHOD 
-nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
+nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
                                      nsHTMLReflowMetrics&   aDesiredSize,
                                      nsRowGroupReflowState& aReflowState,
                                      nsReflowStatus&        aStatus,
@@ -463,7 +463,7 @@ UpdateHeights(RowInfo& aRowInfo,
 }
 
 void 
-nsTableRowGroupFrame::DidResizeRows(nsIPresContext&          aPresContext,
+nsTableRowGroupFrame::DidResizeRows(nsPresContext&          aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nsHTMLReflowMetrics&     aDesiredSize,
                                     nsTableRowFrame*         aStartRowFrameIn)
@@ -484,7 +484,7 @@ nsTableRowGroupFrame::DidResizeRows(nsIPresContext&          aPresContext,
 }
 
 static void
-CacheRowHeightsForPrinting(nsIPresContext*  aPresContext,
+CacheRowHeightsForPrinting(nsPresContext*  aPresContext,
                            nsTableRowFrame* aFirstRow)
 {
   for (nsTableRowFrame* row = aFirstRow; row; row = row->GetNextRow()) {
@@ -501,7 +501,7 @@ CacheRowHeightsForPrinting(nsIPresContext*  aPresContext,
 // Even if rows don't change height, this method must be called to set the heights of each
 // cell in the row to the height of its row.
 void 
-nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext, 
+nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext, 
                                           nsHTMLReflowMetrics&     aDesiredSize,
                                           const nsHTMLReflowState& aReflowState,
                                           nsTableRowFrame*         aStartRowFrameIn)
@@ -803,7 +803,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
 // cells that span into it and no cells that span across it. That way
 // we don't have to deal with rowspans
 nsresult
-nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
+nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsPresContext*        aPresContext,
                                                 nsRowGroupReflowState& aReflowState,
                                                 nsIFrame*              aKidFrame,
                                                 nscoord                aDeltaY)
@@ -834,7 +834,7 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCont
 // Create a continuing frame, add it to the child list, and then push it
 // and the frames that follow
 void 
-nsTableRowGroupFrame::CreateContinuingRowFrame(nsIPresContext& aPresContext,
+nsTableRowGroupFrame::CreateContinuingRowFrame(nsPresContext& aPresContext,
                                                nsIFrame&       aRowFrame,
                                                nsIFrame**      aContRowFrame)
 {
@@ -859,7 +859,7 @@ nsTableRowGroupFrame::CreateContinuingRowFrame(nsIPresContext& aPresContext,
 // and end on or after aLastRow. aFirstTruncatedRow is the highest row on the
 // page that contains a cell which cannot split on this page 
 void
-nsTableRowGroupFrame::SplitSpanningCells(nsIPresContext&          aPresContext,
+nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&          aPresContext,
                                          const nsHTMLReflowState& aReflowState,
                                          nsTableFrame&            aTable,
                                          nsTableRowFrame&         aFirstRow, 
@@ -930,7 +930,7 @@ nsTableRowGroupFrame::SplitSpanningCells(nsIPresContext&          aPresContext,
 // is necessary in case the row doesn't need a continuation later on or needs 
 // a continuation which doesn't have the same number of cells that now exist. 
 void
-nsTableRowGroupFrame::UndoContinuedRow(nsIPresContext*  aPresContext,
+nsTableRowGroupFrame::UndoContinuedRow(nsPresContext*  aPresContext,
                                        nsTableRowFrame* aRow)
 {
   if (!aRow) return; // allow null aRow to avoid callers doing null checks
@@ -964,7 +964,7 @@ GetRowBefore(nsTableRowFrame& aStartRow,
 }
 
 nsresult
-nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
+nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
                                     const nsHTMLReflowState& aReflowState,
                                     nsTableFrame*            aTableFrame,
@@ -1175,7 +1175,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
   * Rows are responsible for layout of their children.
   */
 NS_METHOD
-nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
+nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
@@ -1283,7 +1283,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
 
 
 NS_METHOD 
-nsTableRowGroupFrame::IncrementalReflow(nsIPresContext*        aPresContext,
+nsTableRowGroupFrame::IncrementalReflow(nsPresContext*        aPresContext,
                                         nsHTMLReflowMetrics&   aDesiredSize,
                                         nsRowGroupReflowState& aReflowState,
                                         nsReflowStatus&        aStatus)
@@ -1308,7 +1308,7 @@ nsTableRowGroupFrame::IncrementalReflow(nsIPresContext*        aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
+nsTableRowGroupFrame::AppendFrames(nsPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
@@ -1353,7 +1353,7 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
+nsTableRowGroupFrame::InsertFrames(nsPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aPrevFrame,
@@ -1411,7 +1411,7 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsTableRowGroupFrame::RemoveFrame(nsPresContext* aPresContext,
                                   nsIPresShell&   aPresShell,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
@@ -1436,7 +1436,7 @@ nsTableRowGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_METHOD 
-nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext*        aPresContext,
+nsTableRowGroupFrame::IR_TargetIsMe(nsPresContext*        aPresContext,
                                     nsHTMLReflowMetrics&   aDesiredSize,
                                     nsRowGroupReflowState& aReflowState,
                                     nsReflowStatus&        aStatus)
@@ -1592,7 +1592,7 @@ GetLastRowSibling(nsIFrame* aRowFrame)
 }
 
 NS_METHOD 
-nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
+nsTableRowGroupFrame::IR_TargetIsChild(nsPresContext*        aPresContext,
                                        nsHTMLReflowMetrics&   aDesiredSize,
                                        nsRowGroupReflowState& aReflowState,
                                        nsReflowStatus&        aStatus,
@@ -1713,7 +1713,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
 }
 
 NS_METHOD 
-nsTableRowGroupFrame::IR_StyleChanged(nsIPresContext*        aPresContext,
+nsTableRowGroupFrame::IR_StyleChanged(nsPresContext*        aPresContext,
                                       nsHTMLReflowMetrics&   aDesiredSize,
                                       nsRowGroupReflowState& aReflowState,
                                       nsReflowStatus&        aStatus)
@@ -1756,7 +1756,7 @@ NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::Init(nsIPresContext*  aPresContext,
+nsTableRowGroupFrame::Init(nsPresContext*  aPresContext,
                            nsIContent*      aContent,
                            nsIFrame*        aParent,
                            nsStyleContext*  aContext,

@@ -114,7 +114,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *w
 
   *x = *y = *width = *height = 0;
 
-  nsCOMPtr<nsIPresContext> presContext(GetPresContext());
+  nsCOMPtr<nsPresContext> presContext(GetPresContext());
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContent> ourContent(do_QueryInterface(mDOMNode));

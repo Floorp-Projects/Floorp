@@ -79,7 +79,7 @@
 #include "nsIScrollableViewProvider.h"
 #include "nsRange.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -596,7 +596,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   }
 
   // Get the Presentation Context from the Shell
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   presShell->GetPresContext(getter_AddRefs(context));
 
   if (!context) {
@@ -970,7 +970,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   }
 
   // Get the presentation context
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
     return;
@@ -1357,7 +1357,7 @@ IsArea(nsIContent *aContent)
 }
 
 nsresult
-nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
+nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
                                                nsEvent* aEvent,
                                                nsIDOMEvent** aDOMEvent,
                                                PRUint32 aFlags,
@@ -2359,7 +2359,7 @@ nsGenericHTMLElement::RestoreFormControlState(nsIHTMLContent* aContent,
 // XXX This creates a dependency between content and frames
 nsresult
 nsGenericHTMLElement::GetPresContext(nsIHTMLContent* aContent,
-                                     nsIPresContext** aPresContext)
+                                     nsPresContext** aPresContext)
 {
   // Get the document
   nsIDocument* doc = aContent->GetDocument();
@@ -3589,7 +3589,7 @@ nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMETHODIMP
-nsGenericHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
+nsGenericHTMLFrameElement::HandleChromeEvent(nsPresContext* aPresContext,
                                              nsEvent* aEvent,
                                              nsIDOMEvent** aDOMEvent,
                                              PRUint32 aFlags, 
@@ -3603,7 +3603,7 @@ nsGenericHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
 void
 nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
 {
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (!presContext)
     return;
@@ -3638,7 +3638,7 @@ nsGenericHTMLElement::Focus()
 }
 
 void
-nsGenericHTMLElement::RemoveFocus(nsIPresContext *aPresContext)
+nsGenericHTMLElement::RemoveFocus(nsPresContext *aPresContext)
 {
   if (!aPresContext) 
     return;
@@ -3688,7 +3688,7 @@ nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
   }
 
   // We have an access key, so get the ESM from the pres context.
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
 
   if (presContext) {

@@ -42,7 +42,7 @@
 #include "nsBulletFrame.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
@@ -82,7 +82,7 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
      return NS_ERROR_FAILURE;  
   }
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsIFrame *frame = nsnull;

@@ -89,7 +89,7 @@ class mozXMLTermUtils
    * @return NS_OK on success
    */
   static NS_EXPORT nsresult
-    GetPresContextScrollableView(nsIPresContext* aPresContext,
+    GetPresContextScrollableView(nsPresContext* aPresContext,
                                  nsIScrollableView** aScrollableView);
 
   /** Gets the device context for presentation context
@@ -98,7 +98,7 @@ class mozXMLTermUtils
    * @return NS_OK on success
    */
   static NS_EXPORT nsresult
-    GetPresContextDeviceContext(nsIPresContext* aPresContext,
+    GetPresContextDeviceContext(nsPresContext* aPresContext,
                                 nsIDeviceContext** aDeviceContext);
 
   /** Gets the script context for document

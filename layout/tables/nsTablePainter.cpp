@@ -141,7 +141,7 @@ TableBackgroundPainter::TableBackgroundData::~TableBackgroundData()
 }
 
 void
-TableBackgroundPainter::TableBackgroundData::Destroy(nsIPresContext* aPresContext)
+TableBackgroundPainter::TableBackgroundData::Destroy(nsPresContext* aPresContext)
 {
   NS_PRECONDITION(aPresContext, "null prescontext");
   if (mSynthBorder) {
@@ -168,7 +168,7 @@ TableBackgroundPainter::TableBackgroundData::SetFrame(nsIFrame* aFrame)
 }
 
 void
-TableBackgroundPainter::TableBackgroundData::SetFull(nsIPresContext*      aPresContext,
+TableBackgroundPainter::TableBackgroundData::SetFull(nsPresContext*      aPresContext,
                                                      nsIRenderingContext& aRenderingContext,
                                                      nsIFrame*            aFrame)
 {
@@ -221,7 +221,7 @@ TableBackgroundPainter::TableBackgroundData::SetBCBorder(nsMargin& aBorder,
 
 TableBackgroundPainter::TableBackgroundPainter(nsTableFrame*        aTableFrame,
                                                Origin               aOrigin,
-                                               nsIPresContext*      aPresContext,
+                                               nsPresContext*      aPresContext,
                                                nsIRenderingContext& aRenderingContext,
                                                const nsRect&        aDirtyRect)
   : mPresContext(aPresContext),

@@ -49,12 +49,12 @@ public:
   friend class nsPageFrame;
 
   // nsIFrame
-  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Reflow(nsPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,

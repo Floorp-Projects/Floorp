@@ -193,7 +193,7 @@ nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 }
 
 void
-nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsLineBox::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
 
@@ -289,7 +289,7 @@ nsLineBox::IsEmpty() const
 }
 
 void
-nsLineBox::DeleteLineList(nsIPresContext* aPresContext, nsLineList& aLines)
+nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines)
 {
   if (! aLines.empty()) {
     // Delete our child frames before doing anything else. In particular

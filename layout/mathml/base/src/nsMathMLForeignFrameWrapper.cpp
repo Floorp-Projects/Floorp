@@ -45,7 +45,7 @@
 #include "nsFrame.h"
 #include "nsAreaFrame.h"
 #include "nsLineLayout.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
@@ -75,7 +75,7 @@ NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsMathMLForeignFrameWrapper::Init(nsIPresContext*  aPresContext,
+nsMathMLForeignFrameWrapper::Init(nsPresContext*  aPresContext,
                                   nsIContent*      aContent,
                                   nsIFrame*        aParent,
                                   nsStyleContext*  aContext,
@@ -85,7 +85,7 @@ nsMathMLForeignFrameWrapper::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLForeignFrameWrapper::Reflow(nsIPresContext*          aPresContext,
+nsMathMLForeignFrameWrapper::Reflow(nsPresContext*          aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
                                     const nsHTMLReflowState& aReflowState,
                                     nsReflowStatus&          aStatus)

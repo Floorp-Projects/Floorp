@@ -62,14 +62,14 @@ public:
   nsGfxButtonControlFrame();
 
      //nsIFrame
-  NS_IMETHOD Reflow(nsIPresContext*          aCX,
+  NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
   virtual const nsIID& GetCID();
   virtual const nsIID& GetIID();
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
@@ -89,13 +89,13 @@ public:
 
  
   // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,

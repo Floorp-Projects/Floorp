@@ -47,7 +47,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"
@@ -217,12 +217,12 @@ public:
                                  PRBool aDeepSetDocument);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
 
-  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   // Overriden nsIFormControl methods
@@ -284,7 +284,7 @@ protected:
    * @param aNotify whether to notify the style system and such
    */
   void OnOptionSelected(nsISelectControlFrame* aSelectFrame,
-                        nsIPresContext* aPresContext,
+                        nsPresContext* aPresContext,
                         PRInt32 aIndex,
                         PRBool aSelected,
                         PRBool aNotify);
@@ -530,7 +530,7 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
     // get into the right state once it's created.
     nsISelectControlFrame* selectFrame = GetSelectFrame();
 
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     if (selectFrame) {
       GetPresContext(this, getter_AddRefs(presContext));
     }
@@ -619,7 +619,7 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
     // Tell the widget we removed the options
     nsISelectControlFrame* selectFrame = GetSelectFrame();
     if (selectFrame) {
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       GetPresContext(this, getter_AddRefs(presContext));
       for (int i = aListIndex; i < aListIndex + numRemoved; ++i) {
         selectFrame->RemoveOption(presContext, i);
@@ -1153,7 +1153,7 @@ nsHTMLSelectElement::IsOptionSelectedByIndex(PRInt32 aIndex)
 
 void
 nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
-                                      nsIPresContext* aPresContext,
+                                      nsPresContext* aPresContext,
                                       PRInt32 aIndex,
                                       PRBool aSelected,
                                       PRBool aNotify)
@@ -1263,7 +1263,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
   nsISelectControlFrame *selectFrame = nsnull;
   PRBool did_get_frame = PR_FALSE;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
 
   if (aIsSelected) {
@@ -1597,7 +1597,7 @@ nsHTMLSelectElement::Focus()
 }
 
 void
-nsHTMLSelectElement::SetFocus(nsIPresContext* aPresContext)
+nsHTMLSelectElement::SetFocus(nsPresContext* aPresContext)
 {
   if (!aPresContext)
     return;
@@ -1772,7 +1772,7 @@ nsHTMLSelectElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMap
 
 
 nsresult
-nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLSelectElement::HandleDOMEvent(nsPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,

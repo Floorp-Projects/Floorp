@@ -57,7 +57,7 @@
 #include "nsWeakReference.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMWindow.h"
@@ -168,7 +168,7 @@ protected:
   // Get selection and selection controller for current pres shell
   void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon, 
                     nsISelection **aDomSel);
-  PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext,
+  PRBool IsRangeVisible(nsIPresShell *aPresShell, nsPresContext *aPresContext,
                          nsIDOMRange *aRange, PRBool aMustBeVisible, 
                          PRBool aGetTopVisibleLeaf,
                          nsIDOMRange **aNewRange);
@@ -179,7 +179,7 @@ protected:
                                PRBool aIsFirstVisiblePreferred, 
                                PRBool aCanUseDocSelection,
                                nsIPresShell **aPresShell, 
-                               nsIPresContext **aPresContext);
+                               nsPresContext **aPresContext);
   void DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent, 
                      PRBool aClearStatus, const PRUnichar *aText = nsnull);
   nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);

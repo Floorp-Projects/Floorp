@@ -66,7 +66,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsBoxFrame.h"
 #include "nsStyleContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
@@ -211,7 +211,7 @@ nsBoxFrame::GetHAlign(Halignment& aAlign)
 }
 
 NS_IMETHODIMP
-nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsBoxFrame::SetInitialChildList(nsPresContext* aPresContext,
                                 nsIAtom*        aListName,
                                 nsIFrame*       aChildList)
 {
@@ -248,7 +248,7 @@ nsBoxFrame::IsNormalDirection() const
  * Initialize us. This is a good time to get the alignment of the box
  */
 NS_IMETHODIMP
-nsBoxFrame::Init(nsIPresContext*  aPresContext,
+nsBoxFrame::Init(nsPresContext*  aPresContext,
                  nsIContent*      aContent,
                  nsIFrame*        aParent,
                  nsStyleContext*  aContext,
@@ -691,7 +691,7 @@ nsBoxFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
    // if we receive a ReflowDirtyChild it is because there is an HTML frame 
    // just inside us. So must find the adaptor that contains the child and
    // tell it that things are dirty.
-   nsCOMPtr<nsIPresContext> context;
+   nsCOMPtr<nsPresContext> context;
    aPresShell->GetPresContext(getter_AddRefs(context));
    nsBoxLayoutState state(context);
 
@@ -714,7 +714,7 @@ nsBoxFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 }
 
 NS_IMETHODIMP
-nsBoxFrame::DidReflow(nsIPresContext*           aPresContext,
+nsBoxFrame::DidReflow(nsPresContext*           aPresContext,
                       const nsHTMLReflowState*  aReflowState,
                       nsDidReflowStatus         aStatus)
 {
@@ -751,7 +751,7 @@ nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState,
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
   if (reflowState->reason == eReflowReason_Initial) {
     // See if we are doing Print Preview
-    if (aState.PresContext()->Type() == nsIPresContext::eContext_PrintPreview) {
+    if (aState.PresContext()->Type() == nsPresContext::eContext_PrintPreview) {
       // Now, get the current URI to see if we doing chrome
       nsIPresShell *presShell = aState.PresShell();
       if (!presShell) return PR_FALSE;
@@ -768,7 +768,7 @@ nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::Reflow(nsIPresContext*          aPresContext,
+nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
                    nsReflowStatus&          aStatus)
@@ -1075,7 +1075,7 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
 }
 
 NS_IMETHODIMP
-nsBoxFrame::Destroy(nsIPresContext* aPresContext)
+nsBoxFrame::Destroy(nsPresContext* aPresContext)
 {
   // unregister access key
   RegUnregAccessKey(aPresContext, PR_FALSE);
@@ -1125,7 +1125,7 @@ nsBoxFrame::NeedsRecalc()
 }
 
 NS_IMETHODIMP
-nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsBoxFrame::RemoveFrame(nsPresContext* aPresContext,
                         nsIPresShell&   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aOldFrame)
@@ -1148,7 +1148,7 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
+nsBoxFrame::InsertFrames(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aPrevFrame,
@@ -1188,7 +1188,7 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
+nsBoxFrame::AppendFrames(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aFrameList)
@@ -1219,7 +1219,7 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsBoxFrame::AttributeChanged(nsPresContext* aPresContext,
                              nsIContent* aChild,
                              PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
@@ -1434,14 +1434,14 @@ nsBoxFrame::CheckFrameOrder()
 
 #ifdef DEBUG_LAYOUT
 void
-nsBoxFrame::GetDebugPref(nsIPresContext* aPresContext)
+nsBoxFrame::GetDebugPref(nsPresContext* aPresContext)
 {
     gDebug = nsContentUtils::GetBoolPref("xul.debug.box");
 }
 #endif
 
 NS_IMETHODIMP
-nsBoxFrame::Paint(nsIPresContext*      aPresContext,
+nsBoxFrame::Paint(nsPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect&        aDirtyRect,
                   nsFramePaintLayer    aWhichLayer,
@@ -1489,7 +1489,7 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
  * do with frame state and overlapping that only applied to HTML not XUL
  */
 void
-nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
+nsBoxFrame::PaintChild(nsPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsIFrame*            aFrame,
@@ -1538,7 +1538,7 @@ nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
 }
 
 void
-nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
+nsBoxFrame::PaintChildren(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -1809,7 +1809,7 @@ nsBoxFrame::GetDebug(PRBool& aDebug)
 #endif
 
 NS_IMETHODIMP  
-nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+nsBoxFrame::GetFrameForPoint(nsPresContext*   aPresContext,
                              const nsPoint&    aPoint, 
                              nsFramePaintLayer aWhichLayer,    
                              nsIFrame**        aFrame)
@@ -1878,7 +1878,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
 }
 
 /* virtual */ nsresult
-nsBoxFrame::GetFrameForPointChild(nsIPresContext*   aPresContext,
+nsBoxFrame::GetFrameForPointChild(nsPresContext*   aPresContext,
                                   const nsPoint&    aPoint,
                                   nsFramePaintLayer aWhichLayer,    
                                   nsIFrame*         aChild,
@@ -1972,7 +1972,7 @@ nsBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
 
 
 NS_IMETHODIMP
-nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
+nsBoxFrame::GetCursor(nsPresContext* aPresContext,
                       nsPoint&        aPoint,
                       PRInt32&        aCursor)
 {
@@ -2012,7 +2012,7 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
 // view) into a localized pixel coordinate that is relative to the
 // content area of this frame (inside the border+padding).
 void
-nsBoxFrame::TranslateEventCoords(nsIPresContext* aPresContext,
+nsBoxFrame::TranslateEventCoords(nsPresContext* aPresContext,
                                  const nsPoint& aPoint,
                                  nsPoint& aResult)
 {
@@ -2062,7 +2062,7 @@ nsBoxFrame::GetContentOf(nsIContent** aContent)
 /*
 nsresult
 nsBoxFrame::PaintDebug(nsIBox*              aBox, 
-                       nsIPresContext*      aPresContext,
+                       nsPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer)
@@ -2204,7 +2204,7 @@ nsBoxFrame::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizontal,
 }
 
 void 
-nsBoxFrame::DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
+nsBoxFrame::DrawSpacer(nsPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
 {    
          nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
@@ -2267,7 +2267,7 @@ nsBoxFrame::GetDebugPadding(nsMargin& aPadding)
 #endif
 
 void 
-nsBoxFrame::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels)
+nsBoxFrame::PixelMarginToTwips(nsPresContext* aPresContext, nsMargin& aMarginPixels)
 {
   nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
   aMarginPixels.left   *= onePixel;
@@ -2279,7 +2279,7 @@ nsBoxFrame::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPi
 
 #ifdef DEBUG_LAYOUT
 void
-nsBoxFrame::GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* ch) 
+nsBoxFrame::GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize& b, char* ch) 
 {
     float p2t = aPresContext->ScaledPixelsToTwips();
 
@@ -2303,7 +2303,7 @@ nsBoxFrame::GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize
 }
 
 void
-nsBoxFrame::GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* ch) 
+nsBoxFrame::GetValue(nsPresContext* aPresContext, PRInt32 a, PRInt32 b, char* ch) 
 {
     if (a == NS_INTRINSICSIZE)
       sprintf(ch, "%d[SET]", b);             
@@ -2313,7 +2313,7 @@ nsBoxFrame::GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* c
 
 nsresult
 nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
-                                nsIPresContext* aPresContext,
+                                nsPresContext* aPresContext,
                                 nsPoint&        aPoint,
                                 PRInt32&        aCursor)
 {
@@ -2468,7 +2468,7 @@ nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
  * Boxed don't support fixed positionioning of their children.
  */
 nsresult
-nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
+nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
                                nsIFrame*        aFrame,
                                nsStyleContext*  aStyleContext,
                                PRBool           aForce)
@@ -2607,7 +2607,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
 // If you make changes to this function, check its counterparts
 // in nsTextBoxFrame and nsAreaFrame
 nsresult
-nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
+nsBoxFrame::RegUnregAccessKey(nsPresContext* aPresContext, PRBool aDoReg)
 {
   // if we have no content, we can't do anything
   if (!mContent)
@@ -2649,7 +2649,7 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
 
 
 void
-nsBoxFrame::FireDOMEvent(nsIPresContext *aPresContext, const nsAString& aDOMEventName)
+nsBoxFrame::FireDOMEvent(nsPresContext *aPresContext, const nsAString& aDOMEventName)
 {
   if (mContent) {
     // Fire a DOM event for the title change.

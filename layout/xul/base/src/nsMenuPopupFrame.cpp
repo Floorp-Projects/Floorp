@@ -46,7 +46,7 @@
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
@@ -81,7 +81,7 @@ const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere f
 
 
 static nsIPopupSetFrame*
-GetPopupSetFrame(nsIPresContext* aPresContext)
+GetPopupSetFrame(nsPresContext* aPresContext)
 {
   nsIFrame* rootFrame;
   aPresContext->PresShell()->GetRootFrame(&rootFrame);
@@ -160,7 +160,7 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell)
 
 
 NS_IMETHODIMP
-nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
+nsMenuPopupFrame::Init(nsPresContext*  aPresContext,
                        nsIContent*      aContent,
                        nsIFrame*        aParent,
                        nsStyleContext*  aContext,
@@ -473,7 +473,7 @@ nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
 //   viewmanager if aStopAtViewManagerRoot is true; otherwise it's the
 //   root view of the root viewmanager.
 void
-nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext, 
+nsMenuPopupFrame::GetRootViewForPopup(nsPresContext* aPresContext, 
                                       nsIFrame* aStartFrame,
                                       PRBool aStopAtViewManagerRoot,
                                       nsIView** aResult)
@@ -572,7 +572,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
         shell->GetPrimaryFrameFor(targetAsContent, &targetFrame);
         nsIView* parentView = nsnull;
         if (targetFrame) {
-          nsCOMPtr<nsIPresContext> targetContext;
+          nsCOMPtr<nsPresContext> targetContext;
           shell->GetPresContext(getter_AddRefs(targetContext));
           if (targetContext) {
             GetRootViewForPopup(targetContext, targetFrame, PR_TRUE, &parentView);
@@ -811,7 +811,7 @@ nsMenuPopupFrame::MovePopupToOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt
 
 
 nsresult 
-nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
+nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
                                     const nsString& aPopupAnchor,
                                     const nsString& aPopupAlign,
                                     nsIFrame* aFrame, 
@@ -2011,7 +2011,7 @@ nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 }
 
 NS_IMETHODIMP 
-nsMenuPopupFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMenuPopupFrame::AttributeChanged(nsPresContext* aPresContext,
                                    nsIContent* aChild,
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,
@@ -2048,7 +2048,7 @@ nsMenuPopupFrame::MoveToAttributePosition()
 
 
 NS_IMETHODIMP 
-nsMenuPopupFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsMenuPopupFrame::HandleEvent(nsPresContext* aPresContext, 
                               nsGUIEvent*     aEvent,
                               nsEventStatus*  aEventStatus)
 {
@@ -2056,13 +2056,13 @@ nsMenuPopupFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::Destroy(nsIPresContext* aPresContext)
+nsMenuPopupFrame::Destroy(nsPresContext* aPresContext)
 {
   return nsBoxFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsMenuPopupFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                    const nsPoint& aPoint,
                                    nsFramePaintLayer aWhichLayer,    
                                    nsIFrame** aFrame)

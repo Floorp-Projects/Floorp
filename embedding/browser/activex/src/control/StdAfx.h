@@ -95,7 +95,7 @@
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsISelection.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPrompt.h"
 #include "nsIEditor.h"
 #include "nsIEditingSession.h"

@@ -51,7 +51,7 @@
 #include "nsIFontMetrics.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
@@ -119,7 +119,7 @@ NS_NewTextBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 
 
 NS_IMETHODIMP
-nsTextBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsTextBoxFrame::AttributeChanged(nsPresContext* aPresContext,
                                  nsIContent*     aChild,
                                  PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
@@ -160,7 +160,7 @@ nsTextBoxFrame::~nsTextBoxFrame()
 
 
 NS_IMETHODIMP
-nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
+nsTextBoxFrame::Init(nsPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
@@ -182,7 +182,7 @@ nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextBoxFrame::Destroy(nsIPresContext* aPresContext)
+nsTextBoxFrame::Destroy(nsPresContext* aPresContext)
 {
     // unregister access key
     RegUnregAccessKey(aPresContext, PR_FALSE);
@@ -205,7 +205,7 @@ nsTextBoxFrame::AlwaysAppendAccessKey()
  
 
 void
-nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
+nsTextBoxFrame::UpdateAttributes(nsPresContext*  aPresContext,
                                  nsIAtom*         aAttribute,
                                  PRBool&          aResize,
                                  PRBool&          aRedraw)
@@ -268,7 +268,7 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextBoxFrame::Paint(nsIPresContext*      aPresContext,
+nsTextBoxFrame::Paint(nsPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect,
                       nsFramePaintLayer    aWhichLayer,
@@ -295,7 +295,7 @@ nsTextBoxFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
+nsTextBoxFrame::PaintTitle(nsPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            const nsRect&        aRect)
@@ -439,7 +439,7 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
 }
 
 void
-nsTextBoxFrame::LayoutTitle(nsIPresContext*      aPresContext,
+nsTextBoxFrame::LayoutTitle(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aRect)
 {
@@ -486,7 +486,7 @@ nsTextBoxFrame::CalculateUnderline(nsIRenderingContext& aRenderingContext)
 }
 
 void
-nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
+nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                                        nsIRenderingContext& aRenderingContext,
                                        nscoord              aWidth)
 {
@@ -771,7 +771,7 @@ nsTextBoxFrame::NeedsRecalc()
 }
 
 void
-nsTextBoxFrame::GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
+nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
                                 const nsString& aString, nsSize& aSize, nscoord& aAscent)
 {
     nsCOMPtr<nsIFontMetrics> fontMet;
@@ -789,7 +789,7 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
     if (mNeedsRecalc)
     {
         nsSize size;
-        nsIPresContext* presContext = aBoxLayoutState.PresContext();
+        nsPresContext* presContext = aBoxLayoutState.PresContext();
         const nsHTMLReflowState* rstate = aBoxLayoutState.GetReflowState();
         if (!rstate)
             return;
@@ -873,7 +873,7 @@ nsTextBoxFrame::GetFrameName(nsAString& aResult) const
 // If you make changes to this function, check its counterparts 
 // in nsBoxFrame and nsAreaFrame
 nsresult
-nsTextBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
+nsTextBoxFrame::RegUnregAccessKey(nsPresContext* aPresContext,
                                   PRBool          aDoReg)
 {
     // if we have no content, we can't do anything

@@ -47,7 +47,7 @@
 // Forward declarations
 class nsIAtom;
 class nsIDocument;
-class nsIPresContext;
+class nsPresContext;
 class nsVoidArray;
 class nsIDOMEvent;
 class nsIContent;
@@ -379,7 +379,7 @@ public:
    * @param aEventStatus the status returned from the function.  Generally
    *        nsEventStatus_eIgnore
    */
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus) = 0;
@@ -416,7 +416,7 @@ public:
    * @param aPresContext the pres context
    * @see nsGenericHTMLElement::SetElementFocus()
    */
-  virtual void SetFocus(nsIPresContext* aPresContext)
+  virtual void SetFocus(nsPresContext* aPresContext)
   {
   }
 
@@ -431,7 +431,7 @@ public:
    * @param aPresContext the pres context
    * @see nsGenericHTMLElement::SetElementFocus()
    */
-  virtual void RemoveFocus(nsIPresContext* aPresContext)
+  virtual void RemoveFocus(nsPresContext* aPresContext)
   {
   }
 

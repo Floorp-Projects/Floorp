@@ -41,7 +41,7 @@
 #include "nsISupports.h"
 #include "nsFont.h"
 
-class nsIPresContext;
+class nsPresContext;
 class nsString;
 class nsIContent;
 class nsVoidArray;
@@ -86,7 +86,7 @@ public:
   /**
    * Tells the combobox to roll up
    */
-  NS_IMETHOD RollupFromList(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD RollupFromList(nsPresContext* aPresContext) = 0;
 
   /**
    * Redisplay the selected text (will do nothing if text has not changed)

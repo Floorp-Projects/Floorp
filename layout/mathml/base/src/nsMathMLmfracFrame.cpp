@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -112,7 +112,7 @@ nsMathMLmfracFrame::IsBevelled()
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
+nsMathMLmfracFrame::Init(nsPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
@@ -135,7 +135,7 @@ nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmfracFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // 1. The REC says:
   //    The <mfrac> element sets displaystyle to "false", or if it was already
@@ -167,7 +167,7 @@ nsMathMLmfracFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 nscoord 
-nsMathMLmfracFrame::CalcLineThickness(nsIPresContext*  aPresContext,
+nsMathMLmfracFrame::CalcLineThickness(nsPresContext*  aPresContext,
                                       nsStyleContext*  aStyleContext,
                                       nsString&        aThicknessAttribute,
                                       nscoord          onePixel,
@@ -221,7 +221,7 @@ nsMathMLmfracFrame::CalcLineThickness(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
+nsMathMLmfracFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -248,7 +248,7 @@ nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmfracFrame::Reflow(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
@@ -266,7 +266,7 @@ nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
+nsMathMLmfracFrame::Place(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
@@ -452,7 +452,7 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMathMLmfracFrame::AttributeChanged(nsPresContext* aPresContext,
                                      nsIContent*     aContent,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
@@ -484,7 +484,7 @@ nsMathMLmfracFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::UpdatePresentationData(nsIPresContext* aPresContext,
+nsMathMLmfracFrame::UpdatePresentationData(nsPresContext* aPresContext,
                                            PRInt32         aScriptLevelIncrement,
                                            PRUint32        aFlagsValues,
                                            PRUint32        aFlagsToUpdate)
@@ -529,7 +529,7 @@ nsMathMLmfracFrame::UpdatePresentationData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                                       PRInt32         aFirstIndex,
                                                       PRInt32         aLastIndex,
                                                       PRInt32         aScriptLevelIncrement,

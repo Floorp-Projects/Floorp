@@ -43,7 +43,7 @@
 //
 
 #include "nsScrollbarButtonFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
@@ -98,7 +98,7 @@ nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsScrollbarButtonFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {  
@@ -111,7 +111,7 @@ nsScrollbarButtonFrame::HandleEvent(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsScrollbarButtonFrame::HandlePress(nsIPresContext* aPresContext, 
+nsScrollbarButtonFrame::HandlePress(nsPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
@@ -121,7 +121,7 @@ nsScrollbarButtonFrame::HandlePress(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsScrollbarButtonFrame::HandleRelease(nsIPresContext* aPresContext, 
+nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext, 
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus*  aEventStatus)
 {
@@ -137,7 +137,7 @@ NS_IMETHODIMP nsScrollbarButtonFrame::Notify(nsITimer *timer)
 }
 
 void
-nsScrollbarButtonFrame::MouseClicked(nsIPresContext* aPresContext, nsGUIEvent* aEvent) 
+nsScrollbarButtonFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent) 
 {
   nsButtonBoxFrame::MouseClicked(aPresContext, aEvent);
   //MouseClicked();
@@ -211,7 +211,7 @@ nsScrollbarButtonFrame::MouseClicked()
 }
 
 nsresult
-nsScrollbarButtonFrame::GetChildWithTag(nsIPresContext* aPresContext,
+nsScrollbarButtonFrame::GetChildWithTag(nsPresContext* aPresContext,
                                         nsIAtom* atom, nsIFrame* start,
                                         nsIFrame*& result)
 {
@@ -268,7 +268,7 @@ nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start,
 }
 
 NS_IMETHODIMP
-nsScrollbarButtonFrame::Destroy(nsIPresContext* aPresContext)
+nsScrollbarButtonFrame::Destroy(nsPresContext* aPresContext)
 {
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.

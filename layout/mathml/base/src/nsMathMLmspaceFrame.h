@@ -50,7 +50,7 @@ public:
   friend nsresult NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
@@ -68,7 +68,7 @@ private:
 
   // helper method to initialize our member data
   void 
-  ProcessAttributes(nsIPresContext* aPresContext);
+  ProcessAttributes(nsPresContext* aPresContext);
 };
 
 #endif /* nsMathMLmspaceFrame_h___ */

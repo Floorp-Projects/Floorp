@@ -49,7 +49,7 @@ class nsIFrame;
 class nsVoidArray;
 struct nsSize;
 struct nsHTMLReflowState;
-class nsIPresContext;
+class nsPresContext;
 
 #define NS_SPACE_MANAGER_CACHE_SIZE 4
 
@@ -467,7 +467,7 @@ public:
    * manager in the reflow state.
    */
   nsresult
-  CreateSpaceManagerFor(nsIPresContext *aPresContext,
+  CreateSpaceManagerFor(nsPresContext *aPresContext,
                         nsIFrame *aFrame);
 
 #ifdef DEBUG

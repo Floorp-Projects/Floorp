@@ -39,12 +39,12 @@
 #define nsLegendFrame_h___
 
 #include "nsAreaFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 
 class  nsIContent;
 class  nsIFrame;
-class  nsIPresContext;
+class  nsPresContext;
 struct nsHTMLReflowMetrics;
 class  nsIRenderingContext;
 struct nsRect;
@@ -60,14 +60,14 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+  NS_IMETHOD Destroy(nsPresContext *aPresContext);
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -81,7 +81,7 @@ public:
 
   PRInt32 GetAlign();
 
-  nsIPresContext * mPresContext;
+  nsPresContext * mPresContext;
 };
 
 

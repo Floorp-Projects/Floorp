@@ -41,7 +41,7 @@
 #include "nscore.h"
 #include "nsSize.h"
 
-class nsIPresContext;
+class nsPresContext;
 struct nsHTMLReflowState;
 struct nsMargin;
 class nsTableCellFrame;

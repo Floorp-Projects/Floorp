@@ -113,7 +113,7 @@ void nsHTMLSelectableAccessible::iterator::CalcSelectionCount(PRInt32 *aSelectio
 
 void nsHTMLSelectableAccessible::iterator::AddAccessibleIfSelected(nsIAccessibilityService *aAccService, 
                                                                    nsIMutableArray *aSelectedAccessibles, 
-                                                                   nsIPresContext *aContext)
+                                                                   nsPresContext *aContext)
 {
   PRBool isSelected = PR_FALSE;
   nsCOMPtr<nsIAccessible> tempAccess;
@@ -132,7 +132,7 @@ void nsHTMLSelectableAccessible::iterator::AddAccessibleIfSelected(nsIAccessibil
 
 PRBool nsHTMLSelectableAccessible::iterator::GetAccessibleIfSelected(PRInt32 aIndex, 
                                                                      nsIAccessibilityService *aAccService, 
-                                                                     nsIPresContext *aContext, 
+                                                                     nsPresContext *aContext, 
                                                                      nsIAccessible **aAccessible)
 {
   PRBool isSelected = PR_FALSE;
@@ -211,7 +211,7 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectedChildren(nsIArray **_retval
   if (!selectedAccessibles)
     return NS_ERROR_OUT_OF_MEMORY;
   
-  nsCOMPtr<nsIPresContext> context(GetPresContext());
+  nsCOMPtr<nsPresContext> context(GetPresContext());
   if (!context)
     return NS_ERROR_FAILURE;
 
@@ -237,7 +237,7 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::RefSelection(PRInt32 aIndex, nsIAccess
   if (!accService)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> context(GetPresContext());
+  nsCOMPtr<nsPresContext> context(GetPresContext());
   if (!context)
     return NS_ERROR_FAILURE;
 
@@ -1098,7 +1098,7 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetNumActions(PRUint8 *aNumActions
 NS_IMETHODIMP nsHTMLComboboxButtonAccessible::DoAction(PRUint8 aIndex)
 {
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
-  nsCOMPtr<nsIPresContext> context(GetPresContext());
+  nsCOMPtr<nsPresContext> context(GetPresContext());
   if (!frame || !context)
     return NS_ERROR_FAILURE;
 
@@ -1158,7 +1158,7 @@ void nsHTMLComboboxButtonAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** a
   // bounding frame is the ComboboxControlFrame
   nsIFrame *frame = nsAccessible::GetBoundsFrame();
   *aBoundingFrame = frame;
-  nsCOMPtr<nsIPresContext> context(GetPresContext());
+  nsCOMPtr<nsPresContext> context(GetPresContext());
   if (!frame || !context)
     return;
 

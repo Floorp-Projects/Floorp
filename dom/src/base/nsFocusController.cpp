@@ -48,7 +48,7 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDocument.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
@@ -264,7 +264,7 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
     return NS_OK;
 
   // Retrieve the context
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
 
   // Make this ESM shift the focus per our instructions.

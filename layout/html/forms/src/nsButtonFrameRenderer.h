@@ -63,22 +63,22 @@ public:
 
    // These three functions all assume a "background" layer within the
    // button, which is itself in the foreground layer.
-	 virtual void PaintButton(nsIPresContext* aPresContext,
+	 virtual void PaintButton(nsPresContext* aPresContext,
 							  nsIRenderingContext& aRenderingContext,
 							  const nsRect& aDirtyRect,
 							  const nsRect& aRect);
 
-	 virtual void PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
+	 virtual void PaintOutlineAndFocusBorders(nsPresContext* aPresContext,
 						  nsIRenderingContext& aRenderingContext,
 						  const nsRect& aDirtyRect,
 						  const nsRect& aRect);
 
-	 virtual void PaintBorderAndBackground(nsIPresContext* aPresContext,
+	 virtual void PaintBorderAndBackground(nsPresContext* aPresContext,
 						  nsIRenderingContext& aRenderingContext,
 						  const nsRect& aDirtyRect,
 						  const nsRect& aRect);
 
-	virtual void SetFrame(nsFrame* aFrame, nsIPresContext* aPresContext);
+	virtual void SetFrame(nsFrame* aFrame, nsPresContext* aPresContext);
  
 	virtual void SetDisabled(PRBool aDisabled, PRBool notify);
 
@@ -100,7 +100,7 @@ public:
 
   virtual nsStyleContext* GetStyleContext(PRInt32 aIndex) const;
   virtual void SetStyleContext(PRInt32 aIndex, nsStyleContext* aStyleContext);
-	virtual void ReResolveStyles(nsIPresContext* aPresContext);
+	virtual void ReResolveStyles(nsPresContext* aPresContext);
 
   virtual nsIFrame* GetFrame();
 

@@ -50,7 +50,7 @@
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 
@@ -125,7 +125,7 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
   nsIPresShell *shell = doc->GetShellAt(0);
   NS_ASSERTION(shell, "No pres shell");
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
   NS_ASSERTION(presContext, "No pres context");
 
@@ -133,7 +133,7 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
 }
 
 nsPoint
-inLayoutUtils::GetClientOrigin(nsIPresContext* aPresContext,
+inLayoutUtils::GetClientOrigin(nsPresContext* aPresContext,
                                nsIFrame* aFrame)
 {
   nsPoint result(0,0);
@@ -171,7 +171,7 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
       // Flush all pending notifications so that our frames are uptodate
       doc->FlushPendingNotifications(Flush_Layout);
 
-      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));
       
       if (presContext) {

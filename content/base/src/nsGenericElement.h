@@ -385,14 +385,14 @@ public:
   virtual nsresult RangeAdd(nsIDOMRange* aRange);
   virtual void RangeRemove(nsIDOMRange* aRange);
   virtual const nsVoidArray *GetRangeList() const;
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
   virtual PRUint32 ContentID() const;
   virtual void SetContentID(PRUint32 aID);
-  virtual void SetFocus(nsIPresContext* aContext);
+  virtual void SetFocus(nsPresContext* aContext);
   virtual nsIContent *GetBindingParent() const;
   virtual nsresult SetBindingParent(nsIContent* aParent);
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
@@ -563,7 +563,7 @@ public:
    *        This would be false for loads from auto XLinks or from the
    *        click() method if we ever implement it.
    */
-  nsresult TriggerLink(nsIPresContext* aPresContext,
+  nsresult TriggerLink(nsPresContext* aPresContext,
                        nsLinkVerb aVerb,
                        nsIURI* aOriginURI,
                        nsIURI* aLinkURI,
@@ -573,7 +573,7 @@ public:
   /**
    * Do whatever needs to be done when the mouse leaves a link
    */
-  nsresult LeaveLink(nsIPresContext* aPresContext);
+  nsresult LeaveLink(nsPresContext* aPresContext);
 
   /**
    * Take two text nodes and append the second to the first.

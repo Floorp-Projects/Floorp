@@ -38,7 +38,7 @@
 #include "nsContainerFrame.h"
 #include "nsCSSRendering.h"
 #include "nsIDocument.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -80,9 +80,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aAnonymousItems);
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
@@ -115,7 +115,7 @@ nsDocElementBoxFrame::nsDocElementBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShe
 }
 
 NS_IMETHODIMP
-nsDocElementBoxFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+nsDocElementBoxFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                        nsISupportsArray& aAnonymousItems)
 {
   nsIDocument* doc = mContent->GetDocument();

@@ -38,7 +38,7 @@
 #include "nsHTMLReflowCommand.h"
 #include "nsHTMLParts.h"
 #include "nsIFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsStyleConsts.h"

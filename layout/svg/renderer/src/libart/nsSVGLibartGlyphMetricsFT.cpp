@@ -43,7 +43,7 @@
 #include "nsPromiseFlatString.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "float.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGRect.h"
@@ -287,7 +287,7 @@ nsSVGLibartGlyphMetricsFT::GetFTFace()
 NS_IMETHODIMP_(float)
 nsSVGLibartGlyphMetricsFT::GetPixelScale()
 {
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mSource->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
     NS_ERROR("null prescontext");
@@ -304,7 +304,7 @@ nsSVGLibartGlyphMetricsFT::GetPixelScale()
 NS_IMETHODIMP_(float)
 nsSVGLibartGlyphMetricsFT::GetTwipsToPixels()
 {
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mSource->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
     NS_ERROR("null prescontext");

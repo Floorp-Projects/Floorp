@@ -1196,7 +1196,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
 }
 
 NS_IMETHODIMP
-nsDocShell::GetEldestPresContext(nsIPresContext** aPresContext)
+nsDocShell::GetEldestPresContext(nsPresContext** aPresContext)
 {
     nsresult rv = NS_OK;
 
@@ -1221,7 +1221,7 @@ nsDocShell::GetEldestPresContext(nsIPresContext** aPresContext)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetPresContext(nsIPresContext ** aPresContext)
+nsDocShell::GetPresContext(nsPresContext ** aPresContext)
 {
     nsresult rv = NS_OK;
 
@@ -1248,7 +1248,7 @@ nsDocShell::GetPresShell(nsIPresShell ** aPresShell)
     NS_ENSURE_ARG_POINTER(aPresShell);
     *aPresShell = nsnull;
 
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     (void) GetPresContext(getter_AddRefs(presContext));
 
     if (presContext) {
@@ -1266,7 +1266,7 @@ nsDocShell::GetEldestPresShell(nsIPresShell** aPresShell)
     NS_ENSURE_ARG_POINTER(aPresShell);
     *aPresShell = nsnull;
 
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     (void) GetEldestPresContext(getter_AddRefs(presContext));
 
     if (presContext) {
@@ -1954,7 +1954,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   parentAsItem->GetItemType(&type);
   nsCOMPtr<nsIPresShell> presShell;
   parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsCOMPtr<nsIDocument> doc;
   presShell->GetDocument(getter_AddRefs(doc));
@@ -3265,7 +3265,7 @@ nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
 NS_IMETHODIMP
 nsDocShell::Repaint(PRBool aForce)
 {
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     GetPresContext(getter_AddRefs(context));
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 

@@ -146,7 +146,7 @@ nsDOMEvent::operator delete(void* aPtr)
 
 
 
-nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
                        const nsAString& aEventType) 
 {
 
@@ -1554,7 +1554,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 
 nsresult
 NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
-                 nsIPresContext* aPresContext, const nsAString& aEventType,
+                 nsPresContext* aPresContext, const nsAString& aEventType,
                  nsEvent *aEvent)
 {
   nsDOMEvent* it = new nsDOMEvent(aPresContext, aEvent, aEventType);

@@ -65,7 +65,7 @@ public:
   }
 #endif
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -78,7 +78,7 @@ public:
 
   //nsICheckboxControlFrame methods
   NS_IMETHOD SetCheckboxFaceStyleContext(nsStyleContext *aCheckboxFaceStyleContext);
-  NS_IMETHOD OnChecked(nsIPresContext* aPresContext, PRBool aChecked);
+  NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked);
 
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
@@ -90,7 +90,7 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 #ifdef DEBUG_rodsXXX
-  NS_IMETHOD Reflow(nsIPresContext*          aCX,
+  NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -102,7 +102,7 @@ protected:
 
 protected:
 
-  virtual void PaintCheckBox(nsIPresContext* aPresContext,
+  virtual void PaintCheckBox(nsPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer);

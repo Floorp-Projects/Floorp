@@ -99,7 +99,7 @@ public:
   }
 
   nsresult
-  Paint(nsIPresContext*      aPresContext,
+  Paint(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer,
@@ -110,7 +110,7 @@ public:
   // @param aContainerSize - IN - suggested size for the stretched char
   // @param aDesiredStretchSize - OUT - the size that the char wants
   nsresult
-  Stretch(nsIPresContext*      aPresContext,
+  Stretch(nsPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
@@ -118,7 +118,7 @@ public:
           PRUint32             aStretchHint = NS_STRETCH_NORMAL);
 
   void
-  SetData(nsIPresContext* aPresContext,
+  SetData(nsPresContext* aPresContext,
           nsString&       aData);
 
   void
@@ -204,7 +204,7 @@ private:
 
   // helper methods
   nsresult
-  ComposeChildren(nsIPresContext*      aPresContext,
+  ComposeChildren(nsPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   nsGlyphTable*        aGlyphTable,
                   nsBoundingMetrics&   aContainerSize,
@@ -212,7 +212,7 @@ private:
                   PRUint32             aStretchHint);
 
   static nsresult
-  PaintVertically(nsIPresContext*      aPresContext,
+  PaintVertically(nsPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   nsFont&              aFont,
                   nsStyleContext*      aStyleContext,
@@ -221,7 +221,7 @@ private:
                   nsRect&              aRect);
 
   static nsresult
-  PaintHorizontally(nsIPresContext*      aPresContext,
+  PaintHorizontally(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     nsFont&              aFont,
                     nsStyleContext*      aStyleContext,

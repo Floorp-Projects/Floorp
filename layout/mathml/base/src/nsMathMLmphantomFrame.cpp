@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
@@ -75,7 +75,7 @@ nsMathMLmphantomFrame::~nsMathMLmphantomFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmphantomFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmphantomFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                             nsIFrame*       aParent)
 {
   // let the base class get the default from our parent
@@ -87,7 +87,7 @@ nsMathMLmphantomFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 NS_METHOD
-nsMathMLmphantomFrame::Paint(nsIPresContext*      aPresContext,
+nsMathMLmphantomFrame::Paint(nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer,

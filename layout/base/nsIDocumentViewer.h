@@ -40,7 +40,7 @@
 #include "nsIContentViewer.h"
 
 class nsIDocument;
-class nsIPresContext;
+class nsPresContext;
 class nsIPresShell;
 class nsIStyleSheet;
 
@@ -62,9 +62,9 @@ public:
   
   NS_IMETHOD GetPresShell(nsIPresShell** aResult) = 0;
   
-  NS_IMETHOD GetPresContext(nsIPresContext** aResult) = 0;
+  NS_IMETHOD GetPresContext(nsPresContext** aResult) = 0;
 
-  NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateDocumentViewerUsing(nsPresContext* aPresContext,
                                        nsIDocumentViewer** aResult) = 0;
 };
 

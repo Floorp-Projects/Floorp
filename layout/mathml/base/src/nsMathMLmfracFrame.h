@@ -94,49 +94,49 @@ public:
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
-  AttributeChanged(nsIPresContext* aPresContext,
+  AttributeChanged(nsPresContext* aPresContext,
                    nsIContent*     aChild,
                    PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
+  Init(nsPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD
-  Place(nsIPresContext*      aPresContext,
+  Place(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD 
-  Paint(nsIPresContext*      aPresContext,
+  Paint(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer,
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext);
+  TransmitAutomaticData(nsPresContext* aPresContext);
 
   NS_IMETHOD
-  UpdatePresentationData(nsIPresContext* aPresContext,
+  UpdatePresentationData(nsPresContext* aPresContext,
                          PRInt32         aScriptLevelIncrement,
                          PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                     PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
@@ -145,7 +145,7 @@ public:
 
   // helper to translate the thickness attribute into a usable form
   static nscoord 
-  CalcLineThickness(nsIPresContext*  aPresContext,
+  CalcLineThickness(nsPresContext*  aPresContext,
                     nsStyleContext*  aStyleContext,
                     nsString&        aThicknessAttribute,
                     nscoord          onePixel,

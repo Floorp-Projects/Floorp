@@ -68,8 +68,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIPresContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -854,7 +854,7 @@ nsJVMManager::GetChrome(nsIWebBrowserChrome **theChrome)
     if (!docShell) {
         return NS_OK;
     }
-    nsCOMPtr<nsIPresContext> presContext;
+    nsCOMPtr<nsPresContext> presContext;
     rv = docShell->GetPresContext(getter_AddRefs(presContext));
     if (!presContext) {
         return rv;

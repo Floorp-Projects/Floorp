@@ -39,7 +39,7 @@
 
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
@@ -59,28 +59,28 @@ public:
   // nsISupports 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+  NS_IMETHOD DidReflow(nsPresContext*           aPresContext,
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus);
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
-  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);
 
@@ -91,12 +91,12 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
 
   /* fail on any requests to get a cursor from us because plugins set their own! see bug 118877 */
-  NS_IMETHOD GetCursor(nsIPresContext* aPresContext, nsPoint& aPoint, PRInt32& aCursor) 
+  NS_IMETHOD GetCursor(nsPresContext* aPresContext, nsPoint& aPoint, PRInt32& aCursor) 
   { return NS_ERROR_NOT_IMPLEMENTED;  };
 
   //i18n helper
@@ -112,7 +112,7 @@ public:
 #endif
 
   //local methods
-  nsresult CreateWidget(nsIPresContext* aPresContext,
+  nsresult CreateWidget(nsPresContext* aPresContext,
                         nscoord aWidth,
                         nscoord aHeight,
                         PRBool aViewOnly);
@@ -122,7 +122,7 @@ public:
   PRBool IsSupportedDocument(nsIContent* aContent);
 
   // for a given aRoot, this walks the frame tree looking for the next outFrame
-  static nsIObjectFrame* GetNextObjectFrame(nsIPresContext* aPresContext,
+  static nsIObjectFrame* GetNextObjectFrame(nsPresContext* aPresContext,
                                             nsIFrame* aRoot);
 
   void FixUpURLS(const nsString &name, nsAString &value);
@@ -138,27 +138,27 @@ protected:
 
   // NOTE:  This frame class does not inherit from |nsLeafFrame|, so
   // this is not a virtual method implementation.
-  void GetDesiredSize(nsIPresContext* aPresContext,
+  void GetDesiredSize(nsPresContext* aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aDesiredSize);
 
-  nsresult InstantiateWidget(nsIPresContext*          aPresContext,
+  nsresult InstantiateWidget(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aMetrics,
                              const nsHTMLReflowState& aReflowState,
                              nsCID aWidgetCID);
 
-  nsresult InstantiatePlugin(nsIPresContext*          aPresContext,
+  nsresult InstantiatePlugin(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aMetrics,
                              const nsHTMLReflowState& aReflowState,
                              nsIPluginHost* aPluginHost, 
                              const char* aMimetype,
                              nsIURI* aURL);
 
-  nsresult ReinstantiatePlugin(nsIPresContext* aPresContext, 
+  nsresult ReinstantiatePlugin(nsPresContext* aPresContext, 
                                nsHTMLReflowMetrics& aMetrics, 
                                const nsHTMLReflowState& aReflowState);
 
-  nsresult HandleChild(nsIPresContext*          aPresContext,
+  nsresult HandleChild(nsPresContext*          aPresContext,
                        nsHTMLReflowMetrics&     aMetrics,
                        const nsHTMLReflowState& aReflowState,
                        nsReflowStatus&          aStatus,

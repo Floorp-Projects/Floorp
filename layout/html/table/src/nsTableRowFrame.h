@@ -67,22 +67,22 @@ class nsTableRowFrame : public nsHTMLContainerFrame
 public:
   virtual ~nsTableRowFrame();
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
@@ -98,7 +98,7 @@ public:
   NS_NewTableRowFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
   /** @see nsIFrame::Paint */
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -107,7 +107,7 @@ public:
   // rows don't paint their own background -- the cells do
   virtual PRBool CanPaintBackground() { return PR_FALSE; }
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext*   aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext*   aPresContext,
                               const nsPoint&    aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**        aFrame);
@@ -127,12 +127,12 @@ public:
     * @see nsTableFrame::BalanceColumnWidths
     * @see nsTableFrame::ShrinkWrapChildren
     */
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  void DidResize(nsIPresContext*          aPresContext,
+  void DidResize(nsPresContext*          aPresContext,
                  const nsHTMLReflowState& aReflowState);
 
   /**
@@ -174,7 +174,7 @@ public:
   void SetRowIndex (int aRowIndex);
 
   /** used by row group frame code */
-  nscoord ReflowCellFrame(nsIPresContext*          aPresContext,
+  nscoord ReflowCellFrame(nsPresContext*          aPresContext,
                           const nsHTMLReflowState& aReflowState,
                           nsTableCellFrame*        aCellFrame,
                           nscoord                  aAvailableHeight,
@@ -223,8 +223,8 @@ public:
 
   PRBool  HasUnpaginatedHeight();
   void    SetHasUnpaginatedHeight(PRBool aValue);
-  nscoord GetUnpaginatedHeight(nsIPresContext* aPresContext);
-  void    SetUnpaginatedHeight(nsIPresContext* aPresContext, nscoord aValue);
+  nscoord GetUnpaginatedHeight(nsPresContext* aPresContext);
+  void    SetUnpaginatedHeight(nsPresContext* aPresContext, nscoord aValue);
 
   nscoord GetTopBCBorderWidth(float* aPixelsToTwips = nsnull);
   void    SetTopBCBorderWidth(BCPixelSize aWidth);
@@ -259,7 +259,7 @@ protected:
     */
   nsTableRowFrame();
 
-  void InitChildReflowState(nsIPresContext&         aPresContext,
+  void InitChildReflowState(nsPresContext&         aPresContext,
                             const nsSize&           aAvailSize,
                             PRBool                  aBorderCollapse,
                             float                   aPixelsToTwips,
@@ -276,26 +276,26 @@ protected:
     *
     * @see Reflow
     */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD IncrementalReflow(nsPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsTableFrame&            aTableFrame,
                                nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext*          aPresContext,
+  NS_IMETHOD IR_TargetIsChild(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsTableFrame&            aTableFrame,
                               nsReflowStatus&          aStatus,
                               nsIFrame*                aNextFrame);
 
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext*          aPresContext,
+  NS_IMETHOD IR_TargetIsMe(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsTableFrame&            aTableFrame,
                            nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_StyleChanged(nsIPresContext*          aPresContext,
+  NS_IMETHOD IR_StyleChanged(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsTableFrame&            aTableFrame,
@@ -310,7 +310,7 @@ protected:
    * Called for incremental/dirty and resize reflows. If aDirtyOnly is true then
    * only reflow dirty cells.
    */
-  NS_IMETHOD ReflowChildren(nsIPresContext*          aPresContext,
+  NS_IMETHOD ReflowChildren(nsPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsTableFrame&            aTableFrame,

@@ -57,29 +57,29 @@ public:
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
-  InheritAutomaticData(nsIPresContext* aPresContext,
+  InheritAutomaticData(nsPresContext* aPresContext,
                        nsIFrame*       aParent);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
+  SetInitialChildList(nsPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD 
-  Paint(nsIPresContext*      aPresContext,
+  Paint(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer,
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  AttributeChanged(nsIPresContext* aPresContext,
+  AttributeChanged(nsPresContext* aPresContext,
                    nsIContent*     aContent,
                    PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
@@ -87,13 +87,13 @@ public:
 
   // override the base method because we must keep separators in sync
   virtual nsresult
-  ChildListChanged(nsIPresContext* aPresContext,
+  ChildListChanged(nsPresContext* aPresContext,
                    PRInt32         aModType);
 
   // exported routine that both mfenced and mfrac share.
   // mfrac uses this when its bevelled attribute is set.
   static nsresult
-  doReflow(nsIPresContext*          aPresContext,
+  doReflow(nsPresContext*          aPresContext,
            const nsHTMLReflowState& aReflowState,
            nsHTMLReflowMetrics&     aDesiredSize,
            nsReflowStatus&          aStatus,
@@ -105,7 +105,7 @@ public:
 
   // helper routines to format the MathMLChars involved here
   static nsresult
-  ReflowChar(nsIPresContext*      aPresContext,
+  ReflowChar(nsPresContext*      aPresContext,
              nsIRenderingContext& aRenderingContext,
              nsMathMLChar*        aMathMLChar,
              nsOperatorFlags      aForm,
@@ -139,7 +139,7 @@ protected:
 
   // add fences and separators when all child frames are known
   nsresult
-  CreateFencesAndSeparators(nsIPresContext* aPresContext);
+  CreateFencesAndSeparators(nsPresContext* aPresContext);
 };
 
 #endif /* nsMathMLmfencedFrame_h___ */

@@ -61,7 +61,7 @@
 #include "nsJSUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIInterfaceRequestor.h"
@@ -180,7 +180,7 @@ NS_ScriptErrorReporter(JSContext *cx,
         static PRInt32 errorDepth; // Recursion prevention
         ++errorDepth;
 
-        nsCOMPtr<nsIPresContext> presContext;
+        nsCOMPtr<nsPresContext> presContext;
         docShell->GetPresContext(getter_AddRefs(presContext));
 
         if (presContext && errorDepth < 2) {

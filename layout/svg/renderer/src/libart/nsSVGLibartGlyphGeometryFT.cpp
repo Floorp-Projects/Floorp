@@ -43,7 +43,7 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsISVGGlyphGeometrySource.h"
 #include "nsPromiseFlatString.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsMemory.h"
 
 #include "nsSVGLibartFreetype.h"
@@ -52,7 +52,7 @@
 #include "libart-incs.h"
 #include "nsISVGLibartCanvas.h"
 
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIComponentManager.h"
 

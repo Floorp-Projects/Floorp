@@ -60,21 +60,21 @@ public:
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
-  Paint(nsIPresContext*      aPresContext,
+  Paint(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer,
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  InheritAutomaticData(nsIPresContext* aPresContext,
+  InheritAutomaticData(nsPresContext* aPresContext,
                        nsIFrame*       aParent);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext);
+  TransmitAutomaticData(nsPresContext* aPresContext);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
@@ -84,7 +84,7 @@ public:
                    nsIFrame*     aChild);
 
   NS_IMETHOD
-  AttributeChanged(nsIPresContext* aPresContext,
+  AttributeChanged(nsPresContext* aPresContext,
                    nsIContent*     aContent,
                    PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
@@ -93,7 +93,7 @@ public:
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
   NS_IMETHOD
-  Stretch(nsIPresContext*      aPresContext,
+  Stretch(nsPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
@@ -112,17 +112,17 @@ protected:
 
   // overload the base method so that we can setup our nsMathMLChar
   virtual void
-  ProcessTextData(nsIPresContext* aPresContext);
+  ProcessTextData(nsPresContext* aPresContext);
 
   // helper to get our 'form' and lookup in the Operator Dictionary to fetch 
   // our default data that may come from there, and to complete the setup
   // using attributes that we may have
   void
-  ProcessOperatorData(nsIPresContext* aPresContext);
+  ProcessOperatorData(nsPresContext* aPresContext);
 
   // helper to double check thar our char should be rendered as a selected char
   PRBool
-  IsFrameInSelection(nsIPresContext* aPresContext,
+  IsFrameInSelection(nsPresContext* aPresContext,
                      nsIFrame*       aFrame);
 };
 

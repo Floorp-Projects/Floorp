@@ -50,7 +50,7 @@ using namespace Gdiplus;
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsRect.h"
 #include "nsIRenderingContextWin.h"
 
@@ -67,7 +67,7 @@ class nsSVGGDIPlusCanvas : public nsISVGGDIPlusCanvas
 public:
   nsSVGGDIPlusCanvas();
   ~nsSVGGDIPlusCanvas();
-  nsresult Init(nsIRenderingContext* ctx, nsIPresContext* presContext,
+  nsresult Init(nsIRenderingContext* ctx, nsPresContext* presContext,
                 const nsRect & dirtyRect);
 
   // nsISupports interface:
@@ -82,7 +82,7 @@ public:
 
 private:
   nsCOMPtr<nsIRenderingContext> mMozContext;
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
   Graphics *mGraphics;
 #ifdef SVG_GDIPLUS_ENABLE_OFFSCREEN_BUFFER
   Bitmap *mOffscreenBitmap;
@@ -120,7 +120,7 @@ nsSVGGDIPlusCanvas::~nsSVGGDIPlusCanvas()
 
 nsresult
 nsSVGGDIPlusCanvas::Init(nsIRenderingContext* ctx,
-                         nsIPresContext* presContext,
+                         nsPresContext* presContext,
                          const nsRect & dirtyRect)
 {
   mPresContext = presContext;
@@ -184,7 +184,7 @@ nsSVGGDIPlusCanvas::Init(nsIRenderingContext* ctx,
 nsresult
 NS_NewSVGGDIPlusCanvas(nsISVGRendererCanvas **result,
                        nsIRenderingContext *ctx,
-                       nsIPresContext *presContext,
+                       nsPresContext *presContext,
                        const nsRect & dirtyRect)
 {
   nsSVGGDIPlusCanvas* pg = new nsSVGGDIPlusCanvas();
@@ -265,9 +265,9 @@ nsSVGGDIPlusCanvas::UnlockRenderingContext()
   return NS_OK;
 }
 
-/** Implements nsIPresContext getPresContext(); */
+/** Implements nsPresContext getPresContext(); */
 NS_IMETHODIMP
-nsSVGGDIPlusCanvas::GetPresContext(nsIPresContext **_retval)
+nsSVGGDIPlusCanvas::GetPresContext(nsPresContext **_retval)
 {
   *_retval = mPresContext;
   NS_IF_ADDREF(*_retval);

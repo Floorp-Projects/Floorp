@@ -49,7 +49,7 @@
 #include "nsIFrame.h"
 #include "nsISupports.h"
 #include "nsIAtom.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
@@ -69,40 +69,40 @@ public:
 
   nsFieldSetFrame();
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
                                
-  NS_METHOD Paint(nsIPresContext*      aPresContext,
+  NS_METHOD Paint(nsPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect&        aDirtyRect,
                   nsFramePaintLayer    aWhichLayer,
                   PRUint32             aFlags);
 
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
-  NS_IMETHOD  GetFrameForPoint(nsIPresContext*   aPresContext,
+  NS_IMETHOD  GetFrameForPoint(nsPresContext*   aPresContext,
                                const nsPoint&    aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**        aFrame);
@@ -163,7 +163,7 @@ nsFieldSetFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsFieldSetFrame::SetInitialChildList(nsPresContext* aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aChildList)
 {
@@ -178,7 +178,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
 // this is identical to nsHTMLContainerFrame::Paint except for the background and border. 
 NS_IMETHODIMP
-nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
+nsFieldSetFrame::Paint(nsPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer,
@@ -288,7 +288,7 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
 
 
 NS_IMETHODIMP 
-nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
+nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus&          aStatus)
@@ -626,7 +626,7 @@ nsFieldSetFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::AppendFrames(nsIPresContext* aPresContext,
+nsFieldSetFrame::AppendFrames(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aFrameList)
@@ -638,7 +638,7 @@ nsFieldSetFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::InsertFrames(nsIPresContext* aPresContext,
+nsFieldSetFrame::InsertFrames(nsPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aPrevFrame,
@@ -652,7 +652,7 @@ nsFieldSetFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsFieldSetFrame::RemoveFrame(nsPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
@@ -680,7 +680,7 @@ nsFieldSetFrame::RemoveFrame(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsFieldSetFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsFieldSetFrame::ReplaceFrame(nsPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame,
@@ -694,7 +694,7 @@ nsFieldSetFrame::ReplaceFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+nsFieldSetFrame::GetFrameForPoint(nsPresContext*   aPresContext,
                      const nsPoint&    aPoint, 
                      nsFramePaintLayer aWhichLayer,
                      nsIFrame**        aFrame)

@@ -58,31 +58,31 @@ public:
 #endif
 
   // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD CharacterDataChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD CharacterDataChanged(nsPresContext* aPresContext,
                                   nsIContent*     aChild,
                                   PRBool          aAppend);
 
-  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
+  NS_IMETHOD DidReflow(nsPresContext*           aPresContext,
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus);
 
-  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD  Init(nsPresContext*  aPresContext,
                nsIContent*      aContent,
                nsIFrame*        aParent,
                nsStyleContext*  aContext,
                nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                           const nsPoint& aPoint,
                           nsFramePaintLayer aWhichLayer,    
                           nsIFrame**     aFrame);
    
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -94,7 +94,7 @@ protected:
   virtual void GetBoxName(nsAutoString& aName);
 #endif
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize) {}
 

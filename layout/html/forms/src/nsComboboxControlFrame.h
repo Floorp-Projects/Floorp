@@ -95,9 +95,9 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
    // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+  NS_IMETHOD CreateFrameFor(nsPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame);
 
@@ -106,22 +106,22 @@ public:
 #endif
 
    // nsIFrame
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aCX,
+  NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -129,14 +129,14 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
   virtual nsIFrame* GetContentInsertionFrame();
 
@@ -144,32 +144,32 @@ public:
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD_(PRInt32) GetFormControlType() const;
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   void       SetFocus(PRBool aOn, PRBool aRepaint);
-  void       ScrollIntoView(nsIPresContext* aPresContext);
-  virtual void InitializeControl(nsIPresContext* aPresContext);
+  void       ScrollIntoView(nsPresContext* aPresContext);
+  virtual void InitializeControl(nsPresContext* aPresContext);
   NS_IMETHOD OnContentReset();
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
   // nsIFormMouseListener
-  virtual void MouseClicked(nsIPresContext* aPresContext);
+  virtual void MouseClicked(nsPresContext* aPresContext);
 
   //nsIComboboxControlFrame
   NS_IMETHOD IsDroppedDown(PRBool * aDoDropDown) { *aDoDropDown = mDroppedDown; return NS_OK; }
   NS_IMETHOD ShowDropDown(PRBool aDoDropDown);
   NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame);
   NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame);
-  NS_IMETHOD RollupFromList(nsIPresContext* aPresContext);
+  NS_IMETHOD RollupFromList(nsPresContext* aPresContext);
   NS_IMETHOD AbsolutelyPositionDropDown();
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
   NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex);
@@ -177,11 +177,11 @@ public:
   NS_IMETHOD_(PRInt32) UpdateRecentIndex(PRInt32 aIndex);
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
-  NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
+  NS_IMETHOD AddOption(nsPresContext* aPresContext, PRInt32 index);
+  NS_IMETHOD RemoveOption(nsPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingChildren(PRBool aIsDone);
-  NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
+  NS_IMETHOD OnOptionSelected(nsPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
   NS_IMETHOD OnOptionTextChanged(nsIDOMHTMLOptionElement* option);
@@ -206,18 +206,18 @@ public:
     { mFrameConstructor = aConstructor; return NS_OK;} // not owner - do not addref!
 
   // nsIScrollableViewProvider
-  NS_IMETHOD GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView** aView);
+  NS_IMETHOD GetScrollableView(nsPresContext* aPresContext, nsIScrollableView** aView);
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState);
 
 protected:
 
-  NS_IMETHOD CreateDisplayFrame(nsIPresContext* aPresContext);
+  NS_IMETHOD CreateDisplayFrame(nsPresContext* aPresContext);
 
 #ifdef DO_NEW_REFLOW
-  NS_IMETHOD ReflowItems(nsIPresContext* aPresContext,
+  NS_IMETHOD ReflowItems(nsPresContext* aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsHTMLReflowMetrics& aDesiredSize);
 #endif
@@ -227,7 +227,7 @@ protected:
 
    // Utilities
   nsresult ReflowComboChildFrame(nsIFrame*           aFrame, 
-                            nsIPresContext*          aPresContext, 
+                            nsPresContext*          aPresContext, 
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState, 
                             nsReflowStatus&          aStatus,
@@ -235,22 +235,22 @@ protected:
                             nscoord                  aAvailableHeight);
 
 public:
-  nsresult PositionDropdown(nsIPresContext* aPresContext,
+  nsresult PositionDropdown(nsPresContext* aPresContext,
                             nscoord aHeight, 
                             nsRect aAbsoluteTwipsRect, 
                             nsRect aAbsolutePixelRect);
 protected:
   void ShowPopup(PRBool aShowPopup);
-  void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
+  void ShowList(nsPresContext* aPresContext, PRBool aShowList);
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
   void InitTextStr();
   void CheckFireOnChange();
   nsresult RedisplayText(PRInt32 aIndex);
   nsresult ActuallyDisplayText(nsAString& aText, PRBool aNotify);
-  nsresult GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
-  NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
+  nsresult GetPrimaryComboFrame(nsPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
+  NS_IMETHOD ToggleList(nsPresContext* aPresContext);
 
-  void ReflowCombobox(nsIPresContext *         aPresContext,
+  void ReflowCombobox(nsPresContext *         aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       nsReflowStatus&          aStatus,
@@ -263,7 +263,7 @@ protected:
                       PRBool                   aCheckHeight = PR_FALSE);
 
   nsFrameList              mPopupFrames;             // additional named child list
-  nsIPresContext*          mPresContext;             // XXX: Remove the need to cache the pres context.
+  nsPresContext*          mPresContext;             // XXX: Remove the need to cache the pres context.
   nsCOMPtr<nsITextContent> mDisplayContent;          // Anonymous content used to display the current selection
   nsIFrame*                mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame

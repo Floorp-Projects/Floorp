@@ -50,7 +50,7 @@
 #include "nsIDocumentViewerPrint.h"
 
 #include "nsIDocument.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
 #include "nsIStyleSheet.h"
@@ -308,7 +308,7 @@ class DocumentViewerImpl : public nsIDocumentViewer,
   friend class nsPrintEngine;
 
 public:
-  DocumentViewerImpl(nsIPresContext* aPresContext);
+  DocumentViewerImpl(nsPresContext* aPresContext);
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -322,8 +322,8 @@ public:
   NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
   NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresShell(nsIPresShell** aResult);
-  NS_IMETHOD GetPresContext(nsIPresContext** aResult);
-  NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
+  NS_IMETHOD GetPresContext(nsPresContext** aResult);
+  NS_IMETHOD CreateDocumentViewerUsing(nsPresContext* aPresContext,
                                        nsIDocumentViewer** aResult);
 
   // nsIContentViewerEdit
@@ -390,7 +390,7 @@ protected:
   nsCOMPtr<nsIDocument>    mDocument;
   nsCOMPtr<nsIWidget>      mWindow;      // ??? should we really own it?
   nsCOMPtr<nsIViewManager> mViewManager;
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
 
   nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
@@ -495,7 +495,7 @@ void DocumentViewerImpl::PrepareToStartLoad()
 }
 
 // Note: operator new zeros our memory, so no need to init things to null.
-DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
+DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
   : mPresContext(aPresContext),
     mHintCharsetSource(kCharsetUninitialized),
     mAllowPlugins(PR_TRUE),
@@ -790,9 +790,9 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
   if (aDoCreation) {
     if (aParentWidget && !mPresContext) {
       // Create presentation context
-      mPresContext = new nsIPresContext(GetIsCreatingPrintPreview() ?
-                                        nsIPresContext::eContext_PrintPreview :
-                                        nsIPresContext::eContext_Galley);
+      mPresContext = new nsPresContext(GetIsCreatingPrintPreview() ?
+                                        nsPresContext::eContext_PrintPreview :
+                                        nsPresContext::eContext_Galley);
       NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
       nsresult rv = mPresContext->Init(aDeviceContext); 
@@ -1361,7 +1361,7 @@ DocumentViewerImpl::GetPresShell(nsIPresShell** aResult)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::GetPresContext(nsIPresContext** aResult)
+DocumentViewerImpl::GetPresContext(nsPresContext** aResult)
 {
   NS_IF_ADDREF(*aResult = mPresContext);
 
@@ -1490,7 +1490,7 @@ DocumentViewerImpl::Show(void)
     }
 
     NS_ASSERTION(!mPresContext, "Shouldn't have a prescontext if we have no shell!");
-    mPresContext = new nsIPresContext(nsIPresContext::eContext_Galley);
+    mPresContext = new nsPresContext(nsPresContext::eContext_Galley);
     NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPresContext->Init(mDeviceContext);
@@ -1935,7 +1935,7 @@ nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection,
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::CreateDocumentViewerUsing(nsIPresContext* aPresContext,
+DocumentViewerImpl::CreateDocumentViewerUsing(nsPresContext* aPresContext,
                                               nsIDocumentViewer** aResult)
 {
   if (!mDocument) {
@@ -2668,7 +2668,7 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
    NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE,
       NS_UNCONSTRAINEDSIZE), NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIPresContext> presContext;
+   nsCOMPtr<nsPresContext> presContext;
    GetPresContext(getter_AddRefs(presContext));
    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 

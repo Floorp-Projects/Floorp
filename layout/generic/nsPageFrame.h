@@ -50,16 +50,16 @@ public:
   friend nsresult NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
   // nsIFrame
-  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
-  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Reflow(nsPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer,
@@ -108,7 +108,7 @@ protected:
                        PRInt32              aJust,
                        const nsString&      aStr);
 
-  void DrawHeaderFooter(nsIPresContext*      aPresContext,
+  void DrawHeaderFooter(nsPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nsIFrame *           aFrame,
                         nsHeaderFooterEnum   aHeaderFooter,
@@ -119,7 +119,7 @@ protected:
                         nscoord              aAscent,
                         nscoord              aWidth);
 
-  void DrawHeaderFooter(nsIPresContext*      aPresContext,
+  void DrawHeaderFooter(nsPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nsIFrame *           aFrame,
                         nsHeaderFooterEnum   aHeaderFooter,
@@ -147,7 +147,7 @@ protected:
   static PRBool mDoCreateWidget;
 
 private:
-  void DrawBackground(nsIPresContext* aPresContext,
+  void DrawBackground(nsPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&  aDirtyRect);
 };
@@ -158,7 +158,7 @@ class nsPageBreakFrame : public nsLeafFrame {
   nsPageBreakFrame();
   ~nsPageBreakFrame();
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -167,7 +167,7 @@ class nsPageBreakFrame : public nsLeafFrame {
 
 protected:
 
-    virtual void GetDesiredSize(nsIPresContext*        aPresContext,
+    virtual void GetDesiredSize(nsPresContext*        aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics&     aDesiredSize);
     PRBool mHaveReflowed;

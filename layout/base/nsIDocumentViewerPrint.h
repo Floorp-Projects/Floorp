@@ -39,7 +39,7 @@
 
 #include "nsISupports.h"
 
-class nsIPresContext;
+class nsPresContext;
 class nsIPrintSettings;
 class nsPrintObject;
 class nsISelection;

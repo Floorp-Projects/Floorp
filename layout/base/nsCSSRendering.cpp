@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIImage.h"
 #include "nsIFrame.h"
 #include "nsPoint.h"
@@ -1538,7 +1538,7 @@ nscolor   newcolor;
 // then checked to ensure that it is the HTML or BODY element, and if it is, we get
 // it's primary frame and from that the style context and from that the color to use.
 //
-PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
+PRBool GetBGColorForHTMLElement( nsPresContext *aPresContext,
                                    const nsStyleBackground *&aBGColor )
 {
   NS_ASSERTION(aPresContext, "null params not allowed");
@@ -1609,7 +1609,7 @@ PRBool GetBorderColor(const nsStyleColor* aColor, const nsStyleBorder& aBorder, 
 }
 
 // XXX improve this to constrain rendering to the damaged area
-void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
+void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
@@ -2040,7 +2040,7 @@ void nsCSSRendering::DrawCompositeSide(nsIRenderingContext& aRenderingContext,
 }
 
 // XXX improve this to constrain rendering to the damaged area
-void nsCSSRendering::PaintOutline(nsIPresContext* aPresContext,
+void nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
@@ -2176,7 +2176,7 @@ nscoord width;
 // XXX: doesn't do corners or junctions well at all.  Just uses logic stolen 
 //      from PaintBorder which is insufficient
 
-void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
+void nsCSSRendering::PaintBorderEdges(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       nsIFrame* aForFrame,
                                       const nsRect& aDirtyRect,
@@ -2426,7 +2426,7 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
 // Returns the root scrollable frame, which is the first child of the root
 // frame.
 static nsIScrollableFrame*
-GetRootScrollableFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame)
+GetRootScrollableFrame(nsPresContext* aPresContext, nsIFrame* aRootFrame)
 {
   nsIScrollableFrame* scrollableFrame = nsnull;
 
@@ -2518,7 +2518,7 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
 // it does not actually paint a background, we need to get the right
 // background style so we correctly detect transparent documents.
 inline nsIFrame*
-IsCanvasFrame(nsIPresContext* aPresContext, nsIFrame *aFrame)
+IsCanvasFrame(nsPresContext* aPresContext, nsIFrame *aFrame)
 {
   nsIAtom* frameType = aFrame->GetType();
   if (frameType == nsLayoutAtoms::canvasFrame ||
@@ -2536,7 +2536,7 @@ IsCanvasFrame(nsIPresContext* aPresContext, nsIFrame *aFrame)
 }
 
 inline PRBool
-FindCanvasBackground(nsIPresContext* aPresContext,
+FindCanvasBackground(nsPresContext* aPresContext,
                      nsIFrame* aForFrame,
                      const nsStyleBackground** aBackground)
 {
@@ -2616,7 +2616,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
 }
 
 inline PRBool
-FindElementBackground(nsIPresContext* aPresContext,
+FindElementBackground(nsPresContext* aPresContext,
                       nsIFrame* aForFrame,
                       const nsStyleBackground** aBackground)
 {
@@ -2658,7 +2658,7 @@ FindElementBackground(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsCSSRendering::FindBackground(nsIPresContext* aPresContext,
+nsCSSRendering::FindBackground(nsPresContext* aPresContext,
                                nsIFrame* aForFrame,
                                const nsStyleBackground** aBackground,
                                PRBool* aIsCanvas)
@@ -2677,7 +2677,7 @@ nsCSSRendering::DidPaint()
 }
 
 void
-nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
+nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
@@ -2760,7 +2760,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 }
 
 void
-nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
+nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       nsIFrame* aForFrame,
                                       const nsRect& aDirtyRect,
@@ -3212,7 +3212,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 }
 
 void
-nsCSSRendering::PaintBackgroundColor(nsIPresContext* aPresContext,
+nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      nsIFrame* aForFrame,
                                      const nsRect& aBgClipArea,
@@ -3287,7 +3287,7 @@ nsCSSRendering::PaintBackgroundColor(nsIPresContext* aPresContext,
  *  @update 3/26/99 dwc
  */
 void
-nsCSSRendering::PaintRoundedBackground(nsIPresContext* aPresContext,
+nsCSSRendering::PaintRoundedBackground(nsPresContext* aPresContext,
                                        nsIRenderingContext& aRenderingContext,
                                        nsIFrame* aForFrame,
                                        const nsRect& aBgClipArea,
@@ -3397,7 +3397,7 @@ nsCSSRendering::PaintRoundedBackground(nsIPresContext* aPresContext,
  *  @update 3/26/99 dwc
  */
 void 
-nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
+nsCSSRendering::PaintRoundedBorder(nsPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,

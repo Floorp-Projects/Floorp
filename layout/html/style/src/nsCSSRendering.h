@@ -40,7 +40,7 @@
 #include "nsIRenderingContext.h"
 struct nsPoint;
 class nsStyleContext;
-class nsIPresContext;
+class nsPresContext;
 
 class nsCSSRendering {
 public:
@@ -52,7 +52,7 @@ public:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintBorder(nsIPresContext* aPresContext,
+  static void PaintBorder(nsPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
@@ -72,7 +72,7 @@ public:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintOutline(nsIPresContext* aPresContext,
+  static void PaintOutline(nsPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
@@ -94,7 +94,7 @@ public:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintBorderEdges(nsIPresContext* aPresContext,
+  static void PaintBorderEdges(nsPresContext* aPresContext,
                                nsIRenderingContext& aRenderingContext,
                                nsIFrame* aForFrame,
                                const nsRect& aDirtyRect,
@@ -111,7 +111,7 @@ public:
    * using the pres context.  This applies the rules for propagating
    * backgrounds between BODY, the root element, and the canvas.
    */
-  static PRBool FindBackground(nsIPresContext* aPresContext,
+  static PRBool FindBackground(nsPresContext* aPresContext,
                                nsIFrame* aForFrame,
                                const nsStyleBackground** aBackground,
                                PRBool* aIsCanvas);
@@ -133,7 +133,7 @@ public:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintBackground(nsIPresContext* aPresContext,
+  static void PaintBackground(nsPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
@@ -148,7 +148,7 @@ public:
    * (which short-circuits the code that ensures that the root element's
    * background is drawn on the canvas.
    */
-  static void PaintBackgroundWithSC(nsIPresContext* aPresContext,
+  static void PaintBackgroundWithSC(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRenderingContext,
                                     nsIFrame* aForFrame,
                                     const nsRect& aDirtyRect,
@@ -224,7 +224,7 @@ protected:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintRoundedBorder(nsIPresContext* aPresContext,
+  static void PaintRoundedBorder(nsPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
@@ -241,7 +241,7 @@ protected:
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
                         PRBool aIsOutline=PR_FALSE);
 
-  static void PaintBackgroundColor(nsIPresContext* aPresContext,
+  static void PaintBackgroundColor(nsPresContext* aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    nsIFrame* aForFrame,
                                    const nsRect& aBgClipArea,
@@ -250,7 +250,7 @@ protected:
                                    const nsStylePadding& aPadding,
                                    PRBool aCanPaintNonWhite);
 
-  static void PaintRoundedBackground(nsIPresContext* aPresContext,
+  static void PaintRoundedBackground(nsPresContext* aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      nsIFrame* aForFrame,
                                      const nsRect& aBorderArea,

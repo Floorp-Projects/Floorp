@@ -39,7 +39,7 @@
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsIRenderingContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIURL.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
@@ -77,9 +77,9 @@ public:
   virtual void ParseCoords(const nsAString& aSpec);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const = 0;
-  virtual void Draw(nsIPresContext* aCX,
+  virtual void Draw(nsPresContext* aCX,
                     nsIRenderingContext& aRC) = 0;
-  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect) = 0;
+  virtual void GetRect(nsPresContext* aCX, nsRect& aRect) = 0;
 
   void HasFocus(PRBool aHasFocus);
 
@@ -313,9 +313,9 @@ public:
   DefaultArea(nsIContent* aArea);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsIPresContext* aCX,
+  virtual void Draw(nsPresContext* aCX,
                     nsIRenderingContext& aRC);
-  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
+  virtual void GetRect(nsPresContext* aCX, nsRect& aRect);
 };
 
 DefaultArea::DefaultArea(nsIContent* aArea)
@@ -328,11 +328,11 @@ PRBool DefaultArea::IsInside(nscoord x, nscoord y) const
   return PR_TRUE;
 }
 
-void DefaultArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
+void DefaultArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 {
 }
 
-void DefaultArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
+void DefaultArea::GetRect(nsPresContext* aCX, nsRect& aRect)
 {
 }
 
@@ -344,9 +344,9 @@ public:
 
   virtual void ParseCoords(const nsAString& aSpec);
   virtual PRBool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsIPresContext* aCX,
+  virtual void Draw(nsPresContext* aCX,
                     nsIRenderingContext& aRC);
-  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
+  virtual void GetRect(nsPresContext* aCX, nsRect& aRect);
 };
 
 RectArea::RectArea(nsIContent* aArea)
@@ -457,7 +457,7 @@ PRBool RectArea::IsInside(nscoord x, nscoord y) const
   return PR_FALSE;
 }
 
-void RectArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
+void RectArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 4) {
@@ -477,7 +477,7 @@ void RectArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-void RectArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
+void RectArea::GetRect(nsPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 4) {
     float p2t;
@@ -500,9 +500,9 @@ public:
   PolyArea(nsIContent* aArea);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsIPresContext* aCX,
+  virtual void Draw(nsPresContext* aCX,
                     nsIRenderingContext& aRC);
-  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
+  virtual void GetRect(nsPresContext* aCX, nsRect& aRect);
 };
 
 PolyArea::PolyArea(nsIContent* aArea)
@@ -572,7 +572,7 @@ PRBool PolyArea::IsInside(nscoord x, nscoord y) const
   return PR_FALSE;
 }
 
-void PolyArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
+void PolyArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 6) {
@@ -595,7 +595,7 @@ void PolyArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-void PolyArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
+void PolyArea::GetRect(nsPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 6) {
     float p2t;
@@ -623,9 +623,9 @@ public:
   CircleArea(nsIContent* aArea);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsIPresContext* aCX,
+  virtual void Draw(nsPresContext* aCX,
                     nsIRenderingContext& aRC);
-  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
+  virtual void GetRect(nsPresContext* aCX, nsRect& aRect);
 };
 
 CircleArea::CircleArea(nsIContent* aArea)
@@ -653,7 +653,7 @@ PRBool CircleArea::IsInside(nscoord x, nscoord y) const
   return PR_FALSE;
 }
 
-void CircleArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
+void CircleArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 3) {
@@ -673,7 +673,7 @@ void CircleArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-void CircleArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
+void CircleArea::GetRect(nsPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 3) {
     float p2t;
@@ -730,7 +730,7 @@ NS_IMPL_ISUPPORTS4(nsImageMap,
 
 NS_IMETHODIMP
 nsImageMap::GetBoundsForAreaContent(nsIContent *aContent, 
-                                   nsIPresContext* aPresContext, 
+                                   nsPresContext* aPresContext, 
                                    nsRect& aBounds)
 {
   // Find the Area struct associated with this content node, and return bounds
@@ -928,7 +928,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY) const
 }
 
 void
-nsImageMap::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
+nsImageMap::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
 {
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
@@ -1031,7 +1031,7 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
               if (presShell) {
                 nsIFrame* imgFrame;
                 if (NS_SUCCEEDED(presShell->GetPrimaryFrameFor(targetContent, &imgFrame)) && imgFrame) {
-                  nsCOMPtr<nsIPresContext> presContext;
+                  nsCOMPtr<nsPresContext> presContext;
                   if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(presContext))) && presContext) {
                     nsRect dmgRect;
                     area->GetRect(presContext, dmgRect);

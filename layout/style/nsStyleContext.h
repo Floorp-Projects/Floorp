@@ -43,16 +43,16 @@
 #include "nsRuleNode.h"
 #include "nsIAtom.h"
 
-class nsIPresContext;
+class nsPresContext;
 
 class nsStyleContext
 {
 public:
   nsStyleContext(nsStyleContext* aParent, nsIAtom* aPseudoTag, 
-                 nsRuleNode* aRuleNode, nsIPresContext* aPresContext) NS_HIDDEN;
+                 nsRuleNode* aRuleNode, nsPresContext* aPresContext) NS_HIDDEN;
   ~nsStyleContext() NS_HIDDEN;
 
-  NS_HIDDEN_(void*) operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW;
+  NS_HIDDEN_(void*) operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW;
   NS_HIDDEN_(void) Destroy();
 
   nsrefcnt AddRef() {
@@ -71,7 +71,7 @@ public:
     return mRefCnt;
   }
 
-  nsIPresContext* PresContext() const { return mRuleNode->GetPresContext(); }
+  nsPresContext* PresContext() const { return mRuleNode->GetPresContext(); }
 
   nsStyleContext* GetParent() const { return mParent; }
 
@@ -140,12 +140,12 @@ public:
 
   NS_HIDDEN_(nsStyleStruct*) GetUniqueStyleData(const nsStyleStructID& aSID);
 
-  NS_HIDDEN_(void) ClearStyleData(nsIPresContext* aPresContext);
+  NS_HIDDEN_(void) ClearStyleData(nsPresContext* aPresContext);
 
   NS_HIDDEN_(nsChangeHint) CalcStyleDifference(nsStyleContext* aOther);
 
 #ifdef DEBUG
-  NS_HIDDEN_(void) DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
+  NS_HIDDEN_(void) DumpRegressionData(nsPresContext* aPresContext, FILE* out,
                                       PRInt32 aIndent);
 
   NS_HIDDEN_(void) List(FILE* out, PRInt32 aIndent);
@@ -155,7 +155,7 @@ protected:
   NS_HIDDEN_(void) AppendChild(nsStyleContext* aChild);
   NS_HIDDEN_(void) RemoveChild(nsStyleContext* aChild);
 
-  NS_HIDDEN_(void) ApplyStyleFixups(nsIPresContext* aPresContext);
+  NS_HIDDEN_(void) ApplyStyleFixups(nsPresContext* aPresContext);
 
   nsStyleContext* mParent;
   nsStyleContext* mChild;
@@ -185,5 +185,5 @@ NS_HIDDEN_(already_AddRefed<nsStyleContext>)
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsRuleNode* aRuleNode,
-                   nsIPresContext* aPresContext);
+                   nsPresContext* aPresContext);
 #endif

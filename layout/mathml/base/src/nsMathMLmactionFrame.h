@@ -61,38 +61,38 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
+  Init(nsPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
+  SetInitialChildList(nsPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList);
 
   NS_IMETHOD
-  GetFrameForPoint(nsIPresContext*   aPresContext,
+  GetFrameForPoint(nsPresContext*   aPresContext,
                    const nsPoint&    aPoint,
                    nsFramePaintLayer aWhichLayer,
                    nsIFrame**        aFrame);
 
   NS_IMETHOD
-  Paint(nsIPresContext*      aPresContext,
+  Paint(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer,
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  Place(nsIPresContext*      aPresContext,
+  Place(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
@@ -115,7 +115,7 @@ protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
 private:
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
   PRInt32         mActionType;
   PRInt32         mChildCount;
   PRInt32         mSelection;
@@ -129,7 +129,7 @@ private:
 
   // helper to display a message on the status bar
   static nsresult
-  ShowStatus(nsIPresContext* aPresContext, 
+  ShowStatus(nsPresContext* aPresContext, 
              nsString&       aStatusMsg);
 };
 

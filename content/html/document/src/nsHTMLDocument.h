@@ -86,7 +86,7 @@ public:
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup);
   virtual nsStyleSet::sheetType GetAttrSheetType();
 
-  virtual nsresult CreateShell(nsIPresContext* aContext,
+  virtual nsresult CreateShell(nsPresContext* aContext,
                                nsIViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);

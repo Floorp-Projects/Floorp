@@ -63,7 +63,7 @@ class nsIDOMHTMLOptionsCollection;
 class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
 class nsIViewManager;
-class nsIPresContext;
+class nsPresContext;
 class nsVoidArray;
 class nsIScrollableView;
 
@@ -89,31 +89,31 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
     // nsIFrame
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
   
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aCX,
+  NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD DidReflow(nsIPresContext*           aPresContext, 
+  NS_IMETHOD DidReflow(nsPresContext*           aPresContext, 
                        const nsHTMLReflowState*  aReflowState, 
                        nsDidReflowStatus         aStatus);
-  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+  NS_IMETHOD Destroy(nsPresContext *aPresContext);
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -136,19 +136,19 @@ public:
     // nsIFormControlFrame
   NS_IMETHOD_(PRInt32) GetFormControlType() const;
   NS_IMETHOD GetName(nsAString* aName);
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   NS_IMETHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   NS_IMETHOD OnContentReset();
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-  virtual void ScrollIntoView(nsIPresContext* aPresContext);
-  virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
+  virtual void ScrollIntoView(nsPresContext* aPresContext);
+  virtual void MouseClicked(nsPresContext* aPresContext);
+  virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
@@ -167,25 +167,25 @@ public:
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
   NS_IMETHOD GetSelectedIndex(PRInt32* aIndex); 
   NS_IMETHOD GetOptionText(PRInt32 aIndex, nsAString & aStr);
-  NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
+  NS_IMETHOD CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
-  NS_IMETHOD SyncViewWithFrame(nsIPresContext* aPresContext);
+  NS_IMETHOD SyncViewWithFrame(nsPresContext* aPresContext);
   NS_IMETHOD AboutToDropDown();
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection();
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
-  NS_IMETHOD GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame** aFrame);
+  NS_IMETHOD GetOptionsContainer(nsPresContext* aPresContext, nsIFrame** aFrame);
   NS_IMETHOD FireOnChange();
   NS_IMETHOD ComboboxFinish(PRInt32 aIndex);
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
-  NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
+  NS_IMETHOD AddOption(nsPresContext* aPresContext, PRInt32 index);
+  NS_IMETHOD RemoveOption(nsPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingChildren(PRBool aIsDone);
-  NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
+  NS_IMETHOD OnOptionSelected(nsPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
   NS_IMETHOD OnOptionTextChanged(nsIDOMHTMLOptionElement* option);
@@ -193,8 +193,8 @@ public:
   NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState);
 
   // mouse event listeners
   nsresult MouseDown(nsIDOMEvent* aMouseEvent);
@@ -233,7 +233,7 @@ protected:
   PRBool     IsClickingInCombobox(nsIDOMEvent* aMouseEvent);
   void       AdjustIndexForDisabledOpt(PRInt32 aStartIndex, PRInt32 &anNewIndex,
                                        PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
-  virtual void ResetList(nsIPresContext* aPresContext, nsVoidArray * aInxList = nsnull);
+  virtual void ResetList(nsPresContext* aPresContext, nsVoidArray * aInxList = nsnull);
 
   nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument);
   virtual ~nsListControlFrame();
@@ -270,9 +270,9 @@ protected:
   void     InitSelectionRange(PRInt32 aClickedIndex);
 
   // Timer Methods
-  nsresult StartUpdateTimer(nsIPresContext * aPresContext);
+  nsresult StartUpdateTimer(nsPresContext * aPresContext);
   void     StopUpdateTimer();
-  void     ItemsHaveBeenRemoved(nsIPresContext * aPresContext);
+  void     ItemsHaveBeenRemoved(nsPresContext * aPresContext);
 
   // Data Members
   PRInt32      mStartSelectionIndex;
@@ -292,7 +292,7 @@ protected:
 
   PRPackedBool mOverrideReflowOpt;
 
-  nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
+  nsPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
   nsRefPtr<nsListEventListener> mEventListener;
 

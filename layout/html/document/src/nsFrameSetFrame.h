@@ -46,7 +46,7 @@
 
 class  nsIContent;
 class  nsIFrame;
-class  nsIPresContext;
+class  nsPresContext;
 class  nsIRenderingContext;
 struct nsRect;
 struct nsHTMLReflowState;
@@ -115,7 +115,7 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -131,40 +131,40 @@ public:
 
   static nsHTMLFramesetFrame* GetFramesetParent(nsIFrame* aChild);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
+  NS_IMETHOD GetCursor(nsPresContext* aPresContext,
                        nsPoint&        aPoint,
                        PRInt32&        aCursor);
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD  VerifyTree() const;
 
-  void StartMouseDrag(nsIPresContext*            aPresContext, 
+  void StartMouseDrag(nsPresContext*            aPresContext, 
                       nsHTMLFramesetBorderFrame* aBorder, 
                       nsGUIEvent*                aEvent);
 
-  void MouseDrag(nsIPresContext* aPresContext, 
+  void MouseDrag(nsPresContext* aPresContext, 
                  nsGUIEvent*     aEvent);
 
-  void EndMouseDrag(nsIPresContext* aPresContext);
+  void EndMouseDrag(nsPresContext* aPresContext);
 
   nsFrameborder GetParentFrameborder() { return mParentFrameborder; }
 
@@ -181,24 +181,24 @@ protected:
              PRInt32  aNumItems,
              PRInt32* aItems);
 
-  void CalculateRowCol(nsIPresContext*       aPresContext, 
+  void CalculateRowCol(nsPresContext*       aPresContext, 
                        nscoord               aSize, 
                        PRInt32               aNumSpecs, 
                        const nsFramesetSpec* aSpecs, 
                        nscoord*              aValues);
 
-  void GenerateRowCol(nsIPresContext*       aPresContext,
+  void GenerateRowCol(nsPresContext*       aPresContext,
                       nscoord               aSize,
                       PRInt32               aNumSpecs,
                       const nsFramesetSpec* aSpecs,
                       nscoord*              aValues,
                       nsString&             aNewAttr);
 
-  virtual void GetDesiredSize(nsIPresContext*          aPresContext,
+  virtual void GetDesiredSize(nsPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics&     aDesiredSize);
 
-  PRInt32 GetBorderWidth(nsIPresContext* aPresContext,
+  PRInt32 GetBorderWidth(nsPresContext* aPresContext,
                          PRBool aTakeForcingIntoAccount);
 
   PRInt32 GetParentBorderWidth() { return mParentBorderWidth; }
@@ -222,7 +222,7 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   void ReflowPlaceChild(nsIFrame*                aChild,
-                        nsIPresContext*          aPresContext,
+                        nsPresContext*          aPresContext,
                         const nsHTMLReflowState& aReflowState,
                         nsPoint&                 aOffset,
                         nsSize&                  aSize,

@@ -37,7 +37,7 @@
 #include "nsPageContentFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
@@ -71,7 +71,7 @@ nsPageContentFrame::nsPageContentFrame() :
 {
 }
 
-NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
+NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -177,7 +177,7 @@ nsPageContentFrame::IsContainingBlock() const
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
-nsPageContentFrame::Paint(nsIPresContext*      aPresContext,
+nsPageContentFrame::Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,

@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -77,7 +77,7 @@ nsMathMLmsubFrame::~nsMathMLmsubFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsubFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmsubFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // if our base is an embellished operator, let its state bubble to us
   nsIFrame* baseFrame = mFrames.FirstChild();
@@ -97,7 +97,7 @@ nsMathMLmsubFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmsubFrame::Place (nsIPresContext*      aPresContext,
+nsMathMLmsubFrame::Place (nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
@@ -128,7 +128,7 @@ nsMathMLmsubFrame::Place (nsIPresContext*      aPresContext,
 // exported routine that both munder and msub share.
 // munder uses this when movablelimits is set.
 nsresult
-nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
+nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    PRBool               aPlaceOrigin,
                                    nsHTMLReflowMetrics& aDesiredSize,

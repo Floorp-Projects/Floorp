@@ -40,7 +40,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"
 #include "nsBoxFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIViewManager.h"
@@ -552,7 +552,7 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
     nsIFrame* frame = nsnull;
     GetFrame(&frame);
 
-    nsIPresContext* presContext = aState.PresContext();
+    nsPresContext* presContext = aState.PresContext();
 
     PRUint32 flags = 0;
     GetLayoutFlags(flags);
@@ -642,7 +642,7 @@ nsBox::GetBorder(nsMargin& aMargin)
       nsCOMPtr<nsIDocument> doc = content->GetDocument();
       if (doc) {
         nsIPresShell *shell = doc->GetShellAt(0);
-        nsCOMPtr<nsIPresContext> context;
+        nsCOMPtr<nsPresContext> context;
         shell->GetPresContext(getter_AddRefs(context));
         if (gTheme->ThemeSupportsWidget(context, frame, disp->mAppearance)) {
           nsMargin margin(0,0,0,0);
@@ -790,7 +790,7 @@ nsBox::Collapse(nsBoxLayoutState& aState)
 nsresult 
 nsBox::CollapseChild(nsBoxLayoutState& aState, nsIFrame* aFrame, PRBool aHide)
 {
-      nsIPresContext* presContext = aState.PresContext();
+      nsPresContext* presContext = aState.PresContext();
 
     // shrink the view
       nsIView* view = aFrame->GetView();
@@ -1033,7 +1033,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
   frame->RemoveStateBits(NS_FRAME_HAS_DIRTY_CHILDREN | NS_FRAME_IS_DIRTY
                          | NS_FRAME_FIRST_REFLOW | NS_FRAME_IN_REFLOW);
 
-  nsIPresContext* presContext = aState.PresContext();
+  nsPresContext* presContext = aState.PresContext();
 
   PRUint32 flags = 0;
   GetLayoutFlags(flags);
@@ -1106,7 +1106,7 @@ nsBox::Redraw(nsBoxLayoutState& aState,
   if (aState.PaintingDisabled())
     return NS_OK;
 
-  nsIPresContext* presContext = aState.PresContext();
+  nsPresContext* presContext = aState.PresContext();
   const nsHTMLReflowState* s = aState.GetReflowState();
   if (s) {
     if (s->reason != eReflowReason_Incremental)
@@ -1154,7 +1154,7 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     // For example, we might be magic XUL frames whose primary content is an HTML
     // <select>
     if (content && content->IsContentOfType(nsIContent::eXUL)) {
-        nsIPresContext* presContext = aState.PresContext();
+        nsPresContext* presContext = aState.PresContext();
 
         nsAutoString value;
         PRInt32 error;
@@ -1238,7 +1238,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     nsIContent* content = frame->GetContent();
     if (content) {
-        nsIPresContext* presContext = aState.PresContext();
+        nsPresContext* presContext = aState.PresContext();
 
         nsAutoString value;
         PRInt32 error;
@@ -1298,7 +1298,7 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     nsIContent* content = frame->GetContent();
     if (content) {
-        nsIPresContext* presContext = aState.PresContext();
+        nsPresContext* presContext = aState.PresContext();
 
         nsAutoString value;
         PRInt32 error;

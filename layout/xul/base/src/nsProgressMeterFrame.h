@@ -51,18 +51,18 @@
 
 #include "nsBoxFrame.h"
 
-class nsIPresContext;
+class nsPresContext;
 
 class nsProgressMeterFrame : public nsBoxFrame
 {
 public:
   friend nsresult NS_NewProgressMeterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aChildList);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,

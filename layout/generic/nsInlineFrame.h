@@ -74,25 +74,25 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame overrides
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aPrevFrame,
                           nsIFrame* aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell& aPresShell,
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aOldFrame,
                           nsIFrame* aNewFrame);
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -111,7 +111,7 @@ public:
   virtual PRBool IsEmpty();
 
   // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -143,23 +143,23 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  nsresult ReflowFrames(nsIPresContext* aPresContext,
+  nsresult ReflowFrames(nsPresContext* aPresContext,
                         const nsHTMLReflowState& aReflowState,
                         InlineReflowState& rs,
                         nsHTMLReflowMetrics& aMetrics,
                         nsReflowStatus& aStatus);
 
-  nsresult ReflowInlineFrame(nsIPresContext* aPresContext,
+  nsresult ReflowInlineFrame(nsPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              InlineReflowState& rs,
                              nsIFrame* aFrame,
                              nsReflowStatus& aStatus);
 
-  virtual nsIFrame* PullOneFrame(nsIPresContext* aPresContext,
+  virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,
                                  InlineReflowState& rs,
                                  PRBool* aIsComplete);
 
-  virtual void PushFrames(nsIPresContext* aPresContext,
+  virtual void PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aFromChild,
                           nsIFrame* aPrevSibling);
 
@@ -179,7 +179,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   virtual nsIAtom* GetType() const;
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -191,7 +191,7 @@ public:
 protected:
   nsFirstLineFrame();
 
-  virtual nsIFrame* PullOneFrame(nsIPresContext* aPresContext,
+  virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,
                                  InlineReflowState& rs,
                                  PRBool* aIsComplete);
 };
@@ -209,25 +209,25 @@ public:
 
   virtual ~nsPositionedInlineFrame() { } // useful for debugging
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aPrevFrame,
                           nsIFrame* aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell& aPresShell,
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aOldFrame,
@@ -237,7 +237,7 @@ public:
 
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);

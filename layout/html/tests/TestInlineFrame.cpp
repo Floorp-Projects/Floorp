@@ -46,7 +46,7 @@
 #include "nsCoord.h"
 #include "nsSplittableFrame.h"
 #include "nsIContentDelegate.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsInlineFrame.h"
 #include "nsIAtom.h"
 #include "nsAutoPtr.h"
@@ -89,7 +89,7 @@ public:
   FixedSizeFrame(nsIContent* aContent,
                  nsIFrame* aParentFrame);
 
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -128,7 +128,7 @@ FixedSizeFrame::FixedSizeFrame(nsIContent* aContent,
 {
 }
 
-NS_METHOD FixedSizeFrame::Reflow(nsIPresContext*      aPresContext,
+NS_METHOD FixedSizeFrame::Reflow(nsPresContext*      aPresContext,
                                  nsReflowMetrics&     aDesiredSize,
                                  const nsReflowState& aReflowState,
                                  nsReflowStatus&      aStatus)
@@ -278,7 +278,7 @@ LengthOf(nsIFrame* aChildList)
 // - each child frame is placed and sized properly
 // - the inline frame's desired width and  height are correct
 static PRBool
-TestReflowUnmapped(nsIPresContext* presContext)
+TestReflowUnmapped(nsPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
@@ -374,7 +374,7 @@ TestReflowUnmapped(nsIPresContext* presContext)
 // 3. reflow mapped when the height's too small
 // 4. reflow mapped with a max width narrower than the first child
 static PRBool
-TestChildrenThatDontFit(nsIPresContext* presContext)
+TestChildrenThatDontFit(nsPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
@@ -545,7 +545,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
 // 2. frames use their own overflow list when reflowing mapped children
 // 3. continuing frames should use the overflow list from their prev-in-flow
 static PRBool
-TestOverflow(nsIPresContext* presContext)
+TestOverflow(nsPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
@@ -658,7 +658,7 @@ TestOverflow(nsIPresContext* presContext)
 // 7. pulling up only some of the children across an empty frame
 // 8. partially pulling up a child from a next-in-flow
 static PRBool
-TestPushingPulling(nsIPresContext* presContext)
+TestPushingPulling(nsPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
@@ -1080,7 +1080,7 @@ TestPushingPulling(nsIPresContext* presContext)
 // 6. reflow mapped correctly handles child frames that need to be continued
 // 7. pulling up across empty frames resulting from deleting a child's next-in-flows
 static PRBool
-TestSplittableChildren(nsIPresContext* presContext)
+TestSplittableChildren(nsPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
@@ -1440,7 +1440,7 @@ TestSplittableChildren(nsIPresContext* presContext)
 // 3. reflow mapped/unmapped work together to compute the correct result
 // 4. pulling-up children code computes the correct result
 static PRBool
-TestMaxElementSize(nsIPresContext* presContext)
+TestMaxElementSize(nsPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
@@ -1599,7 +1599,7 @@ int main(int argc, char** argv)
 #if 0
   // Create test document and presentation context
   MyDocument *myDoc = new MyDocument();
-  nsIPresContext* presContext;
+  nsPresContext* presContext;
   nsIDeviceContext *dx;
   
   static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);

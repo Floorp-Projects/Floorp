@@ -55,7 +55,7 @@ using namespace Gdiplus;
 #include "nsPromiseFlatString.h"
 #include "nsSVGGDIPlusGlyphMetrics.h"
 #include "nsISVGGDIPlusGlyphMetrics.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsMemory.h"
 
 /**
@@ -727,7 +727,7 @@ nsSVGGDIPlusGlyphGeometry::UpdateRegions()
   
   // clone the covered region from the hit-test region:
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mSource->GetPresContext(getter_AddRefs(presContext));
 
   NS_NewSVGGDIPlusClonedRegion(getter_AddRefs(mCoveredRegion),

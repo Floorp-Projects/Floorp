@@ -49,7 +49,7 @@
 #include "nsIFontMetrics.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
@@ -100,7 +100,7 @@ nsLeafBoxFrame::GetBoxName(nsAutoString& aName)
  * Initialize us. This is a good time to get the alignment of the box
  */
 NS_IMETHODIMP
-nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
+nsLeafBoxFrame::Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -130,7 +130,7 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsLeafBoxFrame::AttributeChanged(nsPresContext* aPresContext,
                                  nsIContent* aChild,
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute,
@@ -162,7 +162,7 @@ void nsLeafBoxFrame::UpdateMouseThrough()
 
 
 NS_IMETHODIMP  
-nsLeafBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsLeafBoxFrame::GetFrameForPoint(nsPresContext* aPresContext,
                              const nsPoint& aPoint, 
                              nsFramePaintLayer aWhichLayer,    
                              nsIFrame**     aFrame)
@@ -185,7 +185,7 @@ nsLeafBoxFrame::GetFrame(nsIFrame** aFrame)
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::DidReflow(nsIPresContext*           aPresContext,
+nsLeafBoxFrame::DidReflow(nsPresContext*           aPresContext,
                           const nsHTMLReflowState*  aReflowState,
                           nsDidReflowStatus         aStatus)
 {
@@ -204,7 +204,7 @@ nsLeafBoxFrame::DidReflow(nsIPresContext*           aPresContext,
 
 
 NS_IMETHODIMP
-nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
+nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -397,7 +397,7 @@ nsLeafBoxFrame::Release(void)
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::CharacterDataChanged(nsIPresContext* aPresContext,
+nsLeafBoxFrame::CharacterDataChanged(nsPresContext* aPresContext,
                                      nsIContent*     aChild,
                                      PRBool          aAppend)
 {

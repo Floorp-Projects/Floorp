@@ -42,7 +42,7 @@
 #include "nsIDocument.h"
 #include "nsIImageDocument.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIScrollableView.h"
@@ -514,7 +514,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
       return PR_FALSE;
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
     return PR_FALSE;
@@ -636,7 +636,7 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
   return NS_ERROR_FAILURE;
 }
 
-void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect)
+void nsAccessible::GetScreenOrigin(nsPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect)
 {
   aRect->x = aRect->y = 0;
 
@@ -803,7 +803,7 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
   //  Another frame, same node                <- Example
   //  Another frame, same node
 
-  nsCOMPtr<nsIPresContext> presContext(GetPresContext());
+  nsCOMPtr<nsPresContext> presContext(GetPresContext());
   if (!presContext)
   {
     *x = *y = *width = *height = 0;
@@ -940,7 +940,7 @@ NS_IMETHODIMP nsAccessible::TakeFocus()
   if (!content) {
     return NS_ERROR_FAILURE;
   }
-  content->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
+  content->SetFocus(nsCOMPtr<nsPresContext>(GetPresContext()));
 
   return NS_OK;
 }
@@ -1418,7 +1418,7 @@ nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *
   if (! parentFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   aPresShell->GetPresContext(getter_AddRefs(presContext));
   nsIAtom* frameType = nsnull;
   while (frame && (frameType = frame->GetType()) != nsAccessibilityAtoms::textFrame) {
@@ -1459,7 +1459,7 @@ nsIFrame* nsAccessible::GetParentBlockFrame(nsIFrame *aFrame)
   return frame;
 }
 
-PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsIPresContext *aPresContext, nsIFrame *aCurFrame, 
+PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsPresContext *aPresContext, nsIFrame *aCurFrame, 
                                    nsIFrame **aFirstTextFrame, const nsIFrame *aTextFrame)
 // Do a depth-first traversal to find the given text frame(aTextFrame)'s index of the block frame(aCurFrame)
 //   it belongs to, also return the first text frame within the same block.

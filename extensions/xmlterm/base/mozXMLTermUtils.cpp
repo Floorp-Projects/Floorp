@@ -47,7 +47,7 @@
 
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
 
@@ -156,7 +156,7 @@ mozXMLTermUtils::GetInnerDOMWindow(nsIDOMWindowInternal* outerDOMWindow,
  * @return NS_OK on success
  */
 NS_EXPORT nsresult
-mozXMLTermUtils::GetPresContextScrollableView(nsIPresContext* aPresContext,
+mozXMLTermUtils::GetPresContextScrollableView(nsPresContext* aPresContext,
                                          nsIScrollableView** aScrollableView)
 {
   XMLT_LOG(mozXMLTermUtils::GetPresContextScrollableView,30,("\n"));
@@ -184,7 +184,7 @@ mozXMLTermUtils::GetPresContextScrollableView(nsIPresContext* aPresContext,
  * @return NS_OK on success
  */
 NS_EXPORT nsresult
-mozXMLTermUtils::GetPresContextDeviceContext(nsIPresContext* aPresContext,
+mozXMLTermUtils::GetPresContextDeviceContext(nsPresContext* aPresContext,
                                          nsIDeviceContext** aDeviceContext)
 {
   nsresult result;

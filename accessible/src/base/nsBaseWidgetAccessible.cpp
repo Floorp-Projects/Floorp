@@ -42,7 +42,7 @@
 #include "nsAccessibleWrap.h"
 #include "nsGUIEvent.h"
 #include "nsILink.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 
@@ -162,7 +162,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessible)
 NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 { 
   if (IsALink()) {
-    mLinkContent->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
+    mLinkContent->SetFocus(nsCOMPtr<nsPresContext>(GetPresContext()));
   }
   
   return NS_OK;
@@ -244,7 +244,7 @@ NS_IMETHODIMP nsLinkableAccessible::DoAction(PRUint8 index)
   // Action 0 (default action): Jump to link
   if (index == eAction_Jump) {
     if (IsALink()) {
-      nsCOMPtr<nsIPresContext> presContext(GetPresContext());
+      nsCOMPtr<nsPresContext> presContext(GetPresContext());
       if (presContext) {
         nsMouseEvent linkClickEvent(NS_MOUSE_LEFT_CLICK);
 
@@ -329,7 +329,7 @@ NS_IMETHODIMP nsGenericAccessible::TakeFocus()
     return NS_ERROR_FAILURE;  // Node already shut down
   }
 
-  content->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
+  content->SetFocus(nsCOMPtr<nsPresContext>(GetPresContext()));
   
   return NS_OK;
 }

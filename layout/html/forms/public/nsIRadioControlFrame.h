@@ -66,7 +66,7 @@ public:
    /**
     * Called by content when the radio button's state changes
     */
-   NS_IMETHOD OnChecked(nsIPresContext* aPresContext, PRBool aChecked) = 0;
+   NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked) = 0;
 };
 
 #endif

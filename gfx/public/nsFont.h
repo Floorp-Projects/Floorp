@@ -50,7 +50,7 @@ typedef PRBool (*nsFontFamilyEnumFunc)(const nsString& aFamily, PRBool aGeneric,
 
 // IDs for generic fonts
 // NOTE: 0, 1 are reserved for the special IDs of the default variable
-// and fixed fonts in the presentation context, see nsIPresContext.h
+// and fixed fonts in the presentation context, see nsPresContext.h
 const PRUint8 kGenericFont_NONE         = 0x00;
 // Special
 const PRUint8 kGenericFont_moz_variable = 0x00; // for the default variable width font

@@ -45,7 +45,7 @@
 
 #include "nsSliderFrame.h"
 #include "nsStyleContext.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
@@ -121,7 +121,7 @@ nsSliderFrame::~nsSliderFrame()
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Init(nsIPresContext*  aPresContext,
+nsSliderFrame::Init(nsPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsStyleContext*  aContext,
@@ -145,7 +145,7 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsSliderFrame::RemoveFrame(nsPresContext* aPresContext,
                            nsIPresShell& aPresShell,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
@@ -159,7 +159,7 @@ nsSliderFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::InsertFrames(nsIPresContext* aPresContext,
+nsSliderFrame::InsertFrames(nsPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aPrevFrame,
@@ -174,7 +174,7 @@ nsSliderFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::AppendFrames(nsIPresContext* aPresContext,
+nsSliderFrame::AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
@@ -231,7 +231,7 @@ nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 d
 
 
 NS_IMETHODIMP
-nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsSliderFrame::AttributeChanged(nsPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
@@ -289,7 +289,7 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Paint(nsIPresContext*      aPresContext,
+nsSliderFrame::Paint(nsPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer,
@@ -441,7 +441,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
 
 NS_IMETHODIMP
-nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
+nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
@@ -728,7 +728,7 @@ nsSliderFrame::PageUpDown(nsIFrame* aThumbFrame, nscoord change)
 
 // called when the current position changed and we need to update the thumb's location
 nsresult
-nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
+nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext)
 {
   nsIBox* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIContent> scrollbar;
@@ -841,7 +841,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
 
 }
 
-NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                              const nsPoint& aPoint,
                                              nsFramePaintLayer aWhichLayer,
                                              nsIFrame**     aFrame)
@@ -870,7 +870,7 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsSliderFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsSliderFrame::SetInitialChildList(nsPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList)
 {
@@ -1077,7 +1077,7 @@ nsSliderFrame::RemoveListener()
 }
 
 NS_IMETHODIMP
-nsSliderFrame::HandlePress(nsIPresContext* aPresContext,
+nsSliderFrame::HandlePress(nsPresContext* aPresContext,
                            nsGUIEvent*     aEvent,
                            nsEventStatus*  aEventStatus)
 {
@@ -1105,7 +1105,7 @@ nsSliderFrame::HandlePress(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::HandleRelease(nsIPresContext* aPresContext,
+nsSliderFrame::HandleRelease(nsPresContext* aPresContext,
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus*  aEventStatus)
 {
@@ -1117,7 +1117,7 @@ nsSliderFrame::HandleRelease(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Destroy(nsIPresContext* aPresContext)
+nsSliderFrame::Destroy(nsPresContext* aPresContext)
 {
   // tell our mediator if we have one we are gone.
   if (mMediator) {

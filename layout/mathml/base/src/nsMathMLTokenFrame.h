@@ -52,25 +52,25 @@ public:
   virtual nsIAtom* GetType() const;
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
+  Init(nsPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
+  SetInitialChildList(nsPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
+  Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD
-  Place(nsIPresContext*      aPresContext,
+  Place(nsPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
@@ -80,7 +80,7 @@ public:
                    nsIFrame*     aChild);
 
   NS_IMETHOD
-  AttributeChanged(nsIPresContext* aPresContext,
+  AttributeChanged(nsPresContext* aPresContext,
                    nsIContent*     aChild,
                    PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
@@ -93,14 +93,14 @@ protected:
 
   // hook to perform MathML-specific actions depending on the tag
   virtual void
-  ProcessTextData(nsIPresContext* aPresContext);
+  ProcessTextData(nsPresContext* aPresContext);
 
   // helper to set the style of <mi> which has to be italic or normal
   // depending on its textual content
-  void SetTextStyle(nsIPresContext* aPresContext);
+  void SetTextStyle(nsPresContext* aPresContext);
 
   // helper to set the quotes of <ms>
-  void SetQuotes(nsIPresContext* aPresContext);
+  void SetQuotes(nsPresContext* aPresContext);
 };
 
 #endif /* nsMathMLTokentFrame_h___ */

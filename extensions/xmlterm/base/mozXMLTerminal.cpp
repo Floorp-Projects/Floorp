@@ -54,7 +54,7 @@
 #include "nsIObserver.h"
 #include "nsISelectionController.h"
 
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsICaret.h"
 #include "nsRect.h"
 #include "nsIURI.h"
@@ -417,7 +417,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return NS_ERROR_FAILURE;
 
   // Get reference to presentation shell
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   result = docShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(result) || !presContext)
     return NS_ERROR_FAILURE;
@@ -599,7 +599,7 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
     return NS_ERROR_FAILURE;
 
   // Get presentation context
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   result = presShell->GetPresContext( getter_AddRefs(presContext) );
   if (NS_FAILED(result))
     return result;

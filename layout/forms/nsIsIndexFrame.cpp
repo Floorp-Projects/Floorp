@@ -40,7 +40,7 @@
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresState.h"
@@ -121,7 +121,7 @@ nsIsIndexFrame::~nsIsIndexFrame()
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::Paint(nsIPresContext*      aPresContext,
+nsIsIndexFrame::Paint(nsPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect,
                       nsFramePaintLayer    aWhichLayer,
@@ -170,7 +170,7 @@ nsIsIndexFrame::UpdatePromptLabel()
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::GetInputFrame(nsIPresContext* aPresContext,
+nsIsIndexFrame::GetInputFrame(nsPresContext* aPresContext,
                               nsIFormControlFrame** oFrame)
 {
   nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -186,7 +186,7 @@ nsIsIndexFrame::GetInputFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::GetInputValue(nsIPresContext* aPresContext,
+nsIsIndexFrame::GetInputValue(nsPresContext* aPresContext,
                               nsString& oString)
 {
   nsIFormControlFrame* frame = nsnull;
@@ -198,7 +198,7 @@ nsIsIndexFrame::GetInputValue(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::SetInputValue(nsIPresContext* aPresContext,
+nsIsIndexFrame::SetInputValue(nsPresContext* aPresContext,
                               const nsString aString)
 {
   nsIFormControlFrame* frame = nsnull;
@@ -220,7 +220,7 @@ nsIsIndexFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+nsIsIndexFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                        nsISupportsArray& aChildList)
 {
   nsresult result;
@@ -300,7 +300,7 @@ nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 void
-nsIsIndexFrame::ScrollIntoView(nsIPresContext* aPresContext)
+nsIsIndexFrame::ScrollIntoView(nsPresContext* aPresContext)
 {
   if (aPresContext) {
     nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -312,7 +312,7 @@ nsIsIndexFrame::ScrollIntoView(nsIPresContext* aPresContext)
 }
 
 
-NS_IMETHODIMP nsIsIndexFrame::Reflow(nsIPresContext*          aPresContext, 
+NS_IMETHODIMP nsIsIndexFrame::Reflow(nsPresContext*          aPresContext, 
                                      nsHTMLReflowMetrics&     aDesiredSize,
                                      const nsHTMLReflowState& aReflowState, 
                                      nsReflowStatus&          aStatus)
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsIsIndexFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsIsIndexFrame::AttributeChanged(nsPresContext* aPresContext,
                                        nsIContent*     aChild,
                                        PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
@@ -374,7 +374,7 @@ nsIsIndexFrame::GetFrameName(nsAString& aResult) const
 // submission
 // much of this is cut and paste from nsFormFrame::OnSubmit
 NS_IMETHODIMP
-nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
+nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
 {
   if (!mContent || !mInputContent) {
     return NS_ERROR_UNEXPECTED;
@@ -575,7 +575,7 @@ nsIsIndexFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder, n
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsIsIndexFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+nsIsIndexFrame::SaveState(nsPresContext* aPresContext, nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -596,7 +596,7 @@ nsIsIndexFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+nsIsIndexFrame::RestoreState(nsPresContext* aPresContext, nsIPresState* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 

@@ -42,7 +42,7 @@
 class nsString;
 class nsIFrame;
 class nsIStyleRule;
-class nsIPresContext;
+class nsPresContext;
 class nsMappedAttributes;
 class nsIURI;
 struct nsRuleData;

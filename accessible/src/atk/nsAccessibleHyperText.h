@@ -65,7 +65,7 @@ protected:
   nsCOMPtr<nsISupportsArray> mTextChildren;
   PRInt32 mIndex;
 
-  PRBool GetAllTextChildren(nsIPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave);
+  PRBool GetAllTextChildren(nsPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave);
   nsIDOMNode* FindTextNodeByOffset(PRInt32 aOffset, PRInt32& aBeforeLength);
   nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType,
                          PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText);

@@ -47,18 +47,18 @@ public:
 
   nsButtonBoxFrame(nsIPresShell* aPresShell);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
-  virtual void MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent);
+  virtual void MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent);
 
 
 }; // class nsButtonBoxFrame

@@ -47,7 +47,7 @@
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
@@ -151,7 +151,7 @@ mFrameConstructor(nsnull)
 } // cntr
 
 NS_IMETHODIMP
-nsPopupSetFrame::Init(nsIPresContext*  aPresContext,
+nsPopupSetFrame::Init(nsPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
@@ -171,7 +171,7 @@ nsPopupSetFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::Destroy(nsIPresContext* aPresContext)
+nsPopupSetFrame::Destroy(nsPresContext* aPresContext)
 {
   // Remove our frame list.
   if (mFrameConstructor) {
@@ -339,7 +339,7 @@ nsPopupSetFrame::RepositionPopup(nsPopupFrameList* aEntry, nsBoxLayoutState& aSt
   // Sync up the view.
   if (aEntry && aEntry->mElementContent) {
     nsIFrame* frameToSyncTo = nsnull;
-    nsIPresContext* presContext = aState.PresContext();
+    nsPresContext* presContext = aState.PresContext();
     presContext->PresShell()->GetPrimaryFrameFor(aEntry->mElementContent,
                                                  &frameToSyncTo );
     ((nsMenuPopupFrame*)(aEntry->mPopupFrame))->SyncViewWithFrame(presContext, 

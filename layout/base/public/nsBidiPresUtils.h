@@ -70,7 +70,7 @@ public:
    *
    *  @lina 06/18/2000
    */
-  nsresult Resolve(nsIPresContext* aPresContext,
+  nsresult Resolve(nsPresContext* aPresContext,
                    nsIFrame*       aBlockFrame,
                    nsIFrame*       aFirstChild,
                    PRBool&         aForceReflow,
@@ -82,7 +82,7 @@ public:
    * 
    * @lina 05/02/2000
    */
-  void ReorderFrames(nsIPresContext*      aPresContext,
+  void ReorderFrames(nsPresContext*      aPresContext,
                      nsIRenderingContext* aRendContext,
                      nsIFrame*            aFirstChild,
                      nsIFrame*            aNextInFlow,
@@ -95,7 +95,7 @@ public:
    *
    * @lina 06/18/2000 
    */
-  nsresult FormatUnicodeText(nsIPresContext* aPresContext,
+  nsresult FormatUnicodeText(nsPresContext* aPresContext,
                              PRUnichar*      aText,
                              PRInt32&        aTextLength,
                              nsCharType      aCharType,
@@ -134,7 +134,7 @@ public:
   nsresult RenderText(PRUnichar*           aText,
                       PRInt32              aLength,
                       nsBidiDirection      aBaseDirection,
-                      nsIPresContext*      aPresContext,
+                      nsPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nscoord              aX,
                       nscoord              aY);
@@ -145,14 +145,14 @@ private:
    *
    *  @lina 05/02/2000
    */
-  void CreateBlockBuffer(nsIPresContext* aPresContext);
+  void CreateBlockBuffer(nsPresContext* aPresContext);
 
   /**
    * Set up an array of the frames after splitting frames so that each frame has
    * consistent directionality. At this point the frames are still in logical
    * order
    */
-  nsresult InitLogicalArray(nsIPresContext* aPresContext,
+  nsresult InitLogicalArray(nsPresContext* aPresContext,
                             nsIFrame*       aCurrentFrame,
                             nsIFrame*       aNextInFlow,
                             PRBool          aAddMarkers = PR_FALSE);
@@ -163,22 +163,22 @@ private:
    * @param aBidiEnabled TRUE on return if the visual order is different from
    *                      the logical order
    */
-  nsresult Reorder(nsIPresContext* aPresContext,
+  nsresult Reorder(nsPresContext* aPresContext,
                    PRBool&         aBidiEnabled);
   
   /**
    *  Adjust frame positions following their visual order
    *
-   *  @param  <code>nsIPresContext*</code>, the first kid
+   *  @param  <code>nsPresContext*</code>, the first kid
    *
    *  @lina 04/11/2000
    */
-  void RepositionInlineFrames(nsIPresContext*      aPresContext,
+  void RepositionInlineFrames(nsPresContext*      aPresContext,
                               nsIRenderingContext* aRendContext,
                               nsIFrame*            aFirstChild,
                               PRInt32              aChildCount) const;
   
-  void RepositionContainerFrame(nsIPresContext* aPresContext,
+  void RepositionContainerFrame(nsPresContext* aPresContext,
                                 nsIFrame*       aContainer,
                                 PRInt32&        aMinX,
                                 PRInt32&        aMaxX) const;
@@ -199,7 +199,7 @@ private:
    * @see Resolve()
    * @see RemoveBidiContinuation()
    */
-  PRBool EnsureBidiContinuation(nsIPresContext* aPresContext,
+  PRBool EnsureBidiContinuation(nsPresContext* aPresContext,
                                 nsIContent*     aContent,
                                 nsIFrame*       aFrame,
                                 nsIFrame**      aNewFrame,
@@ -222,7 +222,7 @@ private:
    * @see Resolve()
    * @see EnsureBidiContinuation()
    */
-  void RemoveBidiContinuation(nsIPresContext* aPresContext,
+  void RemoveBidiContinuation(nsPresContext* aPresContext,
                               nsIFrame*       aFrame,
                               PRInt32         aFirstIndex,
                               PRInt32         aLastIndex,

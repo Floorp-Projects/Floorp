@@ -516,7 +516,7 @@ nsresult nsDocAccessible::AddEventListeners()
     }
   }
   
-  nsCOMPtr<nsIPresContext> context; 
+  nsCOMPtr<nsPresContext> context; 
   presShell->GetPresContext(getter_AddRefs(context));
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 

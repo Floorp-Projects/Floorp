@@ -125,7 +125,7 @@ public:
     virtual void AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute, PRInt32 aModType);
 
-    virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+    virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,

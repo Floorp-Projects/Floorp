@@ -40,7 +40,7 @@
 #include "nsContainerFrame.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutAtoms.h"
@@ -144,7 +144,7 @@ void nsTableColFrame::ResetSizingInfo()
 }
 
 NS_METHOD 
-nsTableColFrame::Paint(nsIPresContext*      aPresContext,
+nsTableColFrame::Paint(nsPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer,
@@ -160,7 +160,7 @@ nsTableColFrame::Paint(nsIPresContext*      aPresContext,
 
 // override, since we want to act like a block
 NS_IMETHODIMP
-nsTableColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTableColFrame::GetFrameForPoint(nsPresContext* aPresContext,
                           const nsPoint& aPoint,
                           nsFramePaintLayer aWhichLayer,
                           nsIFrame** aFrame)
@@ -168,7 +168,7 @@ nsTableColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsTableColFrame::Reflow(nsIPresContext*          aPresContext,
+NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -278,7 +278,7 @@ NS_NewTableColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsTableColFrame::Init(nsIPresContext*  aPresContext,
+nsTableColFrame::Init(nsPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsStyleContext*  aContext,

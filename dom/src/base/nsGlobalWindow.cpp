@@ -771,7 +771,7 @@ GlobalWindowImpl::GetGlobalObjectOwner()
 }
 
 nsresult
-GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
+GlobalWindowImpl::HandleDOMEvent(nsPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIDOMEvent** aDOMEvent,
                                  PRUint32 aFlags,
@@ -2984,7 +2984,7 @@ GlobalWindowImpl::CheckForAbusePoint()
       nsCOMPtr<nsIPresShell> presShell;
       mDocShell->GetPresShell(getter_AddRefs(presShell));
       if (presShell) {
-        nsCOMPtr<nsIPresContext> presContext;
+        nsCOMPtr<nsPresContext> presContext;
         presShell->GetPresContext(getter_AddRefs(presContext));
         if (presContext)
           presContext->EventStateManager()->GetCurrentEvent(&currentEvent);
@@ -4069,7 +4069,7 @@ GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
     }
 
     // Retrieve the context
-    nsCOMPtr<nsIPresContext> aPresContext;
+    nsCOMPtr<nsPresContext> aPresContext;
     shell->GetPresContext(getter_AddRefs(aPresContext));
     aPresContext->EventStateManager()->
       DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject*, this),
@@ -5471,7 +5471,7 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
   // date.
   FlushPendingNotifications(Flush_Layout);
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
     *aP2T = presContext->PixelsToTwips();
@@ -5761,7 +5761,7 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
   else
     return NS_OK;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
     // Need root widget.

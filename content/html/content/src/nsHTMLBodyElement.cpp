@@ -43,7 +43,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
@@ -334,7 +334,7 @@ nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
   if (NS_CONTENT_ATTR_NOT_THERE ==                                  \
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::attr_, color)) {      \
                                                                     \
-    nsCOMPtr<nsIPresContext> presContext;                           \
+    nsCOMPtr<nsPresContext> presContext;                           \
     GetPresContext(this, getter_AddRefs(presContext));              \
                                                                     \
     if (presContext) {                                              \

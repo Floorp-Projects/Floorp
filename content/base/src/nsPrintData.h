@@ -69,7 +69,7 @@ class nsPagePrintTimer;
 class CachedPresentationObj
 {
 public:
-  CachedPresentationObj(nsIPresShell* aShell, nsIPresContext* aPC,
+  CachedPresentationObj(nsIPresShell* aShell, nsPresContext* aPC,
                         nsIViewManager* aVM, nsIWidget* aW):
     mWindow(aW), mViewManager(aVM), mPresShell(aShell), mPresContext(aPC)
   {
@@ -81,7 +81,7 @@ public:
   nsCOMPtr<nsIWidget>      mWindow;
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIPresShell>   mPresShell;
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsPresContext> mPresContext;
 };
 
 //------------------------------------------------------------------------

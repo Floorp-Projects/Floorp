@@ -45,7 +45,7 @@
 #include "nsISVGRendererRegion.h"
 
 class nsISVGRendererCanvas;
-class nsIPresContext;
+class nsPresContext;
 class nsIDOMSVGRect;
 struct nsRect;
 

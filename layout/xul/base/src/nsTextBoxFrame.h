@@ -58,15 +58,15 @@ public:
 
   friend nsresult NS_NewTextBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD  Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -76,13 +76,13 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  virtual void UpdateAttributes(nsIPresContext*  aPresContext,
+  virtual void UpdateAttributes(nsPresContext*  aPresContext,
                                 nsIAtom*         aAttribute,
                                 PRBool&          aResize,
                                 PRBool&          aRedraw);
 
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -95,12 +95,12 @@ protected:
   void UpdateAccessTitle();
   void UpdateAccessIndex();
 
-  NS_IMETHOD PaintTitle(nsIPresContext*      aPresContext,
+  NS_IMETHOD PaintTitle(nsPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect&        aDirtyRect,
                         const nsRect&        aRect);
 
-  virtual void LayoutTitle(nsIPresContext*      aPresContext,
+  virtual void LayoutTitle(nsPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aRect);
 
@@ -110,17 +110,17 @@ protected:
 
   nsTextBoxFrame(nsIPresShell* aShell);
 
-  virtual void CalculateTitleForWidth(nsIPresContext*      aPresContext,
+  virtual void CalculateTitleForWidth(nsPresContext*      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       nscoord              aWidth);
 
-  virtual void GetTextSize(nsIPresContext*      aPresContext,
+  virtual void GetTextSize(nsPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsString&      aString,
                            nsSize&              aSize,
                            nscoord&             aAscent);
 
-  nsresult RegUnregAccessKey(nsIPresContext* aPresContext,
+  nsresult RegUnregAccessKey(nsPresContext* aPresContext,
                              PRBool          aDoReg);
 
 private:

@@ -50,7 +50,7 @@
 #include "nsISupportsArray.h"
 #include "nsIFocusTracker.h"
 #include "nsCOMPtr.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIComponentManager.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"

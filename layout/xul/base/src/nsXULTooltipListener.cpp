@@ -53,7 +53,7 @@
 #endif
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"

@@ -43,7 +43,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"
@@ -97,7 +97,7 @@ public:
                                nsIContent* aSubmitElement);
 
   // nsIContent overrides...
-  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -105,7 +105,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
@@ -203,7 +203,7 @@ nsHTMLButtonElement::Click()
   if (mDocument) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (shell) {
-      nsCOMPtr<nsIPresContext> context;
+      nsCOMPtr<nsPresContext> context;
       shell->GetPresContext(getter_AddRefs(context));
       if (context) {
         nsEventStatus status = nsEventStatus_eIgnore;
@@ -232,7 +232,7 @@ nsHTMLButtonElement::IsFocusable(PRInt32 *aTabIndex)
 }
 
 void
-nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
+nsHTMLButtonElement::SetFocus(nsPresContext* aPresContext)
 {
   if (!aPresContext)
     return;
@@ -295,7 +295,7 @@ nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 nsresult
-nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,

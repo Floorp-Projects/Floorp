@@ -360,7 +360,7 @@ public:
     return mBounds.height;
   }
 
-  static void DeleteLineList(nsIPresContext* aPresContext, nsLineList& aLines);
+  static void DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines);
 
   // search from beginning to end
   // XXX Should switch to API below
@@ -378,7 +378,7 @@ public:
 #ifdef DEBUG
   char* StateToString(char* aBuf, PRInt32 aBufSize) const;
 
-  void List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  void List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 #endif
 
   nsIFrame* LastChild() const;

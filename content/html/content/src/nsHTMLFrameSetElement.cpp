@@ -40,7 +40,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIFrameSetElement.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDocument.h"

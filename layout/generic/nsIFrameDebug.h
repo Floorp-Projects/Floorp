@@ -40,7 +40,7 @@
 #include "nsISupports.h"
 #include "nsIFrame.h"
 
-class nsIPresContext;
+class nsPresContext;
 struct PRLogModuleInfo;
 
 // IID for the nsIFrameDebug interface {a6cf9069-15b3-11d2-932e-00805f8add32}
@@ -55,12 +55,12 @@ class nsIFrameDebug : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMEDEBUG_IID)
   
-  NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const = 0;
+  NS_IMETHOD  List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const = 0;
   /**
    * lists the frames beginning from the root frame
    * - calls root frame's List(...)
    */
-  static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+  static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent);
   /**
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetType() instead...
@@ -80,7 +80,7 @@ public:
    *
    * Argument aIncludeStyleData: if PR_TRUE, style information is dumpted, otherwise it is not
    */
-  NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData) = 0;
+  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData) = 0;
 
   NS_IMETHOD  VerifyTree() const = 0;
 

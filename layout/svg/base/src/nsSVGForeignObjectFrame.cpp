@@ -38,7 +38,7 @@
 
 #include "nsBlockFrame.h"
 #include "nsIDOMSVGGElement.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGContainerFrame.h"
 #include "nsISVGRendererCanvas.h"
@@ -81,34 +81,34 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:  
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
   
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
   
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   
-  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
@@ -282,7 +282,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::Init(nsIPresContext*  aPresContext,
+nsSVGForeignObjectFrame::Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -298,7 +298,7 @@ nsSVGForeignObjectFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::Reflow(nsIPresContext*          aPresContext,
+nsSVGForeignObjectFrame::Reflow(nsPresContext*          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)
@@ -361,7 +361,7 @@ nsSVGForeignObjectFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::AppendFrames(nsIPresContext* aPresContext,
+nsSVGForeignObjectFrame::AppendFrames(nsPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aFrameList)
@@ -377,7 +377,7 @@ nsSVGForeignObjectFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::InsertFrames(nsIPresContext* aPresContext,
+nsSVGForeignObjectFrame::InsertFrames(nsPresContext* aPresContext,
                                      nsIPresShell&   aPresShell,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aPrevFrame,
@@ -394,7 +394,7 @@ nsSVGForeignObjectFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsSVGForeignObjectFrame::RemoveFrame(nsPresContext* aPresContext,
                                      nsIPresShell&   aPresShell,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aOldFrame)
@@ -407,7 +407,7 @@ nsSVGForeignObjectFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::ReplaceFrame(nsIPresContext* aPresContext,
+nsSVGForeignObjectFrame::ReplaceFrame(nsPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aOldFrame,
@@ -452,7 +452,7 @@ nsSVGForeignObjectFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirty
     nsCOMPtr<nsISVGRendererRegion> region = DoReflow();
   }
 
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
 
   nsRect r(mRect);
   if (!r.IntersectRect(dirtyRectTwips, r))
@@ -516,7 +516,7 @@ nsSVGForeignObjectFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
 {
   *hit = nsnull;
 
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
 
   nsPoint p( (nscoord)(x*GetTwipsPerPx()),
              (nscoord)(y*GetTwipsPerPx()));
@@ -656,7 +656,7 @@ nsSVGForeignObjectFrame::DoReflow()
   printf("**nsSVGForeignObjectFrame::DoReflow()\n");
 #endif
 
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
 
   // remember the area we have to invalidate after this reflow:
   nsCOMPtr<nsISVGRendererRegion> area_before = GetCoveredRegion();

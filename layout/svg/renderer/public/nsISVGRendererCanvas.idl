@@ -48,7 +48,7 @@ struct nsRect;
 typedef PRUint32 nscolor;
 
 interface nsIRenderingContext;
-interface nsIPresContext;
+interface nsPresContext;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -90,7 +90,7 @@ interface nsISVGRendererCanvas : nsISupports
   void unlockRenderingContext();
 
   // XXX do we need this?
-  nsIPresContext getPresContext();
+  nsPresContext getPresContext();
 
   /**
    * Fill the canvas with the given color.

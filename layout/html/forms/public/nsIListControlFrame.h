@@ -40,7 +40,7 @@
 
 #include "nsISupports.h"
 #include "nsFont.h"
-class nsIPresContext;
+class nsPresContext;
 class nsAString;
 class nsIContent;
 class nsIPresState;
@@ -79,7 +79,7 @@ public:
    * Initiates mouse capture for the listbox
    *
    */
-  NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents) = 0;
+  NS_IMETHOD CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrabMouseEvents) = 0;
 
   /**
    * Returns the maximum width and height of an item in the listbox
@@ -96,7 +96,7 @@ public:
   /**
    * 
    */
-  NS_IMETHOD SyncViewWithFrame(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD SyncViewWithFrame(nsPresContext* aPresContext) = 0;
 
   /**
    * Called by combobox when it's about to drop down
@@ -121,7 +121,7 @@ public:
   /**
    *  Return the the frame that the options will be inserted into
    */
-  NS_IMETHOD GetOptionsContainer(nsIPresContext* aPresContext,
+  NS_IMETHOD GetOptionsContainer(nsPresContext* aPresContext,
                                  nsIFrame** aFrame) = 0;
 
   /**

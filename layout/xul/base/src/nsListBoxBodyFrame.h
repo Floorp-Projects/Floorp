@@ -46,7 +46,7 @@
 #include "nsIListBoxObject.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIReflowCallback.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsBoxLayoutState.h"
 
 class nsCSSFrameConstructor;
@@ -74,10 +74,10 @@ public:
                                          nsIBoxLayout* aLayoutManager);
   
   // nsIFrame
-  NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
+  NS_IMETHOD Init(nsPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext, nsIContent* aChild,
                               PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                               PRInt32 aModType);
 
@@ -122,15 +122,15 @@ public:
   PRBool ContinueReflow(nscoord height);
   NS_IMETHOD ListBoxAppendFrames(nsIFrame* aFrameList);
   NS_IMETHOD ListBoxInsertFrames(nsIFrame* aPrevFrame, nsIFrame* aFrameList);
-  void OnContentInserted(nsIPresContext* aPresContext, nsIContent* aContent);
-  void OnContentRemoved(nsIPresContext* aPresContext,  nsIFrame* aChildFrame, PRInt32 aIndex);
+  void OnContentInserted(nsPresContext* aPresContext, nsIContent* aContent);
+  void OnContentRemoved(nsPresContext* aPresContext,  nsIFrame* aChildFrame, PRInt32 aIndex);
 
   void GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent);
   void GetListItemNextSibling(nsIContent* aListItem, nsIContent** aContent, PRInt32& aSiblingIndex);
 
   void PostReflowCallback();
 
-  void InitGroup(nsCSSFrameConstructor* aFC, nsIPresContext* aContext) 
+  void InitGroup(nsCSSFrameConstructor* aFC, nsPresContext* aContext) 
   {
     mFrameConstructor = aFC;
     mPresContext = aContext;
@@ -141,7 +141,7 @@ protected:
 
   // We don't own this. (No addref/release allowed, punk.)
   nsCSSFrameConstructor* mFrameConstructor;
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
 
   // row height
   PRInt32 mRowCount;

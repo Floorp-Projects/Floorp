@@ -295,10 +295,10 @@ Add a <a href="#StyleContextMember">data member</a>
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_UIReset)
 
-  void* operator new(size_t sz, nsIPresContext* aContext) {
+  void* operator new(size_t sz, nsPresContext* aContext) {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsIPresContext* aContext) {
+  void Destroy(nsPresContext* aContext) {
     this-&gt;~nsStyleUIReset();
     aContext-&gt;FreeToShell(sizeof(nsStyleUIReset), this);
   };

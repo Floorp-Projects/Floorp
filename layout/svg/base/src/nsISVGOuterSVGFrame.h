@@ -44,7 +44,7 @@
 class nsISVGRenderer;
 class nsIFrame;
 class nsISVGRendererRegion;
-class nsIPresContext;
+class nsPresContext;
 
 // {760AC5FE-E33B-4A8A-95D2-5B238A628AAE}
 #define NS_ISVGOUTERSVGFRAME_IID \

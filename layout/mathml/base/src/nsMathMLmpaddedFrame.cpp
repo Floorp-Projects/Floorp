@@ -40,7 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"  // to get NS_IS_SPACE
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -90,7 +90,7 @@ nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmpaddedFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmpaddedFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                            nsIFrame*       aParent) 
 {
   // let the base class get the default from our parent
@@ -102,7 +102,7 @@ nsMathMLmpaddedFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 void
-nsMathMLmpaddedFrame::ProcessAttributes(nsIPresContext* aPresContext)
+nsMathMLmpaddedFrame::ProcessAttributes(nsPresContext* aPresContext)
 {
   /*
   parse the attributes
@@ -307,7 +307,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 }
 
 void
-nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
+nsMathMLmpaddedFrame::UpdateValue(nsPresContext*      aPresContext,
                                   nsStyleContext*      aStyleContext,
                                   PRInt32              aSign,
                                   PRInt32              aPseudoUnit,
@@ -373,7 +373,7 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
+nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)

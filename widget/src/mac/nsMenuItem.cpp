@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
 #include "nsMenuBar.h"         // for MenuHelpers namespace
 #include "nsMenuItem.h"
@@ -282,7 +282,7 @@ NS_METHOD nsMenuItem::DoCommand()
 {
   nsresult rv = NS_ERROR_FAILURE;
  
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
   if (!webShell)
     return nsEventStatus_eConsumeNoDefault;

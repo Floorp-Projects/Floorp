@@ -103,7 +103,7 @@ nsSelectsAreaFrame::IsOptionElementFrame(nsIFrame *aFrame)
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsSelectsAreaFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsSelectsAreaFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                      const nsPoint& aPoint,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
@@ -132,7 +132,7 @@ nsSelectsAreaFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSelectsAreaFrame::Paint(nsIPresContext*      aPresContext,
+nsSelectsAreaFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,

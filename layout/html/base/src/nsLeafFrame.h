@@ -49,12 +49,12 @@ class nsLeafFrame : public nsFrame {
 public:
 
   // nsIFrame replacements
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -68,14 +68,14 @@ protected:
    * deal with it). In addition, the ascent will be set to the height
    * and the descent will be set to zero.
    */
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize) = 0;
 
   /**
    * Subroutine to add in borders and padding
    */
-  void AddBordersAndPadding(nsIPresContext* aPresContext,
+  void AddBordersAndPadding(nsPresContext* aPresContext,
                             const nsHTMLReflowState& aReflowState,
                             nsHTMLReflowMetrics& aDesiredSize,
                             nsMargin& aBorderPadding);

@@ -42,7 +42,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIDOMHTMLDocument.h"
@@ -85,11 +85,11 @@ public:
   // nsIContent
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
-  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
-  virtual void SetFocus(nsIPresContext* aContext);
+  virtual void SetFocus(nsPresContext* aContext);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
@@ -177,7 +177,7 @@ nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 }
 
 static PRBool
-EventTargetIn(nsIPresContext *aPresContext, nsEvent *aEvent,
+EventTargetIn(nsPresContext *aPresContext, nsEvent *aEvent,
               nsIContent *aChild, nsIContent *aStop)
 {
   nsCOMPtr<nsIContent> c;
@@ -199,7 +199,7 @@ EventTargetIn(nsIPresContext *aPresContext, nsEvent *aEvent,
 }
 
 nsresult
-nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
+nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
@@ -259,7 +259,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 void
-nsHTMLLabelElement::SetFocus(nsIPresContext* aContext)
+nsHTMLLabelElement::SetFocus(nsPresContext* aContext)
 {
   // Since we don't have '-moz-user-focus: normal', the only time
   // |SetFocus| will be called is when the accesskey is activated.

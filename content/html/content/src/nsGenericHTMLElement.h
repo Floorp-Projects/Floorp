@@ -189,14 +189,14 @@ public:
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
-  virtual void RemoveFocus(nsIPresContext *aPresContext);
+  virtual void RemoveFocus(nsPresContext *aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   /**
    * Standard anchor HandleDOMEvent, used by A, AREA and LINK (parameters
    * are the same as HandleDOMEvent)
    */
-  nsresult HandleDOMEventForAnchors(nsIPresContext* aPresContext,
+  nsresult HandleDOMEventForAnchors(nsPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
@@ -629,7 +629,7 @@ public:
    * @param aPresContext the presentation context [OUT]
    */
   static nsresult GetPresContext(nsIHTMLContent* aContent,
-                                 nsIPresContext** aPresContext);
+                                 nsPresContext** aPresContext);
 
   // Form Helper Routines
   /**

@@ -39,7 +39,7 @@
 #define nsLayoutUtils_h__
 
 class nsIFrame;
-class nsIPresContext;
+class nsPresContext;
 class nsIContent;
 class nsIAtom;
 class nsIView;
@@ -66,7 +66,7 @@ public:
    * @param aPresContext the prescontext
    * @return the :before frame or nsnull if there isn't one
    */
-  static nsIFrame* GetBeforeFrame(nsIFrame* aFrame, nsIPresContext* aPresContext);
+  static nsIFrame* GetBeforeFrame(nsIFrame* aFrame, nsPresContext* aPresContext);
 
   /**
    * GetAfterFrame returns the :after frame of the given frame, if one
@@ -78,7 +78,7 @@ public:
    * @param aPresContext the prescontext
    * @return the :after frame or nsnull if there isn't one
    */
-  static nsIFrame* GetAfterFrame(nsIFrame* aFrame, nsIPresContext* aPresContext);
+  static nsIFrame* GetAfterFrame(nsIFrame* aFrame, nsPresContext* aPresContext);
 
   /** 
    * Given a frame, search up the frame tree until we find an
@@ -177,7 +177,7 @@ public:
   static PRBool HasPseudoStyle(nsIContent* aContent,
                                nsStyleContext* aStyleContext,
                                nsIAtom* aPseudoElement,
-                               nsIPresContext* aPresContext)
+                               nsPresContext* aPresContext)
   {
     NS_PRECONDITION(aPresContext, "Must have a prescontext");
     NS_PRECONDITION(aPseudoElement, "Must have a pseudo name");

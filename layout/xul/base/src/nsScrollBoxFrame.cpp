@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsPageFrame.h"
 #include "nsViewsCID.h"
@@ -98,7 +98,7 @@ nsScrollBoxFrame::NeedsClipWidget()
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::Init(nsIPresContext*  aPresContext,
+nsScrollBoxFrame::Init(nsPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsStyleContext*  aStyleContext,
@@ -114,7 +114,7 @@ nsScrollBoxFrame::Init(nsIPresContext*  aPresContext,
 }
   
 NS_IMETHODIMP
-nsScrollBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsScrollBoxFrame::SetInitialChildList(nsPresContext* aPresContext,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aChildList)
 {
@@ -127,7 +127,7 @@ nsScrollBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 void
-nsScrollBoxFrame::SetUpScrolledFrame(nsIPresContext* aPresContext)
+nsScrollBoxFrame::SetUpScrolledFrame(nsPresContext* aPresContext)
 {
   NS_ASSERTION(mFrames.GetLength() <= 1, "ScrollBoxes can only have 1 child!");
 
@@ -142,7 +142,7 @@ nsScrollBoxFrame::SetUpScrolledFrame(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::AppendFrames(nsIPresContext* aPresContext,
+nsScrollBoxFrame::AppendFrames(nsPresContext* aPresContext,
                             nsIPresShell&   aPresShell,
                             nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
@@ -158,7 +158,7 @@ nsScrollBoxFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::InsertFrames(nsIPresContext* aPresContext,
+nsScrollBoxFrame::InsertFrames(nsPresContext* aPresContext,
                             nsIPresShell&   aPresShell,
                             nsIAtom*        aListName,
                             nsIFrame*       aPrevFrame,
@@ -175,7 +175,7 @@ nsScrollBoxFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
+nsScrollBoxFrame::RemoveFrame(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame)
@@ -200,7 +200,7 @@ nsScrollBoxFrame::CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay
 }
 
 nsresult
-nsScrollBoxFrame::GetScrollingParentView(nsIPresContext* aPresContext,
+nsScrollBoxFrame::GetScrollingParentView(nsPresContext* aPresContext,
                                           nsIFrame* aParent,
                                           nsIView** aParentView)
 {
@@ -226,7 +226,7 @@ nsScrollBoxFrame::GetMouseCapturer() const
 }
 
 nsresult
-nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
+nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
 {
   nsIView*  view;
 
@@ -309,7 +309,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   kid->GetMargin(margin);
   childRect.Deflate(margin);
 
-  nsIPresContext* presContext = aState.PresContext();
+  nsPresContext* presContext = aState.PresContext();
 
   // see if our child is html. If it is then
   // never include the overflow. The child will be the size
@@ -578,7 +578,7 @@ nsScrollBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::Paint(nsIPresContext*      aPresContext,
+nsScrollBoxFrame::Paint(nsPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect&        aDirtyRect,
                         nsFramePaintLayer    aWhichLayer,
@@ -642,7 +642,7 @@ nsScrollBoxFrame::Release(void)
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
+nsScrollBoxFrame::SaveState(nsPresContext* aPresContext,
                             nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
@@ -722,7 +722,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
 
 //-----------------------------------------------------------
 NS_IMETHODIMP
-nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
+nsScrollBoxFrame::RestoreState(nsPresContext* aPresContext,
                                  nsIPresState* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
@@ -788,20 +788,20 @@ public:
   nsAutoRepeatBoxFrame(nsIPresShell* aPresShell);
   friend nsresult NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow);
 
   NS_DECL_NSITIMERCALLBACK
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
   
 };
 
@@ -828,7 +828,7 @@ nsAutoRepeatBoxFrame::nsAutoRepeatBoxFrame(nsIPresShell* aPresShell)
 }
 
 NS_IMETHODIMP
-nsAutoRepeatBoxFrame::Init(nsIPresContext*  aPresContext,
+nsAutoRepeatBoxFrame::Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -846,7 +846,7 @@ NS_IMPL_ADDREF_INHERITED(nsAutoRepeatBoxFrame, nsButtonBoxFrame)
 NS_IMPL_RELEASE_INHERITED(nsAutoRepeatBoxFrame, nsButtonBoxFrame)
 
 NS_IMETHODIMP
-nsAutoRepeatBoxFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {  
@@ -874,7 +874,7 @@ nsAutoRepeatBoxFrame::Notify(nsITimer *timer)
 }
 
 NS_IMETHODIMP
-nsAutoRepeatBoxFrame::Destroy(nsIPresContext* aPresContext)
+nsAutoRepeatBoxFrame::Destroy(nsPresContext* aPresContext)
 {
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.

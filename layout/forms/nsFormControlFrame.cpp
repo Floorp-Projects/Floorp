@@ -40,7 +40,7 @@
 #include "nsIHTMLContent.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
 #include "nsIView.h"
@@ -123,7 +123,7 @@ nsFormControlFrame::~nsFormControlFrame()
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::Destroy(nsIPresContext *aPresContext)
+nsFormControlFrame::Destroy(nsPresContext *aPresContext)
 {
   // XXXldb Do we really need to do this?  Shouldn't only those frames
   // that use it do it?
@@ -388,7 +388,7 @@ nsFormControlFrame::SetClickPoint(nscoord aX, nscoord aY)
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
 NS_METHOD
-nsFormControlFrame::Paint(nsIPresContext*      aPresContext,
+nsFormControlFrame::Paint(nsPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -433,7 +433,7 @@ nsFormControlFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsFormControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                      const nsPoint& aPoint,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
@@ -455,7 +455,7 @@ nsFormControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 void 
-nsFormControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
+nsFormControlFrame::GetDesiredSize(nsPresContext*          aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsHTMLReflowMetrics&     aDesiredLayoutSize,
                                    nsSize&                  aDesiredWidgetSize)
@@ -477,7 +477,7 @@ nsFormControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
 }
 
 void 
-nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsFormControlFrame::GetDesiredSize(nsPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -486,7 +486,7 @@ nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::DidReflow(nsIPresContext*           aPresContext,
+nsFormControlFrame::DidReflow(nsPresContext*           aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus         aStatus)
 {
@@ -515,7 +515,7 @@ nsFormControlFrame::DidReflow(nsIPresContext*           aPresContext,
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsFormControlFrame::SetInitialChildList(nsPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
@@ -523,7 +523,7 @@ nsFormControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_METHOD
-nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
+nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -555,14 +555,14 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
 
 
 nsWidgetInitData* 
-nsFormControlFrame::GetWidgetInitData(nsIPresContext* aPresContext)
+nsFormControlFrame::GetWidgetInitData(nsPresContext* aPresContext)
 {
   return nsnull;
 }
 
 
 nsresult
-nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg)
+nsFormControlFrame::RegUnRegAccessKey(nsPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg)
 {
   NS_ASSERTION(aPresContext, "aPresContext is NULL in RegUnRegAccessKey!");
   NS_ASSERTION(aFrame, "aFrame is NULL in RegUnRegAccessKey!");
@@ -616,7 +616,7 @@ nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * a
 }
 
 void 
-nsFormControlFrame::InitializeControl(nsIPresContext* aPresContext)
+nsFormControlFrame::InitializeControl(nsPresContext* aPresContext)
 {
   RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
 }
@@ -627,7 +627,7 @@ nsFormControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 void
-nsFormControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+nsFormControlFrame::ScrollIntoView(nsPresContext* aPresContext)
 {
   if (aPresContext) {
     nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -713,7 +713,7 @@ nsFormControlFrame::GetValue(nsAString* aResult)
 
 
 NS_METHOD
-nsFormControlFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsFormControlFrame::HandleEvent(nsPresContext* aPresContext, 
                                           nsGUIEvent* aEvent,
                                           nsEventStatus* aEventStatus)
 {
@@ -753,7 +753,7 @@ nsFormControlFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 void 
-nsFormControlFrame::GetStyleSize(nsIPresContext* aPresContext,
+nsFormControlFrame::GetStyleSize(nsPresContext* aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsSize& aSize)
 {
@@ -824,7 +824,7 @@ nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
+nsFormControlFrame::SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
 {
   return NS_OK;
 }
@@ -845,7 +845,7 @@ nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 }
 
 nsresult 
-nsFormControlFrame::GetScreenHeight(nsIPresContext* aPresContext,
+nsFormControlFrame::GetScreenHeight(nsPresContext* aPresContext,
                                     nscoord& aHeight)
 {
   nsRect screen;
@@ -868,7 +868,7 @@ nsFormControlFrame::GetScreenHeight(nsIPresContext* aPresContext,
 
 // Calculate a frame's position in screen coordinates
 nsresult
-nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
+nsFormControlFrame::GetAbsoluteFramePosition(nsPresContext* aPresContext,
                                              nsIFrame *aFrame, 
                                              nsRect& aAbsoluteTwipsRect, 
                                              nsRect& aAbsolutePixelRect)

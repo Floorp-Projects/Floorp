@@ -47,7 +47,7 @@ struct nsRect;
 struct nsSize;
 struct nsFont;
 struct nsMargin;
-class nsIPresContext;
+class nsPresContext;
 class nsIRenderingContext;
 class nsIDeviceContext;
 class nsIFrame;
@@ -88,7 +88,7 @@ public:
 
   NS_IMETHOD ThemeChanged()=0;
 
-  virtual PRBool ThemeSupportsWidget(nsIPresContext* aPresContext,
+  virtual PRBool ThemeSupportsWidget(nsPresContext* aPresContext,
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType)=0;
 

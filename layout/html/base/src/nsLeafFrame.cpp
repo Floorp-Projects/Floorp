@@ -40,14 +40,14 @@
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 
 nsLeafFrame::~nsLeafFrame()
 {
 }
 
 NS_IMETHODIMP
-nsLeafFrame::Paint(nsIPresContext*      aPresContext,
+nsLeafFrame::Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
@@ -61,7 +61,7 @@ nsLeafFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsLeafFrame::Reflow(nsIPresContext* aPresContext,
+nsLeafFrame::Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus)
@@ -95,7 +95,7 @@ nsLeafFrame::Reflow(nsIPresContext* aPresContext,
 // XXX how should border&padding effect baseline alignment?
 // => descent = borderPadding.bottom for example
 void
-nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
+nsLeafFrame::AddBordersAndPadding(nsPresContext* aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nsHTMLReflowMetrics& aMetrics,
                                   nsMargin& aBorderPadding)

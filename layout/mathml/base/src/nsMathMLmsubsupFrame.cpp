@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -77,7 +77,7 @@ nsMathMLmsubsupFrame::~nsMathMLmsubsupFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsubsupFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmsubsupFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // if our base is an embellished operator, let its state bubble to us
   nsIFrame* baseFrame = mFrames.FirstChild();
@@ -102,7 +102,7 @@ nsMathMLmsubsupFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
+nsMathMLmsubsupFrame::Place(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
@@ -143,7 +143,7 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
 // exported routine that both munderover and msubsup share.
 // munderover uses this when movablelimits is set.
 nsresult
-nsMathMLmsubsupFrame::PlaceSubSupScript(nsIPresContext*      aPresContext,
+nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
                                         nsIRenderingContext& aRenderingContext,
                                         PRBool               aPlaceOrigin,
                                         nsHTMLReflowMetrics& aDesiredSize,

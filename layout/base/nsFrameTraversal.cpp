@@ -94,7 +94,7 @@ private :
 class nsLeafIterator: public nsFrameIterator
 {
 public:
-  nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *start);
+  nsLeafIterator(nsPresContext* aPresContext, nsIFrame *start);
   void SetExtensive(PRBool aExtensive) {mExtensive = aExtensive;}
   PRBool GetExtensive(){return mExtensive;}
   void   SetLockInScrollView(PRBool aLockScroll){mLockScroll = aLockScroll;}
@@ -104,7 +104,7 @@ private :
 
   NS_IMETHOD Prev();
 
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
   PRPackedBool mExtensive;
   PRBool mLockScroll;
 };
@@ -112,7 +112,7 @@ private :
 class nsFocusIterator : public nsFrameIterator
 {
 public:
-  nsFocusIterator(nsIPresContext* aPresContext, nsIFrame* aStart);
+  nsFocusIterator(nsPresContext* aPresContext, nsIFrame* aStart);
 private:
   NS_IMETHOD Next();
   NS_IMETHOD Prev();
@@ -145,7 +145,7 @@ private:
   nsIFrame* GetPlaceholderFrame(nsIFrame* aFrame);
   PRBool    IsPopupFrame(nsIFrame* aFrame);
 
-  nsIPresContext* mPresContext;
+  nsPresContext* mPresContext;
 };
 
 #ifdef IBMBIDI // Simon
@@ -153,14 +153,14 @@ private:
 class nsVisualIterator: public nsFrameIterator
 {
   public:
-    nsVisualIterator(nsIPresContext* aPresContext, nsIFrame *start);
+    nsVisualIterator(nsPresContext* aPresContext, nsIFrame *start);
   private :
 
     NS_IMETHOD Next();
 
     NS_IMETHOD Prev();
 
-    nsIPresContext* mPresContext;
+    nsPresContext* mPresContext;
 };
 
 #endif
@@ -184,7 +184,7 @@ nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult)
 nsresult
 NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                      nsTraversalType aType,
-                     nsIPresContext* aPresContext,
+                     nsPresContext* aPresContext,
                      nsIFrame *aStart,
                      PRBool aLockInScrollView)
 {
@@ -259,7 +259,7 @@ NS_IMPL_ISUPPORTS1(nsFrameTraversal,nsIFrameTraversal)
 NS_IMETHODIMP 
 nsFrameTraversal::NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                               PRUint32 aType,
-                              nsIPresContext* aPresContext,
+                              nsPresContext* aPresContext,
                               nsIFrame *aStart)
 {
   return NS_NewFrameTraversal(aEnumerator, NS_STATIC_CAST(nsTraversalType,
@@ -323,7 +323,7 @@ nsFrameIterator::Last()
 /*********LEAFITERATOR**********/
 
 
-nsLeafIterator::nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *aStart)
+nsLeafIterator::nsLeafIterator(nsPresContext* aPresContext, nsIFrame *aStart)
   : mPresContext(aPresContext)
 {
   setStart(aStart);
@@ -476,7 +476,7 @@ nsLeafIterator::Prev()
   return NS_OK;
 }
 
-nsFocusIterator::nsFocusIterator(nsIPresContext* aPresContext, nsIFrame* aStart)
+nsFocusIterator::nsFocusIterator(nsPresContext* aPresContext, nsIFrame* aStart)
   : mPresContext(aPresContext)
 {
   nsIFrame* start = aStart;
@@ -681,7 +681,7 @@ nsFocusIterator::Last()
 
 /*********VISUALITERATOR**********/
 
-nsVisualIterator::nsVisualIterator(nsIPresContext* aPresContext, nsIFrame *aStart)
+nsVisualIterator::nsVisualIterator(nsPresContext* aPresContext, nsIFrame *aStart)
 : mPresContext(aPresContext)
 {
   setStart(aStart);

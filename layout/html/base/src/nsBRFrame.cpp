@@ -37,7 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsHTMLParts.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsLineLayout.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLAtoms.h"
@@ -54,23 +54,23 @@ class BRFrame : public nsFrame {
 public:
   // nsIFrame
 #ifdef NS_DEBUG
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 #endif
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                          const nsPoint& aPoint,
                          nsIContent** aNewContent,
                          PRInt32& aContentOffset,
                          PRInt32& aContentOffsetEnd,
                          PRBool&  aBeginFrameContent);
-  NS_IMETHOD PeekOffset(nsIPresContext* aPresContext, 
+  NS_IMETHOD PeekOffset(nsPresContext* aPresContext, 
                          nsPeekOffsetStruct *aPos);
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -100,7 +100,7 @@ BRFrame::~BRFrame()
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-BRFrame::Paint(nsIPresContext*      aPresContext,
+BRFrame::Paint(nsPresContext*      aPresContext,
                nsIRenderingContext& aRenderingContext,
                const nsRect&        aDirtyRect,
                nsFramePaintLayer    aWhichLayer,
@@ -118,7 +118,7 @@ BRFrame::Paint(nsIPresContext*      aPresContext,
 #endif
 
 NS_IMETHODIMP
-BRFrame::Reflow(nsIPresContext* aPresContext,
+BRFrame::Reflow(nsPresContext* aPresContext,
                 nsHTMLReflowMetrics& aMetrics,
                 const nsHTMLReflowState& aReflowState,
                 nsReflowStatus& aStatus)
@@ -218,7 +218,7 @@ BRFrame::GetType() const
   return nsLayoutAtoms::brFrame;
 }
 
-NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                                      const nsPoint&  aPoint,
                                                      nsIContent **   aContent,
                                                      PRInt32&        aOffsetBegin,
@@ -236,7 +236,7 @@ NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
   return NS_OK;
 }
 
-NS_IMETHODIMP BRFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
+NS_IMETHODIMP BRFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
   if (!aPos)
     return NS_ERROR_NULL_POINTER;

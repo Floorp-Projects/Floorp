@@ -37,7 +37,7 @@
 #include "nsCOMPtr.h" 
 #include "nsReadableUtils.h"
 #include "nsSimplePageSequence.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDeviceContext.h"
@@ -188,7 +188,7 @@ nsSimplePageSequenceFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
 
 // Creates a continuing page frame
 nsresult
-nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext* aPresContext,
+nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsPresContext* aPresContext,
                                                      nsIFrame*       aPageFrame,
                                                      nsIFrame**      aContinuingPage)
 {
@@ -224,7 +224,7 @@ nsSimplePageSequenceFrame::GetEdgePaperMargin(nsMargin& aMargin)
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
+nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -252,7 +252,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   // Turn on the scaling of twips so any of the scrollbars
   // in the UI no longer get scaled
   PRBool isPrintPreview =
-    aPresContext->Type() == nsIPresContext::eContext_PrintPreview;
+    aPresContext->Type() == nsPresContext::eContext_PrintPreview;
   if (isPrintPreview) {
     aPresContext->SetScalingOfTwips(PR_TRUE);
   }
@@ -588,7 +588,7 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
+nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
                                       nsIPrintSettings* aPrintSettings,
                                       PRUnichar*        aDocTitle,
                                       PRUnichar*        aDocURL)
@@ -750,7 +750,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
+nsSimplePageSequenceFrame::PrintNextPage(nsPresContext*  aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
 
@@ -922,7 +922,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::DoPageEnd(nsIPresContext*  aPresContext)
+nsSimplePageSequenceFrame::DoPageEnd(nsPresContext*  aPresContext)
 {
 	nsresult rv = NS_OK;
 	
@@ -963,7 +963,7 @@ nsSimplePageSequenceFrame::SuppressHeadersAndFooters(PRBool aDoSup)
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::SetClipRect(nsIPresContext*  aPresContext, nsRect* aRect)
+nsSimplePageSequenceFrame::SetClipRect(nsPresContext*  aPresContext, nsRect* aRect)
 {
   for (nsIFrame* f = mFrames.FirstChild(); f; f = f->GetNextSibling()) {
     nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, f);
@@ -976,7 +976,7 @@ nsSimplePageSequenceFrame::SetClipRect(nsIPresContext*  aPresContext, nsRect* aR
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::Paint(nsIPresContext*      aPresContext,
+nsSimplePageSequenceFrame::Paint(nsPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsRect&        aDirtyRect,
                                  nsFramePaintLayer    aWhichLayer)

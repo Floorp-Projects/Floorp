@@ -71,7 +71,7 @@
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #ifdef USE_QI_IN_SUPPRESS_EVENT_HANDLERS
 #include "nsIPrintContext.h"
 #include "nsIPrintPreviewContext.h"
@@ -395,7 +395,7 @@ public:
   NS_IMETHOD GetSelection(PRInt16 type, nsISelection **_retval);
   NS_IMETHOD ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRBool aIsSynchronous);
   NS_IMETHOD RepaintSelection(PRInt16 type);
-  NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType);
+  NS_IMETHOD RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType);
   NS_IMETHOD SetCaretEnabled(PRBool enabled);
   NS_IMETHOD SetCaretWidth(PRInt16 twips);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
@@ -418,12 +418,12 @@ public:
   NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) ;
   NS_IMETHOD ShutDown() ;
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGuiEvent) ;
-  NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent);
+  NS_IMETHOD HandleKeyEvent(nsPresContext* aPresContext, nsGUIEvent *aGuiEvent);
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
                        PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint); 
-  NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
+  NS_IMETHOD HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
   NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent);
-  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView* aView, nsPoint& aPoint, PRUint32 aDelay);
+  NS_IMETHOD StartAutoScrollTimer(nsPresContext *aPresContext, nsIView* aView, nsPoint& aPoint, PRUint32 aDelay);
   NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable);
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
@@ -448,14 +448,14 @@ public:
   NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown);
   NS_IMETHOD MaintainSelection();
 #ifdef IBMBIDI
-  NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
+  NS_IMETHOD GetPrevNextBidiLevels(nsPresContext *aPresContext,
                                    nsIContent *aNode,
                                    PRUint32 aContentOffset,
                                    nsIFrame **aPrevFrame,
                                    nsIFrame **aNextFrame,
                                    PRUint8 *aPrevLevel,
                                    PRUint8 *aNextLevel);
-  NS_IMETHOD GetFrameFromLevel(nsIPresContext *aPresContext,
+  NS_IMETHOD GetFrameFromLevel(nsPresContext *aPresContext,
                                nsIFrame *aFrameIn,
                                nsDirection aDirection,
                                PRUint8 aBidiLevel,
@@ -547,7 +547,7 @@ nsTextInputSelectionImpl::RepaintSelection(PRInt16 type)
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
   if (presShell)
   {
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
     {
       return mFrameSelection->RepaintSelection(context, type);
@@ -557,7 +557,7 @@ nsTextInputSelectionImpl::RepaintSelection(PRInt16 type)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::RepaintSelection(nsIPresContext* aPresContext, SelectionType aSelectionType)
+nsTextInputSelectionImpl::RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType)
 {
   return RepaintSelection(aSelectionType);
 }
@@ -871,7 +871,7 @@ nsTextInputSelectionImpl::HandleTextEvent(nsGUIEvent *aGuiEvent)
 
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
+nsTextInputSelectionImpl::HandleKeyEvent(nsPresContext* aPresContext, nsGUIEvent *aGuiEvent)
 {
   return mFrameSelection->HandleKeyEvent(aPresContext, aGuiEvent);
 }
@@ -887,7 +887,7 @@ nsTextInputSelectionImpl::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOf
 
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
+nsTextInputSelectionImpl::HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
 {
   return mFrameSelection->HandleDrag(aPresContext, aFrame, aPoint);
 }
@@ -903,7 +903,7 @@ nsTextInputSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt
 
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
+nsTextInputSelectionImpl::StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
 {
   return mFrameSelection->StartAutoScrollTimer(aPresContext, aView, aPoint, aDelay);
 }
@@ -1035,7 +1035,7 @@ NS_IMETHODIMP nsTextInputSelectionImpl::CommonPageMove(PRBool aForward, PRBool a
 }
 
 #ifdef IBMBIDI
-NS_IMETHODIMP nsTextInputSelectionImpl::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
+NS_IMETHODIMP nsTextInputSelectionImpl::GetPrevNextBidiLevels(nsPresContext *aPresContext,
                                                               nsIContent *aNode,
                                                               PRUint32 aContentOffset,
                                                               nsIFrame **aPrevFrame,
@@ -1048,7 +1048,7 @@ NS_IMETHODIMP nsTextInputSelectionImpl::GetPrevNextBidiLevels(nsIPresContext *aP
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsTextInputSelectionImpl::GetFrameFromLevel(nsIPresContext *aPresContext,
+NS_IMETHODIMP nsTextInputSelectionImpl::GetFrameFromLevel(nsPresContext *aPresContext,
                                                           nsIFrame *aFrameIn,
                                                           nsDirection aDirection,
                                                           PRUint8 aBidiLevel,
@@ -1145,7 +1145,7 @@ nsTextControlFrame::~nsTextControlFrame()
 }
 
 static PRBool
-SuppressEventHandlers(nsIPresContext* aPresContext)
+SuppressEventHandlers(nsPresContext* aPresContext)
 {
   PRBool suppressHandlers = PR_FALSE;
 
@@ -1185,7 +1185,7 @@ SuppressEventHandlers(nsIPresContext* aPresContext)
 }
 
 void
-nsTextControlFrame::PreDestroy(nsIPresContext* aPresContext)
+nsTextControlFrame::PreDestroy(nsPresContext* aPresContext)
 {
   // notify the editor that we are going away
   if (mEditor)
@@ -1262,7 +1262,7 @@ nsTextControlFrame::PreDestroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP 
-nsTextControlFrame::Destroy(nsIPresContext* aPresContext)
+nsTextControlFrame::Destroy(nsPresContext* aPresContext)
 {
   if (!mDidPreDestroy) {
     PreDestroy(aPresContext);
@@ -1271,7 +1271,7 @@ nsTextControlFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 void 
-nsTextControlFrame::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
+nsTextControlFrame::RemovedAsPrimaryFrame(nsPresContext* aPresContext)
 {
   if (!mDidPreDestroy) {
     PreDestroy(aPresContext);
@@ -1361,7 +1361,7 @@ nsTextControlFrame::GetRows()
 
 
 nsresult
-nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
+nsTextControlFrame::ReflowStandard(nsPresContext*          aPresContext,
                                    nsSize&                  aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
@@ -1406,7 +1406,7 @@ nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
 
 
 nsresult
-nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
+nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
                                           nsIRenderingContext*  aRendContext,
                                           nsSize&               aDesiredSize,
                                           nsSize&               aMinSize)
@@ -1474,7 +1474,7 @@ void nsTextControlFrame::PostCreateFrames() {
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
+nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
                                        nsIContent *      aContent,
                                        nsIFrame**        aFrame)
 {
@@ -1564,7 +1564,7 @@ nsTextControlFrame::InitEditor()
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                            nsISupportsArray& aChildList)
 {
   // Get the PresShell
@@ -1857,7 +1857,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::Reflow(nsIPresContext*   aPresContext,
+nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
@@ -1887,7 +1887,7 @@ nsTextControlFrame::Reflow(nsIPresContext*   aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::Paint(nsIPresContext*      aPresContext,
+nsTextControlFrame::Paint(nsPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect&        aDirtyRect,
                               nsFramePaintLayer    aWhichLayer,
@@ -1910,7 +1910,7 @@ nsTextControlFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTextControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
                                          const nsPoint& aPoint,
                                          nsFramePaintLayer aWhichLayer,
                                          nsIFrame** aFrame)
@@ -1951,7 +1951,7 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (collapsed)
     return NS_OK;
 
-  nsIPresContext* presContext = aState.PresContext();
+  nsPresContext* presContext = aState.PresContext();
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
   nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
   nsFormControlFrame::GetStyleSize(presContext, *reflowState, styleSize);
@@ -2031,7 +2031,7 @@ nsTextControlFrame::GetFormControlType() const
 }
 
 static PRBool
-IsFocusedContent(nsIPresContext* aPresContext, nsIContent* aContent)
+IsFocusedContent(nsPresContext* aPresContext, nsIContent* aContent)
 {
   nsCOMPtr<nsIContent> focusedContent;
   aPresContext->EventStateManager()->
@@ -2079,7 +2079,7 @@ void    nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     docSel->RemoveAllRanges();
 }
 
-void    nsTextControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+void    nsTextControlFrame::ScrollIntoView(nsPresContext* aPresContext)
 {
   if (aPresContext) {
     nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -2090,10 +2090,10 @@ void    nsTextControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
   }
 }
 
-void    nsTextControlFrame::MouseClicked(nsIPresContext* aPresContext){}
+void    nsTextControlFrame::MouseClicked(nsPresContext* aPresContext){}
 
 nscoord 
-nsTextControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
+nsTextControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -2103,7 +2103,7 @@ nsTextControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+nsTextControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -2128,7 +2128,7 @@ nsTextControlFrame::GetFormContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
+NS_IMETHODIMP nsTextControlFrame::SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
 {
   if (!mIsProcessing)//some kind of lock.
   {
@@ -2594,7 +2594,7 @@ nsTextControlFrame::GetSelectionContr(nsISelectionController **aSelCon)
 
 ////NSIFRAME
 NS_IMETHODIMP
-nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsTextControlFrame::AttributeChanged(nsPresContext* aPresContext,
                                         nsIContent*     aChild,
                                         PRInt32         aNameSpaceID,
                                         nsIAtom*        aAttribute,
@@ -2786,7 +2786,7 @@ nsTextControlFrame::FireOnInput()
     return;
   }
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   presShell->GetPresContext(getter_AddRefs(context));
   NS_ASSERTION(context, "No pres context");
   if (!context) {
@@ -2830,7 +2830,7 @@ nsTextControlFrame::FireOnChange()
     nsWeakPtr &shell = mTextSelImpl->GetPresShell();
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsPresContext> context;
     if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
       return presShell->HandleEventWithTarget(&event, nsnull, mContent, NS_EVENT_FLAG_INIT, &status); 
   }
@@ -2974,7 +2974,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
 
 
 NS_IMETHODIMP
-nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
+nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
@@ -3066,7 +3066,7 @@ nsTextControlFrame::GetWidthInCharacters() const
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::GetScrollableView(nsIPresContext* aPresContext,
+nsTextControlFrame::GetScrollableView(nsPresContext* aPresContext,
                                       nsIScrollableView** aView)
 {
   *aView = mScrollableView;
@@ -3095,7 +3095,7 @@ nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
 }
 
 NS_IMETHODIMP 
-nsTextControlFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsTextControlFrame::HandleEvent(nsPresContext* aPresContext, 
                                        nsGUIEvent*     aEvent,
                                        nsEventStatus*  aEventStatus)
 {

@@ -47,7 +47,7 @@
 #include "nsINameSpaceManager.h"
 
 class nsIView;
-class nsIPresContext;
+class nsPresContext;
 class nsStyleCoord;
 class nsIPresState;
 class nsStyleContext;
@@ -134,7 +134,7 @@ public:
    * @param aFrame the frame who owns the form control
    * @param aPresContext the pres context
    */
-  static nsresult Reset(nsIFrame* aFrame, nsIPresContext* aPresContext);
+  static nsresult Reset(nsIFrame* aFrame, nsPresContext* aPresContext);
 
   /** 
    * Utility to convert a string to a PRBool
@@ -307,7 +307,7 @@ public:
     * @param aForFrame the frame that the scrollbar will be rendered in to
     */
 
-  static void PaintRectangularButton(nsIPresContext* aPresContext,
+  static void PaintRectangularButton(nsPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, const nsRect& aRect, 
                             PRBool aShift, PRBool aShowFocus, PRBool aDisabled,
@@ -317,7 +317,7 @@ public:
                             nsStyleContext* aStyleContext, nsString& aLabel, 
                             nsIFrame* aForFrame);
 
-  static void StyleChangeReflow(nsIPresContext* aPresContext,
+  static void StyleChangeReflow(nsPresContext* aPresContext,
                                 nsIFrame* aFrame);
 
 protected:

@@ -41,10 +41,10 @@
 
 %{ C++
 #include "nsEvent.h"  // for nsEventStatus enum
-class nsIPresContext;
+class nsPresContext;
 %}
 
-[ptr] native nsIPresContext(nsIPresContext);
+[ptr] native nsPresContext(nsPresContext);
 native nsEvent(nsEvent);
 [ptr] native nsEventPtr(nsEvent);
 native nsEventStatus(nsEventStatus);
@@ -61,7 +61,7 @@ interface nsIChromeEventHandler : nsISupports
 	/**
 	* Handle a chrome DOM event.
 	*/
-	[noscript] void handleChromeEvent(in nsIPresContext aPresContext, 
+	[noscript] void handleChromeEvent(in nsPresContext aPresContext, 
 		in nsEventPtr aEvent, out nsIDOMEvent aDOMEvent, in unsigned long aFlags,
 		inout nsEventStatus aStatus);
 };

@@ -39,7 +39,7 @@
  
 #include "nsStyleConsts.h"
 #include "nsString.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
@@ -65,7 +65,7 @@
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
                                nsRuleNode* aRuleNode,
-                               nsIPresContext* aPresContext)
+                               nsPresContext* aPresContext)
   : mParent((nsStyleContext*)aParent),
     mChild(nsnull),
     mEmptyChild(nsnull),
@@ -92,7 +92,7 @@ nsStyleContext::~nsStyleContext()
 {
   NS_ASSERTION((nsnull == mChild) && (nsnull == mEmptyChild), "destructing context with children");
 
-  nsIPresContext *presContext = mRuleNode->GetPresContext();
+  nsPresContext *presContext = mRuleNode->GetPresContext();
 
   presContext->PresShell()->StyleSet()->
     NotifyStyleContextDestroyed(presContext, this);
@@ -288,7 +288,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
     return NS_CONST_CAST(nsStyleStruct*, current);
 
   nsStyleStruct* result;
-  nsIPresContext *presContext = PresContext();
+  nsPresContext *presContext = PresContext();
   switch (aSID) {
 
 #define UNIQUE_CASE(c_)                                                       \
@@ -334,7 +334,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
   char* resetOrInherit = NS_REINTERPRET_CAST(char*,
       *NS_REINTERPRET_CAST(void**, resetOrInheritSlot));
   if (!resetOrInherit) {
-    nsIPresContext *presContext = mRuleNode->GetPresContext();
+    nsPresContext *presContext = mRuleNode->GetPresContext();
     if (mCachedStyleData.IsReset(aSID)) {
       mCachedStyleData.mResetData = new (presContext) nsResetStyleData;
       resetOrInherit = NS_REINTERPRET_CAST(char*, mCachedStyleData.mResetData);
@@ -350,7 +350,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
 }
 
 void
-nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
+nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
 {
   // See if we have any text decorations.
   // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
@@ -402,7 +402,7 @@ nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
 }
 
 void
-nsStyleContext::ClearStyleData(nsIPresContext* aPresContext)
+nsStyleContext::ClearStyleData(nsPresContext* aPresContext)
 {
   // First we need to clear out all of our style data.
   if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
@@ -622,7 +622,7 @@ static void IndentBy(FILE* out, PRInt32 aIndent) {
   while (--aIndent >= 0) fputs("  ", out);
 }
 // virtual 
-void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
+void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   nsAutoString str;
 
@@ -886,7 +886,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void* 
-nsStyleContext::operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW
+nsStyleContext::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
   return aPresContext->AllocateFromShell(sz);
@@ -898,7 +898,7 @@ void
 nsStyleContext::Destroy()
 {
   // Get the pres context from our rule node.
-  nsCOMPtr<nsIPresContext> presContext = mRuleNode->GetPresContext();
+  nsCOMPtr<nsPresContext> presContext = mRuleNode->GetPresContext();
 
   // Call our destructor.
   this->~nsStyleContext();
@@ -912,7 +912,7 @@ already_AddRefed<nsStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsRuleNode* aRuleNode,
-                   nsIPresContext* aPresContext)
+                   nsPresContext* aPresContext)
 {
   nsStyleContext* context = new (aPresContext) nsStyleContext(aParentContext, aPseudoTag, 
                                                               aRuleNode, aPresContext);

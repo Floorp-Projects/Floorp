@@ -56,7 +56,7 @@ public:
                                   nsIFrame** aNewFrame,
                                   nsIBoxLayout* aLayoutManager);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -64,19 +64,19 @@ public:
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
  
-  NS_IMETHOD GetFrameForPoint(nsIPresContext*   aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext*   aPresContext,
                               const nsPoint&    aPoint,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**        aFrame);
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -98,10 +98,10 @@ protected:
   nsDeckFrame(nsIPresShell* aPresShell);
 
   virtual nsIBox* GetSelectedBox();
-  virtual void IndexChanged(nsIPresContext* aPresContext);
+  virtual void IndexChanged(nsPresContext* aPresContext);
   virtual PRInt32 GetSelectedIndex();
-  virtual void HideBox(nsIPresContext* aPresContext, nsIBox* aBox);
-  virtual void ShowBox(nsIPresContext* aPresContext, nsIBox* aBox);
+  virtual void HideBox(nsPresContext* aPresContext, nsIBox* aBox);
+  virtual void ShowBox(nsPresContext* aPresContext, nsIBox* aBox);
 
 private:
 

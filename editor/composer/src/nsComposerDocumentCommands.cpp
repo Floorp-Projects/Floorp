@@ -49,7 +49,7 @@
 #include "nsIDocument.h"
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsIURI.h"
 
@@ -66,7 +66,7 @@
 
 static
 nsresult
-GetPresContextFromEditor(nsIEditor *aEditor, nsIPresContext **aResult)
+GetPresContextFromEditor(nsIEditor *aEditor, nsPresContext **aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsnull;
@@ -80,7 +80,7 @@ GetPresContextFromEditor(nsIEditor *aEditor, nsIPresContext **aResult)
   nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   rv = presShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(rv)) return rv;
   *aResult = presContext;
@@ -116,7 +116,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   if (!editor) return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   nsresult rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
   if (NS_FAILED(rv)) return rv;
   if (!presContext) return NS_ERROR_FAILURE;
@@ -167,7 +167,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get pres context
-  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
   if (NS_FAILED(rv)) return rv;
   if (!presContext) return NS_ERROR_FAILURE;

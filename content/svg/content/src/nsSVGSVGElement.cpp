@@ -45,7 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsISVGViewportRect.h"
 #include "nsSVGAnimatedRect.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"
@@ -432,7 +432,7 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   presShell->GetPresContext(getter_AddRefs(context));
   if (!context) return NS_OK;
 
@@ -462,7 +462,7 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   presShell->GetPresContext(getter_AddRefs(context));
   if (!context) return NS_OK;
 
@@ -1213,7 +1213,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
     return;
   }
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   presShell->GetPresContext(getter_AddRefs(context));
   if (!context) {
     NS_ERROR("couldn't get prescontext");

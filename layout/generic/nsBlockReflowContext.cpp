@@ -40,7 +40,7 @@
 #include "nsLineLayout.h"
 #include "nsSpaceManager.h"
 #include "nsIFontMetrics.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsFrameManager.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
@@ -63,7 +63,7 @@
 #undef  NOISY_VERTICAL_MARGINS
 #endif
 
-nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
+nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
                                            const nsHTMLReflowState& aParentRS,
                                            PRBool aComputeMaxElementWidth,
                                            PRBool aComputeMaximumWidth)
@@ -80,7 +80,7 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
 }
 
 void
-nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
+nsBlockReflowContext::ComputeCollapsedTopMargin(nsPresContext* aPresContext,
                                                 nsHTMLReflowState& aRS,
                                    /* inout */  nsCollapsingMargin& aMargin)
 {
@@ -292,7 +292,7 @@ ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth,
 }
 
 static void
-nsPointDtor(nsIPresContext *aPresContext, nsIFrame *aFrame,
+nsPointDtor(nsPresContext *aPresContext, nsIFrame *aFrame,
              nsIAtom *aPropertyName, void *aPropertyValue)
 {
   nsPoint *point = NS_STATIC_CAST(nsPoint*, aPropertyValue);

@@ -42,7 +42,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIFontMetrics.h"
 #include "nsIHTMLContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsReflowPath.h"
@@ -96,7 +96,7 @@ nsBulletFrame::~nsBulletFrame()
 }
 
 NS_IMETHODIMP
-nsBulletFrame::Destroy(nsIPresContext* aPresContext)
+nsBulletFrame::Destroy(nsPresContext* aPresContext)
 {
   // Stop image loading first
   if (mImageRequest) {
@@ -114,7 +114,7 @@ nsBulletFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsBulletFrame::Init(nsIPresContext*  aPresContext,
+nsBulletFrame::Init(nsPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsStyleContext*  aContext,
@@ -178,7 +178,7 @@ nsBulletFrame::GetType() const
 
 #include "nsIDOMNode.h"
 NS_IMETHODIMP
-nsBulletFrame::Paint(nsIPresContext*      aPresContext,
+nsBulletFrame::Paint(nsPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer,
@@ -1113,7 +1113,7 @@ static PRBool EthiopicToText(PRInt32 ordinal, nsString& result)
 
 
 PRBool
-nsBulletFrame::GetListItemText(nsIPresContext* aCX,
+nsBulletFrame::GetListItemText(nsPresContext* aCX,
                                const nsStyleList& aListStyle,
                                nsString& result)
 {
@@ -1361,7 +1361,7 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
 
 
 void
-nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
+nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aMetrics)
 {
@@ -1563,7 +1563,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 }
 
 NS_IMETHODIMP
-nsBulletFrame::Reflow(nsIPresContext* aPresContext,
+nsBulletFrame::Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus)
@@ -1756,7 +1756,7 @@ NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer,
 }
 
 void
-nsBulletFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup)
+nsBulletFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup)
 {
   if (!aPresContext)
     return;

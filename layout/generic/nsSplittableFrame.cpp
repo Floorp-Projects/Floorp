@@ -36,11 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsSplittableFrame.h"
 #include "nsIContent.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 
 NS_IMETHODIMP
-nsSplittableFrame::Init(nsIPresContext*  aPresContext,
+nsSplittableFrame::Init(nsPresContext*  aPresContext,
                         nsIContent*      aContent,
                         nsIFrame*        aParent,
                         nsStyleContext*  aContext,
@@ -60,7 +60,7 @@ nsSplittableFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSplittableFrame::Destroy(nsIPresContext* aPresContext)
+nsSplittableFrame::Destroy(nsPresContext* aPresContext)
 {
   // Disconnect from the flow list
   if (mPrevInFlow || mNextInFlow) {
@@ -169,7 +169,7 @@ nsIFrame * nsSplittableFrame::GetNextInFlow()
 
 #ifdef DEBUG
 void
-nsSplittableFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
+nsSplittableFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
 {
   nsFrame::DumpBaseRegressionData(aPresContext, out, aIndent, aIncludeStyleData);
   if (nsnull != mNextInFlow) {

@@ -47,7 +47,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIComponentManager.h"
 #include "nsFrameManager.h"
@@ -113,20 +113,20 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -154,7 +154,7 @@ protected:
   nsresult ShowDocShell();
   nsresult CreateViewAndWidget(nsContentType aContentType);
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
@@ -205,7 +205,7 @@ nsSubDocumentFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::Init(nsIPresContext* aPresContext,
+nsSubDocumentFrame::Init(nsPresContext* aPresContext,
                          nsIContent*     aContent,
                          nsIFrame*       aParent,
                          nsStyleContext* aContext,
@@ -262,7 +262,7 @@ nsSubDocumentFrame::Init(nsIPresContext* aPresContext,
   PRBool shouldCreateDoc;
 
   if (aPresContext->Medium() == nsLayoutAtoms::print) {
-    if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+    if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
       // for print preview we want to create the view and widget but
       // we do not want to load the document, it is already loaded.
       rv = CreateViewAndWidget(eContentTypeContent);
@@ -289,7 +289,7 @@ nsSubDocumentFrame::GetSkipSides() const
 }
 
 void
-nsSubDocumentFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsSubDocumentFrame::GetDesiredSize(nsPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -334,7 +334,7 @@ nsSubDocumentFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::Reflow(nsIPresContext*          aPresContext,
+nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -433,7 +433,7 @@ nsSubDocumentFrame::VerifyTree() const
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsSubDocumentFrame::AttributeChanged(nsPresContext* aPresContext,
                                      nsIContent* aChild,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
@@ -522,7 +522,7 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::Destroy(nsIPresContext* aPresContext)
+nsSubDocumentFrame::Destroy(nsPresContext* aPresContext)
 {
   if (mFrameLoader) {
     // Get the content viewer through the docshell, but don't call

@@ -44,7 +44,7 @@
 
 #include "nsGrippyFrame.h"
 #include "nsScrollbarButtonFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
@@ -88,7 +88,7 @@ nsGrippyFrame::nsGrippyFrame(nsIPresShell* aShell):nsButtonBoxFrame(aShell),mCol
 }
 
 void
-nsGrippyFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent) 
+nsGrippyFrame::MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent) 
 {
     // update the splitter first, in case someone's listening on the command event
     nsIFrame* splitter;
@@ -114,7 +114,7 @@ nsGrippyFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 
 /*
 void
-nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext) 
+nsGrippyFrame::MouseClicked(nsPresContext* aPresContext) 
 {
 
   nsString style;
@@ -165,7 +165,7 @@ nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext)
 
 
 nsIFrame*
-nsGrippyFrame::GetChildBeforeAfter(nsIPresContext* aPresContext, nsIFrame* start, PRBool before)
+nsGrippyFrame::GetChildBeforeAfter(nsPresContext* aPresContext, nsIFrame* start, PRBool before)
 {
    nsIFrame* parent = start->GetParent();
    PRInt32 index = IndexOf(aPresContext, parent, start);
@@ -191,7 +191,7 @@ nsGrippyFrame::GetChildBeforeAfter(nsIPresContext* aPresContext, nsIFrame* start
 }
 
 PRInt32
-nsGrippyFrame::IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame* child)
+nsGrippyFrame::IndexOf(nsPresContext* aPresContext, nsIFrame* parent, nsIFrame* child)
 {
   PRInt32 count = 0;
 
@@ -209,7 +209,7 @@ nsGrippyFrame::IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame*
 }
 
 PRInt32
-nsGrippyFrame::CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame)
+nsGrippyFrame::CountFrames(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   PRInt32 count = 0;
 
@@ -224,7 +224,7 @@ nsGrippyFrame::CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame)
 }
 
 nsIFrame*
-nsGrippyFrame::GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt32 index)
+nsGrippyFrame::GetChildAt(nsPresContext* aPresContext, nsIFrame* parent, PRInt32 index)
 {
   PRInt32 count = 0;
 

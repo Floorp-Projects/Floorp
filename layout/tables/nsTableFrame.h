@@ -197,19 +197,19 @@ public:
   /** sets defaults for table-specific style.
     * @see nsIFrame::Init 
     */
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
 
-  static void* GetProperty(nsIPresContext*      aPresContext,
+  static void* GetProperty(nsPresContext*      aPresContext,
                            nsIFrame*            aFrame,
                            nsIAtom*             aPropertyName,
                            PRBool               aCreateIfNecessary = PR_FALSE);
 
-  static float GetTwipsToPixels(nsIPresContext* aPresContext);
+  static float GetTwipsToPixels(nsPresContext* aPresContext);
 
   static nscoord RoundToPixel(nscoord      aValue,
                               float        aPixelToTwips,
@@ -235,7 +235,7 @@ public:
   static nsresult AppendDirtyReflowCommand(nsIPresShell* aPresShell,
                                            nsIFrame*     aFrame);
 
-  static void RePositionViews(nsIPresContext* aPresContext,
+  static void RePositionViews(nsPresContext* aPresContext,
                               nsIFrame*       aFrame);
 
   static PRBool PageBreakAfter(nsIFrame& aSourceFrame,
@@ -245,24 +245,24 @@ public:
   /*
    * Notification that aAttribute has changed for content inside a table (cell, row, etc)
    */
-  void AttributeChangedFor(nsIPresContext* aPresContext, 
+  void AttributeChangedFor(nsPresContext* aPresContext, 
                            nsIFrame*       aFrame,
                            nsIContent*     aContent, 
                            nsIAtom*        aAttribute); 
 
   /** @see nsIFrame::Destroy */
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
@@ -296,7 +296,7 @@ public:
   /** Initialize the table frame with a set of children.
     * @see nsIFrame::SetInitialChildList 
     */
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
@@ -309,13 +309,13 @@ public:
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 
   /** @see nsIFrame::Paint */
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
-  virtual void PaintChildren(nsIPresContext*      aPresContext,
+  virtual void PaintChildren(nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer,
@@ -325,7 +325,7 @@ public:
 
   // get the area that the border leak out from the inner table frame into
   // the surrounding margin space
-  nsMargin GetBCMargin(nsIPresContext* aPresContext) const;
+  nsMargin GetBCMargin(nsPresContext* aPresContext) const;
 
   /** Get width of table + colgroup + col collapse: elements that
    *  continue along the length of the whole left side.
@@ -335,21 +335,21 @@ public:
    */
   nscoord GetContinuousLeftBCBorderWidth(float aPixelsToTwips) const;
 
-  void SetBCDamageArea(nsIPresContext& aPresContext,
+  void SetBCDamageArea(nsPresContext& aPresContext,
                        const nsRect&   aValue);
 
-  void PaintBCBorders(nsIPresContext*      aPresContext,
+  void PaintBCBorders(nsPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
   /** nsIFrame method overridden to handle table specifics
   */
-  NS_IMETHOD SetSelected(nsIPresContext* aPresContext,
+  NS_IMETHOD SetSelected(nsPresContext* aPresContext,
                          nsIDOMRange *aRange,
                          PRBool aSelected,
                          nsSpread aSpread);
@@ -371,12 +371,12 @@ public:
     * @see BalanceColumnWidths
     * @see nsIFrameReflow::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  nsresult ReflowTable(nsIPresContext*          aPresContext,
+  nsresult ReflowTable(nsPresContext*          aPresContext,
                        nsHTMLReflowMetrics&     aDesiredSize,
                        const nsHTMLReflowState& aReflowState,
                        nscoord                  aAvailHeight,
@@ -395,7 +395,7 @@ public:
 
   nsFrameList& GetColGroups();
 
-  NS_IMETHOD GetParentStyleContextFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
                                         nsIFrame**      aProviderFrame,
                                         PRBool*         aIsChild);
 
@@ -472,23 +472,23 @@ public:
     * @param aColIndex    - index where the column should be inserted into the
     *                       colframe cache
     */
-  void InsertCol(nsIPresContext&  aPresContext,
+  void InsertCol(nsPresContext&  aPresContext,
                  nsTableColFrame& aColFrame,
                  PRInt32          aColIndex);
 
-  nsTableColGroupFrame* CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
+  nsTableColGroupFrame* CreateAnonymousColGroupFrame(nsPresContext&     aPresContext,
                                                      nsTableColGroupType aType);
 
-  PRInt32 DestroyAnonymousColFrames(nsIPresContext& aPresContext,
+  PRInt32 DestroyAnonymousColFrames(nsPresContext& aPresContext,
                                     PRInt32 aNumFrames);
 
-  void CreateAnonymousColFrames(nsIPresContext& aPresContext,
+  void CreateAnonymousColFrames(nsPresContext& aPresContext,
                                 PRInt32         aNumColsToAdd,
                                 nsTableColType  aColType,
                                 PRBool          aDoAppend,
                                 nsIFrame*       aPrevCol = nsnull);
 
-  void CreateAnonymousColFrames(nsIPresContext&       aPresContext,
+  void CreateAnonymousColFrames(nsPresContext&       aPresContext,
                                 nsTableColGroupFrame& aColGroupFrame,
                                 PRInt32               aNumColsToAdd,
                                 nsTableColType        aColType,
@@ -499,54 +499,54 @@ public:
   /** empty the column frame cache */
   void ClearColCache();
 
-  virtual void AppendCell(nsIPresContext&   aPresContext,
+  virtual void AppendCell(nsPresContext&   aPresContext,
                           nsTableCellFrame& aCellFrame,
                           PRInt32           aRowIndex);
 
-  virtual void InsertCells(nsIPresContext& aPresContext,
+  virtual void InsertCells(nsPresContext& aPresContext,
                            nsVoidArray&    aCellFrames, 
                            PRInt32         aRowIndex, 
                            PRInt32         aColIndexBefore);
 
-  virtual void RemoveCell(nsIPresContext&   aPresContext,
+  virtual void RemoveCell(nsPresContext&   aPresContext,
                           nsTableCellFrame* aCellFrame,
                           PRInt32           aRowIndex);
 
-  void AppendRows(nsIPresContext&       aPresContext,
+  void AppendRows(nsPresContext&       aPresContext,
                   nsTableRowGroupFrame& aRowGroupFrame,
                   PRInt32               aRowIndex,
                   nsVoidArray&          aRowFrames);
 
-  PRInt32 InsertRow(nsIPresContext&       aPresContext,
+  PRInt32 InsertRow(nsPresContext&       aPresContext,
                     nsTableRowGroupFrame& aRowGroupFrame,
                     nsIFrame&             aFrame,
                     PRInt32               aRowIndex,
                     PRBool                aConsiderSpans);
 
-  PRInt32 InsertRows(nsIPresContext&       aPresContext,
+  PRInt32 InsertRows(nsPresContext&       aPresContext,
                      nsTableRowGroupFrame& aRowGroupFrame,
                      nsVoidArray&          aFrames,
                      PRInt32               aRowIndex,
                      PRBool                aConsiderSpans);
 
-  virtual void RemoveRows(nsIPresContext&  aPresContext,
+  virtual void RemoveRows(nsPresContext&  aPresContext,
                           nsTableRowFrame& aFirstRowFrame,
                           PRInt32          aNumRowsToRemove,
                           PRBool           aConsiderSpans);
 
-  void AppendRowGroups(nsIPresContext& aPresContext,
+  void AppendRowGroups(nsPresContext& aPresContext,
                        nsIFrame*       aFirstRowGroupFrame);
 
-  void InsertRowGroups(nsIPresContext& aPresContext,
+  void InsertRowGroups(nsPresContext& aPresContext,
                        nsIFrame*       aFirstRowGroupFrame,
                        nsIFrame*       aLastRowGroupFrame);
 
-  void InsertColGroups(nsIPresContext& aPresContext,
+  void InsertColGroups(nsPresContext& aPresContext,
                        PRInt32         aColIndex,
                        nsIFrame*       aFirstFrame,
                        nsIFrame*       aLastFrame = nsnull);
 
-  virtual void RemoveCol(nsIPresContext&       aPresContext,
+  virtual void RemoveCol(nsPresContext&       aPresContext,
                          nsTableColGroupFrame* aColGroupFrame,
                          PRInt32               aColIndex,
                          PRBool                aRemoveFromCache,
@@ -585,7 +585,7 @@ protected:
   /** destructor, responsible for mColumnLayoutData */
   virtual ~nsTableFrame();
 
-  void InitChildReflowState(nsIPresContext&    aPresContext,                     
+  void InitChildReflowState(nsPresContext&    aPresContext,                     
                             nsHTMLReflowState& aReflowState);
 
   /** implement abstract method on nsHTMLContainerFrame */
@@ -614,7 +614,7 @@ public:
 
 protected:
 
-  NS_METHOD ReflowChildren(nsIPresContext*      aPresContext,
+  NS_METHOD ReflowChildren(nsPresContext*      aPresContext,
                            nsTableReflowState&  aReflowState,
                            PRBool               aDoColGroups,
                            PRBool               aDirtyOnly,
@@ -632,7 +632,7 @@ protected:
     *
     * @see Reflow
     */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD IncrementalReflow(nsPresContext*          aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus);
 
@@ -640,7 +640,7 @@ protected:
     * @param aNextFrame  the next frame in the reflow target chain
     * @see nsIFrameReflow::Reflow
     */
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext*       aPresContext,
+  NS_IMETHOD IR_TargetIsChild(nsPresContext*       aPresContext,
                               nsTableReflowState&   aReflowStatet,
                               nsReflowStatus&       aStatus,
                               nsIFrame*             aNextFrame);
@@ -648,7 +648,7 @@ protected:
   /** process an incremental reflow command targeted at this frame. 
     * @see nsIFrameReflow::Reflow
     */
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext*      aPresContext,
+  NS_IMETHOD IR_TargetIsMe(nsPresContext*      aPresContext,
                            nsTableReflowState&  aReflowState,
                            nsReflowStatus&      aStatus);
 
@@ -656,11 +656,11 @@ protected:
     * @see nsIFrameReflow::Reflow
     * TODO: needs to be optimized for which attribute was actually changed.
     */
-  NS_IMETHOD IR_StyleChanged(nsIPresContext*      aPresContext,
+  NS_IMETHOD IR_StyleChanged(nsPresContext*      aPresContext,
                              nsTableReflowState&  aReflowState,
                              nsReflowStatus&      aStatus);
   
-  NS_IMETHOD AdjustSiblingsAfterReflow(nsIPresContext*     aPresContext,
+  NS_IMETHOD AdjustSiblingsAfterReflow(nsPresContext*     aPresContext,
                                        nsTableReflowState& aReflowState,
                                        nsIFrame*           aKidFrame,
                                        nscoord             aDeltaY);
@@ -668,15 +668,15 @@ protected:
   nsresult RecoverState(nsTableReflowState& aReflowState,
                         nsIFrame*           aKidFrame);
 
-  NS_METHOD CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
+  NS_METHOD CollapseRowGroupIfNecessary(nsPresContext* aPresContext,
                                         nsIFrame* aRowGroupFrame,
                                         const nscoord& aYTotalOffset,
                                         nscoord& aYGroupOffset, PRInt32& aRowX);
 
-  NS_METHOD AdjustForCollapsingRows(nsIPresContext*       aPresContext,
+  NS_METHOD AdjustForCollapsingRows(nsPresContext*       aPresContext,
                                     nsHTMLReflowMetrics&  aDesiredSize);
 
-  NS_METHOD AdjustForCollapsingCols(nsIPresContext*       aPresContext,
+  NS_METHOD AdjustForCollapsingCols(nsPresContext*       aPresContext,
                                     nsHTMLReflowMetrics&  aDesiredSize);
   // end incremental reflow methods
 
@@ -712,7 +712,7 @@ protected:
   void DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
                               nscoord                  aAmount);
 
-  void PlaceChild(nsIPresContext*      aPresContext,
+  void PlaceChild(nsPresContext*      aPresContext,
                   nsTableReflowState&  aReflowState,
                   nsIFrame*            aKidFrame,
                   nsHTMLReflowMetrics& aKidDesiredSize);
@@ -724,13 +724,13 @@ protected:
     * @param aMaxSize         the height and width constraints
     * @param aMaxElementSize  the min size of the largest indivisible object
     */
-  virtual void BalanceColumnWidths(nsIPresContext*          aPresContext, 
+  virtual void BalanceColumnWidths(nsPresContext*          aPresContext, 
                                    const nsHTMLReflowState& aReflowState);
 
 
   nsIFrame* GetFirstBodyRowGroupFrame();
-  PRBool MoveOverflowToChildList(nsIPresContext* aPresContext);
-  void PushChildren(nsIPresContext *aPresContext,
+  PRBool MoveOverflowToChildList(nsPresContext* aPresContext);
+  void PushChildren(nsPresContext *aPresContext,
                     nsIFrame*       aFromChild,
                     nsIFrame*       aPrevSibling);
 
@@ -808,7 +808,7 @@ public:
                               PRInt32   anAdjustment);
 
   // Remove cell borders which aren't bordering row and/or col groups 
-  void ProcessGroupRules(nsIPresContext* aPresContext);
+  void ProcessGroupRules(nsPresContext* aPresContext);
 
   nsVoidArray& GetColCache();
 
@@ -821,7 +821,7 @@ protected:
 
   void SetBorderCollapse(PRBool aValue);
 
-  void CalcBCBorders(nsIPresContext& aPresContext);
+  void CalcBCBorders(nsPresContext& aPresContext);
 
   void ExpandBCDamageArea(nsRect& aRect) const;
 

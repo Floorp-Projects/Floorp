@@ -40,7 +40,7 @@
 #include "nsIHTMLContent.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
@@ -407,7 +407,7 @@ nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const PRUnic
 }
 
 nsresult
-nsFormControlHelper::Reset(nsIFrame* aFrame, nsIPresContext* aPresContext)
+nsFormControlHelper::Reset(nsIFrame* aFrame, nsPresContext* aPresContext)
 {
   nsCOMPtr<nsIFormControl> control = do_QueryInterface(aFrame->GetContent());
   if (control) {
@@ -419,7 +419,7 @@ nsFormControlHelper::Reset(nsIFrame* aFrame, nsIPresContext* aPresContext)
 }
 
 void
-nsFormControlHelper::StyleChangeReflow(nsIPresContext* aPresContext,
+nsFormControlHelper::StyleChangeReflow(nsPresContext* aPresContext,
                                        nsIFrame* aFrame)
 {
   nsHTMLReflowCommand* reflowCmd;

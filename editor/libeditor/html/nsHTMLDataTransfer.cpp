@@ -84,7 +84,7 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsIImage.h"

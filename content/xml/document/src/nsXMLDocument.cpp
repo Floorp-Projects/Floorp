@@ -43,7 +43,7 @@
 #include "nsIXMLContent.h"
 #include "nsIXMLContentSink.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h" 
+#include "nsPresContext.h" 
 #include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"

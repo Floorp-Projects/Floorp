@@ -43,7 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
 #include "nsViewsCID.h"
@@ -339,7 +339,7 @@ public:
 
   //locals
 
-  NS_IMETHOD Init(nsIPresContext *aPresContext, nsObjectFrame *aFrame);
+  NS_IMETHOD Init(nsPresContext *aPresContext, nsObjectFrame *aFrame);
 
   nsPluginPort* GetPluginPort();
   void ReleasePluginPort(nsPluginPort * pluginPort);
@@ -359,7 +359,7 @@ private:
   nsCString                   mDocumentBase;
   char                       *mTagText;
   nsCOMPtr<nsIWidget>         mWidget;
-  nsIPresContext             *mContext;
+  nsPresContext             *mContext;
   nsCOMPtr<nsITimer>          mPluginTimer;
   nsCOMPtr<nsIPluginHost>     mPluginHost;
   PRPackedBool                mContentFocused;
@@ -379,7 +379,7 @@ private:
 };
 
 #if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
-static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect);
+static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect);
 #endif
 
   // Mac specific code to fix up port position and clip during paint
@@ -387,7 +387,7 @@ static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRec
 
 #ifdef DO_DIRTY_INTERSECT
   // convert relative coordinates to absolute
-  static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsIPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&aContainerWidget);
+  static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&aContainerWidget);
 #endif
 
   enum { ePluginPaintIgnore, ePluginPaintEnable, ePluginPaintDisable };
@@ -567,7 +567,7 @@ PRBool nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
     !value.Equals("@mozilla.org/content/plugin/document-loader-factory;1");
 }
 
-NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsPresContext* aPresContext,
                                                  nsIAtom*        aListName,
                                                  nsIFrame*       aChildList)
 {
@@ -579,7 +579,7 @@ NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsObjectFrame::Init(nsIPresContext*  aPresContext,
+nsObjectFrame::Init(nsPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsStyleContext*  aContext,
@@ -664,7 +664,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::Destroy(nsIPresContext* aPresContext)
+nsObjectFrame::Destroy(nsPresContext* aPresContext)
 {
   // we need to finish with the plugin before native window is destroyed
   // doing this in the destructor is too late.
@@ -749,7 +749,7 @@ nsObjectFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsresult
-nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
+nsObjectFrame::CreateWidget(nsPresContext* aPresContext,
                             nscoord aWidth,
                             nscoord aHeight,
                             PRBool aViewOnly)
@@ -854,7 +854,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
 #define EMBED_DEF_HEIGHT 200
 
 void
-nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aMetrics)
 {
@@ -950,7 +950,7 @@ nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
+nsObjectFrame::Reflow(nsPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
@@ -1169,7 +1169,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 nsresult
-nsObjectFrame::InstantiateWidget(nsIPresContext*          aPresContext,
+nsObjectFrame::InstantiateWidget(nsPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aMetrics,
                             const nsHTMLReflowState& aReflowState,
                             nsCID aWidgetCID)
@@ -1201,7 +1201,7 @@ nsObjectFrame::InstantiateWidget(nsIPresContext*          aPresContext,
 }
 
 nsresult
-nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
+nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
                                  nsHTMLReflowMetrics& aMetrics,
                                  const nsHTMLReflowState& aReflowState,
                                  nsIPluginHost* aPluginHost, 
@@ -1303,7 +1303,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
 // This is called when the page containing plugin is resized, and plugin has its dimensions
 // specified in percentage, so it needs to follow the page on the fly.
 nsresult
-nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMetrics& aMetrics, const nsHTMLReflowState& aReflowState)
+nsObjectFrame::ReinstantiatePlugin(nsPresContext* aPresContext, nsHTMLReflowMetrics& aMetrics, const nsHTMLReflowState& aReflowState)
 {
   nsIView *parentWithView;
   nsPoint origin;
@@ -1339,7 +1339,7 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMet
 }
 
 nsresult
-nsObjectFrame::HandleChild(nsIPresContext*          aPresContext,
+nsObjectFrame::HandleChild(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aMetrics,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus,
@@ -1398,7 +1398,7 @@ nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
   nsIView * parentWithView;
   nsPoint origin(0,0);
 
-  nsIPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
   GetOffsetFromView(presContext, origin, &parentWithView);
 
   // if it's windowless, let's make sure we have our origin set right
@@ -1427,7 +1427,7 @@ nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
 }
 
 NS_IMETHODIMP
-nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
+nsObjectFrame::DidReflow(nsPresContext*           aPresContext,
                          const nsHTMLReflowState*  aReflowState,
                          nsDidReflowStatus         aStatus)
 {
@@ -1494,7 +1494,7 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::Paint(nsIPresContext*      aPresContext,
+nsObjectFrame::Paint(nsPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer,
@@ -1510,12 +1510,12 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   // If we are painting in Print Preview do nothing....
-  if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+  if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
     return NS_OK;
   }
 
   // determine if we are printing
-  if (aPresContext->Type() == nsIPresContext::eContext_Print) {
+  if (aPresContext->Type() == nsPresContext::eContext_Print) {
     // UNIX Plugins can't PP at this time, so draw an empty box
     // we only want to print on the content layer pass
     if (eFramePaintLayer_Content != aWhichLayer)
@@ -1707,7 +1707,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 #endif
 
     // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
-    nsCOMPtr<nsIPresContext> screenPcx;
+    nsCOMPtr<nsPresContext> screenPcx;
     shell->GetPresContext(getter_AddRefs(screenPcx));
     nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
     frame->DidReflow(screenPcx, nsnull, status);  // DidReflow will take care of it
@@ -1821,7 +1821,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
+nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
                            nsGUIEvent*     anEvent,
                            nsEventStatus*  anEventStatus)
 {
@@ -1933,7 +1933,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
 }
 
 /* static */ nsIObjectFrame*
-nsObjectFrame::GetNextObjectFrame(nsIPresContext* aPresContext,
+nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext,
                                   nsIFrame* aRoot)
 {
   nsIFrame* child = aRoot->GetFirstChild(nsnull);
@@ -3066,7 +3066,7 @@ inline void InitializeEventRecord(EventRecord* event) { ::OSEventAvail(0, event)
 
 void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent)
 {
-  nsIPresContext* presContext = mOwner ? mOwner->GetPresContext() : nsnull;
+  nsPresContext* presContext = mOwner ? mOwner->GetPresContext() : nsnull;
   InitializeEventRecord(&aMacEvent);
   switch (anEvent.message)
   {
@@ -3775,7 +3775,7 @@ void nsPluginInstanceOwner::CancelTimer()
     }
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObjectFrame *aFrame)
+NS_IMETHODIMP nsPluginInstanceOwner::Init(nsPresContext* aPresContext, nsObjectFrame *aFrame)
 {
   //do not addref to avoid circular refs. MMP
   mContext = aPresContext;
@@ -3809,7 +3809,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
       // content viewer knows about
       nsCOMPtr<nsIDocumentViewer> docV(do_QueryInterface(cv));
       if (docV) {
-        nsCOMPtr<nsIPresContext> currentPresContext;
+        nsCOMPtr<nsPresContext> currentPresContext;
         docV->GetPresContext(getter_AddRefs(currentPresContext));
         if (currentPresContext == aPresContext) {
           cv->Show();
@@ -3974,7 +3974,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 
 #if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
 // convert frame coordinates from twips to pixels
-static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
+static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
 {
   float t2p;
   t2p = aPresContext.TwipsToPixels();
@@ -3992,7 +3992,7 @@ static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRec
 // Convert from a frame relative coordinate to a coordinate relative to its
 // containing window
 static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame,
-  nsIPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs,
+  nsPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs,
   nsIWidget *& aContainerWidget)
 {
   // See if this frame has a view

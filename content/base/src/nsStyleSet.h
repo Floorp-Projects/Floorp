@@ -60,14 +60,14 @@ class nsStyleSet
   // Initialize the object.  You must check the return code and not use
   // the nsStyleSet if Init() fails.
 
-  nsresult Init(nsIPresContext *aPresContext);
+  nsresult Init(nsPresContext *aPresContext);
 
   // For getting the cached default data in case we hit out-of-memory.
   // To be used only by nsRuleNode.
   nsCachedStyleData* DefaultStyleData() { return &mDefaultStyleData; }
 
   // clear out all of the computed style data
-  void ClearStyleData(nsIPresContext *aPresContext);
+  void ClearStyleData(nsPresContext *aPresContext);
 
   // enable / disable the Quirk style sheet
   void EnableQuirkStyleSheet(PRBool aEnable);
@@ -107,30 +107,30 @@ class nsStyleSet
 
   // Begin ignoring style context destruction, to avoid lots of unnecessary
   // work on document teardown.
-  void BeginShutdown(nsIPresContext* aPresContext);
+  void BeginShutdown(nsPresContext* aPresContext);
 
   // Free all of the data associated with this style set.
-  void Shutdown(nsIPresContext* aPresContext);
+  void Shutdown(nsPresContext* aPresContext);
 
   // Notification that a style context is being destroyed.
-  void NotifyStyleContextDestroyed(nsIPresContext* aPresContext,
+  void NotifyStyleContextDestroyed(nsPresContext* aPresContext,
                                    nsStyleContext* aStyleContext);
 
   // Get a new style context that lives in a different parent
   // The new context will be the same as the old if the new parent is the
   // same as the old parent.
   already_AddRefed<nsStyleContext>
-    ReParentStyleContext(nsIPresContext* aPresContext,
+    ReParentStyleContext(nsPresContext* aPresContext,
                          nsStyleContext* aStyleContext,
                          nsStyleContext* aNewParentContext);
 
   // Test if style is dependent on content state
-  nsReStyleHint HasStateDependentStyle(nsIPresContext* aPresContext,
+  nsReStyleHint HasStateDependentStyle(nsPresContext* aPresContext,
                                        nsIContent*     aContent,
                                        PRInt32         aStateMask);
 
   // Test if style is dependent on the presence of an attribute.
-  nsReStyleHint HasAttributeDependentStyle(nsIPresContext* aPresContext,
+  nsReStyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
                                            nsIContent*     aContent,
                                            nsIAtom*        aAttribute,
                                            PRInt32         aModType);
@@ -190,7 +190,7 @@ class nsStyleSet
   nsStyleSet& operator=(const nsStyleSet& aCopy);
 
   // Returns false on out-of-memory.
-  PRBool BuildDefaultStyleData(nsIPresContext* aPresContext);
+  PRBool BuildDefaultStyleData(nsPresContext* aPresContext);
 
   // Update the rule processor list after a change to the style sheet list.
   nsresult GatherRuleProcessors(sheetType aType);
@@ -222,11 +222,11 @@ class nsStyleSet
   void WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
                           RuleProcessorData* aData);
 
-  already_AddRefed<nsStyleContext> GetContext(nsIPresContext* aPresContext,
+  already_AddRefed<nsStyleContext> GetContext(nsPresContext* aPresContext,
                                               nsStyleContext* aParentContext,
                                               nsIAtom* aPseudoTag);
 
-  nsIPresContext* PresContext() { return mRuleTree->GetPresContext(); }
+  nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }
 
   static nsIURI  *gQuirkURI;
 

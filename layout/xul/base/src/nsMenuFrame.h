@@ -85,7 +85,7 @@ public:
   // The nsITimerCallback interface
   NS_DECL_NSITIMERCALLBACK
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
@@ -101,34 +101,34 @@ public:
   // can be stored in a separate list (so that they don't impact reflow of the
   // actual menu item at all).
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   // Overridden to prevent events from ever going to children of the menu.
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
                               const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
@@ -167,11 +167,11 @@ public:
 
   // nsIScrollableViewProvider methods
 
-  NS_IMETHOD GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView** aView);
+  NS_IMETHOD GetScrollableView(nsPresContext* aPresContext, nsIScrollableView** aView);
 
   // nsMenuFrame methods 
 
-  nsresult DestroyPopupFrames(nsIPresContext* aPresContext);
+  nsresult DestroyPopupFrames(nsPresContext* aPresContext);
 
   PRBool IsOpen() { return mMenuOpen; };
   PRBool IsMenu();
@@ -199,8 +199,8 @@ protected:
   virtual void RePositionPopup(nsBoxLayoutState& aState);
 
   static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
-  void UpdateMenuType(nsIPresContext* aPresContext);
-  void UpdateMenuSpecialState(nsIPresContext* aPresContext);
+  void UpdateMenuType(nsPresContext* aPresContext);
+  void UpdateMenuSpecialState(nsPresContext* aPresContext);
 
   void OpenMenuInternal(PRBool aActivateFlag);
   void GetMenuChildrenElement(nsIContent** aResult);
@@ -223,7 +223,7 @@ protected:
   // Called as a hook just after the menu goes away.
   PRBool OnDestroyed();
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -244,7 +244,7 @@ protected:
 
   nsIMenuParent* mMenuParent; // Our parent menu.
   nsCOMPtr<nsITimer> mOpenTimer;
-  nsIPresContext* mPresContext; // Our pres context.
+  nsPresContext* mPresContext; // Our pres context.
   nsString mGroupName;
   nsSize mLastPref;
   

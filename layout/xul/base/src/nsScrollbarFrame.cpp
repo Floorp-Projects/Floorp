@@ -80,7 +80,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
 NS_IMETHODIMP
-nsScrollbarFrame::Init(nsIPresContext*  aPresContext,
+nsScrollbarFrame::Init(nsPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -101,7 +101,7 @@ nsScrollbarFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::Reflow(nsIPresContext*          aPresContext,
+nsScrollbarFrame::Reflow(nsPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
@@ -130,7 +130,7 @@ nsScrollbarFrame::IsContainingBlock() const
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsScrollbarFrame::AttributeChanged(nsPresContext* aPresContext,
                                    nsIContent* aChild,
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,
@@ -159,7 +159,7 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::HandlePress(nsIPresContext* aPresContext, 
+nsScrollbarFrame::HandlePress(nsPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
@@ -167,7 +167,7 @@ nsScrollbarFrame::HandlePress(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::HandleMultiplePress(nsIPresContext* aPresContext, 
+nsScrollbarFrame::HandleMultiplePress(nsPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
@@ -175,7 +175,7 @@ nsScrollbarFrame::HandleMultiplePress(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsScrollbarFrame::HandleDrag(nsIPresContext* aPresContext, 
+nsScrollbarFrame::HandleDrag(nsPresContext* aPresContext, 
                               nsGUIEvent*     aEvent,
                               nsEventStatus*  aEventStatus)
 {
@@ -183,7 +183,7 @@ nsScrollbarFrame::HandleDrag(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsScrollbarFrame::HandleRelease(nsIPresContext* aPresContext, 
+nsScrollbarFrame::HandleRelease(nsPresContext* aPresContext, 
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus*  aEventStatus)
 {

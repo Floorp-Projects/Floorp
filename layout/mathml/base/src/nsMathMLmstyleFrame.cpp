@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -78,7 +78,7 @@ nsMathMLmstyleFrame::~nsMathMLmstyleFrame()
 
 // mstyle needs special care for its scriptlevel and displaystyle attributes
 NS_IMETHODIMP
-nsMathMLmstyleFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+nsMathMLmstyleFrame::InheritAutomaticData(nsPresContext* aPresContext,
                                           nsIFrame*       aParent) 
 {
   // let the base class get the default from our parent
@@ -122,7 +122,7 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmstyleFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 {
   // Nothing particular to do here, the values that we computed in
   // InheritAutomaticData() are the values that we wanted to pass to
@@ -133,7 +133,7 @@ nsMathMLmstyleFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationData(nsIPresContext* aPresContext,
+nsMathMLmstyleFrame::UpdatePresentationData(nsPresContext* aPresContext,
                                             PRInt32         aScriptLevelIncrement,
                                             PRUint32        aFlagsValues,
                                             PRUint32        aFlagsToUpdate)
@@ -174,7 +174,7 @@ nsMathMLmstyleFrame::UpdatePresentationData(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
                                                        PRInt32         aFirstIndex,
                                                        PRInt32         aLastIndex,
                                                        PRInt32         aScriptLevelIncrement,
@@ -206,7 +206,7 @@ nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresCont
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsMathMLmstyleFrame::AttributeChanged(nsPresContext* aPresContext,
                                       nsIContent*     aContent,
                                       PRInt32         aNameSpaceID,
                                       nsIAtom*        aAttribute,
