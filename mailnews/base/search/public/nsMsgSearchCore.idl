@@ -30,7 +30,7 @@ interface nsIMsgDBHdr;
 
 typedef long nsMsgSearchScopeAttribute;
 
-[scriptable]
+[scriptable, uuid(5fe70a74-304e-11d3-9be1-00a0c900d445)]
 interface nsMsgSearchScope {
     const long MailFolder = 0;
     const long Newsgroup = 1;
@@ -41,7 +41,7 @@ interface nsMsgSearchScope {
 
 typedef long nsMsgSearchAttribute;
 
-[scriptable]
+[scriptable, uuid(68c8710a-304e-11d3-97bf-00a0c900d445)]
 interface nsMsgSearchAttrib {
 
     const long Subject = 0;	/* mail and news */
@@ -114,7 +114,7 @@ interface nsMsgSearchAttrib {
 
 typedef long nsMsgSearchOperator;
 
-[scriptable]
+[scriptable, uuid(82cc4518-304e-11d3-831d-00a0c900d445)]
 interface nsMsgSearchOp {
     const long Contains = 0; /* for text attributes      */
     const long DoesntContain = 1;
@@ -145,7 +145,7 @@ interface nsMsgSearchOp {
 typedef long nsMsgSearchValueWidget;
 
 /* FEs use this to help build the search dialog box */
-[scriptable]
+[scriptable,uuid(903dd2e8-304e-11d3-92e6-00a0c900d445)]
 interface nsMsgSearchWidget {
     const long Text = 0;
     const long Date = 1;
@@ -158,7 +158,7 @@ typedef long nsMsgSearchTypeVal;
 
 
 /* Used to specify type of search to be performed */
-[scriptable]
+[scriptable,uuid(964b7f32-304e-11d3-ae13-00a0c900d445)]
 interface nsMsgSearchType {
 	const long None = 0;
 	const long RootDSE = 1;
@@ -169,7 +169,7 @@ interface nsMsgSearchType {
 
 typedef long nsMsgSearchBooleanOperator;
  
-[scriptable]
+[scriptable, uuid(a37f3f4a-304e-11d3-8f94-00a0c900d445)]
 interface nsMsgSearchBooleanOp {
     const long BooleanOR = 0;
     const long BooleanAND = 1;

@@ -22,7 +22,7 @@
 
 typedef long nsMsgFilterTypeType;
 
-[scriptable]
+[scriptable,uuid(e9b548ba-304e-11d3-8b33-00a0c900d445)]
 interface nsMsgFilterType {
     /* these longs are all actually of type nsMsgFilterTypeType */
 	const long InboxRule = 0x1;
@@ -40,7 +40,7 @@ typedef long nsMsgFilterIndex;
 
 typedef long nsMsgRuleActionType;
 
-[scriptable]
+[scriptable, uuid(11ba0ed6-304f-11d3-9c16-00a0c900d445)]
 interface nsMsgFilterAction {
   
     /* these longs are all actually of type nsMsgFilterActionType */
