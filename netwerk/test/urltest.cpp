@@ -102,7 +102,7 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 	   	result in the resultset as well. 
 	*/
 
-    const int tests = 9;
+    const int tests = 12;
     const char* url[tests] = 
 	{
 		"http://username:password@hostname.com:80/pathname/./more/stuff/../path",
@@ -113,7 +113,10 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 		"mailbox:///foo", // No host specified path should be /foo
 		"scheme:user@hostname.edu:80/pathname", //this is always http:user and not user:pass
 		"http://username:password@hostname:80/pathname",
-		"resource:/pathname"
+		"resource:/pathname",
+		"ftp://uname%here.com:pwd@there.com/aPath/a.html",
+		"http://www.inf.bme.hu?foo=bar",
+		"http://test.com/aPath/a.html#/1/2"
 	};
 
 	const char* resultset[tests] =
@@ -126,7 +129,10 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 		"mailbox,,,-1,/foo",
 		"scheme,user,hostname.edu,80,/pathname",
 		"http,username:password,hostname,80,/pathname",
-		"resource,,,-1,/pathname"
+		"resource,,,-1,/pathname",
+		"ftp,uname%here.com:pwd,there.com,21,/aPath/a.html",
+		"http,,www.inf.bme.hu,-1,/?foo=bar",
+		"http,,test.com,-1,/aPath/a.html#/1/2"
 	};
 
 	// These tests will fail to create a URI from NS_NewURI calls...
@@ -143,7 +149,9 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 		PR_TRUE,
 		PR_TRUE,
 		PR_FALSE,
-		PR_FALSE
+		PR_FALSE,
+		PR_FALSE,
+        PR_FALSE
 	};
 	nsresult stat;
 	for (int i = 0; i< tests; ++i)
@@ -234,7 +242,7 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
 
     */
 
-    const int tests = 24;
+    const int tests = 25;
 
     const char baseURL[] = "http://a/b/c/d;p?q#f";
 
@@ -263,7 +271,8 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
         "../g",
         "../..",
         "../../",
-        "../../g"
+        "../../g",
+        "#my::anchor"
     };
 
     const char* results[tests] = 
@@ -291,7 +300,8 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
         "http://a/b/g",
         "http://a/",
         "http://a/",
-        "http://a/g"
+        "http://a/g",
+        "http://a/b/c/d;p?q#my::anchor"
     };
 
     for (int i = 0 ; i<tests ; ++i)
