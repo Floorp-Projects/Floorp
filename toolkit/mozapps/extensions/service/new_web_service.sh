@@ -40,7 +40,6 @@ javac $interface || exit 1
 java org.apache.axis.wsdl.Java2WSDL -o $pkg_dir/$name.wsdl \
     -l"http://localhost:8080/axis/services/$name" -n  "urn:$name" \
     -p"$pkg" "urn:$name" $pkg.$name || exit 1
-cp $pkg_dir/$name.wsdl "$CATALINA_HOME/webapps/axis/$name.wsdl"
   
 java org.apache.axis.wsdl.WSDL2Java -o . \
     -d Session -s -S true  -Nurn:$name $pkg $name.wsdl || exit 1
