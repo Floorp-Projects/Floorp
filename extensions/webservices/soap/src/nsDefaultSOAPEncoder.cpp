@@ -2798,7 +2798,7 @@ NS_IMETHODIMP
         PRInt32 p;\
         if (nsSOAPUtils::GetAttribute(aEncoding, aSource, nsSOAPUtils::kSOAPEncURI,\
                                       kSOAPArrayPositionAttribute, pos)) {\
-          PRInt32 p = DecodeArrayPosition(pos, dimensionCount, dimensionSizes);\
+          p = DecodeArrayPosition(pos, dimensionCount, dimensionSizes);\
           if (p == -1) {\
             rc = NS_ERROR_ILLEGAL_VALUE;\
             break;\
