@@ -221,6 +221,8 @@ function ChangeFolderByURI(uri)
   }
   else
   {
+	gCurrentLoadingFolderURI = "";
+	msgfolder.updateFolder();
 	RerootFolder(uri);
   }
 }
