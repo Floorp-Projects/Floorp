@@ -161,6 +161,9 @@ protected:
 	// Indicates the browser is busy doing something
 	BOOL					m_bBusy;
 
+	// Flag to indicate if the browser has a drop target
+	BOOL                    m_bDropTarget;
+
 	// Contains an error message if startup went wrong
 	tstring					m_sErrorMessage;
 
