@@ -60,8 +60,6 @@ Rights Reserved.
           <menuitem data="2" actionvalueindex="1" value="&changePriority.label;"/>
           <menuitem data="3" actionvalueindex="2" value="&delete.label;"/>
           <menuitem data="4" actionvalueindex="2" value="&markRead.label;"/>
-          <menuitem data="5" actionvalueindex="2" value="&ignoreThread.label;"/>
-          <menuitem data="6" actionvalueindex="2" value="&watchThread.label;"/>
         </menupopup>
       </menulist>
       <deck id="actionValueDeck" flex="1">
