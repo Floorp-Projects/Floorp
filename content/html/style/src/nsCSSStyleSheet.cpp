@@ -3631,7 +3631,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           result = data.mIsChecked ? localTrue : localFalse;
       }
       else {
-        result = localFalse;  // unknown pseudo class
+        NS_ERROR("CSS parser parsed a pseudo-class that we do not handle");
+        result = PR_FALSE;  // unknown pseudo class
       }
       pseudoClass = pseudoClass->mNext;
     }
