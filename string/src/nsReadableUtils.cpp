@@ -412,7 +412,7 @@ ToLowerCase( nsACString& aCString )
 
 template <class StringT, class Comparator>
 PRBool
-FindInReadable_Impl( const StringT& aPattern, StringT::const_iterator& aSearchStart, StringT::const_iterator& aSearchEnd, const Comparator& compare )
+FindInReadable_Impl( const StringT& aPattern, typename StringT::const_iterator& aSearchStart, typename StringT::const_iterator& aSearchEnd, const Comparator& compare )
   {
     PRBool found_it = PR_FALSE;
 
