@@ -26,12 +26,13 @@
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 window {
   overflow: auto;
 }
 
-body {
+html|body {
   background-color: #FFFFFF;
 }
 
@@ -56,7 +57,7 @@ headerdisplayname {
 
 box[name="header-attachment"],
 box[name="header-part1"],
-table[name="header-part1"] {
+html|table[name="header-part1"] {
   border-left: 4px solid #EFEFEF;
   background-color: #EFEFEF;
 }
@@ -64,13 +65,13 @@ table[name="header-part1"] {
 box[name="header-part2"],
 box[name="header-part3"],
 box[name="header-seamonkey"],
-table[name="header-part2"],
-table[name="header-part3"] {
+html|table[name="header-part2"],
+html|table[name="header-part3"] {
   border: 4px solid #DEDEDE;
   background-color: #DEDEDE;
 }
 
-div.headerdisplayname {
+html|div.headerdisplayname {
   display: inline;
   font-weight: bold;
   white-space: pre;
