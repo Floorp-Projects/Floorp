@@ -539,85 +539,85 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inZoomIn:
 			case inZoomOut:
-				GrafPtr		savePort;
-				GDHandle	gdNthDevice;
-				GDHandle	gdZoomDevice;
-				Rect		theSect;
-				Rect		tempRect;
-				Rect		zoomRect;
-				short		wTitleHeight;
-				long		sectArea, greatestArea = 0;
-				Boolean		sectFlag;
-				
-				GetPort(&savePort);
+				if (::TrackBox(whichWindow, anEvent.where, partCode)) {
+					GrafPtr		savePort;
+					GDHandle	gdNthDevice;
+					GDHandle	gdZoomDevice;
+					Rect		theSect;
+					Rect		tempRect;
+					Rect		zoomRect;
+					short		wTitleHeight;
+					long		sectArea, greatestArea = 0;
+					Boolean		sectFlag;
+					
+					GetPort(&savePort);
 #if TARGET_CARBON
-				::SetPortWindowPort(whichWindow);
-				Rect windRect;
-				::GetWindowPortBounds(whichWindow, &windRect);
-				::EraseRect(&windRect);
+					::SetPortWindowPort(whichWindow);
+					Rect windRect;
+					::GetWindowPortBounds(whichWindow, &windRect);
+					::EraseRect(&windRect);
 #else
-				SetPort(whichWindow);
-				EraseRect(&whichWindow->portRect);
+					SetPort(whichWindow);
+					EraseRect(&whichWindow->portRect);
 #endif
 				
-				if (partCode == inZoomOut)
-				{
+					if (partCode == inZoomOut) {
 #if !TARGET_CARBON
-					WindowPeek wPeek = (WindowPeek)whichWindow;
-					Rect windRect = whichWindow->portRect;
+						WindowPeek wPeek = (WindowPeek)whichWindow;
+						Rect windRect = whichWindow->portRect;
 #endif
-					LocalToGlobal((Point *)&windRect.top);
-					LocalToGlobal((Point *)&windRect.bottom);
+						LocalToGlobal((Point *)&windRect.top);
+						LocalToGlobal((Point *)&windRect.bottom);
 #if TARGET_CARBON
-					RgnHandle structRgn = ::NewRgn();
-					::GetWindowRegion ( whichWindow, kWindowStructureRgn, structRgn );
-					Rect structRgnBounds;
-					::GetRegionBounds ( structRgn, &structRgnBounds );
-					wTitleHeight = windRect.top - 1 - structRgnBounds.top;
-					::DisposeRgn ( structRgn );
+						RgnHandle structRgn = ::NewRgn();
+						::GetWindowRegion ( whichWindow, kWindowStructureRgn, structRgn );
+						Rect structRgnBounds;
+						::GetRegionBounds ( structRgn, &structRgnBounds );
+						wTitleHeight = windRect.top - 1 - structRgnBounds.top;
+						::DisposeRgn ( structRgn );
 #else
-					wTitleHeight = windRect.top - 1 - (*(wPeek->strucRgn))->rgnBBox.top;
+						wTitleHeight = windRect.top - 1 - (*(wPeek->strucRgn))->rgnBBox.top;
 #endif
-					windRect.top -= wTitleHeight;
-					gdNthDevice = GetDeviceList();
-					while (gdNthDevice)
-					{
-						if (TestDeviceAttribute(gdNthDevice, screenDevice))
-							if (TestDeviceAttribute(gdNthDevice, screenActive))
-							{
-								sectFlag = SectRect(&windRect, &(**gdNthDevice).gdRect, &theSect);
-								sectArea = (theSect.right - theSect.left) * (theSect.bottom - theSect.top);
-								if (sectArea > greatestArea)
+						windRect.top -= wTitleHeight;
+						gdNthDevice = GetDeviceList();
+						while (gdNthDevice)
+						{
+							if (TestDeviceAttribute(gdNthDevice, screenDevice))
+								if (TestDeviceAttribute(gdNthDevice, screenActive))
 								{
-									greatestArea = sectArea;
-									gdZoomDevice = gdNthDevice;
+									sectFlag = SectRect(&windRect, &(**gdNthDevice).gdRect, &theSect);
+									sectArea = (theSect.right - theSect.left) * (theSect.bottom - theSect.top);
+									if (sectArea > greatestArea)
+									{
+										greatestArea = sectArea;
+										gdZoomDevice = gdNthDevice;
+									}
 								}
-							}
-						gdNthDevice = GetNextDevice(gdNthDevice);
-					}
-					if (gdZoomDevice == GetMainDevice())
-						wTitleHeight += GetMBarHeight();
-					tempRect = (**gdZoomDevice).gdRect;
-					SetRect(&zoomRect,
-						tempRect.left + 3,
-						tempRect.top + wTitleHeight + 3,
-						tempRect.right - 64,
-						tempRect.bottom - 3);
+							gdNthDevice = GetNextDevice(gdNthDevice);
+						}
+						if (gdZoomDevice == GetMainDevice())
+							wTitleHeight += GetMBarHeight();
+						tempRect = (**gdZoomDevice).gdRect;
+						SetRect(&zoomRect,
+							tempRect.left + 3,
+							tempRect.top + wTitleHeight + 3,
+							tempRect.right - 64,
+							tempRect.bottom - 3);
 #if TARGET_CARBON
-					::SetWindowStandardState ( whichWindow, &zoomRect );
+						::SetWindowStandardState ( whichWindow, &zoomRect );
 #else
-					(**(WStateDataHandle)(wPeek->dataHandle)).stdState = zoomRect;
+						(**(WStateDataHandle)(wPeek->dataHandle)).stdState = zoomRect;
 #endif
+					}
+				
+					SetPort(savePort);
+					
+					// !!!	Do not call ZoomWindow before calling DispatchOSEventToRaptor
+					// 		otherwise nsMacEventHandler::HandleMouseDownEvent won't get
+					//		the right partcode for the click location
+					
+					DispatchOSEventToRaptor(anEvent, whichWindow);
 				}
-				
-				SetPort(savePort);
-				
-				// !!!	Do not call ZoomWindow before calling DispatchOSEventToRaptor
-				// 		otherwise nsMacEventHandler::HandleMouseDownEvent won't get
-				//		the right partcode for the click location
-				
-				DispatchOSEventToRaptor(anEvent, whichWindow);
-				
 				break;
 	}
 }
