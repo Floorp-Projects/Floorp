@@ -1201,7 +1201,7 @@ static eHTMLTags gTagSet2[]={
   eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
   eHTMLTag_embed,
   eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
-  eHTMLTag_kbd,       
+  eHTMLTag_kbd,        
 
   eHTMLTag_label,     eHTMLTag_layer,     eHTMLTag_map,       eHTMLTag_newline,
   eHTMLTag_nobr,      eHTMLTag_object,    eHTMLTag_p, 
@@ -1338,13 +1338,17 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         break;
 
       case eHTMLTag_caption:    case eHTMLTag_center:
-      case eHTMLTag_dd:         case eHTMLTag_dir:
+      case eHTMLTag_dir:
       case eHTMLTag_div:        case eHTMLTag_form:
       case eHTMLTag_label:      case eHTMLTag_legend:
       case eHTMLTag_menu:       case eHTMLTag_noscript:
       case eHTMLTag_ol:         case eHTMLTag_ul:
       case eHTMLTag_embed:      case eHTMLTag_noembed:
         result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+        break;
+
+      case eHTMLTag_dd:
+        result=(eHTMLTag_dt==aChild) ? PR_FALSE: FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_colgroup:
@@ -1543,6 +1547,7 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const {
 
   switch(aParent) {
     case eHTMLTag_td:
+    case eHTMLTag_th:
       result=CanContain(aParent,aChild);
       break;
 

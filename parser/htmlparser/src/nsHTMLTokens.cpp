@@ -133,14 +133,6 @@ PRInt32 CStartToken::GetTypeID(){
     char cbuf[20];
     tmp.ToCString(cbuf, sizeof(cbuf));
     mTypeID = NS_TagToEnum(cbuf);
-    switch(mTypeID) {
-      case eHTMLTag_dir:
-      case eHTMLTag_menu:
-        mTypeID=eHTMLTag_ul;
-        break;
-      default:
-        break;
-    }
   }
   return mTypeID;
 }
