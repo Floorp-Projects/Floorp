@@ -1723,7 +1723,11 @@ function scrollDown ()
     window.frames[0].scrollTo(0, window.frames[0].document.height);
 }
 
-function notifyActivity (source)
+/* valid values for |what| are "superfluous", "activity", and "attention".
+ * final value for state is dependant on priority of the current state, and the
+ * new state. the priority is: normal < superfluous < activity < attention.
+ */
+function setTabState (source, what)
 {
     if (typeof source != "object")
         source = client.viewsArray[source].source;
@@ -1733,24 +1737,44 @@ function notifyActivity (source)
     
     if ("currentObject" in client && client.currentObject != source)
     {
-        if (tb.getAttribute ("state") == "normal")
-        {       
-            tb.setAttribute ("state", "activity");
-            if (!(vk in client.activityList))
+        var state = tb.getAttribute ("state");
+        if (state == what)
+        {
+            /* if the tab state has an equal priority to what we are setting
+             * then blink it */
+            tb.setAttribute ("state", "normal");
+            setTimeout (setTabState, 200, vk, what);
+        }
+        else
+        {
+            if (state == "normal" || state == "superfluous" ||
+               (state == "activity" && what == "attention"))
             {
-                client.activityList[vk] = "+";
+                /* if the tab state has a lower priority than what we are
+                 * setting, change it to the new state */
+                tb.setAttribute ("state", what);
+                /* we only change the activity list if priority has increased */
+                if (what == "attention")
+                   client.activityList[vk] = "!";
+                else if (what == "activity")
+                    client.activityList[vk] = "+";
+                else
+                {
+                   /* this is functionally equivalent to "+" for now */
+                   client.activityList[vk] = "-";
+                }
                 updateTitle();
             }
+            else
+            {
+                /* the current state of the tab has a higher priority than the
+                 * new state.
+                 * blink the new lower state quickly, then back to the old */
+                tb.setAttribute ("state", what);
+                setTimeout (setTabState, 200, vk, state);
+            }
         }
-        else if (tb.getAttribute("state") == "activity")
-            /* if act light is already lit, blink it real quick */
-        {
-            tb.setAttribute ("state", "normal");
-            setTimeout ("notifyActivity(" + vk + ");", 200);
-        }
-        
     }
-    
 }
 
 function notifyAttention (source)
@@ -2168,7 +2192,7 @@ function __display(message, msgtype, sourceObj, destObj)
 
     /* isImportant means to style the messages as important, and flash the
      * window, getAttention means just flash the window. */
-    var isImportant = false, getAttention = false;
+    var isImportant = false, getAttention = false, isSuperfluous = false;
     var viewType = this.TYPE;
     var code;
     var msgRow = document.createElementNS("http://www.w3.org/1999/xhtml",
@@ -2276,6 +2300,7 @@ function __display(message, msgtype, sourceObj, destObj)
     }
     else
     {
+        isSuperfluous = true;
         if (!client.debugMode && msgtype in client.responseCodeMap)
         {
             code = client.responseCodeMap[msgtype];
@@ -2353,9 +2378,18 @@ function __display(message, msgtype, sourceObj, destObj)
 
     addHistory (this, msgRow, canMergeData, canCollapseRow);
     if (isImportant || getAttention)
-        notifyAttention(this);
+    {
+        setTabState(this, "attention");
+        if (client.FLASH_WINDOW)
+            window.GetAttention();
+    }
     else
-        notifyActivity (this);
+    {
+        if (isSuperfluous)
+            setTabState(this, "superfluous");
+        else
+            setTabState(this, "activity");
+    }
 
     if (isImportant && client.COPY_MESSAGES)
     {
