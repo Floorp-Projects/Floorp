@@ -46,7 +46,7 @@ Rights Reserved.
 <!ENTITY saveAsTemplateCmd.accesskey	"t">  
 <!ENTITY getNewMsgCmd.label				"Get New Messages">  
 <!-- LOCALIZATION NOTE getNewMsgCmd.accesskey			: DONT_TRANSLATE -->  
-<!ENTITY getNewMsgCmd.accesskey			"g">  
+<!ENTITY getNewMsgCmd.accesskey			"m">  
 <!ENTITY sendUnsentCmd.label			"Send Unsent Messages">  
 <!-- LOCALIZATION NOTE sendUnsentCmd.accesskey		: DONT_TRANSLATE -->  
 <!ENTITY sendUnsentCmd.accesskey		"d">  
@@ -55,9 +55,13 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE subscribeCmd.accesskey			: DONT_TRANSLATE -->  
 <!ENTITY subscribeCmd.accesskey			"b">  
 <!ENTITY renameFolder.label				"Rename Folder...">
+<!ENTITY renameFolder.accesskey			"r">
 <!ENTITY compactFolder.label			"Compact This Folder">
+<!ENTITY compactFolder.accesskey		"t">
 <!ENTITY emptyTrashCmd.label			"Empty Trash">  
-<!ENTITY importCmd.label				".Import...">  
+<!ENTITY emptyTrashCmd.accesskey		"y">
+<!ENTITY importCmd.label				"Import...">  
+<!ENTITY importCmd.accesskey			"i">  
 <!ENTITY offlineMenu.label				".Offline"> 
 <!ENTITY workOfflineCmd.label			".Work Offline">  
 <!ENTITY syncCmd.label					".Synchronize">  
@@ -65,6 +69,7 @@ Rights Reserved.
 <!ENTITY getFlaggedCmd.label			".Get Flagged Messages">  
 <!ENTITY printPreviewCmd.label			".Print Preview">  
 <!ENTITY printCmd.label					"Print">  
+<!ENTITY printCmd.accesskey				"p">  
 
 <!-- Edit Menu -->
 <!ENTITY deleteMsgCmd.label "Delete Message">  
@@ -74,8 +79,10 @@ Rights Reserved.
 <!ENTITY selectFlaggedCmd.label ".Flagged Messages">  
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
 <!ENTITY filtersCmd.label "Message Filters...">  
+<!ENTITY filtersCmd.accesskey "m">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings">
+<!ENTITY accountManagerCmd.accesskey "a">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
 <!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
 <!ENTITY undoMoveMsgCmd.label "Undo Move Message">
@@ -205,6 +212,7 @@ Rights Reserved.
 <!-- Go Menu -->
 
 <!ENTITY goMenu.label "Go"> 
+<!ENTITY goMenu.accesskey "g"> 
 <!ENTITY firstUnreadMsgCmd.label ".First Unread Message">  
 <!ENTITY firstFlaggedMsgCmd.label ".First Flagged Message">  
 <!ENTITY nextMenu.label "Next"> 
@@ -232,6 +240,7 @@ Rights Reserved.
 <!ENTITY backCmd.label ".Back">  
 <!ENTITY forwardCmd.label ".Forward">  
 <!ENTITY msgMenu.label "Message">  
+<!ENTITY msgMenu.accesskey "m">  
 <!ENTITY newMsgCmd.label "New Message">  
 <!ENTITY replyMsgCmd.label "Reply">
 <!ENTITY replyMsgCmd.accesskey	"r">

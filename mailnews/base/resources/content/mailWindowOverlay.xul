@@ -330,8 +330,12 @@ Rights Reserved.
 			 observes="cmd_newMessage"/>
 			<menu id="menu_New">
 				<menupopup id="menu_NewPopup">
-					<menuitem value="&newFolderCmd.label;" oncommand="MsgNewFolder();"/>
-					<menuitem value="&newAccountCmd.label;" oncommand="MsgAccountWizard();"/>
+					<menuitem value="&newFolderCmd.label;"
+                     oncommand="MsgNewFolder();"
+                     accesskey="&newFolderCmd.accesskey;"/>
+					<menuitem value="&newAccountCmd.label;"
+                     accesskey="&newAccountCmd.accesskey;"
+                     oncommand="MsgAccountWizard();"/>
 					<menuseparator/>
 					<menuitem id="menu_newNavigator"/>
 					<menuitem id="menu_newMessage"/>
@@ -342,36 +346,40 @@ Rights Reserved.
 			<menuitem value="&openAttachmentCmd.label;" disabled="true" oncommand="MsgOpenAttachment();"/>
 			<menuseparator/>
 			<menuitem id="menu_close"/>
-			<menu value="&saveAsMenu.label;" accessKey="&saveAsMenu.accesskey;">
+			<menu value="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
 				<menupopup>
 					<menuitem value="&saveAsFileCmd.label;"
-					 accessKey="&saveAsFileCmd.accesskey;"
+					 accesskey="&saveAsFileCmd.accesskey;"
 					 oncommand="MsgSaveAsFile();"/>
 					<menuitem value="&saveAsTemplateCmd.label;"
-					 accessKey="&saveAsTemplateCmd.accesskey;"
+					 accesskey="&saveAsTemplateCmd.accesskey;"
 					 oncommand="MsgSaveAsTemplate();"/>
 				</menupopup>
 			</menu>
 			<menuseparator/>
 			<menuitem value="&getNewMsgCmd.label;"
-			 accessKey="&getNewMsgCmd.accesskey;"
+			 accesskey="&getNewMsgCmd.accesskey;"
 			 oncommand="MsgGetMessage();"/>
 			<menuitem value="&sendUnsentCmd.label;"
-			 accessKey="&sendUnsentCmd.accesskey;"
+			 accesskey="&sendUnsentCmd.accesskey;"
 			 oncommand="MsgSendUnsentMsg();"/>
-			<menuitem value="&emptyTrashCmd.label;" oncommand="MsgEmptyTrash();"/>
+			<menuitem value="&emptyTrashCmd.label;"
+             accesskey="&emptyTrashCmd.accesskey;"
+             oncommand="MsgEmptyTrash();"/>
 			<menuitem value="&subscribeCmd.label;"
-			 accessKey="&subscribeCmd.accesskey;"
+			 accesskey="&subscribeCmd.accesskey;"
 			 oncommand="MsgSubscribe();"/>
 			<menuseparator/>
-			<menuitem value="&renameFolder.label;" oncommand="MsgRenameFolder();"/>
-			<menuitem value="&compactFolder.label;" oncommand="MsgCompactFolder();"/>
+			<menuitem value="&renameFolder.label;"
+             accesskey="&renameFolder.accesskey;"
+             oncommand="MsgRenameFolder();"/>
+			<menuitem value="&compactFolder.label;" accesskey="&compactFolder.accesskey;" oncommand="MsgCompactFolder();"/>
 			<menuseparator/>
-			<menuitem value="&importCmd.label;" disabled="true" oncommand="MsgImport();"/>
+			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
 			<menuseparator/>
 			<menuitem observes="cmd_pageSetup"/>
 			<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
-			<menuitem value="&printCmd.label;" oncommand="PrintEnginePrint();"/>
+			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="PrintEnginePrint();"/>
 			<menuseparator/>
 		</menupopup>
 	</menu>
@@ -391,10 +399,12 @@ Rights Reserved.
 			<menuitem value="&selectThreadCmd.label;" disabled="true" oncommand="MsgSelectThread();"/>
 			<menuitem value="&selectFlaggedCmd.label;" disabled="true" oncommand="MsgSelectFlaggedMsg();"/>
 			<menuseparator/>
-			<menuitem value="&filtersCmd.label;" oncommand="MsgFilters();"/>
+			<menuitem value="&filtersCmd.label;"
+                      accesskey="&filtersCmd.accesskey;"
+                      oncommand="MsgFilters();"/>
 			<menuitem value="&folderPropsCmd.label;" disabled="true" oncommand="MsgFolderProperties();"/>
 			<menuseparator/>
-			<menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
+			<menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager();"/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
 		</menupopup>
 	</menu>
@@ -563,14 +573,14 @@ END of Deprecated -->
 			<menuseparator/>
 			-->
 			<menuitem value="&searchInternetCmd.label;" disabled="true" oncommand="MsgSearchInternet();"/>
-			<menuitem value="&searchMailCmd.label;" oncommand="MsgSearchMessages();" accesskey="&searchMailCmd.accesskey;"/>
+			<menuitem value="&searchMailCmd.label;" disabled="true" oncommand="MsgSearchMessages();" accesskey="&searchMailCmd.accesskey;"/>
 			<menuitem value="&searchBookmarksCmd.label;" disabled="true" oncommand="MsgSearchBookmarks();"/>
 			<menuitem value="&searchPeopleCmd.label;" disabled="true" oncommand="MsgSearchPeople();"/>
 			<menuseparator/>
 			<menuitem value="&searchLocalCmd.label;" disabled="true" oncommand="MsgSearchLocal();"/>
 		</menupopup>
 	</menu>
-	<menu value="&goMenu.label;">
+	<menu value="&goMenu.label;" accesskey="&goMenu.accesskey;">
 		<menupopup>
 			<menuitem value="&firstUnreadMsgCmd.label;" disabled="true" oncommand="MsgFirstUnreadMessage();"/>
 			<menuitem value="&firstFlaggedMsgCmd.label;" disabled="true" oncommand="MsgFirstFlaggedMessage();"/>
@@ -596,7 +606,7 @@ END of Deprecated -->
 			<menuitem value="&forwardCmd.label;" disabled="true" oncommand="MsgGoForward();"/>
 		</menupopup>
 	</menu>
-<menu value="&msgMenu.label;">
+<menu value="&msgMenu.label;" accesskey="&msgMenu.accesskey;">
 	<menupopup>
 		<menuitem value="&newMsgCmd.label;" oncommand="MsgNewMessage(event);"/>
 		<menuitem value="&replyMsgCmd.label;" 
