@@ -169,7 +169,7 @@ NS_IMETHODIMP nsRssIncomingServer::GetLocalStoreType(char **type)
 
 NS_IMETHODIMP nsRssIncomingServer::GetAccountManagerChrome(nsAString& aResult)
 {
-    aResult = ToNewUnicode(NS_LITERAL_STRING("am-newsblog.xul"));
+    aResult.AssignLiteral("am-newsblog.xul");
     return NS_OK;
 }
 
