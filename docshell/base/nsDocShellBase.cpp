@@ -286,6 +286,10 @@ NS_IMETHODIMP nsDocShellBase::SelectAll()
 NS_IMETHODIMP nsDocShellBase::CopySelection()
 {
    NS_ENSURE_STATE(mContentViewer);
+   PRBool copyable;
+   NS_ENSURE_SUCCESS(GetCopyable(&copyable), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(copyable, NS_ERROR_UNEXPECTED);
+
    nsCOMPtr<nsIPresShell> presShell;
    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
@@ -300,8 +304,8 @@ NS_IMETHODIMP nsDocShellBase::CopySelection()
 NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool *aCopyable)
 {
    NS_ENSURE_ARG_POINTER(aCopyable);
-
    NS_ENSURE_STATE(mContentViewer);
+
    nsCOMPtr<nsIPresShell> presShell;
    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
@@ -324,6 +328,7 @@ NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool *aCopyable)
 
 NS_IMETHODIMP nsDocShellBase::CutSelection()
 {
+   NS_ENSURE_STATE(mContentViewer);
    PRBool cutable;
    NS_ENSURE_SUCCESS(GetCutable(&cutable), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(cutable, NS_ERROR_UNEXPECTED);
@@ -348,6 +353,11 @@ NS_IMETHODIMP nsDocShellBase::GetCutable(PRBool* aCutable)
 
 NS_IMETHODIMP nsDocShellBase::Paste()
 {
+   NS_ENSURE_STATE(mContentViewer);
+   PRBool pasteable;
+   NS_ENSURE_SUCCESS(GetPasteable(&pasteable), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(pasteable, NS_ERROR_UNEXPECTED);
+   
    //XXX Implement
    return NS_ERROR_FAILURE;
 }
@@ -370,6 +380,11 @@ NS_IMETHODIMP nsDocShellBase::GetPasteable(PRBool* aPasteable)
 
 NS_IMETHODIMP nsDocShellBase::Save()
 {
+   NS_ENSURE_STATE(mContentViewer);
+   PRBool saveable;
+   NS_ENSURE_SUCCESS(GetSaveable(&saveable), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(saveable, NS_ERROR_UNEXPECTED);
+
    //XXX First Check
    return NS_ERROR_FAILURE;
 } 
@@ -389,6 +404,11 @@ NS_IMETHODIMP nsDocShellBase::GetSaveable(PRBool* saveable)
 
 NS_IMETHODIMP nsDocShellBase::Print()
 {
+   NS_ENSURE_STATE(mContentViewer);
+   PRBool printable;
+   NS_ENSURE_SUCCESS(GetPrintable(&printable), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(printable, NS_ERROR_UNEXPECTED);
+
    //XXX First Check
    return NS_ERROR_FAILURE;
 } 
