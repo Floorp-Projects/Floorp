@@ -845,6 +845,10 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 	if (NS_FAILED(rv)) return rv;
 	if (!accountManager) return NS_ERROR_FAILURE;
 
+#ifdef DEBUG_sspitzer
+	printf("todo, for bug #36661, are there any accounts?  if not, see if you can migrate.  if not, popup the wizard for this server?\n");
+#endif
+
 	nsCOMPtr <nsIMsgAccount> account;
 	rv = accountManager->CreateAccount(getter_AddRefs(account));
 	if (NS_FAILED(rv)) return rv;
