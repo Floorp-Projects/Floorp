@@ -515,17 +515,18 @@ nsNSSComponent::PrefChanged(const char* prefName)
   }
 }
 
+#define PROFILE_BEFORE_CHANGE_TOPIC NS_LITERAL_STRING("profile-before-change").get()
+
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const PRUnichar *aTopic, 
                         const PRUnichar *someData)
 {
-#if 0
   if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
     //The profile is about to change, shut down NSS
     NSS_Shutdown();
     mNSSInitialized = PR_FALSE;
   }
-#endif
+
   return NS_OK;
 }
 
