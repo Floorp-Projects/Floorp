@@ -99,6 +99,7 @@ function verifyAccounts() {
         try {
             dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
             am.UpgradePrefs();
+            refreshFolderPane();
         }
         catch (ex) {
             // upgrade prefs failed, so open account wizard
