@@ -128,7 +128,9 @@ void nsNativeViewerApp::DispatchMenuItemWithoutWindow(PRInt32 menuResult)
 				default:
 					Str255 daName;
 					GetMenuItemText(GetMenuHandle(menu_Apple), menuItem, daName);
+					#ifndef TARGET_CARBON
 					OpenDeskAcc(daName);
+					#endif
 					break;
 			}
 			break;
@@ -171,7 +173,7 @@ nsNativeBrowserWindow::InitNativeWindow()
 	// this is where we get a chance to set up the window refCon
 	NS_PRECONDITION(nsnull != mWindow, "Null window in InitNativeWindow");
 	
-	WindowPtr		wind = (WindowPtr)mWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+	WindowPtr		wind = (WindowPtr)mWindow->GetNativeData(NS_NATIVE_DISPLAY);
 	if (!wind) return NS_ERROR_NULL_POINTER;
 
 	::SetWRefCon(wind, (long)this);
@@ -223,7 +225,9 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				default:
 					Str255 daName;
 					GetMenuItemText(GetMenuHandle(menu_Apple), menuItem, daName);
+					#ifndef TARGET_CARBON
 					OpenDeskAcc(daName);
+					#endif
 					break;
 			}
 			break;
