@@ -998,10 +998,10 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	NotifyAnnouncerGoingAway();
 	// OK, remove from cache first and close the store.
 //	RemoveFromCache(this);
-        // clear out db ptr in folder info; it's about to be invalid
-  if (m_dbFolderInfo)
-    m_dbFolderInfo->m_mdb = nsnull;
 	NS_IF_RELEASE(m_dbFolderInfo);
+        // clear out db ptr in folder info; it might have just become invalid
+        if (m_dbFolderInfo)
+          m_dbFolderInfo->m_mdb = nsnull;
 	m_dbFolderInfo = nsnull;
 
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
@@ -1017,7 +1017,6 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	if (m_mdbStore)
 	{
 		m_mdbStore->CloseMdbObject(m_mdbEnv);
-    m_mdbEnv = nsnull;
 		m_mdbStore = nsnull;
 	}
 	Release();
