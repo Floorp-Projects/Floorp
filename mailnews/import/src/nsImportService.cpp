@@ -660,7 +660,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 	rv = module->GetName( &pName);
 	if (NS_SUCCEEDED( rv)) {
 		theTitle = pName;
-		delete [] pName;
+                nsMemory::Free(pName);
 	}
 	else
 		theTitle.Assign(NS_LITERAL_STRING("Unknown"));
@@ -668,7 +668,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 	rv = module->GetDescription( &pName);
 	if (NS_SUCCEEDED( rv)) {
 		theDescription = pName;
-		delete [] pName;
+                nsMemory::Free(pName);
 	}
 	else
 		theDescription.Assign(NS_LITERAL_STRING("Unknown description"));
@@ -756,7 +756,7 @@ void nsImportModuleList::ClearList( void)
 			m_pList[i] = nsnull;
 		}
 		m_count = 0;
-		nsMemory::Free( m_pList);
+		delete [] m_pList;
 		m_pList = nsnull;
 		m_alloc = 0;
 	}
