@@ -16,7 +16,7 @@ sub Help {
         'cookie' => 'To get a fortune cookie, just tell me \'cookie\'. To set a new fortune cookie, see \'new\' (or \'add\'). To find out how many cookies are left, use \'cookie status\'.',
         'new' => 'To set a new fortune cookie, say \'new cookie\' followed by the text, e.g. \'new cookie: you will have a nice day\' or whatever. The string %from% will be replaced by the name of whoever requests the cookie.',
         'add' => 'To add a new fortune cookie, say \'add cookie\' followed by the text, e.g. \'add cookie: you will have a nice day\' or whatever. The string %from% will be replaced by the name of whoever requests the cookie.',
-        'fetch' => 'The command \'fetch cookies from <uri>\' will add each line in <uri> to the cookie list. Cookie lists must start with one line that reads \'FORTUNE COOKIE FILE\'. Blank lines and lines starting with a hash (\'#\') are ignored.',
+        'fetch' => 'The command \'fetch cookies from <uri>\' will add each line in <uri> to the cookie list. Cookie lists must start with one line that reads \'DATA FILE: cookies\' and must be at most 100 lines long. Blank lines and lines starting with a hash (\'#\') are ignored.',
     };
 }
 
@@ -58,10 +58,14 @@ sub Told {
             $self->say($event, 'I\'m sorry, I\'ve run out of cookies! You\'ll have to wait for me to bake some more.');
         }
     } elsif ($message =~ /^\s*(?:new|add)\s+(?:fortune\s+cookie|fortune|cookie)[-!:,;.\s]+(.....+?)\s*$/osi) {
-        push(@{$self->{'cookies'}}, $1);
-        my $count = scalar(@{$self->{'cookies'}});
-        $self->say($event, "$event->{'from'}: Thanks! I have added that fortune cookie to my recipe book. I now have $count fortunes!");
-        $self->saveConfig();
+        if (not $self->findEntry('cookies', $1)) {
+            push(@{$self->{'cookies'}}, $1);
+            my $count = scalar(@{$self->{'cookies'}});
+            $self->say($event, "$event->{'from'}: Thanks! I have added that fortune cookie to my recipe book. I now have $count fortunes!");
+            $self->saveConfig();
+        } else {
+            $self->say($event, "$event->{'from'}: I'm pretty sure I already know that one.");
+        }
     } elsif ($message =~ /^\s*cookie\s+(?:report|status|status\s+report)(?:\s+please)?[?!.1]*\s*$/osi) {
         my $count = scalar(@{$self->{'cookies'}});
         $self->say($event, "My cookie basket has $self->{'cookiesLeft'} cookies left out of possible $self->{'cookiesMax'}. I have $count fortunes in my recipe book.");
@@ -83,6 +87,19 @@ sub GetNext {
     return $reply;
 }
 
+sub findEntry {
+    my $self = shift;
+    my ($list, $cookie) = @_;
+    $cookie =~ s/[\s,;.!?:]/_/gos;
+    $cookie = quotemeta($cookie);
+    $cookie =~ s/_/.*/gos;
+    my $regexp = qr/^$cookie$/is;
+    foreach my $text (@{$self->{$list}}) {
+        return 1 if $text =~ /$regexp/;
+    }
+    return 0;
+}
+
 sub Scheduled {
     my $self = shift;
     my ($event, @data) = @_;
@@ -99,20 +116,26 @@ sub GotURI {
     my ($event, $uri, $output, $type) = @_;
     if ($type eq 'cookies') {
         my @output = split(/[\n\r]+/os, $output);
-        if ((@output) and ($output[0] eq 'FORTUNE COOKIE FILE')) {
-            my $count = 0;
-            foreach (@output[1..$#output]) {
-                if (/^[^#].+$/os) {
-                    push(@{$self->{'cookies'}}, $_);
-                    $count++;
+        if ((@output) and ($output[0] eq "DATA FILE: $type")) {
+            if (@output <= 100) {
+                my $count = 0;
+                foreach (@output[1..$#output]) {
+                    if (/^[^#].+$/os and length($_) < 255 and not $self->findEntry($type, $_)) {
+                        push(@{$self->{$type}}, $_);
+                        $count++;
+                    }
                 }
+                my $total = scalar(@{$self->{$type}});
+                my $s = $count > 1 ? 's' : '';
+                if ($type eq 'cookies') {
+                    $self->say($event, "$event->{'from'}: Thanks! I have added $count fortune cookie$s to my recipe book. I now have $total fortunes!");
+                }
+                $self->saveConfig();
+            } else {
+                $self->say($event, "$event->{'from'}: Sorry, but you can only import 100 lines at a time.");
             }
-            my $total = scalar(@{$self->{'cookies'}});
-            my $s = $count > 1 ? 's' : '';
-            $self->say($event, "$event->{'from'}: Thanks! I have added $count fortune cookie$s to my recipe book. I now have $total fortunes!");
-            $self->saveConfig();
         } else {
-            $self->say($event, "$event->{'from'}: Sorry, but that's not a fortune cookie file.");
+            $self->say($event, "$event->{'from'}: Sorry, but that's not a valid data file.");
         }
     } else {
         return $self->SUPER::GotURI(@_);
