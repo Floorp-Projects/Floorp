@@ -401,6 +401,7 @@
         <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
           <menupopup id="taskPopup">
         
+
         <!-- Moving the messengerCmd menu item item to the Window menu on the Mac -->
 #ifndef XP_MACOSX
             <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
@@ -419,7 +420,7 @@
         </menu>
 
 #ifdef XP_MACOSX
-        <menu id="windowMenu" label="&windowMenu.label;" accesskey="&windowMenu.accesskey;"
+        <menu id="windowMenu" label="&windowMenu.label;"
             datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
             onpopupshown="checkFocusedWindow();">
             <template>

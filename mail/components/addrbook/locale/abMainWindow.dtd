@@ -227,6 +227,7 @@
 <!ENTITY statusText.label "">
 
 <!--  Mac OS X Window Menu -->
+<!ENTITY windowMenu.label "Window">
 <!ENTITY minimizeWindow.key "m">
 <!ENTITY minimizeWindow.label "Minimize Window">
 <!ENTITY bringAllToFront.label "Bring All to Front">
