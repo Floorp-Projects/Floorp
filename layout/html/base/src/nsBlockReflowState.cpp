@@ -994,7 +994,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   }
   else {
     isLeftFloater = PR_FALSE;
-    if (NS_UNCONSTRAINEDSIZE != mAvailSpaceRect.XMost()) {
+    if (NS_UNCONSTRAINEDSIZE != mAvailSpaceRect.width) {
       nsIFrame* prevInFlow;
       floater->GetPrevInFlow(&prevInFlow);
       if (prevInFlow) {
@@ -1011,7 +1011,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
     }
     else {
       okToAddRectRegion = PR_FALSE;
-      region.x = mAvailSpaceRect.x;
+      region.x = NS_UNCONSTRAINEDSIZE - region.width;
     }
   }
   *aIsLeftFloater = isLeftFloater;
