@@ -304,6 +304,7 @@
         <rdf:li> <rdf:Description ID="menu-view-stop" nc:name="Stop" nc:link="menu_reference.xhtml#stop"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-reload" nc:name="Reload" nc:link="menu_reference.xhtml#reload"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-text-size" nc:name="Text Size" nc:link="menu_reference.xhtml#text_size"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-page-style" nc:name="Page Style" nc:link="menu_reference.xhtml#page_style"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-character-encoding" nc:name="Character Encoding" nc:link="menu_reference.xhtml#character_encoding"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-page-source" nc:name="Page Source" nc:link="menu_reference.xhtml#page_source"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-full-screen" nc:name="Full Screen" nc:link="menu_reference.xhtml#full_screen"/> </rdf:li>
@@ -336,6 +337,15 @@
         <rdf:li> <rdf:Description ID="menu-view-text-size-increase" nc:name="Increase" nc:link="menu_reference.xhtml#increase_text_size"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-text-size-decrease" nc:name="Decrease" nc:link="menu_reference.xhtml#decrease_text_size"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-text-size-reset" nc:name="Normal" nc:link="menu_reference.xhtml#reset_text_size"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#menu-view-page-style">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="menu-view-page-style-no-style" nc:name="No Style" nc:link="menu_reference.xhtml#no_style"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-page-style-basic-page-style" nc:name="Basic Page Style" nc:link="menu_reference.xhtml#basic_page_style"/> </rdf:li>      
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
