@@ -131,8 +131,7 @@ void* AtomImpl::operator new ( size_t size, const nsAReadableString& aString )
 NS_IMETHODIMP 
 AtomImpl::ToString(nsAWritableString& aBuf) /*FIX: const */
 {
-  aBuf.SetLength(0);
-  aBuf.Append(mString, nsCRT::strlen(mString));
+  aBuf.Assign(mString);
   return NS_OK;
 }
 
