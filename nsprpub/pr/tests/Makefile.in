@@ -75,6 +75,7 @@ CSRCS =             \
 	fileio.c		\
 	foreign.c	    \
 	forktest.c	    \
+	formattm.c	    \
 	fsync.c	        \
 	getai.c			\
 	gethost.c		\

@@ -114,6 +114,7 @@ exit
 fdcach
 fileio
 foreign
+formattm
 fsync
 gethost
 getproto
