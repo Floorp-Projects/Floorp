@@ -25,14 +25,14 @@
 #include <math.h>
 #include <strings.h>
 #include "nsRenderingContextXP.h"
-#include "nsFontMetricsXP.h"
+#include "nsFontMetricsXlib.h"
 #include "libimg.h"
 #include "nsDeviceContextXP.h"
 #include "nsXPrintContext.h"
 #include "nsICharRepresentable.h"
+#include "xlibrgb.h"
 #include "nsIRegion.h"      
 #include "prmem.h"
-
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
@@ -40,81 +40,36 @@ static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static PRLogModuleInfo *RenderingContextXpLM = PR_NewLogModule("nsRenderingContextXp");
 #endif /* PR_LOGGING */ 
 
+static nsGCCache *gcCache = nsnull;
 
-// Macro to convert from TWIPS (1440 per inch) to POINTS (72 per inch)
-
-#define FLAG_CLIP_VALID       0x0001
-#define FLAG_CLIP_CHANGED     0x0002
-#define FLAG_LOCAL_CLIP_VALID 0x0004
-
-#define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
-
-/** ---------------------------------------------------
- * Do we really need to maintain the state here
- */
-class XP_State
+class GraphicsState
 {
 public:
-  XP_State();
-  XP_State(XP_State &aState);
-  ~XP_State();
+  GraphicsState();
+  ~GraphicsState();
 
-  XP_State        *mNext;
-  nsTransform2D   mMatrix;
-  nsRect          mLocalClip;
-  nsIFontMetrics  *mFontMetrics;
-  nscolor         mCurrentColor;
-  nscolor         mTextColor;
+  nsTransform2D  *mMatrix;
+  nsCOMPtr<nsIRegion> mClipRegion;
+  nscolor         mColor;
   nsLineStyle     mLineStyle;
-  PRInt32         mFlags;
+  nsIFontMetrics *mFontMetrics;
 };
 
-/** ---------------------------------------------------
- *  Default Constructor for the state
- */
-XP_State :: XP_State()
+MOZ_DECL_CTOR_COUNTER(GraphicsState)
+
+GraphicsState::GraphicsState()
 {
-  mNext = nsnull;
-  mMatrix.SetToIdentity();  
-  // mMatrix.SetToScale(1.0, 1.0);  
-  mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
-  mFontMetrics = nsnull;
-  mCurrentColor = NS_RGB(0, 0, 0); /* X11 intial bg color is always _black_...
-                                    * ...but we should query that from 
-                                    * Xserver instead of guessing that...
-                                    */
-  mTextColor = NS_RGB(0, 0, 0);
+  MOZ_COUNT_CTOR(GraphicsState);
+  mMatrix = nsnull;
+  mColor = NS_RGB(0, 0, 0);
   mLineStyle = nsLineStyle_kSolid;
-}
-
-/** ---------------------------------------------------
- *  Constructor of a state using the passed in state to initialize to
- *  Default Constructor for the state
- */
-XP_State :: XP_State(XP_State &aState):mMatrix(&aState.mMatrix),mLocalClip(aState.mLocalClip)
-{
-  mNext = &aState;
-  // mClipRegion = NULL;
-  mCurrentColor = aState.mCurrentColor;
   mFontMetrics = nsnull;
-  //mFont = NULL;
-  mFlags = ~FLAGS_ALL;
-  mTextColor = aState.mTextColor;
-  mLineStyle = aState.mLineStyle;
 }
 
-/** ---------------------------------------------------
- *  Destructor for a state
- */
-XP_State :: ~XP_State()
+GraphicsState::~GraphicsState()
 {
-  //if (NULL != mClipRegion){
-    //VERIFY(::DeleteObject(mClipRegion));
-    //mClipRegion = NULL;
-  //}
-
-  //don't delete this because it lives in the font metrics
-  //mFont = NULL;
+  MOZ_COUNT_DTOR(GraphicsState);
+  NS_IF_RELEASE(mFontMetrics);
 }
 
 // This is not being used
@@ -127,20 +82,29 @@ static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 nsRenderingContextXp :: nsRenderingContextXp()
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::nsRenderingContextXp()\n"));
-
+  
   NS_INIT_REFCNT();
+  mPrintContext =    nsnull;
+  mContext          = nsnull;
+  mFontMetrics      = nsnull;
+  mTranMatrix       = nsnull;
+  mP2T              = 1.0f;
+  mStateCache       = new nsVoidArray();
+  mCurrentFont      = nsnull;
+  mCurrentLineStyle = nsLineStyle_kSolid;
+  mCurrentColor     = NS_RGB(0, 0, 0); /* X11 intial bg color is always _black_...
+                                        * ...but we should query that from 
+                                        * Xserver instead of guessing that...
+                                        */
+  mDisplay          = nsnull;
+  mScreen           = nsnull;
+  mVisual           = nsnull;
+  mDepth            = 0;
+  mGC               = nsnull;
 
-  mContext = nsnull;
-  mFontMetrics = nsnull;
+  mFunction         = GXcopy;
 
-  mStateCache = new nsVoidArray();
-  mPrintContext = nsnull;
-  mCurrentColor = NS_RGB(0, 0, 0); /* X11 intial bg color is always _black_...
-                                    * ...but we should query that from 
-                                    * Xserver instead of guessing that...
-                                    */
   PushState();
-  mP2T = 1.0f;
 }
 
 /** ---------------------------------------------------
@@ -150,22 +114,24 @@ nsRenderingContextXp :: ~nsRenderingContextXp()
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::~nsRenderingContextXp()\n"));
 
-  if (nsnull != mStateCache){
+  NS_IF_RELEASE(mFontMetrics);
+  if (mStateCache) {
     PRInt32 cnt = mStateCache->Count();
 
-    while (--cnt >= 0){
-      XP_State *state = (XP_State *)mStateCache->ElementAt(cnt);
-      mStateCache->RemoveElementAt(cnt);
-
-      if (nsnull != state)
-        delete state;
+    while (--cnt >= 0) {
+      PRBool clipstate;
+      PopState(clipstate);
     }
-
     delete mStateCache;
     mStateCache = nsnull;
   }
 
-  mTranMatrix = nsnull;
+  if (mTranMatrix)
+    delete mTranMatrix;
+  NS_IF_RELEASE(mFontMetrics);
+  
+  if(nsnull != mGC)
+    mGC->Release();
 }
 
 /** ---------------------------------------------------
@@ -206,28 +172,51 @@ NS_IMPL_RELEASE(nsRenderingContextXp)
 NS_IMETHODIMP
 nsRenderingContextXp :: Init(nsIDeviceContext* aContext)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Init(nsIDeviceContext *)\n"));
+
   mContext = do_QueryInterface(aContext);
   if (mContext) {
      mContext->GetPrintContext(mPrintContext);
   }
-  NS_ASSERTION(nsnull != mContext,"Device context is null.");
+  NS_ASSERTION(nsnull != mContext, "Device context is null.");
 
+  mDisplay = mPrintContext->GetDisplay();
+  mScreen  = mPrintContext->GetScreen();
+  mVisual  = mPrintContext->GetVisual();
+  mDepth   = mPrintContext->GetDepth();
 
+  return CommonInit();
+}
+
+/*static*/ nsresult
+nsRenderingContextXp::Shutdown()
+{
+  delete gcCache;
+  gcCache = nsnull;
+  return NS_OK;
+}
+
+nsresult nsRenderingContextXp::CommonInit(void)
+{
+  // put common stuff in here.
   int x, y;
   unsigned int width, height, border, depth;
   Window root_win;
 
-  
-  XGetGeometry(mPrintContext->GetDisplay(),
-               mPrintContext->GetDrawable(),
+  Drawable drawable = mPrintContext->GetDrawable();
+
+  XGetGeometry(mDisplay, 
+               drawable, 
                &root_win,
-               &x,
-               &y,
-               &width,
-               &height,
-               &border,
+               &x, 
+               &y, 
+               &width, 
+               &height, 
+               &border, 
                &depth);
-  mClipRegion = new nsRegionXlib();
+
+  mClipRegion = do_QueryInterface(new nsRegionXlib());
+  if (!mClipRegion) return NS_ERROR_OUT_OF_MEMORY;
   mClipRegion->Init();
   mClipRegion->SetTo(0, 0, width, height);
 
@@ -235,19 +224,36 @@ nsRenderingContextXp :: Init(nsIDeviceContext* aContext)
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
   mTranMatrix->AddScale(app2dev, app2dev);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsRenderingContextXp::Reset(void)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Reset()\n"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::GetDeviceContext(nsIDeviceContext *&aContext)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetDeviceContext()\n"));
+  aContext = mContext;
+  NS_IF_ADDREF(aContext);
   return NS_OK;
 }
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  */
-NS_IMETHODIMP nsRenderingContextXp :: LockDrawingSurface(PRInt32 aX, PRInt32 aY,
+NS_IMETHODIMP nsRenderingContextXp :: LockDrawingSurface(
+                                             PRInt32 aX, PRInt32 aY,
                                              PRUint32 aWidth, PRUint32 aHeight,
                                              void **aBits, PRInt32 *aStride,
                                              PRInt32 *aWidthBytes, 
-                                                PRUint32 aFlags)
+                                             PRUint32 aFlags)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::LockDrawingSurface()\n"));
   PushState();
   return NS_OK;
 }
@@ -257,6 +263,7 @@ NS_IMETHODIMP nsRenderingContextXp :: LockDrawingSurface(PRInt32 aX, PRInt32 aY,
  */
 NS_IMETHODIMP nsRenderingContextXp :: UnlockDrawingSurface(void)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::UnlockDrawingSurface()\n"));
   PRBool clipstate;
   PopState(clipstate);
   return NS_OK;
@@ -269,7 +276,6 @@ NS_IMETHODIMP
 nsRenderingContextXp :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SelectOffScreenDrawingSurface()\n"));
-
   return NS_OK;
 }
 
@@ -290,6 +296,8 @@ nsRenderingContextXp :: GetDrawingSurface(nsDrawingSurface *aSurface)
 NS_IMETHODIMP
 nsRenderingContextXp :: GetHints(PRUint32& aResult)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetHints()\n"));
+
   PRUint32 result = 0;
   // Most X servers implement 8 bit text rendering alot faster than
   // XChar2b rendering. In addition, we can avoid the PRUnichar to
@@ -302,280 +310,287 @@ nsRenderingContextXp :: GetHints(PRUint32& aResult)
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  */
-NS_IMETHODIMP 
-nsRenderingContextXp :: Reset()
+NS_IMETHODIMP
+nsRenderingContextXp::PushState(void)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::PushState()\n"));
+  GraphicsState *state = new GraphicsState();
+
+  if (state == 0) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  state->mMatrix = mTranMatrix;
+  
+  mStateCache->AppendElement(state);
+  
+  if (nsnull == mTranMatrix)
+    mTranMatrix = new nsTransform2D();
+  else
+    mTranMatrix = new nsTransform2D(mTranMatrix);
+  
+  if (mClipRegion) {
+    state->mClipRegion = mClipRegion;
+    mClipRegion = do_QueryInterface(new nsRegionXlib());
+    if (!mClipRegion) return NS_ERROR_OUT_OF_MEMORY;
+    mClipRegion->Init();
+    mClipRegion->SetTo(*state->mClipRegion);
+  }
+  
+  NS_IF_ADDREF(mFontMetrics);
+  state->mFontMetrics = mFontMetrics;
+  state->mColor = mCurrentColor;
+  state->mLineStyle = mCurrentLineStyle;
+  
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetDeviceContext(nsIDeviceContext *&aContext)
+NS_IMETHODIMP
+nsRenderingContextXp::PopState(PRBool &aClipState)
 {
-  aContext = mContext;
-  NS_IF_ADDREF(aContext);
-  return NS_OK;
-}
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::PopState()\n"));
 
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: PushState(void)
-{
-  PRInt32 cnt = mStateCache->Count();
-
-  if (cnt == 0){
-    if (nsnull == mStates)
-      mStates = new XP_State();
-    else
-      mStates = new XP_State(*mStates);
-  } else {
-    XP_State *state = (XP_State *)mStateCache->ElementAt(cnt - 1);
+  PRUint32 cnt = mStateCache->Count();
+  GraphicsState *state;
+  
+  if (cnt > 0) {
+    state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
     mStateCache->RemoveElementAt(cnt - 1);
+    
+    if (mTranMatrix)
+      delete mTranMatrix;
+    mTranMatrix = state->mMatrix;
+    
+    mClipRegion = state->mClipRegion;
+    if (mFontMetrics != state->mFontMetrics)
+      SetFont(state->mFontMetrics);
 
-    state->mNext = mStates;
+    if (state->mColor != mCurrentColor)
+      SetColor(state->mColor);
+    if (state->mLineStyle != mCurrentLineStyle)
+      SetLineStyle(state->mLineStyle);
 
-    //clone state info
-    state->mMatrix = mStates->mMatrix;
-    state->mLocalClip = mStates->mLocalClip;
-    state->mCurrentColor = mStates->mCurrentColor;
-    state->mFontMetrics = mStates->mFontMetrics;
-    state->mTextColor = mStates->mTextColor;
-    state->mLineStyle = mStates->mLineStyle;
-
-    mStates = state;
+    delete state;
   }
 
-  mTranMatrix = &mStates->mMatrix;
+  if (mClipRegion)
+    aClipState = mClipRegion->IsEmpty();
+  else 
+    aClipState = PR_TRUE;
 
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: PopState(PRBool &aClipEmpty)
+void nsRenderingContextXp::UpdateGC()
 {
-  PRBool  retval = PR_FALSE;
+   XGCValues     values;
+   unsigned long valuesMask;
+   unsigned long color;
+ 
+   if (mGC)
+     mGC->Release();
+ 
+   memset(&values, 0, sizeof(XGCValues));
+ 
+ 
+   color = xlib_rgb_xpixel_from_rgb (NS_RGB(NS_GET_B(mCurrentColor),
+                                            NS_GET_G(mCurrentColor),
+                                            NS_GET_R(mCurrentColor)));
 
-  if (nsnull == mStates){
-    NS_ASSERTION(!(nsnull == mStates), "state underflow");
-  } else {
-    XP_State *oldstate = mStates;
+   values.foreground = color;
+   valuesMask = GCForeground;
+ 
+   if (mCurrentFont) {
+     valuesMask |= GCFont;
+     values.font = mCurrentFont->fid;
+   }
+ 
+   values.line_style = mLineStyle;
+   valuesMask |= GCLineStyle;
+ 
+   values.function = mFunction;
+   valuesMask |= GCFunction;
 
-    mStates = mStates->mNext;
+   Region rgn = 0;
+   if (mClipRegion) { 
+     mClipRegion->GetNativeRegion((void*&)rgn);
+   }
+ 
+   if (!gcCache) {
+     gcCache = new nsGCCache();
+     if (!gcCache) return;
+   }
 
-    mStateCache->AppendElement(oldstate);
-
-    if (nsnull != mStates){
-      mTranMatrix = &mStates->mMatrix;
-      SetLineStyle(mStates->mLineStyle);
-    }
-    else
-      mTranMatrix = nsnull;
-  }
-
-  aClipEmpty = retval;
-
-  return NS_OK;
+   mGC = gcCache->GetGC(mDisplay, mPrintContext->GetDrawable(), 
+                        valuesMask, &values,
+                        rgn);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP nsRenderingContextXp :: IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
+NS_IMETHODIMP
+nsRenderingContextXp::IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::IsVisibleRect()\n"));
   aVisible = PR_TRUE;
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP nsRenderingContextXp :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP
+nsRenderingContextXp::SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipState)
 {
-nsRect  trect = aRect;
-#ifdef XP_PC
-PRInt32     cliptype;
-#endif
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SetClipRect()\n"));
+  nsRect trect = aRect;
   Region rgn;
-  mStates->mLocalClip = aRect;
-
-  mTranMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
-  mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
-
+  mTranMatrix->TransformCoord(&trect.x, &trect.y,
+                           &trect.width, &trect.height);
   switch(aCombine) {
-   case nsClipCombine_kIntersect:
-        mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
-    break;
-  case nsClipCombine_kUnion:
-    mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
-    break;
-  case nsClipCombine_kSubtract:
-    mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
-    break;
-  case nsClipCombine_kReplace:
-    mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
-    break;
+    case nsClipCombine_kIntersect:
+      mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+      break;
+    case nsClipCombine_kUnion:
+      mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
+      break;
+    case nsClipCombine_kSubtract:
+      mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+      break;
+    case nsClipCombine_kReplace:
+      mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
+      break;
   }
-  aClipEmpty = mClipRegion->IsEmpty();
-
-  mClipRegion->GetNativeRegion((void*&)rgn);
-  XSetRegion(mPrintContext->GetDisplay(), mPrintContext->GetGC(), rgn);
-
-#ifdef XP_PC
-  if (cliptype == NULLREGION)
-    aClipEmpty = PR_TRUE;
-  else
-    aClipEmpty = PR_FALSE;
-#endif
+  aClipState = mClipRegion->IsEmpty();
 
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
+NS_IMETHODIMP
+nsRenderingContextXp::GetClipRect(nsRect &aRect, PRBool &aClipState)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetClipRext()\n"));
   PRInt32 x, y, w, h;
   if (!mClipRegion->IsEmpty()) {
     mClipRegion->GetBoundingBox(&x,&y,&w,&h);
     aRect.SetRect(x,y,w,h);
-    aClipValid = PR_TRUE;
+    aClipState = PR_TRUE;
   } else {
     aRect.SetRect(0,0,0,0);
-    aClipValid = PR_FALSE;
+    aClipState = PR_FALSE;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SetClipRegion()\n"));
+  Region rgn;
+  switch(aCombine)
+  {
+    case nsClipCombine_kIntersect:
+      mClipRegion->Intersect(aRegion);
+      break;
+    case nsClipCombine_kUnion:
+      mClipRegion->Union(aRegion);
+      break;
+    case nsClipCombine_kSubtract:
+      mClipRegion->Subtract(aRegion);
+      break;
+    case nsClipCombine_kReplace:
+      mClipRegion->SetTo(aRegion);
+      break;
+  }
+
+  aClipState = mClipRegion->IsEmpty();
 
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP
+nsRenderingContextXp::CopyClipRegion(nsIRegion &aRegion)
 {
-  nsRect rect;
-  nsIRegion* pRegion = (nsIRegion*)&aRegion;
-  pRegion->GetBoundingBox(&rect.x, &rect.y, &rect.width, &rect.height);
-  SetClipRect(rect, aCombine, aClipEmpty);
-
-  return NS_OK; 
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CopyClipRegion()\n"));
+  aRegion.SetTo(*mClipRegion);
+  return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: CopyClipRegion(nsIRegion &aRegion)
+NS_IMETHODIMP
+nsRenderingContextXp::GetClipRegion(nsIRegion **aRegion)
 {
-  aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
-  return NS_OK; 
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetClipRegion(nsIRegion **aRegion)
-{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetClipRegion()\n"));
+  nsresult  rv = NS_OK;
+  
   NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
-
+  
   if (*aRegion) {
-    nsIRegion *nRegion = (nsIRegion *)mClipRegion;
-    (*aRegion)->SetTo(*nRegion);
+    (*aRegion)->SetTo(*mClipRegion);
   }
-  return NS_OK; 
+  return rv;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: SetColor(nscolor aColor)
+NS_IMETHODIMP
+nsRenderingContextXp::SetLineStyle(nsLineStyle aLineStyle)
 {
-  if (nsnull == mContext)
-    return NS_ERROR_FAILURE;
-
-  if (mCurrentColor != aColor) {
-      mPrintContext->SetForegroundColor(aColor);
-      mCurrentColor = aColor;
-  }
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP nsRenderingContextXp :: GetColor(nscolor &aColor) const
-{
-  aColor = mCurrentColor;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP nsRenderingContextXp :: SetLineStyle(nsLineStyle aLineStyle)
-{
-  if (aLineStyle != mCurrLineStyle) {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SetLineStyle()\n"));
+  if (aLineStyle != mCurrentLineStyle) {
+    /* XXX this isnt done in gtk, copy from there when ready
     switch(aLineStyle)
-      {
-        case nsLineStyle_kSolid:
-           XSetLineAttributes(mPrintContext->GetDisplay(), mPrintContext->GetGC(),
-                           1, // width
-                           LineSolid, // line style
-                           CapNotLast,// cap style
-                           JoinMiter);// join style
+      { 
+      case nsLineStyle_kSolid:
+        mLineStyle = LineSolid;
+        mDashes = 0;
         break;
       case nsLineStyle_kDashed:
-        {
           static char dashed[2] = {4,4};
-          XSetDashes(mPrintContext->GetDisplay(), mPrintContext->GetGC(),
-                     0, dashed, 2);
-        }
+        mDashList = dashed;
+        mDashes = 2;
         break;
-
       case nsLineStyle_kDotted:
-        {
           static char dotted[2] = {3,1};
-          XSetDashes(mPrintContext->GetDisplay(), mPrintContext->GetGC(),
-                     0, dotted, 2);
-        }
+        mDashList = dotted;
+        mDashes = 2;
         break;
-
     default:
         break;
 
     }
-
-    mCurrLineStyle = aLineStyle ;
+    */
+    mCurrentLineStyle = aLineStyle ;
   }
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetLineStyle(nsLineStyle &aLineStyle)
+NS_IMETHODIMP
+nsRenderingContextXp::GetLineStyle(nsLineStyle &aLineStyle)
 {
-  aLineStyle = mCurrLineStyle;
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetLineStyle()\n"));
+  aLineStyle = mCurrentLineStyle;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::SetColor(nscolor aColor)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SetColor(nscolor)\n"));
+  if (nsnull == mContext)
+    return NS_ERROR_FAILURE;
+
+  mCurrentColor = aColor;
+
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("Setting color to %d %d %d\n", NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor)));
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRenderingContextXp::GetColor(nscolor &aColor) const
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetColor()\n"));
+  aColor = mCurrentColor;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextXp::SetFont(const nsFont& aFont)
 {
-  //PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SetFont(nsFont)\n"));
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SetFont(nsFont)\n"));
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, mFontMetrics);
   return SetFont(mFontMetrics);
@@ -584,7 +599,7 @@ nsRenderingContextXp::SetFont(const nsFont& aFont)
 NS_IMETHODIMP
 nsRenderingContextXp::SetFont(nsIFontMetrics *aFontMetrics)
 {
-  //PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SetFont(nsIFontMetrics)\n"));
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SetFont(nsIFontMetrics)\n"));
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = aFontMetrics;
   NS_IF_ADDREF(mFontMetrics);
@@ -594,100 +609,127 @@ nsRenderingContextXp::SetFont(nsIFontMetrics *aFontMetrics)
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
     mCurrentFont = (XFontStruct *)fontHandle;
-    XSetFont(mPrintContext->GetDisplay(), mPrintContext->GetGC(), mCurrentFont->fid);
   }
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
+NS_IMETHODIMP
+nsRenderingContextXp::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
-
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetFontMetrics()\n"));
   NS_IF_ADDREF(mFontMetrics);
   aFontMetrics = mFontMetrics;
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: Translate(nscoord aX, nscoord aY)
+NS_IMETHODIMP
+nsRenderingContextXp::Translate(nscoord aX, nscoord aY)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Translate()\n"));
   mTranMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: Scale(float aSx, float aSy)
+NS_IMETHODIMP
+nsRenderingContextXp::Scale(float aSx, float aSy)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Scale()\n"));
   mTranMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetCurrentTransform(nsTransform2D *&aTransform)
+NS_IMETHODIMP
+nsRenderingContextXp::GetCurrentTransform(nsTransform2D *&aTransform)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetCurrentTransform()\n"));
   aTransform = mTranMatrix;
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+NS_IMETHODIMP
+nsRenderingContextXp::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CreateDrawingSurface()\n"));
+
+  aSurface = nsnull;
+
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DestroyDrawingSurface(nsDrawingSurface aDS)
+NS_IMETHODIMP
+nsRenderingContextXp::DestroyDrawingSurface(nsDrawingSurface aDS)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DestroyDrawingSurface()\n"));
+
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  if (nsnull == mTranMatrix )
+  nscoord diffX, diffY;
+
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawLine()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext)
     return NS_ERROR_FAILURE;
 
   mTranMatrix->TransformCoord(&aX0,&aY0);
   mTranMatrix->TransformCoord(&aX1,&aY1);
-
   
-  ::XDrawLine(mPrintContext->GetDisplay(), mPrintContext->GetDrawable(),
-              mPrintContext->GetGC(), aX0, aY0, aX1, aY1);
+  diffX = aX1-aX0;
+  diffY = aY1-aY0;
+
+  if (0!=diffX) {
+    diffX = (diffX>0?1:-1);
+  }
+  if (0!=diffY) {
+    diffY = (diffY>0?1:-1);
+  }
+
+  UpdateGC();
+
+  ::XDrawLine(mDisplay, mPrintContext->GetDrawable(),
+              *mGC, aX0, aY0, aX1 - diffX, aY1 - diffY);
 
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  if (nsnull == mTranMatrix) {
+  nscoord diffX, diffY;
+
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawStdLine()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext)
     return NS_ERROR_FAILURE;
+
+  mTranMatrix->TransformCoord(&aX0,&aY0);
+  mTranMatrix->TransformCoord(&aX1,&aY1);
+  
+  diffX = aX1-aX0;
+  diffY = aY1-aY0;
+
+  if (0!=diffX) {
+    diffX = (diffX>0?1:-1);
+  }
+  if (0!=diffY) {
+    diffY = (diffY>0?1:-1);
   }
 
+  UpdateGC();
+  ::XDrawLine(mDisplay, mPrintContext->GetDrawable(),
+              *mGC, aX0, aY0, aX1 - diffX, aY1 - diffY);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawPolyLine()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
+    return NS_ERROR_FAILURE;
+  }
   PRInt32 i ;
   XPoint * xpoints;
   XPoint * thispoint;
@@ -701,9 +743,10 @@ nsRenderingContextXp :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
     mTranMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
 
-  ::XDrawLines(mPrintContext->GetDisplay(),
+  UpdateGC();
+  ::XDrawLines(mDisplay,
                mPrintContext->GetDrawable(),
-               mPrintContext->GetGC(),
+               *mGC,
                xpoints, aNumPoints, CoordModeOrigin);
 
   PR_Free((void *)xpoints);
@@ -711,42 +754,43 @@ nsRenderingContextXp :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawRect(const nsRect& aRect)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawRect(const nsRect& aRect)
 {
-
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawRext()\n"));
   return DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTranMatrix ) {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawRect()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
     return NS_ERROR_FAILURE;
   }
 
-  nscoord x,y,w,h;
-
+  nscoord x,y,w,h; 
+  
   x = aX;
-  y = aY;
+  y = aY; 
   w = aWidth;
   h = aHeight;
-
+    
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
-  
+    
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
+   
   // Don't draw empty rectangles; also, w/h are adjusted down by one
   // so that the right number of pixels are drawn.
-  if (w && h)
+  if (w && h) 
   {
-    ::XDrawRectangle(mPrintContext->GetDisplay(),
+    UpdateGC();
+    ::XDrawRectangle(mDisplay,
                      mPrintContext->GetDrawable(),
-                     mPrintContext->GetGC(),
+                     *mGC,
                      x,
                      y,
                      w - 1,
@@ -756,22 +800,18 @@ nsRenderingContextXp :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: FillRect(const nsRect& aRect)
+NS_IMETHODIMP
+nsRenderingContextXp::FillRect(const nsRect& aRect)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::FillRect(aRect)\n"));
   return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP
+nsRenderingContextXp::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTranMatrix ) {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::FillRect(aX,aY,aWidth,aHeight)\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -781,15 +821,36 @@ nsRenderingContextXp :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   h = aHeight;
 
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
+
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
+
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("About to fill window 0x%lxd with rect %d %d %d %d\n",
+                                                mPrintContext->GetDrawable(), x, y, w, h));
+  UpdateGC();
+
+/* the following code is disabled for two reasons:
+ * 1. It does not work because it does not at the real coordinates instead of
+ *    the translated ones.
+ * 2. Such an optimisation should be done in Xprt (server side/DDX layer) -
+ *    not in the client... 
+ */ 
+#ifdef XPRINT_NOT_NOW  
   // Hack for background page
   if ((x == 0) && (y == 0)) {
-     return NS_OK;
+    PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, 
+           ("nsRenderingContextXp::FillRect() - background page fillrect supressed\n"));
+    return NS_OK;
   }
-  ::XFillRectangle(mPrintContext->GetDisplay(),
+#endif /* XPRINT_NOT_NOW */  
+  
+  ::XFillRectangle(mDisplay,
                    mPrintContext->GetDrawable(),
-                   mPrintContext->GetGC(),
+                   *mGC,
                    x,y,w,h);
-
+  
   return NS_OK;
 }
 
@@ -802,9 +863,9 @@ nsRenderingContextXp :: InvertRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextXp :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTranMatrix )
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) 
     return NS_ERROR_FAILURE;
-
+  
   nscoord x,y,w,h;
 
   x = aX;
@@ -814,338 +875,299 @@ nsRenderingContextXp :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
 
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
-  // Set XOR drawing mode
-  ::XSetFunction(mPrintContext->GetDisplay(),
-                 mPrintContext->GetGC(),
-                 GXxor);
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
 
-  ::XFillRectangle(mPrintContext->GetDisplay(),
-                   mPrintContext->GetDrawable(), 
-                   mPrintContext->GetGC(),
+  mFunction = GXxor;
+  
+  UpdateGC();
+  
+  ::XFillRectangle(mDisplay,
+                   mPrintContext->GetDrawable(),
+                   *mGC,
                    x,
                    y,
                    w,
                    h);
-
-  // Back to normal copy drawing mode
-  ::XSetFunction(mPrintContext->GetDisplay(),
-                 mPrintContext->GetGC(),
-                 GXcopy);
+  
+  mFunction = GXcopy;
 
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (nsnull == mTranMatrix ) {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawPolygon()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
     return NS_ERROR_FAILURE;
   }
   PRInt32 i ;
   XPoint * xpoints;
   XPoint * thispoint;
-
+  
   xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
-
+  
   for (i = 0; i < aNumPoints; i++){
     thispoint = (xpoints+i);
     thispoint->x = aPoints[i].x;
     thispoint->y = aPoints[i].y;
     mTranMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
-
-  ::XDrawLines(mPrintContext->GetDisplay(),
+  
+  UpdateGC();
+  ::XDrawLines(mDisplay,
                mPrintContext->GetDrawable(),
-               mPrintContext->GetGC(),
+               *mGC,
                xpoints, aNumPoints, CoordModeOrigin);
 
   PR_Free((void *)xpoints);
-
-  return NS_OK;
+  
+  return NS_OK;    
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP
+nsRenderingContextXp::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (nsnull == mTranMatrix ) {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::FillPolygon()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
     return NS_ERROR_FAILURE;
   }
   PRInt32 i ;
   XPoint * xpoints;
-  XPoint * thispoint;
-  nscoord x,y;
-
+   
   xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
-
-  for (i = 0; i < aNumPoints; i++){
-    thispoint = (xpoints+i);
-    x = aPoints[i].x;
-    y = aPoints[i].y;
-    mTranMatrix->TransformCoord(&x,&y);
-    thispoint->x = x;
-    thispoint->y = y;
-  }
-
-  ::XFillPolygon(mPrintContext->GetDisplay(),
+  
+  for (i = 0; i < aNumPoints; ++i) {
+    nsPoint p = aPoints[i];
+    mTranMatrix->TransformCoord(&p.x, &p.y);
+    xpoints[i].x = p.x;
+    xpoints[i].y = p.y;
+  } 
+    
+  UpdateGC();
+  ::XFillPolygon(mDisplay,
                  mPrintContext->GetDrawable(),
-                 mPrintContext->GetGC(),
-                 xpoints, aNumPoints, Convex, CoordModeOrigin);
-
+                 *mGC,
+                 xpoints, aNumPoints, Complex, CoordModeOrigin);
+               
   PR_Free((void *)xpoints);
 
-  return NS_OK;
+  return NS_OK; 
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawEllipse(const nsRect& aRect)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawEllipse(const nsRect& aRect)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawEllipse()\n"));
   return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsLineStyle_kNone == mCurrLineStyle)
-    return NS_OK;
-
-  if (nsnull == mTranMatrix ) {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawEllipse()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
-
-  x = aX;
+   
+  x = aX; 
   y = aY;
-  w = aWidth;
+  w = aWidth; 
   h = aHeight;
-
+    
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
-
-  ::XDrawArc(mPrintContext->GetDisplay(),
+    
+  UpdateGC();
+  ::XDrawArc(mDisplay,
              mPrintContext->GetDrawable(),
-             mPrintContext->GetGC(),
+             *mGC,
              x,y,w,h, 0, 360 * 64);
-
-  return NS_OK;
+  
+  return NS_OK;  
 }
 
-NS_IMETHODIMP 
-nsRenderingContextXp :: FillEllipse(const nsRect& aRect)
+NS_IMETHODIMP
+nsRenderingContextXp::FillEllipse(const nsRect& aRect)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::FillEllipse()\n"));
   return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP nsRenderingContextXp :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP
+nsRenderingContextXp::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTranMatrix ) {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::FillEllipse()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
-
-  x = aX;
+   
+  x = aX; 
   y = aY;
-  w = aWidth;
+  w = aWidth; 
   h = aHeight;
-
+    
   mTranMatrix->TransformCoord(&x,&y,&w,&h);
+    
+  UpdateGC();
 
-  ::XFillArc(mPrintContext->GetDisplay(),
+  ::XFillArc(mDisplay,
              mPrintContext->GetDrawable(),
-             mPrintContext->GetGC(),
+             *mGC,
              x,y,w,h, 0, 360 * 64);
   
+  return NS_OK;  
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::DrawArc(const nsRect& aRect,
+                                float aStartAngle, float aEndAngle)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawArc()\n"));
+  return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle); 
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                                float aStartAngle, float aEndAngle)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawArc()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+   
+  x = aX; 
+  y = aY;
+  w = aWidth; 
+  h = aHeight;
+    
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
+    
+  UpdateGC();
+  ::XDrawArc(mDisplay,
+             mPrintContext->GetDrawable(),
+             *mGC,
+             x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
+             NSToIntRound(aEndAngle * 64.0f));
+  
+  return NS_OK;  
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::FillArc(const nsRect& aRect,
+                                float aStartAngle, float aEndAngle)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::FillArc()\n"));
+  return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                                float aStartAngle, float aEndAngle)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::FillArc()\n"));
+  if (nsnull == mTranMatrix || nsnull == mPrintContext) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+   
+  x = aX; 
+  y = aY;
+  w = aWidth; 
+  h = aHeight;
+    
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
+    
+  UpdateGC();
+  ::XFillArc(mDisplay,
+             mPrintContext->GetDrawable(),
+             *mGC,
+             x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
+             NSToIntRound(aEndAngle * 64.0f));
+  
+  return NS_OK;  
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::GetWidth(char aC, nscoord& aWidth)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetWidth()\n"));
+  // Check for the very common case of trying to get the width of a single
+  // space.
+  if ((aC == ' ') && (nsnull != mFontMetrics)) {
+    nsFontMetricsXlib* fontMetrics = (nsFontMetricsXlib*)mFontMetrics;
+    return fontMetrics->GetSpaceWidth(aWidth);
+  }
+  return GetWidth(&aC, 1, aWidth);
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::GetWidth(PRUnichar aC, nscoord& aWidth,
+                                 PRInt32 *aFontID)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetWidth()\n"));
+  return GetWidth(&aC, 1, aWidth, aFontID);
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::GetWidth(const nsString& aString, nscoord& aWidth,
+                                 PRInt32 *aFontID)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetWidth()\n"));
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::GetWidth(const char* aString, nscoord& aWidth)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetWidth()\n"));
+  return GetWidth(aString, strlen(aString), aWidth);
+}
+
+NS_IMETHODIMP
+nsRenderingContextXp::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetWidth()\n"));
+  if (0 == aLength) {
+    aWidth = 0;
+  }
+  else {
+    int rawWidth;
+
+    if ((mCurrentFont->min_byte1 == 0) && (mCurrentFont->max_byte1 == 0))
+      rawWidth = XTextWidth(mCurrentFont, (char *)aString, aLength);
+    else
+      rawWidth = XTextWidth16(mCurrentFont, (XChar2b *)aString, aLength / 2);
+
+    aWidth = NSToCoordRound(rawWidth * mP2T);
+  }  
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRenderingContextXp::DrawTile(nsIImage *aImage, nscoord aX0, nscoord aY0,
-                                        nscoord aX1, nscoord aY1,
-                                        nscoord aWidth, nscoord aHeight)
+nsRenderingContextXp::GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                               nscoord& aWidth, PRInt32 *aFontID)
 {
-  NS_NOTREACHED("nsRenderingContextXp::DrawTile() not yet implemented");
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawArc(const nsRect& aRect,
-                                 float aStartAngle, float aEndAngle)
-{
-  return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                                 float aStartAngle, float aEndAngle)
-{
-  if (nsLineStyle_kNone == mCurrLineStyle)
-    return NS_OK;
-
-  if (nsnull == mTranMatrix ) {
-    return NS_ERROR_FAILURE;
-  }
-  nscoord x,y,w,h;
-
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-
-  mTranMatrix->TransformCoord(&x,&y,&w,&h);
-
-  ::XDrawArc(mPrintContext->GetDisplay(),
-             mPrintContext->GetDrawable(),
-             mPrintContext->GetGC(),
-             x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
-             NSToIntRound(aEndAngle * 64.0f));
-
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: FillArc(const nsRect& aRect,
-                                 float aStartAngle, float aEndAngle)
-{
-  return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                                 float aStartAngle, float aEndAngle)
-{
-  if (nsLineStyle_kNone == mCurrLineStyle)
-    return NS_OK;
-  if (nsnull == mTranMatrix ) {
-    return NS_ERROR_FAILURE;
-  }
-  nscoord x,y,w,h;
-
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-
-  mTranMatrix->TransformCoord(&x,&y,&w,&h);
-
-  ::XFillArc(mPrintContext->GetDisplay(),
-             mPrintContext->GetDrawable(),
-             mPrintContext->GetGC(),
-             x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
-             NSToIntRound(aEndAngle * 64.0f));
-
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetWidth(char ch, nscoord& aWidth)
-{
-  // Check for common case of getting the width of single space
-  if ((ch == ' ') && (nsnull != mFontMetrics)) {
-    nsFontMetricsXp* fontMetricsXP = (nsFontMetricsXp*)mFontMetrics;
-    return fontMetricsXP->GetSpaceWidth(aWidth);
-  }
-  char buf[1];
-  buf[0] = ch;
-  return GetWidth(buf, 1, aWidth);
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
-{
-  PRUnichar buf[1];
-  buf[0] = ch;
-  return GetWidth(buf, 1, aWidth, aFontID);
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetWidth(const char* aString, nscoord& aWidth)
-{
-  return GetWidth(aString, strlen(aString),aWidth);
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetWidth(const char* aString, PRUint32 aLength,
-                                 nscoord& aWidth)
-{
-
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetWidth()\n"));
   if (0 == aLength) {
     aWidth = 0;
-  } else {
-    int rawWidth;
-    if ((mCurrentFont->min_byte1 == 0) && (mCurrentFont->max_byte1 == 0))
-      rawWidth = XTextWidth(mCurrentFont, aString, aLength);
-    else
-      rawWidth = XTextWidth16(mCurrentFont, (XChar2b *)aString, aLength/2);
-    aWidth = NSToCoordRound(rawWidth * mP2T);
   }
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
-{
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoord &aWidth, PRInt32 *aFontID)
-{
-  if (0 == aLength) {
-    aWidth = 0;
-  } else {
-    nsFontMetricsXp* metrics = (nsFontMetricsXp*) mFontMetrics;
-    nsFontXp *prevFont = nsnull;
+  else {
+    nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) mFontMetrics;
+    nsFontXlib *prevFont = nsnull;
     int rawWidth = 0;
     PRUint32 start = 0;
     PRUint32 i;
     for (i = 0; i < aLength; i++) {
       PRUnichar c = aString[i];
-      nsFontXp* currFont = nsnull;
-      nsFontXp** font = metrics->mLoadedFonts;
-      nsFontXp** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      nsFontXlib* currFont = nsnull;
+      nsFontXlib** font = metrics->mLoadedFonts;
+      nsFontXlib** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
         if (IS_REPRESENTABLE((*font)->mMap, c)) {
           currFont = *font;
@@ -1158,8 +1180,7 @@ FoundFont:
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
         if (currFont != prevFont) {
-          rawWidth += prevFont->GetWidth(&aString[start],
-                                                  i - start);
+          rawWidth += prevFont->GetWidth(&aString[start], i - start);
           prevFont = currFont;
           start = i;
         }
@@ -1171,105 +1192,116 @@ FoundFont:
     }
 
     if (prevFont) {
-      rawWidth += prevFont->GetWidth(&aString[start],
-                                              i - start);
+      //                                              
+      rawWidth += prevFont->GetWidth(&aString[start], i - start);
     }
 
     aWidth = NSToCoordRound(rawWidth * mP2T);
   }
   if (nsnull != aFontID)
     *aFontID = 0;
+
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawString(const char *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        const nscoord* aSpacing)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawString(const char *aString, PRUint32 aLength,
+                                   nscoord aX, nscoord aY,
+                                   const nscoord* aSpacing)
 {
-  if (0 == aLength)
-    return NS_OK;
-  if (mTranMatrix == nsnull)
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawString()\n"));
+  if (0 != aLength) {
+    if (mTranMatrix == nsnull)
       return NS_ERROR_FAILURE;
-  if (aString == nsnull)
+    if (aString == nsnull)
       return NS_ERROR_FAILURE;
-
-  nscoord x = aX;
-  nscoord y = aY;
-
-  // Substract xFontStruct ascent since drawing specifies baseline
-  if (mFontMetrics) {
+    
+    nscoord x = aX;
+    nscoord y = aY;
+    
+    // Substract xFontStruct ascent since drawing specifies baseline
+    if (mFontMetrics) {
       mFontMetrics->GetMaxAscent(y);
       y += aY;
-  }
+    }
 
-  if (nsnull != aSpacing) {
-     // Render the string, one character at a time...
-     const char* end = aString + aLength;
-     while (aString < end) {
+    UpdateGC();
+
+    if (nsnull != aSpacing) {
+      // Render the string, one character at a time...
+      const char* end = aString + aLength;
+      while (aString < end) {
         char ch = *aString++;
         nscoord xx = x;
         nscoord yy = y;
         mTranMatrix->TransformCoord(&xx, &yy);
-        XDrawString(mPrintContext->GetDisplay(),
+        ::XDrawString(mDisplay,
                     mPrintContext->GetDrawable(),
-                    mPrintContext->GetGC(),
-                    xx, yy, (char*)&ch, 1);
+                    *mGC,
+                    xx, yy, &ch, 1);
         x += *aSpacing++;
-     }
-  } else {
-    mTranMatrix->TransformCoord(&x, &y);
-    if ((mCurrentFont->min_byte1 == 0) && (mCurrentFont->max_byte1 == 0))
-      XDrawString(mPrintContext->GetDisplay(),
+      }
+    }
+    else {
+      mTranMatrix->TransformCoord(&x, &y);
+      XDrawString(mDisplay,
                   mPrintContext->GetDrawable(),
-                  mPrintContext->GetGC(),
+                  *mGC,
                   x, y, aString, aLength);
-    else
-      XDrawString16(mPrintContext->GetDisplay(),
-                    mPrintContext->GetDrawable(),
-                    mPrintContext->GetGC(),
-                    x, y, (XChar2b*)aString, aLength/2);
-  }
-#if 0
-  //this doesn't need to happen here anymore, but a
-  //new api will come along that will need this stuff. MMP
-  if (nsnull != mFontMetrics){
-    nsFont *font;
-    mFontMetrics->GetFont(font);
-    PRUint8 decorations = font->decorations;
-
-    if (decorations & NS_FONT_DECORATION_OVERLINE){
-      nscoord offset;
-      nscoord size;
-      mFontMetrics->GetUnderline(offset, size);
-      FillRect(aX, aY, aWidth, size);
     }
   }
 
-#endif
-  // XFlush(mPrintContext->GetDisplay());
+#ifdef XPRINT_DISABLED_CODE
+  //this is no longer to be done by this API, but another
+  //will take it's place that will need this code again. MMP
+  if (mFontMetrics)
+  {
+    const nsFont *font;
+    mFontMetrics->GetFont(font);
+    PRUint8 deco = font->decorations;
+
+    if (deco & NS_FONT_DECORATION_OVERLINE)
+      DrawLine(aX, aY, aX + aWidth, aY);
+
+    if (deco & NS_FONT_DECORATION_UNDERLINE)
+    {
+      nscoord ascent,descent;
+
+      mFontMetrics->GetMaxAscent(ascent);
+      mFontMetrics->GetMaxDescent(descent);
+
+      DrawLine(aX, aY + ascent + (descent >> 1),
+               aX + aWidth, aY + ascent + (descent >> 1));
+    }
+
+    if (deco & NS_FONT_DECORATION_LINE_THROUGH)
+    {
+      nscoord height;
+
+      mFontMetrics->GetHeight(height);
+
+      DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
+    }
+  }
+#endif /* XPRINT_DISABLED_CODE */
+
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, PRInt32 aFontID,
-                                    const nscoord* aSpacing)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                   nscoord aX, nscoord aY,
+                                   PRInt32 aFontID,
+                                   const nscoord* aSpacing)
 {
-  if (0 == aLength)
-    return NS_OK;
-  if (nsnull == mFontMetrics)
-      return NS_ERROR_FAILURE;
-  if (mTranMatrix == nsnull)
-      return NS_ERROR_FAILURE;
-  if (aString == nsnull)
-      return NS_ERROR_FAILURE;
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawString()\n"));
+    if (aLength && mFontMetrics) {
+      if (mTranMatrix == nsnull)
+        return NS_ERROR_FAILURE;
+      if (mPrintContext == nsnull)
+        return NS_ERROR_FAILURE;
+      if (aString == nsnull)
+        return NS_ERROR_FAILURE;
 
     nscoord x = aX;
     nscoord y;
@@ -1281,15 +1313,15 @@ nsRenderingContextXp :: DrawString(const PRUnichar *aString, PRUint32 aLength,
 
     mTranMatrix->TransformCoord(&x, &y);
 
-    nsFontMetricsXp* metrics = (nsFontMetricsXp*) mFontMetrics;
-    nsFontXp* prevFont = nsnull;
+    nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) mFontMetrics;
+    nsFontXlib* prevFont = nsnull;
     PRUint32 start = 0;
     PRUint32 i;
     for (i = 0; i < aLength; i++) {
       PRUnichar c = aString[i];
-      nsFontXp* currFont = nsnull;
-      nsFontXp** font = metrics->mLoadedFonts;
-      nsFontXp** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      nsFontXlib* currFont = nsnull;
+      nsFontXlib** font = metrics->mLoadedFonts;
+      nsFontXlib** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < lastFont) {
         if (IS_REPRESENTABLE((*font)->mMap, c)) {
           currFont = *font;
@@ -1305,18 +1337,21 @@ FoundFont:
           if (aSpacing) {
             const PRUnichar* str = &aString[start];
             const PRUnichar* end = &aString[i];
+            UpdateGC();
             while (str < end) {
               x = aX;
               y = aY;
               mTranMatrix->TransformCoord(&x, &y);
-              prevFont->DrawString(mPrintContext, x, y, str, 1);
+              prevFont->DrawString(this, mPrintContext, x, y, str, 1);
               aX += *aSpacing++;
               str++;
             }
           }
           else {
-            x += prevFont->DrawString(mPrintContext, x, y, 
-                                      &aString[start], i - start);
+      UpdateGC();
+      prevFont->DrawString(this, mPrintContext, x, y, &aString[start], i - start);
+              x += prevFont->GetWidth(&aString[start], i -start);
+
           }
           prevFont = currFont;
           start = i;
@@ -1329,6 +1364,7 @@ FoundFont:
     }
 
     if (prevFont) {
+    UpdateGC();
       if (aSpacing) {
         const PRUnichar* str = &aString[start];
         const PRUnichar* end = &aString[i];
@@ -1336,106 +1372,94 @@ FoundFont:
           x = aX;
           y = aY;
           mTranMatrix->TransformCoord(&x, &y);
-          prevFont->DrawString(mPrintContext, x, y, str, 1);
+          prevFont->DrawString(this, mPrintContext, x, y, str, 1);
           aX += *aSpacing++;
           str++;
         }
       }
       else {
-        // mTranMatrix->TransformCoord(&x, &y);
-        prevFont->DrawString(mPrintContext, x, y, &aString[start],
-          i - start);
+        prevFont->DrawString(this, mPrintContext, x, y, &aString[start], i - start);
       }
     }
-  // XFlush(mPrintContext->GetDisplay());
+  }
+
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawString(const nsString& aString,nscoord aX, nscoord aY, PRInt32 aFontID,
-                                    const nscoord* aSpacing)
+NS_IMETHODIMP nsRenderingContextXp::DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                                                 PRInt32 aFontID,
+                                                 const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawString()\n"));
+  return DrawString(aString.GetUnicode(), aString.Length(),
+                    aX, aY, aFontID, aSpacing);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
-  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage(%d/%d)\n", (int)aX, (int)aY));
-
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage(%d/%d)\n", 
+         (int)aX, (int)aY));
   nscoord width, height;
 
   // we have to do this here because we are doing a transform below
-  width = NSToCoordRound(mP2T * aImage->GetWidth());
+  width  = NSToCoordRound(mP2T * aImage->GetWidth());
   height = NSToCoordRound(mP2T * aImage->GetHeight());
-
+  
   return DrawImage(aImage, aX, aY, width, height);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                                        nscoord aWidth, nscoord aHeight) 
+NS_IMETHODIMP
+nsRenderingContextXp::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+                                  nscoord aWidth, nscoord aHeight)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage(%d/%d/%d/%d)\n", 
          (int)aX, (int)aY, (int)aWidth, (int)aHeight));
-
-  nscoord x, y, w, h;
-
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-
-  mTranMatrix->TransformCoord(&x, &y, &w, &h);
-
-  return mPrintContext->DrawImage(aImage, x, y, w, h);
+  nsRect tr;
+  
+  tr.x      = aX;
+  tr.y      = aY;
+  tr.width  = aWidth;
+  tr.height = aHeight;
+  return DrawImage(aImage, tr);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
-{
-  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage(aSRect,aDRect)\n"));
-  nsRect sr,dr;
-
-  sr = aSRect;
-  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
-  sr.x = aSRect.x;
-  sr.y = aSRect.y;
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
-
-  dr = aDRect;
-  mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
-  return mPrintContext->DrawImage(aImage,
-                     sr.x, sr.y,
-                     sr.width, sr.height,
-                     dr.x, dr.y,
-                     dr.width, dr.height);
-}
-
-/** ---------------------------------------------------
- *  See documentation ndow_private/in nsIRenderingContext.h
- */
-NS_IMETHODIMP 
-nsRenderingContextXp :: DrawImage(nsIImage *aImage, const nsRect& aRect)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage(aRect)\n"));
 
-  return DrawImage(aImage, aRect.x, aRect.y,
-                           aRect.width, aRect.height);
+  nsRect tr;
+  tr = aRect;
+  mTranMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
+  UpdateGC();
+  return mPrintContext->DrawImage(mGC, aImage, tr.x, tr.y, tr.width, tr.height);
 }
 
+NS_IMETHODIMP
+nsRenderingContextXp::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage(aSRect,aDRect)\n"));
+  nsRect sr,dr;
+  
+  sr = aSRect;
+  mTranMatrix->TransformCoord(&sr.x, &sr.y,
+                              &sr.width, &sr.height);
+  sr.x = aSRect.x;
+  sr.y = aSRect.y;
+  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
+  
+  dr = aDRect;
+  mTranMatrix->TransformCoord(&dr.x, &dr.y,
+                              &dr.width, &dr.height);
+  UpdateGC();
+  
+  return mPrintContext->DrawImage(mGC, aImage,
+                                  sr.x, sr.y,
+                                  sr.width, sr.height,
+                                  dr.x, dr.y,
+                                  dr.width, dr.height);
+}
 
 #ifdef USE_IMG2
 #include "imgIContainer.h"
@@ -1445,6 +1469,7 @@ nsRenderingContextXp :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
 NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage()\n"));
   nsPoint pt;
   nsRect  sr;
 
@@ -1461,15 +1486,18 @@ NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRec
   nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
   if (!img) return NS_ERROR_FAILURE;
 
+  UpdateGC();
+
   // doesn't it seem like we should use more of the params here?
   // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
   //           pt.x + sr.x, pt.y + sr.y, sr.width, sr.height);
-  return mPrintContext->DrawImage(img, pt.x, pt.y, sr.width, sr.height);
+  return mPrintContext->DrawImage(mGC, img, pt.x, pt.y, sr.width, sr.height);
 }
 
 /* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
 NS_IMETHODIMP nsRenderingContextXp::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawScaledImage()\n"));
   nsRect dr;
 
   dr = *aDestRect;
@@ -1493,7 +1521,9 @@ NS_IMETHODIMP nsRenderingContextXp::DrawScaledImage(imgIContainer *aImage, const
   sr.y = aSrcRect->y;
   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
-  return mPrintContext->DrawImage(img,
+  UpdateGC();
+
+  return mPrintContext->DrawImage(mGC, img,
                                   sr.x, sr.y,
                                   sr.width, sr.height,
                                   dr.x, dr.y,
@@ -1501,135 +1531,22 @@ NS_IMETHODIMP nsRenderingContextXp::DrawScaledImage(imgIContainer *aImage, const
 }
 #endif /* USE_IMG2 */
 
-#ifdef MOZ_MATHML
-  /**
-   * Returns metrics (in app units) of an 8-bit character string
-   */
-NS_IMETHODIMP 
-nsRenderingContextXp::GetBoundingMetrics(const char*        aString,
-                                         PRUint32           aLength,
-                                         nsBoundingMetrics& aBoundingMetrics)
+NS_IMETHODIMP
+nsRenderingContextXp::DrawTile(nsIImage *aImage,
+                                nscoord aSrcXOffset, nscoord aSrcYOffset,
+                                const nsRect &aTileRect)
 {
-  aBoundingMetrics.Clear();
-  if (!aString || 0 > aLength) {
-    return NS_OK;
-  }
-
-  XFontStruct *font_struct = mCurrentFont;
-  XCharStruct overall;
-  int direction, font_ascent, font_descent;
-
-  if ((font_struct->min_byte1 == 0) && (font_struct->max_byte1 == 0))
-    XTextExtents(font_struct, (char *)aString, aLength,
-                 &direction, &font_ascent, &font_descent,
-                 &overall);
-  else
-    XTextExtents16(font_struct, (XChar2b*)aString, aLength/2,
-                   &direction, &font_ascent, &font_descent,
-                   &overall);
-  aBoundingMetrics.leftBearing  =  overall.lbearing;
-  aBoundingMetrics.rightBearing =  overall.rbearing;
-  aBoundingMetrics.width        =  overall.width;
-  aBoundingMetrics.ascent       =  overall.ascent;
-  aBoundingMetrics.descent      =  overall.descent;
-
-  aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
-  aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
-  aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * mP2T);
-  aBoundingMetrics.ascent = NSToCoordRound(aBoundingMetrics.ascent * mP2T);
-  aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * mP2T);
+  NS_NOTREACHED("nsRenderingContextXp::DrawTile() not yet implemented");
 
   return NS_OK;
 }
 
-  /**
-   * Returns metrics (in app units) of a Unicode character string
-   */
-NS_IMETHODIMP 
-nsRenderingContextXp::GetBoundingMetrics(const PRUnichar*   aString,
-                                         PRUint32           aLength,
-                                         nsBoundingMetrics& aBoundingMetrics,
-                                         PRInt32*           aFontID)
+NS_IMETHODIMP
+nsRenderingContextXp::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+                                          const nsRect &aDestBounds, PRUint32 aCopyFlags)
 {
-  aBoundingMetrics.Clear();
-  if (!aString || 0 > aLength) {
-    return NS_OK;
-  }
-  nsFontMetricsXp* metrics = (nsFontMetricsXp*) mFontMetrics;
-  nsFontXp* prevFont = nsnull;
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CopyOffScreenBits()\n"));
 
-  nsBoundingMetrics rawbm;
-  PRBool firstTime = PR_TRUE;
-  PRUint32 start = 0;
-  PRUint32 i;
-  for (i = 0; i < aLength; i++) {
-    PRUnichar c = aString[i];
-    nsFontXp* currFont = nsnull;
-    nsFontXp** font = metrics->mLoadedFonts;
-    nsFontXp** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
-    while (font < end) {
-      if (IS_REPRESENTABLE((*font)->mMap, c)) {
-        currFont = *font;
-        goto FoundFont; // for speed -- avoid "if" statement
-      }
-      font++;
-    }
-    currFont = metrics->FindFont(c);
-FoundFont:
-    // XXX avoid this test by duplicating code -- erik
-    if (prevFont) {
-      if (currFont != prevFont) {
-        prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
-                                     i - start, rawbm);
-        if (firstTime) {
-          firstTime = PR_FALSE;
-          aBoundingMetrics = rawbm;
-        }
-        else {
-          aBoundingMetrics += rawbm;
-        }
-        prevFont = currFont;
-        start = i;
-      }
-    }
-    else {
-      prevFont = currFont;
-      start = i;
-    }
-  }
-  if (prevFont) {
-    prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
-                                 i - start, rawbm);
-    if (firstTime) {
-      aBoundingMetrics = rawbm;
-    }
-    else {
-      aBoundingMetrics += rawbm;
-    }
-  }
-
-  // convert to app units
-  aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
-  aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
-  aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * mP2T);
-  aBoundingMetrics.ascent = NSToCoordRound(aBoundingMetrics.ascent * mP2T);
-  aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * mP2T);
- 
-  if (nsnull != aFontID)
-    *aFontID = 0;
-
-  return NS_OK;
-}
-#endif /* MOZ_MATHML */
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-NS_IMETHODIMP nsRenderingContextXp :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
-                                                         PRInt32 aSrcX, PRInt32 aSrcY,
-                                                         const nsRect &aDestBounds,
-                                                         PRUint32 aCopyFlags)
-{
   NS_NOTREACHED("nsRenderingContextXp::CopyOffScreenBits() not yet implemented");
 
   return NS_OK;
@@ -1638,61 +1555,118 @@ NS_IMETHODIMP nsRenderingContextXp :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 NS_IMETHODIMP nsRenderingContextXp::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 {
   NS_NOTREACHED("nsRenderingContextXp::RetrieveCurrentNativeGraphicData() not yet implemented");
+  
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- */
-void 
-nsRenderingContextXp :: SetupFontAndColor(void)
-{
-  return;
-}
+#ifdef MOZ_MATHML
+#ifdef FONT_SWITCHING
 
-#ifdef NOTNOW
-HPEN nsRenderingContextXp :: SetupSolidPen(void)
-{
-  return mCurrPen;
-}
-
-HPEN nsRenderingContextXp :: SetupDashedPen(void)
-{
-  return mCurrPen;
-}
-
-HPEN nsRenderingContextXp :: SetupDottedPen(void)
-{
-  return mCurrPen;
-}
-#endif /* NOTNOW */
-
-
-#ifdef DC
 NS_IMETHODIMP
-nsRenderingContextXp::GetColor(nsString& aColor)
+nsRenderingContextXp::GetBoundingMetrics(const char*        aString, 
+                                         PRUint32           aLength,
+                                         nsBoundingMetrics& aBoundingMetrics)
 {
-  char cbuf[40];
-  PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
-              NS_GET_R(mCurrentColor),
-              NS_GET_G(mCurrentColor),
-              NS_GET_B(mCurrentColor));
-  aColor = cbuf;
+  aBoundingMetrics.Clear();
+  if (aString && 0 < aLength) {
+
+    XCharStruct overall;
+    int direction, font_ascent, font_descent;
+
+    if ((mCurrentFont->min_byte1 == 0) && (mCurrentFont->max_byte1 == 0))
+      XTextExtents(mCurrentFont, aString, aLength,
+                    &direction, &font_ascent, &font_descent,
+                    &overall);
+    else
+      XTextExtents16(mCurrentFont, (XChar2b *)aString, aLength/2,
+                    &direction, &font_ascent, &font_descent,
+                    &overall);
+
+    aBoundingMetrics.leftBearing  = NSToCoordRound(float(overall.lbearing) * mP2T);
+    aBoundingMetrics.rightBearing = NSToCoordRound(float(overall.rbearing) * mP2T);
+    aBoundingMetrics.width        = NSToCoordRound(float(overall.width)    * mP2T);
+    aBoundingMetrics.ascent       = NSToCoordRound(float(overall.ascent)   * mP2T);
+    aBoundingMetrics.descent      = NSToCoordRound(float(overall.descent)  * mP2T);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRenderingContextXp::SetColor(const nsString& aColor)
+nsRenderingContextXp::GetBoundingMetrics(const PRUnichar*   aString, 
+                                         PRUint32           aLength,
+                                         nsBoundingMetrics& aBoundingMetrics,
+                                         PRInt32*           aFontID)
 {
-  nscolor rgb;
-  if (NS_ColorNameToRGB(aColor, &rgb)) {
-    SetColor(rgb);
+  aBoundingMetrics.Clear(); 
+  if (aString && 0 < aLength) {
+
+    nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) mFontMetrics;
+    nsFontXlib* prevFont = nsnull;
+
+    nsBoundingMetrics rawbm;
+    PRBool firstTime = PR_TRUE;
+    PRUint32 start = 0;
+    PRUint32 i;
+    for (i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      nsFontXlib* currFont = nsnull;
+      nsFontXlib** font = metrics->mLoadedFonts;
+      nsFontXlib** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+          currFont = *font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
+      }
+      currFont = metrics->FindFont(c);
+    FoundFont:
+      // XXX avoid this test by duplicating code -- erik
+      if (prevFont) {
+        if (currFont != prevFont) {
+          prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
+                                       i - start, rawbm);
+          if (firstTime) {
+            firstTime = PR_FALSE;
+            aBoundingMetrics = rawbm;
+          } 
+          else {
+            aBoundingMetrics += rawbm;
+          }
+          prevFont = currFont;
+          start = i;
+        }
+      }
+      else {
+        prevFont = currFont;
+        start = i;
+      }
+    }
+    
+    if (prevFont) {
+      prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
+                                   i - start, rawbm);
+      if (firstTime) {
+        aBoundingMetrics = rawbm;
+      }
+      else {
+        aBoundingMetrics += rawbm;
+      }
+    }
+    // convert to app units
+    aBoundingMetrics.leftBearing  = NSToCoordRound(aBoundingMetrics.leftBearing  * mP2T);
+    aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
+    aBoundingMetrics.width        = NSToCoordRound(aBoundingMetrics.width   * mP2T);
+    aBoundingMetrics.ascent       = NSToCoordRound(aBoundingMetrics.ascent  * mP2T);
+    aBoundingMetrics.descent      = NSToCoordRound(aBoundingMetrics.descent * mP2T);
   }
-  else if (NS_HexToRGB(aColor, &rgb)) {
-    SetColor(rgb);
-  }
+  if (nsnull != aFontID)
+    *aFontID = 0;
+
   return NS_OK;
 }
-#endif /* DC */
+#endif /* FONT_SWITCHING */
+#endif /* MOZ_MATHML */
 
 

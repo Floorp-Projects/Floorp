@@ -34,6 +34,11 @@
 #include "nsCOMPtr.h"
 #include "nsDeviceContextXlib.h"
 #include "nsDrawingSurfaceXlib.h"
+#ifdef USE_XPRINT
+#include "nsDeviceContextXP.h"
+#include "nsXPrintContext.h"
+#include "nsRenderingContextXP.h"
+#endif /* USE_XPRINT */
 #include "nsFont.h"
 #include "nsRenderingContextXlib.h"
 #include "nsString.h"
@@ -81,6 +86,13 @@ public:
                          nsDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY,
                          const PRUnichar* aString, PRUint32 aLength) = 0;
+#ifdef USE_XPRINT
+   virtual int DrawString(nsRenderingContextXp* aContext,
+                          nsXPrintContext* aSurface,
+                          nscoord aX,
+                          nscoord aY, const PRUnichar* aString,
+                          PRUint32 aLength) = 0;      
+#endif /* USE_XPRINT */
 
 #ifdef MOZ_MATHML
   // bounding metrics for a string 
@@ -90,7 +102,7 @@ public:
   GetBoundingMetrics(const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics) = 0;
-#endif
+#endif /* MOZ_MATHML */
 
   XFontStruct           *mFont;
   PRUint32              *mMap;
@@ -107,6 +119,13 @@ public:
   nsFontMetricsXlib();
   virtual ~nsFontMetricsXlib();
 
+#ifdef USE_XPRINT
+  static void     EnablePrinterMode(PRBool printermode);
+#endif /* USE_XPRINT */
+
+  static nsresult InitGlobals(void);
+  static void     FreeGlobals(void);
+  
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_DECL_ISUPPORTS
@@ -211,6 +230,11 @@ protected:
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;
   PRUint8             mStyleIndex;
+
+#ifdef USE_XPRINT
+public:  
+  static PRPackedBool mPrinterMode;
+#endif /* USE_XPRINT */  
 };
 
 class nsFontEnumeratorXlib : public nsIFontEnumerator

@@ -38,29 +38,26 @@
 #include "nsVoidArray.h"
 #include "nsRegionXlib.h"
 
-class XP_State;
+#include "nsImageXlib.h" // nsGCCache.h wants this
+#include "nsGCCache.h"
+
 class nsXPrintContext;
 
 class nsRenderingContextXp : public nsRenderingContextImpl
 {
-public:
+ public:
   nsRenderingContextXp();
   virtual ~nsRenderingContextXp();
+  static nsresult Shutdown(); // release statics
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_DECL_ISUPPORTS
 
-  // nsIPrinterRenderingContext methods
-
-protected:
-
-public:
-  // nsIRenderingContext
   NS_IMETHOD Init(nsIDeviceContext* aContext);
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget) { return NS_OK; }
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface){return NS_OK;}
-
+ 
   NS_IMETHOD Reset(void);
 
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext);
@@ -77,7 +74,7 @@ public:
   NS_IMETHOD PushState(void);
   NS_IMETHOD PopState(PRBool &aClipState);
 
-  NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aClipState);
+  NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 
   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aCilpState);
   NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipState);
@@ -108,6 +105,7 @@ public:
 
   NS_IMETHOD DrawRect(const nsRect& aRect);
   NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
 
   NS_IMETHOD FillRect(const nsRect& aRect);
   NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -122,9 +120,6 @@ public:
   NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD FillEllipse(const nsRect& aRect);
   NS_IMETHOD FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-
-  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,
-                        nscoord aY1, nscoord aWidth,nscoord aHeight);
 
   NS_IMETHOD DrawArc(const nsRect& aRect,
                      float aStartAngle, float aEndAngle);
@@ -162,17 +157,19 @@ public:
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 
-
 #ifdef USE_IMG2
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
   NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
-#endif
+#endif /* USE_IMG2 */
+
+  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX, nscoord aY, const nsRect&);
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
   nsXPrintContext *GetXPrintContext() { return mPrintContext; }
+  
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string
@@ -180,7 +177,7 @@ public:
   NS_IMETHOD GetBoundingMetrics(const char*        aString,
                                 PRUint32           aLength,
                                 nsBoundingMetrics& aBoundingMetrics);
-  
+ 
   /**
    * Returns metrics (in app units) of a Unicode character string
    */
@@ -190,23 +187,53 @@ public:
                                 PRInt32*           aFontID = nsnull);
 #endif /* MOZ_MATHML */
 
-private:
+  // this is a common init function for both of the init functions.
   nsresult CommonInit(void);
-  void SetupFontAndColor(void);
-  void PushClipState(void);
-
-protected:
-  nsCOMPtr<nsIDeviceContextXp>     mContext;
-  nsXPrintContext     *mPrintContext;
-  nsIFontMetrics      *mFontMetrics;
-  nsRegionXlib        *mClipRegion;
-  float                mP2T;
-  nscolor              mCurrentColor;
+  
+  xGC *GetGC() { mGC->AddRef(); return mGC; };
  
-  nsLineStyle          mCurrLineStyle;
-  XP_State            *mStates;
-  nsVoidArray         *mStateCache;
-  XFontStruct         *mCurrentFont;        
+private:
+  void UpdateGC();
+  nsXPrintContext         *mPrintContext;
+  nsCOMPtr<nsIDeviceContextXp> mContext;
+  nsIFontMetrics          *mFontMetrics;
+  nsCOMPtr<nsIRegion>      mClipRegion;
+  float                    mP2T;
+  nscolor                  mCurrentColor;
+  Display *                mDisplay;
+  Screen *                 mScreen;
+  Visual *                 mVisual;
+  int                      mDepth;
+  xGC                     *mGC;
+
+  // graphics state stuff
+  nsVoidArray             *mStateCache;
+  XFontStruct             *mCurrentFont;
+  nsLineStyle              mCurrentLineStyle;
+  int                      mFunction;
+  int                      mLineStyle;
+  char                    *mDashList;
+  int                      mDashes;
+
+  // ConditionRect is used to fix coordinate overflow problems for
+  // rectangles after they are transformed to screen coordinates
+  void ConditionRect(nscoord &x, nscoord &y, nscoord &w, nscoord &h) {
+    if ( y < -32766 ) {
+      y = -32766;
+    }
+    
+    if ( y + h > 32766 ) {
+      h  = 32766 - y;
+    }
+    
+    if ( x < -32766 ) {
+      x = -32766;
+    }
+    
+    if ( x + w > 32766 ) {
+      w  = 32766 - x;
+    }
+  }
 };
 
 

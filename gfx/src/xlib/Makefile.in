@@ -75,7 +75,7 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 		$(NSPR_LIBS)	\
-		-lxpcom			\
+		-lxpcom		\
 		-lgkgfx		\
 		$(GFX_XIE_LIBS) \
 		$(NULL)
@@ -88,6 +88,7 @@ endif
 
 ifdef MOZ_ENABLE_XPRINT
 DEFINES         += -DUSE_XPRINT
+INCLUDES	+= -I$(srcdir)/../xprint
 endif
 
 INCLUDES	+= \
