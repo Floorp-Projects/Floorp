@@ -573,7 +573,7 @@ PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname)
 #if defined(XP_UNIX)
   else 
   {
-    if (ZIFLAG_SYMLINK & item-flags)
+    if (ZIFLAG_SYMLINK & item->flags)
     {
        status = ResolveSymlink(aOutname,item);
     }
