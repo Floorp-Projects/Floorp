@@ -200,10 +200,12 @@ morkRow::AcquireCellHandle(morkEnv* ev, morkCell* ioCell,
   morkCellObject* cellObj = new (*heap, ev)
     morkCellObject(ev, morkUsage::kHeap, heap, this, ioCell, inCol, inPos);
   if ( cellObj )
-    return cellObj->AcquireCellHandle(ev);
-    
-  return (nsIMdbCell*) 0;
-}
+  {
+    nsIMdbCell* cellHandle = cellObj->AcquireCellHandle(ev);
+    cellObj->CutStrongRef(ev);
+    return cellHandle;
+  }
+  return (nsIMdbCell*) 0;}
 
 mork_count
 morkRow::CountOverlap(morkEnv* ev, morkCell* ioVector, mork_fill inFill)
