@@ -149,35 +149,19 @@ CategoryCreateService( const char *category )
             nFailed++;
             continue;
         }
-		nsXPIDLCString cidString;
-		rv = categoryManager->GetCategoryEntry(category,(const char *)entryString, getter_Copies(cidString));
+		nsXPIDLCString progID;
+		rv = categoryManager->GetCategoryEntry(category,(const char *)entryString, getter_Copies(progID));
 		if (NS_FAILED(rv))
         {
             nFailed++;
             continue;
         }
-	
-        nsCID cid;
-        rv = cid.Parse(cidString);
-        if (NS_SUCCEEDED(rv))
-        {
+
 #ifdef DEBUG_HTTP_STARTUP_CATEGORY
-        printf("CategoryCreateInstance: Instantiating cid: %s \
-                in category %s.\n",
-               (const char *)cidString, category);
+        printf("HTTP Handler: Instantiating progid %s \
+                in http startup category.\n", (const char *)cidString);
 #endif /* DEBUG_HTTP_STARTUP_CATEGORY */
-            // Create a service from the cid
-            nsCOMPtr<nsISupports> instance = do_GetService(cid, &rv);
-        }
-        else
-        {
-#ifdef DEBUG_HTTP_STARTUP_CATEGORY
-            printf("HTTP Handler: Instantiating progid %s \
-                    in http startup category.\n", (const char *)cidString);
-#endif /* DEBUG_HTTP_STARTUP_CATEGORY */
-            // This might be a progid. Try that too.
-            nsCOMPtr<nsISupports> instance = do_GetService(cidString, &rv);
-        }
+        nsCOMPtr<nsISupports> instance = do_GetService(progID, &rv);
         if (NS_FAILED(rv))
         {
             nFailed++;
