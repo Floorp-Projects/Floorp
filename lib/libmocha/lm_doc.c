@@ -426,6 +426,24 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+static char *
+getPortStart(char *host) {
+    char *p, *result;
+
+    result = NULL;
+    for (p=host; *p; p++) {
+        /* 
+         * A little paranioia: check that we have only numbers following the 
+         * colon 
+         */
+        if (result && (*p < '0' || '9' < *p))
+            result = NULL;
+        if (*p == ':')
+            result = p;
+    }
+    return result;
+}
+
 
 PR_STATIC_CALLBACK(JSBool)
 doc_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
@@ -434,8 +452,8 @@ doc_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSDocument *doc;
     MochaDecoder *decoder;
     MWContext *context;
-    char *protocol, *pathname, *new_origin_url, *str;
-    const char *domain, *new_domain, *domain_suffix, *prop_name, *origin;
+    char *protocol, *pathname, *new_origin_url, *str, *port, *domain;
+    const char *new_domain, *domain_suffix, *prop_name, *origin;
     size_t domain_len, new_domain_len;
     JSBool ok;
     uint32 type;
@@ -511,7 +529,7 @@ doc_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         origin = lm_GetObjectOriginURL(cx, obj);
         if (!origin || XP_STRCMP(origin, lm_unknown_origin_str) == 0)
             return JS_FALSE;
-        domain = NET_ParseURL(origin, GET_HOST_PART);
+        domain = (char *) NET_ParseURL(origin, GET_HOST_PART);
         if (!domain) {
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
@@ -523,6 +541,13 @@ doc_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         new_domain = JS_GetStringBytes(JSVAL_TO_STRING(*vp));
         new_domain_len = JS_GetStringLength(JSVAL_TO_STRING(*vp));
+        
+        /* Allow setting document.domain to remove a port */
+        port = getPortStart(domain);
+        if (port != NULL && getPortStart((char *) new_domain) == NULL) {
+            *port = '\0';
+        }
+
         domain_len = XP_STRLEN(domain);
         domain_suffix = domain + domain_len - new_domain_len;
         ok = (JSBool)(!XP_STRCASECMP(domain, new_domain) ||
@@ -552,7 +577,7 @@ doc_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             PR_FREEIF(pathname);
             PR_FREEIF(new_origin_url);
         }
-        XP_FREE((char *)domain);
+        XP_FREE(domain);
         return ok;
 
       case DOC_BG_COLOR:
