@@ -44,6 +44,9 @@ MOZ_OBJDIR = WIN32_O.OBJ
 #NSPR_CO_TAG=SeaMonkey_M17_BRANCH
 #PSM_CO_TAG=SeaMonkey_M17_BRANCH
 #LDAPCSDK_CO_TAG=SeaMonkey_M17_BRANCH
+#IMGLIB2_BRANCH=SeaMonkey_M17_BRANCH
+#GFX2_BRANCH=SeaMonkey_M17_BRANCH
+
 
 !if "$(MOZ_BRANCH)" != ""
 CVS_BRANCH=-r $(MOZ_BRANCH)
@@ -90,7 +93,8 @@ CVSCO_TAG = cvs -q co -P
 
 # Branch tags we use
 
-IMGLIB_BRANCH =
+IMGLIB2_BRANCH =
+GFX2_BRANCH =
 PLUGIN_BRANCH =
 XPCOM_BRANCH =
 
@@ -105,7 +109,8 @@ CVSCO_PLUGIN = $(CVSCO) -A
 !endif
 
 CVSCO_XPCOM = $(CVSCO)
-CVSCO_IMGLIB = $(CVSCO)
+CVSCO_IMGLIB2 = $(CVSCO)
+CVSCO_GFX2 = $(CVSCO)
 CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 CVSCO_NETWORK = $(CVSCO)
@@ -158,6 +163,34 @@ LDAPCSDK_CO_FLAGS=-r LDAPCSDK_40_BRANCH
 
 CVSCO_LDAPCSDK = cvs -q $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) -P
 
+#//------------------------------------------------------------------------
+#// Figure out how to pull new image library.
+#// If no IMGLIB2_CO_TAG is specified, use the default tag
+#//------------------------------------------------------------------------
+
+!if "$(IMGLIB2_CO_TAG)" != ""
+IMGLIB2_CO_FLAGS=-r $(IMGLIB2_CO_TAG)
+!else
+IMGLIB2_CO_FLAGS=
+!endif
+
+CVSCO_IMGLIB2 = cvs -q $(CVS_FLAGS) co $(IMGLIB2_CO_FLAGS) -P
+
+#//------------------------------------------------------------------------
+#// Figure out how to pull new image library.
+#// If no GFX2_CO_TAG is specified, use the default tag
+#//------------------------------------------------------------------------
+
+!if "$(GFX2_CO_TAG)" != ""
+GFX2_CO_FLAGS=-r $(GFX2_CO_TAG)
+!else
+GFX2_CO_FLAGS=
+!endif
+
+CVSCO_GFX2 = cvs -q $(CVS_FLAGS) co $(GFX2_CO_FLAGS) -P
+
+
+
 ## The master target
 ############################################################
 
@@ -169,7 +202,7 @@ pull_and_build_all: pull_all depend build_all
 
 pull_clobber_and_build_all: pull_all clobber_all build_all
 
-pull_all: pull_nspr pull_psm pull_ldapcsdk pull_seamonkey
+pull_all: pull_nspr pull_psm pull_ldapcsdk pull_gfx2 pull_imglib2 pull_seamonkey
 
 pull_nspr: pull_clientmak
       cd $(MOZ_SRC)\.
@@ -189,6 +222,14 @@ pull_psm: pull_nss
 pull_ldapcsdk:
 	cd $(MOZ_SRC)\.
 	$(CVSCO_LDAPCSDK) mozilla/directory/c-sdk
+
+pull_gfx2:
+  cd $(MOZ_SRC)\.
+  $(CVSCO_GFX2) mozilla/gfx2
+
+pull_imglib2:
+  cd $(MOZ_SRC)\.
+  $(CVSCO_IMGLIB2) mozilla/modules/libpr0n
 
 pull_xpconnect: pull_nspr
 	cd $(MOZ_SRC)\.
