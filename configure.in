@@ -883,8 +883,6 @@ AC_CHECK_LIB(elf, elf_rawdata)
 AC_CHECK_LIB(intl, textdomain)
 AC_CHECK_LIB(posix4, shm_open)
 AC_CHECK_LIB(w, iswupper)
-AC_CHECK_LIB(l, yywrap,,
-    AC_CHECK_LIB(fl, yywrap))
 
 dnl Replace `main' with a function in -lC_r:
 dnl AC_CHECK_LIB(C_r, main)
@@ -2028,19 +2026,14 @@ _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
 CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
-
-AC_MSG_CHECKING("for FC_Initialize in -ltalkback");
 LIBS="-ltalkback $LIBS"
-AC_TRY_LINK([
-	#include "fullcircle.h"
-        #include <stdio.h>
-	],
-        [FC_Initialize();
-        exit(0);]
-        ,[FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
-        [MISSING_FULLCIRCLE=1 result="no"])
+AC_MSG_CHECKING("for FC_Initialize in -ltalkback");
+AC_TRY_LINK([ #include <stdio.h>
+	      #include "fullcircle.h" ],
+            [ FC_Initialize(); exit(0); ],
+            [FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
+            [MISSING_FULLCIRCLE=1 result="no"])
 AC_MSG_RESULT("$result")
-
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
