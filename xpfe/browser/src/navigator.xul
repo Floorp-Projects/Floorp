@@ -11,7 +11,6 @@
       #header {
         position: fixed;
         width: 100%;
-        height: 75px;
         top: 0;
         right: 0;
         bottom: auto;
@@ -21,7 +20,6 @@
         position: fixed;
         width: auto;
         height: auto;
-        top: 75px;
         right: 0;
         bottom: 34px;
         left: 0;
@@ -38,11 +36,6 @@
         bottom: 0;
         left: 0;
         margin-top: auto;
-      }
-
-      button {
-        background-color: green;
-        color: red;
       }
 
   </html:style>
@@ -174,82 +167,92 @@
   
   <menubar>
     <menu name="File">
-      <menuitem name="New Window" onClick="BrowserNewWindow();"/>
-      <menuitem name="Change Icons" onClick="BrowserPrintPreview();"/>
+      <menuitem name="New Window" onclick="BrowserNewWindow();"/>
+      <menuitem name="Change Icons" onclick="BrowserPrintPreview();"/>
       <separator />
-      <menuitem name="Print Setup" onClick=""/>
-      <menuitem name="Print Preview" onClick="BrowserPrintPreview();"/>
-      <menuitem name="Print" onClick=""/>
+      <menuitem name="Print Setup" onclick=""/>
+      <menuitem name="Print Preview" onclick="BrowserPrintPreview();"/>
+      <menuitem name="Print" onclick=""/>
       <separator />
-      <menuitem name="Close" onClick=""/>
-      <menuitem name="Exit" onClick="BrowserExit();"/>
+      <menuitem name="Close" onclick=""/>
+      <menuitem name="Exit" onclick="BrowserExit();"/>
     </menu>
     <menu name="View">
-      <menuitem name="Reload" onClick="BrowserReload();"/>
+      <menuitem name="Reload" onclick="BrowserReload();"/>
     </menu>
     <menu name="Go">
-      <menuitem name="Back" onClick="BrowserBack();"/>
-      <menuitem name="Forward" onClick="BrowserForward();" />
-      <menuitem name="Home" onClick="BrowserHome();"/>
+      <menuitem name="Back" onclick="BrowserBack();"/>
+      <menuitem name="Forward" onclick="BrowserForward();" />
+      <menuitem name="Home" onclick="BrowserHome();"/>
     </menu>
     <menu name="Window">
-      <menuitem name="Edit Bookmarks..." onClick="BrowserEditBookmarks();"/>
+      <menuitem name="Edit Bookmarks..." onclick="BrowserEditBookmarks();"/>
     </menu>
 
   </menubar>
   
-  <html:div html:id="header">
+  <html:div id="header">
   <toolbox>
   
     <toolbar>
-	  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onClick="BrowserBack()">	
-			  <observes element="canGoBack" attribute="disabled"/>			
-      </titledbutton>
+ 	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
 
-      <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward" 
-			onClick="BrowserForward()" style="background-color:rgb(192,192,50);">
-			  <observes element="canGoForward" attribute="disabled"/>
-      </titledbutton>
+      <html:td width="340px">
 
-      <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload" 
-			  onClick="window.frames[0].location.reload()">
-			  <observes element="canReload" attribute="disabled"/>
-      </titledbutton>
+		  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onclick="BrowserBack()">	
+				  <observes element="canGoBack" attribute="disabled"/>			
+	      </titledbutton>
 
-      <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" 
-			onClick="window.frames[0].stop()">
-        <observes element="canStop" attribute="disabled"/>
-      </titledbutton>
+	      <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward" 
+				onclick="BrowserForward()">
+				  <observes element="canGoForward" attribute="disabled"/>
+	      </titledbutton>
 
-      <titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home" 
-			onClick="window.frames[0].home()"/>
+	      <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload" 
+				  onclick="window.frames[0].location.reload()">
+				  <observes element="canReload" attribute="disabled"/>
+	      </titledbutton>
 
-      <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
-			onClick="window.frames[0].print()">
-        <observes element="canPrint" attribute="disabled"/>
-      </titledbutton>
+	      <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" 
+				onclick="window.frames[0].stop()">
+	        <observes element="canStop" attribute="disabled"/>
+	      </titledbutton>
 
-	  <html:input html:id="urlbar" html:style="vertical-align: center" html:type="text" 
-		  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementById('urlbar').value; }" style="width:325px;"/>   
+	      <titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home" 
+				onclick="window.frames[0].home()"/>
+
+	      <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
+				onclick="window.frames[0].print()">
+	        <observes element="canPrint" attribute="disabled"/>
+	      </titledbutton>
+	  </html:td>
 	  
-      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>
-         
-
+	  <html:td style="vertical-align:center">
+		  <html:input id="urlbar" html:style="vertical-align: center; width: 100%" html:type="text" 
+			  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementById('urlbar').value; }"/>   
+	  </html:td>
+	  
+	  <html:td width="65px">	  
+	      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>        
+      </html:td>
+ 
+      </html:tr></html:table>
+     
     </toolbar>
 
     <toolbar>
-      <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" onClick="window.frames[0].location.href='http://www.mozilla.org'"/>
-	  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News" onClick="window.frames[0].location.href='http://www.abcnews.com'"/>
+      <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" onclick="window.frames[0].location.href='http://www.mozilla.org'"/>
+	  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News" onclick="window.frames[0].location.href='http://www.abcnews.com'"/>
     </toolbar>
     
   </toolbox>
   </html:div>
 
-  <html:div html:id="main">
+  <html:div id="main">
      <html:iframe html:name="content" html:src="BrowserInitPage.html" html:width="100%" html:height="450"></html:iframe>
   </html:div>
 
-  <html:div html:id="footer">
+  <html:div id="footer">
      <html:iframe html:name="status" html:src="status.html" html:width="100%" html:height="34"></html:iframe>
   </html:div>
 
