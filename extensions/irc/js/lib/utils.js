@@ -917,3 +917,31 @@ function promptPassword(msg, initial, parent, title)
 
     return rv.value;
 }
+
+function getHostmaskParts(hostmask)
+{
+    var rv;
+    // A bit cheeky this, we try the matches here, and then branch
+    // according to the ones we like.
+    var ary1 = hostmask.match(/(\S*)!(\S*)@(.*)/);
+    var ary2 = hostmask.match(/(\S*)@(.*)/);
+    var ary3 = hostmask.match(/(\S*)!(.*)/);
+    if (ary1)
+        rv = { nick: ary1[1],  user: ary1[2], host: ary1[3] };
+    else if (ary2)
+        rv = { nick: "*",      user: ary2[1], host: ary2[2] };
+    else if (ary3)
+        rv = { nick: ary3[1],  user: ary3[2], host: "*"     };
+    else
+        rv = { nick: hostmask, user: "*",     host: "*"     };
+    // Make sure we got something for all fields.
+    if (!rv.nick)
+        rv.nick = "*";
+    if (!rv.user)
+        rv.user = "*";
+    if (!rv.host)
+        rv.host = "*";
+    // And re-construct the 'parsed' hostmask.
+    rv.mask = rv.nick + "!" + rv.user + "@" + rv.host;
+    return rv;
+}

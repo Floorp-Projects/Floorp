@@ -78,6 +78,7 @@ function initCommands()
          ["goto-url-newtab",   cmdGotoURL,                                   0],
          ["help",              cmdHelp,                            CMD_CONSOLE],
          ["hide-view",         cmdHideView,                        CMD_CONSOLE],
+         ["ignore",            cmdIgnore,           CMD_NEED_NET | CMD_CONSOLE],
          ["invite",            cmdInvite,           CMD_NEED_SRV | CMD_CONSOLE],
          ["join",              cmdJoin,             CMD_NEED_SRV | CMD_CONSOLE],
          ["join-charset",      cmdJoin,             CMD_NEED_SRV | CMD_CONSOLE],
@@ -123,6 +124,7 @@ function initCommands()
          ["toggle-ui",         cmdToggleUI,                        CMD_CONSOLE],
          ["toggle-pref",       cmdTogglePref,                                0],
          ["topic",             cmdTopic,           CMD_NEED_CHAN | CMD_CONSOLE],
+         ["unignore",          cmdIgnore,           CMD_NEED_NET | CMD_CONSOLE],
          ["unstalk",           cmdUnstalk,                         CMD_CONSOLE],
          ["usermode",          cmdUsermode,                        CMD_CONSOLE],
          ["user-charset",      cmdCharset,         CMD_NEED_USER | CMD_CONSOLE],
@@ -2189,5 +2191,39 @@ function cmdTimestampFormat(e)
     {
         display(getMsg(MSG_FMT_PREF, ["timestampFormat", 
                                       view.prefs["timestampFormat"]]));
+    }
+}
+
+function cmdIgnore(e)
+{
+    if (("mask" in e) && e.mask)
+    {
+        // FIXME: This is incorrect if CASEMAPPING is not ASCII, see bug 190749.
+        e.mask = e.mask.toLowerCase();
+        
+        if (e.command.name == "ignore")
+        {
+            if (e.network.ignore(e.mask))
+                display(getMsg(MSG_IGNORE_ADD, e.mask));
+            else
+                display(getMsg(MSG_IGNORE_ADDERR, e.mask));
+        }
+        else
+        {
+            if (e.network.unignore(e.mask))
+                display(getMsg(MSG_IGNORE_DEL, e.mask));
+            else
+                display(getMsg(MSG_IGNORE_DELERR, e.mask));
+        }
+    }
+    else
+    {
+        var list = new Array();
+        for (var m in e.network.ignoreList)
+            list.push(m);
+        if (list.length == 0)
+            display(MSG_IGNORE_LIST_1);
+        else
+            display(getMsg(MSG_IGNORE_LIST_2, arraySpeak(list)));
     }
 }

@@ -101,6 +101,8 @@ function CIRCNetwork (name, serverList, eventPump)
     this.name = name;
     this.servers = new Object();
     this.serverList = new Array();
+    this.ignoreList = new Object();
+    this.ignoreMaskCache = new Object();
     this.connecting = false;
     
     for (var i = 0; i < serverList.length; ++i)
@@ -237,6 +239,32 @@ CIRCNetwork.prototype.isConnected =
 function net_connected (e)
 {
     return ("primServ" in this && this.primServ.isConnected);   
+}
+
+CIRCNetwork.prototype.ignore =
+function net_ignore (hostmask)
+{
+    var input = getHostmaskParts(hostmask);
+    
+    if (input.mask in this.ignoreList)
+        return false;
+    
+    this.ignoreList[input.mask] = input;
+    this.ignoreMaskCache = new Object();
+    return true;
+}
+
+CIRCNetwork.prototype.unignore =
+function net_ignore (hostmask)
+{
+    var input = getHostmaskParts(hostmask);
+    
+    if (!(input.mask in this.ignoreList))
+        return false;
+    
+    delete this.ignoreList[input.mask];
+    this.ignoreMaskCache = new Object();
+    return true;
 }
 
 /*
@@ -765,6 +793,51 @@ function serv_ppline(e)
 CIRCServer.prototype.onRawData = 
 function serv_onRawData(e)
 {
+    function makeMaskRegExp(text)
+    {
+        function escapeChars(c)
+        {
+            if (c == "*")
+                return ".*";
+            if (c == "?")
+                return ".";
+            return "\\" + c;
+        }
+        // Anything that's not alpha-numeric gets escaped.
+        // "*" and "?" are 'escaped' to ".*" and ".".
+        // Optimisation; * translates as 'match all'.
+        return new RegExp("^" + text.replace(/[^\w\d]/g, escapeChars) + "$", "i");
+    };
+    function hostmaskMatches(user, mask)
+    {
+        // Need to match .nick, .user, and .host.
+        if (!("nickRE" in mask))
+        {
+            // We cache all the regexp objects, but use null if the term is 
+            // just "*", so we can skip having the object *and* the .match
+            // later on.
+            if (mask.nick == "*")
+                mask.nickRE = null;
+            else
+                mask.nickRE = makeMaskRegExp(mask.nick);
+            
+            if (mask.user == "*")
+                mask.userRE = null;
+            else
+                mask.userRE = makeMaskRegExp(mask.user);
+            
+            if (mask.host == "*")
+                mask.hostRE = null;
+            else
+                mask.hostRE = makeMaskRegExp(mask.host);
+        }
+        if ((!mask.nickRE || user.nick.match(mask.nickRE)) && 
+            (!mask.userRE || user.name.match(mask.userRE)) && 
+            (!mask.hostRE || user.host.match(mask.hostRE)))
+            return true;
+        return false;
+    };
+    
     var ary;
     var l = e.data;
 
@@ -793,6 +866,33 @@ function serv_onRawData(e)
             }
         }
     }
+    
+    e.ignored = false;
+    if (("user" in e) && e.user && ("ignoreList" in this.parent))
+    {
+        // Assumption: if "ignoreList" is in this.parent, we assume that:
+        //   a) it's an array.
+        //   b) ignoreMaskCache also exists, and
+        //   c) it's an array too.
+        
+        if (!(e.source in this.parent.ignoreMaskCache))
+        {
+            for (var m in this.parent.ignoreList)
+            {
+                if (hostmaskMatches(e.user, this.parent.ignoreList[m]))
+                {
+                    e.ignored = true;
+                    break;
+                }
+            }
+            /* Save this exact source in the cache, with results of tests. */
+            this.parent.ignoreMaskCache[e.source] = e.ignored;
+        }
+        else
+        {
+            e.ignored = this.parent.ignoreMaskCache[e.source];
+        }
+    }
 
     e.server = this;
 
@@ -811,6 +911,10 @@ function serv_onRawData(e)
 
     e.decodeParam = decodeParam;
     e.code = e.params[0].toUpperCase();
+    
+    // Ignore all Privmsg and Notice messages here.
+    if (e.ignored && ((e.code == "PRIVMSG") || (e.code == "NOTICE")))
+        return true;
 
     e.type = "parseddata";
     e.destObject = this;
