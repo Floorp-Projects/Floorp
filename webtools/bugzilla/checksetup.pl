@@ -174,20 +174,50 @@ sub have_vers {
 }
 
 # Check versions of dependencies.  0 for version = any version acceptible
-my %modules = (
-    "DBI"          => "1.13",
-    "Data::Dumper" => "0",
-    "DBD::mysql"   => "1.2209",
-    "Date::Parse"  => "0",
-    "AppConfig"    => "1.52",
-    "Template"     => "2.07",
-    "Text::Wrap"   => "2001.0131",
-    "File::Spec"   => "0.82"
-);
+my $modules = [ 
+    { 
+        name => 'AppConfig',  
+        version => '1.52' 
+    }, 
+    { 
+        name => 'CGI::Carp', 
+        version => '0' 
+    }, 
+    {
+        name => 'Data::Dumper', 
+        version => '0' 
+    }, 
+    {        
+        name => 'Date::Parse', 
+        version => '0' 
+    }, 
+    { 
+        name => 'DBI', 
+        version => '1.13' 
+    }, 
+    { 
+        name => 'DBD::mysql', 
+        version => '1.2209' 
+    }, 
+    { 
+        name => 'File::Spec', 
+        version => '0.82' 
+    }, 
+    { 
+        name => 'Template', 
+        version => '2.07' 
+    }, 
+    { 
+        name => 'Text::Wrap', 
+        version => '2001.0131' 
+    } 
+];
 
 my %missing = ();
-foreach my $module (keys %modules) {
-    unless (have_vers($module, $modules{$module})) { $missing{$module} = $modules{$module} }
+foreach my $module (@{$modules}) {
+    unless (have_vers($module->{name}, $module->{version})) { 
+        $missing{$module->{name}} = $module->{version};
+    }
 }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
