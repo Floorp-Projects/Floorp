@@ -28,6 +28,9 @@
 #include "nsSupportsArray.h"
 #include "nsIFileSpec.h"
 #include "nsIFile.h"
+#ifndef XPCONNECT_STANDALONE
+#include "nsIPrincipal.h"
+#endif
 extern const char mozJSComponentLoaderProgID[];
 extern const char jsComponentTypeName[];
 
@@ -63,12 +66,14 @@ public:
     nsCOMPtr<nsIRegistry> mRegistry;
     nsCOMPtr<nsIXPConnect> mXPC;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
+#ifndef XPCONNECT_STANDALONE
+    nsCOMPtr<nsIPrincipal> mSystemPrincipal;
+#endif
 
     JSObject  *mSuperGlobal;
     JSRuntime *mRuntime;
     JSContext *mContext;
     JSObject  *mCompMgrWrapper;
-    JSObject  *mSeasonPass;     // holds system principal atop the scope chain
     
     PLHashTable *mModules;
     PLHashTable *mGlobals;
