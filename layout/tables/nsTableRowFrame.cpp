@@ -241,6 +241,7 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
       prevKidFrame->SetNextSibling(kidFrame);
     } else {
       // Our first child (**blush**)
+      if (gsDebug1) printf ("row frame %p, setting first child to %p\n", this, kidFrame);
       mFirstChild = kidFrame;
       SetFirstContentOffset(kidFrame);
       if (gsDebug1) printf("ROW: set first content offset to %d\n", GetFirstContentOffset()); //@@@
@@ -276,6 +277,18 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   PostReflowCheck(result);
 #endif
 
+  if (gsDebug1==PR_TRUE) 
+  {
+    if (nsnull!=aMaxElementSize)
+      printf("nsTableRowFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
+              result==frComplete?"Complete":"Not Complete",
+              aDesiredSize.width, aDesiredSize.height,
+              aMaxElementSize->width, aMaxElementSize->height);
+    else
+      printf("nsTableRowFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
+             result==frComplete?"Complete":"Not Complete",
+             aDesiredSize.width, aDesiredSize.height);
+  }
   return result;
 
 }
@@ -293,6 +306,7 @@ nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 nsIFrame* nsTableRowFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
                                                  nsIFrame*       aParent)
 {
+  if (gsDebug1==PR_TRUE) printf("nsTableRowFrame::CreateContinuingFrame\n");
   nsTableRowFrame* cf = new nsTableRowFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   return cf;

@@ -25,10 +25,11 @@
 #include "nsIAtom.h"
 
 /**
- * TableContent is a concrete subclass for all content nodes contained directly within a table.
+ * TableContent is a concrete base class for all content nodes contained directly 
+ * within a table.
  *
  * @author  sclark
- * @version $Revision: 3.1 $
+ * @version $Revision: 3.2 $
  * @see
  */
 class nsTableContent : public nsHTMLContainer, public nsITableContent
@@ -36,23 +37,26 @@ class nsTableContent : public nsHTMLContainer, public nsITableContent
 
 public:
 
-  //NS_DECL_ISUPPORTS
-
 protected:
+  /** the table to which this content belongs */
   nsTablePart *mTable;
+
+  /** PR_TRUE if this content was generated in response to incomplete input,
+    * meaning there is no actual input tag matching this container.
+    */
   PRBool       mImplicit;
 
 public:
 
-  /**
-    * default constructor
+  /** constructor
+    * @param aTag  the HTML tag causing this caption to get constructed.
     */
   nsTableContent (nsIAtom* aTag);
 
-  /**
-    * constructor
-    * @param aTag
-    * @param aImplicit
+  /** constructor
+    * @param aTag  the HTML tag causing this caption to get constructed.
+    * @param aImplicit  PR_TRUE if there is no actual input tag corresponding to
+    *                   this caption.
     */
   nsTableContent (nsIAtom* aTag, PRBool aImplicit);
 
@@ -63,30 +67,26 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
-  /**
-    * returns the nsTablePart that contains this content node.
-    */
+  /** @see nsITableContent::GetTable */
   nsTablePart* GetTable ();
 
-  /** 
-  * Since mColGroup is the parent of the table column,
-  * reference counting should NOT be done.
-  * see /ns/raptor/doc/MemoryModel.html
-  **/
+  /** @see nsITableContent::SetTable 
+    * Note: Since mColGroup is the parent of the table column,
+    * reference counting should NOT be done.
+    * see /ns/raptor/doc/MemoryModel.html
+    **/
   void SetTable (nsTablePart *aTable);
 
-  /**
-    *
-    */
+  /** @see nsITableContent::IsImplicit */
   virtual PRBool IsImplicit () const;
 
-  /**
-   * Don't want to put out implicit tags when saving.
-   */
+  /** @see nsITableContent::SkipSelfForSaving */
   virtual PRBool SkipSelfForSaving ();
 
+  /** @see nsITableContent::GetType */
   virtual int GetType()=0;
 
+  /** debug method prints out this and all child frames */
   void List(FILE* out, PRInt32 aIndent) const;
 
   PRBool InsertChildAt(nsIContent* aKid, PRInt32 aIndex);
@@ -97,11 +97,11 @@ public:
 
 private:
   /**
-  *
-  * If the content is a nsTableContent then call SetTable on 
-  * aContent, otherwise, do nothing.
-  *
-  */
+    *
+    * If the content is a nsTableContent then call SetTable on 
+    * aContent, otherwise, do nothing.
+    *
+    */
   void SetTableForTableContent(nsIContent* aContent, nsTablePart *aTable);
 
 };

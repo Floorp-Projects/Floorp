@@ -318,6 +318,11 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     // Update mLastContentIsComplete now that this kid fits
     mLastContentIsComplete = PRBool(status == frComplete);
 
+    /* Row groups should not create continuing frames for rows 
+     * unless they absolutely have to!
+     * check to see if this is absolutely necessary (with new params from troy)
+     * otherwise PushChildren and bail.
+     */
     // Special handling for incomplete children
     if (frNotComplete == status) {
       // XXX It's good to assume that we might still have room
@@ -512,6 +517,11 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
       printf("\n");
 #endif
 
+      /* Row groups should not create continuing frames for rows 
+       * unless they absolutely have to!
+       * check to see if this is absolutely necessary (with new params from troy)
+       * otherwise PushChildren and bail, as above.
+       */
       // Is the child we just pulled up complete?
       if (frNotComplete == status) {
         // No the child isn't complete.
@@ -905,6 +915,19 @@ nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
 #ifdef NS_DEBUG
   PostReflowCheck(status);
 #endif
+
+  if (gsDebug1==PR_TRUE) 
+  {
+    if (nsnull!=aMaxElementSize)
+      printf("nsTableRowGroupFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
+              status==frComplete?"Complete":"Not Complete",
+              aDesiredSize.width, aDesiredSize.height,
+              aMaxElementSize->width, aMaxElementSize->height);
+    else
+      printf("nsTableRowGroupFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
+             status==frComplete?"Complete":"Not Complete",
+             aDesiredSize.width, aDesiredSize.height);
+  }
 
   return status;
 

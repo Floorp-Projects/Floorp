@@ -797,8 +797,6 @@ void nsTablePart::BuildCellMap ()
         colIndex++;
       }
 
-      // SEC: this whole next if block is very suspicious.  
-
       if (cellIndex < cellCount)  
       {
         // We didn't use all the cells in this row up. Grow the cell

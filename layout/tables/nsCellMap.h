@@ -22,9 +22,17 @@
 
 class CellData;
 
-/**
+/** nsCellMap is a support class for nsTablePart.  
+  * It maintains an Rows x Columns grid onto which the cells of the table are mapped.
+  * This makes processing of rowspan and colspan attributes much easier.
+  * Each cell is represented by a CellData object.
+  *
+  * @see CellData
+  * @see nsTablePart::BuildCellMap
+  * @see nsTablePart::GrowCellMap
+  * @see nsTablePart::BuildCellIntoMap
+  *
   * acts like a 2-dimensional array, so all offsets are 0-indexed
-  * to the outside world.
   TODO:  inline methods
   */
 class nsCellMap
@@ -45,18 +53,25 @@ public:
   // NOT VIRTUAL BECAUSE THIS CLASS SHOULD **NEVER** BE SUBCLASSED  
   ~nsCellMap();
 
+  /** initialize the CellMap to (aRows x aColumns) */
   void Reset(int aRows, int aColumns);
 
+  /** return the CellData for the cell at (aRow,aColumn) */
   CellData * GetCellAt(int aRow, int aColumn) const;
 
-  void SetCellAt(CellData *aCell, int aRow, int aColumn);
+  /** assign aCellData to the cell at (aRow,aColumn) */
+  void SetCellAt(CellData *aCellData, int aRow, int aColumn);
 
+  /** expand the CellMap to have aColCount columns.  The number of rows remains the same */
   void GrowTo(int aColCount);
 
+  /** return the total number of columns in the table represented by this CellMap */
   int GetColCount() const;
 
+  /** return the total number of rows in the table represented by this CellMap */
   int GetRowCount() const;
 
+  /** for debugging, print out this CellMap */
   void DumpCellMap() const;
 
 };

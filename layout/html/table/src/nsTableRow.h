@@ -24,8 +24,14 @@
 
 
 /**
- * nsTableRow
- * datastructure to maintain information about a single table row
+ * nsTableRow is the content object that represents table rows 
+ * (HTML tag TR). This class cannot be reused
+ * outside of an nsTableRowGroup.  It assumes that its parent is an nsTableRowGroup, and 
+ * its children are nsTableCells.
+ * 
+ * @see nsTablePart
+ * @see nsTableRowGroup
+ * @see nsTableCell
  *
  * @author  sclark
  */
@@ -33,56 +39,89 @@ class nsTableRow : public nsTableContent
 {
 
 private:
-
+  /** parent pointer */
   nsTableRowGroup *  mRowGroup;
+
+  /** the index of the row this content object represents */
   PRInt32            mRowIndex;
 
 public:
 
+  /** constructor
+    * @param aTag  the HTML tag causing this row to get constructed.
+    */
   nsTableRow (nsIAtom* aTag);
 
+  /** constructor
+    * @param aTag  the HTML tag causing this row to get constructed.
+    * @param aImplicit  PR_TRUE if there is no actual input tag corresponding to
+    *                   this row.
+    */
   nsTableRow (nsIAtom* aTag, PRBool aImplicit);
 
+  /** destructor, not responsible for any memory destruction itself */
   virtual ~nsTableRow();
 
   // For debugging purposes only
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
+  /** returns nsITableContent::kTableRowType */
   virtual int GetType();
 
+  /** @see nsIHTMLContent::CreateFrame */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
+  /** return the row group that contains me (my parent) */
   virtual nsTableRowGroup *GetRowGroup ();
 
 
-  /** 
-  * Since mRowGroup is the parent of the table row,
-  * reference counting should not be done on 
-  * this variable when setting the row.
-  * see /ns/raptor/doc/MemoryModel.html
-  **/
+  /** Set my parent row group.<br>
+    * NOTE: Since mRowGroup is the parent of the table row,
+    * reference counting should not be done on 
+    * this variable when setting the row.
+    * see /ns/raptor/doc/MemoryModel.html
+    **/
   virtual void SetRowGroup (nsTableRowGroup * aRowGroup);
 
-
+  /** return this row's starting row index */
   virtual PRInt32 GetRowIndex ();
 
+  /** set this row's starting row index */
   virtual void SetRowIndex (int aRowIndex);
 
+  /** return the number of columns represented by the cells in this row */
   virtual PRInt32 GetMaxColumns();
 
+  /** notify the containing nsTablePart that cell information has changed */
   virtual void ResetCellMap ();
 
   /* ----------- nsTableContent overrides ----------- */
 
+  /** can only append objects that are cells (implement nsITableContent and are .
+    * of type nsITableContent::kTableCellType.)
+    * @see nsIContent::AppendChild
+    */
   virtual PRBool AppendChild (nsIContent * aContent);
 
+  /** can only insert objects that are cells (implement nsITableContent and are .
+    * of type nsITableContent::kTableCellType.)
+    * @see nsIContent::InsertChildAt
+    */
   virtual PRBool InsertChildAt (nsIContent * aContent, int aIndex);
 
+  /** can only replace child objects with objects that are cells 
+    * (implement nsITableContent and are * of type nsITableContent::kTableCellType.)
+    * @param aContent the object to insert, must be a cell
+    * @param aIndex   the index of the object to replace.  Must be in the range
+    *                 0<=aIndex<ChildCount().
+    * @see nsIContent::ReplaceChildAt
+    */
   virtual PRBool ReplaceChildAt (nsIContent * aContent, int aIndex);
 
+  /** @see nsIContent::InsertChildAt */
   virtual PRBool RemoveChildAt (int aIndex);
 
 

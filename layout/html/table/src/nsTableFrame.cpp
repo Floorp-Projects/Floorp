@@ -727,7 +727,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
     }
   }
 
-  // Did we successfully relow our mapped children?
+  // Did we successfully reflow our mapped children?
   if (PR_TRUE == reflowMappedOK) {
     // Any space left?
     if ((nsnull != mFirstChild) && (state.availSize.height <= 0)) {
@@ -1581,7 +1581,6 @@ if there is space left over
 
 // Step 1 - assign the width of all fixed-width columns, 
   //          and calculate min/max table width
-    // still needs to take insets into account
 PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt32 maxWidth, 
                                              PRInt32 aNumCols, nsStyleMolecule* aTableStyleMol,
                                              PRInt32 &aTotalFixedWidth,
