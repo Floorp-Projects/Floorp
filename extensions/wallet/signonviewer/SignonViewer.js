@@ -93,7 +93,7 @@ function LoadReject()
     currSignon = RemoveHTMLFormatting(currSignon);
     var site = currSignon.substring(0,currSignon.lastIndexOf(":"));
     var user = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
-    AddItem("ignoredlist",[site,user],"reject_",i-1);
+    AddItem("ignoredlist",[site],"reject_",i-1);
   }
 }
 

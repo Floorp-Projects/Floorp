@@ -82,12 +82,9 @@
           <tree id="ignoretree" class="inset" style="height: 280px; width: 380px;" align="vertical"
                 onclick="HandleEvent(event);"
                 onkeypress="HandleEvent(event,1)">
-            <treecol width="45%"/>
-            <treecol width="55%"/>
             <treehead>
               <treerow>
                 <treecell value="&treehead.signonsite.label;"/>
-                <treecell value="&treehead.signonusername.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="ignoredlist"/>
