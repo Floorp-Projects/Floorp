@@ -15,7 +15,7 @@ tree[id="searchengines"] {
  border: 1; 
  border-spacing: 0px; 
 // width: 300;
- align: center;
+// align: center;
 } 
 
 treeitem { 
@@ -32,12 +32,12 @@ treebody {
 
 treecol[id="CheckboxColumn"] {
  display: table-column;
- width: 50px;
+ width: 40px;
 }
 
 treecol[id="NameColumn"] {
  display: table-column;
- width: 90%;
+ width: 200px;
 }
 
 treecell { 
@@ -56,7 +56,7 @@ treecell[sortActive="true"][sortDirection="descending"] {
  }
  
 treecol[sortActive="true"] {
-  background-color: lightgreen;
+  background-color: lightgray;
 }
 
 treehead treeitem treecell { 
