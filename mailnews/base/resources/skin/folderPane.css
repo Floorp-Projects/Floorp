@@ -21,17 +21,12 @@
 /* basic mail folders */
 treeitem.folderTreeItem > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/Folder.gif");
+ list-style-image: url("chrome://messenger/skin/folder-closed.gif");
 }
 
 treeitem.folderTreeItem[open="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("chrome://messenger/skin/folder-open.gif");
-}
-
-treeitem[IsServer="true"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("chrome://messenger/skin/server.gif");
 }
 
 /* special folder */
@@ -42,7 +37,7 @@ treeitem[SpecialFolder="Inbox"] > treerow > treecell > .tree-icon
 
 treeitem[SpecialFolder="Inbox"][open="true"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/folder-inbox-open.gif");
+ list-style-image: url("chrome://messenger/skin/folder-inbox.gif");
 }
 
 treeitem[SpecialFolder="Trash"] > treerow > treecell > .tree-icon
@@ -52,47 +47,17 @@ treeitem[SpecialFolder="Trash"] > treerow > treecell > .tree-icon
 
 treeitem[SpecialFolder="Trash"][open="true"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/folder-trash-open.gif");
-}
-
-treeitem[SpecialFolder="Sent"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("chrome://messenger/skin/folder-sent.gif");
-}
-
-treeitem[SpecialFolder="Sent"][open="true"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("chrome://messenger/skin/folder-sent-open.gif");
-}
-
-treeitem[SpecialFolder="Templates"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("chrome://messenger/skin/folder-template.gif");
-}
-
-treeitem[SpecialFolder="Templates"][open="true"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("chrome://messenger/skin/folder-template-open.gif");
-}
-
-treeitem[SpecialFolder="Drafts"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("chrome://messenger/skin/folder-draft.gif");
-}
-
-treeitem[SpecialFolder="Drafts"][open="true"] > treerow > treecell > .tree-icon
-{
- list-style-image: url("chrome://messenger/skin/folder-draft-open.gif");
-}
-
-treeitem[SpecialFolder="Unsent Messages"] > treerow > treecell > .tree-icon 
-{
- list-style-image: url("chrome://messenger/skin/folder-outbox.gif");
+ list-style-image: url("chrome://messenger/skin/folder-trash.gif");
 }
 
 treeitem[BiffState="NewMail"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/folder-new.gif");
+ list-style-image: url("chrome://messenger/skin/folder-new-closed.gif");
+}
+
+treeitem[BiffState="NewMail"][open="true"] > treerow > treecell > .tree-icon
+{
+ list-style-image: url("chrome://messenger/skin/folder-new-open.gif");
 }
 
 treeitem[SpecialFolder="Inbox"][BiffState="NewMail"] > treerow > treecell > .tree-icon
@@ -100,25 +65,27 @@ treeitem[SpecialFolder="Inbox"][BiffState="NewMail"] > treerow > treecell > .tre
  list-style-image: url("chrome://messenger/skin/folder-inbox-new.gif");
 }
 
-/* IMAP folders */
-treeitem[ServerType="imap"] > treerow > treecell > .tree-icon
+treeitem[IsServer="true"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/folder-server.gif");
+ list-style-image: url("chrome://messenger/skin/server-mail.gif");
 }
 
-treeitem[ServerType="imap"][open="true"] > treerow > treecell > .tree-icon
+treeitem[IsServer="true"][open="true"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/folder-server-open.gif");
+ list-style-image: url("chrome://messenger/skin/server-mail.gif");
 }
+
+/* IMAP folders */
 
 treeitem[IsServer="true"][ServerType="imap"][IsSecure="true"] > treerow > treecell > .tree-icon
 {
     list-style-image: url("chrome://messenger/skin/server-remote-lock.gif");
 }
 
-treeitem[IsServer="true"][ServerType="imap"] > treerow > treecell > .tree-icon
+/* Local servers */
+treeitem[IsServer="true"][ServerType="none"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/server-remote.gif");
+ list-style-image: url("chrome://messenger/skin/server-local.gif");
 }
 
 

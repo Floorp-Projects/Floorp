@@ -142,7 +142,9 @@ protected:
 								   nsIRDFNode **target);
 
 	nsresult createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult createMessageHasAttachmentNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageIsImapDeletedNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult createMessageMessageTypeNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageOrderReceivedNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageOrderReceivedSortNode(nsIMessage *message, nsIRDFNode **target);
 
@@ -195,7 +197,9 @@ protected:
 	static nsIRDFResource* kNC_Unread;
 	static nsIRDFResource* kNC_MessageChild;
 	static nsIRDFResource* kNC_IsUnread;
+	static nsIRDFResource* kNC_HasAttachment;
 	static nsIRDFResource* kNC_IsImapDeleted;
+	static nsIRDFResource* kNC_MessageType;
 	static nsIRDFResource* kNC_OrderReceived;
 	static nsIRDFResource* kNC_OrderReceivedSort;
 
@@ -221,6 +225,8 @@ protected:
 	nsCOMPtr<nsIRDFNode> kReadLiteral;
 	nsCOMPtr<nsIRDFNode> kTrueLiteral;
 	nsCOMPtr<nsIRDFNode> kFalseLiteral;
+	nsCOMPtr<nsIRDFNode> kNewsLiteral;
+	nsCOMPtr<nsIRDFNode> kMailLiteral;
 
   // message properties
   static nsIAtom *kStatusAtom;

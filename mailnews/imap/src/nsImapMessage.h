@@ -39,7 +39,7 @@ public:
 
 	NS_DECL_ISUPPORTS_INHERITED
 	NS_IMETHOD GetMsgFolder(nsIMsgFolder **folder);
-
+	NS_IMETHOD GetMessageType(PRUint32 *aMessageType);
 protected:
 	nsresult GetFolderFromURI(nsIMsgFolder **folder);
 

@@ -30,7 +30,12 @@ install::
   $(MAKE_INSTALL) msgHdrViewOverlay.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) mailfolder.gif	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) open-mailfolder.gif	$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) mail-message.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) message-mail.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) message-mail-new.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) message-mail-attach.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) message-mail-imapdelete.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) message-news.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) message-news-new.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) inbox.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) trash.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) outbox.gif	$(DIST)\bin\chrome\messenger\skin\default
@@ -53,7 +58,7 @@ install::
 	$(MAKE_INSTALL) unthreadcol.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) flagcol.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) flaggedmail.gif		$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) Folder.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-closed.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-draft.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-draft-open.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-draft-share.gif			$(DIST)\bin\chrome\messenger\skin\default
@@ -68,6 +73,7 @@ install::
 	$(MAKE_INSTALL) folder-mailserver.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-new.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-new-open.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) folder-new-closed.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-newsgroup.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-newsgroup-new.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-open.gif			$(DIST)\bin\chrome\messenger\skin\default
@@ -89,8 +95,12 @@ install::
 	$(MAKE_INSTALL) folder-trash-open.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-trash-share.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folder-trash-share-open.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) server.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server-mail.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server-mail-new.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server-local.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server-local-new.gif				$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) server-news.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) server-news-new.gif				$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) server-news-lock.gif				$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) server-remote.gif				$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) server-remote-lock.gif				$(DIST)\bin\chrome\messenger\skin\default
@@ -103,7 +113,12 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\threadPane.css
 	rm -f $(DIST)\chrome\messenger\skin\default\mailfolder.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\open-mailfolder.gif
-	rm -f $(DIST)\chrome\messenger\skin\default\mail-message.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\message-mail.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\message-mail-new.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\message-mail-attach.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\message-mail-imapdelete.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\message-news.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\message-news-new.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\inbox.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\trash.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\outbox.gif
@@ -126,13 +141,21 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\unthreadcol.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\flagcol.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\flaggedmail.gif
-	rm -f $(DIST)\chrome\messenger\skin\default\server.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\server-mail.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\server-mail-new.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\server-local.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\server-local-new.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\server-news.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\server-news-new.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\server-remote.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\server-remote-lock.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\server-news-lock.gif
-  rm -f $(DIST)\chrome\messenger\skin\default\attach.gif
-  rm -f $(DIST)\chrome\messenger\skin\default\addtoab.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\folder-closed.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\folder-open.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\folder-new-closed.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\folder-new-open.gif
+    rm -f $(DIST)\chrome\messenger\skin\default\attach.gif
+    rm -f $(DIST)\chrome\messenger\skin\default\addtoab.gif
 
 
 

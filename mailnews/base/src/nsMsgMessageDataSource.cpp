@@ -61,7 +61,9 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Total = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Unread = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageChild = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_IsUnread = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_HasAttachment = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_IsImapDeleted = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_MessageType = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_OrderReceived = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_OrderReceivedSort = nsnull;
 
@@ -115,7 +117,9 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_Unread, refcnt);
 		NS_RELEASE2(kNC_MessageChild, refcnt);
 		NS_RELEASE2(kNC_IsUnread, refcnt);
+		NS_RELEASE2(kNC_HasAttachment, refcnt);
 		NS_RELEASE2(kNC_IsImapDeleted, refcnt);
+		NS_RELEASE2(kNC_MessageType, refcnt);
 		NS_RELEASE2(kNC_OrderReceived, refcnt);
 		NS_RELEASE2(kNC_OrderReceivedSort, refcnt);
 
@@ -170,7 +174,9 @@ nsresult nsMsgMessageDataSource::Init()
 		rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES,   &kNC_Unread);
 		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
 		rdf->GetResource(NC_RDF_ISUNREAD, &kNC_IsUnread);
+		rdf->GetResource(NC_RDF_HASATTACHMENT, &kNC_HasAttachment);
 		rdf->GetResource(NC_RDF_ISIMAPDELETED, &kNC_IsImapDeleted);
+		rdf->GetResource(NC_RDF_MESSAGETYPE, &kNC_MessageType);
 		rdf->GetResource(NC_RDF_ORDERRECEIVED, &kNC_OrderReceived);
 		rdf->GetResource(NC_RDF_ORDERRECEIVED_SORT, &kNC_OrderReceivedSort);
 
@@ -222,6 +228,10 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
 	str = "false";
 	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
+	str = "news";
+	createNode(str, getter_AddRefs(kNewsLiteral), rdf);
+	str = "mail";
+	createNode(str, getter_AddRefs(kMailLiteral), rdf);
 	return NS_OK;
 }
 
@@ -395,7 +405,9 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 		else if((kNC_Subject == property) || (kNC_Date == property) ||
 				(kNC_Status == property) || (kNC_Flagged == property) ||
 				(kNC_Priority == property) || (kNC_Size == property) ||
-				(kNC_IsUnread == property) || (kNC_IsImapDeleted == property) || (kNC_OrderReceived == property))
+				(kNC_IsUnread == property) || (kNC_IsImapDeleted == property) || 
+				(kNC_OrderReceived == property) || (kNC_HasAttachment == property) ||
+				(kNC_MessageType == property))
 		{
 			nsSingletonEnumerator* cursor =
 				new nsSingletonEnumerator(source);
@@ -520,7 +532,9 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(PRBool showThreads,
 	(*arcs)->AppendElement(kNC_Priority);
 	(*arcs)->AppendElement(kNC_Size);
 	(*arcs)->AppendElement(kNC_IsUnread);
+	(*arcs)->AppendElement(kNC_HasAttachment);
 	(*arcs)->AppendElement(kNC_IsImapDeleted);
+	(*arcs)->AppendElement(kNC_MessageType);
 	(*arcs)->AppendElement(kNC_OrderReceived);
 
 	return NS_OK;
@@ -917,8 +931,12 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		rv = createMessageUnreadNode(message, target);
 	else if((kNC_IsUnread == property))
 		rv = createMessageIsUnreadNode(message, target);
+	else if((kNC_HasAttachment == property))
+		rv = createMessageHasAttachmentNode(message, target);
 	else if((kNC_IsImapDeleted == property))
 		rv = createMessageIsImapDeletedNode(message, target);
+	else if((kNC_MessageType == property))
+		rv = createMessageMessageTypeNode(message, target);
   else if ((kNC_MessageChild == property))
     rv = createMessageMessageChildNode(message, target);
   else if ((kNC_OrderReceived == property))
@@ -1052,6 +1070,23 @@ nsMsgMessageDataSource::createMessageIsUnreadNode(nsIMessage *message, nsIRDFNod
 }
 
 nsresult
+nsMsgMessageDataSource::createMessageHasAttachmentNode(nsIMessage *message, nsIRDFNode **target)
+{
+	nsresult rv;
+	PRUint32 flags;
+	rv = message->GetFlags(&flags);
+	if(NS_FAILED(rv))
+		return rv;
+	if(flags & MSG_FLAG_ATTACHMENT)
+		*target = kTrueLiteral;
+	else
+		*target = kFalseLiteral;
+
+	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
+
+nsresult
 nsMsgMessageDataSource::createMessageIsImapDeletedNode(nsIMessage *message, nsIRDFNode **target)
 {
 	nsresult rv;
@@ -1068,6 +1103,22 @@ nsMsgMessageDataSource::createMessageIsImapDeletedNode(nsIMessage *message, nsIR
 	return NS_OK;
 }
 
+nsresult
+nsMsgMessageDataSource::createMessageMessageTypeNode(nsIMessage *message, nsIRDFNode **target)
+{
+	nsresult rv;
+	PRUint32 type;
+	rv = message->GetMessageType(&type);
+	if(NS_FAILED(rv))
+		return rv;
+	if(type == nsIMessage::NewsMessage)
+		*target = kNewsLiteral;
+	else
+		*target = kMailLiteral;
+
+	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
 
 nsresult
 nsMsgMessageDataSource::createMessageOrderReceivedNode(nsIMessage *message, nsIRDFNode **target)

@@ -22,11 +22,6 @@ treeitem[IsUnread="true"] > treerow {
 	font-weight: bold;
 }
 
-treeitem[IsImapDeleted="true"] > treerow {
-	font-weight: lighter;
-   font-style: italic;
-}
-
 treeitem[Priority="Highest"] > treerow > treecell.prioritycol > .tree-button
 {
 	color:red;
@@ -48,13 +43,44 @@ treeitem[Priority="Low"] > treerow > treecell.prioritycol > .tree-button
 }
 
 treeitem > treerow > treecell > .tree-icon {
-  list-style-image: url("chrome://messenger/skin/mail-message.gif");
+  list-style-image: url("chrome://messenger/skin/message-mail.gif");
   min-height: 14px;
 }
 
 treeitem[open="true"] > treerow > treecell > .tree-icon
 {
-  list-style-image: url("chrome://messenger/skin/mail-message.gif");
+  list-style-image: url("chrome://messenger/skin/message-mail.gif");
+  min-height: 14px;
+}
+
+treeitem[Status="new"] > treerow > treecell > .tree-icon {
+  list-style-image: url("chrome://messenger/skin/message-mail-new.gif");
+  min-height: 14px;
+}
+
+treeitem[MessageType="news"] > treerow > treecell > .tree-icon {
+  list-style-image: url("chrome://messenger/skin/message-news.gif");
+  min-height: 14px;
+}
+
+treeitem[MessageType="news"][open="true"] > treerow > treecell > .tree-icon
+{
+  list-style-image: url("chrome://messenger/skin/message-news.gif");
+  min-height: 14px;
+}
+
+treeitem[MessageType="news"][Status="new"] > treerow > treecell > .tree-icon {
+  list-style-image: url("chrome://messenger/skin/message-news-new.gif");
+  min-height: 14px;
+}
+
+treeitem[MessageType="mail"][HasAttachment="true"] > treerow > treecell > .tree-icon {
+  list-style-image: url("chrome://messenger/skin/message-mail-attach.gif");
+  min-height: 14px;
+}
+
+treeitem[IsImapDeleted="true"] > treerow  > treecell > .tree-icon{
+  list-style-image: url("chrome://messenger/skin/message-mail-imapdelete.gif");
   min-height: 14px;
 }
 
@@ -87,9 +113,9 @@ treecell.threadColumnHeader[currentView="unthreaded"] > .tree-button{
 }
 
 treecell.readColumnHeader > .tree-button {
-  list-style-image: url("chrome://messenger/skin/readcol.gif");
+  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
 }
 
 treecell.flagColumnHeader > .tree-button {
-  list-style-image: url("chrome://messenger/skin/flagcol.gif");
+  list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
 }

@@ -29,6 +29,13 @@ interface nsIMessage : nsIMsgHdr {
   readonly attribute nsMsgKey msgKey;
 	nsIMsgFolder GetMsgFolder();
 	void SetMsgFolder(in nsIMsgFolder folder);
+
+	//I hate to do this, but I really don't want to use a string due to all of the
+	//copying around so I'm using these constants and making them part of the base interface.
+	const unsigned long MailMessage    = 0;
+	const unsigned long NewsMessage     = 1;
+	readonly attribute unsigned long messageType;
+
 };
 
 [scriptable, uuid(82702556-01A2-11d3-8A69-0060B0FC04D2)]

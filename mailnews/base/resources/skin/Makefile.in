@@ -35,7 +35,12 @@ EXPORT_RESOURCE_SAMPLES = \
 		msgHdrViewOverlay.css \
 		mailfolder.gif \
 		open-mailfolder.gif \
-		mail-message.gif \
+		message-mail.gif \
+		message-mail-new.gif \
+		message-mail-attach.gif \
+		message-imapdelete.gif \
+		message-news.gif \
+		message-news-new.gif \
 		inbox.gif \
 		trash.gif \
 		outbox.gif \
@@ -58,7 +63,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		unthreadcol.gif \
 		flagcol.gif \
 		flaggedmail.gif \
-		Folder.gif \
+		folder-closed.gif \
 		folder-draft.gif \
 		folder-draft-open.gif \
 		folder-draft-share.gif \
@@ -73,6 +78,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		folder-mailserver.gif \
 		folder-new.gif \
 		folder-new-open.gif \
+		folder-new-closed.gif \
 		folder-newsgroup.gif \
 		folder-newsgroup-new.gif \
 		folder-open.gif \
@@ -94,8 +100,12 @@ EXPORT_RESOURCE_SAMPLES = \
 		folder-trash-open.gif \
 		folder-trash-share.gif \
 		folder-trash-share-open.gif \
-		server.gif \
+		server-mail.gif \
+		server-mail-new.gif \
+		server-local.gif \
+		server-local-new.gif \
 		server-news.gif \
+		server-news-new.gif \
 		server-remote.gif \
 		server-news-lock.gif \
 		server-remote-lock.gif \

@@ -55,6 +55,15 @@ NS_IMETHODIMP nsNewsMessage::GetMsgFolder(nsIMsgFolder **folder)
   return rv;
 }
 
+NS_IMETHODIMP nsNewsMessage::GetMessageType(PRUint32 *aMessageType)
+{
+	if(!aMessageType)
+		return NS_ERROR_NULL_POINTER;
+
+	*aMessageType = nsIMessage::NewsMessage;
+	return NS_OK;
+}
+
 //Note this is the same as the function in LocalMessage except for news uri specific stuff.
 //I'm not convinced that parsing the url is going to be different so I'm setting this up as a
 //separate function.  If it turns out this isn't the case we could write a utility function that

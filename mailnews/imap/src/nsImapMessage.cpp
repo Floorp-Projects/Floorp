@@ -54,6 +54,15 @@ NS_IMETHODIMP nsImapMessage::GetMsgFolder(nsIMsgFolder **folder)
 	return rv;
 }
 
+NS_IMETHODIMP nsImapMessage::GetMessageType(PRUint32 *aMessageType)
+{
+	if(!aMessageType)
+		return NS_ERROR_NULL_POINTER;
+
+	*aMessageType = nsIMessage::MailMessage;
+	return NS_OK;
+}
+
 nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 {
 	nsresult rv;
