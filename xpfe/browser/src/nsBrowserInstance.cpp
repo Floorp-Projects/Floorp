@@ -1243,7 +1243,7 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
 
     aDOMWindow->GetTop(getter_AddRefs(topDOMWindow));
 
-    if (aDOMWindow != topDOMWindow) {
+    if (aDOMWindow != topDOMWindow.get()) {
       // Since the notification is from a child DOM window, just ignore it.
       return NS_OK;
     }
