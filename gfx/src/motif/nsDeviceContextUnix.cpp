@@ -66,7 +66,7 @@ NS_IMPL_QUERY_INTERFACE(nsDeviceContextUnix, kDeviceContextIID)
 NS_IMPL_ADDREF(nsDeviceContextUnix)
 NS_IMPL_RELEASE(nsDeviceContextUnix)
 
-nsresult nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
+NS_IMETHODIMP nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
 {
   NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
 
@@ -91,16 +91,18 @@ nsresult nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
 }
 
 
-float nsDeviceContextUnix :: GetScrollBarWidth() const
+NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarWidth(float &aWidth) const
 {
   // XXX Should we push this to widget library
-  return 240.0;
+  aWidth = 240.0;
+  return NS_OK;
 }
 
-float nsDeviceContextUnix :: GetScrollBarHeight() const
+NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarHeight(float &aHeight) const
 {
   // XXX Should we push this to widget library
-  return 240.0;
+  aHeight = 240.0;
+  return NS_OK;
 }
 
 

@@ -32,13 +32,13 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsNativeWidget aWidget);
+  NS_IMETHOD  Init(nsNativeWidget aWidget);
 
-  virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView);
-  virtual nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow);
+  NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
+  NS_IMETHOD  InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow);
 
-  virtual float GetDevUnitsToTwips() const;
-  virtual float GetTwipsToDevUnits() const;
+  NS_IMETHOD  GetDevUnitsToTwips(float &aDevUnitsToTwips) const;
+  NS_IMETHOD  GetTwipsToDevUnits(float &aTwipsToDevUnits) const;
 
   virtual void SetAppUnitsToDevUnits(float aAppUnits);
   virtual void SetDevUnitsToAppUnits(float aDevUnits);

@@ -83,7 +83,7 @@ DeviceContextImpl :: ~DeviceContextImpl()
   }
 }
 
-nsresult DeviceContextImpl :: Init(nsNativeWidget aWidget)
+NS_IMETHODIMP DeviceContextImpl :: Init(nsNativeWidget aWidget)
 {
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
@@ -93,14 +93,16 @@ nsresult DeviceContextImpl :: Init(nsNativeWidget aWidget)
   return NS_OK;
 }
 
-float DeviceContextImpl :: GetTwipsToDevUnits() const
+NS_IMETHODIMP DeviceContextImpl :: GetTwipsToDevUnits(float &aTwipsToDevUnits) const
 {
-  return mTwipsToPixels;
+  aTwipsToDevUnits = mTwipsToPixels;
+  return NS_OK;
 }
 
-float DeviceContextImpl :: GetDevUnitsToTwips() const
+NS_IMETHODIMP DeviceContextImpl :: GetDevUnitsToTwips(float &aDevUnitsToTwips) const
 {
-  return mPixelsToTwips;
+  aDevUnitsToTwips = mPixelsToTwips;
+  return NS_OK;
 }
 
 void DeviceContextImpl :: SetAppUnitsToDevUnits(float aAppUnits)
@@ -123,15 +125,16 @@ float DeviceContextImpl :: GetDevUnitsToAppUnits() const
   return mDevUnitsToAppUnits;
 }
 
-nsIRenderingContext * DeviceContextImpl :: CreateRenderingContext(nsIView *aView)
+NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)
 {
-  nsIRenderingContext *pContext = nsnull;
+  nsIRenderingContext *pContext;
   nsIWidget           *win = aView->GetWidget();
-  nsresult            rv;
+  nsresult             rv;
 
   static NS_DEFINE_IID(kRCCID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
 
+  aContext = nsnull;
   rv = NSRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
 
   if (NS_OK == rv) {
@@ -142,10 +145,11 @@ nsIRenderingContext * DeviceContextImpl :: CreateRenderingContext(nsIView *aView
   }
 
   NS_IF_RELEASE(win);
-  return pContext;
+  aContext = pContext;
+  return rv;
 }
 
-nsresult DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
+NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
   return (aContext->Init(this, aWin));
 }

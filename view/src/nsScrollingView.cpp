@@ -406,10 +406,13 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
     if (nsnull != mCornerView)
     {
       nsRect trect;
+      float  sbWidth, sbHeight;
 
-      trect.width = NSToCoordRound(dx->GetScrollBarWidth());
+      dx->GetScrollBarWidth(sbWidth);
+      dx->GetScrollBarHeight(sbHeight);
+      trect.width = NSToCoordRound(sbWidth);
       trect.x = aBounds.x + aBounds.XMost() - trect.width;
-      trect.height = NSToCoordRound(dx->GetScrollBarHeight());
+      trect.height = NSToCoordRound(sbHeight);
       trect.y = aBounds.y + aBounds.YMost() - trect.height;
 
       rv = mCornerView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull, -1, nsnull, 1.0f, nsViewVisibility_kHide);
@@ -423,11 +426,14 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
     if (nsnull != mVScrollBarView)
     {
-      nsRect trect = aBounds;
+      nsRect  trect = aBounds;
+      float   sbWidth, sbHeight;
 
-      trect.width = NSToCoordRound(dx->GetScrollBarWidth());
+      dx->GetScrollBarWidth(sbWidth);
+      dx->GetScrollBarHeight(sbHeight);
+      trect.width = NSToCoordRound(sbWidth);
       trect.x += aBounds.XMost() - trect.width;
-      trect.height -= NSToCoordRound(dx->GetScrollBarHeight());
+      trect.height -= NSToCoordRound(sbHeight);
 
       static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
@@ -442,11 +448,14 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
     if (nsnull != mHScrollBarView)
     {
-      nsRect trect = aBounds;
+      nsRect  trect = aBounds;
+      float   sbWidth, sbHeight;
 
-      trect.height = NSToCoordRound(dx->GetScrollBarHeight());
+      dx->GetScrollBarWidth(sbWidth);
+      dx->GetScrollBarHeight(sbHeight);
+      trect.height = NSToCoordRound(sbHeight);
       trect.y += aBounds.YMost() - trect.height;
-      trect.width -= NSToCoordRound(dx->GetScrollBarWidth());
+      trect.width -= NSToCoordRound(sbWidth);
 
       static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
@@ -468,8 +477,11 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
   nsIPresContext    *cx = mViewManager->GetPresContext();
   nsIDeviceContext  *dx = cx->GetDeviceContext();
   nscoord           showHorz = 0, showVert = 0;
-  nscoord           scrollWidth = NSToCoordRound(dx->GetScrollBarWidth());
-  nscoord           scrollHeight = NSToCoordRound(dx->GetScrollBarHeight());
+  float             scrollWidthFloat, scrollHeightFloat;
+  dx->GetScrollBarWidth(scrollWidthFloat);
+  dx->GetScrollBarHeight(scrollHeightFloat);
+  nscoord           scrollWidth = NSToCoordRound(scrollWidthFloat);
+  nscoord           scrollHeight = NSToCoordRound(scrollHeightFloat);
 
   if (nsnull != mCornerView)
   {

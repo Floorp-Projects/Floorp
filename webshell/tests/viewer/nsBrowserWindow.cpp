@@ -605,7 +605,8 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   nsresult rv;
 
   nsIDeviceContext* dc = mWindow->GetDeviceContext();
-  float t2d = dc->GetTwipsToDevUnits();
+  float t2d;
+  dc->GetTwipsToDevUnits(t2d);
   nsFont font(TOOL_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
               NS_FONT_WEIGHT_NORMAL, 0,
               nscoord(t2d * NSIntPointsToTwips(TOOL_BAR_FONT_SIZE)));
@@ -671,7 +672,8 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   nsresult rv;
 
   nsIDeviceContext* dc = mWindow->GetDeviceContext();
-  float t2d = dc->GetTwipsToDevUnits();
+  float t2d;
+  dc->GetTwipsToDevUnits(t2d);
   nsFont font(STATUS_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
               NS_FONT_WEIGHT_NORMAL, 0,
               nscoord(t2d * NSIntPointsToTwips(STATUS_BAR_FONT_SIZE)));

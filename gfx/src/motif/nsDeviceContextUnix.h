@@ -65,10 +65,10 @@ public:
 
 //  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
 
-  virtual nsresult Init(nsNativeWidget aNativeWidget);
+  NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
-  virtual float GetScrollBarWidth() const;
-  virtual float GetScrollBarHeight() const;
+  NS_IMETHOD  GetScrollBarWidth(float &aWidth) const;
+  NS_IMETHOD  GetScrollBarHeight(float &aHeight) const;
 
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
 

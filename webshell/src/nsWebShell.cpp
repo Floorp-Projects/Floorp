@@ -563,8 +563,12 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     goto done;
   }
   mDeviceContext->Init(aNativeParent);
-  mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
-  mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());
+  float dev2twip;
+  mDeviceContext->GetDevUnitsToTwips(dev2twip);
+  mDeviceContext->SetDevUnitsToAppUnits(dev2twip);
+  float twip2dev;
+  mDeviceContext->GetTwipsToDevUnits(twip2dev);
+  mDeviceContext->SetAppUnitsToDevUnits(twip2dev);
 //  mDeviceContext->SetGamma(1.7f);
   mDeviceContext->SetGamma(1.0f);
 
