@@ -38,12 +38,8 @@ endif
 
 ifneq ($(BUILD_MODULES),all)
 
-ifdef CROSS_COMPILE
-BUILD_MODULE_DIRS_js		= $(NSPRPUB_DIR)
-endif
-
 BUILD_MODULE_DIRS_dbm 		= $(NSPRPUB_DIR) dbm
-BUILD_MODULE_DIRS_js		+= js
+BUILD_MODULE_DIRS_js		= $(NSPRPUB_DIR) js/src
 BUILD_MODULE_DIRS_necko		= $(BUILD_MODULE_DIRS_xpcom) netwerk
 BUILD_MODULE_DIRS_transformiix	= extensions/transformiix
 
