@@ -344,7 +344,9 @@ MimeMultCMS_sig_init (void *crypto_closure,
   ct = MimeHeaders_get (signature_hdrs, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
 
   /* Verify that the signature object is of the right type. */
-  if (!ct || (nsCRT::strcasecmp(ct, APPLICATION_XPKCS7_SIGNATURE))) {
+  if (!ct || /* is not a signature type */
+             (nsCRT::strcasecmp(ct, APPLICATION_XPKCS7_SIGNATURE) != 0
+              && nsCRT::strcasecmp(ct, APPLICATION_PKCS7_SIGNATURE) != 0)) {
 	  status = -1; /* #### error msg about bogus message */
   }
   PR_FREEIF(ct);
