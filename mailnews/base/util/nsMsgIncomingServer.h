@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#ifndef nsMsgIncomingServer_h__
+#define nsMsgIncomingServer_h__
+
 #include "nsIMsgIncomingServer.h"
 #include "nsIPref.h"
 #include "msgCore.h"
@@ -64,3 +67,4 @@ protected:
 
 };
 
+#endif // nsMsgIncomingServer_h__
