@@ -19,6 +19,7 @@
  
 #include "nsDeque.h"
 #include "nsCRT.h"
+#include <stdio.h>
 
 //#define _SELFTEST_DEQUE 1
 #undef _SELFTEST_DEQUE 
@@ -30,9 +31,10 @@
  */
 nsDeque::nsDeque(nsDequeFunctor* aDeallocator) {
   mDeallocator=aDeallocator;
-  mCapacity=eGrowthDelta;
   mOrigin=mSize=0;
-  mData=new void*[mCapacity];
+  mData=mBuffer; // don't allocate space until you must
+  mCapacity=sizeof(mBuffer)/sizeof(mBuffer[0]);
+  nsCRT::zero(mData,mCapacity*sizeof(mBuffer[0]));
 }
 
 
@@ -41,8 +43,29 @@ nsDeque::nsDeque(nsDequeFunctor* aDeallocator) {
  * @update	gess4/18/98
  */
 nsDeque::~nsDeque() {
+//  char buffer[30];
+  printf("Capacity: %i\n",mCapacity);
+
+  static int mCaps[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  switch(mCapacity) {
+    case 4:     mCaps[0]++; break;
+    case 8:     mCaps[1]++; break;
+    case 16:    mCaps[2]++; break;
+    case 32:    mCaps[3]++; break;
+    case 64:    mCaps[4]++; break;
+    case 128:   mCaps[5]++; break;
+    case 256:   mCaps[6]++; break;
+    case 512:   mCaps[7]++; break;
+    case 1024:  mCaps[8]++; break;
+    case 2048:  mCaps[9]++; break;
+    case 4096:  mCaps[10]++; break;
+    default:
+      break;
+  }
+
   Erase();
-  delete [] mData;
+  if(mData && (mData!=mBuffer))
+    delete [] mData;
   mData=0;
   if(mDeallocator) {
     delete mDeallocator;
@@ -92,8 +115,8 @@ nsDeque& nsDeque::Empty() {
  * @update	gess4/18/98
  * @return  this
  */
-nsDeque& nsDeque::Erase() {
-  if(mDeallocator) {
+nsDeque& nsDeque::Erase() { 
+  if(mDeallocator && mSize) {
     ForEach(*mDeallocator);
   }
   return Empty();
@@ -110,21 +133,26 @@ nsDeque& nsDeque::Erase() {
  * @return  nada
  */
 nsDeque& nsDeque::GrowCapacity(void) {
-  void** temp=new void*[mCapacity+eGrowthDelta];
+
+  PRInt32 theNewSize = mCapacity<<2;
+  void** temp=new void*[theNewSize];
 
   //Here's the interesting part: You can't just move the elements
   //directy (in situ) from the old buffer to the new one.
   //Since capacity has changed, the old origin doesn't make
   //sense anymore. It's better to resequence the elements now.
-  
-  int tempi=0;
-  int i=0;
-  int j=0;
-  for(i=mOrigin;i<mCapacity;i++) temp[tempi++]=mData[i]; //copy the leading elements...
-  for(j=0;j<mOrigin;j++) temp[tempi++]=mData[j];         //copy the trailing elements...
-  mCapacity+=eGrowthDelta;
+
+  if(mData) {
+    int tempi=0;
+    int i=0;
+    int j=0;
+    for(i=mOrigin;i<mCapacity;i++) temp[tempi++]=mData[i]; //copy the leading elements...
+    for(j=0;j<mOrigin;j++) temp[tempi++]=mData[j];         //copy the trailing elements...
+    if(mData!=mBuffer)
+      delete [] mData;
+  }
+  mCapacity=theNewSize;
   mOrigin=0;       //now realign the origin...
-  delete[]mData;
   mData=temp;
   return *this;
 }
@@ -208,6 +236,7 @@ void* nsDeque::Pop(void) {
 void* nsDeque::PopFront() {
   void* result=0;
   if(mSize>0) {
+    NS_ASSERTION(mOrigin<mCapacity,"Error: Bad origin");
     result=mData[mOrigin];
     mData[mOrigin++]=0;     //zero it out for debugging purposes.
     mSize--;
@@ -216,7 +245,6 @@ void* nsDeque::PopFront() {
     if(0==mSize)
       mOrigin=0;
   }
-  NS_ASSERTION(mOrigin<mCapacity,"Error: Bad origin");
   return result;
 }
 
