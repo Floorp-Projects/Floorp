@@ -3595,4 +3595,17 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
     ::ObscureCursor();
 }
 
+//
+// -_destinationFloatValueForScroller
+//
+// When smooth scrolling is turned on on panther, the parent of a scrollbar (which
+// I guess they assume is a NSScrollView) gets called with this method. I have no
+// idea what the correct return value is, but we have to have this otherwise the scrollbar
+// will not continuously respond when the mouse is held down in the pageup/down area.
+//
+-(float)_destinationFloatValueForScroller:(id)scroller
+{
+  return [scroller floatValue];
+}
+
 @end
