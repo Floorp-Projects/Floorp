@@ -132,6 +132,10 @@ CFLAGS=$(MOZ_JAVA_FLAG) -DMOCHA -DLAYERS $(OS_CFLAGS) $(MOZ_CFLAGS) $(MOZ_LITENE
 !endif
 LFLAGS=$(OS_LFLAGS) $(LLFLAGS) $(MOZ_LFLAGS)
 
+!ifdef NO_SECURITY
+CFLAGS = $(CFLAGS) -DNO_SECURITY
+!endif
+
 # This compiles in heap dumping utilities and other good stuff 
 # for developers -- maybe we only want it in for a special SDK 
 # nspr/java runtime(?):
