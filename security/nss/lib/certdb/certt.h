@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.17 2002/04/10 23:27:50 nelsonb%netscape.com Exp $
+ * $Id: certt.h,v 1.18 2002/06/13 21:42:41 relyea%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -293,7 +293,7 @@ struct CERTCertificateStr {
     struct SECSocketNode *socketlist;
     int socketcount;
     struct SECSocketNode *authsocketlist;
-    int authsocketcount;
+    int series; /* was int authsocketcount; record the series of the pkcs11ID */
 
     /* This is PKCS #11 stuff. */
     PK11SlotInfo *slot;		/*if this cert came of a token, which is it*/
