@@ -123,7 +123,24 @@ var progressListener = {
     
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
-      // we can ignore this notification
+      // Calculate percentage.
+      var percent;
+      if ( aMaxTotalProgress > 0 ) 
+      {
+        percent = parseInt( (aCurTotalProgress*100)/aMaxTotalProgress + .5 );
+        if ( percent > 100 )
+          percent = 100;
+        
+        document.getElementById('compose-progressmeter').removeAttribute("mode");
+        
+        // Advance progress meter.
+        document.getElementById('compose-progressmeter').setAttribute( "value", percent );
+      } 
+      else 
+      {
+        // Progress meter should be barber-pole in this case.
+        document.getElementById('compose-progressmeter').setAttribute( "mode", "undetermined" );
+      }
     },
 
 	  onLocationChange: function(aWebProgress, aRequest, aLocation)
