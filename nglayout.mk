@@ -27,14 +27,16 @@ THIS_MAKEFILE = nglayout.mk
 # Branch tags we use
 IMGLIB_BRANCH = MODULAR_IMGLIB_BRANCH
 NETLIB_BRANCH = 
-XPCOM_BRANCH = XPCOM_BRANCH
+LIBPFEF_BRANCH = XPCOM_BRANCH
+PLUGIN_BRANCH = OJI_19980618_BRANCH
 
 # CVS commands to pull the appropriate branch versions
-CVSCO_XPCOM = $(CVSCO) -r $(XPCOM_BRANCH)
+CVSCO_LIBPREF = $(CVSCO) -r $(LIBPREF_BRANCH)
 CVSCO_IMGLIB = $(CVSCO) -r $(IMGLIB_BRANCH)
 CVSCO_NETLIB = $(CVSCO)
 CVSCO_NGLAYOUT = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
+CVSCO_PLUGIN = $(CVSCO) - $(PLUGIN_BRANCH)
 
 # The list of directories that need to be built to build the standalone
 # nglayout test program. The order is important.
@@ -53,6 +55,7 @@ DIRS =				\
   modules/security/freenav	\
   modules/libpref		\
   modules/libimg		\
+  modules/plugin		\
   base				\
   lib/xp			\
   lib/libpwcac			\
@@ -86,7 +89,7 @@ real_depend: depend
 # Rules for pulling the source from the cvs repository
 #
 
-pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout 
+pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout pull_plugin
 
 pull_lizard:
 	cd $(MOZ_SRC)/.; \
@@ -102,18 +105,23 @@ pull_lizard:
 	$(CVSCO_LIZARD) mozilla/nav-java; \
 	$(CVSCO_LIZARD) mozilla/js; \
 	$(CVSCO_LIZARD) mozilla/modules/security/freenav; \
+	$(CVSCO_PLUGIN) mozilla/modules/plugin; \
 
 pull_xpcom:
 	cd $(MOZ_SRC)/.; \
 	$(CVSCO) -A mozilla/modules/libreg; \
 	$(CVSCO) -A mozilla/xpcom; \
-	$(CVSCO_XPCOM) mozilla/modules/libpref
+	$(CVSCO_LIBPREF) mozilla/modules/libpref
 
 pull_imglib:
 	cd $(MOZ_SRC)/.; \
 	$(CVSCO_IMGLIB) mozilla/jpeg; \
 	$(CVSCO_IMGLIB) mozilla/modules/libutil; \
 	$(CVSCO_IMGLIB) mozilla/modules/libimg 
+
+pull_plugin:
+	cd $(MOZ_SRC)/.; \
+	$(CVSCO_PLUGIN) mozilla/modules/plugin
 
 pull_netlib:
 	cd $(MOZ_SRC)/.; \
