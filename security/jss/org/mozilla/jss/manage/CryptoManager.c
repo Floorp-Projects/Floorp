@@ -325,38 +325,36 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
                         );
 
 
-    if( ! NSS_IsInitialized() ) {
-        szConfigDir = (char*) (*env)->GetStringUTFChars(env, configDir, NULL);
-        if( certPrefix != NULL && keyPrefix != NULL && secmodName != NULL ) {
-            /*
-            * Set up arguments to NSS_Initialize
-            */
-            szCertPrefix = (char*) (*env)->GetStringUTFChars(env, certPrefix, NULL);
-            szKeyPrefix = (char*) (*env)->GetStringUTFChars(env, keyPrefix, NULL);
-            szSecmodName = (char*) (*env)->GetStringUTFChars(env, secmodName, NULL);
-            initFlags = 0;
-            if( readOnly ) {
-                initFlags |= NSS_INIT_READONLY;
-            }
+    szConfigDir = (char*) (*env)->GetStringUTFChars(env, configDir, NULL);
+    if( certPrefix != NULL && keyPrefix != NULL && secmodName != NULL ) {
+        /*
+        * Set up arguments to NSS_Initialize
+        */
+        szCertPrefix = (char*) (*env)->GetStringUTFChars(env, certPrefix, NULL);
+        szKeyPrefix = (char*) (*env)->GetStringUTFChars(env, keyPrefix, NULL);
+        szSecmodName = (char*) (*env)->GetStringUTFChars(env, secmodName, NULL);
+        initFlags = 0;
+        if( readOnly ) {
+            initFlags |= NSS_INIT_READONLY;
+        }
 
-            /*
-            * Initialize NSS.
-            */
-            rv = NSS_Initialize(szConfigDir, szCertPrefix, szKeyPrefix,
-                    szSecmodName, initFlags);
+        /*
+        * Initialize NSS.
+        */
+        rv = NSS_Initialize(szConfigDir, szCertPrefix, szKeyPrefix,
+                szSecmodName, initFlags);
+    } else {
+        if( readOnly ) {
+            rv = NSS_Init(szConfigDir);
         } else {
-            if( readOnly ) {
-                rv = NSS_Init(szConfigDir);
-            } else {
-                rv = NSS_InitReadWrite(szConfigDir);
-            }
+            rv = NSS_InitReadWrite(szConfigDir);
         }
+    }
 
-        if( rv != SECSuccess ) {
-            JSS_throwMsg(env, SECURITY_EXCEPTION,
-                "Unable to initialize security library");
-            goto finish;
-        }
+    if( rv != SECSuccess ) {
+        JSS_throwMsg(env, SECURITY_EXCEPTION,
+            "Unable to initialize security library");
+        goto finish;
     }
 
 	/*
