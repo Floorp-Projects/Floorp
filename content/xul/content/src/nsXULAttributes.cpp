@@ -287,7 +287,7 @@ nsXULAttribute::GetNodeName(nsString& aNodeName)
     const PRUnichar *unicodeString;
     mName->GetUnicode(&unicodeString);
 
-    aNodeName.SetString(unicodeString);
+    aNodeName.Assign(unicodeString);
     return NS_OK;
 }
 
@@ -413,7 +413,7 @@ nsXULAttribute::GetName(nsString& aName)
 {
     const PRUnichar *unicodeString;
     mName->GetUnicode(&unicodeString);
-    aName.SetString(unicodeString);
+    aName.Assign(unicodeString);
     return NS_OK;
 }
 

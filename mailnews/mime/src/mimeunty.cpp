@@ -396,7 +396,7 @@ MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
 	  if (*s != ' ') return PR_FALSE;
 	}
 
-  while (nsString::IsSpace(*s))
+  while (nsCRT::IsAsciiSpace(*s))
 	s++;
 
   name = (char *) PR_MALLOC(((line+length)-s) + 1);
@@ -436,7 +436,7 @@ MimeUntypedText_uu_end_line_p(const char *line, PRInt32 length)
   return (line[0] == 'e' &&
 		  line[1] == 'n' &&
 		  line[2] == 'd' &&
-		  (line[3] == 0 || nsString::IsSpace(line[3])));
+		  (line[3] == 0 || nsCRT::IsAsciiSpace(line[3])));
 #else
   /* ...but, why don't we accept any line that begins with the three
 	 letters "END" in any case: I've seen lots of partial messages
@@ -471,7 +471,7 @@ MimeUntypedText_binhex_begin_line_p(const char *line, PRInt32 length,
   if (length <= BINHEX_MAGIC_LEN)
 	return PR_FALSE;
 
-  while(length > 0 && nsString::IsSpace(line[length-1]))
+  while(length > 0 && nsCRT::IsAsciiSpace(line[length-1]))
 	length--;
 
   if (length != BINHEX_MAGIC_LEN)

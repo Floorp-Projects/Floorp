@@ -295,7 +295,7 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& c
   nsString	  lc_name;
   nsString  	category("NSILOCALE_MESSAGES");
   nsresult	  result	 = aLocale->GetCategory(category.GetUnicode(), &lc_name_unichar);
-  lc_name.SetString(lc_name_unichar);
+  lc_name.Assign(lc_name_unichar);
   nsAllocator::Free(lc_name_unichar);
 
   NS_ASSERTION(NS_SUCCEEDED(result),"nsStringBundle::GetLangCountry: locale.GetCategory failed");

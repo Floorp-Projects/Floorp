@@ -366,7 +366,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 
 	  /* Back up over whitespace before the colon. */
 	  ocolon = colon;
-	  for (; colon > head && nsString::IsSpace(colon[-1]); colon--)
+	  for (; colon > head && nsCRT::IsAsciiSpace(colon[-1]); colon--)
 		;
 
 	  /* If the strings aren't the same length, it doesn't match. */
@@ -383,7 +383,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		char *s;
 
 		/* Skip over whitespace after colon. */
-		while (contents <= end && nsString::IsSpace(*contents))
+		while (contents <= end && nsCRT::IsAsciiSpace(*contents))
 		  contents++;
 
 		/* If we're supposed to strip at the frist token, pull `end' back to
@@ -392,7 +392,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		if (strip_p)
 		  {
 			for (s = contents;
-				 s <= end && *s != ';' && *s != ',' && !nsString::IsSpace(*s);
+				 s <= end && *s != ';' && *s != ',' && !nsCRT::IsAsciiSpace(*s);
 				 s++)
 			  ;
 			end = s;
@@ -435,7 +435,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		  }
 
 		/* Take off trailing whitespace... */
-		while (end > contents && nsString::IsSpace(end[-1]))
+		while (end > contents && nsCRT::IsAsciiSpace(end[-1]))
 		  end--;
 
 		if (end > contents)
@@ -490,7 +490,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
   if (*str)
 	str++;
   /* Skip over following whitespace */
-  for (; *str && nsString::IsSpace(*str); str++)
+  for (; *str && nsCRT::IsAsciiSpace(*str); str++)
 	;
   if (!*str)
 	return 0;
@@ -502,24 +502,24 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 	  const char *value_start = str;
 	  const char *value_end = 0;
 
-	  PR_ASSERT(!nsString::IsSpace(*str)); /* should be after whitespace already */
+	  PR_ASSERT(!nsCRT::IsAsciiSpace(*str)); /* should be after whitespace already */
 
 	  /* Skip forward to the end of this token. */
-	  for (; *str && !nsString::IsSpace(*str) && *str != '=' && *str != ';'; str++)
+	  for (; *str && !nsCRT::IsAsciiSpace(*str) && *str != '=' && *str != ';'; str++)
 		;
 	  token_end = str;
 
 	  /* Skip over whitespace, '=', and whitespace */
-	  while (nsString::IsSpace (*str)) str++;
+	  while (nsCRT::IsAsciiSpace (*str)) str++;
 	  if (*str == '=') str++;
-	  while (nsString::IsSpace (*str)) str++;
+	  while (nsCRT::IsAsciiSpace (*str)) str++;
 
 	  if (*str != '"')
 		{
 		  /* The value is a token, not a quoted string. */
 		  value_start = str;
 		  for (value_end = str;
-			   *value_end && !nsString::IsSpace (*value_end) && *value_end != ';';
+			   *value_end && !nsCRT::IsAsciiSpace (*value_end) && *value_end != ';';
 			   value_end++)
 			;
 		  str = value_end;
@@ -645,9 +645,9 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 
 	  /* str now points after the end of the value.
 		 skip over whitespace, ';', whitespace. */
-	  while (nsString::IsSpace (*str)) str++;
+	  while (nsCRT::IsAsciiSpace (*str)) str++;
 	  if (*str == ';') str++;
-	  while (nsString::IsSpace (*str)) str++;
+	  while (nsCRT::IsAsciiSpace (*str)) str++;
 	}
   return s;
 }
@@ -756,18 +756,18 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
         
         /* Back up over whitespace before the colon. */
         ocolon = colon;
-        for (; colon > head && nsString::IsSpace(colon[-1]); colon--)
+        for (; colon > head && nsCRT::IsAsciiSpace(colon[-1]); colon--)
           ;
         
         contents = ocolon + 1;
     }
     
     /* Skip over whitespace after colon. */
-    while (contents <= end && nsString::IsSpace(*contents))
+    while (contents <= end && nsCRT::IsAsciiSpace(*contents))
       contents++;
     
     /* Take off trailing whitespace... */
-    while (end > contents && nsString::IsSpace(end[-1]))
+    while (end > contents && nsCRT::IsAsciiSpace(end[-1]))
       end--;
     
     name = (char *)PR_MALLOC(colon - head + 1);
@@ -831,7 +831,7 @@ MIME_StripContinuations(char *original)
 			{
 				p2++;
 			}
-			while((*p2 == CR) || (*p2 == LF) || nsString::IsSpace(*p2));
+			while((*p2 == CR) || (*p2 == LF) || nsCRT::IsAsciiSpace(*p2));
 
 			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
 		}

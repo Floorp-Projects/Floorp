@@ -1349,11 +1349,11 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 	nsAutoString serviceState;
 
 	if (profileName) 
-		pName.SetString(profileName);
+		pName.Assign(profileName);
 	if (userEmail) 
-		emailAddress.SetString(userEmail);
+		emailAddress.Assign(userEmail);
 	if (service_denial) 
-		serviceState.SetString(service_denial);
+		serviceState.Assign(service_denial);
 
 	PRInt32 profileNameIndex, delimIndex;
 	PRInt32 serviceIndex;
@@ -1403,7 +1403,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 	// If user denies registration, ignore the information entered.
 	if (userServiceDenial.mLength > 0)
-		userProfileName.SetString("");
+		userProfileName.Assign("");
 
 	char *curProfile = nsnull;
 	rv = GetCurrentProfile(&curProfile);

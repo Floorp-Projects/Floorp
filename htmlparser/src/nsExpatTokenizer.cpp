@@ -400,7 +400,7 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
   CToken* theToken = state->tokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
-    theString.SetString((PRUnichar *) name);
+    theString.Assign((PRUnichar *) name);
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenRecycler);
     int theAttrCount=0;
     while(*atts){
@@ -409,9 +409,9 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
         state->tokenRecycler->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown);
       if(theAttrToken){
         nsString& theKey=theAttrToken->GetKey();
-        theKey.SetString((PRUnichar *) (*atts++));
+        theKey.Assign((PRUnichar *) (*atts++));
         nsString& theValue=theAttrToken->GetStringValueXXX();
-        theValue.SetString((PRUnichar *) (*atts++));
+        theValue.Assign((PRUnichar *) (*atts++));
       }
       CToken* theTok=(CToken*)theAttrToken;
       AddToken(theTok, NS_OK, state->tokenDeque, state->tokenRecycler);
@@ -428,7 +428,7 @@ void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
   CToken* theToken = state->tokenRecycler->CreateTokenOfType(eToken_end,eHTMLTag_unknown);
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
-    theString.SetString((PRUnichar *) name);
+    theString.Assign((PRUnichar *) name);
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenRecycler);
   }
   else{
@@ -479,7 +479,7 @@ void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
   CToken* theToken = state->tokenRecycler->CreateTokenOfType(eToken_comment, eHTMLTag_unknown);
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
-    theString.SetString((PRUnichar *) name);
+    theString.Assign((PRUnichar *) name);
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenRecycler);
   }
   else{

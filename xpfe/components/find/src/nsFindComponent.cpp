@@ -173,7 +173,7 @@ nsFindComponent::Context::MakeTSDocument(nsIWebShell* aWebShell, nsITextServices
 
 inline static PRBool CharsMatch(PRUnichar c1, PRUnichar c2)
 {
-	return (nsString::IsSpace(c1) && nsString::IsSpace(c2)) ||
+	return (nsCRT::IsAsciiSpace(c1) && nsCRT::IsAsciiSpace(c2)) ||
 						(c1 == c2);
 	
 }
@@ -240,20 +240,20 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
 				const PRUnichar	*t = s;
 				const PRUnichar	*p = patternBuf;
 				PRInt32		curMatchOffset = t - searchBuf;
-				PRBool		inWhitespace = nsString::IsSpace(*p);
+				PRBool		inWhitespace = nsCRT::IsAsciiSpace(*p);
 				
 				while (p < patEnd && CharsMatch(*p, *t))
 				{
-					if (inWhitespace && !nsString::IsSpace(*p))
+					if (inWhitespace && !nsCRT::IsAsciiSpace(*p))
 					{
 						// leaving p whitespace. Eat up addition whitespace in s
-						while (t < searchEnd - 1 && nsString::IsSpace(*(t + 1)))
+						while (t < searchEnd - 1 && nsCRT::IsAsciiSpace(*(t + 1)))
 							t ++;
 							
 						inWhitespace = PR_FALSE;
 					}
 					else
-						inWhitespace = nsString::IsSpace(*p);
+						inWhitespace = nsCRT::IsAsciiSpace(*p);
 
 					t ++;
 					p ++;
@@ -285,20 +285,20 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
 				const PRUnichar	*t = s;
 				const PRUnichar	*p = patternBuf;
 				PRInt32		curMatchOffset = t - searchBuf;
-				PRBool		inWhitespace = nsString::IsSpace(*p);
+				PRBool		inWhitespace = nsCRT::IsAsciiSpace(*p);
 				
 				while (p < patEnd && CharsMatch(*p, *t))
 				{
-					if (inWhitespace && !nsString::IsSpace(*p))
+					if (inWhitespace && !nsCRT::IsAsciiSpace(*p))
 					{
 						// leaving p whitespace. Eat up addition whitespace in s
-						while (t < searchEnd - 1 && nsString::IsSpace(*(t + 1)))
+						while (t < searchEnd - 1 && nsCRT::IsAsciiSpace(*(t + 1)))
 							t ++;
 							
 						inWhitespace = PR_FALSE;
 					}
 					else
-						inWhitespace = nsString::IsSpace(*p);
+						inWhitespace = nsCRT::IsAsciiSpace(*p);
 
 					t ++;
 					p ++;

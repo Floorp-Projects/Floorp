@@ -1033,7 +1033,7 @@ msg_generate_message_id (nsIMsgIdentity *identity)
 		if (host) {
 			const char *s;
 			for (s = ++host; *s; s++)
-				if (!nsString::IsAlpha(*s) && !nsString::IsDigit(*s) &&
+				if (!nsCRT::IsAsciiAlpha(*s) && !nsString::IsDigit(*s) &&
 						*s != '-' && *s != '_' && *s != '.') {
 					host = 0;
 					break;

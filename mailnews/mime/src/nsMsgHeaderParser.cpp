@@ -193,7 +193,7 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetNext(nsISupports ** aNextResultPair)
                                                 nsCRT::memcpy(_D,_S,_LEN); _D += _LEN; } } while (0)
 //#define NEXT_CHAR(_STR)             (_STR = (* (char *) _STR < 128) ? (char *) _STR + 1 : NextChar_UTF8((char *)_STR))
 #define NEXT_CHAR(_STR)             (_STR = NextChar_UTF8((char *)_STR))
-#define TRIM_WHITESPACE(_S,_E,_T)   do { while (_E > _S && nsString::IsSpace(_E[-1])) _E--;\
+#define TRIM_WHITESPACE(_S,_E,_T)   do { while (_E > _S && nsCRT::IsAsciiSpace(_E[-1])) _E--;\
                                          *_E++ = _T; } while (0)
 
 /*
@@ -621,7 +621,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
   
 	/* Skip over extra whitespace or commas before addresses.
 	 */
-	while (*line_end && (nsString::IsSpace(*line_end) || *line_end == ','))
+	while (*line_end && (nsCRT::IsAsciiSpace(*line_end) || *line_end == ','))
 		NEXT_CHAR(line_end);
 
 	while (*line_end)
@@ -712,12 +712,12 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 					/* Push out some whitespace before the paren, if
 					 * there is non-whitespace there already.
 					 */
-					if (name_out > name_start && !nsString::IsSpace(name_out [-1]))
+					if (name_out > name_start && !nsCRT::IsAsciiSpace(name_out [-1]))
 						*name_out++ = ' ';
 
 					/* Skip leading whitespace.
 					 */
-					while (nsString::IsSpace(*s) && s < line_end)
+					while (nsCRT::IsAsciiSpace(*s) && s < line_end)
 						s++;
 
 					while (s < line_end)
@@ -733,7 +733,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 						if (*s == '\\')	/* remove one \ */
 							s++;
 
-						if (nsString::IsSpace(*s) && name_out > name_start && nsString::IsSpace(name_out[-1]))
+						if (nsCRT::IsAsciiSpace(*s) && name_out > name_start && nsCRT::IsAsciiSpace(name_out[-1]))
 							/* collapse consecutive whitespace */;
 						else
 							COPY_CHAR(name_out, s);
@@ -753,8 +753,8 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 					/* Eat whitespace at the beginning of the line,
 					 * and eat consecutive whitespace within the line.
 					 */
-					if (   nsString::IsSpace(*line_end)
-					    && (addr_out == addr_start || nsString::IsSpace(addr_out[-1])))
+					if (   nsCRT::IsAsciiSpace(*line_end)
+					    && (addr_out == addr_start || nsCRT::IsAsciiSpace(addr_out[-1])))
 						/* skip it */;
 					else
 						COPY_CHAR(addr_out, line_end);
@@ -793,7 +793,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 
 			/* Skip leading whitespace.
 			 */
-			while (nsString::IsSpace(*s) && s < mailbox_start)
+			while (nsCRT::IsAsciiSpace(*s) && s < mailbox_start)
 				s++;
 
 			/* Copy up to (not including) the <
@@ -812,7 +812,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 					else
 						s++;
 				}
-				if (nsString::IsSpace(*s) && name_out > name_start && nsString::IsSpace(name_out[-1]))
+				if (nsCRT::IsAsciiSpace(*s) && name_out > name_start && nsCRT::IsAsciiSpace(name_out[-1]))
 					/* collapse consecutive whitespace */;
 				else
 					COPY_CHAR(name_out, s);
@@ -827,7 +827,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 
 			/* Skip whitespace after >
 			 */
-			while (nsString::IsSpace(*s) && s < line_end)
+			while (nsCRT::IsAsciiSpace(*s) && s < line_end)
 				s++;
 
 			/* Copy from just after > to the end.
@@ -846,7 +846,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 					else
 						s++;
 				}
-				if (nsString::IsSpace (*s) && name_out > name_start && nsString::IsSpace (name_out[-1]))
+				if (nsCRT::IsAsciiSpace (*s) && name_out > name_start && nsCRT::IsAsciiSpace (name_out[-1]))
 					/* collapse consecutive whitespace */;
 				else
 					COPY_CHAR(name_out, s);
@@ -864,7 +864,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 
 			/* Skip leading whitespace.
 			 */
-			while (nsString::IsSpace(*s) && s < mailbox_end)
+			while (nsCRT::IsAsciiSpace(*s) && s < mailbox_end)
 				s++;
 
 			/* Copy up to (not including) the >
@@ -910,7 +910,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 				{
 					if (*s == '\\')
 						s++;
-					else if (!space && nsString::IsSpace(*s))
+					else if (!space && nsCRT::IsAsciiSpace(*s))
 						space = s;
 					else if (*s == '\"')
 					{
@@ -924,7 +924,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 					{
 						if (*s == '\\')
 							s++;
-						else if (nsString::IsSpace(*s))
+						else if (nsCRT::IsAsciiSpace(*s))
 						{
 							*s = 0;
 							*name_out++ = 0;
@@ -966,7 +966,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 			NEXT_CHAR(line_end);
 
 		/* Skip over extra whitespace or commas between addresses. */
-		while (*line_end && (nsString::IsSpace(*line_end) || *line_end == ','))
+		while (*line_end && (nsCRT::IsAsciiSpace(*line_end) || *line_end == ','))
 			line_end++;
 
 		this_start = line_end;
@@ -980,10 +980,10 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 	{
 		char *s;
 		for (s = name_buf; s < name_out; NEXT_CHAR(s))
-			if (nsString::IsSpace(*s) && *s != ' ')
+			if (nsCRT::IsAsciiSpace(*s) && *s != ' ')
 				*s = ' ';
 		for (s = addr_buf; s < addr_out; NEXT_CHAR(s))
-			if (nsString::IsSpace(*s) && *s != ' ')
+			if (nsCRT::IsAsciiSpace(*s) && *s != ' ')
 				*s = ' ';
 	}
 
@@ -1034,7 +1034,7 @@ msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
 				address = in;
 				break;
 			}
-			else if (!nsString::IsDigit(*in) && !nsString::IsAlpha(*in) && *in != '@' && *in != '.')
+      else if (!nsCRT::IsAsciiDigit(*in) && !nsCRT::IsAsciiAlpha(*in) && *in != '@' && *in != '.')
 				break;
 		}
 	}

@@ -899,7 +899,7 @@ nsHTMLToTXTSinkStream::FlushLine()
 
     WriteSimple(mCurrentLine);
     mColPos += mCurrentLine.Length();
-    mCurrentLine.SetString("");
+    mCurrentLine.Truncate();
   }
 }
 
@@ -986,7 +986,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
       // Must wrap. Let's find a good place to do that.
       PRInt32 goodSpace = mWrapColumn-prefixwidth;
       while (goodSpace >= 0 &&
-             !nsString::IsSpace(mCurrentLine.CharAt(goodSpace))) {
+             !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
         goodSpace--;
       }
     
@@ -996,7 +996,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
         // try to find another place to break
         goodSpace=mWrapColumn-prefixwidth;
         while (goodSpace < linelength &&
-               !nsString::IsSpace(mCurrentLine.CharAt(goodSpace))) {
+               !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
           goodSpace++;
         }
       }
@@ -1006,7 +1006,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
         mCurrentLine.Right(restOfLine, linelength-goodSpace-1);
         mCurrentLine.Cut(goodSpace, linelength-goodSpace);
         EndLine(PR_TRUE);
-        mCurrentLine.SetString("");
+        mCurrentLine.Truncate();
         // Space stuff new line?
         if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
           if((restOfLine[0] == '>') ||
@@ -1050,7 +1050,7 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
     }
     mCurrentLine.Append(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
-    mCurrentLine.SetString("");
+    mCurrentLine.Truncate();
     mColPos=0;
     mEmptyLines=0;
     mInWhitespace=PR_TRUE;
@@ -1067,7 +1067,7 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
       mCurrentLine.SetLength(mCurrentLine.Length()-1);
     mCurrentLine.Append(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
-    mCurrentLine.SetString("");
+    mCurrentLine.Truncate();
     mColPos=0;
     mEmptyLines++;
     mInWhitespace=PR_TRUE;

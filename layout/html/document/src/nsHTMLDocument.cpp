@@ -365,7 +365,7 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 NS_IMETHODIMP 
 nsHTMLDocument::GetContentType(nsString& aContentType) const
 {
-  aContentType.SetString("text/html");
+  aContentType.Assign("text/html");
   return NS_OK;
 }
 
@@ -531,7 +531,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                   "%c",
 #endif
                   &prtime);
-    lastModified.SetString(buf);
+    lastModified.Assign(buf);
     SetLastModified(lastModified);
   }
 
@@ -1469,7 +1469,7 @@ nsHTMLDocument::GetDomain(nsString& aDomain)
   char *hostName;
   if (NS_FAILED(uri->GetHost(&hostName)))
     return NS_ERROR_FAILURE;
-  aDomain.SetString(hostName);
+  aDomain.Assign(hostName);
   nsCRT::free(hostName);
 
   return NS_OK;
@@ -2288,7 +2288,7 @@ nsHTMLDocument::GetLastModified(nsString& aLastModified)
     aLastModified = *mLastModified;
   }
   else {
-    aLastModified.SetString("January 1, 1970 GMT");
+    aLastModified.Assign("January 1, 1970 GMT");
   }
 
   return NS_OK;

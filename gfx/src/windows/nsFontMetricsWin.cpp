@@ -2385,7 +2385,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
     nsString* newPointer = new nsString[newSize];
     if (newPointer) {
       for (int i = metrics->mFontsCount - 1; i >= 0; i--) {
-        newPointer[i].SetString(metrics->mFonts[i].GetUnicode());
+        newPointer[i].Assign(metrics->mFonts[i].GetUnicode());
       }
       delete [] metrics->mFonts;
       metrics->mFonts = newPointer;
@@ -2395,7 +2395,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
       return PR_FALSE; // stop
     }
   }
-  metrics->mFonts[metrics->mFontsCount++].SetString(aFamily.GetUnicode());
+  metrics->mFonts[metrics->mFontsCount++].Assign(aFamily.GetUnicode());
 
   if (aGeneric) {
     return PR_FALSE; // stop

@@ -143,7 +143,7 @@ nsXMLCDATASection::GetTag(nsIAtom*& aResult) const
 NS_IMETHODIMP
 nsXMLCDATASection::GetNodeName(nsString& aNodeName)
 {
-  aNodeName.SetString("#cdata-section");
+  aNodeName.Assign("#cdata-section");
   return NS_OK;
 }
 

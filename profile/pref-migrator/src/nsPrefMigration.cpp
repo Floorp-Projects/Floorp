@@ -1995,7 +1995,7 @@ ConvertStringToUTF8(nsAutoString& aCharset, const char* inString, char** outStri
           rv = decoder->Convert(inString, &srcLength, unichars, &uniLength);
           if (NS_SUCCEEDED(rv)) {
             nsAutoString aString;
-            aString.SetString(unichars, uniLength);
+            aString.Assign(unichars, uniLength);
             // convert to UTF-8
             *outString = aString.ToNewUTF8String();
           }
@@ -2166,7 +2166,7 @@ nsPrefConverter::GetPlatformCharset(nsAutoString& aCharset)
    rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
   }
   if (NS_FAILED(rv)) {
-   aCharset.SetString("ISO-8859-1");  // use ISO-8859-1 in case of any error
+   aCharset.Assign("ISO-8859-1");  // use ISO-8859-1 in case of any error
   }
  
   return rv;

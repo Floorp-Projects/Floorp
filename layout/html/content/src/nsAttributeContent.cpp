@@ -454,10 +454,10 @@ nsAttributeContent::CopyText(nsString& aResult)
 {
   ValidateTextFragment();
   if (mText.Is2b()) {
-    aResult.SetString(mText.Get2b(), mText.GetLength());
+    aResult.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aResult.SetString(mText.Get1b(), mText.GetLength());
+    aResult.Assign(mText.Get1b(), mText.GetLength());
   }
   return NS_OK;
 }

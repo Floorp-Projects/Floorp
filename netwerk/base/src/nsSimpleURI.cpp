@@ -80,7 +80,7 @@ nsSimpleURI::GetSpec(char* *result)
     nsAutoString string;
 //    NS_LOCK_INSTANCE();
 
-    string.SetString(mScheme);
+    string.Assign(mScheme);
     string.Append(':');
     string.Append(mPath);
 

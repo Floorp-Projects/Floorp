@@ -3333,7 +3333,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
   PRUnichar  endCh;
 
   while (kNullCh != *start) {
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
       start++;
     }
 
@@ -3389,7 +3389,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
           attr.StripWhitespace();
 
           PRUnichar* value = ++equals;
-          while (nsString::IsSpace(*value)) {
+          while (nsCRT::IsAsciiSpace(*value)) {
             value++;
           }
           if (((kApostrophe == *value) || (kQuote == *value)) &&
@@ -3463,13 +3463,13 @@ static void ParseLinkTypes(const nsString& aTypes, nsStringArray& aResult)
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
       start++;
     }
 
     end = start;
 
-    while ((kNullCh != *end) && (! nsString::IsSpace(*end))) { // look for space
+    while ((kNullCh != *end) && (! nsCRT::IsAsciiSpace(*end))) { // look for space
       end++;
     }
     *end = kNullCh; // end string here

@@ -2162,12 +2162,12 @@ nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *text,
 
     printf("%cUser: ", '\007');
     scanf("%s", buf);
-    response.SetString(buf);
+    response.Assign(buf);
     *user = response.ToNewUnicode();
 
     printf("%cPassword: ", '\007');
     scanf("%s", buf);
-    response.SetString(buf);
+    response.Assign(buf);
     *pwd = response.ToNewUnicode();
   }
 

@@ -117,7 +117,22 @@ nsColorNames::ReleaseTable(void)
 
 
 nsColorName 
-nsColorNames::LookupName(const nsStr& aColorName)
+nsColorNames::LookupName(const nsCString& aColorName)
+{
+  NS_ASSERTION(gColorTree, "no lookup table, needs addref");
+  if (gColorTree) {
+    ColorNode node(aColorName, eColorName_UNKNOWN);
+    ColorNode*  found = (ColorNode*)gColorTree->FindItem(&node);
+    if (found) {
+      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aColorName), "bad tree");
+      return found->mEnum;
+    }
+  }
+  return eColorName_UNKNOWN;
+}
+
+nsColorName 
+nsColorNames::LookupName(const nsString& aColorName)
 {
   NS_ASSERTION(gColorTree, "no lookup table, needs addref");
   if (gColorTree) {

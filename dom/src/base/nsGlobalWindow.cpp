@@ -1106,7 +1106,7 @@ NS_IMETHODIMP GlobalWindowImpl::Alert(JSContext* cx, jsval* argv, PRUint32 argc)
    if(argc > 0)
       nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
    else
-      str.SetString("undefined");
+      str.Assign("undefined");
 
    //XXXEMBEDDING really we should just instantiate a prompter service
    // don't bother calling up the stack.
@@ -1134,7 +1134,7 @@ NS_IMETHODIMP GlobalWindowImpl::Confirm(JSContext* cx, jsval* argv,
    if(argc > 0)
       nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
    else
-      str.SetString("undefined");
+      str.Assign("undefined");
 
    //XXXEMBEDDING really we should just instantiate a prompter service
    // don't bother calling up the stack.
@@ -1167,7 +1167,7 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
       if(argc > 1)
          nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
       else 
-         initial.SetString("undefined");
+         initial.Assign("undefined");
       }
 
    //XXXEMBEDDING really we should just instantiate a prompter service
@@ -1193,7 +1193,7 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
       // XXX Need to check return value and return null if the
       // user hits cancel. Currently, we can only return a 
       // string reference.
-      aReturn.SetString("");
+      aReturn.Assign("");
       }
 
   return ret;
@@ -1685,7 +1685,7 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
 
    // Escape the string
    char* outBuf = nsEscape(dest, nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path)); 
-   aReturn.SetString(outBuf);
+   aReturn.Assign(outBuf);
 
    nsAllocator::Free(outBuf);
    nsAllocator::Free(dest);
@@ -1760,7 +1760,7 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn
       return result;
       }
 
-   aReturn.SetString(dest, destLen);
+   aReturn.Assign(dest, destLen);
    nsAllocator::Free(dest);
 
    return NS_OK;
@@ -1778,9 +1778,9 @@ PRBool GlobalWindowImpl::AddProperty(JSContext* aContext, JSObject* aObj,
       {
       nsString mPropName;
       nsAutoString mPrefix;
-      mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+      mPropName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
       if(mPropName.Length() > 2)
-         mPrefix.SetString(mPropName.GetUnicode(), 2);
+         mPrefix.Assign(mPropName.GetUnicode(), 2);
       if(mPrefix == "on")
          return CheckForEventListener(aContext, mPropName);
       }
@@ -1873,10 +1873,10 @@ PRBool GlobalWindowImpl::SetProperty(JSContext* aContext, JSObject* aObj,
       {
       nsAutoString propName;
       nsAutoString prefix;
-      propName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+      propName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
       if(propName.Length() > 2)
          {
-         prefix.SetString(propName.GetUnicode(), 2);
+         prefix.Assign(propName.GetUnicode(), 2);
          if(prefix.EqualsIgnoreCase("on"))
             result = CheckForEventListener(aContext, propName);
          }
@@ -2308,7 +2308,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       NS_ENSURE_TRUE(mJSStrURL, NS_ERROR_FAILURE);
 
       nsAutoString mURL;
-      mURL.SetString(JS_GetStringChars(mJSStrURL));
+      mURL.Assign(JS_GetStringChars(mJSStrURL));
     
       if(mURL.Equals(""))
          loadURL = PR_FALSE;
@@ -2332,7 +2332,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
             {
             // No document.  Probably because this window's URL hasn't finished
             // loading.  All we can do is hope the URL we've been given is absolute.
-            mAbsURL.SetString(JS_GetStringChars(mJSStrURL));
+            mAbsURL.Assign(JS_GetStringChars(mJSStrURL));
             nsCOMPtr<nsIURI> test;
             // Make URI; if mAbsURL is relative (or otherwise bogus) this will fail.
             NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(test), mAbsURL),
@@ -2347,7 +2347,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       JSString *mJSStrName = JS_ValueToString(cx, argv[1]);
       NS_ENSURE_TRUE(mJSStrName, NS_ERROR_FAILURE);
 
-      name.SetString(JS_GetStringChars(mJSStrName));
+      name.Assign(JS_GetStringChars(mJSStrName));
       nameSpecified = PR_TRUE;
 
       NS_ENSURE_SUCCESS(CheckWindowName(cx, name), NS_ERROR_FAILURE);

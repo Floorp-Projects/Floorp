@@ -612,7 +612,7 @@ nsXULDocument::GetArena()
 NS_IMETHODIMP
 nsXULDocument::GetContentType(nsString& aContentType) const
 {
-    aContentType.SetString("text/xul");
+    aContentType.Assign("text/xul");
     return NS_OK;
 }
 
@@ -2874,7 +2874,7 @@ nsXULDocument::RemoveElementsFromMapByContent(const nsString& aID,
 NS_IMETHODIMP
 nsXULDocument::GetNodeName(nsString& aNodeName)
 {
-    aNodeName.SetString("#document");
+    aNodeName.Assign("#document");
     return NS_OK;
 }
 

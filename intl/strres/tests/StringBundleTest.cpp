@@ -112,7 +112,7 @@ get_applocale(void)
 	value = new nsString();
 
 	result = locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
-	value->SetString(lc_name_unichar);
+	value->Assign(lc_name_unichar);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
 

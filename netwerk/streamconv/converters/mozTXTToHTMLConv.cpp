@@ -204,14 +204,14 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, c
   {
     PRInt32 i = pos - 1;
     for (; i >= 0 && (
-         nsString::IsAlpha(aInString[PRUint32(i)]) ||
-         nsString::IsDigit(aInString[PRUint32(i)]) ||
+         nsCRT::IsAsciiAlpha(aInString[PRUint32(i)]) ||
+         nsCRT::IsAsciiDigit(aInString[PRUint32(i)]) ||
          aInString[PRUint32(i)] == '+' ||
          aInString[PRUint32(i)] == '-' ||
          aInString[PRUint32(i)] == '.'
          ); i--)
       ;
-    if (nsString::IsAlpha(aInString[PRUint32(++i)]))
+    if (nsCRT::IsAsciiAlpha(aInString[PRUint32(++i)]))
     {
       start = PRUint32(i);
       return PR_TRUE;
@@ -229,13 +229,13 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, c
              && aInString[PRUint32(i)] != '{' && aInString[PRUint32(i)] != '['
              && aInString[PRUint32(i)] != '(' && aInString[PRUint32(i)] != '|'
              && aInString[PRUint32(i)] != '\\'
-             && !nsString::IsSpace(aInString[PRUint32(i)])
+             && !nsCRT::IsAsciiSpace(aInString[PRUint32(i)])
          ; i--)
       ;
     if
       (
-        nsString::IsAlpha(aInString[PRUint32(++i)]) ||
-        nsString::IsDigit(aInString[PRUint32(i)])
+        nsCRT::IsAsciiAlpha(aInString[PRUint32(++i)]) ||
+        nsCRT::IsAsciiDigit(aInString[PRUint32(i)])
       )
     {
       start = PRUint32(i);
@@ -280,7 +280,7 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLengt
              && aInString[i] != '`'
              && aInString[i] != '}' && aInString[i] != ']'
              && aInString[i] != ')' && aInString[i] != '|'
-             && !nsString::IsSpace(aInString[i])
+             && !nsCRT::IsAsciiSpace(aInString[i])
          ; i++)
       ;
     while (--i > pos && (
@@ -494,25 +494,25 @@ mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString, PRInt32 aInLen
   if
     (
       before == LT_ALPHA
-        && !nsString::IsAlpha(text0) ||
+        && !nsCRT::IsAsciiAlpha(text0) ||
       before == LT_DIGIT
-        && !nsString::IsDigit(text0) ||
+        && !nsCRT::IsAsciiDigit(text0) ||
       before == LT_DELIMITER
         &&
         (
-          nsString::IsAlpha(text0) ||
-          nsString::IsDigit(text0) ||
+          nsCRT::IsAsciiAlpha(text0) ||
+          nsCRT::IsAsciiDigit(text0) ||
           text0 == *rep
         ) ||
       after == LT_ALPHA
-        && !nsString::IsAlpha(textAfterPos) ||
+        && !nsCRT::IsAsciiAlpha(textAfterPos) ||
       after == LT_DIGIT
-        && !nsString::IsDigit(textAfterPos) ||
+        && !nsCRT::IsAsciiDigit(textAfterPos) ||
       after == LT_DELIMITER
         &&
         (
-          nsString::IsAlpha(textAfterPos) ||
-          nsString::IsDigit(textAfterPos) ||
+          nsCRT::IsAsciiAlpha(textAfterPos) ||
+          nsCRT::IsAsciiDigit(textAfterPos) ||
           textAfterPos == *rep
         ) ||
         !(before == LT_IGNORE ? !nsCRT::strncasecmp(aInString, rep, aRepLen) :
@@ -605,11 +605,11 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
   PRUint32 delim = (col0 ? 0 : 1) + tagLen;
   if
     (
-      (col0 || nsString::IsSpace(aInString[0]))
+      (col0 || nsCRT::IsAsciiSpace(aInString[0]))
         &&
         (
           aLength <= PRInt32(delim) ||
-          nsString::IsSpace(aInString[delim]) ||
+          nsCRT::IsAsciiSpace(aInString[delim]) ||
           aLength > PRInt32(delim + 1)
             &&
             (
@@ -619,7 +619,7 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
               aInString[delim] == '!' ||
               aInString[delim] == '?'
             )
-            && nsString::IsSpace(aInString[delim + 1])
+            && nsCRT::IsAsciiSpace(aInString[delim + 1])
         )
         && ItMatchesDelimited(aInString, aLength, tagTXT, aTagTxtLength, 
                               col0 ? LT_IGNORE : LT_DELIMITER, LT_IGNORE)
@@ -753,11 +753,11 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     // Find first non-digit
     PRInt32 delimPos = 3;  // 3 = Position after first digit after "^"
     for (; delimPos < aInLength &&
-         nsString::IsDigit(aInString[PRUint32(delimPos)]); delimPos++)
+         nsCRT::IsAsciiDigit(aInString[PRUint32(delimPos)]); delimPos++)
       ;
     // Note: (delimPos == text.Length()) could be true
 
-    if (nsString::IsAlpha(aInString[PRUint32(delimPos)]))
+    if (nsCRT::IsAsciiAlpha(aInString[PRUint32(delimPos)]))
     {
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_FALSE;
@@ -842,9 +842,9 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
        logLineStart is the position of "t" in this example
     */
     PRUint32 i = logLineStart;
-    for (; PRInt32(i) < lineLength && nsString::IsSpace(line[i]); i++)
+    for (; PRInt32(i) < lineLength && nsCRT::IsAsciiSpace(line[i]); i++)
       ;
-    for (; PRInt32(i) < lineLength && nsString::IsAlpha(line[i]); i++)
+    for (; PRInt32(i) < lineLength && nsCRT::IsAsciiAlpha(line[i]); i++)
       ;
     if (line[i] == '>' || line[i] == ']')
     {

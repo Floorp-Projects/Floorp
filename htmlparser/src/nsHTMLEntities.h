@@ -23,9 +23,7 @@
 #define nsHTMLEntities_h___
 
 #include "nshtmlpars.h"
-
-struct nsStr;
-class nsCString;
+#include "nsString.h"
 
 class NS_HTMLPARS nsHTMLEntities {
 public:
@@ -39,7 +37,7 @@ public:
  * passed in must NOT have the leading "&" nor the trailing ";"
  * in it.
  */
-  static PRInt32 EntityToUnicode(const nsStr& aEntity);
+  static PRInt32 EntityToUnicode(const nsString& aEntity);
 
 /**
  * Translate an entity string into it's unicode value. This call

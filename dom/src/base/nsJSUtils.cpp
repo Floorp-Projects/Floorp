@@ -389,7 +389,7 @@ nsJSUtils::nsConvertJSValToString(nsString& aString,
 {
   JSString *jsstring;
   if ((jsstring = JS_ValueToString(aContext, aValue)) != nsnull) {
-    aString.SetString(JS_GetStringChars(jsstring));
+    aString.Assign(JS_GetStringChars(jsstring));
   }
   else {
     aString.Truncate();

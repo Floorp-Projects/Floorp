@@ -150,7 +150,7 @@ nsresult nsCollation::CreateSortKey(nsICollation *inst, const nsCollationStrengt
         if (aKeyInUnichar[aLengthUnichar-1] == 0)
           aLengthUnichar--;
 
-        key.SetString(aKeyInUnichar, aLengthUnichar);
+        key.Assign(aKeyInUnichar, aLengthUnichar);
       }
       delete [] aKey;
     }
@@ -203,7 +203,7 @@ nsresult nsCollation::NormalizeString(nsAutoString& stringInOut)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     mCaseConversion->ToLower(stringInOut.GetUnicode(), aBuffer, aLength);
-    stringInOut.SetString(aBuffer, aLength);
+    stringInOut.Assign(aBuffer, aLength);
     delete [] aBuffer;
   }
   return NS_OK;

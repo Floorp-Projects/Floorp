@@ -396,23 +396,23 @@ void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
       }
     }
   }
-  name.SetString("coords");
+  name.Assign("coords");
   aConverter.AddAttribute(name,coords);
 
-  name.SetString("href");
+  name.Assign("href");
   aConverter.AddAttribute(name,href);
 
   
   if (0 < target.Length()) {
-    name.SetString("target");
+    name.Assign("target");
     aConverter.AddAttribute(name,target);
   }
   if (0 < altText.Length()) {
-    name.SetString("alt");
+    name.Assign("alt");
     aConverter.AddAttribute(name,altText);
   }
   if (mSuppressFeedback) {
-    name.SetString("suppress");
+    name.Assign("suppress");
     aConverter.AddAttribute(name);
   }
 }

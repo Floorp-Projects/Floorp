@@ -332,9 +332,9 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
       nsAutoString pathStr;
       PRUnichar *unichar = ConvertFromFileSystemCharset(path);
       if (nsnull == unichar)
-        pathStr.SetString(path);
+        pathStr.Assign(path);
       else {
-        pathStr.SetString(unichar);
+        pathStr.Assign(unichar);
         delete [] unichar;
       }
       //printf("[%s]\n", path);
@@ -385,7 +385,7 @@ void nsFileWidget::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.SetString("ISO-8859-1");
+		  aCharset.Assign("ISO-8859-1");
   }
   fileSystemCharset = aCharset;
 }

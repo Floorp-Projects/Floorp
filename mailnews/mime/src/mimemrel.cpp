@@ -741,7 +741,7 @@ flush_tag(MimeMultipartRelated* relobj)
 				isquote = PR_TRUE;
 				/* Take up the double quote and leading space here as well. */
 				/* Safe because there's a '>' at the end */
-				do {ptr++;} while (nsString::IsSpace(*ptr));
+				do {ptr++;} while (nsCRT::IsAsciiSpace(*ptr));
 			}
 		}
 		status = real_write(relobj, buf, ptr - buf);
@@ -753,7 +753,7 @@ flush_tag(MimeMultipartRelated* relobj)
 			ptr = mime_strnchr(buf, '"', length - (buf - relobj->curtag));
 		} else {
 			for (ptr = buf; *ptr ; ptr++) {
-				if (*ptr == '>' || nsString::IsSpace(*ptr)) break;
+				if (*ptr == '>' || nsCRT::IsAsciiSpace(*ptr)) break;
 			}
 			PR_ASSERT(*ptr);
 		}
@@ -766,7 +766,7 @@ flush_tag(MimeMultipartRelated* relobj)
 							substitute the appropriate mailbox part URL in
 							its place. */
 			ptr2=buf; /* walk from the left end rightward */
-			while((ptr2<ptr) && (!nsString::IsSpace(*ptr2)))
+			while((ptr2<ptr) && (!nsCRT::IsAsciiSpace(*ptr2)))
 				ptr2++;
 			/* Compare the beginning of the word with "cid:". Yuck. */
 			if (((ptr2 - buf) > 4) && 
@@ -832,7 +832,7 @@ flush_tag(MimeMultipartRelated* relobj)
 
 			/* Advance to the beginning of the next word, or to
 			   the end of the value string. */
-			while((ptr2<ptr) && (nsString::IsSpace(*ptr2)))
+			while((ptr2<ptr) && (nsCRT::IsAsciiSpace(*ptr2)))
 				ptr2++;
 
 			/* Write whatever original text remains after

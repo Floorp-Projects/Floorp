@@ -165,7 +165,7 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
   // Replace the existing string with the new value
   //
   else {
-    entry->mValue.SetString(aValue);
+    entry->mValue.Assign(aValue);
   }
 
   NS_RELEASE(entry);

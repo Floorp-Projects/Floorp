@@ -269,8 +269,8 @@ nsStreamConverterService::ParseFromTo(const char *aProgID, nsCString &aFromRes, 
     ProgIDStr.Mid(fromStr, fromLoc, toLoc - 4 - fromLoc);
     ProgIDStr.Mid(toStr, toLoc, ProgIDStr.Length() - toLoc);
 
-    aFromRes.SetString(fromStr);
-    aToRes.SetString(toStr);
+    aFromRes.Assign(fromStr);
+    aToRes.Assign(toStr);
 
     return NS_OK;
 }

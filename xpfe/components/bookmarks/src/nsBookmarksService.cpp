@@ -622,7 +622,7 @@ BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType
 		rv = ParseMetaTag(line, getter_AddRefs(mUnicodeDecoder));
 	}
 	else if ((offset = line.Find(kOpenHeading, PR_TRUE)) >= 0 &&
-		 nsString::IsDigit(line.CharAt(offset + 2)))
+		 nsCRT::IsAsciiDigit(line.CharAt(offset + 2)))
 	{
 		// XXX Ignore <H1> so that bookmarks root _is_ <H1>
 		if (line.CharAt(offset + 2) != PRUnichar('1'))

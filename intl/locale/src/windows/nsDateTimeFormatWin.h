@@ -64,7 +64,7 @@ public:
                                   nsString& stringOut); 
 
   nsDateTimeFormatWin() {NS_INIT_REFCNT();
-                         mLocale.SetString("");mAppLocale.SetString("");}
+                         mLocale.Assign("");mAppLocale.Assign("");}
 
 
   virtual ~nsDateTimeFormatWin() {}
