@@ -72,7 +72,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 		
 	<box align="horizontal">	
 		<box align="vertical">	
-			<titledbutton value="&newCmd.label;"  onclick="CreateProfile();" style="margin-bottom: 1em;"/>
+			<titledbutton value="&newCmd.label;"  onclick="openCreateProfile();" style="margin-bottom: 1em;"/>
 			<titledbutton value="&migrateCmd.label;"  onclick="MigrateProfile();"/>
 			<titledbutton value="&migrateAllCmd.label;"  onclick="ConfirmMigrateAll();"  style="margin-bottom: 1em;"/>
 			<titledbutton value="&renameCmd.label;"  onclick="openRename();" />

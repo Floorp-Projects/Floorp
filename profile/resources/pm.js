@@ -2,15 +2,16 @@ var profileCore = "";
 var selected    = null;
 var currProfile = "";
 
-function CreateProfile()
+function openCreateProfile()
 {
 	// Need to call CreateNewProfile xuls
-	// var win = window.openDialog('resource://res/profile/cpwManager.xul', 'Creator', 'chrome');
-	dump("\ngot here\n");
-	//this.location.replace(this.location);
-	//this.location.replace("resource:/res/profile/cpwManager.xul");
-	this.location.href = "resource:/res/profile/cpwManager.xul";
-	//this.location = "resource:/res/profile/cpwManager.xul";
+	var win = window.openDialog('cpw.xul', 'CPW', 'chrome');
+    return win;
+}
+
+function CreateProfile()
+{
+	this.location.href = "resource:/res/profile/pm.xul";
 }
 
 function MigrateProfile(override)
@@ -215,7 +216,7 @@ function openRename()
 		if (migrate == "true")
 			dump("Migrate the profile before renaming it.\n");
 		else
-			var win = window.openDialog('pmrename.xul', 'Renamer', 'chrome');
+			var win = window.openDialog('pmRename.xul', 'Renamer', 'chrome');
 	}
 }
 
