@@ -22,6 +22,8 @@
 */
 
 #import "BookmarkInfoController.h"
+#import "BookmarksDataSource.h"
+
 #include "nsIContent.h"
 #include "nsINamespaceManager.h"
 

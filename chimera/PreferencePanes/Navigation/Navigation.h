@@ -28,7 +28,9 @@ class nsIPref;
 
 @interface OrgMozillaChimeraPreferenceNavigation : NSPreferencePane
 {
-  IBOutlet NSButton *buttonSystemPreferences;
+  // IBOutlet NSButton *buttonSystemPreferences;
+	IBOutlet NSTextField *textFieldHomePage;
+	IBOutlet NSButton *checkboxUseSystemHomePage;
   IBOutlet NSButton *checkboxNewTabBlank;
   IBOutlet NSButton *checkboxNewWindowBlank;
   IBOutlet NSButton *checkboxOpenTabs;
@@ -37,9 +39,12 @@ class nsIPref;
   
   nsIPref* mPrefService;					// strong, but can't use a comptr here
 }
+
 - (IBAction)openSystemInternetPanel:(id)sender;
 - (IBAction)checkboxClicked:(id)sender;
+- (IBAction)checkboxUseSystemHomePageClicked:(id)sender;
 - (IBAction)checkboxStartPageClicked:(id)sender;
 - (IBAction)historyDaysModified:(id)sender;
 - (IBAction)clearGlobalHistory:(id)sender;
+
 @end

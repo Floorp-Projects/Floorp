@@ -25,6 +25,8 @@
 #import "CHBookmarksButton.h"
 #import "CHBookmarksToolbar.h"
 #import "BookmarksService.h"
+#import "BookmarksDataSource.h"
+
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 
