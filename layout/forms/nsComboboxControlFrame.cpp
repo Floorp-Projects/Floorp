@@ -291,7 +291,6 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mDisplayFrame                = nsnull;
   mButtonFrame                 = nsnull;
   mDropdownFrame               = nsnull;
-  mSelectedIndex               = -1;
 
   mCacheSize.width             = kSizeNotSet;
   mCacheSize.height            = kSizeNotSet;
@@ -412,17 +411,15 @@ nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
 void 
 nsComboboxControlFrame::InitTextStr()
 {
+  nsAutoString textToDisplay;
   PRInt32 selectedIndex;
   mListControlFrame->GetSelectedIndex(&selectedIndex);
-  // Update the selected text string
-  if (selectedIndex == -1) {
-    mListControlFrame->GetOptionText(0, mTextStr);
-  } else {
-    mListControlFrame->GetOptionText(selectedIndex, mTextStr);
+  if (selectedIndex != -1) {
+    mListControlFrame->GetOptionText(selectedIndex, textToDisplay);
   }
 
-  // Update the display by setting the value attribute
-  mDisplayContent->SetText(mTextStr.get(), mTextStr.Length(), PR_FALSE);
+  mDisplayedIndex = selectedIndex;
+  ActuallyDisplayText(textToDisplay, PR_FALSE);
 }
 
 
@@ -1848,22 +1845,6 @@ nsComboboxControlFrame::GetDropDown(nsIFrame** aDropDownFrame)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate, PRBool aSendEvent) // Added "aForceUpdate" for Bug 42661
-{
-  if (aPresContext == nsnull) {
-    aPresContext = mPresContext;
-  }
-  ShowList(aPresContext, PR_FALSE);
-  mListControlFrame->CaptureMouseEvents(aPresContext, PR_FALSE);
-
-  PRInt32 indx;
-  mListControlFrame->GetSelectedIndex(&indx);
-
-  UpdateSelection(aSendEvent, aForceUpdate, indx); // Added "aForceUpdate" for Bug 42661
-
-  return NS_OK;
-}
 // Toggle dropdown list.
 
 NS_IMETHODIMP 
@@ -1871,29 +1852,6 @@ nsComboboxControlFrame::ToggleList(nsIPresContext* aPresContext)
 {
 
   ShowList(aPresContext, (PR_FALSE == mDroppedDown));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex)
-{
-  if (mListControlFrame) {
-    // Check to see if the selection changed
-    if (mSelectedIndex != aNewIndex || aForceUpdate) {
-      mListControlFrame->GetOptionText(aNewIndex, mTextStr);
-      SelectionChanged();
-
-      // Fix for Bug 42661 (remove comment later)
-#ifdef DO_REFLOW_DEBUG
-      char * str =  ToNewCString(mTextStr);
-      REFLOW_DEBUG_MSG2("UpdateSelection %s\n", str);
-      delete [] str;
-#endif
-      mSelectedIndex = aNewIndex;
-      mListControlFrame->UpdateSelection();
-    }
-  }
 
   return NS_OK;
 }
@@ -1926,8 +1884,30 @@ nsComboboxControlFrame::GetAbsoluteRect(nsRect* aRect)
 ///////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsComboboxControlFrame::SelectionChanged()
+nsComboboxControlFrame::RedisplaySelectedText()
 {
+  PRInt32 selectedIndex;
+  mListControlFrame->GetSelectedIndex(&selectedIndex);
+
+  return RedisplayText(selectedIndex);
+}
+
+nsresult
+nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
+{
+  // Get the text to display
+  nsAutoString textToDisplay;
+  if (aIndex != -1) {
+    mListControlFrame->GetOptionText(aIndex, textToDisplay);
+  }
+  mDisplayedIndex = aIndex;
+
+#ifdef DO_REFLOW_DEBUG
+  char * str =  ToNewCString(textToDisplay);
+  REFLOW_DEBUG_MSG2("RedisplayText %s\n", str);
+  delete [] str;
+#endif
+
   // Send reflow command because the new text maybe larger
   nsresult rv = NS_OK;
   if (mDisplayContent) {
@@ -1941,16 +1921,13 @@ nsComboboxControlFrame::SelectionChanged()
     if (NS_FAILED(result) || value.Length() == 0) {
       shouldSetValue = PR_TRUE;
     } else {
-      shouldSetValue = value != mTextStr;
-      REFLOW_DEBUG_MSG3("**** CBX::SelectionChanged  Old[%s]  New[%s]\n", NS_LossyConvertUCS2toASCII(value).get(), NS_LossyConvertUCS2toASCII(mTextStr).get());
+       shouldSetValue = value != textToDisplay;
+       REFLOW_DEBUG_MSG3("**** CBX::RedisplayText  Old[%s]  New[%s]\n",
+                         NS_LossyConvertUCS2toASCII(value).get(),
+                         NS_LossyConvertUCS2toASCII(textToDisplay).get());
     }
     if (shouldSetValue) {
-      if (mTextStr.Length() == 0) {
-        nsAutoString space(NS_LITERAL_STRING(" "));
-        rv = mDisplayContent->SetText(space.get(), space.Length(), PR_TRUE);
-      } else {
-        rv = mDisplayContent->SetText(mTextStr.get(), mTextStr.Length(), PR_TRUE);
-      }
+      rv = ActuallyDisplayText(textToDisplay, PR_TRUE);
       nsFrameState state;
       //mTextFrame->GetFrameState(&state);
       //state |= NS_FRAME_IS_DIRTY;
@@ -1970,11 +1947,26 @@ nsComboboxControlFrame::SelectionChanged()
   return rv;
 }
 
+nsresult
+nsComboboxControlFrame::ActuallyDisplayText(nsAString& aText, PRBool aNotify)
+{
+  nsresult rv = NS_OK;
+  if (aText.IsEmpty()) {
+    nsAutoString space(PRUnichar(' '));
+    rv = mDisplayContent->SetText(space.get(), space.Length(), aNotify);
+  } else {
+    const nsAFlatString& flat = PromiseFlatString(aText);
+    rv = mDisplayContent->SetText(flat.get(), flat.Length(), aNotify);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsComboboxControlFrame::GetIndexOfDisplayArea(PRInt32* aSelectedIndex)
 {
   NS_ENSURE_ARG_POINTER(aSelectedIndex);
-  *aSelectedIndex = mSelectedIndex;
+  *aSelectedIndex = mDisplayedIndex;
   return NS_OK;
 }
 
@@ -2473,6 +2465,15 @@ nsComboboxControlFrame::Rollup()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsComboboxControlFrame::RollupFromList(nsIPresContext* aPresContext)
+{
+  ShowList(aPresContext, PR_FALSE);
+  mListControlFrame->CaptureMouseEvents(aPresContext, PR_FALSE);
+
+  return NS_OK;
+}
+
 NS_METHOD 
 nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
                              nsIRenderingContext& aRenderingContext,
@@ -2579,12 +2580,35 @@ nsComboboxControlFrame::OnOptionSelected(nsIPresContext* aPresContext,
                                          PRInt32 aIndex,
                                          PRBool aSelected)
 {
-  if (aSelected && !mDroppedDown) {
-    mListControlFrame->GetOptionText(aIndex, mTextStr);
-    SelectionChanged();
+  if (aSelected) {
+    if (!mDroppedDown) {
+      RedisplayText(aIndex);
+    } else {
+      nsCOMPtr<nsISelectControlFrame> selectFrame
+                                       = do_QueryInterface(mListControlFrame);
+      if (selectFrame) {
+        selectFrame->OnOptionSelected(aPresContext, aIndex, aSelected);
+      }
+    }
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsComboboxControlFrame::OnOptionTextChanged(nsIDOMHTMLOptionElement* option)
+{
+  RedisplaySelectedText();
+  if (mDroppedDown) {
+    nsCOMPtr<nsISelectControlFrame> selectFrame
+                                     = do_QueryInterface(mListControlFrame);
+    if (selectFrame) {
+      selectFrame->OnOptionTextChanged(option);
+    }
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsComboboxControlFrame::OnContentReset()

@@ -57,7 +57,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsISelectElement.h"
-#include "nsIComboboxControlFrame.h"
+#include "nsISelectControlFrame.h"
 
 // Notify/query select frame for selected state
 #include "nsIFormControlFrame.h"
@@ -386,12 +386,12 @@ nsHTMLOptionElement::SetLabel(const nsAReadableString& aValue)
     nsIFormControlFrame* fcFrame = GetSelectFrame();
 
     if (fcFrame) {
-      nsIComboboxControlFrame* selectFrame = nsnull;
+      nsISelectControlFrame* selectFrame = nsnull;
 
       CallQueryInterface(fcFrame, &selectFrame);
 
       if (selectFrame) {
-        selectFrame->UpdateSelection(PR_FALSE, PR_TRUE, 0);
+        selectFrame->OnOptionTextChanged(this);
       }
     }
   }
@@ -610,12 +610,12 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
     nsIFormControlFrame* fcFrame = GetSelectFrame();
 
     if (fcFrame) {
-      nsIComboboxControlFrame* selectFrame = nsnull;
+      nsISelectControlFrame* selectFrame = nsnull;
 
       CallQueryInterface(fcFrame, &selectFrame);
 
       if (selectFrame) {
-        selectFrame->UpdateSelection(PR_FALSE, PR_TRUE, 0);
+        selectFrame->OnOptionTextChanged(this);
       }
     }
   }

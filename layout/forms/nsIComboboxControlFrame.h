@@ -89,26 +89,15 @@ public:
   NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame) = 0;
 
   /**
-   * Notifies the Combobox the List was selected
+   * Tells the combobox to roll up
    *
    */
-  NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate, PRBool aSendEvent) = 0;
+  NS_IMETHOD RollupFromList(nsIPresContext* aPresContext) = 0;
 
   /**
-   * Asks the Combobox to update the display frame
-   * aDoDispatchEvent - indicates whether an event should be dispatched to the DOM
-   * aForceUpdate - indicates whether the indexx and the text value should both be
-   *                whether the index has changed or not.
-   *
+   * Redisplay the selected text (will do nothing if text has not changed)
    */
-  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex) = 0;
-
-  /**
-   * Asks the Combobox to update the display frame when the selection has
-   * changed
-   *
-   */
-  NS_IMETHOD SelectionChanged() = 0;
+  NS_IMETHOD RedisplaySelectedText() = 0;
 
   /**
    *
