@@ -769,6 +769,8 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
       if (theView->HasWidget())
       {
         returnView = theView;
+        // account for the view's origin not lining up with the widget's (bug 190290)
+        drawViewOffset += theView->GetPosition() - theView->GetBounds().TopLeft();
         break;
       }
       drawViewOffset += theView->GetPosition();
