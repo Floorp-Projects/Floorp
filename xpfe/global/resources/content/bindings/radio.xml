@@ -171,8 +171,10 @@
            it is not (Windows platform behaviour is for the group to receive focus,
            not the item -->
       <handler event="focus">
-        this.setAttribute("focused", "true");
-        if (this.focusedItem == null) this.focusedItem = this.selectedItem;
+        if (event.target == this) {
+          this.setAttribute("focused", "true");
+          if (this.focusedItem == null) this.focusedItem = this.selectedItem;
+        }
       </handler>
       <handler event="blur">
         this.removeAttribute("focused");
