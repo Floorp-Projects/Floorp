@@ -57,7 +57,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(imgRequest, imgILoad,
 imgRequest::imgRequest() : 
   mObservers(0),
   mLoading(PR_FALSE), mProcessing(PR_FALSE),
-  mImageStatus(imgIRequest::STATUS_NONE), mState(0)
+  mImageStatus(imgIRequest::STATUS_NONE), mState(0), mCacheId(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -68,7 +68,9 @@ imgRequest::~imgRequest()
   /* destructor code */
 }
 
-nsresult imgRequest::Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheEntry)
+nsresult imgRequest::Init(nsIChannel *aChannel,
+                          nsICacheEntryDescriptor *aCacheEntry,
+                          void *aCacheId)
 {
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
@@ -85,6 +87,8 @@ nsresult imgRequest::Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheE
   mLoading = PR_TRUE;                      
 
   mCacheEntry = aCacheEntry;
+
+  mCacheId = aCacheId;
 
   return NS_OK;
 }
