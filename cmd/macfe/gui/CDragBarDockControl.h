@@ -87,11 +87,11 @@ class CDragBarDockControl : public LControl, public CDynamicTooltipMixin
 			// CONTROL BEHAVIOUR
 			
 		virtual Int16			FindHotSpot(
-									Point 				inPoint);
+									Point 				inPoint) const;
 									
 		virtual Boolean			PointInHotSpot(
 									Point 				inPoint,
-									Int16 				inHotSpot);
+									Int16 				inHotSpot) const;
 
 		virtual void			HotSpotAction(
 									Int16				inHotSpot,
