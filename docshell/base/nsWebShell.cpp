@@ -736,7 +736,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
   }
 
   // Now that we have switched documents, forget all of our children
-  ReleaseChildren();
+  DestroyChildren();
 
   return rv;
 }
@@ -921,24 +921,21 @@ nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   
-  nsRect rectClient(0,0,w,h);
   PRInt32 borderWidth  = 0;
   PRInt32 borderHeight = 0;
-
   if (nsnull != mWindow) {
     mWindow->GetBorderSize(borderWidth, borderHeight);
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
-    mWindow->Resize(x, y, w, h,
-                    PR_FALSE);
+    mWindow->Resize(x, y, w, h, PR_FALSE);
   }
 
-  // Set the size of the content area, which is the size of the window minus the borders
+  // Set the size of the content area, which is the size of the window
+  // minus the borders
   if (nsnull != mContentViewer) {
     nsRect rr(0, 0, w-(borderWidth*2), h-(borderHeight*2));
     mContentViewer->SetBounds(rr);
   }
-
   return NS_OK;
 }
 
@@ -2285,6 +2282,11 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               nsIURL* aURL, 
                               PRInt32 aStatus)
 {
+#if 0
+  const char* spec;
+  aURL->GetSpec(&spec);
+  printf("nsWebShell::OnEndDocumentLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
+#endif
   nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -2305,30 +2307,27 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
     }
   }
 
-  /* Fire the EndLoadURL of the container. This is primarily for the viewer */
+  // Fire the EndLoadURL of the web shell container
   if (nsnull != aURL) {
      nsAutoString urlString;
      const char* spec;
      rv = aURL->GetSpec(&spec);
-
-     /* XXX: The load status needs to be passed in... */
      if (NS_SUCCEEDED(rv)) {
        urlString = spec;
        if (nsnull != mContainer) {
-          rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), /* XXX */ 0 );
+          rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
        }  
      }
   }
 
   /*
-   *Fire the OnEndDocumentLoad of the DocLoaderobserver
+   * Fire the OnEndDocumentLoad of the DocLoaderobserver
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver) && (nsnull != aURL)){
      mDocLoaderObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus);
   }
   
   return rv;
-
 }
 
 NS_IMETHODIMP
@@ -2392,6 +2391,11 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
                          nsIURL* aURL, 
                          PRInt32 aStatus)
 {
+#if 0
+  const char* spec;
+  aURL->GetSpec(&spec);
+  printf("nsWebShell::OnEndURLLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
+#endif
   /*
    *Fire the OnStartDocumentLoad of the webshell observer
    */
