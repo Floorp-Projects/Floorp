@@ -36,7 +36,12 @@ Contributor(s): ______________________________________. -->
      becoming an included file someday. -->
 
 <!-- Localizable string definitions from navigator.xul. -->
-<!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd"> 
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
+%navigatorDTD;
+]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
