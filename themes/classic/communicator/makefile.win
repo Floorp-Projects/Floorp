@@ -37,6 +37,7 @@ install::
 	$(MAKE_INSTALL) menubuttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) offline.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) online.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) securityOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 
 clobber::
 	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\*.*

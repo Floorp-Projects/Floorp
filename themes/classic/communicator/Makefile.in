@@ -38,6 +38,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/menubuttonBindings.xml \
 		$(srcdir)/offline.gif \
 		$(srcdir)/online.gif \
+		$(srcdir)/securityOverlay.css \
 		$(NULL)
 
 DIRS = bookmarks directory profile regviewer related search sidebar unix wallet xpinstall

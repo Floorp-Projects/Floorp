@@ -1,0 +1,23 @@
+/**
+ * XP Classic skin file (shared by all three platform variants)
+ **/
+
+#security-button 
+  {
+    list-style-image:url("chrome://communicator/skin/unlock.gif");
+  }
+
+#security-button[level="high"] 
+  {
+    list-style-image:url("chrome://communicator/skin/lock.gif");        
+  }
+
+#security-button[level="low"] 
+  {
+    list-style-image:url("chrome://communicator/skin/lock.gif");        
+  }
+
+#security-button[level="broken"] 
+  {
+    list-style-image:url("chrome://communicator/skin/broken.gif");        
+  }
