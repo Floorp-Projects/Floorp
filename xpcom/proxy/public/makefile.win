@@ -27,13 +27,14 @@ MODULE=xpcom
 
 EXPORTS =                        \
     nsProxyEvent.h               \
-    nsProxyObjectManager.h        \
-    nsProxiedService.h		\
+    nsProxiedService.h	         \
     $(NULL)
 
-XPIDL_MODULE = proxyObjInst
-XPIDLSRCS =                        \
+XPIDL_MODULE = proxyObject
+
+XPIDLSRCS =                          \
         .\nsIProxyCreateInstance.idl \
+        .\nsIProxyObjectManager.idl  \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

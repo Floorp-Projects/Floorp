@@ -25,7 +25,7 @@
 #include "prmem.h"
 
 #include "nsProxyEvent.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
 
 #include "nsHashtable.h"

@@ -35,7 +35,7 @@
 
 #include "nsProxyEvent.h"
 #include "nsProxyEventPrivate.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 
 #include "pratom.h"
 #include "prmem.h"
@@ -665,11 +665,11 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
 
                         if ( NS_SUCCEEDED( rv ) )
                         {
-                                rv = manager->GetProxyObject(eventQ, 
-                                                             *iid,
-                                                             anInterface, 
-                                                             GetProxyType(), 
-                                                             (void**) &aProxyObject);
+                                rv = manager->GetProxyForObject(eventQ, 
+                                                                *iid,
+                                                                 anInterface, 
+                                                                 GetProxyType(), 
+                                                                 (void **) &aProxyObject);
                         }
                         
                     }

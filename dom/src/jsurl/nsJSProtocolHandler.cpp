@@ -37,7 +37,7 @@
 #include "nsJSProtocolHandler.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsIDocShell.h"
 #include "nsDOMError.h"
 #include "nsIInterfaceRequestor.h"
@@ -51,6 +51,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+
 
 static const char console_chrome_url[] = "chrome://global/content/console.xul";
 static const char console_window_options[] = "chrome,menubar,toolbar,resizable";
@@ -255,6 +257,7 @@ public:
         return NS_OK;
     }
 
+
     NS_IMETHOD Open(char* *contentType, PRInt32 *contentLength) {
         // IMPORTANT CHANGE: We used to just implement nsIInputStream and use
         // an input stream channel in the js protocol, but that had the nasty
@@ -268,10 +271,14 @@ public:
         // the current document.
 
         nsresult rv;
+        
 
         // We do this by proxying back to the main thread.
-        NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjectManager,
-                        nsIProxyObjectManager::GetCID(), &rv);
+        NS_WITH_SERVICE(nsIProxyObjectManager, 
+                        proxyObjectManager,
+                        kProxyObjectManagerCID, 
+                        &rv);
+
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsEvaluateStringProxy> eval = new nsEvaluateStringProxy();
@@ -281,7 +288,7 @@ public:
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIEvaluateStringProxy> evalProxy;
-        rv = proxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
+        rv = proxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ,
                                                 NS_GET_IID(nsIEvaluateStringProxy),
                                                 NS_STATIC_CAST(nsISupports*, eval),
                                                 PROXY_SYNC | PROXY_ALWAYS,

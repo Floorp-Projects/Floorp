@@ -810,7 +810,7 @@ nsFtpConnectionThread::S_user() {
 
 
             nsCOMPtr<nsIPrompt> proxyprompter;
-            rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
+            rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
                         NS_GET_IID(nsIPrompt), mPrompter, 
                         PROXY_SYNC, getter_AddRefs(proxyprompter));
             PRUnichar *user = nsnull, *passwd = nsnull;
@@ -887,7 +887,7 @@ nsFtpConnectionThread::S_pass() {
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIPrompt> proxyprompter;
-            rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
+            rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
                         NS_GET_IID(nsIPrompt), mPrompter,
                         PROXY_SYNC, getter_AddRefs(proxyprompter));
             PRUnichar *passwd = nsnull;
@@ -952,7 +952,7 @@ nsFtpConnectionThread::R_pass() {
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         nsCOMPtr<nsIWalletService> pWalletService;
-        rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
+        rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
                         NS_GET_IID(nsIWalletService), walletService, 
                         PROXY_SYNC, getter_AddRefs(pWalletService));
         if (NS_FAILED(rv)) return FTP_ERROR;

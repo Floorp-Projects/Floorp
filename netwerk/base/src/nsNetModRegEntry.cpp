@@ -21,11 +21,12 @@
  */
 
 #include "nsNetModRegEntry.h"
+#include "nsCRT.h"
 #include "plstr.h"
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 
 
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -159,7 +160,7 @@ nsNetModRegEntry::BuildProxy(PRBool sync)
     
     if (sync)
     {
-        result = proxyManager->GetProxyObject(  mEventQ,
+        result = proxyManager->GetProxyForObject(  mEventQ,
                                                 NS_GET_IID(nsINetNotify),
                                                 mRealNotifier,
                                                 PROXY_SYNC | PROXY_ALWAYS,
@@ -167,7 +168,7 @@ nsNetModRegEntry::BuildProxy(PRBool sync)
     }
     else
     {
-         result = proxyManager->GetProxyObject( mEventQ,
+         result = proxyManager->GetProxyForObject( mEventQ,
                                                 NS_GET_IID(nsINetNotify),
                                                 mRealNotifier,
                                                 PROXY_ASYNC | PROXY_ALWAYS,

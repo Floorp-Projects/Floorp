@@ -36,7 +36,7 @@
 #include "nsISocketProviderService.h"
 #include "nsStdURL.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 
@@ -2179,7 +2179,7 @@ nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
       NS_WITH_SERVICE(nsIProxyObjectManager, 
                       proxyMgr, kProxyObjectManagerCID, &rv);
       if (NS_SUCCEEDED(rv)) {
-        rv = proxyMgr->GetProxyObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
+        rv = proxyMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
                                       NS_GET_IID(nsIProgressEventSink),
                                       sink,
                                       PROXY_ASYNC | PROXY_ALWAYS,

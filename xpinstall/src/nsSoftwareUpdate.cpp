@@ -65,7 +65,7 @@
 #include "nsIScriptExternalNameSet.h"
 
 #include "nsIEventQueueService.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
 #include "nsIChromeRegistry.h"
 

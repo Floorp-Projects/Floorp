@@ -34,6 +34,7 @@
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
+
 //*****************************************************************************
 //***    WebBrowser: Object Management
 //*****************************************************************************
@@ -57,9 +58,9 @@ WebBrowser::Init(nsNativeWidget widget)
 	if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIBaseWindow> webBrowserWin = do_QueryInterface(mWebBrowser);
+    mBaseWindow = do_QueryInterface(mWebBrowser);
         
-    rv = webBrowserWin->InitWindow( widget,
+    rv = mBaseWindow->InitWindow( widget,
                                     nsnull, 
                                     0, 
                                     32, 
@@ -69,18 +70,23 @@ WebBrowser::Init(nsNativeWidget widget)
 
     mWebBrowser->SetTopLevelWindow(this);
     
-    webBrowserWin->Create();
+    mBaseWindow->Create();
 
     nsCOMPtr <nsIDocShell> rootDocShell;
     mWebBrowser->GetDocShell(getter_AddRefs(rootDocShell));
     rootDocShell->SetAllowPlugins(PR_TRUE);
 
-    webBrowserWin->SetVisibility(PR_TRUE);
-
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-    webNav->LoadURI(NS_ConvertASCIItoUCS2("http://www.mozilla.org").GetUnicode());
+    mBaseWindow->SetVisibility(PR_TRUE);
 
    return rv;
+}
+
+nsresult 
+WebBrowser::GetIWebBrowser(nsIWebBrowser **outBrowser)
+{
+    *outBrowser = mWebBrowser;
+    NS_IF_ADDREF(*outBrowser);
+    return NS_OK;
 }
 
 
@@ -194,10 +200,12 @@ NS_IMETHODIMP WebBrowser::SetChromeMask(PRUint32 aChromeMask)
    return NS_OK;
 }
 
+extern nsresult CreateNativeWindowWidget(nsIWebBrowser **outBrowser);
 
-NS_IMETHODIMP WebBrowser::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **webBrowser)
+NS_IMETHODIMP WebBrowser::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **outBrowser)
 {    
-   return NS_ERROR_FAILURE;
+    CreateNativeWindowWidget(outBrowser);
+    return NS_OK;
 }
 
 
@@ -284,8 +292,7 @@ NS_IMETHODIMP WebBrowser::GetSize(PRInt32* cx, PRInt32* cy)
 NS_IMETHODIMP WebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
-    nsCOMPtr<nsIBaseWindow> webBrowserWin = do_QueryInterface(mWebBrowser);
-    return webBrowserWin->SetPositionAndSize(x, y,cx, cy,fRepaint);
+    return mBaseWindow->SetPositionAndSize(x, y,cx, cy,fRepaint);
 }
 
 NS_IMETHODIMP WebBrowser::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,

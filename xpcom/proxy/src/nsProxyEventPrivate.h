@@ -34,7 +34,7 @@
 #include "nsIEventQueue.h"
 
 #include "nsProxyEvent.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 
 class nsProxyEventObject;
 class nsProxyEventClass;
@@ -159,20 +159,8 @@ class nsProxyObjectManager: public nsIProxyObjectManager
 public:
 
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
-                              REFNSIID aIID, 
-                              nsISupports* aObj, 
-                              PRInt32 proxyType,
-                              void** aProxyObject);
-    
-    NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
-                              const nsCID &aClass, 
-                              nsISupports *aDelegate, 
-                              const nsIID &aIID, 
-                              PRInt32 proxyType,
-                              void** aProxyObject);
-    
+    NS_DECL_NSIPROXYOBJECTMANAGER
+        
     
     static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
     
