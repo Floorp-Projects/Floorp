@@ -303,7 +303,7 @@ Proxy Password=
 ;   FTP
 ;   HTTP
 ; Default is FTP if key is not set.
-Use Protocol=FTP
+Use Protocol=HTTP
 ; Use Protocol Settings key shows or hides the
 ; Use FTP/Use HTTP radio buttons in the Download Dialog.
 ; Default value is ENABLED unless DISABLED is specified.
