@@ -249,7 +249,7 @@ if ($action eq 'new') {
     unlink "data/versioncache";
 
     print "OK, done.<p>\n";
-    PutTrailer($localtrailer);
+    PutTrailer("<A HREF=\"editkeywords.cgi\">edit</A> more keywords or <A HREF=\"editkeywords.cgi?action=add\">add</a> another keyword");
     exit;
 }
 
