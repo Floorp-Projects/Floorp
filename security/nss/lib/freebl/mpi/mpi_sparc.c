@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpi_sparc.c,v 1.1 2000/09/30 01:43:27 nelsonb%netscape.com Exp $
+ *  $Id: mpi_sparc.c,v 1.2 2000/09/30 04:30:08 wtc%netscape.com Exp $
  */
 
 /* Multiplication performance enhancements for sparc v8+vis CPUs. */
@@ -39,7 +39,7 @@
 #include <sys/systeminfo.h>
 #include <strings.h>
 
-/* In the functions below,
+/* In the functions below, */
 /* vector y must be 8-byte aligned, and n must be even */
 /* returns carry out of high order word of result */
 /* maximum n is 256 */
