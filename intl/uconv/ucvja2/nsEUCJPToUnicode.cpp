@@ -35,7 +35,7 @@ static PRInt16 g_0208ShiftTable[] =  {
 };
 
 static PRInt16 g_0212ShiftTable[] =  {
-        0, u2BytesGRPrefix8EA2Charset,
+        0, u2BytesGRPrefix8FCharset, 
         ShiftCell(0,0,0,0,0,0,0,0)
 };
 static PRInt16 *g_EUCJPShiftTable[4] =  {
