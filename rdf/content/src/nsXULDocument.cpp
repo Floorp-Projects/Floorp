@@ -53,7 +53,6 @@
 #include "nsXULDocument.h"
 
 #include "nsDOMCID.h"
-#include "nsIBrowserWindow.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
 #include "nsICodebasePrincipal.h"
@@ -94,7 +93,7 @@
 #include "nsITextContent.h"
 #include "nsITimer.h"
 #include "nsIURL.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
@@ -269,7 +268,7 @@ NS_IMPL_ISUPPORTS(nsProxyLoadStream, NS_GET_IID(nsIInputStream));
 // PlaceholderChannel
 //
 //   This is a dummy channel implementation that we add to the load
-//   group. It ensures that EndDocumentLoad() in the webshell doesn't
+//   group. It ensures that EndDocumentLoad() in the docshell doesn't
 //   fire before we've finished building the complete document content
 //   model.
 //
@@ -3156,10 +3155,10 @@ nsXULDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval
 
                 if (! container) continue;
 
-                nsCOMPtr<nsIBaseWindow> webShellWin = do_QueryInterface(container);
-                if(!webShellWin) continue;
+                nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
+                if(!docShellWin) continue;
 
-                rv = webShellWin->SetTitle(title.GetUnicode());
+                rv = docShellWin->SetTitle(title.GetUnicode());
                 if (NS_FAILED(rv)) return PR_FALSE;
             }
         }
@@ -3508,20 +3507,10 @@ nsXULDocument::StartLayout(void)
       if (! container)
           return NS_ERROR_UNEXPECTED;
 
-      nsCOMPtr<nsIWebShell> webShell;
-      webShell = do_QueryInterface(container);
-      NS_ASSERTION(webShell != nsnull, "container is not a webshell");
-      if (! webShell)
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+      NS_ASSERTION(docShell != nsnull, "container is not a docshell");
+      if (! docShell)
           return NS_ERROR_UNEXPECTED;
-
-      nsCOMPtr<nsIWebShellContainer> webShellContainer;
-      webShell->GetContainer(*getter_AddRefs(webShellContainer));
-      NS_ASSERTION(webShellContainer != nsnull, "webshell has no container");
-      if (! webShellContainer)
-          return NS_ERROR_UNEXPECTED;
-
-      nsCOMPtr<nsIBrowserWindow> browser;
-      browser = do_QueryInterface(webShellContainer);
 
       nsRect r;
       cx->GetVisibleArea(r);
@@ -3534,7 +3523,7 @@ nsXULDocument::StartLayout(void)
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
         nsCOMPtr<nsIContentViewer> contentViewer;
-        nsresult rv = webShell->GetContentViewer(getter_AddRefs(contentViewer));
+        nsresult rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
         if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
           PRBool enabled;
           contentViewer->GetEnableRendering(&enabled);
@@ -4848,7 +4837,7 @@ nsXULDocument::ResumeWalk()
 
     // Remove the placeholder channel; if we're the last channel in the
     // load group, this will fire the OnEndDocumentLoad() method in the
-    // webshell, and run the onload handlers, etc.
+    // docshell, and run the onload handlers, etc.
     nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
     if (group) {
         rv = group->RemoveChannel(mPlaceholderChannel, nsnull, NS_OK, nsnull);
