@@ -24,155 +24,13 @@
 #include "stdio.h"
 #include "nsString.h"
 #include "nsCoord.h"
+#include "nsCSSValue.h"
 
-
-enum nsCSSUnit {
-  eCSSUnit_Null       = 0,      // (n/a) null unit, value is not specified
-  eCSSUnit_Auto       = 1,      // (n/a) value is algorithmic
-  eCSSUnit_Inherit    = 2,      // (n/a) value is inherited
-  eCSSUnit_None       = 3,      // (n/a) value is none
-  eCSSUnit_Normal     = 4,      // (n/a) value is normal (algorithmic, different than auto)
-  eCSSUnit_String     = 10,     // (nsString) a string value
-  eCSSUnit_Integer    = 50,     // (int) simple value
-  eCSSUnit_Enumerated = 51,     // (int) value has enumerated meaning
-  eCSSUnit_Color      = 80,     // (color) an RGBA value
-  eCSSUnit_Percent    = 90,     // (float) 1.0 == 100%) value is percentage of something
-  eCSSUnit_Number     = 91,     // (float) value is numeric (usually multiplier, different behavior that percent)
-
-  // US English
-  eCSSUnit_Inch       = 100,    // (float) Standard length
-  eCSSUnit_Foot       = 101,    // (float) 12 inches
-  eCSSUnit_Mile       = 102,    // (float) 5280 feet
-
-  // Metric
-  eCSSUnit_Millimeter = 207,    // (float) 1/1000 meter
-  eCSSUnit_Centimeter = 208,    // (float) 1/100 meter
-  eCSSUnit_Meter      = 210,    // (float) Standard length
-  eCSSUnit_Kilometer  = 213,    // (float) 1000 meters
-
-  // US Typographic
-  eCSSUnit_Point      = 300,    // (float) 1/72 inch
-  eCSSUnit_Pica       = 301,    // (float) 12 points == 1/6 inch
-
-  // European Typographic
-  eCSSUnit_Didot      = 400,    // (float) 15 didots == 16 points
-  eCSSUnit_Cicero     = 401,    // (float) 12 didots
-
-  // relative units
-  // Font relative measure
-  eCSSUnit_EM         = 800,    // (float) == current font size
-  eCSSUnit_EN         = 801,    // (float) .5 em
-  eCSSUnit_XHeight    = 802,    // (float) distance from top of lower case x to baseline
-  eCSSUnit_CapHeight  = 803,    // (float) distance from top of uppercase case H to baseline
-
-  // Screen relative measure
-  eCSSUnit_Pixel      = 900     // (float)
-};
 
 struct nsCSSStruct {
   virtual const nsID& GetID(void) = 0;
 };
 
-class nsCSSValue {
-public:
-  nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null);  // for valueless units only (null, auto, inherit, none, normal)
-  nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
-  nsCSSValue(float aValue, nsCSSUnit aUnit);
-  nsCSSValue(const nsString& aValue);
-  nsCSSValue(nscolor aValue);
-  nsCSSValue(const nsCSSValue& aCopy);
-  ~nsCSSValue(void);
-
-  nsCSSValue&  operator=(const nsCSSValue& aCopy);
-  PRBool      operator==(const nsCSSValue& aOther) const;
-
-  nsCSSUnit GetUnit(void) const { return mUnit; };
-  PRBool    IsLengthUnit(void) const  
-    { return PRBool(eCSSUnit_Inch <= mUnit); }
-  PRBool    IsFixedLengthUnit(void) const  
-    { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit < eCSSUnit_EM)); }
-  PRBool    IsRelativeLengthUnit(void) const  
-    { return PRBool(eCSSUnit_EM <= mUnit); }
-
-  PRInt32   GetIntValue(void) const;
-  float     GetPercentValue(void) const;
-  float     GetFloatValue(void) const;
-  nsString& GetStringValue(nsString& aBuffer) const;
-  nscolor   GetColorValue(void) const;
-  nscoord   GetLengthTwips(void) const;
-
-  void  Reset(void);  // sets to null
-  void  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
-  void  SetPercentValue(float aValue);
-  void  SetFloatValue(float aValue, nsCSSUnit aUnit);
-  void  SetStringValue(const nsString& aValue);
-  void  SetColorValue(nscolor aValue);
-  void  SetAutoValue(void);
-  void  SetInheritValue(void);
-  void  SetNoneValue(void);
-  void  SetNormalValue(void);
-
-  // debugging methods only
-  void  AppendToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
-  void  ToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
-
-protected:
-  nsCSSUnit mUnit;
-  union {
-    PRInt32   mInt;
-    float     mFloat;
-    nsString* mString;
-    nscolor   mColor;
-  }         mValue;
-};
-
-inline PRInt32 nsCSSValue::GetIntValue(void) const
-{
-  NS_ASSERTION((mUnit == eCSSUnit_Integer) ||
-               (mUnit == eCSSUnit_Enumerated), "not an int value");
-  if ((mUnit == eCSSUnit_Integer) ||
-      (mUnit == eCSSUnit_Enumerated)) {
-    return mValue.mInt;
-  }
-  return 0;
-}
-
-inline float nsCSSValue::GetPercentValue(void) const
-{
-  NS_ASSERTION((mUnit == eCSSUnit_Percent), "not a percent value");
-  if ((mUnit == eCSSUnit_Percent)) {
-    return mValue.mFloat;
-  }
-  return 0.0f;
-}
-
-inline float nsCSSValue::GetFloatValue(void) const
-{
-  NS_ASSERTION((mUnit >= eCSSUnit_Number), "not a float value");
-  if ((mUnit >= eCSSUnit_Number)) {
-    return mValue.mFloat;
-  }
-  return 0.0f;
-}
-
-inline nsString& nsCSSValue::GetStringValue(nsString& aBuffer) const
-{
-  NS_ASSERTION((mUnit == eCSSUnit_String), "not a string value");
-  aBuffer.Truncate();
-  if ((mUnit == eCSSUnit_String) && (nsnull != mValue.mString)) {
-    aBuffer.Append(*(mValue.mString));
-  }
-  return aBuffer;
-}
-
-inline nscolor nsCSSValue::GetColorValue(void) const
-{
-  NS_ASSERTION((mUnit == eCSSUnit_Color), "not a color value");
-  if (mUnit == eCSSUnit_Color) {
-    return mValue.mColor;
-  }
-  return NS_RGB(0,0,0);
-}
 
 // SID for the nsCSSFont struct {f645dbf8-b48a-11d1-9ca5-0060088f9ff7}
 #define NS_CSS_FONT_SID   \
@@ -202,9 +60,32 @@ inline nscolor nsCSSValue::GetColorValue(void) const
 #define NS_CSS_LIST_SID   \
 {0x603f8266, 0xb48b, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
 
+// SID for the nsCSSTable struct {16aa4b30-5a3b-11d2-803b-006008159b5a}
+#define NS_CSS_TABLE_SID  \
+{0x16aa4b30, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
+// SID for the nsCSSBreaks struct {15124c20-5a3b-11d2-803b-006008159b5a}
+#define NS_CSS_BREAKS_SID \
+{0x15124c20, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
+// SID for the nsCSSPage struct {15dd8810-5a3b-11d2-803b-006008159b5a}
+#define NS_CSS_PAGE_SID  \
+{0x15dd8810, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
+// SID for the nsCSSContent struct {1629ef70-5a3b-11d2-803b-006008159b5a}
+#define NS_CSS_CONTENT_SID  \
+{0x1629ef70, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
+// SID for the nsCSSAural struct {166d2bb0-5a3b-11d2-803b-006008159b5a}
+#define NS_CSS_AURAL_SID  \
+{0x166d2bb0, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
+
 // IID for the nsICSSDeclaration interface {7b36b9ac-b48d-11d1-9ca5-0060088f9ff7}
 #define NS_ICSS_DECLARATION_IID   \
 {0x7b36b9ac, 0xb48d, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
+
+
 
 struct nsCSSFont : public nsCSSStruct {
   const nsID& GetID(void);
@@ -215,6 +96,8 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSValue mVariant;
   nsCSSValue mWeight;
   nsCSSValue mSize;
+  nsCSSValue mSizeAdjust; // NEW
+  nsCSSValue mStretch; // NEW
 };
 
 struct nsCSSColor : public nsCSSStruct  {
@@ -234,7 +117,20 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue mOpacity;
 };
 
+struct nsCSSShadow {
+  nsCSSShadow(void);
+  ~nsCSSShadow(void);
+
+  nsCSSValue mColor;
+  nsCSSValue mXOffset;
+  nsCSSValue mYOffset;
+  nsCSSValue mRadius;
+  nsCSSShadow*  mNext;
+};
+
 struct nsCSSText : public nsCSSStruct  {
+  nsCSSText(void);
+  ~nsCSSText(void);
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -245,6 +141,8 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mTextTransform;
   nsCSSValue mTextAlign;
   nsCSSValue mTextIndent;
+  nsCSSShadow* mTextShadow; // NEW
+  nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
 };
@@ -283,20 +181,28 @@ struct nsCSSMargin : public nsCSSStruct  {
 
   nsCSSRect*  mMargin;
   nsCSSRect*  mPadding;
-  nsCSSRect*  mBorder;
-  nsCSSRect*  mColor;
-  nsCSSRect*  mStyle;
+  nsCSSRect*  mBorderWidth; // CHANGED
+  nsCSSRect*  mBorderColor; // CHANGED
+  nsCSSRect*  mBorderStyle; // CHANGED
+  nsCSSValue  mOutlineWidth; // NEW
+  nsCSSValue  mOutlineColor; // NEW
+  nsCSSValue  mOutlineStyle; // NEW 
 };
 
 struct nsCSSPosition : public nsCSSStruct  {
+  nsCSSPosition(void);
+  ~nsCSSPosition(void);
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   nsCSSValue  mPosition;
   nsCSSValue  mWidth;
+  nsCSSValue  mMinWidth; // NEW
+  nsCSSValue  mMaxWidth; // NEW
   nsCSSValue  mHeight;
-  nsCSSValue  mLeft;
-  nsCSSValue  mTop;
+  nsCSSValue  mMinHeight; // NEW
+  nsCSSValue  mMaxHeight; // NEW
+  nsCSSRect*  mOffset;  // NEW
   nsCSSValue  mZIndex;
 };
 
@@ -309,6 +215,71 @@ struct nsCSSList : public nsCSSStruct  {
   nsCSSValue mPosition;
 };
 
+struct nsCSSTable : public nsCSSStruct  { // NEW
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue mBorderCollapse;
+  nsCSSValue mBorderSpacing;
+  nsCSSValue mCaptionSide;
+  nsCSSValue mEmptyCells;
+  nsCSSValue mLayout;
+};
+
+struct nsCSSBreaks : public nsCSSStruct  { // NEW
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue mOrphans;
+  nsCSSValue mWidows;
+  nsCSSValue mPage;
+  nsCSSValue mPageBreakAfter;
+  nsCSSValue mPageBreakBefore;
+  nsCSSValue mPageBreakInside;
+};
+
+struct nsCSSPage : public nsCSSStruct  { // NEW
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue mMarks;
+  nsCSSValue mSize;
+};
+
+struct nsCSSContent : public nsCSSStruct  { // NEW
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue mContent;
+  nsCSSValue mCounterIncrement;
+  nsCSSValue mCounterReset;
+  nsCSSValue mMarkerOffset;
+  nsCSSValue mQuotes;
+};
+
+struct nsCSSAural : public nsCSSStruct  { // NEW
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue mAzimuth;
+  nsCSSValue mElevation;
+  nsCSSValue mCueAfter;
+  nsCSSValue mCueBefore;
+  nsCSSValue mPauseAfter;
+  nsCSSValue mPauseBefore;
+  nsCSSValue mPitch;
+  nsCSSValue mPitchRange;
+  nsCSSValue mPlayDuring;
+  nsCSSValue mRichness;
+  nsCSSValue mSpeak;
+  nsCSSValue mSpeakHeader;
+  nsCSSValue mSpeakNumeral;
+  nsCSSValue mSpeakPunctuation;
+  nsCSSValue mSpeechRate;
+  nsCSSValue mStress;
+  nsCSSValue mVoiceFamily;
+  nsCSSValue mVolume;
+};
 
 class nsICSSDeclaration : public nsISupports {
 public:
