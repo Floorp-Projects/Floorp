@@ -312,8 +312,6 @@ EmbeddedEventHandler (void * arg) {
     // Create the event queue.
     rv = aEventQService->CreateThreadEventQueue();
 
-    NS_VERIFY(NS_SUCCEEDED(nsIThread::SetMainThread()), "couldn't set main thread");
-
 #ifndef NECKO    
     NS_InitINetService();
 #endif
@@ -363,10 +361,16 @@ EmbeddedEventHandler (void * arg) {
 #if DEBUG_RAPTOR_CANVAS
 	printf("EmbeddedEventHandler(%lx): Init the WebShell...\n", initContext);
 #endif
-    
-    //rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
+
+#ifdef XP_UNIX    
     rv = initContext->webShell->Init((nsNativeWidget *) GTK_MOZAREA(initContext->parentHWnd)->superwin,
-                                     initContext->x, initContext->y, initContext->w, initContext->h);
+                                     initContext->x, initContext->y, 
+                                     initContext->w, initContext->h);
+#else
+    rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
+                                     initContext->x, initContext->y, 
+                                     initContext->w, initContext->h);
+#endif
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kInitWebShellError;
         return;
