@@ -23,6 +23,7 @@
 
 #include "imgRequest.h"
 
+#include "imgLoader.h"
 #include "imgCache.h"
 #include "imgRequestProxy.h"
 
@@ -783,6 +784,5 @@ static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
 void
 imgRequest::SniffMimeType(const char *buf, PRUint32 len)
 {
-  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
-  loader->SupportImageWithContents(buf, len, getter_Copies(mContentType));
+  imgLoader::GetMimeTypeFromContent(buf, len, getter_Copies(mContentType));
 }

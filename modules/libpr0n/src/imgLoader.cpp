@@ -542,6 +542,12 @@ NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, PRBool 
 
 NS_IMETHODIMP imgLoader::SupportImageWithContents(const char* aContents, PRUint32 aLength, char** aContentType)
 {
+  return GetMimeTypeFromContent(aContents, aLength, aContentType);
+}
+
+/* static */
+nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, char** aContentType)
+{
   *aContentType = nsnull;
   /* Is it a GIF? */
   if (aLength >= 4 && !nsCRT::strncmp(aContents, "GIF8", 4))  {
