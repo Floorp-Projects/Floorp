@@ -45,6 +45,7 @@
 #include "nsIPrefService.h"
 #include "nsString.h"
 #include "nsEmbedAPI.h"
+#include "AppDirServiceProvider.h"
 
 
 #ifdef _BUILD_STATIC_BIN
@@ -101,17 +102,30 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 
 - (BOOL) initMozillaPrefs
 {
-    NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
-    setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
-
-    nsresult rv;
 
 #ifdef _BUILD_STATIC_BIN
     // Initialize XPCOM's module info table
     NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
 
-    rv = NS_InitEmbedding(nsnull, nsnull);
+    nsresult rv;
+
+    NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
+    const char *binDirPath = [path fileSystemRepresentation];
+    nsCOMPtr<nsILocalFile> binDir;
+    rv = NS_NewNativeLocalFile(nsDependentCString(binDirPath), PR_TRUE, getter_AddRefs(binDir));
+    if (NS_FAILED(rv))
+      return NO;
+
+    // This shouldn't be needed since we are initing XPCOM with this
+    // directory but causes a (harmless) warning if not defined.
+    setenv("MOZILLA_FIVE_HOME", binDirPath, 1);
+
+    // Supply our own directory service provider so we can control where
+    // the registry and profiles are located.
+    AppDirServiceProvider *provider = new AppDirServiceProvider(NS_LITERAL_CSTRING("Project X"));
+    NS_ASSERTION(provider, "Failed to create AppDirServiceProvider");
+    rv = NS_InitEmbedding(binDir, provider);
     if (NS_FAILED(rv)) {
       printf("Embedding init failed.\n");
       return NO;
@@ -121,7 +135,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     if (NS_FAILED(rv))
         return NO;
     
-    nsAutoString newProfileName(NS_LITERAL_STRING("Chimera"));
+    nsAutoString newProfileName(NS_LITERAL_STRING("default"));
     PRBool profileExists = PR_FALSE;
     rv = profileService->ProfileExists(newProfileName.get(), &profileExists);
     if (NS_FAILED(rv))
