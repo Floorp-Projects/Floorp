@@ -40,6 +40,9 @@
 
 #include "glib.h"
 
+
+#define EVENT_QUEUES_SUCK
+
 static PRBool sInitialized = PR_FALSE;
 static PLHashTable *sQueueHashTable = nsnull;
 static PLHashTable *sCountHashTable = nsnull;
@@ -291,8 +294,10 @@ NS_IMETHODIMP nsAppShell::Spinup()
 
   // XXX shouldn't this be automatic?
  done:
+#ifndef EVENT_QUEUES_SUCK
   ListenToEventQueue(mEventQueue, PR_TRUE);
-  
+#endif
+
   return rv;
 }
 
@@ -307,7 +312,9 @@ NS_IMETHODIMP nsAppShell::Spindown()
   printf("nsAppShell::Spindown()\n");
 #endif
   if (mEventQueue) {
+#ifndef EVENT_QUEUES_SUCK
     ListenToEventQueue(mEventQueue, PR_FALSE);
+#endif
     mEventQueue->ProcessPendingEvents();
     mEventQueue = nsnull;
   }
@@ -326,6 +333,10 @@ NS_IMETHODIMP nsAppShell::Run()
   
   if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;
+
+#ifdef EVENT_QUEUES_SUCK
+  ListenToEventQueue(mEventQueue, PR_TRUE);
+#endif
 
   // kick up gtk_main.  this won't return until gtk_main_quit is called
   gtk_main();
@@ -366,6 +377,10 @@ NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
     return NS_ERROR_NOT_INITIALIZED;
 
   g_main_iteration(PR_TRUE);
+
+#ifdef EVENT_QUEUES_SUCK
+  mEventQueue->ProcessPendingEvents();
+#endif
 
   return NS_OK;
 }
