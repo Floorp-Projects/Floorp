@@ -64,6 +64,50 @@ LIBS		= \
 
 endif
 
+include $(topsrcdir)/config/config.mk
+
+ifdef BUILD_STATIC_LIBS
+
+ifdef MOZ_FAT_EMBED
+EMBED_LINK_COMPS=$(FINAL_LINK_COMPS)
+else
+EMBED_LINK_COMPS=../src/embed-link-comps
+endif
+
+ifeq ($(OS_ARCH),OS2)
+EXTRA_LIBS = $(addprefix lib,$(shell cat $(EMBED_LINK_COMPS) $(FINAL_LINK_LIBS)))
+EXTRA_LIBS += mpfilelocprovider_s
+EXTRA_LDOPTS += libuls.lib libconv.lib unikbd.lib
+else
+EXTRA_LIBS = -L$(DEPTH)/dist/lib/components $(addprefix -l,$(shell cat $(EMBED_LINK_COMPS) $(FINAL_LINK_LIBS)))
+endif
+
+EXTRA_LIBS	+= \
+		$(PNG_LIBS) \
+		$(MNG_LIBS) \
+		$(JPEG_LIBS) \
+		$(ZLIB_LIBS) \
+		$(MOZ_GDK_PIXBUF_LIBS) \
+		$(MOZ_XIE_LIBS) \
+		$(MOZ_XPRINT_LDFLAGS) \
+		$(NULL)
+
+ifdef MOZ_PSM
+EXTRA_LIBS	+= \
+		$(NSS_LIBS) \
+		$(NULL)
+endif
+
+ifdef MOZ_LDAP_XPCOM
+EXTRA_LIBS	+= -lldap40 -llber40
+endif
+
+ifdef MOZ_ENABLE_GTK
+EXTRA_LIBS	+= $(XLDFLAGS) -lXt -lSM -lICE
+endif
+
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef ENABLE_GNOME
