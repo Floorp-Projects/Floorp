@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.143 $ ';
+$::UtilsVersion = '$Revision: 1.144 $ ';
 
 package TinderUtils;
 
@@ -848,8 +848,7 @@ sub run_all_tests {
 	
 
 	#
-	# Some tests need browser.dom.window.dump.enabled set to true, so
-	# that JS dump() will work in optimized builds.
+	# Set prefs to run tests properly.
 	#
 	if($Settings::LayoutPerformanceTest  or
 	   $Settings::XULWindowOpenTest      or
@@ -857,19 +856,33 @@ sub run_all_tests {
 	   $Settings::MailBloatTest          or
 	   $Settings::BloatTest2             or
 	   $Settings::BloatTest) {
+
+      # Chances are we will be timing these tests.  Bring gettime() into memory
+      # by calling it once, before any tests run.
+      Time::PossiblyHiRes::getTime();
+
+      # Some tests need browser.dom.window.dump.enabled set to true, so
+      # that JS dump() will work in optimized builds.
 	  if (system("\\grep -s browser.dom.window.dump.enabled $pref_file > /dev/null")) {
 		print_log "Setting browser.dom.window.dump.enabled\n";
 		open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
 		print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
 		close PREFS;
-
-		# Chances are we will be timing these tests.  Bring gettime() into memory
-		# by calling it once, before any tests run.
-		Time::PossiblyHiRes::getTime();
-
 	  } else {
 		print_log "Already set browser.dom.window.dump.enabled\n";
 	  }
+
+      # Set security prefs to allow us to close our own window, 
+      # pageloader test (and possibly other tests) needs this on.
+	  if (system("\\grep -s dom.allow_scripts_to_close_windows $pref_file > /dev/null")) {
+		print_log "Setting dom.allow_scripts_to_close_windows to 2.\n";
+		open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+		print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", 2);\n";
+		close PREFS;
+	  } else {
+		print_log "Already set dom.allow_scripts_to_close_windows\n";
+	  }
+      
 	}
 	
     #
@@ -883,8 +896,6 @@ sub run_all_tests {
     } else {
       print_log "Modern skin already set.\n";
     }
-
-
 
     # Mozilla alive test
     #
