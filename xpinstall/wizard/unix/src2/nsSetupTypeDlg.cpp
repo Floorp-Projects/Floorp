@@ -28,6 +28,17 @@ nsSetupTypeDlg::Next()
 }
 
 int
+nsSetupTypeDlg::Parse(nsINIParser *aParser)
+{
+    int err = OK;
+
+    return err;
+
+BAIL:
+    return err;
+}
+
+int
 nsSetupTypeDlg::SetMsg0(char *aMsg)
 {
     if (!aMsg)

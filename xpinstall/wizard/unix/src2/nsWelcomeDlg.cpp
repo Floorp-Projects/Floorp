@@ -57,6 +57,17 @@ nsWelcomeDlg::Next()
 }
 
 int
+nsWelcomeDlg::Parse(nsINIParser *aParser)
+{
+    int err = OK;
+
+    return err;
+
+BAIL:
+    return err;
+}
+
+int
 nsWelcomeDlg::SetReadmeFile(char *aReadmeFile)
 {
     if (!aReadmeFile)

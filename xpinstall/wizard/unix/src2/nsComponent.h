@@ -25,7 +25,7 @@
 #ifndef _NS_COMPONENT_H_
 #define _NS_COMPONENT_H_
 
-#include "XILimits.h"
+#include "XIDefines.h"
 #include "XIErrors.h"
 #include <malloc.h>
 

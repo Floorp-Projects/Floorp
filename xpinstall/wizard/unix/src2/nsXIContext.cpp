@@ -22,11 +22,36 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-#ifndef _XILIMITS_H_
-#define _XILIMITS_H_
+#include "nsXIContext.h"
 
-#define MAX_COMPONENTS 64
-#define MAX_SETUP_TYPES 32
+nsXIContext::nsXIContext()
+{
+    me = NULL;
 
+    ldlg = NULL;
+    wdlg = NULL;
+    sdlg = NULL;
+    cdlg = NULL;
+    idlg = NULL;
 
-#endif /* _XILIMITS_H_ */
+    window = NULL;
+    back = NULL;
+    next = NULL;
+    logo = NULL; 
+}
+
+nsXIContext::~nsXIContext()
+{
+    // NOTE: don't try to delete "me" cause I control thee
+
+    XI_IF_DELETE(ldlg);
+    XI_IF_DELETE(wdlg);
+    XI_IF_DELETE(sdlg);
+    XI_IF_DELETE(cdlg);
+    XI_IF_DELETE(idlg);
+
+    XI_IF_FREE(window);
+    XI_IF_FREE(back);
+    XI_IF_FREE(next);
+    XI_IF_FREE(logo);
+}

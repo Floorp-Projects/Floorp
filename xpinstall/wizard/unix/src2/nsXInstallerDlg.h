@@ -28,11 +28,13 @@
 #include <malloc.h>
 #include "XIErrors.h"
 
+#include "nsINIParser.h"
+
 /** 
  * nsXInstallerDlg
  *
  * The interface for all installer dialogs. Helps maintain
- * uniform navigation mechanism and UI widgets.
+ * uniform navigation mechanism, startup init, and UI widgets.
  */
 class nsXInstallerDlg
 {
@@ -46,6 +48,8 @@ public:
     virtual int     Back() = 0;
     virtual int     Next() = 0;
 
+    virtual int     Parse(nsINIParser *aParser) = 0;
+
 /*-------------------------------------------------------------------*
  *   INI Properties
  *-------------------------------------------------------------------*/
@@ -53,8 +57,6 @@ public:
     int             GetShowDlg();
     int             SetTitle(char *aTitle);
     char            *GetTitle();
-
-    // TO DO
 
     enum
     {
