@@ -23,14 +23,27 @@ use Fcntl;
 require "globals.pl";
 require 'lloydcgi.pl';
 
-$buildname = $form{'buildname'};
-$buildtime = $form{'buildtime'};
-$errorparser = $form{'errorparser'};
-$logfile = $form{'logfile'};
-$tree = $form{'tree'};
+if (defined($args = $form{log})) {
+
+  ($tree, $logfile) = split /\//, $args;
+
+  my $br = find_build_record($tree, $logfile);
+  $errorparser = $br->{errorparser};
+  $buildname   = $br->{buildname};
+  $buildtime   = $br->{buildtime};
+} else {
+  $tree        = $form{'tree'};
+  $logfile     = $form{'logfile'};
+  $errorparser = $form{'errorparser'};
+  $buildname   = $form{'buildname'};
+  $buildtime   = $form{'buildtime'};
+}
+
 $enc_buildname = &url_encode($buildname);
+
 $note = $form{'note'};
-$who = $form{'who'};
+$who  = $form{'who'};
+
 $now = time;
 $now_str = &print_time($now);
 
@@ -87,14 +100,14 @@ Go back to the Error Log</a>
 
 } else {
 
-&GetBuildNameIndex;
+  &GetBuildNameIndex;
 
-@names = sort (keys %$build_name_index);
+  @names = sort (keys %$build_name_index);
 
-    if( $buildname eq '' || $buildtime == 0 ){
-        print "<h1>Invalid parameters</h1>\n";
-        die "\n";
-    }
+  if ($buildname eq '' || $buildtime == 0) {
+    print "<h1>Invalid parameters</h1>\n";
+    die "\n";
+  }
 
 #print "$buildname \n $buildtime \n $errorparser \n $logfile \n  $tree \n $enc_buildname \n";
 
