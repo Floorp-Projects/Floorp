@@ -89,7 +89,7 @@ include <$(DEPTH)/config/rules.mak>
 
 CFLAGS = $(CFLAGS) -DMOZILLA_CLIENT
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
     $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 
