@@ -30,7 +30,8 @@
  * Factory class for the nsEUCJPToUnicode objects.
  * 
  */
-class nsEUCJPToUnicodeFactory : public nsIFactory, nsICharsetConverterInfo
+class nsEUCJPToUnicodeFactory : public nsIFactory, 
+public nsICharsetConverterInfo
 {
   NS_DECL_ISUPPORTS
 

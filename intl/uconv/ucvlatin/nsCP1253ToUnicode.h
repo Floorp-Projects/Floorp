@@ -30,7 +30,8 @@
  * Factory class for the nsCP1253ToUnicode objects.
  * 
  */
-class nsCP1253ToUnicodeFactory : public nsIFactory, nsICharsetConverterInfo
+class nsCP1253ToUnicodeFactory : public nsIFactory, 
+public nsICharsetConverterInfo
 {
   NS_DECL_ISUPPORTS
 

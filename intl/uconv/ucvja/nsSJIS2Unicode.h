@@ -30,7 +30,8 @@
  * Factory class for the nsSJIS2Unicode objects.
  * 
  */
-class nsSJIS2UnicodeFactory : public nsIFactory, nsICharsetConverterInfo
+class nsSJIS2UnicodeFactory : public nsIFactory, 
+public nsICharsetConverterInfo
 {
   NS_DECL_ISUPPORTS
 

@@ -32,7 +32,8 @@
  * @created         09/Feb/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsISO2022JPToUnicodeFactory : public nsIFactory, nsICharsetConverterInfo
+class nsISO2022JPToUnicodeFactory : public nsIFactory, 
+public nsICharsetConverterInfo
 {
   NS_DECL_ISUPPORTS
 
