@@ -57,6 +57,11 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
     mSrc        = nsnull;
     mParams     = nsnull;
     mStrTarget  = nsnull;
+    mShortcutPath = nsnull;
+    mDescription  = nsnull;
+    mWorkingPath  = nsnull;
+    mParams       = nsnull;
+    mIcon         = nsnull;
 
     mTarget     = new nsFileSpec(aTarget);
 
@@ -80,6 +85,11 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
   mParams     = nsnull;
   mStrTarget  = nsnull;
   mAction     = ACTION_NONE;
+  mShortcutPath = nsnull;
+  mDescription  = nsnull;
+  mWorkingPath  = nsnull;
+  mParams       = nsnull;
+  mIcon         = nsnull;
 
   mSrc        = new nsFileSpec(aSrc);
   mTarget     = new nsFileSpec(aTarget);
@@ -104,9 +114,13 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
   mParams     = nsnull;
 	mStrTarget  = nsnull;
   mAction     = ACTION_NONE;
-    
-  mTarget     = new nsFileSpec(aTarget);
+  mShortcutPath = nsnull;
+  mDescription  = nsnull;
+  mWorkingPath  = nsnull;
+  mParams       = nsnull;
+  mIcon         = nsnull;
 
+  mTarget = new nsFileSpec(aTarget);
   if(mTarget == nsnull)
     *aReturn = nsInstall::OUT_OF_MEMORY;
 
@@ -121,11 +135,16 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
 {
     MOZ_COUNT_CTOR(nsInstallFileOpItem);
 
-  *aReturn    = nsInstall::SUCCESS;
-  mIObj       = aInstallObj;
-  mCommand    = aCommand;
-  mFlags      = 0;
-  mAction     = ACTION_NONE;
+    *aReturn      = nsInstall::SUCCESS;
+    mIObj         = aInstallObj;
+    mCommand      = aCommand;
+    mFlags        = 0;
+    mAction       = ACTION_NONE;
+    mShortcutPath = nsnull;
+    mDescription  = nsnull;
+    mWorkingPath  = nsnull;
+    mParams       = nsnull;
+    mIcon         = nsnull;
 
     switch(mCommand)
     {
