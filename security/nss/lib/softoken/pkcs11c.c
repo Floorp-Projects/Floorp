@@ -3193,7 +3193,7 @@ CK_RV NSC_GenerateKeyPair (CK_SESSION_HANDLE hSession,
 	rsaPriv = RSA_NewKey(public_modulus_bits, &pubExp);
 	PORT_Free(pubExp.data);
 	if (rsaPriv == NULL) {
-	    crv = CKR_HOST_MEMORY;
+	    crv = CKR_DEVICE_ERROR;
 	    break;
 	}
         /* now fill in the RSA dependent paramenters in the public key */
@@ -3283,7 +3283,7 @@ kpg_done:
 	PORT_Free(pqgParam.subPrime.data);
 	PORT_Free(pqgParam.base.data);
 
-	if (rv != SECSuccess) { crv = CKR_HOST_MEMORY; break; }
+	if (rv != SECSuccess) { crv = CKR_DEVICE_ERROR; break; }
 
 	/* store the generated key into the attributes */
         crv = pk11_AddAttributeType(publicKey,CKA_VALUE,
@@ -3332,7 +3332,7 @@ dsagn_done:
 	PORT_Free(dhParam.prime.data);
 	PORT_Free(dhParam.base.data);
 	if (rv != SECSuccess) { 
-	  crv = CKR_HOST_MEMORY; 
+	  crv = CKR_DEVICE_ERROR;
 	  break;
 	}
 
