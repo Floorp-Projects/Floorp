@@ -4955,7 +4955,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
-  if (mNeedToBlockParser || !mParser->IsParserEnabled()) {
+  if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
     return NS_ERROR_HTMLPARSER_BLOCK;
   }
 
