@@ -98,9 +98,9 @@ externalref XfeManagerClassRec xfeManagerClassRec;
 typedef struct _XfeManagerPart
 {
 	/* Callback Resources */
-	XtCallbackList		resize_callback;		/* Widget Resize		*/
-	XtCallbackList		change_managed_callback;/* Widget Resize		*/
-	XtCallbackList		layout_callback;		/* Widget Layout Request*/
+	XtCallbackList		change_managed_callback;/* Change managed callback	*/
+	XtCallbackList		resize_callback;		/* Resize callback			*/
+	XtCallbackList		realize_callback;		/* Realize callback			*/
 	
 	/* Busy resources */
 	Boolean				busy;					/* Busy  ?				*/
@@ -464,8 +464,8 @@ _XfeManagerApplyProcToChildren			(Widget					w,
 #define _XfemResizeCallback(w) \
 (((XfeManagerWidget) (w))->xfe_manager . resize_callback)
 /*----------------------------------------------------------------------*/
-#define _XfemLayoutCallback(w) \
-(((XfeManagerWidget) (w))->xfe_manager . layout_callback)
+#define _XfemRealizeCallback(w) \
+(((XfeManagerWidget) (w))->xfe_manager . realize_callback)
 /*----------------------------------------------------------------------*/
 #define _XfemBusyCursor(w) \
 (((XfeManagerWidget) (w))->xfe_manager . busy_cursor)

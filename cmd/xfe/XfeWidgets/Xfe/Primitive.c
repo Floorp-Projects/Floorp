@@ -140,6 +140,15 @@ static const XtResource resources[] =
 		(XtPointer) NULL,
 	},
 	{ 
+		XmNrealizeCallback,
+		XmCCallback,
+		XmRCallback,
+		sizeof(XtCallbackList),
+		XtOffsetOf(XfePrimitiveRec , xfe_primitive . realize_callback),
+		XmRImmediate, 
+		(XtPointer) NULL,
+	},
+	{ 
 		XmNresizeCallback,
 		XmCCallback,
 		XmRCallback,
@@ -656,6 +665,9 @@ Realize(Widget w,XtValueMask * mask,XSetWindowAttributes* wa)
 	{
 		XfeCursorDefine(w,_XfeCursor(w));
     }
+
+    /* invoke realize callbacks */
+    _XfeInvokeCallbacks(w,_XfeRealizeCallbacks(w),XmCR_REALIZE,NULL,True);
 }
 /*----------------------------------------------------------------------*/
 static void

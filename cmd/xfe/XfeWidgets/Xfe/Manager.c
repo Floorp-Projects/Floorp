@@ -146,11 +146,20 @@ static const XtResource resources[] =
 {
 	/* Callback resources */
     { 
-		XmNlayoutCallback,
+		XmNchangeManagedCallback,
 		XmCCallback,
 		XmRCallback,
 		sizeof(XtCallbackList),
-		XtOffsetOf(XfeManagerRec , xfe_manager . layout_callback),
+		XtOffsetOf(XfeManagerRec , xfe_manager . change_managed_callback),
+		XmRImmediate, 
+		(XtPointer) NULL,
+    },
+    { 
+		XmNrealizeCallback,
+		XmCCallback,
+		XmRCallback,
+		sizeof(XtCallbackList),
+		XtOffsetOf(XfeManagerRec , xfe_manager . realize_callback),
 		XmRImmediate, 
 		(XtPointer) NULL,
     },
@@ -160,15 +169,6 @@ static const XtResource resources[] =
 		XmRCallback,
 		sizeof(XtCallbackList),
 		XtOffsetOf(XfeManagerRec , xfe_manager . resize_callback),
-		XmRImmediate, 
-		(XtPointer) NULL,
-    },
-    { 
-		XmNchangeManagedCallback,
-		XmCCallback,
-		XmRCallback,
-		sizeof(XtCallbackList),
-		XtOffsetOf(XfeManagerRec , xfe_manager . change_managed_callback),
 		XmRImmediate, 
 		(XtPointer) NULL,
     },
@@ -791,6 +791,9 @@ CoreRealize(Widget w,XtValueMask *mask,XSetWindowAttributes* wa)
     attr.bit_gravity = _XfeManagerAccessBitGravity(w);
     
     XChangeWindowAttributes(XtDisplay(w), _XfeWindow(w), CWBitGravity, &attr);
+
+    /* Invoke realize callbacks */
+	_XfeInvokeCallbacks(w,_XfemRealizeCallback(w),XmCR_REALIZE,NULL,False);
 }
 /*----------------------------------------------------------------------*/
 static void

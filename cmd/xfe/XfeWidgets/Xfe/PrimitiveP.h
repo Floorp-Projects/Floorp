@@ -83,10 +83,11 @@ externalref XfePrimitiveClassRec xfePrimitiveClassRec;
 typedef struct _XfePrimitivePart
 {
     /* Callback Resources */
-    XtCallbackList		enter_callback;			/* Pointer Enter		*/
-    XtCallbackList		focus_callback;			/* Keyboard Focus		*/
-    XtCallbackList		leave_callback;			/* Pointer Leave		*/
-    XtCallbackList		resize_callback;		/* Widget Resize		*/
+    XtCallbackList		enter_callback;		/* Enter widget callback	*/
+    XtCallbackList		focus_callback;		/* Keyboard focus callback 	*/
+    XtCallbackList		leave_callback;		/* Leave widget callback	*/
+    XtCallbackList		realize_callback;	/* Realize callback			*/
+    XtCallbackList		resize_callback;	/* Resize callback			*/
     
 	/* Cursor resources */
     Cursor				cursor;					/* Cursor				*/
@@ -277,6 +278,9 @@ _XfePrimitiveFocus					(Widget,XEvent *,char **,Cardinal *);
 /*----------------------------------------------------------------------*/
 #define _XfeLeaveCallbacks(w) \
 (((XfePrimitiveWidget) (w))->xfe_primitive . leave_callback)
+/*----------------------------------------------------------------------*/
+#define _XfeRealizeCallbacks(w) \
+(((XfePrimitiveWidget) (w))->xfe_primitive . realize_callback)
 /*----------------------------------------------------------------------*/
 #define _XfeResizeCallbacks(w) \
 (((XfePrimitiveWidget) (w))->xfe_primitive . resize_callback)

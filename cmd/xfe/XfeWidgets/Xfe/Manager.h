@@ -63,6 +63,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmCBusyCursor						"BusyCursor"
 #define XmCBusyCursorOn						"BusyCursorOn"
 #define XmCLayoutFrozen						"LayoutFrozen"
+#define XmRLinked							XmRPointer
 #define XmRLinkedChildren					"LinkedChildren"
 #define XmRManagerChildType					"ManagerChildType"
 
