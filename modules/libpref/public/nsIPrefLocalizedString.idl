@@ -39,21 +39,53 @@
 
 #include "nsISupports.idl"
 
-/*
- * nsIPrefLocalizedString is simply a wrapper for nsISupportsWString so we can have a unique
- * identifier to distinguish between requests for normal wstrings and localized wstrings
+/**
+ * The nsIPrefLocalizedString interface is simply a wrapper interface for
+ * nsISupportsWString so the preferences service can have a unique identifier
+ * to distinguish between requests for normal wide strings (nsISupportsWString)
+ * and "localized" wide strings, which get their default values from properites
+ * files.
+ *
+ * @see nsIPrefBranch
+ * @see nsISupportsWString
+ * 
+ * @status FROZEN
  */
 
 [scriptable, uuid(ae419e24-1dd1-11b2-b39a-d3e5e7073802)]
 interface nsIPrefLocalizedString : nsISupports
 {
-    attribute wstring data;
-    wstring toString();
+  /**
+   * Provides access to string data stored in this property.
+   *
+   * @return NS_OK The operation succeeded.
+   * @return Other An error occured.
+   */
+  attribute wstring data;
 
-      // do not include space for null termination in |length|. It is handled
-      // internally. |length| is in characters, not in bytes.
-    void setDataWithLength(in unsigned long length,
-                           [size_is(length)] in wstring data);
+  /**
+   * Used to retrieve the contents of this object into a wide string.
+   *
+   * @return wstring The string containing the data stored within this object.
+   */
+  wstring toString();
+
+  /**
+   * Used to set the contents of this object.
+   *
+   * @param length The length of the string. This value should not include
+   *               space for the null terminator, nor should it account for the
+   *               size of a character. It should  only be the number of
+   *               characters for which there is space in the string.
+   * @param data   The string data to be stored.
+   *
+   * @note
+   * This makes a copy of the string argument passed in.
+   *
+   * @return NS_OK The data was successfully stored.
+   */
+  void setDataWithLength(in unsigned long length,
+                         [size_is(length)] in wstring data);
 };
 
 %{C++
