@@ -319,6 +319,9 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
         nsISupports* service;
         rv = entry->mService->QueryInterface(aIID, (void**)&service);
         if (NS_SUCCEEDED(rv)) {
+            // The refcount acquired in QI() above is "returned" to
+            // the caller.
+
             rv = entry->AddListener(shutdownListener);
             if (NS_SUCCEEDED(rv)) {
                 *result = service;
@@ -342,6 +345,15 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
     mon.Exit();
     rv = nsComponentManager::CreateInstance(aClass, NULL, aIID, (void**)&service);
     mon.Enter();
+
+    // If you hit this assertion, it means that someone tried (and
+    // succeeded!) to get your service during your service's
+    // initialization. This will mean that one instance of your
+    // service will leak, and may mean that the client that
+    // successfully acquired the service got a partially constructed
+    // object.
+    NS_ASSERTION(!mServices->Get(&key), "re-entrant call to service manager created service twice!");
+
     if (NS_SUCCEEDED(rv)) {
         entry = new nsServiceEntry(aClass, service);
         if (entry == NULL) {
