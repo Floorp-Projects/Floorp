@@ -9,6 +9,7 @@ nsIFileStream.h
 nsIString.h
 nsIStringStream.h
 nsFileSpec.h
+nsFileSpecStreaming.h
 nsRepeater.h
 nsIProperties.h
 nsIScriptable.h
