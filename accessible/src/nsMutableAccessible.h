@@ -34,11 +34,11 @@ public:
   NS_DECL_NSIACCESSIBLE
   NS_DECL_NSIMUTABLEACCESSIBLE
 
-  nsMutableAccessible(nsIDOMNode* aNode);
+  nsMutableAccessible(nsISupports* aNode);
   virtual ~nsMutableAccessible();
 
 private:
-  nsCOMPtr<nsIDOMNode> mNode;
+  nsCOMPtr<nsISupports> mNode;
   nsAutoString mName;
   nsAutoString mRole;
   nsCOMPtr<nsIAtom> mNameAttribute;

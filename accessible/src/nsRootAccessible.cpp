@@ -31,8 +31,9 @@
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-nsRootAccessible::nsRootAccessible(nsIPresShell* aShell):nsAccessible(nsnull,nsnull,aShell)
+nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell, nsIFrame* aFrame):nsAccessible(nsnull,nsnull,aShell)
 {
+ // mFrame = aFrame;
 }
 
 //-----------------------------------------------------
@@ -54,15 +55,19 @@ NS_IMETHODIMP nsRootAccessible::GetAccName(PRUnichar * *aAccName)
 // helpers
 nsIFrame* nsRootAccessible::GetFrame()
 {
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShell);
-  nsIFrame* root = nsnull;
-  if (shell) 
-    shell->GetRootFrame(&root);
+  //if (!mFrame) {
+    nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShell);
+    nsIFrame* root = nsnull;
+    if (shell) 
+      shell->GetRootFrame(&root);
   
-  return root;
+    return root;
+  //}
+ 
+ // return mFrame;
 }
 
-nsIAccessible* nsRootAccessible::CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIPresShell* aShell)
+nsIAccessible* nsRootAccessible::CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIWeakReference* aShell)
 {
   return new nsHTMLBlockAccessible(aAccessible, aContent, aShell);
 }

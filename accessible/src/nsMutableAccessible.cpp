@@ -25,9 +25,10 @@
 
 NS_IMPL_ISUPPORTS1(nsMutableAccessible, nsIAccessible)
 
-nsMutableAccessible::nsMutableAccessible(nsIDOMNode* aNode)
+nsMutableAccessible::nsMutableAccessible(nsISupports* aNode)
 {
   NS_INIT_ISUPPORTS();
+  NS_ASSERTION(aNode,"We must have a valid node!!");
   mNode = aNode;
   mNameNodeValue = PR_FALSE;
   mNameStringSet = PR_FALSE;
@@ -124,7 +125,14 @@ NS_IMETHODIMP nsMutableAccessible::GetAccName(PRUnichar **_retval)
   nsAutoString value;
 
   if (mNameNodeValue) {
-    mNode->GetNodeValue(value);
+    // see if we can get nodevalue
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mNode);
+    if (node)
+      node->GetNodeValue(value);
+    else {
+      *_retval = nsnull;
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
   } else if (mNameStringSet) {
     value = mName;
   } else if (mNameAttribute) {
