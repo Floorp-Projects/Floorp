@@ -2241,7 +2241,17 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		   the local system will convert that to the local line
 		   terminator as it is read.
 		 */
-		PL_strcat (outputBuffer, MSG_LINEBREAK);
+        // ** jt - in the case of save message to the stationary file if the
+        // message is to be uploaded to the imap server we need to end the
+        // line with canonical line endings, i.e., CRLF
+        nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningURL);
+        PRBool canonicalLineEnding = PR_FALSE;
+        if (msgurl)
+            msgurl->GetCanonicalLineEnding(&canonicalLineEnding);
+        if (canonicalLineEnding)
+            PL_strcat(outputBuffer, CRLF);
+        else
+            PL_strcat (outputBuffer, MSG_LINEBREAK);
 		/* Don't send content-type to mime parser if we're doing a cancel
 		  because it confuses mime parser into not parsing.
 		  */

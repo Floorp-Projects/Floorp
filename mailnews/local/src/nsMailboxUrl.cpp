@@ -122,6 +122,7 @@ nsMailboxUrl::nsMailboxUrl()
 	m_messageSize = 0;
 	m_messageFileSpec = nsnull;
     m_addDummyEnvelope = PR_FALSE;
+    m_canonicalLineEnding = PR_FALSE;
 }
  
 nsMailboxUrl::~nsMailboxUrl()
@@ -295,6 +296,7 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 }
 
 NS_IMPL_GETSET(nsMailboxUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
+NS_IMPL_GETSET(nsMailboxUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding);
 
 NS_IMETHODIMP nsMailboxUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {

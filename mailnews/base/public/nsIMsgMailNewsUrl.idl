@@ -81,4 +81,5 @@ interface nsIMsgMessageUrl : nsISupports {
 	// used by imap, pop and nntp in order to implement save message to disk
 	attribute nsIFileSpec messageFile;
 	attribute boolean AddDummyEnvelope;	
+    attribute boolean canonicalLineEnding;
 };

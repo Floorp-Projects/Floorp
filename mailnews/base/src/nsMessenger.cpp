@@ -588,7 +588,8 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
               case 0:
               default:
                 messageService->SaveMessageToDisk(url, aSpec, PR_TRUE,
-                                                  urlListener, nsnull);
+                                                  urlListener, nsnull,
+                                                  PR_FALSE);
                 break;
               case 1:
               case 2:
@@ -647,6 +648,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
           { 
               // ** save as Template
               PRBool needDummyHeader = PR_TRUE;
+              PRBool canonicalLineEnding = PR_FALSE;
               nsSaveAsListener *aListener = new nsSaveAsListener(aSpec);
 
               if (aListener)
@@ -656,7 +658,11 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                     getter_Copies(aListener->m_templateUri));
                 if (NS_FAILED(rv)) return rv;
                 needDummyHeader =
-                  PL_strcasestr(aListener->m_templateUri, "mailbox") != nsnull;
+                  PL_strcasestr(aListener->m_templateUri, "mailbox://") 
+                  != nsnull;
+                canonicalLineEnding =
+                  PL_strcasestr(aListener->m_templateUri, "imap://")
+                  != nsnull;
                 rv = aListener->QueryInterface(
                   NS_GET_IID(nsIUrlListener),
                   getter_AddRefs(urlListener));
@@ -671,7 +677,8 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                 // to manually add refs ourself
                 messageService->SaveMessageToDisk(url, aSpec, 
                                                   needDummyHeader,
-                                                  urlListener, nsnull);
+                                                  urlListener, nsnull,
+                                                  canonicalLineEnding); 
               }
           }
         }
@@ -1456,8 +1463,6 @@ nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
   {
     m_fileSpec->Flush();
     m_fileSpec->CloseStream();
-    if (NS_FAILED(rv)) goto done;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) goto done;
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) goto done;

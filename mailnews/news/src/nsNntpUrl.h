@@ -52,6 +52,7 @@ protected:
     // used by save message to disk
 	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
     PRBool                m_addDummyEnvelope;
+    PRBool                m_canonicalLineEnding;
 
 	/* NNTP specific event sinks */
 	nsINNTPHost				* m_newsHost;

@@ -351,6 +351,10 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	else
 	{
 		PRBool pauseForMoreData = PR_FALSE;
+        PRBool canonicalLineEnding = PR_FALSE;
+        nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningUrl);
+        if (msgurl)
+            msgurl->GetCanonicalLineEnding(&canonicalLineEnding);
 		do
 		{
 			line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
@@ -381,7 +385,11 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 					PRInt32 count = 0;
 					if (line)
 						m_tempMessageFile->Write(line, PL_strlen(line), &count);
-					m_tempMessageFile->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
+                    if (canonicalLineEnding)
+                        m_tempMessageFile->Write(CRLF, 2, &count);
+                    else
+                        m_tempMessageFile->Write(MSG_LINEBREAK,
+                                                 MSG_LINEBREAK_LEN, &count);
 				}
 				else
 					SetFlag(MAILBOX_MSG_PARSE_FIRST_LINE);

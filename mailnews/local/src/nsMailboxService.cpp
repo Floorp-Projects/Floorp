@@ -137,8 +137,13 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
   return FetchMessage(aMessageURI, aDisplayConsumer, aUrlListener, nsIMailboxUrl::ActionDisplayMessage, aURL);
 }
 
-NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
-												  PRBool aAddDummyEnvelope, nsIUrlListener *aUrlListener, nsIURI **aURL)
+NS_IMETHODIMP 
+nsMailboxService::SaveMessageToDisk(const char *aMessageURI, 
+                                    nsIFileSpec *aFile, 
+                                    PRBool aAddDummyEnvelope, 
+                                    nsIUrlListener *aUrlListener,
+                                    nsIURI **aURL,
+                                    PRBool canonicalLineEnding)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
@@ -152,6 +157,7 @@ NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFi
         {
 		    msgUrl->SetMessageFile(aFile);
             msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
+            msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
         }
 		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
 		rv = RunMailboxUrl(url);

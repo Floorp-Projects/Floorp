@@ -80,8 +80,10 @@ interface nsIMsgMessageService : nsISupports {
 	 //					  appended at the end of the file. 
      ///////////////////////////////////////////////////////////////////
 %}
-	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile, in boolean aGenerateDummyEnvelope, 
-							in nsIUrlListener aUrlListener, out nsIURI aURL);
+	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile,
+                           in boolean aGenerateDummyEnvelope, 
+						   in nsIUrlListener aUrlListener, out nsIURI aURL,
+                           in boolean canonicalLineEnding);
 
     /////////////////////////////////////////////////////////////////////
 	// GetUrlForUri: when you have a uri and you would like to convert that

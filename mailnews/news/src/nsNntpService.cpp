@@ -84,7 +84,13 @@ NS_IMPL_QUERY_INTERFACE4(nsNntpService,
 // nsIMsgMessageService support
 ////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAddDummyEnvelope, nsIUrlListener *aUrlListener, nsIURI **aURL)
+NS_IMETHODIMP 
+nsNntpService::SaveMessageToDisk(const char *aMessageURI, 
+                                 nsIFileSpec *aFile, 
+                                 PRBool aAddDummyEnvelope, 
+                                 nsIUrlListener *aUrlListener, 
+                                 nsIURI **aURL,
+                                 PRBool canonicalLineEnding)
 {
     nsresult rv = NS_OK;
     if (!aMessageURI) 
@@ -116,6 +122,7 @@ NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileS
         {
 		    msgUrl->SetMessageFile(aFile);
             msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
+            msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
         }   
     
         RunNewsUrl(myuri, nsnull);

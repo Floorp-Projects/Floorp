@@ -2694,15 +2694,15 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
     if (localMessageLine)
         strcpy(localMessageLine,line);
     char *endOfLine = localMessageLine + strlen(localMessageLine);
-    PRBool needDummyEnvelope = PR_FALSE;
+    PRBool canonicalLineEnding = PR_FALSE;
     nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl);
     
     if (m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk && msgUrl)
-        msgUrl->GetAddDummyEnvelope(&needDummyEnvelope);
+        msgUrl->GetCanonicalLineEnding(&canonicalLineEnding);
 
 	if (!chunkEnd)
 	{
-        if (MSG_LINEBREAK_LEN == 1 && needDummyEnvelope)
+        if (MSG_LINEBREAK_LEN == 1 && !canonicalLineEnding)
         {
             if ((endOfLine - localMessageLine) >= 2 &&
                 endOfLine[-2] == CR &&

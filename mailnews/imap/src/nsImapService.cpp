@@ -348,8 +348,12 @@ nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder 
     return rv;
 }
 
-NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
-												  PRBool aAddDummyEnvelope, nsIUrlListener *aUrlListener, nsIURI **aURL)
+NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI, 
+                                               nsIFileSpec *aFile, 
+                                               PRBool aAddDummyEnvelope, 
+                                               nsIUrlListener *aUrlListener, 
+                                               nsIURI **aURL,
+                                               PRBool canonicalLineEnding)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIMsgFolder> folder;
@@ -369,6 +373,7 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI, nsIFileS
         if (NS_FAILED(rv)) return rv;
         msgUrl->SetMessageFile(aFile);
         msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
+        msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
 
         return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aURL, imapMessageSink, msgKey, PR_TRUE);
     }

@@ -68,6 +68,7 @@ nsImapUrl::nsImapUrl()
     m_imapExtensionSink = nsnull;
     m_imapMiscellaneousSink = nsnull;
     m_addDummyEnvelope = PR_FALSE;
+    m_canonicalLineEnding = PR_FALSE;
 }
 
 nsresult nsImapUrl::Initialize()
@@ -1011,6 +1012,7 @@ nsImapUrl::GetURI(char** aURI)
 }
 
 NS_IMPL_GETSET(nsImapUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
+NS_IMPL_GETSET(nsImapUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding);
 
 NS_IMETHODIMP nsImapUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {

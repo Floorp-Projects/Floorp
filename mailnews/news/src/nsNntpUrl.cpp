@@ -55,6 +55,7 @@ nsNntpUrl::nsNntpUrl()
     m_messageKey = nsMsgKey_None;
 	m_newsAction = nsINntpUrl::ActionGetNewNews;
     m_addDummyEnvelope = PR_FALSE;
+    m_canonicalLineEnding = PR_FALSE;
 }
  
 nsNntpUrl::~nsNntpUrl()
@@ -258,6 +259,7 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 }
 
 NS_IMPL_GETSET(nsNntpUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
+NS_IMPL_GETSET(nsNntpUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding);
 
 NS_IMETHODIMP nsNntpUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {
