@@ -15,13 +15,15 @@ target CDATA #IMPLIED>
 
 <!ELEMENT body (#PCDATA)>
 <!ATTLIST body
-name CDATA   #IMPLIED>
+name    CDATA   #IMPLIED
+id      CDATA   #IMPLIED
+bgcolor CDATA   #IMPLIED >
 
 <!ENTITY myentity  "New Entity">
 ]>
 
 <html>
-<body name="hello_body">
+<body name="hello_body" id="body_tag_id">
 Hello
 </body>
 </html>
