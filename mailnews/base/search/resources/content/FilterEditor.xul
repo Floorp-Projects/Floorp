@@ -33,11 +33,24 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
-<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
+<script src="chrome://global/content/default/DumpDOM.js"/>
 
   <box orient="horizontal" class="padded">
     <text value="&filterName.label;"/>
     <textfield flex="1"/>
+  </box>
+  <box>
+    <text value="(For debugging only) Scope:"/>
+    <menulist oncommand="scopeChanged(event);">
+      <menupopup>
+        <menuitem value="onlineMail" data="0"/>
+        <menuitem value="offlineMailFilter" data="1"/>
+        <menuitem value="offlineMail" data="2"/>
+        <menuitem value="localNews" data="3"/>
+        <menuitem value="news" data="4"/>
+        <menuitem value="newsEx" data="5"/>
+      </menupopup>
+    </menulist>
   </box>
   <titledbox orient="vertical">
     <title>
@@ -56,13 +69,16 @@ Rights Reserved.
       <treecol id="a" />
       <treecol id="b"/>
       <treecol id="c"/>
-
         
       <treechildren>
         <treeitem>
           <treerow>
-            <treecell value="the.."/>
-            <treecell value="contains.."/>
+            <treecell allowevents="true">
+              <searchattribute id="searchAttr" flex="1"/>
+            </treecell>
+            <treecell allowevents="true">
+              <searchoperator id="searchOp" flex="1"/>
+            </treecell>
             <treecell value="text here"/>
           </treerow>
         </treeitem>
