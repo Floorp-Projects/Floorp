@@ -903,7 +903,13 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
     aMetrics.height = PR_MAX(0, aMetrics.height);
   }
 
-  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && 
+
+  // we have to split images if we are:
+  //  in Paginated mode, we need to have a constrained height, and have a height larger than our available height
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+  if ((isPaginated) && 
+      (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && 
       (aMetrics.height > aReflowState.availableHeight)) { 
     nsCOMPtr<nsIAtom> fType;
     GetFrameType(getter_AddRefs(fType));
