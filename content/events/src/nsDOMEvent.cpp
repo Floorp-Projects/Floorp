@@ -256,7 +256,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
   nsCOMPtr<nsIEventStateManager> manager;
   nsCOMPtr<nsIContent> targetContent;  
 
-  if (NS_OK == mPresContext->GetEventStateManager(getter_AddRefs(manager)) && manager) {
+  if (mPresContext && NS_OK == mPresContext->GetEventStateManager(getter_AddRefs(manager)) && manager) {
     manager->GetEventTargetContent(mEvent, getter_AddRefs(targetContent));
   }
   
@@ -270,7 +270,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
     //Always want a target.  Use document if nothing else.
     nsCOMPtr<nsIDocument> doc;
 		nsCOMPtr<nsIPresShell> presShell;
-		if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+		if (mPresContext && NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
       if (NS_SUCCEEDED(presShell->GetDocument(getter_AddRefs(doc))) && doc) {
 				if (NS_SUCCEEDED(doc->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)&mTarget))) {
 					*aTarget = mTarget;
