@@ -38,6 +38,13 @@
 #include <TextUtils.h>
 #include <Aliases.h>
 #include <string.h>
+#if TARGET_CARBON && (UNIVERSAL_INTERFACES_VERSION < 0x0340)
+enum {
+  kLocalDomain                  = -32765, /* All users of a single machine have access to these resources.*/
+  kUserDomain                   = -32763, /* Read/write. Resources that are private to the user.*/
+  kClassicDomain                = -32762 /* Domain referring to the currently configured Classic System Folder*/
+};
+#endif
 
 #if TARGET_CARBON
 #include <CFURL.h>
@@ -104,8 +111,12 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
 	{
     case PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER:
       // The system's shared "Plugin-ins" folder
-      mError = ::FindFolder(kOnAppropriateDisk, kInternetPlugInFolderType, kDontCreateFolder, & mSpec.vRefNum, &mSpec.parID);
+#if TARGET_CARBON  // on OS X, we must try kLocalDomain first
+      mError = ::FindFolder(kLocalDomain, kInternetPlugInFolderType, kDontCreateFolder, & mSpec.vRefNum, &mSpec.parID);
       if (mError)
+#endif
+        mError = ::FindFolder(kOnAppropriateDisk, kInternetPlugInFolderType, kDontCreateFolder, & mSpec.vRefNum, &mSpec.parID);
+      if (!mError)
         mError = ::FSMakeFSSpec(mSpec.vRefNum, mSpec.parID, "\p", &mSpec);
       break;
     case PLUGINS_DIR_LOCATION_MOZ_LOCAL:
@@ -133,19 +144,17 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 	    return PR_TRUE;
 
 #if TARGET_CARBON
-  if (info.fdFlags & kHasBundle) {
-    // for Mac OS X bundles.
-    CFBundleRef bundle = getPluginBundle(spec);
-    if (bundle) {
-      UInt32 packageType, packageCreator;
-      CFBundleGetPackageInfo(bundle, &packageType, &packageCreator);
-      CFRelease(bundle);
-      switch (packageType) {
-      case 'BRPL':
-      case 'IEPL':
-      case 'NSPL':
-        return PR_TRUE;
-      }
+  // for Mac OS X bundles.
+  CFBundleRef bundle = getPluginBundle(spec);
+  if (bundle) {
+    UInt32 packageType, packageCreator;
+    CFBundleGetPackageInfo(bundle, &packageType, &packageCreator);
+    CFRelease(bundle);
+    switch (packageType) {
+    case 'BRPL':
+    case 'IEPL':
+    case 'NSPL':
+      return PR_TRUE;
     }
   }
 #endif
