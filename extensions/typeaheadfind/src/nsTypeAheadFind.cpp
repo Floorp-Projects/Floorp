@@ -560,7 +560,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     // If they're just quickly mashing keys onto the keyboard, stop searching
     // until typeahead find is canceled via timeout or another normal means
     if (mTimer) {
-      mTimer->Init(this, mTimeoutLength);  // Timeout from last bad key (this one)
+      mTimer->Init(this, mTimeoutLength, nsITimer::TYPE_ONE_SHOT);  // Timeout from last bad key (this one)
     }
     DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Status message to say find stopped
     return NS_OK;
