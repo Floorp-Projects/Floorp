@@ -1231,13 +1231,9 @@ nsIEProfileMigrator::ResolveShortcut(const nsAFlatString &aFileName, char** aOut
         result = urlLink->GetURL(&lpTemp);
         if (SUCCEEDED(result) && lpTemp) {
           *aOutURL = PL_strdup(lpTemp);
+
           // free the string that GetURL alloc'd
-          IMalloc* pMalloc;
-          result = SHGetMalloc(&pMalloc);
-          if (SUCCEEDED(result)) {
-            pMalloc->Free(lpTemp);
-            pMalloc->Release();
-          } 
+          ::CoTaskMemFree(lpTemp);
         }
       }
       urlFile->Release();
