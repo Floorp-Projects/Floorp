@@ -28,6 +28,7 @@
 #include "nsIPresContext.h" 
 #include "nsIImageMap.h"
 #include "nsIHTMLContent.h"
+#include "nsIDOMNode.h" // for Find
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIPostToServer.h"  
@@ -104,7 +105,7 @@ nsHTMLDocument::nsHTMLDocument()
   mStackInx    = 0;
   mParentStack = (nsIContent**) new PRUint32[32];
   mChildStack  = (nsIContent**) new PRUint32[32];
-
+  mBodyContent = nsnull;
 
 }
 
@@ -141,6 +142,7 @@ nsHTMLDocument::~nsHTMLDocument()
   delete[] mChildStack;
 
   delete mSearchStr;
+  NS_IF_RELEASE(mBodyContent);
 }
 
 NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
@@ -1656,11 +1658,98 @@ void printRefs(nsIContent * aContent, PRInt32 aLevel)
 #endif
 
 
+#if 0 // debug
+void printDOMRefs(nsIDOMNode * aNode, PRInt32 aLevel)
+{
+  char * cStr = nsnull;
+
+  PRInt32 i;
+  for (i=0;i<aLevel;i++) {
+    printf(".");
+  }
+  static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+  nsIDOMElement* domElement;
+  nsresult rv = aNode->QueryInterface(kIDOMElementIID,(void **)&domElement);
+  if (NS_OK == rv) {
+    nsString tagName;
+    domElement->GetTagName(tagName);
+    cStr = tagName.ToNewCString();
+    NS_RELEASE(domElement);
+  }
+
+  static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+  nsIDOMText* textContent;
+  rv = aNode->QueryInterface(kIDOMTextIID,(void **)&textContent);
+  if (NS_OK == rv) {
+    nsString stringBuf;
+    textContent->GetData(stringBuf);
+    cStr = stringBuf.ToNewCString();
+    NS_RELEASE(textContent);
+  }
+
+  if (cStr) {
+    for (i=0;i<strlen(cStr);i++) {
+      if (cStr[i] < 15) {
+        cStr[i] =  ' ';
+      }
+    }
+  }
+
+  printf("[%s] (0x%x)\n", (cStr?cStr:"<?>"), aNode);
+  delete[] cStr;
+
+  PRBool hasChildren;
+  aNode->GetHasChildNodes(&hasChildren);
+  if (hasChildren) {
+    nsIDOMNode * childNode;
+    aNode->GetFirstChild(&childNode);
+    while (childNode != nsnull) {
+      printDOMRefs(childNode, aLevel+2);
+      nsIDOMNode * oldChild = childNode;
+      oldChild->GetNextSibling(&childNode);
+      NS_RELEASE(oldChild);
+    }
+  }
+}
+#endif
+
+
+
+nsIDOMNode * FindDOMNode(nsIDOMNode * aNode, nsIContent * aContent)
+{
+  static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+  nsIContent* content;
+  nsresult rv = aNode->QueryInterface(kIContentIID,(void **)&content);
+  if (NS_OK == rv) {
+    if (content == aContent) {
+      return aNode;
+    }
+  }
+
+  PRBool hasChildren;
+  aNode->GetHasChildNodes(&hasChildren);
+  if (hasChildren) {
+    nsIDOMNode * childNode;
+    aNode->GetFirstChild(&childNode);
+    while (childNode != nsnull) {
+      nsIDOMNode * node = FindDOMNode(childNode, aContent);
+      if (node != nsnull) {
+        return node;
+      }
+      nsIDOMNode * oldChild = childNode;
+      oldChild->GetNextSibling(&childNode);
+      NS_RELEASE(oldChild);
+    }
+  }
+  return nsnull;
+}
+
 /**
   * Finds text in content
  */
 NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
+
   aIsFound         = PR_FALSE;
   mShouldMatchCase = aMatchCase;
 
@@ -1671,9 +1760,24 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
     mSearchStr->Append(aSearchStr);
   }
 
+  // Temporary
+  PRBool   doReplace = PR_FALSE;
+  nsString replacementStr("xxxx");
+  PRInt32 inx = mSearchStr->Find('/');
+  if (inx > -1) {
+    if (inx == mSearchStr->Length()-1) {
+      replacementStr.SetLength(0);
+    } else {
+      replacementStr = *mSearchStr;
+      replacementStr.Cut(0, inx+1);
+    }
+    mSearchStr->Truncate(inx);
+
+    doReplace = PR_TRUE;
+  }
+
   nsIContent * start = nsnull;
   nsIContent * end   = nsnull;
-  nsIContent * body  = nsnull;
 
   nsString bodyStr("BODY");
   PRInt32 i, n;
@@ -1681,30 +1785,29 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   for (i=0;i<n;i++) {
     nsIContent * child;
     mRootContent->ChildAt(i, child);
-    PRBool isSynthetic;
-    child->IsSynthetic(isSynthetic);
-    if (!isSynthetic) {
-      nsIAtom * atom;
-      child->GetTag(atom);/* XXX leak */
+    nsIAtom * atom;
+    child->GetTag(atom);
+    if (nsnull != atom) {
       if (bodyStr.EqualsIgnoreCase(atom)) {
-        body = child;
+        if (mBodyContent != nsnull) {
+          NS_RELEASE(mBodyContent);
+        }
+        mBodyContent = child;
         break;
       }
-
+      NS_RELEASE(atom);
     }
     NS_RELEASE(child);
   }
 
-  if (body == nsnull) {
+  if (mBodyContent == nsnull) {
     return NS_OK;
   }
 
-  mBodyContent = body;
+  //printRefs(mBodyContent, 0);
 
-  //printRefs(body, 0);
-
-  start = body;
-  NS_ADDREF(body);
+  start = mBodyContent;
+  NS_ADDREF(start);
   // Find Very first Piece of Content
   for (;;) {
     PRInt32 snc;
@@ -1717,8 +1820,8 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
     NS_RELEASE(child);
   }
 
-  end = body;
-  NS_ADDREF(body);
+  end = mBodyContent;
+  NS_ADDREF(end);
   // Last piece of Content
   for (;;) {
     PRInt32 count;
@@ -1741,13 +1844,15 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   nsIContent * searchContent;
 
   if (endContent == nsnull && mSearchDirection == kForward) {
-    searchContent = (mSearchDirection == kForward ? body:end);
+    searchContent = (mSearchDirection == kForward ? mBodyContent:end);
     //NS_ADDREF(searchContent);
     BlockText blockText;
     if (!BuildBlockTraversing(searchContent, blockText)) {
       if (SearchBlock(blockText, *mSearchStr)) {
         aIsFound = PR_TRUE;
       }
+    } else {
+      aIsFound = PR_TRUE;
     }
     //NS_RELEASE(searchContent);
   } else {
@@ -1788,11 +1893,141 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
 
   NS_IF_RELEASE(startContent);
   NS_IF_RELEASE(endContent);
-  NS_IF_RELEASE(body);
   NS_IF_RELEASE(start);
   NS_IF_RELEASE(end);
 
   SetDisplaySelection(PR_TRUE); 
+
+
+  if (aIsFound && doReplace) {
+    range        = mSelection->GetRange();
+    startContent = range->GetStartContent();
+    endContent   = range->GetEndContent();
+    startPnt     = range->GetStartPoint();
+    endPnt       = range->GetEndPoint();
+
+    nsIDOMElement* root = nsnull;
+    if (NS_OK == GetDocumentElement(&root)) {  
+      //printDOMRefs(root, 0);
+      nsIDOMNode * node = FindDOMNode(root, startContent);
+
+      nsString contentStr;
+      static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+      nsIDOMText* textContent;
+      nsresult rv = node->QueryInterface(kIDOMTextIID,(void **)&textContent);
+      if (NS_OK == rv) {
+        textContent->GetData(contentStr);
+        NS_RELEASE(textContent);
+      }
+
+      //PRInt32 offset = contentStr.Find(*mSearchStr, !mShouldMatchCase);
+      PRInt32 offset;
+      // temporary
+      if (mShouldMatchCase) {
+        offset = contentStr.Find(*mSearchStr);
+        if (offset == -1) {
+          offset = contentStr.RFind(*mSearchStr);
+        }
+      } else {
+        nsString cs(contentStr);
+        nsString ss(*mSearchStr);
+        cs.ToLowerCase();
+        ss.ToLowerCase();
+        offset = cs.Find(ss);
+        if (offset == -1) {
+          offset = cs.RFind(ss);        
+        }
+      } 
+      // end temporary
+
+      if (offset > -1) {
+        contentStr.Cut(offset, mSearchStr->Length());
+        contentStr.Insert(replacementStr, offset, replacementStr.Length());
+
+        char * s = contentStr.ToNewCString();
+        delete[]s;
+
+        nsIDOMNode * parent;
+        node->GetParentNode(&parent);
+
+          //nsIDOMNode * delNode;
+          //parent->ReplaceChild(newNode, node, &delNode);
+
+        PRBool       nodeWasAdded = PR_FALSE;
+        nsIDOMNode * nextNode;
+        nsIDOMNode * prevNode;
+        nsIDOMNode * delNode;
+
+        node->GetPreviousSibling(&prevNode);
+        node->GetNextSibling(&nextNode);
+
+        parent->RemoveChild(node, &delNode);
+        NS_IF_RELEASE(delNode);
+
+        nsIDOMNode * contentNode = nsnull;
+        PRInt32      newOffset;
+
+        if (contentStr.Length() > 0) {
+          nsIDOMNode * retNode;
+          nsIDOMText * newNode;
+          CreateTextNode(contentStr, &newNode);
+          if (nsnull != nextNode) {
+            parent->InsertBefore(newNode, nextNode, &retNode);
+          } else {
+            parent->AppendChild(newNode, &retNode);
+          }
+
+          newOffset    = offset + replacementStr.Length();
+          contentNode  = newNode;
+          nodeWasAdded = PR_TRUE;
+
+          NS_IF_RELEASE(newNode);
+          NS_IF_RELEASE(retNode);
+        } else {
+          newOffset   = 0;
+          contentNode = (nextNode == nsnull ? prevNode : nextNode);
+          // XXX Bummer if previous is also null then this was the only child
+          // now we have to go find a different node to set the content to for selection
+          // So we will use the parent node for now, but this needs to be changed
+          if (contentNode == nsnull) {
+            contentNode = parent;
+          }
+        }
+
+        NS_ADDREF(contentNode);
+
+        NS_IF_RELEASE(nextNode);
+        NS_IF_RELEASE(prevNode);
+
+        if (contentNode != nsnull) {
+          static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+          nsIContent* content;
+          rv = contentNode->QueryInterface(kIContentIID,(void **)&content);
+          if (NS_OK == rv) {
+            //range    = mSelection->GetRange();
+            //startPnt = range->GetStartPoint();
+            //endPnt   = range->GetEndPoint();
+
+            startPnt->SetContent(content);
+            startPnt->SetOffset(newOffset);
+            endPnt->SetContent(content);
+            endPnt->SetOffset(newOffset);
+            range->SetStartPoint(startPnt);
+            range->SetEndPoint(endPnt);
+            NS_RELEASE(content);
+          }
+        }
+        NS_IF_RELEASE(contentNode);
+        NS_IF_RELEASE(parent);
+        NS_IF_RELEASE(node);
+        NS_IF_RELEASE(root);
+      }
+    }
+    NS_RELEASE(startContent);
+    NS_RELEASE(endContent);
+  }
+
+  NS_IF_RELEASE(mBodyContent);
 
   return NS_OK;
 }
