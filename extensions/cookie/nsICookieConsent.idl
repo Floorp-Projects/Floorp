@@ -36,37 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsICategoryManager.h"
-#include "nsIComponentManager.h"
-#include "nsIGenericFactory.h"
-#include "nsIHttpProtocolHandler.h"
-#include "nsIServiceManager.h"
-#include "nsP3PCIID.h"
-#include "nsP3PService.h"
-#include "nsCompactPolicy.h"
+#include "nsISupports.idl"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsP3PService,Init)
+interface nsIHttpChannel;
 
-static nsModuleComponentInfo gP3PComponents[] =
-{
-  {"P3P Service",
-   NS_P3PSERVICE_CID,
-   NS_COOKIECONSENT_CONTRACTID,
-   nsP3PServiceConstructor,
-  }
-};
+[scriptable,uuid(F5A34F50-1F39-11d6-A627-0010A401EB10)]
+interface nsICookieConsent : nsISupports {
+ long getConsent(in string aURI, 
+                 in nsIHttpChannel aHttpChannel);
+};  
 
-PR_STATIC_CALLBACK(nsresult)
-Initialize(nsIModule* aSelf)
-{
-  return nsCompactPolicy::InitTokenTable(); 
-}
-
-PR_STATIC_CALLBACK(void)
-Shutdown(nsIModule* aSelf)
-{
-  nsCompactPolicy::DestroyTokenTable();
-}
-
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsP3PModule, gP3PComponents,Initialize,Shutdown)
-
+%{C++
+#define NS_COOKIECONSENT_CONTRACTID "@mozilla.org/cookie-consent;1"
+%}

@@ -83,7 +83,7 @@ StopListeningToHeaders(nsP3PService* aService) {
  ***********************************/
 
 NS_IMPL_ISUPPORTS3(nsP3PService,
-                   nsIP3PService,
+                   nsICookieConsent,
                    nsIHttpNotify,
                    nsINetNotify);
 

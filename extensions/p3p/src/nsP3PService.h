@@ -39,14 +39,14 @@
 #ifndef NS_P3PSERVICE_H__
 #define NS_P3PSERVICE_H__
 
-#include "nsIP3PService.h"
+#include "nsICookieConsent.h"
 #include "nsIHttpNotify.h"
 #include "nsCompactPolicy.h"
 #include "nsIObserver.h"
 
 class nsIPrefBranch;
 
-class nsP3PService : public nsIP3PService,
+class nsP3PService : public nsICookieConsent,
                      public nsIHttpNotify,
                      public nsIObserver
 {
@@ -55,15 +55,15 @@ public:
   NS_DECL_ISUPPORTS
   // nsIHttpNotify
   NS_DECL_NSIHTTPNOTIFY
-  // nsIP3PService
-  NS_DECL_NSIP3PSERVICE
+  // nsICookieConsent
+  NS_DECL_NSICOOKIECONSENT
   // nsIObserver
   NS_DECL_NSIOBSERVER
 
   nsP3PService( );
   virtual ~nsP3PService( );
   
-  // nsP3PService
+  // P3PService
   nsresult Init();
 protected:
   nsresult ProcessResponseHeader(nsIHttpChannel* aHttpChannel);

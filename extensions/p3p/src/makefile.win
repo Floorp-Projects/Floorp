@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  string    \
 		  necko     \
 		  pref      \
+		  cookie      \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
