@@ -708,7 +708,7 @@ COOKIE_RegisterPrefCallbacks(void) {
   if (NS_SUCCEEDED(prefs->GetBoolPref(cookie_lifetimeBehaviorPref, &forCurrentSession))) {
     cookie_lifetimeCurrentSession = forCurrentSession;
     cookie_SetLifetimeLimit(forCurrentSession ? 0 : cookie_lifetimeDays);
-    cookie_SetLifetimePref(forCurrentSession ? COOKIE_Normal : COOKIE_Trim);
+    cookie_SetLifetimePref(forCurrentSession ? COOKIE_Trim : COOKIE_Normal);
   }
 #else
   if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
