@@ -3265,19 +3265,19 @@ nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
 
   mTopRowIndex += delta;
 
-  float t2p = mPresContext->TwipsToPixels();
-  nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
-
-  // See if we have a background image.  If we do, then we cannot blit.
-  PRBool hasBackground = GetStyleBackground()->mBackgroundImage != nsnull;
-
-  PRInt32 absDelta = PR_ABS(delta);
-  if (hasBackground || absDelta*mRowHeight >= mRect.height)
+  // See if we have a transparent background or a background image.  
+  // If we do, then we cannot blit.
+  const nsStyleBackground* background = GetStyleBackground();
+  if (background->mBackgroundImage || background->IsTransparent() || 
+      PR_ABS(delta)*mRowHeight >= mRect.height) {
     Invalidate();
-  else {
+  } else {
     nsIWidget* widget = nsLeafBoxFrame::GetView()->GetWidget();
-    if (widget)
+    if (widget) {
+      float t2p = mPresContext->TwipsToPixels();
+      nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
       widget->Scroll(0, -delta*rowHeightAsPixels, nsnull);
+    }
   }
 
   return NS_OK;

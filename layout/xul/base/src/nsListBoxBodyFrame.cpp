@@ -471,7 +471,7 @@ nsListBoxBodyFrame::VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible)
   PRInt32 delta = mCurrentIndex - lastPageTopRow;
   if (delta > 0) {
     mCurrentIndex = lastPageTopRow;
-    InternalPositionChanged(PR_TRUE, delta, PR_FALSE);
+    InternalPositionChanged(PR_TRUE, delta);
   }
 
   return NS_OK;
@@ -590,12 +590,6 @@ nsListBoxBodyFrame::EnsureIndexIsVisible(PRInt32 aRowIndex)
 
   InternalPositionChanged(up, delta);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsListBoxBodyFrame::ScrollToIndex(PRInt32 aRowIndex)
-{
-  return DoScrollToIndex(aRowIndex);
 }
 
 NS_IMETHODIMP
@@ -864,7 +858,7 @@ nsListBoxBodyFrame::PostReflowCallback()
 ////////// scrolling
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::DoScrollToIndex(PRInt32 aRowIndex, PRBool aForceDestruct)
+nsListBoxBodyFrame::ScrollToIndex(PRInt32 aRowIndex)
 {
   if (( aRowIndex < 0 ) || (mRowHeight == 0))
     return NS_OK;
@@ -882,7 +876,7 @@ nsListBoxBodyFrame::DoScrollToIndex(PRInt32 aRowIndex, PRBool aForceDestruct)
     return NS_OK;
 
   mCurrentIndex = newIndex;
-  InternalPositionChanged(up, delta, aForceDestruct);
+  InternalPositionChanged(up, delta);
 
   // This change has to happen immediately.
   // Flush any pending reflow commands.
@@ -909,7 +903,7 @@ nsListBoxBodyFrame::InternalPositionChangedCallback()
 }
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool aForceDestruct)
+nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
 {  
   if (aDelta == 0)
     return NS_OK;
@@ -925,7 +919,7 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
   if (mRowHeight)
 	  visibleRows = GetAvailableHeight()/mRowHeight;
   
-  if (aDelta < visibleRows && !aForceDestruct) {
+  if (aDelta < visibleRows) {
     PRInt32 loseRows = aDelta;
     if (aUp) {
       // scrolling up, destroy rows from the bottom downwards
@@ -963,9 +957,6 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool a
   
   VerticalScroll(mYPosition);
 
-  if (aForceDestruct)
-    Redraw(state, nsnull, PR_FALSE);
-  
   PRTime end = PR_Now();
 
   PRTime difTime;
