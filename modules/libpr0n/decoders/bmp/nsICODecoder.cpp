@@ -447,6 +447,10 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
 
     PRUint32 toCopy;
     do {
+        if (mCurLine == 0) {
+          return NS_OK;
+        }
+
         toCopy = rowSize - mRowBytes;
         if (toCopy) {
             if (toCopy > aCount)
@@ -470,10 +474,6 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
               p++;
             }
             
-            if (mCurLine == 0) {
-              return NS_OK;
-            }
-              
             mRowBytes = 0;
         }
     } while (aCount > 0);
