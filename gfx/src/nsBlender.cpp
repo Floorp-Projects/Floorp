@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBlender.h"
-#include "nsIDeviceContext.h"
 #include "nsCRT.h"
 
 /** ---------------------------------------------------
@@ -57,7 +57,6 @@ nsBlender :: nsBlender()
  */
 nsBlender::~nsBlender() 
 {
-  NS_IF_RELEASE(mContext);
 }
 
 NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender);
@@ -101,7 +100,6 @@ NS_IMETHODIMP
 nsBlender::Init(nsIDeviceContext *aContext)
 {
   mContext = aContext;
-  NS_IF_ADDREF(mContext);
   
   return NS_OK;
 }
@@ -138,6 +136,11 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDr
                  nsDrawingSurface aSecondSrc, nscolor aSrcBackColor,
                  nscolor aSecondSrcBackColor)
 {
+  NS_ASSERTION(aSrc, "nsBlender::Blend() called with nsnull aSrc");
+  NS_ASSERTION(aDst, "nsBlender::Blend() called with nsnull aDst");
+  NS_ENSURE_ARG_POINTER(aSrc);
+  NS_ENSURE_ARG_POINTER(aDst);
+
   if (aSecondSrc) {
     // the background color options are obsolete and should be removed.
     NS_ASSERTION(aSrcBackColor == NS_RGB(0, 0, 0),
@@ -168,33 +171,33 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDr
   PRInt32 srcSpan, destSpan, secondSrcSpan;
   PRInt32 srcRowBytes, destRowBytes, secondSrcRowBytes;
 
-  if (NS_OK == srcSurface->Lock(aSX, aSY, aWidth, aHeight, (void**)&srcBytes, &srcRowBytes, &srcSpan, NS_LOCK_SURFACE_READ_ONLY)) {
-    if (NS_OK == destSurface->Lock(aDX, aDY, aWidth, aHeight, (void**)&destBytes, &destRowBytes, &destSpan, 0)) {
+  result = srcSurface->Lock(aSX, aSY, aWidth, aHeight, (void**)&srcBytes, &srcRowBytes, &srcSpan, NS_LOCK_SURFACE_READ_ONLY);
+  if (NS_SUCCEEDED(result)) {
+    result = destSurface->Lock(aDX, aDY, aWidth, aHeight, (void**)&destBytes, &destRowBytes, &destSpan, 0);
+    if (NS_SUCCEEDED(result)) {
       NS_ASSERTION(srcSpan == destSpan, "Mismatched bitmap formats (src/dest) in Blender");
       if (srcSpan == destSpan) {
-
         if (secondSrcSurface) {
-          if (NS_OK == secondSrcSurface->Lock(aSX, aSY, aWidth, aHeight, (void**)&secondSrcBytes, &secondSrcRowBytes, &secondSrcSpan, NS_LOCK_SURFACE_READ_ONLY)) {
+          result = secondSrcSurface->Lock(aSX, aSY, aWidth, aHeight, (void**)&secondSrcBytes, &secondSrcRowBytes, &secondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
+          if (NS_SUCCEEDED(result)) {
             NS_ASSERTION(srcSpan == secondSrcSpan && srcRowBytes == secondSrcRowBytes,
-                         "Mismatched bitmap formats (src/secondSrc) in Blender");
-            if (srcSpan != secondSrcSpan || srcRowBytes != secondSrcRowBytes) {
-              // disable second source if there's a format mismatch
-              secondSrcBytes = nsnull;
+                         "Mismatched bitmap formats (src/secondSrc) in Blender");                         
+            if (srcSpan == secondSrcSpan && srcRowBytes == secondSrcRowBytes) {
+              result = Blend(srcBytes, srcRowBytes,
+                             destBytes, destRowBytes,
+                             secondSrcBytes,
+                             srcSpan, aHeight, aSrcOpacity);
             }
-          } else {
-            // failed to lock. So, pretend it was never there.
-            secondSrcSurface = nsnull;
-            secondSrcBytes = nsnull;
+            
+            secondSrcSurface->Unlock();
           }
         }
-
-        result = Blend(srcBytes, srcRowBytes,
-                       destBytes, destRowBytes,
-                       secondSrcBytes,
-                       srcSpan, aHeight, aSrcOpacity);
-
-        if (secondSrcSurface) {
-          secondSrcSurface->Unlock();
+        else
+        {
+          result = Blend(srcBytes, srcRowBytes,
+                         destBytes, destRowBytes,
+                         secondSrcBytes,
+                         srcSpan, aHeight, aSrcOpacity);
         }
       }
 

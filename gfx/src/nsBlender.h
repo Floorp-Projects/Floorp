@@ -18,13 +18,15 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsBlender_h___
 #define nsBlender_h___
 
+#include "nsCOMPtr.h"
 #include "nsIBlender.h"
-#include "nsComObsolete.h"
+#include "nsIDeviceContext.h"
 
 typedef enum
 {
@@ -138,8 +140,8 @@ protected:
                 PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
                 PRInt32 aSLSpan, PRInt32 aDLSpan, IL_ColorSpace *aColorMap, nsBlendQuality aBlendQuality);
 
-  nsIDeviceContext  *mContext;
+  nsCOMPtr<nsIDeviceContext> mContext;
 };
 
-#endif
+#endif /* !nsBlender_h___ */
 
