@@ -114,6 +114,7 @@ NS_CONFIG_MK	= 1
 # Provide the means to easily override our tool directory locations.
 #
 ifdef NETSCAPE_HIERARCHY
+NETSCAPE_BUILD = 1   # Defines XFEPRIVDIR, below.
 CONTRIB_BIN	:= /tools/contrib/bin/
 JAVA_BIN	:= /usr/local/java/bin/
 LOCAL_BIN	:= /usr/local/bin/
@@ -121,10 +122,14 @@ LOCAL_SUN4	:= /usr/local/sun4/bin/
 NS_BIN		:= /tools/ns/bin/
 NS_LIB		:= /tools/ns/lib
 JAVA_LIB	:= /usr/local/netscape/java/lib
-XFEPRIVDIR	:= $(DEPTH)/../ns/cmd/xfe/
 else
 NS_LIB		:= .
 JAVA_LIB	:= .
+endif
+
+# Allow NETSCAPE_BUILD to include XFEPRIVDIR w/o NETSCAPE_HIERARCHY
+ifdef NETSCAPE_BUILD
+XFEPRIVDIR		:= $(DEPTH)/../ns/cmd/xfe/
 endif
 
 #
@@ -430,6 +435,11 @@ endif
 
 ifdef NO_SECURITY
 DEFINES		+= -DNO_SECURITY
+endif
+
+# Crash-reporting system
+ifdef MOZ_FULLCIRCLE
+DEFINES		+= -DMOZ_FULLCIRCLE
 endif
 
 ifdef EDITOR
