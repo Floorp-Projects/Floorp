@@ -253,7 +253,10 @@ nsMenuPopupFrame::MarkStyleChange(nsBoxLayoutState& aState)
 
   nsIBox* parent = nsnull;
   GetParentBox(&parent);
-  if (parent)
+  nsIMenuFrame* menuFrame = nsnull;
+  CallQueryInterface(parent, &menuFrame);
+
+  if (menuFrame)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
@@ -310,7 +313,10 @@ nsMenuPopupFrame::MarkDirty(nsBoxLayoutState& aState)
 
   nsIBox* parent = nsnull;
   GetParentBox(&parent);
-  if (parent)
+  nsIMenuFrame* menuFrame = nsnull;
+  CallQueryInterface(parent, &menuFrame);
+
+  if (menuFrame)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
@@ -355,7 +361,10 @@ nsMenuPopupFrame::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
 
     nsIBox* parentBox = nsnull;
     GetParentBox(&parentBox);
-    if (parentBox)
+    nsIMenuFrame* menuFrame = nsnull;
+    CallQueryInterface(parentBox, &menuFrame);
+
+    if (menuFrame)
       return parentBox->RelayoutDirtyChild(aState, this);
     else {
       nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
