@@ -529,13 +529,9 @@ nsPop3Protocol::Load(nsIURL* aURL, nsISupports * aConsumer)
 	const char* urlSpec = NULL;
 	const char* host = NULL;
 	nsresult rv = 0;
-    nsIPop3URL *pop3URL = NULL;
 
     if (aURL)
-    {
 		m_nsIPop3URL = do_QueryInterface(aURL);
-        rv = aURL->QueryInterface(nsIPop3URL::GetIID(), (void **) &pop3URL);
-    }
     else
         return NS_ERROR_FAILURE;
 
