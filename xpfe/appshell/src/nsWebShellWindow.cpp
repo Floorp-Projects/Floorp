@@ -210,11 +210,13 @@ nsWebShellWindow::~nsWebShellWindow()
     mWindow->SetClientData(0);
   mWindow = nsnull; // Force release here.
 
-  PR_Lock(mSPTimerLock);
-  if (mSPTimer)
-    mSPTimer->Cancel();
-  PR_Unlock(mSPTimerLock);
-  PR_DestroyLock(mSPTimerLock);
+  if (mSPTimerLock) {
+    PR_Lock(mSPTimerLock);
+    if (mSPTimer)
+      mSPTimer->Cancel();
+    PR_Unlock(mSPTimerLock);
+    PR_DestroyLock(mSPTimerLock);
+  }
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsWebShellWindow)
@@ -1174,6 +1176,9 @@ nsWebShellWindow::DestroyModalDialogEvent(PLEvent *aEvent)
 void
 nsWebShellWindow::SetPersistenceTimer(PRUint32 aDirtyFlags)
 {
+  if (!mSPTimerLock)
+    return;
+
   PR_Lock(mSPTimerLock);
   if (mSPTimer) {
     mSPTimer->SetDelay(SIZE_PERSISTENCE_TIMEOUT);
@@ -1195,6 +1200,8 @@ void
 nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
 {
   nsWebShellWindow *win = NS_STATIC_CAST(nsWebShellWindow *, aClosure);
+  if (!win->mSPTimerLock)
+    return;
   PR_Lock(win->mSPTimerLock);
   win->SavePersistentAttributes();
   PR_Unlock(win->mSPTimerLock);
@@ -1654,14 +1661,17 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
    }
 #endif
 
+  nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(this);
   PR_Lock(mSPTimerLock);
   if (mSPTimer) {
     mSPTimer->Cancel();
-    mSPTimer = nsnull;
     SavePersistentAttributes();
+    mSPTimer = nsnull;
     NS_RELEASE_THIS(); // the timer held a reference to us
   }
   PR_Unlock(mSPTimerLock);
+  PR_DestroyLock(mSPTimerLock);
+  mSPTimerLock = nsnull;
 
   return nsXULWindow::Destroy();
 }
