@@ -40,7 +40,7 @@ CPPSRCS =				\
 	nsStyleSet.cpp			\
 	$(NULL)
 
-EXPORTS =			\
+EXPORTS = nsSelectionRange.h \
 	$(NULL)
 
 MODULE = raptor
