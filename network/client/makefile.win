@@ -24,7 +24,11 @@ IGNORE_MANIFEST=1
 #
 #------------------------------------------------------------------------
 
+DEPTH=..\..
+MODULE=cnetinit 
+EXPORTS= cnetinit.h
 
+!ifndef MODULAR_NETLIB
 #
 # Make sure we have MOZILLA_CLIENT defined so we get the
 #   proper JS includes
@@ -41,7 +45,7 @@ MISCDEP=$(LLIBS)
 OBJS=   \
 	.\$(OBJDIR)\cnetinit.obj		\
 	$(NULL)
-	
+
 
 CSRCS =	\
 	cnetinit.c	\
@@ -49,8 +53,6 @@ CSRCS =	\
 
 
 LIBRARY_NAME=cnetinit 
-MODULE=cnetinit 
-DEPTH=..\..
 
 LOCAL_INCLUDES=-I. 
 INCLUDES = $(LOCAL_INCLUDES)
@@ -59,7 +61,6 @@ INCLUDES = $(LOCAL_INCLUDES)
 EXTRA_LIBS=
 
 REQUIRES= network 
-EXPORTS= cnetinit.h
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
@@ -78,11 +79,16 @@ LINCS= \
     -I$(XPDIST)\public\marimurl 
 #!endif
 
+!endif
+
 include <$(DEPTH)\config\rules.mak> 
 
+!ifndef MODULAR_NETLIB
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 symbols::
 	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
 	@echo "LIBRARY          is $(LIBRARY)"
+
+!endif
