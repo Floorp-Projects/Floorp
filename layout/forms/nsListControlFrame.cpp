@@ -381,7 +381,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   PRBool bailOnHeight;
   // This ifdef is for turning off the optimization
   // so we can check timings against the old version
-#if 1
+#if 0
 
   nsFormControlFrame::SkipResizeReflow(mCacheSize, 
                                        mCachedMaxElementSize, 
