@@ -34,7 +34,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.8 2003/06/06 04:51:26 nelsonb%netscape.com Exp $
+ * $Id: secitem.c,v 1.9 2003/06/07 03:05:49 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -142,6 +142,11 @@ SECITEM_CompareItem(const SECItem *a, const SECItem *b)
 {
     unsigned m;
     SECComparison rv;
+
+    if (!a || !a->len || !a->data) 
+        return (!b || !b->len || !b->data) ? SECEqual : SECLessThan;
+    if (!b || !b->len || !b->data) 
+    	return SECGreaterThan;
 
     m = ( ( a->len < b->len ) ? a->len : b->len );
     
