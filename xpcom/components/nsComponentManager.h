@@ -28,26 +28,12 @@
 class nsFactoryEntry;
 class nsDll;
 
-////////////////////////////////////////////////////////////////////////////////
-/*
- *** Quick Registration NOT FOR PUBLIC CONSUMPTION ***
- *
- * Quick Registration
- *
- * For quick registration, dlls can define
- *		NSQuickRegisterClassData g_NSQuickRegisterData[];
- * and export the symbol "g_NSQuickRegisterData"
- *
- * Quick registration is tried only if the symbol "NSRegisterSelf"
- * is not found. If it is found but fails registration, quick registration
- * will not kick in.
- *
- * The array is terminated by having a NULL last element. Specifically, the
- * array will be assumed to end when
- *		(g_NSQuickRegisterData[i].classIdStr == NULL)
- *
- */
-#define NS_QUICKREGISTER_DATA_SYMBOL "g_NSQuickRegisterData"
+// Registry Factory creation function defined in nsRegistry.cpp
+// We hook into this function locally to create and register the registry
+// Since noone outside xpcom needs to know about this and nsRegistry.cpp
+// does not have a local include file, we are putting this definition
+// here rather than in nsIRegistry.h
+extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -141,16 +127,14 @@ protected:
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult HashProgID(const char *aprogID, const nsCID &aClass);
 
+    // The following functions are the only ones that operate on the persistent
+    // registry
+    nsresult PlatformInit(void);
     nsresult PlatformVersionCheck();
     nsresult PlatformCreateDll(const char *fullname, nsDll* *result);
     nsresult PlatformMarkNoComponents(nsDll *dll);
-    struct QuickRegisterData {
-        const char *CIDString;	// {98765-8776-8958758759-958785}
-        const char *className;	// "Layout Engine"
-        const char *progID;	// "Gecko.LayoutEngine.1"
-    };
-    nsresult PlatformRegister(QuickRegisterData* regd, nsDll *dll);
-    nsresult PlatformUnregister(QuickRegisterData* regd, const char *aLibrary);
+    nsresult PlatformRegister(const char *cidString, const char *className, const char *progID, nsDll *dll);
+    nsresult PlatformUnregister(const char *cidString, const char *aLibrary);
     nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
     nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
     nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);

@@ -20,9 +20,6 @@
 #include "nsIServiceManager.h"
 #include <stdlib.h>
 
-extern "C" NS_EXPORT nsresult
-NS_RegistryGetFactory(nsISupports* servMgr, nsIFactory** aFactory);
-
 #include "plstr.h"
 #include "prlink.h"
 #include "prsystem.h"
@@ -35,9 +32,12 @@ NS_RegistryGetFactory(nsISupports* servMgr, nsIFactory** aFactory);
 #include "prcmon.h"
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
 
-#ifdef NS_DEBUG
+// Logging of debug output
+#define FORCE_PR_LOG		// Allow logging in release builds
 PRLogModuleInfo* nsComponentManagerLog = NULL;
-#endif
+
+// Enable printing of critical errors on screen even for release builds
+#define PRINT_CRITICAL_ERROR_TO_SCREEN
 
 // Common Key Names 
 const char xpcomBaseName[]="XPCOM";
@@ -63,6 +63,11 @@ const char inprocServerValueName[]="InprocServer";
 #define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
     static NS_DEFINE_CID(kNoCID, NS_NO_CID);
 
+// Build is using USE_NSREG to turn off xpcom using registry
+// but internally we use USE_REGISTRY. Map them propertly.
+#ifdef USE_NSREG
+#define USE_REGISTRY
+#endif /* USE_NSREG */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,10 +111,8 @@ nsFactoryEntry::Init(nsHashtable* dllCollection,
     // PR_ExitMonitor(mMon);
     	
     if (dll == NULL) {
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: New dll \"%s\".", aLibrary));
-#endif /* NS_DEBUG */
 
         // Add a new Dll into the nsDllStore
         dll = new nsDll(aLibrary, lastModTime, fileSize);
@@ -117,28 +120,22 @@ nsFactoryEntry::Init(nsHashtable* dllCollection,
             return NS_ERROR_OUT_OF_MEMORY;
         if (dll->GetStatus() != DLL_OK) {
             // Cant create a nsDll. Backoff.
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: New dll status error. \"%s\".", aLibrary));
-#endif /* NS_DEBUG */
             delete dll;
             dll = NULL;
         }
         else {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Adding New dll \"%s\" to mDllStore.",
                     aLibrary));
-#endif /* NS_DEBUG */
 
             dllCollection->Put(&key, (void *)dll);
         }
     }
     else {
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: Found in mDllStore \"%s\".", aLibrary));
-#endif /* NS_DEBUG */
         // XXX We found the dll in the dllCollection.
         // XXX Consistency check: dll needs to have the same
         // XXX lastModTime and fileSize. If not that would mean
@@ -181,6 +178,11 @@ nsComponentManagerImpl::nsComponentManagerImpl()
 
 nsresult nsComponentManagerImpl::Init(void) 
 {
+    if (nsComponentManagerLog == NULL)
+    {
+        nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
+    }
+
     if (mFactories == NULL) {
         mFactories = new nsHashtable(256, /* Thread Safe */ PR_TRUE);
         if (mFactories == NULL)
@@ -201,42 +203,60 @@ nsresult nsComponentManagerImpl::Init(void)
         if (mDllStore == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
+    
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+           ("nsComponentManager: Initialized."));
 
-    if(mRegistry==NULL) {		
+#ifdef USE_REGISTRY
+    PlatformInit();
+#endif
+
+    return NS_OK;
+}
+
+nsComponentManagerImpl::~nsComponentManagerImpl()
+{
+    if (mFactories)
+        delete mFactories;
+    if (mProgIDs)
+        delete mProgIDs;
+    if (mMon)
+        PR_DestroyMonitor(mMon);
+    if (mDllStore)
+        delete mDllStore;
+#ifdef USE_REGISTRY
+    if(mRegistry)
+        NS_RELEASE(mRegistry);
+#endif /* USE_REGISTRY */
+}
+
+NS_IMPL_ISUPPORTS(nsComponentManagerImpl, nsIComponentManager::GetIID());
+
+////////////////////////////////////////////////////////////////////////////////
+// nsComponentManagerImpl: Platform methods
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef USE_REGISTRY
+
+nsresult
+nsComponentManagerImpl::PlatformInit(void)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    // We need to creaet out registry. Since we are in the constructor
+    // we haven't gone as far as registering the registry factory.
+    // Hence, we hand create a registry.
+    if (mRegistry == NULL) {		
         nsIFactory *registryFactory = NULL;
-        nsresult rv;
-
-        nsIServiceManager *srvMgr;
-
-        rv = nsServiceManager::GetGlobalServiceManager(&srvMgr);
-        if(NS_FAILED(rv))
-        {
-            return rv;
-        }
-        rv = NS_RegistryGetFactory(srvMgr, &registryFactory);
+        rv = NS_RegistryGetFactory(&registryFactory);
         if (NS_SUCCEEDED(rv))
         {
             NS_DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID);
             rv = registryFactory->CreateInstance(NULL, kRegistryIID,(void **)&mRegistry);
-            if (NS_FAILED(rv))
-            {
-                return rv;
-            }
-
+            if (NS_FAILED(rv)) return rv;
             NS_RELEASE(registryFactory);
         }
     }
-    
-
-#ifdef NS_DEBUG
-    if (nsComponentManagerLog == NULL) {
-        nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
-    }
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-           ("nsComponentManager: Initialized."));
-#endif
-
-#ifdef USE_NSREG
 
 #ifdef XP_UNIX
     // Create ~/.mozilla as that is the default place for the registry file
@@ -266,72 +286,33 @@ nsresult nsComponentManagerImpl::Init(void)
         if (PR_Access(dotMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS)
         {
             PR_MkDir(dotMozillaDir, NS_MOZILLA_DIR_PERMISSION);
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Creating Directory %s", dotMozillaDir));
-#endif /* NS_DEBUG */
         }
     }
 #endif /* XP_UNIX */
     
-    // No error checking on the following because the program
-    // can work perfectly well even if no registry is available.
-
     // Open the App Components registry. We will keep it open forever!
-    mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    rv = mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_FAILED(rv)) return rv;
 
     // Check the version of registry. Nuke old versions.
     PlatformVersionCheck();
 
     // Open common registry keys here to speed access
     // Do this after PlatformVersionCheck as it may re-create our keys
-    nsresult rv;
     rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &mXPCOMKey);
     		
-    if (NS_FAILED(rv))
-    {        
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
     rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &mClassesKey);
-    if (NS_FAILED(rv))
-    {        
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
     rv = mRegistry->AddSubtree(nsIRegistry::Common, classIDKeyName, &mCLSIDKey);
-    if (NS_FAILED(rv))
-    {
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
-#endif
-
-    return NS_OK;
+    return rv;
 }
-
-nsComponentManagerImpl::~nsComponentManagerImpl()
-{
-    if (mFactories)
-        delete mFactories;
-    if (mProgIDs)
-        delete mProgIDs;
-    if (mMon)
-        PR_DestroyMonitor(mMon);
-    if (mDllStore)
-        delete mDllStore;
-    if(mRegistry)
-        NS_RELEASE(mRegistry);
-}
-
-NS_IMPL_ISUPPORTS(nsComponentManagerImpl, nsIComponentManager::GetIID());
-
-////////////////////////////////////////////////////////////////////////////////
-// nsComponentManagerImpl: Platform methods
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef USE_NSREG
-#define USE_REGISTRY
 
 /**
  * PlatformVersionCheck()
@@ -343,17 +324,13 @@ nsresult
 nsComponentManagerImpl::PlatformVersionCheck()
 {
 
-	nsIRegistry::Key xpcomKey;
-	nsresult rv;
-	rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
-
+    nsIRegistry::Key xpcomKey;
+    nsresult rv;
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
     		
-    if (NS_FAILED(rv))
-    {        
-        return rv;
-    }
-
-	char *buf;
+    if (NS_FAILED(rv)) return rv;
+    
+    char *buf;
     nsresult err = mRegistry->GetString(xpcomKey, versionValueName, &buf);
     autoFree bufAutoFree(buf);
 
@@ -361,31 +338,25 @@ nsComponentManagerImpl::PlatformVersionCheck()
     // Delete the old repository hierarchies and recreate version string
     if (NS_FAILED(err) || PL_strcmp(buf, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING))
     {
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: Registry version mismatch (%s vs %s). Nuking xpcom "
                 "registry hierarchy.", buf, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
-#endif /* NS_DEBUG */
 
         // Delete the XPCOM and CLSID hierarchy
         nsIRegistry::Key netscapeKey;
         rv = mRegistry->GetSubtree(nsIRegistry::Common,netscapeKeyName, &netscapeKey);
         if(NS_FAILED(rv))
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Failed To Get Subtree (%s)",netscapeKeyName));         
-#endif /* NS_DEBUG */
         }
         else
         {
             rv = mRegistry->RemoveSubtreeRaw(netscapeKey, xpcomBaseName);
             if(NS_FAILED(rv))
             {
-#ifdef NS_DEBUG
                 PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                        ("nsComponentManager: Failed To Nuke Subtree (%s)",xpcomKeyName));
-#endif /* NS_DEBUG */
                 return rv;
             }
         }
@@ -393,20 +364,16 @@ nsComponentManagerImpl::PlatformVersionCheck()
         rv = mRegistry->GetSubtree(nsIRegistry::Common,classesKeyName, &netscapeKey);
         if(NS_FAILED(rv))
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Failed To Get Subtree (%s)",classesKeyName));
-#endif /* NS_DEBUG */
         }
         else
         {
             rv = mRegistry->RemoveSubtreeRaw(netscapeKey, classIDKeyName);
             if(NS_FAILED(rv))
             {
-#ifdef NS_DEBUG
                 PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                        ("nsComponentManager: Failed To Nuke Subtree (%s/%s)",classesKeyName,classIDKeyName));
-#endif /* NS_DEBUG */
                 return rv;
             }
         }
@@ -415,10 +382,8 @@ nsComponentManagerImpl::PlatformVersionCheck()
         rv = mRegistry->AddSubtree(nsIRegistry::Common,xpcomKeyName, &xpcomKey);
         if(NS_FAILED(rv))
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Failed To Add Subtree (%s)",xpcomKeyName));
-#endif /* NS_DEBUG */
             return rv;
 
         }
@@ -426,10 +391,8 @@ nsComponentManagerImpl::PlatformVersionCheck()
         rv = mRegistry->AddSubtree(nsIRegistry::Common,classesClassIDKeyName, NULL);
         if(NS_FAILED(rv))
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Failed To Add Subtree (%s)",classesClassIDKeyName));
-#endif /* NS_DEBUG */
             return rv;
 
         }
@@ -437,20 +400,16 @@ nsComponentManagerImpl::PlatformVersionCheck()
         rv = mRegistry->SetString(xpcomKey,versionValueName, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING);
         if(NS_FAILED(rv))
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Failed To Set String (Version) Under (%s)",xpcomKeyName));
-#endif /* NS_DEBUG */
             return rv;
         }
 
     }
     else 
     {
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: platformVersionCheck() passed."));
-#endif /* NS_DEBUG */
     }
 
     return NS_OK;
@@ -557,33 +516,34 @@ nsComponentManagerImpl::PlatformMarkNoComponents(nsDll *dll)
 }
 
 nsresult
-nsComponentManagerImpl::PlatformRegister(QuickRegisterData* regd, nsDll *dll)
+nsComponentManagerImpl::PlatformRegister(const char *cidString,
+                                         const char *className,
+                                         const char * progID, nsDll *dll)
 {
     // Preconditions
-    PR_ASSERT(regd != NULL);
-    PR_ASSERT(regd->CIDString != NULL);
+    PR_ASSERT(cidString != NULL);
     PR_ASSERT(dll != NULL);
-    PR_ASSERT(mRegistry!=NULL);
+    PR_ASSERT(mRegistry !=NULL);
 
     nsresult rv;
     
     nsIRegistry::Key IDkey;
-    rv = mRegistry->AddSubtreeRaw(mCLSIDKey, regd->CIDString, &IDkey);
+    rv = mRegistry->AddSubtreeRaw(mCLSIDKey, cidString, &IDkey);
     if (NS_FAILED(rv)) return (rv);
 
 
-    rv = mRegistry->SetString(IDkey,classNameValueName, regd->className);
-    if (regd->progID)
+    rv = mRegistry->SetString(IDkey,classNameValueName, className);
+    if (progID)
     {
-        rv = mRegistry->SetString(IDkey,progIDValueName, regd->progID);        
+        rv = mRegistry->SetString(IDkey,progIDValueName, progID);        
     }
     rv = mRegistry->SetString(IDkey, inprocServerValueName, dll->GetFullPath());
     
-    if (regd->progID)
+    if (progID)
     {
         nsIRegistry::Key progIDKey;
-        rv = mRegistry->AddSubtreeRaw(mClassesKey, regd->progID, &progIDKey);
-        rv = mRegistry->SetString(progIDKey, classIDValueName, regd->CIDString);
+        rv = mRegistry->AddSubtreeRaw(mClassesKey, progID, &progIDKey);
+        rv = mRegistry->SetString(progIDKey, classIDValueName, cidString);
     }
 
     // XXX Gross. LongLongs dont have a serialization format. This makes
@@ -608,15 +568,15 @@ nsComponentManagerImpl::PlatformRegister(QuickRegisterData* regd, nsDll *dll)
 }
 
 nsresult
-nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *aLibrary)
+nsComponentManagerImpl::PlatformUnregister(const char *cidString,
+                                           const char *aLibrary)
 {  
     PR_ASSERT(mRegistry!=NULL);
 
-    
     nsresult rv;
 
     nsIRegistry::Key cidKey;
-    rv = mRegistry->AddSubtreeRaw(mCLSIDKey,regd->CIDString, &cidKey);
+    rv = mRegistry->AddSubtreeRaw(mCLSIDKey, cidString, &cidKey);
 
     char *progID = NULL;
     rv = mRegistry->GetString(cidKey, progIDValueName, &progID);
@@ -626,7 +586,7 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
         PR_FREEIF(progID);
     }
 
-    mRegistry->RemoveSubtree(mCLSIDKey, regd->CIDString);
+    mRegistry->RemoveSubtree(mCLSIDKey, cidString);
     	
     nsIRegistry::Key libKey;
     rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLibrary, &libKey);
@@ -789,7 +749,7 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(nsCID *aClass,
 
 }
 
-#endif // USE_NSREG
+#endif /* USE_REGISTRY */
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Public methods
@@ -821,31 +781,26 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
     if (aEntry->dll->IsLoaded() == PR_FALSE)
     {
         // Load the dll
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                ("nsComponentManager: + Loading \"%s\".", aEntry->dll->GetFullPath()));
-#endif /* NS_DEBUG */
         if (aEntry->dll->Load() == PR_FALSE)
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                    ("nsComponentManager: Library load unsuccessful."));
-#endif /* NS_DEBUG */
             
             char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
             if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
                 PR_GetErrorText(errorMsg);
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Load(%s) FAILED with error:%s", aEntry->dll->GetFullPath(), errorMsg));
-#endif /* NS_DEBUG */
 
+#ifdef PRINT_CRITICAL_ERROR_TO_SCREEN
             // Put the error message on the screen.
             printf("**************************************************\n"
     		   "nsComponentManager: Load(%s) FAILED with error: %s\n"
             	   "**************************************************\n",
     		   aEntry->dll->GetFullPath(), errorMsg);
-
+#endif
             return NS_ERROR_FAILURE;
         }
     }
@@ -881,10 +836,8 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
             delete[] progID;
         return rv;
     }
-#ifdef NS_DEBUG
     PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
            ("nsComponentManager: NSGetFactory entrypoint not found."));
-#endif /* NS_DEBUG */
     return NS_ERROR_FACTORY_NOT_LOADED;
 }
 
@@ -901,14 +854,12 @@ nsresult
 nsComponentManagerImpl::FindFactory(const nsCID &aClass,
                                     nsIFactory **aFactory) 
 {
-#ifdef NS_DEBUG
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
         PR_LogPrint("nsComponentManager: FindFactory(%s)", buf);
         delete [] buf;
     }
-#endif
     	
     PR_ASSERT(aFactory != NULL);
     	
@@ -922,28 +873,22 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
 #ifdef USE_REGISTRY
     if (entry == NULL)
     {
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("\t\tnot found in factory cache. Looking in registry"));
-#endif /* NS_DEBUG */
         nsresult rv = PlatformFind(aClass, &entry);
 
         // If we got one, cache it in our hashtable
         if (NS_SUCCEEDED(rv))
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("\t\tfound in registry."));
-#endif /* NS_DEBUG */
             mFactories->Put(&key, entry);
         }
     }
     else
     {
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("\t\tfound in factory cache."));
-#endif /* NS_DEBUG */
     }
 #endif /* USE_REGISTRY */
     	
@@ -963,11 +908,9 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
         }
     }
     	
-#ifdef NS_DEBUG
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
            ("\t\tFindFactory() %s",
             NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
-#endif /* NS_DEBUG */
     	
     return res;
 }
@@ -1033,7 +976,6 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
     }
 #endif /* USE_REGISTRY */
 
-#ifdef NS_DEBUG
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) {
         char *buf;
         if (NS_SUCCEEDED(res))
@@ -1044,8 +986,7 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
         if (NS_SUCCEEDED(res))
             delete [] buf;
     }
-#endif
-    	
+
     return res;
 }
 
@@ -1068,7 +1009,6 @@ nsComponentManagerImpl::CLSIDToProgID(nsCID *aClass,
     res = PlatformCLSIDToProgID(aClass, aClassName, aProgID);
 #endif /* USE_REGISTRY */
 
-#ifdef NS_DEBUG
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass->ToString();
@@ -1077,7 +1017,6 @@ nsComponentManagerImpl::CLSIDToProgID(nsCID *aClass,
                 NS_SUCCEEDED(res) ? *aProgID : "[FAILED]"));
         delete [] buf;
     }
-#endif
 
     return res;
 }
@@ -1095,14 +1034,13 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
                                        const nsIID &aIID,
                                        void **aResult)
 {
-#ifdef NS_DEBUG
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
         PR_LogPrint("nsComponentManager: CreateInstance(%s)", buf);
         delete [] buf;
     }
-#endif
+
     if (aResult == NULL)
     {
         return NS_ERROR_NULL_POINTER;
@@ -1115,18 +1053,14 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
     {
         res = factory->CreateInstance(aDelegate, aIID, aResult);
         NS_RELEASE(factory);
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("\t\tFactory CreateInstance() %s.",
                 NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
-#endif /* NS_DEBUG */
         return res;
     }
 
-#ifdef NS_DEBUG
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
            ("\t\tCreateInstance() FAILED."));
-#endif /* NS_DEBUG */
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
 
@@ -1178,7 +1112,6 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
                                         nsIFactory *aFactory, 
                                         PRBool aReplace)
 {
-#ifdef NS_DEBUG
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
@@ -1186,7 +1119,6 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
                     buf, aClassName, aProgID, (int)aReplace);
         delete [] buf;
     }
-#endif
 
     nsIFactory *old = NULL;
     FindFactory(aClass, &old);
@@ -1196,18 +1128,14 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         NS_RELEASE(old);
         if (!aReplace)
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tFactory already registered."));
-#endif /* NS_DEBUG */
             return NS_ERROR_FACTORY_EXISTS;
         }
         else
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tdeleting old Factory Entry."));
-#endif /* NS_DEBUG */
         }
     }
     	
@@ -1241,19 +1169,15 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
             // CreateInstance(..progid..) is the more used one.
             //
             PR_ExitMonitor(mMon);
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tFactory register succeeded. PROGID->CLSID mapping failed."));
-#endif /* NS_DEBUG */
             return (rv);
         }
     }
     PR_ExitMonitor(mMon);
     	
-#ifdef NS_DEBUG
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
            ("\t\tFactory register succeeded."));
-#endif /* NS_DEBUG */
     	
     return NS_OK;
 }
@@ -1267,7 +1191,7 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                                           PRBool aPersist)
 {
     nsresult rv = NS_OK;
-#ifdef NS_DEBUG
+
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
@@ -1275,7 +1199,6 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                     buf, aClassName, aProgID, aLibrary, (int)aReplace, (int)aPersist);
         delete [] buf;
     }
-#endif
 
     nsIFactory *old = NULL;
     FindFactory(aClass, &old);
@@ -1285,18 +1208,14 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
         NS_RELEASE(old);
         if (!aReplace)
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tFactory already registered."));
-#endif /* NS_DEBUG */
             return NS_ERROR_FACTORY_EXISTS;
         }
         else
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tdeleting registered Factory."));
-#endif /* NS_DEBUG */
         }
     }
     	
@@ -1311,14 +1230,9 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto done;
         }
-        // XXX temp hack until we get the dll to give us the entire
-        // XXX NSQuickRegisterClassData
-        QuickRegisterData cregd = {0};
-        cregd.CIDString = aClass.ToString();
-        cregd.className = aClassName;
-        cregd.progID = aProgID;
-        PlatformRegister(&cregd, dll);
-        delete [] (char *)cregd.CIDString;
+        char *cidString = aClass.ToString();
+        PlatformRegister(cidString, aClassName, aProgID, dll);
+        delete [] cidString;
         delete dll;
     } 
     else
@@ -1367,11 +1281,9 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
     }
     
     PR_ExitMonitor(mMon);
-#ifdef NS_DEBUG
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
            ("\t\tFactory register %s.",
             rv == NS_OK ? "succeeded" : "failed"));
-#endif /* NS_DEBUG */
     return rv;
 }
 
@@ -1379,7 +1291,6 @@ nsresult
 nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
                                           nsIFactory *aFactory)
 {
-#ifdef NS_DEBUG
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) 
     {
         char *buf = aClass.ToString();
@@ -1387,7 +1298,6 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
         PR_LogPrint("nsComponentManager: + %s.", buf);
         delete [] buf;
     }
-#endif
     	
     nsIDKey key(aClass);
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1405,11 +1315,9 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
 
     }
 
-#ifdef NS_DEBUG
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
            ("nsComponentManager: ! Factory unregister %s.", 
             NS_SUCCEEDED(res) ? "succeeded" : "failed"));
-#endif /* NS_DEBUG */
     	
     return res;
 }
@@ -1418,7 +1326,6 @@ nsresult
 nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
                                             const char *aLibrary)
 {
-#ifdef NS_DEBUG
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
@@ -1426,7 +1333,6 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
         PR_LogPrint("nsComponentManager: + %s in \"%s\".", buf, aLibrary);
         delete [] buf;
     }
-#endif
     	
     nsIDKey key(aClass);
     nsFactoryEntry *old = (nsFactoryEntry *) mFactories->Get(&key);
@@ -1450,22 +1356,17 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
             res = NS_OK;
         }
 #ifdef USE_REGISTRY
-        // XXX temp hack until we get the dll to give us the entire
-        // XXX NSQuickRegisterClassData
-        QuickRegisterData cregd = {0};
-        cregd.CIDString = aClass.ToString();
-        res = PlatformUnregister(&cregd, aLibrary);
-        delete [] (char *)cregd.CIDString;
+        char *cidString = aClass.ToString();
+        res = PlatformUnregister(cidString, aLibrary);
+        delete [] cidString;
 #endif
     }
     	
     PR_ExitMonitor(mMon);
     	
-#ifdef NS_DEBUG
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
            ("nsComponentManager: ! Factory unregister %s.", 
             NS_SUCCEEDED(res) ? "succeeded" : "failed"));
-#endif /* NS_DEBUG */
     	
     return res;
 }
@@ -1483,10 +1384,8 @@ nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure)
             nsresult rv = proc(serviceMgr);
             if (NS_FAILED(rv))
             {
-#ifdef NS_DEBUG
                 PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                        ("nsComponentManager: + Unloading \"%s\".", entry->dll->GetFullPath()));
-#endif /* NS_DEBUG */
                 entry->dll->Unload();
             }
         }
@@ -1500,10 +1399,8 @@ nsComponentManagerImpl::FreeLibraries(void)
 {
     PR_EnterMonitor(mMon);
     	
-#ifdef NS_DEBUG
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
            ("nsComponentManager: Freeing Libraries."));
-#endif /* NS_DEBUG */
 
     nsIServiceManager* serviceMgr = NULL;
     nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
@@ -1540,15 +1437,15 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when, const char* dir)
 
     if (dir != NULL)
     {
-#ifdef DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                ("nsComponentManager: Autoregistration begins. dir = %s", dir));
+#ifdef DEBUG
         printf("nsComponentManager: Autoregistration begins. dir = %s\n", dir);
 #endif /* DEBUG */
         rv = SyncComponentsInDir(when, dir);
-#ifdef DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                ("nsComponentManager: Autoregistration ends. dir = %s", dir));
+#ifdef DEBUG
         printf("nsComponentManager: Autoregistration ends. dir = %s\n", dir);
 #endif /* DEBUG */
     }
@@ -1668,11 +1565,9 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char 
         // Make sure the dll is OK
         if (dll->GetStatus() != NS_OK)
         {
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                    ("nsComponentManager: + nsDll not NS_OK \"%s\". Skipping...",
                     dll->GetFullPath()));
-#endif /* NS_DEBUG */
             return NS_ERROR_FAILURE;
         }
     		
@@ -1681,11 +1576,9 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char 
             (dll->GetSize() == statbuf.size))
         {
             // Dll hasn't changed. Skip.
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                    ("nsComponentManager: + nsDll not changed \"%s\". Skipping...",
                     dll->GetFullPath()));
-#endif /* NS_DEBUG */
             return NS_OK;
         }
     		
@@ -1705,11 +1598,9 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char 
                 PRBool res = proc(this /*, PR_TRUE*/);
                 if (res)
                 {
-#ifdef NS_DEBUG
                     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                            ("nsComponentManager: + Unloading \"%s\".",
                             dll->GetFullPath()));
-#endif /* NS_DEBUG */
                     dll->Unload();
                 }
                 else
@@ -1717,12 +1608,10 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char 
                     // THIS IS THE WORST SITUATION TO BE IN.
                     // Dll doesn't want to be unloaded. Cannot re-register
                     // this dll.
-#ifdef NS_DEBUG
                     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                            ("nsComponentManager: *** Dll already loaded. "
                             "Cannot unload either. Hence cannot re-register "
                             "\"%s\". Skipping...", dll->GetFullPath()));
-#endif /* NS_DEBUG */
                     return NS_ERROR_FAILURE;
                 }
             }
@@ -1730,12 +1619,9 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char 
                 // dll doesn't have a CanUnload proc. Guess it is
                 // ok to unload it.
                 dll->Unload();
-#ifdef NS_DEBUG
                 PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                        ("nsComponentManager: + Unloading \"%s\". (no CanUnloadProc).",
                         dll->GetFullPath()));
-    				
-#endif /* NS_DEBUG */
             }
     			
         } // dll isloaded
@@ -1746,11 +1632,9 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char 
             // We went through all the above to make sure the dll
             // is unloaded. And here we are with the dll still
             // loaded. Whoever taught dp programming...
-#ifdef NS_DEBUG
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Dll still loaded. Cannot re-register "
                     "\"%s\". Skipping...", dll->GetFullPath()));
-#endif /* NS_DEBUG */
             return NS_ERROR_FAILURE;
         }
     } // dll != NULL
@@ -1774,11 +1658,9 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char 
     nsresult ret = NS_OK;
     if (NS_FAILED(res))
     {
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: Autoregistration FAILED for "
                 "\"%s\". Skipping...", dll->GetFullPath()));
-#endif /* NS_DEBUG */
         // Mark dll as not xpcom dll along with modified time and size in
         // the registry so that we wont need to load the dll again every
         // session until the dll changes.
@@ -1789,11 +1671,9 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, const char 
     }
     else
     {
-#ifdef NS_DEBUG
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: Autoregistration Passed for "
                 "\"%s\".", dll->GetFullPath()));
-#endif /* NS_DEBUG */
         // Marking dll along with modified time and size in the
         // registry happens at PlatformRegister(). No need to do it
         // here again.
@@ -1818,7 +1698,6 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
     	
     if (dll->Load() == PR_FALSE)
     {
-#ifdef NS_DEBUG
         // Cannot load. Probably not a dll.
         char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
         if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
@@ -1827,13 +1706,12 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: SelfRegisterDll(%s) Load FAILED with error:%s", dll->GetFullPath(), errorMsg));
 
-    	// Put the error message on the screen.
-        // For now this message is also for optimized builds. Hence no ifdef DEBUG
+#ifdef PRINT_CRITICAL_ERROR_TO_SCREEN
         printf("**************************************************\n"
                "nsComponentManager: Load(%s) FAILED with error: %s\n"
                "**************************************************\n",
                dll->GetFullPath(), errorMsg);
-#endif /* NS_DEBUG */
+#endif
         return(NS_ERROR_FAILURE);
     }
     	
@@ -1841,19 +1719,7 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
 
     if (regproc == NULL)
     {
-        // Smart registration
-        QuickRegisterData* qr =
-            (QuickRegisterData*)dll->FindSymbol(NS_QUICKREGISTER_DATA_SYMBOL);
-        if (qr == NULL)
-        {
-            res = NS_ERROR_NO_INTERFACE;
-        }
-        else
-        {
-            // XXX register the quick registration data on behalf of the dll
-            // XXX for now return failure
-            res = NS_ERROR_FAILURE;
-        }
+        res = NS_ERROR_NO_INTERFACE;
     }
     else
     {
@@ -1886,14 +1752,7 @@ nsComponentManagerImpl::SelfUnregisterDll(nsDll *dll)
     	
     if (unregproc == NULL)
     {
-        // Smart unregistration
-        QuickRegisterData* qr = (QuickRegisterData*)
-            dll->FindSymbol(NS_QUICKREGISTER_DATA_SYMBOL);
-        if (qr == NULL)
-        {
-            return(NS_ERROR_NO_INTERFACE);
-        }
-        // XXX unregister the dll based on the quick registration data
+        return(NS_ERROR_NO_INTERFACE);
     }
     else
     {
