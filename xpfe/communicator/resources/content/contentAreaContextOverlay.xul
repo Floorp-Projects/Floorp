@@ -45,14 +45,14 @@
     <popup id="contentAreaContextMenu"
            onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
            onpopuphiding="gContextMenu = null;">
-      <menuitem id="context-openlinkintab"
-                label="&openLinkCmdInTab.label;"
-                accesskey="&openLinkCmdInTab.accesskey;"
-                oncommand="gContextMenu.openLinkInTab();"/>
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
                 accesskey="&openLinkCmd.accesskey;"
                 oncommand="gContextMenu.openLink();"/>
+      <menuitem id="context-openlinkintab"
+                label="&openLinkCmdInTab.label;"
+                accesskey="&openLinkCmdInTab.accesskey;"
+                oncommand="gContextMenu.openLinkInTab();"/>
       <menuseparator id="context-sep-open"/>
       <menuitem id="context-bookmarklink"
                 label="&bookmarkLinkCmd.label;"
@@ -158,12 +158,12 @@
           <menuitem label="&showOnlyThisFrameCmd.label;"
                     accesskey="&showOnlyThisFrameCmd.accesskey;"
                     oncommand="gContextMenu.showOnlyThisFrame();"/>
-          <menuitem label="&openFrameCmdInTab.label;"
-                    accesskey="&openFrameCmdInTab.accesskey;"
-                    oncommand="gContextMenu.openFrameInTab();"/>
           <menuitem label="&openFrameCmd.label;"
                     accesskey="&openFrameCmd.accesskey;"
                     oncommand="gContextMenu.openFrame();"/>
+          <menuitem label="&openFrameCmdInTab.label;"
+                    accesskey="&openFrameCmdInTab.accesskey;"
+                    oncommand="gContextMenu.openFrameInTab();"/>
           <menuseparator/>
           <menuitem id="context-reload-frame"
                     label="&reloadFrameCmd.label;"
