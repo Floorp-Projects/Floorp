@@ -129,6 +129,9 @@ public:
     // Called to find out if the transaction generated a complete response.
     PRBool ResponseIsComplete() { return mResponseIsComplete; }
 
+    void   SetSSLConnectFailed() { mSSLConnectFailed = PR_TRUE; }
+    PRBool    SSLConnectFailed() { return mSSLConnectFailed; }
+
 private:
     nsresult Restart();
     void     ParseLine(char *line);
@@ -195,6 +198,7 @@ private:
     PRUint32                        mReceivedData       : 1;
     PRUint32                        mStatusEventPending : 1;
     PRUint32                        mHasRequestBody     : 1;
+    PRUint32                        mSSLConnectFailed   : 1;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

@@ -2107,6 +2107,13 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
             LOG(("rejecting 407 when proxy server not configured!\n"));
             return NS_ERROR_UNEXPECTED;
         }
+        if (mConnectionInfo->UsingSSL() && !mTransaction->SSLConnectFailed()) {
+            // we need to verify that this challenge came from the proxy
+            // server itself, and not some server on the other side of the
+            // SSL tunnel.
+            LOG(("rejecting 407 from origin server!\n"));
+            return NS_ERROR_UNEXPECTED;
+        }
         challenges = mResponseHead->PeekHeader(nsHttp::Proxy_Authenticate);
     }
     else

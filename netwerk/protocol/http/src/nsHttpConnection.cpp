@@ -350,8 +350,15 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             // XXX what if this fails -- need to handle this error
             NS_ASSERTION(NS_SUCCEEDED(rv), "mSocketOut->AsyncWait failed");
         }
-        else
+        else {
             LOG(("SSL proxy CONNECT failed!\n"));
+            // NOTE: this cast is valid since this connection cannot be
+            // processing a transaction pipeline until after the first HTTP/1.1
+            // response.
+            nsHttpTransaction *trans =
+                    NS_STATIC_CAST(nsHttpTransaction *, mTransaction);
+            trans->SetSSLConnectFailed();
+        }
     }
 
     return NS_OK;
