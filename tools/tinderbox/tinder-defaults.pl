@@ -61,7 +61,15 @@ $XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 0;  # Ts
 
 $TestsPhoneHome           = 0;  # Should test report back to server?
-$results_server           = "axolotl.mozilla.org"; # was tegu
+
+# $results_server
+#----------------------------------------------------------------------------
+# Server on which test results will be accessible.  This was originally tegu,
+# then became axolotl.  Once we moved services from axolotl, it was time
+# to give this service its own hostname to make future transitions easier.
+# - cmp@mozilla.org
+$results_server           = "build-graphs.mozilla.org";
+
 $pageload_server          = "spider";  # localhost
 
 #
