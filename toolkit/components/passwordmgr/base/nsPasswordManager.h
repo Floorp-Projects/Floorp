@@ -47,6 +47,7 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMLoadListener.h"
 #include "nsIStringBundle.h"
+#include "nsIPrefBranch.h"
 
 /* 360565c4-2ef3-4f6a-bab9-94cca891b2a7 */
 #define NS_PASSWORDMANAGER_CID \
@@ -188,4 +189,5 @@ protected:
   nsDataHashtable<nsISupportsHashKey,PRInt32> mAutoCompleteInputs;
 
   nsCOMPtr<nsIFile> mSignonFile;
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
 };
