@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): Colin Phillips <colinp@oeone.com> 
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,18 +45,23 @@
 
 <RDF:Description about="urn:mozilla:package:calendar"
         chrome:displayName="Calendar"
-        chrome:author="OEone Corp."
+        chrome:author="OEone Corp. and Mozilla"
+	chrome:authorURL="http://www.mozilla.org/projects/calendar/" 
         chrome:name="calendar"
+	chrome:description="Add extension calendar to Mozilla"
+	chrome:extension="true"
         chrome:skinVersion="1.5">
 </RDF:Description>
 
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
+    <!-- Mozilla -->
     <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
   </RDF:Seq>
 
+  <!-- Mozilla Application Suite -->
   <!-- calendar tasks -->
   <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
     <RDF:li>chrome://calendar/content/calendarOverlay.xul</RDF:li>

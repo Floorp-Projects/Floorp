@@ -38,6 +38,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 
+<?xml-stylesheet href="chrome://calendar/skin/overlay.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
@@ -45,7 +46,7 @@
 <!DOCTYPE overlay 
 [
    <!ENTITY % calendarDTD SYSTEM "chrome://calendar/locale/calendar.dtd" > %calendarDTD;
-	<!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
+   <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
 ]>
 
 <overlay id="calendarOverlay"
@@ -67,8 +68,6 @@
     <command id="cmd_selectAll"/>
   
     <!-- Search Menu -->
-    <command id="Browser:Find" oncommand="BrowserFind();" />
-    <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" /> 
     <commandset id="tasksCommands"/>
   </commandset>
   
@@ -84,8 +83,8 @@
     <key id="key_paste"/>
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-  
   </keyset>
+  
   <keyset id="tasksKeys">
       <key id="key_quit"/>
   </keyset>
@@ -125,7 +124,7 @@
                    label="&event.mail.event;"
                    accesskey="&event.mail.event.accesskey;"
                    observes="send_event_command"/>
-         <menuseparator/>
+         <menuseparator id="calendar-print-sep"/>
          <menuitem id="calendar-print-menu"
                    label="&calendar.print.label;"
                    accesskey="&calendar.print.accesskey;"
@@ -265,7 +264,7 @@
       </menupopup>
    </menu>
    
-   <menu id="tasksMenu"
+    <menu id="tasksMenu"
          label="&taskMenu.label;"
          accesskey="&taskMenu.accesskey;" >                                                                                       
       <menupopup id="taskPopup">
@@ -302,7 +301,9 @@
          <menuitem id="calendar-about-menu-item"
                    label="&calendar.about.label;"
                    accesskey="&calendar.about.accesskey;"
-                   oncommand="displayCalendarVersion()"/>
+                   oncommand="window.openDialog('chrome://calendar/content/about.xul',
+		                                'About',
+						'modal,centerscreen,chrome,width=500,resizable=yes');"/>
       </menupopup>
    </menu>      
 </menubar>

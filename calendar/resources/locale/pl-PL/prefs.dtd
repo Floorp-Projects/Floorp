@@ -40,10 +40,15 @@
 <!ENTITY calendar.publish.label     "Publikowanie">
 <!ENTITY calendar.alarms.label      "Alarmy">
 <!ENTITY calendar.views.label       "Widoki">
+<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.timezone.label    "Moja strefa czasowa">
 
 <!ENTITY pref.mainbox.label         "Ustawienia główne" >
 <!ENTITY pref.alarmgoesoff.label "Gdy alarm się wyłącza:">
+<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.category         "Category">
+
 <!ENTITY pref.playasound  "Odtwórz dzwięk" >
 
 <!ENTITY pref.alarmbox.label    "Alarmy" >

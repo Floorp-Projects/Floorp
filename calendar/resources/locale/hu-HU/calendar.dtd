@@ -408,6 +408,7 @@
 <!ENTITY calendar.publish.close.button      "Bezárás">
 
 <!ENTITY calendar.publish.example.url.description   "Valami olyasmi mint: http://www.azenszerverem.com/webdav/test.ics">
+<!-- TRANSLATORS: this label must be short to keep a reasonnable column width in the week view -->
 
 <!ENTITY allDayEvents.label "Egésznapos események">
 

@@ -99,6 +99,8 @@
 <script type="application/x-javascript" src="chrome://calendar/content/eventDialog.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/selectAddressesDialog.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/attachFile.js"/>
+<!-- NEEDED FOR APPLICATION SUPPORT -->
+<script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
 
 <!-- needed to get the default categories -->
 <script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
@@ -246,7 +248,7 @@
                                    searchSessions="history"
                                    flex="1"/>
                           <button label="&newevent.uri.visit.label;"
-                                  oncommand="launchBrowser()"/>
+                                  oncommand="loadURL()"/>
                         </hbox>
                      </row>
               

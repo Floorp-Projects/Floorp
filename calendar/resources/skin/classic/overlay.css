@@ -57,3 +57,18 @@
   list-style-image: url("chrome://calendar/skin/calendar-16.gif");
 }
 
+
+/* ::::: tools menu icons ::::: */
+
+.icon-mail16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/mail-16.gif");
+}
+
+.icon-addressbook16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/addressbook-16.gif");
+}
+
+.icon-navigator16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/navigator-16.gif");
+}
+

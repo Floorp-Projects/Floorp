@@ -109,10 +109,25 @@ var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
 var rootPrefNode = prefService.getBranch(null); // preferences root node
 
+/*To log messages in the JSconsole */
+if( gDebugCalendar == true ) {
+  var aConsoleService = Components.classes["@mozilla.org/consoleservice;1"].
+    getService(Components.interfaces.nsIConsoleService);
+  var logMessage = aConsoleService.logStringMessage ;
+} else 
+{
+  var logMessage = function(){} ;  
+}
+
+/*To recognize the application running calendar*/
+var applicationName = navigator.vendor ;
+if(applicationName == "" ) applicationName = "Mozilla" ;
+logMessage("application : " + applicationName);
+
+
 /*-----------------------------------------------------------------
 *  G L O B A L     C A L E N D A R      F U N C T I O N S
 */
-
 
 /** 
 * Called from calendar.xul window onload.
@@ -120,6 +135,9 @@ var rootPrefNode = prefService.getBranch(null); // preferences root node
 
 function calendarInit() 
 {
+  if(applicationName == "Thunderbird") {
+    document.getElementById( 'tasksMenuNavigator' ).setAttribute( "collapsed", "true" );
+   }
 	// get the calendar event data source
    gEventSource = new CalendarEventDataSource();
    
@@ -237,7 +255,10 @@ function calendarFinish()
 
 function launchPreferences()
 {
-   goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendarPanel" );
+  if( applicationName == "Mozilla" || applicationName == "Firebird" ) {
+    goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendarPanel" );
+  } else
+    window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,resizable=no");
 }
 
 

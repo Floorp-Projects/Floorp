@@ -834,6 +834,6 @@ function formatDate( date )
 
 function debug( Text )
 {
-   dump( "\n"+ Text + "\n");
+   dump( "\nprintDialog.js:"+ Text + "\n");
 
 }

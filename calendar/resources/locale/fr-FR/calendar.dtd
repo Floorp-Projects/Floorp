@@ -408,7 +408,8 @@
 
 <!ENTITY calendar.publish.example.url.description   "Quelque chose comme http://www.monserveur.com/webdav/test.ics">
 
-<!ENTITY allDayEvents.label "Événement durant toute la journée">
+<!-- TRANSLATORS: this label must be short to keep a reasonnable column width in the week view -->
+<!ENTITY allDayEvents.label "Événements du jour">
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importer : Importer les événements d'un fichier local dans un calendrier existant.">

@@ -40,9 +40,14 @@
 <!ENTITY calendarPanel.label        "Kalender" >
 <!ENTITY calendar.accesskey         "c" >
 <!ENTITY calendar.publish.label     "Publiceren">
+<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.alarms.label      "Waarschuwingen">
 <!ENTITY calendar.views.label       "Overzichten">
 <!ENTITY calendar.timezone.label    "My Timezone">
+
+<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.category         "Category">
 
 <!ENTITY pref.mainbox.label         "Algemen instellingen" >
 <!ENTITY pref.alarmgoesoff.label "Als een waarschuwing gegeven wordt:">

@@ -408,6 +408,7 @@
 <!ENTITY allDayEvents.label "Ganztägige Ereignisse">
 
 <!-- Calendar Wizard Dialog -->
+<!-- TRANSLATORS: this label must be short to keep a reasonnable column width in the week view -->
 <!ENTITY calendar.wizard.import.label              "Import: Importiert Ereignisse aus einer lokalen Datei in einen existierenden Kalender.">
 <!ENTITY calendar.wizard.export.label              "Export: Exportiert Ereignisse aus einem existierenden Kalender in eine lokale Datei.">
 <!ENTITY calendar.wizard.subscribe.label           "Abonnieren: Abonniert eine Kalender-Datei auf einem entfernten Computer (z.B. im Internet).">

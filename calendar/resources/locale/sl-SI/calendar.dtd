@@ -408,6 +408,7 @@
 
 <!ENTITY calendar.publish.example.url.description   "Kot na primer http://www.mojstreznik.si/webdav/test.ics">
 
+<!-- TRANSLATORS: this label must be short to keep a reasonnable column width in the week view -->
 <!ENTITY allDayEvents.label "Celodnevni dogodki">
 
 <!-- Dialog čarovnika koledarja-->

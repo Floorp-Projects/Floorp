@@ -40,9 +40,14 @@
 <!ENTITY calendarPanel.label        "Protyka" >
 <!ENTITY calendar.accesskey         "P" >
 <!ENTITY calendar.publish.label     "Publikowanje">
+<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.alarms.label      "Alarmy">
 <!ENTITY calendar.views.label       "Widy">
 <!ENTITY calendar.timezone.label    "Moje časowe pasmo">
+
+<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.category         "Category">
 
 <!ENTITY pref.mainbox.label         "Powšitkowne nastajenja" >
 <!ENTITY pref.alarmgoesoff.label "Hdyž alarm wubuchnje:" >

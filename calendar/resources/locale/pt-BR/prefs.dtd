@@ -40,10 +40,15 @@
 <!ENTITY calendar.label             "Calend&#xE1;rio" >
 <!ENTITY calendarPanel.label        "Calend&#xE1;rio" >
 <!ENTITY calendar.accesskey         "C" >
+<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.publish.label     "Publica&#xE7;&#xE3;o">
 <!ENTITY calendar.alarms.label      "Alarmes">
 <!ENTITY calendar.views.label       "Vis&#xF5;es ">
 <!ENTITY calendar.timezone.label    "Fuso Hor&#xE1;rio">
+<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.category         "Category">
+
 
 <!ENTITY pref.mainbox.label         "Op&#xE7;&#xF5;es Gerais" >
 <!ENTITY pref.alarmgoesoff.label "Quando um alarme disparar:">

@@ -40,9 +40,14 @@
 <!ENTITY calendarPanel.label        "Calendar" >
 <!ENTITY calendar.accesskey         "C" >
 <!ENTITY calendar.publish.label     "Publication">
+<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.alarms.label      "Alarmes">
 <!ENTITY calendar.views.label       "Vues">
 <!ENTITY calendar.timezone.label    "Mon fuseau horaire">
+
+<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.category         "Category">
 
 <!ENTITY pref.mainbox.label         "Réglages globaux" >
 <!ENTITY pref.alarmgoesoff.label "Quand survient une alarme :">

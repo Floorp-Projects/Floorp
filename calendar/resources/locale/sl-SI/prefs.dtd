@@ -40,9 +40,14 @@
 <!ENTITY calendarPanel.label        "Koledar">
 <!ENTITY calendar.accesskey         "K">
 <!ENTITY calendar.publish.label     "Objavljanje">
+<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.alarms.label      "Alarmi">
 <!ENTITY calendar.views.label       "Pogledi">
 <!ENTITY calendar.timezone.label    "Moj časovni pas">
+
+<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.category         "Category">
 
 <!ENTITY pref.mainbox.label         "Splošne nastavitve">
 <!ENTITY pref.alarmgoesoff.label "Ko se vklopi alarm:">
