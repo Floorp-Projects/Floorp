@@ -32,10 +32,10 @@ interface nsIFilePicker : nsISupports
 {
   const short modeOpen        = 0;              // Load a file or directory
   const short modeSave        = 1;              // Save a file or directory
-  const short modeGetFolder   = 2;              // Select a fodler/directory
+  const short modeGetFolder   = 2;              // Select a folder/directory
 
-  const short returnOK        = 0;              // User hit cancel, ignore selection
-  const short returnCancel    = 1;              // User hit Ok, process selection
+  const short returnOK        = 0;              // User hit Ok, process selection
+  const short returnCancel    = 1;              // User hit cancel, ignore selection
   const short returnReplace   = 2;              // User acknowledged file already exists so ok to replace, process selection
 
   const long filterAll        = 0x01;           // *.*
@@ -48,7 +48,7 @@ interface nsIFilePicker : nsISupports
  /**
   * Initialize the file widget.
   *
-  * @param      parent   nsIDOMWindowInternal parent.  This dialog should be dependant on this parent.
+  * @param      parent   nsIDOMWindowInternal parent.  This dialog should be dependent on this parent.
   * @param      title    The title for the file widget
   * @param      mode     load, save, or get folder
   *
@@ -67,7 +67,7 @@ interface nsIFilePicker : nsISupports
   * Add a filter
   *
   * @param      title    name of the filter
-  * @param      filter   extentions to filter -- semicolon and space seperated
+  * @param      filter   extensions to filter -- semicolon and space separated
   *
   */
   void appendFilter(in wstring title,
