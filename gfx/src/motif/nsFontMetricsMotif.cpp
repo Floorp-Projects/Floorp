@@ -68,7 +68,7 @@ NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIDeviceContext* 
   aCX->GetTwipsToDevUnits(t2d);
   PRInt32     dpi = NSToIntRound(t2d * 1440);
   Display     *dpy;
-  dpy = ((nsDeviceContextMotif *)aCX->GetDisplay();
+  dpy = ((nsDeviceContextMotif *)aCX)->GetDisplay();
 
   if (nsnull == wildstring)
     return NS_ERROR_NOT_INITIALIZED;
