@@ -19,6 +19,9 @@ DEPTH=..\..
 IGNORE_MANIFEST=1
 
 DIRS=base coreDom coreEvents range events html css
+
+XPIDLSRCS = .\domstubs.idl
+
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsIScriptContext.h 		\
 	nsIJSScriptObject.h 		\
