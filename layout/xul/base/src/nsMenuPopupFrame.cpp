@@ -216,6 +216,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   nsWidgetInitData widgetData;
   widgetData.mWindowType = eWindowType_popup;
   widgetData.mBorderStyle = eBorderStyle_default;
+  widgetData.clipSiblings = PR_TRUE;
 
   // XXX make sure we are hidden (shouldn't this be done automatically?)
   viewManager->SetViewVisibility(ourView, nsViewVisibility_kHide);
