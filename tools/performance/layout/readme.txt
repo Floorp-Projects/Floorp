@@ -1,5 +1,10 @@
 readme.txt - if there is a perf.html file, read that, it contains the full documentation. This file is a stop-gap until the documentation is completed.
 
+The cached websites must be downloaded and installed under the
+performance\layout directory. You can find them at
+http://techno/users/attinasi/publish and click on the WebSites in ZIP format.
+Unzip the archive and make sure the websites extracted correctly.
+
 BASICS: to run the performance tool simply execute the perf.pl script.
  eg. perl perf.pl Daily-021400 s:\mozilla\dist\win32_o.obj CPU
 
