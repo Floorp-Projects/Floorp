@@ -26,37 +26,37 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<window id="editCert" 
+<window id="editSSLCert" 
         title="&certmgr.editcert.title;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="setWindowName();"
+        onload="doLoadForSSLCert();"
         persist="height width screenX screenY"
         debug="false">
 
+  <script src="chrome://global/content/strres.js" />
+  <script src="pippki.js" />
   <script src="editcerts.js"/>
 
   <box orient="vertical" flex="1">
-    <html>&certmgr.editcert.beforename;</html>
-    <text id="certname"/>
-    <html>&certmgr.editcert.aftername;</html>
+    <html id="certmsg"/>
+    <html id="issuer"/>
     <separator />
-    <html>&certmgr.editcert.edittrust;</html>
+    <html>&certmgr.editsslcert.edittrust;</html>
     <box orient = "vertical">
-      <checkbox label="&certmgr.editcert.trustssl;" checked="false" 
-       id="trustSSL"/>
-      <checkbox label="&certmgr.editcert.trustemail;" checked="false" 
-       id="trustEmail"/>
-      <checkbox label="&certmgr.editcert.trustobjsign;" checked="false" 
-       id="trustObjSign"/>
+      <radiogroup id="sslTrustGroup" orient="vertical" flex="1">
+        <radio label="&certmgr.editsslcert.dotrust;"
+          id="trustSSLCert" group="sslTrustGroup"/>
+        <radio label="&certmgr.editsslcert.donttrust;"
+          id="dontTrustSSLCert" group="sslTrustGroup"/>
+      </radiogroup>
     </box>
     <box orient="horizontal" align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
-           style="width: 8ex" oncommand="doOK();"/> 
+           style="width: 8ex" oncommand="doSSLOK();"/> 
       <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
            style="width: 8ex" oncommand="window.close();" /> 
       <button id="help-button" class="dialog" label="&certmgr.help.label;"
-           style="width: 8ex" oncommand="alert('Help to add here');" /> 
+           style="width: 8ex"/>
     </box>
   </box>
 

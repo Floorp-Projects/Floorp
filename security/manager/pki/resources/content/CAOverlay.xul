@@ -33,6 +33,8 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <box id="CACerts" orient="vertical">
+    <html>&certmgr.cas;</html>
+    <separator class="thin"/>
     <outliner id="ca-outliner" multiple="true" 
               onselect="ca_enableButtons()" flex="1">
       <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 

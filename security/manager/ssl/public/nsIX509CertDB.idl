@@ -155,7 +155,6 @@ interface nsIX509CertDB : nsISupports {
    *
    * The certificate database is responsible for managing cert trust.  This
    * function allows clients to set the trust settings for a cert.
-   * XXX type is always CA, no?
    */
   void setCertTrust(in nsIX509Cert cert,
                     in unsigned long type,
@@ -172,6 +171,7 @@ interface nsIX509CertDB : nsISupports {
    *                                                     object signing cert
    */
   boolean getCertTrust(in nsIX509Cert cert,
+                       in unsigned long certType,
                        in unsigned long trustType);
 
   /*

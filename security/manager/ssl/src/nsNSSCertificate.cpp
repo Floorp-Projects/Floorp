@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.27 2001/05/22 21:19:29 ddrinan%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.28 2001/05/22 23:02:49 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -102,6 +102,9 @@ public:
   PRBool HasTrustedCA(PRBool checkSSL = PR_TRUE, 
                       PRBool checkEmail = PR_TRUE,  
                       PRBool checkObjSign = PR_TRUE);
+  PRBool HasTrustedPeer(PRBool checkSSL = PR_TRUE, 
+                        PRBool checkEmail = PR_TRUE,  
+                        PRBool checkObjSign = PR_TRUE);
 
   /* common defaults */
   /* equivalent to "c,c,c" */
@@ -183,6 +186,7 @@ nsNSSCertTrust::nsNSSCertTrust(unsigned int ssl,
                                unsigned int email, 
                                unsigned int objsign)
 {
+  memset(&mTrust, 0, sizeof(CERTCertTrust));
   addTrust(&mTrust.sslFlags, ssl);
   addTrust(&mTrust.emailFlags, email);
   addTrust(&mTrust.objectSigningFlags, objsign);
@@ -402,6 +406,21 @@ nsNSSCertTrust::HasTrustedCA(PRBool checkSSL,
   if (checkObjSign && 
        !(hasTrust(mTrust.objectSigningFlags, CERTDB_TRUSTED_CA) ||
          hasTrust(mTrust.objectSigningFlags, CERTDB_TRUSTED_CLIENT_CA)))
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
+PRBool
+nsNSSCertTrust::HasTrustedPeer(PRBool checkSSL, 
+                               PRBool checkEmail,  
+                               PRBool checkObjSign)
+{
+  if (checkSSL && !(hasTrust(mTrust.sslFlags, CERTDB_TRUSTED)))
+    return PR_FALSE;
+  if (checkEmail && !(hasTrust(mTrust.emailFlags, CERTDB_TRUSTED)))
+    return PR_FALSE;
+  if (checkObjSign && 
+       !(hasTrust(mTrust.objectSigningFlags, CERTDB_TRUSTED)))
     return PR_FALSE;
   return PR_TRUE;
 }
@@ -689,12 +708,12 @@ nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
     goto done; 
   }
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
-  while (cert &&
-         SECITEM_CompareItem(&cert->derIssuer, &cert->derSubject) 
-           != SECEqual) {
+  while (cert) {
     nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(cert);
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("adding %s to chain\n", cert->nickname));
     array->AppendElement(pipCert);
+    if (SECITEM_CompareItem(&cert->derIssuer, &cert->derSubject) == SECEqual)
+      break;
     cert = CERT_FindCertIssuer(cert, PR_Now(), certUsageSSLClient);
   }
 #endif // NSS_CHAIN_BUG_FIXED
@@ -852,7 +871,15 @@ nsNSSCertificate::GetTokenName(PRUnichar **aTokenName)
   NS_ENSURE_ARG(aTokenName);
   *aTokenName = nsnull;
   if (mCert) {
-    if (mCert->slot) {
+    // HACK alert
+    // When the trust of a builtin cert is modified, NSS copies it into the
+    // cert db.  At this point, it is now "managed" by the user, and should
+    // not be listed with the builtins.  However, in the collection code
+    // used by PK11_ListCerts, the cert is found in the temp db, where it
+    // has been loaded from the token.  Though the trust is correct (grabbed
+    // from the cert db), the source is wrong.  I believe this is a safe
+    // way to work around this.
+    if (mCert->slot && !mCert->isperm) {
       char *token = PK11_GetTokenName(mCert->slot);
       if (token) {
         nsAutoString tok = NS_ConvertASCIItoUCS2(token);
@@ -2465,7 +2492,15 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
     srv = SEC_DeletePermCertificate(cert);
   }
 #endif
-  srv = SEC_DeletePermCertificate(cert);
+  if (cert->slot) {
+    // To delete a cert of a slot (builtin, most likely), mark it as
+    // completely untrusted.
+    nsNSSCertTrust trust(0, 0, 0);
+    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+                               cert, trust.GetTrust());
+  } else {
+    srv = SEC_DeletePermCertificate(cert);
+  }
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert deleted: %d", srv));
   CERT_DestroyCertificate(cert);
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
@@ -2483,62 +2518,69 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
 {
   SECStatus srv;
   nsNSSCertTrust trust;
-  if (type != nsIX509Cert::CA_CERT) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
+  CERTCertificate *nsscert = pipCert->GetCert();
+  if (type == nsIX509Cert::CA_CERT) {
+    // always start with untrusted and move up
+    trust.SetValidCA();
+    trust.AddCATrust(trusted & nsIX509CertDB::TRUSTED_SSL,
+                     trusted & nsIX509CertDB::TRUSTED_EMAIL,
+                     trusted & nsIX509CertDB::TRUSTED_OBJSIGN);
+    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+                               nsscert,
+                               trust.GetTrust());
+  } else if (type == nsIX509Cert::SERVER_CERT) {
+    // always start with untrusted and move up
+    trust.SetValidPeer();
+    trust.AddPeerTrust(trusted & nsIX509CertDB::TRUSTED_SSL, 0, 0);
+    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+                               nsscert,
+                               trust.GetTrust());
+  } else {
+    // ignore user and email certs
+    return NS_OK;
   }
-  ////// UGLY kluge until I decide how cert->GetCert() will work
-  PRUnichar *wnn;
-  cert->GetNickname(&wnn);
-  char *nickname = PL_strdup(NS_ConvertUCS2toUTF8(wnn).get()); 
-  CERTCertificate *nsscert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
-                                                     nickname);
-  if (!nsscert) {
-    return NS_ERROR_FAILURE;
-  }
-  ////// end of kluge
-  // always start with untrusted and move up
-  trust.SetValidCA();
-  trust.AddCATrust(trusted & nsIX509CertDB::TRUSTED_SSL,
-                   trusted & nsIX509CertDB::TRUSTED_EMAIL,
-                   trusted & nsIX509CertDB::TRUSTED_OBJSIGN);
-  srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
-                             nsscert,
-                             trust.GetTrust());
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 /*
  * boolean getCertTrust(in nsIX509Cert cert,
+ *                      in unsigned long certType,
  *                      in unsigned long trustType);
  */
 NS_IMETHODIMP 
 nsNSSCertificateDB::GetCertTrust(nsIX509Cert *cert, 
+                                 PRUint32 certType,
                                  PRUint32 trustType,
                                  PRBool *_isTrusted)
 {
   SECStatus srv;
-  ////// UGLY kluge until I decide how cert->GetCert() will work
-  PRUnichar *wnn;
-  cert->GetNickname(&wnn);
-  char *nickname = PL_strdup(NS_ConvertUCS2toUTF8(wnn).get()); 
-  CERTCertificate *nsscert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
-                                                     nickname);
-  if (!nsscert) {
-    return NS_ERROR_FAILURE;
-  }
-  ////// end of kluge
+  nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
+  CERTCertificate *nsscert = pipCert->GetCert();
   CERTCertTrust nsstrust;
   srv = CERT_GetCertTrust(nsscert, &nsstrust);
   nsNSSCertTrust trust(&nsstrust);
-  if (trustType & nsIX509CertDB::TRUSTED_SSL) {
-    *_isTrusted = trust.HasTrustedCA(PR_TRUE, PR_FALSE, PR_FALSE);
-  } else if (trustType & nsIX509CertDB::TRUSTED_EMAIL) {
-    *_isTrusted = trust.HasTrustedCA(PR_FALSE, PR_TRUE, PR_FALSE);
-  } else if (trustType & nsIX509CertDB::TRUSTED_OBJSIGN) {
-    *_isTrusted = trust.HasTrustedCA(PR_FALSE, PR_FALSE, PR_TRUE);
-  } else {
-    return NS_ERROR_FAILURE;
-  }
+  if (certType == nsIX509Cert::CA_CERT) {
+    if (trustType & nsIX509CertDB::TRUSTED_SSL) {
+      *_isTrusted = trust.HasTrustedCA(PR_TRUE, PR_FALSE, PR_FALSE);
+    } else if (trustType & nsIX509CertDB::TRUSTED_EMAIL) {
+      *_isTrusted = trust.HasTrustedCA(PR_FALSE, PR_TRUE, PR_FALSE);
+    } else if (trustType & nsIX509CertDB::TRUSTED_OBJSIGN) {
+      *_isTrusted = trust.HasTrustedCA(PR_FALSE, PR_FALSE, PR_TRUE);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  } else if (certType == nsIX509Cert::SERVER_CERT) {
+    if (trustType & nsIX509CertDB::TRUSTED_SSL) {
+      *_isTrusted = trust.HasTrustedPeer(PR_TRUE, PR_FALSE, PR_FALSE);
+    } else if (trustType & nsIX509CertDB::TRUSTED_EMAIL) {
+      *_isTrusted = trust.HasTrustedPeer(PR_FALSE, PR_TRUE, PR_FALSE);
+    } else if (trustType & nsIX509CertDB::TRUSTED_OBJSIGN) {
+      *_isTrusted = trust.HasTrustedPeer(PR_FALSE, PR_FALSE, PR_TRUE);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  } /* user or email, ignore */
   return NS_OK;
 }
 

@@ -40,26 +40,33 @@ function setWindowName()
   //cert = isupport.QueryInterface(nsIX509Cert);
   cert = certdb.getCertByDBKey(dbkey, null);
 
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var windowReference = document.getElementById('editCert');
-  windowReference.setAttribute("title", cert.commonName);
+  windowReference.setAttribute("title", 
+                             bundle.GetStringFromName("editTrustWindowTitle")); 
 
-  var certname = document.getElementById("certname");
-  certname.setAttribute("value", cert.commonName);
+  var message1 = bundle.formatStringFromName("editTrustCA",
+                                             [ cert.commonName ],
+                                             1);
+  setText("certmsg", message1);
 
   var ssl = document.getElementById("trustSSL");
-  if (certdb.getCertTrust(cert, 1)) {
+  if (certdb.getCertTrust(cert, nsIX509Cert.CA_CERT, 
+                          nsIX509CertDB.TRUSTED_SSL)) {
     ssl.setAttribute("checked", "true");
   } else {
     ssl.setAttribute("checked", "false");
   }
   var email = document.getElementById("trustEmail");
-  if (certdb.getCertTrust(cert, 2)) {
+  if (certdb.getCertTrust(cert, nsIX509Cert.CA_CERT, 
+                          nsIX509CertDB.TRUSTED_EMAIL)) {
     email.setAttribute("checked", "true");
   } else {
     email.setAttribute("checked", "false");
   }
   var objsign = document.getElementById("trustObjSign");
-  if (certdb.getCertTrust(cert, 4)) {
+  if (certdb.getCertTrust(cert, nsIX509Cert.CA_CERT,  
+                          nsIX509CertDB.TRUSTED_OBJSIGN)) {
     objsign.setAttribute("checked", "true");
   } else {
     objsign.setAttribute("checked", "false");
@@ -71,13 +78,56 @@ function doOK()
   var ssl = document.getElementById("trustSSL");
   var email = document.getElementById("trustEmail");
   var objsign = document.getElementById("trustObjSign");
-  // clean this up
-  var trustssl = (ssl.checked) ? 1 : 0;
-  var trustemail = (email.checked) ? 2 : 0;
-  var trustobjsign = (objsign.checked) ? 4 : 0;
+  var trustssl = (ssl.checked) ? nsIX509CertDB.TRUSTED_SSL : 0;
+  var trustemail = (email.checked) ? nsIX509CertDB.TRUSTED_EMAIL : 0;
+  var trustobjsign = (objsign.checked) ? nsIX509CertDB.TRUSTED_OBJSIGN : 0;
   //
   //  Set the cert trust
   //
-  certdb.setCertTrust(cert, 1, trustssl | trustemail | trustobjsign);
+  certdb.setCertTrust(cert, nsIX509Cert.CA_CERT, 
+                      trustssl | trustemail | trustobjsign);
+  window.close();
+}
+
+function doLoadForSSLCert()
+{
+  var dbkey = self.name;
+
+  //  Get the cert from the cert database
+  certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+  cert = certdb.getCertByDBKey(dbkey, null);
+
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var windowReference = document.getElementById('editSSLCert');
+  windowReference.setAttribute("title", 
+                             bundle.GetStringFromName("editTrustWindowTitle")); 
+
+  var message1 = bundle.formatStringFromName("editTrustSSL",
+                                             [ cert.commonName ],
+                                             1);
+  setText("certmsg", message1);
+
+  setText("issuer", cert.issuerName);
+
+  var trustssl = document.getElementById("trustSSLCert");
+  var notrustssl = document.getElementById("dontTrustSSLCert");
+  if (certdb.getCertTrust(cert, nsIX509Cert.SERVER_CERT, 
+                          nsIX509CertDB.TRUSTED_SSL)) {
+    trustssl.setAttribute("checked", "true");
+  } else {
+    notrustssl.setAttribute("checked", "true");
+  }
+}
+
+function doSSLOK()
+{
+  var ssl = document.getElementById("trustSSLCert");
+  //var checked = ssl.getAttribute("value");
+  var checked = ssl.getAttribute("checked");
+  var trustssl = (checked == "true") ? nsIX509CertDB.TRUSTED_SSL : 0;
+  //
+  //  Set the cert trust
+  //
+  certdb.setCertTrust(cert, nsIX509Cert.SERVER_CERT, trustssl);
   window.close();
 }
