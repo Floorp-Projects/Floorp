@@ -196,7 +196,7 @@ protected:
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
     void GetNonClientBounds(nsRect &aRect);
-	void HandleTextEvent(void);
+	void HandleTextEvent(HIMC hIMEContext);
 	void HandleStartComposition(void);
 	void HandleEndComposition(void);
 	void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
