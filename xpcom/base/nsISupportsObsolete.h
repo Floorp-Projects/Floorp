@@ -295,6 +295,10 @@ NS_IMPL_SETTER_STR(_class::Set##_postfix, _member)
 #define NS_VERIFY_THREADSAFE_INTERFACE(_iface)
 #endif
 
+#define NS_IMPL_THREADSAFE_ISUPPORTS(_class,_classiiddef)                     \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)
 
 /*
  The following macro is deprecated.  We need to switch all instances

@@ -571,11 +571,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
  * for the class (e.g. NS_ISUPPORTS_IID)
  */
 
-#define NS_IMPL_THREADSAFE_ISUPPORTS(_class,_classiiddef)                     \
-  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
-  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)
-
 #define NS_IMPL_THREADSAFE_ADDREF(_class)  NS_IMPL_ADDREF(_class)
 
 #define NS_IMPL_THREADSAFE_RELEASE(_class) NS_IMPL_RELEASE(_class)
