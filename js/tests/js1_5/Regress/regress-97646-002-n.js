@@ -17,22 +17,23 @@
 * All Rights Reserved.
 *
 * Contributor(s): pschwartau@netscape.com
-* Date: 2001-07-12
+* Date: 30 August 2001
 *
-* SUMMARY: Regression test for bug 90445
+* SUMMARY: Regression test for bug 97646
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=97646
+*
+* (This script originally arose from bug 90445)
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=90445
-* 
-* Just seeing if this script will compile without crashing.
 */
-//-------------------------------------------------------------------------------------------------
-var bug = 90445;
-var summary = 'Testing this script will compile without crashing';
+//-----------------------------------------------------------------------------
+var bug = 97646;
+var summary = 'We should get a non-0 exit code if block is too large';
 
 printBugNumber (bug);
 printStatus (summary);
 
 
-// The big function - 
+// The big function -
 function compte() {
     var mois = getValueFromOption(document.formtest.mois);
     var region = document.formtest.region.options.selectedIndex;
