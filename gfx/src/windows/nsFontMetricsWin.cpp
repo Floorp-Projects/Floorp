@@ -147,6 +147,7 @@ static nsISaveAsCharset* gFontSubstituteConverter = nsnull;
 static nsIPref* gPref = nsnull;
 
 static nsIAtom* gUsersLocale = nsnull;
+static nsIAtom* gSystemLocale = nsnull;
 static nsIAtom* gUserDefined = nsnull;
 static nsIAtom* gJA = nsnull;
 static nsIAtom* gKO = nsnull;
@@ -197,6 +198,7 @@ FreeGlobals(void)
   NS_IF_RELEASE(gCharsetManager);
   NS_IF_RELEASE(gPref);
   NS_IF_RELEASE(gUsersLocale);
+  NS_IF_RELEASE(gSystemLocale);
   NS_IF_RELEASE(gUserDefined);
   NS_IF_RELEASE(gUserDefinedConverter);
   if (gUserDefinedCCMap)
@@ -317,6 +319,20 @@ InitGlobals(void)
   if (!gUsersLocale) {
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  if (!gSystemLocale) {
+    UINT cp= ::GetACP();
+    for (int i = 1; i < eCharset_COUNT; ++i) {
+      if (gCharsetInfo[i].mCodePage == cp) {
+        gSystemLocale = NS_NewAtom(gCharsetInfo[i].mLangGroup);
+        break;
+      }
+    }
+  }
+  if (!gSystemLocale) {
+    gSystemLocale = gUsersLocale;
+    NS_ADDREF(gSystemLocale);
   }
 
   gUserDefined = NS_NewAtom(USER_DEFINED);
@@ -2849,6 +2865,41 @@ GenericFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void* aData)
  _pref.Assign(_s0); \
  _pref.Append(_s1);
 
+static void 
+AppendGenericFontFromPref(nsString& aFontname,
+                          const char* aLangGroup,
+                          const char* aGeneric)
+{
+  nsresult res;
+  nsCAutoString pref;
+  nsXPIDLString value;
+  nsCAutoString generic_dot_langGroup;
+
+  generic_dot_langGroup.Assign(aGeneric);
+  generic_dot_langGroup.Append('.');
+  generic_dot_langGroup.Append(aLangGroup);
+
+  // font.name.[generic].[langGroup]
+  // the current user' selected font, it gives the first preferred font
+  MAKE_FONT_PREF_KEY(pref, "font.name.", generic_dot_langGroup);
+  res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
+  if (NS_SUCCEEDED(res)) {
+    if(aFontname.Length() > 0)
+      aFontname.Append((PRUnichar)',');
+    aFontname.Append(value);
+  }
+
+  // font.name-list.[generic].[langGroup]
+  // the pre-built list of default fonts, it gives alternative fonts
+  MAKE_FONT_PREF_KEY(pref, "font.name-list.", generic_dot_langGroup);
+  res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
+  if (NS_SUCCEEDED(res)) {
+    if(aFontname.Length() > 0)
+      aFontname.Append((PRUnichar)',');
+    aFontname.Append(value);
+  }
+}
+
 nsFontWin*
 nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
 {
@@ -2857,68 +2908,18 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
     return nsnull;
   }
 
-  nsAutoString langGroup;
-  nsCAutoString generic_dot_langGroup;
-
   // This is a nifty hook that we will use to just iterate over
   // the list of names using the callback mechanism of nsFont...
   nsFont font("", 0, 0, 0, 0, 0);
-
-  nsresult res;
   nsCAutoString pref;
   nsXPIDLString value;
 
-  // Get the fonts in the element's language group  
-  // . font.name.[generic].[langGroup]
-  // . font.name-list.[generic].[langGroup]
-
   if (mLangGroup) {
+    nsAutoString langGroup;
     mLangGroup->ToString(langGroup);
-    generic_dot_langGroup.Assign(NS_ConvertUCS2toUTF8(mGeneric));
-    generic_dot_langGroup.Append('.');
-    generic_dot_langGroup.Append(NS_ConvertUCS2toUTF8(langGroup));
-
-    // font.name.[generic].[langGroup]
-    // the current user' selected font, it gives the first preferred font
-    MAKE_FONT_PREF_KEY(pref, "font.name.", generic_dot_langGroup);
-    res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
-    if (NS_SUCCEEDED(res)) {
-      font.name.Assign(value);
-    }
-
-    // font.name-list.[generic].[langGroup]
-    // the pre-built list of default fonts, it gives alternative fonts
-    MAKE_FONT_PREF_KEY(pref, "font.name-list.", generic_dot_langGroup);
-    res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
-    if (NS_SUCCEEDED(res)) {
-      font.name.Append((PRUnichar)',');
-      font.name.Append(value);
-    }
-  }
-
-  // Get extra alternative fonts in the user's locale's language group
-  // . font.name.[generic].[locale's langGroup]
-  // . font.name-list.[generic].[locale's langGroup]
-
-  if (gUsersLocale != mLangGroup) {
-    gUsersLocale->ToString(langGroup);
-    generic_dot_langGroup.Assign(NS_ConvertUCS2toUTF8(mGeneric));
-    generic_dot_langGroup.Append('.');
-    generic_dot_langGroup.Append(NS_ConvertUCS2toUTF8(langGroup));
-
-    MAKE_FONT_PREF_KEY(pref, "font.name.", generic_dot_langGroup);
-    res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
-    if (NS_SUCCEEDED(res)) {
-      font.name.Append((PRUnichar)',');
-      font.name.Append(value);
-    }
-
-    MAKE_FONT_PREF_KEY(pref, "font.name-list.", generic_dot_langGroup);
-    res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
-    if (NS_SUCCEEDED(res)) {
-      font.name.Append((PRUnichar)',');
-      font.name.Append(value);
-    }
+    AppendGenericFontFromPref(font.name, 
+                              NS_ConvertUCS2toUTF8(langGroup).get(), 
+                              NS_ConvertUCS2toUTF8(mGeneric).get());
   }
 
   // Iterate over the list of names using the callback mechanism of nsFont...
@@ -2929,7 +2930,9 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
   }
 
 #if defined(DEBUG_rbs) || defined(DEBUG_shanjian)
-  nsCAutoString lang; lang.Assign(NS_ConvertUCS2toUTF8(langGroup));
+  nsAutoString langGroupName;
+  mLangGroup->ToString(langGroupName);
+  nsCAutoString lang; lang.Assign(NS_ConvertUCS2toUTF8(langGroupName));
   nsCAutoString generic; generic.Assign(NS_ConvertUCS2toUTF8(mGeneric));
   nsCAutoString family; family.Assign(NS_ConvertUCS2toUTF8(mFont.name));
   printf("FindGenericFont missed:U+%04X langGroup:%s generic:%s mFont.name:%s\n", 
@@ -2937,6 +2940,54 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
 #endif
 
   mTriedAllGenerics = 1;
+  return nsnull;
+}
+
+nsFontWin*
+nsFontMetricsWin::FindPrefFont(HDC aDC, PRUnichar aChar)
+{
+  if (mTriedAllPref) {
+    // don't bother anymore because mLoadedFonts[] already has all our pref fonts
+    return nsnull;
+  }
+  nsFont font("", 0, 0, 0, 0, 0);
+  // Try the pref of the user's ui lang group
+  // For example, if the ui language is Japanese, try pref from "ja"
+  // Make localized build work better on other OS
+  if (gUsersLocale != mLangGroup) {
+    nsAutoString langGroup;
+    gUsersLocale->ToString(langGroup);
+    AppendGenericFontFromPref(font.name, 
+                              NS_ConvertUCS2toUTF8(langGroup).get(), 
+                              NS_ConvertUCS2toUTF8(mGeneric).get());
+  }
+  // Try the pref of the user's system lang group
+  // For example, if the os language is Simplified Chinese, 
+  // try pref from "zh-CN"
+  // Make English build work better on other OS
+  if ((gSystemLocale != mLangGroup) && (gSystemLocale != gUsersLocale)) {
+    nsAutoString langGroup;
+    gSystemLocale->ToString(langGroup);
+    AppendGenericFontFromPref(font.name, 
+                              NS_ConvertUCS2toUTF8(langGroup).get(), 
+                              NS_ConvertUCS2toUTF8(mGeneric).get());
+  }
+
+  // Also try all the default pref fonts enlisted from other languages
+  for (int i = 1; i < eCharset_COUNT; ++i) {
+    nsIAtom* langGroup = NS_NewAtom(gCharsetInfo[i].mLangGroup); 
+    if((gUsersLocale != langGroup) && (gSystemLocale != langGroup)) {
+      AppendGenericFontFromPref(font.name, gCharsetInfo[i].mLangGroup, 
+                                NS_ConvertUCS2toUTF8(mGeneric).get());
+    }
+    NS_IF_RELEASE(langGroup);
+  }
+  GenericFontEnumContext context = {aDC, aChar, nsnull, this};
+  font.EnumerateFamilies(GenericFontEnumCallback, &context);
+  if (context.mFont) { // a suitable font was found
+    return context.mFont;
+  }
+  mTriedAllPref = 1;
   return nsnull;
 }
 
@@ -2949,9 +3000,12 @@ nsFontMetricsWin::FindFont(HDC aDC, PRUnichar aChar)
     if (!font) {
       font = FindGenericFont(aDC, aChar);
       if (!font) {
-        font = FindGlobalFont(aDC, aChar);
+        font = FindPrefFont(aDC, aChar);
         if (!font) {
-          font = FindSubstituteFont(aDC, aChar);
+          font = FindGlobalFont(aDC, aChar);
+          if (!font) {
+            font = FindSubstituteFont(aDC, aChar);
+          }
         }
       }
     }

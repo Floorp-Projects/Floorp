@@ -221,6 +221,7 @@ public:
   virtual nsFontWin* FindUserDefinedFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* FindGenericFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindPrefFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
 
@@ -243,6 +244,7 @@ public:
   nsString            mUserDefined;
 
   PRBool              mTriedAllGenerics;
+  PRBool              mTriedAllPref;
   PRBool              mIsUserDefined;
 
   static PRUint16*    gEmptyCCMap;
