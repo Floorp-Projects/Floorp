@@ -94,8 +94,8 @@ NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
       }
       else if (NS_LITERAL_STRING(NS_NET_PREF_IDNPREFIX).Equals(aData)) {
         nsXPIDLCString prefix;
-        if (NS_SUCCEEDED(prefBranch->GetCharPref(NS_NET_PREF_IDNPREFIX, getter_Copies(prefix))) &&
-            prefix.Length() <= kACEPrefixLen)
+        nsresult rv = prefBranch->GetCharPref(NS_NET_PREF_IDNPREFIX, getter_Copies(prefix));
+        if (NS_SUCCEEDED(rv) && prefix.Length() <= kACEPrefixLen)
           PL_strncpyz(nsIDNService::mACEPrefix, prefix.get(), kACEPrefixLen + 1);
       }
     }

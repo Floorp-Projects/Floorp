@@ -2142,8 +2142,10 @@ nsNativeAppSupportOS2::EnsureProfile(nsICmdLineService* args)
   // See if profile manager is being suppressed via -silent flag.
   PRBool canInteract = PR_TRUE;
   nsXPIDLCString arg;
-  if (NS_SUCCEEDED(args->GetCmdLineValue("-silent", getter_Copies(arg))) && (const char*)arg) {
-    canInteract = PR_FALSE;
+  if (NS_SUCCEEDED(args->GetCmdLineValue("-silent", getter_Copies(arg)))) {
+    if ((const char*)arg) {
+      canInteract = PR_FALSE;
+    }
   }
   rv = appShell->DoProfileStartup(args, canInteract);
 

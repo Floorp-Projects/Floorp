@@ -921,8 +921,10 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
     // If we were launched with -silent, we cannot show UI, either.
     if (shouldShowUI) {
       nsXPIDLCString arg;
-      if (NS_SUCCEEDED(cmdLineArgs->GetCmdLineValue("-silent", getter_Copies(arg))) && (const char*)arg) {
-        shouldShowUI = PR_FALSE;
+      if (NS_SUCCEEDED(cmdLineArgs->GetCmdLineValue("-silent", getter_Copies(arg)))) {
+        if ((const char*)arg) {
+          shouldShowUI = PR_FALSE;
+        }
       }
     }
     nsresult rv;

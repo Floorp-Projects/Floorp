@@ -1698,8 +1698,8 @@ nsBookmarksService::Init()
         // determine what the name of the Personal Toolbar Folder is...
         // first from user preference, then string bundle, then hard-coded default
         nsXPIDLCString prefValue;
-        if (NS_SUCCEEDED(rv = prefBranch->GetCharPref("custtoolbar.personal_toolbar_folder", getter_Copies(prefValue))
-            && !prefValue.IsEmpty()))
+        rv = prefBranch->GetCharPref("custtoolbar.personal_toolbar_folder", getter_Copies(prefValue));
+        if (NS_SUCCEEDED(rv) && !prefValue.IsEmpty())
         {
             CopyUTF8toUTF16(prefValue, mPersonalToolbarName);
         }
