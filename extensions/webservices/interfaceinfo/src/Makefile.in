@@ -49,7 +49,6 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 	nsGenericInterfaceInfoSet.cpp	\
 	nsScriptableInterfaceInfo.cpp	\
-	iixmodule.cpp	\
 	$(NULL)
 
 EXTRA_COMPONENTS = nsInterfaceInfoToIDL.js

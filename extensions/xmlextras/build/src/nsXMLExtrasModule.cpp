@@ -69,7 +69,7 @@
 #include "nsWSDLPrivate.h"
 #include "wspprivate.h"
 
-
+#include "iixprivate.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -79,6 +79,8 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGenericInterfaceInfoSet)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableInterfaceInfo)
 
 NS_DECL_DOM_CLASSINFO(XMLSerializer)
 NS_DECL_DOM_CLASSINFO(XMLHttpRequest)
@@ -183,6 +185,16 @@ NS_DECL_CLASSINFO(WSPFactory)
 #define NS_WSP_INTERFACE_INFO_SERVICE_CID           \
  {0x79998de9, 0x1e34, 0x45e0,                       \
  { 0xa5, 0x87, 0xf9, 0xcc, 0xc8, 0xdb, 0x0, 0xdd } }
+
+// {B404670D-1EB1-4af8-86E5-FB3E9C4ECC4B}
+#define NS_GENERIC_INTERFACE_INFO_SET_CID  \
+  { 0xb404670d, 0x1eb1, 0x4af8,            \
+    { 0x86, 0xe5, 0xfb, 0x3e, 0x9c, 0x4e, 0xcc, 0x4b } }
+
+// {ED150A6A-4592-4e2c-82F8-70C8D65F74D2}
+#define NS_SCRIPTABLE_INTERFACE_INFO_CID  \
+  { 0xed150a6a, 0x4592, 0x4e2c,           \
+    { 0x82, 0xf8, 0x70, 0xc8, 0xd6, 0x5f, 0x74, 0xd2 } }
 
 class nsXMLExtrasNameset : public nsISupports
 {
@@ -620,7 +632,17 @@ static const nsModuleComponentInfo components[] = {
   { "WSPFactory", NS_WEBSERVICEPROXYFACTORY_CLASSID, 
     NS_WEBSERVICEPROXYFACTORY_CONTRACTID, WSPFactoryConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(WSPFactory), nsnull, 
-    &NS_CLASSINFO_NAME(WSPFactory), nsIClassInfo::DOM_OBJECT }
+    &NS_CLASSINFO_NAME(WSPFactory), nsIClassInfo::DOM_OBJECT },
+  { "InterfaceInfo", 
+    NS_GENERIC_INTERFACE_INFO_SET_CID, 
+    NS_GENERIC_INTERFACE_INFO_SET_CONTRACTID, 
+    nsGenericInterfaceInfoSetConstructor
+  },
+  { "ScriptableInterfaceInfo", 
+    NS_SCRIPTABLE_INTERFACE_INFO_CID, 
+    NS_SCRIPTABLE_INTERFACE_INFO_CONTRACTID, 
+    nsScriptableInterfaceInfoConstructor
+  }
 };
 
 void PR_CALLBACK
