@@ -77,11 +77,12 @@ then
     if [ "$os_full" = "SOLARISx86 2.8" -o "$os_full" = "SOLARISx86 2.9" ] 
     then
         PATH=/usr/ucb:/opt/usr/local/bin:$PATH
+        JAVA_HOME="/usr/java1.2"
     else
         PATH=/usr/ucb:$PATH
+        JAVA_HOME="/share/builds/components/jdk/1.2.2/SunOS"
     fi
     export XAPPLRESDIR  OPENWINHOME LD_LIBRARY_PATH
-    JAVA_HOME="/share/builds/components/jdk/1.2.2/SunOS"
 
 elif [ "$os_name" = "IRIX" ]
 then

@@ -42,7 +42,7 @@ if [ -z "$O_TBX" -o "$O_TBX" != "ON" ] ; then
 fi
 
 INTERNAL_TOKEN="NSS Certificate DB"
-#INTERNAL_TOKEN="Internal Key Storage Token"
+SIGTEST_INTERNAL_TOKEN="Internal Key Storage Token"
 
 ################################ jss_init #########################
 # 
@@ -63,6 +63,7 @@ jss_init()
   NTDIST=`echo $NTDIST | sed -e 's/nss/jss/g'`
   UXDIST=`echo $UXDIST | sed -e 's/nss/jss/g'`
   RESULTDIR=`echo $RESULTDIR | sed -e 's/nss/jss/g'`
+  mkdir -p ${RESULTDIR} 2>/dev/null
   JSS_LOGFILE=${RESULTDIR}/${HOST}.txt
   FILENAME=$JSS_LOGFILE
   O_FILE=ON
@@ -163,14 +164,14 @@ jss_test()
   Debug "Cleaning  $JSS_SAMPLES"
   rm cert7.db key3.db 2>/dev/null
 
-  Debug "modutil -dbdir . -create"
-  echo | modutil -dbdir . -create
+  Debug "echo | modutil -dbdir . -create -force"
+  echo | modutil -dbdir . -create -force
   Debug "modutil returned $?"
 
   modutil -dbdir . -list
 
-  Debug "echo | modutil -dbdir . -changepw \"$INTERNAL_TOKEN\" -newpwfile $PWFILE "
-  modutil -dbdir . -changepw "$INTERNAL_TOKEN" -newpwfile $PWFILE <$EMPTYFILE
+  Debug "echo | modutil -dbdir . -changepw \"$INTERNAL_TOKEN\" -newpwfile $PWFILE -force"
+  modutil -dbdir . -changepw "$INTERNAL_TOKEN" -newpwfile $PWFILE  -force <$EMPTYFILE
   #modutil -dbdir . -changepw "$INTERNAL_TOKEN" -pwfile $PWFILE -newpwfile $PWFILE <$EMPTYFILE
   Debug "modutil returned $?"
 
@@ -184,30 +185,23 @@ jss_test()
           
   echo "Starting new jss test on $HOST"  
   date
-          #script <platform>.txt
-           # 
-#9. Run the tests
 
-    Debug "$JAVA $NATIVE_FLAG TestKeyGen ." 
-    $JAVA $NATIVE_FLAG TestKeyGen . 
-    #$JAVA $NATIVE_FLAG TestKeyGen . >>$JSS_LOGFILE 2>&1
-    Debug "$JAVA TestKeyGen returned $?"
+  # Run the actual tests
 
-    Debug "$JAVA $NATIVE_FLAG SigTest . \"$INTERNAL_TOKEN\""
-    $JAVA $NATIVE_FLAG SigTest . "$INTERNAL_TOKEN"
-    #$JAVA $NATIVE_FLAG SigTest . "$INTERNAL_TOKEN" >>$JSS_LOGFILE 2>&1
-    Debug "$JAVA SigTest returned $?"
-       #java TestKeyGen [... test will run interactively ...]
-       #javac SigTest [... test will run interactively ...]
-             # 
-#10. Stop the logging.
-       #exit
+  Debug "$JAVA $NATIVE_FLAG TestKeyGen ." 
+  $JAVA $NATIVE_FLAG TestKeyGen . 
+  Debug "$JAVA TestKeyGen returned $?"
+
+  Debug "$JAVA $NATIVE_FLAG SigTest . \"$SIGTEST_INTERNAL_TOKEN\""
+  $JAVA $NATIVE_FLAG SigTest . "$SIGTEST_INTERNAL_TOKEN"
+  Debug "$JAVA SigTest returned $?"
+
   O_FILE=ON
 }
 
 jss_init
 jss_mode_init
-if [ -z "O_CRON" -o "$O_CRON" != "ON" ]
+if [ -z "O_CRON" -o "$O_CRON" != "ON" -a  "$O_WIN" != "ON" ]
 then
     tail -f ${JSS_LOGFILE}  &
     TAILPID=$!
@@ -217,4 +211,5 @@ jss_test >>$JSS_LOGFILE  2>&1
 BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
 jss_mode_init
 jss_test >>$JSS_LOGFILE  2>&1
+kill $TAILPID
 Exit "jssqa completed. Done `uname -n` $QA_OS_STRING"
