@@ -47,8 +47,8 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #endif
 
 #ifdef WIN32
-#define snprintf	_snprintf
-#define strcasecmp	stricmp
+#define snprintf   _snprintf
+#define strcasecmp stricmp
 #endif
 
 #include "vobject.h"

@@ -85,6 +85,10 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\caldate.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\icalarray.c
 # End Source File
 # Begin Source File
@@ -207,6 +211,10 @@ SOURCE=sspm.c
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\astime.h
+# End Source File
 # Begin Source File
 
 SOURCE=ical.h

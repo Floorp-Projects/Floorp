@@ -3,7 +3,7 @@
   FILE: icaltypes.c
   CREATOR: eric 16 May 1999
   
-  $Id: icaltypes.c,v 1.3 2001/12/21 18:56:27 mikep%oeone.com Exp $
+  $Id: icaltypes.c,v 1.4 2002/03/14 15:17:52 mikep%oeone.com Exp $
   $Locker:  $
     
 

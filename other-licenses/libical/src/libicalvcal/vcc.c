@@ -23,11 +23,6 @@
 #define	ID	273
 #define	STRING	274
 
-#ifdef WIN32
-#define snprintf	_snprintf
-#define strcasecmp	stricmp
-#endif
-
 #line 1 "vcc.y"
 
 
@@ -85,6 +80,11 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #define DBG_(x) printf x
 #else
 #define DBG_(x)
+#endif
+
+#ifdef WIN32
+#define snprintf   _snprintf
+#define strcasecmp stricmp
 #endif
 
 /****  External Functions  ****/
@@ -201,7 +201,7 @@ static void enterValues(const char *value);
 static void mime_error_(char *s);
 
 
-#line 178 "vcc.y"
+#line 183 "vcc.y"
 typedef union {
     char *str;
     VObject *vobj;
@@ -281,11 +281,11 @@ static const short yyrhs[] = {    22,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-   206,   209,   212,   212,   216,   217,   220,   226,   231,   237,
-   243,   244,   247,   251,   257,   260,   265,   265,   271,   272,
-   275,   278,   282,   289,   292,   293,   293,   297,   298,   301,
-   305,   307,   310,   313,   314,   317,   319,   320,   323,   330,
-   335,   341,   347,   354,   359,   365
+   211,   214,   217,   217,   221,   222,   225,   231,   236,   242,
+   248,   249,   252,   256,   262,   265,   270,   270,   276,   277,
+   280,   283,   287,   294,   297,   298,   298,   302,   303,   306,
+   310,   312,   315,   318,   319,   322,   324,   325,   328,   335,
+   340,   346,   352,   359,   364,   370
 };
 #endif
 
@@ -915,49 +915,49 @@ yyreduce:
   switch (yyn) {
 
 case 2:
-#line 210 "vcc.y"
+#line 215 "vcc.y"
 { addList(&vObjList, yyvsp[0].vobj); curObj = 0; ;
     break;}
 case 4:
-#line 213 "vcc.y"
+#line 218 "vcc.y"
 { addList(&vObjList, yyvsp[0].vobj); curObj = 0; ;
     break;}
 case 7:
-#line 222 "vcc.y"
+#line 227 "vcc.y"
 {
 	lexPushMode(L_VCARD);
 	if (!pushVObject(VCCardProp)) YYERROR;
 	;
     break;}
 case 8:
-#line 227 "vcc.y"
+#line 232 "vcc.y"
 {
 	lexPopMode(0);
 	yyval.vobj = popVObject();
 	;
     break;}
 case 9:
-#line 232 "vcc.y"
+#line 237 "vcc.y"
 {
 	lexPushMode(L_VCARD);
 	if (!pushVObject(VCCardProp)) YYERROR;
 	;
     break;}
 case 10:
-#line 237 "vcc.y"
+#line 242 "vcc.y"
 {
 	lexPopMode(0);
 	yyval.vobj = popVObject();
 	;
     break;}
 case 13:
-#line 248 "vcc.y"
+#line 253 "vcc.y"
 {
 	lexPushMode(L_VALUES);
 	;
     break;}
 case 14:
-#line 252 "vcc.y"
+#line 257 "vcc.y"
 {
 	if (lexWithinMode(L_BASE64) || lexWithinMode(L_QUOTED_PRINTABLE))
 	   lexPopMode(0);
@@ -965,109 +965,109 @@ case 14:
 	;
     break;}
 case 16:
-#line 261 "vcc.y"
-{
-	enterProps(yyvsp[0].str);
-	;
-    break;}
-case 18:
 #line 266 "vcc.y"
 {
 	enterProps(yyvsp[0].str);
 	;
     break;}
+case 18:
+#line 271 "vcc.y"
+{
+	enterProps(yyvsp[0].str);
+	;
+    break;}
 case 22:
-#line 279 "vcc.y"
+#line 284 "vcc.y"
 {
 	enterAttr(yyvsp[0].str,0);
 	;
     break;}
 case 23:
-#line 283 "vcc.y"
+#line 288 "vcc.y"
 {
 	enterAttr(yyvsp[-2].str,yyvsp[0].str);
 
 	;
     break;}
 case 25:
-#line 292 "vcc.y"
+#line 297 "vcc.y"
 { enterValues(yyvsp[-1].str); ;
     break;}
 case 27:
-#line 294 "vcc.y"
+#line 299 "vcc.y"
 { enterValues(yyvsp[0].str); ;
     break;}
 case 29:
-#line 298 "vcc.y"
+#line 303 "vcc.y"
 { yyval.str = 0; ;
     break;}
 case 30:
-#line 303 "vcc.y"
-{ if (!pushVObject(VCCalProp)) YYERROR; ;
-    break;}
-case 31:
-#line 306 "vcc.y"
-{ yyval.vobj = popVObject(); ;
-    break;}
-case 32:
 #line 308 "vcc.y"
 { if (!pushVObject(VCCalProp)) YYERROR; ;
     break;}
+case 31:
+#line 311 "vcc.y"
+{ yyval.vobj = popVObject(); ;
+    break;}
+case 32:
+#line 313 "vcc.y"
+{ if (!pushVObject(VCCalProp)) YYERROR; ;
+    break;}
 case 33:
-#line 310 "vcc.y"
+#line 315 "vcc.y"
 { yyval.vobj = popVObject(); ;
     break;}
 case 39:
-#line 325 "vcc.y"
+#line 330 "vcc.y"
 {
 	lexPushMode(L_VEVENT);
 	if (!pushVObject(VCEventProp)) YYERROR;
 	;
     break;}
 case 40:
-#line 331 "vcc.y"
+#line 336 "vcc.y"
 {
 	lexPopMode(0);
 	popVObject();
 	;
     break;}
 case 41:
-#line 336 "vcc.y"
+#line 341 "vcc.y"
 {
 	lexPushMode(L_VEVENT);
 	if (!pushVObject(VCEventProp)) YYERROR;
 	;
     break;}
 case 42:
-#line 341 "vcc.y"
+#line 346 "vcc.y"
 {
 	lexPopMode(0);
 	popVObject();
 	;
     break;}
 case 43:
-#line 349 "vcc.y"
+#line 354 "vcc.y"
 {
 	lexPushMode(L_VTODO);
 	if (!pushVObject(VCTodoProp)) YYERROR;
 	;
     break;}
 case 44:
-#line 355 "vcc.y"
+#line 360 "vcc.y"
 {
 	lexPopMode(0);
 	popVObject();
 	;
     break;}
 case 45:
-#line 360 "vcc.y"
+#line 365 "vcc.y"
 {
 	lexPushMode(L_VTODO);
 	if (!pushVObject(VCTodoProp)) YYERROR;
 	;
     break;}
 case 46:
-#line 365 "vcc.y"
+#line 370 "vcc.y"
 {
 	lexPopMode(0);
 	popVObject();
@@ -1295,7 +1295,7 @@ yyerrhandle:
     }
   return 1;
 }
-#line 371 "vcc.y"
+#line 376 "vcc.y"
 
 static int pushVObject(const char *prop)
     {

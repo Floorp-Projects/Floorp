@@ -3,7 +3,7 @@
   FILE: icalperiod.c
   CREATOR: eric 02 June 2000
   
-  $Id: icalperiod.c,v 1.2 2001/12/21 18:56:23 mikep%oeone.com Exp $
+  $Id: icalperiod.c,v 1.3 2002/03/14 15:17:52 mikep%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org

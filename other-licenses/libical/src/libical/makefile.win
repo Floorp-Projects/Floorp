@@ -210,6 +210,7 @@ LIBICAL_OBJS=	.\$(OBJDIR)\icalarray.obj \
 		.\$(OBJDIR)\icalyacc.obj \
 		.\$(OBJDIR)\pvl.obj \
 		.\$(OBJDIR)\sspm.obj \
+		.\$(OBJDIR)\caldate.obj \
 		  $(NULL)
 
 

@@ -2,7 +2,7 @@
   FILE: icalvcal.c
   CREATOR: eric 25 May 00
   
-  $Id: icalvcal.c,v 1.3 2001/12/21 18:56:46 mikep%oeone.com Exp $
+  $Id: icalvcal.c,v 1.4 2002/03/14 15:17:59 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org

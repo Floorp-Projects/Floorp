@@ -22,7 +22,6 @@ END:VEVENT
 
 BEGIN:VEVENT
 DESCRIPTION
-=======
  :Monday of week number 20 (where the default start of the week is Monday)\, 
  forever:
 DTSTART
@@ -469,5 +468,12 @@ RRULE
  :FREQ=WEEKLY;COUNT=4;INTERVAL=2;BYDAY=TU,SU
 END:VEVENT
 
-
+BEGIN:VEVENT
+DESCRIPTION
+ :Repeat every tuesday and wednesday starting 2 April 2002
+RRULE
+ :FREQ=WEEKLY;INTERVAL=1;COUNT=6;BYDAY=TU,WE
+DTSTART
+ :20020402T114500
+END:VEVENT
 

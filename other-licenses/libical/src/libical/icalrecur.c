@@ -3,7 +3,7 @@
   FILE: icalrecur.c
   CREATOR: eric 16 May 2000
   
-  $Id: icalrecur.c,v 1.2 2001/12/21 18:56:23 mikep%oeone.com Exp $
+  $Id: icalrecur.c,v 1.3 2002/03/14 15:17:52 mikep%oeone.com Exp $
   $Locker:  $
     
 
@@ -769,7 +769,7 @@ icalrecur_iterator* icalrecur_iterator_new(struct icalrecurrencetype rule,
     impl->by_ptrs[BY_SECOND]=impl->rule.by_second;
     impl->by_ptrs[BY_SET_POS]=impl->rule.by_set_pos;
 
-    memset(impl->orig_data,0,9);
+    memset(impl->orig_data,0,9*sizeof(short));
 
     /* Note which by rules had data in them when the iterator was
        created. We can't use the actuall by_x arrays, because the
@@ -910,7 +910,7 @@ icalrecur_iterator* icalrecur_iterator_new(struct icalrecurrencetype rule,
 
     }
 
-    /* For YEARLY rule, begin by setting up the year days array . THey
+    /* For YEARLY rule, begin by setting up the year days array . The
        YEARLY rules work by expanding one year at a time. */
 
     if(impl->rule.freq == ICAL_YEARLY_RECURRENCE){
@@ -919,7 +919,7 @@ icalrecur_iterator* icalrecur_iterator_new(struct icalrecurrencetype rule,
 	for (;;) {
             expand_year_days(impl,impl->last.year);
 	    if (impl->days[0] != ICAL_RECURRENCE_ARRAY_MAX)
-	        break;
+	        break; // break when no days are expanded
 	    increment_year(impl,impl->rule.interval);
 	}
 
@@ -1574,7 +1574,9 @@ int next_weekday_by_week(struct icalrecur_iterator_impl* impl)
       return 0;
   }
 
-  assert(has_by_data(impl,BY_DAY));
+  if(!has_by_data(impl,BY_DAY)){
+      return 1;
+  }
 
   /* If we get here, we need to step to tne next day */
 
@@ -2031,8 +2033,8 @@ int expand_year_days(struct icalrecur_iterator_impl* impl,short year)
             
             for(i = 0; BYWEEKPTR[i] != ICAL_RECURRENCE_ARRAY_MAX; i++){
                     short weekno = BYWEEKPTR[i];
-                    
-                    if(weekno== icaltime_week_number(tt)){
+                    short this_weekno = icaltime_week_number(tt);
+                    if(weekno== this_weekno){
                         impl->days[days_index++] = day;
                     }
             }

@@ -3,7 +3,7 @@
     FILE: icalclassify.c
     CREATOR: ebusboom 23 aug 2000
   
-    $Id: icalclassify.c,v 1.2 2001/12/21 18:56:34 mikep%oeone.com Exp $
+    $Id: icalclassify.c,v 1.3 2002/03/14 15:17:55 mikep%oeone.com Exp $
     $Locker:  $
     
     (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org

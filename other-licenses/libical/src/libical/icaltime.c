@@ -3,7 +3,7 @@
   FILE: icaltime.c
   CREATOR: eric 02 June 2000
   
-  $Id: icaltime.c,v 1.3 2001/12/21 18:56:27 mikep%oeone.com Exp $
+  $Id: icaltime.c,v 1.4 2002/03/14 15:17:52 mikep%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -34,6 +34,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#define JDAY
+
+#ifdef JDAY
+#include "astime.h"
+#endif
 
 /*
 #ifdef ICAL_NO_LIBICAL
@@ -183,12 +189,13 @@ time_t icaltimegm(struct tm* stm)
 /* Get the offset for a named timezone. */
 int icaltime_utc_offset(struct icaltimetype ictt, const char* tzid)
 {
+    time_t offset_tt;
+#ifndef WIN32
     icaltimezone *utc_zone, *local_zone;
     struct tm gtm;
     struct set_tz_save old_tz; 
 
     time_t tt = icaltime_as_timet(ictt);
-    time_t offset_tt;
 
     local_zone =  icaltimezone_get_builtin_timezone(tzid);
     utc_zone = icaltimezone_get_utc_timezone ();
@@ -223,6 +230,29 @@ int icaltime_utc_offset(struct icaltimetype ictt, const char* tzid)
 	assert(offset == tt-offset_tt);
 #endif
     return tt-offset_tt;
+#else
+	int is_daylight;
+
+	if ( tzid == 0 )
+	{
+		TIME_ZONE_INFORMATION tz;
+
+		GetTimeZoneInformation(&tz);
+
+		return -tz.Bias*60;
+	}
+	else
+	{
+		icaltimezone* zone = icaltimezone_get_builtin_timezone(tzid);
+
+
+		offset_tt = icaltimezone_get_utc_offset_of_utc_time     (zone,
+											   &ictt,
+											   &is_daylight);
+
+		return offset_tt;
+	}
+#endif
 }
 
 /***********************************************************************/
@@ -561,7 +591,8 @@ short icaltime_days_in_month(short month,short year)
 
 /* 1-> Sunday, 7->Saturday */
 short icaltime_day_of_week(struct icaltimetype t){
-    struct tm stm;
+#ifndef JDAY 
+	struct tm stm;
 
     stm.tm_year = t.year - 1900;
     stm.tm_mon = t.month - 1;
@@ -574,11 +605,28 @@ short icaltime_day_of_week(struct icaltimetype t){
     mktime (&stm);
 
     return stm.tm_wday + 1;
+#else /* JDAY implementation */
+	UTinstant jt;
+
+	memset(&jt,0,sizeof(UTinstant));
+
+	jt.year = t.year;
+    jt.month = t.month;
+    jt.day = t.day;
+    jt.i_hour = 0;
+    jt.i_minute = 0;
+    jt.i_second = 0;
+
+	juldat(&jt);
+
+	return jt.weekday + 1;
+#endif
 }
 
 /* Day of the year that the first day of the week (Sunday) is on.
    FIXME: Doesn't take into account different week start days. */
 short icaltime_start_doy_of_week(struct icaltimetype t){
+#ifndef JDAY
     struct tm stm;
     int start;
 
@@ -612,12 +660,30 @@ short icaltime_start_doy_of_week(struct icaltimetype t){
     }
 
     return start;
+#else
+	UTinstant jt;
+
+	memset(&jt,0,sizeof(UTinstant));
+
+	jt.year = t.year;
+    jt.month = t.month;
+    jt.day = t.day;
+    jt.i_hour = 0;
+    jt.i_minute = 0;
+    jt.i_second = 0;
+
+	juldat(&jt);
+	caldat(&jt);
+
+	return jt.day_of_year - jt.weekday;
+#endif
 }
 
 /* FIXME: Doesn't take into account the start day of the week. strftime assumes
    that weeks start on Monday. */
 short icaltime_week_number(struct icaltimetype ictt)
 {
+#ifndef JDAY
     struct tm stm;
     int week_no;
     char str[8];
@@ -637,6 +703,23 @@ short icaltime_week_number(struct icaltimetype ictt)
     week_no = atoi(str);
 
     return week_no;
+#else
+	UTinstant jt;
+
+	memset(&jt,0,sizeof(UTinstant));
+
+	jt.year = ictt.year;
+    jt.month = ictt.month;
+    jt.day = ictt.day;
+    jt.i_hour = 0;
+    jt.i_minute = 0;
+    jt.i_second = 0;
+
+	juldat(&jt);
+	caldat(&jt);
+
+	return (jt.day_of_year - jt.weekday) / 7;
+#endif
 }
 
 /* The first array is for non-leap years, the seoncd for leap years*/

@@ -3,7 +3,7 @@
   FILE: icalparser.c
   CREATOR: eric 04 August 1999
   
-  $Id: icalparser.c,v 1.3 2001/12/21 18:56:23 mikep%oeone.com Exp $
+  $Id: icalparser.c,v 1.4 2002/03/14 15:17:51 mikep%oeone.com Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -541,7 +541,7 @@ char* icalparser_get_line(icalparser *parser,
 	*(line_p) = '\0';
     }
 
-	while ( *line_p == '\0' || iswspace(*line_p) )
+	while ( (*line_p == '\0' || iswspace(*line_p)) && line_p > line )
 	{
 		*line_p = '\0';
 		line_p--;

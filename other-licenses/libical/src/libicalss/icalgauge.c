@@ -4,7 +4,7 @@
  CREATOR: eric 23 December 1999
 
 
- $Id: icalgauge.c,v 1.2 2001/12/21 18:56:37 mikep%oeone.com Exp $
+ $Id: icalgauge.c,v 1.3 2002/03/14 15:17:57 mikep%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org

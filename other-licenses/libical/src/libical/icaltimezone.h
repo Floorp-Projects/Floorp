@@ -4,7 +4,7 @@
  CREATOR: Damon Chaplin 15 March 2001
 
 
- $Id: icaltimezone.h,v 1.1 2001/12/21 19:21:38 mikep%oeone.com Exp $
+ $Id: icaltimezone.h,v 1.2 2002/03/14 15:17:52 mikep%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Damon Chaplin
@@ -128,6 +128,15 @@ void	    icaltimezone_array_append_from_vtimezone (icalarray	    *timezones,
 void	    icaltimezone_array_free		(icalarray	*timezones);
 
 
+/*
+ *  Handling the default location the timezone files
+ */
+
+/* Set the directory to look for the zonefiles */
+void set_zone_directory(char *path);
+
+/* Free memory dedicated to the zonefile directory */
+void free_zone_directory();
 
 /*
  * Debugging Output.
