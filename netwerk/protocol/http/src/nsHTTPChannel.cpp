@@ -2002,8 +2002,8 @@ nsHTTPChannel::ProcessStatusCode(void)
         // 200 (OK) and 203 (Non-authoritative success) results can be cached
         if ((statusCode == 200) || (statusCode == 203)) {
             nsCOMPtr<nsIStreamListener> listener2;
-            CacheReceivedResponse(listener, getter_AddRefs(listener2));
-            if (listener2) {
+            rv = CacheReceivedResponse(listener, getter_AddRefs(listener2));
+            if (NS_SUCCEEDED(rv) && listener2) {
                 listener = listener2;
             }
         }
@@ -2034,8 +2034,8 @@ nsHTTPChannel::ProcessStatusCode(void)
         // 300 (Multiple choices) or 301 (Redirect) results can be cached
         if ((statusCode == 300) || (statusCode == 301)) {
             nsCOMPtr<nsIStreamListener> listener2;
-            CacheReceivedResponse(listener, getter_AddRefs(listener2));
-            if (listener2) {
+            rv = CacheReceivedResponse(listener, getter_AddRefs(listener2));
+            if (NS_SUCCEEDED(rv) && listener2) {
                 listener = listener2;
             }
         }
