@@ -33,6 +33,7 @@ XPIDLSRCS =					\
 	nsIDOMDocumentRange.idl			\
 	nsIDOMNSRange.idl			\
 	nsIDOMRange.idl				\
+	nsIDOMRangeException.idl	\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

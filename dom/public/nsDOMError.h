@@ -67,10 +67,8 @@
 
 /* DOM error codes from http://www.w3.org/TR/DOM-Level-2/range.html */
 
-// Note! These should have their own error MODULE and correct codes
-// (101 should be 1, 102 should be 2)
-#define NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,101)
-#define NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,102)
+#define NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_RANGE, 1)
+#define NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_RANGE, 2)
 
 
 /* DOM error codes defined by us */
@@ -89,14 +87,5 @@
 #define NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,1011)
 #define NS_ERROR_DOM_BAD_URI                     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,1012)
 #define NS_ERROR_DOM_RETVAL_UNDEFINED            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,1013)
-
-// XXX Not the right place for this.
-#include "nsIDOMDOMException.h"
-
-extern "C" nsresult NS_NewDOMException(nsIDOMDOMException** aException,
-                                              nsresult aResult, 
-                                              const char* aName, 
-                                              const char* aMessage,
-                                              const char* aLocation);
 
 #endif // nsDOMError_h__

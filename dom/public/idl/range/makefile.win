@@ -28,6 +28,7 @@ XPIDLSRCS =					\
 	.\nsIDOMDocumentRange.idl		\
 	.\nsIDOMNSRange.idl			\
 	.\nsIDOMRange.idl			\
+	.\nsIDOMRangeException.idl	\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
