@@ -39,8 +39,6 @@ static NS_DEFINE_IID(kICookieServiceIID, NS_ICOOKIESERVICE_IID);
 
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID); 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
-static NS_DEFINE_IID(kCookieHTTPNotifyCID, NS_COOKIEHTTPNOTIFY_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,28 +69,6 @@ private:
 };
 
 static nsCookieService* gCookieService = nsnull; // The one-and-only CookieService
-
-////////////////////////////////////////////////////////////////////////////////
-// Module implementation
-class nsCookieServiceModule : public nsIModule
-{
-public:
-    nsCookieServiceModule();
-    virtual ~nsCookieServiceModule();
-
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIMODULE
-
-protected:
-    nsresult Initialize();
-
-    void Shutdown();
-
-    PRBool mInitialized;
-    nsCOMPtr<nsIGenericFactory> mCookieServiceFactory;
-    nsCOMPtr<nsIGenericFactory> mCookieHTTPNotifyFactory;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsCookieService Implementation
@@ -211,9 +187,12 @@ NS_IMETHODIMP nsCookieService::Cookie_GetPermissionListForViewer(nsString& aPerm
 
 //----------------------------------------------------------------------
 
-// Functions used to create new instances of a given object by the
-// generic factory.
-
+////////////////////////////////////////////////////////////////////////
+// Define the contructor function for the objects
+//
+// NOTE: This creates an instance of objects by using the default constructor
+//
+// NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookieService)
 static NS_IMETHODIMP    
 CreateNewCookieService(nsISupports* aOuter, REFNSIID aIID, void **aResult)
 {                                                                    
@@ -241,219 +220,20 @@ CreateNewCookieService(nsISupports* aOuter, REFNSIID aIID, void **aResult)
     return rv;                
 }
 
-
-//----------------------------------------------------------------------
-
-
-nsCookieServiceModule::nsCookieServiceModule()
-    : mInitialized(PR_FALSE)
-{
-    NS_INIT_ISUPPORTS();
-}
-
-nsCookieServiceModule::~nsCookieServiceModule()
-{
-    Shutdown();
-}
-
-NS_IMPL_ISUPPORTS(nsCookieServiceModule, NS_GET_IID(nsIModule))
-
-// Perform our one-time intialization for this module
-nsresult
-nsCookieServiceModule::Initialize()
-{
-    if (mInitialized) {
-        return NS_OK;
-    }
-    mInitialized = PR_TRUE;
-    return NS_OK;
-}
-
-// Shutdown this module, releasing all of the module resources
-void
-nsCookieServiceModule::Shutdown()
-{
-    // Release the factory objects
-    mCookieServiceFactory = nsnull;
-    mCookieHTTPNotifyFactory = nsnull;
-}
-
-// Create a factory object for creating instances of aClass.
-NS_IMETHODIMP
-nsCookieServiceModule::GetClassObject(nsIComponentManager *aCompMgr,
-                               const nsCID& aClass,
-                               const nsIID& aIID,
-                               void** r_classObj)
-{
-    nsresult rv;
-
-    // Defensive programming: Initialize *r_classObj in case of error below
-    if (!r_classObj) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *r_classObj = NULL;
-
-    // Do one-time-only initialization if necessary
-    if (!mInitialized) {
-        rv = Initialize();
-        if (NS_FAILED(rv)) {
-            // Initialization failed! yikes!
-            return rv;
-        }
-    }
-
-    // Choose the appropriate factory, based on the desired instance
-    // class type (aClass).
-    nsCOMPtr<nsIGenericFactory> fact;
-    if (aClass.Equals(kCookieServiceCID)) {
-        if (!mCookieServiceFactory) {
-            // Create and save away the factory object for creating
-            // new instances of CookieService. This way if we are called
-            // again for the factory, we won't need to create a new
-            // one.
-            rv = NS_NewGenericFactory(getter_AddRefs(mCookieServiceFactory),
-                                      CreateNewCookieService);
-        }
-        fact = mCookieServiceFactory;
-    }
-    else if (aClass.Equals(kCookieHTTPNotifyCID)) {
-        if (!mCookieHTTPNotifyFactory) {
-            // Create and save away the factory object for creating
-            // new instances of CookieHTTPNotify. This way if we are called
-            // again for the factory, we won't need to create a new
-            // one.
-            rv = NS_NewGenericFactory(getter_AddRefs(mCookieHTTPNotifyFactory),
-                                      nsCookieHTTPNotify::Create);
-        }
-        fact = mCookieHTTPNotifyFactory;
-    }
-    else {
-		    rv = NS_ERROR_FACTORY_NOT_REGISTERED;
-#ifdef DEBUG
-        char* cs = aClass.ToString();
-        printf("+++ nsCookieServiceModule: unable to create factory for %s\n", cs);
-        nsCRT::free(cs);
-#endif
-    }
-
-    if (fact) {
-        rv = fact->QueryInterface(aIID, r_classObj);
-    }
-
-    return rv;
-}
-
-//----------------------------------------
-
-struct Components {
-    const char* mDescription;
-    const nsID* mCID;
-    const char* mProgID;
+////////////////////////////////////////////////////////////////////////
+// Define a table of CIDs implemented by this module along with other
+// information like the function to create an instance, progid, and
+// class name.
+//
+static nsModuleComponentInfo components[] = {
+    { "CookieService", NS_COOKIESERVICE_CID,
+      "component://netscape/cookie", CreateNewCookieService, },	// XXX Singleton
+    { "CookieHTTPNotifyService", NS_COOKIEHTTPNOTIFY_CID,
+      "component://netscape/cookie-http-notify", CreateNewCookieService, },
 };
 
-// The list of components we register
-static Components gComponents[] = {
-    { "CookieService", &kCookieServiceCID,
-      "component://netscape/cookie", },
-    { "CookieHTTPNotifyService", &kCookieHTTPNotifyCID,
-      "component://netscape/cookie-http-notify", },
-};
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
-
-
-NS_IMETHODIMP
-nsCookieServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                                    nsIFileSpec* aPath,
-                                    const char* registryLocation,
-                                    const char* componentType)
-{
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG
-    printf("*** Registering CookieService components\n");
-#endif
-
-    Components* cp = gComponents;
-    Components* end = cp + NUM_COMPONENTS;
-    while (cp < end) {
-        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
-                                             PR_TRUE);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsCookieServiceModule: unable to register %s component => %x\n",
-                   cp->mDescription, rv);
-#endif
-            break;
-        }
-        cp++;
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsCookieServiceModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                                      nsIFileSpec* aPath,
-                                      const char* registryLocation)
-{
-#ifdef DEBUG
-    printf("*** Unregistering CookieService components\n");
-#endif
-    Components* cp = gComponents;
-    Components* end = cp + NUM_COMPONENTS;
-    while (cp < end) {
-        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsCookieServiceModule: unable to unregister %s component => %x\n",
-                   cp->mDescription, rv);
-#endif
-        }
-        cp++;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieServiceModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-    if (!okToUnload) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *okToUnload = PR_FALSE;
-    return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-
-static nsCookieServiceModule *gModule = NULL;
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
-                                          nsIModule** return_cobj)
-{
-    nsresult rv = NS_OK;
-
-    NS_ENSURE_ARG_POINTER(return_cobj);
-    NS_ENSURE_FALSE(gModule, NS_ERROR_FAILURE);
-
-    // Create and initialize the module instance
-    nsCookieServiceModule *m = new nsCookieServiceModule();
-    if (!m) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-    if (NS_FAILED(rv)) {
-        delete m;
-        m = nsnull;
-    }
-    gModule = m;                  // WARNING: Weak Reference
-    return rv;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// Implement the NSGetModule() exported function for your module
+// and the entire implementation of the module object.
+//
+NS_IMPL_NSGETMODULE("nsCookieModule", components)
