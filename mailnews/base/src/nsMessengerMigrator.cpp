@@ -60,7 +60,7 @@
 
 #define BUF_STR_LEN 1024
 
-#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_MIGRATOR 1
 #endif
 
@@ -1717,24 +1717,37 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 #endif /* NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
 
 			// psuedo-name is of the form newsrc-<host> or snewsrc-<host>.  
-			// right now, we can't handle snewsrc, so if we get one of those
-			// gracefully handle it by ignoring it.
-			if (PL_strncmp(PSUEDO_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_NAME_PREFIX)) != 0) {
-				continue;
-			}
+			if (PL_strncmp(PSUEDO_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_NAME_PREFIX)) == 0) {
+                // check that there is a hostname to get after the "newsrc-" part
+                NS_ASSERTION(PL_strlen(psuedo_name) > PL_strlen(PSUEDO_NAME_PREFIX), "psuedo_name is too short");
+                if (PL_strlen(psuedo_name) <= PL_strlen(PSUEDO_NAME_PREFIX)) {
+                    return NS_ERROR_FAILURE;
+                }
 
-			// check that there is a hostname to get after the "newsrc-" part
-			NS_ASSERTION(PL_strlen(psuedo_name) > PL_strlen(PSUEDO_NAME_PREFIX), "psuedo_name is too short");
-			if (PL_strlen(psuedo_name) <= PL_strlen(PSUEDO_NAME_PREFIX)) {
-				return NS_ERROR_FAILURE;
+                char *hostname = psuedo_name + PL_strlen(PSUEDO_NAME_PREFIX);
+                rv = MigrateNewsAccount(identity, hostname, rcFile, newsHostsDir, PR_FALSE /* isSecure */);
+                if (NS_FAILED(rv)) {
+                    // failed to migrate.  bail out
+                    return rv;
+                }
 			}
+            else if (PL_strncmp(PSUEDO_SECURE_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_SECURE_NAME_PREFIX)) == 0) {
+                // check that there is a hostname to get after the "snewsrc-" part
+                NS_ASSERTION(PL_strlen(psuedo_name) > PL_strlen(PSUEDO_SECURE_NAME_PREFIX), "psuedo_name is too short");
+                if (PL_strlen(psuedo_name) <= PL_strlen(PSUEDO_SECURE_NAME_PREFIX)) {
+                    return NS_ERROR_FAILURE;
+                }
 
-			char *hostname = psuedo_name + PL_strlen(PSUEDO_NAME_PREFIX);
-            rv = MigrateNewsAccount(identity, hostname, rcFile, newsHostsDir);
-            if (NS_FAILED(rv)) {
-				// failed to migrate.  bail out
-				return rv;
-			}
+                char *hostname = psuedo_name + PL_strlen(PSUEDO_SECURE_NAME_PREFIX);
+                rv = MigrateNewsAccount(identity, hostname, rcFile, newsHostsDir, PR_TRUE /* isSecure */);
+                if (NS_FAILED(rv)) {
+                    // failed to migrate.  bail out
+                    return rv;
+                }
+            }
+            else {
+                continue;
+            }
 		}
 	}
 	
@@ -1751,14 +1764,27 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 
       char *filename = possibleRcFile.GetLeafName();
       
-      if ((PL_strncmp(NEWSRC_FILE_PREFIX_5x, filename, PL_strlen(NEWSRC_FILE_PREFIX_5x)) == 0) && (PL_strlen(filename) > PL_strlen(NEWSRC_FILE_PREFIX_5x))) {
+      if ((PL_strncmp(NEWSRC_FILE_PREFIX_IN_5x, filename, PL_strlen(NEWSRC_FILE_PREFIX_IN_5x)) == 0) && (PL_strlen(filename) > PL_strlen(NEWSRC_FILE_PREFIX_IN_5x))) {
 #ifdef DEBUG_MIGRATOR
         printf("found a newsrc file: %s\n", filename);
 #endif
-        char *hostname = filename + PL_strlen(NEWSRC_FILE_PREFIX_5x);
-        rv = MigrateNewsAccount(identity, hostname, possibleRcFile, newsHostsDir);
+        char *hostname = filename + PL_strlen(NEWSRC_FILE_PREFIX_IN_5x);
+        rv = MigrateNewsAccount(identity, hostname, possibleRcFile, newsHostsDir, PR_FALSE /* isSecure */);
         if (NS_FAILED(rv)) {
           // failed to migrate.  bail out
+          nsCRT::free(filename);
+          return rv;
+        }
+      }
+      else if ((PL_strncmp(SNEWSRC_FILE_PREFIX_IN_5x, filename, PL_strlen(SNEWSRC_FILE_PREFIX_IN_5x)) == 0) && (PL_strlen(filename) > PL_strlen(SNEWSRC_FILE_PREFIX_IN_5x))) {
+#ifdef DEBUG_MIGRATOR
+        printf("found a secure newsrc file: %s\n", filename);
+#endif
+        char *hostname = filename + PL_strlen(SNEWSRC_FILE_PREFIX_IN_5x);
+        rv = MigrateNewsAccount(identity, hostname, possibleRcFile, newsHostsDir, PR_TRUE /* isSecure */);
+        if (NS_FAILED(rv)) {
+          // failed to migrate.  bail out
+          nsCRT::free(filename);
           return rv;
         }
       }
@@ -1771,7 +1797,7 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 }
 
 nsresult
-nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec & newsrcfile, nsFileSpec & newsHostsDir)
+nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec & newsrcfile, nsFileSpec & newsHostsDir, PRBool isSecure)
 {  
 	nsresult rv;
     NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
@@ -1809,6 +1835,9 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
     if ((port != -1) || (port == 0)) {
       server->SetPort(port);
     }
+
+    rv = server->SetIsSecure(isSecure);
+	if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG_MIGRATOR
 	PRInt32 portValue;
@@ -1870,7 +1899,14 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	// can't do dir += "host-"; dir += hostname; 
 	// because += on a nsFileSpec inserts a separator
 	// so we'd end up with host-/<hostname> and not host-<hostname>
-	nsCAutoString alteredHost ((const char *) "host-");
+	nsCAutoString alteredHost;
+    if (isSecure) {
+        alteredHost = "shost-";
+    }
+    else {
+        alteredHost = "host-";
+    }
+
 	alteredHost += hostAndPort;
 	NS_MsgHashIfNecessary(alteredHost);	
 	thisNewsHostsDir += (const char *) alteredHost;

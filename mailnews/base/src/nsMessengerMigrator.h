@@ -36,15 +36,19 @@
  * file name length limitations.
  */
 #if defined(XP_UNIX) || defined(XP_BEOS)
-/* in 4.x, the prefix was ".newsrc-", in 5.0, the profile migrator code copies the newsrc files from
+/* in 4.x, the prefix was ".newsrc-" and ".snewsrc-"
+ * in 5.0, the profile migrator code copies the newsrc files from
  * ~/.newsrc-* to ~/.mozilla/<profile>/News/newsrc-*
+ * ~/.snewsrc-* to ~/.mozilla/<profile>/News/snewsrc-*
  */
-#define NEWSRC_FILE_PREFIX_5x "newsrc-"
+#define NEWSRC_FILE_PREFIX_IN_5x "newsrc-"
+#define SNEWSRC_FILE_PREFIX_IN_5x "snewsrc-"
 #else
 #define USE_NEWSRC_MAP_FILE
 
-// in the fat file, the hostname is prefix by this string:
+// in the fat file, the hostname is prefix by one of these:
 #define PSUEDO_NAME_PREFIX "newsrc-"
+#define PSUEDO_SECURE_NAME_PREFIX "snewsrc-"
 
 #if defined(XP_PC)
 #define NEWS_FCC_DEFAULT_TO_IMAP_SENT
@@ -105,7 +109,7 @@ private:
   nsresult MigrateOldMailPrefs(nsIMsgIncomingServer *server);
   
   nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
+  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir, PRBool isSecure);
   nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostAndPort, nsFileSpec &newsrcfile);
 
   nsresult ProceedWithMigration();
