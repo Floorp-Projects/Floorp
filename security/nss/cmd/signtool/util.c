@@ -209,6 +209,7 @@ usage (void)
   PR_fprintf(outputFD, "    -m\"metafile\"\t\tinclude custom meta-information\n");
   PR_fprintf(outputFD, "    --norecurse\t\t\tdo not operate on subdirectories\n");
   PR_fprintf(outputFD, "    -o\t\t\t\toptimize - omit optional headers\n");
+  PR_fprintf(outputFD, "    -O\t\t\t\tenableOCSP - enable OCSP checking\n");
   PR_fprintf(outputFD, "    --outfile \"filename\"\tredirect output to file\n");
   PR_fprintf(outputFD, "    -p\"password\"\t\tfor password on command line (insecure)\n");
   PR_fprintf(outputFD, "    -s keysize\t\t\tkeysize in bits of generated cert\n");
