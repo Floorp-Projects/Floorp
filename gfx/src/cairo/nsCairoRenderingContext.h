@@ -214,15 +214,13 @@ protected:
     nsCOMPtr<nsIRegion> mClipRegion;
     nsCOMPtr<nsIFontMetrics> mFontMetrics;
 
-    nsCairoDrawingSurface *mBackBuffer;
-
     nsLineStyle mLineStyle;
     nscolor mColor;
 
     cairo_t *mCairo;
 
-    cairo_surface_t *mSurface;
-    nsCairoDrawingSurface *mSelectedSurface;
+    nsCOMPtr<nsCairoDrawingSurface> mDrawingSurface;
+    nsCOMPtr<nsCairoDrawingSurface> mOffscreenSurface;
 };
 
 #endif  // NSCAIRORENDERINGCONTEXT__H__

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *    Stuart Parmenter <pavlov@pavlov.net>
+ *    Vladimir Vukicevic <vladimir@pobox.com>
  *    Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -33,6 +34,8 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
+
+#include "nsIServiceManager.h"
 
 #include "nsCairoDeviceContext.h"
 #include "nsCairoRenderingContext.h"
@@ -52,7 +55,6 @@
 NS_IMPL_ISUPPORTS_INHERITED0(nsCairoDeviceContext, DeviceContextImpl)
 
 nsCairoDeviceContext::nsCairoDeviceContext()
-    : mCairo(nsnull), mSurface(nsnull)
 {
     NS_INIT_ISUPPORTS();
 
@@ -69,13 +71,13 @@ nsCairoDeviceContext::nsCairoDeviceContext()
 
 nsCairoDeviceContext::~nsCairoDeviceContext()
 {
-    if (mCairo)
-        cairo_destroy(mCairo);
 }
 
 NS_IMETHODIMP
 nsCairoDeviceContext::Init(nsNativeWidget aWidget)
 {
+    //DeviceContextImpl::CommonInit();
+
     // mTwipsToPixels = 96 / (float)NSIntPointsToTwips(72);
     // mPixelsToTwips = 1.0f / mTwipsToPixels;
     mTwipsToPixels = 1.0f;
@@ -83,12 +85,23 @@ nsCairoDeviceContext::Init(nsNativeWidget aWidget)
 
     mWidget = aWidget;
 
-    if (aWidget) {
-        CreateCairoFor (aWidget, &mCairo);
-        mSurface = cairo_current_target_surface(mCairo);
+    if (!mScreenManager)
+        mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
+    if (!mScreenManager)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIScreen> screen;
+    mScreenManager->GetPrimaryScreen (getter_AddRefs(screen));
+    if (screen) {
+        PRInt32 x, y, width, height;
+        screen->GetRect (&x, &y, &width, &height );
+        mWidthFloat = float(width);
+        mHeightFloat = float(height);
     }
 
-    //DeviceContextImpl::CommonInit();
+    mWidth = -1;
+    mHeight = -1;
+
     return NS_OK;
 }
 
@@ -188,15 +201,6 @@ nsCairoDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 }
 
 NS_IMETHODIMP
-nsCairoDeviceContext::GetDrawingSurface(nsIRenderingContext &aContext,
-                                        nsIDrawingSurface *aSurface)
-{
-    NS_WARNING("Fix my broken ass interface to not use stupid refs");
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsCairoDeviceContext::CheckFontExistence(const nsString& aFaceName)
 {
     return NS_OK;
@@ -232,18 +236,14 @@ nsCairoDeviceContext::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 NS_IMETHODIMP
 nsCairoDeviceContext::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-#ifdef MOZ_ENABLE_GTK2
-    gint w, h;
-    gdk_drawable_get_size (GDK_DRAWABLE(mWidget), &w, &h);
-    aWidth = w;
-    aHeight = h;
-#endif
+    if (mWidth == -1)
+        mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
 
-#ifdef MOZ_ENABLE_XLIB
-    Screen *scr = xxlib_rgb_get_screen(mXlibRgbHandle);
-    aWidth = (int) XWidthOfScreen(scr);
-    aHeight = (int) XHeightOfScreen(scr);
-#endif
+    if (mHeight == -1)
+        mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+
+    aWidth = mWidth;
+    aHeight = mHeight;
 
     return NS_OK;
 }
@@ -252,9 +252,35 @@ nsCairoDeviceContext::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeig
 NS_IMETHODIMP
 nsCairoDeviceContext::GetRect(nsRect &aRect)
 {
-    aRect.x = 0;
-    aRect.y = 0;
-    this->GetDeviceSurfaceDimensions(aRect.width, aRect.height);
+#if defined (MOZ_ENABLE_GTK2) || defined (MOZ_ENABLE_XLIB)
+    if (mWidget) {
+        Window root_ignore;
+        int x, y;
+        unsigned int bwidth_ignore, width, height, depth;
+
+        XGetGeometry(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(mWidget)),
+                     GDK_WINDOW_XWINDOW(GDK_DRAWABLE(mWidget)),
+                     &root_ignore, &x, &y,
+                     &width, &height,
+                     &bwidth_ignore, &depth);
+
+        nsCOMPtr<nsIScreen> screen;
+        mScreenManager->ScreenForRect(x, y, width, height, getter_AddRefs(screen));
+        screen->GetRect(&aRect.x, &aRect.y, &aRect.width, &aRect.height);
+
+        aRect.x = NSToIntRound(mDevUnitsToAppUnits * aRect.x);
+        aRect.y = NSToIntRound(mDevUnitsToAppUnits * aRect.y);
+        aRect.width = NSToIntRound(mDevUnitsToAppUnits * aRect.width);
+        aRect.height = NSToIntRound(mDevUnitsToAppUnits * aRect.height);
+    } else {
+        aRect.x = 0;
+        aRect.y = 0;
+
+        this->GetDeviceSurfaceDimensions(aRect.width, aRect.height);
+    }
+#else
+#error write me
+#endif
 
     return NS_OK;
 }
@@ -265,53 +291,6 @@ nsCairoDeviceContext::GetClientRect(nsRect &aRect)
 {
     return this->GetRect(aRect);
 }
-
-NS_IMETHODIMP
-nsCairoDeviceContext::CreateCairoFor(nsNativeWidget aNativeWidget, cairo_t **aCairo)
-{
-    NS_ENSURE_ARG(aCairo);
-    *aCairo = nsnull;
-
-#ifdef MOZ_ENABLE_GTK2
-    cairo_surface_t *surf;
-    cairo_t *cctx;
-
-    NS_ASSERTION (GDK_IS_WINDOW(aNativeWidget), "unsupported native widget type!");
-    surf = cairo_xlib_surface_create (GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(aNativeWidget)),
-                                      GDK_WINDOW_XWINDOW(GDK_DRAWABLE(aNativeWidget)),
-                                      GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(aNativeWidget))),
-                                      CAIRO_FORMAT_ARGB32, // I hope!
-                                      GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(GDK_DRAWABLE(aNativeWidget))));
-    cctx = cairo_create();
-    cairo_set_target_surface(cctx, surf);
-
-    *aCairo = cctx;
-#elif MOZ_ENABLE_XLIB
-    cairo_surface_t *surf;
-    cairo_t *cctx;
-
-    Display *dpy = xxlib_rgb_get_display(mXlibRgbHandle);
-    Screen *screen = xxlib_rgb_get_screen(mXlibRgbHandle);
-    Visual *visual = xxlib_rgb_get_visual(mXlibRgbHandle);
-    int depth = xxlib_rgb_get_depth(mXlibRgbHandle);
-    Colormap cmap = xxlib_rgb_get_cmap(mXlibRgbHandle);
-
-    surf = cairo_xlib_surface_create (dpy, (Drawable) aNativeWidget, visual,
-                                      CAIRO_FORMAT_RGB24,
-                                      cmap);
-
-    cctx = cairo_create();
-    cairo_set_target_surface(cctx, surf);
-
-    *aCairo = cctx;
-#else
-#error "Don't know how to CreateCairoFor this backend type!"
-#endif
-    fprintf (stderr, "nsCairoDeviceContext::CreateCairoFor: %p -> %p\n", aNativeWidget, *aCairo);
-
-    return NS_OK;
-}
-
 
 /*
  * below methods are for printing and are not implemented

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *    Stuart Parmenter <pavlov@pavlov.net>
+ *    Vladimir Vukicevic <vladimir@pobox.com>
  *    Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -33,6 +34,8 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
+
+#include "nsIScreenManager.h"
 
 #include "nsDeviceContext.h"
 
@@ -63,8 +66,6 @@ public:
     NS_IMETHOD GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
     NS_IMETHOD GetSystemFont(nsSystemFontID aID, nsFont *aFont) const;
-
-    NS_IMETHOD GetDrawingSurface(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface);
 
     NS_IMETHOD CheckFontExistence(const nsString& aFaceName);
 
@@ -97,9 +98,6 @@ public:
     NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC);
     NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn);
 
-    // local methods
-    NS_IMETHOD CreateCairoFor(nsNativeWidget aNativeWidget, cairo_t **aCairo);
-
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     Display *GetXDisplay();
     Visual *GetXVisual();
@@ -108,9 +106,14 @@ public:
 #endif
 
 private:
-    cairo_t *mCairo;
-    cairo_surface_t *mSurface;
     nsNativeWidget mWidget;
+
+    nsCOMPtr<nsIScreenManager> mScreenManager;
+
+    float mWidthFloat;
+    float mHeightFloat;
+    PRInt32 mWidth;
+    PRInt32 mHeight;
 
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     Drawable mPixmapParentDrawable;
