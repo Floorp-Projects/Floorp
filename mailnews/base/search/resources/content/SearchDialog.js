@@ -46,7 +46,7 @@ var gNextMessageViewIndexAfterDelete = -1;
 var gDataSourceSearchListener;
 var gViewSearchListener;
 
-var gButton;
+var gSearchStopButton;
 var gSearchSessionFolderListener;
 var gMailSession;
 
@@ -109,7 +109,7 @@ var gSearchNotificationListener =
 
     onSearchDone: function(status)
     {
-        gButton.setAttribute("label", gSearchBundle.getString("labelForSearchButton"));
+        gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForSearchButton"));
 
         var statusMsg;
         // if there are no hits, it means no matches were found in the search.
@@ -133,7 +133,7 @@ var gSearchNotificationListener =
 
     onNewSearch: function()
     {
-      gButton.setAttribute("label", gSearchBundle.getString("labelForStopButton"));
+      gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForStopButton"));
 //        if (gThreadTree)
 //            gThreadTree.clearItemSelection();
 
@@ -227,7 +227,7 @@ function initializeSearchWindowWidgets()
 {
     gFolderPicker = document.getElementById("searchableFolders");
 //    gThreadTree = document.getElementById("threadTree");
-    gButton = document.getElementById("search-button");
+    gSearchStopButton = document.getElementById("search-button");
     gStatusBar = document.getElementById('statusbar-icon');
 
     msgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
@@ -296,6 +296,20 @@ function onChooseFolder(event) {
     if (folderURI) {
         updateSearchFolderPicker(folderURI);
     }
+}
+
+function onEnterInSearchTerm()
+{
+  // on enter
+  // if not searching, start the search
+  // if searching, stop and then start again
+  if (gSearchStopButton.getAttribute("label") == gSearchBundle.getString("labelForSearchButton")) { 
+     onSearch(); 
+  }
+  else {
+     onSearchStop();
+     onSearch();
+  }
 }
 
 function onSearch()

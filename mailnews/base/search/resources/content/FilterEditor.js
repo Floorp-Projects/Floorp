@@ -64,6 +64,11 @@ function filterEditorOnLoad()
     moveToAlertPosition();
 }
 
+function onEnterInSearchTerm()
+{
+  // do nothing.  okOk() will get called since this is a dialog
+}
+
 function onOk()
 {
     if (isDuplicateFilterNameExists())

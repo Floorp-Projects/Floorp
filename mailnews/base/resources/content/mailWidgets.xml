@@ -400,7 +400,7 @@
     <handlers>
 	<handler event="keypress"><![CDATA[
 	  if (event.keyCode == 13) {
-	    onSearch(); 
+	    onEnterInSearchTerm(); 
           }
         ]]></handler>
     </handlers>
