@@ -258,10 +258,12 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     foundInterface = NS_STATIC_CAST(_interface*, this);                  \
   else
 
-#define NS_IMPL_QUERY_TAIL(_supports_interface)                          \
-  if ( aIID.Equals(NS_GET_IID(nsISupports)) )                            \
-    foundInterface = NS_STATIC_CAST(_supports_interface*, this);         \
-  else                                                                   \
+#define NS_IMPL_QUERY_BODY_AMBIGUOUS(_interface, _implClass)             \
+  if ( aIID.Equals(NS_GET_IID(_interface)) )                             \
+    foundInterface = NS_STATIC_CAST(_interface*, NS_STATIC_CAST(_implClass*, this)); \
+  else
+
+#define NS_IMPL_QUERY_TAIL_GUTS                                          \
     foundInterface = 0;                                                  \
   nsresult status;                                                       \
   if ( !foundInterface )                                                 \
@@ -274,6 +276,22 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   *aInstancePtr = foundInterface;                                        \
   return status;                                                         \
 }
+
+#define NS_IMPL_QUERY_TAIL(_supports_interface)                          \
+	NS_IMPL_QUERY_BODY_AMBIGUOUS(nsISupports, _supports_interface)         \
+	NS_IMPL_QUERY_TAIL_GUTS
+
+
+	/*
+		This is the new scheme.  Using this notation now will allow us to switch to
+		a table driven mechanism when it's ready.  Note the difference between this
+		and the (currently) underlying NS_IMPL_QUERY_INTERFACE mechanism.  You must
+		explicitly mention |nsISupports| when using the interface maps.
+	*/
+#define NS_INTERFACE_MAP_BEGIN(_implClass)                         NS_IMPL_QUERY_HEAD(_implClass)
+#define NS_INTERFACE_MAP_ENTRY(_interface)                         NS_IMPL_QUERY_BODY(_interface)
+#define NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(_interface, _implClass)   NS_IMPL_QUERY_BODY_AMBIGUOUS(_interface, _implClass)
+#define NS_INTERFACE_MAP_END                                       NS_IMPL_QUERY_TAIL_GUTS
 
 
 #define NS_IMPL_QUERY_INTERFACE0(_class)                                 \
