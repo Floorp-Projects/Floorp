@@ -60,7 +60,7 @@ class nsParser;
  ***************************************************************/
 
 //#define _dynstack 1
-class CTagStack {
+CLASS_EXPORT_HTMLPARS CTagStack {
   enum {eStackSize=200};
 
 public:
@@ -93,7 +93,7 @@ public:
  ***************************************************************/
 
 
-class CNavDTD : public nsIDTD {
+CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
             
   public:
 
