@@ -7650,7 +7650,7 @@ if test ! "$GNU_CXX"; then
 
                         case $target in
     *-solaris*)
-	if test ! -z "`${CC} -V 2>&1 | head -1 | grep '5.0'`" && test "$SUNWSPRO5_VTABLE"; then
+	if test ! -z "`${CC} -V 2>&1 | head -1 | grep -v '4.2'`" && test "$SUNWSPRO5_VTABLE"; then
 	    CXX="$CXX -library=iostream"
 	    LIBS="-liostream -lCrun $LIBS"
 	else
