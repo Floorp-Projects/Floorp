@@ -106,8 +106,15 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 inline nsIOutlinerBoxObject*
 nsOutlinerBoxObject::GetOutlinerBody()
 {
-  if (mOutlinerBody)
-    return mOutlinerBody;
+  nsAutoString outlinerbody; outlinerbody.AssignWithConversion("outlinerbody");
+
+  nsCOMPtr<nsISupports> supp;
+  GetPropertyAsSupports(outlinerbody.GetUnicode(), getter_AddRefs(supp));
+
+  if (supp) {
+    nsCOMPtr<nsIOutlinerBoxObject> body(do_QueryInterface(supp));
+    return body;
+  }
 
   nsIFrame* frame = GetFrame();
   if (!frame)
@@ -123,12 +130,10 @@ nsOutlinerBoxObject::GetOutlinerBody()
   mPresShell->GetPrimaryFrameFor(content, &frame);
 
   // It's a frame. Refcounts are irrelevant.
-  frame->QueryInterface(NS_GET_IID(nsIOutlinerBoxObject), (void**)&mOutlinerBody);
-
-  nsOutlinerBodyFrame* bodyFrame = NS_STATIC_CAST(nsOutlinerBodyFrame*, frame);
-  bodyFrame->SetBoxObject(this);
-
-  return mOutlinerBody;
+  nsCOMPtr<nsIOutlinerBoxObject> body;
+  frame->QueryInterface(NS_GET_IID(nsIOutlinerBoxObject), getter_AddRefs(body));
+  SetPropertyAsSupports(outlinerbody.GetUnicode(), body);
+  return body;
 }
 
 NS_IMETHODIMP nsOutlinerBoxObject::GetView(nsIOutlinerView * *aView)
