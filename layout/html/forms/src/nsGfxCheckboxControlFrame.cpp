@@ -698,6 +698,7 @@ nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext,
                                   nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsGfxCheckboxControlFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
   nsresult rv = nsFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   COMPARE_QUIRK_SIZE("nsGfxCheckboxControlFrame", 13, 13) 

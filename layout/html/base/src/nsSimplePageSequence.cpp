@@ -294,6 +294,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
                                   nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsSimplePageSequenceFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;  // we're always complete

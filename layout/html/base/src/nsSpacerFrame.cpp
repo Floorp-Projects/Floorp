@@ -98,6 +98,7 @@ SpacerFrame::Reflow(nsIPresContext*          aPresContext,
                     nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("SpacerFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aMetrics, aStatus);
   aStatus = NS_FRAME_COMPLETE;
 
   // By default, we have no area

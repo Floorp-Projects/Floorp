@@ -4958,12 +4958,13 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextFrame::Reflow(nsIPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aMetrics,
+nsTextFrame::Reflow(nsIPresContext*          aPresContext,
+                    nsHTMLReflowMetrics&     aMetrics,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus)
+                    nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTextFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aMetrics, aStatus);
 #ifdef NOISY_REFLOW
   ListTag(stdout);
   printf(": BeginReflow: availableSize=%d,%d\n",

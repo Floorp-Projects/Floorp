@@ -1042,7 +1042,8 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
                              nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableRowGroupFrame", aReflowState.reason);
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
 
@@ -1103,7 +1104,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.height = GetHeightOfRows(aPresContext);
   }
 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
   return rv;

@@ -679,7 +679,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
                                    nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableCellFrame", aReflowState.reason);
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
 
@@ -788,7 +789,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     firstKid->GetOrigin(kidOrigin);
   }
 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(firstKid, (nsHTMLReflowState&)kidReflowState);
 #endif
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
@@ -796,7 +797,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (isStyleChanged) {
     Invalidate(aPresContext, mRect);
   }
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(firstKid, (nsHTMLReflowState&)kidReflowState, &kidSize, aStatus);
 #endif
 
@@ -932,7 +933,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
 

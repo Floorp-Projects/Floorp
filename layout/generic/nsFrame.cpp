@@ -107,9 +107,9 @@ void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame);
 static void RefreshContentFrames(nsIPresContext* aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 #endif
 
+#include "prenv.h"
 
-
-//----------------------------------------------------------------------
+// start nsIFrameDebug
 
 #ifdef NS_DEBUG
 static PRBool gShowFrameBorders = PR_FALSE;
@@ -219,9 +219,8 @@ nsIFrameDebug::RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aI
     }
   }
 }
-
 #endif
-//----------------------------------------------------------------------
+// end nsIFrameDebug
 
 nsresult
 NS_NewEmptyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -4184,5 +4183,584 @@ nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
   }
 }
 
+
+// Start Display Reflow
+#ifdef DEBUG
+
+DR_cookie::DR_cookie(nsIFrame*                aFrame, 
+                     const nsHTMLReflowState& aReflowState,
+                     nsHTMLReflowMetrics&     aMetrics,
+                     nsReflowStatus&          aStatus)
+  :mFrame(aFrame), mReflowState(aReflowState), mMetrics(aMetrics), mStatus(aStatus)
+{
+  mValue = nsFrame::DisplayReflowEnter(mFrame, mReflowState);
+}
+
+DR_cookie::~DR_cookie()
+{
+  nsFrame::DisplayReflowExit(mFrame, mMetrics, mStatus, mValue);
+}
+
+void DR_DestroyArrayContents(nsVoidArray& aArray)
+{
+  PRInt32 numElements = aArray.Count();
+  for (PRInt32 i = numElements - 1; i >= 0; i--) {
+    delete aArray.ElementAt(i);
+  }
+}
+
+struct DR_FrameTypeInfo;
+struct DR_FrameTreeNode;
+struct DR_Rule;
+
+struct DR_State
+{
+  DR_State();
+  ~DR_State();
+  void Init();
+  void AddFrameTypeInfo(nsIAtom* aFrameType,
+                        char*    aFrameNameAbbrev,
+                        char*    aFrameName);
+  DR_FrameTypeInfo* GetFrameTypeInfo(nsIAtom* aFrameType);
+  DR_FrameTypeInfo* GetFrameTypeInfo(char* aFrameName);
+  void InitFrameTypeTable();
+  DR_FrameTreeNode* CreateTreeNode(nsIFrame*                aFrame,
+                                   const nsHTMLReflowState& aReflowState);
+  void FindMatchingRule(DR_FrameTreeNode& aNode);
+  PRBool RuleMatches(DR_Rule&          aRule,
+                     DR_FrameTreeNode& aNode);
+  PRBool GetToken(FILE* aFile,
+                  char* aBuf);
+  DR_Rule* ParseRule(FILE* aFile);
+  void ParseRulesFile();
+  void AddRule(nsVoidArray& aRules,
+               DR_Rule&     aRule);
+  PRBool IsWhiteSpace(int c);
+  PRBool GetNumber(char*    aBuf, 
+                 PRInt32&  aNumber);
+  void PrettyUC(nscoord aSize,
+                char*   aBuf);
+  void DisplayFrameTypeInfo(nsIFrame* aFrame,
+                            PRInt32   aIndent);
+  void DeleteTreeNode(DR_FrameTreeNode& aNode);
+
+  PRBool      mInited;
+  PRBool      mActive;
+  PRInt32     mCount;
+  nsVoidArray mWildRules;
+  PRInt32     mAssert;
+  PRInt32     mIndentStart;
+  PRBool      mIndentUndisplayedFrames;
+  nsVoidArray mFrameTypeTable;
+
+  // reflow specific state
+  nsVoidArray mFrameTreeLeaves;
+};
+
+static DR_State DR_state; // the one and only DR_State
+
+struct DR_RulePart 
+{
+  DR_RulePart(nsIAtom* aFrameType) : mFrameType(aFrameType), mNext(0) {}
+  void Destroy();
+
+  nsIAtom*     mFrameType;
+  DR_RulePart* mNext;
+};
+
+void DR_RulePart::Destroy()
+{
+  if (mNext) {
+    mNext->Destroy();
+  }
+  delete this;
+}
+
+struct DR_Rule 
+{
+  DR_Rule() : mLength(0), mTarget(nsnull), mDisplay(PR_FALSE) {}
+  ~DR_Rule() { if (mTarget) mTarget->Destroy(); }
+  void AddPart(nsIAtom* aFrameType);
+
+  PRUint32      mLength;
+  DR_RulePart*  mTarget;
+  PRBool        mDisplay;
+};
+
+void DR_Rule::AddPart(nsIAtom* aFrameType)
+{
+  DR_RulePart* newPart = new DR_RulePart(aFrameType);
+  newPart->mNext = mTarget;
+  mTarget = newPart;
+  mLength++;
+}
+
+struct DR_FrameTypeInfo
+{
+  DR_FrameTypeInfo(nsIAtom* aFrmeType, char* aFrameNameAbbrev, char* aFrameName);
+  ~DR_FrameTypeInfo() { DR_DestroyArrayContents(mRules); }
+
+  nsIAtom*    mType;
+  char        mNameAbbrev[16];
+  char        mName[32];
+  nsVoidArray mRules;
+};
+
+DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType, 
+                                   char*    aFrameNameAbbrev, 
+                                   char*    aFrameName)
+{
+  mType = aFrameType;
+  strcpy(mNameAbbrev, aFrameNameAbbrev);
+  strcpy(mName, aFrameName);
+}
+
+struct DR_FrameTreeNode
+{
+  DR_FrameTreeNode(nsIFrame* aFrame, DR_FrameTreeNode* aParent) : mFrame(aFrame), mParent(aParent), mDisplay(0), mIndent(0) {}
+
+  nsIFrame*         mFrame;
+  DR_FrameTreeNode* mParent;
+  PRBool            mDisplay;
+  PRUint32          mIndent;
+};
+
+// DR_State implementation
+
+DR_State::DR_State() 
+: mInited(PR_FALSE), mActive(PR_FALSE), mCount(0), mAssert(-1), mIndentStart(0), mIndentUndisplayedFrames(PR_FALSE)
+{}
+
+void DR_State::Init() 
+{
+  char* env = PR_GetEnv("GECKO_DISPLAY_REFLOW_ASSERT");
+  PRInt32 num;
+  if (env) {
+    if (GetNumber(env, num)) 
+      mAssert = num;
+    else 
+      printf("GECKO_DISPLAY_REFLOW_ASSERT - invalid value = %s", env);
+  }
+
+  env = PR_GetEnv("GECKO_DISPLAY_REFLOW_INDENT_START");
+  if (env) {
+    if (GetNumber(env, num)) 
+      mIndentStart = num;
+    else 
+      printf("GECKO_DISPLAY_REFLOW_INDENT_START - invalid value = %s", env);
+  }
+
+  env = PR_GetEnv("GECKO_DISPLAY_REFLOW_INDENT_UNDISPLAYED_FRAMES");
+  if (env) {
+    if (GetNumber(env, num)) 
+      mIndentUndisplayedFrames = num;
+    else 
+      printf("GECKO_DISPLAY_REFLOW_INDENT_UNDISPLAYED_FRAMES - invalid value = %s", env);
+  }
+  InitFrameTypeTable();
+  ParseRulesFile();
+  mInited = PR_TRUE;
+}
+
+DR_State::~DR_State()
+{
+  DR_DestroyArrayContents(mWildRules);
+  DR_DestroyArrayContents(mFrameTreeLeaves);
+  DR_DestroyArrayContents(mFrameTypeTable);
+}
+
+PRBool DR_State::GetNumber(char*     aBuf, 
+                           PRInt32&  aNumber)
+{
+  if (sscanf(aBuf, "%d", &aNumber) > 0) 
+    return PR_TRUE;
+  else 
+    return PR_FALSE;
+}
+
+PRBool DR_State::IsWhiteSpace(int c) {
+  return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r');
+}
+
+PRBool DR_State::GetToken(FILE* aFile,
+                          char* aBuf)
+{
+  PRBool haveToken = PR_FALSE;
+  aBuf[0] = 0;
+  // get the 1st non whitespace char
+  int c = -1;
+  for (c = getc(aFile); (c > 0) && IsWhiteSpace(c); c = getc(aFile)) {
+  }
+
+  if (c > 0) {
+    haveToken = PR_TRUE;
+    aBuf[0] = c;
+    // get everything up to the next whitespace char
+    PRInt32 cX;
+    for (cX = 1, c = getc(aFile); ; cX++, c = getc(aFile)) {
+      if (c < 0) { // EOF
+        ungetc(' ', aFile); 
+        break;
+      }
+      else {
+        if (IsWhiteSpace(c)) {
+          break;
+        }
+        else {
+          aBuf[cX] = c;
+        }
+      }
+    }
+    aBuf[cX] = 0;
+  }
+  return haveToken;
+}
+
+DR_Rule* DR_State::ParseRule(FILE* aFile)
+{
+  char buf[128];
+  PRInt32 doDisplay;
+  DR_Rule* rule = nsnull;
+  while (GetToken(aFile, buf)) {
+    if (GetNumber(buf, doDisplay)) {
+      if (rule) { 
+        rule->mDisplay = (PRBool)doDisplay;
+        break;
+      }
+      else {
+        printf("unexpected token - %s \n", buf);
+      }
+    }
+    else {
+      if (!rule) {
+        rule = new DR_Rule;
+      }
+      if (strcmp(buf, "*") == 0) {
+        rule->AddPart(nsnull);
+      }
+      else {
+        DR_FrameTypeInfo* info = GetFrameTypeInfo(buf);
+        if (info) {
+          rule->AddPart(info->mType);
+        }
+        else {
+          printf("invalid frame type - %s \n", buf);
+        }
+      }
+    }
+  }
+  return rule;
+}
+
+void DR_State::AddRule(nsVoidArray& aRules,
+                       DR_Rule&     aRule)
+{
+  PRInt32 numRules = aRules.Count();
+  for (PRInt32 ruleX = 0; ruleX < numRules; ruleX++) {
+    DR_Rule* rule = (DR_Rule*)aRules.ElementAt(ruleX);
+    NS_ASSERTION(rule, "program error");
+    if (aRule.mLength > rule->mLength) {
+      aRules.InsertElementAt(&aRule, ruleX);
+      return;
+    }
+  }
+  aRules.AppendElement(&aRule);
+}
+
+void DR_State::ParseRulesFile()
+{
+  char* path = PR_GetEnv("GECKO_DISPLAY_REFLOW_RULES_FILE");
+  if (path) {
+    FILE* inFile = fopen(path, "r");
+    if (inFile) {
+      for (DR_Rule* rule = ParseRule(inFile); rule; rule = ParseRule(inFile)) {
+        if (rule->mTarget) {
+          nsIAtom* fType = rule->mTarget->mFrameType;
+          if (fType) {
+            DR_FrameTypeInfo* info = GetFrameTypeInfo(fType);
+            if (info) {
+              AddRule(info->mRules, *rule);
+            }
+          }
+          else {
+            AddRule(mWildRules, *rule);
+          }
+          mActive = PR_TRUE;
+        }
+      }
+    }
+  }
+}
+
+
+void DR_State::AddFrameTypeInfo(nsIAtom* aFrameType,
+                                char*    aFrameNameAbbrev,
+                                char*    aFrameName)
+{
+  mFrameTypeTable.AppendElement(new DR_FrameTypeInfo(aFrameType, aFrameNameAbbrev, aFrameName));
+}
+
+DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(nsIAtom* aFrameType)
+{
+  PRInt32 numEntries = mFrameTypeTable.Count();
+  for (PRInt32 i = 0; i < numEntries; i++) {
+    DR_FrameTypeInfo* info = (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(i);
+    if (info && (info->mType == aFrameType)) {
+      return info;
+    }
+  }
+  return nsnull;
+}
+
+DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName)
+{
+  PRInt32 numEntries = mFrameTypeTable.Count();
+  for (PRInt32 i = 0; i < numEntries; i++) {
+    DR_FrameTypeInfo* info = (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(i);
+    if (info && ((strcmp(aFrameName, info->mName) == 0) || (strcmp(aFrameName, info->mNameAbbrev) == 0))) {
+      return info;
+    }
+  }
+  return nsnull;
+}
+
+void DR_State::InitFrameTypeTable()
+{  
+  AddFrameTypeInfo(nsLayoutAtoms::areaFrame,             "area",      "area");
+  AddFrameTypeInfo(nsLayoutAtoms::blockFrame,            "block",     "block");
+  AddFrameTypeInfo(nsLayoutAtoms::brFrame,               "br",        "br");
+  AddFrameTypeInfo(nsLayoutAtoms::bulletFrame,           "bullet",    "bullet");
+  AddFrameTypeInfo(nsLayoutAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
+  AddFrameTypeInfo(nsLayoutAtoms::htmlFrameInnerFrame,   "frameI",    "htmlFrameInner");
+  AddFrameTypeInfo(nsLayoutAtoms::htmlFrameOuterFrame,   "frameO",    "htmlFrameOuter");
+  AddFrameTypeInfo(nsLayoutAtoms::imageFrame,            "img",       "image");
+  AddFrameTypeInfo(nsLayoutAtoms::inlineFrame,           "inline",    "inline");
+  AddFrameTypeInfo(nsLayoutAtoms::letterFrame,           "letter",    "letter");
+  AddFrameTypeInfo(nsLayoutAtoms::lineFrame,             "line",      "line");
+  AddFrameTypeInfo(nsLayoutAtoms::listControlFrame,      "select",    "select");
+  AddFrameTypeInfo(nsLayoutAtoms::objectFrame,           "obj",       "object");
+  AddFrameTypeInfo(nsLayoutAtoms::pageFrame,             "page",      "page");
+  AddFrameTypeInfo(nsLayoutAtoms::placeholderFrame,      "place",     "placeholder");
+  AddFrameTypeInfo(nsLayoutAtoms::positionedInlineFrame, "posInline", "positionedInline");
+  AddFrameTypeInfo(nsLayoutAtoms::canvasFrame,           "canvas",    "canvas");
+  AddFrameTypeInfo(nsLayoutAtoms::rootFrame,             "root",      "root");
+  AddFrameTypeInfo(nsLayoutAtoms::scrollFrame,           "scroll",    "scroll");
+  AddFrameTypeInfo(nsLayoutAtoms::tableCaptionFrame,     "caption",   "tableCaption");
+  AddFrameTypeInfo(nsLayoutAtoms::tableCellFrame,        "cell",      "tableCell");
+  AddFrameTypeInfo(nsLayoutAtoms::tableColFrame,         "col",       "tableCol");
+  AddFrameTypeInfo(nsLayoutAtoms::tableColGroupFrame,    "colG",      "tableColGroup");
+  AddFrameTypeInfo(nsLayoutAtoms::tableFrame,            "tbl",       "table");
+  AddFrameTypeInfo(nsLayoutAtoms::tableOuterFrame,       "tblO",      "tableOuter");
+  AddFrameTypeInfo(nsLayoutAtoms::tableRowGroupFrame,    "rowG",      "tableRowGroup");
+  AddFrameTypeInfo(nsLayoutAtoms::tableRowFrame,         "row",       "tableRow");
+  AddFrameTypeInfo(nsLayoutAtoms::textInputFrame,        "textCtl",   "textInput");
+  AddFrameTypeInfo(nsLayoutAtoms::textFrame,             "text",      "text");
+  AddFrameTypeInfo(nsLayoutAtoms::viewportFrame,         "VP",        "viewport");
+  AddFrameTypeInfo(nsnull,                               "unknown",   "unknown");
+}
+
+
+void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
+                                    PRInt32   aIndent)
+{ 
+  nsCOMPtr<nsIAtom> fType;
+  aFrame->GetFrameType(getter_AddRefs(fType));
+
+  DR_FrameTypeInfo* frameTypeInfo = GetFrameTypeInfo(fType);
+  if (frameTypeInfo) {
+    for (PRInt32 i = 0; i < aIndent; i++) {
+      printf(" ");
+    }
+    printf("%s %p ", frameTypeInfo->mNameAbbrev, aFrame);
+  }
+}
+
+PRBool DR_State::RuleMatches(DR_Rule&          aRule,
+                             DR_FrameTreeNode& aNode)
+{
+  NS_ASSERTION(aRule.mTarget, "program error");
+
+  DR_RulePart* rulePart;
+  DR_FrameTreeNode* parentNode;
+  for (rulePart = aRule.mTarget->mNext, parentNode = aNode.mParent;
+       rulePart && parentNode;
+       rulePart = rulePart->mNext, parentNode = parentNode->mParent) {
+    if (rulePart->mFrameType) {
+      if (parentNode->mFrame) {
+        nsCOMPtr<nsIAtom> fNodeType;
+        parentNode->mFrame->GetFrameType(getter_AddRefs(fNodeType));
+        if (rulePart->mFrameType != fNodeType) {
+          return PR_FALSE;
+        }
+      }
+      else NS_ASSERTION(PR_FALSE, "program error");
+    }
+    // else wild card match
+  }
+  return PR_TRUE;
+}
+
+void DR_State::FindMatchingRule(DR_FrameTreeNode& aNode)
+{
+  if (!aNode.mFrame) {
+    NS_ASSERTION(PR_FALSE, "invalid DR_FrameTreeNode \n");
+    return;
+  }
+
+  PRBool matchingRule = PR_FALSE;
+
+  nsCOMPtr<nsIAtom> fType;
+  aNode.mFrame->GetFrameType(getter_AddRefs(fType));
+  DR_FrameTypeInfo* info = GetFrameTypeInfo(fType.get());
+  NS_ASSERTION(info, "program error");
+  PRInt32 numRules = info->mRules.Count();
+  for (PRInt32 ruleX = 0; ruleX < numRules; ruleX++) {
+    DR_Rule* rule = (DR_Rule*)info->mRules.ElementAt(ruleX);
+    if (rule && RuleMatches(*rule, aNode)) {
+      aNode.mDisplay = rule->mDisplay;
+      matchingRule = PR_TRUE;
+      break;
+    }
+  }
+  if (!matchingRule) {
+    PRInt32 numWildRules = mWildRules.Count();
+    for (PRInt32 ruleX = 0; ruleX < numWildRules; ruleX++) {
+      DR_Rule* rule = (DR_Rule*)mWildRules.ElementAt(ruleX);
+      if (rule && RuleMatches(*rule, aNode)) {
+        aNode.mDisplay = rule->mDisplay;
+        break;
+      }
+    }
+  }
+
+  if (aNode.mParent) {
+    aNode.mIndent = aNode.mParent->mIndent;
+    if (aNode.mDisplay || mIndentUndisplayedFrames) {
+      aNode.mIndent++;
+    }
+  }
+}
+    
+DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
+                                           const nsHTMLReflowState& aReflowState)
+{
+  // find the frame of the parent reflow state (usually just the parent of aFrame)
+  const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
+  nsIFrame* parentFrame = (parentRS) ? parentRS->frame : nsnull;
+
+  // find the parent tree node leaf
+  DR_FrameTreeNode* parentNode = nsnull;
+  DR_FrameTreeNode* lastLeaf = (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(mFrameTreeLeaves.Count() - 1);
+  if (lastLeaf) {
+    for (parentNode = lastLeaf; parentNode && (parentNode->mFrame != parentFrame); parentNode = parentNode->mParent) {
+    }
+  }
+  DR_FrameTreeNode* newNode = new DR_FrameTreeNode(aFrame, parentNode);
+  FindMatchingRule(*newNode);
+  if (lastLeaf == parentNode) {
+    mFrameTreeLeaves.RemoveElementAt(mFrameTreeLeaves.Count() - 1);
+  }
+  mFrameTreeLeaves.AppendElement(newNode);
+  mCount++;
+
+  return newNode;
+}
+
+void DR_State::PrettyUC(nscoord aSize,
+                        char*   aBuf)
+{
+  if (NS_UNCONSTRAINEDSIZE == aSize) {
+    strcpy(aBuf, "UC");
+  }
+  else {
+    sprintf(aBuf, "%d", aSize);
+  }
+}
+
+void DR_State::DeleteTreeNode(DR_FrameTreeNode& aNode)
+{
+  mFrameTreeLeaves.RemoveElement(&aNode);
+  PRInt32 numLeaves = mFrameTreeLeaves.Count();
+  if ((0 == numLeaves) || (aNode.mParent != (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(numLeaves - 1))) {
+    mFrameTreeLeaves.AppendElement(aNode.mParent);
+  }
+  // delete the tree node 
+  delete &aNode;
+}
+
+void* nsFrame::DisplayReflowEnter(nsIFrame*                aFrame,
+                                  const nsHTMLReflowState& aReflowState)
+{
+  if (!DR_state.mInited) DR_state.Init();
+  if (!DR_state.mActive) return nsnull;
+
+  NS_ASSERTION(aFrame, "invalid call");
+
+  DR_FrameTreeNode* treeNode = DR_state.CreateTreeNode(aFrame, aReflowState);
+  if (treeNode->mDisplay) {
+    DR_state.DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+
+    char width[16];
+    char height[16];
+    DR_state.PrettyUC(aReflowState.availableWidth, width);
+    DR_state.PrettyUC(aReflowState.availableHeight, height);
+    printf("r=%d a=%s,%s ", aReflowState.reason, width, height); 
+
+    DR_state.PrettyUC(aReflowState.mComputedWidth, width);
+    DR_state.PrettyUC(aReflowState.mComputedHeight, height);
+    printf("c=%s,%s ", width, height);
+
+    nsIFrame* inFlow;
+    aFrame->GetPrevInFlow(&inFlow);
+    if (inFlow) {
+      printf("pif=%p ", inFlow);
+    }
+    aFrame->GetNextInFlow(&inFlow);
+    if (inFlow) {
+      printf("nif=%p ", inFlow);
+    }
+    printf("cnt=%d \n", DR_state.mCount);
+  }
+  return treeNode;
+}
+
+void nsFrame::DisplayReflowExit(nsIFrame*            aFrame,
+                                nsHTMLReflowMetrics& aMetrics,
+                                nsReflowStatus       aStatus,
+                                void*                aFrameTreeNode)
+{
+  if (!DR_state.mActive) return;
+
+  NS_ASSERTION(aFrame, "DisplayReflowExit - invalid call");
+  if (!aFrameTreeNode) return;
+
+  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
+  if (treeNode->mDisplay) {
+    DR_state.DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+
+    char width[16];
+    char height[16];
+    DR_state.PrettyUC(aMetrics.width, width);
+    DR_state.PrettyUC(aMetrics.height, height);
+    printf("d=%s,%s ", width, height);
+
+    if (aMetrics.maxElementSize) {
+      DR_state.PrettyUC(aMetrics.maxElementSize->width, width);
+      printf("me=%s ", width);
+    }
+    if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+      DR_state.PrettyUC(aMetrics.mMaximumWidth, width);
+      printf("m=%s ", width);
+    }
+    if (NS_FRAME_COMPLETE != aStatus) {
+      printf("status=%d", aStatus);
+    }
+    printf("\n");
+  }
+  DR_state.DeleteTreeNode(*treeNode);
+}
+
+#endif
+// End Display Reflow
 
 #endif

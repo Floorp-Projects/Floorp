@@ -732,12 +732,13 @@ nsGfxScrollFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 }
 
 NS_IMETHODIMP
-nsGfxScrollFrame::Reflow(nsIPresContext*   aPresContext,
+nsGfxScrollFrame::Reflow(nsIPresContext*      aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsGfxScrollFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
 
   // if there is a max element request then set it to -1 so we can see if it gets set
   if (aDesiredSize.maxElementSize)

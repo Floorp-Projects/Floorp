@@ -1487,7 +1487,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
                                     nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame", aOuterRS.reason);
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  DISPLAY_REFLOW(this, aOuterRS, aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aOuterRS);
 #endif
 
@@ -1628,7 +1629,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
   mPriorAvailWidth = aOuterRS.availableWidth;
 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aOuterRS, &aDesiredSize, aStatus);
 #endif
   return rv;

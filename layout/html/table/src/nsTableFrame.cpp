@@ -1821,7 +1821,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
                                nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableFrame", aReflowState.reason);
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
 
@@ -1981,7 +1982,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
   return rv;

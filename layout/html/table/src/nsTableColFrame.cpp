@@ -166,12 +166,13 @@ nsTableColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
-                                  nsHTMLReflowMetrics& aDesiredSize,
+NS_METHOD nsTableColFrame::Reflow(nsIPresContext*          aPresContext,
+                                  nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
-                                  nsReflowStatus&      aStatus)
+                                  nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableColFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
   aDesiredSize.width=0;
   aDesiredSize.height=0;
   if (nsnull!=aDesiredSize.maxElementSize)
