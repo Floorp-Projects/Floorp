@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  shistory \
 		  webbrowserpersist \
 		  gfx \
+		  profdirserviceprovider \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -61,7 +62,7 @@ CPPSRCS		= \
 		WindowCreator.cpp \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= embed_base_s gkgfx
+EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s gkgfx
 
 LIBS		= \
 		$(EXTRA_DSO_LIBS) \

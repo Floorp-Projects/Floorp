@@ -60,6 +60,11 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsCRT.h"
 
+#include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsProfileDirServiceProvider.h"
+#include "nsAppDirectoryServiceDefs.h"
+
 // Local header files
 #include "winEmbed.h"
 #include "WebBrowserChrome.h"
@@ -93,12 +98,10 @@ static nsresult OpenWebPage(const char * url);
 static nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome);
 
 // Profile chooser stuff
-static BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly, const char *szDefaultProfile);
-static LRESULT CALLBACK ChooseProfileDlgProc(HWND, UINT, WPARAM, LPARAM);
+static nsresult StartupProfile();
 
 // Global variables
 static UINT gDialogCount = 0;
-static BOOL gProfileSwitch = FALSE;
 static HINSTANCE ghInstanceResources = NULL;
 static HINSTANCE ghInstanceApp = NULL;
 static char gFirstURL[1024];
@@ -123,19 +126,6 @@ static const TCHAR *gDefaultURLs[] =
     _T("http://www.cnn.com/"),
     _T("http://www.javasoft.com/")
 };
-
-class ProfileChangeObserver : public nsIObserver,
-                              public nsSupportsWeakReference
-
-{
-public:
-    ProfileChangeObserver();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-};
-
-
 int main(int argc, char *argv[])
 {
     printf("You are embedded, man!\n\n");
@@ -153,22 +143,15 @@ int main(int argc, char *argv[])
     printf("\n\n");
     
     // Sophisticated command-line parsing in action
+#ifdef MINIMO
     char *szFirstURL = "http://www.mozilla.org/projects/embedding";
-    char *szDefaultProfile = nsnull;
-    int argn;
+#else
+    char *szFirstURL = "http://www.mozilla.org/projects/minimo";
+#endif
+	int argn;
     for (argn = 1; argn < argc; argn++)
     {
-        if (stricmp("-P", argv[argn]) == 0)
-        {
-            if (argn + 1 < argc)
-            {
-                szDefaultProfile = argv[++argn];
-            }
-        }
-        else
-        {
-            szFirstURL = argv[argn];
-        }
+		szFirstURL = argv[argn];
     }
     strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
 
@@ -189,23 +172,14 @@ int main(int argc, char *argv[])
     NS_InitEmbedding(nsnull, nsnull);
 
     // Choose the new profile
-    if (!ChooseNewProfile(TRUE, szDefaultProfile))
+    if (NS_FAILED(StartupProfile()))
     {
         NS_TermEmbedding();
         return 1;
     }
     WPARAM rv;
-    {    
-        // Now register an observer to watch for profile changes
-        nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
-
-        ProfileChangeObserver *observer = new ProfileChangeObserver;
-        observer->AddRef();
-        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-approve-change", PR_TRUE);
-        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-change-teardown", PR_TRUE);
-        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-after-change", PR_TRUE);
-
-        InitializeWindowCreator();
+    {   
+		InitializeWindowCreator();
 
         // Open the initial browser window
         OpenWebPage(gFirstURL);
@@ -216,70 +190,9 @@ int main(int argc, char *argv[])
         PRBool runCondition = PR_TRUE;
 
         rv = AppCallbacks::RunEventLoop(runCondition);
-
-        observer->Release();
     }
     // Close down Embedding APIs
     NS_TermEmbedding();
-
-    return rv;
-}
-
-//-----------------------------------------------------------------------------
-// ProfileChangeObserver
-//-----------------------------------------------------------------------------
-
-NS_IMPL_THREADSAFE_ISUPPORTS2(ProfileChangeObserver, nsIObserver, nsISupportsWeakReference)
-
-ProfileChangeObserver::ProfileChangeObserver()
-{
-}
-
-// ---------------------------------------------------------------------------
-//  CMfcEmbedApp : nsIObserver
-// ---------------------------------------------------------------------------
-
-NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
-{
-    nsresult rv = NS_OK;
-
-    if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0)
-    {
-        // The profile is about to change!
-
-        // Ask the user if they want to
-        int result = ::MessageBox(NULL, "Do you want to close all windows in order to switch the profile?", "Confirm", MB_YESNO | MB_ICONQUESTION);
-        if (result != IDYES)
-        {
-            nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
-            NS_ENSURE_TRUE(status, NS_ERROR_FAILURE);
-            status->VetoChange();
-        }
-    }
-    else if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
-    {
-        // The profile is changing!
-
-        // Prevent WM_QUIT by incrementing the dialog count
-        gDialogCount++;
-    }
-    else if (nsCRT::strcmp(aTopic, "profile-after-change") == 0)
-    {
-        // Decrease the dialog count so WM_QUIT can once more happen
-        gDialogCount--;
-        if (gDialogCount == 0)
-        {
-            // All the dialogs have been torn down so open new page
-            OpenWebPage(gFirstURL);
-        }
-        else
-        {
-            // The profile has changed, but dialogs are still being
-            // torn down. Set this flag so when the last one goes
-            // it can finish the switch.
-            gProfileSwitch = TRUE;
-        }
-    }
 
     return rv;
 }
@@ -605,12 +518,6 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
 //
 BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (uMsg == WM_COMMAND && LOWORD(wParam) == MOZ_SwitchProfile)
-    {
-        ChooseNewProfile(FALSE, NULL);
-        return FALSE;
-    }
-
     // Get the browser and other pointers since they are used a lot below
     HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
     nsIWebBrowserChrome *chrome = nsnull ;
@@ -898,156 +805,34 @@ LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Profile chooser dialog
-
-
 //
-//  FUNCTION: ChooseNewProfile()
+//  FUNCTION: StartupProfile()
 //
-//  PURPOSE: Allows the user to select a new profile from a list.
-//           The bShowForMultipleProfilesOnly argument specifies whether the
-//           function should automatically select the first profile and return
-//           without displaying a dialog box if there is only one profile to
-//           select.
+//  PURPOSE: 
 //
-BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly, const char *szDefaultProfile)
+nsresult StartupProfile()
 {
-    nsresult rv;
-    nsCOMPtr<nsIProfile> profileService = 
-             do_GetService(NS_PROFILE_CONTRACTID, &rv);
+
+	nsCOMPtr<nsIFile> appDataDir;
+	nsresult rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR, getter_AddRefs(appDataDir));
+	if (NS_FAILED(rv))
+      return rv;
+    
+	appDataDir->Append(NS_LITERAL_STRING("winembed"));
+	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
+
+	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
+    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
+    if (!locProvider)
+      return NS_ERROR_FAILURE;
+    
+	rv = locProvider->Register();
     if (NS_FAILED(rv))
-    {
-        return FALSE;
-    }
+      return rv;
+    
+	return locProvider->SetProfileDir(localAppDataDir);
 
-    if (szDefaultProfile)
-    {
-        // Make a new default profile
-        nsAutoString newProfileName; newProfileName.AssignWithConversion(szDefaultProfile);
-        rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
-        if (NS_FAILED(rv)) return FALSE;
-        rv = profileService->SetCurrentProfile(newProfileName.get());
-        if (NS_FAILED(rv)) return FALSE;
-        return TRUE;
-    }
-
-    PRInt32 profileCount = 0;
-    rv = profileService->GetProfileCount(&profileCount);
-    if (profileCount == 0)
-    {
-        // Make a new default profile
-        NS_NAMED_LITERAL_STRING(newProfileName, "winEmbed");
-        rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
-        if (NS_FAILED(rv)) return FALSE;
-        rv = profileService->SetCurrentProfile(newProfileName.get());
-        if (NS_FAILED(rv)) return FALSE;
-        return TRUE;
-    }
-    else if (profileCount == 1 && bShowForMultipleProfilesOnly)
-    {
-        // GetCurrentProfile returns the profile which was last used but is not nescesarily
-        // active. Call SetCurrentProfile to make it installed and active.
-        
-        nsXPIDLString   currProfileName;
-        rv = profileService->GetCurrentProfile(getter_Copies(currProfileName));
-        if (NS_FAILED(rv)) return FALSE;
-        rv = profileService->SetCurrentProfile(currProfileName);
-        if (NS_FAILED(rv)) return FALSE;
-        return TRUE;
-    }
-
-    INT nResult;
-    nResult = DialogBox(ghInstanceResources, (LPCTSTR)IDD_CHOOSEPROFILE, NULL, (DLGPROC)ChooseProfileDlgProc);
-    return (nResult == IDOK) ? TRUE : FALSE;
 }
-
-
-//
-//  FUNCTION: ChooseProfileDlgProc(HWND, unsigned, WORD, LONG)
-//
-//  PURPOSE:  Dialog handler procedure for the open uri dialog.
-//
-LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    nsresult rv;
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        {
-            HWND hwndProfileList = GetDlgItem(hDlg, IDC_PROFILELIST);
-
-            nsCOMPtr<nsIProfile> profileService = 
-                     do_GetService(NS_PROFILE_CONTRACTID, &rv);
-
-            // Get the list of profile names and add them to the list box
-            PRUint32 listLen = 0;
-            PRUnichar **profileList = nsnull;
-            rv = profileService->GetProfileList(&listLen, &profileList);
-            for (PRUint32 index = 0; index < listLen; index++)
-            {
-#ifdef UNICODE
-                SendMessageW(hwndProfileList, LB_ADDSTRING, 0, (LPARAM) profileList[index]);
-#else
-                nsCAutoString profile; profile.AssignWithConversion(profileList[index]);
-                SendMessageA(hwndProfileList, LB_ADDSTRING, 0, (LPARAM) profile.get());
-#endif
-            }
-
-            // Select the current profile (if there is one)
-
-            // Get the current profile
-#ifdef UNICODE
-            nsXPIDLString currProfile;
-            profileService->GetCurrentProfile(getter_Copies(currProfile));
-#else
-            nsXPIDLString currProfileUnicode;
-            profileService->GetCurrentProfile(getter_Copies(currProfileUnicode));
-            nsCAutoString currProfile; currProfile.AssignWithConversion(currProfileUnicode);
-#endif
-
-            // Now find and select it
-            INT currentProfileIndex = LB_ERR;
-            currentProfileIndex = SendMessage(hwndProfileList, LB_FINDSTRINGEXACT, -1, (LPARAM) currProfile.get());
-            if (currentProfileIndex != LB_ERR)
-            {
-                SendMessage(hwndProfileList, LB_SETCURSEL, currentProfileIndex, 0);
-            }
-        }
-        return TRUE;
-
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK ||
-            (HIWORD(wParam) & LBN_DBLCLK && LOWORD(wParam) == IDC_PROFILELIST))
-        {
-            HWND hwndProfileList = GetDlgItem(hDlg, IDC_PROFILELIST);
-
-            // Get the selected profile from the list box and make it current
-            INT currentProfileIndex = SendMessage(hwndProfileList, LB_GETCURSEL, 0, 0);
-            if (currentProfileIndex != LB_ERR)
-            {
-                nsCOMPtr<nsIProfile> profileService = 
-                         do_GetService(NS_PROFILE_CONTRACTID, &rv);
-                // Convert TCHAR name to unicode and make it current
-                INT profileNameLen = SendMessage(hwndProfileList, LB_GETTEXTLEN, currentProfileIndex, 0);
-                TCHAR *profileName = new TCHAR[profileNameLen + 1];
-                SendMessage(hwndProfileList, LB_GETTEXT, currentProfileIndex, (LPARAM) profileName);
-                nsAutoString newProfile; newProfile.AssignWithConversion(profileName);
-                rv = profileService->SetCurrentProfile(newProfile.get());
-            }
-            EndDialog(hDlg, IDOK);
-        }
-        else if (LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-        }
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1170,16 +955,8 @@ void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
     --gDialogCount;
     if (gDialogCount == 0)
     {
-        if (gProfileSwitch)
-        {
-            gProfileSwitch = FALSE;
-            OpenWebPage(gFirstURL);
-        }
-        else
-        {
-            // Quit when there are no more browser objects
-            PostQuitMessage(0);
-        }
+        // Quit when there are no more browser objects
+        PostQuitMessage(0);
     }
 }
 
@@ -1385,12 +1162,6 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
 
   // Place it where we want it.
   ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
-
-  // Subscribe new window to profile changes so it can kill itself when one happens
-  nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
-  if (observerService)
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome),
-                                 "profile-change-teardown", PR_TRUE);
 
   // if opened as chrome, it'll be made visible after the chrome has loaded.
   // otherwise, go ahead and show it now.
