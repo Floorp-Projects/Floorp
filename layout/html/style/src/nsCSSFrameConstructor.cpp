@@ -11519,8 +11519,14 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
 
       if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ||
           (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay)) {
+        // If the row group has was continued, then don't replicate it
+        nsIFrame* rgNextInFlow;
+        rowGroupFrame->GetNextInFlow(&rgNextInFlow);
+        if (rgNextInFlow) {
+          ((nsTableRowGroupFrame*)rowGroupFrame)->SetRepeatable(PR_FALSE);
+        }
         // Replicate the header/footer frame if it is not too tall
-        if (((nsTableRowGroupFrame*)rowGroupFrame)->IsRepeatable()) {        
+        else if (((nsTableRowGroupFrame*)rowGroupFrame)->IsRepeatable()) {        
           nsIFrame*               headerFooterFrame;
           nsFrameItems            childItems;
           nsIContent*             headerFooter;
