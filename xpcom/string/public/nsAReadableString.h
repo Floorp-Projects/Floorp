@@ -504,7 +504,7 @@ template <class CharT>
 PRUint32
 basic_nsAReadableString<CharT>::CountChar( CharT c ) const
   {
-#if 1
+#if 0
     return PRUint32(count(BeginReading(), EndReading(), c));
 #else
     PRUint32 result = 0;
@@ -679,7 +679,7 @@ inline
 int
 basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
   {
-    return ::Compare(*this, NS_STATIC_CAST(basic_nsAReadableString<CharT>, basic_nsLiteralString<CharT>(rhs)));
+    return ::Compare(*this, NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, basic_nsLiteralString<CharT>(rhs)));
   }
 
 template <class CharT>
@@ -687,7 +687,7 @@ inline
 int
 basic_nsAReadableString<CharT>::Compare( const CharT* rhs, PRUint32 rhs_length ) const
   {
-    return ::Compare(*this, NS_STATIC_CAST(basic_nsAReadableString<CharT>, basic_nsLiteralString<CharT>(rhs, rhs_length)));
+    return ::Compare(*this, NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, basic_nsLiteralString<CharT>(rhs, rhs_length)));
   }
 
 

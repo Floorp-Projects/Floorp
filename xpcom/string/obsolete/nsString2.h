@@ -35,6 +35,10 @@
     4. Subsumable strings
  ***********************************************************************/
 
+#ifndef NEW_STRING_APIS
+//#define NEW_STRING_APIS 1
+#endif //NEW_STRING_APIS
+
 
 #ifndef _nsString_
 #define _nsString_
@@ -898,6 +902,7 @@ public:
     virtual ~nsAutoString();
     nsAutoString();
     nsAutoString(const nsAutoString& aString);
+    nsAutoString(const nsString& aString);
     nsAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
     nsAutoString(PRUnichar aChar);
     nsAutoString(const CBufDescriptor& aBuffer);    

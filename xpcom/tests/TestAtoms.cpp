@@ -47,7 +47,8 @@ int main(int argc, char** argv)
     if (nsnull == s) {
       break;
     }
-    nsAutoString sb(buf);
+    nsAutoString sb;
+    sb.AssignWithConversion(buf);
     strings[count++] = sb.ToNewUnicode();
     sb.ToUpperCase();
     strings[count++] = sb.ToNewUnicode();
