@@ -854,6 +854,9 @@ NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
 NS_IMETHODIMP
 CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
+  // Check this at runtime because it might be hit in some out-of-memory cases.
+  NS_ENSURE_TRUE(mDeclaration->HasImportantData(), NS_ERROR_UNEXPECTED);
+
   return mDeclaration->MapImportantRuleInfoInto(aRuleData);
 }
 
@@ -1363,17 +1366,25 @@ nsCSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 
 already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
 {
-  if (!mImportantRule && mDeclaration->HasImportantData()) {
-    mImportantRule = new CSSImportantRule(mDeclaration);
-    NS_IF_ADDREF(mImportantRule);
+  if (!mDeclaration->HasImportantData()) {
+    NS_ASSERTION(!mImportantRule, "immutable, so should be no important rule");
+    return nsnull;
   }
-  NS_IF_ADDREF(mImportantRule);
+
+  if (!mImportantRule) {
+    mImportantRule = new CSSImportantRule(mDeclaration);
+    if (!mImportantRule)
+      return nsnull;
+    NS_ADDREF(mImportantRule);
+  }
+  NS_ADDREF(mImportantRule);
   return mImportantRule;
 }
 
 NS_IMETHODIMP
 CSSStyleRuleImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
+// XXX What about inner, etc.
   return nsCSSRule::GetStyleSheet(aSheet);
 }
 
