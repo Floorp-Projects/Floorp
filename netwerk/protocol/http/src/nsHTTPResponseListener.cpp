@@ -247,7 +247,7 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
         if (NS_FAILED(rv)) return rv;
 
         nsISimpleEnumerator* pModules = nsnull;
-        rv = pNetModuleMgr->EnumerateModules("http-response", &pModules);
+        rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, &pModules);
         if (NS_FAILED(rv)) return rv;
 
         nsIProxyObjectManager*  proxyObjectManager = nsnull; 
