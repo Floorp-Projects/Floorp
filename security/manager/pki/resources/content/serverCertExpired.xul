@@ -43,7 +43,7 @@
 
 <dialog id="serverCertExpired"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  style="width: 30em;"
+  style="width: 30em; height: 12em;"
   spacerflex="1"
   buttons="accept,cancel,help,extra2"
   buttonlabelaccept="&serverCertExpired.accept.label;"
