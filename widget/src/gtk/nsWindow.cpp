@@ -362,6 +362,10 @@ nsWindow::~nsWindow()
 /* static */ void
 nsWindow::ReleaseGlobals()
 {
+  if (mWindowLookupTable) {
+    g_hash_table_destroy(mWindowLookupTable);
+    mWindowLookupTable = nsnull;
+  }
   if (gXICLookupTable.ops) {
     PL_DHashTableFinish(&gXICLookupTable);
     gXICLookupTable.ops = nsnull;
