@@ -41,6 +41,7 @@
 #include "txError.h"
 #include "nsVoidArray.h"
 #include "nsDoubleHashtable.h"
+#include "txKey.h"
 
 class txVariableMap;
 class txXSLKey;
@@ -308,10 +309,27 @@ public:
     MBool addKey(Element* aKeyElem);
 
     /**
-     * Returns the key with the supplied name
-     * returns NULL if no such key exists
+     * Get the nodeset for a key+document+value. Note that the result can
+     * only be used until the next call to this function.
+     * @param aKeyName         Name of key.
+     * @param aDocument        Context-document to get key-nodes in.
+     * @param aKeyValue        Key-value to get the nodes for.
+     * @param aIndexIfNotFound Check if the requested key is index in the
+     *                         requested document and if it isn't index it.
+     *                         This should only be false if it's known that
+     *                         the key is already indexed in that document.
+     * @param aResult          Out-param returning the result. This pointer
+     *                         can only be used until the next call to
+     *                         getKeyNodes.
      */
-    txXSLKey* getKey(txExpandedName& keyName);
+    nsresult getKeyNodes(const txExpandedName& aKeyName, Document* aDocument,
+                         const nsAString& aKeyValue, PRBool aIndexIfNotFound,
+                         const NodeSet** aResult)
+    {
+        return mKeyHash.getKeyNodes(aKeyName, aDocument, aKeyValue,
+                                    aIndexIfNotFound, this, aResult);
+    }
+
 
     /**
      * Adds a decimal format. Returns false if the format already exists
@@ -450,6 +468,11 @@ private:
      * The set of all available keys
      */
     txExpandedNameMap mXslKeys;
+
+    /**
+     * Hash of all key-values
+     */
+    txKeyHash mKeyHash;
 
     /**
      * The set of all avalible decimalformats
