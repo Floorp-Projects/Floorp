@@ -28,6 +28,7 @@
 #include <prerr.h>
 #include <prmem.h>
 #include "primpl.h"       
+#include <fcntl.h>
 
 extern PRLogModuleInfo *_pr_shm_lm;
 
@@ -41,7 +42,6 @@ extern PRLogModuleInfo *_pr_shm_lm;
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 
 #define _MD_OPEN_SHARED_MEMORY _MD_OpenSharedMemory
 #define _MD_ATTACH_SHARED_MEMORY _MD_AttachSharedMemory
@@ -276,7 +276,6 @@ extern PRStatus _MD_DeleteSharedMemory( const char *name )
 */
 #elif defined PR_HAVE_POSIX_NAMED_SHARED_MEMORY
 #include <sys/mman.h>
-#include <fcntl.h>
 
 #define _MD_OPEN_SHARED_MEMORY _MD_OpenSharedMemory
 #define _MD_ATTACH_SHARED_MEMORY _MD_AttachSharedMemory
