@@ -20,6 +20,7 @@
 #define nsRenderingContextMac_h___
 
 #include "nsIRenderingContext.h"
+#include "nsDrawingSurfaceMac.h"
 #include <QDOffscreen.h>
 #include "nsCRT.h"
 
@@ -122,7 +123,11 @@ public:
   nsresult   Init(nsIDeviceContext* aContext, GrafPtr aPort);
 
 protected:
+#ifdef OLDDRAWINGSURFACE
 	void		SelectDrawingSurface(DrawingSurface* aSurface);
+#else
+	void		SelectDrawingSurface(nsDrawingSurfaceMac* aSurface);
+#endif
 
 	GrafPtr		mOldPort;
 
@@ -143,10 +148,18 @@ protected:
 	float             		mP2T; 				// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
 
+#ifdef OLDDRAWINGSURFACE
 	DrawingSurface*			mOriginalSurface;
 	DrawingSurface*			mFrontSurface;
 
 	DrawingSurface*			mCurrentSurface;	// pointer to the current surface
+#else
+	nsDrawingSurfaceMac*			mOriginalSurface;
+	nsDrawingSurfaceMac*			mFrontSurface;
+
+	nsDrawingSurfaceMac*			mCurrentSurface;	// pointer to the current surface
+#endif
+
 	GrafPtr					mPort;				// current grafPort - shortcut for mCurrentSurface->GetPort()
 	GraphicState *			mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
 

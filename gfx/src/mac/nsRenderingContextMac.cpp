@@ -68,6 +68,7 @@ static void ConvertLatin1ToMacRoman( char* aString)
 #pragma mark -
 
 
+#ifdef OLDDRAWINGSURFACE
 //------------------------------------------------------------------------
 //	GraphicState and DrawingSurface
 //
@@ -127,6 +128,12 @@ protected:
 	GrafPtr					mPort;
 	GraphicState*		mGS;
 };
+#else
+
+#define DrawingSurface	nsDrawingSurfaceMac
+
+
+#endif
 
 
 //------------------------------------------------------------------------
@@ -189,7 +196,12 @@ void GraphicState::Init(nsDrawingSurface aSurface)
 {
 	// retrieve the grafPort
 	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+#ifdef OLDDRAWINGSURFACE
 	GrafPtr port = surface->GetPort();
+#else
+	GrafPtr port;
+	surface->GetGrafPtr(&port);
+#endif
 
 	// init from grafPort
 	Init(port);
@@ -275,6 +287,7 @@ RgnHandle GraphicState::DuplicateRgn(RgnHandle aRgn)
 #pragma mark -
 
 
+#ifdef OLDDRAWINGSURFACE
 DrawingSurface::DrawingSurface()
 {
 	mPort = nsnull;
@@ -313,6 +326,7 @@ void DrawingSurface::Init(nsIWidget* aWindow)
   mPort = static_cast<GrafPtr>(aWindow->GetNativeData(NS_NATIVE_DISPLAY));
   mGS->Init(aWindow);
 }
+#endif
 
 
 //------------------------------------------------------------------------
@@ -328,8 +342,13 @@ nsRenderingContextMac::nsRenderingContextMac()
   mP2T							= 1.0f;
   mContext					= nsnull ;
 
+#ifdef OLDDRAWINGSURFACE
   mOriginalSurface	= new DrawingSurface();
   mFrontSurface			= new DrawingSurface();
+#else
+  mOriginalSurface	= new nsDrawingSurfaceMac();
+  mFrontSurface			= new nsDrawingSurfaceMac();
+#endif
 
 	mCurrentSurface		= nsnull;
   mPort							= nsnull;
@@ -347,7 +366,13 @@ nsRenderingContextMac::~nsRenderingContextMac()
   NS_IF_RELEASE(mContext);
   if (mOriginalSurface)
   {
+#ifdef OLDDRAWINGSURFACE
 		::SetPort(mOriginalSurface->GetPort());
+#else
+		GrafPtr port;
+		mOriginalSurface->GetGrafPtr(&port);
+		::SetPort(port);
+#endif
 		::SetOrigin(0,0); 		//¥TODO? Setting to 0,0 may not really reset the state properly.
 													// Maybe we should also restore the GS from mOriginalSurface.
 	}
@@ -400,8 +425,15 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
   mContext = aContext;
   NS_IF_ADDREF(mContext);
  
+#ifdef OLDDRAWINGSURFACE
 	if (mOriginalSurface->GetPort() == nsnull)
 		mOriginalSurface->Init(aWindow);
+#else
+		GrafPtr port;
+		mOriginalSurface->GetGrafPtr(&port);
+		if(port == nsnull)
+			mOriginalSurface->Init(aWindow);
+#endif
 
  	// select the surface
 	mFrontSurface->Init(aWindow);
@@ -454,8 +486,15 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
   mContext = aContext;
   NS_IF_ADDREF(mContext);
    
+#ifdef OLDDRAWINGSURFACE
 	if (mOriginalSurface->GetPort() == nsnull)
 		mOriginalSurface->Init(aSurface);
+#else
+		GrafPtr port;
+		mOriginalSurface->GetGrafPtr(&port);
+		if(port==nsnull)
+			mOriginalSurface->Init(aSurface);
+#endif
 
 	// select the surface
 	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
@@ -472,8 +511,15 @@ nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, GrafPtr aPort)
   mContext = aContext;
   NS_IF_ADDREF(mContext);
  
+#ifdef OLDDRAWINGSURFACE
 	if (mOriginalSurface->GetPort() == nsnull)
 		mOriginalSurface->Init(aPort);
+#else
+		GrafPtr port;
+		mOriginalSurface->GetGrafPtr(&port);
+		if(port==nsnull)
+			mOriginalSurface->Init(aPort);
+#endif
 
  	// select the surface
 	mFrontSurface->Init(aPort);
@@ -490,8 +536,14 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 		return;
 
 	mCurrentSurface = aSurface;
+#ifdef OLDDRAWINGSURFACE
 	mPort	= aSurface->GetPort();
 	mGS		= aSurface->GetGS();
+#else
+		GrafPtr port;
+		aSurface->GetGrafPtr(&mPort);
+		mGS		= aSurface->GetGS();
+#endif
 
 	// quickdraw initialization
   ::SetPort(mPort);
@@ -657,7 +709,12 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 	// retrieve the surface
 	DrawingSurface* srcSurface = static_cast<DrawingSurface*>(aSrcSurf);
+#ifdef OLDDRAWINGSURFACE
 	GrafPtr srcPort = srcSurface->GetPort();
+#else
+		GrafPtr srcPort;
+		srcSurface->GetGrafPtr(&srcPort);
+#endif
 
 	// apply the selected transformations
   PRInt32	x = aSrcX;
@@ -702,7 +759,11 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   else
   {
     destSurface	= mFrontSurface;
+#ifdef OLDDRAWINGSURFACE
     destPort		= mFrontSurface->GetPort();
+#else
+		mFrontSurface->GetGrafPtr(&destPort);
+#endif
 	}
 
 	// select the destination surface to set the colors
@@ -759,6 +820,7 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
+#ifdef OLDDRAWINGSURFACE
 	// get depth
   PRUint32 depth = 8;
   if (mContext)
@@ -796,6 +858,27 @@ NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRU
 	surface->Init((GrafPtr)offscreenGWorld);
  
 	aSurface = surface;
+#else
+
+  PRUint32 depth = 8;
+  if (mContext)
+  	mContext->GetDepth(depth);
+
+	// get rect
+  Rect macRect;
+  if (aBounds != nsnull)
+  {
+  	// fyi, aBounds->x and aBounds->y are always 0 here
+  	::SetRect(&macRect, aBounds->x, aBounds->y, aBounds->XMost(), aBounds->YMost());
+  }
+  else
+  	::SetRect(&macRect, 0, 0, 2, 2);
+
+	nsDrawingSurfaceMac* surface = new nsDrawingSurfaceMac();
+	surface->Init(depth,macRect.right,macRect.bottom,aSurfFlags);
+	aSurface = surface;	
+
+#endif
 
   return NS_OK;
 }
@@ -814,7 +897,12 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aS
 
 	// delete the offscreen
 	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+#ifdef OLDDRAWINGSURFACE
   GWorldPtr offscreenGWorld = (GWorldPtr)surface->GetPort();
+#else
+		GWorldPtr offscreenGWorld;
+		mOriginalSurface->GetGrafPtr(&(GrafPtr)offscreenGWorld);
+#endif
 	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
 	::DisposeGWorld(offscreenGWorld);
 
