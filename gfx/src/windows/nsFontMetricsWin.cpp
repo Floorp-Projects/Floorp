@@ -47,6 +47,39 @@
 //#define NS_REPLACEMENT_CHAR  PRUnichar(0x00BF) // Inverted question mark
 //#define NS_REPLACEMENT_CHAR  PRUnichar(0x25AD) // White rectangle
 
+enum nsCharSet
+{
+  eCharSet_DEFAULT = 0,
+  eCharSet_ANSI,
+  eCharSet_EASTEUROPE,
+  eCharSet_RUSSIAN,
+  eCharSet_GREEK,
+  eCharSet_TURKISH,
+  eCharSet_HEBREW,
+  eCharSet_ARABIC,
+  eCharSet_BALTIC,
+  eCharSet_THAI,
+  eCharSet_SHIFTJIS,
+  eCharSet_GB2312,
+  eCharSet_HANGEUL,
+  eCharSet_CHINESEBIG5,
+  eCharSet_JOHAB,
+  eCharSet_COUNT
+};
+
+struct nsCharSetInfo
+{
+  char*    mName;
+  PRUint16 mCodePage;
+  char*    mLangGroup;
+  void     (*GenerateMap)(nsCharSetInfo* aSelf);
+  PRUint32* mMap;
+};
+
+static void GenerateDefault(nsCharSetInfo* aSelf);
+static void GenerateSingleByte(nsCharSetInfo* aSelf);
+static void GenerateMultiByte(nsCharSetInfo* aSelf);
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -78,6 +111,25 @@ static int gFontMetricsWinCount = 0;
 static int gInitialized = 0;
 
 static PRUint32 gUserDefinedMap[2048];
+
+static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
+{
+  { "DEFAULT",     0,    "",               GenerateDefault },
+  { "ANSI",        1252, "x-western",      GenerateSingleByte },
+  { "EASTEUROPE",  1250, "x-central-euro", GenerateSingleByte },
+  { "RUSSIAN",     1251, "x-cyrillic",     GenerateSingleByte },
+  { "GREEK",       1253, "el",             GenerateSingleByte },
+  { "TURKISH",     1254, "tr",             GenerateSingleByte },
+  { "HEBREW",      1255, "he",             GenerateSingleByte },
+  { "ARABIC",      1256, "ar",             GenerateSingleByte },
+  { "BALTIC",      1257, "x-baltic",       GenerateSingleByte },
+  { "THAI",        874,  "th",             GenerateSingleByte },
+  { "SHIFTJIS",    932,  "ja",             GenerateMultiByte },
+  { "GB2312",      936,  "zh-CN",          GenerateMultiByte },
+  { "HANGEUL",     949,  "ko",             GenerateMultiByte },
+  { "CHINESEBIG5", 950,  "zh-TW",          GenerateMultiByte },
+  { "JOHAB",       1361, "ko-XXX",         GenerateMultiByte }
+};
 
 static void
 FreeGlobals(void)
@@ -330,21 +382,31 @@ GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
   return glyphIndex;
 }
 
-static int
+enum nsGetNameError
+{
+  eGetName_OK = 0,
+  eGetName_GDIError,
+  eGetName_OtherError
+};
+
+static nsGetNameError
 GetNAME(HDC aDC, nsString* aName)
 {
   DWORD len = GetFontData(aDC, NAME, 0, nsnull, 0);
-  if ((len == GDI_ERROR) || (!len)) {
-    return 0;
+  if (len == GDI_ERROR) {
+    return eGetName_GDIError;
+  }
+  if (!len) {
+    return eGetName_OtherError;
   }
   PRUint8* buf = (PRUint8*) PR_Malloc(len);
   if (!buf) {
-    return 0;
+    return eGetName_OtherError;
   }
   DWORD newLen = GetFontData(aDC, NAME, 0, buf, len);
   if (newLen != len) {
     PR_Free(buf);
-    return 0;
+    return eGetName_OtherError;
   }
   PRUint8* p = buf + 2;
   PRUint16 n = GET_SHORT(p);
@@ -372,7 +434,7 @@ GetNAME(HDC aDC, nsString* aName)
   }
   if (i == n) {
     PR_Free(buf);
-    return 0;
+    return eGetName_OtherError;
   }
   p = buf + offset + idOffset;
   idLength /= 2;
@@ -384,7 +446,7 @@ GetNAME(HDC aDC, nsString* aName)
 
   PR_Free(buf);
 
-  return 1;
+  return eGetName_OK;
 }
 
 static PLHashNumber
@@ -537,26 +599,6 @@ PRUint8 bitToCharSet[64] =
 /*61*/ DEFAULT_CHARSET,
 /*62*/ DEFAULT_CHARSET,
 /*63*/ DEFAULT_CHARSET
-};
-
-enum nsCharSet
-{
-  eCharSet_DEFAULT = 0,
-  eCharSet_ANSI,
-  eCharSet_EASTEUROPE,
-  eCharSet_RUSSIAN,
-  eCharSet_GREEK,
-  eCharSet_TURKISH,
-  eCharSet_HEBREW,
-  eCharSet_ARABIC,
-  eCharSet_BALTIC,
-  eCharSet_THAI,
-  eCharSet_SHIFTJIS,
-  eCharSet_GB2312,
-  eCharSet_HANGEUL,
-  eCharSet_CHINESEBIG5,
-  eCharSet_JOHAB,
-  eCharSet_COUNT
 };
 
 static nsCharSet gCharSetToIndex[256] =
@@ -1013,7 +1055,8 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
   }
   PRUint32* map;
   nsFontInfo* info;
-  if (GetNAME(aDC, name)) {
+  nsGetNameError ret = GetNAME(aDC, name);
+  if (ret == eGetName_OK) {
     info = (nsFontInfo*) PL_HashTableLookup(gFontMaps, name);
     if (info) {
       delete name;
@@ -1029,6 +1072,32 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     if (!map) {
       delete name;
       return nsnull;
+    }
+  }
+  // GDIError occurs when we have raster font (not TrueType)
+  else if (ret == eGetName_GDIError) {
+    delete name;
+    int charset = GetTextCharset(aDC);
+    if (charset & (~0xFF)) {
+      return emptyMap;
+    }
+    else {
+      int j = gCharSetToIndex[charset];
+      PRUint32* charSetMap = gCharSetInfo[j].mMap;
+      if (!charSetMap) {
+        charSetMap = (PRUint32*) PR_Calloc(2048, 4);
+        if (charSetMap) {
+          gCharSetInfo[j].mMap = charSetMap;
+          gCharSetInfo[j].GenerateMap(&gCharSetInfo[j]);
+        }
+        else {
+          return emptyMap;
+        }
+      }
+      if (aFontType) {
+        *aFontType = NS_FONT_TYPE_UNICODE;
+      }
+      return charSetMap;
     }
   }
   else {
@@ -1334,7 +1403,7 @@ GetGlyphIndices(HDC              aDC,
     if (aCMAP) {
       nsAutoString name;
       nsFontInfo* info;
-      if (GetNAME(aDC, &name)) {
+      if (GetNAME(aDC, &name) == eGetName_OK) {
         info = (nsFontInfo*) PL_HashTableLookup(nsFontMetricsWin::gFontMaps, &name);
         if (info) {
           info->mCMAP.mData = buf;
@@ -1689,12 +1758,6 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
 static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
   DWORD fontType, LPARAM closure)
 {
-  // XXX do we really want to ignore non-TrueType fonts?
-  if (!(fontType & TRUETYPE_FONTTYPE)) {
-    //printf("rejecting %s\n", logFont->lfFaceName);
-    return 1;
-  }
-
   // XXX ignore vertical fonts
   if (logFont->lfFaceName[0] == '@') {
     return 1;
@@ -1885,9 +1948,9 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
     nsFontWin* font = mLoadedFonts[i];
     nsAutoString name;
     HFONT oldFont = (HFONT) ::SelectObject(aDC, font->mFont);
-    int res = GetNAME(aDC, &name);
+    nsGetNameError res = GetNAME(aDC, &name);
     ::SelectObject(aDC, oldFont);
-    if (res) {
+    if (res == eGetName_OK) {
       nsFontInfo* info = (nsFontInfo*)PL_HashTableLookup(nsFontMetricsWin::gFontMaps, &name);
       if (!info || info->mType != NS_FONT_TYPE_UNICODE) {
         continue;
@@ -2080,10 +2143,6 @@ static int CALLBACK nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRI
   DWORD fontType, LPARAM closure)
 {
   // printf("Name %s Log font sizes %d\n",logFont->lfFaceName,logFont->lfWeight);
-  if (!(fontType & TRUETYPE_FONTTYPE)) {
- //     printf("rejecting %s\n", logFont->lfFaceName);
-    return TRUE;
-  }
   
   nsFontWeightInfo* weightInfo = (nsFontWeightInfo*)closure;
   if (NULL != metrics) {
@@ -3418,17 +3477,6 @@ nsFontWinSubstitute::DumpFontInfo()
 #endif // NS_DEBUG
 #endif
 
-typedef struct nsCharSetInfo nsCharSetInfo;
-
-struct nsCharSetInfo
-{
-  char*    mName;
-  PRUint16 mCodePage;
-  char*    mLangGroup;
-  void     (*GenerateMap)(nsCharSetInfo* aSelf);
-  PRUint32* mMap;
-};
-
 static void
 GenerateDefault(nsCharSetInfo* aSelf)
 { 
@@ -3471,25 +3519,6 @@ GenerateMultiByte(nsCharSetInfo* aSelf)
     }
   }
 }
-
-static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
-{
-  { "DEFAULT",     0,    "",               GenerateDefault },
-  { "ANSI",        1252, "x-western",      GenerateSingleByte },
-  { "EASTEUROPE",  1250, "x-central-euro", GenerateSingleByte },
-  { "RUSSIAN",     1251, "x-cyrillic",     GenerateSingleByte },
-  { "GREEK",       1253, "el",             GenerateSingleByte },
-  { "TURKISH",     1254, "tr",             GenerateSingleByte },
-  { "HEBREW",      1255, "he",             GenerateSingleByte },
-  { "ARABIC",      1256, "ar",             GenerateSingleByte },
-  { "BALTIC",      1257, "x-baltic",       GenerateSingleByte },
-  { "THAI",        874,  "th",             GenerateSingleByte },
-  { "SHIFTJIS",    932,  "ja",             GenerateMultiByte },
-  { "GB2312",      936,  "zh-CN",          GenerateMultiByte },
-  { "HANGEUL",     949,  "ko",             GenerateMultiByte },
-  { "CHINESEBIG5", 950,  "zh-TW",          GenerateMultiByte },
-  { "JOHAB",       1361, "ko-XXX",         GenerateMultiByte }
-};
 
 static int
 HaveConverterFor(PRUint8 aCharSet)
