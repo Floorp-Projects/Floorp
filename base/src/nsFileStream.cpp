@@ -316,7 +316,11 @@ void nsOutputFileStream::flush()
 nsOutputStream& nsEndl(nsOutputStream& os)
 //----------------------------------------------------------------------------------------
 {
+#ifdef XP_PC
+    os.write("\r\n", 2);
+#else
     os.put('\n');
+#endif
     os.flush();
     return os;
 } // nsEndl
