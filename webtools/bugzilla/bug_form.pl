@@ -58,7 +58,6 @@ sub show_bug {
     my $vars = $::vars;
     
     $vars->{'GetBugLink'} = \&GetBugLink;
-    $vars->{'quoteUrls'} = \&quoteUrls,
     $vars->{'lsearch'} = \&lsearch,
     $vars->{'header_done'} = (@_),
 

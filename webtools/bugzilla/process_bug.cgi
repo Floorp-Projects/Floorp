@@ -1089,7 +1089,6 @@ foreach my $id (@idlist) {
         $vars->{'mform'} = \%::MFORM;
         
         $vars->{'bug_id'} = $id;
-        $vars->{'quoteUrls'} = \&quoteUrls;
         
         SendSQL("UNLOCK TABLES");
         

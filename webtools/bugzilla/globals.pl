@@ -1545,6 +1545,9 @@ $::vars =
     # Generic linear search function
     'lsearch' => \&Bugzilla::Util::lsearch ,
 
+    # quoteUrls - autolinkifies text
+    'quoteUrls' => \&quoteUrls ,
+    
     # UserInGroup - you probably want to cache this
     'UserInGroup' => \&UserInGroup ,
 

@@ -39,11 +39,14 @@ ConnectToDatabase();
 
 quietly_check_login();
 
-if (defined $::FORM{'id'}) {
+if ($::FORM{'id'}) {
+    # Remove all dodgy chars, and split into name and ctype.
     $::FORM{'id'} =~ s/[^\w\-\.]//g;
-    $::FORM{'id'} =~ /(.*)(\.(.*))?/;
+    $::FORM{'id'} =~ /(.*)\.(.*)/;
 
-    my $format = GetFormat($1, undef, $3);
+    my $format = GetFormat($1, undef, $2);
+    
+    $vars->{'form'} = \%::FORM; 
     
     print "Content-Type: $format->{'ctype'}\n\n";
 
