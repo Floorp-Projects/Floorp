@@ -1362,35 +1362,196 @@ deny from all
   <section id="upgrading">
     <title>Upgrading to New Releases</title>
 
-    <para>A plain Bugzilla is fairly easy to upgrade from one version to a
-    newer one. Always read the release notes to see if there are any issues
-    that you might need to take note of. It is recommended that you take a 
-    backup of your database and your entire Bugzilla installation before attempting an
-    upgrade. You can upgrade a 'clean' installation by untarring a new
-    tarball over the old installation. If you are upgrading from 2.12 or
-    later, and have cvs installed, you can type <filename>cvs -z3 update</filename>, 
-    and resolve conflicts if there are any.
+    <para>Upgrading Bugzilla is something we all want to do from time to time,
+    be it to get new features or pick up the latest security fix. How easy
+    it is to update depends on a few factors.
     </para>
-    
-    <para>However, things get a bit more complicated if you've made
-    changes to Bugzilla's code. In this case, you may have to re-make or
-    reapply those changes. One good method is to take a diff of your customized
-    version against the original, so you can survey all that you've changed.
-    Hopefully, templatization will reduce the need for
-    this in the future.</para>
 
-    <para>From version 2.8 onward, Bugzilla databases can be automatically
-    carried forward during an upgrade. However, because the developers of
-    Bugzilla are constantly adding new
-    tables, columns and fields, you'll probably get SQL errors if you just
-    update the code and attempt to use Bugzilla. Always run the
-    <filename>checksetup.pl</filename> 
-    script whenever you upgrade your installation.</para>
+    <itemizedlist>
+      <listitem>
+        <para>If the new version is a revision or a new point release</para>
+      </listitem>
+      <listitem>
+        <para>How many, if any, local changes have been made</para>
+      </listitem>
+    </itemizedlist>
 
-    <para>If you are running Bugzilla version 2.8 or lower, and wish to
-    upgrade to the latest version, please consult the file,
-    "UPGRADING-pre-2.8" in the Bugzilla root directory after untarring the
-    archive.</para>
+    <para>There are also three different methods to upgrade your installation.
+    </para>
+
+    <orderedlist>
+      <listitem>
+        <para>Using CVS (<xref linkend="upgrade-cvs"/>)</para>
+      </listitem>
+      <listitem>
+        <para>Downloading a new tarball (<xref linkend="upgrade-tarball"/>)</para>
+      </listitem>
+      <listitem>
+        <para>Applying the relevant patches (<xref linkend="upgrade-patches"/>)</para>
+      </listitem>
+    </orderedlist>
+
+    <para>Which options are available to you may depend on how large a jump
+    you are making and/or your network configuration.
+    </para>
+
+    <para>Revisions are normally released to fix security vulnerabilities
+    and are distinguished by an increase in the third number. For example,
+    when 2.16.2 was released, it was a revision to 2.16.1.
+    </para>
+
+    <para>Point releases are normally released when the Bugzilla team feels
+    that there has been a significant amount of progress made between the
+    last point release and the current time. These are often proceeded by a
+    stabilization period and release candidates, however the use of 
+    development versions or release candidates is beyond the scope of this
+    document. Point releases can be distinguished by an increase in the
+    second number, or minor version. For example, 2.16.2 is a newer point
+    release than 2.14.5.
+    </para>
+
+    <para>The examples in this section are written as if you were updating
+    to version 2.16.2.  The procedures are the same regardless if you are
+    updating to a new point release or a new revision.  However, the chance
+    of running into trouble increases when upgrading to a new point release,
+    escpecially if you've made local changes.
+    </para>
+
+    <para>These examples also assume that your Bugzilla installation is at
+    <filename>/var/www/html/bugzilla</filename>. If that is not the case,
+    simply substitute the proper paths where appropriate.
+    </para>
+
+    <example id="upgrade-cvs">
+      <title>Upgrading using CVS</title>
+
+      <para>Every release of Bugzilla, whether it is a revision or a point
+      release, is tagged in CVS.  Also, every tarball we have distributed
+      since version 2.12 has been primed for using CVS. This does, however,
+      require that you are able to access cvs-mirror.mozilla.org on port
+      2401.
+
+        <tip>
+          <para>If you can do this, updating using CVS is probably the most
+          painless method, especially if you have a lot of local changes.
+          </para>
+        </tip>
+      </para>
+
+      <programlisting>
+bash$ <command>cd /var/www/html/bugzilla</command>
+bash$ <command>cvs login</command>
+Logging in to :pserver:anonymous@cvs-mirror.mozilla.org:2401/cvsroot
+CVS password: <command>anonymous</command>
+bash$ <command>cvs -q update -r BUGZILLA-2_16_2 -dP</command>
+P checksetup.pl
+P collectstats.pl
+P globals.pl
+P docs/rel_notes.txt
+P template/en/default/list/quips.html.tmpl
+      </programlisting>
+
+      <para>
+        <caution>
+          <para>If a line in the output from <command>cvs update</command>
+          begins with a <computeroutput>C</computeroutput> that represents a
+          file with local changes that CVS was unable to properly merge. You
+          need to resolve these conflicts manually before Bugzilla (or at
+          least the portion using that file) will be usable.
+          </para>
+        </caution>
+
+        <note>
+          <para>You also need to run <command>./checksetup.pl</command>
+          before your Bugzilla upgrade will be complete.
+          </para>
+        </note>
+      </para>
+    </example>
+
+    <example id="upgrade-tarball">
+      <title>Upgrading using the tarball</title>
+
+      <para>If you are unable or unwilling to use CVS, another option that's
+      always available is to download the latest tarball. This is the most
+      difficult option to use, especially if you have local changes.
+      </para>
+
+      <programlisting>
+bash$ <command>cd /var/www/html</command>
+bash$ <command>wget ftp://ftp.mozilla.org/pub/webtools/bugzilla-2.16.2.tar.gz</command>
+<emphasis>Output omitted</emphasis>
+bash$ <command>tar xzvf bugzilla-2.16.2.tar.gz</command>
+bugzilla-2.16.2/
+bugzilla-2.16.2/.cvsignore
+bugzilla-2.16.2/1x1.gif
+<emphasis>Output truncated</emphasis>
+bash$ <command>cd bugzilla-2.16.2</command>
+bash$ <command>cp ../bugzilla/localconfig* .</command>
+bash$ <command>cp -r ../bugzilla/data .</command>
+bash$ <command>cd ..</command>
+bash$ <command>mv bugzilla bugzilla.old</command>
+bash$ <command>mv bugzilla-2.16.2 bugzilla</command>
+bash$ <command>cd bugzilla</command>
+bash$ <command>./checksetup.pl</command>
+<emphasis>Output omitted</emphasis>
+      </programlisting>
+
+      <para>
+        <warning>
+          <para>The <command>cp</command> commands both end with periods which
+          is a very important detail, it tells the shell that the destination
+          directory is the current working directory. Also, the period at the
+          beginning of the <command>./checksetup.pl</command> is important and
+          can not be omitted.
+          </para>
+        </warning>
+
+        <note>
+          <para>You will now have to reapply any changes you have made to your
+          local installation manually.
+          </para>
+        </note>
+      </para>
+    </example>
+
+    <example id="upgrade-patches">
+      <title>Upgrading using patches</title>
+
+      <para>The Bugzilla team will normally make a patch file available for
+      revisions to go from the most recent revision to the new one. You could
+      also read the release notes and grab the patches attached to the
+      mentioned bug, but it is safer to use the released patch file as
+      sometimes patches get changed before they get checked in (for minor
+      spelling fixes and the like). It is also theorectically possible to
+      scour the fixed bug list and pick and choose which patches to apply
+      from a point release, but this is not recommended either as what you'll
+      end up with is a hodge podge Bugzilla that isn't really any version.
+      This would also make it more difficult to upgrade in the future.
+      </para>
+
+      <programlisting>
+bash$ <command>cd /var/www/html/bugzilla</command>
+bash$ <command>wget ftp://ftp.mozilla.org/pub/webtools/bugzilla-2.16.1-to-2.16.2.diff.gz</command>
+<emphasis>Output omitted</emphasis>
+bash$ <command>gunzip bugzilla-2.16.1-to-2.16.2.diff.gz</command>
+bash$ <command>patch -p1 &lt; bugzilla-2.16.1-to-2.16.2.diff</command>
+patching file checksetup.pl
+patching file collectstats.pl
+patching file globals.pl
+      </programlisting>
+
+      <para>
+        <caution>
+          <para>If you do this, beware that this doesn't change the entires in
+          your <filename id="dir">CVS</filename> directory so it may make
+          updates using CVS (<xref linkend="upgrade-cvs"/>) more difficult in the
+          future.
+          </para>
+        </caution>
+      </para>
+    </example>
+
   </section>
 
   <!-- Integrating Bugzilla with Third-Party Tools -->
