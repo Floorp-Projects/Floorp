@@ -4218,7 +4218,8 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create parser");
     if (NS_FAILED(rv)) return rv;
 
-    parser->SetCommand(aCommand);
+    parser->SetCommand(nsCRT::strcmp(aCommand, "view-source") ? eViewNormal :
+      eViewSource);
 
     nsAutoString utf8("UTF-8");
     parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
