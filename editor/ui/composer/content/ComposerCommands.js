@@ -3066,6 +3066,8 @@ var nsSetSmiley =
         break;
         case ":-[": strSml="s6";
         break;
+        case ":-/":
+        case ":/":
         case ":-\\":
         case ":\\": strSml="s7";
         break;
