@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCookieService.h"
-#include "nsCookieHTTPNotify.h"
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIScriptGlobalObject.h"
