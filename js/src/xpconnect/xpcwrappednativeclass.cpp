@@ -20,7 +20,7 @@
 
 #include "xpcprivate.h"
 
-const char* XPC_VAL_STR = "val";
+const char* XPC_VAL_STR = "value";
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 

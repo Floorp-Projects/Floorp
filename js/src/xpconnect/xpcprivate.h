@@ -37,7 +37,7 @@
 #include "xpcforwards.h"
 #include "xpcvariant.h"
 
-extern const char* XPC_VAL_STR; // 'val' property name for out params
+extern const char* XPC_VAL_STR; // 'value' property name for out params
 
 /***************************************************************************/
 

@@ -205,10 +205,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
         {
             char* p = (char*)s;
             if(!p)
-                break;
+                return JS_FALSE;
             JSString* str;
             if(!(str = JS_NewStringCopyN(cx, p, 1)))
-                break;
+                return JS_FALSE;
             *d = STRING_TO_JSVAL(str);
             break;
         }
@@ -216,10 +216,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
         {
             jschar* p = (jschar*)s;
             if(!p)
-                break;
+                return JS_FALSE;
             JSString* str;
             if(!(str = JS_NewUCStringCopyN(cx, p, 1)))
-                break;
+                return JS_FALSE;
             *d = STRING_TO_JSVAL(str);
             break;
         }
@@ -244,10 +244,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             {
                 nsID* iid = *((nsID**)s);
                 if(!iid)
-                    break;
+                    return JS_FALSE;
                 JSObject* obj;
                 if(!(obj = xpc_NewIDObject(cx, *iid)))
-                    break;
+                    return JS_FALSE;
                 *d = OBJECT_TO_JSVAL(obj);
                 break;
             }
@@ -261,10 +261,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             {
                 char* p = *((char**)s);
                 if(!p)
-                    break;
+                    return JS_FALSE;
                 JSString* str;
                 if(!(str = JS_NewStringCopyZ(cx, p)))
-                    break;
+                    return JS_FALSE;
                 *d = STRING_TO_JSVAL(str);
                 break;
             }
@@ -273,10 +273,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             {
                 jschar* p = *((jschar**)s);
                 if(!p)
-                    break;
+                    return JS_FALSE;
                 JSString* str;
                 if(!(str = JS_NewUCStringCopyZ(cx, p)))
-                    break;
+                    return JS_FALSE;
                 *d = STRING_TO_JSVAL(str);
                 break;
             }
@@ -310,7 +310,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                        !(wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
                                                                 iface, *iid)))
                     {
-                        break;
+                        return JS_FALSE;
                     }
                     aJSObj = wrapper->GetJSObject();
                     NS_RELEASE(wrapper);
