@@ -1173,6 +1173,11 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
 
+    if (!prop) {
+        *rval = JSVAL_FALSE;
+        return JS_TRUE;
+    }
+
     /*
      * XXX ECMA spec error compatible: return false unless hasOwnProperty.
      * The ECMA spec really should be fixed so propertyIsEnumerable and the
@@ -1184,8 +1189,7 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * technique used to satisfy ECMA requirements; users should not be able
      * to distinguish a shared permanent proto-property from a local one.
      */
-    if (prop &&
-        obj2 != obj &&
+    if (obj2 != obj &&
         !(OBJ_IS_NATIVE(obj2) &&
           SPROP_IS_SHARED_PERMANENT((JSScopeProperty *)prop))) {
         OBJ_DROP_PROPERTY(cx, obj2, prop);
@@ -1194,8 +1198,7 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &attrs);
-    if (prop)
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
+    OBJ_DROP_PROPERTY(cx, obj2, prop);
     if (ok)
         *rval = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
     return ok;
