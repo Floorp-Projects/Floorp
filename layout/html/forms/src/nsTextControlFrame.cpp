@@ -66,6 +66,7 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
+nsresult NS_NewTextControlFrame(nsIFrame*& aResult);
 nsresult
 NS_NewTextControlFrame(nsIFrame*& aResult)
 {

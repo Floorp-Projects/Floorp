@@ -41,6 +41,7 @@ private:
 
 
 
+nsresult NS_MakeEditorLoader(nsIContextLoader **aResult);
 nsresult NS_MakeEditorLoader(nsIContextLoader **aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
