@@ -169,7 +169,6 @@ calStorageCalendar.prototype = {
             throw Components.results.NS_ERROR_FAILURE;
 
         // we can only load storage bits from a file
-        this.mURI = aURI;
         var fileURL = aURI.QueryInterface(Components.interfaces.nsIFileURL);
         if (!fileURL)
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -180,6 +179,8 @@ calStorageCalendar.prototype = {
         this.mDBTwo = dbService.openDatabase (fileURL.file);
 
         this.initDB();
+
+        this.mURI = aURI;
     },
 
     // attribute boolean readOnly;
@@ -785,12 +786,11 @@ calStorageCalendar.prototype = {
 
             ip.flags = flags;
             this.mInsertItem.step();
+            this.mDB.commitTransaction();
         } catch (e) {
+            dump ("EXCEPTION; error is: " + this.mDB.lastErrorString + "\n");
             dump (e);
             this.mDB.rollbackTransaction();
-            failed = true;
-        } finally {
-            this.mDB.commitTransaction();
         }
 
         this.mItemCache[item.id] = item;
@@ -808,11 +808,11 @@ calStorageCalendar.prototype = {
             this.mDeleteAttendees.step();
             this.mDeleteProperties.step();
             this.mDeleteItem.step();
-        } catch (e) {
-            this.mDB.rollbackTransaction();
-            failed = true;
-        } finally {
             this.mDB.commitTransaction();
+        } catch (e) {
+            dump ("EXCEPTION; error is: " + this.mDB.lastErrorString + "\n");
+            dump (e);
+            this.mDB.rollbackTransaction();
         }
 
         delete this.mItemCache[aID];
