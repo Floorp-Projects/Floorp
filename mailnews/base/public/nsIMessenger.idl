@@ -50,5 +50,4 @@ interface nsIMessenger : nsISupports {
 						  in boolean markRead);
 	void NewFolder(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
 				   in string name);
-    void AccountManager(in nsIDOMWindow parent);
 };

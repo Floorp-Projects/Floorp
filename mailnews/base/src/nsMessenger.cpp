@@ -109,7 +109,6 @@ public:
 
   NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 						const char *name);
-  NS_IMETHOD AccountManager(nsIDOMWindow *parent);
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
@@ -775,30 +774,3 @@ nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *pa
 	return rv;
 }
 
-NS_IMETHODIMP
-nsMessenger::AccountManager(nsIDOMWindow *parent)
-{
-  nsresult rv;
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIURL> url;
-  rv = NS_NewURL(getter_AddRefs(url),
-                 "chrome://messenger/content/AccountManager.xul");
-  if (NS_FAILED(rv)) return rv;
-
-  nsIXULWindowCallbacks *cb = nsnull;
-  nsIWebShellWindow* newWindow;
-  rv = appShell->CreateDialogWindow(nsnull, // parent
-                                    url, // UI url
-                                    PR_TRUE, 
-                                    newWindow,
-                                    nsnull, // stream observer
-                                    cb, // callbacks
-                                    504, 436 ); // width, height
-
-  if (NS_SUCCEEDED(rv) && newWindow)
-    rv = newWindow->ShowModal();
-  
-  return rv;
-}
