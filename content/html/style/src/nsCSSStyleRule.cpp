@@ -2406,6 +2406,9 @@ MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSUs
 
     if (aUI.mResizer.GetUnit() == eCSSUnit_Null && ourUI->mResizer.GetUnit() != eCSSUnit_Null)
       aUI.mResizer = ourUI->mResizer;
+
+    if (aUI.mForceBrokenImageIcon.GetUnit() == eCSSUnit_Null && ourUI->mForceBrokenImageIcon.GetUnit() == eCSSUnit_Integer)
+      aUI.mForceBrokenImageIcon = ourUI->mForceBrokenImageIcon;
   }
 
   return NS_OK;

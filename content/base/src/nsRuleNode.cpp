@@ -940,7 +940,8 @@ static const PropertyCheckData UserInterfaceCheckProperties[] = {
 static const PropertyCheckData UIResetCheckProperties[] = {
   CHECKDATA_PROP(nsCSSUserInterface, mUserSelect, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSUserInterface, mResizer, CHECKDATA_VALUE, PR_FALSE),
-  CHECKDATA_PROP(nsCSSUserInterface, mKeyEquivalent, CHECKDATA_VALUELIST, PR_FALSE)
+  CHECKDATA_PROP(nsCSSUserInterface, mKeyEquivalent, CHECKDATA_VALUELIST, PR_FALSE),
+  CHECKDATA_PROP(nsCSSUserInterface, mForceBrokenImageIcon, CHECKDATA_VALUE, PR_FALSE)
 };
 
 #ifdef INCLUDE_XUL
@@ -2760,6 +2761,11 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aDa
     ui->mResizer = parentUI->mResizer;
   }
 
+  // force-broken-image-icons: integer
+  if (eCSSUnit_Integer == uiData.mForceBrokenImageIcon.GetUnit()) {
+    ui->mForceBrokenImageIcon = uiData.mForceBrokenImageIcon.GetIntValue();
+  }
+  
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
