@@ -34,6 +34,7 @@
 #include "nsICSSParser.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIDOMRange.h"
+#include "nsIContentIterator.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -48,6 +49,7 @@ static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_IID(kCHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
+static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
@@ -58,6 +60,7 @@ static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 
 extern nsresult NS_NewRangeList(nsIDOMSelection **);
 extern nsresult NS_NewRange(nsIDOMRange **);
+extern nsresult NS_NewContentIterator(nsIContentIterator **);
 extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 
 
@@ -207,7 +210,14 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
     refCounted = PR_TRUE;
-  }
+  } 
+  else if (mClassID.Equals(kCContentIteratorCID)) {
+    res = NS_NewContentIterator((nsIContentIterator **)&inst);
+    if (!NS_SUCCEEDED(res)) {
+      return res;
+    }
+    refCounted = PR_TRUE;
+  } 
   else if (mClassID.Equals(kCCSSParserCID)) {
     // XXX this should really be factored into a style-specific DLL so
     // that all the HTML, generic layout, and style stuff isn't munged
