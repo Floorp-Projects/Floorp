@@ -1740,6 +1740,9 @@ extern "C" JSBool pref_InitInitialObjects()
 	,	"winpref.js"
 #elif defined(XP_UNIX)
 	,	"unix.js"
+#if defined(VMS)
+	,	"openvms.js"
+#endif
 #elif defined(XP_OS2)
    ,	"os2pref.js"
 #endif
