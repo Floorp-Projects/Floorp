@@ -36,7 +36,7 @@
 #include "net.h"
 
 #include "nsPrefMigration.h"
-#include "nsPrefMigrationProgressDialog.h"
+#include "nsPMProgressDlg.h"
 
 /*-----------------------------------------------------------------
  * Globals
