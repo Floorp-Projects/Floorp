@@ -150,7 +150,7 @@ pull_lizard:
 pull_xpcom:
 	cd $(MOZ_SRC)/.; \
 	$(CVSCO_XPCOM) ns/modules/libreg; \
-	$(CVSCO_XPCOM) ns/xpcom
+	$(CVSCO_XPCOM) ns/xpcom; \
 	$(CVSCO_XPCOM) ns/modules/libpref
 
 pull_imglib:
