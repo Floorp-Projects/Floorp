@@ -1074,6 +1074,7 @@ case "$target" in
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
+    MOZ_ENABLE_COREXFONTS=
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
