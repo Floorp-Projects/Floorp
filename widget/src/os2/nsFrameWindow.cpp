@@ -216,8 +216,8 @@ nsresult nsFrameWindow::Show( PRBool bState)
    {
       nsWindow::Show( bState);
       SetWindowListVisibility( bState);
-      if( bState)
-         WinSetWindowPos( GetMainWindow(), 0, 0, 0, 0, 0, SWP_ACTIVATE);
+      WinSetWindowPos( GetMainWindow(), NULLHANDLE, 0L, 0L, 0L, 0L, 
+                       (bState == PR_TRUE) ? SWP_ACTIVATE : SWP_DEACTIVATE);
    }
 
    return NS_OK;
