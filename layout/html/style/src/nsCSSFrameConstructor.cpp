@@ -5818,7 +5818,7 @@ FindFrameWithTextContent(nsIFrame* aFrame, nsIContent* aContent)
 
     // See if the frame points to the same content object
     kidFrame->GetContent(getter_AddRefs(kidContent));
-    if (kidContent == aContent) {
+    if (kidContent.get() == aContent) {
       return kidFrame;
     }
 
@@ -5853,7 +5853,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext* aPresContext,
 
   // The only content objects that we don't add a mapping to the hash table
   // for are text content objects, because they're anonymous
-  if (nsLayoutAtoms::textTagName == tag) {
+  if (nsLayoutAtoms::textTagName == tag.get()) {
     nsCOMPtr<nsIContent>   parentContent;
     nsCOMPtr<nsIPresShell> presShell;
     nsIFrame*              parentFrame;
