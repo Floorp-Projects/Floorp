@@ -382,6 +382,7 @@ END
 // remains consistent on all systems.
 IDI_SETUP               ICON    DISCARDABLE     "setup.ico"
 IDI_BROWSER             ICON    DISCARDABLE     "browser.ico"
+IDI_MAIL                ICON    DISCARDABLE     "mail.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
