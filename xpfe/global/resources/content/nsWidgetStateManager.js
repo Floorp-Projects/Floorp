@@ -110,7 +110,8 @@ nsWidgetStateManager.prototype =
             {
               // save page data based on user supplied function in content area
               var dataObject = this.contentArea.GetFields();
-              this.dataManager.setPageData( aPageTag, dataObject );
+              if (dataObject)
+                this.dataManager.setPageData( aPageTag, dataObject );
             }
 
             // Automatic element retrieval. This is done in two ways.
