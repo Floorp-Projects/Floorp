@@ -1509,22 +1509,8 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   }
 #endif // XP_MAC
 
-  SetTitleFromXUL();
-  ShowAppropriateChrome();
-  LoadContentAreas();
-  
-  SetBoundsFromXUL(PR_TRUE, PR_TRUE /* !mIntrinsicallySized */);
-  if (mIntrinsicallySized)
-    {
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
-    if(markupViewer)
-      markupViewer->SizeToContent();
-    }
-
-  // Here's where we service the "show" request initially given in Initialize()
   OnChromeLoaded();
+  LoadContentAreas();
 
   return NS_OK;
 }
@@ -1704,130 +1690,10 @@ void nsWebShellWindow::ExecuteStartupCode()
     mCallbacks->ConstructAfterJavaScript(mWebShell);
 }
 
-/* This simply reads attributes from the window tag and blindly sets the size
-   to whatever it finds within.
-*/
-void nsWebShellWindow::SetBoundsFromXUL(PRBool aPosition, PRBool aSize)
-{
-  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
-  nsIWidget *windowWidget = GetWidget();
-  nsCOMPtr<nsIDOMElement> webshellElement;
-  nsAutoString sizeString;
-  PRInt32 errorCode,
-          specX, specY, specWidth, specHeight,
-          specSize;
-  nsRect  currentBounds;
-
-  if (webshellNode)
-    webshellElement = do_QueryInterface(webshellNode);
-  if (!webshellElement || !windowWidget) // it's hopeless
-    return;
-
-  mWindow->GetBounds(currentBounds);
-
-  if (aPosition) {
-    // first guess: use current position
-    specX = currentBounds.x;
-    specY = currentBounds.y;
-
-    // read position attributes
-    if (NS_SUCCEEDED(webshellElement->GetAttribute("screenX", sizeString))) {
-      specSize = sizeString.ToInteger(&errorCode);
-      if (NS_SUCCEEDED(errorCode) && specSize > 0)
-        specX = specSize;
-    }
-    if (NS_SUCCEEDED(webshellElement->GetAttribute("screenY", sizeString))) {
-      specSize = sizeString.ToInteger(&errorCode);
-      if (NS_SUCCEEDED(errorCode) && specSize > 0)
-        specY = specSize;
-    }
-
-    // position the window
-    if (specX != currentBounds.x || specY != currentBounds.y)
-      MoveTo(specX, specY);
-  }
-
-  if (aSize) {
-    // first guess: use current size
-    specWidth = currentBounds.width;
-    specHeight = currentBounds.height;
-
-    // read "height" attribute
-    if (NS_SUCCEEDED(webshellElement->GetAttribute("height", sizeString))) {
-      specSize = sizeString.ToInteger(&errorCode);
-      if (NS_SUCCEEDED(errorCode) && specSize > 0) {
-        specHeight = specSize;
-        mIntrinsicallySized = PR_FALSE;
-      }
-    }
-
-    // read "width" attribute
-    if (NS_SUCCEEDED(webshellElement->GetAttribute("width", sizeString))) {
-      specSize = sizeString.ToInteger(&errorCode);
-      if (NS_SUCCEEDED(errorCode) || specSize > 0) {
-        specWidth = specSize;
-        mIntrinsicallySized = PR_FALSE;
-      }
-    }
-
-    if (specWidth != currentBounds.width || specHeight != currentBounds.height)
-      windowWidget->Resize(specWidth, specHeight, PR_TRUE);
-  }
-} // SetBoundsFromXUL
-
-
 /* copy the window's size and position to the window tag */
 void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize)
 {
-  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
-  nsCOMPtr<nsIDOMElement> webshellElement;
-  nsAutoString sizeString,
-               persistString;
-  char         sizeBuf[10];
-  nsRect       currentSize;
-
-  if (webshellNode)
-    webshellElement = do_QueryInterface(webshellNode);
-  if (!webshellElement) // it's hopeless
-    return;
-
-  GetWindowBounds(currentSize);
-  // (But only for size elements which are persisted.)
-  /* Note we use the same cheesy way to determine that as in
-     nsXULDocument.cpp. Some day that'll be fixed and there will
-     be an obscure bug here. */
-  /* Note that storing sizes which are not persisted makes it
-     difficult to distinguish between windows intrinsically sized
-     and not. */
-  webshellElement->GetAttribute("persist", persistString);
-
-  if (aPosition) {
-    if (persistString.Find("screenX") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long) currentSize.x);
-      sizeString = sizeBuf;
-      webshellElement->SetAttribute("screenX", sizeString);
-    }
-
-    if (persistString.Find("screenY") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long) currentSize.y);
-      sizeString = sizeBuf;
-      webshellElement->SetAttribute("screenY", sizeString);
-    }
-  }
-
-  if (aSize) {
-    if (persistString.Find("width") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long) currentSize.width);
-      sizeString = sizeBuf;
-      webshellElement->SetAttribute("width", sizeString);
-    }
-
-    if (persistString.Find("height") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long) currentSize.height);
-      sizeString = sizeBuf;
-      webshellElement->SetAttribute("height", sizeString);
-    }
-  }
+   PersistPositionAndSize(aPosition, aSize);
 } // StoreBoundsToXUL
 
 
@@ -1839,109 +1705,6 @@ void nsWebShellWindow::KillPersistentSize()
    SetPersistence(persistX, persistY, PR_FALSE, PR_FALSE);
 }
 
-
-void nsWebShellWindow::SetTitleFromXUL()
-{
-  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
-  nsIWidget *windowWidget = GetWidget();
-  nsCOMPtr<nsIDOMElement> webshellElement;
-  nsString windowTitle;
-
-  if (webshellNode)
-    webshellElement = do_QueryInterface(webshellNode);
-  if (webshellElement && windowWidget &&
-      NS_SUCCEEDED(webshellElement->GetAttribute("title", windowTitle)) &&
-      windowTitle != "")
-  
-  if(NS_SUCCEEDED(EnsureChromeTreeOwner()))
-   mChromeTreeOwner->SetTitle(windowTitle.GetUnicode());
-} // SetTitleFromXUL
-
-
-// show/hide contents according to the current chrome mask
-void nsWebShellWindow::ShowAppropriateChrome()
-{
-  nsCOMPtr<nsIDOMElement>    rootElement;
-  nsCOMPtr<nsIDOMXULElement> xulRoot;
-  nsCOMPtr<nsIDOMDocument>   chromeDoc;
-  nsCOMPtr<nsIDOMWindow>     domWindow;
-  PRUint32                   chromeMask;
-
-  // get this window's document
-  if (NS_FAILED(ConvertWebShellToDOMWindow(mWebShell, getter_AddRefs(domWindow))))
-    return;
-  if (NS_FAILED(domWindow->GetDocument(getter_AddRefs(chromeDoc))) || !chromeDoc)
-    return;
-  if (NS_FAILED(chromeDoc->GetDocumentElement(getter_AddRefs(rootElement))) || !rootElement)
-    return;
-
-  // calculate a special version of the chrome mask. we store the actual
-  // value sent, but we make local changes depending on whether defaults
-  // were asked for.  Note that only internal (not OS-) chrome matters
-  // at this point, so the OS chrome is not calculated.
-  chromeMask = mChromeMask;
-  if (chromeMask & NS_CHROME_DEFAULT_CHROME)
-    if (chromeMask & NS_CHROME_OPEN_AS_DIALOG)
-      chromeMask &= ~(NS_CHROME_MENU_BAR_ON | NS_CHROME_TOOL_BAR_ON |
-                      NS_CHROME_LOCATION_BAR_ON | NS_CHROME_STATUS_BAR_ON |
-                      NS_CHROME_PERSONAL_TOOLBAR_ON | NS_CHROME_SCROLLBARS_ON |NS_CHROME_EXTRACHROME_ON);
-    else
-      // theoretically, this won't happen (only dialogs can have defaults)
-      // but, we cover this case anyway
-      chromeMask |= NS_CHROME_ALL_CHROME;
-
-  // special treatment for the menubar
-  ShowMenuBar(mChromeMask & NS_CHROME_MENU_BAR_ON ? PR_TRUE : PR_FALSE);
-
-  // get a list of this document's elements with the chromeclass attribute specified
-  xulRoot = do_QueryInterface(rootElement);
-  if (xulRoot) { // todo (maybe) the longer, straight DOM (not RDF) version?
-    nsCOMPtr<nsIDOMNodeList> chromeNodes;
-    if (NS_SUCCEEDED(xulRoot->GetElementsByAttribute("chromeclass", "*",
-                                getter_AddRefs(chromeNodes)))) {
-      PRUint32 nodeCtr, nodeCount;
-      chromeNodes->GetLength(&nodeCount);
-      for (nodeCtr = 0; nodeCtr < nodeCount; nodeCtr++) {
-        nsCOMPtr<nsIDOMNode> domNode;
-        nsCOMPtr<nsIDOMElement> domElement;
-        chromeNodes->Item(nodeCtr, getter_AddRefs(domNode));
-        domElement = do_QueryInterface(domNode);
-        if (domElement) {
-          nsAutoString chromeClass;
-          PRBool       makeChange;
-          PRUint32     flag;
-          // show or hide the element according to its chromeclass and the chromemask
-          domElement->GetAttribute("chromeclass", chromeClass);
-          makeChange = PR_FALSE;
-          if (chromeClass == "menubar") {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & NS_CHROME_MENU_BAR_ON;
-          } else if (chromeClass == "toolbar") {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & NS_CHROME_TOOL_BAR_ON;
-          } else if (chromeClass == "location") {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & NS_CHROME_LOCATION_BAR_ON;
-          } else if (chromeClass == "directories") {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & NS_CHROME_PERSONAL_TOOLBAR_ON;
-          } else if (chromeClass == "status") {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & NS_CHROME_STATUS_BAR_ON;
-          }else if (chromeClass == "extrachrome") {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & NS_CHROME_EXTRACHROME_ON;
-          }
-          if (makeChange)
-            if (flag)
-              domElement->RemoveAttribute("chromehidden");
-            else
-              domElement->SetAttribute("chromehidden", "T");
-        }
-      }
-    }
-  }
-}
 
 // if the main document URL specified URLs for any content areas, start them loading
 void nsWebShellWindow::LoadContentAreas() {
@@ -2345,14 +2108,15 @@ NS_IMETHODIMP nsWebShellWindow::GetWindowBounds(nsRect& aResult)
  
 NS_IMETHODIMP nsWebShellWindow::SetChrome(PRUint32 aNewChromeMask)
 {
-   mChromeMask = aNewChromeMask;
-   ShowAppropriateChrome();
+   if(mContentTreeOwner)
+      return mContentTreeOwner->SetChromeMask(aNewChromeMask);
    return NS_OK;
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetChrome(PRUint32& aChromeMaskResult)
 {
-   aChromeMaskResult = mChromeMask;
+   if(mContentTreeOwner)
+      return mContentTreeOwner->GetChromeMask(&aChromeMaskResult);
    return NS_OK;
 }
  

@@ -63,12 +63,15 @@ protected:
    NS_IMETHOD EnsureChromeTreeOwner();
    NS_IMETHOD EnsureContentTreeOwner();
    NS_IMETHOD EnsurePrimaryContentTreeOwner();
+   
    void OnChromeLoaded();
+   NS_IMETHOD LoadPositionAndSizeFromXUL(PRBool aPosition, PRBool aSize);
+   NS_IMETHOD LoadTitleFromXUL();
+   NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize);
 
 
    NS_IMETHOD GetDOMElementFromDocShell(nsIDocShell* aDocShell, 
       nsIDOMElement** aDOMElement);
-   NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize);
    NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
       PRBool aPrimary, const PRUnichar* aID);
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 
