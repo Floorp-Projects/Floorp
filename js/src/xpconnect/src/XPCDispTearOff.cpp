@@ -486,9 +486,15 @@ pre_call_clean_up:
                 JS_smprintf_free(sz);
         }
 
+        // Get this right away in case we do something below to cause JS code
+        // to run on this JSContext.  And get it whether success or not so that
+        // scriptable methods that must return NS_COMFALSE or another non-NS_OK
+        // success code can do so when implemented by JS.
+        pending_result = xpcc->GetPendingResult();
+
         if (!success)
         {
-            retval = nsXPCWrappedJSClass::CheckForException(ccx, name.get(), "IDispatch");
+            retval = nsXPCWrappedJSClass::CheckForException(ccx, name.get(), "IDispatch", pending_result);
             goto done;
         }
 

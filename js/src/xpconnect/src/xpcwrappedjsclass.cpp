@@ -802,7 +802,8 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
 nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        const char * aPropertyName,
-                                       const char * anInterfaceName)
+                                       const char * anInterfaceName,
+                                       nsresult aPendingResult)
 {
     XPCContext * xpcc = ccx.GetXPCContext();
     JSContext * cx = ccx.GetJSContext();
@@ -812,10 +813,6 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     xpcc->GetException(getter_AddRefs(xpc_exception));
     if(xpc_exception)
         xpcc->SetException(nsnull);
-
-    // get this right away in case we do something below to cause JS code
-    // to run on this JSContext
-    nsresult pending_result = xpcc->GetPendingResult();
 
     jsval js_exception;
     /* JS might throw an expection whether the reporter was called or not */
@@ -934,9 +931,9 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     else
     {
         // see if JS code signaled failure result without throwing exception
-        if(NS_FAILED(pending_result))
+        if(NS_FAILED(aPendingResult))
         {
-            return pending_result;
+            return aPendingResult;
         }
     }
     return NS_ERROR_FAILURE;
@@ -1368,9 +1365,16 @@ pre_call_clean_up:
         }
     }
 
+    // Get this right away in case we do something below to cause JS code
+    // to run on this JSContext.  And get it whether success or not so that
+    // scriptable methods that must return NS_COMFALSE or another non-NS_OK
+    // success code can do so when implemented by JS.
+    pending_result = xpcc->GetPendingResult();
+
     if (!success)
     {
-        retval = CheckForException(ccx, name, GetInterfaceName());
+        retval = CheckForException(ccx, name, GetInterfaceName(),
+                                   pending_result);
         goto done;
     }
 
