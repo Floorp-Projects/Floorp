@@ -29,6 +29,10 @@
 #include "nsINntpUrl.h"
 #include "nsNNTPProtocol.h"
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 
 nsNntpService::nsNntpService()
@@ -39,7 +43,67 @@ nsNntpService::nsNntpService()
 nsNntpService::~nsNntpService()
 {}
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsNntpService, nsINntpService::GetIID());
+NS_IMPL_THREADSAFE_ADDREF(nsNntpService);
+NS_IMPL_THREADSAFE_RELEASE(nsNntpService);
+
+nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+{
+    if (nsnull == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+ 
+    if (aIID.Equals(nsINntpService::GetIID()) || aIID.Equals(kISupportsIID)) 
+	{
+        *aInstancePtr = (void*) ((nsINntpService*)this);
+        AddRef();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsIMsgMessageService::GetIID())) 
+	{
+        *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
+        AddRef();
+        return NS_OK;
+    }
+
+#if defined(NS_DEBUG)
+    /*
+     * Check for the debug-only interface indicating thread-safety
+     */
+    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+    if (aIID.Equals(kIsThreadsafeIID))
+        return NS_OK;
+#endif
+ 
+    return NS_NOINTERFACE;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+// nsIMsgMessageService support
+////////////////////////////////////////////////////////////////////////////////////////
+nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
+{
+	// this function is just a shell right now....eventually we'll implement displaymessage such
+	// that we break down the URI and extract the news host and article number. We'll then
+	// build up a url that represents that action, create a connection to run the url
+	// and load the url into the connection. 
+	
+	// HACK ALERT: For now, the only news url we run is a display message url. So just forward
+	// this URI to RunNewUrl
+
+	return RunNewsUrl(aMessageURI, aDisplayConsumer, aUrlListener, aURL);
+
+}
+
+nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
+						   nsIUrlListener * aUrlListener, nsIURL **aURL)
+{
+	NS_ASSERTION(0, "unimplemented feature");
+	return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+// nsINntpService support
+////////////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer, 
 										nsIUrlListener *aUrlListener, nsIURL ** aUrl)

@@ -20,11 +20,12 @@
 #define nsNntpService_h___
 
 #include "nsINntpService.h"
+#include "nsIMsgMessageService.h"
 
 class nsIURL;
 class nsIUrlListener;
 
-class nsNntpService : public nsINntpService
+class nsNntpService : public nsINntpService, nsIMsgMessageService
 {
 public:
 	nsNntpService();
@@ -32,9 +33,20 @@ public:
 
 	NS_DECL_ISUPPORTS
 
+	////////////////////////////////////////////////////////////////////////////////////////
+	// we suppport the nsINntpService Interface 
+	////////////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
 						   nsIUrlListener * aUrlListener, nsIURL ** aURL);
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// we suppport the nsIMsgMessageService Interface 
+	////////////////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, 
+						   PRBool moveMessage,nsIUrlListener * aUrlListener, nsIURL **aURL);
+
+	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 };
 
 #endif /* nsNntpService_h___ */
-
