@@ -5765,7 +5765,7 @@ rm -f conftest*
         echo "$ac_t""$_res" 1>&6
     else
        ASFLAGS="$ASFLAGS -fPIC"
-       DSO_LDOPTS='-G -h $@'
+       DSO_LDOPTS='-shared -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
