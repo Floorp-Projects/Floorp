@@ -3019,6 +3019,15 @@ MOZ_ARG_DISABLE_BOOL(tests,
 [  --disable-tests         Dont build the tests],
   ENABLE_TESTS= )
 
+dnl bi-directional support off by default
+IBMBIDI=
+MOZ_ARG_ENABLE_BOOL(bidi,
+[  --enable-bidi     Enable bi-directional support],
+  IBMBIDI=1)
+if test "$IBMBIDI"; then
+  AC_DEFINE(IBMBIDI)
+fi
+
 dnl ========================================================
 dnl =
 dnl = --enable-monolithic-toolkit
@@ -3909,6 +3918,7 @@ AC_SUBST(NO_UNIX_ASYNC_DNS)
 AC_SUBST(NO_SHARED_LIB)
 AC_SUBST(NO_STATIC_LIB)
 AC_SUBST(ENABLE_TESTS)
+AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(BUILD_IDLC)
