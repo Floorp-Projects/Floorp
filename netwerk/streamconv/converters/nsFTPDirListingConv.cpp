@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Bradley Baetz <bbaetz@cs.mcgill.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -1030,8 +1030,12 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
 
         // MODIFIED DATE
         char buffer[256] = "";
+        // Note: The below is the RFC822/1123 format, as required by
+        // the application/http-index-format specs
+        // viewers of such a format can then reformat this into the
+        // current locale (or anything else they choose)
         PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
-                                "%m/%d/%y %I:%M:%S %p", &thisEntry->mMDTM );
+                               "%a, %d %b %Y %H:%M:%S GMT", &thisEntry->mMDTM );
         char *escapedDate = nsEscape(buffer, url_Path);
 
         aString.Append(escapedDate);

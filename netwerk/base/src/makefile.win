@@ -25,6 +25,8 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  mimetype \
 		  intl \
+		  uconv \
+		  locale \
 		  pref \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>

@@ -98,6 +98,14 @@ RegisterProc(nsIComponentManager *aCompMgr,
                                    PR_TRUE, 
                                    PR_TRUE, 
                                    getter_Copies(previous));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = catman->AddCategoryEntry("Gecko-Content-Viewers", "application/http-index-format; x-view-type=view-source",
+                                  NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format; x-view-type=view-source",
+                                  PR_TRUE, 
+                                  PR_TRUE, 
+                                  getter_Copies(previous));
+    
     return rv;
 }
 static NS_METHOD 
@@ -112,8 +120,12 @@ UnregisterProc(nsIComponentManager *aCompMgr,
 
     rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers", 
                                      "application/http-index-format", PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers", 
+                                     "application/http-index-format; x-view-type=view-source", PR_TRUE);
+
+    return rv;
 }
 
 static nsModuleComponentInfo components[] = {
@@ -128,6 +140,9 @@ static nsModuleComponentInfo components[] = {
     { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format",
       nsDirectoryViewerFactoryConstructor, RegisterProc, UnregisterProc  },
+    { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
+      NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format; x-view-type=view-source",
+      nsDirectoryViewerFactoryConstructor }, // Let the standard type do the registration
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_CONTRACTID,
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,

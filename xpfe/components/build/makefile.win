@@ -28,6 +28,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  rdf \
 		  necko \
+		  necko2 \
 		  timer \
 		  intl \
 		  locale \

@@ -27,6 +27,7 @@ REQUIRES	= xpcom \
 		  util \
 		  pref \
 		  exthandler \
+                  uconv \
 		  zlib \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
@@ -49,6 +50,8 @@ CPP_OBJS =                                  \
         .\$(OBJDIR)\nsHTTPCompressConv.obj  \
         .\$(OBJDIR)\nsUnknownDecoder.obj    \
         .\$(OBJDIR)\nsTXTToHTMLConv.obj     \
+        .\$(OBJDIR)\nsDirIndex.obj          \
+        .\$(OBJDIR)\nsDirIndexParser.obj    \
         .\$(OBJDIR)\nsIndexedToHTML.obj     \
 		.\$(OBJDIR)\nsBinHexDecoder.obj     \
         $(NULL)

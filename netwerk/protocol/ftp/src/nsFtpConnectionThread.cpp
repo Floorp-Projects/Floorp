@@ -373,11 +373,10 @@ nsFtpState::nsFtpState() {
     mControlConnection = nsnull;
     mDRequestForwarder = nsnull;
 
-    mGenerateRawContent = mGenerateHTMLContent = PR_FALSE;
+    mGenerateRawContent = PR_FALSE;
     nsresult rv;
     nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_SUCCEEDED(rv) || pPref) { 
-        pPref->GetBoolPref("network.dir.generate_html", &mGenerateHTMLContent);
         pPref->GetBoolPref("network.ftp.raw_output", &mGenerateRawContent);
     }
 }
@@ -1232,9 +1231,6 @@ nsFtpState::SetContentType()
         return mChannel->SetContentType(contentType);
     }
 
-    if (mGenerateHTMLContent)
-        return mChannel->SetContentType("text/html");
-    
     return mChannel->SetContentType("application/http-index-format");
 }
 
@@ -2022,13 +2018,6 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
     if (mGenerateRawContent) {
         converterListener = listener;
     }
-    else if (mGenerateHTMLContent) {
-        rv = scs->AsyncConvertData(fromStr.get(), 
-                                   NS_LITERAL_STRING("text/html").get(),
-                                   listener, 
-                                   mURL, 
-                                   getter_AddRefs(converterListener));
-    } 
     else 
     {
         rv = scs->AsyncConvertData(fromStr.get(), 

@@ -90,12 +90,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl)
 #include "nsStreamProviderProxy.h"
 #include "nsSimpleStreamListener.h"
 #include "nsSimpleStreamProvider.h"
+#include "nsDirIndexParser.h"
+#include "nsDirIndex.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRequestObserverProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamProviderProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamListener)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamProvider)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDirIndexParser, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirIndex)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -752,7 +756,13 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ISTREAMCONVERTER_KEY INDEX_TO_HTML, 
       nsIndexedToHTML::Create
     },
-    
+
+    { "Directory Index Parser",
+      NS_DIRINDEXPARSER_CID,
+      NS_DIRINDEXPARSER_CONTRACTID,
+      nsDirIndexParserConstructor
+    },
+
     { "MultiMixedConverter", 
       NS_MULTIMIXEDCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY MULTI_MIXED_X, 
@@ -832,6 +842,13 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
 	  NS_ISTREAMCONVERTER_KEY, 
 	  CreateNewTXTToHTMLConvFactory
     },
+
+    { "Directory Index",
+      NS_DIRINDEX_CID,
+      "@mozilla.org/dirIndex;1",
+      nsDirIndexConstructor
+    },
+
 #if defined(OLD_CACHE)
     // from netwerk/cache:
     { "Memory Cache", NS_MEM_CACHE_FACTORY_CID, NS_NETWORK_MEMORY_CACHE_CONTRACTID, nsMemCacheConstructor },

@@ -40,6 +40,7 @@ REQUIRES	= xpcom \
 		  jar \
 		  locale \
 		  intl \
+		  uconv \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 

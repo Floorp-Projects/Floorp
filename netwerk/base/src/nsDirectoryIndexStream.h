@@ -42,7 +42,8 @@
 #include "nsString.h"
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
-#include "nsISimpleEnumerator.h"
+#include "nsVoidArray.h"
+#include "nsITextToSubURI.h"
 
 class nsDirectoryIndexStream : public nsIInputStream
 {
@@ -51,7 +52,13 @@ protected:
     PRInt32 mOffset;
 
     nsCOMPtr<nsIFile> mDir;
-    nsCOMPtr<nsISimpleEnumerator> mIter;
+    PRInt32 mPos;
+    nsVoidArray mArray;
+    
+    // XXX - we could make these statics, and share them. But we're only going to have one
+    // of directoryindexstream at once, so theres no point
+    nsXPIDLCString mFSCharset;
+    nsCOMPtr<nsITextToSubURI> mTextToSubURI;
 
     nsDirectoryIndexStream();
     nsresult Init(nsIFile* aDir);

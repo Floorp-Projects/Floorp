@@ -62,19 +62,9 @@ interface nsIHTTPIndex : nsISupports
     readonly attribute nsIRDFDataSource DataSource;
 
     /**
-     * Create a stream listener that can be used to populate the HTTP index.
-     */
-    nsIStreamListener CreateListener();
-
-    /**
      * The charset to use for decoding FTP filenames
      */
     attribute string encoding;
-
-    /**
-     * secret method to add parent<->child relationship(s)
-     */
-    [noscript] void AddElement(in nsIRDFResource parent, in nsIRDFResource prop, in nsIRDFNode child);
 };
 
 %{C++
