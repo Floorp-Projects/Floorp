@@ -887,19 +887,21 @@ if (!$userid) {
 </tr></table>};
     }
 
-    print "
+    print qq{
 <INPUT TYPE=radio NAME=cmdtype VALUE=asdefault> Remember this as the default query
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=asnamed> Remember this query, and name it:
 <INPUT TYPE=text NAME=newqueryname>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="checkbox" NAME="tofooter" VALUE="1">
+    and put it in my page footer.
 <BR>
-"
+    };
 }
 
-print "
+print qq{
 <NOBR><B>Sort By:</B>
 <SELECT NAME=\"order\">
-";
+};
 
 my $deforder = "'Importance'";
 my @orders = ('Bug Number', $deforder, 'Assignee');

@@ -730,13 +730,15 @@ individual query.
         }
         $::buffer =~ s/[\&\?]cmdtype=[a-z]+//;
         my $qname = SqlQuote($name);
+       my $tofooter= ( $::FORM{'tofooter'} ? 1 : 0 );
         SendSQL("SELECT query FROM namedqueries " .
                 "WHERE userid = $userid AND name = $qname");
         if (!FetchOneColumn()) {
-            SendSQL("REPLACE INTO namedqueries (userid, name, query) " .
-                    "VALUES ($userid, $qname, " . SqlQuote($::buffer) . ")");
+            SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter) " .
+                    "VALUES ($userid, $qname, ". SqlQuote($::buffer) .", ". $tofooter .")");
         } else {
-            SendSQL("UPDATE namedqueries SET query = " . SqlQuote($::buffer) .
+            SendSQL("UPDATE namedqueries SET query = " . SqlQuote($::buffer) . "," .
+                   " linkinfooter = " . $tofooter .
                     " WHERE userid = $userid AND name = $qname");
         }
         PutHeader("OK, query saved.");
@@ -838,7 +840,7 @@ if ($dotweak) {
     confirm_login();
     if (!UserInGroup("editbugs")) {
         print qq{
-Sorry; you do not have sufficient priviledges to edit a bunch of bugs
+Sorry; you do not have sufficient privileges to edit a bunch of bugs
 at once.
 };
         PutFooter();
