@@ -1236,6 +1236,37 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   return rv;
 }
 
+static PRBool
+HaveAutoWidth(const nsHTMLReflowState& aReflowState)
+{
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.computedWidth) {
+    return PR_TRUE;
+  }
+  const nsStylePosition* pos = aReflowState.mStylePosition;
+  if (!pos) {
+    return PR_TRUE;
+  }
+  for (;;) {
+    nsStyleUnit widthUnit = pos->mWidth.GetUnit();
+    if (eStyleUnit_Auto == widthUnit) {
+      return PR_TRUE;
+    }
+    if (eStyleUnit_Inherit != widthUnit) {
+      break;
+    }
+    const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
+      aReflowState.parentReflowState;
+    if (!prs) {
+      return PR_TRUE;
+    }
+    pos = prs->mStylePosition;
+    if (!pos) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+        
 void
 nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                                nsBlockReflowState& aState,
@@ -1276,7 +1307,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // Compute final width
     nscoord maxWidth = 0, maxHeight = 0;
     nscoord minWidth = aState.mKidXMost + borderPadding.right;
-    if (!aState.mUnconstrainedWidth && aReflowState.HaveFixedContentWidth()) {
+    if (!HaveAutoWidth(aReflowState)) {
       // Use style defined width
       aMetrics.width = borderPadding.left + aReflowState.computedWidth +
         borderPadding.right;

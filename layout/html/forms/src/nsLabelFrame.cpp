@@ -467,14 +467,6 @@ nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
   }
 
-  // if we are constrained and the child is smaller, use the constrained values
-  //if (aReflowState.HaveFixedContentWidth() && (aDesiredSize.width < aReflowState.computedWidth)) {
-  //  aDesiredSize.width = aReflowState.computedWidth;
-  //}
-  //if (aReflowState.HaveFixedContentHeight() && (aDesiredSize.height < aReflowState.computedHeight)) {
-  //  aDesiredSize.height = aReflowState.computedHeight;
-  //}
-
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 

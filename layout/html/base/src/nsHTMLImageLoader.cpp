@@ -244,13 +244,11 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     heightConstraint = aReflowState->computedHeight;
 
     // Determine whether the image has fixed content width and height
-    fixedContentWidth = aReflowState->HaveFixedContentWidth();
-    fixedContentHeight = aReflowState->HaveFixedContentHeight();
-    if (NS_INTRINSICSIZE == widthConstraint) {
-      fixedContentWidth = PR_FALSE;
+    if (NS_UNCONSTRAINEDSIZE != widthConstraint) {
+      fixedContentWidth = PR_TRUE;
     }
-    if (NS_INTRINSICSIZE == heightConstraint) {
-      fixedContentHeight = PR_FALSE;
+    if (NS_UNCONSTRAINEDSIZE != heightConstraint) {
+      fixedContentHeight = PR_TRUE;
     }
   }
 

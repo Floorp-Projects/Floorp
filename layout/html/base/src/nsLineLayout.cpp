@@ -973,8 +973,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         parent->DeleteChildsNextInFlow(mPresContext, aFrame);
       }
     }
-    if (firstLetterOK && !mFirstLetterStyleOK) {
-    }
+//XXX    if (firstLetterOK && !mFirstLetterStyleOK) {
+//XXX    }
 
     // See if we can place the frame. If we can't fit it, then we
     // return now.

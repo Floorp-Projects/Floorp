@@ -490,11 +490,11 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRUint32 width = EMBED_DEF_DIM;
   PRUint32 height = EMBED_DEF_DIM;
 
-  if (aReflowState.HaveFixedContentWidth()) {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
     aMetrics.width = aReflowState.computedWidth;
     haveWidth = PR_TRUE;
   }
-  if (aReflowState.HaveFixedContentHeight()) {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
     aMetrics.height = aReflowState.computedHeight;
     haveHeight = PR_TRUE;
   }

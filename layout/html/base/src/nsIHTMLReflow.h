@@ -234,13 +234,6 @@ struct nsHTMLReflowState : nsReflowState {
                     const nsSize&            aAvailableSpace);
 
   /**
-   * Returns PR_TRUE if the specified width or height has an value other
-   * than 'auto'
-   */
-  PRBool HaveFixedContentWidth() const;
-  PRBool HaveFixedContentHeight() const;
-
-  /**
    * Get the containing block reflow state, starting from a frames
    * <B>parent</B> reflow state (the parent reflow state may or may not end
    * up being the containing block reflow state)
