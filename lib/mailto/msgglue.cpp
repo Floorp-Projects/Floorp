@@ -378,6 +378,7 @@ MSG_GetParentPane(MSG_Pane* progresspane)
 }
 
 
+#ifdef XP_UNIX
 extern "C" MSG_Pane*
 MSG_MailDocument (MWContext *old_context)
 {
@@ -435,7 +436,6 @@ MSG_MailDocumentURL (MWContext *old_context,const char *url)
 	XP_ASSERT(comppane->GetPaneType() == MSG_COMPOSITIONPANE);
 	return comppane;
 }
-
 
 extern "C" MSG_Pane*
 MSG_Mail (MWContext *old_context)
@@ -510,6 +510,8 @@ MSG_DestroyCompositionFields(MSG_CompositionFields *fields)
 	delete fields;
 }
 
+#endif //XP_UNIX
+
 extern "C" void
 MSG_SetCompFieldsReceiptType(MSG_CompositionFields *fields,
 							 int32 type)
@@ -544,6 +546,7 @@ MSG_GetForcePlainText(MSG_CompositionFields* fields)
 	return fields->GetForcePlainText();
 }
 
+#ifdef XP_UNIX
 extern "C" MSG_Pane*
 MSG_ComposeMessage (MWContext *old_context,
 					const char *from,
@@ -599,7 +602,7 @@ MSG_ComposeMessage (MWContext *old_context,
 	return comppane;
 }
 
-
+#endif //XP_UNIX
 extern "C" XP_Bool
 MSG_ShouldAutoQuote(MSG_Pane* comppane)
 {

@@ -413,7 +413,9 @@ MSG_CompositionPane::~MSG_CompositionPane() {
 	delete m_print;
 	m_print = NULL;
 
+#if XP_UNIX
 	if (m_context) FE_DestroyMailCompositionContext(m_context);
+#endif //XP_UNIX
 	m_context = NULL;
 
 	delete m_fields;
@@ -646,12 +648,14 @@ extern "C" void FE_MsgShowHeaders(MSG_Pane *pPane, MSG_HEADER_SET mhsHeaders);
 
 void MSG_CompositionPane::ToggleCompositionHeader(uint32 header)
 {
-  if (m_visible_headers & header) {
+#if XP_UNIX
+    if (m_visible_headers & header) {
 	m_visible_headers &= ~header;
   } else {
 	m_visible_headers |= header;
   }
   FE_MsgShowHeaders(this, m_visible_headers);
+#endif //XP_UNIX
 }
 
 XP_Bool 
@@ -681,7 +685,8 @@ void
 MSG_CompositionPane::InitializeHeaders(MWContext* old_context,
 									   MSG_CompositionFields* fields)
 {
-	XP_ASSERT(m_fields == NULL);
+#ifdef XP_UNIX
+    XP_ASSERT(m_fields == NULL);
 	XP_ASSERT(m_initfields == NULL);
 
 	const char *real_addr = FE_UsersMailAddress ();
@@ -860,7 +865,7 @@ MSG_CompositionPane::InitializeHeaders(MWContext* old_context,
 
 	m_initfields = new MSG_CompositionFields(m_fields);
 								// ###tw  Should check for failure!
-
+#endif //XP_UNIX
 }
 
 
@@ -1013,7 +1018,8 @@ MSG_CompositionPane::GetUrlDone_S(PrintSetup* pptr)
 void
 MSG_CompositionPane::GetUrlDone(PrintSetup* /*pptr*/)
 {
-	XP_File file;
+#ifdef XP_UNIX
+    XP_File file;
 	FREEIF(m_quoteUrl);
 	m_textContext = NULL;  /* since this is called as a result of
 							  TXFE_AllConnectionsComplete, we know this context
@@ -1149,6 +1155,7 @@ MSG_CompositionPane::GetUrlDone(PrintSetup* /*pptr*/)
 
 	/* Re-enable the UI. */
 	FE_UpdateCompToolbar (this);
+#endif //XP_UNIX
 }
 
   
@@ -1611,13 +1618,14 @@ msg_attachments_match (MSG_AttachmentData *attachment,
 int
 MSG_CompositionPane::DownloadAttachments()
 {
-	int attachment_count = 0;
+	int returnValue = 0;
+#ifdef XP_UNIX
+    int attachment_count = 0;
 	int new_download_count = 0;
 	int download_overlap_count = 0;
 	MSG_AttachmentData *tmp;
 	MSG_AttachmentData *downloads = 0;
 	MSG_AttachedFile *tmp2;
-	int returnValue = 0;
 
 	// *** Relax the rule a little bit to enable resume downloading at
 	// *** send time.
@@ -1720,6 +1728,7 @@ MSG_CompositionPane::DownloadAttachments()
 							   MSG_CompositionPane::DownloadAttachmentsDone_S);
 		XP_FREE(downloads);
 	}
+#endif //XP_UNIX
 	return returnValue;
 }
 
@@ -1740,7 +1749,8 @@ MSG_CompositionPane::DownloadAttachmentsDone(MWContext* context, int status,
 											 const char* error_message,
 											 struct MSG_AttachedFile *attachments)
 {
-	XP_ASSERT(context == m_context);
+#ifdef XP_UNIX
+    XP_ASSERT(context == m_context);
 
 	int old_count = 0;
 	int new_count = 0;
@@ -1809,6 +1819,7 @@ FAIL:
 	/* Since we weren't able to store it, ditch the files and the strings
 	   describing them. */
 	msg_delete_attached_files(attachments);
+#endif //XP_UNIX
 }
 
 
@@ -2097,7 +2108,9 @@ MSG_CompositionPane::DeliveryDoneCB(MWContext* context, int status,
 	XP_ASSERT(!m_attachmentInProgress);
 	if (m_deliveryInProgress) {
 		m_deliveryInProgress = FALSE;
-#ifndef XP_UNIX /* Does not need this function call for UNIX. 
+
+#if 0
+//#ifndef XP_UNIX /* Does not need this function call for UNIX. 
 		   This will prevent toolbar to be enabled after msg sent on 
 		   UNIX. */
 		 FE_UpdateCompToolbar (this); 
@@ -2127,7 +2140,8 @@ MSG_CompositionPane::DeliveryDoneCB(MWContext* context, int status,
 void
 MSG_CompositionPane::MailCompositionAllConnectionsComplete ()
 {
-	/* This may be redundant, I'm not sure... */
+#ifdef XP_UNIX
+    /* This may be redundant, I'm not sure... */
 	if (m_deliveryInProgress) {
 		m_deliveryInProgress = FALSE;
 		FE_UpdateCompToolbar(this);
@@ -2140,6 +2154,7 @@ MSG_CompositionPane::MailCompositionAllConnectionsComplete ()
 	if (m_status >= 0) {
 		delete this;
 	}
+#endif //XP_UNIX
 }
 
 
@@ -2170,9 +2185,10 @@ MSG_CompositionPane::GetHTMLMarkup(void)
 int
 MSG_CompositionPane::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 {
-	int attachment_count = 0;
-	XP_Bool digest_p = FALSE;
 	int status = 0;
+#ifdef XP_UNIX
+    int attachment_count = 0;
+	XP_Bool digest_p = FALSE;
 
 	if (m_pendingAttachmentsCount) {
 		m_deliveryInProgress = TRUE; // so that DoneComposeMessage is called again
@@ -2323,6 +2339,7 @@ MSG_CompositionPane::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 #endif
 												DeliveryDoneCB_s);
 	}
+#endif //XP_UNIX
 	return 0; // Always success, because Errors were reported and handled by EDT_SaveFileTo.
 }
 

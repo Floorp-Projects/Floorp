@@ -1292,6 +1292,7 @@ mime_make_attachment_stream (int /*format_out*/, void * /*closure*/,
 
 HG55451
 
+#ifndef XP_WIN32
 void
 MSG_RegisterConverters (void)
 {
@@ -1399,6 +1400,8 @@ MSG_RegisterConverters (void)
 
 
 }
+
+#endif //XP_WIN32
 
 
 static XP_Bool
@@ -3163,6 +3166,7 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 									char **new_post_url_return,
 									char **headers_return)
 {
+#ifdef XP_UNIX
   char *from = 0, *to = 0, *cc = 0, *body = 0, *search = 0;
   char *extra_headers = 0;
   char *s;
@@ -3377,6 +3381,10 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 	  MSG_DestroyCompositionFields(fields);
 
   return status;
+#else
+  return 0;
+  XP_ASSERT(FALSE);
+#endif //XP_UNIX
 }
 
 

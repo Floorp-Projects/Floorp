@@ -497,6 +497,74 @@ MSG_MimeRelatedParentPart::~MSG_MimeRelatedParentPart(void)
 
 /*
 ----------------------------------------------------------------------
+MSG_MimeRelatedStreamSaver
+----------------------------------------------------------------------
+*/
+
+// Constructor
+MSG_MimeRelatedStreamSaver::MSG_MimeRelatedStreamSaver(MSG_CompositionPane *pane, 
+										   MWContext *context, 
+										   MSG_CompositionFields *fields,
+										   XP_Bool digest_p, 
+										   MSG_Deliver_Mode deliver_mode,
+										   const char *body, 
+										   uint32 body_length,
+										   MSG_AttachedFile *attachedFiles,
+										   DeliveryDoneCallback cb,
+										   char **ppOriginalRootURL)
+	: MSG_MimeRelatedSaver(pane,context,fields,digest_p,deliver_mode,
+        body,body_length,attachedFiles,cb,ppOriginalRootURL)
+
+{
+}
+
+void
+MSG_MimeRelatedStreamSaver::Complete( Bool bSuccess, EDT_ITapeFileSystemComplete *pfComplete, void *pArg )
+{
+ 	m_pEditorCompletionFunc = pfComplete;
+	m_pEditorCompletionArg = pArg;
+
+	// Call StartMessageDelivery (and should) if we
+	// were told to at creation time.
+	if (bSuccess)
+	{
+		// If we only generated a single HTML part, treat that as 
+		// the root part.
+		if (m_pPart->GetNumChildren() == 1)
+		{
+			MSG_SendPart *tempPart = m_pPart->DetachChild(0);
+			delete m_pPart;
+			m_pPart = tempPart;
+		}
+
+        // Call our UrlExit routine to perform cleanup.
+        MSG_MimeRelatedSaver::UrlExit(m_pContext, this, 0, NULL);
+#if 0
+        msg_StartMessageDeliveryWithAttachments(m_pPane, this,
+												m_pFields,
+												m_digest, FALSE, 
+												m_deliverMode,
+												TEXT_HTML,
+												m_pBody, m_bodyLength,
+												m_pAttachedFiles,
+												m_pPart,
+#ifdef XP_OS2
+												(void (_Optlink*) (MWContext*,void*,int,const char*))
+#endif
+												MSG_MimeRelatedSaver::UrlExit);
+#endif
+	}
+	else
+	{
+		// delete the contained part since we failed
+		delete m_pPart;
+		m_pPart = NULL;
+        // Call our UrlExit routine to perform cleanup.
+        MSG_MimeRelatedSaver::UrlExit(m_pContext, this, MK_INTERRUPTED, NULL);
+    }
+}
+/*
+----------------------------------------------------------------------
 MSG_MimeRelatedSaver
 ----------------------------------------------------------------------
 */

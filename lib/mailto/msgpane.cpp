@@ -284,7 +284,12 @@ MSG_Prefs* MSG_Pane::GetPrefs() {
 MsgERR
 MSG_Pane::ComposeNewMessage()
 {
+#ifdef XP_UNIX
 	return (MSG_Mail(GetContext())) ? 0 : MK_OUT_OF_MEMORY;
+#else
+    XP_ASSERT(FALSE);
+    return MK_OUT_OF_MEMORY;
+#endif //XP_UNIX
 }
 
 //This is a long one.  I'd like to break it down but some of the work
@@ -479,11 +484,12 @@ MSG_Pane::MakeMailto(const char *to, const char *cc,
 					const char *attachment, const char *host_data,
 					XP_Bool xxx_p, XP_Bool sign_p)
 {
-	char *to2 = 0, *cc2 = 0;
+	char *url=NULL;
+#ifdef XP_UNIX
+    char *to2 = 0, *cc2 = 0;
 	char *out, *head;
 	char *qto, *qcc, *qnewsgroups, *qsubject, *qreferences;
 	char *qattachment, *qhost_data;
-	char *url;
 	char *me = MIME_MakeFromField();
 	char *to_plus_me = 0;
 
@@ -584,6 +590,7 @@ FAIL:
 		FREEIF (qattachment);
 		FREEIF (qhost_data);
 
+#endif //XP_UNIX
 		return url;
 }
 

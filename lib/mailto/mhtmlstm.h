@@ -222,4 +222,24 @@ public:
 
 //#endif
 
+
+//used to stop lame mimerelated saver from sending a message!
+class MSG_MimeRelatedStreamSaver : public MSG_MimeRelatedSaver
+{
+public:
+    MSG_MimeRelatedStreamSaver(MSG_CompositionPane *pane, MWContext *context, 
+						 MSG_CompositionFields *fields,
+						 XP_Bool digest_p, MSG_Deliver_Mode deliver_mode,
+						 const char *body, uint32 body_length,
+						 MSG_AttachedFile *attachedFiles,
+						 DeliveryDoneCallback cb,
+						 char **ppOriginalRootURL);
+    virtual ~MSG_MimeRelatedStreamSaver(){}
+    //
+    // Called on completion, TRUE if completed successfully, FALSE if it failed.  
+    // we dont want the message to be sent, so we stop mimerelated saver from completing
+    //  
+    virtual void Complete( Bool bSuccess, EDT_ITapeFileSystemComplete *pfComplete, void *pArg );
+};
+
 #endif
