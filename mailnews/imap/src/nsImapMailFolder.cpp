@@ -1409,17 +1409,14 @@ NS_IMETHODIMP nsImapMailFolder::OnlineFolderRename(
         nsCOMPtr<nsIFolder> iFolder;
         nsCOMPtr<nsIMsgImapMailFolder> parent;
         nsCOMPtr<nsIMsgFolder> me;
-        rv = GetParent(getter_AddRefs(iFolder));
+        rv = GetFolder(aStruct->fOldName, getter_AddRefs(me));
+        if (NS_FAILED(rv)) return rv;
+        rv = me->GetParent(getter_AddRefs(iFolder));
         if (NS_SUCCEEDED(rv))
         {
             parent = do_QueryInterface(iFolder, &rv);
             if (NS_SUCCEEDED(rv))
-            {
-                rv = QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(),
-                                    getter_AddRefs(me));
-                if (NS_SUCCEEDED(rv))
                     parent->RemoveSubFolder(me);
-            }
         }
         nsCOMPtr<nsIMsgFolder> rootFolder;
         rv = GetRootFolder(getter_AddRefs(rootFolder));
@@ -2504,6 +2501,43 @@ PRBool nsImapMailFolder::DeleteIsMoveToTrash()
 		PR_FREEIF(userName);
 	}
 	return rv;
+}
+
+nsresult nsImapMailFolder::GetFolder(const char* name, nsIMsgFolder** pFolder)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!name || !*name || !pFolder) return rv;
+    *pFolder = nsnull;
+    nsCOMPtr<nsIMsgFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    if (NS_SUCCEEDED(rv) && rootFolder)
+    {
+        char* uri = nsnull;
+        rv = rootFolder->GetURI(&uri);
+        if (NS_SUCCEEDED(rv) && uri)
+        {
+            nsAutoString uriAutoString = uri;
+            uriAutoString.Append('/');
+            uriAutoString.Append(name);
+            NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
+            char* uriString = uriAutoString.ToNewCString();
+            nsCOMPtr<nsIRDFResource> res;
+            rv = rdf->GetResource(uriString, getter_AddRefs(res));
+            if (NS_SUCCEEDED(rv))
+            {
+                nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+                if (NS_SUCCEEDED(rv) && folder)
+                {
+                    *pFolder = folder;
+                    NS_ADDREF(*pFolder);
+                }
+            }
+            delete [] uriString;
+        }
+        PR_FREEIF(uri);
+    }
+    return rv;
 }
 
 nsresult nsImapMailFolder::GetTrashFolder(nsIMsgFolder **pTrashFolder)
