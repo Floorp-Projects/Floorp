@@ -233,8 +233,8 @@ RDFContainerUtilsImpl::IsContainer(nsIRDFDataSource *aDataSource, nsIRDFResource
     if (! _retval)
         return NS_ERROR_NULL_POINTER;
 
-    if (IsA(aDataSource, aResource, kRDF_Bag) ||
-        IsA(aDataSource, aResource, kRDF_Seq) ||
+    if (IsA(aDataSource, aResource, kRDF_Seq) ||
+        IsA(aDataSource, aResource, kRDF_Bag) ||
         IsA(aDataSource, aResource, kRDF_Alt)) {
         *_retval = PR_TRUE;
     }
