@@ -734,6 +734,12 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       if (relPath) {
         href.Append(relPath);
         nsCRT::free(relPath);
+
+        // If re-using the same URL, chop off old query string (bug 25330)
+        PRInt32 queryStart = href.FindChar('?');
+        if (kNotFound != queryStart) {
+          href.Truncate(queryStart);
+        }
       } else {
         result = NS_ERROR_OUT_OF_MEMORY;
       }
