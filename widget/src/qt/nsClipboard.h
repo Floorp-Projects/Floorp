@@ -67,12 +67,12 @@ protected:
 
     inline nsITransferable *GetTransferable(PRInt32 aWhichClipboard);
 
-    PRBool              mIgnoreEmptyNotification;
-
     nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
     nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
     nsCOMPtr<nsITransferable>   mSelectionTransferable;
     nsCOMPtr<nsITransferable>   mGlobalTransferable;
+
+    PRBool              mIgnoreEmptyNotification;
 };
 
 #endif // nsClipboard_h__

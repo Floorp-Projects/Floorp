@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   John C. Griggs <johng@corel.com>
+ *   Esben Mose Hansen <esben@despammed.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -40,7 +41,9 @@
 #include <math.h>
 
 #include "nspr.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
 #include "nsDeviceContextQT.h"
@@ -64,13 +67,24 @@
 #define QCOLOR_TO_NS_RGB(c) \
     ((nscolor)NS_RGB(c.red(),c.green(),c.blue()))
 
-static NS_DEFINE_CID(kPrefCID,NS_PREF_CID);
-
 nscoord nsDeviceContextQT::mDpi = 96;
+
+#define dmsg(level, item) traceMessage(level, item);
+
+enum Trace_level { ENTER, EXIT };
+
+void traceMessage(Trace_level level, const char* const item) {
+  static int indent = 0;
+  if (EXIT == level && indent>0) --indent;
+  for (int i=0; i<indent; i++) printf(" ");
+  printf("%s", item);
+  if (ENTER == level) ++indent;
+}
 
 nsDeviceContextQT::nsDeviceContextQT()
   : DeviceContextImpl()
 {
+  dmsg(ENTER, "nsDeviceContextQT");
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
   mDepth = 0 ;
@@ -79,20 +93,23 @@ nsDeviceContextQT::nsDeviceContextQT()
   mHeightFloat = 0.0f;
   mWidth = -1;
   mHeight = -1;
+  dmsg(EXIT, "nsDeviceContextQT");
 }
 
 nsDeviceContextQT::~nsDeviceContextQT()
 {
+  dmsg(ENTER, "~nsDeviceContextQT");
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID,&rv);
-  if (NS_SUCCEEDED(rv)) {
-    prefs->UnregisterCallback("browser.display.screen_resolution",
-                              prefChanged,(void*)this);
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (pbi) {
+    pbi->RemoveObserver("browser.display.screen_resolution", this);
   }
+  dmsg(EXIT, "~nsDeviceContextQT");
 }
 
 NS_IMETHODIMP nsDeviceContextQT::Init(nsNativeWidget aNativeWidget)
 {
+  dmsg(ENTER, "Init");
   PRBool  bCleanUp = PR_FALSE;
   QWidget *pWidget  = nsnull;
 
@@ -133,17 +150,17 @@ NS_IMETHODIMP nsDeviceContextQT::Init(nsNativeWidget aNativeWidget)
     // If it's 0, it means force use of the operating system's logical resolution.
     // If it's positive, we use it as the logical resolution
     PRInt32 prefVal = -1;
-    nsresult res;
-
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
-    if (NS_SUCCEEDED(res) && prefs) {
-      res = prefs->GetIntPref("browser.display.screen_resolution",&prefVal);
-      if (! NS_SUCCEEDED(res)) {
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+      nsresult res = prefBranch->GetIntPref("browser.display.screen_resolution",
+                                            &prefVal);
+      if (NS_FAILED(res)) {
         prefVal = -1;
       }
-      prefs->RegisterCallback("browser.display.screen_resolution",prefChanged,
-                              (void*)this);
+      nsCOMPtr<nsIPrefBranchInternal> pbi(do_QueryInterface(prefBranch));
+      pbi->AddObserver("browser.display.screen_resolution", this, PR_FALSE);
     }
+
     // Set OSVal to what the operating system thinks the logical resolution is.
     PRInt32 OSVal = qPaintMetrics.logicalDpiX();
 
@@ -198,11 +215,13 @@ NS_IMETHODIMP nsDeviceContextQT::Init(nsNativeWidget aNativeWidget)
   if (bCleanUp)
     delete pWidget;
   return NS_OK;
+  dmsg(EXIT, "Init");
 }
 
 NS_IMETHODIMP 
 nsDeviceContextQT::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
+  dmsg(ENTER, "CreateRenderingContext");
   nsIRenderingContext *pContext;
   nsresult rv;
   nsDrawingSurfaceQT *surf;
@@ -243,32 +262,38 @@ nsDeviceContextQT::CreateRenderingContext(nsIRenderingContext *&aContext)
     NS_IF_RELEASE(pContext);
   }
   aContext = pContext;
+  dmsg(EXIT, "CreateRenderingContext");
   return rv;
 }
 
 NS_IMETHODIMP 
 nsDeviceContextQT::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
+  dmsg(ENTER, "SupportsNativeWidgets");
   //XXX it is very critical that this not lie!! MMP
   // read the comments in the mac code for this
   aSupportsWidgets = PR_TRUE;
 
+  dmsg(EXIT, "SupportsNativeWidgets");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::GetScrollBarDimensions(float &aWidth, 
                                                         float &aHeight) const
 {
+  dmsg(ENTER, "GetScrollBarDimensions");
   float scale;
   GetCanonicalPixelScale(scale);
   aWidth = mScrollbarWidth * mPixelsToTwips * scale;
   aHeight = mScrollbarHeight * mPixelsToTwips * scale;
+  dmsg(EXIT, "GetScrollBarDimensions");
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsDeviceContextQT::GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
 {
+  dmsg(ENTER, "GetSystemFont");
   nsresult    status      = NS_OK;
 
   switch (anID) {
@@ -293,6 +318,7 @@ nsDeviceContextQT::GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
       status = GetSystemFontInfo(aFont);
       break;
   }
+  dmsg(EXIT, "GetSystemFont");
   return status;
 }
 
@@ -300,27 +326,35 @@ NS_IMETHODIMP
 nsDeviceContextQT::GetDrawingSurface(nsIRenderingContext &aContext, 
                                      nsDrawingSurface &aSurface)
 {
+  dmsg(ENTER, "GetDrawingSurface");
   aContext.CreateDrawingSurface(nsnull,0,aSurface);
   return (nsnull == aSurface) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;  
+  dmsg(EXIT, "GetDrawingSurface");
 }
 
 NS_IMETHODIMP nsDeviceContextQT::ConvertPixel(nscolor aColor, 
                                               PRUint32 &aPixel)
 {
+  dmsg(ENTER, "ConvertPixel");
   QColor color(NS_GET_R(aColor),NS_GET_G(aColor),NS_GET_B(aColor));
 
   aPixel = color.pixel();
+
+  dmsg(ENTER, "ConvertPixel");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::CheckFontExistence(const nsString& aFontName)
 {
+  dmsg(ENTER, "CheckFontExistence");
+  dmsg(EXIT, "CheckFontExistence");
   return nsFontMetricsQT::FamilyExists(aFontName);
 }
 
 NS_IMETHODIMP nsDeviceContextQT::GetDeviceSurfaceDimensions(PRInt32 &aWidth, 
                                                             PRInt32 &aHeight)
 {
+  dmsg(ENTER, "GetDeviceSurfaceDimensions");
   if (-1 == mWidth)
     mWidth =  NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
 
@@ -329,11 +363,13 @@ NS_IMETHODIMP nsDeviceContextQT::GetDeviceSurfaceDimensions(PRInt32 &aWidth,
 
   aWidth = mWidth;
   aHeight = mHeight;
+  dmsg(EXIT, "GetDeviceSurfaceDimensions");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::GetRect(nsRect &aRect)
 {
+  dmsg(ENTER, "GetRect");
   PRInt32 width,height;
   nsresult rv;
  
@@ -342,11 +378,14 @@ NS_IMETHODIMP nsDeviceContextQT::GetRect(nsRect &aRect)
   aRect.y = 0;
   aRect.width = width;
   aRect.height = height;
+  dmsg(EXIT, "GetRect");
   return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::GetClientRect(nsRect &aRect)
 {
+  dmsg(ENTER, "GetClientRect");
+  dmsg(EXIT, "GetClientRect");
   return GetRect(aRect);
 }
 
@@ -354,6 +393,7 @@ NS_IMETHODIMP
 nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                        nsIDeviceContext *&aContext)
 {
+  dmsg(ENTER, "GetDeviceContextFor");
 
   static NS_DEFINE_CID(kCDeviceContextPS,NS_DEVICECONTEXTPS_CID);
   
@@ -373,37 +413,49 @@ nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
   rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
                             (void**)&aContext);
   NS_RELEASE(dcps);
+  dmsg(EXIT, "GetDeviceContextFor");
   return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
 {
+  dmsg(ENTER, "BeginDocument");
+  dmsg(EXIT, "BeginDocument");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::EndDocument(void)
 {
+  dmsg(ENTER, "EndDocument");
+  dmsg(EXIT, "EndDocument");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::BeginPage(void)
 {
+  dmsg(ENTER, "BeginPage");
+  dmsg(EXIT, "BeginPage");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::EndPage(void)
 {
+  dmsg(ENTER, "EndPage");
+  dmsg(EXIT, "EndPage");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::GetDepth(PRUint32& aDepth)
 {
+  dmsg(ENTER, "GetDepth");
   aDepth = mDepth;
+  dmsg(EXIT, "GetDepth");
   return NS_OK;
 }
 
 nsresult nsDeviceContextQT::SetDPI(PRInt32 aDpi)
 {
+  dmsg(ENTER, "SetDPI");
   mDpi = aDpi;
 
   int pt2t = 72;
@@ -413,28 +465,39 @@ nsresult nsDeviceContextQT::SetDPI(PRInt32 aDpi)
   mTwipsToPixels = 1.0f / mPixelsToTwips;
 
   // XXX need to reflow all documents
+  dmsg(EXIT, "SetDPI");
   return NS_OK;
 }
 
-int nsDeviceContextQT::prefChanged(const char *aPref,void *aClosure)
+NS_IMETHODIMP
+nsDeviceContextQT::Observe(nsISupports* aSubject, const char* aTopic,
+                           const PRUnichar* aData)
 {
-  nsDeviceContextQT *context = (nsDeviceContextQT*)aClosure;
-  nsresult rv;
- 
-  if (nsCRT::strcmp(aPref,"browser.display.screen_resolution") == 0) {
-    PRInt32 dpi;
-
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-    rv = prefs->GetIntPref(aPref, &dpi);
-    if (NS_SUCCEEDED(rv))
-      context->SetDPI(dpi);
+  dmsg(ENTER, "observe");
+  if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) != 0) {
+    // Our local observer only handles pref changes.
+    // Forward everything else to our super class.
+    dmsg(EXIT, "observe");
+    return DeviceContextImpl::Observe(aSubject, aTopic, aData);
   }
-  return 0;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_QueryInterface(aSubject));
+  NS_ASSERTION(prefBranch,
+               "All pref change observer subjects implement nsIPrefBranch");
+  nsCAutoString prefName(NS_LossyConvertUCS2toASCII(aData).get());
+  if (prefName.Equals(NS_LITERAL_CSTRING("browser.display.screen_resolution"))) {
+    PRInt32 dpi;
+    nsresult rv = prefBranch->GetIntPref(prefName.get(), &dpi);
+    if (NS_SUCCEEDED(rv))
+      SetDPI(dpi);
+  }
+  dmsg(EXIT, "observe");
+  return NS_OK;
 }
 
 nsresult
 nsDeviceContextQT::GetSystemFontInfo(nsFont* aFont) const
 {
+  dmsg(ENTER, "GetSystemFontInfo");
   nsresult status = NS_OK;
   int rawWeight;
   QFont theFont = QApplication::font();
@@ -455,5 +518,6 @@ nsDeviceContextQT::GetSystemFontInfo(nsFont* aFont) const
   if (theFontInfo.underline()) {
     aFont->decorations = NS_FONT_DECORATION_UNDERLINE;
   }
+  dmsg(EXIT, "GetSystemFontInfo");
   return (status);
 }

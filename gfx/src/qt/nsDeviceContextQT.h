@@ -96,7 +96,9 @@ public:
     // Overridden DeviceContextImpl functions.
     NS_IMETHOD GetDepth(PRUint32 &aDepth);
 
-    static int prefChanged(const char *aPref,void *aClosure);
+    // Preferences observer
+    NS_DECL_NSIOBSERVER
+
     nsresult   SetDPI(PRInt32 dpi);
 
 private:

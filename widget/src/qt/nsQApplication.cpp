@@ -86,16 +86,19 @@ int _x_error(Display *display, XErrorEvent *error)
 
 nsQApplication* nsQApplication::Instance(int argc,char** argv)
 {
+  printf("Enter nsQApplication::Instance\n");
   if (!mInstance)
     mInstance = new nsQApplication(argc,argv);
 
   mRefCnt++;
 
+  printf("Exit nsQApplication::Instance\n");
   return mInstance;
 }
 
 void nsQApplication::Release()
 {
+    printf("Enter nsQApplication::Release\n");
   mRefCnt--;
   if (mRefCnt <= 0) {
     if (mMasterWidget) {
@@ -105,19 +108,23 @@ void nsQApplication::Release()
     delete mInstance;
     mInstance = nsnull;
   }
+    printf("Exit nsQApplication::Release\n");
 }
 
 QWidget *nsQApplication::GetMasterWidget()
 {
+    printf("Enter nsQApplication::GetMasterWidget\n");
   if (!mMasterWidget)
     mMasterWidget = new QWidget();
 
+  printf("Exit nsQApplication::GetMasterWidget\n");
   return mMasterWidget;
 }
 
 nsQApplication::nsQApplication(int argc,char** argv)
 	: QApplication(argc,argv)
 {
+  printf("Enter: QApplication::QApplication\n");
 #ifdef DBG_JCG
   gQAppCount++;
   mID = gQAppID++;
@@ -125,23 +132,24 @@ nsQApplication::nsQApplication(int argc,char** argv)
 
   XSetErrorHandler (_x_error);
 #endif
-  if (mInstance)
-    NS_ASSERTION(mInstance == nsnull,
-                 "Attempt to create duplicate QApplication Object.");
+  NS_ASSERTION(!mInstance, "Attempt to create duplicate QApplication Object.");
   mInstance = this;
   setGlobalMouseTracking(true);
   setStyle(new QWindowsStyle);
   setOverrideCursor(QCursor(ArrowCursor),PR_TRUE);
   connect(this,SIGNAL(lastWindowClosed()),this,SLOT(quit()));
+  printf("Exit: QApplication::QApplication\n");
 }
 
 nsQApplication::~nsQApplication()
 {
+  printf("Enter: QApplication::~QApplication\n");
 #ifdef DBG_JCG
   gQAppCount--;
   printf("JCG nsQApplication DTOR (%p) ID: %d, Count: %d\n",this,mID,gQAppCount);
 #endif
   setGlobalMouseTracking(false);
+  printf("Exit: QApplication::~QApplication\n");
 }
 
 void nsQApplication::AddEventProcessorCallback(nsIEventQueue* EQueue)

@@ -157,7 +157,7 @@ public:
     nsFontQT*  LoadFont(QString &aName,PRUnichar aChar);
     nsFontQT*  LoadFont(QString &aName,const QString &aCharSet,
                         PRUnichar aChar);
-    QFont*     LoadQFont(QString &aName,const QString &aCharSet);
+    QFont*     LoadQFont(QString &aName);
 
     static nsresult FamilyExists(const nsString& aFontName);
 

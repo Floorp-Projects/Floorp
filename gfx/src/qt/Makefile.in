@@ -73,6 +73,7 @@ CFLAGS		+= $(MOZ_QT_CFLAGS)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
                 -lgkgfx \
+                -lgfxshared_s \
 		$(MOZ_JS_LIBS) \
                 $(NULL)
 

@@ -48,6 +48,7 @@
 #include "nsQApplication.h"
 
 #include <qobjectlist.h>
+#include <qcursor.h>
 
 //JCG #define DBG_JCG 1
 //JCG #define DBG_JCG_EVENT 1
@@ -1111,13 +1112,13 @@ void qt_leave_modal(QWidget*);          // --- "" ---
 void nsQWidget::SetModal(PRBool aState)
 {
   if (aState) {
-    setWFlags(Qt::WType_Modal);
-    setWState(Qt::WState_Modal);
+    setWFlags(Qt::WShowModal);
+//    setWState(Qt::WState_Modal);
     qt_enter_modal(this);
   }
   else {
-    clearWFlags(Qt::WType_Modal);
-    clearWState(Qt::WState_Modal);
+    clearWFlags(Qt::WShowModal);
+//    clearWState(Qt::WState_Modal);
     qt_leave_modal(this);
   }
 }
