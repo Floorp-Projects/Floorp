@@ -124,6 +124,17 @@ nsresult NS_AutoregisterComponents()
 extern "C" void
 NS_SetupRegistry_1()
 {
+  nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+
+  // This *has* to happen after registration of nsIFileLocator as the call
+  // required it.
+  //
+  // The right thing for autoregistration which causes dynamic component
+  // registraion is to happen after all the static RegisterComponents()
+  // have been registered. But doing that is causing a coredump with
+  // jsdom.dll. Puttin that off until that gets resolved.
+  NS_AutoregisterComponents();
+
   /*
    * Call the standard NS_SetupRegistry() implemented in 
    * webshell/tests/viewer/nsSetupregistry.cpp
@@ -132,7 +143,6 @@ NS_SetupRegistry_1()
 
   nsComponentManager::RegisterComponent(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kGlobalHistoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, APPSHELL_DLL, PR_TRUE, PR_TRUE);
@@ -150,11 +160,6 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
-
-  // After we have Registered all the app specific components, install all the dynamic
-  // components. This has to happen after all the above registrations as nsIFileLocator
-  // is required in looking for files.
-  NS_AutoregisterComponents();
 
 }
 
