@@ -516,14 +516,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 
 			if (m_mdbEnv)
 				m_mdbEnv->SetAutoClear(PR_TRUE);
-#if /*defined(XP_MAC) */ 0
-			char * unixPath = nsCRT::strdup(dbName);
-			NativeToUnix(unixPath);
-			m_dbName = nsCRT::strdup(unixPath);
-			delete [] unixPath;
-#else
 			m_dbName = nsCRT::strdup(dbName);
-#endif
 #if defined(XP_PC) || defined(XP_MAC)
 			UnixToNative(nativeFileName);
 #endif
@@ -543,11 +536,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				first512Bytes.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
 
 				{
-#if /*defined(XP_MAC)*/ 0
-					nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(m_dbName)); //Mac need a unix path!!
-#else
 					nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(dbName));
-#endif
 					PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
 					first512Bytes.mYarn_Fill = bytesRead;
 					dbStream->close();

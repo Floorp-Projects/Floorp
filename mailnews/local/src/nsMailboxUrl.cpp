@@ -559,7 +559,7 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     }
 
 
-#if defined(XP_UNIX) || defined (XP_MAC)
+//#if defined(XP_UNIX) || defined (XP_MAC)
         // Always leave the top level slash for absolute file paths under Mac and UNIX.
         // The code above sometimes results in stripping all of slashes
         // off. This only happens when a previously stripped url is asked to be
@@ -573,7 +573,7 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
                 cp--;
             }
         }
-#endif /* XP_UNIX */
+//#endif /* XP_UNIX */
 
         // The remainder of the string is the file name and the search path....
 		// Strip out the ? stuff....
@@ -608,11 +608,7 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 	if (m_filePath)
 		delete m_filePath;
 	ParseSearchPart();
-#if defined(XP_MAC)
 	m_filePath = new nsFileSpec(nsFilePath(m_file));
-#else
-	m_filePath = new nsFileSpec(m_file);
-#endif
 
 	// we need to set the mailbox action type that this url represented....
 	// if we had a search field then we parsed it and it set the mailbox state...
