@@ -642,7 +642,7 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
     int flags;
 
 #if defined(VMS_EVENTS_USE_SOCKETS)
-    err = socketpair(AF_INET,SOCK_STREAM,0,self->eventPipe);
+    err = socketpair(AF_UNIX,SOCK_STREAM,0,self->eventPipe);
 #else
     err = pipe(self->eventPipe);
 #endif
