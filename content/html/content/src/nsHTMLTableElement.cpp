@@ -941,7 +941,7 @@ nsHTMLTableElement::DeleteRow(PRInt32 aValue)
   return parent->RemoveChild(row, getter_AddRefs(deleted_row));
 }
 
-static nsGenericHTMLElement::EnumTable kFrameTable[] = {
+static nsHTMLValue::EnumTable kFrameTable[] = {
   { "void",   NS_STYLE_TABLE_FRAME_NONE },
   { "above",  NS_STYLE_TABLE_FRAME_ABOVE },
   { "below",  NS_STYLE_TABLE_FRAME_BELOW },
@@ -954,7 +954,7 @@ static nsGenericHTMLElement::EnumTable kFrameTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kRulesTable[] = {
+static nsHTMLValue::EnumTable kRulesTable[] = {
   { "none",   NS_STYLE_TABLE_RULES_NONE },
   { "groups", NS_STYLE_TABLE_RULES_GROUPS },
   { "rows",   NS_STYLE_TABLE_RULES_ROWS },
@@ -963,7 +963,7 @@ static nsGenericHTMLElement::EnumTable kRulesTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kLayoutTable[] = {
+static nsHTMLValue::EnumTable kLayoutTable[] = {
   { "auto",   NS_STYLE_TABLE_LAYOUT_AUTO },
   { "fixed",  NS_STYLE_TABLE_LAYOUT_FIXED },
   { 0 }
@@ -979,14 +979,14 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   /* attributes that resolve to pixels, with min=0 */
   if ((aAttribute == nsHTMLAtoms::cellspacing) ||
       (aAttribute == nsHTMLAtoms::cellpadding)) {
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::cols) {
     /* attributes that are either empty, or integers, with min=0 */
 
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -994,7 +994,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
     /* attributes that are either empty, or pixels */
 
     PRInt32 min = (aValue.IsEmpty()) ? 1 : 0;
-    if (ParseValue(aValue, min, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, min)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
     else { 
@@ -1006,14 +1006,14 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::height) {
     /* attributes that resolve to integers or percents */
 
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
     /* attributes that resolve to integers or percents or proportions */
 
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       // treat 0 width as auto
       nsHTMLUnit unit = aResult.GetUnit();
       if ((eHTMLUnit_Pixel == unit) && (0 == aResult.GetPixelValue())) {
@@ -1036,37 +1036,37 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (ParseColor(aValue, mDocument, aResult)) {
+    if (aResult.ParseColor(aValue, mDocument)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::bordercolor) {
-    if (ParseColor(aValue, mDocument, aResult)) {
+    if (aResult.ParseColor(aValue, mDocument)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::frame) {
-    if (ParseEnumValue(aValue, kFrameTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kFrameTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::layout) {
-    if (ParseEnumValue(aValue, kLayoutTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kLayoutTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::rules) {
-    if (ParseEnumValue(aValue, kRulesTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kRulesTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::hspace) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::vspace) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -1088,17 +1088,17 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::frame) {
-    if (EnumValueToString(aValue, kFrameTable, aResult)) {
+    if (aValue.EnumValueToString(kFrameTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::layout) {
-    if (EnumValueToString(aValue, kLayoutTable, aResult)) {
+    if (aValue.EnumValueToString(kLayoutTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::rules) {
-    if (EnumValueToString(aValue, kRulesTable, aResult)) {
+    if (aValue.EnumValueToString(kRulesTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

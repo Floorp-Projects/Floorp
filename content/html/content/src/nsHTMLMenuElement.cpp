@@ -47,7 +47,7 @@
 
 // XXX nav4 has type= start= (same as OL/UL)
 
-extern nsGenericHTMLElement::EnumTable kListTypeTable[];
+extern nsHTMLValue::EnumTable kListTypeTable[];
 
 
 class nsHTMLMenuElement : public nsGenericHTMLContainerElement,
@@ -173,12 +173,12 @@ nsHTMLMenuElement::StringToAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (ParseEnumValue(aValue, kListTypeTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kListTypeTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::start) {
-    if (ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 1)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -192,7 +192,7 @@ nsHTMLMenuElement::AttributeToString(nsIAtom* aAttribute,
                                      nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    EnumValueToString(aValue, kListTypeTable, aResult);
+    aValue.EnumValueToString(kListTypeTable, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 

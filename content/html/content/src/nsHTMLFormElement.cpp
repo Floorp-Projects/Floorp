@@ -627,13 +627,13 @@ nsHTMLFormElement::Reset()
   return rv;
 }
 
-static nsGenericHTMLElement::EnumTable kFormMethodTable[] = {
+static nsHTMLValue::EnumTable kFormMethodTable[] = {
   { "get", NS_FORM_METHOD_GET },
   { "post", NS_FORM_METHOD_POST },
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kFormEnctypeTable[] = {
+static nsHTMLValue::EnumTable kFormEnctypeTable[] = {
   { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
   { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
   { "text/plain", NS_FORM_ENCTYPE_TEXTPLAIN },
@@ -646,12 +646,12 @@ nsHTMLFormElement::StringToAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::method) {
-    if (ParseEnumValue(aValue, kFormMethodTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kFormMethodTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::enctype) {
-    if (ParseEnumValue(aValue, kFormEnctypeTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kFormEnctypeTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -665,13 +665,13 @@ nsHTMLFormElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::method) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kFormMethodTable, aResult);
+      aValue.EnumValueToString(kFormMethodTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::enctype) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kFormEnctypeTable, aResult);
+      aValue.EnumValueToString(kFormEnctypeTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

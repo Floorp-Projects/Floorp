@@ -43,6 +43,10 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsMemory.h"
+#include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
+#include "nsUnitConversion.h"
+#include "prprf.h"
 
 nsHTMLValue::nsHTMLValue(nsHTMLUnit aUnit)
   : mUnit(aUnit)
@@ -377,4 +381,222 @@ nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
     default:
       NS_ERROR("Unknown HTMLValue type!");
   }
+}
+
+
+//
+// Parsing methods
+//
+
+PRBool
+nsHTMLValue::ParseEnumValue(const nsAString& aValue,
+                            EnumTable* aTable,
+                            PRBool aCaseSensitive)
+{
+  nsAutoString val(aValue);
+  while (aTable->tag) {
+    if (aCaseSensitive ? val.EqualsWithConversion(aTable->tag) :
+                         val.EqualsIgnoreCase(aTable->tag)) {
+      SetIntValue(aTable->value, eHTMLUnit_Enumerated);
+      return PR_TRUE;
+    }
+    aTable++;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsHTMLValue::EnumValueToString(EnumTable* aTable,
+                               nsAString& aResult) const
+{
+  if (GetUnit() == eHTMLUnit_Enumerated) {
+    PRInt32 v = GetIntValue();
+    while (aTable->tag) {
+      if (aTable->value == v) {
+        CopyASCIItoUCS2(nsDependentCString(aTable->tag), aResult);
+
+        return PR_TRUE;
+      }
+      aTable++;
+    }
+  }
+  aResult.Truncate();
+  return PR_FALSE;
+}
+
+/* used to parse attribute values that could be either:
+ *   integer  (n),
+ *   percent  (n%),
+ *   or proportional (n*)
+ */
+PRBool
+nsHTMLValue::ParseIntValue(const nsAString& aString,
+                           nsHTMLUnit aDefaultUnit,
+                           PRBool aCanBePercent,
+                           PRBool aCanBeProportional)
+{
+  nsAutoString tmp(aString);
+  PRInt32 ec;
+  PRInt32 val = tmp.ToInteger(&ec);
+
+  if (NS_SUCCEEDED(ec)) {
+    if (val < 0) {
+      val = 0;
+    }
+    // % (percent) (XXX RFindChar means that 5%x will be parsed!)
+    if (aCanBePercent && tmp.RFindChar('%') >= 0) {
+      if (val > 100) {
+        val = 100;
+      }
+      SetPercentValue(float(val)/100.0f);
+      return PR_TRUE;
+    }
+      
+    // * (proportional) (XXX RFindChar means that 5*x will be parsed!)
+    if (aCanBeProportional && tmp.RFindChar('*') >= 0) {
+      SetIntValue(val, eHTMLUnit_Proportional);
+      return PR_TRUE;
+    }
+
+    // Straight number is interpreted with the default unit
+    if (aDefaultUnit == eHTMLUnit_Pixel) {
+      SetPixelValue(val);
+    } else {
+      SetIntValue(val, aDefaultUnit);
+    }
+    return PR_TRUE;
+  }
+
+  // Even if the integer could not be parsed, it might just be "*"
+  tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
+  if (tmp.Last() == '*' && tmp.Length() == 1) {
+    // special case: HTML spec says a value '*' == '1*'
+    // see http://www.w3.org/TR/html4/types.html#type-multi-length
+    // b=29061
+    SetIntValue(1, eHTMLUnit_Proportional);
+    return PR_TRUE;
+  }
+  
+  return PR_FALSE;
+}
+
+PRBool
+nsHTMLValue::ToString(nsAString& aResult) const
+{
+  nsAutoString intStr;
+  aResult.Truncate();
+
+  switch (GetUnit()) {
+    case eHTMLUnit_Integer:
+    case eHTMLUnit_Pixel:
+    case eHTMLUnit_Proportional:
+      intStr.AppendInt(GetIntValue());
+      aResult.Append(intStr);
+      if (GetUnit() == eHTMLUnit_Proportional) {
+        aResult.Append(PRUnichar('*'));
+      }
+      return PR_TRUE;
+    case eHTMLUnit_Percent:
+    {
+      float percentVal = GetPercentValue() * 100.0f;
+      intStr.AppendInt(NSToCoordRoundExclusive(percentVal));
+      aResult.Append(intStr);
+      aResult.Append(PRUnichar('%'));
+      return PR_TRUE;
+    }
+    case eHTMLUnit_Color:
+    {
+      nscolor v = GetColorValue();
+      char buf[10];
+      PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
+                  NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
+      aResult.Assign(NS_ConvertASCIItoUCS2(buf));
+      return PR_TRUE;
+    }
+    case eHTMLUnit_ColorName:
+    case eHTMLUnit_String:
+      GetStringValue(aResult);
+      return PR_TRUE;
+    default:
+      return PR_FALSE;
+  }
+}
+
+PRBool
+nsHTMLValue::ParseIntWithBounds(const nsAString& aString,
+                                nsHTMLUnit aDefaultUnit,
+                                PRInt32 aMin, PRInt32 aMax)
+{
+  nsAutoString str(aString);
+  PRInt32 ec;
+  PRInt32 val = str.ToInteger(&ec);
+  if (NS_SUCCEEDED(ec)) {
+    val = PR_MAX(val, aMin);
+    val = PR_MIN(val, aMax);
+    if (aDefaultUnit == eHTMLUnit_Pixel) {
+      SetPixelValue(val);
+    } else {
+      SetIntValue(val, aDefaultUnit);
+    }
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
+nsHTMLValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
+{
+  if (aString.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  // Previously we did a complicated algorithm to strip leading and trailing
+  // whitespace; now we just use CompressWhitespace like everyone else.
+  // Since all color values are just one word, this is ok.
+
+  nsAutoString colorStr(aString);
+  colorStr.CompressWhitespace(PR_TRUE, PR_TRUE);
+  if (colorStr.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  nscolor color;
+
+  // No color names begin with a '#', but numerical colors do so
+  // it is a very common first char
+  if ((colorStr.CharAt(0) != '#') && NS_ColorNameToRGB(colorStr, &color)) {
+    SetStringValue(colorStr, eHTMLUnit_ColorName);
+    return PR_TRUE;
+  }
+
+  // Check if we are in compatibility mode
+  PRBool inNavQuirksMode;
+  {
+    nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(aDocument));
+    if (doc) {
+      nsCompatibility mode;
+      doc->GetCompatibilityMode(mode);
+      inNavQuirksMode = (mode == eCompatibility_NavQuirks);
+    } else {
+      inNavQuirksMode = PR_FALSE;
+    }
+  }
+  if (!inNavQuirksMode) {
+    if (colorStr.CharAt(0) == '#') {
+      colorStr.Cut(0, 1);
+      if (NS_HexToRGB(colorStr, &color)) {
+        SetColorValue(color);
+        return PR_TRUE;
+      }
+    }
+  }
+  else {
+    if (NS_LooseHexToRGB(colorStr, &color)) { 
+      SetColorValue(color);
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
 }

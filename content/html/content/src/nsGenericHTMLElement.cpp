@@ -457,7 +457,7 @@ nsGenericHTMLElement::SetLang(const nsAString& aLang)
   return NS_OK;
 }
 
-static nsGenericHTMLElement::EnumTable kDirTable[] = {
+static nsHTMLValue::EnumTable kDirTable[] = {
   { "ltr", NS_STYLE_DIRECTION_LTR },
   { "rtl", NS_STYLE_DIRECTION_RTL },
   { 0 }
@@ -470,7 +470,7 @@ nsGenericHTMLElement::GetDir(nsAString& aDir)
   nsresult result = GetHTMLAttribute(nsHTMLAtoms::dir, value);
 
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-    EnumValueToString(value, kDirTable, aDir);
+    value.EnumValueToString(kDirTable, aDir);
   }
 
   return NS_OK;
@@ -2547,7 +2547,7 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
     nsresult result = GetHTMLAttribute(nsHTMLAtoms::dir, value);
 
     if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-      EnumValueToString(value, kDirTable, aResult);
+      value.EnumValueToString(kDirTable, aResult);
 
       return NS_OK;
     }
@@ -2590,309 +2590,6 @@ nsGenericHTMLElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMa
   else
     aMapRuleFunc = &MapCommonAttributesInto;
   return NS_OK;
-}
-
-PRBool
-nsGenericHTMLElement::ParseEnumValue(const nsAString& aValue,
-                                     EnumTable* aTable,
-                                     nsHTMLValue& aResult)
-{
-  nsAutoString val(aValue);
-  while (nsnull != aTable->tag) {
-    if (val.EqualsIgnoreCase(aTable->tag)) {
-      aResult.SetIntValue(aTable->value, eHTMLUnit_Enumerated);
-      return PR_TRUE;
-    }
-    aTable++;
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ParseCaseSensitiveEnumValue(const nsAString& aValue,
-                                                  EnumTable* aTable,
-                                                  nsHTMLValue& aResult)
-{
-  nsAutoString val(aValue);
-  while (nsnull != aTable->tag) {
-    if (val.EqualsWithConversion(aTable->tag)) {
-      aResult.SetIntValue(aTable->value, eHTMLUnit_Enumerated);
-      return PR_TRUE;
-    }
-    aTable++;
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
-                                        EnumTable* aTable,
-                                        nsAString& aResult)
-{
-  if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
-    PRInt32 v = aValue.GetIntValue();
-    while (nsnull != aTable->tag) {
-      if (aTable->value == v) {
-        CopyASCIItoUCS2(nsDependentCString(aTable->tag), aResult);
-
-        return PR_TRUE;
-      }
-      aTable++;
-    }
-  }
-  aResult.Truncate();
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ParseValueOrPercent(const nsAString& aString,
-                                          nsHTMLValue& aResult,
-                                          nsHTMLUnit aValueUnit)
-{
-  nsAutoString tmp(aString);
-  PRInt32 ec, val = tmp.ToInteger(&ec);
-  if (NS_OK == ec) {
-    if (val < 0) {
-      val = 0;
-    }
-    if (tmp.RFindChar('%') != kNotFound) {
-      if (val > 100) {
-        val = 100;
-      }
-      aResult.SetPercentValue(float(val)/100.0f);
-    } else {
-      if (eHTMLUnit_Pixel == aValueUnit) {
-        aResult.SetPixelValue(val);
-      }
-      else {
-        aResult.SetIntValue(val, aValueUnit);
-      }
-    }
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-/* used to parse attribute values that could be either:
- *   integer  (n),
- *   percent  (n%),
- *   or proportional (n*)
- */
-PRBool
-nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAString& aString,
-                                                        nsHTMLValue& aResult,
-                                                        nsHTMLUnit aValueUnit)
-{
-  nsAutoString tmp(aString);
-  tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-  PRInt32 ec, val = tmp.ToInteger(&ec);
-
-  if (NS_OK == ec) {
-    if (val < 0) val = 0;
-    if (!tmp.IsEmpty() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
-      if (val > 100) val = 100;
-      aResult.SetPercentValue(float(val)/100.0f);
-    } else if (!tmp.IsEmpty() && tmp.Last() == '*') {
-      if (tmp.Length() == 1) {
-        // special case: HTML spec says a value '*' == '1*'
-        // see http://www.w3.org/TR/html4/types.html#type-multi-length
-        // b=29061
-        val = 1;
-      }
-      aResult.SetIntValue(val, eHTMLUnit_Proportional); // proportional values are integers
-    } else if (eHTMLUnit_Pixel == aValueUnit) {
-        aResult.SetPixelValue(val);
-    }
-    else {
-      aResult.SetIntValue(val, aValueUnit);
-    } 
-    return PR_TRUE;
-  } else if (tmp.Length()==1 && tmp.Last()== '*') {
-    aResult.SetIntValue(1, eHTMLUnit_Proportional);
-    return PR_TRUE;
-  }  
-  
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ValueOrPercentToString(const nsHTMLValue& aValue,
-                                             nsAString& aResult)
-{
-  nsAutoString intStr;
-  aResult.Truncate(0);
-  switch (aValue.GetUnit()) {
-    case eHTMLUnit_Integer:
-      intStr.AppendInt(aValue.GetIntValue());
-      aResult.Append(intStr);
-      return PR_TRUE;
-    case eHTMLUnit_Pixel:
-      intStr.AppendInt(aValue.GetPixelValue());
-      aResult.Append(intStr);
-      return PR_TRUE;
-    case eHTMLUnit_Percent:
-      {
-      float percentVal = aValue.GetPercentValue() * 100.0f;
-      intStr.AppendInt(NSToCoordRoundExclusive(percentVal));
-      aResult.Append(intStr);
-      aResult.Append(PRUnichar('%'));
-      return PR_TRUE;
-      }
-    default:
-      break;
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ValueOrPercentOrProportionalToString(const nsHTMLValue& aValue,
-                                                           nsAString& aResult)
-{
-  nsAutoString intStr;
-  aResult.Truncate(0);
-  switch (aValue.GetUnit()) {
-  case eHTMLUnit_Integer:
-    intStr.AppendInt(aValue.GetIntValue());
-    aResult.Append(intStr);
-    return PR_TRUE;
-  case eHTMLUnit_Pixel:
-    intStr.AppendInt(aValue.GetPixelValue());
-    aResult.Append(intStr);
-    return PR_TRUE;
-  case eHTMLUnit_Percent:
-    {
-    float percentVal = aValue.GetPercentValue() * 100.0f;
-    intStr.AppendInt(NSToCoordRoundExclusive(percentVal));
-    aResult.Append(intStr);
-    aResult.Append(NS_LITERAL_STRING("%"));
-    return PR_TRUE;
-    }
-  case eHTMLUnit_Proportional:
-    intStr.AppendInt(aValue.GetIntValue());
-    aResult.Append(intStr);
-    aResult.Append(NS_LITERAL_STRING("*"));
-    return PR_TRUE;
-  default:
-    break;
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ParseValue(const nsAString& aString, PRInt32 aMin,
-                                 PRInt32 aMax,
-                                 nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
-{
-  nsAutoString str(aString);
-  PRInt32 ec, val = str.ToInteger(&ec);
-  if (NS_OK == ec) {
-    if (val < aMin) val = aMin;
-    if (val > aMax) val = aMax;
-    if (eHTMLUnit_Pixel == aValueUnit) {
-      aResult.SetPixelValue(val);
-    }
-    else {
-      aResult.SetIntValue(val, aValueUnit);
-    }
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ParseColor(const nsAString& aString,
-                                 nsIDocument* aDocument,
-                                 nsHTMLValue& aResult)
-{
-  if (aString.IsEmpty()) {
-    return PR_FALSE;
-  }
-
-  // All color strings are one single word so we just strip
-  // leading and trailing whitespace before checking.
-
-  // We need a string to remove cruft from
-  nsAString::const_iterator iter, end_iter;
-  aString.BeginReading(iter);
-  aString.EndReading(end_iter);
-  PRUnichar the_char;
-  // Skip whitespace in the beginning
-  while ((iter != end_iter) &&
-         (((the_char = *iter) == ' ') ||
-          (the_char == '\r') ||
-          (the_char == '\t') ||
-          (the_char == '\n') ||
-          (the_char == '\b')))
-    ++iter;
-  
-  if (iter == end_iter) {
-    // Nothing left
-    return PR_FALSE;
-  }
-
-  --end_iter; // So that it points on a character
-
-  // This will stop at a charater. At very least the same character
-  // that stopped the forward iterator.
-  while (((the_char = *end_iter)== ' ') ||
-         (the_char == '\r') ||
-         (the_char == '\t') ||
-         (the_char == '\n') ||
-         (the_char == '\b'))
-    --end_iter;
-
-  nsAutoString colorStr;
-  colorStr = Substring(iter, ++end_iter);
-
-  nscolor color;
-
-  // No color names begin with a '#', but numerical colors do so
-  // it is a very common first char
-  if ((colorStr.CharAt(0) != '#') &&
-      NS_ColorNameToRGB(colorStr, &color)) {
-    aResult.SetStringValue(colorStr, eHTMLUnit_ColorName);
-    return PR_TRUE;
-  }
-
-  if (!InNavQuirksMode(aDocument)) {
-    if (colorStr.CharAt(0) == '#') {
-      colorStr.Cut(0, 1);
-      if (NS_HexToRGB(colorStr, &color)) {
-        aResult.SetColorValue(color);
-        return PR_TRUE;
-      }
-    }
-  }
-  else {
-    if (NS_LooseHexToRGB(colorStr, &color)) { 
-      aResult.SetColorValue(color);
-      return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
-                                    nsAString& aResult)
-{
-  if (aValue.GetUnit() == eHTMLUnit_Color) {
-    nscolor v = aValue.GetColorValue();
-    char buf[10];
-    PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
-                NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
-    aResult.Assign(NS_ConvertASCIItoUCS2(buf));
-    return PR_TRUE;
-  }
-  if ((aValue.GetUnit() == eHTMLUnit_ColorName) ||
-      (aValue.GetUnit() == eHTMLUnit_String)) {
-    aValue.GetStringValue(aResult);
-    return PR_TRUE;
-  }
-  return PR_FALSE;
 }
 
 // static
@@ -3061,7 +2758,7 @@ nsGenericHTMLElement::GetPresContext(nsIHTMLContent* aContent,
 }
 
 // XXX check all mappings against ebina's usage
-static nsGenericHTMLElement::EnumTable kAlignTable[] = {
+static nsHTMLValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
 
@@ -3079,7 +2776,7 @@ static nsGenericHTMLElement::EnumTable kAlignTable[] = {
 
 // Elements that should return vertical align values "middle", "bottom", and "top" 
 //  instead of "center", "baseline", and "texttop" from GetAttribute() should use this
-static nsGenericHTMLElement::EnumTable kVAlignTable[] = {
+static nsHTMLValue::EnumTable kVAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "top", NS_STYLE_VERTICAL_ALIGN_TOP },//verified
@@ -3094,7 +2791,7 @@ static nsGenericHTMLElement::EnumTable kVAlignTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
+static nsHTMLValue::EnumTable kDivAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -3103,7 +2800,7 @@ static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kFrameborderTable[] = {
+static nsHTMLValue::EnumTable kFrameborderTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
   { "1", NS_STYLE_FRAME_1 },
@@ -3111,7 +2808,7 @@ static nsGenericHTMLElement::EnumTable kFrameborderTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kScrollingTable[] = {
+static nsHTMLValue::EnumTable kScrollingTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
   { "on", NS_STYLE_FRAME_ON },
@@ -3122,7 +2819,7 @@ static nsGenericHTMLElement::EnumTable kScrollingTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kTableVAlignTable[] = {
+static nsHTMLValue::EnumTable kTableVAlignTable[] = {
   { "top",     NS_STYLE_VERTICAL_ALIGN_TOP },
   { "middle",  NS_STYLE_VERTICAL_ALIGN_MIDDLE },
   { "bottom",  NS_STYLE_VERTICAL_ALIGN_BOTTOM },
@@ -3136,7 +2833,7 @@ nsGenericHTMLElement::ParseCommonAttribute(nsIAtom* aAttribute,
                                            nsHTMLValue& aResult)
 {
   if (nsHTMLAtoms::dir == aAttribute) {
-    return ParseEnumValue(aValue, kDirTable, aResult);
+    return aResult.ParseEnumValue(aValue, kDirTable);
   }
   else if (nsHTMLAtoms::lang == aAttribute) {
     aResult.SetStringValue(aValue);
@@ -3149,13 +2846,13 @@ PRBool
 nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
                                       nsHTMLValue& aResult)
 {
-  return ParseEnumValue(aString, kAlignTable, aResult);
+  return aResult.ParseEnumValue(aString, kAlignTable);
 }
 
 //----------------------------------------
 
 // Vanilla table as defined by the html4 spec...
-static nsGenericHTMLElement::EnumTable kTableHAlignTable[] = {
+static nsHTMLValue::EnumTable kTableHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -3165,7 +2862,7 @@ static nsGenericHTMLElement::EnumTable kTableHAlignTable[] = {
 };
 
 // This table is used for TABLE when in compatability mode
-static nsGenericHTMLElement::EnumTable kCompatTableHAlignTable[] = {
+static nsHTMLValue::EnumTable kCompatTableHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -3182,9 +2879,9 @@ nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
                                             nsHTMLValue& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
-    return ParseEnumValue(aString, kCompatTableHAlignTable, aResult);
+    return aResult.ParseEnumValue(aString, kCompatTableHAlignTable);
   }
-  return ParseEnumValue(aString, kTableHAlignTable, aResult);
+  return aResult.ParseEnumValue(aString, kTableHAlignTable);
 }
 
 PRBool
@@ -3192,15 +2889,15 @@ nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
                                                nsAString& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
-    return EnumValueToString(aValue, kCompatTableHAlignTable, aResult);
+    return aValue.EnumValueToString(kCompatTableHAlignTable, aResult);
   }
-  return EnumValueToString(aValue, kTableHAlignTable, aResult);
+  return aValue.EnumValueToString(kTableHAlignTable, aResult);
 }
 
 //----------------------------------------
 
 // These tables are used for TD,TH,TR, etc (but not TABLE)
-static nsGenericHTMLElement::EnumTable kTableCellHAlignTable[] = {
+static nsHTMLValue::EnumTable kTableCellHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -3209,7 +2906,7 @@ static nsGenericHTMLElement::EnumTable kTableCellHAlignTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kCompatTableCellHAlignTable[] = {
+static nsHTMLValue::EnumTable kCompatTableCellHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -3231,9 +2928,9 @@ nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
                                                 nsHTMLValue& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
-    return ParseEnumValue(aString, kCompatTableCellHAlignTable, aResult);
+    return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable);
   }
-  return ParseEnumValue(aString, kTableCellHAlignTable, aResult);
+  return aResult.ParseEnumValue(aString, kTableCellHAlignTable);
 }
 
 PRBool
@@ -3241,9 +2938,9 @@ nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
                                                    nsAString& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
-    return EnumValueToString(aValue, kCompatTableCellHAlignTable, aResult);
+    return aValue.EnumValueToString(kCompatTableCellHAlignTable, aResult);
   }
-  return EnumValueToString(aValue, kTableCellHAlignTable, aResult);
+  return aValue.EnumValueToString(kTableCellHAlignTable, aResult);
 }
 
 //----------------------------------------
@@ -3252,42 +2949,42 @@ PRBool
 nsGenericHTMLElement::ParseTableVAlignValue(const nsAString& aString,
                                             nsHTMLValue& aResult)
 {
-  return ParseEnumValue(aString, kTableVAlignTable, aResult);
+  return aResult.ParseEnumValue(aString, kTableVAlignTable);
 }
 
 PRBool
 nsGenericHTMLElement::AlignValueToString(const nsHTMLValue& aValue,
                                          nsAString& aResult)
 {
-  return EnumValueToString(aValue, kAlignTable, aResult);
+  return aValue.EnumValueToString(kAlignTable, aResult);
 }
 
 PRBool
 nsGenericHTMLElement::VAlignValueToString(const nsHTMLValue& aValue,
                                          nsAString& aResult)
 {
-  return EnumValueToString(aValue, kVAlignTable, aResult);
+  return aValue.EnumValueToString(kVAlignTable, aResult);
 }
 
 PRBool
 nsGenericHTMLElement::TableVAlignValueToString(const nsHTMLValue& aValue,
                                                nsAString& aResult)
 {
-  return EnumValueToString(aValue, kTableVAlignTable, aResult);
+  return aValue.EnumValueToString(kTableVAlignTable, aResult);
 }
 
 PRBool
 nsGenericHTMLElement::ParseDivAlignValue(const nsAString& aString,
                                          nsHTMLValue& aResult) const
 {
-  return ParseEnumValue(aString, kDivAlignTable, aResult);
+  return aResult.ParseEnumValue(aString, kDivAlignTable);
 }
 
 PRBool
 nsGenericHTMLElement::DivAlignValueToString(const nsHTMLValue& aValue,
                                             nsAString& aResult) const
 {
-  return EnumValueToString(aValue, kDivAlignTable, aResult);
+  return aValue.EnumValueToString(kDivAlignTable, aResult);
 }
 
 PRBool
@@ -3297,12 +2994,12 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
       (aAttribute == nsHTMLAtoms::height)) {
-    return ParseValueOrPercent(aString, aResult, eHTMLUnit_Pixel);
+    return aResult.ParseIntValue(aString, eHTMLUnit_Pixel, PR_TRUE);
   }
   else if ((aAttribute == nsHTMLAtoms::hspace) ||
            (aAttribute == nsHTMLAtoms::vspace) ||
            (aAttribute == nsHTMLAtoms::border)) {
-    return ParseValue(aString, 0, aResult, eHTMLUnit_Pixel);
+    return aResult.ParseIntWithBounds(aString, eHTMLUnit_Pixel, 0);
   }
   return PR_FALSE;
 }
@@ -3317,7 +3014,7 @@ nsGenericHTMLElement::ImageAttributeToString(nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::border) ||
       (aAttribute == nsHTMLAtoms::hspace) ||
       (aAttribute == nsHTMLAtoms::vspace)) {
-    return ValueOrPercentToString(aValue, aResult);
+    return aValue.ToString(aResult);
   }
   return PR_FALSE;
 }
@@ -3326,28 +3023,28 @@ PRBool
 nsGenericHTMLElement::ParseFrameborderValue(const nsAString& aString,
                                             nsHTMLValue& aResult)
 {
-  return ParseEnumValue(aString, kFrameborderTable, aResult);
+  return aResult.ParseEnumValue(aString, kFrameborderTable);
 }
 
 PRBool
 nsGenericHTMLElement::FrameborderValueToString(const nsHTMLValue& aValue,
                                                nsAString& aResult)
 {
-  return EnumValueToString(aValue, kFrameborderTable, aResult);
+  return aValue.EnumValueToString(kFrameborderTable, aResult);
 }
 
 PRBool
 nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
                                           nsHTMLValue& aResult)
 {
-  return ParseEnumValue(aString, kScrollingTable, aResult);
+  return aResult.ParseEnumValue(aString, kScrollingTable);
 }
 
 PRBool
 nsGenericHTMLElement::ScrollingValueToString(const nsHTMLValue& aValue,
                                              nsAString& aResult)
 {
-  return EnumValueToString(aValue, kScrollingTable, aResult);
+  return aValue.EnumValueToString(kScrollingTable, aResult);
 }
 
 nsresult

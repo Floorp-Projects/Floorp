@@ -176,7 +176,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLegendElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLLegendElement, Align, align)
 
 // this contains center, because IE4 does
-static nsGenericHTMLElement::EnumTable kAlignTable[] = {
+static nsHTMLValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -191,7 +191,7 @@ nsHTMLLegendElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseEnumValue(aValue, kAlignTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kAlignTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -206,7 +206,7 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kAlignTable, aResult);
+      aValue.EnumValueToString(kAlignTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

@@ -3086,7 +3086,7 @@ nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
     result = mAttrStyleSheet->GetActiveLinkColor(color);
     if (NS_OK == result) {
       nsHTMLValue value(color);
-      nsGenericHTMLElement::ColorToString(value, aAlinkColor);
+      value.ToString(aAlinkColor);
     }
   }
 
@@ -3107,7 +3107,7 @@ nsHTMLDocument::SetAlinkColor(const nsAString& aAlinkColor)
   else if (mAttrStyleSheet) {
     nsHTMLValue value;
   
-    if (nsGenericHTMLElement::ParseColor(aAlinkColor, this, value)) {
+    if (value.ParseColor(aAlinkColor, this)) {
       mAttrStyleSheet->SetActiveLinkColor(value.GetColorValue());
     }
   }
@@ -3132,7 +3132,7 @@ nsHTMLDocument::GetLinkColor(nsAString& aLinkColor)
     result = mAttrStyleSheet->GetLinkColor(color);
     if (NS_OK == result) {
       nsHTMLValue value(color);
-      nsGenericHTMLElement::ColorToString(value, aLinkColor);
+      value.ToString(aLinkColor);
     }
   }
 
@@ -3152,7 +3152,7 @@ nsHTMLDocument::SetLinkColor(const nsAString& aLinkColor)
   }
   else if (mAttrStyleSheet) {
     nsHTMLValue value;
-    if (nsGenericHTMLElement::ParseColor(aLinkColor, this, value)) {
+    if (value.ParseColor(aLinkColor, this)) {
       mAttrStyleSheet->SetLinkColor(value.GetColorValue());
     }
   }
@@ -3177,7 +3177,7 @@ nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor)
     result = mAttrStyleSheet->GetVisitedLinkColor(color);
     if (NS_OK == result) {
       nsHTMLValue value(color);
-      nsGenericHTMLElement::ColorToString(value, aVlinkColor);
+      value.ToString(aVlinkColor);
     }
   }
 
@@ -3197,7 +3197,7 @@ nsHTMLDocument::SetVlinkColor(const nsAString& aVlinkColor)
   }
   else if (mAttrStyleSheet) {
     nsHTMLValue value;
-    if (nsGenericHTMLElement::ParseColor(aVlinkColor, this, value)) {
+    if (value.ParseColor(aVlinkColor, this)) {
       mAttrStyleSheet->SetVisitedLinkColor(value.GetColorValue());
     }
   }
