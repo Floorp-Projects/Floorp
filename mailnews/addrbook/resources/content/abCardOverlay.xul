@@ -39,7 +39,7 @@ Rights Reserved.
 		  <spring flex="1"/>
 	   </tabbox>
 	   
-	   <tabpanel id="abTabPanel" align="vertical" flex="1" style="border:2px groove white">
+	   <tabpanel id="abTabPanel" align="vertical" flex="1">
 
 			<!-- ** Name Tab ** -->
 			<box index="name" align="vertical" flex="1">
