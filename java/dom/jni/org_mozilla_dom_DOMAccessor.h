@@ -11,18 +11,10 @@ extern "C" {
 /* Inaccessible static: permission */
 /*
  * Class:     org_mozilla_dom_DOMAccessor
- * Method:    register
+ * Method:    doGC
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_register
-  (JNIEnv *, jclass);
-
-/*
- * Class:     org_mozilla_dom_DOMAccessor
- * Method:    unregister
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_unregister
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_doGC
   (JNIEnv *, jclass);
 
 /*
@@ -35,10 +27,26 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessor_getNodeByHandle
 
 /*
  * Class:     org_mozilla_dom_DOMAccessor
- * Method:    doGC
+ * Method:    initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_doGC
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_initialize
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     org_mozilla_dom_DOMAccessor
+ * Method:    register
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_register
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     org_mozilla_dom_DOMAccessor
+ * Method:    unregister
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_unregister
   (JNIEnv *, jclass);
 
 #ifdef __cplusplus

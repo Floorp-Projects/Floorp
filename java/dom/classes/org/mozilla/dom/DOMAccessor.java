@@ -45,6 +45,8 @@ public final class DOMAccessor {
     private static native Node getNodeByHandle(long p);
     private static native void doGC();
 
+    public static native void initialize();
+
     public static synchronized void 
 	addDocumentLoadListener(DocumentLoadListener listener) {
 	if (documentLoadListeners.size() == 0) {

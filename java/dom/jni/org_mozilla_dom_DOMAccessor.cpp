@@ -106,4 +106,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_doGC
   JavaDOMGlobals::TakeOutGarbage();
 }
 
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_initialize
+(JNIEnv *env, jclass)
+{
+  if (!JavaDOMGlobals::log) {
+    JavaDOMGlobals::Initialize(env);
+  }
+  
+}
+
 
