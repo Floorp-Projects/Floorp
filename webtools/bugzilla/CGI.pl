@@ -560,6 +560,11 @@ sub quietly_check_login() {
             }
         }
     }
+    # if 'who' is passed in, verify that it's a good value
+    if ($::FORM{'who'}) {
+        my $whoid = DBname_to_id($::FORM{'who'});
+        delete $::FORM{'who'} unless $whoid;
+    }
     if (!$loginok) {
         delete $::COOKIE{"Bugzilla_login"};
     }
