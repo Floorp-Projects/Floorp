@@ -329,7 +329,7 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 
 #endif /* XP_MACOSX */
 
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
 #endif //MOZ_WIDGET_GTK
 
