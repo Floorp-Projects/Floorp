@@ -29,6 +29,7 @@
 #define _nsImageOS2_h_
 
 #include "nsIImage.h"
+#include "nsRect.h"
 
 struct nsDrawingSurfaceOS2;
 
@@ -49,16 +50,16 @@ public:
   virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual PRInt32     GetLineStride()     { return mRowBytes; }
 
-  NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
-  NS_IMETHOD     SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
+  NS_IMETHOD          SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
+  NS_IMETHOD          SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
   virtual PRInt32     GetNaturalWidth() {return mNaturalWidth; }
   virtual PRInt32     GetNaturalHeight() {return mNaturalHeight; }
 
   NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
-  virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
-  virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
-  virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
-  virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
+  virtual PRInt32     GetDecodedX1() { return mDecodedRect.x; }
+  virtual PRInt32     GetDecodedY1() { return mDecodedRect.y; }
+  virtual PRInt32     GetDecodedX2() { return mDecodedRect.XMost (); }
+  virtual PRInt32     GetDecodedY2() { return mDecodedRect.YMost (); }
 
   virtual PRBool      GetHasAlphaMask()   { return mAlphaBits != nsnull; }
 
@@ -77,12 +78,10 @@ public:
 
   /** 
    * Draw a tiled version of the bitmap
-   * @update - dwc 3/30/00
    * @param aSurface  the surface to blit to
-   * @param aX The destination horizontal location
-   * @param aY The destination vertical location
-   * @param aWidth The destination width of the pixelmap
-   * @param aHeight The destination height of the pixelmap
+   * @param aSXOffset Offset from image's upper right corner that will be located at 
+   * @param aSYOffset   upper right corner of filled area
+   * @param aTileRect Area which must be filled with tiled image
    * @return if TRUE, no errors
    */
   NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
@@ -90,10 +89,8 @@ public:
                       PRInt32 aSXOffset, PRInt32 aSYOffset,
                       const nsRect &aTileRect);
 
-#ifdef USE_IMG2
   NS_IMETHOD DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
                          nscoord aDWidth, nscoord aDHeight);
-#endif
 
   /** 
    * Return the header size of the Device Independent Bitmap(DIB).
@@ -190,23 +187,19 @@ public:
    */
   PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
 #endif
-  BITMAPINFO2*    mInfo;
+  BITMAPINFO2*        mInfo;
   PRBool              mIsTopToBottom;     // rows in image are top to bottom 
-  HBITMAP            mBitmap;
-  HBITMAP            mABitmap;
+  HBITMAP             mBitmap;
+  HBITMAP             mABitmap;
   PRUint32            mDeviceDepth;
   PRInt32             mRowBytes;          // number of bytes per row
   PRUint8*            mImageBits;         // starting address of DIB bits
   PRBool              mIsOptimized;       // Did we convert our DIB to a HBITMAP
   nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
 
-  PRInt32		      mNaturalWidth;
+  PRInt32             mNaturalWidth;
   PRInt32             mNaturalHeight;
-
-  PRInt32             mDecodedX1;       //Keeps track of what part of image
-  PRInt32             mDecodedY1;       // has been decoded.
-  PRInt32             mDecodedX2; 
-  PRInt32             mDecodedY2;    
+  nsRect              mDecodedRect;       // Keeps track of what part of image has been decoded.
     
   // alpha layer members
   PRUint8             *mAlphaBits;        // alpha layer if we made one
@@ -224,8 +217,8 @@ public:
   void NS2PM_ININ( const nsRect &in, RECTL &rcl);
   void CreateBitmaps( nsDrawingSurfaceOS2 *surf);
 
-  PRBool  SlowTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
-  void    BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInfo, nscoord aWidth, nscoord aHeight, LONG tileWidth, LONG tileHeight);
+  nsresult SlowTile (nsIRenderingContext& aContext, nsDrawingSurface aSurface, PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect);
+  void     BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInfo, nscoord aTileWidth, nscoord aTileHeight);
 };
 
 #endif

@@ -245,9 +245,9 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
 }
 
 NS_IMETHODIMP 
-nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+nsImageOS2::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
    PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
    PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
@@ -261,12 +261,12 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    // limit the size of the blit to the amount of the image read in
    PRInt32 aSX2 = aSX + aSWidth;
 
-   if (aSX2 > mDecodedX2) 
-      aSX2 = mDecodedX2;
+   if (aSX2 > mDecodedRect.XMost ()) 
+      aSX2 = mDecodedRect.XMost ();
 
-   if (aSX < mDecodedX1) {
-      aDX += (mDecodedX1 - aSX) * origDWidth / origSWidth;
-      aSX = mDecodedX1;
+   if (aSX < mDecodedRect.x) {
+      aDX += (mDecodedRect.x - aSX) * origDWidth / origSWidth;
+      aSX = mDecodedRect.x;
    }
   
    aSWidth = aSX2 - aSX;
@@ -277,12 +277,12 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
    PRInt32 aSY2 = aSY + aSHeight;
 
-   if (aSY2 > mDecodedY2)
-      aSY2 = mDecodedY2;
+   if (aSY2 > mDecodedRect.YMost ())
+      aSY2 = mDecodedRect.YMost ();
 
-   if (aSY < mDecodedY1) {
-      aDY += (mDecodedY1 - aSY) * origDHeight / origSHeight;
-      aSY = mDecodedY1;
+   if (aSY < mDecodedRect.y) {
+      aDY += (mDecodedRect.y - aSY) * origDHeight / origSHeight;
+      aSY = mDecodedRect.y;
    }
 
    aSHeight = aSY2 - aSY;
@@ -299,10 +299,10 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    surf->NS2PM_ININ (trect, rcl);
 
    // Set up blit coord array
-   POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom },              // TLL
-                       { rcl.xRight, rcl.yTop },                // TUR
-                       { aSX, mInfo->cy - (aSY + aSHeight) },   // SLL
-                       { aSX + aSWidth, mInfo->cy - aSY } };    // SUR
+   POINTL aptl [4] = { rcl.xLeft, rcl.yBottom,                  // TLL - in
+                       rcl.xRight, rcl.yTop,                    // TUR - in
+                       aSX, mInfo->cy - (aSY + aSHeight),       // SLL - in
+                       aSX + aSWidth, mInfo->cy - aSY };        // SUR - ex
 
    if( mAlphaDepth == 0)
    {
@@ -373,9 +373,9 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
             {
                GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
 
-               POINTL aptlDevToMem [3] = { 0, 0,                                    // TLL - mem bitmap (0, 0)
-                                           bihMem.cx, bihMem.cy,                    // TUR - mem bitmap (cx, cy)
-                                           rcl.xLeft, rcl.yBottom };                // SLL - device (Dx1, Dy2)
+               POINTL aptlDevToMem [3] = { 0, 0,                                    // TLL - in
+                                           bihMem.cx, bihMem.cy,                    // TUR - ex
+                                           rcl.xLeft, rcl.yBottom };                // SLL - in
 
                GFX (::GpiBitBlt (MemPS, surf->GetPS (), 3, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
 
@@ -442,9 +442,9 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
                    GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
 
                    // Transfer bitmap from memory bitmap back to device
-                   POINTL aptlMemToDev [3] = { rcl.xLeft, rcl.yBottom,                  // TLL - device (Dx1, Dy2)
-                                               rcl.xRight, rcl.yTop,                    // TUR - device (Dx2, Dy1)
-                                               0, 0 };                                  // SLL - mem bitmap (0, 0)
+                   POINTL aptlMemToDev [3] = { rcl.xLeft, rcl.yBottom,              // TLL - in
+                                               rcl.xRight, rcl.yTop,                // TUR - ex
+                                               0, 0 };                              // SLL - in
 
                    GFX (::GpiBitBlt (surf->GetPS (), MemPS, 3, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
                  }
@@ -458,7 +458,7 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
 
             GFX (::GpiDestroyPS (MemPS), FALSE);
          }
-         ::DevCloseDC (MemDC);
+         GFX (::DevCloseDC (MemDC), DEV_ERROR);
       }
 
 //DJ - temporary hack
@@ -502,77 +502,90 @@ nsImageOS2::UnlockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsImageOS2::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
 {
-    
-  mDecodedX1 = x1; 
-  mDecodedY1 = y1; 
-  mDecodedX2 = x2; 
-  mDecodedY2 = y2; 
+  mDecodedRect.SetRect (x1, y1, x2 - x1, y2 - y1); 
   return NS_OK;
 }
 
 void
 nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInfo,
-                       nscoord aWidth, nscoord aHeight,
-                       LONG tileWidth, LONG tileHeight)
+                       nscoord aTileWidth, nscoord aTileHeight)
 {
-   PRInt32 notLoadedDY = 0;
-   if( mDecodedY2 < mInfo->cy)
+   // If bitmap not fully loaded, then first fill area with background color.
+   if (nsRect (0, 0, mInfo->cx, mInfo->cy) != mDecodedRect)
    {
-      // If bitmap not fully loaded, fill unloaded area
-      notLoadedDY = mInfo->cy - mDecodedY2;
-      RECTL rect = { 0, 0, aWidth, notLoadedDY };
-      ::WinFillRect( hpsTile, &rect, CLR_BACKGROUND);
+      POINTL pt1 = { 0, 0 };                                                   // LL - in
+      POINTL pt2 = { mInfo->cx, mInfo->cy };                                   // UR - ex
+
+      GFX (::GpiCreateLogColorTable (hpsTile, 0, LCOLF_RGB, 0, 0, 0), FALSE);
+      GFX (::GpiSetColor (hpsTile, MK_RGB (255, 255, 0)), FALSE);              // yellow eye-catcher
+      GFX (::GpiMove (hpsTile, &pt1), FALSE);
+      GFX (::GpiBox (hpsTile, DRO_FILL, &pt2, 0, 0), GPI_ERROR);
    }
 
    // Set up blit coord array
-   POINTL aptl[ 4] = { { 0, notLoadedDY },
-                       { aWidth - 1, aHeight - 1 },
-                       { 0, notLoadedDY },
-                       { mInfo->cx, mInfo->cy } };
+   POINTL aptl [4] = { mDecodedRect.x, mDecodedRect.y,                         // TLL - in
+                       mDecodedRect.XMost () - 1, mDecodedRect.YMost () - 1,   // TUR - in
+                       mDecodedRect.x, mDecodedRect.y,                         // SLL - in
+                       mDecodedRect.XMost (), mDecodedRect.YMost () };         // SUR - ex
 
    // Draw bitmap once into temporary PS
    GFX (::GpiDrawBits (hpsTile, (PBYTE)pImageBits, pBitmapInfo, 4, aptl, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
 
+   PRInt32 DestWidth  = mInfo->cx;
+   PRInt32 DestHeight = mInfo->cy;
+
    // Copy bitmap horizontally, doubling each time
-   while( aWidth < tileWidth)
+   while (DestWidth < aTileWidth)
    {
-      POINTL aptlCopy[ 4] = { { aWidth, 0 },
-                              { 2*aWidth, aHeight },
-                              { 0, 0 },
-                              { aWidth, aHeight } };
+      POINTL aptlCopy [3] = { DestWidth, 0,                     // TLL - in
+                              2 * DestWidth, DestHeight,        // TUR - ex
+                              0, 0 };                           // SLL - in
 
-      GFX (::GpiBitBlt (hpsTile, hpsTile, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
-      aWidth *= 2;
+      GFX (::GpiBitBlt (hpsTile, hpsTile, 3, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
+      DestWidth *= 2;
    }
-   // Copy bitmap vertically, doubling each time
-   while( aHeight < tileHeight)
-   {
-      POINTL aptlCopy[ 4] = { { 0, aHeight },
-                              { aWidth, 2*aHeight },
-                              { 0, 0 },
-                              { aWidth, aHeight } };
 
-      GFX (::GpiBitBlt (hpsTile, hpsTile, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
-      aHeight *= 2;
+   // Copy bitmap vertically, doubling each time
+   while (DestHeight < aTileHeight)
+   {
+      POINTL aptlCopy [4] = { 0, DestHeight,                    // TLL - in
+                              DestWidth, 2 * DestHeight,        // TUR - ex
+                              0, 0 };                           // SLL - in
+
+      GFX (::GpiBitBlt (hpsTile, hpsTile, 3, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
+      DestHeight *= 2;
    }
 }
 
-#ifdef PAVLOV_REALLY_SUCKS
-PRBool 
-nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                              nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                              nscoord aWidth, nscoord aHeight)
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *  @update 3/16/00 dwc
+ */
+NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
+                                   nsDrawingSurface aSurface,
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   const nsRect &aTileRect)
 {
+   if (aTileRect.IsEmpty ())
+      return NS_OK;
+
    PRBool didTile = PR_FALSE;
-   LONG tileWidth = aX1-aX0;
-   LONG tileHeight = aY1-aY0;
+   PRInt32 ImageWidth = mInfo->cx;
+   PRInt32 ImageHeight = mInfo->cy;
+
+   nsRect ValidRect (0, 0, ImageWidth, ImageHeight);
+   ValidRect.IntersectRect (ValidRect, mDecodedRect);
+
+   nsRect DrawRect = aTileRect;
+   DrawRect.MoveBy (-aSXOffset, -aSYOffset);
+   DrawRect.SizeBy (aSXOffset, aSYOffset);
 
    // Don't bother tiling if we only have to draw the bitmap a couple of times
    // Can't tile with 8bit alpha masks because need access destination bitmap values
-   if( (aWidth > tileWidth / 2) || (aHeight > tileHeight / 2) ||
-       (aWidth > MAX_BUFFER_WIDTH) || (aHeight > MAX_BUFFER_HEIGHT) ||
+   if ((ImageWidth > DrawRect.width / 2 && ImageHeight > DrawRect.height / 2) ||
+       (ImageWidth > MAX_BUFFER_WIDTH && ImageHeight > MAX_BUFFER_HEIGHT) ||
         mAlphaDepth > 1)
-      return SlowTile (aContext, aSurface, aX0, aY0, aX1, aY1, aWidth, aHeight);   
+      return SlowTile (aContext, aSurface, aSXOffset, aSYOffset, aTileRect);   
 
 
    nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
@@ -581,8 +594,8 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    HDC hdcCompat = GFX (::GpiQueryDevice (surf->GetPS ()), HDC_ERROR);
 
    DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
-   HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5,
-                            (PDEVOPENDATA) &dop, hdcCompat);
+   HDC MemDC = GFX (::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat),
+                    DEV_ERROR);
 
    if( DEV_ERROR != MemDC)
    {
@@ -599,16 +612,14 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
          hdr.cbFix = sizeof( BITMAPINFOHEADER2);
          // Maximum size of tiled area (could do this better)
-         LONG endWidth = aWidth * 2;
-         while( endWidth < tileWidth)
-         {
+         PRInt32 endWidth = ImageWidth;
+         while( endWidth < DrawRect.width)
             endWidth *= 2;
-         } 
-         LONG endHeight = aHeight * 2;
-         while( endHeight < tileHeight)
-         {
+
+         PRInt32 endHeight = ImageHeight;
+         while( endHeight < DrawRect.height)
             endHeight *= 2;
-         } 
+
          hdr.cx = endWidth;
          hdr.cy = endHeight;
          hdr.cPlanes = 1;
@@ -618,14 +629,12 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
          GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
          hdr.cBitCount = (USHORT) lBitCount;
 
-         nsRect trect( aX0, aY0, tileWidth, tileHeight);
          RECTL  rcl;
-         surf->NS2PM_ININ (trect, rcl); // !! !! !!
+         surf->NS2PM_INEX (aTileRect, rcl);
 
-         POINTL aptlTile[ 4] = { { rcl.xLeft, rcl.yBottom },
-                                 { rcl.xRight + 1, rcl.yTop + 1 },
-                                 { 0, endHeight - tileHeight },
-                                 { tileWidth, endHeight } };
+         POINTL aptlTile [3] = { rcl.xLeft, rcl.yBottom,                                 // TLL - in
+                                 rcl.xRight, rcl.yTop,                                   // TUR - ex
+                                 aSXOffset, endHeight - aTileRect.height - aSYOffset };  // SLL - in
 
          HBITMAP hMemBmp = GFX (::GpiCreateBitmap (MemPS, &hdr, 0, 0, 0), GPI_ERROR);
          if (hMemBmp != GPI_ERROR)
@@ -657,18 +666,18 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
 
                MONOBITMAPINFO MaskBitmapInfo (mInfo);
-               BuildTile (MemPS, mAlphaBits, MaskBitmapInfo, aWidth, aHeight, tileWidth, tileHeight);
+               BuildTile (MemPS, mAlphaBits, MaskBitmapInfo, DrawRect.width, DrawRect.height);
 
                // Apply mask to target, clear pels we will fill in from the image
-               GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlTile, ROP_SRCAND, 0L), GPI_ERROR);
+               GFX (::GpiBitBlt (surf->GetPS (), MemPS, 3, aptlTile, ROP_SRCAND, 0L), GPI_ERROR);
 
                ImageROP = ROP_SRCPAINT;    // Original image must be combined with mask
             }
 
 
-            BuildTile (MemPS, mImageBits, mInfo, aWidth, aHeight, tileWidth, tileHeight);
+            BuildTile (MemPS, mImageBits, mInfo, DrawRect.width, DrawRect.height);
 
-            GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlTile, ImageROP, 0L), GPI_ERROR);
+            GFX (::GpiBitBlt (surf->GetPS (), MemPS, 3, aptlTile, ImageROP, 0L), GPI_ERROR);
 
             didTile = PR_TRUE;
 
@@ -678,41 +687,35 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
          }
          GFX (::GpiDestroyPS (MemPS), FALSE);
       }
-      ::DevCloseDC (MemDC);
+      GFX (::DevCloseDC (MemDC), DEV_ERROR);
    }
 
    // If we failed to tile the bitmap, then use the old, slow, reliable way
    if( didTile == PR_FALSE)
-      SlowTile (aContext, aSurface, aX0, aY0, aX1, aY1, aWidth, aHeight);
-
-   return(PR_TRUE);
+      return SlowTile (aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
 }
-#else
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *  @update 3/16/00 dwc
- */
-NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
-                                   nsDrawingSurface aSurface,
-                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
-                                   const nsRect &aTileRect)
+
+nsresult nsImageOS2::SlowTile (nsIRenderingContext& aContext, nsDrawingSurface aSurface, 
+                               PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect)
 {
-   return(PR_FALSE);
+  nsRect ImageRect (0, 0, PR_MIN (mInfo->cx, mDecodedRect.width), PR_MIN (mInfo->cy, mDecodedRect.height));
+
+  for (PRInt32 y = aTileRect.y - aSYOffset + mDecodedRect.y ; y < aTileRect.YMost () ; y += mInfo->cy)
+    for (PRInt32 x = aTileRect.x - aSXOffset + mDecodedRect.x ; x < aTileRect.XMost () ; x += mInfo->cx)
+    {
+      nsRect CroppedImage;
+
+      ImageRect.MoveTo (x, y);
+      CroppedImage.IntersectRect (ImageRect, aTileRect);
+
+      Draw (aContext, aSurface,
+            CroppedImage.x - x, CroppedImage.y - y, CroppedImage.width, CroppedImage.height,
+            CroppedImage.x, CroppedImage.y, CroppedImage.width, CroppedImage.height);
+    }
+
+  return NS_OK;
 }
-#endif
 
-PRBool nsImageOS2::SlowTile (nsIRenderingContext& aContext, nsDrawingSurface aSurface, 
-                             nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1, 
-                             nscoord aWidth, nscoord aHeight)
-{
-  for (int y = aY0 ; y < aY1 ; y += aHeight)
-     for (int x = aX0 ; x < aX1 ; x += aWidth)
-        Draw (aContext, aSurface, x, y, aWidth, aHeight);
-
-  return PR_TRUE;
-}
-
-#ifdef USE_IMG2
 void nsImageOS2::NS2PM_ININ( const nsRect &in, RECTL &rcl)
 {
   PRUint32 ulHeight = GetHeight ();
@@ -783,10 +786,10 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
   destImg->NS2PM_ININ (trect, rcl);
 
   // Set up blit coord array
-  POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom },
-                      { rcl.xRight, rcl.yTop },
-                      { 0, mInfo->cy - mNaturalHeight },
-                      { mNaturalWidth, mInfo->cy } };
+  POINTL aptl [4] = { rcl.xLeft, rcl.yBottom,              // TLL - in
+                      rcl.xRight, rcl.yTop,                // TUR - in
+                      0, mInfo->cy - mNaturalHeight,       // SLL - in
+                      mNaturalWidth, mInfo->cy };          // SUR - ex
 
   if( 1==mAlphaDepth && mAlphaBits){
     // Apply mask to target, clear pels we will fill in from the image
@@ -815,4 +818,3 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
 
   return rc;
 }
-#endif
