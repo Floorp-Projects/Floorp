@@ -86,11 +86,6 @@ public:
    * @param pData if the key doesn't exist, pData will be set to nsnull.
    */
   PRBool Get(KeyType aKey, UserDataType* pData) const;
-
-protected:
-#ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
-  using nsBaseHashtableMT<KeyClass, nsAutoPtr<T>, T*>::mLock;
-#endif
 };
 
 
@@ -117,7 +112,7 @@ nsClassHashtable<KeyClass,T>::Get(KeyType aKey, T** retVal) const
     *retVal = nsnull;
 
   return PR_FALSE;
-};
+}
 
 
 //
@@ -128,7 +123,7 @@ template<class KeyClass,class T>
 PRBool
 nsClassHashtableMT<KeyClass,T>::Get(KeyType aKey, T** retVal) const
 {
-  PR_Lock(mLock);
+  PR_Lock(this->mLock);
 
   typename nsBaseHashtableMT<KeyClass,nsAutoPtr<T>,T*>::EntryType* ent =
     GetEntry(aKey);
@@ -138,7 +133,7 @@ nsClassHashtableMT<KeyClass,T>::Get(KeyType aKey, T** retVal) const
     if (retVal)
       *retVal = ent->mData;
 
-    PR_Unlock(mLock);
+    PR_Unlock(this->mLock);
 
     return PR_TRUE;
   }
@@ -146,9 +141,9 @@ nsClassHashtableMT<KeyClass,T>::Get(KeyType aKey, T** retVal) const
   if (retVal)
     *retVal = nsnull;
 
-  PR_Unlock(mLock);
+  PR_Unlock(this->mLock);
 
   return PR_FALSE;
-};
+}
 
 #endif // nsClassHashtable_h__
