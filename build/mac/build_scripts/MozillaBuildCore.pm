@@ -42,8 +42,6 @@ sub DoPrebuildCheck()
 #// Configure Build System
 #//--------------------------------------------------------------------------------------------------
 
-my($UNIVERSAL_INTERFACES_VERSION) = 0x0320;
-
 sub GenBuildSystemInfo()
 {
     # always rebuild the configuration program.
@@ -163,7 +161,7 @@ sub ConfigureBuildSystem()
     #// we'll assume that 3.3 or later is in use.
     my($universal_interfaces) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:Universal:Interfaces:CIncludes:");
     if (-e ($universal_interfaces . "ControlDefinitions.h")) {
-        $UNIVERSAL_INTERFACES_VERSION = 0x0330;
+        $main::UNIVERSAL_INTERFACES_VERSION = 0x0330;
     }
 
     #// Rename IC SDK folder in the Mac OS Support folder
@@ -176,7 +174,7 @@ sub ConfigureBuildSystem()
         print "Mozilla no longer needs the Internet Config SDK to build:\n  Renaming the 'ICProgKit2.0.2' folder to '(ICProgKit2.0.2)'\n";
     }
 
-    printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $UNIVERSAL_INTERFACES_VERSION);
+    printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $main::UNIVERSAL_INTERFACES_VERSION);
 
     UpdateConfigHeader(":mozilla:config:mac:DefinesOptions.h");
 

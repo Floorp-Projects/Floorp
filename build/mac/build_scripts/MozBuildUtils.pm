@@ -17,6 +17,7 @@ use Mac::Events;
 use Mac::StandardFile;
 
 use Moz;
+use MozBuildFlags;
 
 use vars qw(@ISA @EXPORT);
 
