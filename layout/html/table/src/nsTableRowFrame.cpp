@@ -949,6 +949,13 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
     if (aDirtyOnly && ((frameState & NS_FRAME_IS_DIRTY) == 0)) {
       doReflowChild = PR_FALSE;
     }
+    else if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && IS_TABLE_CELL(frameType)) {
+      // We don't reflow a rowspan >1 cell here with a constrained height. 
+      // That happens in nsTableRowGroupFrame::SplitSpanningCells.
+      if (aTableFrame.GetEffectiveRowSpan((nsTableCellFrame&)*kidFrame) > 1) {
+        doReflowChild = PR_FALSE;
+      }
+    }
     if (aReflowState.mFlags.mSpecialHeightReflow) {
       if (!isPaginated && (IS_TABLE_CELL(frameType.get()) &&
                            !((nsTableCellFrame*)kidFrame)->NeedSpecialReflow())) {
@@ -1545,11 +1552,16 @@ nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
-  aCellFrame->SizeTo(aPresContext, cellSize.width, aAvailableHeight);
+  PRBool fullyComplete = NS_FRAME_IS_COMPLETE(aStatus) && !NS_FRAME_IS_TRUNCATED(aStatus);
+
+  aCellFrame->SizeTo(aPresContext, cellSize.width, 
+                     (fullyComplete) ? aAvailableHeight : desiredSize.height);
 
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
-  aCellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
+  if (fullyComplete) {
+    aCellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
+  }
   aCellFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 
   return desiredSize.height;

@@ -336,11 +336,15 @@ protected:
 
   void SplitSpanningCells(nsIPresContext&          aPresContext,
                           const nsHTMLReflowState& aReflowState,
-                          nsIStyleSet&             aStyleSet,
+                          nsIStyleSet&             aStyleSet,                                         
                           nsTableFrame&            aTableFrame,
-                          nsTableRowFrame&         aRowFrame,
-                          nscoord                  aRowEndY,
-                          nsTableRowFrame*         aContRowFrame);
+                          nsTableRowFrame&         aFirstRow, 
+                          nsTableRowFrame&         aLastRow,  
+                          PRBool                   aFirstRowIsTopOfPage,
+                          nscoord                  aAvailHeight,
+                          nsTableRowFrame*&        aContRowFrame,
+                          nsTableRowFrame*&        aFirstTruncatedRow,
+                          nscoord&                 aDesiredHeight);
 
   void CreateContinuingRowFrame(nsIPresContext& aPresContext,
                                 nsIStyleSet&    aStyleSet,
@@ -352,6 +356,8 @@ protected:
 
   void GetNextRowSibling(nsIFrame** aRowFrame);
 
+  void UndoContinuedRow(nsIPresContext*  aPresContext,
+                        nsTableRowFrame* aRow);
 public:
   virtual nsIFrame* GetFirstFrame() { return mFrames.FirstChild(); };
   virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); };
