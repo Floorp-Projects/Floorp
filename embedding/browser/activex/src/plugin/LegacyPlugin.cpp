@@ -268,11 +268,9 @@ jref NPP_GetJavaClass(void)
 
 #define MIME_OLEOBJECT1   "application/x-oleobject"
 #define MIME_OLEOBJECT2   "application/oleobject"
-#define MIME_ACTIVESCRIPT "text/x-activescript"
 
 enum MozAxPluginErrors
 {
-    MozAxErrorActiveScriptNotSupported,
     MozAxErrorControlIsNotSafeForScripting,
     MozAxErrorCouldNotCreateControl,
 };
@@ -290,9 +288,6 @@ ShowError(MozAxPluginErrors errorCode, const CLSID &clsid)
     // TODO errors are hardcoded for now
     switch (errorCode)
     {
-    case MozAxErrorActiveScriptNotSupported:
-        szMsg = _T("ActiveScript not supported yet!");
-        break;
     case MozAxErrorControlIsNotSafeForScripting:
         {
             USES_CONVERSION;
@@ -320,21 +315,6 @@ ShowError(MozAxPluginErrors errorCode, const CLSID &clsid)
     szBuffer[kBufSize - 1] = TCHAR('\0');
     if (szMsg)
         MessageBox(NULL, szMsg, _T("ActiveX Error"), MB_OK | MB_ICONWARNING);
-}
-
-static NPError
-NewScript(const char *pluginType,
-          PluginInstanceData *pData,
-          uint16 mode,
-          int16 argc,
-          char *argn[],
-          char *argv[])
-{
-    CActiveScriptSiteInstance *pScriptSite = NULL;
-    CActiveScriptSiteInstance::CreateInstance(&pScriptSite);
-    // TODO support ActiveScript
-    ShowError(MozAxErrorActiveScriptNotSupported, CLSID_NULL);
-    return NPERR_GENERIC_ERROR;
 }
 
 #if defined(MOZ_ACTIVEX_PLUGIN_XPCONNECT) && defined(XPC_IDISPATCH_SUPPORT)
@@ -985,12 +965,8 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 #endif
 
     NPError rv = NPERR_GENERIC_ERROR;
-    if (strcmp(pluginType, MIME_ACTIVESCRIPT) == 0)
-    {
-        rv = NewScript(pluginType, pData, mode, argc, argn, argv);
-    }
-    else /* if (strcmp(pluginType, MIME_OLEOBJECT1) == 0 ||
-             strcmp(pluginType, MIME_OLEOBJECT2) == 0) */
+    /* if (strcmp(pluginType, MIME_OLEOBJECT1) == 0 ||
+           strcmp(pluginType, MIME_OLEOBJECT2) == 0) */
     {
         rv = NewControl(pluginType, pData, mode, argc, argn, argv);
     }
