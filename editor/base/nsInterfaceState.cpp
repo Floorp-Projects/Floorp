@@ -124,7 +124,7 @@ nsInterfaceState::NotifyDocumentStateChanged(PRBool aNowDirty)
 }
 
 NS_IMETHODIMP
-nsInterfaceState::NotifySelectionChanged()
+nsInterfaceState::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *)
 {
   return PrimeUpdateTimer();
 }
