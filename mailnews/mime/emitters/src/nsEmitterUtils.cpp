@@ -17,50 +17,53 @@
  */
 #include "prmem.h"
 #include "plstr.h"
+#include "nsMailHeaders.h"
+#include "nsIMimeEmitter.h"
 
-extern "C" char *
-nsEscapeHTML(const char * string)
+extern "C" PRBool
+EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
 {
-  if (!string)
-    return NULL;
+  if (AllHeaders == dispType)
+    return PR_TRUE;
 
-  char *rv = (char *) PR_MALLOC(PL_strlen(string)*4 + 1); 
-              /* The +1 is for the trailing null! */
-  char *ptr = rv;
+  if ((!header) || (!*header))
+    return PR_FALSE;
 
-  if(rv)
+  if (MicroHeaders == dispType)
   {
-		  for(; *string != '\0'; string++)
-		    {
-        if(*string == '<')
-        {
-          *ptr++ = '&';
-          *ptr++ = 'l';
-          *ptr++ = 't';
-          *ptr++ = ';';
-        }
-        else if(*string == '>')
-        {
-          *ptr++ = '&';
-          *ptr++ = 'g';
-          *ptr++ = 't';
-          *ptr++ = ';';
-        }
-        else if(*string == '&')
-        {
-          *ptr++ = '&';
-          *ptr++ = 'a';
-          *ptr++ = 'm';
-          *ptr++ = 'p';
-          *ptr++ = ';';
-        }
-        else
-        {
-          *ptr++ = *string;
-        }
-		    }
-      *ptr = '\0';
+    if (
+          (!PL_strcmp(header, HEADER_SUBJECT)) ||
+          (!PL_strcmp(header, HEADER_FROM)) ||
+          (!PL_strcmp(header, HEADER_DATE))
+       )
+      return PR_TRUE;
+    else
+      return PR_FALSE;
   }
 
-  return(rv);
+  if (NormalHeaders == dispType)
+  {
+    if (
+        (!PL_strcmp(header, HEADER_TO)) ||
+        (!PL_strcmp(header, HEADER_SUBJECT)) ||
+        (!PL_strcmp(header, HEADER_SENDER)) ||
+        (!PL_strcmp(header, HEADER_RESENT_TO)) ||
+        (!PL_strcmp(header, HEADER_RESENT_SENDER)) ||
+        (!PL_strcmp(header, HEADER_RESENT_FROM)) ||
+        (!PL_strcmp(header, HEADER_RESENT_CC)) ||
+        (!PL_strcmp(header, HEADER_REPLY_TO)) ||
+        (!PL_strcmp(header, HEADER_REFERENCES)) ||
+        (!PL_strcmp(header, HEADER_NEWSGROUPS)) ||
+        (!PL_strcmp(header, HEADER_MESSAGE_ID)) ||
+        (!PL_strcmp(header, HEADER_FROM)) ||
+        (!PL_strcmp(header, HEADER_FOLLOWUP_TO)) ||
+        (!PL_strcmp(header, HEADER_CC)) ||
+        (!PL_strcmp(header, HEADER_BCC))
+       )
+       return PR_TRUE;
+    else
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }

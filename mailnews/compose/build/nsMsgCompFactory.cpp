@@ -34,6 +34,7 @@
 #include "nsMsgSendLaterFact.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsMsgQuote.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -44,7 +45,7 @@ static NS_DEFINE_CID(kCMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID(kCMsgSendLaterCID, NS_MSGSENDLATER_CID);
 static NS_DEFINE_CID(kCSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kCMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
-
+static NS_DEFINE_CID(kCMsgQuoteCID, NS_MSGQUOTE_CID);
 
 
 ////////////////////////////////////////////////////////////
@@ -183,6 +184,12 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		return aMsgCompService->QueryInterface(kISupportsIID, aResult);
 	}
 
+  // Quoting anyone?
+  else if (mClassID.Equals(kCMsgQuoteCID)) 
+	{
+    return NS_NewMsgQuote(aIID, aResult);
+	}
+  
 	return NS_NOINTERFACE;  
 }  
 
@@ -272,6 +279,12 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 
+  
+    rv = compMgr->RegisterComponent(kCMsgQuoteCID,
+										"Message Quoting",
+										"Xcomponent://netscape/messengercompose/smtp",
+										path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) finalResult = rv;
 
 #ifdef NS_DEBUG
   printf("composer registering from %s\n",path);
@@ -305,6 +318,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCSmtpServiceCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->UnregisterComponent(kCMsgQuoteCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	return finalResult;
