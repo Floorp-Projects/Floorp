@@ -3070,29 +3070,11 @@ NS_IMETHODIMP nsWebShell::Destroy()
     rv = FireUnloadEvent();
   }
 
-  // Stop any URLs that are currently being loaded...
-  Stop();
-  mDocLoader->Destroy();
+  nsDocShell::Destroy();
 
   SetContainer(nsnull);
-  SetDocLoaderObserver(nsnull);
 
-  // Remove this docshell from its parent's child list
-  nsCOMPtr<nsIDocShellTreeNode> docShellParentAsNode(do_QueryInterface(mParent));
-
-  if (docShellParentAsNode) {
-    docShellParentAsNode->RemoveChild(this);
-  }
-
-  if (nsnull != mDocLoader) {
-    mDocLoader->SetContainer(nsnull);
-  }
-
-  mContentViewer = nsnull;
-
-  // Destroy our child web shells and release references to them
-  DestroyChildren();
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWebShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
