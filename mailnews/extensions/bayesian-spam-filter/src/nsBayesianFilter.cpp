@@ -826,7 +826,12 @@ nsBayesianFilter::nsBayesianFilter()
     }
 }
 
-nsBayesianFilter::~nsBayesianFilter() {}
+nsBayesianFilter::~nsBayesianFilter() 
+{
+  // call shutdown when we are going away in case we need
+  // to flush the training set to disk
+  Shutdown();
+}
 
 // this object is used for one call to classifyMessage or classifyMessages(). 
 // So if we're classifying multiple messages, this object will be used for each message.
