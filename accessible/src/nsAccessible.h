@@ -92,6 +92,10 @@ public:
                                       nsRect& aAbsoluteTwipsRect, 
                                       nsRect& aAbsolutePixelRect);
     static nsresult GetTranslatedString(PRUnichar *aKey, nsAWritableString *aStringOut);
+
+    // helper method to verify frames
+    static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
+
 protected:
   virtual nsIFrame* GetFrame();
   virtual nsIFrame* GetBoundsFrame();
