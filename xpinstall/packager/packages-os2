@@ -278,6 +278,10 @@ bin/ldap50.dll
 ;bin/nsldappr32v50.dll
 bin/prldap50.dll
 
+; p3p
+bin/components/p3p.xpt
+bin/components/p3p.dll
+
 ; chrome stuff
 bin/chrome/help.jar
 bin/chrome/comm.jar
@@ -458,6 +462,3 @@ bin/res/inspector/search-registry.rdf
 ;xpctest.dll  -Test
 ;xpconnect_tests.xpt - Test
 
-; p3p
-bin/components/p3p.xpt
-bin/components/p3p.dll
