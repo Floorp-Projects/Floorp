@@ -83,6 +83,7 @@ public:
 
 protected:
   NS_IMETHOD UpdateCommands(const nsAString& aEventName);
+  void UpdateWWActiveWindow();
 
 public:
   static nsresult GetParentWindowFromDocument(nsIDOMDocument* aElement, nsIDOMWindowInternal** aWindow);
@@ -96,8 +97,9 @@ protected:
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
 
   PRUint32 mSuppressFocus;
-  PRBool mSuppressFocusScroll;
-  PRBool mActive;
+  PRPackedBool mSuppressFocusScroll;
+  PRPackedBool mActive;
+  PRPackedBool mUpdateWindowWatcher;
 };
 
 #endif // nsFocusController_h__

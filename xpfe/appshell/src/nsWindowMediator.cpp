@@ -204,18 +204,6 @@ nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
     mTopmostWindow = 0;
   delete inInfo;  
 
-  // inform WindowWatcher
-  nsWindowInfo *info = MostRecentWindowInfo(0);
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  if (info && info->mWindow) {
-    nsCOMPtr<nsIDOMWindowInternal> idomWindow;
-    GetDOMWindow(info->mWindow, idomWindow);
-    domWindow = do_QueryInterface(idomWindow);
-  }
-
-  // failure or no more windows sets it to 0, which is acceptable
-  mWatcher->SetActiveWindow(domWindow);
-
   return NS_OK;
 }
 
@@ -387,15 +375,6 @@ nsWindowMediator::UpdateWindowTimeStamp( nsIXULWindow* inWindow)
     if (info->mWindow.get() == inWindow) {
       // increment the window's time stamp
       info->mTimeStamp = ++mTimeStamp;
-
-      // inform WindowWatcher
-      nsCOMPtr<nsIDOMWindowInternal> idomwindow;
-      GetDOMWindow(info->mWindow, idomwindow);
-      nsCOMPtr<nsIDOMWindow> domwindow(do_QueryInterface(idomwindow));
-      // if for some reason anything failed, it'll be set to 0, which is
-      // better than an invalid pointer.
-      mWatcher->SetActiveWindow(domwindow);
-
       return NS_OK;
     }
     info = info->mYounger;
@@ -670,10 +649,6 @@ nsWindowMediator::Init()
         return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mWatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  
   return NS_OK;
 }
 
