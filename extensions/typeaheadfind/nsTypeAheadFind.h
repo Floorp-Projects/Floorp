@@ -131,7 +131,10 @@ protected:
   void CancelFind();
   PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext, 
                          nsIDOMRange *aRange, PRBool aMustBeVisible, nsIDOMRange **aNewRange);
-  void FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
+  nsresult FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
+  nsresult GetSearchContainers(nsISupports *aContainer, PRBool aIsFirstVisiblePreferred, 
+                               nsIPresShell **aPresShell, nsIPresContext **aPresContext,
+                               nsIDOMRange **aSearchRange, nsIDOMRange **aStartRange, nsIDOMRange **aEndRange);
   void DisplayStatus(PRBool aSuccess, PRBool aClearStatus);
   nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
 
@@ -160,8 +163,8 @@ protected:
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsITimer> mTimer;
 
-  // The current content window that we're listening to and it's cached objects
-  nsCOMPtr<nsISelection> mDocSelection;
-  nsCOMPtr<nsIDOMWindow> mCurrentWindow;
-  nsCOMPtr<nsIWeakReference> mWeakShell;
+  // The focused content window that we're listening to and it's cached objects
+  nsCOMPtr<nsISelection> mFocusedDocSelection;
+  nsCOMPtr<nsIDOMWindow> mFocusedWindow;
+  nsCOMPtr<nsIWeakReference> mFocusedWeakShell;
 };
