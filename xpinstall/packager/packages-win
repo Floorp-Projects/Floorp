@@ -185,6 +185,7 @@ bin\chrome\related\*
 bin\chrome\sidebar\*
 bin\chrome\wallet\*
 bin\chrome\xpinstall\*
+bin\chrome\layout\*
 bin\chrome\xul.css
 bin\chrome\xulBindings.xml
 bin\chrome\htmlBindings.xml
