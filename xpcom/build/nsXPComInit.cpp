@@ -116,7 +116,7 @@
 // Since noone outside xpcom needs to know about this and nsRegistry.cpp
 // does not have a local include file, we are putting this definition
 // here rather than in nsIRegistry.h
-extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
+extern nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
 
 #ifdef DEBUG
@@ -574,7 +574,13 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 #ifdef DEBUG_dougt
 	printf("start - Registering GRE components\n");
 #endif
+                // If the GRE contains any loaders, we want to know about it so that we can cause another
+                // autoregistration of the applications component directory.
+                int loaderCount = nsComponentManagerImpl::gComponentManager->GetLoaderCount();
                 rv = nsComponentManagerImpl::gComponentManager->AutoRegister(greDir);
+                
+                if (loaderCount != nsComponentManagerImpl::gComponentManager->GetLoaderCount()) 
+                    nsComponentManagerImpl::gComponentManager->AutoRegisterNonNativeComponents(nsnull);        
 
 #ifdef DEBUG_dougt
 	printf("end - Registering GRE components\n");
