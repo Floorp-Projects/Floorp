@@ -830,13 +830,10 @@ function getDefaultFontSize()
     }
     catch(ex) { }
     
-    // DPI pref    : browser.display.screen_resolution
-    var dpi = 96;
-    try
-    {
-        dpi = prefBranch.getIntPref("browser.display.screen_resolution");
-    }
-    catch(ex) { }
+    // Get the DPI the fun way (make Mozilla do the work).
+    var b = document.createElement("box");
+    b.style.width = "1in";
+    var dpi = window.getComputedStyle(b, null).width.match(/^\d+/);
     
     return Math.round((pxSize / dpi) * 72);
 }
