@@ -84,9 +84,11 @@ void nsInput::MapAttributesInto(nsIStyleContext* aContext,
     case NS_STYLE_TEXT_ALIGN_RIGHT:
       display->mFloats = NS_STYLE_FLOAT_RIGHT;
       break;
+#if 0
     default:
       text->mVerticalAlignFlags = mAlign;
       break;
+#endif
     }
   }
 #endif
