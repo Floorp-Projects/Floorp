@@ -160,7 +160,7 @@ private:
   NS_IMETHOD      GenerateProtocolForCard(nsIAbCard *aCard, PRBool  aAddId, nsString &protLine);
   PRBool          ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *syncRecord, nsString &protLine);
   void            InternalInit();
-  nsresult        InternalCleanup();
+  nsresult        InternalCleanup(nsresult aResult);
   nsresult        CleanServerTable(nsVoidArray *aArray);
   PRUnichar       *GetString(const PRUnichar *aStringName);
   nsresult        DisplayErrorMessage(const PRUnichar * msg);
@@ -186,12 +186,17 @@ private:
   PRInt32                         mCurrentPostRecord;
 
   nsCOMPtr<nsIFileSpec>           mHistoryFile;
+  nsCOMPtr<nsIFileSpec>           mLockFile;
+  PRBool                          mLastSyncFailed;
 
   PRUint32                        mOldTableSize;
   syncMappingRecord               *mOldSyncMapingTable;  // Old history table...
   PRUint32                        mNewTableSize;
   syncMappingRecord               *mNewSyncMapingTable;   // New table after reading address book
   nsVoidArray                     *mNewServerTable;       // New entries from the server
+
+  PRUint32                        mCrashTableSize;
+  syncMappingRecord               *mCrashTable;           // Comparison table for crash recovery...
 
   char                            *mProtocolResponse;     // what the server said...
   char                            *mProtocolOffset;       // where in the buffer are we?
@@ -239,6 +244,10 @@ private:
                                      nsIAddrDatabase  *aDatabase, 
                                      nsIAbDirectory   *directory,
                                      nsIAbCard        **aReturnCard);
+
+  PRBool          CardAlreadyInAddressBook(nsIAbCard        *newCard,
+                                           PRInt32          *aClientID,
+                                           ulong            *aRetCRC);
 
   nsString        mLocale;                                // Charset of returned data!
   nsStringArray   *mDeletedRecordTags;                    // The deleted record tags from the server...

@@ -99,6 +99,12 @@ nsAbSync::InternalInit()
 
   mPhoneTypes = nsnull;
   mPhoneValues = nsnull;
+
+  mLockFile = nsnull;
+  mLastSyncFailed = PR_FALSE;
+
+  mCrashTableSize = 0;
+  mCrashTable = nsnull;
 }
 
 nsresult
@@ -121,7 +127,7 @@ nsAbSync::CleanServerTable(nsVoidArray *aArray)
 }
 
 nsresult
-nsAbSync::InternalCleanup()
+nsAbSync::InternalCleanup(nsresult aResult)
 {
   /* cleanup code */
   DeleteListeners();
@@ -132,10 +138,20 @@ nsAbSync::InternalCleanup()
   PR_FREEIF(mOldSyncMapingTable);
   PR_FREEIF(mNewSyncMapingTable);
 
+  PR_FREEIF(mCrashTable);
+
   CleanServerTable(mNewServerTable);
 
   if (mHistoryFile)
     mHistoryFile->CloseStream();
+
+  if (mLockFile)
+  {
+    mLockFile->CloseStream();
+
+    if (NS_SUCCEEDED(aResult))
+      mLockFile->Delete(PR_FALSE);
+  }
 
   PR_FREEIF(mUserName);
 
@@ -183,7 +199,7 @@ nsAbSync::~nsAbSync()
   if (mPostEngine)
     mPostEngine->RemovePostListener((nsIAbSyncPostListener *)this);
 
-  InternalCleanup();
+  InternalCleanup(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
@@ -525,7 +541,7 @@ NS_IMETHODIMP nsAbSync::OnStopOperation(PRInt32 aTransactionID, nsresult aStatus
     rv = ProcessServerResponse(aProtocolResponse);
 
   NotifyListenersOnStopSync(aTransactionID, rv, aMsg);
-  InternalCleanup();
+  InternalCleanup(aStatus);
 
   mCurrentState = nsIAbSyncState::nsIAbSyncIdle;
 
@@ -673,7 +689,7 @@ EarlyExit:
   PR_FREEIF(clientIDStr);
 
   if (NS_FAILED(rv))
-    InternalCleanup();
+    InternalCleanup(rv);
   return rv;
 }
 
@@ -1045,6 +1061,34 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
   return PR_FALSE;
 }
 
+char*
+BuildSyncTimestamp(void)
+{
+  static char       result[75] = "";
+	PRExplodedTime    now;
+  char              buffer[128] = "";
+
+  // Generate envelope line in format of:  From - Sat Apr 18 20:01:49 1998
+  //
+  // Use PR_FormatTimeUSEnglish() to format the date in US English format,
+	// then figure out what our local GMT offset is, and append it (since
+	// PR_FormatTimeUSEnglish() can't do that.) Generate four digit years as
+	// per RFC 1123 (superceding RFC 822.)
+  //
+  PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
+	PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
+						   "%a %b %d %H:%M:%S %Y",
+						   &now);
+  
+  // This value must be in ctime() format, with English abbreviations.
+	// PL_strftime("... %c ...") is no good, because it is localized.
+  //
+  PL_strcpy(result, "Last - ");
+  PL_strcpy(result + 7, buffer);
+  PL_strcpy(result + 7 + 24, CRLF);
+  return result;
+}
+
 NS_IMETHODIMP
 nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *directory)
 {
@@ -1098,6 +1142,113 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   //mNewSyncMapingTable = nsnull;
   mHistoryFile->Exists(&exists);
   
+  // Do this here to be used in case of a crash recovery situation...
+  rv = aDatabase->EnumerateCards(directory, &cardEnum);
+  if (NS_FAILED(rv) || (!cardEnum))
+  {
+    rv = NS_ERROR_FAILURE;
+    goto GetOut;
+  }
+
+  //
+  // Now, lets get a lot smarter about failures that may happen during the sync
+  // operation. If this happens, we should do all that is possible to prevent 
+  // duplicate entries from getting stored in an address book. To that end, we
+  // will create an "absync.lck" file that will only exist during the synchronization
+  // operation. The only time the lock file should be on disk at this point is if the
+  // last sync operation failed. If so, we should build a compare list of the current
+  // address book and only insert entries that don't have matching CRC's
+  //
+  // Note: be very tolerant if any of this stuff fails ...
+  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(mLockFile));
+  if (NS_SUCCEEDED(rv)) 
+  {
+    rv = mLockFile->AppendRelativeUnixPath((const char *)"absync.lck");
+    if (NS_SUCCEEDED(rv)) 
+    {
+      PRBool      tExists = PR_FALSE;
+
+      mLockFile->Exists(&tExists);
+      if (tExists)
+      {
+        mLastSyncFailed = PR_TRUE;
+
+        // Ok, we got here which means that the last operation must have failed and
+        // we should build a table of the CRC's of the address book we have locally
+        // and prevent us from adding the same person twice. Hope this works.
+        //
+        cardEnum->First();
+        do
+        {
+          mCrashTableSize++;
+        } while (NS_SUCCEEDED(cardEnum->Next()));
+
+        mCrashTable = (syncMappingRecord *) PR_MALLOC(mCrashTableSize * sizeof(syncMappingRecord));
+        if (!mCrashTable)
+        {
+          mCrashTableSize = 0;
+        }
+        else
+        {
+          // Init the memory!
+          nsCRT::memset(mCrashTable, 0, (mCrashTableSize * sizeof(syncMappingRecord)) );
+          nsString        tProtLine; 
+
+          rv = NS_OK;  
+          cardEnum->First();
+          do
+          {
+            if (NS_FAILED(cardEnum->CurrentItem(getter_AddRefs(obj))))
+              break;
+            else
+            {
+              nsCOMPtr<nsIAbCard> card;
+              card = do_QueryInterface(obj, &rv);
+              if ( NS_SUCCEEDED(rv) && (card) )
+              {
+                // First, we need to fill out the localID for this entry. This should
+                // be the ID from the local database for this card entry
+                //
+                PRUint32    aKey;
+                if (NS_FAILED(card->GetKey(&aKey)))
+                  continue;
+
+                // Ugh...this should never happen...BUT??
+                if (aKey <= 0)
+                  continue;
+
+                // Ok, now get the data for this record....
+                mCrashTable[workCounter].localID = aKey;
+                if (NS_SUCCEEDED(GenerateProtocolForCard(card, PR_FALSE, tProtLine)))
+                {
+                  char    *tCRCLine = tProtLine.ToNewCString();
+                  if (tCRCLine)
+                  {
+                    mCrashTable[workCounter].CRC = GetCRC(tCRCLine);
+                    PR_FREEIF(tCRCLine);
+                  }
+                }
+              }
+            }
+
+            workCounter++;
+          } while (NS_SUCCEEDED(cardEnum->Next()));
+        }
+      }
+      else  // If here, create the lock file
+      {
+        if (NS_SUCCEEDED(mLockFile->OpenStreamForWriting()))
+        {
+          char      *tMsg = BuildSyncTimestamp();
+          PRInt32   tWriteSize;
+
+          mLockFile->Write(tMsg, nsCRT::strlen(tMsg), &tWriteSize);
+          mLockFile->CloseStream();
+        }
+      }
+    }
+  }  
+
   // If the old table exists, then we need to load it up!
   if (exists)
   {
@@ -1150,13 +1301,6 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
     }
   }
 
-  rv = aDatabase->EnumerateCards(directory, &cardEnum);
-  if (NS_FAILED(rv) || (!cardEnum))
-  {
-    rv = NS_ERROR_FAILURE;
-    goto GetOut;
-  }
-
   //
   // Now create the NEW sync mapping table that we will use for this
   // current operation. First, we have to count the total number of
@@ -1179,6 +1323,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   nsCRT::memset(mNewSyncMapingTable, 0, (mNewTableSize * sizeof(syncMappingRecord)) );
 
   rv = NS_OK;  
+  workCounter =0;
   cardEnum->First();
   do
   {
@@ -2225,6 +2370,43 @@ EarlyExit:
   return rv;
 }
 
+//
+// This routine will be used to hunt through an index of CRC's to see if this
+// address book card has already been added to the local database. If so, don't
+// duplicate!
+// 
+PRBool
+nsAbSync::CardAlreadyInAddressBook(nsIAbCard        *newCard,
+                                   PRInt32          *aClientID,
+                                   ulong            *aRetCRC)
+{
+  PRUint32   i;
+  nsString  tProtLine;
+  PRBool    rVal = PR_FALSE;
+
+  // First, generate a protocol line for this new card...
+  if (NS_FAILED(GenerateProtocolForCard(newCard, PR_FALSE, tProtLine)))
+    return PR_FALSE;
+ 
+  char    *tCRCLine = tProtLine.ToNewCString();
+  if (!tCRCLine)
+    return PR_FALSE;
+
+  ulong   workCRC = GetCRC(tCRCLine);
+  for (i=0; i<mCrashTableSize; i++)
+  {
+    if (mCrashTable[i].CRC == workCRC)
+    {
+      *aClientID = mCrashTable[i].localID;
+      *aRetCRC = workCRC;
+      rVal = PR_TRUE;
+    }
+  }
+  
+  PR_FREEIF(tCRCLine);
+  return rVal;
+}
+
 // 
 // This will look for an entry in the address book for this particular person and return 
 // the address book card and the client ID if found...otherwise, it will return ZERO
@@ -2287,7 +2469,7 @@ nsAbSync::AddNewUsers()
   PRInt32         addCount = 0;
   PRInt32         i,j;
   PRInt32         serverID;
-  PRUint32        localID;
+  PRInt32         localID;
   nsCOMPtr<nsIAbCard> newCard;
   nsIAbCard       *tCard = nsnull;
   nsString        tempProtocolLine;
@@ -2412,11 +2594,28 @@ nsAbSync::AddNewUsers()
     // Now do the phone numbers...they are special???
     ProcessPhoneNumbersTheyAreSpecial(newCard);
 
-    // Ok, now we need to modify or add the card!
-    if (!isNewCard)
-      rv = aDatabase->EditCard(newCard, PR_TRUE);
-    else
-      rv = aDatabase->CreateNewCardAndAddToDBWithKey(newCard, PR_TRUE, &localID);
+    // Ok, now that we are here, we should check if this is a recover from a crash situation.
+    // If it is, then we should try to find the CRC for this entry in the local address book
+    // and tweak a new flag if it is already there.
+    //
+    PRBool    cardAlreadyThere = PR_FALSE;
+    ulong     tempCRC;
+
+    if (mLastSyncFailed)
+      cardAlreadyThere = CardAlreadyInAddressBook(newCard, &localID, &tempCRC);
+
+    // Ok, now we need to modify or add the card! ONLY IF ITS NOT THERE ALREADY
+    if (!cardAlreadyThere)
+    {
+      if (!isNewCard)
+        rv = aDatabase->EditCard(newCard, PR_TRUE);
+      else
+      {
+        PRUint32  tID;
+        rv = aDatabase->CreateNewCardAndAddToDBWithKey(newCard, PR_TRUE, &tID);
+        localID = (PRInt32) tID;
+      }
+    }
 
     //
     // Now, calculate the NEW CRC for the new or updated card...
@@ -2449,6 +2648,10 @@ nsAbSync::AddNewUsers()
         newSyncRecord->serverID = serverID;
         newSyncRecord->localID = localID;
         mNewServerTable->AppendElement((void *)newSyncRecord);
+      }
+      else
+      {
+        PR_FREEIF(newSyncRecord);
       }
 
       nsCRT::free(tLine);
