@@ -1482,6 +1482,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     CK_ATTRIBUTE *attrs;
     CK_RV crv;
     SECCertUsage *certUsage = NULL;
+    SECItem derSerial = { 0 };
 
     if (keyID == NULL) {
 	PORT_SetError(SEC_ERROR_ADDING_CERT);
@@ -1503,8 +1504,14 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 					 cert->derSubject.len ); attrs++;
     PK11_SETATTRS(attrs,CKA_ISSUER, cert->derIssuer.data,
 					 cert->derIssuer.len ); attrs++;
-    PK11_SETATTRS(attrs,CKA_SERIAL_NUMBER, cert->serialNumber.data,
-					 cert->serialNumber.len); attrs++;
+    if (PR_TRUE) {
+	/* CERTCertificate stores serial numbers decoded.  I need the DER
+	* here.  sigh.
+	*/
+	CERT_SerialNumberFromDERCert(&cert->derCert, &derSerial);
+	PK11_SETATTRS(attrs,CKA_SERIAL_NUMBER, derSerial.data, derSerial.len); 
+	attrs++;
+    }
     PK11_SETATTRS(attrs,CKA_VALUE, cert->derCert.data, 
 						cert->derCert.len); attrs++;
     if (includeTrust && PK11_IsInternal(slot)) {
@@ -1577,6 +1584,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     }
 
 done:
+    if (derSerial.data) PORT_Free(derSerial.data);
     SECITEM_FreeItem(keyID,PR_TRUE);
     PK11_RestoreROSession(slot,rwsession);
     if(certUsage) {
