@@ -49,11 +49,6 @@
 #include "nsIDOMMouseListener.h"
 
 #include "nsMathMLmactionFrame.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsMathMLmactionFrameLog)
-#define PRINTF NS_LOG_PRINTF(nsMathMLmactionFrameLog)
-#define FLUSH  NS_LOG_FLUSH(nsMathMLmactionFrameLog)
 
 //
 // <maction> -- bind actions to a subexpression - implementation
