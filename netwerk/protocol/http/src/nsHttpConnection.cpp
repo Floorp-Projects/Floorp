@@ -340,7 +340,10 @@ nsHttpConnection::ActivateConnection()
         if (NS_FAILED(rv)) return rv;
 
         // need to handle SSL proxy CONNECT if this is the first time.
-        if (mConnectionInfo->UsingSSL() && mConnectionInfo->ProxyHost()) {
+        // unless its SOCKS.
+        if (mConnectionInfo->UsingSSL() &&
+            mConnectionInfo->ProxyHost() &&
+            PL_strcmp(mConnectionInfo->ProxyType(), "socks")) {
             rv = SetupSSLProxyConnect();
             if (NS_FAILED(rv)) return rv;
         }
@@ -433,12 +436,14 @@ nsHttpConnection::CreateTransport()
     // configure the socket type based on the connection type requested.
     const char *types[3] = {0,0,0};
     PRUint32 count = 0;
-    if (mConnectionInfo->UsingSSL()) {
-        types[0] = "ssl";
-        count++;
-    }
+
     if (!PL_strcasecmp(mConnectionInfo->ProxyType(), "socks")) {
         types[count] = "socks";
+        count++;
+    }
+
+    if (mConnectionInfo->UsingSSL()) {
+        types[count] = "ssl";
         count++;
     }
 
