@@ -132,9 +132,9 @@ public:
     */
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
-  NS_FORWARD_IDOMNODE(nsHTMLContainer)
-  NS_FORWARD_IDOMELEMENT(nsHTMLContainer)
-  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLContainer)
+  NS_FORWARD_IDOMNODE(nsHTMLContainer::)
+  NS_FORWARD_IDOMELEMENT(nsHTMLContainer::)
+  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLContainer::)
 
   NS_DECL_IDOMHTMLINPUTELEMENT
 

@@ -73,9 +73,9 @@ public:
   virtual void MapAttributesInto(nsIStyleContext* aContext, 
                                  nsIPresContext* aPresContext);
 
-  NS_FORWARD_IDOMNODE(nsHTMLImageSuper)
-  NS_FORWARD_IDOMELEMENT(nsHTMLImageSuper)
-  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLImageSuper)
+  NS_FORWARD_IDOMNODE(nsHTMLImageSuper::)
+  NS_FORWARD_IDOMELEMENT(nsHTMLImageSuper::)
+  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLImageSuper::)
 
   NS_DECL_IDOMHTMLIMAGEELEMENT
 
