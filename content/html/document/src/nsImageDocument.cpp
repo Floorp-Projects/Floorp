@@ -268,14 +268,9 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
   NS_ENSURE_ARG_POINTER(aContainer);
   mContainer = dont_AddRef(NS_GetWeakReference(aContainer));
 
-  nsresult rv = Init();
-
-  if (NS_FAILED(rv) && rv != NS_ERROR_ALREADY_INITIALIZED) {
-    return rv;
-  }
-
-  rv = nsDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
-                                     aContainer, aDocListener, aReset, aSink);
+  nsresult rv = nsDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
+                                              aContainer, aDocListener, aReset,
+                                              aSink);
   if (NS_FAILED(rv)) {
     return rv;
   }
