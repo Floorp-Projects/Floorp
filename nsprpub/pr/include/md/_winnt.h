@@ -69,7 +69,7 @@
 #define _PR_HAVE_PEEK_BUFFER
 #define _PR_PEEK_BUFFER_MAX (32 * 1024)
 #define _PR_FD_NEED_EMULATE_MSG_PEEK(fd) \
-    (!(fd)->secret->nonblocking && !(fd)->secret->inheritable)
+    (!(fd)->secret->nonblocking && (fd)->secret->inheritable != _PR_TRI_TRUE)
 
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 

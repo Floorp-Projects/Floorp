@@ -422,8 +422,7 @@ PRIntervalTime timeout)
 	fd2->secret->nonblocking = fd->secret->nonblocking;
 	fd2->secret->inheritable = fd->secret->inheritable;
 #ifdef WINNT
-	PR_ASSERT(_PR_TRI_UNKNOWN != fd2->secret->inheritable);
-	if (!fd2->secret->nonblocking && !fd2->secret->inheritable) {
+	if (!fd2->secret->nonblocking && fd2->secret->inheritable != _PR_TRI_TRUE) {
 		/*
 		 * The new socket has been associated with an I/O
 		 * completion port.  There is no going back.
