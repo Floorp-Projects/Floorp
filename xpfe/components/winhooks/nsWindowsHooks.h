@@ -56,6 +56,7 @@ private:
         PRBool mHandleHTTPS;
         PRBool mHandleFTP;
         PRBool mHandleCHROME;
+        PRBool mHandleGOPHER;
     };
     // File types.
     struct {

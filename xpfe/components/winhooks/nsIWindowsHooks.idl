@@ -109,6 +109,7 @@ interface nsIWindowsHooksSettings : nsISupports {
     attribute boolean isHandlingHTTPS;
     attribute boolean isHandlingFTP;
     attribute boolean isHandlingCHROME;
+    attribute boolean isHandlingGOPHER;
 
     // File handling (based on extension).
     attribute boolean isHandlingHTML;

@@ -38,7 +38,8 @@ static ProtocolRegistryEntry
     http( "http" ),
     https( "https" ),
     ftp( "ftp" ),
-    chrome( "chrome" );
+    chrome( "chrome" ),
+    gopher( "gopher" );
 
 const char *jpgExts[] = { ".jpg", ".jpeg", 0 };
 const char *gifExts[] = { ".gif", 0 };
@@ -107,6 +108,7 @@ DEFINE_GETTER_AND_SETTER( IsHandlingHTTP,   mHandleHTTP   )
 DEFINE_GETTER_AND_SETTER( IsHandlingHTTPS,  mHandleHTTPS  )
 DEFINE_GETTER_AND_SETTER( IsHandlingFTP,    mHandleFTP    )
 DEFINE_GETTER_AND_SETTER( IsHandlingCHROME, mHandleCHROME )
+DEFINE_GETTER_AND_SETTER( IsHandlingGOPHER, mHandleGOPHER )
 DEFINE_GETTER_AND_SETTER( ShowDialog,       mShowDialog   )
 DEFINE_GETTER_AND_SETTER( HaveBeenSet,      mHaveBeenSet  )
 
@@ -142,6 +144,7 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     prefs->mHandleHTTPS  = (void*)( BoolRegistryEntry( "isHandlingHTTPS"  ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleFTP    = (void*)( BoolRegistryEntry( "isHandlingFTP"    ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleCHROME = (void*)( BoolRegistryEntry( "isHandlingCHROME" ) ) ? PR_TRUE : PR_FALSE;
+    prefs->mHandleGOPHER = (void*)( BoolRegistryEntry( "isHandlingGOPHER" ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleHTML   = (void*)( BoolRegistryEntry( "isHandlingHTML"   ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleJPEG   = (void*)( BoolRegistryEntry( "isHandlingJPEG"   ) ) ? PR_TRUE : PR_FALSE;
     prefs->mHandleGIF    = (void*)( BoolRegistryEntry( "isHandlingGIF"    ) ) ? PR_TRUE : PR_FALSE;
@@ -214,6 +217,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
             settings->mHandleHTTPS  = PR_TRUE;
             settings->mHandleFTP    = PR_TRUE;
             settings->mHandleCHROME = PR_TRUE;
+            settings->mHandleGOPHER = PR_TRUE;
             settings->mHandleHTML   = PR_TRUE;
             settings->mHandleJPEG   = PR_TRUE;
             settings->mHandleGIF    = PR_TRUE;
@@ -250,6 +254,8 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                  misMatch( settings->mHandleFTP,    ftp )
                  ||
                  misMatch( settings->mHandleCHROME, chrome )
+                 ||
+                 misMatch( settings->mHandleGOPHER, gopher )
                  ||
                  misMatch( settings->mHandleHTML,   mozillaMarkup )
                  ||
@@ -439,6 +445,7 @@ nsWindowsHooks::SetSettings(nsIWindowsHooksSettings *prefs) {
     putPRBoolIntoRegistry( "isHandlingHTTPS",  prefs, &nsIWindowsHooksSettings::GetIsHandlingHTTPS );
     putPRBoolIntoRegistry( "isHandlingFTP",    prefs, &nsIWindowsHooksSettings::GetIsHandlingFTP );
     putPRBoolIntoRegistry( "isHandlingCHROME", prefs, &nsIWindowsHooksSettings::GetIsHandlingCHROME );
+    putPRBoolIntoRegistry( "isHandlingGOPHER", prefs, &nsIWindowsHooksSettings::GetIsHandlingGOPHER );
     putPRBoolIntoRegistry( "isHandlingHTML",   prefs, &nsIWindowsHooksSettings::GetIsHandlingHTML );
     putPRBoolIntoRegistry( "isHandlingJPEG",   prefs, &nsIWindowsHooksSettings::GetIsHandlingJPEG );
     putPRBoolIntoRegistry( "isHandlingGIF",    prefs, &nsIWindowsHooksSettings::GetIsHandlingGIF );
@@ -515,6 +522,11 @@ nsWindowsHooks::SetRegistry() {
         (void) chrome.set();
     } else {
         (void) chrome.reset();
+    }
+    if ( prefs->mHandleGOPHER ) {
+        (void) gopher.set();
+    } else {
+        (void) gopher.reset();
     }
 
     return NS_OK;
