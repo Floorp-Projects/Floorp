@@ -376,7 +376,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     // Check to see if it's a select element. If so, need the currently focused option
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(targetNode));
     if (selectElement)     // ----- Target Node is an HTML <select> element ------
-      nsHTMLSelectOptionAccessible::GetFocusedOptionNode(mPresShell, targetNode, optionTargetNode);
+      nsHTMLSelectOptionAccessible::GetFocusedOptionNode(targetNode, optionTargetNode);
 
     // for focus events on Radio Groups we give the focus to the selected button
     nsCOMPtr<nsIDOMXULSelectControlElement> selectControl(do_QueryInterface(targetNode));
@@ -393,7 +393,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
     if (NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
       if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
-        if (selectControl && optionTargetNode &&
+        if (optionTargetNode &&
             NS_SUCCEEDED(mAccService->GetAccessibleFor(optionTargetNode, getter_AddRefs(accessible)))) {
           FireAccessibleFocusEvent(accessible, optionTargetNode);
         }
@@ -401,15 +401,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
           FireAccessibleFocusEvent(accessible, targetNode);
       }
       else if (eventType.EqualsIgnoreCase("change")) {
-        if (optionTargetNode) {   // Set to current option only for HTML selects
-          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_SELECTION, accessible);
-          if (NS_SUCCEEDED(mAccService->GetAccessibleFor(optionTargetNode, getter_AddRefs(accessible)))) 
-            FireAccessibleFocusEvent(accessible, optionTargetNode);
-        }
-        else 
+        if (!selectControl)   // Don't use onchange to fire EVENT_STATE_CHANGE events for selects
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
       }
-      else if (eventType.EqualsIgnoreCase("ListitemStateChange")){
+      else if (eventType.EqualsIgnoreCase("ListitemStateChange")) {
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible);
       }
