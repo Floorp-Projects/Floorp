@@ -334,153 +334,139 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       // Find the compatible device context and create a memory one
       HDC hdcCompat = GFX (::GpiQueryDevice (surf->GetPS ()), HDC_ERROR);
 
-//DJ - This is temporary hack. Printer drivers can't get info that is already drawn on drawing surface.
-LONG Technology = 0;
-::DevQueryCaps (hdcCompat, CAPS_TECHNOLOGY, 1, &Technology);
-  
-if (Technology == CAPS_TECH_RASTER_DISPLAY)
-{
-//DJ - End of temporary hack
-      
-    rv = NS_ERROR_FAILURE;
+      rv = NS_ERROR_FAILURE;
     
-     // create non-inclusive rect for GpiBitBlt
-    RECTL dest;
-    surf->NS2PM_INEX (trect, dest);
+       // create non-inclusive rect for GpiBitBlt
+      RECTL dest;
+      surf->NS2PM_INEX (trect, dest);
 
-    DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
-    HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat);
+      DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
+      HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat);
 
-    if( MemDC != DEV_ERROR )
-    {   
-      // create the PS
-      SIZEL sizel = { 0, 0 };
-      HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
+      if( MemDC != DEV_ERROR )
+      {   
+        // create the PS
+        SIZEL sizel = { 0, 0 };
+        HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
 
-      if( MemPS != GPI_ERROR )
-      {
-        // now create a bitmap of the right size
-        HBITMAP hMemBmp;
-        BITMAPINFOHEADER2 bihMem = { 0 };
-
-        bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
-        bihMem.cx = aSWidth;
-        bihMem.cy = aSHeight;
-        bihMem.cPlanes = 1;
-        LONG lBitCount = 0;
-        GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
-        bihMem.cBitCount = (USHORT) lBitCount;
-
-        hMemBmp = GFX (::GpiCreateBitmap (MemPS, &bihMem, 0, 0, 0), GPI_ERROR);
-
-        if( hMemBmp != GPI_ERROR )
+        if( MemPS != GPI_ERROR )
         {
-          GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
+          GFX (::GpiCreateLogColorTable (MemPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
 
-          POINTL aptlDevToMem [4] = { 0, 0,                       // TLL - mem bitmap (0, 0)
-                                      bihMem.cx, bihMem.cy,       // TUR - mem bitmap (cx, cy)
-                                      dest.xLeft, dest.yBottom,   // SLL - device (Dx1, Dy2)
-                                      dest.xRight, dest.yTop };   // SUR - device (Dx2, Dy1)
+          // now create a bitmap of the right size
+          HBITMAP hMemBmp;
+          BITMAPINFOHEADER2 bihMem = { 0 };
 
-          GFX (::GpiBitBlt (MemPS, surf->GetPS (), 4, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+          bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
+          bihMem.cx = aSWidth;
+          bihMem.cy = aSHeight;
+          bihMem.cPlanes = 1;
+          LONG lBitCount = 0;
+          GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
+          bihMem.cBitCount = (USHORT) lBitCount;
 
-          // Now we want direct access to bitmap raw data. 
-          // Must copy data again because GpiSetBitmap doesn't provide pointer to
-          // start of raw bit data ?? (DJ)
-          BITMAPINFOHEADER2 bihDirect = { 0 };
-          bihDirect.cbFix   = sizeof (BITMAPINFOHEADER2);
-          bihDirect.cPlanes = 1;
-          bihDirect.cBitCount = 24;
+          hMemBmp = GFX (::GpiCreateBitmap (MemPS, &bihMem, 0, 0, 0), GPI_ERROR);
 
-          int RawDataSize = bihMem.cy * RASWIDTH (bihMem.cx, 24);
-          PRUint8* pRawBitData = (PRUint8*)malloc (RawDataSize);
-
-          if( pRawBitData )
+          if( hMemBmp != GPI_ERROR )
           {
-            ULONG rc = GFX (::GpiQueryBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
+            GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
 
-            if( rc != GPI_ALTERROR )
+            POINTL aptlDevToMem [4] = { 0, 0,                       // TLL - mem bitmap (0, 0)
+                                        bihMem.cx, bihMem.cy,       // TUR - mem bitmap (cx, cy)
+                                        dest.xLeft, dest.yBottom,   // SLL - device (Dx1, Dy2)
+                                        dest.xRight, dest.yTop };   // SUR - device (Dx2, Dy1)
+
+            GFX (::GpiBitBlt (MemPS, surf->GetPS (), 4, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+
+            // Now we want direct access to bitmap raw data. 
+            // Must copy data again because GpiSetBitmap doesn't provide pointer to
+            // start of raw bit data ?? (DJ)
+            BITMAPINFOHEADER2 bihDirect = { 0 };
+            bihDirect.cbFix   = sizeof (BITMAPINFOHEADER2);
+            bihDirect.cPlanes = 1;
+            bihDirect.cBitCount = 24;
+
+            int RawDataSize = bihMem.cy * RASWIDTH (bihMem.cx, 24);
+            PRUint8* pRawBitData = (PRUint8*)malloc (RawDataSize);
+
+            if( pRawBitData )
             {
-              // Do manual alpha blending
-              PRUint8* pDest  = pRawBitData;
-              PRUint8* pSrc;
-              PRUint8* pAlpha;
+              ULONG rc = GFX (::GpiQueryBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
 
-              if (mInfo->cBitCount == 8)
+              if( rc != GPI_ALTERROR )
               {
-                for (int y = mInfo->cy - aSY - aSHeight ; y < mInfo->cy - aSY ; y++)
+                // Do manual alpha blending
+                PRUint8* pDest  = pRawBitData;
+                PRUint8* pSrc;
+                PRUint8* pAlpha;
+
+                if (mInfo->cBitCount == 8)
                 {
-                  pSrc   = mImageBits + (y * mRowBytes) + aSX;
-                  pAlpha = mAlphaBits + (y * mARowBytes) + aSX;
+                  for (int y = mInfo->cy - aSY - aSHeight ; y < mInfo->cy - aSY ; y++)
+                  {
+                    pSrc   = mImageBits + (y * mRowBytes) + aSX;
+                    pAlpha = mAlphaBits + (y * mARowBytes) + aSX;
                        
-                  for (int x = 0 ; x < bihDirect.cx ; x++)
-                  {
-                    pDest [0] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 0], pDest [0], *pAlpha);
-                    pDest [1] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 1], pDest [1], *pAlpha);
-                    pDest [2] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 2], pDest [2], *pAlpha);
-                    pSrc++;
-                    pDest += 3;
-                    pAlpha++;
-                  }
+                    for (int x = 0 ; x < bihDirect.cx ; x++)
+                    {
+                      pDest [0] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 0], pDest [0], *pAlpha);
+                      pDest [1] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 1], pDest [1], *pAlpha);
+                      pDest [2] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 2], pDest [2], *pAlpha);
+                      pSrc++;
+                      pDest += 3;
+                      pAlpha++;
+                    }
         
-                  pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);    // For next scanline align pointers on DWORD boundary
+                    pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);    // For next scanline align pointers on DWORD boundary
+                  }
                 }
-              }
-              else
-              {
-                for (int y = mInfo->cy - aSY - aSHeight ; y < mInfo->cy - aSY ; y++)
+                else
                 {
-                  pSrc   = mImageBits + (y * mRowBytes) + (aSX * 3);
-                  pAlpha = mAlphaBits + (y * mARowBytes) + aSX;
-                               
-                  for (int x = 0 ; x < bihDirect.cx ; x++)
+                  for (int y = mInfo->cy - aSY - aSHeight ; y < mInfo->cy - aSY ; y++)
                   {
-                    pDest [0] = FAST_BLEND (pSrc [0], pDest [0], *pAlpha);
-                    pDest [1] = FAST_BLEND (pSrc [1], pDest [1], *pAlpha);
-                    pDest [2] = FAST_BLEND (pSrc [2], pDest [2], *pAlpha);
-                    pSrc  += 3;
-                    pDest += 3;
-                    pAlpha++;
+                    pSrc   = mImageBits + (y * mRowBytes) + (aSX * 3);
+                    pAlpha = mAlphaBits + (y * mARowBytes) + aSX;
+                               
+                    for (int x = 0 ; x < bihDirect.cx ; x++)
+                    {
+                      pDest [0] = FAST_BLEND (pSrc [0], pDest [0], *pAlpha);
+                      pDest [1] = FAST_BLEND (pSrc [1], pDest [1], *pAlpha);
+                      pDest [2] = FAST_BLEND (pSrc [2], pDest [2], *pAlpha);
+                      pSrc  += 3;
+                      pDest += 3;
+                      pAlpha++;
+                    }
+        
+                    pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);    // For next scanline align pointers on DWORD boundary
                   }
-        
-                  pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);    // For next scanline align pointers on DWORD boundary
                 }
-              }
         
-              // Copy modified memory back to memory bitmap
-              GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
+                // Copy modified memory back to memory bitmap
+                GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
               
-              // Transfer bitmap from memory bitmap back to device
-              POINTL aptlMemToDev [4] = { dest.xLeft, dest.yBottom,   // TLL - device (Dx1, Dy2)
-                                          dest.xRight, dest.yTop,     // TUR - device (Dx2, Dy1)
-                                          0, 0,                       // SLL - mem bitmap (0, 0)
-                                          bihMem.cx, bihMem.cy};      // SUR - mem bitmap (cx, cy)
+                // Transfer bitmap from memory bitmap back to device
+                POINTL aptlMemToDev [4] = { dest.xLeft, dest.yBottom,   // TLL - device (Dx1, Dy2)
+                                            dest.xRight, dest.yTop,     // TUR - device (Dx2, Dy1)
+                                            0, 0,                       // SLL - mem bitmap (0, 0)
+                                            bihMem.cx, bihMem.cy};      // SUR - mem bitmap (cx, cy)
 
-              GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+                GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
             
-              rv = NS_OK;
+                rv = NS_OK;
+              }
+
+              free (pRawBitData);
             }
 
-            free (pRawBitData);
+            GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
+            GFX (::GpiDeleteBitmap (hMemBmp), FALSE);
           }
-
-          GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
-          GFX (::GpiDeleteBitmap (hMemBmp), FALSE);
-        }
         
-        GFX (::GpiDestroyPS (MemPS), FALSE);
-      }
+          GFX (::GpiDestroyPS (MemPS), FALSE);
+        }
     
-      ::DevCloseDC (MemDC);
-    }
-
-//DJ - temporary hack
-} else  // This is not display driver. Can't get info that is already drawn. Output only image without mask.
-{
-  GFX (::GpiDrawBits (surf->GetPS (), mImageBits, mInfo, 4, aptl, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
-}
-//DJ - end of temporary hack
-
+        ::DevCloseDC (MemDC);
+      }
    }
 
    return rv;
@@ -529,7 +515,6 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
       POINTL pt1 = { 0, 0 };                                                   // LL - in
       POINTL pt2 = { mInfo->cx, mInfo->cy };                                   // UR - ex
 
-      GFX (::GpiCreateLogColorTable (hpsTile, 0, LCOLF_RGB, 0, 0, 0), FALSE);
 #ifdef DEBUG
       GFX (::GpiSetColor (hpsTile, MK_RGB (255, 255, 0)), FALSE);              // yellow eye-catcher
 #else
@@ -611,19 +596,18 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
    HDC hdcCompat = GFX (::GpiQueryDevice (surf->GetPS ()), HDC_ERROR);
 
    DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
-   HDC MemDC = GFX (::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat),
-                    DEV_ERROR);
+   HDC MemDC = GFX (::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat), DEV_ERROR);
 
    if( DEV_ERROR != MemDC)
    {
       // create the PS
       SIZEL sizel = { 0, 0 };
-      HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel,
-                                      PU_PELS | GPIT_MICRO | GPIA_ASSOC),
-                       GPI_ERROR);
+      HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
 
       if( GPI_ERROR != MemPS)
       {
+         GFX (::GpiCreateLogColorTable (MemPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
+
          // now create a bitmap of the right size
          BITMAPINFOHEADER2 hdr = { 0 };
 
@@ -788,8 +772,9 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
                    (PDEVOPENDATA) &dop, (HDC)0), DEV_ERROR);
 
   // create the PS
-  HPS MemPS = GFX (::GpiCreatePS (0/*hab*/, MemDC, &sizel,
-                                  PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
+  HPS MemPS = GFX (::GpiCreatePS (0/*hab*/, MemDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
+
+  GFX (::GpiCreateLogColorTable (MemPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
 
   nsImageOS2* destImg = NS_STATIC_CAST(nsImageOS2*, aDstImage); 
 
@@ -808,7 +793,22 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
                       0, mInfo->cy - mNaturalHeight,       // SLL - in
                       mNaturalWidth, mInfo->cy };          // SUR - ex
 
-  if( 1==mAlphaDepth && mAlphaBits){
+  if( 1==mAlphaDepth && mAlphaBits)
+  {
+    LONG BlackColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR);    // CLR_BLACK;
+    LONG WhiteColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR);    // CLR_WHITE;
+    if (BlackColor == GPI_ALTERROR) BlackColor = MK_RGB (0x00, 0x00, 0x00);
+    if (WhiteColor == GPI_ALTERROR) WhiteColor = MK_RGB (0xFF, 0xFF, 0xFF);
+
+    // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
+    // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
+    IMAGEBUNDLE ib;
+    ib.lColor     = BlackColor;        // map 1 in mask to 0x000000 (black) in destination
+    ib.lBackColor = WhiteColor;        // map 0 in mask to 0xFFFFFF (white) in destination
+    ib.usMixMode  = FM_OVERPAINT;
+    ib.usBackMixMode = BM_OVERPAINT;
+    GFX (::GpiSetAttrs (MemPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
+
     // Apply mask to target, clear pels we will fill in from the image
     MONOBITMAPINFO MaskBitmapInfo (mInfo);
     GFX (::GpiDrawBits (MemPS, mAlphaBits, MaskBitmapInfo, 4, aptl, ROP_SRCAND,
