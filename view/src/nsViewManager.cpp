@@ -770,11 +770,16 @@ NS_IMETHODIMP nsViewManager::ResetScrolling(void)
   return NS_OK;
 }
 
-void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRegion *region, PRUint32 aUpdateFlags)
+/**
+   aRegion is given in device coordinates!!
+*/
+void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRegion *aRegion, PRUint32 aUpdateFlags)
 {
   nsRect              wrect;
   nsCOMPtr<nsIRenderingContext> localcx;
   nsDrawingSurface    ds = nsnull;
+
+  NS_ASSERTION(aRegion != nsnull, "Null aRegion");
 
   if (PR_FALSE == mRefreshEnabled)
     return;
@@ -831,7 +836,7 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
       nsCOMPtr<nsICompositeListener> listener;
       for (PRUint32 i = 0; i < listenerCount; i++) {
         if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->WillRefreshRegion(this, aView, aContext, region, aUpdateFlags);
+          listener->WillRefreshRegion(this, aView, aContext, aRegion, aUpdateFlags);
         }
       }
     }
@@ -846,31 +851,25 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
       ds = GetDrawingSurface(*localcx, wrect);
     }
 
-  PRBool  result;
-  nsRect  trect;
+  nsRect viewRect;
+  aView->GetBounds(viewRect);
+  viewRect.x = viewRect.y = 0;
 
-  if (nsnull != region)
-    localcx->SetClipRegion(*region, nsClipCombine_kUnion, result);
+  nsRect damageRect;
+  float  p2t;
+  mContext->GetDevUnitsToAppUnits(p2t);
+  aRegion->GetBoundingBox(&damageRect.x, &damageRect.y, &damageRect.width, &damageRect.height);
+  damageRect.ScaleRoundOut(p2t);
 
-  aView->GetBounds(trect);
-
-  localcx->SetClipRect(trect, nsClipCombine_kIntersect, result);
-
-  RenderViews(aView, *localcx, trect, result);
+  if (damageRect.IntersectRect(damageRect, viewRect)) {
+    PRBool result;
+    localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
+    localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, result);
+    RenderViews(aView, *localcx, damageRect, result);
+  }
 
   if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
-
-  // Subtract the area we just painted from the dirty region
-  if ((nsnull != region) && !region->IsEmpty()) {
-    nsRect  pixrect = trect;
-    float   t2p;
-    
-    mContext->GetAppUnitsToDevUnits(t2p);
-    
-    pixrect.ScaleRoundIn(t2p);
-    region->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
-  }
 
   mLastRefresh = PR_IntervalNow();
 
@@ -883,7 +882,7 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
       nsCOMPtr<nsICompositeListener> listener;
       for (PRUint32 i = 0; i < listenerCount; i++) {
         if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->DidRefreshRegion(this, aView, aContext, region, aUpdateFlags);
+          listener->DidRefreshRegion(this, aView, aContext, aRegion, aUpdateFlags);
         }
       }
     }
@@ -901,144 +900,6 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
   MOZ_TIMER_PRINT(mWatch);
 #endif
 
-}
-
-void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, const nsRect *rect, PRUint32 aUpdateFlags)
-{
-  nsRect              wrect, brect;
-  nsCOMPtr<nsIRenderingContext> localcx;
-  nsDrawingSurface    ds = nsnull;
-
-  if (PR_FALSE == mRefreshEnabled)
-    return;
-
-#ifdef NS_VM_PERF_METRICS
-  MOZ_TIMER_DEBUGLOG(("Reset nsViewManager::Refresh(region), this=%p\n", this));
-  MOZ_TIMER_RESET(mWatch);
-
-  MOZ_TIMER_DEBUGLOG(("Start: nsViewManager::Refresh(region)\n"));
-  MOZ_TIMER_START(mWatch);
-#endif
-
-  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
-  if (mPainting) {
-    mRecursiveRefreshPending = PR_TRUE;
-    return;
-  }  
-
-  mPainting = PR_TRUE;
-
-  //force double buffering because of non-opaque views?
-
-  //printf("refreshing rect... ");
-  //stdout << *rect;
-  //printf("\n");
-  if (mTransCnt > 0)
-    aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
-
-#ifdef NO_DOUBLE_BUFFER
-  aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-#endif
-
-  if (PR_FALSE == mAllowDoubleBuffering) {
-    // Turn off double-buffering of the display
-    aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-  }
-
-  if (nsnull == aContext)
-    {
-      localcx = getter_AddRefs(CreateRenderingContext(*aView));
-
-      //couldn't get rendering context. this is ok if at startup
-      if (nsnull == localcx) {
-        mPainting = PR_FALSE;
-        return;
-      }
-    } else {
-      // plain assignment adds a ref
-      localcx = aContext;
-    }
-
-  // notify the listeners.
-  if (nsnull != mCompositeListeners) {
-    PRUint32 listenerCount;
-    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
-      nsCOMPtr<nsICompositeListener> listener;
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->WillRefreshRect(this, aView, aContext, rect, aUpdateFlags);
-        }
-      }
-    }
-  }
-
-  if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
-    {
-      nsCOMPtr<nsIWidget> widget;
-      aView->GetWidget(*getter_AddRefs(widget));
-      widget->GetClientBounds(wrect);
-      brect = wrect;
-      wrect.x = wrect.y = 0;
-      ds = GetDrawingSurface(*localcx, wrect);
-    }
-
-  nsRect trect = *rect;
-
-  PRBool  result;
-
-  localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
-
-  RenderViews(aView, *localcx, trect, result);
-
-  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
-    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
-
-#if 0
-  // Subtract the area we just painted from the dirty region
-  nsIRegion* dirtyRegion;
-  aView->GetDirtyRegion(dirtyRegion);
-
-  if ((nsnull != dirtyRegion) && !dirtyRegion->IsEmpty())
-    {
-      nsRect  pixrect = trect;
-      float   t2p;
-
-      mContext->GetAppUnitsToDevUnits(t2p);
-
-      pixrect.ScaleRoundIn(t2p);
-      dirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
-      NS_RELEASE(dirtyRegion);
-    }
-#endif
-
-  mLastRefresh = PR_IntervalNow();
-
-  mPainting = PR_FALSE;
-
-  // notify the listeners.
-  if (nsnull != mCompositeListeners) {
-    PRUint32 listenerCount;
-    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
-      nsCOMPtr<nsICompositeListener> listener;
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->DidRefreshRect(this, aView, aContext, rect, aUpdateFlags);
-        }
-      }
-    }
-  }
-
-  if (mRecursiveRefreshPending) {
-    UpdateAllViews(aUpdateFlags);
-    mRecursiveRefreshPending = PR_FALSE;
-  }
-
-#ifdef NS_VM_PERF_METRICS
-  MOZ_TIMER_DEBUGLOG(("Stop: nsViewManager::Refresh(region), this=%p\n", this));
-  MOZ_TIMER_STOP(mWatch);
-  MOZ_TIMER_LOG(("vm2 Paint time (this=%p): ", this));
-  MOZ_TIMER_PRINT(mWatch);
-#endif
 }
 
 void nsViewManager::DefaultRefresh(nsIView* aView, const nsRect* aRect)
@@ -2021,52 +1882,48 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
     case NS_PAINT:
       {
         nsIView *view = nsView::GetViewFor(aEvent->widget);
-
+        
         if (nsnull != view)
           {
-            // The rect is in device units, and it's in the coordinate space of its
-            // associated window.
-            nsRect  damrect = *((nsPaintEvent*)aEvent)->rect;
-
-            float   p2t;
-            mContext->GetDevUnitsToAppUnits(p2t);
-            damrect.ScaleRoundOut(p2t);
-
             // Do an immediate refresh
             if (nsnull != mContext)
               {
-                nsRect  viewrect;
-                float   varea;
+                // The rect is in device units, and it's in the coordinate space of its
+                // associated window.
+                nsRect& damrect = *((nsPaintEvent*)aEvent)->rect;
 
-                // Check that there's actually something to paint
-                view->GetBounds(viewrect);
-                viewrect.x = viewrect.y = 0;
-                varea = (float)viewrect.width * viewrect.height;
-
-                if (varea > 0.0000001f)
+                if (damrect.width > 0 && damrect.height > 0)
                   {
-                    // nsRect     arearect;
-                    PRUint32   updateFlags = 0;
-
-                    // Auto double buffering logic.
-                    // See if the paint region is greater than .25 the area of our view.
-                    // If so, enable double buffered painting.
-             
-                    // XXX These two lines cause a lot of flicker for drag-over re-drawing - rods
-                    //arearect.IntersectRect(damrect, viewrect);
-  
-                    //if ((((float)arearect.width * arearect.height) / varea) >  0.25f)
-                    // XXX rods
-                    updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+                    PRUint32   updateFlags = NS_VMREFRESH_DOUBLE_BUFFER;
+                    PRBool     doDefault = PR_TRUE;
 
                     //printf("refreshing: view: %x, %d, %d, %d, %d\n", view, damrect.x, damrect.y, damrect.width, damrect.height);
                     // Refresh the view
                     if (mRefreshEnabled) {
-                      Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &damrect, updateFlags);
+                      nsIComponentManager* componentManager = nsnull;
+                      nsresult rv = NS_GetGlobalComponentManager(&componentManager);
+                      nsCOMPtr<nsIRegion> rgn;
+                      if (NS_SUCCEEDED(rv)) {
+                        rv = CreateRegion(componentManager, getter_AddRefs(rgn));
+                        if (NS_SUCCEEDED(rv)) {
+                          // Eventually we would like the platform paint event to include a region
+                          // we can use. This could improve paint performance when the invalid area
+                          // is more complicated than a rectangle. Right now the event's region field
+                          // just contains garbage on some platforms so we can't trust it at all.
+                          // When that gets fixed, we can just change the code right here.
+                          rgn->SetTo(damrect.x, damrect.y, damrect.width, damrect.height);
+                          Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, rgn, updateFlags);
+                          doDefault = PR_FALSE;
+                        }
+                      }
                     }
-                    else {
-                      // since we got an NS_PAINT event, we need to
-                      // draw something so we don't get blank areas.
+
+                    // since we got an NS_PAINT event, we need to
+                    // draw something so we don't get blank areas.
+                    if (doDefault) {
+                      float p2t;
+                      mContext->GetDevUnitsToAppUnits(p2t);
+                      damrect.ScaleRoundOut(p2t);
                       DefaultRefresh(view, &damrect);
 
                       // Clients like the editor can trigger multiple
@@ -2573,16 +2430,6 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRInt32 aZIndex)
   nsresult  rv = NS_OK;
 
   NS_ASSERTION((aView != nsnull), "no view");
-
-#if 0
-  // a little hack to check out a theory:  don't let floating views have any other z-index.
-  PRBool isFloating = PR_FALSE;
-  aView->GetFloating(isFloating);
-  if (isFloating) {
-    NS_ASSERTION((aZIndex == 0x7FFFFFFF), "floating view's z-index messed up");
-    aZIndex = 0x7FFFFFFF;
-  }
-#endif
 
   PRInt32 oldidx;
   aView->GetZIndex(oldidx);
@@ -3548,7 +3395,6 @@ void nsViewManager::ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect,
 {   
   while (aIndex < mDisplayListCount) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(aIndex));
-    PRInt32 curIndex = aIndex;
     aIndex++;
 
     if (element->mFlags & VIEW_RENDERED) {
@@ -3634,7 +3480,6 @@ void nsViewManager::OptimizeDisplayListClipping(PRBool aHaveClip, nsRect& aClipR
 
   while (aIndex < mDisplayListCount) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(aIndex));
-    PRInt32 curIndex = aIndex;
     aIndex++;
 
     if (element->mFlags & VIEW_RENDERED) {
@@ -3723,8 +3568,8 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
     view->GetZIndex(zindex);
     rect *= t2p;
     printf("%snsIView@%p [z=%d, x=%d, y=%d, w=%d, h=%d, p=%p]\n",
-           nest, view, zindex,
-           rect.x, rect.y, rect.width, rect.height, parent);
+           nest, (void*)view, zindex,
+           rect.x, rect.y, rect.width, rect.height, (void*)parent);
 
     newnestcnt = nestcnt;
 
@@ -3912,20 +3757,6 @@ NS_IMETHODIMP nsViewManager::IsRectVisible(nsIView *aView, const nsRect &aRect, 
     *aIsVisible = visibleRect.Contains(absRect);
   else
     *aIsVisible = absRect.IntersectRect(absRect, visibleRect);
-
-#if 0
-  // Debugging code
-  static int toggle = 0;
-  for (int i = 0; i < toggle; i++) {
-    printf(" ");
-  }
-  if (toggle == 10) {
-    toggle = 0;
-  } else {
-    toggle++;
-  }
-  printf("***overlaps %d\n", *aIsVisible);
-#endif
 
   return NS_OK;
 }

@@ -192,8 +192,6 @@ private:
 
 	void Refresh(nsIView *aView, nsIRenderingContext *aContext,
 	             nsIRegion *region, PRUint32 aUpdateFlags);
-	void Refresh(nsIView* aView, nsIRenderingContext *aContext,
-	             const nsRect *rect, PRUint32 aUpdateFlags);
 	void DefaultRefresh(nsIView* aView, const nsRect* aRect);
 	void RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
 					 PRBool &aResult);
