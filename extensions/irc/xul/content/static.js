@@ -31,7 +31,7 @@ var client = new Object();
 
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.3";
+client.version = "0.8.4";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -42,7 +42,7 @@ client.MAX_HISTORY = 50;
  * element */
 client.MAX_NICK_DISPLAY = 14;
 /* longest word to show in display before abbreviating */
-client.MAX_WORD_DISPLAY = 40;
+client.MAX_WORD_DISPLAY = 20;
 client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
 client.ADDRESSED_NICK_SEP = ": ";
 
@@ -142,8 +142,8 @@ function initStatic()
                   client.eventPump.getHook ("event-tracer").enabled);
     setMenuCheck ("menu-munger", client.munger.enabled);
 
-    client.uiState["toolbar"] =
-        setMenuCheck ("menu-view-toolbar", isVisible("views-tbar"));
+    client.uiState["tabstrip"] =
+        setMenuCheck ("menu-view-tabstrip", isVisible("view-tabs"));
     client.uiState["info"] =
         setMenuCheck ("menu-view-info", isVisible("user-list-box"));
     client.uiState["status"] =
@@ -184,18 +184,6 @@ function initStatic()
     client.onInputNetworks();
     client.onInputCommands();
 
-    var ary = client.INITIAL_URLS.split(";");
-    for (var i in ary)
-    {
-        ary[i] = stringTrim(ary[i]);
-        if (ary[i])
-        {
-            if (ary[i].indexOf("irc://") != 0)
-                ary[i] = "irc://" + ary[i];
-            gotoIRCURL (ary[i]);
-        }
-    }
-
     ary = client.INITIAL_VICTIMS.split(";");
     for (i in ary)
     {
@@ -206,9 +194,28 @@ function initStatic()
 
     var m = document.getElementById ("menu-settings-autosave");
     m.setAttribute ("checked", String(client.SAVE_SETTINGS));
-                    
-    if (document.location.search)
-        gotoIRCURL (document.location.search.substr(1));
+     
+    var wentSomewhere = false;
+    
+    if (window.arguments && window.arguments[0] && window.arguments[0].url)
+    {
+        url = window.arguments[0].url;
+        if (url.search(/^irc:\/?\/?$/i) == -1)
+        {
+            /* if the url is not irc: irc:/ or irc://, then go to it. */
+            gotoIRCURL (url);
+            wentSomewhere = true;
+        }
+    }    
+
+    if (!wentSomewhere)
+    {
+        /* if we had nowhere else to go, connect to any default urls */
+        var ary = client.INITIAL_URLS.split(";");
+        for (var i in ary)
+            if ((ary[i] = stringTrim(ary[i])))
+                gotoIRCURL (ary[i]);
+    }
 
     setInterval ("onNotifyTimeout()", client.NOTIFY_TIMEOUT);
     
@@ -268,6 +275,9 @@ function initHost(obj)
     obj.networks["webbnet"] =
         new CIRCNetwork ("webbnet", [{name: "irc.webbnet.org", port:6667}],
                          obj.eventPump);
+    obj.networks["quakenet"] =
+        new CIRCNetwork ("quakenet", [{name: "irc.quakenet.org", port:6667}],
+                         obj.eventPump);
     obj.networks["opennet"] =
         new CIRCNetwork ("opennet",         
                          [{name:"irc.openprojects.net", port:6667},
@@ -285,12 +295,15 @@ function initHost(obj)
                                {type: "event-end"}], event_tracer,
                                "event-tracer", true /* negate */,
                                false /* disable */);
+    obj.linkRE = /((\w+):\/\/[^<>\[\]()\'\"\s]+|www(\.[^.<>\[\]()\'\"\s]+){2,})/;
 
     obj.munger = new CMunger();
     obj.munger.enabled = true;
-    obj.munger.addRule
-        ("link", /((\w+):\/\/[^<>()\'\"\s]+|www(\.[^.<>()\'\"\s]+){2,})/,
-         insertLink);
+    obj.munger.addRule ("mailto", /((mailto:)?[^<>\[\]()\'\"\s]+@[^.<>\[\]()\'\"\s]+\.[^<>\[\]()\'\"\s]+)/i,
+                        insertMailToLink);
+    obj.munger.addRule ("link", obj.linkRE, insertLink);
+    obj.munger.addRule ("channel-link", /[@+]?(#[^<>\[\]()\'\"\s]+[^:,.<>\[\]()\'\"\s])/i,
+                        insertChannelLink);
     obj.munger.addRule ("face",
          /((^|\s)[\<\>]?[\;\=\:]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\](\s|$))/,
          insertSmiley);
@@ -305,8 +318,6 @@ function initHost(obj)
                         "chatzilla-teletype");
     obj.munger.addRule ("underline", /(?:\s|^)(\_[^_,.()]*\_)(?:[\s.,]|$)/,
                         "chatzilla-underline");
-    obj.munger.addRule ("smallcap", /(?:\s|^)(\#[^#,.()]*\#)(?:[\s.,]|$)/,
-                        "chatzilla-smallcap");
     obj.munger.addRule ("word-hyphenator",
                         new RegExp ("(\\S{" + client.MAX_WORD_DISPLAY + ",})"),
                         insertHyphenatedWord);
@@ -315,6 +326,8 @@ function initHost(obj)
     
     obj.rdf.initTree("user-list");
     obj.rdf.setTreeRoot("user-list", obj.rdf.resNullChan);
+
+    multilineInputMode(false);
     
 }
 
@@ -338,6 +351,48 @@ function insertLink (matchText, containerTag)
     
 }
 
+function insertMailToLink (matchText, containerTag)
+{
+
+    var href;
+    
+    if (matchText.indexOf ("mailto:") != 0)
+        href = "mailto:" + matchText;
+    else
+        href = matchText;
+    
+    var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                           "html:a");
+    anchor.setAttribute ("href", href);
+    anchor.setAttribute ("class", "chatzilla-link");
+    //anchor.setAttribute ("target", "_content");
+    insertHyphenatedWord (matchText, anchor);
+    containerTag.appendChild (anchor);
+    
+}
+
+function insertChannelLink (matchText, containerTag, eventData)
+{
+    if (!eventData.network || 
+        matchText.search
+            (/^#(include|error|define|if|ifdef|else|elsif|endif)$/i) != -1)
+
+    {
+        containerTag.appendChild (document.createTextNode(matchText));
+        return;
+    }
+    
+    var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                           "html:a");
+    anchor.setAttribute ("href", "irc://" + eventData.network.name + "/" +
+                         matchText);
+    anchor.setAttribute ("class", "chatzilla-link");
+    //anchor.setAttribute ("target", "_content");
+    insertHyphenatedWord (matchText, anchor);
+    containerTag.appendChild (anchor);
+    
+}
+
 function insertRheet (matchText, containerTag)
 {
 
@@ -346,7 +401,7 @@ function insertRheet (matchText, containerTag)
     anchor.setAttribute ("href",
                          "ftp://ftp.mozilla.org/pub/mozilla/libraries/bonus-tracks/rheet.wav");
     anchor.setAttribute ("class", "chatzilla-rheet chatzilla-link");
-    anchor.setAttribute ("target", "_content");
+    //anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);
     containerTag.appendChild (anchor);    
 }
@@ -365,37 +420,45 @@ function insertEar (matchText, containerTag)
 
 function insertSmiley (emoticon, containerTag)
 {
-    var src = "";
+    var type = "error";
 
     if (emoticon.search (/\;[-^v]?[\)>\]]/) != -1)
-        src = "face-wink.gif";
+        type = "face-wink";
     else if (emoticon.search (/[=:;][-^v]?[\)>\]]/) != -1)
-        src = "face-smile.gif";
+        type = "face-smile";
     else if (emoticon.search (/[=:;][-^v]?[\/\\]/) != -1)
-        src = "face-screw.gif";
+        type = "face-screw";
     else if (emoticon.search (/[=:;]\~[-^v]?\(/) != -1)
-        src = "face-cry.gif";
+        type = "face-cry";
     else if (emoticon.search (/[=:;][-^v]?[\(<\[]/) != -1)
-        src = "face-frown.gif";
+        type = "face-frown";
     else if (emoticon.search (/\<?[=:;][-^v]?[0oO]/) != -1)
-        src = "face-surprise.gif";
+        type = "face-surprise";
     else if (emoticon.search (/[=:;][-^v]?[pP]/) != -1)
-        src = "face-tongue.gif";
+        type = "face-tongue";
     else if (emoticon.search (/\>?[=:;][\-\^\v]?[\(\|]/) != -1)
-        src = "face-angry.gif";
+        type = "face-angry";
 
-    if (!src || client.smileyText)
-        containerTag.appendChild (document.createTextNode (emoticon));
+    var span = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                         "html:span");
 
-    if (src)
-    {
-        var img = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                            "html:img");
-        img.setAttribute ("src", client.IMAGEDIR + src);
-        img.setAttribute ("class", "smiley-image");
-        containerTag.appendChild (img);
-    }
+    /* create a span to hold the emoticon text */
+    span.setAttribute ("class", "chatzilla-emote-txt");
+    span.setAttribute ("type", type);
+    span.appendChild (document.createTextNode (emoticon));
+    containerTag.appendChild (span);
 
+    /* create an empty span after the text.  this span will have an image added
+     * after it with a chatzilla-emote:after css rule. using
+     * chatzilla-emote-txt:after is not good enough because it does not allow us
+     * to turn off the emoticon text, but keep the image.  ie.
+     * chatzilla-emote-txt { display: none; } turns off chatzilla-emote-txt:after
+     * as well.*/
+    span = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                     "html:span");
+    span.setAttribute ("class", "chatzilla-emote");
+    span.setAttribute ("type", type);
+    containerTag.appendChild (span);
     
 }
 
@@ -409,7 +472,7 @@ function insertHyphenatedWord (longWord, containerTag)
         {
             var img = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                                 "html:img");
-            img.setAttribute ("class", "spacer-image");
+            img.setAttribute ("style", "border: none; width: 0px; height: 0px;");
             containerTag.appendChild (img);
         }
     }
@@ -427,6 +490,43 @@ function msgIsImportant (msg, sourceNick, myNick)
         return true;
 
     return false;    
+}
+
+function fillInHTMLTooltip(tipElement)
+{
+    const XULNS =
+        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    const XLinkNS = "http://www.w3.org/1999/xlink";
+    const Node = { ELEMENT_NODE : 1 }; // XXX Components.interfaces.Node;
+    
+    var retVal = false;
+    var tipNode = document.getElementById("HTML_TOOLTIP_tooltipBox");
+    try {
+        while (tipNode.hasChildNodes())
+            tipNode.removeChild(tipNode.firstChild);
+        var titleText = "";
+        var XLinkTitleText = "";
+        while (!titleText && !XLinkTitleText && tipElement) {
+            if (tipElement.nodeType == Node.ELEMENT_NODE) {
+                titleText = tipElement.getAttribute("title");
+                XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
+            }
+            tipElement = tipElement.parentNode;
+        }
+        var texts = [titleText, XLinkTitleText];
+        for (var i = 0; i < texts.length; ++i) {
+            var t = texts[i];
+            if (t.search(/\S/) >= 0) {
+                var tipLineElem =
+                    tipNode.ownerDocument.createElementNS(XULNS, "text");
+                tipLineElem.setAttribute("value", t);
+                tipNode.appendChild(tipLineElem);
+                retVal = true;
+            }
+        }
+    } catch (e) {
+    }
+    return retVal;
 }
 
 /* timer-based mainloop */
@@ -596,18 +696,89 @@ function getObjectDetails (obj, rv)
     
 }
 
+function findDynamicRule (selector)
+{
+    var rules = frames[0].document.styleSheets[1].cssRules;
+    
+    if (selector instanceof RegExp)
+        fun = "search";
+    else
+        fun = "indexOf";
+    
+    for (var i = 0; i < rules.length; ++i)
+    {
+        var rule = rules.item(i);
+        if (rule.selectorText && rule.selectorText[fun](selector) == 0)
+            return {sheet: frames[0].document.styleSheets[1], rule: rule,
+                    index: i};
+    }
+    
+    return null;
+}
+
+function addDynamicRule (rule)
+{
+    var rules = frames[0].document.styleSheets[1];
+
+    var pos = rules.cssRules.length;
+    rules.insertRule (rule, pos);
+}
+
 function setClientOutput(doc) 
 {
     client.output = frames[0].document.getElementById("output");
+    //createHighlightMenu();
 }
 
+function createHighlightMenu()
+{
+    function processStyleRules(rules)
+    {
+        for (var i = 0; i < rules.length; ++i)
+        {
+            var rule = rules.item(i);
+            if (rule.selectorText)
+            {
+                ary = rule.selectorText.
+                    match(/\.chatzilla-highlight\[name=\"?([^\"]+)\"?\]/i);
+                if (ary)
+                {
+                    menuitem = document.createElement("menuitem");
+                    menuitem.setAttribute ("class", "highlight-menu-item");
+                    menuitem.setAttribute ("label", ary[1]);
+                    menuitem.setAttribute ("oncommand", "onPopupHighlight('" + 
+                                           rule.style.cssText + "');");
+                    menuitem.setAttribute ("style", rule.style.cssText);
+                    menu.appendChild(menuitem);
+                }
+            }
+            else if (rule.styleSheet)
+            {
+                processStyleRules(rule.styleSheet.rules);
+            }
+        }
+    }
+    
+    var menu = document.getElementById("highlightMenu");
+    while (menu.firstChild)
+        menu.removeChild(menu.firstChild);
+    var menuitem = document.createElement("menuitem");
+    menuitem.setAttribute ("label", getMsg("noStyle"));
+    menuitem.setAttribute ("class", "highlight-menu-item");
+    menuitem.setAttribute ("oncommand", "onPopupHighlight('');");
+    menu.appendChild(menuitem);
+    
+    //processStyleRules(frames[0].document.styleSheets[0].cssRules);
+}
+    
 var testURLs =
     ["irc:", "irc://", "irc:///", "irc:///help", "irc:///help,needkey",
     "irc://irc.foo.org", "irc://foo:6666",
     "irc://foo", "irc://irc.foo.org/", "irc://foo:6666/", "irc://foo/",
     "irc://irc.foo.org/,needpass", "irc://foo/,isserver",
     "irc://moznet/,isserver", "irc://moznet/",
-    "irc://foo/chatzilla", "irc://irc.foo.org/?msg=hello%20there",
+    "irc://foo/chatzilla", "irc://foo/chatzilla/",
+    "irc://irc.foo.org/?msg=hello%20there",
     "irc://irc.foo.org/?msg=hello%20there&ignorethis",
     "irc://irc.foo.org/%23mozilla,needkey?msg=hello%20there&ignorethis",
     "invalids",
@@ -633,7 +804,7 @@ function parseIRCURL (url)
     
     var rv = new Object();
     rv.spec = url;
-    rv.host = client.DEFAULT_NETWORK;
+    rv.host = null;
     rv.target = "";
     rv.port = 6667;
     rv.msg = "";
@@ -642,9 +813,11 @@ function parseIRCURL (url)
     rv.isnick = false;
     rv.isserver = false;
     
-    if (url.search(/^(irc:|irc:\/\/)$/i) != -1)
+    if (url.search(/^(irc:\/?\/?)$/i) != -1)
         return rv;
 
+    rv.host = client.DEFAULT_NETWORK;
+    
     /* split url into <host>/<everything-else> pieces */
     var ary = url.match (/^irc:\/\/([^\/\s]+)?(\/.*)?\s*$/i);
     if (!ary)
@@ -676,18 +849,14 @@ function parseIRCURL (url)
     }
     else if (ary[1])
     {
-        if (client.networks[ary[1]])
-            specifiedHost = rv.host = ary[1].toLowerCase();
-        else
-        {
-            specifiedHost = rv.host = ary[1].toLowerCase();
+        specifiedHost = rv.host = ary[1].toLowerCase();
+        if (specifiedHost.indexOf(".") != -1)
             rv.isserver = true;
-        }
     }
 
     if (rest)
     {
-        ary = rest.match (/^\/([^\,\?\s]*)?(,[^\?]*)?(\?.*)?$/);
+        ary = rest.match (/^\/([^\,\?\s\/]*)?\/?(,[^\?]*)?(\?.*)?$/);
         if (!ary)
         {
             dd ("parseIRCURL: rest split failed ``" + rest + "''");
@@ -757,6 +926,16 @@ function gotoIRCURL (url)
         return;
     }
 
+    if (!url.host)
+    {
+        /* focus the *client* view for irc:, irc:/, and irc:// (the only irc
+         * urls that don't have a host.  (irc:/// implies a connect to the
+         * default network.)
+         */
+        onSimulateCommand("/client");
+        return;
+    }
+
     var net;
     var pass = "";
     
@@ -781,8 +960,10 @@ function gotoIRCURL (url)
 
         if (!alreadyThere)
         {
+            /*
             dd ("gotoIRCURL: not already connected to " +
                 "server " + url.host + " trying to connect...");
+            */
             client.onInputServer ({inputData: url.host + " " + url.port +
                                                   " " + pass});
             net = client.networks[url.host];
@@ -798,8 +979,10 @@ function gotoIRCURL (url)
         net = client.networks[url.host];
         if (!net.isConnected())
         {
+            /*
             dd ("gotoIRCURL: not already connected to " +
                 "network " + url.host + " trying to connect...");
+            */
             client.onInputAttach ({inputData: url.host + " " + pass});
             if (!net.pendingURLs)
                 net.pendingURLs = new Array();
@@ -809,8 +992,7 @@ function gotoIRCURL (url)
     }
     
     /* already connected, do whatever comes next in the url */
-    dd ("gotoIRCURL: connected, time to finish parsing ``" +
-        url + "''");
+    //dd ("gotoIRCURL: connected, time to finish parsing ``" + url + "''");
     if (url.target)
     {
         var key = "";
@@ -978,7 +1160,7 @@ function updateTitle (obj)
             break;
     }
 
-    if (!client.uiState["toolbar"])
+    if (!client.uiState["tabstrip"])
     {
         var actl = new Array();
         for (var i in client.activityList)
@@ -1000,6 +1182,8 @@ function multilineInputMode (state)
     var splitter = document.getElementById("input-splitter");
     var iw = document.getElementById("input-widgets");
     var h;
+
+    client._mlMode = state;
     
     if (state)  /* turn on multiline input mode */
     {
@@ -1011,7 +1195,7 @@ function multilineInputMode (state)
         singleInput.setAttribute ("collapsed", "true");
         splitter.setAttribute ("collapsed", "false");
         multiInput.setAttribute ("collapsed", "false");
-        multiInput.focus();
+        client.input = multiInput;
     }
     else  /* turn off multiline input mode */
     {
@@ -1022,8 +1206,15 @@ function multilineInputMode (state)
         splitter.setAttribute ("collapsed", "true");
         multiInput.setAttribute ("collapsed", "true");
         singleInput.setAttribute ("collapsed", "false");
-        singleInput.focus();
+        client.input = singleInput;
     }
+
+    client.input.focus();
+}
+
+function focusInput ()
+{
+    client.input.focus();
 }
 
 function newInlineText (data, className, tagName)
@@ -1063,18 +1254,25 @@ function newInlineText (data, className, tagName)
     
 }
 
-function stringToMsg (message)
+function stringToMsg (message, obj)
 {
     var ary = message.split ("\n");
     var span = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                         "html:span")
-    for (var l in ary)
+                                         "html:span");
+    var data = getObjectDetails(obj);
+    
+    if (ary.length == 1)
+        client.munger.munge(ary[0], span, data);
+    else
     {
-        client.munger.munge(ary[l], span,
-                            getObjectDetails(this));
-        span.appendChild
-            (document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                       "html:br"));
+        for (var l = 0; l < ary.length - 1; ++l)
+        {
+            client.munger.munge(ary[l], span, data);
+            span.appendChild 
+                (document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                           "html:br"));
+        }
+        client.munger.munge(ary[l], span, data);
     }
 
     return span;
@@ -1095,7 +1293,7 @@ function setCurrentObject (obj)
 
     if (client.currentObject)
     {
-        tb = getTBForObject(client.currentObject);
+        tb = getTabForObject(client.currentObject);
     }
     if (tb)
     {
@@ -1122,7 +1320,7 @@ function setCurrentObject (obj)
         client.rdf.setTreeRoot ("user-list", client.rdf.resNullChan);
 
     client.currentObject = obj;
-    tb = getTBForObject(obj);
+    tb = getTabForObject(obj);
     if (tb)
     {
         tb.setAttribute ("selected", "true");
@@ -1138,7 +1336,8 @@ function setCurrentObject (obj)
 
     if (client.PRINT_DIRECTION == 1)
         scrollDown();
-    
+
+    focusInput();
 }
 
 function scrollDown ()
@@ -1202,7 +1401,7 @@ function notifyActivity (source)
     if (typeof source != "object")
         source = client.viewsArray[source].source;
     
-    var tb = getTBForObject (source, true);
+    var tb = getTabForObject (source, true);
     var vk = Number(tb.getAttribute("viewKey"));
     
     if (client.currentObject != source)
@@ -1234,7 +1433,7 @@ function notifyAttention (source)
     
     if (client.currentObject != source)
     {
-        var tb = getTBForObject (source, true);
+        var tb = getTabForObject (source, true);
         var vk = Number(tb.getAttribute("viewKey"));
 
         tb.setAttribute ("state", "attention");
@@ -1249,13 +1448,13 @@ function notifyAttention (source)
 
 /* gets the toolbutton associated with an object
  * if |create| is present, and true, create if not found */
-function getTBForObject (source, create)
+function getTabForObject (source, create)
 {
     var name;
 
     if (!source)
     {
-        dd ("** UNDEFINED  passed to getTBForObject **");
+        dd ("** UNDEFINED  passed to getTabForObject **");
         dd (getStackTrace());
         return null;
     }
@@ -1276,7 +1475,7 @@ function getTBForObject (source, create)
             break;
 
         default:
-            dd ("** INVALID OBJECT passed to getTBForObject **");
+            dd ("** INVALID OBJECT passed to getTabForObject **");
             return null;
     }
 
@@ -1299,47 +1498,122 @@ function getTBForObject (source, create)
     {
         var views = document.getElementById ("views-tbar-inner");
         tb = document.createElement ("tab");
-        tb.setAttribute ("onclick", "onTBIClick('" + id + "');");
+        tb.setAttribute ("ondraggesture",
+                         "nsDragAndDrop.startDrag(event, tabDNDObserver);");
+        tb.setAttribute ("href", source.getURL());
+        tb.setAttribute ("name", source.name);
+        tb.setAttribute ("onclick", "onTabClick('" + id + "');");
         tb.setAttribute ("crop", "right");
-        
-        //tb.addEventListener("command", onTBIClickTempHandler, false);
         
         tb.setAttribute ("class", "tab-bottom view-button");
         tb.setAttribute ("id", id);
         tb.setAttribute ("state", "normal");
 
-        client.viewsArray.push ({source: source, tb: tb});
+        var spacer = document.createElement ("box");
+        spacer.setAttribute ("id", id + "-spacer");
+        spacer.setAttribute ("class", "tabs-bottom view-button-spacer");
+        spacer.setAttribute ("index", client.viewsArray.length);
+        views.appendChild (spacer);
+
+        client.viewsArray.push ({source: source, tb: tb, spacer: spacer});
         tb.setAttribute ("viewKey", client.viewsArray.length - 1);
         if (matches > 1)
-            tb.setAttribute ("label", name + "<" + matches + ">");
+            tb.setAttribute("label", name + "<" + matches + ">");
         else
-            tb.setAttribute ("label", name);
+            tb.setAttribute("label", name);
 
-        views.appendChild (tb);
+        views.appendChild (tb);        
     }
 
     return tb;
     
 }
 
-/*
- * This is used since setAttribute is funked up right now.
- */
-function onTBIClickTempHandler (e)
-{ 
-  
-    dd ("onTBIClickTempHandler called");
-    
-    var id = "tb[" + e.target.getAttribute("value") + "]";
+function retrieveURLFromData (aData, flavour)
+{
+    switch (flavour) 
+    {
+        case "text/unicode":
+            if (aData.search(client.linkRE) != -1)
+                return aData;
+            else
+                return null;
 
-    var tb = document.getElementById (id);
-    var view = client.viewsArray[tb.getAttribute("viewKey")];
-   
-    setCurrentObject (view.source);
+        case "text/x-moz-url":
+            var data = aData.toString();
+            var separator = data.indexOf("\n");
+            if (separator != -1)
+                data = data.substr(0, separator);
+            return data;
 
+        case "application/x-moz-file":
+            return aData.URL;
+    }
+
+    return null;                                                   
 }
 
-function deleteToolbutton (tb)
+
+var contentDropObserver = new Object();
+
+contentDropObserver.onDragOver =
+function tabdnd_dover (aEvent, aFlavour, aDragSession)
+{
+    if (aEvent.getPreventDefault())
+        return;
+
+    if (aDragSession.sourceDocument == aEvent.view.document)
+    {
+        aDragSession.canDrop = false;
+        return;
+    }
+}
+
+contentDropObserver.onDrop =
+function tabdnd_drop (aEvent, aXferData, aDragSession)
+{
+    var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+    if (!url)
+        return;
+    
+    if (url.search(/\.css$/i) != -1  && confirm (getMsg("tabdnd_drop", url)))
+    {
+        onSimulateCommand("/css " + url);
+    }
+    else if (url.search(/^irc:\/\//i) != -1)
+    {
+        gotoIRCURL (url);
+    }
+}
+
+contentDropObserver.getSupportedFlavours =
+function tabdnd_gsf ()
+{
+    var flavourSet = new FlavourSet();
+    flavourSet.appendFlavour("text/x-moz-url");
+    flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+    flavourSet.appendFlavour("text/unicode");
+    return flavourSet;
+}
+
+var tabDNDObserver = new Object();
+
+tabDNDObserver.onDragStart =
+function tabdnd_dstart (aEvent, aXferData, aDragAction)
+{
+    var tb = aEvent.currentTarget;
+    var href = tb.getAttribute("href");
+    var name = tb.getAttribute("name");
+    
+    aXferData.data = new TransferData();
+    /* x-moz-url has the format "<url>\n<name>", goodie */
+    aXferData.data.addDataForFlavour("text/x-moz-url", href + "\n" + name);
+    aXferData.data.addDataForFlavour("text/unicode", href);
+    aXferData.data.addDataForFlavour("text/html", "<a href='" + href + "'>" +
+                                     name + "</a>");
+}
+
+function deleteTab (tb)
 {
     var i, key = Number(tb.getAttribute("viewKey"));
     
@@ -1351,20 +1625,23 @@ function deleteToolbutton (tb)
             for (i = key + 1; i < client.viewsArray.length; i++)
             {
                 client.viewsArray[i].tb.setAttribute ("viewKey", i - 1);
+                client.viewsArray[i].spacer.setAttribute ("index", i - 1);
             }
+            spacer = client.viewsArray[key].spacer;
             arrayRemoveAt(client.viewsArray, key);
             var tbinner = document.getElementById("views-tbar-inner");
             tbinner.removeChild(tb);
+            tbinner.removeChild(spacer);
         }
         else
         {
-            window.alert (getMsg("deleteToolbuttonMsg"));
+            window.alert (getMsg("deleteTabMsg"));
             return -1;
         }
             
     }
     else
-        dd  ("*** INVALID OBJECT passed to deleteToolButton (" + tb + ") " +
+        dd  ("*** INVALID OBJECT passed to deleteTab (" + tb + ") " +
              "no viewKey attribute. (" + key + ")");
 
     return key;
@@ -1382,6 +1659,12 @@ function filterOutput (msg, msgtype)
     
 }
 
+client.getURL =
+function cli_geturl ()
+{
+    return "irc://";
+}
+
 client.load =
 function cli_load(url, obj)
 {
@@ -1397,16 +1680,12 @@ function cli_load(url, obj)
     }
     
     try {
+        client.currentObject.display (getMsg("cli_loadLoading", url));
         client._loader.loadSubScript (url, obj);
     }
     catch (ex)
     {
-        var msg = getMsg("cli_loadMsg",ex);
-        if (ex.fileName)
-            msg += getMsg("cli_loadMsg2",ex.fileName);
-        if (ex.lineNumber)
-            msg += getMsg("cli_loadMsg3",ex.lineNumber);
-
+        var msg = getMsg("cli_loadError", ex.lineNumber, ex.fileName, ex);
         client.currentObject.display (msg, "ERROR");        
     }
 }
@@ -1471,12 +1750,24 @@ function u_display(message, msgtype, sourceObj, destObj)
     }
 }
 
+function display (message, msgtype, sourceObj, destObj)
+{
+    client.currentObject.display (message, msgtype, sourceObj, destObj);
+}
+
 client.display =
 CIRCNetwork.prototype.displayHere =
 CIRCChannel.prototype.display =
 CIRCUser.prototype.displayHere =
-function display(message, msgtype, sourceObj, destObj)
+function __display(message, msgtype, sourceObj, destObj)
 {            
+    var d = new Date();
+    var mins = d.getMinutes();
+    if (mins < 10)
+        mins = "0" + mins;
+    var dateString = getMsg("cli_dateString", [d.getMonth() + 1, d.getDate(),
+                                               d.getHours(), mins]);
+ 
     function setAttribs (obj, c, attrs)
     {
         for (var a in attrs)
@@ -1502,7 +1793,7 @@ function display(message, msgtype, sourceObj, destObj)
     var fromType = (sourceObj && sourceObj.TYPE) ? sourceObj.TYPE : "unk";
     var fromAttr;
     
-    if      (sourceObj == me)                    fromAttr = "ME!";
+    if      (sourceObj && sourceObj == me)       fromAttr = "ME!";
     else if (fromType.search(/IRC.*User/) != -1) fromAttr = sourceObj.nick;
     else if (typeof sourceObj == "object")       fromAttr = sourceObj.name;
         
@@ -1568,7 +1859,9 @@ function display(message, msgtype, sourceObj, destObj)
 
         var msgSource = document.createElementNS("http://www.w3.org/1999/xhtml",
                                                  "html:td");
-        setAttribs (msgSource, "msg-user", {important: isImportant});
+        setAttribs (msgSource, "msg-user", {title: dateString});
+        if (isImportant)
+            msgSource.setAttribute ("important", "true");
         if (nick.length > client.MAX_NICK_DISPLAY)
             blockLevel = true;
         msgSource.appendChild (newInlineText (nick));
@@ -1581,7 +1874,7 @@ function display(message, msgtype, sourceObj, destObj)
         /* Display the message code */
         var msgType = document.createElementNS("http://www.w3.org/1999/xhtml",
                                                "html:td");
-        setAttribs (msgType, "msg-type");
+        setAttribs (msgType, "msg-type", {title: dateString});
 
         if (!code)
             if (client.HIDE_CODES)
@@ -1596,13 +1889,16 @@ function display(message, msgtype, sourceObj, destObj)
     {
         var msgData = document.createElementNS("http://www.w3.org/1999/xhtml",
                                                "html:td");
-        setAttribs (msgData, "msg-data", {important: isImportant});
+        setAttribs (msgData, "msg-data");
+        if (isImportant)
+            msgData.setAttribute ("important", "true");
+
         if (this.mark)
             msgData.setAttribute ("mark", this.mark);
         
         if (typeof message == "string")
         {
-            msgData.appendChild (stringToMsg (message));
+            msgData.appendChild (stringToMsg (message, this));
         }
         else
             msgData.appendChild (message);
