@@ -1550,6 +1550,7 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
                             PRInt32* numUnConverted)
 {
+#if defined(NS_DEBUG) && defined(NS_MT_SUPPORTED)
   static void *owningthread;
 
   if (owningthread) {
@@ -1557,6 +1558,7 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
  } else {
     owningthread = NS_CurrentThread();
  }
+#endif
 
   if (!autoDetection && from_charset && to_charset &&
       (!nsCRT::strcasecmp(from_charset,to_charset) ||
