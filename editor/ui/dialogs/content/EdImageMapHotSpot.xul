@@ -33,6 +33,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
+    persist="screenX screenY"
     orient="vertical"
 	>
 
@@ -91,22 +92,11 @@
 			      </menupopup>
                 </menulist>
 
-          <!-- 
-		  <html s e l e c t name="common_targets" id="commonInput" size="4" oncommand="changeTarget()" onchange="changeTarget()">
-            <html o p t i o n value="_self">Same Frame</html o p t i o n>
-            <html o p t i o n value="_top">Whole Page</html o p t i o n>
-            <html o p t i o n value="_blank">New Window</html o p t i o n>
-            <html o p t i o n value="_parent">Parent Frame</html o p t i o n>
-          </html s e l e c t> 
-		  -->
-
 		  </row>
 		</rows>
       </grid>
   </titledbox>
 
-
-  <box orient="horizontal">
-   <box id="okCancelButtons"/>
-  </box>
+  <!-- from global dialogOverlay -->
+  <box id="okCancelButtons"/>
 </window>

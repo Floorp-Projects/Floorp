@@ -296,7 +296,7 @@ function chooseFile()
   }
   
   // Put focus into the input field
-  dialog.BackgroundImageInput.focus();
+  SetTextfieldFocus(dialog.BackgroundImageInput);
 }
 
 function ValidateImage()
@@ -312,7 +312,7 @@ function ValidateImage()
       dialog.BackgroundImage = null;
     }
   }
-  dialog.BackgroundImageInput.focus();
+  SetTextfieldFocus(dialog.BackgroundImageInput);
   ShowInputErrorMessage(GetString("MissingImageError"));
 
   // Don't allow checkbox if bad or no image

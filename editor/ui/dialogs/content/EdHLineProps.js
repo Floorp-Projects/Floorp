@@ -62,7 +62,7 @@ function Startup()
   InitDialog()
 
   // SET FOCUS TO FIRST CONTROL
-  dialog.widthInput.focus();
+  SetTextfieldFocus(dialog.widthInput);
 
   // Resize window
   window.sizeToContent();
@@ -82,12 +82,9 @@ function InitDialog()
 
   // We will use "height" here and in UI
   dialog.heightInput.value = height;
-dump("Calling InitPixelOrPercentMenulist\n");
   // Get the width attribute of the element, stripping out "%"
-  // This sets contents of combobox (adds pixel and percent menuitems elements)
+  // This sets contents of menulist (adds pixel and percent menuitems elements)
   dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
-
-dump("AFTER Calling InitPixelOrPercentMenulist\n");
   align = globalElement.getAttribute("align");
   if (align == "center") {
     dialog.centerAlign.checked = true;
@@ -160,7 +157,7 @@ function ValidateData()
     // Set focus to the offending control
     dump("Height is empty\n");
     SetTextfieldFocus(dialog.heightInput);
-    dialog.heightInput.focus();
+    SetTextfieldFocus(dialog.heightInput);
     return false;
   }
   dump("Setting height="+height+"\n");
@@ -178,7 +175,7 @@ function ValidateData()
   width = ValidateNumberString(dialog.widthInput.value, 1, maxLimit);
   if (width == "") {
     dump("Width is empty\n");
-    dialog.widthInput.focus();
+    SetTextfieldFocus(dialog.widthInput);
     return false;
   }
   if (isPercent)

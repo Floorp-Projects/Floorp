@@ -56,8 +56,7 @@ function Startup()
     }
   }
 
-  dialog.urlInput.focus();
-  dialog.urlInput.select();
+  SetTextfieldFocus(dialog.urlInput);
 }
 
 function onOK()
@@ -83,5 +82,5 @@ function chooseFile()
   }
 
   // Put focus into the input field
-  dialog.urlInput.focus();
+  SetTextfieldFocus(dialog.urlInput);
 }

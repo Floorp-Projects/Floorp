@@ -39,36 +39,32 @@
   <script language="Javascript" src="chrome://global/content/strres.js" />
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <broadcaster id="args" value=""/>
-  <box>
-    <!-- value is set in JS -->
-    <text class="label" id="MisspelledWordLabel"/>
-    <spring class="bigspacer"/>
-    <text class="label bold" id="MisspelledWord"/>
-  </box>
+  <grid>
+    <columns><column/><column style="width: 15em" flex="1"/><column style="min-width: 8em"/></columns>
+    <rows>
+      <row>
+        <text class="label" id="MisspelledWordLabel" value="&misspelledWord.label;"/>
+        <text class="label bold" id="MisspelledWord"/>
+        <spring/>
+      </row>
+      <row>
+        <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
+        <textfield id="ReplaceWord" onkeyup="ChangeReplaceWord()"/>
+        <button id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
+      </row>
+    </rows>
+  </grid>
+  <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
   <grid>
     <columns><column style="width: 15em" flex="1"/><column style="width: 15em" flex="1"/></columns>
     <rows>
-      <row>
-        <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
-        <spring/>
-      </row>
-      <row>
-        <textfield id="ReplaceWord" onkeyup="ChangeReplaceWord()"/>
-        <box flex="1">
-          <button id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
-        </box>
-      </row>
-      <row>
-        <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
-        <spring/>
-      </row>
       <row>
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
         <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" onclick="SelectSuggestedWord()">
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
         <grid flex="1">
-          <columns><column flex="1"/><column flex="1"/></columns>
+          <columns><column style="min-width: 8em" flex="1"/><column style="min-width: 8em" flex="1"/></columns>
           <rows>
             <row>
               <button class="dialog" id="Ignore" oncommand="Ignore()" value="&ignoreButton.label;"/>
@@ -78,10 +74,8 @@
               <button class="dialog" id="Replace" oncommand="Replace()" value="&changeButton.label;"/>
               <button class="dialog" id="ReplaceAll" oncommand="ReplaceAll()" value="&changeAllButton.label;"/>
             </row>
-            <row>
-              <text class="label" value="&userDictionary.label;"/>
-              <spring/>
-            </row>
+            <spring class="bigspacer"/>
+            <text class="label" value="&userDictionary.label;"/>
             <row>
               <button class="dialog" id="AddToDictionary" oncommand="AddToDictionary()" value="&addToUserDictionaryButton.label;"/>
               <button class="dialog" id="EditDictionary"  oncommand="EditDictionary()" value="&editUserDictionaryButton.label;"/>
@@ -98,7 +92,7 @@
           <!-- contents are appended by JS -->
         <box flex="1">
           <button class="dialog" id="Recheck" flex="1" value="&recheckButton.label;" oncommand="Recheck()"/>
-          <button class="dialog" id="Close" flex="1" value="&closeButton.label;" oncommand="Close()"/>
+          <button class="exit-dialog" id="cancel" flex="1" value="&closeButton.label;" onclick="Close()"/>
         </box>
       </row>
     </rows>

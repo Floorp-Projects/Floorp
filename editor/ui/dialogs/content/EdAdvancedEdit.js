@@ -227,13 +227,13 @@ function doAddAttribute(which)
 
   switch(tree.id) {
     case "HTMLATree":
-      document.getElementById("AddHTMLAttributeNameInput").focus();
+      SetTextfieldFocus(document.getElementById("AddHTMLAttributeNameInput"));
       break;
     case "CSSATree":
-      document.getElementById("AddCSSAttributeNameInput").focus();
+      SetTextfieldFocus(document.getElementById("AddCSSAttributeNameInput"));
       break;
     case "JSEATree":
-      document.getElementById("AddJSEAttributeNameInput").focus();
+      SetTextfieldFocus(document.getElementById("AddJSEAttributeNameInput"));
       break;
     default:
       break;
@@ -258,7 +258,7 @@ function doSelect(e)
   
     cell.setAttribute("class","FocusSelected");
     input.setAttribute("class","FocusSelected");
-    input.focus();
+    SetTextfieldFocus(input);
   }
 }
 

@@ -28,9 +28,13 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-
   doSetOKCancel(onOK, null);
-  
+  var okButton = document.getElementById("ok");
+  if (okButton)
+  {
+    okButton.removeAttribute("default");
+    okButton.setAttribute("value",GetString("Insert"));
+  }  
   // Create dialog object to store controls for easy access
   srcInput = document.getElementById("srcInput");
 
@@ -40,7 +44,8 @@ function Startup()
     srcInput.value = selection;
 
   // Set initial focus
-  srcInput.focus();
+  srcInput.focus;
+  // Note: We can't set the caret location in a multiline textfield
 }
 
 function onOK()

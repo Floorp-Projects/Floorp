@@ -43,6 +43,10 @@ var gOutputFormatFlowed  = 64;
 var gOutputAbsoluteLinks = 128;
 var gOutputEncodeEntities = 256;
 
+// Use for 'defaultIndex' param in InitPixelOrPercentMenulist
+var gPixel = 0;
+var gPercent = 1;
+
 var maxPixels  = 10000;
 // For dialogs that expand in size. Default is smaller size see "onMoreFewer()" below
 var SeeMore = false;
@@ -79,60 +83,6 @@ function StringExists(string)
   return false;
 }
 
-function ClearList(list)
-{
-  if (list) {
-    list.selectedIndex = -1;
-    for( i=list.length-1; i >= 0; i--)
-      list.remove(i);
-  }
-}
-//TODO: WE NEED EQUIVALENT OF THIS FOR "TREELIST"
-function ReplaceStringInList(list, index, string)
-{
-  if (index < list.options.length)
-  {
-    // Save and remove selection else we have trouble below!
-    //  (This must be a bug!)
-    selIndex = list.selectedIndex;
-    list.selectedIndex = -1;
-
-    optionNode = new Option(string, string);
-    // Remove existing option node
-    //list.remove(index);
-    list.options[index] = null;
-    // Insert the new node
-    list.options[index] = optionNode;
-    // NOTE: If we insert, then remove, we crash!
-    // Reset the selected item
-    list.selectedIndex = selIndex;
-  }
-}
-
-// THESE WILL BE REMOVE ONCE ALL DIALOGS ARE CONVERTED TO NEW WIDGETS
-function AppendStringToListById(list, stringID)
-{
-  AppendStringToList(list, editorShell.GetString(stringID));
-}
-
-function AppendStringToList(list, string)
-{
-  // THIS DOESN'T WORK! Result is a XULElement -- namespace problem
-  // optionNode1 = document.createElement("option");
-  // This works - Thanks to Vidur! Params = name, value
-  optionNode = new Option(string, string);
-
-  if (optionNode) {
-    list.add(optionNode, null);    
-  } else {
-    dump("Failed to create OPTION node. String content="+string+"\n");
-  }
-}
-
-/*
-  It would be better to add method to Select object, but what is its name?
-  SELECT and HTMLSELECT don't work!
-*/
 
 function ValidateNumberString(value, minValue, maxValue)
 {
@@ -158,16 +108,9 @@ function SetTextfieldFocus(textfield)
 {
   if (textfield)
   {
-dump("Selection Start="+textfield.selectionStart+"\n");
-dump("Selection End="+textfield.selectionEnd+"\n");
+    // Select entire contents
+    textfield.select(); //setSelectionRange(0, -1);
     textfield.focus();
-    //TODO: This is not working -- did Simon checkin? Do we need to change XBL?
-    //textfield.selectionStart = 0;
-    textfield.setAttribute("selectionStart",0);
-    //TODO: Simon should change this to support "-1" for "select to end"
-    //textfield.selectionEnd = textfield.value.length;
-    textfield.setAttrubute("selectionEnd",textfield.value.length);
-
   }
 }
 
@@ -309,8 +252,10 @@ function GetAppropriatePercentString(elementForAtt, elementInDoc)
     return GetString("PercentOfWindow");
 }
 
-function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menulistID)
+function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menulistID, defaultIndex)
 {
+  if (!defaultIndex) defaultIndex = gPixel;
+
   var size  = elementForAtt.getAttribute(attribute);
   var menulist = document.getElementById(menulistID);
   var pixelItem;
@@ -324,19 +269,25 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
 
   ClearMenulist(menulist);
   pixelItem = AppendStringToMenulist(menulist, GetString("Pixels"));
+  if (!pixelItem)
+    return;
   percentItem = AppendStringToMenulist(menulist, GetAppropriatePercentString(elementForAtt, elementInDoc));
-//dump("**** InitPixelOrPercentMenulist: pixelItem="+pixelItem+", percentItem="+percentItem+", menulistID="+menulistID+"\n");
-  // Search for a "%" character
-  percentIndex = size.search(/%/);
-  if (percentIndex > 0)
+  if (size && size.length > 0)
   {
-    // Strip out the %
-    size = size.substr(0, percentIndex);
-    if (percentItem)
-      menulist.selectedItem = percentItem;
-  } 
-  else if(pixelItem)
-    menulist.selectedItem = pixelItem;
+    // Search for a "%" character
+    percentIndex = size.search(/%/);
+    if (percentIndex > 0)
+    {
+      // Strip out the %
+      size = size.substr(0, percentIndex);
+      if (percentItem)
+        menulist.selectedItem = percentItem;
+    } 
+    else
+      menulist.selectedItem = pixelItem;
+  }
+  else
+    menulist.selectedIndex = defaultIndex;
 
   return size;
 }
@@ -432,7 +383,6 @@ function AppendStringToTreelistById(tree, stringID)
 
 function AppendStringToTreelist(tree, string)
 {
-dump("AppendStringToTreelist: string="+string+"\n");
   if (tree)
   {
     var treecols = tree.firstChild;
@@ -464,13 +414,40 @@ dump("AppendStringToTreelist: string="+string+"\n");
       treeitem.appendChild(treerow);
       treechildren.appendChild(treeitem)
       treecell.setAttribute("value", string);
-      var len = Number(tree.getAttribute("length"));
-      if (!len) len = -1;
-      tree.setAttribute("length",len+1);
+      //var len = Number(tree.getAttribute("length"));
+      //if (!len) len = -1;
+      tree.setAttribute("length", treechildren.childNodes.length);
       return treeitem;
     }
   }
   return null;
+}
+
+function ReplaceStringInTreeList(tree, index, string)
+{
+  if (tree)
+  {
+    var treecols = tree.firstChild;
+    if (!treecols)
+    {
+      dump("Bad XUL: Must have <treecolgroup> as first child\n");
+      return;
+    }
+    var treechildren = treecols.nextSibling;
+    if (!treechildren)
+      return;
+
+    // Each list item is a <treeitem><treerow><treecell> under <treechildren> node
+    var childNodes = treechildren.childNodes;
+    if (!childNodes || index >= childNodes.length)
+      return;
+
+    var row = childNodes.item(index).firstChild;
+    if (row && row.firstChild)
+    {
+      row.firstChild.setAttribute("value", string);
+    }
+  }
 }
 
 function ClearTreelist(tree)
@@ -496,19 +473,57 @@ function ClearTreelist(tree)
 
 function GetSelectedTreelistAttribute(tree, attr)
 {
-  if (tree && tree.selectedItems && 
-      tree.selectedItems[0] && 
-      tree.selectedItems[0].firstChild &&
-      tree.selectedItems[0].firstChild.firstChild)
+  if (tree)
   {
-    return tree.selectedItems[0].firstChild.firstChild.getAttribute(attr);
+    if (tree.selectedIndex >= 0 &&
+        tree.selectedItems.length > 0 && 
+        tree.selectedItems[0] && 
+        tree.selectedItems[0].firstChild &&
+        tree.selectedItems[0].firstChild.firstChild)
+    {
+      return tree.selectedItems[0].firstChild.firstChild.getAttribute(attr);
+    }
   }
-
   return "";
 }
+
 function GetSelectedTreelistValue(tree)
 {
   return GetSelectedTreelistAttribute(tree,"value")
+}
+
+function RemoveSelectedTreelistItem(tree)
+{
+  if (tree)
+  {
+    if (tree.selectedIndex >= 0 &&
+        tree.selectedItems.length > 0)
+    {
+      // Get the node to delete
+      var treeItem = tree.selectedItems[0];
+      if (treeItem)
+      {
+        tree.clearItemSelection();
+        var parent = treeItem.parentNode;
+        if (parent)
+        {
+          parent.removeChild(treeItem);
+          tree.setAttribute("length", parent.childNodes.length);
+        }
+      }
+    }
+  }
+}
+
+function GetTreelistValueAt(tree, index)
+{
+  if (tree)
+  {
+    var item = tree.getItemAtIndex(index);
+    if (item && item.firstChild && item.firstChild.firstChild)
+      return item.firstChild.firstChild.getAttribute("value");
+  }
+  return "";
 }
 
 
@@ -582,11 +597,7 @@ function getContainer ()
   selImage = editorShell.GetSelectedElement(tagName);
   if (selImage)  // existing image
   {
-    //dump("Is an image element\n");
     oneup = selImage.parentNode;
-    //dump("Parent = " + oneup.nodeName + "\n");
-    //twoup = oneup.parentNode;
-    //dump("Grand Parent is " + twoup.nodeName + "\n");
     return oneup;
   }
   else if (!selImage)  // new image insertion

@@ -132,7 +132,7 @@ function Startup()
     InitDialog();
   
   onMoreFewerImage();  // this call will initialize all widgets if entire dialog is visible
-  dialog.srcInput.focus();
+  SetTextfieldFocus(dialog.srcInput);
 }
 
 // Set dialog widgets with attribute data
@@ -155,8 +155,8 @@ function InitDialog()
   if ( SeeMore )
   {
 	  // setup the height and width widgets
-	  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, imageElement, "width", "widthUnitsMenulist");
-	  dialog.heightInput.value = InitPixelOrPercentMenulist(globalElement, imageElement, "height", "heightUnitsMenulist");
+	  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, imageElement, "width", "widthUnitsMenulist", gPixel);
+	  dialog.heightInput.value = InitPixelOrPercentMenulist(globalElement, imageElement, "height", "heightUnitsMenulist", gPixel);
 	  
 	  // TODO: We need to get the actual image dimensions.
 	  //       If different from attribute dimensions, then "custom" is checked.
@@ -219,7 +219,7 @@ function chooseFile()
   }
   
   // Put focus into the input field
-  dialog.srcInput.focus();
+  SetTextfieldFocus(dialog.srcInput);
 }
 
 function SetGlobalElementToCurrentDialogSettings()
@@ -298,29 +298,26 @@ function onMoreFewerImage()
     SetGlobalElementToCurrentDialogSettings();
     
     dialog.MoreSection.setAttribute("collapsed","true");
-    window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
     dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
     SeeMore = false;
 
     // Show the "Advanced Edit" button on same line as "More Properties"
-    dialog.AdvancedEditButton.removeAttribute("hidden");
-    dialog.AdvancedEditButton2.setAttribute("hidden","true");
+    dialog.AdvancedEditButton.removeAttribute("collapsed");
+    dialog.AdvancedEditButton2.setAttribute("collapsed","true");
+    window.sizeToContent();
   }
   else
   {
     dialog.MoreSection.removeAttribute("collapsed");
-    // Hide the "Advanced Edit" next to "More..." Use button at bottom right of dialog
-    dialog.AdvancedEditButton.setAttribute("style","display: none");
-    window.sizeToContent();
-
     dialog.MoreFewerButton.setAttribute("more","1");
     dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
     SeeMore = true;
 
     // Show the "Advanced Edit" button at bottom
-    dialog.AdvancedEditButton.setAttribute("hidden","true");
+    dialog.AdvancedEditButton.setAttribute("collapsed","true");
     dialog.AdvancedEditButton2.removeAttribute("hidden");
+    window.sizeToContent();
     
     InitDialog();
     
@@ -480,7 +477,7 @@ function ValidateData()
   globalElement.setAttribute("src", src);
   
   // TODO: Should we confirm with user if no alt tag? Or just set to empty string?
-  var alt = dialog.altTextInput.value.trimString();
+  var alt = dialog.altTextInput.value; //.trimString();
   globalElement.setAttribute("alt", alt);
   
   //TODO: WE SHOULD ALWAYS SET WIDTH AND HEIGHT FOR FASTER IMAGE LAYOUT
@@ -528,7 +525,7 @@ function ValidateData()
     {
       if ( !SeeMore )
         onMoreFewerImage();
-      dialog.widthInput.focus();
+      SetTextfieldFocus(dialog.widthInput);
       return false;
     }
     if (isPercentWidth)
@@ -540,7 +537,7 @@ function ValidateData()
     {
       if ( !SeeMore )
         onMoreFewerImage();
-      dialog.heightInput.focus();
+      SetTextfieldFocus(dialog.heightInput);
       return false;
     }
     if (isPercentHeight)

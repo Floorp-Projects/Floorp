@@ -61,13 +61,20 @@ function Startup()
   // Initialize all widgets with image attributes
   InitDialog();
 
-  // Set initial number to 1 row, 2 columns:
+  // Set initial number to 2 rows, 2 columns:
   // Note, these are not attributes on the table,
   //  so don't put them in InitDialog(),
   //  else the user's values will be trashed when they use 
   //  the Advanced Edit dialog
-  dialog.rowsInput.value = 1;
+  dialog.rowsInput.value = 2;
   dialog.columnsInput.value = 2;
+
+  // If no default value on the width, set to 100%
+  if (dialog.widthInput.value.length == 0)
+  {
+    dialog.widthInput.value = "100";
+    dialog.widthPixelOrPercentMenulist.selectedIndex = 1;
+  }
 
   dialog.rowsInput.focus();
 
@@ -82,9 +89,9 @@ function InitDialog()
 {  
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
-  // This sets contents of select combobox list
-  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "widthInput","widthPixelOrPercentMenulist");
-  dialog.heightInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "heightInput","heightPixelOrPercentMenulist");
+  // This sets contents of menu combobox list
+  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "widthInput","widthPixelOrPercentMenulist", gPercent);
+  dialog.heightInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "heightInput","heightPixelOrPercentMenulist", gPixel);
   dialog.borderInput.value = globalElement.getAttribute("border");
 }
 
@@ -104,7 +111,7 @@ function ValidateData()
   if (columns == "")
   {
     // Set focus to the offending control
-    dialog.columnsInput.focus();
+    SetTextfieldFocus(dialog.columnsInput);
     return false;
   }
 
@@ -166,6 +173,8 @@ function onOK()
   {
     editorShell.CloneAttributes(tableElement, globalElement);
 
+    // Create necessary rows and cells for the table
+    // AFTER BUG 30378 IS FIXED, DON'T INSERT TBODY!
     var tableBody = editorShell.CreateElementWithDefaults("tbody");
     if (tableBody)
     {
