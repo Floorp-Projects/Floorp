@@ -871,6 +871,8 @@ JSString *nsDOMClassInfo::sOnresize_id        = nsnull;
 JSString *nsDOMClassInfo::sOnscroll_id        = nsnull;
 JSString *nsDOMClassInfo::sScrollIntoView_id  = nsnull;
 JSString *nsDOMClassInfo::sOpen_id            = nsnull;
+JSString *nsDOMClassInfo::sItem_id            = nsnull;
+JSString *nsDOMClassInfo::sEnumerate_id       = nsnull;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
@@ -940,6 +942,8 @@ nsDOMClassInfo::DefineStaticJSStrings(JSContext *cx)
   sOnscroll_id       = ::JS_InternString(cx, "onscroll");
   sScrollIntoView_id = ::JS_InternString(cx, "scrollIntoView");
   sOpen_id           = ::JS_InternString(cx, "open");
+  sItem_id           = ::JS_InternString(cx, "item");
+  sEnumerate_id      = ::JS_InternString(cx, "enumerateProperties");
 
   return NS_OK;
 }
@@ -2391,7 +2395,7 @@ nsDOMClassInfo::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // Ask the security manager if it's OK to enumerate
   nsresult rv =
     sSecMan->CheckPropertyAccess(cx, obj, sClassInfoData[mID].mName,
-                                 "enumerateProperties",
+                                 STRING_TO_JSVAL(sEnumerate_id),
                                  nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
   if (NS_FAILED(rv)) {
@@ -2441,21 +2445,6 @@ nsDOMClassInfo::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_ERROR_UNEXPECTED;
 }
 
-// Result of this function should not be freed.
-static inline const PRUnichar *
-JSValIDToString(JSContext *aJSContext, const jsval idval)
-{
-  JSString *str = JS_ValueToString(aJSContext, idval);
-
-  if(!str) {
-    NS_ERROR("JS_ValueToString() returned null!");
-
-    return nsnull;
-  }
-
-  return NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(str));
-}
-
 NS_IMETHODIMP
 nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsval id, PRUint32 mode,
@@ -2463,23 +2452,13 @@ nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
   if ((mode == JSACC_WATCH || mode == JSACC_PROTO || mode == JSACC_PARENT) &&
       sSecMan) {
-    JSString *str = ::JS_ValueToString(cx, id);
-
-    if (!str)
-      return NS_ERROR_UNEXPECTED;
 
     JSObject *real_obj = nsnull;
     nsresult rv = wrapper->GetJSObject(&real_obj);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ConvertUCS2toUTF8
-      prop_name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                    ::JS_GetStringChars(str)),
-                ::JS_GetStringLength(str));
-
     rv =
-      sSecMan->CheckPropertyAccess(cx, real_obj, sClassInfoData[mID].mName,
-                                   prop_name.get(),
+      sSecMan->CheckPropertyAccess(cx, real_obj, sClassInfoData[mID].mName, id,
                                    nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
     if (NS_FAILED(rv)) {
@@ -2629,6 +2608,8 @@ nsDOMClassInfo::ShutDown()
   sOnscroll_id        = jsnullstring;
   sScrollIntoView_id  = jsnullstring;
   sOpen_id            = jsnullstring;
+  sItem_id            = jsnullstring;
+  sEnumerate_id       = jsnullstring;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -2754,11 +2735,9 @@ nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
 
   JSObject *global = sgo->GetGlobalJSObject();
 
-  NS_ConvertUCS2toUTF8 prop_name(JSValIDToString(cx, id));
-
   return sSecMan->CheckPropertyAccess(cx, global,
                                       sClassInfoData[mID].mName,
-                                      prop_name.get(), accessMode);
+                                      id, accessMode);
 }
 
 NS_IMETHODIMP
@@ -2943,7 +2922,7 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   nsresult rv = doCheckPropertyAccess(cx, obj, id, wrapper,
-                               nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+                                      nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 
   if (NS_FAILED(rv)) {
     // Security check failed. The security manager set a JS
@@ -5231,7 +5210,8 @@ nsHistorySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, obj, sClassInfoData[mID].mName, "item",
+    sSecMan->CheckPropertyAccess(cx, obj, sClassInfoData[mID].mName,
+                                 STRING_TO_JSVAL(sItem_id),
                                  nsIXPCSecurityManager::ACCESS_CALL_METHOD);
 
   if (NS_FAILED(rv)) {

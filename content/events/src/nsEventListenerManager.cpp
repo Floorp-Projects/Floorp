@@ -180,6 +180,11 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
   return NS_OK;
 }
 
+void nsEventListenerManager::Shutdown()
+{
+    sAddListenerID = JSVAL_VOID;
+}
+
 NS_IMPL_ADDREF(nsEventListenerManager)
 NS_IMPL_RELEASE(nsEventListenerManager)
 
@@ -951,6 +956,9 @@ nsEventListenerManager::RemoveScriptEventListener(nsIAtom *aName)
   return result;
 }
 
+jsval
+nsEventListenerManager::sAddListenerID = JSVAL_VOID;
+
 NS_IMETHODIMP
 nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
                                                     nsISupports *aObject, 
@@ -992,8 +1000,12 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
 
   nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aObject);
 
+  if (sAddListenerID == JSVAL_VOID) {
+    sAddListenerID = STRING_TO_JSVAL(::JS_InternString(cx, "addEventListener"));
+  }
+
   if (NS_FAILED(rv = securityManager->CheckPropertyAccess(cx, jsobj,
-                "EventTarget","addEventListener",
+                "EventTarget", sAddListenerID,
                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY))) {
       // XXX set pending exception on the native call context?
     return rv;

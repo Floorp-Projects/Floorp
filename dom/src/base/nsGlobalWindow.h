@@ -373,6 +373,8 @@ protected:
   MimeTypeArrayImpl* mMimeTypes;
   PluginArrayImpl* mPlugins;
   nsIDocShell* mDocShell; // weak reference
+
+  static jsval       sPrefInternal_id;
 };
 
 class nsIURI;

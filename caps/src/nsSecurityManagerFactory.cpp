@@ -364,11 +364,17 @@ RegisterSecurityNameSet(nsIComponentManager *aCompMgr,
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    rv = catman->AddCategoryEntry("app-startup", "service",
+                                  NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                                  PR_TRUE, PR_TRUE,
+                                  getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     return rv;
 }
 
 
-static const nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo capsComponentInfo[] =
 {
     { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
       NS_SCRIPTSECURITYMANAGER_CID, 
@@ -451,5 +457,12 @@ static const nsModuleComponentInfo components[] =
 };
 
 
-NS_IMPL_NSGETMODULE(nsSecurityManagerModule, components);
+void PR_CALLBACK
+CapsModuleDtor(nsIModule* thisModules)
+{
+    nsScriptSecurityManager::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsSecurityManagerModule, capsComponentInfo,
+                              CapsModuleDtor);
 

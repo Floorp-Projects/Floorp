@@ -4620,6 +4620,7 @@ NavigatorImpl::~NavigatorImpl()
 {
   NS_IF_RELEASE(mMimeTypes);
   NS_IF_RELEASE(mPlugins);
+  sPrefInternal_id = JSVAL_VOID;
 }
 
 //*****************************************************************************
@@ -4949,6 +4950,9 @@ NavigatorImpl::TaintEnabled(PRBool *aReturn)
   return NS_OK;
 }
 
+jsval
+NavigatorImpl::sPrefInternal_id = JSVAL_VOID;
+
 NS_IMETHODIMP
 NavigatorImpl::Preference()
 {
@@ -4985,7 +4989,10 @@ NavigatorImpl::Preference()
   NS_ENSURE_SUCCESS(rv, rv);
 
   //--Check to see if the caller is allowed to access prefs
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
+  if (sPrefInternal_id = JSVAL_VOID)
+    sPrefInternal_id = STRING_TO_JSVAL(::JS_InternString(cx, "preferenceinternal"));
+
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
       do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   PRUint32 action;
@@ -4993,8 +5000,9 @@ NavigatorImpl::Preference()
       action = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
   else
       action = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
-  rv = secMan->CheckPropertyAccess(cx, nsnull,
-                                   "Navigator", "preferenceinternal", action);
+
+  rv = secMan->CheckPropertyAccess(cx, nsnull, 
+                                   "Navigator", sPrefInternal_id, action);
   if (NS_FAILED(rv))
   {
       return NS_OK;

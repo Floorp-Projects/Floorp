@@ -61,7 +61,8 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  xultmpl \
 		  timer \
-      webbrwsr \
+		  webbrwsr \
+		  caps \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -185,6 +185,9 @@ protected:
   static JSString *sOnscroll_id;
   static JSString *sScrollIntoView_id;
   static JSString *sOpen_id;
+  static JSString *sItem_id;
+  static JSString *sEnumerate_id;
+
 
   static const JSClass *sObjectClass;
 };

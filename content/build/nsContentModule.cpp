@@ -49,6 +49,7 @@
 #include "nsDOMCID.h"
 #include "nsCSSOMFactory.h"
 #include "nsEventStateManager.h"
+#include "nsEventListenerManager.h"
 #include "nsGenericElement.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsHTMLAtoms.h"
@@ -225,6 +226,7 @@ Shutdown(nsIModule* aSelf)
   nsRange::Shutdown();
   nsGenericElement::Shutdown();
   nsGenericDOMDataNode::Shutdown();
+  nsEventListenerManager::Shutdown();
 
   // Release all of our atoms
   nsColorNames::ReleaseTable();

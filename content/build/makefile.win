@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout_xul \
 		  content_xul \
+		  caps \
 		  $(NULL)
 
 LCFLAGS = \
