@@ -112,21 +112,15 @@ struct InlineBackgroundData
   {
     SetFrame(aFrame);
 
-    nsSize size;
-    mFrame->GetSize(size);
-
     // Assume background-origin: border and return a rect with offsets
     // relative to (0,0).  If we have a different background-origin,
     // then our rect should be deflated appropriately by our caller.
-    return nsRect(-mContinuationPoint, 0, mUnbrokenWidth, size.height);
+    return nsRect(-mContinuationPoint, 0, mUnbrokenWidth, mFrame->GetSize().height);
   }
 
   nsRect GetBoundingRect(nsIFrame* aFrame)
   {
     SetFrame(aFrame);
-
-    nsPoint point;
-    mFrame->GetOrigin(point);
 
     // Move the offsets relative to (0,0) which puts the bounding box into
     // our coordinate system rather than our parent's.  We do this by
@@ -134,6 +128,7 @@ struct InlineBackgroundData
     // This also assumes background-origin: border, so our caller will
     // need to deflate us if needed.
     nsRect boundingBox(mBoundingBox);
+    nsPoint point = mFrame->GetPosition();
     boundingBox.MoveBy(-point.x, -point.y);
 
     return boundingBox;
@@ -161,9 +156,7 @@ protected:
 
     // Get our last frame's size and add its width to our continuation
     // point before we cache the new frame.
-    nsSize size;
-    mFrame->GetSize(size);
-    mContinuationPoint += size.width;
+    mContinuationPoint += mFrame->GetSize().width;
 
     mFrame = aFrame;
   }
@@ -175,9 +168,8 @@ protected:
     // is the total of the widths of the previous frames.
     aFrame->GetPrevInFlow(&inlineFrame);
 
-    nsRect rect;
     while (inlineFrame) {
-      inlineFrame->GetRect(rect);
+      nsRect rect = inlineFrame->GetRect();
       mContinuationPoint += rect.width;
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
@@ -188,7 +180,7 @@ protected:
     // unbroken width.
     inlineFrame = aFrame;
     while (inlineFrame) {
-      inlineFrame->GetRect(rect);
+      nsRect rect = inlineFrame->GetRect();
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
       inlineFrame->GetNextInFlow(&inlineFrame);
@@ -893,11 +885,6 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
   PRUint8 style = aDoOutline
                   ? aOutlineStyle->GetOutlineStyle()
                   : aBorderStyle->GetBorderStyle(startSide);  
-
-  // find out were x and y start
-  // XXX Unused variables
-  nscoord xstart = PR_MAX(aDirtyRect.x, borderInside.x);
-  nscoord ystart = PR_MAX(aDirtyRect.y, borderInside.y);
 
   // find the x and y width
   nscoord xwidth = aDirtyRect.XMost();
@@ -1609,8 +1596,7 @@ nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFra
   if (aFrame && aBGFrame) {
     *aBGFrame = aFrame; // default to the frame passed in
 
-    nsCOMPtr<nsIContent> pContent;
-    aFrame->GetContent(getter_AddRefs(pContent));
+    nsIContent* pContent = aFrame->GetContent();
     if (pContent) {
       // make sure that this is the HTML or BODY element
       nsCOMPtr<nsIAtom> tag;
@@ -1619,8 +1605,7 @@ nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFra
         if (tag.get() == nsHTMLAtoms::html ||
             tag.get() == nsHTMLAtoms::body) {
           // the frame is the body frame, so we provide the canvas frame
-          nsIFrame *pCanvasFrame = nsnull;
-          aFrame->GetParent(&pCanvasFrame);
+          nsIFrame *pCanvasFrame = aFrame->GetParent();
           while (pCanvasFrame) {
             nsCOMPtr<nsIAtom>  parentType;
             pCanvasFrame->GetFrameType(getter_AddRefs(parentType));
@@ -1628,7 +1613,7 @@ nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFra
               *aBGFrame = pCanvasFrame;
               break;
             }
-            pCanvasFrame->GetParent(&pCanvasFrame);
+            pCanvasFrame = pCanvasFrame->GetParent();
           }
         }// if tag == html or body
       }// if tag
@@ -2515,7 +2500,7 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
 static nsIFrame*
 GetNearestScrollFrame(nsIFrame* aFrame)
 {
-  for (nsIFrame* f = aFrame; f; f->GetParent(&f)) {
+  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
     nsCOMPtr<nsIAtom> frameType;
 
     // Is it a scroll frame?
@@ -2677,7 +2662,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
             *aBackground = kidFrame->GetStyleBackground();
             return PR_TRUE;
           } else {
-            kidFrame->GetNextSibling(&kidFrame); 
+            kidFrame = kidFrame->GetNextSibling(); 
           }
         }
         firstChild->FirstChild(aPresContext, nsnull, &firstChild);
@@ -2687,8 +2672,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
 
     // Check if we need to do propagation from BODY rather than HTML.
     if (result->IsTransparent()) {
-      nsCOMPtr<nsIContent> content;
-      aForFrame->GetContent(getter_AddRefs(content));
+      nsIContent* content = aForFrame->GetContent();
       if (content) {
         nsCOMPtr<nsIDOMNode> node( do_QueryInterface(content) );
         // Use |GetOwnerDocument| so it works during destruction.
@@ -2736,8 +2720,7 @@ FindElementBackground(nsIPresContext* aPresContext,
                       nsIFrame* aForFrame,
                       const nsStyleBackground** aBackground)
 {
-  nsIFrame *parentFrame;
-  aForFrame->GetParent(&parentFrame);
+  nsIFrame *parentFrame = aForFrame->GetParent();
   // XXXldb We shouldn't have to null-check |parentFrame| here.
   if (parentFrame && IsCanvasFrame(aPresContext, parentFrame) == parentFrame) {
     // Check that we're really the root (rather than in another child list).
@@ -2749,8 +2732,7 @@ FindElementBackground(nsIPresContext* aPresContext,
 
   *aBackground = aForFrame->GetStyleBackground();
 
-  nsCOMPtr<nsIContent> content;
-  aForFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = aForFrame->GetContent();
   if (!content || !content->IsContentOfType(nsIContent::eHTML))
     return PR_TRUE;  // not frame for an HTML element
   
@@ -2817,8 +2799,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     // bg, but there's no way to hook that up via css.
     const nsStyleDisplay* displayData = aForFrame->GetStyleDisplay();
     if (displayData->mAppearance) {
-      nsCOMPtr<nsIContent> content;
-      aForFrame->GetContent(getter_AddRefs(content));
+      nsIContent* content = aForFrame->GetContent();
       if (content) {
         nsCOMPtr<nsIContent> parent;
         content->GetParent(getter_AddRefs(parent));
@@ -2844,23 +2825,16 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     return;
   nsStyleBackground canvasColor(*color);
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsIViewManager> vm;
-  shell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = aPresContext->GetViewManager();
 
   if (canvasColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
     nsIView* rootView;
     vm->GetRootView(rootView);
-    nsIView* rootParent;
-    rootView->GetParent(rootParent);
-    if (!rootParent) {
+    if (!rootView->GetParent()) {
       PRBool widgetIsTranslucent = PR_FALSE;
 
-      nsCOMPtr<nsIWidget> rootWidget;
-      rootView->GetWidget(*getter_AddRefs(rootWidget));
-      if (rootWidget) {
-        rootWidget->GetWindowTranslucency(widgetIsTranslucent);
+      if (rootView->HasWidget()) {
+        rootView->GetWidget()->GetWindowTranslucency(widgetIsTranslucent);
       }
       
       if (!widgetIsTranslucent) {
@@ -2879,7 +2853,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   // attachment (root or BODY) or the stylesheet specifying that
   // attachment, set the BitBlt flag here as well.
   if (canvasColor.mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED) {
-    nsIView *view = aForFrame->GetView(aPresContext);
+    nsIView *view = aForFrame->GetView();
     if (view)
       vm->SetViewBitBltEnabled(view, PR_FALSE);
   }
@@ -3110,8 +3084,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     }
 
     if (scrolledFrame) {
-      scrolledFrame->GetRect(viewportArea);
-      viewportView = scrolledFrame->GetView(aPresContext);
+      viewportArea = scrolledFrame->GetRect();
+      viewportView = scrolledFrame->GetView();
     }
     else {
       // The viewport isn't scrollable, so use the root frame's view
@@ -3131,9 +3105,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
         rootFrame = page;
       }
 
-      viewportView = rootFrame->GetView(aPresContext);
+      viewportView = rootFrame->GetView();
       NS_ASSERTION(viewportView, "no viewport view");
-      viewportView->GetBounds(viewportArea);
+      viewportArea = viewportView->GetBounds();
       viewportArea.x = 0;
       viewportArea.y = 0;
 
@@ -3167,7 +3141,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
 
     // Convert the anchor point to aForFrame's coordinate space
-    nsIView* view = aForFrame->GetView(aPresContext);
+    nsIView* view = aForFrame->GetView();
     if (!view) {
       nsPoint offset;
       aForFrame->GetOffsetFromView(aPresContext, offset, &view);
@@ -3175,14 +3149,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     }
     NS_ASSERTION(view, "expected a view");
     while (view && (view != viewportView)) {
-      nscoord x, y;
-
-      view->GetPosition(&x, &y);
-      anchor.x -= x;
-      anchor.y -= y;
-
+      anchor -= view->GetPosition();
       // Get the parent view until we reach the viewport view
-      view->GetParent(view);
+      view = view->GetParent();
     }
   } else {
     if (frameType == nsLayoutAtoms::canvasFrame) {
@@ -3198,7 +3167,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
       // temporary null check -- see bug 97226
       if (firstRootElementFrame) {
-        firstRootElementFrame->GetRect(firstRootElementFrameArea);
+        firstRootElementFrameArea = firstRootElementFrame->GetRect();
 
         // Take the border out of the frame's rect
         const nsStyleBorder* borderStyle = firstRootElementFrame->GetStyleBorder();
@@ -4307,7 +4276,6 @@ GetDashInfo(nscoord  aBorderLength,
   }
   else {
     aNumDashSpaces = aBorderLength / (2 * aDashLength); // round down
-    nscoord foo = ((2 * aNumDashSpaces) - 1) * aDashLength;
     nscoord extra = aBorderLength - aStartDashLength - aEndDashLength - (((2 * aNumDashSpaces) - 1) * aDashLength);
     if (extra > 0) {
       nscoord half = RoundIntToPixel(extra / 2, aTwipsPerPixel);
