@@ -2866,7 +2866,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
   if (cgContent) { 
     cgContent->GetSpan(&span);
     nsIFrame* lastCol = aNewFrame;
-    nsStyleContext* styleContext;
+    nsStyleContext* styleContext = nsnull;
     for (PRInt32 spanX = 1; spanX < span; spanX++) {
       // The same content node should always resolve to the same style context.
       if (1 == spanX)
@@ -10688,7 +10688,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   // check for inline style.  we need to clear the data at the style
   // context's rule node whenever the inline style property changes.
 
-  nsStyleContext* styleContext;
+  nsStyleContext* styleContext = nsnull;
   nsCOMPtr<nsIStyleRule> rule;
   PRBool inlineStyle = PR_FALSE;
   if (aAttribute == nsHTMLAtoms::style) {
@@ -13428,7 +13428,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresShell* aPresShell,
                                             PRBool                   aParentIsBlock)
 {
   nsresult rv = NS_OK;
-  nsStyleContext* styleContext;
+  nsStyleContext* styleContext = nsnull;
 
   if (aCanHaveGeneratedContent) {
     // Probe for generated content before
@@ -13731,7 +13731,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
                                              PRBool*                  aKidsAllInline)
 {
   nsresult rv = NS_OK;
-  nsStyleContext* styleContext;
+  nsStyleContext* styleContext = nsnull;
 
   // save the pseudo frame state 
   nsPseudoFrames prevPseudoFrames; 
