@@ -49,6 +49,7 @@ require "globals.pl";
 use vars qw(@legal_product); # globals from er, globals.pl
 
 my $dir = "data/mining";
+my $graph_dir = "graphs";
 
 my @status = qw (NEW ASSIGNED REOPENED);
 my %bugsperperson;
@@ -500,10 +501,10 @@ FIN
     my $type = chart_image_type();
     my $data_file = daily_stats_filename($FORM{product});
     my $image_file = chart_image_name($data_file, $type);
-    my $url_image = "$dir/" . url_quote($image_file);
+    my $url_image = "$graph_dir/" . url_quote($image_file);
 
-    if (! -e "$dir/$image_file") {
-        generate_chart("$dir/$data_file", "$dir/$image_file", $type);
+    if (! -e "$graph_dir/$image_file") {
+        generate_chart("$dir/$data_file", "$graph_dir/$image_file", $type);
     }
     
     print <<FIN;
@@ -586,7 +587,7 @@ sub generate_chart {
             if (! defined $line[$i] or $line[$i] eq '') {
                 # no data point given, don't plot (this will probably
                 # generate loads of Chart::Base warnings, but that's not
-                # our fault.
+                # our fault.)
                 push @{$data{$field}}, undef;
             }
             else {

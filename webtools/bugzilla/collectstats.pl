@@ -32,10 +32,10 @@ use vars @::legal_product;
 require "globals.pl";
 
 # tidy up after graphing module
-chdir("data/mining");
-unlink <*.gif>; 
-unlink <*.png>;
-chdir("../..");
+chdir("graphs");
+unlink <./*.gif>; 
+unlink <./*.png>;
+chdir("..");
  
 ConnectToDatabase(1);
 GetVersionTable();
