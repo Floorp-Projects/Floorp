@@ -1293,8 +1293,7 @@ BookmarksService::DoAncestorsIncludeNode(BookmarkItem* bookmark, BookmarkItem* s
       return true;
 
     // If a match wasn't found, set up the next node to compare
-    nsCOMPtr<nsIContent> oldCurrent = current;
-    oldCurrent->GetParent(getter_AddRefs(current));
+    current = current->GetParent();
   }
   
   return false;
@@ -1383,8 +1382,7 @@ BookmarksService::IsBookmarkDropValid(BookmarkItem* proposedParent, int index, N
     if (!isCopy && [draggedItems count] == 1)
     {
       BookmarkItem* draggedItem = [draggedItems objectAtIndex:0];
-      nsCOMPtr<nsIContent> parentContent;
-      [draggedItem contentNode]->GetParent(getter_AddRefs(parentContent));
+      nsCOMPtr<nsIContent> parentContent = [draggedItem contentNode]->GetParent();
       PRInt32 childIndex;
       if (parentContent && NS_SUCCEEDED(parentContent->IndexOf([draggedItem contentNode], childIndex)))
       {
@@ -1449,7 +1447,7 @@ BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, BookmarkItem* before
     //  get the dragged nodes parent
     nsCOMPtr<nsIContent> draggedParent;
     if (draggedNode)
-      draggedNode->GetParent(getter_AddRefs(draggedParent));
+      draggedParent = draggedNode->GetParent();
 
     //  get the proposed parent
     nsCOMPtr<nsIContent> proposedParent = [parent contentNode];
@@ -1721,8 +1719,7 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
 
 - (BookmarkItem*)parentItem
 {
-  nsCOMPtr<nsIContent> parentContent;
-  mContentNode->GetParent(getter_AddRefs(parentContent));
+  nsCOMPtr<nsIContent> parentContent = mContentNode->GetParent();
 
   nsCOMPtr<nsIContent> rootContent;
   BookmarksService::GetRootContent(getter_AddRefs(rootContent));

@@ -132,8 +132,7 @@ const int kBookmarksRootItemTag = -2;
       if (!content)
         return;
 
-      nsCOMPtr<nsIContent> parentContent;
-      content->GetParent(getter_AddRefs(parentContent));
+      nsCOMPtr<nsIContent> parentContent = content->GetParent();
       nsCOMPtr<nsIContent> root;
       BookmarksService::GetRootContent(getter_AddRefs(root));
       
@@ -483,7 +482,7 @@ const int kBookmarksRootItemTag = -2;
 
   nsCOMPtr<nsIContent> parent;
   if (item)
-    item->GetParent(getter_AddRefs(parent));
+    parent = item->GetParent();
   if (parent)		// we're not the root
     bmItem = [[BookmarksManager sharedBookmarksManager] getWrapperForContent:item];
 

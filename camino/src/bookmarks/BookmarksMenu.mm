@@ -146,11 +146,10 @@
 
 - (NSMenu*)locateMenuForContent:(nsIContent*)content
 {
-  nsCOMPtr<nsIContent> parent;
   if (content == mRootContent)
     return mMenu;
 
-  content->GetParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIContent> parent = content->GetParent();
   if (!parent)
     return nil;		// not in our subtree
 
@@ -215,8 +214,7 @@
   BookmarkItem* bmItem 		= [bmManager getWrapperForContent:bookmark];
 
   // XXX fix to not use nsIContent
-  nsCOMPtr<nsIContent> parent;
-  bookmark->GetParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIContent> parent = bookmark->GetParent();
 
   NSMenu* menu = [self locateMenuForContent:parent];
   if (!menu) return;
