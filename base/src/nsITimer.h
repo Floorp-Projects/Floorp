@@ -35,15 +35,37 @@ typedef void
 
 /**
  * Timer class, used to invoke a function or method after a fixed
- * millisecond interval.
+ * millisecond interval. <B>Note that this interface is subject to
+ * change!</B>
  */
 class nsITimer : public nsISupports {
 public:  
+  /**
+   * Initialize a timer to fire after the given millisecond interval.
+   * This version takes a function to call and a closure to pass to
+   * that function.
+   *
+   * @param aFunc - The function to invoke
+   * @param aClosure - an opaque pointer to pass to that function
+   * @param aRepeat - (Not yet implemented) One-shot or repeating
+   * @param aDelay - The millisecond interval
+   * @result - NS_OK if this operation was successful
+   */
   virtual nsresult Init(nsTimerCallbackFunc aFunc,
                         void *aClosure,
 //                      PRBool aRepeat, 
                         PRUint32 aDelay)=0;
 
+  /**
+   * Initialize a timer to fire after the given millisecond interval.
+   * This version takes an interface of type <code>nsITimerCallback</code>. 
+   * The <code>Notify</code> method of this method is invoked.
+   *
+   * @param aCallback - The interface to notify
+   * @param aRepeat - (Not yet implemented) One-shot or repeating
+   * @param aDelay - The millisecond interval
+   * @result - NS_OK if this operation was successful
+   */
   virtual nsresult Init(nsITimerCallback *aCallback,
 //                      PRBool aRepeat, 
                         PRUint32 aDelay)=0;
@@ -51,8 +73,10 @@ public:
   /// Cancels the timeout
   virtual void Cancel()=0;
 
+  /// @return the millisecond delay of the timeout
   virtual PRUint32 GetDelay()=0;
 
+  /// Change the millisecond interval for the timeout
   virtual void SetDelay(PRUint32 aDelay)=0;
 };
 
