@@ -71,7 +71,7 @@ protected:
                     nsISupportsArray *deletedArray);
   nsresult DoCommand(nsIRDFCompositeDataSource *db, const nsACString& command,
                      nsISupportsArray *srcArray, nsISupportsArray *arguments);
-  nsAdoptingString GetString(const nsAFlatString& aStringName);
+  const nsAdoptingString GetString(const nsAFlatString& aStringName);
   nsresult InitStringBundle();
 
 private:

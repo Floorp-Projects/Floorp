@@ -2073,7 +2073,7 @@ nsMessenger::InitStringBundle()
     return res;
 }
 
-nsAdoptingString
+const nsAdoptingString
 nsMessenger::GetString(const nsAFlatString& aStringName)
 {
     nsresult rv = NS_OK;
