@@ -52,6 +52,13 @@ build from sources you can easily set the dataDir as an option to configure.
 you'll want to make sure to add mysqld to your init scripts so the server
 daemon will come back up whenever your machine reboots.
 
+  You also may want to edit those init scripts, to make sure that mysqld will
+accept large packets.  By default, mysqld is set up to only accept packets up
+to 64K long.  This limits the size of attachments you may put on bugs.  If you
+add something like "-O max_allowed_packet=1M" to the command that starts mysqld
+(or safe_mysqld), then you will be able to have attachments up to about 1
+megabyte.
+
 1.2. Perl (5.004 or greater)
 
   Any machine that doesn't have perl on it is a sad machine indeed.  Perl
