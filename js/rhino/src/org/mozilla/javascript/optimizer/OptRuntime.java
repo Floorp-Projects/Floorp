@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s):
@@ -277,7 +277,7 @@ public final class OptRuntime extends ScriptRuntime {
                 getMessage("msg.isnt.function", errorArgs));
         }
 
-        return function.call(cx, function.getParentScope(), thisArg, args);
+        return function.call(cx, scope, thisArg, args);
     }
     
     public static Object thisGet(Scriptable thisObj, String id, 

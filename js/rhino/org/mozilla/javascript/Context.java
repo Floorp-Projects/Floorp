@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
@@ -1607,6 +1607,30 @@ public final class Context {
             hashtable = new Hashtable();
         hashtable.put(key, value);
     }
+    
+    /**
+     * Return whether functions are compiled by this context using
+     * dynamic scope.
+     * <p>
+     * If functions are compiled with dynamic scope, then they execute
+     * in the scope of their caller, rather than in their parent scope.
+     * This is useful for sharing functions across multiple scopes.
+     * @since 1.5 Release 1
+     */
+    public boolean hasCompileFunctionsWithDynamicScope() {
+        return compileFunctionsWithDynamicScopeFlag;
+    }
+    
+    /**
+     * Set whether functions compiled by this context should use
+     * dynamic scope.
+     * <p>
+     * @param flag if true, compile functions with dynamic scope
+     * @since 1.5 Release 1
+     */
+    public void setCompileFunctionsWithDynamicScope(boolean flag) {
+        compileFunctionsWithDynamicScopeFlag = flag;
+    }
 
     /********** end of API **********/
 
@@ -1915,6 +1939,7 @@ public final class Context {
     private Locale locale;
     private boolean generatingDebug;
     private boolean generatingSource=true;
+    private boolean compileFunctionsWithDynamicScopeFlag;
     private int optimizationLevel;
     private SourceTextManager debug_stm;
     private DeepScriptHook debug_scriptHook;

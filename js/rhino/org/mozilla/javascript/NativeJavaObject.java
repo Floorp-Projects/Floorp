@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -219,8 +219,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         if (converter == null) {
             Object[] errArgs = { converterName, javaObject.getClass().getName() };
             throw Context.reportRuntimeError(
-                                             Context.getMessage("msg.java.conversion.implicit_method",
-                                                                errArgs));
+                    Context.getMessage("msg.java.conversion.implicit_method",
+                                       errArgs));
         }
         return callConverter(converter);
     }
@@ -239,7 +239,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             // fall through to error message
         }
         throw Context.reportRuntimeError(
-                                         Context.getMessage("msg.default.value", null));
+            Context.getMessage("msg.default.value", null));
     }
 
 

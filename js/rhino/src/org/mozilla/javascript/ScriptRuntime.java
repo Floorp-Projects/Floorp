@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
@@ -1281,12 +1281,12 @@ public class ScriptRuntime {
         }
 
         Scriptable thisObj;
-        if (thisArg instanceof Scriptable) {
+        if (thisArg instanceof Scriptable || thisArg == null) {
             thisObj = (Scriptable) thisArg;
         } else {
             thisObj = ScriptRuntime.toObject(scope, thisArg);
         }
-        return function.call(cx, function.getParentScope(), thisObj, args);
+        return function.call(cx, scope, thisObj, args);
     }
 
     private static Object callOrNewSpecial(Context cx, Scriptable scope,

@@ -15,10 +15,12 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
+ * Ted Neward
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -207,6 +209,9 @@ public class FunctionObject extends NativeFunction {
 
         setParentScope(scope);
         setPrototype(getFunctionPrototype(scope));
+        Context cx = Context.getCurrentContext();
+        useDynamicScope = cx != null && 
+                          cx.hasCompileFunctionsWithDynamicScope();
     }
 
     /**
@@ -289,14 +294,13 @@ public class FunctionObject extends NativeFunction {
      * @param name the name of the methods to find
      * @return an array of the found methods, or null if no methods
      *         by that name were found.
-     * @see java.lang.Class#getMethods
+     * @see java.lang.Class#getDeclaredMethods
      */
     public static Method[] findMethods(Class clazz, String name) {
         Vector v = new Vector(5);
-        Method[] methods = clazz.getMethods();
+        Method[] methods = clazz.getDeclaredMethods();
         for (int i=0; i < methods.length; i++) {
-            if (methods[i].getDeclaringClass() == clazz &&
-                methods[i].getName().equals(name)){
+            if (methods[i].getName().equals(name)) {
                 v.addElement(methods[i]);
             }
         }
@@ -401,11 +405,14 @@ public class FunctionObject extends NativeFunction {
             // OPT: cache "clazz"?
             Class clazz = method != null ? method.getDeclaringClass()
                                          : ctor.getDeclaringClass();
-            if (!clazz.isInstance(thisObj)) {
-                // Couldn't find an object to call this on.
-                Object[] errArgs = { names[0] };
-                String msg = Context.getMessage("msg.incompat.call", errArgs);
-                throw NativeGlobal.constructError(cx, "TypeError", msg, scope);
+            while (!clazz.isInstance(thisObj)) {
+                thisObj = thisObj.getPrototype();
+                if (thisObj == null || !useDynamicScope) {
+                    // Couldn't find an object to call this on.
+                    Object[] errArgs = { names[0] };
+                    String msg = Context.getMessage("msg.incompat.call", errArgs);
+                    throw NativeGlobal.constructError(cx, "TypeError", msg, scope);
+                }
             }
         }
         Object[] invokeArgs;
@@ -563,4 +570,5 @@ public class FunctionObject extends NativeFunction {
     private short lengthPropertyValue;
     private boolean hasVoidReturn;
     private boolean isStatic;
+    private boolean useDynamicScope;
 }

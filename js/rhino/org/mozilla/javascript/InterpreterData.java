@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -44,7 +44,8 @@ class InterpreterData {
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
     
     InterpreterData(int lastICodeTop, int lastStringTableIndex, 
-                    int lastNumberTableIndex, Object securityDomain)
+                    int lastNumberTableIndex, Object securityDomain,
+                    boolean useDynamicScope)
     {
         itsICodeTop = lastICodeTop == 0 
                       ? INITIAL_MAX_ICODE_LENGTH
@@ -59,6 +60,7 @@ class InterpreterData {
                                     ? INITIAL_NUMBERTABLE_SIZE
                                     : lastNumberTableIndex * 2];
         
+        itsUseDynamicScope = useDynamicScope;
         if (securityDomain == null && Context.isSecurityDomainRequired())
             throw new SecurityException("Required security context missing");
         this.securityDomain = securityDomain;
@@ -71,6 +73,7 @@ class InterpreterData {
     String itsSourceFile;
     boolean itsNeedsActivation;
     boolean itsFromEvalCode;
+    boolean itsUseDynamicScope;
 
     String[] itsStringTable;
     int itsStringTableIndex;

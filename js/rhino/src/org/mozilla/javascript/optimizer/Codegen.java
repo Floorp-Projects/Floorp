@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s):
@@ -1468,6 +1468,16 @@ public class Codegen extends Interpreter {
         contextLocal = reserveWordLocal(1);
         variableObjectLocal = reserveWordLocal(2);
         thisObjLocal = reserveWordLocal(3);
+
+        if (!cx.hasCompileFunctionsWithDynamicScope()) {
+            aload(funObjLocal);
+            classFile.add(ByteCode.INVOKEINTERFACE,
+                          "org/mozilla/javascript/Scriptable",
+                          "getParentScope",
+                          "()", 
+                          "Lorg/mozilla/javascript/Scriptable;");
+            astore(variableObjectLocal);
+        }
 
         if (directParameterCount > 0) {
             for (int i = 0; i < (3 * directParameterCount); i++)

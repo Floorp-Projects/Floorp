@@ -15,11 +15,12 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
  * Patrick Beard
+ * Norris Boyd
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -61,7 +62,8 @@ public class Interpreter extends LabelTable {
         throws IOException
     {
         version = cx.getLanguageVersion();
-        itsData = new InterpreterData(0, 0, 0, securityDomain);
+        itsData = new InterpreterData(0, 0, 0, securityDomain, 
+                    cx.hasCompileFunctionsWithDynamicScope());
         if (tree instanceof FunctionNode) {
             FunctionNode f = (FunctionNode) tree;
             InterpretedFunction result = 
@@ -137,7 +139,8 @@ public class Interpreter extends LabelTable {
             FunctionNode def = (FunctionNode)itsFunctionList.elementAt(i);
             Interpreter jsi = new Interpreter();
             jsi.itsSourceFile = itsSourceFile;
-            jsi.itsData = new InterpreterData(0, 0, 0, securityDomain);
+            jsi.itsData = new InterpreterData(0, 0, 0, securityDomain,
+                            cx.hasCompileFunctionsWithDynamicScope());
             jsi.itsInFunctionFlag = true;
             itsNestedFunctions[i] = jsi.generateFunctionICode(cx, scope, def, 
                                                               securityDomain);
@@ -1414,7 +1417,7 @@ public class Interpreter extends LabelTable {
                     case TokenStream.EQ :
                         rhs = stack[stackTop--];
                         lhs = stack[stackTop];
-                        stack[stackTop] = ScriptRuntime.eqB(rhs, lhs);
+                        stack[stackTop] = ScriptRuntime.eqB(lhs, rhs);
                         break;
                     case TokenStream.NE :
                         rhs = stack[stackTop--];
@@ -1661,8 +1664,13 @@ public class Interpreter extends LabelTable {
                             lhs = getString(theData.itsStringTable, iCode, 
                                             pc + 1);
                         }
+                        Scriptable calleeScope = scope;
+                        if (theData.itsNeedsActivation) {
+                            calleeScope = ScriptableObject.getTopLevelScope(scope);
+                        }
                         stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs, 
-                                                             outArgs, scope);
+                                                             outArgs, 
+                                                             calleeScope);
                         pc += 4;                                                            
                         break;
                     case TokenStream.NEW :

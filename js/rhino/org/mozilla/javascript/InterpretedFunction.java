@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -74,6 +74,8 @@ class InterpretedFunction extends NativeFunction {
         itsData.itsCX = cx;
         if (itsClosure != null)
         	scope = itsClosure;
+        else if (!itsData.itsUseDynamicScope)
+            scope = getParentScope();
         if (itsData.itsNeedsActivation)
             scope = ScriptRuntime.initVarObj(cx, scope, this, thisObj, args);
         itsData.itsScope = scope;
