@@ -38,6 +38,7 @@ class nsIContent;
 class nsIListControlFrame : public nsISupports {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILISTCONTROLFRAME_IID)
 
   /**
    * Sets the ComboBoxFrame
@@ -50,12 +51,6 @@ public:
    *
    */
   NS_IMETHOD GetSelectedItem(nsString & aStr) = 0;
-
-  /**
-   * Tells the list it is about to drop down
-   *
-   */
-  NS_IMETHOD AboutToDropDown() = 0;
 
   /**
    * Initiates mouse capture for the listbox
