@@ -103,10 +103,14 @@
 
       addContextMenuItemListeners : function (aEvent) {
         var contextPopup = document.getElementById("contentAreaContextSet");
-        contextPopup.addEventListener("popupshowing", cookieContextMenu.initImageBlocking, false);
+        if (contextPopup)
+          contextPopup.addEventListener("popupshowing", cookieContextMenu.initImageBlocking, false);
+
+        var mailContextPopup = document.getElementById("messagePaneContext");
+        if (mailContextPopup)
+          mailContextPopup.addEventListener("popupshowing", cookieContextMenu.initImageBlocking, false);
       }
     }
-
     window.addEventListener("load", cookieContextMenu.addContextMenuItemListeners, false);
 
    ]]>
@@ -125,4 +129,19 @@
               oncommand="cookieContextMenu.unblockImage();"
               insertafter="context-viewimage"/>
   </popup>
+
+  <!-- Mail Message Pane context menu -->
+  <popup id="messagePaneContext">
+    <menuitem id="context-blockimage"
+              label="&blockImageCmd.label;"
+              accesskey=""
+              oncommand="cookieContextMenu.blockImage();"
+              insertafter="context-viewimage"/>
+    <menuitem id="context-unblockimage"
+              label="&unblockImageCmd.label;"
+              accesskey=""
+              oncommand="cookieContextMenu.unblockImage();"
+              insertafter="context-viewimage"/>
+  </popup>
+  
 </overlay>

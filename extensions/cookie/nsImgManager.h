@@ -43,6 +43,7 @@
 #include "nsIContentPolicy.h"
 #include "nsCOMPtr.h"
 #include "nsIIOService.h"
+#include "nsIDocShell.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +62,8 @@ public:
   nsresult Init();
 
 protected:
+  NS_IMETHOD GetRootDocShell(nsIDOMWindow *aWindow, nsIDocShell **result);
+
   // cached IOService
   nsCOMPtr<nsIIOService>       mIOService;
 

@@ -847,6 +847,7 @@ cookie_isFromMailNews(char *firstURL, nsIIOService* ioService) {
   
   return (schemeString.Equals(NS_LITERAL_CSTRING("imap")) || 
           schemeString.Equals(NS_LITERAL_CSTRING("news")) ||
+          schemeString.Equals(NS_LITERAL_CSTRING("snews")) ||
           schemeString.Equals(NS_LITERAL_CSTRING("mailbox")));
 }
 
