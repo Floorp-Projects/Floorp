@@ -28,7 +28,7 @@ EXPORTS	= rdf.h \
 	nsIRDFDataBase.h \
 	nsIRDFObserver.h \
 	nsIRDFCursor.h \
-        nsRDFCIDs.h \
+        nsRDFCID.h \
 	htrdf.h \
 	vocab.h \
 	jsec2rdf.h \

@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsRDFCIDs_h__
-#define nsRDFCIDs_h__
+#ifndef nsRDFCID_h__
+#define nsRDFCID_h__
 
 // {2564E6E0-79C9-11d2-B51D-000000000000}
 #define NS_RDFTREEDATAMODEL_CID \
@@ -28,4 +28,4 @@
 { 0x6b13a9c0, 0x79c9, 0x11d2, { 0xb5, 0x1d, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
 
-#endif // nsRDFCIDs_h__
+#endif // nsRDFCID_h__
