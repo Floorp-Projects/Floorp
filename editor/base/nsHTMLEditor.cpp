@@ -308,40 +308,31 @@ nsHTMLEditor::~nsHTMLEditor()
       selection->RemoveSelectionListener(listener); 
     }
   }
-  // Don't use getDocument here, because we have no way of knowing if
-  // Init() was ever called.  So we need to get the document ourselves,
-  // if it exists.
-  if (mDocWeak)
+  nsCOMPtr<nsIDOMEventReceiver> erP;
+  result = GetDOMEventReceiver(getter_AddRefs(erP));
+  if (NS_SUCCEEDED(result) && erP) 
   {
-    nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-    if (doc)
-    {
-      nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(doc, &result);
-      if (NS_SUCCEEDED(result) && erP) 
-      {
-        if (mKeyListenerP) {
-          erP->RemoveEventListenerByIID(mKeyListenerP, NS_GET_IID(nsIDOMKeyListener));
-        }
-        if (mMouseListenerP) {
-          erP->RemoveEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
-        }
-        if (mTextListenerP) {
-          erP->RemoveEventListenerByIID(mTextListenerP, NS_GET_IID(nsIDOMTextListener));
-        }
-         if (mCompositionListenerP) {
-          erP->RemoveEventListenerByIID(mCompositionListenerP, NS_GET_IID(nsIDOMCompositionListener));
-        }
-        if (mFocusListenerP) {
-          erP->RemoveEventListenerByIID(mFocusListenerP, NS_GET_IID(nsIDOMFocusListener));
-        }
-        if (mDragListenerP) {
-            erP->RemoveEventListenerByIID(mDragListenerP, NS_GET_IID(nsIDOMDragListener));
-        }
-      }
-      else
-        NS_NOTREACHED("~nsTextEditor");
+    if (mKeyListenerP) {
+      erP->RemoveEventListenerByIID(mKeyListenerP, NS_GET_IID(nsIDOMKeyListener));
+    }
+    if (mMouseListenerP) {
+      erP->RemoveEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
+    }
+    if (mTextListenerP) {
+      erP->RemoveEventListenerByIID(mTextListenerP, NS_GET_IID(nsIDOMTextListener));
+    }
+     if (mCompositionListenerP) {
+      erP->RemoveEventListenerByIID(mCompositionListenerP, NS_GET_IID(nsIDOMCompositionListener));
+    }
+    if (mFocusListenerP) {
+      erP->RemoveEventListenerByIID(mFocusListenerP, NS_GET_IID(nsIDOMFocusListener));
+    }
+    if (mDragListenerP) {
+        erP->RemoveEventListenerByIID(mDragListenerP, NS_GET_IID(nsIDOMDragListener));
     }
   }
+  else
+    NS_NOTREACHED("~nsTextEditor");
 
   NS_IF_RELEASE(mTypeInState);
 }
@@ -599,32 +590,9 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
     return result;
   }
 
-  // get the DOM event receiver
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsEditor::GetDocument(getter_AddRefs(domdoc));
   nsCOMPtr<nsIDOMEventReceiver> erP;
-  nsCOMPtr<nsIDOMElement> rootElement;
-  GetRootElement(getter_AddRefs(rootElement));
-  //now hack to make sure we are not anonymous content if we are grab the parent of root element for our observer
+  result = GetDOMEventReceiver(getter_AddRefs(erP));
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
-  if (content)
-  {
-    nsCOMPtr<nsIContent> parent;
-    if (NS_SUCCEEDED(content->GetParent(*getter_AddRefs(parent))) && parent)
-    {
-      PRInt32 index;
-      if (NS_FAILED(parent->IndexOf(content, index)) || index<0 )
-      {
-        rootElement = do_QueryInterface(parent); //this will put listener on the form element basically
-        result = rootElement->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
-      }
-      else
-        rootElement = 0;//let the event receiver work on the document instead of the root element
-    }
-  }
-  if (!rootElement && domdoc)
-    result = domdoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
   //end hack
   if (NS_FAILED(result)) {
     HandleEventListenerError();
@@ -2189,6 +2157,64 @@ nsresult nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
   return result;
 }
 
+nsresult 
+nsHTMLEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver) 
+{ 
+  if (!aEventReceiver) 
+    return NS_ERROR_NULL_POINTER; 
+
+  *aEventReceiver = 0; 
+
+  nsCOMPtr<nsIDOMElement> rootElement; 
+
+  nsresult result = GetRootElement(getter_AddRefs(rootElement)); 
+
+  if (NS_FAILED(result)) 
+    return result; 
+
+  if (!rootElement) 
+    return NS_ERROR_FAILURE; 
+
+  // Now hack to make sure we are not anonymous content. 
+  // If we are grab the parent of root element for our observer. 
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement); 
+
+  if (content) 
+  { 
+    nsCOMPtr<nsIContent> parent; 
+    if (NS_SUCCEEDED(content->GetParent(*getter_AddRefs(parent))) && parent) 
+    { 
+      PRInt32 index; 
+      if (NS_FAILED(parent->IndexOf(content, index)) || index < 0 ) 
+      { 
+        rootElement = do_QueryInterface(parent); //this will put listener on the form element basically 
+        result = rootElement->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void **)aEventReceiver); 
+      } 
+      else 
+        rootElement = 0; // Let the event receiver work on the document instead of the root element 
+    } 
+  } 
+  else 
+    rootElement = 0; 
+
+  if (!rootElement && mDocWeak) 
+  { 
+    // Don't use getDocument here, because we have no way of knowing if 
+    // Init() was ever called.  So we need to get the document ourselves, 
+    // if it exists. 
+
+    nsCOMPtr<nsIDOMDocument> domdoc = do_QueryReferent(mDocWeak); 
+
+    if (!domdoc) 
+      return NS_ERROR_FAILURE; 
+
+    result = domdoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void **)aEventReceiver); 
+  } 
+
+  return result; 
+} 
+  
 NS_IMETHODIMP 
 nsHTMLEditor::SetCaretToDocumentStart()
 {
@@ -3592,7 +3618,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
       res = enumerator->CurrentItem(getter_AddRefs(currentItem));
       if ((NS_SUCCEEDED(res)) && currentItem)
       {
-        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        nsCOMPtr<nsIDOMRange> currange( do_QueryInterface(currentItem) );
         nsCOMPtr<nsIContentIterator> iter;
         res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
                                                     NS_GET_IID(nsIContentIterator), 
@@ -3600,7 +3626,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
         // XXX: ERROR_HANDLING  XPCOM usage
         if ((NS_SUCCEEDED(res)) && iter)
         {
-          iter->Init(range);
+          iter->Init(currange);
           // loop through the content iterator for each content node
           nsCOMPtr<nsIContent> content;
           while (NS_ENUMERATOR_FALSE == iter->IsDone())
@@ -5131,6 +5157,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
                 wc = (PRUint32)wrapColumn;
             }
           }
+          printf("Editor: getting output with wrapcol = %d (GetBodyWrapWidth returned %d\n", wc, wrapColumn);
           return selection->ToString(aFormatType, aFlags, wc, aOutputString);
         }
       }

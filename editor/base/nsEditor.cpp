@@ -4991,7 +4991,13 @@ nsresult nsEditor::EndUpdateViewBatch()
   if (NS_FAILED(rv) || !selCon)
     return rv?rv:NS_ERROR_FAILURE;
     
-  StCaretHider caretHider(selCon);
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsICaret> caret;
+  if (ps)
+    rv = ps->GetCaret(getter_AddRefs(caret));
+  if (NS_FAILED(rv) ||!caret)
+    return rv?rv:NS_ERROR_FAILURE;
+  StCaretHider caretHider(caret);
         
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
