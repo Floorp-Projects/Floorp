@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.35 2001/06/23 13:13:03 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.36 2001/06/27 00:33:17 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -197,7 +197,10 @@ nsNSSCertTrust::nsNSSCertTrust(unsigned int ssl,
 
 nsNSSCertTrust::nsNSSCertTrust(CERTCertTrust *t)
 {
-  memcpy(&mTrust, t, sizeof(CERTCertTrust));
+  if (t)
+    memcpy(&mTrust, t, sizeof(CERTCertTrust));
+  else
+    memset(&mTrust, 0, sizeof(CERTCertTrust)); 
 }
 
 nsNSSCertTrust::~nsNSSCertTrust()
@@ -980,6 +983,9 @@ nsNSSCertificate::verifyFailed(PRUint32 *_verified)
   case EMAIL_CERT:   /* fall through */
   case USER_CERT:    certUsage = certUsageEmailRecipient; break;
   case CA_CERT:      certUsage = certUsageSSLCA;          break;
+  // Chances are if we don't know the cert type, it's because 
+  // of an SSL site we're visiting.
+  default: 
   case SERVER_CERT:  certUsage = certUsageSSLServer;      break;
   }
   CERT_VerifyCertNow(CERT_GetDefaultCertDB(), mCert, PR_TRUE, certUsage, NULL);
@@ -1020,6 +1026,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
 {
   nsresult rv;
   int tmpCount = 0;
+
   CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv)) return rv; 
