@@ -35,79 +35,90 @@ pref("category.thread_columns_win",         "");
 pref("news.category_columns_win",           "");
 
 
-pref("font.name.serif.x-western", "Times New Roman");
-pref("font.name.sans-serif.x-western", "Arial");
-pref("font.name.monospace.x-western", "Courier New");
+pref("font.name.serif.ar", "Times New Roman");
+pref("font.name.sans-serif.ar", "Arial");
+pref("font.name.monospace.ar", "Courier New");
+pref("font.name.cursive.ar", "XXX.cursive");
+pref("font.name.fantasy.ar", "XXX.fantasy");
+
+pref("font.name.serif.el", "Times New Roman");
+pref("font.name.sans-serif.el", "Arial");
+pref("font.name.monospace.el", "Courier New");
+pref("font.name.cursive.el", "XXX.cursive");
+pref("font.name.fantasy.el", "XXX.fantasy");
+
+pref("font.name.serif.he", "Times New Roman");
+pref("font.name.sans-serif.he", "Arial");
+pref("font.name.monospace.he", "Courier New");
+pref("font.name.cursive.he", "XXX.cursive");
+pref("font.name.fantasy.he", "XXX.fantasy");
+
+pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
+pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
+pref("font.name.monospace.ja", "ＭＳ ゴシック"); // "MS Gothic"
+pref("font.name.cursive.ja", "XXX.cursive");
+pref("font.name.fantasy.ja", "XXX.fantasy");
+
+pref("font.name.serif.ko", "굴림체"); // "GulimChe" 
+pref("font.name.sans-serif.ko", "굴림체"); // "GulimChe" 
+pref("font.name.monospace.ko", "굴림체"); // "GulimChe" 
+pref("font.name.cursive.ko", "XXX.cursive");
+pref("font.name.fantasy.ko", "XXX.fantasy");
+
+pref("font.name.serif.th", "Times New Roman");
+pref("font.name.sans-serif.th", "Arial");
+pref("font.name.monospace.th", "Courier New");
+pref("font.name.cursive.th", "XXX.cursive");
+pref("font.name.fantasy.th", "XXX.fantasy");
+
+pref("font.name.serif.tr", "Times New Roman");
+pref("font.name.sans-serif.tr", "Arial");
+pref("font.name.monospace.tr", "Courier New");
+pref("font.name.cursive.tr", "XXX.cursive");
+pref("font.name.fantasy.tr", "XXX.fantasy");
+
+pref("font.name.serif.x-baltic", "Times New Roman");
+pref("font.name.sans-serif.x-baltic", "Arial");
+pref("font.name.monospace.x-baltic", "Courier New");
+pref("font.name.cursive.x-baltic", "XXX.cursive");
+pref("font.name.fantasy.x-baltic", "XXX.fantasy");
+
+pref("font.name.serif.x-central-euro", "Times New Roman");
+pref("font.name.sans-serif.x-central-euro", "Arial");
+pref("font.name.monospace.x-central-euro", "Courier New");
+pref("font.name.cursive.x-central-euro", "XXX.cursive");
+pref("font.name.fantasy.x-central-euro", "XXX.fantasy");
+
+pref("font.name.serif.x-cyrillic", "Times New Roman");
+pref("font.name.sans-serif.x-cyrillic", "Arial");
+pref("font.name.monospace.x-cyrillic", "Courier New");
+pref("font.name.cursive.x-cyrillic", "XXX.cursive");
+pref("font.name.fantasy.x-cyrillic", "XXX.fantasy");
 
 pref("font.name.serif.x-unicode", "Times New Roman");
 pref("font.name.sans-serif.x-unicode", "Arial");
 pref("font.name.monospace.x-unicode", "Courier New");
+pref("font.name.cursive.x-unicode", "XXX.cursive");
+pref("font.name.fantasy.x-unicode", "XXX.fantasy");
 
-pref("intl.font2.win.mimecharset",  "iso-8859-1");
-pref("intl.font2.win.prop_font",    "Times New Roman");
-pref("intl.font2.win.prop_size",    12);
-pref("intl.font2.win.fixed_font",   "Courier New");
-pref("intl.font2.win.fixed_size",   10);
+pref("font.name.serif.x-western", "Times New Roman");
+pref("font.name.sans-serif.x-western", "Arial");
+pref("font.name.monospace.x-western", "Courier New");
+pref("font.name.cursive.x-western", "XXX.cursive");
+pref("font.name.fantasy.x-western", "XXX.fantasy");
 
-pref("intl.font260.win.mimecharset",    "Shift_JIS");
-pref("intl.font260.win.prop_font",      "Times New Roman");
-pref("intl.font260.win.prop_size",      10);
-pref("intl.font260.win.fixed_font",     "Courier New");
-pref("intl.font260.win.fixed_size",     10);
+pref("font.name.serif.zh-CN", "MS Song");
+pref("font.name.sans-serif.zh-CN", "MS Hei");
+pref("font.name.monospace.zh-CN", "MS Hei");
+pref("font.name.cursive.zh-CN", "XXX.cursive");
+pref("font.name.fantasy.zh-CN", "XXX.fantasy");
 
-pref("intl.font263.win.mimecharset",    "big5");
-pref("intl.font263.win.prop_font",  "Times New Roman");
-pref("intl.font263.win.prop_size",  12);
-pref("intl.font263.win.fixed_font", "Courier New");
-pref("intl.font263.win.fixed_size", 10);
+pref("font.name.serif.zh-TW", "細明體"); // "MingLiU" 
+pref("font.name.sans-serif.zh-TW", "細明體"); // "MingLiU" 
+pref("font.name.monospace.zh-TW", "細明體"); // "MingLiU" 
+pref("font.name.cursive.zh-TW", "XXX.cursive");
+pref("font.name.fantasy.zh-TW", "XXX.fantasy");
 
-pref("intl.font1292.win.mimecharset",   "euc-kr");
-pref("intl.font1292.win.prop_font", "Times New Roman");
-pref("intl.font1292.win.prop_size", 12);
-pref("intl.font1292.win.fixed_font",    "Courier New");
-pref("intl.font1292.win.fixed_size",    10);
-
-pref("intl.font264.win.mimecharset",    "gb2312");
-pref("intl.font264.win.prop_font",  "Times New Roman");
-pref("intl.font264.win.prop_size",  12);
-pref("intl.font264.win.fixed_font", "Courier New");
-pref("intl.font264.win.fixed_size", 10);
-
-pref("intl.font44.win.mimecharset", "windows-1250");
-pref("intl.font44.win.prop_font",   "Times New Roman");
-pref("intl.font44.win.prop_size",   12);
-pref("intl.font44.win.fixed_font",  "Courier New");
-pref("intl.font44.win.fixed_size",  10);
-
-pref("intl.font41.win.mimecharset", "windows-1251");
-pref("intl.font41.win.prop_font",   "Times New Roman");
-pref("intl.font41.win.prop_size",   12);
-pref("intl.font41.win.fixed_font",  "Courier New");
-pref("intl.font41.win.fixed_size",  10);
-
-pref("intl.font43.win.mimecharset", "windows-1253");
-pref("intl.font43.win.prop_font",   "Times New Roman");
-pref("intl.font43.win.prop_size",   12);
-pref("intl.font43.win.fixed_font",  "Courier New");
-pref("intl.font43.win.fixed_size",  10);
-
-pref("intl.font20.win.mimecharset", "iso-8859-9");
-pref("intl.font20.win.prop_font",   "Times New Roman");
-pref("intl.font20.win.prop_size",   12);
-pref("intl.font20.win.fixed_font",  "Courier New");
-pref("intl.font20.win.fixed_size",  10);
-
-pref("intl.font290.win.mimecharset",    "utf-8");
-pref("intl.font290.win.prop_font",  "Times New Roman");
-pref("intl.font290.win.prop_size",  12);
-pref("intl.font290.win.fixed_font", "Courier New");
-pref("intl.font290.win.fixed_size", 10);
-
-pref("intl.font254.win.mimecharset",    "x-user-defined");
-pref("intl.font254.win.prop_font",  "Times New Roman");
-pref("intl.font254.win.prop_size",  12);
-pref("intl.font254.win.fixed_font", "Courier New");
-pref("intl.font254.win.fixed_size", 10);
 
 pref("taskbar.x",                           -1); 
 pref("taskbar.y",                           -1);
