@@ -26,15 +26,8 @@ include <$(DEPTH)\config\rules.mak>
 
 FILES=\
 	profile.css				\
-	createProfileWizard.css	\
-	profileManager.css		\
-	pwiz_panels.css                 \
-	header.gif			\
-	profileSelection.css		\
-	profileicon-selected.gif        \
-        profileicon.gif                 \
-        profileicon-large.gif           \
-        migrate.gif                     \
+    profileicon-large.gif           \
+    migrate.gif                     \
 	newProfile1_2.css		\
 	$(NULL)
 
