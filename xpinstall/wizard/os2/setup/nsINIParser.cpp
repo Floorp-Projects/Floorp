@@ -67,7 +67,7 @@ nsINIParser::nsINIParser(char *aFilename)
 
     mfWrite = 0;
     mFileBuf = NULL;
-    mFilename = (char*)malloc(strlen(aFilename));
+    mFilename = (char*)malloc(strlen(aFilename)+1);
     strcpy(mFilename, aFilename);
     mFileBufSize = 0;
     mError = OK;
