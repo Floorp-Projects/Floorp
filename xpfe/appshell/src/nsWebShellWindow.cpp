@@ -1986,7 +1986,9 @@ void nsWebShellWindow::SetTitleFromXUL()
   if (webshellElement && windowWidget &&
       NS_SUCCEEDED(webshellElement->GetAttribute("title", windowTitle)) &&
       windowTitle != "")
-    SetTitle(windowTitle.GetUnicode());
+  
+  if(NS_SUCCEEDED(EnsureChromeTreeOwner()))
+   mChromeTreeOwner->SetTitle(windowTitle.GetUnicode());
 } // SetTitleFromXUL
 
 
