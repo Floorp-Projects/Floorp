@@ -635,28 +635,62 @@ public class TokenStream {
         this.sourceCursor = 0;
     }
 
-    public Scriptable getScope() {
-        return scope;
+    public final void
+    reportCurrentLineError(String messageProperty, Object[] args)
+    {
+        reportSyntaxError(true, messageProperty, args,
+                          getSourceName(), getLineno(),
+                          getLine(), getOffset());
     }
 
-    public String getSourceName() { return sourceName; }
+    public void
+    reportCurrentLineWarning(String messageProperty, Object[] args)
+    {
+        reportSyntaxError(false, messageProperty, args,
+                          getSourceName(), getLineno(),
+                          getLine(), getOffset());
+    }
 
-    public int getLineno() { return lineno; }
+    public void
+    reportSyntaxError(boolean isError, String messageProperty, Object[] args,
+                      String sourceName, int lineno,
+                      String line, int lineOffset)
+    {
+        String message = Context.getMessage(messageProperty, args);
+        if (isError) {
+            if (scope != null) {
+                // We're probably in an eval. Need to throw an exception.
+                throw NativeGlobal.constructError(
+                    Context.getContext(), "SyntaxError",
+                    message, scope, sourceName, lineno, lineOffset, line);
+            } else {
+                Context.reportError(message, sourceName,
+                                    lineno, line, lineOffset);
+            }
+        } else {
+            Context.reportWarning(message, sourceName,
+                                  lineno, line, lineOffset);
+        }
+    }
 
-    public int getOp() { return op; }
+    public final String getSourceName() { return sourceName; }
 
-    public String getString() { return string; }
+    public final int getLineno() { return lineno; }
 
-    public double getNumber() { return number; }
+    public final int getOp() { return op; }
 
-    public int getTokenno() { return tokenno; }
+    public final String getString() { return string; }
 
-    public boolean eof() { return hitEOF; }
+    public final double getNumber() { return number; }
+
+    public final int getTokenno() { return tokenno; }
+
+    public final boolean eof() { return hitEOF; }
 
     /* return and pop the token from the stream if it matches...
      * otherwise return null
      */
-    public boolean matchToken(int toMatch) throws IOException {
+    public final boolean matchToken(int toMatch) throws IOException {
         int token = getToken();
         if (token == toMatch)
             return true;
@@ -667,14 +701,14 @@ public class TokenStream {
         return false;
     }
 
-    public void ungetToken(int tt) {
+    public final void ungetToken(int tt) {
         // Can not unread more then one token
         if (this.pushbackToken != EOF && tt != ERROR) Context.codeBug();
         this.pushbackToken = tt;
         tokenno--;
     }
 
-    public int peekToken() throws IOException {
+    public final int peekToken() throws IOException {
         int result = getToken();
 
         this.pushbackToken = result;
@@ -682,7 +716,7 @@ public class TokenStream {
         return result;
     }
 
-    public int peekTokenSameLine() throws IOException {
+    public final int peekTokenSameLine() throws IOException {
         flags |= TSF_NEWLINES;          // SCAN_NEWLINES from jsscan.h
         int result = getToken();
         if (result == EOL) {
@@ -695,7 +729,7 @@ public class TokenStream {
         return result;
     }
 
-    public int getToken() throws IOException {
+    public final int getToken() throws IOException {
         int c;
         tokenno++;
 
@@ -767,7 +801,8 @@ public class TokenStream {
                             if (escapeVal < 0) { break; }
                         }
                         if (escapeVal < 0) {
-                            reportSyntaxError("msg.invalid.escape", null);
+                            reportCurrentLineError(
+                                "msg.invalid.escape", null);
                             return ERROR;
                         }
                         addToString(escapeVal);
@@ -780,7 +815,8 @@ public class TokenStream {
                                 isUnicodeEscapeStart = true;
                                 containsEscape = true;
                             } else {
-                                reportSyntaxError("msg.illegal.character", null);
+                                reportCurrentLineError(
+                                    "msg.illegal.character", null);
                                 return ERROR;
                             }
                         } else {
@@ -813,10 +849,11 @@ public class TokenStream {
                         }
                         else {
                             // If implementation permits to use future reserved
-                            // keywords in violation with the EcmaScript standard,
+                            // keywords in violation with the EcmaScript,
                             // treat it as name but issue warning
                             Object[] errArgs = { str };
-                            reportSyntaxWarning("msg.reserved.keyword", errArgs);
+                            reportCurrentLineWarning(
+                                "msg.reserved.keyword", errArgs);
                         }
                     }
                 }
@@ -857,7 +894,8 @@ public class TokenStream {
                          */
                         if (base == 8 && c >= '8') {
                             Object[] errArgs = { c == '8' ? "8" : "9" };
-                            reportSyntaxWarning("msg.bad.octal.literal", errArgs);
+                            reportCurrentLineWarning(
+                                "msg.bad.octal.literal", errArgs);
                             base = 10;
                         }
                         addToString(c);
@@ -883,7 +921,8 @@ public class TokenStream {
                             c = getChar();
                         }
                         if (!isDigit(c)) {
-                            reportSyntaxError("msg.missing.exponent", null);
+                            reportCurrentLineError(
+                                "msg.missing.exponent", null);
                             return ERROR;
                         }
                         do {
@@ -903,7 +942,8 @@ public class TokenStream {
                     }
                     catch (NumberFormatException ex) {
                         Object[] errArgs = { ex.getMessage() };
-                        reportSyntaxError("msg.caught.nfe", errArgs);
+                        reportCurrentLineError(
+                            "msg.caught.nfe", errArgs);
                         return ERROR;
                     }
                 } else {
@@ -928,7 +968,8 @@ public class TokenStream {
             strLoop: while (c != quoteChar) {
                     if (c == '\n' || c == EOF_CHAR) {
                         ungetChar(c);
-                        reportSyntaxError("msg.unterminated.string.lit", null);
+                        reportCurrentLineError(
+                            "msg.unterminated.string.lit", null);
                         return ERROR;
                     }
 
@@ -1164,8 +1205,8 @@ public class TokenStream {
                     for (;;) {
                         c = getChar();
                         if (c == EOF_CHAR) {
-                            reportSyntaxError("msg.unterminated.comment",
-                                              null);
+                            reportCurrentLineError(
+                                "msg.unterminated.comment", null);
                             return ERROR;
                         } else if (c == '*') {
                             lookForSlash = true;
@@ -1185,7 +1226,8 @@ public class TokenStream {
                     while ((c = getChar()) != '/') {
                         if (c == '\n' || c == EOF_CHAR) {
                             ungetChar(c);
-                            reportSyntaxError("msg.unterminated.re.lit", null);
+                            reportCurrentLineError(
+                                "msg.unterminated.re.lit", null);
                             return ERROR;
                         }
                         if (c == '\\') {
@@ -1209,7 +1251,8 @@ public class TokenStream {
                     }
 
                     if (isAlpha(peekChar())) {
-                        reportSyntaxError("msg.invalid.re.flag", null);
+                        reportCurrentLineError(
+                            "msg.invalid.re.flag", null);
                         return ERROR;
                     }
 
@@ -1270,7 +1313,8 @@ public class TokenStream {
                 return c;
 
             default:
-                reportSyntaxError("msg.illegal.character", null);
+                reportCurrentLineError(
+                    "msg.illegal.character", null);
                 return ERROR;
             }
         }
@@ -1336,26 +1380,6 @@ public class TokenStream {
         }
         stringBuffer[N] = (char)c;
         stringBufferTop = N + 1;
-    }
-
-    public void reportSyntaxError(String messageProperty, Object[] args) {
-        String message = Context.getMessage(messageProperty, args);
-        if (scope != null) {
-            // We're probably in an eval. Need to throw an exception.
-            throw NativeGlobal.constructError(
-                            Context.getContext(), "SyntaxError",
-                            message, scope, getSourceName(),
-                            getLineno(), getOffset(), getLine());
-        } else {
-            Context.reportError(message, getSourceName(),
-                                getLineno(), getLine(), getOffset());
-        }
-    }
-
-    void reportSyntaxWarning(String messageProperty, Object[] args) {
-        String message = Context.getMessage(messageProperty, args);
-        Context.reportWarning(message, getSourceName(),
-                              getLineno(), getLine(), getOffset());
     }
 
     private void ungetChar(int c) {
@@ -1439,13 +1463,13 @@ public class TokenStream {
         ungetChar(c);
     }
 
-    public int getOffset() {
+    public final int getOffset() {
         int n = sourceCursor - lineStart;
         if (lineEndChar >= 0) { --n; }
         return n;
     }
 
-    public String getLine() {
+    public final String getLine() {
         if (sourceString != null) {
             // String case
             int lineEnd = sourceCursor;
