@@ -169,7 +169,7 @@ nsPSMShimVerifyUnixSocket(CMTSocket sock)
     CMSocket  *cmSock;
     struct stat statbuf;
 
-    cmSock = (CMSocket *)sock
+    cmSock = (CMSocket *)sock;
         
     if (!cmSock || !cmSock->isUnix) 
         return CMTFailure;
