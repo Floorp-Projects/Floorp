@@ -44,6 +44,10 @@ EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
 		mimerosetta.h					\
 		$(NULL)
 
+EXPORT_RESOURCE_SAMPLES := \
+		mail.css	\
+		mail.js
+
 CPPSRCS = \
 		nsMimeFactory.cpp	\
 		nsRFC822toHTMLStreamConverter.cpp	\
@@ -142,3 +146,5 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
+install:: $(PROGRAM)
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res
