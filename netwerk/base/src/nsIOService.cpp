@@ -54,8 +54,6 @@ nsIOService::Init()
 
     // initialize the version and app components
     // XXX we're forcing these to be single byte strings for now.
-    nsresult rv;
-
     mAppName = new nsCString("Netscape");
     if (!mAppName) return NS_ERROR_OUT_OF_MEMORY;
     mAppCodeName = new nsCString("Mozilla");
