@@ -25,7 +25,7 @@
 #include "nsVerifier.h"
 static PRUint32 EUCKR_cls [ 256 / 8 ] = {
 PCK4BITS(0,1,1,1,1,1,1,1),  // 00 - 07 
-PCK4BITS(1,1,1,1,1,1,1,1),  // 08 - 0f 
+PCK4BITS(1,1,1,1,1,1,0,0),  // 08 - 0f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 10 - 17 
 PCK4BITS(1,1,1,0,1,1,1,1),  // 18 - 1f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 20 - 27 

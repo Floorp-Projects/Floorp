@@ -69,6 +69,7 @@ NS_IMETHODIMP nsMyObserver::Notify(
     const char* aCharset, nsDetectionConfident aConf)
 {
     nsresult rv = NS_OK;
+    rv = mWebShellSvc->SetRendering( PR_FALSE);
     rv = mWebShellSvc->ReloadDocument( aCharset, kCharsetFromAutoDetection);
     return NS_OK;
 }
@@ -79,6 +80,7 @@ NS_IMETHODIMP nsMyObserver::Init( nsIWebShellServices* aWebShellSvc)
     {
         NS_IF_ADDREF(aWebShellSvc);
         mWebShellSvc = aWebShellSvc;
+        return NS_OK;
     }
     return NS_ERROR_ILLEGAL_VALUE;
 }
@@ -174,7 +176,7 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
          if(nsnull == mobs)
             return NS_ERROR_OUT_OF_MEMORY;
 
-         rv = this->QueryInterface(nsICharsetDetectionObserver::GetIID(),
+         rv = mobs->QueryInterface(nsICharsetDetectionObserver::GetIID(),
                                   (void**) &aObserver);
         
          if(NS_SUCCEEDED(rv)) {
@@ -193,7 +195,9 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
 
             mDontFeedToDetector = PR_FALSE;
             return NS_OK;
-         }
+         } else {
+            delete mobs;
+	 }
     }
     return NS_ERROR_ILLEGAL_VALUE;
 }

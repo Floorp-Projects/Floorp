@@ -53,6 +53,11 @@ NS_DEFINE_CID(kZHStringPSMDetectorCID,  NS_ZH_STRING_PSMDETECTOR_CID);
 NS_DEFINE_CID(kCJKPSMDetectorCID,  NS_CJK_PSMDETECTOR_CID);
 NS_DEFINE_CID(kCJKStringPSMDetectorCID,  NS_CJK_STRING_PSMDETECTOR_CID);
 
+#include "nsCyrillicDetector.h"
+NS_DEFINE_CID(kRUProbDetectorCID,  NS_RU_PROBDETECTOR_CID);
+NS_DEFINE_CID(kRUStringProbDetectorCID,  NS_RU_STRING_PROBDETECTOR_CID);
+NS_DEFINE_CID(kUKProbDetectorCID,  NS_UK_PROBDETECTOR_CID);
+NS_DEFINE_CID(kUKStringProbDetectorCID,  NS_UK_STRING_PROBDETECTOR_CID);
 
 
 #define INCLUDE_DBGDETECTOR
@@ -92,30 +97,28 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     factory = NEW_XML_ENCODING_OBSERVER_FACTORY();
   } else if (aClass.Equals(kCharsetDetectionAdaptorCID)) {
     factory = NEW_DETECTION_ADAPTOR_FACTORY();
-  } else if (aClass.Equals(kJAPSMDetectorCID)) {
-    factory = NEW_JA_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kJAStringPSMDetectorCID)) {
-    factory = NEW_JA_STRING_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kKOPSMDetectorCID)) {
-    factory = NEW_KO_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kKOStringPSMDetectorCID)) {
-    factory = NEW_KO_STRING_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kZHCNPSMDetectorCID)) {
-    factory = NEW_ZHCN_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kZHCNStringPSMDetectorCID)) {
-    factory = NEW_ZHCN_STRING_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kZHTWPSMDetectorCID)) {
-    factory = NEW_ZHTW_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kZHTWStringPSMDetectorCID)) {
-    factory = NEW_ZHTW_STRING_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kZHPSMDetectorCID)) {
-    factory = NEW_ZH_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kZHStringPSMDetectorCID)) {
-    factory = NEW_ZH_STRING_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kCJKPSMDetectorCID)) {
-    factory = NEW_CJK_PSMDETECTOR_FACTORY();
-  } else if (aClass.Equals(kCJKStringPSMDetectorCID)) {
-    factory = NEW_CJK_STRING_PSMDETECTOR_FACTORY();
+  } else if (aClass.Equals(kJAPSMDetectorCID) ||
+             aClass.Equals(kJAStringPSMDetectorCID) ||
+             aClass.Equals(kKOPSMDetectorCID) ||
+             aClass.Equals(kKOStringPSMDetectorCID) ||
+             aClass.Equals(kZHCNPSMDetectorCID) ||
+             aClass.Equals(kZHCNStringPSMDetectorCID) ||
+             aClass.Equals(kZHTWPSMDetectorCID) ||
+             aClass.Equals(kZHTWStringPSMDetectorCID) ||
+             aClass.Equals(kZHPSMDetectorCID) ||
+             aClass.Equals(kZHStringPSMDetectorCID) ||
+             aClass.Equals(kCJKPSMDetectorCID) ||
+             aClass.Equals(kCJKStringPSMDetectorCID)
+            ) 
+  {
+    factory = NEW_PSMDETECTOR_FACTORY(aClass);
+  } else if (aClass.Equals(kRUProbDetectorCID) ||
+             aClass.Equals(kRUStringProbDetectorCID) ||
+             aClass.Equals(kUKProbDetectorCID) ||
+             aClass.Equals(kUKStringProbDetectorCID) 
+            )
+  {
+    factory = NEW_PROBDETECTOR_FACTORY(aClass);
 #ifdef INCLUDE_DBGDETECTOR
   } else if (aClass.Equals(k1stBlkDbgDetectorCID)) {
     factory = NEW_1STBLKDBG_DETECTOR_FACTORY();
@@ -228,6 +231,26 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   NS_STRCDETECTOR_PROGID_BASE "cjkpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kRUProbDetectorCID, 
+                                  "Probability based Russian Charset Detector", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "ruprob", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kUKProbDetectorCID, 
+                                  "Probability based Ukrainian Charset Detector", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "ukprob", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kRUStringProbDetectorCID, 
+                                  "Probability based Russian String Charset Detector", 
+                                  NS_STRCDETECTOR_PROGID_BASE "ruprob", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kUKStringProbDetectorCID, 
+                                  "Probability based Ukrainian String Charset Detector", 
+                                  NS_STRCDETECTOR_PROGID_BASE "ukprob", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
 #ifdef INCLUDE_DBGDETECTOR
   rv = compMgr->RegisterComponent(k1stBlkDbgDetectorCID,
                                   "Debuging Detector 1st block", 
@@ -278,6 +301,10 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   rv = compMgr->UnregisterComponent(kZHStringPSMDetectorCID, path);
   rv = compMgr->UnregisterComponent(kCJKPSMDetectorCID, path);
   rv = compMgr->UnregisterComponent(kCJKStringPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kRUProbDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kUKProbDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kRUStringProbDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kUKStringProbDetectorCID, path);
 #ifdef INCLUDE_DBGDETECTOR
   rv = compMgr->UnregisterComponent(k1stBlkDbgDetectorCID, path);
   rv = compMgr->UnregisterComponent(k2ndBlkDbgDetectorCID, path);
