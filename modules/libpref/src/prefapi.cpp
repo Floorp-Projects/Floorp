@@ -1616,12 +1616,8 @@ PREF_CreateChildList(const char* parent_node, char **child_list)
 char*
 PREF_NextChild(char *child_list, int *indx)
 {
-#if HAVE_STRTOK_R
     char *nextstr;
-    char* child = strtok_r(&child_list[*indx], ";", &nextstr);
-#else
-    char* child = strtok(&child_list[*indx], ";");
-#endif
+    char* child = PL_strtok_r(&child_list[*indx], ";", &nextstr);
     if (child)
         *indx += PL_strlen(child) + 1;
     return child;
@@ -2192,12 +2188,8 @@ static int pref_CountListMembers(char* list)
 {
     int members = 0;
     char* p = list = PL_strdup(list);
-#ifdef HAVE_STRTOK_R
     char* nextstr;
-    for ( p = strtok_r(p, ",", &nextstr); p != NULL; p = strtok_r(nextstr, ",", &nextstr) )
-#else
-    for ( p = strtok(p, ","); p != NULL; p = strtok(NULL, ",") )
-#endif
+    for ( p = PL_strtok_r(p, ",", &nextstr); p != NULL; p = PL_strtok_r(nextstr, ",", &nextstr) )
         members++;
     PR_FREEIF(list);
     return members;
@@ -2215,9 +2207,7 @@ PrefResult PREF_GetListPref(const char* pref, char*** list, PRBool isDefault)
     char* value;
     char** p;
     int nugmembers;
-#ifdef HAVE_STRTOK_R
     char* nextstr;
-#endif
 
     *list = NULL;
 
@@ -2229,15 +2219,9 @@ PrefResult PREF_GetListPref(const char* pref, char*** list, PRBool isDefault)
     p = *list = (char**) PR_MALLOC((nugmembers+1) * sizeof(char**));
     if ( *list == NULL ) return PREF_ERROR;
 
-#ifdef HAVE_STRTOK_R
-    for ( *p = strtok_r(value, ",", &nextstr);
+    for ( *p = PL_strtok_r(value, ",", &nextstr);
           *p != NULL;
-          *(++p) = strtok_r(nextstr, ",", &nextstr) ) /* Empty body */ ;
-#else
-    for ( *p = strtok(value, ","); 
-          *p != NULL; 
-          *(++p) = strtok(NULL, ",") ) /* Empty body */ ;
-#endif
+          *(++p) = PL_strtok_r(nextstr, ",", &nextstr) ) /* Empty body */ ;
 
     /* Copy each entry so that users can free them. */
     for ( p = *list; *p != NULL; p++ )
