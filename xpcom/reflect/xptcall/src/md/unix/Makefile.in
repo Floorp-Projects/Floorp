@@ -169,6 +169,9 @@ ifeq ($(OS_ARCH),IRIX)
 ifneq ($(basename $(OS_RELEASE)),5)
 CPPSRCS		:= xptcinvoke_irix.cpp xptcstubs_irix.cpp
 ASFILES		:= xptcinvoke_asm_irix.s xptcstubs_asm_irix.s
+ifdef GNU_CC
+ASFLAGS		+= -Wa,-D__GNUC__
+endif
 endif
 endif
 
