@@ -30,8 +30,8 @@
 
 
 
-# $Revision: 1.10 $ 
-# $Date: 2002/05/06 19:08:55 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/10 21:46:25 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Time.pm,v $ 
 # $Name:  $ 
@@ -48,7 +48,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.10 $ )[1];
+$VERSION = ( qw $Revision: 1.11 $ )[1];
 
 
 sub new {
@@ -94,6 +94,14 @@ sub apply_db_updates {
   return 0;
 }
 
+
+
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+sub notice_association {
+    return ;
+}
 
 sub status_table_header {
   return ("\t<th><b>Build Time</b></th>\n");

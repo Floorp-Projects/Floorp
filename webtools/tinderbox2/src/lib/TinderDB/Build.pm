@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.54 $ 
-# $Date: 2002/05/10 21:20:27 $ 
+# $Revision: 1.55 $ 
+# $Date: 2002/05/10 21:46:25 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -269,7 +269,8 @@ sub latest_status {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
-    return build_names();
+    my ($self, $tree) = (@_);
+    return build_names($tree);
 }
 
 #  Prepare information for popupwindows on row headers and also the

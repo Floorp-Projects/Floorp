@@ -37,8 +37,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.18 $ 
-# $Date: 2002/05/10 21:20:28 $ 
+# $Revision: 1.19 $ 
+# $Date: 2002/05/10 21:46:25 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
@@ -77,7 +77,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.18 $ )[1];
+$VERSION = ( qw $Revision: 1.19 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -168,11 +168,6 @@ sub status_table_legend {
 
 
 
-sub notice_association {
-    return BTData::get_all_columns();
-}
-
-
 sub status_table_header {
   my $out = '';
 
@@ -189,6 +184,7 @@ sub status_table_header {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
+    my ($self, $tree, ) = @_;
     my (@columns) = BTData::get_all_columns();
     return @columns;
 }
