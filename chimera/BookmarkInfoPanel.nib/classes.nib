@@ -16,29 +16,6 @@
             SUPERCLASS = NSWindowController; 
         }, 
         {CLASS = BookmarkItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {
-            ACTIONS = {
-                addBookmark = id; 
-                addFolder = id; 
-                beginRenameBookmark = id; 
-                cancelRenameBookmarkSheet = id; 
-                deleteBookmarks = id; 
-                doRenameBookmarkSheet = id; 
-                openBookmarkInNewTab = id; 
-                openBookmarkInNewWindow = id; 
-                showBookmarkInfo = id; 
-            }; 
-            CLASS = BookmarksDataSource; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {
-                mBookmarkInfoPanel = id; 
-                mBrowserWindowController = id; 
-                mOutlineView = id; 
-                mRenameSheet = id; 
-                mRenameTextField = NSTextField; 
-            }; 
-            SUPERCLASS = NSObject; 
-        }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
     ); 
     IBVersion = 1; 
