@@ -31,7 +31,7 @@ nsCommonString::assign( const string_type& aReadable )
   {
     const nsSharedBufferHandle<char_type>* handle = aReadable.GetSharedBufferHandle();
     if ( !handle )
-      handle = NS_AllocateContiguousHandleWithData(handle, aReadable, 1);
+      handle = NS_AllocateContiguousHandleWithData(handle, aReadable, PRUint32(1));
     mBuffer = handle;
   }
 
@@ -46,7 +46,7 @@ nsCommonCString::assign( const string_type& aReadable )
   {
     const nsSharedBufferHandle<char_type>* handle = aReadable.GetSharedBufferHandle();
     if ( !handle )
-      handle = NS_AllocateContiguousHandleWithData(handle, aReadable, 1);
+      handle = NS_AllocateContiguousHandleWithData(handle, aReadable, PRUint32(1));
     mBuffer = handle;
   }
 
