@@ -41,7 +41,6 @@
 #ifndef nsglobalhistory__h____
 #define nsglobalhistory__h____
 
-#include "nsIGlobalHistory.h"
 #include "nsIBrowserHistory.h"
 
 #include "mdb.h"
@@ -129,7 +128,6 @@ struct AutocompleteExclude {
 };
 
 class nsGlobalHistory : nsSupportsWeakReference,
-                        public nsIGlobalHistory,
                         public nsIBrowserHistory,
                         public nsIObserver,
                         public nsIRDFDataSource,
@@ -140,7 +138,7 @@ public:
   // nsISupports methods 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_NSIGLOBALHISTORY
+  NS_DECL_NSIGLOBALHISTORY2
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIRDFDATASOURCE
@@ -181,6 +179,7 @@ protected:
   //
   // expiration/removal stuff
   //
+  nsresult RemovePage(const char *aURL);
   PRInt32   mExpireDays;
   nsresult ExpireEntries(PRBool notify);
   nsresult RemoveMatchingRows(rowMatchCallback aMatchFunc,
@@ -304,8 +303,6 @@ protected:
   //
   // AddPage-oriented stuff
   //
-  nsresult AddPageToDatabase(const char *aURL,
-                             PRInt64 aDate);
   nsresult AddExistingPageToDatabase(nsIMdbRow *row,
                                      PRInt64 aDate,
                                      PRInt64 *aOldDate,

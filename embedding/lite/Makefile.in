@@ -36,7 +36,7 @@ REQUIRES	= xpcom \
 		  content \
 		  necko \
 		  pref \
-		  history \
+		  docshell \
 		  $(NULL)
 
 CPPSRCS         = \

@@ -65,6 +65,10 @@ REQUIRES	= xpcom \
 		  history \
 		  $(NULL)
 
+SDK_XPIDLSRCS = \
+		nsIGlobalHistory.idl \
+		$(NULL)
+
 XPIDLSRCS	= \
 		nsCDocShell.idl			\
 		nsCDefaultURIFixup.idl		\
@@ -74,6 +78,7 @@ XPIDLSRCS	= \
 		nsIDocShellTreeNode.idl	\
 		nsIDocShellTreeOwner.idl	\
 		nsIDocShellHistory.idl \
+		nsIGlobalHistory2.idl \
 		nsIMarkupDocumentViewer.idl	\
 		nsIScrollable.idl		\
 		nsITextScroll.idl		\
@@ -95,6 +100,8 @@ CPPSRCS		= \
 		nsDocShellEnumerator.cpp  \
 		nsDSURIContentListener.cpp		\
 		nsDefaultURIFixup.cpp		\
+		nsGlobalHistoryAdapter.cpp \
+		nsGlobalHistory2Adapter.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

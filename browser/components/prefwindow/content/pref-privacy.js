@@ -47,7 +47,7 @@ var _elementIDs = ["histDay", "browserCacheDiskCache", "cookieBehavior", "enable
 function Startup() {
 
   // Initially disable the clear buttons when needed
-  var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
+  var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"].getService(Components.interfaces.nsIBrowserHistory);
   document.getElementById("history").setAttribute("cleardisabled", globalHistory.count == 0);
   
   var cookieMgr = Components.classes["@mozilla.org/cookiemanager;1"].getService();
@@ -183,7 +183,7 @@ var PrivacyPanel = {
     // to them. 
     history: function ()
     {
-      var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+      var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
                                     .getService(Components.interfaces.nsIBrowserHistory);
       globalHistory.removeAllPages();
       

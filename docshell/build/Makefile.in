@@ -63,6 +63,10 @@ REQUIRES	= xpcom \
 		  prefetch \
 		  $(NULL)
 
+EXPORTS = \
+		  nsDocShellCID.h \
+		  $(NULL)
+
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	= gkgfx
 endif

@@ -33,6 +33,7 @@ FORCE_STATIC_LIB = 1
 
 REQUIRES = xpcom \
            string \
+           docshell \
            rdf \
            mork \
            pref \

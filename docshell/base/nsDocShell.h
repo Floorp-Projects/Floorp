@@ -60,7 +60,7 @@
 // Interfaces Needed
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIDocCharset.h"
-#include "nsIGlobalHistory.h"
+#include "nsIGlobalHistory2.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
@@ -262,8 +262,7 @@ protected:
     PRBool ShouldDiscardLayoutState(nsIHttpChannel * aChannel);
     
     // Global History
-    nsresult ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd);
-    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool );
+    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect);
 
     // Helper Routines
     NS_IMETHOD GetPromptAndStringBundle(nsIPrompt ** aPrompt,
@@ -327,7 +326,7 @@ protected:
     nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
     nsCOMPtr<nsIScriptContext> mScriptContext;
     nsCOMPtr<nsISHistory>      mSessionHistory;
-    nsCOMPtr<nsIGlobalHistory> mGlobalHistory;
+    nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
     nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
     nsCOMPtr<nsIURIFixup>      mURIFixup;
     nsCOMPtr<nsIWebBrowserFind> mFind;

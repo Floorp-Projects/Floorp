@@ -41,6 +41,7 @@
 #include "nsAlertsService.h"
 #endif
 #include "nsToolkitCompsCID.h"
+#include "nsDocShellCID.h"
 #include "nsAutoCompleteController.h"
 #include "nsAutoCompleteMdbResult.h"
 #include "nsDownloadManager.h"
@@ -122,7 +123,7 @@ static const nsModuleComponentInfo components[] =
 
   { "Global History",
     NS_GLOBALHISTORY_CID,
-    NS_GLOBALHISTORY_CONTRACTID,
+    NS_GLOBALHISTORY2_CONTRACTID,
     nsGlobalHistoryConstructor },
     
   { "Global History",

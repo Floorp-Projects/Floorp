@@ -205,10 +205,12 @@ tier_9_dirs	+= \
 		xpfe/components/xremote/public \
 		$(NULL)
 
+ifdef MOZ_XUL
 ifdef MOZ_XUL_APP
-tier_9_dirs	+= toolkit/components/history/public chrome
+tier_9_dirs	+= chrome
 else
-tier_9_dirs	+= xpfe/components/history/public
+tier_9_dirs	+= rdf/chrome
+endif
 endif
 
 ifdef ACCESSIBILITY
@@ -237,6 +239,12 @@ endif
 # This must preceed xpfe
 ifdef MOZ_JPROF
 tier_50_dirs        += tools/jprof
+endif
+
+ifdef MOZ_XUL_APP
+tier_50_dirs += toolkit/components/history/public
+else
+tier_50_dirs += xpfe/components/history/public
 endif
 
 tier_50_dirs	+= xpfe themes

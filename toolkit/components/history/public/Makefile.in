@@ -31,7 +31,6 @@ MODULE = history
 XPIDL_MODULE = history
 
 XPIDLSRCS  = \
-  nsIGlobalHistory.idl  \
   nsIBrowserHistory.idl \
   $(NULL)
 

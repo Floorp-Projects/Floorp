@@ -711,11 +711,8 @@ nsWebShell::GetLinkState(nsIURI* aLinkURI, nsLinkState& aState)
   if (!mGlobalHistory)
     return NS_OK;
 
-  nsCAutoString spec;
-  aLinkURI->GetSpec(spec);
-
   PRBool isVisited;
-  NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(spec.get(), &isVisited),
+  NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(aLinkURI, &isVisited),
                     NS_ERROR_FAILURE);
   if (isVisited)
     aState = eLinkState_Visited;

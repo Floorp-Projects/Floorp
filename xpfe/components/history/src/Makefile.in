@@ -30,6 +30,7 @@ MODULE		= history
 LIBRARY_NAME	= history_s
 REQUIRES	= xpcom \
 		  string \
+		  docshell \
 		  rdf \
 		  mork \
 		  pref \

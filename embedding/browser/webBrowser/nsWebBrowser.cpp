@@ -335,13 +335,11 @@ NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(PRBool aEnable)
     if (NS_FAILED(rv)) return rv;
     
     if (aEnable) {
-       nsCOMPtr<nsIGlobalHistory> history = 
-                do_GetService(NS_GLOBALHISTORY_CONTRACTID, &rv);
-       if (NS_FAILED(rv)) return rv;  
-       rv = dsHistory->SetGlobalHistory(history);
+        rv = dsHistory->SetUseGlobalHistory(PR_TRUE);
     }
-    else
-       rv = dsHistory->SetGlobalHistory(nsnull);
+    else {
+        rv = dsHistory->SetUseGlobalHistory(PR_FALSE);
+    }
        
     return rv;
 }

@@ -336,10 +336,8 @@ function prepareForStartup()
   webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
                                            .createInstance(Components.interfaces.nsISHistory);
 
-  // wire up global history.  the same applies here.
-  var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                                .getService(Components.interfaces.nsIGlobalHistory);
-  gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
+  // enable global history
+  gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
 
   const selectedBrowser = gBrowser.selectedBrowser;
   if (selectedBrowser.securityUI)
@@ -750,10 +748,9 @@ function updateGoMenu(goMenu)
   
   if (history.hidden) {
     history.hidden = false;
-    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                                  .getService(Components.interfaces.nsIGlobalHistory);
-    var dataSource = globalHistory.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    history.database.AddDataSource(dataSource);
+    var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
+                                  .getService(Components.interfaces.nsIRDFDataSource);
+    history.database.AddDataSource(globalHistory);
   }
 
   if (!history.ref)
@@ -1783,7 +1780,7 @@ function addToUrlbarHistory()
      return;
 
   if (!gGlobalHistory)
-    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
                                .getService(Components.interfaces.nsIBrowserHistory);
   
   if (!gURIFixup)
