@@ -111,7 +111,7 @@ addThis();
 
 
 // now do the same thing, with non-default sorting:
-function g() {return 0;}
+function g() {return 1;}
 
 status = inSection('1a');
 arr = arr1.sort(g);
