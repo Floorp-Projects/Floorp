@@ -46,6 +46,7 @@ my %reports =
 	( 
 	"most_doomed" => \&most_doomed,
 	"most_doomed_for_milestone" => \&most_doomed_for_milestone,
+	"most_recently_doomed" => \&most_recently_doomed,
 	"show_chart" => \&show_chart,
 	);
 
@@ -137,6 +138,7 @@ FIN
         if (Param('usetargetmilestone')) {
             print "<option value=\"most_doomed_for_milestone\">Most Doomed";
             }
+        print "<option value=\"most_recently_doomed\">Most Recently Doomed";
 	print <<FIN;
 $charts
 </select>
@@ -513,6 +515,9 @@ FIN
 	exit;
 	}
 
+sub bybugs {
+   $bugsperperson{$a} <=> $bugsperperson{$b}
+   }
 
 sub most_doomed_for_milestone
 	{
@@ -595,9 +600,6 @@ FIN
                 }
 
 #       sort people by the number of bugs they have assigned to this milestone
-        sub bybugs {
-                $bugsperperson{$a} <=> $bugsperperson{$b}
-                }
         @people = sort bybugs @people;
         my $totalpeople = @people;
                 
@@ -640,3 +642,110 @@ FIN
         }
 
 
+
+sub most_recently_doomed
+	{
+	my $when = localtime (time);
+        my $ms = "M" . Param("curmilestone");
+        my $quip = "Summary";
+
+	print "<center>\n<h1>";
+        if( $::FORM{'product'} ne "-All-" ) {
+            print "Most Recently Doomed ($::FORM{'product'})";
+        } else {
+            print "Most Recently Doomed";
+            }
+        print "</h1>\n$when<p>\n";
+
+	#########################
+	# start painting report #
+	#########################
+
+	if ($::FORM{'quip'})
+                {
+                if (open (COMMENTS, "<data/comments"))
+                        {
+                        my @cdata;
+                        while (<COMMENTS>)
+                                {
+                                push @cdata, $_;
+                                }
+                        close COMMENTS;
+                        $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";                        }
+                }
+
+
+        # Build up $query string
+	my $query;
+        $query = "select distinct assigned_to from bugs where bugs.bug_status='NEW' and target_milestone='' and bug_severity!='enhancement' and status_whiteboard='' and (product='Browser' or product='MailNews')";
+	if( $::FORM{'product'} ne "-All-" ) {
+		$query .= "and    bugs.product='$::FORM{'product'}'";
+	}
+
+# End build up $query string
+
+        SendSQL ($query);
+        my @people = ();
+        while (my ($person) = FetchSQLData())
+            {
+            push @people, $person;
+            }
+
+        #############################
+        # suck contents of database # 
+        #############################
+        my $person = "";
+        my $bugtotal = 0;
+        foreach $person (@people)
+                {
+                my $query = "select count(bug_id) from bugs,profiles where bugs.bug_status='NEW' and userid=assigned_to and userid='$person' and target_milestone='' and bug_severity!='enhancement' and status_whiteboard='' and (product='Browser' or product='MailNews')";
+	        if( $::FORM{'product'} ne "-All-" ) {
+                    $query .= "and    bugs.product='$::FORM{'product'}'";
+                    }
+                SendSQL ($query);
+	        my $bugcount = FetchSQLData();
+                $bugsperperson{$person} = $bugcount;
+                $bugtotal += $bugcount;
+                }
+
+#       sort people by the number of bugs they have assigned to this milestone
+        @people = sort bybugs @people;
+        my $totalpeople = @people;
+                
+        print "<TABLE>\n";
+        print "<TR><TD COLSPAN=2>\n";
+        print "$totalpeople engineers have $bugtotal untouched new bugs.\n";
+        print "</TD></TR>\n";
+
+        while (@people)
+                {
+                $person = pop @people;
+                print "<TR><TD>\n";
+                SendSQL("select login_name from profiles where userid=$person");
+                my $login_name= FetchSQLData();
+                print("<A HREF=\"buglist.cgi?bug_status=NEW&email1=$login_name&emailtype1=substring&emailassigned_to1=1&product=Browser&product=MailNews&target_milestone=---&status_whiteboard=.&status_whiteboard_type=notregexp&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial\">\n"); 
+                print("$bugsperperson{$person}  bugs");
+                print("</A>");
+                print(" for \n");
+                print("<A HREF=\"mailto:$login_name\">");
+                print("$login_name");
+                print("</A>\n");
+                print("</TD><TD>\n");
+
+                $person = pop @people;
+                if ($person) {
+                    SendSQL("select login_name from profiles where userid=$person");
+                    my $login_name= FetchSQLData();
+                    print("<A HREF=\"buglist.cgi?bug_status=NEW&email1=$login_name&emailtype1=substring&emailassigned_to1=1&product=Browser&product=MailNews&target_milestone=---&status_whiteboard=.&status_whiteboard_type=notregexp&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial\">\n"); 
+                    print("$bugsperperson{$person}  bugs");
+                    print("</A>");
+                    print(" for \n");
+                    print("<A HREF=\"mailto:$login_name\">");
+                    print("$login_name");
+                    print("</A>\n");
+                    print("</TD></TR>\n\n");
+                    }
+                }
+        print "</TABLE>\n";
+
+        }
