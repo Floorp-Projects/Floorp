@@ -70,7 +70,7 @@ my %pubcmds = (
                "up" => \&bot_up,
                "(trees|tree)" => \&bot_tinderbox,
                "debug" => \&bot_debug,
-               "stocks" => \&bot_stocks,
+               "(stocks|stock)" => \&bot_stocks,
                "(translate|xlate|x)" => \&bot_translate,
                );
 
