@@ -16,11 +16,8 @@ interface nsISupportsWeakReference : nsISupports
 
 %{C++
 
-#ifndef nsCOMPtr_h___
-#include "nsCOMPtr.h"
-#endif
-
-typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
+// typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
+	// ...this definition actually exists in nsCOMPtr.h, sorry
 
 nsIWeakReference* NS_GetWeakReference( nsISupports* );
 	// ...convenience.  Get a weak reference (if possible) without doing the query yourself
