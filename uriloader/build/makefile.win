@@ -40,6 +40,7 @@ LLIBS=										                \
 			$(DIST)\lib\xpcom.lib			          \
       $(DIST)\lib\uriloaderbase_s.lib     \
 			$(LIBNSPR)						              \
+      $(DIST)\lib\js3250.lib	\
 			$(NULL)
 
 WIN_LIBS= shell32.lib
