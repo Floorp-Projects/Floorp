@@ -41,3 +41,8 @@ GARBAGE		+= $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES)) \
 libs::
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_DIR)
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_L10N_DIR)
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_FILES) $(DESTDIR)$(mozappdir)/defaults/messenger
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_FILES) $(DESTDIR)$(mozappdir)/defaults/messenger/US
+
