@@ -132,12 +132,35 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 fi
 
 
+# Check whether we have 'eu-readelf' or 'readelf' available.
+# If we do, it will give more accurate symbol sizes than nm.
+
+READELF_PROG=`which eu-readelf 2>/dev/null`
+if test "$READELF_PROG"; then
+  USE_READELF=1
+else
+  READELF_PROG=`which readelf 2>/dev/null`
+  if test "$READELF_PROG"; then
+    READELF_PROG="readelf -W"
+    USE_READELF=1
+  else
+    USE_READELF=
+  fi
+fi
+
 #
 #   Find all relevant files.
 #
 ALLFILES="$MYTMPDIR/allfiles.list"
 grep -v '[\;\[]' < $MANIFEST | grep -v '^$' | sed "s|^|${OBJROOT}/dist/bin/|" > $ALLFILES
 
+
+RAWTSVFILE="$MYTMPDIR/raw.tsv"
+
+if test "$USE_READELF"; then
+export READELF_PROG
+xargs -n 1 ./mozilla/tools/codesighs/readelf_wrap.pl < $ALLFILES > $RAWTSVFILE
+else
 
 #
 #   Produce the cumulative nm output.
@@ -157,9 +180,9 @@ fi
 #
 #   Produce the TSV output.
 #
-RAWTSVFILE="$MYTMPDIR/raw.tsv"
 $OBJROOT/dist/bin/nm2tsv --input $NMRESULTS > $RAWTSVFILE
 
+fi  # USE_READELF
 
 #
 #   Sort the TSV output for useful diffing and eyeballing in general.
