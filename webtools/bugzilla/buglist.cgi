@@ -1004,7 +1004,9 @@ DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
 DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords", 5);
 
 my @collist;
-if (defined $::COOKIE{'COLUMNLIST'}) {
+if (defined $::FORM{'columnlist'}) {
+    @collist = split(/[ ,]+/, $::FORM{'columnlist'});
+} elsif (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
 } else {
     @collist = @::default_column_list;
