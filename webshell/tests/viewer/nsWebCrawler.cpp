@@ -300,15 +300,15 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
     if (mJiggleLayout) {
       nsRect r;
-      mBrowser->GetBounds(r);
+      mBrowser->GetContentBounds(r);
       nscoord oldWidth = r.width;
       while (r.width > 100) {
         r.width -= 10;
-        mBrowser->SizeTo(r.width, r.height);
+        mBrowser->SizeWindowTo(r.width, r.height);
       }
       while (r.width < oldWidth) {
         r.width += 10;
-        mBrowser->SizeTo(r.width, r.height);
+        mBrowser->SizeWindowTo(r.width, r.height);
       }
     }
 

@@ -205,6 +205,7 @@ nsWebShellWindow::nsWebShellWindow()
   mLockedUntilChromeLoad = PR_FALSE;
   mContentShells = nsnull;
   mChromeMask = NS_CHROME_ALL_CHROME;
+  mIntrinsicallySized = PR_FALSE;
 }
 
 
@@ -1375,7 +1376,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
     // Just do a nice normal create of a web shell and
     // return it immediately.  
     rv = appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, getter_AddRefs(newWindow),
-                                   nsnull, nsnull, 615, 480);
+                                   nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(newWindow));
       if (browser)
@@ -1777,44 +1778,9 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   SetTitleFromXUL();
   ShowAppropriateChrome();
   LoadContentAreas();
-
-#if 0
-  nsCOMPtr<nsIDOMDocument> toolbarDOMDoc(GetNamedDOMDoc(nsAutoString("browser.toolbar")));
-  nsCOMPtr<nsIDOMDocument> contentDOMDoc(GetNamedDOMDoc(nsAutoString("browser.webwindow")));
-  nsCOMPtr<nsIDocument> contentDoc(do_QueryInterface(contentDOMDoc));
-  nsCOMPtr<nsIDocument> statusDoc(do_QueryInterface(statusDOMDoc));
-  nsCOMPtr<nsIDocument> toolbarDoc(do_QueryInterface(toolbarDOMDoc));
-
-  nsIWebShell* statusWebShell = nsnull;
-  mWebShell->FindChildWithName(nsAutoString("browser.status"), statusWebShell);
-
-  PRInt32 actualStatusHeight  = GetDocHeight(statusDoc);
-  PRInt32 actualToolbarHeight = GetDocHeight(toolbarDoc);
-
-
-  PRInt32 height = 0;
-  PRInt32 x,y,w,h;
-  PRInt32 contentHeight;
-  PRInt32 toolbarHeight;
-  PRInt32 statusHeight;
-
-  mWebShell->GetBounds(x, y, w, h);
-  toolbarWebShell->GetBounds(x, y, w, toolbarHeight);
-  contentWebShell->GetBounds(x, y, w, contentHeight);
-  statusWebShell->GetBounds(x, y, w, statusHeight); 
-
-  //h = toolbarHeight + contentHeight + statusHeight;
-  contentHeight = h - actualStatusHeight - actualToolbarHeight;
-
-  toolbarWebShell->GetBounds(x, y, w, h);
-  toolbarWebShell->SetBounds(x, y, w, actualToolbarHeight);
-
-  contentWebShell->GetBounds(x, y, w, h);
-  contentWebShell->SetBounds(x, y, w, contentHeight);
-
-  statusWebShell->GetBounds(x, y, w, h);
-  statusWebShell->SetBounds(x, y, w, actualStatusHeight);
-#endif
+  
+  // Always show the window at this point.
+  mWindow->Show(PR_TRUE);
 
   return NS_OK;
 }
@@ -2213,26 +2179,11 @@ void nsWebShellWindow::SetSizeFromXUL()
       specWidth = specSize;
   }
 
-  if (specWidth != currentSize.width || specHeight != currentSize.height)
+  if (specWidth != currentSize.width || specHeight != currentSize.height) {
     windowWidget->Resize(specWidth, specHeight, PR_TRUE);
-
-#if 0
-  // adjust height to fit contents?
-  if (fitHeight == PR_TRUE) {
-    nsCOMPtr<nsIContentViewer> cv;
-    mWebShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-      if (docv) {
-        nsCOMPtr<nsIDocument> doc;
-        docv->GetDocument(*getter_AddRefs(doc));
-        if (doc)
-          specHeight = GetDocHeight(doc);
-      }
-    }
-    mWindow->GetBounds(currentSize);
+    mIntrinsicallySized = PR_FALSE;
   }
-#endif
+
 } // SetSizeFromXUL
 
 
@@ -2610,16 +2561,49 @@ NS_IMETHODIMP nsWebShellWindow::MoveTo(PRInt32 aX, PRInt32 aY)
    return NS_OK;
 }
  
-NS_IMETHODIMP nsWebShellWindow::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
 {
+  // XXX We have to look at the delta between our content shell's 
+  // size and the size passed in and then resize ourselves based on that
+  // delta.
+   mIntrinsicallySized = PR_FALSE; // We got changed. No more intrinsic sizing here.
    mWindow->Resize(aWidth, aHeight, PR_TRUE);
    return NS_OK;
 }
  
-NS_IMETHODIMP nsWebShellWindow::GetBounds(nsRect& aResult)
+NS_IMETHODIMP nsWebShellWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
 {
-   mWindow->GetClientBounds(aResult);
+   PRInt32 x,y,width,height;
+   mWebShell->GetBounds(x,y,width,height);
+   PRInt32 aWidthDelta = aWidth - width;
+   PRInt32 aHeightDelta = aHeight - height;
+   
+   nsRect windowBounds;
+   mWindow->GetBounds(windowBounds);
+   mWindow->Resize(windowBounds.width + aWidthDelta, 
+                   windowBounds.height + aHeightDelta,
+                   PR_TRUE);
    return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShellWindow::GetContentBounds(nsRect& aResult)
+{
+  // Should return the size of the content webshell.
+  nsCOMPtr<nsIWebShell> contentShell;
+  GetContentWebShell(getter_AddRefs(contentShell));
+  if (!contentShell) {
+    NS_ERROR("Attempt to retrieve the content bounds for a window with no content.");
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 x,y,width,height;
+  contentShell->GetBounds(x,y,width,height);
+  aResult.x = x;
+  aResult.y = y;
+  aResult.width = width;
+  aResult.height = height;
+
+  return NS_OK;
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetWindowBounds(nsRect& aResult)

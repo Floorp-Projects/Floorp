@@ -752,7 +752,7 @@ GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
     nsRect r;
-    mBrowser->GetBounds(r);
+    mBrowser->GetContentBounds(r);
     *aInnerWidth = r.width;
     NS_RELEASE(mBrowser);
   }
@@ -770,9 +770,9 @@ GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
     nsRect r;
-    mBrowser->GetBounds(r);
+    mBrowser->GetContentBounds(r);
 
-    mBrowser->SizeTo(aInnerWidth, r.height);
+    mBrowser->SizeContentTo(aInnerWidth, r.height);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -785,7 +785,7 @@ GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
     nsRect r;
-    mBrowser->GetBounds(r);
+    mBrowser->GetContentBounds(r);
     *aInnerHeight = r.height;
     NS_RELEASE(mBrowser);
   }
@@ -803,9 +803,9 @@ GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
 
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
     nsRect r;
-    mBrowser->GetBounds(r);
+    mBrowser->GetContentBounds(r);
 
-    mBrowser->SizeTo(r.width, aInnerHeight);
+    mBrowser->SizeContentTo(r.width, aInnerHeight);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -838,7 +838,7 @@ GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
     nsRect r;
     mBrowser->GetWindowBounds(r);
 
-    mBrowser->SizeTo(aOuterWidth, r.height);
+    mBrowser->SizeWindowTo(aOuterWidth, r.height);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -871,7 +871,7 @@ GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
     nsRect r;
     mBrowser->GetWindowBounds(r);
 
-    mBrowser->SizeTo(r.width, aOuterHeight);
+    mBrowser->SizeWindowTo(r.width, aOuterHeight);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -1323,7 +1323,7 @@ GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
   nsIBrowserWindow *mBrowser;
 
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    mBrowser->SizeTo(aWidth, aHeight);
+    mBrowser->SizeWindowTo(aWidth, aHeight);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -1338,7 +1338,7 @@ GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
     nsRect r;
     mBrowser->GetWindowBounds(r);
 
-    mBrowser->SizeTo(r.width + aWidthDif, r.height + aHeightDif);
+    mBrowser->SizeWindowTo(r.width + aWidthDif, r.height + aHeightDif);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -2066,12 +2066,20 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
   // set size
   if (nsnull != openedWindow) {
 
-    if (nsnull != aFeatures) {
-      width = WinHasOption(aFeatures, "innerWidth") | WinHasOption(aFeatures, "width");
-      height = WinHasOption(aFeatures, "innerHeight") | WinHasOption(aFeatures, "height");
+    PRUint32 chromeFlags = CalculateChromeFlags(aFeatures);
+    PRBool openAsContent = ((chromeFlags & NS_CHROME_OPEN_AS_CHROME) == 0);
 
-      // width = WinHasOption(aFeatures, "outerWidth");
-      // height = WinHasOption(aFeatures, "outerHeight");
+    if (nsnull != aFeatures) {
+
+      if (openAsContent) {
+        width = WinHasOption(aFeatures, "innerWidth") | WinHasOption(aFeatures, "width");
+        height = WinHasOption(aFeatures, "innerHeight") | WinHasOption(aFeatures, "height");
+      }
+      else {
+        // Chrome. Look for outerWidth, outerHeight, or width/height
+        width = WinHasOption(aFeatures, "outerWidth") | WinHasOption(aFeatures, "width");
+        height = WinHasOption(aFeatures, "outerHeight") | WinHasOption(aFeatures, "height");
+      }
 
       left = WinHasOption(aFeatures, "left") | WinHasOption(aFeatures, "screenX");
       top = WinHasOption(aFeatures, "top") | WinHasOption(aFeatures, "screenY");
@@ -2079,7 +2087,11 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
 
     // beard: don't resize/reposition the window if it is the same web shell.
     if (aOuterShell != mWebShell) {
-      openedWindow->SizeTo(width ? width : defaultBounds.width, height ? height : defaultBounds.height);
+      if (openAsContent)
+        openedWindow->SizeContentTo(width ? width : defaultBounds.width, height ? height : defaultBounds.height);
+      else if (width > 0 || height > 0)
+        openedWindow->SizeWindowTo(width ? width : defaultBounds.width, height ? height : defaultBounds.height);
+      
       openedWindow->MoveTo(left ? left : defaultBounds.x, top ? top : defaultBounds.y);
       openedWindow->Show();
     }

@@ -72,7 +72,7 @@
 #include "nsITransferable.h"
 #include "nsIFormatConverter.h"
 #include "nsIWebShell.h"
-
+#include "nsIBrowserWindow.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
@@ -896,6 +896,46 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
       mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+
+      if (maxSize.width == NS_UNCONSTRAINEDSIZE && maxSize.height == NS_UNCONSTRAINEDSIZE) {
+        // We were flowed intrinsically. Set our new visible area to our intrinsic
+        // size.
+        mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width, desiredSize.height));
+        
+        // Provide our window with the hint that it needs to resize.
+        nsCOMPtr<nsIWebShell> webShell;
+        nsCOMPtr<nsISupports> container;
+        mPresContext->GetContainer(getter_AddRefs(container));
+        if (container) {
+          webShell = do_QueryInterface(container);
+          if (webShell) {
+            // Retrieve our container and see if it's a browser window.
+            nsCOMPtr<nsIWebShellContainer> rootContainer;
+            webShell->GetContainer(*getter_AddRefs(rootContainer));
+            if (rootContainer) {
+              nsCOMPtr<nsIBrowserWindow> browserWindow = do_QueryInterface(rootContainer);
+              if (browserWindow) {
+                PRInt32 chromeX,chromeY,chromeWidth,chromeHeight;
+                webShell->GetBounds(chromeX,chromeY,chromeWidth,chromeHeight);
+
+                float t2p;
+                mPresContext->GetTwipsToPixels(&t2p);
+                PRInt32 width = PRInt32((float)desiredSize.width*t2p);
+                PRInt32 height = PRInt32((float)desiredSize.height*t2p);
+                
+                PRInt32 widthDelta = width - chromeWidth;
+                PRInt32 heightDelta = height - chromeHeight;
+
+                nsRect windowBounds;
+                browserWindow->GetWindowBounds(windowBounds);
+                browserWindow->SizeWindowTo(windowBounds.width + widthDelta, 
+                                            windowBounds.height + heightDelta);
+              }
+            }
+          }
+        }
+      }
+
 #ifdef NS_DEBUG
       if (nsIFrame::GetVerifyTreeEnable()) {
         mRootFrame->VerifyTree();

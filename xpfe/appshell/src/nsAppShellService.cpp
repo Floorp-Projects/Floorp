@@ -496,9 +496,18 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
     nsWidgetInitData widgetInitData;
     widgetInitData.mBorderStyle = eBorderStyle_window;
 
+    if (aInitialWidth == NS_SIZETOCONTENT ||
+        aInitialHeight == NS_SIZETOCONTENT) {
+      aInitialWidth = 0;
+      aInitialHeight = 0;
+      showWindow = PR_FALSE; // Don't show until we have the intrinsic size figured out.
+      window->SetIntrinsicallySized(PR_TRUE);
+    }
+
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight, widgetInitData);
+      
     if (NS_SUCCEEDED(rv))
     {
       // this does the AddRef of the return value
@@ -546,6 +555,14 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
     // seem to be interpreting it in unexpected ways.
     nsWidgetInitData widgetInitData;
     widgetInitData.mBorderStyle = eBorderStyle_window;
+
+    if (aInitialWidth == NS_SIZETOCONTENT ||
+        aInitialHeight == NS_SIZETOCONTENT) {
+      aInitialWidth = 0;
+      aInitialHeight = 0;
+      showWindow = PR_FALSE; // Don't show until we have the intrinsic size figured out.
+      window->SetIntrinsicallySized(PR_TRUE);
+    }
 
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,

@@ -65,10 +65,10 @@ public:
 
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
 
-  NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight) = 0;
+  NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight) = 0;
+  NS_IMETHOD SizeContentTo(PRInt32 aWidth, PRInt32 aHeight) = 0;
 
-  NS_IMETHOD GetBounds(nsRect& aResult) = 0;
-
+  NS_IMETHOD GetContentBounds(nsRect& aResult) = 0;
   NS_IMETHOD GetWindowBounds(nsRect& aResult) = 0;
 
   NS_IMETHOD Show() = 0;
