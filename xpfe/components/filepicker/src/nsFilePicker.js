@@ -158,9 +158,9 @@ nsFilePicker.prototype = {
     }
   },
 
-  appendFilter: function(title, extentions) {
+  appendFilter: function(title, extensions) {
     this.mFilterTitles.push(title);
-    this.mFilters.push(extentions);
+    this.mFilters.push(extensions);
   },
 
   QueryInterface: function(iid) {
