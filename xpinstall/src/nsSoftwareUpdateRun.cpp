@@ -579,8 +579,11 @@ extern "C" void RunChromeInstallOnThread(void *data)
             if ( isSkin && selected )
                 reg->RefreshSkins();
  
+#ifdef RELOAD_CHROME_WORKS
+// XXX ReloadChrome() crashes right now
             if ( isContent || (isLocale && selected) )
                 reg->ReloadChrome();
+#endif
         }
     }
 
