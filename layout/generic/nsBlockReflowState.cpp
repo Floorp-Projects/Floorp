@@ -2674,6 +2674,17 @@ nsBlockFrame::FindLineFor(nsIFrame* aFrame,
   return line;
 }
 
+// SEC: added GetCurrentLine() for bug 45152
+// we need a way for line layout to know what line is being reflowed,
+// but we don't want to expose the innards of nsBlockReflowState.
+nsresult 
+nsBlockFrame::GetCurrentLine(nsBlockReflowState *aState, nsLineBox ** aOutCurrentLine)
+{
+  if (!aState || !aOutCurrentLine) return NS_ERROR_FAILURE;
+  *aOutCurrentLine = aState->mCurrentLine;
+  return NS_OK;  
+}
+
 void
 nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
                                nsLineBox* aLine,
@@ -3257,7 +3268,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
     // We don't really know what changed in the line, so use the union
     // of the old and new combined areas
-    if (aDamageDirtyArea) {
+    // SEC: added "aLine->IsForceInvalidate()" for bug 45152
+    if (aDamageDirtyArea || aLine->IsForceInvalidate()) {
+      aLine->SetForceInvalidate(PR_FALSE);  // doing the invalidate now, force flag to off
       nsRect combinedArea;
       aLine->GetCombinedArea(&combinedArea);
 

@@ -161,6 +161,8 @@ public:
   nsLineBox* FindLineFor(nsIFrame* aFrame, nsLineBox** aPrevLineResult,
                          PRBool* aIsFloaterResult);
 
+  static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
+
   // return our ascent (i.e., ascent of our first line)
   // to support 'vertical-align: baseline' in table-cells
   nscoord GetAscent() const;
