@@ -68,6 +68,20 @@ sub MakeDocs($$) {
 ###############################################################################
 
 chdir dirname($0);
+
+if (!-d 'html') {
+    unlink 'html';
+    mkdir 'html', 0755;
+}
+if (!-d 'txt') {
+    unlink 'txt';
+    mkdir 'txt', 0755;
+}
+if (!-d 'pdf') {
+    unlink 'pdf';
+    mkdir 'pdf', 0755;
+}
+
 chdir 'html';
 
 MakeDocs('separate HTML', "jade -t sgml -i html -d $LDP_HOME/ldp.dsl\#html " .
@@ -89,5 +103,5 @@ MakeDocs(undef, 'mv ../xml/Bugzilla-Guide.tex .');
 MakeDocs(undef, 'pdfjadetex Bugzilla-Guide.tex');
 MakeDocs(undef, 'pdfjadetex Bugzilla-Guide.tex');
 MakeDocs(undef, 'pdfjadetex Bugzilla-Guide.tex');
-MakeDocs(undef, 'rm Bugzilla-Guide.tex Bugzilla-Guide.log Bugzilla-Guide.aux');
+MakeDocs(undef, 'rm Bugzilla-Guide.tex Bugzilla-Guide.log Bugzilla-Guide.aux Bugzilla-Guide.out');
 
