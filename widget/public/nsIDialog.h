@@ -31,25 +31,25 @@
  * The base class for all the widgets. It provides the interface for
  * all basic and necessary functionality.
  */
-class nsIDialog : public nsIWidget {
+class nsIDialog : public nsISupports {
 
   public:
 
    /**
-    * Set the button label
+    * Set the dialog label
     *
     * @param aText  button label
     */
   
-    virtual void SetLabel(const nsString &aText) = 0;
+    NS_IMETHOD SetLabel(const nsString &aText) = 0;
     
    /**
-    * Get the button label
+    * Get the dialog label
     *
     * @param aBuffer contains label upon return
     */
  
-    virtual void GetLabel(nsString &aBuffer) = 0;
+    NS_IMETHOD GetLabel(nsString &aBuffer) = 0;
 
 
 

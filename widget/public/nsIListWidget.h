@@ -32,7 +32,7 @@
  *
  */
 
-class nsIListWidget : public nsIWidget {
+class nsIListWidget : public nsISupports {
 
 public:
 

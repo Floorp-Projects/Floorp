@@ -43,9 +43,91 @@ struct nsListBoxInitData : public nsWidgetInitData {
  * horizontal scrollbar.
  */
 
-class nsIListBox : public nsIListWidget {
+class nsIListBox : public nsISupports {
 
 public:
+
+    /**
+     * Set an item at the specific position
+     *
+     * @param   aItem     the item name. The item has to be null terminated
+     * @param   aPosition the position the item should be inserted at
+     *                    0 is at the top of the list
+     *                    -1 is at the end of the list
+     */
+    virtual void AddItemAt(nsString &aItem, PRInt32 aPosition) = 0;
+
+    /**
+     * Finds the first occurrence of the specified item
+     *
+     * @param   aItem     the string to be filled
+     * @param   aStartPos the starting position (index)
+     * @return  PR_TRUE if successful, PR_FALSE otherwise
+     *
+     */
+    virtual PRInt32  FindItem(nsString &aItem, PRInt32 aStartPos) = 0;
+
+    /**
+     * Returns the number of items in the list
+     *
+     * @return  the number of items
+     *
+     */
+    virtual PRInt32  GetItemCount() = 0;
+
+    /**
+     * Remove the first occurrence of the specified item
+     *
+     * @param   aPosition the item position
+     *                    0 is at the top of the list
+     *                    -1 is at the end of the list
+     *
+     * @return  PR_TRUE if successful, PR_FALSE otherwise
+     *
+     */
+    virtual PRBool RemoveItemAt(PRInt32 aPosition) = 0;
+
+    /**
+     * Gets an item at a specific location
+     *
+     * @param   anItem    on return contains the string of the item at that position
+     * @param   aPosition the Position of the item
+     *
+     */
+     virtual PRBool GetItemAt(nsString& anItem, PRInt32 aPosition) = 0;
+
+    /**
+     * Gets the selected item for a single selection list
+     *
+     * @param   aItem  on return contains the string of the selected item
+     *
+     */
+     virtual void GetSelectedItem(nsString &aItem) = 0;
+
+    /**
+     * Returns with the index of the selected item
+     *
+     * @return  PRInt32, index of selected item
+     *
+     */
+    virtual PRInt32 GetSelectedIndex()  = 0;
+
+    /**
+     * Select the item at the specified position
+     *
+     * @param   PRInt32, the item position
+     *                   0 is at the top of the list
+     *                   -1 is at the end of the list
+     *
+     */
+    virtual void SelectItem(PRInt32 aPosition)  = 0;
+
+    /**
+     * Deselects all the items in the list
+     *
+     */
+    virtual void Deselect()  = 0;
+
 
     /**
      * Set the listbox to be multi-select.

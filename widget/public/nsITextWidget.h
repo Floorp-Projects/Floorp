@@ -39,7 +39,7 @@ struct nsTextWidgetInitData : public nsWidgetInitData {
  *
  */
 
-class nsITextWidget : public nsIWidget
+class nsITextWidget : public nsISupports
 {
 
   public:
@@ -49,21 +49,23 @@ class nsITextWidget : public nsIWidget
      *
      * @param aTextBuffer  on return contains the text of this component
      * @param aBufferSize  the size of the buffer passed in
-     * @return             the number of char copied
+     * @param aActualSize  the number of char copied
+     * @result NS_Ok if no errors
      *
      */
 
-    virtual PRUint32 GetText(nsString &aTextBuffer, PRUint32 aBufferSize) = 0;
+    NS_IMETHOD GetText(nsString &aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize) = 0;
 
     /**
      * Set the text of this component.
      *
-     * @param   aTextBuffer   on return it contains the text contents.
+     * @param   aText -- an object containing a copy of the text
      * @return  the number of chars in the text string
+     * @result NS_Ok if no errors
      *
      */
 
-    virtual PRUint32 SetText(const nsString &aText) = 0;
+    NS_IMETHOD SetText(const nsString &aText, PRUint32& aActualSize) = 0;
 
     /**
      * Insert text into this component.
@@ -75,79 +77,89 @@ class nsITextWidget : public nsIWidget
      * @param   aText     the text to set
      * @param   aStartPos starting position for inserting text
      * @param   aEndPos   ending position for inserting text
+     * @result NS_Ok if no errors
      */
 
-    virtual PRUint32 InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos) = 0;
+    NS_IMETHOD InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize) = 0;
 
     /**
      * Remove any content from this text widget
+     * @result NS_Ok if no errors
      */
 
-    virtual void RemoveText() = 0;
+    NS_IMETHOD RemoveText(void) = 0;
 
     /**
      * Indicates a password will be entered. 
      *
      * @param aIsPassword PR_TRUE shows contents as asterisks. PR_FALSE shows
      * contents as normal text.
+     * @result NS_Ok if no errors
      */
     
-    virtual void SetPassword(PRBool aIsPassword) = 0;
+    NS_IMETHOD SetPassword(PRBool aIsPassword) = 0;
 
     /**
      * Sets the maximum number of characters the widget can hold 
      *
      * @param aChars maximum number of characters for this widget. if 0 then there isn't any limit
+     * @result NS_Ok if no errors
      */
     
-    virtual void SetMaxTextLength(PRUint32 aChars) = 0;
+    NS_IMETHOD SetMaxTextLength(PRUint32 aChars) = 0;
 
 
     /**
      * Set the text widget to be read-only
      *
-     * @param      aReadOnlyFlag PR_TRUE the widget is read-only,
-     *             PR_FALSE indicates the widget is writable. 
-     * @return     PR_TRUE if it was read only. PR_FALSE if it was writable           
+     * @param  aReadOnlyFlag PR_TRUE the widget is read-only,
+     *         PR_FALSE indicates the widget is writable. 
+     * @param  PR_TRUE if it was read only. PR_FALSE if it was writable           
+     * @result NS_Ok if no errors
      */
 
-    virtual PRBool SetReadOnly(PRBool aReadOnlyFlag) = 0;
+    NS_IMETHOD SetReadOnly(PRBool aNewReadOnlyFlag, PRBool& aOldReadOnlyFlag) = 0;
     
     /**
      * Select all of the contents
+     * @result NS_Ok if no errors
      */
 
-    virtual void SelectAll() = 0;
+    NS_IMETHOD SelectAll() = 0;
 
     /**
      * Set the selection in this text component
      * @param aStartSel starting selection position in characters
      * @param aEndSel ending selection position in characters 
+     * @result NS_Ok if no errors
      */
 
-    virtual void SetSelection(PRUint32 aStartSel, PRUint32 aEndSel) = 0;
+    NS_IMETHOD SetSelection(PRUint32 aStartSel, PRUint32 aEndSel) = 0;
 
     /**
      * Get the selection in this text component
      * @param aStartSel starting selection position in characters
      * @param aEndSel ending selection position in characters 
+     * @result NS_Ok if no errors
      */
 
-    virtual void GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel) = 0;
+    NS_IMETHOD GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel) = 0;
 
     /**
      * Set the caret position
      * @param aPosition caret position in characters
+     * @result NS_Ok if no errors
      */
 
-    virtual void SetCaretPosition(PRUint32 aPosition) = 0;
+    NS_IMETHOD SetCaretPosition(PRUint32 aPosition) = 0;
 
     /**
      * Get the caret position
      * @return caret position in characters
+     * @result NS_Ok if no errors
      */
 
-    virtual PRUint32 GetCaretPosition() = 0;
+    NS_IMETHOD GetCaretPosition(PRUint32& aPosition) = 0;
 
 };
 

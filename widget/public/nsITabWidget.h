@@ -29,7 +29,7 @@
  * Tab widget.
  * Presents a lists of tabs to be clicked on.
  */
-class nsITabWidget : public nsIWidget {
+class nsITabWidget : public nsISupports {
 
   public:
  
@@ -38,17 +38,19 @@ class nsITabWidget : public nsIWidget {
     *
     * @param aNumberOfTabs  The number of tabs in aTabLabels and aTabID
     * @param aTabLabels     title displayed in the tab
+    * @result NS_Ok if no errors
     */
   
-    virtual void SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[]) = 0;
+    NS_IMETHOD SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[]) = 0;
 
    /**
     * Get selected tab
     *
     * @return the index of the selected tab. Index ranges between 0 and (NumberOfTabs - 1)
+    * @result NS_Ok if no errors
     */
   
-    virtual PRUint32 GetSelectedTab() = 0;
+    NS_IMETHOD GetSelectedTab(PRUint32& aTab) = 0;
   
 };
 

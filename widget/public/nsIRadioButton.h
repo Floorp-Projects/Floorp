@@ -32,24 +32,43 @@ class nsIRadioGroup;
  * The RadioButton widget automatically shows itself checked or unchecked when clicked on.
  */
 
-class nsIRadioButton : public nsIButton {
+class nsIRadioButton : public nsISupports {
 
-  public:
+public:
+
+   /**
+    * Set the button label
+    *
+    * @param aText  button label
+    * @result set to NS_OK if method successful
+    */
+  
+    NS_IMETHOD SetLabel(const nsString &aText) = 0;
+    
+   /**
+    * Get the button label
+    *
+    * @param aBuffer contains label upon return
+    * @result set to NS_OK if method successful
+    */
+ 
+    NS_IMETHOD GetLabel(nsString &aBuffer) = 0;
 
     /**
-     * Set the radio state.
-     * @param aState PR_TRUE sets the RadioButton and unsets all siblings, PR_FALSE unsets it
-     *
+     * Set the check state.
+     * @param aState PR_TRUE show as checked. PR_FALSE show unchecked.
+     * @result set to NS_OK if method successful
      */
-    virtual void SetState(PRBool aState) = 0;
 
+    NS_IMETHOD SetState(const PRBool aState) = 0;
+    
     /**
-     * Gets the state the RadioButton
-     *
-     * @return PR_TRUE if set, PR_FALSE if unset
-     *
+     * Get the check state.
+     * @param aState PR_TRUE if checked. PR_FALSE if unchecked.
+     * @result set to NS_OK if method successful
      */
-    virtual PRBool GetState() = 0;
+
+    NS_IMETHOD GetState(PRBool& aState) = 0;
 
 };
 

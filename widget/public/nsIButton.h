@@ -31,25 +31,27 @@
  * Push button widget.
  * Automatically shows itself as depressed when clicked on.
  */
-class nsIButton : public nsIWidget {
+class nsIButton : public nsISupports {
 
-  public:
+public:
  
    /**
-    * Set the button label
+    * Set the label
     *
-    * @param aText  button label
+    * @param  Set the label to aText
+    * @result NS_Ok if no errors
     */
   
-    virtual void SetLabel(const nsString &aText) = 0;
+    NS_IMETHOD SetLabel(const nsString &aText) = 0;
     
    /**
     * Get the button label
     *
     * @param aBuffer contains label upon return
+    * @result NS_Ok if no errors
     */
  
-    virtual void GetLabel(nsString &aBuffer) = 0;
+    NS_IMETHOD GetLabel(nsString &aBuffer) = 0;
 
 };
 

@@ -41,31 +41,35 @@ public:
     /**
      * Adds a RadioButton to the group
      * @param aRadioBtn the radio button to be added
+     * @result NS_Ok if no errors
      *
      */
-    virtual void Add(nsIRadioButton * aRadioBtn) = 0;
+    NS_IMETHOD Add(nsIRadioButton * aRadioBtn) = 0;
 
     /**
      * Removes a RadioButton from the group
      * @param aRadioBtn the radio button to be removed
+     * @result NS_Ok if no errors
      *
      */
-    virtual void Remove(nsIRadioButton * aRadioBtn) = 0;
+    NS_IMETHOD Remove(nsIRadioButton * aRadioBtn) = 0;
 
     /**
      * Sets the name of the RadioGroup
      * @param aName The new name of the radio group
+     * @result NS_Ok if no errors
      *
      */
-    virtual void SetName(const nsString &aName) = 0;
+    NS_IMETHOD SetName(const nsString &aName) = 0;
 
     /**
      * Tells the RadioGroup that a child RadioButton has been clicked and it should set 
      * the approproate state on the other buttons
      * @param aChild The RadioButton that was clicked
+     * @result NS_Ok if no errors
      *
      */
-    virtual void Clicked(nsIRadioButton * aChild) = 0;
+    NS_IMETHOD Clicked(nsIRadioButton * aChild) = 0;
 
     /**
      * Gets the enumeration of children
