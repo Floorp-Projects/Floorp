@@ -58,9 +58,13 @@ nsMsgRDFDataSource::Init()
     return rv;
 }
 
-void
-nsMsgRDFDataSource::Close()
+
+void nsMsgRDFDataSource::Close()
 {
+	mStatusFeedback = null_nsCOMPtr();
+	mTransactionManager = null_nsCOMPtr();
+	mMessageView = null_nsCOMPtr();
+	kEmptyArray = null_nsCOMPtr();
 }
 
 NS_IMPL_ADDREF(nsMsgRDFDataSource)
@@ -281,12 +285,13 @@ NS_IMETHODIMP
 nsMsgRDFDataSource::OnShutdown(const nsCID& aClass, nsISupports* service)
 {
     
+    mRDFService=nsnull;
+	m_shuttingDown = PR_TRUE;
+	Close();
     // the question is do we release the service or what?
     // at the very least we set our member variable to nsnull so
     // that getRDFService knows to re-get the service
-    mRDFService=nsnull;
-	m_shuttingDown = PR_TRUE;
-    return NS_OK;
+	return NS_OK;
 }
 
 
@@ -345,7 +350,7 @@ nsIRDFService *
 nsMsgRDFDataSource::getRDFService()
 {
     
-    if (!mRDFService) {
+    if (!mRDFService && !m_shuttingDown) {
         nsresult rv;
         
         rv = nsServiceManager::GetService(kRDFServiceCID,
