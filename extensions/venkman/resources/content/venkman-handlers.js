@@ -59,6 +59,34 @@ function con_step()
     return true;
 }
 
+console.onTModeMenuCreate =
+function con_tmodecreate()
+{
+    var check;
+    
+    switch (getThrowMode())
+    {
+        case TMODE_IGNORE:
+            check = "menu_TModeIgnore";
+            break;
+        case TMODE_TRACE:
+            check = "menu_TModeTrace";
+            break;
+        case TMODE_BREAK:
+            check = "menu_TModeBreak";
+            break;
+    }
+    
+    var menu = document.getElementById("menu_TModeIgnore");
+    menu.setAttribute("checked", "menu_TModeIgnore" == check);
+
+    menu = document.getElementById("menu_TModeTrace");
+    menu.setAttribute("checked", "menu_TModeTrace" == check);
+
+    menu = document.getElementById("menu_TModeBreak");
+    menu.setAttribute("checked", "menu_TModeBreak" == check);
+}
+
 console.displayUsageError =
 function con_dusage (command)
 {
@@ -69,10 +97,29 @@ console.onDebugTrap =
 function con_ondt ()
 {
     var frame = getCurrentFrame();
-    focusSource (frame.script.fileName, frame.line);
+    var url = frame.script.fileName;
+    
+    if (!console._sources[url])
+    {
+        function loaded ()
+        {
+            focusSource (url, frame.line);
+        }
+        loadSource (url, loaded);
+    }
+    else
+        focusSource (url, frame.line);
+
     console._stackOutlinerView.setStack(console.frames);
     console._stackOutlinerView.setCurrentFrame (getCurrentFrameIndex());
     enableDebugCommands()
+}
+
+console.onDebugContinue =
+function con_ondc ()
+{
+    console._stackOutlinerView.setStack(null);
+    console._sourceOutlinerView.setCurrentLine(null);
 }
 
 console.onLoad =
@@ -266,7 +313,8 @@ function con_ieval (e)
                 refreshResultsArray();
                 var l = $.length;
                 $[l] = rv;
-                display ("$[" + l + "] = " + formatValue (rv), MT_FEVAL_OUT);
+                display (getMsg(MSN_FMT_TMP_ASSIGN, [l, formatValue (rv)]),
+                         MT_FEVAL_OUT);
             }
             else
                 display (formatValue (rv), MT_FEVAL_OUT);
@@ -455,6 +503,33 @@ console.onInputStep =
 function con_iwhere ()
 {
     return console.doCommandStep();
+}
+
+console.onInputTMode =
+function con_itmode (e)
+{
+    if (typeof e.inputData == "string")
+    {
+        if (e.inputData.search(/ignore/i) != -1)
+        {
+            setThrowMode(TMODE_IGNORE);
+            return true;
+        }
+        else if (e.inputData.search(/trace/i) != -1)
+        {
+            setThrowMode(TMODE_TRACE);
+            return true;
+        }
+        else if (e.inputData.search(/breaK/i) != -1)
+        {
+            setThrowMode(TMODE_BREAK);
+            return true;
+        }
+    }
+
+    /* display the current throw mode */
+    setThrowMode(getThrowMode());
+    return true;
 }
 
 console.onInputQuit =
@@ -719,11 +794,11 @@ function con_tabcomplete (e)
 
 }
 
-console.onClose =
-function con_close (e)
+console.onUnload =
+function con_unload (e)
 {
-    dd ("Application venkman, 'JavaScript Debugger' closing.");
-
+    dd ("Application venkman, 'JavaScript Debugger' unloading.");
+    
     detachDebugger();
     
     return true;
