@@ -92,7 +92,11 @@ nsProfileAccess::nsProfileAccess()
     // Get the old moz registry
     nsCOMPtr<nsIFile> mozRegFile;
 
-#if defined(XP_PC)
+#if defined(XP_OS2)
+    NS_GetSpecialDirectory(NS_OS2_DIR, getter_AddRefs(mozRegFile));
+    if (mozRegFile)
+        mozRegFile->Append(WIN_MOZ_REG);
+#elif defined(XP_PC)
     NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(mozRegFile));
     if (mozRegFile)
         mozRegFile->Append(WIN_MOZ_REG);
