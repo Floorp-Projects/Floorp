@@ -1230,11 +1230,11 @@ var attachmentAreaDNDObserver = {
       var attachmentDisplayName = target.getAttribute("label");
       var attachmentContentType = target.getAttribute("attachmentContentType");
       var tmpurl = attachmentUrl;
-      tmpurl = tmpurl + "&type=" + attachmentContentType + "&filename=" + attachmentDisplayName;
+      var tmpurlWithExtraInfo = tmpurl + "&type=" + attachmentContentType + "&filename=" + attachmentDisplayName;
       aAttachmentData.data = new TransferData();
       if (attachmentUrl && attachmentDisplayName)
       {
-        aAttachmentData.data.addDataForFlavour("text/x-moz-url", tmpurl + "\n" + attachmentDisplayName);
+        aAttachmentData.data.addDataForFlavour("text/x-moz-url", tmpurlWithExtraInfo + "\n" + attachmentDisplayName);
         aAttachmentData.data.addDataForFlavour("text/x-moz-url-data", tmpurl);
         aAttachmentData.data.addDataForFlavour("text/x-moz-url-desc", attachmentDisplayName);
         
