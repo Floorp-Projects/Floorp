@@ -1059,3 +1059,4 @@ nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **
     *result = NS_STATIC_CAST(nsIFileChannel*, channel);
     return NS_OK;
 }
+
