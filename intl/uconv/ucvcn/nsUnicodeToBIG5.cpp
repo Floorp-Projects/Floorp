@@ -27,8 +27,9 @@ static PRUint16 g_BIG5MappingTable[] = {
 };
 
 static PRInt16 g_BIG5ShiftTable[] =  {
-  1, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
+  2, uMultibytesCharset,  
+  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
+  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
 };
 
 //----------------------------------------------------------------------
