@@ -223,7 +223,8 @@ nsFontMetricsWin::RealizeFont()
   TEXTMETRIC&  metrics = oMetrics.otmTextMetrics;
 
   if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
-    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * dev2app);
+//    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * dev2app);  XXX not really supported on windows
+    mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.56f); // 56% of ascent
     mSuperscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * dev2app);
     mSubscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * dev2app);
 
