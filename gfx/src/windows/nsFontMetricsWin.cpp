@@ -2604,7 +2604,7 @@ HDC   dc1 = NULL;
   mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
   mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
-  mAveCharWidth = NSToCoordRound(metrics.tmAveCharWidth * dev2app);
+  mAveCharWidth = PR_MAX(1, NSToCoordRound(metrics.tmAveCharWidth * dev2app));
 
    // Cache the width of a single space.
   SIZE  size;
