@@ -476,6 +476,8 @@ static const char kProxyType_DIRECT[] = "direct";
 const char *
 nsProtocolProxyService::ExtractProxyInfo(const char *start, PRBool permitHttp, nsProxyInfo **result)
 {
+    *result = nsnull;
+
     // see BNF in nsIProxyAutoConfig.idl
 
     // find end of proxy info delimiter
