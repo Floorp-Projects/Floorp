@@ -205,7 +205,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 	// is printed out to the console and determining if the mail app loaded up correctly...obviously
 	// this solution is not very good so we should look at something better, but don't remove this
 	// line before talking to me (mscott) and mailnews QA....
-	printf("Mailbox Done");
+	printf("Mailbox Done\n");
 
 	return NS_OK;
 
