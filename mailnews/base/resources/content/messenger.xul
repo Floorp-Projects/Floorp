@@ -565,12 +565,12 @@ Rights Reserved.
 
    <toolbox>
 	  <toolbar>
-	  <titledbutton src="&getMsgButton.img;" align="bottom" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
-	  <titledbutton src="&newMsgButton.img;" align="bottom" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>
+	  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
+	  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>
 	  <html:div class="separator" align="vertical"/> 
-	  <titledbutton src="&replyButton.img;" align="bottom" value="&replyButton.label;" onclick="MsgReplyMessage()"/>
-	  <titledbutton src="&forwardButton.img;" align="bottom" value="&forwardButton.label;" onclick="MsgForwardMessage()"/>
-	  <titledbutton src="&deleteButton.img;" align="bottom" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
+	  <titledbutton src="&replyButton.img;" align="top" value="&replyButton.label;" onclick="MsgReplyMessage()"/>
+	  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage()"/>
+	  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
       <spring flex="100%"/>
 	  <titledbutton src="&throbber.img;" align="right" onclick="MsgHome('&throbber.url;')"/>
       </toolbar>
