@@ -64,6 +64,9 @@
 #include "nsIAddressBook.h"
 #include "nsAbBaseCID.h"
 
+#include "nsIMsgFilterService.h"
+#include "nsIMsgFilterList.h"
+
 #define BUF_STR_LEN 1024
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
@@ -117,6 +120,8 @@ static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 #define DEFAULT_4X_SENT_FOLDER_NAME "Sent"
 #define DEFAULT_4X_TEMPLATES_FOLDER_NAME "Templates"
 #define UNSENT_MESSAGES_FOLDER_NAME "Unsent Messages"
+
+#define FILTER_FILE_NAME	"rules.dat"		/* this is XP in 5.x */
 
 /* we are going to clear these after migration */
 #define PREF_4X_MAIL_IDENTITY_USEREMAIL "mail.identity.useremail"
@@ -1374,6 +1379,10 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   rv = SetSendLaterUriPref(server);
   if (NS_FAILED(rv)) return rv;
 
+  // migrate the filter file
+  rv = MigrateFilters(server);
+  if (NS_FAILED(rv)) return rv;
+
   // we could only have one pop account in 4.x, so we make it the default in 5.0
   rv = accountManager->SetDefaultAccount(account);
   return rv;
@@ -1613,6 +1622,10 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     imapMailDir->CreateDir();
   }
   
+  // migrate the filter file
+  rv = MigrateFilters(server);
+  if (NS_FAILED(rv)) return rv;
+
   if (isDefaultAccount) {
     rv = accountManager->SetDefaultAccount(account);
     if (NS_FAILED(rv)) return rv;
@@ -2165,6 +2178,10 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 		newsDir->CreateDir();
 	}
 
+    // migrate the filter file
+    rv = MigrateFilters(server);
+    if (NS_FAILED(rv)) return rv;
+
 	return NS_OK;
 }
 
@@ -2197,3 +2214,58 @@ nsMessengerMigrator::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
   return NS_OK;
 }
 
+#if defined(DEBUG_sspitzer) || defined(DEBUG_bienvenu)
+#define MIGRATE_FILTERS 1
+#endif
+
+nsresult nsMessengerMigrator::MigrateFilters(nsIMsgIncomingServer *aServer)
+{
+#ifdef MIGRATE_FILTERS
+	nsresult rv;
+	if (!aServer) return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr <nsIFolder> rootFolder;
+	rv = aServer->GetRootFolder(getter_AddRefs(rootFolder));
+	if (NS_FAILED(rv)) return rv;
+	if (!rootFolder) return NS_ERROR_FAILURE;
+	
+	nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(rootFolder, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+
+	nsCOMPtr <nsIMsgFilterService> filterService = do_GetService(NS_MSGFILTERSERVICE_PROGID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!filterService) return NS_ERROR_FAILURE;
+	
+	nsCOMPtr <nsIMsgFilterList> filterList;
+	nsCOMPtr <nsIFileSpec> filterFile;
+
+	rv = aServer->GetLocalPath(getter_AddRefs(filterFile));
+	if (NS_FAILED(rv)) return rv;
+	if (!filterFile) return NS_ERROR_FAILURE;
+
+	rv = filterFile->AppendRelativeUnixPath(FILTER_FILE_NAME);
+	if (NS_FAILED(rv)) return rv;
+
+	PRBool exists;
+	rv = filterFile->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+
+	if (exists) {
+		nsFileSpec filterFileSpec;
+		rv = filterFile->GetFileSpec(&filterFileSpec);
+		if (NS_FAILED(rv)) return rv;
+
+		// open will migrate the filters.
+		rv = filterService->OpenFilterList(&filterFileSpec, getter_AddRefs(filterList));
+		if (NS_FAILED(rv)) return rv;
+		if (!filterList) return NS_ERROR_FAILURE;
+		
+		// now save the filters.
+		rv = filterService->SaveFilterList(filterList, &filterFileSpec);
+		if (NS_FAILED(rv)) return rv;
+	}
+#endif /* MIGRATE_FILTERS */
+
+	return NS_OK;
+}

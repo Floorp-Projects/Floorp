@@ -120,7 +120,8 @@ private:
   nsresult Convert4XUri(const char *old_uri, PRBool for_news, const char *aUsername, const char *aHostname, const char *default_folder_name, char **new_uri);
  
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
- 
+  nsresult MigrateFilters(nsIMsgIncomingServer *server);
+
   nsresult getPrefService();
 
   nsCOMPtr <nsIPref> m_prefs;
