@@ -1488,6 +1488,13 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
      mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
      scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
                                      indexStr, /* notify */ PR_TRUE);
+
+     // Now force the reflow to happen immediately, because we need to
+     // deal with cleaning out the content chain.
+     nsCOMPtr<nsIPresShell> shell;
+     aPresContext->GetShell(getter_AddRefs(shell));
+     shell->ProcessReflowCommands(PR_FALSE);
+
      return; // All frames got deleted anyway by the pos change.
   }
   
