@@ -23,7 +23,6 @@
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsILoggingSink.h"
-#include "CNavDTD.h"
 #include "nsIInputStream.h"
 #include "prprf.h"
 #include <fstream.h>
@@ -45,6 +44,8 @@ static NS_DEFINE_IID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 // Interface IID's
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
+
+static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 
 //----------------------------------------------------------------------
 
@@ -93,7 +94,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
       if (NS_SUCCEEDED(result)) {
         // Create a dtd
         nsCOMPtr<nsIDTD> dtd;
-        result=NS_NewNavHTMLDTD(getter_AddRefs(dtd));
+        result=nsComponentManager::CreateInstance(kNavDTDCID,nsnull,NS_GET_IID(nsIDTD),getter_AddRefs(dtd));
         if(NS_SUCCEEDED(result)) {
           // Parse the document, having the sink write the data to fp
           PRFileDesc* out;
