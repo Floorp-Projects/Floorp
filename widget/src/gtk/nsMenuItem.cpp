@@ -321,6 +321,15 @@ NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 //-------------------------------------------------------------------------
 // nsIMenuListener interface
 //-------------------------------------------------------------------------
+nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  if(mXULCommandListener)
+    return mXULCommandListener->MenuSelected(aMenuEvent);
+
+  g_print("nsMenuItem::MenuSelected\n");
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   if(mXULCommandListener)
@@ -336,7 +345,11 @@ nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
-nsEventStatus nsMenuItem::MenuConstruct(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenuItem::MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menuNode,
+	void              * aWebShell)
 {
   g_print("nsMenuItem::MenuConstruct\n");
   return nsEventStatus_eIgnore;
@@ -346,4 +359,43 @@ nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
   g_print("nsMenuItem::MenuDestruct\n");
   return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+/**
+* Sets the JavaScript Command to be invoked when a "gui" event occurs on a source widget
+* @param aStrCmd the JS command to be cached for later execution
+* @return NS_OK 
+*/
+NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
+{
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+/**
+* Executes the "cached" JavaScript Command 
+* @return NS_OK if the command was executed properly, otherwise an error code
+*/
+NS_METHOD nsMenuItem::DoCommand()
+{
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
+{
+	return NS_OK;
+}
+    
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetDOMElement(nsIDOMElement ** aDOMElement)
+{
+	return NS_OK;
+}
+    
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
+{
+	return NS_OK;
 }

@@ -310,6 +310,14 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 // nsIMenuListener interface
 //-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  if (nsnull != mListener) {
+    mListener->MenuSelected(aMenuEvent);
+  }
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   if (nsnull != mListener) {
@@ -328,7 +336,11 @@ nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 }
 
 //-------------------------------------------------------------------------
-nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenu::MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menuNode,
+	void              * aWebShell)
 {
   if (nsnull != mListener) {
     mListener->MenuDeselected(aMenuEvent);
@@ -343,4 +355,34 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
     mListener->MenuDeselected(aMenuEvent);
   }
   return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+/**
+* Set DOMNode
+*
+*/
+NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
+{
+	return NS_OK:
+}
+
+//-------------------------------------------------------------------------
+/**
+* Set DOMElement
+*
+*/
+NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
+{
+	return NS_OK;
+}
+    
+//-------------------------------------------------------------------------
+/**
+* Set WebShell
+*
+*/
+NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
+{
+	return NS_OK;
 }

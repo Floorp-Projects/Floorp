@@ -22,6 +22,9 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
+#include "nsIWebShell.h"
+#include "nsIDOMElement.h"
+
 // {7F045771-4BEB-11d2-8DBB-00609703C14E}
 #define NS_IMENUITEM_IID      \
 { 0x7f045771, 0x4beb, 0x11d2, \
@@ -140,6 +143,22 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD IsSeparator(PRBool & aIsSep) = 0;
 
+   /**
+    * Sets the JavaScript Command to be invoked when a "gui" event occurs on a source widget
+    * @param aStrCmd the JS command to be cached for later execution
+    * @return NS_OK 
+    */
+    NS_IMETHOD SetCommand(const nsString & aStrCmd) = 0;
+
+   /**
+    * Executes the "cached" JavaScript Command 
+    * @return NS_OK if the command was executed properly, otherwise an error code
+    */
+    NS_IMETHOD DoCommand() = 0;
+
+    NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement) = 0;
+    NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement) = 0;
+    NS_IMETHOD SetWebShell(nsIWebShell * aWebShell) = 0;
 };
 
 #endif

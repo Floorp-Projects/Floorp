@@ -199,6 +199,11 @@ NS_IMETHODIMP nsXULCommand::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsSt
 /////////////////////////////////////////////////////////////////////////
 // nsIMenuListener Method(s)
 /////////////////////////////////////////////////////////////////////////
+nsEventStatus nsXULCommand::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  DoCommand();
+  return nsEventStatus_eConsumeNoDefault;
+}
 
 nsEventStatus nsXULCommand::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
@@ -212,7 +217,16 @@ nsEventStatus nsXULCommand::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eConsumeNoDefault;
 }
 
-nsEventStatus nsXULCommand::MenuConstruct(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsXULCommand::MenuConstruct(
+
+    const nsMenuEvent & aMenuEvent,
+
+    nsIWidget         * aParentWindow, 
+
+    void              * menubarNode,
+
+	void              * aWebShell)
+
 {
   DoCommand();
   return nsEventStatus_eConsumeNoDefault;

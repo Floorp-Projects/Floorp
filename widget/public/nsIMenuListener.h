@@ -42,6 +42,13 @@ class nsIMenuListener : public nsISupports {
   public:
     static const nsIID& GetIID() { static nsIID iid = NS_IMENULISTENER_IID; return iid; }
 
+	 /**
+     * Processes a menu item selected event
+     * @param aMenuEvent See nsGUIEvent.h 
+     * @return whether the event was consumed or ignored. See nsEventStatus
+     */
+    virtual nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent) = 0;
+
     /**
      * Processes a menu selected event
      * @param aMenuEvent See nsGUIEvent.h 
@@ -56,7 +63,18 @@ class nsIMenuListener : public nsISupports {
      */
     virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent) = 0;
 
-    virtual nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent) = 0;
+    virtual nsEventStatus MenuConstruct(
+
+      const nsMenuEvent & aMenuEvent,
+
+      nsIWidget         * aParentWindow, 
+
+      void              * menubarNode,
+
+	  void              * aWebShell) = 0;
+
+      
+
     virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent) = 0;
 };
 

@@ -66,6 +66,13 @@ NS_IMPL_RELEASE(nsMenuBar)
 // nsMenuListener interface
 //
 //-------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   // Dispatch menu event
@@ -96,7 +103,11 @@ nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 }
 
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuConstruct(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenuBar::MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menuNode,
+	void              * aWebShell)
 {
   return nsEventStatus_eIgnore;
 }

@@ -330,6 +330,50 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 // nsIMenuListener interface
 //
 //-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  nsEventStatus eventStatus = nsEventStatus_eIgnore;
+      
+  // Determine if this is the correct menu to handle the event
+  PRInt16 menuID = HiWord(((nsMenuEvent)aMenuEvent).mCommand);
+  if(mMacMenuID == menuID)
+  {
+    // Call MenuSelected on the correct nsMenuItem
+    PRInt16 menuItemID = LoWord(((nsMenuEvent)aMenuEvent).mCommand);
+    nsIMenuListener * menuListener = nsnull;
+    ((nsIMenuItem*)mMenuItemVoidArray[menuItemID-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+	if(menuListener) {
+	  eventStatus = menuListener->MenuSelected(aMenuEvent);
+	  NS_IF_RELEASE(menuListener);
+	}
+  } 
+  else
+  {
+    // Make sure none of our submenus are the ones that should be handling this
+      for (int i = mMenuItemVoidArray.Count(); i > 0; i--)
+	  {
+	    if(nsnull != mMenuItemVoidArray[i-1])
+	    {
+		    nsIMenu * submenu = nsnull;
+		    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuIID, &submenu);
+		    if(submenu)
+		    {
+			    nsIMenuListener * menuListener = nsnull;
+			    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+			    if(menuListener){
+			      eventStatus = menuListener->MenuSelected(aMenuEvent);
+			      NS_IF_RELEASE(menuListener);
+			      if(nsEventStatus_eIgnore != eventStatus)
+			        return eventStatus;
+			    }
+		    }
+		}
+	  }
+  
+  }
+  return eventStatus;
+}
+
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
@@ -381,7 +425,11 @@ nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 }
 
 //-------------------------------------------------------------------------
-nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenu::MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menuNode,
+	void              * aWebShell)
 {
   return nsEventStatus_eIgnore;
 }
@@ -390,4 +438,34 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent)
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+/**
+* Set DOMNode
+*
+*/
+NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
+{
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+/**
+* Set DOMElement
+*
+*/
+NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
+{
+	return NS_OK;
+}
+    
+//-------------------------------------------------------------------------
+/**
+* Set WebShell
+*
+*/
+NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
+{
+	return NS_OK;
 }
