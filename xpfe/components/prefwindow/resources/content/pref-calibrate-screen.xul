@@ -38,16 +38,16 @@
   <script type="application/x-javascript" 
           src="chrome://communicator/content/pref/pref-fonts.js"/>
 
-  <box orient="vertical" align="center">
+  <vbox align="center">
 
-    <box id="horizRuler" orient="vertical" width="300" height="30" style="margin: 10px; margin-bottom: 0px">
-      <box height="10px" style="border-bottom: 1px solid black; border-left: 1px solid black; border-right: 1px solid black;"/>
-      <box height="10px" style="border-top: 1px solid black; border-left: 1px solid black; border-right: 1px solid black;"/>
-    </box>
+    <vbox id="horizRuler" width="300" height="30" style="margin: 10px; margin-bottom: 0px">
+      <hbox height="10px" style="border-bottom: 1px solid black; border-left: 1px solid black; border-right: 1px solid black;"/>
+      <hbox height="10px" style="border-top: 1px solid black; border-left: 1px solid black; border-right: 1px solid black;"/>
+    </vbox>
 
-    <box align="center">
+    <hbox align="center">
       <text value="&calibrate.instructions;"/>
-    </box>
+    </hbox>
       
     <separator class="thin"/>
       
@@ -65,8 +65,8 @@
     <separator/>
 
     <keyset id="dialogKeys"/>
-    <box id="okCancelButtonsRight"/>
+    <hbox id="okCancelButtonsRight"/>
 
-  </box>
+  </vbox>
   
 </window>

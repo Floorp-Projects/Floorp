@@ -29,11 +29,11 @@
 <window title="&regviewerWindowTitle.label;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="horizontal"
+        orient="horizontal"
         onload="OnLoad();">
 
   <script type="application/x-javascript" src="regviewer.js" />
-  <box flex="1*">
+  <hbox flex="1*">
     <html:div style="width:100px;height:100px;" flex="1*">
       <tree id="tree" style="width:100%;height:100%" datasources="rdf:null"
             containment="urn:mozilla-registry:subkeys"
@@ -59,10 +59,10 @@
         </treehead>
       </tree>
     </html:div>
-  </box>
+  </hbox>
   <splitter collapse="before"/>
-  <box flex="1*">
+  <hbox flex="1*">
     <html:div id="properties" style="width:100%;height:100%" flex="1*" />
-  </box>
+  </hbox>
 </window>
 

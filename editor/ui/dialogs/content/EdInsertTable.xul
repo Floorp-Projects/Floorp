@@ -37,7 +37,7 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
     persist="screenX screenY"
-    align="vertical">
+    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -48,7 +48,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
-  <titledbox orient="vertical"><label value="&size.label;"/>
+  <groupbox orient="vertical"><label value="&size.label;"/>
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>
@@ -71,16 +71,16 @@
       </rows>
     </grid>
     <spring class="spacer"/>
-  </titledbox>
+  </groupbox>
   <spring class="spacer"/>
-  <box valign="middle" autostretch="never">
+  <hbox valign="middle" autostretch="never">
     <text class="label align-right" text-align="right" value="&borderEditField.label;"
         tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;" />
     <textbox class="narrow" id="borderInput" oninput="forceInteger(this.id)" />
     <text class="label" value="&pixels.label;"/>  
-  </box>
+  </hbox>
   <!-- from EdDialogOverlay -->
-  <box id="AdvancedEdit"/>
+  <hbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/> 
+  <hbox id="okCancelButtons"/> 
 </window>

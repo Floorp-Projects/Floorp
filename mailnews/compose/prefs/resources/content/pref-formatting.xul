@@ -37,7 +37,7 @@
                 prefattribute="value"
                 wsm_attributes="value"/>
   
-  <box class="box-smallheader" title="&pane.title;"/>
+  <hbox class="box-smallheader" title="&pane.title;"/>
 
   <html>&sendMaildesc.label;</html>
 
@@ -52,7 +52,7 @@
     
   <html>&override.label;</html>
 
-  <titledbox orient="vertical" flex="1">
+  <groupbox orient="vertical" flex="1">
     <label value="&domain.title;"/>
 
     <html>&domaindesc.label;</html>
@@ -101,5 +101,5 @@
         </hbox>
       </vbox>
     </hbox>
-  </titledbox>
+  </groupbox>
 </window>

@@ -33,14 +33,14 @@
                 orient="vertical"
                 onload="Init();">
 
-  <html:script language="JavaScript" src="chrome://global/content/strres.js" />
-  <html:script language="JavaScript" src="chrome://communicator/content/pref/pref-P3P.js"/>
-  <html:script language="JavaScript" src="chrome://communicator/content/pref/pref-P3Pcust.js"/>
-  <html:script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <html:script type="application/x-javascript" src="chrome://global/content/strres.js" />
+  <html:script type="application/x-javascript" src="chrome://communicator/content/pref/pref-P3P.js"/>
+  <html:script type="application/x-javascript" src="chrome://communicator/content/pref/pref-P3Pcust.js"/>
+  <html:script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
 
-  <box id="insertboxhere" orient="vertical" flex="1"/>
+  <vbox id="insertboxhere" flex="1"/>
 
   <separator class="groove"/>
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 
 </window>

@@ -53,7 +53,7 @@
     </tabs>
     <tabpanels id="panel" flex="1">
       <!-- saved signons -->
-      <box id="savedsignons" flex="1" orient="vertical">
+      <vbox id="savedsignons" flex="1">
           <html>&spiel.signonsstored.label;</html>
           <separator class="thin"/>
           <tree id="signonstree" class="inset" style="height: 20em;"
@@ -77,16 +77,16 @@
             <treechildren id="savesignonlist" flex="1"/>
           </tree>
           <separator class="thin"/>
-          <box>
+          <hbox>
             <button id="removeSignon" disabled="true" class="dialog push"
                           label="&remove.label;" oncommand="DeleteSignon();"/>
             <button id="removeAllSignons" class="dialog push"
                           label="&removeall.label;"
                           oncommand="DeleteAllSignons();"/>
-          </box>
-      </box>
+          </hbox>
+      </vbox>
       <!-- ignored signon sites -->
-      <box id="ignoredsites" flex="1" orient="vertical">
+      <vbox id="ignoredsites" flex="1">
           <html>&spiel.signonsnotstored.label;</html>
           <separator class="thin"/>
           <tree id="ignoretree" class="inset" style="height: 20em;"
@@ -105,16 +105,16 @@
             <treechildren flex="1" id="ignoredlist"/>
           </tree>
           <separator class="thin"/>
-          <box>
+          <hbox>
             <button id="removeIgnoredSite" disabled="true" class="dialog push"
                           label="&remove.label;" oncommand="DeleteIgnoredSite();"/>
             <button id="removeAllSites" class="dialog push"
                           label="&removeall.label;"
                           oncommand="DeleteAllSites();"/>
-          </box>
-      </box>
+          </hbox>
+      </vbox>
       <!-- do not preview panel -->
-      <box class="tabpanel" id="nopreviewforms" flex="1" orient="vertical">
+      <vbox class="tabpanel" id="nopreviewforms" flex="1">
           <html>&spiel.nopreview.label;</html>
           <separator class="thin"/>
           <tree id="nopreviewtree" class="inset" style="height: 20em;" 
@@ -134,16 +134,16 @@
             <treechildren flex="1" id="nopreviewlist"/>
           </tree>
           <separator class="thin"/>
-          <box>
+          <hbox>
             <button id="removeNoPreview" disabled="true" class="dialog push"
                           label="&remove.label;" oncommand="DeleteNoPreviewForm();"/>
             <button id="removeAllNopreviews" class="dialog push"
                           label="&removeall.label;"
                           oncommand="DeleteAllNopreviews();"/>
-          </box>
-      </box>
+          </hbox>
+      </vbox>
       <!-- do not capture panel -->
-      <box class="tabpanel" id="nocaptureforms" flex="1" orient="vertical">
+      <vbox class="tabpanel" id="nocaptureforms" flex="1">
           <html>&spiel.nocapture.label;</html>
           <separator class="thin"/>
           <tree id="nocapturetree" class="inset" style="height: 20em;" 
@@ -162,19 +162,19 @@
             <treechildren flex="1" id="nocapturelist"/>
           </tree>
           <separator class="thin"/>
-          <box>
+          <hbox>
             <button id="removeNoCapture" disabled="true" class="dialog push"
                           label="&remove.label;" oncommand="DeleteNoCaptureForm();"/>
             <button id="removeAllNocaptures" class="dialog push"
                           label="&removeall.label;"
                           oncommand="DeleteAllNocaptures();"/>
-          </box>
-      </box>
+          </hbox>
+      </vbox>
     </tabpanels>
   </tabbox>
     
   <separator class="thin"/>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
  
 </window>

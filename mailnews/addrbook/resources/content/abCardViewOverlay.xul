@@ -25,26 +25,26 @@ Rights Reserved.
 		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript" src="chrome://messenger/content/addressbook/abCardViewOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardViewOverlay.js"/>
 
-  <box id="CardViewBox" orient="vertical" flex="1">
+  <vbox id="CardViewBox" flex="1">
 	
-	<box id="CardViewInnerBox" orient="vertical" flex="1">
+	<vbox id="CardViewInnerBox" flex="1">
 		
 		<html hide="true" id="CardTitle"/>
 
-		<box orient="horizontal" style="width:100%" flex="1">
+		<hbox style="width:100%" flex="1">
 			
-			<box orient="vertical" flex="1" style="width:200px">
-				<box id="cvbName" class="cardViewGroup" orient="vertical">
+			<vbox flex="1" style="width:200px">
+				<vbox id="cvbName" class="cardViewGroup">
 					<html class="CardViewHeading" hide="true" id="cvhName"/>
 					<html class="CardViewText" hide="true" id="cvDisplayName"/>
 					<html class="CardViewText" hide="true" id="cvNickname"/>
 					<html class="CardViewText" hide="true" id="cvEmail1"/>
 					<html class="CardViewText" hide="true" id="cvEmail2"/>
-				</box>
+				</vbox>
 				
-				<box id="cvbHome" class="cardViewGroup" orient="vertical">
+				<vbox id="cvbHome" class="cardViewGroup">
 					<html class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</html>
 					<html class="CardViewText" hide="true" id="cvHomeAddress"/>
 					<html class="CardViewText" hide="true" id="cvHomeAddress2"/>
@@ -53,31 +53,31 @@ Rights Reserved.
 					<html class="CardViewText" hide="true" id="cvHomeWebPageBox">
 						<html:p><html:a href="" id="cvHomeWebPage"/>
 					</html:p></html>
-				</box>
+				</vbox>
 
-				<box id="cvbOther" class="cardViewGroup" orient="vertical">
+				<vbox id="cvbOther" class="cardViewGroup">
 					<html class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</html>
 					<html class="CardViewText" hide="true" id="cvCustom1"/>
 					<html class="CardViewText" hide="true" id="cvCustom2"/>
 					<html class="CardViewText" hide="true" id="cvCustom3"/>
 					<html class="CardViewText" hide="true" id="cvCustom4"/>
 					<html class="CardViewText" hide="true" id="cvNotes"/>
-				</box>
-			</box>
+				</vbox>
+			</vbox>
 			
 			<spring style="width:20px"/>
 
-			<box orient="vertical" flex="1" style="width:200px">
-				<box id="cvbPhone" class="cardViewGroup" orient="vertical">
+			<vbox flex="1" style="width:200px">
+				<vbox id="cvbPhone" class="cardViewGroup">
 					<html class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</html>
 					<html class="CardViewText" hide="true" id="cvPhWork"/>
 					<html class="CardViewText" hide="true" id="cvPhHome"/>
 					<html class="CardViewText" hide="true" id="cvPhFax"/>
 					<html class="CardViewText" hide="true" id="cvPhCellular"/>
 					<html class="CardViewText" hide="true" id="cvPhPager"/>
-				</box>
+				</vbox>
 				
-				<box id="cvbWork" class="cardViewGroup" orient="vertical">
+				<vbox id="cvbWork" class="cardViewGroup">
 					<html class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html>
 					<html class="CardViewText" hide="true" id="cvJobTitle"/>
 					<html class="CardViewText" hide="true" id="cvDepartment"/>
@@ -89,13 +89,13 @@ Rights Reserved.
 					<html class="CardViewText" hide="true" id="cvWorkWebPageBox">
 						<html:p><html:a href="" id="cvWorkWebPage"/>
 					</html:p></html>
-				</box>
-			</box>
+				</vbox>
+			</vbox>
 
-		</box>
+		</hbox>
 
-	</box>
+	</vbox>
 
-</box>
+</vbox>
 
 </overlay>

@@ -32,38 +32,38 @@ Rights Reserved.
         onload="parent.wizardManager.onPageLoad('login');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-login.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-login.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
-  <box class="box-header" title="&loginTitle.label;"/>
+  <hbox class="box-header" title="&loginTitle.label;"/>
 
   <separator/>
   
-  <box class="box-wizardcontent" orient="vertical" flex="1">
+  <vbox class="box-wizardcontent" flex="1">
     <html>&usernameDesc.label; &usernameExample.label;</html>
     <separator class="thin"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&usernameLabel.label;" for="username" style="width: 8em;"/>
       <textbox id="username" wsm_persist="true" flex="1"/>
-    </box>
+    </hbox>
 <!--
     <separator/>
     
-    <titledbox>
+    <groupbox>
       <label value="&passwordTitle.label;"/>
       <html>&savePasswordDesc.label;</html>
       <html>&savePasswordLabel.label;</html>
       <checkbox wsm_persist="true" oncommand="onSavePassword(event.target)"
                 id="rememberPassword"/>
-      <box orient="vertical" class="indent">
+      <vbox class="indent">
         <text class="label" value="&passwordDesc.label;"/>
-        <box autostretch="never">
+        <hbox autostretch="never">
           <text class="label" value="&passwordLabel.label;" for="password"/>
           <textbox type="password" id="password" wsm_persist="true"/>
-        </box>
-      </box>
-    </titledbox>
+        </hbox>
+      </vbox>
+    </groupbox>
 -->
-  </box>
+  </vbox>
   
 </window>

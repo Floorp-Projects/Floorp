@@ -33,13 +33,13 @@ Rights Reserved.
     title="&editcardWindow.title;"
     onload="OnLoadNewCard()"
     class="dialog"
-    align="vertical">
+    orient="vertical">
 
   <stringbundleset id="stringbundleset"/>
 
   <keyset id="dialogKeys"/>
 
-  <box orient="horizontal" autostretch="never" valign="center">
+  <hbox autostretch="never" valign="center">
 
     <text for="abPopup" value="&chooseAddressBook.label;"/>
     <menulist id="abPopup">
@@ -54,12 +54,12 @@ Rights Reserved.
       </menupopup>
     </menulist>
 
-  </box>
+  </hbox>
   
   <spring style="height:1em"/>
     
-  <box id="editcard"/>
+  <hbox id="editcard"/>
   
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 
 </window>

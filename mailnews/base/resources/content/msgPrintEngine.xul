@@ -40,7 +40,7 @@ Rights Reserved.
         titlemenuseparator="&titleSeperator.label;"
 		    onload="OnLoadPrintEngine()"
 		    onunload="OnUnloadPrintEngine()"
-		    align="vertical"
+		    orient="vertical"
         width="150"
         height="250"
         screenX="10000"

@@ -32,21 +32,21 @@ Rights Reserved.
         onload="parent.wizardManager.onPageLoad('identity');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
-  <script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/> 
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-identity.js"/> 
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-wizardAdapter.js"/> 
 
-  <box class="box-header" title="&identityTitle.label;"/>
+  <hbox class="box-header" title="&identityTitle.label;"/>
   
   <separator/>
-  <box class="box-wizardcontent" orient="vertical" flex="1">
+  <vbox class="box-wizardcontent" flex="1">
     <html>&identityDesc.label;</html>
     <separator/>
     <html>&fullnameDesc.label; &fullnameExample.label;</html>
     <separator class="thin"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="awIdentityLabel" for="fullName" value="&fullnameLabel.label;"/>
       <textbox mailtype="identity" wsm_persist="true" name="fullName" id="fullName" flex="6"/>
-    </box>
+    </hbox>
     <separator/>  
     <grid>
       <columns>
@@ -58,14 +58,14 @@ Rights Reserved.
         </row>
         <separator class="thin"/>
         <row>
-          <box autostretch="never">
+          <hbox autostretch="never">
             <text class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
             <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
             <text id="postEmailText"/>
-          </box>
+          </hbox>
         </row>
       </rows>
     </grid>
-  </box>
+  </vbox>
   
 </window>

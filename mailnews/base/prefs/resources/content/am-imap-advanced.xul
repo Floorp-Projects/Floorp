@@ -11,16 +11,16 @@
       style="padding: 10px"
       title="&imapAdvanced.label;"
       onload="onLoad();"
-      align="vertical">
+      orient="vertical">
 
 <keyset id="dialogKeys"/>
 
 <script src="am-imap-advanced.js"/>
 
-<box>
+<hbox>
   <text value="&serverDirectory.label;" class="label"/>
   <textbox imap_persist="true" id="serverDirectory"/>
-</box>
+</hbox>
 
 <checkbox imap_persist="true" id="usingSubscription" label="&usingSubscription.label;"/>
 
@@ -70,6 +70,6 @@
 <separator class="groove"/>
 <spring class="spacer"/>
 
-<box id="okCancelButtonsRight"/>
+<hbox id="okCancelButtonsRight"/>
 
 </window>

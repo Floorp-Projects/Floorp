@@ -12,15 +12,15 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/prefs/pref-sidebar.js"/>
 
-  <box class="box-smallheader" title="&Sidebar.label;"/>
+  <hbox class="box-smallheader" title="&Sidebar.label;"/>
 
-  <box id="bxSidebarPrefs">
-    <box id="bxSidebarInstalled" collapsed="true" flex="1">
+  <hbox id="bxSidebarPrefs">
+    <hbox id="bxSidebarInstalled" collapsed="true" flex="1">
       <text value="The sidebar panel is currently installed."/>
-    </box>
-    <box id="bxSidebarNotInstalled" collapsed="true" flex="1" orient="vertical">
+    </hbox>
+    <vbox id="bxSidebarNotInstalled" collapsed="true" flex="1">
       <text value="The sidebar panel is not currently installed.  Click the 'Install' button to add it to your sidebar."/>
       <button label="Install" onclick="gSidebarPrefs.installSidebar()"/>
-    </box>
-  </box>
+    </vbox>
+  </hbox>
 </window>

@@ -25,7 +25,7 @@ Rights Reserved.
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script language="JavaScript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
 
   <!-- Addressing Widget -->
   <tree id="addressingWidgetTree"

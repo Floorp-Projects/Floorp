@@ -8,10 +8,10 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&window.title;"
     class="dialog"
-    align="vertical">
+    orient="vertical">
 
-  <box align="vertical" style="width:100%">
-  <box orient="horizontal" style="width:100%">
+  <vbox style="width:100%">
+  <hbox style="width:100%">
       <spring flex="1"/>
      <text class="label" value="&notInToCc.label;" accesskey="&notInToCc.accesskey;" for="NotInToCc"/>
       <menulist id="NotInToCc" pref="true" preftype="int" prefstring="mail.mdn.report.not_in_to_cc"
@@ -22,9 +22,9 @@
           <menuitem value="2" label="&askMe.label;"/>
         </menupopup>
       </menulist>
-  </box>
+  </hbox>
 
-  <box orient="horizontal" style="width:100%">
+  <hbox style="width:100%">
       <spring flex="1"/>
       <text class="label" value="&outside.label;" accesskey="&outside.accesskey;" for="OutsideDomain"/>
       <menulist id="OutsideDomain" pref="true" preftype="int" prefstring="mail.mdn.report.outside_domain"
@@ -35,9 +35,9 @@
           <menuitem value="2" label="&askMe.label;"/>
         </menupopup>
       </menulist>
-  </box>
+  </hbox>
 
-  <box orient="horizontal" style="width:100%">
+  <hbox style="width:100%">
       <spring flex="1"/>
      <text class="label" value="&other.label;" accesskey="&other.accesskey;" for="Other"/>
       <menulist id="Other" pref="true" preftype="int" prefstring="mail.mdn.report.other"
@@ -48,11 +48,11 @@
           <menuitem value="2" label="&askMe.label;"/>
         </menupopup>
       </menulist>
-  </box>
-  </box>
+  </hbox>
+  </vbox>
 
   <spring style="height:1em"/>
     
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 
 </window>

@@ -40,7 +40,7 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:xpcom="http://www.mozilla.org/NC-xpcom#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical" onload="onLoad();" onunload="onUnload();"
+        orient="vertical" onload="onLoad();" onunload="onUnload();"
         persist="width height" title="XPCOM Component Viewer">
 <!--
   note the xmlns:xpcom in the <window> tag, it's used in the <rule>s
@@ -120,8 +120,8 @@
     </menubar>
   </toolbox>
 
-  <box id="outer-box" flex="1">
-    <box id="component-box" align="vertical" flex="1" width="50%">
+  <hbox id="outer-box" flex="1">
+    <vbox id="component-box" flex="1" width="50%">
     <text id="component-label" value="Components..." crop="right"
       autostretch="never"/>
 <!--
@@ -190,13 +190,13 @@
         </treerow>
       </treehead>
     </tree>
-    </box>
+    </vbox>
 
-    <splitter id="main-splitter" align="vertical" collapse="before">
+    <splitter id="main-splitter" orient="vertical" collapse="before">
       <grippy/>
     </splitter>
 
-    <box id="interface-box" align="vertical" flex="1" width="50%">
+    <vbox id="interface-box" flex="1" width="50%">
     <text id="interface-label" value="Interfaces..." crop="right"
       autostretch="never"/>
     <tree id="interface-list" container="true" datasources="rdf:null" flex="1"
@@ -245,7 +245,7 @@
         </treerow>
       </treehead>
     </tree>
-    </box>
+    </vbox>
 
-  </box>
+  </hbox>
 </window>

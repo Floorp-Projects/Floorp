@@ -46,24 +46,24 @@
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
 
-  <box orient="vertical" style="min-width: 20em">
-    <titledbox orient="vertical"><label id="linkTextCaption" align="left"/>
+  <vbox style="min-width: 20em">
+    <groupbox orient="vertical"><label id="linkTextCaption" align="left"/>
       <text class="label" id="linkTextMessage"/> 
 	    <textbox id="linkTextInput" flex="1" oninput="ChangeText()"/>
-    </titledbox>
+    </groupbox>
 
-    <titledbox orient="vertical"><label value="&LinkURLBox.label;"/>
+    <groupbox orient="vertical"><label value="&LinkURLBox.label;"/>
       <text class="label" value="&LinkURLEditField.label;"/>
-      <box autostretch="never" valign="middle">
+      <hbox autostretch="never" valign="middle">
         <textbox id="hrefInput" flex="1" style="min-width: 18em" oninput="ChangeLocation()"/>
         <button class="dialog" id="ChooseFile" flex="1"/>
-      </box>
+      </hbox>
       <html class="wrap" flex="1" id="RemoveLinkMsg" style="margin-bottom: 7px">&RemoveLinkMsg.label;</html>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <button class="dialog" id="MoreFewerButton" align="left" oncommand="onMoreFewer()" persist="more"/>
-      </box>
+      </hbox>
       <spring class="spacer"/>
-      <box id="MoreSection" orient="vertical">
+      <vbox id="MoreSection">
         <spring class="spacer"/>
         <text class="label" align="left" value="&NamedAnchorMsg.label;"/>
         <tree rows="4" class="list" id="NamedAnchorList" onselect="SelectNamedAnchor()">
@@ -75,11 +75,11 @@
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
         <text class="label" flex="1" value="&HeadingMsg2.label;"/>
-      </box>
-    </titledbox>
-  </box>
+      </vbox>
+    </groupbox>
+  </vbox>
   <!-- from EdDialogOverlay -->
-  <box id="AdvancedEdit"/>
+  <hbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelHelpButtonsRight"/> 
+  <hbox id="okCancelHelpButtonsRight"/> 
 </window>

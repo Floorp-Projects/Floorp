@@ -28,49 +28,49 @@
   <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchTreeBuilder.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
 
-  <box id="bxInspectorMain" orient="vertical">
+  <vbox id="bxInspectorMain">
 
-    <box id="bxInspectorPanes" orient="horizontal" flex="1" hide="true">
-      <box id="bxDocPane" class="viewer-pane" flex="1" orient="vertical">
-        <box id="bxDocHeader" class="viewer-pane-header" autostretch="never">
+    <hbox id="bxInspectorPanes" flex="1" hide="true">
+      <vbox id="bxDocPane" class="viewer-pane" flex="1">
+        <hbox id="bxDocHeader" class="viewer-pane-header" autostretch="never">
           <menubutton class="viewer-list" ins-role="viewer-list" disabled="true"/>
           <text class="viewer-title" ins-role="viewer-title" flex="1"/>
           <menubutton class="viewer-menu" ins-role="viewer-menu" disabled="true"/>
-        </box>
+        </hbox>
         <iframe id="ifDocViewer" class="viewer-iframe" flex="1" ins-role="viewer-iframe"/>
-      </box>
+      </vbox>
       
       <splitter orient="vertical" collapse="before">
         <grippy/>
       </splitter>
 
-      <box id="bxObjectPane" class="viewer-pane" flex="1" orient="vertical">
-        <box id="bxObjHeader" class="viewer-pane-header" autostretch="never">
+      <vbox id="bxObjectPane" class="viewer-pane" flex="1">
+        <hbox id="bxObjHeader" class="viewer-pane-header" autostretch="never">
           <menubutton class="viewer-list" ins-role="viewer-list" disabled="true"/>
           <text class="viewer-title" ins-role="viewer-title" flex="1"/>
           <menubutton class="viewer-menu" ins-role="viewer-menu" disabled="true"/>
-        </box>
+        </hbox>
         <iframe id="ifObjViewer" class="viewer-iframe" flex="1" ins-role="viewer-iframe"/>
-      </box>
-    </box>
+      </vbox>
+    </hbox>
 
     <splitter id="splBrowser" class="titled-splitter" 
         onopen="inspector.onSplitterOpen(this)"
         value="Browser" closebutton="true" collapse="after"/>
-    <box id="bxBrowser" flex="1">
+    <hbox id="bxBrowser" flex="1">
       <browser id="ifBrowser" type="content-primary" flex="1" src="about:blank"/>
-    </box>
+    </hbox>
 
     <splitter id="splSearch" class="titled-splitter" 
         onopen="inspector.onSplitterOpen(this)"
         value="Search Results" closebutton="true" collapse="after"/>
-    <box id="bxSearch" orient="vertical">
+    <vbox id="bxSearch">
       <tree id="trSearch" flex="1" context="ppSearchResults" datasources="rdf:null">
         <template/>
       </tree>
     
       <!-- TEMPORARY UNTIL FIX FOR 54237 -->
       <browser id="inSearchServiceLoader" height="1"/>
-    </box>
-  </box>
+    </vbox>
+  </vbox>
 </overlay>

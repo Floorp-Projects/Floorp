@@ -42,8 +42,8 @@
 
   <keyset id="dialogKeys"/>
 
-  <box flex="1">
-    <box orient="vertical" flex="1">
+  <hbox flex="1">
+    <vbox flex="1">
       <text class="label" value="&sidebar.customize.additional.label;"
         crop="right"/>
       <tree id="other-panels" flex="1"
@@ -95,7 +95,7 @@
       </tree>
 
       <!-- xxxslamm Need to add descriptive panel text here -->
-      <box class="button-group">
+      <hbox class="button-group">
         <button class="dialog" id="add_button" oncommand="AddPanel()"
           label="&sidebar.customize.add.label;"
           disabled="true"/>
@@ -103,13 +103,13 @@
         <button class="dialog" id="preview_button" oncommand="PreviewPanel()"
           label="&sidebar.customize.preview.label;"
           disabled="true"/>
-      </box>
-    </box> 
+      </hbox>
+    </vbox> 
     
     <separator orient="vertical"/>    
 
     <!-- The panels that the user currently has chosen -->
-    <box orient="vertical" flex="1">
+    <vbox flex="1">
       <text class="label" value="&sidebar.customize.current.label;"
         crop="right"/>
       <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
@@ -150,36 +150,36 @@
               to it from the script -->
         <treechildren id="current-panels-root"/> 
       </tree>
-      <box class="button-group">
+      <hbox class="button-group">
         <button class="dialog" id="customize-button"
           oncommand="CustomizePanel();" 
           label="&sidebar.customize.customize.label;" />
         <button class="dialog" id="remove-button" onclick="RemovePanel()"
           label="&sidebar.customize.remove.label;" />
-      </box>      
-    </box>
+      </hbox>      
+    </vbox>
 
     <separator orient="vertical" class="thin"/>
 
     <!-- The 'reorder' buttons -->
-    <box id="reorder" align="vertical" autostretch="never">
+    <vbox id="reorder" autostretch="never">
       <spring flex="1"/>
       <button oncommand="MoveUp();" id="up" class="dialog" 
         label="&sidebar.customize.up.label;"/>
       <button oncommand="MoveDown();" id="down" class="dialog"
         label="&sidebar.customize.down.label;"/>
       <spring flex="1"/>
-    </box> 
+    </vbox> 
 
-  </box>
+  </hbox>
 
   <separator/>
   
-  <box>
+  <hbox>
     <button id="more-panels-link" label="&sidebar.more.label;" oncommand="BrowseMorePanels()"/>
     <spring flex="1"/>
-    <box id="okCancelButtonsRight" />
-  </box>
+    <hbox id="okCancelButtonsRight" />
+  </hbox>
 
 </window>
 

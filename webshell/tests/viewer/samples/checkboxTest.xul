@@ -5,7 +5,7 @@
 <!DOCTYPE window> 
 
 <window style="overflow: auto" xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="vertical" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" orient="vertical" 
         onload=""> 
 
 <html:h1>TriStateCheckbox Test 1</html:h1>

@@ -24,7 +24,7 @@
 
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
-  <box orient="vertical" flex="1">
+  <vbox flex="1">
 
     <!-- button bar -->
     <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
@@ -64,16 +64,16 @@
     <separator class="groovy-thin"/>
 
     <!-- the two help panes (sidebar & content) -->
-    <box flex="1">
+    <hbox flex="1">
 
-      <box id="helpsidebar-box" orient="vertical">
+      <vbox id="helpsidebar-box">
 
-        <box orient="vertical" id="help-subset">
+        <vbox id="help-subset">
           <!-- these we will want to clean up or style better -->
 	  <text value="&t1.label;"/>
           <text value="&t2.label;"/>
           <text value="&t3.label;"/>
-        </box>
+        </vbox>
 
         <tabbox orient="vertical" flex="1">
           <tabs orient="horizontal">
@@ -81,7 +81,7 @@
             <tab label="&tab2.label;"/>
           </tabs>
           <tabpanels flex="1">
-            <box id="help-toc">
+            <hbox id="help-toc">
               <tree id="help-toc-tree" ref="urn:root" flex="1*"
                     datasources="chrome://help/locale/help-toc.rdf"
                     containment="http://home.netscape.com/NC-rdf#subheadings">
@@ -127,17 +127,17 @@
                 <treechildren flex="1*"/>
 
               </tree>
-            </box>
+            </hbox>
 
-            <box id="help-index">
+            <hbox id="help-index">
               <!-- right now this makes the toc as wide as the content area -->
               <iframe flex="1" style="min-width: 0px; width: 0px;" 
 		src="chrome://help/locale/help_index.html" />
-            </box>
+            </hbox>
 
           </tabpanels>
         </tabbox>
-      </box>
+      </vbox>
 
       <splitter id="helpsidebar-splitter"
                 collapse="before"
@@ -149,15 +149,15 @@
       </splitter>
 
       <!-- this stuff lifted from navigator.xul -->
-      <box id="appcontent" align="vertical" flex="3">
+      <vbox id="appcontent" flex="3">
         <!-- this box is temporary, pending XBLified <browser> -->
-        <box id="browser" flex="1">
+        <hbox id="browser" flex="1">
           <!-- type attribute is used by frame construction to locate iframes
                intended to hold (html) content -->
           <browser context="context" type="content-primary" id="help-content"
                    src="about:blank" flex="1"/>
-        </box>
-      </box>
-    </box>
-  </box>
+        </hbox>
+      </vbox>
+    </hbox>
+  </vbox>
 </window>

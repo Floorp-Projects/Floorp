@@ -37,7 +37,7 @@
   ]]>
   </script>
   
-  <box class="box-smallheader" title="&lHeader;" />
+  <hbox class="box-smallheader" title="&lHeader;" />
   <html> &rContent1;</html>
   <html> &rContent2;</html>
   <!-- Overlays add UI here -->

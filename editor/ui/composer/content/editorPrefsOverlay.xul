@@ -25,12 +25,12 @@
   </script>         
 
   <!-- editor startup toggle -->
-  <titledbox id="generalStartupPreferences">           
+  <groupbox id="generalStartupPreferences">           
     <checkbox id="generalStartupEditor" wsm_persist="true" position="3"
               label="&editorCheck.label;" accesskey="&editorCheck.accesskey;"
               pref="true" preftype="bool" prefstring="general.startup.editor"
               prefattribute="checked"/>         
-  </titledbox>
+  </groupbox>
 
   <!-- category tree entries for editor -->
   <treechildren id="panelChildren">

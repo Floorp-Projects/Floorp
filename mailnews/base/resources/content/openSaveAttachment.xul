@@ -7,21 +7,21 @@
 <window id="open-save-attachment"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   flex="100%" class="dialog" title="&openSaveAttachment.title;" 
-  align="vertical" onload="onLoad();" onclose="onCancel();" >
+  orient="vertical" onload="onLoad();" onclose="onCancel();" >
 
   <script src="chrome://messenger/content/openSaveAttachment.js"/>
 
-  <box width="360px">
-    <box orient="vertical">
+  <hbox width="360px">
+    <vbox>
       <image class="question-icon"/>
       <spring flex="1"/>
-    </box>
-    <box width="10px" />
-      <box orient="vertical" flex="1">
+    </vbox>
+    <hbox width="10px" />
+      <vbox flex="1">
       <separator class="thin"/>
-      <box id="documentNameBox">
+      <hbox id="documentNameBox">
         <text value="&openSaveAttachmentHeading.label;" />
-      </box>
+      </hbox>
       <separator class="thin"/>
       <html>&openSaveAttachmentWarning.label;</html>
       <separator class="thin"/>
@@ -32,8 +32,8 @@
         <radio group="openSaveGroup" id="saveIt" label="&openSaveAttachmentSave.label;" oncommand="onSave();" checked="true"/>
       </radiogroup>
       <separator class="thin"/>
-    </box>
-  </box>
+    </vbox>
+  </hbox>
   <separator class="thin"/>
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 </window>

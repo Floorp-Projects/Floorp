@@ -54,13 +54,13 @@
   ]]>
   </script>
         
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&walletHeader.label;"/>
     <html>&walletDescription.label;</html>
 <!--
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label"
             for="walletServer"
             value="&walletServer.label;"
@@ -71,9 +71,9 @@
                  preftype="string"
                  prefstring="wallet.Server"
                  prefattribute="value"/>
-    </box>
+    </hbox>
 -->
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox id="walletCaptureForms"
               label="&walletEnabled.label;"
               accesskey="&walletEnabled.accesskey;"
@@ -81,8 +81,8 @@
               preftype="bool"
               prefstring="wallet.captureForms"
               prefattribute="checked"/>
-    </box>
-    <box autostretch="never" halign="right">
+    </hbox>
+    <hbox autostretch="never" halign="right">
       <button class="dialog"
               label="&viewWallet.label;"
               accesskey="&viewWallet.accesskey;" 
@@ -95,7 +95,7 @@
               oncommand="viewWalletSites();"
               id="viewSiteButton" pref="true" preftype="bool"
               prefstring="pref.advanced.form.disable_button.view_sites" prefattribute="disabled"/>
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
 </window>

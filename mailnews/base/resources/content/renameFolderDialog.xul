@@ -32,7 +32,7 @@
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&renameFolderDialog.title;"
-        align="vertical"
+        orient="vertical"
         class="dialog"
         onload="onLoad();">
 
@@ -42,7 +42,7 @@
 
   <keyset id="dialogKeys"/>
 
-  <box align="vertical">
+  <vbox>
 
     <spring flex="100%"/>
 
@@ -51,8 +51,8 @@
 
     <spring flex="100%"/>
 
-    <box id="okCancelButtons"/>
+    <hbox id="okCancelButtons"/>
 
-  </box>
+  </vbox>
 
 </window>

@@ -4,7 +4,7 @@
 <window xmlns:html="http://www.w3.org/1999/xhtml"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	align="vertical"> 
+	orient="vertical"> 
 
 	<script>
 	function cmdHideButtonOne(){
@@ -34,10 +34,10 @@
 		</toolbar>
 	</toolbox>
 
-	<box flex="1">
+	<hbox flex="1">
 		<html:input flex="1" type="BUTTON" value="Hide Only Button 1" onclick="cmdHideButtonOne()"/>
 		<html:input flex="1" type="BUTTON" value="Hide Only Button 2" onclick="cmdHideButtonTwo()"/>
 		<html:input flex="1" type="BUTTON" value="Hide Both" onclick="cmdHideAll()"/>
 		<html:input flex="1" type="BUTTON" value="Show Both" onclick="cmdShowAll()"/>
-	</box>
+	</hbox>
 </window>

@@ -28,7 +28,7 @@
 
   <script src="chrome://messenger/content/searchTermOverlay.js"/>
 
-  <box orient="vertical" id="searchTermListBox" class="indent">
+  <vbox id="searchTermListBox" class="indent">
 
     <radiogroup id="booleanAndGroup"
                 selectedItem="or" oncommand="booleanChanged(event);">
@@ -36,8 +36,8 @@
       <radio group="booleanAndGroup" checked="true" value="or" label="&matchAny.label;"/>
     </radiogroup>
     
-    <box flex="1">
-      <box id="searchterms"/>
+    <hbox flex="1">
+      <hbox id="searchterms"/>
       <tree class="inset" flex="1" id="searchTermTree" style="height: 100px; min-height: 50px;">
         <treecolgroup>
           <treecol flex="1"/>
@@ -80,11 +80,11 @@
         
         </treechildren>
       </tree>
-    </box>
-    <box>
+    </hbox>
+    <hbox>
       <button id="more" label="&more.label;" oncommand="onMore(event);"/>
       <button id="less" label="&less.label;" disabled="true" oncommand="onLess(event);"/>
-    </box>
-  </box>
+    </hbox>
+  </vbox>
 
 </overlay>

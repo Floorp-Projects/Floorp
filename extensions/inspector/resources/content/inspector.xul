@@ -35,9 +35,9 @@
     <toolbar id="tbInspectorPrimary"/>
   </toolbox>
 
-  <box id="bxInspectorMain" flex="1"/>
+  <hbox id="bxInspectorMain" flex="1"/>
   
-  <box id="bxStatus"/>
+  <hbox id="bxStatus"/>
 </window>
 
         

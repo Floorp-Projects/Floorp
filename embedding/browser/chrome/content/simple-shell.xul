@@ -25,22 +25,22 @@ Contributor(s): ______________________________________. -->
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical"
+  orient="vertical"
   title="Embedding">
 
 <!-- attach the browser key set to the content window -->
 <keyset/>
 
-  <box flex="1" >
-    <box id="appcontent" flex="100%">
+  <hbox flex="1" >
+    <hbox id="appcontent" flex="100%">
       <!-- this box is temporary, pending XBLified <browser> -->
-      <box id="browser" context="context" flex="1">
+      <hbox id="browser" context="context" flex="1">
         <!-- type attribute is used by frame construction to locate iframes
              intended to hold (html) content -->
         <browser context="context" type="content-primary" id="content"
           src="about:blank" flex="1"/>
-      </box>
-    </box>
-  </box>
+      </hbox>
+    </hbox>
+  </hbox>
 
 </window>

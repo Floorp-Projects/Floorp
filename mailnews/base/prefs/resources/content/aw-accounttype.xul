@@ -35,11 +35,11 @@ Rights Reserved.
 
   <script src="aw-accounttype.js"/>
   <script src="aw-wizardAdapter.js"/>
-  <box class="box-header" title="&accountTypeTitle.label;"/>
+  <hbox class="box-header" title="&accountTypeTitle.label;"/>
 
   <separator/>
   
-  <box class="box-wizardcontent" orient="vertical" flex="1">
+  <vbox class="box-wizardcontent" flex="1">
 
     <html class="desc">&accountTypeDesc.label;</html>
     <html class="desc">&accountTypeDirections.label;</html>
@@ -50,8 +50,7 @@ Rights Reserved.
              wsm_persist="true"
              label="&accountTypeMail.label;"/>
   
-      <box orient="vertical"
-           datasources="rdf:ispdefaults" 
+      <vbox datasources="rdf:ispdefaults" 
            containment="http://home.netscape.com/NC-rdf#providers"
            id="ispBox"
            ref="NC:ispinfo">
@@ -63,11 +62,11 @@ Rights Reserved.
                       label="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
           </rule>
        </template>
-      </box>
+      </vbox>
       <radio group="acctyperadio" id="newsaccount" value="newsaccount"
              wsm_persist="true"
              label="&accountTypeNews.label;"/>
     </radiogroup>
-  </box>
+  </vbox>
 
 </window>

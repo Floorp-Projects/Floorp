@@ -27,12 +27,12 @@
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="loaderstuff()"
-        align="vertical">
-<script type="text/javascript" src="DiffDOM.js" />
-<script type="text/javascript" src="txTools.js" />
-<script type="text/javascript" src="xulTxTools.js" />
-<script type="text/javascript" src="DumpDOM.js" />
-<box align="horizontal">
+        orient="vertical">
+<script type="application/x-javascript" src="DiffDOM.js" />
+<script type="application/x-javascript" src="txTools.js" />
+<script type="application/x-javascript" src="xulTxTools.js" />
+<script type="application/x-javascript" src="DumpDOM.js" />
+<hbox>
   <button label="load tests" oncommand="refresh_xalan()" />
   <button label="check all" oncommand="check(true)" />
   <button label="uncheck all" oncommand="check(false)" />
@@ -40,14 +40,14 @@
   <button label="hide checked" oncommand="hide_checked(true)" />
   <button label="hide unchecked" oncommand="hide_checked(false)" />
   <button label="run checked tests" oncommand="dump_checked()" />
-</box>
-<box align="horizontal">
+</hbox>
+<hbox>
   <text value="Xalan base directory: " class="head" />
   <textbox id="xalan_base" persist="value"/>
   <button label="browse..." oncommand="browse_base_dir()" />
-</box>
-<box align="horizontal">
-<titledbox align="horizontal"><label value="search" />
+</hbox>
+<hbox>
+<groupbox orient="horizontal"><label value="search" />
   <button label="Search for " oncommand="select()"/>
   <textbox style="width: 10em;" id="search-name" persist="value" /><text value=" in " />
   <menulist id="search-field" persist="data">
@@ -57,14 +57,14 @@
       <menuitem value="3" label="Comment" />
     </menupopup>
   </menulist>
-</titledbox>
-<spring flex="1" /></box>
-<box align="horizontal"><titledbox align="horizontal"><label value="stats" />
+</groupbox>
+<spring flex="1" /></hbox>
+<hbox><groupbox orient="horizontal"><label value="stats" />
   <text value="tests run: "/><text id="tests_run" value="0" />
   <text value="  tests passed: "/><text id="tests_passed" value="0"/>
   <text value="  tests failed: "/><text id="tests_failed" value="0"/>
-</titledbox>  
-<spring flex="1" /></box>
+</groupbox>  
+<spring flex="1" /></hbox>
 
 <outliner id="out" flex="1">
   <outlinercol id="name" label="Name" flex="1"/>

@@ -46,7 +46,7 @@
   <keyset id="dialogKeys"/>
 
   <!-- from EdDialogOverlay -->
-  <box id="AdvancedEdit"/>
+  <hbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/> 
+	<hbox id="okCancelButtons"/> 
 </window>

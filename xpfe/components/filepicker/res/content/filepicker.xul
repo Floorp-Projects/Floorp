@@ -46,15 +46,15 @@
 <script type="application/x-javascript" src="chrome://global/content/filepicker.js"/>
 <keyset id="dialogKeys"/>
 
-<box autostretch="never">
+<hbox autostretch="never">
   <text value="&lookInMenuList.label;"/>
   <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);" crop="left">
     <menupopup id="lookInMenu"/>
   </menulist>
   <button label=".." oncommand="goUp();"/>
-</box>
+</hbox>
 
-<box flex="1">
+<hbox flex="1">
   <outliner id="directoryOutliner" flex="1" onclick="onClick(event);"
             ondblclick="onDblClick(event);">
     <outlinercol id="FilenameColumn" label="&name.label;" flex="1"
@@ -68,7 +68,7 @@
 
     <outlinerbody flex="1" onselect="this.parentNode.outlinerBoxObject.view.selectionChanged()"/>
    </outliner>
-</box>
+</hbox>
 
 <grid style="margin-top: 5px">
   <columns>
@@ -88,6 +88,6 @@
   </rows>
 </grid>
 
-<box id="okCancelButtons"/>
+<hbox id="okCancelButtons"/>
 
 </window>

@@ -47,7 +47,7 @@
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
 
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&pageColors.label;"/>
     <radiogroup id="pageColorGroup" orient="vertical" autostretch="never">
       <radio group="pageColorGroup" id="DefaultColorsRadio" label="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
@@ -55,7 +55,7 @@
       <radio group="pageColorGroup" id="CustomColorsRadio" label="&customColorsRadio.label;" oncommand="UseCustomColors()"
         tooltip="aTooltip"     tooltiptext="&customColorsRadio.tooltip;" />
     </radiogroup>
-    <box class="big-left-margin">
+    <hbox class="big-left-margin">
       <grid>
         <columns><column/><column/></columns>
         <rows>
@@ -63,55 +63,55 @@
             <text class="label" id="Text" value="&normalText.label;&colon.character;" />
             <stack>
               <button id="TextButton" class="dialog color-button" oncommand="GetColorAndUpdate('textCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="textCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
           </row>
           <row valign="middle" autostretch="never">
             <text class="label" id="Link" value="&linkText.label;&colon.character;" />
             <stack>
               <button id="LinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('linkCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="linkCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
           </row>
           <row valign="middle" autostretch="never">
             <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
             <stack>
               <button id="ActiveLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('activeCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="activeCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
           </row>
           <row valign="middle" autostretch="never">
             <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
             <stack>
               <button id="VisitedLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('visitedCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="visitedCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
           </row>
           <row valign="middle" autostretch="never">
             <text class="label" id="Background" value="&background.label;" />
             <stack>
               <button id="BackgroundButton" class="dialog color-button" oncommand="GetColorAndUpdate('backgroundCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="backgroundCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
           </row>
         </rows>
@@ -128,9 +128,9 @@
         <spring flex="1"/>
       </vbox>
       <spring flex="1"/>
-    </box>
+    </hbox>
     <spring class="spacer"/>
-  </titledbox>
+  </groupbox>
   <spring class="spacer"/>
   <text class="label" value="&backgroundImage.label;"/>
   <grid flex="1">
@@ -151,5 +151,5 @@
     </rows>
   </grid>
   <separator class="groove"/>
-  <box id="okCancelButtons"/> 
+  <hbox id="okCancelButtons"/> 
 </window>

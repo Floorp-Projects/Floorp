@@ -36,7 +36,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
   persist="width height screenX screenY"
   title="&window.title;">
 
-  <script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/FilterListDialog.js"/>
   <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
 
   <keyset id="dialogKeys"/>
@@ -128,6 +128,6 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
      
   <separator/>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>

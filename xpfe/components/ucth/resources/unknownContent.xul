@@ -21,26 +21,26 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/unknownContent.js"/>
 
-  <box>
+  <hbox>
     <separator orient="vertical" class="thin"/>
-    <box orient="vertical" autostretch="never" valign="top">
+    <vbox autostretch="never" valign="top">
       <image class="message-icon" id="fileIcon"/>
-    </box>
+    </vbox>
     <separator orient="vertical" class="thin"/>
-    <box orient="vertical">
+    <vbox>
       <html id="dialog.contentType">&startDownload;</html>
       <html>&helpText;</html>
-    </box>
+    </vbox>
     <separator orient="vertical" class="thin"/>
-  </box>
+  </hbox>
     
   <separator class="groove"/>
     
-  <box autostretch="never">
+  <hbox autostretch="never">
     <button class="dialog" id="dialog.more" label="&dialogMore.label;" oncommand="more()"/>
     <spring flex="1"/>
-    <box id="okCancelButtons"/>
-  </box>
+    <hbox id="okCancelButtons"/>
+  </hbox>
 
   <keyset id="dialogKeys"/>
 

@@ -32,22 +32,22 @@ Rights Reserved.
         onload="parent.wizardManager.onPageLoad('newsserver');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-server.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
-  <box class="box-header" title="&serverTitle.label;"/>
+  <hbox class="box-header" title="&serverTitle.label;"/>
 
   <separator/>
  
-  <box class="box-wizardcontent" orient="vertical" flex="1">
+  <vbox class="box-wizardcontent" flex="1">
 
     <html>&newsServerNameDesc.label;</html>
     <separator class="thin"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" for="hostname" value="&incomingServerLabel.label;" style="width: 8em;"/>
       <textbox id="hostname" wsm_persist="true" flex="1"/>
-    </box>
+    </hbox>
   
-  </box>
+  </vbox>
   
 </window>

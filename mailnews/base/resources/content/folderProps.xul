@@ -36,8 +36,8 @@
   onload="folderPropsOnLoad()" style="width: 36em;"
   class="dialog" orient="vertical">
  
-  <script language="Javascript" src="chrome://global/content/globalOverlay.js"></script>
-  <script language="JavaScript" src="chrome://messenger/content/folderProps.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
+  <script type="application/x-javascript" src="chrome://messenger/content/folderProps.js"></script>
 
 <keyset id="dialogKeys"/>  
 
@@ -87,5 +87,5 @@
   </tabpanels>
 </tabbox>
 
-<box align="right" id="okCancelButtonsRight"/>
+<hbox align="right" id="okCancelButtonsRight"/>
 </window>

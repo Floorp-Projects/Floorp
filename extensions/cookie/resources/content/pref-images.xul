@@ -75,9 +75,9 @@
 
   <broadcaster id="haveImageBlocking" hidden="true"/>
 
-  <box class="box-smallheader" id="imagesHeader" title="&lHeader;"/>
+  <hbox class="box-smallheader" id="imagesHeader" title="&lHeader;"/>
 
-  <titledbox orient="vertical" id="imagesArea">
+  <groupbox orient="vertical" id="imagesArea">
     <label value="&imageBlocking.label;"/>
 
     <html>&imageDetails;</html>
@@ -99,25 +99,25 @@
 
     <separator observes="haveImageBlocking"/>
 
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox id="networkImageWarnAboutImages" label="&warnAboutImages.label;"
                 accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
                 pref="true" preftype="bool" prefattribute="checked"
                 prefstring="network.image.warnAboutImages"/>
-    </box>
+    </hbox>
 
     <separator observes="haveImageBlocking"/>
 
-    <box autostretch="never" halign="right">
+    <hbox autostretch="never" halign="right">
       <button class="dialog" id="viewImages" label="&viewImages.label;"
               accesskey="&viewImages.accesskey;" oncommand="viewImages();"
               observes="haveImageBlocking"
               pref="true" preftype="bool"
               prefstring="pref.advanced.images.disable_button.view_image" prefattribute="disabled"/>
-    </box>
+    </hbox>
 
-  </titledbox>
-  <titledbox orient="vertical">
+  </groupbox>
+  <groupbox orient="vertical">
     <label value="&animLoopingTitle.label;"/>
     <radiogroup id="imageLooping" orient="vertical" autostretch="never"
                 pref="true" preftype="string" prefstring="image.animation_mode"
@@ -129,6 +129,6 @@
         <radio group="imageLooping" value="none" label="&animLoopNever.label;"
                accesskey="&animLoopNever.accesskey;"/>
     </radiogroup>
-  </titledbox>
+  </groupbox>
 
 </window>

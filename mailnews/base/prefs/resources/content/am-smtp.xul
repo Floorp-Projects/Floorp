@@ -13,28 +13,28 @@
   onload="onLoad();"
   orient="vertical">
 
-  <script language="javascript" src="am-smtp.js"/>
+  <script type="application/x-javascript" src="am-smtp.js"/>
 
-  <box class="box-smallheader" title="&smtpServer.label;"/>
+  <hbox class="box-smallheader" title="&smtpServer.label;"/>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
 
   <html>&smtpDesc.label;</html>
 
   <separator/>
 
-  <box id="smtpServerEditor"/>
+  <hbox id="smtpServerEditor"/>
 
   <separator/>
   
-  <box>
+  <hbox>
     <spring flex="1"/>
     <button label="&advanced.label;" oncommand="onAdvanced(event);"
             wsm_persist="true" id="smtp.advancedbutton" 
             pref="true" preftype="bool" prefattribute="disabled" 
             prefstring="mail.smtpserver.%serverkey%.advanced.disable"/>
-  </box>
+  </hbox>
   
-  </titledbox>
+  </groupbox>
   
 </window>

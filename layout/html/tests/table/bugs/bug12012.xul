@@ -259,13 +259,13 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	onload="Boot()"
 	id="ApptsWindow"
-	align="horizontal">
+	orient="horizontal">
 
 	<html:script src="bug12012.js" />
 
 	<spring flex="1"/>
-	<box align="vertical"> <!-- fill all horizontal space -->
-		<box flex="1" id="main"> <!-- fill all vertical space -->
+	<vbox> <!-- fill all horizontal space -->
+		<hbox flex="1" id="main"> <!-- fill all vertical space -->
 
 			<html:div class="add" style="display: none">
 
@@ -452,9 +452,9 @@
 
 			</html:div>
 
-		</box>
+		</hbox>
 
-		<box id="tabs" align="horizontal">
+		<hbox id="tabs">
 			<spring flex="1"/>
 			<html:table>
 				<html:tr id="tabsTR">
@@ -473,7 +473,7 @@
 				</html:tr>
 			</html:table>
 			<spring flex="1"/>
-		</box> <!-- id="tabs" -->
-	</box>
+		</hbox> <!-- id="tabs" -->
+	</vbox>
 	<spring flex="1"/>
 </window>

@@ -32,49 +32,49 @@ Rights Reserved.
         onload="parent.wizardManager.onPageLoad('server');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-server.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
-  <box class="box-header" title="&serverTitle.label;"/>
+  <hbox class="box-header" title="&serverTitle.label;"/>
 
   <separator/>
   
-  <box class="box-wizardcontent" orient="vertical" flex="1">
+  <vbox class="box-wizardcontent" flex="1">
 
-    <titledbox orient="vertical">
+    <groupbox orient="vertical">
       <label value="&incomingServerTitle.label;"/>
       <html>&incomingServerTypeDesc.label;</html>
       <separator class="thin"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <!-- The initial value for the servertype radiogroup is set in onInit() -->
         <radiogroup id="servertype" wsm_persist="true">
             <radio group="servertype" value="pop3" id="pop3" label="&popType.label;" wsm_persist="true"/>
             <radio group="servertype" value="imap" id="imap" label="&imapType.label;" wsm_persist="true"/>
         </radiogroup>
-      </box>
+      </hbox>
       <separator/>
       <html>&incomingServerNameDesc.label;</html>
       <separator class="thin"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <text class="label" style="width: 8em;" value="&incomingServerLabel.label;" for="hostname"/>
         <textbox wsm_persist="true" id="hostname" flex="1"/>
-      </box>
-    </titledbox>
+      </hbox>
+    </groupbox>
 
-    <titledbox orient="vertical" id="noSmtp">
+    <groupbox orient="vertical" id="noSmtp">
       <label value="&smtpServerTitle.label;"/>
       <html>&smtpServerDesc.label;</html>
       <separator class="thin"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <text class="label" value="&smtpServerLabel.label;" for="smtphostname" style="width: 8em;"/>
         <textbox id="smtphostname" wsm_persist="true" flex="1"/>
-      </box>
-    </titledbox>
+      </hbox>
+    </groupbox>
 
-    <titledbox id="haveSmtp" orient="vertical">
+    <groupbox id="haveSmtp" orient="vertical">
       <html id="smtpStaticText" style="width: 200px;">&haveSmtp1.label;</html>
-    </titledbox>
-  </box>
+    </groupbox>
+  </vbox>
   
 </window>
 

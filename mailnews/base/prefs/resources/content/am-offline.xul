@@ -37,25 +37,25 @@ Contributors:
  
     <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/> 
 
-    <script type="text/javascript" src="chrome://messenger/content/AccountManager.js"/>
-    <script type="text/javascript" src="chrome://messenger/content/am-offline.js"/>
+    <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
+    <script type="application/x-javascript" src="chrome://messenger/content/am-offline.js"/>
 
     <text hidden="true" wsm_persist="true" id="server.type"/>  
 
-    <box id="headertitle" class="box-smallheader"/>
+    <hbox id="headertitle" class="box-smallheader"/>
 
-    <titledbox orient="vertical" id="offlinepop.titlebox" hidable="true" hidefor="imap,nntp">
+    <groupbox orient="vertical" id="offlinepop.titlebox" hidable="true" hidefor="imap,nntp">
       <html iscontrolcontainer="true">&offlinePopDesc.label;</html>
-      <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
+      <hbox iscontrolcontainer="true" autostretch="never">
         <checkbox  wsm_persist="true" id="offline.notDownload" 
             label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;"/>
         <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"/> 
         <text class="label" value="&kb.label;"/>
-      </box>
+      </hbox>
 
-    </titledbox>
+    </groupbox>
 
-    <titledbox orient="vertical" id="offline.titlebox"  hidable="true" hidefor="pop3">
+    <groupbox orient="vertical" id="offline.titlebox"  hidable="true" hidefor="pop3">
       <label value="&offlineGroupTitle.label;"/>
 
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&offlineImapDesc.label;</html>
@@ -74,59 +74,66 @@ Contributors:
 
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&selectButtonDesc.label;</html>
 
-    <box iscontrolcontainer="true" hidable="true" hidefor="pop3" orient="horizontal" align="right">
+    <hbox iscontrolcontainer="true" hidable="true" hidefor="pop3" align="right">
         <button label="&offlineSelect.label;" oncommand="onClickSelect()"/>
-    </box>
+    </hbox>
 
-    </titledbox>    
+    </groupbox>    
     
     <separator class="thin"/>
-    <titledbox orient="vertical" id="diskspace.titlebox"  hidable="true" hidefor="pop3">
+    <groupbox orient="vertical" id="diskspace.titlebox"  hidable="true" hidefor="pop3">
       <label value="&diskspaceGroupTitle.label;"/>
 
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineMsg.label;</html>
 
-    <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
+    <hbox iscontrolcontainer="true" autostretch="never">
         <checkbox  wsm_persist="true" id="offline.notDownload"
             label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;"/>
         <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"/> 
         <text class="label" value="&kb.label;"/>
-    </box>
+    </hbox>
+
+    <hbox iscontrolcontainer="true" autostretch="never">
+        <checkbox wsm_persist="true" id="offline.compactFolder" 
+            label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"/> 
+        <textbox wsm_persist="true" id="offline.compactFolderMin" size="5" value="100"/>
+        <text class="label" value="&kb.label;"/>
+    </hbox>
 
     
     <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" 
          wsm_persist="true" id="nntp.downloadUnread" label="&nntpDownloadUnread.label;" accesskey="&nntpDownloadUnread.accesskey;"/>
-    <box iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" orient="horizontal" autostretch="never">
+    <hbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" autostretch="never">
         <checkbox wsm_persist="true" id="nntp.downloadMsg" label="&nntpDownloadMsg.label;" accesskey="&nntpDownloadMsg.accesskey;"/>
         <textbox wsm_persist="true" id="nntp.downloadMsgMin" size="5" value="30"/>
         <text class="label" value="&daysAgo.label;"/>
-    </box>
+    </hbox>
 
     <separator/>
-    <box orient="vertical" iscontrolcontainer="true" hidable="true" hidefor="pop3,imap"  autostretch="never">  
+    <vbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap"  autostretch="never">  
     <html class="desc">&nntpCleanup.label;</html>
 
     <radiogroup orient="vertical"  wsm_persist="true" id="nntp.keepMsg" pref="true" preftype="int" prefattribute="data">
-        <box orient="horizontal" flex="1">
+        <hbox flex="1">
             <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepOldMsg" data="2" label="&nntpKeepMsg.label;"/>
             <textbox wsm_persist="true" id="nntp.keepOldMsgMin" size="5" value="30"/>
             <text class="label" value="&days.label;"/>
-        </box>
+        </hbox>
         <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepAllMsg" data="1" label="&nntpKeepAll.label;"/>
-        <box orient="horizontal" flex="1">
+        <hbox flex="1">
             <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepNewMsg" data="3" label="&nntpKeepNew.label;"/>
             <textbox wsm_persist="true" id="nntp.keepNewMsgMin" size="5" value="30"/>
             <text class="label" value="&message.label;"/>
-        </box>
+        </hbox>
     </radiogroup>
 
     <checkbox  wsm_persist="true" id="nntp.keepUnread" label="&nntpKeepUnread.label;" checked="true"/>
-    <box orient="horizontal" flex="1">
+    <hbox flex="1">
         <checkbox wsm_persist="true" id="nntp.removeBody" label="&nntpRemoveBody.label;"/>
         <textbox wsm_persist="true" id="nntp.removeBodyMin" size="5" value="30"/>
         <text class="label" value="&days.label;"/>
-    </box>
-    </box>
-    </titledbox>
+    </hbox>
+    </vbox>
+    </groupbox>
    
 </window>

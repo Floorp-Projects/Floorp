@@ -36,7 +36,7 @@ Rights Reserved.
         class="dialog"
         width="680" height="480"
         onload="OnLoadSelectAddress()"
-        align="vertical">
+        orient="vertical">
 
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
   <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
@@ -50,28 +50,28 @@ Rights Reserved.
   <popupset id="aTooltipSet"/>
 
   <!-- Main box, 3 pane and majority of buttons -->
-  <box align="horizontal" flex="100%">
+  <hbox flex="100%">
     <!-- 3 Pane box -->
-    <box id="3PaneBox" align="horizontal" orient="horizontal" flex="100%">
+    <hbox id="3PaneBox" flex="100%">
       
       <!-- dir tree -->
-      <box id="dirTreeBox" align="horizontal">
+      <hbox id="dirTreeBox">
         <tree id="dirTree" type="dialog" flex="1"/>
-      </box>
+      </hbox>
         
       <splitter id="vertical-splitter" collapse="before"  persist="state"/>
 
       <!-- Box that holds results pane, (to,cc,bcc buttons), and address bucket -->
-      <box id="results-bucket-tree-box" orient="vertical" flex="100%">
+      <vbox id="results-bucket-tree-box" flex="100%">
         <!-- Box that holds results pane and (to,cc,bcc buttons) -->
-        <box align="vertical" flex="100%">
+        <vbox flex="100%">
           <!-- results tree -->
-          <box id="resultsTreeBox" flex="100%" align="vertical">
+          <vbox id="resultsTreeBox" flex="100%">
             <tree id="resultsTree" flex="1"/>
-          </box>
+          </vbox>
           
           <!-- Box that holds (to,cc,bcc buttons) -->
-          <box id="addToBucketButtonBox" align="horizontal">
+          <hbox id="addToBucketButtonBox">
             <spring flex="50%"/>
             <button id="toButton" label="&toButton.label;" class="dialog" oncommand="SelectAddressToButton()"/> 
             <spring class="middle-button-spring"/>
@@ -79,42 +79,42 @@ Rights Reserved.
             <spring class="middle-button-spring"/>
             <button id="bccButton" label="&bccButton.label;" class="dialog" oncommand="SelectAddressBccButton()"/>  
             <spring flex="50%"/>
-          </box>
-        </box>
+          </hbox>
+        </vbox>
         
         <splitter id="bucket-splitter" collapse="before" persist="state"/>
         
         <!-- Address bucket -->
-        <box id="bucketBox" align="vertical">
+        <vbox id="bucketBox">
           <tree id="addressBucket" flex="1" multiple="true" onselect="top.DialogBucketPaneSelectionChanged();">
                         <treecolgroup>
               <treecol flex="1"/>
                         </treecolgroup>
             <treechildren id="bucketBody" flex="1"/>
           </tree>
-        </box>
+        </vbox>
         
-      </box>
-    </box>
+      </vbox>
+    </hbox>
     
     <!-- Box with buttons on right edge of window -->
-    <box id="rightColumnButtonBox" align="vertical">
-      <box align="vertical" flex="50%">
+    <vbox id="rightColumnButtonBox">
+      <vbox flex="50%">
         <spring class="third-column-spring"/>
         <button id="new" label="&newButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard()"/> 
         <spring class="third-column-spring"/>
         <button id="edit" label="&editButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/> 
         <spring flex="100%"/>
-      </box>
-      <box align="vertical" flex="50%">
+      </vbox>
+      <vbox flex="50%">
         <spring flex="50%"/>
         <button id="remove" label="&removeButton.label;" class="dialog" oncommand="RemoveSelectedFromBucket()"/>  
         <spring flex="50%"/>
-      </box>
-    </box>
-  </box>
+      </vbox>
+    </vbox>
+  </hbox>
 
   <!-- OK & Cancel buttons -->
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 
 </window>

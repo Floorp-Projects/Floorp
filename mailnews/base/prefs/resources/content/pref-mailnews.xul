@@ -43,12 +43,12 @@ Contributor(s):
   </script>
   <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
   
-  <box class="box-smallheader" title="&pane.title;"/>
+  <hbox class="box-smallheader" title="&pane.title;"/>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&windowSettings.label;"/>
     
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&selectWindowLayout.label;"/>
       <spring flex="1"/>
       <radiogroup id="mailPaneConfig" pref="true" preftype="int" prefstring="mail.pane_config"
@@ -56,54 +56,54 @@ Contributor(s):
         <radio group="mailPaneConfig" class="iconic" value="0" id="classic"/>
         <radio group="mailPaneConfig" class="iconic" value="1" id="wide"/>
       </radiogroup>
-    </box>
+    </hbox>
     
     <html>&chooseExp.label;</html>
 
     <separator class="thin"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox id="mailnewsConfirmMoveFoldersToTrash" label="&confirmMove.label;"
                 pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
                 prefattribute="checked"/>
-    </box>
+    </hbox>
 
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&messengerStartPage.label;"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <checkbox allowevents="true" id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
                   pref="true" preftype="bool" prefstring="mailnews.start_page.enabled"
                   prefattribute="checked"/>
-      </box>
+      </hbox>
 
       <separator class="thin"/>
 
-      <box autostretch="never">
+      <hbox autostretch="never">
         <text class="label" value="&location.label;" accesskey="&location.accesskey;" 
                    for="mailnews.start_page.url"/>
         <textbox id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
                  prefstring="mailnews.start_page.url" prefattribute="value"/>
-      </box>
+      </hbox>
 
-    <box autostretch="never" halign="right">
+    <hbox autostretch="never" halign="right">
       <button class="dialog" label="&useDefault.label;" accesskey="&useDefault.accesskey;"
               id="resetHomePageButton"
               oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');">
         <observes element="mailnewsStartPageUrl" attribute="disabled"/>
       </button>
-     </box>
+     </hbox>
 
-  </titledbox>
+  </groupbox>
   
   <!-- Sound notification for new mail -->    
-        <titledbox orient="vertical">
+        <groupbox orient="vertical">
     <label value="&newMessage.label;"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
             <checkbox allowevents="true" id="newMailNotification" label="&playSound.label;"
                 pref="true" preftype="bool" prefstring="mail.biff.play_sound"
                 prefattribute="checked" accesskey="&playSound.accesskey;" />
-          </box>              
-        </titledbox>
+          </hbox>              
+        </groupbox>
   
 </window>

@@ -38,9 +38,9 @@ Contributors:
         onload="OnLoad();">
 
 <script src="chrome://global/content/strres.js"/>
-<script language="JavaScript" src="chrome://messenger/content/mailWindowOverlay.js"/>
-<script language="JavaScript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-<script language="JavaScript" src="chrome://messenger/content/msgSynchronize.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgSynchronize.js"/>
 
     <keyset id="keyset"/>
     <text hidden="true" wsm_persist="true" id="server.type"/>
@@ -49,20 +49,20 @@ Contributors:
     <separator/>
     <html class="desc">&MsgSyncDirections.label;</html>
 
-    <box orient="vertical" class="indent">
+    <vbox class="indent">
         <checkbox id="syncMail" hidable="true" hidefor="pop3" label="&syncTypeMail.label;"/>
         <checkbox id="syncNews" label="&syncTypeNews.label;"/>
-    </box>
+    </vbox>
 
-    <box orient="vertical">
+    <vbox>
         <checkbox id="sendMessage" label="&sendMessage.label;"/>
         <checkbox id="workOffline" label="&workOffline.label;"/>
-    </box>
+    </vbox>
     <separator/>
-    <box orient="horizontal" align="right">
+    <hbox align="right">
         <button id="select" class="dialog" label="&selectButton.label;"  oncommand="OnSelect();"/>
-    </box>
+    </hbox>
 
     <separator/>
-    <box id="okCancelButtonsRight"/>
+    <hbox id="okCancelButtonsRight"/>
 </window>

@@ -27,13 +27,13 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&searchOptionsTitle.label;">
 
-<box align="vertical" style="width: 100%; height: 100%">
+<vbox style="width: 100%; height: 100%">
   <html:div>
     <html:input type="checkbox" name="searchSubfolders" id="searchSubfolders"/>
     &searchSubfoldersCheckbox.label;
   </html:div>
   <html:div>&localRemoteTitle.label;</html:div>
-  <box align="vertical" class="cleanborder">
+  <vbox class="cleanborder">
     <html:div>
       <html:input type="checkbox" name="localremote" id="local"/>
       &localSearchRadio.label;
@@ -42,5 +42,5 @@ Rights Reserved.
       <html:input type="checkbox" name="localremote" id="remote"/>
       &localSearchRadio.label;
     </html:div>
-  </box>
-</box>
+  </vbox>
+</vbox>

@@ -59,7 +59,7 @@
 ]]>
 </script>
 
-<box orient="vertical">
+<vbox>
   <grid>
     <columns><column/><column/></columns>
     <rows>
@@ -129,14 +129,14 @@
       </row>
     </rows>
   </grid>
-</box>
+</vbox>
 <spring style="width: 8px"/>
-<box orient="vertical">
-  <box orient="horizontal">
+<vbox>
+  <hbox>
     <spring flex="1"/>
     <text value="Open"/>
     <spring flex="1"/>
-  </box>
+  </hbox>
   <grid>
     <columns><column/><column/></columns>
     <rows>
@@ -150,5 +150,5 @@
       </row>
     </rows>
   </grid>
-</box>
+</vbox>
 </window>

@@ -64,7 +64,7 @@
 	 * to call the backend to determine if turbo mode is enabled (since we are 
 	 * required to check for it in a non-trivial way) and then explicitly set the
 	 * checkbox here based on what we find. Finally, we have to hide the checkbox
-	 * (and the titled box that frames it) if we are not executing on a Win32 
+	 * (and the group box that frames it) if we are not executing on a Win32 
 	 * platform.
 	 *
 	 * Return Value: void
@@ -151,9 +151,9 @@
   ]]>
   </script>
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical" id="advancedSettings">
+  <groupbox orient="vertical" id="advancedSettings">
     <label value="&advancedTitle.label;"/>
     <vbox autostretch="never" id="contentEnablingBox">
       <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
@@ -180,13 +180,13 @@
       <spring flex="1"/>
     </hbox>
     <separator/>
-  </titledbox>
-  <titledbox orient="vertical" id="perfSettings">
+  </groupbox>
+  <groupbox orient="vertical" id="perfSettings">
    <label id="perfLabel" value="&perfTitle.label;"/>
     <vbox id="perfBox" autostretch="never">
       <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"/>
-	</vbox>
-   </titledbox>
+    </vbox>
+  </groupbox>
   
 </window>
 

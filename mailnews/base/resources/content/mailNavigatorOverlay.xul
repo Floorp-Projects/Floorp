@@ -8,7 +8,7 @@
 <overlay id="mailNavigatorOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
 
     function sendLink(pageUrl, pageTitle)

@@ -63,7 +63,7 @@
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
 
-  <titledbox class="tabpanel" autostretch="never" hidden="true">
+  <groupbox class="tabpanel" autostretch="never" hidden="true">
     <label value="&concatPrimary.title;"/>
     <grid class="indent" flex="1">
       <columns>
@@ -194,9 +194,9 @@
 
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
 
-  <titledbox class="tabpanel" autostretch="never" hidden="true">
+  <groupbox class="tabpanel" autostretch="never" hidden="true">
     <label value="&concatShipping.title;"/>
     <grid class="indent">
       <columns>
@@ -327,9 +327,9 @@
 
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
 
-  <titledbox class="tabpanel" autostretch="never" hidden="true">
+  <groupbox class="tabpanel" autostretch="never" hidden="true">
     <label value="&concatBilling.title;"/>
     <grid class="indent">
       <columns>
@@ -460,9 +460,9 @@
 
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
 
-  <titledbox class="tabpanel" autostretch="never" hidden="true">
+  <groupbox class="tabpanel" autostretch="never" hidden="true">
     <label value="&concatOther.title;"/>label
     <grid class="indent">
       <columns>
@@ -513,6 +513,6 @@
 
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
 
 </window>

@@ -31,38 +31,38 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
 
 
-<box id="editlist" align="vertical">
+<vbox id="editlist">
 
-	<box align="vertical" style="width:100%">
-		<box orient="horizontal">
+	<vbox style="width:100%">
+		<hbox>
 			<spring flex="1"/>
 			<text for="ListName" value="&ListName.label;" class="CardEditLabel"/>
-			<box class="CardEditWidth">
+			<hbox class="CardEditWidth">
 				<textbox id="ListName" flex="1"/>
-			</box>
-		</box>
-		<box orient="horizontal">
+			</hbox>
+		</hbox>
+		<hbox>
 			<spring flex="1"/>
 			<text for="ListNickName" value="&ListNickName.label;" class="CardEditLabel"/>
-			<box class="CardEditWidth">
+			<hbox class="CardEditWidth">
 				<textbox id="ListNickName" flex="1"/>
-			</box>
-		</box>
-		<box orient="horizontal">
+			</hbox>
+		</hbox>
+		<hbox>
 			<spring flex="1"/>
 			<text for="ListDescription" value="&ListDescription.label;" class="CardEditLabel"/>
-			<box class="CardEditWidth">
+			<hbox class="CardEditWidth">
 				<textbox id="ListDescription" flex="1"/>
-			</box>
-		</box>
-	</box>
+			</hbox>
+		</hbox>
+	</vbox>
 
 	<spring style="height:1em"/>
 		
 	<text value="&AddressTitle.label;"/>
 	<spring style="height:0.1em"/>
-	<box orient="horizontal"  flex="100%">
-		<box orient="vertical" flex="80%">
+	<hbox  flex="100%">
+		<vbox flex="80%">
 			<tree id="addressListTree" class="inset"
 				  rows="8"
 				  onclick="awClickEmptySpace(event.target, true)">
@@ -85,9 +85,9 @@ Rights Reserved.
 					</treeitem>
 				</treechildren>
 			</tree>
-		</box>
-	</box>
-</box>
+		</vbox>
+	</hbox>
+</vbox>
 
 </overlay>
 

@@ -11,7 +11,7 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/search/find.js"/>
 
-  <box autostretch="never" halign="left">
+  <hbox autostretch="never" halign="left">
     <text class="label" value="&search1.label;"/>
     <menulist id="datasource">
       <menupopup>
@@ -20,9 +20,9 @@
       </menupopup>
     </menulist>
     <text class="label" value="&search2.label;"/>
-  </box>
+  </hbox>
   
-  <box autostretch="never" halign="left">
+  <hbox autostretch="never" halign="left">
     <menulist id="match">
       <menupopup>
         <menuitem label="&name.label;" value="http://home.netscape.com/NC-rdf#Name"/>
@@ -43,10 +43,10 @@
     </menulist>
     <textbox id="findtext" type="text" width="20" onkeypress="if (event.keyCode == 13) { doFind(); }" />
     <button label="&search.button.label;" oncommand="doFind();"/>
-  </box>          
+  </hbox>          
           
-  <box autostretch="never" halign="left">
+  <hbox autostretch="never" halign="left">
     <button id="SaveSearch" disabled="true" label="&save.button.label;" oncommand="saveSearch();"/>
-  </box>
+  </hbox>
 
 </window>

@@ -41,7 +41,7 @@ Contributor(s):
         onload="onLoad()"
         onunload="onUnload()">
 
-  <script type="text/javascript" src="chrome://messenger/content/messengercompose/sendProgress.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/sendProgress.js"/>
 
     <!-- This is non-visible content that simply adds translatable string
          into the document so that it is accessible to JS code.
@@ -65,29 +65,29 @@ Contributor(s):
       
       <rows>
         <row>
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label" value="&status;"/>
-          </box>
+          </hbox>
           <text class="label" id="dialog.status"/>
         </row>
         <row class="thin-separator">             
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label" value="&progress;"/>
-          </box>
+          </hbox>
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label" id="dialog.progressText"/>
-          </box>
+          </hbox>
         </row>
       </rows>
     </grid>
     
     <!-- remove the cancel button until we finish the backend code
-    <box id="CancelButton">
+    <hbox id="CancelButton">
       <spring flex="1"/>
       <button class="dialog" id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
       <spring flex="1"/>
-    </box>
+    </hbox>
     -->
 
 </window>

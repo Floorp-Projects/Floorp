@@ -54,7 +54,7 @@
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
     <grid>
@@ -87,9 +87,9 @@
       </rows>
     </grid>
     <spring class="spacer"/>
-  </titledbox>
+  </groupbox>
   <spring class="spacer"/>
-  <box valign="middle" autostretch="never"> 
+  <hbox valign="middle" autostretch="never"> 
     <button 
       class   = "dialog" 
       id      = "MoreFewerButton" 
@@ -98,41 +98,41 @@
       tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
     <spring class="spacer"/>
-    <titledbox style="padding: 4px">
-      <box id="preview-image-box" valign="middle" autostretch="never">
+    <groupbox style="padding: 4px">
+      <hbox id="preview-image-box" valign="middle" autostretch="never">
         <spring flex="1"/>
         <html id="preview-image-holder"/>
         <spring flex="1"/>
-      </box>
-      <box id="PreviewSize" orient="vertical" collapsed="true">
+      </hbox>
+      <vbox id="PreviewSize" collapsed="true">
         <spring flex="1"/>
         <text class="label" value="&actualSize.label;"/>
-        <box orient="horizontal">
+        <hbox>
           <text class="label" value="&widthEditField.label;"/>
           <spring flex="1"/>
           <text id="PreviewWidth" class="label"/>
-        </box>
-        <box orient="horizontal">
+        </hbox>
+        <hbox>
           <text class="label" value="&heightEditField.label;"/>
           <spring flex="1"/>
           <text id="PreviewHeight" class="label"/>
-        </box>
+        </hbox>
         <spring flex="1"/>
-      </box>
-    </titledbox>
+      </vbox>
+    </groupbox>
     <spring flex="1"/>
     <!-- From EdDialogOverlay.xul -->
     <button id="AdvancedEditButton"/>
-  </box>
+  </hbox>
   <spring class="spacer"/>
   <!-- Area that shows and hides via MoreFewerButton --> 
-  <box id="MoreSection" orient="vertical" flex="1">
-    <box>
-      <box orient="vertical">
+  <vbox id="MoreSection" flex="1">
+    <hbox>
+      <vbox>
         <!-- //////// Image Dimensions //////// -->
-        <titledbox orient="vertical" flex="1">
+        <groupbox orient="vertical" flex="1">
           <label id="dimensionsLabel" value="&dimensionsBox.label;"/>
-          <box>
+          <hbox>
             <radiogroup id="imgSizeGroup" orient="vertical">
               <radio
                 group   = "imgSizeGroup"
@@ -148,15 +148,15 @@
                 oncommand = "doDimensionEnabling();" />
             </radiogroup>
             <spring flex="1"/>
-            <box orient="vertical">
+            <vbox>
               <spring flex="1"/>
               <!--////// CONSTRAIN DIMENSIONS //////-->
               <checkbox id="constrainCheckbox" label="&constrainCheckbox.label;"
                    oncommand="ToggleConstrain()"
                    tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
-            </box>
+            </vbox>
             <spring flex="1"/>
-          </box>
+          </hbox>
           <spring class="spacer"/>
           <grid class="big-left-margin">
             <columns><column/><column/><column flex="1"/></columns>
@@ -194,11 +194,11 @@
             </rows>          
           </grid>
           <spring flex="1"/>
-        </titledbox>
+        </groupbox>
         <!--////// IMAGE MAP BUTTONS //////-->
-        <titledbox orient="vertical" flex="1">
+        <groupbox orient="vertical" flex="1">
            <label id="imagemapLabel" value="&imagemapBox.label;"/>
-           <box flex="1" equalsize="always">
+           <hbox flex="1" equalsize="always">
 
 <!-- Hide Image Map Editor. Not ready for prime time yet
             <button
@@ -216,15 +216,15 @@
               label   = "&removeImageMapButton.label;"
               flex    = "1"/>
             <spring flex="1"/><!-- remove when we restore Image Map Editor -->
-            </box>
+            </hbox>
           <spring class="spacer"/>
-        </titledbox>
-      </box> <!-- vert. box on bottom left side -->
+        </groupbox>
+      </vbox> <!-- vert. box on bottom left side -->
 
       <!-- Bottom Right Region -->
-      <box orient="vertical" flex="1">
+      <vbox flex="1">
         <!--//////// Alignment ////////-->
-        <titledbox flex="1" orient="vertical">
+        <groupbox flex="1" orient="vertical">
           <label id="alignLabel" value="&alignment.label;"/>
           <spring class="spacer"/>
           <menulist id="alignTypeSelect" class="align-menu">
@@ -237,10 +237,10 @@
               <menuitem class="align-menu" value="left"  label="&wrapRightPopup.value;"/>
             </menupopup>
           </menulist>
-        </titledbox>
+        </groupbox>
 
         <!--//////// Borders and Spacing ////////-->
-        <titledbox flex="1">
+        <groupbox flex="1">
           <label id="spacingLabel" value="&spacingBox.label;"/>
           <grid>
             <columns><column/><column/><column/></columns>
@@ -288,19 +288,19 @@
               </row>
             </rows>
           </grid>
-        </titledbox>
-      </box> <!-- Bottom Right region -->
-    </box> <!-- The horizontal box -->
+        </groupbox>
+      </vbox> <!-- Bottom Right region -->
+    </hbox> <!-- The horizontal box -->
   
     <!-- buttons along bottom -->
     <spring class="spacer"/>
-    <box>
+    <hbox>
       <spring flex="1"/>
       <!-- From EdDialogOverlay -->
       <button id="AdvancedEditButton2"/>
-    </box>
-  </box> <!-- END OF MORE/FEWER SECTION -->
+    </hbox>
+  </vbox> <!-- END OF MORE/FEWER SECTION -->
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelHelpButtonsRight"/> 
+  <hbox id="okCancelHelpButtonsRight"/> 
 </window>

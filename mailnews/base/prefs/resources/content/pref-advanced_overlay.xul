@@ -3,7 +3,7 @@
 <overlay id="messengerPrefOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     // this appends this element to the wsm ID array
     if( _elementIDs )

@@ -39,7 +39,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&console.title;"
         windowtype="global:console"
-        align="vertical"
+        orient="vertical"
         width="640" height="480"
         screenX="10" screenY="10"
         persist="screenX screenY width height"> 
@@ -148,7 +148,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   </toolbar>
 </toolbox>
   
-<box id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext"/>
+<hbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext"/>
 
 <iframe id="Evaluator" style="height: 0px" />
 

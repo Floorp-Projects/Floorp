@@ -37,28 +37,28 @@ Contributor(s):
   <script src="chrome://communicator/content/profile/no_space.js"></script>
   <keyset id="keyset"/>
 
-  <box flex="1">
-    <box orient="horizontal">
+  <hbox flex="1">
+    <hbox>
         <text id="outOfSpace" value="&errorText1.label;"/>
         <spring flex="100%"/>
         <image id="info.icon" class="message-icon"/>
-    </box>
+    </hbox>
     <separator orient="vertical" class="thin"/>
-  </box>
+  </hbox>
 
   <spring flex="50%"/>
 
-  <box orient="horizontal" id="errorTextBody">
+  <hbox id="errorTextBody">
       <text value="&errorText2.label;"/>
-  </box>
+  </hbox>
 
   <spring flex="50%"/>
 
   <separator class="thin"/>
-  <box class="selection" id="RetryNewCancelButtons">
+  <hbox class="selection" id="RetryNewCancelButtons">
       <button class="dialog push" id="retry" default="true" label="&buttonRetry.label;" oncommand="OnRetry();"/> 
       <button class="dialog push" id="createNew" label="&buttonCreateNew.label;"  oncommand="OnCreateNew();" />
       <button class="dialog push" id="cancel" label="&buttonCancel.label;"  oncommand="OnCancel();" />
-  </box>
+  </hbox>
 
 </window>

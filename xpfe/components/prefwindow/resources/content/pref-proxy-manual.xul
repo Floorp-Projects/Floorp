@@ -34,19 +34,19 @@
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     		title="&window.title;"
-		    class="dialog" align="vertical"
+		    class="dialog" orient="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-proxy-manual' ); else parent.queuedTag = 'pref-proxy-manual';">
 
 <keyset id="dialogKeys"/>
 
 <html:div flex="100%">
-<box align="vertical">
-	<box align="horizontal">
+<vbox>
+	<hbox>
 		<html:div>
 		&intro.label;
 		</html:div>
-	</box>
-	<box align="horizontal">
+	</hbox>
+	<hbox>
 		<html:div>
 		&ftp.label;
 		</html:div>
@@ -58,8 +58,8 @@
 		</html:div>
 		<html:input name="ftpproxyport" type="text" id="networkProxyHTTPPort"
                 pref="true" preftype="string" prefstring="network.proxy.http_port" size="5"/>
-	</box>
-	<box align="horizontal">
+	</hbox>
+	<hbox>
 		<html:div>
 		&gopher.label;
 		</html:div>
@@ -71,8 +71,8 @@
 		</html:div>
 		<html:input name="gopherproxyport" type="text" id="networkProxyGopherPort"
                 pref="true" preftype="string" prefstring="network.proxy.gopher_port" size="5"/>
-	</box>
-	<box align="horizontal">
+	</hbox>
+	<hbox>
 		<html:div>
 		&http.label;
 		</html:div>
@@ -84,8 +84,8 @@
 		</html:div>
 		<html:input name="httpproxyport" type="text" id="networkProxyHTTPPort"
                 pref="true" preftype="string" prefstring="network.proxy.http_port" size="5"/>
-	</box>
-	<box align="horizontal">
+	</hbox>
+	<hbox>
 		<html:div>
 		&wais.label;
 		</html:div>
@@ -97,20 +97,20 @@
 		</html:div>
 		<html:input name="waisproxyport" type="text" id="networkProxyWAISPort"
                 pref="true" preftype="string" prefstring="network.proxy.wais_port" size="5"/>
-	</box>
-	<box align="horizontal">
+	</hbox>
+	<hbox>
 		<html:div>
 		&direct.label;
 		</html:div>
-	</box>
-	<box align="horizontal">
+	</hbox>
+	<hbox>
 		<html:div>
 		&noproxy.label;
 		</html:div>
 		<html:input name="noproxy" type="text" id="networProxyNone"
                 pref="true" preftype="string" prefstring="network.proxy.none" size="60"/>
-	</box>
-	<box align="horizontal">
+	</hbox>
+	<hbox>
 		<html:div>
 		&sockhost.label;
 		</html:div>
@@ -122,9 +122,9 @@
 		</html:div>
 		<html:input name="socksport" type="text" id="networkSocksPort"
                 pref="true" preftype="string" prefstring="network.socks.port" size="5"/>
-	</box>
-	<box id="okCancelButtons"/>
-</box>
+	</hbox>
+	<hbox id="okCancelButtons"/>
+</vbox>
 </html:div>
 
 </window>

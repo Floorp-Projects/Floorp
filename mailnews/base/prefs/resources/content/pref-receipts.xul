@@ -10,7 +10,7 @@
         onload="parent.initPanel('chrome://messenger/content/pref-receipts.xul');"
         orient="vertical">
 
-  <script language="javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     _elementIDs = [];
     
@@ -22,6 +22,6 @@
   </script>
 
 
-  <box class="box-smallheader" title="&pane.title;"/>
+  <hbox class="box-smallheader" title="&pane.title;"/>
 
 </window>

@@ -50,7 +50,7 @@ splitter:hover:active
   }
 
 /* vertical splitters */
-  window > splitter, box > splitter 
+  window > splitter, box, hbox > splitter 
     {
     	width               : 6px;
     }
@@ -62,7 +62,8 @@ splitter:hover:active
   window[orient="vertical"] > splitter,
   box[orient="vertical"] > splitter,
   window[align="vertical"] > splitter,
-  box[align="vertical"] > splitter
+  box[align="vertical"] > splitter,
+  vbox > splitter
     {
       cursor              : n-resize;
       border-right		  : 0px;
@@ -75,6 +76,8 @@ splitter:hover:active
 
   window[orient="vertical"] > splitter > grippy,
   window[orient="vertical"] > splitter > grippy[collapse="before"],
+  vbox > splitter > grippy,
+  vbox > splitter > grippy[collapse="before"],
   box[orient="vertical"] > splitter > grippy,
   box[orient="vertical"] > splitter > grippy[collapse="before"]
     {
@@ -82,6 +85,7 @@ splitter:hover:active
     }
     
   window[orient="vertical"] > splitter[state="collapsed"] > grippy,
+  vbox > splitter[state="collapsed"] > grippy,
   box[orient="vertical"] > splitter[state="collapsed"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");

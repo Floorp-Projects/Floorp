@@ -32,7 +32,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    align="vertical">
+    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -43,7 +43,7 @@
   <broadcaster id="args" value=""/>
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <titledbox orient="vertical" flex="1"><label value="&ListType.label;"/>
+  <groupbox orient="vertical" flex="1"><label value="&ListType.label;"/>
     <menulist id="ListType" oncommand="SelectListType()">
       <menupopup>
         <menuitem label="&none.value;"/>
@@ -56,25 +56,25 @@
       <radio group="RadioGroup" id="ChangeAll"      label="&changeEntireListRadio.label;"/>
       <radio group="RadioGroup" id="ChangeSelected" label="&changeSelectedRadio.label;"/>
     </radiogroup>
-  </titledbox>
+  </groupbox>
   <spring class="spacer"/>
 
   <!-- message text and list items are set in JS 
        text value should be identical to string with id=BulletStyle in editor.properties 
   -->
-  <titledbox orient="vertical" flex="1"><label id="BulletStyleLabel" value="&bulletStyle.label;"/>
+  <groupbox orient="vertical" flex="1"><label id="BulletStyleLabel" value="&bulletStyle.label;"/>
     <menulist class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
     <spring class="spacer"/>
-    <box>
+    <hbox>
       <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
       <textbox class="narrow" id="StartingNumber" oninput="forceInteger(this.id)"/>
       <spring/>
-    </box>
+    </hbox>
     <html id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</html>
-  </titledbox>
+  </groupbox>
   <!-- from EdDialogOverlay -->
-  <box id="AdvancedEdit"/>
+  <hbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/> 
+  <hbox id="okCancelButtons"/> 
 
 </window>

@@ -40,9 +40,9 @@
   ]]>
   </script>
         
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
   
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&widgetRendering.label;"/>
     <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
               pref="true" preftype="bool" prefstring="nglayout.widget.debugWindow"
@@ -50,11 +50,11 @@
     <checkbox id="debugXULBoxes" label="&debugXULBox.label;"
               pref="true" preftype="bool" prefstring="xul.debug.box"
               prefattribute="checked"/>
-  </titledbox>
+  </groupbox>
 
   <!-- nothing on this page has accesskeys because this is a temporary debug
        panel and you can damn well click the widgets! -->
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&debugMiscellaneous.label;"/>
     <checkbox id="nglayoutDebugUseXBLForms" label="Use XBL-based form controls (takes effect after restart). Don't file bugs on these controls; they are still under construction."
               pref="true" preftype="bool" prefstring="nglayout.debug.enable_xbl_forms"
@@ -68,10 +68,10 @@
     <checkbox id="showAboutAsStupidModalWindow" label="&debugShowAboutAsStupidModalWindow.label;"
               pref="true" preftype="bool" prefstring="browser.show_about_as_stupid_modal_window"
               prefattribute="checked"/>
-  </titledbox>              
+  </groupbox>              
 
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&accelerators.label;"/>
     <label value="&acceleratorsBlurb.label;"/>
 
@@ -95,7 +95,7 @@
         </rows>
       </grid>
 
-  </titledbox>
+  </groupbox>
 
 </window>
 

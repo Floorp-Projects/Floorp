@@ -28,7 +28,7 @@
 <window title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical"
+        orient="vertical"
         class="dialog"
         onload="Startup()">
 
@@ -38,14 +38,14 @@
 
   <keyset id="dialogKeys"/>
            
-  <box>
+  <hbox>
     <text value="&heading.label;"/>
     <spring flex="100%"/>
     <button label="&viewdata.label;" oncommand="formShow();"/>
-  </box>
+  </hbox>
 
   <spring style="height: 20px;"/>
-  <box class="tabpanel" autostretch="never" style="overflow: auto; height: 260px;">
+  <hbox class="tabpanel" autostretch="never" style="overflow: auto; height: 260px;">
     <grid class="indent">
       <columns>
         <column width="25"/>
@@ -55,16 +55,16 @@
       <rows id="rows">
       </rows>
     </grid>
-  </box>
+  </hbox>
 
   <spring style="height: 20px;"/>
 
-  <box align="horizontal">
+  <hbox>
     <checkbox id="checkbox" label="&bypass.label;"/>
     <spring flex="100%"/>
-  </box>
+  </hbox>
 
   <spring style="height: 20px;"/>
 
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 </window>

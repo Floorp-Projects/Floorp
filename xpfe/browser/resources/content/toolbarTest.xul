@@ -80,30 +80,30 @@
   <popupset>
     <popup type="floater" id="panelpopup" oncreate="initPopup();" 
            menugenerated="true" popupanchor="bottomleft" popupalign="topleft">
-      <box orient="vertical" flex="1">
+      <vbox flex="1">
         <menuitem label="Add Current Page" class="menuitem-floater"/>
         <menuitem label="Manage Bookmarks..." class="menuitem-floater"/>             
         <iframe flex="1" id="panelsrc" style="min-width: 1px; min-height: 1px;"/>
-      </box>
+      </vbox>
     </popup>
     <!--             
     <popup id="panelpopup" oncreate="initPopup();" orient="vertical"
            class="popup-resizable"
            style="min-width: 100px; max-width: 300px;">
-      <box class="floater-box" orient="vertical">
-        <box class="floater-box-top">
+      <vbox class="floater-box">
+        <hbox class="floater-box-top">
           <titlebar flex="1"/>
-        </box>
-        <box class="floater-box-center" flex="1">
-          <box class="floater-children" flex="1">
+        </hbox>
+        <hbox class="floater-box-center" flex="1">
+          <hbox class="floater-children" flex="1">
             <iframe flex="1" id="panelsrc" style="width: 170px; height: 200px;"/>
-          </box>
-        </box>
-        <box class="floater-box-bottom">
+          </hbox>
+        </hbox>
+        <hbox class="floater-box-bottom">
           <resizer direction="bottom" flex="1"/>
           <resizer direction="bottomright"/>
-        </box>
-      </box>
+        </hbox>
+      </vbox>
     </popup>
     -->
   </popupset>
@@ -289,11 +289,11 @@
   </tree>
 -->
 
-  <box flex="1">
-    <box id="sidebar-box" class="chromeclass-extrachrome"/>
+  <hbox flex="1">
+    <hbox id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
-    <box flex="1"/>
-  </box>
+    <hbox flex="1"/>
+  </hbox>
 
 </window>        
 

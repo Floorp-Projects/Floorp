@@ -33,7 +33,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical">
+  orient="vertical">
 
   <html:script>
   function RemovePersonalToolbar()
@@ -86,11 +86,11 @@
   }
   </html:script>
 
-  <box align="horizontal">  
+  <hbox>  
     <html:button onclick="RemovePersonalToolbar();">Remove Personal Toolbar</html:button>
     <html:button onclick="AddPersonalToolbar();">Add Personal Toolbar</html:button>
     <html:button onclick="MutateBody();">Swap Body (Bookmarks Root/Personal Toolbar Folder)</html:button>
-  </box>
+  </hbox>
 
   <tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);" ref="NC:BookmarksRoot">
     <template>

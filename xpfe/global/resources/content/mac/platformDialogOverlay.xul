@@ -27,40 +27,39 @@
              xmlns:html="http://www.w3.org/1999/xhtml"
              xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <box id="okCancelButtons" align="horizontal">
+  <hbox id="okCancelButtons">
     <spring flex="1"/>
     <button class="exit-dialog" id="Button3" label="" collapsed="true" oncommand="doButton3();"/>
     <button class="exit-dialog" id="Button2" label="" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
     <button class="right exit-dialog" id="ok" default="true" label="&okButton.label;" oncommand="doOKButton();"/>
-  </box>
+  </hbox>
 
-
-  <box id="okCancelHelpButtons" align="horizontal">
+  <hbox id="okCancelHelpButtons">
     <button class="exit-dialog" id="help" label="&helpButton.label;" oncommand="doHelpButton();"/>
     <spring flex="1"/>
     <button class="exit-dialog" id="Button3" label="" collapsed="true" oncommand="doButton3();"/>
     <button class="exit-dialog" id="Button2" label="" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
     <button class="right exit-dialog" id="ok" default="true" label="&okButton.label;" oncommand="doOKButton();"/>
-  </box>
+  </hbox>
 
-  <box id="okCancelButtonsRight" align="horizontal">
+  <hbox id="okCancelButtonsRight">
     <spring flex="1"/>
     <button class="exit-dialog" id="Button3" label="" collapsed="true" oncommand="doButton3();"/>
     <button class="exit-dialog" id="Button2" label="" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
     <button class="right exit-dialog" id="ok" default="true" label="&okButton.label;" oncommand="doOKButton();"/>
-  </box>
+  </hbox>
 
-  <box id="okCancelHelpButtonsRight" align="horizontal">
+  <hbox id="okCancelHelpButtonsRight">
     <button class="exit-dialog" id="help" label="&helpButton.label;" oncommand="doHelpButton();"/>
     <spring flex="1"/>
     <button class="exit-dialog" id="Button3" label="" collapsed="true" oncommand="doButton3();"/>
     <button class="exit-dialog" id="Button2" label="" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
     <button class="right exit-dialog" id="ok" default="true" label="&okButton.label;" oncommand="doOKButton();"/>
-  </box>
+  </hbox>
 
   <keyset id="dialogKeys">
     <key keycode="VK_ENTER" oncommand="if (!document.getElementById('ok').disabled) doOKButton();"/>

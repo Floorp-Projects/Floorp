@@ -66,10 +66,10 @@
 
   <!-- from dialogOverlay.xul -->
   <spring style="height: 5px;"/>
-  <box orient="horizontal">
+  <hbox>
     <spring flex="100%"/>
    <button class="right dialog" id="ok" label="&ok;" default="true" oncommand="doOKButton();"/> 
-  </box>
+  </hbox>
   <spring style="height: 5px;"/>
 
 </window>

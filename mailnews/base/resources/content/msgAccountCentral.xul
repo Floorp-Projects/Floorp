@@ -62,34 +62,34 @@ Rights Reserved.
       <separator/>
 
       <row id="EmailHeader" class="acctCentralTitleRow">
-        <box class="acctCentralRowTitleBox">
+        <hbox class="acctCentralRowTitleBox">
           <html>&emailSectionHdr.label;</html> 
-        </box>
+        </hbox>
       </row>
       <separator id="EmailHeader.separator" class="thin"/>
       <row id="ReadMessages" class="acctCentralRow">
-        <box> 
+        <hbox> 
           <text class="acctCentralText acctCentralLinkText" value="&readMsgsLink.label;" onclick="ReadMessages();"/> 
-        </box>
+        </hbox>
       </row>
       <separator id="ReadMessages.separator" class="thin"/>
       <row id="ComposeMessage" class="acctCentralRow">
-        <box> 
+        <hbox> 
           <text class="acctCentralText acctCentralLinkText" value="&composeMsgLink.label;" onclick="ComposeAMessage();"/> 
-        </box> 
+        </hbox> 
       </row>
       <separator id="ComposeMessage.separator" class="thin"/>
 
       <row id="NewsHeader" class="acctCentralTitleRow">
-        <box class="acctCentralRowTitleBox">
+        <hbox class="acctCentralRowTitleBox">
           <html>&newsSectionHdr.label;</html> 
-        </box>
+        </hbox>
       </row>
       <separator id="NewsHeader.separator" class="thin"/>
       <row id="SubscribeNewsgroups" class="acctCentralRow">
-        <box> 
+        <hbox> 
           <text class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" onclick="SubscribeNewsgroups();"/> 
-        </box> 
+        </hbox> 
       </row>
       <separator id="SubscribeNewsgroups.separator" class="thin"/>
 
@@ -98,21 +98,21 @@ Rights Reserved.
       <separator id="MessagesSection.separator3"/>
 
       <row id="AccountsHeader" class="acctCentralTitleRow">
-        <box class="acctCentralRowTitleBox">
+        <hbox class="acctCentralRowTitleBox">
           <html>&accountsSectionHdr.label;</html> 
-        </box>
+        </hbox>
       </row>
       <separator id="AccountsHeader.separator" class="thin"/>
       <row id="AccountSettings" class="acctCentralRow">
-        <box> 
+        <hbox> 
           <text class="acctCentralText acctCentralLinkText" value="&settingsLink.label;" onclick="ViewSettings();"/> 
-        </box> 
+        </hbox> 
       </row>
       <separator id="AccountSettings.separator" class="thin"/>
       <row id="CreateAccount" class="acctCentralRow">
-        <box> 
+        <hbox> 
           <text class="acctCentralText acctCentralLinkText" value="&newAcctLink.label;" onclick="CreateNewAccount();"/> 
-        </box> 
+        </hbox> 
       </row>
       <separator id="CreateAccount.separator" class="thin"/>
 
@@ -121,27 +121,27 @@ Rights Reserved.
       <separator id="AccountsSection.separator3"/>
 
       <row id="AdvancedFeaturesHeader" class="acctCentralTitleRow">
-        <box class="acctCentralRowTitleBox">
+        <hbox class="acctCentralRowTitleBox">
           <html>&advFeaturesSectionHdr.label;</html> 
-        </box> 
+        </hbox> 
       </row>
       <separator id="AdvancedFeaturesHeader.separator" class="thin"/>
       <row id="SearchMessages" class="acctCentralRow">
-        <box> 
+        <hbox> 
           <text class="acctCentralText acctCentralLinkText" value="&searchMsgsLink.label;" onclick="SearchMessages();"/> 
-        </box> 
+        </hbox> 
       </row>
       <separator id="SearchMessages.separator" class="thin"/>
       <row id="CreateFilters" class="acctCentralRow">
-        <box> 
+        <hbox> 
           <text class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" onclick="CreateMsgFilters();"/> 
-        </box> 
+        </hbox> 
       </row>
       <separator id="CreateFilters.separator" class="thin"/>
       <row id="OfflineSettings" class="acctCentralRow">
-        <box> 
+        <hbox> 
           <text class="acctCentralText acctCentralLinkText" value="&offlineLink.label;" onclick="ViewSettings();"/> 
-        </box> 
+        </hbox> 
       </row>
       <separator id="OfflineSettings.separator" class="thin"/>
 

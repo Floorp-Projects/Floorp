@@ -9,11 +9,11 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         class="color-dialog"
         onload="parent.onPanelLoaded('am-serverwithnoidentities.xul');"
-        align="vertical">
+        orient="vertical">
 
   <script src="chrome://messenger/content/am-serverwithnoidentities.js"/>
 
-  <box class="box-smallheader" title="&accountTitle.label;"/>
+  <hbox class="box-smallheader" title="&accountTitle.label;"/>
 
   <html class="secDesc">&accountSettingsDesc.label;</html>
   <grid>
@@ -31,10 +31,10 @@
     </rows>
   </grid>
   <spring flex="1"/>
-  <box align="vertical">
+  <vbox>
     <text value="&localPath.label;"/>
     <textbox wsm_persist="true" size="60" id="server.localPath" datatype="nsIFileSpec"
              pref="true" preftype="string" prefattribute="value"
              prefstring="mail.server.%serverkey%.directory"/>
-  </box>
+  </vbox>
 </window>

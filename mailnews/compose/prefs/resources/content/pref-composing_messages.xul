@@ -54,12 +54,12 @@
   ]]>
   </script>  
     
-  <box class="box-smallheader" title="&pane.title;"/>
+  <hbox class="box-smallheader" title="&pane.title;"/>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&forwardReply.label;"/>
     
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;"/>
       <menulist id="forwardMessageMode" 
                 pref="true" preftype="int" prefstring="mail.forward_message_mode"
@@ -69,13 +69,13 @@
           <menuitem value="0" label="&asAttachment.label;" accesskey="&asAttachment.accesskey;"/>
         </menupopup>
       </menulist>
-    </box>
-    <box autostretch="never">
+    </hbox>
+    <hbox autostretch="never">
       <checkbox id="autoQuote" label="&autoQuote.label;" 
                 pref="true" preftype="bool" prefstring="mail.auto_quote"
                 prefattribute="checked" oncommand="doEnabling();"/>
-    </box>
-    <box class="indent" autostretch="never" id="thenBox">
+    </hbox>
+    <hbox class="indent" autostretch="never" id="thenBox">
       <text class="label" value="&then.label;" accesskey="&then.accesskey;" for="replyOnTop"/>
       <menulist id="replyOnTop" pref="true" preftype="int" prefstring="mailnews.reply_on_top"
                 prefattribute="value">
@@ -85,11 +85,11 @@
           <menuitem value="2" label="&selectAndQuote.label;" accesskey="&selectAndQuote.accesskey;"/>
         </menupopup>
       </menulist>        
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
   <!-- Composing Mail -->
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&sendingMessagesHeader.label;"/>
         
     <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
@@ -100,14 +100,14 @@
                 pref="true" preftype="bool" prefstring="mail.strictly_mime"
                 prefattribute="checked"/>
     
-	<box autostretch="never">
+	<hbox autostretch="never">
 	<text class="label" value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" for="wrapLength"/>
     <textbox id="wrapLength" size="3" pref="true" preftype="int"
                prefstring="mailnews.wraplength" prefattribute="value"/>
     <text class="label" value="&char.label;"/>
-  </box>
+  </hbox>
 
-   <box autostretch="never">
+   <hbox autostretch="never">
     <text class="label" value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" for="sendDefaultCharsetList"/>
     <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
               pref="true" preftype="string" prefstring="mailnews.send_default_charset"
@@ -118,14 +118,14 @@
         </menupopup>
       </template>
     </menulist>       
-    </box> 
-  </titledbox>
+    </hbox> 
+  </groupbox>
   
 <!--
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
   <label value="&languages.label;"/>
 
-   <box autostretch="never">
+   <hbox autostretch="never">
     <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>
     <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
               pref="true" preftype="string" prefstring="mailnews.send_default_charset"
@@ -136,8 +136,8 @@
         </menupopup>
       </template>
     </menulist>       
-    </box> 
-  </titledbox>
+    </hbox> 
+  </groupbox>
 -->
               
       

@@ -132,7 +132,7 @@
   <!-- Form toolbar items -->
 
 <!-- form toolbar is out
-  <box id="appcontent">
+  <hbox id="appcontent">
     <toolbar id="formToolbar"
              class="chromeclass-directories"
              tbautostretch="always"
@@ -164,7 +164,7 @@
               tooltiptext="&formView.tooltip;"/>
       <toolbarseparator/>
     </toolbar>
-  </box>
+  </hbox>
 -->
 
 </overlay>

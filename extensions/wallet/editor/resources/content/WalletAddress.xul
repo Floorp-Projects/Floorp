@@ -47,7 +47,7 @@
   <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
-  <titledbox class="tabpanel" autostretch="never">
+  <groupbox class="tabpanel" autostretch="never">
     <label value="&address.title;"/>
     <grid class="indent" flex="1">
 
@@ -110,7 +110,7 @@
 
         <row>
           <html>&addressZipcode.label;</html>
-          <box>
+          <hbox>
           <menulist id="postalcode.prefix" editable="true" autoSelectMenuitem="false" flex="55%" width="0"
                     onchange="Append(this)">
             <menupopup>
@@ -124,7 +124,7 @@
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
-          </box>
+          </hbox>
         </row>
 
         <row>
@@ -162,6 +162,6 @@
 
     </grid>
 
-  </titledbox>
+  </groupbox>
 
 </window>

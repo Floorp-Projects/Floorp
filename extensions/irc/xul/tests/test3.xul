@@ -35,7 +35,7 @@ resource:///irc/tests/test3.xul
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical" onload="onLoad();" onunload="onUnload();">
+        orient="vertical" onload="onLoad();" onunload="onUnload();">
 
 <html:script src="resource:///irc/js/lib/utils.js"/>
 <html:script src="resource:///irc/js/lib/connection-xpcom.js"/>
@@ -98,21 +98,21 @@ resource:///irc/tests/test3.xul
   </toolbar>
 </toolbox>
 
-<box id="outer-box" align="vertical" flex="1">
-  <box id="inner-box" align="horizontal" flex="1">
+<vbox id="outer-box" flex="1">
+  <hbox id="inner-box" flex="1">
     <html:div id="quickList" class="quick-list" flex="0" width="150px">
     </html:div>
-    <splitter id="main-splitter" align="vertical" collapse="before"/>
-    <box align="vertical" flex="1">
+    <splitter id="main-splitter" orient="vertical" collapse="before"/>
+    <vbox flex="1">
       <html:iframe id="it-doesnt-matter-anyway" class="output-container"
        src="about:blank" flex="1"/>
     <!--
       <html:textarea id="input" class="input-window"/>
     -->
       <html:input type="text" id="input" class="input-window"/>
-    </box>
-  </box>
-</box>
+    </vbox>
+  </hbox>
+</vbox>
 
 <toolbox>
   <toolbar id="status-bar">

@@ -62,7 +62,7 @@ Contributor(s):
 
   <vbox>
     <text class="label" value="&conditionDesc.label;"/>
-    <box id="searchTermListBox" flex="1"/>
+    <hbox id="searchTermListBox" flex="1"/>
   </vbox>
 
   <separator/>
@@ -101,6 +101,6 @@ Contributor(s):
 
   <separator/>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>

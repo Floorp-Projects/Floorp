@@ -48,23 +48,23 @@
     <broadcaster id="args" value=""/>
     <keyset id="dialogKeys"/>
 
-    <titledbox orient="vertical"><label align="left" value="&documentTitleTitle.label;"/>
+    <groupbox orient="vertical"><label align="left" value="&documentTitleTitle.label;"/>
         <!-- Text labels filled in from editor.properties -->
         <text id="EnterTitleLabel" class="label"/> 
         <textbox id="TitleInput" oninput="TitleChanged();"/>
         <html id="TitleHelp" class="label wrap" style="width:1em" />
-    </titledbox>
+    </groupbox>
 
-    <titledbox orient="vertical" flex="1"><label value="&documentCharsetTitle.label;"/>
+    <groupbox orient="vertical" flex="1"><label value="&documentCharsetTitle.label;"/>
         <text class="label" value="&documentCharsetDesc.label;"/>
         <tree class="list" id="CharsetTree" rows="7" flex="1" onselect="SelectCharset();">
             <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
-    </titledbox>
+    </groupbox>
 
     <checkbox id="ExportToText" label="&documentExportToText.label;" />
     <separator class="groove"/>
  
     <!-- from global dialogOverlay -->
-    <box id="okCancelButtons"/> 
+    <hbox id="okCancelButtons"/> 
 </window>

@@ -33,12 +33,12 @@
 
   <tabbox id="scratchView" flex="1" orient="vertical">
     <tabpanels flex="1">
-      <box orient="vertical">
+      <vbox>
         <iframe name="vfView" id="vfView" flex="1"
                 style="overflow: auto;"
                 src="chrome://vixen/content/vfdScratchDocument.xul"/>
-      </box>
-      <box orient="vertical">
+      </vbox>
+      <vbox>
         <tree id="domTree" style="height: 0px; width: 0px;" flex="1">
           <treehead>
             <treerow>
@@ -60,15 +60,15 @@
             </treeitem>
           </treechildren>
         </tree> 
-        <box>
+        <hbox>
           <button class="button-toolbar" label="Insert Node"/>
           <button class="button-toolbar" label="Remove Node"/>
           <toolbarseparator/>
           <button class="button-toolbar" label="Add Attribute"/>
           <button class="button-toolbar" label="Remove Attribute"/>
           <spring flex="1"/>
-        </box>
-      </box>
+        </hbox>
+      </vbox>
     </tabpanels>
     <tabs>
       <tab label="Designer"/>

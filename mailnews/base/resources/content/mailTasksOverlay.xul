@@ -10,7 +10,7 @@
 <overlay id="mailPrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     // uses "toOpenWindowByType" function provided by utilityOverlay.js
     // which is included by most clients. 
@@ -58,10 +58,10 @@
   </commandset>
   
 
-  <box id="component-bar" class="statusbar-panel" persist="collapsed">
+  <hbox id="component-bar" class="statusbar-panel" persist="collapsed">
     <button class="button-toolbar-4 taskbutton" id="mini-mail" oncommand="toMessengerWindow()" 
             position="2" tooltip="aTooltip" tooltiptext="&taskMessenger.tooltip;"/>
-  </box>
+  </hbox>
   
   <menupopup id="taskPopup">
     <menuitem position="2" accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail"/>

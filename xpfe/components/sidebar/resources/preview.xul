@@ -37,12 +37,12 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/sidebar/preview.js" />
 
-  <box id="panel-container" orient="vertical">
+  <vbox id="panel-container">
 
-    <box id="paneltitle" class="box-texttab texttab-sidebar" selected="true"/>
+    <hbox id="paneltitle" class="box-texttab texttab-sidebar" selected="true"/>
     <!--  <iframe id="previewframe" type="content" src="about:blank" flex="1"/>-->
     <iframe class="box-panel" id="previewframe" type="content" src="about:blank" flex="1"/>
 
-  </box>  
+  </vbox>  
 
 </window>

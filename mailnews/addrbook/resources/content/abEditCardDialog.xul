@@ -29,15 +29,15 @@ Rights Reserved.
     id="abcardWindow"
 		onload="OnLoadEditCard()"
 		class="dialog"
-		align="vertical">
+		orient="vertical">
 
   <stringbundleset id="stringbundleset"/>
 
 	<keyset id="dialogKeys"/>
 
-	<box id="editcard"/>
+	<hbox id="editcard"/>
 	
-	<box id="okCancelButtons"/>
+	<hbox id="okCancelButtons"/>
 
 </window>
 

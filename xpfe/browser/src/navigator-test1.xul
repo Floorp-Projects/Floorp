@@ -540,23 +540,23 @@
 
   </menubar>
   
-  <box id="outer-box" align="vertical">
-  <box align="horizontal" style="margin: 5px;">
-  <box align="vertical" flex="100%">
+  <vbox id="outer-box">
+  <hbox style="margin: 5px;">
+  <vbox flex="100%">
   <spring flex="100%"/>
   <html:input id="urlbar" type="text" style="min-width: 100px; min-height: 25px"
     onkeyup="if (event.keyCode == 13) { BrowserLoadURL(); }"/>   
   <spring flex="100%"/>
-  </box>
+  </vbox>
   <button id="Throbber" onclick="window.frames[0].home()">
      <observes element="Browser:Throbber" attribute="busy"/>
   </button>
-   </box>
+   </hbox>
 
-   <box align="horizontal" flex="100%">
+   <hbox flex="100%">
 
-   <toolbox align="horizontal">
-    <toolbar class="main-bar" align="vertical">
+   <toolbox orient="horizontal">
+    <toolbar class="main-bar" orient="vertical">
       <button id="back-button" align="bottom" label="Back" onclick="BrowserBack()"> 
           <observes element="canGoBack" attribute="disabled"/>      
         </button>
@@ -583,7 +583,7 @@
 
   </toolbar>
 
-    <toolbar class="main-bar" align="vertical">
+    <toolbar class="main-bar" orient="vertical">
       <button id="home-button" align="bottom" label="Home" 
       onclick="BrowserHome()"/>
     <button id="netscape-button" align="bottom" label="Netscape" 
@@ -596,7 +596,7 @@
   
   <html:iframe id="content-frame" html:name="content" html:src="BrowserInitPage.html" flex="100%" />
 
-  </box>
+  </hbox>
  
   <script>
         var bindCount = 0;
@@ -713,7 +713,7 @@
         }
     </script>
 
-  <box align="horizontal" id="status-bar">
+  <hbox id="status-bar">
  
     <broadcaster id="Browser:LoadingProgress"/>
     <broadcaster id="Browser:Status"/>
@@ -724,15 +724,15 @@
     
     <button label="[Notification Component]" onclick="doTests()"/>
 
-  <box id="security-box" class="insecure" align="horizontal" flex="100%">
-    <box align="vertical" style="width:100px">
+  <hbox id="security-box" class="insecure" flex="100%">
+    <vbox style="width:100px">
       <spring flex="100%"/>
       <progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
         <observes element="Browser:LoadingProgress" attribute="mode"/>
         <observes element="Browser:Throbber" attribute="busy" onbroadcast="onProgress()"/>
       </progressmeter>
       <spring flex="100%"/>
-    </box>
+    </vbox>
 
     <button id="statusText" align="right" flex="1%" label="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
              <observes element="Browser:Status" attribute="label" onbroadcast="onStatus()"/>      
@@ -744,31 +744,31 @@
     </button>
 
     <button id="security-button" class="insecure" label="Secure Conn" align="right" onclick="securityOff();"/>
-     </box>
-  </box>
+     </hbox>
+  </hbox>
 
   <toolbox>
     <toolbar id="taskbar">
-        <box align="horizontal">
+        <hbox>
            <button align="left" class="popup"  label="Web" />
            <button align="left" class="popup"  label="Mail" />
            <button align="left" class="popup"  label="Chat" />
-      </box>
+      </hbox>
       <spring flex="100%"/>
-      <box align="horizontal">
+      <hbox>
         <button align="left"  class="popup"  label="DayPlanner" />
         <button align="left"  class="popup"  label="Shopping" />
         <button align="left"  class="popup"  label="My Desk" />
-          </box>
+          </hbox>
       <spring flex="100%"/>
-        <box align="horizontal">
+        <hbox>
         <button align="left" class="popup" label="Open Windows" />
         <button align="left" id="mini-nav" label="" />
         <button align="left" id="mini-mail" label="" onclick="OpenMessenger()"/>
         <button align="left" id="mini-addr" label="" />
         <button align="left" id="mini-comp" label="" />
-        </box>
+        </hbox>
     </toolbar>
   </toolbox>
-  </box>
+  </vbox>
 </window>

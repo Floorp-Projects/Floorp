@@ -36,10 +36,10 @@
         title="&privacyInfo.title;"
         onload="Init()">
 
-  <html:script language="JavaScript" src="chrome://global/content/strres.js" />
-  <html:script language="JavaScript" src="chrome://communicator/content/P3PInProgressInfo.js"/>
+  <html:script type="application/x-javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/P3PInProgressInfo.js"/>
 
-  <box class="box-smallheader" title="&privacyinfo.header;"/>
+  <hbox class="box-smallheader" title="&privacyinfo.header;"/>
 
   <text class="header" value="&inprogress1.text;"/>
   <text class="header" value="&inprogress2.text;"/>
@@ -50,11 +50,11 @@
 
   <separator/>
   <spring flex="1"/>
-  <box align="horizontal" autostretch="never">
+  <hbox autostretch="never">
     <spring flex="1"/>
     <button id="refresh" value="&refreshButton.label;" onclick="doRefreshButton()"/>
     <button id="cancel"  value="&cancelButton.label;"  onclick="doCancelButton()"/>
     <spring flex="1"/>
-  </box>
+  </hbox>
 
 </window>

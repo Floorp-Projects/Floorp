@@ -39,9 +39,9 @@ The test exercises creation and removal of HTML elements.
   <html:button onclick="toggleOpenClose();" flex="100%">Add/Remove Red Element At 0</html:button>
   The order should stay 'blue, green, yellow'.
 
-  <box id="container" align="horizontal" style="height: 100%; width: 100%;" flex="100%">
-    <box align="vertical" style="width: 50px; height: 50px; background: blue;" />
-    <box align="vertical" style="width: 50px; height: 50px; background: green;" />
-    <box align="vertical" style="width: 50px; height: 50px; background: yellow;" />
-  </box>
+  <hbox id="container" style="height: 100%; width: 100%;" flex="100%">
+    <vbox style="width: 50px; height: 50px; background: blue;" />
+    <vbox style="width: 50px; height: 50px; background: green;" />
+    <vbox style="width: 50px; height: 50px; background: yellow;" />
+  </hbox>
 </window>

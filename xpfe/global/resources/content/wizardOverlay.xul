@@ -8,7 +8,7 @@
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Wizard Buttons -->
-   <box id="wizardButtons" align="horizontal">
+   <hbox id="wizardButtons">
     <spring flex="100%"/>
     <button class="dialog" id="wiz-cancel-button" label="&cancelButton.label;" oncommand="wizardManager.onCancel();" />
     <spring flex="20%"/>
@@ -17,6 +17,6 @@
     <spring flex="5%"/>
     <button class="dialog" id="wiz-finish-button" label="&finishButton.label;" oncommand="wizardManager.onFinish();" />
     <spring flex="5%"/>
-  </box>
+  </hbox>
   
 </overlay>    

@@ -34,14 +34,14 @@
   title="&smtpEditTitle.label;"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical"
+  orient="vertical"
   onload="onLoad();"
 >
 
-<script language="javascript" src="SmtpServerEdit.js"/>
+<script type="application/x-javascript" src="SmtpServerEdit.js"/>
 <keyset id="dialogKeys"/>
-<box id="smtpServerEditor"/>
+<hbox id="smtpServerEditor"/>
 <separator/>
-<box id="okCancelButtonsRight"/>
+<hbox id="okCancelButtonsRight"/>
 
 </window>

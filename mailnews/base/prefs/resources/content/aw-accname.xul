@@ -33,20 +33,20 @@ Rights Reserved.
         onload="parent.wizardManager.onPageLoad('accname');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-accname.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-accname.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-wizardAdapter.js"/>
 
-  <box class="box-header" title="&accnameTitle.label;"/>
+  <hbox class="box-header" title="&accnameTitle.label;"/>
   
   <separator/>
   
-  <box class="box-wizardcontent" orient="vertical" flex="1">
+  <vbox class="box-wizardcontent" flex="1">
     <html>&accnameDesc.label;</html>
     <separator class="thin"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&accnameLabel.label;" for="prettyName" style="width: 8em;"/>
       <textbox id="prettyName" size="40" wsm_persist="true" flex="1"/>
-    </box>
-  </box>
+    </hbox>
+  </vbox>
     
 </window>

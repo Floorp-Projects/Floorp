@@ -29,13 +29,13 @@ Rights Reserved.
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         class="color-dialog"
         style="-moz-user-focus: ignore;"
-        title="&window.title;" align="vertical"
+        title="&window.title;" orient="vertical"
         onload="onInitEditDirectories();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
 
     <html>&directoriesText.label;</html>
-    <box flex="1">
+    <hbox flex="1">
       <tree class="inset" id="directoriesTree" flex="1"
             datasources="rdf:null" onselect="selectDirectory();">
         <treecolgroup>
@@ -43,11 +43,11 @@ Rights Reserved.
         </treecolgroup>
         <treechildren id="directoriesTree_root" flex="1"/>
       </tree>
-      <box orient="vertical">
+      <vbox>
         <button id="addButton" label="&addDirectory.label;" oncommand="newDirectory();"/>
         <button id="editButton" label="&editDirectory.label;" oncommand="editDirectory();" disabled="true"/>
         <button id="removeButton" label="&deleteDirectory.label;" oncommand="removeDirectory();" disabled="true"/>
-      </box>
-    </box>
-    <box id="okCancelButtonsRight"/>
+      </vbox>
+    </hbox>
+    <hbox id="okCancelButtonsRight"/>
 </window>

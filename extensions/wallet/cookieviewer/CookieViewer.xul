@@ -51,7 +51,7 @@
       <tab id="imagesTab" hidden="true" label="&tab.bannedimages.label;"/>
     </tabs>
     <tabpanels id="panel" flex="1">
-      <box class="tabpanel" id="system" flex="1" orient="vertical">
+      <vbox class="tabpanel" id="system" flex="1">
           <text class="label" value="&div.cookiesonsystem.label;"/>
           <separator class="thin"/>
           <tree id="cookietree" class="inset" style="height: 10em;"
@@ -76,7 +76,7 @@
             </treehead>
             <treechildren id="cookieList" flex="1"/>
           </tree>
-          <titledbox>
+          <groupbox>
             <label value="&treehead.infoselected.label;"/>
             <!-- labels -->
             <grid flex="1">
@@ -111,8 +111,8 @@
                 </row>
               </rows>
             </grid>
-          </titledbox>
-          <box>
+          </groupbox>
+          <hbox>
             <button id="removeCookies" class="dialog push" disabled="true"
                           label="&button.removecookie.label;"
                           oncommand="DeleteCookieSelected();"/>
@@ -120,14 +120,14 @@
                           label="&button.removeallcookies.label;"
                           oncommand="DeleteAllCookies();"/>
             <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" label="&button.restorecookie.label;" oncommand="RestoreCookies();"/> -->
-          </box>
+          </hbox>
           <separator class="thin"/>
-          <box autostretch="never">
+          <hbox autostretch="never">
             <checkbox id="checkbox" label="&checkbox.label;" />
-          </box>
-      </box>
+          </hbox>
+      </vbox>
       
-      <box class="tabpanel" id="servers" flex="1" orient="vertical">
+      <vbox class="tabpanel" id="servers" flex="1">
           <text class="label" value="&div.bannedservers.label;"/>
           <separator class="thin"/>
           <tree id="cookiepermissionstree" class="inset" flex="1"
@@ -150,17 +150,17 @@
             </treehead>
             <treechildren flex="1" id="cookiePermList"/>
           </tree>
-          <box>
+          <hbox>
             <button id="removePermissions" class="dialog push" disabled="true" 
                           label="&removepermission.label;" 
                           oncommand="DeleteCookiePermissionSelected();"/>
             <button id="removeAllPermissions" class="dialog push"
                           label="&removeallpermissions.label;" 
                           oncommand="DeleteAllCookiePermissions();"/>
-          </box>
-      </box>
+          </hbox>
+      </vbox>
 
-      <box class="tabpanel" id="images" hidden="true" flex="1" orient="vertical">
+      <vbox class="tabpanel" id="images" hidden="true" flex="1">
           <text class="label" value="&div.bannedimages.label;"/>
           <separator class="thin"/>
           <tree id="imagepermissionstree" class="inset" flex="1" style="height: 0px;"
@@ -183,20 +183,20 @@
             </treehead>
             <treechildren flex="1" id="imagePermList"/>
           </tree>
-          <box>
+          <hbox>
             <button id="removeImages" class="dialog push" disabled="true"
                           label="&removeimage.label;" 
                           oncommand="DeleteImagePermissionSelected();"/>
             <button id="removeAllImages" class="dialog push"
                           label="&removeallimages.label;" 
                           oncommand="DeleteAllImagePermissions();"/>
-          </box>
-      </box>
+          </hbox>
+      </vbox>
 
     </tabpanels>
   </tabbox>
   
   <separator class="thin"/>
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>

@@ -49,11 +49,11 @@
         title="&caption.label;"
         onload="onLoad()"
         class="dialog"
-        align="vertical"
+        orient="vertical"
         persist="screenX screenY"
         screenX="24" screenY="24">
 
-  <script language="javascript" src="chrome://navigator/content/metadata.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/metadata.js"/>
 
   <stringbundle src="chrome://navigator/locale/metadata.properties" id="bundle_metadata"/>
   <stringbundle src="chrome://global/locale/languageNames.properties" id="bundle_languages"/>
@@ -61,7 +61,7 @@
 
   <text id="no-properties" value="&no-properties.label;"/>
   
-  <titledbox id="link-sec">
+  <groupbox id="link-sec">
     <label><text value="&link-sec.label;"/></label>
     <grid>
       <columns>
@@ -95,8 +95,8 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
-  <titledbox id="image-sec">
+  </groupbox>
+  <groupbox id="image-sec">
     <label><text value="&image-sec.label;"/></label>
     <grid>
       <columns>
@@ -114,8 +114,8 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
-  <titledbox id="insdel-sec">
+  </groupbox>
+  <groupbox id="insdel-sec">
     <label><text value="&insdel-sec.label;"/></label>
     <grid>
       <columns>
@@ -133,8 +133,8 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
-  <titledbox id="quote-sec">
+  </groupbox>
+  <groupbox id="quote-sec">
     <label><text value="&quote-sec.label;"/></label>
     <grid>
       <columns>
@@ -148,8 +148,8 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
-  <titledbox id="misc-sec">
+  </groupbox>
+  <groupbox id="misc-sec">
     <label><text value="&misc-sec.label;"/></label>
     <grid>
       <columns>
@@ -163,9 +163,9 @@
         </row>
         <row id="misc-title">
           <text value="&misc-title.label; "/>
-          <box>
+          <hbox>
           <html id="misc-title-text" width="100%" style="margin: 0px;"/>
-          </box>
+          </hbox>
         </row>
         <row id="misc-tblsummary">
           <text value="&misc-tblsummary.label; "/>
@@ -173,7 +173,7 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
 
   <spring flex="1"/>
 

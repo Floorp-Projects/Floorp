@@ -29,14 +29,14 @@
 <window class="dialog"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&identityAdvanced.label;"
-  align="vertical"
+  orient="vertical"
   onload="onLoad();">
 
-  <script language="javascript" src="am-identity-advanced.js"/>
+  <script type="application/x-javascript" src="am-identity-advanced.js"/>
   
   <html style="width: 20em; ">&smtpDesc.label;</html>
   <separator class="thin"/>
-  <box autostretch="never">
+  <hbox autostretch="never">
     <text value="&smtpName.label;" class="label" for="smtpServerList"/>
     <menulist datasources="rdf:smtp"
               containment="http://home.netscape.com/NC-rdf#child"
@@ -57,10 +57,10 @@
         <!-- template will be inserted here -->
       </menupopup>
     </menulist>
-  </box>
+  </hbox>
         
   <separator/>
           
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>

@@ -6,7 +6,7 @@
     style="margins: 5 5 5 5"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script language="javascript"><![CDATA[
+<script type="application/x-javascript"><![CDATA[
 function getClient() {
     return Components.classes['@mozilla.org/xml-rpc/client;1']
         .createInstance(Components.interfaces.nsIXmlRpcClient);
@@ -57,19 +57,19 @@ var Listener = {
 };
 ]]></script>
 
-<box orient="vertical" flex="1">
+<vbox flex="1">
 <spring flex="1"/>
 <text value="Enter a state code:"/>
 <textbox id="statecode"/>
 <text value="Statename:"/>
 <text id="statename" value=" "/>
 <spring flex="1"/>
-</box>
+</vbox>
 
-<box orient="vertical">
+<vbox>
 <spring flex="1"/>
 <button label="Call Async." onclick="callAsync()"/>
 <button label="Call Sync." onclick="callSync()"/>
 <spring flex="1"/>
-</box>
+</vbox>
 </window>

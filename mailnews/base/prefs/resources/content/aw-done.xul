@@ -33,11 +33,11 @@ Rights Reserved.
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script src="chrome://messenger/content/aw-done.js"/>
 
-  <box class="box-header" title="&completionTitle.label;"/>
+  <hbox class="box-header" title="&completionTitle.label;"/>
 
   <separator/>
   
-  <box class="box-wizardcontent" orient="vertical" flex="1">
+  <vbox class="box-wizardcontent" flex="1">
 
     <html>&completionText.label;</html>
 
@@ -83,10 +83,10 @@ Rights Reserved.
     <separator/>
     <html>&clickFinish.label;</html>
     <!--
-      <box>
+      <hbox>
         <button class="dialog push" label="&setupAnotherButton.label;" oncommand="setupAnother(event);"/>
-      </box>
+      </hbox>
     -->
-  </box>
+  </vbox>
   
 </window>

@@ -32,7 +32,7 @@
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newFolderDialog.title;"
-        align="vertical"
+        orient="vertical"
         class="dialog"
         onload="onLoad();">
 
@@ -42,7 +42,7 @@
 
   <keyset id="dialogKeys"/>
 
-  <box align="vertical">
+  <vbox>
 
     <spring flex="1"/>
 
@@ -53,12 +53,12 @@
 
     <text value="&description.label;" class="label" accesskey="&description.accesskey;" for="msgNewFolderPicker"/>
 
-    <box align="horizontal">
+    <hbox>
       <menu id="msgNewFolderPicker" oncommand="doEnabling();" crop="right" flex="1"/>
       <spring flex="1"/>
-    </box>
+    </hbox>
 
-    <box align="vertical" orient="vertical" hidden="true" id="newFolderTypeBox">
+    <vbox hidden="true" id="newFolderTypeBox">
 
       <separator class="thin"/>
 
@@ -73,14 +73,14 @@
         <spring flex="100%"/>
       </radiogroup>
 
-    </box>
+    </vbox>
 
     <spring flex="1"/>
 
     <separator/>
 
-    <box id="okCancelButtonsRight"/>
+    <hbox id="okCancelButtonsRight"/>
 
-  </box>
+  </vbox>
 
 </window>

@@ -12,7 +12,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/search/internet.js" />
   <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js" />
 
-  <box>
+  <hbox>
     <spring flex="100%" />
 
     <html>&search.label;</html>
@@ -41,9 +41,9 @@
     <button id="searchbutton" oncommand="return doSearch();" label="&search.button.label;"/>
     <button id="stopbutton" oncommand="return doStop();" style="display: none;" label="&stop.button.label;"/>
     <spring flex="100%"/>
-  </box>
+  </hbox>
 
-  <box style="height: 85%; width: 100%;" flex="1" >
+  <hbox style="height: 85%; width: 100%;" flex="1" >
     <spring flex="50%" />
     <tree orient="horizontal" id="searchengines" border="1" flex="1" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot">
       <treecolgroup>
@@ -79,13 +79,13 @@
       </treehead>
     </tree>
     <spring flex="50%" />
-  </box>
+  </hbox>
 
-  <box style="width: 100%;" >
+  <hbox style="width: 100%;" >
     <spring flex="100%" />
     <button oncommand="doCheckAll(true);" label="&checkall.button.label;"/>
     <button oncommand="doCheckAll(false);" label="&uncheckall.button.label;"/> 
     <button id="SaveSearch" disabled="true" oncommand="saveSearch();" label="&savesearch.button.label;"/>
     <spring flex="100%"/>
-  </box>
+  </hbox>
 </window>

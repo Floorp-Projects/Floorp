@@ -39,12 +39,12 @@
   ]]>
   </script>
         
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
   
   <!-- nothing on this page has accesskeys because this is a temporary debug
        panel and you can damn well click the widgets! -->
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&debugNetworking.label;"/>
     <vbox autostretch="never">
       <checkbox id="browserEnableKeepAlive" label="&debugEnableKeepAlive.label;"
@@ -65,9 +65,9 @@
     <textbox id="acceptEncodingString" flex="1" wsm_persist="true"
               pref="true" preftype="string" prefstring="network.http.accept-encoding"
               prefattribute="value"/> 
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&debugCache.label;"/>
     <vbox autostretch="never">
     <checkbox id="nglayoutDebugDisableXULCache" label="&debugDisableXULCache.label;"
@@ -81,7 +81,7 @@
               prefattribute="checked"/>
 
     </vbox>
-  </titledbox>
+  </groupbox>
 
 </window>
 

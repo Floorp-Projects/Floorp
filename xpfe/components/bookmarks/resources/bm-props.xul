@@ -104,7 +104,7 @@
         <separator class="thin"/>
         <hbox class="box-padded">
           <spring flex="1"/>
-          <titledbox orient="vertical">
+          <groupbox orient="vertical">
             <label class="label" value="&checkforupdates.legend.label;"/>
             <grid flex="1">
               <columns>
@@ -208,7 +208,7 @@
               </rows>
             </grid>
             <separator class="thin"/>
-          </titledbox>
+          </groupbox>
           <spring flex="1"/>
         </hbox>
       </vbox>
@@ -223,13 +223,13 @@
         <separator class="thin"/>
         <hbox class="box-padded">
           <spring flex="1"/>
-          <titledbox orient="vertical" autostretch="never">
+          <groupbox orient="vertical" autostretch="never">
             <label value="&notifications.legend.label;" />
             <checkbox id="bookmarkIcon" label="&notification.icon.label;" />
             <checkbox id="showAlert" label="&notification.alert.label;" />
             <checkbox id="openWindow" label="&notification.window.label;" />
             <checkbox id="playSound" label="&notification.sound.label;" />
-          </titledbox>
+          </groupbox>
           <spring flex="1"/>
         </hbox>
       </vbox>
@@ -238,6 +238,6 @@
   
   <separator/>
     
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>

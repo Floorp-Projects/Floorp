@@ -37,11 +37,11 @@ Rights Reserved.
 	<checkbox  id="offline.downloadMessages" wsm_persist="true" label="&alwaysAsk.check.label;" />
 
 	<spring flex="100%"/>
-	<box align="horizontal" autostretch="never">
+	<hbox autostretch="never">
 		 <spring flex="100%"/>
 		 <button id="buttonClicked:yes" class="dialog" label="&yesButton.label;"  onclick="doYesButton()" /> 
 		 <button id="buttonClicked:no" class="dialog" label="&noButton.label;" onclick="doNoButton()" />
 		 <button id="buttonClicked:cancel" class="dialog" label="&cancelButton.label;" onclick="doCancelButton()" /> 
 		 <spring flex="100%"/>
-	</box>
+	</hbox>
 </window>

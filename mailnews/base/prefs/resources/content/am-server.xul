@@ -44,7 +44,7 @@ Contributors:
   
   <text hidden="true" wsm_persist="true" id="server.type"/>
 
-  <box class="box-smallheader" title="&serverSettings.label;"/>
+  <hbox class="box-smallheader" title="&serverSettings.label;"/>
 
   <grid>
     <columns>
@@ -62,34 +62,34 @@ Contributors:
             <textbox wsm_persist="true" disabled="true" size="25" id="server.hostName"/>
       </row>
       <row autostretch="never">
-        <box iscontrolcontainer="true" autostretch="never">
+        <hbox iscontrolcontainer="true" autostretch="never">
             <text hidable="true" hidefor="nntp" class="label" id="userNameLabel" 
                   value="&userName.label;"/>
-        </box>
-        <box iscontrolcontainer="true" autostretch="never">
+        </hbox>
+        <hbox iscontrolcontainer="true" autostretch="never">
             <!-- XXX: when #14295 is fixed, remove disabled="true" -->
             <textbox hidable="true" hidefor="nntp" wsm_persist="true" disabled="true"
                      size="25" id="server.username"/>
-        </box>
+        </hbox>
       </row>
       <row>
-        <box autostretch="never">
+        <hbox autostretch="never">
             <text class="label" value="&port.label;"/>
-        </box>
-        <box autostretch="never">
+        </hbox>
+        <hbox autostretch="never">
             <textbox autostretch="never" wsm_persist="true" size="5" id="server.port"
                      pref="true" preftype="int" prefattribute="value"
                      prefstring="mail.server.%serverkey%.port"/>
-        </box>
+        </hbox>
       </row>
     </rows>
   </grid>
 
   <spring class="spacer"/>
 
-  <titledbox>
+  <groupbox>
   <label value="&serverSettings.label;"/>
-  <box orient="vertical" flex="1">
+  <vbox flex="1">
   <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.isSecure"
             label="&isSecure.label;" hidefor="pop3" oncommand="secureSelect();"
             pref="true" preftype="bool" prefattribute="value"
@@ -103,7 +103,7 @@ Contributors:
   <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>
 -->
-  <box orient="horizontal" autostretch="never">
+  <hbox autostretch="never">
     <checkbox wsm_persist="true" id="server.doBiff" label="&biffStart.label;"
               oncommand="setupBiffUI();"
               pref="true" preftype="bool" prefattribute="value"
@@ -114,9 +114,9 @@ Contributors:
              prefstring="mail.server.%serverkey%.check_time"/>
     <text class="label" id="biffEnd" for="server.biffMinutes" value="&biffEnd.label;"
            observes="broadcaster_doBiff"/>
-  </box>
+  </hbox>
   <!-- POP3 -->
-  <box orient="vertical" iscontrolcontainer="true" autostretch="never">
+  <vbox iscontrolcontainer="true" autostretch="never">
     <checkbox hidable="true" class="indent" hidefor="imap,nntp"
               wsm_persist="true" id="server.downloadOnBiff"
               label="&downloadOnBiff.label;" observes="broadcaster_doBiff"
@@ -132,9 +132,9 @@ Contributors:
               label="&deleteOnServer.label;"
               pref="true" preftype="bool" prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
-  </box>
+  </vbox>
   <!-- IMAP -->
-  <box iscontrolcontainer="true" autostretch="never">
+  <hbox iscontrolcontainer="true" autostretch="never">
     <text class="label" value="&deleteMessagePrefix.label;"/>
     <menulist hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.deleteModel"
               pref="true" preftype="int" prefattribute="value"
@@ -146,7 +146,7 @@ Contributors:
       </menupopup>
     </menulist>
     <spring flex="1"/>
-  </box>
+  </hbox>
   <separator class="thin"/>
 
   <checkbox hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.cleanupInboxOnExit"
@@ -158,15 +158,15 @@ Contributors:
             pref="true" preftype="bool" prefattribute="value"
             prefstring="mail.server.%serverkey%.empty_trash_on_exit"/>
 
-  <box iscontrolcontainer="true" flex="1">
-    <box flex="1">
+  <hbox iscontrolcontainer="true" flex="1">
+    <hbox flex="1">
       <spring flex="1"/>
       <button label="&advancedButton.label;"
               oncommand="openImapAdvanced(event);"
               wsm_persist="true" id="server.advancedbutton" 
               pref="true" preftype="bool" prefattribute="disabled" 
               prefstring="mail.server.%serverkey%.advanced.disable"/>
-    </box>
+    </hbox>
 
     <checkbox hidable="true" hidefor="pop3,nntp" hidden="true" wsm_persist="true" id="imap.dualUseFolders"
               pref="true" preftype="bool" prefattribute="value"
@@ -181,24 +181,24 @@ Contributors:
     <checkbox hidden="true" wsm_persist="true" id="imap.overrideNamespaces"
               pref="true" preftype="bool" prefattribute="value"
               prefstring="mail.server.%serverkey%.override_namespaces"/>
-  </box>
+  </hbox>
 
   <!-- NNTP -->
-  <box iscontrolcontainer="true" orient="horizontal">
+  <hbox iscontrolcontainer="true">
     <checkbox hidable="true" hidefor="pop3,imap" wsm_persist="true" id="nntp.notifyOn"
-                label="&maxMessagesStart.label;"
+              label="&maxMessagesStart.label;"
               pref="true" preftype="bool" prefattribute="value"
               prefstring="mail.server.%serverkey%.notify.on"/>
-    <box iscontrolcontainer="true" autostretch="never">
+    <hbox iscontrolcontainer="true" autostretch="never">
       <textbox wsm_persist="true" id="nntp.maxArticles" size="6"
                pref="true" preftype="int" prefattribute="value"
                prefstring="mail.server.%serverkey%.max_articles"/>
       <text class="label" for="nntp.maxArticles" value="&maxMessagesEnd.label;"/>
-    </box>
-  </box>
+    </hbox>
+  </hbox>
 <!-- take out for now - bug 45079
-    <box iscontrolcontainer="true" flex="100%">
-      <titledbox orient="vertical">
+    <hbox iscontrolcontainer="true" flex="100%">
+      <groupbox orient="vertical">
          <label class="header label" value="&abbreviate.label;"/>
 
          <radiogroup hidable="true" hidefor="pop3,imap" orient="vertical" wsm_persist="true"
@@ -208,25 +208,25 @@ Contributors:
            <radio group="nntp.abbreviate" wsm_persist="true" value="false" 
                   label="&abbreviateOff.label;"/>
          </radiogroup>
-      </titledbox>
-  </box>
+      </groupbox>
+    </hbox>
 -->
 
-  <box orient="vertical" iscontrolcontainer="true">
+  <vbox iscontrolcontainer="true">
     <text class="label" value="&newsrcFilePath.label;" for="nntp.newsrcFilePath"/>
     <textbox hidable="true" hidefor="imap,pop3" wsm_persist="true" id="nntp.newsrcFilePath"
                datatype="nsIFileSpec"
                pref="true" preftype="string" prefattribute="value"
                prefstring="mail.server.%serverkey%.newsrc.file"/>
-  </box>
-  </box>
-  </titledbox>
+  </vbox>
+  </vbox>
+  </groupbox>
   <spring flex="100%"/>
-    <box orient="vertical">
+    <vbox>
     <text class="label" value="&localPath.label;" for="server.localPath"/>
     <textbox wsm_persist="true" id="server.localPath"
             datatype="nsIFileSpec"
             pref="true" preftype="string" prefattribute="value"
             prefstring="mail.server.%serverkey%.directory"/>
-  </box>
+    </vbox>
 </window>

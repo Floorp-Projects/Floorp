@@ -39,7 +39,7 @@
 >
 
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-<script language="javascript" src="SmtpServerList.js"/>
+<script type="application/x-javascript" src="SmtpServerList.js"/>
 
 <keyset id="dialogKeys"/>
 
@@ -47,14 +47,14 @@
 
 <separator class="thin"/>
 
-<box>
+<hbox>
   <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" flex="1" style="height: 0px;">
     <treecolgroup>
       <treecol flex="1"/>
     </treecolgroup>
     <treechildren id="smtpTreeChildren" flex="1"/>
   </tree>
-  <box orient="vertical">
+  <vbox>
     <button id="addButton"
        oncommand="onAdd(event);" label="&smtpListAdd.label;"/>
     <button id="editButton" disabled="true"
@@ -63,11 +63,11 @@
        oncommand="onDelete(event);" label="&smtpListDelete.label;"/>
     <button id="setDefaultButton" disabled="true"
        oncommand="onSetDefault(event);" label="&smtpListSetDefault.label;"/>
-  </box>
-</box>
+  </vbox>
+</hbox>
 
 <separator/>
 
-<box id="okCancelButtonsRight" />
+<hbox id="okCancelButtonsRight" />
 
 </window>

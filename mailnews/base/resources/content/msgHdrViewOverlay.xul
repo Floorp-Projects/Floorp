@@ -49,7 +49,7 @@ Rights Reserved.
     <text id="attachmentTreeTooltipText"/>
 </popup>
 
-<box id="msgHeaderView" persist="state">
+<hbox id="msgHeaderView" persist="state">
 <grid id="collapsedHeaderView" class="header-part1" flex="1" collapsed="true">
   <columns>
     <column class="collapsedToggleHdrBox" autostretch="never" >
@@ -187,5 +187,5 @@ Rights Reserved.
    </hbox>
 
   </hbox>
- </box>
+ </hbox>
 </overlay>

@@ -43,9 +43,9 @@ Rights Reserved.
 <stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-<script language="JavaScript" src="chrome://messenger/content/mailCommands.js"/>
-<script language="JavaScript" src="chrome://messenger/content/mailWindow.js"/>
-<script language="JavaScript" src="chrome://messenger/content/subscribe.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
 
   <keyset id="dialogKeys"/>
 
@@ -94,7 +94,7 @@ Rights Reserved.
       </row>
       <row flex="1">
       <deck id="subscribedeck" index="0">
-      <box id="normalview">
+      <hbox id="normalview">
         <tree class="inset" flex="1"
               id="subscribetree"
               datasources="rdf:null"
@@ -129,8 +129,8 @@ Rights Reserved.
             </treerow>
           </treehead> 
         </tree>
-     </box>
-     <box id="searchview">
+     </hbox>
+     <hbox id="searchview">
        <outliner id="searchOutliner" flex="1" onclick="SearchOnClick(event);"> 
          <outlinercol id="nameCol" label="..." class="outlinercol-header outlinercol-inset-header" flex="5" width="0" persist="hidden width" />
          <splitter class="tree-splitter" />
@@ -139,15 +139,15 @@ Rights Reserved.
          <outlinercol id="messagesCol" label="&messagesHeader.label;" class="outlinercol-header outlinercol-inset-header" flex="1" width="0" persist="hidden width" />
          <outlinerbody id="searchOutlinerBody" flex="1" />
        </outliner>
-     </box>
+     </hbox>
      </deck>
-        <box orient="vertical">
+        <vbox>
           <button id="subscribe" class="dialog" label="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
           <button id="unsubscribe" class="dialog" label="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
           <button id="refresh" class="dialog" label="&refreshButton.label;" oncommand="Refresh()"/>
           <button id="stop" class="dialog" label="&stopButton.label;" oncommand="Stop()"/>
           <spring flex="1"/>
-        </box>
+        </vbox>
       </row>
       <row>
         <statusbar id="status-bar" class="chromeclass-status"/>
@@ -157,6 +157,6 @@ Rights Reserved.
   
   <separator/>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>

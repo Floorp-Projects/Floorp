@@ -410,7 +410,7 @@
     </menubar>
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed">
-      <box id="toolbar_button_box">
+      <hbox id="toolbar_button_box">
        <button class="button-toolbar-2 top" 
                id="button-send" label="&sendButton.label;"
                tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
@@ -440,33 +440,33 @@
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
                command="cmd_saveDefault"/>
        <spring flex="1"/>
-       <box id="throbber-box" autostretch="never">
+       <hbox id="throbber-box" autostretch="never">
          <button id="navigator-throbber" 
                oncommand="goClickThrobber('compose.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
            <observes element="broadcaster_throbber" attribute="busy"/>
          </button>
-       </box>
-       </box>
+       </hbox>
+       </hbox>
     </toolbar>
   
     <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbautostretch="always" flex="1">
-      <box id="msgheaderstoolbar-box" flex="1">
-        <box orient="vertical" flex="75">
-          <box autostretch="never">
+      <hbox id="msgheaderstoolbar-box" flex="1">
+        <vbox flex="75">
+          <hbox autostretch="never">
             <text class="label" value="&fromAddr.label;"/>
             <menulist id="msgIdentity" label="..." flex="1" oncommand="LoadIdentity(false);">
               <menupopup id="msgIdentityPopup"/>
             </menulist>
-          </box> 
+          </hbox> 
           <tree id="addressingWidgetTree" flex="1"/>
-          <box autostretch="never">
+          <hbox autostretch="never">
             <text class="label" value="&subject.label;" accesskey="&subject.accesskey;"/>
             <textbox id="msgSubject" flex="1" class="toolbar" onkeyup="SetComposeWindowTitle(event.which);"
                        onkeypress="subjectKeyPress(event);" onchange="contentChanged=true;"/>
-          </box>
-        </box>
+          </hbox>
+        </vbox>
         <splitter id="attachmentbucket-sizer" collapse="after"/>
-        <box orient="vertical" flex="25">
+        <vbox flex="25">
           <text class="label" id="attachmentBucketText" value="&attachments.label;" crop="right"
                 accesskey="&attachments.accesskey;"/>
           <tree id="attachmentBucket" class="inset toolbar" flex="1" style="height: 0px; width: 0px;"
@@ -483,8 +483,8 @@
             </treecolgroup>
             <treechildren id="bucketBody" flex="1"/>
           </tree>
-        </box>
-      </box>
+        </vbox>
+      </hbox>
     </toolbar>
   
     <!-- These toolbar items get filled out from the editorOverlay -->
@@ -514,13 +514,13 @@
   <splitter id="compose-toolbar-sizer" onmousedown="awSizerListen()" collapse="after"/>
 
   <!-- The mail message body frame -->
-  <box id="appcontent" orient="vertical" flex="1">
+  <vbox id="appcontent" flex="1">
     <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="1"
             onkeypress="editorKeyPress(event);"/>
-  </box>
+  </vbox>
 
   <statusbar id="status-bar">
-    <box id="component-bar"/>
+    <hbox id="component-bar"/>
     <statusbarpanel id="statusText" flex="1" label="&defaultStatusText.label;"/>
 
     <progressmeter id="compose-progressmeter" class="progressmeter-statusbar" 

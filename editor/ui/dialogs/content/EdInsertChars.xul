@@ -44,7 +44,7 @@
   <keyset id="dialogKeys"/>
   <broadcaster id="args" value=""/>
 
-  <titledbox orient="vertical"><label value="&category.label;"/>
+  <groupbox orient="vertical"><label value="&category.label;"/>
     <radiogroup id="CatGrp" orient="vertical" persist="category letter_index char_index">
       <radio group="CatGrp" id="AccentUpper" label="&accentUpper.label;"   oncommand="ChangeCategory(this.id)"/>
       <radio group="CatGrp" id="AccentLower" label="&accentLower.label;"   oncommand="ChangeCategory(this.id)"/>
@@ -53,20 +53,20 @@
       <radio group="CatGrp" id="Symbol"      label="&commonSymbols.label;" oncommand="ChangeCategory(this.id)"/>
     </radiogroup> 
     <spring class="spacer"/>
-  </titledbox>
-  <box>
-    <box orient="vertical" flex="1">
+  </groupbox>
+  <hbox>
+    <vbox flex="1">
       <!-- value is set in JS from editor.properties strings -->
       <text class="label" id="LatinL_Label" value="&letter.label;"/>
       <menulist class="larger" flex="1" id="LatinL" oncommand="SelectLatinLetter()"/>
-    </box>
-    <box orient="vertical" flex="1">
+    </vbox>
+    <vbox flex="1">
       <text class="label" id="LatinM_Label" value="&character.label;"/>
       <menulist class="larger" flex="1" id="LatinM" oncommand="SelectLatinModifier()"/>
-    </box>
-  </box>
+    </vbox>
+  </hbox>
 
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 </window>

@@ -39,12 +39,12 @@
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-charset.js"/>
   
 <!-- 
-  <box class="box-smallheader" title="&charset.customize.left.header;" id="confirm_text" value="&charset.customize.save.popup;"/>
+  <hbox class="box-smallheader" title="&charset.customize.left.header;" id="confirm_text" value="&charset.customize.save.popup;"/>
 -->
 
   <!-- The two-pane -->
-  <box flex="1">
-    <box orient="vertical" flex="1">
+  <hbox flex="1">
+    <vbox flex="1">
       <text class="label" value="&charset.customize.additional.label;" crop="right"/>
       <!-- Available Charsets Tree -->
       <tree class="inset" id="available_charsets" flex="1"
@@ -57,13 +57,13 @@
         <treechildren id="available_charsets_root" flex="1"/>
       </tree> 
       <separator class="thin"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <button id="add_button" oncommand="AddAvailableCharset();" class="dialog"
                 label="&charset.customize.add.label;" disabled="true"/>
-      </box>
-    </box> 
+      </hbox>
+    </vbox> 
     <separator orient="vertical"/>
-    <box orient="vertical" flex="1">
+    <vbox flex="1">
       <text class="label" value="&charset.customize.current.label;" crop="right"/>
       <tree class="inset" id="active_charsets" flex="1" 
             onselect="SelectActiveCharset();"
@@ -76,25 +76,25 @@
         <treechildren id="active_charsets_root" flex="1"/>
       </tree>
       <separator class="thin"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <button id="remove_button" oncommand="RemoveActiveCharset();"
                 class="dialog" disabled="true"
                 label="&charset.customize.remove.label;"/>
-      </box>
-    </box> 
-    <box orient="vertical">
+      </hbox>
+    </vbox> 
+    <vbox>
       <spring flex="1"/>
       <button id="up_button" class="up small" disabled="true"
               oncommand="MoveUp();"/>
       <button id="down_button" class="down small" disabled="true"
               oncommand="MoveDown();"/>
       <spring flex="1"/>
-    </box>
-  </box>
+    </vbox>
+  </hbox>
 
   <separator class="groove"/>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
   
 </window>
 

@@ -40,14 +40,14 @@ Contributors:
         onload="selectOnLoad();">
 		
 <script src="chrome://global/content/strres.js"/>
-<script language="JavaScript" src="chrome://messenger/content/mailWindowOverlay.js"/>
-<script language="JavaScript" src="chrome://messenger/content/commandglue.js"/>
-<script language="JavaScript" src="chrome://messenger/content/msgSynchronize.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgSynchronize.js"/>
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-<script language="JavaScript" src="chrome://messenger/content/mailCommands.js"/>
-<script language="JavaScript" src="chrome://messenger/content/mailWindow.js"/>
-<script language="JavaScript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
 	
     <keyset id="keyset"/>
     <html class="desc">&MsgSelectDesc.label;</html>
@@ -103,5 +103,5 @@ Contributors:
     </grid>
 
     <separator/>
-    <box id="okCancelButtonsRight"/>
+    <hbox id="okCancelButtonsRight"/>
 </window>

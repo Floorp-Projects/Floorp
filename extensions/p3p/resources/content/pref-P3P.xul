@@ -33,7 +33,7 @@
         title="&window.title;"
         onload="parent.initPanel('chrome://communicator/content/pref/pref-P3P.xul');">
 
-  <script language="JavaScript">
+  <html:script type="application/x-javascript">
     <![CDATA[
       _elementIDs = ["P3PServiceEnabled",
 
@@ -182,15 +182,15 @@
     ]]>
   </script>
 
-  <html:script language="JavaScript" src="chrome://global/content/strres.js" />
-  <html:script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <html:script language="JavaScript" src="chrome://communicator/content/pref/pref-P3P.js"/>
+  <html:script type="application/x-javascript" src="chrome://global/content/strres.js" />
+  <html:script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <html:script type="application/x-javascript" src="chrome://communicator/content/pref/pref-P3P.js"/>
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
   <!-- P3P Enable/Disable Box -->
-  <titledbox orient="vertical">
-    <title><text value="&service.label;"/></title>
+  <groupbox orient="vertical">
+    <label><text value="&service.label;"/></label>
     <checkbox id="P3PServiceEnabled"
               value="&enable.label;"
               oncommand="DoEnableService( )"
@@ -220,10 +220,10 @@
                 value="&warningposttonopolicy.label;"
                 class="indent"
                 pref="true" preftype="bool" prefstring="P3P.warningposttonopolicy" prefattribute="checked"/>
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical">
-    <title><text value="&selection.label;"/></title>
+  <groupbox orient="vertical">
+    <label><text value="&selection.label;"/></label>
     <html>&selection.desc;</html>
     <radiogroup id="P3PLevel"
                 orient="vertical"
@@ -246,19 +246,19 @@
              value="&customlevel.label;"
              oncommand="DoMapLevel();"/>
       <separator/>
-      <box align="horizontal">
+      <hbox>
         <button id="customizebutton" value="&customize.label;"
                 accesskey="&custom.accesskey;"
                 oncommand="doCustomize();"/>
         <spring flex="1"/>
-      </box>
+      </hbox>
     </radiogroup>
-  </titledbox>
+  </groupbox>
 
-  <box orient="vertical" flex="1" hidden="true">
-    <box id="custombox" orient="vertical" flex="1">
-      <box orient="horizontal" flex="1">
-        <box orient="horizontal" flex="1">
+  <vbox flex="1" hidden="true">
+    <vbox id="custombox" flex="1">
+      <hbox flex="1">
+        <hbox flex="1">
           <tree id="categoryTree" flex="1"
                 onselect="var categoryTree = document.getElementById('categoryTree');
                           if (categoryTree) {
@@ -444,26 +444,26 @@
 
             </treechildren>
           </tree>
-        </box>
+        </hbox>
 
-        <box orient="vertical" flex="1">
+        <vbox flex="1">
           <deck id="purposeDeck" flex="1">
             <!-- deck index 0 -->
-            <box orient="vertical" style="width:100px" flex="1"/>
+            <vbox style="width:100px" flex="1"/>
 
             <!-- deck index 1 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&superphysical.label;"/>
               <html>&superphysical.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 2 -->
-            <box orient="vertical" style="width:100px">>
+            <vbox style="width:100px">>
               <text class="header" value="physical"/>
               <html>&physical.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -471,8 +471,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PPhysicalAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.admin" prefattribute="checked"
                                   />
@@ -480,10 +480,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.physical.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PPhysicalDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.develop" prefattribute="checked"
                                   />
@@ -494,12 +494,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.physical.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PPhysicalCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.customization" prefattribute="checked"
                                   />
@@ -513,10 +513,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.physical.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PPhysicalCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.current" prefattribute="checked"
                                   />
@@ -527,35 +527,35 @@
                                   pref="true" preftype="bool" prefstring="P3P.physical.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PPhysicalOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PPhysicalSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.physical.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 3 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="location"/>
               <html>&location.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -563,8 +563,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PLocationAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.location.admin" prefattribute="checked"
                                   />
@@ -572,10 +572,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.location.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PLocationDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.location.develop" prefattribute="checked"
                                   />
@@ -586,12 +586,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.location.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PLocationCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.location.customization" prefattribute="checked"
                                   />
@@ -605,10 +605,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.location.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PLocationCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.location.current" prefattribute="checked"
                                   />
@@ -619,41 +619,41 @@
                                   pref="true" preftype="bool" prefstring="P3P.location.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PLocationOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.location.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PLocationSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.location.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 4 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&superonline.label;"/>
               <html>&superonline.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 5 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="online"/>
               <html>&online.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -661,8 +661,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3POnlineAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.online.admin" prefattribute="checked"
                                   />
@@ -670,10 +670,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.online.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3POnlineDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.online.develop" prefattribute="checked"
                                   />
@@ -684,12 +684,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.online.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3POnlineCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.online.customization" prefattribute="checked"
                                   />
@@ -703,10 +703,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.online.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3POnlineCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.online.current" prefattribute="checked"
                                   />
@@ -717,41 +717,41 @@
                                   pref="true" preftype="bool" prefstring="P3P.online.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3POnlineOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.online.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3POnlineSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.online.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 6 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&superuserid.label;"/>
               <html>&superuserid.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 7 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="computer"/>
               <html>&computer.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -759,8 +759,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PComputerAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.admin" prefattribute="checked"
                                   />
@@ -768,10 +768,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.computer.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PComputerDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.develop" prefattribute="checked"
                                   />
@@ -782,12 +782,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.computer.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PComputerCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.customization" prefattribute="checked"
                                   />
@@ -801,10 +801,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.computer.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PComputerCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.current" prefattribute="checked"
                                   />
@@ -815,35 +815,35 @@
                                   pref="true" preftype="bool" prefstring="P3P.computer.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PComputerOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PComputerSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.computer.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 8 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="state"/>
               <html>&state.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -851,8 +851,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PStateAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.state.admin" prefattribute="checked"
                                   />
@@ -860,10 +860,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.state.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PStateDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.state.develop" prefattribute="checked"
                                   />
@@ -874,12 +874,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.state.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PStateCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.state.customization" prefattribute="checked"
                                   />
@@ -893,10 +893,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.state.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PStateCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.state.current" prefattribute="checked"
                                   />
@@ -907,35 +907,35 @@
                                   pref="true" preftype="bool" prefstring="P3P.state.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PStateOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.state.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PStateSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.state.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 9 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="uniqueid"/>
               <html>&uniqueid.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -943,8 +943,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PUniqueIDAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.admin" prefattribute="checked"
                                   />
@@ -952,10 +952,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PUniqueIDDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.develop" prefattribute="checked"
                                   />
@@ -966,12 +966,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PUniqueIDCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.customization" prefattribute="checked"
                                   />
@@ -985,10 +985,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PUniqueIDCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.current" prefattribute="checked"
                                   />
@@ -999,35 +999,35 @@
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PUniqueIDOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PUniqueIDSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.uniqueid.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 10 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="government"/>
               <html>&government.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1035,8 +1035,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PGovernmentAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.government.admin" prefattribute="checked"
                                   />
@@ -1044,10 +1044,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.government.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PGovernmentDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.government.develop" prefattribute="checked"
                                   />
@@ -1058,12 +1058,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.government.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PGovernmentCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.government.customization" prefattribute="checked"
                                   />
@@ -1077,10 +1077,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.government.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PGovernmentCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.government.current" prefattribute="checked"
                                   />
@@ -1091,41 +1091,41 @@
                                   pref="true" preftype="bool" prefstring="P3P.government.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PGovernmentOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.government.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PGovernmentSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.government.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 11 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&superpurchase.label;"/>
               <html>&superpurchase.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 12 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="purchase"/>
               <html>&purchase.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1133,8 +1133,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PPurchaseAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.admin" prefattribute="checked"
                                   />
@@ -1142,10 +1142,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.purchase.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PPurchaseDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.develop" prefattribute="checked"
                                   />
@@ -1156,12 +1156,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.purchase.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PPurchaseCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.customization" prefattribute="checked"
                                   />
@@ -1175,10 +1175,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.purchase.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PPurchaseCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.current" prefattribute="checked"
                                   />
@@ -1189,41 +1189,41 @@
                                   pref="true" preftype="bool" prefstring="P3P.purchase.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PPurchaseOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PPurchaseSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.purchase.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 13 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&superpersonal.label;"/>
               <html>&superpersonal.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 14 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="financial"/>
               <html>&financial.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1231,8 +1231,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PFinancialAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.admin" prefattribute="checked"
                                   />
@@ -1240,10 +1240,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.financial.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PFinancialDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.develop" prefattribute="checked"
                                   />
@@ -1254,12 +1254,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.financial.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PFinancialCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.customization" prefattribute="checked"
                                   />
@@ -1273,10 +1273,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.financial.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PFinancialCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.current" prefattribute="checked"
                                   />
@@ -1287,35 +1287,35 @@
                                   pref="true" preftype="bool" prefstring="P3P.financial.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PFinancialOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PFinancialSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.financial.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 15 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="health"/>
               <html>&health.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1323,8 +1323,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PHealthAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.health.admin" prefattribute="checked"
                                   />
@@ -1332,10 +1332,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.health.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PHealthDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.health.develop" prefattribute="checked"
                                   />
@@ -1346,12 +1346,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.health.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PHealthCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.health.customization" prefattribute="checked"
                                   />
@@ -1365,10 +1365,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.health.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PHealthCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.health.current" prefattribute="checked"
                                   />
@@ -1379,35 +1379,35 @@
                                   pref="true" preftype="bool" prefstring="P3P.health.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PHealthOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.health.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PHealthSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.health.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 16 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="political"/>
               <html>&political.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1415,8 +1415,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PPoliticalAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.political.admin" prefattribute="checked"
                                   />
@@ -1424,10 +1424,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.political.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PPoliticalDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.political.develop" prefattribute="checked"
                                   />
@@ -1438,12 +1438,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.political.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PPoliticalCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.political.customization" prefattribute="checked"
                                   />
@@ -1457,10 +1457,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.political.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PPoliticalCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.political.current" prefattribute="checked"
                                   />
@@ -1471,41 +1471,41 @@
                                   pref="true" preftype="bool" prefstring="P3P.political.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PPoliticalOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.political.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PPoliticalSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.political.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 17 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&superhistory.label;"/>
               <html>&superhistory.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 18 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="navigation"/>
               <html>&navigation.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1513,8 +1513,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PNavigationAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.admin" prefattribute="checked"
                                   />
@@ -1522,10 +1522,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.navigation.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PNavigationDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.develop" prefattribute="checked"
                                   />
@@ -1536,12 +1536,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.navigation.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PNavigationCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.customization" prefattribute="checked"
                                   />
@@ -1555,10 +1555,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.navigation.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PNavigationCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.current" prefattribute="checked"
                                   />
@@ -1569,35 +1569,35 @@
                                   pref="true" preftype="bool" prefstring="P3P.navigation.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PNavigationOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PNavigationSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.navigation.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 19 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="interactive"/>
               <html>&interactive.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1605,8 +1605,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PInteractiveAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.admin" prefattribute="checked"
                                   />
@@ -1614,10 +1614,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.interactive.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PInteractiveDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.develop" prefattribute="checked"
                                   />
@@ -1628,12 +1628,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.interactive.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PInteractiveCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.customization" prefattribute="checked"
                                   />
@@ -1647,10 +1647,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.interactive.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PInteractiveCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.current" prefattribute="checked"
                                   />
@@ -1661,41 +1661,41 @@
                                   pref="true" preftype="bool" prefstring="P3P.interactive.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PInteractiveOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PInteractiveSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.interactive.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 20 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&superdemographic.label;"/>
               <html>&superdemographic.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 21 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="demographic"/>
               <html>&demographic.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1703,8 +1703,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PDemographicAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.admin" prefattribute="checked"
                                   />
@@ -1712,10 +1712,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.demographic.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PDemographicDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.develop" prefattribute="checked"
                                   />
@@ -1726,12 +1726,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.demographic.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PDemographicCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.customization" prefattribute="checked"
                                   />
@@ -1745,10 +1745,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.demographic.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PDemographicCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.current" prefattribute="checked"
                                   />
@@ -1759,35 +1759,35 @@
                                   pref="true" preftype="bool" prefstring="P3P.demographic.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PDemographicOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PDemographicSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.demographic.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 22 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="preference"/>
               <html>&preference.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1795,8 +1795,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PPreferenceAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.admin" prefattribute="checked"
                                   />
@@ -1804,10 +1804,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.preference.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PPreferenceDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.develop" prefattribute="checked"
                                   />
@@ -1818,12 +1818,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.preference.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PPreferenceCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.customization" prefattribute="checked"
                                   />
@@ -1837,10 +1837,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.preference.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PPreferenceCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.current" prefattribute="checked"
                                   />
@@ -1851,41 +1851,41 @@
                                   pref="true" preftype="bool" prefstring="P3P.preference.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PPreferenceOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PPreferenceSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.preference.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 23 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&supercontent.label;"/>
               <html>&supercontent.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 24 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="content"/>
               <html>&content.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1893,8 +1893,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3PContentAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.content.admin" prefattribute="checked"
                                   />
@@ -1902,10 +1902,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.content.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3PContentDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.content.develop" prefattribute="checked"
                                   />
@@ -1916,12 +1916,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.content.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3PContentCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.content.customization" prefattribute="checked"
                                   />
@@ -1935,10 +1935,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.content.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3PContentCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.content.current" prefattribute="checked"
                                   />
@@ -1949,41 +1949,41 @@
                                   pref="true" preftype="bool" prefstring="P3P.content.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3PContentOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.content.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3PContentSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.content.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
 
             <!-- deck index 25 -->
-            <box orient="vertical" style="width:100px" flex="1">
+            <vbox style="width:100px" flex="1">
               <text class="header" value="&superother.label;"/>
               <html>&superother.tip;</html>
-            </box>
+            </vbox>
 
             <!-- deck index 26 -->
-            <box orient="vertical" style="width:100px">
+            <vbox style="width:100px">
               <text class="header" value="other"/>
               <html>&other.tip;</html>
               <spring flex="1"/>
-              <titledbox orient="horizontal">
-                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+              <groupbox orient="horizontal">
+                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1991,8 +1991,8 @@
                   </columns>
                   <rows>
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
                         <checkbox id="P3POtherAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.other.admin" prefattribute="checked"
                                   />
@@ -2000,10 +2000,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.other.historical" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
                         <checkbox id="P3POtherDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.other.develop" prefattribute="checked"
                                   />
@@ -2014,12 +2014,12 @@
                                   pref="true" preftype="bool" prefstring="P3P.other.individual-analysis" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <titledbox orient="vertical">
-                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
                         <checkbox id="P3POtherCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.other.customization" prefattribute="checked"
                                   />
@@ -2033,10 +2033,10 @@
                                   pref="true" preftype="bool" prefstring="P3P.other.individual-decision" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
 
-                      <titledbox orient="vertical">
-                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                      <groupbox orient="vertical">
+                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
                         <checkbox id="P3POtherCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.other.current" prefattribute="checked"
                                   />
@@ -2047,30 +2047,30 @@
                                   pref="true" preftype="bool" prefstring="P3P.other.telemarketing" prefattribute="checked"
                                   />
                         <spring flex="1"/>
-                      </titledbox>
+                      </groupbox>
                     </row>
 
                     <row flex="1">
-                      <box orient="vertical">
+                      <vbox>
                         <checkbox id="P3POtherOther-purpose" value="other-purpose" tooltip="other-purposetip"
                                   pref="true" preftype="bool" prefstring="P3P.other.other-purpose" prefattribute="checked"
                                   />
-                      </box>
+                      </vbox>
                     </row>
                   </rows>
                 </grid>
-              </titledbox>
+              </groupbox>
 
-              <titledbox orient="vertical">
-                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+              <groupbox orient="vertical">
+                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
                 <checkbox id="P3POtherSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.other.sharing" prefattribute="checked"
                           />
-              </titledbox>
-            </box>
+              </groupbox>
+            </vbox>
           </deck>
-        </box>
-      </box>
+        </vbox>
+      </hbox>
 
       <separator/>
       <checkbox id="showhelp" value="&showhelp.label;"/>
@@ -2279,6 +2279,6 @@
         </popup>
       </popupset>
 
-    </box>
-  </box>
+    </vbox>
+  </vbox>
 </window>

@@ -33,16 +33,16 @@ Rights Reserved.
 		onload="OnLoadEditList()"
         ondragover="return DragOverTree(event);"
         ondragdrop="return DropOnAddressListTree(event);"
-		align="vertical">
+		orient="vertical">
 
   <stringbundleset id="stringbundleset"/>
 
 	<keyset id="dialogKeys"/>
 
-	<box id="editlist"/>
+	<hbox id="editlist"/>
 		
 	<spring style="height:1em"/>
 		
-	<box id="okCancelButtons"/>
+	<hbox id="okCancelButtons"/>
 
 </window>

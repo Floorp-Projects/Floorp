@@ -45,12 +45,12 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://messenger/content/AccountWizard.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/ispUtils.js"/>
 
-  <box orient="vertical" flex="1">
-    <box id="contentarea" flex="1">
+  <vbox flex="1">
+    <hbox id="contentarea" flex="1">
       <iframe flex="1" name="wizardContents" scrolling="auto" id="wizardContents"/>
-    </box>
+    </hbox>
 	<!-- if you change "wizardButtons", make sure to change AccountWizardOverlay.xul, too -->
-    <box id="wizardButtons"/>
-  </box>
+    <hbox id="wizardButtons"/>
+  </vbox>
 
 </window>

@@ -41,7 +41,7 @@
         onload="window.dialog = new nsHelperAppLauncherDialog()"
         style="width: 40em;"
         class="dialog"
-        align="vertical"
+        orient="vertical"
         persist="screenX screenY"
         screenX="24" screenY="24">
               
@@ -52,50 +52,50 @@
                    
     <keyset id="dialogKeys"/>
            
-    <box>
-        <box orient="vertical">
+    <hbox>
+        <vbox>
             <image class="question-icon"/>
             <spring flex="1"/>
-        </box>
+        </vbox>
         <separator orient="vertical" class="thin"/>
-        <box orient="vertical" flex="1">
+        <vbox flex="1">
             <html id="intro">&intro.label;</html>
             <separator orient="horizontal" class="thin"/>
             <radiogroup id="mode" orient="vertical" oncommand="window.dialog.toggleChoice()">
-                <box orient="vertical">
-                    <box autostretch="never">
+                <vbox>
+                    <hbox autostretch="never">
                         <radio id="runApp"
                                group="mode"
                                label="&runApp.label;"
                                accesskey="&runApp.accesskey;"/>
-                    </box>
-                    <box class="indent">
+                    </hbox>
+                    <hbox class="indent">
                         <textbox id="appName" readonly="true" flex="1"/>
                         <button id="chooseApp"
                                 class="dialog"
                                 label="&chooseApp.label;"
                                 accesskey="&chooseApp.accesskey;"
                                 oncommand="dialog.chooseApp()"/>
-                    </box>
-                </box>
-                <box orient="vertical">
-                    <box autostretch="never">
+                    </hbox>
+                </vbox>
+                <vbox>
+                    <hbox autostretch="never">
                         <radio id="saveToDisk"
                                group="mode"
                                label="&saveToDisk.label;"
                                accesskey="&saveToDisk.accesskey;"/>
-                    </box>
-                 </box>
+                    </hbox>
+                 </vbox>
             </radiogroup>
             <separator orient="horizontal" class="thin"/>
-            <box autostretch="never">
+            <hbox autostretch="never">
                 <checkbox id="alwaysAskMe" label="&alwaysAskMe.label;" accesskey="&alwaysAskMe.accesskey;"/>
-            </box>
-        </box>
-    </box>
+            </hbox>
+        </vbox>
+    </hbox>
 
     <separator class="groove"/>
 
-    <box id="okCancelButtonsRight"/>
+    <hbox id="okCancelButtonsRight"/>
            
 </window>

@@ -36,7 +36,7 @@ Rights Reserved.
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- Context menu -->
-<script language="javascript">
+<script type="application/x-javascript">
   // Global variable that holds the nsContextMenu instance.
   var gMessagePaneContextMenu = null;
 </script>
@@ -1185,7 +1185,7 @@ Rights Reserved.
 
 <toolbox id="mailToolbarToolbox">
   <toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
-    <box id="toolbar_button_box">
+    <hbox id="toolbar_button_box">
                         <menubutton class="menubutton-dual toolbar top" id="button-getmsg" 
                                     label="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
                                     tooltiptext="&getMsgButton.tooltip;" 
@@ -1296,26 +1296,26 @@ Rights Reserved.
       </menubutton>
       <button class="button-toolbar-2 top" id="button-stop" label="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
       <spring flex="1"/>
-            <box id="throbber-box" autostretch="never">
+            <hbox id="throbber-box" autostretch="never">
                 <button id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
-            </box>
-    </box>
+            </hbox>
+    </hbox>
   </toolbar>
 </toolbox>
 
 
 
 <statusbar id="status-bar"> 
-  <box insertbefore="unreadMessageCount" flex="1">
-    <box id="component-bar"/>
+  <hbox insertbefore="unreadMessageCount" flex="1">
+    <hbox id="component-bar"/>
     <statusbarpanel id="statusText" label="&statusText.label;" crop="right" flex="1"/> 
     <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/> 
-  </box>
-  <box insertafter="totalMessageCount">
+  </hbox>
+  <hbox insertafter="totalMessageCount">
     <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-icononly"/> 
     <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
 	  <resizer class="window-diagonal"/>
-  </box>
+  </hbox>
 </statusbar> 
 
 

@@ -5,7 +5,7 @@
 
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="main-window" align="vertical" onclose="onClose();">
+  id="main-window" orient="vertical" onclose="onClose();">
 
   <script>
     <![CDATA[

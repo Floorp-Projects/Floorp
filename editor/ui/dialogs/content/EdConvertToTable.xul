@@ -51,14 +51,14 @@
   <radiogroup id="SepRadioGroup" orient="vertical" persist="index character" index="0" character="">
     <radio group="SepRadioGroup" id="comma"    label="&commaRadio.label;"    oncommand="SelectCharacter('0');"/>
     <radio group="SepRadioGroup" id="space"    label="&spaceRadio.label;"    oncommand="SelectCharacter('1');"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <radio group="SepRadioGroup" id="other"  label="&otherRadio.label;"    oncommand="SelectCharacter('2');"/>
       <textbox class="narrow" id="SepCharacterInput" oninput="InputSepCharacter()"/>
-    </box>
+    </hbox>
   </radiogroup> 
   <spring class="spacer"/>
   <checkbox id="DeleteSepCharacter" label="&deleteCharCheck.label;" oncommand="SelectCharacter('1');"/>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 </window>

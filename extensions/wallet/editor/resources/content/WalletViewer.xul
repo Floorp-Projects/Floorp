@@ -48,7 +48,7 @@
 
   <keyset id="dialogKeys"/>
 
-  <box flex="1">
+  <hbox flex="1">
     <!-- tree sidebar -->
     <tree class="inset" id="panelTree" style="width: 0px" flex="3"/>      
 
@@ -59,10 +59,10 @@
       document.getElementById("panelFrame").setAttribute("tag", "" );
     ]]>
     </script>
-  </box>
+  </hbox>
 
   <separator/>
 
-  <box id="okCancelButtonsRight" />
+  <hbox id="okCancelButtonsRight" />
 
 </window>

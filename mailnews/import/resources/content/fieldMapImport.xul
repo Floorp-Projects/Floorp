@@ -32,14 +32,14 @@ Rights Reserved.
         title="&fieldMapImport.title;"
     class="dialog"
         onload="OnLoadFieldMapImport()"
-        align="vertical">
+        orient="vertical">
 
   <script type="application/x-javascript" src="chrome://messenger/content/fieldMapImport.js"/>
 
   <keyset id="dialogKeys"/>
 
   <!-- field list -->
-  <box id="fieldList-box" align="vertical">
+  <vbox id="fieldList-box">
     <tree id="fieldList" flex="1"
         ondragover="return DragOverTree(event);"
         ondraggesture="return BeginDrag( event);"
@@ -58,11 +58,11 @@ Rights Reserved.
 
       <treechildren id="fieldBody" flex="1"/>
     </tree>
-  </box>
+  </vbox>
   
   <spring style="height: .5em"/>
 
-  <box align="horizontal">
+  <hbox>
     <spring flex="50%"/>
     <button class="dialog" id="previous" oncommand="OnPreviousRecord()" label="&fieldMapImport.previous;"/>
     <spring style="width: 2em"/>
@@ -72,11 +72,11 @@ Rights Reserved.
     <spring style="width: 2em"/>
     <button class="dialog" id="next" oncommand="OnNextRecord()" label="&fieldMapImport.next;"/>
     <spring flex="50%"/>    
-  </box>
+  </hbox>
 
   <spring style="height: 2em"/>
 
   <!-- OK & Cancel buttons -->
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 
 </window>

@@ -42,7 +42,7 @@
         onload="onLoad()"
         style="width: 40em;"
         class="dialog"
-        align="vertical"
+        orient="vertical"
         persist="screenX screenY"
         screenX="24" screenY="24">
               
@@ -54,17 +54,17 @@
   <stringbundle id="openLocationBundle" src="chrome://communicator/locale/openLocation.properties"/>
   <keyset id="dialogKeys"/>
 
-  <box>
-    <box orient="vertical">
+  <hbox>
+    <vbox>
       <image class="question-icon"/>
       <spring flex="1"/>
-    </box>
+    </vbox>
     <separator orient="vertical" class="thin"/>
-    <box orient="vertical" flex="1">
+    <vbox flex="1">
       <html>&enter.label;</html>
       <separator class="thin"/>
 
-      <box autostretch="never">
+      <hbox autostretch="never">
         <textbox id="dialog.input" flex="1" type="autocomplete"
                     searchSessions="history" timeout="50" maxrows="6"
                     oninput="doEnabling();">
@@ -74,8 +74,8 @@
                      oncommand="useUBHistoryItem(event.target)"/>
         </textbox>
         <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
-      </box>
-      <box autostretch="never" valign="center">
+      </hbox>
+      <hbox autostretch="never" valign="center">
         <text class="label" value="&openWhere.label;"/>
         <menulist id="openAppList">
           <menupopup>
@@ -86,12 +86,12 @@
           </menupopup>
         </menulist>
         <spring flex="1"/>
-      </box>
-    </box>
-  </box> 
+      </hbox>
+    </vbox>
+  </hbox> 
 
   <separator/>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
            
  </window>

@@ -47,9 +47,9 @@
 
   <keyset id="dialogKeys"/>
   
-  <box flex="1">
+  <hbox flex="1">
   
-    <box orient="vertical" flex="1">
+    <vbox flex="1">
       <tree multiple="true" flex="1" class="inset" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
         <template>
           <treechildren>
@@ -78,15 +78,15 @@
 
         <treechildren flex="1"/>
       </tree>
-      <box>
+      <hbox>
         <button class="dialog" id="add-button" oncommand="return AddEngine()" label="&add.label;" />
-      </box>
-    </box>
+      </hbox>
+    </vbox>
     
     <separator class="groove" orient="vertical" style="width: 0px;"/>
         
-    <box orient="vertical" flex="1">
-      <box autostretch="never">
+    <vbox flex="1">
+      <hbox autostretch="never">
         <text class="label" value="&category.label;"/>
         <menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" flex="1">
           <template>
@@ -98,17 +98,17 @@
           </template>
           <menupopup id="categoryPopup"/>
         </menulist>
-      </box>
+      </hbox>
       
-      <box>
+      <hbox>
         <button class="dialog" id="new-category-button" oncommand="NewCategory()" label="&new.category.label;" flex="1"/>
         <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" label="&rename.category.label;" flex="1"/>
         <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" label="&remove.category.label;" flex="1"/>
-      </box>
+      </hbox>
       
       <separator class="thin"/>
 
-      <box flex="1">
+      <hbox flex="1">
         <tree class="inset" multiple="true" flex="1" id="engineList" style="height: 0px;"
               datasources="rdf:internetsearch" onselect="doMoveDirectionEnabling()">
           <template>
@@ -135,22 +135,22 @@
           <treechildren flex="1"/>
           
         </tree>
-        <box orient="vertical">
+        <vbox>
           <spring flex="1"/>
           <button class="up" oncommand="MoveUp();" id="up" disabled="true"/>
           <button class="down" oncommand="MoveDown();" id="down" disabled="true"/>
           <spring flex="1"/>
-        </box>
-      </box>          
-      <box>
+        </vbox>
+      </hbox>          
+      <hbox>
         <button class="dialog" id="remove-button" oncommand="return RemoveEngine()" label="&remove.label;" />
-      </box>    
+      </hbox>    
       
-    </box>
+    </vbox>
   
-  </box>
+  </hbox>
 
   <separator/>
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>

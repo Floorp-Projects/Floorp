@@ -22,8 +22,8 @@
 
   <keyset id="dialogKeys"/>
 
-  <box flex="1">
-    <box orient="vertical" flex="1">
+  <hbox flex="1">
+    <vbox flex="1">
       <tree datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
             containment="http://home.netscape.com/NC-rdf#Settings"
             onselect="onAccountClick(event.target)" id="accounttree"
@@ -57,21 +57,21 @@
               pref="true" preftype="bool" prefattribute="disabled"
               prefstring="mail.disable_button.set_default_account"/>
   
-      <box >
+      <hbox >
         <!-- taking out for PR2
           <button class="dialog" disabled="true" label="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
         -->
         <button class="dialog" disabled="true" label="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"
                 pref="true" preftype="bool" prefattribute="disabled"
                 prefstring="mail.disable_button.delete_account"/>
-      </box>
-    </box>
+      </hbox>
+    </vbox>
   
     <iframe id="contentFrame" name="contentFrame" flex="6" style="width: 0px"/>
-  </box>
+  </hbox>
   
   <separator/>
   
-  <box id="okCancelHelpButtonsRight"/>
+  <hbox id="okCancelHelpButtonsRight"/>
 
 </window>

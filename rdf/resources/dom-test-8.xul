@@ -35,7 +35,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical"
+  orient="vertical"
   onload="ToBeetle();">
 
   <html:script>
@@ -86,14 +86,14 @@
   }
   </html:script>
 
-  <box align="horizontal">
+  <hbox>
     <button onclick="ToBeetle();" label="To Beetle" />
     <button onclick="ToPrev();" label="To Previous Sibling" />
     <button onclick="ToNext();" label="To Next Sibling" />
     <button onclick="ToParent();" label="To Parent" />
     <button onclick="ToFirstChild();" label="To First Child" />
     <button onclick="ToLastChild();" label="To Last Child" />
-  </box>
+  </hbox>
 
 <!--  <tree id="tree" flex="100%" datasources="rdf:bookmarks rdf:mailnewsfolders rdf:msgaccountmanager" style="height:100%;"> -->
   <html:div style="width:100px;height:100px">

@@ -41,12 +41,12 @@ Rights Reserved.
 
   <keyset id="dialogKeys"/>
   
-  <box class="box-header" id="header"
+  <hbox class="box-header" id="header"
        title="&importTitle.label;"
        description="&importDesc.label;"/>
 
   <deck id="stateDeck" index="0">
-    <box class="wizard-box" orient="vertical">
+    <vbox class="wizard-box">
       <html>&importDescription.label;</html>
       <html>&importDescription2.label;</html>
       <separator/>
@@ -57,8 +57,8 @@ Rights Reserved.
         <radio group="importFields" value="mail" id="mailRadio" label="&importDialog.mailTitle;"/>
         <radio group="importFields" value="settings" id="settingsRadio" label="&importDialog.settingsTitle;"/>
       </radiogroup>
-    </box>
-    <box class="wizard-box" orient="vertical">
+    </vbox>
+    <vbox class="wizard-box">
       <html>&selectDescription.label;</html>
       <tree class="inset" id="moduleList" flex="3" onselect="ImportSelectionChanged(); enableAdvance();" 
             style="height: 0px;">
@@ -68,30 +68,30 @@ Rights Reserved.
         <treechildren id="bucketBody" flex="1"/>
       </tree>
       <html id="description" class="box-padded" flex="1"/>
-    </box>
-    <box class="wizard-box" orient="vertical">
+    </vbox>
+    <vbox class="wizard-box">
       <spring flex="1"/>
-      <titledbox orient="vertical">
+      <groupbox orient="vertical">
         <label id="progressTitle" value="&title.label;"/>
         <text class="label indent" id="progressStatus" value="&processing.label;"/>
-        <box class="box-padded" orient="vertical">
+        <vbox class="box-padded">
           <progressmeter id="progressMeter" mode="normal" value="5"/>
-        </box>
-      </titledbox>
-    </box>
-    <box class="wizard-box" orient="vertical">
+        </vbox>
+      </groupbox>
+    </vbox>
+    <vbox class="wizard-box">
       <html id="status"/>
-      <box style="overflow: auto" class="inset color-window" flex="1">
+      <hbox style="overflow: auto" class="inset color-window" flex="1">
         <html id="results" flex="1"/>
-      </box>
-    </box>
+      </hbox>
+    </vbox>
   </deck>
 
   <separator/>
   
   <separator class="groove"/>
   
-  <box class="box-padded">
+  <hbox class="box-padded">
     <spring flex="1"/>
     <button id="back" label="&back.label;" disabled="true"
             oncommand="back();"/>
@@ -100,7 +100,7 @@ Rights Reserved.
     <separator orient="vertical"/>
     <button id="cancel" label="&cancel.label;"
             oncommand="close();"/>
-  </box>
+  </hbox>
   
 
 </window>

@@ -17,23 +17,23 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
 
-  <box orient="vertical">
+  <vbox>
     <html style="width: 400px">&junkImgsDescription;</html>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text id="txSearchPath" value="Search Path:"/>
       <textbox id="txfSearchPath" flex="1" style="width: 25em;" persist="true"/>
       <button id="btnSearchPathBrowser" value="Browse" onclick="dialog.browse()"/>
-    </box>
+    </hbox>
     <!--
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text id="txRemotePath" value="Target URL:"/>
       <textbox id="txfRemotePath" flex="1" persist="true"/>
-    </box>
-    <box autostretch="never">
+    </hbox>
+    <hbox autostretch="never">
       <checkbox id="cbIsSkin" label="Target is a Skin" checked="true" persist="true"/>
-    </box>
+    </hbox>
     -->
-  </box>
+  </vbox>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 </window>

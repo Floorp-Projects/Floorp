@@ -84,35 +84,35 @@
   ]]>
   </script>
         
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
   
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&filingBookmarks.label;"/>
     <html flex="1">&autoFile.label;</html>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox id="enableAutoFile" label="&enableAutoFile.label;"
                 pref="true" preftype="bool" prefstring="browser.bookmarks.add_without_dialog"
                 prefattribute="checked" valign="top"/>
-    </box>
+    </hbox>
     <separator/>
     <html flex="1">&defaultFolder.label;</html>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <textbox readonly="true" id="defaultFolder" crop="right" flex="1"/>
       <button label="&chooseDefaultFolder.label;" accesskey="&chooseDefaultFolder.accesskey;"
               oncommand="chooseDefaultFolder();"
               id="browser.bookmarks.choosefolder" pref="true" preftype="bool"
               prefstring="pref.browser.homepage.disable_button.choose_folder" prefattribute="disabled"/>
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&extendedDataViews.label;"/>
     <html>&extendedDataExplanation.label;</html>
     <checkbox id="showExtendedData" label="&showExtendedData.label;"
               accesskey="&showExtendedData.accesskey;"
               pref="true" preftype="bool" prefstring="browser.bookmarks.show_extended_data"
               prefattribute="checked"/>
-  </titledbox>              
+  </groupbox>              
 
 
 </window>

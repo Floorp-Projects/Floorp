@@ -10,7 +10,7 @@
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       class="color-dialog"
       onload="parent.onPanelLoaded('am-copies.xul');"
-      align="vertical">
+      orient="vertical">
 
   <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
@@ -36,17 +36,17 @@
   <text hidden="true" wsm_persist="true" id="identity.draftsFolderPickerMode"/>
   <text hidden="true" wsm_persist="true" id="identity.tmplFolderPickerMode"/>
 
-  <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
+  <hbox class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&sendingPrefix.label;"/>
 
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;" 
                 pref="true" preftype="bool" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.fcc"
                 oncommand="setupFccItems();"/>
-    </box>
+    </hbox>
       <radiogroup id="doFcc" orient="vertical">
       <grid class="specialFolderPickerGrid">
         <columns>
@@ -77,29 +77,29 @@
     </radiogroup>
     <separator/>  
 
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"
                 pref="true" preftype="bool" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.bcc_self"/>
-    </box>
+    </hbox>
     
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox wsm_persist="true" id="identity.bccOthers" label="&bccAddress.label;"
                 pref="true" preftype="bool" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.bcc_other"/>
       <textbox wsm_persist="true" id="identity.bccList" flex="1"
                pref="true" preftype="string" prefattribute="value"
                prefstring="mail.identity.%identitykey%.bcc_other_list"/>
-    </box>
+    </hbox>
 
-  </titledbox>
+  </groupbox>
   
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&specialFoldersTitle.label;"/>
 
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&keepDrafts.label;"/>
-    </box>
+    </hbox>
     
     <radiogroup id="messageDrafts" orient="vertical">
       <grid class="specialFolderPickerGrid">
@@ -128,9 +128,9 @@
       </grid>
     </radiogroup>
     <separator/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&keepTempltes.label;"/>
-    </box>
+    </hbox>
 	
     <radiogroup id="messageTemplates" orient="vertical">
       <grid class="specialFolderPickerGrid">
@@ -159,11 +159,11 @@
       </grid>
     </radiogroup>
       <separator class="thin"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" label="&saveMessageDlg.label;"
                 pref="true" preftype="bool" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.showSaveMsgDlg"/>
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
 </window>

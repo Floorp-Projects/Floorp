@@ -38,7 +38,7 @@
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
 
   <keyset id="keyset"/>
-  <box id="editDirectory" align="vertical">
+  <vbox id="editDirectory">
 
     <tabbox orient="vertical" style="margin:5px">
       <tabs id="directoryTabBox">
@@ -47,7 +47,7 @@
       </tabs>
 	   
       <tabpanels id="directoryTabPanels" flex="1">
-         <box index="general" align="vertical" flex="1">
+         <vbox index="general" flex="1">
            <grid flex="1">
              <columns>
                <column/>
@@ -75,8 +75,8 @@
                </row>
              </rows>
            </grid>
-         </box>
-         <box index="advanced" align="vertical" flex="1" style="width:100%">
+         </vbox>
+         <vbox index="advanced" flex="1" style="width:100%">
            <grid flex="1">
              <columns>
                <column/>
@@ -88,18 +88,18 @@
                  <text class="label" value="&portNumber.label;" 
                        accesskey="&portNumber.accesskey;"
                        for="port"/>
-                 <box>
+                 <hbox>
                    <textbox id="port" size="6"/>
-                 </box>
+                 </hbox>
                </row>
                <row>
                  <text class="label" value="&return.label;" 
                        accesskey="&return.accesskey;"
                        for="results"/>
-                 <box autostretch="never">
+                 <hbox autostretch="never">
                    <textbox id="results" size="6"/>
                    <text class="label" value="&results.label;"/>
-                 </box>
+                 </hbox>
                </row>
                <row>
                  <text class="label" value="&searchFilter.label;" 
@@ -110,20 +110,20 @@
             </rows>
           </grid>
           <separator class="thin"/>
-          <box orient="horizontal">
+          <hbox>
             <html>&scope.label;</html>
-          </box>
-          <box orient="horizontal" class="indent">
+          </hbox>
+          <hbox class="indent">
             <radiogroup id="scope" orient="horizontal" autostretch="never">
               <radio group="scope" id="one" value="1" label="&scopeOneLevel.label;"/>
               <radio group="scope" id="sub" value="2" label="&scopeSubtree.label;"/>                
             </radiogroup>
-          </box>
-        </box>
+          </hbox>
+        </vbox>
       </tabpanels>
     </tabbox>
-  </box>
-  <box id="okCancelButtonsRight"/>
+  </vbox>
+  <hbox id="okCancelButtonsRight"/>
   
 </window>
         

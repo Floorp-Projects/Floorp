@@ -38,15 +38,15 @@
         title="&privacyInfo.title;"
         onload="Init()">
 
-  <html:script language="JavaScript" src="chrome://global/content/strres.js" />
-  <html:script language="JavaScript" src="chrome://communicator/content/P3PPrivacyMetInfo.js"/>
+  <html:script type="application/x-javascript" src="chrome://global/content/strres.js" />
+  <html:script type="application/x-javascript" src="chrome://communicator/content/P3PPrivacyMetInfo.js"/>
 
-  <box class="box-smallheader" title="&privacyinfo.header;"/>
+  <hbox class="box-smallheader" title="&privacyinfo.header;"/>
 
   <text class="header" value="&policymet.text;"/>
 
   <separator/>
-  <box flex="1">
+  <hbox flex="1">
     <tree id="privacyTree" flex="1" datasources="rdf:null" ref="NC:P3PPolicyRoot"
           containment="http://home.netscape.com/NC-rdf#P3PEntries">
 
@@ -115,13 +115,13 @@
         </rule>
       </template>
     </tree>
-  </box>
+  </hbox>
 
   <separator/>
-  <box align="horizontal" autostretch="never">
+  <hbox autostretch="never">
     <spring flex="1"/>
     <button id="ok" value="&okButton.label;" default="true" align="center" onclick="doOKButton()"/>
     <spring flex="1"/>
-  </box>
+  </hbox>
 
 </window>

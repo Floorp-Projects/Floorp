@@ -29,12 +29,12 @@
   ]]>
   </script>  
     
-  <box class="box-smallheader" title="&pane.title;"/>
+  <hbox class="box-smallheader" title="&pane.title;"/>
 
-  <titledbox orient="vertical" class="small-margin">
+  <groupbox orient="vertical" class="small-margin">
     <label value="&emailCollectiontitle.label;"/>
   <html class="small-margin">&emailCollectiontext.label;</html>
-    <box orient="vertical" autostretch="never" class="indent">
+    <vbox autostretch="never" class="indent">
     <checkbox class="small-margin" id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_incoming"
               prefattribute="checked"/>
@@ -44,26 +44,26 @@
     <checkbox class="small-margin" id="emailCollectionNewsgroup" label="&emailCollectionNewsgroupEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_newsgroup"
               prefattribute="checked"/>
-	</box>
-    <box autostretch="never">
+    </vbox>
+    <hbox autostretch="never">
       <checkbox class="small-margin" id="enableCABsizeLimit" label="&useCABSizelimitPart1.label;"
                 pref="true" preftype="bool" prefstring="mail.collect_email_address_enable_size_limit"
                 prefattribute="checked"/>
       <textbox class="small-margin" id="CABsizeLimit" size="6" pref="true" preftype="int"
                prefstring="mail.collect_email_address_size_limit" prefattribute="value"/>
       <text id="useCABSizelimitPart2" class="label small-margin" value="&useCABSizelimitPart2.label;"/>
-    </box> 
-	</titledbox>
+    </hbox> 
+  </groupbox>
 	
-    <titledbox class="small-margin" orient="vertical"  id="addressAutocompletion">
+    <groupbox class="small-margin" orient="vertical"  id="addressAutocompletion">
       <label value="&addressingTitle.label;"/>
       <html class="small-margin">&autocompleteText.label;</html>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <checkbox class="small-margin" id="addressingAutocomplete" label="&addressingEnable.label;"
           pref="true" preftype="bool" prefstring="mail.enable_autocomplete"
           prefattribute="checked"/>
-      </box>
-      <box autostretch="never">
+      </hbox>
+      <hbox autostretch="never">
         <checkbox class="small-margin" id="autocompleteLDAP" label="&directories.label;" 
                   pref="true" preftype="bool" 
                   prefstring="ldap_2.autoComplete.useDirectory" 
@@ -82,16 +82,16 @@
                prefstring="pref.ldap.disable_button.edit_directories" 
                prefattribute="disabled"
                oncommand="onEditDirectories();"/>
-     </box>
+     </hbox>
      <!--
      <html class="small-margin">&matchText.label;</html>
-     <box autostretch="never">
+     <hbox autostretch="never">
        <checkbox class="small-margin" id="autocompleteSkipDirectory"
                  label="&skipDirectory.label;" 
                  pref="true" preftype="bool" 
                  prefstring="ldap_2.autoComplete.skipDirectoryIfLocalMatchFound"
                  prefattribute="checked"/>    
-     </box>
+     </hbox>
      -->
-   </titledbox>
+   </groupbox>
 </window>

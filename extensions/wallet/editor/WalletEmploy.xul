@@ -45,7 +45,7 @@
   <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
-  <titledbox class="tabpanel" autostretch="never">
+  <groupbox class="tabpanel" autostretch="never">
     <label value="&employ.title;"/>
     <grid class="indent" flex="1">
 
@@ -89,6 +89,6 @@
       </rows>
 
     </grid>
-  </titledbox>
+  </groupbox>
 
 </window>
