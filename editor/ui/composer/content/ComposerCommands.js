@@ -2395,8 +2395,9 @@ var nsSpellingCommand =
   {
     window.cancelSendMessage = false;
     try {
+      var spellCheckMail = (window.document.firstChild.getAttribute("windowtype") == "msgcompose");
       window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
-              "chrome,close,titlebar,modal", false);
+              "chrome,close,titlebar,modal", spellCheckMail);
     }
     catch(ex) {}
     window.content.focus();
