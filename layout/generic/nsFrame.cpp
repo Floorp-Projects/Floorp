@@ -672,7 +672,15 @@ NS_IMETHODIMP  nsFrame::CalcBorderPadding(nsMargin& aBorderPadding) const {
   if (mStyleContext) {
     nsStyleBorderPadding bpad;
     mStyleContext->GetBorderPaddingFor(bpad);
-    bpad.GetBorderPadding(aBorderPadding);
+    if (!bpad.GetBorderPadding(aBorderPadding)) {
+      const nsStylePadding* paddingStyle = GetStylePadding();
+      paddingStyle->CalcPaddingFor(this, aBorderPadding);
+      const nsStyleBorder* borderStyle = GetStyleBorder();
+      nsMargin  border;
+      if (borderStyle->GetBorder(border)) {
+        aBorderPadding += border;
+      }
+    }
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
