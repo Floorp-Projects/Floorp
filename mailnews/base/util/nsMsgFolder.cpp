@@ -637,7 +637,7 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 				{
 
 					//Remove from list of subfolders.
-					mSubFolders->RemoveElement(child);
+					mSubFolders->RemoveElement(supports);
 					//Remove self as parent
 					child->SetParent(nsnull);
 					nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
