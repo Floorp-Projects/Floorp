@@ -948,6 +948,9 @@ void nsWindow::NativeGrab(PRBool aGrab)
     gtk_grab_remove(GetOwningWidget());
     DropMotionTarget();
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
+    
+    // Unlock CDE if something is deadlock
+    gdk_flush();
   }
 }
 
