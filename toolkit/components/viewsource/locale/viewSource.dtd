@@ -1,9 +1,9 @@
 <!-- extracted from content/viewSource.xul -->
 
 <!-- LOCALIZATION NOTE (mainWindow.title) : DONT_TRANSLATE --> 
-<!ENTITY mainWindow.title "&brandShortName;"> 
+<!ENTITY mainWindow.title "&brandFullName;">
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
-<!ENTITY mainWindow.titlemodifier "&brandShortName;"> 
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifierseparator) : DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifierseparator " - ">
 <!ENTITY mainWindow.preface "Source of: ">
