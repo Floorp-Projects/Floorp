@@ -193,9 +193,15 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     if (last) {
         /* Always force, so we wait for any racing GC to finish. */
         js_ForceGC(cx);
+
+        /* Iterate until no finalizer removes a GC root or lock. */
+        while (rt->gcPoke)
+            js_GC(cx, GC_LAST_CONTEXT);
+
+        /* Free atom state last, now that no scripts survive. */
         js_FreeAtomState(cx, &rt->atomState);
 
-        /* Take the runtime down now that it has no contexts. */
+        /* Take the runtime down, now that it has no contexts or atoms. */
         JS_LOCK_RUNTIME(rt);
         rt->state = JSRTS_DOWN;
         JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
