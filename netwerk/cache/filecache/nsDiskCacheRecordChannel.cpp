@@ -331,6 +331,15 @@ nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetContentType(const char *aContentType)
+{
+  if(!mFileTransport)
+    return NS_ERROR_FAILURE ;
+
+  return mFileTransport->SetContentType(aContentType) ;
+}
+
+NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetContentLength(PRInt32 *aContentLength)
 {
   if(!mFileTransport)

@@ -33,16 +33,12 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 
-#include "nsIFileChannel.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
-#include "nsFileSpec.h"
 #include "prlock.h"
 #include "nsIEventQueueService.h"
 #include "nsIPipe.h"
-#include "nsILoadGroup.h"
-#include "nsIStreamListener.h"
-#include "nsCOMPtr.h"
+#include "nsString.h"
 
 class nsFileChannel : public nsIFileChannel,
                       public nsIStreamListener
@@ -86,6 +82,7 @@ protected:
     char*                               mCommand;
     nsFileSpec                          mSpec;
     nsCOMPtr<nsIChannel>                mFileTransport;
+    nsCString                           mContentType;
     PRUint32                            mLoadAttributes;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;

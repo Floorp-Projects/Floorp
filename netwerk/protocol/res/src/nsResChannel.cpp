@@ -500,6 +500,14 @@ nsResChannel::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsResChannel::SetContentType(const char *aContentType)
+{
+    if (mResolvedChannel)
+        return mResolvedChannel->SetContentType(aContentType);
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsResChannel::GetContentLength(PRInt32 *aContentLength)
 {
     if (mResolvedChannel)

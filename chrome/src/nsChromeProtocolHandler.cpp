@@ -221,6 +221,13 @@ nsCachedChromeChannel::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsCachedChromeChannel::SetContentType(const char *aContentType)
+{
+    // Do not allow the content-type to be changed.
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsCachedChromeChannel::GetContentLength(PRInt32 *aContentLength)
 {
     NS_NOTREACHED("don't do that");

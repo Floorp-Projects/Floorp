@@ -331,6 +331,25 @@ nsHTTPChannel::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsHTTPChannel::SetContentType(const char *aContentType)
+{
+  nsresult rv;
+
+  if (mResponse) {
+    rv = mResponse->SetContentType(aContentType);
+  } else {
+    //
+    // Do not allow the content-type to be set until a response has been
+    // received from the server...
+    //
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
 nsHTTPChannel::GetContentLength(PRInt32 *aContentLength)
 {
   if (!mResponse)

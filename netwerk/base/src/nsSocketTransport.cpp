@@ -1805,6 +1805,12 @@ nsSocketTransport::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsSocketTransport::SetContentType(const char *aContentType)
+{
+  return NS_ERROR_FAILURE;    // XXX doesn't make sense for transports
+}
+
+NS_IMETHODIMP
 nsSocketTransport::GetContentLength(PRInt32 *aContentLength)
 {
   // The content length is always unknown for transports...
