@@ -34,49 +34,66 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIURIContentListener.h"
 
-#define _MAX_LENGTH             256
+#define _MAX_LENGTH   256
 
-class nsProfile: public nsIProfile, public nsIURIContentListener, public nsIInterfaceRequestor
+#define REGISTRY_YES_STRING  "yes"
+#define REGISTRY_NO_STRING   "no"
+
+// strings for items in the registry we'll be getting or setting
+#define REGISTRY_PROFILE_SUBTREE_STRING     "Profiles"
+#define REGISTRY_CURRENT_PROFILE_STRING     "CurrentProfile"
+#define REGISTRY_NC_SERVICE_DENIAL_STRING   "NCServiceDenial"
+#define REGISTRY_NC_PROFILE_NAME_STRING     "NCProfileName"
+#define REGISTRY_NC_USER_EMAIL_STRING       "NCEmailAddress"
+#define REGISTRY_NC_HAVE_PREG_INFO_STRING   "NCHavePregInfo"
+#define REGISTRY_HAVE_PREG_INFO_STRING      "HavePregInfo"
+#define REGISTRY_MIGRATED_STRING            "migrated"
+#define REGISTRY_DIRECTORY_STRING           "directory"
+#define REGISTRY_NEED_MIGRATION_STRING      "NeedMigration"
+
+#define REGISTRY_VERSION_STRING	  "Version"
+#define REGISTRY_VERSION_1_0      "1.0"		
+
+class nsProfile: public nsIProfile, 
+                 public nsIURIContentListener, 
+                 public nsIInterfaceRequestor
 {
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSIPROFILE
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIPROFILE
 
-  // these are necessary if the profile manager is going to load urls for
-  // the registration stuff....
-  NS_DECL_NSIURICONTENTLISTENER
-  NS_DECL_NSIINTERFACEREQUESTOR
+    // these are necessary if the profile manager is going to load urls for
+    // the registration stuff....
+    NS_DECL_NSIURICONTENTLISTENER
+    NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
-	nsresult ProcessArgs(nsICmdLineService *service,
-					   PRBool *profileDirSet,
-					   nsCString & profileURLStr);
-	nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
-	PRBool mAutomigrate;
-   nsCOMPtr<nsIXULWindow> mPregWindow;
+    nsresult ProcessArgs(nsICmdLineService *service,
+                            PRBool *profileDirSet,
+                            nsCString & profileURLStr);
+    nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
+    PRBool mAutomigrate;
+    nsCOMPtr<nsIXULWindow> mPregWindow;
 
 public:
-	nsProfile();
-	virtual ~nsProfile();
+    nsProfile();
+    virtual ~nsProfile();
 
-	nsresult RenameProfileDir(const char *newProfileName);
+    nsresult RenameProfileDir(const PRUnichar *newProfileName);
 
-	// Creates associated user directories on the creation of a new profile
+    // Creates associated user directories on the creation of a new profile
     nsresult CreateUserDirectories(const nsFileSpec& profileDir);
 
-	// Deletes associated user directories
-	nsresult DeleteUserDirectories(const nsFileSpec& profileDir);
+    // Deletes associated user directories
+    nsresult DeleteUserDirectories(const nsFileSpec& profileDir);
 
-	// Copies all the registry keys from old profile to new profile
-	nsresult CopyRegKey(const char *oldProfile, const char *newProfile);
+    // Copies all the registry keys from old profile to new profile
+    nsresult CopyRegKey(const PRUnichar *oldProfile, const PRUnichar *newProfile);
 
-	// Routine that frees the memory allocated to temp profile struct
-	void FreeProfileStruct(ProfileStruct* aProfile);
+    nsresult AutoMigrate();
 
-	nsresult AutoMigrate();
-
-	nsresult CreateDefaultProfile(void);
-	nsresult TriggerActivation(const char *profileName);
-	nsresult CleanUp();
-	nsresult CheckDomain(PRBool *valid, char *domainName);
+    nsresult CreateDefaultProfile(void);
+    nsresult TriggerActivation(const PRUnichar *profileName);
+    nsresult CleanUp();
+    nsresult CheckDomain(PRBool *valid, const char *domainName);
 };
 
