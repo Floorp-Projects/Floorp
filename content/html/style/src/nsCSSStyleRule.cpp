@@ -33,6 +33,7 @@ static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
+static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
 static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
@@ -581,6 +582,36 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
       }
     }
 
+    nsCSSMargin*  ourMargin;
+    if (NS_OK == mDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin)) {
+      if (nsnull != ourMargin) {
+        nsStyleMolecule* hack = (nsStyleMolecule*)aContext->GetData(kStyleMoleculeSID);
+
+        // margin
+        if (nsnull != ourMargin->mMargin) {
+          if (ourMargin->mMargin->mLeft.IsLengthUnit()) {
+            hack->margin.left = CalcLength(ourMargin->mMargin->mLeft, font, aPresContext);
+          } else if (ourMargin->mMargin->mLeft.GetUnit() != eCSSUnit_Null) {
+            hack->margin.left = (nscoord)ourMargin->mMargin->mLeft.GetFloatValue();
+          }
+          if (ourMargin->mMargin->mTop.IsLengthUnit()) {
+            hack->margin.top = CalcLength(ourMargin->mMargin->mTop, font, aPresContext);
+          } else if (ourMargin->mMargin->mTop.GetUnit() != eCSSUnit_Null) {
+            hack->margin.top = (nscoord)ourMargin->mMargin->mTop.GetFloatValue();
+          }
+          if (ourMargin->mMargin->mRight.IsLengthUnit()) {
+            hack->margin.right = CalcLength(ourMargin->mMargin->mRight, font, aPresContext);
+          } else if (ourMargin->mMargin->mRight.GetUnit() != eCSSUnit_Null) {
+            hack->margin.right = (nscoord)ourMargin->mMargin->mRight.GetFloatValue();
+          }
+          if (ourMargin->mMargin->mBottom.IsLengthUnit()) {
+            hack->margin.bottom = CalcLength(ourMargin->mMargin->mBottom, font, aPresContext);
+          } else if (ourMargin->mMargin->mBottom.GetUnit() != eCSSUnit_Null) {
+            hack->margin.bottom = (nscoord)ourMargin->mMargin->mBottom.GetFloatValue();
+          }
+        }
+      }
+    }
 
     nsCSSList* ourList;
     if (NS_OK == mDeclaration->GetData(kCSSListSID, (nsCSSStruct**)&ourList)) {
