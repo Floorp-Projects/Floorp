@@ -76,14 +76,28 @@ function Startup()
   dialog.ReplaceWordInput.value = MisspelledWord;
 
   if (dialog.LanguageMenulist)
-    InitLanguageMenu("");
+  {
+    // Fill in the language menulist and sync it up
+    // with the spellchecker's current language.
+
+    var curLang;
+
+    try {
+      curLang = spellChecker.GetCurrentDictionary();
+    } catch(ex) {
+      dump(ex);
+      curLang = "";
+    }
+
+    InitLanguageMenu(curLang);
+  }
 
   DoEnabling();
 
   dialog.SuggestedList.focus();  
 }
 
-function InitLanguageMenu(defaultLangStr)
+function InitLanguageMenu(curLang)
 {
   ClearMenulist(dialog.LanguageMenulist);
 
@@ -113,7 +127,7 @@ function InitLanguageMenu(defaultLangStr)
       if (!menuStr)
         menuStr = dictList[i];
 
-      if (defaultLangStr && dictList[i] == defaultLangStr)
+      if (curLang && dictList[i] == curLang)
         defaultIndex = i;
     } catch (ex) {
       // GetStringFromName throws an exception when
@@ -126,14 +140,10 @@ function InitLanguageMenu(defaultLangStr)
     AppendValueAndDataToMenulist(dialog.LanguageMenulist, menuStr, dictList[i]);
   }
 
-  // Now make sure the correct item in the menu list
-  // is selected and that the spellchecker is in sync!
+  // Now make sure the correct item in the menu list is selected.
 
   if (dictList.length > 0)
-  {
     dialog.LanguageMenulist.selectedIndex = defaultIndex;
-    // SelectLanguage();
-  }
 }
 
 function DoEnabling()
@@ -289,15 +299,23 @@ function SelectLanguage()
 function Recheck()
 {
   //TODO: Should we bother to add a "Recheck" method to interface?
-  spellChecker.CloseSpellChecking();
-  MisspelledWord = spellChecker.StartSpellChecking();
-  SetWidgetsForMisspelledWord();
+  try {
+    var curLang = spellChecker.GetCurrentDictionary();
+
+    spellChecker.UninitSpellChecker();
+    spellChecker.InitSpellChecker();
+    spellChecker.SetCurrentDictionary(curLang);
+    MisspelledWord = spellChecker.GetNextMisspelledWord();
+    SetWidgetsForMisspelledWord();
+  } catch(ex) {
+    dump(ex);
+  }
 }
 
 function Close()
 {
   // Shutdown the spell check and close the dialog
-  spellChecker.CloseSpellChecking();
+  spellChecker.UninitSpellChecker();
   window.close();
 }
 

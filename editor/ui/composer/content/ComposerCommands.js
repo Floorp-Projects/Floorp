@@ -225,19 +225,25 @@ var nsSpellingCommand =
       // dump("Check Spelling starting...\n");
       // Start the spell checker module. Return is first misspelled word
       try {
-        firstMisspelledWord = spellChecker.StartSpellChecking();
+        spellChecker.InitSpellChecker();
+
+        // XXX: We need to read in a pref here so we can set the
+        //      default language for the spellchecker!
+        // spellChecker.SetCurrentDictionary();
+
+        firstMisspelledWord = spellChecker.GetNextMisspelledWord();
       }
       catch(ex) {
-        dump("*** Exception error: StartSpellChecking\n");
+        dump("*** Exception error: InitSpellChecker\n");
         return;
       }
       if( firstMisspelledWord == "")
       {
         try {
-          spellChecker.CloseSpellChecking();
+          spellChecker.UninitSpellChecker();
         }
         catch(ex) {
-          dump("*** Exception error: CloseSpellChecking\n");
+          dump("*** Exception error: UnInitSpellChecker\n");
           return;
         }
         // No misspelled word - tell user
