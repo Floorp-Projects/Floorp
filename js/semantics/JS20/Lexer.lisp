@@ -209,13 +209,13 @@
        
        (define reserved-words-r-e (vector string)
          (vector "abstract" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
-                 "eval" "export" "extends" "field" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in"
+                 "eval" "export" "extends" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in"
                  "instanceof" "native" "new" "package" "private" "protected" "public" "return" "static" "switch" "synchronized"
                  "throw" "throws" "transient" "try" "typeof" "var" "volatile" "while" "with"))
        (define reserved-words-div (vector string)
          (vector "false" "null" "super" "this" "true"))
        (define non-reserved-words (vector string)
-         (vector "constructor" "getter" "method" "override" "setter" "traditional" "version"))
+         (vector "box" "constructor" "field" "get" "language" "local" "method" "override" "set" "version"))
        (define keywords (vector string)
          (append reserved-words-r-e (append reserved-words-div non-reserved-words)))
        
@@ -405,6 +405,8 @@
        (rule :quantity-name ((name string))
          (production :quantity-name ((:- :letter-e :letter-x) :identifier-name) quantity-name-identifier
            (name (name :identifier-name)))
+         ;(production :quantity-name (:letter-e :identifier-name) quantity-name-e-identifier
+         ;  (name (append (vector ($default-action :letter-e)) (name :identifier-name))))
          ;(production :quantity-name (:letter-x :identifier-name) quantity-name-x-identifier
          ;  (name (append (vector ($default-action :letter-x)) (name :identifier-name))))
          )
@@ -552,14 +554,14 @@
    t
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw* :visible-semantics nil))
-   :external-link-base "notation-semantic.html")
+   :external-link-base "notation.html")
   (depict-html-to-local-file
    ";JS20;LexerSemantics.html"
    "JavaScript 2 Lexer Semantics"
    t
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw*))
-   :external-link-base "notation-semantic.html"))
+   :external-link-base "notation.html"))
 
 (with-local-output (s ";JS20;LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))
 
