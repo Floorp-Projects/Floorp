@@ -112,6 +112,14 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal)
     XPCWrappedNativeScope* scope = FindInJSObjectScope(ccx, aGlobal, JS_TRUE);
     if(!scope)
         scope = new XPCWrappedNativeScope(ccx, aGlobal);
+    else
+    {
+        // We need to call SetGlobal in order to refresh our cached 
+        // mPrototypeJSObject in the case where the global object is being 
+        // reused (JS_ClearScope has been called).
+        // NOTE: We are only called by nsXPConnect::InitClasses. 
+        scope->SetGlobal(ccx, aGlobal);
+    }
     return scope;
 }
 
