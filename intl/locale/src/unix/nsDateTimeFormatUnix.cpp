@@ -26,42 +26,75 @@ nsresult nsDateTimeFormatUnix::FormatTime(const nsString& locale,
                                       const nsDateFormatSelector  dateFormatSelector, 
                                       const nsTimeFormatSelector timeFormatSelector, 
                                       const time_t  timetTime, 
-                                      PRUnichar *stringOut, 
-                                      PRUint32 *outLen)
+                                      nsString& stringOut) 
 {
-  // Temporary implementation, real implementation to be done by FE.
-  //
-
-  struct tm *today;
-  char *str;
-
-  today = localtime( &timetTime );
-  str = asctime(today);
-
-  nsString aString(str);
-  *outLen = aString.Length();
-  memcpy((void *) stringOut, (void *) aString.GetUnicode(), aString.Length() * sizeof(PRUnichar));
-
-  return NS_OK;
+  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime(&timetTime), stringOut);
 }
 
 // performs a locale sensitive date formatting operation on the struct tm parameter
-// locale RFC1766 (e.g. "en-US"), caller should allocate the buffer, outLen is in/out
 nsresult nsDateTimeFormatUnix::FormatTMTime(const nsString& locale, 
                                         const nsDateFormatSelector  dateFormatSelector, 
                                         const nsTimeFormatSelector timeFormatSelector, 
                                         const struct tm*  tmTime, 
-                                        PRUnichar *stringOut, 
-                                        PRUint32 *outLen)
+                                        nsString& stringOut) 
 {
-  // Temporary implementation, real implementation to be done by FE.
-  //
+#define NSDATETIME_FORMAT_BUFFER_LEN  80
+  char strOut[NSDATETIME_FORMAT_BUFFER_LEN];
+  char fmtD[32], fmtT[32];
 
-  char *str = asctime(tmTime);
-
-  nsString aString(str);
-  *outLen = aString.Length();
-  memcpy((void *) stringOut, (void *) aString.GetUnicode(), aString.Length() * sizeof(PRUnichar));
+  switch (dateFormatSelector) {
+    case kDateFormatNone:
+      strcpy(fmtD, "");
+      break; 
+    case kDateFormatLong:
+      strcpy(fmtD, "%c");
+      break; 
+    case kDateFormatShort:
+      strcpy(fmtD, "%x");
+      break; 
+    case kDateFormatYearMonth:
+      strcpy(fmtD, "%y/%m");
+      break; 
+    case kDateFormatWeekday:
+      strcpy(fmtD, "%a");
+      break;
+    default:
+      strcpy(fmtD, ""); 
+  }
+  switch (timeFormatSelector) {
+    case kTimeFormatNone:
+      strcpy(fmtT, ""); 
+      break;
+    case kTimeFormatSeconds:
+      strcpy(fmtT, "%I:%M:%S %p");
+      break;
+    case kTimeFormatNoSeconds:
+      strcpy(fmtT, "%I:%M %p");
+      break;
+    case kTimeFormatSecondsForce24Hour:
+      strcpy(fmtT, "%H:%M:%S");
+      break;
+    case kTimeFormatNoSecondsForce24Hour:
+      strcpy(fmtT, "%H:%M");
+      break;
+    default:
+      strcpy(fmtT, ""); 
+  }
+  if (strlen(fmtD) && strlen(fmtT)) {
+    strcat(fmtD, " ");
+    strcat(fmtD, fmtT);
+    strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtD, tmTime);
+  }
+  else if (strlen(fmtD) && !strlen(fmtT)) {
+    strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtD, tmTime);
+  }
+  else if (!strlen(fmtD) && strlen(fmtT)) {
+    strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtT, tmTime);
+  }
+  else {
+    strcpy(strOut, "");
+  }
+  stringOut.SetString(strOut);
 
   return NS_OK;
 }

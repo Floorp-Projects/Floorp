@@ -22,46 +22,27 @@ NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatMac, kIDateTimeFormatIID);
 
+// performs a locale sensitive date formatting operation on the time_t parameter
 nsresult nsDateTimeFormatMac::FormatTime(const nsString& locale, 
                                       const nsDateFormatSelector  dateFormatSelector, 
                                       const nsTimeFormatSelector timeFormatSelector, 
                                       const time_t  timetTime, 
-                                      PRUnichar *stringOut, 
-                                      PRUint32 *outLen)
+                                      nsString& stringOut)
 {
-  // Temporary implementation, real implementation to be done by FE.
-  //
-
-  struct tm *today;
-  char *str;
-
-  today = localtime( &timetTime );
-  str = asctime(today);
-
-  nsString aString(str);
-  *outLen = aString.Length();
-  memcpy((void *) stringOut, (void *) aString.GetUnicode(), aString.Length() * sizeof(PRUnichar));
-
-  return NS_OK;
+  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime(&timetTime), stringOut);
 }
 
 // performs a locale sensitive date formatting operation on the struct tm parameter
-// locale RFC1766 (e.g. "en-US"), caller should allocate the buffer, outLen is in/out
 nsresult nsDateTimeFormatMac::FormatTMTime(const nsString& locale, 
-                                        const nsDateFormatSelector  dateFormatSelector, 
-                                        const nsTimeFormatSelector timeFormatSelector, 
-                                        const struct tm*  tmTime, 
-                                        PRUnichar *stringOut, 
-                                        PRUint32 *outLen)
+                                           const nsDateFormatSelector  dateFormatSelector, 
+                                           const nsTimeFormatSelector timeFormatSelector, 
+                                           const struct tm*  tmTime, 
+                                           nsString& stringOut)
 {
   // Temporary implementation, real implementation to be done by FE.
   //
 
-  char *str = asctime(tmTime);
-
-  nsString aString(str);
-  *outLen = aString.Length();
-  memcpy((void *) stringOut, (void *) aString.GetUnicode(), aString.Length() * sizeof(PRUnichar));
+  stringOut.SetString(asctime(tmTime));
 
   return NS_OK;
 }

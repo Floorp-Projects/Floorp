@@ -25,24 +25,23 @@ NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatWin, kIDateTimeFormatIID);
 
+
+// performs a locale sensitive date formatting operation on the time_t parameter
 nsresult nsDateTimeFormatWin::FormatTime(const nsString& locale, 
-                                      const nsDateFormatSelector  dateFormatSelector, 
-                                      const nsTimeFormatSelector timeFormatSelector, 
-                                      const time_t  timetTime, 
-                                      PRUnichar *stringOut, 
-                                      PRUint32 *outLen)
+                                         const nsDateFormatSelector  dateFormatSelector, 
+                                         const nsTimeFormatSelector timeFormatSelector, 
+                                         const time_t  timetTime, 
+                                         nsString& stringOut)
 {
-  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime( &timetTime ), stringOut, outLen);
+  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime( &timetTime ), stringOut);
 }
 
 // performs a locale sensitive date formatting operation on the struct tm parameter
-// locale RFC1766 (e.g. "en-US"), caller should allocate the buffer, outLen is in/out
 nsresult nsDateTimeFormatWin::FormatTMTime(const nsString& locale, 
-                                        const nsDateFormatSelector  dateFormatSelector, 
-                                        const nsTimeFormatSelector timeFormatSelector, 
-                                        const struct tm*  tmTime, 
-                                        PRUnichar *stringOut, 
-                                        PRUint32 *outLen)
+                                           const nsDateFormatSelector  dateFormatSelector, 
+                                           const nsTimeFormatSelector timeFormatSelector, 
+                                           const struct tm*  tmTime, 
+                                           nsString& stringOut)
 {
 	SYSTEMTIME system_time;
   DWORD dwFlags_Date = 0, dwFlags_Time = 0;
@@ -127,26 +126,19 @@ nsresult nsDateTimeFormatWin::FormatTMTime(const nsString& locale,
 
   NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (PRUint32) (dateLen + 1), "internal date buffer is not large enough");
   NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (PRUint32) (timeLen + 1), "internal time buffer is not large enough");
-  NS_ASSERTION(*outLen >= (PRUint32) (dateLen + timeLen + 1 + 1), "input buffer is not large enough");
 
   // Copy the result
-  stringOut[0] = 0;
+  stringOut.SetString("");
   if (dateLen != 0 && timeLen != 0) {
-    (void) wcscpy((wchar_t *) stringOut, (const wchar_t *) dateBuffer);
-    (void) wcscat((wchar_t *) stringOut, (const wchar_t *) L" ");
-    (void) wcscat((wchar_t *) stringOut, (const wchar_t *) timeBuffer);
-    *outLen = dateLen + timeLen + 1;
+    stringOut.SetString(dateBuffer, dateLen);
+    stringOut.Append((PRUnichar *)(L" "), 1);
+    stringOut.Append(timeBuffer, timeLen);
   }
-  else if (timeLen == 0) {
-    (void) wcscpy((wchar_t *) stringOut, (const wchar_t *) dateBuffer);
-    *outLen = dateLen;
+  else if (dateLen != 0 && timeLen == 0) {
+    stringOut.SetString(dateBuffer, dateLen);
   }
-  else if (dateLen == 0) {
-    (void) wcscpy((wchar_t *) stringOut, (const wchar_t *) timeBuffer);
-    *outLen = timeLen;
-  }
-  else {
-    *outLen = 0;
+  else if (dateLen == 0 && timeLen != 0) {
+    stringOut.SetString(timeBuffer, timeLen);
   }
 
   return NS_OK;

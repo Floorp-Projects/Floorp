@@ -25,6 +25,7 @@
 #include "nsString.h"
 #include <time.h>
 
+
 // {2BBAA0B0-A591-11d2-9119-006008A6EDF6}
 #define NS_IDATETIMEFORMAT_IID \
 { 0x2bbaa0b0, 0xa591, 0x11d2, \
@@ -47,27 +48,25 @@ typedef enum {
 } nsTimeFormatSelector;
 
 
+// Locale sensitive date and time format interface
+// 
 class nsIDateTimeFormat : public nsISupports {
 
 public: 
 
   // performs a locale sensitive date formatting operation on the time_t parameter
-  // locale RFC1766 (e.g. "en-US"), caller should allocate the buffer, outLen is in/out
   NS_IMETHOD FormatTime(const nsString& locale, 
                         const nsDateFormatSelector  dateFormatSelector, 
                         const nsTimeFormatSelector timeFormatSelector, 
-                        const time_t  timetTime, 
-                        PRUnichar *stringOut, 
-                        PRUint32 *outLen) = 0; 
+                        const time_t  timetTime,
+                        nsString& stringOut) = 0; 
 
   // performs a locale sensitive date formatting operation on the struct tm parameter
-  // locale RFC1766 (e.g. "en-US"), caller should allocate the buffer, outLen is in/out
   NS_IMETHOD FormatTMTime(const nsString& locale, 
-                        const nsDateFormatSelector  dateFormatSelector, 
-                        const nsTimeFormatSelector timeFormatSelector, 
-                        const struct tm*  tmTime, 
-                        PRUnichar *stringOut, 
-                        PRUint32 *outLen) = 0; 
+                          const nsDateFormatSelector  dateFormatSelector, 
+                          const nsTimeFormatSelector timeFormatSelector, 
+                          const struct tm*  tmTime, 
+                          nsString& stringOut) = 0; 
 };
 
 #endif  /* nsIDateTimeFormat_h__ */
