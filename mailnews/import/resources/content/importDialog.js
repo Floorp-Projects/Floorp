@@ -835,9 +835,9 @@ function ImportAddress( module, success, error) {
 		filePicker.appendFilter(gImportMsgsBundle.getString('Comm4xFiles'),"*.na2");
         else {
           var addressbookBundle = GetStringBundle("chrome://messenger/locale/addressbook/addressBook.properties");
-          filePicker.appendFilter(addressbookBundle.GetStringFromName('LDIFFiles'), "*.ldi;*.ldif");
+          filePicker.appendFilter(addressbookBundle.GetStringFromName('LDIFFiles'), "*.ldi; *.ldif");
           filePicker.appendFilter(addressbookBundle.GetStringFromName('CSVFiles'), "*.csv");
-          filePicker.appendFilter(addressbookBundle.GetStringFromName('TABFiles'), "*.tab;*.txt");
+          filePicker.appendFilter(addressbookBundle.GetStringFromName('TABFiles'), "*.tab; *.txt");
           filePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
         }
 

@@ -1263,7 +1263,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("LDIFFiles").get(), getter_Copies(filterString));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = filePicker->AppendFilter(filterString.get(), NS_LITERAL_STRING("*.ldi;*.ldif").get());
+  rv = filePicker->AppendFilter(filterString.get(), NS_LITERAL_STRING("*.ldi; *.ldif").get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("CSVFiles").get(), getter_Copies(filterString));
@@ -1275,7 +1275,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("TABFiles").get(), getter_Copies(filterString));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = filePicker->AppendFilter(filterString.get(), NS_LITERAL_STRING("*.tab;*.txt").get());
+  rv = filePicker->AppendFilter(filterString.get(), NS_LITERAL_STRING("*.tab; *.txt").get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt16 dialogResult;
