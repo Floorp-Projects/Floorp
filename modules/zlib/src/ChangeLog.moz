@@ -10,3 +10,6 @@ Mozilla.org changes:
 
 - 17 June 2004
   Turn off ZLIB_DLL to fix static build bustage
+
+- 24 June 2004
+  do not prototype strerror for VMS in zutil.h
