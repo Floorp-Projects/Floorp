@@ -133,6 +133,7 @@ sub show_graph {
 
 
   # interpolate params into gnuplot command
+  # Removing set format x, let gnuplot figure this out.
   my $cmds = qq{
 				reset
 				set term png color
@@ -147,8 +148,7 @@ sub show_graph {
 				$xscale
 				$yscale
 				set ylabel "$TESTNAME ($UNITS)"
-				set timestamp "Generated: %d/%b/%y %H:%M" 0,0 
-				set format x "%h %d"
+				set timestamp "Generated: %d/%b/%y %H:%M" 0,-1
 				set grid
 				plot "$DATAFILE" using 1:2 with points ls 1, "$DATAFILE" using 1:2 with lines ls 2
 			   };
