@@ -273,7 +273,7 @@ net_parse_menu (ActiveEntry * cur_entry)
     if (gopher_type == GTYPE_TEXT) 
       {
         int i=0;
-        while(XP_IS_SPACE(name[i])) i++;
+        while(NET_IS_SPACE(name[i])) i++;
         if(!PL_strlen(name))
         gopher_type = GTYPE_INFO;
       }

@@ -334,7 +334,7 @@ NET_ExtViewerConverter   (int         format_out,
 	  end = XP_StripLine(prog);
 
 	  /* Extract the leaf name of the program: " /bin/sh -foo" ==> "sh". */
-	  for (; *end && !XP_IS_SPACE(*end); end++)
+	  for (; *end && !NET_IS_SPACE(*end); end++)
 		;
 	  *end = 0;
 

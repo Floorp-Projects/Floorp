@@ -32,15 +32,6 @@ extern "C" {
 #include "xp_reg.h"
 #include "secnav.h"
 #include "preenc.h"
-
-#include "fileurl.h"
-#include "httpurl.h"
-#include "ftpurl.h"
-#include "abouturl.h"
-#include "gophurl.h"
-#include "fileurl.h"
-#include "remoturl.h"
-#include "netcache.h"
 };
 
 /* From libimg */
@@ -53,18 +44,6 @@ extern "C" {
  */
 
 extern "C" {
-
-void NET_ClientProtocolInitialize()
-{
-    NET_InitFileProtocol();
-    NET_InitHTTPProtocol();
-    NET_InitMemCacProtocol();
-    NET_InitFTPProtocol();
-    NET_InitAboutProtocol();
-    NET_InitGopherProtocol();
-    NET_InitRemoteProtocol();
-}
-
 
 /*  Meta charset is weakest. Only set doc_csid if no http or override */
 void
@@ -252,42 +231,6 @@ INTL_GetCSIMimeCharset (INTL_CharSetInfo c)
     MOZ_FUNCTION_STUB;
     return NULL;
 }
-
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libparse/pa_hash.c
- *---------------------------------------------------------------------------
- */
-
-/*************************************
- * Function: pa_tokenize_tag
- *
- * Description: This function maps the passed in string
- * 		to one of the valid tag element tokens, or to
- *		the UNKNOWN token.
- *
- * Params: Takes a \0 terminated string.
- *
- * Returns: a 32 bit token to describe this tag element.  On error,
- * 	    which means it was not passed an unknown tag element string,
- * 	    it returns the token P_UNKNOWN.
- *
- * Performance Notes:
- * Profiling on mac revealed this routine as a big (5%) time sink.
- * This function was stolen from pa_mdl.c and merged with the perfect
- * hashing code and the tag comparison code so it would be flatter (fewer
- * function calls) since those are still expensive on 68K and x86 machines.
- *************************************/
-
-intn
-pa_tokenize_tag(char *str)
-{
-    MOZ_FUNCTION_STUB;
-    return -1; /* P_UNKNOWN */;
-}
-
 
 /*
  *---------------------------------------------------------------------------
@@ -828,15 +771,6 @@ IL_Type(const char *buf, int32 len)
     return 0; /* IL_NOTFOUND */
 }
 
-
-PRBool
-IL_PreferredStream(URL_Struct *urls)
-{
-    MOZ_FUNCTION_STUB;
-    return PR_FALSE;
-}
-
-
 NET_StreamClass *
 IL_NewStream (FO_Present_Types format_out,
               void *type,
@@ -1303,9 +1237,9 @@ WH_FileName (const char *NetName, XP_FileType type)
             bChopSlash = FALSE;
 
         if(bChopSlash)
-            newName = XP_STRDUP(&(NetName[1]));
+            newName = PL_strdup(&(NetName[1]));
         else
-            newName = XP_STRDUP(NetName);
+            newName = PL_strdup(NetName);
 
         if(!newName)
             return NULL;
@@ -2504,10 +2438,10 @@ NET_BACopy (char **destination, const char *source, size_t length)
 	  }
     else 
 	  {
-        *destination = (char *) XP_ALLOC (length);
+        *destination = (char *) PR_Malloc (length);
         if (*destination == NULL) 
 	        return(NULL);
-        XP_MEMCPY(*destination, source, length);
+        memcpy(*destination, source, length);
       }
     return *destination;
 }
@@ -2528,20 +2462,20 @@ NET_BACat (char **destination,
 	  {
         if (*destination) 
 	      {
-      	    *destination = (char *) XP_REALLOC (*destination, destination_length + source_length);
+      	    *destination = (char *) PR_Realloc (*destination, destination_length + source_length);
             if (*destination == NULL) 
 	          return(NULL);
 
-            XP_MEMMOVE (*destination + destination_length, source, source_length);
+            memmove (*destination + destination_length, source, source_length);
 
           } 
 		else 
 		  {
-            *destination = (char *) XP_ALLOC (source_length);
+            *destination = (char *) PR_Malloc (source_length);
             if (*destination == NULL) 
 	          return(NULL);
 
-            XP_MEMCPY(*destination, source, source_length);
+            memcpy(*destination, source, source_length);
           }
     }
 
@@ -2564,11 +2498,11 @@ NET_SACopy (char **destination, const char *source)
 	  }
     else 
 	  {
-        *destination = (char *) XP_ALLOC (XP_STRLEN(source) + 1);
+        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
         if (*destination == NULL) 
  	        return(NULL);
 
-        XP_STRCPY (*destination, source);
+        PL_strcpy (*destination, source);
       }
     return *destination;
 }
@@ -2582,20 +2516,20 @@ NET_SACat (char **destination, const char *source)
       {
         if (*destination)
           {
-            int length = XP_STRLEN (*destination);
-            *destination = (char *) XP_REALLOC (*destination, length + XP_STRLEN(source) + 1);
+            int length = PL_strlen (*destination);
+            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
             if (*destination == NULL)
             return(NULL);
 
-            XP_STRCPY (*destination + length, source);
+            PL_strcpy (*destination + length, source);
           }
         else
           {
-            *destination = (char *) XP_ALLOC (XP_STRLEN(source) + 1);
+            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
             if (*destination == NULL)
                 return(NULL);
 
-             XP_STRCPY (*destination, source);
+             PL_strcpy (*destination, source);
           }
       }
     return *destination;
@@ -2634,17 +2568,17 @@ char *XP_AppendStr(char *in, const char *append)
 {
     int alen, inlen;
 
-    alen = XP_STRLEN(append);
+    alen = PL_strlen(append);
     if (in) {
-		inlen = XP_STRLEN(in);
-		in = (char*) XP_REALLOC(in,inlen+alen+1);
+		inlen = PL_strlen(in);
+		in = (char*) PR_Realloc(in,inlen+alen+1);
 		if (in) {
-			XP_MEMCPY(in+inlen, append, alen+1);
+			memcpy(in+inlen, append, alen+1);
 		}
     } else {
-		in = (char*) XP_ALLOC(alen+1);
+		in = (char*) PR_Malloc(alen+1);
 		if (in) {
-			XP_MEMCPY(in, append, alen+1);
+			memcpy(in, append, alen+1);
 		}
     }
     return in;

@@ -29,9 +29,33 @@ void free_stub_context(MWContext *window_id);
 void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
 
 extern "C" {
+#include "fileurl.h"
+#include "httpurl.h"
+#include "ftpurl.h"
+#include "abouturl.h"
+#include "gophurl.h"
+#include "fileurl.h"
+#include "remoturl.h"
+#include "netcache.h"
+
 extern char *XP_AppCodeName;
 extern char *XP_AppVersion;
 };
+
+/*
+ * Initialize our protocols
+ */
+
+extern "C" void NET_ClientProtocolInitialize()
+{
+    NET_InitFileProtocol();
+    NET_InitHTTPProtocol();
+    NET_InitMemCacProtocol();
+    NET_InitFTPProtocol();
+    NET_InitAboutProtocol();
+    NET_InitGopherProtocol();
+    NET_InitRemoteProtocol();
+}
 
 static NS_DEFINE_IID(kIProtocolConnectionIID,  NS_IPROTOCOLCONNECTION_IID);
 

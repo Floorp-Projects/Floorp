@@ -50,6 +50,7 @@
 
 /* for XP_GetString() */
 #include "xpgetstr.h"
+
 extern int XP_CONFIRM_AUTHORIZATION_FAIL;
 extern int XP_ACCESS_ENTER_USERNAME;
 extern int XP_ACCESS_ENTER_USERNAME;
@@ -1683,7 +1684,7 @@ net_IntSetCookieString(MWContext * context,
 			/* terminate at first space or semi-colon
 			 */
 			for(ptr=path_from_header; *ptr != '\0'; ptr++)
-				if(XP_IS_SPACE(*ptr) || *ptr == ';' || *ptr == ',') {
+				if(NET_IS_SPACE(*ptr) || *ptr == ';' || *ptr == ',') {
 					*ptr = '\0';
 					break;
 				  }
@@ -1709,7 +1710,7 @@ net_IntSetCookieString(MWContext * context,
             /* terminate at first space or semi-colon
              */
             for(ptr=domain_from_header; *ptr != '\0'; ptr++)
-                if(XP_IS_SPACE(*ptr) || *ptr == ';' || *ptr == ',') {
+                if(NET_IS_SPACE(*ptr) || *ptr == ';' || *ptr == ',') {
                     *ptr = '\0';
                     break;
                   }
@@ -2718,7 +2719,7 @@ PRIVATE net_AuthType
 net_auth_type(char *name)
 {
 	if (name) {
-		while (*name && XP_IS_SPACE(*name))
+		while (*name && NET_IS_SPACE(*name))
 			name++;
 		if (!PL_strncasecmp(name, "basic", 5))
 			return AUTH_BASIC;
@@ -2779,7 +2780,7 @@ bin2hex(unsigned char *data, int len)
  * structure.
  *
  */
-#define SKIP_WS(p) while((*(p)) && XP_IS_SPACE(*(p))) p++
+#define SKIP_WS(p) while((*(p)) && NET_IS_SPACE(*(p))) p++
 
 PRIVATE PRBool
 next_params(char **pp, char **name, char **value)
@@ -2799,7 +2800,7 @@ next_params(char **pp, char **name, char **value)
     }
     else {
 		*value = q;
-		while (*q && !XP_IS_SPACE(*q)) q++;
+		while (*q && !NET_IS_SPACE(*q)) q++;
 		if (*q)
 		  *q++ = '\0';
     }
@@ -2824,7 +2825,7 @@ net_parse_authenticate_line(char *auth, net_AuthStruct *ret)
 
     SKIP_WS(p);
 	ret->auth_type = net_auth_type(p);
-    while (*p && !XP_IS_SPACE(*p)) p++;
+    while (*p && !NET_IS_SPACE(*p)) p++;
 
     while (next_params(&p, &name, &value)) {
 		if (!PL_strcasecmp(name, "realm"))

@@ -2271,7 +2271,7 @@ net_read_news_list (ActiveEntry *ce)
 	  }
 
     /* find whitespace seperator if it exits */
-    for(i=0; line[i] != '\0' && !XP_IS_SPACE(line[i]); i++)
+    for(i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
         ;  /* null body */
 
     if(line[i] == '\0')
@@ -3374,7 +3374,7 @@ static int net_list_pretty_names_response(ActiveEntry *ce)
 		{
 			int i;
 			/* find whitespace seperator if it exits */
-			for (i=0; line[i] != '\0' && !XP_IS_SPACE(line[i]); i++)
+			for (i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
 				;  /* null body */
 
 			if(line[i] == '\0')
@@ -3461,7 +3461,7 @@ static int net_list_xactive_response(ActiveEntry *ce)
 			char *s = line;
 			/* format is "rec.arts.movies.past-films 7302 7119 csp"
 			 */
-			while (*s && !XP_IS_SPACE(*s))
+			while (*s && !NET_IS_SPACE(*s))
 				s++;
 			if (s)
 			{
