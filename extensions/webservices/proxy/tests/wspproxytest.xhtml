@@ -47,6 +47,7 @@ WSPTest.prototype.onIsPrimeProxyTestComplete = function(str) {
 
 WSPTest.prototype.startTest = function() {
   try {
+    document.getElementById("id1").firstChild.nodeValue = "Testing...";
     document.getElementById("id1").firstChild.nodeValue = this.wsptest.testComplexTypeWrapper();
   }
   catch (e) {
@@ -54,6 +55,7 @@ WSPTest.prototype.startTest = function() {
   }
 
   try {
+    document.getElementById("id2").firstChild.nodeValue = "Testing...";
     document.getElementById("id2").firstChild.nodeValue = this.wsptest.testPropertyBagWrapper();
   }
   catch (e) {
@@ -61,6 +63,7 @@ WSPTest.prototype.startTest = function() {
   }
 
   try {
+    document.getElementById("id3").firstChild.nodeValue = "Testing...";
     this.wsptest.testIsPrimeProxy(this);
   }
   catch (e) {
