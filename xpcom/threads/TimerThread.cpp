@@ -243,10 +243,11 @@ NS_IMETHODIMP TimerThread::Run()
 
   while (!mShutdown) {
     PRIntervalTime waitFor;
-    
-    if (mSleeping)
-      waitFor = PR_MillisecondsToInterval(100);   // sleep for 0.1 seconds while not firing timers
-    else {
+
+    if (mSleeping) {
+      // Sleep for 0.1 seconds while not firing timers.
+      waitFor = PR_MillisecondsToInterval(100);
+    } else {
       waitFor = PR_INTERVAL_NO_TIMEOUT;
       PRIntervalTime now = PR_IntervalNow();
       nsTimerImpl *timer = nsnull;
@@ -265,7 +266,7 @@ NS_IMETHODIMP TimerThread::Run()
           NS_ADDREF(timer);
           RemoveTimerInternal(timer);
 
-          // We release mLock around the Fire call, of course, to avoid deadlock.
+          // We release mLock around the Fire call to avoid deadlock.
           lock.unlock();
 
 #ifdef DEBUG_TIMERS
@@ -274,14 +275,14 @@ NS_IMETHODIMP TimerThread::Run()
                    ("Timer thread woke up %dms from when it was supposed to\n",
                     (now >= timer->mTimeout)
                     ? PR_IntervalToMilliseconds(now - timer->mTimeout)
-                    : -(PRInt32)PR_IntervalToMilliseconds(timer->mTimeout - now))
+                    : -(PRInt32)PR_IntervalToMilliseconds(timer->mTimeout-now))
                   );
           }
 #endif
 
-          // We are going to let the call to PostTimerEvent here handle the release of the
-          // timer so that we don't end up releasing the timer on the TimerThread
-          // instead of on the thread it targets.
+          // We are going to let the call to PostTimerEvent here handle the
+          // release of the timer so that we don't end up releasing the timer
+          // on the TimerThread instead of on the thread it targets.
           timer->PostTimerEvent();
           timer = nsnull;
 
@@ -289,8 +290,8 @@ NS_IMETHODIMP TimerThread::Run()
           if (mShutdown)
             break;
 
-          // Update now, as PostTimerEvent plus the locking may have taken a tick or two,
-          // and we may goto next below.
+          // Update now, as PostTimerEvent plus the locking may have taken a
+          // tick or two, and we may goto next below.
           now = PR_IntervalNow();
         }
       }
@@ -300,8 +301,8 @@ NS_IMETHODIMP TimerThread::Run()
 
         PRIntervalTime timeout = timer->mTimeout + mTimeoutAdjustment;
 
-        // Don't wait at all (even for PR_INTERVAL_NO_WAIT) if the next timer is
-        // due now or overdue.
+        // Don't wait at all (even for PR_INTERVAL_NO_WAIT) if the next timer
+        // is due now or overdue.
         if (!TIMER_LESS_THAN(now, timeout))
           goto next;
         waitFor = timeout - now;
@@ -318,7 +319,7 @@ NS_IMETHODIMP TimerThread::Run()
       }
 #endif
     }
-    
+
     mWaiting = PR_TRUE;
     PR_WaitCondVar(mCondVar, waitFor);
     mWaiting = PR_FALSE;
@@ -386,12 +387,14 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl *aTimer)
 // This function must be called from within a lock
 PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
 {
+  PRIntervalTime now = PR_IntervalNow();
   PRInt32 count = mTimers.Count();
   PRInt32 i = 0;
   for (; i < count; i++) {
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[i]);
 
-    if (TIMER_LESS_THAN(aTimer->mTimeout, timer->mTimeout)) {
+    if (TIMER_LESS_THAN(now, timer->mTimeout) &&
+        TIMER_LESS_THAN(aTimer->mTimeout, timer->mTimeout)) {
       break;
     }
   }
@@ -422,15 +425,14 @@ void TimerThread::DoBeforeSleep()
 
 void TimerThread::DoAfterSleep()
 {
-  for (PRInt32 i = 0; i < mTimers.Count(); i ++)
-  {
+  for (PRInt32 i = 0; i < mTimers.Count(); i ++) {
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[i]);
     // get and set the delay to cause its timeout to be recomputed
     PRUint32 delay;
     timer->GetDelay(&delay);
     timer->SetDelay(delay);
   }
-  
+
   // nuke the stored adjustments, so they get recalibrated
   mTimeoutAdjustment = 0;
   mDelayLineCounter = 0;
