@@ -37,21 +37,20 @@ static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
 
-NS_IMPL_ADDREF(nsClipboard)
-NS_IMPL_RELEASE(nsClipboard)
+NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
+NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 
 //-------------------------------------------------------------------------
 //
 // nsClipboard constructor
 //
 //-------------------------------------------------------------------------
-nsClipboard::nsClipboard()
+nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-  NS_INIT_REFCNT();
-  mClipboardOwner = nsnull;
-  mTransferable   = nsnull;
+  //NS_INIT_REFCNT();
   mDataObj        = nsnull;
   mIgnoreEmptyNotification = PR_FALSE;
+  mWindow         = nsnull;
 
   // Create a Native window for the shell container...
   //nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID, (void**)&mWindow);
@@ -68,7 +67,7 @@ nsClipboard::~nsClipboard()
 {
   NS_IF_RELEASE(mWindow);
 
-  EmptyClipboard();
+  //EmptyClipboard();
   if (nsnull != mDataObj) {
     mDataObj->Release();
   }
@@ -100,51 +99,34 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return rv;
 }
 
-
 /**
-  * Sets the transferable object
+  * 
   *
   */
-NS_IMETHODIMP nsClipboard::SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner)
+static UINT GetFormat(const nsString & aMimeStr)
 {
-  if (aTransferable == mTransferable && anOwner == mClipboardOwner) {
-    return NS_OK;
+  UINT format = 0;
+
+  if (aMimeStr.Equals(kTextMime)) {
+    format = CF_TEXT;
+  } else if (aMimeStr.Equals(kUnicodeMime)) {
+    format = CF_UNICODETEXT;
+  } else if (aMimeStr.Equals(kJPEGImageMime)) {
+    format = CF_BITMAP;
+  } else {
+    char * str = aMimeStr.ToNewCString();
+    format = ::RegisterClipboardFormat(str);
+    delete[] str;
   }
 
-  EmptyClipboard();
-
-  mClipboardOwner = anOwner;
-  if (nsnull != anOwner) {
-    NS_ADDREF(mClipboardOwner);
-  }
-
-  mTransferable = aTransferable;
-  if (nsnull != mTransferable) {
-    NS_ADDREF(mTransferable);
-  }
-
-  return NS_OK;
-}
-
-/**
-  * Gets the transferable object
-  *
-  */
-NS_IMETHODIMP nsClipboard::GetData(nsITransferable ** aTransferable)
-{
-  *aTransferable = mTransferable;
-  if (nsnull != mTransferable) {
-    NS_ADDREF(mTransferable);
-  }
-
-  return NS_OK;
+  return format;
 }
 
 /**
   * 
   *
   */
-NS_IMETHODIMP nsClipboard::SetClipboard()
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 {
   mIgnoreEmptyNotification = PR_TRUE;
 
@@ -182,19 +164,8 @@ NS_IMETHODIMP nsClipboard::SetClipboard()
     if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
       nsString mime;
       df->GetMimeType(mime);
-      UINT format;
+      UINT format = GetFormat(mime);
 
-      if (mime.Equals(kTextMime)) {
-        format = CF_TEXT;
-      } else if (mime.Equals(kUnicodeMime)) {
-        format = CF_UNICODETEXT;
-      } else if (mime.Equals(kImageMime)) {
-        format = CF_BITMAP;
-      } else {
-        char * str = mime.ToNewCString();
-        format = ::RegisterClipboardFormat(str);
-        delete[] str;
-      }
       FORMATETC fe;
       SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
 
@@ -276,39 +247,16 @@ static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aFormat, voi
   * 
   *
   */
-static UINT GetFormat(const nsString & aMimeStr)
-{
-  UINT format = 0;
-
-  if (aMimeStr.Equals(kTextMime)) {
-    format = CF_TEXT;
-  } else if (aMimeStr.Equals(kUnicodeMime)) {
-    format = CF_UNICODETEXT;
-  } else if (aMimeStr.Equals(kImageMime)) {
-    format = CF_BITMAP;
-  } else {
-    char * str = aMimeStr.ToNewCString();
-    format = ::RegisterClipboardFormat(str);
-    delete[] str;
-  }
-
-  return format;
-}
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsClipboard::GetClipboard()
+NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 {
   // make sure we have a good transferable
-  if (nsnull == mTransferable) {
+  if (nsnull == aTransferable) {
     return NS_ERROR_FAILURE;
   }
 
   // Get the transferable list of data flavors
   nsISupportsArray * dfList;
-  mTransferable->GetTransferDataFlavors(&dfList);
+  aTransferable->GetTransferDataFlavors(&dfList);
 
   // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
   PRUint32 i;
@@ -324,10 +272,7 @@ NS_IMETHODIMP nsClipboard::GetClipboard()
       PRUint32 dataLen;
 
       if (NS_OK == GetNativeDataOffClipboard(mWindow, format, &data, &dataLen)) {
-        mTransferable->SetTransferData(df, data, dataLen);
-        //NS_RELEASE(df);
-        //NS_RELEASE(supports);
-        //return NS_OK;
+        aTransferable->SetTransferData(df, data, dataLen);
       }
       NS_RELEASE(df);
     }
@@ -337,41 +282,6 @@ NS_IMETHODIMP nsClipboard::GetClipboard()
   return NS_OK;
 }
 
-/**
-  * This enumarates the native clipboard checking to see if the data flavor is on it
-  *
-  */
-NS_IMETHODIMP nsClipboard::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
-{
-  // make sure we have a good transferable
-  if (nsnull == mTransferable) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mTransferable->IsDataFlavorSupported(aDataFlavor);
-}
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsClipboard::EmptyClipboard()
-{
-  if (mIgnoreEmptyNotification) {
-    return NS_OK;
-  }
-
-  if (nsnull != mClipboardOwner) {
-    mClipboardOwner->LosingOwnership(mTransferable);
-    NS_RELEASE(mClipboardOwner);
-  }
-
-  if (nsnull != mTransferable) {
-    NS_RELEASE(mTransferable);
-  }
-
-  return NS_OK;
-}
 
 /**
   * 
@@ -452,108 +362,3 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-
-  	// make the IDataObject
-  /*IDataObject * dataObj = NULL;
-  
-  IClassFactory * pCF    = NULL;
-
-  HRESULT hr = ::CoGetClassObject(CLSID_CfDataObj, CLSCTX_INPROC_SERVER, NULL, IID_IClassFactory, (void **)&pCF); 
-	if (REGDB_E_CLASSNOTREG == hr) {
-		return hr;
-	}
-  //hresult = pCF->CreateInstance(pUnkOuter, riid, ppvObj) 
-  pCF->Release();
-
-  HRESULT ret = ::CoCreateInstance(CLSID_CfDataObj, NULL, CLSCTX_INPROC_SERVER, IID_IDataObject, (void **)&dataObj);
-	if (REGDB_E_CLASSNOTREG == ret) {
-		//return ret;
-	}
-	if (FAILED(ret)) {
-		//return ret;
-	}*/
-
-#if 0
-NS_IMETHODIMP nsTransferable::SetNativeClipboard()
-{
-  ::OleFlushClipboard();
-
-  if (!mStrCache) {
-    return NS_OK;
-  }
-
-  char * str = mStrCache->ToNewCString();
-#if 0
-	
-  PlaceStringOnClipboard(CF_TEXT, str, mStrCache->Length());
-			
-  ::CloseClipboard();
-#else 
-
-  if (mDataObj) {
-    mDataObj->Release();
-  }
-
-  	// make the IDataObject
-  /*IDataObject * dataObj = NULL;
-  
-  IClassFactory * pCF    = NULL;
-
-  HRESULT hr = ::CoGetClassObject(CLSID_CfDataObj, CLSCTX_INPROC_SERVER, NULL, IID_IClassFactory, (void **)&pCF); 
-	if (REGDB_E_CLASSNOTREG == hr) {
-		return hr;
-	}
-  //hresult = pCF->CreateInstance(pUnkOuter, riid, ppvObj) 
-  pCF->Release();
-
-  HRESULT ret = ::CoCreateInstance(CLSID_CfDataObj, NULL, CLSCTX_INPROC_SERVER, IID_IDataObject, (void **)&dataObj);
-	if (REGDB_E_CLASSNOTREG == ret) {
-		//return ret;
-	}
-	if (FAILED(ret)) {
-		//return ret;
-	}*/
-
-  mDataObj = new nsDataObj();
-  mDataObj->AddRef();
-
-  mDataObj->SetText(*mStrCache);
-
-  PRUint32 i;
-  for (i=0;i<mDFList->Count();i++) {
-    nsIDataFlavor * df;
-    nsISupports * supports = mDFList->ElementAt(i);
-    if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-      nsString mime;
-      df->GetMimeType(mime);
-      UINT format;
-      if (mime.Equals(kTextMime)) {
-        format = CF_TEXT;
-      } else {
-        char * str = mime.ToNewCString();
-        UINT format = ::RegisterClipboardFormat(str);
-        delete[] str;
-      }
-      FORMATETC fe;
-      SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
-      mDataObj->AddDataFlavor(df, &fe);
-      NS_RELEASE(df);
-    }
-    NS_RELEASE(supports);
-  }
-
-
-  IDataObject * ido = (IDataObject *)mDataObj;
-  ::OleSetClipboard(ido);
-
-#endif
-
-  delete[] str;
-  return NS_OK;
-}
-#endif

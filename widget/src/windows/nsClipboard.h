@@ -19,8 +19,7 @@
 #ifndef nsClipboard_h__
 #define nsClipboard_h__
 
-#include "nsIClipboard.h"
-#include "nsITransferable.h"
+#include "nsBaseClipboard.h"
 
 class nsITransferable;
 class nsDataObj;
@@ -31,7 +30,7 @@ class nsIWidget;
  * Native Win32 Clipboard wrapper
  */
 
-class nsClipboard : public nsIClipboard
+class nsClipboard : public nsBaseClipboard
 {
 
 public:
@@ -39,21 +38,17 @@ public:
   virtual ~nsClipboard();
 
   //nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   
 
   // nsIClipboard  
-  NS_IMETHOD SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner);
-  NS_IMETHOD GetData(nsITransferable ** aTransferable);
-
-  NS_IMETHOD GetClipboard();
-  NS_IMETHOD SetClipboard();
-  NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor);
-  NS_IMETHOD EmptyClipboard();
   NS_IMETHOD ForceDataToClipboard();
 
 
 protected:
+  NS_IMETHOD SetNativeClipboardData();
+  NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
+
   PRBool              mIgnoreEmptyNotification;
 
   nsIClipboardOwner * mClipboardOwner;
