@@ -77,7 +77,7 @@ sub open {
     # try to connect
     $self->dump(9, 'opening AIM connection');
     $self->handle(undef);
-    {
+    eval {
         # The Net::AIM code sprouts warning like there's no tomorrow
         # Let's mute them. :-)
         local $^W = 0;
@@ -112,10 +112,14 @@ sub open {
 
             while (not defined($self->handle) and $aim->do_one_loop()) { }
         }
-    }
+    };
 
     if (not defined($self->handle)) {
-        $self->warn(4, 'Could not create the AIM handle');
+        if ($@) {
+            $self->warn(4, "Could not create the AIM handle: $@");
+        } else {
+            $self->warn(4, 'Could not create the AIM handle');
+        }
     }
 }
 
@@ -182,10 +186,8 @@ sub setupConfigure {
         }
         $self->propertySet($property, $value);
     }
-
     $self->open();
     $app->getService('dataSource.configuration')->setSettings($app, $self, 'protocol.aim');
-    $self->dump(9, 'done configuring protocol.aim');
     return;
 }
 
