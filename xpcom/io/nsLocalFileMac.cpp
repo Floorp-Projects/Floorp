@@ -3148,10 +3148,31 @@ NS_IMETHODIMP nsLocalFile::InitWithFSSpec(const FSSpec *fileSpec)
 
 NS_IMETHODIMP nsLocalFile::InitFindingAppByCreatorCode(OSType aAppCreator)
 {
-	// is the app running?
-	FSSpec							appSpec;
+	FSSpec				appSpec;
 	ProcessSerialNumber psn;
 	
+#if TARGET_CARBON
+    if (sRunningOSX)
+    { // If we're running under OS X use LaunchServices to determine the app
+      // corresponding to the creator code
+        if ( (UInt32)LSFindApplicationForInfo != (UInt32)kUnresolvedCFragSymbolAddress )
+        {
+            FSRef    theRef;
+            if (::LSFindApplicationForInfo(aAppCreator, NULL, NULL, &theRef, NULL) == noErr)
+            {
+                FSCatalogInfoBitmap   whichInfo = kFSCatInfoNone;
+                
+                if (::FSGetCatalogInfo(&theRef, whichInfo, NULL, NULL, &appSpec, NULL) == noErr)
+                    return InitWithFSSpec(&appSpec);
+            }
+            
+            // If we get here we didn't find an app
+            return NS_ERROR_FILE_NOT_FOUND;
+        }
+    }
+#endif
+
+	// is the app running?
 	nsresult rv = FindRunningAppBySignature(aAppCreator, appSpec, psn);
 	if (rv == NS_ERROR_FILE_NOT_FOUND)
 	{
@@ -3327,13 +3348,6 @@ nsLocalFile::GetFileSizeWithResFork(PRInt64 *aFileSize)
 NS_IMETHODIMP
 nsLocalFile::LaunchAppWithDoc(nsILocalFile* aDocToLoad, PRBool aLaunchInBackground)
 {
-#if TARGET_CARBON
-	// Either there's something fundamentally wrong with IC's mapping of helper apps
-	// under OS X or our interaction with the info we get back so for now I'm just going
-	// to fall back to LaunchServices and let the OS figure out how to deal with it
-	if (sRunningOSX)
-	  return (aDocToLoad->Launch());
-#endif
 	// are we launchable?
 	PRBool isExecutable;
 	nsresult rv = IsExecutable(&isExecutable);
