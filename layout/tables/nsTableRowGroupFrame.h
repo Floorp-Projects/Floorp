@@ -190,7 +190,7 @@ public:
   
   virtual PRBool RowGroupReceivesExcessSpace() { return PR_TRUE; }
 
-  virtual PRBool ContinueReflow(nsIPresContext* aPresContext, nscoord y, nscoord height) { return PR_TRUE; }
+  virtual PRBool ContinueReflow(nsIFrame* aFrame, nsIPresContext* aPresContext, nscoord y, nscoord height) { return PR_TRUE; }
 
   void GetMaxElementSize(nsSize& aMaxElementSize) const;
 

@@ -75,7 +75,10 @@ NS_NewTreeFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeFrame::nsTreeFrame()
-:nsTableFrame(),mSlatedForReflow(PR_FALSE), mTwistyListener(nsnull), mGeneration(0), mUseGeneration(PR_TRUE) { }
+:nsTableFrame(),mSlatedForReflow(PR_FALSE), mTwistyListener(nsnull), mGeneration(0), mUseGeneration(PR_TRUE),
+ mFixedRows(-1), mReflowStopped(PR_FALSE)
+{
+}
 
 // Destructor
 nsTreeFrame::~nsTreeFrame()
@@ -493,6 +496,36 @@ nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
 
   aDesiredSize.ascent = aDesiredSize.height;
   
+  if (mFixedRows != -1) {
+    PRInt32 totalRows = mCellMap->GetRowCount();
+    if (totalRows < mFixedRows) {
+      if (totalRows == 0) aDesiredSize.height = 0 +
+          aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;;
+
+      // Get a single cell and use it as a multiplicative factor.
+      nsTableCellFrame* cellFrame = GetCellInfoAt(0, 0);
+      nsRect rect;
+      cellFrame->GetRect(rect);
+      aDesiredSize.height = (mFixedRows*rect.height) + 
+         aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;;
+    }
+    else {
+      // Find out the total height of our frame children.
+      nsIFrame* child = mFrames.FirstChild();
+      PRInt32 height = 0;
+      while (child) {
+        nsRect rect;
+        child->GetRect(rect);
+        height += rect.height;
+
+        child->GetNextSibling(&child);
+      }
+    
+      aDesiredSize.height = height +
+        aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+    }
+  }
+
   if (!UseGeneration())
     SetUseGeneration(PR_TRUE);
 
@@ -550,6 +583,16 @@ nsTreeFrame::Init(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
   
   target->AddEventListener("mousedown", mTwistyListener, PR_TRUE); 
+
+  nsAutoString value;
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent);
+  element->GetAttribute("rows", value);
+
+  if (value != "") {
+    PRInt32 dummy;
+    PRInt32 count = value.ToInteger(&dummy);
+    mFixedRows = count;
+  }
 
   return rv;
 }

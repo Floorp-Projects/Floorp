@@ -1124,6 +1124,8 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, mScrollbar,
                                      kidAvailSize, aReason);
     
+    if (mRowGroupHeight == -1) // This happens when a fixed row tree wishes to alter the scrollbar's height
+      mRowGroupHeight = aReflowState.y;
     kidReflowState.mComputedHeight = mRowGroupHeight;
     rv = ReflowChild(mScrollbar, aPresContext, desiredSize, kidReflowState,
                      0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
@@ -1276,7 +1278,6 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext* aPresContext)
       
       nsCOMPtr<nsIContent> topRowContent;
       PRInt32 delta = 1;
-      
       FindPreviousRowContent(delta, rowContent, nsnull, getter_AddRefs(topRowContent));
 
       PRInt32 numColsAdded = AddRowToMap(tableFrame, *aPresContext, topRowContent, mTopFrame);
@@ -1347,6 +1348,7 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFram
         prevFrame = aFrame;
         isAppend = PR_FALSE;
       }
+
       mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, prevFrame, nextContent,
                                                  aResult, isAppend, PR_FALSE,
                                                  nsnull);
@@ -1358,6 +1360,7 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFram
         nsCOMPtr<nsIContent> topRowContent;
         PRInt32 delta = 1;
         FindPreviousRowContent(delta, nextContent, nsnull, getter_AddRefs(topRowContent));
+        
         PRInt32 numColsAdded = AddRowToMap(tableFrame, *aPresContext, topRowContent, (*aResult));
         if (numColsAdded > 0) {
           MarkTreeAsDirty(aPresContext, (nsTreeFrame*) tableFrame);
@@ -1385,11 +1388,31 @@ nsTreeRowGroupFrame::TreeAppendFrames(nsIFrame* aFrameList)
   return NS_OK;
 }
 
-PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext* aPresContext, nscoord y, nscoord height) 
+PRBool nsTreeRowGroupFrame::ContinueReflow(nsIFrame* aFrame, nsIPresContext* aPresContext, nscoord y, nscoord height) 
 { 
   //printf("Y is: %d\n", y);
   //printf("Height is: %d\n", height); 
-  if (height <= 0) {
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+
+  PRInt32 rowSize = treeFrame->GetFixedRowSize();
+  
+  // Let's figure out if we want to halt the reflow.
+  if (IsTableRowFrame(aFrame)) {
+    // Cast it and get the row index.
+    PRInt32 rowIndex = ((nsTableRowFrame*)aFrame)->GetRowIndex();
+    if (rowSize != -1 && rowIndex == (rowSize-1)) {
+      treeFrame->HaltReflow();
+
+      // Get our running height total and clear the row group's mRowGroupHeight
+      mOuterFrame->ClearRowGroupHeight();
+    }
+  }
+
+  PRBool reflowStopped = treeFrame->IsReflowHalted();
+
+  if ((rowSize == -1 && height <= 0) || reflowStopped) {
     mIsFull = PR_TRUE;
     nsIFrame* lastChild = GetLastFrame();
     nsIFrame* startingPoint = mBottomFrame;
@@ -1415,8 +1438,6 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext* aPresContext, nscoord
 
         // remove the rows from the table after removing from the sibling chain
         if ((startRowIndex >= 0) && (numRows > 0)) {
-          nsTableFrame* tableFrame;
-          nsTableFrame::GetTableFrame(this, tableFrame);
           tableFrame->RemoveRows(*aPresContext, startRowIndex, numRows, PR_FALSE);
           tableFrame->InvalidateColumnWidths();
         }
@@ -1890,6 +1911,7 @@ nsTreeRowGroupFrame::AddRowToMap(nsTableFrame*   aTableFrame,
                                         insertionIndex, PR_FALSE);
   }
 
+  
   return numNewCols;
 }
 
