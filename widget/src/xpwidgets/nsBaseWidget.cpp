@@ -151,8 +151,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
         nsresult res;
         res = nsComponentManager::CreateInstance(kToolkitCID, nsnull,
                                                  NS_GET_IID(nsIToolkit), (void **)&mToolkit);
-        if (NS_OK != res)
-          NS_ASSERTION(PR_FALSE, "Can not create a toolkit in nsBaseWidget::Create");
+        NS_ASSERTION(NS_SUCCEEDED(res), "Can not create a toolkit in nsBaseWidget::Create");
         if (mToolkit)
           mToolkit->Init(PR_GetCurrentThread());
       }
@@ -185,7 +184,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
                                              NS_GET_IID(nsIDeviceContext), (void **)&mContext);
 
-    if (NS_OK == res)
+    if (NS_SUCCEEDED(res))
       mContext->Init(nsnull);
   }
 
@@ -470,21 +469,28 @@ NS_IMETHODIMP nsBaseWidget::GetWindowType(nsWindowType& aWindowType)
 //-------------------------------------------------------------------------
 nsIRenderingContext* nsBaseWidget::GetRenderingContext()
 {
-  nsIRenderingContext *renderingCtx = NULL;
-  nsresult  res;
-
   static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+  nsresult rv;
 
-  res = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
-                                           NS_GET_IID(nsIRenderingContext),
-                                           (void **)&renderingCtx);
-
-  if (NS_OK == res)
-    renderingCtx->Init(mContext, this);
-
-  NS_ASSERTION(NULL != renderingCtx, "Null rendering context");
+  nsCOMPtr<nsIRenderingContext> renderingCtx = do_CreateInstance(kRenderingContextCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = renderingCtx->Init(mContext, this);
+    if (NS_SUCCEEDED(rv)) {
+      nsIRenderingContext *ret = renderingCtx;
+      /* Increment object refcount that the |ret| object is still a valid one
+       * after we leave this function... */
+      NS_ADDREF(ret);
+      return ret;
+    }
+    else {
+      NS_WARNING("GetRenderingContext: nsIRenderingContext::Init() failed.");
+    }  
+  }
+  else {
+    NS_WARNING("GetRenderingContext: Cannot create RenderingContext.");
+  }  
   
-  return renderingCtx;
+  return nsnull;  
 }
 
 //-------------------------------------------------------------------------
