@@ -480,9 +480,9 @@ nsresult nsImportService::DoDiscover( void)
 							rv = reg->GetString( key, "Supports", &pSupports);
 							if (NS_SUCCEEDED( rv) && (pSupports != nsnull)) {
 								LoadModuleInfo( pClsId, pSupports);
-								PR_Free( pSupports);
+								nsAllocator::Free(pSupports);
 							}
-							PR_Free( pClsId);
+							naAllocator::Free(pClsId);
 						}	
 					}
 				}
