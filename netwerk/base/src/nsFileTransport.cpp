@@ -593,9 +593,15 @@ nsFileTransport::Run(void)
         // Change transfer state if canceled.
         //
         if (mRunState == CANCELED) {
-            if (mXferState == READING)
+            if (mXferState == OPEN_FOR_READ ||
+                mXferState == START_READ ||
+                mXferState == READING ||
+                mXferState == END_READ)
                 mXferState = END_READ;
-            else if (mXferState == WRITING)
+            else if (mXferState == OPEN_FOR_WRITE ||
+                     mXferState == START_WRITE ||
+                     mXferState == WRITING ||
+                     mXferState == END_WRITE)
                 mXferState = END_WRITE;
             else
                 mXferState = CLOSING;
@@ -646,6 +652,8 @@ nsFileTransport::Process(void)
                 mStatus = rv;
         }
 
+        PR_AtomicIncrement(&mService->mInUseTransports);
+
         mXferState = NS_FAILED(mStatus) ? END_READ : START_READ;
         break;
       }
@@ -653,8 +661,6 @@ nsFileTransport::Process(void)
       case START_READ: {
         LOG(("nsFileTransport: START_READ [this=%x %s]\n", this, mStreamName.get()));
 
-        PR_AtomicIncrement(&mService->mInUseTransports);
-    
         nsCOMPtr<nsIInputStream> source;
         mStatus = mStreamIO->GetInputStream(getter_AddRefs(source));
         if (NS_FAILED(mStatus)) {
@@ -779,11 +785,16 @@ nsFileTransport::Process(void)
 
       case END_READ: {
         
-        PR_AtomicDecrement(&mService->mInUseTransports);
-
         LOG(("nsFileTransport: END_READ [this=%x %s] status=%x\n",
             this, mStreamName.get(), mStatus));
 
+        PR_AtomicDecrement(&mService->mInUseTransports);
+
+#if DEBUG
+        if (NS_FAILED(mStatus))
+          printf("Error reading file %s\n", mStreamName.get());
+#endif
+                               
 #if defined (DEBUG_dougt) || defined (DEBUG_warren) || defined (DEBUG_bienvenu)
         NS_ASSERTION(mTransferAmount <= 0 || NS_FAILED(mStatus), "didn't transfer all the data");
 #endif 
@@ -839,6 +850,8 @@ nsFileTransport::Process(void)
                 mStatus = rv;
         }
 
+        PR_AtomicIncrement(&mService->mInUseTransports);
+
         mXferState = NS_FAILED(mStatus) ? END_WRITE : START_WRITE;
         break;
       }
@@ -846,8 +859,6 @@ nsFileTransport::Process(void)
       case START_WRITE: {
         LOG(("nsFileTransport: START_WRITE [this=%x %s]\n",
             this, mStreamName.get()));
-
-        PR_AtomicIncrement(&mService->mInUseTransports);
 
         mStatus = mStreamIO->GetOutputStream(getter_AddRefs(mSink));
         if (NS_FAILED(mStatus)) {
