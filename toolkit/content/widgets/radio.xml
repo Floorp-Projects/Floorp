@@ -25,7 +25,14 @@
       <property name="disabled">
         <getter>
         <![CDATA[
-            return this.getAttribute('disabled') == 'true';
+          if (this.getAttribute('disabled') == 'true')
+            return true;
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; ++i) {
+            if (!children[i].hidden && !children[i].collapsed && !children[i].disabled)
+              return false;
+          }
+          return true;
         ]]>
         </getter>
         <setter>
@@ -43,6 +50,25 @@
         </setter>
       </property>
       
+      <property name="selectedIndex">
+        <getter>
+        <![CDATA[
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; ++i) {
+            if (children[i].selected)
+              return i;
+          }
+          return -1;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          this.selectedItem = this._getRadioChildren()[val];
+          return val;
+        ]]>
+        </setter>
+      </property>
+ 
       <property name="selectedItem">
         <getter>
         <![CDATA[
@@ -56,16 +82,16 @@
         </getter>
         <setter>
         <![CDATA[
-          var alreadySelected = val.getAttribute("selected") == "true";
-          var focused = false;
-          if (this.getAttribute("focused") == "true") {
-            val.setAttribute("focused", "true");
-            focused = true;
+          var focused = this.getAttribute("focused") == "true";
+          var alreadySelected = false;
+
+          if (val) {
+            alreadySelected = val.getAttribute("selected") == "true";
+            val.setAttribute("focused", focused);
+            val.setAttribute("selected", "true");
+            this.value = val.value;
           }
 
-          val.setAttribute("selected", "true");
-          this.value = val.value;
-          
           // uncheck all other group nodes
           var children = this._getRadioChildren();
           for (var i = 0; i < children.length; ++i) {
@@ -74,7 +100,8 @@
               children[i].removeAttribute("focused");
             }
           }
-          var event = document.createEvent("Events");          
+
+          var event = document.createEvent("Events");
           event.initEvent("select", false, true);
           this.dispatchEvent(event);
 
@@ -121,40 +148,39 @@
         <body>
         <![CDATA[
           var currentElement = this.focusedItem;
-          // If focused item isn't a radio button, do nothing!
-          // (This allows textbox to work inside a radiogroup)
-          if (!currentElement)
-            return;
-          var index, i;
+          var i;
           var children = this._getRadioChildren();
           for (i = 0; i < children.length; ++i ) {
             if (children[i] == currentElement) 
               break;
           }
-          
+          var index = i;
+
           if (aNextFlag) {
             do {
-              index = ++i % children.length;             
-              if (i > children.length)
+              if (++i == children.length)
+                i = 0;
+              if (i == index)
                 break;
             }
-            while (children[index].getAttribute("hidden") == "true" || children[index].disabled);
-            // XXX check for collapsed attr and display/visibility props too
+            while (children[i].hidden || children[i].collapsed || children[i].disabled);
+            // XXX check for display/visibility props too
 
-            this.selectedItem = children[index];
-            children[index].doCommand();
+            this.selectedItem = children[i];
+            children[i].doCommand();
           }
           else {              
             do {
-              index = i > 0 ? --i : (i = children.length - 1);
-              if (i == children.length)
+              if (i == 0)
+                i = children.length;
+              if (--i == index)
                 break;
             }
-            while (children[index].getAttribute("hidden") == "true" || children[index].disabled);
-            // XXX check for collapsed attr and display/visibility props too
+            while (children[i].hidden || children[i].collapsed || children[i].disabled);
+            // XXX check for display/visibility props too
 
-            this.selectedItem = children[index];
-            children[index].doCommand();
+            this.selectedItem = children[i];
+            children[i].doCommand();
           }
         ]]>
         </body>
@@ -230,13 +256,6 @@
     </implementation>
     
     <handlers>
-      <handler event="click" button="0">
-        <![CDATA[
-          if (event.target.localName == "radio" && !event.target.disabled) 
-            this.selectedItem = event.target;
-          event.preventBubble();
-         ]]>
-      </handler>
       <handler event="select">
         <![CDATA[
           //XXXblake this should not be necessary
@@ -244,13 +263,10 @@
           event.preventBubble();
         ]]>
       </handler>
-      <handler event="mousedown" button="0">
-        <![CDATA[
-          if (event.target.localName == "radio" && !event.target.disabled)
-            this.focusedItem = event.target;
-          event.preventBubble();
-         ]]>
-      </handler>
+      <handler event="mousedown">
+        if (this.disabled)
+          event.preventDefault();
+       </handler>
      
       <!-- keyboard navigation -->
       <!-- Here's how keyboard navigation works in radio groups on Windows:
@@ -259,7 +275,7 @@
            using the arrow keys. Accessing previous or following radio buttons
            is done solely through the arrow keys and not the tab button. Tab
            takes you to the next widget in the tab order -->
-      <handler event="keypress" key=" ">
+      <handler event="keypress" key=" " phase="target">
          this.selectedItem = this.focusedItem;
          this.selectedItem.doCommand();
       </handler>
@@ -285,11 +301,24 @@
            it is not (Windows platform behaviour is for the group to receive focus,
            not the item -->
       <handler event="focus" phase="target">
-        if (event.target == this) {
+        <![CDATA[
           this.setAttribute("focused", "true");
-          if (!this.focusedItem)
-            this.focusedItem = this.selectedItem;
-        }
+          if (this.focusedItem)
+            return;
+
+          var val = this.selectedItem;
+          if (!val || val.disabled || val.hidden || val.collapsed) {
+            var children = this._getRadioChildren();
+            var i;
+            for (var i = 0; i < children.length; ++i) {
+              if (!children[i].hidden && !children[i].collapsed && !children[i].disabled) {
+                val = children[i];
+                break;
+              }
+            }
+          }
+          this.focusedItem = val;
+        ]]>
       </handler>
       <handler event="blur" phase="target">
         this.removeAttribute("focused");
@@ -298,16 +327,16 @@
     </handlers>
   </binding>
 
-  <binding id="radio" extends="chrome://global/content/bindings/general.xml#control-item">
+  <binding id="radio" extends="chrome://global/content/widgets/general.xml#control-item">
     <resources>
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
 
     <content>
       <xul:image class="radio-check" xbl:inherits="disabled,selected"/>
-      <xul:hbox class="radio-label-box" xbl:inherits="flex">
+      <xul:hbox class="radio-label-box" flex="1">
         <xul:image class="radio-icon" xbl:inherits="src"/>
-        <xul:label class="radio-label" xbl:inherits="xbl:text=label,flex,accesskey,crop"/>
+        <xul:label class="radio-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
       </xul:hbox>
     </content>
 
@@ -347,15 +376,31 @@
       <property name="radioGroup">
         <getter>
         <![CDATA[
-          var parent = this;
-          while (parent = parent.parentNode) {
+          var parent = this.parentNode;
+          while (parent) {
             if (parent.localName == "radiogroup")
               return parent;
+            parent = parent.parentNode;
           }
           return null;
         ]]>
         </getter>
       </property>
     </implementation>
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+          if (!this.disabled)
+            this.radioGroup.selectedItem = this;
+         ]]>
+      </handler>
+
+      <handler event="mousedown" button="0">
+        <![CDATA[
+          if (!this.disabled)
+            this.radioGroup.focusedItem = this;
+         ]]>
+      </handler>
+    </handlers>
   </binding>
 </bindings>
