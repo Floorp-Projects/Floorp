@@ -29,7 +29,7 @@ nsISHistoryListener object
 
 function sessionHistoryListener()
 {
-   alert("In sessionHistoryListener constructor");
+   ddump("In sessionHistoryListener constructor\n");
    this.interfaceName = "nsISHistoryListener";
 
 }
@@ -56,14 +56,14 @@ sessionHistoryListener.prototype =
        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
        uriSpec = newUrl.spec;
 
-       alert("In OnHistoryNewEntry(). uriSpec = " + uriSpec);
+       ddump("In OnHistoryNewEntry(). uriSpec = " + uriSpec + "\n");
     },
 
     OnHistoryGoBack: function(uri)
     {
        uriSpec = uri.spec;
 
-       alert("In OnHistoryGoBack(). uriSpec = " + uriSpec);
+       ddump("In OnHistoryGoBack(). uriSpec = " + uriSpec + "\n");
        backCallback = true;
        return true;
     },
@@ -72,7 +72,7 @@ sessionHistoryListener.prototype =
     {
        uriSpec = uri.spec;
 
-       alert("In OnHistoryGoForward(). uriSpec = " + uriSpec);
+       ddump("In OnHistoryGoForward(). uriSpec = " + uriSpec + "\n");
        forwardCallback = true;
        return true;
     },
@@ -81,8 +81,8 @@ sessionHistoryListener.prototype =
     {
        uriSpec = uri.spec;
 
-       alert("In OnHistoryReload(). uriSpec = " + uriSpec);
-       alert("In OnHistoryReload(). reloadFlags = " + reloadFlags);
+       ddump("In OnHistoryReload(). uriSpec = " + uriSpec + "\n");
+       ddump("In OnHistoryReload(). reloadFlags = " + reloadFlags + "\n");
        reloadCallback = true;
        return true;
     },
@@ -91,15 +91,15 @@ sessionHistoryListener.prototype =
     {
        uriSpec = uri.spec;
 
-       alert("In OnHistoryGotoIndex(). uriSpec = " + uriSpec);
-       alert("In OnHistoryGotoIndex(). index = " + index);
+       ddump("In OnHistoryGotoIndex(). uriSpec = " + uriSpec + "\n");
+       ddump("In OnHistoryGotoIndex(). index = " + index + "\n");
        gotoCallback = true;
        return true;
     },
 
     OnHistoryPurge: function(numEntries)
     {
-       alert("In OnHistoryPurge(). numEntries = " + numEntries);
+       ddump("In OnHistoryPurge(). numEntries = " + numEntries + "\n");
        purgeCallback = true;
        return true;
     },
@@ -108,7 +108,7 @@ sessionHistoryListener.prototype =
     {
        if (debug ==1)
           dump(s);
-       else
+       else if (debug==2)
           alert(s);
     }
 }
