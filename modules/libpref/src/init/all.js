@@ -144,10 +144,6 @@ pref("browser.search.defaultenginename", "chrome://navigator/locale/navigator.pr
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
 //pref("capability.policy.default.barprop.visible.set", "UniversalBrowserWrite");
-pref("capability.policy.default.Document.close", "allAccess");
-pref("capability.policy.default.Document.open", "allAccess");
-pref("capability.policy.default.Document.write", "allAccess");
-pref("capability.policy.default.Document.writeln", "allAccess");
 
 pref("capability.policy.default.Domexception.code", "allAccess");
 pref("capability.policy.default.Domexception.message", "allAccess");
@@ -159,11 +155,16 @@ pref("capability.policy.default.History.back", "allAccess");
 pref("capability.policy.default.History.current", "UniversalBrowserRead");
 pref("capability.policy.default.History.forward", "allAccess");
 pref("capability.policy.default.History.go", "allAccess");
-pref("capability.policy.default.History.item", "UniversalBrowserRead");
+//pref("capability.policy.default.History.item", "UniversalBrowserRead");
 pref("capability.policy.default.History.length", "UniversalBrowserRead");
 pref("capability.policy.default.History.next", "UniversalBrowserRead");
 pref("capability.policy.default.History.previous", "UniversalBrowserRead");
 pref("capability.policy.default.History.toString", "UniversalBrowserRead");
+
+pref("capability.policy.default.HTMLDocument.close", "allAccess");
+pref("capability.policy.default.HTMLDocument.open", "allAccess");
+pref("capability.policy.default.HTMLDocument.write", "allAccess");
+pref("capability.policy.default.HTMLDocument.writeln", "allAccess");
 
 pref("capability.policy.default.Location.hash.set", "allAccess");
 pref("capability.policy.default.Location.host.set", "allAccess");
@@ -172,6 +173,8 @@ pref("capability.policy.default.Location.href.set", "allAccess");
 pref("capability.policy.default.Location.pathname.set", "allAccess");
 pref("capability.policy.default.Location.port.set", "allAccess");
 pref("capability.policy.default.Location.protocol.set", "allAccess");
+pref("capability.policy.default.Location.reload", "allAccess");
+pref("capability.policy.default.Location.replace", "allAccess");
 pref("capability.policy.default.Location.search.set", "allAccess");
 
 pref("capability.policy.default.Navigator.preference", "allAccess");
@@ -188,6 +191,8 @@ pref("capability.policy.default.Window.history", "allAccess");
 pref("capability.policy.default.Window.location", "allAccess");
 // window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
 pref("capability.policy.default.Window.opendialog", "noAccess");
+pref("capability.policy.default.Window.self", "allAccess");
+pref("capability.policy.default.Window.window", "allAccess");
 
 pref("capability.policy.mailnews.Domexception.tostring", "noAccess");
 pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
