@@ -1930,10 +1930,10 @@ nsEventRecieverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
 
   if (compile) {
-    rv = manager->CompileScriptEventListener(script_cx, receiver, atom,
+    rv = manager->CompileScriptEventListener(script_cx, native, atom,
                                              did_compile);
   } else {
-    rv = manager->RegisterScriptEventListener(script_cx, receiver, atom);
+    rv = manager->RegisterScriptEventListener(script_cx, native, atom);
   }
 
   return rv;
