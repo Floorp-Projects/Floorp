@@ -48,8 +48,6 @@ public:
   PRBool  TestAddBandOverlap();
   PRBool  TestAddRectToBand();
   PRBool  TestRemoveRegion();
-  PRBool  TestOffsetRegion();
-  PRBool  TestResizeRectRegion();
   PRBool  TestGetBandData();
 
   struct BandInfo {
@@ -643,91 +641,6 @@ PRBool MySpaceManager::TestRemoveRegion()
   return PR_TRUE;
 }
 
-// Test of offseting regions
-//
-// This tests the following:
-// 1. simple test of offseting the one and only band rect
-PRBool MySpaceManager::TestOffsetRegion()
-{
-  BandsInfo bandsInfo;
-  BandRect* bandRect;
-  nsresult  status;
-  
-  // Clear any existing regions
-  ClearRegions();
-  NS_ASSERTION(mBandList.IsEmpty(), "clear regions failed");
-
-  /////////////////////////////////////////////////////////////////////////////
-  // #1. A simple test of offseting the one and only band rect
-  status = AddRectRegion((nsIFrame*)0x01, nsRect(10, 100, 100, 100));
-  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
-  status = OffsetRegion((nsIFrame*)0x01, 50, 50);
-  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
-
-  // Verify there is one band with one rect
-  GetBandsInfo(bandsInfo);
-  if (bandsInfo.numBands != 1) {
-    printf("TestOffsetRegion: wrong number of bands (#1): %i\n", bandsInfo.numBands);
-    return PR_FALSE;
-  }
-  if (bandsInfo.bands[0].numRects != 1) {
-    printf("TestOffsetRegion: wrong number of rects (#1): %i\n", bandsInfo.bands[0].numRects);
-    return PR_FALSE;
-  }
-
-  // Verify the position
-  bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->mLeft != 60) || (bandRect->mTop != 150)) {
-    printf("TestOffsetRegion: wrong rect origin (#1)\n");
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
-// Test of resizing rect regions
-//
-// This tests the following:
-// 1. simple test of resizing the one and only band rect
-PRBool MySpaceManager::TestResizeRectRegion()
-{
-  BandsInfo bandsInfo;
-  BandRect* bandRect;
-  nsresult  status;
-  
-  // Clear any existing regions
-  ClearRegions();
-  NS_ASSERTION(mBandList.IsEmpty(), "clear regions failed");
-
-  /////////////////////////////////////////////////////////////////////////////
-  // #1. A simple test of resizing the right edge of the one and only band rect
-  status = AddRectRegion((nsIFrame*)0x01, nsRect(10, 100, 100, 100));
-  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
-  status = ResizeRectRegion((nsIFrame*)0x01, 50, 50, nsSpaceManager::RightEdge);
-  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
-
-  // Verify there is one band with one rect
-  GetBandsInfo(bandsInfo);
-  if (bandsInfo.numBands != 1) {
-    printf("TestResizeRectRegion: wrong number of bands (#1): %i\n", bandsInfo.numBands);
-    return PR_FALSE;
-  }
-  if (bandsInfo.bands[0].numRects != 1) {
-    printf("TestResizeRectRegion: wrong number of rects (#1): %i\n", bandsInfo.bands[0].numRects);
-    return PR_FALSE;
-  }
-
-  // Verify the position and size of the rect
-  bandRect = bandsInfo.bands[0].firstRect;
-  if ((bandRect->mLeft != 10) || (bandRect->mTop != 100) ||
-      (bandRect->mRight != 160) || (bandRect->mBottom != 250)) {
-    printf("TestResizeRectRegion: wrong rect shape (#1)\n");
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
 // Test of getting the band data
 PRBool MySpaceManager::TestGetBandData()
 {
@@ -824,16 +737,6 @@ int main(int argc, char** argv)
 
   // Test removing regions
   if (!spaceMgr->TestRemoveRegion()) {
-    return -1;
-  }
-
-  // Test offseting regions
-  if (!spaceMgr->TestOffsetRegion()) {
-    return -1;
-  }
-
-  // Test resizing rect regions
-  if (!spaceMgr->TestResizeRectRegion()) {
     return -1;
   }
 
