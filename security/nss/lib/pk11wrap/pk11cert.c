@@ -4170,10 +4170,14 @@ void SECMOD_InitCallOnce(void) {
 
 void SECMOD_CleanupCallOnce()
 {
-    PR_DestroyLock(mod_init.ml);
-    mod_init.ml = NULL;
-    PR_DestroyCondVar(mod_init.cv);
-    mod_init.cv = NULL;
+    if (mod_init.ml) {
+	PR_DestroyLock(mod_init.ml);
+	mod_init.ml = NULL;
+    }
+    if (mod_init.cv) {
+	PR_DestroyCondVar(mod_init.cv);
+	mod_init.cv = NULL;
+    }
 }
 
 SECStatus SECMOD_CallOnce(SECMODCallOnceType *once,
