@@ -2958,7 +2958,7 @@ MOZ_ARG_DISABLE_BOOL(tests,
 dnl bi-directional support on by default
 IBMBIDI=1
 MOZ_ARG_DISABLE_BOOL(bidi,
-[  --disable-bidi           Disable bi-directional support],
+[  --disable-bidi          Disable bi-directional support],
   IBMBIDI= )
 if test "$IBMBIDI"; then
   AC_DEFINE(IBMBIDI)
@@ -2967,7 +2967,7 @@ fi
 dnl accessibility support on by default
 ACCESSIBILITY=1
 MOZ_ARG_DISABLE_BOOL(accessibility,
-[  --disable-accessibility           Disable accessibility support],
+[  --disable-accessibility Disable accessibility support],
   ACCESSIBILITY= )
 if test "$ACCESSIBILITY"; then
   AC_DEFINE(ACCESSIBILITY)
