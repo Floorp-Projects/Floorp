@@ -48,7 +48,7 @@ enum ePathTypes{
   eCalcRev
 };
 
-static void GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,float aFrac=0);
+static void GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
 
 
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
@@ -1715,6 +1715,11 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
                                 nscoord aDX,
                                 nscoord aDY)
 {
+nsMargin      border;
+PRInt16       theRadius;
+nsStyleCoord  borderRadius;
+
+
   if (0 < aColor.mBackgroundImage.Length()) {
     // Lookup the image
     nsSize imageSize;
@@ -1875,11 +1880,34 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       // XXX This step can be avoided if we have an image and it doesn't
       // have any transparent pixels, and the image is tiled in both
       // the x and the y
+
+      // check to see if we have a radius
+      borderRadius = aSpacing.mBorderRadius;
+      theRadius = 0;
+      switch (borderRadius.GetUnit() ) {
+        case eStyleUnit_Inherit:
+          break;
+        case eStyleUnit_Percent:
+          break;
+        case eStyleUnit_Coord:
+          theRadius = borderRadius.GetCoordValue();
+          break;
+      }
+
+      // rounded version of the border
+      if (theRadius > 0){
+        PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aColor,aSpacing,aDX,aDY,theRadius);
+        return;
+      }
+
+
       aRenderingContext.SetColor(aColor.mBackgroundColor);
       aRenderingContext.FillRect(aBorderArea);
     }
   }
 }
+
+static void  AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32 aStartIndex,PRInt32 curIndex,PRInt8 aSide,PRInt8 aCorner);
 
 
 /** ---------------------------------------------------
@@ -1901,8 +1929,7 @@ nsCSSRendering::PaintRoundedBackground(nsIPresContext& aPresContext,
 RoundedRect   outerPath;
 QBCurve       cr1,cr2,cr3,cr4;
 QBCurve       UL,UR,LL,LR;
-PRInt16       out_rad;
-PRInt32       curIndex;
+PRInt32       curIndex,c1Index;
 nsPoint       anc1,con,anc2;
 nsPoint       thePath[MAXPATHSIZE];
 nsPoint       polyPath[MAXPOLYPATHSIZE];
@@ -1910,18 +1937,10 @@ PRInt16       np;
 nsMargin      border;
 nsStyleCoord  borderRadius;
 
-  out_rad = aTheRadius;
-
   aRenderingContext.SetColor(aColor.mBackgroundColor);
 
-  if(out_rad>(aBorderArea.width>>1))
-    out_rad = aBorderArea.width>>1;
-
-  if(out_rad>(aBorderArea.height>>1))
-    out_rad = aBorderArea.height>>1;
-
   // set the rounded rect up, and let'er rip
-  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,out_rad);
+  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aTheRadius);
   outerPath.GetRoundedBorders(UL,UR,LL,LR);
 
   // BUILD THE ENTIRE OUTSIDE PATH
@@ -1939,7 +1958,7 @@ nsStyleCoord  borderRadius;
   polyPath[0].x = thePath[0].x;
   polyPath[0].y = thePath[0].y;
   curIndex = 1;
-  GetPath(thePath,polyPath,&curIndex,eOutside);
+  GetPath(thePath,polyPath,&curIndex,eOutside,c1Index);
 
   // RIGHT LINE ----------------------------------------------------------------
   LR.MidPointDivide(&cr2,&cr3);
@@ -1950,7 +1969,7 @@ nsStyleCoord  borderRadius;
   thePath[np++].MoveTo(cr2.mAnc1.x, cr2.mAnc1.y);
   thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
   thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
-  GetPath(thePath,polyPath,&curIndex,eOutside);
+  GetPath(thePath,polyPath,&curIndex,eOutside,c1Index);
 
   // BOTTOM LINE ----------------------------------------------------------------
   LL.MidPointDivide(&cr2,&cr4);
@@ -1961,7 +1980,7 @@ nsStyleCoord  borderRadius;
   thePath[np++].MoveTo(cr2.mAnc1.x, cr2.mAnc1.y);
   thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
   thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
-  GetPath(thePath,polyPath,&curIndex,eOutside);
+  GetPath(thePath,polyPath,&curIndex,eOutside,c1Index);
 
   // LEFT LINE ----------------------------------------------------------------
   np=0;
@@ -1971,9 +1990,10 @@ nsStyleCoord  borderRadius;
   thePath[np++].MoveTo(cr1.mAnc1.x, cr1.mAnc1.y);
   thePath[np++].MoveTo(cr1.mCon.x, cr1.mCon.y);
   thePath[np++].MoveTo(cr1.mAnc2.x, cr1.mAnc2.y);
-  GetPath(thePath,polyPath,&curIndex,eOutside);
+  GetPath(thePath,polyPath,&curIndex,eOutside,c1Index);
 
-  //aRenderingContext.FillPolygon(polyPath,curIndex);   put back
+  aRenderingContext.FillPolygon(polyPath,curIndex); 
+
 }
 
 
@@ -1998,7 +2018,6 @@ QBCurve       UL,LL,UR,LR;
 QBCurve       IUL,ILL,IUR,ILR;
 QBCurve       cr1,cr2,cr3,cr4;
 QBCurve       Icr1,Icr2,Icr3,Icr4;
-PRInt16       out_rad;
 nsPoint       anc1,con,anc2;
 nsPoint       thePath[MAXPATHSIZE];
 PRInt16       np;
@@ -2019,16 +2038,8 @@ float         p2t;
   // Base our thickness check on the segment being less than a pixel and 1/2
   twipsPerPixel += twipsPerPixel >> 2;
 
-  out_rad = aBorderRadius;
-
-  if(out_rad>(aBorderArea.width>>1))
-    out_rad = aBorderArea.width>>1;
-
-  if(out_rad>(aBorderArea.height>>1))
-    out_rad = aBorderArea.height>>1;
-
   // set the rounded rect up, and let'er rip
-  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,out_rad);
+  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aBorderRadius);
   outerPath.GetRoundedBorders(UL,UR,LL,LR);
   outerPath.CalcInsetCurves(IUL,IUR,ILL,ILR,border);
 
@@ -2124,10 +2135,9 @@ float         p2t;
   RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_LEFT,border,twipsPerPixel);
 }
 
-static void  AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32   curIndex);
 
 /** ---------------------------------------------------
- *  Process the passed in path so it can be rendered with CSS borderStyle information
+ *  See documentation in nsCSSRendering.h
  *	@update 3/26/99 dwc
  */
 void 
@@ -2139,8 +2149,9 @@ QBCurve   thecurve,cr1,cr2,cr3,cr4;
 nscolor   sideColor;
 nsPoint   thePath[MAXPATHSIZE];
 nsPoint   polypath[MAXPOLYPATHSIZE];
-PRInt32   curIndex;
+PRInt32   curIndex,c1Index,c2Index,junk;
 PRInt8    border_Style;
+PRInt16   r,g,b;
 
   // set the style information
   aBorderStyle.GetBorderColor(aSide,sideColor);
@@ -2169,30 +2180,43 @@ PRInt8    border_Style;
         polypath[0].x = aPoints[0].x;
         polypath[0].y = aPoints[0].y;
         curIndex = 1;
-        GetPath(aPoints,polypath,&curIndex,eOutside);
+        GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
+        c2Index = curIndex;
         polypath[curIndex].x = aPoints[6].x;
         polypath[curIndex].y = aPoints[6].y;
         curIndex++;
-        GetPath(aPoints,polypath,&curIndex,eInside);
+        GetPath(aPoints,polypath,&curIndex,eInside,junk);
         polypath[curIndex].x = aPoints[0].x;
         polypath[curIndex].y = aPoints[0].y;
         curIndex++;
-        //aRenderingContext.FillPolygon(polypath,curIndex);    put back
-        sideColor = NS_RGB(0,255,0);
-        aRenderingContext.SetColor ( sideColor );
-        AntiAliasPoly(aRenderingContext,polypath,curIndex);
+        aRenderingContext.FillPolygon(polypath,curIndex);
+
+        // anti-alias this
+        r = NS_GET_R(sideColor);
+        g = NS_GET_G(sideColor);
+        b = NS_GET_B(sideColor);
+
+        r += (255-r)>>1;
+        g += (255-g)>>1;
+        b += (255-b)>>1;
+        
+        sideColor = NS_RGB(r,g,b);
+
+        aRenderingContext.SetColor(sideColor);
+        AntiAliasPoly(aRenderingContext,polypath,0,c1Index,aSide,1);
+        AntiAliasPoly(aRenderingContext,polypath,c1Index+1,c2Index,aSide,2);
 
        break;
       case NS_STYLE_BORDER_STYLE_DOUBLE:
         polypath[0].x = aPoints[0].x;
         polypath[0].y = aPoints[0].y;
         curIndex = 1;
-        GetPath(aPoints,polypath,&curIndex,eOutside);
+        GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
         aRenderingContext.DrawPolyline(polypath,curIndex);
         polypath[0].x = aPoints[6].x;
         polypath[0].y = aPoints[6].y;
         curIndex = 1;
-        GetPath(aPoints,polypath,&curIndex,eInside);
+        GetPath(aPoints,polypath,&curIndex,eInside,c1Index);
         aRenderingContext.DrawPolyline(polypath,curIndex);
         break;
       case NS_STYLE_BORDER_STYLE_NONE:
@@ -2208,15 +2232,14 @@ PRInt8    border_Style;
         aBorderStyle.GetBorderColor(aSide,sideColor);
         aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
 
-
         polypath[0].x = aPoints[0].x;
         polypath[0].y = aPoints[0].y;
         curIndex = 1;
-        GetPath(aPoints,polypath,&curIndex,eOutside);
+        GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
         polypath[curIndex].x = (aPoints[5].x + aPoints[6].x)>>1;
         polypath[curIndex].y = (aPoints[5].y + aPoints[6].y)>>1;
         curIndex++;
-        GetPath(aPoints,polypath,&curIndex,eCalcRev,.5);
+        GetPath(aPoints,polypath,&curIndex,eCalcRev,c1Index,.5);
         polypath[curIndex].x = aPoints[0].x;
         polypath[curIndex].y = aPoints[0].y;
         curIndex++;
@@ -2231,11 +2254,11 @@ PRInt8    border_Style;
         polypath[0].x = (aPoints[0].x + aPoints[11].x)>>1;
         polypath[0].y = (aPoints[0].y + aPoints[11].y)>>1;
         curIndex = 1;
-        GetPath(aPoints,polypath,&curIndex,eCalc,.5);
+        GetPath(aPoints,polypath,&curIndex,eCalc,c1Index,.5);
         polypath[curIndex].x = aPoints[6].x ;
         polypath[curIndex].y = aPoints[6].y;
         curIndex++;
-        GetPath(aPoints,polypath,&curIndex,eInside);
+        GetPath(aPoints,polypath,&curIndex,eInside,c1Index);
         polypath[curIndex].x = aPoints[0].x;
         polypath[curIndex].y = aPoints[0].y;
         curIndex++;
@@ -2253,19 +2276,58 @@ PRInt8    border_Style;
  *	@update 4/13/99 dwc
  */
 static void
-AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32   aCurIndex)
+AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32 aStartIndex,PRInt32 aCurIndex,PRInt8 aSide,PRInt8 aCorner)
 {
 PRInt32 i;
+PRInt32 x0,y0,x1,y1,offsetx,offsety;
 
-  for(i=1;i<aCurIndex;i++) {
-    aRenderingContext.DrawLine(aPoints[i-1].x,aPoints[i-1].y,aPoints[i].x,aPoints[i].y);
+  offsetx = offsety = 0;
+  switch (aSide) {
+    case NS_SIDE_TOP:
+      if( aCorner == 1) {
+        offsetx = 0;
+      }else{
+        offsetx = -10;
+      }  
+    break;
+    case NS_SIDE_LEFT:
+      if( aCorner == 1) {
+        offsetx = 0;
+      }else{
+        offsetx = 0;
+      }
+    break;
+    case NS_SIDE_RIGHT:
+      if( aCorner == 1) {
+        offsetx = -10;
+      }else{
+        offsetx = -10;
+      }
+    break;
+    case NS_SIDE_BOTTOM:
+      if( aCorner == 1) {
+        offsety = -10;
+      }else{
+        offsety = -10;
+      }
+    break;
+  } 
+
+
+  for(i=aStartIndex+1;i<aCurIndex;i++) {
+    x0 = aPoints[i-1].x+offsetx;
+    y0 = aPoints[i-1].y+offsety;
+    x1 = aPoints[i].x+offsetx;
+    y1 = aPoints[i].y+offsety;
+    aRenderingContext.DrawLine(x0,y0,x1,y1); 
   }
+
 }
 
 
 /** ---------------------------------------------------
- *  Inset the rounded rect in x and y
- *	@update 4/13/99 dwc
+ *  See documentation in nsCSSRendering.h
+ *	@update 3/26/99 dwc
  */
 void 
 RoundedRect::CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve,nsMargin &aBorder)
@@ -2277,6 +2339,14 @@ PRInt32   nLeft,nTop,nRight,nBottom;
   nRight = mOuterRight-aBorder.right;
   nBottom = mOuterBottom-aBorder.bottom;
 
+  if(nLeft > nRight){
+    nLeft = nRight;
+  }
+
+  if(nTop > nBottom){
+    nTop = nBottom;
+  }
+
   // set the passed in curves to the rounded borders of the rectangle
   aULCurve.SetPoints(nLeft,mInnerTop,nLeft,nTop,mInnerLeft,nTop);
   aURCurve.SetPoints(mInnerRight,nTop,nRight,nTop,nRight,mInnerTop);
@@ -2286,27 +2356,39 @@ PRInt32   nLeft,nTop,nRight,nBottom;
 }
 
 /** ---------------------------------------------------
- *  Set the Rounded rects coordinates
+ *  See documentation in nsCSSRendering.h
  *	@update 4/13/99 dwc
  */
 void 
 RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius)
 {
+PRInt32 width;
+
+  width = aLeft+aWidth;
+
+  if( aRadius > (aWidth>>1) )
+    mRoundness = aWidth>>1;
+  else
+    mRoundness = aRadius;
+
+  if( mRoundness > (aHeight>>1) )
+    mRoundness = aHeight>>1;
 
   // important coordinates that the path hits
   mOuterLeft = aLeft;
   mOuterRight = aLeft + aWidth;
   mOuterTop = aTop;
   mOuterBottom = aTop+aHeight;
-  mInnerLeft = mOuterLeft + aRadius;
-  mInnerRight = mOuterRight - aRadius;
-  mInnerTop = mOuterTop + aRadius;
-  mInnerBottom = mOuterBottom - aRadius;
+  mInnerLeft = mOuterLeft + mRoundness;
+  mInnerRight = mOuterRight - mRoundness;
+  mInnerTop = mOuterTop + mRoundness;
+  mInnerBottom = mOuterBottom - mRoundness;
+
 
 }
 
 /** ---------------------------------------------------
- *  Set the Rounded rects coordinates
+ *  See documentation in nsCSSRendering.h
  *	@update 4/13/99 dwc
  */
 void 
@@ -2323,9 +2405,14 @@ RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLC
 /** ---------------------------------------------------
  *  Given a qbezier path, convert it into a polygon path
  *	@update 3/26/99 dwc
+ *  @param aPoints -- an array of points to use for the path
+ *  @param aPolyPath -- an array of points containing the flattened polygon to use
+ *  @param aCurIndex -- the index that points to the last element of the array
+ *  @param aPathType -- what kind of path that should be returned
+ *  @param aFrac -- the inset amount for a eCalc type path
  */
 static void 
-GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,float aFrac)
+GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac)
 {
 QBCurve thecurve;
 
@@ -2333,6 +2420,7 @@ QBCurve thecurve;
     case eOutside:
       thecurve.SetPoints(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      aC1Index = *aCurIndex;
       aPolyPath[*aCurIndex].x = aPoints[3].x;
       aPolyPath[*aCurIndex].y = aPoints[3].y;
       (*aCurIndex)++;
@@ -2378,12 +2466,8 @@ QBCurve thecurve;
 }
 
 /** ---------------------------------------------------
- *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
- *  else it is so small that it can be approximated by 2 lineto calls
- *  @param aRenderingContext -- The RenderingContext to use to draw with
- *  @param aPointArray[] -- A list of points we can put line calls into instead of drawing.  If null, lines are drawn
- *  @param aCurInex -- a pointer to an Integer that tells were to put the points into the array, incremented when finished
- *	@update 3/26/99 dwc
+ *  See documentation in nsCSSRendering.h
+ *	@update 4/13/99 dwc
  */
 void 
 QBCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],PRInt32 *aCurIndex)
@@ -2422,10 +2506,8 @@ PRInt16		fx,fy,smag;
 }
 
 /** ---------------------------------------------------
- *  Divide a Quadratic Bezier curve at the mid-point
- *	@update 3/26/99 dwc
- *  @param aCurve1 -- Curve 1 as a result of the division
- *  @param aCurve2 -- Curve 2 as a result of the division
+ *  See documentation in nsCSSRendering.h
+ *	@update 4/13/99 dwc
  */
 void 
 QBCurve::MidPointDivide(QBCurve *A,QBCurve *B)
