@@ -32,6 +32,7 @@ EXPORTS = \
 	nsNewsSet.h \
 	nsLocalFolderSummarySpec.h	\
 	nsUInt32Array.h \
+	nsMsgLineBuffer.h	\
 	$(NULL)
 
 CPPSRCS = \
