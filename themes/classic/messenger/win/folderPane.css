@@ -30,11 +30,39 @@ treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon
   }
 
 /* special folder */
+/** Inbox **/
 .tree-cell-folderpane-icon[SpecialFolder="Inbox"]
   {
     list-style-image      : url("chrome://messenger/skin/folder-inbox.gif");
   }
 
+/* ..... Sent ..... */
+
+.tree-cell-folderpane-icon[SpecialFolder="Sent"] {
+  list-style-image: url("chrome://messenger/skin/folder-sent.gif");
+}
+
+
+/* ..... Drafts ..... */
+
+.tree-cell-folderpane-icon[SpecialFolder="Drafts"] {
+  list-style-image: url("chrome://messenger/skin/folder-draft.gif");
+}
+
+
+
+/* ..... Templates ..... */
+
+.tree-cell-folderpane-icon[SpecialFolder="Templates"] {
+  list-style-image: url("chrome://messenger/skin/folder-template.gif");
+}
+
+
+
+
+
+
+/** Trash **/
 .tree-cell-folderpane-icon[SpecialFolder="Trash"]
   {
     list-style-image      : url("chrome://messenger/skin/folder-trash.gif");
