@@ -60,9 +60,7 @@ function Startup()
       rowIndex = 1;
   }
 
-  bookmarksView.treeBoxObject.scrollToRow(rowIndex);
   bookmarksView.treeBoxObject.selection.select(rowIndex);
-
   windowNode.setAttribute("title", titleString);
 
   document.getElementById("CommandUpdate_Bookmarks").setAttribute("commandupdater","true");
