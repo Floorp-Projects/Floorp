@@ -241,7 +241,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
       ioserv->NewChannelFromURI(aURI, getter_AddRefs(newChannel));
       if (!newChannel) return NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(aRequest));
+      nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(newChannel));
 
       if (cacheChan) {
 
