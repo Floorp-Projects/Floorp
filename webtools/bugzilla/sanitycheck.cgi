@@ -478,7 +478,7 @@ my $lastb = 0;
 my @list;
 while (1) {
     my ($b, $k) = FetchSQLData();
-    if (!defined $b || $b ne $lastb) {
+    if (!defined $b || $b != $lastb) {
         if (@list) {
             $realk{$lastb} = join(', ', @list);
         }
