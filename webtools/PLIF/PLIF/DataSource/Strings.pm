@@ -83,6 +83,7 @@ sub get {
             $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
         }
         if (not scalar(@results)) {
+            $self->dump(9, "Did not find a string for '$string', going to look in the defaults...");
             @results = $self->getDefaultString($app, $protocol, $string);
             $self->assert(scalar(@results), 1, "Couldn't find a string to display for '$string' in protocol '$protocol'");
         }
