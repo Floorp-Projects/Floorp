@@ -2289,9 +2289,14 @@ function CloseWindow()
     if (window.InsertCharWindow)
       SwitchInsertCharToAnotherEditorOrClose();
 
-    //window.editorShell.CloseWindowWithoutSaving();
     try {
-      document.documentElement.destroy();
+      var basewin = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIWebNavigation)
+                      .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                      .treeOwner
+                      .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIBaseWindow);
+      basewin.destroy();
     } catch (e) {}
   }
 }
