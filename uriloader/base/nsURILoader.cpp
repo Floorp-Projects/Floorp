@@ -286,6 +286,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
 {
   nsresult rv;
   nsXPIDLCString contentType;
+  nsCOMPtr<nsISupports> originalWindowContext = m_originalContext; // local variable to keep track of this.
 
   rv = aChannel->GetContentType(getter_Copies(contentType));
   if (NS_FAILED(rv)) return rv;
@@ -405,7 +406,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
 
       if (NS_FAILED(rv))
       {
-        nsCOMPtr<nsIDOMWindow> domWindow (do_GetInterface(contentListener));
+        nsCOMPtr<nsIDOMWindow> domWindow (do_GetInterface(originalWindowContext));
         return InvokeUnknownContentHandler(aChannel, contentType, domWindow);
       }
 
