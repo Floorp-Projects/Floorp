@@ -70,6 +70,7 @@
 #include "nsINameSpace.h"
 #include "nsThemeConstants.h"
 #include "nsContentErrors.h"
+#include "nsUnitConversion.h"
 
 #include "prprf.h"
 
@@ -2767,7 +2768,7 @@ PRBool CSSParserImpl::ParseColorOpacity(PRInt32& aErrorCode, PRUint8& aOpacity)
     return PR_FALSE;
   }
 
-  PRUint32 value = (PRUint32)round(mToken.mNumber*255);
+  PRUint32 value = (PRUint32)NSToIntRound(mToken.mNumber*255);
 
   if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ')' but found"));
