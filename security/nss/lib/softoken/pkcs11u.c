@@ -591,15 +591,51 @@ pk11_AddAttributeType(PK11Object *object,CK_ATTRIBUTE_TYPE type,void *valPtr,
  */
 
 /* allocation hooks that allow us to recycle old object structures */
-static PK11Object *
+#ifdef MAX_OBJECT_LIST_SIZE
+static PK11Object * objectFreeList = NULL;
+static PRLock *objectLock = NULL;
+static int object_count = 0;
+#endif
+PK11Object *
 pk11_GetObjectFromList(PRBool *hasLocks) {
-    PK11Object *object = (PK11Object*)PORT_ZAlloc(sizeof(PK11Object));
+    PK11Object *object;
+
+#if MAX_OBJECT_LIST_SIZE
+    if (objectLock == NULL) {
+	objectLock = PR_NewLock();
+    }
+
+    PK11_USE_THREADS(PR_Lock(objectLock));
+    object = objectFreeList;
+    if (object) {
+	objectFreeList = object->next;
+	object_count--;
+    }    	
+    PK11_USE_THREADS(PR_Unlock(objectLock));
+    if (object) {
+	object->next = object->prev = NULL;
+        *hasLocks = PR_TRUE;
+	return object;
+    }
+#endif
+
+    object  = (PK11Object*)PORT_ZAlloc(sizeof(PK11Object));
     *hasLocks = PR_FALSE;
     return object;
 }
 
 static void
 pk11_PutObjectToList(PK11Object *object) {
+#ifdef MAX_OBJECT_LIST_SIZE
+    if (object_count < MAX_OBJECT_LIST_SIZE) {
+	PK11_USE_THREADS(PR_Lock(objectLock));
+	object->next = objectFreeList;
+	objectFreeList = object;
+	object_count++;
+	PK11_USE_THREADS(PR_Unlock(objectLock));
+	return;
+     }
+#endif
     PK11_USE_THREADS(PR_DestroyLock(object->attributeLock);)
     PK11_USE_THREADS(PR_DestroyLock(object->refLock);)
     object->attributeLock = object->refLock = NULL;

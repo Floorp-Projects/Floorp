@@ -87,6 +87,7 @@ typedef void (*PK11Free)(void *);
 #define TOKEN_OBJECT_HASH_SIZE 1024
 #define SESSION_HASH_SIZE 512
 #define MAX_KEY_LEN 256
+#define MAX_OBJECT_LIST_SIZE 800
 
 /* Value to tell if an attribute is modifiable or not.
  *    NEVER: attribute is only set on creation.
