@@ -21,6 +21,7 @@ VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-DIRS	= us
+
+DIRS	= lang
 
 include $(topsrcdir)/config/rules.mk
