@@ -1398,7 +1398,7 @@ nsresult Text::RemoveChild(nsIDOMNode *oldChild)
 nsresult Text::GetData(nsString &aString)
 {
   if (nsnull != mText) {
-    aString = mText;
+    aString.SetString(mText, mLength);
   }
 
   return NS_OK;
