@@ -52,6 +52,13 @@ class nsIFrameSelection;
 #define NS_PRESSHELL_SCROLL_CENTER   50
 #define NS_PRESSHELL_SCROLL_ANYWHERE -1
 
+typedef enum SelectionType{SELECTION_NORMAL = 0, 
+                   SELECTION_SPELLCHECK, 
+                   SELECTION_IME_SOLID, 
+                   SELECTION_IME_DASHED, 
+                   NUM_SELECTIONTYPES} SelectionType;
+
+
 /**
  * Presentation shell interface. Presentation shells are the
  * controlling point for managing the presentation of a document. The
