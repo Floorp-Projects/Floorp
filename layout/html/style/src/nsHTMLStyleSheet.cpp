@@ -54,6 +54,7 @@
 #include "nsTreeFrame.h"
 #include "nsToolboxFrame.h"
 #include "nsToolbarFrame.h"
+#include "nsTreeIndentationFrame.h"
 #endif
 
 //#define FRAMEBASED_COMPONENTS 1 // This is temporary please leave in for now - rods
@@ -2152,6 +2153,10 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
                                     aStyleContext, aAbsoluteItems, aNewFrame);
 		aFrameItems.AddChild(aNewFrame);
 		return rv;
+	}
+	else if (aTag == nsXULAtoms::treeindentation)
+	{
+		rv = NS_NewTreeIndentationFrame(aNewFrame);
 	}
 	// End of TREE CONSTRUCTION logic
 

@@ -27,12 +27,14 @@ CPPSRCS=					\
 	nsToolboxFrame.cpp		\
 	nsToolbarFrame.cpp		\
 	nsTreeFrame.cpp			\
+	nsTreeIndentationFrame.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsToolboxFrame.obj		\
 	.\$(OBJDIR)\nsToolbarFrame.obj		\
 	.\$(OBJDIR)\nsTreeFrame.obj	\
+	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
 	$(NULL)
 
 EXPORTS =					\
@@ -42,6 +44,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
    -I..\..\..\html\document\src \
    -I..\..\..\html\table\src \
+   -I..\..\content\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
 
 LCFLAGS = \
