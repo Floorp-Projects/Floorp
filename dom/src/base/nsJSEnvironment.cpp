@@ -1068,6 +1068,7 @@ AtomToEventHandlerName(nsIAtom *aName)
 NS_IMETHODIMP
 nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
                                  const nsAString& aBody,
+                                 const char *aURL, PRUint32 aLineNo,
                                  PRBool aShared, void** aHandler)
 {
   if (!sSecurityManager) {
@@ -1103,8 +1104,7 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
                                           charName, 1, gEventArgv,
                                           (jschar*)(const PRUnichar*)PromiseFlatString(aBody).get(),
                                           aBody.Length(),
-                                          //XXXbe filename, lineno:
-                                          nsnull, 0);
+                                          aURL, aLineNo);
 
   if (jsprin) {
     JSPRINCIPALS_DROP(mContext, jsprin);

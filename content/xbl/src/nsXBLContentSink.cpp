@@ -386,7 +386,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
         nsXBLPrototypeHandler* newHandler;
         newHandler = new nsXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
                                                nsnull, nsnull, nsnull, nsnull,
-                                               nsnull, nsnull);
+                                               nsnull, nsnull, mBinding);
         newHandler->SetEventName(nsXBLAtoms::constructor);
         newHandler->SetLineNumber(aLineNumber);
         mBinding->SetConstructor(newHandler);
@@ -396,7 +396,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
         nsXBLPrototypeHandler* newHandler;
         newHandler = new nsXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
                                                nsnull, nsnull, nsnull, nsnull,
-                                               nsnull, nsnull);
+                                               nsnull, nsnull, mBinding);
         newHandler->SetEventName(nsXBLAtoms::destructor);
         newHandler->SetLineNumber(aLineNumber);
         mBinding->SetDestructor(newHandler);
@@ -520,7 +520,7 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
   nsXBLPrototypeHandler* newHandler;
   newHandler = new nsXBLPrototypeHandler(event, phase, action, command,
                                          keycode, charcode, modifiers, button,
-                                         clickcount, preventdefault);
+                                         clickcount, preventdefault, mBinding);
 
   if (newHandler) {
     newHandler->SetLineNumber(aLineNumber);

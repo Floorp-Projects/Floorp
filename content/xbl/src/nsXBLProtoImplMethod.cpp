@@ -162,8 +162,11 @@ nsXBLProtoImplMethod::SetLineNumber(PRUint32 aLineNumber)
 }
 
 nsresult
-nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
-                                      void* aScriptObject, void* aTargetClassObject)
+nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
+                                    nsIContent* aBoundElement, 
+                                    void* aScriptObject,
+                                    void* aTargetClassObject,
+                                    const nsCString& aClassStr)
 {
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
   JSObject * scriptObject = (JSObject *) aScriptObject;

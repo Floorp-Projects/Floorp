@@ -193,8 +193,11 @@ nsXBLProtoImplProperty::SetSetterLineNumber(PRUint32 aLineNumber) {
 const char* gPropertyArgs[] = { "val" };
 
 nsresult
-nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
-                                      void* aScriptObject, void* aTargetClassObject)
+nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
+                                      nsIContent* aBoundElement, 
+                                      void* aScriptObject,
+                                      void* aTargetClassObject,
+                                      const nsCString& aClassStr)
 {
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
   JSObject * scriptObject = (JSObject *) aScriptObject;

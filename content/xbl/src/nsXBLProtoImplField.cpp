@@ -52,7 +52,8 @@ MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplField)
 nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly)
   : nsXBLProtoImplMember(aName),
     mFieldText(nsnull),
-    mFieldTextLength(0)
+    mFieldTextLength(0),
+    mLineNumber(0)
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplField);
   mJSAttributes = JSPROP_ENUMERATE;
@@ -93,8 +94,11 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 }
 
 nsresult
-nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
-                                   void* aScriptObject, void* aTargetClassObject)
+nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
+                                   nsIContent* aBoundElement, 
+                                   void* aScriptObject,
+                                   void* aTargetClassObject,
+                                   const nsCString& aClassStr)
 {
   if (mFieldTextLength == 0)
     return NS_OK; // nothing to do.
@@ -105,6 +109,11 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext, nsIContent* aBoun
   if (!scriptObject)
     return NS_ERROR_FAILURE;
 
+  nsCAutoString bindingURI(aClassStr);
+  PRInt32 hash = bindingURI.RFindChar('#');
+  if (hash != kNotFound)
+    bindingURI.Truncate(hash);
+  
   // compile the literal string 
   jsval result = nsnull;
   PRBool undefined;
@@ -112,7 +121,8 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext, nsIContent* aBoun
   aContext->EvaluateStringWithValue(nsDependentString(mFieldText,
                                                       mFieldTextLength), 
                                     scriptObject,
-                                    nsnull, nsnull, 0, nsnull,
+                                    nsnull, bindingURI.get(),
+                                    mLineNumber, nsnull,
                                     (void*) &result, &undefined);
               
   if (!undefined) {
