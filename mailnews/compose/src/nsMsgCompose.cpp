@@ -250,8 +250,8 @@ GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *o
   return result;
 }
 
-NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf,
-                                                  nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor)
+NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString& aPrefix, nsString& aBuf,
+                                                  nsString& aSignature, PRBool aQuoted, PRBool aHTMLEditor)
 {
   // First, get the nsIEditor interface for future use
   nsCOMPtr<nsIEditor> editor;
