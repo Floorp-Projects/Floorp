@@ -234,7 +234,11 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
                          const nsXPTMethodInfo *aMethodInfo,
                          nsXPTCMiniVariant *aParams)
 {
-  LOG("nsJavaXPTCStub::CallMethod [%s]\n", aMethodInfo->GetName());
+#ifdef DEBUG
+  const char* ifaceName;
+  mIInfo->GetNameShared(&ifaceName);
+  LOG("nsJavaXPTCStub::CallMethod [%s::%s]\n", ifaceName, aMethodInfo->GetName());
+#endif
 
   nsresult rv = NS_OK;
 
@@ -276,8 +280,18 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
   // Get Java method to call
   jmethodID mid = nsnull;
   if (NS_SUCCEEDED(rv)) {
-    nsCAutoString methodName(aMethodInfo->GetName());
-    methodName.SetCharAt(tolower(methodName[0]), 0);
+    nsCAutoString methodName;
+    if (aMethodInfo->IsGetter() || aMethodInfo->IsSetter()) {
+      if (aMethodInfo->IsGetter())
+        methodName.Append("get");
+      else
+        methodName.Append("set");
+      methodName.Append(aMethodInfo->GetName());
+      methodName.SetCharAt(toupper(methodName[3]), 3);
+    } else {
+      methodName.Append(aMethodInfo->GetName());
+      methodName.SetCharAt(tolower(methodName[0]), 0);
+    }
 
     jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
     if (clazz)
