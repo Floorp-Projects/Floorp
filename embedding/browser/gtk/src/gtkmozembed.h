@@ -62,10 +62,16 @@ extern GtkType      gtk_moz_embed_get_type         (void);
 extern GtkWidget   *gtk_moz_embed_new              (void);
 extern void         gtk_moz_embed_load_url         (GtkMozEmbed *embed, const char *url);
 extern void         gtk_moz_embed_stop_load        (GtkMozEmbed *embed);
+extern gboolean     gtk_moz_embed_can_go_back      (GtkMozEmbed *embed);
+extern gboolean     gtk_moz_embed_can_go_forward   (GtkMozEmbed *embed);
+extern void         gtk_moz_embed_go_back          (GtkMozEmbed *embed);
+extern void         gtk_moz_embed_go_forward       (GtkMozEmbed *embed);
+extern void         gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags);
 extern char        *gtk_moz_embed_get_link_message (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_js_status    (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_title        (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_location     (GtkMozEmbed *embed);
+extern void         gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags);
 
 /* These are straight out of nsIWebProgress.h */
 
@@ -83,6 +89,13 @@ enum { gtk_moz_embed_flag_net_start = 1,
        gtk_moz_embed_flag_net_userCancelled = 65536,
        gtk_moz_embed_flag_win_start = 1048576,
        gtk_moz_embed_flag_win_stop = 2097152 };
+
+/* These are straight out of nsIWebNavigation.h */
+
+enum { gtk_moz_embed_flag_reloadNormal = 0,
+       gtk_moz_embed_flag_reloadBypassCache = 1,
+       gtk_moz_embed_flag_reloadBypassProxy = 2,
+       gtk_moz_embed_flag_reloadBypassProxyAndCache = 3 };
 
 
 #ifdef __cplusplus
