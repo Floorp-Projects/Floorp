@@ -483,8 +483,6 @@ PROffset32 _MD_LSeek(PRFileDesc *fd, PROffset32 offset, PRSeekWhence how)
 	OSErr 	err = noErr;
 	long	curPos, endPos;
 
-	PR_ASSERT(offset >= 0);
-
 	/* compute new mark */
 	switch (how) {
 		case PR_SEEK_SET:
