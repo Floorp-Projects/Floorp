@@ -4327,6 +4327,7 @@ nsImapMailFolder::GetMessageSizeFromDB(const char *id, PRBool idIsUid, PRUint32 
   nsresult rv = NS_ERROR_FAILURE;
   NS_ENSURE_ARG(size);
   *size = 0;
+  (void) GetDatabase(nsnull);
   if (id && mDatabase)
   {
     PRUint32 key = atoi(id);
