@@ -2257,29 +2257,37 @@ pk11_DestroySlotData(PK11Slot *slot)
  * handle the SECMOD.db
  */
 char **
-NSC_ModuleDBFunc(unsigned long function,char *parameters, char *args)
+NSC_ModuleDBFunc(unsigned long function,char *parameters, void *args)
 {
-    char *secmod;
+    char *secmod = NULL;
+    char *appName = NULL;
+    char *filename = NULL;
     PRBool rw;
     static char *success="Success";
     char **rvstr = NULL;
 
-    secmod = secmod_getSecmodName(parameters,&rw);
+    secmod = secmod_getSecmodName(parameters,&appName,&filename, &rw);
 
     switch (function) {
     case SECMOD_MODULE_DB_FUNCTION_FIND:
-	rvstr = secmod_ReadPermDB(secmod,parameters,rw);
+	rvstr = secmod_ReadPermDB(appName,filename,secmod,(char *)parameters,rw);
 	break;
     case SECMOD_MODULE_DB_FUNCTION_ADD:
-	rvstr = (secmod_AddPermDB(secmod,args,rw) == SECSuccess) 
-							? &success: NULL;
+	rvstr = (secmod_AddPermDB(appName,filename,secmod,(char *)args,rw) 
+				== SECSuccess) ? &success: NULL;
 	break;
     case SECMOD_MODULE_DB_FUNCTION_DEL:
-	rvstr = (secmod_DeletePermDB(secmod,args,rw) == SECSuccess) 
-							? &success: NULL;
+	rvstr = (secmod_DeletePermDB(appName,filename,secmod,(char *)args,rw)
+				 == SECSuccess) ? &success: NULL;
+	break;
+    case SECMOD_MODULE_DB_FUNCTION_RELEASE:
+	rvstr = (secmod_ReleasePermDBData(appName,filename,secmod,
+			(char **)args,rw) == SECSuccess) ? &success: NULL;
 	break;
     }
     if (secmod) PR_smprintf_free(secmod);
+    if (appName) PORT_Free(appName);
+    if (filename) PORT_Free(filename);
     return rvstr;
 }
 
@@ -2424,6 +2432,7 @@ CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
     pInfo->flags = 0;
     return CKR_OK;
 }
+
 
 /* NSC_GetSlotList obtains a list of slots in the system. */
 CK_RV NSC_GetSlotList(CK_BBOOL tokenPresent,
@@ -3213,7 +3222,6 @@ CK_RV NSC_CopyObject(CK_SESSION_HANDLE hSession,
     if (crv != CKR_OK) {
 	pk11_FreeObject(destObject);
 	pk11_FreeSession(session);
-	return crv;
     }
 
     crv = pk11_handleObject(destObject,session);

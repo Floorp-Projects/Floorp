@@ -139,6 +139,7 @@ nsslowcert_DestroyDBEntry(certDBEntry *entry);
 
 SECStatus
 nsslowcert_OpenCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
+		const char *domain, const char *prefix,
                 NSSLOWCERTDBNameFunc namecb, void *cbarg, PRBool openVolatile);
 
 void

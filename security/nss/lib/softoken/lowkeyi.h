@@ -32,7 +32,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: lowkeyi.h,v 1.5 2002/02/21 22:41:38 ian.mcgreer%sun.com Exp $
+ * $Id: lowkeyi.h,v 1.6 2002/04/05 09:17:50 relyea%netscape.com Exp $
  */
 
 #ifndef _LOWKEYI_H_
@@ -66,11 +66,11 @@ typedef char * (* NSSLOWKEYDBNameFunc)(void *arg, int dbVersion);
 ** Open a key database.
 */
 extern NSSLOWKEYDBHandle *nsslowkey_OpenKeyDB(PRBool readOnly,
+					   const char *domain,
+					   const char *prefix,
 					   NSSLOWKEYDBNameFunc namecb,
 					   void *cbarg);
 
-extern NSSLOWKEYDBHandle *nsslowkey_OpenKeyDBFilename(char *filename,
-						   PRBool readOnly);
 
 /*
  * Clear out all the keys in the existing database

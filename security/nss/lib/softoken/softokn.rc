@@ -34,12 +34,20 @@
 #include "nss.h"
 #include <winver.h>
 
-#define MY_LIBNAME "softokn"
+#define MY_LIBNAME "softoken"
 #ifdef MOZ_CLIENT
-#define MY_FILEDESCRIPTION "NSS Builtin Crypto PKCS #11 Library for Clients"
+#define CLIENTS " for Clients"
 #else
-#define MY_FILEDESCRIPTION "NSS Builtin Crypto PKCS #11 Library"
+#define CLIENTS ""
 #endif
+
+#ifdef REMOTE_DBM
+#define DBM " with Shared Database"
+#else
+#define DBM ""
+#endif
+
+#define MY_FILEDESCRIPTION "NSS PKCS #11 Library" CLIENTS DBM
 
 #define STRINGIZE(x) #x
 #define STRINGIZE2(x) STRINGIZE(x)
