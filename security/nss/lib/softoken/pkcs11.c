@@ -3208,6 +3208,7 @@ CK_RV NSC_CopyObject(CK_SESSION_HANDLE hSession,
     if (crv != CKR_OK) {
 	pk11_FreeObject(destObject);
 	pk11_FreeSession(session);
+	return crv;
     }
 
     crv = pk11_handleObject(destObject,session);
