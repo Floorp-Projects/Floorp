@@ -146,6 +146,10 @@ protected:
                       nsIRenderingContext& aRenderingContext,
                       const nsString&      aAltText,
                       const nsRect&        aRect);
+
+  void DisplayAltFeedback(nsIPresContext&      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          PRInt32              aIconId);
 };
 
 // Value's for mSuppress
@@ -529,10 +533,6 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
                            const nsString&      aAltText,
                            const nsRect&        aRect)
 {
-  // Clip so we don't render outside of the rect.
-  aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(aRect, nsClipCombine_kIntersect);
-
   const nsStyleColor* color =
     (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
   const nsStyleFont* font =
@@ -570,7 +570,6 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
   }
 
   NS_RELEASE(fm);
-  aRenderingContext.PopState();
 }
 
 struct nsRecessedBorder : public nsStyleSpacing {
@@ -595,6 +594,62 @@ struct nsRecessedBorder : public nsStyleSpacing {
   }
 };
 
+void
+ImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
+                               nsIRenderingContext& aRenderingContext,
+                               PRInt32              aIconId)
+{
+  // Display a recessed one pixel border in the inner area
+  nsRect  inner;
+  GetInnerArea(&aPresContext, inner);
+
+  float p2t = aPresContext.GetPixelsToTwips();
+  nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
+  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
+                              inner, recessedBorder, 0);
+
+  // Adjust the inner rect to account for the one pixel recessed border,
+  // and a six pixel padding on each edge
+  inner.Deflate(NSIntPixelsToTwips(7, p2t), NSIntPixelsToTwips(7, p2t));
+  if (inner.IsEmpty()) {
+    return;
+  }
+
+  // Clip so we don't render outside the inner rect
+  aRenderingContext.PushState();
+  aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect);
+
+#ifdef _WIN32
+  // Display the icon
+  nsIDeviceContext* dc = aRenderingContext.GetDeviceContext();
+  nsIImage*         icon;
+
+  if (NS_SUCCEEDED(dc->LoadIconImage(aIconId, icon))) {
+    aRenderingContext.DrawImage(icon, inner.x, inner.y);
+
+    // Reduce the inner rect by the width of the icon, and leave an
+    // additional six pixels padding
+    PRInt32 iconWidth = NSIntPixelsToTwips(icon->GetWidth() + 6, p2t);
+    inner.x += iconWidth;
+    inner.width -= iconWidth;
+
+    NS_RELEASE(icon);
+  }
+
+  NS_RELEASE(dc);
+#endif
+
+  // If there's still room, display the alt-text
+  if (!inner.IsEmpty()) {
+    nsAutoString altText;
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ALT", altText)) {
+      DisplayAltText(aPresContext, aRenderingContext, altText, inner);
+    }
+  }
+
+  aRenderingContext.PopState();
+}
+
 NS_METHOD
 ImageFrame::Paint(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
@@ -618,49 +673,7 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     if (nsnull == image) {
       // No image yet. Draw the icon that indicates we're loading, and display
       // the alt-text
-      // Display a recessed one-pixel border in the inner area
-      nsRect  inner;
-      GetInnerArea(&aPresContext, inner);
-
-      float p2t = aPresContext.GetPixelsToTwips();
-      nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
-                                  inner, recessedBorder, 0);
-      inner.Deflate(NSIntPixelsToTwips(1, p2t), NSIntPixelsToTwips(1, p2t));
-
-      // Leave a 5 pixel top/bottom padding
-      inner.Deflate(0, NSIntPixelsToTwips(5, p2t));
-
-#if 0
-      // If there's room then display the icon
-      if (!inner.IsEmpty()) {
-        nsIDeviceContext* dc = aRenderingContext.GetDeviceContext();
-        nsIImage*         icon;
-
-        if (NS_SUCCEEDED(dc->LoadIconImage(NS_ICON_LOADING_IMAGE, icon))) {
-          // Leave a 6 pixel left padding
-          inner.Deflate(NSIntPixelsToTwips(6, p2t), 0);
-
-          // XXX Clip...
-          aRenderingContext.DrawImage(icon, inner.x, inner.y);
-          NS_RELEASE(icon);
-        }
-
-        NS_RELEASE(dc);
-      }
-#endif
-
-      // Now display the alt-text if there's room
-      if (!inner.IsEmpty()) {
-        nsAutoString altText;
-        if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ALT", altText)) {
-          // Leave a 8 pixel left/right padding
-          inner.Deflate(NSIntPixelsToTwips(8, p2t), 0);
-
-          DisplayAltText(aPresContext, aRenderingContext, altText, inner);
-        }
-      }
-
+      DisplayAltFeedback(aPresContext, aRenderingContext, NS_ICON_LOADING_IMAGE);
       return NS_OK;
     }
 
