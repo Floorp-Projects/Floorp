@@ -5707,7 +5707,14 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
 
             // We try the UTF-8 string first, and then try the
             // document's charset (see below).
-            rv = shell->GoToAnchor(NS_ConvertUTF8toUCS2(str), scroll);
+            // If the string is not UTF-8, conversion will fail and give us
+            // an empty Unicode string.  In that case, we should just fall
+            // through to using the page's charset.
+            rv = NS_ERROR_FAILURE;
+            NS_ConvertUTF8toUCS2 uStr(str);
+            if (!uStr.IsEmpty()) {
+                rv = shell->GoToAnchor(NS_ConvertUTF8toUCS2(str), scroll);
+            }
             nsMemory::Free(str);
 
             // Above will fail if the anchor name is not UTF-8.
