@@ -4,8 +4,9 @@ use CGI::Request;
 
 my $req = new CGI::Request;
 
-my $TBOX     = lc($req->param('tbox'));
-my $DATAFILE = "db/$TBOX";
+my $TBOX      = lc($req->param('tbox'));
+my $AUTOSCALE = lc($req->param('autoscale'));
+my $DATAFILE  = "db/$TBOX";
 
 sub make_machine_list {
   my @result;
@@ -56,6 +57,14 @@ sub show_graph {
 	die "Can't find gnuplot.";
   }
 
+  # Auto-scale y-axis?
+  my $yscale;
+  if($AUTOSCALE) {
+	$yscale = "";
+  } else {
+	$yscale = "set yrange [ 0 : ]";
+  }
+
   # interpolate params into gnuplot command
   my $cmds = qq{
 				reset
@@ -67,7 +76,7 @@ sub show_graph {
 				set linestyle 2 lt 1 lw 1 pt 7 ps 1
 				set data style points
 				set timefmt "%Y:%m:%d:%H:%M:%S"
-				set yrange [ 0 : ]
+				$yscale
 				set xdata time
 				set ylabel "XUL Window Open time (msec.)"
 				set timestamp "Generated: %d/%b/%y %H:%M" 0,0 
