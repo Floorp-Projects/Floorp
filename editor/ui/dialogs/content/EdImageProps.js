@@ -155,13 +155,14 @@ function chooseFile()
 function onMoreFewer()
 {
   if (doSeeAll) {
+    void(null);    
     doSeeAll = false;
+    dialog.MoreRow.style.visibility = "hidden"; // collapse is a little funky
     // BUG: This works to hide the row, but
-    //   setting visibility to "show" doesn't bring it back
-    dialog.MoreRow.style.visibility = "collapse"; // hidden
+    //   setting visibility to "show" doesn't bring it back 
   } else {
     doSeeAll = true;
-    dialog.MoreRow.style.visibility = "visible"; // inherit
+    dialog.MoreRow.style.visibility = "inherit"; // was visible; show doesn't seem to work
   }
 }
 
