@@ -710,12 +710,15 @@ JS_YieldRequest(JSContext *cx)
     JSRuntime *rt;
 
     CHECK_REQUEST(cx);
-	rt = cx->runtime;
+    rt = cx->runtime;
+    JS_LOCK_GC(rt);
     JS_ASSERT(rt->requestCount > 0);
     rt->requestCount--;
     if (rt->requestCount == 0)
         JS_NOTIFY_REQUEST_DONE(rt);
     JS_UNLOCK_GC(rt);
+    /* XXXbe give the GC or another request calling it a chance to run here?
+             Assumes FIFO scheduling */
     JS_LOCK_GC(rt);
     rt->requestCount++;
     JS_UNLOCK_GC(rt);

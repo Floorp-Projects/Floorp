@@ -692,14 +692,10 @@ js_GC(JSContext *cx)
     GCFinalizeOp finalizer;
     JSBool a_all_clear, f_all_clear;
 
-    /*
-     * XXX kludge for pre-ECMAv2 compile-time switch case expr eval, see
-     * jsemit.c:js_EmitTree, under case TOK_SWITCH: (look for XXX).
-     */
-    if (cx->gcDisabled)
+    rt = cx->runtime;
+    if (rt->gcDisabled)
 	return;
 
-    rt = cx->runtime;
 #ifdef JS_THREADSAFE
     /* Avoid deadlock. */
     JS_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));

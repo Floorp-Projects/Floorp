@@ -51,7 +51,7 @@
 
 JS_BEGIN_EXTERN_C
 
-typedef enum JS_GC_Flag { JS_FORCE_GC, JS_NO_GC, JS_MAYBE_GC } JS_GC_Flag;
+typedef enum JSGCMode { JS_NO_GC, JS_MAYBE_GC, JS_FORCE_GC } JSGCMode;
 
 struct JSRuntime {
     /* Garbage collector state, used by jsgc.c. */
@@ -59,6 +59,7 @@ struct JSRuntime {
     JSArenaPool         gcFlagsPool;
     JSHashTable         *gcRootsHash;
     JSGCThing           *gcFreeList;
+    jsword              gcDisabled;
     uint32              gcBytes;
     uint32              gcLastBytes;
     uint32              gcMaxBytes;
@@ -135,6 +136,9 @@ struct JSRuntime {
 #endif
 };
 
+#define JS_ENABLE_GC(rt)    JS_ATOMIC_ADDREF(&(rt)->gcDisabled, -1);
+#define JS_DISABLE_GC(rt)   JS_ATOMIC_ADDREF(&(rt)->gcDisabled, -1);
+
 #ifdef JS_ARGUMENT_FORMATTER_DEFINED
 /*
  * Linked list mapping format strings for JS_{Convert,Push}Arguments{,VA} to
@@ -201,7 +205,6 @@ struct JSContext {
 
     /* GC and thread-safe state. */
     JSStackFrame        *dormantFrameChain; /* dormant stack frame to scan */
-    uint32              gcDisabled;         /* XXX for pre-ECMAv2 switch */
 #ifdef JS_THREADSAFE
     jsword              thread;
     jsrefcount          requestDepth;
@@ -217,7 +220,7 @@ extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize);
 
 extern void
-js_DestroyContext(JSContext *cx, JS_GC_Flag gcFlag);
+js_DestroyContext(JSContext *cx, JSGCMode gcmode);
 
 extern JSContext *
 js_ContextIterator(JSRuntime *rt, JSContext **iterp);

@@ -102,7 +102,7 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 }
 
 void
-js_DestroyContext(JSContext *cx, JS_GC_Flag gcFlag)
+js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 {
     JSRuntime *rt;
     JSBool rtempty;
@@ -144,14 +144,14 @@ js_DestroyContext(JSContext *cx, JS_GC_Flag gcFlag)
     js_FreeRegExpStatics(cx, &cx->regExpStatics);
 #endif
 
-    if (gcFlag == JS_FORCE_GC)
+    /* XXXbe this deadlocks with a GC waiting for this request to end */
+    if (gcmode == JS_FORCE_GC)
         js_ForceGC(cx);
-    else
-	if (gcFlag == JS_MAYBE_GC)
-       	    JS_MaybeGC(cx);
+    else if (gcmode == JS_MAYBE_GC)
+        JS_MaybeGC(cx);
 
     if (rtempty) {
-        if (gcFlag == JS_NO_GC)
+        if (gcmode == JS_NO_GC)
             js_ForceGC(cx);
 
 	/* Free atom state now that we've run the GC. */

@@ -1616,8 +1616,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		return JS_FALSE;
 	    }
 	}
-	if (pn->pn_op != JSOP_NOP) {
-	    if (js_Emit1(cx, cg, pn->pn_op) < 0)
+	if (pn->pn_extra) {
+	    if (js_Emit1(cx, cg, JSOP_POP) < 0)
 		return JS_FALSE;
 	}
 	break;
