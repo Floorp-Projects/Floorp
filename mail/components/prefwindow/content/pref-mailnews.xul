@@ -125,7 +125,7 @@
       <vbox>
         <spacer flex="1"/>
         <hbox align="center">
-          <textbox flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl" preftype="string"
+          <textbox readonly="true" flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl" preftype="string"
                    prefstring="mail.biff.play_sound.url"/>
           <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
                   accesskey="&browse.accesskey;" oncommand="Browse()"/>

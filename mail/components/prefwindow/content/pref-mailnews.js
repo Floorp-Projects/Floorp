@@ -84,7 +84,9 @@ function Browse()
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK) {
     var mailnewsSoundFileUrl = document.getElementById("mailnewsSoundFileUrl");
-    mailnewsSoundFileUrl.value = fp.file.path;
+
+    // convert the nsILocalFile into a nsIFile url 
+    mailnewsSoundFileUrl.value = fp.fileURL.spec;
   }
 
   onCustomWavInput();
