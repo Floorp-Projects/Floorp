@@ -16,7 +16,8 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
  *
- * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
+ * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.composition;
