@@ -11,7 +11,7 @@ ${license_xml}
 
   <!-- skin information -->
   <RDF:Description about="urn:mozilla:skin:${skin_name_short}/${skin_version}"
-        chrome:displayName="${skin_name_short}"
+        chrome:displayName="${skin_name_long}"
         chrome:author="${app_author}"
         chrome:name="${skin_name_short}/${skin_version}">
     <chrome:packages>
