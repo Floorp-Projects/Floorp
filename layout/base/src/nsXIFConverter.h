@@ -36,6 +36,7 @@ private:
   nsString mContent;
   nsString mComment;
   nsString mContainer;
+  nsString mEntity;
   nsString mIsa;
   nsString mLeaf;
 
@@ -110,6 +111,9 @@ public:
   void AddCSSDeclaration(const nsString& aName, const nsString& aValue);
   void EndCSSDeclaration();
   void EndCSSDeclarationList();
+
+  PRBool  IsMarkupEntity(const PRUnichar aChar);
+  PRBool  AddMarkupEntity(const PRUnichar aChar);
 
   // Output routines
   void Write();

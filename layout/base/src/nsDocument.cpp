@@ -2618,12 +2618,23 @@ void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 
   converter.SetSelection(aSelection);
 
-  converter.AddStartTag("section");
-  
+  converter.AddStartTag("section"); 
   converter.AddStartTag("section_head");
-  converter.AddEndTag("section_head");
 
+  nsString charset = "ISO-8859-1";
+  if (mCharacterSet != nsnull)
+    charset = *mCharacterSet;
+
+  converter.BeginStartTag("document_info");
+  converter.AddAttribute(nsString("charset"),charset);
+  converter.FinishStartTag("document_info",PR_TRUE,PR_TRUE);
+    
+  
+  converter.AddEndTag("section_head");
   converter.AddStartTag("section_body");
+
+
+
 
   nsIDOMElement* root = nsnull;
   if (NS_OK == GetDocumentElement(&root)) 
