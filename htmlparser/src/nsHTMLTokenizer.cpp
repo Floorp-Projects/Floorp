@@ -133,7 +133,7 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
  */
 nsHTMLTokenizer::~nsHTMLTokenizer(){
   if(mTokenDeque.GetSize()){
-    CTokenDeallocator theDeallocator;
+    CTokenDeallocator theDeallocator(mTokenAllocator->GetArenaPool());
     mTokenDeque.ForEach(theDeallocator);
   }
 }
@@ -149,7 +149,7 @@ void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,
       aDeque->Push(aToken);
     }
     else {
-      IF_FREE(aToken);
+      IF_FREE(aToken, aTokenAllocator);
     }
   }
 }
@@ -589,12 +589,12 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
           AddToken((CToken*&)theToken,result,&mTokenDeque,theAllocator);
         }
         else {
-          IF_FREE(theToken);
+          IF_FREE(theToken, mTokenAllocator);
         }
       }
       else { //if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
         aToken->SetEmpty(PR_TRUE);
-        IF_FREE(theToken);
+        IF_FREE(theToken, mTokenAllocator);
         if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result)
           result=NS_OK;
       }
@@ -728,7 +728,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
             AddToken(endToken,result,&mTokenDeque,theAllocator);
           }
           else {
-            IF_FREE(text);
+            IF_FREE(text, mTokenAllocator);
           }
         }
       }
@@ -742,11 +742,11 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       if(!NS_SUCCEEDED(result)) {
         while(mTokenDeque.GetSize()>theDequeSize) {
           CToken* theToken=(CToken*)mTokenDeque.Pop();
-          IF_FREE(theToken);
+          IF_FREE(theToken, mTokenAllocator);
         }
       }
     } //if
-    else IF_FREE(aToken);
+    else IF_FREE(aToken, mTokenAllocator);
   } //if
   return result;
 }
@@ -900,7 +900,7 @@ nsresult nsHTMLTokenizer::ConsumeText(CToken*& aToken,nsScanner& aScanner){
     result=theToken->Consume(ch,aScanner,mParseMode);
     if(!NS_SUCCEEDED(result)) {
       if(0==theToken->GetTextLength()){
-        IF_FREE(aToken);
+        IF_FREE(aToken, mTokenAllocator);
         aToken = nsnull;
       }
       else result=NS_OK;

@@ -123,7 +123,7 @@ void nsEntryStack::EnsureCapacityFor(PRInt32 aNewMax,PRInt32 aShiftOffset) {
  * 
  * @update  gess 04/22/99
  */
-void nsEntryStack::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
+void nsEntryStack::Push(const nsCParserNode* aNode,nsEntryStack* aStyleStack) {
   if(aNode) {
 
     EnsureCapacityFor(mCount+1);
@@ -131,9 +131,9 @@ void nsEntryStack::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
     ((nsCParserNode*)aNode)->mUseCount++;
 
     mEntries[mCount].mTag=(eHTMLTags)aNode->GetNodeType();
-    mEntries[mCount].mNode=(nsIParserNode*)aNode;
+    mEntries[mCount].mNode=NS_CONST_CAST(nsCParserNode*,aNode);
     
-    NS_ADDREF(mEntries[mCount].mNode);
+    IF_HOLD(mEntries[mCount].mNode);
     
     mEntries[mCount].mParent=aStyleStack;
     mEntries[mCount++].mStyles=0;
@@ -146,7 +146,7 @@ void nsEntryStack::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
  *
  * @update  gess 11/10/99
  */
-void nsEntryStack::PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
+void nsEntryStack::PushFront(const nsCParserNode* aNode,nsEntryStack* aStyleStack) {
   if(aNode) {
 
     if(mCount<mCapacity) {
@@ -161,9 +161,9 @@ void nsEntryStack::PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStac
     ((nsCParserNode*)aNode)->mUseCount++;
 
     mEntries[0].mTag=(eHTMLTags)aNode->GetNodeType();
-    mEntries[0].mNode=(nsIParserNode*)aNode;
+    mEntries[0].mNode=NS_CONST_CAST(nsCParserNode*,aNode);
     
-    NS_ADDREF(mEntries[0].mNode);
+    IF_HOLD(mEntries[0].mNode);
     
     mEntries[0].mParent=aStyleStack;
     mEntries[0].mStyles=0;
@@ -203,8 +203,8 @@ void nsEntryStack::Append(nsEntryStack *aStack) {
  * aTag: the id of the tag to be removed
  * @update  gess 02/25/00
  */
-nsIParserNode* nsEntryStack::Remove(PRInt32 anIndex,eHTMLTags aTag) {
-  nsIParserNode* result=0;
+nsCParserNode* nsEntryStack::Remove(PRInt32 anIndex,eHTMLTags aTag) {
+  nsCParserNode* result=0;
 
   if((0<mCount) && (anIndex<mCount)){
     result=mEntries[anIndex].mNode;
@@ -246,9 +246,9 @@ nsIParserNode* nsEntryStack::Remove(PRInt32 anIndex,eHTMLTags aTag) {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-nsIParserNode* nsEntryStack::Pop(void) {
+nsCParserNode* nsEntryStack::Pop(void) {
 
-  nsIParserNode* result=0;
+  nsCParserNode* result=0;
 
   if(0<mCount) {
     result=mEntries[--mCount].mNode;
@@ -297,8 +297,8 @@ eHTMLTags nsEntryStack::First() const {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-nsIParserNode* nsEntryStack::NodeAt(PRInt32 anIndex) const {
-  nsIParserNode* result=0;
+nsCParserNode* nsEntryStack::NodeAt(PRInt32 anIndex) const {
+  nsCParserNode* result=0;
   if((0<mCount) && (anIndex<mCount)) {
     result=mEntries[anIndex].mNode;
   }
@@ -885,7 +885,7 @@ PRBool nsDTDContext::HasOpenContainer(eHTMLTags aTag) const {
  * 
  * @update  gess7/9/98
  */
-void nsDTDContext::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
+void nsDTDContext::Push(const nsCParserNode* aNode,nsEntryStack* aStyleStack) {
   if(aNode) {
 
 #ifdef  NS_DEBUG
@@ -894,7 +894,7 @@ void nsDTDContext::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
     if(size< eMaxTags)
       mXTags[size]=theTag;
 #endif
-    mStack.Push((nsIParserNode*)aNode,aStyleStack);
+    mStack.Push(aNode,aStyleStack);
   }
 }
 
@@ -902,10 +902,10 @@ void nsDTDContext::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
  * @update  gess 11/11/99, 
  *          harishd 04/04/99
  */
-nsIParserNode* nsDTDContext::Pop(nsEntryStack *&aChildStyleStack) {
+nsCParserNode* nsDTDContext::Pop(nsEntryStack *&aChildStyleStack) {
 
   PRInt32         theSize=mStack.mCount;
-  nsIParserNode*  result=0;
+  nsCParserNode*  result=0;
 
   if(0<theSize) {
 
@@ -932,7 +932,7 @@ nsIParserNode* nsDTDContext::Pop(nsEntryStack *&aChildStyleStack) {
  * @update  harishd 04/07/00
  */
 
-nsIParserNode* nsDTDContext::Pop() {
+nsCParserNode* nsDTDContext::Pop() {
   nsEntryStack   *theTempStyleStack=0; // This has no use here...
   return Pop(theTempStyleStack);
 }
@@ -992,7 +992,7 @@ nsEntryStack* nsDTDContext::GetStylesAt(PRInt32 anIndex) const {
  * 
  * @update  gess 04/28/99
  */
-void nsDTDContext::PushStyle(const nsIParserNode* aNode){
+void nsDTDContext::PushStyle(const nsCParserNode* aNode){
 
   nsTagEntry* theEntry=mStack.EntryAt(mStack.mCount-1);
   if(theEntry ) {
@@ -1045,8 +1045,8 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
       // If you're here it means that we have hit the rock bottom
       // ,of the stack, and there's no need to handle anymore styles.
       // Fix for bug 29048
-      nsIParserNode* theNode=aStyles->Pop();
-      NS_IF_RELEASE(theNode);
+      nsCParserNode* theNode=aStyles->Pop();
+      IF_HOLD(theNode);
       delete aStyles;
       aStyles=0;
     }
@@ -1058,8 +1058,8 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
  * 
  * @update  gess 04/28/99
  */
-nsIParserNode* nsDTDContext::PopStyle(void){
-  nsIParserNode *result=0;
+nsCParserNode* nsDTDContext::PopStyle(void){
+  nsCParserNode *result=0;
 
   nsTagEntry *theEntry=mStack.EntryAt(mStack.mCount-1);
   if(theEntry && (theEntry->mNode)) {
@@ -1076,10 +1076,10 @@ nsIParserNode* nsDTDContext::PopStyle(void){
  * 
  * @update  gess 04/28/99
  */
-nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
+nsCParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
 
   PRInt32 theLevel=0;
-  nsIParserNode* result=0;
+  nsCParserNode* result=0;
 
   for(theLevel=mStack.mCount-1;theLevel>0;theLevel--) {
     nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
@@ -1105,10 +1105,10 @@ nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
  *
  * @update  gess 01/26/00
  */
-nsIParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
+nsCParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
 
   PRInt32 theLevel=0;
-  nsIParserNode* result=0;
+  nsCParserNode* result=0;
 
   for(theLevel=mStack.mCount-1;theLevel>0;theLevel--) {
     nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
@@ -1337,7 +1337,7 @@ nsNodeAllocator::~nsNodeAllocator() {
 #endif
 }
   
-nsIParserNode* nsNodeAllocator::CreateNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator) {
+nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator) {
   nsCParserNode* result=0;
 
 #ifdef HEAP_ALLOCATED_NODES
@@ -1352,18 +1352,18 @@ nsIParserNode* nsNodeAllocator::CreateNode(CToken* aToken,PRInt32 aLineNumber,ns
     result->Init(aToken,aLineNumber,aTokenAllocator,this);
   }
   else{
-    result=new nsCParserNode(aToken,aLineNumber,aTokenAllocator,this);
+    result=nsCParserNode::Create(aToken,aLineNumber,aTokenAllocator,this);
 #ifdef DEBUG_TRACK_NODES
     mCount++;
     AddNode(NS_STATIC_CAST(nsCParserNode*,result));
 #endif
-    NS_IF_ADDREF(result);
+    IF_HOLD(result);
   }
 #else
-  result=new(mNodePool) nsCParserNode(aToken,aLineNumber,aTokenAllocator);
-  NS_IF_ADDREF(result);
+  result=nsCParserNode::Create(aToken,aLineNumber,aTokenAllocator,this);
+  IF_HOLD(result);
 #endif
-  return NS_STATIC_CAST(nsIParserNode*,result);
+  return result;
 }
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle) {

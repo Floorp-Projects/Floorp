@@ -46,7 +46,7 @@
 #include "nsVoidArray.h"
 
 #define IF_HOLD(_ptr) if(_ptr) { _ptr->AddRef(); }
-#define IF_FREE(_ptr) if(_ptr) { _ptr->Release(); _ptr=0; } // recycles _ptr  
+#define IF_FREE(_ptr, _allocator) if(_ptr) { _ptr->Release((_allocator)->GetArenaPool()); _ptr=0; } // recycles _ptr  
 
 class nsIParserNode;
 class nsCParserNode;
@@ -67,7 +67,7 @@ class nsEntryStack;  //forware declare to make compilers happy.
 
 struct nsTagEntry {
   eHTMLTags       mTag;  //for speedier access to tag id
-  nsIParserNode*  mNode;
+  nsCParserNode*  mNode;
   nsEntryStack*   mParent;
   nsEntryStack*   mStyles;
 };
@@ -78,12 +78,12 @@ public:
                   ~nsEntryStack();
 
   void            EnsureCapacityFor(PRInt32 aNewMax, PRInt32 aShiftOffset=0);
-  void            Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
-  void            PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
+  void            Push(const nsCParserNode* aNode,nsEntryStack* aStyleStack=0);
+  void            PushFront(const nsCParserNode* aNode,nsEntryStack* aStyleStack=0);
   void            Append(nsEntryStack *theStack);
-  nsIParserNode*  Pop(void);
-  nsIParserNode*  Remove(PRInt32 anIndex,eHTMLTags aTag);
-  nsIParserNode*  NodeAt(PRInt32 anIndex) const;
+  nsCParserNode*  Pop(void);
+  nsCParserNode*  Remove(PRInt32 anIndex,eHTMLTags aTag);
+  nsCParserNode*  NodeAt(PRInt32 anIndex) const;
   eHTMLTags       First() const;
   eHTMLTags       TagAt(PRInt32 anIndex) const;
   nsTagEntry*     EntryAt(PRInt32 anIndex) const;
@@ -229,6 +229,8 @@ public:
   virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAReadableString& aString);
   virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
 
+  nsFixedSizeAllocator& GetArenaPool() { return mArenaPool; }
+
 protected:
     nsFixedSizeAllocator mArenaPool;
 
@@ -245,23 +247,30 @@ protected:
   that get created during the run of the system.
  ************************************************************************/
 
+#ifndef HEAP_ALLOCATED_NODES
+class nsCParserNode;
+#endif
+
 class nsNodeAllocator {
 public:
   
                          nsNodeAllocator();
   virtual                ~nsNodeAllocator();
-  virtual nsIParserNode* CreateNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
+  virtual nsCParserNode* CreateNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
+
+  nsFixedSizeAllocator&  GetArenaPool() { return mNodePool; }
+
 #ifdef HEAP_ALLOCATED_NODES
-  void Recycle(nsIParserNode* aNode) { mSharedNodes.Push(NS_STATIC_CAST(void*,aNode)); }
+  void Recycle(nsCParserNode* aNode) { mSharedNodes.Push(NS_STATIC_CAST(void*,aNode)); }
 protected:
   nsDeque mSharedNodes;
 #ifdef DEBUG_TRACK_NODES
   PRInt32 mCount;
 #endif
-#else
+#endif
+
 protected:
   nsFixedSizeAllocator mNodePool;
-#endif
 };
 
 /************************************************************************
@@ -273,10 +282,10 @@ public:
                   nsDTDContext();
                   ~nsDTDContext();
 
-  void            Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
-  nsIParserNode*  Pop(nsEntryStack*& aChildStack);
-  nsIParserNode*  Pop();
-  nsIParserNode*  PeekNode() { return mStack.NodeAt(mStack.mCount-1); }
+  void            Push(const nsCParserNode* aNode,nsEntryStack* aStyleStack=0);
+  nsCParserNode*  Pop(nsEntryStack*& aChildStack);
+  nsCParserNode*  Pop();
+  nsCParserNode*  PeekNode() { return mStack.NodeAt(mStack.mCount-1); }
   eHTMLTags       First(void) const;
   eHTMLTags       Last(void) const;
   nsTagEntry*     LastEntry(void) const;
@@ -290,11 +299,11 @@ public:
   PRInt32         GetCount(void) {return mStack.mCount;}
   PRInt32         GetResidualStyleCount(void) {return mResidualStyleCount;}
   nsEntryStack*   GetStylesAt(PRInt32 anIndex) const;
-  void            PushStyle(const nsIParserNode* aNode);
+  void            PushStyle(const nsCParserNode* aNode);
   void            PushStyles(nsEntryStack *theStyles);
-  nsIParserNode*  PopStyle(void);
-  nsIParserNode*  PopStyle(eHTMLTags aTag);
-  nsIParserNode*  RemoveStyle(eHTMLTags aTag);
+  nsCParserNode*  PopStyle(void);
+  nsCParserNode*  PopStyle(eHTMLTags aTag);
+  nsCParserNode*  RemoveStyle(eHTMLTags aTag);
 
   static  void    ReleaseGlobalObjects(void);
 
@@ -342,10 +351,16 @@ public:
   Now define the token deallocator class...
  **************************************************************/
 class CTokenDeallocator: public nsDequeFunctor{
+protected:
+  nsFixedSizeAllocator& mArenaPool;
+
 public:
+  CTokenDeallocator(nsFixedSizeAllocator& aArenaPool)
+    : mArenaPool(aArenaPool) {}
+
   virtual void* operator()(void* anObject) {
     CToken* aToken = (CToken*)anObject;
-    delete aToken;
+    CToken::Destroy(aToken, mArenaPool);
     return 0;
   }
 };

@@ -62,9 +62,14 @@ nsInstantiationNode::Propogate(const InstantiationSet& aInstantiations, void* aC
     for (InstantiationSet::ConstIterator inst = aInstantiations.First(); inst != last; ++inst) {
         nsAssignmentSet assignments = inst->mAssignments;
 
-        nsTemplateMatch* match = new (mConflictSet.GetPool()) nsTemplateMatch(mRule, *inst, assignments);
+        nsTemplateMatch* match =
+            nsTemplateMatch::Create(mConflictSet.GetPool(), mRule, *inst, assignments);
+
         if (! match)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        // Temporarily AddRef() to keep the match alive.
+        match->AddRef();
 
         mRule->InitBindings(mConflictSet, match);
 
@@ -72,7 +77,7 @@ nsInstantiationNode::Propogate(const InstantiationSet& aInstantiations, void* aC
 
         // Give back our "local" reference. The conflict set will have
         // taken what it needs.
-        match->Release();
+        match->Release(mConflictSet.GetPool());
 
         newkeys->Add(nsClusterKey(*inst, mRule));
     }

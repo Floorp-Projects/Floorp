@@ -48,6 +48,7 @@
 
 */
 
+#include <new>
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
@@ -75,6 +76,10 @@ static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 //
 // CompositeDataSourceImpl
 //
+
+class CompositeEnumeratorImpl;
+class CompositeArcsInOutEnumeratorImpl;
+class CompositeAssertionEnumeratorImpl;
 
 class CompositeDataSourceImpl : public nsIRDFCompositeDataSource,
                                 public nsIRDFObserver
@@ -112,6 +117,10 @@ protected:
     nsFixedSizeAllocator mAllocator;
 
 	virtual ~CompositeDataSourceImpl() {}
+
+    friend class CompositeEnumeratorImpl;
+    friend class CompositeArcsInOutEnumeratorImpl;
+    friend class CompositeAssertionEnumeratorImpl;
 };
 
 //----------------------------------------------------------------------
@@ -121,25 +130,7 @@ protected:
 
 class CompositeEnumeratorImpl : public nsISimpleEnumerator
 {
-public:
-    static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-        return aAllocator.Alloc(aSize); }
-
-    static void operator delete(void* aPtr, size_t aSize) {
-        nsFixedSizeAllocator::Free(aPtr, aSize); }
-
-#if defined(HAVE_CPP_EXCEPTIONS) && defined(HAVE_CPP_PLACEMENT_DELETE)
-    static void operator delete(void* aPtr, size_t aSize, nsFixedSizeAllocator& aAllocator) {
-        nsFixedSizeAllocator::Free(aPtr, aSize); }
-#endif
-
-    CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
-    				PRBool aAllowNegativeAssertions,
-    				PRBool aCoalesceDuplicateArcs);
-
-    virtual ~CompositeEnumeratorImpl();
-    
-    // nsISupports interface
+    // nsISupports
     NS_DECL_ISUPPORTS
 
     // nsISimpleEnumerator interface
@@ -152,7 +143,15 @@ public:
     virtual nsresult
     HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, PRBool* aResult) = 0;
 
+    virtual void Destroy() = 0;
+
 protected:
+    CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
+                            PRBool aAllowNegativeAssertions,
+                            PRBool aCoalesceDuplicateArcs);
+
+    virtual ~CompositeEnumeratorImpl();
+    
     CompositeDataSourceImpl* mCompositeDataSource;
 
     nsISimpleEnumerator* mCurrent;
@@ -165,8 +164,8 @@ protected:
 
 
 CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
-						 PRBool aAllowNegativeAssertions,
-						 PRBool aCoalesceDuplicateArcs)
+                                                 PRBool aAllowNegativeAssertions,
+                                                 PRBool aCoalesceDuplicateArcs)
     : mCompositeDataSource(aCompositeDataSource),
       mCurrent(nsnull),
       mResult(nsnull),
@@ -195,8 +194,9 @@ CompositeEnumeratorImpl::~CompositeEnumeratorImpl(void)
 	NS_RELEASE(mCompositeDataSource);
 }
 
-
-NS_IMPL_ISUPPORTS1(CompositeEnumeratorImpl, nsISimpleEnumerator);
+NS_IMPL_ADDREF(CompositeEnumeratorImpl)
+NS_IMPL_RELEASE_WITH_DESTROY(CompositeEnumeratorImpl, Destroy())
+NS_IMPL_QUERY_INTERFACE1(CompositeEnumeratorImpl, nsISimpleEnumerator);
 
 NS_IMETHODIMP
 CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
@@ -356,11 +356,20 @@ class CompositeArcsInOutEnumeratorImpl : public CompositeEnumeratorImpl
 public:
     enum Type { eArcsIn, eArcsOut };
 
-    CompositeArcsInOutEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
-                                     nsIRDFNode* aNode,
-                                     Type aType,
-                                     PRBool aAllowNegativeAssertions,
-                                     PRBool aCoalesceDuplicateArcs);
+    static CompositeArcsInOutEnumeratorImpl*
+    Create(nsFixedSizeAllocator& aAllocator,
+           CompositeDataSourceImpl* aCompositeDataSource,
+           nsIRDFNode* aNode,
+           Type aType,
+           PRBool aAllowNegativeAssertions,
+           PRBool aCoalesceDuplicateArcs) {
+        void* place = aAllocator.Alloc(sizeof(CompositeArcsInOutEnumeratorImpl));
+        return place
+            ? ::new (place) CompositeArcsInOutEnumeratorImpl(aCompositeDataSource,
+                                                             aNode, aType,
+                                                             aAllowNegativeAssertions,
+                                                             aCoalesceDuplicateArcs)
+            : nsnull; }
 
     virtual ~CompositeArcsInOutEnumeratorImpl();
 
@@ -370,11 +379,25 @@ public:
     virtual nsresult
     HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, PRBool* aResult);
 
+    virtual void Destroy();
+
+protected:
+    CompositeArcsInOutEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
+                                     nsIRDFNode* aNode,
+                                     Type aType,
+                                     PRBool aAllowNegativeAssertions,
+                                     PRBool aCoalesceDuplicateArcs);
+
 private:
     nsIRDFNode* mNode;
     Type        mType;
     PRBool	    mAllowNegativeAssertions;
     PRBool      mCoalesceDuplicateArcs;
+
+    // Hide so that only Create() and Destroy() can be used to
+    // allocate and deallocate from the heap
+    static void* operator new(size_t) { return 0; }
+    static void operator delete(void*, size_t) {}
 };
 
 
@@ -423,6 +446,19 @@ CompositeArcsInOutEnumeratorImpl::HasNegation(
     return NS_OK;
 }
 
+void
+CompositeArcsInOutEnumeratorImpl::Destroy()
+{
+    // Keep the datasource alive for the duration of the stack
+    // frame so its allocator stays valid.
+    nsCOMPtr<nsIRDFCompositeDataSource> kungFuDeathGrip =
+        dont_QueryInterface(mCompositeDataSource);
+
+    nsFixedSizeAllocator& pool = mCompositeDataSource->mAllocator;
+    this->~CompositeArcsInOutEnumeratorImpl();
+    pool.Free(this, sizeof(*this));
+}
+
 
 //----------------------------------------------------------------------
 //
@@ -432,6 +468,33 @@ CompositeArcsInOutEnumeratorImpl::HasNegation(
 class CompositeAssertionEnumeratorImpl : public CompositeEnumeratorImpl
 {
 public:
+    static CompositeAssertionEnumeratorImpl*
+    Create(nsFixedSizeAllocator& aAllocator,
+           CompositeDataSourceImpl* aCompositeDataSource,
+           nsIRDFResource* aSource,
+           nsIRDFResource* aProperty,
+           nsIRDFNode* aTarget,
+           PRBool aTruthValue,
+           PRBool aAllowNegativeAssertions,
+           PRBool aCoalesceDuplicateArcs) {
+        void* place = aAllocator.Alloc(sizeof(CompositeAssertionEnumeratorImpl));
+        return place
+            ? ::new (place) CompositeAssertionEnumeratorImpl(aCompositeDataSource,
+                                                             aSource, aProperty, aTarget,
+                                                             aTruthValue,
+                                                             aAllowNegativeAssertions,
+                                                             aCoalesceDuplicateArcs)
+            : nsnull; }
+
+    virtual nsresult
+    GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult);
+
+    virtual nsresult
+    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, PRBool* aResult);
+
+    virtual void Destroy();
+
+protected:
     CompositeAssertionEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
                                      nsIRDFResource* aSource,
                                      nsIRDFResource* aProperty,
@@ -442,12 +505,6 @@ public:
 
     virtual ~CompositeAssertionEnumeratorImpl();
 
-    virtual nsresult
-    GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult);
-
-    virtual nsresult
-    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, PRBool* aResult);
-
 private:
     nsIRDFResource* mSource;
     nsIRDFResource* mProperty;
@@ -455,6 +512,11 @@ private:
     PRBool          mTruthValue;
     PRBool          mAllowNegativeAssertions;
     PRBool          mCoalesceDuplicateArcs;
+
+    // Hide so that only Create() and Destroy() can be used to
+    // allocate and deallocate from the heap
+    static void* operator new(size_t) { return 0; }
+    static void operator delete(void*, size_t) {}
 };
 
 
@@ -513,6 +575,19 @@ CompositeAssertionEnumeratorImpl::HasNegation(
         nsCOMPtr<nsIRDFResource> source( do_QueryInterface(aNode) );
         return aDataSource->HasAssertion(source, mProperty, mTarget, !mTruthValue, aResult);
     }
+}
+
+void
+CompositeAssertionEnumeratorImpl::Destroy()
+{
+    // Keep the datasource alive for the duration of the stack
+    // frame so its allocator stays valid.
+    nsCOMPtr<nsIRDFCompositeDataSource> kungFuDeathGrip =
+        dont_QueryInterface(mCompositeDataSource);
+
+    nsFixedSizeAllocator& pool = mCompositeDataSource->mAllocator;
+    this->~CompositeAssertionEnumeratorImpl();
+    pool.Free(this, sizeof(*this));
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -693,8 +768,12 @@ CompositeDataSourceImpl::GetSources(nsIRDFResource* aProperty,
     if ((mAllowNegativeAssertions == PR_FALSE) && (aTruthValue == PR_FALSE))
         return(NS_RDF_NO_VALUE);
 
-    *aResult = new (mAllocator) CompositeAssertionEnumeratorImpl(this, nsnull, aProperty,
-    	aTarget, aTruthValue, mAllowNegativeAssertions, mCoalesceDuplicateArcs);
+    *aResult = CompositeAssertionEnumeratorImpl::Create(mAllocator,
+                                                        this, nsnull, aProperty,
+                                                        aTarget, aTruthValue,
+                                                        mAllowNegativeAssertions,
+                                                        mCoalesceDuplicateArcs);
+
     if (! *aResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -797,8 +876,13 @@ CompositeDataSourceImpl::GetTargets(nsIRDFResource* aSource,
     if ((mAllowNegativeAssertions == PR_FALSE) && (aTruthValue == PR_FALSE))
         return(NS_RDF_NO_VALUE);
 
-    *aResult = new (mAllocator) CompositeAssertionEnumeratorImpl(this, aSource, aProperty,
-    	nsnull, aTruthValue, mAllowNegativeAssertions, mCoalesceDuplicateArcs);
+    *aResult =
+        CompositeAssertionEnumeratorImpl::Create(mAllocator, this,
+                                                 aSource, aProperty, nsnull,
+                                                 aTruthValue,
+                                                 mAllowNegativeAssertions,
+                                                 mCoalesceDuplicateArcs);
+
     if (! *aResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1133,9 +1217,10 @@ CompositeDataSourceImpl::ArcLabelsIn(nsIRDFNode* aTarget, nsISimpleEnumerator** 
         return NS_ERROR_NULL_POINTER;
 
     nsISimpleEnumerator* result = 
-        new (mAllocator) CompositeArcsInOutEnumeratorImpl(this, aTarget,
-                           CompositeArcsInOutEnumeratorImpl::eArcsIn,
-                           mAllowNegativeAssertions, mCoalesceDuplicateArcs);
+        CompositeArcsInOutEnumeratorImpl::Create(mAllocator, this, aTarget,
+                                                 CompositeArcsInOutEnumeratorImpl::eArcsIn,
+                                                 mAllowNegativeAssertions,
+                                                 mCoalesceDuplicateArcs);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1158,9 +1243,10 @@ CompositeDataSourceImpl::ArcLabelsOut(nsIRDFResource* aSource,
         return NS_ERROR_NULL_POINTER;
 
     nsISimpleEnumerator* result =
-        new (mAllocator) CompositeArcsInOutEnumeratorImpl(this, aSource,
-                           CompositeArcsInOutEnumeratorImpl::eArcsOut,
-                           mAllowNegativeAssertions, mCoalesceDuplicateArcs);
+        CompositeArcsInOutEnumeratorImpl::Create(mAllocator, this, aSource,
+                                                 CompositeArcsInOutEnumeratorImpl::eArcsOut,
+                                                 mAllowNegativeAssertions,
+                                                 mCoalesceDuplicateArcs);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;

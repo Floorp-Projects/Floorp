@@ -33,6 +33,20 @@
  * of that particular token type gets detected in the 
  * input stream.
  *
+ * CToken objects that are allocated from the heap _must_ be allocated
+ * using the nsTokenAllocator: the nsTokenAllocator object uses an
+ * arena to manage the tokens.
+ *
+ * The nsTokenAllocator object's arena implementation requires
+ * object size at destruction time to properly recycle the object;
+ * therefore, CToken::operator delete() is not public. Instead,
+ * heap-allocated tokens should be destroyed using the static
+ * Destroy() method, which accepts a token and the arena from which
+ * the token was allocated.
+ *
+ * Leaf classes (that are actually instantiated from the heap) must
+ * implement the SizeOf() method, which Destroy() uses to determine
+ * the size of the token in order to properly recycle it.
  */
 
 
@@ -45,9 +59,8 @@
 #include "nsFileSpec.h"
 #include "nsFixedSizeAllocator.h"
 
-
 class nsScanner;
-
+class nsTokenAllocator;
 
 enum eContainerInfo {
   eWellFormed,
@@ -55,6 +68,14 @@ enum eContainerInfo {
   eFormUnknown
 };
 
+/**
+ * Implement the SizeOf() method; leaf classes derived from CToken
+ * must declare this.
+ */
+#define CTOKEN_IMPL_SIZEOF                                \
+protected:                                                \
+  virtual size_t SizeOf() const { return sizeof(*this); } \
+public:
 
 /**
  *  Token objects represent sequences of characters as they
@@ -70,27 +91,43 @@ class CToken {
 
     enum  eTokenOrigin {eSource,eResidualStyle};
 
+  protected:
+
+    // nsTokenAllocator should be the only class that tries to
+    // allocate tokens from the heap.
+    friend class nsTokenAllocator;
+
     /**
      * 
      * @update	harishd 08/01/00
      * @param   aSize    - 
      * @param   aArena   - Allocate memory from this pool.
      */
-    static void * operator new (size_t aSize, nsFixedSizeAllocator& anArena)
+    static void * operator new (size_t aSize,nsFixedSizeAllocator& anArena)
     {
       return anArena.Alloc(aSize);
     }
 
     /**
-     *  
-     *
-     * @update	harishd 08/01/00
-     * @param   aPtr     - The memory that should be recycled/freed.
-     * @param   aSize    - The size of memory that needs to be freed.
+     * Hide operator delete; clients should use Destroy() instead.
      */
-    static void operator delete (void* aPtr,size_t aSize)
+    static void operator delete (void*,size_t) {}
+
+  public:
+    /**
+     * destructor
+     * @update	gess5/11/98
+     */
+    virtual ~CToken();
+
+    /**
+     * Destroy a token.
+     */
+    static void Destroy(CToken* aToken,nsFixedSizeAllocator& aArenaPool)
     {
-      nsFixedSizeAllocator::Free(aPtr,aSize);
+      size_t sz = aToken->SizeOf();
+      aToken->~CToken();
+      aArenaPool.Free(aToken, sz);
     }
 
     /**
@@ -103,21 +140,16 @@ class CToken {
      * Free yourself if no one is holding you.
      * @update	harishd 08/02/00
      */
-    void Release() {
+    void Release(nsFixedSizeAllocator& aArenaPool) {
       if(--mUseCount==0) 
-        delete this;
+        Destroy(this, aArenaPool);
     }
+
     /**
      * Default constructor
      * @update	gess7/21/98
      */
     CToken(PRInt32 aTag=0);
-
-    /**
-     * destructor
-     * @update	gess5/11/98
-     */
-    virtual ~CToken();
 
     /**
      * Retrieve string value of the token
@@ -229,6 +261,10 @@ class CToken {
     PRInt32       mNewlineCount;
 
 protected:
+    /**
+     * Returns the size of the token object.
+     */
+    virtual size_t SizeOf() const = 0;
 
     PRInt32				mTypeID;
     PRInt16				mAttrCount;

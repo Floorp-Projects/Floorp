@@ -230,6 +230,40 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                \
 }
 
 /**
+ * Use this macro to implement the Release method for a given
+ * <i>_class</i>.
+ * @param _class The name of the class implementing the method
+ * @param _destroy A statement that is executed when the object's
+ *   refcount drops to zero.
+ *
+ * For example,
+ *
+ *   NS_IMPL_RELEASE_WITH_DESTROY(Foo, Destroy(this))
+ *
+ * will cause
+ *
+ *   Destroy(this);
+ *
+ * to be invoked when the object's refcount drops to zero. This
+ * allows for arbitrary teardown activity to occur (e.g., deallocation
+ * of object allocated with placement new).
+ */
+#define NS_IMPL_RELEASE_WITH_DESTROY(_class, _destroy)       \
+NS_IMETHODIMP_(nsrefcnt) _class::Release(void)               \
+{                                                            \
+  NS_PRECONDITION(0 != mRefCnt, "dup release");              \
+  NS_ASSERT_OWNINGTHREAD(_class);                            \
+  --mRefCnt;                                                 \
+  NS_LOG_RELEASE(this, mRefCnt, #_class);                    \
+  if (mRefCnt == 0) {                                        \
+    mRefCnt = 1; /* stabilize */                             \
+    _destroy;                                                \
+    return 0;                                                \
+  }                                                          \
+  return mRefCnt;                                            \
+}
+
+/**
  * Use this macro to implement the Release method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
  *
@@ -242,20 +276,8 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                \
  * destructor, we make sure that no balanced refcounting can return
  * the refcount to |0|.
  */
-#define NS_IMPL_RELEASE(_class)                              \
-NS_IMETHODIMP_(nsrefcnt) _class::Release(void)               \
-{                                                            \
-  NS_PRECONDITION(0 != mRefCnt, "dup release");              \
-  NS_ASSERT_OWNINGTHREAD(_class);                            \
-  --mRefCnt;                                                 \
-  NS_LOG_RELEASE(this, mRefCnt, #_class);                    \
-  if (mRefCnt == 0) {                                        \
-    mRefCnt = 1; /* stabilize */                             \
-    NS_DELETEXPCOM(this);                                    \
-    return 0;                                                \
-  }                                                          \
-  return mRefCnt;                                            \
-}
+#define NS_IMPL_RELEASE(_class) \
+  NS_IMPL_RELEASE_WITH_DESTROY(_class, NS_DELETEXPCOM(this))
 
 ///////////////////////////////////////////////////////////////////////////////
 

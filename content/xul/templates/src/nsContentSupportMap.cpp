@@ -24,58 +24,39 @@
 #include "nsContentSupportMap.h"
 #include "nsIXULContent.h"
 
-PLHashAllocOps nsContentSupportMap::gAllocOps = {
-    AllocTable, FreeTable, AllocEntry, FreeEntry };
+PLDHashTableOps nsContentSupportMap::gOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashGetKeyStub,
+    PL_DHashVoidPtrKeyStub,
+    PL_DHashMatchEntryStub,
+    PL_DHashMoveEntryStub,
+    ClearEntry,
+    PL_DHashFinalizeStub
+};
+
+void PR_CALLBACK
+nsContentSupportMap::ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr)
+{
+    PL_DHashClearEntryStub(aTable, aHdr);
+}
 
 void
 nsContentSupportMap::Init()
 {
-    static const size_t kBucketSizes[] = { sizeof(Entry) };
-    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
-
-    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
-    static const PRInt32 kInitialSize = 256;
-
-    mPool.Init("nsContentSupportMap", kBucketSizes, kNumBuckets, kInitialSize);
-
-    static const PRInt32 kInitialEntries = 8; // XXX arbitrary
-
-    mMap = PL_NewHashTable(kInitialEntries,
-                           HashPointer,
-                           PL_CompareValues,
-                           PL_CompareValues,
-                           &gAllocOps,
-                           &mPool);
+    PL_DHashTableInit(&mMap, &gOps, nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE);
 }
 
 void
 nsContentSupportMap::Finish()
 {
-    PL_HashTableDestroy(mMap);
+    PL_DHashTableFinish(&mMap);
 }
-
-nsresult
-nsContentSupportMap::Put(nsIContent* aElement, nsTemplateMatch* aMatch)
-{
-    PLHashEntry* he = PL_HashTableAdd(mMap, aElement, nsnull);
-    if (! he)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // "Fix up" the entry's value to refer to the mMatch that's built
-    // in to the Entry object.
-    Entry* entry = NS_REINTERPRET_CAST(Entry*, he);
-    entry->mHashEntry.value = &entry->mMatch;
-    entry->mMatch = aMatch;
-    aMatch->AddRef();
-
-    return NS_OK;
-}
-
 
 nsresult
 nsContentSupportMap::Remove(nsIContent* aElement)
 {
-    PL_HashTableRemove(mMap, aElement);
+    PL_DHashTableOperate(&mMap, aElement, PL_DHASH_REMOVE);
 
     PRInt32 count;
 
@@ -101,13 +82,3 @@ nsContentSupportMap::Remove(nsIContent* aElement)
 }
 
 
-PRBool
-nsContentSupportMap::Get(nsIContent* aElement, nsTemplateMatch** aMatch)
-{
-    nsTemplateMatch** match = NS_STATIC_CAST(nsTemplateMatch**, PL_HashTableLookup(mMap, aElement));
-    if (! match)
-        return PR_FALSE;
-
-    *aMatch = *match;
-    return PR_TRUE;
-}

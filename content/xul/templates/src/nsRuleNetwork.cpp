@@ -79,20 +79,6 @@ ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
     PL_DHashClearEntryStub(aTable, aEntry);
 }
 
-static PLDHashOperator PR_CALLBACK
-RemoveEach(PLDHashTable* aTable, PLDHashEntryHdr* aEntry, PRUint32 aNumber, void* aArg)
-{
-    return PL_DHASH_REMOVE;
-}
-
-
-static void PR_CALLBACK
-FinalizeTable(PLDHashTable* aTable)
-{
-    PL_DHashTableEnumerate(aTable, RemoveEach, nsnull);
-    PL_DHashFinalizeStub(aTable);
-}
-
 PLDHashTableOps nsRuleNetwork::gOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
@@ -101,7 +87,7 @@ PLDHashTableOps nsRuleNetwork::gOps = {
     MatchEntry,
     PL_DHashMoveEntryStub,
     ClearEntry,
-    FinalizeTable
+    PL_DHashFinalizeStub
 };
 
 void

@@ -47,18 +47,28 @@ public:
     GetAncestorVariables(VariableSet& aVariables) const;
 
     class Element : public MemoryElement {
+    private:
+        // Hide so that only Create() and Destroy() can be used to
+        // allocate and deallocate from the heap
+        static void* operator new(size_t) { return 0; }
+        static void operator delete(void*, size_t) {}
+
     public:
-        static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-            return aAllocator.Alloc(aSize); }
-
-        static void operator delete(void* aPtr, size_t aSize) {
-            nsFixedSizeAllocator::Free(aPtr, aSize); }
-
         Element(nsIContent* aContent)
             : mContent(aContent) {
             MOZ_COUNT_CTOR(nsContentTestNode::Element); }
 
         virtual ~Element() { MOZ_COUNT_DTOR(nsContentTestNode::Element); }
+
+        static Element*
+        Create(nsFixedSizeAllocator& aPool, nsIContent* aContent) {
+            void* place = aPool.Alloc(sizeof(Element));
+            return place ? ::new (place) Element(aContent) : nsnull; }
+
+        static void
+        Destroy(nsFixedSizeAllocator& aPool, Element* aElement) {
+            aElement->~Element();
+            aPool.Free(aElement, sizeof(*aElement)); }
 
         virtual const char* Type() const {
             return "nsContentTestNode::Element"; }
@@ -74,8 +84,7 @@ public:
             return PR_FALSE; }
 
         virtual MemoryElement* Clone(void* aPool) const {
-            return new (*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool))
-                Element(mContent); }
+            return Create(*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool), mContent); }
 
     protected:
         nsCOMPtr<nsIContent> mContent;

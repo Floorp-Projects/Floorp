@@ -234,7 +234,7 @@ NS_IMETHODIMP nsExpatDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer
       if(theToken) {
         result=HandleToken(theToken,aParser);
         if(NS_SUCCEEDED(result)) {
-          IF_FREE(theToken);
+          IF_FREE(theToken, mTokenizer->GetTokenAllocator());
         }
         else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
           mTokenizer->PushTokenFront(theToken);

@@ -48,7 +48,7 @@ const nsString& GetEmptyString() {
  */
 nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator): 
     nsIParserNode() {
-  NS_INIT_REFCNT();
+  mRefCnt = 0;
   MOZ_COUNT_CTOR(nsCParserNode);
 
   static int theNodeCount=0;
@@ -88,9 +88,6 @@ nsCParserNode::~nsCParserNode() {
 }
 
 
-NS_IMPL_ADDREF(nsCParserNode)
-NS_IMPL_RELEASE(nsCParserNode)
-
 /**
  *  Init
  *  
@@ -105,7 +102,7 @@ nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator
   if(mAttributes && (mAttributes->GetSize())) {
     CToken* theAttrToken=0;
     while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-      IF_FREE(theAttrToken);
+      IF_FREE(theAttrToken, aTokenAllocator);
     }
   }
   mToken=aToken;
@@ -120,40 +117,6 @@ nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator
 #endif
   return NS_OK;
 }
-
-/**
- *  This method gets called as part of our COM-like interfaces.
- *  Its purpose is to create an interface to parser object
- *  of some type.
- *  
- *  @update   gess 3/25/98
- *  @param    nsIID  id of object to discover
- *  @param    aInstancePtr ptr to newly discovered interface
- *  @return   NS_xxx result code
- */
-nsresult nsCParserNode::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-
-  if(aIID.Equals(kISupportsIID))    {  //do IUnknown...
-    *aInstancePtr = (nsIParserNode*)(this);                                        
-  }
-  else if(aIID.Equals(kIParserNodeIID)) {  //do IParser base class...
-    *aInstancePtr = (nsIParserNode*)(this);                                        
-  }
-  else if(aIID.Equals(kClassIID)) {  //do this class...
-    *aInstancePtr = (nsCParserNode*)(this);                                        
-  }                 
-  else {
-    *aInstancePtr=0;
-    return NS_NOINTERFACE;
-  }
-  NS_ADDREF_THIS();
-  return NS_OK;                                                        
-}
-
 
 /**
  *  Causes the given attribute to be added to internal 
@@ -380,7 +343,7 @@ nsresult nsCParserNode::ReleaseAll() {
   if(mAttributes) {
     CToken* theAttrToken=0;
     while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-      IF_FREE(theAttrToken);
+      IF_FREE(theAttrToken, mTokenAllocator);
     }
     delete mAttributes;
     mAttributes=0;
@@ -389,7 +352,7 @@ nsresult nsCParserNode::ReleaseAll() {
     delete mSkippedContent;
     mSkippedContent=0;
   }
-  IF_FREE(mToken);
+  IF_FREE(mToken, mTokenAllocator);
   return NS_OK;
 }
 

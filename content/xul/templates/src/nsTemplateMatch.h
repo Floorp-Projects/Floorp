@@ -27,6 +27,7 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsResourceSet.h"
 #include "nsRuleNetwork.h"
+#include <new>
 
 /**
  * A "match" is a fully instantiated rule; that is, a complete and
@@ -42,24 +43,36 @@ class nsConflictSet;
 class nsTemplateRule;
 
 class nsTemplateMatch {
+private:
+    // Hide so that only Create() and Destroy() can be used to
+    // allocate and deallocate from the heap
+    void* operator new(size_t) { return 0; }
+    void operator delete(void*, size_t) {}
+
 protected:
     PRInt32 mRefCnt;
 
-public:
-    static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-        return aAllocator.Alloc(aSize); }
-
-    static void operator delete(void* aPtr, size_t aSize) {
-        nsFixedSizeAllocator::Free(aPtr, aSize); }
-
     nsTemplateMatch(const nsTemplateRule* aRule,
-          const Instantiation& aInstantiation,
-          const nsAssignmentSet& aAssignments)
-        : mRefCnt(1),
+                    const Instantiation& aInstantiation,
+                    const nsAssignmentSet& aAssignments)
+        : mRefCnt(0),
           mRule(aRule),
           mInstantiation(aInstantiation),
-          mAssignments(aAssignments)
-        { MOZ_COUNT_CTOR(nsTemplateMatch); }
+          mAssignments(aAssignments) {}
+
+public:
+    static nsTemplateMatch*
+    Create(nsFixedSizeAllocator& aPool,
+           const nsTemplateRule* aRule,
+           const Instantiation& aInstantiation,
+           const nsAssignmentSet& aAssignments) {
+        void* place = aPool.Alloc(sizeof(nsTemplateMatch));
+        return place ? ::new (place) nsTemplateMatch(aRule, aInstantiation, aAssignments) : nsnull; }
+
+    static void
+    Destroy(nsFixedSizeAllocator& aPool, nsTemplateMatch* aMatch) {
+        aMatch->~nsTemplateMatch();
+        aPool.Free(aMatch, sizeof(*aMatch)); }
 
     PRBool operator==(const nsTemplateMatch& aMatch) const {
         return mRule == aMatch.mRule && mInstantiation == aMatch.mInstantiation; }
@@ -104,16 +117,18 @@ public:
      */
     nsResourceSet mBindingDependencies;
 
-    PRInt32 AddRef() { return ++mRefCnt; }
+    PRInt32 AddRef() {
+        ++mRefCnt;
+        NS_LOG_ADDREF(this, mRefCnt, "nsTemplateMatch", sizeof(*this));
+        return mRefCnt; }
 
-    PRInt32 Release() {
+    PRInt32 Release(nsFixedSizeAllocator& aPool) {
         NS_PRECONDITION(mRefCnt > 0, "bad refcnt");
         PRInt32 refcnt = --mRefCnt;
-        if (refcnt == 0) delete this;
+        NS_LOG_RELEASE(this, mRefCnt, "nsTemplateMatch");
+        if (refcnt == 0)
+            Destroy(aPool, this);
         return refcnt; }
-
-protected:
-    ~nsTemplateMatch() { MOZ_COUNT_DTOR(nsTemplateMatch); }
 
 private:
     nsTemplateMatch(const nsTemplateMatch& aMatch); // not to be implemented

@@ -65,22 +65,31 @@ protected:
 
     class ContentListItem {
     public:
-        static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-            return aAllocator.Alloc(aSize); }
-
-        static void operator delete(void* aPtr, size_t aSize) {
-            nsFixedSizeAllocator::Free(aPtr, aSize); }
-
-        ContentListItem(nsIContent* aContent) : mNext(nsnull), mContent(aContent) {
-            MOZ_COUNT_CTOR(nsElementMap::ContentListItem);
-        }
-
-        ~ContentListItem() {
-            MOZ_COUNT_DTOR(nsElementMap::ContentListItem);
-        }
-
         ContentListItem* mNext;
         nsCOMPtr<nsIContent> mContent;
+
+        static ContentListItem*
+        Create(nsFixedSizeAllocator& aPool, nsIContent* aContent) {
+            void* bytes = aPool.Alloc(sizeof(ContentListItem));
+            return bytes ? new (bytes) ContentListItem(aContent) : nsnull; }
+
+        static void
+        Destroy(nsFixedSizeAllocator& aPool, ContentListItem* aItem) {
+            delete aItem;
+            aPool.Free(aItem, sizeof(*aItem)); }
+
+    protected:
+        static void* operator new(size_t aSize, void* aPtr) {
+            return aPtr; }
+
+        static void operator delete(void* aPtr, size_t aSize) {
+            /* do nothing; memory free()'d in Destroy() */ }
+
+        ContentListItem(nsIContent* aContent) : mNext(nsnull), mContent(aContent) {
+            MOZ_COUNT_CTOR(nsElementMap::ContentListItem); }
+
+        ~ContentListItem() {
+            MOZ_COUNT_DTOR(nsElementMap::ContentListItem); }
     };
 
     static PLHashNumber PR_CALLBACK
@@ -117,6 +126,7 @@ public:
 
 private:
     struct EnumerateClosure {
+        nsElementMap*          mSelf;
         nsElementMapEnumerator mEnumerator;
         void*                  mClosure;
     };

@@ -32,14 +32,13 @@
 #include "nsCRT.h"
 #include "nsFixedSizeAllocator.h"
 
-
-nsresult
+nsFixedSizeAllocator::Bucket *
 nsFixedSizeAllocator::AddBucket(size_t aSize)
 {
     void* p;
     PL_ARENA_ALLOCATE(p, &mPool, sizeof(Bucket));
     if (! p)
-        return NS_ERROR_OUT_OF_MEMORY;
+        return nsnull;
 
     Bucket* bucket = NS_STATIC_CAST(Bucket*, p);
     bucket->mSize  = aSize;
@@ -47,10 +46,8 @@ nsFixedSizeAllocator::AddBucket(size_t aSize)
     bucket->mNext  = mBuckets;
 
     mBuckets = bucket;
-    return NS_OK;
+    return bucket;
 }
-
-
 
 nsresult
 nsFixedSizeAllocator::Init(const char* aName,
@@ -77,33 +74,36 @@ nsFixedSizeAllocator::Init(const char* aName,
     return NS_OK;
 }
 
-void*
-nsFixedSizeAllocator::Alloc(size_t aSize)
+nsFixedSizeAllocator::Bucket *
+nsFixedSizeAllocator::FindBucket(size_t aSize)
 {
     Bucket** link = &mBuckets;
-    Bucket* bucket = mBuckets;
+    Bucket* bucket;
 
-    while (bucket != nsnull) {
+    while ((bucket = *link) != nsnull) {
         if (aSize == bucket->mSize) {
             // Promote to the head of the list, under the assumption
-            // that we'll allocate same-sized object cotemporaneously.
+            // that we'll allocate same-sized object contemporaneously.
             *link = bucket->mNext;
             bucket->mNext = mBuckets;
             mBuckets = bucket;
-            break;
+            return bucket;
         }
 
         link = &bucket->mNext;
-        bucket = bucket->mNext;
     }
+    return nsnull;
+}
 
+void*
+nsFixedSizeAllocator::Alloc(size_t aSize)
+{
+    Bucket* bucket = FindBucket(aSize);
     if (! bucket) {
         // Oops, we don't carry that size. Let's fix that.
-        nsresult rv = AddBucket(aSize);
-        if (NS_FAILED(rv))
+        bucket = AddBucket(aSize);
+        if (! bucket)
             return nsnull;
-
-        bucket = mBuckets;
     }
 
     void* next;
@@ -112,37 +112,29 @@ nsFixedSizeAllocator::Alloc(size_t aSize)
         bucket->mFirst = bucket->mFirst->mNext;
     }
     else {
-        // Allocate headroom so we can have a backpointer. Use
-        // 'sizeof double' so that the block stays well-aligned
-        PL_ARENA_ALLOCATE(next, &mPool, aSize + sizeof(double));
-
-        FreeEntry* entry = NS_STATIC_CAST(FreeEntry*, next);
-        entry->mBucket = bucket;
+        PL_ARENA_ALLOCATE(next, &mPool, aSize);
+        if (!next)
+            return nsnull;
     }
 
-    next = NS_STATIC_CAST(void*, NS_STATIC_CAST(char*, next) + sizeof(double));
-
 #ifdef DEBUG
-    nsCRT::memset(next, 0xc8, bucket->mSize);
+    nsCRT::memset(next, 0xc8, aSize);
 #endif
 
     return next;
 }
 
-
 void
 nsFixedSizeAllocator::Free(void* aPtr, size_t aSize)
 {
-    FreeEntry* entry = NS_REINTERPRET_CAST(FreeEntry*, NS_STATIC_CAST(char*, aPtr) - sizeof(double));
-
-    Bucket* bucket = entry->mBucket;
+    FreeEntry* entry = NS_REINTERPRET_CAST(FreeEntry*, aPtr);
+    Bucket* bucket = FindBucket(aSize);
 
 #ifdef DEBUG
-    NS_ASSERTION(bucket->mSize == aSize, "ack! corruption! bucket->mSize != aSize!");
+    NS_ASSERTION(bucket && bucket->mSize == aSize, "ack! corruption! bucket->mSize != aSize!");
     nsCRT::memset(aPtr, 0xd8, bucket->mSize);
 #endif
 
     entry->mNext = bucket->mFirst;
     bucket->mFirst = entry;
 }
-

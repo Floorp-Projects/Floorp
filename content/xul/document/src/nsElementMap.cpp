@@ -65,8 +65,9 @@ static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey)
 
 static void PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) 
 {
+    nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
     if (aFlag == HT_FREE_ENTRY)
-        nsFixedSizeAllocator::Free(aEntry, sizeof(PLHashEntry));
+        pool->Free(aEntry, sizeof(PLHashEntry));
 }
 
 PLHashAllocOps nsElementMap::gAllocOps = {
@@ -115,7 +116,7 @@ nsElementMap::~nsElementMap()
     MOZ_COUNT_DTOR(nsElementMap);
 
     if (mMap) {
-        PL_HashTableEnumerateEntries(mMap, ReleaseContentList, nsnull);
+        PL_HashTableEnumerateEntries(mMap, ReleaseContentList, this);
         PL_HashTableDestroy(mMap);
     }
 
@@ -127,6 +128,8 @@ nsElementMap::~nsElementMap()
 PRIntn
 nsElementMap::ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
 {
+    nsElementMap* self = NS_STATIC_CAST(nsElementMap*, aClosure);
+
     PRUnichar* id =
         NS_REINTERPRET_CAST(PRUnichar*, NS_CONST_CAST(void*, aHashEntry->key));
 
@@ -138,7 +141,7 @@ nsElementMap::ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* a
     while (head) {
         ContentListItem* doomed = head;
         head = head->mNext;
-        delete doomed;
+        ContentListItem::Destroy(self->mPool, doomed);
     }
 
     return HT_ENUMERATE_NEXT;
@@ -159,7 +162,7 @@ nsElementMap::Add(const nsAReadableString& aID, nsIContent* aContent)
         NS_STATIC_CAST(ContentListItem*, PL_HashTableLookup(mMap, id));
 
     if (! head) {
-        head = new (mPool) ContentListItem(aContent);
+        head = ContentListItem::Create(mPool, aContent);
         if (! head)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -211,7 +214,7 @@ nsElementMap::Add(const nsAReadableString& aID, nsIContent* aContent)
             head = head->mNext;
         }
 
-        head->mNext = new (mPool) ContentListItem(aContent);
+        head->mNext = ContentListItem::Create(mPool, aContent);
         if (! head->mNext)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -302,14 +305,14 @@ nsElementMap::Remove(const nsAReadableString& aID, nsIContent* aContent)
             PL_HashTableRawRemove(mMap, hep, *hep);
             nsMemory::Free(key);
         }
-        delete head;
+        ContentListItem::Destroy(mPool, head);
     }
     else {
         ContentListItem* item = head->mNext;
         while (item) {
             if (item->mContent.get() == aContent) {
                 head->mNext = item->mNext;
-                delete item;
+                ContentListItem::Destroy(mPool, item);
                 break;
             }
             head = item;
@@ -365,7 +368,7 @@ nsElementMap::FindFirst(const nsAReadableString& aID, nsIContent** aResult)
 nsresult
 nsElementMap::Enumerate(nsElementMapEnumerator aEnumerator, void* aClosure)
 {
-    EnumerateClosure closure = { aEnumerator, aClosure };
+    EnumerateClosure closure = { this, aEnumerator, aClosure };
     PL_HashTableEnumerateEntries(mMap, EnumerateImpl, &closure);
     return NS_OK;
 }
@@ -398,7 +401,7 @@ nsElementMap::EnumerateImpl(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosu
         if (result == HT_ENUMERATE_REMOVE) {
             // If the user wants to remove the current, then deal.
             *link = item;
-            delete current;
+            ContentListItem::Destroy(closure->mSelf->mPool, current);
 
             if ((! *link) && (link == NS_REINTERPRET_CAST(ContentListItem**, &aHashEntry->value))) {
                 // It's the last content node that was mapped to this

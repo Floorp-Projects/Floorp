@@ -514,15 +514,15 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const nsClusterKeySet& aNewKeys)
     // to track those?
     nsClusterKeySet::ConstIterator last = aNewKeys.Last();
     for (nsClusterKeySet::ConstIterator key = aNewKeys.First(); key != last; ++key) {
-        const nsTemplateMatchSet* matches;
-        mConflictSet.GetMatchesForClusterKey(*key, &matches);
+        nsConflictSet::MatchCluster* matches =
+            mConflictSet.GetMatchesForClusterKey(*key);
 
         NS_ASSERTION(matches != nsnull, "no matched rules for new key");
         if (! matches)
             continue;
 
         nsTemplateMatch* bestmatch =
-            matches->FindMatchWithHighestPriority();
+            mConflictSet.GetMatchWithHighestPriority(matches);
 
         NS_ASSERTION(bestmatch != nsnull, "no matches in match set");
         if (! bestmatch)
@@ -530,12 +530,12 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const nsClusterKeySet& aNewKeys)
 
         // If the new "bestmatch" is different from the last match,
         // then we need to yank some content out and rebuild it.
-        const nsTemplateMatch* lastmatch = matches->GetLastMatch();
+        const nsTemplateMatch* lastmatch = matches->mLastMatch;
         if (bestmatch != lastmatch) {
             ReplaceMatch(VALUE_TO_IRDFRESOURCE(key->mMemberValue), lastmatch, bestmatch);
 
             // Remember the best match as the new "last" match
-            NS_CONST_CAST(nsTemplateMatchSet*, matches)->SetLastMatch(bestmatch);
+            matches->mLastMatch = bestmatch;
         }
     }
 
@@ -587,13 +587,13 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
     for (NodeSet::ConstIterator node = mRDFTests.First(); node != lastnode; ++node) {
         const nsRDFTestNode* rdftestnode = NS_STATIC_CAST(const nsRDFTestNode*, *node);
 
-        nsTemplateMatchSet firings;
-        nsTemplateMatchSet retractions;
+        nsTemplateMatchSet firings(mConflictSet.GetPool());
+        nsTemplateMatchSet retractions(mConflictSet.GetPool());
         rdftestnode->Retract(aSource, aProperty, aTarget, firings, retractions);
 
         {
-            nsTemplateMatchSet::Iterator last = retractions.Last();
-            for (nsTemplateMatchSet::Iterator match = retractions.First(); match != last; ++match) {
+            nsTemplateMatchSet::ConstIterator last = retractions.Last();
+            for (nsTemplateMatchSet::ConstIterator match = retractions.First(); match != last; ++match) {
                 Value memberval;
                 match->mAssignments.GetAssignmentFor(match->mRule->GetMemberVariable(), &memberval);
 
@@ -1243,27 +1243,19 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
 
     // Get all the matches whose assignments are currently supported
     // by aSource and aProperty: we'll need to recompute them.
-    const nsTemplateMatchSet* matches;
-    mConflictSet.GetMatchesWithBindingDependency(aSource, &matches);
+    const nsTemplateMatchRefSet* matches =
+        mConflictSet.GetMatchesWithBindingDependency(aSource);
+
     if (! matches || matches->Empty())
         return NS_OK;
 
     // Since we'll actually be manipulating the match set as we
     // iterate through it, we need to copy it into our own private
     // area before performing the iteration.
-    static const size_t kBucketSizes[] = { nsTemplateMatchSet::kEntrySize, nsTemplateMatchSet::kIndexSize };
-    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
+    nsTemplateMatchRefSet copy = *matches;
 
-    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
-    static const PRInt32 kPoolSize = 256;
-
-    nsFixedSizeAllocator pool;
-    pool.Init("nsXULTemplateBuilder::SynchronizeAll", kBucketSizes, kNumBuckets, kPoolSize);
-
-    nsTemplateMatchSet copy;
-    matches->CopyInto(copy, pool);
-
-    for (nsTemplateMatchSet::Iterator match = copy.First(); match != copy.Last(); ++match) {
+    nsTemplateMatchRefSet::ConstIterator last = copy.Last();
+    for (nsTemplateMatchRefSet::ConstIterator match = copy.First(); match != last; ++match) {
         const nsTemplateRule* rule = match->mRule;
 
         // Recompute the assignments. This will replace aOldTarget with

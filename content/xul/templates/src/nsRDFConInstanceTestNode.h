@@ -67,13 +67,13 @@ public:
 
 
     class Element : public MemoryElement {
+    protected:
+        // Hide so that only Create() and Destroy() can be used to
+        // allocate and deallocate from the heap
+        static void* operator new(size_t) { return 0; }
+        static void operator delete(void*, size_t) {}
+
     public:
-        static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-            return aAllocator.Alloc(aSize); }
-
-        static void operator delete(void* aPtr, size_t aSize) {
-            nsFixedSizeAllocator::Free(aPtr, aSize); }
-
         Element(nsIRDFResource* aContainer,
                 Test aContainerTest,
                 Test aEmptyTest)
@@ -83,6 +83,17 @@ public:
             MOZ_COUNT_CTOR(nsRDFConInstanceTestNode::Element); }
 
         virtual ~Element() { MOZ_COUNT_DTOR(nsRDFConInstanceTestNode::Element); }
+
+        static Element*
+        Create(nsFixedSizeAllocator& aPool, nsIRDFResource* aContainer,
+               Test aContainerTest, Test aEmptyTest) {
+            void* place = aPool.Alloc(sizeof(Element));
+            return place ? ::new (place) Element(aContainer, aContainerTest, aEmptyTest) : nsnull; }
+
+        static void
+        Destroy(nsFixedSizeAllocator& aPool, Element* aElement) {
+            aElement->~Element();
+            aPool.Free(aElement, sizeof(*aElement)); }
 
         virtual const char* Type() const {
             return "nsRDFConInstanceTestNode::Element"; }
@@ -102,8 +113,8 @@ public:
             return PR_FALSE; }
 
         virtual MemoryElement* Clone(void* aPool) const {
-            return new (*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool))
-                Element(mContainer, mContainerTest, mEmptyTest); }
+            return Create(*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool),
+                          mContainer, mContainerTest, mEmptyTest); }
 
     protected:
         nsCOMPtr<nsIRDFResource> mContainer;

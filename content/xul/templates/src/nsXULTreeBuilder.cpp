@@ -1106,14 +1106,7 @@ nsXULOutlinerBuilder::TokenizeProperties(const nsAReadableString& aString,
         if (iter == first)
             break;
 
-     
-#if 1 // XXX until bug 55143 is fixed, we need to copy so the string
-      // is zero-terminated
-        nsAutoString s(Substring(first, iter));
-        nsCOMPtr<nsIAtom> atom = dont_AddRef(NS_NewAtom(s));
-#else
         nsCOMPtr<nsIAtom> atom = dont_AddRef(NS_NewAtom(Substring(first, iter)));
-#endif
         aProperties->AppendElement(atom);
     } while (iter != end);
 
@@ -1188,14 +1181,14 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
     // Iterate through newly added keys to determine which rules fired
     nsClusterKeySet::ConstIterator last = newkeys.Last();
     for (nsClusterKeySet::ConstIterator key = newkeys.First(); key != last; ++key) {
-        const nsTemplateMatchSet* matches;
-        mConflictSet.GetMatchesForClusterKey(*key, &matches);
+        nsConflictSet::MatchCluster* matches =
+            mConflictSet.GetMatchesForClusterKey(*key);
 
         if (! matches)
             continue;
 
         nsTemplateMatch* match = 
-            matches->FindMatchWithHighestPriority();
+            mConflictSet.GetMatchWithHighestPriority(matches);
 
         NS_ASSERTION(match != nsnull, "no best match in match set");
         if (! match)
@@ -1205,7 +1198,7 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
         mRows.InsertRowAt(match, aSubtree, count);
 
         // Remember this as the "last" match
-        NS_CONST_CAST(nsTemplateMatchSet*, matches)->SetLastMatch(match);
+        matches->mLastMatch = match;
 
         // If this is open, then remember it so we can recursively add
         // *its* rows to the tree.
@@ -1260,13 +1253,14 @@ nsXULOutlinerBuilder::CloseContainer(PRInt32 aIndex, nsIRDFResource* aContainer)
     if (aIndex < 0 || aIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
 
-    nsTemplateMatchSet firings, retractions;
+    nsTemplateMatchSet firings(mConflictSet.GetPool());
+    nsTemplateMatchSet retractions(mConflictSet.GetPool());
     mConflictSet.Remove(nsOutlinerRowTestNode::Element(aContainer), firings, retractions);
 
     {
         // Clean up the conflict set
-        nsTemplateMatchSet::Iterator last = retractions.Last();
-        nsTemplateMatchSet::Iterator iter;
+        nsTemplateMatchSet::ConstIterator last = retractions.Last();
+        nsTemplateMatchSet::ConstIterator iter;
 
         for (iter = retractions.First(); iter != last; ++iter) {
             Value val;
@@ -1301,11 +1295,12 @@ nsXULOutlinerBuilder::RemoveMatchesFor(nsIRDFResource* aContainer)
     if (! aContainer)
         return NS_ERROR_FAILURE;
 
-    nsTemplateMatchSet firings, retractions;
+    nsTemplateMatchSet firings(mConflictSet.GetPool());
+    nsTemplateMatchSet retractions(mConflictSet.GetPool());
     mConflictSet.Remove(nsOutlinerRowTestNode::Element(aContainer), firings, retractions);
 
-    nsTemplateMatchSet::Iterator last = retractions.Last();
-    nsTemplateMatchSet::Iterator iter;
+    nsTemplateMatchSet::ConstIterator last = retractions.Last();
+    nsTemplateMatchSet::ConstIterator iter;
 
     for (iter = retractions.First(); iter != last; ++iter) {
         Value val;

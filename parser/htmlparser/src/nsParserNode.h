@@ -50,40 +50,59 @@
 class nsTokenAllocator;
 
 class nsCParserNode :  public nsIParserNode {
-  
+
+  protected:
+
+    PRInt32 mRefCnt;
+
   public:
 
-    NS_DECL_ISUPPORTS
+    void AddRef()
+    {
+      ++mRefCnt;
+    }
 
-            
-#ifdef HEAP_ALLOCATED_NODES
-    void* operator new(size_t aSize) {
-      return ::operator new(aSize);
-    }
-#else
-    /**
-     * 
-     * @update	harishd 01/01/01
-     * @param   aSize    - 
-     * @param   aArena   - Allocate memory from this pool.
-     */
-    static void * operator new (size_t aSize, nsFixedSizeAllocator& anArena)
+    void Release(nsFixedSizeAllocator& aPool)
     {
-      return anArena.Alloc(aSize);
+      if (--mRefCnt == 0)
+        Destroy(this, aPool);
     }
-#endif
-    /**
-     *  
-     *
-     * @update	harishd 01/01/01
-     * @param   aPtr     - The memory that should be recycled/freed.
-     * @param   aSize    - The size of memory that needs to be freed.
-     */
-    static void operator delete (void* aPtr,size_t aSize)
-    {
-      // NodeAllocator would take care of heap allocated nodes..
+
 #ifndef HEAP_ALLOCATED_NODES
-      nsFixedSizeAllocator::Free(aPtr,aSize);
+  private:
+
+    /**
+     * Hide operator new; clients should use Create() instead.
+     */
+    static void* operator new(size_t) { return 0; }
+
+    /**
+     * Hide operator delete; clients should use Destroy() instead.
+     */
+    static void operator delete(void*,size_t) {}
+
+#endif
+
+  public:
+    static nsCParserNode* Create(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator)
+    {
+#ifdef HEAP_ALLOCATED_NODES
+      return new
+#else
+      nsFixedSizeAllocator& pool = aNodeAllocator->GetArenaPool();
+      void* place = pool.Alloc(sizeof(nsCParserNode));
+      return ::new (place)
+#endif
+        nsCParserNode(aToken, aLineNumber, aTokenAllocator, aNodeAllocator);
+    }
+
+    static void Destroy(nsCParserNode* aNode, nsFixedSizeAllocator& aPool)
+    {
+#ifdef HEAP_ALLOCATED_NODES
+      delete aNode;
+#else
+      aNode->~nsCParserNode();
+      aPool.Free(aNode, sizeof(*aNode));
 #endif
     }
 
@@ -248,7 +267,6 @@ class nsCParserNode :  public nsIParserNode {
 #ifdef HEAP_ALLOCATED_NODES
    nsNodeAllocator*  mNodeAllocator; // weak 
 #endif
-
 };
 
 #endif
