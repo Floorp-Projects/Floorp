@@ -30,7 +30,7 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
-#undef FONT_SWITCHING
+#define FONT_SWITCHING
 #ifdef FONT_SWITCHING
 
 #ifdef ADD_GLYPH
