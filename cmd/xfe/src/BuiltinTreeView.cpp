@@ -51,16 +51,10 @@ XFE_BuiltinTreeView::XFE_BuiltinTreeView(XFE_Component *toplevel_component,
 	target  = LO_GetBuiltInAttribute(builtin_struct, "target");
 
 	// New HT pane.
-#ifdef OJI	
 	newPaneFromURL(url, builtin_struct->attributes.n, 
 				   builtin_struct->attributes.names, 
 				   builtin_struct->attributes.values);
-#else
-	newPaneFromURL(url, builtin_struct->attribute_cnt,
-				   builtin_struct->attribute_list,
-				   builtin_struct->value_list);
 
-#endif
 	// Create an RDF View instance and give it our form.
 	m_view = new XFE_RDFTreeView(toplevel_component,
 								 mainForm,
