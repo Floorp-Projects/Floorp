@@ -288,8 +288,6 @@ nsViewSourceChannel::SetLoadFlags(PRUint32 aLoadFlags)
                                   ~::nsIChannel::LOAD_DOCUMENT_URI);
 }
 
-#define X_VIEW_SOURCE_PARAM "; x-view-type=view-source"
-
 NS_IMETHODIMP
 nsViewSourceChannel::GetContentType(nsACString &aContentType) 
 {
