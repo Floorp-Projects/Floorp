@@ -509,8 +509,7 @@ namespace MetaData {
                   parameterFrame(NULL),
                   localFrame(NULL),
                   parameterSlots(NULL),
-                  traceInstructions(false),
-                  thisVal(JS2VAL_VOID)
+                  traceInstructions(false)
     {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
@@ -1053,7 +1052,6 @@ namespace MetaData {
         activationStackTop->parameterSlots = parameterSlots;
         activationStackTop->parameterCount = parameterCount;
         activationStackTop->superConstructorCalled = superConstructorCalled;
-        activationStackTop->thisVal = thisVal;
         activationStackTop++;
         if (new_bCon) {
             bCon = new_bCon;
@@ -1087,12 +1085,10 @@ namespace MetaData {
         parameterSlots = activationStackTop->parameterSlots;
         parameterCount = activationStackTop->parameterCount;
         superConstructorCalled = activationStackTop->superConstructorCalled;
-        thisVal = activationStackTop->thisVal;
         if (parameterFrame) {
             parameterFrame->argSlots = parameterSlots;
             parameterFrame->argCount = parameterCount;
             parameterFrame->superConstructorCalled = superConstructorCalled;
-            parameterFrame->thisObject = thisVal;
         }
         // reset the env. top
         while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
@@ -1122,7 +1118,6 @@ namespace MetaData {
                 for (i = 0; i < f->parameterCount; i++)
                     GCMARKVALUE(f->parameterSlots[i]);
             }
-        	GCMARKVALUE(thisVal);
         }
         for (js2val *e = execStack; (e < sp); e++) {
             GCMARKVALUE(*e);
@@ -1140,7 +1135,6 @@ namespace MetaData {
             }
         }
         GCMARKVALUE(retval);
-        GCMARKVALUE(thisVal);
     }
 
     void JS2Engine::pushHandler(uint8 *pc)

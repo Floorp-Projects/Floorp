@@ -315,7 +315,6 @@ public:
         js2val *parameterSlots;
         uint32 parameterCount;
 		bool superConstructorCalled;
-		js2val thisVal;
     };
     void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
@@ -372,7 +371,6 @@ public:
     js2val *parameterSlots;             // just local copies of paramterFrame->argSlots
     uint32 parameterCount;              // ... and parameterFrame->argCount
     bool superConstructorCalled;
-    js2val thisVal;
 
     void pushHandler(uint8 *pc);
     void popHandler();

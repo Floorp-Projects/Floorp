@@ -286,7 +286,7 @@ namespace MetaData {
         if (init) {
             ParameterFrame *runtimeFrame;
             DEFINE_ROOTKEEPER(this, rk, runtimeFrame);
-            runtimeFrame = init->fWrap->compileFrame; //new (this) ParameterFrame(init->fWrap->compileFrame);
+            runtimeFrame = init->fWrap->compileFrame;
             if (!init->fWrap->compileFrame->callsSuperConstructor) {
                 invokeInit(c->super, thisValue, NULL, 0);
                 runtimeFrame->superConstructorCalled = true;
@@ -318,18 +318,12 @@ namespace MetaData {
             else {
                 uint8 *savePC = NULL;
                 BytecodeContainer *bCon = fWrap->bCon;
-
-                // XXX why construct a new bCon at this point, why not just save off the old one (that's necessary
-                // because we may be in the process of generating into it) and restore it below like everything else?
-                CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
+                BytecodeContainer *oldbcon = this->bCon;
                 DEFINE_ROOTKEEPER(this, rk, runtimeFrame);
                 if (runtimeFrame == NULL)
-                    runtimeFrame = fWrap->compileFrame; //new (this) ParameterFrame(fWrap->compileFrame);
-                runtimeFrame->instantiate(fWrap->env);
+                    runtimeFrame = fWrap->compileFrame;
                 runtimeFrame->thisObject = thisValue;
-				js2val oldThis = engine->thisVal;
-                uint32 newSlotsCount = 0;
-                js2val *newSlots = runtimeFrame->assignArguments(this, fnObj, argv, argc, newSlotsCount);
+                runtimeFrame->assignArguments(this, fnObj, argv, argc);
                 Frame *oldTopFrame = fWrap->env->getTopFrame();
                 if (fInst->isMethodClosure)
                     fWrap->env->addFrame(objectType(thisValue));
@@ -341,30 +335,27 @@ namespace MetaData {
                     savePC = engine->pc;
                     engine->pc = NULL;
                     engine->parameterFrame = runtimeFrame;
-                    engine->parameterSlots = newSlots;
-                    engine->parameterCount = newSlotsCount;
-					engine->thisVal = thisValue;
+                    engine->parameterSlots = runtimeFrame->argSlots;
+                    engine->parameterCount = runtimeFrame->argCount;
                     result = engine->interpret(RunPhase, bCon, fWrap->env);
                 }
                 catch (Exception &x) {
                     engine->pc = savePC;
-                    restoreCompilationUnit(oldData);
                     fWrap->env->setTopFrame(oldTopFrame);
                     engine->parameterFrame = oldPFrame;
                     engine->parameterSlots = oldPSlots;
                     if (engine->parameterFrame)
                         engine->parameterFrame->argSlots = engine->parameterSlots;
-					engine->thisVal = oldThis;
+                    this->bCon = oldbcon;
                     throw x;
                 }
                 engine->pc = savePC;
-                restoreCompilationUnit(oldData);
                 fWrap->env->setTopFrame(oldTopFrame);
                 engine->parameterFrame = oldPFrame;
                 engine->parameterSlots = oldPSlots;
                 if (engine->parameterFrame)
                     engine->parameterFrame->argSlots = engine->parameterSlots;
-				engine->thisVal = oldThis;
+                this->bCon = oldbcon;
             }
         }
         return result;

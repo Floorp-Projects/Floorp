@@ -81,15 +81,13 @@
                         push(a);
                     }
                     else {
-                        pFrame = fWrap->compileFrame; //new (meta) ParameterFrame(fWrap->compileFrame);
-                        pFrame->instantiate(meta->env);
+                        pFrame = fWrap->compileFrame;
                         baseVal = OBJECT_TO_JS2VAL(new (meta) SimpleInstance(meta, protoVal, meta->objectType(protoVal)));
                         pFrame->thisObject = baseVal;
-                        pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
+                        pFrame->assignArguments(meta, obj, base(argCount), argCount);
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);
 						parameterSlots = pFrame->argSlots;
-						parameterCount = length;
-						thisVal = baseVal;
+						parameterCount = pFrame->argCount;
                         meta->env->addFrame(pFrame);
                         parameterFrame = pFrame;
                         pFrame = NULL;
@@ -135,8 +133,6 @@ doCall:
                         push(JS2VAL_UNDEFINED);
                         argCount++;
                     }
-					if (parameterFrame)
-						thisVal = parameterFrame->thisObject;
                     jsr(phase, NULL, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
                     if (fWrap->alien)
                         a = fWrap->alien(meta, fInst, a, base(argCount), argc);
@@ -147,15 +143,13 @@ doCall:
                 }
                 else {
                     if (length || fInst->isMethodClosure || fWrap->compileFrame->buildArguments) {
-                        pFrame = fWrap->compileFrame;//new (meta) ParameterFrame(fWrap->compileFrame);
-                        //pFrame->instantiate(meta->env);
+                        pFrame = fWrap->compileFrame;
                         pFrame->thisObject = a;
                         // XXX (use fWrap->compileFrame->signature)
-                        pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
+                        pFrame->assignArguments(meta, fObj, base(argCount), argCount);
                         jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
 						parameterSlots = pFrame->argSlots;
-						parameterCount = length;
-						thisVal = a;
+						parameterCount = pFrame->argCount;
                         if (fInst->isMethodClosure)
                             meta->env->addFrame(meta->objectType(a));
                         meta->env->addFrame(pFrame);
@@ -164,17 +158,15 @@ doCall:
                     }
                     else {
                         jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
-                        // XXX constructing a parameterFrame only for the purpose of holding the 'this'
-                        // need to find a more efficient way of stashing 'this'
-                        // used to be : "meta->env->addFrame(fWrap->compileFrame->prototype);"
-                        // Still need to mark the frame as a runtime frame (see stmtnode::return in validate)
-                        pFrame = fWrap->compileFrame; //new (meta) ParameterFrame(a, fWrap->compileFrame->prototype);
+                        // need to mark the frame as a runtime frame (see stmtnode::return in validate)
+                        pFrame = fWrap->compileFrame;
                         pFrame->pluralFrame = fWrap->compileFrame;
                         meta->env->addFrame(pFrame);
 						parameterSlots = NULL;
 						parameterCount = 0;
-						thisVal = a;
                         pFrame->thisObject = a;
+                        parameterFrame = pFrame;
+                        pFrame = NULL;
                     }
                 }
             }

@@ -2916,7 +2916,6 @@ doUnary:
         ParameterFrame *pFrame = getEnclosingParameterFrame(&thisVal);
         if (pFrame == NULL)
             meta->reportError(Exception::referenceError, "Can't access instance members outside an instance method without supplying an instance object", meta->engine->errorPos());
-//        js2val thisVal = pFrame->thisObject;
         if ((!JS2VAL_IS_OBJECT(thisVal) || JS2VAL_IS_NULL(thisVal)) || !pFrame->isInstance || !pFrame->isConstructor)
             meta->reportError(Exception::referenceError, "Can't access instance members inside a non-instance method without supplying an instance object", meta->engine->errorPos());
         if (!pFrame->superConstructorCalled)
@@ -5267,7 +5266,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // the cloned Variables assigned into this (singular) frame. Use the 
     // incoming values to initialize the positionals.
     // Pad out to 'length' args with undefined values if argc is insufficient
-    js2val *ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argv, uint32 argc, uint32 &argsLength)
+    void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argv, uint32 argc)
     {
         uint32 i;
         
@@ -5311,11 +5310,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         else {
 			if (argc > slotCount)
 				slotCount = argc;
+            if (argSlots)
+                delete [] argSlots;
             if (slotCount)
                 argSlots = new js2val[slotCount];
+            else
+                argSlots = NULL;
         }
         argCount = slotCount;
-        argsLength = slotCount;
 
         for (i = 0; (i < argc); i++) {
             if (i < slotCount) {
@@ -5329,7 +5331,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             setLength(meta, argsObj, argc);
             meta->argumentsClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->world.identifiers["callee"], true, OBJECT_TO_JS2VAL(fnObj));
         }
-        return argSlots;
     }
 
 
@@ -5347,8 +5348,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     ParameterFrame::~ParameterFrame()
     {
         if (buildArguments) {
-            frameSlots = NULL;      // the slots are in the arguments object, let it do the delete
+            argSlots = NULL;      // the slots are in the arguments object, let it do the delete
         }
+        else
+            if (argSlots)
+                delete [] argSlots;
     }
 
  /************************************************************************************

@@ -1392,7 +1392,7 @@ public:
 //    uint32 positionalCount;
 
     virtual void instantiate(Environment *env);
-    js2val *assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 &argsLength);
+    void assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount);
     virtual void markChildren();
     virtual ~ParameterFrame();
 };
