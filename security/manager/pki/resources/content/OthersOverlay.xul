@@ -66,9 +66,11 @@
       <button id="email_viewButton"
               label="&certmgr.view.label;"
               disabled="true" oncommand="viewCerts();"/>
+<!-- Not yet implemented
       <button id="email_editButton"
               label="&certmgr.edit.label;"
               disabled="true" oncommand="editCerts();"/>
+-->
 <!-- future - import a DER cert?
       <button id="email_addButton"
               label="&certmgr.add.label;"
