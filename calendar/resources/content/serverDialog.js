@@ -121,6 +121,10 @@ function loadCalendarServerDialog()
 
    document.getElementById( "server-name-textbox" ).value = gCalendarObject.name;
 
+   document.getElementById( "server-username-textbox" ).value = gCalendarObject.username;
+
+   document.getElementById( "server-password-textbox" ).value = gCalendarObject.password;
+
    if( gCalendarObject.remote == true )
       document.getElementById( "server-path-textbox" ).value = gCalendarObject.remotePath;
    else
@@ -143,6 +147,10 @@ function onOKCommand()
    gCalendarObject.name = document.getElementById( "server-name-textbox" ).value;
 
    gCalendarObject.path = document.getElementById( "server-path-textbox" ).value;
+
+   gCalendarObject.username = document.getElementById( "server-username-textbox" ).value;
+
+   gCalendarObject.password = document.getElementById( "server-password-textbox" ).value;
 
    //TODO: check that the gCalendarObject.path is actually a file, if its not, create it.
    
