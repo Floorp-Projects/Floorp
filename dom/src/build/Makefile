@@ -19,7 +19,7 @@ DEPTH = ../../..
 
 include $(DEPTH)/config/config.mk
 
-LCFLAGS=-D_IMPL_NS_HTML 
+LCFLAGS=-D_IMPL_NS_DOM
 
 LIBRARY_NAME = jsdom
 
@@ -29,7 +29,8 @@ REQUIRES=xpcom raptor
 
 CPPSRCS=dlldeps.cpp 
 
-#INCLUDES +=  -I../html/base/src -I../base/src -I../css/layout/src
+INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
+	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I../base
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)
