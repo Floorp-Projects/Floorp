@@ -1104,14 +1104,14 @@ nsresult nsMsgFolderDataSource::createFolderTreeSimpleNameNode(nsIMsgFolder * fo
 
 nsresult nsMsgFolderDataSource::CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString)
 {
-	//Only do this if unread messages are positive
-	if(unreadMessages > 0)
-	{
-		nameString.AppendWithConversion(" (");
-		nameString.AppendInt(unreadMessages);
-		nameString.AppendWithConversion(')');
-	}
-	return NS_OK;
+  //Only do this if unread messages are positive
+  if(unreadMessages > 0)
+  {
+    nameString.Append(NS_LITERAL_STRING(" (").get());
+    nameString.AppendInt(unreadMessages);
+    nameString.Append(NS_LITERAL_STRING(")").get());
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -1510,6 +1510,8 @@ nsMsgFolderDataSource::createBiffStateNodeFromFolder(nsIMsgFolder *folder, nsIRD
 
   rv = createBiffStateNodeFromFlag(biffState, target);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  return NS_OK;
 }
 
 nsresult
