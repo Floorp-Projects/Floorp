@@ -144,7 +144,7 @@ struct Components {
 // The list of components we register
 static Components gComponents[] = {
     { "Resource Protocol Handler", &kResourceProtocolHandlerCID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "resource", },
+      NS_NETWORK_PROTOCOL_PROGID_PREFIX "res", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
