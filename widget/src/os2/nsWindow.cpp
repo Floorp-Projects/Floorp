@@ -1570,6 +1570,12 @@ nsresult nsWindow::Show( PRBool bState)
    return NS_OK;
 }
 
+// check a potential move to see if it fits onscreen
+nsresult nsWindow::ConstrainPosition( PRInt32 *aX, PRInt32 *aY)
+{
+    return NS_OK;
+}
+
 // Move this component (WinSetWindowPos() appears not to require a msgq)
 nsresult nsWindow::Move( PRInt32 aX, PRInt32 aY)
 {

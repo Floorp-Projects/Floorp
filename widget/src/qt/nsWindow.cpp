@@ -564,6 +564,11 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
     return NS_ERROR_FAILURE; // DRaM
 }
 
+NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+    return NS_OK;
+}
+
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
     PR_LOG(QtWidgetsLM, 

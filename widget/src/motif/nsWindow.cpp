@@ -598,6 +598,16 @@ NS_METHOD nsWindow::IsVisible(PRBool & aState)
 
 //-------------------------------------------------------------------------
 //
+// Check a potential new window position to be sure it fits on screen
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Move this component
 //
 //-------------------------------------------------------------------------
