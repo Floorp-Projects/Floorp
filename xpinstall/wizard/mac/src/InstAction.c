@@ -29,6 +29,7 @@
 #define XP_MAC 1
 #include "zipstub.h"
 #include "zipfile.h"
+#include <ctype.h>
 
 /*-----------------------------------------------------------*
  *   Install Action
@@ -1845,7 +1846,7 @@ CRCCheckDownloadedArchives(Handle dlPath, short dlPathlen, int count)
                     strcat( buf, *(gControls->cfg->comp[i].archive) );
 	                HUnlock(dlPath);
                     HUnlock(gControls->cfg->comp[i].archive);
-                    if (VerifyArchive( buf ) == ZIP_OK) 
+                    if (IsArchiveFile(buf) == false || VerifyArchive( buf ) == ZIP_OK) 
                         gControls->cfg->comp[i].dirty = false;
                     else
                         isClean = false;
@@ -1862,4 +1863,62 @@ CRCCheckDownloadedArchives(Handle dlPath, short dlPathlen, int count)
     return isClean;
 }
 
+/* 
+ * Name: IsArchiveFile( char *path )
+ * 
+ * Arguments:
+ * 
+ * char *path -- NULL terminated pathname 
+ *
+ * Description: 
+ *  
+ * This function extracts the file extension of filename pointed to by path and then 
+ * checks it against a table of extensions. If a match occurs, the file is considered
+ * to be an archive file that has a checksum we can validate, and we return PR_TRUE.
+ * Otherwise, PR_FALSE is returned.
+ *
+ * Return Value: true if the file extension matches one of those we are looking for,
+ * and false otherwise.
+ *
+ * Original Code: Syd Logan 7/28/2001
+ *
+*/
 
+static char *extensions[] = { "ZIP", "XPI", "JAR" };  // must be uppercase
+
+Boolean
+IsArchiveFile( char *buf ) 
+{
+    PRBool ret = false;
+    char lbuf[1024];
+    char *p;
+    int i, max;
+    
+    // if we have a string and it contains a '.'
+    
+    if ( buf != (char *) NULL && ( p = strrchr( buf, '.' ) ) != (char *) NULL ) {
+        p++;
+        
+        // if there are characters after the '.' then see if there is a match
+        
+        if ( *p != '\0' ) {
+            
+            // make a copy of the extension, and fold to uppercase, since mac has no strcasecmp
+            // and we need to ensure we are comparing strings of chars that have the same case. 
+
+            strcpy( lbuf, p );
+            for ( i = 0; i < strlen( lbuf ); i++ )
+            	lbuf[i] = toupper(lbuf[i]);
+            
+            // search
+            	
+            max = sizeof( extensions ) / sizeof ( char * );
+            for ( i = 0; i < max; i++ ) 
+                if ( !strcmp( lbuf, extensions[i] ) ) {
+                    ret = true;
+                    break;
+                }
+        }   
+    }
+    return ( ret );
+}
