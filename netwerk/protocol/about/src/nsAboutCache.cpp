@@ -119,7 +119,6 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     mBuffer.Assign("<html>\n<head>\n<title>Information about the Cache Manager</title>\n</head>\n<body>\n");
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 
-
 #ifdef MOZ_NEW_CACHE
     mStream = outputStream;
     rv = cacheService->VisitEntries(this);
@@ -153,47 +152,6 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
       DumpCacheInfo(outputStream, cache);
 
       DumpCacheEntries(outputStream, cacheManager, cache);
-/*
-      do {
-        char *key;
-        PRUint32 length;
-        PRBool bMoreEntries = PR_FALSE;
-
-        rv = entryIterator->HasMoreElements(&bMoreEntries);
-        if (!bMoreEntries) break;
-
-        rv = entryIterator->GetNext(getter_AddRefs(item));
-        if (NS_FAILED(rv)) break;
-
-        cacheRecord = do_QueryInterface(item);
-
-        cacheEntryCount += 1;
-        cacheRecord->GetStoredContentLength(&length);
-        cacheSize += length;
-
-        buffer.Truncate(0);
-        buffer.AppendInt(cacheEntryCount);
-        buffer.Append(".\t");
-        buffer.AppendInt(length);
-        buffer.Append(" bytes\t");
-        outputStream->Write(buffer, buffer.Length(), &bytesWritten);
-
-        rv = cacheRecord->GetKey(&length, &key);
-        if (NS_FAILED(rv)) break;
-
-        outputStream->Write(key, strlen(key), &bytesWritten);
-        outputStream->Write("\n", 1, &bytesWritten);
-
-        nsMemory::Free(key);
-
-      } while(1);
-
-      buffer.Truncate(0);
-      buffer.Append("\nTotal Bytes in Cache: ");
-      buffer.AppendInt(cacheSize);
-      buffer.Append("\n\n");
-      outputStream->Write(buffer, buffer.Length(), &bytesWritten);
-*/
     } while(1);
 #endif
 
@@ -280,18 +238,23 @@ nsAboutCache::VisitEntry(const char *deviceID,
     PRUint32        bytesWritten;
     nsXPIDLCString  key;
     nsXPIDLCString  clientID;
+    PRBool          streamBased;
     
-
     rv = entryInfo->GetKey(getter_Copies(key));
     if (NS_FAILED(rv))  return rv;
 
     rv = entryInfo->GetClientID(getter_Copies(clientID));
     if (NS_FAILED(rv))  return rv;
 
+    rv = entryInfo->IsStreamBased(&streamBased);
+    if (NS_FAILED(rv)) return rv;
+
     // Generate a about:cache-entry URL for this entry...
     nsCAutoString url;
     url += NS_LITERAL_CSTRING("about:cache-entry?client=");
     url += clientID;
+    url += NS_LITERAL_CSTRING("&sb=");
+    url += streamBased ? "1" : "0";
     url += NS_LITERAL_CSTRING("&key=");
     url += key; // key
 
@@ -351,17 +314,6 @@ nsAboutCache::VisitEntry(const char *deviceID,
         mBuffer.Append("No last modified time");
     mBuffer.Append("<br>");
 
-    /*
-    mBuffer.Append("<tt>Last Validated: </tt>");
-    entryInfo->GetLastFetched(&t);
-    if (t) {
-        PrintTimeString(buf, sizeof(buf), t);
-        mBuffer.Append(buf);
-    } else
-        mBuffer.Append("No last validated time");
-    mBuffer.Append("<br>");
-    */
-
     // Expires time
     mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                  "Expires: </tt>");
@@ -373,45 +325,6 @@ nsAboutCache::VisitEntry(const char *deviceID,
         mBuffer.Append("No expiration time");
     }
     mBuffer.Append("<br>");
-
-    // Stream based
-    mBuffer.Append("<tt>&nbsp;&nbsp;Stream based: </tt>");
-    PRBool b = PR_TRUE;
-    entryInfo->IsStreamBased(&b);
-    mBuffer.Append(b ? "TRUE" : "FALSE");
-    mBuffer.Append("<br>\n");
-
-    /*
-    // Flags
-    PRBool flag = PR_FALSE, foundFlag = PR_FALSE;
-    mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                 "Flags: </tt><b>");
-
-    flag = PR_FALSE;
-    entry->GetPartialFlag(&flag);
-    if (flag) {
-        mBuffer.Append("PARTIAL ");
-        foundFlag = PR_TRUE;
-    }
-    flag = PR_FALSE;
-    entry->GetUpdateInProgress(&flag);
-    if (flag) {
-        mBuffer.Append("UPDATE_IN_PROGRESS ");
-        foundFlag = PR_TRUE;
-    }
-    flag = PR_FALSE;
-    entry->GetInUse(&flag);
-    if (flag) {
-        mBuffer.Append("IN_USE");
-        foundFlag = PR_TRUE;
-    }
-
-    if (!foundFlag) {
-        mBuffer.Append("</b>none<br>\n");
-    } else {
-        mBuffer.Append("</b><br>\n");
-    }
-    */
 
     // Entry is done...
     mBuffer.Append("</p>\n");

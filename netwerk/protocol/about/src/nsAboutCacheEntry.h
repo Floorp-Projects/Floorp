@@ -53,7 +53,7 @@ public:
 private:
     nsresult WriteCacheEntryDescription(nsIOutputStream *, nsICacheEntryDescriptor *);
     nsresult WriteCacheEntryUnavailable(nsIOutputStream *, nsresult);
-    nsresult ParseURI(nsCString &, nsCString &);
+    nsresult ParseURI(nsCString &, PRBool &, nsCString &);
 
 private:
     nsCOMPtr<nsIChannel>            mStreamChannel;
