@@ -227,12 +227,38 @@ nsHttpConnection::OnTransactionComplete(nsHttpTransaction *trans, nsresult statu
 
 // not called from the socket thread
 nsresult
+nsHttpConnection::Suspend()
+{
+    // we only bother to suspend the read request, since that's the only
+    // one that will effect our consumers.
+ 
+    nsCOMPtr<nsIRequest> readReq;
+    {
+        nsAutoLock lock(mLock);
+        readReq = mReadRequest;
+    }
+
+    if (readReq)
+        readReq->Suspend();
+
+    return NS_OK;
+}
+
+// not called from the socket thread
+nsresult
 nsHttpConnection::Resume()
 {
-    // XXX may require a lock to ensure thread safety
+    // we only need to worry about resuming the read request, since that's
+    // the only one that can be suspended.
 
-    if (mReadRequest)
-        mReadRequest->Resume();
+    nsCOMPtr<nsIRequest> readReq;
+    {
+        nsAutoLock lock(mLock);
+        readReq = mReadRequest;
+    }
+
+    if (readReq)
+        readReq->Resume();
 
     return NS_OK;
 }
