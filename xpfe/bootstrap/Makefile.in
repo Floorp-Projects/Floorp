@@ -26,7 +26,7 @@ MODULE		= apprunner
 include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-BEOS_PROGRAM_RESOURCE = apprunner-beos.rsrc
+BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
 endif
 
 ifndef NECKO
