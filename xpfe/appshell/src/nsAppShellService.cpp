@@ -1231,7 +1231,15 @@ nsAppShellService::Ensure1Window(nsICmdLineService *aCmdLineService)
       if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
         PR_sscanf(tempString.get(), "%d", &height);
 
+#ifdef MOZ_THUNDERBIRD
+      PRBool windowOpened = PR_FALSE;
+      rv = LaunchTask(NULL, height, width, &windowOpened); 
+      if (NS_FAILED(rv) || !windowOpened)
+        rv = LaunchTask("mail", height, width, &windowOpened);
+
+#else
       rv = OpenBrowserWindow(height, width);
+#endif
     }
   }
   return rv;
