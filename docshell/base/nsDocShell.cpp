@@ -185,20 +185,11 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 // nsDocShell::nsIDocShell
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aUri, 
-   nsIPresContext* presContext)
-{
-   //NS_ENSURE_ARG(aUri);  // Done in LoadURIVia for us.
-
-   return LoadURIVia(aUri, presContext, 0);
-}
-
-NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aURI, 
-   nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
+NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIURI* aReferrer)
 {
    NS_ENSURE_ARG(aURI);
 
-   NS_ENSURE_SUCCESS(InternalLoad(aURI, nsnull), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(InternalLoad(aURI, aReferrer), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -998,9 +989,11 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    // XXX Honor the reload type
    NS_ENSURE_STATE(mCurrentURI);
 
-   mUpdateHistoryOnLoad = PR_FALSE;
+   // XXXTAB Convert reload type to our type
+   loadType type = loadReloadNormal;
    
-   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, type),
+      NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -1230,10 +1223,23 @@ NS_IMETHODIMP nsDocShell::Destroy()
    mParentWidget = nsnull;
    mPrefs = nsnull;
    mCurrentURI = nsnull;
+
+   if(mScriptGlobal)
+      {
+      mScriptGlobal->SetDocShell(nsnull);
+      mScriptGlobal = nsnull;
+      }
+   if(mScriptContext)
+      {
+      mScriptContext->SetOwner(nsnull);
+      mScriptContext = nsnull;
+      }
+
    mScriptGlobal = nsnull;
    mScriptContext = nsnull;
    mSessionHistory = nsnull;
    mLoadCookie = nsnull;
+   mTreeOwner = nsnull;
 
    if(mInitInfo)
       {
@@ -2208,7 +2214,30 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    PRBool wasAnchor = PR_FALSE;
    NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
    if(wasAnchor)
+      {
+      SetCurrentURI(aURI);
       return NS_OK;
+      }
+   
+   // Determine if this type of load should go into session history   
+   switch(aLoadType)
+      {
+      case loadHistory:
+      case loadReloadNormal:
+      case loadReloadBypassCache:
+      case loadReloadBypassProxy:
+      case loadRelaodBypassProxyAndCache:
+         mUpdateHistoryOnLoad = PR_FALSE;
+         break;
+
+      default:
+         NS_ERROR("Need to update case");
+         // Fall through to a normal type of load.
+      case loadNormal:
+      case loadLink:
+         mUpdateHistoryOnLoad = PR_TRUE;
+         break;
+      } 
    
    NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
    
@@ -2259,20 +2288,24 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIURI* aURI)
 {
    UpdateCurrentSessionHistory();
-   PRBool shouldAdd = PR_FALSE;
-   ShouldAddToSessionHistory(aURI, &shouldAdd);
-   if(shouldAdd)
-      AddToSessionHistory(aURI);
-
-   shouldAdd = PR_FALSE;
    UpdateCurrentGlobalHistory();
-   ShouldAddToGlobalHistory(aURI, &shouldAdd);
-   if(shouldAdd)
-      AddToGlobalHistory(aURI);
+
+   if(mUpdateHistoryOnLoad)
+      {
+      PRBool shouldAdd = PR_FALSE;
+
+      ShouldAddToSessionHistory(aURI, &shouldAdd);
+      if(shouldAdd)
+         AddToSessionHistory(aURI);
+
+      shouldAdd = PR_FALSE;
+      ShouldAddToGlobalHistory(aURI, &shouldAdd);
+      if(shouldAdd)
+         AddToGlobalHistory(aURI);
+      }
 
    SetCurrentURI(aURI);
    mInitialPageLoad = PR_FALSE;
-   mUpdateHistoryOnLoad = PR_TRUE;
    return NS_OK;
 }
 
@@ -2299,15 +2332,24 @@ NS_IMETHODIMP nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI,
       return NS_OK;
       } 
       
-   //XXXTAB Do testing here if there are some things that shouldn't go in
-
    *aShouldAdd = PR_TRUE;
  
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::ShouldPersistInSessionHistory(nsIURI* aURI,
+   PRBool* aShouldAdd)
+{
+   // XXXTAB Do testing here if there are some things that shouldn't stay in 
+   // session history
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI* aURI)
 {
+   PRBool shouldPersist = PR_FALSE;
+   ShouldPersistInSessionHistory(aURI, &shouldPersist);
+
    // XXXTAB
    //NS_ERROR("Haven't Implemented this yet");
    return NS_OK;
