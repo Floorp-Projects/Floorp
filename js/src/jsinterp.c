@@ -1794,9 +1794,12 @@ js_Interpret(JSContext *cx, jsval *result)
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
-     * if it returns false.
+     * if it returns false.  We reload onbranch after calling out to native
+     * functions (but not to getters, setters, or other native hooks).
      */
-    onbranch = cx->branchCallback;
+#define LOAD_BRANCH_CALLBACK(cx)    (onbranch = (cx)->branchCallback)
+
+    LOAD_BRANCH_CALLBACK(cx);
     ok = JS_TRUE;
 #define CHECK_BRANCH(len)                                                     \
     JS_BEGIN_MACRO                                                            \
@@ -2938,6 +2941,7 @@ js_Interpret(JSContext *cx, jsval *result)
             SAVE_SP(fp);
             ok = js_Invoke(cx, argc, JSINVOKE_CONSTRUCT);
             RESTORE_SP(fp);
+            LOAD_BRANCH_CALLBACK(cx);
             LOAD_INTERRUPT_HANDLER(rt);
             if (!ok) {
                 cx->newborn[GCX_OBJECT] = NULL;
@@ -3365,6 +3369,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
+            LOAD_BRANCH_CALLBACK(cx);
             LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
@@ -3401,6 +3406,7 @@ js_Interpret(JSContext *cx, jsval *result)
             SAVE_SP(fp);
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
+            LOAD_BRANCH_CALLBACK(cx);
             LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
