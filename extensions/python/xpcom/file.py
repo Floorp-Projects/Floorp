@@ -175,7 +175,7 @@ class LocalFile(_File):
         if mode in ["w","a"]:
             if mode== "w":
                 if file.exists():
-                    file.delete(0)
+                    file.remove(0)
                 moz_mode = NS_CREATE_FILE | NS_WRONLY
             elif mode=="a":
                 moz_mode = NS_APPEND
@@ -252,6 +252,18 @@ def _TestLocalFile():
         else:
             print "Chunks read the correct data."
         test_file.close()
+        # Open the same file again for writing - this should delete the old one.
+        if not os.path.isfile(fname):
+            raise RuntimeError, "The file '%s' does not exist, but we are explicitly testing create semantics when it does" % (fname,)
+        test_file = LocalFile(fname, "w")
+        test_file.write(data)
+        test_file.close()
+        # Make sure Python can read it OK.
+        f = open(fname, "r")
+        if f.read() != data:
+                print "Eeek - Python could not read the data back correctly after recreating an existing file!"
+        f.close()
+
         # XXX - todo - test "a" mode!
     finally:
         try:
