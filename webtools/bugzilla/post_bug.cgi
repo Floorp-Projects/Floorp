@@ -74,10 +74,6 @@ my $format = GetFormat("bug/create/comment", $::FORM{'format'}, "txt");
 $template->process($format->{'template'}, $vars, \$comment)
   || ThrowTemplateError($template->error());
 
-# Check that if required a description has been provided
-if (Param("commentoncreate") && !trim($::FORM{'comment'})) {
-    ThrowUserError("description_required");
-}
 ValidateComment($comment);
 
 my $product = $::FORM{'product'};
@@ -118,6 +114,13 @@ $component_id || ThrowUserError("require_component");
 
 if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
     ThrowUserError("require_summary");
+}
+
+# Check that if required a description has been provided
+# This has to go somewhere after 'maketemplate' 
+#  or it breaks bookmarks with no comments.
+if (Param("commentoncreate") && !trim($::FORM{'comment'})) {
+    ThrowUserError("description_required");
 }
 
 # If bug_file_loc is "http://", the default, strip it out and use an empty
