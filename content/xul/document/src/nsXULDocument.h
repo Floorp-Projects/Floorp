@@ -231,6 +231,8 @@ public:
 
     NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader);
 
+    NS_IMETHOD GetFocusController(nsIFocusController** aFocusController);
+
     virtual void AddObserver(nsIDocumentObserver* aObserver);
 
     virtual PRBool RemoveObserver(nsIDocumentObserver* aObserver);
@@ -548,6 +550,8 @@ protected:
     nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip
     nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // [OWNER] list of names in the document
 
+    nsWeakPtr mFocusController;
+
     /**
      * Context stack, which maintains the state of the Builder and allows
      * it to be interrupted.
@@ -793,8 +797,6 @@ protected:
 
 private:
     // helpers
-
-    nsresult GetFocusController(nsIFocusController** aController);
 
 };
 

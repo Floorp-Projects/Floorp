@@ -59,7 +59,8 @@ nsFocusController::~nsFocusController(void)
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsFocusController, nsIFocusController, nsIDOMFocusListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS4(nsFocusController, nsIFocusController,
+                   nsIDOMFocusListener, nsIDOMEventListener, nsSupportsWeakReference)
 
 NS_IMETHODIMP
 nsFocusController::Create(nsIFocusController** aResult)
@@ -401,13 +402,13 @@ nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, char* aReason)
   if(aSuppressFocus) {
     ++mSuppressFocus;
 #ifdef DEBUG_hyatt
-    printf("[%d] SuppressFocus incremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
+    printf("[%p] SuppressFocus incremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
 #endif
   }
   else if(mSuppressFocus > 0) {
     --mSuppressFocus;
 #ifdef DEBUG_hyatt
-    printf("[%d] SuppressFocus decremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
+    printf("[%p] SuppressFocus decremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
 #endif
   }
   else 

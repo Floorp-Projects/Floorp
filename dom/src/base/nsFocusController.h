@@ -29,6 +29,7 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
+#include "nsWeakReference.h"
 
 class nsIDOMElement;
 class nsIDOMWindow;
@@ -36,7 +37,8 @@ class nsIController;
 class nsIControllers;
 
 class nsFocusController : public nsIFocusController, 
-                          public nsIDOMFocusListener
+                          public nsIDOMFocusListener,
+                          public nsSupportsWeakReference
 {
 public:
   static NS_IMETHODIMP Create(nsIFocusController** aResult);
