@@ -328,7 +328,8 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                           nsCOMPtr<nsIInterfaceRequestor> interfaces;
                           nsCOMPtr<nsIPrompt> prompter;
 
-                          channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
+                          if (channel)
+                            channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
                           if (interfaces)
                             interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
                           if (!prompter)
