@@ -566,24 +566,11 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
     else
         m_pop3ConData->get_url = PR_FALSE;
 
-	// Time to set up the message store event sink
-	//
-	// -*-*-*- To Do:
-	// ???
-
 	if (!m_pop3ConData->only_check_for_new_mail)
 	{
-		// Pick up pref setting regarding leave messages on server, message size
-		// limit, for now do the following
+		// Pick up pref setting regarding leave messages on server, message
+        // size limit
 
-#if 1 // for now
-		m_pop3ConData->leave_on_server = PR_TRUE;
-        // ** jefft - bug 16338 -- POP3- large file attachment do not download
-        // with the msg
-		// m_pop3ConData->size_limit = 50 * 1024;
-        m_pop3ConData->size_limit = -1;  // for now; **** come back later ****
-                                         // no limits set here
-#else  // in the future
         m_pop3Server->GetLeaveMessagesOnServer(&m_pop3ConData->leave_on_server);
         PRBool limitMessageSize = PR_FALSE;
         m_pop3Server->GetLimitMessageSize(&limitMessageSize);
@@ -593,7 +580,6 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
             if (m_pop3ConData->size_limit == 0) // default value
                 m_pop3ConData->size_limit = 50 * 1024;
         }
-#endif 
 	}
 
 	// UIDL stuff
