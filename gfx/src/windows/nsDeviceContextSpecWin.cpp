@@ -273,7 +273,7 @@ static nsresult
 GetFileNameForPrintSettings(nsIPrintSettings* aPS)
 {
   // for testing
-#ifdef DEBUG_rodsX
+#ifdef DEBUG_rods
   return NS_OK;
 #endif
 
