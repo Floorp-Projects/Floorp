@@ -739,11 +739,11 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
         *slash = '\0';
 
 #ifdef XP_OS2
-        rv = CreateDirectoryA(mResolvedPath, NULL);
+        rv = CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL);
         if (rv) {
             rv = ConvertOS2Error(rv);
 #else
-        if (!CreateDirectoryA(mResolvedPath, NULL)) {
+        if (!CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL)) {
             rv = ConvertWinError(GetLastError());
 #endif
             if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
@@ -766,11 +766,11 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     if (type == DIRECTORY_TYPE)
     {
 #ifdef XP_OS2
-        rv = CreateDirectoryA(mResolvedPath, NULL);
+        rv = CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL);
         if (rv) 
             return ConvertOS2Error(rv);
 #else
-        if (!CreateDirectoryA(mResolvedPath, NULL))
+        if (!CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL))
             return ConvertWinError(GetLastError());
 #endif
         else 
@@ -858,11 +858,7 @@ NS_IMETHODIMP
 nsLocalFile::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-#ifdef XP_OS2_VACPP
-    *_retval = (char*) nsMemory::Clone((void *)mWorkingPath, strlen(mWorkingPath)+1);
-#else
-    *_retval = (char*) nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
-#endif
+    *_retval = (char*) nsMemory::Clone(mWorkingPath.get(), strlen(mWorkingPath)+1);
     return NS_OK;
 }
 
@@ -912,7 +908,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
 
     APIRET rc;
     if (!move) {
-        rc = DosCopy(filePath, (PSZ)destPath, DCPY_EXISTING);
+        rc = DosCopy(filePath, (PSZ)NS_CONST_CAST(char*, destPath.get()), DCPY_EXISTING);
         /* WSOD2 HACK */
         if (rc == 65) { // NETWORK_ACCESS_DENIED
           CHAR         achProgram[CCHMAXPATH];  // buffer for program name, parameters
@@ -922,7 +918,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
           strcat(achProgram, """COPY ");
           strcat(achProgram, filePath);
           strcat(achProgram, " ");
-          strcat(achProgram, (PSZ)destPath);
+          strcat(achProgram, (PSZ)NS_CONST_CAST(char*, destPath.get()));
           strcat(achProgram, """");
           achProgram[strlen(achProgram) + 1] = '\0';
           achProgram[7] = '\0';
@@ -932,7 +928,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
           rc = 0; // Assume it worked
         } /* endif */
     } else {
-        rc = DosMove(filePath, (PSZ)destPath);
+        rc = DosMove(filePath, (PSZ)NS_CONST_CAST(char*, destPath.get()));
     }
     
     if (rc)
@@ -1215,7 +1211,7 @@ nsLocalFile::Spawn(const char **args, PRUint32 count)
     PID pid;
     memset(&sd, 0, sizeof(STARTDATA));
     sd.Length = 24;
-    sd.PgmName = mResolvedPath;
+    sd.PgmName = NS_CONST_CAST(char*, mResolvedPath.get());
     sd.PgmInputs = pszInputs;
     APIRET rc = DosStartSession(&sd, &sid, &pid);
 
@@ -2051,11 +2047,7 @@ nsLocalFile::GetTarget(char **_retval)
 #endif
     ResolveAndStat(PR_TRUE);
  
-#ifdef XP_OS2_VACPP
-    *_retval = (char*) nsMemory::Clone( (void *)mResolvedPath, strlen(mResolvedPath)+1 );
-#else       
-    *_retval = (char*) nsMemory::Clone( mResolvedPath, strlen(mResolvedPath)+1 );
-#endif
+    *_retval = (char*) nsMemory::Clone( mResolvedPath.get(), strlen(mResolvedPath)+1 );
     return NS_OK;
 }
 
@@ -2108,7 +2100,7 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
 {
     nsresult rv;
-    char* ePath = (char*) nsMemory::Clone((char*)mWorkingPath, strlen(mWorkingPath)+1);
+    char* ePath = (char*) nsMemory::Clone(mWorkingPath.get(), strlen(mWorkingPath)+1);
     if (ePath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 #if defined (XP_WIN) || defined(XP_OS2)
