@@ -44,10 +44,6 @@ endif
 
 CSRCS		+= prefapi.c
 
-include $(topsrcdir)/config/rules.mk
-
-INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(srcdir)/unix -I./unix
-
 GARBAGE		+= unix/jsbuffer.h
 
 CONFIG_FILES	= initpref.js \
@@ -88,6 +84,32 @@ CONFIG_FILES	+= \
 
 CONFIG_FILES	:= $(addprefix $(srcdir)/, $(CONFIG_FILES))
 
+
+##############################
+# Magic PREF_ generation hacks
+
+# put auto-generated headers in here
+HEADER_DEST_DIR = $(srcdir)/prefnames
+
+# rename .js -> .h
+CONFIG_FILE_HEADERS = $(notdir $(CONFIG_FILES:%.js=%.h))
+
+# strip out the path and add the dest and pref_ prefix
+CONFIG_FILE_EXPORTS = $(addprefix $(HEADER_DEST_DIR)/pref_,$(CONFIG_FILE_HEADERS))
+
+# export these new files so other modules can use them
+EXPORTS += $(CONFIG_FILE_EXPORTS)
+
+
+include $(topsrcdir)/config/rules.mk
+
+# VPATH allows us to make the auto-generation rule works for
+# everything in VPATH (so init/all.js -> pref_all.h etc)
+VPATH += $(srcdir)/init $(srcdir)/unix
+
+# this comes after rules.mk because rules.mk blows it away
+INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(srcdir)/unix -I./unix
+
 $(LIBRARY): $(OBJS)
 
 unix/unixpref.c: unix/jsbuffer.h
@@ -101,3 +123,12 @@ unix/jsbuffer.h: Makefile $(CONFIG_FILES)
 	@echo "static char* pref_init_buffer = " >> $@
 	@cat $(CONFIG_FILES) | sed 's/\\/\\\\/g' | sed 's/\\r/\\n/' | sed 's/\"/\\\"/g' | sed 's/^M//g' | sed 's/^/"/' | sed 's/$$/\\n"/' >> $@
 	@echo \; >> $@
+
+# create the directory if necessary
+$(HEADER_DEST_DIR):
+	mkdir $(HEADER_DEST_DIR)
+
+# generate the header files so that path/file.js -> pref_file.h
+# path must be in the VPATH above
+$(HEADER_DEST_DIR)/pref_%.h: %.js $(HEADER_DEST_DIR)
+	$(PERL) $(srcdir)/prefheader.pl $< > $@
