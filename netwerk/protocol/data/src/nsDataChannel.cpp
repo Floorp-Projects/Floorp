@@ -179,19 +179,26 @@ nsDataChannel::ParseData() {
         nsCAutoString dataBuf(comma+1);
         dataBuf.StripWhitespace();
         dataBuffer = ToNewCString(dataBuf);
+        if (!dataBuffer)
+            return NS_ERROR_OUT_OF_MEMORY;
         cleanup = PR_TRUE;
     }
     
     nsCOMPtr<nsIInputStream> bufInStream;
     nsCOMPtr<nsIOutputStream> bufOutStream;
-
+    writeData* dataToWrite = nsnull;
+    
     rv = NS_NewPipe(getter_AddRefs(bufInStream), getter_AddRefs(bufOutStream));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        goto cleanup;
 
     PRUint32 dataLen = PL_strlen(dataBuffer);
     PRUint32 wrote;
-    writeData *dataToWrite = (writeData*)nsMemory::Alloc(sizeof(writeData));
-    if (!dataToWrite) return NS_ERROR_OUT_OF_MEMORY;
+    dataToWrite = (writeData*)nsMemory::Alloc(sizeof(writeData));
+    if (!dataToWrite) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto cleanup;
+    }
 
     if (lBase64) {
         *base64 = 'b';
@@ -206,8 +213,14 @@ nsDataChannel::ParseData() {
         }
         resultLen = ((resultLen * 3) / 4);
 
+        // XXX PL_Base64Decode will return a null pointer for decoding
+        // errors.  Since those are more likely than out-of-memory,
+        // we return NS_ERROR_UNEXPECTED instead.
         char * decodedData = PL_Base64Decode(dataBuffer, dataLen, nsnull);
-        if (!decodedData) return NS_ERROR_OUT_OF_MEMORY;
+        if (!decodedData) {
+            rv = NS_ERROR_UNEXPECTED;
+            goto cleanup;
+        }
 
         dataToWrite->dataLen = resultLen;
         dataToWrite->data = decodedData;
@@ -221,19 +234,26 @@ nsDataChannel::ParseData() {
 
         rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataLen, &wrote);
     }
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        goto cleanup;
 
     // Initialize the content length of the data...
     mContentLength = dataToWrite->dataLen;
 
     rv = bufInStream->QueryInterface(NS_GET_IID(nsIInputStream), getter_AddRefs(mDataStream));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        goto cleanup;
 
     *comma = ',';
 
-    nsMemory::Free(dataToWrite);
-    if (cleanup) nsMemory::Free(dataBuffer);
-    return NS_OK;
+    rv = NS_OK;
+
+ cleanup:
+    if (dataToWrite)
+        nsMemory::Free(dataToWrite);
+    if (cleanup)
+        nsMemory::Free(dataBuffer);
+    return rv;
 }
 
 NS_METHOD
