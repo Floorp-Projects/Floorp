@@ -35,4 +35,9 @@ LOCAL_INCLUDES	= -I./expat/xmltok -I./expat/xmlparse/ -I./glue
 
 include $(DEPTH)/config/rules.mk
 
+ifdef RHAPSODY
+CFLAGS += -traditional-cpp
+endif
+
 $(LIBRARY): $(OBJS)
+
