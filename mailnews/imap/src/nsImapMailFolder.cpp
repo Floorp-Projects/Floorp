@@ -4459,31 +4459,37 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           }
           break;
         case nsIImapUrl::nsImapAddMsgFlags:
-        {
+          {
             imapMessageFlagsType flags = 0;
             imapUrl->GetMsgFlags(&flags);
-            //we need to delete headers from db only when we don't show deleted msgs
-            if (flags & kImapMsgDeletedFlag && !ShowDeletedMessages())
+            if (flags & kImapMsgDeletedFlag)
             {
+              // we need to delete headers from db only when we don't show deleted msgs
+              if (!ShowDeletedMessages()) 
+              {
                 nsCOMPtr<nsIMsgDatabase> db;
                 rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
                 if (NS_SUCCEEDED(rv) && db)
                 {
-                    nsMsgKeyArray keyArray;
-                    char *keyString = nsnull;
-                    imapUrl->CreateListOfMessageIdsString(&keyString);
-                    if (keyString)
-                    {
-                      ParseUidString(keyString, keyArray);
-                      db->DeleteMessages(&keyArray, nsnull);
-                      db->SetSummaryValid(PR_TRUE);
-                      db->Commit(nsMsgDBCommitType::kLargeCommit);
-                      nsCRT::free(keyString);
-                    }
+                  nsMsgKeyArray keyArray;
+                  char *keyString = nsnull;
+                  imapUrl->CreateListOfMessageIdsString(&keyString);
+                  if (keyString)
+                  {
+                    ParseUidString(keyString, keyArray);
+                    db->DeleteMessages(&keyArray, nsnull);
+                    db->SetSummaryValid(PR_TRUE);
+                    db->Commit(nsMsgDBCommitType::kLargeCommit);
+                    nsCRT::free(keyString);
+                  }
                 }
+              }
+              // see bug #188051
+              // only send the folder event only if we are deleting
+              // (and not for other flag changes)
+              NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
             }
-            NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
-        }
+          }
           break;
         case nsIImapUrl::nsImapAppendMsgFromFile:
         case nsIImapUrl::nsImapAppendDraftFromFile:
