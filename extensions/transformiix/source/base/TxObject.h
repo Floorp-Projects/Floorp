@@ -45,7 +45,7 @@ class TxObject {
      * Returns the Hashcode for this TxObject
     **/
     virtual PRInt32 hashCode() {
-        return (PRInt32)this;
+        return NS_PTR_TO_INT32(this);
     } //-- hashCode
 
     /**

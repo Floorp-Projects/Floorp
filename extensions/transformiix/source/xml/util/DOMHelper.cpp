@@ -25,6 +25,7 @@
  * A class used to overcome DOM 1.0 deficiencies
 **/
 
+#include "baseutils.h"
 #include "DOMHelper.h"
 #include "primitives.h"
 
@@ -83,11 +84,11 @@ void DOMHelper::generateId(Node* node, String& dest) {
     dest.append("id");
 
     if (node->getNodeType() == Node::DOCUMENT_NODE) {
-        Integer::toString((int)node,dest);
+        Integer::toString(NS_PTR_TO_INT32(node),dest);
         return;
     }
 
-    Integer::toString((int)node->getOwnerDocument(), dest);
+    Integer::toString(NS_PTR_TO_INT32(node->getOwnerDocument()), dest);
 
     OrderInfo* orderInfo = getDocumentOrder(node);
 
