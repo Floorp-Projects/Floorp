@@ -265,10 +265,10 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
-  // if we get here it is because of a nested tree row group
-  if (mFirstMap) {
-    mFirstMap->InsertRows(*this, aRows, aFirstRowIndex, aConsiderSpans);
-  }
+  
+  NS_ASSERTION(PR_FALSE, "Attempt to insert row into wrong map.");
+  /*if (mFirstMap)
+    mFirstMap->InsertRows(*this, aRows, aFirstRowIndex, aConsiderSpans);*/
 }
 
 void
