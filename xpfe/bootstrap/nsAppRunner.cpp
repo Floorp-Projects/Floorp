@@ -256,6 +256,7 @@ int main(int argc, char* argv[])
      */
   /* Comments/questions to alecf@netscape.com */
   {
+	/*MESSENGER*/
     nsIAppShellService *messenger;
     const char *messengerProgID = "component://netscape/messenger";
     nsresult result;
@@ -275,6 +276,27 @@ int main(int argc, char* argv[])
     if (NS_SUCCEEDED(result)) {
       printf("The Messenger component is available. Initializing...\n");
       result = messenger->Initialize();
+    }
+ 
+	/*COMPOSER*/
+      nsIAppShellService *composer;
+    const char *composerProgID = "component://netscape/composer";
+
+    /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
+#define NS_COMPOSERBOOTSTRAP_CID                 \
+	{ /* 82041531-D73E-11d2-82A9-00805F2A0107 */      \
+		0x82041531, 0xd73e, 0x11d2,                     \
+		{0x82, 0xa9, 0x0, 0x80, 0x5f, 0x2a, 0x1, 0x7}}
+
+    NS_DEFINE_CID(kCComposerBootstrapCID, NS_COMPOSERBOOTSTRAP_CID);
+    
+    result = nsComponentManager::CreateInstance(kCComposerBootstrapCID,
+                                                nsnull,
+                                                nsIAppShellService::GetIID(),
+                                                (void **)&composer);
+    if (NS_SUCCEEDED(result)) {
+      printf("The Composer component is available. Initializing...\n");
+      result = composer->Initialize();
     }
   }
   /* End of mailhack */
