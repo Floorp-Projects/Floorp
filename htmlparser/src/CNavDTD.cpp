@@ -49,6 +49,7 @@ static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kHTMLTextContentType = "text/html";
 static char* kVerificationDir = "c:/temp";
+static const char* kViewSourceCommand= "view-source";
 
 static nsAutoString gEmpty;
 
@@ -324,7 +325,10 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
 PRBool CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=aContentType.Equals(kHTMLTextContentType);
+  PRBool result=PR_FALSE;
+  if(!aCommand.Equals(kViewSourceCommand)) {
+    result=aContentType.Equals(kHTMLTextContentType);
+  }
   return result;
 }
 
