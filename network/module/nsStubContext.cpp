@@ -105,7 +105,7 @@ void stub_Alert(MWContext *context,
   } 
   /* No nsINetSupport interface... */
   else {
-    printf("Alert: %s", msg);
+    printf("%cAlert: %s", '\007', msg);
   }
 }
 
@@ -142,7 +142,17 @@ XP_Bool stub_Confirm(MWContext *context,
   } 
   /* No nsINetSupport interface... */
   else {
-    printf("Confirm: %s", msg);
+    printf("%cConfirm: %s (y/n)? ", '\007', msg);
+    char c;
+    for (;;) {
+      c = getchar();
+      if (tolower(c) == 'y') {
+        bResult = TRUE;
+      }
+      if (tolower(c) == 'n') {
+        bResult = FALSE;
+      }
+    }
   }
   return bResult;
 }
@@ -171,7 +181,7 @@ char *stub_Prompt(MWContext *context,
     char buf[256];
 
     printf("%s\n", msg);
-    printf("Prompt: ");
+    printf("%cPrompt: ", '\007');
     scanf("%s", buf);
     if (PL_strlen(buf)) {
       result = PL_strdup(buf);
@@ -208,11 +218,11 @@ stub_PromptUsernameAndPassword(MWContext *context,
     char buf[256];
 
     printf("%s\n", msg);
-    printf("Username: ");
+    printf("%cUsername: ", '\007');
     scanf("%s", buf);
     *username = PL_strdup(buf);
 
-    printf("Password: ");
+    printf("%cPassword: ", '\007');
     scanf("%s", buf);
     *password = PL_strdup(buf);
     if (**username) {
@@ -247,7 +257,7 @@ char *stub_PromptPassword(MWContext *context,
     char buf[256];
 
     printf("%s\n", msg);
-    printf("Password: ");
+    printf("%cPassword: ", '\007');
     scanf("%s", buf);
     if (PL_strlen(buf)) {
       result = PL_strdup(buf);

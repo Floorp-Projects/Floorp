@@ -2494,7 +2494,7 @@ nsBrowserWindow::Alert(const nsString &aText)
   char *str;
 
   str = aText.ToNewCString();
-  printf("Browser Window Alert: %s\n", str);
+  printf("Browser Window Alert: %c%s\n", '\007', str);
   PR_Free(str);
 }
 
@@ -2505,10 +2505,18 @@ nsBrowserWindow::Confirm(const nsString &aText)
   char *str;
 
   str = aText.ToNewCString();
-  printf("Browser Window Confirm: %s (returning false)\n", str);
+  printf("%cBrowser Window Confirm: %s (y/n)? ", '\007', str);
   PR_Free(str);
-
-  return PR_FALSE;
+  char c;
+  for (;;) {
+    c = getchar();
+    if (tolower(c) == 'y') {
+      return PR_TRUE;
+    }
+    if (tolower(c) == 'n') {
+      return PR_FALSE;
+    }
+  }
 }
 
 //----------------------------------------
@@ -2521,7 +2529,7 @@ nsBrowserWindow::Prompt(const nsString &aText,
   char buf[256];
 
   str = aText.ToNewCString();
-  printf("Browser Window: %s\n", str);
+  printf("%cBrowser Window: %s\n", '\007', str);
   PR_Free(str);
 
   printf("Prompt: ");
@@ -2544,10 +2552,10 @@ nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
   printf("Browser Window: %s\n", str);
   PR_Free(str);
 
-  printf("User: ");
+  printf("%cUser: ", '\007');
   scanf("%s", buf);
   aUser = buf;
-  printf("Password: ");
+  printf("%cPassword: ", '\007');
   scanf("%s", buf);
   aPassword = buf;
   
@@ -2563,7 +2571,7 @@ nsBrowserWindow::PromptPassword(const nsString &aText,
   char buf[256];
   
   str = aText.ToNewCString();
-  printf("Browser Window: %s\n", str);
+  printf("%cBrowser Window: %s\n", '\007', str);
   PR_Free(str);
 
   printf("Password: ");

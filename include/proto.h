@@ -265,8 +265,10 @@ extern Bool LO_GridCanGoForward(MWContext *context);
 extern Bool LO_GridCanGoBackward(MWContext *context);
 
 #if defined(SingleSignon)
+extern void SI_RestoreSignonData
+    (char* URLName, char* name, char** value);
 extern void SI_RememberSignonData
-    (MWContext *context, LO_FormSubmitData *submit);
+    (char* URLName, LO_FormSubmitData *submit);
 extern void SI_RememberSignonDataFromBrowser
     (MWContext *context,char* URLName, char* username, char* password);
 extern void SI_RestoreOldSignonData

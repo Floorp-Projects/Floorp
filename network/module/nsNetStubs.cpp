@@ -525,6 +525,17 @@ size_t XP_StrfTime(MWContext* context, char *result, size_t maxsize, int format,
 
 /*
  *---------------------------------------------------------------------------
+ * From ns/lib/layout/edtutil.cpp
+ *---------------------------------------------------------------------------
+ */
+
+void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername)
+{
+    MOZ_FUNCTION_STUB;
+}
+
+/*
+ *---------------------------------------------------------------------------
  * From ns/lib/layout/layutil.c
  *---------------------------------------------------------------------------
  */
@@ -882,7 +893,8 @@ xpJSCookieFilters
 xpFileToPost
 xpMimeTypes
 xpHTTPCookie
-xpHTTPCookiePermission*/
+xpHTTPCookiePermission
+xpHTTPSingleSignon*/
 
 // Caller is repsonsible for freeing string.
 
@@ -914,6 +926,8 @@ char *xpFileTypeToName(XP_FileType type) {
             return PL_strdup("%USER%%COOKIE_F%");
         case (xpHTTPCookiePermission):
             return PL_strdup("%USER%%COOKIE_PERMISSION_F%");
+        case (xpHTTPSingleSignon):
+            return PL_strdup("%USER%%SIGNON_F%");
 
         default:
             break;
@@ -1061,6 +1075,8 @@ NET_InitFilesAndDirs(void) {
 
     // Setup files.
     fileMgr->SetFileAssoc(COOKIE_FILE_TOK, COOKIE_FILE, USER_DIR_TOK);
+    fileMgr->SetFileAssoc(COOKIE_PERMISSION_FILE_TOK, COOKIE_PERMISSION_FILE, USER_DIR_TOK);
+    fileMgr->SetFileAssoc(SIGNON_FILE_TOK, SIGNON_FILE, USER_DIR_TOK);
     fileMgr->SetFileAssoc(CACHE_DB_F_TOK, CACHE_DB_FILE, CACHE_DIR_TOK);
     return TRUE;
 }
@@ -1379,6 +1395,12 @@ WH_FileName (const char *NetName, XP_FileType type)
 #else
         return PL_strdup("cookperm");
 #endif
+    } else if (type == xpHTTPSingleSignon) {
+#ifdef XP_PC
+        return PL_strdup("signons.txt");
+#else
+        return PL_strdup("signons");
+#endif
     } else if (type == xpCacheFAT) {
 ;//		sprintf(newName, "%s\\fat.db", (const char *)theApp.m_pCacheDir);
         
@@ -1438,6 +1460,7 @@ XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
         case xpFileToPost:
         case xpHTTPCookie:
         case xpHTTPCookiePermission:
+        case xpHTTPSingleSignon:
         {
             XP_File fp;
             char* newName = WH_FileName(name, type);
@@ -1768,7 +1791,17 @@ JSBool
 ET_PostMessageBox(MWContext* context, char* szMessage, JSBool bConfirm)
 {
     MOZ_FUNCTION_STUB;
-    return JS_FALSE;
+    fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
+    char c;
+    for (;;) {
+	c = getchar();
+        if (tolower(c) == 'y') {
+	    return JS_TRUE;
+	}
+        if (tolower(c) == 'n') {
+	    return JS_FALSE;
+	}
+    }
 }
 
 JSBool
@@ -1778,7 +1811,7 @@ ET_PostCheckConfirmBox(MWContext* context,
 	XP_Bool *bChecked)
 {
     MOZ_FUNCTION_STUB;
-    fprintf(stdout, "%c%s  y/n?  ", '\007', szMainMessage); /* \007 is BELL */
+    fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMainMessage); /* \007 is BELL */
     char c;
     XP_Bool result;
     for (;;) {

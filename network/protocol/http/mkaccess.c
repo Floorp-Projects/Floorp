@@ -3853,6 +3853,7 @@ XP_MakeRawHTMLDialog(void *proto_win, XPDialogInfo *dialogInfo,
         char* button = NULL;
         char* cookie;
         char* separator;
+        int i, j;
 
         /* read in the cookies file */
         stat(COOKIE_FILE, &stats);
@@ -3861,43 +3862,38 @@ XP_MakeRawHTMLDialog(void *proto_win, XPDialogInfo *dialogInfo,
         f = fopen(COOKIE_FILE, "r");
         fread(readBuf, sizeof(char), fileLength, f);
 
-        /* find the htmldlgs cookie (it is preceded by "htmldlgs" tab "|" ) */
-        cookie = PL_strstr(readBuf, "htmldlgs\t|"); /* get to htmldlgs tab | */
-        cookie = cookie + PL_strlen("htmldlgs\t|"); /* get passed htmldlgs tab | */
+        /* find the htmldlgs cookie (it is preceded by "htmldlgs" tab verical-bar ) */
+        cookie = PL_strstr(readBuf, "htmldlgs\t|"); /* get to htmldlgs tab vert-bar */
+        cookie = cookie + PL_strlen("htmldlgs\t|"); /* get passed htmldlgs tab vert-bar */
 
-        /* button name is first item in cookie (up to next |) */
+        /* button name is first item in cookie (up to next verical bar) */
         separator = strchr(cookie, '|');
         *separator = '\0';
         StrAllocCopy(button, cookie);
         cookie = separator+1;
         *separator = '|';
 
-        /* goneC value is next item in cookie (up to next |) */
-        separator = strchr(cookie, '|');
-        *separator = '\0';
-        StrAllocCopy(argv[0], "goneC");
-        StrAllocCopy(argv[1], cookie);
-        cookie = separator+1;
-        *separator = '|';
+        /* remainder of cookie string are the args, separated by vertical bars */
+        for (i=0; (*cookie != '\n') && (*cookie != '\r'); i++) {
+            separator = strchr(cookie, '|');
+            *separator = '\0';
+            StrAllocCopy(argv[i], cookie);
+            cookie = separator+1;
+            *separator = '|';
+        }
 
-        /* goneP value is next item in cookie (up to next |) */
-        separator = strchr(cookie, '|');
-        *separator = '\0';
-        StrAllocCopy(argv[2], "goneP");
-        StrAllocCopy(argv[3], cookie);
-        cookie = separator+1;
-        *separator = '|';
-
+        /* invoke the dialog callback routine */
         if (!PORT_Strcmp(button,"OK")) {
           (dialogInfo->handler)(NULL, argv, 4, XP_DIALOG_OK_BUTTON);
         } else {
           (dialogInfo->handler)(NULL, argv, 4, XP_DIALOG_CANCEL_BUTTON);
         }
+
+        /* free up the allocated strings */
         XP_FREE(button);
-        XP_FREE(argv[0]);
-        XP_FREE(argv[1]);
-        XP_FREE(argv[2]);
-        XP_FREE(argv[3]);
+        for (j=0; j<1; j++) {
+          XP_FREE(argv[j]);
+        }
         XP_FREE(readBuf);
     }
 
@@ -5436,7 +5432,7 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 "      var expires = new Date();\n"
 "      expires.setTime(expires.getTime() + 1000*60*60*24*365);\n"
 "      document.cookie = \"htmldlgs=|\" + but.value +\n"
-"        \"|\" + goneC.value + \"|\" + goneP.value + \"|\" +\n"
+"        \"|goneC|\" + goneC.value + \"|goneP|\" + goneP.value + \"|\" +\n"
 "        \"; expires=\" + expires.toGMTString();\n"
 #endif
 "      top.frames[button_frame].document.buttons.xxxbuttonxxx.value = but.value;\n"
