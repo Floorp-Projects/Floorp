@@ -88,12 +88,14 @@ public:
    * @param aParent intended parent for view. this is not actually set in the
    *        nsIView through this method. it is only used by the initialization
    *        code to walk up the view tree, if necessary, to find resources.
+   * @param aCilpRect initial clip rect of view
    * @param aVisibilityFlag initial visibility state of view
    * @result The result of the initialization, NS_OK if no errors
    */
   NS_IMETHOD  Init(nsIViewManager* aManager,
 						       const nsRect &aBounds,
                    const nsIView *aParent,
+        					 const nsViewClip *aClip = nsnull,
         					 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
 
   /**

@@ -103,9 +103,10 @@ nsrefcnt nsScrollPortView::Release()
 NS_IMETHODIMP nsScrollPortView::Init(nsIViewManager* aManager,
                                       const nsRect &aBounds,
                                       const nsIView *aParent,
+                                      const nsViewClip *aClip,
                                       nsViewVisibility aVisibilityFlag)
 {
-  return nsView::Init(aManager, aBounds, aParent, aVisibilityFlag);
+  return nsView::Init(aManager, aBounds, aParent, aClip, aVisibilityFlag);
 }
 
 NS_IMETHODIMP nsScrollPortView::SetDimensions(nscoord width, nscoord height, PRBool aPaint)
