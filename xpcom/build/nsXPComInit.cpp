@@ -503,8 +503,6 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 //
 nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
-    nsrefcnt cnt;
-
     // Notify observers of xpcom shutting down
     nsresult rv = NS_OK;
     {
@@ -576,8 +574,11 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Finally, release the component manager last because it unloads the
     // libraries:
-    NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
-    NS_WARN_IF_FALSE(cnt == 0, "Component Manager being held past XPCOM shutdown.");
+    if (nsComponentManagerImpl::gComponentManager) {
+      nsrefcnt cnt;
+      NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
+      NS_WARN_IF_FALSE(cnt == 0, "Component Manager being held past XPCOM shutdown.");
+    }
     nsComponentManagerImpl::gComponentManager = nsnull;
 
 #ifdef DEBUG
