@@ -868,7 +868,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         if (*fmt == '{') {
                             if (isdigit(fmt[1])) {
                                 int d = JS7_UNDEC(fmt[1]);
-                                JS_ASSERT(expandedArgs < argCount);
+                                JS_ASSERT(d < argCount);
                                 arg = reportp->messageArgs[d];
                                 js_strncpy(out, arg, argLengths[d]);
                                 out += argLengths[d];
