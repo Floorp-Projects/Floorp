@@ -164,8 +164,8 @@ void CnsIChannelTests::GetURITest(nsIChannel *theChannel, PRInt16 displayMode)
 
 void CnsIChannelTests::SetOwnerTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
-	theSupports = do_QueryInterface(theChannel);
-	rv = theChannel->SetOwner(theSupports);
+	theSupports = do_QueryInterface(qaWebBrowser);
+	rv = theChannel->SetOwner(theChannel);
 	RvTestResult(rv, "SetOwner", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "SetOwner");
@@ -211,7 +211,7 @@ void CnsIChannelTests::GetNotificationsTest(nsIChannel *theChannel, PRInt16 disp
 
 void CnsIChannelTests::GetSecurityInfoTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
-	theSupports = do_QueryInterface(theChannel);
+	theSupports = do_QueryInterface(qaWebBrowser);
 	if (!theChannel)
 	{
 	   QAOutput("Didn't get nsIChannel object. GetSecurityInfoTest failed.", displayMode);
@@ -308,7 +308,11 @@ void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode
 	   return;
 	}
 	// this calls nsIStreamListener::OnDataAvailable()
-	rv = theChannel->AsyncOpen(listener, nsnull);
+	theSupports = do_QueryInterface(theChannel);
+	if (!theSupports)
+	   QAOutput("Didn't get the nsISupports object. AsyncOpen() failed.", displayMode);
+
+	rv = theChannel->AsyncOpen(listener, theSupports);
 	RvTestResult(rv, "AsyncOpen()", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "AsyncOpen()");
