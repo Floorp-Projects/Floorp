@@ -42,6 +42,7 @@
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
 const NC_NS = "http://home.netscape.com/NC-rdf#";
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
+const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
 
 var gDownloadManager  = null;
 var gDownloadListener = null;
@@ -313,6 +314,33 @@ function onDownloadOpen(aEvent)
 
       if (f.exists()) {
         // XXXben security check!  
+        if (f.isExecutable()) {
+          var dontAsk = false;
+          var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+          try {
+            dontAsk = !pref.getBoolPref(PREF_BDM_ALERTONEXEOPEN);
+          }
+          catch (e) { }
+          
+          if (!dontAsk) {
+            var strings = document.getElementById("downloadStrings");
+            var name = aEvent.target.getAttribute("target");
+            var message = strings.getFormattedString("fileExecutableSecurityWarning", [name, name]);
+
+            var title = strings.getString("fileExecutableSecurityWarningTitle");
+            var dontAsk = strings.getString("fileExecutableSecurityWarningDontAsk");
+
+            var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+            var checkbox = { value: false };
+            var open = promptSvc.confirmCheck(window, title, message, dontAsk, checkbox);
+            
+            if (!open) 
+              return;
+            else
+              pref.setBoolPref(PREF_BDM_ALERTONEXEOPEN, !checkbox.value);              
+          }        
+        }
         f.launch();
       }
       else {

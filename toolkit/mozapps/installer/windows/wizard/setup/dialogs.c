@@ -41,6 +41,9 @@
 // commdlg.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
 
+// Turn off default to safe upgrade for 0.8... until we can guarantee that we won't be deleting other files. 
+#define DEFAULT_SAFE_UPGRADE FALSE
+
 static WNDPROC OldListBoxWndProc;
 static DWORD   gdwACFlag;
 static BOOL    gDidShowUpgradePanel;
@@ -118,7 +121,7 @@ void InitSequence(HINSTANCE hInstance)
     // If we're not showing the Upgrade dialog, we need to set some state to
     // tell the installer to default to a Safe Install. 
 
-    sgProduct.doCleanupOnUpgrade = TRUE;
+    sgProduct.doCleanupOnUpgrade = DEFAULT_SAFE_UPGRADE;
   }
 
   if (diSelectComponents.bShowDialog) {
@@ -337,6 +340,7 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     // Check the "Decline" Radio button by default. 
     CheckDlgButton(hDlg, IDC_RADIO_DECLINE, BST_CHECKED);
     SendMessage(GetDlgItem(hDlg, IDC_RADIO_DECLINE), BM_SETCHECK, BST_CHECKED, 0);
+    PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_BACK);
 
     // License Text
     lstrcpy(szBuf, szSetupDir);
@@ -592,7 +596,7 @@ void CheckForUpgrade(HWND aPanel, int aNextPanel)
       if(sgProduct.mode == NORMAL)
         nextPanel = DLG_UPGRADE;
       else {
-        sgProduct.doCleanupOnUpgrade = TRUE;
+        sgProduct.doCleanupOnUpgrade = DEFAULT_SAFE_UPGRADE;
         nextPanel = aNextPanel;
       }
     }
