@@ -53,7 +53,10 @@ else
 DIRS		+= $(MOZ_WIDGET_TOOLKIT)
 endif
 
+# unix_services are only useful in unix, duh...
+ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= unix_services
+endif
 
 include $(topsrcdir)/config/rules.mk
 
