@@ -337,8 +337,13 @@ void nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame,
     NS_IF_RELEASE(docURL);
 
     // Now pass on absolute url to the click handler
-    nsPostData postData(!isURLEncoded, data.ToNewCString()); 
-    handler->OnLinkClick(aFrame, absURLSpec, target, &postData);
+    if (isPost) {
+      nsPostData postData(!isURLEncoded, data.ToNewCString()); 
+      handler->OnLinkClick(aFrame, absURLSpec, target, &postData);
+    }
+    else {
+      handler->OnLinkClick(aFrame, absURLSpec, target, nsnull);
+    }
 
 DebugPrint("url", absURLSpec);
 DebugPrint("data", data);
