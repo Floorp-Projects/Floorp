@@ -218,6 +218,8 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
       modalDelegate:self
      didEndSelector:NULL
         contextInfo:NULL];
+  NSSize min = {440, 240};
+  [mCookiesPanel setMinSize:min];
 }
 
 -(IBAction) removeCookies:(id)aSender
@@ -316,6 +318,8 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
       modalDelegate:self
      didEndSelector:NULL
         contextInfo:NULL];
+  NSSize min = {440, 240};
+  [mPermissionsPanel setMinSize:min];
 }
 
 -(IBAction) removeCookiePermissions:(id)aSender
