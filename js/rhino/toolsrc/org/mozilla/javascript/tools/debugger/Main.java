@@ -3415,15 +3415,24 @@ public class Main extends JFrame implements Debugger, ContextListener {
             Scriptable scope;
             FrameHelper frame = contextData.getFrame(frameIndex);
             scope = frame.getVariableObject();
+            Script script;
+            int savedLevel = cx.getOptimizationLevel();
+            try {
+                cx.setOptimizationLevel(-1);
+                script = cx.compileString(scope, expr, "", 0, null);
+            } finally {
+                cx.setOptimizationLevel(savedLevel);
+            }
             Object result;
-            if (scope instanceof NativeCall) {
+            if (scope instanceof NativeCall
+                && script instanceof Function)
+            {
                 NativeCall call = (NativeCall)scope;
-                result = NativeGlobal.evalSpecial(cx, call,
-                                                  call.getThisObj(),
-                                                  new Object[]{expr},
-                                                  "", 1);
+                Function f = (Function)script;
+                result = f.call(cx, scope, call.getThisObj(),
+                                ScriptRuntime.emptyArgs);
             } else {
-                result = cx.evaluateString(scope, expr, "", 0, null);
+                result = script.exec(cx, scope);
             }
             if (result == Undefined.instance) {
                 result = "";
