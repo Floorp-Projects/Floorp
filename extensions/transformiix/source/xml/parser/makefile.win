@@ -31,7 +31,6 @@ REQUIRES	= string \
 		  appshell \
 		  xpconnect \
 		  caps \
-		  raptor \
 		  content \
 		  $(NULL)
 

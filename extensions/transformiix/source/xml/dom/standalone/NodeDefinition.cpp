@@ -32,10 +32,7 @@
 #include "dom.h"
 #include "ArrayList.h"
 #include "URIUtils.h"
-#include "txAtom.h"
-
-const String XMLBASE_ATTR = "xml:base";
-const String XMLNS_ATTR = "xmlns";
+#include "txAtoms.h"
 
 NodeDefinition::NodeDefinition(NodeType type, const String& name,
                                const String& value, Document* owner)
@@ -379,15 +376,15 @@ PRInt32 NodeDefinition::getNamespaceID()
 //
 // @return namespace associated with prefix
 //
-PRInt32 NodeDefinition::lookupNamespaceID(txAtom* prefix)
+PRInt32 NodeDefinition::lookupNamespaceID(txAtom* aPrefix)
 {
   // this is http://www.w3.org/2000/xmlns/,
   // ID = kNameSpaceID_XMLNS, see txNamespaceManager::Init
-  if (prefix == txXMLAtoms::XMLNSPrefix)
+  if (aPrefix == txXMLAtoms::xmlns)
     return kNameSpaceID_XMLNS; 
   // this is http://www.w3.org/XML/1998/namespace,
   // ID = kNameSpaceID_XML, see txNamespaceManager::Init
-  if (prefix == txXMLAtoms::XMLPrefix)
+  if (aPrefix == txXMLAtoms::xml)
     return kNameSpaceID_XML; 
 
   Node* node = this;
@@ -396,7 +393,7 @@ PRInt32 NodeDefinition::lookupNamespaceID(txAtom* prefix)
 
   String name("xmlns:");
   String prefixString;
-  TX_GET_ATOM_STRING(prefix,prefixString);
+  TX_GET_ATOM_STRING(aPrefix, prefixString);
   name.append(prefixString);
   Attr* xmlns;
   while (node && node->getNodeType() == Node::ELEMENT_NODE) {
@@ -430,14 +427,14 @@ String NodeDefinition::getBaseURI()
   Node* node = this;
   ArrayList baseUrls;
   String url;
-  Node* xbAttr;
+  String attValue;
 
   while (node) {
     switch (node->getNodeType()) {
       case Node::ELEMENT_NODE :
-        xbAttr = ((Element*)node)->getAttributeNode(XMLBASE_ATTR);
-        if (xbAttr)
-          baseUrls.add(new String(xbAttr->getNodeValue()));
+        if (((Element*)node)->getAttr(txXMLAtoms::base, kNameSpaceID_XML,
+                                      attValue))
+          baseUrls.add(new String(attValue));
         break;
 
       case Node::DOCUMENT_NODE :

@@ -51,6 +51,7 @@ CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\Stack.obj \
 	..\source\base\$(OBJDIR)\StringList.obj \
 	..\source\base\$(OBJDIR)\Tokenizer.obj \
+	..\source\base\$(OBJDIR)\txAtoms.obj \
 	..\source\base\$(OBJDIR)\MozillaString.obj \
 	..\source\net\$(OBJDIR)\URIUtils.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaObjectWrapper.obj \
@@ -138,7 +139,7 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\source\xslt\functions \
+LINCS= -I$(PUBLIC)\xpcom -I..\source\xslt\functions \
       -I..\source\xml\dom -I..\source\xml\dom\mozImpl -I..\source\xml\util \
       -I..\source\xpath -I..\source\xslt\util -I..\source\xml -I..\source\xslt \
       -I..\source\base -I..\source\net -I..\source\xml\parser
@@ -146,15 +147,8 @@ LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\source\xslt\functions \
 # These are the libraries we need to link with to create the dll
 LLIBS=$(LLIBS)  $(LIBNSPR)		\
  $(DIST)\lib\xpcom.lib	\
-!ifndef NECKO
-	$(DIST)\lib\netlib.lib \
-!endif
  $(DIST)\lib\js3250.lib \
  $(DIST)\lib\expat.lib
-
-WIN_LIBS =                            \
-        shell32.lib                    \
-	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

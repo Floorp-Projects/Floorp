@@ -27,7 +27,7 @@
    interface into a TransforMIIX Node interface.
 */
 
-#include "txAtom.h"
+#include "txAtoms.h"
 #include "mozilladom.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
@@ -433,16 +433,16 @@ Node* Node::getXPathParent()
  * @param prefix atom for prefix to look up
  * @return namespace ID for prefix
  */
-PRInt32 Node::lookupNamespaceID(txAtom* prefix)
+PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
 {
     NSI_FROM_TX(Node)
     nsresult rv;
     
     if (!nsNode)
         return kNameSpaceID_Unknown;
-    if (prefix == txXMLAtoms::XMLNSPrefix)
+    if (aPrefix == txXMLAtoms::xmlns)
         return kNameSpaceID_XMLNS;
-    if (prefix == txXMLAtoms::XMLPrefix)
+    if (aPrefix == txXMLAtoms::xml)
         return kNameSpaceID_XML;
 
     nsCOMPtr<nsIContent> elem;
@@ -467,7 +467,7 @@ PRInt32 Node::lookupNamespaceID(txAtom* prefix)
 
     while (elem) {
         nsAutoString uri;
-        rv = elem->GetAttr(kNameSpaceID_XMLNS, prefix, uri);
+        rv = elem->GetAttr(kNameSpaceID_XMLNS, aPrefix, uri);
         NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
         if (rv != NS_CONTENT_ATTR_NOT_THERE) {
             PRInt32 nsId;

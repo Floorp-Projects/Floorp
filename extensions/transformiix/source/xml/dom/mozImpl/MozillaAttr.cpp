@@ -44,6 +44,10 @@ Attr::Attr(nsIDOMAttr* aAttr, Document* aOwner) : Node(aAttr, aOwner)
         return;
     nsAutoString ns;
     aAttr->GetNamespaceURI(ns);
+    if (ns.IsEmpty()) {
+        namespaceID = kNameSpaceID_None;
+        return;
+    }
     NS_ASSERTION(aOwner->nsNSManager,
                  "owner document lacks namespace manager");
     if (!aOwner->nsNSManager)

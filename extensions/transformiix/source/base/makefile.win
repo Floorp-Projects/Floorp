@@ -41,7 +41,8 @@ CPPSRCS=				\
 	Stack.cpp			\
 	Map.cpp				\
 	StringList.cpp			\
-	Tokenizer.cpp			
+	Tokenizer.cpp			\
+	txAtoms.cpp
 
 !ifndef TX_EXE
 CPPSRCS = $(CPPSRCS)			\
@@ -65,7 +66,8 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\Stack.obj			\
 	.\$(OBJDIR)\Map.obj			\
 	.\$(OBJDIR)\StringList.obj		\
-	.\$(OBJDIR)\Tokenizer.obj		
+	.\$(OBJDIR)\Tokenizer.obj		\
+	.\$(OBJDIR)\txAtoms.obj
 
 !ifndef TX_EXE
 CPP_OBJS = $(CPP_OBJS)			\
@@ -81,7 +83,7 @@ CPP_OBJS = $(CPP_OBJS)			        \
 EXPORTS = 					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor
+LINCS=-I$(PUBLIC)\xpcom -I..\xpath -I..\xslt
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -60,6 +60,7 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/base/Stack.$(OBJ_SUFFIX) \
   ../source/base/StringList.$(OBJ_SUFFIX) \
   ../source/base/Tokenizer.$(OBJ_SUFFIX) \
+  ../source/base/txAtoms.$(OBJ_SUFFIX) \
   ../source/base/MozillaString.$(OBJ_SUFFIX) \
   ../source/net/URIUtils.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaObjectWrapper.$(OBJ_SUFFIX) \

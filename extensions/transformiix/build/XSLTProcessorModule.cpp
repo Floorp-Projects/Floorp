@@ -27,11 +27,11 @@
 #include "nsICategoryManager.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptNameSpaceManager.h"
+#include "nsSyncLoader.h"
 #include "nsXPIDLString.h"
-
+#include "txAtoms.h"
 #include "XSLTProcessor.h"
 #include "XPathProcessor.h"
-#include "nsSyncLoader.h"
 
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(XSLTProcessor)
@@ -68,11 +68,11 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
   return rv;
 }
 
-// Perform our one-time intialization for this module
 static PRBool gInitialized = PR_FALSE;
 
+// Perform our one-time intialization for this module
 PR_STATIC_CALLBACK(nsresult)
-Initialize(nsIModule* self)
+Initialize(nsIModule* aSelf)
 {
   NS_PRECONDITION(!gInitialized, "module already initialized");
   if (gInitialized)
@@ -80,30 +80,34 @@ Initialize(nsIModule* self)
 
   gInitialized = PR_TRUE;
 
-  txXMLAtoms::XMLPrefix = NS_NewAtom("xml");
-  NS_ENSURE_TRUE(txXMLAtoms::XMLPrefix, NS_ERROR_OUT_OF_MEMORY);
-  txXMLAtoms::XMLNSPrefix = NS_NewAtom("xmlns");
-  NS_ENSURE_TRUE(txXMLAtoms::XMLNSPrefix, NS_ERROR_OUT_OF_MEMORY);
-
+  if (!txXMLAtoms::init())
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!txXPathAtoms::init())
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!txXSLTAtoms::init())
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!txHTMLAtoms::init())
+    return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
 // Shutdown this module, releasing all of the module resources
 PR_STATIC_CALLBACK(void)
-Shutdown(nsIModule* self)
+Shutdown(nsIModule* aSelf)
 {
   NS_PRECONDITION(gInitialized, "module not initialized");
   if (! gInitialized)
     return;
 
   gInitialized = PR_FALSE;
-
-  NS_IF_RELEASE(txXMLAtoms::XMLPrefix);
-  NS_IF_RELEASE(txXMLAtoms::XMLNSPrefix);
+  txXMLAtoms::shutdown();
+  txXPathAtoms::shutdown();
+  txXSLTAtoms::shutdown();
+  txHTMLAtoms::shutdown();
 }
 
 // Component Table
-static nsModuleComponentInfo components[] = {
+static nsModuleComponentInfo gComponents[] = {
     { "Transformiix XSLT Processor",
       TRANSFORMIIX_XSLT_PROCESSOR_CID,
       TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID,
@@ -119,5 +123,5 @@ static nsModuleComponentInfo components[] = {
       nsSyncLoaderConstructor }
 };
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(TransformiixModule, components,
-				   Initialize, Shutdown)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(TransformiixModule, gComponents,
+                                   Initialize, Shutdown)
