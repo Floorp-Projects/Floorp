@@ -1924,6 +1924,7 @@ GenerateFileNameFromURI(nsIURI *aURL)
     if (*cp)
     {
       if ((cp1 = PL_strchr(cp, '/'))) *cp1 = 0;  
+      if ((cp1 = PL_strchr(cp, '?'))) *cp1 = 0;  
       if (*cp != '\0')
       {
         returnString = PL_strdup(cp);
