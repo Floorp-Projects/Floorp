@@ -29,10 +29,10 @@ var needLinkText = false;
 var href;
 var newLinkText;
 var HNodeArray;
-var haveNamedAnchors = false;
-var haveHeadings = false;
-var canChangeHeadingSelected = true;
-var canChangeAnchorSelected = true;
+var gHaveNamedAnchors = false;
+var gHaveHeadings = false;
+var gCanChangeHeadingSelected = true;
+var gCanChangeAnchorSelected = true;
 var dialog;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
@@ -256,7 +256,7 @@ function FillListboxes()
     for (var i = 0; i < NamedAnchorCount; i++)
       AppendStringToTreelist(dialog.NamedAnchorList, NamedAnchorNodeList.item(i).name);
 
-    haveNamedAnchors = true;
+    gHaveNamedAnchors = true;
   } 
   else 
   {
@@ -304,7 +304,7 @@ function FillListboxes()
   }
   if (HNodeArray)
   {
-    haveHeadings = true;
+    gHaveHeadings = true;
   } else {
     // Message to tell user there are none
     item = AppendStringToTreelistById(dialog.HeadingsList, "NoHeadings");
@@ -314,17 +314,20 @@ function FillListboxes()
 
 function ChangeText()
 {
-  // Set OK button enable state only if inserting a new link
+  var enable = true;
+ 
+  // Disable OK button only if inserting a new link
   // (allow empty location to remove existing link)
   if (insertNew)
   {
-    var enable = true;
     if (insertLinkAtCaret)
       enable = dialog.linkTextInput.value.trimString().length > 0;
+
     if (enable)
       enable = dialog.hrefInput.value.trimString().length > 0;
-    SetElementEnabledById( "ok", enable);
   }
+
+  SetElementEnabledById( "ok", enable);
 }
 
 var gClearListSelections = true;
@@ -354,15 +357,17 @@ function GetExistingHeadingIndex(text)
 
 function SelectNamedAnchor()
 {
-  if (canChangeAnchorSelected)
+  if (gCanChangeAnchorSelected)
   {
-    if (haveNamedAnchors)
+    if (gHaveNamedAnchors)
     {
       // Prevent ChangeLocation() from unselecting the list
       gClearListSelections = false;
       dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.NamedAnchorList);
       gClearListSelections = true;
-      //ChangeText();
+
+      // ChangeLocation isn't always called, so be sure Ok is enabled
+      ChangeText();
     }
     else
       UnselectNamedAnchor();
@@ -373,13 +378,15 @@ function SelectNamedAnchor()
 
 function SelectHeading()
 {
-  if (canChangeHeadingSelected)
+  if (gCanChangeHeadingSelected)
   {
-    if (haveHeadings)
+    if (gHaveHeadings)
     {
       gClearListSelections = false;
       dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.HeadingsList);
       gClearListSelections = true;
+
+      ChangeText();
     }
     else
       UnselectHeadings();
@@ -391,17 +398,17 @@ function SelectHeading()
 function UnselectNamedAnchor()
 {
   // Prevent recursive calling of SelectNamedAnchor()
-  canChangeAnchorSelected = false;
+  gCanChangeAnchorSelected = false;
   dialog.NamedAnchorList.selectedIndex = -1;  
-  canChangeAnchorSelected = true;
+  gCanChangeAnchorSelected = true;
 }
 
 function UnselectHeadings()
 {
   // Prevent recursive calling of SelectHeading()
-  canChangeHeadingSelected = false;
+  gCanChangeHeadingSelected = false;
   dialog.HeadingsList.selectedIndex = -1;  
-  canChangeHeadingSelected = true;
+  gCanChangeHeadingSelected = true;
 }
 
 // Get and validate data from widgets.
