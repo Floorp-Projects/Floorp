@@ -11,6 +11,7 @@
 - (void) dealloc
 {
   NS_IF_RELEASE(mPrefService);
+  [super dealloc];
 }
 
 - (id) initWithBundle:(NSBundle *) bundle
