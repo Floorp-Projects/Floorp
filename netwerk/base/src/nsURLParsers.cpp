@@ -42,6 +42,7 @@
 #include "nsIURI.h"
 #include "prtypes.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "netCore.h"
 
 //----------------------------------------------------------------------------
