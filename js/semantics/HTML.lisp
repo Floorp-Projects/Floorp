@@ -464,6 +464,7 @@
     (:grammar-argument (:nest :nowrap (div (class "grammar-argument"))))
     (:semantics (:nest :nowrap (p (class "semantics"))))
     (:semantics-next (:nest :nowrap (p (class "semantics-next"))))
+    (:semantic-comment (:nest :nowrap (p (class "semantic-comment"))))
     
     ;Inline Styles
     (:script (script (type "text/javascript")))
@@ -499,6 +500,7 @@
     ((:vector-begin 1) (b "["))
     ((:vector-end 1) (b "]"))
     ((:empty-vector 2) (b "[]"))
+    ((:vector-construct 1) (b "|"))
     ((:vector-append 2) :circle-plus-10)
     ((:tuple-begin 1) (b :left-triangle-bracket-10))
     ((:tuple-end 1) (b :right-triangle-bracket-10))
