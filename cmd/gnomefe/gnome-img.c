@@ -150,7 +150,6 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
                      mask_header->width,
                      mask_header->height,
                      1);
-
   printf("\tNewpixmap: width, height = %d, %d\n", img_header->width,
 	 img_header->height);
   
@@ -180,7 +179,6 @@ _IMGCB_UpdatePixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap,
   fe_PixmapClientData *pixmap_client_data;
   fe_Drawable *fe_drawable;
   MozHTMLView *view = 0;
-  GdkVisual   *gdk_visual;
   GdkPixmap   *gdk_pixmap;
   GdkImage    *gdk_image;
   GdkGC       *gdk_gc;
@@ -198,17 +196,13 @@ _IMGCB_UpdatePixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap,
   view = find_html_view(context);
   XP_ASSERT(view);
   fe_drawable = view->drawable;
-  gdk_visual = gdk_window_get_visual((GdkWindow *)fe_drawable->drawable);
-  if (gdk_visual == NULL) {
-    printf("Warning: gdk_visual in _IMGCB_UpdatePixmap is null.\n");
-    return;
-  }
 
   gdk_pixmap = pixmap_client_data->gdk_pixmap;
   
   /* try to get the required display parameters from the pixmap */
   visual_depth = gdk_visual_get_best_depth();
   dpy = GDK_WINDOW_XDISPLAY(pixmap_client_data->gdk_pixmap);
+  visual = GDK_VISUAL_XVISUAL(gnomefe_visual);
   
   /* Check for zero dimensions. */
   if (width == 0 || height == 0)
@@ -325,8 +319,8 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
   XP_Bool tiling_required = FALSE;
   GdkWindow * window = (GdkWindow *)fe_drawable->drawable;
 
-  printf ("_IMGCB_DisplayPixmap (context %p, image %p, width %d, height %d)\n",
-	  context, image, width, height);
+  printf ("_IMGCB_DisplayPixmap (context %p, image %p, mask %p, width %d, height %d)\n",
+	  context, image, mask, width, height);
 
 				/* Check for zero display area. */
   if (width == 0 || height == 0)
@@ -367,123 +361,28 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
            tiling_required, fe_drawable->clip_region);
     
 
-    if (mask) {                 /* Image is transparent. */
-#if 0
-        if (tiling_required) {
-#endif
-            /* Offsets are measured wrt the origin of the tiled mask to
-               be generated. */
-            int x_tile_offset = img_x_offset - rect_x_offset;
-            int y_tile_offset = img_y_offset - rect_y_offset;
-            GdkPixmap *tmp_pixmap = 0;
-
-#if 0
-            /* Create the mask by tiling the mask_x_pixmap and computing
-               the intersection with the compositor's clip region. */
-            tmp_pixmap =
-                fe_TiledMaskWithClipRegion(dpy, drawable, mask_x_pixmap,
-                                           width, height, x_tile_offset,
-                                           y_tile_offset, -rect_x_offset,
-                                           -rect_y_offset,
-                                           (Region)fe_drawable->clip_region);
-#endif
-            /* Create the GC.  Don't attempt to get a GC from the GC cache
-               because we are using a temporary mask pixmap. */
-            gcv.fill = GDK_TILED;
-            gcv.tile = img_x_pixmap;
-            gcv.ts_x_origin = img_x_offset;
-            gcv.ts_y_origin = img_y_offset;
-            /*gcv.clip_mask = tmp_pixmap; */
-            gcv.clip_x_origin = rect_x_offset;
-            gcv.clip_y_origin = rect_y_offset;
-            /*
-            flags = GDK_GC_TILE | GDK_GC_TS_X_ORIGIN |
-	      GDK_GC_TS_Y_ORIGIN | GDK_GC_CLIP_MASK |
-	      GDK_GC_CLIP_X_ORIGIN | GDK_GC_CLIP_Y_ORIGIN;
-            */
-            printf("Warning: masked images not yet supported in DrawPixmap\n");
-            flags = GDK_GC_TILE | GDK_GC_TS_X_ORIGIN |
-	      GDK_GC_TS_Y_ORIGIN | 
-	      GDK_GC_CLIP_X_ORIGIN | GDK_GC_CLIP_Y_ORIGIN;
-            gc = gdk_gc_new_with_values(window, &gcv, flags);
-
-	    gdk_draw_rectangle(drawable, gc, TRUE, 
-			       rect_x_offset, rect_y_offset, width,
-			       height);
+    gc = gdk_gc_new(window);
+    gdk_gc_set_ts_origin(gc, img_x_offset, img_y_offset);
+    if (mask)
+      gdk_gc_set_clip_mask(gc, mask_x_pixmap);
+    gdk_gc_set_clip_origin(gc, rect_x_offset, rect_y_offset);
+    if (tiling_required)
+      {
+        gdk_gc_set_fill(gc, GDK_TILED);
+        gdk_gc_set_tile(gc,img_x_pixmap);
+      }
+    if (fe_drawable->clip_region) { /* This is a bad hack */
+      GdkRegionPrivate * hack = gdk_region_new();
+      FE_CopyRegion((Region)fe_drawable->clip_region, 
+                    hack->xregion );
+      gdk_gc_set_clip_region(gc, hack);
+      gdk_region_destroy(hack);
+    }    
+    gdk_draw_rectangle(drawable, gc, TRUE,
+                       rect_x_offset, rect_y_offset, width,
+                       height);
 				/* Clean up. */
-	    gdk_gc_destroy(gc);
-	    gdk_pixmap_unref(tmp_pixmap);
-#if 0
-        }
-        else {                  /* Tiling not required. */
-            if (fe_drawable->clip_region) {
-
-                /* Draw the image (transparent, non-tiled and with
-                   clip_region.)  x_offset and y_offset are wrt the image
-                   origin, while rect_x_offset and rect_y_offset are wrt the
-                   drawable origin. */
-                fe_DrawMaskedImageWithClipRegion(dpy, drawable, img_x_pixmap,
-                                                 mask_x_pixmap, width, height,
-                                                 img_x_offset, img_y_offset,
-                                                 x_offset, y_offset,
-                                                 (Region)fe_drawable->clip_region);
-            }
-            else {              /* No clip region. */
-                /* XXX transparent, non-tiled and no clip_region. */
-            }
-        }
-#endif
-    }
-    else {                      /* Image is not transparent. */
-        if (tiling_required) {
-            gcv.fill = GDK_TILED;
-            gcv.tile = img_x_pixmap;
-            gcv.ts_x_origin = img_x_offset;
-            gcv.ts_y_origin = img_y_offset;
-            flags = GDK_GC_TILE | GDK_GC_TS_X_ORIGIN |
-	      GDK_GC_TS_Y_ORIGIN;
-	    
-
-	    gc = gdk_gc_new_with_values(window, &gcv, flags);
-
-#if 1
-	    if (fe_drawable->clip_region) { /* This is a bad hack */
-	      GdkRegionPrivate * hack = gdk_region_new();
-              FE_CopyRegion((Region)fe_drawable->clip_region, 
-                            hack->xregion );
-	      gdk_gc_set_clip_region(gc, hack);
-	      gdk_region_destroy(hack);
-	    }
-#endif
-	    gdk_draw_rectangle(drawable, gc, TRUE, 
-			       rect_x_offset, rect_y_offset, width,
-			       height);
-
-				/* Clean up. */
-	    gdk_gc_destroy(gc);
-
-        }
-        else {                  /* Tiling not required. */
-	    gc = gdk_gc_new(window);
-#if 1
-	    if (fe_drawable->clip_region) { /* This is a bad hack */
-	      GdkRegionPrivate * hack = gdk_region_new();
-              FE_CopyRegion((Region)fe_drawable->clip_region, 
-                            hack->xregion );
-	      gdk_gc_set_clip_region(gc, hack);
-	      gdk_region_destroy(hack);
-	    }
-#endif
-	    gdk_draw_pixmap(drawable, gc, img_x_pixmap, 
-			    x_offset, y_offset, 
-			    rect_x_offset, rect_y_offset, 
-			    width, height);
-	    gdk_gc_destroy(gc);
-        }
-    }
-
-
-
+    gdk_gc_destroy(gc);
 
 }
 
