@@ -1441,7 +1441,6 @@ static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent 
     nsIMenuListener * listener;
     if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
       //listener->MenuDeselected(aEvent);
-	  //listener->MenuDestruct(aEvent);
       NS_RELEASE(listener);
     }
   }
@@ -1450,7 +1449,6 @@ static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent 
     if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
 		NS_ASSERTION(false, "get debugger");
       //listener->MenuSelected(aEvent);
-	  //listener->MenuConstruct(aEvent, this, null);
       NS_RELEASE(listener);
     }
   }

@@ -42,17 +42,10 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Create(nsIMenu        *aParent, 
+  // nsIMenuItem Methods
+  NS_IMETHOD Create(nsISupports    *aParent, 
                     const nsString &aLabel,  
                     PRBool         aIsSeparator);
-
-  NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
-                    const nsString &aLabel, 
-                    PRUint32        aCommand) ;
-  NS_IMETHOD Create(nsIMenu * aParent);
-  NS_IMETHOD Create(nsIPopUpMenu * aParent);
-
-  // nsIMenuBar Methods
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(nsString &aText);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
@@ -84,6 +77,12 @@ public:
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
  
 protected:
+  NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
+                    const nsString &aLabel, 
+                    PRUint32        aCommand) ;
+  NS_IMETHOD Create(nsIMenu * aParent);
+  NS_IMETHOD Create(nsIPopUpMenu * aParent);
+  
   //void Create(nsIWidget * aMBParent, Widget aParent,
               //const nsString &aLabel, PRUint32 aCommand);
   nsIWidget * GetMenuBarParent(nsISupports * aParentSupports);

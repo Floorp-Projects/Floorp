@@ -147,20 +147,17 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::Create(
-  nsIMenu * aParent, 
+  nsISupports * aParent, 
   const nsString &aLabel, 
   PRBool aIsSeparator)
 {
-  //mCommand = aCommand;
-  mLabel   = aLabel;
-  mMenu    = aParent;
-  //NS_ADDREF(mMenu);
-
-  nsISupports * sups;
-  if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
-    //mTarget = GetMenuBarParent(sups);
-
-    NS_RELEASE(sups);
+  mLabel       = aLabel;
+  mIsSeparator = aIsSeparator;
+  
+  nsIMenu * menu = nsnull;
+  if (NS_OK == aParent->QueryInterface(kIMenuIID,(void**)&menu)) {
+    mMenu    = menu;
+    NS_RELEASE(menu);
   } else {
     mTarget = nsnull;
   }

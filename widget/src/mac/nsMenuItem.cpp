@@ -184,7 +184,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIMenu        *aParent, 
+NS_METHOD nsMenuItem::Create(nsISupports    *aParent, 
                              const nsString &aLabel, 
                              PRBool         aIsSeparator)
                             
