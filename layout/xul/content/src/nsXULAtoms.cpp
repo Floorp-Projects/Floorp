@@ -35,6 +35,7 @@ nsIAtom* nsXULAtoms::fontpicker;
 nsIAtom* nsXULAtoms::radio;
 nsIAtom* nsXULAtoms::text;
 nsIAtom* nsXULAtoms::toolbar;
+nsIAtom* nsXULAtoms::toolbaritem;
 nsIAtom* nsXULAtoms::toolbox;
 
 nsIAtom* nsXULAtoms::tree;
@@ -100,6 +101,7 @@ void nsXULAtoms::AddrefAtoms() {
     radio = NS_NewAtom("radio");
     text = NS_NewAtom("text");
     toolbar = NS_NewAtom("toolbar");
+  	toolbaritem = NS_NewAtom("toolbaritem");
     toolbox = NS_NewAtom("toolbox");
 
     tree = NS_NewAtom("tree");
