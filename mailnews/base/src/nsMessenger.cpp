@@ -99,6 +99,7 @@ nsMessengerBootstrap::Initialize()
 {
   nsresult rv;
 
+  printf("Messenger has been bootstrapped!\n");
   nsIScriptNameSetRegistry* registry;
   rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID, 
                                     nsIScriptNameSetRegistry::GetIID(),

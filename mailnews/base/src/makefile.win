@@ -42,7 +42,11 @@ CPPSRCS=                     \
 	nsUrlListenerManager.cpp \
 	nsMsgMailSession.cpp	 \
 	nsMsgIdentity.cpp		 \
+	nsJSMsgAppCore.cpp		\
+	nsMsgAppCore.cpp		\
 	$(NULL)
+
+
 
 CPP_OBJS=                               \
     .\$(OBJDIR)\nsMessenger.obj			\
@@ -60,7 +64,10 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsUrlListenerManager.obj \
 	.\$(OBJDIR)\nsMsgMailSession.obj	\
 	.\$(OBJDIR)\nsMsgIdentity.obj		\
+	.\$(OBJDIR)\nsMsgAppCore.obj		\
+	.\$(OBJDIR)\nsJSMsgAppCore.obj		\
 	$(NULL)
+
 
 EXPORTS=                \
 	nsMessenger.h		\
@@ -75,6 +82,7 @@ EXPORTS=                \
 	nsUrlListenerManager.h \
 	nsMsgMailSession.h  \
 	nsMsgIdentity.h		\
+	nsMsgAppCore.h		\
 	$(NULL)
 
 LINCS=                       \
@@ -87,6 +95,8 @@ LINCS=                       \
         -I$(PUBLIC)\js		 \
 		-I$(PUBLIC)\netlib	 \
 		-I$(PUBLIC)\dom		 \
+		-I$(PUBLIC)\appcores	\
+		-I$(PUBLIC)\security	\
 		$(NULL)
 
 LCFLAGS = \

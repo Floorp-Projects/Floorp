@@ -33,6 +33,8 @@
 #include "nsIMsgGroupRecord.h"
 #include "nsMsgGroupRecord.h"
 
+#include "nsMsgAppCore.h"
+
 /* Include all of the interfaces our factory can generate components for */
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"
@@ -53,6 +55,7 @@ static NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGERBOOTSTRAP_CID);
 static NS_DEFINE_CID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
 
+static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
 static NS_DEFINE_CID(kCMsgGroupRecordCID, NS_MSGGROUPRECORD_CID);
 
 
@@ -195,6 +198,10 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
     if (session == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 	}
+  else if (mClassID.Equals(kCMsgAppCoreCID)) {
+    res = NS_NewMsgAppCore((nsIDOMMsgAppCore **)&inst);
+    if (NS_FAILED(res)) return res;
+  }
 
 	// End of checking the interface ID code....
 	if (inst) 
@@ -293,6 +300,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                        "component://netscape/messenger",
                                        path,
                                        PR_TRUE, PR_TRUE);
+
+  rv = compMgr->RegisterComponent(kCMsgAppCoreCID,
+                                  "Messenger AppCore",
+                                  "component://netscape/appcores/messenger",
+                                  path,
+                                  PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 #if 0
   rv = compMgr->RegisterComponent(kCMsgGroupRecordCID,

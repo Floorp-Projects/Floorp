@@ -26,6 +26,12 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
+#include "nsMessenger.h"
+
+
+/* hack the AppCore stuff here */
+#include "nsIDOMMsgAppCore.h"
+#include "nsMsgAppCore.h"
 
 static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 
@@ -52,6 +58,10 @@ nsMessengerNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
   JSContext *cx = (JSContext*)aScriptContext->GetNativeContext();
   
   printf("nsMessengerNameSet::InitializeClasses() Initializing base classes\n");
+
+  /* initialize the AppCore */
+  NS_InitMsgAppCoreClass(aScriptContext, nsnull);
+
 #ifdef XPIDL_JS_STUBS
   nsIMessenger::InitJSClass(cx);
 #endif
@@ -59,6 +69,8 @@ nsMessengerNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
   return rv;
 }
 
+static NS_DEFINE_CID(kCMessengerCID, NS_MESSENGER_CID);
+static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
 
 NS_IMETHODIMP
 nsMessengerNameSet::AddNameSet(nsIScriptContext *aScriptContext)
@@ -68,12 +80,19 @@ nsMessengerNameSet::AddNameSet(nsIScriptContext *aScriptContext)
 
   printf("nsMessengerNameSet::AddNameSet() Registering Messenger in the JS namespace\n");
   rv = aScriptContext->GetNameSpaceManager(&manager);
+  
   if (NS_SUCCEEDED(rv))
     rv = manager->RegisterGlobalName("Messenger",
                                      // put the CID here, not IID
-                                     nsIMessenger::GetIID(),
+                                     kCMessengerCID,
                                      PR_TRUE);
 
+  /* register the appcore here too */
+  if (NS_SUCCEEDED(rv))
+      rv = manager->RegisterGlobalName("MsgAppCore",
+                                       kCMsgAppCoreCID,
+                                       PR_TRUE);
+                                       
   return rv;
 
 }

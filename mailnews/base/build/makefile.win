@@ -90,6 +90,10 @@ LLIBS=										\
 			$(DIST)\lib\libplc21.lib		\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgcore.lib			\
+			$(DIST)\lib\appcores.lib	\
+			$(DIST)\lib\nntp.lib		\
+			$(DIST)\lib\netlib.lib		\
+			$(DIST)\lib\nntpTest.lib	\
 			$(LIBNSPR)						\
 			$(NULL)
 
@@ -101,6 +105,8 @@ LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\raptor			\
 			   -I$(PUBLIC)\rdf				\
 			   -I$(PUBLIC)\netlib			\
+			   -I$(PUBLIC)\dom			\
+			   -I$(PUBLIC)\appcores			\
  			     $(NULL)
 
 #//------------------------------------------------------------------------
