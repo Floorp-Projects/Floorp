@@ -38,7 +38,6 @@
 #include "nsMessenger.h"
 #include "nsMsgGroupRecord.h"
 
-#include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
 
 /* Include all of the interfaces our factory can generate components for */

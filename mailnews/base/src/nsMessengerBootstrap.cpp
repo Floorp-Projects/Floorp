@@ -33,7 +33,6 @@
 #include "nsIMsgFolderCache.h"
 #include "nsIPref.h"
 #include "nsIDOMWindow.h"
-#include "nsIAppShellService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsString.h"
@@ -46,7 +45,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap);
 NS_IMPL_THREADSAFE_RELEASE(nsMessengerBootstrap);
-NS_IMPL_QUERY_INTERFACE3(nsMessengerBootstrap, nsIAppShellComponent, nsICmdLineHandler, nsIMessengerWindowService);
+NS_IMPL_QUERY_INTERFACE2(nsMessengerBootstrap, nsICmdLineHandler, nsIMessengerWindowService);
 
 nsMessengerBootstrap::nsMessengerBootstrap()
 {
@@ -56,21 +55,6 @@ nsMessengerBootstrap::nsMessengerBootstrap()
 nsMessengerBootstrap::~nsMessengerBootstrap()
 {
 }
-
-nsresult
-nsMessengerBootstrap::Initialize(nsIAppShellService*,
-                                 nsICmdLineService*)
-{
-    return NS_OK;
-}
-
-nsresult
-nsMessengerBootstrap::Shutdown()
-{
-
-	return NS_OK;
-}
-
 
 CMDLINEHANDLER3_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","Start with mail.",NS_MAILSTARTUPHANDLER_CONTRACTID,"Mail Cmd Line Handler",PR_FALSE,"", PR_TRUE)
 

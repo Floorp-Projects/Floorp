@@ -26,8 +26,6 @@
 
 #include "nscore.h"
 #include "nsIServiceManager.h"
-#include "nsIAppShellService.h"
-#include "nsIAppShellComponent.h"
 #include "nsICmdLineHandler.h"
 #include "nsIMessengerWindowService.h"
 
@@ -37,14 +35,13 @@
   {0xb7, 0xf6, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
 
 
-class nsMessengerBootstrap : public nsIAppShellComponent, public nsICmdLineHandler, public nsIMessengerWindowService {
+class nsMessengerBootstrap : public nsICmdLineHandler, public nsIMessengerWindowService {
   
 public:
   nsMessengerBootstrap();
   virtual ~nsMessengerBootstrap();
   
   NS_DECL_ISUPPORTS  
-  NS_DECL_NSIAPPSHELLCOMPONENT
   NS_DECL_NSICMDLINEHANDLER
   NS_DECL_NSIMESSENGERWINDOWSERVICE
   CMDLINEHANDLER_REGISTERPROC_DECLS
