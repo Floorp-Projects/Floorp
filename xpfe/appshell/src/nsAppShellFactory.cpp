@@ -25,7 +25,9 @@
 #include "nsIFileLocator.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIWindowMediator.h"
+#include "nsISessionHistory.h"
 #include "rdf.h"
+
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
@@ -41,6 +43,8 @@ static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,				  NS_WINDOWMEDIATOR_CID);
+static NS_DEFINE_CID(kSessionHistoryCID,				  NS_SESSION_HISTORY_CID);
+
 /*
  * Global entry point to register all components in the registry...
  */
@@ -53,6 +57,7 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kProtocolHelperCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
    	nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kSessionHistoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 
     nsComponentManager::RegisterComponent(kWindowMediatorCID,
                                          "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
@@ -73,7 +78,8 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterComponent(kXPConnectFactoryCID, path);
     nsComponentManager::UnregisterComponent(kNetSupportDialogCID, path);
     nsComponentManager::UnregisterComponent(kWindowMediatorCID, path);
-     
+    nsComponentManager::UnregisterComponent(kSessionHistoryCID, path);
+      
     return NS_OK;
 }
 
@@ -127,7 +133,10 @@ NSGetFactory(nsISupports* serviceMgr,
   {
   	rv = NS_NewWindowMediatorFactory( aFactory );
   }
-
+  else if ( aClass.Equals( kSessionHistoryCID ) )
+  {
+  	rv = NS_NewSessionHistoryFactory( aFactory );
+  }
 
   return rv;
 }
