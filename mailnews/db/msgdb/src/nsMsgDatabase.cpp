@@ -537,11 +537,11 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommitType commitType)
 			break;
 		case kLargeCommit:
 			err = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
-//			err = m_mdbStore->LargeCommit(GetEnv(), &commitThumb);
+			err = m_mdbStore->LargeCommit(GetEnv(), &commitThumb);
 			break;
 		case kSessionCommit:
 			// comment out until persistence works.
-//			err = m_mdbStore->SessionCommit(GetEnv(), &commitThumb);
+			err = m_mdbStore->SessionCommit(GetEnv(), &commitThumb);
 			break;
 		case kCompressCommit:
 			err = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
