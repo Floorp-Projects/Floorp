@@ -125,6 +125,8 @@ final class InterpreterData implements Serializable, DebuggableScript
 
     Object[] literalIds;
 
+    UintMap longJumps;
+
     InterpreterData parentData;
 
     public boolean isTopLevel()

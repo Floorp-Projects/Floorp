@@ -510,10 +510,8 @@ public class Interpreter
                 Node defaultNode = (Node) switchNode.getProp(Node.DEFAULT_PROP);
                 if (defaultNode != null) {
                     Node.Target defaultTarget = new Node.Target();
-                    defaultNode.getFirstChild().
-                        addChildToFront(defaultTarget);
-                    iCodeTop = addGoto(defaultTarget, Token.GOTO,
-                                       iCodeTop);
+                    defaultNode.getFirstChild().addChildToFront(defaultTarget);
+                    iCodeTop = addGoto(defaultTarget, Token.GOTO, iCodeTop);
                 }
 
                 Node.Target breakTarget = switchNode.target;
@@ -1259,11 +1257,10 @@ public class Interpreter
         } else {
             iCodeTop = addToken(gotoOp, iCodeTop);
         }
-        int jumpSite = iCodeTop;
         iCodeTop = addShort(0, iCodeTop);
 
         if (targetPC != -1) {
-            recordJumpOffset(jumpSite, targetPC - gotoPC);
+            recordJump(gotoPC, targetPC);
         } else {
             int top = itsFixupTableTop;
             if (itsFixupTable == null || top == itsFixupTable.length) {
@@ -1276,31 +1273,23 @@ public class Interpreter
                 }
             }
             itsFixupTableTop = top + 1;
-            itsFixupTable[top] = ((long)label << 32) | jumpSite;
+            itsFixupTable[top] = ((long)label << 32) | gotoPC;
         }
         return iCodeTop;
     }
 
     private void fixLabelGotos()
     {
-        byte[] codeBuffer = itsData.itsICode;
         for (int i = 0; i < itsFixupTableTop; i++) {
             long fixup = itsFixupTable[i];
             int label = (int)(fixup >> 32);
-            int fixupSite = (int)fixup;
+            int jumpSource = (int)fixup;
             int pc = itsLabelTable[label];
             if (pc == -1) {
                 // Unlocated label
-                throw new RuntimeException();
+                throw Kit.codeBug();
             }
-            // -1 to get delta from instruction start
-            int offset = pc - (fixupSite - 1);
-            if ((short)offset != offset) {
-                throw new RuntimeException
-                    ("Program too complex: too big jump offset");
-            }
-            codeBuffer[fixupSite] = (byte)(offset >> 8);
-            codeBuffer[fixupSite + 1] = (byte)offset;
+            recordJump(jumpSource, pc);
         }
         itsFixupTableTop = 0;
     }
@@ -1315,18 +1304,23 @@ public class Interpreter
     private void resolveForwardGoto(int jumpStart, int iCodeTop)
     {
         if (jumpStart + 3 > iCodeTop) Kit.codeBug();
-        int offset = iCodeTop - jumpStart;
-        // +1 to write after jump icode
-        recordJumpOffset(jumpStart + 1, offset);
+        recordJump(jumpStart, iCodeTop);
     }
 
-    private void recordJumpOffset(int pos, int offset)
+    private void recordJump(int jumpSource, int jumpDestination)
     {
+        if (jumpSource == jumpDestination) throw Kit.codeBug();
+        int offsetSite = jumpSource + 1;
+        int offset = jumpDestination - jumpSource;
         if (offset != (short)offset) {
-            throw Context.reportRuntimeError0("msg.too.big.jump");
+            if (itsData.longJumps == null) {
+                itsData.longJumps = new UintMap();
+            }
+            itsData.longJumps.put(offsetSite, jumpDestination);
+            offset = 0;
         }
-        itsData.itsICode[pos] = (byte)(offset >> 8);
-        itsData.itsICode[pos + 1] = (byte)offset;
+        itsData.itsICode[offsetSite] = (byte)(offset >> 8);
+        itsData.itsICode[offsetSite + 1] = (byte)offset;
     }
 
     private int addByte(int value, int iCodeTop)
@@ -3046,9 +3040,13 @@ public class Interpreter
                         instructionCount = 0;
                     }
                 }
-                // -1 accounts to the fact that pc points to one byte past
-                // instruction
-                pc += getShort(iCode, pc) - 1;
+                int offset = getShort(iCode, pc);
+                if (offset != 0) {
+                    // -1 accounts for pc pointing to jump opcode + 1
+                    pc += offset - 1;
+                } else {
+                    pc = idata.longJumps.getExistingInt(pc);
+                }
                 pcPrevBranch = pc;
                 continue Loop;
 
