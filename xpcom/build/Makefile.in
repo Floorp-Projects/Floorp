@@ -100,7 +100,9 @@ endif
 
 # pull in MoreFiles for MacOSX
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += $(DEPTH)/dist/lib/libmacmorefiles_s.a
+EXTRA_DSO_LIBS = macmorefiles_s
+EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS)
+EXTRA_DEPS += $(DIST)/lib/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
 endif
 
 # Force use of PIC
