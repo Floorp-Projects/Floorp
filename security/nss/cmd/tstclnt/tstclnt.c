@@ -170,6 +170,7 @@ static void Usage(const char *progName)
     printf("%-20s Nickname of key and cert for client auth\n", "-n nickname");
     printf("%-20s Disable SSL v2.\n", "-2");
     printf("%-20s Disable SSL v3.\n", "-3");
+    printf("%-20s Disable TLS (SSL v3.1).\n", "-T");
     printf("%-20s Override bad server cert. Make it OK.\n", "-o");
     printf("%-20s Use export policy.\n", "-x");
     printf("%-20s Letter(s) chosen from the following list\n", "-c ciphers");
@@ -257,7 +258,6 @@ int main(int argc, char **argv)
     PRInt32            filesReady;
     PRInt32            ip;
     int                npds;
-    int                o;
     int                override = 0;
     int                disableSSL2 = 0;
     int                disableSSL3 = 0;
@@ -439,27 +439,22 @@ int main(int argc, char **argv)
 	}
     }
 
-    if (disableSSL2) {
-    	rv = SSL_Enable(s, SSL_ENABLE_SSL2, 0);
-	if (rv != SECSuccess) {
-	    SECU_PrintError(progName, "error disabling SSLv2 ");
-	    return -1;
-	}
+    rv = SSL_Enable(s, SSL_ENABLE_SSL2, !disableSSL2);
+    if (rv != SECSuccess) {
+	SECU_PrintError(progName, "error enabling SSLv2 ");
+	return -1;
     }
 
-    if (disableSSL3) {
-    	rv = SSL_Enable(s, SSL_ENABLE_SSL3, 0);
-	if (rv != SECSuccess) {
-	    SECU_PrintError(progName, "error disabling SSLv3 ");
-	    return -1;
-	}
+    rv = SSL_Enable(s, SSL_ENABLE_SSL3, !disableSSL3);
+    if (rv != SECSuccess) {
+	SECU_PrintError(progName, "error enabling SSLv3 ");
+	return -1;
     }
-    if (!disableTLS) {
-	rv = SSL_Enable(s, SSL_ENABLE_TLS, 1);
-	if (rv != SECSuccess) {
-	    SECU_PrintError(progName, "error enabling TLS ");
-	    return -1;
-	}
+
+    rv = SSL_Enable(s, SSL_ENABLE_TLS, !disableTLS);
+    if (rv != SECSuccess) {
+	SECU_PrintError(progName, "error enabling TLS ");
+	return -1;
     }
 
 #if 0

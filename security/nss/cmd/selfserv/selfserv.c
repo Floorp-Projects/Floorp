@@ -143,9 +143,11 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
 
-"Usage: %s -n rsa_nickname -p port [-3mrvx] [-w password]\n"
+"Usage: %s -n rsa_nickname -p port [-3RTmrvx] [-w password]\n"
 "                   [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
 "-3 means disable SSL v3\n"
+"-T means disable TLS\n"
+"-R means disable detection of rollback from TLS to SSL3\n"
 "-m means test the model-socket feature of SSL_ImportFD.\n"
 "-r flag is interepreted as follows:\n"
 "    1 -r  means request, not require, cert on initial handshake.\n"
@@ -223,7 +225,7 @@ networkEnd(void)
 #endif
 }
 
-static void
+static const char *
 errWarn(char * funcString)
 {
     PRErrorCode  perr      = PR_GetError();
@@ -231,6 +233,7 @@ errWarn(char * funcString)
 
     fprintf(stderr, "exit after %s with error %d:\n%s\n",
             funcString, perr, errString);
+    return errString;
 }
 
 static void
@@ -529,7 +532,10 @@ destroy_thread_data(void)
 ** End   thread management routines.
 **************************************************************************/
 
-PRBool useModelSocket = PR_FALSE;
+PRBool useModelSocket  = PR_FALSE;
+PRBool disableSSL3     = PR_FALSE;
+PRBool disableTLS      = PR_FALSE;
+PRBool disableRollBack  = PR_FALSE;
 
 static const char stopCmd[] = { "GET /stop " };
 static const char outHeader[] = {
@@ -823,7 +829,7 @@ handle_connection(
 					PR_TRANSMITFILE_KEEP_OPEN,
 					PR_INTERVAL_NO_TIMEOUT);
 		if (bytes < 0) {
-		    errWarn("PR_TransmitFile");
+		    errString = errWarn("PR_TransmitFile");
 		    i = PORT_Strlen(errString);
 		    PORT_Memcpy(buf, errString, i);
 		    goto send_answer;
@@ -963,10 +969,7 @@ server_main(
     unsigned short      port, 
     int                 requestCert, 
     SECKEYPrivateKey ** privKey,
-    CERTCertificate **  cert, 
-    PRBool              useModelSocket,
-    PRBool		disableSSL3,
-    PRBool              disableTLS)
+    CERTCertificate **  cert)
 {
     PRFileDesc *listen_sock;
     PRFileDesc *model_sock	= NULL;
@@ -1026,18 +1029,19 @@ server_main(
     }
 #endif
 
-    if (disableSSL3) {
-    	rv = SSL_Enable(model_sock, SSL_ENABLE_SSL3, 0);
-	if (rv != SECSuccess) {
-	    errExit("error disabling SSLv3 ");
-	}
+    rv = SSL_Enable(model_sock, SSL_ENABLE_SSL3, !disableSSL3);
+    if (rv != SECSuccess) {
+	errExit("error enabling SSLv3 ");
     }
 
-    if (!disableTLS) {
-    	rv = SSL_Enable(model_sock, SSL_ENABLE_TLS, 1);
-	if (rv != SECSuccess) {
-	    errExit("error enabling TLS ");
-	}
+    rv = SSL_Enable(model_sock, SSL_ENABLE_TLS, !disableTLS);
+    if (rv != SECSuccess) {
+	errExit("error enabling TLS ");
+    }
+
+    rv = SSL_Enable(model_sock, SSL_ROLLBACK_DETECTION, !disableRollBack);
+    if (rv != SECSuccess) {
+	errExit("error enabling RollBack detection ");
     }
 
     for (kea = kt_rsa; kea < kt_kea_size; kea++) {
@@ -1161,13 +1165,10 @@ main(int argc, char **argv)
     char *               tmp;
     CERTCertificate *    cert   [kt_kea_size] = { NULL };
     SECKEYPrivateKey *   privKey[kt_kea_size] = { NULL };
-    int                  o;
     int                  requestCert = 0;
     unsigned short       port        = 0;
     SECStatus            rv;
     PRBool               useExportPolicy = PR_FALSE;
-    PRBool		 disableSSL3     = PR_FALSE;
-    PRBool               disableTLS      = PR_FALSE;
     PLOptState *optstate;
 
     tmp = strrchr(argv[0], '/');
@@ -1175,7 +1176,7 @@ main(int argc, char **argv)
     progName = strrchr(tmp, '\\');
     progName = progName ? progName + 1 : tmp;
 
-    optstate = PL_CreateOptState(argc, argv, "T2:3c:d:p:mn:f:rvw:x");
+    optstate = PL_CreateOptState(argc, argv, "RT2:3c:d:p:mn:f:rvw:x");
     while (PL_GetNextOpt(optstate) == PL_OPT_OK) {
 	switch(optstate->option) {
 	default:
@@ -1184,6 +1185,8 @@ main(int argc, char **argv)
 	case '2': fileName = optstate->value; 	break;
 
 	case '3': disableSSL3 = PR_TRUE;	break;
+
+	case 'R': disableRollBack = PR_TRUE;	break;
 
 	case 'T': disableTLS  = PR_TRUE;	break;
 
@@ -1288,10 +1291,12 @@ main(int argc, char **argv)
 	privKey[kt_fortezza] = PK11_FindKeyByAnyCert(cert[kt_fortezza], NULL);
     }
 
-    SSL_ConfigMPServerSIDCache(256, 0, 0, NULL);
+    rv = SSL_ConfigMPServerSIDCache(256, 0, 0, NULL);
+    if (rv != SECSuccess) {
+        errExit("SSL_ConfigMPServerSIDCache");
+    }
 
-    server_main(port, requestCert, privKey, cert, useModelSocket, 
-                disableSSL3, disableTLS);
+    server_main(port, requestCert, privKey, cert);
 
     NSS_Shutdown();
     PR_Cleanup();
