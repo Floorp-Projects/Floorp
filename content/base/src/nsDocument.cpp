@@ -1795,8 +1795,7 @@ nsDocument::GetScriptLoader(nsIScriptLoader** aScriptLoader)
     mScriptLoader->Init(this);
   }
 
-  *aScriptLoader = mScriptLoader;
-  NS_ADDREF(*aScriptLoader);
+  NS_ADDREF(*aScriptLoader = mScriptLoader);
 
   return NS_OK;
 }
