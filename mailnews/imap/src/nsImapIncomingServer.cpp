@@ -2109,13 +2109,8 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
   if (aMsgWindow)
     aMsgWindow->GetPromptDialog(getter_AddRefs(dialog));
 
-  if (!dialog) // if we didn't get one, use the default....
+  if (dialog)
   {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    if (wwatch)
-      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
-  }
-
 	if (aString)
 	{
 		// skip over the first two words, I guess.
@@ -2144,6 +2139,7 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
 			PR_Free(serverSaidPrefix);
 		}
 	}
+  }
 
   return rv;
 }
