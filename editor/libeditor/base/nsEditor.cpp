@@ -2533,7 +2533,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aParentNode,
     // and want the deep-right child.
     else
     {
-      result = GetRightmostChild(*aResultNode, aResultNode);
+      result = GetRightmostChild(aParentNode, aResultNode);
       if (NS_FAILED(result)) return result;
       if (!aEditableNode) return result;
       if (IsEditable(*aResultNode))  return result;
@@ -2564,7 +2564,7 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   nsCOMPtr<nsIDOMNode> child = GetChildAt(aParentNode, aOffset);
   if (child)
   {
-    result = GetLeftmostChild(*aResultNode, aResultNode);
+    result = GetLeftmostChild(aParentNode, aResultNode);
     if (NS_FAILED(result)) return result;
     if (!aEditableNode) return result;
     if (IsEditable(*aResultNode))  return result;
