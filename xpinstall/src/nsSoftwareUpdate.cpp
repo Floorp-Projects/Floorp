@@ -125,8 +125,9 @@ nsSoftwareUpdate::nsSoftwareUpdate()
   mReg(0)
 {
     NS_INIT_ISUPPORTS();
-    mMasterListener.AddRef(); // inflate refcount so it doesn't go away early
-
+    mMasterListener = new nsTopProgressListener;
+    NS_IF_ADDREF (mMasterListener);
+    
     mLock = PR_NewLock();
 
     /***************************************/
@@ -179,7 +180,7 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
     NR_ShutdownRegistry();
 
     //NS_IF_RELEASE( mProgramDir );
-
+    NS_IF_RELEASE (mMasterListener);
     mInstance = nsnull;
 }
 
@@ -261,9 +262,13 @@ nsSoftwareUpdate::RegisterListener(nsIXPIListener *aListener)
     // register a Listener, you can not remove it.  This should at some
     // point be fixed.
 
-    (void) mMasterListener.RegisterListener(aListener);
-    
+  if (mMasterListener)
+  {
+    mMasterListener->RegisterListener(aListener);
     return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -273,17 +278,27 @@ nsSoftwareUpdate::GetMasterListener(nsIXPIListener **aListener)
     if (!aListener)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ADDREF(&mMasterListener);
-    *aListener = &mMasterListener;
-    return NS_OK;
+    if (mMasterListener)
+    {
+      NS_ADDREF (mMasterListener);
+      *aListener = mMasterListener;
+      return NS_OK;
+    }
+    else
+      return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 nsSoftwareUpdate::SetActiveListener(nsIXPIListener *aListener)
 {
-    mMasterListener.SetActiveListener(aListener);
+  if (mMasterListener)
+  {
+    mMasterListener->SetActiveListener (aListener);
     return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

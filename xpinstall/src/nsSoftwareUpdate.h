@@ -13,6 +13,7 @@
 #include "prlock.h"
 //#include "mozreg.h"
 #include "NSReg.h"
+#include "nsCOMPtr.h"
 
 class nsInstallInfo;
 
@@ -91,13 +92,13 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         nsresult RunNextInstall();
         nsresult RegisterNameset();
         
-        PRLock*           mLock;
-        PRBool            mInstalling;
-        PRBool            mStubLockout;
-        nsVoidArray       mJarInstallQueue;
-        nsTopProgressListener   mMasterListener;
+        PRLock*               mLock;
+        PRBool                mInstalling;
+        PRBool                mStubLockout;
+        nsVoidArray           mJarInstallQueue;
+        nsTopProgressListener *mMasterListener;
 
-        HREG              mReg;
+        HREG                  mReg;
 };
 
 
