@@ -39,6 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * - [ Dependencies ] ---------------------------------------------------------
+ *  utilityOverlay.js:
+ *    - gatherTextUnder
+ */
+
   var pref = null;
   pref = Components.classes["@mozilla.org/preferences-service;1"]
                    .getService(Components.interfaces.nsIPrefBranch);
@@ -205,7 +211,7 @@
         saveModifier = saveModifier ? event.shiftKey : event.metaKey;
           
         if (saveModifier) {                                           // if saveModifier is down
-          savePage(href);                                             // save the link
+          saveURL(href, gatherTextUnder(event.target));
           return true;
         }
         if (event.altKey)                                             // if alt is down

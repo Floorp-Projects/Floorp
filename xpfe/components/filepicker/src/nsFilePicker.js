@@ -63,6 +63,7 @@ function nsFilePicker()
 
   /* attributes */
   this.mDefaultString = "";
+  this.mFilterIndex = 0;
   if (lastDirectory) {
     this.mDisplayDirectory = Components.classes[LOCAL_FILE_CONTRACTID].createInstance(nsILocalFile);
     this.mDisplayDirectory.initWithUnicodePath(lastDirectory);
@@ -98,6 +99,10 @@ nsFilePicker.prototype = {
   /* attribute wstring defaultString; */
   set defaultString(a) { this.mDefaultString = a; },
   get defaultString()  { return this.mDefaultString; },
+
+  /* attribute long filterIndex; */
+  set filterIndex(a) { this.mFilterIndex = a; },
+  get filterInrex() { return this.mFilterIndex; },
 
   /* methods */
   init: function(parent, title, mode) {
@@ -151,6 +156,7 @@ nsFilePicker.prototype = {
     o.mode = this.mMode;
     o.displayDirectory = this.mDisplayDirectory;
     o.defaultString = this.mDefaultString;
+    o.filterIndex = this.mFilterIndex;</pre>
     o.filters = new Object();
     o.filters.titles = this.mFilterTitles;
     o.filters.types = this.mFilters;
@@ -179,6 +185,7 @@ nsFilePicker.prototype = {
                         "chrome,modal,titlebar,resizable=yes,dependent=yes",
                         o);
       this.mFile = o.retvals.file;
+      this.mFilterIndex = o.retvals.filterindex;</pre>
       lastDirectory = o.retvals.directory;
       return o.retvals.buttonStatus;
     } catch(ex) { dump("unable to open file picker\n" + ex + "\n"); }

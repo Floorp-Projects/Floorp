@@ -381,6 +381,52 @@ function extractFileNameFromUrl(urlstr)
   return urlstr.slice(urlstr.lastIndexOf( "/" )+1);
 }
 
+// Gather all descendent text under given document node.
+function gatherTextUnder ( root ) 
+{
+  var text = "";
+  var node = root.firstChild;
+  var depth = 1;
+  while ( node && depth > 0 ) {
+    // See if this node is text.
+    if ( node.nodeName == "#text" ) {
+      // Add this text to our collection.
+      text += " " + node.data;
+    } else if ( node.nodeType == Node.ELEMENT_NODE 
+                && node.localName.toUpperCase() == "IMG" ) {
+      // If it has an alt= attribute, use that.
+      var altText = node.getAttribute( "alt" );
+      if ( altText && altText != "" ) {
+        text = altText;
+        break;
+      }
+    }
+    // Find next node to test.
+    // First, see if this node has children.
+    if ( node.hasChildNodes() ) {
+      // Go to first child.
+      node = node.firstChild;
+      depth++;
+    } else {
+      // No children, try next sibling.
+      if ( node.nextSibling ) {
+        node = node.nextSibling;
+      } else {
+        // Last resort is our next oldest uncle/aunt.
+        node = node.parentNode.nextSibling;
+        depth--;
+      }
+    }
+  }
+  // Strip leading whitespace.
+  text = text.replace( /^\s+/, "" );
+  // Strip trailing whitespace.
+  text = text.replace( /\s+$/, "" );
+  // Compress remaining whitespace.
+  text = text.replace( /\s+/g, " " );
+  return text;
+}
+
 var offlineObserver = {
   observe: function(subject, topic, state) {
     // sanity checks

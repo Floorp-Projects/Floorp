@@ -467,15 +467,15 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on frame.
     saveFrame : function () {
-        this.savePage( this.target.ownerDocument.location.href, true );
+        saveDocument( this.target.ownerDocument );
     },
     // Save URL of clicked-on link.
     saveLink : function () {
-        this.savePage( this.linkURL(), false );
+        saveURL( this.linkURL(), this.linkText() );
     },
     // Save URL of clicked-on image.
     saveImage : function () {
-        this.savePage( this.imageURL, true );
+        saveURL( this.imageURL, null, "SaveImageTitle" );
     },
     // Generate email address and put it on clipboard.
     copyEmail : function () {
@@ -578,52 +578,8 @@ nsContextMenu.prototype = {
     },
     // Get text of link (if possible).
     linkText : function () {
-        var text = this.gatherTextUnder( this.link );
+        var text = gatherTextUnder( this.link );
         return text;
-    },
-    // Gather all descendent text under given document node.
-    gatherTextUnder : function ( root ) {
-         var text = "";
-         var node = root.firstChild;
-         var depth = 1;
-         while ( node && depth > 0 ) {
-             // See if this node is text.
-             if ( node.nodeName == "#text" ) {
-                 // Add this text to our collection.
-                 text += " " + node.data;
-             } else if ( node.nodeType == Node.ELEMENT_NODE 
-                         && node.localName.toUpperCase() == "IMG" ) {
-                 // If it has an alt= attribute, use that.
-                 var altText = node.getAttribute( "alt" );
-                 if ( altText && altText != "" ) {
-                     text = altText;
-                     break;
-                 }
-             }
-             // Find next node to test.
-             // First, see if this node has children.
-             if ( node.hasChildNodes() ) {
-                 // Go to first child.
-                 node = node.firstChild;
-                 depth++;
-             } else {
-                 // No children, try next sibling.
-                 if ( node.nextSibling ) {
-                     node = node.nextSibling;
-                 } else {
-                     // Last resort is our next oldest uncle/aunt.
-                     node = node.parentNode.nextSibling;
-                     depth--;
-                 }
-             }
-         }
-         // Strip leading whitespace.
-         text = text.replace( /^\s+/, "" );
-         // Strip trailing whitespace.
-         text = text.replace( /\s+$/, "" );
-         // Compress remaining whitespace.
-         text = text.replace( /\s+/g, " " );
-         return text;
     },
     // Returns "true" if there's no text selected, null otherwise.
     isNoTextSelected : function ( event ) {
@@ -685,34 +641,6 @@ nsContextMenu.prototype = {
         var baseURI  = ioService.newURI(base, null);
         
         return ioService.newURI(baseURI.resolve(url), null).spec;
-    },
-    // Save specified URL in user-selected file.
-    savePage : function ( url, doNotValidate ) {
-        var postData = null; // No post data, usually.
-        var cacheKey = null;
-
-        // Default is to save current page.
-        if ( !url ) {
-            url = window._content.location.href;
-
-            try {
-                var sessionHistory = getWebNavigation().sessionHistory;
-                var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false).QueryInterface(Components.interfaces.nsISHEntry);
-                postData = entry.postData;
-                cacheKey = entry.cacheKey;
-            } catch(e) {
-            }
-        }
-
-        // Use stream xfer component to prompt for destination and save.
-        var xfer = this.getService( "@mozilla.org/appshell/component/xfer;1",
-                                    "nsIStreamTransfer" );
-        try {
-            xfer.SelectFileAndTransferLocationSpec( url, window, "", "", doNotValidate, postData, cacheKey );
-        } catch( exception ) {
-            // Failed (or cancelled), give them another chance.
-        }
-        return;
     },
     // Parse coords= attribute and return array.
     parseCoords : function ( area ) {
