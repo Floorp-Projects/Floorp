@@ -528,7 +528,7 @@ if ($action eq 'delete') {
     }
     SendSQL("SELECT name " .
             "FROM groups " .
-            "WHERE group_id = " . SqlQuote($gid));
+            "WHERE id = " . SqlQuote($gid));
     my ($name) = FetchSQLData();
 
     my $cantdelete = 0;
