@@ -310,7 +310,8 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
       }
       const PRUnichar *charsetName;
       charsetAtom->GetUnicode(&charsetName);
-      strcpy(_charset, NS_ConvertUCS2toUTF8(charsetName).get());
+      strncpy(_charset, NS_ConvertUCS2toUTF8(charsetName).get(), sizeof(_charset)-1);
+      _charset[sizeof(_charset)-1] = '\0';
       if (_charset[0])
         charset = _charset;
     }
@@ -1072,7 +1073,8 @@ char *intl_decode_mime_part2_str(const char *header,
 
     // Override charset if requested.  Never override labeled UTF-8.
     if (override_charset && 0 != nsCRT::strcasecmp(charset, "UTF-8")) {
-      PL_strcpy(charset, default_charset);
+      PL_strncpy(charset, default_charset, sizeof(charset)-1);
+      charset[sizeof(charset)-1] = '\0';
     }
 
     if (NS_SUCCEEDED(ConvertToUnicode(charset, decoded_text, tempUnicodeString))) {

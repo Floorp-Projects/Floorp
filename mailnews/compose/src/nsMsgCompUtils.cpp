@@ -776,7 +776,8 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
   {
     
     char charset_label[65] = "";   // Content-Type: charset
-    PL_strcpy(charset_label, charset);
+    PL_strncpy(charset_label, charset, sizeof(charset_label)-1);
+    charset_label[sizeof(charset_label)-1] = '\0';
     
     /* If the characters are all 7bit, then it's better (and true) to
     claim the charset to be US-  rather than Latin1.  Should we
