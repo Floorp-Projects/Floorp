@@ -684,8 +684,8 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   
 
   PRInt32
-    destScaledWidth  = (int) (mBHead->biWidth*scale),
-    destScaledHeight = (int) (mBHead->biHeight*scale);
+    destScaledWidth  = PR_MAX(int(mBHead->biWidth*scale), 1),
+    destScaledHeight = PR_MAX(int(mBHead->biHeight*scale), 1);
 
   PRInt32
     validX = 0,
@@ -698,20 +698,20 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   // has been validated.
   if (mDecodedY2 < mBHead->biHeight) {
     validHeight = mDecodedY2 - mDecodedY1;
-    destScaledHeight = (int)(validHeight*scale);
+    destScaledHeight = PR_MAX(int(validHeight*scale), 1);
   }
   if (mDecodedX2 < mBHead->biWidth) {
     validWidth = mDecodedX2 - mDecodedX1;
-    destScaledHeight = (int)(validWidth*scale);
+    destScaledWidth = PR_MAX(int(validWidth*scale), 1);
   }
   if (mDecodedY1 > 0) {   
     validHeight -= mDecodedY1;
-    destScaledHeight = (int)(validHeight*scale);
+    destScaledHeight = PR_MAX(int(validHeight*scale), 1);
     validY = mDecodedY1;
   }
   if (mDecodedX1 > 0) {
     validWidth -= mDecodedX1;
-    destScaledHeight = (int)(validWidth*scale);
+    destScaledWidth = PR_MAX(int(validWidth*scale), 1);
     validX = mDecodedX1; 
   }
 
@@ -724,8 +724,8 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
   // this is the width and height of the image in pixels
   // we need to map this to the pixel height of the device
-  nscoord imageScaledWidth = (int)(mBHead->biWidth*scale);
-  nscoord imageScaledHeight = (int)(mBHead->biHeight*scale);
+  nscoord imageScaledWidth = PR_MAX(int(mBHead->biWidth*scale), 1);
+  nscoord imageScaledHeight = PR_MAX(int(mBHead->biHeight*scale), 1);
 
   nscoord tileWidth = aTileRect.width;
   nscoord tileHeight = aTileRect.height;
