@@ -319,9 +319,9 @@ nsInstallDlg::WorkDammitWork(void *arg)
     sActivity = nsInstallDlg::ACT_INSTALL;
     XI_ERR_BAIL(engine->Install(bCus, comps, gCtx->opt->mDestination));
 
-    // destroy xpiengine
-    XI_IF_DELETE(xpiengine);
-    
+    // destroy installer engine thread object
+    XI_IF_DELETE(engine);
+
     pthread_mutex_lock(&gCtx->prog_mutex);
     gCtx->bDone = TRUE;
     gCtx->threadTurn = nsXIContext::UI_THREAD;
@@ -333,8 +333,8 @@ nsInstallDlg::WorkDammitWork(void *arg)
     DUMP("post pthread_exit");
 
 BAIL:
-    // destroy xpiengine
-    XI_IF_DELETE(xpiengine);
+    // destroy installer engine thread object
+    XI_IF_DELETE(engine);
 
     return NULL;
 }
@@ -355,6 +355,7 @@ nsInstallDlg::ProgressUpdater(gpointer aData)
         pthread_cond_destroy(&gCtx->prog_cv);
         pthread_mutex_destroy(&gCtx->prog_mutex);
 
+        // XXX gdk_flush();
         gtk_main_quit();
         return 0;
     }
@@ -394,8 +395,6 @@ nsInstallDlg::ProgressUpdater(gpointer aData)
 
             gtk_widget_show(sMinorLabel);
             gtk_widget_show(sMinorProgBar);
-            gtk_widget_draw(sMinorLabel, NULL);
-            gtk_widget_draw(sMinorProgBar, NULL);
 
             if (!gCtx->bDone)
                 gCtx->threadTurn = nsXIContext::ENGINE_THREAD;
