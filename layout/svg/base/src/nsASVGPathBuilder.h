@@ -40,6 +40,7 @@
 #define __NS_ASVGPATHBUILDER_H__
 
 #include "nscore.h"
+#include "nsDebug.h"
 
 // abstract path builder 'interface' class.
 // XXX one day this will become a proper interface
