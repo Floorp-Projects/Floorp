@@ -517,7 +517,7 @@ FreeStretch(nsFontStretch* aStretch)
 static void
 FreeWeights(nsFontWeight* aWeight)
 {
-  nsFontStretch* stretches=aWeight->mStretches;
+  nsFontStretch** stretches=aWeight->mStretches;
   for (int i=0; i < 9; i++)
   {
     if (stretches[i])
@@ -536,7 +536,7 @@ FreeWeights(nsFontWeight* aWeight)
 static void
 FreeStyle(nsFontStyle* aStyle)
 {
-  nsFontWeight* weights=aStyle->mWeights;
+  nsFontWeight** weights=aStyle->mWeights;
   for (int i=0; i < 9; i++)
   {
     if (weights[i])
