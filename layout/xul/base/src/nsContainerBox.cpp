@@ -77,10 +77,6 @@
 #include "nsIServiceManager.h"
 
 #include "nsContainerBox.h"
-#include "nsQuickSort.h"
-
-int PR_CALLBACK 
-BoxOrderSortComparison(const void *v1, const void *v2, void *unused);
 
 nsContainerBox::nsContainerBox(nsIPresShell* aShell):nsBox(aShell)
 {
@@ -450,8 +446,23 @@ nsContainerBox::CheckBoxOrder(nsBoxLayoutState& aState)
       ++boxPtr;
     }
 
-    // sort the array by ordinal group
-    NS_QuickSort(boxes, mChildCount, sizeof(nsIBox*), BoxOrderSortComparison, (void*)&aState);
+    // sort the array by ordinal group, selection sort
+    PRInt32 i, j, min;
+    PRUint32 minOrd, jOrd;
+    for(i = 0; i < mChildCount; i++) {
+      min = i;
+      boxes[min]->GetOrdinal(aState, minOrd);
+      for(j = i + 1; j < mChildCount; j++) {
+        boxes[j]->GetOrdinal(aState, jOrd);
+        if (jOrd < minOrd) {
+          min = j;
+          minOrd = jOrd;
+        }
+      }
+      box = boxes[min];
+      boxes[min] = boxes[i];
+      boxes[i] = box;
+    }
     
     // turn the array back into linked list, with first and last cached
     mFirstChild = boxes[0];
@@ -464,21 +475,6 @@ nsContainerBox::CheckBoxOrder(nsBoxLayoutState& aState)
     }
     delete [] boxes;
   }
-}
-
-int PR_CALLBACK 
-BoxOrderSortComparison(const void *v1, const void *v2, void *unused) 
-{
-  nsIBox* box1 = *(nsIBox**) v1;
-  nsIBox* box2 = *(nsIBox**) v2;
-  nsBoxLayoutState state = *((nsBoxLayoutState*)unused);
-  
-  PRUint32 ord1;
-  box1->GetOrdinal(state, ord1);
-  PRUint32 ord2;
-  box2->GetOrdinal(state, ord2);
-  
-  return ord1 > ord2 ? 1 : (ord2 > ord1 ? -1 : 0);
 }
 
 NS_IMETHODIMP
