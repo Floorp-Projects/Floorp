@@ -40,6 +40,7 @@ mailnews/db/mdb/Makefile
 mailnews/db/mdb/public/Makefile
 mailnews/db/mork/Makefile
 mailnews/db/mork/src/Makefile
+mailnews/db/mork/build/Makefile
 mailnews/db/msgdb/Makefile
 mailnews/db/msgdb/public/Makefile
 mailnews/db/msgdb/src/Makefile
