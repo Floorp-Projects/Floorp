@@ -178,52 +178,6 @@ void InitConfigureEvent(GdkEventConfigure *aConf,
 }
 
 //==============================================================
-void InitMouseEvent(GdkEventButton *aGEB,
-                            gpointer   p,
-                            nsMouseEvent &anEvent,
-                            PRUint32   aEventType)
-{
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_MOUSE_EVENT;
-
-  if (aGEB != NULL) {
-    anEvent.point.x = nscoord(aGEB->x);
-    anEvent.point.y = nscoord(aGEB->y);
-
-    anEvent.isShift = (aGEB->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.isControl = (aGEB->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.isAlt = (aGEB->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.time = aGEB->time;
-
-    switch(aGEB->type)
-      {
-      case GDK_BUTTON_PRESS:
-        anEvent.clickCount = 1;
-        break;
-      case GDK_2BUTTON_PRESS:
-        anEvent.clickCount = 2;
-        break;
-      case GDK_3BUTTON_PRESS:  /* Clamp to double-click */
-        anEvent.clickCount = 2;
-        break;
-      default:
-        anEvent.clickCount = 1;
-    }
-
-  }
-}
-
-//==============================================================
-void UninitMouseEvent(GdkEventButton *aGEB,
-                        gpointer     p,
-                        nsMouseEvent &anEvent,
-                        PRUint32     aEventType)
-{
-}
-
-//==============================================================
 void InitExposeEvent(GdkEventExpose *aGEE,
                             gpointer   p,
                             nsPaintEvent &anEvent,
@@ -425,117 +379,15 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 }
 
 //==============================================================
-gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
-{
-  nsMouseEvent mevent;
-  int b = 0;
-
-  /* Switch on single, double, triple click. */
-  switch (event->type) {
-  case GDK_BUTTON_PRESS:   /* Single click. */
-    switch (event->button)  /* Which button? */
-      {
-      case 1:
-        b = NS_MOUSE_LEFT_BUTTON_DOWN;
-        break;
-      case 2:
-        b = NS_MOUSE_MIDDLE_BUTTON_DOWN;
-        break;
-      case 3:
-        b = NS_MOUSE_RIGHT_BUTTON_DOWN;
-        break;
-      default:
-        /* Single-click default. */
-        b = NS_MOUSE_LEFT_BUTTON_DOWN;
-        break;
-      }
-    break;
-
-  case GDK_2BUTTON_PRESS:   /* Double click. */
-    switch (event->button)  /* Which button? */
-      {
-      case 1:
-        b = NS_MOUSE_LEFT_DOUBLECLICK;
-        break;
-      case 2:
-        b = NS_MOUSE_MIDDLE_DOUBLECLICK;
-        break;
-      case 3:
-        b = NS_MOUSE_RIGHT_DOUBLECLICK;
-        break;
-      default:
-        /* Double-click default. */
-        b = NS_MOUSE_LEFT_DOUBLECLICK;
-        break;
-      }
-    break;
-
-  case GDK_3BUTTON_PRESS:   /* Triple click. */
-    /* Unhandled triple click. */
-    break;
-
-  default:
-    break;
-  }
-  InitMouseEvent(event, p, mevent, b);
-
-  nsWindow *win = (nsWindow *)p;
-  win->AddRef();
-  win->DispatchMouseEvent(mevent);
-  win->Release();
-
-  UninitMouseEvent(event, p, mevent, b);
-
-  return PR_TRUE;
-}
-
-//==============================================================
-gint handle_button_release_event(GtkWidget *w, GdkEventButton * event, gpointer p)
-{
-  nsMouseEvent mevent;
-  int b = 0;
-
-  switch (event->button)
-  {
-    case 1:
-      b = NS_MOUSE_LEFT_BUTTON_UP;
-      break;
-    case 2:
-      b = NS_MOUSE_MIDDLE_BUTTON_UP;
-      break;
-    case 3:
-      b = NS_MOUSE_RIGHT_BUTTON_UP;
-      break;
-    default:
-      b = NS_MOUSE_LEFT_BUTTON_UP;
-      break;
-  }
-  InitMouseEvent(event, p, mevent, b);
-
-  nsWindow *win = (nsWindow *)p;
-  win->AddRef();
-  win->DispatchMouseEvent(mevent);
-  win->Release();
-
-  UninitMouseEvent(event, p, mevent, b);
-
-  return PR_TRUE;
-}
-
-//==============================================================
-
-//==============================================================
 gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
 {
   nsWindow *win = (nsWindow *)p;
   if (!win->IsDestroying()) {
     nsGUIEvent gevent;
     InitFocusEvent(event, p, gevent, NS_GOTFOCUS);
-
     win->AddRef();
     win->DispatchFocus(gevent);
     win->Release();
-
     UninitFocusEvent(event, p, gevent, NS_GOTFOCUS);
   }
   return PR_TRUE;

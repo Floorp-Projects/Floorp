@@ -62,18 +62,20 @@ nsButton::~nsButton()
 
 void nsButton::InitCallbacks(char * aName)
 {
-  nsWidget::InitCallbacks();
+  InstallButtonPressSignal(mWidget);
+  InstallButtonReleaseSignal(mWidget);
 
-  /* FIXME: we need to unconnect the signals connected from
-   * nsWidget::InitCallbacks that we provide here */
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "button_press_event",
-                     GTK_SIGNAL_FUNC(handle_button_press_event),
-                     this);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "button_release_event",
-                     GTK_SIGNAL_FUNC(handle_button_release_event),
-                     this);
+  // These are needed so that the events will go to us and not our parent.
+  AddToEventMask(mWidget,
+                 GDK_BUTTON_PRESS_MASK |
+                 GDK_BUTTON_RELEASE_MASK |
+                 GDK_ENTER_NOTIFY_MASK |
+                 GDK_EXPOSURE_MASK |
+                 GDK_FOCUS_CHANGE_MASK |
+                 GDK_KEY_PRESS_MASK |
+                 GDK_KEY_RELEASE_MASK |
+                 GDK_LEAVE_NOTIFY_MASK |
+                 GDK_POINTER_MOTION_MASK);
 }
 
 /**

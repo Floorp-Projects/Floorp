@@ -111,32 +111,6 @@ protected:
   virtual gint OnDrawSignal(GdkRectangle * aArea);
 
   //////////////////////////////////////////////////////////////////////
-  //
-  // Crossing signals
-  // 
-  //////////////////////////////////////////////////////////////////////
-  void InitCrossingEvent(GdkEventCrossing * aGdkCrossingEvent,
-                         nsMouseEvent &     aMouseEvent,
-                         PRUint32           aEventType);
-
-  void UninitCrossingEvent(GdkEventCrossing * aGdkCrossingEvent,
-                           nsMouseEvent &     aMouseEvent,
-                           PRUint32           aEventType);
-
-
-  static gint EnterNotifySignal(GtkWidget *        aWidget, 
-                                GdkEventCrossing * aGdkCrossingEvent, 
-                                gpointer           aData);
-
-  virtual gint OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
-
-  static gint LeaveNotifySignal(GtkWidget *        aWidget, 
-                                GdkEventCrossing * aGdkCrossingEvent, 
-                                gpointer           aData);
-  
-  virtual gint OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
-
-  //////////////////////////////////////////////////////////////////////
 
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkWidget *parentWidget);
