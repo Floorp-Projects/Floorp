@@ -28,6 +28,9 @@
 #include "nsFont.h"
 #include "nsIImage.h"
 #include "nsAFMObject.h"
+#ifdef VMS
+#include <stdlib.h>
+#endif
 
 extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
 
@@ -69,6 +72,15 @@ nsPostScriptObj::~nsPostScriptObj()
 	fclose( mPrintSetup->out );
   else
 	pclose( mPrintSetup->out );
+#ifdef VMS
+  if ( mPrintSetup->print_cmd != (char *) NULL ) {
+    char VMSPrintCommand[1024];
+    sprintf (VMSPrintCommand, "%s /delete %s.",
+      mPrintSetup->print_cmd, mPrintSetup->filename);
+    system(VMSPrintCommand);
+    free(mPrintSetup->filename);
+  }
+#endif
   // Cleanup things allocated along the way
   if (nsnull != mPrintContext){
     if (nsnull != mPrintContext->prInfo){
@@ -126,9 +138,17 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
       mPrintSetup->paper_size = printSize;
       aSpec->GetToPrinter( isAPrinter );
       if ( isAPrinter == PR_TRUE ) {
+#ifndef VMS
         aSpec->GetCommand( &buf );
         mPrintSetup->out = popen( buf, "w" );
         mPrintSetup->filename = (char *) NULL;  
+#else
+        // We can not open a pipe and print the contents of it. Instead
+        // we have to print to a file and then print that.
+        aSpec->GetCommand( &mPrintSetup->print_cmd );
+        mPrintSetup->filename = tempnam("SYS$SCRATCH:","MOZ_P");
+        mPrintSetup->out = fopen(mPrintSetup->filename, "w");
+#endif
       } else {
         aSpec->GetPath( &buf );
         mPrintSetup->filename = buf;          
