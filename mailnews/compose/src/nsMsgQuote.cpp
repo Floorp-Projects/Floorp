@@ -194,25 +194,22 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   rv = msgService->GetUrlForUri(msgURI, getter_AddRefs(aURL), nsnull);
   if (NS_FAILED(rv)) return rv;
 
-  // now we want to append some quote specific information to the 
-  // end of the url spec. 
-  nsXPIDLCString urlSpec;
-  aURL->GetSpec(getter_Copies(urlSpec));
-  nsCAutoString modifiedUrlSpec(urlSpec);
-
   PRBool bAutoQuote = PR_TRUE;
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
   if (NS_SUCCEEDED(rv))
     prefs->GetBoolPref("mail.auto_quote", &bAutoQuote);
 
-  if (! bAutoQuote) /* We don't need to quote the message body but we still need to extract the headers */
-    modifiedUrlSpec += "?header=only";
-  else if (quoteHeaders)
-      modifiedUrlSpec += "?header=quote";
-  else
-      modifiedUrlSpec += "?header=quotebody";
+  nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aURL, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  aURL->SetSpec(modifiedUrlSpec.get());
+  if (! bAutoQuote) /* We don't need to quote the message body but we still need to extract the headers */
+    rv = mailNewsUrl->SetQuery("header=only");
+  else if (quoteHeaders)
+    rv = mailNewsUrl->SetQuery("header=quote");
+  else
+    rv = mailNewsUrl->SetQuery("header=quotebody");
+
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // if we were given a non empty charset, then use it
   if (aMsgCharSet && *aMsgCharSet)
