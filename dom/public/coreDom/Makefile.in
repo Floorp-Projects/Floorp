@@ -43,6 +43,7 @@ EXPORTS =               \
 	nsIDOMText.h \
 	nsIDOMStyleSheet.h \
 	nsIDOMStyleSheetCollection.h \
+	nsIDOMNSDocument.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
