@@ -46,7 +46,7 @@
 ;+#   directives are hidden behind ";", ";+", and ";-"
 ;+SOFTOKEN_3.4 {       # Softoken 3.4 release
 ;+    global:
-LIBRARY softoken	;-
+LIBRARY softokn3 ;-
 EXPORTS		;-
 NSC_GetFunctionList ;
 NSC_ModuleDBFunc ;
