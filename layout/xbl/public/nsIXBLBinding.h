@@ -59,6 +59,7 @@ public:
   
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement) = 0;
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement) = 0;
+  NS_IMETHOD InstallProperties(nsIContent* aBoundElement) = 0;
 
   NS_IMETHOD GetBaseTag(nsIAtom** aResult) = 0;
 
