@@ -1076,7 +1076,7 @@ nsPluginHostImpl :: nsPluginHostImpl(nsIServiceManager *serviceMgr)
 {
   NS_INIT_REFCNT();
   mPluginsLoaded = PR_FALSE;
-  mserviceMgr = serviceMgr;
+  mServiceMgr = serviceMgr;
 }
 
 nsPluginHostImpl :: ~nsPluginHostImpl()
@@ -1517,9 +1517,6 @@ NS_IMETHODIMP nsPluginHostImpl :: Init(void)
     NS_RELEASE(object);
   }
 
-  // eagerly load them as a test.
-  LoadPlugins();
-
   return rv;
 }
 
@@ -1773,7 +1770,7 @@ NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType,
           nsFactoryProc  fact = (nsFactoryProc)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
 
           if (nsnull != fact)
-			(fact)(kIPluginIID, mserviceMgr, (nsIFactory**)&plugins->mEntryPoint);
+			(fact)(kIPluginIID, mServiceMgr, (nsIFactory**)&plugins->mEntryPoint);
 
 		  // we only need to call this for 5x style plugins - CreatePlugin() handles this for
 		  // 4x style plugins
@@ -1820,10 +1817,43 @@ NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType,
   }
 }
 
-NS_IMETHODIMP nsPluginHostImpl :: GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
+NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
 {
+	nsresult res = NS_ERROR_FAILURE;
 	*aPlugin = NULL;
-	return NS_ERROR_NOT_IMPLEMENTED;
+
+	// If plugins haven't been scanned yet, do so now.
+	if (mPlugins == NULL)
+		LoadPlugins();
+
+	// search the plugin list for the specified MIME type.
+	// TODO:  should look at the MIME type array as well.
+	if (aMimeType != nsnull) {
+		nsPluginTag* pluginTag = mPlugins;
+		while (pluginTag != nsnull) {
+			if (::strcmp(aMimeType, pluginTag->mMimeType) == 0) {
+				nsIPlugin* plugin = pluginTag->mEntryPoint;
+				if (plugin == NULL) {
+					// need to get the plugin factory from this plugin.
+					nsFactoryProc nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
+					if (nsGetFactory != NULL) {
+						res = nsGetFactory(kIPluginIID, mServiceMgr, (nsIFactory**)&pluginTag->mEntryPoint);
+						plugin = pluginTag->mEntryPoint;
+						if (plugin != NULL)
+							plugin->Initialize();
+					}
+				}
+				if (plugin != NULL) {
+					*aPlugin = plugin;
+					plugin->AddRef();
+					res = NS_OK;
+					break;
+				}
+			}
+			pluginTag = pluginTag->mNext;
+		}
+	}
+	return res;
 }
 
 #ifdef XP_MAC
@@ -1849,8 +1879,22 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 					nsPluginTag* pluginTag = new nsPluginTag();
 					pluginTag->mNext = mPlugins;
 					mPlugins = pluginTag;
-					// GetLeafName() returns a copy allocated with new.
-					pluginTag->mName = pluginFile.GetLeafName();
+					
+					nsPluginInfo info = { sizeof(info) };
+					if (pluginFile.GetPluginInfo(info) == NS_OK) {
+						pluginTag->mName = info.fName;
+						pluginTag->mDescription = info.fDescription;
+						pluginTag->mMimeType = info.fMimeType;
+						pluginTag->mMimeDescription = info.fMimeDescription;
+						pluginTag->mExtensions = info.fExtensions;
+						pluginTag->mVariants = info.fVariantCount;
+						pluginTag->mMimeTypeArray = info.fMimeTypeArray;
+						pluginTag->mMimeDescriptionArray = info.fMimeDescriptionArray;
+					}
+					
+					pluginTag->mLibrary = pluginLibrary;
+					pluginTag->mEntryPoint = NULL;
+					pluginTag->mFlags = 0;
 				}
 			}
 		}
