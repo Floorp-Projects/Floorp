@@ -111,7 +111,6 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
   mBlock = aBlock;
   mSpaceManager = aSpaceManager;
   mBlockIsPseudo = aBlock->IsPseudoFrame();
-  mBlockIsListItem = PR_FALSE;
   mListPositionOutside = PR_FALSE;
   mCurrentLine = nsnull;
   mPrevKidFrame = nsnull;
@@ -132,7 +131,6 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
   mPrevNegBottomMargin = 0;
 
   mNextListOrdinal = -1;
-  mFirstChildIsInsideBullet = PR_FALSE;
 
   return rv;
 }
@@ -1030,7 +1028,6 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
   nsStyleDisplay* myDisplay = (nsStyleDisplay*)
     mStyleContext->GetData(eStyleStruct_Display);
   if (NS_STYLE_DISPLAY_LIST_ITEM == myDisplay->mDisplay) {
-    aState.mBlockIsListItem = PR_TRUE;
     nsStyleList* myList = (nsStyleList*)
       mStyleContext->GetData(eStyleStruct_List);
     if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == myList->mListStylePosition) {

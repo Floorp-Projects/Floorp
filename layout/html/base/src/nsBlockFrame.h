@@ -69,8 +69,6 @@ struct nsBlockReflowState {
 
   nsBlockFrame* mBlock;
   PRBool mBlockIsPseudo;
-  PRBool mBlockIsListItem;
-  PRBool mListPositionOutside;
 
   // Current line being reflowed
   nsLineLayout* mCurrentLine;
@@ -107,8 +105,9 @@ struct nsBlockReflowState {
   // Array of floaters to place below current line
   nsVoidArray mPendingFloaters;
 
+  // The next list ordinal for counting list bullets
   PRInt32 mNextListOrdinal;
-  PRPackedBool mFirstChildIsInsideBullet;
+  PRBool mListPositionOutside;
 };
 
 //----------------------------------------------------------------------
