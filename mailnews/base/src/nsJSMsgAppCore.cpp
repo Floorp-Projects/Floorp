@@ -329,10 +329,10 @@ MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
 
 //
-// Native method GetMessageHeader
+// Native method GetRDFResourceForMessage
 //
 PR_STATIC_CALLBACK(JSBool)
-MsgAppCoreGetMessageHeader(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+MsgAppCoreGetRDFResourceForMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -363,9 +363,11 @@ MsgAppCoreGetMessageHeader(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
                                             argv[1]);
 
               
-      if (!rBool || NS_OK != nativeThis->GetMessageHeader(tree,
-                                                          nodeList, 
-                                                          &nativeRet)) {
+      if (!rBool || NS_OK != nativeThis->GetRDFResourceForMessage(tree,
+                                                                  nodeList, 
+                                                                  &nativeRet))
+          
+      {
           return JS_FALSE;
       }
       
@@ -374,7 +376,7 @@ MsgAppCoreGetMessageHeader(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
       nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
-    JS_ReportError(cx, "Function ReplyMessage requires 1 parameters");
+    JS_ReportError(cx, "Function GetRDFResource requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -419,7 +421,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"SetWindow",          MsgAppCoreSetWindow,     1},
   {"OpenURL",          MsgAppCoreOpenURL,     1},
   {"DeleteMessage",          MsgAppCoreDeleteMessage,     2},
-  {"GetMessageHeader",          MsgAppCoreGetMessageHeader,     2},
+  {"GetRDFResourceForMessage",    MsgAppCoreGetRDFResourceForMessage,     2},
   {0}
 };
 

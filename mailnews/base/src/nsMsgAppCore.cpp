@@ -91,7 +91,9 @@ public:
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
   NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList);
-  NS_IMETHOD GetMessageHeader(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList, nsISupports **aSupport);
+  NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
+                                      nsIDOMNodeList *nodeList, nsISupports
+                                      **aSupport); 
 
 private:
   
@@ -537,7 +539,9 @@ nsMsgAppCore::DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList
 }
 
 NS_IMETHODIMP
-nsMsgAppCore::GetMessageHeader(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList, nsISupports **aSupport)
+nsMsgAppCore::GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
+                                       nsIDOMNodeList *nodeList, nsISupports
+                                       **aSupport) 
 {
       nsresult rv;
       nsISupportsArray *resourceArray;
