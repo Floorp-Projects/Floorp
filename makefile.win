@@ -56,7 +56,13 @@ DIRS =                         \
   netwerk                      \
   widget\timer                 \
   js                           \
-  modules                      \
+  modules\zlib                 \
+  modules\libjar               \
+  modules\libutil              \
+  modules\libimg               \
+  modules\libpref              \
+  modules\plugin               \
+  modules\oji                  \
   caps                         \
   intl                         \
 !endif
