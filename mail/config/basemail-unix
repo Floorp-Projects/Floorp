@@ -469,3 +469,8 @@ components/filepicker.xpt
 ; p3p
 ;;components/libp3p.so
 ;;components/p3p.xpt
+
+; talkback
+components/libqfaservices.so
+components/qfaservices.xpt
+components/talkback/*
