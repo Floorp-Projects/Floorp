@@ -1315,23 +1315,23 @@ sub BuildAppRunner()
 	my($cmd_file) = "";
 
 	$cmd_file = "Mozilla Addressbook";
-	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . "Mozilla_Addressbook", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
 	$cmd_file = "Mozilla Editor";
-	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . "Mozilla_Editor", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
 	$cmd_file = "Mozilla Message Compose";
-	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . "Mozilla_Message_Compose", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
 	$cmd_file = "Mozilla Messenger";
-	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . "Mozilla_Messenger", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
 	$cmd_file = "Mozilla Preference";
-	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . "Mozilla_Preference", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 }
 
