@@ -1,0 +1,121 @@
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+NODEPEND=1
+
+#//------------------------------------------------------------------------
+#//
+#// Specify the depth of the current directory relative to the
+#// root of NS
+#//
+#//------------------------------------------------------------------------
+DEPTH=..\..\..
+
+#//------------------------------------------------------------------------
+#//
+# New build system where zip dll is build indepenant of java stubs.
+#//
+#//------------------------------------------------------------------------
+MODULE  =mailnews
+REQUIRES=xpcom js
+EXPORTS =      \
+	          $(NULL)
+
+
+#//------------------------------------------------------------------------
+#// 
+#// Define the files necessary to build the target (ie. OBJS)
+#//
+#//------------------------------------------------------------------------
+
+CPPSRCS=										\
+			nsMsgNewsFactory.cpp				\
+			$(NULL)
+OBJS=											\
+			.\$(OBJDIR)\nsMsgNewsFactory.obj    \
+			$(NULL)
+
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
+#//
+#//------------------------------------------------------------------------
+DLLNAME=msgnews
+MAPFILE=msgnews.map
+# DEFFILE=msg.def
+
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
+#// (these must be defined before the common makefiles are included)
+#//
+#//------------------------------------------------------------------------
+
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+#//------------------------------------------------------------------------
+#//
+#// Define any local options for the make tools 
+#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
+#//
+#//------------------------------------------------------------------------
+LCFLAGS=-DNETSCAPE
+
+MSGLIBS=				\
+		$(NULL)
+
+# These are the libraries we need to link with to create the dll
+LLIBS=												\
+			$(MSGLIBS)								\
+			$(DIST)\lib\xpcom32.lib					\
+			$(DIST)\lib\raptorbase.lib				\
+			$(DIST)\lib\xplib.lib       			\
+			$(DIST)\lib\plc3.lib					\
+			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
+			$(DIST)\lib\msgcoreutil.lib				\
+			$(DIST)\lib\nntp.lib					\
+			$(DIST)\lib\netlib.lib					\
+			$(LIBNSPR)								\
+			$(NULL)
+
+MISCDEP=$(LLIBS)
+
+LINCS=$(LINCS) -I,							\
+			   -I$(PUBLIC)\xpcom			\
+			   -I$(PUBLIC)\js				\
+			   -I$(PUBLIC)\mailnews			\
+			   -I$(PUBLIC)\pref				\
+			   -I$(PUBLIC)\raptor			\
+			   -I$(PUBLIC)\rdf				\
+			   -I$(PUBLIC)\netlib			\
+			   -I$(PUBLIC)\dom				\
+ 			    $(NULL)
+
+#//------------------------------------------------------------------------
+#//
+#// Include the common makefile rules
+#//
+#//------------------------------------------------------------------------
+include <$(DEPTH)/config/rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+
+clobber::
+	rm -f $(DIST)\bin\$(DLLNAME)
+
+
