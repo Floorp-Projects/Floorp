@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.87 2005/01/10 07:21:26 travis%sedsystems.ca Exp $ -->
+<!-- $Id: installation.xml,v 1.88 2005/01/10 07:30:18 travis%sedsystems.ca Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -221,7 +221,7 @@
       
       <para>
         The preferred way of installing Perl modules is via CPAN on Unix, 
-        or PPM on Windows (see <xref linkend="win32-perlmodules"/>). These
+        or PPM on Windows (see <xref linkend="win32-perl-modules"/>). These
         instructions assume you are using CPAN; if for some reason you need 
         to install the Perl modules manually, see 
         <xref linkend="install-perlmodules-manual"/>.
