@@ -44,6 +44,7 @@ static NS_DEFINE_IID(kCXPFCDTD,               NS_IXPFCXML_DTD_IID);
 static NS_DEFINE_IID(kCXPFCContentSink,       NS_XPFCXMLCONTENTSINK_IID);
 static NS_DEFINE_IID(kCXPFCCommandServerCID,  NS_XPFC_COMMAND_SERVER_CID);
 static NS_DEFINE_IID(kCXPFCHTMLCanvasCID,     NS_XPFC_HTML_CANVAS_CID);
+static NS_DEFINE_IID(kCXPFolderCanvasCID,     NS_XP_FOLDER_CANVAS_CID);
 
 static NS_DEFINE_IID(kViewManagerCID,         NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kIViewManagerIID,        NS_IVIEWMANAGER_IID);
@@ -606,6 +607,7 @@ nsresult nsCalendarContainer::RegisterFactories()
   nsRepository::RegisterFactory(kCXPFCCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXPFCCanvasCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXPFCHTMLCanvasCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFolderCanvasCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXPFCCanvasCID, XPFC_DLL, PR_TRUE, PR_TRUE);
   nsRepository::RegisterFactory(kCXPFCCanvasManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXPFCMethodInvokerCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);

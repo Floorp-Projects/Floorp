@@ -91,6 +91,7 @@ public:
    * @result nsILayout pointer, nsnull if no layout object assigned, else a pointer to the layout object
    */
   NS_IMETHOD_(nsILayout *)  GetLayout() = 0;
+  NS_IMETHOD                SetLayout(nsILayout * aLayout) = 0;
 
   /**
    * Get the Name of this canvas, relative to itself

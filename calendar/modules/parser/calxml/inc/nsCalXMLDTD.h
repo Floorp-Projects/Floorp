@@ -37,6 +37,7 @@ enum eCalXMLTags
   eCalXMLTag_control,
   eCalXMLTag_ctx,
   eCalXMLTag_doctype,
+  eCalXMLTag_foldercanvas,
   eCalXMLTag_htmlcanvas,
   eCalXMLTag_leaf,
   eCalXMLTag_mcc,
@@ -50,6 +51,7 @@ enum eCalXMLTags
   eCalXMLTag_timebaruserheading,
   eCalXMLTag_todocanvas,
   eCalXMLTag_xml,    
+  eCalXMLTag_xpitem,
 
   eCalXMLTag_userdefined
 };

@@ -19,6 +19,7 @@
 #include "nsXPFCToolbar.h"
 #include "nsxpfcCIID.h"
 #include "nspr.h"
+#include "nsBoxLayout.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCXPFCToolbarCID, NS_XPFC_TOOLBAR_CID);
@@ -26,6 +27,8 @@ static NS_DEFINE_IID(kCIXPFCToolbarIID, NS_IXPFC_TOOLBAR_IID);
 
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
+
+#define DEFAULT_GAP 2
 
 nsXPFCToolbar :: nsXPFCToolbar(nsISupports* outer) : nsXPFCCanvas(outer)
 {
@@ -66,7 +69,12 @@ NS_IMPL_RELEASE(nsXPFCToolbar)
 
 nsresult nsXPFCToolbar :: Init()
 {
-  return (nsXPFCCanvas::Init());    
+  nsresult res = nsXPFCCanvas::Init();
+
+  ((nsBoxLayout *)GetLayout())->SetHorizontalGap(DEFAULT_GAP);
+  ((nsBoxLayout *)GetLayout())->SetVerticalGap(DEFAULT_GAP);
+
+  return (res);    
 }
 
 nsresult nsXPFCToolbar :: SetParameter(nsString& aKey, nsString& aValue)

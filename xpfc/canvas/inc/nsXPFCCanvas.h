@@ -61,6 +61,8 @@ public:
   NS_IMETHOD  CreateIterator(nsIIterator ** aIterator) ;
   NS_IMETHOD  Layout() ;
   NS_IMETHOD_(nsILayout *)  GetLayout();
+  NS_IMETHOD                SetLayout(nsILayout * aLayout) ;
+
 
   NS_IMETHOD_(nsString&) GetNameID();
   NS_IMETHOD             SetNameID(nsString& aString);
@@ -244,6 +246,9 @@ public:
 
 protected:
   ~nsXPFCCanvas();
+  NS_IMETHOD CreateImageGroup();
+  NS_IMETHOD CreateDefaultLayout();
+  NS_IMETHOD_(nsIImageRequest *) RequestImage(nsString aUrl);
 
 
 public:
@@ -269,8 +274,6 @@ private:
   nsFont          mFont;
   PRUint32        mTabID;
   PRUint32        mTabGroup;
-  nsIImageGroup*  mImageGroup;
-  nsIImageRequest* mImageRequest;
 
 // nsIWidget Aggregation
 protected:
@@ -288,6 +291,8 @@ protected:
 
   nsIRenderingContext *mRenderingContext;
   nsIXPFCCanvas * mParent;
+  nsIImageRequest* mImageRequest;
+  nsIImageGroup*  mImageGroup;
 
 public:
   nsIView           *mView;

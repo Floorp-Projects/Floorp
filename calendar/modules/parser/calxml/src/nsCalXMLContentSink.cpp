@@ -56,6 +56,8 @@ static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
 
 static NS_DEFINE_IID(kCalContextcontrollerIID, NS_ICAL_CONTEXT_CONTROLLER_IID);
 static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
+static NS_DEFINE_IID(kCXPFolderCanvas,         NS_XP_FOLDER_CANVAS_CID);
+static NS_DEFINE_IID(kCXPItem,                 NS_XP_ITEM_CID);
 
 
 
@@ -392,6 +394,14 @@ NS_IMETHODIMP nsCalXMLContentSink::CIDFromTag(eCalXMLTags tag, nsCID &aClass)
 
     case eCalXMLTag_htmlcanvas:
       aClass = kCXPFCHTMLCanvasCID;
+      break;
+
+    case eCalXMLTag_foldercanvas:
+      aClass = kCXPFolderCanvas;
+      break;
+
+    case eCalXMLTag_xpitem:
+      aClass = kCXPItem;
       break;
       
     default:

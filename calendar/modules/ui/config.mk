@@ -27,7 +27,6 @@ LD_LIBS += \
 	nsjpn$(MOZ_BITS)30 \
 	nscnv$(MOZ_BITS)30 \
 	nssb$(MOZ_BITS)30 \
-	calnetwork10 \
     xpfc10 \
 	$(XP_REG_LIB)
 

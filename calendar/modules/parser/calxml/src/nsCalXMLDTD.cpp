@@ -56,6 +56,7 @@ nsCalXMLTagEntry gCalXMLTagTable[] =
   {"comment",               eCalXMLTag_comment},
   {"control",               eCalXMLTag_control},
   {"ctx",                   eCalXMLTag_ctx},
+  {"foldercanvas",          eCalXMLTag_foldercanvas},
   {"htmlcanvas",            eCalXMLTag_htmlcanvas},
   {"leaf",                  eCalXMLTag_leaf},
   {"mcc",                   eCalXMLTag_mcc},
@@ -68,6 +69,7 @@ nsCalXMLTagEntry gCalXMLTagTable[] =
   {"timebarscale",          eCalXMLTag_timebarscale},
   {"timebaruserheading",    eCalXMLTag_timebaruserheading},
   {"todocanvas",            eCalXMLTag_todocanvas},
+  {"xpitem",                eCalXMLTag_xpitem},
 };
 
 
@@ -256,6 +258,7 @@ nsresult nsCalXMLDTD::HandleStartToken(CToken* aToken)
         case eCalXMLTag_object:
         case eCalXMLTag_rootpanel:
         case eCalXMLTag_panel:
+        case eCalXMLTag_foldercanvas:
         {
           mSink->OpenContainer(*attrNode);
         }
@@ -269,6 +272,7 @@ nsresult nsCalXMLDTD::HandleStartToken(CToken* aToken)
         case eCalXMLTag_timebarscale:
         case eCalXMLTag_timebaruserheading:
         case eCalXMLTag_todocanvas:
+        case eCalXMLTag_xpitem:
         case eCalXMLTag_htmlcanvas:
         {
           mSink->AddLeaf(*attrNode);
@@ -327,6 +331,7 @@ nsresult nsCalXMLDTD::HandleEndToken(CToken* aToken)
     case eCalXMLTag_object:
     case eCalXMLTag_panel:
     case eCalXMLTag_rootpanel:
+    case eCalXMLTag_foldercanvas:
     {
       mSink->CloseContainer(*attrNode);
     }
@@ -342,6 +347,7 @@ nsresult nsCalXMLDTD::HandleEndToken(CToken* aToken)
     case eCalXMLTag_todocanvas:
     case eCalXMLTag_htmlcanvas:
     case eCalXMLTag_control:
+    case eCalXMLTag_xpitem:
        break;
 
     case eCalXMLTag_set:
@@ -377,6 +383,10 @@ eCalXMLTags nsCalXMLDTD::TagTypeFromObject(const nsIParserNode& aNode)
         return eCalXMLTag_timebaruserheading;
       if (value.EqualsIgnoreCase(XPFC_STRING_HTML_CANVAS))
         return eCalXMLTag_htmlcanvas;
+      if (value.EqualsIgnoreCase(XPFC_STRING_FOLDER_CANVAS))
+        return eCalXMLTag_foldercanvas;
+      if (value.EqualsIgnoreCase(XPFC_STRING_XPITEM))
+        return eCalXMLTag_xpitem;
    }
    
   }

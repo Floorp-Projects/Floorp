@@ -94,6 +94,32 @@ public:
    */
   NS_IMETHOD SetFocusedCanvas(nsIXPFCCanvas * aCanvas) = 0;
 
+  /**
+   * Get the canvas with Keyboard Focus
+   * @result nsIXPFCCanvas pointer, the canvas with focus
+   */
+  NS_IMETHOD_(nsIXPFCCanvas *) GetPressedCanvas() = 0;
+
+  /**
+   * Set the canvas with Keyboard Focus
+   * @param nsIXPFCCanvas pointer, the canvas to set focus to
+   * @result nsresult, NS_OK if successful
+   */
+  NS_IMETHOD SetPressedCanvas(nsIXPFCCanvas * aCanvas) = 0;
+
+  /**
+   * Get the canvas with Keyboard Focus
+   * @result nsIXPFCCanvas pointer, the canvas with focus
+   */
+  NS_IMETHOD_(nsIXPFCCanvas *) GetMouseOverCanvas() = 0;
+
+  /**
+   * Set the canvas with Keyboard Focus
+   * @param nsIXPFCCanvas pointer, the canvas to set focus to
+   * @result nsresult, NS_OK if successful
+   */
+  NS_IMETHOD SetMouseOverCanvas(nsIXPFCCanvas * aCanvas) = 0;
+
 };
 
 #endif /* nsIXPFCCanvasManager_h___ */

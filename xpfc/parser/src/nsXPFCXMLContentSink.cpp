@@ -51,6 +51,7 @@ static NS_DEFINE_IID(kCButtonCID,           NS_BUTTON_CID);
 static NS_DEFINE_IID(kCTextWidgetCID,       NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCTabWidgetCID,        NS_TABWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCButtonCID,       NS_XPFC_BUTTON_CID);
+static NS_DEFINE_IID(kCXPButtonCID,         NS_XP_BUTTON_CID);
 static NS_DEFINE_IID(kCXPFCTabWidgetCID,    NS_XPFC_TABWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCTextWidgetCID,   NS_XPFC_TEXTWIDGET_CID);
 static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
@@ -588,6 +589,10 @@ NS_IMETHODIMP nsXPFCXMLContentSink::CIDFromTag(eXPFCXMLTags tag, nsCID &aClass)
       
     case eXPFCXMLTag_button:
       aClass = kCXPFCButtonCID;
+      break;
+
+    case eXPFCXMLTag_xpbutton:
+      aClass = kCXPButtonCID;
       break;
       
     case eXPFCXMLTag_tabwidget:
