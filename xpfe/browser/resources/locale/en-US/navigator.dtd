@@ -95,10 +95,6 @@
 <!ENTITY logicalcontrolstextmodeBidiCmd.label "Logical">
 <!ENTITY visiualcontrolstextmodeBidiCmd.label "Visual">
 <!ENTITY containercontrolstextmodeBidiCmd.label "Like Containing Document">
-<!ENTITY clipboardtextmodeBidiMenu.label "Text Mode in clipboard">
-<!ENTITY logicalclipboardtextmodeBidiCmd.label "Logical">
-<!ENTITY visiualclipboardtextmodeBidiCmd.label "Visual">
-<!ENTITY sourceclipboardtextmodeBidiCmd.label "As Source">
 <!ENTITY charactersetBidiMenu.label "Character set">
 <!ENTITY doccharactersetBidiCmd.label "Use the document specified character set">
 <!ENTITY defaultcharactersetBidiCmd.label "Use my default character set, overriding the document-specified character set">

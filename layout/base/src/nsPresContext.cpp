@@ -545,11 +545,6 @@ nsPresContext::GetUserPreferences()
   SET_BIDI_OPTION_CONTROLSTEXTMODE(mBidi, prefInt);
 
   prefInt =
-    nsContentUtils::GetIntPref("bidi.clipboardtextmode",
-                               GET_BIDI_OPTION_CLIPBOARDTEXTMODE(mBidi));
-  SET_BIDI_OPTION_CLIPBOARDTEXTMODE(mBidi, prefInt);
-
-  prefInt =
     nsContentUtils::GetIntPref("bidi.numeral",
                                GET_BIDI_OPTION_NUMERAL(mBidi));
   SET_BIDI_OPTION_NUMERAL(mBidi, prefInt);
@@ -1030,25 +1025,6 @@ nsPresContext::GetContainer()
 }
 
 #ifdef IBMBIDI
-//ahmed
-NS_IMETHODIMP
-nsPresContext::IsArabicEncoding(PRBool& aResult) const
-{
-  aResult=PR_FALSE;
-  if ( (mCharset.EqualsIgnoreCase("ibm864") )||(mCharset.EqualsIgnoreCase("ibm864i") )||(mCharset.EqualsIgnoreCase("windows-1256") )||(mCharset.EqualsIgnoreCase("iso-8859-6") ))
-    aResult=PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::IsVisRTL(PRBool& aResult) const
-{
-  aResult=PR_FALSE;
-  if ( (mIsVisual)&&(GET_BIDI_OPTION_DIRECTION(mBidi) == IBMBIDI_TEXTDIRECTION_RTL) )
-    aResult=PR_TRUE;
-  return NS_OK;
-}
-
 PRBool
 nsPresContext::BidiEnabled() const
 {
@@ -1122,16 +1098,6 @@ nsPresContext::GetBidi(PRUint32* aDest) const
     *aDest = mBidi;
   return NS_OK;
 }
-
-//Mohamed 17-1-01
-NS_IMETHODIMP
-nsPresContext::GetBidiCharset(nsACString &aCharSet) const
-{
-  aCharSet = mCharset;
-  return NS_OK;
-}
-//Mohamed End
-
 #endif //IBMBIDI
 
 NS_IMETHODIMP

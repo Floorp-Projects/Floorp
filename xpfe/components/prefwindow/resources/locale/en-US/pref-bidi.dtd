@@ -31,13 +31,6 @@
 <!ENTITY visualcontrolstextmode.accesskey    "s">
 <!ENTITY containercontrolstextmode.label     "Like Containing Document">
 <!ENTITY containercontrolstextmode.accesskey "d">
-<!ENTITY clipboardtextmode.label             "Text Mode in clipboard">
-<!ENTITY logicalclipboardtextmode.label      "Logical">
-<!ENTITY logicalclipboardtextmode.accesskey  "b">
-<!ENTITY visualclipboardtextmode.label       "Visual">
-<!ENTITY visualclipboardtextmode.accesskey   "v">
-<!ENTITY sourceclipboardtextmode.label       "As Source">
-<!ENTITY sourceclipboardtextmode.accesskey   "z">
 <!ENTITY characterset.label                  "Character set">
 <!ENTITY doccharacterset.label               "Use the document specified character set">
 <!ENTITY doccharacterset.accesskey           "n">
