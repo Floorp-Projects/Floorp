@@ -56,12 +56,14 @@ public class TokenStream {
      * by the parser to change/check the state of the scanner.
      */
 
-    public final static int
-        TSF_NEWLINES    = 0x0001,  // tokenize newlines
-        TSF_FUNCTION    = 0x0002,  // scanning inside function body
-        TSF_RETURN_EXPR = 0x0004,  // function has 'return expr;'
-        TSF_RETURN_VOID = 0x0008,  // function has 'return;'
-        TSF_REGEXP      = 0x0010;  // looking for a regular expression
+    final static int
+        TSF_NEWLINES    = 1 << 0,  // tokenize newlines
+        TSF_FUNCTION    = 1 << 1,  // scanning inside function body
+        TSF_RETURN_EXPR = 1 << 2,  // function has 'return expr;'
+        TSF_RETURN_VOID = 1 << 3,  // function has 'return;'
+        TSF_REGEXP      = 1 << 4,  // looking for a regular expression
+        TSF_DIRTYLINE   = 1 << 5;  // stuff other than whitespace since
+                                   // start of line
 
     /*
      * For chars - because we need something out-of-range
@@ -727,6 +729,13 @@ public class TokenStream {
                 || c == 0x2028 || c == 0x2029);
     }
 
+    private void skipLine() throws IOException {
+        // skip to end of line
+        int c;
+        while ((c = in.read()) != EOF_CHAR && c != '\n') { }
+        in.unread();
+    }
+
     public int getToken() throws IOException {
         int c;
         tokenno++;
@@ -741,13 +750,17 @@ public class TokenStream {
         // Eat whitespace, possibly sensitive to newlines.
         do {
             c = in.read();
-            if (c == '\n')
+            if (c == '\n') {
+                flags &= ~TSF_DIRTYLINE;
                 if ((flags & TSF_NEWLINES) != 0)
                     break;
+            }
         } while (isJSSpace(c) || c == '\n');
 
         if (c == EOF_CHAR)
             return EOF;
+        if (c != '-' && c != '\n')
+            flags |= TSF_DIRTYLINE;
 
         // identifier/keyword/instanceof?
         // watch out for starting with a <backslash>
@@ -1114,9 +1127,7 @@ public class TokenStream {
             if (in.match('!')) {
                 if (in.match('-')) {
                     if (in.match('-')) {
-                        while ((c = in.read()) != EOF_CHAR && c != '\n')
-                            /* skip to end of line */;
-                        in.unread();
+                        skipLine();
                         return getToken();  // in place of 'goto retry'
                     }
                     in.unread();
@@ -1181,9 +1192,7 @@ public class TokenStream {
         case '/':
             // is it a // comment?
             if (in.match('/')) {
-                while ((c = in.read()) != EOF_CHAR && c != '\n')
-                    /* skip to end of line */;
-                in.unread();
+                skipLine();
                 return getToken();
             }
             if (in.match('*')) {
@@ -1259,26 +1268,34 @@ public class TokenStream {
             return UNARYOP;
 
         case '+':
-        case '-':
             if (in.match('=')) {
-                if (c == '+') {
-                    this.op = ADD;
-                    return ASSIGN;
-                } else {
-                    this.op = SUB;
-                    return ASSIGN;
-                }
-            } else if (in.match((char) c)) {
-                if (c == '+') {
-                    return INC;
-                } else {
-                    return DEC;
-                }
-            } else if (c == '-') {
-                return SUB;
+                this.op = ADD;
+                return ASSIGN;
+            } else if (in.match('+')) {
+                return INC;
             } else {
                 return ADD;
             }
+
+        case '-':
+            if (in.match('=')) {
+                this.op = SUB;
+                c = ASSIGN;
+            } else if (in.match('-')) {
+                if (0 == (flags & TSF_DIRTYLINE)) {
+                    // treat HTML end-comment after possible whitespace
+                    // after line start as comment-utill-eol
+                    if (in.match('>')) {
+                        skipLine();
+                        return getToken();
+                    }
+                }
+                c = DEC;
+            } else {
+                c = SUB;
+            }
+            flags |= TSF_DIRTYLINE;
+            return c;
 
         default:
             reportSyntaxError("msg.illegal.character", null);
@@ -1337,8 +1354,8 @@ public class TokenStream {
      * should this be manipulated by gettor/settor functions?
      * should it be passed to getToken();
      */
-    public int flags;
-    public String regExpFlags;
+    int flags;
+    String regExpFlags;
 
     private String sourceName;
     private String line;
@@ -1357,6 +1374,4 @@ public class TokenStream {
 
     private char[] stringBuffer = new char[128];
     private int stringBufferTop;
-
-    private static final boolean checkSelf = Context.check && true;
 }
