@@ -80,6 +80,12 @@
               label="&useQuickMode.label;"
               accesskey="&useQuickMode.accesskey;"/>
 
+    <checkbox wsm_persist="true" id="server.emptyTrashOnExit"
+              label="&emptyTrashOnExit.label;"
+              accesskey="&emptyTrashOnExit.accesskey;"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.empty_trash_on_exit"/>
+
     <separator class="thin"/>
 
     <hbox align="center">
