@@ -308,7 +308,8 @@ endif
 
 ldap:
 ifdef MOZ_LDAP_XPCOM
-	$(MAKE) -C directory/c-sdk/ldap
+	$(MAKE) -C directory/c-sdk/ldap export
+	$(MAKE) -C directory/c-sdk/ldap install
 endif
 
 # For modules.mk standalone build
