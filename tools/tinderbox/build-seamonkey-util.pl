@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.79 $ ';
+$::UtilsVersion = '$Revision: 1.80 $ ';
 
 package TinderUtils;
 
@@ -855,6 +855,32 @@ sub run_all_tests {
                             $Settings::LayoutPerformanceTestTimeout,
                             "_x_x_mozilla_page_load", 1, 0);
     }
+
+	# xul window open test.
+	# Use xul/js test from John Morrison
+	#
+	# Needs user_pref("browser.dom.window.dump.enabled", 1);
+	if ($Settings::XULWindowOpenTest and $test_result eq 'success') {
+		my $open_time;
+		# Settle OS.
+		run_system_cmd("sync; sleep 10", 35);
+ 
+		my $url  = "-chrome \"file:$build_dir/mozilla/xpfe/test/winopen.xul\"";
+		if($test_result eq 'success') {
+			$open_time = AliveTestReturnToken("XULWindowOpenTest",
+												$build_dir,
+												$binary,
+												$url,
+												$Settings::XULOpenWindowTestTimeout,
+												"TinderboxPrint:Txul",
+												":");
+		}
+		if($open_time) {
+			$test_result = 'success';
+		} else {
+			$test_result = 'testfailed';
+		}
+	}
 
 	# Startup performance test.  Time how fast it takes the browser
 	# to start up.  Some help from John Morrison to get this going.
