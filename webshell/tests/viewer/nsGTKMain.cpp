@@ -101,7 +101,7 @@ static void MenuProc(PRUint32 aId)
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
-  CreateViewerMenus((GtkWidget*)mWindow->GetNativeData(NS_NATIVE_WIDGET),NULL);
+  CreateViewerMenus((GtkWidget*)mWindow->GetNativeData(NS_NATIVE_WIDGET),this);
   return NS_OK;
 }
 

@@ -26,7 +26,7 @@ typedef void (*MenuCallbackProc)(
     PRUint32
 );
 
-void CreateViewerMenus(GtkWidget *aParent, gpointer aCallback);
+void CreateViewerMenus(GtkWidget *aParent, gpointer data);
 
 
 #endif // _nsMotifMenu_h_
