@@ -25,13 +25,18 @@ extern nsresult WidgetTest(int * argc, char **argv);
 
 void main(int argc, char **argv)
 {
-    WidgetTest();
+  int argC = argc;
+
+  WidgetTest(&argC, argv);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, 
     int nCmdShow)
 {
-    return(WidgetTest());
+  int  argC = 0;
+  char ** argv = NULL;
+
+  return(WidgetTest(&argC, argv));
 }
 
 #endif
