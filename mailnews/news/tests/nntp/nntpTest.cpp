@@ -228,7 +228,10 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
     rv = nsServiceManager::GetService(kNntpUrlCID,
                                       nsINntpUrl::GetIID(),
                                       (nsISupports**)&m_url);
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv) || (m_url == nsnull)) { 
+        printf("InitializeProtocol failed\n");
+        return rv;
+    }
 
     //m_url->foobar(urlString);
 
