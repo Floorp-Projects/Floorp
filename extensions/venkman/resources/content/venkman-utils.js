@@ -45,8 +45,8 @@ else
 var jsenv = new Object();
 jsenv.HAS_SECURITYMANAGER = ((typeof netscape == "object") &&
                              (typeof netscape.security == "object"));
-jsenv.HAS_XPCOM = ((typeof Components == "function") &&
-                   (typeof Components.classes == "function"));
+jsenv.HAS_XPCOM = ((typeof Components == "object") &&
+                   (typeof Components.classes == "object"));
 jsenv.HAS_JAVA = (typeof java == "object");
 jsenv.HAS_RHINO = (typeof defineClass == "function");
 jsenv.HAS_DOCUMENT = (typeof document == "object");
