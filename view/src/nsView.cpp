@@ -322,18 +322,6 @@ NS_IMETHODIMP nsView::IgnoreSetPosition(PRBool aShouldIgnore)
 
 void nsView::SetPosition(nscoord aX, nscoord aY)
 {
-  nscoord x = aX;
-  nscoord y = aY;
-  if (IsRoot()) {
-    // Add view manager's coordinate offset to the root view
-    // This allows the view manager to offset it's coordinate space
-    // while allowing layout to assume it's coordinate space origin is (0,0)
-    nscoord offsetX;
-    nscoord offsetY;
-    mViewManager->GetWindowOffset(&offsetX, &offsetY);
-    x += offsetX;
-    y += offsetY;
-  }
   mDimBounds.x += aX - mPosX;
   mDimBounds.y += aY - mPosY;
   mPosX = aX;
@@ -477,12 +465,9 @@ NS_IMETHODIMP nsView::GetPosition(nscoord *x, nscoord *y) const
     *x = *y = 0;
   else
   {
-
     *x = mPosX;
     *y = mPosY;
-
   }
-
 
   return NS_OK;
 }
@@ -800,7 +785,7 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
     
     GetVisibility(vis);
     SetVisibility(vis);
-    }
+  }
 
   NS_RELEASE(dx);
 
@@ -841,8 +826,8 @@ NS_IMETHODIMP nsView::GetWidget(nsIWidget *&aWidget) const
 
 NS_IMETHODIMP nsView::HasWidget(PRBool *aHasWidget) const
 {
-	*aHasWidget = (mWindow != nsnull);
-	return NS_OK;
+  *aHasWidget = (mWindow != nsnull);
+  return NS_OK;
 }
 
 //
@@ -912,13 +897,13 @@ NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget 
   while (nsnull != ancestor)
   {
     ancestor->GetWidget(aWidget);
-	  if (nsnull != aWidget) {
+    if (nsnull != aWidget) {
       // the widget's (0,0) is at the top left of the view's bounds, NOT its position
       nsRect r;
       ancestor->GetDimensions(r);
       aDx -= r.x;
       aDy -= r.y;
-	    return NS_OK;
+      return NS_OK;
     }
 
     if ((nsnull != aDx) && (nsnull != aDy))
@@ -926,13 +911,12 @@ NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget 
       ancestor->ConvertToParentCoords(aDx, aDy);
     }
 
-	  ancestor = ancestor->GetParent();
+    ancestor = ancestor->GetParent();
   }
 
-  
   if (nsnull == aWidget) {
-       // The root view doesn't have a widget
-       // but maybe the view manager does.
+    // The root view doesn't have a widget
+    // but maybe the view manager does.
     GetViewManager()->GetWidget(&aWidget);
   }
 
