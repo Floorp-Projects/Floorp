@@ -2769,10 +2769,14 @@ public class Interpreter {
         if (id != DBL_MRK) {
             result = ScriptRuntime.getElem(lhs, id, scope);
         } else {
+            double val = stackDbl[stackTop];
+            if (lhs == null || lhs == Undefined.instance) {
+                throw NativeGlobal.undefReadError(
+                          lhs, ScriptRuntime.toString(val), scope);
+            }
             Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
                              : ScriptRuntime.toObject(cx, scope, lhs);
-            double val = stackDbl[stackTop];
             int index = (int)val;
             if (index == val) {
                 result = ScriptRuntime.getElem(obj, index);
@@ -2798,10 +2802,14 @@ public class Interpreter {
         if (id != DBL_MRK) {
             result = ScriptRuntime.setElem(lhs, id, rhs, scope);
         } else {
+            double val = stackDbl[stackTop - 1];
+            if (lhs == null || lhs == Undefined.instance) {
+                throw NativeGlobal.undefWriteError(
+                          lhs, ScriptRuntime.toString(val), rhs, scope);
+            }
             Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
                              : ScriptRuntime.toObject(cx, scope, lhs);
-            double val = stackDbl[stackTop - 1];
             int index = (int)val;
             if (index == val) {
                 result = ScriptRuntime.setElem(obj, index, rhs);

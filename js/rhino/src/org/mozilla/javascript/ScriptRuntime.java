@@ -702,19 +702,14 @@ public class ScriptRuntime {
     }
 
     public static Object getProp(Object obj, String id, Scriptable scope) {
+        if (obj == null || obj == Undefined.instance) {
+            throw NativeGlobal.undefReadError(obj, id, scope);
+        }
         Scriptable start;
         if (obj instanceof Scriptable) {
             start = (Scriptable) obj;
         } else {
             start = toObject(scope, obj);
-        }
-        if (start == null || start == Undefined.instance) {
-            String msg = start == null ? "msg.null.to.object"
-                                       : "msg.undefined";
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
-                        ScriptRuntime.getMessage0(msg),
-                        scope);
         }
         Object result = ScriptableObject.getProperty(start, id);
         if (result != Scriptable.NOT_FOUND)
@@ -832,14 +827,14 @@ public class ScriptRuntime {
     public static Object setProp(Object obj, String id, Object value,
                                  Scriptable scope)
     {
-        Scriptable start;
-        try {
-            start = (Scriptable) obj;
-        } catch(ClassCastException e) {
-            start = toObject(scope, obj);
+        if (obj == null || obj == Undefined.instance) {
+            throw NativeGlobal.undefWriteError(obj, id, value, scope);
         }
-        if (start == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
+        Scriptable start;
+        if (obj instanceof Scriptable) {
+            start = (Scriptable)obj;
+        } else {
+            start = toObject(scope, obj);
         }
         ScriptableObject.putProperty(start, id, value);
         return value;
@@ -948,6 +943,10 @@ public class ScriptRuntime {
                 index = 0;
             }
         }
+        if (obj == null || obj == Undefined.instance) {
+            String property = (s != null) ? s : Integer.toString(index);
+            throw NativeGlobal.undefReadError(obj, property, scope);
+        }
         Scriptable start;
         try {
             start = (Scriptable)obj;
@@ -1007,11 +1006,14 @@ public class ScriptRuntime {
                 index = 0;
             }
         }
-
+        if (obj == null || obj == Undefined.instance) {
+            String property = (s != null) ? s : Integer.toString(index);
+            throw NativeGlobal.undefWriteError(obj, property, value, scope);
+        }
         Scriptable start;
-        try {
+        if (obj instanceof Scriptable) {
             start = (Scriptable) obj;
-        } catch (ClassCastException e) {
+        } else {
             start = toObject(scope, obj);
         }
         if (s != null) {

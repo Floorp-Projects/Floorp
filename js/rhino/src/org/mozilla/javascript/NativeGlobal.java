@@ -561,6 +561,25 @@ public class NativeGlobal implements IdFunctionMaster {
             ScriptRuntime.getMessage1(messageId, arg1), scope);
     }
 
+    static RuntimeException undefReadError(Object object, String property,
+                                           Scriptable scope)
+    {
+        String msg = (object == null) ? "msg.null.prop.read"
+                                      : "msg.undef.prop.read";
+        return NativeGlobal.typeError1(msg, property, scope);
+    }
+
+    static RuntimeException undefWriteError(Object object, String property,
+                                            Object value, Scriptable scope)
+    {
+        String msg = (object == null) ? "msg.null.prop.write"
+                                      : "msg.undef.prop.write";
+        String valueStr = (value instanceof Scriptable)
+                          ? value.toString() : ScriptRuntime.toString(value);
+        return constructError(Context.getContext(), "TypeError",
+            ScriptRuntime.getMessage2(msg, property, valueStr), scope);
+    }
+
     /**
      * The NativeError functions
      *
