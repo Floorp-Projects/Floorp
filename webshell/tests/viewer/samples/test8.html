@@ -30,9 +30,8 @@ SELECT#select1 {
    <INPUT TYPE="HIDDEN" NAME="a" VALUE="n">
    &nbsp;&nbsp;password:&nbsp;&nbsp;<INPUT TYPE="PASSWORD">
 </FORM>
-
 <BR><BR>
-<FORM METHOD="GET" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="echo">
+<FORM METHOD="POST" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="echo">
 <textarea name=a rows=4 cols=10 value="a textarea">a textarea</textarea>
 &nbsp;&nbsp;
 <textarea name=a id=textarea1 value="a textarea">another textarea
@@ -67,6 +66,10 @@ a checkbox: <input type=checkbox name=check1 checked>
 <input type=submit id=input1 name=submit value="SUBMIT">
 <input type=image src=raptor.jpg width=50 height=50 name=imageSubmit> an image submit. For now, click twice.
 
+<BR><BR>
+<FORM METHOD="POST" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="foo">
+ a post test
+<input size=80 type=submit>
 </form>
 </body>
 </html>

@@ -257,19 +257,26 @@ nsForm::OnReturn()
 {
 }
 
-void 
-nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame, 
-                 nsIFormControl* aSubmitter)
+void DebugPrint(char* aLabel, nsString aString)
 {
-  printf("\n  YYYYYYYYYYYYY \n");
-  // right now we only do "get"
-  nsAutoString method, href;
-  GetAttribute("method", method);
-  PRBool isPost = (method.EqualsIgnoreCase("post")) ? PR_TRUE : PR_FALSE;
-  GetAttribute("action", href);
+  char* out = aString.ToNewCString();
+  printf("\n %s=%s\n", aLabel, out);
+  delete [] out;
+}
 
-  nsString data(href); // this could be more efficient, by allocating a larger buffer
-  data += '?';
+void nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame, 
+                      nsIFormControl* aSubmitter)
+{
+  nsString data; // this could be more efficient, by allocating a larger buffer
+
+  nsAutoString method;
+  GetAttribute("method", method);
+  PRBool isPost = PR_TRUE;
+  if (!method.EqualsIgnoreCase("post")) {
+    isPost = PR_FALSE;
+    data += '?';
+  }
+
   PRBool firstTime = PR_TRUE;
 
   PRInt32 numChildren = mChildren.Count();
@@ -318,17 +325,24 @@ nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame,
       NS_RELEASE(content);
     }
 
-    nsAutoString target, method;
+    nsAutoString target;
     GetAttribute("target", target);
 
+    nsAutoString href;
+    GetAttribute("action", href);
+    if (!isPost) {
+      href.Append(data);
+    }
     nsAutoString absURLSpec;
     nsAutoString base;
-    nsresult rv = NS_MakeAbsoluteURL(docURL, base, data, absURLSpec);
+    nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
     NS_IF_RELEASE(docURL);
 
     // Now pass on absolute url to the click handler
     handler->OnLinkClick(aFrame, absURLSpec, target);
-printf("\nurl=%s\n", absURLSpec.ToNewCString());
+
+DebugPrint("url", absURLSpec);
+DebugPrint("data", data);
   }
 }
 
