@@ -38,7 +38,7 @@ endif
 
 CSRCS		= $(ICAL_SRC_LCSRCS)
 
-ifeq (,$(filter -DHAVE_SNPRINTF=1,$(DEFS)))
+ifeq (,$(filter -DHAVE_SNPRINTF=1,$(ACDEFINES)))
 CSRCS += vsnprintf.c
 endif
 
