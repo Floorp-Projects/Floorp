@@ -982,11 +982,10 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL, const nsAReadableString& aSrc)
             mLoader->RemoveFrame(this);
           }
 
-          // Start the image loading. We don't care about holding on to
-          // the image loader.
+          // Start the image loading.
           result = context->StartLoadImage(url, nsnull, specifiedSize,
-                                           nsnull, ImageLibCallBack, this, this,
-                                           getter_AddRefs(mLoader));
+                                           nsnull, ImageLibCallBack, this,
+                                           this, getter_AddRefs(mLoader));
 
           NS_RELEASE(context);
         }
