@@ -60,33 +60,50 @@
 #include <langinfo.h>
 #endif
 #include "nsPlatformCharset.h"
+#include "nsAutoLock.h"
+#include "prinit.h"
 
-NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
 
 static nsURLProperties *gNLInfo = nsnull;
 static nsURLProperties *gInfo_deprecated = nsnull;
 static PRInt32 gCnt=0;
 
+//this lock is for protecting above static variable operation
+static PRLock  *gLock = nsnull;
+
+static PRStatus InitLock(void)
+{
+  gLock = PR_NewLock();
+  if (gLock)
+    return PR_SUCCESS;
+  return PR_FAILURE;
+}
+
 nsPlatformCharset::nsPlatformCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&gCnt);
+  static PRCallOnceType once;
+  PR_CallOnce(&once, InitLock);
+  NS_ASSERTION(gLock, "Can't allocate a lock?!");
 }
 
 nsresult
 nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAWritableString& oResult)
 {
 
-  // XXX for thread safety the following block should be locked
-  if(nsnull == gInfo_deprecated)
+  // locked for thread safety 
   {
-    nsURLProperties *info = new nsURLProperties( NS_LITERAL_STRING("resource:/res/unixcharset.properties") );
-    NS_ASSERTION( info, "cannot create nsURLProperties");
-    gInfo_deprecated = info;
+    nsAutoLock guard(gLock);
+    if (!gInfo_deprecated) {
+      nsURLProperties *info = new nsURLProperties(NS_LITERAL_STRING("resource:/res/unixcharset.properties"));
+      NS_ASSERTION( info, "cannot create nsURLProperties");
+      gInfo_deprecated = info;
+    }
   }
 
-  if(gInfo_deprecated && locale.Length())
-  {
+  if (gInfo_deprecated && !(locale.IsEmpty())) {
     nsAutoString platformLocaleKey;
     // note: NS_LITERAL_STRING("locale." OSTYPE ".") does not compile on AIX
     platformLocaleKey.Assign(NS_LITERAL_STRING("locale."));
@@ -95,14 +112,14 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
     platformLocaleKey.Append(locale.get());
 
     nsresult res = gInfo_deprecated->Get(platformLocaleKey, oResult);
-    if(NS_SUCCEEDED(res))  {
+    if (NS_SUCCEEDED(res))  {
       return NS_OK;
     }
     nsAutoString localeKey;
     localeKey.Assign(NS_LITERAL_STRING("locale.all."));
     localeKey.Append(locale.get());
     res = gInfo_deprecated->Get(localeKey, oResult);
-    if(NS_SUCCEEDED(res))  {
+    if (NS_SUCCEEDED(res))  {
       return NS_OK;
     }
    }
@@ -114,10 +131,12 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
 nsPlatformCharset::~nsPlatformCharset()
 {
   PR_AtomicDecrement(&gCnt);
-  if(0 == gCnt) {
+  if (!gCnt) {
     if (gNLInfo) {
       delete gNLInfo;
       gNLInfo = nsnull;
+      PR_DestroyLock(gLock);
+      gLock = nsnull;
     }
     if (gInfo_deprecated) {
       delete gInfo_deprecated;
@@ -192,27 +211,42 @@ nsPlatformCharset::InitGetCharset(nsAWritableString &oString)
   nl_langinfo_codeset = nl_langinfo(CODESET);
   NS_ASSERTION(nl_langinfo_codeset, "cannot get nl_langinfo(CODESET)");
 
-  // XXX for thread safety the following block should be locked
-  if(nsnull == gNLInfo) {
-    nsAutoString propertyURL;
-    // note: NS_LITERAL_STRING("resource:/res/unixcharset." OSARCH ".properties") does not compile on AIX
-    propertyURL.Assign(NS_LITERAL_STRING("resource:/res/unixcharset."));
-    propertyURL.AppendWithConversion(OSARCH);
-    propertyURL.Append(NS_LITERAL_STRING(".properties"));
-    nsURLProperties *info;
-    info = new nsURLProperties( propertyURL );
-    NS_ASSERTION( info, "cannot create nsURLProperties");
-    if (info) {
-      PRBool didLoad;
-      info->DidLoad(didLoad);
-      if (!didLoad) {
-        delete info;
-        info = nsnull;
-      }
+  //
+  // see if we can use nl_langinfo(CODESET) directly
+  //
+  if (nl_langinfo_codeset) {
+    aCharset.AssignWithConversion(nl_langinfo_codeset);
+    res = VerifyCharset(aCharset);
+    if (NS_SUCCEEDED(res)) {
+      oString = aCharset;
+      return res;
     }
-    gNLInfo = info;
   }
-#endif
+
+  // locked for thread safety 
+  {
+    nsAutoLock guard(gLock);
+
+    if (!gNLInfo) {
+      nsAutoString propertyURL;
+      // note: NS_LITERAL_STRING("resource:/res/unixcharset." OSARCH ".properties") does not compile on AIX
+      propertyURL.Assign(NS_LITERAL_STRING("resource:/res/unixcharset."));
+      propertyURL.AppendWithConversion(OSARCH);
+      propertyURL.Append(NS_LITERAL_STRING(".properties"));
+      nsURLProperties *info;
+      info = new nsURLProperties( propertyURL );
+      NS_ASSERTION( info, "cannot create nsURLProperties");
+      if (info) {
+        PRBool didLoad;
+        info->DidLoad(didLoad);
+        if (!didLoad) {
+          delete info;
+          info = nsnull;
+        }
+      }
+      gNLInfo = info;
+    }
+  }
 
   //
   // See if we are remapping nl_langinfo(CODESET)
@@ -256,20 +290,6 @@ nsPlatformCharset::InitGetCharset(nsAWritableString &oString)
     }
   }
 
-  //
-  // Did not find a charset override so
-  // see if we can use nl_langinfo(CODESET) directly
-  //
-  if (nl_langinfo_codeset) {
-    aCharset.AssignWithConversion(nl_langinfo_codeset);
-    res = VerifyCharset(aCharset);
-    if (NS_SUCCEEDED(res)) {
-      oString = aCharset;
-      return res;
-    }
-  }
-
-#if HAVE_NL_LANGINFO
   NS_ASSERTION(0, "unable to use nl_langinfo(CODESET)");
 #endif
 
