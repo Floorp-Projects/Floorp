@@ -33,6 +33,7 @@ install::
 	$(MAKE_INSTALL) EditorDialog.css $(DIST)\bin\chrome\$(THEME)\editor\skin
 	$(MAKE_INSTALL) EditorToolbars.css $(DIST)\bin\chrome\$(THEME)\editor\skin
 	$(MAKE_INSTALL) editor.css $(DIST)\bin\chrome\$(THEME)\editor\skin
+	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\$(THEME)\editor\skin
 
 clobber::
 	rm -f $(DIST)\chrome\$(THEME)\editor\skin\*.*

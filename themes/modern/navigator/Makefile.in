@@ -51,6 +51,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	search.gif \
 	stop.gif \
 	unlock.gif \
+	manifest.rdf \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
