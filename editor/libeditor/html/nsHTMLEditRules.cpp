@@ -2315,6 +2315,7 @@ nsHTMLEditRules::MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *a
   {
     res = MoveNodeSmart(child, aDest, aOffset);
     if (NS_FAILED(res)) return res;
+    aSource->GetFirstChild(getter_AddRefs(child));
   }
   return NS_OK;
 }
