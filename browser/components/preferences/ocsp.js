@@ -55,10 +55,14 @@ var gOCSPDialog = {
     }
     
     var signingCAPref = document.getElementById("security.OCSP.signingCA");
-    if (!signingCAPref.hasUserValue) {
+    if (!signingCAPref.hasUserValue)
       signingCA.selectedIndex = 0;
-      this.chooseServiceURL();
+    else {
+      // We need to initialize manually since auto-initialization is often 
+      // called prior to menulist population above.
+      signingCA.value = signingCAPref.value;
     }
+    this.chooseServiceURL();
   },
   
   _updateUI: function ()
