@@ -77,6 +77,9 @@ NS_IMETHODIMP nsMsgComposeContentHandler::HandleContent(const char * aContentTyp
       if (NS_SUCCEEDED(rv))
         rv = composeService->OpenComposeWindowWithURI(nsnull, aUri);
     }
+  } else {
+    // The content-type was not x-application-mailto...
+    return NS_ERROR_WONT_HANDLE_CONTENT;
   }
 
   return rv;
