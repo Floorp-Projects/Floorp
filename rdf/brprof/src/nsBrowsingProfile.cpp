@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsIBrowsingProfile.h"
 #include "nsIRDFObserver.h"
 #include "nsCRT.h"
@@ -26,6 +27,8 @@
 #include "nsIRDFResource.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFCursor.h"
+#include "nsHashtable.h"
+#include "prclist.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -44,6 +47,15 @@ peq(nsIRDFResource* r1, nsIRDFResource* r2)
 #else
 #define peq(r1, r2)     ((r1) == (r2))
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct nsCategory {
+    PRCList     mHeader;        // for ordering
+    const char* mURL;
+    PRInt32     mVectorIndex;
+    nsBrowsingProfileCategoryDescriptor mDescriptor;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,7 +84,13 @@ public:
     nsBrowsingProfile();
     virtual ~nsBrowsingProfile();
 
-    nsresult RecordHit(const char* categoryURL, PRInt32 id);
+    nsresult RecordHit(const char* categoryURL, PRUint16 id);
+    nsresult GetCategoryID(nsIRDFResource* category, PRUint16 *result);
+    void UpdateVector(nsCategory* cat) {
+        if (cat->mVectorIndex < nsBrowsingProfile_CategoryCount) {
+            mVector.mCategory[cat->mVectorIndex] = cat->mDescriptor;
+        }
+    }
 
     static PRUint32 gRefCnt;
     static nsIRDFService* gRDFService;
@@ -84,6 +102,8 @@ public:
 protected:
     const char* mUserProfileName;
     nsBrowsingProfileVector mVector;
+    nsHashtable mCategories;    // for fast indexing into mCategoryChain
+    PRCList mCategoryChain;
 };
 
 PRUint32 nsBrowsingProfile::gRefCnt = 0;
@@ -98,6 +118,7 @@ nsIRDFResource* nsBrowsingProfile::gCategoryIDProperty = nsnull;
 nsBrowsingProfile::nsBrowsingProfile()
 {
     nsCRT::zero(&mVector, sizeof(nsBrowsingProfileVector));
+    PR_INIT_CLIST(&mCategoryChain);
     gRefCnt++;
 }
 
@@ -132,6 +153,14 @@ nsBrowsingProfile::Init(const char* userProfileName)
 
 nsBrowsingProfile::~nsBrowsingProfile()
 {
+    PRCList* chain = &mCategoryChain;
+    while (!PR_CLIST_IS_EMPTY(chain)) {
+        PRCList* element = chain;
+        chain = PR_NEXT_LINK(chain);
+        PR_REMOVE_LINK(element);
+        delete element;
+    }
+
     --gRefCnt;
     if (gRefCnt == 0) {
         nsresult rv;
@@ -250,26 +279,16 @@ nsBrowsingProfile::CountPageVisit(const char* url)
                 rv = cursor->GetSubject(&category);
                 if (NS_SUCCEEDED(rv)) {
                     // found this page in a category -- count it
-                    nsIRDFNode* catID;
-                    rv = gCategoryDB->GetTarget(category, gCategoryIDProperty, PR_TRUE, &catID);
+                    PRUint16 id;
+                    rv = GetCategoryID(category, &id);
+                    NS_RELEASE(category);
                     if (NS_SUCCEEDED(rv)) {
                         const char* catURI;
                         rv = category->GetValue(&catURI);
                         if (NS_SUCCEEDED(rv)) {
-                            nsIRDFInt* catIDInt;
-                            rv = catID->QueryInterface(nsIRDFInt::GetIID(), (void**)&catIDInt);
-                            if (NS_SUCCEEDED(rv)) {
-                                int32 id;
-                                rv = catIDInt->GetValue(&id);
-                                if (NS_SUCCEEDED(rv)) {
-                                    rv = RecordHit(catURI, id);
-                                    found = PR_TRUE;
-                                }
-                                NS_RELEASE(catIDInt);
-                            }
+                            rv = RecordHit(catURI, id);
                         }
                     }
-                    NS_RELEASE(category);
                 }
             }
             NS_RELEASE(cursor);
@@ -286,8 +305,78 @@ nsBrowsingProfile::CountPageVisit(const char* url)
 }
 
 nsresult
-nsBrowsingProfile::RecordHit(const char* categoryURL, PRInt32 id)
+nsBrowsingProfile::GetCategoryID(nsIRDFResource* category, PRUint16 *result)
 {
+    nsresult rv;
+    nsIRDFNode* catID;
+    rv = gCategoryDB->GetTarget(category, gCategoryIDProperty, PR_TRUE, &catID);
+    if (NS_SUCCEEDED(rv)) {
+        const char* catURI;
+        rv = category->GetValue(&catURI);
+        if (NS_SUCCEEDED(rv)) {
+            nsIRDFInt* catIDInt;
+            rv = catID->QueryInterface(nsIRDFInt::GetIID(), (void**)&catIDInt);
+            if (NS_SUCCEEDED(rv)) {
+                int32 id;
+                rv = catIDInt->GetValue(&id);
+                if (NS_SUCCEEDED(rv)) {
+                    *result = (PRUint16)id;
+                }
+                NS_RELEASE(catIDInt);
+            }
+        }
+        NS_RELEASE(catID);
+    }
+    return rv;
+}
+
+nsresult
+nsBrowsingProfile::RecordHit(const char* categoryURL, PRUint16 id)
+{
+    nsCStringKey key(categoryURL);
+    nsCategory* cat = NS_STATIC_CAST(nsCategory*, mCategories.Get(&key));
+    if (cat == nsnull) {
+        nsCategory* cat = new nsCategory;
+        if (cat == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        cat->mURL = categoryURL;
+        cat->mVectorIndex = 0;
+        cat->mDescriptor.mID = id;
+        cat->mDescriptor.mVisitCount = 1;
+        cat->mDescriptor.mFlags = 0;
+
+        // find the right place to insert this
+        PRCList* end = &mCategoryChain;
+        for (PRCList* chain = &mCategoryChain; chain != end; chain = PR_NEXT_LINK(chain)) {
+            nsCategory* other = (nsCategory*)chain;
+            if (cat->mDescriptor.mVisitCount >= other->mDescriptor.mVisitCount) {
+                PR_INSERT_BEFORE(&cat->mHeader, chain);
+                cat->mVectorIndex = other->mVectorIndex;
+                // and slide everybody else down
+                for (; chain != end; chain = PR_NEXT_LINK(chain)) {
+                    other = (nsCategory*)chain;
+                    other->mVectorIndex++;
+                    UpdateVector(other);
+                }
+                break;
+            }
+        }
+        // and insert this in the lookup table
+        mCategories.Put(&key, cat);
+    }
+    else {
+        cat->mDescriptor.mVisitCount++;
+        nsCategory* prev = (nsCategory*)PR_PREV_LINK(&cat->mHeader);
+        if (cat->mDescriptor.mVisitCount >= prev->mDescriptor.mVisitCount) {
+            // if we got more hits on this category then it's predecessor 
+            // then reorder the chain
+            PR_REMOVE_LINK(&cat->mHeader);
+            PR_INSERT_BEFORE(&cat->mHeader, &prev->mHeader);
+            cat->mVectorIndex = prev->mVectorIndex++;
+            UpdateVector(prev);
+        }
+        UpdateVector(cat);
+    }
     return NS_OK;
 }
 
