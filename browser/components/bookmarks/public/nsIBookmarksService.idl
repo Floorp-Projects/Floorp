@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Ben Goodger              <ben@netscape.com> 
  *   David Hyatt              <hyatt@mozilla.org>
+ *   Vladimir Vukicevic       <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -47,7 +48,7 @@ interface nsIArray;
 interface nsIRDFResource;
 interface nsITransactionManager;
 
-[scriptable, uuid(bd03e58b-61b6-4f85-ad61-33f6a05e29ce)]
+[scriptable, uuid(2c31ecce-4157-4820-8631-ec65b2e0ca93)]
 interface nsIBookmarksService : nsISupports
 {
     const unsigned long BOOKMARK_DEFAULT_TYPE   = 0;
@@ -96,7 +97,9 @@ interface nsIBookmarksService : nsISupports
     nsIRDFResource getBookmarksToolbarFolder();
     void setBookmarksToolbarFolder(in nsIRDFResource aSource);
 
-    void updateBookmarkIcon(in string aURL, in wstring aIconURL);
+    void updateBookmarkIcon(in string aURL, in string aIconMIMEtype,
+                            [const,array,size_is(aIconDataLen)] in octet aIconData,
+                            in unsigned long aIconDataLen);
     void removeBookmarkIcon(in string aURL);
 
     void updateLastVisitedDate(in string aURL, in wstring docCharset);
