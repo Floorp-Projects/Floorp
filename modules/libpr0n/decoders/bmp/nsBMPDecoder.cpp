@@ -46,14 +46,11 @@
 
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
-#include "nsIImage.h"
-#include "nsMemory.h"
 #include "imgIContainerObserver.h"
-#include "nsRect.h"
 
 #include "imgILoad.h"
 
-#include "ImageLogging.h"
+#include "prlog.h"
 
 PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
 

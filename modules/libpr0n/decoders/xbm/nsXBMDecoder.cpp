@@ -40,16 +40,12 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "nsXBMDecoder.h"
 
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
-#include "nsIImage.h"
-#include "nsMemory.h"
-#include "imgIContainerObserver.h"
-#include "nsRect.h"
-#include "nsReadableUtils.h"
 
 #include "imgILoad.h"
 
@@ -198,12 +194,6 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         }
     }
     if (mState == RECV_DATA) {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-// bytes per pixel
-        const PRUint32 bpp = 4;
-#else
-        const PRUint32 bpp = 3;
-#endif
         PRUint32 bpr;
         mFrame->GetImageBytesPerRow(&bpr);
         PRUint32 abpr;

@@ -36,7 +36,6 @@ MODULE_NAME	= nsBMPModule
 REQUIRES	= xpcom \
 		  gfx \
 		  imglib2 \
-		  string \
 		  $(NULL)
 
 CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp

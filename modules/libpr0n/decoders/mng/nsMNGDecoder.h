@@ -27,7 +27,6 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
-#include "nsWeakReference.h"
 #include "imgILoad.h"
 
 #define NS_MNGDECODER_CID \
