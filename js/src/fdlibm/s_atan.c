@@ -122,14 +122,17 @@ really_big   = 1.0e300;
 	double x;
 #endif
 {
+        fd_twoints u;
 	double w,s1,s2,z;
 	int ix,hx,id;
 
-	hx = __HI(x);
+        u.d = x;
+	hx = __HI(u);
 	ix = hx&0x7fffffff;
 	if(ix>=0x44100000) {	/* if |x| >= 2^66 */
+            u.d = x;
 	    if(ix>0x7ff00000||
-		(ix==0x7ff00000&&(__LO(x)!=0)))
+		(ix==0x7ff00000&&(__LO(u)!=0)))
 		return x+x;		/* NaN */
 	    if(hx>0) return  atanhi[3]+atanlo[3];
 	    else     return -atanhi[3]-atanlo[3];

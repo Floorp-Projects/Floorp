@@ -77,12 +77,14 @@ static double one = 1.0, shuge = 1.0e307;
 	double x;
 #endif
 {	
+        fd_twoints u;
 	double t,w,h;
 	int ix,jx;
 	unsigned lx;
 
     /* High word of |x|. */
-	jx = __HI(x);
+        u.d = x;
+	jx = __HI(u);
 	ix = jx&0x7fffffff;
 
     /* x is INF or NaN */

@@ -101,9 +101,11 @@ C6  = -1.13596475577881948265e-11; /* 0xBDA8FAE9, 0xBE8838D4 */
 	double x,y;
 #endif
 {
+        fd_twoints u;
 	double a,hz,z,r,qx;
 	int ix;
-	ix = __HI(x)&0x7fffffff;	/* ix = |x|'s high word*/
+        u.d = x;
+	ix = __HI(u)&0x7fffffff;	/* ix = |x|'s high word*/
 	if(ix<0x3e400000) {			/* if x < 2**27 */
 	    if(((int)x)==0) return one;		/* generate inexact */
 	}
@@ -115,8 +117,10 @@ C6  = -1.13596475577881948265e-11; /* 0xBDA8FAE9, 0xBE8838D4 */
 	    if(ix > 0x3fe90000) {		/* x > 0.78125 */
 		qx = 0.28125;
 	    } else {
-	        __HI(qx) = ix-0x00200000;	/* x/4 */
-	        __LO(qx) = 0;
+                u.d = qx;
+	        __HI(u) = ix-0x00200000;	/* x/4 */
+	        __LO(u) = 0;
+                qx = u.d;
 	    }
 	    hz = 0.5*z-qx;
 	    a  = one-qx;

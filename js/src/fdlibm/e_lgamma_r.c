@@ -195,10 +195,12 @@ static double zero=  0.00000000000000000000e+00;
 	double x;
 #endif
 {
+        fd_twoints u;
 	double y,z;
 	int n,ix;
 
-	ix = 0x7fffffff&__HI(x);
+        u.d = x;
+	ix = 0x7fffffff&__HI(u);
 
 	if(ix<0x3fd00000) return __kernel_sin(pi*x,zero,0);
 	y = -x;		/* x is assume negative */
@@ -217,7 +219,8 @@ static double zero=  0.00000000000000000000e+00;
                 y = zero; n = 0;                 /* y must be even */
             } else {
                 if(ix<0x43300000) z = y+two52;	/* exact */
-                n   = __LO(z)&1;        /* lower word of z */
+                u.d = z;
+                n   = __LO(u)&1;        /* lower word of z */
                 y  = n;
                 n<<= 2;
             }
@@ -243,11 +246,13 @@ static double zero=  0.00000000000000000000e+00;
 	double x; int *signgamp;
 #endif
 {
+        fd_twoints u;
 	double t,y,z,nadj,p,p1,p2,p3,q,r,w;
 	int i,hx,lx,ix;
 
-	hx = __HI(x);
-	lx = __LO(x);
+        u.d = x;
+	hx = __HI(u);
+	lx = __LO(u);
 
     /* purge off +-inf, NaN, +-0, and negative arguments */
 	*signgamp = 1;

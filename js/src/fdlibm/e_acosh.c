@@ -76,9 +76,11 @@ ln2	= 6.93147180559945286227e-01;  /* 0x3FE62E42, 0xFEFA39EF */
 	double x;
 #endif
 {	
+        fd_twoints u;
 	double t;
 	int hx;
-	hx = __HI(x);
+        u.d = x;
+	hx = __HI(u);
 	if(hx<0x3ff00000) {		/* x < 1 */
 	    return (x-x)/(x-x);
 	} else if(hx >=0x41b00000) {	/* x > 2**28 */
@@ -86,7 +88,7 @@ ln2	= 6.93147180559945286227e-01;  /* 0x3FE62E42, 0xFEFA39EF */
 	        return x+x;
 	    } else 
 		return __ieee754_log(x)+ln2;	/* acosh(huge)=log(2x) */
-	} else if(((hx-0x3ff00000)|__LO(x))==0) {
+	} else if(((hx-0x3ff00000)|__LO(u))==0) {
 	    return 0.0;			/* acosh(1) = 0 */
 	} else if (hx > 0x40000000) {	/* 2**28 > x > 2 */
 	    t=x*x;

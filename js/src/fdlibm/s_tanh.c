@@ -85,9 +85,11 @@ static double one=1.0, two=2.0, tiny = 1.0e-300;
 {
 	double t,z;
 	int jx,ix;
+        fd_twoints u;
 
     /* High word of |x|. */
-	jx = __HI(x);
+        u.d = x;
+	jx = __HI(u);
 	ix = jx&0x7fffffff;
 
     /* x is INF or NaN */

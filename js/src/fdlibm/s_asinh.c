@@ -73,9 +73,11 @@ really_big=  1.00000000000000000000e+300;
 	double x;
 #endif
 {	
+        fd_twoints u;
 	double t,w;
 	int hx,ix;
-	hx = __HI(x);
+        u.d = x;
+	hx = __HI(u);
 	ix = hx&0x7fffffff;
 	if(ix>=0x7ff00000) return x+x;	/* x is inf or NaN */
 	if(ix< 0x3e300000) {	/* |x|<2**-28 */

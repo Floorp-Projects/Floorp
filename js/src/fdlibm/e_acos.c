@@ -97,17 +97,15 @@ qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 	double x;
 #endif
 {
-#ifdef GCC_OPT_BUG
-        volatile double df;
-#else
+        fd_twoints u;
         double df;
-#endif
 	double z,p,q,r,w,s,c;
 	int hx,ix;
-	hx = __HI(x);
+        u.d = x;
+	hx = __HI(u);
 	ix = hx&0x7fffffff;
 	if(ix>=0x3ff00000) {	/* |x| >= 1 */
-	    if(((ix-0x3ff00000)|__LO(x))==0) {	/* |x|==1 */
+	    if(((ix-0x3ff00000)|__LO(u))==0) {	/* |x|==1 */
 		if(hx>0) return 0.0;		/* acos(1) = 0  */
 		else return pi+2.0*pio2_lo;	/* acos(-1)= pi */
 	    }
@@ -131,8 +129,9 @@ qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 	} else {			/* x > 0.5 */
 	    z = (one-x)*0.5;
 	    s = fd_sqrt(z);
-	    df = s;
-	    __LO(df) = 0;
+	    u.d = s;
+	    __LO(u) = 0;
+            df = u.d;
 	    c  = (z-df*df)/(s+df);
 	    p = z*(pS0+z*(pS1+z*(pS2+z*(pS3+z*(pS4+z*pS5)))));
 	    q = one+z*(qS1+z*(qS2+z*(qS3+z*qS4)));

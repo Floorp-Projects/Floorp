@@ -167,11 +167,13 @@ Q5  =  -2.01099218183624371326e-07; /* BE8AFDB7 6E09C32D */
 	double x;
 #endif
 {
+        fd_twoints u;
 	double y,hi,lo,c,t,e,hxs,hfx,r1;
 	int k,xsb;
 	unsigned hx;
 
-	hx  = __HI(x);	/* high word of x */
+        u.d = x;
+	hx  = __HI(u);	/* high word of x */
 	xsb = hx&0x80000000;		/* sign bit of x */
 	if(xsb==0) y=x; else y= -x;	/* y = |x| */
 	hx &= 0x7fffffff;		/* high word of |x| */
@@ -180,7 +182,8 @@ Q5  =  -2.01099218183624371326e-07; /* BE8AFDB7 6E09C32D */
 	if(hx >= 0x4043687A) {			/* if |x|>=56*ln2 */
 	    if(hx >= 0x40862E42) {		/* if |x|>=709.78... */
                 if(hx>=0x7ff00000) {
-		    if(((hx&0xfffff)|__LO(x))!=0) 
+                    u.d = x;
+		    if(((hx&0xfffff)|__LO(u))!=0) 
 		         return x+x; 	 /* NaN */
 		    else return (xsb==0)? x:-1.0;/* exp(+-inf)={inf,-1} */
 	        }
@@ -230,19 +233,29 @@ Q5  =  -2.01099218183624371326e-07; /* BE8AFDB7 6E09C32D */
 	       	else 	      return  one+2.0*(x-e);
 	    if (k <= -2 || k>56) {   /* suffice to return exp(x)-1 */
 	        y = one-(e-x);
-	        __HI(y) += (k<<20);	/* add k to y's exponent */
+                u.d = y;
+	        __HI(u) += (k<<20);	/* add k to y's exponent */
+                y = u.d;
 	        return y-one;
 	    }
 	    t = one;
 	    if(k<20) {
-	       	__HI(t) = 0x3ff00000 - (0x200000>>k);  /* t=1-2^-k */
+                u.d = t;
+	       	__HI(u) = 0x3ff00000 - (0x200000>>k);  /* t=1-2^-k */
+                t = u.d;
 	       	y = t-(e-x);
-	       	__HI(y) += (k<<20);	/* add k to y's exponent */
+                u.d = y;
+	       	__HI(u) += (k<<20);	/* add k to y's exponent */
+                y = u.d;
 	   } else {
-	       	__HI(t)  = ((0x3ff-k)<<20);	/* 2^-k */
+               u.d = t;
+	       	__HI(u)  = ((0x3ff-k)<<20);	/* 2^-k */
+                t = u.d;
 	       	y = x-(e+t);
 	       	y += one;
-	       	__HI(y) += (k<<20);	/* add k to y's exponent */
+                u.d = y;
+	       	__HI(u) += (k<<20);	/* add k to y's exponent */
+                y = u.d;
 	    }
 	}
 	return y;

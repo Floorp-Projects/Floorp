@@ -60,8 +60,11 @@
 #endif
 {
 	int lx,ix;
-	ix = (__HI(x))&0x7fffffff;	/* high |x| */
-	lx = __LO(x);			/* low x */
+        fd_twoints u;
+
+        u.d = x;
+	ix = (__HI(u))&0x7fffffff;	/* high |x| */
+	lx = __LO(u);			/* low x */
 	if((ix|lx)==0) return -1.0/fd_fabs(x);
 	if(ix>=0x7ff00000) return x*x;
 	if((ix>>=20)==0) 			/* IEEE 754 logb */

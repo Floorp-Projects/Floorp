@@ -62,11 +62,13 @@
 {
 	int	hx,hy,ix,iy;
 	unsigned lx,ly;
+        fd_twoints ux, uy;
 
-	hx = __HI(x);		/* high word of x */
-	lx = __LO(x);		/* low  word of x */
-	hy = __HI(y);		/* high word of y */
-	ly = __LO(y);		/* low  word of y */
+        ux.d = x; uy.d = y;
+	hx = __HI(ux);		/* high word of x */
+	lx = __LO(ux);		/* low  word of x */
+	hy = __HI(uy);		/* high word of y */
+	ly = __LO(uy);		/* low  word of y */
 	ix = hx&0x7fffffff;		/* |x| */
 	iy = hy&0x7fffffff;		/* |y| */
 
@@ -75,8 +77,10 @@
 	   return x+y;				
 	if(x==y) return x;		/* x=y, return x */
 	if((ix|lx)==0) {			/* x == 0 */
-	    __HI(x) = hy&0x80000000;	/* return +-minsubnormal */
-	    __LO(x) = 1;
+            ux.d = x;
+	    __HI(ux) = hy&0x80000000;	/* return +-minsubnormal */
+	    __LO(ux) = 1;
+            x = ux.d;
 	    y = x*x;
 	    if(y==x) return y; else return x;	/* raise underflow flag */
 	} 
@@ -102,10 +106,14 @@
 	if(hy<0x00100000) {		/* underflow */
 	    y = x*x;
 	    if(y!=x) {		/* raise underflow flag */
-		__HI(y) = hx; __LO(y) = lx;
+                uy.d = y;
+		__HI(uy) = hx; __LO(uy) = lx;
+                y = uy.d;
 		return y;
 	    }
 	}
-	__HI(x) = hx; __LO(x) = lx;
+        ux.d = x;
+	__HI(ux) = hx; __LO(ux) = lx;
+        x = ux.d;
 	return x;
 }

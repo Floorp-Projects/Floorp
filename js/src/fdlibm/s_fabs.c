@@ -57,6 +57,9 @@
 	double x;
 #endif
 {
-	__HI(x) &= 0x7fffffff;
+        fd_twoints u;
+        u.d = x;
+	__HI(u) &= 0x7fffffff;
+        x = u.d;
         return x;
 }

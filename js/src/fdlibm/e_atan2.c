@@ -93,14 +93,16 @@ pi_lo   = 1.2246467991473531772E-16; /* 0x3CA1A626, 0x33145C07 */
 	double  y,x;
 #endif
 {  
+        fd_twoints ux, uy, uz;
 	double z;
 	int k,m,hx,hy,ix,iy;
 	unsigned lx,ly;
 
-	hx = __HI(x); ix = hx&0x7fffffff;
-	lx = __LO(x);
-	hy = __HI(y); iy = hy&0x7fffffff;
-	ly = __LO(y);
+        ux.d = x; uy.d = y;
+	hx = __HI(ux); ix = hx&0x7fffffff;
+	lx = __LO(ux);
+	hy = __HI(uy); iy = hy&0x7fffffff;
+	ly = __LO(uy);
 	if(((ix|((lx|-(int)lx)>>31))>0x7ff00000)||
 	   ((iy|((ly|-(int)ly)>>31))>0x7ff00000))	/* x or y is NaN */
 	   return x+y;
@@ -147,7 +149,9 @@ pi_lo   = 1.2246467991473531772E-16; /* 0x3CA1A626, 0x33145C07 */
 	else z=fd_atan(fd_fabs(y/x));		/* safe to do y/x */
 	switch (m) {
 	    case 0: return       z  ;	/* atan(+,+) */
-	    case 1: __HI(z) ^= 0x80000000;
+	    case 1: uz.d = z;
+                    __HI(uz) ^= 0x80000000;
+                    z = uz.d;
 		    return       z  ;	/* atan(-,+) */
 	    case 2: return  pi-(z-pi_lo);/* atan(+,-) */
 	    default: /* case 3 */
