@@ -1,5 +1,7 @@
 //Microsoft Developer Studio generated resource script.
 //
+#include "resrc1.h"
+
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -102,8 +104,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,4,0,0
- PRODUCTVERSION 1,4,0,0
+ FILEVERSION 1,5,0,0
+ PRODUCTVERSION 1,5,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x3L
@@ -123,7 +125,7 @@ BEGIN
             VALUE "FileDescription", "32-bit NPAPI test plugin\0"
             VALUE "FileExtents", "pts\0"
             VALUE "FileOpenName", "API (*.pts)\0"
-            VALUE "FileVersion", "1, 4, 0, 0\0"
+            VALUE "FileVersion", "1, 5, 0, 0\0"
             VALUE "InternalName", "npapi.dll\0"
             VALUE "LegalCopyright", "Copyright © 1997-2001\0"
             VALUE "LegalTrademarks", "\0"
@@ -131,7 +133,7 @@ BEGIN
             VALUE "OriginalFilename", "npapi.dll\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Netscape NPAPI Tester Plugin\0"
-            VALUE "ProductVersion", "1, 4, 0, 0\0"
+            VALUE "ProductVersion", "1, 5, 0, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END

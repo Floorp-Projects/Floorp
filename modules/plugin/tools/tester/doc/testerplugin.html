@@ -5,8 +5,8 @@
 <BODY>
 
 <CENTER><B><FONT SIZE=+2>Tester Plugin</FONT></B></CENTER>
-<CENTER><I>Started by: av 11.25.97</I></CENTER>
-<CENTER><I>Last updated: 12.16.97</I></CENTER>
+<CENTER><I>Started by: av 11.25.1997</I></CENTER>
+<CENTER><I>Last updated: 04.1.2002</I></CENTER>
 
 <P><B><FONT SIZE=+1>Table of contents</FONT></B>
 <UL>
@@ -234,7 +234,7 @@ or <TT>width=</TT>..., <TT>height=</TT>...
 
 <P><A NAME="Current Version"></A><B><FONT SIZE=+1>Current Version and Known Issues</FONT></B>
 
-<P>Current version is 1.4.
+<P>Current version is 1.5.
 
 <P>Issues:
 <UL>
@@ -307,8 +307,16 @@ used in dependencies)
 &nbsp;<A NAME="Preferences File"></A><B><FONT SIZE=+1>Appendix B: Preferences File</FONT></B>
 
 <P><TT>Npapi.ini</TT> is located in the same directory the plugin is located.
-Currently it stores GUI preferences in <TT>Options </TT>section, and normally,
-it does not need to be edited directly.
+Currently it stores GUI preferences (state of check boxes etc.) 
+in <TT>Preferences </TT>section, and normally this section does not need to be
+edited directly. Exception is <B><TT>LoadWindowStatus</B></TT>.
+
+<P><TT>In Preferences</TT> section you can manually add an option to show
+a small window in the left top corner of the screen which tells you that
+the plugin dll is loaded in memory. This may be useful after calling
+<TT>NPN_SetValue</TT> setting <TT>NPPVpluginKeepLibraryInMemory TRUE</TT>.
+<UL><TT>[Preferences]</TT>
+<BR><TT>LoadWindowStatus=Yes</TT></UL>
 
 <P><A NAME="Separator"></A><TT>In Log </TT>section the form of <A HREF="#Separator Back">separator</A>
 can be specified using key <B><TT>RecordSeparator</TT></B>. For example:
