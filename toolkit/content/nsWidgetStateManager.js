@@ -114,9 +114,10 @@ nsWidgetStateManager.prototype =
 
     if ("GetFields" in gCurrentWindow) {
       // save page data based on user supplied function in content area
-      var dataObject = gCurrentWindow.GetFields();
+      var dataObject = this.dataManager.getPageData(aPageTag);
+      dataObject = this.contentArea.GetFields(dataObject);
       if (dataObject)
-        this.dataManager.setPageData( aPageTag, dataObject );
+        this.dataManager.setPageData(aPageTag, dataObject);
     }
 
     // Automatic element retrieval. This is done in two ways.
@@ -231,7 +232,7 @@ nsWidgetStateManager.prototype =
     // set menulist specific properties
     if ("value" in aDataObject) {
       try {
-        element.selectedItem = element.getElementsByAttribute("value", aDataObject.value)[0];
+        element.selectedItem = aDataObject.value;
       }
       catch (ex) {
         dump(aElementID + ", ex: " + ex + "\n");
