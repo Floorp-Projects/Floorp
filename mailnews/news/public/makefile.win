@@ -19,23 +19,17 @@ DEPTH=..\..\..
 MODULE=msgnews
 
 XPIDLSRCS= \
-		.\nsIMsgOfflineNewsState.idl	\
+		.\nsIMsgOfflineNewsState.idl		\
 		.\nsINNTPArticleList.idl		\
 		.\nsINNTPCategory.idl			\
-		.\nsINNTPCategoryContainer.idl	\
-		.\nsINNTPHost.idl				\
+		.\nsINNTPCategoryContainer.idl		\
+		.\nsINNTPHost.idl			\
 		.\nsINNTPNewsgroup.idl			\
 		.\nsINNTPNewsgroupList.idl		\
+		.\nsINNTPNewsgroupPost.idl		\
 		.\nsINntpIncomingServer.idl		\
 		.\nsINntpService.idl			\
-		$(NULL)
-
-################################################################################
-## exports
-
-EXPORTS=						\
-		nsINNTPNewsgroupPost.h  \
-		nsINntpUrl.h			\
+		.\nsINntpUrl.idl			\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
