@@ -352,7 +352,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 		IMPORT_LOG0( "*** Failed getting leaf name of file\n");
 		return( rv);
 	}
-	nsString	name = pName;
+	nsString	name; name.AssignWithConversion(pName);
 	PRInt32		idx = name.RFindChar( '.');
 	if ((idx != -1) && (idx > 0) && ((name.Length() - idx - 1) < 5)) {
 		nsString t;
@@ -402,7 +402,7 @@ void ImportAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsTextStringBundle::FreeString( pFmt);
-	pStream->Append( NS_LINEBREAK);
+	pStream->AppendWithConversion( NS_LINEBREAK);
 	NS_IF_RELEASE( pBundle);
 }
 
@@ -417,7 +417,7 @@ void ImportAddressImpl::ReportError( PRInt32 errorNum, nsString& name, nsString 
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsTextStringBundle::FreeString( pFmt);
-	pStream->Append( NS_LINEBREAK);
+	pStream->AppendWithConversion( NS_LINEBREAK);
 	NS_IF_RELEASE( pBundle);
 }
 
@@ -635,12 +635,12 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 		PRInt32		fNum = 0;
 		while (nsTextAddress::GetField( pLine, lineLen, fNum, field, m_delim)) {
 			if (fNum)
-				str.Append( "\n");
+				str.AppendWithConversion( "\n");
 			SanitizeSampleData( field);
 			if (impSvc)
 				impSvc->SystemStringToUnicode( field, uField);
 			else
-				uField.Assign( field);
+				uField.AssignWithConversion( field);
 
 			str.Append( uField);
 			fNum++;
@@ -766,7 +766,7 @@ void ImportAddressImpl::SaveFieldMap( nsIImportFieldMap *pMap)
 		else
 			str.Append( '-');
 
-		str.Append( index);
+		str.AppendInt( index);
 		str.Append( ',');
 	}
 

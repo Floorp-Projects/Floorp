@@ -65,7 +65,7 @@ void nsTextAddress::ConvertToUnicode( const char *pStr, nsString& str)
 		m_pService->SystemStringToUnicode( pStr, str);
 	}
 	else
-		str.Assign( pStr);
+		str.AssignWithConversion( pStr);
 }
 
 nsresult nsTextAddress::ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors)
@@ -949,7 +949,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 {
     nsCAutoString colType(typeSlot);
     // nsCAutoString column(valueSlot);
-	nsString		colValue = valueSlot;
+	nsString		colValue; colValue.AssignWithConversion(valueSlot);
 	char *			column = colValue.ToNewUTF8String();
 
 	mdb_u1 firstByte = (mdb_u1)(colType.GetBuffer())[0];
