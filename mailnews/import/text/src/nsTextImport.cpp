@@ -345,13 +345,20 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 		return( rv);
 	}
 	
-	char *pName = nsnull;
-	rv = pLoc->GetLeafName( &pName);
+	nsXPIDLCString pName;
+	rv = pLoc->GetLeafName(getter_Copies(pName));
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Failed getting leaf name of file\n");
 		return( rv);
 	}
-	nsString	name; name.AssignWithConversion(pName);
+
+	// for get unicode leafname.  If it uses nsILocalFile interface,
+	// these codes do not need due to nsILocalFile->GetUnicodeLeafName()
+	nsString	name;
+	rv = impSvc->SystemStringToUnicode((const char*) pName, name);
+	if (NS_FAILED(rv))
+		name.AssignWithConversion((const char*) pName);
+
 	PRInt32		idx = name.RFindChar( '.');
 	if ((idx != -1) && (idx > 0) && ((name.Length() - idx - 1) < 5)) {
 		nsString t;
