@@ -261,7 +261,7 @@ public: \
                                      nsIToolkit *aToolkit = nsnull, \
                                      nsWidgetInitData *aInitData = nsnull); \
     NS_IMETHOD              GetClientData(void*& aClientData); \
-    NSIMETHOD               SetClientData(void* aClientData); \
+    NS_IMETHOD               SetClientData(void* aClientData); \
     virtual void            Destroy(); \
     virtual nsIWidget*      GetParent(void); \
     virtual nsIEnumerator*  GetChildren(); \
