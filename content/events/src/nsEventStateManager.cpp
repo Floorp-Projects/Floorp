@@ -226,9 +226,14 @@ nsEventStateManager::Init()
       sGeneralAccesskeyModifier =
         nsContentUtils::GetIntPref("ui.key.generalAccessKey",
                                    sGeneralAccesskeyModifier);
+
+      nsIContent::sTabFocusModelAppliesToXUL =
+        nsContentUtils::GetBoolPref("accessibility.tabfocus_applies_to_xul",
+                                    nsIContent::sTabFocusModelAppliesToXUL);
     }
     prefBranch->AddObserver("accessibility.accesskeycausesactivation", this, PR_TRUE);
     prefBranch->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
+    prefBranch->AddObserver("accessibility.tabfocus_applies_to_xul", this, PR_TRUE);
     prefBranch->AddObserver("nglayout.events.dispatchLeftClickOnly", this, PR_TRUE);
     prefBranch->AddObserver("ui.key.generalAccessKey", this, PR_TRUE);
 #if 0
@@ -305,6 +310,7 @@ nsEventStateManager::Shutdown()
   if (prefBranch) {
     prefBranch->RemoveObserver("accessibility.accesskeycausesactivation", this);
     prefBranch->RemoveObserver("accessibility.browsewithcaret", this);
+    prefBranch->RemoveObserver("accessibility.tabfocus_applies_to_xul", this);
     prefBranch->RemoveObserver("nglayout.events.dispatchLeftClickOnly", this);
     prefBranch->RemoveObserver("ui.key.generalAccessKey", this);
 #if 0
@@ -347,6 +353,10 @@ nsEventStateManager::Observe(nsISupports *aSubject,
                                     sKeyCausesActivation);
     } else if (data.EqualsLiteral("accessibility.browsewithcaret")) {
       ResetBrowseWithCaret();
+    } else if (data.EqualsLiteral("accessibility.tabfocus_applies_to_xul")) {
+      nsIContent::sTabFocusModelAppliesToXUL =
+        nsContentUtils::GetBoolPref("accessibility.tabfocus_applies_to_xul",
+                                    nsIContent::sTabFocusModelAppliesToXUL);
     } else if (data.EqualsLiteral("nglayout.events.dispatchLeftClickOnly")) {
       sLeftClickOnly =
         nsContentUtils::GetBoolPref("nglayout.events.dispatchLeftClickOnly",
