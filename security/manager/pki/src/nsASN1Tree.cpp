@@ -485,4 +485,52 @@ nsNSSASN1Outliner::PerformActionOnCell(const PRUnichar *action, PRInt32 row,
   return NS_OK;
 }
 
+//
+// CanDropOn
+//
+// Can't drop on the thread pane.
+//
+NS_IMETHODIMP nsNSSASN1Outliner::CanDropOn(PRInt32 index, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+  
+  return NS_OK;
+}
+
+//
+// CanDropBeforeAfter
+//
+// Can't drop on the thread pane.
+//
+NS_IMETHODIMP nsNSSASN1Outliner::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+  
+  return NS_OK;
+}
+
+
+//
+// Drop
+//
+// Can't drop on the thread pane.
+//
+NS_IMETHODIMP nsNSSASN1Outliner::Drop(PRInt32 row, PRInt32 orient)
+{
+  return NS_OK;
+}
+
+
+//
+// IsSorted
+//
+// ...
+//
+NS_IMETHODIMP nsNSSASN1Outliner::IsSorted(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
 
