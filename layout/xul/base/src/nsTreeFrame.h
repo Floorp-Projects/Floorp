@@ -67,7 +67,15 @@ public:
 
   void WillNeedDirtyReflow() { mNeedsDirtyReflow = PR_TRUE; };
   PRInt32 GetCurrentGeneration() { return mGeneration; };
+  void SetCurrentGeneration(PRInt32 aGeneration) { mGeneration = aGeneration; };
+
+  PRBool UseGeneration() { return mUseGeneration; };
+  void SetUseGeneration(PRBool aUse) { mUseGeneration = aUse; };
+
+  NS_IMETHOD AnnotateColumns();
   
+  PRBool ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex, nsTableColFrame** aResult);
+
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();
@@ -77,6 +85,5 @@ protected: // Data Members
   nsTreeTwistyListener* mTwistyListener;
   PRBool mNeedsDirtyReflow;
   PRInt32 mGeneration;
-  PRInt32 mMaxGeneration;
-
+  PRBool mUseGeneration;
 }; // class nsTreeFrame

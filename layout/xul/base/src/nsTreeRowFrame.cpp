@@ -29,11 +29,14 @@
 #include "nsINameSpaceManager.h"
 #include "nsTreeRowGroupFrame.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
+#include "nsTableColFrame.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsTreeTwistyListener.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
+#include "nsIPresContext.h"
 
 //
 // NS_NewTreeFrame
@@ -59,7 +62,8 @@ NS_NewTreeRowFrame (nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeRowFrame::nsTreeRowFrame()
-:nsTableRowFrame(), mIsHeader(PR_FALSE),mGeneration(0)
+:nsTableRowFrame(), mIsHeader(PR_FALSE), mGeneration(0), mDraggingHeader(PR_FALSE), 
+ mHitFrame(nsnull), mFlexingCol(nsnull), mHeaderPosition(0)
 { }
 
 // Destructor
@@ -153,8 +157,10 @@ nsTreeRowFrame::HeaderDrag(PRBool aGrabMouseEvents)
     if (viewMan) {
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
+        mDraggingHeader = PR_TRUE;
       } else {
         viewMan->GrabMouseEvents(nsnull,result);
+        mDraggingHeader = PR_FALSE;
       }
     }
   }
@@ -162,27 +168,6 @@ nsTreeRowFrame::HeaderDrag(PRBool aGrabMouseEvents)
   return NS_OK;
 }
 
-PRBool
-nsTreeRowFrame::DraggingHeader()
-{
-    // get its view
-  nsIView* view = nsnull;
-  GetView(&view);
-  nsCOMPtr<nsIViewManager> viewMan;
-  
-  if (view) {
-    view->GetViewManager(*getter_AddRefs(viewMan));
-
-    if (viewMan) {
-      nsIView* grabbingView;
-      viewMan->GetMouseEventGrabber(grabbingView);
-      if (grabbingView == view)
-        return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
-}
 
 NS_IMETHODIMP
 nsTreeRowFrame::Reflow(nsIPresContext&          aPresContext,
@@ -196,14 +181,16 @@ nsTreeRowFrame::Reflow(nsIPresContext&          aPresContext,
     nsTableFrame* tableFrame;
     nsTableFrame::GetTableFrame(this, tableFrame);
     nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
-    PRInt32 currGeneration = treeFrame->GetCurrentGeneration();
-    if (currGeneration > mGeneration) {
-      nsRect rect;
-      GetRect(rect);
-      aDesiredSize.width = rect.width;
-      aDesiredSize.height = rect.height;
-      aStatus = NS_FRAME_COMPLETE;
-      return NS_OK;
+    if (treeFrame->UseGeneration()) {
+      PRInt32 currGeneration = treeFrame->GetCurrentGeneration();
+      if (currGeneration > mGeneration) {
+        nsRect rect;
+        GetRect(rect);
+        aDesiredSize.width = rect.width;
+        aDesiredSize.height = rect.height;
+        aStatus = NS_FRAME_COMPLETE;
+        return NS_OK;
+      }
     }
   }
 
@@ -212,4 +199,99 @@ nsTreeRowFrame::Reflow(nsIPresContext&          aPresContext,
   printf("Full row reflow! Number %d\n", i);
 */
   return nsTableRowFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+}
+
+nsresult
+nsTreeRowFrame::HandleMouseUpEvent(nsIPresContext& aPresContext, 
+									                  nsGUIEvent*     aEvent,
+									                  nsEventStatus&  aEventStatus)
+{
+  if (DraggingHeader()) {
+    HeaderDrag(PR_FALSE);
+    
+    nsTableFrame* tableFrame = nsnull;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+    treeFrame->SetUseGeneration(PR_FALSE); // Cached rows have to reflow.
+
+    nsCellMap* cellMap = tableFrame->GetCellMap();
+    PRInt32 numCols = cellMap->GetColCount();
+    nsTableColFrame* colFrame = tableFrame->GetColFrame(0);
+    nsCOMPtr<nsIContent> colElement;
+    colFrame->GetContent(getter_AddRefs(colElement));
+    if (colElement) {
+      colElement->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, "40", PR_TRUE);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsTreeRowFrame::HandleEvent(nsIPresContext& aPresContext, 
+                             nsGUIEvent*     aEvent,
+                             nsEventStatus&  aEventStatus)
+{
+  aEventStatus = nsEventStatus_eConsumeDoDefault;
+	if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
+    HandleMouseUpEvent(aPresContext, aEvent, aEventStatus);
+  else if (aEvent->message == NS_MOUSE_MOVE && mDraggingHeader && mHitFrame)
+    HandleHeaderDragEvent(aPresContext, aEvent, aEventStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeRowFrame::GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
+                                 nsIFrame**     aFrame)
+{
+  nsresult rv = nsTableRowFrame::GetFrameForPoint(aPoint, aFrame);
+  if (mDraggingHeader) {
+    mHitFrame = *aFrame;
+    *aFrame = this;
+    nsRect rect;
+    GetRect(rect);
+    if (rect.Contains(aPoint)) {
+      mHitFrame = nsnull;
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTreeRowFrame::GetCursor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor)
+{
+  if (mDraggingHeader) {
+    nsRect rect;
+    GetRect(rect);
+    if (rect.Contains(aPoint)) {
+      aCursor = NS_STYLE_CURSOR_W_RESIZE;
+    }
+    else {
+      aCursor = NS_STYLE_CURSOR_DEFAULT;
+    }
+  }
+  else aCursor = NS_STYLE_CURSOR_DEFAULT;
+  return NS_OK;
+}
+
+nsresult
+nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext& aPresContext, 
+									                    nsGUIEvent*     aEvent,
+									                    nsEventStatus&  aEventStatus)
+{
+  // Figure out how much we shifted the mouse.
+  nsPoint point = ((nsMouseEvent*)aEvent)->point;
+  PRInt32 delta = mHeaderPosition - point.x;
+  mHeaderPosition = point.x;
+
+  // The flexing column always just gains or loses the amount of space.
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
+  PRInt32 twipsDelta = NSIntPixelsToTwips(delta, p2t);
+  
+  // Modify the flexing column by the delta.
+  
+  return NS_OK;
 }

@@ -19,6 +19,7 @@
 
 #include "nsTableCellFrame.h"
 
+class nsTableColFrame;
 class nsTreeFrame;
 
 class nsTreeCellFrame : public nsTableCellFrame
@@ -80,7 +81,7 @@ protected:
 								                  nsGUIEvent*     aEvent,
 							                    nsEventStatus&  aEventStatus);
 
-  PRBool CanResize(nsPoint& aPoint);
+  PRBool CanResize(nsPoint& aPoint, nsTableColFrame** aResult);
 
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext) { return NS_OK; };
 
