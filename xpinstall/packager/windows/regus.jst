@@ -2,6 +2,8 @@
 var srDest;
 var err;
 var fProgram;
+var searchPlugins = "searchplugins";
+var platformNode = getPlatform();
 
 // ----LOCALIZATION NOTE: translate only these ------
 var prettyName = "US Region Pack";
@@ -15,6 +17,11 @@ var localeName = "locale/" + chromeNode + "/";
 srDest = $SpaceRequired$:bin;
 err    = initInstall(prettyName, regName, "$Version$"); 
 logComment("initInstall: " + err);
+
+if (platformNode == 'mac')
+{
+  searchPlugins = "Search Plugins";
+}
 
 fProgram = getFolder("Program");
 logComment("fProgram: " + fProgram);
@@ -31,6 +38,7 @@ if(verifyDiskSpace(fProgram, srDest))
   if (err != SUCCESS)
   {
     logComment("addDirectory() to " + fProgram + "failed!");
+    logComment("searchplugins will not be installed");
     // couldn't install globally, try installing to the profile
     resetError();
     chromeType |= PROFILE_CHROME;
@@ -38,7 +46,18 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("try installing to the profile: " + fProgram);
     err = addDirectory("","bin/chrome",fProgram,"chrome");
   }
- 
+  else
+  {
+    //Add the searchplugins folder only if permitted to install globally. (They don't work in the Profile)
+    //Using special error variable for logging purposes only. 
+    //No action is taken if searchplugins fails to install.
+    var spError = addDirectory("",
+                               "searchplugins",       // dir name in jar to extract 
+                               getFolder("Program"),  // Where to put this file (Returned from GetFolder) 
+                               searchPlugins);        // subdirectory to create 
+    logComment("addDirectory() for searchplugins returned: " + spError);
+  }
+
   setPackageFolder(fProgram);
 
   if (err == SUCCESS)
