@@ -1153,8 +1153,9 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
 
         if (*token != '\0') {
             comma = n++ != 0 ? "," : ""; // delimiter if not first item
-            if (q < 0.9995)
-                wrote = PR_snprintf(p2, available, "%s%s;q=0.%01u", comma, token, QVAL_TO_UINT(q));
+            PRUint32 u = QVAL_TO_UINT(q);
+            if (u < 10)
+                wrote = PR_snprintf(p2, available, "%s%s;q=0.%u", comma, token, u);
             else
                 wrote = PR_snprintf(p2, available, "%s%s", comma, token);
             q -= dec;
@@ -1198,7 +1199,7 @@ nsHttpHandler::SetAcceptLanguages(const char *aAcceptLanguages)
 static nsresult
 PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
 {
-    PRUint32 n, size, wrote;
+    PRUint32 n, size, wrote, u;
     PRInt32 available;
     double q, dec;
     char *p, *p2, *token, *q_Accept, *o_Accept;
@@ -1250,8 +1251,9 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
 
         if (*token != '\0') {
             comma = n++ != 0 ? "," : ""; // delimiter if not first item
-            if (q < 0.9995)
-                wrote = PR_snprintf(p2, available, "%s%s;q=0.%01u", comma, token, QVAL_TO_UINT(q));
+            u = QVAL_TO_UINT(q);
+            if (u < 10)
+                wrote = PR_snprintf(p2, available, "%s%s;q=0.%u", comma, token, u);
             else
                 wrote = PR_snprintf(p2, available, "%s%s", comma, token);
             q -= dec;
@@ -1262,8 +1264,9 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
     }
     if (add_utf) {
         comma = n++ != 0 ? "," : ""; // delimiter if not first item
-        if (q < 0.9995)
-            wrote = PR_snprintf(p2, available, "%sutf-8;q=0.%01u", comma, QVAL_TO_UINT(q));
+        u = QVAL_TO_UINT(q);
+        if (u < 10)
+            wrote = PR_snprintf(p2, available, "%sutf-8;q=0.%u", comma, u);
         else
             wrote = PR_snprintf(p2, available, "%sutf-8", comma);
         q -= dec;
@@ -1279,9 +1282,9 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
         // the non-wildcard always receives preference.
 
         q += dec;
-        if (q < 0.9995) {
-            wrote = PR_snprintf(p2, available, "%s*;q=0.%01u", comma, QVAL_TO_UINT(q));
-        }
+        u = QVAL_TO_UINT(q);
+        if (u < 10)
+            wrote = PR_snprintf(p2, available, "%s*;q=0.%u", comma, u);
         else
             wrote = PR_snprintf(p2, available, "%s*", comma);
         available -= wrote;
