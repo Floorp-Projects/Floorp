@@ -1,7 +1,6 @@
 classic.jar:
     skin/classic/communicator/contents.rdf                               (communicator/contents.rdf)
     skin/classic/editor/contents.rdf                                     (editor/contents.rdf)
-    skin/classic/global/contents.rdf                                     (global/contents.rdf)
     skin/classic/messenger/contents.rdf                                  (messenger/contents.rdf)
     skin/classic/navigator/contents.rdf                                  (navigator/contents.rdf)
     skin/classic/communicator/search-widgets.css                         (communicator/win/search-widgets.css)

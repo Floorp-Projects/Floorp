@@ -1,4 +1,5 @@
 classic.jar:
+    skin/classic/global/contents.rdf
     skin/classic/global/box.css
     skin/classic/global/button.css
     skin/classic/global/checkbox.css
