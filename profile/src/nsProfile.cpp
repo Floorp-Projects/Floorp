@@ -370,6 +370,10 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     }
     mCurrentProfileAvailable = PR_TRUE;
 
+    // Now we have the right profile, read the user-specific prefs.
+    rv = prefs->ReadUserPrefs();
+    if (NS_FAILED(rv)) return rv;
+
     NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_PROGID, &rv);
 
     if(NS_SUCCEEDED(rv) && catman) 
@@ -395,10 +399,6 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 	   }
 	}
     }
-
-    // Now we have the right profile, read the user-specific prefs.
-    rv = prefs->ReadUserPrefs();
-    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr <nsIPrefConverter> pPrefConverter = do_CreateInstance(kPrefConverterCID, &rv);
 
