@@ -1234,7 +1234,7 @@ nsFormFrame::GetContentType(char* aPathName, char** aContentType)
           return NS_OK;
     }
   }
-  *aContentType = nsCRT::strdup("unknown");
+  *aContentType = nsCRT::strdup("application/octet-stream");
   if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
