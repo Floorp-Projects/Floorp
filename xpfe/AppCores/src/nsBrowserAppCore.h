@@ -81,6 +81,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Close();
     NS_IMETHOD    Exit();
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset); 
+    NS_IMETHOD    LoadInitialPage();
 
 #if 0
     // nsIStreamObserver
