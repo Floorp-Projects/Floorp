@@ -21,4 +21,8 @@ IGNORE_MANIFEST=1
 
 DIRS = windows registry
 
+!ifdef BUILD_XPIDL 
+DIRS += xpidl 
+!endif 
+
 include <$(DEPTH)\config\rules.mak>

@@ -38,13 +38,12 @@ LINCS=-I$(PUBLIC)\xpcom	\
 	-I$(MOZ_TOOLS)\include	\
 	$(NULL)
 
-      
 MYDIR=C:\USR\LOCAL
 
 MYLIBS=                         \
  $(DIST)\lib\libxpt32.lib		\
- $(MOZ_TOOLS)\lib\glib-1.1.lib        \
- $(MOZ_TOOLS)\lib\libidl-0.6.lib     \
+ $(MOZ_TOOLS)\lib\glib-1.2.lib		\
+ $(MOZ_TOOLS)\lib\libidl-0.6.lib	\
  $(LIBNSPR)	\
  $(NULL)
 
