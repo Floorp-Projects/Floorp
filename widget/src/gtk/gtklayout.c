@@ -24,9 +24,15 @@ static void     gtk_layout_size_allocate      (GtkWidget      *widget,
 					       GtkAllocation  *allocation);
 static void     gtk_layout_draw               (GtkWidget      *widget, 
 					       GdkRectangle   *area);
+static gint     gtk_layout_expose             (GtkWidget      *widget, 
+					       GdkEventExpose *event);
 
 static void     gtk_layout_remove             (GtkContainer *container, 
 					       GtkWidget    *widget);
+static void     gtk_layout_forall             (GtkContainer *container,
+					       gboolean      include_internals,
+					       GtkCallback   callback,
+					       gpointer      callback_data);
 
 static void     gtk_layout_realize_child      (GtkLayout      *layout,
 					       GtkLayoutChild *child);
@@ -176,7 +182,7 @@ gtk_layout_move (GtkLayout     *layout,
 		 gint           y)
 {
   GList *tmp_list;
-  GtkLayoutChild *child = NULL;
+  GtkLayoutChild *child;
   
   g_return_if_fail (layout != NULL);
   g_return_if_fail (GTK_IS_LAYOUT (layout));
@@ -186,17 +192,15 @@ gtk_layout_move (GtkLayout     *layout,
     {
       child = tmp_list->data;
       if (child->widget == child_widget)
-	break;
-      tmp_list = g_list_next(tmp_list);
+	{
+	  child->x = x;
+	  child->y = y;
+	  
+	  gtk_layout_position_child (layout, child, TRUE);
+	  return;
+	}
+      tmp_list = tmp_list->next;
     }
-
-  if (tmp_list)
-    {
-      child->x = x;
-      child->y = y;
-    }
-
-  gtk_layout_position_child (layout, child, TRUE);
 }
 
 void
@@ -285,10 +289,12 @@ gtk_layout_class_init (GtkLayoutClass *class)
   widget_class->size_request = gtk_layout_size_request;
   widget_class->size_allocate = gtk_layout_size_allocate;
   widget_class->draw = gtk_layout_draw;
+  widget_class->expose_event = gtk_layout_expose;
 
   gravity_works = gtk_layout_gravity_works ();
 
   container_class->remove = gtk_layout_remove;
+  container_class->forall = gtk_layout_forall;
 }
 
 static void
@@ -401,9 +407,6 @@ gtk_layout_map (GtkWidget *widget)
       if (child->window)
 	gdk_window_show (child->window);
 
-      if (GTK_WIDGET_VISIBLE (child->widget))
-	gtk_layout_realize_child (layout, child);
-	
       tmp_list = tmp_list->next;
     }
   
@@ -517,6 +520,34 @@ gtk_layout_size_allocate (GtkWidget     *widget,
   gtk_signal_emit_by_name (GTK_OBJECT (layout->vadjustment), "changed");
 }
 
+static gint 
+gtk_layout_expose (GtkWidget *widget, GdkEventExpose *event)
+{
+  GList *tmp_list;
+  GtkLayout *layout;
+
+  g_return_val_if_fail (widget != NULL, FALSE);
+  g_return_val_if_fail (GTK_IS_LAYOUT (widget), FALSE);
+
+  layout = GTK_LAYOUT (widget);
+
+  if (event->window == layout->bin_window)
+    return FALSE;
+  
+  tmp_list = layout->children;
+  while (tmp_list)
+    {
+      GtkLayoutChild *child = tmp_list->data;
+
+      if (event->window == child->window)
+	return gtk_widget_event (child->widget, (GdkEvent *)event);
+	
+      tmp_list = tmp_list->next;
+    }
+
+  return FALSE;
+}
+
 /* Container method
  */
 static void
@@ -538,7 +569,7 @@ gtk_layout_remove (GtkContainer *container,
       child = tmp_list->data;
       if (child->widget == widget)
 	break;
-      tmp_list=tmp_list->next;
+      tmp_list = tmp_list->next;
     }
 
   if (tmp_list)
@@ -560,6 +591,31 @@ gtk_layout_remove (GtkContainer *container,
     }
 }
 
+static void
+gtk_layout_forall (GtkContainer *container,
+		   gboolean      include_internals,
+		   GtkCallback   callback,
+		   gpointer      callback_data)
+{
+  GtkLayout *layout;
+  GtkLayoutChild *child;
+  GList *tmp_list;
+
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (GTK_IS_LAYOUT (container));
+  g_return_if_fail (callback != NULL);
+
+  layout = GTK_LAYOUT (container);
+
+  tmp_list = layout->children;
+  while (tmp_list)
+    {
+      child = tmp_list->data;
+      tmp_list = tmp_list->next;
+
+      (* callback) (child->widget, callback_data);
+    }
+}
 
 /* Operations on children
  */
@@ -577,20 +633,28 @@ gtk_layout_realize_child (GtkLayout *layout,
     {
       GdkWindowAttr attributes;
       
+      gint x = child->x - layout->xoffset;
+      gint y = child->y - layout->xoffset;
+
       attributes.window_type = GDK_WINDOW_CHILD;
-      attributes.x = widget->allocation.x;
-      attributes.y = widget->allocation.y;
-      attributes.width = widget->allocation.width;
-      attributes.height = widget->allocation.height;
+      attributes.x = x;
+      attributes.y = y;
+      attributes.width = child->widget->requisition.width;
+      attributes.height = child->widget->requisition.height;
       attributes.wclass = GDK_INPUT_OUTPUT;
       attributes.visual = gtk_widget_get_visual (widget);
       attributes.colormap = gtk_widget_get_colormap (widget);
-      attributes.event_mask = 0;
-
+      attributes.event_mask = GDK_EXPOSURE_MASK;
+ 
       attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
       child->window =  gdk_window_new (layout->bin_window,
-				       &attributes, attributes_mask);
+ 				       &attributes, attributes_mask);
       gdk_window_set_user_data (child->window, widget);
+
+      if (child->window)
+	gtk_style_set_background (widget->style, 
+				  child->window, 
+				  GTK_STATE_NORMAL);
     }
 
   gtk_widget_set_parent_window (child->widget,
@@ -599,7 +663,7 @@ gtk_layout_realize_child (GtkLayout *layout,
   gtk_widget_realize (child->widget);
   
   if (gravity_works)
-    gtk_layout_set_static_gravity (child->widget->window, TRUE);
+    gtk_layout_set_static_gravity (child->window ? child->window : child->widget->window, TRUE);
 }
 
 static void
@@ -627,8 +691,26 @@ gtk_layout_position_child (GtkLayout      *layout,
       if (force_allocate)
 	{
 	  GtkAllocation allocation;
-	  allocation.x = x;
-	  allocation.y = y;
+
+	  if (GTK_WIDGET_NO_WINDOW (child->widget))
+	    {
+	      if (child->window)
+		{
+		  gdk_window_move_resize (child->window,
+					  x, y, 
+					  child->widget->requisition.width,
+					  child->widget->requisition.height);
+		}
+
+	      allocation.x = 0;
+	      allocation.y = 0;
+	    }
+	  else
+	    {
+	      allocation.x = x;
+	      allocation.y = y;
+	    }
+
 	  allocation.width = child->widget->requisition.width;
 	  allocation.height = child->widget->requisition.height;
 	  
@@ -637,8 +719,10 @@ gtk_layout_position_child (GtkLayout      *layout,
     }
   else
     {
-      if (GTK_WIDGET_MAPPED (child->widget))
-	gtk_widget_unmap (child->widget);
+      if (child->window)
+	gdk_window_hide (child->window);
+      else if (GTK_WIDGET_MAPPED (child->widget))
+ 	gtk_widget_unmap (child->widget);
     }
 }
 
@@ -1048,9 +1132,8 @@ gtk_layout_gravity_works (void)
 
   gdk_window_get_geometry (child, NULL, &y, NULL, NULL, NULL);
 
-  gdk_window_unref (parent);
-  gdk_window_unref (child);
+  gdk_window_destroy (parent);
+  gdk_window_destroy (child);
   
   return  (y == -20);
 }
-

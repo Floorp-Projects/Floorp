@@ -14,6 +14,7 @@
 #include <gtk/gtkcontainer.h>
 #include <gtk/gtkadjustment.h>
 
+
 /*
  * We don't want to require gnome-libs, in which GtkLayout now lives, but
  * we do want to be able to link safely against it.
@@ -44,6 +45,7 @@
 #define gtk_layout_get_vadjustment moz_gtk_layout_get_vadjustment
 #define gtk_layout_set_hadjustment moz_gtk_layout_set_hadjustment
 #define gtk_layout_set_vadjustment moz_gtk_layout_set_vadjustment
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,7 +87,7 @@ struct _GtkLayout {
   gint scroll_x;
   gint scroll_y;
 
-  gint frozen : 1;
+  guint frozen : 1;
 };
 
 struct _GtkLayoutClass {
