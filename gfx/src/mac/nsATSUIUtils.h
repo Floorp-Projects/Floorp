@@ -44,6 +44,7 @@
 #include "nsError.h"
 #include "nsCoord.h"
 #include "nsColor.h"
+#include "nsIRenderingContext.h"
 #include <ATSUnicode.h>
 
 class ATSUILayoutCache;
@@ -53,14 +54,14 @@ class nsIDeviceContext;
 class nsATSUIUtils
 {
 public:
-	static void		Initialize();
-	static PRBool	IsAvailable();
+  static void Initialize();
+  static PRBool IsAvailable();
 
-	static ATSUILayoutCache*	gTxLayoutCache;
+  static ATSUILayoutCache*  gTxLayoutCache;
 
 private:
-	static PRBool				gIsAvailable;
-	static PRBool				gInitialized;
+  static PRBool gIsAvailable;
+  static PRBool gInitialized;
 };
 
 
@@ -68,26 +69,29 @@ private:
 class nsATSUIToolkit
 {
 public:
-	nsATSUIToolkit();
-	virtual ~nsATSUIToolkit() {};
+  nsATSUIToolkit();
+  ~nsATSUIToolkit() {};
 
-	void        		PrepareToDraw(GrafPtr aPort, nsIDeviceContext* aContext);
+  void PrepareToDraw(GrafPtr aPort, nsIDeviceContext* aContext);
  
-    NS_IMETHOD			GetWidth(const PRUnichar *aCharPt, short &oWidth, 
-    						short aSize, short fontNum, PRBool aBold, PRBool aItalic, nscolor aColor);
-    NS_IMETHOD			DrawString(const PRUnichar *aCharPt, PRInt32 x, PRInt32 y, short &oWidth, 
-    						short aSize, short fontNum, PRBool aBold, PRBool aItalic, nscolor aColor);
+  nsresult GetTextDimensions(const PRUnichar *aCharPt, nsTextDimensions &oDim, 
+                             short aSize, short fontNum, PRBool aBold, 
+                             PRBool aItalic, nscolor aColor);
+  nsresult DrawString(const PRUnichar *aCharPt, PRInt32 x, PRInt32 y, short &oWidth, 
+                      short aSize, short fontNum, PRBool aBold, PRBool aItalic, 
+                      nscolor aColor);
 
 private:
-	void        		StartDraw(const PRUnichar *aCharPt, short aSize, short fontNum, PRBool aBold, PRBool aItalic, nscolor aColor, 
-									GrafPtr& oSavePort, ATSUTextLayout& oLayout);
-	void        		EndDraw(GrafPtr aSavePort);
-	ATSUTextLayout		GetTextLayout(short aFontNum, short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
-	
+  void StartDraw(const PRUnichar *aCharPt, short aSize, short fontNum, PRBool aBold,
+                 PRBool aItalic, nscolor aColor, 
+                 GrafPtr& oSavePort, ATSUTextLayout& oLayout);
+  void EndDraw(GrafPtr aSavePort);
+  ATSUTextLayout GetTextLayout(short aFontNum, short aSize, PRBool aBold, 
+                               PRBool aItalic, nscolor aColor);
+  
 private:
-	GrafPtr				mPort;
-
-	nsIDeviceContext*	mContext;
+  GrafPtr        mPort;
+  nsIDeviceContext*  mContext;
 };
 
 #endif //nsATSUIUtils_h___

@@ -42,6 +42,7 @@
 #include <UnicodeConverter.h>
 #include "nsCOMPtr.h"
 #include "nsISaveAsCharset.h"
+#include "nsIRenderingContext.h"
 class nsUnicodeFallbackCache;
 class nsIDeviceContext;
 class nsGraphicState;
@@ -49,64 +50,67 @@ class nsGraphicState;
 class nsUnicodeRenderingToolkit 
 {
 public:
-	nsUnicodeRenderingToolkit() {};
-	virtual ~nsUnicodeRenderingToolkit() {};
+  nsUnicodeRenderingToolkit() {};
+  virtual ~nsUnicodeRenderingToolkit() {};
 
-#ifdef IBMBIDI
-  NS_IMETHOD PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort, PRBool aRightToLeftText);
-#else
-  NS_IMETHOD PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort);
-#endif
-  NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
-                      PRInt32 *aFontID);
-  NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
-                        PRInt32 aFontID,
-                        const nscoord* aSpacing);
-private:	
-	// Unicode text measure/drawing functions
-	UnicodeToTextInfo 	GetConverterByScript(ScriptCode sc);
-	PRBool 				TECFallbackGetWidth(const PRUnichar *pChar, short& oWidth,
-									short fontNum, const short* scriptFallbackFonts);
-	PRBool 				TECFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth,
-									short fontNum, const short* scriptFallbackFonts);
-									
-	PRBool 				ATSUIFallbackGetWidth(const PRUnichar *pChar, short& oWidth, short fontNum,	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
-	PRBool 				ATSUIFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth, short fontNum, short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
-	
-	PRBool 				UPlusFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
-	PRBool 				UPlusFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
+  nsresult PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, 
+                         GrafPtr aPort, PRBool aRightToLeftText);
+  nsresult GetTextDimensions(const PRUnichar *aString, PRUint32 aLength, 
+                             nsTextDimensions &aDimension, PRInt32 *aFontID);
+  nsresult GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
+                    PRInt32 *aFontID);
 
-	PRBool 				QuestionMarkFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
-	PRBool 				QuestionMarkFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
+  nsresult DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
+                      PRInt32 aFontID,
+                      const nscoord* aSpacing);
+private:  
+  // Unicode text measure/drawing functions
+  UnicodeToTextInfo GetConverterByScript(ScriptCode sc);
+  PRBool TECFallbackGetDimensions(const PRUnichar *pChar, nsTextDimensions& oWidth,
+                                  short fontNum, const short* scriptFallbackFonts);
+  PRBool TECFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth,
+                             short fontNum, const short* scriptFallbackFonts);
+                  
+  PRBool ATSUIFallbackGetDimensions(const PRUnichar *pChar, nsTextDimensions& oWidth, short fontNum,  
+                                    short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
+  PRBool ATSUIFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth, short fontNum, 
+                               short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
+  
+  PRBool UPlusFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
+  PRBool UPlusFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
 
-	PRBool 				LatinFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
-	PRBool 				LatinFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
-	PRBool 				PrecomposeHangulFallbackGetWidth(const PRUnichar *pChar, short& oWidth,short koreanFont, short origFont);
-	PRBool 				PrecomposeHangulFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth,short koreanFont, short origFont);
-	PRBool 				TransliterateFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
-	PRBool 				TransliterateFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
-	PRBool 				LoadTransliterator();
-	
-	void 				GetScriptTextWidth(const char* aText, ByteCount aLen, short& aWidth);
-	void 				DrawScriptText(const char* aText, ByteCount aLen, PRInt32 x, PRInt32 y, short& aWidth);
-	
-	nsresult 			GetTextSegmentWidth( const PRUnichar *aString, PRUint32 aLength, short fontNum, const short *scriptFallbackFonts,
-												PRUint32& oWidth);
-	nsresult 			DrawTextSegment( const PRUnichar *aString, PRUint32 aLength, short fontNum, const short *scriptFallbackFonts,
-												PRInt32 x, PRInt32 y, PRUint32& oWidth);
-												
-	nsUnicodeFallbackCache* GetTECFallbackCache();		
+  PRBool QuestionMarkFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
+  PRBool QuestionMarkFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
+
+  PRBool LatinFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
+  PRBool LatinFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
+  PRBool PrecomposeHangulFallbackGetWidth(const PRUnichar *pChar, short& oWidth,short koreanFont, short origFont);
+  PRBool PrecomposeHangulFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth,
+                                          short koreanFont, short origFont);
+  PRBool TransliterateFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
+  PRBool TransliterateFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
+  PRBool LoadTransliterator();
+  
+  void GetScriptTextWidth(const char* aText, ByteCount aLen, short& aWidth);
+  void DrawScriptText(const char* aText, ByteCount aLen, PRInt32 x, PRInt32 y, short& aWidth);
+  
+  nsresult GetTextSegmentWidth(const PRUnichar *aString, PRUint32 aLength, short fontNum, 
+                               const short *scriptFallbackFonts, PRUint32& oWidth);
+  nsresult GetTextSegmentDimensions(const PRUnichar *aString, PRUint32 aLength, short fontNum, 
+                                    const short *scriptFallbackFonts, nsTextDimensions& aDimension);
+  nsresult DrawTextSegment(const PRUnichar *aString, PRUint32 aLength, short fontNum, 
+                           const short *scriptFallbackFonts, PRInt32 x, PRInt32 y, PRUint32& oWidth);
+                        
+  nsUnicodeFallbackCache* GetTECFallbackCache();    
 private:
-	float             		mP2T; 				// Pixel to Twip conversion factor
-	nsIDeviceContext *		mContext;
-	nsGraphicState *		mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
+  float mP2T; // Pixel to Twip conversion factor
+  nsIDeviceContext *mContext;
+  nsGraphicState *mGS; // current graphic state - shortcut for mCurrentSurface->GetGS()
 
-	GrafPtr					mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
-	nsATSUIToolkit			mATSUIToolkit;
-	nsCOMPtr<nsISaveAsCharset> mTrans;
-#ifdef IBMBIDI
-	PRBool mRightToLeftText;
-#endif
+  GrafPtr mPort; // current grafPort - shortcut for mCurrentSurface->GetPort()
+  nsATSUIToolkit mATSUIToolkit;
+  nsCOMPtr<nsISaveAsCharset> mTrans;
+  PRBool mRightToLeftText;
 
 };
 #endif /* nsUnicodeRenderingToolkit_h__ */
