@@ -443,6 +443,8 @@ function newToDoCommand()
    
 
    calendarToDo.due.setTime( dueDate );
+
+   calendarToDo.start.setTime( dueDate );
    
    var args = new Object();
    args.mode = "new";
@@ -623,38 +625,6 @@ function modifyToDoDialogResponse( calendarToDo )
 }
 
 
-/**
-*  Called when a user hovers over an element and the text for the mouse over is changed.
-*/
-
-function getPreviewText( calendarEventDisplay )
-{
-	var HolderBox = document.createElement( "vbox" );
-
-   if (calendarEventDisplay.event.title)
-   {
-      var TitleHtml = document.createElement( "description" );
-      var TitleText = document.createTextNode( "Title: "+calendarEventDisplay.event.title );
-      TitleHtml.appendChild( TitleText );
-      HolderBox.appendChild( TitleHtml );
-   }
-
-   var DateHtml = document.createElement( "description" );
-   var DateText = document.createTextNode( "Start: "+calendarEventDisplay.event.start.toString() );
-   DateHtml.appendChild( DateText );
-   HolderBox.appendChild( DateHtml );
-
-   if (calendarEventDisplay.event.description)
-   {
-      var DescriptionHtml = document.createElement( "description" );
-      var DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
-      DescriptionHtml.appendChild( DescriptionText );
-      HolderBox.appendChild( DescriptionHtml );
-   }
-
-   return ( HolderBox );
-}
-
 function alertCalendarVersion()
 {
    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'chrome://calendar/content/about.html' );
@@ -690,4 +660,137 @@ function deleteToDoCommand( event )
 function closeCalendar()
 {
    self.close();
+}
+
+
+function changeToolTipTextForToDo( event )
+{
+   var toDoItem = event.currentTarget.toDo;
+
+   var Html = document.getElementById( "savetip" );
+
+   while( Html.hasChildNodes() )
+   {
+      Html.removeChild( Html.firstChild ); 
+   }
+   
+   var HolderBox = document.createElement( "vbox" );
+
+   if (toDoItem.title)
+   {
+      var TitleHtml = document.createElement( "description" );
+      var TitleText = document.createTextNode( "Title: "+toDoItem.title );
+      TitleHtml.appendChild( TitleText );
+      HolderBox.appendChild( TitleHtml );
+   }
+
+   var DateHtml = document.createElement( "description" );
+   var startDate = new Date( toDoItem.start.getTime() );
+   var DateText = document.createTextNode( "Start Date: "+gCalendarWindow.dateFormater.getFormatedDate( startDate ) );
+   DateHtml.appendChild( DateText );
+   HolderBox.appendChild( DateHtml );
+
+   var DateHtml = document.createElement( "description" );
+   var dueDate = new Date( toDoItem.due.getTime() );
+   var DateText = document.createTextNode( "Due Date: "+gCalendarWindow.dateFormater.getFormatedDate( dueDate ) );
+   DateHtml.appendChild( DateText );
+   HolderBox.appendChild( DateHtml );
+
+   if (toDoItem.description)
+   {
+      var DescriptionHtml = document.createElement( "description" );
+      var DescriptionText = document.createTextNode( "Description: "+toDoItem.description );
+      DescriptionHtml.appendChild( DescriptionText );
+      HolderBox.appendChild( DescriptionHtml );
+   }
+   
+   Html.appendChild( HolderBox );
+}
+
+function changeToolTipTextForEvent( event )
+{
+   var thisEvent = event.currentTarget.event;
+
+   var Html = document.getElementById( "savetip" );
+
+   while( Html.hasChildNodes() )
+   {
+      Html.removeChild( Html.firstChild ); 
+   }
+   
+   var HolderBox = getPreviewText( event.currentTarget.event );
+   
+   Html.appendChild( HolderBox );
+}
+
+/**
+*  Called when a user hovers over an element and the text for the mouse over is changed.
+*/
+
+function getPreviewText( calendarEvent )
+{
+	var HolderBox = document.createElement( "vbox" );
+
+   if (calendarEvent.title)
+   {
+      var TitleHtml = document.createElement( "description" );
+      var TitleText = document.createTextNode( "Title: "+calendarEvent.title );
+      TitleHtml.appendChild( TitleText );
+      HolderBox.appendChild( TitleHtml );
+   }
+
+   var DateHtml = document.createElement( "description" );
+   var startDate = new Date( calendarEvent.start.getTime() );
+   var DateText = document.createTextNode( "Start: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+   DateHtml.appendChild( DateText );
+   HolderBox.appendChild( DateHtml );
+
+   var DateHtml = document.createElement( "description" );
+   var endDate = new Date( calendarEvent.end.getTime() );
+   var DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( endDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( endDate ) );
+   DateHtml.appendChild( DateText );
+   HolderBox.appendChild( DateHtml );
+
+   if (calendarEvent.description)
+   {
+      var DescriptionHtml = document.createElement( "description" );
+      var DescriptionText = document.createTextNode( "Description: "+calendarEvent.description );
+      DescriptionHtml.appendChild( DescriptionText );
+      HolderBox.appendChild( DescriptionHtml );
+   }
+
+   return ( HolderBox );
+}
+
+/**
+*  Called when a user hovers over an element and the text for the mouse over is changed.
+*/
+
+function getPreviewTextForRepeatingEvent( calendarEventDisplay )
+{
+	var HolderBox = document.createElement( "vbox" );
+
+   if (calendarEventDisplay.event.title)
+   {
+      var TitleHtml = document.createElement( "description" );
+      var TitleText = document.createTextNode( "Title: "+calendarEventDisplay.event.title );
+      TitleHtml.appendChild( TitleText );
+      HolderBox.appendChild( TitleHtml );
+   }
+
+   var DateHtml = document.createElement( "description" );
+   var startDate = new Date( calendarEventDisplay.displayDate.getTime() );
+   var DateText = document.createTextNode( "Start: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+   DateHtml.appendChild( DateText );
+   HolderBox.appendChild( DateHtml );
+
+   if (calendarEventDisplay.event.description)
+   {
+      var DescriptionHtml = document.createElement( "description" );
+      var DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
+      DescriptionHtml.appendChild( DescriptionText );
+      HolderBox.appendChild( DescriptionHtml );
+   }
+
+   return ( HolderBox );
 }

@@ -430,7 +430,7 @@ CalendarWindow.prototype.mouseOverInfo = function( calendarEvent, event )
       Html.removeChild( Html.firstChild ); 
    }
    
-   var HolderBox = getPreviewText( event.currentTarget.calendarEventDisplay );
+   var HolderBox = getPreviewTextForRepeatingEvent( event.currentTarget.calendarEventDisplay );
    
    Html.appendChild( HolderBox );
 }

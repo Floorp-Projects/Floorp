@@ -163,7 +163,6 @@ function loadCalendarEventDialog()
    }
 
    //file attachments;
-   
    for( var i = 0; i < gEvent.attachmentsArray.Count(); i++ )
    {
       var thisAttachment = gEvent.attachmentsArray.QueryElementAt( i, Components.interfaces.nsIMsgAttachment );
@@ -412,7 +411,6 @@ function checkEndTime()
 
       return( true );
    }
-      
 }
 
 

@@ -524,12 +524,16 @@ CalendarEventDataSource.prototype.getAllToDos = function()
 *   CalendarEvent orderToDosByDueDate.
 * 
 * NOTES
-*   Used to sort table by date
+*   Used to sort todo table by date
 */
 
 CalendarEventDataSource.prototype.orderToDosByDueDate = function( toDoA, toDoB )
 {
-    return( toDoA.due.getTime() - toDoB.due.getTime() );
+   if( ( toDoA.due.getTime() - toDoB.due.getTime() ) == 0 ) 
+   {
+      return( toDoA.start.getTime() - toDoB.start.getTime() );
+   }
+   return( toDoA.due.getTime() - toDoB.due.getTime() );
 }
 
 
@@ -537,7 +541,7 @@ CalendarEventDataSource.prototype.orderToDosByDueDate = function( toDoA, toDoB )
 *   CalendarEvent orderEventsByDisplayDate.
 * 
 * NOTES
-*   Used to sort table by date
+*   Used to sort events table by date
 */
 
 CalendarEventDataSource.prototype.orderEventsByDisplayDate = function( eventA, eventB )
@@ -553,7 +557,7 @@ CalendarEventDataSource.prototype.orderEventsByDisplayDate = function( eventA, e
 *   CalendarEvent orderRawEventsByDate.
 * 
 * NOTES
-*   Used to sort table by date
+*   Used to sort events table by date
 */
 
 CalendarEventDataSource.prototype.orderRawEventsByDate = function( eventA, eventB )

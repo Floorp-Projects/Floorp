@@ -43,6 +43,9 @@
 <!ENTITY event.new.event		"New Event">
 <!ENTITY event.new.event.accesskey "n">
 
+<!ENTITY event.new.todo		"New Task">
+<!ENTITY event.new.todo.accesskey "t">
+
 <!ENTITY event.edit.event	"Edit Event">
 <!ENTITY event.edit.event.accesskey	"e">
 

@@ -110,6 +110,7 @@
 <keyset>
   <key id="delete_key" keycode="VK_DELETE" observes="delete_command"/>
   <key id="new_event_key" key="N" modifiers="control" observes="new_command"/>
+  <key id="new_todo_key" key="M" modifiers="control" observes="new_todo_command"/>
   <key id="modify_event_key" key="E" modifiers="control" observes="modify_command"/>
   <key id="import_key" key="I" modifiers="control" observes="import_command"/>
   <key id="export_key" key="O" modifiers="control" observes="export_command"/>
@@ -161,10 +162,9 @@
 
 
 <!-- Pop up menus -->
-<tooltip id="savetip"/>
-
 <popup id="context-menu">
    <menuitem label="&calendar.context.newevent.label;" accesskey="&calendar.context.newevent.accesskey;" observes="new_command"/>
+   <menuitem label="&calendar.context.newtodo.label;" accesskey="&calendar.context.newtodo.accesskey;" observes="new_todo_command"/>
    <menuitem label="&calendar.context.modifyevent.label;" accesskey="&calendar.context.modifyevent.accesskey;" observes="modify_command" />
    <menuitem label="&calendar.context.deleteevent.label;" accesskey="&calendar.context.deleteevent.accesskey;" observes="delete_command"/>
 
@@ -239,9 +239,9 @@
                <checkbox label="&calendar.unifinder.withalarms.label;" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
                <checkbox label="&calendar.unifinder.todayandfuture.label;" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )" persist="checked"/>
             </box>
-            <listbox id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" 
+            <listbox tooltip="savetip" id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" 
                class="unifinder-tree-class" flex="1" ondragover="return( false );"/>
-            <splitter collapse="after" persist="state hidden collapsed left"
+            <splitter id="calendar-todo-splitter" collapse="after" persist="state hidden collapsed top"
                class="chromeclass-extrachrome" orient="vertical">
                <grippy/>
             </splitter>
@@ -252,7 +252,7 @@
                <box align="center">
                   <checkbox id="only-completed-checkbox" label="&calendar.unifinder.hidecompletedtodos.label;" oncommand="toDoUnifinderRefesh( event )"/>
                </box>
-               <listbox flex="1" id="unifinder-todo-listbox" seltype="single">
+               <listbox tooltip="savetip" flex="1" id="unifinder-todo-listbox" seltype="single">
                   <listhead>
                      <listheader label="&calendar.unifinder.listbox.done.label;"/>
                      <listheader label="&calendar.unifinder.listbox.title.label;"/>
@@ -263,7 +263,7 @@
                      <listcol flex="5"/>
                      <listcol flex="3"/>
                   </listcols>
-                  <listitem allowevents="true" collapsed="true" name="sample-todo-listitem" ondblclick="unifinderDoubleClickToDo( event )">
+                  <listitem allowevents="true" onmouseover="changeToolTipTextForToDo( event )" collapsed="true" name="sample-todo-listitem" ondblclick="unifinderDoubleClickToDo( event )">
                      <listcell name="checkbox-listcell">
                         <checkbox name="firstcheckbox" oncommand="checkboxClick( event )"/>
                      </listcell>
@@ -274,7 +274,7 @@
             </vbox>
          </vbox>
        
-   		<splitter id="calendar-splitter" collapse="before" persist="state hidden collapsed"
+   		<splitter id="calendar-splitter" collapse="before" persist="state hidden collapsed left"
           class="chromeclass-extrachrome sidebar-splitter" orient="horizontal">
             <grippy class="sidebar-splitter-grippy"/>
          </splitter>

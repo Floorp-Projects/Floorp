@@ -1141,3 +1141,9 @@
 {
    text-decoration        : line-through;
 }
+
+#unifinder-todo-listbox > listitem[started="true"] > listcell
+{
+   color                   : green;
+}
+

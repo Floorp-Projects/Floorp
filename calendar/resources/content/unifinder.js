@@ -412,6 +412,7 @@ function refreshEventTree( eventArray )
 
       treeItem.event = calendarEvent;
 
+      treeItem.setAttribute( "onmouseover", "changeToolTipTextForEvent( event )" );
       treeItem.setAttribute( "ondblclick" , "unifinderDoubleClickEvent(" + calendarEvent.id + ")" );
       //treeItem.setAttribute( "onclick" , "unifinderClickEvent(" + calendarEvent.id + ")" );
       

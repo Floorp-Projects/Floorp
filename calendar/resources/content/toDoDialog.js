@@ -125,6 +125,10 @@ function loadCalendarToDoDialog()
    
    setDateFieldValue( "due-date-text", dueDate );
 
+   var startDate = new Date( gToDo.start.getTime() );
+   
+   setDateFieldValue( "start-date-text", startDate );
+
    if( gToDo.completed.getTime() > 0 )
    {
       var completedDate = new Date( gToDo.completed.getTime() );
@@ -186,6 +190,15 @@ function onOKCommand()
    gToDo.due.year = dueDate.getYear()+1900;
    gToDo.due.month = dueDate.getMonth();
    gToDo.due.day = dueDate.getDate();
+   gToDo.due.hour = 23;
+   gToDo.due.minute = 59;
+   
+   var startDate = getDateTimeFieldValue( "start-date-text" );
+   gToDo.start.year = startDate.getYear()+1900;
+   gToDo.start.month = startDate.getMonth();
+   gToDo.start.day = startDate.getDate();
+   gToDo.start.hour = 0;
+   gToDo.start.minute = 0;
    
    gToDo.privateEvent = getFieldValue( "private-checkbox", "checked" );
    
@@ -263,7 +276,32 @@ function onDatePick( datepopup )
    
    datepopup.dateField.editDate = datepopup.value;
 
-   var Now = new Date();
+   checkStartAndDueDates();
+}
+
+function checkStartAndDueDates()
+{
+   var StartDate = getDateTimeFieldValue( "start-date-text" );
+
+   var DueDate = getDateTimeFieldValue( "due-date-text" );
+
+   if( DueDate.getTime() < StartDate.getTime() )
+   {
+      //show alert message, disable OK button
+      document.getElementById( "start-date-warning" ).removeAttribute( "collapsed" );
+
+      document.getElementById( "ok" ).setAttribute( "disabled", true );
+   }
+   else
+   {
+      //enable OK button
+      
+      document.getElementById( "start-date-warning" ).setAttribute( "collapsed", true );
+      
+      document.getElementById( "ok" ).removeAttribute( "disabled" );
+
+   }
+
 }
 
 

@@ -119,6 +119,17 @@
                         <textbox id="title-field"/>
                     </row>
         
+                    <!--  Start Date -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="&newtodo.startdate.label;"/>
+                        </hbox>
+                        <hbox  id="start-date-box" align="center">
+                            <textbox class="date-text-class" id="start-date-text" readonly="true" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                            <image id="start-date-button" class="event-date-button-class"         onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                        </hbox>
+                    </row>
+                    
                     <!--  Due Date -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
@@ -127,6 +138,7 @@
                         <hbox  id="due-date-box" align="center">
                             <textbox class="date-text-class" id="due-date-text" readonly="true"                 onmousedown="prepareDatePicker('due-date-text')" popup="oe-date-picker-popup" position="after_start"/>
                             <image id="start-date-button" class="event-date-button-class" onmousedown="prepareDatePicker('due-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                            <label id="start-date-warning" class="warning-text-class" value="&newtodo.starttime.warning;" collapsed="true"/>
                         </hbox>
                     </row>
                     

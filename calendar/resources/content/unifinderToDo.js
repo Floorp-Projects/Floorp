@@ -194,6 +194,16 @@ function refreshToDoTree( eventArray )
       
       treeItem.toDo = calendarToDo;
 
+      var now = new Date();
+      
+      var thisMorning = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0 );
+
+      if( calendarToDo.start.getTime() <= thisMorning.getTime() )
+      {
+         //this task should be started
+         treeItem.setAttribute( "started", "true" );
+      }
+
       var completed = calendarToDo.completed.getTime();
 
       if( completed > 0 )
@@ -210,7 +220,9 @@ function refreshToDoTree( eventArray )
 
       var now = new Date();
 
-      if( now.getTime() > dueDate.getTime() )
+      var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59 );
+
+      if( now.getTime() > tonightMidnight.getTime() )
       {
          /* for setting some css */
          treeItem.setAttribute( "overdue", "true" );

@@ -244,7 +244,14 @@ function getCalendarDataFilePath()
 		DirUtilsInstance = DirUtilsComponent.createInstance(Components.interfaces.nsIProperties);
 		nsIFile = Components.interfaces.nsIFile;
 		FilePath = DirUtilsInstance.get("ProfD", nsIFile).path; 
-		FilePath += "/tempIcal.ics";
+		var aFile = Components.classes["@mozilla.org/file/local;1"].createInstance();
+      var aLocalFile = aFile.QueryInterface(Components.interfaces.nsILocalFile);
+      if (!aLocalFile) return false;
+      
+      aLocalFile.initWithPath(FilePath);
+      aLocalFile.append( "tempIcal.ics" );
+
+      FilePath = aLocalFile.path;
 	}
 	catch(ex)
 	{
