@@ -89,12 +89,16 @@ ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS			+= nsMacCharset.cpp
 EXPORT_RESOURCE		+= maccharset.properties
 else
+ifeq ($(OS_ARCH),BeOS)
+CPPSRCS			+= nsBeOSCharset.cpp
+else
 CPPSRCS			+= nsUNIXCharset.cpp
 EXPORT_RESOURCE		+= unixcharset.properties
 # add platform charset remapping properties files here if necessary
 # (see unixcharset.sample.properties for an example file)
 # eg: if we needed a charset remap for OSARCH=Linux then add the following line:
 #EXPORT_RESOURCE		+= unixcharset.Linux.properties
+endif
 endif
 endif
 endif
