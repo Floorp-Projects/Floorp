@@ -1173,10 +1173,18 @@ dnl = use the one in the source tree (mozilla/nsprpub)
 dnl =
 dnl ========================================================
 
-AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
+MOZ_ARG_WITH_STRING(system-nspr,
+    [  --without-system-nspr   Skip system installed NSPR checks],
+    [ if test "$withval" = "no"; then
+        _NO_NSPR=1
+    fi])
+
+if test -z "$_NO_NSPR"; then
+    AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
+fi
 
 if test -z "$MOZ_NATIVE_NSPR"; then
-    AC_MSG_WARN(nspr-config not found. building local copy of NSPR)
+    AC_MSG_WARN(Building local copy of NSPR)
     NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --cflags`'
     case "$target" in
     *-*-os2_vacpp)
