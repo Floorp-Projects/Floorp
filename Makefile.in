@@ -51,7 +51,9 @@ endif
 
 DIRS	+= $(NSPRPUB_DIR)
 
-DIRS		+= dbm modules/libreg js string xpcom js/src/xpconnect
+# intl should not be in here - it's just temporary until
+# xpconnect's dependency on intl is repaired - see bug 106130
+DIRS		+= dbm modules/libreg js string xpcom intl js/src/xpconnect
 
 ifdef MOZ_OJI
 DIRS		+= js/src/liveconnect
@@ -89,7 +91,6 @@ DIRS		+= \
 		netwerk \
 		modules/mpfilelocprovider \
 		uriloader \
-		intl \
 		modules/libpref \
 		modules/libimg \
 		modules/oji \
