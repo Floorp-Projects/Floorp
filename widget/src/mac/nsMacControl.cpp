@@ -417,6 +417,9 @@ void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 		         do_GetService(kCharsetConverterManagerCID, &rv); 
 		if (NS_SUCCEEDED(rv)) {
 			rv = ccm->GetUnicodeEncoder(&fileSystemCharset, &mUnicodeEncoder);
+            if (NS_SUCCEEDED(rv)) {
+              rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
+            }
 		}
 	}
 
