@@ -44,7 +44,7 @@ class nsTableCellFrame : public nsHTMLContainerFrame, nsITableCellLayout
 public:
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // default constructor supplied by the compiler
 
