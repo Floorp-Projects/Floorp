@@ -948,12 +948,17 @@ else
 MKDEPEND_BUILTIN =
 endif
 
+ifdef COMPILER_DEPEND
+depend::
+	@echo Warning: No need to run \"$(MAKE) depend\" with \"--enable-md\". 2>&1
+else
 ifdef OBJS
 depend:: $(MKDEPEND_BUILTIN) $(MKDEPENDENCIES)
 else
 depend::
 endif
 	+$(LOOP_OVER_DIRS)
+endif
 
 dependclean::
 	rm -f $(MKDEPENDENCIES)
@@ -973,11 +978,11 @@ MDDEPEND_FILES := $(foreach obj, $(OBJS), \
 MDDEPEND_FILES := $(wildcard $(MDDEPEND_FILES))
 ifdef MDDEPEND_FILES
 # Get the list of objects to force.
-MDDEPEND_FORCE := $(shell $(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) > $(OBJDIR)/.deps/.all.pp)
+foo := `$(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) \
+        >$(OBJDIR)/.deps/.all.pp`
 -include $(OBJDIR)/.deps/.all.pp
-# (MDDEPEND_FORCE gets added to the PHONY target).
-endif
 #endif
+endif
 endif
 endif
 #############################################################################
