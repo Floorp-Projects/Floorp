@@ -47,7 +47,7 @@ function Startup()
   gSearchField = document.getElementById("searchField");
   gSearchField.focus();
 }
-
+var gCreatingNewWindow = false;
 function find()
 {
   // Build up a find URI from the search fields and open a new window
@@ -62,13 +62,12 @@ function find()
   
   // Update the root of the tree if we're using an existing search window. 
   if (!gCreatingNewWindow) 
-    bmWindow.gBookmarksShell.setRoot(searchURI);
-
+    bmWindow.document.getElementById("bookmarks-view").outlinerBody.setAttribute("ref", searchURI);
+ 
   bmWindow.focus();
   return true;
 }
 
-var gCreatingNewWindow = false;
 function findMostRecentWindow(aType, aURI, aParam)
 {
   var WM = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();

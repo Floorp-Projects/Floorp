@@ -42,17 +42,8 @@
 // tree widget, etc. 
 function Startup() 
 {
-  // Create the Bookmarks Shell
-  var bookmarksTree = document.getElementById("bookmarksTree");
-  gBookmarksShell = new BookmarksPanelTree (bookmarksTree.database);
-
-  // Set up the tree controller
-  bookmarksTree.controllers.appendController(gBookmarksShell.controller);
-
-  // Update to the last sort.
-  RefreshSort();
-  
-  bookmarksTree.focus();
+  var bookmarksView = document.getElementById("bookmarks-view");  
+  bookmarksView.focus();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +56,6 @@ function BookmarksPanelTree (aCompositeDataSource)
 { 
   // 'db' is used by the base class. 
   this.db = aCompositeDataSource;
-  this.id = "bookmarksTree";
 }
 
 BookmarksPanelTree.prototype = {
@@ -88,11 +78,7 @@ BookmarksPanelTree.prototype = {
       BookmarksUtils.addBookmarkForBrowser(contentArea.webNavigation, true);
   },
   
-  manageBookmarks: function ()
-  {
-    openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", "", "chrome,dialog=no,resizable=yes");
-  },
-  
+ 
   /////////////////////////////////////////////////////////////////////////////
   // This function only exists because we call onCommandUpdate manually in it,
   // because for some reason, the commandupdate handler on the commandupdater
@@ -107,3 +93,6 @@ BookmarksPanelTree.prototype = {
 
 };
 
+function manageBookmarks() {
+  openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", "", "chrome,dialog=no,resizable=yes");
+}

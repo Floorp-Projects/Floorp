@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>  
 
 <!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
 <!--
@@ -29,6 +29,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksWindow.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/content/bookmarks/bookmarks.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -54,10 +55,10 @@
   <!-- The order of loading of these script files is IMPORTANT -->
 
   <!-- Shared Libraries -->
-  <script type="application/x-javascript" src="chrome://global/content/treePopups.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"></script>
+
+  <!-- XXX - This should SO become an XBL widget -->
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
   
   <!-- Shared Bookmarks Utility Library -->
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
@@ -67,8 +68,6 @@
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
 
   <!-- Bookmarks Window Drag & Drop -->
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
@@ -78,21 +77,22 @@
   <commands id="commands">
     <commandset id="CommandUpdate_Bookmarks"
                 commandupdater="true"
-                events="focus,tree-select"
-                oncommandupdate="BookmarksTree.prototype.controller.onCommandUpdate()">
+                events="focus,outliner-select"
+                oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
     </commandset>                
 
     <commandset id="tasksCommands"/>
     <commandset id="bookmarksItems"/>
   
+
     <!-- File Menu -->
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
     <command id="cmd_close" oncommand="close()"/>
-    <command id="Browser:SendLink" oncommand="sendBookmarksLink();"/>
     <command id="cmd_quit"/>
     <!-- Edit Menu -->
     <command id="cmd_undo"/>
+    <command id="Browser:SendLink" oncommand="sendBookmarksLink();"/>
   </commands>
 
   <stringbundleset id="stringbundleset"/>
@@ -120,10 +120,10 @@
 
     <key id="bm_key_find"  
          key="&edit.find.keybinding;"  
-         command="cmd_find" modifiers="accel"/>
+         command="cmd_bm_find" modifiers="accel"/>
     <key id="bm_key_properties" 
          key="&edit.properties.keybinding;"  
-         command="cmd_properties" modifiers="accel"/>
+         command="cmd_bm_properties" modifiers="accel"/>
   </keyset>
   
   <toolbox id="bookmarks-toolbox">
@@ -132,24 +132,24 @@
         <menupopup id="menu_FilePopup" onpopupshowing="updateSendLinkItem();">
           <menuitem label="&command.newBookmark.label;" 
                     accesskey="&command.newBookmark.accesskey;"
-                    observes="cmd_newbookmark"/>
+                    observes="cmd_bm_newbookmark"/>
           <menuitem label="&command.newFolder.label;" 
                     accesskey="&command.newFolder.accesskey;"
-                    observes="cmd_newfolder"/>
+                    observes="cmd_bm_newfolder"/>
           <menuitem label="&command.newSeparator.label;"
                     accesskey="&command.newSeparator.accesskey;"
-                    observes="cmd_newseparator"/>
-				  <menuseparator/>
+                    observes="cmd_bm_newseparator"/>
+          <menuseparator/>
           <menuitem id="menu_close"/>
           <menuseparator/>
           <menuitem label="&menuitem.import.label;"
                     accesskey="&menuitem.import.accesskey;"
-                    observes="cmd_import"/>
+                    observes="cmd_bm_import"/>
           <menuitem label="&menuitem.export.label;"
                     accesskey="&menuitem.export.accesskey;"
-                    observes="cmd_export"/>
+                    observes="cmd_bm_export"/>
           <menuseparator/>
-          <menuitem observes="cmd_properties" key="bm_key_properties" 
+          <menuitem observes="cmd_bm_properties" key="bm_key_properties" 
                     label="&command.properties.label;" 
                     accesskey="&command.properties.accesskey;" />
           <menuitem id="menu_sendPage" hidden="true"/>
@@ -161,26 +161,26 @@
           <menuseparator/>
           <menuitem id="menu_bm_cut"    
                     label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" 
-					key="key_cut" command="cmd_bm_cut"/>
+          key="key_cut" command="cmd_bm_cut"/>
           <menuitem id="menu_bm_copy"
                     label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"
                     key="key_copy" command="cmd_bm_copy"/>
-          <menuitem id="menu_bm_paste"	
-                    label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;"		  
+          <menuitem id="menu_bm_paste"  
+                    label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;"     
                     key="key_paste" command="cmd_bm_paste"/>
-          <menuitem id="menu_bm_delete"	
-                    label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;"		  
+          <menuitem id="menu_bm_delete" 
+                    label="&deleteCmd.label;" accesskey="&deleteCmd.label;"     
                     key="key_bm_delete" command="cmd_bm_delete"/>
           <menuseparator/>
           <menuitem id="menu_bm_selectAll" 
-		            label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
+                label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
                     key="key_selectAll" command="cmd_bm_selectAll"/>
           <menuseparator/>
           <menuitem label="&command.fileBookmark.label;"
                     accesskey="&command.fileBookmark.accesskey;"
                     command="cmd_bm_fileBookmark"/>
           <menuseparator/>
-          <menuitem command="cmd_find" key="bm_key_find"
+          <menuitem command="cmd_bm_find" key="bm_key_find"
                     label="&menuitem.find.label;" 
                     accesskey="&menuitem.find.accesskey;"/>
         </menupopup>
@@ -194,36 +194,14 @@
                     oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar');"
                     persist="checked"/>
           <menuseparator/>
-          <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
-                    label="&menuitem.view.unsorted.label;" 
-                    accesskey="&menuitem.view.unsorted.accesskey;"
-                    oncommand="return SetSortDirection('natural');"/>
-          <menuseparator id="fill_after_this_node" collapsed="true" />
-          <menuseparator id="fill_before_this_node"/>
-          <menuitem type="radio" name="sort_direction" id="sort_ascending"
-                    label="&menuitem.view.ascending.label;" 
-                    accesskey="&menuitem.view.ascending.accesskey;"
-                    oncommand="return SetSortDirection('ascending');"/>
-          <menuitem type="radio" name="sort_direction" id="sort_descending"
-                    label="&menuitem.view.descending.label;" 
-                    accesskey="&menuitem.view.descending.accesskey;"
-                    oncommand="return SetSortDirection('descending');"/>
-          <menuseparator/>
-          <menu label="&menuitem.view.show_columns.label;" 
-                accesskey="&menuitem.view.show_columns.accesskey;">
-            <menupopup onpopupshowing="BuildTreePopup(document.getElementById('theColumns'), 
-                                                document.getElementById('headRow'), this,
-                                                document.getElementById('popupCell'))"/>
-          </menu>
-          <menuseparator/>
           <menuitem label="&menuitem.newbookmarkfolder.label;" 
-                    observes="cmd_setnewbookmarkfolder"
+                    command="cmd_bm_setnewbookmarkfolder"
                     accesskey="&menuitem.newbookmarkfolder.accesskey;"/>
           <menuitem label="&menuitem.newinternetsearchfolder.label;"
-                    observes="cmd_setnewsearchfolder"
+                    command="cmd_bm_setnewsearchfolder"
                     accesskey="&menuitem.newinternetsearchfolder.accesskey;"/>
           <menuitem label="&menuitem.personaltoolbarfolder.label;"    
-                    observes="cmd_setpersonaltoolbarfolder"
+                    command="cmd_bm_setpersonaltoolbarfolder"
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
         </menupopup>
       </menu>
@@ -232,178 +210,23 @@
     </menubar>
 
     <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
-    <toolbar class="chromeclass-toolbar" id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
       <toolbarbutton id="newfolder" label="&command.newFolder.label;" 
-              command="cmd_newfolder"/>
+                     command="cmd_bm_newfolder"/>
       <toolbarbutton id="newseparator" label="&command.newSeparator.label;" 
-              command="cmd_newseparator"/>
+                     command="cmd_bm_newseparator"/>
       <toolbarseparator/>
       <toolbarbutton id="fileBookmark" label="&command.fileBookmark.label;"
-              command="cmd_bm_fileBookmark"/>
+                     command="cmd_bm_fileBookmark"/>
       <toolbarseparator/>
       <toolbarbutton id="properties" label="&command.properties.label;"
-              command="cmd_properties"/>
+                     command="cmd_bm_properties"/>
       <toolbarbutton id="rename" label="&command.rename.label;"
-              command="cmd_rename"/>
+                     command="cmd_bm_rename"/>
       <toolbarbutton id="delete" label="&command.delete.label;"
-              command="cmd_bm_delete"/>
+                     command="cmd_bm_delete"/>
     </toolbar>
   </toolbox>
   
-  <tree id="bookmarksTree" class="bookmarks-window-tree" ref="NC:BookmarksRoot"
-        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:localsearch"
-        type="http://home.netscape.com/NC-rdf#Folder"
-        multiple="true" flags="dont-test-empty"
-        ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
-        ondraggesture="nsDragAndDrop.startDrag(event, bookmarksDNDObserver);"
-        ondragdrop="nsDragAndDrop.drop(event, bookmarksDNDObserver);"
-        onclick="gBookmarksShell.treeClicked(event);"
-        onselect="gBookmarksShell.treeSelect(event);"
-        onkeydown="gBookmarksShell.treeKeyPress(event);"
-        style="height:0px" flex="2">
-
-    <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-        <treechildren>
-          <treeitem uri="rdf:*"
-                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <treerow>
-              <treecell align="center">
-                <treeindentation/>
-                <separator class="groove" flex="1"/>
-              </treecell>
-              <treecell align="center"><separator class="groove" flex="1"/></treecell>
-              <treecell align="center"><separator class="groove" flex="1"/></treecell>
-              <treecell align="center"><separator class="groove" flex="1"/></treecell>
-              <treecell align="center"><separator class="groove" flex="1"/></treecell>
-              <treecell align="center"><separator class="groove" flex="1"/></treecell>
-              <treecell align="center"><separator class="groove" flex="1"/></treecell>
-            </treerow>
-          </treeitem>     
-        </treechildren>
-      </rule>
-  
-      <rule>
-        <treechildren>
-          <treeitem uri="rdf:*" persist="open" class="bookmark-item"
-                    status="rdf:http://home.netscape.com/WEB-rdf#status"
-                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                    loading="rdf:http://home.netscape.com/NC-rdf#loading">
-            <treerow>
-              <treecell class="treecell-indent" editable="true" 
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                        validate="never"
-                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                        loading="rdf:http://home.netscape.com/NC-rdf#loading" />
-              <treecell crop="center" class="treecell-editable" editable="true"
-                        label="rdf:http://home.netscape.com/NC-rdf#URL"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"
-                        class="treecell-editable" editable="true"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#Description"
-                        class="treecell-editable" editable="true"/>
-              <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
-              <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
-            </treerow>
-          </treeitem>
-        </treechildren>
-      </rule>
-    </template>
-
-    <treecolgroup id="theColumns">
-      <treecol id="Name"
-               sortSeparators="true" width="4*" flex="4"
-               persist="hidden width sortActive sortDirection" 
-               resource="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="URL"
-               sortSeparators="true" width="4*" flex="4"
-               persist="hidden width sortActive sortDirection" 
-               resource="http://home.netscape.com/NC-rdf#URL"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="ShortcutURL" hidden="true"
-               sortSeparators="true" width="1*" flex="1"
-               persist="hidden width sortActive sortDirection" 
-               resource="http://home.netscape.com/NC-rdf#ShortcutURL"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="Description" hidden="true"
-               sortSeparators="true" width="1*" flex="1"
-               persist="hidden width sortActive sortDirection" 
-               resource="http://home.netscape.com/NC-rdf#Description"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="LastVisitDate" hidden="true"
-               sortSeparators="true" width="1*" flex="1"
-               persist="hidden width sortActive sortDirection" 
-               resource="http://home.netscape.com/WEB-rdf#LastVisitDate"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="BookmarkAddDate" hidden="true"
-               sortSeparators="true" width="1*" flex="1"
-               persist="hidden width sortActive sortDirection" 
-               resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="LastModifiedDate" hidden="true"
-               sortSeparators="true" width="1*" flex="1"
-               persist="hidden width sortActive sortDirection" 
-               resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
-    </treecolgroup>
-    
-    <treehead>
-      <treerow id="headRow">
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&tree.header.name.label;"
-                  onclick="return TriStateColumnSort('Name');"
-                  observes="Name" />
-        <treecell class="treecell-header sortDirectionIndicator" 
-                  label="&tree.header.url.label;"
-                  onclick="return TriStateColumnSort('URL');"
-                  observes="URL" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&tree.header.shortcut.label;"
-                  onclick="return TriStateColumnSort('ShortcutURL');"
-                  observes="ShortcutURL" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&tree.header.description.label;" 
-                  onclick="return TriStateColumnSort('Description');"
-                  observes="Description" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&tree.header.lastvisit.label;"
-                  onclick="return TriStateColumnSort('LastVisitDate');"
-                  observes="LastVisitDate" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&tree.header.addedon.label;"
-                  onclick="return TriStateColumnSort('BookmarkAddDate');"
-                  observes="BookmarkAddDate" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&tree.header.lastmod.label;" 
-                  onclick="return TriStateColumnSort('LastModifiedDate');" 
-                  observes="LastModifiedDate" />
-        <treecell class="treecell-header" allowevents="true" id="popupCell">
-          <menu class="treecell-popupcell-menu" align="center" pack="center">
-            <menupopup popupanchor="bottomright" popupalign="topright"
-                      onpopupshowing="BuildTreePopup(document.getElementById('theColumns'), 
-                                               document.getElementById('headRow'), this,
-                                               document.getElementById('popupCell'))"/>
-          </menu>
-        </treecell>
-      </treerow>
-    </treehead>
-
-    <treechildren flex="1" id="treechildren-bookmarks" context="bmContext"
-                  onclick="gBookmarksShell.treeOpen(event);"/>
-  </tree>
-    
-  <statusbar class="chromeclass-status" id="status-bar">
-    <statusbarpanel id="statusbar-text" flex="1"/>
-  </statusbar>
-
+  <bookmarks-outliner id="bookmarks-view" flex="1"/>
 </window>
-
 

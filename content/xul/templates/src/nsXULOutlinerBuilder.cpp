@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
  *   Ben Goodger <ben@netscape.com>
+ *   Jan Varga <varga@utcru.sk>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -274,7 +275,15 @@ protected:
      * The builder observers.
      */
     nsCOMPtr<nsISupportsArray> mObservers;
+    
+    // pseudo-constants
+    static PRInt32 gRefCnt;
+    static nsIRDFResource* kRDF_type;
+    static nsIRDFResource* kNC_BookmarkSeparator;
 };
+PRInt32         nsXULOutlinerBuilder::gRefCnt = 0;
+nsIRDFResource* nsXULOutlinerBuilder::kRDF_type;
+nsIRDFResource* nsXULOutlinerBuilder::kNC_BookmarkSeparator;
 
 //----------------------------------------------------------------------
 
@@ -314,6 +323,14 @@ nsXULOutlinerBuilder::nsXULOutlinerBuilder()
 nsresult
 nsXULOutlinerBuilder::Init()
 {
+    nsresult rv = nsXULTemplateBuilder::Init();
+    if (NS_FAILED(rv)) return rv;
+
+    if (gRefCnt++ == 0) {
+        gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
+        gRDFService->GetResource(NC_NAMESPACE_URI "BookmarkSeparator", &kNC_BookmarkSeparator);
+    }
+
     // Try to acquire a collation object for sorting
     nsCOMPtr<nsILocaleService> ls = do_GetService(NS_LOCALESERVICE_CONTRACTID);
     if (ls) {
@@ -329,12 +346,14 @@ nsXULOutlinerBuilder::Init()
                 cfact->CreateCollation(locale, getter_AddRefs(mCollation));
         }
     }
-
-    return nsXULTemplateBuilder::Init();
 }
 
 nsXULOutlinerBuilder::~nsXULOutlinerBuilder()
 {
+    if (--gRefCnt == 0) {
+        NS_IF_RELEASE(kRDF_type);
+        NS_IF_RELEASE(kNC_BookmarkSeparator);
+    }
 }
 
 //----------------------------------------------------------------------
@@ -527,7 +546,9 @@ nsXULOutlinerBuilder::IsSeparator(PRInt32 aIndex, PRBool* aResult)
     if (aIndex < 0 || aIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
 
-    *aResult = PR_FALSE;
+    nsIRDFResource* resource = GetResourceFor(aIndex);
+    mDB->HasAssertion(resource, kRDF_type, kNC_BookmarkSeparator, PR_TRUE, aResult);
+
     return NS_OK;
 }
 

@@ -25,6 +25,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksWindow.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/content/bookmarks/bookmarks.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -39,21 +40,15 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup();">
 
-  <!-- Generic Utilities -->
-  <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
   <!-- XXX - would like to cut this dependency out -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 
   <!-- Bookmarks Shell -->
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksPanel.js"/>
 
   <!-- Drag and Drop -->
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
@@ -69,86 +64,22 @@
   <commands id="commands">
     <commandset id="CommandUpdate_Bookmarks"
                 commandupdater="true"
-                events="click,focus,tree-select"
-                oncommandupdate="BookmarksTree.prototype.controller.onCommandUpdate()">
+                events="click,focus"
+                oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
     </commandset>                
     <commandset id="bookmarksItems"/>
   </commands>
   
   <hbox id="panel-bar" class="toolbar">
     <toolbarbutton id="btnAddBookmark" label="&command.addBookmark.label;"
-            oncommand="gBookmarksShell.addBookmark();"/>
+            oncommand="document.getElementById('bookmarks-view').addBookmark();"/>
     <toolbarbutton id="btnManageBookmarks" label="&command.manageBookmarks.label;"
-            oncommand="gBookmarksShell.manageBookmarks();"/>
+            oncommand="manageBookmarks();"/>
     <spacer flex="1"/>
     <toolbarseparator/>
     <toolbarbutton id="btnFindBookmarks" label="&command.findBookmarks.label;"
-            oncommand="gBookmarksShell.findInBookmarks();"/>
+            oncommand="document.getElementById('bookmarks-view').openFindDialog();"/>
   </hbox>
   
-  <tree id="bookmarksTree" context="bmContext" ref="NC:BookmarksRoot" class="sidebarTree"
-        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
-        flags="dont-test-empty"
-        type="http://home.netscape.com/NC-rdf#Folder"
-        ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
-        ondraggesture="nsDragAndDrop.startDrag(event, bookmarksDNDObserver);"
-        ondragdrop="nsDragAndDrop.drop(event, bookmarksDNDObserver);"
-        onclick="gBookmarksShell.hlClick(event);"
-        style="height:0px" flex="1">
-
-    <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-        <treechildren>
-          <treeitem uri="rdf:*"
-                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <treerow>
-              <treecell align="center">
-                <treeindentation/>
-                <separator class="groove" flex="1"/>
-              </treecell>
-            </treerow>
-          </treeitem>     
-        </treechildren>
-      </rule>
-  
-      <rule>
-        <treechildren>
-          <treeitem uri="rdf:*" persist="open" class="bookmark-item"
-                    status="rdf:http://home.netscape.com/WEB-rdf#status"
-                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                    loading="rdf:http://home.netscape.com/NC-rdf#loading">
-            <treerow>
-              <treecell class="treecell-indent treecell-editable"
-                        editable="true" label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                        validate="never"
-                        web:status="rdf:http://home.netscape.com/WEB-rdf#status"
-                        rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                        loading="rdf:http://home.netscape.com/NC-rdf#loading" />
-            </treerow>
-          </treeitem>
-        </treechildren>
-      </rule>
-    </template>
-
-    <treecolgroup id="theColumns">
-      <treecol id="Name"
-               sortSeparators="true" width="4*" flex="4"
-               persist="hidden width sortActive sortDirection" 
-               resource="http://home.netscape.com/NC-rdf#Name"/>
-    </treecolgroup>
-    
-    <treehead>
-      <treerow id="headRow">
-        <treecell class="treecell-header sortDirectionIndicator treecell-header-sidebarpanel"
-                  label="&tree.header.name.label;"
-                  onclick="return TriStateColumnSort('Name');"
-                  observes="Name" />
-      </treerow>
-    </treehead>
-
-    <treechildren flex="1" id="treechildren-bookmarks" 
-                  onclick="gBookmarksShell.treeOpen(event);"/>
-  </tree>
-
+  <bookmarks-outliner id="bookmarks-view" class="single-name" flex="1"/>
 </page>
