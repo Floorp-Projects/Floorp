@@ -27,6 +27,8 @@ public:
     //  Whether or not we've read and set up the prefs.
     //  Can't do this until JS and PREFLIB is ready.
     void Initialize();
+	// Can't do _this_ until RDF is ready
+	void InitializeToRDF();
 
 	// Call this when the system colors change
 	void	SysColorChange();

@@ -123,7 +123,6 @@ public:
 	virtual BOOL NeedsUpdate();
 
 protected:
-	virtual void DrawPicturesMode(HDC hDC, CRect rect);
 	virtual void DrawPicturesAndTextMode(HDC hDC, CRect rect);
     virtual BOOL CreateRightMouseMenu(void);
 	virtual CWnd* GetMenuParent(void);
@@ -236,6 +235,16 @@ private:
 	static int m_nMaxToolbarButtonChars;
 	
 public:
+
+	// toolbar style descriptors for translating between our superclass' idea of style
+	// and HT's idea, an intersection occupied by this class
+	// (see HTDescriptorFromStyle()).
+	enum StyleType {
+		nPicAndTextStyle = 0,
+		nPicStyle,
+		nTextStyle
+	};
+
 	CRDFToolbar(HT_View theView, int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, int nPicturesHeight,
 				 int nTextHeight);
 	~CRDFToolbar();
@@ -264,6 +273,7 @@ public:
     void WidthChanged(int width);  // Inherited from toolbar.  Called when width changes, e.g. window resize or animation placed on toolbar.
 
 	void FillInToolbar(); // Called to create and place the buttons on the toolbar
+	int GetDisplayMode(void);
 
 	HT_View GetHTView() { return m_ToolbarView; }  // Returns the HT-View for this toolbar.
 	void SetHTView(HT_View v) { m_ToolbarView = v; }
@@ -303,6 +313,14 @@ public:
 	void LoadComplete(HT_Resource r) { Invalidate(); }
 
 	void ChangeButtonSizes(void); // Overridden to prevent separators and url bars from changing size.
+
+	virtual void SetToolbarStyle(int nToolbarStyle);
+
+	// returns the HT string descriptor corresponding to the toolbar style.
+	static const char * HTDescriptorFromStyle(int style);
+	// returns the toolbar style corresponding to the HT string descriptor.
+	// returns < 0 if no corresponding style is found
+	static int StyleFromHTDescriptor(const char *descriptor);
 
 protected:
     // Helper function used in conjunction with LayoutButtons

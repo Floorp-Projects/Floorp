@@ -20,12 +20,17 @@
 #include "prefinfo.h"
 #include "prefapi.h"
 #include "edt.h"
+#include "htrdf.h"
 #include "prefs.h"
+#include "usertlbr.h"
 #ifdef MOZ_OFFLINE
 #include "statbar.h"
 #endif //MOZ_OFFLINE
 
 extern void wfe_ReloadAllWindows();
+
+// new ht stuff
+extern "C" RDF_NCVocab gNavCenter;
 
 int PR_CALLBACK prefWatcher(const char *pPrefName, void *pData)
 {
@@ -119,13 +124,21 @@ int PR_CALLBACK SetToolbarButtonStyle(const char *newPref, void *data)
 	PREF_GetIntPref("browser.chrome.button_style",&prefInt);
 	theApp.m_pToolbarStyle = CASTINT(prefInt);
 
+	// first, tell ht about it
+	XP_ASSERT(theApp.m_pToolbarStyle >= 0 && theApp.m_pToolbarStyle < 3);
+
+	HT_SetNodeData(HT_TopNode(HT_GetSelectedView(HT_GetTemplate(ht_template_chrome))),
+		gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING,
+		(void *)CRDFToolbar::HTDescriptorFromStyle(theApp.m_pToolbarStyle));
+
+	// tell the individual toolbars to update themselves
 	CGenericFrame *pGenFrame;
 	for(pGenFrame = theApp.m_pFrameList; pGenFrame; pGenFrame = pGenFrame->m_pNext) {
 		LPNSTOOLBAR pIToolBar = NULL;
 		pGenFrame->GetChrome()->QueryInterface( IID_INSToolBar, (LPVOID *) &pIToolBar );
 		if (pIToolBar) {
-	       pIToolBar->SetToolbarStyle(theApp.m_pToolbarStyle);
-		   pIToolBar->Release();
+			pIToolBar->SetToolbarStyle(theApp.m_pToolbarStyle);
+			pIToolBar->Release();
 		}
 		pGenFrame->GetChrome()->SetToolbarStyle(theApp.m_pToolbarStyle);
     }
@@ -133,7 +146,7 @@ int PR_CALLBACK SetToolbarButtonStyle(const char *newPref, void *data)
 #ifdef MOZ_TASKBAR
 	theApp.GetTaskBarMgr().SetTaskBarStyle(theApp.m_pToolbarStyle);
 #endif /* MOZ_TASKBAR */
-	
+
 	return PREF_NOERROR;
 }
 
@@ -248,10 +261,19 @@ void CPrefInfo::Initialize()
  	PREF_GetIntPref("browser.chrome.button_style",&prefInt);
 	theApp.m_pToolbarStyle = CASTINT(prefInt);
 	PREF_RegisterCallback("browser.chrome.button_style", SetToolbarButtonStyle, NULL);
-
+	
 #ifdef MOZ_OFFLINE
 	//Online state
 	PREF_RegisterCallback("network.online", HandleOnlineStateChange, NULL);
 #endif //MOZ_OFFLINE
 
+}
+
+void CPrefInfo::InitializeToRDF()
+{
+	// tell ht about the button style preference
+	XP_ASSERT(theApp.m_pToolbarStyle >= 0 && theApp.m_pToolbarStyle < 3);
+	HT_SetNodeData(HT_TopNode(HT_GetSelectedView(HT_GetTemplate(ht_template_chrome))),
+		gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING,
+		(void *) CRDFToolbar::HTDescriptorFromStyle(theApp.m_pToolbarStyle));
 }

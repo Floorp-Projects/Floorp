@@ -324,27 +324,6 @@ void CRDFToolbarButton::DrawPicturesAndTextMode(HDC hDC, CRect rect)
 	DrawBitmapOnSide(hDC, rect);
 }
 
-void CRDFToolbarButton::DrawPicturesMode(HDC hDC, CRect rect)
-{
-	if (foundOnRDFToolbar())
-	{
-		CRDFToolbar* theToolbar = (CRDFToolbar*)GetParent();
-		void* data;
-		HT_GetTemplateData(HT_TopNode(theToolbar->GetHTView()), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
-		if (data)
-		{
-			CString position((char*)data);
-			if (position == "top")
-			{
-				DrawBitmapOnTop(hDC, rect);
-				return;
-			}
-		}
-	}
-
-	DrawBitmapOnSide(hDC, rect);
-}
-
 void CRDFToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString strTxt)
 {
 	if (foundOnRDFToolbar())
@@ -379,7 +358,7 @@ void CRDFToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CStr
 
 CSize CRDFToolbarButton::GetButtonSizeFromChars(CString s, int c)
 {
-    if(m_nToolbarStyle != TB_TEXT)
+    if(m_nToolbarStyle == TB_PICTURESANDTEXT)
 	{
 		if (foundOnRDFToolbar())
 		{
@@ -395,10 +374,12 @@ CSize CRDFToolbarButton::GetButtonSizeFromChars(CString s, int c)
 				}
 			}
 		}
-		return(GetBitmapOnSideSize(s, c));
+		return GetBitmapOnSideSize(s, c);
 	}
-	else
-		return(GetTextOnlySize(s, c));
+	else if(m_nToolbarStyle == TB_PICTURES)
+		return GetBitmapOnlySize();
+	else // m_nToolbarStyle == TB_TEXT
+		return GetTextOnlySize(s, c);
 }
 
 void CRDFToolbarButton::GetPicturesAndTextModeTextRect(CRect &rect)
@@ -1451,7 +1432,15 @@ CRDFToolbar::CRDFToolbar(HT_View htView, int nMaxButtons, int nToolbarStyle, int
 
 CRDFToolbar* CRDFToolbar::CreateUserToolbar(HT_View theView, CWnd* pParent)
 {
-	CRDFToolbar* pToolbar = new CRDFToolbar(theView, MAX_TOOLBAR_BUTTONS, theApp.m_pToolbarStyle, 43, 27, 27);
+	// fetch the RDF toolbar style property
+	char *data;
+	HT_GetTemplateData(HT_TopNode(theView), gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING,
+				(void **)&data);
+	int style = StyleFromHTDescriptor(data);
+	if (style < 0)
+		style = theApp.m_pToolbarStyle;
+
+	CRDFToolbar* pToolbar = new CRDFToolbar(theView, MAX_TOOLBAR_BUTTONS, style, 43, 27, 27);
 
 	if (pToolbar->Create(pParent))
 	{
@@ -1520,6 +1509,16 @@ void CRDFToolbar::FillInToolbar()
 	LayoutButtons(-1);
 }
 
+int CRDFToolbar::GetDisplayMode(void)
+{
+	char		*data;
+	int			style;
+	HT_Resource	top = HT_TopNode(GetHTView());
+	HT_GetTemplateData(top, gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING, (void **)&data);
+	style = data ? StyleFromHTDescriptor(data) : -1;
+	return style >= 0 ? style : theApp.m_pToolbarStyle;
+}
+
 void CRDFToolbar::AddHTButton(HT_Resource item)
 {
 	BOOKMARKITEM bookmark;
@@ -1549,7 +1548,7 @@ void CRDFToolbar::AddHTButton(HT_Resource item)
 	}
 	else pButton = new CRDFToolbarButton;
 
-	pButton->Create(this, theApp.m_pToolbarStyle, CSize(60,42), CSize(85, 25), csAmpersandString,
+	pButton->Create(this, GetDisplayMode(), CSize(60,42), CSize(85, 25), csAmpersandString,
 					tooltipText, statusBarText, CSize(23,17), 
 					m_nMaxToolbarButtonChars, m_nMinToolbarButtonChars, bookmark,
 					item, (HT_IsContainer(item) ? TB_HAS_DRAGABLE_MENU | TB_HAS_IMMEDIATE_MENU : 0));
@@ -1624,6 +1623,12 @@ void CRDFToolbar::ChangeButtonSizes(void)
 		}
 	}
 	HT_DeleteCursor(cursor);
+}
+
+/* RDF toolbars get their style info from RDF.  App preference settings
+   make their way into RDF elsewhere. */
+void CRDFToolbar::SetToolbarStyle(int nToolbarStyle) {
+	CNSToolbar2::SetToolbarStyle(GetDisplayMode());
 }
 
 int CRDFToolbar::GetHeight(void)
@@ -2348,6 +2353,26 @@ BOOL CRDFToolbar::OnCommand( WPARAM wParam, LPARAM lParam )
 		return TRUE;
 	}
 	return((BOOL)GetParentFrame()->SendMessage(WM_COMMAND, wParam, lParam));
+}
+
+static char *htButtonStyleProperties[] = {
+	"picturesAndText", "pictures", "text"
+};
+
+const char * CRDFToolbar::HTDescriptorFromStyle(int style)
+{
+	XP_ASSERT(style == nPicAndTextStyle || style == nPicStyle || style == nTextStyle);
+	return htButtonStyleProperties[style];
+}
+
+int CRDFToolbar::StyleFromHTDescriptor(const char *descriptor)
+{
+	int	ctr;
+	for (ctr = nPicAndTextStyle; ctr <= nTextStyle; ctr++)
+		if (strcmp(descriptor, htButtonStyleProperties[ctr]) == 0)
+			return ctr;
+	XP_ASSERT(0);
+	return -1;
 }
 
 // ==========================================================

@@ -1490,6 +1490,9 @@ BOOL CNetscapeApp::InitInstance()
 		PREF_SetCharPref("browser.bookmark_location",msg);
 	}
 
+	// finish pref initialization, now that RDF is up
+    prefInfo.InitializeToRDF();
+
 #ifdef MOZ_OFFLINE
 	m_bSynchronizingExit = FALSE;
 	m_bSynchronizing = FALSE;

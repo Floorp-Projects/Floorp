@@ -119,7 +119,7 @@ public:
 	// Sets each buttons bitmap to be nWidth by nHeight;
 	void SetBitmapSize(int nWidth, int nHeight);
 
-	void SetToolbarStyle(int nToolbarStyle);
+	virtual void SetToolbarStyle(int nToolbarStyle);
 	BOOL GetToolbarStyle(void) {return m_nToolbarStyle;}
 	void LayoutButtons(void);
     virtual void LayoutButtons(int nStartIndex);
