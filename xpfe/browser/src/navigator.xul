@@ -177,6 +177,11 @@
       <menuitem name="Close" onclick=""/>
       <menuitem name="Exit" onclick="BrowserExit();"/>
     </menu>
+    <menu name="Edit">
+      <menuitem name="Cut" onclick=""/>
+      <menuitem name="Copy" onclick=""/>
+      <menuitem name="Paste" onclick=""/>
+    </menu>
     <menu name="View">
       <menuitem name="Reload" onclick="BrowserReload();"/>
     </menu>
