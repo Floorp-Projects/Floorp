@@ -88,10 +88,10 @@ Rights Reserved.
 <!-- View Menu -->
 <!-- LOCALIZATION NOTE (showSidebarMenu) : Do not translate below line. -->
 <!ENTITY showSidebarMenu.label				".SideBar">
-<!ENTITY showMessengerToolbarCmd.label		"Show Mail Toolbar">
+<!ENTITY showMessengerToolbarCmd.label		"Mail Toolbar">
 <!-- LOCALIZATION NOTE showMessengerToolbarCmd.accesskey	: DONT_TRANSLATE -->
 <!ENTITY showMessengerToolbarCmd.accesskey	"o">
-<!ENTITY showLocationToolbarCmd.label		".Show Location Toolbar">
+<!ENTITY showLocationToolbarCmd.label		".Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey	"l">
 <!ENTITY showMessageCmd.label				"Message">  
 <!ENTITY sortMenu.label "Sort"> 

@@ -53,7 +53,7 @@ Rights Reserved.
 <!ENTITY editCardCmd.accesskey				"e">  
 
 <!-- View Menu -->
-<!ENTITY showAbToolbarCmd.label				"Show Address Book Toolbar">  
+<!ENTITY showAbToolbarCmd.label				"Address Book Toolbar">  
 <!-- LOCALIZATION NOTE (showAbToolbarCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY showAbToolbarCmd.accesskey			"o">  
 <!ENTITY showCardPane.label					".Card Pane">  
