@@ -930,7 +930,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   saltedTempLeafName.Append(mTempFileExtension);
 
   mTempFile->Append(saltedTempLeafName.get()); // make this file unique!!!
-  mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
+  mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
 
   NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
   nsCOMPtr<nsIFileTransportService> fts = 
@@ -938,7 +938,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsITransport> fileTransport;
-  rv = fts->CreateTransport(mTempFile, PR_WRONLY | PR_CREATE_FILE, 0664, getter_AddRefs(fileTransport));
+  rv = fts->CreateTransport(mTempFile, PR_WRONLY | PR_CREATE_FILE, 0600, getter_AddRefs(fileTransport));
   if (NS_FAILED(rv)) return rv;
 
   rv = fileTransport->OpenOutputStream(0, -1, 0, getter_AddRefs(mOutStream));  
@@ -1091,7 +1091,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
       // Make sure the suggested name is unique since in this case we don't
       // have a file name that was guaranteed to be unique by going through
       // the File Save dialog
-      rv = mFinalFileDestination->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
+      rv = mFinalFileDestination->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
       if (NS_SUCCEEDED(rv))
       {
         // Source and dest dirs should be == so this should just do a rename
