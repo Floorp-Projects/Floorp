@@ -340,9 +340,9 @@
 
         <p>
           <h4>Class:</h4>
-            Steps where we only care about the boolean value.
+            Unpredicated steps where we only care about the boolean value.
           <h4>Example:</h4>
-            foo[processing-instruction()]
+            foo[<u>processing-instruction()</u>]
           <h4>What we do today:</h4>
             Evaluate the step and create a nodeset. Then get the bool-value of
             the nodeset by checking if the nodeset contain any nodes.
@@ -353,6 +353,27 @@
             It might not be worth implementing all axes unless we can reuse
             code from the normal Step-code. This could also be applied to
             <code>PathExpr</code>s by getting the boolvalue of the last step.
+        </p>
+
+        <p>
+          <h4>Class:</h4>
+            Unpredicated steps where we only care about the string-value.
+          <h4>Example:</h4>
+            starts-with(<u>processing-instruction()</u>, 'hello')
+          <h4>What we do today:</h4>
+            Evaluate the step and create a nodeset. Then get the string-value of
+            the nodeset by getting the stringvalue of the first node.
+          <h4>What we could do:</h4>
+            Walk along the axis until we find a node that matches the nodetest.
+            If one is found we can stop the walking and return a string-result
+            containing the value of that node. Otherwise an empty string-result
+            can be returned.<br>
+            This can also be done when we only care about the number-value.<br>
+            This could be combined with the "Unpredicated steps where we only
+            care about the boolean value" optimization by instead of returning
+            a bool-value or string-value return a nodeset containing just the
+            found node. If that is done this optimization could be applied to
+            <code>PathExpr</code>s.
         </p>
 
         <p>
@@ -428,6 +449,30 @@
           <h4>What we could do:</h4>
             Apply the "Steps where we only care about the boolean
             value"-optimization on the PathExpr-side and then evaluate as usual.
+        </p>
+
+        <p>
+          <h4>Class:</h4>
+            Subexpressions that will be evaluated more then once where the only
+            change is in context it doesn't depend on
+          <h4>Example:</h4>
+            foo[@bar = <u>sum($var/@bar)</u>]
+          <h4>What we do today:</h4>
+            Reevaluate the subexpression every time we need it and every time
+            get the same result.
+          <h4>What we could do:</h4>
+            We should save the result from the first evaluation and just bring
+            it back the following time we need it. This can be done by
+            inserting an extra expression between the subexpression and its
+            parent, this expression would then first go look in a cache
+            available through the <code>nsIEvalContext</code>, if the value
+            isn't available there the original expression is evaluated and its
+            result is saved in the cache. The cache can be keyed on an integer
+            which is stored in the inserted 'cache-expression'.<br>
+            The cache itself could be created by another expression that is
+            inserted at the top of the expression. This way that expression
+            works as a boundry-point for the cache and can in theory be
+            inserted anywhere in an expression if needed.
         </p>
 
     <h2>Stage 5</h2>
