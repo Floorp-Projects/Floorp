@@ -116,7 +116,16 @@ int SSM_strncasecmp(const char *s1, const char *s2, size_t count);
 #define STRNCASECMP(s1,s2,n) SSM_strncasecmp((s1),(s2),(n))
 #endif
 
-#ifdef DEBUG
+/*
+ * If you want to enable PSM log output, make the following
+ * #if 0 block a #if 1 block or add a -DPSM_LOG to the compile
+ * line.
+ */
+#if 0
+#define PSM_LOG 1
+#endif
+
+#if defined(DEBUG) && defined(PSM_LOG)
 #define SSM_DEBUG SSM_DebugP
 #else
 #define SSM_DEBUG if(0) SSM_DebugP
