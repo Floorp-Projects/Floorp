@@ -4040,3 +4040,39 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 #endif // USE_XIM 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsWindow::HideWindowChrome(PRBool aShouldHide)
+{
+  if (!mShell) {
+    // This is not a top-level window widget.
+    return NS_ERROR_FAILURE;
+  }
+
+  // Sawfish, metacity, and presumably other window managers get
+  // confused if we change the window decorations while the window
+  // is visible.
+
+  if (mShown)
+    gdk_window_hide(mShell->window);
+
+  gint wmd;
+  if (aShouldHide)
+    wmd = 0;
+  else
+    wmd = ConvertBorderStyles(mBorderStyle);
+
+  gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
+
+  if (mShown)
+    gdk_window_show(mShell->window);
+
+  // For some window managers, adding or removing window decorations
+  // requires unmapping and remapping our toplevel window.  Go ahead
+  // and flush the queue here so that we don't end up with a BadWindow
+  // error later when this happens (when the persistence timer fires
+  // and GetWindowPos is called).
+  XSync(GDK_DISPLAY(), False);
+
+  return NS_OK;
+}
