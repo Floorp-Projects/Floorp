@@ -323,7 +323,7 @@ rdf_EscapeAmpersandsAndAngleBrackets(nsCString& s)
     start = s.BeginReading(); // begin of string
     c = start + origLength - 1; // last char in original string
     char* w = s.EndWriting() - 1; // last char in grown buffer
-    while (c > start) {
+    while (c >= start) {
         switch (*c) {
         case '&' :
             w -= 4;
