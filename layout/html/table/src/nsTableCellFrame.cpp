@@ -469,28 +469,30 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     PRBool clipState;
     nsPoint offset;
     GetCollapseOffset(aPresContext, offset);
+    PRBool pushed = PR_FALSE;
     if ((0 != offset.x) || (0 != offset.y)) {
       aRenderingContext.PushState();
+      pushed = PR_TRUE;
       aRenderingContext.Translate(offset.x, offset.y);
       aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
                                     nsClipCombine_kIntersect, clipState);
     }
     else {
-      if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
+      if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow ||
+          // XXXldb SCROLLBARS_NONE should really create a scrollframe,
+          // but test here since it doesn't.
+          NS_STYLE_OVERFLOW_SCROLLBARS_NONE == disp->mOverflow ||
+          HasPctOverHeight()) {
         aRenderingContext.PushState();
+        pushed = PR_TRUE;
         SetOverflowClipRect(aRenderingContext);
       }    
     }
 
     PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
 
-    if ((0 != offset.x) || (0 != offset.y)) {
+    if (pushed) {
       aRenderingContext.PopState(clipState);
-    }
-    else { 
-      if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
-        aRenderingContext.PopState(clipState);         
-      }
     }
   } 
   
