@@ -45,6 +45,8 @@ classic.jar:
   skin/classic/communicator/search/search-editor.css                    (communicator/search/search-editor.css)
   skin/classic/communicator/search/search.css                           (communicator/search/search.css)
   skin/classic/communicator/search/internetresults.css                  (communicator/search/internetresults.css)
+  skin/classic/communicator/sidebar/sb-open.gif                         (communicator/sidebar/sb-open.gif)
+  skin/classic/communicator/sidebar/sb-closed.gif                       (communicator/sidebar/sb-closed.gif)
   skin/classic/communicator/sidebar/sbtab-twisty.gif                    (communicator/sidebar/sbtab-twisty.gif)
   skin/classic/communicator/sidebar/sbtab-twisty-open.gif               (communicator/sidebar/sbtab-twisty-open.gif)
   skin/classic/communicator/sidebar/customize.css                       (communicator/sidebar/customize.css)
