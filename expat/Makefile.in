@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = xmlparse xmltok xmlwf
+DIRS = xmlparse xmltok # xmlwf
 
 include $(topsrcdir)/config/config.mk
 
