@@ -1,0 +1,51 @@
+root {
+  display: block;
+  margin: 1em 1em;
+  line-height: 1.1;
+  font-size: 10pt;
+  font-family: "Arial", "Times New Roman", "Times Roman", serif;
+}
+
+root > n, root > n > n, root > n > n > n {
+  display: block;
+}
+
+body > .n, body > .n > .n, body > .n > .n > .n {
+  display: block;
+}
+
+key, .key {
+ display: block;
+ margin: 1em;
+ border: 2px solid green;
+ font-size: 130%;
+}
+key b, key k, .key .b, .key .d { margin: 0 0 0 2em; padding: 0; }
+
+n, .n {
+  display: none;
+  margin: 0 1em;
+  white-space: nowrap;
+}
+
+n.e, .n.e {
+  background-color: orange;
+}
+
+s, .s {
+  display: inline;
+  margin-left: 5px;
+}
+
+b, .b {
+  display: inline;
+  background-color: yellow;
+  margin: 0 1em;
+  padding: 0 1em;
+}
+
+k, .d {
+  display: inline;
+  background-color: khaki;
+  padding: 0 1em;
+}
