@@ -29,7 +29,6 @@ EXPORTS         = \
 		intl_csi.h \
 		libi18n.h \
 		merrors.h \
-		msgcom.h \
 		msgtypes.h \
 		net.h \
 		npapi.h \
