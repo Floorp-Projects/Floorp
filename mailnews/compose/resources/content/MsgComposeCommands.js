@@ -3016,4 +3016,3 @@ function SwitchElementFocus(event)
       SetMsgAddressingWidgetTreeElementFocus();
   }
 }
-
