@@ -243,8 +243,8 @@ protected:
   GtkWidget   *mMozAreaClosestParent;
 
   // are we doing a grab?
-  static PRBool      mIsGrabbing;
-  static nsWindow   *mGrabWindow;
+  static PRBool      sIsGrabbing;
+  static nsWindow   *sGrabWindow;
 
   // our wonderful hash table with our window -> nsWindow * lookup
   static GHashTable *mWindowLookupTable;
@@ -274,6 +274,8 @@ private:
                        GdkBitmap *window_mask);
   nsresult     SetIcon();
   void         SendExposeEvent();
+  PRBool       mLastGrabFailed;
+  void         NativeGrab(PRBool aGrab);
 
   PRBool       mIsUpdating;
 
