@@ -25,7 +25,7 @@
 		<key>463</key>
 		<string>7 444 200 252 0 0 1152 746 </string>
 		<key>56</key>
-		<string>319 496 343 68 0 0 1152 746 </string>
+		<string>404 484 343 68 0 0 1152 746 </string>
 	</dict>
 	<key>IBFramework Version</key>
 	<string>248.0</string>
@@ -46,10 +46,8 @@
 	<key>IBOpenObjects</key>
 	<array>
 		<integer>56</integer>
-		<integer>82</integer>
 		<integer>394</integer>
 		<integer>160</integer>
-		<integer>10</integer>
 	</array>
 	<key>IBSystem Version</key>
 	<string>5Q125</string>
