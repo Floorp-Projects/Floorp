@@ -111,6 +111,11 @@ public:
   nsBox(nsIPresShell* aShell);
   virtual ~nsBox();
 
+  /**
+   * Returns PR_TRUE if this box clips its children, e.g., if this box is an scrollbox.
+   */
+  virtual PRBool DoesClipChildren() { return PR_FALSE; }
+
   virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
 
   virtual PRBool DoesNeedRecalc(const nsSize& aSize);
