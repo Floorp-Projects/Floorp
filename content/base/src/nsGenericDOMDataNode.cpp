@@ -512,12 +512,9 @@ nsGenericDOMDataNode::GetScriptObject(nsIContent *aOuterContent,
       nsAutoString nodeName;
       char nameBuf[128];
       
-      node->GetNodeName(nodeName);
-      nodeName.ToCString(nameBuf, sizeof(nameBuf));
-
       aContext->AddNamedReference((void *)&mScriptObject,
                                   mScriptObject,
-                                  nameBuf);
+                                  "nsGenericDOMDataNode::mScriptObject");
     }
     NS_RELEASE(node);
     NS_RELEASE(factory);

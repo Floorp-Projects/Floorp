@@ -1225,12 +1225,10 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
                                     (void**)&slots->mScriptObject);
     NS_RELEASE(factory);
     
-    char tagBuf[50];
-    tag.ToCString(tagBuf, sizeof(tagBuf));
     if (nsnull != mDocument) {
       aContext->AddNamedReference((void *)&slots->mScriptObject,
                                   slots->mScriptObject,
-                                  tagBuf);
+                                  "nsGenericElement::mScriptObject");
     }
   }
   *aScriptObject = slots->mScriptObject;
