@@ -25,7 +25,7 @@
  * Pierre Phaneuf, pp@ludusdesign.com
  *    -- fixed some XPCOM usage.
  *
- * $Id: XSLTProcessor.cpp,v 1.3 2000/04/07 22:59:04 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.cpp,v 1.4 2000/04/12 10:15:34 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -38,7 +38,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/04/07 22:59:04 $
+ * @version $Revision: 1.4 $ $Date: 2000/04/12 10:15:34 $
 **/
 
 /**
@@ -355,7 +355,13 @@ void XSLTProcessor::processTopLevel
     //-------------------------------------------------------/
 
     Element* stylesheet = xslDocument->getDocumentElement();
+    processTopLevel(stylesheet, ps);
+   
+}
 
+void XSLTProcessor::processTopLevel
+   (Element* stylesheet, ProcessorState* ps)
+{
     if (!stylesheet) return;
 
     NodeList* nl = stylesheet->getChildNodes();
