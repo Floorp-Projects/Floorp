@@ -2,21 +2,15 @@
 <center><b><font size=+2>XPConnect Sample</font></b>
 
 <p>
-<a href="mailto:arielb@netscape.com">Ariel Blackenroth &lt;arielb@netscape.com&gt;</a>
+<a href="mailto:arielb@rice.edu">Ariel Blackenroth &lt;arielb@rice.edu&gt;</a>
 <br>
 <a href="mailto:mang@subcarrier.org">Michael Ang &lt;mang@subcarrier.org&gt;</a>
 <br>
-Last modified Aug 4, 1999
+Last modified 
+<script>
+document.write(document.lastModified);
+</script>
 </center>
-
-<hr>
-NOTE: The example on this page currently won't work out of the box, because
-access to arbitrary XPConnect components through <tt>Components</tt>
-object is disabled for web-page JavaScript.  When we get our security
-story straightened out, we'll restore most access.  For now, you can get around
-it by finding '<tt>pref("security.checkxpconnect", <b>true</b>);'</tt> in the
-preferences file (<tt>all.js</tt>) and setting it to <tt><b>false</b></tt>.
-<hr>
 
 <p>In the spirit of "worse is better" this somewhat rough guide is being
 released to the world.  It will be expanded upon and improved.
@@ -38,6 +32,7 @@ using the <tt>Components</tt> object, then accesses it through
 the <a href="http://lxr.mozilla.org/seamonkey/source/xpcom/sample/nsISample.idl">nsISample</a> interface by calling <tt>QueryInterface</tt>:
 <br>
 <pre>
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var sample = Components.classes["component://mozilla/sample/sample-world"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISample);
 </pre>
@@ -123,6 +118,7 @@ printed is calculated in C++ code defined in <a href="http://lxr.mozilla.org/sea
 <!-- XXX keep in sync with stuff in pre tag below -->
 <script>
 /* to use nsSample.js version, use "mozilla.jssample.1" */
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var sample = Components.classes["component://netscape/sample"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISample);
 dump("sample = " + sample + "\n");
@@ -169,6 +165,7 @@ JavaScript and form source:
 <pre>
 &lt;script&gt;
 /* to use nsSample.js version, use "mozilla.jssample.1" */
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var sample = Components.classes["component://netscape/sample"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISample);
 dump("sample = " + sample + "\n");
