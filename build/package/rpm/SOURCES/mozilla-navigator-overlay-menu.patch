@@ -1,0 +1,126 @@
+--- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Wed Apr 18 22:39:27 2001
++++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Wed Apr 18 22:41:09 2001
+@@ -343,123 +343,6 @@
+   <menu id="tasksMenu"/>
+   
+   <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
+-  <!-- Menu for testing. -->
+-  <menu id="debugMenu" accesskey="&debugMenu.accesskey;" label="&debugMenu.label;">
+-    <menupopup>
+-      <menu label="&debugVerCmd.label;">
+-        <menupopup>
+-          <menuitem label="&ver1Cmd.label;"  oncommand="window._content.location.href='http://www.mozilla.org'"/>
+-          <menuitem label="&ver2Cmd.label;"  oncommand="window._content.location.href='http://www.yahoo.com'"/>
+-          <menuitem label="&ver3Cmd.label;"  oncommand="window._content.location.href='http://www.netscape.com'"/>
+-          <menuitem label="&ver4Cmd.label;"  oncommand="window._content.location.href='http://www.excite.com'"/>
+-          <menuitem label="&ver5Cmd.label;"  oncommand="window._content.location.href='http://www.microsoft.com'"/>
+-          <menuitem label="&ver6Cmd.label;"  oncommand="window._content.location.href='http://www.city.net'"/>
+-          <menuitem label="&ver7Cmd.label;"  oncommand="window._content.location.href='http://www.mirabilis.com'"/>
+-          <menuitem label="&ver8Cmd.label;"  oncommand="window._content.location.href='http://www.time.com/time/index.html'"/>
+-          <menuitem label="&ver9Cmd.label;"  oncommand="window._content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
+-          <menuitem label="&ver10Cmd.label;" oncommand="window._content.location.href='http://www.cnn.com'"/>
+-          <menuitem label="&ver11Cmd.label;" oncommand="window._content.location.href='http://www.usatoday.com'"/>
+-          <menuitem label="&ver12Cmd.label;" oncommand="window._content.location.href='http://www.disney.go.com'"/>
+-          <menuitem label="&ver13Cmd.label;" oncommand="window._content.location.href='http://www.hotwired.com'"/>
+-          <menuitem label="&ver14Cmd.label;" oncommand="window._content.location.href='http://www.hotbot.com'"/>
+-          <menuseparator />
+-          <menuitem label="&ver15Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
+-          <menuitem label="&ver16Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
+-          <menuitem label="&ver17Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
+-          <menuitem label="&ver18Cmd.label;" oncommand="window._content.location.href='http://www.abcnews.com'"/>
+-          <menuitem label="&ver19Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
+-          <menuitem label="&ver20Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+-          <menuitem label="&ver21Cmd.label;" oncommand="window._content.location.href='http://www.libpng.org/pub/png/png-MagnoliaAlpha.html'"/>
+-          <menuitem label="&ver22Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
+-          <menuitem label="&ver23Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+-          <menuitem label="&ver24Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
+-          <menuitem label="&ver25Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
+-        </menupopup>
+-      </menu>
+-
+-      <menu label="&viewDemoMenu.label;">
+-       <menupopup>
+-        <menuitem label="&demo0Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test0.html'"/>
+-        <menuitem label="&demo1Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test1.html'"/>
+-        <menuitem label="&demo2Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+-        <menuitem label="&demo3Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test3.html'"/>
+-        <menuitem label="&demo4Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test4.html'"/>
+-        <menuitem label="&demo5Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test5.html'"/>
+-        <menuitem label="&demo6Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
+-        <menuitem label="&demo7Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test7.html'"/>
+-        <menuitem label="&demo8Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test8.html'"/>
+-        <menuitem label="&demo9Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test9.html'"/>
+-        <menuitem label="&demo10Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test10.html'"/>
+-        <menuitem label="&demo11Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test11.html'"/>
+-        <menuitem label="&demo12Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test12.html'"/>
+-        <menuitem label="&demo13Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
+-        <menuitem label="&demo14Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test14.html'"/>
+-        <menuitem label="&demo15Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test15.html'"/>
+-        <menuitem label="&demo16Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test16.html'"/>
+-       </menupopup>
+-      </menu>
+-
+-      <menu label="XBL Demos">
+-       <menupopup>
+-        <menuitem label="#0 Remote XBL"  oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test0/test.xul'"/>
+-        <menuitem label="#1 Technicolor DIV" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test1/test.html'"/>
+-        <menuitem label="#2 Rollover Madness" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test2/test.html'"/>
+-        <menuitem label="#3 Popups in HTML" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test3/test.html'"/>
+-        <menuitem label="#4 Partition Magic" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test4/test.html'"/>        
+-        <menuitem label="#5 Sticky Notes" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test5/test.html'"/>
+-       </menupopup>
+-      </menu>
+-
+-      <menu label="&xptkMenu.label;">
+-       <menupopup>
+-        <menuitem label="&xptk1Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/checkboxTest.xul'"/>
+-        <menuitem label="&xptk2Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
+-        <menuitem label="&xptk3Cmd.label;" oncommand="BrowserReallyReload(0)"/>
+-        <menuitem label="&xptk4Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/dexopenchrome.xul'"/>
+-        <menuitem label="&xptk7Cmd.label;" oncommand="BrowserReallyReload(0)"/>
+-        <menuitem label="&xptk8Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/beeptest.html'"/>
+-        <menuitem label="&xptk9Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/soundtest.html'"/>
+-        <menuitem label="&xptk10Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/xpmenu.xul'"/>
+-        <menuitem label="&xptk11Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/colorpicker.xul'"/>
+-       </menupopup>
+-      </menu>
+-
+-     <menuitem label="&domviewer.label;" oncommand="window._content.location.href='chrome://communicator/content/domviewer/DOMDataSourceViewer.xul'"/>
+-     <menuitem label="&browserbuster.label;" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
+-     <menuitem label="&editor-test-page.label;" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
+-     <menuitem label="&flush-memory.label;" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
+-
+-    </menupopup>
+-  </menu>
+-
+-  <menu id="qaMenu" accesskey="&QA.accesskey;" label="&QA.label;">
+-    <menupopup>
+-      <menuitem label="&PrecheckinTests.label;"  oncommand="window._content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
+-      <menuseparator />
+-      <menuitem label="&QABugCmd.label;"        oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+-      <menuitem label="&QATempCmd.label;"       oncommand="window._content.location.href='http://www.mozilla.org/quality/help/bug-form.html'"/>
+-      <menuitem label="&QASmokeCmd.label;"      oncommand="window._content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
+-      <menuitem label="&QAKnownBugCmd.label;"   oncommand="window._content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
+-      <menuseparator />
+-      <menuitem label="&strresCmd.label;"       oncommand="window._content.location.href='resource:/res/strres-test.xul'"/>
+-
+-      <menuseparator />
+-      <menuitem label="&BloatDumpNewCmd.label;" oncommand="window._content.location.href='about:bloat?new'"/>
+-      <menuitem label="&BloatDumpAllCmd.label;" oncommand="window._content.location.href='about:bloat'"/>
+-      <menuitem label="&BloatClearCmd.label;"   oncommand="window._content.location.href='about:bloat?clear'"/>
+-
+-      <menuseparator />
+-
+-      <menu label="Leak Detector">
+-       <menupopup>
+-        <menuitem label="&LeaksDumpLeaksCmd.label;"   oncommand="dumpMemoryLeaks();"/>
+-        <menuitem label="&LeaksTraceChromeCmd.label;" oncommand="traceChrome();"/>
+-        <menuitem label="&LeaksTraceDocumentCmd.label;" oncommand="traceDocument();"/>
+-        <menuitem label="&LeaksTraceVerboseCmd.label;" oncommand="traceVerbose(this.getAttribute('checked'))" type="checkbox" checked="false"/>
+-       </menupopup>
+-      </menu>
+-    </menupopup>
+-  </menu>
+ </menubar>
+ 
+ </overlay>

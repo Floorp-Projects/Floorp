@@ -1,0 +1,63 @@
+--- mozilla/editor/ui/composer/content/editorOverlay.xul.debug	Mon May 14 11:51:19 2001
++++ mozilla/editor/ui/composer/content/editorOverlay.xul	Mon May 14 11:51:42 2001
+@@ -791,60 +791,4 @@
+    -->
+   <menuitem id="menu_pasteQuote" accesskey="&editpastequotation.accesskey;" observes="cmd_pasteQuote"/>
+ 
+-  <!-- DEBUG only -->
+-  <menu id="debugMenu" label="&debugMenu.label;">
+-  <menupopup>
+-    <menuitem label="&newEditorTestPage.label;" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
+-    <menuitem label="&textEditorCmd.label;"     oncommand="EditorNewPlaintext();" />
+-    <menuitem label="&outputTextCmd.label;"
+-           oncommand="EditorGetText()"/>
+-    <menuitem label="&outputHTMLCmd.label;"
+-           oncommand="EditorGetHTML()"/>
+-    <menuitem label="Dom Serializer"
+-           oncommand="EditorSerialize()"/>
+-    <menuseparator />
+-    <menuitem label="&pasteAsQuotationCmd.label;"
+-           accesskey="&editpastequotation.accesskey;"
+-           oncommand="goDoCommand('cmd_pasteQuote')"/>
+-    <menuitem label="&editRewrapCmd.label;"
+-           oncommand="editorShell.Rewrap(true)"/>
+-    <menuitem label="&editStripQuotesCmd.label;"
+-           oncommand="editorShell.StripCites()"/>
+-    <menuitem label="&insertTextCmd.label;"
+-           oncommand="EditorInsertText('All good things come to those who wait. ')"/>
+-    <menuitem label="Tableize"
+-           oncommand="EditorTableize()"/>
+-    <menuseparator />
+-    <menuitem label="&testSelectionCmd.label;"
+-           oncommand="EditorTestSelection()"/>
+-    <menuitem label="&testTableLayoutCmd.label;"
+-           oncommand="EditorTestTableLayout()"/>
+-    <menuitem label="&showEmbeddedCmd.label;"
+-           oncommand="EditorShowEmbeddedObjects()"/>
+-    <menuitem label="&dumpContentCmd.label;"
+-           oncommand="EditorDumpContent()"/>
+-    <menuitem label="&testDocumentCmd.label;"
+-           oncommand="EditorTestDocument()"/>
+-    <menuitem label="&runUnitTestsCmd.label;"
+-           oncommand="EditorUnitTests()"/>
+-    <menuseparator />
+-    <menuitem label="&dumpUndoStack.label;"
+-           oncommand="DumpUndoStack()"/>
+-    <menuitem label="&dumpRedoStack.label;"
+-           oncommand="DumpRedoStack()"/>
+-    <menuseparator />
+-    <menuitem label="&startLogCmd.label;"
+-           oncommand="EditorStartLog()"/>
+-    <menuitem label="&stopLogCmd.label;"
+-           oncommand="EditorStopLog()"/>
+-    <menuitem label="&runLogCmd.label;"
+-           oncommand="EditorRunLog()"/>
+-    <menuseparator />
+-    <menuitem label="&setFocusCmd.label;"
+-            accesskey="&toolsetfocus.accesskey;"
+-            oncommand="window.focus()"/>
+-  </menupopup>
+-  </menu>
+-  <!-- end DEBUG only -->
+-
+ </overlay>
