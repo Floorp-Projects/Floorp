@@ -442,9 +442,9 @@ struct MetaDataHeader {
     MetaDataHeader()
         :   mHeaderSize(sizeof(MetaDataHeader)),
             mFetchCount(0),
-            mLastFetched(LL_ZERO),
-            mLastValidated(LL_ZERO),
-            mExpirationTime(LL_ZERO),
+            mLastFetched(0),
+            mLastValidated(0),
+            mExpirationTime(0),
             mDataSize(0),
             mKeySize(0),
             mMetaDataSize(0)
