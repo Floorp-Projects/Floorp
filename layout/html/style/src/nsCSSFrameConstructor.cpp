@@ -10456,8 +10456,13 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
   // first see if we need to manage the style system: 
   //  inlineStyle changes require us to clear out style data associated with the style attribute
+  // NOTE: for reframe, it happens after the old frames have been destroyed, not here, otherwise
+  //       we cannot get to the old style information for the old frame, and cannot correctly
+  //       deal with positioned frames or floaters (see bug 118415) - this is done in 
+  //       RecreateFramesForContent, which is called for a reframe
   if (inlineStyle && 
-      (reconstruct || reframe || restyle)) {
+      (reconstruct || restyle) && 
+      !reframe) {
     nsCOMPtr<nsIStyleSet> set;
     shell->GetStyleSet(getter_AddRefs(set));
     set->ClearStyleData(aPresContext, rule, styleContext);
@@ -11900,7 +11905,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
       rv = ContentRemoved(aPresContext, container, aContent, indexInContainer, PR_FALSE);
 
       // Now that the old frame is gone (and has stopped depending on obsolete style
-      // data, we need to blow away our style information if this reframe happened as
+      // data), we need to blow away our style information if this reframe happened as
       // a result of an inline style attribute changing.
       if (aInlineStyle) {
         if (aStyleContext)
