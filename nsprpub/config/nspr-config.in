@@ -107,7 +107,7 @@ if test "$echo_libs" = "yes"; then
       fi
       os_ldflags="@LDFLAGS@"
       for i in $os_ldflags ; do
-	if echo $i | grep ^-L >/dev/null; then
+	if echo $i | grep \^-L >/dev/null; then
 	  libdirs="$libdirs $i"
         fi
       done
