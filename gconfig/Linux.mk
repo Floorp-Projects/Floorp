@@ -68,6 +68,6 @@ DSO_LDFLAGS		=
 
 G++INCLUDES		= -I/usr/include/g++
 
-AR_ALL = --whole-archive
-AR_NONE = --no-whole-archive
+AR_ALL = -Wl,--whole-archive
+AR_NONE = -Wl,--no-whole-archive
 LINK_PROGRAM += -rdynamic
