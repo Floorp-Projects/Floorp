@@ -38,6 +38,8 @@
 #include "pkcs12t.h"
 #include "p12.h"
 
+SEC_BEGIN_PROTOS
+
 typedef SECItem * (* SEC_PKCS12GetPassword)(void *arg);
 
 /* Decode functions */
@@ -63,5 +65,7 @@ SEC_PKCS12PutPFX(SECItem *der_pfx, SECItem *pwitem,
  * the desired header for a PKCS 12 file
  */
 PRBool SEC_PKCS12ValidData(char *buf, int bufLen, long int totalLength);
+
+SEC_END_PROTOS
 
 #endif
