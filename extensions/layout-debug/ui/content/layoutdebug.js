@@ -401,13 +401,8 @@ RTestURLList.prototype = {
 
   doneURL : function()
   {
-    var basename = new String(this.mCurrentURL.relurl);
-    basename = basename.replace(":", "");
-    basename = basename.replace("/", "_");
-    basename = basename.replace(".", "_");
-    basename = basename.replace("?", "_");
-    basename = basename.replace("&", "_");
-    basename += ".rgd";
+    var basename =
+      String(this.mCurrentURL.relurl).replace(/[:=&.\/?]/g, "_") + ".rgd";
 
     var data = this.mCurrentURL.dir.clone();
     data.append( this.mIsBaseline ? "baseline" : "verify");
