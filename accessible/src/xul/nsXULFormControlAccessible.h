@@ -42,12 +42,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibleWrap.h"
-#include "nsIDOMXULTextboxElement.h"
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsHTMLFormControlAccessibleWrap.h"
-#else
-#include "nsHTMLFormControlAccessible.h"
-#endif
+#include "nsFormControlAccessible.h"
 
 class nsXULButtonAccessible : public nsAccessibleWrap
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
@@ -152,13 +147,14 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
-class nsXULTextFieldAccessible : public nsHTMLTextFieldAccessibleWrap
+class nsXULTextFieldAccessible : public nsLeafAccessible
 {
 public:
   nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetName(nsAString& aName) { return GetXULName(aName); }
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_TEXT; return NS_OK; }
 };
 
 

@@ -39,11 +39,13 @@
 
 // NOTE: alphabetically ordered
 #include "nsXULFormControlAccessible.h"
+#include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIDOMXULTextboxElement.h"
 #include "nsAccessibleTreeWalker.h"
 
 /**
@@ -632,7 +634,7 @@ NS_IMETHODIMP nsXULToolbarSeparatorAccessible::GetState(PRUint32 *_retval)
   */
 
 nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
- nsHTMLTextFieldAccessibleWrap(aNode, aShell)
+ nsLeafAccessible(aNode, aShell)
 {
 }
 
