@@ -65,27 +65,25 @@ Contributor(s):
       
       <rows>
         <row>
-          <hbox autostretch="never" halign="right">
+          <hbox pack="end">
             <text class="label" value="&status;"/>
           </hbox>
           <text class="label" id="dialog.status"/>
         </row>
         <row class="thin-separator">             
-          <hbox autostretch="never" halign="right">
+          <hbox pack="end">
             <text class="label" value="&progress;"/>
           </hbox>
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
-          <hbox autostretch="never" halign="right">
+          <hbox pack="end">
             <text class="label" id="dialog.progressText"/>
           </hbox>
         </row>
       </rows>
     </grid>
-    
-    <hbox id="CancelButton">
-      <spring flex="1"/>
+    <separator/>
+    <hbox id="CancelButton" pack="end">
       <button class="dialog" id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
-      <spring flex="1"/>
     </hbox>
 
 </window>

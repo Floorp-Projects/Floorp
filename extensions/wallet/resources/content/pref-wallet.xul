@@ -82,7 +82,7 @@
               prefstring="wallet.captureForms"
               prefattribute="checked"/>
     </hbox>
-    <hbox autostretch="never" halign="right">
+    <hbox pack="end">
       <button class="dialog"
               label="&viewWallet.label;"
               accesskey="&viewWallet.accesskey;" 

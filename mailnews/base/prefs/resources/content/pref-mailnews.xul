@@ -86,7 +86,7 @@ Contributor(s):
                  prefstring="mailnews.start_page.url" prefattribute="value"/>
       </hbox>
 
-    <hbox autostretch="never" halign="right">
+    <hbox pack="end">
       <button class="dialog" label="&useDefault.label;" accesskey="&useDefault.accesskey;"
               id="resetHomePageButton"
               oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');">

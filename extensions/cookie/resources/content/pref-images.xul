@@ -108,7 +108,7 @@
 
     <separator observes="haveImageBlocking"/>
 
-    <hbox autostretch="never" halign="right">
+    <hbox pack="end">
       <button class="dialog" id="viewImages" label="&viewImages.label;"
               accesskey="&viewImages.accesskey;" oncommand="viewImages();"
               observes="haveImageBlocking"
