@@ -93,8 +93,8 @@ public:
 
   friend class TimerThread;
 
-  void PostTimerEvent();
   void Fire();
+  void PostTimerEvent();
   void SetDelayInternal(PRUint32 aDelay);
 
   NS_IMETHOD Init(nsTimerCallbackFunc aFunc,
