@@ -611,7 +611,8 @@ nsInstallDlg::PerformInstall()
     // run all specified applications after installation
     if (sRunAppList)
     {
-        RunApps();
+        if (gCtx->opt->mShouldRunApps)
+            RunApps();
         FreeRunAppList();
     }
 

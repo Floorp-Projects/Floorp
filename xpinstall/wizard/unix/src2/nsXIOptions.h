@@ -37,6 +37,7 @@ public:
     char    *mDestination;
     int     mSetupType;
     int     mMode;
+    int     mShouldRunApps;
 
     enum
     {

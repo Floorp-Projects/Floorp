@@ -46,10 +46,21 @@ nsXInstaller::ParseArgs(int aArgc, char **aArgv)
 
     for (int argNum = 1; argNum < aArgc; ++argNum)
     {
+        /* Print usage
+         */
+        if (strcmp(aArgv[argNum], "-h") == 0 ||
+            strcmp(aArgv[argNum], "--help") == 0)
+        {
+           if (gCtx->Res("USAGE_MSG"))
+                fprintf (stderr, gCtx->Res("USAGE_MSG"), aArgv[0], "\n", 
+                      "\n", "\n", "\n", "\n", "\n", "\n", "\n");
+            return E_USAGE_SHOWN;
+        }
+
         /* mode: auto  (show progress UI but assume defaults
          *              without user intervention)
          */
-        if (strcmp(aArgv[argNum], "-ma") == 0)
+        else if (strcmp(aArgv[argNum], "-ma") == 0)
         {
             gCtx->opt->mMode = nsXIOptions::MODE_AUTO;
         }
@@ -60,6 +71,13 @@ nsXInstaller::ParseArgs(int aArgc, char **aArgv)
         else if (strcmp(aArgv[argNum], "-ms") == 0)
         {
             gCtx->opt->mMode = nsXIOptions::MODE_SILENT;
+        }
+
+        /* ignore [RunAppX] sections
+         */
+        else if (strcmp(aArgv[argNum], "-ira") == 0)
+        {
+            gCtx->opt->mShouldRunApps = FALSE;
         }
     }
 
@@ -370,8 +388,8 @@ main(int argc, char **argv)
     {
         if ( (err = installer->ParseConfig()) == OK)
         {
-            installer->ParseArgs(argc, argv);
-            err = installer->RunWizard(argc, argv);
+            if (installer->ParseArgs(argc, argv) == OK)
+                err = installer->RunWizard(argc, argv);
         }
     }
     else
