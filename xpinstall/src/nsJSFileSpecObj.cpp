@@ -66,7 +66,7 @@ fso_ToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
   }
 
-    if(NS_OK != nativeThis->ToString(&stringReturned))
+    if(NS_FAILED( nativeThis->ToString(&stringReturned)))
       return JS_FALSE;
     nsJSUtils::nsConvertStringToJSVal(stringReturned, cx, rval);
 
