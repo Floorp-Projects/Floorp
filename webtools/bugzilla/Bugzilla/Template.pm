@@ -249,10 +249,10 @@ sub create {
             # Format a time for display (more info in Bugzilla::Util)
             time => \&Bugzilla::Util::format_time,
 
-            # Simple filter to obscure the '@' in user visible strings
+            # Override html filter to obscure the '@' in user visible strings
             # See bug 120030 for details
-            obscure_email => sub {
-                my ($var) = @_;
+            html => sub {
+                my ($var) = Template::Filters::html_filter(@_);
                 $var =~ s/\@/\&#64;/g;
                 return $var;
             },
