@@ -62,6 +62,43 @@ CControlSite::~CControlSite()
 	m_cControlList.remove(this);
 }
 
+// Helper method checks whether a class implements a particular category
+HRESULT CControlSite::ClassImplementsCategory(const CLSID &clsid, const CATID &catid)
+{
+	CIPtr(ICatInformation) spCatInfo;
+	HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (LPVOID*) &spCatInfo);
+	if (spCatInfo == NULL)
+	{
+		// Must fail if we can't open the category manager
+		return E_FAIL;
+	}
+	
+	// See what categories the class implements
+	CIPtr(IEnumCATID) spEnumCATID;
+	if (FAILED(spCatInfo->EnumImplCategoriesOfClass(clsid, &spEnumCATID)))
+	{
+		// Can't enumerate classes in category so fail
+		return E_FAIL;
+	}
+
+	// Search for matching categories
+	BOOL bFound = FALSE;
+	CATID catidNext = GUID_NULL;
+	while (spEnumCATID->Next(1, &catidNext, NULL) == S_OK)
+	{
+		if (memcmp(&catid, &catidNext, sizeof(CATID)) == 0)
+		{
+			bFound = TRUE;
+		}
+	}
+	if (!bFound)
+	{
+		return S_FALSE;
+	}
+
+	return S_OK;
+}
+
 
 #if 0
 // For use when the SDK does not define it (which isn't the case these days)
@@ -80,39 +117,10 @@ HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl, const tstring szN
 	m_szName = szName;
 
 	// See if object is script safe
-	if (m_bSafeForScriptingObjectsOnly)
+	if (m_bSafeForScriptingObjectsOnly &&
+		ClassImplementsCategory(clsid, CATID_SafeForScripting) != S_OK)
 	{
-		const CATID &catid = CATID_SafeForScripting;
-		CIPtr(ICatInformation) spCatInfo;
-		HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (LPVOID*) &spCatInfo);
-		if (spCatInfo == NULL)
-		{
-			// Must fail if we can't open the category manager
-			return E_FAIL;
-		}
-		
-		// See what categories the class implements
-		CIPtr(IEnumCATID) spEnumCATID;
-		if (FAILED(spCatInfo->EnumImplCategoriesOfClass(clsid, &spEnumCATID)))
-		{
-			// Can't enumerate classes in category so fail
-			return E_FAIL;
-		}
-
-		// Search for matching categories
-		BOOL bFound = FALSE;
-		CATID catidNext = GUID_NULL;
-		while (spEnumCATID->Next(1, &catidNext, NULL) == S_OK)
-		{
-			if (memcmp(&catid, &catidNext, sizeof(CATID)) == 0)
-			{
-				bFound = TRUE;
-			}
-		}
-		if (!bFound)
-		{
-			return E_FAIL;
-		}
+		return E_FAIL;
 	}
 
 	// Create the object
