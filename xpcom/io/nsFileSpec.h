@@ -462,7 +462,7 @@ class NS_BASE nsDirectoryIterator
 	                            operator nsFileSpec&() { return mCurrent; }
 	private:
 	    nsFileSpec              mCurrent;
-	    bool                    mExists; // MUST be bool.
+	    PRBool                  mExists; // MUST be bool.
 	      
 #if defined(XP_UNIX)
         DIR*                    mDir;
