@@ -48,23 +48,18 @@ public class VariableTable {
         return varStart;
     }
 
-    public LocalVariable createLocalVariable(String name, boolean isParameter)
-    {
-        return new LocalVariable(name, isParameter);
-    }
-
-    public LocalVariable getVariable(int index) {
-        return (LocalVariable)(itsVariables.get(index));
+    public Object getVariable(int index) {
+        return itsVariables.get(index);
     }
 
     public boolean hasVariable(String name) {
         return itsVariableNames.has(name);
     }
 
-    public LocalVariable getVariable(String name) {
+    public Object getVariable(String name) {
         int vIndex = itsVariableNames.get(name, -1);
         if (vIndex != -1)
-            return (LocalVariable)(itsVariables.get(vIndex));
+            return itsVariables.get(vIndex);
         else
             return null;
     }
@@ -73,30 +68,11 @@ public class VariableTable {
         return itsVariableNames.get(name, -1);
     }
 
-    public String getName(int index) {
-        return getVariable(index).getName();
+    public void getAllVariables(Object[] destination) {
+        itsVariables.toArray(destination);
     }
 
-    public String[] getAllNames() {
-        int N = size();
-        String[] result = null;
-        if (N != 0) {
-            result = new String[N];
-            for (int i = 0; i != N; i++) {
-                result[i] = getName(i);
-            }
-        }
-        return result;
-    }
-
-    public void establishIndices() {
-        for (int i = 0; i < itsVariables.size(); i++) {
-            LocalVariable lVar = (LocalVariable)(itsVariables.get(i));
-            lVar.setIndex(i);
-        }
-    }
-
-    public void addParameter(String pName) {
+    public void addParameter(String pName, Object paramObj) {
         // Check addParameter is not called after addLocal
         if (varStart != itsVariables.size()) Context.codeBug();
         int pIndex = itsVariableNames.get(pName, -1);
@@ -105,20 +81,18 @@ public class VariableTable {
             Context.reportWarning(message, null, 0, null, 0);
         }
         int index = varStart++;
-        LocalVariable lVar = createLocalVariable(pName, true);
-        itsVariables.add(lVar);
+        itsVariables.add(paramObj);
         itsVariableNames.put(pName, index);
     }
 
-    public void addLocal(String vName) {
+    public void addLocal(String vName, Object varObj) {
         int vIndex = itsVariableNames.get(vName, -1);
         if (vIndex != -1) {
             // There's already a variable or parameter with this name.
             return;
         }
         int index = itsVariables.size();
-        LocalVariable lVar = createLocalVariable(vName, false);
-        itsVariables.add(lVar);
+        itsVariables.add(varObj);
         itsVariableNames.put(vName, index);
     }
 

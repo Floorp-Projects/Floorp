@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -19,7 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ * Norris Boyd
  * Roger Lawrence
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -33,47 +34,33 @@
  * file under either the NPL or the GPL.
  */
 
-package org.mozilla.javascript;
 
-public class LocalVariable {
+package org.mozilla.classfile;
 
-    public LocalVariable(String name, boolean isParameter) {
-        itsName = name;
-        itsIsParameter = isParameter;
-    }
-
-    public void setIndex(int index){ itsIndex = index; }
-    public int getIndex()          { return itsIndex; }
-
-    public void setIsParameter()   { itsIsParameter = true; }
-    public boolean isParameter()   { return itsIsParameter; }
-
-    public String getName()        { return itsName; }
+/**
+ * Information about java variable to use when generating the local
+ * variable table.
+ */
+public interface JavaVariable {
 
     /**
-     * Return the starting PC where this variable is live, or -1
+     * Variable name
+     */
+    public String getName();
+
+    /**
+     * Return variable type as bytecode descriptor string
+     */
+    public String getTypeDescriptor();
+
+    /**
+     * Return the starting bytecode PC where this variable is live, or -1
      * if it is not a Java register.
      */
-    public int getStartPC() {
-        return -1;
-    }
+    public int getStartPC();
 
     /**
      * Return the Java register number or -1 if it is not a Java register.
      */
-    public short getJRegister() {
-        return -1;
-    }
-
-    /**
-     * Return true if the local variable is a Java register with double type.
-     */
-    public boolean isNumber() {
-        return false;
-    }
-
-    private String itsName;
-    private int itsIndex = -1;
-
-    private boolean itsIsParameter;
+    public short getJRegister();
 }

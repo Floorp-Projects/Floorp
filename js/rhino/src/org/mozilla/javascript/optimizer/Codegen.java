@@ -384,7 +384,7 @@ public class Codegen extends Interpreter {
         if (inFunction) {
             OptFunctionNode fnNode = (OptFunctionNode) tree;
             inDirectCallFunction = fnNode.isTargetOfDirectCall();
-            vars = (OptVariableTable) fnNode.getVariableTable();
+            vars = fnNode.getVariableTable();
             this.name = fnNode.getClassName();
             classFile = new ClassFileWriter(name, superClassName, itsSourceFile);
             Node args = tree.getFirstChild();
@@ -434,12 +434,12 @@ public class Codegen extends Interpreter {
                                fnNode.getDirectCallParameterSignature() +
                                 "Ljava/lang/Object;",
                                1, false, true);
-                vars.assignParameterJRegs();
+                assignParameterJRegs(vars);
                 if (!fnNode.getParameterNumberContext()) {
                     // make sure that all parameters are objects
                     itsForcedObjectParameters = true;
                     for (int i = 0; i < vars.getParameterCount(); i++) {
-                        OptLocalVariable lVar = (OptLocalVariable) vars.getVariable(i);
+                        OptLocalVariable lVar = OptLocalVariable.get(vars, i);
                         aload(lVar.getJRegister());
                         classFile.add(ByteCode.GETSTATIC,
                                       "java/lang/Void",
@@ -470,7 +470,7 @@ public class Codegen extends Interpreter {
             // better be a script
             if (tree.getType() != TokenStream.SCRIPT)
                 badTree();
-            vars = (OptVariableTable) tree.getProp(Node.VARS_PROP);
+            vars = (VariableTable) tree.getProp(Node.VARS_PROP);
             boolean isPrimary = itsNameHelper.getTargetExtends() == null &&
                                 itsNameHelper.getTargetImplements() == null;
             this.name = itsNameHelper.getJavaScriptClassName(null, isPrimary);
@@ -512,6 +512,20 @@ public class Codegen extends Interpreter {
         classFilesVector = null;
 
         return name;
+    }
+
+    private static void assignParameterJRegs(VariableTable vars) {
+        // 0 is reserved for function Object 'this'
+        // 1 is reserved for context
+        // 2 is reserved for parentScope
+        // 3 is reserved for script 'this'
+        short jReg = 4;
+        int parameterCount = vars.getParameterCount();
+        for (int i = 0; i < parameterCount; i++) {
+            OptLocalVariable lVar = OptLocalVariable.get(vars, i);
+            lVar.assignJRegister(jReg);
+            jReg += 3;  // 3 is 1 for Object parm and 2 for double parm
+        }
     }
 
     private void generateCodeFromNode(Node node, Node parent, int trueLabel,
@@ -998,7 +1012,8 @@ public class Codegen extends Interpreter {
     }
 
     private void finishMethod(Context cx, VariableTable vars) {
-        classFile.stopMethod((short)(localsMax + 1), vars);
+        OptLocalVariable[] array = OptLocalVariable.toArray(vars);
+        classFile.stopMethod((short)(localsMax + 1), array);
         contextLocal = -1;
     }
 
@@ -1129,7 +1144,7 @@ public class Codegen extends Interpreter {
                 for (int i = 0; i != N; i++) {
                     addByteCode(ByteCode.DUP);
                     push(i);
-                    push(vars.getName(i));
+                    push(OptLocalVariable.get(vars, i).getName());
                     addByteCode(ByteCode.AASTORE);
                 }
                 addByteCode(ByteCode.ALOAD_0);
@@ -1438,7 +1453,7 @@ public class Codegen extends Interpreter {
             // before the next call and are used in the function
             short firstUndefVar = -1;
             for (int i = 0; i < vars.size(); i++) {
-                OptLocalVariable lVar = (OptLocalVariable) vars.getVariable(i);
+                OptLocalVariable lVar = OptLocalVariable.get(vars, i);
                 if (lVar.isNumber()) {
                     lVar.assignJRegister(getNewWordPairLocal());
                     push(0.0);
@@ -1538,11 +1553,13 @@ public class Codegen extends Interpreter {
 
         // default is to generate debug info
         if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug()) {
-            debugVars = new OptVariableTable();
-            debugVars.addLocal(debugVariableName);
-            OptLocalVariable lv = (OptLocalVariable) debugVars.getVariable(debugVariableName);
+            OptLocalVariable lv = new OptLocalVariable(debugVariableName,
+                                                       false);
             lv.assignJRegister(variableObjectLocal);
             lv.setStartPC(classFile.getCurrentCodeOffset());
+
+            debugVars = new VariableTable();
+            debugVars.addLocal(debugVariableName, lv);
         }
 
         if (!inFunction) {
@@ -2436,7 +2453,7 @@ public class Codegen extends Interpreter {
         }
         String name = node.getString();
         if (hasVarsInRegs) {
-            OptLocalVariable lVar = (OptLocalVariable) vars.getVariable(name);
+            OptLocalVariable lVar = OptLocalVariable.get(vars, name);
             if (lVar != null) {
                 if (lVar.isNumber()) {
                     push("number");
@@ -2474,7 +2491,7 @@ public class Codegen extends Interpreter {
             String routine = (isInc) ? "postIncrement" : "postDecrement";
             if (hasVarsInRegs && child.getType() == TokenStream.GETVAR) {
                 if (lVar == null)
-                    lVar = (OptLocalVariable) vars.getVariable(child.getString());
+                    lVar = OptLocalVariable.get(vars, child.getString());
                 if (lVar.getJRegister() == -1)
                     lVar.assignJRegister(getNewWordLocal());
                 aload(lVar.getJRegister());
@@ -2881,8 +2898,8 @@ public class Codegen extends Interpreter {
         return null;
     }
 
-    private void visitEqOp(Node node, Node child, Node parent, int trueGOTO, 
-                           int falseGOTO) 
+    private void visitEqOp(Node node, Node child, Node parent, int trueGOTO,
+                           int falseGOTO)
     {
         int op = node.getInt();
         Node rightChild = child.getNextSibling();
@@ -2970,10 +2987,10 @@ public class Codegen extends Interpreter {
                     return;
                 }
                 /*
-                    since we have to test for null && undefined we end up 
-                    having to push the operand twice and so have to GOTO to 
+                    since we have to test for null && undefined we end up
+                    having to push the operand twice and so have to GOTO to
                     a pop site if the first test passes.
-                    We can avoid that for operands that are 'simple', i.e. 
+                    We can avoid that for operands that are 'simple', i.e.
                     don't generate a lot of code and don't have side-effects.
                     For now, 'simple' means GETVAR
                 */
@@ -3229,7 +3246,7 @@ public class Codegen extends Interpreter {
     {
         // TODO: Clean up use of lVar here and in set.
         if (hasVarsInRegs && lVar == null)
-            lVar = (OptLocalVariable) vars.getVariable(name);
+            lVar = OptLocalVariable.get(vars, name);
         if (lVar != null) {
             if (lVar.getJRegister() == -1)
                 if (lVar.isNumber())
@@ -3300,7 +3317,7 @@ public class Codegen extends Interpreter {
         OptLocalVariable lVar = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
         // XXX is this right? If so, clean up.
         if (hasVarsInRegs && lVar == null)
-            lVar = (OptLocalVariable) vars.getVariable(child.getString());
+            lVar = OptLocalVariable.get(vars, child.getString());
         if (lVar != null) {
             generateCodeFromNode(child.getNextSibling(), node, -1, -1);
             if (lVar.getJRegister() == -1) {
@@ -3804,8 +3821,8 @@ public class Codegen extends Interpreter {
     private boolean itsForcedObjectParameters;
     private boolean trivialInit;
     private short itsLocalAllocationBase;
-    private OptVariableTable vars;
-    private OptVariableTable debugVars;
+    private VariableTable vars;
+    private VariableTable debugVars;
     private int epilogueLabel;
     private int optLevel;
 }

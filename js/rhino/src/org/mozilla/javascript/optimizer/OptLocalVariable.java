@@ -37,11 +37,13 @@
 package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
+import org.mozilla.classfile.JavaVariable;
 
-public class OptLocalVariable extends LocalVariable {
+final class OptLocalVariable implements JavaVariable {
 
     public OptLocalVariable(String name, boolean isParameter) {
-        super(name, isParameter);
+        itsName = name;
+        itsIsParameter = isParameter;
         // If the variable is a parameter, it could have any type.
         // If it is from a "var" statement, its typeEvent will be set
         // when we see the setVar node.
@@ -58,18 +60,21 @@ public class OptLocalVariable extends LocalVariable {
                     + ", JRegister = " + itsJRegister;
     }
 
-    public void setIsNumber()      { itsIsNumber = true; }
-    public boolean isNumber()      { return itsIsNumber; }
+    public String getName() {
+        return itsName;
+    }
 
-    public void markLiveAcrossCall()     { itsLiveAcrossCall = true; }
-    public void clearLiveAcrossCall()    { itsLiveAcrossCall = false; }
-    public boolean isLiveAcrossCall()    { return itsLiveAcrossCall; }
+    public String getTypeDescriptor() {
+        return isNumber() ? "D" : "Ljava/lang/Object;";
+    }
 
-    public void assignJRegister(short aJReg)     { itsJRegister = aJReg; }
-    public short getJRegister()                  { return itsJRegister; }
+    public short getJRegister() {
+        return itsJRegister;
+    }
 
-    public boolean assignType(int aType)       { return itsTypeUnion.add(aType); }
-    public int getTypeUnion()                  { return itsTypeUnion.getEvent(); }
+    void assignJRegister(short aJReg) {
+        itsJRegister = aJReg;
+    }
 
     /**
      * Get the offset into the bytecode where the variable becomes live.
@@ -79,13 +84,66 @@ public class OptLocalVariable extends LocalVariable {
         return initPC;
     }
 
+    int getIndex() {
+        return itsIndex;
+    }
+
+    void setIndex(int index) {
+        itsIndex = index;
+    }
+
     /**
      * Set the offset into the bytecode where the variable becomes live.
      * Used for generating the local variable table.
      */
-    public void setStartPC(int pc) {
+    void setStartPC(int pc) {
         initPC = pc;
     }
+
+    void setIsNumber()      { itsIsNumber = true; }
+    boolean isNumber()      { return itsIsNumber; }
+
+    boolean isParameter()   { return itsIsParameter; }
+
+    void markLiveAcrossCall()     { itsLiveAcrossCall = true; }
+    void clearLiveAcrossCall()    { itsLiveAcrossCall = false; }
+    boolean isLiveAcrossCall()    { return itsLiveAcrossCall; }
+
+    boolean assignType(int aType) {
+        return itsTypeUnion.add(aType);
+    }
+
+    int getTypeUnion() {
+        return itsTypeUnion.getEvent();
+    }
+
+    static OptLocalVariable get(VariableTable vars, int index) {
+        return (OptLocalVariable)(vars.getVariable(index));
+    }
+
+    static OptLocalVariable get(VariableTable vars, String name) {
+        return (OptLocalVariable)(vars.getVariable(name));
+    }
+
+    static void establishIndices(VariableTable vars) {
+        int N = vars.size();
+        for (int i = 0; i != N; i++) {
+            get(vars, i).itsIndex = i;
+        }
+    }
+
+    static OptLocalVariable[] toArray(VariableTable vars) {
+        OptLocalVariable[] array = null;
+        if (vars != null) {
+            array = new OptLocalVariable[vars.size()];
+            vars.getAllVariables(array);
+        }
+        return array;
+    }
+
+    private String itsName;
+    private boolean itsIsParameter;
+    private int itsIndex = -1;
 
     private short itsJRegister = -1;   // unassigned
 

@@ -216,7 +216,7 @@ public class Block {
                     }
                     for (int i = 0; i < liveSet.length; i++) {
                         if (liveSet[i])
-                            ((OptLocalVariable)theVariables.getVariable(i)).markLiveAcrossCall();
+                            OptLocalVariable.get(theVariables, i).markLiveAcrossCall();
                     }
                 }
                 break;
@@ -245,7 +245,7 @@ public class Block {
     {
         for (int i = 0; i < theVariables.size(); i++)
             if (itsLiveOnEntrySet.test(i))
-                ((OptLocalVariable)theVariables.getVariable(i)).assignType(TypeEvent.AnyType);
+                OptLocalVariable.get(theVariables, i).assignType(TypeEvent.AnyType);
 
     }
 
@@ -648,14 +648,15 @@ public class Block {
     public void printLiveOnEntrySet(PrintWriter pw, VariableTable theVariables)
     {
         for (int i = 0; i < theVariables.size(); i++) {
+            String name = OptLocalVariable.get(theVariables, i).getName();
             if (itsUseBeforeDefSet.test(i))
-                pw.println(theVariables.getVariable(i).getName() + " is used before def'd");
+                pw.println(name + " is used before def'd");
             if (itsNotDefSet.test(i))
-                pw.println(theVariables.getVariable(i).getName() + " is not def'd");
+                pw.println(name + " is not def'd");
             if (itsLiveOnEntrySet.test(i))
-                pw.println(theVariables.getVariable(i).getName() + " is live on entry");
+                pw.println(name + " is live on entry");
             if (itsLiveOnExitSet.test(i))
-                pw.println(theVariables.getVariable(i).getName() + " is live on exit");
+                pw.println(name + " is live on exit");
         }
     }
 

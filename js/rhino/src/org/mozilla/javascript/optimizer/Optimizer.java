@@ -80,11 +80,9 @@ public class Optimizer {
                 pw.println(Block.toString(theBlocks, theStatementNodes));
             }
 
-            OptVariableTable vars = (OptVariableTable)
-                theFunction.getVariableTable();
+            VariableTable vars = theFunction.getVariableTable();
             if (vars != null) {
-
-                vars.establishIndices();
+                OptLocalVariable.establishIndices(vars);
                 for (int i = 0; i < theStatementNodes.length; i++)
                     replaceVariableAccess(theStatementNodes[i], vars);
 
@@ -116,7 +114,12 @@ public class Optimizer {
                         pw.println("For block " + theBlocks[i].getBlockID());
                         theBlocks[i].printLiveOnEntrySet(pw, vars);
                     }
-                    vars.print(pw);
+                    int N = vars.size();
+                    System.out.println("Variable Table, size = " + N);
+                    for (int i = 0; i != N; i++) {
+                        OptLocalVariable lVar = OptLocalVariable.get(vars, i);
+                        pw.println(lVar.toString());
+                    }
                 }
 
             }
@@ -167,7 +170,7 @@ public class Optimizer {
             }
         }
         for (int i = 0; i < theVariables.size(); i++) {
-            OptLocalVariable lVar = (OptLocalVariable) theVariables.getVariable(i);
+            OptLocalVariable lVar = OptLocalVariable.get(theVariables, i);
             if (!lVar.isParameter()) {
                 int theType = lVar.getTypeUnion();
                 if (theType == TypeEvent.NumberType) {
@@ -1006,16 +1009,16 @@ public class Optimizer {
         switch (n.getType()) {
             case TokenStream.SETVAR : {
                     String name = n.getFirstChild().getString();
-                    OptLocalVariable theVar = (OptLocalVariable)
-                        theVariables.getVariable(name);
+                    OptLocalVariable theVar = OptLocalVariable.
+                                                  get(theVariables, name);
                     if (theVar != null)
                         n.putProp(Node.VARIABLE_PROP, theVar);
                 }
                 break;
             case TokenStream.GETVAR : {
                     String name = n.getString();
-                    OptLocalVariable theVar = (OptLocalVariable)
-                        theVariables.getVariable(name);
+                    OptLocalVariable theVar = OptLocalVariable.
+                                                  get(theVariables, name);
                     if (theVar != null)
                         n.putProp(Node.VARIABLE_PROP, theVar);
                 }

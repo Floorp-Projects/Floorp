@@ -72,10 +72,6 @@ class OptTransformer extends NodeTransformer {
         return super.transform(tree, enclosing, ts, scope);
     }
 
-    protected VariableTable createVariableTable() {
-        return new OptVariableTable();
-    }
-
     private int detectDirectCall(Node node, Node tree)
     {
         Context cx = Context.getCurrentContext();
@@ -102,6 +98,10 @@ class OptTransformer extends NodeTransformer {
         }
 
         return argCount;
+    }
+
+    protected Object createVariableObject(String name, boolean isParameter) {
+        return new OptLocalVariable(name, isParameter);
     }
 
     protected void visitNew(Node node, Node tree) {

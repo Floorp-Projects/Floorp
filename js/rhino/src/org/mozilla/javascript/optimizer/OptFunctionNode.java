@@ -45,7 +45,6 @@ public class OptFunctionNode extends FunctionNode {
                            ClassNameHelper nameHelper)
     {
         super(name, left, right);
-        itsVariableTable = new OptVariableTable();
         OptClassNameHelper nh = (OptClassNameHelper) nameHelper;
         itsClassName = nh.getJavaScriptClassName(name, false);
     }

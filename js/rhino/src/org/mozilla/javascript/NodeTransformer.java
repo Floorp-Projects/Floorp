@@ -522,7 +522,7 @@ public class NodeTransformer {
             {
                 String name = cursor.getString();
                 if (fNames == null || !fNames.has(name))
-                    vars.addLocal(name);
+                    vars.addLocal(name, createVariableObject(name, false));
             }
         }
         String name = tree.getString();
@@ -535,7 +535,7 @@ public class NodeTransformer {
             // ECMA Ch. 13.  We add code to the beginning of the function
             // to initialize a local variable of the function's name
             // to the function value.
-            vars.addLocal(name);
+            vars.addLocal(name, createVariableObject(name, false));
             Node block = tree.getLastChild();
             Node setFn = new Node(TokenStream.POP,
                             new Node(TokenStream.SETVAR,
@@ -556,9 +556,13 @@ public class NodeTransformer {
                  cursor = cursor.getNextSibling())
             {
                 String arg = cursor.getString();
-                vars.addParameter(arg);
+                vars.addParameter(arg, createVariableObject(arg, true));
             }
         }
+    }
+
+    protected Object createVariableObject(String name, boolean isParameter) {
+        return name;
     }
 
     protected void visitNew(Node node, Node tree) {

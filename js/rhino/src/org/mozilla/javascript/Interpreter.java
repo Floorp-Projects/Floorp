@@ -168,7 +168,7 @@ public class Interpreter extends LabelTable {
         itsData.itsRegExpLiterals = regExpLiterals;
         if (Context.printICode) dumpICode(itsData);
 
-        String[] argNames = itsVariableTable.getAllNames();
+        String[] argNames = getArgNames(itsVariableTable);
         short argCount = (short)itsVariableTable.getParameterCount();
         InterpretedScript
             result = new InterpretedScript(cx, itsData, argNames, argCount);
@@ -224,7 +224,7 @@ public class Interpreter extends LabelTable {
         itsData.itsRegExpLiterals = regExpLiterals;
         if (Context.printICode) dumpICode(itsData);
 
-        String[] argNames = itsVariableTable.getAllNames();
+        String[] argNames = getArgNames(itsVariableTable);
         short argCount = (short)itsVariableTable.getParameterCount();
         InterpretedFunction
             result = new InterpretedFunction(cx, itsData, argNames, argCount);
@@ -232,6 +232,12 @@ public class Interpreter extends LabelTable {
             cx.debugger.handleCompilationDone(cx, result, debugSource);
         }
         return result;
+    }
+
+    private static String[] getArgNames(VariableTable vt) {
+        String[] argNames = new String[vt.size()];
+        vt.getAllVariables(argNames);
+        return argNames;
     }
 
     boolean itsInFunctionFlag;

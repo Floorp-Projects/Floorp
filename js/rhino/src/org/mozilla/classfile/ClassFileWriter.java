@@ -232,10 +232,10 @@ public class ClassFileWriter extends LabelTable {
      *
      * @param maxLocals the maximum number of local variable slots
      *        (a.k.a. Java registers) used by the method
-     * @param vars the VariableTable of the variables for the method,
+     * @param vars the array of the variables for the method,
      *        or null if none
      */
-    public void stopMethod(short maxLocals, VariableTable vars) {
+    public void stopMethod(short maxLocals, JavaVariable[] vars) {
         if (DEBUG) {
             if (itsCurrentMethod == null)
                 throw new RuntimeException("No method to stop");
@@ -259,7 +259,7 @@ public class ClassFileWriter extends LabelTable {
             // 6 bytes for the attribute header
             // 2 bytes for the variable count
             // 10 bytes for each entry
-            variableTableLength = 6 + 2 + (vars.size() * 10);
+            variableTableLength = 6 + 2 + (vars.length * 10);
         }
 
         int attrLength = 2 +                    // attribute_name_index
@@ -353,7 +353,7 @@ public class ClassFileWriter extends LabelTable {
                     = itsConstantPool.addUtf8("LocalVariableTable");
             codeAttribute[index++] = (byte)(variableTableAttrIndex >> 8);
             codeAttribute[index++] = (byte)variableTableAttrIndex;
-            int varCount = vars.size();
+            int varCount = vars.length;
             int tableAttrLength = 2 + (varCount * 10);
             codeAttribute[index++] = (byte)(tableAttrLength >> 24);
             codeAttribute[index++] = (byte)(tableAttrLength >> 16);
@@ -362,7 +362,7 @@ public class ClassFileWriter extends LabelTable {
             codeAttribute[index++] = (byte)(varCount >> 8);
             codeAttribute[index++] = (byte)varCount;
             for (int i = 0; i < varCount; i++) {
-                LocalVariable lvar = vars.getVariable(i);
+                JavaVariable lvar = vars[i];
 
                 // start pc
                 int startPc = lvar.getStartPC();
@@ -375,16 +375,13 @@ public class ClassFileWriter extends LabelTable {
                 codeAttribute[index++] = (byte)length;
 
                 // name index
-                int nameIndex
-                        = itsConstantPool.addUtf8(lvar.getName());
+                int nameIndex = itsConstantPool.addUtf8(lvar.getName());
                 codeAttribute[index++] = (byte)(nameIndex >> 8);
                 codeAttribute[index++] = (byte)nameIndex;
 
                 // descriptor index
-                int descriptorIndex = itsConstantPool.addUtf8(
-                                        lvar.isNumber()
-                                        ? "D"
-                                        :  "Ljava/lang/Object;");
+                String descriptor = lvar.getTypeDescriptor();
+                int descriptorIndex = itsConstantPool.addUtf8(descriptor);
                 codeAttribute[index++] = (byte)(descriptorIndex >> 8);
                 codeAttribute[index++] = (byte)descriptorIndex;
 
