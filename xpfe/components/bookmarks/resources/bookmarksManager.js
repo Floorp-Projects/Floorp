@@ -143,6 +143,11 @@ function OpenBookmarksFile()
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   fp.init(window, BookmarksUtils.getLocaleString("SelectOpen"), nsIFilePicker.modeOpen);
   fp.appendFilters(nsIFilePicker.filterHTML);
-  if (fp.show() == nsIFilePicker.returnOK)
-    PREF.setCharPref("browser.bookmarks.file", fp.file.path);
+  if (fp.show() == nsIFilePicker.returnOK) {
+    var path = Components.classes["@mozilla.org/supports-string;1"]
+               .createInstance(Components.interfaces.nsISupportsString);
+    path.data = fp.file.path;
+    PREF.setComplexValue("browser.bookmarks.file",
+                         Components.interfaces.nsISupportsString, path);
+  }
 }
