@@ -163,10 +163,10 @@ public:
 	void static GetLoadGroupTest(nsIRequest *);
 };
 
-
+//	structure for uri table
 typedef struct
 {
-	char		theUrl[1024];
+	char		theUri[1024];
 	bool		reqPend;
 	bool		reqStatus;
 	bool		reqSuspend;
