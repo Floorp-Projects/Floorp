@@ -29,6 +29,7 @@ REQUIRES	= xpcom \
 		  uconv \
 		  intl \
 		  bookmarks \
+		  unicharutil \
 		  $(NULL)
 
 CPP_OBJS=                                \
