@@ -43,6 +43,7 @@ static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 static NS_DEFINE_CID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 
 
 ////////////////////////////////////////////////////////////////////////////////
