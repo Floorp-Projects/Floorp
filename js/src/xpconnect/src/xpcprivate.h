@@ -36,6 +36,7 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
 #include "nsIXPCSecurityManager.h"
+#include "nsIJSRuntimeService.h"
 #include "xptcall.h"
 #include "jsapi.h"
 #include "jshash.h"
@@ -909,6 +910,25 @@ private:
 
 #define AUTO_PUSH_JSCONTEXT(cx) AutoPushJSContext _AutoPushJSContext(cx)
 #define AUTO_PUSH_JSCONTEXT2(cx,xpc) AutoPushJSContext _AutoPushJSContext(cx,xpc)
+
+/***************************************************************************/
+#define NS_JS_RUNTIME_SERVICE_CID \
+{0xb5e65b52, 0x1dd1, 0x11b2, \
+    { 0xae, 0x8f, 0xf0, 0x92, 0x8e, 0xd8, 0x84, 0x82 }}
+
+class nsJSRuntimeServiceImpl : public nsIJSRuntimeService
+{
+ public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIJSRUNTIMESERVICE
+        
+    static nsJSRuntimeServiceImpl *GetSingleton();
+
+    nsJSRuntimeServiceImpl();
+    virtual ~nsJSRuntimeServiceImpl();
+ protected:
+    JSRuntime *mRuntime;
+};
 
 /***************************************************************************/
 class XPCJSStackFrame;
