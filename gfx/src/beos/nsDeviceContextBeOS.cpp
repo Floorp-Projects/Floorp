@@ -132,10 +132,8 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
     } 
  
     // Set OSVal to what the operating system thinks the logical resolution is. 
-    PRInt32 OSVal = 72; 
     // BeOS lacks monitor info, so we use estimation
-    float fPrefVal = float(mWidthFloat)*72./800.;
-    prefVal = int(fPrefVal);
+    PRInt32 OSVal = int(mWidthFloat*72./800.);
     if (prefVal > 0)
     { 
       // If there's a valid pref value for the logical resolution, 
