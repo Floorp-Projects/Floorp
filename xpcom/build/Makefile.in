@@ -29,13 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom
 
-ifdef _BUILD_BUNDLE
-IS_COMPONENT	= 1
-DLL_SUFFIX	= .bundle
-NO_DIST_INSTALL	= 1
-NO_COMPONENT_LINK_MAP = 1
-endif
-
 # Do not set EXPORT_LIBRARY as we do not want xpcom in the static libs list
 #EXPORT_LIBRARY = 1
 GRE_MODULE	= 1
@@ -125,18 +118,6 @@ endif
 OS_LIBS += $(LIBICONV)
 
 include $(topsrcdir)/config/rules.mk
-
-ifndef DISABLE_DIST_GRE
-ifeq ($(OS_ARCH),Darwin)
-GARBAGE	+= $(SHARED_LIBRARY:$(DLL_SUFFIX)=.bundle)
-ifndef _BUILD_BUNDLE
-libs:: $(SHARED_LIBRARY)
-	$(MAKE) libs _BUILD_BUNDLE=1 
-	$(INSTALL) $(LIB_PREFIX)$(LIBRARY_NAME).bundle $(DIST)/gre
-	$(INSTALL) $(LIB_PREFIX)$(LIBRARY_NAME).bundle $(DIST)/bin
-endif
-endif
-endif
 
 DEFINES		+= \
 		-D_IMPL_NS_COM \
