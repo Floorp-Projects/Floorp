@@ -1558,7 +1558,8 @@ function addBookmarkForBrowser(aDocShell, aIsWebPanel)
 
 function openLocation()
 {
-  if (gURLBar && !gURLBar.parentNode.parentNode.collapsed) {
+  if (gURLBar && !gURLBar.parentNode.parentNode.collapsed &&
+      !(window.getComputedStyle(gURLBar.parentNode, null).display == "none")) {
     gURLBar.focus();
     gURLBar.select();
   }
