@@ -20,6 +20,19 @@
  * 
  * Contributor(s): 
  *   Scott Furman, fur@netscape.com
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 #ifndef _nsCachedNetData_h_
@@ -105,7 +118,7 @@ protected:
     nsresult ClearFlag(Flag aFlag) { return SetFlag(PR_FALSE, aFlag); }
 
     void ComputeProfit(PRUint32 aCurrentTime);
-    static int Compare(const void *a, const void *b, void *unused);
+    static int PR_CALLBACK Compare(const void *a, const void *b, void *unused);
 
     void NoteAccess();
     void NoteUpdate();

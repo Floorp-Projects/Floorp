@@ -17,7 +17,20 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): Judson Valeski
+ * Contributor(s): 
+ * Judson Valeski
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 #include "nsMIMEService.h"
@@ -29,8 +42,7 @@
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
 
-// Hash table helper functions
-PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
+PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)aData;
     NS_ASSERTION(entry, "mapping problem");
 	NS_RELEASE(entry);

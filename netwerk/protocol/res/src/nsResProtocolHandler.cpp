@@ -18,6 +18,20 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/23/2000   IBM Corp.       Fixed bug with OS2_SystemDirectory.
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 #include "nsResProtocolHandler.h"
@@ -80,6 +94,8 @@ nsResProtocolHandler::Init()
     rv = SetSpecialDir("SystemDir",
 #ifdef XP_MAC
                        nsSpecialSystemDirectory::Mac_SystemDirectory
+#elif XP_OS2
+                       nsSpecialSystemDirectory::OS2_SystemDirectory
 #elif XP_PC
                        nsSpecialSystemDirectory::Win_SystemDirectory
 #elif XP_BEOS
@@ -151,7 +167,7 @@ nsResProtocolHandler::Init()
     return rv;
 }
 
-static PR_CALLBACK PRBool
+static PRBool PR_CALLBACK
 DeleteCStringArray(nsHashKey *aKey, void *aData, void* closure)
 {
     nsCStringArray* array = NS_STATIC_CAST(nsCStringArray*, aData);
