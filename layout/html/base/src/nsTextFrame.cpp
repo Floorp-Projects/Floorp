@@ -65,13 +65,13 @@
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 #ifdef NS_DEBUG
-#undef NOISY
 #undef NOISY_BLINK
 #undef DEBUG_WORD_WRAPPING
+#undef NOISY_REFLOW
 #else
-#undef NOISY
 #undef NOISY_BLINK
 #undef DEBUG_WORD_WRAPPING
+#undef NOISY_REFLOW
 #endif
 
 // #define DEBUGWORDJUMP
@@ -430,6 +430,7 @@ public:
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
+                                   nsIContent* aContent,
                                    nsITextContent* aText,
                                    PRBool* aStop,
                                    const PRUnichar* aWordBuf,
@@ -2307,10 +2308,11 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus)
 {
-  //  NS_PRECONDITION(nsnull != aReflowState.lineLayout, "no line layout");
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("enter nsTextFrame::Reflow: aMaxSize=%d,%d",
-      aReflowState.availableWidth, aReflowState.availableHeight));
+#ifdef NOISY_REFLOW
+  ListTag(stdout);
+  printf(": BeginReflow: availableSize=%d,%d\n",
+         aReflowState.availableWidth, aReflowState.availableHeight);
+#endif
 
   // XXX If there's no line layout, we shouldn't even have created this
   // frame. This may happen if, for example, this is text inside a table
@@ -2481,6 +2483,11 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     // See if there is room for the text
     if ((0 != x) && wrapping && (x + width > maxWidth)) {
       // The text will not fit.
+#ifdef NOISY_REFLOW
+      ListTag(stdout);
+      printf(": won't fit (at offset=%d) x=%d width=%d maxWidth=%d\n",
+             offset, x, width, maxWidth);
+#endif
       break;
     }
     prevColumn = column;
@@ -2544,7 +2551,10 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
           ListTag(stdout);
           printf(": start='");
           fputs(tmp, stdout);
-          printf("' baseWidth=%d [%d,%d]\n", lastWordWidth, prevOffset, offset);
+          printf("' baseWidth=%d [%d,%d] next=",
+                 lastWordWidth, prevOffset, offset);
+          ListTag(stdout, next);
+          printf("\n");
 #endif
           PRUnichar* pWordBuf = wordBuf;
           PRUint32   aWordBufLen = WORD_BUF_SIZE;
@@ -2575,6 +2585,11 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
             }
           }
           else {
+#ifdef NOISY_REFLOW
+            ListTag(stdout);
+            printf(": look-ahead (didn't fit) x=%d wordWidth=%d lastWordWidth=%d\n",
+                   x, wordWidth, lastWordWidth);
+#endif
             // The fully joined word won't fit. We need to reduce our
             // size by the lastWordWidth.
             x -= lastWordWidth;
@@ -2654,9 +2669,12 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   }
   aStatus = rs;
 
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("exit nsTextFrame::Reflow: status=%x width=%d",
-                  aStatus, aMetrics.width));
+#ifdef NOISY_REFLOW
+  ListTag(stdout);
+  printf(": desiredSize=%d,%d(a=%d/d=%d) status=%x\n",
+         aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent,
+         aStatus);
+#endif
   return NS_OK;
 }
 
@@ -2826,7 +2844,7 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
                                                      aLineBreaker,
                                                      aLineLayout,
                                                      aReflowState,
-                                                     aNextFrame, tc,
+                                                     aNextFrame, content, tc,
                                                      &stop,
                                                      aWordBuf,
                                                      aWordBufLen,
@@ -2878,6 +2896,7 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
                                       nsLineLayout& aLineLayout,
                                       const nsHTMLReflowState& aReflowState,
                                       nsIFrame* aTextFrame,
+                                      nsIContent* aContent,
                                       nsITextContent* aText,
                                       PRBool* aStop,
                                       const PRUnichar* aWordBuf,
@@ -2885,11 +2904,8 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
                                       PRUint32 aWordBufSize)
 {
   PRUnichar buf[TEXT_BUF_SIZE];
-
   nsTextTransformer tx(buf, TEXT_BUF_SIZE,aLineBreaker,nsnull);
-  // XXX we need the content-offset of the text frame!!! 0 won't
-  // always be right when continuations are in action
-  tx.Init(aTextFrame, mContent, 0);
+  tx.Init(aTextFrame, aContent, 0);
                        
   PRBool isWhitespace;
   PRInt32 wordLen, contentLen;
