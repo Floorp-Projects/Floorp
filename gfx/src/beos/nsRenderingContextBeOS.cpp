@@ -43,6 +43,7 @@
 #include "nsImageBeOS.h"
 #include "nsGraphicsStateBeOS.h"
 #include "nsICharRepresentable.h"
+#include <Polygon.h>
 #include <math.h>
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
@@ -280,7 +281,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetClipRect(const nsRect& aRect, nsClipCom
 	
 	aClipEmpty = mClipRegion->IsEmpty();
 	return NS_OK;
-}
+} 
 
 // To reduce locking overhead, the caller must unlock the looper itself.
 // TO DO: Locking and unlocking around each graphics primitive is still very lame
@@ -522,28 +523,49 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawStdLine(nscoord aX0, nscoord aY0, nsco
 	return NS_OK;
 }
 
-// TO DO: Allocating BPoints on the heap here is not great.
 NS_IMETHODIMP nsRenderingContextBeOS::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints) {
 	if (mTranMatrix == nsnull) return NS_ERROR_FAILURE;
 	if (mSurface == nsnull) return NS_ERROR_FAILURE;
-	
-	BPoint *pts = new BPoint[aNumPoints];
-	for (int i = 0; i < aNumPoints; i++) {
+	BPoint *pts;
+	BPolygon poly;
+	BRect r;
+	PRInt32 w, h;
+	//allocating from stack if amount isn't big
+	BPoint bpointbuf[64];
+	pts = bpointbuf;
+	if(aNumPoints>64)
+		pts = new BPoint[aNumPoints];
+	for (int i = 0; i < aNumPoints; ++i) {
 		nsPoint p = aPoints[i];
 		mTranMatrix->TransformCoord(&p.x, &p.y);
 		pts[i].x = p.x;
 		pts[i].y = p.y;
 #ifdef DEBUG
-		printf("(%i,%i)\n", p.x, p.y);
+		printf("polyline(%i,%i)\n", p.x, p.y);
 #endif
 	}
-	
-	UpdateView();
-	if (mView) {
-		mView->StrokePolygon(pts, aNumPoints, false);
-		mView->UnlockLooper();
-	}
-	delete [] pts;
+	poly.AddPoints(pts, aNumPoints);
+	r = poly.Frame();	
+	w = r.IntegerWidth();
+	h = r.IntegerHeight();
+//	Don't draw empty polygon
+	if(w && h)
+	{
+		UpdateView();
+		if (mView) {
+			if (1 == h) {
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left + w - 1, r.top));
+			} else if (1 == w) {
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left, r.top + h -1));
+			} else {
+				poly.MapTo(r,BRect(r.left, r.top, r.left + w -1, r.top + h - 1));
+				mView->StrokePolygon(&poly, false);
+			}
+			mView->UnlockLooper();
+		}		
+	}	
+	if(pts!=bpointbuf)
+		delete [] pts;
 	return NS_OK;
 }
 
@@ -639,41 +661,85 @@ NS_IMETHODIMP nsRenderingContextBeOS::InvertRect(nscoord aX, nscoord aY, nscoord
 
 NS_IMETHODIMP nsRenderingContextBeOS::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) {
 	if (nsnull == mTranMatrix || nsnull == mSurface) return NS_ERROR_FAILURE;
-	
-	BPoint *pts = new BPoint[aNumPoints];
-	for (int i = 0; i < aNumPoints; i++) {
+	BPoint *pts;
+	BPolygon poly;
+	BRect r;
+	PRInt32 w, h;
+	//allocating from stack if amount isn't big
+	BPoint bpointbuf[64];
+	pts = bpointbuf;
+	if(aNumPoints>64)
+		pts = new BPoint[aNumPoints];
+	for (int i = 0; i < aNumPoints; ++i) {
 		nsPoint p = aPoints[i];
 		mTranMatrix->TransformCoord(&p.x, &p.y);
 		pts[i].x = p.x;
 		pts[i].y = p.y;
 	}
-	
-	UpdateView();
-	if (mView) {
-		mView->StrokePolygon(pts, aNumPoints, true, B_SOLID_HIGH);
-		mView->UnlockLooper();
-	}
-	delete [] pts;
+	poly.AddPoints(pts, aNumPoints);
+	r = poly.Frame();	
+	w = r.IntegerWidth();
+	h = r.IntegerHeight();
+//	Don't draw empty polygon
+	if(w && h)
+	{
+		UpdateView();
+		if (mView) {
+			if (1 == h) {
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left + w - 1, r.top));
+			} else if (1 == w) {
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left, r.top + h -1));
+			} else {
+				poly.MapTo(r,BRect(r.left, r.top, r.left + w -1, r.top + h - 1));
+				mView->StrokePolygon(&poly, true, B_SOLID_HIGH);
+			}
+			mView->UnlockLooper();
+		}		
+	}		
+	if(pts!=bpointbuf)
+		delete [] pts;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) {
 	if (nsnull == mTranMatrix || nsnull == mSurface) return NS_ERROR_FAILURE;
 	
-	BPoint *pts = new BPoint[aNumPoints];
-	for (int i = 0; i < aNumPoints; i++) {
+	BPoint *pts;
+	BPolygon poly;
+	BRect r;
+	PRInt32 w, h;
+	BPoint bpointbuf[64];
+	pts = bpointbuf;
+	if(aNumPoints>64)
+		pts = new BPoint[aNumPoints];
+	for (int i = 0; i < aNumPoints; ++i) {
 		nsPoint p = aPoints[i];
 		mTranMatrix->TransformCoord(&p.x, &p.y);
 		pts[i].x = p.x;
 		pts[i].y = p.y;
 	}
-	
-	UpdateView();
-	if (mView) {
-		mView->FillPolygon(pts, aNumPoints, B_SOLID_HIGH);
-		mView->UnlockLooper();
+	poly.AddPoints(pts, aNumPoints);
+	r = poly.Frame();
+	w = r.IntegerWidth();
+	h = r.IntegerHeight();
+//	Don't draw empty polygon
+	if(w && h)
+	{
+		UpdateView();
+		if (mView) {
+			if (1 == h) {
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left + w - 1, r.top));
+			} else if (1 == w) {
+				mView->StrokeLine(BPoint(r.left, r.top), BPoint(r.left, r.top + h -1));
+			} else {
+				poly.MapTo(r,BRect(r.left, r.top, r.left + w -1, r.top + h - 1));
+				mView->FillPolygon(&poly, B_SOLID_HIGH);
+			}
+			mView->UnlockLooper();
+		}		
 	}
-	delete [] pts;
+	if(pts!=bpointbuf)
+		delete [] pts;
 	return NS_OK;
 }
 
