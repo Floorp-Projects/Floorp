@@ -30,36 +30,6 @@ static PRUint16 gJis0212map[] = {
 #include "jis0212.ump" 
 };
 
-class nsShiftJISToUnicode : public nsBasicDecoderSupport
-{
-public:
-
- nsShiftJISToUnicode() 
-     { 
-         mState=0; mData=0; 
-     };
- virtual ~nsShiftJISToUnicode() {};
-
- NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
- NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength) 
-     {
-        *aDestLength = aSrcLength;
-        return NS_OK;
-     };
- NS_IMETHOD Reset()
-     {
-        mState = 0;
-        return NS_OK;
-     };
-
-private:
-
-private:
- PRInt32  mState;
- PRInt32 mData;
-};
 
 
 NS_IMETHODIMP nsShiftJISToUnicode::Convert(
@@ -208,34 +178,6 @@ error1:
 }
 
 
-class nsEUCJPToUnicodeV2 : public nsBasicDecoderSupport
-{
-public:
-
- nsEUCJPToUnicodeV2() 
-     { 
-          mState=0; mData=0; 
-     };
- virtual ~nsEUCJPToUnicodeV2() {};
-
- NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
- NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength) 
-     {
-        *aDestLength = aSrcLength;
-        return NS_OK;
-     };
- NS_IMETHOD Reset()
-     {
-        mState = 0;
-        return NS_OK;
-     };
-
-private:
- PRInt32  mState;
- PRInt32 mData;
-};
 
 
 NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
@@ -433,36 +375,6 @@ error1:
    return NS_OK_UDEC_MOREOUTPUT;
 }
 
-class nsISO2022JPToUnicodeV2 : public nsBasicDecoderSupport
-{
-public:
-
- nsISO2022JPToUnicodeV2() 
-     { 
-        mState=0; mData=0; mLastLegalState= 0;
-     };
- virtual ~nsISO2022JPToUnicodeV2() {};
-
- NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
- NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength) 
-     {
-        *aDestLength = aSrcLength;
-        return NS_OK;
-     };
- NS_IMETHOD Reset()
-     {
-        mState = 0;
-        mLastLegalState = 0;
-        return NS_OK;
-     };
-
-private:
- PRInt32  mState;
- PRInt32  mLastLegalState;
- PRInt32 mData;
-};
 
 
 NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
@@ -744,6 +656,7 @@ error1:
    *aSrcLen = src-(unsigned char*)aSrc;
    return NS_OK_UDEC_MOREOUTPUT;
 }
+#if 0
 nsresult NEW_ShiftJISToUnicode(nsISupports **aResult)
 {
    *aResult = new nsShiftJISToUnicode();
@@ -759,3 +672,4 @@ nsresult NEW_ISO2022JPToUnicode(nsISupports **aResult)
    *aResult = new nsISO2022JPToUnicodeV2();
    return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
+#endif

@@ -22,9 +22,97 @@
 #ifndef nsShiftJISToUnicode_h__
 #define nsShiftJISToUnicode_h__
 #include "nsISupports.h"
+#include "nsUCvJaSupport.h"
 
-nsresult NEW_ShiftJISToUnicode(nsISupports **aResult);
-nsresult NEW_EUCJPToUnicode(nsISupports **aResult);
-nsresult NEW_ISO2022JPToUnicode(nsISupports **aResult);
 
+class nsShiftJISToUnicode : public nsBasicDecoderSupport
+{
+public:
+
+ nsShiftJISToUnicode() 
+     { 
+         mState=0; mData=0; 
+     };
+ virtual ~nsShiftJISToUnicode() {};
+
+ NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+     PRUnichar * aDest, PRInt32 * aDestLength) ;
+ NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
+     PRInt32 * aDestLength) 
+     {
+        *aDestLength = aSrcLength;
+        return NS_OK;
+     };
+ NS_IMETHOD Reset()
+     {
+        mState = 0;
+        return NS_OK;
+     };
+
+private:
+
+private:
+ PRInt32  mState;
+ PRInt32 mData;
+};
+
+class nsEUCJPToUnicodeV2 : public nsBasicDecoderSupport
+{
+public:
+
+ nsEUCJPToUnicodeV2() 
+     { 
+          mState=0; mData=0; 
+     };
+ virtual ~nsEUCJPToUnicodeV2() {};
+
+ NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+     PRUnichar * aDest, PRInt32 * aDestLength) ;
+ NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
+     PRInt32 * aDestLength) 
+     {
+        *aDestLength = aSrcLength;
+        return NS_OK;
+     };
+ NS_IMETHOD Reset()
+     {
+        mState = 0;
+        return NS_OK;
+     };
+
+private:
+ PRInt32  mState;
+ PRInt32 mData;
+};
+ 
+class nsISO2022JPToUnicodeV2 : public nsBasicDecoderSupport
+{
+public:
+
+ nsISO2022JPToUnicodeV2() 
+     { 
+        mState=0; mData=0; mLastLegalState= 0;
+     };
+ virtual ~nsISO2022JPToUnicodeV2() {};
+
+ NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+     PRUnichar * aDest, PRInt32 * aDestLength) ;
+ NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
+     PRInt32 * aDestLength) 
+     {
+        *aDestLength = aSrcLength;
+        return NS_OK;
+     };
+ NS_IMETHOD Reset()
+     {
+        mState = 0;
+        mLastLegalState = 0;
+        return NS_OK;
+     };
+
+private:
+ PRInt32  mState;
+ PRInt32  mLastLegalState;
+ PRInt32 mData;
+};
 #endif // nsShiftJISToUnicode_h__

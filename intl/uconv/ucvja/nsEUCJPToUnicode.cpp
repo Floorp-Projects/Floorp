@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#if 0
 
 #include "nsEUCJPToUnicode.h"
 #include "nsUCVJADll.h"
@@ -90,3 +91,4 @@ NS_IMETHODIMP nsEUCJPToUnicode::GetMaxLength(const char * aSrc,
   *aDestLength = aSrcLength;
   return NS_OK;
 }
+#endif

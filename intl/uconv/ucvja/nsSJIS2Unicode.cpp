@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#if 0
 
 #include "nsSJIS2Unicode.h"
 
@@ -62,3 +63,4 @@ NS_IMETHODIMP nsSJIS2Unicode::GetMaxLength(const char * aSrc,
   *aDestLength = aSrcLength;
   return NS_OK;
 }
+#endif
