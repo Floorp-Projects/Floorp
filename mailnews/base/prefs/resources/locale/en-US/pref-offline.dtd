@@ -4,6 +4,9 @@
 <!ENTITY window.title  "Offline &amp; Disk Space">
 <!ENTITY boxHeader  "Offline &amp; Disk Space">
 <!ENTITY rHeader  "Offline">
+<!ENTITY textStartUp   "When starting up:">
+<!ENTITY radioRememberPrevState "Remember previous online state">
+<!ENTITY radioAskMe "Ask me for online state at startup">
 <!ENTITY textGoingOnline   "When going online:">
 <!ENTITY radioAskUnsent  "Ask me if I want to send my unsent messages">
 <!ENTITY radioAutoSend  "Automatically send my unsent messages">

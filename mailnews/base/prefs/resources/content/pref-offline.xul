@@ -21,6 +21,7 @@
 
    Contributor(s): Mohan Bhamidipati (mohanb@netscape.com)
                    Diego Biurrun     (diego@biurrun.de)
+                   David Bienvenu    (bienvenu@nventure.com)
 
   -->
 
@@ -34,7 +35,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["whengoingOnlinestate", "whengoingOfflinestate", "offlineCompactFolder", "offlineCompactFolderMin"];
+    var _elementIDs = ["whenStartingUp", "whengoingOnlinestate", "whengoingOfflinestate", "offlineCompactFolder", "offlineCompactFolderMin"];
 
   function Startup()
   {
@@ -59,6 +60,13 @@
 <groupbox>
   <caption label="&rHeader;"/>
 
+  <separator class="thin"/>
+  <label value="&textStartUp;"/>
+    <radiogroup id="whenStartingUp"
+                prefstring="offline.startup_state">
+    <radio value="0" label="&radioRememberPrevState;"/>
+    <radio value="1" label="&radioAskMe;"/>
+    </radiogroup>
   <separator class="thin"/>
   <label value="&textGoingOnline;"/>
     <radiogroup id="whengoingOnlinestate"
