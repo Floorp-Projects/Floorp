@@ -4439,14 +4439,13 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             {
               if (NS_SUCCEEDED(aExitCode))
               {
-                if (folderOpen)
-                  UpdateFolder(msgWindow);
-                else
-                  UpdatePendingCounts(PR_TRUE, PR_FALSE);
+                UpdatePendingCounts(PR_TRUE, PR_FALSE);
 
                 m_copyState->m_curIndex++;
                 if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
                 {
+                  if (folderOpen)
+                    UpdateFolder(msgWindow);
                   if (m_copyState->m_msgWindow && m_copyState->m_undoMsgTxn)
                   {
                     nsCOMPtr<nsITransactionManager> txnMgr;
