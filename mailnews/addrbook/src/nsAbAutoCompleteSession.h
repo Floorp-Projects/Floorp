@@ -44,6 +44,7 @@
 #include "nsIAbDirectory.h"
 #include "nsIAbAutoCompleteSession.h"
 
+class nsIPref;
 
 typedef struct
 {
@@ -104,12 +105,9 @@ protected:
                      const PRUnichar* pEmailStr, const PRUnichar* pNotes,
                      const PRUnichar* pDirName, PRBool bIsMailList, 
                      MatchType type, nsIAutoCompleteResults* results);
-  PRBool CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName,const PRUnichar* displayName, 
+    PRBool CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName,const PRUnichar* displayName, 
 	    const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType);
-	  nsresult SearchCards(nsIAbDirectory* directory, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results);
-    nsresult SearchDirectory(const char *aURI, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory = PR_FALSE);
-    nsresult SearchPreviousResults(nsAbAutoCompleteSearchString *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
-
+	      
     nsCOMPtr<nsIMsgHeaderParser> mParser;
     nsString mDefaultDomain;
     PRUint32 mMatchTypeConters[LAST_MATCH_TYPE];
@@ -124,6 +122,15 @@ protected:
     // 2 = other per-addressbook format (currrently unused here)
     //
     PRInt32 mAutoCompleteCommentColumn;
+
+private:
+    nsresult SearchCards(nsIAbDirectory* directory, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results);
+    nsresult SearchDirectory(const char *aURI, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results);
+    nsresult SearchPreviousResults(nsAbAutoCompleteSearchString *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
+
+    nsresult SearchReplicatedLDAPDirectories(nsIPref *aPrefs, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results);
+    nsresult NeedToSearchReplicatedLDAPDirectories(nsIPref *aPrefs, PRBool *aNeedToSearch);
+    nsresult NeedToSearchLocalDirectories(nsIPref *aPrefs, PRBool *aNeedToSearch);
 };
 
 

@@ -46,12 +46,12 @@
 #include "nsIAddrBookSession.h"
 #include "nsIRDFService.h"
 
-#include "nsIPref.h"
-
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
-
+#include "nsNetCID.h"
+#include "nsIIOService.h"
+#include "nsIPref.h"
 
 nsAbLDAPDirectory::nsAbLDAPDirectory() :
     nsAbDirectoryRDFResource(),
@@ -107,20 +107,19 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
     mURL = do_CreateInstance(NS_LDAPURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv,rv);
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // turn mURINoQuery into a pref name;
-    // moz-abldapdirectory://ldap_2.servers.nscpphonebook into -> "ldap_2.servers.nscpphonebook.uri"
-
+    // use mURINoQuery to get a prefName
     nsCAutoString prefName;
     prefName = nsDependentCString(mURINoQuery.get() + kLDAPDirectoryRootLen) + NS_LITERAL_CSTRING(".uri");
 
-    nsXPIDLCString ldapURL;
-    rv = pref->CopyCharPref(prefName.get(), getter_Copies(ldapURL));
+    // turn moz-abldapdirectory://ldap_2.servers.nscpphonebook into -> "ldap_2.servers.nscpphonebook.uri"
+    nsXPIDLCString URI;
+    rv = prefs->CopyCharPref(prefName.get(), getter_Copies(URI));
     NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = mURL->SetSpec(ldapURL);
+    
+    rv = mURL->SetSpec(URI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);
@@ -157,16 +156,60 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsIEnumerator** result)
 {
     nsresult rv;
     
-    // Start the search
-    rv = StartSearch ();
-    NS_ENSURE_SUCCESS(rv, rv);
+    // when offline, we need to get the child cards for the local, replicated mdb directory 
+    PRBool offline;
+    nsCOMPtr <nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = ioService->GetOffline(&offline);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    if (mIsQueryURI && offline) {
+      nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsISupportsArray> array;
-    NS_NewISupportsArray(getter_AddRefs(array));
-    if (!array)
-            return NS_ERROR_OUT_OF_MEMORY;
+      nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    return array->Enumerate(result);
+      // use mURINoQuery to get a prefName
+      nsCAutoString prefName;
+      prefName = nsDependentCString(mURINoQuery.get() + kLDAPDirectoryRootLen) + NS_LITERAL_CSTRING(".filename");
+
+      nsXPIDLCString fileName;
+      rv = prefs->CopyCharPref(prefName.get(), getter_Copies(fileName));
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      // if there is no fileName, bail out now.
+      if (fileName.IsEmpty())
+        return NS_OK;
+
+      // perform the same query, but on the local directory
+      nsCAutoString localDirectoryURI;
+      localDirectoryURI = NS_LITERAL_CSTRING("moz-abmdbdirectory://") + fileName + NS_LITERAL_CSTRING("?") + mQueryString;
+      
+      nsCOMPtr <nsIRDFResource> resource;
+      rv = rdfService->GetResource(localDirectoryURI.get(), getter_AddRefs(resource));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(resource, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = directory->GetChildCards(result);
+    }
+    else {
+      // Start the search
+      rv = StartSearch();
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsCOMPtr<nsISupportsArray> array;
+      NS_NewISupportsArray(getter_AddRefs(array));
+      if (!array)
+        return NS_ERROR_OUT_OF_MEMORY;
+      
+      rv = array->Enumerate(result);
+    }
+
+    NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
 }
 
 NS_IMETHODIMP nsAbLDAPDirectory::HasCard(nsIAbCard* card, PRBool* hasCard)
@@ -272,24 +315,29 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
         new nsAbDirSearchListener (this);
     queryListener = _queryListener;
 
-    // Perform the query
-    //
-    // XXX todo, instead of 100, use the ldap_2.servers.xxx.maxHits pref
-    // the problem is how to get that value here.
-    //
-    // I'm thinking that nsAbDirectories should know their key so that
-    // they can do a lookup of server values from the key, when they need it
-    // (as those values can change)
-    rv = DoQuery(arguments, queryListener, 100, 0, &mContext);
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
+    // use mURINoQuery to get a prefName
+    nsCAutoString prefName;
+    prefName = nsDependentCString(mURINoQuery.get() + kLDAPDirectoryRootLen) + NS_LITERAL_CSTRING(".maxHits");
+
+    // turn moz-abldapdirectory://ldap_2.servers.nscpphonebook into -> "ldap_2.servers.nscpphonebook.maxHits"
+    PRInt32 maxHits;
+    rv = prefs->GetIntPref(prefName.get(), &maxHits);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Perform the query
+    rv = DoQuery(arguments, queryListener, maxHits, 0, &mContext);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Enter lock
     nsAutoLock lock (mLock);
     mPerformingQuery = PR_TRUE;
     mCache.Reset ();
 
     return rv;
-}
+}  
 
 NS_IMETHODIMP nsAbLDAPDirectory::StopSearch ()
 {

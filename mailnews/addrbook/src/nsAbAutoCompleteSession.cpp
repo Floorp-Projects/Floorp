@@ -49,8 +49,10 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgIdentity.h"
-#include "nsIPref.h"
 #include "prmem.h"
+#include "nsNetCID.h"
+#include "nsIIOService.h"
+#include "nsIPref.h"
 
 NS_IMPL_ISUPPORTS2(nsAbAutoCompleteSession, nsIAbAutoCompleteSession, nsIAutoCompleteSession)
 
@@ -491,8 +493,73 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
   return NS_OK;
 }
 
+nsresult
+nsAbAutoCompleteSession::NeedToSearchLocalDirectories(nsIPref *aPrefs, PRBool *aNeedToSearch)
+{
+  NS_ENSURE_ARG_POINTER(aPrefs);
+  NS_ENSURE_ARG_POINTER(aNeedToSearch);
 
-nsresult nsAbAutoCompleteSession::SearchDirectory(const char *aURI, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
+  nsresult rv = aPrefs->GetBoolPref("mail.enable_autocomplete", aNeedToSearch);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+  
+nsresult
+nsAbAutoCompleteSession::NeedToSearchReplicatedLDAPDirectories(nsIPref *aPrefs, PRBool *aNeedToSearch)
+{
+  NS_ENSURE_ARG_POINTER(aPrefs);
+  NS_ENSURE_ARG_POINTER(aNeedToSearch);
+
+  // first check if the user is set up to do LDAP autocompletion
+  nsresult rv = aPrefs->GetBoolPref("ldap_2.autoComplete.useDirectory", aNeedToSearch);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // no need to search if not set up for LDAP autocompletion
+  if (!*aNeedToSearch)
+    return NS_OK;
+
+  // now see if we are offline, if we are we need to search the
+  // replicated directory
+  nsCOMPtr <nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = ioService->GetOffline(aNeedToSearch);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+
+nsresult 
+nsAbAutoCompleteSession::SearchReplicatedLDAPDirectories(nsIPref *aPref, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results)
+{
+  NS_ENSURE_ARG_POINTER(aPref);
+
+  nsXPIDLCString prefName;
+  nsresult rv = aPref->CopyCharPref("ldap_2.autoComplete.directoryServer", getter_Copies(prefName));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (prefName.IsEmpty())
+    return NS_OK;
+    
+  // use the prefName to get the fileName pref
+  nsCAutoString fileNamePref;
+  fileNamePref = prefName + NS_LITERAL_CSTRING(".filename");
+
+  nsXPIDLCString fileName;
+  rv = aPref->CopyCharPref(fileNamePref.get(), getter_Copies(fileName));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // if there is no fileName, bail out now.
+  if (fileName.IsEmpty())
+    return NS_OK;
+
+  // use the fileName to create the URI for the replicated directory
+  nsCAutoString URI;
+  URI = NS_LITERAL_CSTRING("moz-abmdbdirectory://") + fileName;
+
+  // and then search the replicated directory
+  return SearchDirectory(URI.get(), searchStr, searchSubDirectory, results);
+}
+
+nsresult nsAbAutoCompleteSession::SearchDirectory(const char *aURI, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIRDFService> rdfService(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
@@ -541,7 +608,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(const char *aURI, nsAbAutoComp
 		                    {
 		                        nsXPIDLCString URI;
 		                        subResource->GetValue(getter_Copies(URI));
-		                        rv = SearchDirectory(URI.get(), searchStr, results, PR_TRUE);
+		                        rv = SearchDirectory(URI.get(), searchStr, PR_TRUE, results);
 		                    }
                     }
                 }
@@ -620,14 +687,19 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     if (!listener)
         return NS_ERROR_NULL_POINTER;
     
-    PRBool enableAutocomplete = PR_TRUE;
+    PRBool enableLocalAutocomplete;
+    PRBool enableReplicatedLDAPAutocomplete;
 
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    pPref->GetBoolPref("mail.enable_autocomplete", &enableAutocomplete);
+    rv = NeedToSearchLocalDirectories(prefs, &enableLocalAutocomplete);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    if (uSearchString[0] == 0 || enableAutocomplete == PR_FALSE)
+    rv = NeedToSearchReplicatedLDAPDirectories(prefs, &enableReplicatedLDAPAutocomplete);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (uSearchString[0] == 0 || (!enableLocalAutocomplete && !enableReplicatedLDAPAutocomplete))
     {
         listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
         return NS_OK;
@@ -636,7 +708,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     // figure out what we're supposed to do about the comment column, and 
     // remember it for when the results start coming back
     //
-    rv = pPref->GetIntPref("mail.autoComplete.commentColumn", 
+    rv = prefs->GetIntPref("mail.autoComplete.commentColumn", 
                            &mAutoCompleteCommentColumn);
     if (NS_FAILED(rv)) {
       mAutoCompleteCommentColumn = 0;
@@ -657,8 +729,28 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     if (NS_SUCCEEDED(rv))
 		  if (NS_FAILED(SearchPreviousResults(&searchStrings, previousSearchResult, results)))
 		  {
-			  rv = SearchDirectory(kAllDirectoryRoot, &searchStrings, results, PR_TRUE);
-		  }
+        nsresult rv1,rv2;
+
+        if (enableLocalAutocomplete) {
+          rv1 = SearchDirectory(kAllDirectoryRoot, &searchStrings, PR_TRUE, results);
+          NS_ASSERTION(NS_SUCCEEDED(rv1), "searching all local directories failed");
+        }
+        else 
+          rv1 = NS_OK;
+
+        if (enableReplicatedLDAPAutocomplete) {
+          rv2 = SearchReplicatedLDAPDirectories(prefs, &searchStrings, PR_TRUE, results);
+          NS_ASSERTION(NS_SUCCEEDED(rv2), "searching all replicated LDAP directories failed");
+        }
+        else
+          rv2 = NS_OK;
+        
+        // only bail out if both failed.  otherwise, we have some results we can use
+        if (NS_FAILED(rv1) && NS_FAILED(rv2))
+          rv = NS_ERROR_FAILURE;
+        else 
+          rv = NS_OK;
+    }
                 
     AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
     if (NS_SUCCEEDED(rv) && results)
