@@ -1,0 +1,72 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://xpinstall/locale/institems.dtd">
+
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad()"
+        title="&items.label;"
+		align = "vertical"
+		flex = "100%"
+		class="dialog"
+		width="350"
+		height="300"> 
+
+    <html:script language="javascript" src="institems.js"/>
+    
+	<box align="vertical" id="Main-Box">
+        <box align="horizontal" style="width:100%">
+            
+			<box align="vertical">
+                <html:div> <html:h2> &items.label; </html:h2> </html:div>
+            </box>
+
+            <spring flex="80%"/>
+            <box align="vertical">
+                <html:img src="chrome://global/skin/alert-icon.gif"/>
+            </box>
+        
+		</box>
+        
+        <html:div style="height:10px; width:100%">
+		    <html:hr/>
+		</html:div>
+
+        <html:div>&componentList.label;</html:div>
+            
+		<spring style="height: 1em;"/>
+            
+		<box align="vertical">
+		    <html:div id="table-housing" flex="100%">
+                <tree id="tree">
+		            <treecol style="width:55%"/>
+			        <treecol style="width:40%"/>
+
+			        <treehead>
+			            <treerow>
+			                <treecell>&moduleName.label;</treecell>
+			                <treecell>&moduleSource.label;</treecell>
+			            </treerow>
+			        </treehead>
+
+			        <treechildren id="theTreeBody">
+			        </treechildren>
+                </tree>
+			</html:div>
+        </box>
+
+		<box align="vertical">
+		    <spring style="height:7em;"/>
+		</box>
+			
+        <box align="horizontal">
+            <spring flex="100%"/>
+            <titledbutton class="dialog push" id="start" value="&dialogOk.label;"  onclick="onOk();" />
+            <titledbutton class="dialog push" value="&dialogCancel.label;"  onclick="cancel();" />
+        </box>
+    </box>
+
+
+</window>
