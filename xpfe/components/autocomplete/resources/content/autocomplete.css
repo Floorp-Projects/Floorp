@@ -21,6 +21,8 @@
 popupset {
   max-width: 0px;
   width: 0px;
+  min-width: 0%;
+  min-height: 0%;
 }
 
 treecolpicker {
