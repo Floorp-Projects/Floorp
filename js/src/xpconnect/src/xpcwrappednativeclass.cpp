@@ -1148,6 +1148,41 @@ nsXPCWrappedNativeClass::NewFunObj(JSContext *cx, JSObject *obj,
     return JS_GetFunctionObject(fun);
 }
 
+JSBool
+nsXPCWrappedNativeClass::AllowedToGetStaticProperty(XPCContext* xpcc,
+                                        nsXPCWrappedNative* wrapper, 
+                                        const XPCNativeMemberDescriptor* desc)
+{
+    NS_ASSERTION(xpcc, "bad param");
+    NS_ASSERTION(wrapper, "bad param");
+    NS_ASSERTION(desc, "bad param");
+     
+    // Constants are never security checked.
+    // Methods can always be gotten, only calling them is security checked.
+    // Only attributes are subject to security checks at 'Get' time.
+
+    if(!desc->IsAttribute())
+        return JS_TRUE;
+
+    nsIXPCSecurityManager* sm = 
+        xpcc->GetAppropriateSecurityManager(
+                nsIXPCSecurityManager::HOOK_GET_PROPERTY);
+    if(!sm)
+        return JS_TRUE;
+
+    JSContext* cx = xpcc->GetJSContext();
+    NS_ASSERTION(cx, "bad context");
+
+    {
+      AutoJSErrorAndExceptionEater eater(cx); // scoped error eater
+      return  NS_OK == sm->CanGetProperty(cx, GetIID(), wrapper->GetNative(),
+                                          GetInterfaceInfo(), 
+                                          desc->index, desc->id);
+    }
+}
+
+
+
 struct EnumStateHolder
 {
     jsval dstate;
@@ -1180,7 +1215,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
                 did = INT_TO_JSVAL(0);
             }
             // we *know* this won't fail
-            StaticEnumerate(wrapper, JSENUMERATE_INIT, &holder->sstate, &sid);
+            StaticEnumerate(wrapper, cx, JSENUMERATE_INIT, &holder->sstate, &sid);
             int total = JSVAL_TO_INT(did) + JSVAL_TO_INT(sid);
             if(total)
             {
@@ -1192,6 +1227,8 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
             else
                 delete holder;
         }
+        if (idp)
+            *idp = INT_TO_JSVAL(0);
         *statep = JSVAL_NULL;
         return JS_TRUE;
     }
@@ -1208,7 +1245,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
             }
 
             if(holder->dstate == JSVAL_NULL && holder->sstate != JSVAL_NULL)
-                StaticEnumerate(wrapper, JSENUMERATE_NEXT, &holder->sstate, idp);
+                StaticEnumerate(wrapper, cx, JSENUMERATE_NEXT, &holder->sstate, idp);
 
             // are we done?
             if(holder->dstate != JSVAL_NULL || holder->sstate != JSVAL_NULL)
@@ -1226,7 +1263,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
                               &holder->dstate, idp, wrapper,
                               as, &retval);
             if(holder->sstate != JSVAL_NULL)
-                StaticEnumerate(wrapper, JSENUMERATE_DESTROY, &holder->sstate, idp);
+                StaticEnumerate(wrapper, cx, JSENUMERATE_DESTROY, &holder->sstate, idp);
             delete holder;
         }
         *statep = JSVAL_NULL;
@@ -1240,6 +1277,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
 
 JSBool
 nsXPCWrappedNativeClass::StaticEnumerate(nsXPCWrappedNative* wrapper,
+                                         JSContext *cx,
                                          JSIterateOp enum_op,
                                          jsval *statep, jsid *idp)
 {
@@ -1256,13 +1294,22 @@ nsXPCWrappedNativeClass::StaticEnumerate(nsXPCWrappedNative* wrapper,
 
     case JSENUMERATE_NEXT:
     {
-        int index = JSVAL_TO_INT(*statep);
-        int count = totalCount;
+        // We ignore properties that the current caller is not allowed to get
 
-        if (index < count) {
-            *idp = GetMemberDescriptor(index)->id;
-            *statep =  INT_TO_JSVAL(index+1);
-            return JS_TRUE;
+        XPCContext* xpcc = nsXPConnect::GetContext(cx);
+        if(!xpcc)
+            return JS_FALSE;
+
+        for(int index = JSVAL_TO_INT(*statep); index < totalCount; index++) 
+        {
+            const XPCNativeMemberDescriptor* desc = GetMemberDescriptor(index);
+
+            if(AllowedToGetStaticProperty(xpcc, wrapper, desc))
+            {
+                *idp = desc->id;
+                *statep = INT_TO_JSVAL(index+1);
+                return JS_TRUE;
+            }
         }
     }
 
@@ -1280,7 +1327,8 @@ nsXPCWrappedNativeClass::StaticEnumerate(nsXPCWrappedNative* wrapper,
 
 JSObject*
 nsXPCWrappedNativeClass::NewInstanceJSObject(XPCContext* xpcc,
-                                             JSObject* aGlobalObject,
+                                             nsXPCWrappedNativeScope* aScope,
+                                             JSObject* aScopingJSObject,
                                              nsXPCWrappedNative* self)
 {
     JSObject* jsobj;
@@ -1289,18 +1337,20 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(XPCContext* xpcc,
                             &WrappedNativeWithCall_class :
                             &WrappedNative_class;
 
-    // shaver@mozilla.org sez:
-    // We set the prototype to be the global object, then set it back to null
-    // after creation.  If we just pass nsnull as the prototype argument, the
-    // engine will do a scope search for the class name to find the constructor,
-    // which is an expense we don't need, and will always fail anyway.
-    
     {
       AutoJSRequest req(cx); // scoped JS Request  
-      jsobj = JS_NewObject(cx, jsclazz, aGlobalObject, aGlobalObject);
+
+      JSObject* globalObject = aScopingJSObject;
+      JSObject* parent;
+
+      while(nsnull != (parent = JS_GetParent(cx, globalObject)))
+          globalObject = parent;
+    
+      jsobj = JS_NewObject(cx, jsclazz, 
+                           aScope->GetDefaultJSObjectPrototype(), globalObject);
     }
-    if(!jsobj || !JS_SetPrototype(cx, jsobj, nsnull) ||
-       !JS_SetPrivate(cx, jsobj, self))
+
+    if(!jsobj || !JS_SetPrivate(cx, jsobj, self))
         return nsnull;
 
     // wrapper is responsible for calling DynamicScriptable->Create

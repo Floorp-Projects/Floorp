@@ -42,12 +42,15 @@
 const char* XPCJSRuntime::mStrings[] = {
     "constructor",          // IDX_CONSTRUCTOR
     "toString",             // IDX_TO_STRING
+    "toSource",             // IDX_TO_SOURCE
     "lastResult",           // IDX_LAST_RESULT
     "returnCode",           // IDX_RETURN_CODE
     "value",                // IDX_VALUE
     "QueryInterface",       // IDX_QUERY_INTERFACE
     "Components",           // IDX_COMPONENTS
-    "wrappedJSObject"       // IDX_WRAPPED_JSOBJECT
+    "wrappedJSObject",      // IDX_WRAPPED_JSOBJECT
+    "Object",               // IDX_OBJECT
+    "prototype"             // IDX_PROTOTYPE
 };
 
 /***************************************************************************/

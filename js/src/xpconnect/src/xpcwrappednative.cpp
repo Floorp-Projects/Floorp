@@ -101,7 +101,7 @@ nsXPCWrappedNative::JSObjectFinalized(JSContext *cx, JSObject *obj)
 nsXPCWrappedNative*
 nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
                                         nsXPCWrappedNativeScope* aScope,
-                                        JSObject* aGlobalObject,
+                                        JSObject* aScopingJSObject,
                                         nsISupports* aObj,
                                         REFNSIID aIID,
                                         nsresult* pErr)
@@ -189,7 +189,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
         {
             // the root will do double duty as the interface wrapper
             wrapper = root = new nsXPCWrappedNative(xpcc, realObj, aScope, 
-                                                    aGlobalObject,
+                                                    aScopingJSObject,
                                                     clazz, nsnull);
             if(!wrapper)
                 goto return_wrapper;
@@ -215,7 +215,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
                 goto return_wrapper;
 
             root = new nsXPCWrappedNative(xpcc, rootObj, aScope, 
-                                          aGlobalObject, rootClazz, nsnull);
+                                          aScopingJSObject, rootClazz, nsnull);
             NS_RELEASE(rootClazz);
 
             if(!root)
@@ -239,7 +239,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     if(!wrapper)
     {
         wrapper = new nsXPCWrappedNative(xpcc, realObj, aScope, 
-                                         aGlobalObject, clazz, root);
+                                         aScopingJSObject, clazz, root);
         if(!wrapper)
             goto return_wrapper;
         if(!wrapper->mJSObj)
@@ -279,7 +279,7 @@ return_wrapper:
 nsXPCWrappedNative::nsXPCWrappedNative(XPCContext* xpcc,
                                        nsISupports* aObj,
                                        nsXPCWrappedNativeScope* aScope,
-                                       JSObject* aGlobalObject,
+                                       JSObject* aScopingJSObject,
                                        nsXPCWrappedNativeClass* aClass,
                                        nsXPCWrappedNative* root)
     : mObj(aObj),
@@ -296,7 +296,7 @@ nsXPCWrappedNative::nsXPCWrappedNative(XPCContext* xpcc,
     NS_PRECONDITION(mObj, "bad object to wrap");
     NS_PRECONDITION(mClass, "bad class for wrapper");
     NS_PRECONDITION(mScope, "bad scope for wrapper");
-    NS_PRECONDITION(aGlobalObject, "bad global object for wrapper");
+    NS_PRECONDITION(aScopingJSObject, "bad scoping js object for wrapper");
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
     NS_ADDREF(mClass);
@@ -328,7 +328,7 @@ nsXPCWrappedNative::nsXPCWrappedNative(XPCContext* xpcc,
         NS_ADDREF(mRoot);
     }
 
-    mJSObj = aClass->NewInstanceJSObject(xpcc, aGlobalObject, this);
+    mJSObj = aClass->NewInstanceJSObject(xpcc, aScope, aScopingJSObject, this);
     if(mJSObj)
     {
         // intentional second addref to be released when mJSObj is gc'd
