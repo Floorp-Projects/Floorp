@@ -114,6 +114,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccName(nsAString& _retval)
   return NS_OK;
 }
 
+//return menu accesskey: N or Alt+F
 NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeyboardShortcut(nsAString& _retval)
 {
   static PRInt32 gMenuAccesskeyModifier = -1;  // magic value of -1 indicates unitialized state
@@ -152,6 +153,22 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeyboardShortcut(nsAString& _retval
     }
     if (_retval.IsEmpty())
       _retval = accesskey;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+//return menu shortcut: Ctrl+F or Ctrl+Shift+L
+NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeybinding(nsAString& _retval)
+{
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+  if (elt) {
+    nsAutoString accelText;
+    elt->GetAttribute(NS_LITERAL_STRING("acceltext"), accelText);
+    if (accelText.IsEmpty())
+      return NS_OK;
+
+    _retval = accelText;
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

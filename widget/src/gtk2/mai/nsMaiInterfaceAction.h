@@ -64,6 +64,7 @@ public:
 
 private:
     nsCString mName;
+    nsCString mKeyBinding;
 };
 
 #endif /* __MAI_INTERFACE_ACTION_H__ */
