@@ -126,7 +126,7 @@ sub SetupPath {
 	if ( $CPU eq 'i86pc' ) {
 	    $ENV{'PATH'} = '/opt/gnu/bin:' . $ENV{'PATH'};
 	    $ENV{'LD_LIBRARY_PATH'} .= ':/opt/gnu/lib';
-	    $ConfigureEnvArgs = '';
+	    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	    # This may just be an NSPR bug, but if USE_PTHREADS is defined, then
 	    # _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and libnspr21 doesn't work.
 	    $NSPRArgs .= 'CLASSIC_NSPR=1';
@@ -217,9 +217,10 @@ sub GetSystemInfo {
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	} elsif ( $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
 	    $ObjDir = 'obj-arm-unknown-linux-gnu';
-	    $BuildName = $host . ' ' . $OS . '/arm' . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	    $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	} else {
 	    $ObjDir = 'obj-' . $CPU . '-pc-linux-gnu';
+	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	}
     }
 
@@ -231,10 +232,10 @@ sub GetSystemInfo {
     if ( $OS eq 'SunOS' ) {
 	if ( $CPU eq 'i86pc' ) {
 	    $ObjDir = 'obj-i386-pc-solaris' . $OSVer;
-	    $BuildName = $host . ' ' . $OS . '/' . i386 . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	} else {
 	    $ObjDir = 'obj-sparc-sun-solaris' . $OSVer;
-	    $BuildName = $host . ' ' . $OS . '/' . sparc . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	    $BuildName = $host . ' ' . $OS . '/sparc ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	}
 	$ObjDir =~ s/s5\./s2./o;
     }
