@@ -473,7 +473,8 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFD
   overlayFile += "/";
   overlayFile += "overlays.rdf";
 
-  void *data = mDataSourceTable->Get(&nsStringKey(overlayFile));
+  nsStringKey skey(overlayFile);
+  void *data = mDataSourceTable->Get(&skey);
   if (data)
   {
     nsCOMPtr<nsIRDFDataSource> dataSource;
@@ -563,7 +564,8 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName, n
       mDataSourceTable = new nsSupportsHashtable;
 
     nsCOMPtr<nsISupports> supports = do_QueryInterface(remote);
-    mDataSourceTable->Put(&nsStringKey(aFileName), (void*)supports.get());
+    nsStringKey skey(aFileName);
+    mDataSourceTable->Put(&skey, (void*)supports.get());
 
     return NS_OK;
 }
@@ -587,7 +589,8 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
     if (mDataSourceTable)
     {
       // current.rdf and overlays.rdf are loaded in pairs and so if one is loaded, the other should be too.
-      void *data = mDataSourceTable->Get(&nsStringKey(chromeFile));
+      nsStringKey skey(chromeFile);
+      void *data = mDataSourceTable->Get(&skey);
       if (data)
       {
         nsCOMPtr<nsIRDFDataSource> dataSource;
