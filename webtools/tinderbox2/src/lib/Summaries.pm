@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.4 $ 
-# $Date: 2000/09/01 18:37:52 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/09/18 19:25:17 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -137,7 +137,13 @@ sub summary_pages {
     # create_summary page for ($func, $tree)
     # and its index entry in $tree/index.html
 
-    push @index_html, "\t<LI><a href=\"$func.$extension\">$func</a>\n";
+    push @index_html, ("\t<LI>".
+                       HTMLPopUp::Link(
+                                       "linktxt"=>$func,
+                                       "href"=>"$func.$extension",
+                                      ).
+                       "\n"
+                      );
 
     # create a list of all different trees summary results.  This
     # makes an interesting overview page.
@@ -154,8 +160,12 @@ sub summary_pages {
   } # for $func
   
   push @index_html, (
-                     "\t<LI><a href=\"status.html\">status</a>\n",
-                     "</UL></TD></TR></TABLE>\n",
+                     "\t<LI>".
+                     HTMLPopUp::Link(
+                                     "linktxt"=>"status",
+                                     "href"=>"status.html",
+                                    ).
+                     "\n</UL></TD></TR></TABLE>\n",
                     );
 
   main::overwrite_file($index_file, @index_html);
@@ -198,8 +208,12 @@ sub treegroup_func_page    {
     
     main::overwrite_file ($file_name, $group_func_summary_page);
     
-    $link .= ("\t\t<LI><a href=\"$base_name\">".
-                  "$func</a>\n");
+    $link .= ("\t\t<LI>".
+              HTMLPopUp::Link(
+                              "linktxt"=>$func,
+                              "href"=>$base_name,
+                             ).
+              "\n");
   }
 
   return $link;
@@ -225,13 +239,23 @@ sub create_global_index {
 
   foreach (@trees) {
     my ($tree_dir) = FileStructure::get_filename($_, 'tree_HTML');
-    push @tree_dir_links, "\t\t<LI><a href=\"./$_\">$_</a></LI>\n";
+    push @tree_dir_links, (
+                           "\t\t<LI>".
+                           HTMLPopUp::Link(
+                                           "linktxt"=>$_,
+                                           "href"=>"./$_/index.html",
+                                          ).
+                           "</LI>\n"
+                          );
 
     push @tree_admin_links, (
-                             "\t\t<LI><a ".
-                             "href=\"$FileStructure::URLS{'admintree'}".
-                             "\?tree=$_\">$_".
-                             "</a></LI>\n"
+                             "\t\t<LI>".
+                             HTMLPopUp::Link(
+                                             "linktxt"=>$_,
+                                             "href"=> ("$FileStructure::URLS{'admintree'}".
+                                                       "\?tree=$_"),
+                                            ).
+                             "</LI>\n"
                             );
   }
 
@@ -346,7 +370,7 @@ EOF
                                         " as of $HTML_TIME"),
                            "href"=> (FileStructure::get_filename($TREE, 
                                                                  'tree_URL').
-                                     "/status\.html"),
+                                     "/$FileStructure::DEFAULT_HTML_PAGE"),
                           );
   
   $body .= "\t\t</th></tr><tr>\n\n";
@@ -387,9 +411,9 @@ sub panel {
   $body .= HTMLPopUp::Link(
                            "linktxt"=> ("$TREE is $TREE_STATE".
                                         " as of $HTML_TIME"),
-                           "href"=> (FileStructure::get_filename($TREE, 
+                           "href"=>(FileStructure::get_filename($TREE, 
                                                                  'tree_URL').
-                                     "/status\.html"),
+                                     "/$FileStructure::DEFAULT_HTML_PAGE"),
                      );
 
   $body .= "\n\t<table border=0 cellpadding=1 cellspacing=1>\n";
