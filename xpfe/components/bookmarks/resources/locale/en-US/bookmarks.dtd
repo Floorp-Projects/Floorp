@@ -36,7 +36,7 @@
 <!ENTITY button.newSeparator.label     "New Separator">
 <!ENTITY button.newSeparator.accesskey  "o">
 <!ENTITY command.newSeparator.accesskey "S">
-<!ENTITY menuitem.open.label           "Open Bookmark File...">
+<!ENTITY menuitem.open.label           "Open Bookmarks File...">
 <!ENTITY menuitem.open.accesskey       "O">
 <!ENTITY menuitem.import.label         "Import...">
 <!ENTITY menuitem.import.accesskey     "i">
