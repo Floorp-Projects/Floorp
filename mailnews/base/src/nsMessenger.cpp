@@ -62,6 +62,7 @@
 // mail
 #include "nsMsgUtils.h"
 #include "nsMsgBaseCID.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIMsgMailSession.h"
 
 #include "nsIMsgFolder.h"
