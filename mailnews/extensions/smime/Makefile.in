@@ -32,5 +32,4 @@ include $(topsrcdir)/config/rules.mk
 
 libs::
 	$(INSTALL) $(srcdir)/resources/content/smime.js $(DIST)/bin/defaults/pref
-	@$(REGCHROME) content messenger-smime messenger.jar
-	@$(REGCHROME) locale en-US/messenger-smime en-US.jar
+

@@ -34,8 +34,3 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	@$(REGCHROME) content messenger messenger.jar
-	@$(REGCHROME) content messenger-region messenger.jar
-	@$(REGCHROME) locale en-US/messenger en-US.jar
-	@$(REGCHROME) locale US/messenger-region US.jar

@@ -28,7 +28,3 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	@$(REGCHROME) content content-packs content-packs.jar
-	@$(REGCHROME) locale en-US/content-packs en-US.jar
-

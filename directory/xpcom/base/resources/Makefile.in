@@ -46,6 +46,3 @@ XPIDL_MODULE	= mozldap
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	@$(REGCHROME) content mozldap comm.jar
-	@$(REGCHROME) locale en-US/mozldap en-US.jar

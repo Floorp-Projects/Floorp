@@ -41,10 +41,3 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	@$(REGCHROME) skin classic/communicator classic.jar
-	@$(REGCHROME) skin classic/editor classic.jar
-	@$(REGCHROME) skin classic/global classic.jar
-	@$(REGCHROME) skin classic/messenger classic.jar
-	@$(REGCHROME) skin classic/navigator classic.jar
-	@$(REGCHROME) skin classic/forms classic.jar

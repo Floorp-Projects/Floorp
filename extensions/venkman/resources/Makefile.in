@@ -40,7 +40,3 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	@$(REGCHROME) content venkman venkman.jar
-	@$(REGCHROME) skin modern/venkman venkman.jar
-	@$(REGCHROME) locale en-US/venkman venkman.jar
