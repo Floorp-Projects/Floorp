@@ -1596,9 +1596,6 @@ $::template ||= Template->new(
     PRE_CHOMP => 1 ,
     TRIM => 1 , 
 
-    COMPILE_EXT => ".ttc",
-    COMPILE_DIR => "data/templates",
-
     # Functions for processing text within templates in various ways.
     FILTERS =>
       {
