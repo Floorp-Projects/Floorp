@@ -120,6 +120,7 @@ PRUint32 gScriptCount   = 0;
 PRUint32 gValueCount    = 0;
 PRUint32 gPropertyCount = 0;
 PRUint32 gContextCount  = 0;
+PRUint32 gFrameCount  = 0;
 #endif
 
 static jsdService   *gJsds       = 0;
@@ -151,9 +152,10 @@ static struct FilterRecord {
     PRUint32     endLine;
 } *gFilters = nsnull;
 
-static struct LiveEphemeral *gLiveValues     = nsnull;
-static struct LiveEphemeral *gLiveProperties = nsnull;
-static struct LiveEphemeral *gLiveContexts   = nsnull;
+static struct LiveEphemeral *gLiveValues      = nsnull;
+static struct LiveEphemeral *gLiveProperties  = nsnull;
+static struct LiveEphemeral *gLiveContexts    = nsnull;
+static struct LiveEphemeral *gLiveStackFrames = nsnull;
 
 /*******************************************************************************
  * utility functions for ephemeral lists
@@ -525,12 +527,12 @@ jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
     
     running = PR_TRUE;
     
-    jsdIValue *val = 0;
+    nsCOMPtr<jsdIValue> val;
     if (JS_IsExceptionPending(cx)) {
         jsval jv;
         JS_GetPendingException(cx, &jv);
         JSDValue *jsdv = JSD_NewValue (jsdc, jv);
-        val = jsdValue::FromPtr(jsdc, jsdv);
+        val = getter_AddRefs(jsdValue::FromPtr(jsdc, jsdv));
     }
     
     const char *fileName;
@@ -601,7 +603,7 @@ jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     gJsds->Pause(nsnull);
     hook->OnCall(frame, type);    
     gJsds->UnPause(nsnull);
-    frame->Invalidate();
+    jsdStackFrame::InvalidateAll();
 
     return JS_TRUE;
 }
@@ -612,7 +614,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
 {
     nsCOMPtr<jsdIExecutionHook> hook(0);
     PRUint32 hook_rv = JSD_HOOK_RETURN_CONTINUE;
-    jsdIValue *js_rv = 0;    
+    nsCOMPtr<jsdIValue> js_rv;
 
     switch (type)
     {
@@ -642,7 +644,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
             gJsds->GetThrowHook(getter_AddRefs(hook));
             if (hook) {
                 JSDValue *jsdv = JSD_GetException (jsdc, jsdthreadstate);
-                js_rv = jsdValue::FromPtr (jsdc, jsdv);
+                js_rv = getter_AddRefs(jsdValue::FromPtr (jsdc, jsdv));
             }
             break;
         }
@@ -661,16 +663,22 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
         getter_AddRefs(jsdStackFrame::FromPtr(jsdc, jsdthreadstate,
                                               native_frame));
     gJsds->Pause(nsnull);
-    hook->OnExecute (frame, type, &js_rv, &hook_rv);
+    jsdIValue *inout_rv = js_rv;
+    NS_IF_ADDREF(inout_rv);
+    hook->OnExecute (frame, type, &inout_rv, &hook_rv);
+    js_rv = inout_rv;
     gJsds->UnPause(nsnull);
-    frame->Invalidate();
+    jsdStackFrame::InvalidateAll();
         
     if (hook_rv == JSD_HOOK_RETURN_RET_WITH_VAL ||
-        hook_rv == JSD_HOOK_RETURN_THROW_WITH_VAL)
-    {
-        JSDValue *jsdv;
-        js_rv->GetJSDValue (&jsdv);
-        *rval = JSD_GetValueWrappedJSVal(jsdc, jsdv);
+        hook_rv == JSD_HOOK_RETURN_THROW_WITH_VAL) {
+        if (js_rv) {
+            JSDValue *jsdv;
+            js_rv->GetJSDValue (&jsdv);
+            *rval = JSD_GetValueWrappedJSVal(jsdc, jsdv);
+        } else {
+            *rval = JSVAL_VOID;
+        }
     }
     
     NS_IF_RELEASE(js_rv);
@@ -1017,7 +1025,7 @@ jsdScript::CreatePPLineMap()
         fun = JS_CompileUCFunction (cx, obj, "ppfun", fun->nargs, argnames,
                                     JS_GetStringChars(jsstr),
                                     JS_GetStringLength(jsstr),
-                                    "x-jsd:internal:ppbuffer:function", 3);
+                                    "x-jsd:ppbuffer?type=function", 3);
         if (!fun || !(script = JS_GetFunctionScript(cx, fun)))
             return nsnull;
         baseLine = 3;
@@ -1030,7 +1038,7 @@ jsdScript::CreatePPLineMap()
         script = JS_CompileUCScript (cx, obj,
                                      JS_GetStringChars(jsstr),
                                      JS_GetStringLength(jsstr),
-                                     "x-jsd:internal:ppbuffer:script", 1);
+                                     "x-jsd:ppbuffer?type=script", 1);
         if (!script)
             return nsnull;
         scriptOwner = PR_TRUE;
@@ -1582,6 +1590,74 @@ jsdContext::SetScriptsEnabled (PRBool _rval)
 /* Stack Frames */
 NS_IMPL_THREADSAFE_ISUPPORTS2(jsdStackFrame, jsdIStackFrame, jsdIEphemeral);
 
+jsdStackFrame::jsdStackFrame (JSDContext *aCx, JSDThreadState *aThreadState,
+                              JSDStackFrameInfo *aStackFrameInfo) :
+    mCx(aCx), mThreadState(aThreadState), mStackFrameInfo(aStackFrameInfo)
+{
+    DEBUG_CREATE ("jsdStackFrame", gFrameCount);
+    mValid = (aCx && aThreadState && aStackFrameInfo);
+    NS_INIT_ISUPPORTS();
+    if (mValid) {
+        mLiveListEntry.key = aStackFrameInfo;
+        mLiveListEntry.value = this;
+        jsds_InsertEphemeral (&gLiveStackFrames, &mLiveListEntry);
+    }
+}
+
+jsdStackFrame::~jsdStackFrame() 
+{
+    DEBUG_DESTROY ("jsdStackFrame", gFrameCount);
+    if (mValid)
+    {
+        /* call Invalidate() to take ourselves out of the live list */
+        Invalidate();
+    }
+}
+
+jsdIStackFrame *
+jsdStackFrame::FromPtr (JSDContext *aCx, JSDThreadState *aThreadState,
+                        JSDStackFrameInfo *aStackFrameInfo)
+{
+    if (!aStackFrameInfo)
+        return nsnull;
+
+    jsdIStackFrame *rv;
+    nsCOMPtr<jsdIStackFrame> frame;
+
+    nsCOMPtr<jsdIEphemeral> eph =
+        jsds_FindEphemeral (&gLiveStackFrames,
+                            NS_REINTERPRET_CAST(void *, aStackFrameInfo));
+
+    if (eph)
+    {
+        frame = do_QueryInterface(eph);
+        rv = frame;
+    }
+    else
+    {
+        rv = new jsdStackFrame (aCx, aThreadState, aStackFrameInfo);
+    }
+
+    NS_IF_ADDREF(rv);
+    return rv;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::Invalidate()
+{
+    ASSERT_VALID_EPHEMERAL;
+    mValid = PR_FALSE;
+    jsds_RemoveEphemeral (&gLiveStackFrames, &mLiveListEntry);
+    return NS_OK;
+}
+
+void
+jsdStackFrame::InvalidateAll()
+{
+    if (gLiveStackFrames)
+        jsds_InvalidateAllEphemerals (&gLiveStackFrames);
+}
+
 NS_IMETHODIMP
 jsdStackFrame::GetJSDContext(JSDContext **_rval)
 {
@@ -1610,14 +1686,6 @@ NS_IMETHODIMP
 jsdStackFrame::GetIsValid(PRBool *_rval)
 {
     *_rval = mValid;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdStackFrame::Invalidate()
-{
-    ASSERT_VALID_EPHEMERAL;
-    mValid = PR_FALSE;
     return NS_OK;
 }
 
@@ -1803,23 +1871,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(jsdValue, jsdIValue, jsdIEphemeral);
 jsdIValue *
 jsdValue::FromPtr (JSDContext *aCx, JSDValue *aValue)
 {
+    /* value will be dropped by te jsdValue destructor. */
+
     if (!aValue)
         return nsnull;
-
-    nsCOMPtr<jsdIValue> jsdiv;
-    jsval jv = JSD_GetValueWrappedJSVal (aCx, aValue);
-    nsCOMPtr<jsdIEphemeral> eph =
-        jsds_FindEphemeral (&gLiveValues, NS_REINTERPRET_CAST(void *, jv));
-    if (eph)
-    {
-        jsdiv = do_QueryInterface(eph);
-    }
-    else
-    {
-        jsdiv = new jsdValue (aCx, aValue);
-    }
     
-    jsdIValue *rv = jsdiv;
+    jsdIValue *rv = new jsdValue (aCx, aValue);
     NS_IF_ADDREF(rv);
     return rv;
 }
@@ -1831,8 +1888,6 @@ jsdValue::jsdValue (JSDContext *aCx, JSDValue *aValue) : mValid(PR_TRUE),
     DEBUG_CREATE ("jsdValue", gValueCount);
     NS_INIT_ISUPPORTS();
     mLiveListEntry.value = this;
-    mLiveListEntry.key = NS_REINTERPRET_CAST(void *,
-                                        JSD_GetValueWrappedJSVal (aCx, aValue));
     jsds_InsertEphemeral (&gLiveValues, &mLiveListEntry);
 }
 
@@ -2168,8 +2223,12 @@ jsdService::GetInitAtStartup (PRBool *_rval)
     nsresult rv;
     nsCOMPtr<nsICategoryManager>
         categoryManager(do_GetService(NS_CATMAN_CTRID, &rv));
+    
     if (NS_FAILED(rv))
+    {
+        NS_WARNING("couldn't get category manager");
         return rv;
+    }
 
     if (mInitAtStartup == triUnknown) {
         nsXPIDLCString notused;
@@ -2189,12 +2248,19 @@ jsdService::GetInitAtStartup (PRBool *_rval)
             mInitAtStartup = triYes;
             rv = SetInitAtStartup (PR_FALSE);
             if (NS_FAILED(rv))
+            {
+                NS_WARNING("SetInitAtStartup failed");
                 return rv;
+            }
         } else if (autoreg_rv == NS_ERROR_NOT_AVAILABLE) {
             mInitAtStartup = triNo;
         } else if (NS_SUCCEEDED(autoreg_rv)) {
             mInitAtStartup = triYes;
         } else {
+            NS_WARN_IF_FALSE(NS_SUCCEEDED(autoreg_rv),
+                             "couldn't get autoreg category");
+            NS_WARN_IF_FALSE(NS_SUCCEEDED(appstart_rv),
+                             "couldn't get appstart category");
             return rv;
         }
     }
@@ -2525,12 +2591,24 @@ jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
     return rv;
 }
 
+#ifdef GC_MARK_DEBUG
+extern JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
+#endif
+
 NS_IMETHODIMP
 jsdService::GC (void)
 {
     ASSERT_VALID_CONTEXT;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
+#ifdef GC_MARK_DEBUG
+    FILE *file = fopen("jsds-roots.txt", "w");
+    js_DumpGCHeap = file;
+#endif
     JS_GC(cx);
+#ifdef GC_MARK_DEBUG
+    fclose (file);
+    js_DumpGCHeap = NULL;
+#endif
     return NS_OK;
 }
     
@@ -2614,9 +2692,14 @@ jsdService::RemoveFilter (jsdIFilter *filter)
     if (!rec)
         return NS_ERROR_INVALID_ARG;
     
-    if (gFilters == rec)
+    if (gFilters == rec) {
         gFilters = NS_REINTERPRET_CAST(FilterRecord *,
                                        PR_NEXT_LINK(&rec->links));
+        /* If we're the only filter left, null out the list head. */
+        if (gFilters == rec)
+            gFilters = nsnull;
+    }
+
     
     PR_REMOVE_LINK(&rec->links);
     jsds_FreeFilter (rec);
