@@ -98,6 +98,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLDocument.h"
 
 #include "nsIImageLoadingContent.h"
@@ -2734,6 +2735,29 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         StoreURIAttribute(aNode, "data");
         return NS_OK;
     }
+
+    nsCOMPtr<nsIDOMHTMLAppletElement> nodeAsApplet = do_QueryInterface(aNode);
+    if (nodeAsApplet)
+    {
+        // For an applet, relative URIs are resolved relative to the
+        // codebase (which is resolved relative to the base URI).
+        nsCOMPtr<nsIURI> oldBase = mCurrentBaseURI;
+        nsAutoString codebase;
+        nodeAsApplet->GetCodeBase(codebase);
+        if (!codebase.IsEmpty()) {
+            nsCOMPtr<nsIURI> baseURI;
+            NS_NewURI(getter_AddRefs(baseURI), codebase,
+                      mCurrentCharset.get(), mCurrentBaseURI);
+            if (baseURI) {
+                mCurrentBaseURI = baseURI;
+            }
+        }
+        StoreURIAttribute(aNode, "code");
+        StoreURIAttribute(aNode, "archive");
+        // restore the base URI we really want to have
+        mCurrentBaseURI = oldBase;
+        return NS_OK;
+    }
     
     nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNode);
     if (nodeAsLink)
@@ -3037,6 +3061,38 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         return rv;
     }
 
+    nsCOMPtr<nsIDOMHTMLAppletElement> nodeAsApplet = do_QueryInterface(aNodeIn);
+    if (nodeAsApplet)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            nsCOMPtr<nsIDOMHTMLAppletElement> newApplet =
+                do_QueryInterface(*aNodeOut);
+            // For an applet, relative URIs are resolved relative to the
+            // codebase (which is resolved relative to the base URI).
+            nsCOMPtr<nsIURI> oldBase = mCurrentBaseURI;
+            nsAutoString codebase;
+            nodeAsApplet->GetCodeBase(codebase);
+            if (!codebase.IsEmpty()) {
+                nsCOMPtr<nsIURI> baseURI;
+                NS_NewURI(getter_AddRefs(baseURI), codebase,
+                          mCurrentCharset.get(), mCurrentBaseURI);
+                if (baseURI) {
+                    mCurrentBaseURI = baseURI;
+                }
+            }
+            // Unset the codebase too, since we'll correctly relativize the
+            // code and archive paths.
+            newApplet->RemoveAttribute(NS_LITERAL_STRING("codebase"));
+            FixupNodeAttribute(*aNodeOut, "code");
+            FixupNodeAttribute(*aNodeOut, "archive");
+            // restore the base URI we really want to have
+            mCurrentBaseURI = oldBase;
+        }
+        return rv;
+    }
+    
     nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNodeIn);
     if (nodeAsLink)
     {
