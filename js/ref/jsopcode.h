@@ -173,6 +173,9 @@ extern JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script);
 
 extern JSBool
+js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun, JSBool newlines);
+
+extern JSBool
 js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines);
 
 /*

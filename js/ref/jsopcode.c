@@ -1996,6 +1996,26 @@ js_DecompileScript(JSPrinter *jp, JSScript *script)
 }
 
 JSBool
+js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun, JSBool newlines)
+{
+    JSScript *script = fun->script;
+    if (script) {
+        JSScope *oldScope, *scope = NULL;
+        JSBool ok;
+        if (fun->object) scope = (JSScope *)fun->object->map;
+        oldScope = jp->scope;
+        jp->scope = scope;
+        ok = js_DecompileCode(jp, script, script->code, (uintN)script->length);
+        jp->scope = oldScope;
+        return ok;
+    }
+    else {
+	js_printf(jp, "\t[native code]\n");
+        return JS_TRUE;
+    }
+}
+
+JSBool
 js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
 {
     JSScope *scope, *oldscope;
