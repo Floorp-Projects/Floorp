@@ -48,6 +48,7 @@
 #include "nsIXULKeyListener.h"
 #include "nsIServiceManager.h"
 #include "nsIElementFactory.h"
+#include "nsIControllerCommand.h"
 
 extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 
@@ -107,6 +108,7 @@ MAKE_CTOR(XULContentSink,XULContentSink,XULContentSink)
 MAKE_CTOR(RDFDefaultResource,DefaultResource,RDFResource)
 MAKE_CTOR(LocalStore,LocalStore,LocalStore)
 
+MAKE_CTOR(ControllerCommandManager,ControllerCommandManager,ControllerCommandManager)
 
 // The list of components we register
 static nsModuleComponentInfo components[] = 
@@ -234,6 +236,12 @@ static nsModuleComponentInfo components[] =
       NS_XULELEMENTFACTORY_CID,
       NS_ELEMENT_FACTORY_PROGID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
       CreateNewXULElementFactory
+    },
+
+    { "Controller Command Manager",
+      NS_CONTROLLERCOMMANDMANAGER_CID,
+      NS_RDF_PROGID "/controller-command-manager",
+      CreateNewControllerCommandManager
     },
 };
 
