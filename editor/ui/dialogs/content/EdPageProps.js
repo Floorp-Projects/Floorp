@@ -53,6 +53,8 @@ function Startup()
   // Default string for new page is set from DTD string in XUL,
   //   so set only if not new doc URL
   var location = editorShell.editorDocument.location;
+  var lastmodString = GetString("Unknown");
+dump("location="+location);
   if (location != "about:blank")
   {
     dialog.PageLocation.setAttribute("value", editorShell.editorDocument.location);
@@ -61,11 +63,12 @@ function Startup()
     // TODO: Convert this to local time?
     var lastmod = editorShell.editorDocument.lastModified;  // get string of last modified date
     var lastmoddate = Date.parse(lastmod);                  // convert modified string to date
-    if(lastmoddate == 0)                                    // unknown date (or January 1, 1970 GMT)
-      lastmod = GetString("Unknown");
+    if(lastmoddate != 0)                                    // unknown date (or January 1, 1970 GMT)
+      lastmodString = lastmoddate;
 
-    document.getElementById("PageModDate").setAttribute("value",lastmod);
   }
+dump(", lastmod date="+lastmoddate+"\n");
+  document.getElementById("PageModDate").setAttribute("value", lastmodString);
 
   authorElement = GetMetaElement("author");
   if (!authorElement)

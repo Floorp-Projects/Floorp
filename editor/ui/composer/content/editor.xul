@@ -224,8 +224,7 @@
                  flex="1" style="width:1em; height:1em;"/>
     </deck>
 
-    <!-- TODO: Set hidden="true" so default is to not show the editmode toolbar -->
-    <toolbar id="EditModeToolbar" autostretch="never" valign="middle" persist="hidden collapsed">
+    <toolbar id="EditModeToolbar" hidden="true" autostretch="never" valign="middle" persist="hidden collapsed">
       <text id="EditModeLabel" class="margin-left-right" value="&editMode.label;"/>
       <button id="NormalModeButton"/>
       <button id="TagModeButton"/>
