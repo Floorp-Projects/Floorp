@@ -53,7 +53,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
-#include "nsIURI.h"
 #include "nsHashtable.h"
 #include <ATSTypes.h>
 #include <SFNTTypes.h>
@@ -477,30 +476,6 @@ static PRUint16* InitGlobalCCMap()
   return map;
 }
 
-static nsresult
-InitFontEncodingProperties(void)
-{
-  // load the special encoding resolver
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), 
-                          "resource:/res/fonts/fontEncoding.properties");
-  if (NS_SUCCEEDED(rv))
-  {
-      nsCOMPtr<nsIInputStream> in;
-      rv = NS_OpenURI(getter_AddRefs(in), uri);
-      if (NS_SUCCEEDED(rv))
-      {
-          rv = nsComponentManager::
-              CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
-                        NS_GET_IID(nsIPersistentProperties),
-                        (void**)&gFontEncodingProperties);
-          if (NS_SUCCEEDED(rv))
-              rv = gFontEncodingProperties->Load(in);
-      }
-  }
-  return rv;
-}
-
 // Helper to determine if a font has a private encoding that we know something about
 static nsresult
 GetEncoding(const nsCString& aFontName, nsACString& aValue)
@@ -521,7 +496,8 @@ GetEncoding(const nsCString& aFontName, nsACString& aValue)
       return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
 
     // init the property now
-    rv = InitFontEncodingProperties();
+    rv = NS_LoadPersistentPropertiesFromURISpec(&gFontEncodingProperties,
+         NS_LITERAL_CSTRING("resource:/res/fonts/fontEncoding.properties"));
     if NS_FAILED(rv)
       return rv;
   }

@@ -61,7 +61,6 @@
 #include "nsIPersistentProperties2.h"
 #include "nsCompressedCharMap.h"
 #include "nsNetUtil.h"
-#include "nsIURI.h"
 #include "plhash.h"
 
 #include <gdk/gdkx.h>
@@ -370,7 +369,6 @@ static nsresult       GetEncoding(const char* aFontName,
 static nsresult       GetConverter(const char* aEncoding,
                                    nsIUnicodeEncoder** aConverter);
 static nsresult       FreeGlobals(void);
-static nsresult       InitFontEncodingProperties(void);
 static nsFontXftInfo* GetFontXftInfo(FcPattern* aPattern);
 
 static PLHashNumber   HashKey(const void* aString);
@@ -2845,7 +2843,8 @@ GetEncoding(const char *aFontName, char **aEncoding, nsXftFontType &aType,
 
     // if we have not init the property yet, init it right now.
     if (!gFontEncodingProperties)
-        InitFontEncodingProperties();
+        NS_LoadPersistentPropertiesFromURISpec(&gFontEncodingProperties,
+            NS_LITERAL_CSTRING("resource:/res/fonts/fontEncoding.properties"));
 
     nsAutoString encoding;
     *aEncoding = nsnull;
@@ -2951,35 +2950,6 @@ FreeGlobals(void)
     }
 
     return NS_OK;
-}
-
-/* static */
-nsresult
-InitFontEncodingProperties(void)
-{
-    nsresult rv;
-    // load the special encoding resolver
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   "resource:/res/fonts/fontEncoding.properties");
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIInputStream> in;
-    rv = NS_OpenURI(getter_AddRefs(in), uri);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = nsComponentManager::
-        CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
-                       NS_GET_IID(nsIPersistentProperties),
-                       (void**)&gFontEncodingProperties);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = gFontEncodingProperties->Load(in);
-
-    return rv;
 }
 
 /* static */

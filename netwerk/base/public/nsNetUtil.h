@@ -79,6 +79,7 @@
 #include "nsIBufferedStreams.h"
 #include "nsIInputStreamPump.h"
 #include "nsIAsyncStreamCopier.h"
+#include "nsIPersistentProperties2.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByCID
@@ -791,6 +792,42 @@ NS_NewPostDataStream(nsIInputStream  **result,
 
     // otherwise, create a string stream for the data (copies)
     return NS_NewCStringInputStream(result, data);
+}
+
+inline nsresult
+NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **result,
+                                   nsIURI                  *uri,
+                                   nsIIOService            *ioService = nsnull)
+{
+    nsCOMPtr<nsIInputStream> in;
+    nsresult rv = NS_OpenURI(getter_AddRefs(in), uri, ioService);
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIPersistentProperties> properties = 
+            do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv = properties->Load(in);
+            if (NS_SUCCEEDED(rv))
+                NS_ADDREF(*result = properties);
+        }
+    }
+    return rv;
+}
+
+inline nsresult
+NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **result,
+                                       const nsACString        &spec,
+                                       const char              *charset = nsnull,
+                                       nsIURI                  *baseURI = nsnull,
+                                       nsIIOService            *ioService = nsnull)     
+{
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = 
+        NS_NewURI(getter_AddRefs(uri), spec, charset, baseURI, ioService);
+
+    if (NS_SUCCEEDED(rv))
+        rv = NS_LoadPersistentPropertiesFromURI(result, uri, ioService);
+
+    return rv;
 }
 
 #endif // !nsNetUtil_h__

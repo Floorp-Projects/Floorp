@@ -27,7 +27,6 @@
 #include "nsIComponentManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
-#include "nsIURI.h"
 #include "nsCRT.h"
 
 #include "nsMathMLOperators.h"
@@ -279,21 +278,9 @@ InitOperators(void)
 {
   // Load the property file containing the Operator Dictionary
   nsresult rv;
-  nsAutoString uriStr;
-  nsCOMPtr<nsIURI> uri;
-  uriStr.Assign(NS_LITERAL_STRING("resource:/res/fonts/mathfont.properties"));
-  rv = NS_NewURI(getter_AddRefs(uri), uriStr);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIInputStream> in;
-  rv = NS_OpenURI(getter_AddRefs(in), uri);
-  if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIPersistentProperties> mathfontProp;
-  rv = nsComponentManager::
-       CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
-                      NS_GET_IID(nsIPersistentProperties),
-                      getter_AddRefs(mathfontProp));
-  if NS_FAILED(rv) return rv;
-  rv = mathfontProp->Load(in);
+  rv = NS_LoadPersistentPropertiesFromURISpec(getter_AddRefs(mathfontProp),
+       NS_LITERAL_CSTRING("resource:/res/fonts/mathfont.properties"));
   if NS_FAILED(rv) return rv;
 
   // Get the list of invariant chars

@@ -50,7 +50,6 @@
 #include "nsReadableUtils.h"
 
 #include "nsICharsetAlias.h"
-#include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPersistentProperties2.h"
 #include "nsCRT.h"
@@ -1933,7 +1932,8 @@ FILE *f;
   fprintf(f, "\n");
 
   // read the printer properties file
-  InitUnixPrinterProps();
+  NS_LoadPersistentPropertiesFromURISpec(getter_AddRefs(mPrinterProps),
+    NS_LITERAL_CSTRING("resource:/res/unixpsfonts.properties"));
 
   // setup prolog for each langgroup
   initlanggroup();
@@ -2864,24 +2864,6 @@ nsPostScriptObj::setlanggroup(nsIAtom * aLangGroup)
   } else {
     fprintf(f, "default_ls\n");
   }
-}
-
-PRBool
-nsPostScriptObj::InitUnixPrinterProps()
-{
-  nsCOMPtr<nsIPersistentProperties> printerprops_tmp;
-  const char propertyURL[] = "resource:/res/unixpsfonts.properties";
-  nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING(propertyURL)), PR_FALSE);
-  nsCOMPtr<nsIInputStream> in;
-  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(in), uri), PR_FALSE);
-  NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(
-    NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
-    NS_GET_IID(nsIPersistentProperties), getter_AddRefs(printerprops_tmp)),
-    PR_FALSE);
-  NS_ENSURE_SUCCESS(printerprops_tmp->Load(in), PR_FALSE);
-  mPrinterProps = printerprops_tmp;
-  return PR_TRUE;
 }
 
 PRBool
