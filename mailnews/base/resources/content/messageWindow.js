@@ -147,7 +147,7 @@ function OnLoadMessageWindow()
   	AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
-	verifyAccounts();
+	verifyAccounts(null);
 
 	InitMsgWindow();
 

@@ -50,7 +50,7 @@ function OnUnloadAddressBook()
 function OnLoadAddressBook()
 {
 	gAddressBookBundle = document.getElementById("bundle_addressBook");
-	verifyAccounts(); 	// this will do migration, if we need to.
+	verifyAccounts(null); 	// this will do migration, if we need to.
 
 	top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);

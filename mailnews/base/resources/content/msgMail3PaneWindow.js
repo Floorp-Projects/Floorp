@@ -362,7 +362,7 @@ function OnLoadMessenger()
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
   Create3PaneGlobals();
-  verifyAccounts();
+  verifyAccounts(null);
     
   HideAccountCentral();
   loadStartPage();
