@@ -189,9 +189,8 @@ protected:
   EVENT_CALLBACK 		mEventCallback;
   nsIDeviceContext 	*mContext;
   nsIFontMetrics 		*mFontMetrics;
-  nsToolkit   			*mToolkit;
+  nsToolkit					*mToolkit;
   nsIAppShell 			*mAppShell;
-
   nsIMouseListener 	*mMouseListener;
   nsIEventListener 	*mEventListener;
 

@@ -21,24 +21,21 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsXtEventHandler.h"
-
-#include <Xm/Text.h>
 
 #define DBG 0
 
-extern int mIsPasswordCallBacksInstalled;
 
 //-------------------------------------------------------------------------
 //
 // nsTextWidget constructor
 //
 //-------------------------------------------------------------------------
-nsTextWidget::nsTextWidget(nsISupports *aOuter) : nsWindow(aOuter),
-  mIsPasswordCallBacksInstalled(PR_FALSE),
-  mMakeReadOnly(PR_FALSE),
-  mMakePassword(PR_FALSE)
+nsTextWidget::nsTextWidget(nsISupports *aOuter): nsWindow(aOuter)
 {
+  mIsPasswordCallBacksInstalled = PR_FALSE;
+  mMakeReadOnly=PR_FALSE;
+  mMakePassword=PR_FALSE;
+  mTE_Data = nsnull;
   //mBackground = NS_RGB(124, 124, 124);
 }
 
@@ -49,6 +46,8 @@ nsTextWidget::nsTextWidget(nsISupports *aOuter) : nsWindow(aOuter),
 //-------------------------------------------------------------------------
 nsTextWidget::~nsTextWidget()
 {
+	if(mTE_Data!=nsnull)
+		WEDispose(mTE_Data);
 }
 
 //-------------------------------------------------------------------------
@@ -60,64 +59,64 @@ void nsTextWidget::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData) 
 {
+LongRect		destRect,viewRect;
+PRUint32		teFlags=0;
+GrafPtr			curport;
+
+
+  mParent = aParent;
   aParent->AddChild(this);
-  Widget parentWidget = nsnull;
 
   if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
+	
+	WindowPtr window = nsnull;
 
-  if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
+  if (aParent) 
+    window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
+	else 
+		if (aAppShell)
+    	window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
 
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
-  mWidget = ::XtVaCreateManagedWidget("button",
-                                    xmTextWidgetClass, 
-                                    parentWidget,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNhighlightOnEnter, False,
-                                    XmNeditable, mMakeReadOnly?False:True,
-		                    XmNx, aRect.x,
-		                    XmNy, aRect.y, 
-                                    nsnull);
-  mHelper = new nsTextHelper(mWidget);
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks("nsTextWidget");
-
-  XtAddCallback(mWidget,
-                XmNfocusCallback,
-                nsXtWidget_Focus_Callback,
-                this);
-
-  XtAddCallback(mWidget,
-                XmNlosingFocusCallback,
-                nsXtWidget_Focus_Callback,
-                this);
-
-  if (mMakeReadOnly) {
-    SetReadOnly(PR_TRUE);
-  }
-  if (mMakePassword) {
-    SetPassword(PR_TRUE);
-    PasswordData * data = new PasswordData();
-    data->mPassword = "";
-    XtVaSetValues(mWidget, XmNuserData, data, NULL);
-  }
+  mIsMainWindow = PR_FALSE;
+  mWindowMadeHere = PR_TRUE;
+	mWindowRecord = (WindowRecord*)window;
+	mWindowPtr = (WindowPtr)window;
   
-  
+  NS_ASSERTION(window!=nsnull,"The WindowPtr for the widget cannot be null")
+	if (window)
+		{
+	  InitToolkit(aToolkit, aParent);
 
+	  if (DBG) fprintf(stderr, "Parent 0x%x\n", window);
+
+		// Set the bounds to the local rect
+		SetBounds(aRect);
+		
+		mWindowRegion = NewRgn();
+		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
+
+
+	  // save the event callback function
+	  mEventCallback = aHandleEventFunction;
+	  
+	  //mMouseDownInButton = PR_FALSE;
+	  //mWidgetArmed = PR_FALSE;
+
+	  //InitCallbacks("nsButton");
+	  
+	  // Initialize the TE record
+	  viewRect.left = aRect.x;
+	  viewRect.top = aRect.y;
+	  viewRect.right = aRect.x+aRect.width;
+	  viewRect.bottom = aRect.y+aRect.height;
+	  destRect = viewRect;
+	  ::GetPort(&curport);
+	  ::SetPort(mWindowPtr);
+		WENew(&destRect,&viewRect,teFlags,&mTE_Data);
+		::SetPort(curport);
+		
+	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
+		}
 
 }
 
@@ -158,10 +157,62 @@ nsresult nsTextWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 PRBool nsTextWidget::OnPaint(nsPaintEvent & aEvent)
 {
+nsRect							therect;
+Rect								macrect;
+GrafPtr							theport;
+RGBColor						blackcolor = {0,0,0};
+RgnHandle						thergn;
+	
+		GetPort(&theport);
+	::SetPort(mWindowPtr);
+	GetBounds(therect);
+	nsRectToMacRect(therect,macrect);
+	thergn = ::NewRgn();
+	::GetClip(thergn);
+	::ClipRect(&macrect);
+	//::EraseRoundRect(&macrect,10,10);
+	//::PenSize(1,1);
+	//::FrameRoundRect(&macrect,10,10); 
+
+	WEActivate(mTE_Data);
+	WEUpdate(nsnull,mTE_Data);
+	::PenSize(1,1);
+	::SetClip(thergn);
+	::SetPort(theport);
+	
   return PR_FALSE;
 }
 
+//--------------------------------------------------------------
+void nsTextWidget::PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers)
+{
+PRBool 	result=PR_TRUE;
 
+	WEKey(aKey,aModifiers,mTE_Data);
+}
+
+//--------------------------------------------------------------
+
+/*
+PRBool 
+nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
+{
+PRBool 	result=PR_TRUE;
+	
+	switch (aEvent.message)
+		{
+		case NS_MOUSE_LEFT_BUTTON_DOWN:
+			break;
+		case NS_MOUSE_LEFT_BUTTON_UP:
+			break;
+		case NS_MOUSE_EXIT:
+			break;
+		case NS_MOUSE_ENTER:
+			break;
+		}
+	return result;
+}
+*/
 //--------------------------------------------------------------
 PRBool nsTextWidget::OnResize(nsSizeEvent &aEvent)
 {
@@ -171,102 +222,137 @@ PRBool nsTextWidget::OnResize(nsSizeEvent &aEvent)
 //--------------------------------------------------------------
 void nsTextWidget::SetPassword(PRBool aIsPassword)
 {
-  if (mWidget == nsnull && aIsPassword) {
+  if ( aIsPassword) {
     mMakePassword = PR_TRUE;
     return;
   }
 
-  if (aIsPassword) {
-    if (!mIsPasswordCallBacksInstalled) {
-      XtAddCallback(mWidget, XmNmodifyVerifyCallback, nsXtWidget_Text_Callback, NULL);
-      XtAddCallback(mWidget, XmNactivateCallback,     nsXtWidget_Text_Callback, NULL);
+  if (aIsPassword) 
+  	{
+    if (!mIsPasswordCallBacksInstalled) 
+    	{
       mIsPasswordCallBacksInstalled = PR_TRUE;
-    }
-  } else {
-    if (mIsPasswordCallBacksInstalled) {
-      XtRemoveCallback(mWidget, XmNmodifyVerifyCallback, nsXtWidget_Text_Callback, NULL);
-      XtRemoveCallback(mWidget, XmNactivateCallback,     nsXtWidget_Text_Callback, NULL);
+    	}
+  	}
+ 	else 
+ 		{
+    if (mIsPasswordCallBacksInstalled) 
+    	{
       mIsPasswordCallBacksInstalled = PR_FALSE;
-    }
-  }
-  mHelper->SetPassword(aIsPassword);
+    	}
+  	}
+  //mHelper->SetPassword(aIsPassword);
 }
 
 //--------------------------------------------------------------
 PRBool  nsTextWidget::SetReadOnly(PRBool aReadOnlyFlag)
 {
-  if (mWidget == nsnull && aReadOnlyFlag) {
+  if ( aReadOnlyFlag) 
+  	{
     mMakeReadOnly = PR_TRUE;
     return PR_TRUE;
-  }
-  return mHelper->SetReadOnly(aReadOnlyFlag);
+  	}
+  	
 }
 
 //--------------------------------------------------------------
 void nsTextWidget::SetMaxTextLength(PRUint32 aChars)
 {
-  mHelper->SetMaxTextLength(aChars);
 }
 
 //--------------------------------------------------------------
-PRUint32  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
-  return mHelper->GetText(aTextBuffer, aBufferSize);
+PRUint32  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) 
+{
+Handle				thetext;
+PRInt32 			len,i;
+char					*str;
+
+  thetext = WEGetText(mTE_Data);
+  len = WEGetTextLength(mTE_Data);
+  
+  HLock(thetext);
+  str = new char[len];
+  for(i=0;i<len;i++)
+  	str[i] = (*thetext)[i];
+  HUnlock(thetext);	
+  
+  aTextBuffer.SetLength(0);
+  aTextBuffer.Append(str);
+	delete str;
+	return aTextBuffer.Length();
 }
 
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::SetText(const nsString& aText)
 { 
-  return mHelper->SetText(aText);
+char buffer[256];
+PRInt32 len;
+
+	this->RemoveText();
+	aText.ToCString(buffer,255);
+	len = strlen(buffer);
+
+	WEInsert(buffer,len,0,0,mTE_Data);
+
+	return len;
 }
 
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
 { 
-  return mHelper->InsertText(aText, aStartPos, aEndPos);
+char buffer[256];
+PRInt32 len;
+
+	aText.ToCString(buffer,255);
+	len = strlen(buffer);
+	
+	WEInsert(buffer,len,0,0,mTE_Data);
+	return(len);
 }
 
 //--------------------------------------------------------------
 void  nsTextWidget::RemoveText()
 {
-  mHelper->RemoveText();
+	WESetSelection(0, 32000,mTE_Data);
+	WEDelete(mTE_Data);
 }
 
 //--------------------------------------------------------------
 void nsTextWidget::SelectAll()
 {
-  mHelper->SelectAll();
+	WESetSelection(0, 32000,mTE_Data);
 }
 
 
 //--------------------------------------------------------------
 void  nsTextWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
-  mHelper->SetSelection(aStartSel, aEndSel);
+  WESetSelection(aStartSel, aEndSel,mTE_Data);
 }
 
 
 //--------------------------------------------------------------
 void  nsTextWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
-  mHelper->GetSelection(aStartSel, aEndSel);
+	WEGetSelection((long*)aStartSel,(long*)aEndSel,mTE_Data);
 }
 
 //--------------------------------------------------------------
 void  nsTextWidget::SetCaretPosition(PRUint32 aPosition)
 {
-  mHelper->SetCaretPosition(aPosition);
+  //mHelper->SetCaretPosition(aPosition);
 }
 
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::GetCaretPosition()
 {
-  return mHelper->GetCaretPosition();
+  //return mHelper->GetCaretPosition();
 }
 
 //--------------------------------------------------------------
 PRBool nsTextWidget::AutoErase()
 {
-  return mHelper->AutoErase();
+  //return mHelper->AutoErase();
 }
 
 

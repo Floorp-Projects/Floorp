@@ -28,9 +28,9 @@
 #include "nsButton.h"
 #include "nsRadioButton.h"
 #include "nsCheckButton.h"
+#include "nsTextWidget.h"
 
 //#include "nsScrollbar.h"
-//#include "nsTextWidget.h"
 //#include "nsTextAreaWidget.h"
 //#include "nsFileWidget.h"
 //#include "nsListBox.h"
@@ -176,6 +176,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if ( mClassID.Equals(kCCheckButtonCID)) {
         inst = new nsCheckButton(aOuter);
     }
+    else if (mClassID.Equals(kCTextWidgetCID)) {
+        inst = new nsTextWidget(aOuter);
+    }
     
     
     
@@ -189,9 +192,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (aIID.Equals(kIScrollbar)) {
         inst = nsnull;
         fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
-    }
-    else if (mClassID.Equals(kCTextWidgetCID)) {
-        inst = new nsTextWidget(aOuter);
     }
     else if (mClassID.Equals(kCTextAreaWidgetCID)) {
         inst = new nsTextAreaWidget(aOuter);
