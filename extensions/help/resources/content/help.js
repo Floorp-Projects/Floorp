@@ -39,7 +39,7 @@ var key = {
  "?navigator_pref_languages":  "chrome://help/locale/cs_nav_prefs_navigator.html#Languages",
  "?navigator_pref_helper_applications": "chrome://help/locale/cs_nav_prefs_navigator.html#Helper",
  "?navigator_pref_internet_searching": "chrome://help/locale/cs_nav_prefs_navigator.html#Internet",
- "?navigator_pref_smart_browsing": "chrome://locale/locale/cs_nav_prefs_navigator.html#Smart",  
+ "?navigator_pref_smart_browsing": "chrome://help/locale/cs_nav_prefs_navigator.html#Smart",  
 
  "?advanced_pref":  "chrome://help/locale/cs_nav_prefs_advanced.html",
  "?advanced_pref_advanced":  "chrome://help/locale/cs_nav_prefs_advanced.html#Advanced",
@@ -47,6 +47,7 @@ var key = {
  "?advanced_pref_installation": "chrome://help/locale/cs_nav_prefs_advanced.html#Software_Installation",
  "?advanced_pref_mouse_wheel": "chrome://help/locale/cs_nav_prefs_advanced.html#Mouse_Wheel",
  "?advanced_pref_system":  "chrome://help/locale/cs_nav_prefs_advanced.html#system",
+ "?advanced_pref_proxies": "chrome://help/locale/cs_nav_prefs_advanced.html#nav_proxies",
 
  "?nover_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Not_Verified_Not Encrypted",
  "?ver_encrypt":  "chrome://help/locale/ssl_page_info_help.html#Verified_Encrypted",
@@ -109,8 +110,6 @@ function openHelp(uri)
   var topWindow = windowManagerInterface.getMostRecentWindow( "mozilla:help" );
   if ( topWindow ) {
      topWindow.focus();
-  } else if (window.opener) {
-      window.opener.open(uri, "_blank", "chrome,menubar,toolbar,dialog=no,resizable,scrollbars");
   } else {
       window.open(uri, "_blank", "chrome,menubar,toolbar,dialog=no,resizable,scrollbars");
   }
