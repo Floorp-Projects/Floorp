@@ -1721,8 +1721,11 @@ COOKIE_Write() {
   dirSpec->AppendNative(NS_LITERAL_CSTRING(kCookiesFileName));
 
   nsCOMPtr<nsIOutputStream> strm;
-  NS_NewLocalFileOutputStream(getter_AddRefs(strm),
-                              dirSpec);
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(strm),
+                                   dirSpec);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
 #define COOKIEFILE_LINE1 "# HTTP Cookie File\n"
 #define COOKIEFILE_LINE2 "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
@@ -1803,22 +1806,23 @@ COOKIE_Read() {
   nsCAutoString buffer;
   PRBool added_to_list;
 
+  PRBool exists = PR_FALSE;
   nsCOMPtr<nsIFile> dirSpec;
   nsresult rv = CKutil_ProfileDirectory(getter_AddRefs(dirSpec));
   if (NS_FAILED(rv)) {
     return rv;
   }
-
   dirSpec->AppendNative(NS_LITERAL_CSTRING(kCookiesFileName));
-
-  nsCOMPtr<nsIInputStream> strm;
-  NS_NewLocalFileInputStream(getter_AddRefs(strm),
-                             dirSpec);
-
-  PRBool exists = PR_FALSE;;
   if (NS_FAILED(dirSpec->Exists(&exists)) || !exists) {
     /* file doesn't exist -- that's not an error */
     return NS_OK;
+  }
+
+  nsCOMPtr<nsIInputStream> strm;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(strm),
+                                  dirSpec);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   /* format is:
