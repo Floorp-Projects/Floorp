@@ -177,11 +177,11 @@ nsTreeFrame::RemoveFromSelection(nsIPresContext& aPresContext, nsTreeCellFrame* 
 		nsTreeCellFrame* theFrame = (nsTreeCellFrame*)mSelectedItems[i];
     if (theFrame == frame) {
       mSelectedItems.RemoveElementAt(i);
-      break;
+	  FireChangeHandler(aPresContext);
+      return;
     }
 	}
 
-  FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
