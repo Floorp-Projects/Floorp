@@ -49,6 +49,10 @@
 { 0xfd774840, 0x237b, 0x11d3, \
     { 0x98, 0x79, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
 
+// {4DD7EC80-30D9-11d3-9885-006008962422}
+#define NS_STRING_TEST_CID \
+{ 0x4dd7ec80, 0x30d9, 0x11d3,\
+    { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
 
 // 'namespace' class
 class xpctest
@@ -62,6 +66,9 @@ public:
 
   static const nsID& GetNoisyCID() {static nsID cid = NS_NOISY_CID; return cid;}
   static NS_METHOD ConstructNoisy(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetStringTestCID() {static nsID cid = NS_STRING_TEST_CID; return cid;}
+  static NS_METHOD ConstructStringTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
     xpctest();  // not implemented

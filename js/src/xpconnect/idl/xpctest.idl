@@ -103,3 +103,9 @@ interface nsIXPCTestOther : nsISupports {
 interface nsIXPCTestNoisy : nsISupports {
     void squawk();
 };
+
+[scriptable, uuid(d970e910-30d8-11d3-9885-006008962422)]
+interface nsIXPCTestString : nsISupports {
+    string GetStringA();
+    void GetStringB(out string s);
+};
