@@ -590,6 +590,9 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }
+  if (nsnull != mNextSibling) {
+    fprintf(out, " next=%p", mNextSibling);
+  }
   if (nsnull != mPrevInFlow) {
     fprintf(out, " prev-in-flow=%p", mPrevInFlow);
   }
@@ -600,6 +603,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
+  fprintf(out, " sc=%p", mStyleContext);
 
   // Output the children
   nsIAtom* listName = nsnull;
