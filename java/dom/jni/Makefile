@@ -14,9 +14,9 @@
 # Inc. All Rights Reserved. 
 
 DEPTH		= ../../..
-topsrcdir	= /opt/mozilla
-srcdir		= /opt/mozilla/java/dom/jni
-VPATH		= /opt/mozilla/java/dom/jni
+topsrcdir	= $(DEPTH)
+srcdir		= .
+VPATH		= .
 
 include $(DEPTH)/config/autoconf.mk
 

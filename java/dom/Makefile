@@ -13,7 +13,7 @@
 # Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
 # Inc. All Rights Reserved. 
 
-DEPTH		= /opt/mozilla
+DEPTH		= ../..
 topsrcdir	= $(DEPTH)
 srcdir		= .
 VPATH		= .
@@ -30,16 +30,15 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/config.mk
 
-JAVA_HOME	= /opt/jdk
-INCLUDES	+= -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/solaris
+INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
 DSO_LDOPTS	+= \
-	-L$(JAVA_HOME)/jre/lib/sparc \
-	-L$(JAVA_HOME)/jre/lib/sparc/classic \
-	-L$(JAVA_HOME)/jre/lib/sparc/native_threads \
-	-R$(JAVA_HOME)/jre/lib/sparc \
-	-R$(JAVA_HOME)/jre/lib/sparc/classic \
-	-R$(JAVA_HOME)/jre/lib/sparc/native_threads \
-	-ljvm -lhpi -lsunwjit
+	-L$(JAVAHOME)/jre/lib/sparc \
+	-L$(JAVAHOME)/jre/lib/sparc/classic \
+	-L$(JAVAHOME)/jre/lib/sparc/native_threads \
+	-R$(JAVAHOME)/jre/lib/sparc \
+	-R$(JAVAHOME)/jre/lib/sparc/classic \
+	-R$(JAVAHOME)/jre/lib/sparc/native_threads \
+	-ljvm -lhpi
 
 EXPORTS 	= \
 	nsJavaDOMCID.h \
