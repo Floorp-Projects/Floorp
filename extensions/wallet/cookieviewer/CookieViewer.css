@@ -82,3 +82,11 @@ tree treechildren > treeitem > treerow[selectedrow=true] > treecell > a:link {
 tree treechildren > treeitem > treerow[selectedrow ~= true]  > treecell > a:hover {
   color: #FFFFFF;
 }
+
+input.dispcell {
+  border: none;
+  background-color: #CCCCDD;
+  height: 12px;
+  font-family: tahoma;
+  font-size: 10px;
+}

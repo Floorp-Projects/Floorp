@@ -31,7 +31,7 @@
 <!DOCTYPE window SYSTEM "chrome://wallet/locale/CookieViewer.dtd" >
 
 <window id="cookieviewer"
-        width="400" height="400"
+        width="400" height="420"
         title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -43,59 +43,58 @@
 
   <tabcontrol flex="100%" align="vertical">
     <tabbox>
-      <tab>&tab.cookiesonsystem.label;</tab>
+      <tab onclick="UpdateCookieView();">&tab.cookiesonsystem.label;</tab>
       <tab>&tab.bannedservers.label;</tab>
     </tabbox>
-    <tabpanel align="horizontal" flex="100%">
+    <tabpanel align="horizontal" style="width: 400px;">
       <box class="tabpanel" id="system" flex="100%" align="vertical">
         <box><html:div>&div.cookiesonsystem.label;</html:div></box>
         <spring style="height: 10px;"/>
-        <tree id="cookietree" flex="100%" style="height: 150px;" align="vertical" onclick="ViewCookieSelected(event.target.parentNode.parentNode)">
-          <treecol width="30%"/>
-          <treecol width="70%"/>
-          <treehead>
-            <treerow>
-              <treecell>&treehead.cookiedomain.label;</treecell>
-              <treecell>&treehead.cookiename.label;</treecell>
-            </treerow>          
-          </treehead>
-          <treechildren id="cookielist"/>
-        </tree>
+        <html:div style="width: 380px;">
+          <tree id="cookietree" style="height: 150px; width: 380px;" align="vertical" onclick="ViewCookieSelected(event.target.parentNode.parentNode)">
+            <treecol width="30%"/>
+            <treecol width="70%"/>
+            <treehead>
+              <treerow>
+                <treecell>&treehead.cookiedomain.label;</treecell>
+                <treecell>&treehead.cookiename.label;</treecell>
+              </treerow>          
+            </treehead>
+            <treechildren id="cookielist"/>
+          </tree>
+        </html:div>
         <spring style="height: 5px;"/>
         <html:fieldset style="border: 2px groove #CCCCDD;">
           <html:legend>&treehead.infoselected.label;</html:legend>
-          <box align="horizontal">
             <!-- labels -->
-            <html:table>
-              <html:tr>
-                <html:td>&props.name.label;</html:td>
-              </html:tr>
-              <html:tr>
-                <html:td>&props.value.label;</html:td>
-              </html:tr>
-              <html:tr>
-                <html:td>&props.domain.label;</html:td>
-              </html:tr>
-              <html:tr>
-                <html:td>&props.path.label;</html:td>
-              </html:tr>
-              <html:tr>
-                <html:td>&props.secure.label;</html:td>
-              </html:tr>
-              <html:tr>
-                <html:td>&props.expires.label;</html:td>
-              </html:tr>
-            </html:table>
-            <!-- values -->
-            <html:table>
-              <html:tr id="ifl_name"/>
-              <html:tr id="ifl_value"/>
-              <html:tr id="ifl_domain"/>
-              <html:tr id="ifl_path"/>
-              <html:tr id="ifl_secure"/>
-              <html:tr id="ifl_expires"/>
-            </html:table>
-          </box>
+            <html:div flex="100%">
+              <html:table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <html:tr>
+                  <html:td width="55%">&props.name.label;</html:td>
+                  <html:td><html:input id="ifl_name" type="text" flex="100%" class="dispcell"/></html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td>&props.value.label;</html:td>
+                  <html:td><html:input id="ifl_value" type="text" flex="100%" class="dispcell"/></html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td id="ifl_domaintype">&props.domain.label;</html:td>
+                  <html:td><html:input id="ifl_domain" type="text" flex="100%" class="dispcell"/></html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td>&props.path.label;</html:td>
+                  <html:td><html:input id="ifl_path" type="text" flex="100%" class="dispcell"/></html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td>&props.secure.label;</html:td>
+                  <html:td><html:input id="ifl_secure" type="text" flex="100%" class="dispcell"/></html:td>
+                </html:tr>
+                <html:tr>
+                  <html:td>&props.expires.label;</html:td>
+                  <html:td><html:input id="ifl_expires" type="text" flex="100%" class="dispcell"/></html:td>
+                </html:tr>
+              </html:table>
+            </html:div>
         </html:fieldset>
         <spring flex="5%"/>
         <box align="horizontal">
@@ -106,15 +105,17 @@
       <box class="tabpanel" id="servers" flex="100%" align="vertical">
         <html:div>&div.bannedservers.label;</html:div>
         <spring flex="5%"/>
-        <tree id="permissionstree" flex="100%" style="height: 150px;" align="vertical">
-          <treehead>
-            <treerow>
-              <treecell>&treehead.sitename.label;</treecell>
-              <treecell>&treehead.status.label;</treecell>
-            </treerow>          
-          </treehead>
-          <treechildren id="permissionslist"/>
-        </tree>
+        <html:div flex="100%">
+          <tree id="permissionstree" style="height: 280px; width: 380px;" align="vertical">
+            <treehead>
+              <treerow>
+                <treecell>&treehead.sitename.label;</treecell>
+                <treecell>&treehead.status.label;</treecell>
+              </treerow>          
+            </treehead>
+            <treechildren id="permissionslist"/>
+          </tree>
+        </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
           <titledbutton value="&removepermission.label;" onclick="DeletePermissionSelected();"/>
@@ -125,7 +126,10 @@
   </tabcontrol>
   
   <!-- from dialogOverlay.xul -->
-  <box id="okCancelButtons"/>
+  <box align="horizontal">
+    <spring flex="100%"/>
+    <box id="okCancelButtons"/>
+  </box>
 
   <popup id="cancannot">
     <menu>

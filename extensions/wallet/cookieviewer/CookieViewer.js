@@ -185,17 +185,19 @@ function ViewCookieSelected(node)
       dtypecell.appendChild(content);
       continue;
     }
-    var row = document.getElementById(rows[i]);
-    if(row.hasChildNodes())
-      row.removeChild(row.lastChild);
-    // TODO: put the actual values into borderless TEXT FIELDS so they don't overrun
-    //       and so that their values can be copied.
-    var cell = document.createElement("html:td");
+    var field = document.getElementById(rows[i]);
     var content = props[i];
-    var text = document.createTextNode(content);
-    cell.appendChild(text);
-    row.appendChild(cell);
+    field.value = content;
     if(rows[i] == "ifl_expires") break;
+  }
+}
+
+function UpdateCookieView()
+{
+  ctree = document.getElementById("cookietree");
+  if (ctree.selectedItems.length > 0) {
+    var node = ctree.selectedItems[0];
+    ViewCookieSelected(node);
   }
 }
 
@@ -215,7 +217,7 @@ function DeleteCookieSelected() {
     for(k = 0; k < rows.length; k++) 
     {
       var row = document.getElementById(rows[k]);
-      row.removeChild(row.lastChild);
+      row.setAttribute("value","");
     }
   }
 }
