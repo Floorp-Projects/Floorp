@@ -96,7 +96,7 @@ class NS_COM nsPromiseFlatString
       virtual const nsBufferHandle<PRUnichar>*        GetFlatBufferHandle() const;
       virtual const nsBufferHandle<PRUnichar>*        GetBufferHandle() const;
       virtual const nsSharedBufferHandle<PRUnichar>*  GetSharedBufferHandle() const;
-      virtual PRBool Promises( const nsAString& ) const;
+      virtual PRBool IsDependentOn( const nsAString& ) const;
 
 
         // things we are forwarding now, but won't when we finally fix obsolete/nsString et al
@@ -132,7 +132,7 @@ class NS_COM nsPromiseFlatCString
       virtual const nsBufferHandle<char>*       GetFlatBufferHandle() const;
       virtual const nsBufferHandle<char>*       GetBufferHandle() const;
       virtual const nsSharedBufferHandle<char>* GetSharedBufferHandle() const;
-      virtual PRBool Promises( const nsACString& ) const;
+      virtual PRBool IsDependentOn( const nsACString& ) const;
 
 
         // things we are forwarding now, but won't when we finally fix obsolete/nsString et al

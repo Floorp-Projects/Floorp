@@ -39,9 +39,9 @@ nsDependentConcatenation::Length() const
   }
 
 PRBool
-nsDependentConcatenation::Promises( const string_type& aString ) const
+nsDependentConcatenation::IsDependentOn( const string_type& aString ) const
   {
-    return mStrings[0]->Promises(aString) || mStrings[1]->Promises(aString);
+    return mStrings[0]->IsDependentOn(aString) || mStrings[1]->IsDependentOn(aString);
   }
 
 #if 0
@@ -124,9 +124,9 @@ nsDependentCConcatenation::Length() const
   }
 
 PRBool
-nsDependentCConcatenation::Promises( const string_type& aString ) const
+nsDependentCConcatenation::IsDependentOn( const string_type& aString ) const
   {
-    return mStrings[0]->Promises(aString) || mStrings[1]->Promises(aString);
+    return mStrings[0]->IsDependentOn(aString) || mStrings[1]->IsDependentOn(aString);
   }
 
 #if 0

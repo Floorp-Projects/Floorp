@@ -107,7 +107,7 @@ class NS_COM nsDependentConcatenation
     public:
 
       virtual PRUint32 Length() const;
-      virtual PRBool Promises( const string_type& ) const;
+      virtual PRBool IsDependentOn( const string_type& ) const;
 //    virtual PRBool PromisesExactly( const string_type& ) const;
 
 //    const self_type operator+( const string_type& rhs ) const;
@@ -184,7 +184,7 @@ class NS_COM nsDependentCConcatenation
     public:
 
       virtual PRUint32 Length() const;
-      virtual PRBool Promises( const string_type& ) const;
+      virtual PRBool IsDependentOn( const string_type& ) const;
 //    virtual PRBool PromisesExactly( const string_type& ) const;
 
 //    const self_type operator+( const string_type& rhs ) const;
