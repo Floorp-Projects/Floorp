@@ -29,14 +29,12 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 
-#ifdef USE_XIM
 #include "nsTextWidget.h"
 
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-#endif
 
 #include "stdio.h"
 #include "ctype.h"
@@ -272,7 +270,7 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
   if (keysym >= GDK_F1 && keysym <= GDK_F24)
     return keysym - GDK_F1 + NS_VK_F1;
 
-#ifdef DEBUG_akkana
+#if defined(DEBUG_akkana) || defined(DEBUG_ftang)
   printf("No match in nsPlatformToDOMKeyCode: keysym is 0x%x, string is %s\n", keysym, aGEK->string);
 #endif
 
@@ -372,7 +370,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     } else
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
-#if defined(DEBUG_akkana) || defined(DEBUG_pavlov)
+#if defined(DEBUG_akkana) || defined(DEBUG_pavlov) || defined (DEBUG_ftang)
     printf("Key Press event: keyCode = 0x%x, char code = '%c'",
            anEvent.keyCode, anEvent.charCode);
     if (anEvent.isShift)
@@ -583,7 +581,6 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 #endif
 }
 
-#ifdef USE_XIM
 static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin,
                               nsEventStatus *aStatus) {
   nsCompositionEvent compEvent;
@@ -749,7 +746,6 @@ gint handle_key_release_event_for_text(GtkWidget *w, GdkEventKey* event,
   return PR_TRUE;
 }
 
-#endif // USE_XIM
 
 //==============================================================
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
@@ -784,8 +780,6 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-// XXX this doesn't work, so s/USE_XIM_NOT/USE_XIM/ when this works again
-#ifdef USE_XIM
   if (event->length) {
     static nsIUnicodeDecoder *decoder = nsnull;
     if (!decoder) {
@@ -804,10 +798,6 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
     InitKeyPressEvent(event,p, kevent);
     win->OnKey(kevent);
   }
-#else
-  InitKeyPressEvent(event,p,kevent);
-  win->OnKey(kevent);
-#endif
 
   win->Release();
   gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");

@@ -35,10 +35,8 @@
 
 //#define USE_GTK_FIXED
 
-#ifdef USE_XIM
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
-#endif
 
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -123,12 +121,10 @@ nsWidget::nsWidget()
 
 
 
-#ifdef        USE_XIM
   mIMEEnable = PR_TRUE;
   mIC = nsnull;
   mIMECompositionUniString = nsnull;
   mIMECompositionUniStringSize = 0;
-#endif
 
 }
 
@@ -149,12 +145,10 @@ nsWidget::~nsWidget()
     NS_IF_RELEASE(sLookAndFeel);
   }
 
-#ifdef USE_XIM
   if (mIMECompositionUniString) {
     delete[] mIMECompositionUniString;
     mIMECompositionUniString = nsnull;
   }
-#endif /* USE_XIM */
 }
 
 NS_IMETHODIMP nsWidget::GetAbsoluteBounds(nsRect &aRect)
@@ -1953,7 +1947,6 @@ nsWidget::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
   Release();
 
 
-#ifdef USE_XIM
   if(mIMEEnable == PR_FALSE)
   {
 #ifdef NOISY_XIM
@@ -1986,7 +1979,6 @@ nsWidget::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
 #endif
   }
 
-#endif // USE_XIM
 
 }
 //////////////////////////////////////////////////////////////////////
@@ -2018,7 +2010,6 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
   Release();
 
 
-#ifdef USE_XIM
 
   if(mIMEEnable == PR_FALSE)
   {
@@ -2048,7 +2039,6 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
 #endif
   }
 
-#endif
 
 }
 //////////////////////////////////////////////////////////////////////
@@ -2537,7 +2527,6 @@ void nsWidget::SetBackgroundColorNative(GdkColor *aColorNor,
 
 //////////////////////////////////////////////////////////////////////
 
-#ifdef USE_XIM
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -2715,4 +2704,3 @@ nsWidget::SetXICSpotLocation(nsPoint aPoint)
   return;
 }
 
-#endif

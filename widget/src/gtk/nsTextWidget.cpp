@@ -71,19 +71,11 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkWidget *parentWindow)
    */
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
                      "key_press_event",
-#ifdef USE_XIM
                      GTK_SIGNAL_FUNC(handle_key_press_event_for_text),
-#else
-                     GTK_SIGNAL_FUNC(handle_key_press_event),
-#endif
                      this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
-#ifdef USE_XIM
                      GTK_SIGNAL_FUNC(handle_key_release_event_for_text),
-#else
-                     GTK_SIGNAL_FUNC(handle_key_release_event),
-#endif
                      this);
   SetPassword(mIsPassword);
   SetReadOnly(mIsReadOnly, oldIsReadOnly);
@@ -104,7 +96,6 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkWidget *parentWindow)
   return NS_OK;
 }
 
-#ifdef USE_XIM
 PRBool nsTextWidget::OnKey(nsKeyEvent &aEvent)
 {
   if (mEventCallback) {
@@ -112,4 +103,3 @@ PRBool nsTextWidget::OnKey(nsKeyEvent &aEvent)
   }
   return PR_FALSE;
 }
-#endif

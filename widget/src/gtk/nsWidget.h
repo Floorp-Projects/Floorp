@@ -32,9 +32,7 @@ class nsIToolkit;
 
 #include <gtk/gtk.h>
 
-#ifdef USE_XIM
 #include <gdk/gdkprivate.h>
-#endif
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
@@ -255,13 +253,11 @@ protected:
 
 
 
-#ifdef USE_XIM
 public:
   PRBool          mIMEEnable;
   PRUnichar*      mIMECompositionUniString;
   PRInt32         mIMECompositionUniStringSize;
   void            SetXICSpotLocation(nsPoint aPoint);
-#endif
 
 
 
@@ -368,12 +364,10 @@ protected:
 
   PRUint32 mPreferredWidth, mPreferredHeight;
 
-#ifdef        USE_XIM
   GdkICPrivate *mIC;
   GdkICPrivate *GetXIC();
   void SetXIC(GdkICPrivate *aIC);
   void GetXYFromPosition(unsigned long *aX, unsigned long *aY);
-#endif /* USE_XIM */
 
 
 

@@ -36,9 +36,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-#ifdef USE_XIM
   PRBool   OnKey(nsKeyEvent &aEvent);
-#endif
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);
 };
