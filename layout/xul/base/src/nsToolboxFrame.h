@@ -122,6 +122,8 @@ protected:
   nsToolboxFrame();
   virtual ~nsToolboxFrame();
 
+  virtual PRBool GetInitialAlignment();
+
   virtual void UpdateStyles(nsIPresContext* aPresContext);
   virtual void CalculateGrippies(nsIPresContext& aPresContext);
   virtual nsresult ReflowGrippies(nsIPresContext&          aPresContext,

@@ -54,6 +54,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsArray.h"
+#include "nsHTMLAtoms.h"
 
 
 // Drag & Drop, Clipboard Support
@@ -124,11 +125,21 @@ nsToolboxFrame :: nsToolboxFrame ( )
     kHiddenAtom(dont_AddRef( NS_NewAtom("hidden"))),
     mDragListenerDelegate(nsnull)
 {
-  // we start off vertical
-  mHorizontal = PR_FALSE;
 }
 
 
+PRBool
+nsToolboxFrame::GetInitialAlignment()
+{
+ // by default we are vertical unless horizontal is specifically specified
+  nsString value;
+
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  if (value.EqualsIgnoreCase("horizontal"))
+    return PR_TRUE;
+  else 
+    return PR_FALSE;
+}
 //
 // nsToolboxFrame dstr
 //

@@ -21,6 +21,8 @@
    Contributor(s): 
   -->
 
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-colors.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -28,7 +30,6 @@
         onload="StartUp('Colors')"  title="&window.title;" align="vertical">
 
 <html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js"/>
-<html:div flex="100%">
 
 <html:script>
   function setColorWell(menu)
@@ -44,17 +45,15 @@
 </html:script>
 
 
-	<box id="header" style="width:100%" align="horizontal">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&lHeader;</html:B>
-		  </html:div>
-   		  <spring flex="100%"/>
-		  <html:div>&rHeader;</html:div><spring style="width:5px"/>
+  	<box class="header" align="horizontal">  
+	      <titledbutton class="left-header-text" value="&lHeader;"/>
+   		  <spring class="header-spring" flex="1"/>
+		  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
-  <box flex="100%" align="horizontal" style="width: 100%;">
-	<box align="vertical" flex="50%" style="width: 50%;">
-		<html:fieldset style="width: 50%;">
+
+
+  <box align="horizontal">
+		<html:fieldset flex="1">
 					<html:legend align="left"> 
 			<html:div>
 				&color;
@@ -88,10 +87,7 @@
 			</html:label>
 			</html:div> 
 	    	</html:fieldset>
-	</box>  
-	<spring style="width:10px"/>
-	<box align="horizontal" flex="50%" style="width: 50%;">
-			<html:fieldset style="width: 50%;">
+			<html:fieldset flex="1">
 					<html:legend align="left">
 			<html:div>&links;</html:div> 
 					</html:legend>
@@ -120,11 +116,9 @@
 			
 			</html:div>		
 		</html:fieldset>
-	</box>  
   </box>
 
-	<box align="horizontal" flex="100%" style="width: 100%;">
-			<html:fieldset style="width: 100%;">
+			<html:fieldset>
 					<html:legend align="left">
 			<html:div></html:div> 
 					</html:legend>
@@ -138,7 +132,4 @@
 			</html:label>
 			</html:div>		
 		</html:fieldset>
-	</box>
-
-</html:div>
 </window>

@@ -94,6 +94,9 @@ public:
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
+  // return true if the alignment is horizontal false if vertical
+  virtual PRBool GetInitialAlignment(); 
+
 
 private:
 

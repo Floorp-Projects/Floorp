@@ -11,3 +11,17 @@ background-color: grey
   width :25%;
   height : 326;
 }
+
+box.header {
+   background-color: #336699;
+   padding: 5px;
+}
+
+titledbutton.left-header-text {
+   color: white;
+   font-weight: bold;
+}
+
+titledbutton.right-header-text {
+   color: white;
+}

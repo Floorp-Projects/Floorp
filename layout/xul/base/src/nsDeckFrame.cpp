@@ -272,12 +272,15 @@ nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 {
   // ------- set the childs positions ---------
   nsIFrame* childFrame = mFrames.FirstChild(); 
+  nsInfoList* list = GetInfoList();
+  nsCalculatedBoxInfo* info = list->GetFirst();
+
   nscoord count = 0;
   while (nsnull != childFrame) 
   {
     nsresult rv;
     // make collapsed children not show up
-    if (mSprings[count].collapsed) {
+    if (info->collapsed) {
        //nsRect rect(0,0,0,0);
        //childFrame->GetRect(rect);
        //if (rect.width > 0 || rect.height > 0) {
@@ -290,6 +293,7 @@ nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    info = info->next;
     count++;
   }
 
@@ -357,10 +361,14 @@ nsDeckFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, n
 void
 nsDeckFrame::LayoutChildrenInRect(nsRect& size)
 {
-  for (int i=0; i<mSpringCount; i++) {
-      mSprings[i].calculatedSize.width = size.width;
-      mSprings[i].calculatedSize.height = size.height;
-      mSprings[i].sizeValid = PR_TRUE;
+  nsInfoList* list = GetInfoList();
+  nsCalculatedBoxInfo* info = list->GetFirst();
+
+  while(info) {
+      info->calculatedSize.width = size.width;
+      info->calculatedSize.height = size.height;
+      info->sizeValid = PR_TRUE;
+      info = info->next;
   }
 }
 

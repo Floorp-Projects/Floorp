@@ -36,15 +36,16 @@
 
 <html:script language="javascript" src="PrefsWindow.js"/>
 
-<html:div flex="100%">
+<html:div>
 &categoryHeader;
-<html:br/>
-
-  <html:iframe name="preftree" id="preftree" src="chrome://pref/content/preftree.xul" scrolling="auto" resize="yes" width="72%" height="356"/>
-  <html:iframe name="pref-appearance" id="pref-appearance"
-	src="chrome://pref/content/pref-appearance.xul" width="72%" height="356" resize="yes" scrolling="auto"/>
-
 </html:div>
+
+<box align="horizontal" flex="1">
+  <html:iframe name="preftree" id="preftree" src="chrome://pref/content/preftree.xul" style="width: 150px; height: 600px; overflow: auto"/>
+  <splitter/>
+  <html:iframe name="pref-appearance" id="pref-appearance"
+	src="chrome://pref/content/pref-appearance.xul" flex="1" style="width: 378px; height: 600px; overflow: auto"/>
+</box>
 
 <box id="okCancelButtons"/>
 

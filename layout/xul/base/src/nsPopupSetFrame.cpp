@@ -300,10 +300,6 @@ nsPopupSetFrame::RemoveFrame(nsIPresContext& aPresContext,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
 {
-  // need to rebuild all the springs.
-  for (int i=0; i < mSpringCount; i++) 
-    mSprings[i].clear();
-
   nsresult  rv;
   
   if (mPopupFrames.ContainsFrame(aOldFrame)) {
@@ -324,9 +320,6 @@ nsPopupSetFrame::InsertFrames(nsIPresContext& aPresContext,
                             nsIFrame* aPrevFrame,
                             nsIFrame* aFrameList)
 {
-  // need to rebuild all the springs.
-  for (int i=0; i < mSpringCount; i++) 
-    mSprings[i].clear();
 
   nsCOMPtr<nsIContent> frameChild;
   aFrameList->GetContent(getter_AddRefs(frameChild));
@@ -351,10 +344,6 @@ nsPopupSetFrame::AppendFrames(nsIPresContext& aPresContext,
 {
   if (!aFrameList)
     return NS_OK;
-
-  // need to rebuild all the springs.
-  for (int i=0; i < mSpringCount; i++) 
-    mSprings[i].clear();
 
   nsCOMPtr<nsIContent> frameChild;
   aFrameList->GetContent(getter_AddRefs(frameChild));

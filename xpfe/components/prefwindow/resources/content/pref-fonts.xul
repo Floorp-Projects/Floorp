@@ -26,46 +26,85 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="StartUp('Fonts')"  title="&window.title;">
+        onload="StartUp('Fonts')"  title="&window.title;"
+		align="vertical">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-<html:div flex="100%">
-  	<box id="header" align="horizontal">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&lHeader;</html:B>
-		  </html:div>
-   		  <spring flex="100%"/><spring style="width:60px"/>
-		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
-	</box> 
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
-			<html:div>
-				&encod.select;
-				<html:select>
-					<html:option>&encod1.option;</html:option>
-				</html:select>			
-			</html:div>
-			<html:div>
-				&varFont.select;
+    <box class="header" align="horizontal">  
+	      <titledbutton class="left-header-text" value="&lHeader;"/>
+   		  <spring class="header-spring" flex="1"/>
+		  <titledbutton class="right-header-text" value="&rHeader;"/>
+	</box>
+
+
+		<html:fieldset>
+	      <html:table width="100%">
+			  <html:tr>
+				  <html:td>
+					&encod.select;
+				  </html:td>
+
+				  <html:td>
+					<html:select>
+						<html:option>&encod1.option;</html:option>
+					</html:select>						
+				  </html:td>
+
+				  <html:td>
+				  
+				  </html:td>
+
+				  <html:td>
+				  
+				  </html:td>
+			  </html:tr>
+
+			   <html:tr>
+				  <html:td>
+  				     &varFont.select;
+				  </html:td>
+
+				  <html:td>
 				<html:select>
 					<html:option>&encod1.option;</html:option>
 				</html:select>
-				&size.select;
-				<html:select>
+				
+				  </html:td>
+
+				  <html:td>
+   				     &size.select;
+				  </html:td>
+
+				  <html:td>
+    				<html:select>
 						<html:option>&varFont.option;</html:option>
-				</html:select>
-			</html:div>
-			<html:div>
-				&fixedFont.Select;
-				<html:select>
-					<html:option>&encod1.option;</html:option>
-				</html:select>
-				&size.select;
-				<html:select>
+     				</html:select>
+				  </html:td>
+			  </html:tr>
+
+              <html:tr>
+		          <html:td>
+				  				&fixedFont.Select;
+				  </html:td>
+
+				  <html:td>
+	  				<html:select>
+  					   <html:option>&encod1.option;</html:option>
+			    	</html:select>
+				  </html:td>
+
+				  <html:td>
+				  	    &size.select;
+				  </html:td>
+
+				  <html:td>
+	  				<html:select>
 						<html:option>&varFont.option;</html:option>
-				</html:select>
-			</html:div>
+       				</html:select>
+				  </html:td>
+			  </html:tr>
+
+			</html:table>
 	<html:br />
 	<html:div>
 	&header2;
@@ -89,7 +128,6 @@
 		</html:label>
 	</html:div>	
 		</html:fieldset>
-</box>
 
 <!--
 <html:table>
@@ -150,5 +188,4 @@
 		</html:table>
 
 -->
-</html:div>
 </window>

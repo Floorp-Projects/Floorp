@@ -325,28 +325,7 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // XXX Hack because we need the pres context in some of the event handling functions...
-  mPresContext = &aPresContext;
-
-  // find the box we are in
-  nsIFrame* box = nsnull;
-  nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::box, this, box);
-
-  // if no box get the window because it is a box.
-  if (box == nsnull)
-      nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::window, this, box);
-
-  // see if the box is horizontal or vertical
-  if (box) {
-    nsCOMPtr<nsIContent> content;  
-    box->GetContent(getter_AddRefs(content));
-
-    nsString value;
-    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
-    if (value.EqualsIgnoreCase("vertical"))
-      mHorizontal = PR_TRUE;
-    else 
-      mHorizontal = PR_FALSE;
-  }
+  mPresContext = &aPresContext; 
 
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
@@ -366,6 +345,31 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
   mImpl->AddListener();
 
   return rv;
+}
+
+PRBool
+nsSplitterFrame::GetInitialAlignment()
+{
+ // find the box we are in
+  nsIFrame* box = nsnull;
+  nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::box, this, box);
+
+  // if no box get the window because it is a box.
+  if (box == nsnull)
+      nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::window, this, box);
+
+  // see if the box is horizontal or vertical
+  if (box) {
+    nsCOMPtr<nsIContent> content;  
+    box->GetContent(getter_AddRefs(content));
+
+    nsString value;
+    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+    if (value.EqualsIgnoreCase("vertical"))
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP 
