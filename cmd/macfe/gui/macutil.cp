@@ -45,6 +45,10 @@ extern "C" {
 	#include "asyncCursors.h"
 }
 
+#ifndef MOZ_NGLAYOUT
+#include "CSimpleTextView.h"
+#endif
+
 #include "mfinder.h" // needed for workaround function to bug in Apple's
 					 // ::TruncText and ::TruncString - andrewb 6/20/97
 					 
@@ -636,8 +640,8 @@ void GetDateTimeString( CStr255& dateTime )
 	::DateString( dt, longDate, dateTime, NULL );
 }
 
-unsigned short GetTextLengthInPixels( LTextEdit* textEdit );
-unsigned short GetTextLengthInPixels( LTextEdit* textEdit )
+unsigned short GetTextLengthInPixels( LTextEditView* textEdit );
+unsigned short GetTextLengthInPixels( LTextEditView* textEdit )
 {
 	XP_ASSERT( textEdit );
 	
@@ -1444,7 +1448,7 @@ void LArrowControl::DrawSelf()
 	}
 }
 
-Boolean LArrowControl::PointInHotSpot( Point inPoint, Int16 inHotSpot )
+Boolean LArrowControl::PointInHotSpot( Point inPoint, Int16 inHotSpot ) const
 {
 	Rect		localFrame;
 	Int16		midPoint;
@@ -1460,7 +1464,7 @@ Boolean LArrowControl::PointInHotSpot( Point inPoint, Int16 inHotSpot )
 	return PtInRect( inPoint, &localFrame );	
 }
 
-Int16 LArrowControl::FindHotSpot( Point inPoint )
+Int16 LArrowControl::FindHotSpot( Point inPoint ) const
 {
 	Rect		localFrame;
 	Int16		midPoint;
