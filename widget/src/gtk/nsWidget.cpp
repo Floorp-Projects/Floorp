@@ -210,10 +210,12 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-  mBounds.x = aX;
-  mBounds.y = aY;
+  // The (x,y) components of the bounds are always zero.  Dont change
+  // them here or the compositor (and other things probably) freaks out.
+
   if (mWidget)
     ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+
   return NS_OK;
 }
 
