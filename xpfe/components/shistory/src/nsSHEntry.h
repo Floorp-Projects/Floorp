@@ -60,18 +60,17 @@ class nsSHEntry : public nsIHistoryEntry,
                   public nsISHContainer
 {
 public: 
-   nsSHEntry();
+  nsSHEntry();
+  nsSHEntry(const nsSHEntry &other);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHISTORYENTRY
   NS_DECL_NSISHENTRY
   NS_DECL_NSISHCONTAINER
 
-protected:
-   virtual ~nsSHEntry();
 private:
-   
-	 
+  ~nsSHEntry() { mChildren.Clear(); }
+
   nsCOMPtr<nsIURI>                mURI;
   nsCOMPtr<nsIURI>                mReferrerURI;
   nsCOMPtr<nsIDOMDocument>        mDocument;
@@ -90,6 +89,5 @@ private:
   nsCOMPtr<nsISupports>           mCacheKey;
   nsISHEntry *                    mParent;  // weak reference
 };
-
 
 #endif /* nsSHEntry_h */
