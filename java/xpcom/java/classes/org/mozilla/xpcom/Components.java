@@ -23,18 +23,24 @@
 package org.mozilla.xpcom;
 
 public class Components {
-  public static nsIComponentManager getComponentManager() {
-    return componentMgr;
-  }
-  public static void setComponentManager(nsIComponentManager mgr) {
-    componentMgr = mgr;
-  }
-  public static nsIXPIDLServiceManager getServiceManager() {
-    return serviceMgr;
-  }
-  public static void setServiceManager(nsIXPIDLServiceManager mgr) {
-    serviceMgr = mgr;
-  }
-  private static nsIComponentManager componentMgr = null;
-  private static nsIXPIDLServiceManager serviceMgr = null;
+    public static nsIComponentManager getComponentManager() {
+        return componentMgr;
+    }
+    public static void setComponentManager(nsIComponentManager mgr) {
+        componentMgr = mgr;
+    }
+    public static nsIXPIDLServiceManager getServiceManager() {
+        return serviceMgr;
+    }
+    public static void setServiceManager(nsIXPIDLServiceManager mgr) {
+        serviceMgr = mgr;
+    }
+    public static native void initXPCOM();
+    private static nsIComponentManager componentMgr = null;
+    private static nsIXPIDLServiceManager serviceMgr = null;
+    static {
+        System.loadLibrary("blackconnectjni");
+    }
+
 };
+

@@ -59,6 +59,11 @@ EXPORTS = \
 	  
 CXXFLAGS        += -I../public -I../src
 
+DSO_LDOPTS            += \
+	$(XPCOM_LIBS) \
+	$(NULL)
+
+
 include $(topsrcdir)/config/rules.mk
 
 

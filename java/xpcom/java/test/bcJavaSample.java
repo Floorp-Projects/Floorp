@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -23,6 +23,7 @@ import org.mozilla.xpcom.*;
 import java.lang.reflect.*;
 
 public class bcJavaSample implements bcIJavaSample {
+    bcIJavaSample object;
     public bcJavaSample() {
         System.out.println("--[java]bcJavaSample constructor");
     }
@@ -41,11 +42,14 @@ public class bcJavaSample implements bcIJavaSample {
     public void test0() {
         System.out.println("--[java]bcJavaSample.test0");
         nsIXPIDLServiceManager sm = Components.getServiceManager();
-	nsISupports service = sm.getService(new CID("f0032af2-1dd1-11b2-bb75-c242dcb4f47a"), new IID("1f29f516-1dd2-11b2-9751-f129d72134d0"));
-      
+        nsISupports service = sm.getService(new CID("f0032af2-1dd1-11b2-bb75-c242dcb4f47a"), new IID("1f29f516-1dd2-11b2-9751-f129d72134d0"));
+        System.out.println("--[java]bcJavaSample.test0 current thread "+Thread.currentThread()+"\n");
+        Thread.dumpStack();
     }
     public void test1(int l) {
         System.out.println("--[java]bcJavaSample.test1 "+l+"\n");
+
+        
     }
     public void test2(bcIJavaSample o) {
         System.out.println("--[java]bcJavaSample.test2");
@@ -61,9 +65,23 @@ public class bcJavaSample implements bcIJavaSample {
                 String[] strings = {"4","3","2","1"};
                 o.test6(4, strings);
             }
+            System.out.println("--[java]bcJavaSample.test2 doing threads test\n");
+
+            System.out.println("--[java]bcJavaSample.test2 current thread "+Thread.currentThread()+"\n");
+            Thread.dumpStack();
+            o.test2(this);
+            object = o;
+            new Thread( new Runnable() {
+                    public void run() {
+                        System.out.println("--[java]bcJavaSample.test2 current thread "+Thread.currentThread()+"\n");
+                        object.test2(bcJavaSample.this);
+                    }
+                }).start();
+            
         } else {
             System.out.println("--[java]bcJavaSample.test2 o = null");
         }
+
     }
     public void test3(int count, int[] valueArray) {
         System.out.println("--[java]bcJavaSample.test3");

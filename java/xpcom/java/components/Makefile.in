@@ -42,6 +42,10 @@ include ../config/rules.mk
 COMPONENT=bcBlackConnectInit
 CLASSES=bcIBlackConnectInit.class bcBlackConnectInit.class 
 
+DSO_LDOPTS            += \
+	$(XPCOM_LIBS) \
+	$(NULL)
+
 $(COMPONENT).jar.comp: manifest $(CLASSES)
 	$(JDKHOME)/bin/jar cvfm $(COMPONENT).jar.comp  manifest *.class
 .java.class:

@@ -38,6 +38,10 @@ CPPSRCS         = bcJavaSample.cpp
 include $(topsrcdir)/config/rules.mk
 include ../config/rules.mk
 
+DSO_LDOPTS            += \
+	$(XPCOM_LIBS) \
+	$(NULL)
+
 bcJavaSample.jar.comp: manifest bcIJavaSample.class bcJavaSample.class 
 	$(JDKHOME)/bin/jar cvfm bcJavaSample.jar.comp  manifest *.class
 .java.class:

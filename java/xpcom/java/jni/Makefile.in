@@ -20,40 +20,34 @@
 # Contributor(s):
 # Igor Kushnirskiy <idk@eng.sun.com>
 #
-DEPTH           = ../../../
-topsrcdir	= $(DEPTH)
-srcdir		= .
-VPATH		= .
 
-LIBRARY_NAME    = bcxpcomstubs
-MODULE          = bcxpcomstubs
-IS_COMPONENT	= 1
+
+DEPTH		=../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
 include $(topsrcdir)/config/config.mk
 
-CXXFLAGS        +=  -I$(CONNECT_SRC)/public
-CPPSRCS =  \
-     bcXPCOMProxy.cpp   \
-     bcXPCOMStub.cpp \
-     bcXPCOMMarshalToolkit.cpp \
-     bcXPCOMStubsAndProxies.cpp \
-     bcXPCOMLog.cpp \
-     $(NULL)
-EXPORTS = \
-	bcIXPCOMStubsAndProxies.h \
-	bcXPCOMStubsAndProxiesCID.h \
-	$(NULL)
+LIBRARY_NAME = blackconnectjni
 
+CPPSRCS =  \
+	org_mozilla_xpcom_Components.cpp \
+	$(NULL)
 
 DSO_LDOPTS            += \
 	$(XPCOM_LIBS) \
 	$(NULL)
 
+JDKINCLUDE= -I$(JDKHOME)/include
+ifeq ($(OS_ARCH), Linux)
+	JDKINCLUDE += -I$(JDKHOME)/include/linux
+endif
+ifeq ($(OS_ARCH), SunOS)
+	JDKINCLUDE += -I$(JDKHOME)/include/solaris
+endif
+
+CXXFLAGS  := $(JDKINCLUDE) $(CXXFLAGS) 
 include $(topsrcdir)/config/rules.mk
-
-
-
-
-
+CCC += $(CXXFLAGS) # I want to have $(JDKHOME)/include before $(DIST) include

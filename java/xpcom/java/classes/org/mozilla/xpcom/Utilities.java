@@ -81,12 +81,3 @@ public class Utilities {
         System.loadLibrary("bcjavastubs");
     }
 }
-
-
-
-
-
-
-
-
-

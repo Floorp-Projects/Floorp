@@ -39,6 +39,10 @@ CPPSRCS		=  \
 		bcJavaComponentFactory.cpp \
 		$(NULL)
 
+DSO_LDOPTS            += \
+	$(XPCOM_LIBS) \
+	$(NULL)
+
 CXXFLAGS        += -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public
 
 include $(topsrcdir)/config/rules.mk

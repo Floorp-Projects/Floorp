@@ -128,13 +128,14 @@ void test() {
     }
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
+
     test->Test1(1000);
     bcIJavaSample *test1;
     if (NS_FAILED(r)) {
         printf("failed to get component. try to restart test\n");
     } else {
         test->Test2(a);
-    }
+        }
     test->QueryInterface(NS_GET_IID(bcIJavaSample),(void**)&test1);
     int intArray[] = {1,2,3};
     test->Test3(3, intArray);
@@ -192,10 +193,10 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
                                           nsIModule** result)  //I am using it for runnig test *only*
 {
     if (counter == 0) {
-	counter ++;
-	printf("--bcJavaSample before test\n");
-	test();
-	printf("--bcJavaSample after test\n");
+        counter ++;
+        printf("--bcJavaSample before test\n");
+        test();
+        printf("--bcJavaSample after test\n");
     }
     return NS_ERROR_FAILURE;
 }
