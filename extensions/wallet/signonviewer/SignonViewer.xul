@@ -54,7 +54,6 @@
       <box class="tabpanel" id="savedsignons" flex="100%" align="vertical">
         <box><html:div>&spiel.signonsstored.label;</html:div></box>
         <spring style="height: 10px;"/>
-        <html:div style="width: 440px;">
           <tree id="signonstree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 onkeypress="HandleEvent(event,0)">
@@ -68,7 +67,6 @@
             </treehead>
             <treechildren id="savesignonlist"/>
           </tree>
-        </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
           <titledbutton id="removeSignon" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteSignon();"/>
@@ -79,7 +77,6 @@
       <box class="tabpanel" id="ignoredsites" flex="100%" align="vertical">
         <html:div>&spiel.signonsnotstored.label;</html:div>
         <spring style="height: 10px;"/>
-        <html:div flex="100%">
           <tree id="ignoretree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 onkeypress="HandleEvent(event,1)">
@@ -91,7 +88,6 @@
             </treehead>
             <treechildren id="ignoredlist"/>
           </tree>
-        </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
           <titledbutton id="removeIgnoredSite" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteIgnoredSite();"/>
@@ -102,7 +98,6 @@
       <box class="tabpanel" id="nopreviewforms" flex="100%" align="vertical">
         <html:div>&spiel.nopreview.label;</html:div>
         <spring style="height: 10px;"/>
-        <html:div flex="100%">
           <tree id="nopreviewtree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 onkeypress="HandleEvent(event,2)">
@@ -114,7 +109,6 @@
             </treehead>
             <treechildren id="nopreviewlist"/>
           </tree>
-        </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
           <titledbutton id="removeNoPreview" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteNoPreviewForm();"/>
@@ -125,7 +119,6 @@
       <box class="tabpanel" id="nocaptureforms" flex="100%" align="vertical">
         <html:div>&spiel.nocapture.label;</html:div>
         <spring style="height: 10px;"/>
-        <html:div flex="100%">
           <tree id="nocapturetree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 onkeypress="HandleEvent(event,3)">
@@ -137,7 +130,6 @@
             </treehead>
             <treechildren id="nocapturelist"/>
           </tree>
-        </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
           <titledbutton id="removeNoCapture" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteNoCaptureForm();"/>
