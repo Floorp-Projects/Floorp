@@ -3,5 +3,4 @@
   org.mozilla.chimera.preference.privacy,
   Chimera.HelpersPrefPane,
   Chimera.SecurityPrefPane,
-  org.mozilla.chimera.preference.personal
 )
