@@ -740,8 +740,6 @@ GetUnicodeEscape(JSTokenStream *ts)
     return '\\';
 }
 
-#define JS_FILENAME_MAX 1024
-
 JSTokenType
 js_GetToken(JSContext *cx, JSTokenStream *ts)
 {
@@ -1140,7 +1138,7 @@ retry:
             if (JS_HAS_ATLINE_OPTION(cx)) {
                 jschar cp[5];
                 uintN i, line, temp;
-                char filename[JS_FILENAME_MAX];
+                char filename[1024];
 
                 if (PeekChars(ts, 5, cp) &&
                     cp[0] == '@' &&
@@ -1149,10 +1147,8 @@ retry:
                     cp[3] == 'n' &&
                     cp[4] == 'e') {
                     SkipChars(ts, 5);
-                    while ((c = GetChar(ts)) != EOF && JS_ISSPACE(c)) {
-                        if (c == '\n')
-                            break;
-                    }
+                    while ((c = GetChar(ts)) != '\n' && JS_ISSPACE(c))
+                        continue;
                     if (JS7_ISDEC(c)) {
                         line = JS7_UNDEC(c);
                         while ((c = GetChar(ts)) != EOF && JS7_ISDEC(c)) {
@@ -1163,11 +1159,8 @@ retry:
                             }
                             line = temp;
                         }
-                        while (JS_ISSPACE(c) && c != '\n') {
+                        while (c != '\n' && JS_ISSPACE(c))
                             c = GetChar(ts);
-                            if (c == EOF)
-                                break;
-                        }
                         i = 0;
                         if (c == '"') {
                             while ((c = GetChar(ts)) != EOF && c != '"') {
@@ -1175,21 +1168,20 @@ retry:
                                     UngetChar(ts, c);
                                     goto skipline;
                                 }
-                                if ((c >> 8) != 0 || i >= JS_FILENAME_MAX)
+                                if ((c >> 8) != 0 || i >= sizeof filename - 1)
                                     goto skipline;
                                 filename[i++] = (char) c;
                             }
                             if (c == '"') {
-                                while ((c = GetChar(ts)) != EOF &&
+                                while ((c = GetChar(ts)) != '\n' &&
                                        JS_ISSPACE(c)) {
-                                    if (c == '\n')
-                                        break;
+                                    continue;
                                 }
                             }
                         }
                         filename[i] = '\0';
                         if (c == '\n') {
-                            if (filename[0]) {
+                            if (i > 0) {
                                 if (ts->flags & TSF_OWNFILENAME)
                                     JS_free(cx, (void *) ts->filename);
                                 ts->filename = JS_strdup(cx, filename);
@@ -1206,7 +1198,7 @@ retry:
 
 skipline:
             while ((c = GetChar(ts)) != EOF && c != '\n')
-                /* skip to end of line */;
+                continue;
             UngetChar(ts, c);
             goto retry;
         }
