@@ -142,7 +142,8 @@ JS_ArenaGrow(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
     void *newp;
 
     JS_ARENA_ALLOCATE(newp, pool, size + incr);
-    memcpy(newp, p, size);
+    if (newp)
+        memcpy(newp, p, size);
     return newp;
 }
 
