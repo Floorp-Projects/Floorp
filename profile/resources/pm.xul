@@ -189,7 +189,7 @@ setTimeout("loadElements()", 0);
 <popup id="renamePopup">
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="100" height="50">
 If you don't type in the input field, it works.
-<html:input type="text" id="NewName" size="20" value="zz"  />
+<html:input type="text" id="NewName" size="20" />
 <titledbutton value="Ok" class="push" onclick="opener.RenameProfile(window);window.close();" />
 <titledbutton value="Cancel" class="push" onclick="window.close();" />
 </window>
@@ -261,8 +261,11 @@ bookmarks, and stored messages in your personal profile.
 <html:hr />
 <html:p />
 
-<titledbutton value="Migrate All" class="push" popup="migratePopup" />
-<titledbutton value="Start" class="push" onclick="window.close();" />
-<titledbutton value="Exit" class="push" onclick="ExitApp();" />
-
+<box align="horizontal" style="width: 100%">
+  <html:div flex="100%"/>
+  <titledbutton value="Migrate All" class="push" popup="migratePopup" />
+  <titledbutton value="Start" class="push" onclick="window.close();" />
+  <titledbutton value="Exit" class="push" onclick="ExitApp();" />
+  <html:div style="width: 10px"/>
+</box>
 </window>
