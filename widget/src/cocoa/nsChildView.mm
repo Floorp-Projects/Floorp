@@ -1707,7 +1707,7 @@ nsChildView::GetQuickDrawPort()
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   
   // Go up our view chain to fetch the correct menu to return.
-  return nil;
+  return [[self superview] getContextMenu];
 }
 
 
