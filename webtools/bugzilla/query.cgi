@@ -187,7 +187,7 @@ my $emailinput2 = GenerateEmailInput(2);
 # javascript
     
 my $jscript = << 'ENDSCRIPT';
-<script language="Javascript1.1">
+<script language="Javascript1.2">
 <!--
 var cpts = new Array();
 var vers = new Array();
