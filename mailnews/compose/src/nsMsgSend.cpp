@@ -597,8 +597,11 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		  }
     }
 
-		if (tempfile.failed()) 
+    if (NS_FAILED(tempfile.flush()) || tempfile.failed())
+    {
+			status = NS_MSG_ERROR_WRITING_FILE;
       goto FAIL;
+    }
 
     tempfile.close();
 
@@ -1052,9 +1055,15 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   
   if (mOutputFile) 
   {
-		/* If we don't do this check...ZERO length files can be sent */
-		if (mOutputFile->failed()) 
+		if (NS_FAILED(mOutputFile->flush()) || mOutputFile->failed()) 
     {
+			status = NS_MSG_ERROR_WRITING_FILE;
+			goto FAIL;
+		}
+
+		/* If we don't do this check...ZERO length files can be sent */
+		if (mTempFileSpec->GetFileSize() == 0)
+		{
 			status = NS_MSG_ERROR_WRITING_FILE;
 			goto FAIL;
 		}
@@ -1708,6 +1717,32 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       // Just try to continue and send it without this thing.
       continue;
     }
+    
+    //
+    // Before going further, check if we are dealing with a local file and
+    // if it's the case be sure the file exist!
+    nsCOMPtr<nsIFileURL> fileUrl (do_QueryInterface(attachment.url));
+    if (fileUrl)
+    {
+      PRBool isAValidFile = PR_FALSE;
+
+      nsCOMPtr<nsIFile> aFile;
+      rv = fileUrl->GetFile(getter_AddRefs(aFile));
+      if (NS_SUCCEEDED(rv) && aFile)
+      {
+        nsCOMPtr<nsILocalFile> aLocalFile (do_QueryInterface(aFile));
+        if (aLocalFile)
+        {
+          rv = aLocalFile->IsFile(&isAValidFile);
+          if (NS_FAILED(rv))
+            isAValidFile = PR_FALSE;
+        }
+      }
+      
+      if (! isAValidFile)
+        continue;
+    }  
+    
     
     // 
     // Now we have to get all of the interesting information from
@@ -4136,6 +4171,9 @@ FAIL:
 
   if (tempOutfile.is_open()) 
   {
+    if (NS_FAILED(tempOutfile.flush()) || tempOutfile.failed())
+      status = NS_MSG_ERROR_WRITING_FILE;
+
     tempOutfile.close();
     if (mCopyFileSpec)
       mCopyFileSpec->CloseStream();
