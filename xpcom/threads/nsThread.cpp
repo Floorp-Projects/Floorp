@@ -589,11 +589,12 @@ nsThreadPool::Init(PRUint32 minThreadCount,
 nsresult
 nsThreadPool::AddThread()
 {
+    nsresult rv;
     nsAutoCMonitor mon(this);
 
 #ifdef DEBUG
     PRUint32 cnt;
-    nsresult rv = mThreads->Count(&cnt);
+    rv = mThreads->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
 
     if (cnt >= mMaxThreads)
