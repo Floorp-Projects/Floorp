@@ -49,7 +49,8 @@
     { 0xcfc599f0, 0x4ca, 0x11d3, { 0x80, 0x68, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
 
 // Implementation of the sample app shell component interface.
-class nsSampleAppShellComponent : public nsISampleAppShellComponent {
+class nsSampleAppShellComponent : public nsISampleAppShellComponent,
+                                  public nsAppShellComponentImpl {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_SAMPLEAPPSHELLCOMPONENT_CID );
 
@@ -71,7 +72,6 @@ public:
 
 private:
     // Data members and implemention functions go here.
-    nsCOMPtr<nsIAppShellService> mAppShell;
 
     // Objects of this class are counted to manage library unloading...
     nsInstanceCounter instanceCounter;
@@ -82,14 +82,6 @@ NS_IMETHODIMP
 nsSampleAppShellComponent::DoDialogTests() {
     nsresult rv = NS_OK;
     DEBUG_PRINTF( PR_STDOUT, "nsSampleAppShellComponent::DoDialogTests called\n" );
-    return rv;
-}
-
-NS_IMETHODIMP
-nsSampleAppShellComponent::Initialize( nsIAppShellService *anAppShell,
-                                       nsICmdLineService  *aCmdLineService ) {
-    nsresult rv = NS_OK;
-    mAppShell = dont_QueryInterface( anAppShell );
     return rv;
 }
 

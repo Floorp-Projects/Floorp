@@ -39,7 +39,8 @@
 #define NS_UNKNOWNCONTENTTYPEHANDLER_CID \
     { 0x42770b50, 0x3e9, 0x11d3, { 0x80, 0x68, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
 
-class nsUnknownContentTypeHandler : public nsIUnknownContentTypeHandler {
+class nsUnknownContentTypeHandler : public nsIUnknownContentTypeHandler,
+                                    public nsAppShellComponentImpl {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_UNKNOWNCONTENTTYPEHANDLER_CID );
 
@@ -60,22 +61,8 @@ public:
     NS_DECL_IUNKNOWNCONTENTTYPEHANDLER
 
 private:
-    nsCOMPtr<nsIAppShellService> mAppShell;
     nsInstanceCounter            mInstanceCounter;
 }; // nsUnknownContentTypeHandler
-
-// Initialize (from nsIAppShellComponent) implementation.
-NS_IMETHODIMP
-nsUnknownContentTypeHandler::Initialize( nsIAppShellService *appShell,
-                                         nsICmdLineService *args )
-{
-    nsresult rv = NS_OK;
-
-    // Remember the app shell service in case we need it.
-    mAppShell = nsDontQueryInterface<nsIAppShellService>( appShell );
-
-    return rv;
-}
 
 struct nsUnknownContentDialog : public nsIXULWindowCallbacks,
                                        nsIDocumentObserver {
@@ -355,27 +342,11 @@ nsUnknownContentDialog::OnSave() {
 
     // Get "stream xfer component".
     nsIStreamTransfer *xfer;
-    rv = nsServiceManager::GetService( NS_ISTREAMTRANSFER_PROGID,
-                                       nsIStreamTransfer::GetIID(),
-                                       (nsISupports**)&xfer );
+    rv = nsAppShellComponentImpl::mServiceMgr->GetService( NS_ISTREAMTRANSFER_PROGID,
+                                                           nsIStreamTransfer::GetIID(),
+                                                           (nsISupports**)&xfer );
 
     if ( NS_SUCCEEDED( rv ) ) {
-        #if 1
-        // Temporary code pending proper component initialization in apprunner main.
-        static PRBool initialized = PR_FALSE;
-        if ( !initialized ) {
-            // Get app shell service.
-            nsIAppShellService *appShell;
-            rv = nsServiceManager::GetService( kAppShellServiceCID,
-                                               nsIAppShellService::GetIID(),
-                                               (nsISupports**)&appShell );
-            if ( NS_SUCCEEDED( rv ) ) {
-                rv = xfer->Initialize( appShell, 0 );
-                nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
-                initialized = PR_TRUE;
-            }
-        }
-        #endif
         // Have the component stream the url to a user-selected file.
         rv = xfer->SelectFileAndTransferLocation( mUrl );
 
@@ -386,6 +357,7 @@ nsUnknownContentDialog::OnSave() {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Error saving file, rv=0x%X\n",
                           __FILE__, (int)__LINE__, (int)rv );
         }
+        nsAppShellComponentImpl::mServiceMgr->ReleaseService( NS_ISTREAMTRANSFER_PROGID, xfer );
     } else {
         DEBUG_PRINTF( PR_STDOUT, "Unable to get stream transfer, GetService rv=0x%X\n", (int)rv );
     }

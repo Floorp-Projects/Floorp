@@ -30,7 +30,7 @@ static NS_DEFINE_IID( kCFileWidgetCID, NS_FILEWIDGET_CID  );
 static NS_DEFINE_IID( kIFileWidgetIID, NS_IFILEWIDGET_IID );
 
 // Implementation of the stream transfer component interface.
-class nsStreamTransfer : public nsIStreamTransfer {
+class nsStreamTransfer : public nsIStreamTransfer, public nsAppShellComponentImpl {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_STREAMTRANSFER_CID );
 
@@ -54,20 +54,9 @@ private:
     // Put up file picker dialog.
     NS_IMETHOD SelectFile( nsFileSpec &result );
 
-    // Hold reference to app shell service (for OpenWindow calls).
-    nsCOMPtr<nsIAppShellService> mAppShell;
-
     // Objects of this class are counted to manage library unloading...
     nsInstanceCounter instanceCounter;
 }; // nsStreamTransfer
-
-NS_IMETHODIMP
-nsStreamTransfer::Initialize( nsIAppShellService *anAppShell,
-                              nsICmdLineService  *aCmdLineService ) {
-    nsresult rv = NS_OK;
-    mAppShell = dont_QueryInterface( anAppShell );
-    return rv;
-}
 
 NS_IMETHODIMP
 nsStreamTransfer::SelectFileAndTransferLocation( nsIURL *aURL ) {

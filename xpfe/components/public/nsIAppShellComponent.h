@@ -26,8 +26,9 @@ class nsICmdLineService;
 // a6cf90ed-15b3-11d2-932e-00805f8add32
 #define NS_IAPPSHELLCOMPONENT_IID \
     { 0xa6cf90ed, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} };
-#define NS_IAPPSHELLCOMPONENT_PROGID "component://netscape/appshell/component"
+#define NS_IAPPSHELLCOMPONENT_PROGID    "component://netscape/appshell/component"
 #define NS_IAPPSHELLCOMPONENT_CLASSNAME "Mozilla AppShell Component"
+#define NS_IAPPSHELLCOMPONENT_KEY       "software/netscape/appshell/components"
 
 /*--------------------------- nsIAppShellComponent -----------------------------
 | This interface describes the fundamental communications between the          |
@@ -79,6 +80,12 @@ struct nsIAppShellComponent : public nsISupports {
     NS_IMETHOD Initialize( nsIAppShellService *appShell,
                            nsICmdLineService *args ) = 0;
 
+    /*------------------------------- Shutdown ---------------------------------
+    | Called at application shutdown (if the component had registered as a     |
+    | service).                                                                |
+    --------------------------------------------------------------------------*/
+    NS_IMETHOD Shutdown() = 0;
+
     /*------------------------- HandleAppShellEvent ----------------------------
     | This function is called (by the app shell, when its                      |
     | BroadcastAppShellEvent member function is called) to broadcast           |
@@ -100,7 +107,8 @@ struct nsIAppShellComponent : public nsISupports {
 }; // nsIAppShellComponent
 
 #define NS_DECL_IAPPSHELLCOMPONENT \
-    NS_IMETHOD Initialize( nsIAppShellService *appShell, \
-                           nsICmdLineService *args );
+    NS_IMETHOD Initialize( nsIAppShellService*, \
+                           nsICmdLineService* ); \
+    NS_IMETHOD Shutdown();
 
 #endif
