@@ -140,37 +140,41 @@ toolbar#ToolbarMode toolbarbutton {
 }
 
 toolbarbutton[observes="Console:modeAll"] {
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 toolbarbutton[observes="Console:modeAll"]:hover,
 toolbarbutton[observes="Console:modeAll"][checked="true"] {
-  -moz-image-region: rect(32px, 32px, 64px, 0px);
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
 toolbarbutton[observes="Console:modeErrors"] {
-  -moz-image-region: rect(0px, 64px, 32px, 32px);
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 toolbarbutton[observes="Console:modeErrors"]:hover,
 toolbarbutton[observes="Console:modeErrors"][checked="true"] {
-  -moz-image-region: rect(32px, 64px, 64px, 32px);
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
 toolbarbutton[observes="Console:modeWarnings"] {
-  -moz-image-region: rect(0px, 96px, 32px, 64px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 toolbarbutton[observes="Console:modeWarnings"]:hover,
 toolbarbutton[observes="Console:modeWarnings"][checked="true"] {
-  -moz-image-region: rect(32px, 96px, 64px, 64px);
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
 }
 
 toolbarbutton[observes="Console:modeMessages"] {
-  -moz-image-region: rect(0px, 128px, 32px, 96px);
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 toolbarbutton[observes="Console:modeMessages"]:hover,
 toolbarbutton[observes="Console:modeMessages"][checked="true"] {
-  -moz-image-region: rect(32px, 128px, 64px, 96px);
+  -moz-image-region: rect(16px, 64px, 32px, 48px);
 }
 
-toolbar#ToolbarMode toolbarbutton[observes="Console:clear"] {
-  list-style-image: none;
+toolbarbutton[observes="Console:clear"] {
+  -moz-image-region: rect(0px, 80px, 16px, 64px);
+}
+toolbarbutton[observes="Console:clear"]:hover,
+toolbarbutton[observes="Console:clear"][checked="true"] {
+  -moz-image-region: rect(16px, 80px, 32px, 64px);
 }

@@ -85,11 +85,11 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 }
 
 #offline-status[offline="true"] {
-  list-style-image: url("chrome://communicator/skin/icons/offline.gif");
+  list-style-image: url("chrome://communicator/skin/icons/offline.png");
 }
 
 #offline-status {
-  list-style-image: url("chrome://communicator/skin/icons/online.gif");
+  list-style-image: url("chrome://communicator/skin/icons/online.png");
 }
 
 /* ::::: directional button icons ::::: */

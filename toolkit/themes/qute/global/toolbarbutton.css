@@ -35,13 +35,9 @@ toolbarbutton {
   -moz-box-pack: center;
   margin: 0;
   border: 1px solid transparent;
-  padding: 4px;
+  padding: 6px;
   background-color: transparent;
   color: -moz-DialogText;
-}
-
-.toolbarbutton-icon {
-  margin-right: 2px;
 }
 
 .toolbarbutton-text {
@@ -57,7 +53,7 @@ toolbarbutton[buttonover="true"] {
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-  padding: 5px 3px 3px 5px;
+  padding: 7px 5px 5px 7px;
 }
 
 toolbarbutton[disabled="true"],
@@ -65,7 +61,7 @@ toolbarbutton[disabled="true"]:hover,
 toolbarbutton[disabled="true"]:hover:active,
 toolbarbutton[disabled="true"][open="true"] {
   border-color: transparent;
-  padding: 4px;
+  padding: 6px;
   color: GrayText;
 }
 
@@ -73,9 +69,13 @@ toolbarbutton[disabled="true"][open="true"] {
 
 toolbarbutton[checked="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
-  padding: 5px 3px 3px 5px !important;
+  padding: 7px 5px 5px 7px !important;
   background-image: url("chrome://global/skin/toolbar/Lighten.png");
   color: ButtonText !important;
+}
+
+toolbarbutton[checked="true"]:hover {
+  background-image: none;
 }
 
 /* ::::: toolbarbutton menu ::::: */
@@ -83,6 +83,7 @@ toolbarbutton[checked="true"] {
 .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
+  margin-left: 6px;
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
@@ -111,23 +112,28 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-box-align: center;
   -moz-box-pack: center;
   -moz-box-orient: vertical;
+  padding-right: 3px;
+}
+
+.toolbarbutton-menubutton-button:hover:active {
+  padding-right: 2px;
+}
+.toolbarbutton-menubutton-button[disabled="true"],
+.toolbarbutton-menubutton-button[disabled="true"]:hover,
+.toolbarbutton-menubutton-button[disabled="true"]:hover:active,
+.toolbarbutton-menubutton-button[disabled="true"][open="true"] {
+  padding-right: 3px
 }
 
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
   -moz-box-align: center;
-  padding: 0 0 1px 0;
+  padding: 0 4px 0 2px;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {
-  padding: 0 0 1px 0 !important;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif") !important;
-}
-
-toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker,
-toolbarbutton[type="menu-button"][buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
-  padding: 1px 0 0 0;
 }

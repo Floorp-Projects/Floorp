@@ -64,7 +64,7 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
 
 .up-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
-  -moz-image-region: rect(0px 20px 20px 0px);
+  -moz-image-region: rect(0px 16px 16px 0px);
   min-width: 0%; // don't let XUL layout min-size override our max-width setting
   min-height: 0%;
   max-width: 36px;
@@ -72,7 +72,7 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
 
 .home-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
-  -moz-image-region: rect(0px 40px 20px 20px);
+  -moz-image-region: rect(0px 32px 16px 16px);
   min-width: 0%; // don't let XUL layout min-size override our max-width setting
   min-height: 0%;
   max-width: 36px;
@@ -80,7 +80,7 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
 
 .new-dir-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
-  -moz-image-region: rect(0px, 60px, 20px, 40px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
   min-width: 0%; // don't let XUL layout min-size override our max-width setting
   min-height: 0%;
   max-width: 36px;
