@@ -94,12 +94,12 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 }
 
 NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
-                           nsString& aTitle,
-                           nsFileDlgMode aMode,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           void *aInitData)
+                               const nsString& aTitle,
+                               nsFileDlgMode aMode,
+                               nsIDeviceContext *aContext,
+                               nsIAppShell *aAppShell,
+                               nsIToolkit *aToolkit,
+                               void *aInitData)
 {
   return NS_OK;
 }

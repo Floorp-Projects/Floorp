@@ -39,12 +39,12 @@ class nsFileWidget : public nsIFileWidget
   // nsIWidget interface
   
   NS_IMETHOD            Create( nsIWidget *aParent,
-				const nsString& aTitle,
-				nsFileDlgMode aMode,
-				nsIDeviceContext *aContext = nsnull,
-				nsIAppShell *aAppShell = nsnull,
-				nsIToolkit *aToolkit = nsnull,
-				void *aInitData = nsnull);
+                                const nsString& aTitle,
+                                nsFileDlgMode aMode,
+                                nsIDeviceContext *aContext = nsnull,
+                                nsIAppShell *aAppShell = nsnull,
+                                nsIToolkit *aToolkit = nsnull,
+                                void *aInitData = nsnull);
   
   // nsIFileWidget part
   virtual PRBool          Show();
