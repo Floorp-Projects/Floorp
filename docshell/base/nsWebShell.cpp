@@ -356,40 +356,6 @@ nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
 //----------------------------------------------------------------------
 // Web Shell Services API
 
-NS_IMETHODIMP
-nsWebShell::LoadDocument(const char* aURL,
-                         const char* aCharset,
-                         PRInt32 aSource)
-{
-  // XXX hack. kee the aCharset and aSource wait to pick it up
-  nsCOMPtr<nsIContentViewer> cv;
-  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
-  if (cv)
-  {
-    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);  
-    if (muDV)
-    {
-      PRInt32 hint;
-      muDV->GetHintCharacterSetSource(&hint);
-      if( aSource > hint ) 
-      {
-        muDV->SetHintCharacterSet(nsDependentCString(aCharset));
-        muDV->SetHintCharacterSetSource(aSource);
-        if(eCharsetReloadRequested != mCharsetReloadState) 
-        {
-          mCharsetReloadState = eCharsetReloadRequested;
-          LoadURI(NS_ConvertASCIItoUCS2(aURL).get(),  // URI string
-                  LOAD_FLAGS_NONE,                    // Load flags
-                  nsnull,                             // Referring URI
-                  nsnull,                             // Post data stream
-                  nsnull);                            // Header stream
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
 //This functions is only called when a new charset is detected in loading a document. 
 //Its name should be changed to "CharsetReloadDocument"
 NS_IMETHODIMP
