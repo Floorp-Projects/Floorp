@@ -2272,11 +2272,6 @@ nsStandardURL::Init(PRUint32 urlType,
     if (mOriginCharset.EqualsIgnoreCase("UTF-8"))
         mOriginCharset.Truncate();
 
-    if (spec.IsEmpty()) {
-        Clear();
-        return NS_OK;
-    }
-
     if (baseURI) {
         PRUint32 start, end;
         // pull out the scheme and where it ends
