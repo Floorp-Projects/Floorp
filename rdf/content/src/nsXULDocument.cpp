@@ -216,7 +216,6 @@ nsXULDocument::nsXULDocument(void)
       mScriptObject(nsnull),
       mCharSetID("UTF-8"),
       mDisplaySelection(PR_FALSE),
-      mContentViewerContainer(nsnull),
       mIsPopup(PR_FALSE),
       mForwardReferencesResolved(PR_FALSE),
       mState(eState_Master)
@@ -516,7 +515,7 @@ NS_IMETHODIMP
 nsXULDocument::StartDocumentLoad(const char* aCommand,
                                  nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
-                                 nsIContentViewerContainer* aContainer,
+                                 nsISupports* aContainer,
                                  nsIStreamListener **aDocListener)
 {
     nsresult rv;
@@ -1886,12 +1885,11 @@ NS_IMETHODIMP
 nsXULDocument::CreateFromPrototype(const char* aCommand,
                                    nsIXULPrototypeDocument* aPrototype,
                                    nsIPrincipal* aPrincipal,
-                                   nsIContentViewerContainer* aContainer)
+                                   nsISupports* aContainer)
 {
     nsresult rv;
 
     mCurrentPrototype       = aPrototype;
-    mContentViewerContainer = aContainer;
     mDocumentPrincipal      = aPrincipal;
 
     rv = mCurrentPrototype->GetURI(getter_AddRefs(mDocumentURL));
@@ -1920,7 +1918,7 @@ nsXULDocument::CreateFromPrototype(const char* aCommand,
 
 NS_IMETHODIMP
 nsXULDocument::LoadFromStream(nsIInputStream& xulStream,
-                              nsIContentViewerContainer* aContainer,
+                              nsISupports* aContainer,
                               const char* aCommand)
 {
     nsresult rv;
@@ -3792,7 +3790,7 @@ nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
 
 
 nsresult
-nsXULDocument::PrepareToLoad(nsIContentViewerContainer* aContainer,
+nsXULDocument::PrepareToLoad(nsISupports* aContainer,
                              const char* aCommand,
                              nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup,
@@ -3818,10 +3816,6 @@ nsXULDocument::PrepareToLoad(nsIContentViewerContainer* aContainer,
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to synthesize URL for stream doc");
         if (NS_FAILED(rv)) return rv;
     }
-
-    // Set the content viewer container. Note that we'll only hold a
-    // weak reference to it.
-    mContentViewerContainer = aContainer;
 
     mDocumentTitle.Truncate();
 
