@@ -438,6 +438,7 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "-A domain -- add a domain/host that should be avoided (e.g. microsoft.com)\n");
   fprintf(stderr, "-N pages -- set the max # of pages to crawl\n");
   fprintf(stderr, "-x -- startup and just shutdown to test for leaks under Purify\n");
+  fprintf(stderr, "-Prt -- printer test will be run\n");
 #if defined(NS_DEBUG) && defined(XP_WIN)
   fprintf(stderr, "-md # -- set the crt debug flags to #\n");
 #endif
@@ -653,6 +654,15 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
       }
       else if (PL_strcmp(argv[i], "-?") == 0) {
         PrintHelpInfo(argv);
+      }
+      else if (PL_strcmp(argv[i], "-Prt") == 0) {
+        int printTestType;
+        i++;
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &printTestType)){
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        mCrawler->SetPrintTest(printTestType);
       }
     }
     else

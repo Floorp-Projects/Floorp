@@ -28,8 +28,16 @@ class nsIContentViewerFile : public nsISupports {
   /* readonly attribute boolean saveable; */
   NS_IMETHOD GetSaveable(PRBool *aSaveable) = 0;
 
-  /* void Print (); */
-  NS_IMETHOD Print(void) = 0;
+  /* void Print (); 
+  
+  */
+  /**
+   * Print the current document
+   * @param aSilent -- if true, the print settings dialog will be suppressed
+   * @param aFileName -- a file pointer to output regression tests or print to a file
+   * @return error status
+   */
+  NS_IMETHOD Print(PRBool aSilent,FILE *aFile) = 0;
 
   /* [noscript] void PrintContent (in nsIWebShell parent, in nsIDeviceContext DContext); */
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext) = 0;
@@ -42,7 +50,7 @@ class nsIContentViewerFile : public nsISupports {
 #define NS_DECL_NSICONTENTVIEWERFILE \
   NS_IMETHOD Save(void); \
   NS_IMETHOD GetSaveable(PRBool *aSaveable); \
-  NS_IMETHOD Print(void); \
+  NS_IMETHOD Print(PRBool aSilent,FILE *aFile); \
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext); \
   NS_IMETHOD GetPrintable(PRBool *aPrintable); 
 
@@ -50,7 +58,7 @@ class nsIContentViewerFile : public nsISupports {
 #define NS_FORWARD_NSICONTENTVIEWERFILE(_to) \
   NS_IMETHOD Save(void) { return _to ## Save(); } \
   NS_IMETHOD GetSaveable(PRBool *aSaveable) { return _to ## GetSaveable(aSaveable); } \
-  NS_IMETHOD Print(void) { return _to ## Print(); } \
+  NS_IMETHOD Print(PRBool aSilent,FILE *aFile) { return _to ## Print(); } \
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext) { return _to ## PrintContent(parent, DContext); } \
   NS_IMETHOD GetPrintable(PRBool *aPrintable) { return _to ## GetPrintable(aPrintable); } 
 

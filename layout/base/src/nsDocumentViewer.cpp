@@ -68,6 +68,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShell.h"
+#include "nsIFrameDebug.h"
 
 
 #include "nsIServiceManager.h"
@@ -181,9 +182,10 @@ protected:
 
   nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
 
-  PRBool mEnableRendering;
+  PRBool  mEnableRendering;
   PRInt16 mNumURLStarts;
   PRBool  mIsPrinting;
+
 
 
   // printing members
@@ -193,6 +195,7 @@ protected:
   nsIPresShell      *mPrintPS;
   nsIViewManager    *mPrintVM;
   nsIView           *mPrintView;
+  FILE              *mFilePointer;   // a file where information can go to when printing
 
   // document management data
   //   these items are specific to markup documents (html and xml)
@@ -233,6 +236,7 @@ DocumentViewerImpl::DocumentViewerImpl()
 {
   NS_INIT_REFCNT();
   mEnableRendering = PR_TRUE;
+  mFilePointer = nsnull;
 
 }
 
@@ -246,6 +250,7 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   mAllowPlugins = PR_TRUE;
   mIsFrame = PR_FALSE;
   mEnableRendering = PR_TRUE;
+  mFilePointer = nsnull;
 
 }
 
@@ -659,7 +664,6 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
     ps->Init(mDocument, cx, vm, ss);
 
     //lay it out...
-    //aDContext->BeginDocument();
     ps->InitialReflow(width, height);
 
     // Ask the page sequence frame to print all the pages
@@ -668,7 +672,22 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
 
     ps->GetPageSequenceFrame(&pageSequence);
     NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
-    pageSequence->Print(cx, options, nsnull);
+    
+ 
+    if (nsnull != mFilePointer) {
+      // output the regression test
+      nsIFrameDebug* fdbg;
+      nsIFrame* root;
+      ps->GetRootFrame(&root);
+
+      if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
+        fdbg->DumpRegressionData(cx, mFilePointer, 0);
+      }
+      fclose(mFilePointer);      
+    } else {
+      pageSequence->Print(cx, options, nsnull);
+    }
+
     aDContext->EndDocument();
 
     ps->EndObservingDocument();
@@ -1094,11 +1113,11 @@ static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTOR
 
 
 /** ---------------------------------------------------
- *  See documentation above in the DocumentViewerImpl class definition
- *	@update 07/09/99 dwc
+ *  See documentation above in the nsIContentViewerfile class definition
+ *	@update 01/24/00 dwc
  */
 NS_IMETHODIMP
-DocumentViewerImpl::Print()
+DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile)
 {
 nsCOMPtr<nsIWebShell>                 webContainer;
 nsCOMPtr<nsIDeviceContextSpecFactory> factory;
@@ -1119,8 +1138,9 @@ nsCOMPtr<nsIPref>                     prefs;
     nsIDeviceContextSpec *devspec = nsnull;
     nsCOMPtr<nsIDeviceContext> dx;
     mPrintDC = nsnull;
+    mFilePointer = aFile;
 
-    factory->CreateDeviceContextSpec(nsnull, devspec, PR_FALSE);
+    factory->CreateDeviceContextSpec(nsnull, devspec, aSilent);
     if (nsnull != devspec) {
       mPresContext->GetDeviceContext(getter_AddRefs(dx));
       nsresult rv = dx->GetDeviceContextFor(devspec, mPrintDC); 

@@ -282,7 +282,7 @@ NS_IMETHODIMP nsAddressBook::PrintCard()
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
     if (viewerFile) {
-      rv = viewerFile->Print();
+      rv = viewerFile->Print(PR_FALSE,nsnull);
     }
 #ifdef DEBUG_seth
     else {
