@@ -1665,7 +1665,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
   NS_ASSERTION(aNode, "GetAccessible() called with no node.");
 
-  *aIsHidden = PR_FALSE;
+  *aIsHidden = false;
 
 #ifdef DEBUG_aleventhal
   // Please leave this in for now, it's a convenient debugging method
@@ -1770,9 +1770,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
 
     // Check frame to see if it is hidden
-    if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
-      *aIsHidden = PR_TRUE;
-    }
+    *aIsHidden = !frame;
   }
 
   if (*aIsHidden) {
@@ -1813,23 +1811,6 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 
   return InitAccessible(newAcc, aAccessible);
-}
-
-// Called from layout when the frame tree owned by a node changes significantly
-NS_IMETHODIMP nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell, nsIContent *aContent)
-{
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aShell));
-  NS_ASSERTION(aShell, "No pres shell in call to InvalidateSubtreeFor");
-  nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
-  nsAccessNode::GetDocAccessibleFor(weakShell, getter_AddRefs(accessibleDoc));
-  nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
-    do_QueryInterface(accessibleDoc);
-  if (!privateAccessibleDoc) {
-    return NS_OK;
-  }
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aContent));
-  NS_ASSERTION(domNode, "No DOM node in call to InvalidateSubtreeFor");
-  return privateAccessibleDoc->InvalidateCacheSubtree(domNode, nsIAccessibleEvent::EVENT_REORDER);
 }
 
 //////////////////////////////////////////////////////////////////////
