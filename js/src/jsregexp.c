@@ -2282,7 +2282,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 		    res->moreLength = 10;
 		    morepar = (JSSubString*) JS_malloc(cx,
                                                        10 * sizeof(JSSubString));
-		} else if (morenum > res->moreLength) {
+		} else if (morenum >= res->moreLength) {
 		    res->moreLength += 10;
 		    morepar = (JSSubString*) JS_realloc(cx, morepar,
 					 res->moreLength * sizeof(JSSubString));
