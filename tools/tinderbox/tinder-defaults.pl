@@ -16,6 +16,7 @@ $TestOnly          = 0;      # Only run tests, don't pull/build
 $BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 
 # Tests
+$CleanProfile             = 0;
 $AliveTest                = 1;
 $JavaTest                 = 0;
 $ViewerTest               = 0;

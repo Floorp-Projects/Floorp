@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.78 $ ';
+$::UtilsVersion = '$Revision: 1.79 $ ';
 
 package TinderUtils;
 
@@ -735,18 +735,27 @@ sub run_all_tests {
     # The mailnews test also adds a couple preferences to it.
     my $pref_file = "$build_dir/.mozilla/$Settings::MozProfileName/prefs.js";
 
-    # Mozilla now create the "default" profile if none exists. -slamm 5-8-00
-    #unless (-f $pref_file) {
-    #  print_log "Prefs file not found: $pref_file\n";
-    #  print_log "Creating profile...\n";
-    # $test_result = CreateProfile($build_dir, $binary, $pref_file, 45);
-    #}
-
     #
     # Before running tests, run regxpcom so that we don't crash when 
     # people change contractids on us (since we don't autoreg opt builds)
     #
     AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0, 15);
+
+    # Create a new profile
+    #
+    if ($Settings::CleanProfile and $test_result eq 'success') {
+        system("rm -rf $build_dir/.mozilla");
+        my $result = run_cmd($build_dir, $binary_dir,
+                             $binary . " -CreateProfile $Settings::MozProfileName",
+                             "/dev/null", 30);
+
+        open PREFS, "find $build_dir/.mozilla -name prefs.js|"
+            or die "couldn't find prefs file\n";
+        $pref_file = $_ while <PREFS>;
+        chomp $pref_file;
+
+        $test_result = "success";
+    }
 
     # Mozilla alive test
     #
@@ -830,13 +839,21 @@ sub run_all_tests {
 	# bug to push this out to mozilla.org is:
     #   http://bugzilla.mozilla.org/show_bug.cgi?id=75073
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
+          # Enable the dump() command so we can get the output.
+          open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+          print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
+          close PREFS;
+
 	  # Settle OS.
 	  run_system_cmd("sync; sleep 10", 35);
 
-	  $test_result = AliveTest("LayoutPerformanceTest", $build_dir,
-							   $binary, 
-							   "\"http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0\"",
-							   $Settings::LayoutPerformanceTestTimeout);
+          # XXX we should use a variable to get the host for the page
+          # load tests instead of hard-coding to localhost.
+          $test_result =
+              FileBasedTest("LayoutPerformanceTest", $build_dir, $binary_dir,
+                            $binary . " -P $Settings::MozProfileName \"http://localhost/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=30000\"",
+                            $Settings::LayoutPerformanceTestTimeout,
+                            "_x_x_mozilla_page_load", 1, 0);
     }
 
 	# Startup performance test.  Time how fast it takes the browser
@@ -1251,36 +1268,6 @@ sub print_logfile {
     print_log "----------- End Output from $test_name --------- \n";
 }
 
-
-sub CreateProfile {
-    my ($build_dir, $binary, $pref_file, $timeout_secs) = @_;
-    my $binary_dir = File::Basename::dirname($binary);
-    my $binary_log = "$build_dir/profile.log";
-    local $_;
-
-    my $cmd = "$binary -CreateProfile $Settings::MozProfileName";
-    my $result = run_cmd($build_dir, $binary_dir, $cmd,
-                          $binary_log, $timeout_secs);
-
-    print_logfile($binary_log, "Create Profile");
-    
-    if ($result->{timed_out}) {
-	    # timeout = success.
-        print_log "Success: profile was created, $binary started and stayed up.\n";
-        return 'success';
-    } elsif ($result->{exit_value} != 0) {
-      my $binary_basename = File::Basename::basename($binary);
-        print_test_errors($result, $binary_basename);
-        return 'testfailed';
-    } else {
-        if (-f $pref_file) {
-            return 'success';
-        } else {
-            return "Error: no prefs after creating profile: $pref_file\n";
-            return 'testfailed'
-        }
-    }
-}
 
 # Start up Mozilla, test passes if Mozilla is still alive
 # after $timeout_secs (seconds).
