@@ -35,7 +35,16 @@ if ( err == SUCCESS ) {
    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "locale/en-US/calendar/");
 
    for (var i = 0; i < addLocales.length; i++) {
+
+      // Check Mozilla 1.x, Mozilla Firefox (Browser)
       chkJarFileName = addLocales[i] + ".jar";
+      tmp_f = getFolder("Chrome", chkJarFileName);
+      if ( File.exists(tmp_f) ) {
+        registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, addLocales[i] + "/");
+      }
+
+      // Check Mozilla Thunderbird (Mail/News)
+      chkJarFileName = addLocales[i] + "-mail.jar";
       tmp_f = getFolder("Chrome", chkJarFileName);
       if ( File.exists(tmp_f) ) {
         registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, addLocales[i] + "/");
