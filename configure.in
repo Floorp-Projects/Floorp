@@ -145,6 +145,7 @@ case "$target" in
     if test -z "$CPP"; then CPP=cl; fi
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
+    if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 esac
 
