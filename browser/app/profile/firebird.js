@@ -50,7 +50,7 @@ pref("general.useragent.misc", "rv:1.4b");
 pref("general.useragent.vendor", "Mozilla Firebird");
 pref("general.useragent.vendorSub", "0.6");
 
-pref("general.smoothScroll", true);
+pref("general.smoothScroll", false);
 
 pref("backups.number_of_prefs_copies", 1);
 
