@@ -54,7 +54,6 @@
 #include "nsIMsgCompose.h"
 #include "nsIMsgCompFields.h"
 #include "nsIMsgSend.h"
-#include "nsIMsgPost.h"
 
 // jefft
 #include "nsIXULWindowCallbacks.h"
@@ -78,8 +77,6 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
-static NS_DEFINE_IID(kIMsgPostIID, NS_IMSGPOST_IID); 
-static NS_DEFINE_CID(kMsgPostCID, NS_MSGPOST_CID);
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
@@ -162,7 +159,6 @@ protected:
 
 	nsIMsgCompFields *mMsgCompFields;
 	nsIMsgSend *mMsgSend;
-    nsIMsgPost *mMsgPost;
 
 	nsAutoString mArgs;
 
@@ -238,7 +234,6 @@ nsComposeAppCore::nsComposeAppCore()
 	mEditor				= nsnull;
 	mMsgCompFields		= nsnull;
 	mMsgSend			= nsnull;
-    mMsgPost			= nsnull;
 }
 
 nsComposeAppCore::~nsComposeAppCore()
@@ -262,7 +257,6 @@ nsComposeAppCore::~nsComposeAppCore()
 	NS_IF_RELEASE(mWindow);
 	NS_IF_RELEASE(mEditor);
 	NS_IF_RELEASE(mMsgSend);
-    NS_IF_RELEASE(mMsgPost);
 	NS_IF_RELEASE(mMsgCompFields);
 }
 
@@ -593,15 +587,6 @@ nsComposeAppCore::Init(const nsString& aId)
 		if (NS_FAILED(res)) return NS_ERROR_FAILURE;
 		printf("We succesfully obtained a nsIMsgSend interface....\n");
 	}
-	if (!mMsgPost)
-	{
-		res = nsComponentManager::CreateInstance(kMsgPostCID, 
-		                                         NULL, 
-			                                     kIMsgPostIID, 
-                                                 (void **) &mMsgPost); 
-		if (NS_FAILED(res)) return NS_ERROR_FAILURE;
-		printf("We succesfully obtained a nsIMsgPost interface....\n");
-	}
 	if (!mMsgCompFields)
 	{
 		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
@@ -902,7 +887,6 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 		if (mMsgSend)
 			mMsgSend->SendMessage(mMsgCompFields, NULL);
 	}
-
 	if (nsnull != mScriptContext) {
 		const char* url = "";
 		PRBool isUndefined = PR_FALSE;

@@ -32,7 +32,6 @@ CPPSRCS=    nsMsgCompFields.cpp \
 			nsSmtpProtocol.cpp	\
             MsgCompGlue.cpp     \
 			nsMsgSend.cpp		\
-			nsMsgPost.cpp		\
 			nsMsgSendPart.cpp	\
 			nsSmtpService.cpp	\
 			nsJSComposeAppCore.cpp	\
@@ -55,7 +54,6 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
 			.\$(OBJDIR)\nsComposer.obj	\
 			.\$(OBJDIR)\nsComposerNameSet.obj	\
 			.\$(OBJDIR)\nsMsgCompPrefs.obj \
-			.\$(OBJDIR)\nsMsgPost.obj \
             $(NULL)
 
 

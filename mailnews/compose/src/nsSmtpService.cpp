@@ -73,6 +73,9 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 
 			identity->GetSmtpHostname(&hostName);
 			identity->GetSmtpUsername(&senderName);
+
+            // todo:  are we leaking hostName and senderName
+
 			rv = NS_MsgBuildMailtoUrl(aFilePath, hostName, senderName, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
 			if (NS_SUCCEEDED(rv) && urlToRun)
 			{	
