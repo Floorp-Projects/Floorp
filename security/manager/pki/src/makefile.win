@@ -56,6 +56,7 @@ REQUIRES = \
 	pipnss \
 	layout \
 	layout_xul \
+        pipboot \
 	$(NULL)
 
 include <$(DEPTH)/config/config.mak>

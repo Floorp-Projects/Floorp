@@ -63,11 +63,12 @@ ifdef HAVE_64BIT_OS
 DEFAULT_GMAKE_FLAGS += USE_64=1
 endif
 
-SUBMAKEFILES = ssl/Makefile pki/Makefile
+SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile
 
 include $(topsrcdir)/config/rules.mk
 
 depend dependclean export::
+	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
@@ -84,10 +85,12 @@ ifndef HAVE_64BIT_OS
 endif
 endif
 endif
+	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
 clean clobber clobber_all realclean distclean::
+	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean

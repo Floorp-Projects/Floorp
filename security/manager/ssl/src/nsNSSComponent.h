@@ -21,6 +21,7 @@
  *   Hubbie Shaw
  *   Doug Turner <dougt@netscape.com>
  *   Brian Ryner <bryner@netscape.com>
+ *   Kai Engert <kaie@netscape.com>
  */
 
 #ifndef _nsNSSComponent_h_
@@ -40,8 +41,6 @@
 #include "nsIScriptSecurityManager.h"
 
 #include "nsNSSHelper.h"
-
-#define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 
 #define NS_NSSCOMPONENT_CID \
 {0xa277189c, 0x1dd1, 0x11b2, {0xa8, 0xc9, 0xe4, 0xe8, 0xbf, 0xb1, 0x33, 0x8e}}
@@ -80,7 +79,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD RememberCert(CERTCertificate *cert) = 0;
 };
 
-
+struct PRLock;
 
 // Implementation of the PSM component interface.
 class nsNSSComponent : public nsISecurityManagerComponent,
@@ -112,26 +111,31 @@ public:
                                            PRUnichar **outString);
   NS_IMETHOD DisableOCSP();
   NS_IMETHOD EnableOCSP();
-  nsresult InitializeNSS();
   NS_IMETHOD RememberCert(CERTCertificate *cert);
 
 private:
 
+  nsresult InitializeNSS();
+  nsresult ShutdownNSS();
   void InstallLoadableRoots();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   char * GetPK11String(const PRUnichar *name, PRUint32 len);
   nsresult RegisterPSMContentListener();
-  nsresult RegisterProfileChangeObserver();
+  nsresult RegisterObservers();
   static int PR_CALLBACK PrefChangedCallback(const char* aPrefName, void* data);
   void PrefChanged(const char* aPrefName);
 
+  PRLock *mutex;
+  
   nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPref> mPref;
-  static PRBool mNSSInitialized;
+  PRBool mNSSInitialized;
+  PRBool mObserversRegistered;
   PLHashTable *hashTableCerts;
+  static int mInstanceCount;
 };
 
 //--------------------------------------------

@@ -22,6 +22,7 @@
  *   Doug Turner <dougt@netscape.com>
  *   Mitch Stoltz <mstoltz@netscape.com>
  *   Brian Ryner <bryner@netscape.com>
+ *   Kai Engert <kaie@netscape.com>
  */
 
 #include "nsNSSComponent.h"
@@ -44,12 +45,16 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
 #include "prlog.h"
+#include "nsAutoLock.h"
 
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
 #include "nsICertificatePrincipal.h"
 #include "nsReadableUtils.h"
+#include "nsIEntropyCollector.h"
+#include "nsIBufEntropyCollector.h"
+#include "nsIServiceManager.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -70,7 +75,7 @@ extern "C" {
 PRLogModuleInfo* gPIPNSSLog = nsnull;
 #endif
 
-PRBool nsNSSComponent::mNSSInitialized = PR_FALSE;
+int nsNSSComponent::mInstanceCount = 0;
 
 #ifdef XP_MAC
 
@@ -171,37 +176,40 @@ static PRIntn PR_CALLBACK certHashtable_clearEntry(PLHashEntry *he, PRIntn /*ind
 }
 
 nsNSSComponent::nsNSSComponent()
+:mNSSInitialized(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
+  mutex = PR_NewLock();
+  
+#ifdef PR_LOGGING
+  if (!gPIPNSSLog)
+    gPIPNSSLog = PR_NewLogModule("pipnss");
+#endif
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::ctor\n"));
 
-  hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare, 
-    certHashtable_valueCompare, 0, 0 );
+  mObserversRegistered = PR_FALSE;
+  
+  NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
+  ++mInstanceCount;
+  hashTableCerts = nsnull;
 }
 
 nsNSSComponent::~nsNSSComponent()
 {
-  if (mPSMContentListener) {
-    nsresult rv = NS_ERROR_FAILURE;
-      
-    nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
-    if (dispatcher) {
-      rv = dispatcher->UnRegisterContentListener(mPSMContentListener);
-    }
-  }
-  if (mPref)
-    mPref->UnregisterCallback("security.", nsNSSComponent::PrefChangedCallback,
-                              (void*) this);
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor\n"));
 
-  if (hashTableCerts) {
-    PL_HashTableEnumerateEntries(hashTableCerts, certHashtable_clearEntry, 0);
-    PL_HashTableDestroy(hashTableCerts);
-    hashTableCerts = 0;
-  }
+  // All cleanup code requiring services needs to happen in xpcom_shutdown
 
-  if (mNSSInitialized)
-    NSS_Shutdown();  
-
+  ShutdownNSS();
   nsSSLIOLayerFreeTLSIntolerantSites();
+  --mInstanceCount;
+
+  if (mutex) {
+    PR_DestroyLock(mutex);
+    mutex = nsnull;
+  }
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor finished\n"));
 }
 
 #ifdef XP_MAC
@@ -417,6 +425,8 @@ loser:
 nsresult
 nsNSSComponent::InitializePIPNSSBundle()
 {
+  // Called during init only, no mutex required.
+
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
   if (NS_FAILED(rv) || !bundleService) 
@@ -433,6 +443,8 @@ nsNSSComponent::InitializePIPNSSBundle()
 nsresult
 nsNSSComponent::RegisterPSMContentListener()
 {
+  // Called during init only, no mutex required.
+
   nsresult rv = NS_OK;
   if (!mPSMContentListener) {
     nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
@@ -512,92 +524,207 @@ static void setOCSPOptions(nsIPref * pref)
 nsresult
 nsNSSComponent::InitializeNSS()
 {
-  nsresult rv;
-  nsXPIDLCString profileStr;
-  nsCOMPtr<nsIFile> profilePath;
+  // Can be called both during init and profile change.
+  // Needs mutex protection.
 
-  if (mNSSInitialized) {
-    PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to 
-                                                  // initialize NSS more than
-                                                  // once in a process.
-    return NS_ERROR_FAILURE;
-  }
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::InitializeNSS\n"));
 
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization beginning\n"));
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(profilePath));
-  if (NS_FAILED(rv)) {
-    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
-    return rv;
-  }
+  // variables used for flow control within this function
+
+  enum { problem_none, problem_no_rw, problem_no_security_at_all }
+    which_nss_problem = problem_none;
+
+  {
+    nsAutoLock lock(mutex);
+
+    // Init phase 1, prepare own variables used for NSS
+
+    if (mNSSInitialized) {
+      PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to 
+                                                    // initialize NSS more than
+                                                    // once in a process.
+      return NS_ERROR_FAILURE;
+    }
     
-  PK11_SetPasswordFunc(PK11PasswordPrompt);
-#ifdef XP_MAC
-  // On the Mac we place all NSS DBs in the Security
-  // Folder in the profile directory.
-  profilePath->Append("Security");
-  profilePath->Create(nsIFile::DIRECTORY_TYPE, 0); //This is for Mac, don't worry about
-                                                   //permissions.
-#endif 
+    mNSSInitialized = PR_TRUE;
 
-  rv = profilePath->GetPath(getter_Copies(profileStr));
-  if (NS_FAILED(rv)) 
-    return rv;
-  
-  if (NSS_InitReadWrite(profileStr) != SECSuccess) {
-    return NS_ERROR_ABORT;
+    hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare, 
+      certHashtable_valueCompare, 0, 0 );
+
+    nsresult rv;
+    nsXPIDLCString profileStr;
+    nsCOMPtr<nsIFile> profilePath;
+
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(profilePath));
+    if (NS_FAILED(rv)) {
+      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
+      return rv;
+    }
+
+  #ifdef XP_MAC
+    // On the Mac we place all NSS DBs in the Security
+    // Folder in the profile directory.
+    profilePath->Append("Security");
+    profilePath->Create(nsIFile::DIRECTORY_TYPE, 0); //This is for Mac, don't worry about
+                                                     //permissions.
+  #endif 
+
+    rv = profilePath->GetPath(getter_Copies(profileStr));
+    if (NS_FAILED(rv)) 
+      return rv;
+
+    PRBool supress_warning_preference = PR_FALSE;
+    rv = mPref->GetBoolPref("security.suppress_nss_rw_impossible_warning", &supress_warning_preference);
+
+    if (NS_FAILED(rv)) {
+      supress_warning_preference = PR_FALSE;
+    }
+
+    // init phase 2, init calls to NSS library
+
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization beginning\n"));
+
+    // The call to ConfigureInternalPKCS11Token needs to be done before NSS is initialized, 
+    // but affects only static data.
+    // If we could assume i18n will not change between profiles, one call per application
+    // run were sufficient. As I can't predict what happens in the future, let's repeat
+    // this call for every re-init of NSS.
+
+    ConfigureInternalPKCS11Token();
+
+    if (::NSS_InitReadWrite(profileStr) != SECSuccess) {
+
+      if (supress_warning_preference) {
+        which_nss_problem = problem_none;
+      }
+      else {
+        which_nss_problem = problem_no_rw;
+      }
+
+      // try to init r/o
+      if (NSS_Init(profileStr) != SECSuccess) {
+        which_nss_problem = problem_no_security_at_all;
+
+        NSS_NoDB_Init(profileStr);
+      }
+    }
+
+    // init phase 3, only if phase 2 was successful
+
+    if (problem_no_security_at_all != which_nss_problem) {
+      ::NSS_SetDomesticPolicy();
+      //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
+
+      PK11_SetPasswordFunc(PK11PasswordPrompt);
+
+      // Register a callback so we can inform NSS when these prefs change
+      mPref->RegisterCallback("security.", nsNSSComponent::PrefChangedCallback,
+                              (void*) this);
+
+      PRBool enabled;
+      mPref->GetBoolPref("security.enable_ssl2", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
+      mPref->GetBoolPref("security.enable_ssl3", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
+      mPref->GetBoolPref("security.enable_tls", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+
+      // Set SSL/TLS ciphers
+      for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
+        mPref->GetBoolPref(cp->pref, &enabled);
+
+        SSL_CipherPrefSetDefault(cp->id, enabled);
+      }
+
+      // Enable ciphers for PKCS#12
+      SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
+      SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
+      SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
+      SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
+      SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
+      SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
+      SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
+      PORT_SetUCS2_ASCIIConversionFunction(pip_ucs2_ascii_conversion_fn);
+
+      // Set up OCSP //
+      setOCSPOptions(mPref);
+
+      InstallLoadableRoots();
+
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
+    }
   }
-  
-  NSS_SetDomesticPolicy();
-  //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
 
-  mPref = do_GetService(NS_PREF_CONTRACTID);
+  if (problem_none != which_nss_problem) {
+    nsString message;
 
-  // Register a callback so we can inform NSS when these prefs change
-  mPref->RegisterCallback("security.", nsNSSComponent::PrefChangedCallback,
-                          (void*) this);
+    // We might want to use different messages, depending on what failed.
+    // For now, let's use the same message.
+    nsresult rv = GetPIPNSSBundleString(NS_LITERAL_STRING("NSSInitProblem").get(), message);
 
-  PRBool enabled;
-  mPref->GetBoolPref("security.enable_ssl2", &enabled);
-  SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
-  mPref->GetBoolPref("security.enable_ssl3", &enabled);
-  SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
-  mPref->GetBoolPref("security.enable_tls", &enabled);
-  SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
-
-  // Set SSL/TLS ciphers
-  for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
-    mPref->GetBoolPref(cp->pref, &enabled);
-
-    SSL_CipherPrefSetDefault(cp->id, enabled);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch) {
+        nsCOMPtr<nsIPrompt> prompter;
+        wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+        if (prompter) {
+          nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+          if (proxyman) {
+            nsCOMPtr<nsIPrompt> proxyPrompt;
+            proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
+                                        prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
+            if (proxyPrompt) {
+              proxyPrompt->Alert(nsnull, message.get());
+            }
+          }
+        }
+      }
+    }
   }
 
-  // Enable ciphers for PKCS#12
-  SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
-  SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
-  SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
-  SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
-  SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
-  SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
-  SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
-  PORT_SetUCS2_ASCIIConversionFunction(pip_ucs2_ascii_conversion_fn);
-
-  // Set up OCSP //
-  setOCSPOptions(mPref);
-
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
-  mNSSInitialized = PR_TRUE;
   return NS_OK;
 }
 
+nsresult
+nsNSSComponent::ShutdownNSS()
+{
+  // Can be called both during init and profile change,
+  // needs mutex protection.
+  
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::ShutdownNSS\n"));
+
+  nsAutoLock lock(mutex);
+
+  if (hashTableCerts) {
+    PL_HashTableEnumerateEntries(hashTableCerts, certHashtable_clearEntry, 0);
+    PL_HashTableDestroy(hashTableCerts);
+    hashTableCerts = nsnull;
+  }
+
+  if (mNSSInitialized) {
+    mNSSInitialized = PR_FALSE;
+
+    PK11_SetPasswordFunc((PK11PasswordFunc)nsnull);
+
+    if (mPref) {
+      mPref->UnregisterCallback("security.", nsNSSComponent::PrefChangedCallback,
+                                (void*) this);
+    }
+
+    ::NSS_Shutdown();
+  }
+
+  return NS_OK;
+}
+ 
 NS_IMETHODIMP
 nsNSSComponent::Init()
 {
+  // No mutex protection.
+  // Assume Init happens before any concurrency on "this" can start.
+
   nsresult rv = NS_OK;
-#ifdef PR_LOGGING
-  if (!gPIPNSSLog)
-    gPIPNSSLog = PR_NewLogModule("pipnss");
-#endif
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Beginning NSS initialization\n"));
   rv = InitializePIPNSSBundle();
@@ -605,15 +732,38 @@ nsNSSComponent::Init()
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to create pipnss bundle.\n"));
     return rv;
   }      
-  ConfigureInternalPKCS11Token();
+
+  if (!mPref) {
+    mPref = do_GetService(NS_PREF_CONTRACTID);
+    NS_ASSERTION(mPref, "Unable to get pref service");
+  }
+
+  // Do that before NSS init, to make sure we won't get unloaded.
+  RegisterObservers();
+
   rv = InitializeNSS();
   if (NS_FAILED(rv)) {
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS.\n"));
     return rv;
   }
-  InstallLoadableRoots();
+
   RegisterPSMContentListener();
-  RegisterProfileChangeObserver();
+
+  nsCOMPtr<nsIEntropyCollector> ec
+      = do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID);
+
+  nsCOMPtr<nsIBufEntropyCollector> bec;
+
+  if (ec) {
+    bec = do_QueryInterface(ec);
+  }
+
+  NS_ASSERTION(bec, "No buffering entropy collector.  "
+                    "This means no entropy will be collected.");
+  if (bec) {
+    bec->ForwardTo(this);
+  }
+
   return rv;
 }
 
@@ -766,9 +916,13 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
     nsresult rv2;
     nsCOMPtr<nsIX509Cert> pCert = new nsNSSCertificate(cert);
     if (!mScriptSecurityManager) {
-      mScriptSecurityManager = 
-         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv2);
-      if (NS_FAILED(rv2)) return rv2;
+      nsAutoLock lock(mutex);
+      // re-test the condition to prevent double initialization
+      if (!mScriptSecurityManager) {
+        mScriptSecurityManager = 
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv2);
+        if (NS_FAILED(rv2)) return rv2;
+      }
     }
     //-- Create a certificate principal with id and organization data
     PRUnichar* fingerprint;
@@ -802,6 +956,11 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
 NS_IMETHODIMP
 nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 {
+  // Asynchronous event happening often,
+  // must not interfere with initialization or profile switch.
+  
+  nsAutoLock lock(mutex);
+
   if (!mNSSInitialized)
       return NS_ERROR_NOT_INITIALIZED;
 
@@ -846,6 +1005,11 @@ nsNSSComponent::PrefChanged(const char* prefName)
   }
 }
 
+#ifdef DEBUG
+#define PROFILE_CHANGE_NET_TEARDOWN_TOPIC NS_LITERAL_CSTRING("profile-change-net-teardown").get()
+#define PROFILE_CHANGE_NET_RESTORE_TOPIC NS_LITERAL_CSTRING("profile-change-net-restore").get()
+#endif
+
 #define PROFILE_BEFORE_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-before-change").get()
 #define PROFILE_AFTER_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-after-change").get()
 
@@ -854,26 +1018,118 @@ NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
                         const PRUnichar *someData)
 {
+#ifdef DEBUG
+  static PRBool isNetworkDown = PR_FALSE;
+#endif
+
   if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
-    //The profile is about to change, shut down NSS
-    NSS_Shutdown();
-    mNSSInitialized = PR_FALSE;
-  } else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0) {
-    InitializeNSS();
-    InstallLoadableRoots();
+#ifdef DEBUG
+    NS_ASSERTION(isNetworkDown, "nsNSSComponent relies on profile manager to wait for synchronous shutdown of all network activity");
+#endif
+
+    PRBool needsCleanup = PR_TRUE;
+
+    {
+      nsAutoLock lock(mutex);
+
+      if (!mNSSInitialized) {
+        // Make sure we don't try to cleanup if we have already done so.
+        // This makes sure we behave safely, in case we are notified
+        // multiple times.
+        needsCleanup = PR_FALSE;
+      }
+    }
+    
+    if (needsCleanup) {
+      ShutdownNSS();
+    }
   }
+  else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0) {
+  
+    PRBool needsInit = PR_TRUE;
+
+    {
+      nsAutoLock lock(mutex);
+
+      if (mNSSInitialized) {
+        // We have already initialized NSS before the profile came up,
+        // no need to do it again
+        needsInit = PR_FALSE;
+      }
+    }
+    
+    if (needsInit) {
+      if (NS_FAILED(InitializeNSS())) {
+        PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS after profile switch.\n"));
+      }
+    }
+  }
+  else if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent: XPCom shutdown observed\n"));
+
+    // Cleanup code that requires services, it's too late in destructor.
+
+    if (mPSMContentListener) {
+      nsresult rv = NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
+      if (dispatcher) {
+        rv = dispatcher->UnRegisterContentListener(mPSMContentListener);
+      }
+      mPSMContentListener = nsnull;
+    }
+
+    nsCOMPtr<nsIEntropyCollector> ec
+        = do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID);
+
+    if (ec) {
+      nsCOMPtr<nsIBufEntropyCollector> bec
+        = do_QueryInterface(ec);
+      if (bec) {
+        bec->DontForward();
+      }
+    }
+  }
+
+#ifdef DEBUG
+  else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_TEARDOWN_TOPIC) == 0) {
+    isNetworkDown = PR_TRUE;
+  }
+  else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_RESTORE_TOPIC) == 0) {
+    isNetworkDown = PR_FALSE;
+  }
+#endif
 
   return NS_OK;
 }
 
 nsresult
-nsNSSComponent::RegisterProfileChangeObserver()
+nsNSSComponent::RegisterObservers()
 {
+  // Happens once during init only, no mutex protection.
+
   nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
   NS_ASSERTION(observerService, "could not get observer service");
   if (observerService) {
-    observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_TRUE);
-    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_TRUE);
+    mObserversRegistered = PR_TRUE;
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent: adding observers\n"));
+
+    // We are a service.
+    // Once we are loaded, don't allow being removed from memory.
+    // This makes sense, as initializing NSS is expensive.
+
+    // By using PR_FALSE for parameter ownsWeak in AddObserver,
+    // we make sure that we won't get unloaded until the application shuts down.
+
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+
+    observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_FALSE);
+    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_FALSE);
+#ifdef DEBUG
+    observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, PR_FALSE);
+    observerService->AddObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC, PR_FALSE);
+#endif
   }
   return NS_OK;
 }
@@ -881,6 +1137,10 @@ nsNSSComponent::RegisterProfileChangeObserver()
 NS_IMETHODIMP
 nsNSSComponent::RememberCert(CERTCertificate *cert)
 {
+  // Must not interfere with init / shutdown / profile switch.
+
+  nsAutoLock lock(mutex);
+
   if (!hashTableCerts || !cert)
     return NS_OK;
   

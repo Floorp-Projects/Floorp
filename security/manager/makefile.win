@@ -36,6 +36,6 @@
 DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
 
-DIRS = ssl pki
+DIRS = boot ssl pki
 
 include <$(DEPTH)\config\rules.mak>

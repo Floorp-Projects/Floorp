@@ -43,6 +43,7 @@
         const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
         const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
         const nsISSLStatusProvider = Components.interfaces.nsISSLStatusProvider;
+        const nsISSLStatus = Components.interfaces.nsISSLStatus;
 
         // Get the window for this information
         var w;
@@ -60,6 +61,9 @@
         var ui = security._getSecurityUI();
         var sp = ui.QueryInterface(nsISSLStatusProvider);
         var status = sp.SSLStatus;
+        if (status) {
+          status = status.QueryInterface(nsISSLStatus);
+        }
         if (status) {
           var cert = status.serverCert;
           var issuerName;
@@ -198,8 +202,8 @@
       <separator class="groove"/>
       <label id="security-privacy" class="header"/>
       <vbox flex="1">
-        <html id="security-privacy-msg1"/>
-        <html id="security-privacy-msg2"/>
+        <description id="security-privacy-msg1"/>
+        <description id="security-privacy-msg2"/>
       </vbox>
     </vbox>
   </tabpanels>

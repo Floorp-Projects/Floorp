@@ -725,6 +725,9 @@ embedding/config/Makefile
 
 MAKEFILES_psm2="
 security/manager/Makefile
+security/manager/boot/Makefile
+security/manager/boot/src/Makefile
+security/manager/boot/public/Makefile
 security/manager/ssl/Makefile
 security/manager/ssl/src/Makefile
 security/manager/ssl/resources/Makefile
