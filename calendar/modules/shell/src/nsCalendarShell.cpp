@@ -1283,8 +1283,48 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
   }
 
   /*
-   * Find the canvas by this name
+   * MCC   mini calendar controller
    */
+  if (target.EqualsIgnoreCase(CAL_STRING_CMD_MCC))
+  {
+    nsIXPFCCanvas * root = nsnull;
+    nsIXPFCCanvas * canvas = nsnull;
+    gXPFCToolkit->GetRootCanvas(&root);
+    canvas = root->CanvasFromName(name);
+    NS_RELEASE(root);
+    if (canvas == nsnull)
+      return NS_OK;
+
+    /*
+     * Send this command directly to the the canvas.
+     */
+    static NS_DEFINE_IID(kCXPFCMethodInvokerCommandCID, NS_XPFC_METHODINVOKER_COMMAND_CID);
+    static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
+    static NS_DEFINE_IID(kCXPFCObserverIID, NS_IXPFC_OBSERVER_IID);
+    static NS_DEFINE_IID(kCXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
+    nsXPFCMethodInvokerCommand * command;
+    nsresult res = nsRepository::CreateInstance(kCXPFCMethodInvokerCommandCID, nsnull, kXPFCCommandIID, (void **)&command);
+    if (NS_OK != res)
+      return res ;
+    command->Init();
+    command->mMethod = method;
+    command->mParams = param;
+
+    /*
+     * Pass this Command onto the Observer interface of the target canvas directly.
+     * There is no need to go through the ObserverManager since we have the
+     * necessary info
+     */
+    nsIXPFCObserver * observer = nsnull;
+    nsIXPFCSubject * subject = nsnull;
+    res = canvas->QueryInterface(kCXPFCObserverIID, (void **)&observer);
+    if (res == NS_OK)
+      observer->Update(subject,command);
+    aReply = command->mReply;
+
+    NS_IF_RELEASE(command);
+    NS_IF_RELEASE(observer);
+  } 
 
   if (target.EqualsIgnoreCase(XPFC_STRING_PANEL))
   {
@@ -1341,7 +1381,11 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
 
     NS_IF_RELEASE(command);
     NS_IF_RELEASE(observer);
-  } else if (target.EqualsIgnoreCase(XPFC_STRING_HELP)) {
+  } 
+  /*
+   * HELP
+   */
+  else if (target.EqualsIgnoreCase(XPFC_STRING_HELP)) {
 
     /*
      * Return basic help?

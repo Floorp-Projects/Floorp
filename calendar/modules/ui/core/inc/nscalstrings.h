@@ -78,6 +78,8 @@
 #define CAL_STRING_PREF_USER_DISPLAY_NAME         "cal.userDisplayName"
 #define CAL_STRING_PREF_USER_DISPLAY_NAME_DEFAULT "$USERNAME"
 
+#define CAL_STRING_CMD_MCC                        "mcc"
+
 #endif
 
 
