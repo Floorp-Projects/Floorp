@@ -299,6 +299,13 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
     result = mAttributes->Clone(&(aDst->mAttributes));
   }
 
+  PRInt32 id;
+  if (mDocument) {
+    mDocument->GetAndIncrementContentID(&id);
+  }
+  if (aDst && aDst->mContent) {
+    aDst->mContent->SetContentID(id);
+  }
   return result;
 }
 

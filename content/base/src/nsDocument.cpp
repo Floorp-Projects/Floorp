@@ -591,6 +591,7 @@ nsDocument::nsDocument()
   mModCount = 0;
   mFileSpec = nsnull;
   mPrincipal = nsnull;
+  mNextContentID = NS_CONTENT_ID_COUNTER_BASE;
   Init();/* XXX */
 }
 
@@ -3055,6 +3056,14 @@ nsDocument::FlushPendingNotifications()
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocument::GetAndIncrementContentID(PRInt32* aID)
+{
+  *aID = mNextContentID++;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsDocument::GetModCount(PRInt32 *outModCount)

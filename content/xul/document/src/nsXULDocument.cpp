@@ -1755,6 +1755,13 @@ nsXULDocument::FlushPendingNotifications()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::GetAndIncrementContentID(PRInt32* aID)
+{
+  *aID = mNextContentID++;
+  return NS_OK;
+}
+
 void
 nsXULDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {

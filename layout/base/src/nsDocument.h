@@ -318,6 +318,7 @@ public:
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
   NS_IMETHOD FlushPendingNotifications();
+  NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
 
 public:
   
@@ -489,7 +490,10 @@ protected:
   nsVoidArray *mEpilog;
   nsDocumentChildNodes* mChildNodes;
   nsIWordBreaker* mWordBreaker;
-  
+  // A content ID counter used to give a monotonically increasing ID to the content
+  // objects in the document's content model
+  PRInt32 mNextContentID;
+
   // disk file members
   nsFileSpec*     mFileSpec;
   PRInt32         mModCount;
