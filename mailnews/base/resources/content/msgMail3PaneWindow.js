@@ -733,7 +733,6 @@ function ChangeSelection(tree, newSelection)
 	if(newSelection)
 	{
 		tree.clearItemSelection();
-		tree.clearCellSelection();
 		tree.selectItem(newSelection);
 		tree.ensureElementIsVisible(newSelection);
 	}

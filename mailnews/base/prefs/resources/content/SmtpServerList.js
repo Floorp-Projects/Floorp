@@ -108,7 +108,6 @@ function refreshServerList()
     // save selection
     var oldSelectedIds = new Array;
     serverList.clearItemSelection();
-    serverList.clearCellSelection();
     var selectedItems = serverList.selectedItems;
     for (var i=0; i< selectedItems.length; i++)
         oldSelectedIds[i] = selectedItems[0].id;

@@ -99,7 +99,6 @@ function RenameFolder(name,uri)
 	if (uri && (uri != "") && name && (name != "")) {
                 var selectedFolder = GetResourceFromUri(uri);
                 folderTree.clearItemSelection();
-                folderTree.clearCellSelection();
                 messenger.RenameFolder(folderTree.database, selectedFolder, name);
         }
         else {
@@ -202,7 +201,6 @@ function MsgCompactFolder()
                 ChangeSelection(tree, selectedFolder);
                 */
                 tree.clearItemSelection();
-                tree.clearCellSelection();
             }
         }
 	}

@@ -195,7 +195,6 @@ function refreshFilterList() {
         selection = tree.selectedItems[0].id;
 
     tree.clearItemSelection();
-    tree.clearCellSelection();
     tree.setAttribute("ref", tree.getAttribute("ref"));
 
     if (selection) {
