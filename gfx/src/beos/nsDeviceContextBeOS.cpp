@@ -61,8 +61,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
  
 nscoord nsDeviceContextBeOS::mDpi = 96; 
  
-NS_IMPL_ISUPPORTS1(nsDeviceContextBeOS, nsIDeviceContext) 
- 
 nsDeviceContextBeOS::nsDeviceContextBeOS()
 {
   NS_INIT_REFCNT();

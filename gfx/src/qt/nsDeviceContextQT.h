@@ -53,8 +53,6 @@ public:
     nsDeviceContextQT();
     virtual ~nsDeviceContextQT();
 
-    NS_DECL_ISUPPORTS
-
     NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
     NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);

@@ -68,8 +68,6 @@ static NS_DEFINE_CID(kPrefCID,NS_PREF_CID);
 
 nscoord nsDeviceContextQT::mDpi = 96;
 
-NS_IMPL_ISUPPORTS1(nsDeviceContextQT,nsIDeviceContext)
-
 nsDeviceContextQT::nsDeviceContextQT()
 {
   NS_INIT_REFCNT();

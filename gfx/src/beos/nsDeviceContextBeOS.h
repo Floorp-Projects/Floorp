@@ -53,8 +53,6 @@ public:
   nsDeviceContextBeOS();
   virtual ~nsDeviceContextBeOS();
 
-  NS_DECL_ISUPPORTS
-
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
