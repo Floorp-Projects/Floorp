@@ -202,7 +202,7 @@ unless ($action) {
         print "</TR>";
     }
     print "<TR>\n";
-    print "  <TD VALIGN=\"top\" COLSPAN=4>Add a new product</TD>\n";
+    print "  <TD VALIGN=\"top\" COLSPAN=5>Add a new product</TD>\n";
     print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><FONT SIZE =-1><A HREF=\"editproducts.cgi?action=add\">Add</A></FONT></TD>\n";
     print "</TR></TABLE>\n";
 
