@@ -34,58 +34,22 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+MODULE    = accessibility
+XPIDL_MODULE= accessibility
+GRE_MODULE      = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = accessibility
-LIBRARY_NAME = accessibility_toolkit_s
-REQUIRES	= content \
-		  docshell \
-		  dom \
-		  gfx \
-		  htmlparser \
-		  intl \
-		  layout \
-		  locale \
-		  necko \
-		  plugin \
-		  pref \
-		  string \
-		  uriloader \
-		  view \
-		  webshell \
-		  widget \
-		  xpcom \
-		  xuldoc \
-		  $(NULL)
+DIRS=ISimpleDOMNode ISimpleDOMDocument
 
-CPPSRCS = \
-  nsAccessNodeWrap.cpp \
-  nsAccessibleWrap.cpp \
-  nsDocAccessibleWrap.cpp \
-  nsRootAccessibleWrap.cpp \
-  $(NULL)
-
-EXPORTS = \
-  nsAccessNodeWrap.h \
-  nsAccessibleWrap.h \
-  nsDocAccessibleWrap.h \
-  nsRootAccessibleWrap.h \
-  $(NULL)
-
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = 1
+XPIDLSRCS = \
+      nsIAccessibleWin32Object.idl \
+      $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(srcdir)/../base \
-  -I$(srcdir)/../html \
-  -I$(srcdir)/../xul \
-  $(NULL)
 

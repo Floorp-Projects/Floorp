@@ -36,20 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#ifndef _nsOuterDocAccessible_H_
+#define _nsOuterDocAccessible_H_
 
-#ifndef _nsDocAccessibleWrap_H_
-#define _nsDocAccessibleWrap_H_
+#include "nsBaseWidgetAccessible.h"
+#include "nsIAccessible.h"
 
-#include "nsDocAccessible.h"
+class nsIWeakReference;
 
-class nsDocAccessibleWrap: public nsDocAccessible
+class nsOuterDocAccessible : public nsBlockAccessible
 {
-public:
-    nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsDocAccessibleWrap();
+  NS_DECL_ISUPPORTS_INHERITED
+
+  public:
+    nsOuterDocAccessible(nsIDOMNode* aNode, 
+                         nsIAccessible* aInnerDocAccessible, 
+                         nsIWeakReference* aShell);
+
+    NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
+    NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
+    NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+    NS_IMETHOD GetAccName(nsAString& aAccName);
+    NS_IMETHOD GetAccValue(nsAString& AccValue);
+    NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
+    NS_IMETHOD GetAccState(PRUint32 *aAccState);
+
+  protected:
+    nsCOMPtr<nsIAccessible> mInnerDocAccessible;
 };
 
-#endif
+#endif  

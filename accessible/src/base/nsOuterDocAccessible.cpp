@@ -36,20 +36,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#include "nsOuterDocAccessible.h"
 
-#ifndef _nsDocAccessibleWrap_H_
-#define _nsDocAccessibleWrap_H_
+NS_IMPL_ISUPPORTS_INHERITED0(nsOuterDocAccessible, nsBlockAccessible)
 
-#include "nsDocAccessible.h"
-
-class nsDocAccessibleWrap: public nsDocAccessible
+nsOuterDocAccessible::nsOuterDocAccessible(nsIDOMNode* aNode, 
+                                           nsIAccessible* aDocAccessible, 
+                                           nsIWeakReference* aShell):
+  nsBlockAccessible(aNode, aShell), mInnerDocAccessible(aDocAccessible)
 {
-public:
-    nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsDocAccessibleWrap();
-};
+}
 
-#endif
+  /* attribute wstring accName; */
+NS_IMETHODIMP nsOuterDocAccessible::GetAccName(nsAString& aAccName) 
+{ 
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mInnerDocAccessible));
+  nsresult rv = accDoc->GetTitle(aAccName);
+  if (NS_FAILED(rv) || aAccName.IsEmpty())
+    rv = accDoc->GetURL(aAccName);
+  return rv;
+}
+
+NS_IMETHODIMP nsOuterDocAccessible::GetAccValue(nsAString& aAccValue) 
+{ 
+  return NS_OK;
+}
+
+/* nsIAccessible getAccFirstChild (); */
+NS_IMETHODIMP nsOuterDocAccessible::GetAccFirstChild(nsIAccessible **aChild)
+{
+  NS_IF_ADDREF(*aChild = mInnerDocAccessible);
+  return NS_OK;
+}
+
+/* nsIAccessible getAccLastChild (); */
+NS_IMETHODIMP nsOuterDocAccessible::GetAccLastChild(nsIAccessible **aChild)
+{
+  NS_IF_ADDREF(*aChild = mInnerDocAccessible);
+  return NS_OK;
+}
+
+/* long getAccChildCount (); */
+NS_IMETHODIMP nsOuterDocAccessible::GetAccChildCount(PRInt32 *aNumChildren)
+{
+  *aNumChildren = 1;
+  return NS_OK;
+}
+
+/* unsigned long getAccRole (); */
+NS_IMETHODIMP nsOuterDocAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_CLIENT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOuterDocAccessible::GetAccState(PRUint32 *aAccState)
+{
+  return nsAccessible::GetAccState(aAccState);
+}
