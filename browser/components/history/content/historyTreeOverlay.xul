@@ -30,7 +30,6 @@
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contentAreaCommandsDTD;
 ]>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
@@ -45,7 +44,7 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTreeSorting.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/history/history.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   
   <popupset id="historyContextMenu">
     <command id="cmd_selectAll"/>

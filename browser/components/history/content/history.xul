@@ -23,7 +23,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://browser/content/history/historyTreeOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
