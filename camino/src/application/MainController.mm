@@ -1162,12 +1162,13 @@ const int kReuseWindowOnAE = 2;
 {
   // ignore |hasVisibleWindows| because we always want to show a browser window when
   // the user clicks on the app icon, even if, say, prefs or the d/l window are open.
-  // If there is no browser, create one. If there is one, bring it to the front and
-  // unminimize it if it's down in the dock.
+  // If there is no browser, create one. If there is one, unminimize it if it's in the dock.
   NSWindow* frontBrowser = [self getFrontmostBrowserWindow];
   if ( !frontBrowser )
     [self newWindow:self];
-
+  else if ([frontBrowser isMiniaturized])
+    [frontBrowser deminiaturize:self];
+  
   return NO;
 }
 
