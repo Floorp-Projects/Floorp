@@ -127,7 +127,7 @@ char* vr_findVerRegName()
  *  WINDOWS STUBS
  * ------------------------------------------------------------------
  */
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"
 #define PATHLEN 260
 
