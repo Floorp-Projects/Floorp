@@ -1,6 +1,7 @@
 /* Address Book specific style */
 
-/* CardEdit styles - used in the Card Edit View */
+
+/* CardEdit styles - used in the Card Edit Dialog */
 
 box[class="CardEdit"] {
 	margin: 5px;
@@ -16,6 +17,34 @@ input[class="CardEdit"] {
 	margin-top   : 1px;
 	margin-bottom: 1px;
 }
+
+
+/* CardView styles - used in the Card View Pane*/
+
+div[class="CardViewHeading"] {
+	padding: 1px;
+	padding-left: 5px;
+	color: white;
+	background-color: #5050ff;
+	font-weight: bold;
+}
+
+div[class="CardViewText"] {
+	padding-left: 20px;
+	padding-right: 2px;
+}
+
+box[class="CardView"] {
+	padding: 0px;
+	padding-top: 12px;
+	padding-bottom: 4px;
+	border: none;
+}
+
+spring[class="CardViewHeadingSpace"] {
+	height: 3px;
+}
+
 
 /* General styles */
 
