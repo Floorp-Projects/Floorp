@@ -28,6 +28,7 @@
 #ifdef XP_UNIX
 #include <sys/stat.h>
 #include <unistd.h>
+#include "private/pprio.h"  /* for PR_Socket */
 #endif
 
 #define PSM_TIMEOUT_IN_SEC 300
@@ -70,7 +71,7 @@ nsPSMShimGetSocket(int unixSock)
 #ifndef XP_UNIX        
         return NULL;
 #else
-        fd = PR_OpenTCPSocket(AF_UNIX);
+        fd = PR_Socket(PR_AF_LOCAL, PR_SOCK_STREAM, 0);
         PR_ASSERT(fd);
 #endif
     }
@@ -78,14 +79,13 @@ nsPSMShimGetSocket(int unixSock)
     {
         fd = PR_NewTCPSocket();
         PR_ASSERT(fd);
+
+        /* disable Nagle algorithm delay for control sockets */
+        sockopt.option = PR_SockOpt_NoDelay;
+        sockopt.value.no_delay = PR_TRUE;   
+        rv = PR_SetSocketOption(fd, &sockopt);
+        PR_ASSERT(PR_SUCCESS == rv);
     }
-
-    /* disable Nagle algorithm delay for control sockets */
-    sockopt.option = PR_SockOpt_NoDelay;
-    sockopt.value.no_delay = PR_TRUE;   
-    rv = PR_SetSocketOption(fd, &sockopt);
-    PR_ASSERT(PR_SUCCESS == rv);
-
 
     sock = (CMSocket *)PR_Malloc(sizeof(CMSocket));
 
