@@ -220,6 +220,8 @@ void nsDeviceContextMac::FlushFontCache()
 }
 
 
+
+
 nsIFontMetrics* nsDeviceContextMac::GetMetricsFor(const nsFont& aFont)
 {
   /*if (nsnull == mFontCache) {
@@ -533,6 +535,12 @@ void nsDeviceContextMac :: InstallColormap()
 
   }
 #endif
+}
+
+NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
+{
+  aDepth = 24;
+  return NS_OK;
 }
 
 nsDrawingSurface nsDeviceContextMac :: GetDrawingSurface()
