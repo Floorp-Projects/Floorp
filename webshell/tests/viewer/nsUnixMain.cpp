@@ -116,6 +116,3 @@ int main(int argc, char **argv)
 }
 
 
-void ValidateDocData() { }
-void XP_ReBuffer() { }
-void XP_Trace() { }
