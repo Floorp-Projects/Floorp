@@ -32,6 +32,7 @@
 #include "mkutils.h"
 #include "mktcp.h"
 #include "netutils.h"
+#include "prsystem.h"
 
 extern "C"
 {
