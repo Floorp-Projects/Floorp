@@ -29,8 +29,8 @@
 #undef NS_IMPL_IDS
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
-
-
+#include "nsdefs.h"
+#include <windows.h>
 /**
  * Native Windows FileSelector wrapper
  */
@@ -51,22 +51,24 @@ protected:
                           PRInt16 aMode);
 
 
-
+  void GetFilterListArray(nsString& aFilterList);
   static void GetFileSystemCharset(nsString & fileSystemCharset);
   char * ConvertToFileSystemCharset(const PRUnichar *inString);
   PRUnichar * ConvertFromFileSystemCharset(const char *inString);
 
   HWND                   mWnd;
   nsString               mTitle;
-  nsFileDlgMode          mMode;
+  PRInt16                mMode;
   nsString               mFile;
   PRUint32               mNumberOfFilters;  
-  const nsString*        mTitles;
-  const nsString*        mFilters;
+  const PRUnichar**      mTitles;
+  const PRUnichar**      mFilters;
   nsString               mDefault;
   nsIUnicodeEncoder*     mUnicodeEncoder;
   nsIUnicodeDecoder*     mUnicodeDecoder;
-  nsCOMPtr<nsIFile>      mDisplayDirectory;
+  nsCOMPtr<nsILocalFile> mDisplayDirectory;
+  PRInt16                mSelectedType;
+
 };
 
 #endif // nsFilePicker_h__
