@@ -5,7 +5,7 @@
 CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export CVSROOT
 
-PATH=/opt/local/bin:$PATH
+PATH=/opt/local/bin:/opt/cvs-tools/bin:$PATH
 export PATH
 
 lxr_dir=.
@@ -16,6 +16,8 @@ log=$db_dir/cvs.log
 exec > $log 2>&1
 set -x
 
+date
+
 # update the lxr sources
 pwd
 cvs -Q -d $CVSROOT update -dP
@@ -24,5 +26,7 @@ cvs -Q -d $CVSROOT update -dP
 cd $src_dir
 cd ..
 cvs -Q -d $CVSROOT checkout MozillaSource
+
+date
 
 exit 0
