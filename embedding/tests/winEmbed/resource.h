@@ -16,6 +16,16 @@
 #define IDI_SMALL                       108
 #define IDS_ABOUT_TITLE                 108
 #define IDC_WINEMBED                    109
+#define IDS_HIST_BACK                   109
+#define IDS_HIST_FORWARD                110
+#define IDS_HIST_RELOAD_NORMAL          111
+#define IDS_HIST_RELOAD_BYPASSPROXY     112
+#define IDS_HIST_RELOAD_BYPASSCACHE     113
+#define IDS_HIST_ADDURL                 114
+#define IDS_HIST_RELOAD_BYPASSPROXYANDCACHE 115
+#define IDS_HIST_PURGE                  116
+#define IDS_HIST_GOTO                   117
+#define IDS_HIST_URL                    118
 #define IDR_MAINFRAME                   128
 #define IDD_BROWSER                     130
 #define IDD_CHOOSEPROFILE               132

@@ -31,6 +31,9 @@
 #include "nsIChannel.h"
 #include "nsCWebBrowser.h"
 #include "nsWidgetsCID.h"
+#include "nsXPIDLString.h"
+#include "resource.h"
+ 
 
 #include "WebBrowserChrome.h"
 
@@ -69,6 +72,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) // optional
+   NS_INTERFACE_MAP_ENTRY(nsISHistoryListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
@@ -160,6 +164,9 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32
     (void)mWebBrowser->AddWebBrowserListener(supports, 
         NS_GET_IID(nsIWebProgressListener));
     
+    // The window has been created. Now register for history notifications
+    mWebBrowser->AddWebBrowserListener(supports, NS_GET_IID(nsISHistoryListener));
+
     NS_IF_ADDREF(*aWebBrowser = mWebBrowser);
     return NS_OK;
 }
@@ -279,6 +286,126 @@ WebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//*****************************************************************************
+// WebBrowserChrome::nsISHistoryListener
+//*****************************************************************************   
+
+NS_IMETHODIMP
+WebBrowserChrome::OnHistoryNewEntry(nsIURI * aNewURI)
+{
+  return SendHistoryStatusMessage(aNewURI, "add");
+}
+
+NS_IMETHODIMP
+WebBrowserChrome::OnHistoryGoBack(nsIURI * aBackURI, PRBool * aContinue)
+{
+  // For now, let the operation continue
+  *aContinue = PR_TRUE;
+  return SendHistoryStatusMessage(aBackURI, "back");
+}
+
+
+NS_IMETHODIMP
+WebBrowserChrome::OnHistoryGoForward(nsIURI * aForwardURI, PRBool * aContinue)
+{
+  // For now, let the operation continue
+  *aContinue = PR_TRUE;
+  return SendHistoryStatusMessage(aForwardURI, "forward");
+}
+
+
+NS_IMETHODIMP
+WebBrowserChrome::OnHistoryGotoIndex(PRInt32 aIndex, nsIURI * aGotoURI, PRBool * aContinue)
+{
+  // For now, let the operation continue
+  *aContinue = PR_TRUE;
+  return SendHistoryStatusMessage(aGotoURI, "goto", aIndex);
+}
+
+NS_IMETHODIMP
+WebBrowserChrome::OnHistoryReload(nsIURI * aURI, PRUint32 aReloadFlags, PRBool * aContinue)
+{
+  // For now, let the operation continue
+  *aContinue = PR_TRUE;
+  return SendHistoryStatusMessage(aURI, "reload", 0 /* no info to pass here */, aReloadFlags);
+}
+
+NS_IMETHODIMP
+WebBrowserChrome::OnHistoryPurge(PRInt32 aNumEntries, PRBool *aContinue)
+{
+  // For now let the operation continue
+  *aContinue = PR_FALSE;
+  return SendHistoryStatusMessage(nsnull, "purge", aNumEntries);
+}
+
+nsresult
+WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1, PRUint32 aReloadFlags)
+{
+  nsXPIDLCString uriCStr;
+  if (aURI)
+    aURI->GetSpec(getter_Copies(uriCStr));
+
+  nsString uriAStr;
+
+  if(!(nsCRT::strcmp(operation, "back"))) {
+    // Going back. XXX Get string from a resource file
+    uriAStr.Append(NS_ConvertASCIItoUCS2("Going back to url:"));
+    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+  }
+  else if (!(nsCRT::strcmp(operation, "forward"))) {
+    // Going forward. XXX Get string from a resource file
+    uriAStr.Append(NS_ConvertASCIItoUCS2("Going forward to url:"));
+    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+  }
+  else if (!(nsCRT::strcmp(operation, "reload"))) {
+    // Reloading. XXX Get string from a resource file
+    if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
+        aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+    {
+      uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url,(bypassing proxy and cache) :"));
+    }
+    else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
+    {
+      uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (bypassing proxy):"));
+    }
+    else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+    {
+      uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (bypassing cache):"));
+    }
+    else
+    {
+      uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (normal):"));
+    }
+    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+  }
+  else if (!(nsCRT::strcmp(operation, "add"))) {
+    // Adding new entry. XXX Get string from a resource file
+    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+    uriAStr.Append(NS_ConvertASCIItoUCS2(" added to session History"));
+  }
+  else if (!(nsCRT::strcmp(operation, "goto"))) {
+    // Goto. XXX Get string from a resource file
+    uriAStr.Append(NS_ConvertASCIItoUCS2("Going to HistoryIndex:"));
+    uriAStr.AppendInt(info1);
+    uriAStr.Append(NS_ConvertASCIItoUCS2(" Url:"));
+    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+  }
+  else if (!(nsCRT::strcmp(operation, "purge"))) {
+    // Purging old entries
+    uriAStr.AppendInt(info1);
+    uriAStr.Append(NS_ConvertASCIItoUCS2(" purged from Session History"));
+  }
+
+  PRUnichar * uriStr = nsnull;
+  uriStr = uriAStr.ToNewUnicode();
+  if (mUI)
+    mUI->UpdateStatusBarText(this, uriStr);
+  nsCRT::free(uriStr);
+
+  return NS_OK;
+
+
+}
 
 //*****************************************************************************
 // WebBrowserChrome::nsIWebBrowserSiteWindow

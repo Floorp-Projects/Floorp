@@ -195,6 +195,13 @@ NS_IMETHODIMP nsWebBrowser::BindListener(nsISupports *aListener, const nsIID& aI
         if (NS_FAILED(rv)) return rv;
         rv = mWebProgress->AddProgressListener(listener);
     }
+    else if (aIID.Equals(NS_GET_IID(nsISHistoryListener))) {      
+      nsCOMPtr<nsISHistory> shistory(do_GetInterface(mDocShell, &rv));
+      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(aListener, &rv));
+      if (NS_FAILED(rv)) return rv;
+      rv = shistory->AddSHistoryListener(listener);
+    }
     return rv;
 }
 
@@ -246,6 +253,13 @@ NS_IMETHODIMP nsWebBrowser::UnBindListener(nsISupports *aListener, const nsIID& 
         nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
         if (NS_FAILED(rv)) return rv;
         rv = mWebProgress->RemoveProgressListener(listener);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsISHistoryListener))) {
+      nsCOMPtr<nsISHistory> shistory(do_GetInterface(mDocShell, &rv));
+      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(aListener, &rv));
+      if (NS_FAILED(rv)) return rv;
+      rv = shistory->RemoveSHistoryListener(listener);
     }
     return rv;
 }

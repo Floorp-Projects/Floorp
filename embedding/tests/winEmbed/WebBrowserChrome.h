@@ -39,7 +39,7 @@
 #include "nsIWebBrowser.h"
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
-
+#include "nsISHistoryListener.h"
 
 class WebBrowserChromeUI
 {
@@ -49,6 +49,7 @@ public:
     virtual void UpdateCurrentURI(nsIWebBrowserChrome *aChrome) = 0;
     virtual void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy) = 0;
     virtual void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax) = 0;
+    virtual void GetResourceStringById(PRInt32 aID, char ** aReturn) =0;
 };
 
 #define NS_DECL_WEBBROWSERCHROMEUI \
@@ -57,13 +58,15 @@ public:
     virtual void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText); \
     virtual void UpdateCurrentURI(nsIWebBrowserChrome *aChrome); \
     virtual void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy); \
-    virtual void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax);
+    virtual void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax); \
+    virtual void GetResourceStringById(PRInt32 aID, char ** aReturn);
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
-						   public nsIWebBrowserSiteWindow,
+                           public nsIWebBrowserSiteWindow,
                            public nsIPrompt,
                            public nsIInterfaceRequestor,
+                           public nsISHistoryListener,
                            public nsSupportsWeakReference
 {
 public:
@@ -75,12 +78,13 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBPROGRESSLISTENER
-	NS_DECL_NSIWEBBROWSERSITEWINDOW
+    NS_DECL_NSIWEBBROWSERSITEWINDOW
     NS_DECL_NSIPROMPT
     NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSISHISTORYLISTENER
 
 protected:
-   
+   nsresult SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1=0, PRUint32 info2=0);
    nativeWindow mNativeWindow;
    
    WebBrowserChromeUI *mUI;
