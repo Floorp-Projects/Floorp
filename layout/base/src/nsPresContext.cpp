@@ -320,7 +320,9 @@ float
 nsPresContext::GetPixelsToTwips() const
 {
   if (nsnull != mDeviceContext) {
-    return mDeviceContext->GetDevUnitsToAppUnits();
+    float p2t;
+    mDeviceContext->GetDevUnitsToAppUnits(p2t);
+    return p2t;
   }
   return 1.0f;
 }
@@ -329,7 +331,9 @@ float
 nsPresContext::GetTwipsToPixels() const
 {
   if (nsnull != mDeviceContext) {
-    return mDeviceContext->GetAppUnitsToDevUnits();
+    float app2dev;
+    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+    return app2dev;
   }
   return 1.0f;
 }
@@ -357,8 +361,9 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
     rootFrame = mShell->GetRootFrame();
     rootFrame->GetWindow(window);
     nsIRenderingContext* drawCtx = window->GetRenderingContext();
-    drawCtx->Scale(mDeviceContext->GetAppUnitsToDevUnits(),
-                   mDeviceContext->GetAppUnitsToDevUnits());
+    float app2dev;
+    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+    drawCtx->Scale(app2dev, app2dev);
     NS_RELEASE(drawCtx);
     nsIDeviceContext* deviceCtx = window->GetDeviceContext();
     rv = mImageGroup->Init(deviceCtx);

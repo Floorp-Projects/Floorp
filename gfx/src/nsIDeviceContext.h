@@ -80,13 +80,13 @@ public:
   //device context to define what the scale is
   //between the units used by the app and the
   //device units
-  virtual void SetAppUnitsToDevUnits(float aAppUnits) = 0;
-  virtual void SetDevUnitsToAppUnits(float aDevUnits) = 0;
+  NS_IMETHOD  SetAppUnitsToDevUnits(float aAppUnits) = 0;
+  NS_IMETHOD  SetDevUnitsToAppUnits(float aDevUnits) = 0;
 
   //these are used to query the scale values defined
   //by the above Set*() methods
-  virtual float GetAppUnitsToDevUnits() const = 0;
-  virtual float GetDevUnitsToAppUnits() const = 0;
+  NS_IMETHOD  GetAppUnitsToDevUnits(float &aAppUnits) const = 0;
+  NS_IMETHOD  GetDevUnitsToAppUnits(float &aDevUnits) const = 0;
 
   //returns the scrollbar dimensions in app units
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const = 0;

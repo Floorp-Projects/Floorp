@@ -40,11 +40,11 @@ public:
   NS_IMETHOD  GetDevUnitsToTwips(float &aDevUnitsToTwips) const;
   NS_IMETHOD  GetTwipsToDevUnits(float &aTwipsToDevUnits) const;
 
-  virtual void SetAppUnitsToDevUnits(float aAppUnits);
-  virtual void SetDevUnitsToAppUnits(float aDevUnits);
+  NS_IMETHOD  SetAppUnitsToDevUnits(float aAppUnits);
+  NS_IMETHOD  SetDevUnitsToAppUnits(float aDevUnits);
 
-  virtual float GetAppUnitsToDevUnits() const;
-  virtual float GetDevUnitsToAppUnits() const;
+  NS_IMETHOD  GetAppUnitsToDevUnits(float &aAppUnits) const;
+  NS_IMETHOD  GetDevUnitsToAppUnits(float &aDevUnits) const;
 
   NS_IMETHOD  GetFontCache(nsIFontCache *&aCache);
   NS_IMETHOD  FlushFontCache();
