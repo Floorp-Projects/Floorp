@@ -170,7 +170,7 @@ PRInt32 nsHTTPHeaderArray::GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult)
     
     entry   = m_pHTTPHeaders->ElementAt(i);
     element = (nsHeaderEntry*)entry.get();
-    if (aHeader == element->mAtom) {
+    if (aHeader == element->mAtom.get()) {
       *aResult = element;
       NS_ADDREF(*aResult);
       return i;
