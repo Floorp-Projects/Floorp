@@ -548,6 +548,7 @@ const nsFont& nsRenderingContextUnix :: GetFont()
 
 nsIFontMetrics* nsRenderingContextUnix :: GetFontMetrics()
 {
+  NS_IF_ADDREF(mFontMetrics);
   return mFontMetrics;
 }
 

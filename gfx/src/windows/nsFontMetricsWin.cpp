@@ -40,7 +40,48 @@ nsFontMetricsWin :: ~nsFontMetricsWin()
   }
 }
 
+#ifdef LEAK_DEBUG
+nsrefcnt nsFontMetricsWin :: AddRef()
+{
+  NS_PRECONDITION(mRefCnt != 0, "resurrecting a dead object");
+  return ++mRefCnt;
+}
+
+nsrefcnt nsFontMetricsWin :: Release()
+{
+  NS_PRECONDITION(mRefCnt != 0, "too many release's");
+  if (--mRefCnt == 0) {
+    delete this;
+  }
+  return mRefCnt;
+}
+
+nsresult nsFontMetricsWin :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtr = NULL;
+
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  static NS_DEFINE_IID(kClassIID, kIFontMetricsIID);
+  if (aIID.Equals(kClassIID)) {
+    *aInstancePtr = (void*) this;
+    mRefCnt++;
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*) ((nsISupports*)this);
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+#else
 NS_IMPL_ISUPPORTS(nsFontMetricsWin, kIFontMetricsIID)
+#endif
+
 
 // Note: The presentation context has a reference to this font
 // metrics, therefore avoid circular references by not AddRef'ing the
