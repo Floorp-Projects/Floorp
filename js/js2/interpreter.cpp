@@ -18,14 +18,16 @@
 // Rights Reserved.
 
 #include "interpreter.h"
+#include "world.h"
+
+#include <map>
 
 namespace JavaScript {
 
 // these should probably be in icodegenerator.h.
-typedef Instruction_2<StringAtom&, Register> LoadName;
-typedef Instruction_2<double, Register> LoadImmediate;
-typedef Instruction_2<int32, Register> LoadVar;
-typedef Instruction_2<int32, Register> SaveVar;
+typedef Instruction_2<StringAtom&, Register> LoadName, SaveName;
+typedef Instruction_2<float64, Register> LoadImmediate;
+typedef Instruction_2<int32, Register> LoadVar, SaveVar;
 typedef Instruction_1<int32> Branch;
 typedef Instruction_2<int32, Register> BranchCond;
 typedef Instruction_3<Register, Register, Register> Arithmetic;
@@ -35,25 +37,31 @@ typedef Instruction_2<Register, Register> Move;
 #define op2(i) (i->itsOperand2)
 #define op3(i) (i->itsOperand3)
 
-JSValue interpret(InstructionStream& iCode, const JSValues& args)
+JSValue interpret(InstructionStream& iCode, LabelList& labels, const JSValues& args)
 {
-	JSValue result = JSValue();
+	JSValue result;
 	JSValues frame(args);
 	JSValues registers(32);
+	static std::map<String, JSValue> globals;
 	
     for (InstructionIterator pc = iCode.begin(); pc != iCode.end(); ++pc) {
         Instruction* instruction = *pc;
-	    switch (instruction->itsOp) {
-        case LOAD_NAME :
+	    switch (instruction->opcode()) {
+        case LOAD_NAME:
 			{
 				LoadName* i = static_cast<LoadName*>(instruction);
-				std::cout << "\"" << op1(i) <<  "\", R" << op2(i);
+				registers[op2(i)] = globals[op1(i)];
 			}
 			break;
-		case LOAD_IMMEDIATE :
+		case SAVE_NAME:
+			{
+				SaveName* i = static_cast<SaveName*>(instruction);
+				globals[op1(i)] = registers[op2(i)];
+			}
+			break;
+		case LOAD_IMMEDIATE:
 			{
 				LoadImmediate* i = static_cast<LoadImmediate*>(instruction);
-				// s << t->itsOperand1 << ", R" << t->itsOperand2;
 				registers[op2(i)] = JSValue(op1(i));
 			}
 			break;
@@ -69,18 +77,18 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 				frame[op1(i)] = registers[op2(i)];
 			}
 			break;
-		case BRANCH :
+		case BRANCH:
 			{
 				Branch* i = static_cast<Branch*>(instruction);
-				pc = iCode.begin() + op1(i);
+				pc = iCode.begin() + labels[op1(i)]->itsOffset;
 			}
 			break;
-		case BRANCH_COND :
+		case BRANCH_COND:
 			{
 				BranchCond* i = static_cast<BranchCond*>(instruction);
 				// s << "target #" << t->itsOperand1 << ", R" << t->itsOperand2;
 				if (registers[op2(i)].i32)
-					pc = iCode.begin() + op1(i);
+					pc = iCode.begin() + labels[op1(i)]->itsOffset;
 			}
 			break;
 		case ADD:
