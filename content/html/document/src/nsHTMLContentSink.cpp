@@ -3168,8 +3168,8 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 
   // Create content object
   nsAutoString tag("BASE");
-  nsIHTMLContent* element = nsnull;
-  result = NS_CreateHTMLElement(&element, tag);
+  nsCOMPtr<nsIHTMLContent> element;
+  result = NS_CreateHTMLElement(getter_AddRefs(element), tag);
   if (NS_SUCCEEDED(result)) {
     element->SetContentID(mContentIDCounter++);
 
