@@ -926,8 +926,16 @@ var monthViewEventDragAndDropObserver  = {
       if( newDay == null )
          return;
 
-      gEventBeingDragged.start.day = newDay;
-      gEventBeingDragged.end.day = newDay;
+      var OldStartDate = new Date( gEventBeingDragged.start.getTime() );
+      var newStartDate = new Date( OldStartDate.getTime() );
+      newStartDate.setDate( newDay );
+      
+      var Difference = newStartDate.getTime() - OldStartDate.getTime();
+      var oldEndDate = new Date( gEventBeingDragged.end.getTime() );
+      var newEndDate = oldEndDate.getTime() + Difference;
+
+      gEventBeingDragged.start.setTime( newStartDate.getTime() );
+      gEventBeingDragged.end.setTime( newEndDate );
 
       //edit the event being dragged to change its start and end date
       //don't change the start and end time though.
