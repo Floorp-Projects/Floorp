@@ -375,7 +375,6 @@ NS_IMETHODIMP nsImageQT::Draw(nsIRenderingContext &aContext,
     return NS_OK;
 }
 
-#ifdef USE_IMG2
 void nsImageQT::CreateOffscreenPixmap(PRInt32 aWidth,PRInt32 aHeight)
 {
   if (mImagePixmap)
@@ -386,7 +385,7 @@ void nsImageQT::CreateOffscreenPixmap(PRInt32 aWidth,PRInt32 aHeight)
     mImagePixmap->fill(0);
   }
 }
-#endif
+
 void nsImageQT::CreateImagePixmap(PRInt32 aWidth,PRInt32 aHeight)
 {
   mImagePixmap = new QImage(aWidth,aHeight,mDepth);
@@ -530,7 +529,6 @@ nsImageQT::SetDecodedRect(PRInt32 x1,PRInt32 y1,PRInt32 x2,PRInt32 y2)
   return NS_OK;
 }
 
-#ifdef USE_IMG2
 NS_IMETHODIMP nsImageQT::DrawToImage(nsIImage *aDstImage,
                                      nscoord aDX,nscoord aDY,
                                      nscoord aDWidth,nscoord aDHeight)
@@ -557,4 +555,3 @@ NS_IMETHODIMP nsImageQT::DrawToImage(nsIImage *aDstImage,
  
   return NS_OK;
 }
-#endif
