@@ -46,6 +46,8 @@ LIBRARY_NAME	= xpical
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= oeICalModule
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  appshell \
 		  string \

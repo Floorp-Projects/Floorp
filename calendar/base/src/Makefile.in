@@ -48,6 +48,7 @@ LIBRARY_NAME     = calbase_s
 MODULE_NAME      = calBaseModule
 FORCE_STATIC_LIB = 1
 GRE_MODULE       = 1
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES = xpcom \
 	   js \
