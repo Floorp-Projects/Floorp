@@ -811,7 +811,12 @@ AppendFontName(XFontStruct* aFontStruct, nsString& aString, Display *aDisplay)
 {
   unsigned long pr = 0;
   // we first append the FFRE name to reconstruct font more faithfully
+#ifdef MOZ_WIDGET_GTK
   unsigned long font_atom = gdk_atom_intern("FONT", FALSE);
+#endif
+#ifdef MOZ_WIDGET_GTK2
+  unsigned long font_atom = gdk_x11_get_xatom_by_name("FONT");
+#endif
   ::XGetFontProperty(aFontStruct, font_atom, &pr);
   if(pr) {
     char* xlfdName = ::XGetAtomName(aDisplay, pr);
