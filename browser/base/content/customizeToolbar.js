@@ -24,7 +24,7 @@
 */
 
 var gToolbarChanged = false;
-
+var gFlavorSet = null;
 var gCurrentDragOverItem = null;
 
 function buildDialog()
@@ -133,13 +133,13 @@ var dragObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction) {
     aXferData.data = new TransferDataSet();
     var data = new TransferData();
-    data.addDataForFlavour("text/unicode", aEvent.target.firstChild.id);
+    data.addDataForFlavor("text/unicode", aEvent.target.firstChild.id);
     aXferData.data.push(data);
   }
 }
 
 var dropObserver = {
-  onDragOver: function (aEvent, aFlavour, aDragSession)
+  onDragOver: function (aEvent, aFlavor, aDragSession)
   {
     if (gCurrentDragOverItem)
       gCurrentDragOverItem.removeAttribute("dragactive");
@@ -157,7 +157,7 @@ var dropObserver = {
   },
   onDrop: function (aEvent, aXferData, aDragSession)
   {
-    var newButtonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+    var newButtonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavor.contentType);
     var toolbar = document.getElementById("cloneToolbar");
     
     // If dropping a button that's already on the toolbar, we want to move it to
@@ -196,16 +196,36 @@ var dropObserver = {
 
     gToolbarChanged = true;
   },
-  _flavourSet: null,
-  getSupportedFlavours: function ()
+  _flavorSet: null,
+  getSupportedFlavors: function ()
   {
-    if (!this._flavourSet) {
-      this._flavourSet = new FlavourSet();
-      this._flavourSet.appendFlavour("text/unicode");
+    if (!this._flavorSet) {
+      this._flavorSet = new FlavorSet();
+      this._flavorSet.appendFlavor("text/unicode");
     }
-    return this._flavourSet;
+    return this._flavorSet;
   }
 }
+
+var trashObserver = {
+  onDragOver: function (aEvent, aFlavor, aDragSession)
+  {
+    aDragSession.canDrop = true;
+  },
+  onDrop: function (aEvent, aXferData, aDragSession)
+  {
+    var buttonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavor.contentType);
+    var toolbar = document.getElementById("cloneToolbar");
+    var toolbarItem = toolbar.firstChild;
+    while (toolbarItem) {
+      if (toolbarItem.firstChild.id == buttonId) {
+        toolbar.removeChild(toolbarItem);
+        return;
+      }
+      toolbarItem = toolbarItem.nextSibling;
+    }
+  },
+}    
 
 // Make sure all buttons look enabled (and that textboxes are disabled).
 // Hey, you try to come up with a better name.
