@@ -1700,6 +1700,9 @@ class UpdateContext implements Runnable {
         db.context.disableUpdate();
         int frameCount = contextData.getFrameCount();
         ctx.removeAllItems();
+        // workaround for JDK 1.4 bug that caches selected value even after
+        // removeAllItems() is called
+        ctx.setSelectedItem(null);
         toolTips.removeAllElements();
         for (int i = 0; i < frameCount; i++) {
             FrameHelper frame = contextData.getFrame(i);
