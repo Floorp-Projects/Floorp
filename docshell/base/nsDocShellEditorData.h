@@ -69,7 +69,7 @@ public:
 
 protected:              
 
-  nsresult    GetOrCreateEditingSession(nsIEditingSession **outEditingSession);
+  nsresult    GetOrCreateEditingSession(nsIEditingSession **outEditingSession, PRBool inAllowCreation);
 
 protected:
 

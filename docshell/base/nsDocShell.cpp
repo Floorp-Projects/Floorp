@@ -3009,6 +3009,9 @@ nsDocShell::Destroy()
         mContentListener->SetParentContentListener(nsnull);
         NS_RELEASE(mContentListener);
     }
+    
+    delete mEditorData;
+    mEditorData = 0;
 
     return NS_OK;
 }
