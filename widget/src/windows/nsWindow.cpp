@@ -1065,6 +1065,7 @@ void nsWindow::SetCursor(nsCursor aCursor)
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
     HCURSOR newCursor = NULL;
+    HMODULE hm ;
 
     switch(aCursor) {
     case eCursor_select:
@@ -1076,7 +1077,7 @@ void nsWindow::SetCursor(nsCursor aCursor)
       break;
 
     case eCursor_hyperlink: {
-      HMODULE hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
       newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_SELECTANCHOR));
       break;
     }
@@ -1091,6 +1092,46 @@ void nsWindow::SetCursor(nsCursor aCursor)
 
     case eCursor_sizeNS:
       newCursor = ::LoadCursor(NULL, IDC_SIZENS);
+      break;
+
+    case eCursor_arrow_north:
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
+      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWNORTH));
+      break;
+
+    case eCursor_arrow_north_plus:
+      
+      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWNORTHPLUS));
+      break;
+
+    case eCursor_arrow_south:
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
+      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWSOUTH));
+      break;
+
+    case eCursor_arrow_south_plus:
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
+      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWSOUTHPLUS));
+      break;
+
+    case eCursor_arrow_east:
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
+      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWEAST));
+      break;
+
+    case eCursor_arrow_east_plus:
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
+      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWEASTPLUS));
+      break;
+
+    case eCursor_arrow_west:
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
+      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWWEST));
+      break;
+
+    case eCursor_arrow_west_plus:
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
+      newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWWESTPLUS));
       break;
 
     default:
