@@ -44,6 +44,8 @@
 #include <nsIDocShellTreeOwner.h>
 #include <nsIURILoader.h>
 #include <nsCURILoader.h>
+#include <nsIURIFixup.h>
+#include <nsCDefaultURIFixup.h>
 #include <nsIURI.h>
 #include <nsNetUtil.h>
 #include <nsIWindowMediator.h>
@@ -660,15 +662,14 @@ XRemoteService::MayOpenURL(const nsCString &aURL)
       scheme = NS_LITERAL_CSTRING("about");
     }
     else {
-      nsCOMPtr<nsIIOService> ios = do_GetIOService();
-      if (ios) {
-        ios->ExtractScheme(aURL, scheme);
-        if (scheme.IsEmpty()) {
-          // could not parse out a scheme.  perhaps this is a file path.
-          nsCOMPtr<nsILocalFile> file;
-          NS_NewNativeLocalFile(aURL, PR_FALSE, getter_AddRefs(file));
-          if (file)
-            scheme = NS_LITERAL_CSTRING("file");
+      nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+      if (fixup) {
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv =
+          fixup->CreateFixupURI(aURL, nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+                                getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv) && uri) {
+          uri->GetScheme(scheme);
         }
       }
     }
