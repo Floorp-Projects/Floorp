@@ -103,7 +103,7 @@ public class Main {
                               ScriptableObject.DONTENUM);
         
         for (int i=0; i < fileList.size(); i++) {
-            processSource(cx, (String) fileList.get(i));
+            processSource(cx, (String) fileList.elementAt(i));
         }
 
         cx.exit();
