@@ -68,7 +68,8 @@
 #    and a completely common environment
 #
 ########################################################################
-
+NSS_STRICT_SHUTDOWN=1
+export NSS_STRICT_SHUTDOWN
 
 if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
