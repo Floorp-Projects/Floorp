@@ -668,6 +668,11 @@ nsHttpConnection::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
         mKeepAliveMask = mKeepAlive;
 
         nsHttpHandler::get()->ReclaimConnection(this);
+
+        // release reference to socket transport if were not going to reuse
+        // the socket connection.
+        if (!mKeepAlive)
+            mSocketTransport = 0;
     }
     // no point in returning anything else but NS_OK
     return NS_OK;
