@@ -19,7 +19,6 @@
 
 #include <locale.h>
 #include "nsIPlatformCharset.h"
-#include "nsPlatformCharsetFactory.h"
 #include "pratom.h"
 #include "nsURLProperties.h"
 #include "nsCOMPtr.h"
@@ -138,57 +137,29 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
 
 }
 
-class nsUNIXCharsetFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
+//----------------------------------------------------------------------
 
-public:
-   nsUNIXCharsetFactory() {
-     NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsUNIXCharsetFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
- 
-};
-
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsUNIXCharsetFactory , kIFactoryIID);
-
-NS_IMETHODIMP nsUNIXCharsetFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+NS_IMETHODIMP
+NS_NewPlatformCharset(nsISupports* aOuter, 
+                      const nsIID &aIID,
+                      void **aResult)
 {
-  if(NULL == aResult) 
-        return NS_ERROR_NULL_POINTER;
-  if(NULL != aDelegate) 
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-  nsISupports *inst = new nsUNIXCharset();
-  if(NULL == inst) {
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsUNIXCharset* inst = new nsUNIXCharset();
+  if (!inst) {
+    *aResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res)) {
-     delete inst;
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
   }
-  
   return res;
 }
-NS_IMETHODIMP nsUNIXCharsetFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-nsIFactory* NEW_PLATFORMCHARSETFACTORY()
-{
-  return new nsUNIXCharsetFactory();
-}
-

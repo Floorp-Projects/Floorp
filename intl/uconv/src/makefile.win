@@ -28,28 +28,28 @@ DLLNAME = uconv
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
-	nsTextToSubURI.cpp	\
+	nsTextToSubURI.cpp		\
 	nsCharsetConverterManager.cpp	\
 	nsUnicodeDecodeUtil.cpp		\
 	nsUnicodeDecodeHelper.cpp	\
 	nsUnicodeEncodeHelper.cpp	\
 	nsWinCharset.cpp		\
 	nsCharsetAliasImp.cpp		\
-	nsUConvDll.cpp			\
+	nsUConvModule.cpp		\
 	nsMappingCache.cpp		\
 	nsURLProperties.cpp		\
 	nsCharsetMenu.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
-	.\$(OBJDIR)\nsTextToSubURI.obj 	\
+	.\$(OBJDIR)\nsTextToSubURI.obj			\
 	.\$(OBJDIR)\nsCharsetConverterManager.obj 	\
 	.\$(OBJDIR)\nsUnicodeDecodeUtil.obj 		\
 	.\$(OBJDIR)\nsUnicodeDecodeHelper.obj 		\
 	.\$(OBJDIR)\nsUnicodeEncodeHelper.obj 		\
 	.\$(OBJDIR)\nsWinCharset.obj 			\
 	.\$(OBJDIR)\nsCharsetAliasImp.obj 		\
-	.\$(OBJDIR)\nsUConvDll.obj 			\
+	.\$(OBJDIR)\nsUConvModule.obj 			\
 	.\$(OBJDIR)\nsMappingCache.obj 			\
 	.\$(OBJDIR)\nsURLProperties.obj 		\
 	.\$(OBJDIR)\nsCharsetMenu.obj 			\

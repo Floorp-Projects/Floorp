@@ -20,7 +20,6 @@
  */
 
 #include "nsIPlatformCharset.h"
-#include "nsPlatformCharsetFactory.h"
 #include "nsUConvDll.h"
 #include "pratom.h"
 #include <unidef.h>
@@ -77,55 +76,29 @@ nsOS2Charset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
    return NS_OK;
 }
 
-class nsOS2CharsetFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
+//----------------------------------------------------------------------
 
-public:
-   nsOS2CharsetFactory() {
-     NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsOS2CharsetFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
- 
-};
-
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsOS2CharsetFactory , kIFactoryIID);
-
-NS_IMETHODIMP nsOS2CharsetFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+NS_IMETHODIMP
+NS_NewPlatformCharset(nsISupports* aOuter, 
+                      const nsIID &aIID,
+                      void **aResult)
 {
-  if( !aResult) 
-        return NS_ERROR_NULL_POINTER;
-  if( aDelegate) 
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-  nsISupports *inst = new nsOS2Charset;
-  if( !inst)
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsOS2Charset* inst = new nsOS2Charset();
+  if (!inst) {
+    *aResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res))
-     delete inst;
-  
+  }
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
+  }
   return res;
-}
-NS_IMETHODIMP nsOS2CharsetFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-nsIFactory* NEW_PLATFORMCHARSETFACTORY()
-{
-  return new nsOS2CharsetFactory();
 }

@@ -20,9 +20,39 @@
 #ifndef nsUConvDll_h___
 #define nsUConvDll_h___
 
-#include "prtypes.h"
+#include "nsISupports.h"
 
 extern "C" PRInt32 g_InstanceCount;
 extern "C" PRInt32 g_LockCount;
+
+// Factory methods
+
+NS_IMETHODIMP
+NS_NewCharsetConverterManager(nsISupports* aOuter, const nsIID& aIID,
+                              void** aResult);
+
+NS_IMETHODIMP
+NS_NewUnicodeDecodeHelper(nsISupports* aOuter, const nsIID& aIID,
+                          void** aResult);
+
+NS_IMETHODIMP
+NS_NewUnicodeEncodeHelper(nsISupports* aOuter, const nsIID& aIID,
+                          void** aResult);
+
+NS_IMETHODIMP
+NS_NewPlatformCharset(nsISupports* aOuter, const nsIID& aIID,
+                      void** aResult);
+
+NS_IMETHODIMP
+NS_NewCharsetAlias(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
+NS_IMETHODIMP
+NS_NewCharsetMenu(nsISupports* aOuter, const nsIID& aIID,
+                  void** aResult);
+
+NS_IMETHODIMP
+NS_NewTextToSubURI(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
 
 #endif /* nsUConvDll_h___ */

@@ -42,10 +42,10 @@ CPPSRCS		= \
 		nsUnicodeEncodeHelper.cpp \
 		nsUNIXCharset.cpp \
 		nsCharsetAliasImp.cpp \
-		nsUConvDll.cpp \
 		nsURLProperties.cpp \
 		nsMappingCache.cpp \
 		nsCharsetMenu.cpp \
+		nsUConvModule.cpp \
 		$(NULL)
 
 EXPORT_RESOURCE	= \

@@ -557,45 +557,29 @@ NS_IMETHODIMP nsCharsetMenu::DoCommand(nsISupportsArray* aSources,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//----------------------------------------------------------------------------
-// Class nsCharsetMenuFactory [implementation]
+//----------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsCharsetMenuFactory, nsCOMTypeInfo<nsIFactory>::GetIID());
-
-nsCharsetMenuFactory::nsCharsetMenuFactory() 
+NS_IMETHODIMP
+NS_NewCharsetMenu(nsISupports* aOuter, 
+                  const nsIID &aIID,
+                  void **aResult)
 {
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsCharsetMenuFactory::~nsCharsetMenuFactory() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
-
-//----------------------------------------------------------------------------
-// Interface nsIFactory [implementation]
-
-NS_IMETHODIMP nsCharsetMenuFactory::CreateInstance(nsISupports *aDelegate, 
-                                                   const nsIID &aIID,
-                                                   void **aResult)
-{
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
-
-  nsCharsetMenu * t = new nsCharsetMenu;  
-  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult res = t->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) delete t;
-
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsCharsetMenu* inst = new nsCharsetMenu();
+  if (!inst) {
+    *aResult = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
+  }
   return res;
-}
-
-NS_IMETHODIMP nsCharsetMenuFactory::LockFactory(PRBool aLock)
-{
-  if (aLock) PR_AtomicIncrement(&g_LockCount);
-  else PR_AtomicDecrement(&g_LockCount);
-
-  return NS_OK;
 }

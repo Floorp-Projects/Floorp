@@ -29,7 +29,6 @@
 #include "nsICharsetConverterInfo.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsCharsetConverterManager.h"
 #include "nsUConvDll.h"
 
 // just for CIDs
@@ -498,45 +497,22 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetNames(
 }
 
 //----------------------------------------------------------------------
-// Class nsManagerFactory [implementation]
 
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsManagerFactory, kIFactoryIID);
-
-nsManagerFactory::nsManagerFactory() 
+NS_IMETHODIMP
+NS_NewCharsetConverterManager(nsISupports* aOuter, const nsIID& aIID,
+                              void** aResult)
 {
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsManagerFactory::~nsManagerFactory() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
-
-//----------------------------------------------------------------------
-// Interface nsIFactory [implementation]
-
-NS_IMETHODIMP nsManagerFactory::CreateInstance(nsISupports *aDelegate, 
-                                                const nsIID &aIID,
-                                                void **aResult)
-{
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
-
-  nsICharsetConverterManager * t = nsCharsetConverterManager::GetInstance();  
-  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult res = t->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) delete t;
-
-  return res;
-}
-
-NS_IMETHODIMP nsManagerFactory::LockFactory(PRBool aLock)
-{
-  if (aLock) PR_AtomicIncrement(&g_LockCount);
-  else PR_AtomicDecrement(&g_LockCount);
-
-  return NS_OK;
+  if (!aResult) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsICharsetConverterManager* inst = nsCharsetConverterManager::GetInstance();
+  if (!inst) {
+    *aResult = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return inst->QueryInterface(aIID, aResult);
 }

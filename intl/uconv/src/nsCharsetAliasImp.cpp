@@ -22,7 +22,6 @@
 
 
 #include "nsICharsetAlias.h"
-#include "nsCharsetAliasFactory.h"
 #include "pratom.h"
 
 // for NS_IMPL_IDS only
@@ -133,64 +132,30 @@ NS_IMETHODIMP nsCharsetAlias2::Equals(const char* aCharset1, const char* aCharse
    return NS_ERROR_NOT_IMPLEMENTED;
 }
  
-//==============================================================
-class nsCharsetAliasFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
 
-public:
-   nsCharsetAliasFactory() {
-     NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsCharsetAliasFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
+//----------------------------------------------------------------------
 
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
- 
-};
-
-//--------------------------------------------------------------
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsCharsetAliasFactory , kIFactoryIID);
-
-NS_IMETHODIMP nsCharsetAliasFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+NS_IMETHODIMP
+NS_NewCharsetAlias(nsISupports* aOuter, 
+                   const nsIID &aIID,
+                   void **aResult)
 {
-  if(NULL == aResult) 
-        return NS_ERROR_NULL_POINTER;
-  if(NULL != aDelegate) 
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-
-  nsISupports *inst = new nsCharsetAlias2();
-
-
-  if(NULL == inst) {
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsCharsetAlias2* inst = new nsCharsetAlias2();
+  if (!inst) {
+    *aResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res)) {
-     delete inst;
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
   }
-  
   return res;
 }
-//--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAliasFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-//==============================================================
-nsIFactory* NEW_CHARSETALIASFACTORY()
-{
-  return new nsCharsetAliasFactory();
-}
-

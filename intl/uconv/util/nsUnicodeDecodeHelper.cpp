@@ -23,7 +23,6 @@
 #include "nsIMappingCache.h"
 #include "nsMappingCache.h"
 #include "nsIUnicodeDecodeHelper.h"
-#include "nsUnicodeDecodeHelper.h"
 #include "nsIUnicodeDecoder.h"
 
 //----------------------------------------------------------------------
@@ -258,45 +257,28 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::CreateFastTable(
 }
 
 //----------------------------------------------------------------------
-// Class nsDecodeHelperFactory [implementation]
 
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsDecodeHelperFactory, kIFactoryIID);
-
-nsDecodeHelperFactory::nsDecodeHelperFactory() 
+NS_IMETHODIMP
+NS_NewUnicodeDecodeHelper(nsISupports* aOuter, 
+                          const nsIID &aIID,
+                          void **aResult)
 {
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsDecodeHelperFactory::~nsDecodeHelperFactory() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
-
-//----------------------------------------------------------------------
-// Interface nsIFactory [implementation]
-
-NS_IMETHODIMP nsDecodeHelperFactory::CreateInstance(nsISupports *aDelegate, 
-                                                    const nsIID &aIID,
-                                                    void **aResult)
-{
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
-
-  nsIUnicodeDecodeHelper * t = new nsUnicodeDecodeHelper;
-  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult res = t->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) delete t;
-
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsUnicodeDecodeHelper* inst = new nsUnicodeDecodeHelper();
+  if (!inst) {
+    *aResult = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
+  }
   return res;
-}
-
-NS_IMETHODIMP nsDecodeHelperFactory::LockFactory(PRBool aLock)
-{
-  if (aLock) PR_AtomicIncrement(&g_LockCount);
-  else PR_AtomicDecrement(&g_LockCount);
-
-  return NS_OK;
 }
