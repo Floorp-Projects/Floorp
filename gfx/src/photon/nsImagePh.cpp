@@ -353,6 +353,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     return NS_ERROR_FAILURE;
   }
 
+  nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
+
   // XXX kipp: this is temporary code until we eliminate the
   // width/height arguments from the draw method.
   if ((aWidth != mWidth) || (aHeight != mHeight))
@@ -364,34 +366,15 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     aHeight = mHeight;
   }
 
-#if 1
-  /* Create a new GC just for this image */
-  PhGC_t *newGC = PgCreateGC(0);
-  PgDefaultGC(newGC);
-  PhGC_t *previousGC = PgSetGC(newGC);
-  nsRect aRect;
-  PRBool isValid;
-  
-  aContext.GetClipRect(aRect, isValid); 
-  if (isValid)
-  {
-    PhRect_t rect = { {aRect.x,aRect.y}, {aRect.x+aRect.width-1,aRect.y+aRect.height-1}};
-    PgSetMultiClip(1,&rect);  
-  }
-
-  newGC->translation = previousGC->translation;
-  newGC->rid = previousGC->rid;
-  newGC->target_rid = previousGC->target_rid;
-#endif
-  
-#if 1
+#ifdef DEBUG
+{
   /* Print out all the clipping that applies */
   PhRect_t  *rect;
   int       rect_count;
   PhGC_t    *gc;
 
   gc = PgGetGC();
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   GC Information: rid=<%d> target_rid=<%d>\n", gc->rid, gc->target_rid));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   CurrentGC gc=<%p> Information: rid=<%d> target_rid=<%d>\n", gc, gc->rid, gc->target_rid));
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects));
   rect_count=gc->n_clip_rects;
   rect = gc->clip_rects;
@@ -411,6 +394,108 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t aux_clip_valid=<%d>\n", gc->aux_clip_valid));
+
+
+/* drawing surface GC */
+
+  gc = drawing->GetGC();
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   aSurface->GetGC gc=<%p> Information: rid=<%d> target_rid=<%d>\n", gc, gc->rid, gc->target_rid));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects));
+  rect_count=gc->n_clip_rects;
+  rect = gc->clip_rects;
+  while(rect_count--)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
+    rect++;
+  }
+  
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n__user_clip_rects=<%d> max_user_clip_rects=<%d>\n", gc->n_user_clip_rects,gc->max_user_clip_rects));
+  rect_count=gc->n_user_clip_rects;
+  rect = gc->user_clip_rects;
+  while(rect_count--)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
+    rect++;
+  }
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t aux_clip_valid=<%d>\n", gc->aux_clip_valid));
+}
+#endif
+
+#if 1
+{
+  nsRect aRect;
+  PRBool isValid;
+  
+  aContext.GetClipRect(aRect, isValid); 
+  if (isValid)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2  ClipRect=<%d,%d,%d,%d>\n",aRect.x,aRect.y, aRect.width, aRect.height));
+  }
+  else
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2  ClipRect=<not valid>\n"));
+  }
+}
+#endif
+
+//#define CREATE_NEW_GC
+
+#ifdef CREATE_NEW_GC
+  /* Create a new GC just for this image */
+  PhGC_t *newGC = PgCreateGC(0);
+  PgDefaultGC(newGC);
+  PhGC_t *previousGC = PgSetGC(newGC);
+  nsRect aRect;
+  PRBool isValid;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   oldGC=<%p> newGC=<%p>\n", previousGC, newGC));
+
+#if 0  
+  aContext.GetClipRect(aRect, isValid); 
+  if (isValid)
+  {
+    PhRect_t rect = { {aRect.x,aRect.y}, {aRect.x+aRect.width-1,aRect.y+aRect.height-1}};
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2  ClipRect=<%d,%d,%d,%d>\n",aRect.x,aRect.y, aRect.width, aRect.height));
+
+    PgSetMultiClip(1,&rect);  
+  }
+#else
+  newGC->n_user_clip_rects = previousGC->n_user_clip_rects;
+  newGC->user_clip_rects   = previousGC->user_clip_rects;
+#endif
+
+  newGC->translation = previousGC->translation;
+  newGC->rid = previousGC->rid;
+  newGC->target_rid = previousGC->target_rid;
+
+{  /* Print out all the clipping that applies */
+  PhRect_t  *rect;
+  int       rect_count;
+  PhGC_t    *gc;
+
+  gc = PgGetGC();
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   GC Information: rid=<%d> target_rid=<%d>\n", gc->rid, gc->target_rid));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects));
+  rect_count=gc->n_clip_rects;
+  rect = gc->clip_rects;
+  while(rect_count--) 
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
+    rect++;
+  }
+  
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n__user_clip_rects=<%d> max_user_clip_rects=<%d>\n", gc->n_user_clip_rects,gc->max_user_clip_rects));
+  rect_count=gc->n_user_clip_rects;
+  rect = gc->user_clip_rects;
+  while(rect_count--)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
+    rect++;
+  }
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t aux_clip_valid=<%d>\n", gc->aux_clip_valid));
+}
 #endif
 
 
@@ -503,9 +588,13 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> finished \n", this));
   //printf("nsImagePh::Draw2 this=<%p> finished \n", this);
 
-#if 1
+#ifdef CREATE_NEW_GC
   /* Restore the old GC */
   PgSetGC(previousGC);
+
+  newGC->n_user_clip_rects = 0;
+  newGC->user_clip_rects   = NULL;
+  
   PgDestroyGC(newGC);
 #endif
 

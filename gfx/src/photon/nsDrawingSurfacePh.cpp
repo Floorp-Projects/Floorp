@@ -402,6 +402,11 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
     PgSetGC(mGC);  
   }
 
+  /* Clear out the Multi-clip, it will be reset if needed */
+  /* This fixed the toolbar drawing */
+  PgSetMultiClip(0,NULL);
+
+
 #ifdef DEBUG
   PhRect_t  *rect;
   int       rect_count;
