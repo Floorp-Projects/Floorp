@@ -277,7 +277,8 @@ nsScrollFrame::CreateScrollingView()
   if (NS_OK == rv) {
     // Initialize the scrolling view
     // XXX Check for opacity...
-    view->Init(viewManager, mRect, parentView, &kWidgetCID, nsnull, nsnull);
+    //view->Init(viewManager, mRect, parentView, &kWidgetCID, nsnull, nsnull);
+    view->Init(viewManager, mRect, parentView, nsnull, nsnull, nsnull);
   
     // Insert the view into the view hierarchy
     viewManager->InsertChild(parentView, view, 0);

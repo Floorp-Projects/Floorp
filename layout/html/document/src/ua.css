@@ -470,3 +470,11 @@ NOSCRIPT {
 NOFRAMES {
   display: none;
 }
+
+// Pseudo-classes
+
+:SCROLLED-CONTENT {
+  background: inherit;
+  padding: inherit;
+}
+

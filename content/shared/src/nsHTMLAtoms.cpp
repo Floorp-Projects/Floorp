@@ -183,6 +183,7 @@ nsIAtom* nsHTMLAtoms::rowspan;
 nsIAtom* nsHTMLAtoms::rules;
 nsIAtom* nsHTMLAtoms::scheme;
 nsIAtom* nsHTMLAtoms::scope;
+nsIAtom* nsHTMLAtoms::scrolledContentPseudo;
 nsIAtom* nsHTMLAtoms::scrolling;
 nsIAtom* nsHTMLAtoms::select;
 nsIAtom* nsHTMLAtoms::selected;
@@ -399,6 +400,7 @@ void nsHTMLAtoms::AddrefAtoms()
     rules = NS_NewAtom("RULES");
     scheme = NS_NewAtom("SCHEME");
     scope = NS_NewAtom("SCOPE");
+    scrolledContentPseudo = NS_NewAtom(":SCROLLED-CONTENT");
     scrolling = NS_NewAtom("SCROLLING");
     select = NS_NewAtom("SELECT");
     selected = NS_NewAtom("SELECTED");

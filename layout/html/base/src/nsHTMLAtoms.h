@@ -217,6 +217,7 @@ public:
 
   static nsIAtom* scheme;
   static nsIAtom* scope;
+  static nsIAtom* scrolledContentPseudo;
   static nsIAtom* scrolling;
   static nsIAtom* select;
   static nsIAtom* selected;
