@@ -38,7 +38,6 @@
 #include "cert.h"
 #include "key.h"
 #include "hashtbl.h"
-#include "obscure.h"
 #include "prefs.h"
 
 /*

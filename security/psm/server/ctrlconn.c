@@ -1001,8 +1001,6 @@ SSM_SetSMIMEExport(void)
 #else
 #define LOADABLE_CERTS_MODULE ":Essential Files:NSSckbi.shlb"
 #endif /*DEBUG*/ 
-#else
-#define LOADABLE_CERTS_MODULE "nssckbi.dll"
 #endif /*XP_MAC*/
 
 SECStatus
@@ -1094,21 +1092,21 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
 	                  "from properties file\n");
 	        goto loser;          
 	    }
-#ifdef XP_MAC
         processDir = xpcomGetProcessDir();
+#ifdef XP_MAC
         if (processDir == NULL) {
             goto loser;
         }
         SSM_DEBUG("I think the process lives in <%s>\n", processDir);
         fullModuleName = PR_smprintf("%s%s", processDir, LOADABLE_CERTS_MODULE);
-        PR_FREEIF(processDir);
         fullModuleName = SSM_ConvertMacPathToUnix(fullModuleName);
-#elif defined(WIN32)
-        fullModuleName = PL_strdup(LOADABLE_CERTS_MODULE);
+#else
+        fullModuleName = PR_GetLibraryName(processDir, "nssckbi");
 #endif
+        PR_FREEIF(processDir);
         /* If a module exists with the same name, delete it. */
         SECMOD_DeleteModule(modName, &modType);
-        SSM_DEBUG("Will try to load <%s> for root certs.\n");
+        SSM_DEBUG("Will try to load <%s> for root certs.\n",fullModuleName);
 	    if (SECMOD_AddNewModule(modName, fullModuleName, 0, 0) != SECSuccess) {
 	        SSM_DEBUG("Couldn't load the module at <%s>",fullModuleName);
 	    }
