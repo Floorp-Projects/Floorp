@@ -91,7 +91,7 @@ show index from repositories;
 
 create table dirs (
     id mediumint not null auto_increment primary key,
-    dir varchar(128) binary not null,
+    dir varchar(255) binary not null,
 
     unique(dir)
 );
@@ -102,7 +102,7 @@ show index from dirs;
 
 create table files (
     id mediumint not null auto_increment primary key,
-    file varchar(128) binary not null,
+    file varchar(255) binary not null,
 
     unique(file)
 );
