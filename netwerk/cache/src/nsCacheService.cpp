@@ -213,7 +213,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
 #endif
             
     nsresult rv;
-    if (nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {
+    if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {
         // xpcom going away, shutdown cache service
         if (nsCacheService::GlobalInstance())
             nsCacheService::GlobalInstance()->Shutdown();
