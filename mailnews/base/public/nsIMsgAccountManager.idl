@@ -32,15 +32,15 @@ interface nsISupportsArray;
 interface nsIMsgAccountManager : nsISupports {
 
   /* createAccount creates a new account and assigns a new accountKey */
-  nsIMsgAccount createAccount(in nsIMsgIncomingServer server,
+  nsIMsgAccount CreateAccount(in nsIMsgIncomingServer server,
                               in nsIMsgIdentity identity);
 
   /* similar to createAccount, but we already know the account key */
-  nsIMsgAccount createAccountWithKey(in nsIMsgIncomingServer server,
+  nsIMsgAccount CreateAccountWithKey(in nsIMsgIncomingServer server,
                                      in nsIMsgIdentity identity,
                                      in string accountKey);
 
-  void addAccount(in nsIMsgAccount account);
+  void AddAccount(in nsIMsgAccount account);
 
   /* account list stuff */
 
