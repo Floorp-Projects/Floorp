@@ -1011,6 +1011,7 @@ sub BuildCommonProjects()
 		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",	            "JSUrl$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 		# mime service
 		BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mimetype$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
