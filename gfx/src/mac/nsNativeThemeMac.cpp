@@ -514,7 +514,15 @@ void
 nsNativeThemeMac::DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled )
 {
   ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
-  ::DrawThemeTabPane(&inBoxRect, kThemeStateActive);
+  ::DrawThemeTabPane(&inBoxRect, drawState);
+}
+
+
+void
+nsNativeThemeMac::DrawSeparator ( const Rect& inBoxRect, PRBool inIsDisabled )
+{
+  ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
+  ::DrawThemeSeparator(&inBoxRect, drawState);
 }
 
 
@@ -704,6 +712,9 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
     case NS_THEME_TOOLBAR_BUTTON:
       DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame),
                     kThemeButtonOn, kThemeAdornmentNone, eventState );
+      break;
+    case NS_THEME_TOOLBAR_SEPARATOR:
+      DrawSeparator ( macRect, IsDisabled(aFrame) );
       break;
       
     case NS_THEME_TOOLBAR:
@@ -1093,6 +1104,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext,
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_TOOLBAR_SEPARATOR:
     
     case NS_THEME_LISTBOX:
     
