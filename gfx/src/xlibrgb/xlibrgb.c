@@ -294,7 +294,7 @@ xlib_rgb_try_colormap (int nr, int ng, int nb)
   int r0, g0, b0;
   Colormap     cmap;
   XVisualInfo *visual;
-  XColor      *colors;
+  XColor      *colors = NULL;
   XColor       color;
   unsigned long pixels[256];
   unsigned long junk[256];
@@ -422,6 +422,8 @@ xlib_rgb_try_colormap (int nr, int ng, int nb)
   image_info->nblue_shades = nb;
   xlib_rgb_make_colorcube (pixels, nr, ng, nb);
   xlib_rgb_make_colorcube_d (pixels, nr, ng, nb);
+  if (colors)
+    free(colors);
   return TRUE;
 }
 
@@ -443,7 +445,7 @@ xlib_rgb_do_colormaps (void)
   };
   static const int n_sizes = sizeof(sizes) / (3 * sizeof(int));
   int i;
-
+  
   for (i = 0; i < n_sizes; i++)
     if (xlib_rgb_try_colormap (sizes[i][0], sizes[i][1], sizes[i][2]))
       return TRUE;
