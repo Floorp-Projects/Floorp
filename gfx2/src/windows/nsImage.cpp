@@ -214,7 +214,7 @@ NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
 	mBHead->biWidth = GFXCoordToIntCeil(mSize.width);
 	mBHead->biHeight = -GFXCoordToIntCeil(mSize.height);
 	mBHead->biPlanes = 1;
-	mBHead->biBitCount = 24;
+	mBHead->biBitCount = mDepth;
 	mBHead->biCompression = BI_RGB;
 	mBHead->biSizeImage = mBitsLength;            // not compressed, so we dont need this to be set
 	mBHead->biXPelsPerMeter = 0;

@@ -42,21 +42,26 @@
  * @ingroup conversion_constants
  * @note XXX this should be derived from platform FLOAT_MIN
  */
-#define ROUND_EXCLUSIVE_CONST_FLOAT   0.4999999999999999
+#ifndef ROUND_EXCLUSIVE_CONST_FLOAT
+#define ROUND_EXCLUSIVE_CONST_FLOAT   0.499999999
+#endif
 
 /**
  * ROUND_CONST_FLOAT
  * @ingroup conversion_constants
  */
+#ifndef ROUND_CONST_FLOAT
 #define ROUND_CONST_FLOAT             0.5
+#endif
 
 /**
  * CEIL_CONST_FLOAT
  * @ingroup conversion_constants
  * @note XXX this should be derived from platform FLOAT_MIN
  */
+#ifndef CEIL_CONST_FLOAT
 #define CEIL_CONST_FLOAT              0.99999999
-
+#endif
 
 /**
  * gfx_coord rounding, floor, ceil functions
@@ -72,7 +77,7 @@
  */
 inline gfx_coord GFXCoordAbs(gfx_coord aValue)
 {
-  return fabs(aValue);
+  return gfx_coord(fabs(aValue));
 }
 
 
