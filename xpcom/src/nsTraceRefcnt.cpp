@@ -24,8 +24,6 @@
 #include <windows.h>
 #endif
 
-static PRLogModuleInfo* gTraceRefcntLog;
-
 #if defined(NS_MT_SUPPORTED)
 #include "prlock.h"
 
@@ -38,6 +36,10 @@ static PRLock* gTraceLock;
 #define UNLOCK_TRACELOG()
 #endif /* ! NS_MT_SUPPORTED */
 
+#if defined(MOZ_TRACE_XPCOM_REFCNT)
+
+static PRLogModuleInfo* gTraceRefcntLog;
+
 static void InitTraceLog(void)
 {
   if (0 == gTraceRefcntLog) {
@@ -49,7 +51,6 @@ static void InitTraceLog(void)
   }
 }
 
-#if defined(MOZ_TRACE_XPCOM_REFCNT)
 #if defined(_WIN32)
 #include "imagehlp.h"
 #include <stdio.h>
