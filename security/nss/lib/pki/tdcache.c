@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.26 $ $Date: 2002/02/08 21:47:05 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.27 $ $Date: 2002/03/04 21:06:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -729,6 +729,7 @@ add_cert_to_cache
     return nssrv;
 loser:
     /* Remove any handles that have been created */
+    subjectList = NULL;
     if (added >= 1) {
 	(void)remove_issuer_and_serial_entry(td->cache, cert);
     }
@@ -740,6 +741,10 @@ loser:
     }
     if (added >= 4) {
 	(void)remove_email_entry(td->cache, cert, subjectList);
+    }
+    if (subjectList) {
+	nssHash_Remove(td->cache->subject, &cert->subject);
+	nssList_Destroy(subjectList);
     }
     if (arena) {
 	nssArena_Destroy(arena);
