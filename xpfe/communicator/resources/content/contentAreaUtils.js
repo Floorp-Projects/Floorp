@@ -101,10 +101,7 @@
     return true;
   }
 
-  function editPage(url)
-  {
-    window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
-  }
+  //Note: "function editPage(url)" was moved to utilityOverlay.js
 
   function findParentNode(node, parentNode)
   {

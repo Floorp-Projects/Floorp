@@ -402,6 +402,44 @@ function NewEditorFromDraft()
   // XXX not implemented
 }
 
+// Any non-editor window wanting to create an editor with a URL
+//   should use this instead of "window.openDialog..."
+//  We must always find an existing window with requested URL
+// (When calling from a dialog, "launchWindow" is dialog's "opener"
+//   and we need a delay to let dialog close)
+function editPage(url, launchWindow, delay)
+{
+  // User may not have supplied a window
+  if (!launchWindow)
+    launchWindow = window;
+
+  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  if (!windowManager) return;
+  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+  if ( !windowManagerInterface ) return;
+  var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
+  if ( !enumerator ) return;
+
+  while ( enumerator.hasMoreElements() )
+  {
+    var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
+    if ( window && window.editorShell)
+    {
+      if (window.editorShell.checkOpenWindowForURLMatch(url, window))
+      {
+        // We found an editor with our url
+        window.focus();
+        return;
+      }
+    }
+  }
+  
+  // Create new Composer window
+  if (delay)
+    launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url);
+  else
+    launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url);
+}
 
 function helpMenuCreate()
 {

@@ -92,7 +92,9 @@ function open()
         window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no", dialog.input.value);
         break;
       case "2":
-        window.opener.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", dialog.input.value);
+        // editPage is in utilityOverlay.js (all editor openers with URL should use this)
+        // 3rd param tells editPage to use "delayedOpenWindow"
+        editPage(dialog.input.value, window.opener, true);
         break;
     }
   }
