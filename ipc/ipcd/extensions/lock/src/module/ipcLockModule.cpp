@@ -225,11 +225,12 @@ ipcLockModule_ReleaseByCID(PLHashEntry *he, PRIntn i, void *arg)
 {
     PRUint32 cid = *(PRUint32 *) arg;
 
-    printf("$$$ ipcLockModule_ReleaseByCID [cid=%u key=%s he=%p]\n", cid, (char*)he->key, (void*)he);
-
     ipcLockContext *ctx = (ipcLockContext *) he->value;
     if (ctx->mOwnerID != cid)
         return HT_ENUMERATE_NEXT;
+
+    printf("$$$ ipcLockModule_ReleaseByCID [cid=%u key=%s he=%p]\n",
+        cid, (char*)he->key, (void*)he);
 
     if (ipcLockModule_ReleaseLockHelper(cid, (const char *) he->key, ctx))
         return HT_ENUMERATE_REMOVE;

@@ -40,9 +40,11 @@
 #ifdef IPC_LOGGING
 
 #include <string.h>
+#include <ctype.h>
 
 #include "prenv.h"
 #include "prprf.h"
+#include "prthread.h"
 #include "plstr.h"
 
 PRBool ipcLogEnabled = PR_FALSE;
@@ -58,8 +60,9 @@ char ipcLogPrefix[10] = {0};
 static inline PRUint32
 WritePrefix(char *buf, PRUint32 bufLen)
 {
-    return PR_snprintf(buf, bufLen, "[%u] %s ",
+    return PR_snprintf(buf, bufLen, "[%u:%p] %s ",
                        (unsigned) getpid(),
+                       PR_GetCurrentThread(),
                        ipcLogPrefix);
 }
 #endif
@@ -73,9 +76,9 @@ WritePrefix(char *buf, PRUint32 bufLen)
 static inline PRUint32
 WritePrefix(char *buf, PRUint32 bufLen)
 {
-    return PR_snprintf(buf, bufLen, "[%u:%u] %s ",
+    return PR_snprintf(buf, bufLen, "[%u:%p] %s ",
                        GetCurrentProcessId(),
-                       GetCurrentThreadId(),
+                       PR_GetCurrentThread(),
                        ipcLogPrefix);
 }
 #endif
@@ -110,6 +113,35 @@ IPC_Log(const char *fmt, ... )
     fwrite(buf, strlen(buf), 1, stdout);
 
     va_end(ap);
+}
+
+void
+IPC_LogBinary(const PRUint8 *data, PRUint32 len)
+{
+    PRUint32 i, j, ln;
+    for (i=0; i<len; ) {
+        char line[100] = "";
+        const PRUint8 *p;
+
+        ln = 0;
+        
+        p = &data[i];
+        for (j=0; j<PR_MIN(8, len - i); ++j, ++p)
+            ln += PR_snprintf(line + ln, sizeof(line) - ln, "%02x  ", *p);
+
+        for (; ln < 32; ++ln)
+            line[ln] = ' ';
+
+        p = &data[i];
+        for (j=0; j<PR_MIN(8, len - i); ++j, ++p)
+            ln += PR_snprintf(line + ln, sizeof(line) - ln, "%c", isprint(*p) ? *p : '.');
+
+        line[ln] = '\0';
+
+        i += (p - &data[i]);
+
+        LOG(("%s\n", line));
+    }
 }
 
 #endif

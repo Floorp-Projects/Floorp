@@ -334,31 +334,21 @@ WaitTarget(const nsID           &aTarget,
   {
     NS_ASSERTION(!lastChecked, "oops");
 
-    if (beforeLastChecked)
-    {
-      // verify that beforeLastChecked is still in the queue since it might
-      // have been removed while we were asleep on the monitor.  we must not
-      // dereference it until we have verified this.
-      PRBool isValid = PR_FALSE;
-      for (ipcMessage *iter = td->pendingQ.First(); iter; iter=iter->mNext)
-      {
-        if (iter == beforeLastChecked)
-        {
-          isValid = PR_TRUE;
-          break;
-        }
-      }
+    //
+    // NOTE:
+    //
+    // we must start at the top of the pending queue, possibly revisiting
+    // messages that our selector has already rejected.  this is necessary
+    // because the queue may have been modified while we were waiting on
+    // the monitor.  the impact of this on performance remains to be seen.
+    //
+    // one cheap solution is to keep a counter that is incremented each
+    // time a message is removed from the pending queue.  that way we can
+    // avoid revisiting all messages sometimes.
+    //
 
-      if (isValid)
-        lastChecked = beforeLastChecked->mNext;
-      else
-      {
-        lastChecked = td->pendingQ.First();
-        beforeLastChecked = nsnull;
-      }
-    }
-    else
-      lastChecked = td->pendingQ.First();
+    lastChecked = td->pendingQ.First();
+    beforeLastChecked = nsnull;
 
     // loop over pending queue until we find a message that our selector likes.
     while (lastChecked)
@@ -400,6 +390,9 @@ WaitTarget(const nsID           &aTarget,
       break;
     }
     mon.Wait(timeEnd - t);
+
+    LOG(("woke up from sleep [pendingQempty=%d connected=%d]\n",
+          td->pendingQ.IsEmpty(), gClientState->connected));
   }
 
   return rv;
@@ -1051,10 +1044,26 @@ IPC_OnConnectionEnd(nsresult error)
 
 /* ------------------------------------------------------------------------- */
 
+#ifdef IPC_LOGGING
+#include "prprf.h"
+#include <ctype.h>
+#endif
+
 // called on a background thread
 void
 IPC_OnMessageAvailable(ipcMessage *msg)
 {
+#ifdef IPC_LOGGING
+  if (LOG_ENABLED())
+  {
+    char *targetStr = msg->Target().ToString();
+    LOG(("got message for target: %s\n", targetStr));
+    nsMemory::Free(targetStr);
+
+    IPC_LogBinary((const PRUint8 *) msg->Data(), msg->DataLen());
+  }
+#endif
+
   if (msg->Target().Equals(IPCM_TARGET))
   {
     switch (IPCM_GetType(msg))
@@ -1101,8 +1110,10 @@ IPC_OnMessageAvailable(ipcMessage *msg)
     // once we notify the monitor.
     const nsID target = msg->Target();
 
+    LOG(("placed message on pending queue for target and notifying all...\n"));
+
     // wake up anyone waiting on this queue
-    mon.Notify();
+    mon.NotifyAll();
 
     // proxy call to target's message procedure
     if (dispatchEvent)
@@ -1113,123 +1124,3 @@ IPC_OnMessageAvailable(ipcMessage *msg)
     NS_WARNING("message target is undefined");
   }
 }
-
-/* ------------------------------------------------------------------------- */
-
-#ifdef BUILD_IPCDCLIENT_STANDALONE
-
-#include "nsXPCOM.h"
-#include "nsIEventQueueService.h"
-
-static PRBool gKeepGoing = PR_TRUE;
-
-static const nsID kTestTargetID =
-{ /* e628fc6e-a6a7-48c7-adba-f241d1128fb8 */
-  0xe628fc6e,
-  0xa6a7,
-  0x48c7,
-  {0xad, 0xba, 0xf2, 0x41, 0xd1, 0x12, 0x8f, 0xb8}
-};
-
-class TestMessageObserver : public ipcIMessageObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD OnMessageAvailable(PRUint32       aSenderID,
-                                const nsID    &aTarget,
-                                const PRUint8 *aData,
-                                PRUint32       aDataLen)
-  {
-    LOG(("got message from %d: \"%s\"\n", aSenderID, aData));
-    return NS_OK;
-  }
-};
-NS_IMPL_ISUPPORTS1(TestMessageObserver, ipcIMessageObserver)
-
-class TestClientObserver : public ipcIClientObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD OnClientStateChange(PRUint32 aClientID,
-                                 PRUint32 aClientStatus)
-  {
-    LOG(("got client status change [cid=%u status=%u]\n", aClientID, aClientStatus));
-    return NS_OK;
-  }
-};
-NS_IMPL_ISUPPORTS1(TestClientObserver, ipcIClientObserver)
-
-int main()
-{
-  NS_InitXPCOM2(nsnull, nsnull, nsnull);
-
-  {
-    nsresult rv;
-
-    nsCOMPtr<nsIEventQueueService> eqs = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return -1;
-
-    rv = eqs->CreateMonitoredThreadEventQueue();
-    if (NS_FAILED(rv)) return -1;
-
-    nsCOMPtr<nsIEventQueue> eq;
-    rv = eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(eq));
-    if (NS_FAILED(rv)) return -1;
-
-    rv = IPC_Init();
-    if (NS_FAILED(rv)) return -1;
-
-    rv = IPC_AddClientObserver(new TestClientObserver());
-    if (NS_FAILED(rv)) return -1;
-
-    PRUint32 cID;
-    rv = IPC_GetID(&cID);
-    if (NS_FAILED(rv)) return -1;
-
-    LOG(("current process's client id = %lu\n", cID));
-
-    // add test code here
-
-    rv = IPC_AddName("ipcdclient");
-    if (NS_FAILED(rv)) return -1;
-
-    // test valid lookup
-    PRUint32 resolvedID;
-    rv = IPC_ResolveClientName("ipcdclient", &resolvedID);
-    if (NS_FAILED(rv)) return -1;
-    LOG(("resolved ID is %lu\n", resolvedID));
-    if (resolvedID != cID)
-      NS_NOTREACHED("resolved ID is not what was expected");
-
-    // test bogus lookup
-    rv = IPC_ResolveClientName("foopy", &resolvedID);
-    LOG(("resolving \"foopy\" returned rv=%x\n", rv));
-    if (NS_SUCCEEDED(rv))
-      NS_NOTREACHED("expected client name lookup to fail");
-
-    rv = IPC_DefineTarget(kTestTargetID, new TestMessageObserver());
-    if (NS_FAILED(rv)) return -1;
-
-    const PRUint8 kData[] = "hello world\n";
-    rv = IPC_SendMessage(0, kTestTargetID, kData, sizeof(kData));
-    if (NS_FAILED(rv)) return -1;
-
-    PLEvent *ev;
-    while (gKeepGoing)
-    {
-      eq->WaitForEvent(&ev);
-      if (!ev)
-        break;
-      eq->HandleEvent(ev);
-    }
-
-    IPC_Shutdown();
-  }
-
-  NS_ShutdownXPCOM(nsnull);
-  return 0;
-}
-
-#endif // BUILD_IPCDCLIENT_STANDALONE

@@ -145,8 +145,14 @@ interface ipcIService : nsISupports
      * @param aObserver
      *        the message observer to receive incoming messages for the
      *        specified target.  pass null to remove the existing observer.
+     * @param aOnCurrentThread
+     *        if true, then the message observer will be called on the same
+     *        thread that calls defineTarget.  otherwise, aObserver will be
+     *        called on a background thread.
      */
-    void defineTarget(in nsIDRef aTarget, in ipcIMessageObserver aObserver);
+    void defineTarget(in nsIDRef             aTarget,
+                      in ipcIMessageObserver aObserver,
+                      in boolean             aOnCurrentThread);
 
     /**
      * send message asynchronously to a client or a module in the IPC daemon.
@@ -202,6 +208,16 @@ interface ipcIService : nsISupports
                      in nsIDRef             aTarget,
                      in ipcIMessageObserver aObserver,
                      in unsigned long       aTimeout);
+
+    /**
+     * Call this method to disable the default message observer for a target.
+     */
+    void disableMessageObserver(in nsIDRef aTarget);
+
+    /**
+     * Call this method to re-enable the default message observer for a target.
+     */
+    void enableMessageObserver(in nsIDRef aTarget);
 };
 
 %{C++

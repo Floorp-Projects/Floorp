@@ -85,9 +85,10 @@ ipcService::ClientExists(PRUint32 aClientID, PRBool *aResult)
 }
 
 NS_IMETHODIMP
-ipcService::DefineTarget(const nsID &aTarget, ipcIMessageObserver *aObserver)
+ipcService::DefineTarget(const nsID &aTarget, ipcIMessageObserver *aObserver,
+                         PRBool aOnCurrentThread)
 {
-    return IPC_DefineTarget(aTarget, aObserver);
+    return IPC_DefineTarget(aTarget, aObserver, aOnCurrentThread);
 }
 
 NS_IMETHODIMP
@@ -102,5 +103,18 @@ ipcService::WaitMessage(PRUint32 aSenderID, const nsID &aTarget,
                         ipcIMessageObserver *aObserver,
                         PRUint32 aTimeout)
 {
-    return IPC_WaitMessage(aSenderID, aTarget, aObserver, PR_MillisecondsToInterval(aTimeout));
+    return IPC_WaitMessage(aSenderID, aTarget, aObserver,
+                           PR_MillisecondsToInterval(aTimeout));
+}
+
+NS_IMETHODIMP
+ipcService::DisableMessageObserver(const nsID &aTarget)
+{
+    return IPC_DisableMessageObserver(aTarget);
+}
+
+NS_IMETHODIMP
+ipcService::EnableMessageObserver(const nsID &aTarget)
+{
+    return IPC_EnableMessageObserver(aTarget);
 }

@@ -170,6 +170,7 @@ ConnCreate(PRFileDesc *fd)
   s->fds[POLL].fd = PR_NewPollableEvent();
   s->send_offset = 0;
   s->in_msg = NULL;
+  s->shutdown = PR_FALSE;
 
   if (!s->lock || !s->fds[1].fd)
   {
@@ -331,32 +332,17 @@ ConnThread(void *arg)
       // check if something has been added to the send queue.  if so, then
       // acknowledge pollable event (wait should not block), and configure
       // poll flags to find out when we can write.
-      //
-      // delay processing a shutdown request until after all queued up
-      // messages have been sent and until after all queued up callbacks
-      // have been run.
 
       if (s->fds[POLL].out_flags & PR_POLL_READ)
       {
         PR_WaitForPollableEvent(s->fds[POLL].fd);
         PR_Lock(s->lock);
 
-        PRBool delayShutdown = PR_FALSE;
-
         if (!s->send_queue.IsEmpty())
-        {
-          delayShutdown = PR_TRUE;
           s->fds[SOCK].in_flags |= PR_POLL_WRITE;
-        }
 
         if (!s->callback_queue.IsEmpty())
-        {
-          delayShutdown = PR_TRUE;
           s->callback_queue.MoveTo(cbs_to_run);
-        }
-
-        if (!delayShutdown && s->shutdown)
-          rv = NS_ERROR_ABORT;
 
         PR_Unlock(s->lock);
       }
@@ -376,6 +362,14 @@ ConnThread(void *arg)
         (cb->func)(cb->arg);
         cbs_to_run.DeleteFirst();
       }
+
+      // check if we should exit this thread.  delay processing a shutdown
+      // request until after all queued up messages have been sent and until
+      // after all queued up callbacks have been run.
+      PR_Lock(s->lock);
+      if (s->shutdown && s->send_queue.IsEmpty() && s->callback_queue.IsEmpty())
+        rv = NS_ERROR_ABORT;
+      PR_Unlock(s->lock);
     }
     else
     {
