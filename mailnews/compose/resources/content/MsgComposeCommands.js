@@ -158,7 +158,7 @@ function ReleaseGlobalVariables()
 
 function disableEditableFields()
 {
-  editorShell.editor.flags |= nsIPlaintextEditorMail.eEditorReadonlyMask;
+  gMsgCompose.editor.flags |= nsIPlaintextEditorMail.eEditorReadonlyMask;
   var disableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<disableElements.length;i++)
   {
@@ -168,7 +168,7 @@ function disableEditableFields()
 
 function enableEditableFields()
 {
-  editorShell.editor.flags &= ~nsIPlaintextEditorMail.eEditorReadonlyMask;
+  gMsgCompose.editor.flags &= ~nsIPlaintextEditorMail.eEditorReadonlyMask;
   var enableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<enableElements.length;i++)
   {
@@ -1143,15 +1143,7 @@ function DoCommandClose()
 
 function DoCommandPrint()
 {
-  if (gMsgCompose)
-  {
-    var editorShell = gMsgCompose.editor;
-    if (editorShell)
-      try {
-        editorShell.FinishHTMLSource();
-        editorShell.Print();
-      } catch(ex) {dump("#PRINT ERROR: " + ex + "\n");}
-  }
+  goDoCommand("cmd_print");
 }
 
 function DoCommandPreferences()
@@ -1236,10 +1228,11 @@ function ComposeFieldsReady(msgType)
   //If we are in plain text, we need to set the wrap column
   if (! gMsgCompose.composeHTML) {
     try {
-      window.editorShell.wrapColumn = gMsgCompose.wrapLength;
+      gMsgCompose.editor.QueryInterface(nsIPlaintextEditorMail).wrapWidth
+          = gMsgCompose.wrapLength;
     }
     catch (e) {
-      dump("### window.editorShell.wrapColumn exception text: " + e + " - failed\n");
+      dump("### textEditor.wrapWidth exception text: " + e + " - failed\n");
     }
   }
   CompFields2Recipients(gMsgCompose.compFields, gMsgCompose.type);
@@ -1442,7 +1435,7 @@ function ComposeStartup(recycled, aParams)
         }
 
       gMsgCompose.RegisterStateListener(stateListener);
-      gMsgCompose.editor = window.editorShell;      
+      gMsgCompose.editorShell = window.editorShell;      
     }
   }
 }
