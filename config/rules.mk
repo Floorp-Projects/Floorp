@@ -779,7 +779,7 @@ $(MKDEPENDENCIES)::
 	@$(MAKE_OBJDIR)
 	touch $(MKDEPENDENCIES)
 ifdef USE_AUTOCONF
-	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS))
+	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >& /dev/null
 	@mv depend.mk depend.mk.old && cat depend.mk.old | sed "s|^$(OBJDIR_NAME)/$(srcdir)/|$(OBJDIR_NAME)/|g" > depend.mk && rm -f depend.mk.old
 else
 	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(INCLUDES) $(CSRCS) $(CPPSRCS)
