@@ -90,7 +90,8 @@ PR_PUBLIC_API(RDF_Error) RDF_Undo(RDF rdf);
 depends on them. */
 
 /* PR_PUBLIC_API(RDF_Error) RDF_Init(char *profileDirURL); */
-PR_PUBLIC_API(RDF_Error) RDF_Init(RDF_InitParams params);
+/* PR_PUBLIC_API(RDF_Error) RDF_Init(RDF_InitParams params); */
+PR_PUBLIC_API(RDF_Error) RDF_Init(void);
 PR_PUBLIC_API(RDF_Error) RDF_Shutdown(void);
 
 /* the stuff in vocab.h will supercede whats below. I am leaving this here

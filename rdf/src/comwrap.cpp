@@ -17,11 +17,6 @@
  */
 
 #include "rdf.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFDataBase.h"
-#include "nsIRDFObserver.h"
-#include "nsIRDFService.h"
-#include "nsIRDFCursor.h"
 
 #include "nspr.h"
 #include "plhash.h"
@@ -159,6 +154,9 @@ private:
 class rdfServiceWrapper : public nsIRDFService {
 public:
   NS_DECL_ISUPPORTS
+  
+  rdfServiceWrapper();
+  ~rdfServiceWrapper();
 
   NS_METHOD CreateDatabase(const RDF_String* url,
                            nsIRDFDataBase** db);
@@ -547,6 +545,18 @@ rdfDatabaseWrapper::DeleteAllArcs(RDF_Resource resource)
 
 NS_IMPL_ISUPPORTS( rdfServiceWrapper, NS_IRDFSERVICE_IID )
 
+rdfServiceWrapper::rdfServiceWrapper()
+{
+  nsresult err = RDF_Init(); // this method currently cannot fail
+  PR_ASSERT( err == NS_OK ); // XXX
+}
+
+rdfServiceWrapper::~rdfServiceWrapper()
+{
+  nsresult err = RDF_Shutdown(); // this method currently cannot fail
+  PR_ASSERT( err == NS_OK ); // XXX
+}
+
 NS_METHOD
 rdfServiceWrapper::CreateDatabase(const RDF_String* url_ary,
                                   nsIRDFDataBase **db)
@@ -639,7 +649,8 @@ rdfServiceFactory::LockFactory(PRBool lock)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult NS_GetRDFService(nsIRDFService **s)
+PR_IMPLEMENT(nsresult)
+NS_GetRDFService(nsIRDFService **s)
 {
   PR_ASSERT( s );
   if( 0 == s )

@@ -81,7 +81,25 @@ walkThroughAllBookmarks (RDF_Resource u)
 }
 
 
+#ifndef XXX
+PR_PUBLIC_API(RDF_Error)
+RDF_Init()
+{
+  if ( sRDFInitedB )
+    return -1;
 
+  resourceHash = PL_NewHashTable(500, PL_HashString, PL_CompareStrings, 
+                                 PL_CompareValues,   NULL, NULL);
+  dataSourceHash = PL_NewHashTable(100, PL_HashString, PL_CompareStrings, 
+                                   PL_CompareValues,  NULL, NULL);
+  /*  RDFglueInitialize(); */
+  MakeRemoteStore("rdf:remoteStore");
+  createVocabs();
+  sRDFInitedB = PR_TRUE;
+
+  return NS_OK;
+}
+#else /* XXX */
 PR_PUBLIC_API(RDF_Error)
 RDF_Init(RDF_InitParams params)
 {
@@ -134,6 +152,7 @@ RDF_Init(RDF_InitParams params)
   walkThroughAllBookmarks(RDF_GetResource(NULL, "NC:Bookmarks", true));
   return 0;
 }
+#endif /* XXX */
 
 
 
@@ -147,7 +166,7 @@ RDF_Shutdown ()
 {
 #ifdef MOZILLA_CLIENT
   /*  flushBookmarks(); */
-  HT_Shutdown();
+/*   HT_Shutdown(); */
   /*  RDFglueExit(); */
   if (profileDirURL != NULL)
   {
@@ -173,5 +192,5 @@ RDF_Shutdown ()
   disposeAllDBs();
   sRDFInitedB = PR_FALSE;
   
-  return 0;
+  return NS_OK;
 }

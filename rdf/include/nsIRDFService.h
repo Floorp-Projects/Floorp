@@ -62,6 +62,6 @@ public:
 
 };
 
-extern nsresult NS_GetRDFService(nsIRDFService **);
+PR_PUBLIC_API(nsresult) NS_GetRDFService(nsIRDFService **);
 
 #endif /* nsIRDFService_h__ */
