@@ -1279,9 +1279,19 @@ then observed (ERic 20/06/03)
    min-height:            30px;
 }
 
+#week-view-column-hours {
+   border-bottom        : 1px solid #2085c4;
+}
+/* day column */
+.week-view-day-container-box {
+   border-bottom        : 1px solid #2085c4;
+}
+/* Use border-top/left rather than bottom/right to avoid
+   disappearing borders (in grid, roundoff errors may cause 
+   later filled boxes to overwrite last pixel of previous boxes.) */
 .week-view-hour-box-class
 {
-   border-bottom        : 1px solid #2085c4;
+   border-top           : 1px solid #2085c4;
    border-left          : 1px solid #2085c4;
    width                : 58px;
    background-color     : white;
@@ -1295,7 +1305,6 @@ then observed (ERic 20/06/03)
 
 .week-view-hour-box-class-last-day
 {
-   border-bottom        : 1px solid #2085c4;
 }
 
 .month-day-box-class[weekend="true"],
@@ -1321,7 +1330,7 @@ then observed (ERic 20/06/03)
 
 .week-view-hours-only-box-class
 {
-   border-bottom        : 1px solid #2085c4;
+   border-top         : 1px solid #2085c4;
    border-left        : 1px solid #2085c4;
    width                : 62px;
    background-color     : white;

@@ -128,7 +128,7 @@
                   </column>
 
                   <!-- DAY 0 -->
-                  <column class="week-view-day-container-box" id="weekview-header-column-day-1" flex="1">
+                  <column class="week-view-header-day-column" id="weekview-header-column-day-1" flex="1">
                       <hbox flex="1" id="week-header-box-1" class="weekview-daynumber-class">
                          <label id="week-header-date-1" class="week-header-date" value=""/>
                          <label id="week-header-date-text-1" class="week-header-date-text" value="&day.1.DDD;" />
@@ -139,7 +139,7 @@
                   </column>
 
                   <!-- DAY 1 -->
-                  <column class="week-view-day-container-box" id="weekview-header-column-day-2" flex="1">
+                  <column class="week-view-header-day-column" id="weekview-header-column-day-2" flex="1">
                       <hbox flex="1" id="week-header-box-2" class="weekview-daynumber-class">
                          <label id="week-header-date-2" class="week-header-date" value="" />
                          <label id="week-header-date-text-2" class="week-header-date-text" value="&day.2.DDD;" />
@@ -150,7 +150,7 @@
                   </column>
 
                   <!-- DAY 2 -->
-                  <column class="week-view-day-container-box" id="weekview-header-column-day-3" flex="1">
+                  <column class="week-view-header-day-column" id="weekview-header-column-day-3" flex="1">
                       <hbox flex="1" id="week-header-box-3" class="weekview-daynumber-class">
                          <label id="week-header-date-3" class="week-header-date" value="" />
                          <label id="week-header-date-text-3" class="week-header-date-text" value="&day.3.DDD;" />
@@ -160,7 +160,7 @@
                   </column>
 
                   <!-- DAY 3 -->
-                  <column class="week-view-day-container-box" id="weekview-header-column-day-4" flex="1">
+                  <column class="week-view-header-day-column" id="weekview-header-column-day-4" flex="1">
                       <hbox flex="1" id="week-header-box-4" class="weekview-daynumber-class">
                          <label id="week-header-date-4" class="week-header-date" value="" />
                          <label id="week-header-date-text-4" class="week-header-date-text" value="&day.4.DDD;" />
@@ -170,7 +170,7 @@
                   </column>
 
                   <!-- DAY 4 -->
-                  <column class="week-view-day-container-box" id="weekview-header-column-day-5" flex="1">
+                  <column class="week-view-header-day-column" id="weekview-header-column-day-5" flex="1">
                       <hbox flex="1" id="week-header-box-5" class="weekview-daynumber-class">
                          <label id="week-header-date-5" class="week-header-date" value="" />
                          <label id="week-header-date-text-5" class="week-header-date-text" value="&day.5.DDD;" />
@@ -180,7 +180,7 @@
                   </column>
 
                   <!-- DAY 5 -->
-                  <column class="week-view-day-container-box" id="weekview-header-column-day-6" flex="1">
+                  <column class="week-view-header-day-column" id="weekview-header-column-day-6" flex="1">
                       <hbox flex="1" id="week-header-box-6" class="weekview-daynumber-class">
                          <label id="week-header-date-6" class="week-header-date" value="" />
                          <label id="week-header-date-text-6" class="week-header-date-text" value="&day.6.DDD;" />
@@ -190,7 +190,7 @@
                   </column>
 
                   <!-- DAY 6 -->
-                  <column class="week-view-day-container-box" id="weekview-header-column-day-7" flex="1">
+                  <column class="week-view-header-day-column" id="weekview-header-column-day-7" flex="1">
                       <hbox flex="1" id="week-header-box-7" class="weekview-daynumber-class">
                          <label id="week-header-date-7" class="week-header-date" value="" />
                          <label id="week-header-date-text-7" class="week-header-date-text" value="&day.7.DDD;" />
