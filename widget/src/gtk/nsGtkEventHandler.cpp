@@ -149,8 +149,8 @@ void InitAllocationEvent(GtkAllocation *aAlloc,
   anEvent.eventStructType = NS_SIZE_EVENT;
 
   if (aAlloc != NULL) {
-    nsRect rect(aAlloc->x, aAlloc->y, aAlloc->width, aAlloc->height);
-    anEvent.windowSize = &rect;
+    nsRect *foo = new nsRect(aAlloc->x, aAlloc->y, aAlloc->width, aAlloc->height);
+    anEvent.windowSize = foo;
     anEvent.point.x = aAlloc->x;
     anEvent.point.y = aAlloc->y;
     anEvent.mWinWidth = aAlloc->width;
