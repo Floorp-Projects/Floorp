@@ -82,20 +82,24 @@ public:
 /*END nsIFrameSelection interfacse*/
 
 /*BEGIN nsIDOMSelection interface implementations*/
-  NS_IMETHOD DeleteFromDocument();
-  NS_IMETHOD Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
-  NS_IMETHOD IsCollapsed(PRBool* aIsCollapsed);
-  NS_IMETHOD Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
-  NS_IMETHOD ClearSelection();
-  NS_IMETHOD AddRange(nsIDOMRange* aRange);
-  NS_IMETHOD GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnchorOffset);
-  NS_IMETHOD GetFocusNodeAndOffset(nsIDOMNode** outFocusNode, PRInt32 *outFocusOffset);
+  NS_IMETHOD    GetAnchorNode(nsIDOMNode** aAnchorNode);
+  NS_IMETHOD    GetAnchorOffset(PRInt32* aAnchorOffset);
+  NS_IMETHOD    GetFocusNode(nsIDOMNode** aFocusNode);
+  NS_IMETHOD    GetFocusOffset(PRInt32* aFocusOffset);
+  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);
+  NS_IMETHOD    GetAnchorNodeAndOffset(nsIDOMNode** aAnchorNode, PRInt32* aOffset);
+  NS_IMETHOD    GetFocusNodeAndOffset(nsIDOMNode** aFocusNode, PRInt32* aOffset);
+  NS_IMETHOD    ClearSelection();
+  NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
+  NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
+  NS_IMETHOD    DeleteFromDocument();
+  NS_IMETHOD    AddRange(nsIDOMRange* aRange);
 
-  NS_IMETHOD AddSelectionListener(nsIDOMSelectionListener* inNewListener);
-  NS_IMETHOD RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove);
-  NS_IMETHOD StartBatchChanges();
-  NS_IMETHOD EndBatchChanges();
+  NS_IMETHOD    StartBatchChanges();
+  NS_IMETHOD    EndBatchChanges();
 
+  NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener);
+  NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);
 /*END nsIDOMSelection interface implementations*/
 
   nsRangeList();
@@ -103,7 +107,6 @@ public:
 
 private:
   nsresult AddItem(nsISupports *aRange);
-
   nsresult RemoveItem(nsISupports *aRange);
 
   nsresult Clear();
@@ -117,12 +120,16 @@ private:
 
   void ResizeBuffer(PRUint32 aNewBufSize);
 
-  nsIDOMNode*  GetAnchorNode(); //where did the selection begin
-  PRInt32      GetAnchorOffset();
+	// inline methods for convenience. Note, these don't addref
+  nsIDOMNode*  FetchAnchorNode()        { return mAnchorNode;    } 			//where did the selection begin
+  PRInt32      FetchAnchorOffset()			{ return mAnchorOffset;  }
+
+  nsIDOMNode*  FetchFocusNode()         { return mFocusNode;     }  		//where is the carret
+  PRInt32      FetchFocusOffset()       { return mFocusOffset;   }
+  
   void         setAnchor(nsIDOMNode*, PRInt32);
-  nsIDOMNode*  GetFocusNode();  //where is the carret
-  PRInt32      GetFocusOffset();
   void         setFocus(nsIDOMNode*, PRInt32);
+  
   PRUint32     GetBatching(){return mBatching;}
   PRBool       GetNotifyFrames(){return mNotifyFrames;}
   void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
@@ -431,15 +438,42 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-nsIDOMNode* nsRangeList::GetAnchorNode()
+// note: this can return a nil anchor node
+NS_METHOD nsRangeList::GetAnchorNode(nsIDOMNode** aAnchorNode)
 {
-  return mAnchorNode;
+	if (!aAnchorNode)
+		return NS_ERROR_NULL_POINTER;
+	
+	*aAnchorNode = mAnchorNode;
+	NS_IF_ADDREF(*aAnchorNode);
+
+	return NS_OK;
 }
 
-PRInt32 nsRangeList::GetAnchorOffset()
+NS_METHOD nsRangeList::GetAnchorOffset(PRInt32* aAnchorOffset)
 {
-  return mAnchorOffset;
+	*aAnchorOffset = mAnchorOffset;
+	return NS_OK;
 }
+
+// note: this can return a nil focus node
+NS_METHOD nsRangeList::GetFocusNode(nsIDOMNode** aFocusNode)
+{
+	if (!aFocusNode)
+		return NS_ERROR_NULL_POINTER;
+	
+	*aFocusNode = mFocusNode;
+	NS_IF_ADDREF(*aFocusNode);
+
+	return NS_OK;
+}
+
+NS_METHOD nsRangeList::GetFocusOffset(PRInt32* aFocusOffset)
+{
+	*aFocusOffset = mFocusOffset;
+	return NS_OK;
+}
+
 
 void nsRangeList::setAnchor(nsIDOMNode* node, PRInt32 offset)
 {
@@ -447,15 +481,6 @@ void nsRangeList::setAnchor(nsIDOMNode* node, PRInt32 offset)
   mAnchorOffset = offset;
 }
 
-nsIDOMNode* nsRangeList::GetFocusNode()
-{
-  return mFocusNode;
-}
-
-PRInt32 nsRangeList::GetFocusOffset()
-{
-  return mFocusOffset;
-}
 
 void nsRangeList::setFocus(nsIDOMNode* node, PRInt32 offset)
 {
@@ -695,9 +720,9 @@ void nsRangeList::printSelection()
   }
 
   printf("Anchor is 0x%lx, %d\n",
-         (unsigned long)(nsIDOMNode*)GetAnchorNode(), GetAnchorOffset());
+         (unsigned long)(nsIDOMNode*)FetchAnchorNode(), FetchAnchorOffset());
   printf("Focus is 0x%lx, %d\n",
-         (unsigned long)(nsIDOMNode*)GetFocusNode(), GetFocusOffset());
+         (unsigned long)(nsIDOMNode*)FetchFocusNode(), FetchFocusOffset());
   printf(" ... end of selection\n");
 }
 #endif /* DEBUG */
@@ -882,11 +907,11 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
           nsCOMPtr<nsIContent>oldContent;
           if (NS_SUCCEEDED(frame->GetContent(getter_AddRefs(oldContent))) && oldContent){
             nsCOMPtr<nsIDOMNode> oldDomNode(do_QueryInterface(oldContent));
-            if (oldDomNode && (oldDomNode.get() == GetFocusNode())) {
+            if (oldDomNode && (oldDomNode.get() == FetchFocusNode())) {
               nsCOMPtr<nsIContent> anchorContent;
               if (NS_SUCCEEDED(anchor->GetContent(getter_AddRefs(anchorContent))) && anchorContent){
                 nsCOMPtr<nsIDOMNode>anchorDomNode(do_QueryInterface(anchorContent));
-                if (anchorDomNode && anchorDomNode.get() == GetAnchorNode()) {
+                if (anchorDomNode && anchorDomNode.get() == FetchAnchorNode()) {
 
 
                   //get offsets
@@ -911,12 +936,12 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                   //compare old cursor to new cursor
                   PRInt32 result2 = compareFrames(frame,aFrame);
                   if (result2 == 0)
-                    result2 = ComparePoints(GetFocusNode(), GetFocusOffset(),
+                    result2 = ComparePoints(FetchFocusNode(), FetchFocusOffset(),
                                             domNode, aOffset );
                   //compare anchor to new cursor
                   PRInt32 result3 = compareFrames(anchor,aFrame);
                   if (result3 == 0)
-                    result3 = ComparePoints(GetAnchorNode(), GetAnchorOffset(),
+                    result3 = ComparePoints(FetchAnchorNode(), FetchAnchorOffset(),
                                             domNode , aOffset );
 
                   if (result1 == 0 && result3 < 0)
@@ -1013,10 +1038,10 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   //reset the focus and anchor points.
   nsCOMPtr<nsIContent> anchorContent;
   nsCOMPtr<nsIContent> frameContent;
-  if (GetAnchorNode() && GetFocusNode()){
-    anchorContent =  do_QueryInterface(GetAnchorNode(),&res);
+  if (FetchAnchorNode() && FetchFocusNode()){
+    anchorContent =  do_QueryInterface(FetchAnchorNode(),&res);
     if (NS_SUCCEEDED(res))
-      frameContent = do_QueryInterface(GetFocusNode(),&res);
+      frameContent = do_QueryInterface(FetchFocusNode(),&res);
   }
   else
     res = NS_OK;
@@ -1046,9 +1071,9 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
         nsCOMPtr<nsIContent> endContent(do_QueryInterface(endNode));
         if (endContent == startContent){
           if (startContent == frameContent)
-            frameOffset = GetFocusOffset();
+            frameOffset = FetchFocusOffset();
           if ( startContent == anchorContent ) 
-            anchorOffset = GetAnchorOffset();
+            anchorOffset = FetchAnchorOffset();
           nsSelectionStruct ss={nsSelectionStruct::SELON|nsSelectionStruct::CHECKANCHOR|nsSelectionStruct::CHECKFOCUS
             , startOffset, endOffset, 0,0, anchorOffset,frameOffset, eDirNext, PR_FALSE};
           if (anchorOffset> frameOffset)
@@ -1058,9 +1083,9 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
         }
         else{
           if (startContent == frameContent)
-            frameOffset = GetFocusOffset();
+            frameOffset = FetchFocusOffset();
           if ( startContent == anchorContent ) 
-            anchorOffset = GetAnchorOffset();
+            anchorOffset = FetchAnchorOffset();
           nsSelectionStruct ss={nsSelectionStruct::SELON|nsSelectionStruct::SELTOEND|nsSelectionStruct::CHECKANCHOR|nsSelectionStruct::CHECKFOCUS
             , startOffset, 0, 0,0, anchorOffset,frameOffset, eDirNext, PR_FALSE};
           result->SetSelectedContentOffsets(&ss, aTracker, &result);//select from start to end
@@ -1073,9 +1098,9 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
             result->GetContent(getter_AddRefs(content));
             if (content == endContent){
               if (endContent == frameContent)
-                frameOffset = GetFocusOffset();
+                frameOffset = FetchFocusOffset();
               if ( endContent == anchorContent ) 
-                anchorOffset = GetAnchorOffset();
+                anchorOffset = FetchAnchorOffset();
               nsSelectionStruct ss={nsSelectionStruct::SELON|nsSelectionStruct::CHECKANCHOR|nsSelectionStruct::CHECKFOCUS
                 , 0, endOffset, 0,0, anchorOffset,frameOffset, eDirNext, PR_FALSE};
               result->SetSelectedContentOffsets(&ss, aTracker, &result);//select from beginning to endOffset
@@ -1292,7 +1317,7 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
  * IsCollapsed -- is the whole selection just one point, or unset?
  */
 NS_IMETHODIMP
-nsRangeList::IsCollapsed(PRBool* aIsCollapsed)
+nsRangeList::GetIsCollapsed(PRBool* aIsCollapsed)
 {
   if (!mRangeArray || (mRangeArray->Count() == 0))
   {
@@ -1369,7 +1394,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     range->GetStartOffset(&startOffset);
     nsresult res;
 
-    if ((GetFocusNode() == endNode.get()) && (GetFocusOffset() == endOffset))
+    if ((FetchFocusNode() == endNode.get()) && (FetchFocusOffset() == endOffset))
     {
       res = range->SetEnd(aParentNode, aOffset);
       if (res == NS_ERROR_ILLEGAL_VALUE)
@@ -1396,7 +1421,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       return NotifySelectionListeners();
     }
     
-    if ((GetFocusNode() == startNode.get()) && (GetFocusOffset() == startOffset))
+    if ((FetchFocusNode() == startNode.get()) && (FetchFocusOffset() == startOffset))
     {
       res = range->SetStart(aParentNode, aOffset);
       if (res == NS_ERROR_ILLEGAL_VALUE)
@@ -1444,13 +1469,13 @@ nsRangeList::DeleteFromDocument()
   // last item BEFORE the current range, rather than the range itself,
   // before we do the delete.
   PRBool isCollapsed;
-  IsCollapsed(&isCollapsed);
+  GetIsCollapsed(&isCollapsed);
   if (isCollapsed)
   {
     // If the offset is positive, then it's easy:
-    if (GetFocusOffset() > 0)
+    if (FetchFocusOffset() > 0)
     {
-      Extend(GetFocusNode(), GetFocusOffset() - 1);
+      Extend(FetchFocusNode(), FetchFocusOffset() - 1);
     }
     else
     {
@@ -1482,9 +1507,9 @@ nsRangeList::DeleteFromDocument()
   // If we deleted one character, then we move back one element.
   // FIXME  We don't know how to do this past frame boundaries yet.
   if (isCollapsed)
-    Collapse(GetAnchorNode(), GetAnchorOffset()-1);
-  else if (GetAnchorOffset() > 0)
-    Collapse(GetAnchorNode(), GetAnchorOffset());
+    Collapse(FetchAnchorNode(), FetchAnchorOffset()-1);
+  else if (FetchAnchorOffset() > 0)
+    Collapse(FetchAnchorNode(), FetchAnchorOffset());
 #ifdef DEBUG
   else
     printf("Don't know how to set selection back past frame boundary\n");

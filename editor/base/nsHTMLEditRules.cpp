@@ -249,7 +249,7 @@ nsHTMLEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
   nsresult result = aResult;  // if aResult is an error, we return it.
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   PRBool isCollapsed;
-  aSelection->IsCollapsed(&isCollapsed);
+  aSelection->GetIsCollapsed(&isCollapsed);
   NS_ASSERTION(PR_TRUE==isCollapsed, "selection not collapsed after insert break.");
   // if the insert break resulted in consecutive BR tags, 
   // collapse the two BR tags into a single P

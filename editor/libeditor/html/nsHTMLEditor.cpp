@@ -352,7 +352,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
     return res;
   }
   PRBool isCollapsed;
-  res = selection->IsCollapsed(&isCollapsed);
+  res = selection->GetIsCollapsed(&isCollapsed);
   if (!NS_SUCCEEDED(res))
     isCollapsed = PR_TRUE;
 

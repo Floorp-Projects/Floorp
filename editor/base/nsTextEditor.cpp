@@ -325,7 +325,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
   if ((NS_SUCCEEDED(result)) && selection)
   {
     PRBool isCollapsed;
-    selection->IsCollapsed(&isCollapsed);
+    selection->GetIsCollapsed(&isCollapsed);
     if (PR_TRUE==isCollapsed)
     {
       // manipulating text attributes on a collapsed selection only sets state for the next text insertion
@@ -599,7 +599,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
   if ((NS_SUCCEEDED(result)) && selection)
   {
     PRBool isCollapsed;
-    selection->IsCollapsed(&isCollapsed);
+    selection->GetIsCollapsed(&isCollapsed);
     if (PR_TRUE==isCollapsed)
     {
       // manipulating text attributes on a collapsed selection only sets state for the next text insertion

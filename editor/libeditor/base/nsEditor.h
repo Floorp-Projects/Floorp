@@ -82,7 +82,7 @@ public:
 /*BEGIN nsIEdieditor for more details*/
   
 //Interfaces for addref and release and queryinterface
-//NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsText
+//NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsEditor
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
