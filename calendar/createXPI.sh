@@ -7,15 +7,15 @@ rm -f calendar_linux.xpi
 echo "Building Linux xpi..."
 cd linux/components
 chmod 644 *.*
-cd ..
-find components/ resources/ icons/ install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_linux.xpi
+cd ../
+find components/ resources/ icons/ ../calendar_pref.js install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_linux.xpi
 mv calendar_linux.xpi ../
 echo "Done."
 
 #Windows
 echo "Building Windows xpi..."
 cd ../windows
-find components/ resources/ icons/ install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_windows.xpi
+find components/ resources/ icons/ ../calendar_pref.js install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_windows.xpi
 mv calendar_windows.xpi ../
 echo "Done."
 cd ..
