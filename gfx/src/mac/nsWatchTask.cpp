@@ -68,6 +68,12 @@ nsWatchTask :: ~nsWatchTask ( )
 void
 nsWatchTask :: Start ( )
 {
+  // get the watch cursor and lock it high
+  CursHandle watch = ::GetCursor ( watchCursor );
+  if ( !watch )
+    return;
+  mWatchCursor = **watch;
+  
   // setup the task
   mTask.qType = vType;
 	mTask.vblAddr = NewVBLProc((VBLProcPtr)DoWatchTask);
@@ -98,12 +104,12 @@ nsWatchTask :: DoWatchTask ( nsWatchTask* inSelf )
     if ( !inSelf->mSuspended  ) {
       if ( !inSelf->mBusy && !LMGetCrsrBusy() ) {
         if ( ::TickCount() - inSelf->mTicks > kTicksToShowWatch ) {
-          ::SetAnimatedThemeCursor(kThemeWatchCursor, inSelf->mAnimation);
+          ::SetCursor ( &(inSelf->mWatchCursor) );
           inSelf->mBusy = PR_TRUE;
         }
       }
       else
-        ::SetAnimatedThemeCursor(kThemeWatchCursor, inSelf->mAnimation);
+        ::SetCursor ( &(inSelf->mWatchCursor) );
       
       // next frame in cursor animation    
       ++inSelf->mAnimation;

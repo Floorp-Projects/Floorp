@@ -26,6 +26,7 @@
 
 
 #include <Retrace.h>
+#include <Quickdraw.h>
 #include "PRTypes.h"
 #include "nscore.h"
 
@@ -74,6 +75,7 @@ private:
   long mChecksum;           // 'mozz' to validate we have real data at interrupt time (not needed?)
   void* mSelf;              // so we can get back to |this| from the static routine
   long mTicks;              // last time the event loop was hit
+  Cursor mWatchCursor;      // the watch cursor
   PRPackedBool mBusy;       // are we currently spinning the cursor?
   PRPackedBool mSuspended;  // set if we've temporarily suspended operation
   PRPackedBool mInstallSucceeded;     // did we succeed in installing the task? (used in dtor)
