@@ -151,7 +151,6 @@ private:
 //----------------------------------------------------------------------
 
 #ifdef NS_DEBUG
-#include "prlog.h"
 /**
  * Note: the log module is created during initialization which
  * means that you cannot perform logging before then.
