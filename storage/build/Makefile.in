@@ -41,7 +41,7 @@ VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= storagecomps
+MODULE		= storage
 LIBRARY_NAME = storagecomps
 SHORT_LIBNAME = strgcmps
 EXPORT_LIBRARY = 1
