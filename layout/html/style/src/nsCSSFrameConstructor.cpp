@@ -616,8 +616,6 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
   return rv;
 }
 
-// if aParentFrame is a table, it is assummed that it is an outer table and the inner
-// table is already a child
 nsresult
 nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
                                                   nsIContent*      aContent,
@@ -636,8 +634,17 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
   nsIFrame* innerFrame;
 
   if (NS_STYLE_DISPLAY_TABLE == parentDisplay->mDisplay) { // parent is an outer table
+    // determine the inner table frame, it is either aParentFrame or its first child
+    nsIFrame* parFrame = aParentFrame;
     aParentFrame->FirstChild(nsnull, &innerFrame);
-    aNewCaptionFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+    const nsStyleDisplay* innerDisplay;
+    innerFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)innerDisplay);
+    if (NS_STYLE_DISPLAY_TABLE != innerDisplay->mDisplay) {
+      innerFrame = aParentFrame; 
+      innerFrame->GetParent(&parFrame);
+    }
+
+    aNewCaptionFrame->Init(*aPresContext, aContent, parFrame, aStyleContext,
                            nsnull);
     innerFrame->SetNextSibling(aNewCaptionFrame);
     // the caller is responsible for calling SetInitialChildList on the outer, inner frames
@@ -2748,7 +2755,15 @@ nsCSSFrameConstructor::GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame,
             aNewParentFrame=innerTableFrame;
           } // else we were already given the inner table frame
         } // else the current parent has no children and cannot be an outer table frame       
-      } // else the child is a caption and really belongs to the outer table frame     
+      } else { // else the child is a caption and really belongs to the outer table frame 
+        nsIFrame* parFrame = nsnull;
+        aCurrentParentFrame->GetParent(&parFrame);
+        const nsStyleDisplay* parDisplay;
+        aCurrentParentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)parDisplay);
+        if (NS_STYLE_DISPLAY_TABLE == parDisplay->mDisplay) {
+          aNewParentFrame = parFrame; // aNewParentFrame was an inner frame
+        }
+      }
     }
   } else {
     rv = NS_ERROR_NULL_POINTER;
