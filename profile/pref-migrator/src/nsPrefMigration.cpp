@@ -101,7 +101,7 @@ NS_IMPL_RELEASE(nsPrefMigration)
  *
  *-------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsPrefMigration::ProcessPrefs(char* profilePath, char* installPath50)
+nsPrefMigration::ProcessPrefs(char* profilePath, char* installPath50, nsresult *aResult)
 {
 /*
   PRFileDesc *reg4file, *prefs4file;   
@@ -121,35 +121,45 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* installPath50)
   if((newProfilePath = (char*) PR_MALLOC(PL_strlen(profilePath) + 2)) == NULL)
   {
     PR_Free(newProfilePath);
-    return NS_ERROR_FAILURE;
+    *aResult = NS_ERROR_FAILURE;
+    return 0;
   }
 
   if((newMailPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
     PR_Free(newMailPath);
-    return NS_ERROR_FAILURE;
+    *aResult = NS_ERROR_FAILURE;
+    return 0;
   }
 
   if((newNewsPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
     PR_Free(newNewsPath);
-    return NS_ERROR_FAILURE;
+    *aResult = NS_ERROR_FAILURE;
+    return 0;
   }
 
   if((oldMailPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
     PR_Free(oldMailPath);
-    return NS_ERROR_FAILURE;
+    *aResult = NS_ERROR_FAILURE;
+    return 0;
   }
 
   if((oldNewsPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
     PR_Free(oldNewsPath);
-    return NS_ERROR_FAILURE;
+    *aResult = NS_ERROR_FAILURE;
+    return 0;
   }
 
   /* Create the new profile tree for 5.x */
   nsresult success = CreateNewUser5Tree(profilePath, newProfilePath);
+  if (success != NS_OK)
+  {
+    *aResult = success;
+    return 0;
+  }
 
   /* Create the new mail directory from the setting in prefs.js or a default */
   if(GetDirFromPref(newProfilePath, "mail.directory", newMailPath, oldMailPath) != NS_OK)
@@ -192,8 +202,8 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* installPath50)
   PR_Free(oldNewsPath);
   PR_Free(newMailPath);
   PR_Free(newNewsPath);
-  PR_Free(mailFileArray);
-  PR_Free(newsFileArray);
+  //PR_Free(mailFileArray);
+  //PR_Free(newsFileArray);
 
   return NS_OK;
 }
