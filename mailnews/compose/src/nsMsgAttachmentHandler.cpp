@@ -632,8 +632,10 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       m_x_mac_creator = PL_strdup(filetype);
     }
 
+    long dataSize = 0;
+    long resSize = 0;
+  
     PRBool sendResourceFork = PR_TRUE;
-    PRBool sendDataFork = PR_TRUE;
     PRBool icGaveNeededInfo = PR_FALSE;
  
     nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
@@ -644,7 +646,14 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       if (NS_SUCCEEDED(rv) && icFlags != -1 && !(icFlags & nsIInternetConfigService::eIICMapFlag_NotOutgoingMask))
       {
         sendResourceFork = (icFlags & nsIInternetConfigService::eIICMapFlag_ResourceForkMask);
-        sendDataFork = (icFlags & nsIInternetConfigService::eIICMapFlag_DataForkMask);
+
+        if (sendResourceFork)
+        {
+          // before deciding to send the resource fork along the data fork, check if we have one,
+          // else don't need to use apple double.
+          if (::FSpGetFileSize(&fsSpec, &dataSize, &resSize) == noErr && resSize == 0)
+            sendResourceFork = PR_FALSE;
+        }
         
         icGaveNeededInfo = PR_TRUE;
       }
@@ -653,9 +662,6 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     if (! icGaveNeededInfo)
     {
       // If InternetConfig cannot help us, then just try our best...
-      long dataSize = 0;
-      long resSize = 0;
-  
       // first check if we have a resource fork
       if (::FSpGetFileSize(&fsSpec, &dataSize, &resSize) == noErr)
         sendResourceFork = (resSize > 0);
