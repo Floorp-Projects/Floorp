@@ -7,7 +7,8 @@
 
 <!ENTITY msgComposeWindow.title "Message Compose">
 
-<!-- address labels -->                            
+<!-- address labels -->
+<!ENTITY fromAddr.label "From:">
 <!ENTITY toAddr.label   "To:"> 
 <!ENTITY ccAddr.label   "Cc:"> 
 <!ENTITY bccAddr.label  "Bcc:"> 
@@ -209,48 +210,32 @@
 	</toolbar>
 
 	<toolbar>
-		<html:p>&toAddr.label;</html:p>
-		<box align="vertical" flex="100%">
-			<spring flex="100%"/>
-	  		<html:input id="msgTo" type="text" style="min-width: 200px; min-height: 27px"/>   
-			<spring flex="100%"/>
-		</box>
+        <html:div flex="10%">&fromAddr.label;</html:div>
+        <html:select id="msgIdentity" flex="90%"/>
+	</toolbar>		
+	<toolbar>
+		<html:div flex="10%">&toAddr.label;</html:div>
+ 		<html:input id="msgTo" type="text" flex="90%"/>
 	</toolbar>
 
 	<toolbar>
-		<html:p>&ccAddr.label;</html:p>
-		<box align="vertical" flex="100%">
-			<spring flex="100%"/>
-	  		<html:input id="msgCc" type="text" style="min-width: 200px; min-height: 27px"/>   
-			<spring flex="100%"/>
-		</box>
+		<html:div flex="10%">&ccAddr.label;</html:div>
+ 		<html:input id="msgCc" type="text" flex="90%"/>
 	</toolbar>
 
 	<toolbar>
-		<html:p>&bccAddr.label;</html:p>
-		<box align="vertical" flex="100%">
-			<spring flex="100%"/>
-	  		<html:input id="msgBcc" type="text" style="min-width: 200px; min-height: 27px"/>   
-			<spring flex="100%"/>
-		</box>
+		<html:div flex="10%">&bccAddr.label;</html:div>
+  		<html:input id="msgBcc" type="text" flex="90%"/>
 	</toolbar>
 
 	<toolbar>
-		<html:p>&newsgroupsAddr.label;</html:p>
-		<box align="vertical" flex="100%">
-			<spring flex="100%"/>
-	  		<html:input id="msgNewsgroup" type="text" style="min-width: 200px; min-height: 27px"/>   
-			<spring flex="100%"/>
-		</box>
+		<html:div flex="10%">&newsgroupsAddr.label;</html:div>
+	    <html:input id="msgNewsgroup" type="text" flex="90%"/>
 	</toolbar>
 	
 	<toolbar>
-		<html:p>&subject.label;</html:p>
-		<box align="vertical" flex="100%">
-			<spring flex="100%"/>
-	  		<html:input id="msgSubject" type="text" style="min-width: 200px; min-height: 27px"/>   
-			<spring flex="100%"/>
-		</box>
+		<html:div flex="10%">&subject.label;</html:div>
+	    <html:input id="msgSubject" type="text" flex="90%"/>
 	</toolbar>
 
     <!-- The Following toolbar has been imported from editorAppShell.xul -->

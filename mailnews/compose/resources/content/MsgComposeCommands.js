@@ -1,3 +1,23 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ */
+
 var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;
@@ -88,7 +108,15 @@ function ComposeStartup()
 			document.getElementById("msgTo").focus();
 		}
 	}
+
+    // fill in Identity combobox
+    var identitySelect = document.getElementById("msgIdentity");
+    if (identitySelect) {
+        fillIdentitySelect(identitySelect);
+    }
+    
 }
+
 
 function ComposeUnload(calledFromExit)
 {
@@ -121,9 +149,11 @@ function SetDocumentCharacterSet(aCharset)
 function SendMessage()
 {
 	dump("SendMessage from XUL\n");
-	
+
+    dump("Identity = " + getCurrentIdentity() + "\n");
+    
 	if (msgCompose != null)
-		msgCompose.SendMsg(0, null);
+		msgCompose.SendMsg(0, getCurrentIdentity(), null);
 	else
 		dump("###SendMessage Error: composeAppCore is null!\n");
 }
@@ -136,3 +166,50 @@ function SelectAddress()
 	return dialog;
 }
 
+function queryISupportsArray(supportsArray, iid) {
+    var result = new Array;
+    for (var i=0; i<supportsArray.Count(); i++) {
+      result[i] = supportsArray.GetElementAt(i).QueryInterface(iid);
+    }
+    return result;
+}
+
+function GetIdentities()
+{
+    var msgService = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
+
+    var accountManager = msgService.accountManager;
+
+    var idSupports = accountManager.allIdentities;
+    var identities = queryISupportsArray(idSupports,
+                                         Components.interfaces.nsIMsgIdentity);
+
+    return identities;
+}
+
+function fillIdentitySelect(selectElement) {
+    var identities = GetIdentities();
+
+    for (var i=0; i<identities.length; i++) {
+      var identity = identities[i];
+      var opt = new Option(identity.identityName, identity.key);
+
+      selectElement.add(opt, null);
+    }
+}
+
+function getCurrentIdentity() {
+
+
+    var msgService = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
+
+    var accountManager = msgService.accountManager;
+
+    // fill in Identity combobox
+    var identitySelect = document.getElementById("msgIdentity");
+    var identityKey = identitySelect.value;
+    dump("Looking for identity " + identityKey + "\n");
+    var identity = accountManager.GetIdentityByKey(identityKey);
+    
+    return identity;
+}
