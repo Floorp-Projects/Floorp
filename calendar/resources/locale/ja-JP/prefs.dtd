@@ -40,17 +40,17 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY calendar.label             "Calendar" >
-<!ENTITY calendar.general.label     "General">
 <!ENTITY calendarPanel.label        "Calendar" >
 <!ENTITY calendar.accesskey         "C" >
 <!ENTITY calendar.publish.label     "公開">
+<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.alarms.label      "アラーム">
+<!ENTITY calendar.views.label       "ビュー">
+<!ENTITY calendar.timezone.label    "タイムゾーン">
+
 <!ENTITY prefWindow.title            "Calendar Options">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
 <!ENTITY prefWindow.category         "Category">
-
-<!ENTITY calendar.views.label       "ビュー">
-<!ENTITY calendar.timezone.label    "タイムゾーン">
 
 <!ENTITY pref.mainbox.label         "全般設定" >
 <!ENTITY pref.alarmgoesoff.label "通知方法:">

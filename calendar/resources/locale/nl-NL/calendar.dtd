@@ -18,7 +18,7 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   - Contributor(s): Garth Smedley <garths@oeone.com>
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
@@ -408,7 +408,7 @@
 
 <!ENTITY calendar.publish.example.url.description   "Zoiets als http://www.myserver.com/webdav/test.ics">
 
-<!-- TRANSLATORS: this label must be short to keep a reasonnable column width in the week view -->
+<!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
 <!ENTITY allDayEvents.label "Gehele dag gebeurtenissen">
 
 <!-- Calendar Wizard Dialog -->

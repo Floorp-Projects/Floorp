@@ -115,7 +115,22 @@
 <!ENTITY goNextCmd.label                "Next">
 <!ENTITY goNextCmd.accesskey            "N">
 
-<!ENTITY taskMenu.label                "Tools">
+<!ENTITY taskMenu.label                "Tasks">
 <!ENTITY taskMenu.accesskey            "T">
+
+<!ENTITY toolsMenu.label                "Tools">
+<!ENTITY toolsMenu.accesskey            "o">
+
+<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey "S">
+
+<!ENTITY navigatorCmd.label     "Browser">
+<!ENTITY navigatorCmd.accesskey "B">
+
+<!ENTITY messengerCmd.label     "Mail">
+<!ENTITY messengerCmd.accesskey "M">
+
+<!ENTITY addressBookCmd.label     "Address Book">
+<!ENTITY addressBookCmd.accesskey "A">
 
 <!ENTITY helpMenu.accesskey            "H">

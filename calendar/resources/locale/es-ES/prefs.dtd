@@ -38,17 +38,17 @@
 <!ENTITY calendarPanel.label        "Calendario" >
 <!ENTITY calendar.accesskey         "c" >
 <!ENTITY calendar.publish.label     "Publicar">
+<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.alarms.label      "Alarmas">
 <!ENTITY calendar.views.label       "Vistas">
-<!ENTITY calendar.general.label     "General">
 <!ENTITY calendar.timezone.label    "Mi zona horaria">
 
-<!ENTITY pref.mainbox.label         "Configuración general" >
-<!ENTITY pref.alarmgoesoff.label "Cuando se apague la alarma:">
 <!ENTITY prefWindow.title            "Calendar Options">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
 <!ENTITY prefWindow.category         "Category">
 
+<!ENTITY pref.mainbox.label         "Configuración general" >
+<!ENTITY pref.alarmgoesoff.label "Cuando se apague la alarma:">
 <!ENTITY pref.playasound  "Reproducir un sonido" >
 
 <!ENTITY pref.alarmbox.label    "Alarmas" >

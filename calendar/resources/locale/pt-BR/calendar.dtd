@@ -408,8 +408,8 @@
 <!ENTITY calendar.publish.close.button      "Fechar">
 
 <!ENTITY calendar.publish.example.url.description   "Algo como http://www.myserver.com/webdav/test.ics">
-<!-- TRANSLATORS: this label must be short to keep a reasonnable column width in the week view -->
 
+<!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
 <!ENTITY allDayEvents.label "Eventos de Dia Inteiro">
 
 <!-- Calendar Wizard Dialog -->

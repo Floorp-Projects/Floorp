@@ -404,11 +404,11 @@
 
 <!ENTITY calendar.publish.example.url.description   "Podobnie do http://www.myserver.com/webdav/test.ics">
 
+<!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
 <!ENTITY allDayEvents.label "Wydarzenia całego dnia">
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importuj: Importuje wydarzenia z lokalnego pliku do istniejącego kalendarza.">
-<!-- TRANSLATORS: this label must be short to keep a reasonnable column width in the week view -->
 <!ENTITY calendar.wizard.export.label              "Eksportuj: Ekspotruje wydarzenia z istniejącego kalendarza do lokalnego pliku.">
 <!ENTITY calendar.wizard.subscribe.label           "Subskrybuj: Subskrybuje plik kalendarza ze zdalnego serwera (np.: z internetu)">
 <!ENTITY calendar.wizard.publish.label             "Publikuj: Publikuje wydarzenia na zdalny serwer (np.: w internecie) by inni mogli je subskrybować.">
