@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.3 $ $Date: 2002/04/15 15:22:01 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.4 $ $Date: 2002/04/15 16:20:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -222,7 +222,7 @@ NSSTokenArray_Destroy
   NSSToken **tokens
 )
 {
-    return nssTokenArray_Destroy(tokens);
+    nssTokenArray_Destroy(tokens);
 }
 
 NSS_IMPLEMENT void
