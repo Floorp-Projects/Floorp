@@ -64,6 +64,8 @@ IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 PRStatus
 IPC_SendMsg(ipcClient *client, const ipcMessage *msg)
 {
+    LOG(("IPC_SendMsg [clientID=%u]\n", client->ID()));
+
     if (client == NULL) {
         //
         // broadcast
@@ -75,7 +77,7 @@ IPC_SendMsg(ipcClient *client, const ipcMessage *msg)
         return PR_SUCCESS;
     }
     if (!client->HasTarget(msg->Target())) {
-        LOG(("no registered message handler\n"));
+        LOG(("  no registered message handler\n"));
         return PR_FAILURE;
     }
     return IPC_PlatformSendMsg(client, msg);

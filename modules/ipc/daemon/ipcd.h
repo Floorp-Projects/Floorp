@@ -59,20 +59,4 @@ PRBool          IPC_ClientHasTarget      (ipcClientHandle client, const nsID &ta
 void            IPC_EnumClientNames      (ipcClientHandle client, ipcClientNameEnumFunc func, void *closure);
 void            IPC_EnumClientTargets    (ipcClientHandle client, ipcClientTargetEnumFunc func, void *closure);
 
-//-----------------------------------------------------------------------------
-// inline helpers
-//-----------------------------------------------------------------------------
-
-static inline PRStatus
-IPC_SendMsg(PRUint32 clientID, ipcMessage *msg)
-{
-    PRStatus rv;
-    ipcClient *client = IPC_GetClientByID(clientID);
-    if (client)
-        rv = IPC_SendMsg(client, msg);
-    else
-        rv = PR_FAILURE;
-    return rv;
-}
-
 #endif // !IPCD_H__
