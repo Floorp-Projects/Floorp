@@ -184,6 +184,7 @@ sidebarheader {
   min-width: 120px;
   font-size: 150%;
   font-weight: bold;
+  color: #000000;
 }
  
 .cardViewGroup {
@@ -207,6 +208,7 @@ sidebarheader {
   padding-right: 2px;
   padding-left: 20px;
   min-width: 30px;
+  color: #000000;
 }
 
 .CardViewLink {

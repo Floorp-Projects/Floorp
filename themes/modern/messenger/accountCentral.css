@@ -44,12 +44,14 @@ separator.thin {
   padding: 10px 0px 10px 10px;
   font-size: 180%;
   font-weight: bold;
+  color: #000000;
 }
 
 .acctCentralRow {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#row-iconic");
   margin-left: 10px;
   font-size: 125%;
+  color: #000000;
 }
 
 .row-iconic-icon {
@@ -61,6 +63,7 @@ separator.thin {
   background-color: #C7D0D9;
   font-size: 150%;
   font-weight: bold;
+  color: #000000;
 }
 
 /* ::::: links ::::: */
