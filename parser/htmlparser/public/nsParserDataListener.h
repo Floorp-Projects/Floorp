@@ -83,6 +83,8 @@
  * component's contract id should be registered with the category
  * manager (nsICategoryManager), with the category
  * PARSER_DATA_LISTENER_CATEGORY, defined here.
+ *
+ * @status FROZEN
  */
 #define PARSER_DATA_LISTENER_CATEGORY "Parser data listener"
 
