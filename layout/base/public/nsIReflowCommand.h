@@ -161,10 +161,11 @@ public:
                       nsIRenderingContext& aRendContext) = 0;
 
   /**
-   * Get the next frame in the command processing path. Note that this removes
-   * the frame from the path so you must only call it once.
+   * Get the next frame in the command processing path. If requested removes the
+   * the frame from the path. You must remove the frame from the path before
+   * dispatching the reflow command to the next frame in the chain.
    */
-  NS_IMETHOD GetNext(nsIFrame*& aNextFrame) = 0;
+  NS_IMETHOD GetNext(nsIFrame*& aNextFrame, PRBool aRemove = PR_TRUE) = 0;
 
   /**
    * Get the target of the reflow command.
