@@ -23,15 +23,16 @@
  * Keith Visco 
  *    -- finished implementation
  *
- * $Id: XMLParser.h,v 1.4 2000/06/11 12:28:24 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLParser.h,v 1.5 2000/08/26 04:51:00 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include <iostream.h>
-#include "baseutils.h"
 #ifndef XML_UNICODE
 #define XML_UNICODE
 #endif
+#ifndef MOZ_XSL
 #include "xmlparse.h"
+#endif
 #include "dom.h"
 
 typedef struct  {
@@ -44,10 +45,11 @@ typedef struct  {
  * parsing is provided by EXPAT.
  * @author <a href="tomk@mitre.org">Tom Kneeland</a>
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/06/11 12:28:24 $
+ * @version $Revision: 1.5 $ $Date: 2000/08/26 04:51:00 $
 **/
 class XMLParser
 {
+#ifndef MOZ_XSL
   /*-----------------6/18/99 12:43PM------------------
    * Sax related methods for XML parsers
    * --------------------------------------------------*/
@@ -57,11 +59,14 @@ class XMLParser
   friend void endElement(void *userData, const XML_Char* name);
 
   friend void piHandler(void *userData, const XML_Char *target, const XML_Char *data);
+#endif
 
   public:
     XMLParser();
    ~XMLParser();
 
+    Document* getDocumentFromURI(String& href, String& documentBase, String& errMsg);
+#ifndef MOZ_XSL
     Document* parse(istream& inputStream);
     const String& getErrorString();
 
@@ -71,8 +76,10 @@ class XMLParser
     Element*   currentElement;
     MBool      errorState;
     String  errorString;
+#endif
 };
 
+#ifndef MOZ_XSL
 /*-----------------6/18/99 12:43PM------------------
  * Sax related methods for XML parsers
  * --------------------------------------------------*/
@@ -80,3 +87,4 @@ void charData(void* userData, const XML_Char* s, int len);
 void startElement(void *userData, const XML_Char* name, const XML_Char** atts);
 void endElement(void *userData, const XML_Char* name);
 void piHandler(void *userData, const XML_Char *target, const XML_Char *data);
+#endif
