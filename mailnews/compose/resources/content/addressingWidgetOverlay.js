@@ -844,6 +844,12 @@ function awRecipientErrorCommand(errItem, element)
 function awRecipientKeyPress(event, element)
 {
   switch(event.keyCode) {
+  case KeyEvent.DOM_VK_UP:
+    awArrowHit(element, -1);
+    break;
+  case KeyEvent.DOM_VK_DOWN:
+    awArrowHit(element, 1);
+    break;
   case KeyEvent.DOM_VK_RETURN:
   case KeyEvent.DOM_VK_TAB:
   {
@@ -861,6 +867,19 @@ function awRecipientKeyPress(event, element)
   case 9:
     awTabFromRecipient(element, event);
     break;
+  }
+}
+
+function awArrowHit(inputElement, direction)
+{
+  var row = awGetRowByInputElement(inputElement) + direction;
+  if (row) {
+    var nextInput = awGetInputElement(row);
+
+    if (nextInput)
+      awSetFocus(row, nextInput);
+    else if (inputElement.value)
+      awAppendNewRow(true);
   }
 }
 

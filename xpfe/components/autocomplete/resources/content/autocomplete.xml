@@ -890,8 +890,7 @@
             case KeyEvent.DOM_VK_DOWN:
               if (!aEvent.altKey) {
                 this.clearTimer();
-                killEvent = true;
-                this.keyNavigation(aEvent);
+                killEvent = this.keyNavigation(aEvent);
                 break;
               }
             // Alt+Down falls through to history popup toggling code
@@ -910,8 +909,7 @@
             case KeyEvent.DOM_VK_UP:
               if (!aEvent.ctrlKey && !aEvent.metaKey) {
                 this.clearTimer();
-                killEvent = true;
-                this.keyNavigation(aEvent);
+                killEvent = this.keyNavigation(aEvent);
               }
               break;
           }
@@ -935,10 +933,13 @@
               k == KeyEvent.DOM_VK_PAGE_UP || k == KeyEvent.DOM_VK_PAGE_DOWN)
           {
             // up/down keys while menu is closed will open menu
-            if (!this.mMenuOpen && (this.view.rowCount > 0 || this.alwaysOpenPopup)) {
+            if (!this.mMenuOpen) {
+              if (!this.view.rowCount && !this.alwaysOpenPopup)
+                return false;
+
               this.mNeedToFinish = true;
               this.openResultPopup();
-              return;
+              return true;
             }
             
             this.userAction = "scrolling";
@@ -972,6 +973,7 @@
             this.mInputElt.setSelectionRange(this.value.length, this.value.length);
             this.ignoreInputEvent = false;
           }
+          return true;
         ]]></body>
       </method>
 
