@@ -5534,6 +5534,96 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
                                      nsnull, aFrameList);
 }
 
+static nsIFrame*
+FindPreviousSibling(nsIPresShell* aPresShell,
+                    nsIContent*   aContainer,
+                    PRInt32       aIndexInContainer)
+{
+  nsIFrame* prevSibling = nsnull;
+
+  // Note: not all content objects are associated with a frame (e.g., if their
+  // 'display' type is 'hidden') so keep looking until we find a previous frame
+  for (PRInt32 i = aIndexInContainer - 1; i >= 0; i--) {
+    nsCOMPtr<nsIContent> precedingContent;
+
+    aContainer->ChildAt(i, *getter_AddRefs(precedingContent));
+    aPresShell->GetPrimaryFrameFor(precedingContent, &prevSibling);
+
+    if (nsnull != prevSibling) {
+      // The frame may have a next-in-flow. Get the last-in-flow
+      nsIFrame* nextInFlow;
+      do {
+        prevSibling->GetNextInFlow(&nextInFlow);
+        if (nsnull != nextInFlow) {
+          prevSibling = nextInFlow;
+        }
+      } while (nsnull != nextInFlow);
+
+      // Did we really get the *right* frame?
+      const nsStyleDisplay* display;
+      prevSibling->GetStyleData(eStyleStruct_Display,
+                                (const nsStyleStruct*&)display);
+      if (display->IsFloating()) {
+        // Nope. Get the place-holder instead
+        nsIFrame* placeholderFrame;
+        aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
+        NS_ASSERTION(nsnull != placeholderFrame, "yikes");
+        prevSibling = placeholderFrame;
+      }
+
+      break;
+    }
+  }
+
+  return prevSibling;
+}
+
+static nsIFrame*
+FindNextSibling(nsIPresShell* aPresShell,
+                nsIContent*   aContainer,
+                PRInt32       aIndexInContainer)
+{
+  nsIFrame* nextSibling = nsnull;
+
+  // Note: not all content objects are associated with a frame (e.g., if their
+  // 'display' type is 'hidden') so keep looking until we find a previous frame
+  PRInt32 count;
+  aContainer->ChildCount(count);
+  for (PRInt32 i = aIndexInContainer + 1; i < count; i++) {
+    nsCOMPtr<nsIContent> nextContent;
+
+    aContainer->ChildAt(i, *getter_AddRefs(nextContent));
+    aPresShell->GetPrimaryFrameFor(nextContent, &nextSibling);
+
+    if (nsnull != nextSibling) {
+      // The frame may have a next-in-flow. Get the first-in-flow
+      nsIFrame* prevInFlow;
+      do {
+        nextSibling->GetPrevInFlow(&prevInFlow);
+        if (nsnull != prevInFlow) {
+          nextSibling = prevInFlow;
+        }
+      } while (nsnull != prevInFlow);
+
+      // Did we really get the *right* frame?
+      const nsStyleDisplay* display;
+      nextSibling->GetStyleData(eStyleStruct_Display,
+                                (const nsStyleStruct*&)display);
+      if (display->IsFloating()) {
+        // Nope. Get the place-holder instead
+        nsIFrame* placeholderFrame;
+        aPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
+        NS_ASSERTION(nsnull != placeholderFrame, "yikes");
+        nextSibling = placeholderFrame;
+      }
+
+      break;
+    }
+  }
+
+  return nextSibling;
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
@@ -5573,12 +5663,29 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
       if (parent) {
         // We found it.  Get the primary frame.
-        nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, child);
+        nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, child);
 
         // Convert to a tree row group frame.
-        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
+        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)outerFrame;
         if (treeRowGroup && treeRowGroup->IsLazy()) {
-          treeRowGroup->OnContentAdded(aPresContext);
+
+          // Get the primary frame for the parent of the child that's being added.
+          nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
+  
+          // See if there's a previous sibling.
+          nsIFrame* prevSibling = FindPreviousSibling(shell,
+                                                      aContainer,
+                                                      aNewIndexInContainer);
+
+          if (prevSibling || innerFrame) {
+            // We're onscreen. Make sure a full reflow happens.
+            treeRowGroup->OnContentAdded(aPresContext);
+          }
+          else {
+            // We're going to be offscreen.
+            treeRowGroup->ReflowScrollbar(aPresContext);
+          }
+
           return NS_OK;
         }
       }
@@ -5763,95 +5870,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-static nsIFrame*
-FindPreviousSibling(nsIPresShell* aPresShell,
-                    nsIContent*   aContainer,
-                    PRInt32       aIndexInContainer)
-{
-  nsIFrame* prevSibling = nsnull;
-
-  // Note: not all content objects are associated with a frame (e.g., if their
-  // 'display' type is 'hidden') so keep looking until we find a previous frame
-  for (PRInt32 i = aIndexInContainer - 1; i >= 0; i--) {
-    nsCOMPtr<nsIContent> precedingContent;
-
-    aContainer->ChildAt(i, *getter_AddRefs(precedingContent));
-    aPresShell->GetPrimaryFrameFor(precedingContent, &prevSibling);
-
-    if (nsnull != prevSibling) {
-      // The frame may have a next-in-flow. Get the last-in-flow
-      nsIFrame* nextInFlow;
-      do {
-        prevSibling->GetNextInFlow(&nextInFlow);
-        if (nsnull != nextInFlow) {
-          prevSibling = nextInFlow;
-        }
-      } while (nsnull != nextInFlow);
-
-      // Did we really get the *right* frame?
-      const nsStyleDisplay* display;
-      prevSibling->GetStyleData(eStyleStruct_Display,
-                                (const nsStyleStruct*&)display);
-      if (display->IsFloating()) {
-        // Nope. Get the place-holder instead
-        nsIFrame* placeholderFrame;
-        aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
-        NS_ASSERTION(nsnull != placeholderFrame, "yikes");
-        prevSibling = placeholderFrame;
-      }
-
-      break;
-    }
-  }
-
-  return prevSibling;
-}
-
-static nsIFrame*
-FindNextSibling(nsIPresShell* aPresShell,
-                nsIContent*   aContainer,
-                PRInt32       aIndexInContainer)
-{
-  nsIFrame* nextSibling = nsnull;
-
-  // Note: not all content objects are associated with a frame (e.g., if their
-  // 'display' type is 'hidden') so keep looking until we find a previous frame
-  PRInt32 count;
-  aContainer->ChildCount(count);
-  for (PRInt32 i = aIndexInContainer + 1; i < count; i++) {
-    nsCOMPtr<nsIContent> nextContent;
-
-    aContainer->ChildAt(i, *getter_AddRefs(nextContent));
-    aPresShell->GetPrimaryFrameFor(nextContent, &nextSibling);
-
-    if (nsnull != nextSibling) {
-      // The frame may have a next-in-flow. Get the first-in-flow
-      nsIFrame* prevInFlow;
-      do {
-        nextSibling->GetPrevInFlow(&prevInFlow);
-        if (nsnull != prevInFlow) {
-          nextSibling = prevInFlow;
-        }
-      } while (nsnull != prevInFlow);
-
-      // Did we really get the *right* frame?
-      const nsStyleDisplay* display;
-      nextSibling->GetStyleData(eStyleStruct_Display,
-                                (const nsStyleStruct*&)display);
-      if (display->IsFloating()) {
-        // Nope. Get the place-holder instead
-        nsIFrame* placeholderFrame;
-        aPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
-        NS_ASSERTION(nsnull != placeholderFrame, "yikes");
-        nextSibling = placeholderFrame;
-      }
-
-      break;
-    }
-  }
-
-  return nextSibling;
-}
 
 nsresult
 nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
@@ -5944,20 +5962,37 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         // We found it.  Get the primary frame.
         nsCOMPtr<nsIPresShell> shell;
         aPresContext->GetShell(getter_AddRefs(shell));
-        nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, child);
+        nsIFrame*     outerFrame = GetFrameFor(shell, aPresContext, child);
 
         // Convert to a tree row group frame.
-        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
+        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)outerFrame;
         if (treeRowGroup && treeRowGroup->IsLazy()) {
-          nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
-          if(!nextSibling)
-            treeRowGroup->OnContentAdded(aPresContext);
-          else {
-            nsIFrame*     frame = GetFrameFor(shell, aPresContext, aContainer);
-            nsTreeRowGroupFrame* frameTreeRowGroup = (nsTreeRowGroupFrame*)frame;
-            if(frameTreeRowGroup)
-              frameTreeRowGroup->OnContentInserted(aPresContext, nextSibling, aIndexInContainer);
+
+          // Get the primary frame for the parent of the child that's being added.
+          nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
+  
+          // See if there's a previous sibling.
+          nsIFrame* prevSibling = FindPreviousSibling(shell,
+                                                       aContainer,
+                                                       aIndexInContainer);
+
+          if (prevSibling || innerFrame) {
+             // We're onscreen. Make sure a full reflow happens.
+            nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
+            if(!nextSibling)
+              treeRowGroup->OnContentAdded(aPresContext);
+            else {
+              nsIFrame*     frame = GetFrameFor(shell, aPresContext, aContainer);
+              nsTreeRowGroupFrame* frameTreeRowGroup = (nsTreeRowGroupFrame*)frame;
+              if(frameTreeRowGroup)
+                frameTreeRowGroup->OnContentInserted(aPresContext, nextSibling, aIndexInContainer);
+            }
           }
+          else {
+            // We're going to be offscreen.
+            treeRowGroup->ReflowScrollbar(aPresContext);
+          }
+
           return NS_OK;
         }
       }
@@ -6533,7 +6568,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         // Ensure that we notify the outermost row group that the item
         // has been removed (so that we can update the scrollbar state).
         // Walk up to the outermost tree row group frame and tell it that
-        // content was removed.
+        // the scrollbar thumb should be updated.
         nsCOMPtr<nsIContent> parent;
         nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
         child->GetParent(*getter_AddRefs(parent));
@@ -6552,7 +6587,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           // Convert to a tree row group frame.
           nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
           if (treeRowGroup && treeRowGroup->IsLazy()) {
-            treeRowGroup->OnContentRemoved(aPresContext, nsnull, aIndexInContainer);
+            treeRowGroup->ReflowScrollbar(aPresContext);
             return NS_OK;
           }
         }
@@ -7218,6 +7253,19 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   nsIFrame*     primaryFrame;
    
   shell->GetPrimaryFrameFor(aContent, &primaryFrame);
+
+#ifdef INCLUDE_XUL
+  // The following tree widget trap prevents offscreen tree widget
+  // content from being removed and re-inserted (which is what would
+  // happen otherwise).
+  if (!primaryFrame) {
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    if (tag && (tag.get() == nsXULAtoms::treechildren ||
+                tag.get() == nsXULAtoms::treeitem))
+      return NS_OK;
+  }
+#endif // INCLUDE_XUL
 
   PRBool  reconstruct = PR_FALSE;
   PRBool  restyle = PR_FALSE;
