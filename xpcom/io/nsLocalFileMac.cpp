@@ -374,14 +374,14 @@ static void MacintoshInitializeTime(void)
     gJanuaryFirst1970Seconds = 2082844800 + GMTDelta();
 }
 
-static nsresult	ConvertMacTimeToMilliseconds( PRInt64* aLastModificationDate, PRInt32 timestamp )
+static nsresult	ConvertMacTimeToMilliseconds( PRInt64* aLastModificationDate, PRUint32 timestamp )
 {
 	if ( gJanuaryFirst1970Seconds == 0)
 		MacintoshInitializeTime();
 	timestamp -= gJanuaryFirst1970Seconds;
     PRTime usecPerSec, dateInMicroSeconds;
 	LL_I2L(dateInMicroSeconds, timestamp);
-	LL_I2L(usecPerSec, PR_USEC_PER_SEC);
+	LL_I2L(usecPerSec, PR_MSEC_PER_SEC);
 	LL_MUL(*aLastModificationDate, usecPerSec, dateInMicroSeconds);
 	return NS_OK;
 }
@@ -393,11 +393,11 @@ static nsresult ConvertMillisecondsToMacTime(PRInt64 aTime, PRUint32 *aOutMacTim
 	PRTime usecPerSec, dateInSeconds;
 	dateInSeconds = LL_ZERO;
 	
-	LL_I2L(usecPerSec, PR_USEC_PER_SEC);
+	LL_I2L(usecPerSec, PR_MSEC_PER_SEC);
 	LL_DIV(dateInSeconds, aTime, usecPerSec); // dateInSeconds = aTime/1,000
 	LL_L2UI(*aOutMacTime, dateInSeconds);
 	*aOutMacTime += 2082844800; // date + Mac epoch
-	
+
 	return NS_OK;
 }
 
