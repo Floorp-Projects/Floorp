@@ -349,15 +349,8 @@ XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocShell> docShell;
-  scriptObject->GetDocShell(getter_AddRefs(docShell));
-  if (!docShell) {
-    NS_WARNING("Failed to get docshell object for browser instance");
-    return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIBaseWindow> baseWindow;
-  baseWindow = do_QueryInterface(docShell);
+  baseWindow = do_QueryInterface(scriptObject->GetDocShell());
   if (!baseWindow) {
     NS_WARNING("Failed to get base window for browser instance");
     return NS_ERROR_FAILURE;
@@ -830,15 +823,13 @@ XRemoteService::OpenURL(nsCString &aArgument,
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDocShell> docShell;
-    scriptObject->GetDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIDocShell> docShell = scriptObject->GetDocShell();
     if (!docShell) {
       NS_WARNING("Failed to get docshell object for browser instance");
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDocShellTreeItem> item;
-    item = do_QueryInterface(docShell);
+    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
     if (!item) {
       NS_WARNING("failed to get doc shell tree item for browser instance");
       return NS_ERROR_FAILURE;
