@@ -348,8 +348,6 @@ nsEventQueueServiceImpl::PopThreadEventQueue(nsIEventQueue *aQueue)
 NS_IMETHODIMP
 nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult)
 {
-  nsresult rv = NS_OK;
-
   /* Parameter validation... */
   if (NULL == aResult) return NS_ERROR_NULL_POINTER;
   
@@ -364,7 +362,7 @@ nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, nsIEventQueue** 
     nsCOMPtr<nsIThread>  mainIThread;
     
     // Get the primordial thread
-    rv = nsIThread::GetMainThread(getter_AddRefs(mainIThread));
+    nsresult rv = nsIThread::GetMainThread(getter_AddRefs(mainIThread));
     if (NS_FAILED(rv)) return rv;
 
     rv = mainIThread->GetPRThread(&keyThread);
@@ -380,18 +378,17 @@ nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, nsIEventQueue** 
 
   PR_ExitMonitor(mEventQMonitor);
 
+  nsCOMPtr<nsIEventQueue> youngestQueue;
   if (queue) {
-    nsCOMPtr<nsIEventQueue> youngestQueue;
     GetYoungestEventQueue(queue, getter_AddRefs(youngestQueue)); // get the youngest active queue
-    *aResult = youngestQueue;
-    NS_IF_ADDREF(*aResult);
-  } else {
-    // XXX: Need error code for requesting an event queue when none exists...
-    *aResult = NULL;
-    rv = NS_ERROR_FAILURE;
   }
-
-  return rv;
+  *aResult = youngestQueue;
+  // XXX: Need error code for requesting an event queue when none exists...
+  if (!youngestQueue) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  NS_ADDREF(*aResult);
+  return NS_OK;
 }
 
 
