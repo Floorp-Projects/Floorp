@@ -28,6 +28,11 @@ const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
 const nsICertOutliner = Components.interfaces.nsICertOutliner;
 const nsCertOutliner = "@mozilla.org/security/nsCertOutliner;1";
+const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
+const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
+const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
+
 
 var helpURL = "chrome://help/content/help.xul";
 var key;
@@ -289,13 +294,42 @@ function restoreCerts()
 function deleteCerts()
 {
   getSelectedCerts();
-  var numcerts = selected_certs.length;
-  for (var t=0; t<numcerts; t++) {
-    var cert = selected_certs[t];
-    var certkey = cert.dbKey;
-    window.openDialog('chrome://pippki/content/deletecert.xul', certkey,
-                'chrome,resizable=1,modal');
+  
+  var pkiParams;
+  pkiParams = Components.classes[nsPKIParamBlock].getService(nsIPKIParamBlock);
+  var dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
+  
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var selTab = document.getElementById('certMgrTabbox').selectedTab;
+  var selTabID = selTab.getAttribute('id');
+  if (selTabID == 'mine_tab') 
+  {
+    dialogParams.SetString(1,bundle.GetStringFromName("deleteUserCertFlag"));
+  } 
+  else if (selTabID == "websites_tab") 
+  {
+    dialogParams.SetString(1,bundle.GetStringFromName("deleteSslCertFlag"));
+  } 
+  else if (selTabID == "ca_tab") 
+  {
+    dialogParams.SetString(1,bundle.GetStringFromName("deleteCaCertFlag"));
   }
+  else
+  {
+    return;
+  }
+
+  var numcerts = selected_certs.length;
+  dialogParams.SetInt(2,numcerts);
+  for (var t=0; t<numcerts; t++) 
+  {
+    var cert = selected_certs[t];
+    pkiParams.setISupportAtIndex(t+1, cert);  
+  }
+   
+  window.openDialog('chrome://pippki/content/deletecert.xul', "",
+                'chrome,resizable=1,modal',pkiParams);
+ 
   ReloadCerts();
 }
 

@@ -24,31 +24,100 @@ const nsIX509Cert = Components.interfaces.nsIX509Cert;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
 const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
+const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var certdb;
-var cert;
+var certs = [];
+var dialogParams;
+var pkiParams;
+var helpUrl;
 
 function setWindowName()
 {
-  var dbkey = self.name;
+  pkiParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+  dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
 
   //  Get the cert from the cert database
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-  //var pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);
-  //var isupport = pkiParams.getISupportAtIndex(1);
-  //cert = isupport.QueryInterface(nsIX509Cert);
-  cert = certdb.getCertByDBKey(dbkey, null);
-
+  
+  var typeFlag = dialogParams.GetString(1);
+  var numberOfCerts = dialogParams.GetInt(2);
+  var dbkey;
+  var isupport 
+  for(var x=0; x<numberOfCerts;x++)
+  {
+     isupport = pkiParams.getISupportAtIndex(x+1);
+     certs[x]    = isupport.QueryInterface(nsIX509Cert);
+  }
+  
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var title;
+  var confirm;
+  var impact;
+  
+  if(typeFlag == bundle.GetStringFromName("deleteUserCertFlag"))
+  {
+     title = bundle.GetStringFromName("deleteUserCertTitle");
+	 confirm = bundle.GetStringFromName("deleteUserCertConfirm");
+	 impact = bundle.GetStringFromName("deleteUserCertImpact");
+	 helpUrl = "chrome://help/content/help.xul?delete_my_certs"
+  }
+  else if(typeFlag == bundle.GetStringFromName("deleteSslCertFlag"))
+  {
+     title = bundle.GetStringFromName("deleteSslCertTitle");
+	 confirm = bundle.GetStringFromName("deleteSslCertConfirm");
+	 impact = bundle.GetStringFromName("deleteSslCertImpact");
+	 helpUrl = "chrome://help/content/help.xul?delete_web_certs"
+  }
+  else if(typeFlag == bundle.GetStringFromName("deleteCaCertFlag"))
+  {
+     title = bundle.GetStringFromName("deleteCaCertTitle");
+	 confirm = bundle.GetStringFromName("deleteCaCertConfirm");
+	 impact = bundle.GetStringFromName("deleteCaCertImpact");
+	 helpUrl = "chrome://help/content/help.xul?delete_ca_certs"   
+  }
+  else
+  {
+     return;
+  }
   var windowReference = document.getElementById('deleteCert');
-  windowReference.setAttribute("title", cert.commonName);
+  var confirReference = document.getElementById('confirm');
+  var impactReference = document.getElementById('impact');
+  windowReference.setAttribute("title", title);
+  
+  setText("confirm",confirm);
 
-  var certname = document.getElementById("certname");
-  certname.setAttribute("value", cert.commonName);
+  var box=document.getElementById("certlist");
+  var text;
+  for(var x=0;x<certs.length;x++)
+  {
+    text = document.createElement("text");
+	text.setAttribute("value",certs[x].commonName);
+	box.appendChild(text);
+  }
 
+  setText("impact",impact);
+
+  var wdth = window.innerWidth; // THIS IS NEEDED,
+  window.sizeToContent();
+  windowReference.setAttribute("width",window.innerWidth + 30);
+  var hght = window.innerHeight; // THIS IS NEEDED,
+  window.sizeToContent();
+  windowReference.setAttribute("height",window.innerHeight + 40);
+
+  
 }
 
 function doOK()
 {
-  certdb.deleteCertificate(cert);
+  for(var i=0;i<certs.length;i++)
+  {
+    certdb.deleteCertificate(certs[i]);
+  }
   window.close();
+}
+
+function doHelp()
+{
+   openHelp(helpUrl);
 }
