@@ -40,7 +40,9 @@ MYLIBS=							\
  $(DIST)\lib\msgcore.lib		\
  $(DIST)\lib\msglocal.lib		\
  $(DIST)\lib\mailnews.lib		\
+ $(DIST)\lib\rdf.lib			\
  $(DIST)\lib\xplib.lib			\
+ $(DIST)\lib\rdfbase_s.lib			\
  $(NULL)
 
 LLIBS= $(MYLIBS)				\
