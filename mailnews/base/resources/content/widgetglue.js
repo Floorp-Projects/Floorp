@@ -436,14 +436,12 @@ function MsgSortBySubject()
 function MsgNewFolder()
 {
 	var windowTitle = Bundle.GetStringFromName("newFolderDialogTitle");
-	dump(Bundle + windowTitle + "\n");
 	MsgNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle);
 }
 
 function MsgSubscribe()
 {
         var windowTitle = Bundle.GetStringFromName("subscribeDialogTitle");
-	dump(Bundle + windowTitle + "\n");
 	MsgNewSubfolder("chrome://messenger/content/subscribeDialog.xul", windowTitle);
 }
 
@@ -459,11 +457,11 @@ function MsgNewSubfolder(chromeWindowURL,windowTitle)
 			selectedFolder = selectedFolderList[0];
 		}
 		else {
-			dump("number of selected folder was " + selectedFolderList.length + "\n");
+			// dump("number of selected folder was " + selectedFolderList.length + "\n");
 		}
 	}
 	catch (ex) {
-		//dump("failed to get the selected folder\n");
+		// dump("failed to get the selected folder\n");
 	}
 
 	try {
@@ -481,7 +479,7 @@ function MsgNewSubfolder(chromeWindowURL,windowTitle)
 				okCallback:NewFolder});
 	}
 	catch (ex) {
-		dump("failed to open the new folder dialog\n");
+		// dump("failed to open the new folder dialog\n");
 	}
 }
 

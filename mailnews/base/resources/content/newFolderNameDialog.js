@@ -40,7 +40,7 @@ function newFolderNameOnLoad()
 		}
 	}
 	else {
-		dump("passed null for preselectedURI, do nothing\n");
+		// dump("passed null for preselectedURI, do nothing\n");
 	}
 }
 
