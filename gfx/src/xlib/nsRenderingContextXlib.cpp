@@ -675,22 +675,22 @@ nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlag
     aSurface = nsnull;
     return NS_ERROR_FAILURE;
   }
+
+  NS_ENSURE_TRUE(aBounds != nsnull, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE((aBounds->width > 0) && (aBounds->height > 0), NS_ERROR_FAILURE);
  
+  nsresult rv = NS_ERROR_FAILURE;
   nsDrawingSurfaceXlibImpl *surf = new nsDrawingSurfaceXlibImpl();
 
   if (surf) {
     NS_ADDREF(surf);
-    if (!mGC)
-      UpdateGC();
-      surf->Init(mXlibRgbHandle,
-                 mGC,
-                 aBounds->width, 
-                 aBounds->height, 
-                 aSurfFlags);
+    UpdateGC();
+    rv = surf->Init(mXlibRgbHandle, mGC, aBounds->width, aBounds->height, aSurfFlags);    
   }
-  
+
   aSurface = (nsDrawingSurface)surf;
-  return NS_OK;
+
+  return rv;
 }
 
 NS_IMETHODIMP
