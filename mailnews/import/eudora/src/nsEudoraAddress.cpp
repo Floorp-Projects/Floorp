@@ -583,7 +583,7 @@ void nsEudoraAddress::ResolveEntries( nsCString& name, nsVoidArray& list, nsVoid
 	for (i = 0; i < max; i++) {
 		pData = (CAliasData *)list.ElementAt( i);
 		// resolve the email to an existing alias!
-		if (name.Compare( (const char *)pData->m_email, PR_TRUE) && ((pEntry = ResolveAlias( pData->m_email)) != nsnull)) {
+		if (name.CompareWithConversion( (const char *)pData->m_email, PR_TRUE) && ((pEntry = ResolveAlias( pData->m_email)) != nsnull)) {
 			// This new entry has all of the entries for this puppie.
 			// Resolve all of it's entries!
 			ResolveEntries( pEntry->m_name, pEntry->m_list, result);

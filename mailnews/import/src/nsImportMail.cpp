@@ -1064,7 +1064,7 @@ void nsImportGenericMail::GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsStr
 					nsXPIDLString	prettyName;
 					rv = server->GetPrettyName( getter_Copies( prettyName));
 					if (NS_SUCCEEDED( rv)) {
-						if (!newName.Compare( prettyName, PR_TRUE))
+						if (!newName.Compare( nsAutoString(prettyName), PR_TRUE))
 							found = PR_TRUE;
 					}	
 				}

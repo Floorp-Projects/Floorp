@@ -985,7 +985,7 @@ PRBool nsEudoraMac::IsValidMailFolderName( nsCString& name)
 		return( PR_TRUE);
 	
 	for (int i = 0; i < kNumBadFolderNames; i++) {
-		if (!name.Compare( cBadFolderNames[i], PR_TRUE))
+		if (!name.CompareWithConversion( cBadFolderNames[i], PR_TRUE))
 			return( PR_FALSE);
 	}
 	
@@ -997,7 +997,7 @@ PRBool nsEudoraMac::IsValidMailboxName( nsCString& fName)
 {
 	if (m_depth > 1)
 		return( PR_TRUE);
-	if (!fName.Compare( "Eudora Nicknames", PR_TRUE))
+	if (!fName.CompareWithConversion( "Eudora Nicknames", PR_TRUE))
 		return( PR_FALSE);
 	return( PR_TRUE);
 }
