@@ -22,18 +22,18 @@ dnl    the 'myconfig.m4' file.
 dnl Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
 
-dnl AM_ARG_ENABLE_BOOL(           NAME, HELP, IF-YES [, IF-NO [, ELSE]])
-dnl AM_ARG_DISABLE_BOOL(          NAME, HELP, IF-NO [, IF-YES [, ELSE]])
-dnl AM_ARG_ENABLE_STRING(         NAME, HELP, IF-SET [, ELSE])
-dnl AM_ARG_ENABLE_BOOL_OR_STRING( NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
-dnl AM_ARG_WITH_BOOL(             NAME, HELP, IF-YES [, IF-NO [, ELSE])
-dnl AM_ARG_WITHOUT_BOOL(          NAME, HELP, IF-NO [, IF-YES [, ELSE])
-dnl AM_ARG_WITH_STRING(           NAME, HELP, IF-SET [, ELSE])
-dnl AM_READ_MYCONFIG() - Read in 'myconfig.sh' file
+dnl MOZ_ARG_ENABLE_BOOL(           NAME, HELP, IF-YES [, IF-NO [, ELSE]])
+dnl MOZ_ARG_DISABLE_BOOL(          NAME, HELP, IF-NO [, IF-YES [, ELSE]])
+dnl MOZ_ARG_ENABLE_STRING(         NAME, HELP, IF-SET [, ELSE])
+dnl MOZ_ARG_ENABLE_BOOL_OR_STRING( NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
+dnl MOZ_ARG_WITH_BOOL(             NAME, HELP, IF-YES [, IF-NO [, ELSE])
+dnl MOZ_ARG_WITHOUT_BOOL(          NAME, HELP, IF-NO [, IF-YES [, ELSE])
+dnl MOZ_ARG_WITH_STRING(           NAME, HELP, IF-SET [, ELSE])
+dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 
 
-dnl AM_TWO_STRING_TEST(NAME, STR1, IF-STR1, STR2, IF-STR2 [, ELSE])
-AC_DEFUN(AM_TWO_STRING_TEST,
+dnl MOZ_TWO_STRING_TEST(NAME, STR1, IF-STR1, STR2, IF-STR2 [, ELSE])
+AC_DEFUN(MOZ_TWO_STRING_TEST,
 [if test "$enableval" = "[$2]"; then
     ifelse([$3], , :, [$3])
   elif test "$enableval" = "[$4]"; then
@@ -44,52 +44,52 @@ AC_DEFUN(AM_TWO_STRING_TEST,
       [$6])
   fi])
 
-dnl AM_ARG_ENABLE_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE]])
-AC_DEFUN(AM_ARG_ENABLE_BOOL,
+dnl MOZ_ARG_ENABLE_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE]])
+AC_DEFUN(MOZ_ARG_ENABLE_BOOL,
 [AC_ARG_ENABLE([$1], [$2], 
- [AM_TWO_STRING_TEST([$1], yes, [$3], no, [$4])],
+ [MOZ_TWO_STRING_TEST([$1], yes, [$3], no, [$4])],
  [$5])])
 
-dnl AM_ARG_DISABLE_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE]])
-AC_DEFUN(AM_ARG_DISABLE_BOOL,
+dnl MOZ_ARG_DISABLE_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE]])
+AC_DEFUN(MOZ_ARG_DISABLE_BOOL,
 [AC_ARG_ENABLE([$1], [$2],
- [AM_TWO_STRING_TEST([$1], no, [$3], yes, [$4])],
+ [MOZ_TWO_STRING_TEST([$1], no, [$3], yes, [$4])],
  [$5])])
 
-dnl AM_ARG_ENABLE_STRING(NAME, HELP, IF-SET [, ELSE])
-AC_DEFUN(AM_ARG_ENABLE_STRING,
+dnl MOZ_ARG_ENABLE_STRING(NAME, HELP, IF-SET [, ELSE])
+AC_DEFUN(MOZ_ARG_ENABLE_STRING,
 [AC_ARG_ENABLE([$1], [$2], [$3], [$4])])
 
-dnl AM_ARG_ENABLE_BOOL_OR_STRING(NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
-AC_DEFUN(AM_ARG_ENABLE_BOOL_OR_STRING,
+dnl MOZ_ARG_ENABLE_BOOL_OR_STRING(NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
+AC_DEFUN(MOZ_ARG_ENABLE_BOOL_OR_STRING,
 [ifelse([$5], , 
  [errprint([Option, $1, needs an "IF-SET" argument.
 ])
   m4exit(1)],
  [AC_ARG_ENABLE([$1], [$2],
-  [AM_TWO_STRING_TEST([$1], yes, [$3], no, [$4], [$5])],
+  [MOZ_TWO_STRING_TEST([$1], yes, [$3], no, [$4], [$5])],
   [$6])])])
 
-dnl AM_ARG_WITH_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE])
-AC_DEFUN(AM_ARG_WITH_BOOL,
+dnl MOZ_ARG_WITH_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE])
+AC_DEFUN(MOZ_ARG_WITH_BOOL,
 [AC_ARG_WITH([$1], [$2],
- [AM_TWO_STRING_TEST([$1], yes, [$3], no, [$4])],
+ [MOZ_TWO_STRING_TEST([$1], yes, [$3], no, [$4])],
  [$5])])
 
-dnl AM_ARG_WITHOUT_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE])
-AC_DEFUN(AM_ARG_WITHOUT_BOOL,
+dnl MOZ_ARG_WITHOUT_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE])
+AC_DEFUN(MOZ_ARG_WITHOUT_BOOL,
 [AC_ARG_WITH([$1], [$2],
- [AM_TWO_STRING_TEST([$1], no, [$3], yes, [$4])],
+ [MOZ_TWO_STRING_TEST([$1], no, [$3], yes, [$4])],
  [$5])])
 
-dnl AM_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])
-AC_DEFUN(AM_ARG_WITH_STRING,
+dnl MOZ_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])
+AC_DEFUN(MOZ_ARG_WITH_STRING,
 [AC_ARG_WITH([$1], [$2], [$3], [$4])])
 
 
 
-dnl AM_READ_MYCONFIG() - Read in 'myconfig.sh' file
-AC_DEFUN(AM_READ_MYCONFIG,
+dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
+AC_DEFUN(MOZ_READ_MYCONFIG,
 [AC_REQUIRE([AC_INIT_BINSH])dnl
 # Read in 'myconfig.sh' script to set the initial options.
 # See the load-myconfig.sh script for more details.
@@ -106,4 +106,4 @@ elif test -f $_topsrcdir/myconfig.sh; then
 fi])
 
 dnl This gets inserted at the top of the configure script
-AM_READ_MYCONFIG
+MOZ_READ_MYCONFIG
