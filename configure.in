@@ -348,11 +348,15 @@ dnl Test for a.out platform and handle C++ libraries correctly
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(DSO_LDOPTS)'
-    if test ! "$GNU_CC"; then
+    dnl I think this will probably break builds using both gcc and GNU ld.
+    MKSHLIB_FORCE_ALL='-Wl,-all'
+    MKSHLIB_UNFORCE_ALL='-Wl,-none'
+    if test "$GNU_CC"; then
+       _WARNINGS_CFLAGS="-Wall"
+       _WARNINGS_CXXFLAGS="-Wall"
+    else
        CFLAGS="$CFLAGS -woff 3262"
        CXXFLAGS="$CXXFLAGS -woff 3262"
-       MKSHLIB_FORCE_ALL='-all'
-       MKSHLIB_UNFORCE_ALL=
     fi
     ;;
 
