@@ -2633,118 +2633,118 @@ nsMsgDatabase::EnumerateReadMessages(nsISimpleEnumerator* *result)
 
 NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
 {
-	nsresult	err = NS_OK;
-	nsIMdbRow		*hdrRow;
-	struct mdbOid allMsgHdrsTableOID;
-
-	if (!pnewHdr || !m_mdbAllMsgHeadersTable || !m_mdbStore)
-		return NS_ERROR_NULL_POINTER;
-
-	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
-	allMsgHdrsTableOID.mOid_Id = key;	// presumes 0 is valid key value
-
-	err = m_mdbStore->GetRow(GetEnv(), &allMsgHdrsTableOID, &hdrRow);
-	if (!hdrRow)	
-		err  = m_mdbStore->NewRowWithOid(GetEnv(), &allMsgHdrsTableOID, &hdrRow);
-
-	if (NS_FAILED(err)) 
-		return err;
-    err = CreateMsgHdr(hdrRow, key, pnewHdr);
-	return err;
+  nsresult	err = NS_OK;
+  nsIMdbRow		*hdrRow;
+  struct mdbOid allMsgHdrsTableOID;
+  
+  if (!pnewHdr || !m_mdbAllMsgHeadersTable || !m_mdbStore)
+    return NS_ERROR_NULL_POINTER;
+  
+  allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
+  allMsgHdrsTableOID.mOid_Id = key;	// presumes 0 is valid key value
+  
+  err = m_mdbStore->GetRow(GetEnv(), &allMsgHdrsTableOID, &hdrRow);
+  if (!hdrRow)	
+    err  = m_mdbStore->NewRowWithOid(GetEnv(), &allMsgHdrsTableOID, &hdrRow);
+  
+  if (NS_FAILED(err)) 
+    return err;
+  err = CreateMsgHdr(hdrRow, key, pnewHdr);
+  return err;
 }
 
 NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 {
-    nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, newHdr);          // closed system, cast ok
-	PRBool newThread;
-
-	nsresult err = ThreadNewHdr(hdr, newThread);
-	// we thread header before we add it to the all headers table
-	// so that subject threading will work (otherwise, when we try
-	// to find the first header with the same subject, we get the
-	// new header!
-	if (NS_SUCCEEDED(err))
-	{
-		nsMsgKey key;
-		PRUint32 flags;
-
-		newHdr->GetMessageKey(&key);
-		hdr->GetRawFlags(&flags);
+  nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, newHdr);          // closed system, cast ok
+  PRBool newThread;
+  
+  nsresult err = ThreadNewHdr(hdr, newThread);
+  // we thread header before we add it to the all headers table
+  // so that subject threading will work (otherwise, when we try
+  // to find the first header with the same subject, we get the
+  // new header!
+  if (NS_SUCCEEDED(err))
+  {
+    nsMsgKey key;
+    PRUint32 flags;
+    
+    newHdr->GetMessageKey(&key);
+    hdr->GetRawFlags(&flags);
     // use raw flags instead of GetFlags, because GetFlags will
     // pay attention to what's in m_newSet, and this new hdr isn't
     // in m_newSet yet.
-		if (flags & MSG_FLAG_NEW)
-		{
-			PRUint32 newFlags;
-			newHdr->AndFlags(~MSG_FLAG_NEW, &newFlags);	// make sure not filed out
-			AddToNewList(key);
-		}
-		if (m_dbFolderInfo != NULL)
-		{
-			m_dbFolderInfo->ChangeNumMessages(1);
-			m_dbFolderInfo->ChangeNumVisibleMessages(1);
-            PRBool isRead = PR_TRUE;
-            IsHeaderRead(newHdr, &isRead);
-			if (!isRead) 
-				m_dbFolderInfo->ChangeNumNewMessages(1);
+    if (flags & MSG_FLAG_NEW)
+    {
+      PRUint32 newFlags;
+      newHdr->AndFlags(~MSG_FLAG_NEW, &newFlags);	// make sure not filed out
+      AddToNewList(key);
+    }
+    if (m_dbFolderInfo != NULL)
+    {
+      m_dbFolderInfo->ChangeNumMessages(1);
+      m_dbFolderInfo->ChangeNumVisibleMessages(1);
+      PRBool isRead = PR_TRUE;
+      IsHeaderRead(newHdr, &isRead);
+      if (!isRead) 
+        m_dbFolderInfo->ChangeNumNewMessages(1);
       m_dbFolderInfo->SetHighWater(key, PR_FALSE);
-		}
-
-		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdr->GetMDBRow());
-		if (notify)
-		{
-			nsMsgKey threadParent;
-
-			newHdr->GetThreadParent(&threadParent);
-			NotifyKeyAddedAll(key, threadParent, flags, NULL);
-		}
-	}
-	NS_ASSERTION(NS_SUCCEEDED(err), "error creating thread");
-	return err;
+    }
+    
+    err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdr->GetMDBRow());
+    if (notify)
+    {
+      nsMsgKey threadParent;
+      
+      newHdr->GetThreadParent(&threadParent);
+      NotifyKeyAddedAll(key, threadParent, flags, NULL);
+    }
+  }
+  NS_ASSERTION(NS_SUCCEEDED(err), "error creating thread");
+  return err;
 }
 
 NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, PRBool addHdrToDB, nsIMsgDBHdr **newHdr)
 {
-	nsresult	err = NS_OK;
-
-	if (existingHdr)
-	{
+  nsresult	err = NS_OK;
+  
+  if (existingHdr)
+  {
     if (key == nsMsgKey_None)
       return NS_MSG_MESSAGE_NOT_FOUND;
-
-	  nsMsgHdr* sourceMsgHdr = NS_STATIC_CAST(nsMsgHdr*, existingHdr);      // closed system, cast ok
-		nsMsgHdr *destMsgHdr = nsnull;
-		CreateNewHdr(key, (nsIMsgDBHdr **) &destMsgHdr);
+    
+    nsMsgHdr* sourceMsgHdr = NS_STATIC_CAST(nsMsgHdr*, existingHdr);      // closed system, cast ok
+    nsMsgHdr *destMsgHdr = nsnull;
+    CreateNewHdr(key, (nsIMsgDBHdr **) &destMsgHdr);
     if (!destMsgHdr)
       return NS_MSG_MESSAGE_NOT_FOUND;
-
-		nsIMdbRow	*sourceRow = sourceMsgHdr->GetMDBRow() ;
-		nsIMdbRow	*destRow = destMsgHdr->GetMDBRow();
-		err = destRow->SetRow(GetEnv(), sourceRow);
-		if (NS_SUCCEEDED(err))
-		{
-			if(addHdrToDB)
-			    err = AddNewHdrToDB(destMsgHdr, PR_TRUE);
-			if (NS_SUCCEEDED(err) && newHdr)
-				*newHdr = destMsgHdr;
-		}
-
-	}
-	return err;
+    
+    nsIMdbRow	*sourceRow = sourceMsgHdr->GetMDBRow() ;
+    nsIMdbRow	*destRow = destMsgHdr->GetMDBRow();
+    err = destRow->SetRow(GetEnv(), sourceRow);
+    if (NS_SUCCEEDED(err))
+    {
+      if(addHdrToDB)
+        err = AddNewHdrToDB(destMsgHdr, PR_TRUE);
+      if (NS_SUCCEEDED(err) && newHdr)
+        *newHdr = destMsgHdr;
+    }
+    
+  }
+  return err;
 }
 
 nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token columnToken, nsString &resultStr)
 {
-	nsresult	err = NS_OK;
-
-	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
-	{
-		struct mdbYarn yarn;
-		err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
-		if (err == NS_OK)
-			YarnTonsString(&yarn, &resultStr);
-	}
-	return err;
+  nsresult	err = NS_OK;
+  
+  if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
+  {
+    struct mdbYarn yarn;
+    err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
+    if (err == NS_OK)
+      YarnTonsString(&yarn, &resultStr);
+  }
+  return err;
 }
 
 // as long as the row still exists, and isn't changed, the returned const char ** will be valid.
@@ -2765,128 +2765,128 @@ nsresult nsMsgDatabase::RowCellColumnToConstCharPtr(nsIMdbRow *hdrRow, mdb_token
 
 nsIMimeConverter *nsMsgDatabase::GetMimeConverter()
 {
-	if (!m_mimeConverter)
-	{
-		// apply mime decode
-		nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                          NS_GET_IID(nsIMimeConverter), getter_AddRefs(m_mimeConverter));
-	}
+  if (!m_mimeConverter)
+  {
+    // apply mime decode
+    nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+      NS_GET_IID(nsIMimeConverter), getter_AddRefs(m_mimeConverter));
+  }
   return m_mimeConverter;
 }
 
 nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar* *resultStr)
 {
-    nsresult err = NS_OK;
-    const char *nakedString = nsnull;
-    err = RowCellColumnToConstCharPtr(row, columnToken, &nakedString);
-    if (NS_SUCCEEDED(err) && nakedString && nsCRT::strlen(nakedString))
+  nsresult err = NS_OK;
+  const char *nakedString = nsnull;
+  err = RowCellColumnToConstCharPtr(row, columnToken, &nakedString);
+  if (NS_SUCCEEDED(err) && nakedString && nsCRT::strlen(nakedString))
+  {
+    GetMimeConverter();
+    if (m_mimeConverter) 
     {
-        GetMimeConverter();
-        if (m_mimeConverter) 
-        {
-            nsAutoString decodedStr;
-            const char *charSet;
-            PRBool characterSetOverride;
-            m_dbFolderInfo->GetConstCharPtrCharacterSet(&charSet);
-            m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
-
-            err = m_mimeConverter->DecodeMimeHeader(nakedString, resultStr, charSet, characterSetOverride);
-        }
+      nsAutoString decodedStr;
+      const char *charSet;
+      PRBool characterSetOverride;
+      m_dbFolderInfo->GetConstCharPtrCharacterSet(&charSet);
+      m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
+      
+      err = m_mimeConverter->DecodeMimeHeader(nakedString, resultStr, charSet, characterSetOverride);
     }
-    return err;
+  }
+  return err;
 }
 
 nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_token colToken, PRUint8 **result, PRUint32 *len)
 {
-    const char *cSender;
-    nsXPIDLCString name;
-
-    nsresult ret = RowCellColumnToConstCharPtr(row, colToken, &cSender);
-    if (NS_SUCCEEDED(ret))
+  const char *cSender;
+  nsXPIDLCString name;
+  
+  nsresult ret = RowCellColumnToConstCharPtr(row, colToken, &cSender);
+  if (NS_SUCCEEDED(ret))
+  {
+    nsIMsgHeaderParser *headerParser = GetHeaderParser();
+    if (headerParser)
     {
-        nsIMsgHeaderParser *headerParser = GetHeaderParser();
-        if (headerParser)
+      // apply mime decode
+      nsIMimeConverter *converter = GetMimeConverter();
+      
+      if (NS_SUCCEEDED(ret) && nsnull != converter) 
+      {
+        char *resultStr = nsnull;
+        char *charset;
+        PRBool characterSetOverride;
+        m_dbFolderInfo->GetCharPtrCharacterSet(&charset);
+        m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
+        
+        ret = converter->DecodeMimeHeader(cSender, &resultStr,
+          charset, characterSetOverride);
+        if (NS_SUCCEEDED(ret) && resultStr)
         {
-            // apply mime decode
-            nsIMimeConverter *converter = GetMimeConverter();
-
-            if (NS_SUCCEEDED(ret) && nsnull != converter) 
-            {
-                char *resultStr = nsnull;
-                char *charset;
-                PRBool characterSetOverride;
-                m_dbFolderInfo->GetCharPtrCharacterSet(&charset);
-                m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
-
-                ret = converter->DecodeMimeHeader(cSender, &resultStr,
-                                                  charset, characterSetOverride);
-                if (NS_SUCCEEDED(ret) && resultStr)
-                {
-                    ret = headerParser->ExtractHeaderAddressName ("UTF-8", resultStr, getter_Copies(name));
-                }
-                else {
-                  ret = headerParser->ExtractHeaderAddressName ("UTF-8", cSender, getter_Copies(name));
-                }
-                PR_FREEIF(resultStr);
-                PR_FREEIF(charset);
-            }
-
+          ret = headerParser->ExtractHeaderAddressName ("UTF-8", resultStr, getter_Copies(name));
         }
+        else {
+          ret = headerParser->ExtractHeaderAddressName ("UTF-8", cSender, getter_Copies(name));
+        }
+        PR_FREEIF(resultStr);
+        PR_FREEIF(charset);
+      }
+      
     }
-    if (NS_SUCCEEDED(ret))
-    {
-        ret = CreateCollationKey(NS_ConvertUTF8toUCS2(name).get(), result, len);
-    }
-
-    return ret;
+  }
+  if (NS_SUCCEEDED(ret))
+  {
+    ret = CreateCollationKey(NS_ConvertUTF8toUCS2(name).get(), result, len);
+  }
+  
+  return ret;
 }
 
 nsresult nsMsgDatabase::GetCollationKeyGenerator()
 {
-	nsresult err = NS_OK;
-	if (!m_collationKeyGenerator)
-	{
-		nsCOMPtr <nsILocale> locale; 
-		nsString localeName; 
-
-		// get a locale service 
-		nsCOMPtr <nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &err);
-		if (NS_SUCCEEDED(err))
-		{
-			// do this for a new db if no UI to be provided for locale selection 
-			err = localeService->GetApplicationLocale(getter_AddRefs(locale)); 
-
-			if (locale)
-			{
-				// or generate a locale from a stored locale name ("en_US", "fr_FR") 
-				//err = localeFactory->NewLocale(&localeName, &locale); 
-
-				nsCOMPtr <nsICollationFactory> f;
-
-				err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-										  NS_GET_IID(nsICollationFactory), getter_AddRefs(f)); 
-				if (NS_SUCCEEDED(err) && f)
-				{
-					// get a collation interface instance 
-					err = f->CreateCollation(locale, getter_AddRefs(m_collationKeyGenerator));
-
-				}
-			}
-		}
-	}
-	return err;
+  nsresult err = NS_OK;
+  if (!m_collationKeyGenerator)
+  {
+    nsCOMPtr <nsILocale> locale; 
+    nsString localeName; 
+    
+    // get a locale service 
+    nsCOMPtr <nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &err);
+    if (NS_SUCCEEDED(err))
+    {
+      // do this for a new db if no UI to be provided for locale selection 
+      err = localeService->GetApplicationLocale(getter_AddRefs(locale)); 
+      
+      if (locale)
+      {
+        // or generate a locale from a stored locale name ("en_US", "fr_FR") 
+        //err = localeFactory->NewLocale(&localeName, &locale); 
+        
+        nsCOMPtr <nsICollationFactory> f;
+        
+        err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
+          NS_GET_IID(nsICollationFactory), getter_AddRefs(f)); 
+        if (NS_SUCCEEDED(err) && f)
+        {
+          // get a collation interface instance 
+          err = f->CreateCollation(locale, getter_AddRefs(m_collationKeyGenerator));
+          
+        }
+      }
+    }
+  }
+  return err;
 }
 
 nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUint8 **result, PRUint32 *len)
 {
   nsXPIDLString nakedString;
-	nsresult err;
-
-	err = RowCellColumnToMime2DecodedString(row, columnToken, getter_Copies(nakedString));
-	if (NS_SUCCEEDED(err))
-		err = CreateCollationKey((const PRUnichar *)nakedString, result, len);
-
-	return err;
+  nsresult err;
+  
+  err = RowCellColumnToMime2DecodedString(row, columnToken, getter_Copies(nakedString));
+  if (NS_SUCCEEDED(err))
+    err = CreateCollationKey((const PRUnichar *)nakedString, result, len);
+  
+  return err;
 }
 
 NS_IMETHODIMP 
@@ -2922,58 +2922,64 @@ nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUint8 **resul
 
 nsIMsgHeaderParser *nsMsgDatabase::GetHeaderParser()
 {
-	if (!m_HeaderParser)
-	{
+  if (!m_HeaderParser)
+  {
     nsCOMPtr <nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
     NS_IF_ADDREF(m_HeaderParser = parser);
-	}
-	return m_HeaderParser;
+  }
+  return m_HeaderParser;
 }
 
 
 nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue)
 {
-	return RowCellColumnToUInt32(hdrRow, columnToken, &uint32Result, defaultValue);
+  return RowCellColumnToUInt32(hdrRow, columnToken, &uint32Result, defaultValue);
 }
 
 nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue)
 {
-	nsresult	err = NS_OK;
-
-	if (uint32Result)
-		*uint32Result = defaultValue;
-	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
-	{
-		struct mdbYarn yarn;
-		err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
-		if (err == NS_OK)
-			YarnToUInt32(&yarn, uint32Result);
-	}
-	return err;
+  nsresult	err = NS_OK;
+  
+  if (uint32Result)
+    *uint32Result = defaultValue;
+  if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
+  {
+    struct mdbYarn yarn;
+    err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
+    if (err == NS_OK)
+      YarnToUInt32(&yarn, uint32Result);
+  }
+  return err;
 }
 
 nsresult nsMsgDatabase::UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value)
 {
-	struct mdbYarn yarn;
-	char	yarnBuf[100];
+  struct mdbYarn yarn;
+  char	yarnBuf[100];
+  
+  if (!row)
+    return NS_ERROR_NULL_POINTER;
 
-	yarn.mYarn_Buf = (void *) yarnBuf;
-	yarn.mYarn_Size = sizeof(yarnBuf);
-	yarn.mYarn_Fill = yarn.mYarn_Size;
-	yarn.mYarn_Form = 0;
-	yarn.mYarn_Grow = NULL;
-	return row->AddColumn(GetEnv(),  columnToken, UInt32ToYarn(&yarn, value));
+  yarn.mYarn_Buf = (void *) yarnBuf;
+  yarn.mYarn_Size = sizeof(yarnBuf);
+  yarn.mYarn_Fill = yarn.mYarn_Size;
+  yarn.mYarn_Form = 0;
+  yarn.mYarn_Grow = NULL;
+  return row->AddColumn(GetEnv(),  columnToken, UInt32ToYarn(&yarn, value));
 }
 
 nsresult nsMsgDatabase::CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr)
 {
-	struct mdbYarn yarn;
-	yarn.mYarn_Buf = (void *) charPtr;
-	yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
-	yarn.mYarn_Fill = yarn.mYarn_Size - 1;
-	yarn.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
+  if (!row)
+    return NS_ERROR_NULL_POINTER;
 
-	return row->AddColumn(GetEnv(),  columnToken, &yarn);
+  struct mdbYarn yarn;
+  yarn.mYarn_Buf = (void *) charPtr;
+  yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
+  yarn.mYarn_Fill = yarn.mYarn_Size - 1;
+  yarn.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
+  
+  return row->AddColumn(GetEnv(),  columnToken, &yarn);
 }
 
 // caller must PR_FREEIF result
@@ -3009,28 +3015,28 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 
 /* static */struct mdbYarn *nsMsgDatabase::nsStringToYarn(struct mdbYarn *yarn, nsString *str)
 {
-	yarn->mYarn_Buf = ToNewCString(*str);
-	yarn->mYarn_Size = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
-	yarn->mYarn_Fill = yarn->mYarn_Size - 1;
-	yarn->mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
-	return yarn;
+  yarn->mYarn_Buf = ToNewCString(*str);
+  yarn->mYarn_Size = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
+  yarn->mYarn_Fill = yarn->mYarn_Size - 1;
+  yarn->mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
+  return yarn;
 }
 
 /* static */struct mdbYarn *nsMsgDatabase::UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i)
 {
-	PR_snprintf((char *) yarn->mYarn_Buf, yarn->mYarn_Size, "%lx", i);
-	yarn->mYarn_Fill = PL_strlen((const char *) yarn->mYarn_Buf);
-	yarn->mYarn_Form = 0;	// what to do with this? Should be parsed out of the mime2 header?
-	return yarn;
+  PR_snprintf((char *) yarn->mYarn_Buf, yarn->mYarn_Size, "%lx", i);
+  yarn->mYarn_Fill = PL_strlen((const char *) yarn->mYarn_Buf);
+  yarn->mYarn_Form = 0;	// what to do with this? Should be parsed out of the mime2 header?
+  return yarn;
 }
 
 /* static */void nsMsgDatabase::YarnTonsString(struct mdbYarn *yarn, nsString *str)
 {
-    const char* buf = (const char*)yarn->mYarn_Buf;
-    if (buf)
-        str->AssignWithConversion(buf, yarn->mYarn_Fill);
-    else
-        str->Truncate();
+  const char* buf = (const char*)yarn->mYarn_Buf;
+  if (buf)
+    str->AssignWithConversion(buf, yarn->mYarn_Fill);
+  else
+    str->Truncate();
 }
 
 /* static */void nsMsgDatabase::YarnTonsCString(struct mdbYarn *yarn, nsCString *str)
@@ -3046,146 +3052,149 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 // this is so we can leave default values as they were.
 /* static */void nsMsgDatabase::YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult)
 {
-	PRUint32 result;
-	char *p = (char *) yarn->mYarn_Buf;
-	PRInt32 numChars = PR_MIN(8, yarn->mYarn_Fill);
-	PRInt32 i;
- 
+  PRUint32 result;
+  char *p = (char *) yarn->mYarn_Buf;
+  PRInt32 numChars = PR_MIN(8, yarn->mYarn_Fill);
+  PRInt32 i;
+  
   if (numChars > 0)
   {
-	  for (i=0, result = 0; i<numChars; i++, p++)
-	  {
-		  char C = *p;
-
-		  PRInt8 unhex = ((C >= '0' && C <= '9') ? C - '0' :
-			  ((C >= 'A' && C <= 'F') ? C - 'A' + 10 :
+    for (i=0, result = 0; i<numChars; i++, p++)
+    {
+      char C = *p;
+      
+      PRInt8 unhex = ((C >= '0' && C <= '9') ? C - '0' :
+      ((C >= 'A' && C <= 'F') ? C - 'A' + 10 :
 			   ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : -1)));
-		  if (unhex < 0)
-			  break;
-		  result = (result << 4) | unhex;
-	  }
+                           if (unhex < 0)
+                             break;
+                           result = (result << 4) | unhex;
+    }
     
-	  *pResult = result;
+    *pResult = result;
   }
 }
 
 /* static */void nsMsgDatabase::PRTime2Seconds(PRTime prTime, PRUint32 *seconds)
 {
-	PRInt64 microSecondsPerSecond, intermediateResult;
-	
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-	LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
-    LL_L2UI((*seconds), intermediateResult);
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+  LL_L2UI((*seconds), intermediateResult);
 }
 
 /* static */void nsMsgDatabase::Seconds2PRTime(PRUint32 seconds, PRTime *prTime)
 {
-	PRInt64 microSecondsPerSecond, intermediateResult;
-	
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-    LL_UI2L(intermediateResult, seconds);
-	LL_MUL((*prTime), intermediateResult, microSecondsPerSecond);
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_UI2L(intermediateResult, seconds);
+  LL_MUL((*prTime), intermediateResult, microSecondsPerSecond);
 }
 
 
 nsresult nsMsgDatabase::GetProperty(nsIMdbRow *row, const char *propertyName, char **result)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-	if (m_mdbStore)
-		err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
-	else
-		err = NS_ERROR_NULL_POINTER;
-	if (err == NS_OK)
-		err = RowCellColumnToCharPtr(row, property_token, result);
-
-	return err;
+  nsresult err = NS_OK;
+  mdb_token	property_token;
+  
+  if (m_mdbStore)
+    err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+  else
+    err = NS_ERROR_NULL_POINTER;
+  if (err == NS_OK)
+    err = RowCellColumnToCharPtr(row, property_token, result);
+  
+  return err;
 }
 
 nsresult nsMsgDatabase::SetProperty(nsIMdbRow *row, const char *propertyName, const char *propertyVal)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-	err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
+  nsresult err = NS_OK;
+  mdb_token	property_token;
+  
+  err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+  if (err == NS_OK)
     CharPtrToRowCellColumn(row, property_token, propertyVal);
-	return err;
+  return err;
 }
 
 nsresult nsMsgDatabase::GetPropertyAsNSString(nsIMdbRow *row, const char *propertyName, nsString *result)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
+  nsresult err = NS_OK;
+  mdb_token	property_token;
+  
   NS_ENSURE_ARG(result);
-	err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-		err = RowCellColumnTonsString(row, property_token, *result);
-
-	return err;
+  err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+  if (err == NS_OK)
+    err = RowCellColumnTonsString(row, property_token, *result);
+  
+  return err;
 }
 
 nsresult nsMsgDatabase::SetPropertyFromNSString(nsIMdbRow *row, const char *propertyName, nsString *propertyVal)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-	err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-		return SetNSStringPropertyWithToken(row, property_token, propertyVal);
-
-	return err;
+  nsresult err = NS_OK;
+  mdb_token	property_token;
+  
+  err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+  if (err == NS_OK)
+    return SetNSStringPropertyWithToken(row, property_token, propertyVal);
+  
+  return err;
 }
 
 
 nsresult nsMsgDatabase::GetUint32Property(nsIMdbRow *row, const char *propertyName, PRUint32 *result, PRUint32 defaultValue)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-	err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-		err = RowCellColumnToUInt32(row, property_token, result, defaultValue);
-
-	return err;
+  nsresult err = NS_OK;
+  mdb_token	property_token;
+  
+  err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+  if (err == NS_OK)
+    err = RowCellColumnToUInt32(row, property_token, result, defaultValue);
+  
+  return err;
 }
 
 nsresult nsMsgDatabase::SetUint32Property(nsIMdbRow *row, const char *propertyName, PRUint32 propertyVal)
 {
-	struct mdbYarn yarn;
-	char	int32StrBuf[20];
-	yarn.mYarn_Buf = int32StrBuf;
-	yarn.mYarn_Size = sizeof(int32StrBuf);
-	yarn.mYarn_Fill = sizeof(int32StrBuf);
+  struct mdbYarn yarn;
+  char	int32StrBuf[20];
+  yarn.mYarn_Buf = int32StrBuf;
+  yarn.mYarn_Size = sizeof(int32StrBuf);
+  yarn.mYarn_Fill = sizeof(int32StrBuf);
 
-	mdb_token	property_token;
+  if (!row)
+    return NS_ERROR_NULL_POINTER;
 
-	nsresult err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-	{
-		UInt32ToYarn(&yarn, propertyVal);
-		err = row->AddColumn(GetEnv(), property_token, &yarn);
-	}
-	return err;
+  mdb_token	property_token;
+  
+  nsresult err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+  if (err == NS_OK)
+  {
+    UInt32ToYarn(&yarn, propertyVal);
+    err = row->AddColumn(GetEnv(), property_token, &yarn);
+  }
+  return err;
 }
 
 nsresult nsMsgDatabase::SetNSStringPropertyWithToken(nsIMdbRow *row, mdb_token aProperty, nsString *propertyStr)
 {
   NS_ENSURE_ARG(row);
-	struct mdbYarn yarn;
-
-	yarn.mYarn_Grow = NULL;
-	nsresult err = row->AddColumn(GetEnv(), aProperty, nsStringToYarn(&yarn, propertyStr));
-	nsMemory::Free((char *)yarn.mYarn_Buf);	// won't need this when we have nsCString
-	return err;
+  struct mdbYarn yarn;
+  
+  yarn.mYarn_Grow = NULL;
+  nsresult err = row->AddColumn(GetEnv(), aProperty, nsStringToYarn(&yarn, propertyStr));
+  nsMemory::Free((char *)yarn.mYarn_Buf);	// won't need this when we have nsCString
+  return err;
 }
 
 
 PRUint32 nsMsgDatabase::GetCurVersion()
 {
-	return kMsgDBVersion;
+  return kMsgDBVersion;
 }
 
 NS_IMETHODIMP nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
@@ -3211,66 +3220,66 @@ NS_IMETHODIMP	nsMsgDatabase::GetSummaryValid(PRBool *aResult)
 
 nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, const char *subject, nsMsgThread **pnewThread)
 {
-	nsresult	err = NS_OK;
-	nsIMdbTable		*threadTable;
-	struct mdbOid threadTableOID;
-	struct mdbOid allThreadsTableOID;
-
-	if (!pnewThread || !m_mdbStore)
-		return NS_ERROR_NULL_POINTER;
-
-	threadTableOID.mOid_Scope = m_hdrRowScopeToken;
-	threadTableOID.mOid_Id = threadId;
-
-	err  = GetStore()->NewTableWithOid(GetEnv(), &threadTableOID, m_threadTableKindToken, 
-                                     PR_FALSE, nsnull, &threadTable);
-	if (NS_FAILED(err)) 
-		return err;
-
-	allThreadsTableOID.mOid_Scope = m_threadRowScopeToken;
-	allThreadsTableOID.mOid_Id = threadId;	
-
-	// add a row for this thread in the table of all threads that we'll use
-	// to do our mapping between subject strings and threads.
-	nsIMdbRow *threadRow = nsnull;
-
-	err = m_mdbStore->GetRow(GetEnv(), &allThreadsTableOID, &threadRow);
-	if (!threadRow)	
-	{
-		err  = m_mdbStore->NewRowWithOid(GetEnv(), &allThreadsTableOID, &threadRow);
-		if (NS_SUCCEEDED(err) && threadRow)
-		{
-			err = CharPtrToRowCellColumn(threadRow, m_threadSubjectColumnToken, subject);
-			threadRow->Release();
-		}
-	}
-
-	*pnewThread = new nsMsgThread(this, threadTable);
-	if (*pnewThread)
-		(*pnewThread)->SetThreadKey(threadId);
-	return err;
+  nsresult	err = NS_OK;
+  nsIMdbTable		*threadTable;
+  struct mdbOid threadTableOID;
+  struct mdbOid allThreadsTableOID;
+  
+  if (!pnewThread || !m_mdbStore)
+    return NS_ERROR_NULL_POINTER;
+  
+  threadTableOID.mOid_Scope = m_hdrRowScopeToken;
+  threadTableOID.mOid_Id = threadId;
+  
+  err  = GetStore()->NewTableWithOid(GetEnv(), &threadTableOID, m_threadTableKindToken, 
+    PR_FALSE, nsnull, &threadTable);
+  if (NS_FAILED(err)) 
+    return err;
+  
+  allThreadsTableOID.mOid_Scope = m_threadRowScopeToken;
+  allThreadsTableOID.mOid_Id = threadId;	
+  
+  // add a row for this thread in the table of all threads that we'll use
+  // to do our mapping between subject strings and threads.
+  nsIMdbRow *threadRow = nsnull;
+  
+  err = m_mdbStore->GetRow(GetEnv(), &allThreadsTableOID, &threadRow);
+  if (!threadRow)	
+  {
+    err  = m_mdbStore->NewRowWithOid(GetEnv(), &allThreadsTableOID, &threadRow);
+    if (NS_SUCCEEDED(err) && threadRow)
+    {
+      err = CharPtrToRowCellColumn(threadRow, m_threadSubjectColumnToken, subject);
+      threadRow->Release();
+    }
+  }
+  
+  *pnewThread = new nsMsgThread(this, threadTable);
+  if (*pnewThread)
+    (*pnewThread)->SetThreadKey(threadId);
+  return err;
 }
 
 
 nsIMsgThread *nsMsgDatabase::GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr)
 {
-	nsIMsgDBHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
-	nsIMsgThread *thread = NULL;
-
-	if (msgHdr != NULL)
-	{
-		nsMsgKey threadId;
-		if (NS_SUCCEEDED(msgHdr->GetThreadId(&threadId)))
-		{
-			// find thread header for header whose message id we matched.
-			thread = GetThreadForThreadId(threadId);
-		}
-		if (pMsgHdr)
-			*pMsgHdr = msgHdr;
-		else
-			msgHdr->Release();
-	}
-	return thread;
+  nsIMsgDBHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
+  nsIMsgThread *thread = NULL;
+  
+  if (msgHdr != NULL)
+  {
+    nsMsgKey threadId;
+    if (NS_SUCCEEDED(msgHdr->GetThreadId(&threadId)))
+    {
+      // find thread header for header whose message id we matched.
+      thread = GetThreadForThreadId(threadId);
+    }
+    if (pMsgHdr)
+      *pMsgHdr = msgHdr;
+    else
+      msgHdr->Release();
+  }
+  return thread;
 }
 
 nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
