@@ -329,11 +329,7 @@ remoteStoreGetSlotValue (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType
     if ((nextAs->db == mcf) && (nextAs->s == s) && (nextAs->tv == tv) && (nextAs->type == type)) {
       void* ans = (inversep ? nextAs->u : nextAs->value);
       if (type == RDF_STRING_TYPE) {
-#ifdef DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
 	return copyString((char*)ans); 
-#else
-	return ans;
-#endif
       } else return ans;
     }
     nextAs = (inversep ? nextAs->invNext : nextAs->next);

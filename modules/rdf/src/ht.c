@@ -1310,14 +1310,6 @@ HT_NewView (RDF_Resource topNode, HT_Pane pane, PRBool useColumns, void *feData,
 				column->name = (char *) RDF_GetSlotValue(pane->db, r,
 								gCoreVocab->RDF_name,
 								RDF_STRING_TYPE, false, true);
-#ifndef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
-
-				if (column->name != NULL)
-				{
-					column->name = copyString(column->name);
-				}
-#endif
-
 				*columnList = column;
 				columnList = &(column->next);
 			}	
@@ -1517,7 +1509,6 @@ deleteHTNode(HT_Resource node)
 	}
 	node->values = NULL;
 
-#ifdef DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
 	if (node->flags & HT_FREEICON_URL_FLAG)
 	{
 		if (node->url[0] != NULL)
@@ -1531,7 +1522,6 @@ deleteHTNode(HT_Resource node)
 			node->url[1] = NULL;
 		}
 	}
-#endif
 
 	if ((!node->view->refreshingItemListp) && (node->view->itemList != NULL))
 	{
@@ -2141,14 +2131,6 @@ advertURLOfContainer (RDF r, RDF_Resource u)
 
 	url = RDF_GetSlotValue(r, u,  gNavCenter->RDF_HTMLURL,
 				RDF_STRING_TYPE, 0, 1);
-
-#ifndef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
-	if (url != NULL)
-	{
-		url = copyString(url);
-	}
-#endif
-
 	return(url);
 }
 
@@ -3164,13 +3146,6 @@ HT_NextContextMenuItem (HT_Cursor cursor, HT_MenuCmd *menuCmd)
 							(*menuList)->graphCommand = graphCommand;
 							(*menuList)->name = RDF_GetSlotValue(gNCDB, graphCommand,
 									gCoreVocab->RDF_name, RDF_STRING_TYPE, false, true);
-#ifndef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
-
-							if ((*menuList)->name != NULL)
-							{
-								(*menuList)->name = copyString((*menuList)->name);
-							}
-#endif
 						}
 					}
 				}
@@ -4239,14 +4214,6 @@ HT_GetNodeData (HT_Resource node, void *token, uint32 tokenType, void **nodeData
 				data = RDF_GetSlotValue(node->view->pane->db, node->node,
 						token, RDF_STRING_TYPE, false, true);
 			}
-
-#ifndef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
-			if (data != NULL)
-			{
-				data = copyString(data);
-			}
-#endif
-
 			if (data != NULL)
 			{
 				foundData = true;
@@ -4308,8 +4275,6 @@ HT_SetNodeData (HT_Resource node, void *token, uint32 tokenType, void *data)
 					if (token == gNavCenter->RDF_smallIcon ||
 					    token == gNavCenter->RDF_largeIcon)
 					{
-
-#ifdef DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
 						if (node->flags & HT_FREEICON_URL_FLAG)
 						{
 							if (node->url[0] != NULL)
@@ -4323,11 +4288,6 @@ HT_SetNodeData (HT_Resource node, void *token, uint32 tokenType, void *data)
 								node->url[1] = NULL;
 							}
 						}
-#else
-						node->url[0] = NULL;
-						node->url[1] = NULL;
-#endif
-
 					}
 				}
 				error = HT_NoErr;
@@ -4665,11 +4625,6 @@ getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFlag)
 		{
 			node->flags &= (~HT_VOLATILE_URL_FLAG);
 			node->flags |= HT_FREEICON_URL_FLAG;
-
-#ifndef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
-			node->url[iconIndex] = copyString(node->url[iconIndex]);
-#endif
-
 		}
 		else
 		{
@@ -5253,13 +5208,6 @@ constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType)
 	tokenName = (char *) RDF_GetSlotValue(gNCDB, token,
 					gCoreVocab->RDF_name,
 					RDF_STRING_TYPE, false, true);
-#ifndef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
-
-	if (tokenName != NULL)
-	{
-		tokenName = copyString(tokenName);
-	}
-#endif
 	if (tokenName == NULL)
 	{
 		tokenName = resourceID((RDF_Resource)token);
@@ -6478,10 +6426,7 @@ ht_SetPassword(HT_Resource node, char *newPassword)
 	{
 		RDF_Unassert(node->view->pane->db, node->node,
 			gNavCenter->RDF_Password, activePassword, RDF_STRING_TYPE);
-
-#ifdef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
 		freeMem(activePassword);
-#endif
 	}
 	if ((newPassword != NULL) && (((char *)newPassword)[0] != '\0'))
 	{
@@ -6509,10 +6454,7 @@ ht_hasPassword(HT_Resource node)
 		{
 			hasPasswordFlag = PR_TRUE;
 		}
-
-#ifdef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
 		freeMem(activePassword);
-#endif
 	}
 	return(hasPasswordFlag);
 }
@@ -6561,11 +6503,7 @@ ht_checkPassword(HT_Resource node, PRBool alwaysCheck)
 				}
 			}
 		}
-
-#ifdef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
 		freeMem(activePassword);
-#endif
-
 	}
 	return(granted);
 }
@@ -6915,10 +6853,7 @@ copyMoveRDFLink (HT_Resource dropTarget, HT_Resource dropObject)
 	if (name != NULL)
 	{
 		RDF_Assert(db, obj, gCoreVocab->RDF_name, name, RDF_STRING_TYPE);
-
-#ifdef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
 		freeMem(name);
-#endif
 	}
 
 	/* drag&drops between personal toolbar and bookmark view should be a move action */
@@ -6982,10 +6917,7 @@ copyMoveRDFLinkAtPos (HT_Resource dropx, HT_Resource dropObject, PRBool before)
 	if (name != NULL)
 	{
 		RDF_Assert(db, obj, gCoreVocab->RDF_name, copyString(name), RDF_STRING_TYPE);
-
-#ifdef	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom
 		freeMem(name);
-#endif
 	}
 
 	/* drag&drops between personal toolbar and bookmark view should be a move action */

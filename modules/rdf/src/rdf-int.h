@@ -21,10 +21,6 @@
 #ifndef	_RDF_RDF_INT_H
 #define	_RDF_RDF_INT_H
 
-/*
-#define	DEBUG_RDF_GetSlotValue_Memory_Needs_Freedom	1
-*/
-
 
 #define WINTEST 0
 #define DBMTEST 1 
