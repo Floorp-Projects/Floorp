@@ -231,6 +231,7 @@ nsListControlFrame::nsListControlFrame()
   mIsAllContentHere   = PR_FALSE;
   mIsAllFramesHere    = PR_FALSE;
   mHasBeenInitialized = PR_FALSE;
+  mDoneWithInitialReflow = PR_FALSE;
 
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;
@@ -2949,7 +2950,15 @@ nsListControlFrame::DidReflow(nsIPresContext* aPresContext,
     SyncViewWithFrame(aPresContext);
     return rv;
   } else {
-    return nsScrollFrame::DidReflow(aPresContext, aStatus);
+    nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
+    if (!mDoneWithInitialReflow && mSelectedIndex != kNothingSelected) {
+      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
+      if (content) {
+        ScrollToFrame(content);
+      }
+      mDoneWithInitialReflow = PR_TRUE;
+    }
+    return rv;
   }
 }
 
