@@ -31,3 +31,6 @@ DIRS		= unix
 
 include $(topsrcdir)/config/rules.mk
 
+# Install bloaturls.txt file for tinderbox Bloaty test.
+install:: $(srcdir)/bloaturls.txt
+	$(INSTALL) $< $(DIST)/bin
