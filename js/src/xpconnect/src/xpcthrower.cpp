@@ -226,9 +226,9 @@ XPCJSThrower::ThrowExceptionObject(JSContext* cx, nsIXPCException* e)
             return JS_FALSE;
 
         // XXX funky
-        JSObject* obj = JS_GetGlobalObject(cx);
+        JSObject* glob = JS_GetGlobalObject(cx);
 
-        rv = xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIXPCException), &wrapper);
+        rv = xpc->WrapNative(cx, glob, e, NS_GET_IID(nsIXPCException), &wrapper);
         NS_RELEASE(xpc);
         if(NS_SUCCEEDED(rv))
         {
