@@ -1398,9 +1398,8 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
     return ret;
 
   if ((*aEventStatus == nsEventStatus_eIgnore ||
-       (*aEventStatus != nsEventStatus_eConsumeNoDefault &&
-        (aEvent->message == NS_MOUSE_ENTER_SYNTH ||
-         aEvent->message == NS_MOUSE_EXIT_SYNTH))) &&
+       aEvent->message == NS_MOUSE_ENTER_SYNTH ||
+       aEvent->message == NS_MOUSE_EXIT_SYNTH) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
 
     // If we're here, then aOuter should be an nsILink. We'll use the
@@ -1495,11 +1494,15 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
 
       case NS_MOUSE_ENTER_SYNTH:
       {
-        nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
+        nsCOMPtr<nsIEventStateManager> stateManager;
+        aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
+        if (stateManager)
           stateManager->SetContentState(this, NS_EVENT_STATE_HOVER);
-          NS_RELEASE(stateManager);
-        }
+
+        // don't set status for onmouseover="...; return true;"
+        if (*aEventStatus == nsEventStatus_eConsumeNoDefault)
+          break;
+
         *aEventStatus = nsEventStatus_eConsumeNoDefault;
       }
       // Set the status bar the same for focus and mouseover
@@ -1519,11 +1522,15 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
 
       case NS_MOUSE_EXIT_SYNTH:
       {
-        nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
+        nsCOMPtr<nsIEventStateManager> stateManager;
+        aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
+        if (stateManager)
           stateManager->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
-          NS_RELEASE(stateManager);
-        }
+
+        // don't set status for onmouseover="...; return true;"
+        if (*aEventStatus == nsEventStatus_eConsumeNoDefault)
+          break;
+
         *aEventStatus = nsEventStatus_eConsumeNoDefault;
 
         nsAutoString empty;
