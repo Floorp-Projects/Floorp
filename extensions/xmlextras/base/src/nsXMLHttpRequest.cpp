@@ -138,6 +138,30 @@ GetCurrentContext(nsIScriptContext **aScriptContext)
   return;
 }
 
+/**
+ * Gets the nsIDocument given the script context. Will return nsnull on failure.
+ *
+ * @param aScriptContext the script context to get the document for; can be null
+ *
+ * @return the document associated with the script context
+ */
+static already_AddRefed<nsIDocument>
+GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
+{
+  if (!aScriptContext)
+    return nsnull;
+
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  aScriptContext->GetGlobalObject(getter_AddRefs(global));
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
+  nsIDocument *doc = nsnull;
+  if (window) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    window->GetDocument(getter_AddRefs(domdoc));
+    (void) CallQueryInterface(domdoc, &doc);
+  }
+  return doc;
+}
 
 /////////////////////////////////////////////
 //
@@ -583,18 +607,9 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
     GetCurrentContext(getter_AddRefs(mScriptContext));
   }
 
-  if (mScriptContext) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    mScriptContext->GetGlobalObject(getter_AddRefs(global));
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
-    if (window) {
-      nsCOMPtr<nsIDOMDocument> domdoc;
-      window->GetDocument(getter_AddRefs(domdoc));
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-      if (doc) {
-        doc->GetDocumentLoadGroup(aLoadGroup);
-      }
-    }
+  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+  if (doc) {
+    doc->GetDocumentLoadGroup(aLoadGroup);
   }
 
   return NS_OK;
@@ -613,16 +628,9 @@ nsXMLHttpRequest::GetBaseURI(nsIURI **aBaseURI)
     }
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  mScriptContext->GetGlobalObject(getter_AddRefs(global));
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
-  if (window) {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    window->GetDocument(getter_AddRefs(domdoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-    if (doc) {
-      doc->GetBaseURL(aBaseURI);
-    }
+  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+  if (doc) {
+    doc->GetBaseURL(aBaseURI);
   }
 
   return NS_OK;
