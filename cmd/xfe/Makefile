@@ -21,16 +21,19 @@
 # There are N dimensions to a full complement of binaries:
 #
 #	- target architecture
-#	- debug vs optimized
-#	- normal vs "lite"
-#	- normal vs purified
+#	- debug   vs  optimized
+#	- normal  vs  "lite"
+#	- normal  vs  purified
+#   - dynamic vs  statically linked
 #
 # A directory is needed for each of the first two dimensions (target
 # and debug), but executables for all of the others will then be built
 # in the same directory from the same .o files.  The files have names
 # as follows:
 #
-#	mozilla-export
+#   moz-export          (Dynamically linked with libs in 
+#                        ../../dist/<objdir>/bin)
+#	mozilla-export      (Statically linked)
 #	mozilla-nis-export	(SunOS 4 only)
 #	mozilla-export.pure	(SunOS 4 and Solaris only)
 #	 ...etc...
