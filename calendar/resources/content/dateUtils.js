@@ -316,6 +316,8 @@ DateFormater.prototype.parseShortDate = function ( dateString )
        var currentYear = 1900 + new Date().getYear(); // getYear 0 is 1900.
        var currentCentury = currentYear - currentYear % 100;
        year = currentCentury + year;
+       if (year < currentYear - 69)
+         year += 100;
        if (year > currentYear + 30)
  	year -= 100;
      }
