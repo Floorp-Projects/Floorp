@@ -55,7 +55,7 @@ TX_StringEqualsAtom(const nsASingleFragmentString& aString, nsIAtom* aAtom)
     const PRUnichar* UTF16Iter;
     aString.BeginReading(UTF16Iter);
 
-    while (ASCIIAtom) {
+    while (*ASCIIAtom) {
         if (PRUnichar(*ASCIIAtom) != *UTF16Iter) {
             return PR_FALSE;
         }
