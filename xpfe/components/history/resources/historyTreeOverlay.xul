@@ -78,8 +78,7 @@
             onkeypress="if (event.keyCode == 13) OpenURL(event.ctrlKey || event.metaKey);" 
             onselect="this.outlinerBoxObject.view.selectionChanged();
                       historyOnSelect();"
-            ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
-            ondblclick="if (validClickConditions(event)) OpenURL(event.ctrlKey || event.metaKey);">
+            ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, historyDNDObserver);">
     <template>
       <rule>
         <outlinerchildren>
