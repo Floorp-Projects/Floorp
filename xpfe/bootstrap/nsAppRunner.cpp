@@ -551,6 +551,10 @@ static nsresult main1(int argc, char* argv[])
   if ( CheckAndRunPrefs(cmdLineArgs) )
   	return NS_OK;
 
+#ifdef NS_BUILD_REFCNT_LOGGING  
+  nsTraceRefcnt::SetPrefServiceAvailability(PR_TRUE);
+#endif
+
   // fire up an instance of the cookie manager.
   // I'm doing this using the serviceManager for convenience's sake.
   // Presumably an application will init it's own cookie service a 
