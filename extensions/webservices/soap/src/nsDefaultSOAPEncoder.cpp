@@ -22,7 +22,8 @@
 
 #include "nsDefaultSOAPEncoder.h"
 #include "nsSOAPUtils.h"
-
+#include "nsISOAPParameter.h"
+#include "nsXPIDLString.h"
 
 nsDefaultSOAPEncoder::nsDefaultSOAPEncoder()
 {
@@ -50,7 +51,7 @@ nsDefaultSOAPEncoder::ParameterToElement(nsISOAPParameter *parameter,
   PRInt32 type;
   parameter->GetType(&type);
 
-  XPIDLString name;
+  nsXPIDLString name;
   parameter->GetName(getter_Copies(name));
   
   // If it's an unnamed parameter, we use the type names defined
