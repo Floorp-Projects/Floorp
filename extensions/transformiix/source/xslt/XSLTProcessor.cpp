@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.44 2001/05/12 12:00:31 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.cpp,v 1.45 2001/05/14 14:22:49 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -72,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.44 $ $Date: 2001/05/12 12:00:31 $
+ * @version $Revision: 1.45 $ $Date: 2001/05/14 14:22:49 $
 **/
 
 /**
@@ -207,11 +207,10 @@ String& XSLTProcessor::getAppVersion() {
 **/
 void XSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument, String& href) {
 
-    NodeList* nl = xmlDocument.getChildNodes();
+    Node* node = xmlDocument.getFirstChild();
     String type;
     String tmpHref;
-    for ( UInt32 i = 0; i < nl->getLength(); i++ ) {
-        Node* node = nl->item(i);
+    while (node) {
         if ( node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE ) {
             String target = ((ProcessingInstruction*)node)->getTarget();
             if ( STYLESHEET_PI.isEqual(target) ||
@@ -226,6 +225,7 @@ void XSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument, String& href)
                 }
             }
         }
+        node = node->getNextSibling();
     }
 
 } //-- getHrefFromStylesheetPI
@@ -401,9 +401,8 @@ void XSLTProcessor::processTopLevel
 {
     if (!stylesheet) return;
 
-    NodeList* nl = stylesheet->getChildNodes();
-    for (UInt32 i = 0; i < nl->getLength(); i++) {
-        Node* node = nl->item(i);
+    Node* node = stylesheet->getFirstChild();
+    while (node) {
         if (node->getNodeType() == Node::ELEMENT_NODE) {
             Element* element = (Element*)node;
             String name = element->getNodeName();
@@ -533,6 +532,7 @@ void XSLTProcessor::processTopLevel
                     break;
             }
         }
+        node = node->getNextSibling();
     }
 
 } //-- process(Document, ProcessorState)
@@ -768,9 +768,8 @@ MBool XSLTProcessor::getText
     MBool flag = MB_TRUE;
     if ( deep ) XMLDOMUtils::getNodeValue(dfrag, &dest);
     else {
-        NodeList* nl = dfrag->getChildNodes();
-        for ( UInt32 i = 0; i < nl->getLength(); i++ ) {
-            Node* node = nl->item(i);
+        Node* node = dfrag->getFirstChild();
+        while (node) {
             switch(node->getNodeType()) {
                 case Node::CDATA_SECTION_NODE:
                 case Node::TEXT_NODE :
@@ -780,6 +779,7 @@ MBool XSLTProcessor::getText
                     if (allowOnlyTextNodes) flag = MB_FALSE;
                     break;
             }
+            node = node->getNextSibling();
         }
     }
     return flag;
@@ -1006,11 +1006,13 @@ void XSLTProcessor::processAction
             // xsl:if
             case XSLType::CHOOSE :
             {
-                NodeList* nl = actionElement->getChildNodes();
+                Node* tmp = actionElement->getFirstChild();
                 Element* xslTemplate = 0;
-                for ( UInt32 i = 0; i < nl->getLength(); i++ ) {
-                    Node* tmp = nl->item(i);
-                    if ( tmp->getNodeType() != Node::ELEMENT_NODE ) continue;
+                while (tmp) {
+                    if ( tmp->getNodeType() != Node::ELEMENT_NODE ) {
+                      tmp = tmp->getNextSibling();
+                      continue;
+                    }
                     xslTemplate = (Element*)tmp;
                     String nodeName = xslTemplate->getNodeName();
                     switch ( getElementType(nodeName, ps) ) {
@@ -1030,6 +1032,7 @@ void XSLTProcessor::processAction
                         default: //-- invalid xsl:choose child
                             break;
                     }
+                    tmp = tmp->getNextSibling();
                 } //-- end for-each child of xsl:choose
                 break;
             }
@@ -1369,9 +1372,10 @@ void XSLTProcessor::processAction
                     }
                 }
                 //-- process children
-                NodeList* nl = xslAction->getChildNodes();
-                for ( UInt32 i = 0; i < nl->getLength(); i++) {
-                    processAction(node, nl->item(i),ps);
+                Node* tmp = xslAction->getFirstChild();
+                while (tmp) {
+                    processAction(node,tmp,ps);
+                    tmp = tmp->getNextSibling();
                 }
                 ps->getNodeStack()->pop();
 #ifdef MOZ_XSL
@@ -1461,9 +1465,8 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
     }
 
     //-- handle xsl:with-param elements
-    NodeList* nl = xslAction->getChildNodes();
-    for (UInt32 i = 0; i < nl->getLength(); i++) {
-        Node* tmpNode = nl->item(i);
+    Node* tmpNode = xslAction->getFirstChild();
+    while (tmpNode) {
         int nodeType = tmpNode->getNodeType();
         if ( nodeType == Node::ELEMENT_NODE ) {
             Element* action = (Element*)tmpNode;
@@ -1490,6 +1493,7 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
                 }
             }
         }
+        tmpNode = tmpNode->getNextSibling();
     }
     return params;
 } //-- processParameters
@@ -1514,9 +1518,11 @@ void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorStat
         localBindings.setObjectDeletion(MB_TRUE);
         bindings->push(&localBindings);
         processTemplateParams(xslTemplate, node, ps, params);
-        NodeList* nl = xslTemplate->getChildNodes();
-        for (UInt32 i = 0; i < nl->getLength(); i++)
-            processAction(node, nl->item(i), ps);
+        Node* tmp = xslTemplate->getFirstChild();
+        while (tmp) {
+            processAction(node,tmp,ps);
+            tmp = tmp->getNextSibling();
+        }
         bindings->pop();
     }
 } //-- processTemplate
@@ -1536,10 +1542,9 @@ void XSLTProcessor::processTemplateParams
 {
 
     if ( xslTemplate ) {
-        NodeList* nl = xslTemplate->getChildNodes();
+        Node* tmpNode = xslTemplate->getFirstChild();
         //-- handle params
-        for (UInt32 i = 0; i < nl->getLength(); i++) {
-            Node* tmpNode = nl->item(i);
+        while (tmpNode) {
             int nodeType = tmpNode->getNodeType();
             if ( nodeType == Node::ELEMENT_NODE ) {
                 Element* action = (Element*)tmpNode;
@@ -1573,6 +1578,7 @@ void XSLTProcessor::processTemplateParams
                 if (!XMLUtils::isWhitespace(((Text*)tmpNode)->getData())) break;
             }
             else break;
+            tmpNode = tmpNode->getNextSibling();
         }
     }
 } //-- processTemplateParams
@@ -1601,12 +1607,13 @@ ExprResult* XSLTProcessor::processVariable
         return expr->evaluate(node, ps);
     }
     else {
-        NodeList* nl = xslVariable->getChildNodes();
+        Node* tmpNode = xslVariable->getFirstChild();
         Document* resultTree = ps->getResultDocument();
         NodeStack* nodeStack = ps->getNodeStack();
         nodeStack->push(resultTree->createDocumentFragment());
-        for (UInt32 i = 0; i < nl->getLength(); i++) {
-            processAction(node, nl->item(i), ps);
+        while (tmpNode) {
+            processAction(node, tmpNode, ps);
+            tmpNode = tmpNode->getNextSibling();
         }
         Node* node = nodeStack->pop();
         //-- add clean up for This new NodeSet;

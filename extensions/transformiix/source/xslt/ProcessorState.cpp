@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.25 2001/04/12 14:04:49 peterv%netscape.com Exp $
+ * $Id: ProcessorState.cpp,v 1.26 2001/05/14 14:22:49 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.25 $ $Date: 2001/04/12 14:04:49 $
+ * @version $Revision: 1.26 $ $Date: 2001/05/14 14:22:49 $
 **/
 
 #include "ProcessorState.h"
@@ -138,9 +138,8 @@ void ProcessorState::addAttributeSet(Element* attributeSet) {
     }
 
     //-- add xsl:attribute elements to attSet
-    NodeList* nl = attributeSet->getChildNodes();
-    for ( UInt32 i = 0; i < nl->getLength(); i++) {
-        Node* node = nl->item(i);
+    Node* node = attributeSet->getFirstChild();
+    while (node) {
         if ( node->getNodeType() == Node::ELEMENT_NODE) {
             String nodeName = node->getNodeName();
             String ns;
@@ -150,6 +149,7 @@ void ProcessorState::addAttributeSet(Element* attributeSet) {
             XMLUtils::getLocalPart(nodeName, localPart);
             if ( ATTRIBUTE.isEqual(localPart) ) attSet->add(node);
         }
+        node = node->getNextSibling();
     }
 
 } //-- addAttributeSet

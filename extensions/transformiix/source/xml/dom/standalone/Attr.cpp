@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -63,21 +63,19 @@ MBool Attr::getSpecified() const
 //
 const String& Attr::getValue()
 {
-  Int32 valueLoop;
   nodeValue = NULL_STRING;
-  NodeList* childList = getChildNodes();
-  Int32 numChildren = childList->getLength();
 
-  for (valueLoop=0;valueLoop<numChildren;valueLoop++)
-    {
-    if (childList->item(valueLoop)->getNodeType() != Node::ENTITY_REFERENCE_NODE)
-      {
-        nodeValue.append(childList->item(valueLoop)->getNodeValue());
-        if (valueLoop < (numChildren-1))
+  Node* child = getFirstChild();
+  while (child) {
+    if (child->getNodeType() != Node::ENTITY_REFERENCE_NODE) {
+        nodeValue.append(child->getNodeValue());
+        child = child->getNextSibling();
+        if (child)
           nodeValue.append(",");
-      }
+    } else {
+      child = child->getNextSibling();
     }
-
+  }
   return nodeValue;
 }
 
