@@ -61,6 +61,8 @@ public:
   NS_IMETHOD DetermineOutputFormat(const char *url, nsMimeOutputType *newType);
 
 private:
+  nsresult Close();
+
   // the input and output streams form a pipe...they need to be passed around together..
   nsCOMPtr<nsIBufferOutputStream>     mOutputStream;     // output stream
   nsCOMPtr<nsIBufferInputStream>	    mInputStream;

@@ -710,8 +710,20 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
 
   mAlreadyKnowOutputType = PR_FALSE;
 
+  // since we are done converting data, lets close all the objects we own...
+  // this helps us fix some circular ref counting problems we are running into...
+  Close(); 
+
   // Time to return...
   return NS_OK;
+}
+
+nsresult nsStreamConverter::Close()
+{
+	mOutgoingChannel = null_nsCOMPtr();
+	mEmitter = null_nsCOMPtr();
+	mOutListener = null_nsCOMPtr();
+	return NS_OK;
 }
 
 // nsIStreamConverter implementation
