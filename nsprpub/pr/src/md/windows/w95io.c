@@ -43,8 +43,10 @@ _PR_MD_INIT_IO()
 {
     WORD WSAVersion = 0x0101;
     WSADATA WSAData;
+    int err;
 
-    WSAStartup(	WSAVersion, &WSAData );
+    err = WSAStartup( WSAVersion, &WSAData );
+    PR_ASSERT(0 == err);
 
 #ifdef DEBUG
     /* Doublecheck _pr_filetime_offset's hard-coded value is correct. */
