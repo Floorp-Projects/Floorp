@@ -38,6 +38,7 @@ browser.jar:
     content/browser/pref/autocomplete-showsearch.gif       (content/autocomplete-showsearch.gif)
     content/browser/pref/pref-winhooks.xul                 (content/pref-winhooks.xul)
     content/browser/pref/pref-winhooks.js                  (content/pref-winhooks.js)
+    content/browser/pref/pref-tabs.xul                     (content/pref-tabs.xul)
 
 en-US.jar:
     locale/en-US/browser/pref/pref-advanced.dtd            (locale/pref-advanced.dtd)
@@ -49,6 +50,7 @@ en-US.jar:
     locale/en-US/browser/pref/pref-download.dtd            (locale/pref-download.dtd)
     locale/en-US/browser/pref/pref-fonts.dtd               (locale/pref-fonts.dtd)
     locale/en-US/browser/pref/pref-languages.dtd           (locale/pref-languages.dtd)
+    locale/en-US/browser/pref/pref-tabs.dtd                (locale/pref-tabs.dtd)
     locale/en-US/browser/pref/pref-languages.properties    (locale/pref-languages.properties)
     locale/en-US/browser/pref/pref-navigator.dtd           (locale/pref-navigator.dtd)
     locale/en-US/browser/pref/pref-connection.dtd          (locale/pref-connection.dtd)    
