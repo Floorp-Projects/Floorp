@@ -124,6 +124,7 @@ CPPSRCS		= \
 		  PrefsLang.cpp \
 		  PrefsProxiesView.cpp \
 		  RDFView.cpp \
+		  RDFTreeView.cpp \
 		  RadioGroup.cpp \
 		  Splash.cpp \
 		  Toolbar.cpp \

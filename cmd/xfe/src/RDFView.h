@@ -29,24 +29,12 @@
 #include "IconGroup.h"
 #include "htrdf.h"
 #include "NavCenterView.h"
-#include "PopupMenu.h"
-
-class XFE_RDFPopupMenu : public XFE_SimplePopupMenu
-{
-public:
-  XFE_RDFPopupMenu(String name, Widget parent,
-                   HT_View view, 
-                   Boolean isWorkspace, Boolean isBackground);
-
-  void PushButtonActivate(Widget w, XtPointer userData);
-
-protected:
-  HT_Pane m_pane;
-};
+#include "RDFTreeView.h"
 
 class XFE_RDFView : public XFE_View
 {
 public:
+
   XFE_RDFView(XFE_Component *toplevel, Widget parent,
               XFE_View *parent_view, MWContext *context);
 
@@ -70,78 +58,40 @@ public:
   // RDF Specific calls
   void notify(HT_Notification ns, HT_Resource n, HT_Event whatHappened);
 
-  void setRDFView(HT_View view);
+	// HT view set/get methods
+	void setHTView(HT_View view);
 
-  void doPopup(XEvent *event);
-
+	// Stand alone set/get methods
 	void setStandAloneState(XP_Bool state);
 	XP_Bool getStandAloneState();
 
 private:
-  //HT_Pane m_Pane;		// The pane that owns this view
-  HT_View m_rdfview;		// The view as registered in the hypertree
-  Widget  viewName;     // The label that displays the currently open pane
-  Widget  rdfControlsParent; // Parent of the label and the button on top
-  Widget  m_tree;       // The tree widget
-  XFE_RDFPopupMenu *m_popup;
+
+	// The view as registered in the hypertree
+	HT_View				_ht_rdfView;
+
+	// The label that displays the currently open pane
+	Widget				_viewLabel;     
+
+	// Parent of the label and the button on top
+	Widget				_controlToolBar; 
+
+	// Toggle tree operating mode
+	Widget				_addBookmarkControl;
+
+	// Close the view
+	Widget				_closeControl;
+
+	// Toggle tree operating mode
+	Widget				_modeControl;
+
+	// The rdf tree view component
+	XFE_RDFTreeView *	_rdfTreeView;
 
 	// Is this a stand alone view ?
-	XP_Bool _standAloneState;
+	XP_Bool				_standAloneState;
 
-  // icons for use in the bookmark window.
-  static fe_icon bookmark;
-  static fe_icon openedFolder;
-  static fe_icon closedFolder;
-
-  void init_pixmaps();
-
-  void fill_tree();
-  void destroy_tree();
-
-  void add_row(HT_Resource node);
-  void add_row(int node);
-  void delete_row(int row);
-  void add_column(int index, char *name, uint32 width,
-                  void *token, uint32 token_type);
-
-  void expand_row(int row);
-  void collapse_row(int row);
-  void delete_column(HT_Resource cursor);
-  void activate_row(int row);
-  void resize(XtPointer);
-  void edit_cell(XtPointer);
-  void select_row(int row);
-  void deselect_row(int row);
-
-  static void expand_row_cb(Widget, XtPointer, XtPointer);
-  static void collapse_row_cb(Widget, XtPointer, XtPointer);
-  static void delete_cb(Widget, XtPointer, XtPointer);
-  static void activate_cb(Widget, XtPointer, XtPointer);
-  static void resize_cb(Widget, XtPointer, XtPointer);
-  static void edit_cell_cb(Widget, XtPointer, XtPointer);
-  static void deselect_cb(Widget, XtPointer, XtPointer);
-  static void select_cb(Widget, XtPointer, XtPointer);
-  static void popup_cb(Widget, XtPointer, XtPointer);
-  static void closeRdfView_cb(Widget, XtPointer, XtPointer);
-
-#ifdef NOTYET
-  void dropfunc(Widget dropw, fe_dnd_Event type, fe_dnd_Source *source, XEvent *event);
-  static void drop_func(Widget dropw, void *closure, fe_dnd_Event type,
-			fe_dnd_Source *source, XEvent* event);
-
-  static fe_icon mailBookmark;
-  static fe_icon newsBookmark;
-  static fe_icon changedBookmark;
-  //  static fe_icon unknownBookmark;
-  static fe_icon closedPersonalFolder;
-  static fe_icon openedPersonalFolder;
-  static fe_icon closedFolderDest;
-  static fe_icon openedFolderDest;
-  static fe_icon closedFolderMenu;
-  static fe_icon openedFolderMenu;
-  static fe_icon closedFolderMenuDest;
-  static fe_icon openedFolderMenuDest;
-#endif /*NOTYET*/
+	static void closeRdfView_cb(Widget, XtPointer, XtPointer);
 };
 
 #endif /* _xfe_rdfview_h */

@@ -113,6 +113,8 @@ XFE_BrowserView::showNavCenter()
 
 		// Add _navCenterView to the sub-view list of browser view
 		addView(_navCenterView);
+
+		_navCenterView->show();
 	}
 
 	// Show the nav center

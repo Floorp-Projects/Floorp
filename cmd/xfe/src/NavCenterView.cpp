@@ -88,15 +88,17 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   // Set the view type.
   m_viewType = VIEW_NAVCENTER;
 
-  Widget nav_form = XtVaCreateManagedWidget("nav_form",
-                                            xmFormWidgetClass,
-                                            parent,
-                                            NULL);
-  setBaseWidget(nav_form);
+  Widget navCenterMainForm = 
+	  XtVaCreateManagedWidget("navCenterMainForm",
+							  xmFormWidgetClass,
+							  parent,
+							  NULL);
+
+  setBaseWidget(navCenterMainForm);
 
   m_selector = XtVaCreateManagedWidget("selector",
                    xfeToolScrollWidgetClass,
-                   nav_form,
+                   navCenterMainForm,
                    XmNtopAttachment,    XmATTACH_FORM,
                    XmNbottomAttachment, XmATTACH_FORM,
                    XmNleftAttachment,   XmATTACH_FORM,
@@ -115,32 +117,41 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                 XmNshadowThickness,      0,
                 NULL);
 
-  rdf_parent = XtVaCreateManagedWidget("rdf_form",
-                          xmFormWidgetClass,
-                          nav_form,
-                          XmNtopAttachment,    XmATTACH_FORM,
+  m_htview = NULL;
+  m_pane = NULL;
+
+  m_rdfview = new XFE_RDFView(this, m_widget, this, context);
+
+  XtVaSetValues(m_rdfview->getBaseWidget(),
+                XmNtopAttachment,    XmATTACH_FORM,
 #ifdef HTML_PANE
-                          XmNbottomAttachment, XmATTACH_NONE,
+                XmNbottomAttachment, XmATTACH_NONE,
 #else
-                          XmNbottomAttachment, XmATTACH_FORM,
+                XmNbottomAttachment, XmATTACH_FORM,
 #endif
-                          XmNleftAttachment,   XmATTACH_WIDGET,
-                          XmNleftWidget,       m_selector,
-                          XmNrightAttachment,  XmATTACH_FORM,
-                          XmNtopOffset,        0,
-                          XmNbottomOffset,     1,
-                          XmNleftOffset,       0,
-                          XmNrightOffset,      0,
-                          XmNshadowThickness,  2,
-                          XmNshadowType,       XmSHADOW_IN,
-                          NULL);
+                XmNleftAttachment,   XmATTACH_WIDGET,
+                XmNleftWidget,       m_selector,
+                XmNrightAttachment,  XmATTACH_FORM,
+
+
+// Put this stuff in the resource file
+//                 XmNtopOffset,        0,
+//                 XmNbottomOffset,     1,
+//                 XmNleftOffset,       0,
+//                 XmNrightOffset,      0,
+//                 XmNshadowThickness,  2,
+//                 XmNshadowType,       XmSHADOW_IN,
+                NULL);
+
+  m_rdfview->setStandAloneState(m_isStandalone);
+
 #ifdef HTML_PANE
-  m_htmlview = new XFE_HTMLView(this, nav_form, NULL, context);
+  m_htmlview = new XFE_HTMLView(this, navCenterMainForm, NULL, context);
   Widget html_base = m_htmlview->getBaseWidget();
 
   XtVaSetValues(html_base,
                 XmNtopAttachment,    XmATTACH_WIDGET,
-                XmNtopWidget,        rdf_parent,
+                XmNtopWidget,        m_rdfview->getBaseWidget(),
                 XmNbottomAttachment, XmATTACH_FORM,
                 XmNleftAttachment,   XmATTACH_WIDGET,
                 XmNleftWidget,       m_selector,
@@ -148,12 +159,7 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                 NULL);
 #endif
 
-  m_htview = NULL;
-  m_pane = NULL;
 
-  m_rdfview = new XFE_RDFView(this, rdf_parent, this, context);
-
-  m_rdfview->setStandAloneState(m_isStandalone);
 
   HT_Notification ns = new HT_NotificationStruct;
   ns->notifyProc = &XFE_NavCenterView::notify_cb;
@@ -176,7 +182,6 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   m_htmlview->getURL(NET_CreateURLStruct("http://dunk/",NET_DONT_RELOAD));
 #endif
 
-  XtManageChild(nav_form);
 }
 
 
@@ -403,7 +408,9 @@ XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * 
 {
    XFE_RDFImage *  rdfImage;
 
+#ifdef DEBUG_radha
    printf("In NavCenterView:handleDisplayPixmap\n");
+#endif
     // Get handle to the RDFImage object from the cache
 
     for (int i = 0; i < m_numRDFImagesLoaded; i ++)
@@ -423,7 +430,9 @@ XFE_NavCenterView::handleNewPixmap(Widget w, IL_Pixmap * image, Boolean mask)
 {
      XFE_RDFImage *  rdfImage;
 
+#ifdef DEBUG_radha
     printf("In NavCenterView:handlenewPixmap\n");
+#endif
     // Get handle to the RDFImage object from the cache
 
     for (int i = 0; i < m_numRDFImagesLoaded; i ++)
@@ -444,7 +453,10 @@ XFE_NavCenterView::handleImageComplete(Widget w, IL_Pixmap * image)
 
 
    XFE_RDFImage *  rdfImage;
+
+#ifdef DEBUG_radha
    printf("In NavCenterView:handleImageComplete\n");
+#endif
     // Get handle to the RDFImage object from the cache
 
     for (int i = 0; i < m_numRDFImagesLoaded; i ++)
@@ -465,16 +477,18 @@ void ImageCompleteCallback(XtPointer client_data)
      Widget button = (Widget )cb->widget;
      Dimension b_width=0, b_height=0;
 
+#ifdef DEBUG_radha
      printf("Inside ImageCompleteCallback\n");
+#endif
 
      XtUnmanageChild(button);
      XtVaGetValues(button, XmNwidth, &b_width, XmNheight, &b_height, NULL);
 
      XtVaSetValues(button, XmNheight,(cb->height + b_height),
-                           XmNpixmap, cb->image, 
-                           XmNpixmapMask, cb->mask,
-                           XmNbuttonLayout, XmBUTTON_LABEL_ON_BOTTOM,
-                           XmNlabelAlignment, XmALIGNMENT_CENTER,
+				   XmNpixmap, cb->image, 
+				   XmNpixmapMask, cb->mask,
+				   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY,
+				   XmNlabelAlignment, XmALIGNMENT_CENTER,
                    NULL);
      XtManageChild(button);
      XP_FREE(cb);
