@@ -122,14 +122,12 @@ protected:
   PRBool ComputeAvailableSize();
 
   PRBool ReflowFrame(nsHTMLReflowMetrics& aMetrics,
-                     nsRect& aBounds,
                      nsReflowStatus& aStatus);
 
   PRBool CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
-                       nsRect& aBounds,
                        nsReflowStatus& aStatus);
 
-  void PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds);
+  void PlaceFrame(nsHTMLReflowMetrics& aMetrics);
 
   void UpdateFrames();
 
@@ -194,7 +192,6 @@ protected:
   PRUintn mCarriedOutMarginFlags;
 
   // The computed available size and location for the frame
-  nscoord mFrameX, mFrameY;
   nsSize mFrameAvailSize;
 
   nscoord mLeftEdge;
