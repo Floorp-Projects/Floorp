@@ -96,6 +96,7 @@ nsAbCardProperty::nsAbCardProperty(void)
 	NS_INIT_REFCNT();
 
 	m_LastModDate = 0;
+	m_Key = 0;
 
 	m_bSendPlainText = PR_TRUE;
 	m_bIsMailList = PR_FALSE;
@@ -682,6 +683,25 @@ NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri)
 		return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsAbCardProperty::DropCardToDatabase(const char *uri)
+{
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIAddrDatabase>  dropDatabase;  
+
+	NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+	if (NS_SUCCEEDED(rv))
+		rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(dropDatabase));
+
+	if (dropDatabase)
+	{
+		dropDatabase->CreateNewCardAndAddToDB(this, PR_FALSE);
+		dropDatabase->Commit(kLargeCommit);
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
 {
 	if (!mCardDatabase && uri)
@@ -986,8 +1006,15 @@ nsAbCardProperty::GetNotes(PRUnichar * *aNotes)
 
 NS_IMETHODIMP
 nsAbCardProperty::GetLastModifiedDate(PRUint32 *aLastModifiedDate)
-{ return *aLastModifiedDate = m_LastModDate; }
+{ *aLastModifiedDate = m_LastModDate; return NS_OK; }
 
+NS_IMETHODIMP 
+nsAbCardProperty::GetKey(PRUint32 *aKey)
+{ *aKey = m_Key; return NS_OK; }
+
+NS_IMETHODIMP 
+nsAbCardProperty::SetRecordKey(PRUint32 key)
+{ m_Key = key; return NS_OK; }
 
 NS_IMETHODIMP
 nsAbCardProperty::SetFirstName(const PRUnichar * aFirstName)

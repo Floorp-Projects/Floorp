@@ -75,6 +75,9 @@ const char *kPabTableKind = "ns:addrbk:db:table:kind:pab";
 
 const char *kCardRowScope = "ns:addrbk:db:row:scope:card:all";
 const char *kListRowScope = "ns:addrbk:db:row:scope:list:all";
+const char *kDataRowScope = "ns:addrbk:db:row:scope:data:all";
+
+#define DATAROW_ROWID 1
 
 const char *kFirstNameColumn = "FirstName";
 const char *kLastNameColumn = "LastName";
@@ -114,8 +117,10 @@ const char *kCustom3Column = "Custom3";
 const char *kCustom4Column = "Custom4";
 const char *kNotesColumn = "Notes";
 const char *kLastModifiedDateColumn = "LastModifiedDate";
+const char *kRecordKeyColumn = "RecordKey";
 
 const char *kAddressCharSetColumn = "AddrCharSet";
+const char *kLastRecordKeyColumn = "LastRecordKey";
 
 const char *kMailListName = "ListName";
 const char *kMailListNickName = "ListNickName";
@@ -177,6 +182,7 @@ nsAddrDatabase::nsAddrDatabase()
 	  m_LastModDateColumnToken(0),
       m_PlainTextColumnToken(0),
       m_AddressCharSetColumnToken(0),
+	  m_LastRecordKey(0),
 	  m_dbDirectory(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -572,9 +578,8 @@ NS_IMETHODIMP nsAddrDatabase::Open
 	if (NS_SUCCEEDED(err)) 
 	{
 		pAddressBookDB->SetDbPath(pabName);
+		GetDBCache()->AppendElement(pAddressBookDB);
 		*pAddrDB = pAddressBookDB;
-		if (pAddressBookDB)  
-			GetDBCache()->AppendElement(pAddressBookDB);
 	}
 	else 
 	{
@@ -820,6 +825,8 @@ nsresult nsAddrDatabase::InitNewDB()
 	if (NS_SUCCEEDED(err))
 	{
 		err = InitPabTable();
+		err = InitLastRecorKey();
+		Commit(kLargeCommit);
 	}
 	return err;
 }
@@ -833,6 +840,88 @@ nsresult nsAddrDatabase::InitPabTable()
 
 	return mdberr;
 }
+
+//save the last record number, store in m_DataRowScopeToken, row 1
+nsresult nsAddrDatabase::InitLastRecorKey()
+{
+	if (!m_mdbPabTable)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+	nsIMdbRow *pDataRow = nsnull;
+	mdbOid dataRowOid;
+	dataRowOid.mOid_Scope = m_DataRowScopeToken;
+	dataRowOid.mOid_Id = DATAROW_ROWID;
+	err  = GetStore()->NewRowWithOid(GetEnv(), &dataRowOid, &pDataRow);
+
+	if (NS_SUCCEEDED(err) && pDataRow)
+	{
+		m_LastRecordKey = 0;
+		err = AddIntColumn(pDataRow, m_LastRecordKeyColumnToken, 0);
+		err = m_mdbPabTable->AddRow(GetEnv(), pDataRow);
+		pDataRow->CutStrongRef(GetEnv());
+	}
+	return err;
+}
+
+nsresult nsAddrDatabase::GetDataRow(nsIMdbRow **pDataRow)
+{
+	nsIMdbRow *pRow = nsnull;
+	mdbOid dataRowOid;
+	dataRowOid.mOid_Scope = m_DataRowScopeToken;
+	dataRowOid.mOid_Id = DATAROW_ROWID;
+	GetStore()->GetRow(GetEnv(), &dataRowOid, &pRow);
+	*pDataRow = pRow;
+	if (pRow)
+		return NS_OK;
+	else
+		return NS_ERROR_FAILURE;
+}
+
+nsresult nsAddrDatabase::GetLastRecorKey()
+{
+	if (!m_mdbPabTable)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+	nsIMdbRow *pDataRow = nsnull;
+	err = GetDataRow(&pDataRow);
+
+	if (NS_SUCCEEDED(err) && pDataRow)
+	{
+		m_LastRecordKey = 0;
+		err = GetIntColumn(pDataRow, m_LastRecordKeyColumnToken, &m_LastRecordKey, 0);
+		if (NS_FAILED(err))
+			err = NS_ERROR_NOT_AVAILABLE;
+		pDataRow->CutStrongRef(GetEnv());
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NOT_AVAILABLE;
+	return err;
+}
+
+nsresult nsAddrDatabase::UpdateLastRecordKey()
+{
+	if (!m_mdbPabTable)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+	nsIMdbRow *pDataRow = nsnull;
+	err = GetDataRow(&pDataRow);
+
+	if (NS_SUCCEEDED(err) && pDataRow)
+	{
+		err = AddIntColumn(pDataRow, m_LastRecordKeyColumnToken, m_LastRecordKey);
+		err = m_mdbPabTable->AddRow(GetEnv(), pDataRow);
+		pDataRow->CutStrongRef(GetEnv());
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NOT_AVAILABLE;
+	return err;
+}
+
 
 nsresult nsAddrDatabase::InitAnonymousTable()
 {
@@ -855,8 +944,58 @@ nsresult nsAddrDatabase::InitExistingDB()
 
 		err = GetStore()->StringToToken(GetEnv(), kAnonymousTableKind, &m_AnonymousTableKind); 
 		err = GetStore()->GetTable(GetEnv(), &gAnonymousTableOID, &m_mdbAnonymousTable);
+
+		err = GetLastRecorKey();
+		if (err == NS_ERROR_NOT_AVAILABLE)
+			CheckAndUpdateRecordKey();
 	}
 	return err;
+}
+
+nsresult nsAddrDatabase::CheckAndUpdateRecordKey()
+{
+	nsresult err = NS_OK;
+	nsIMdbTableRowCursor* rowCursor = nsnull;
+	nsIMdbRow* findRow = nsnull;
+ 	mdb_pos	rowPos = 0;
+
+	err = m_mdbPabTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+
+	if (NS_FAILED(err) || !rowCursor)
+		return NS_ERROR_FAILURE;
+
+	mdb_count total = 0;
+	err = rowCursor->GetCount(GetEnv(), &total);
+
+	nsIMdbRow *pDataRow = nsnull;
+	err = GetDataRow(&pDataRow);
+	if (NS_FAILED(err))
+		InitLastRecorKey();
+
+	if (total == 0)
+		return NS_OK;
+
+	do
+	{  //add key to each card and mailing list row
+		err = rowCursor->NextRow(GetEnv(), &findRow, &rowPos);
+		if (NS_SUCCEEDED(err) && findRow)
+		{
+			mdbOid rowOid;
+
+			if (findRow->GetOid(GetEnv(), &rowOid) == NS_OK)
+			{
+				if (!IsDataRowScopeToken(rowOid.mOid_Scope))
+				{
+					m_LastRecordKey++;
+					err = AddIntColumn(findRow, m_RecordKeyColumnToken, m_LastRecordKey);
+				}
+			}
+		}
+	} while (findRow);
+
+	UpdateLastRecordKey();
+	Commit(kLargeCommit);
+	return NS_OK;
 }
 
 // initialize the various tokens and tables in our db's env
@@ -869,6 +1008,7 @@ nsresult nsAddrDatabase::InitMDBInfo()
 		m_mdbTokensInitialized = PR_TRUE;
 		err	= GetStore()->StringToToken(GetEnv(), kCardRowScope, &m_CardRowScopeToken); 
 		err	= GetStore()->StringToToken(GetEnv(), kListRowScope, &m_ListRowScopeToken); 
+		err	= GetStore()->StringToToken(GetEnv(), kDataRowScope, &m_DataRowScopeToken); 
 		gAddressBookTableOID.mOid_Scope = m_CardRowScopeToken;
 		gAddressBookTableOID.mOid_Id = ID_PAB_TABLE;
 		gAnonymousTableOID.mOid_Scope = m_CardRowScopeToken;
@@ -913,8 +1053,11 @@ nsresult nsAddrDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kCustom4Column, &m_Custom4ColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kNotesColumn, &m_NotesColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kLastModifiedDateColumn, &m_LastModDateColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kRecordKeyColumn, &m_RecordKeyColumnToken);
 
 			GetStore()->StringToToken(GetEnv(),  kAddressCharSetColumn, &m_AddressCharSetColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kLastRecordKeyColumn, &m_LastRecordKeyColumnToken);
+
 			err = GetStore()->StringToToken(GetEnv(), kPabTableKind, &m_PabTableKind); 
 
 			GetStore()->StringToToken(GetEnv(),  kMailListName, &m_ListNameColumnToken);
@@ -927,6 +1070,20 @@ nsresult nsAddrDatabase::InitMDBInfo()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+nsresult nsAddrDatabase::AddRecordKeyColumnToRow(nsIMdbRow *pRow)
+{
+	if (pRow)
+	{
+		m_LastRecordKey++;
+		nsresult err = AddIntColumn(pRow, m_RecordKeyColumnToken, m_LastRecordKey);
+		err = m_mdbPabTable->AddRow(GetEnv(), pRow);
+		UpdateLastRecordKey();
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+}
 
 nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow)
 {
@@ -1402,6 +1559,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	if (NS_SUCCEEDED(err) && cardRow)
 	{
 		AddAttributeColumnsToRow(newCard, cardRow);
+		AddRecordKeyColumnToRow(cardRow);
 		err = m_mdbPabTable->AddRow(GetEnv(), cardRow);
 		cardRow->CutStrongRef(GetEnv());
 	}
@@ -1622,6 +1780,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDB(nsIAbDirectory *newList, 
 	if (NS_SUCCEEDED(err) && listRow)
 	{
 		AddListAttributeColumnsToRow(newList, listRow);
+		AddRecordKeyColumnToRow(listRow);
 		err = m_mdbPabTable->AddRow(GetEnv(), listRow);
 		listRow->CutStrongRef(GetEnv());
 	}
@@ -2933,6 +3092,11 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 		nsAllocator::Free(tempCString);
 		PR_Free(unicodeStr);
 	}
+	PRUint32 key = 0;
+	err = GetIntColumn(cardRow, m_RecordKeyColumnToken, &key, 0);
+	if (NS_SUCCEEDED(err))
+		newCard->SetRecordKey(key);
+
 	return err;
 }
 
@@ -2975,7 +3139,10 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardR
 		nsAllocator::Free(tempCString);
 		PR_Free(unicodeStr);
 	}
-
+	PRUint32 key = 0;
+	err = GetIntColumn(cardRow, m_RecordKeyColumnToken, &key, 0);
+	if (NS_SUCCEEDED(err))
+		listCard->SetRecordKey(key);
 	return err;
 }
 
@@ -3100,6 +3267,10 @@ NS_IMETHODIMP nsAddrDBEnumerator::Next(void)
 			{
 				mCurrentRowIsList = PR_FALSE;
 				return NS_OK;
+			}
+			else if (mDB->IsDataRowScopeToken(rowOid.mOid_Scope))
+			{
+				return Next();
 			}
 			else
 				return NS_ERROR_FAILURE;

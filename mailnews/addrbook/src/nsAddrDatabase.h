@@ -249,6 +249,7 @@ public:
 
 	PRBool IsListRowScopeToken(mdb_scope scope) { return (scope == m_ListRowScopeToken) ? PR_TRUE: PR_FALSE; }
 	PRBool IsCardRowScopeToken(mdb_scope scope) { return (scope == m_CardRowScopeToken) ? PR_TRUE: PR_FALSE;  }
+	PRBool IsDataRowScopeToken(mdb_scope scope) { return (scope == m_DataRowScopeToken) ? PR_TRUE: PR_FALSE; }
 	nsresult GetCardRowByRowID(mdb_id rowID, nsIMdbRow **dbRow);
 	nsresult GetListRowByRowID(mdb_id rowID, nsIMdbRow **dbRow);
 
@@ -284,6 +285,7 @@ protected:
 	nsresult GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardRow);
 	nsresult GetListFromDB(nsIAbDirectory *newCard, nsIMdbRow* cardRow);
 	nsresult GetAnonymousAttributesFromDB();
+	nsresult AddRecordKeyColumnToRow(nsIMdbRow *pRow);
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
 	nsresult AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos);
 	nsresult AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIMdbRow *listRow);
@@ -323,6 +325,12 @@ protected:
 	nsresult			InitPabTable();
 	nsresult			InitAnonymousTable();
 
+	nsresult			InitLastRecorKey();
+	nsresult			GetDataRow(nsIMdbRow **pDataRow);
+	nsresult			GetLastRecorKey();
+	nsresult			UpdateLastRecordKey();
+	nsresult			CheckAndUpdateRecordKey();
+
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
 	nsIMdbTable		    *m_mdbPabTable;
@@ -345,6 +353,7 @@ protected:
 
 	mdb_scope			m_CardRowScopeToken;
 	mdb_scope			m_ListRowScopeToken;
+	mdb_scope			m_DataRowScopeToken;
 
 	mdb_token			m_FirstNameColumnToken;
 	mdb_token			m_LastNameColumnToken;
@@ -383,16 +392,19 @@ protected:
 	mdb_token			m_Custom4ColumnToken;
 	mdb_token			m_NotesColumnToken;
 	mdb_token			m_LastModDateColumnToken;
+	mdb_token			m_RecordKeyColumnToken;
 
 	mdb_token			m_PlainTextColumnToken;
 
 	mdb_token			m_AddressCharSetColumnToken;
+	mdb_token			m_LastRecordKeyColumnToken;
 
 	mdb_token			m_ListNameColumnToken;
 	mdb_token			m_ListNickNameColumnToken;
 	mdb_token			m_ListDescriptionColumnToken;
 	mdb_token			m_ListTotalColumnToken;
 
+	PRUint32			m_LastRecordKey;
 	nsIAbDirectory*		m_dbDirectory;
 
 	nsCOMPtr<nsICollation> m_collationKeyGenerator;

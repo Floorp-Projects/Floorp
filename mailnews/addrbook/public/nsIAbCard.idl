@@ -72,6 +72,7 @@ interface nsIAbCard : nsISupports {
 	attribute unsigned long lastModifiedDate;
 	attribute wstring name;
 	readonly attribute string printCardUrl;
+	readonly attribute unsigned long key;
 
 	attribute boolean sendPlainText;
 	attribute boolean isMailList;
@@ -101,4 +102,6 @@ interface nsIAbCard : nsISupports {
 	void editCardToDatabase(in string uri);
 	void copyCard(in nsIAbCard srcCard);
 	wstring getCollationKey(in wstring str);
+	void setRecordKey(in unsigned long key);
+	void dropCardToDatabase(in string uri);
 };
