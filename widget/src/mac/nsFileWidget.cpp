@@ -248,6 +248,11 @@ nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outS
 			if (anErr == noErr) {
 				*outSpec = theFSSpec;	// Return the FSSpec
 				
+				if (reply.replacing)
+					mSelectResult = nsFileDlgResults_Replace;
+				else
+					mSelectResult = nsFileDlgResults_OK;
+				
 				// Some housekeeping for Nav Services 
 				::NavCompleteSave(&reply, kNavTranslateInPlace);
 				::NavDisposeReply(&reply);
@@ -314,6 +319,7 @@ nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 			
 			if (anErr == noErr) {
 				*outSpec = theFSSpec;	// Return the FSSpec
+				mSelectResult = nsFileDlgResults_OK;
 				
 				// Some housekeeping for Nav Services 
 				::NavDisposeReply(&reply);
@@ -377,6 +383,7 @@ nsFileWidget :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 			
 			if (anErr == noErr) {
 				*outSpec = theFSSpec;	// Return the FSSpec
+				mSelectResult = nsFileDlgResults_OK;
 				
 				// Some housekeeping for Nav Services 
 				::NavDisposeReply(&reply);
@@ -485,6 +492,51 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
   return NS_OK;
 }
 
+
+nsFileDlgResults  nsFileWidget::GetFile(
+	    nsIWidget        * aParent,
+	    nsString         & promptString,
+	    nsFileSpec       & theFileSpec)
+{
+	Create(aParent, promptString, eMode_load, nsnull, nsnull);
+	if (Show() == PR_TRUE)
+	{
+		theFileSpec = mFileSpec;
+		return mSelectResult;
+	}
+	
+	return nsFileDlgResults_Cancel;
+}
+	    
+nsFileDlgResults  nsFileWidget::GetFolder(
+	    nsIWidget        * aParent,
+	    nsString         & promptString,
+	    nsFileSpec       & theFileSpec)
+{
+	Create(aParent, promptString, eMode_getfolder, nsnull, nsnull);
+	if (Show() == PR_TRUE)
+	{
+		theFileSpec = mFileSpec;
+		return mSelectResult;
+	}
+	
+	return nsFileDlgResults_Cancel;
+}
+	    
+nsFileDlgResults  nsFileWidget::PutFile(
+	    nsIWidget        * aParent,
+	    nsString         & promptString,
+	    nsFileSpec       & theFileSpec)
+{
+	Create(aParent, promptString, eMode_save, nsnull, nsnull);
+	if (Show() == PR_TRUE)
+	{
+		theFileSpec = mFileSpec;
+		return mSelectResult;
+	}
+	
+	return nsFileDlgResults_Cancel;
+}
 
 //-------------------------------------------------------------------------
 //
