@@ -496,7 +496,6 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
     nsWidgetInitData widgetInitData;
     widgetInitData.mBorderStyle = eBorderStyle_window;
 
-#ifndef XP_UNIX
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {
       aInitialWidth = 1;
@@ -504,7 +503,6 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
       showWindow = PR_FALSE; // Don't show until we have the intrinsic size figured out.
       window->SetIntrinsicallySized(PR_TRUE);
     }
-#endif
 
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,
@@ -558,7 +556,6 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
     nsWidgetInitData widgetInitData;
     widgetInitData.mBorderStyle = eBorderStyle_dialog;
 
-#ifndef XP_UNIX
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {
       aInitialWidth = 1;
@@ -566,7 +563,6 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
       showWindow = PR_FALSE; // Don't show until we have the intrinsic size figured out.
       window->SetIntrinsicallySized(PR_TRUE);
     }
-#endif 
 
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,
