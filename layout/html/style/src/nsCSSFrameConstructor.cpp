@@ -387,6 +387,20 @@ GetSpecialSibling(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** a
   *aResult = NS_STATIC_CAST(nsIFrame*, value);
 }
 
+// Get the frame's next-in-flow, or, if it doesn't have one,
+// its special sibling.
+static nsIFrame*
+GetNifOrSpecialSibling(nsIFrameManager *aFrameManager, nsIFrame *aFrame)
+{
+  nsIFrame *result;
+  aFrame->GetNextInFlow(&result);
+  if (result)
+    return result;
+
+  if (IsFrameSpecial(aFrame))
+    GetSpecialSibling(aFrameManager, aFrame, &result);
+  return result;
+}
 
 static void
 SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aSpecialSibling)
@@ -9940,12 +9954,13 @@ static void
 DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
                              nsIViewManager* aViewManager,
+                             nsIFrameManager* aFrameManager,
                              nsChangeHint aChange);
 
 static void
 UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame, 
-                   nsIViewManager* aViewManager, nsRect& aBoundsRect,
-                   nsChangeHint aChange)
+                   nsIViewManager* aViewManager, nsIFrameManager* aFrameManager,
+                   nsRect& aBoundsRect, nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
@@ -9987,11 +10002,12 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
           nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
           NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
-          DoApplyRenderingChangeToTree(aPresContext, outOfFlowFrame, aViewManager, aChange);
+          DoApplyRenderingChangeToTree(aPresContext, outOfFlowFrame,
+                                       aViewManager, aFrameManager, aChange);
         }
         else {  // regular frame
           nsRect  childBounds;
-          UpdateViewsForTree(aPresContext, child, aViewManager, childBounds, aChange);
+          UpdateViewsForTree(aPresContext, child, aViewManager, aFrameManager, childBounds, aChange);
           bounds.UnionRect(bounds, childBounds);
         }
         NS_IF_RELEASE(frameType);
@@ -10010,12 +10026,13 @@ static void
 DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
                              nsIViewManager* aViewManager,
+                             nsIFrameManager* aFrameManager,
                              nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
 
-  for ( ; aFrame; aFrame->GetNextInFlow(&aFrame)) {
+  for ( ; aFrame; aFrame = GetNifOrSpecialSibling(aFrameManager, aFrame)) {
     // Get the frame's bounding rect
     nsRect invalidRect;
     nsPoint viewOffset;
@@ -10031,11 +10048,15 @@ DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
       aFrame->GetOffsetFromView(aPresContext, viewOffset, &parentView);
       NS_ASSERTION(nsnull != parentView, "no view");
     }
-    UpdateViewsForTree(aPresContext, aFrame, aViewManager, invalidRect, aChange);
+    UpdateViewsForTree(aPresContext, aFrame, aViewManager, aFrameManager,
+                       invalidRect, aChange);
 
     if (! view && (aChange & nsChangeHint_RepaintFrame)) { // if frame has view, will already be invalidated
       // XXX Instead of calling this we should really be calling
       // Invalidate on on the nsFrame (which does this)
+      // XXX This rect inflation should be done when the rects are
+      // being accumulated in UpdateViewsForTree, not in
+      // DoApplyRenderingChangeToTree
       const nsStyleOutline* outline;
       aFrame->GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline);
       nscoord width;
@@ -10099,10 +10120,14 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
 
   viewManager->BeginUpdateViewBatch();
 
+  nsCOMPtr<nsIFrameManager> frameManager;
+  shell->GetFrameManager(getter_AddRefs(frameManager));
+  
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = PR_TRUE;
 #endif
-  DoApplyRenderingChangeToTree(aPresContext, aFrame, viewManager, aChange);
+  DoApplyRenderingChangeToTree(aPresContext, aFrame, viewManager,
+                               frameManager, aChange);
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = PR_FALSE;
 #endif
@@ -11549,21 +11574,6 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
   *aContinuingFrame = newFrame; 
 
   return rv;
-}
-
-// Get the frame's next-in-flow, or, if it doesn't have one,
-// its special sibling.
-static nsIFrame*
-GetNifOrSpecialSibling(nsIFrameManager *aFrameManager, nsIFrame *aFrame)
-{
-  nsIFrame *result;
-  aFrame->GetNextInFlow(&result);
-  if (result)
-    return result;
-
-  if (IsFrameSpecial(aFrame))
-    GetSpecialSibling(aFrameManager, aFrame, &result);
-  return result;
 }
 
 // Helper function that searches the immediate child frames 
