@@ -36,6 +36,8 @@
 #include <errno.h>
 
 PRBool            nsAppShell::mPtInited = PR_FALSE;
+int               nsAppShell::mModalCount = -1;
+
 nsIEventQueue     *kedlEQueue = nsnull;
 
 /* Global Definitions */
@@ -267,7 +269,15 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Spinup()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Spinup - Not Implemented.\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Spinup  this=<%p> mModalCount=<%d>\n", this, mModalCount));
+  if (mModalCount != -1)
+  {
+    /* This should be -1 here... what is wrong? */
+    NS_ASSERTION(0,"nsAppShell::Spinup  mModalCount is not -1!\n");
+	abort();  
+  }
+  
+  mModalCount = PtModalStart();
   return NS_OK;
 }
 
@@ -278,7 +288,9 @@ NS_METHOD nsAppShell::Spinup()
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Spindown()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Spindown - Not Implemented.\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Spindown this=<%p> mModalCount=<%d>\n", this, mModalCount));
+  PtModalEnd( mModalCount );
+  mModalCount = -1;
   return NS_OK;
 }
 

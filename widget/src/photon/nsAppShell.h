@@ -60,7 +60,8 @@ private:
     nsDispatchListener   *mDispatchListener;
 	EventQueueTokenQueue *mEventQueueTokens;
     static PRBool        mPtInited;
-
+    static int           mModalCount;
+	
 //  unsigned long        mEventBufferSz;
 //  PhEvent_t            *mEvent;
 //  nsIEventQueueService * mEventQService;
