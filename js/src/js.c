@@ -90,9 +90,9 @@
 #define EXITCODE_RUNTIME_ERROR 3
 #define EXITCODE_FILE_NOT_FOUND 4
 
-
 size_t gStackChunkSize = 8192;
 int gExitCode = 0;
+JSBool gQuitting = JS_FALSE;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
 
@@ -376,7 +376,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             }
             JS_DestroyScript(cx, script);
         }
-    } while (!hitEOF);
+    } while (!hitEOF && !gQuitting);
     fprintf(gOutFile, "\n");
     return;
 }
@@ -648,15 +648,13 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static JSBool
 Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    int r = 0;
-
 #ifdef LIVECONNECT
     JSJ_SimpleShutdown();
 #endif
 
-    JS_ConvertArguments(cx, argc, argv,"/ i", &r);
+    JS_ConvertArguments(cx, argc, argv,"/ i", &gExitCode);
 
-    exit(r);
+    gQuitting = JS_TRUE;
     return JS_FALSE;
 }
 
