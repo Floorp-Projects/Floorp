@@ -301,7 +301,7 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   nsCOMPtr<nsIDocument> parentDoc;
   aDocument->GetParentDocument(getter_AddRefs(parentDoc));
 
-  nsIPresShell *presShell(aShell);
+  nsIPresShell *presShell = aShell;
   if (!presShell) {
     presShell = aDocument->GetShellAt(0);
   }
