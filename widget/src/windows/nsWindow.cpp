@@ -761,6 +761,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mIMECompClauseString = NULL;
     mIMECompClauseStringSize = 0;
     mIMECompClauseStringLength = 0;
+    mIMECursorPosition = 0;
     mIMEReconvertUnicode = NULL;
     mLeadByte = '\0';
     mBlurEventSuppressionLevel = 0;
