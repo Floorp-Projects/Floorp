@@ -4305,6 +4305,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
       }
       rowGroupFrame=mFrames.FirstChild();
       nscoord y=0;
+      nscoord rowGroupYPos = 0;
       while (nsnull!=rowGroupFrame)
       {
         const nsStyleDisplay *rowGroupDisplay;
@@ -4312,7 +4313,6 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
         if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
         { 
           nscoord excessForGroup = 0;
-          nscoord rowGroupYPos = 0;
           DistributeSpaceToRows(aPresContext, aReflowState, rowGroupFrame, sumOfRowHeights, 
                                 excess, tableStyle, excessForGroup, rowGroupYPos);
         }
