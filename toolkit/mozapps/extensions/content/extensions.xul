@@ -135,6 +135,7 @@
 
   <hbox flex="1">
     <view id="extensionsView" flex="3" style="overflow: auto;"
+          context="extensionContextMenu"
           datasources="rdf:null" persist="last-selected"
           ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
           ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
@@ -216,7 +217,7 @@
           <action>
             <!-- XXXben - we could really use a variety of different templates
                           here to make each element not be so heavy. -->
-            <extension uri="?extension" context="extensionContextMenu"
+            <extension uri="?extension"
                        image="?icon" name="?name" version="?version" 
                        description="?description" creator="?creator"
                        disabled="?disabled" locked="?locked" 
@@ -269,7 +270,10 @@
                 command="cmd_useTheme"/>
       </hbox>
       <spacer flex="1"/>
-      <label id="getMore" onclick="openURL(gGetMoreURL);"
+
+      <label id="getMore"
+             onclick="openURL(gGetMoreURL);"
+             onkeypress="if (event.keyCode == event.DOM_VK_ENTER || event.keyCode == event.DOM_VK_RETURN) openURL(gGetMoreURL);"
              valuethemes="&getMoreThemes.label;"
              valueextensions="&getMoreExtensions.label;"
              tooltiptextthemes="&getMoreThemes.tooltip;"
