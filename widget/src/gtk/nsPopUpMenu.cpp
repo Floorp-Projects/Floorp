@@ -22,7 +22,7 @@
 #include "nsString.h"
 #include "nsFileSpec.h" // XXX: For nsAutoCString
 
-NS_IMPL_ISUPPORTS(nsPopUpMenu, nsPopUpMenu::GetIID())
+NS_IMPL_ISUPPORTS(nsPopUpMenu, nsIPopUpMenu::GetIID())
 
 //-------------------------------------------------------------------------
 //
