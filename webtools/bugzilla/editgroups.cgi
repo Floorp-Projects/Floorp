@@ -137,9 +137,9 @@ if ($action eq 'changeform') {
 
     my @groups;
     SendSQL("SELECT groups.id, groups.name, groups.description," .
-             " IF(group_group_map.member_id IS NOT NULL, 1, 0)," .
-             " IF(B.member_id IS NOT NULL, 1, 0)," .
-             " IF(C.member_id IS NOT NULL, 1, 0)" .
+             " CASE WHEN group_group_map.member_id IS NOT NULL THEN 1 ELSE 0 END," .
+             " CASE WHEN B.member_id IS NOT NULL THEN 1 ELSE 0 END," .
+             " CASE WHEN C.member_id IS NOT NULL THEN 1 ELSE 0 END" .
              " FROM groups" .
              " LEFT JOIN group_group_map" .
              " ON group_group_map.member_id = groups.id" .

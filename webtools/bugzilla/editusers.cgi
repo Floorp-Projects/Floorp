@@ -135,9 +135,9 @@ sub EmitFormElements ($$$$)
     if($user ne "") {
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
         SendSQL("SELECT groups.id, groups.name, groups.description, " .
-                "MAX(IF(grant_type = " . GRANT_DIRECT . ", 1, 0))," .
-                "MAX(IF(grant_type = " . GRANT_DERIVED . ", 1, 0))," .
-                "MAX(IF(grant_type = " . GRANT_REGEXP . ", 1, 0))" .
+                "MAX(CASE WHEN grant_type = " . GRANT_DIRECT . " THEN 1 ELSE 0 END)," .
+                "MAX(CASE WHEN grant_type = " . GRANT_DERIVED . " THEN 1 ELSE 0 END)," .
+                "MAX(CASE WHEN grant_type = " . GRANT_REGEXP . " THEN 1 ELSE 0 END)" .
                 "FROM groups " .
                 "LEFT JOIN user_group_map " .
                 "ON user_group_map.group_id = groups.id " .

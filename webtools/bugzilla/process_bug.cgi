@@ -572,9 +572,9 @@ sub ChangeStatus {
         if ($::FORM{knob} eq 'reopen') {
             # When reopening, we need to check whether the bug was ever
             # confirmed or not
-            $::query .= "bug_status = IF(everconfirmed = 1, " .
-                         SqlQuote($str) . ", " .
-                         SqlQuote($::unconfirmedstate) . ")";
+            $::query .= "bug_status = CASE WHEN everconfirmed = 1 THEN " .
+                         SqlQuote($str) . " ELSE " .
+                         SqlQuote($::unconfirmedstate) . " END";
         } elsif (IsOpenedState($str)) {
             # Note that we cannot combine this with the above branch - here we
             # need to check if bugs.bug_status is open, (since we don't want to
@@ -603,11 +603,11 @@ sub ChangeStatus {
 
             my @open_state = map(SqlQuote($_), OpenStates());
             my $open_state = join(", ", @open_state);
-            $::query .= "bug_status = IF(bug_status IN($open_state), " .
-                                        "IF(everconfirmed = 1, " .
-                                            SqlQuote($str) . ", " .
-                                            SqlQuote($::unconfirmedstate) . " ), " .
-                                        "bug_status)";
+            $::query .= "bug_status = CASE WHEN bug_status IN($open_state) THEN " .
+                                        "(CASE WHEN everconfirmed = 1 THEN " .
+                                            SqlQuote($str) . " ELSE " .
+                                            SqlQuote($::unconfirmedstate) . " END) ELSE " .
+                                        "bug_status END";
         } else {
             $::query .= "bug_status = " . SqlQuote($str);
         }
