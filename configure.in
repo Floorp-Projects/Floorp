@@ -1060,9 +1060,9 @@ case "$target" in
         _pwd=`pwd`
          CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
     fi
-    if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" != 0; then
-        PERL="${CYGWIN_WRAPPER} -up ${PERL}"
-        _CYGWIN_PERL=1
+    if test `${PERL} -v | grep -c cygwin  2>/dev/null` -eq 0; then
+        _AS_PERL=1
+        PERL="${CYGWIN_WRAPPER} ${PERL}"
     fi
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
@@ -3646,11 +3646,7 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
 fi
 
 dnl Remove dupes
-if test -n "${_CYGWIN_PERL}"; then
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
-else
-MOZ_EXTENSIONS=`${CYGWIN_WRAPPER} ${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
-fi
 
 dnl ========================================================
 dnl Image decoders
@@ -3688,11 +3684,7 @@ done],
     MOZ_IMG_DECODERS="$MOZ_IMG_DECODERS_DEFAULT")
 
 dnl Remove dupes
-if test -n "${_CYGWIN_PERL}"; then
 MOZ_IMG_DECODERS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_DECODERS}`
-else
-MOZ_IMG_DECODERS=`${CYGWIN_WRAPPER} ${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_DECODERS}`
-fi
 
 dnl ========================================================
 dnl experimental ldap features
@@ -4894,11 +4886,7 @@ MOZ_ARG_ENABLE_STRING(necko-protocols,
 done],
     NECKO_PROTOCOLS="$NECKO_PROTOCOLS_DEFAULT")
 dnl Remove dupes
-if test -n "${_CYGWIN_PERL}"; then
-    NECKO_PROTOCOLS=`${PERL} ${srcdir}/build/unix/uniq.pl ${NECKO_PROTOCOLS}`
-else
-    NECKO_PROTOCOLS=`${CYGWIN_WRAPPER} ${PERL} ${srcdir}/build/unix/uniq.pl ${NECKO_PROTOCOLS}`
-fi
+NECKO_PROTOCOLS=`${PERL} ${srcdir}/build/unix/uniq.pl ${NECKO_PROTOCOLS}`
 AC_SUBST(NECKO_PROTOCOLS)
 for p in $NECKO_PROTOCOLS; do
     AC_DEFINE_UNQUOTED(NECKO_PROTOCOL_$p)
@@ -5299,9 +5287,6 @@ mingw*|cygwin*|msvc*|mks*)
     AS="\$(CYGWIN_WRAPPER) $AS"
     RC="\$(CYGWIN_WRAPPER) $RC"
     MIDL="\$(CYGWIN_WRAPPER) $MIDL"
-    if test -z "${_CYGWIN_PERL}"; then
-        PERL="${CYGWIN_WRAPPER} $PERL"
-    fi
     CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
     ;;
 esac
@@ -5420,7 +5405,11 @@ dnl This does not change the $MAKEFILES variable.
 dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
-echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
+if test -z "${_AS_PERL}"; then
+echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
+else
+echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl -nowrap --cygwin-srcdir=$srcdir > conftest.sh
+fi
 . ./conftest.sh
 rm conftest.sh
 
