@@ -34,6 +34,7 @@ EXPORTS =                          \
 	nsCppSharedAllocator.h     \
 	nsCRT.h                    \
 	nsDeque.h                  \
+	nsDoubleHashtable.h        \
 	nsEnumeratorUtils.h        \
 	nsFixedSizeAllocator.h     \
 	nsHashtable.h              \
@@ -98,6 +99,7 @@ CPP_OBJS =                                        \
 	.\$(OBJDIR)\nsCRT.obj                     \
 	.\$(OBJDIR)\nsConjoiningEnumerator.obj    \
 	.\$(OBJDIR)\nsDeque.obj                   \
+	.\$(OBJDIR)\nsDoubleHashtable.obj         \
 	.\$(OBJDIR)\nsEmptyEnumerator.obj         \
 	.\$(OBJDIR)\nsEnumeratorUtils.obj         \
 	.\$(OBJDIR)\nsFixedSizeAllocator.obj      \

@@ -47,6 +47,7 @@ CPPSRCS		= \
 		nsCRT.cpp \
 		nsConjoiningEnumerator.cpp \
 		nsDeque.cpp \
+		nsDoubleHashtable.cpp \
 		nsEmptyEnumerator.cpp \
 		nsEnumeratorUtils.cpp \
 		nsFixedSizeAllocator.cpp \
@@ -79,6 +80,7 @@ EXPORTS		= \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
 		nsDeque.h \
+		nsDoubleHashtable.h \
 		nsEnumeratorUtils.h \
 		nsFixedSizeAllocator.h \
 		nsHashtable.h \
