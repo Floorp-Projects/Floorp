@@ -25,47 +25,72 @@
 %{C++
 
    /**
-    * nsIObserver topics for profile changing. Profile changing happens in 5 phases
+    * nsIObserver topics for profile changing. Profile changing happens in phases
     * in the order given below. An observer may register separately for each phase
     * of the process depending on its needs. The subject passed to the observer's
     * Observe() method can be QI'd to an nsIProfileChangeStatus.
     *
-    * PROFILE_APPROVE_CHANGE_TOPIC
-    *   Called before a profile switch is attempted. Typically,
+    * "profile-approve-change"
+    *   Called before a profile change is attempted. Typically,
     *   the application level observer will ask the user if
     *   he/she wants to stop all network activity, close all open
     *   windows, etc. If the user says NO, the observer should
     *   call the subject's vetoChange(). If any observer does
-    *   this, the profile will not be switched.
+    *   this, the profile will not be changed.
     *
-    * PROFILE_CHANGE_TEARDOWN_TOPIC
+    * "profile-change-teardown"
     *   All async activity must be stopped in this phase. Typically,
     *   the application level observer will close all open windows. 
     *
-    * PROFILE_BEFORE_CHANGE_TOPIC
+    * "profile-before-change"
     *   Called before the profile has changed. Use this notification
-    *   to prepare for the profile being switched. If a component is
+    *   to prepare for the profile going away. If a component is
     *   holding any state which needs to be flushed to a profile-relative
     *   location, it should be done here.
     *
-    * PROFILE_DO_CHANGE_TOPIC
+    * "profile-do-change"
     *   Called after the profile has changed. Do the work to
     *   respond to having a new profile. Any change which
     *   affects others must be done in this phase.
     *
-    * PROFILE_AFTER_CHANGE_TOPIC
+    * "profile-after-change"
     *   Called after the profile has changed. Use this notification
     *   to make changes that are dependent on what some other listener
-    *   did during its PROFILE_DO_CHANGE. For example, to respond to
+    *   did during its profile-do-change. For example, to respond to
     *   new preferences. 
-    */
-
-#define PROFILE_APPROVE_CHANGE_TOPIC (NS_LITERAL_STRING("profile-approve-change").get())
-#define PROFILE_CHANGE_TEARDOWN_TOPIC (NS_LITERAL_STRING("profile-change-teardown").get())
-#define PROFILE_BEFORE_CHANGE_TOPIC (NS_LITERAL_STRING("profile-before-change").get())
-#define PROFILE_DO_CHANGE_TOPIC (NS_LITERAL_STRING("profile-do-change").get())
-#define PROFILE_AFTER_CHANGE_TOPIC (NS_LITERAL_STRING("profile-after-change").get())
-  
+    *
+    *
+    * Contexts for profile changes. These are passed as the someData param to the
+    * observer's Observe() method.
+    
+    * "startup"
+    *   Going from no profile to a profile.
+    *
+    *   The following topics happen in this context:
+    *       profile-do-change
+    *       profile-after-change
+    *
+    * "shutdown-persist"
+    *   The user is logging out and whatever data the observer stores
+    *   for the current profile should be released from memory and
+    *   saved to disk.
+    *
+    * "shutdown-cleanse"
+    *   The user is logging out and whatever data the observer stores
+    *   for the current profile should be released from memory and
+    *   deleted from disk.
+    *
+    *   The following topics happen in both shutdown contexts:
+    *       profile-approve-change
+    *       profile-change-teardown
+    *       profile-before-change
+    *
+    * "switch"
+    *   Going from one profile to another.
+    *
+    *   All of the above topics happen in a profile switch.
+    *
+    */  
 %}
 
 

@@ -119,6 +119,9 @@ SI_DeleteAll();
 extern void
 SI_ClearUserData();
 
+extern void
+SI_DeletePersistentUserData();
+
 extern PRBool
 SINGSIGN_ReencryptAll();
 

@@ -1230,6 +1230,20 @@ SI_ClearUserData() {
   gLoadedUserData = PR_FALSE;
 }
 
+PUBLIC void
+SI_DeletePersistentUserData() {
+
+  if (signonFileName && nsCRT::strlen(signonFileName)) {
+    nsFileSpec fileSpec;
+    nsresult rv = Wallet_ProfileDirectory(fileSpec);
+    if (NS_SUCCEEDED(rv)) {
+      fileSpec += signonFileName;
+      if (fileSpec.Valid() && fileSpec.IsFile())
+        fileSpec.Delete(PR_FALSE);
+    }
+  }
+}
+
 /****************************
  * Managing the Reject List *
  ****************************/

@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-
+ 
 #include "nsProfile.h"
 #include "nsIPref.h"
 
@@ -87,7 +87,7 @@
 
 
 // A default profile name, in case automigration 4x profile fails
-#define DEFAULT_PROFILE_NAME           "default"
+#define DEFAULT_PROFILE_NAME           (NS_LITERAL_STRING("default").get())
 
 #define PROFILE_SELECTION_URL          "chrome://communicator/content/profile/profileSelection.xul"
 #define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
@@ -123,7 +123,6 @@
 // destructor at the right time (count == 0)
 static nsProfileAccess*    gProfileDataAccess = nsnull;
 static PRInt32          gInstanceCount = 0;
-static PRBool           mCurrentProfileAvailable = PR_FALSE;
 
 // Atoms for file locations
 static nsIAtom* sApp_PrefsDirectory50         = nsnull;
@@ -235,6 +234,7 @@ nsProfile::nsProfile()
     mAutomigrate = PR_FALSE;
     mOutofDiskSpace = PR_FALSE;
     mDiskSpaceErrorQuitCalled = PR_FALSE;
+    mCurrentProfileAvailable = PR_FALSE;
 
     if (gInstanceCount++ == 0) {
         
@@ -383,24 +383,12 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     nsresult rv;
     nsCOMPtr<nsIURI> profileURL;
     PRInt32 numProfiles=0;
+    nsXPIDLString currentProfileStr;
   
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     GetProfileCount(&numProfiles);
-    /*
-     * Create the Application Shell instance...
-     */
-    NS_WITH_SERVICE(nsIAppShellService, profAppShell,
-                          kAppShellServiceCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    PRBool shrimpPrefEnabled = PR_FALSE;
-    prefs->GetBoolPref(SHRIMP_PREF, &shrimpPrefEnabled);
-
-    if (shrimpPrefEnabled)
-        profileURLStr = "";
 
     if (profileURLStr.Length() == 0)
     {
@@ -411,25 +399,19 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
         {
             rv = CreateDefaultProfile();
             if (NS_FAILED(rv)) return rv;
-                
-            GetProfileCount(&numProfiles);
-            profileURLStr = "";
-
-            mCurrentProfileAvailable = PR_TRUE;
-            // Need to load new profile prefs.
-            rv = LoadNewProfilePrefs();
+            // Will get set in call to SetCurrentProfile() below
         }
         else if (numProfiles > 1)
             profileURLStr = PROFILE_SELECTION_URL;
     }
 
-    if ((profileURLStr.Length() != 0) && !(shrimpPrefEnabled))
+    if (profileURLStr.Length() != 0)
     {
-        rv = NS_NewURI(getter_AddRefs(profileURL), (const char *)profileURLStr);
+        NS_WITH_SERVICE(nsIAppShellService, profAppShell, kAppShellServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-        if (NS_FAILED(rv)) {
-            return rv;
-        } 
+        rv = NS_NewURI(getter_AddRefs(profileURL), (const char *)profileURLStr);
+        if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIXULWindow> profWindow;
         rv = profAppShell->CreateTopLevelWindow(nsnull, profileURL,
@@ -440,9 +422,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 
         if (NS_FAILED(rv)) return rv;
 
-        /*
-         * Start up the main event loop...
-         */    
+        // Start an event loop for the modal dialog
         rv = profAppShell->Run();
     }
 
@@ -473,17 +453,16 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     // if we get here, and we don't have a current profile, 
     // return a failure so we will exit
     // this can happen, if the user hits Exit in the profile manager dialog
-    nsXPIDLString currentProfileStr;
     rv = GetCurrentProfile(getter_Copies(currentProfileStr));
-
     if (NS_FAILED(rv) || (*(const PRUnichar*)currentProfileStr == 0)) {
         return NS_ERROR_FAILURE;
     }
-    mCurrentProfileAvailable = PR_TRUE;
 
-    // Now we have the right profile, read the user-specific prefs.
-    rv = prefs->ReadUserPrefs();
-    if (NS_FAILED(rv)) return rv;
+    // if at this point we have a current profile but it is not set, set it
+    if (!mCurrentProfileAvailable) {
+        rv = SetCurrentProfile(currentProfileStr);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_CONTRACTID, &rv);
 
@@ -523,7 +502,8 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 
         rv = pPrefConverter->ConvertPrefsToUTF8();
     }
-    return rv;
+    
+    return NS_OK;
 }
 
 nsresult 
@@ -965,28 +945,26 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     }
     else
         isSwitch = PR_FALSE;
-            
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    NS_ENSURE_TRUE(directoryService, NS_ERROR_FAILURE);
     
     NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
     
     nsISupports *subject = (nsISupports *)((nsIProfile *)this);
+    nsLiteralString context(isSwitch ? (NS_LITERAL_STRING("switch")).get() : NS_LITERAL_STRING("startup").get());
             
     if (isSwitch)
     {
         // Phase 1: See if anybody objects to the profile being changed.
         mProfileChangeVetoed = PR_FALSE;        
-        observerService->Notify(subject, PROFILE_APPROVE_CHANGE_TOPIC, nsnull);
+        observerService->Notify(subject, NS_LITERAL_STRING("profile-approve-change").get(), context.get());
         if (mProfileChangeVetoed)
             return NS_OK;
 
         // Phase 2: Send the "teardown" notification
-        observerService->Notify(subject, PROFILE_CHANGE_TEARDOWN_TOPIC, nsnull);
+        observerService->Notify(subject, NS_LITERAL_STRING("profile-change-teardown").get(), context.get());
         
         // Phase 3: Notify observers of a profile change
-        observerService->Notify(subject, PROFILE_BEFORE_CHANGE_TOPIC, nsnull);        
+        observerService->Notify(subject, NS_LITERAL_STRING("profile-before-change").get(), context.get());        
     }
 
     // Flush the stringbundle cache
@@ -1006,29 +984,15 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     
     if (isSwitch)
     {
-        (void) directoryService->Undefine(NS_APP_PREFS_50_DIR);
-        (void) directoryService->Undefine(NS_APP_PREFS_50_FILE);
-        (void) directoryService->Undefine(NS_APP_USER_PROFILE_50_DIR);
-        (void) directoryService->Undefine(NS_APP_USER_CHROME_DIR);
-        (void) directoryService->Undefine(NS_APP_LOCALSTORE_50_FILE);
-        (void) directoryService->Undefine(NS_APP_HISTORY_50_FILE);
-        (void) directoryService->Undefine(NS_APP_USER_PANELS_50_FILE);
-        (void) directoryService->Undefine(NS_APP_USER_MIMETYPES_50_FILE);
-        (void) directoryService->Undefine(NS_APP_BOOKMARKS_50_FILE);
-        (void) directoryService->Undefine(NS_APP_SEARCH_50_FILE);
-        (void) directoryService->Undefine(NS_APP_MAIL_50_DIR);
-        (void) directoryService->Undefine(NS_APP_IMAP_MAIL_50_DIR);
-        (void) directoryService->Undefine(NS_APP_NEWS_50_DIR);
-        (void) directoryService->Undefine(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
-
-        // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
-        observerService->Notify(subject, PROFILE_DO_CHANGE_TOPIC, nsnull);
-
-        // Phase 5: Now observers can respond to something another observer did in phase 4
-        observerService->Notify(subject, PROFILE_AFTER_CHANGE_TOPIC, nsnull);
+        rv = UndefineFileLocations();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Could not undefine file locations");
     }
-    else
-      rv = LoadNewProfilePrefs();
+
+    // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
+    observerService->Notify(subject, NS_LITERAL_STRING("profile-do-change").get(), context.get());
+
+    // Phase 5: Now observers can respond to something another observer did in phase 4
+    observerService->Notify(subject, NS_LITERAL_STRING("profile-after-change").get(), context.get());
       
     // Now that a profile is established, set the profile defaults dir for the locale of this profile
     rv = DefineLocaleDefaultsDir();
@@ -1053,6 +1017,37 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsIFile **profileDir)
 
     return NS_OK;
 }
+
+// Performs a "logout" by shutting down the current profile
+NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
+{
+    nsresult rv;
+    
+    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
+    
+    nsISupports *subject = (nsISupports *)((nsIProfile *)this);
+    nsLiteralString context(shutDownType == SHUTDOWN_CLEANSE ? NS_LITERAL_STRING("shutdown-cleanse").get() : NS_LITERAL_STRING("shutdown-persist").get());
+           
+    // Phase 1: See if anybody objects to the profile being changed.
+    mProfileChangeVetoed = PR_FALSE;        
+    observerService->Notify(subject, NS_LITERAL_STRING("profile-approve-change").get(), context.get());
+    if (mProfileChangeVetoed)
+        return NS_OK;
+
+    // Phase 2: Send the "teardown" notification
+    observerService->Notify(subject, NS_LITERAL_STRING("profile-change-teardown").get(), context.get());
+    
+    // Phase 3: Notify observers of a profile change
+    observerService->Notify(subject, NS_LITERAL_STRING("profile-before-change").get(), context.get());        
+
+    rv = UndefineFileLocations();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not undefine file locations");
+    mCurrentProfileAvailable = PR_FALSE;
+    
+    return NS_OK;
+}
+
 
 #define SALT_SIZE 8
 #define TABLE_SIZE 36
@@ -1493,6 +1488,7 @@ NS_IMETHODIMP nsProfile::ForgetCurrentProfile()
     if (NS_FAILED(rv)) return rv;  
 
     gProfileDataAccess->mForgetProfileCalled = PR_TRUE;
+    mCurrentProfileAvailable = PR_FALSE;
     
     return rv;
 }
@@ -1715,6 +1711,31 @@ nsProfile::DefineLocaleDefaultsDir()
         rv = directoryService->Define(NS_APP_PROFILE_DEFAULTS_50_DIR, localeDefaults);
     }
     return rv;
+}
+
+nsresult nsProfile::UndefineFileLocations()
+{
+    nsresult rv;
+    
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    NS_ENSURE_TRUE(directoryService, NS_ERROR_FAILURE);
+
+    (void) directoryService->Undefine(NS_APP_PREFS_50_DIR);
+    (void) directoryService->Undefine(NS_APP_PREFS_50_FILE);
+    (void) directoryService->Undefine(NS_APP_USER_PROFILE_50_DIR);
+    (void) directoryService->Undefine(NS_APP_USER_CHROME_DIR);
+    (void) directoryService->Undefine(NS_APP_LOCALSTORE_50_FILE);
+    (void) directoryService->Undefine(NS_APP_HISTORY_50_FILE);
+    (void) directoryService->Undefine(NS_APP_USER_PANELS_50_FILE);
+    (void) directoryService->Undefine(NS_APP_USER_MIMETYPES_50_FILE);
+    (void) directoryService->Undefine(NS_APP_BOOKMARKS_50_FILE);
+    (void) directoryService->Undefine(NS_APP_SEARCH_50_FILE);
+    (void) directoryService->Undefine(NS_APP_MAIL_50_DIR);
+    (void) directoryService->Undefine(NS_APP_IMAP_MAIL_50_DIR);
+    (void) directoryService->Undefine(NS_APP_NEWS_50_DIR);
+    (void) directoryService->Undefine(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
+
+    return NS_OK;
 }
 
 // Migrate a selected profile
@@ -2093,8 +2114,7 @@ nsProfile::CreateDefaultProfile(void)
     rv = profileRootDir->GetUnicodePath(getter_Copies(profilePath));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString defaultProfileName; defaultProfileName.AssignWithConversion(DEFAULT_PROFILE_NAME);
-    rv = CreateNewProfile(defaultProfileName.GetUnicode(), profilePath, nsnull, PR_TRUE);
+    rv = CreateNewProfile(DEFAULT_PROFILE_NAME, profilePath, nsnull, PR_TRUE);
 
     return rv;
 }

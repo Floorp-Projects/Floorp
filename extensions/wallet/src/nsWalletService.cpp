@@ -44,7 +44,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIChannel.h"
-#include "nsIProfileChangeStatus.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
 #include "nsIScriptGlobalObject.h"
@@ -200,10 +199,13 @@ NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(nsAutoString results){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar*) 
+NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar *someData) 
 {
-  if (!nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC)) {
+  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
     WLLT_ClearUserData();
+    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+      WLLT_DeletePersistentUserData();
+    }
   }
   return NS_OK;
 }
@@ -228,7 +230,7 @@ nsresult nsWalletlibService::Init()
     nsAutoString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
     svc->AddObserver(this, topic.GetUnicode());
     // Register as an observer of profile changes
-    svc->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+    svc->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
   }
   else
     NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
@@ -482,7 +484,7 @@ nsSingleSignOnPrompt::Init()
   NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && svc) {
     // Register as an observer of profile changes
-    svc->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+    svc->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
   }
   else
     NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
@@ -591,10 +593,13 @@ nsSingleSignOnPrompt::SetPromptDialogs(nsIPrompt* dialogs)
 // nsIObserver methods:
 
 NS_IMETHODIMP
-nsSingleSignOnPrompt::Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar*) 
+nsSingleSignOnPrompt::Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar *someData) 
 {
-  if (!nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC)) {
+  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
     SI_ClearUserData();
+    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+      SI_DeletePersistentUserData();
+    }
   }
   return NS_OK;
 }

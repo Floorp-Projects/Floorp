@@ -55,6 +55,9 @@ extern void
 WLLT_ClearUserData();
 
 extern void
+WLLT_DeletePersistentUserData();
+
+extern void
 WLLT_PreEdit(nsString& walletList);
 
 extern void

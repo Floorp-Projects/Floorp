@@ -52,7 +52,6 @@
 #include "nsIFileSpec.h"
 #include "prmem.h"
 #include "prprf.h"  
-#include "nsIProfile.h"
 #include "nsIContent.h"
 #include "nsISecurityManagerComponent.h"
 
@@ -74,7 +73,6 @@ static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -3091,6 +3089,20 @@ WLLT_ClearUserData() {
   wallet_ValuesReadIn = PR_FALSE;
   namesInitialized = PR_FALSE;
   wallet_URLListInitialized = PR_FALSE;
+}
+
+PUBLIC void
+WLLT_DeletePersistentUserData() {
+
+  if (schemaValueFileName && nsCRT::strlen(schemaValueFileName)) {
+    nsFileSpec fileSpec;
+    nsresult rv = Wallet_ProfileDirectory(fileSpec);
+    if (NS_SUCCEEDED(rv)) {
+      fileSpec += schemaValueFileName;
+      if (fileSpec.Valid() && fileSpec.IsFile())
+        fileSpec.Delete(PR_FALSE);
+    }
+  }
 }
 
 MODULE_PRIVATE int PR_CALLBACK

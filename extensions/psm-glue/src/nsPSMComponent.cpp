@@ -65,7 +65,6 @@
 #include "nsIDOMWindow.h"
 
 #include "nsIObserverService.h"
-#include "nsIProfileChangeStatus.h"
 
 #define PSM_VERSION_REG_KEY "/Netscape/Personal Security Manager"
 
@@ -166,7 +165,7 @@ nsPSMComponent::RegisterProfileChangeObserver()
     if (observerService) {
         // Our refcnt must be > 0 when we call AddObserver or we'll get deleted. 
         ++mRefCnt;
-        observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+        observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
         --mRefCnt;
     }
     return rv;
@@ -1228,7 +1227,7 @@ nsPSMComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 NS_IMETHODIMP
 nsPSMComponent::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
-    if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
+    if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get()) == 0) {
 
         // The profile is about to change - close our control connection if we have one.
         // Next time PSM is needed, we'll make a new control connection which

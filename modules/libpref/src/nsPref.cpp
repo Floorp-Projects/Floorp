@@ -61,8 +61,6 @@
 #include "nsWeakReference.h"
 #include "nsISupportsArray.h"
 
-#include "nsIProfileChangeStatus.h"
-
 #include "nsTextFormatter.h"
 
 #include "plhash.h"
@@ -235,8 +233,8 @@ nsPref::nsPref()
     if (observerService) {
         // Our refcnt must be > 0 when we call this, or we'll get deleted!
         ++mRefCnt;
-        rv = observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
-        rv = observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+        rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+        rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
         --mRefCnt;
     }
 }
@@ -1459,10 +1457,17 @@ NS_IMETHODIMP nsPref::Observe(nsISupports *aSubject, const PRUnichar *aTopic, co
 {
     nsresult rv = NS_OK;
 
-    if (!nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC)) {
-        rv = SavePrefFile();
+    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+            if (mFileSpec) {
+                mFileSpec->Delete(PR_FALSE);
+                NS_RELEASE(mFileSpec);
+            }
+        }
+        else
+            rv = SavePrefFile();
     }
-    else if (!nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC)) {
+    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {
         PREF_ClearAllUserPrefs();
         rv = ReadUserPrefs();
     }

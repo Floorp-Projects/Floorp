@@ -116,7 +116,6 @@ BOOL CMfcEmbedApp::InitInstance()
 		return FALSE;
 	}
 
-    InitializePrefs();
 
     if(!CreateHiddenWindow())
 	{
@@ -255,13 +254,13 @@ BOOL CMfcEmbedApp::InitializeProfiles()
     if (!m_ProfileMgr)
         return FALSE;
 
-    m_ProfileMgr->StartUp();
-
-	nsresult rv;
+	  nsresult rv;
     NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    observerService->AddObserver(this, PROFILE_APPROVE_CHANGE_TOPIC);
-    observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC);
-    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+
+    m_ProfileMgr->StartUp();
 
 	return TRUE;
 }
@@ -388,7 +387,7 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTop
 {
     nsresult rv = NS_OK;
     
-    if (nsCRT::strcmp(aTopic, PROFILE_APPROVE_CHANGE_TOPIC) == 0)
+    if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-approve-change").get()) == 0)
     {
         // Ask the user if they want to
         int result = MessageBox(NULL, "Do you want to close all windows in order to switch the profile?", "Confirm", MB_YESNO | MB_ICONQUESTION);
@@ -399,7 +398,7 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTop
             status->VetoChange();
         }
     }
-    else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_TOPIC) == 0)
+    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
     {
         // Close all open windows. Alternatively, we could just call CBrowserWindow::Stop()
         // on each. Either way, we have to stop all network activity on this phase.
@@ -424,11 +423,14 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTop
         if (NS_SUCCEEDED(rv))
           cacheMgr->Clear(nsINetDataCacheManager::MEM_CACHE);
     }
-    else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0)
+    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()) == 0)
     {
         InitializePrefs(); // In case we have just switched to a newly created profile.
         
-        OnNewBrowser();
+        // Only make a new browser window on a switch. This also gets
+        // called at start up and we already make a window then.
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("switch").get()))      
+            OnNewBrowser();
     }
     return rv;
 }

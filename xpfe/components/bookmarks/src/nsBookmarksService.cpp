@@ -37,7 +37,6 @@
 #include "nsFileStream.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIProfileChangeStatus.h"
 #include "nsIObserverService.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
@@ -1682,8 +1681,8 @@ nsBookmarksService::Init()
     NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     NS_ASSERTION(observerService, "Could not get observer service.");
     if (observerService) {
-        observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
-        observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+        observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+        observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
     }
 
 	// read in bookmarks AFTER trying to get string bundle
@@ -2482,12 +2481,19 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const PRUnichar
 {
   nsresult rv = NS_OK;
 
-  if (!nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC))
+  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get()))
   {
     // The profile has not changed yet.
     rv = Flush();
+    
+    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+      nsFileSpec	bookmarksFile;
+	    rv = GetBookmarksFile(&bookmarksFile);
+      if (NS_SUCCEEDED(rv) && bookmarksFile.IsFile())
+        bookmarksFile.Delete(PR_FALSE);
+    }
   }    
-  else if (!nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC))
+  else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get()))
   {
     // The profile has aleady changed.
     rv = ReadBookmarks();
