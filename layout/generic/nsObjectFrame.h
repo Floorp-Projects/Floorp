@@ -116,6 +116,8 @@ protected:
  
   nsresult GetBaseURL(nsIURI* &aURL);
 
+  PRBool IsHidden() const;
+
 private:
   nsPluginInstanceOwner *mInstanceOwner;
   nsIURI                *mFullURL;
