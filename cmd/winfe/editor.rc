@@ -464,8 +464,6 @@ BEGIN
     IDS_COLUMN              "Column"
     IDS_CELL                "Cell"
     IDS_PERCENT_TABLE       "% of table"
-    IDS_APPLY_CELL_MSG      "Apply changes before changing selection?"
-    IDS_CHANGE_SEL_CAPTION  "Change Table Selection"
     IDS_SMALL_ROMAN         "i, ii, iii..."
 END
 
@@ -487,6 +485,8 @@ BEGIN
     IDS_WHITE_ON_VIOLET     "White on Violet"
     IDS_BLACK_ON_WHITE      "Black on White"
     IDS_INTEGER_RANGE_ERROR "Please enter an integer between %d and %d"
+    IDS_MISSING_IMAGE       "You must supply an Image URL and\nAlternate Text for the image"
+    IDS_MISSING_LINK        "You must supply an Link Location"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -635,6 +635,7 @@ BEGIN
     IDS_EDIT_DOC_SOURCE     "Edit page &Source"
     IDS_TEXT_PROPS_CAPTION  "Character Properties"
     IDS_IMAGE_PROPS_CAPTION "Image Properties"
+    IDS_LINK_PROPS_CAPTION  "Link Properties"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -660,7 +661,7 @@ BEGIN
                             "Unable to launch external editor! Error code=%d"
     IDS_IMAGE_IS_REMOTE     "Image is at a remote location.\nSave image to disk before editing."
     IDS_EDIT_IMAGE_CAPTION  "Edit Image"
-    ID_EDT_NEW_DOC_BLANK    "Create a new page\nNew"
+    ID_EDT_NEW_DOC_BLANK    "Create a new page\nNew\nNew"
     ID_EDT_NEW_DOC_TEMPLATE "Use a template to create a new web page"
     IDS_FILE_IS_MODIFIED    "This page has been modified by another program.\nReload page to see changes?"
     IDS_FILE_MODIFIED_CAPTION "Reload File"

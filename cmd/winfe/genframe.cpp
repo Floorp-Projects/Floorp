@@ -3132,7 +3132,7 @@ BOOL CGenericFrame::OnCommand(UINT wParam,LONG lParam)
         // Don't load into a Composer frame if within mail
         // TODO QUESTION: Should we even load into a Composer when within a Compose Frame?
         if(EDT_IS_EDITOR(pContext) && !pContext->bIsComposeWindow)
-    	    FE_LoadUrl(nodeURL, TRUE);
+    	    FE_LoadUrl(nodeURL, LOAD_URL_COMPOSER);
         else
 #endif
 		{

@@ -1507,7 +1507,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     if(nIDS)
     {
         // Why on earth does ID_PROPS_LINK get disabled if used here???
-        cmPopup.AppendMenu(MF_ENABLED, ID_POPUP_PROPS_LINK, szLoadString(nIDS));
+        cmPopup.AppendMenu(MF_ENABLED, ID_MAKE_LINK /*ID_POPUP_PROPS_LINK*/, szLoadString(nIDS));
         bLinkPopup = TRUE;
     }
 

@@ -235,13 +235,6 @@ BEGIN
     END
     POPUP "T&able"
     BEGIN
-        POPUP "&Align Table"
-        BEGIN
-	        MENUITEM "&Left",                      ID_ALIGN_TABLE_LEFT
-	        MENUITEM "&Center",                    ID_ALIGN_TABLE_CENTER
-	        MENUITEM "&Right",                     ID_ALIGN_TABLE_RIGHT
-        END
-        MENUITEM SEPARATOR
         // Will be replaced with IDM_COMPOSER_TABLE_INSERTMENU
         MENUITEM "{&I}"                            ID_INSERT_TABLE
         // Will be replaced with IDM_COMPOSER_TABLE_DELETEMENU
@@ -249,9 +242,15 @@ BEGIN
         // Will be replaced with IDM_COMPOSER_TABLE_SELECTMENU
         MENUITEM "{&S}"                            ID_SELECT_TABLE
         MENUITEM SEPARATOR
-        // "&Join..."
+        POPUP "&Align Table"
+        BEGIN
+	        MENUITEM "&Left",                      ID_ALIGN_TABLE_LEFT
+	        MENUITEM "&Center",                    ID_ALIGN_TABLE_CENTER
+	        MENUITEM "&Right",                     ID_ALIGN_TABLE_RIGHT
+        END
+        MENUITEM SEPARATOR
+        // "&Join..." or "Spli&t Cell"
         MENUITEM "{&J}"                            ID_MERGE_TABLE_CELLS
-        //MENUITEM "Spli&t Cell"                     ID_SPLIT_TABLE_CELL
         // "&Convert Text To Table" or "&Convert Table To Text"
         MENUITEM "{&C}"                            ID_TABLE_TEXT_CONVERT
         MENUITEM SEPARATOR
@@ -372,8 +371,7 @@ BEGIN
 	    MENUITEM SEPARATOR
 	    MENUITEM "&HTML Source",                   ID_FILE_EDITSOURCE
 	    MENUITEM SEPARATOR
-	    MENUITEM "Pr&eferences",				   ID_OPTIONS_PREFERENCES
-    //	MENUITEM "&Mail and News Preferences...",  ID_OPTIONS_MAILANDNEWS
+	    MENUITEM "Pr&eferences...",				   ID_OPTIONS_PREFERENCES
     END
     POPUP "&View"
     BEGIN
@@ -385,7 +383,7 @@ BEGIN
 	    MENUITEM SEPARATOR
 	    MENUITEM "&Reload",                     ID_NAVIGATE_RELOAD
 	    MENUITEM "Show &Images",                ID_VIEW_LOADIMAGES
-	    MENUITEM "Re&fresh",                    ID_NAVIGATE_REPAINT
+	    MENUITEM "Refres&h",                    ID_NAVIGATE_REPAINT
 	    MENUITEM "&Stop Loading\t<Esc>",        ID_NAVIGATE_INTERRUPT
 	    MENUITEM SEPARATOR
 	    MENUITEM "Page So&urce",                ID_FILE_VIEWSOURCE
@@ -431,8 +429,8 @@ BEGIN
 	    MENUITEM "T&arget...",                  ID_INSERT_TARGET
 	    MENUITEM "&Image...",                   ID_INSERT_IMAGE
 	    MENUITEM "H&orizontal Line",            ID_INSERT_HRULE
-        MENUITEM "&Table..."                 ID_INSERT_TABLE
-	    MENUITEM "&HTML Tag...",                 ID_INSERT_TAG
+        MENUITEM "&Table..."                    ID_INSERT_TABLE
+	    MENUITEM "&HTML Tag...",                ID_INSERT_TAG
 	    MENUITEM SEPARATOR
 	    MENUITEM "&New Line Break\tShift+Enter"     ID_INSERT_LINE_BREAK
 	    MENUITEM "&Break below Image(s)"            ID_INSERT_BREAK_BOTH
@@ -508,13 +506,6 @@ BEGIN
     END
     POPUP "T&able"
     BEGIN
-        POPUP "&Align Table"
-        BEGIN
-	        MENUITEM "&Left",                      ID_ALIGN_TABLE_LEFT
-	        MENUITEM "&Center",                    ID_ALIGN_TABLE_CENTER
-	        MENUITEM "&Right",                     ID_ALIGN_TABLE_RIGHT
-        END
-        MENUITEM SEPARATOR
         // Will be replaced with IDM_COMPOSER_TABLE_INSERTMENU
         MENUITEM "{&I}"                            ID_INSERT_TABLE
         // Will be replaced with IDM_COMPOSER_TABLE_DELETEMENU
@@ -522,22 +513,19 @@ BEGIN
         // Will be replaced with IDM_COMPOSER_TABLE_SELECTMENU
         MENUITEM "{&S}"                            ID_SELECT_TABLE
         MENUITEM SEPARATOR
-        // "&Join..."
+        POPUP "&Align Table"
+        BEGIN
+	        MENUITEM "&Left",                      ID_ALIGN_TABLE_LEFT
+	        MENUITEM "&Center",                    ID_ALIGN_TABLE_CENTER
+	        MENUITEM "&Right",                     ID_ALIGN_TABLE_RIGHT
+        END
+        MENUITEM SEPARATOR
+        // "&Join..." or "Spli&t Cell"
         MENUITEM "{&J}"                            ID_MERGE_TABLE_CELLS
-        //MENUITEM "Spli&t Cell"                     ID_SPLIT_TABLE_CELL
         // "&Convert Text To Table" or "&Convert Table To Text"
         MENUITEM "{&C}"                            ID_TABLE_TEXT_CONVERT
         MENUITEM SEPARATOR
         MENUITEM "&Properties"                     ID_PROPS_TABLE
-#if 0        
-        POPUP "&Properties"
-        BEGIN
-           MENUITEM "&Table"                       ID_PROPS_TABLE
-           MENUITEM "&Row"                         ID_PROPS_TABLE_ROW
-           MENUITEM "C&olumn"                      ID_PROPS_TABLE_COLUMN
-           MENUITEM "&Cell"                        ID_PROPS_TABLE_CELL 
-        END
-#endif
     END
      // Translate this menu group string and the string IDS_TOOLS_MENU(in editor.rc) identically.
      // The code tries to find this menu entry using the string resource.
@@ -610,17 +598,8 @@ END
 
 IDM_COMPOSER_TABLE_INSERTMENU MENU DISCARDABLE
 BEGIN
-#if 0
-// Use this for final release
-    MENUITEM "&Row"                        ID_INSERT_TABLE_ROW_ABOVE
-    MENUITEM "C&olumn"                     ID_INSERT_TABLE_COLUMN_BEFORE
-    MENUITEM "&Cell"                       ID_INSERT_TABLE_CELL_BEFORE
+    MENUITEM "&Table..."                   ID_INSERT_TABLE
     MENUITEM SEPARATOR
-	MENUITEM "C&aption"                    ID_INSERT_TABLE_CAPTION
-    MENUITEM "&More..."                    ID_INSERT_TABLE_MORE
-#endif
-//#if 0
-// Use this for debugging all possible insert modes
     MENUITEM "&Row Above"                  ID_INSERT_TABLE_ROW_ABOVE
     MENUITEM "Row &Below"                  ID_INSERT_TABLE_ROW
     MENUITEM SEPARATOR
@@ -629,21 +608,15 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "&Cell Before"                ID_INSERT_TABLE_CELL_BEFORE
     MENUITEM "C&ell After"                 ID_INSERT_TABLE_CELL
-    MENUITEM SEPARATOR
-	MENUITEM "C&aption"                    ID_INSERT_TABLE_CAPTION
-    MENUITEM "&More..."                    ID_INSERT_TABLE_MORE
-//#endif
 END
 
 
 IDM_COMPOSER_TABLE_DELETEMENU MENU DISCARDABLE
 BEGIN
+   MENUITEM "&Table"                       ID_DELETE_TABLE
    MENUITEM "&Row"                         ID_DELETE_TABLE_ROW
    MENUITEM "C&olumn"                      ID_DELETE_TABLE_COLUMN
    MENUITEM "&Cell"                        ID_DELETE_TABLE_CELL
-   MENUITEM "&Table"                       ID_DELETE_TABLE
-   MENUITEM "C&aption"                     ID_DELETE_TABLE_CAPTION
-   MENUITEM "&More..."                     ID_DELETE_TABLE_MORE
 END
 
 /////////////////////////////////////////////////////////////////////////////

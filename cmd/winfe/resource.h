@@ -442,7 +442,6 @@
 #define IDC_BUTTON1                     373
 #define IDC_SHORTCUT1                   373
 #define IDC_USE_EXTERNAL_CHANGES        373
-#define IDC_ALT_TEXT_LOWRES             373
 #define IDC_USE_INTERNAL_CHANGES        374
 #define IDC_SHORTCUT2                   374
 #define IDC_EXTRA_HTML                  374
@@ -2738,8 +2737,8 @@
 #define IDS_TEXT_PROPS_CAPTION          42190
 #define IDS_IMAGE_PROPS_CAPTION         42191
 #define IDS_LINK_PROPS_CAPTION          42192
-#define IDS_REMOVE_LINKS_CAPTION        42192
-#define IDS_JAVA_PROPS_CAPTION          42193
+#define IDS_REMOVE_LINKS_CAPTION        42193
+#define IDS_JAVA_PROPS_CAPTION          42194
 #define IDS_ERROR_READ_ONLY             42206
 #define IDS_FILE_ERROR_CAPTION          42207
 #define IDS_ERROR_BLOCKED               42208
@@ -2842,7 +2841,8 @@
 #define IDS_SELECTED_CELLS_CAPTION      42321
 #define IDS_SELECTED_ROW_CAPTION        42322
 #define IDS_SELECTED_COLUMN_CAPTION     42323
-#define IDS_CHANGE_SEL_CAPTION          42324
+#define IDS_MISSING_IMAGE               42324
+#define IDS_MISSING_LINK                42325
 #define ID_PROPS_TABLE                  42330
 #define ID_PROPS_TABLE_ROW              42331
 #define ID_PROPS_TABLE_COLUMN           42332
@@ -2872,7 +2872,6 @@
 #define IDS_CELL                        42357
 #define IDS_TABLE                       42358
 #define IDS_PERCENT_TABLE               42359
-#define IDS_APPLY_CELL_MSG              42360
 #define IDS_SMALL_ROMAN                 42363
 #define ID_NAVIGATE_CONTINUE            42365
 #define ID_DISPLAY_TABLES               42366

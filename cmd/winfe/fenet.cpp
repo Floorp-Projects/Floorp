@@ -515,8 +515,9 @@ wfe_GetSaveFileName(HWND m_hWnd, char * prompt, char * initial, int * type, char
 	
     // try to guess the type
     if(initial) {
-
-        if( bHtmlOnly || strcasestr(initial, "htm") || strcasestr(initial, "html")) {
+        BOOL bHTM = (NULL != strcasestr(initial, "htm"));
+        BOOL bHTML = (NULL != strcasestr(initial, "html"));
+        if( bHtmlOnly || bHTM || bHTML ) {
 /*__EDITOR__*/
 // Use ".html" for 32-bit versions
 #ifdef XP_WIN16
@@ -524,7 +525,7 @@ wfe_GetSaveFileName(HWND m_hWnd, char * prompt, char * initial, int * type, char
 #else
             extension = "html";
 #endif
-            if( bHtmlOnly ){
+            if( bHtmlOnly && !bHTM && !bHTML ){
                 // This will force replacing any existing EXT with value "extension"
                 bAppendHTML_Ext = TRUE;
             }

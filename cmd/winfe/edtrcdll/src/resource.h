@@ -30,7 +30,6 @@
 #define IDC_FONTFACE_COMBO              213
 #define IDC_AUTO_SAVE_MINUTES           214
 #define IDC_PUBLISH_USER_NAME           217
-#define IDC_ALT_TEXT_LOWRES             373
 #define IDC_USE_EXTERNAL_CHANGES        373
 #define IDC_EXTRA_HTML                  374
 #define IDC_USE_INTERNAL_CHANGES        374

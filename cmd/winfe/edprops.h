@@ -1211,10 +1211,7 @@ public:
     UINT    m_nIDBitmap;
 
 private:
-	// These are changed via CImageAltDlg dialog
-    CString	       m_csLowRes;
 	CString	       m_csAltText;
-    
     MWContext     *m_pMWContext;
     EDT_ImageData *m_pData;
     BOOL           m_bInsert;
@@ -1250,6 +1247,8 @@ private:
 public:
     // Called after saving file to disk -- has new image path+name
     void SetImageFileSaved(char * pImageURL, BOOL bMainImage);
+    // Set state of OK button
+    void SetOKEnable();
 
 protected:
 
@@ -1268,7 +1267,6 @@ protected:
 	afx_msg void OnRemoveIsmap();
 	afx_msg void OnImageOriginalSize();
 	afx_msg void OnEditImage();
-	afx_msg void OnAltTextLowRes();
 	afx_msg void OnAlignBaseline();
 	afx_msg void OnAlignBottom();
 	afx_msg void OnAlignCenter();
@@ -1285,63 +1283,13 @@ protected:
 	afx_msg void OnChangeBorder();
 	afx_msg void OnExtraHTML();
     afx_msg void OnLockAspect();
+	afx_msg void OnChangeAltText();
     //}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// CAltImageDlg dialog (modal popup over CImagePage for Alt text and Lowres Image)
-
-class CImageAltDlg : public CDialog
-{
-// Construction
-public:
-	CImageAltDlg(CWnd *pParent, MWContext *pMWContext,
-                 CString& csAltText, CString& csLowRes );
-    ~CImageAltDlg();
-
- // Dialog Data
-	//{{AFX_DATA(CImageAltDlg)
-	enum { IDD = IDD_IMAGE_ALT };
-	CString	m_csLowRes;
-	CString	m_csAltText;
-	//}}AFX_DATA
-
-    MWContext     *m_pMWContext;
-    BOOL           m_bImageChanged;
-
-private:
-    // This will change resource hInstance to Editor dll (in constructor)
-    CEditorResourceSwitcher m_ResourceSwitcher;
-
-// Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CImageAltDlg)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	//}}AFX_VIRTUAL
-
-// Implementation
-protected:
-
-	// Generated message map functions
-	//{{AFX_MSG(CImageAltDlg)
-	afx_msg void OnHelp();
-	virtual void OnOK();
-	virtual BOOL OnInitDialog();
-	afx_msg void OnLowResFile();
-	afx_msg void OnChangeLowResURL();
-	afx_msg void OnEditImage();
-	//}}AFX_MSG
-#ifdef XP_WIN32
-    afx_msg BOOL OnHelpInfo(HELPINFO *);
-#endif
-	DECLARE_MESSAGE_MAP()
-};
-
-
-/////////////////////////////////////////////////////////////////////////////
-// CExtraHTMLDlg dialog (modal popup over CImagePage or CLinkPage for Extra HTML
+// CExtraHTMLDlg dialog (modal popup over most all property dialogs)
 
 class CExtraHTMLDlg : public CDialog
 {

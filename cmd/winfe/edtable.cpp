@@ -38,14 +38,14 @@ extern char * ed_pDontChange;
 
 // Convert the front-end valign (0..2) to the back end alignment codes.
 
-// FE Vertical:     Top, Center, Bottom, Baseline
+// FE Vertical:     Top, Center, Bottom,  // [NO MORE "Baseline"]
 // FE Horizontal:   Left, center, right
-static const ED_Alignment kFEToXPVAlign[4] = {ED_ALIGN_ABSTOP, ED_ALIGN_ABSCENTER, ED_ALIGN_ABSBOTTOM, ED_ALIGN_BASELINE};
+static const ED_Alignment kFEToXPVAlign[3] = {ED_ALIGN_ABSTOP, ED_ALIGN_ABSCENTER, ED_ALIGN_ABSBOTTOM};
 static const ED_Alignment kFEToXPAlign[3] = {ED_ALIGN_LEFT, ED_ALIGN_ABSCENTER, ED_ALIGN_RIGHT };
 // Base -1 (default = -1)
-// default center left right top bottom baseline abscenter absbotom abstop
+// default center left right top bottom baseline abscenter absbottom abstop
 static const int kXPToFEAlign[10] =  {0,  1,  0,  2, -1, -1, -1, 1, -1, -1};  // Default is shown as LEFT in listbox
-static const int kXPToFEVAlign[10] = {1, -1, -1, -1,  0,  2,  3, 1,  2,  0};  // Default is shown as CENTER in listbox
+static const int kXPToFEVAlign[10] = {1, -1, -1, -1,  0,  2,  2, 1,  2,  0};  // Default is shown as CENTER in listbox
 
 static const ED_HitType kFEToXPSelType[3] = {ED_HIT_SEL_CELL, ED_HIT_SEL_ROW, ED_HIT_SEL_COL};
 static const int kXPToFESelType[10] = {-1, -1, 2, 1, 0, 0, -1, -1, -1, -1};
@@ -1004,7 +1004,7 @@ BOOL CTableCellPage::OnSetActive()
     pCombo->AddString(szLoadString(IDS_TOP));
     pCombo->AddString(szLoadString(IDS_CENTER));
     pCombo->AddString(szLoadString(IDS_BOTTOM));
-    pCombo->AddString(szLoadString(IDS_BASELINE));
+    //pCombo->AddString(szLoadString(IDS_BASELINE));
     
     // Initialize width and height Units comboboxex
     pCombo = (CComboBox*)GetDlgItem(IDC_HEIGHT_PIX_OR_PERCENT);
@@ -1060,14 +1060,14 @@ void CTableCellPage::InitPageData()
     {
         m_iVAlign = kXPToFEVAlign[m_pCellData->valign+1];
         // Remove "Dont change" item in combo if already there
-        if( pCombo->GetCount() == 5 )
-            pCombo->DeleteString(4);
+        if( pCombo->GetCount() == 4 )
+            pCombo->DeleteString(3);
     }
     else
     {
         m_iVAlign = -1;
         // Add "Dont change" item to combo if not already there
-        if( pCombo->GetCount() == 4 )
+        if( pCombo->GetCount() == 3 )
             pCombo->AddString(ed_pDontChange);
     }
 
@@ -1388,17 +1388,12 @@ void CTableCellPage::OnChangeSelectionType()
 
 void CTableCellPage::ChangeSelection(ED_MoveSelType iMoveType)
 {
-    if( iMoveType != ED_MOVE_NONE && m_bModified &&
-        IDYES == MessageBox(szLoadString(IDS_APPLY_CELL_MSG), szLoadString(IDS_CHANGE_SEL_CAPTION),
-                            MB_YESNO | MB_ICONQUESTION) )
+    // Save current data
+    if( OnKillActive() )
     {
-        // Save current data
-        if( OnKillActive() )
-        {
-            OnOK();
-        } else {
-            return;
-        }
+        OnOK();
+    } else {
+        return;
     }
 
     EDT_ChangeTableSelection(m_pMWContext, m_iSelectionType, iMoveType, m_pCellData);

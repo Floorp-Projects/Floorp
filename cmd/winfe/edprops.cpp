@@ -6278,16 +6278,8 @@ ED_Alignment CAlignControls::GetAlignment()
             m_EdAlign = ED_ALIGN_TOP;
             break;
         case IDC_EDAL_C:
-            m_EdAlign = ED_ALIGN_CENTER;
-//            m_EdAlign =  ED_ALIGN_ABSCENTER;
-            break;
         case IDC_EDALCB:
-            m_EdAlign =  ED_ALIGN_ABSCENTER;
-//            m_EdAlign = ED_ALIGN_CENTER;
-            break;
-        case IDC_EDAL_B:
-            m_EdAlign = ED_ALIGN_BOTTOM;
-//            m_EdAlign = ED_ALIGN_ABSBOTTOM;
+            m_EdAlign =  ED_ALIGN_ABSCENTER; // Should write "CENTER" to HTML
             break;
         case IDC_EDAL_L:
             m_EdAlign = ED_ALIGN_LEFT;
@@ -6296,7 +6288,7 @@ ED_Alignment CAlignControls::GetAlignment()
             m_EdAlign = ED_ALIGN_RIGHT;
             break;
         default:
-            m_EdAlign = ED_ALIGN_BASELINE;
+            m_EdAlign = ED_ALIGN_BASELINE;  // Should write no param (default)
             break;
     }
     return m_EdAlign;
@@ -6329,7 +6321,6 @@ CImagePage::CImagePage(CWnd* pParent, MWContext * pMWContext,
 
 	//{{AFX_DATA_INIT(CImagePage)
 	m_csImage = _T("");
-	m_csLowRes = _T("");
 	m_csAltText = _T("");
     m_bNoSave = 0;
     m_bSetAsBackground = 0;
@@ -6381,6 +6372,7 @@ void CImagePage::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxInt(pDX, m_iBorder, 0, 1000);
 	DDX_CBIndex(pDX, IDC_HEIGHT_PIX_OR_PERCENT, m_iHeightPixOrPercent);
 	DDX_CBIndex(pDX, IDC_WIDTH_PIX_OR_PERCENT, m_iWidthPixOrPercent);
+	DDX_Text(pDX, IDC_IMAGE_ALT_TEXT, m_csAltText);
 	//}}AFX_DATA_MAP
 }
 
@@ -6389,10 +6381,9 @@ BEGIN_MESSAGE_MAP(CImagePage, CNetscapePropertyPage)
 	//{{AFX_MSG_MAP(CImagePage)
 	ON_BN_CLICKED(IDC_IMAGE_FILE, OnImageFile)
 	ON_EN_CHANGE(IDC_IMAGE_URL, OnChangeImageURL)
-	ON_EN_KILLFOCUS(IDC_LOWRES_URL, OnKillfocusImage)
+	ON_EN_KILLFOCUS(IDC_IMAGE_URL, OnKillfocusImage)
 	ON_BN_CLICKED(IDC_IMAGE_ORIGINAL_SIZE, OnImageOriginalSize)
 	ON_BN_CLICKED(IDC_EDIT_IMAGE, OnEditImage)
-	ON_BN_CLICKED(IDC_ALT_TEXT_LOWRES, OnAltTextLowRes)
 	ON_BN_CLICKED(IDC_NO_SAVE_IMAGE, OnNoSave)
 	ON_BN_CLICKED(IDC_REMOVE_ISMAP, OnRemoveIsmap)
 	ON_BN_CLICKED(IDC_MAKE_IMAGE_BACKGROUND, OnSetAsBackground)
@@ -6412,6 +6403,7 @@ BEGIN_MESSAGE_MAP(CImagePage, CNetscapePropertyPage)
 	ON_EN_CHANGE(IDC_IMAGE_BORDER, OnChangeBorder)
 	ON_BN_CLICKED(IDC_EXTRA_HTML, OnExtraHTML)
     ON_BN_CLICKED(IDC_LOCK_ASPECT, OnLockAspect)
+	ON_EN_CHANGE(IDC_IMAGE_ALT_TEXT, OnChangeAltText)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -6515,9 +6507,6 @@ BOOL CImagePage::OnSetActive()
     wfe_InitPixOrPercentCombos(this);
     
     // Controls specific to Image page:
-    if ( m_pData->pLowSrc ){
-        m_csLowRes = m_pData->pLowSrc;
-    }
     m_csAltText = m_pData->pAlt;
 
     // Get possible HREF for image
@@ -6530,15 +6519,13 @@ BOOL CImagePage::OnSetActive()
     m_csImageStart = m_csImage;
     // Also save last valid image filenames
     m_csLastValidImage = m_csImage;
-//    m_csLastValidLowRes = m_csLowRes;
     m_bImageChanged = FALSE;
-//    m_bLowResChanged = FALSE;
 
     // Only allow removing bIsMap on images that already have it,
     //  i.e., we can't add it to raw images  (YET!)
     (GetDlgItem(IDC_REMOVE_ISMAP))->EnableWindow(m_pData->bIsMap);
 
-
+    SetOKEnable();
 
     m_bNoSave = m_pData->bNoSave;
 
@@ -6556,6 +6543,14 @@ void CImagePage::OnHelp()
     NetHelp(HELP_PROPS_IMAGE);
 }
 
+void CImagePage::SetOKEnable()
+{
+    // Enable OK only if we have both Image URL and Alt text,
+    //  but Alt text isn't needed if image will be used for background
+    (GetParent()->GetDlgItem(IDOK))->EnableWindow( !(m_csImage.IsEmpty()) && 
+                                                   (m_bSetAsBackground || !(m_csAltText.IsEmpty())) );
+}
+
 void CImagePage::OnOK() 
 {
     //EDT_BeginBatchChanges(m_pMWContext);
@@ -6563,7 +6558,8 @@ void CImagePage::OnOK()
 
     // Always set HREF data for image if struct exists, even if we didn't visit this page
     //  since the value may be changed by CLinkPage
-    if( m_pData->pHREFData ){
+    if( m_pData->pHREFData )
+    {
         // If m_pData->pHREFData->pURL is NULL or empty, this clears any existing link
         EDT_SetHREFData(m_pMWContext, m_pData->pHREFData);
     }
@@ -6572,28 +6568,30 @@ void CImagePage::OnOK()
         // no change
         !IS_APPLY_ENABLED(this) ||
         // or error in data
-        !UpdateData(TRUE) ) {
+        !UpdateData(TRUE) )
+    {
         //EDT_EndBatchChanges(m_pMWContext);
         return;
     }
 
-
-    CleanupString(m_csImage);
-
-    if ( m_csImage.IsEmpty() ){
+    if ( m_csImage.IsEmpty() )
+    {
         // No image -- do nothing 
         // WHAT IF THERE IS A LOWRES IMAGE??? ADD MESSAGEBOX?
-        if ( m_bInsert ){
+        if ( m_bInsert )
             return;
-        }
+
         // TODO: delete current image here?
         // Currently, EDT_SetImageData does not check for m_pImageData = NULL;
         return;
     }
+
     // Validate/Relativize images
     // (Shouldn't really need this - validation is done on killfocus of edit boxes)
-    if ( m_bImageChanged && !m_bValidImage ){
-        if ( !wfe_ValidateImage( m_pMWContext, m_csImage ) ) {
+    if ( m_bImageChanged && !m_bValidImage )
+    {
+        if ( !wfe_ValidateImage( m_pMWContext, m_csImage ) ) 
+        {
             m_bValidImage = TRUE;
             UpdateData(FALSE);
             return;
@@ -6619,10 +6617,12 @@ void CImagePage::OnOK()
             return;
     }
     
-    if( m_bSetAsBackground ){
+    if( m_bSetAsBackground )
+    {
         // Real simple - ignore all data except for image name and save
         EDT_PageData * pPageData = EDT_GetPageData(m_pMWContext);
-        if( pPageData ){
+        if( pPageData )
+        {
             XP_FREEIF(pPageData->pBackgroundImage);
             pPageData->pBackgroundImage = XP_STRDUP((char*)LPCSTR(m_csImage));
             pPageData->bBackgroundNoSave = m_bNoSave;
@@ -6632,7 +6632,8 @@ void CImagePage::OnOK()
     } else {
         // Get the Alignment/Size data
         m_pData->align = m_AlignControls.GetAlignment();
-        if( m_bOriginalButtonPressed ){
+        if( m_bOriginalButtonPressed )
+        {
             // Trick backend into getting size from image,
             //   not the values edited
             m_pData->iWidth = 0;
@@ -6643,21 +6644,21 @@ void CImagePage::OnOK()
         }
         m_pData->iHSpace = m_iHSpace;
         m_pData->iVSpace = m_iVSpace;
-        if( m_bDefaultBorder ){
+
+        if( m_bDefaultBorder )
             m_pData->iBorder = -1;
-        } else {
+        else
             m_pData->iBorder = m_iBorder;
-        }
+
         m_pData->bWidthPercent = m_iWidthPixOrPercent;
         m_pData->bHeightPercent = m_iHeightPixOrPercent;
     
         // Data specific to Image:
-        CleanupString(m_csLowRes);
         CleanupString(m_csAltText);
 
-        if ( m_pData->pSrc ){
+        if ( m_pData->pSrc )
             XP_FREE(m_pData->pSrc);
-        }
+
         m_pData->pSrc = XP_STRDUP(m_csImage);
 
         if ( m_pData->pLowSrc ){
@@ -6665,28 +6666,27 @@ void CImagePage::OnOK()
             m_pData->pLowSrc = NULL;
         }
 
-        if ( !m_csLowRes.IsEmpty() ){
-            m_pData->pLowSrc = XP_STRDUP(m_csLowRes);
-        }
-
         // Note: deleting Alt text in editbox to remove Alt Text
-        if ( m_pData->pAlt ){
+        if ( m_pData->pAlt )
+        {
             XP_FREE(m_pData->pAlt);
             m_pData->pAlt = NULL;
         }
-        if ( !m_csAltText.IsEmpty() ){
+        if ( !m_csAltText.IsEmpty() )
+        {
             m_pData->pAlt = XP_STRDUP(m_csAltText);
         }
 
         m_pData->bNoSave = m_bNoSave;
         if ( m_bInsert )
-            {
+        {
             EDT_InsertImage(m_pMWContext, m_pData, !m_bNoSave);
             // We insert just ONE image (on 1st "Apply" usage)
             // Thus other Apply or OK will modify newly-inserted image        
             m_bInsert = FALSE;
         }
-        else {
+        else 
+        {
             EDT_SetImageData(m_pMWContext, m_pData, !m_bNoSave);
         }
         //Note: ImageData and HrefData should be freed by caller
@@ -6701,15 +6701,31 @@ void CImagePage::OnOK()
 // so it is up to date if we switch to the Link dialog page
 BOOL CImagePage::OnKillActive()
 {
-    if( !UpdateData(TRUE) ){
+    if( !UpdateData(TRUE) )
+        return FALSE;
+
+    if ( m_bImageChanged && !m_bValidImage )
+        wfe_ValidateImage( m_pMWContext, m_csImage );
+
+    CleanupString(m_csAltText);
+    CleanupString(m_csImage);
+
+    if( m_csImage.IsEmpty() || (!m_bSetAsBackground && m_csAltText.IsEmpty()) )
+    {
+        // Notify user they must have both image URL and alt text filled in
+        MessageBox(szLoadString(IDS_MISSING_IMAGE),
+                   szLoadString(IDS_IMAGE_PROPS_CAPTION), 
+                   MB_ICONEXCLAMATION | MB_OK);
+
+        // Put focus in the offending control
+        // And select all text, just like DDV functions
+        CEdit *pEdit = (CEdit*)GetDlgItem(m_csImage.IsEmpty() ? IDC_IMAGE_URL : IDC_IMAGE_ALT_TEXT);
+        pEdit->SetFocus();
+        pEdit->SetSel(0, -1, TRUE);
         return FALSE;
     }
-    if ( m_bImageChanged && !m_bValidImage ){
-        wfe_ValidateImage( m_pMWContext, m_csImage );
-    }
-    if ( m_pData->pSrc ){
-        XP_FREE(m_pData->pSrc);
-    }
+
+    XP_FREEIF(m_pData->pSrc);
     m_pData->pSrc = XP_STRDUP(m_csImage);
 
     // Contrary to MFC help, this does NOT call our OnOK
@@ -6722,11 +6738,9 @@ void CImagePage::SetImageFileSaved(char * pImageURL, int iImageNumber )
 {
     UpdateData(TRUE);
 
-    if( iImageNumber == 1 ){
+    if( iImageNumber == 1 )
         m_csImage = pImageURL;
-    } else if ( iImageNumber == 2 ) {
-        m_csLowRes = pImageURL;
-    }
+
     UpdateData(FALSE);
 }
 
@@ -6735,17 +6749,18 @@ void CImagePage::OnImageFile()
     UpdateData(TRUE);
     char * szFilename = wfe_GetExistingImageFileName(this->m_hWnd, 
                                          szLoadString(IDS_SELECT_IMAGE), TRUE);
-    if ( szFilename != NULL ){
+    if ( szFilename != NULL )
+    {
         m_csImage = szFilename;
         // Note that we don't tell user if file is "bad" since
         //  it is difficult to validate in all cases
         wfe_ValidateImage( m_pMWContext, m_csImage );
-        UpdateData(FALSE);
         XP_FREE( szFilename );
         SetModified(TRUE);
         UpdateData(FALSE);
         m_bValidImage = TRUE;
         m_csLastValidImage = m_csImage;
+        SetOKEnable();
     }
 }
 
@@ -6759,12 +6774,14 @@ void CImagePage::OnChangeImageURL()
     m_csImage.TrimLeft();
     m_csImage.TrimRight();
     GetDlgItem(IDC_EDIT_IMAGE)->EnableWindow(!m_csImage.IsEmpty());
+    SetOKEnable();
 }
 
 void CImagePage::OnKillfocusImage() 
 {
     if( m_bImageChanged &&
-	    UpdateData(TRUE) ){
+	    UpdateData(TRUE) )
+    {
         wfe_ValidateImage( m_pMWContext, m_csImage );
         m_bValidImage = TRUE;
         UpdateData(FALSE);
@@ -6802,27 +6819,22 @@ void CImagePage::OnSetAsBackground()
     GetDlgItem(IDC_IMAGE_SPACE_HORIZ)->EnableWindow(!m_bSetAsBackground);
     GetDlgItem(IDC_IMAGE_SPACE_VERT)->EnableWindow(!m_bSetAsBackground);
     GetDlgItem(IDC_IMAGE_BORDER)->EnableWindow(!m_bSetAsBackground);
-    GetDlgItem(IDC_ALT_TEXT_LOWRES)->EnableWindow(!m_bSetAsBackground);
     GetDlgItem(IDC_EXTRA_HTML)->EnableWindow(!m_bSetAsBackground);
     GetDlgItem(IDC_REMOVE_ISMAP)->EnableWindow(!m_bSetAsBackground && m_pData->bIsMap);
+    GetDlgItem(IDC_IMAGE_ALT_TEXT)->EnableWindow(!m_bSetAsBackground);
+
     SetLockAspectEnable();
+    SetOKEnable();
     SetModified(TRUE);
 }
 
-void CImagePage::OnAltTextLowRes()
+void CImagePage::OnChangeAltText()
 {
-    CImageAltDlg dlg(this, m_pMWContext, m_csAltText, m_csLowRes);
-    if( dlg.DoModal() ){
-        // Get new strings only if they changed
-        if( dlg.m_csAltText != m_csAltText ){
-            SetModified(TRUE);
-            m_csAltText  = dlg.m_csAltText;
-        }
-        if( dlg.m_csLowRes != m_csLowRes ){
-            SetModified(TRUE);
-            m_csLowRes = dlg.m_csLowRes;
-        }
-    }
+    // Get the alt text
+    UpdateData(TRUE);
+    CleanupString(m_csAltText);
+    SetOKEnable();
+    SetModified(TRUE);
 }
 
 void CImagePage::OnNoSave() 
@@ -6895,7 +6907,8 @@ void CImagePage::OnImageOriginalSize()
 
 void CImagePage::OnChangeHeight() 
 {
-    if( m_bLockAspect && ((CButton*)GetDlgItem(IDC_LOCK_ASPECT))->IsWindowEnabled() ) {
+    if( m_bLockAspect && ((CButton*)GetDlgItem(IDC_LOCK_ASPECT))->IsWindowEnabled() )
+    {
         // Get value just enterred and set the opposite
         //  to a value that keeps aspect ratio of original
         CWnd *pHeightEdit = GetDlgItem(IDC_IMAGE_HEIGHT);
@@ -6906,7 +6919,8 @@ void CImagePage::OnChangeHeight()
         int32 iHeight = (int)strtol( pValue, &pEnd, 10 );
     
         // Bad conversion if end pointer isn't at terminal null;
-        if( *pEnd == '\0' ){
+        if( *pEnd == '\0' )
+        {
             m_iHeight = iHeight;
             // Add 0.5 to round off when converting back to int
             m_iWidth = (int)((iHeight * m_iOriginalWidth) / m_iOriginalHeight);
@@ -6918,15 +6932,16 @@ void CImagePage::OnChangeHeight()
             m_bLockAspect = TRUE;
         }
     }
-    if( m_iHeight != m_iOriginalHeight){
+    if( m_iHeight != m_iOriginalHeight)
         m_bOriginalButtonPressed = FALSE;
-    }
+
     SetModified(TRUE);
 }
 
 void CImagePage::OnChangeWidth() 
 {
-    if( m_bLockAspect && ((CButton*)GetDlgItem(IDC_LOCK_ASPECT))->IsWindowEnabled() ){
+    if( m_bLockAspect && ((CButton*)GetDlgItem(IDC_LOCK_ASPECT))->IsWindowEnabled() )
+    {
         // Get value just enterred and set the opposite
         //  to a value that keeps aspect ratio of original
         CWnd *pWidthEdit = GetDlgItem(IDC_IMAGE_WIDTH);
@@ -6936,7 +6951,8 @@ void CImagePage::OnChangeWidth()
         pWidthEdit->GetWindowText(pValue, 10);
         int32 iWidth = (int32)strtol( pValue, &pEnd, 10 );
     
-        if( *pEnd == '\0' ){
+        if( *pEnd == '\0' )
+        {
             m_iWidth = iWidth;
             m_iHeight = (int)((iWidth * m_iOriginalHeight) / m_iOriginalWidth);
             wsprintf(pValue, "%d", m_iHeight);
@@ -6948,9 +6964,9 @@ void CImagePage::OnChangeWidth()
             m_bLockAspect = TRUE;
         }
     }
-    if( m_iWidth != m_iOriginalWidth){
+    if( m_iWidth != m_iOriginalWidth)
         m_bOriginalButtonPressed = FALSE;
-    }
+
     SetModified(TRUE);
 }
 
@@ -6993,131 +7009,13 @@ void CImagePage::OnChangeBorder()
 void CImagePage::OnExtraHTML()
 {
     CExtraHTMLDlg dlg(this, &m_pData->pExtra, IDS_IMG_TAG);
-    if( dlg.DoModal() && dlg.m_bDataChanged ){
+    if( dlg.DoModal() && dlg.m_bDataChanged )
         SetModified(TRUE);
-    }
 }
 
 void CImagePage::OnLockAspect()
 {
     m_bLockAspect = ((CButton*)GetDlgItem(IDC_LOCK_ASPECT))->GetCheck();
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// CAltImageDlg dialog (modal popup over CImagePage for Alt text and Lowres Image)
-
-CImageAltDlg::CImageAltDlg(CWnd *pParent,
-                         MWContext *pMWContext,
-                         CString& csAltText, 
-                         CString& csLowRes )
-	: CDialog(CImageAltDlg::IDD, pParent),
-    m_pMWContext(pMWContext),
-    m_bImageChanged(FALSE)
-{
-	//{{AFX_DATA_INIT(CImageAltDlg)
-	m_csAltText = csAltText;
-	m_csLowRes = csLowRes;
- 	//}}AFX_DATA_INIT
-    ASSERT( pMWContext );
-}
-
-CImageAltDlg::~CImageAltDlg()
-{
-}
-
-void CImageAltDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CImageAltDlg)
-	DDX_Text(pDX, IDC_LOWRES_URL, m_csLowRes);
-	DDX_Text(pDX, IDC_IMAGE_ALT_TEXT, m_csAltText);
-	//}}AFX_DATA_MAP
-}
-
-
-BEGIN_MESSAGE_MAP(CImageAltDlg, CDialog)
-	//{{AFX_MSG_MAP(CImageAltDlg)
-	ON_BN_CLICKED(IDC_IMAGE_FILE, OnLowResFile)
-	ON_EN_CHANGE(IDC_LOWRES_URL, OnChangeLowResURL)
-	ON_BN_CLICKED(IDC_EDIT_IMAGE, OnEditImage)
-	ON_BN_CLICKED(ID_HELP, OnHelp)
-	//}}AFX_MSG_MAP
-#ifdef XP_WIN32
-    ON_WM_HELPINFO()
-#endif //XP_WIN32
-END_MESSAGE_MAP()
-
-
-BOOL CImageAltDlg::OnInitDialog() 
-{
-    // Switch back to NETSCAPE.EXE for resource hInstance
-    m_ResourceSwitcher.Reset();
-
- 	CDialog::OnInitDialog();
-
-    GetDlgItem(IDC_EDIT_IMAGE)->EnableWindow(!m_csLowRes.IsEmpty());
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
-}
-
-void CImageAltDlg::OnHelp() 
-{
-    NetHelp(HELP_PROPS_IMAGE);    // TODO: ADD THIS TO HELP  
-}
-
-#ifdef XP_WIN32
-BOOL CImageAltDlg::OnHelpInfo(HELPINFO *)//32bit messagemapping.
-{
-    OnHelp();
-    return TRUE;
-}
-#endif//XP_WIN32
-
-void CImageAltDlg::OnOK() 
-{
-    CDialog::OnOK();    
-    // Strip off leading and ending spaces
-    m_csAltText.TrimLeft();
-    m_csAltText.TrimRight();
-    m_csLowRes.TrimLeft();
-    m_csLowRes.TrimRight();
-    if( !m_bImageChanged ){
-        wfe_ValidateImage( m_pMWContext, m_csLowRes );
-    }
-}
-
-void CImageAltDlg::OnLowResFile() 
-{
-    UpdateData(TRUE);
-    char * szFilename = wfe_GetExistingImageFileName(this->m_hWnd, 
-                                         szLoadString(IDS_SELECT_LOWRES_IMAGE), TRUE);
-    if ( szFilename == NULL ){
-        return;
-    }
-
-    m_csLowRes = szFilename;
-    wfe_ValidateImage( m_pMWContext, m_csLowRes );
-    m_bImageChanged = TRUE;
-    UpdateData(FALSE);
-    XP_FREE( szFilename );
-}
-
-void CImageAltDlg::OnChangeLowResURL()
-{
-    m_bImageChanged = FALSE;
-    // Disable Edit button if no image name
-    GetDlgItem(IDC_LOWRES_URL)->GetWindowText(m_csLowRes);
-    m_csLowRes.TrimLeft();
-    m_csLowRes.TrimRight();
-    GetDlgItem(IDC_EDIT_IMAGE)->EnableWindow(!m_csLowRes.IsEmpty());
-}
-
-void CImageAltDlg::OnEditImage() 
-{
-   UpdateData(TRUE);
-    // Get our view from the context and call edit method
-   ((CNetscapeEditView*)WINCX(m_pMWContext)->GetView())->EditImage((char*)LPCSTR(m_csLowRes));
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -7426,7 +7324,8 @@ BOOL CLinkPage::OnSetActive()
     UpdateData(FALSE);
     // Allow Apply button to be active if we are inserting a new object
     SetModified(m_bInsert);
-	return(TRUE);
+
+    return TRUE;
 }
 
 // Set the HREF data 
@@ -7440,6 +7339,21 @@ BOOL CLinkPage::OnKillActive()
     if ( !m_bValidHref ){
         ValidateHref();
     }
+    if( m_csHref.IsEmpty() )
+    {
+        // Notify user they must have a URL filled in
+        MessageBox(szLoadString(IDS_MISSING_LINK),
+                   szLoadString(IDS_LINK_PROPS_CAPTION), 
+                   MB_ICONEXCLAMATION | MB_OK);
+
+        // Put focus in the offending control
+        // And select all text, just like DDV functions
+        CEdit *pEdit = (CEdit*)GetDlgItem(IDC_HREF_URL);
+        pEdit->SetFocus();
+        pEdit->SetSel(0, -1, TRUE);
+        return FALSE;
+    }
+
     return CPropertyPage::OnKillActive();
 }
 
@@ -7696,7 +7610,7 @@ void CLinkPage::ValidateHref()
         UpdateData(FALSE);
     }
     // We must always set the HREF data immediately 
-    //  common data because it will be accessed by
+    //  because it will be accessed by
     //  CImagePage::OnOK before CLinkPage::OnOK
     SetHrefData();
 }
@@ -7775,7 +7689,7 @@ void CLinkPage::OnOK()
         }
         else /* if(m_pData->pURL) */{
             // We created a new link - 
-            // Anchor text should have beeen typed
+            // Anchor text should have been typed
             char * szAnchor;
             if ( m_csAnchorEdit.IsEmpty() ) {
                 // No anchor text supplied, use URL
