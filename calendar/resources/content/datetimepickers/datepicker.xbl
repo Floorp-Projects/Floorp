@@ -176,10 +176,8 @@
             this.mDisabled = aDisabled;
             if (this.mDisabled) {
               this.kTextBox.setAttribute( "disabled", "true" );
-              this.kButton.setAttribute( "disabled", "true" );
             } else {
               this.kTextBox.removeAttribute( "disabled" );
-              this.kButton.removeAttribute( "disabled" );
             }
           ]]></body>
         </method>
