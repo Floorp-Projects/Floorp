@@ -3630,6 +3630,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               aPos->mContentOffset = newOffset +1;
             else
               aPos->mContentOffset = newOffset;//to beginning of frame
+            return NS_OK;
           }
         }
       }
