@@ -62,6 +62,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 #include "nsIScriptObjectOwner.h" // for nsIScriptEventHandlerOwner
+#include "nsIClassInfo.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -973,8 +974,10 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
   if (NS_FAILED(rv))
       return rv;
 
+  nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aObject);
+
   if (NS_FAILED(rv = securityManager->CheckPropertyAccess(
-      nsIXPCSecurityManager::ACCESS_SET_PROPERTY, cx, jsobj, aObject, nsnull,
+      nsIXPCSecurityManager::ACCESS_SET_PROPERTY, cx, jsobj, aObject, classInfo,
                   "EventTarget","addEventListener", PR_FALSE))) {
       // XXX set pending exception on the native call context?
     return rv;
