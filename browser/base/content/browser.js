@@ -65,7 +65,8 @@ var gURLBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
-var gNavigatorBundle;
+var gNavigatorBundle = null;
+var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
@@ -253,15 +254,6 @@ function RegisterTabOpenObserver()
 #endif
 function Startup()
 {
-  // init globals
-  gNavigatorBundle = document.getElementById("bundle_browser");
-  gBrowser = document.getElementById("content");
-  gURLBar = document.getElementById("urlbar");  
-
-  gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
-
-  gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
-
   var webNavigation;
   try {
     // Create the browser instance component.
@@ -279,65 +271,25 @@ function Startup()
     return;
   }
 
-  // initialize observers and listeners
-  window.XULBrowserWindow = new nsBrowserStatusHandler();
-  window.browserContentListener =
-    new nsBrowserContentListener(window, gBrowser);
+  var uriToLoad = null;
+  // Check for window.arguments[0]. If present, use that for uriToLoad.
+  if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
+    uriToLoad = window.arguments[0];
+  gIsLoadingBlank = uriToLoad == "about:blank";
 
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
- 
-  // set default character set if provided
-  if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
-    if (window.arguments[1].indexOf("charset=") != -1) {
-      var arrayArgComponents = window.arguments[1].split("=");
-      if (arrayArgComponents) {
-        //we should "inherit" the charset menu setting in a new window
-        getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
-      }
-    }
+
+  if (!gIsLoadingBlank) {
+    prepareForStartup();
   }
-
-  // XXXjag work-around for bug 113076
-  // there's another bug where we throw an exception when getting
-  // sessionHistory if it is null, which I'm exploiting here to
-  // detect the situation described in bug 113076.
-  // The same problem caused bug 139522, also worked around below.
-  try {
-    gBrowser.sessionHistory;
-  } catch (e) {
-    // sessionHistory wasn't set from the browser's constructor
-    // so we'll just have to set it here.
- 
-    // Wire up session and global history before any possible
-    // progress notifications for back/forward button updating
-    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                             .createInstance(Components.interfaces.nsISHistory);
-
-    // wire up global history.  the same applies here.
-    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                                  .getService(Components.interfaces.nsIGlobalHistory);
-    gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
-
-    const selectedBrowser = gBrowser.selectedBrowser;
-    if (selectedBrowser.securityUI)
-      selectedBrowser.securityUI.init(selectedBrowser.contentWindow);
-  }
-
-  // hook up UI through progress listener
-  gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
 #ifdef ENABLE_PAGE_CYCLER
   appCore.startPageCycler();
 #else
   // only load url passed in when we're not page cycling
-  var uriToLoad = null;
-
-  // Check for window.arguments[0]. If present, use that for uriToLoad.
-  if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
-    uriToLoad = window.arguments[0];
-  
-  if (uriToLoad && uriToLoad != "about:blank") {
+ 
+  if (uriToLoad && !gIsLoadingBlank) {
     if (gURLBar)
       gURLBar.value = uriToLoad;
     if ("arguments" in window && window.arguments.length >= 3) {
@@ -346,6 +298,7 @@ function Startup()
       loadURI(uriToLoad);
     }
   }
+
 #ifdef MOZ_ENABLE_XREMOTE
   // hook up remote support
   var remoteService;
@@ -366,39 +319,79 @@ function Startup()
       var sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
       sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
       sidebarBox.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
-    }
-  }
-  if (sidebarBox.hasAttribute("sidebarcommand")) { 
-    var cmd = sidebarBox.getAttribute("sidebarcommand");
-    if (cmd != "") {
       gMustLoadSidebar = true;
       sidebarBox.hidden = false;
       var sidebarSplitter = document.getElementById("sidebar-splitter");
       sidebarSplitter.hidden = false;
-      document.getElementById(cmd).setAttribute("checked", "true");
+      document.getElementById(sidebarCmd).setAttribute("checked", "true");
+    }
+  }
+  else {
+    if (sidebarBox.hasAttribute("sidebarcommand")) { 
+      var cmd = sidebarBox.getAttribute("sidebarcommand");
+      if (cmd != "") {
+        gMustLoadSidebar = true;
+        sidebarBox.hidden = false;
+        var sidebarSplitter = document.getElementById("sidebar-splitter");
+        sidebarSplitter.hidden = false;
+        document.getElementById(cmd).setAttribute("checked", "true");
+      }
+    }
+  }
+  setTimeout(delayedStartup, 0);
+}
+
+function prepareForStartup()
+{
+  gURLBar = document.getElementById("urlbar");  
+  gBrowser = document.getElementById("content");
+  gNavigatorBundle = document.getElementById("bundle_browser");
+  gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
+  gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
+
+  // initialize observers and listeners
+  window.XULBrowserWindow = new nsBrowserStatusHandler();
+  window.browserContentListener =
+    new nsBrowserContentListener(window, gBrowser);
+
+  // set default character set if provided
+  if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
+    if (window.arguments[1].indexOf("charset=") != -1) {
+      var arrayArgComponents = window.arguments[1].split("=");
+      if (arrayArgComponents) {
+        //we should "inherit" the charset menu setting in a new window
+        getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
+      }
     }
   }
 
-  // Focus the content area unless we're loading a blank page
-  var elt;      
-  if (uriToLoad == "about:blank") {
-    var navBar = document.getElementById("nav-bar");
-    if (navBar && !navBar.hidden && gURLBar && !gURLBar.parentNode.parentNode.collapsed)
-      elt = gURLBar;
-  }  
-  else {
-    elt = _content;
-  }
-  
-  setTimeout(delayedStartup, 0, elt);
+  // Wire up session and global history before any possible
+  // progress notifications for back/forward button updating
+  getWebNavigation().sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                                                .createInstance(Components.interfaces.nsISHistory);
+
+  // wire up global history.  the same applies here.
+  var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                .getService(Components.interfaces.nsIGlobalHistory);
+  gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
+
+  const selectedBrowser = gBrowser.selectedBrowser;
+  if (selectedBrowser.securityUI)
+    selectedBrowser.securityUI.init(selectedBrowser.contentWindow);
+
+  // hook up UI through progress listener
+  gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 }
 
-function delayedStartup(aElt)
+function delayedStartup()
 {
+  if (gIsLoadingBlank)
+    prepareForStartup();
+
   // loads the services
   initServices();
   initBMService();
-
+  
   gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
 
   window.addEventListener("keypress", ctrlNumberTabSelection, true);
@@ -422,7 +415,7 @@ function delayedStartup(aElt)
   // initiated by a web page script
   window.addEventListener("fullscreen", onFullScreen, false);
 
-  WindowFocusTimerCallback(aElt);
+  WindowFocusTimerCallback();
 
   SetPageProxyState("invalid", null);
 
@@ -440,8 +433,18 @@ function delayedStartup(aElt)
   updateHomeTooltip();
 }
 
-function WindowFocusTimerCallback(element)
+function WindowFocusTimerCallback()
 {
+  var element;
+  if (gIsLoadingBlank) {  
+    var navBar = document.getElementById("nav-bar");
+    if (navBar && !navBar.hidden && !navBar.collapsed)
+      element = gURLBar;
+  }
+  else {
+    element = _content;
+  }
+
   // This fuction is a redo of the fix for jag bug 91884
   var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                      .getService(Components.interfaces.nsIWindowWatcher);
