@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.75 $ $Date: 2003/08/25 19:18:01 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.76 $ $Date: 2003/09/12 19:38:04 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -587,6 +587,7 @@ get_cert_instance(NSSCertificate *c)
 
 char * 
 STAN_GetCERTCertificateNameForInstance (
+  PLArenaPool *arenaOpt,
   NSSCertificate *c,
   nssCryptokiInstance *instance
 )
@@ -615,7 +616,11 @@ STAN_GetCERTCertificateNameForInstance (
 	}
 	nicklen = nssUTF8_Size(stanNick, &nssrv);
 	len = tokenlen + nicklen;
-	nickname = PORT_Alloc(len);
+	if (arenaOpt) {
+	    nickname = PORT_ArenaAlloc(arenaOpt, len);
+	} else {
+	    nickname = PORT_Alloc(len);
+	}
 	nick = nickname;
 	if (tokenName) {
 	    memcpy(nick, tokenName, tokenlen-1);
@@ -629,10 +634,10 @@ STAN_GetCERTCertificateNameForInstance (
 }
 
 char * 
-STAN_GetCERTCertificateName(NSSCertificate *c)
+STAN_GetCERTCertificateName(PLArenaPool *arenaOpt, NSSCertificate *c)
 {
     nssCryptokiInstance *instance = get_cert_instance(c);
-    return STAN_GetCERTCertificateNameForInstance(c, instance);
+    return STAN_GetCERTCertificateNameForInstance(arenaOpt, c, instance);
 }
 
 static void

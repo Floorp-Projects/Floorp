@@ -418,7 +418,7 @@ CollectNicknames( NSSCertificate *c, void *data)
      * a duplicate
      */
     if ( saveit ) {
-	nickname = STAN_GetCERTCertificateName(c);
+	nickname = STAN_GetCERTCertificateName(NULL, c);
 	/* nickname can only be NULL here if we are having memory 
 	 * alloc problems */
 	if (nickname == NULL) {
