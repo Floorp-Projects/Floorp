@@ -247,7 +247,7 @@ nsPresContext::GetMetricsFor(const nsFont& aFont)
     nsIFontMetrics* metrics;
 
     mDeviceContext->GetMetricsFor(aFont, metrics);
-    return NS_OK;
+    return metrics;
   }
   return nsnull;
 }
