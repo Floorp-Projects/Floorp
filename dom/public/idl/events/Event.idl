@@ -179,4 +179,6 @@
 
 	      attribute   int layerX;
 	      attribute   int layerY;
+
+	      readonly attribute RenderingContext rc;
       };

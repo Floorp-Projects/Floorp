@@ -28,6 +28,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
+#include "nsIDOMRenderingContext.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -36,10 +37,12 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kINSEventIID, NS_IDOMNSEVENT_IID);
+static NS_DEFINE_IID(kIRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMEvent);
 NS_DEF_PTR(nsIDOMNSEvent);
+NS_DEF_PTR(nsIDOMRenderingContext);
 
 //
 // Event property ids
@@ -60,7 +63,8 @@ enum Event_slots {
   EVENT_KEYCODE = -13,
   EVENT_BUTTON = -14,
   NSEVENT_LAYERX = -15,
-  NSEVENT_LAYERY = -16
+  NSEVENT_LAYERY = -16,
+  NSEVENT_RC = -17
 };
 
 /***********************************************************************/
@@ -278,6 +282,42 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
           if(NS_OK == b->GetLayerY(&prop)) {
           *vp = INT_TO_JSVAL(prop);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSEvent");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSEVENT_RC:
+      {
+        nsIDOMRenderingContext* prop;
+        nsIDOMNSEvent* b;
+        if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
+          if(NS_OK == b->GetRc(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
             NS_RELEASE(b);
           }
           else {
@@ -738,6 +778,7 @@ static JSPropertySpec EventProperties[] =
   {"button",    EVENT_BUTTON,    JSPROP_ENUMERATE},
   {"layerX",    NSEVENT_LAYERX,    JSPROP_ENUMERATE},
   {"layerY",    NSEVENT_LAYERY,    JSPROP_ENUMERATE},
+  {"rc",    NSEVENT_RC,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
