@@ -1122,7 +1122,7 @@ nsresult nsDiskCacheDevice::openOutputStream(nsIFile * file, nsIOutputStream ** 
         return NS_OK;
     } else {
         nsCOMPtr<nsITransport> transport;
-        nsresult rv = getTransportForFile(file, nsICache::ACCESS_WRITE, getter_AddRefs(transport));
+        rv = getTransportForFile(file, nsICache::ACCESS_WRITE, getter_AddRefs(transport));
         if (NS_FAILED(rv)) return rv;
         return transport->OpenOutputStream(0, ULONG_MAX, 0, result);
     }
