@@ -66,7 +66,7 @@ static const PRUint16 *g_BIG5MappingTableSet [] ={
 
 static const uRange g_BIG5Ranges[] = {
   { 0x00, 0x7E },
-  { 0x81, 0xFC }
+  { 0x81, 0xFE }
 };
 
 NS_METHOD
