@@ -62,8 +62,11 @@ static PRBool gNoisy;
 static PRBool gNoisyDamageRepair;
 static PRBool gNoisyMaxElementSize;
 static PRBool gNoisyReflow;
+static PRBool gReallyNoisyReflow;
 static PRBool gNoisySpaceManager;
 static PRBool gVerifyLines;
+static PRBool gDisableResizeOpt;
+static PRBool gListTextRuns;
 
 struct BlockDebugFlags {
   const char* name;
@@ -72,12 +75,15 @@ struct BlockDebugFlags {
 
 static BlockDebugFlags gFlags[] = {
   { "reflow", &gNoisyReflow },
+  { "really-noisy-reflow", &gReallyNoisyReflow },
   { "max-element-size", &gNoisyMaxElementSize },
   { "space-manager", &gNoisySpaceManager },
   { "verify-lines", &gVerifyLines },
   { "damage-repair", &gNoisyDamageRepair },
   { "lame-paint-metrics", &gLamePaintMetrics },
   { "lame-reflow-metrics", &gLameReflowMetrics },
+  { "disable-resize-opt", &gDisableResizeOpt },
+  { "list-text-runs", &gListTextRuns },
 };
 #define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 
@@ -113,6 +119,7 @@ InitDebugFlags()
         for (; bdf < end; bdf++) {
           if (PL_strcasecmp(bdf->name, flags) == 0) {
             *(bdf->on) = PR_TRUE;
+            printf("nsBlockFrame: setting %s debug flag on\n", bdf->name);
             gNoisy = PR_TRUE;
             found = PR_TRUE;
             break;
@@ -1163,6 +1170,7 @@ ListTextRuns(FILE* out, PRInt32 aIndent, nsTextRun* aRuns)
 NS_METHOD
 nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
+#ifdef DEBUG
   IndentBy(out, aIndent);
   ListTag(out);
   nsIView* view;
@@ -1244,7 +1252,7 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   }
 
   // Output the text-runs
-  if (nsnull != mTextRuns) {
+  if (gListTextRuns && mTextRuns) {
     IndentBy(out, aIndent);
     fputs("text-runs <\n", out);
 
@@ -1258,6 +1266,7 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   IndentBy(out, aIndent);
   fputs(">\n", out);
 
+#endif
   return NS_OK;
 }
 
@@ -1766,6 +1775,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
       // See if we should compute our max element size
       if (aState.mComputeMaxElementSize) {
+        // Adjust the computedWidth
         if (aState.mNoWrap) {
           // When no-wrap is true the max-element-size.width is the
           // width of the widest line plus the right border. Note that
@@ -1778,17 +1788,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
           maxWidth = aState.mMaxElementSize.width +
             borderPadding.left + borderPadding.right;
         }
-
-        // See if our max-element-size width is larger than our
-        // computed-width. This happens when we are impacted by a
-        // floater. When this does happen, our desired size needs to
-        // include room for the floater.
         if (computedWidth < maxWidth) {
-#ifdef DEBUG_kipp
-          ListTag(stdout);
-          printf(": adjusting width from %d to %d\n", computedWidth,
-                 maxWidth);
-#endif
           computedWidth = maxWidth;
         }
       }
@@ -2124,15 +2124,20 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       (NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableWidth)) {
 
     // If the text is left-aligned, then we try and avoid reflowing the lines
-    const nsStyleText* mStyleText = (const nsStyleText*)
+    const nsStyleText* styleText = (const nsStyleText*)
       mStyleContext->GetStyleData(eStyleStruct_Text);
 
-    if (NS_STYLE_TEXT_ALIGN_LEFT == mStyleText->mTextAlign) {
+    if ((NS_STYLE_TEXT_ALIGN_LEFT == styleText->mTextAlign) ||
+        ((NS_STYLE_TEXT_ALIGN_DEFAULT == styleText->mTextAlign) &&
+         (NS_STYLE_DIRECTION_LTR == aState.mReflowState.mStyleDisplay->mDirection))) {
       tryAndSkipLines = PR_TRUE;
     }
   }
 
 #ifdef DEBUG
+  if (gDisableResizeOpt) {
+    tryAndSkipLines = PR_FALSE;
+  }
   if (gNoisyReflow) {
     if (!tryAndSkipLines) {
       const nsStyleText* mStyleText = (const nsStyleText*)
@@ -2160,35 +2165,49 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
     }
 #endif
     
+    PRBool notWrapping = aState.mNoWrap;
     while (nsnull != line) {
-      // We don't have to mark the line dirty if all of the following are true:
-      // - the line fits within the new available space
-      // - it's inline (not a block)
-      // - we're not wrapping text -or- it's the last line in the block -or- the
-      //   line ended with a break after
-      // - there are no floaters associated with the line (reflowing the
-      //   placeholder frame causes the floater to be reflowed)
-      if (line->IsBlock() ||
-          (!aState.mNoWrap && line->mNext && !line->HasBreak()) ||
-          line->HasFloaters() || line->IsImpactedByFloater() ||
-          (line->mBounds.XMost() > newAvailWidth)) {
+
+      if (line->IsBlock()) {
+        // We have to let child blocks make their own decisions.
+        line->MarkDirty();
+      }
+      else {
+        // We can avoid reflowing *some* inline lines in some cases.
+        if (notWrapping) {
+          // When no-wrap is set then the only line-breaking that
+          // occurs for inline lines is triggered by BR elements or by
+          // newlines. Therefore, we don't need to reflow the line.
+        }
+        else if ((line->mNext && !line->HasBreak()) ||
+                 line->HasFloaters() || line->IsImpactedByFloater() ||
+                 line->HasPercentageChild() ||
+                 (line->mBounds.XMost() > newAvailWidth)) {
+          // When an inline line has:
+          //
+          //  - a next line and it doesn't end in a break, or
+          //  - floaters, or
+          //  - is impacted by a floater, or
+          //  - is wider than the new available space
+          //
+          // Then we must reflow it.
+          line->MarkDirty();
+        }
 
 #ifdef DEBUG
-        if (gNoisyReflow) {
+        if (gNoisyReflow && !line->IsDirty() && !notWrapping) {
           IndentBy(stdout, gNoiseIndent + 1);
-          printf("dirty: line=%p next=%p %s %s %s%s%s xmost=%d\n",
+          printf("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
                  line, line->mNext,
                  line->IsBlock() ? "block" : "inline",
                  aState.mNoWrap ? "no-wrap" : "wrapping",
                  line->HasBreak() ? "has-break " : "",
                  line->HasFloaters() ? "has-floaters " : "",
                  line->IsImpactedByFloater() ? "impacted " : "",
+                 line->GetBreakType(),
                  line->mBounds.XMost());
         }
 #endif
-
-        // We have to mark the line dirty
-        line->MarkDirty();
       }
       line = line->mNext;
     }
@@ -3579,6 +3598,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                  "redo line on totally empty line");
     NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mAvailSpaceRect.height,
                  "unconstrained height on totally empty line");
+
     aState.mY += aState.mAvailSpaceRect.height;
     // XXX: a small optimization can be done here when paginating:
     // if the new Y coordinate is past the end of the block then
@@ -3679,6 +3699,11 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     }
     else {
       // Break-after cases
+      if (breakType == NS_STYLE_CLEAR_LINE) {
+        if (!aLineLayout.GetLineEndsInBR()) {
+          breakType = NS_STYLE_CLEAR_NONE;
+        }
+      }
       aLine->SetBreakType(breakType);
       if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
         // Create a continuation for the incomplete frame. Note that the
@@ -3798,6 +3823,18 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
   PRInt32 pushCount = aLine->GetChildCount() - aLineLayout.GetCurrentSpanCount();
   NS_ABORT_IF_FALSE(pushCount >= 0, "bad push count"); 
 
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    nsFrame::IndentBy(stdout, gNoiseIndent);
+    printf("split line: from line=%p pushCount=%d aFrame=", aLine, pushCount);
+    nsFrame::ListTag(stdout, aFrame);
+    printf("\n");
+    if (gReallyNoisyReflow) {
+      aLine->List(aState.mPresContext, stdout, gNoiseIndent+1);
+    }
+  }
+#endif
+
   if (0 != pushCount) {
     NS_ABORT_IF_FALSE(aLine->GetChildCount() > pushCount, "bad push");
     NS_ABORT_IF_FALSE(nsnull != aFrame, "whoops");
@@ -3810,6 +3847,11 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     newLine->mNext = aLine->mNext;
     aLine->mNext = newLine;
     aLine->SetChildCount(aLine->GetChildCount() - pushCount);
+#ifdef DEBUG
+    if (gReallyNoisyReflow) {
+      newLine->List(aState.mPresContext, stdout, gNoiseIndent+1);
+    }
+#endif
 
     // Let line layout know that some frames are no longer part of its
     // state.
@@ -4750,7 +4792,7 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
     // Find which line contains the floater
     nsLineBox* line = mLines;
     while (nsnull != line) {
-      if (line->RemoveFloater(aOldFrame)) {
+      if (line->IsInline() && line->RemoveFloater(aOldFrame)) {
         aOldFrame->Destroy(aPresContext);
         goto found_it;
       }
@@ -5131,7 +5173,8 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
     aLineLayout.UpdateBand(mAvailSpaceRect.x + BorderPadding().left, mY,
                            mAvailSpaceRect.width,
                            mAvailSpaceRect.height,
-                           isLeftFloater);
+                           isLeftFloater,
+                           aPlaceholder->GetOutOfFlowFrame());
 
     // Restore coordinate system
     mSpaceManager->Translate(dx, dy);
@@ -5370,7 +5413,11 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
 
   // Place the floater in the space manager
   if (okToAddRectRegion) {
-    mSpaceManager->AddRectRegion(floater, region);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      mSpaceManager->AddRectRegion(floater, region);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "bad floater placement");
   }
 
   // Save away the floaters region in the spacemanager, after making
@@ -5451,6 +5498,14 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
   nsFloaterCache* fc = aList.Head();
   while (fc) {
     if (!fc->mIsCurrentLineFloater) {
+#ifdef DEBUG
+      if (gNoisyReflow) {
+        nsFrame::IndentBy(stdout, gNoiseIndent);
+        printf("placing bcl floater: ");
+        nsFrame::ListTag(stdout, fc->mPlaceholder->GetOutOfFlowFrame());
+        printf("\n");
+      }
+#endif
       mBlock->ReflowFloater(*this, fc->mPlaceholder, fc->mCombinedArea,
                             fc->mMargins, fc->mOffsets);
 
