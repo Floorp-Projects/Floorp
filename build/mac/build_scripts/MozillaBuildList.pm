@@ -1375,6 +1375,7 @@ sub BuildImglib2Projects()
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:gifdecoder2.mcp",        "gifdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:jpegdecoder2.mcp",       "jpegdecoder2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:icondecoder.mcp",        "icondecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+#        BuildOneProject(":mozilla:modules:libpr0n:macbuild:bmpdecoder.mcp",         "bmpdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         
         # MNG
         if ($main::options{mng})
@@ -1653,7 +1654,12 @@ sub BuildEditorProjects()
 
     BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",                 "EditorTxmgr$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:editor:txtsvc:macbuild:txtsvc.mcp",               "TextServices$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:editor:macbuild:editor.mcp",                      "EditorCore$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+
+    # note: only build one of the following targets
+    BuildOneProject(":mozilla:editor:macbuild:editor.mcp",                      "htmleditor$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+#    BuildOneProject(":mozilla:editor:macbuild:editor.mcp",                      "texteditor$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+
+    BuildOneProject(":mozilla:editor:macbuild:composer.mcp",                    "Composer$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     EndBuildModule("editor");
 }
