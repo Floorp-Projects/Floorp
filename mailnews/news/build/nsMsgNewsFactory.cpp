@@ -224,15 +224,20 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->RegisterComponent(kNntpUrlCID, nsnull, nsnull, path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->RegisterComponent(kNntpServiceCID, "Nntp Service", 
+	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP Service", 
 									"component://netscape/messenger/nntpservice", 
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->RegisterComponent(kNntpServiceCID, "Nntp Message Service", 
-									"component://netscape/messenger/messageservice;type=news", 
-									path, PR_TRUE, PR_TRUE);
+	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP News Service", 
+                                  "component://netscape/messenger/messageservice;type=news", 
+                                  path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP News Message Service",
+                                  "component://netscape/messenger/messageservice;type=news_message", 
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;  
 
 	rv = compMgr->RegisterComponent(kNewsFolderResourceCID,
                                   "News Folder Resource Factory",
