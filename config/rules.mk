@@ -1699,6 +1699,10 @@ echo-module:
 echo-requires:
 	@echo $(REQUIRES)
 
+echo-requires-recursive::
+	@$(if $(REQUIRES),echo $(subst $(topsrcdir)/,,$(srcdir)): $(MODULE): $(REQUIRES))
+	+$(LOOP_OVER_DIRS)
+
 echo-depth-path:
 	@$(topsrcdir)/build/unix/print-depth-path.sh
 
