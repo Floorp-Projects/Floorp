@@ -67,7 +67,7 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer)
 nsXIFConverter::~nsXIFConverter()
 {
   MOZ_COUNT_DTOR(nsXIFConverter);
-#ifdef DEBUG
+#ifdef DEBUG_XIF
   WriteDebugFile();
 #endif
 }
@@ -491,7 +491,7 @@ void nsXIFConverter::EndCSSDeclaration()
   FinishStartTag(nsString("css_declaration"),PR_TRUE);
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_XIF
 //
 // Leave a temp file for debugging purposes
 //
