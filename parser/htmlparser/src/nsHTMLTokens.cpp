@@ -997,9 +997,13 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
   nsresult result=PR_TRUE;
   
   switch(aMode) {
+
+#if 0 //set to 1 if you want strict comments...  bug 53011...
     case eDTDMode_strict:
       result=ConsumeStrictComment(aChar,aScanner,mTextValue);
       break;
+#endif 
+
     case eDTDMode_transitional:
     default:
       result=ConsumeComment(aChar,aScanner,mTextValue);

@@ -161,6 +161,7 @@ struct nsHTMLElement {
   TagList*        GetSpecialParents(void) const {return mSpecialParents;}
 
   PRBool          IsMemberOf(PRInt32 aType) const;
+  PRBool          ContainsSet(PRInt32 aType) const;
   PRBool          CanContainType(PRInt32 aType) const;
   
   eHTMLTags       GetTag(void) const {return mTagID;}
