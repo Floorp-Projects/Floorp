@@ -5018,13 +5018,48 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
       }
     }  // mSessionHistory
-    // Determine if this type of load should update history
+    // Determine if this type of load should update history.
+    // We do want to update SHEntry with the new cacheKey if 
+    // the user hit shift-relaod 
     if (aLoadType == LOAD_BYPASS_HISTORY ||
-        aLoadType & LOAD_CMD_RELOAD || aLoadType & LOAD_CMD_HISTORY ||
-        (mCurrentURI && NS_SUCCEEDED(mCurrentURI->Equals(aURI, &equalUri))
-         && equalUri && !inputStream)) {
+         aLoadType & LOAD_CMD_HISTORY ||
+         aLoadType & LOAD_CMD_RELOAD)         
         updateHistory = PR_FALSE;
+    
+
+    /* If the url to be loaded is the same as the one already there,
+     * and the original loadType is LOAD_NORMAL or LOAD_LINK,
+     * set loadType to LOAD_NORMAL_REPLACE so that AddToSessionHistory()
+     * won't mess with the current SHEntry and if this page has any frame 
+     * children, it also will be handled properly. see bug 83684
+     *
+     * XXX Hopefully changing the loadType at this time will not hurt  
+     *  anywhere. The other way to take care of sequentially repeating
+     *  frameset pages is to add new methods to nsIDocShellTreeItem.
+     * Hopefully I don't have to do that. 
+     */
+    if (NS_SUCCEEDED(aURI->Equals(mCurrentURI, &equalUri))
+       && equalUri && !inputStream &&
+       (mLoadType == LOAD_NORMAL || mLoadType == LOAD_LINK))
+        mLoadType = LOAD_NORMAL_REPLACE;
+
+    /* If the user pressed shift-reload, cache will create a new cache key
+     * for the page. Save the new cacheKey in Session History. 
+     * see bug 90098
+     */
+    if (aChannel && aLoadType == LOAD_RELOAD_BYPASS_CACHE ||
+        aLoadType == LOAD_RELOAD_BYPASS_PROXY ||
+        aLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE) {                 
+        
+        nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aChannel));
+        nsCOMPtr<nsISupports>  cacheKey;
+        // Get the Cache Key  and store it in SH.         
+        if (cacheChannel) 
+            cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
+        if (mLSHE)
+          mLSHE->SetCacheKey(cacheKey);
     }
+
 
     if (updateHistory && shAvailable) { 
       // Update session history if necessary...
