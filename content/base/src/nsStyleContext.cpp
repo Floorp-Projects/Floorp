@@ -432,28 +432,6 @@ nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule
   }
 }
 
-template <class T>
-inline void
-DoStructDifference(T*,
-                   nsStyleContext* aThisContext,
-                   nsStyleContext* aOtherContext,
-                   PRBool aDoCompare,
-                   nsChangeHint aMaxHint,
-                   nsChangeHint& aHint)
-{
-  const T* thisStruct = NS_STATIC_CAST(const T*,
-                         aThisContext->PeekStyleData(NS_GET_STYLESTRUCTID(T)));
-  if (thisStruct) {
-    const T* otherStruct = NS_STATIC_CAST(const T*,
-                         aOtherContext->GetStyleData(NS_GET_STYLESTRUCTID(T)));
-    if (aDoCompare &&
-        !NS_IsHintSubset(aMaxHint, aHint) &&
-        thisStruct != otherStruct) {
-      NS_UpdateHint(aHint, thisStruct->CalcDifference(*otherStruct));
-    }
-  }
-}
-
 nsChangeHint
 nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 {
@@ -473,23 +451,40 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 
   nsChangeHint maxHint = NS_STYLE_HINT_FRAMECHANGE;
   
+#define DO_STRUCT_DIFFERENCE(struct_)                                         \
+  PR_BEGIN_MACRO                                                              \
+    const nsStyle##struct_* this##struct_ =                                   \
+        NS_STATIC_CAST(const nsStyle##struct_*,                               \
+                      PeekStyleData(NS_GET_STYLESTRUCTID(nsStyle##struct_))); \
+    if (this##struct_) {                                                      \
+      const nsStyle##struct_* other##struct_ =                                \
+          NS_STATIC_CAST(const nsStyle##struct_*,                             \
+               aOther->GetStyleData(NS_GET_STYLESTRUCTID(nsStyle##struct_))); \
+      if (compare &&                                                          \
+          !NS_IsHintSubset(maxHint, hint) &&                                  \
+          this##struct_ != other##struct_) {                                  \
+        NS_UpdateHint(hint, this##struct_->CalcDifference(*other##struct_));  \
+      }                                                                       \
+    }                                                                         \
+  PR_END_MACRO
+
   // We begin by examining those style structs that are capable of
   // causing the maximal difference, a FRAMECHANGE.
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
   // Visibility, Quotes
-  DoStructDifference(NS_STATIC_CAST(nsStyleDisplay*, nsnull), this, aOther, compare, maxHint, hint);
+  DO_STRUCT_DIFFERENCE(Display);
 #ifdef INCLUDE_XUL
-  DoStructDifference(NS_STATIC_CAST(nsStyleXUL*, nsnull), this, aOther, compare, maxHint, hint);
+  DO_STRUCT_DIFFERENCE(XUL);
 #endif
-  DoStructDifference(NS_STATIC_CAST(nsStyleContent*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleUserInterface*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleVisibility*, nsnull), this, aOther, compare, maxHint, hint);
+  DO_STRUCT_DIFFERENCE(Content);
+  DO_STRUCT_DIFFERENCE(UserInterface);
+  DO_STRUCT_DIFFERENCE(Visibility);
 #ifdef MOZ_SVG
-  DoStructDifference(NS_STATIC_CAST(nsStyleSVG*, nsnull), this, aOther, compare, maxHint, hint);
+  DO_STRUCT_DIFFERENCE(SVG);
 #endif
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
-  DoStructDifference(NS_STATIC_CAST(nsStyleQuotes*, nsnull), this, aOther, compare, maxHint, hint);
+  DO_STRUCT_DIFFERENCE(Quotes);
 
   // At this point, we know that the worst kind of damage we could do is
   // a reflow.
@@ -498,16 +493,16 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // The following structs cause (as their maximal difference) a reflow
   // to occur.  REFLOW Structs: Font, Margin, Padding, Border, List,
   // Position, Text, TextReset, Table, TableBorder
-  DoStructDifference(NS_STATIC_CAST(nsStyleFont*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleMargin*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStylePadding*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleBorder*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleList*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStylePosition*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleText*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleTextReset*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleTable*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleTableBorder*, nsnull), this, aOther, compare, maxHint, hint);
+  DO_STRUCT_DIFFERENCE(Font);
+  DO_STRUCT_DIFFERENCE(Margin);
+  DO_STRUCT_DIFFERENCE(Padding);
+  DO_STRUCT_DIFFERENCE(Border);
+  DO_STRUCT_DIFFERENCE(List);
+  DO_STRUCT_DIFFERENCE(Position);
+  DO_STRUCT_DIFFERENCE(Text);
+  DO_STRUCT_DIFFERENCE(TextReset);
+  DO_STRUCT_DIFFERENCE(Table);
+  DO_STRUCT_DIFFERENCE(TableBorder);
 
   // At this point, we know that the worst kind of damage we could do is
   // a re-render (i.e., a VISUAL change).
@@ -516,10 +511,12 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // The following structs cause (as their maximal difference) a
   // re-render to occur.  VISUAL Structs: Color, Background, Outline,
   // UIReset
-  DoStructDifference(NS_STATIC_CAST(nsStyleColor*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleBackground*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleOutline*, nsnull), this, aOther, compare, maxHint, hint);
-  DoStructDifference(NS_STATIC_CAST(nsStyleUIReset*, nsnull), this, aOther, compare, maxHint, hint);
+  DO_STRUCT_DIFFERENCE(Color);
+  DO_STRUCT_DIFFERENCE(Background);
+  DO_STRUCT_DIFFERENCE(Outline);
+  DO_STRUCT_DIFFERENCE(UIReset);
+
+#undef DO_STRUCT_DIFFERENCE
 
   return hint;
 }
