@@ -304,9 +304,11 @@ AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
   fclose(fp);
 }
 
+#ifdef NS_DEBUG
 int _CrtSetDbgFlag(int arg){
   return arg;
 }
+#endif
 
 NS_IMETHODIMP
 nsViewerApp::ProcessArguments(int argc, char** argv)
@@ -317,6 +319,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
   int i;
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
+#ifdef NS_DEBUG
 #ifdef XP_WIN
       if (PL_strcmp(argv[i], "-md") == 0) {
         int old = _CrtSetDbgFlag(0);
@@ -326,6 +329,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
         _CrtSetDbgFlag(old);
       }
       else
+#endif
 #endif
       if (PL_strncmp(argv[i], "-p", 2) == 0) {
         char *optionalSampleStopIndex = &(argv[i][2]);
@@ -900,7 +904,6 @@ static char * gTop100List[] = {
    "http://www.pathfinder.com",
    "http://www.warnerbros.com",
    "http://www.cnn.com",
-   "http://www.altavista.digital.com",
    "http://www.altavista.com",
    "http://www.usatoday.com",
    "http://www.disney.com",
