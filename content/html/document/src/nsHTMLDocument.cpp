@@ -144,8 +144,6 @@ const PRInt32 kBackward = 1;
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
-
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsIRDFService* nsHTMLDocument::gRDF;
@@ -328,8 +326,8 @@ nsHTMLDocument::~nsHTMLDocument()
   }
 }
 
-NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
-                                             void** aInstancePtr)
+NS_IMETHODIMP
+nsHTMLDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(nsnull != aInstancePtr, "null ptr");
   if (nsnull == aInstancePtr) {
@@ -358,12 +356,14 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
   return nsDocument::QueryInterface(aIID, aInstancePtr);
 }
 
-nsrefcnt nsHTMLDocument::AddRef()
+nsrefcnt
+nsHTMLDocument::AddRef()
 {
   return nsDocument::AddRef();
 }
 
-nsrefcnt nsHTMLDocument::Release()
+nsrefcnt
+nsHTMLDocument::Release()
 {
   return nsDocument::Release();
 }
@@ -617,8 +617,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-  if (needsParser)
-  {
+  if (needsParser) {
     rv = nsComponentManager::CreateInstance(kCParserCID, 
                                             nsnull, 
                                             kCParserIID, 
@@ -884,24 +883,28 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 #endif
 
-  if (NS_FAILED(rv)) { return rv; }
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   rv = this->SetDocumentCharacterSet(charset);
-  if (NS_FAILED(rv)) { return rv; }
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  if(cachedData)
-  {
+  if(cachedData) {
        rv=cachedData->SetAnnotation("charset",charset.Length()+1,
                NS_ConvertUCS2toUTF8(charset.GetUnicode()));
        NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetAnnotation");
   }
 
   // Set the parser as the stream listener for the document loader...
-  if (mParser) 
-  {
-    rv = mParser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)aDocListener);
-    if (NS_FAILED(rv)) { return rv; }
-
+  if (mParser) {
+    rv = mParser->QueryInterface(NS_GET_IID(nsIStreamListener),
+                                 (void**)aDocListener);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     //The following lines were added by Rick.
     //These perform "dynamic" DTD registration, allowing
@@ -955,7 +958,8 @@ nsHTMLDocument::EndLoad()
   return nsDocument::EndLoad();
 }
 
-NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsAReadableString& aTitle)
+NS_IMETHODIMP
+nsHTMLDocument::SetTitle(const nsAReadableString& aTitle)
 {
   if (nsnull == mDocumentTitle) {
     mDocumentTitle = new nsString(aTitle);
@@ -1036,7 +1040,8 @@ nsHTMLDocument::GetImageMap(const nsString& aMapName,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
+NS_IMETHODIMP
+nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -1052,7 +1057,8 @@ NS_IMETHODIMP nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
+NS_IMETHODIMP
+nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -1068,7 +1074,8 @@ NS_IMETHODIMP nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult
   return NS_OK;
 }
 
-void nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
+void
+nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
 {
   if (aSheet == mAttrStyleSheet) {  // always first
     mStyleSheets.InsertElementAt(aSheet, 0);
@@ -1108,7 +1115,7 @@ nsHTMLDocument::GetBaseURL(nsIURI*& aURL) const
 }
 
 NS_IMETHODIMP
-nsHTMLDocument:: SetBaseURL(const nsAReadableString& aURLSpec)
+nsHTMLDocument::SetBaseURL(const nsAReadableString& aURLSpec)
 {
   nsresult result = NS_OK;
 
@@ -1122,7 +1129,7 @@ nsHTMLDocument:: SetBaseURL(const nsAReadableString& aURLSpec)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument:: GetBaseTarget(nsAWritableString& aTarget) const
+nsHTMLDocument::GetBaseTarget(nsAWritableString& aTarget) const
 {
   if (nsnull != mBaseTarget) {
     aTarget.Assign(*mBaseTarget);
@@ -1134,7 +1141,7 @@ nsHTMLDocument:: GetBaseTarget(nsAWritableString& aTarget) const
 }
 
 NS_IMETHODIMP
-nsHTMLDocument:: SetBaseTarget(const nsAReadableString& aTarget)
+nsHTMLDocument::SetBaseTarget(const nsAReadableString& aTarget)
 {
   if (0 < aTarget.Length()) {
     if (nsnull != mBaseTarget) {
