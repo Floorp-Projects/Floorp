@@ -71,7 +71,6 @@
     "css2properties.backgroundimage", \
     "css2properties.backgroundposition", \
     "css2properties.backgroundrepeat", \
-    "css2properties.behavior", \
     "css2properties.border", \
     "css2properties.borderbottom", \
     "css2properties.borderbottomcolor", \
@@ -138,7 +137,8 @@
     "css2properties.maxwidth", \
     "css2properties.minheight", \
     "css2properties.minwidth", \
-    "css2properties.opacity", \
+    "css2properties.mozbinding", \
+    "css2properties.mozopacity", \
     "css2properties.orphans", \
     "css2properties.outline", \
     "css2properties.outlinecolor", \
@@ -228,7 +228,7 @@
     "cssstylesheet.insertrule", \
     "cssstylesheet.ownerrule", \
     "cssvalue.csstext", \
-    "cssvalue.valuetype", \
+    "cssvalue.cssvaluetype", \
     "document.createattribute", \
     "document.createattributens", \
     "document.createcdatasection", \

@@ -174,7 +174,7 @@ nsROCSSPrimitiveValue::SetCssText(const nsAReadableString& aCssText)
 
 
 NS_IMETHODIMP
-nsROCSSPrimitiveValue::GetValueType(PRUint16* aValueType)
+nsROCSSPrimitiveValue::GetCssValueType(PRUint16* aValueType)
 {
   NS_ENSURE_ARG_POINTER(aValueType);
   *aValueType = nsIDOMCSSValue::CSS_PRIMITIVE_VALUE;
