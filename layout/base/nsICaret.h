@@ -125,6 +125,11 @@ public:
    **/
   NS_IMETHOD DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset) = 0;
 
+  /** SetOptimizeDrawCaret
+  *  To start or stop process of optimizing draw caret
+  */
+  NS_IMETHOD SetOptimizeDrawCaret(PRBool aOptimzeDrawCaret) = 0;
+
 };
 
 nsresult

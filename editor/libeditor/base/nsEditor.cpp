@@ -746,10 +746,29 @@ nsEditor::EndPlaceHolderTransaction()
   NS_PRECONDITION(mPlaceHolderBatch > 0, "zero or negative placeholder batch count when ending batch!");
   if (mPlaceHolderBatch == 1)
   {
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    nsCOMPtr<nsICaret> caret;
+    if (!ps)
+      return NS_ERROR_FAILURE;
+
+    nsresult rv = ps->GetCaret(getter_AddRefs(caret));
+    if (NS_FAILED(rv))
+      return rv;
+
+    // optimizing drawcaret starts
+    if (caret) {
+      caret->SetOptimizeDrawCaret(PR_TRUE);
+    }
+    
     // time to turn off the batch
     EndUpdateViewBatch();
     // make sure selection is in view
     ScrollSelectionIntoView(PR_FALSE);
+
+    // optimizing drawcaret stops
+    if (caret) {
+      caret->SetOptimizeDrawCaret(PR_FALSE);
+    }
 
     if (mSelState)
     {
@@ -4340,15 +4359,6 @@ nsresult nsEditor::EndUpdateViewBatch()
   if (!caret)
     return NS_ERROR_FAILURE;
 
-  StCaretHider caretHider(caret);
-        
-  nsCOMPtr<nsISelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
-    selPrivate->EndBatchChanges();
-  }
-
   if (mViewManager)
   {
     mUpdateCount--;
@@ -4360,6 +4370,8 @@ nsresult nsEditor::EndUpdateViewBatch()
 
       if (NS_FAILED(rv))
         return rv;
+
+      StCaretHider caretHider(caret);
 
       // Make sure we enable reflowing before we call
       // mViewManager->EndUpdateViewBatch().  This will make sure that any
@@ -4385,6 +4397,13 @@ nsresult nsEditor::EndUpdateViewBatch()
       mViewManager->EndUpdateViewBatch(updateFlag);
     }
   }  
+
+  nsCOMPtr<nsISelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
+    selPrivate->EndBatchChanges();
+  }
 
   return NS_OK;
 }
