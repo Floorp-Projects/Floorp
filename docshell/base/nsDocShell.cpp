@@ -414,14 +414,6 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         NS_ADDREF((nsISupports*)*aSink);
         return NS_OK;
     }
-    else if (aIID.Equals(NS_GET_IID(nsIWebBrowserSpellCheck))) {
-        nsresult rv = EnsureSpellCheck();
-        if (NS_FAILED(rv)) return rv;
-
-        *aSink = mSpellCheck;
-        NS_ADDREF((nsISupports*)*aSink);
-        return NS_OK;
-    }
     else if (aIID.Equals(NS_GET_IID(nsIEditingSession)) && NS_SUCCEEDED(EnsureEditorData())) {
       nsCOMPtr<nsIEditingSession> editingSession;
       mEditorData->GetEditingSession(getter_AddRefs(editingSession));
@@ -6609,50 +6601,6 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
     rv = findInFrames->SetRootSearchFrame(rootWindow);
     if (NS_FAILED(rv)) return rv;
     rv = findInFrames->SetCurrentSearchFrame(windowToSearch);
-    if (NS_FAILED(rv)) return rv;
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::EnsureSpellCheck()
-{
-    nsresult rv;
-    if (!mSpellCheck)
-    {
-        mSpellCheck = do_CreateInstance("@mozilla.org/embedcomp/spellcheck;1", &rv);
-        if (NS_FAILED(rv)) return rv;
-    }
-    
-    // we promise that the nsIWebBrowserFind that we return has been set
-    // up to point to the focussed, or content window, so we have to
-    // set that up each time.
-    nsCOMPtr<nsIScriptGlobalObject> scriptGO;
-    rv = GetScriptGlobalObject(getter_AddRefs(scriptGO));
-    if (NS_FAILED(rv)) return rv;
-
-    // default to our window
-    nsCOMPtr<nsIDOMWindow> rootWindow = do_QueryInterface(scriptGO);
-    nsCOMPtr<nsIDOMWindow> windowToSearch = rootWindow;
-
-    // if we can, search the focussed window
-    nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(scriptGO);
-    nsCOMPtr<nsIFocusController> focusController;
-    if (ourWindow)
-        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
-    if (focusController)
-    {
-        nsCOMPtr<nsIDOMWindowInternal> focussedWindow;
-        focusController->GetFocusedWindow(getter_AddRefs(focussedWindow));
-        if (focussedWindow)
-            windowToSearch = focussedWindow;
-    }
-
-    nsCOMPtr<nsIWebBrowserSpellCheckInFrames> spellCheckInFrames = do_QueryInterface(mSpellCheck);
-    if (!spellCheckInFrames) return NS_ERROR_NO_INTERFACE;
-    
-    rv = spellCheckInFrames->SetRootSearchFrame(rootWindow);
-    if (NS_FAILED(rv)) return rv;
-    rv = spellCheckInFrames->SetCurrentSearchFrame(windowToSearch);
     if (NS_FAILED(rv)) return rv;
     
     return NS_OK;
