@@ -156,7 +156,7 @@ NS_IMETHODIMP nsStdColorPicker::Init(nsIContent *aContent)
     mNumCols = 10;
     mColors = sizeof(NosePalette) / sizeof(char *);
   }
-  else if (palette.EqualsIgnoreCase("gray"))
+  else if (palette.EqualsIgnoreCase("gray") || palette.EqualsIgnoreCase("grey"))
   {
     printf("gray picked\n");
     mPalette = GrayPalette;
