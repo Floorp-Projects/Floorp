@@ -44,7 +44,31 @@ list-style-image: url("chrome://messenger/skin/icons/folder-open.gif");
 }
 
 .folderMenuItem[SpecialFolder="Inbox"][open="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-inbox.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-inbox-open.gif");
+}
+
+.folderMenuItem[SpecialFolder="Sent"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-sent.gif");
+}
+
+.folderMenuItem[SpecialFolder="Sent"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-sent-open.gif");
+}
+
+.folderMenuItem[SpecialFolder="Drafts"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-draft.gif");
+}
+
+.folderMenuItem[SpecialFolder="Drafts"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-draft-open.gif");
+}
+
+.folderMenuItem[SpecialFolder="Templates"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-template.gif");
+}
+
+.folderMenuItem[SpecialFolder="Templates"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-template-open.gif");
 }
 
 .folderMenuItem[SpecialFolder="Trash"] {
@@ -52,7 +76,7 @@ list-style-image: url("chrome://messenger/skin/icons/folder-open.gif");
 }
 
 .folderMenuItem[SpecialFolder="Trash"][open="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-trash-open.gif");
 }
 
 .folderMenuItem[IsServer="true"] {
