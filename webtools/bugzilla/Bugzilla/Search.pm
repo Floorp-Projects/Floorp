@@ -58,6 +58,7 @@ sub init {
     my $self = shift;
     my $fieldsref = $self->{'fields'};
     my $params = $self->{'params'};
+    my $user = $self->{'user'} || Bugzilla->user;
 
     my $debug = 0;
         
@@ -991,8 +992,6 @@ sub init {
     # Make sure we create a legal SQL query.
     @andlist = ("1 = 1") if !@andlist;
    
-    my $user = Bugzilla->user;
-
     my $query = "SELECT " . join(', ', @fields) .
                 " FROM $suppstring" .
                 " LEFT JOIN bug_group_map " .

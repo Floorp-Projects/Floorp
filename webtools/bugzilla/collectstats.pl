@@ -441,7 +441,7 @@ sub CollectSeriesData {
     CleanupChartTables() if ($days_since_epoch % 7 == 0);
 
     my $dbh = Bugzilla->dbh;
-    my $serieses = $dbh->selectall_hashref("SELECT series_id, query " .
+    my $serieses = $dbh->selectall_hashref("SELECT series_id, query, creator " .
                       "FROM series " .
                       "WHERE frequency != 0 AND " . 
                       "($days_since_epoch + series_id) % frequency = 0",
@@ -455,12 +455,12 @@ sub CollectSeriesData {
     foreach my $series_id (keys %$serieses) {
         # We set up the user for Search.pm's permission checking - each series
         # runs with the permissions of its creator.
-        $::vars->{'user'} =
-                      new Bugzilla::User($serieses->{$series_id}->{'creator'});
+        my $user = new Bugzilla::User($serieses->{$series_id}->{'creator'});
 
         my $cgi = new Bugzilla::CGI($serieses->{$series_id}->{'query'});
         my $search = new Bugzilla::Search('params' => $cgi,
-                                          'fields' => ["bugs.bug_id"]);
+                                          'fields' => ["bugs.bug_id"],
+                                          'user'   => $user);
         my $sql = $search->getSQL();
         
         # We need to count the returned rows. Without subselects, we can't
