@@ -50,29 +50,6 @@ public final class XPCOM {
   public static native nsIComponentRegistrar getComponentRegistrar();
   public static native nsILocalFile newLocalFile(String aPath, boolean followLinks);
 
-  // Calling functions used by Java stub classes
-  public static native void CallXPCOMMethodVoid(Object thisObj, int fnNumber, Object[] params);
-  public static native boolean CallXPCOMMethodBool(Object thisObj, int fnNumber, Object[] params);
-  public static native boolean[] CallXPCOMMethodBoolA(Object thisObj, int fnNumber, Object[] params);
-  public static native byte CallXPCOMMethodByte(Object thisObj, int fnNumber, Object[] params);
-  public static native byte[] CallXPCOMMethodByteA(Object thisObj, int fnNumber, Object[] params);
-  public static native char CallXPCOMMethodChar(Object thisObj, int fnNumber, Object[] params);
-  public static native char[] CallXPCOMMethodCharA(Object thisObj, int fnNumber, Object[] params);
-  public static native short CallXPCOMMethodShort(Object thisObj, int fnNumber, Object[] params);
-  public static native short[] CallXPCOMMethodShortA(Object thisObj, int fnNumber, Object[] params);
-  public static native int CallXPCOMMethodInt(Object thisObj, int fnNumber, Object[] params);
-  public static native int[] CallXPCOMMethodIntA(Object thisObj, int fnNumber, Object[] params);
-  public static native long CallXPCOMMethodLong(Object thisObj, int fnNumber, Object[] params);
-  public static native long[] CallXPCOMMethodLongA(Object thisObj, int fnNumber, Object[] params);
-  public static native float CallXPCOMMethodFloat(Object thisObj, int fnNumber, Object[] params);
-  public static native float[] CallXPCOMMethodFloatA(Object thisObj, int fnNumber, Object[] params);
-  public static native double CallXPCOMMethodDouble(Object thisObj, int fnNumber, Object[] params);
-  public static native double[] CallXPCOMMethodDoubleA(Object thisObj, int fnNumber, Object[] params);
-  public static native Object CallXPCOMMethodObj(Object thisObj, int fnNumber, Object[] params);
-  public static native Object[] CallXPCOMMethodObjA(Object thisObj, int fnNumber, Object[] params);
-
-  public static native void FinalizeStub(Object thisObj);
-
 
   /*  Utility functions */
 
