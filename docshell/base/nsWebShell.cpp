@@ -167,7 +167,7 @@ static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
 static PRBool
 IsOffline()
 {
-    PRBool offline;
+    PRBool offline = PR_TRUE;
     nsCOMPtr<nsIIOService> ios(do_GetIOService());
     if (ios)
         ios->GetOffline(&offline);
