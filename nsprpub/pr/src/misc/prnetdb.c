@@ -177,6 +177,7 @@ const PRIPv6Addr _pr_in6addr_loopback = {{{ 0, 0, 0, 0,
  * W. Richard Stevens' Unix Network Programming, Vol. 1, 2nd. Ed.)
  */
 
+static PRLock *_pr_query_ifs_lock = NULL;
 static PRBool _pr_have_inet_if = PR_FALSE;
 static PRBool _pr_have_inet6_if = PR_FALSE;
 
@@ -423,13 +424,7 @@ void _PR_InitNet(void)
 	_getproto_lock = PR_NewLock();
 #endif
 #if defined(_PR_INET6) && defined(_PR_HAVE_GETHOSTBYNAME2)
-	_pr_QueryNetIfs();
-#ifdef DEBUG_QUERY_IFS
-	if (_pr_have_inet_if)
-		printf("Have IPv4 source address\n");
-	if (_pr_have_inet6_if)
-		printf("Have IPv6 source address\n");
-#endif
+	_pr_query_ifs_lock = PR_NewLock();
 #endif
 }
 
@@ -445,6 +440,12 @@ void _PR_CleanupNet(void)
     if (_getproto_lock) {
         PR_DestroyLock(_getproto_lock);
         _getproto_lock = NULL;
+    }
+#endif
+#if defined(_PR_INET6) && defined(_PR_HAVE_GETHOSTBYNAME2)
+    if (_pr_query_ifs_lock) {
+        PR_DestroyLock(_pr_query_ifs_lock);
+        _pr_query_ifs_lock = NULL;
     }
 #endif
 }
@@ -791,6 +792,25 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return PR_FAILURE;
     }
+
+#if defined(_PR_INET6) && defined(_PR_HAVE_GETHOSTBYNAME2)
+    PR_Lock(_pr_query_ifs_lock);
+    /*
+     * Keep querying the presence of IPv4 and IPv6 interfaces until
+     * at least one is up.  This allows us to detect the local
+     * machine going from offline to online.
+     */
+    if (!_pr_have_inet_if && !_pr_have_inet6_if) {
+	_pr_QueryNetIfs();
+#ifdef DEBUG_QUERY_IFS
+	if (_pr_have_inet_if)
+		printf("Have IPv4 source address\n");
+	if (_pr_have_inet6_if)
+		printf("Have IPv6 source address\n");
+#endif
+    }
+    PR_Unlock(_pr_query_ifs_lock);
+#endif
 
 #if defined(_PR_HAVE_GETIPNODEBYNAME)
 	if (flags & PR_AI_V4MAPPED)
