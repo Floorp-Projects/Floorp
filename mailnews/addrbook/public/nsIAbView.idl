@@ -45,4 +45,6 @@ interface nsIAbView : nsISupports
 {
     void init(in string aURI);
     nsIAbCard getCardFromRow(in long row);
+    void selectAll();
+	void deleteSelectedCards();
 };

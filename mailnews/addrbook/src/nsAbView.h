@@ -48,8 +48,18 @@
 #include "nsVoidArray.h"
 #include "nsIAbDirectory.h"
 #include "nsIAtom.h"
+#include "nsICollation.h"
+#include "nsIAbListener.h"
 
-class nsAbView : public nsIAbView, public nsIOutlinerView
+typedef struct AbCard
+{
+  nsIAbCard *card;
+  PRUnichar *primaryCollationKey;
+  PRUnichar *secondaryCollationKey;
+} AbCard;
+
+
+class nsAbView : public nsIAbView, public nsIOutlinerView, public nsIAbListener
 {
 public:
   nsAbView();
@@ -58,17 +68,26 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIABVIEW
   NS_DECL_NSIOUTLINERVIEW
+  NS_DECL_NSIABLISTENER
 
 private:
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
   nsresult SortBy(const PRUnichar *colID);
+  nsresult CreateCollationKey(const PRUnichar *source,  PRUnichar **result);
+  PRInt32 FindIndexForInsert(const PRUnichar *colID, AbCard *abcard);
+  PRInt32 FindIndexForCard(const PRUnichar *colID, nsIAbCard *card);
+  nsresult GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *abcard);
+  nsresult InvalidateOutliner(PRInt32 row);
+  void RemoveCardAt(PRInt32 row);
+  nsresult EnumerateCards();
 
-  nsresult EnumerateCards(nsIAbDirectory* directory);
   nsCString mURI;
+  nsCOMPtr <nsIAbDirectory> mDirectory;
   nsVoidArray mCards;
   nsCOMPtr<nsIAtom> mMailListAtom;
   nsString mSortedColumn;
+  nsCOMPtr<nsICollation> mCollationKeyGenerator;
 };
 
 #endif /* _nsAbView_H_ */
