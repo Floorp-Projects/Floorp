@@ -54,13 +54,13 @@ public:
   nsPNGDecoder();
   virtual ~nsPNGDecoder();
 
-static void
+PR_STATIC_CALLBACK(void)
 info_callback(png_structp png_ptr, png_infop info_ptr);
-static void
+PR_STATIC_CALLBACK(void)
 row_callback(png_structp png_ptr, png_bytep new_row,
              png_uint_32 row_num, int pass);
 
-static void
+PR_STATIC_CALLBACK(void)
 end_callback(png_structp png_ptr, png_infop info_ptr);
 
   inline PRUint32 ProcessData(unsigned char *data, PRUint32 count);
