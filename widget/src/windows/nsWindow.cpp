@@ -1037,46 +1037,15 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                      PRBool *aForWindow)
 {
-  PRBool isInWindow,
-         isMouseEvent;
-  MSG    *msg = (MSG *) aEvent;
-
   if (!aRealEvent) {
-     *aForWindow = PR_FALSE;
-     return NS_OK;
-   }
+    *aForWindow = PR_FALSE;
+    return NS_OK;
+  }
+#if 0
+  // this version actually works, but turns out to be unnecessary
+  // if we use the OS properly.
+  MSG *msg = (MSG *) aEvent;
 
-   isInWindow = PR_FALSE;
-
-   // Get native window
-   HWND win;
-   win = (HWND)GetNativeData(NS_NATIVE_WINDOW);
-
-   // Find top most window of event window
-   HWND eWin = msg->hwnd;
-   if (NULL != eWin) {
-     /*HWND parent = ::GetParent(eWin);
-     while (parent != NULL) {
-       eWin = parent;
-       parent = ::GetParent(eWin);
-     }
-     */
-     if (win == eWin)
-       isInWindow = PR_TRUE;
-     else {
-       RECT r;
-       ::GetWindowRect(win, &r);
-       if (msg->pt.x >= r.left && msg->pt.x <= r.right && msg->pt.y >= r.top && msg->pt.y <= r.bottom)
-         isInWindow = PR_TRUE;
-     }
-   }
-
-   // include for consideration any popup menu which may be active at the moment
-   if (!isInWindow && gRollupWidget &&
-       EventIsInsideWindow((nsWindow*)gRollupWidget))
-     isInWindow = PR_TRUE;
-
-  isMouseEvent = PR_FALSE;
   switch (msg->message) {
      case WM_MOUSEMOVE:
      case WM_LBUTTONDOWN:
@@ -1087,11 +1056,42 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
      case WM_MBUTTONDBLCLK:
      case WM_RBUTTONDOWN:
      case WM_RBUTTONUP:
-     case WM_RBUTTONDBLCLK:
-       isMouseEvent = PR_TRUE;
-  }
+     case WM_RBUTTONDBLCLK: {
+         HWND   msgWindow, ourWindow, rollupWindow;
+         PRBool acceptEvent;
 
-  *aForWindow = isInWindow || !isMouseEvent ? PR_TRUE : PR_FALSE;
+         // is the event within our window?
+         msgWindow = 0;
+         rollupWindow = 0;
+         ourWindow = msg->hwnd;
+         while (ourWindow) {
+           msgWindow = ourWindow;
+           ourWindow = ::GetParent(ourWindow);
+         }
+         ourWindow = (HWND)GetNativeData(NS_NATIVE_WINDOW);
+         if (gRollupWidget)
+           rollupWindow = (HWND)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+         acceptEvent = msgWindow && (msgWindow == ourWindow ||
+                                     msgWindow == rollupWindow) ?
+                       PR_TRUE : PR_FALSE;
+
+         // if not, accept events for any window that hasn't been
+         // disabled.
+         if (!acceptEvent) {
+           LONG proc = ::GetWindowLong(msgWindow, GWL_WNDPROC);
+           if (proc == (LONG)&nsWindow::WindowProc) {
+             nsWindow *msgWin = (nsWindow*) ::GetWindowLong(msgWindow, GWL_USERDATA);
+             msgWin->IsEnabled(&acceptEvent);
+           }
+         }
+       }
+       break;
+     default:
+       *aForWindow = PR_TRUE;
+  }
+#else
+  *aForWindow = PR_TRUE;
+#endif
 
   return NS_OK;
 }
@@ -1248,7 +1248,7 @@ NS_METHOD nsWindow::Enable(PRBool bState)
     return NS_OK;
 }
 
-    
+
 //-------------------------------------------------------------------------
 //
 // Give the focus to this component
