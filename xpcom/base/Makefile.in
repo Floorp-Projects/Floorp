@@ -34,7 +34,6 @@ REQUIRES	= string \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsLogging.cpp \
 		nsAllocator.cpp \
 		nsMemoryImpl.cpp \
 		nsErrorService.cpp \
@@ -75,7 +74,6 @@ EXPORTS		= \
 		nsWeakReference.h \
 		nsWeakPtr.h \
 		nscore.h \
-		nslog.h \
 		nsIInterfaceRequestorUtils.h \
 		$(NULL)
 
@@ -88,7 +86,6 @@ endif
 
 XPIDLSRCS	= \
 		nsrootidl.idl \
-		nsILoggingService.idl \
 		nsISupports.idl \
 		nsIMemory.idl \
 		nsIErrorService.idl \
