@@ -497,10 +497,14 @@ install:: export
 clean::
 	rm -f $(TARGETS)
 
-# The prpoll test calls BSD socket functions, so it needs to link
+# The following tests call BSD socket functions, so they need to link
 # with -lsocket on some platforms.
 ifeq ($(OS_ARCH),SunOS)
 ifneq ($(OS_RELEASE),4.1.3_U1)
+ifeq ($(USE_IPV6),1)
+$(OBJDIR)/gethost: $(OBJDIR)/gethost.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lsocket $(EXTRA_LIBS) -o $@
+endif
 $(OBJDIR)/prpoll: $(OBJDIR)/prpoll.o
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lsocket $(EXTRA_LIBS) -o $@
 endif
