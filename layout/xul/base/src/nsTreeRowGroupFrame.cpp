@@ -135,22 +135,34 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
   PRInt32 rowCount;
   GetRowCount(rowCount);
 
+  // Get our owning tree.
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+
   // Get our presentation context.
   if (aNewIndex > aOldIndex) {
     // Figure out how many rows we have to lose off the top.
     PRInt32 rowsToLose = aNewIndex - aOldIndex;
     if (rowsToLose > rowCount) {
-      // B
+
+      // Get the content node that corresponds to the row.
+      nsTableCellFrame* tableCellFrame = tableFrame->GetCellFrameAt(0, 0);
+      nsCOMPtr<nsIContent> cellContent;
+      tableCellFrame->GetContent(getter_AddRefs(cellContent));
+      nsCOMPtr<nsIContent> rowContent;
+      cellContent->GetParent(*getter_AddRefs(rowContent));
+
+      // Just destroy everything and build a content chain
+      mFrames.DeleteFrames(aPresContext); // Destroys everything.
+      //ConstructContentChain(aOldIndex, aNewIndex, rowContent);
     }
-    DestroyRows(aPresContext, rowsToLose);
+    else DestroyRows(aPresContext, rowsToLose);
   }
   else {
     // Figure out how many rows we have to lose off the bottom.
   }
 
   // Invalidate the cell map and column cache.
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
   tableFrame->InvalidateCellMap();
   tableFrame->InvalidateColumnCache();
     
