@@ -44,12 +44,13 @@
 #include <nspr.h>
 #include <plstr.h>
 #include <pkcs11.h>
+#include <nss.h>
+#include <ssl.h>
 
 #include <jssutil.h>
 #include <java_ids.h>
 #include <jss_exceptions.h>
 
-#include "jssinit.h"
 #include "pk11util.h"
 
 #if defined(AIX) || defined(HPUX) || defined(LINUX)
@@ -126,9 +127,8 @@ handleSigChild(JNIEnv *env) {
 #endif
         
 
-int ConfigureOSCP( 
+int ConfigureOCSP( 
 		JNIEnv *env,
-		CERTCertDBHandle *db,
 		jboolean ocspCheckingEnabled,
         jstring ocspResponderURL,
         jstring ocspResponderCertNickname )
@@ -137,6 +137,7 @@ int ConfigureOSCP(
 	char *ocspResponderCertNickname_string=NULL;
 	SECStatus status;
 	int result = SECSuccess;
+    CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
 
 
 	/* if caller specified default responder, get the
@@ -167,14 +168,14 @@ int ConfigureOSCP(
 
 	/* first disable OCSP - we'll enable it later */
 
-	CERT_DisableOCSPChecking(db);
+	CERT_DisableOCSPChecking(certdb);
 
 	/* if they set the default responder, then set it up
 	 * and enable it
 	 */
 	if (ocspResponderURL) {
 		status = 
-			CERT_SetOCSPDefaultResponder(	db, 
+			CERT_SetOCSPDefaultResponder(	certdb, 
 											ocspResponderURL_string,
 											ocspResponderCertNickname_string
 										);
@@ -185,18 +186,18 @@ int ConfigureOSCP(
 			result = SECFailure;
 			goto loser;
 		}
-		CERT_EnableOCSPDefaultResponder(db);
+		CERT_EnableOCSPDefaultResponder(certdb);
 	}
 	else {
 		/* if no defaultresponder is set, disable it */
-		CERT_DisableOCSPDefaultResponder(db);
+		CERT_DisableOCSPDefaultResponder(certdb);
 	}
 		
 
 	/* enable OCSP checking if requested */
 
 	if (ocspCheckingEnabled) {
-		CERT_EnableOCSPChecking(db);
+		CERT_EnableOCSPChecking(certdb);
 	}
 	
 loser:
@@ -215,6 +216,7 @@ loser:
 
 }
 
+#if 0
 /***********************************************************************
  * simpleInitialize
  *
@@ -306,7 +308,9 @@ Java_org_mozilla_jss_CryptoManager_initializeNative
         return;
     }
 }
+#endif
 
+#if 0
 /*
  * Callback for key database name.  Name is passed in through void* argument.
  */
@@ -331,6 +335,7 @@ certDBNameCallback(void *arg, int dbVersion)
         return PL_strdup("");
     }
 }
+#endif
 
 /**********************************************************************
  * This is the PasswordCallback object that will be used to login
@@ -344,58 +349,9 @@ static jobject globalPasswordCallback = NULL;
  */
 JavaVM * JSS_javaVM;
 
-/***********************************************************************
- * CryptoManager.initialize
- *
- * Initialize the security library and open all the databases.
- *
- */
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_CryptoManager_initializeAllNative
     (JNIEnv *env, jclass clazz,
-        jstring modDBName,
-        jstring keyDBName,
-        jstring certDBName,
-        jboolean readOnly,
-        jstring manuString,
-        jstring libraryString,
-        jstring tokString,
-        jstring keyTokString,
-        jstring slotString,
-        jstring keySlotString,
-        jstring fipsString,
-        jstring fipsKeyString,
-		jboolean ocspCheckingEnabled,
-		jstring ocspResponderURL,
-		jstring ocspResponderCertNickname )
-{
-    JSS_completeInitialize(env,
-            modDBName,
-            keyDBName,
-            certDBName,
-            readOnly,
-            manuString,
-            libraryString,
-            tokString,
-            keyTokString,
-            slotString,
-            keySlotString,
-            fipsString,
-            fipsKeyString,
-			ocspCheckingEnabled,
-			ocspResponderURL,
-			ocspResponderCertNickname
-		);
-}
-
-/***********************************************************************
- * JSS_completeInitialize
- *
- * Initialize the security library and open all the databases.
- *
- */
-void
-JSS_completeInitialize(JNIEnv *env,
         jstring configDir,
         jstring certPrefix,
         jstring keyPrefix,
@@ -433,10 +389,24 @@ JSS_completeInitialize(JNIEnv *env,
     /* This is thread-safe because initialize is synchronized */
     static PRBool initialized=PR_FALSE;
 
+    if( configDir == NULL ||
+        manuString == NULL ||
+        libraryString == NULL ||
+        tokString == NULL ||
+        keyTokString == NULL ||
+        slotString == NULL ||
+        keySlotString == NULL ||
+        fipsString == NULL ||
+        fipsKeyString == NULL )
+    {
+        JSS_throw(env, NULL_POINTER_EXCEPTION);
+        goto finish;
+    }
+
     /* Make sure initialize() completes only once */
     if(initialized) {
         JSS_throw(env, ALREADY_INITIALIZED_EXCEPTION);
-        return;
+        goto finish;
     }
 
     /*
@@ -475,23 +445,32 @@ JSS_completeInitialize(JNIEnv *env,
                         );
 
 
-    /*
-     * Set up arguments to NSS_Initialize
-     */
     szConfigDir = (char*) (*env)->GetStringUTFChars(env, configDir, NULL);
-    szCertPrefix = (char*) (*env)->GetStringUTFChars(env, certPrefix, NULL);
-    szKeyPrefix = (char*) (*env)->GetStringUTFChars(env, keyPrefix, NULL);
-    szSecmodName = (char*) (*env)->GetStringUTFChars(env, secmodName, NULL);
-    initFlags = 0;
-    if( readOnly ) {
-        initFlags |= NSS_INIT_READONLY;
+    if( certPrefix != NULL && keyPrefix != NULL && secmodName != NULL ) {
+        /*
+        * Set up arguments to NSS_Initialize
+        */
+        szCertPrefix = (char*) (*env)->GetStringUTFChars(env, certPrefix, NULL);
+        szKeyPrefix = (char*) (*env)->GetStringUTFChars(env, keyPrefix, NULL);
+        szSecmodName = (char*) (*env)->GetStringUTFChars(env, secmodName, NULL);
+        initFlags = 0;
+        if( readOnly ) {
+            initFlags |= NSS_INIT_READONLY;
+        }
+
+        /*
+        * Initialize NSS.
+        */
+        rv = NSS_Initialize(szConfigDir, szCertPrefix, szKeyPrefix,
+                szSecmodName, initFlags);
+    } else {
+        if( readOnly ) {
+            rv = NSS_Init(szConfigDir);
+        } else {
+            rv = NSS_InitReadWrite(szConfigDir);
+        }
     }
 
-    /*
-     * Initialize NSS.
-     */
-    rv = NSS_Initialize(szConfigDir, szCertPrefix, szKeyPrefix, szSecmodName,
-            initFlags);
     if( rv != SECSuccess ) {
         JSS_throwMsg(env, SECURITY_EXCEPTION,
             "Unable to initialize security library");
@@ -508,9 +487,8 @@ JSS_completeInitialize(JNIEnv *env,
 	/*
 	 * Setup NSS to call the specified OCSP responder
 	 */
-	rv = ConfigureOSCP( 
+	rv = ConfigureOCSP( 
 		env,
-		cdb_handle,
 		ocspCheckingEnabled,
         ocspResponderURL,
         ocspResponderCertNickname );
@@ -518,11 +496,6 @@ JSS_completeInitialize(JNIEnv *env,
 	if (rv != SECSuccess) {
 		goto finish;
 	}
-
-    if( NSS_SetDomesticPolicy() != SECSuccess ) {
-        JSS_throwMsg(env, SECURITY_EXCEPTION, "Unable to set security policy");
-        goto finish;
-    }
 
     /*
      * Save the JavaVM pointer so we can retrieve the JNI environment
@@ -542,6 +515,13 @@ JSS_completeInitialize(JNIEnv *env,
         PR_ASSERT(PR_FALSE);
     }
     JSS_javaVM = VMs[0];
+
+#if 0
+    if( NSS_SetDomesticPolicy() != SECSuccess ) {
+        JSS_throwMsg(env, SECURITY_EXCEPTION, "Unable to set domestic policy");
+        goto finish;
+    }
+#endif
 
     initialized = PR_TRUE;
 
@@ -575,25 +555,6 @@ finish:
     return;
 }
 
-
-
-
-
-/**********************************************************************
- * 
- * CryptoManager.setNativePasswordCallback
- *
- * Sets the global PasswordCallback object, which will be used to
- * login to tokens implicitly if necessary.
- *
- */
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_CryptoManager_setNativePasswordCallback
-    (JNIEnv *env, jclass clazz, jobject callback)
-{
-    JSS_setPasswordCallback(env, callback);
-}
-
 /**********************************************************************
  * 
  * JSS_setPasswordCallback
@@ -618,6 +579,21 @@ JSS_setPasswordCallback(JNIEnv *env, jobject callback)
     if(globalPasswordCallback == NULL) {
         JSS_throw(env, OUT_OF_MEMORY_ERROR);
     }
+}
+
+/**********************************************************************
+ * 
+ * CryptoManager.setNativePasswordCallback
+ *
+ * Sets the global PasswordCallback object, which will be used to
+ * login to tokens implicitly if necessary.
+ *
+ */
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_CryptoManager_setNativePasswordCallback
+    (JNIEnv *env, jclass clazz, jobject callback)
+{
+    JSS_setPasswordCallback(env, callback);
 }
 
 /********************************************************************
@@ -1003,11 +979,5 @@ JNIEXPORT void JNICALL
 Java_org_mozilla_jss_DatabaseCloser_closeDatabases
     (JNIEnv *env, jobject this)
 {
-    PR_ASSERT( CERT_GetDefaultCertDB() != NULL );
-    CERT_ClosePermCertDB( CERT_GetDefaultCertDB() );
-    CERT_SetDefaultCertDB( NULL );
-
-    PR_ASSERT( SECKEY_GetDefaultKeyDB() != NULL );
-    SECKEY_CloseKeyDB( SECKEY_GetDefaultKeyDB() );
-    SECKEY_SetDefaultKeyDB( NULL );
+    NSS_Shutdown();
 }

@@ -35,8 +35,7 @@ CORE_DEPTH = ..
  
 MODULE = jss
  
-IMPORTS =	svrcore/SVRCORE_2_5_1 \
-			security/NSS_2_8_4_RTM \
+IMPORTS =	security/NSS_3_2_RTM\
 			dbm/DBM_1_54 \
 			nspr20/v3.5.1 \
 			$(NULL)

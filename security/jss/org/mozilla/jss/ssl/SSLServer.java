@@ -330,7 +330,7 @@ public class SSLServer
         System.out.println("SSLServer started\n");
 
 	try {
-		NSSInit.initialize("secmod.db", "key3.db", "cert7.db");
+		CryptoManager.initialize("secmod.db", "key3.db", "cert7.db");
 	}
 	catch (KeyDatabaseException kdbe) {
           System.out.println("Couldn't open the key database\n");
@@ -342,6 +342,10 @@ public class SSLServer
 	}
     catch (org.mozilla.jss.crypto.AlreadyInitializedException aie) {
       System.out.println("CryptoManager already initialized???");
+      return;
+    }
+    catch (java.security.GeneralSecurityException e) {
+      System.out.println("General security exception while initializing");
       return;
     }
 	  
