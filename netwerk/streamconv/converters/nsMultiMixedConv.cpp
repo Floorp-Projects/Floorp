@@ -243,9 +243,17 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                     boundaryLoc = PL_strstr(buffer, mBoundaryCStr);
                 }
             } else {
-                // this boundaryLoc is an ending delimiter. we've
-                // already sent off the data so lets start from the top again.
+                // this boundaryLoc is an ending delimiter.
                 mBoundaryStart = PR_FALSE;
+                char tmpChar = *boundaryLoc;
+                *boundaryLoc = '\0';
+
+                if (*buffer) {
+                    rv = SendData(buffer, mPartChannel, ctxt);
+                    if (NS_FAILED(rv)) return rv;
+                }
+
+                *boundaryLoc = tmpChar;
 
                 rv = mFinalListener->OnStopRequest(mPartChannel, ctxt, NS_OK, nsnull);
                 if (NS_FAILED(rv)) return rv;
@@ -254,8 +262,11 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                 boundaryLoc = PL_strstr(buffer, mBoundaryCStr);
             }
         } else {
-            rv = SendData(buffer, mPartChannel, ctxt);
-            if (NS_FAILED(rv)) return rv;
+            // null byte check
+            if (*buffer) { 
+                rv = SendData(buffer, mPartChannel, ctxt);
+                if (NS_FAILED(rv)) return rv;
+            }
         }
     } while (boundaryLoc);
 
