@@ -97,6 +97,9 @@ protected:
 
   virtual ~nsContainerFrame();
 
+  void DeleteFrameList(nsIPresContext& aPresContext,
+                       nsIFrame** aListP);
+
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   /**
