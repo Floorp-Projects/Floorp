@@ -62,6 +62,8 @@ nsSpamSettings::nsSpamSettings()
   mPurgeInterval = 14; // 14 days
   mUseWhiteList = PR_FALSE;
   mLoggingEnabled = PR_FALSE;
+  mManualMark = PR_FALSE;
+  mManualMarkMode = nsISpamSettings::MANUAL_MARK_MODE_MOVE;
 }
 
 nsSpamSettings::~nsSpamSettings()
@@ -95,8 +97,23 @@ nsSpamSettings::GetMoveTargetMode(PRInt32 *aMoveTargetMode)
 
 NS_IMETHODIMP nsSpamSettings::SetMoveTargetMode(PRInt32 aMoveTargetMode)
 {
-  NS_ASSERTION((aMoveTargetMode == 0 || aMoveTargetMode == 1), "bad mode");
+  NS_ASSERTION((aMoveTargetMode == nsISpamSettings::MOVE_TARGET_MODE_FOLDER || aMoveTargetMode == nsISpamSettings::MOVE_TARGET_MODE_ACCOUNT), "bad move target mode");
   mMoveTargetMode = aMoveTargetMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSpamSettings::GetManualMarkMode(PRInt32 *aManualMarkMode)
+{
+  NS_ENSURE_ARG_POINTER(aManualMarkMode);
+  *aManualMarkMode = mManualMarkMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::SetManualMarkMode(PRInt32 aManualMarkMode)
+{ 
+  NS_ASSERTION((aManualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_MOVE || aManualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_DELETE), "bad manual mark mode");
+  mManualMarkMode = aManualMarkMode;
   return NS_OK;
 }
 
@@ -104,7 +121,7 @@ NS_IMPL_GETSET(nsSpamSettings, LoggingEnabled, PRBool, mLoggingEnabled);
 NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam);
 NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge);
 NS_IMPL_GETSET(nsSpamSettings, UseWhiteList, PRBool, mUseWhiteList);
-
+NS_IMPL_GETSET(nsSpamSettings, ManualMark, PRBool, mManualMark);
 
 NS_IMETHODIMP nsSpamSettings::GetWhiteListAbURI(char * *aWhiteListAbURI)
 {
@@ -327,11 +344,10 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   nsresult rv = aSpamSettings->GetUseWhiteList(&mUseWhiteList); 
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = aSpamSettings->GetMoveOnSpam(&mMoveOnSpam); 
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = aSpamSettings->GetPurge(&mPurge); 
-  NS_ENSURE_SUCCESS(rv,rv);
+  (void)aSpamSettings->GetMoveOnSpam(&mMoveOnSpam);
+  (void)aSpamSettings->GetManualMark(&mManualMark); 
+  (void)aSpamSettings->GetManualMarkMode(&mManualMarkMode); 
+  (void)aSpamSettings->GetPurge(&mPurge); 
 
   rv = aSpamSettings->GetPurgeInterval(&mPurgeInterval); 
   NS_ENSURE_SUCCESS(rv,rv);
@@ -371,7 +387,7 @@ NS_IMETHODIMP nsSpamSettings::GetSpamFolderURI(char **aSpamFolderURI)
   if (mMoveTargetMode == nsISpamSettings::MOVE_TARGET_MODE_FOLDER)
     return GetActionTargetFolder(aSpamFolderURI);
 
-  // if the mode is MOVE_TARGET_MODE_ACCOUNT
+  // if the mode is nsISpamSettings::MOVE_TARGET_MODE_ACCOUNT
   // the spam folder URI = account uri + "/Junk"
   nsXPIDLCString folderURI;
   nsresult rv = GetActionTargetAccount(getter_Copies(folderURI));

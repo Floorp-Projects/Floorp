@@ -15,3 +15,6 @@
 <!ENTITY purge2.label "days from this folder">
 <!ENTITY whitelist.label "Do not mark messages as junk mail if the sender is in my address book:">
 <!ENTITY whitelist.accesskey "D">
+<!ENTITY manualMark.label "When I manually mark messages as Junk:">
+<!ENTITY manualMarkModeMove.label "Move them to the &quot;Junk&quot; folder">
+<!ENTITY manualMarkModeDelete.label "Delete them">

@@ -210,10 +210,10 @@ nsresult nsMsgPurgeService::PerformPurge()
         rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        PRInt32 spamLevel = 0;
+        PRInt32 spamLevel;
         spamSettings->GetLevel(&spamLevel);
         PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] spamLevel=%d (if 0, don't purge)", serverIndex, spamLevel));
-        if (spamLevel == 0)
+        if (!spamLevel)
           continue;
         
         // check if we are set up to purge for this server

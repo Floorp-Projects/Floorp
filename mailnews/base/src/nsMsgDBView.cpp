@@ -63,6 +63,7 @@
 #include "nsIMsgSearchSession.h"
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
+#include "nsISpamSettings.h"
 
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 
@@ -1894,9 +1895,8 @@ NS_IMETHODIMP nsMsgDBView::DoCommandWithFolder(nsMsgViewCommandTypeValue command
         // any order (e.g. order of discontiguous selection), we have to
         // sort the indices in order to find out which nsMsgViewIndex will
         // be deleted first.
-        if (numIndices > 1) {
-            NS_QuickSort (indices, numIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
-        }
+        if (numIndices > 1)
+          NS_QuickSort(indices, numIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
         NoteStartChange(nsMsgViewNotificationCode::none, 0, 0);
         rv = ApplyCommandToIndicesWithFolder(command, indices, numIndices, destFolder);
         NoteEndChange(nsMsgViewNotificationCode::none, 0, 0);
@@ -2621,9 +2621,8 @@ nsresult nsMsgDBView::SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin,
     // and told us the junk status of this message.
     //
     rv = SetStringPropertyByIndex(aIndex, "junkscoreorigin", "user");
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetStringPropertyByIndex failed");
+    return rv;
 }
 
 nsresult
@@ -2637,44 +2636,195 @@ NS_IMETHODIMP
 nsMsgDBView::OnMessageClassified(const char *aMsgURI,
                                  nsMsgJunkStatus aClassification)
 {
-    // is this the last url in the batch?
-    //
-    if ( mLastJunkUriInBatch.Equals(aMsgURI) )  {
-        // we can't just use m_folder
-        // as this might be from a cross folder search
-        // see bug #180477
-        //
-        nsCOMPtr <nsIMsgFolder> folder;
-        nsresult rv = GetFolderFromMsgURI(aMsgURI, getter_AddRefs(folder));
-        NS_ENSURE_SUCCESS(rv,rv);
+  // we can't just use m_folder
+  // as this might be from a cross folder search
+  // see bug #180477
+  nsCOMPtr <nsIMsgFolder> folder;
+  nsresult rv = GetFolderFromMsgURI(aMsgURI, getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = folder->GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsIMsgIncomingServer> server;
-        rv = folder->GetServer(getter_AddRefs(server));
-        NS_ENSURE_SUCCESS(rv, rv);
+  // save off the msg hdr, if we need to
+  rv = SaveJunkMsgForAction(server, aMsgURI, aClassification);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-        // get the filter, and QI to the interface we want
-        //
-        nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
-        rv = server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCOMPtr<nsIJunkMailPlugin> junkPlugin = 
-            do_QueryInterface(filterPlugin, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // close out existing coalesced junk batches 
-        //
-        for ( ; mOutstandingJunkBatches > 0 ; --mOutstandingJunkBatches ) {
-            
-            // tell the plugin that all outstanding batches from us
-            // have finished.
-            //
-            rv = junkPlugin->EndBatch();
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
+  // is this the last url in the batch?
+  if (mLastJunkUriInBatch.Equals(aMsgURI))
+  {    
+    // get the filter, and QI to the interface we want
+    nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
+    rv = server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIJunkMailPlugin> junkPlugin = do_QueryInterface(filterPlugin, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // close out existing coalesced junk batches 
+    for ( ; mOutstandingJunkBatches > 0 ; --mOutstandingJunkBatches ) 
+    {    
+      // tell the plugin that all outstanding batches from us
+      // have finished.
+      rv = junkPlugin->EndBatch();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
+    
+    rv = PerformActionOnJunkMsgs();
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return NS_OK;
+}
 
+nsresult
+nsMsgDBView::PerformActionOnJunkMsgs()
+{
+  PRUint32 numIndices = mJunkKeys.GetSize();
+  // nothing to do, bail out
+  if (!numIndices) 
+  {
+    mJunkTargetFolder = nsnull; // just to be safe
     return NS_OK;
+  }
+
+  nsMsgViewIndex *indices = (nsMsgViewIndex *)nsMemory::Alloc(numIndices * sizeof(nsMsgViewIndex));
+  if (!indices) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  for (PRUint32 i=0;i<numIndices;i++)
+    indices[i] = FindKey(mJunkKeys.GetAt(i), PR_TRUE /* expand */); // what if we don't find the index?
+
+  // tell the FE to call SetNextMessageAfterDelete() because a delete is coming
+  nsresult rv = mCommandUpdater->UpdateNextMessageAfterDelete();
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (numIndices > 1)
+    NS_QuickSort(indices, numIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
+  NoteStartChange(nsMsgViewNotificationCode::none, 0, 0);
+  if (mJunkTargetFolder) 
+    rv = ApplyCommandToIndicesWithFolder(nsMsgViewCommandType::moveMessages, indices, numIndices, mJunkTargetFolder);
+  else
+    rv = ApplyCommandToIndices(nsMsgViewCommandType::deleteMsg, indices, numIndices);
+  NoteEndChange(nsMsgViewNotificationCode::none, 0, 0);
+
+  mJunkKeys.RemoveAll();
+  mJunkTargetFolder = nsnull;
+  nsMemory::Free(indices);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "move or delete failed");
+  return rv;
+}
+
+nsresult
+nsMsgDBView::SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMsgURI, nsMsgJunkStatus aClassification)
+{
+  // we only care when the message gets marked as junk
+  if (aClassification == nsIJunkMailPlugin::GOOD)
+    return NS_OK;
+    
+  nsCOMPtr <nsISpamSettings> spamSettings;
+  nsresult rv = aServer->GetSpamSettings(getter_AddRefs(spamSettings));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // if the spam feature is disabled, do nothing
+  // the user could still manually mark spam if the feature is disabled
+  // but let's not move or delete in that scenario
+  PRInt32 spamLevel;
+  (void)spamSettings->GetLevel(&spamLevel);
+  if (!spamLevel)
+    return NS_OK;
+    
+  // if the manual mark functionality is turned off, bail out.
+  PRBool manualMark; 
+  (void)spamSettings->GetManualMark(&manualMark);
+  if (!manualMark)
+    return NS_OK;
+  
+  PRInt32 manualMarkMode;
+  (void)spamSettings->GetManualMarkMode(&manualMarkMode);
+  
+  nsCOMPtr <nsIMsgMessageService> msgMessageService;
+  rv = GetMessageServiceFromURI(aMsgURI, getter_AddRefs(msgMessageService));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  rv = msgMessageService->MessageURIToMsgHdr(aMsgURI, getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr <nsIMsgFolder> srcFolder;
+  rv = msgHdr->GetFolder(getter_AddRefs(srcFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsMsgKey msgKey;
+  rv = msgHdr->GetMessageKey(&msgKey);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // we can execute the move or delete
+  PRUint32 folderFlags;
+  srcFolder->GetFlags(&folderFlags);
+  
+  NS_ASSERTION(manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_MOVE || manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_DELETE, "bad mode");
+  if (manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_MOVE) 
+  {
+    PRBool moveOnSpam;
+    (void)spamSettings->GetMoveOnSpam(&moveOnSpam);    
+    // if move of spam not enabled, bail out
+    if (!moveOnSpam)
+      return NS_OK;
+    
+    // if this is a junk folder
+    // (not only "the" junk folder for this account)
+    // don't do the move
+    if (folderFlags & MSG_FOLDER_FLAG_JUNK)
+      return NS_OK;
+    
+    nsXPIDLCString spamFolderURI;
+    rv = spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    NS_ASSERTION(!spamFolderURI.IsEmpty(), "spam folder is empty, can't move");
+    if (!spamFolderURI.IsEmpty()) 
+    {
+      nsCOMPtr<nsIMsgFolder> destFolder;
+      rv = GetExistingFolder(spamFolderURI.get(), getter_AddRefs(destFolder));
+      if (NS_SUCCEEDED(rv) && destFolder)
+      {
+#ifdef DEBUG
+        // double check the assumptions
+        if (mJunkKeys.GetSize())
+          NS_ASSERTION(mJunkTargetFolder == nsnull, "junk folder should be null, no keys yet");
+        else
+        {
+          NS_ASSERTION(!mJunkTargetFolder, "should have a junk folder at this point");
+          NS_ASSERTION(mJunkTargetFolder == destFolder, "junk folder doesn't match");
+        }
+#endif
+        // save off msg key and folder
+        mJunkKeys.Add(msgKey);
+        if (!mJunkTargetFolder)
+          mJunkTargetFolder = destFolder;
+      }
+    }
+  }
+  else // manualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_DELETE)
+  {
+    // if this is in the trash, don't delete?
+    if (folderFlags & MSG_FOLDER_FLAG_TRASH)
+      return NS_OK;
+    
+    // we can't delete, bail out
+    PRBool canDelete;
+    (void)srcFolder->GetCanDeleteMessages(&canDelete);
+    if (!canDelete)
+      return NS_OK;
+    
+    // save off msg key
+    mJunkKeys.Add(msgKey);
+    NS_ASSERTION(mJunkTargetFolder == nsnull, "should be null");
+    mJunkTargetFolder = nsnull;  // should already be null
+  }
+  return NS_OK;
 }
 
 // reversing threads involves reversing the threads but leaving the
@@ -5097,7 +5247,7 @@ nsresult nsMsgDBView::ToggleIgnored(nsMsgViewIndex * indices, PRInt32 numIndices
   else
   {
     if (numIndices > 1)
-      NS_QuickSort (indices, numIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
+      NS_QuickSort(indices, numIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
     for (int curIndex = numIndices - 1; curIndex >= 0; curIndex--)
     {
       // here we need to build up the unique threads, and mark them ignored.
@@ -5170,7 +5320,7 @@ nsresult nsMsgDBView::ToggleWatched( nsMsgViewIndex* indices,	PRInt32 numIndices
   else
   {
     if (numIndices > 1)
-      NS_QuickSort (indices, numIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
+      NS_QuickSort(indices, numIndices, sizeof(nsMsgViewIndex), CompareViewIndices, nsnull);
     for (int curIndex = numIndices - 1; curIndex >= 0; curIndex--)
     {
       nsMsgViewIndex	threadIndex;    

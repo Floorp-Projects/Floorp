@@ -7251,11 +7251,8 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
     // or when manually classifying messages in those folders
     if (!(mFlags & MSG_FOLDER_FLAG_JUNK || mFlags & MSG_FOLDER_FLAG_TRASH))
     {
-      PRBool moveOnSpam = PR_FALSE;
-        
-      rv = spamSettings->GetMoveOnSpam(&moveOnSpam);
-      NS_ENSURE_SUCCESS(rv, rv);
-
+      PRBool moveOnSpam;
+      (void)spamSettings->GetMoveOnSpam(&moveOnSpam);
       if (moveOnSpam)
       {
         rv = spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));

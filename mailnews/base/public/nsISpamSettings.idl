@@ -79,7 +79,16 @@ interface nsISpamSettings: nsISupports {
 
   attribute boolean useWhiteList;
   attribute string whiteListAbURI;
-  
+
+  /**
+   * should we do something (move or delete)
+   * when the user manually marks a message as junk?
+   */
+  attribute boolean manualMark;
+  attribute long manualMarkMode;
+  const long MANUAL_MARK_MODE_MOVE = 0;
+  const long MANUAL_MARK_MODE_DELETE = 1;
+
   // for logging
   attribute boolean loggingEnabled;
   attribute nsIOutputStream logStream;

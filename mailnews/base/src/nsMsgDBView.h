@@ -365,7 +365,6 @@ protected:
 
   // used to know to finish out the junk mail classification batch when the 
   // last classification callback happens
-  //
   nsCString mLastJunkUriInBatch;
   PRUint8 mOutstandingJunkBatches;
 
@@ -377,6 +376,11 @@ private:
   static nsDateFormatSelector  m_dateFormatThisWeek;
   static nsDateFormatSelector  m_dateFormatToday;
   PRBool ServerSupportsFilterAfterTheFact();
+
+  nsMsgKeyArray	mJunkKeys;
+  nsCOMPtr <nsIMsgFolder> mJunkTargetFolder;
+  nsresult PerformActionOnJunkMsgs();
+  nsresult SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMsgURI, nsMsgJunkStatus aClassification);
 };
 
 #endif

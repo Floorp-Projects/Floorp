@@ -179,6 +179,11 @@ nsMsgDBViewCommandUpdater.prototype =
     goUpdateCommand("button_junk");
   },
 
+  updateNextMessageAfterDelete : function()
+  {
+    SetNextMessageAfterDelete();
+  },
+
   QueryInterface : function(iid)
   {
     if (iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater) ||

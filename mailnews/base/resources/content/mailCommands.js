@@ -561,7 +561,7 @@ function deleteJunkInFolder()
   //
   // XXX todo
   // should we try to set next message after delete 
-  // to the the previous selected message, if it was not junk?
+  // to the message selected before we did all this, if it was not junk?
   SetNextMessageAfterDelete();  
   view.doCommand(nsMsgViewCommandType.deleteMsg);
 }

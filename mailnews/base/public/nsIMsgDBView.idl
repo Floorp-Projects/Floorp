@@ -337,4 +337,10 @@ interface nsIMsgDBViewCommandUpdater : nsISupports
 
 	/* displayed message has changed */
 	void displayMessageChanged(in nsIMsgFolder aFolder, in wstring aSubject, in string aKeywords);
+
+    /**
+	 * allows the backend to tell the front end to re-determine 
+	 * which message we should selet after a delete or move
+	 */
+	void updateNextMessageAfterDelete();
 };

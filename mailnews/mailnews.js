@@ -371,6 +371,8 @@ pref("mail.server.default.whiteListAbURI","moz-abmdbdirectory://abook.mab");  //
 pref("mail.server.default.purgeSpam",false);
 pref("mail.server.default.purgeSpamInterval",14); // 14 days
 pref("mail.server.default.spamLoggingEnabled",false);
+pref("mail.server.default.manualMark",false);
+pref("mail.server.default.manualMarkMode",0); // 0 == "move to junk folder", 1 == "delete"
 
 pref("mail.smtpserver.default.auth_method", 1); // auth any
 pref("mail.smtpserver.default.try_ssl", 0);

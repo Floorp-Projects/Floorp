@@ -1907,16 +1907,20 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
 
   PRBool moveOnSpam;
-  rv = mSpamSettings->GetMoveOnSpam(&moveOnSpam);
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = SetBoolValue("moveOnSpam", moveOnSpam);
-  NS_ENSURE_SUCCESS(rv,rv);
+  (void)mSpamSettings->GetMoveOnSpam(&moveOnSpam);
+  (void)SetBoolValue("moveOnSpam", moveOnSpam);
 
   PRInt32 moveTargetMode;
-  rv = mSpamSettings->GetMoveTargetMode(&moveTargetMode);
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = SetIntValue("moveTargetMode", moveTargetMode);
-  NS_ENSURE_SUCCESS(rv,rv);
+  (void)mSpamSettings->GetMoveTargetMode(&moveTargetMode);
+  (void)SetIntValue("moveTargetMode", moveTargetMode);
+
+  PRBool manualMark;
+  (void)mSpamSettings->GetManualMark(&manualMark);
+  (void)SetBoolValue("manualMark", manualMark);
+
+  PRInt32 manualMarkMode;
+  (void)mSpamSettings->GetManualMarkMode(&manualMarkMode);
+  (void)SetIntValue("manualMarkMode", manualMarkMode);
 
   nsXPIDLCString spamActionTargetAccount;
   rv = mSpamSettings->GetActionTargetAccount(getter_Copies(spamActionTargetAccount));
@@ -2016,6 +2020,14 @@ nsMsgIncomingServer::GetSpamSettings(nsISpamSettings **aSpamSettings)
     rv = mSpamSettings->SetMoveTargetMode(moveTargetMode);
     NS_ENSURE_SUCCESS(rv,rv);
     
+    PRBool manualMark;
+    (void)GetBoolValue("manualMark", &manualMark);
+    (void)mSpamSettings->SetManualMark(manualMark);
+
+    PRInt32 manualMarkMode;
+    (void)GetIntValue("manualMarkMode", &manualMarkMode);
+    (void)mSpamSettings->SetManualMarkMode(manualMarkMode);
+
     nsXPIDLCString spamActionTargetAccount;
     rv = GetCharValue("spamActionTargetAccount", getter_Copies(spamActionTargetAccount));
     NS_ENSURE_SUCCESS(rv,rv);

@@ -59,23 +59,24 @@ public:
 
 private:
   nsCOMPtr <nsIMsgIncomingServer> mServer;  // make a weak ref?
+  nsCOMPtr <nsIOutputStream> mLogStream;
 
+  PRInt32 mManualMarkMode;
   PRInt32 mLevel; 
-
-  PRBool mMoveOnSpam;
+  PRInt32 mPurgeInterval;
   PRInt32 mMoveTargetMode;
+
+  PRBool mManualMark;
+  PRBool mLoggingEnabled;
+  PRBool mPurge;
+  PRBool mUseWhiteList;
+  PRBool mMoveOnSpam;
+  
   nsCString mActionTargetAccount;
   nsCString mActionTargetFolder;
-
-  PRBool mPurge;
-  PRInt32 mPurgeInterval;
-
-  PRBool mUseWhiteList;
   nsCString mWhiteListAbURI;
-  
-  PRBool mLoggingEnabled;
-  nsCOMPtr <nsIOutputStream> mLogStream;
   nsCString mLogURL;
+  
   nsresult GetLogFileSpec(nsIFileSpec **aFileSpec);
   nsresult TruncateLog();
 };

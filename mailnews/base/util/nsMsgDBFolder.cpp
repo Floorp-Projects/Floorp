@@ -1720,7 +1720,7 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
 
     NS_ENSURE_SUCCESS(rv, rv); 
     spamSettings->GetLevel(&spamLevel);
-    if (spamLevel == 0)
+    if (!spamLevel)
       return NS_OK;
     nsCOMPtr<nsIMsgMailSession> mailSession = 
         do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
