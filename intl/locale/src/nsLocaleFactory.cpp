@@ -60,7 +60,7 @@ nsLocaleFactory::~nsLocaleFactory(void)
 	for(i=0;i<6;i++)
 		delete fCatagoryList[i];
 
-	delete fCatagoryList;
+	delete []fCatagoryList;
 }
 
 NS_IMETHODIMP
@@ -162,3 +162,4 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 
 	return result;
 }
+
