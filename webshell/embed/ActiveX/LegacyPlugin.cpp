@@ -17,15 +17,16 @@
  */
 #include "stdafx.h"
 
-
-enum InstanceType
+// Plugin types supported
+enum PluginInstanceType
 {
 	itScript,
 	itControl
 };
 
-struct InstanceData {
-	InstanceType nType;
+// Data associated with a plugin instance
+struct PluginInstanceData {
+	PluginInstanceType nType;
 	union
 	{
 		CActiveScriptSiteInstance *pScriptSite;
@@ -93,12 +94,11 @@ jref NPP_GetJavaClass(void)
 
 
 NPError NewScript(const char *pluginType,
-					InstanceData *pData,
+					PluginInstanceData *pData,
 					uint16 mode,
 					int16 argc,
 					char *argn[],
-					char *argv[],
-					NPSavedData *saved)
+					char *argv[])
 {
 	CActiveScriptSiteInstance *pScriptSite = NULL;
 	CActiveScriptSiteInstance::CreateInstance(&pScriptSite);
@@ -109,12 +109,11 @@ NPError NewScript(const char *pluginType,
 }
 
 NPError NewControl(const char *pluginType,
-					InstanceData *pData,
+					PluginInstanceData *pData,
 					uint16 mode,
 					int16 argc,
 					char *argn[],
-					char *argv[],
-					NPSavedData *saved)
+					char *argv[])
 {
 	// Read the parameters
 	CLSID clsid = CLSID_NULL;
@@ -251,8 +250,6 @@ NPError NewControl(const char *pluginType,
 }
 
 
-
-
 // NPP_New
 //
 //	create a new plugin instance 
@@ -274,7 +271,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 		return NPERR_INVALID_INSTANCE_ERROR;
 	}
 
-	InstanceData *pData = new InstanceData;
+	PluginInstanceData *pData = new PluginInstanceData;
 	if (pData == NULL)
 	{
 		return NPERR_GENERIC_ERROR;
@@ -285,12 +282,12 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 	NPError rv = NPERR_GENERIC_ERROR;
 	if (strcmp(pluginType, MIME_ACTIVESCRIPT) == 0)
 	{
-		rv = NewScript(pluginType, pData, mode, argc, argn, argv, saved);
+		rv = NewScript(pluginType, pData, mode, argc, argn, argv);
 	}
 	else if (strcmp(pluginType, MIME_OLEOBJECT1) == 0 ||
              strcmp(pluginType, MIME_OLEOBJECT2) == 0)
 	{
-		rv = NewControl(pluginType, pData, mode, argc, argn, argv, saved);
+		rv = NewControl(pluginType, pData, mode, argc, argn, argv);
 	}
 	else
 	{
@@ -319,7 +316,7 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 {
 	NG_TRACE_METHOD(NPP_Destroy);
 
-	InstanceData *pData = (InstanceData *) instance->pdata;
+	PluginInstanceData *pData = (PluginInstanceData *) instance->pdata;
 	if (pData == NULL)
 	{
 		return NPERR_INVALID_INSTANCE_ERROR;
@@ -376,7 +373,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 		return NPERR_GENERIC_ERROR;
 	}
 
-	InstanceData *pData = (InstanceData *) instance->pdata;
+	PluginInstanceData *pData = (PluginInstanceData *) instance->pdata;
 	if (pData == NULL)
 	{
 		return  NPERR_INVALID_INSTANCE_ERROR;
