@@ -113,8 +113,6 @@ static nsDefaultMimeTypeEntry extraMimeEntries [] =
   { IMAGE_ART, "art", "ART Image", 0, 0 },
   { IMAGE_TIFF, "tiff,tif", "TIFF Image", 0, 0 },
   { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File",0, 0 },
-  { TEXT_RTF, "rtf", "Rich Text Format", 0, 0 },
-  { TEXT_CPP, "cpp", "CPP file", 'TEXT','CWIE' },
   { "application/x-arj", "arj", "ARJ file", 0,0 },
 };
 

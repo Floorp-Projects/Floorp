@@ -116,8 +116,6 @@
 #define TEXT_XML                            "text/xml"
 #define TEXT_RDF                            "text/rdf"
 #define TEXT_XUL                            "application/vnd.mozilla.xul+xml"
-#define TEXT_RTF                            "text/rtf"
-#define TEXT_CPP                            "text/cpp"
 
 #define VIDEO_MPEG                          "video/mpeg"
 

@@ -494,14 +494,6 @@ nsXMLMIMEDataSource::InitFromHack() {
 
     rv = AppendExtension(APPLICATION_POSTSCRIPT, "ai");
     if (NS_FAILED(rv)) return rv;
-                 
-    rv = AddMapping(TEXT_RTF, "rtf", "Rich Text Format", nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-
-    rv = AddMapping(TEXT_CPP, "cpp", "CPP file", nsnull,  'TEXT','CWIE');
-    if (NS_FAILED(rv)) return rv;
-
     
     rv = AddMapping( "application/x-arj", "arj", "ARJ file", nsnull);
     if (NS_FAILED(rv)) return rv;

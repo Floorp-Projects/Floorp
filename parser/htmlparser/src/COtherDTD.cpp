@@ -292,9 +292,6 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
       if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
         result=eValidDetect;
       }
-      else if(aParserContext.mMimeType.EqualsWithConversion(kRTFTextContentType)){ 
-        result=eValidDetect;
-      }
     }
     else {
       if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {

@@ -61,7 +61,6 @@ static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
 static char* gHTMLTypes[] = {
   "text/html",
   "text/plain",
-  "text/rtf",
   "text/css",
   "text/javascript",
   "application/x-javascript",

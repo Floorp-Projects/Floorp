@@ -374,7 +374,6 @@ const PRUnichar kNullCh           = '\0';
 #define kTextCSSContentType   "text/css"
 #define kApplicationJSContentType   "application/x-javascript"
 #define kTextJSContentType    "text/javascript"
-#define kRTFTextContentType   "text/rtf"
 #define kSGMLTextContentType   "text/sgml"
 
 
