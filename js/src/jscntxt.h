@@ -357,12 +357,19 @@ struct JSContext {
     JSPackedBool        rval2set;
 #endif
 
-    /* True if clearing a scope -- used to coalesce property cache flushes. */
-    JSPackedBool        clearingScope;
+    /*
+     * True if creating an exception object, to prevent runaway recursion.
+     * NB: creatingException packs with rval2set, #if JS_HAS_LVALUE_RETURN,
+     * and with throwing, below.
+     */
+    JSPackedBool        creatingException;
 
-    /* Exception state (NB: throwing packs with clearingScope, above). */
+    /*
+     * Exception state -- the exception member is a GC root by definition.
+     * NB: throwing packs with creatingException and rval2set, above.
+     */
     JSPackedBool        throwing;           /* is there a pending exception? */
-    jsval               exception;          /* most-recently-thrown exceptin */
+    jsval               exception;          /* most-recently-thrown exception */
 
     /* Per-context options. */
     uint32              options;            /* see jsapi.h for JSOPTION_* */
@@ -420,13 +427,13 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
 
 extern JSBool
 js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-		       void *userRef, const uintN errorNumber,
+                       void *userRef, const uintN errorNumber,
                        JSBool charArgs, va_list ap);
 
 extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
-			void *userRef, const uintN errorNumber,
-			char **message, JSErrorReport *reportp,
+                        void *userRef, const uintN errorNumber,
+                        char **message, JSErrorReport *reportp,
                         JSBool *warningp, JSBool charArgs, va_list ap);
 #endif
 
