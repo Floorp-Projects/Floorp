@@ -123,6 +123,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_TextFieldHeight:
         aMetric = 16;
         break;
+    case eMetric_TextFieldBorder:
+        aMetric = 4;
+        break;
     case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
         aMetric = 20;
         break;
