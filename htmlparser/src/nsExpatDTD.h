@@ -34,6 +34,8 @@
 #include "nsVoidArray.h"
 #include "nsDeque.h"
 #include "nsIContentSink.h"
+#include "xmlparse.h"
+#include "nsIExpatTokenizer.h"
 
 
 #define NS_EXPAT_DTD_IID      \
@@ -221,12 +223,24 @@ class nsExpatDTD : public nsIDTD {
     virtual nsITokenRecycler* GetTokenRecycler(void);
     
 protected:
+    /**
+     * Sets up the callbacks for the expat parser encapsulated by nsExpatTokenizer.
+     * Assumes that mTokenizer has been set to nsExpatTokenizer
+     * @update  nra 2/24/99
+     * @param   none
+     * @return  none
+     */
+    void SetupExpatCallbacks(void);
+
+    /* The callback handlers that get called from the expat parser */
+    static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
+    static void HandleEndElement(void *userData, const XML_Char *name);
   
     nsParser*           mParser;
     nsIContentSink*     mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
-    nsITokenizer*       mTokenizer;
+    nsIExpatTokenizer*  mTokenizer;
 };
 
 extern NS_HTMLPARS nsresult NS_New_Expat_DTD(nsIDTD** aInstancePtrResult);

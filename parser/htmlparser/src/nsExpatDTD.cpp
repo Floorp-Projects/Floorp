@@ -46,12 +46,9 @@
 #endif
 #include "prmem.h"
 
-
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_EXPAT_DTD_IID); 
-
-
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -220,6 +217,7 @@ NS_IMETHODIMP nsExpatDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
 NS_IMETHODIMP nsExpatDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
 
+  /*
   if(aTokenizer) {
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
@@ -242,6 +240,8 @@ NS_IMETHODIMP nsExpatDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer
     mTokenizer=oldTokenizer;
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
+  */
+
   return result;
 }
 
@@ -277,6 +277,27 @@ nsITokenRecycler* nsExpatDTD::GetTokenRecycler(void){
   return theTokenizer->GetTokenRecycler();
 }
 
+
+/**
+ * Sets up the callbacks for the expat parser encapsulated by nsExpatTokenizer
+ * @update  nra 2/24/99
+ * @param   none
+ * @return  none
+ */
+void nsExpatDTD::SetupExpatCallbacks(void) {
+  PR_ASSERT( mTokenizer != NULL );
+  mTokenizer->SetElementHandler(HandleStartElement, HandleEndElement);
+  /*
+  mTokenizer->SetCharacterDataHandler(NULL);
+  mTokenizer->SetProcessingInstructionHandler(NULL);
+  mTokenizer->SetDefaultHandler(NULL);
+  mTokenizer->SetUnparsedEntityDeclHandler(NULL);
+  mTokenizer->SetNotationDeclHandler(NULL);
+  mTokenizer->SetExternalEntityRefHandler(NULL);
+  mTokenizer->SetUnknownEncodingHandler(NULL);
+  */
+}
+
 /**
  * Retrieve the preferred tokenizer for use by this DTD.
  * @update	gess12/28/98
@@ -284,10 +305,14 @@ nsITokenRecycler* nsExpatDTD::GetTokenRecycler(void){
  * @return  ptr to tokenizer
  */
 nsITokenizer* nsExpatDTD::GetTokenizer(void) {
-  if(!mTokenizer)
+  if(!mTokenizer) {
     mTokenizer=new nsExpatTokenizer();
+    if (mTokenizer)
+      SetupExpatCallbacks();
+  }
   return mTokenizer;
 }
+
 
 /**
  * 
@@ -463,4 +488,18 @@ nsresult nsExpatDTD::CaptureTokenPump(nsITagHandler* aHandler) {
 nsresult nsExpatDTD::ReleaseTokenPump(nsITagHandler* aHandler){
   nsresult result=NS_OK;
   return result;
+}
+
+/***************************************/
+/* Expat Callback Functions start here */
+/***************************************/
+
+void nsExpatDTD::HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleStartElement() not yet implemented.");
+}
+
+void nsExpatDTD::HandleEndElement(void *userData, const XML_Char *name)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleEndElement() not yet implemented.");
 }
