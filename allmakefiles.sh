@@ -834,6 +834,13 @@ if [ "$MOZ_LDAP_XPCOM" ]; then
 "
 fi
 
+# libimg/mng
+if [ "$MOZ_MNG" ]; then
+    MAKEFILES_libimg="$MAKEFILES_libimg
+	modules/libimg/mng/Makefile
+	modules/libimg/mngcom/Makefile
+"
+fi
 
 for extension in $MOZ_EXTENSIONS; do
     case "$extension" in
