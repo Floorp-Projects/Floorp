@@ -200,12 +200,12 @@ pref("browser.search.defaultenginename", "chrome://navigator/locale/navigator.pr
 // &PT - Page Number "of" Page total
 // Set each header to a string containing zero or one of these codes
 // and the code will be replaced in that string by the corresponding data
-user_pref("print.print_headerleft", "&T");
-user_pref("print.print_headercenter", "");
-user_pref("print.print_headerright", "&U");
-user_pref("print.print_footerleft", "&P");
-user_pref("print.print_footercenter", "");
-user_pref("print.print_footerright", "&D");
+pref("print.print_headerleft", "&T");
+pref("print.print_headercenter", "");
+pref("print.print_headerright", "&U");
+pref("print.print_footerleft", "&P");
+pref("print.print_footercenter", "");
+pref("print.print_footerright", "&D");
 
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
