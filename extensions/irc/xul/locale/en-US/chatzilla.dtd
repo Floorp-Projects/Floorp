@@ -43,6 +43,8 @@
 <!ENTITY ShowStatusbarCmd.aKey  "S">
 <!ENTITY CollapseCmd.label      "Collapse Consecutive Messages">
 <!ENTITY CollapseCmd.aKey       "N">
+<!ENTITY CopyMessagesCmd.label  "Copy Important Messages">
+<!ENTITY CopyMessagesCmd.aKey   "I">
 <!ENTITY NoneCmd.label          "No Motif">
 <!ENTITY NoneCmd.aKey           "N">
 <!ENTITY DefaultCmd.label       "Default Motif">
