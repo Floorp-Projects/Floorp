@@ -10,7 +10,7 @@
 <h1>
 How to debug memory leaks/refcnt leaks</h1></center>
 
-<center>Last update: October 21st, 1999</center>
+<center>Last update: July 11, 2000</center>
 
 <h2>
 What tools do we have?</h2>
@@ -91,7 +91,12 @@ or leaky, see below). What this does is to enable logging (to stdout) of
 each and every call to addref/release without discrimination to the types
 involved. The output includes mapping the call-stacks at the time of the
 call to symbolic forms (on platforms that support this) and thus will be
-*very* *VERY* *VERY* slow. Did I say slow?</blockquote>
+*very* *VERY* *VERY* slow. Did I say slow?  It is not as slow when using
+XPCOM_MEM_LOG_CLASSES and XPCOM_MEM_LOG_OBJECTS</blockquote>
+XPCOM_MEM_COMPTR_LOG
+<blockquote>This environment variable enables logging of additions and
+releases of objects into nsCOMPtrs.  This is currently only enabled on
+Linux.</blockquote>
 XPCOM_MEM_ALLOC_LOG
 <blockquote>For losing architectures (those that don't have stack-crawl
 software written for them), xpcom supports logging at the *call site* to
@@ -135,7 +140,8 @@ further restrict the reference count tracing:
 
 <blockquote>
 <blockquote>Set this variable to a comma-separated list of object
-<i>serial number</i>. When this is set, along with
+<i>serial number</i> or ranges of <i>serial number</i>, e.g.,
+<code>1,37-42,73,165</code>. When this is set, along with
 XPCOM_MEM_LOG_CLASSES and XPCOM_MEM_REFCNT_LOG, a stack track will be
 generated for <em>only</em> the specific objects that you list. For
 example,
@@ -384,7 +390,7 @@ connect xpcom's tracing to leakys tracing.</blockquote>
 Sample output</h3>
 Here is what you see when you enable some logging with XPCOM_MEM_LOG_CLASSES
 set to something:
-<p>nsWebShell&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x81189f8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<pre>nsWebShell&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x81189f8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Release 5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nsWebShell::Release(void)+0x59&nbsp;
 nsCOMPtr&lt;nsIContentViewerContainer>::~nsCOMPtr(void)+0x34&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 nsChannelListener::OnStartRequest(nsIChannel *, nsISupports *)+0x550&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -397,7 +403,7 @@ g_io_add_watch+0xaa&nbsp;&nbsp;&nbsp;&nbsp; g_get_current_time+0x136&nbsp;&nbsp;
 g_get_current_time+0x6f1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_main_run+0x81
 gtk_main+0xb9&nbsp;&nbsp; nsAppShell::Run(void)+0x245&nbsp;&nbsp;&nbsp;&nbsp;
 nsAppShell::Run(void)+0xc7a92ede&nbsp;&nbsp; nsAppShell::Run(void)+0xc7a9317c
-__libc_start_main+0xeb
+__libc_start_main+0xeb</pre>
 <p>Here is what you see when you use the leaky tool to dump out addref/release
 leaks:
 <p>addref&nbsp;&nbsp;&nbsp;&nbsp; 082cccc8&nbsp;&nbsp;&nbsp;&nbsp; 0 00000001
