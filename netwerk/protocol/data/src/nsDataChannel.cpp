@@ -198,7 +198,7 @@ nsDataChannel::ParseData() {
     rv = NS_NewPipe(getter_AddRefs(bufInStream),
                     getter_AddRefs(bufOutStream),
                     NET_DEFAULT_SEGMENT_SIZE, PR_UINT32_MAX,
-                    PR_TRUE, PR_TRUE, nsIOService::gBufferCache);
+                    PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv))
         goto cleanup;
 
