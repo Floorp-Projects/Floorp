@@ -464,6 +464,16 @@ typedef PRUint8 PRPackedBool;
 */
 typedef enum { PR_FAILURE = -1, PR_SUCCESS = 0 } PRStatus;
 
+#ifdef MOZ_UNICODE
+/*
+ * EXPERIMENTAL: This type may be removed in a future release.
+ */
+#ifndef __PRUNICHAR__
+#define __PRUNICHAR__
+typedef PRUint16 PRUnichar;
+#endif
+#endif /* MOZ_UNICODE */
+
 /*
 ** WARNING: The undocumented data types PRWord and PRUword are
 ** only used in the garbage collection and arena code.  Do not

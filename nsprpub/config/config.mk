@@ -127,6 +127,10 @@ ifeq ($(USE_IPV6),1)
 DEFINES += -D_PR_INET6
 endif
 
+ifeq ($(MOZ_UNICODE),1)
+DEFINES += -DMOZ_UNICODE
+endif
+
 ####################################################################
 #
 # Configuration for the release process

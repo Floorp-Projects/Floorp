@@ -779,3 +779,51 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     return PR_FAILURE;
 #endif
 }
+
+#ifdef MOZ_UNICODE
+/* ================ UTF16 Interfaces ================================ */
+PR_IMPLEMENT(PRFileDesc*) PR_OpenFileUTF16(
+    const PRUnichar *name, PRIntn flags, PRIntn mode)
+{ 
+    PRInt32 osfd;
+    PRFileDesc *fd = 0;
+#if !defined(XP_UNIX) /* BugZilla: 4090 */
+    PRBool  appendMode = ( PR_APPEND & flags )? PR_TRUE : PR_FALSE;
+#endif
+   
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+  
+    /* Map pr open flags and mode to os specific flags */
+    osfd = _PR_MD_OPEN_FILE_UTF16(name, flags, mode);
+    if (osfd != -1) {
+        fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
+        if (!fd) {
+            (void) _PR_MD_CLOSE_FILE(osfd);
+        } else {
+#if !defined(XP_UNIX) /* BugZilla: 4090 */
+            fd->secret->appendMode = appendMode;
+#endif
+            _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
+        }
+    }
+    return fd;
+}
+ 
+PR_IMPLEMENT(PRStatus) PR_GetFileInfo64UTF16(const PRUnichar *fn, PRFileInfo64 *info)
+{
+#ifdef XP_MAC
+#pragma unused (fn, info)
+#endif
+    PRInt32 rv;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+    rv = _PR_MD_GETFILEINFO64_UTF16(fn, info);
+    if (rv < 0) {
+        return PR_FAILURE;
+    } else {
+        return PR_SUCCESS;
+    }
+}
+
+/* ================ UTF16 Interfaces ================================ */
+#endif /* MOZ_UNICODE */
