@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (specification).                            */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -109,33 +109,34 @@ FT_BEGIN_HEADER
   } CFF_DriverRec;
 
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   CFF_Size_Init( CFF_Size  size );
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   CFF_Size_Done( CFF_Size  size );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   CFF_Size_Reset( CFF_Size  size );
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   CFF_GlyphSlot_Done( CFF_GlyphSlot  slot );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   CFF_GlyphSlot_Init( CFF_GlyphSlot   slot );
+
 
   /*************************************************************************/
   /*                                                                       */
   /* Face functions                                                        */
   /*                                                                       */
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   CFF_Face_Init( FT_Stream      stream,
                  CFF_Face       face,
                  FT_Int         face_index,
                  FT_Int         num_params,
                  FT_Parameter*  params );
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   CFF_Face_Done( CFF_Face  face );
 
 
@@ -143,10 +144,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* Driver functions                                                      */
   /*                                                                       */
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   CFF_Driver_Init( CFF_Driver  driver );
 
-  FT_LOCAL void
+  FT_LOCAL( void )
   CFF_Driver_Done( CFF_Driver  driver );
 
 

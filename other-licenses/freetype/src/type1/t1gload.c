@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 Glyph Loader (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,8 +24,6 @@
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
 
 #include "t1errors.h"
-
-#include <string.h>     /* for strcmp() */
 
 
   /*************************************************************************/
@@ -56,11 +54,11 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  T1_Parse_Glyph( T1_Decoder*  decoder,
-                  FT_UInt      glyph_index )
+  T1_Parse_Glyph( T1_Decoder  decoder,
+                  FT_UInt     glyph_index )
   {
-    T1_Face   face  = (T1_Face)decoder->builder.face;
-    T1_Font*  type1 = &face->type1;
+    T1_Face  face  = (T1_Face)decoder->builder.face;
+    T1_Font  type1 = &face->type1;
 
 
     decoder->font_matrix = type1->font_matrix;
@@ -73,15 +71,15 @@
   }
 
 
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   T1_Compute_Max_Advance( T1_Face  face,
                           FT_Int*  max_advance )
   {
-    FT_Error          error;
-    T1_Decoder        decoder;
-    FT_Int            glyph_index;
-    T1_Font*          type1 = &face->type1;
-    PSAux_Interface*  psaux = (PSAux_Interface*)face->psaux;
+    FT_Error       error;
+    T1_DecoderRec  decoder;
+    FT_Int         glyph_index;
+    T1_Font        type1 = &face->type1;
+    PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
 
     *max_advance = 0;
@@ -105,16 +103,20 @@
     decoder.subrs     = type1->subrs;
     decoder.subrs_len = type1->subrs_len;
 
+    *max_advance = 0;
+
     /* for each glyph, parse the glyph charstring and extract */
     /* the advance width                                      */
     for ( glyph_index = 0; glyph_index < type1->num_glyphs; glyph_index++ )
     {
       /* now get load the unscaled outline */
       error = T1_Parse_Glyph( &decoder, glyph_index );
+      if ( glyph_index == 0 || decoder.builder.advance.x > *max_advance )
+        *max_advance = decoder.builder.advance.x;
+        
       /* ignore the error if one occured - skip to next glyph */
     }
 
-    *max_advance = decoder.builder.advance.x;
     return T1_Err_Ok;
   }
 
@@ -136,22 +138,23 @@
   /*************************************************************************/
 
 
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   T1_Load_Glyph( T1_GlyphSlot  glyph,
                  T1_Size       size,
                  FT_Int        glyph_index,
                  FT_Int        load_flags )
   {
     FT_Error                error;
-    T1_Decoder              decoder;
+    T1_DecoderRec           decoder;
     T1_Face                 face = (T1_Face)glyph->root.face;
     FT_Bool                 hinting;
-    T1_Font*                type1         = &face->type1;
-    PSAux_Interface*        psaux         = (PSAux_Interface*)face->psaux;
-    const T1_Decoder_Funcs* decoder_funcs = psaux->t1_decoder_funcs;
+    T1_Font                 type1         = &face->type1;
+    PSAux_Service           psaux         = (PSAux_Service)face->psaux;
+    const T1_Decoder_Funcs  decoder_funcs = psaux->t1_decoder_funcs;
 
     FT_Matrix               font_matrix;
     FT_Vector               font_offset;
+
 
     if ( load_flags & FT_LOAD_NO_RECURSE )
       load_flags |= FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;

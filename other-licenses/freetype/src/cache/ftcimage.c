@@ -24,9 +24,6 @@
 
 #include "ftcerror.h"
 
-#include <string.h>     /* memcmp() */
-#include <stdlib.h>     /* labs()   */
-
 
   /* the FT_Glyph image node type */
   typedef struct  FTC_ImageNodeRec_

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PostScript hints recorder (body).                           */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2002 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -46,7 +46,7 @@
   ps_hint_table_done( PS_Hint_Table  table,
                       FT_Memory      memory )
   {
-    FREE( table->hints );
+    FT_FREE( table->hints );
     table->num_hints = 0;
     table->max_hints = 0;
   }
@@ -67,7 +67,7 @@
     {
       /* try to grow the table */
       new_max = ( new_max + 7 ) & -8;
-      if ( !REALLOC_ARRAY( table->hints, old_max, new_max, PS_HintRec ) )
+      if ( !FT_RENEW_ARRAY( table->hints, old_max, new_max ) )
         table->max_hints = new_max;
     }
     return error;
@@ -120,7 +120,7 @@
   ps_mask_done( PS_Mask    mask,
                 FT_Memory  memory )
   {
-    FREE( mask->bytes );
+    FT_FREE( mask->bytes );
     mask->num_bits  = 0;
     mask->max_bits  = 0;
     mask->end_point = 0;
@@ -141,7 +141,7 @@
     if ( new_max > old_max )
     {
       new_max = ( new_max + 7 ) & -8;
-      if ( !REALLOC_ARRAY( mask->bytes, old_max, new_max, FT_Byte ) )
+      if ( !FT_RENEW_ARRAY( mask->bytes, old_max, new_max ) )
         mask->max_bits = new_max * 8;
     }
     return error;
@@ -151,55 +151,55 @@
   /* test a bit value in a given mask */
   static FT_Int
   ps_mask_test_bit( PS_Mask  mask,
-                    FT_Int   index )
+                    FT_Int   idx )
   {
-    if ( (FT_UInt)index >= mask->num_bits )
+    if ( (FT_UInt)idx >= mask->num_bits )
       return 0;
 
-    return mask->bytes[index >> 3] & ( 0x80 >> ( index & 7 ) );
+    return mask->bytes[idx >> 3] & ( 0x80 >> ( idx & 7 ) );
   }
 
 
   /* clear a given bit */
   static void
   ps_mask_clear_bit( PS_Mask  mask,
-                     FT_Int   index )
+                     FT_Int   idx )
   {
     FT_Byte*  p;
 
 
-    if ( (FT_UInt)index >= mask->num_bits )
+    if ( (FT_UInt)idx >= mask->num_bits )
       return;
 
-    p    = mask->bytes + ( index >> 3 );
-    p[0] = (FT_Byte)( p[0] & ~( 0x80 >> ( index & 7 ) ) );
+    p    = mask->bytes + ( idx >> 3 );
+    p[0] = (FT_Byte)( p[0] & ~( 0x80 >> ( idx & 7 ) ) );
   }
 
 
   /* set a given bit, possibly grow the mask */
   static FT_Error
   ps_mask_set_bit( PS_Mask    mask,
-                   FT_Int     index,
+                   FT_Int     idx,
                    FT_Memory  memory )
   {
     FT_Error  error = 0;
     FT_Byte*  p;
 
 
-    if ( index < 0 )
+    if ( idx < 0 )
       goto Exit;
 
-    if ( (FT_UInt)index >= mask->num_bits )
+    if ( (FT_UInt)idx >= mask->num_bits )
     {
-      error = ps_mask_ensure( mask, index + 1, memory );
+      error = ps_mask_ensure( mask, idx + 1, memory );
       if ( error )
         goto Exit;
 
-      mask->num_bits = index + 1;
+      mask->num_bits = idx + 1;
     }
 
-    p    = mask->bytes + ( index >> 3 );
-    p[0] = (FT_Byte)( p[0] | ( 0x80 >> ( index & 7 ) ) );
+    p    = mask->bytes + ( idx >> 3 );
+    p[0] = (FT_Byte)( p[0] | ( 0x80 >> ( idx & 7 ) ) );
 
   Exit:
     return error;
@@ -218,7 +218,7 @@
     for ( ; count > 0; count--, mask++ )
       ps_mask_done( mask, memory );
 
-    FREE( table->masks );
+    FT_FREE( table->masks );
     table->num_masks = 0;
     table->max_masks = 0;
   }
@@ -238,7 +238,7 @@
     if ( new_max > old_max )
     {
       new_max = ( new_max + 7 ) & -8;
-      if ( !REALLOC_ARRAY( table->masks, old_max, new_max, PS_MaskRec ) )
+      if ( !FT_RENEW_ARRAY( table->masks, old_max, new_max ) )
         table->max_masks = new_max;
     }
     return error;
@@ -414,7 +414,7 @@
     {
       temp   = index1;
       index1 = index2;
-      index2 = index1;
+      index2 = temp;
     }
 
     if ( index1 < index2 && index1 >= 0 && index2 < (FT_Int)table->num_masks )
@@ -472,7 +472,7 @@
         PS_MaskRec  dummy = *mask2;
 
 
-        memmove( mask2, mask2 + 1, delta * sizeof ( PS_MaskRec ) );
+        ft_memmove( mask2, mask2 + 1, delta * sizeof ( PS_MaskRec ) );
 
         mask2[delta] = dummy;
       }
@@ -554,7 +554,7 @@
   /* set a bit at a given index in the current hint mask */
   static FT_Error
   ps_dimension_set_mask_bit( PS_Dimension  dim,
-                             FT_UInt       index,
+                             FT_UInt       idx,
                              FT_Memory     memory )
   {
     PS_Mask  mask;
@@ -566,7 +566,7 @@
     if ( error )
       goto Exit;
 
-    error = ps_mask_set_bit( mask, index, memory );
+    error = ps_mask_set_bit( mask, idx, memory );
 
   Exit:
     return error;
@@ -665,19 +665,19 @@
     /* now, lookup stem in the current hints table */
     {
       PS_Mask  mask;
-      FT_UInt  index;
+      FT_UInt  idx;
       FT_UInt  max   = dim->hints.num_hints;
       PS_Hint  hint  = dim->hints.hints;
 
 
-      for ( index = 0; index < max; index++, hint++ )
+      for ( idx = 0; idx < max; idx++, hint++ )
       {
         if ( hint->pos == pos && hint->len == len )
           break;
       }
 
       /* we need to create a new hint in the table */
-      if ( index >= max )
+      if ( idx >= max )
       {
         error = ps_hint_table_alloc( &dim->hints, memory, &hint );
         if ( error )
@@ -693,12 +693,12 @@
       if ( error )
         goto Exit;
 
-      error = ps_mask_set_bit( mask, index, memory );
+      error = ps_mask_set_bit( mask, idx, memory );
       if ( error )
         goto Exit;
 
       if ( aindex )
-        *aindex = (FT_Int)index;
+        *aindex = (FT_Int)idx;
     }
 
   Exit:
@@ -779,7 +779,7 @@
 
 
   /* destroy hints */
-  FT_LOCAL void
+  FT_LOCAL( void )
   ps_hints_done( PS_Hints  hints )
   {
     FT_Memory  memory = hints->memory;
@@ -793,11 +793,11 @@
   }
 
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   ps_hints_init( PS_Hints   hints,
                  FT_Memory  memory )
   {
-    memset( hints, 0, sizeof ( *hints ) );
+    ft_memset( hints, 0, sizeof ( *hints ) );
     hints->memory = memory;
     return 0;
   }
@@ -898,7 +898,7 @@
       PS_Dimension  dim;
       FT_Memory     memory = hints->memory;
       FT_Int        count;
-      FT_Int        index[3];
+      FT_Int        idx[3];
 
 
       /* limit "dimension" to 0..1 */
@@ -918,14 +918,14 @@
         for ( count = 0; count < 3; count++, stems += 2 )
         {
           error = ps_dimension_add_t1stem( dim, stems[0], stems[1],
-                                           memory, &index[count] );
+                                           memory, &idx[count] );
           if ( error )
             goto Fail;
         }
 
         /* now, add the hints to the counters table */
-        error = ps_dimension_add_counter( dim, index[0], index[1],
-                                          index[2], memory );
+        error = ps_dimension_add_counter( dim, idx[0], idx[1], idx[2],
+                                          memory );
         if ( error )
           goto Fail;
       }
@@ -1129,10 +1129,10 @@
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   t1_hints_funcs_init( T1_Hints_FuncsRec*  funcs )
   {
-    memset( (char*)funcs, 0, sizeof ( *funcs ) );
+    ft_memset( (char*)funcs, 0, sizeof ( *funcs ) );
 
     funcs->open  = (T1_Hints_OpenFunc)    t1_hints_open;
     funcs->close = (T1_Hints_CloseFunc)   ps_hints_close;
@@ -1194,10 +1194,10 @@
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   t2_hints_funcs_init( T2_Hints_FuncsRec*  funcs )
   {
-    memset( funcs, 0, sizeof ( *funcs ) );
+    ft_memset( funcs, 0, sizeof ( *funcs ) );
 
     funcs->open    = (T2_Hints_OpenFunc)   t2_hints_open;
     funcs->close   = (T2_Hints_CloseFunc)  ps_hints_close;

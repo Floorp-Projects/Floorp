@@ -5,7 +5,7 @@
 /*    PostScript hinter global hinting management (body).                  */
 /*    Inspired by the new auto-hinter module.                              */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2002 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -42,22 +42,44 @@
                             FT_UInt      direction )
   {
     PSH_Dimension  dim   = &globals->dimension[direction];
-    PSH_Widths     std   = &dim->std;
-    FT_UInt        count = std->count;
-    PSH_Width      width = std->widths;
+    PSH_Widths     stdw  = &dim->stdw;
+    FT_UInt        count = stdw->count;
+    PSH_Width      width = stdw->widths;
+    PSH_Width      stand = width;               /* standard width/height */
     FT_Fixed       scale = dim->scale_mult;
 
 
-    for ( ; count > 0; count--, width++ )
+    if ( count > 0 )
     {
       width->cur = FT_MulFix( width->org, scale );
       width->fit = FT_RoundFix( width->cur );
+
+      width++;
+      count--;
+
+      for ( ; count > 0; count--, width++ )
+      {
+        FT_Pos  w, dist;
+
+
+        w    = FT_MulFix( width->org, scale );
+        dist = w - stand->cur;
+
+        if ( dist < 0 )
+          dist = -dist;
+
+        if ( dist < 128 )
+          w = stand->cur;
+
+        width->cur = w;
+        width->fit = FT_RoundFix( w );
+      }
     }
   }
 
 
   /* org_width is is font units, result in device pixels, 26.6 format */
-  FT_LOCAL_DEF FT_Pos
+  FT_LOCAL_DEF( FT_Pos )
   psh_dimension_snap_width( PSH_Dimension  dimension,
                             FT_Int         org_width )
   {
@@ -67,13 +89,13 @@
     FT_Pos   reference = width;
 
 
-    for ( n = 0; n < dimension->std.count; n++ )
+    for ( n = 0; n < dimension->stdw.count; n++ )
     {
       FT_Pos  w;
       FT_Pos  dist;
 
 
-      w = dimension->std.widths[n].cur;
+      w = dimension->stdw.widths[n].cur;
       dist = width - w;
       if ( dist < 0 )
         dist = -dist;
@@ -480,7 +502,7 @@
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   psh_blues_snap_stem( PSH_Blues      blues,
                        FT_Int         stem_top,
                        FT_Int         stem_bot,
@@ -493,7 +515,7 @@
     FT_Int          no_shoots;
 
 
-    alignment->align = 0;
+    alignment->align = PSH_BLUE_ALIGN_NONE;
 
     no_shoots = blues->no_overshoots;
 
@@ -560,15 +582,15 @@
 
 
       memory = globals->memory;
-      globals->dimension[0].std.count = 0;
-      globals->dimension[1].std.count = 0;
+      globals->dimension[0].stdw.count = 0;
+      globals->dimension[1].stdw.count = 0;
 
       globals->blues.normal_top.count    = 0;
       globals->blues.normal_bottom.count = 0;
       globals->blues.family_top.count    = 0;
       globals->blues.family_bottom.count = 0;
 
-      FREE( globals );
+      FT_FREE( globals );
 
 #ifdef DEBUG_HINTER
       ps_debug_globals = 0;
@@ -586,7 +608,7 @@
     FT_Error     error;
 
 
-    if ( !ALLOC( globals, sizeof ( *globals ) ) )
+    if ( !FT_NEW( globals ) )
     {
       FT_UInt    count;
       FT_Short*  read;
@@ -597,7 +619,7 @@
       /* copy standard widths */
       {
         PSH_Dimension  dim   = &globals->dimension[1];
-        PSH_Width      write = dim->std.widths;
+        PSH_Width      write = dim->stdw.widths;
 
 
         write->org = priv->standard_width[1];
@@ -611,13 +633,13 @@
           read++;
         }
 
-        dim->std.count = write - dim->std.widths;
+        dim->stdw.count = write - dim->stdw.widths;
       }
 
       /* copy standard heights */
       {
         PSH_Dimension  dim = &globals->dimension[0];
-        PSH_Width      write = dim->std.widths;
+        PSH_Width      write = dim->stdw.widths;
 
 
         write->org = priv->standard_height[1];
@@ -631,7 +653,7 @@
           read++;
         }
 
-        dim->std.count = write - dim->std.widths;
+        dim->stdw.count = write - dim->stdw.widths;
       }
 
       /* copy blue zones */
@@ -701,7 +723,7 @@
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   psh_globals_funcs_init( PSH_Globals_FuncsRec*  funcs )
   {
     funcs->create    = psh_globals_new;

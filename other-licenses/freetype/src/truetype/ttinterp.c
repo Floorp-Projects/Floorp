@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType bytecode interpreter (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -256,7 +256,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Goto_CodeRange( TT_ExecContext  exec,
                      FT_Int          range,
                      FT_Long         IP )
@@ -264,17 +264,17 @@
     TT_CodeRange*  coderange;
 
 
-    FT_Assert( range >= 1 && range <= 3 );
+    FT_ASSERT( range >= 1 && range <= 3 );
 
     coderange = &exec->codeRangeTable[range - 1];
 
-    FT_Assert( coderange->base != NULL );
+    FT_ASSERT( coderange->base != NULL );
 
     /* NOTE: Because the last instruction of a program may be a CALL */
     /*       which will return to the first byte *after* the code    */
     /*       range, we test for IP <= Size instead of IP < Size.     */
     /*                                                               */
-    FT_Assert( (FT_ULong)IP <= coderange->size );
+    FT_ASSERT( (FT_ULong)IP <= coderange->size );
 
     exec->code     = coderange->base;
     exec->codeSize = coderange->size;
@@ -306,13 +306,13 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Set_CodeRange( TT_ExecContext  exec,
                     FT_Int          range,
                     void*           base,
                     FT_Long         length )
   {
-    FT_Assert( range >= 1 && range <= 3 );
+    FT_ASSERT( range >= 1 && range <= 3 );
 
     exec->codeRangeTable[range - 1].base = (FT_Byte*)base;
     exec->codeRangeTable[range - 1].size = length;
@@ -341,11 +341,11 @@
   /* <Note>                                                                */
   /*    Does not set the Error variable.                                   */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Clear_CodeRange( TT_ExecContext  exec,
                       FT_Int          range )
   {
-    FT_Assert( range >= 1 && range <= 3 );
+    FT_ASSERT( range >= 1 && range <= 3 );
 
     exec->codeRangeTable[range - 1].base = NULL;
     exec->codeRangeTable[range - 1].size = 0;
@@ -380,12 +380,12 @@
   /* <Note>                                                                */
   /*    Only the glyph loader and debugger should call this function.      */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Destroy_Context( TT_ExecContext  exec,
                       FT_Memory       memory )
   {
     /* free composite load stack */
-    FREE( exec->loadStack );
+    FT_FREE( exec->loadStack );
     exec->loadSize = 0;
 
     /* points zone */
@@ -393,22 +393,22 @@
     exec->maxContours = 0;
 
     /* free stack */
-    FREE( exec->stack );
+    FT_FREE( exec->stack );
     exec->stackSize = 0;
 
     /* free call stack */
-    FREE( exec->callStack );
+    FT_FREE( exec->callStack );
     exec->callSize = 0;
     exec->callTop  = 0;
 
     /* free glyph code range */
-    FREE( exec->glyphIns );
+    FT_FREE( exec->glyphIns );
     exec->glyphSize = 0;
 
     exec->size = NULL;
     exec->face = NULL;
 
-    FREE( exec );
+    FT_FREE( exec );
     return TT_Err_Ok;
   }
 
@@ -446,7 +446,7 @@
     exec->memory   = memory;
     exec->callSize = 32;
 
-    if ( ALLOC_ARRAY( exec->callStack, exec->callSize, TT_CallRec ) )
+    if ( FT_NEW_ARRAY( exec->callStack, exec->callSize ) )
       goto Fail_Memory;
 
     /* all values in the context are set to 0 already, but this is */
@@ -512,8 +512,8 @@
 
     if ( *size < new_max )
     {
-      FREE( *buff );
-      if ( ALLOC( *buff, new_max * multiplier ) )
+      FT_FREE( *buff );
+      if ( FT_ALLOC( *buff, new_max * multiplier ) )
         return error;
       *size = new_max;
     }
@@ -544,7 +544,7 @@
   /* <Note>                                                                */
   /*    Only the glyph loader and debugger should call this function.      */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Load_Context( TT_ExecContext  exec,
                    TT_Face         face,
                    TT_Size         size )
@@ -647,7 +647,7 @@
   /* <Note>                                                                */
   /*    Only the glyph loader and debugger should call this function.      */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Save_Context( TT_ExecContext  exec,
                    TT_Size         size )
   {
@@ -694,7 +694,7 @@
   /* <Note>                                                                */
   /*    Only the glyph loader and debugger should call this function.      */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Run_Context( TT_ExecContext  exec,
                   FT_Bool         debug )
   {
@@ -776,7 +776,7 @@
 
 
       /* allocate object */
-      if ( ALLOC( exec, sizeof ( *exec ) ) )
+      if ( FT_NEW( exec ) )
         goto Exit;
 
       /* initialize it */
@@ -792,7 +792,7 @@
     return driver->context;
 
   Fail:
-    FREE( exec );
+    FT_FREE( exec );
 
     return 0;
   }
@@ -815,7 +815,7 @@
   /* <Note>                                                                */
   /*    Only the glyph loader and debugger should call this function.      */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   TT_Done_Context( TT_ExecContext  exec )
   {
     /* Nothing at all for now */
@@ -824,39 +824,6 @@
     return TT_Err_Ok;
   }
 
-
- /* return length of given vector */
-#ifdef FT_CONFIG_OPTION_OLD_CALCS
-
-  static FT_F26Dot6
-  Norm( FT_F26Dot6  X,
-        FT_F26Dot6  Y )
-  {
-    TT_INT64  T1, T2;
-
-
-    MUL_64( X, X, T1 );
-    MUL_64( Y, Y, T2 );
-
-    ADD_64( T1, T2, T1 );
-
-    return (FT_F26Dot6)SQRT_64( T1 );
-  }
-
-#else  /* !FT_CONFIG_OPTION_OLD_CALCS */
-
-  static FT_F26Dot6
-  Norm( FT_F26Dot6  X,
-        FT_F26Dot6  Y )
-  {
-    FT_Vector  v;
-
-    v.x = X;
-    v.y = Y;
-    return FT_Vector_Length( &v );
-  }
-
-#endif /* FT_CONFIG_OPTION_OLD_CALCS */
 
 
   /*************************************************************************/
@@ -1201,6 +1168,167 @@
 #define NULL_Vector  (FT_Vector*)&Null_Vector
 
 
+  /* compute (a*b)/2^14 with maximal accuracy and rounding */
+  static FT_Int32
+  TT_MulFix14( FT_Int32  a,
+               FT_Int    b )
+  {
+    FT_Int32   m, s, hi;
+    FT_UInt32  l, lo;
+    
+
+    /* compute ax*bx as 64-bit value */
+    l  = (FT_UInt32)( ( a & 0xFFFFU ) * b );
+    m  = ( a >> 16 ) * b;
+    
+    lo = l + (FT_UInt32)( m << 16 );
+    hi = ( m >> 16 ) + ( (FT_Int32)l >> 31 ) + ( lo < l );
+    
+    /* divide the result by 2^14 with rounding */
+    s   = hi >> 31;
+    l   = lo + (FT_UInt32)s;
+    hi += s + ( l < lo );
+    lo  = l;
+
+    l   = lo + 0x2000U;
+    hi += (l < lo);
+    
+    return ( hi << 18 ) | ( l >> 14 );
+  }
+
+
+  /* compute (ax*bx+ay*by)/2^14 with maximal accuracy and rounding */
+  static FT_Int32
+  TT_DotFix14( FT_Int32  ax,
+               FT_Int32  ay,
+               FT_Int    bx,
+               FT_Int    by )
+  {
+    FT_Int32   m, s, hi1, hi2, hi;
+    FT_UInt32  l, lo1, lo2, lo;
+    
+
+    /* compute ax*bx as 64-bit value */
+    l = (FT_UInt32)( ( ax & 0xFFFFU ) * bx );
+    m = ( ax >> 16 ) * bx;
+    
+    lo1 = l + (FT_UInt32)( m << 16 );
+    hi1 = ( m >> 16 ) + ( (FT_Int32)l >> 31 ) + ( lo1 < l );
+    
+    /* compute ay*by as 64-bit value */
+    l = (FT_UInt32)( ( ay & 0xFFFFU ) * by );
+    m = ( ay >> 16 ) * by;
+    
+    lo2 = l + (FT_UInt32)( m << 16 );
+    hi2 = ( m >> 16 ) + ( (FT_Int32)l >> 31 ) + ( lo2 < l );
+    
+    /* add them */
+    lo = lo1 + lo2;
+    hi = hi1 + hi2 + ( lo < lo1 );
+    
+    /* divide the result by 2^14 with rounding */
+    s   = hi >> 31;
+    l   = lo + (FT_UInt32)s;
+    hi += s + ( l < lo );
+    lo  = l;
+
+    l   = lo + 0x2000U;
+    hi += ( l < lo );
+    
+    return ( hi << 18 ) | ( l >> 14 );
+  }
+
+
+  /* return length of given vector */
+
+#if 0
+
+  static FT_Int32
+  TT_VecLen( FT_Int32  x,
+             FT_Int32  y )
+  {
+    FT_Int32   m, hi1, hi2, hi;
+    FT_UInt32  l, lo1, lo2, lo;
+
+    
+    /* compute x*x as 64-bit value */
+    lo = (FT_UInt32)( x & 0xFFFFU );
+    hi = x >> 16;
+    
+    l  = lo * lo;
+    m  = hi * lo;
+    hi = hi * hi;
+    
+    lo1 = l + (FT_UInt32)( m << 17 );
+    hi1 = hi + ( m >> 15 ) + ( lo1 < l );
+    
+    /* compute y*y as 64-bit value */
+    lo = (FT_UInt32)( y & 0xFFFFU );
+    hi = y >> 16;
+    
+    l  = lo * lo;
+    m  = hi * lo;
+    hi = hi * hi;
+    
+    lo2 = l + (FT_UInt32)( m << 17 );
+    hi2 = hi + ( m >> 15 ) + ( lo2 < l );
+    
+    /* add them to get 'x*x+y*y' as 64-bit value */
+    lo = lo1 + lo2;
+    hi = hi1 + hi2 + ( lo < lo1 );
+    
+    /* compute the square root of this value */
+    {
+      FT_UInt32  root, rem, test_div;
+      FT_Int     count;
+
+
+      root = 0;
+
+      {
+        rem   = 0;
+        count = 32;
+        do
+        {
+          rem      = ( rem << 2 ) | ( (FT_UInt32)hi >> 30 );
+          hi       = (  hi << 2 ) | (            lo >> 30 );
+          lo     <<= 2;
+          root   <<= 1;
+          test_div = ( root << 1 ) + 1;
+
+          if ( rem >= test_div )
+          {
+            rem  -= test_div;
+            root += 1;
+          }
+        } while ( --count );
+      }
+      
+      return (FT_Int32)root;
+    }
+  }
+
+#else
+ 
+  /* this version uses FT_Vector_Length which computes the same value */
+  /* much, much faster..                                              */
+  /*                                                                  */
+  static FT_F26Dot6
+  TT_VecLen( FT_F26Dot6  X,
+             FT_F26Dot6  Y )
+  {
+    FT_Vector  v;
+
+
+    v.x = X;
+    v.y = Y;
+
+    return FT_Vector_Length( &v );
+  }
+  
+#endif
+
+
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
@@ -1231,7 +1359,7 @@
 
       x = TT_MULDIV( CUR.GS.projVector.x, CUR.tt_metrics.x_ratio, 0x4000 );
       y = TT_MULDIV( CUR.GS.projVector.y, CUR.tt_metrics.y_ratio, 0x4000 );
-      CUR.tt_metrics.ratio = Norm( x, y );
+      CUR.tt_metrics.ratio = TT_VecLen( x, y );
     }
 
     return CUR.tt_metrics.ratio;
@@ -1253,48 +1381,48 @@
 
 
   FT_CALLBACK_DEF( FT_F26Dot6 )
-  Read_CVT( EXEC_OP_ FT_ULong  index )
+  Read_CVT( EXEC_OP_ FT_ULong  idx )
   {
-    return CUR.cvt[index];
+    return CUR.cvt[idx];
   }
 
 
   FT_CALLBACK_DEF( FT_F26Dot6 )
-  Read_CVT_Stretched( EXEC_OP_ FT_ULong  index )
+  Read_CVT_Stretched( EXEC_OP_ FT_ULong  idx )
   {
-    return TT_MULFIX( CUR.cvt[index], CURRENT_Ratio() );
+    return TT_MULFIX( CUR.cvt[idx], CURRENT_Ratio() );
   }
 
 
   FT_CALLBACK_DEF( void )
-  Write_CVT( EXEC_OP_ FT_ULong    index,
+  Write_CVT( EXEC_OP_ FT_ULong    idx,
                       FT_F26Dot6  value )
   {
-    CUR.cvt[index] = value;
+    CUR.cvt[idx] = value;
   }
 
 
   FT_CALLBACK_DEF( void )
-  Write_CVT_Stretched( EXEC_OP_ FT_ULong    index,
+  Write_CVT_Stretched( EXEC_OP_ FT_ULong    idx,
                                 FT_F26Dot6  value )
   {
-    CUR.cvt[index] = FT_DivFix( value, CURRENT_Ratio() );
+    CUR.cvt[idx] = FT_DivFix( value, CURRENT_Ratio() );
   }
 
 
   FT_CALLBACK_DEF( void )
-  Move_CVT( EXEC_OP_ FT_ULong    index,
+  Move_CVT( EXEC_OP_ FT_ULong    idx,
                      FT_F26Dot6  value )
   {
-    CUR.cvt[index] += value;
+    CUR.cvt[idx] += value;
   }
 
 
   FT_CALLBACK_DEF( void )
-  Move_CVT_Stretched( EXEC_OP_ FT_ULong    index,
+  Move_CVT_Stretched( EXEC_OP_ FT_ULong    idx,
                                FT_F26Dot6  value )
   {
-    CUR.cvt[index] += FT_DivFix( value, CURRENT_Ratio() );
+    CUR.cvt[idx] += FT_DivFix( value, CURRENT_Ratio() );
   }
 
 
@@ -1397,11 +1525,11 @@
   /*    zone     :: The affected glyph zone.                               */
   /*                                                                       */
   static void
-  Direct_Move( EXEC_OP_ TT_GlyphZone*  zone,
-                        FT_UShort      point,
-                        FT_F26Dot6     distance )
+  Direct_Move( EXEC_OP_ TT_GlyphZone  zone,
+                        FT_UShort     point,
+                        FT_F26Dot6    distance )
   {
-    FT_F26Dot6 v;
+    FT_F26Dot6  v;
 
 
     v = CUR.GS.freeVector.x;
@@ -1459,9 +1587,9 @@
 
 
   static void
-  Direct_Move_X( EXEC_OP_ TT_GlyphZone*  zone,
-                          FT_UShort      point,
-                          FT_F26Dot6     distance )
+  Direct_Move_X( EXEC_OP_ TT_GlyphZone  zone,
+                          FT_UShort     point,
+                          FT_F26Dot6    distance )
   {
     FT_UNUSED_EXEC;
 
@@ -1471,9 +1599,9 @@
 
 
   static void
-  Direct_Move_Y( EXEC_OP_ TT_GlyphZone*  zone,
-                          FT_UShort      point,
-                          FT_F26Dot6     distance )
+  Direct_Move_Y( EXEC_OP_ TT_GlyphZone  zone,
+                          FT_UShort     point,
+                          FT_F26Dot6    distance )
   {
     FT_UNUSED_EXEC;
 
@@ -1982,8 +2110,10 @@
   Project( EXEC_OP_ FT_Vector*  v1,
                     FT_Vector*  v2 )
   {
-    return TT_MULDIV( v1->x - v2->x, CUR.GS.projVector.x, 0x4000 ) +
-           TT_MULDIV( v1->y - v2->y, CUR.GS.projVector.y, 0x4000 );
+    return TT_DotFix14( v1->x - v2->x,
+                        v1->y - v2->y,
+                        CUR.GS.projVector.x,
+                        CUR.GS.projVector.y );
   }
 
 
@@ -2007,8 +2137,10 @@
   Dual_Project( EXEC_OP_ FT_Vector*  v1,
                          FT_Vector*  v2 )
   {
-    return TT_MULDIV( v1->x - v2->x, CUR.GS.dualVector.x, 0x4000 ) +
-           TT_MULDIV( v1->y - v2->y, CUR.GS.dualVector.y, 0x4000 );
+    return TT_DotFix14( v1->x - v2->x,
+                        v1->y - v2->y,
+                        CUR.GS.dualVector.x,
+                        CUR.GS.dualVector.y );
   }
 
 
@@ -2032,8 +2164,10 @@
   Free_Project( EXEC_OP_ FT_Vector*  v1,
                          FT_Vector*  v2 )
   {
-    return TT_MULDIV( v1->x - v2->x, CUR.GS.freeVector.x, 0x4000 ) +
-           TT_MULDIV( v1->y - v2->y, CUR.GS.freeVector.y, 0x4000 );
+    return TT_DotFix14( v1->x - v2->x,
+                        v1->y - v2->y,
+                        CUR.GS.freeVector.x,
+                        CUR.GS.freeVector.y );
   }
 
 
@@ -2188,7 +2322,6 @@
   /*    R is undefined.                                                    */
   /*                                                                       */
 
-#ifdef FT_CONFIG_OPTION_OLD_CALCS
 
   static FT_Bool
   Normalize( EXEC_OP_ FT_F26Dot6      Vx,
@@ -2206,7 +2339,7 @@
       Vx *= 0x100;
       Vy *= 0x100;
 
-      W = Norm( Vx, Vy );
+      W = TT_VecLen( Vx, Vy );
 
       if ( W == 0 )
       {
@@ -2221,7 +2354,7 @@
       return SUCCESS;
     }
 
-    W = Norm( Vx, Vy );
+    W = TT_VecLen( Vx, Vy );
 
     Vx = FT_MulDiv( Vx, 0x4000L, W );
     Vy = FT_MulDiv( Vy, 0x4000L, W );
@@ -2283,30 +2416,6 @@
 
     return SUCCESS;
   }
-
-#else
-
-  static FT_Bool
-  Normalize( EXEC_OP_ FT_F26Dot6      Vx,
-                      FT_F26Dot6      Vy,
-                      FT_UnitVector*  R )
-  {
-    FT_Vector  v;
-    FT_Angle   angle;
-
-    FT_UNUSED_EXEC;
-
-    angle = FT_Atan2( Vx, Vy );
-
-    FT_Vector_Unit( &v, angle );
-
-    R->x = (short)(v.x >> 2);
-    R->y = (short)(v.y >> 2);
-
-    return SUCCESS;
-  }
-
-#endif /* FT_CONFIG_OPTION_OLD_CALCS */
 
 
   /*************************************************************************/
@@ -3846,9 +3955,9 @@
 
     K = CUR.stack[CUR.args - L];
 
-    MEM_Move( &CUR.stack[CUR.args - L    ],
-              &CUR.stack[CUR.args - L + 1],
-              ( L - 1 ) * sizeof ( FT_Long ) );
+    FT_MEM_MOVE( &CUR.stack[CUR.args - L    ],
+                 &CUR.stack[CUR.args - L + 1],
+                 ( L - 1 ) * sizeof ( FT_Long ) );
 
     CUR.stack[CUR.args - 1] = K;
   }
@@ -4981,14 +5090,14 @@
 
 
   static FT_Bool
-  Compute_Point_Displacement( EXEC_OP_ FT_F26Dot6*    x,
-                                       FT_F26Dot6*    y,
-                                       TT_GlyphZone*  zone,
-                                       FT_UShort*     refp )
+  Compute_Point_Displacement( EXEC_OP_ FT_F26Dot6*   x,
+                                       FT_F26Dot6*   y,
+                                       TT_GlyphZone  zone,
+                                       FT_UShort*    refp )
   {
-    TT_GlyphZone  zp;
-    FT_UShort     p;
-    FT_F26Dot6    d;
+    TT_GlyphZoneRec  zp;
+    FT_UShort        p;
+    FT_F26Dot6       d;
 
 
     if ( CUR.opcode & 1 )
@@ -5016,8 +5125,8 @@
 
 #ifdef NO_APPLE_PATENT
 
-    *x = TT_MULDIV( d, CUR.GS.freeVector.x, 0x4000 );
-    *y = TT_MULDIV( d, CUR.GS.freeVector.y, 0x4000 );
+    *x = TT_MulFix14( d, CUR.GS.freeVector.x );
+    *y = TT_MulFix14( d, CUR.GS.freeVector.y );
 
 #else
 
@@ -5065,12 +5174,12 @@
   static void
   Ins_SHP( INS_ARG )
   {
-    TT_GlyphZone  zp;
-    FT_UShort     refp;
+    TT_GlyphZoneRec  zp;
+    FT_UShort        refp;
 
-    FT_F26Dot6    dx,
-                  dy;
-    FT_UShort     point;
+    FT_F26Dot6       dx,
+                     dy;
+    FT_UShort        point;
 
     FT_UNUSED_ARG;
 
@@ -5118,13 +5227,13 @@
   static void
   Ins_SHC( INS_ARG )
   {
-    TT_GlyphZone zp;
-    FT_UShort    refp;
-    FT_F26Dot6   dx,
-                 dy;
+    TT_GlyphZoneRec zp;
+    FT_UShort       refp;
+    FT_F26Dot6      dx,
+                    dy;
 
-    FT_Short     contour;
-    FT_UShort    first_point, last_point, i;
+    FT_Short        contour;
+    FT_UShort       first_point, last_point, i;
 
 
     contour = (FT_UShort)args[0];
@@ -5174,12 +5283,12 @@
   static void
   Ins_SHZ( INS_ARG )
   {
-    TT_GlyphZone zp;
-    FT_UShort    refp;
-    FT_F26Dot6   dx,
-                 dy;
+    TT_GlyphZoneRec zp;
+    FT_UShort       refp;
+    FT_F26Dot6      dx,
+                    dy;
 
-    FT_UShort    last_point, i;
+    FT_UShort       last_point, i;
 
 
     if ( BOUNDS( args[0], 2 ) )
@@ -5225,12 +5334,8 @@
       return;
     }
 
-    dx = TT_MULDIV( args[0],
-                    (FT_Long)CUR.GS.freeVector.x,
-                    0x4000 );
-    dy = TT_MULDIV( args[0],
-                    (FT_Long)CUR.GS.freeVector.y,
-                    0x4000 );
+    dx = TT_MulFix14( args[0], CUR.GS.freeVector.x );
+    dy = TT_MulFix14( args[0], CUR.GS.freeVector.y );
 
     while ( CUR.GS.loop > 0 )
     {
@@ -5393,11 +5498,9 @@
 
     if ( CUR.GS.gep0 == 0 )   /* If in twilight zone */
     {
-      CUR.zp0.org[point].x = TT_MULDIV( CUR.GS.freeVector.x,
-                                        distance, 0x4000 );
-      CUR.zp0.org[point].y = TT_MULDIV( CUR.GS.freeVector.y,
-                                        distance, 0x4000 );
-      CUR.zp0.cur[point] = CUR.zp0.org[point];
+      CUR.zp0.org[point].x = TT_MulFix14( distance, CUR.GS.freeVector.x );
+      CUR.zp0.org[point].y = TT_MulFix14( distance, CUR.GS.freeVector.y ),
+      CUR.zp0.cur[point]   = CUR.zp0.org[point];
     }
 
     org_dist = CUR_Func_project( CUR.zp0.cur + point, NULL_Vector );
@@ -5550,14 +5653,10 @@
     if ( CUR.GS.gep1 == 0 )
     {
       CUR.zp1.org[point].x = CUR.zp0.org[CUR.GS.rp0].x +
-                             TT_MULDIV( cvt_dist,
-                                        CUR.GS.freeVector.x,
-                                        0x4000 );
+                             TT_MulFix14( cvt_dist, CUR.GS.freeVector.x );
 
       CUR.zp1.org[point].y = CUR.zp0.org[CUR.GS.rp0].y +
-                             TT_MULDIV( cvt_dist,
-                                        CUR.GS.freeVector.y,
-                                        0x4000 );
+                             TT_MulFix14( cvt_dist, CUR.GS.freeVector.y );
 
       CUR.zp1.cur[point] = CUR.zp1.org[point];
     }

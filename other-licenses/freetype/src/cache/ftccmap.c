@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType CharMap cache (body)                                        */
 /*                                                                         */
-/*  Copyright 2000-2001 by                                                 */
+/*  Copyright 2000-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -177,27 +177,27 @@
     if ( !error )
     {
       FT_UInt      count = face->num_charmaps;
-      FT_UInt      index = count;
+      FT_UInt      idx   = count;
       FT_CharMap*  cur   = face->charmaps;
 
 
       switch ( desc->type )
       {
       case FTC_CMAP_BY_INDEX:
-        index = desc->u.index;
-        hash  = index * 33;
+        idx  = desc->u.index;
+        hash = idx * 33;
         break;
 
       case FTC_CMAP_BY_ENCODING:
-        for ( index = 0; index < count; index++, cur++ )
+        for ( idx = 0; idx < count; idx++, cur++ )
           if ( cur[0]->encoding == desc->u.encoding )
             break;
 
-        hash = index * 67;
+        hash = idx * 67;
         break;
 
       case FTC_CMAP_BY_ID:
-        for ( index = 0; index < count; index++, cur++ )
+        for ( idx = 0; idx < count; idx++, cur++ )
         {
           if ( (FT_UInt)cur[0]->platform_id == desc->u.id.platform &&
                (FT_UInt)cur[0]->encoding_id == desc->u.id.encoding )
@@ -212,11 +212,11 @@
         ;
       }
 
-      if ( index >= count )
+      if ( idx >= count )
         goto Bad_Descriptor;
 
       /* compute hash value, both in family and query */
-      cfam->index               = index;
+      cfam->index               = idx;
       cfam->hash                = hash ^ FTC_FACE_ID_HASH( desc->face_id );
       FTC_QUERY( cquery )->hash = FTC_CMAP_HASH( cfam, cquery );
 

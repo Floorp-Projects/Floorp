@@ -2,9 +2,9 @@
 /*                                                                         */
 /*  ftsystem.c                                                             */
 /*                                                                         */
-/*    Unix-specific FreeType low-level system interface (body).            */
+/*    VMS-specific FreeType low-level system interface (body).             */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -144,9 +144,9 @@
   /*    The memory release function.                                       */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    memory  :: A pointer to the memory object.                         */
+  /*    memory :: A pointer to the memory object.                          */
   /*                                                                       */
-  /*    block   :: The address of block in memory to be freed.             */
+  /*    block  :: The address of block in memory to be freed.              */
   /*                                                                       */
   FT_CALLBACK_DEF( void )
   ft_free( FT_Memory  memory,
@@ -204,8 +204,8 @@
   /* documentation is in ftobjs.h */
 
   FT_EXPORT_DEF( FT_Error )
-  FT_New_Stream( const char*  filepathname,
-                 FT_Stream    stream )
+  FT_Stream_Open( FT_Stream    stream,
+                  const char*  filepathname )
   {
     int          file;
     struct stat  stat_buf;
@@ -218,14 +218,14 @@
     file = open( filepathname, O_RDONLY );
     if ( file < 0 )
     {
-      FT_ERROR(( "FT_New_Stream:" ));
+      FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not open `%s'\n", filepathname ));
       return FT_Err_Cannot_Open_Resource;
     }
 
     if ( fstat( file, &stat_buf ) < 0 )
     {
-      FT_ERROR(( "FT_New_Stream:" ));
+      FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not `fstat' file `%s'\n", filepathname ));
       goto Fail_Map;
     }
@@ -241,7 +241,7 @@
 
     if ( (long)stream->base == -1 )
     {
-      FT_ERROR(( "FT_New_Stream:" ));
+      FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not `mmap' file `%s'\n", filepathname ));
       goto Fail_Map;
     }
@@ -254,7 +254,7 @@
     stream->close = ft_close_stream;
     stream->read  = 0;
 
-    FT_TRACE1(( "FT_New_Stream:" ));
+    FT_TRACE1(( "FT_Stream_Open:" ));
     FT_TRACE1(( " opened `%s' (%d bytes) successfully\n",
                 filepathname, stream->size ));
 
@@ -275,12 +275,12 @@
 
   extern FT_Int
   ft_mem_debug_init( FT_Memory  memory );
-  
+
   extern void
   ft_mem_debug_done( FT_Memory  memory );
-  
-#endif  
-      
+
+#endif
+
 
   /* documentation is in ftobjs.h */
 
@@ -299,7 +299,7 @@
       memory->free    = ft_free;
 #ifdef FT_DEBUG_MEMORY
       ft_mem_debug_init( memory );
-#endif    
+#endif
     }
 
     return memory;
@@ -313,7 +313,7 @@
   {
 #ifdef FT_DEBUG_MEMORY
     ft_mem_debug_done( memory );
-#endif  
+#endif
     memory->free( memory, memory );
   }
 

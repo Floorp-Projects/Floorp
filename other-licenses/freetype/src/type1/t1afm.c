@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM support for Type 1 fonts (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,9 +20,6 @@
 #include "t1afm.h"
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_TYPE1_TYPES_H
-#include <stdlib.h>  /* for qsort()   */
-#include <string.h>  /* for strcmp()  */
-#include <ctype.h>   /* for isalnum() */
 
 
   /*************************************************************************/
@@ -35,29 +32,29 @@
 #define FT_COMPONENT  trace_t1afm
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   T1_Done_AFM( FT_Memory  memory,
                T1_AFM*    afm )
   {
-    FREE( afm->kern_pairs );
+    FT_FREE( afm->kern_pairs );
     afm->num_pairs = 0;
-    FREE( afm );
+    FT_FREE( afm );
   }
 
 
 #undef  IS_KERN_PAIR
 #define IS_KERN_PAIR( p )  ( p[0] == 'K' && p[1] == 'P' )
 
-#define IS_ALPHANUM( c )  ( isalnum( c ) || \
-                            c == '_'     || \
-                            c == '.'     )
+#define IS_ALPHANUM( c )  ( ft_isalnum( c ) || \
+                            c == '_'        || \
+                            c == '.'        )
 
 
   /* read a glyph name and return the equivalent glyph index */
   static FT_UInt
   afm_atoindex( FT_Byte**  start,
                 FT_Byte*   limit,
-                T1_Font*   type1 )
+                T1_Font    type1 )
   {
     FT_Byte*  p = *start;
     FT_Int    len;
@@ -83,7 +80,7 @@
 
 
       /* copy glyph name to intermediate array */
-      MEM_Copy( temp, *start, len );
+      FT_MEM_COPY( temp, *start, len );
       temp[len] = 0;
 
       /* lookup glyph name in face array */
@@ -92,7 +89,7 @@
         char*  gname = (char*)type1->glyph_names[n];
 
 
-        if ( gname && gname[0] == temp[0] && strcmp( gname, temp ) == 0 )
+        if ( gname && gname[0] == temp[0] && ft_strcmp( gname, temp ) == 0 )
         {
           result = n;
           break;
@@ -156,7 +153,7 @@
 
 
   /* parse an AFM file -- for now, only read the kerning pairs */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   T1_Read_AFM( FT_Face    t1_face,
                FT_Stream  stream )
   {
@@ -167,11 +164,11 @@
     FT_Byte*       p;
     FT_Int         count = 0;
     T1_Kern_Pair*  pair;
-    T1_Font*       type1 = &((T1_Face)t1_face)->type1;
+    T1_Font        type1 = &((T1_Face)t1_face)->type1;
     T1_AFM*        afm   = 0;
 
 
-    if ( ACCESS_Frame( stream->size ) )
+    if ( FT_FRAME_ENTER( stream->size ) )
       return error;
 
     start = (FT_Byte*)stream->cursor;
@@ -192,8 +189,7 @@
       goto Exit;
 
     /* allocate the pairs */
-    if ( ALLOC( afm, sizeof ( *afm ) )                       ||
-         ALLOC_ARRAY( afm->kern_pairs, count, T1_Kern_Pair ) )
+    if ( FT_NEW( afm ) || FT_NEW_ARRAY( afm->kern_pairs, count ) )
       goto Exit;
 
     /* now, read each kern pair */
@@ -230,28 +226,28 @@
     }
 
     /* now, sort the kern pairs according to their glyph indices */
-    qsort( afm->kern_pairs, count, sizeof ( T1_Kern_Pair ),
-           compare_kern_pairs );
+    ft_qsort( afm->kern_pairs, count, sizeof ( T1_Kern_Pair ),
+              compare_kern_pairs );
 
   Exit:
     if ( error )
-      FREE( afm );
+      FT_FREE( afm );
 
-    FORGET_Frame();
+    FT_FRAME_EXIT();
 
     return error;
   }
 
 
   /* find the kerning for a given glyph pair */
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   T1_Get_Kerning( T1_AFM*     afm,
                   FT_UInt     glyph1,
                   FT_UInt     glyph2,
                   FT_Vector*  kerning )
   {
     T1_Kern_Pair  *min, *mid, *max;
-    FT_ULong      index = KERN_INDEX( glyph1, glyph2 );
+    FT_ULong      idx = KERN_INDEX( glyph1, glyph2 );
 
 
     /* simple binary search */
@@ -266,13 +262,13 @@
       mid  = min + ( max - min ) / 2;
       midi = KERN_INDEX( mid->glyph1, mid->glyph2 );
 
-      if ( midi == index )
+      if ( midi == idx )
       {
         *kerning = mid->kerning;
         return;
       }
 
-      if ( midi < index )
+      if ( midi < idx )
         min = mid + 1;
       else
         max = mid - 1;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm 2 (body).                               */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2002 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -54,12 +54,12 @@
   psh2_hint_table_done( PSH2_Hint_Table  table,
                         FT_Memory        memory )
   {
-    FREE( table->zones );
+    FT_FREE( table->zones );
     table->num_zones = 0;
     table->zone      = 0;
 
-    FREE( table->sort );
-    FREE( table->hints );
+    FT_FREE( table->sort );
+    FT_FREE( table->hints );
     table->num_hints   = 0;
     table->max_hints   = 0;
     table->sort_global = 0;
@@ -85,14 +85,14 @@
   /* internal function used to record a new hint */
   static void
   psh2_hint_table_record( PSH2_Hint_Table  table,
-                          FT_UInt          index )
+                          FT_UInt          idx )
   {
-    PSH2_Hint  hint = table->hints + index;
+    PSH2_Hint  hint = table->hints + idx;
 
 
-    if ( index >= table->max_hints )
+    if ( idx >= table->max_hints )
     {
-      FT_ERROR(( "%s.activate: invalid hint index %d\n", index ));
+      FT_ERROR(( "%s.activate: invalid hint index %d\n", idx ));
       return;
     }
 
@@ -137,12 +137,12 @@
   {
     FT_Int    mask = 0, val = 0;
     FT_Byte*  cursor = hint_mask->bytes;
-    FT_UInt   index, limit;
+    FT_UInt   idx, limit;
 
 
     limit = hint_mask->num_bits;
 
-    for ( index = 0; index < limit; index++ )
+    for ( idx = 0; idx < limit; idx++ )
     {
       if ( mask == 0 )
       {
@@ -151,7 +151,7 @@
       }
 
       if ( val & mask )
-        psh2_hint_table_record( table, index );
+        psh2_hint_table_record( table, idx );
 
       mask >>= 1;
     }
@@ -173,9 +173,9 @@
 
 
     /* allocate our tables */
-    if ( ALLOC_ARRAY( table->sort,  2 * count,     PSH2_Hint    ) ||
-         ALLOC_ARRAY( table->hints,     count,     PSH2_HintRec ) ||
-         ALLOC_ARRAY( table->zones, 2 * count + 1, PSH2_ZoneRec ) )
+    if ( FT_NEW_ARRAY( table->sort,  2 * count     ) ||
+         FT_NEW_ARRAY( table->hints,     count     ) ||
+         FT_NEW_ARRAY( table->zones, 2 * count + 1 ) )
       goto Exit;
 
     table->max_hints   = count;
@@ -235,7 +235,7 @@
   {
     FT_Int    mask = 0, val = 0;
     FT_Byte*  cursor = hint_mask->bytes;
-    FT_UInt   index, limit, count;
+    FT_UInt   idx, limit, count;
 
 
     limit = hint_mask->num_bits;
@@ -243,7 +243,7 @@
 
     psh2_hint_table_deactivate( table );
 
-    for ( index = 0; index < limit; index++ )
+    for ( idx = 0; idx < limit; idx++ )
     {
       if ( mask == 0 )
       {
@@ -253,7 +253,7 @@
 
       if ( val & mask )
       {
-        PSH2_Hint  hint = &table->hints[index];
+        PSH2_Hint  hint = &table->hints[idx];
 
 
         if ( !psh2_hint_is_active( hint ) )
@@ -387,7 +387,7 @@
       hint->cur_len = fit_len;
 
       /* check blue zones for horizontal stems */
-      align.align = 0;
+      align.align = PSH_BLUE_ALIGN_NONE;
       align.align_bot = align.align_top = 0;
 
       if ( dimension == 1 )
@@ -523,7 +523,7 @@
 #include <stdio.h>
 
   static void
-  print_zone( PSH2_Zone  zone )
+  psh2_print_zone( PSH2_Zone  zone )
   {
     printf( "zone [scale,delta,min,max] = [%.3f,%.3f,%d,%d]\n",
              zone->scale/65536.0,
@@ -534,7 +534,7 @@
 
 #else
 
-#define print_zone( x )   do { } while ( 0 )
+#define psh2_print_zone( x )   do { } while ( 0 )
 
 #endif
 
@@ -576,7 +576,7 @@
     zone->min   = PSH2_ZONE_MIN;
     zone->max   = hint->org_pos;
 
-    print_zone( zone );
+    psh2_print_zone( zone );
 
     zone++;
 
@@ -597,7 +597,7 @@
         zone->max   = hint->org_pos + hint->org_len;
         zone->delta = hint->cur_pos - FT_MulFix( zone->min, scale2 );
 
-        print_zone( zone );
+        psh2_print_zone( zone );
 
         zone++;
       }
@@ -620,7 +620,7 @@
       zone->delta = hint->cur_pos + hint->cur_len -
                     FT_MulFix( zone->min, scale2 );
 
-      print_zone( zone );
+      psh2_print_zone( zone );
 
       zone++;
 
@@ -634,7 +634,7 @@
     zone->delta = hint->cur_pos + hint->cur_len -
                   FT_MulFix( zone->min, scale );
 
-    print_zone( zone );
+    psh2_print_zone( zone );
 
     zone++;
 
@@ -814,8 +814,8 @@
     psh2_hint_table_done( &glyph->hint_tables[1], memory );
     psh2_hint_table_done( &glyph->hint_tables[0], memory );
 
-    FREE( glyph->points );
-    FREE( glyph->contours );
+    FT_FREE( glyph->points );
+    FT_FREE( glyph->contours );
 
     glyph->num_points   = 0;
     glyph->num_contours = 0;
@@ -861,15 +861,13 @@
 
 
     /* clear all fields */
-    memset( glyph, 0, sizeof ( *glyph ) );
+    ft_memset( glyph, 0, sizeof ( *glyph ) );
 
     memory = globals->memory;
 
     /* allocate and setup points + contours arrays */
-    if ( ALLOC_ARRAY( glyph->points,   outline->n_points,
-                      PSH2_PointRec   )                     ||
-         ALLOC_ARRAY( glyph->contours, outline->n_contours,
-                      PSH2_ContourRec )                     )
+    if ( FT_NEW_ARRAY( glyph->points,   outline->n_points   ) ||
+         FT_NEW_ARRAY( glyph->contours, outline->n_contours ) )
       goto Exit;
 
     glyph->num_points   = outline->n_points;
@@ -1500,19 +1498,22 @@
     PSH2_GlyphRec  glyphrec;
     PSH2_Glyph     glyph = &glyphrec;
     FT_Error       error;
+#ifdef DEBUG_HINTER
     FT_Memory      memory;
+#endif
     FT_Int         dimension;
 
-    memory = globals->memory;
 
 #ifdef DEBUG_HINTER
+    memory = globals->memory;
+
     if ( ps2_debug_glyph )
     {
       psh2_glyph_done( ps2_debug_glyph );
-      FREE( ps2_debug_glyph );
+      FT_FREE( ps2_debug_glyph );
     }
 
-    if ( ALLOC( glyph, sizeof ( *glyph ) ) )
+    if ( FT_NEW( glyph ) )
       return error;
 
     ps2_debug_glyph = glyph;

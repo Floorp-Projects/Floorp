@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType auxiliary PostScript module implementation (body).          */
 /*                                                                         */
-/*  Copyright 2000-2001 by                                                 */
+/*  Copyright 2000-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,10 +20,11 @@
 #include "psauxmod.h"
 #include "psobjs.h"
 #include "t1decode.h"
+#include "t1cmap.h"
 
 
   FT_CALLBACK_TABLE_DEF
-  const PS_Table_Funcs  ps_table_funcs =
+  const PS_Table_FuncsRec  ps_table_funcs =
   {
     PS_Table_New,
     PS_Table_Done,
@@ -33,25 +34,25 @@
 
 
   FT_CALLBACK_TABLE_DEF
-  const T1_Parser_Funcs  t1_parser_funcs =
+  const PS_Parser_FuncsRec  ps_parser_funcs =
   {
-    T1_Init_Parser,
-    T1_Done_Parser,
-    T1_Skip_Spaces,
-    T1_Skip_Alpha,
-    T1_ToInt,
-    T1_ToFixed,
-    T1_ToCoordArray,
-    T1_ToFixedArray,
-    T1_ToToken,
-    T1_ToTokenArray,
-    T1_Load_Field,
-    T1_Load_Field_Table
+    PS_Parser_Init,
+    PS_Parser_Done,
+    PS_Parser_SkipSpaces,
+    PS_Parser_SkipAlpha,
+    PS_Parser_ToInt,
+    PS_Parser_ToFixed,
+    PS_Parser_ToCoordArray,
+    PS_Parser_ToFixedArray,
+    PS_Parser_ToToken,
+    PS_Parser_ToTokenArray,
+    PS_Parser_LoadField,
+    PS_Parser_LoadFieldTable
   };
 
 
   FT_CALLBACK_TABLE_DEF
-  const T1_Builder_Funcs  t1_builder_funcs =
+  const T1_Builder_FuncsRec  t1_builder_funcs =
   {
     T1_Builder_Init,
     T1_Builder_Done,
@@ -65,7 +66,7 @@
 
 
   FT_CALLBACK_TABLE_DEF
-  const T1_Decoder_Funcs  t1_decoder_funcs =
+  const T1_Decoder_FuncsRec  t1_decoder_funcs =
   {
     T1_Decoder_Init,
     T1_Decoder_Done,
@@ -73,15 +74,27 @@
   };
 
 
+  FT_CALLBACK_TABLE_DEF
+  const T1_CMap_ClassesRec  t1_cmap_classes =
+  {
+    &t1_cmap_standard_class_rec,
+    &t1_cmap_expert_class_rec,
+    &t1_cmap_custom_class_rec,
+    &t1_cmap_unicode_class_rec
+  };
+
+
   static
   const PSAux_Interface  psaux_interface =
   {
     &ps_table_funcs,
-    &t1_parser_funcs,
+    &ps_parser_funcs,
     &t1_builder_funcs,
     &t1_decoder_funcs,
 
-    T1_Decrypt
+    T1_Decrypt,
+    
+    (const T1_CMap_ClassesRec*) &t1_cmap_classes,
   };
 
 

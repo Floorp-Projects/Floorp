@@ -417,7 +417,11 @@
     ft_trig_pseudo_polarize( &v );
 
     v.x = ft_trig_downscale( v.x );
-    return ( shift >= 0 ) ? ( v.x >> shift ) : ( v.x << -shift );
+
+    if ( shift > 0 )
+      return ( v.x + ( 1 << ( shift - 1 ) ) ) >> shift;
+
+    return v.x << -shift;
   }
 
 

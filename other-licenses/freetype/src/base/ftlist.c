@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Generic list support for FreeType (body).                            */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -205,7 +205,7 @@
       if ( destroy )
         destroy( memory, data, user );
 
-      FREE( cur );
+      FT_FREE( cur );
       cur = next;
     }
 

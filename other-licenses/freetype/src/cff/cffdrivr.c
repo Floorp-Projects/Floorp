@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,6 +22,7 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
 #include FT_TRUETYPE_IDS_H
+#include FT_INTERNAL_POSTSCRIPT_NAMES_H
 
 #include "cffdrivr.h"
 #include "cffgload.h"
@@ -96,7 +97,7 @@
                FT_UInt     right_glyph,
                FT_Vector*  kerning )
   {
-    TT_Kern_0_Pair*  pair;
+    TT_Kern0_Pair  pair;
 
 
     if ( !face )
@@ -227,21 +228,22 @@
                       FT_Pointer  buffer,
                       FT_UInt     buffer_max )
   {
-    CFF_Font*           font   = (CFF_Font*)face->extra.data;
-    FT_Memory           memory = FT_FACE_MEMORY( face );
-    FT_String*          gname;
-    FT_UShort           sid;
-    PSNames_Interface*  psnames;
-    FT_Error            error;
+    CFF_Font         font   = (CFF_Font)face->extra.data;
+    FT_Memory        memory = FT_FACE_MEMORY( face );
+    FT_String*       gname;
+    FT_UShort        sid;
+    PSNames_Service  psnames;
+    FT_Error         error;
 
-    psnames = (PSNames_Interface*)FT_Get_Module_Interface(
+
+    psnames = (PSNames_Service)FT_Get_Module_Interface(
                 face->root.driver->root.library, "psnames" );
 
     if ( !psnames )
     {
-      FT_ERROR(( "CFF_Init_Face:" ));
+      FT_ERROR(( "cff_get_glyph_name:" ));
       FT_ERROR(( " cannot open CFF & CEF fonts\n" ));
-      FT_ERROR(( "             " ));
+      FT_ERROR(( "                   " ));
       FT_ERROR(( " without the `PSNames' module\n" ));
       error = CFF_Err_Unknown_File_Format;
       goto Exit;
@@ -255,17 +257,17 @@
 
     if ( buffer_max > 0 )
     {
-      FT_UInt  len = strlen( gname );
+      FT_UInt  len = ft_strlen( gname );
 
 
       if ( len >= buffer_max )
         len = buffer_max - 1;
 
-      MEM_Copy( buffer, gname, len );
+      FT_MEM_COPY( buffer, gname, len );
       ((FT_Byte*)buffer)[len] = 0;
     }
 
-    FREE ( gname );
+    FT_FREE ( gname );
     error = CFF_Err_Ok;
 
     Exit:
@@ -292,9 +294,9 @@
   cff_get_char_index( TT_CharMap  charmap,
                       FT_Long     charcode )
   {
-    FT_Error       error;
-    CFF_Face       face;
-    TT_CMapTable*  cmap;
+    FT_Error      error;
+    CFF_Face      face;
+    TT_CMapTable  cmap;
 
 
     cmap = &charmap->cmap;
@@ -303,7 +305,7 @@
     /* Load table if needed */
     if ( !cmap->loaded )
     {
-      SFNT_Interface*  sfnt = (SFNT_Interface*)face->sfnt;
+      SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
 
       error = sfnt->load_charmap( face, cmap, face->root.stream );
@@ -336,9 +338,9 @@
   cff_get_next_char( TT_CharMap  charmap,
                      FT_Long     charcode )
   {
-    FT_Error       error;
-    CFF_Face       face;
-    TT_CMapTable*  cmap;
+    FT_Error      error;
+    CFF_Face      face;
+    TT_CMapTable  cmap;
 
 
     cmap = &charmap->cmap;
@@ -347,7 +349,7 @@
     /* Load table if needed */
     if ( !cmap->loaded )
     {
-      SFNT_Interface*  sfnt = (SFNT_Interface*)face->sfnt;
+      SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
 
       error = sfnt->load_charmap( face, cmap, face->root.stream );
@@ -357,7 +359,8 @@
       cmap->loaded = TRUE;
     }
 
-    return ( cmap->get_next_char ? cmap->get_next_char( cmap, charcode ) : 0 );
+    return ( cmap->get_next_char ? cmap->get_next_char( cmap, charcode )
+                                 : 0 );
   }
 
 
@@ -382,20 +385,20 @@
   cff_get_name_index( CFF_Face    face,
                       FT_String*  glyph_name )
   {
-    CFF_Font*           cff;
-    CFF_Charset*        charset;
-    PSNames_Interface*  psnames;
-    FT_Memory           memory = FT_FACE_MEMORY( face );
-    FT_String*          name;
-    FT_UShort           sid;
-    FT_UInt             i;
-    FT_Int              result;
+    CFF_Font         cff;
+    CFF_Charset      charset;
+    PSNames_Service  psnames;
+    FT_Memory        memory = FT_FACE_MEMORY( face );
+    FT_String*       name;
+    FT_UShort        sid;
+    FT_UInt          i;
+    FT_Int           result;
 
 
-    cff     = face->extra.data;
+    cff     = (CFF_FontRec *)face->extra.data;
     charset = &cff->charset;
 
-    psnames = (PSNames_Interface*)FT_Get_Module_Interface(
+    psnames = (PSNames_Service)FT_Get_Module_Interface(
                 face->root.driver->root.library, "psnames" );
 
     for ( i = 0; i < cff->num_glyphs; i++ )
@@ -407,10 +410,10 @@
       else
         name = (FT_String *)psnames->adobe_std_strings( sid );
 
-      result = strcmp( glyph_name, name );
+      result = ft_strcmp( glyph_name, name );
 
       if ( sid > 390 )
-        FREE( name );
+        FT_FREE( name );
 
       if ( !result )
         return i;
@@ -438,12 +441,13 @@
   {
     FT_Module  sfnt;
 
+
 #ifndef FT_CONFIG_OPTION_NO_GLYPH_NAMES
 
-    if ( strcmp( (const char*)interface, "glyph_name" ) == 0 )
+    if ( ft_strcmp( (const char*)interface, "glyph_name" ) == 0 )
       return (FT_Module_Interface)cff_get_glyph_name;
 
-    if ( strcmp( (const char*)interface, "name_index" ) == 0 )
+    if ( ft_strcmp( (const char*)interface, "name_index" ) == 0 )
       return (FT_Module_Interface)cff_get_name_index;
 
 #endif
@@ -458,7 +462,7 @@
   /* The FT_DriverInterface structure is defined in ftdriver.h. */
 
   FT_CALLBACK_TABLE_DEF
-  const FT_Driver_Class  cff_driver_class =
+  const FT_Driver_ClassRec  cff_driver_class =
   {
     /* begin with the FT_Module_Class fields */
     {
@@ -483,24 +487,24 @@
     sizeof( FT_SizeRec ),
     sizeof( CFF_GlyphSlotRec ),
 
-    (FTDriver_initFace)     CFF_Face_Init,
-    (FTDriver_doneFace)     CFF_Face_Done,
-    (FTDriver_initSize)     CFF_Size_Init,
-    (FTDriver_doneSize)     CFF_Size_Done,
-    (FTDriver_initGlyphSlot)CFF_GlyphSlot_Init,
-    (FTDriver_doneGlyphSlot)CFF_GlyphSlot_Done,
+    (FT_Face_InitFunc)        CFF_Face_Init,
+    (FT_Face_DoneFunc)        CFF_Face_Done,
+    (FT_Size_InitFunc)        CFF_Size_Init,
+    (FT_Size_DoneFunc)        CFF_Size_Done,
+    (FT_Slot_InitFunc)        CFF_GlyphSlot_Init,
+    (FT_Slot_DoneFunc)        CFF_GlyphSlot_Done,
 
-    (FTDriver_setCharSizes) CFF_Size_Reset,
-    (FTDriver_setPixelSizes)CFF_Size_Reset,
+    (FT_Size_ResetPointsFunc) CFF_Size_Reset,
+    (FT_Size_ResetPixelsFunc) CFF_Size_Reset,
 
-    (FTDriver_loadGlyph)    Load_Glyph,
-    (FTDriver_getCharIndex) cff_get_char_index,
+    (FT_Slot_LoadFunc)        Load_Glyph,
+    (FT_CharMap_CharIndexFunc)cff_get_char_index,
 
-    (FTDriver_getKerning)   Get_Kerning,
-    (FTDriver_attachFile)   0,
-    (FTDriver_getAdvances)  0,
+    (FT_Face_GetKerningFunc)  Get_Kerning,
+    (FT_Face_AttachFunc)      0,
+    (FT_Face_GetAdvancesFunc) 0,
     
-    (FTDriver_getNextChar)  cff_get_next_char
+    (FT_CharMap_CharNextFunc) cff_get_next_char
   };
 
 
@@ -526,7 +530,7 @@
   /*    format-specific interface can then be retrieved through the method */
   /*    interface->get_format_interface.                                   */
   /*                                                                       */
-  FT_EXPORT_DEF( const FT_Driver_Class* )
+  FT_EXPORT_DEF( const FT_Driver_Class )
   getDriverClass( void )
   {
     return &cff_driver_class;

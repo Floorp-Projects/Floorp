@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000-2001 by
+  Copyright 2000-2001, 2002 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 FT_BEGIN_HEADER
 
-  FT_EXPORT_VAR( const FT_Driver_Class )  pcf_driver_class;
+  FT_EXPORT_VAR( const FT_Driver_ClassRec )  pcf_driver_class;
 
 FT_END_HEADER
 

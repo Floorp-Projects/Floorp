@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID objects manager (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,22 +44,22 @@
   /*                                                                       */
   /*************************************************************************/
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   CID_GlyphSlot_Done( CID_GlyphSlot  slot )
   {
     slot->root.internal->glyph_hints = 0;
   }
 
 
-  FT_LOCAL_DEF FT_Error
-  CID_GlyphSlot_Init( CID_GlyphSlot   slot )
+  FT_LOCAL_DEF( FT_Error )
+  CID_GlyphSlot_Init( CID_GlyphSlot  slot )
   {
-    CID_Face             face;
-    PSHinter_Interface*  pshinter;
+    CID_Face          face;
+    PSHinter_Service  pshinter;
 
 
-    face     = (CID_Face) slot->root.face;
-    pshinter = face->pshinter;
+    face     = (CID_Face)slot->root.face;
+    pshinter = (PSHinter_Service)face->pshinter;
 
     if ( pshinter )
     {
@@ -92,9 +92,9 @@
   static PSH_Globals_Funcs
   CID_Size_Get_Globals_Funcs( CID_Size  size )
   {
-    CID_Face             face     = (CID_Face)size->root.face;
-    PSHinter_Interface*  pshinter = face->pshinter;
-    FT_Module            module;
+    CID_Face          face     = (CID_Face)size->root.face;
+    PSHinter_Service  pshinter = (PSHinter_Service)face->pshinter;
+    FT_Module         module;
 
 
     module = FT_Get_Module( size->root.face->driver->root.library,
@@ -105,7 +105,7 @@
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   CID_Size_Done( CID_Size  size )
   {
     if ( size->root.internal )
@@ -122,7 +122,7 @@
   }
 
 
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   CID_Size_Init( CID_Size  size )
   {
     FT_Error           error = 0;
@@ -131,10 +131,10 @@
 
     if ( funcs )
     {
-      PSH_Globals    globals;
-      CID_Face       face = (CID_Face)size->root.face;
-      CID_FontDict*  dict = face->cid.font_dicts + face->root.face_index;
-      T1_Private*    priv = &dict->private_dict;
+      PSH_Globals   globals;
+      CID_Face      face = (CID_Face)size->root.face;
+      CID_FaceDict  dict = face->cid.font_dicts + face->root.face_index;
+      PS_Private    priv = &dict->private_dict;
 
 
       error = funcs->create( size->root.face->memory, priv, &globals );
@@ -146,7 +146,7 @@
   }
 
 
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   CID_Size_Reset( CID_Size  size )
   {
     PSH_Globals_Funcs  funcs = CID_Size_Get_Globals_Funcs( size );
@@ -162,14 +162,11 @@
   }
 
 
-
-
   /*************************************************************************/
   /*                                                                       */
   /*                           FACE  FUNCTIONS                             */
   /*                                                                       */
   /*************************************************************************/
-
 
   /*************************************************************************/
   /*                                                                       */
@@ -182,7 +179,7 @@
   /* <Input>                                                               */
   /*    face :: A pointer to the face object to destroy.                   */
   /*                                                                       */
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   CID_Face_Done( CID_Face  face )
   {
     FT_Memory  memory;
@@ -190,8 +187,8 @@
 
     if ( face )
     {
-      CID_Info*     cid  = &face->cid;
-      T1_FontInfo*  info = &cid->font_info;
+      CID_FaceInfo  cid  = &face->cid;
+      PS_FontInfo   info = &cid->font_info;
 
 
       memory = face->root.memory;
@@ -199,39 +196,39 @@
       /* release subrs */
       if ( face->subrs )
       {
-        FT_Int      n;
+        FT_Int  n;
         
 
         for ( n = 0; n < cid->num_dicts; n++ )
         {
-          CID_Subrs*  subr = face->subrs + n;
+          CID_Subrs  subr = face->subrs + n;
           
 
           if ( subr->code )
           {
-            FREE( subr->code[0] );
-            FREE( subr->code );
+            FT_FREE( subr->code[0] );
+            FT_FREE( subr->code );
           }
         }
 
-        FREE( face->subrs );
+        FT_FREE( face->subrs );
       }
 
       /* release FontInfo strings */
-      FREE( info->version );
-      FREE( info->notice );
-      FREE( info->full_name );
-      FREE( info->family_name );
-      FREE( info->weight );
+      FT_FREE( info->version );
+      FT_FREE( info->notice );
+      FT_FREE( info->full_name );
+      FT_FREE( info->family_name );
+      FT_FREE( info->weight );
 
       /* release font dictionaries */
-      FREE( cid->font_dicts );
+      FT_FREE( cid->font_dicts );
       cid->num_dicts = 0;
 
       /* release other strings */
-      FREE( cid->cid_font_name );
-      FREE( cid->registry );
-      FREE( cid->ordering );
+      FT_FREE( cid->cid_font_name );
+      FT_FREE( cid->registry );
+      FT_FREE( cid->ordering );
 
       face->root.family_name = 0;
       face->root.style_name  = 0;
@@ -262,17 +259,17 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   CID_Face_Init( FT_Stream      stream,
                  CID_Face       face,
                  FT_Int         face_index,
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
-    FT_Error             error;
-    PSNames_Interface*   psnames;
-    PSAux_Interface*     psaux;
-    PSHinter_Interface*  pshinter;
+    FT_Error          error;
+    PSNames_Service   psnames;
+    PSAux_Service     psaux;
+    PSHinter_Service  pshinter;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
@@ -282,35 +279,35 @@
 
     face->root.num_faces = 1;
 
-    psnames = (PSNames_Interface*)face->psnames;
+    psnames = (PSNames_Service)face->psnames;
     if ( !psnames )
     {
-      psnames = (PSNames_Interface*)FT_Get_Module_Interface(
+      psnames = (PSNames_Service)FT_Get_Module_Interface(
                   FT_FACE_LIBRARY( face ), "psnames" );
 
       face->psnames = psnames;
     }
 
-    psaux = (PSAux_Interface*)face->psaux;
+    psaux = (PSAux_Service)face->psaux;
     if ( !psaux )
     {
-      psaux = (PSAux_Interface*)FT_Get_Module_Interface(
+      psaux = (PSAux_Service)FT_Get_Module_Interface(
                 FT_FACE_LIBRARY( face ), "psaux" );
 
       face->psaux = psaux;
     }
 
-    pshinter = (PSHinter_Interface*)face->pshinter;
+    pshinter = (PSHinter_Service)face->pshinter;
     if ( !pshinter )
     {
-      pshinter = (PSHinter_Interface*)FT_Get_Module_Interface(
+      pshinter = (PSHinter_Service)FT_Get_Module_Interface(
                    FT_FACE_LIBRARY( face ), "pshinter" );
 
       face->pshinter = pshinter;
     }
 
     /* open the tokenizer; this will also check the font format */
-    if ( FILE_Seek( 0 ) )
+    if ( FT_STREAM_SEEK( 0 ) )
       goto Exit;
 
     error = CID_Open_Face( face );
@@ -381,40 +378,18 @@
         root->num_fixed_sizes = 0;
         root->available_sizes = 0;
 
-        root->bbox = face->cid.font_bbox;
+        root->bbox.xMin =   face->cid.font_bbox.xMin             >> 16;
+        root->bbox.yMin =   face->cid.font_bbox.yMin             >> 16;
+        root->bbox.xMax = ( face->cid.font_bbox.xMax + 0xFFFFU ) >> 16;
+        root->bbox.yMax = ( face->cid.font_bbox.yMax + 0xFFFFU ) >> 16;
+
         if ( !root->units_per_EM )
           root->units_per_EM  = 1000;
 
-        root->ascender  = (FT_Short)( face->cid.font_bbox.yMax >> 16 );
-        root->descender = (FT_Short)( face->cid.font_bbox.yMin >> 16 );
+        root->ascender  = (FT_Short)( root->bbox.yMax );
+        root->descender = (FT_Short)( root->bbox.yMin );
         root->height    = (FT_Short)(
           ( ( root->ascender + root->descender ) * 12 ) / 10 );
-
-
-#if 0
-
-        /* now compute the maximum advance width */
-
-        root->max_advance_width = face->type1.private_dict.standard_width[0];
-
-        /* compute max advance width for proportional fonts */
-        if ( !face->type1.font_info.is_fixed_pitch )
-        {
-          FT_Int  max_advance;
-
-
-          error = CID_Compute_Max_Advance( face, &max_advance );
-
-          /* in case of error, keep the standard width */
-          if ( !error )
-            root->max_advance_width = max_advance;
-          else
-            error = 0;   /* clear error */
-        }
-
-        root->max_advance_height = root->height;
-
-#endif /* 0 */
 
         root->underline_position  = face->cid.font_info.underline_position;
         root->underline_thickness = face->cid.font_info.underline_thickness;
@@ -423,74 +398,6 @@
         root->internal->max_contours = 0;
       }
     }
-
-#if 0
-
-    /* charmap support - synthetize unicode charmap when possible */
-    {
-      FT_Face      root    = &face->root;
-      FT_CharMap   charmap = face->charmaprecs;
-
-
-      /* synthesize a Unicode charmap if there is support in the `psnames' */
-      /* module                                                            */
-      if ( face->psnames )
-      {
-        PSNames_Interface*  psnames = (PSNames_Interface*)face->psnames;
-
-
-        if ( psnames->unicode_value )
-        {
-          error = psnames->build_unicodes(
-                             root->memory,
-                             face->type1.num_glyphs,
-                             (const char**)face->type1.glyph_names,
-                             &face->unicode_map );
-          if ( !error )
-          {
-            root->charmap        = charmap;
-            charmap->face        = (FT_Face)face;
-            charmap->encoding    = ft_encoding_unicode;
-            charmap->platform_id = 3;
-            charmap->encoding_id = 1;
-            charmap++;
-          }
-
-          /* simply clear the error in case of failure (which really */
-          /* means that out of memory or no unicode glyph names)     */
-          error = 0;
-        }
-      }
-
-      /* now, support either the standard, expert, or custom encodings */
-      charmap->face        = (FT_Face)face;
-      charmap->platform_id = 7;  /* a new platform id for Adobe fonts? */
-
-      switch ( face->type1.encoding_type )
-      {
-      case t1_encoding_standard:
-        charmap->encoding    = ft_encoding_adobe_standard;
-        charmap->encoding_id = 0;
-        break;
-
-      case t1_encoding_expert:
-        charmap->encoding    = ft_encoding_adobe_expert;
-        charmap->encoding_id = 1;
-        break;
-
-      default:
-        charmap->encoding    = ft_encoding_adobe_custom;
-        charmap->encoding_id = 2;
-        break;
-      }
-
-      root->charmaps     = face->charmaps;
-      root->num_charmaps = charmap - face->charmaprecs + 1;
-      face->charmaps[0]  = &face->charmaprecs[0];
-      face->charmaps[1]  = &face->charmaprecs[1];
-    }
-
-#endif /* 0 */
 
   Exit:
     return error;
@@ -511,7 +418,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   CID_Driver_Init( CID_Driver  driver )
   {
     FT_UNUSED( driver );
@@ -531,7 +438,7 @@
   /* <Input>                                                               */
   /*    driver :: A handle to the target CID driver.                       */
   /*                                                                       */
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   CID_Driver_Done( CID_Driver  driver )
   {
     FT_UNUSED( driver );

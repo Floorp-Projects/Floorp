@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Glyph hinter (body).                                                 */
 /*                                                                         */
-/*  Copyright 2000-2001 Catharon Productions Inc.                          */
+/*  Copyright 2000-2001, 2002 Catharon Productions Inc.                    */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -158,7 +158,7 @@
     FT_Pos  dist;
     FT_Pos  sign = 1;
 
-    UNUSED( hinter );
+    FT_UNUSED( hinter );
 
 
     dist = serif->opos - base->opos;
@@ -378,7 +378,7 @@
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   ah_hinter_hint_edges( AH_Hinter*  hinter,
                         FT_Bool     no_horz_edges,
                         FT_Bool     no_vert_edges )
@@ -388,7 +388,7 @@
     ah_debug_disable_vert = no_vert_edges;
 #else
     FT_UNUSED( no_horz_edges );
-    FT_UNUSED( no_vert_edges );    
+    FT_UNUSED( no_vert_edges );
 #endif
     /* AH_Interpolate_Blue_Edges( hinter ); -- doesn't seem to help      */
     /* reduce the problem of the disappearing eye in the `e' of Times... */
@@ -807,7 +807,7 @@
 #endif /* !AH_OPTION_NO_WEAK_INTERPOLATION */
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   ah_hinter_align_points( AH_Hinter*  hinter )
   {
     ah_hinter_align_edge_points( hinter );
@@ -896,7 +896,7 @@
 
 
   /* finalize a hinter object */
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   ah_hinter_done( AH_Hinter*  hinter )
   {
     if ( hinter )
@@ -913,13 +913,13 @@
       hinter->globals = 0;
       hinter->face    = 0;
 
-      FREE( hinter );
+      FT_FREE( hinter );
     }
   }
 
 
   /* create a new empty hinter object */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   ah_hinter_new( FT_Library   library,
                  AH_Hinter**  ahinter )
   {
@@ -931,7 +931,7 @@
     *ahinter = 0;
 
     /* allocate object */
-    if ( ALLOC( hinter, sizeof ( *hinter ) ) )
+    if ( FT_NEW( hinter ) )
       goto Exit;
 
     hinter->memory = memory;
@@ -955,7 +955,7 @@
 
 
   /* create a face's autohint globals */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   ah_hinter_new_face_globals( AH_Hinter*   hinter,
                               FT_Face      face,
                               AH_Globals*  globals )
@@ -965,7 +965,7 @@
     AH_Face_Globals*  face_globals;
 
 
-    if ( ALLOC( face_globals, sizeof ( *face_globals ) ) )
+    if ( FT_NEW( face_globals ) )
       goto Exit;
 
     hinter->face    = face;
@@ -987,14 +987,14 @@
 
 
   /* discard a face's autohint globals */
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   ah_hinter_done_face_globals( AH_Face_Globals*  globals )
   {
     FT_Face    face   = globals->face;
     FT_Memory  memory = face->memory;
 
 
-    FREE( globals );
+    FT_FREE( globals );
   }
 
 
@@ -1011,7 +1011,7 @@
     FT_Fixed          y_scale  = face->size->metrics.y_scale;
     FT_Error          error;
     AH_Outline*       outline  = hinter->glyph;
-    AH_Loader*        gloader  = hinter->loader;
+    AH_Loader         gloader  = hinter->loader;
     FT_Bool           no_horz_hints = FT_BOOL(
                         ( load_flags & AH_HINT_NO_HORZ_EDGES ) != 0 );
     FT_Bool           no_vert_hints = FT_BOOL(
@@ -1067,14 +1067,14 @@
       if ( error )
         goto Exit;
 
-      MEM_Copy( gloader->current.extra_points, slot->outline.points,
-                slot->outline.n_points * sizeof ( FT_Vector ) );
+      FT_MEM_COPY( gloader->current.extra_points, slot->outline.points,
+                   slot->outline.n_points * sizeof ( FT_Vector ) );
 
-      MEM_Copy( gloader->current.outline.contours, slot->outline.contours,
-                slot->outline.n_contours * sizeof ( short ) );
+      FT_MEM_COPY( gloader->current.outline.contours, slot->outline.contours,
+                   slot->outline.n_contours * sizeof ( short ) );
 
-      MEM_Copy( gloader->current.outline.tags, slot->outline.tags,
-                slot->outline.n_points * sizeof ( char ) );
+      FT_MEM_COPY( gloader->current.outline.tags, slot->outline.tags,
+                   slot->outline.n_points * sizeof ( char ) );
 
       gloader->current.outline.n_points   = slot->outline.n_points;
       gloader->current.outline.n_contours = slot->outline.n_contours;
@@ -1139,9 +1139,9 @@
 
     case ft_glyph_format_composite:
       {
-        FT_UInt       nn, num_subglyphs = slot->num_subglyphs;
-        FT_UInt       num_base_subgs, start_point;
-        FT_SubGlyph*  subglyph;
+        FT_UInt      nn, num_subglyphs = slot->num_subglyphs;
+        FT_UInt      num_base_subgs, start_point;
+        FT_SubGlyph  subglyph;
 
 
         start_point   = gloader->base.outline.n_points;
@@ -1151,8 +1151,8 @@
         if ( error )
           goto Exit;
 
-        MEM_Copy( gloader->current.subglyphs, slot->subglyphs,
-                  num_subglyphs * sizeof ( FT_SubGlyph ) );
+        FT_MEM_COPY( gloader->current.subglyphs, slot->subglyphs,
+                     num_subglyphs * sizeof ( FT_SubGlyph ) );
 
         gloader->current.num_subglyphs = num_subglyphs;
         num_base_subgs = gloader->base.num_subglyphs;
@@ -1327,7 +1327,7 @@
 
 
   /* load and hint a given glyph */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   ah_hinter_load_glyph( AH_Hinter*    hinter,
                         FT_GlyphSlot  slot,
                         FT_Size       size,
@@ -1381,7 +1381,7 @@
 
 
   /* retrieve a face's autohint globals for client applications */
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   ah_hinter_get_global_hints( AH_Hinter*  hinter,
                               FT_Face     face,
                               void**      global_hints,
@@ -1393,7 +1393,7 @@
 
 
     /* allocate new master globals */
-    if ( ALLOC( globals, sizeof ( *globals ) ) )
+    if ( FT_NEW( globals ) )
       goto Fail;
 
     /* compute face globals if needed */
@@ -1411,21 +1411,21 @@
     return;
 
   Fail:
-    FREE( globals );
+    FT_FREE( globals );
 
     *global_hints = 0;
     *global_len   = 0;
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   ah_hinter_done_global_hints( AH_Hinter*  hinter,
                                void*       global_hints )
   {
     FT_Memory  memory = hinter->memory;
 
 
-    FREE( global_hints );
+    FT_FREE( global_hints );
   }
 
 

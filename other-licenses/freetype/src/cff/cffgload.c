@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -238,7 +238,7 @@
 
     if ( glyph )
     {
-      FT_GlyphLoader*  loader = glyph->root.internal->loader;
+      FT_GlyphLoader  loader = glyph->root.internal->loader;
 
 
       builder->loader  = loader;
@@ -248,7 +248,7 @@
 
       builder->hints_globals = 0;
       builder->hints_funcs   = 0;
-            
+
       if ( hinting && size )
       {
         builder->hints_globals = size->internal;
@@ -345,18 +345,18 @@
   /*                                                                       */
   /*    slot    :: The current glyph object.                               */
   /*                                                                       */
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   CFF_Init_Decoder( CFF_Decoder*   decoder,
                     TT_Face        face,
                     CFF_Size       size,
                     CFF_GlyphSlot  slot,
                     FT_Bool        hinting )
   {
-    CFF_Font*  cff = (CFF_Font*)face->extra.data;
+    CFF_Font  cff = (CFF_Font)face->extra.data;
 
 
     /* clear everything */
-    MEM_Set( decoder, 0, sizeof ( *decoder ) );
+    FT_MEM_SET( decoder, 0, sizeof ( *decoder ) );
 
     /* initialize builder */
     CFF_Builder_Init( &decoder->builder, face, size, slot, hinting );
@@ -369,12 +369,12 @@
 
 
   /* this function is used to select the locals subrs array */
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   CFF_Prepare_Decoder( CFF_Decoder*  decoder,
                        FT_UInt       glyph_index )
   {
-    CFF_Font*     cff = (CFF_Font*)decoder->builder.face->extra.data;
-    CFF_SubFont*  sub = &cff->top_font;
+    CFF_Font     cff = (CFF_Font)decoder->builder.face->extra.data;
+    CFF_SubFont  sub = &cff->top_font;
 
 
     /* manage CID fonts */
@@ -400,7 +400,7 @@
   check_points( CFF_Builder*  builder,
                 FT_Int        count )
   {
-    return FT_GlyphLoader_Check_Points( builder->loader, count, 0 );
+    return FT_GlyphLoader_CheckPoints( builder->loader, count, 0 );
   }
 
 
@@ -426,6 +426,7 @@
 
       builder->last = *point;
     }
+
     outline->n_points++;
   }
 
@@ -461,7 +462,7 @@
       return CFF_Err_Ok;
     }
 
-    error = FT_GlyphLoader_Check_Points( builder->loader, 0, 1 );
+    error = FT_GlyphLoader_CheckPoints( builder->loader, 0, 1 );
     if ( !error )
     {
       if ( outline->n_contours > 0 )
@@ -492,6 +493,7 @@
       if ( !error )
         error = add_point1( builder, x, y );
     }
+
     return error;
   }
 
@@ -501,6 +503,7 @@
   close_contour( CFF_Builder*  builder )
   {
     FT_Outline*  outline = builder->current;
+
 
     /* XXXX: We must not include the last point in the path if it */
     /*       is located on the first point.                       */
@@ -518,8 +521,8 @@
         p1    = outline->points + first;
       }
 
-      /* `delete' last point only if it coincides with the first */
-      /* point and it is not a control point (which can happen). */
+      /* `delete' last point only if it coincides with the first    */
+      /* point and if it is not a control point (which can happen). */
       if ( p1->x == p2->x && p1->y == p2->y )
         if ( *control == FT_Curve_Tag_On )
           outline->n_points--;
@@ -532,8 +535,8 @@
 
 
   static FT_Int
-  cff_lookup_glyph_by_stdcharcode( CFF_Font*  cff,
-                                   FT_Int     charcode )
+  cff_lookup_glyph_by_stdcharcode( CFF_Font  cff,
+                                   FT_Int    charcode )
   {
     FT_UInt    n;
     FT_UShort  glyph_sid;
@@ -567,7 +570,7 @@
     FT_Int       bchar_index, achar_index, n_base_points;
     FT_Outline*  base = decoder->builder.base;
     TT_Face      face = decoder->builder.face;
-    CFF_Font*    cff  = (CFF_Font*)(face->extra.data);
+    CFF_Font     cff  = (CFF_Font)(face->extra.data);
     FT_Vector    left_bearing, advance;
     FT_Byte*     charstring;
     FT_ULong     charstring_len;
@@ -587,13 +590,13 @@
     /* accent character and return the array of subglyphs.         */
     if ( decoder->builder.no_recurse )
     {
-      FT_GlyphSlot     glyph  = (FT_GlyphSlot)decoder->builder.glyph;
-      FT_GlyphLoader*  loader = glyph->internal->loader;
-      FT_SubGlyph*     subg;
+      FT_GlyphSlot    glyph  = (FT_GlyphSlot)decoder->builder.glyph;
+      FT_GlyphLoader  loader = glyph->internal->loader;
+      FT_SubGlyph     subg;
 
 
       /* reallocate subglyph array if necessary */
-      error = FT_GlyphLoader_Check_Subglyphs( loader, 2 );
+      error = FT_GlyphLoader_CheckSubGlyphs( loader, 2 );
       if ( error )
         goto Exit;
 
@@ -699,7 +702,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   CFF_Parse_CharStrings( CFF_Decoder*  decoder,
                          FT_Byte*      charstring_base,
                          FT_Int        charstring_len )
@@ -1091,7 +1094,7 @@
         case cff_op_hintmask:
         case cff_op_cntrmask:
           FT_TRACE4(( op == cff_op_hintmask ? " hintmask" : " cntrmask" ));
-  
+
           /* implement vstem when needed --                        */
           /* the specification doesn't say it, but this also works */
           /* with the 'cntrmask' operator                          */
@@ -1103,7 +1106,7 @@
                              0,
                              num_args / 2,
                              args );
-          
+
             decoder->num_hints += num_args / 2;
           }
 
@@ -1124,15 +1127,13 @@
           {
             FT_UInt maskbyte;
 
+
             FT_TRACE4(( " " ));
 
             for ( maskbyte = 0;
                   maskbyte < (FT_UInt)(( decoder->num_hints + 7 ) >> 3);
                   maskbyte++, ip++ )
-            {
               FT_TRACE4(( "%02X", *ip ));
-            }
-
           }
 #else
           ip += ( decoder->num_hints + 7 ) >> 3;
@@ -1723,16 +1724,16 @@
 
         case cff_op_random:
           {
-            FT_Fixed  rand;
+            FT_Fixed  Rand;
 
 
             FT_TRACE4(( " rand" ));
 
-            rand = seed;
-            if ( rand >= 0x8000 )
-              rand++;
+            Rand = seed;
+            if ( Rand >= 0x8000 )
+              Rand++;
 
-            args[0] = rand;
+            args[0] = Rand;
             seed    = FT_MulFix( seed, 0x10000L - seed );
             if ( seed == 0 )
               seed += 0x2873;
@@ -1793,16 +1794,16 @@
 
         case cff_op_index:
           {
-            FT_Int  index = args[0] >> 16;
+            FT_Int  idx = args[0] >> 16;
 
 
             FT_TRACE4(( " index" ));
 
-            if ( index < 0 )
-              index = 0;
-            else if ( index > num_args - 2 )
-              index = num_args - 2;
-            args[0] = args[-( index + 1 )];
+            if ( idx < 0 )
+              idx = 0;
+            else if ( idx > num_args - 2 )
+              idx = num_args - 2;
+            args[0] = args[-( idx + 1 )];
             args++;
           }
           break;
@@ -1810,7 +1811,7 @@
         case cff_op_roll:
           {
             FT_Int  count = (FT_Int)( args[0] >> 16 );
-            FT_Int  index = (FT_Int)( args[1] >> 16 );
+            FT_Int  idx   = (FT_Int)( args[1] >> 16 );
 
 
             FT_TRACE4(( " roll" ));
@@ -1822,9 +1823,9 @@
             if ( args < stack )
               goto Stack_Underflow;
 
-            if ( index >= 0 )
+            if ( idx >= 0 )
             {
-              while ( index > 0 )
+              while ( idx > 0 )
               {
                 FT_Fixed  tmp = args[count - 1];
                 FT_Int    i;
@@ -1833,12 +1834,12 @@
                 for ( i = count - 2; i >= 0; i-- )
                   args[i + 1] = args[i];
                 args[0] = tmp;
-                index--;
+                idx--;
               }
             }
             else
             {
-              while ( index < 0 )
+              while ( idx < 0 )
               {
                 FT_Fixed  tmp = args[0];
                 FT_Int    i;
@@ -1847,7 +1848,7 @@
                 for ( i = 0; i < count - 1; i++ )
                   args[i] = args[i + 1];
                 args[count - 1] = tmp;
-                index++;
+                idx++;
               }
             }
             args += count;
@@ -1863,27 +1864,27 @@
 
         case cff_op_put:
           {
-            FT_Fixed  val   = args[0];
-            FT_Int    index = (FT_Int)( args[1] >> 16 );
+            FT_Fixed  val = args[0];
+            FT_Int    idx = (FT_Int)( args[1] >> 16 );
 
 
             FT_TRACE4(( " put" ));
 
-            if ( index >= 0 && index < decoder->len_buildchar )
-              decoder->buildchar[index] = val;
+            if ( idx >= 0 && idx < decoder->len_buildchar )
+              decoder->buildchar[idx] = val;
           }
           break;
 
         case cff_op_get:
           {
-            FT_Int   index = (FT_Int)( args[0] >> 16 );
-            FT_Fixed val   = 0;
+            FT_Int    idx = (FT_Int)( args[0] >> 16 );
+            FT_Fixed  val = 0;
 
 
             FT_TRACE4(( " get" ));
 
-            if ( index >= 0 && index < decoder->len_buildchar )
-              val = decoder->buildchar[index];
+            if ( idx >= 0 && idx < decoder->len_buildchar )
+              val = decoder->buildchar[idx];
 
             args[0] = val;
             args++;
@@ -1956,13 +1957,13 @@
 
         case cff_op_callsubr:
           {
-            FT_UInt  index = (FT_UInt)( ( args[0] >> 16 ) +
-                                        decoder->locals_bias );
+            FT_UInt  idx = (FT_UInt)( ( args[0] >> 16 ) +
+                                      decoder->locals_bias );
 
 
-            FT_TRACE4(( " callsubr(%d)", index ));
+            FT_TRACE4(( " callsubr(%d)", idx ));
 
-            if ( index >= decoder->num_locals )
+            if ( idx >= decoder->num_locals )
             {
               FT_ERROR(( "CFF_Parse_CharStrings:" ));
               FT_ERROR(( "  invalid local subr index\n" ));
@@ -1978,8 +1979,8 @@
             zone->cursor = ip;  /* save current instruction pointer */
 
             zone++;
-            zone->base   = decoder->locals[index];
-            zone->limit  = decoder->locals[index + 1];
+            zone->base   = decoder->locals[idx];
+            zone->limit  = decoder->locals[idx + 1];
             zone->cursor = zone->base;
 
             if ( !zone->base )
@@ -1996,13 +1997,13 @@
 
         case cff_op_callgsubr:
           {
-            FT_UInt  index = (FT_UInt)( ( args[0] >> 16 ) +
-                                        decoder->globals_bias );
+            FT_UInt  idx = (FT_UInt)( ( args[0] >> 16 ) +
+                                      decoder->globals_bias );
 
 
-            FT_TRACE4(( " callgsubr(%d)", index ));
+            FT_TRACE4(( " callgsubr(%d)", idx ));
 
-            if ( index >= decoder->num_globals )
+            if ( idx >= decoder->num_globals )
             {
               FT_ERROR(( "CFF_Parse_CharStrings:" ));
               FT_ERROR(( " invalid global subr index\n" ));
@@ -2018,8 +2019,8 @@
             zone->cursor = ip;  /* save current instruction pointer */
 
             zone++;
-            zone->base   = decoder->globals[index];
-            zone->limit  = decoder->globals[index+1];
+            zone->base   = decoder->globals[idx];
+            zone->limit  = decoder->globals[idx + 1];
             zone->cursor = zone->base;
 
             if ( !zone->base )
@@ -2108,14 +2109,14 @@
 #if 0 /* unused until we support pure CFF fonts */
 
 
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   CFF_Compute_Max_Advance( TT_Face  face,
                            FT_Int*  max_advance )
   {
     FT_Error     error = 0;
     CFF_Decoder  decoder;
     FT_Int       glyph_index;
-    CFF_Font*    cff = (CFF_Font*)face->other;
+    CFF_Font     cff = (CFF_Font)face->other;
 
 
     *max_advance = 0;
@@ -2175,7 +2176,7 @@
   /*************************************************************************/
 
 
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   CFF_Load_Glyph( CFF_GlyphSlot  glyph,
                   CFF_Size       size,
                   FT_Int         glyph_index,
@@ -2185,7 +2186,7 @@
     CFF_Decoder  decoder;
     TT_Face      face = (TT_Face)glyph->root.face;
     FT_Bool      hinting;
-    CFF_Font*    cff = (CFF_Font*)face->extra.data;
+    CFF_Font     cff = (CFF_Font)face->extra.data;
 
     FT_Matrix    font_matrix;
     FT_Vector    font_offset;
@@ -2225,7 +2226,7 @@
                                   &charstring, &charstring_len );
       if ( !error )
       {
-        CFF_Index csindex = cff->charstrings_index;
+        CFF_IndexRec csindex = cff->charstrings_index;
 
 
         CFF_Prepare_Decoder( &decoder, glyph_index );
@@ -2329,8 +2330,8 @@
 
           if ( hinting )
           {
-            metrics->horiAdvance = ( metrics->horiAdvance + 32 ) & -64;
-            metrics->vertAdvance = ( metrics->vertAdvance + 32 ) & -64;
+            metrics->horiAdvance  = ( metrics->horiAdvance + 32 ) & -64;
+            metrics->vertAdvance  = ( metrics->vertAdvance + 32 ) & -64;
 
             metrics->vertBearingX = ( metrics->vertBearingX + 32 ) & -64;
             metrics->vertBearingY = ( metrics->vertBearingY + 32 ) & -64;

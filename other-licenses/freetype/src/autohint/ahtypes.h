@@ -5,7 +5,7 @@
 /*    General types and definitions for the auto-hint module               */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 2000-2001 Catharon Productions Inc.                          */
+/*  Copyright 2000-2001, 2002 Catharon Productions Inc.                    */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -207,7 +207,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    prev      :: The previous point in same contour.                   */
   /*                                                                       */
-  struct AH_Point
+  struct  AH_Point
   {
     AH_Flags      flags;    /* point flags used by hinter */
     FT_Pos        ox, oy;
@@ -420,14 +420,14 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  AH_Globals_
   {
-    FT_Int    num_widths;
-    FT_Int    num_heights;
+    FT_Int  num_widths;
+    FT_Int  num_heights;
 
-    FT_Pos    widths [AH_MAX_WIDTHS];
-    FT_Pos    heights[AH_MAX_HEIGHTS];
+    FT_Pos  widths [AH_MAX_WIDTHS];
+    FT_Pos  heights[AH_MAX_HEIGHTS];
 
-    FT_Pos    blue_refs  [ah_blue_max];
-    FT_Pos    blue_shoots[ah_blue_max];
+    FT_Pos  blue_refs  [ah_blue_max];
+    FT_Pos  blue_shoots[ah_blue_max];
 
   } AH_Globals;
 
@@ -477,7 +477,7 @@ FT_BEGIN_HEADER
 
     AH_Outline*       glyph;
 
-    AH_Loader*        loader;
+    AH_Loader         loader;
     FT_Vector         pp1;
     FT_Vector         pp2;
 
@@ -488,14 +488,15 @@ FT_BEGIN_HEADER
   } AH_Hinter;
 
 
-#ifdef    DEBUG_HINTER
-  extern AH_Hinter*   ah_debug_hinter;
-  extern FT_Bool      ah_debug_disable_horz;
-  extern FT_Bool      ah_debug_disable_vert;
+#ifdef  DEBUG_HINTER
+  extern AH_Hinter*  ah_debug_hinter;
+  extern FT_Bool     ah_debug_disable_horz;
+  extern FT_Bool     ah_debug_disable_vert;
 #else
-# define ah_debug_disable_horz   0
-# define ah_debug_disable_vert   0
-#endif  /* DEBUG_HINTER */
+#define ah_debug_disable_horz  0
+#define ah_debug_disable_vert  0
+#endif /* DEBUG_HINTER */
+
 
 FT_END_HEADER
 

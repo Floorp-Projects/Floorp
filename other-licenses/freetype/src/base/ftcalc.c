@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Arithmetic computations (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,7 +39,6 @@
 
 
 /* we need to define a 64-bits data type here */
-#ifndef FT_CONFIG_OPTION_OLD_CALCS
 
 #ifdef FT_LONG64
 
@@ -56,8 +55,6 @@
 
 #endif /* FT_LONG64 */
 
-#endif /* !FT_CONFIG_OPTION_OLD_CALCS */
-
 
   /*************************************************************************/
   /*                                                                       */
@@ -70,7 +67,7 @@
 
 
   /* The following three functions are available regardless of whether */
-  /* FT_LONG64 or FT_CONFIG_OPTION_OLD_CALCS is defined.               */
+  /* FT_LONG64 is defined.                                             */
 
   /* documentation is in freetype.h */
 
@@ -102,27 +99,6 @@
   }
 
 
-#ifdef FT_CONFIG_OPTION_OLD_CALCS
-
-  static const FT_Long  ft_square_roots[63] =
-  {
-       1L,    1L,    2L,     3L,     4L,     5L,     8L,    11L,
-      16L,   22L,   32L,    45L,    64L,    90L,   128L,   181L,
-     256L,  362L,  512L,   724L,  1024L,  1448L,  2048L,  2896L,
-    4096L, 5892L, 8192L, 11585L, 16384L, 23170L, 32768L, 46340L,
-
-      65536L,   92681L,  131072L,   185363L,   262144L,   370727L,
-     524288L,  741455L, 1048576L,  1482910L,  2097152L,  2965820L,
-    4194304L, 5931641L, 8388608L, 11863283L, 16777216L, 23726566L,
-
-      33554432L,   47453132L,   67108864L,   94906265L,
-     134217728L,  189812531L,  268435456L,  379625062L,
-     536870912L,  759250125L, 1073741824L, 1518500250L,
-    2147483647L
-  };
-
-#else
-
   /* documentation is in ftcalc.h */
 
   FT_EXPORT_DEF( FT_Int32 )
@@ -152,10 +128,9 @@
     return root;
   }
 
-#endif /* FT_CONFIG_OPTION_OLD_CALCS */
-
 
 #ifdef FT_LONG64
+
 
   /* documentation is in freetype.h */
 
@@ -220,51 +195,6 @@
 
     return ( s < 0 ? -(FT_Long)q : (FT_Long)q );
   }
-
-
-#ifdef FT_CONFIG_OPTION_OLD_CALCS
-
-  /* a helper function for FT_Sqrt64() */
-
-  static int
-  ft_order64( FT_Int64  z )
-  {
-    int  j = 0;
-
-
-    while ( z )
-    {
-      z = (unsigned FT_INT64)z >> 1;
-      j++;
-    }
-    return j - 1;
-  }
-
-
-  /* documentation is in ftcalc.h */
-
-  FT_EXPORT_DEF( FT_Int32 )
-  FT_Sqrt64( FT_Int64  l )
-  {
-    FT_Int64  r, s;
-
-
-    if ( l <= 0 ) return 0;
-    if ( l == 1 ) return 1;
-
-    r = ft_square_roots[ft_order64( l )];
-
-    do
-    {
-      s = r;
-      r = ( r + l / r ) >> 1;
-
-    } while ( r > s || r * r > l );
-
-    return (FT_Int32)r;
-  }
-
-#endif /* FT_CONFIG_OPTION_OLD_CALCS */
 
 
 #else /* FT_LONG64 */
@@ -427,7 +357,7 @@
            ( ( al * ( ub & 0xFFFF ) + 0x8000 ) >> 16 );
     }
 
-    return ( s < 0 ? -(FT_Long)ua : ua );
+    return ( s < 0 ? -(FT_Long)ua : (FT_Long)ua );
   }
 
 
@@ -498,7 +428,9 @@
 
   /* apparently, the second version of this code is not compiled correctly */
   /* on Mac machines with the MPW C compiler..  tsss, tsss, tss...         */
+
 #if 1
+
   FT_EXPORT_DEF( FT_Int32 )
   FT_Div64by32( FT_Int64*  x,
                 FT_Int32   y )
@@ -550,7 +482,9 @@
 
     return ( s < 0 ? -(FT_Int32)q : (FT_Int32)q );
   }
-#else
+
+#else /* 0 */
+
   FT_EXPORT_DEF( FT_Int32 )
   FT_Div64by32( FT_Int64*  x,
                 FT_Int32   y )
@@ -582,86 +516,8 @@
 
     return ( s < 0 ? -(FT_Int32)q : (FT_Int32)q );
   }
-#endif
 
-
-#ifdef FT_CONFIG_OPTION_OLD_CALCS
-
-
-  /* two helper functions for FT_Sqrt64() */
-
-  static void
-  FT_Sub64( FT_Int64*  x,
-            FT_Int64*  y,
-            FT_Int64*  z )
-  {
-    register FT_UInt32  lo, hi;
-
-
-    lo = x->lo - y->lo;
-    hi = x->hi - y->hi - ( (FT_Int32)lo < 0 );
-
-    z->lo = lo;
-    z->hi = hi;
-  }
-
-
-  static int
-  ft_order64( FT_Int64*  z )
-  {
-    FT_UInt32  i;
-    int        j;
-
-
-    i = z->lo;
-    j = 0;
-    if ( z->hi )
-    {
-      i = z->hi;
-      j = 32;
-    }
-
-    while ( i > 0 )
-    {
-      i >>= 1;
-      j++;
-    }
-    return j - 1;
-  }
-
-
-  /* documentation is in ftcalc.h */
-
-  FT_EXPORT_DEF( FT_Int32 )
-  FT_Sqrt64( FT_Int64*  l )
-  {
-    FT_Int64  l2;
-    FT_Int32  r, s;
-
-
-    if ( (FT_Int32)l->hi < 0          ||
-         ( l->hi == 0 && l->lo == 0 ) )
-      return 0;
-
-    s = ft_order64( l );
-    if ( s == 0 )
-      return 1;
-
-    r = ft_square_roots[s];
-    do
-    {
-      s = r;
-      r = ( r + FT_Div64by32( l, r ) ) >> 1;
-      FT_MulTo64( r, r,   &l2 );
-      FT_Sub64  ( l, &l2, &l2 );
-
-    } while ( r > s || (FT_Int32)l2.hi < 0 );
-
-    return r;
-  }
-
-
-#endif /* FT_CONFIG_OPTION_OLD_CALCS */
+#endif /* 0 */
 
 
 #endif /* FT_LONG64 */

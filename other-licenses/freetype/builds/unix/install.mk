@@ -13,7 +13,7 @@
 # fully.
 
 
-.PHONY: install uninstall
+.PHONY: install uninstall check
 
 # Unix installation and deinstallation targets.
 install: $(PROJECT_LIBRARY)
@@ -53,6 +53,10 @@ uninstall:
 	-$(DELDIR) $(includedir)/freetype2
 	-$(DELETE) $(includedir)/ft2build.h
 	-$(DELETE) $(bindir)/freetype-config
+
+
+check:
+	@echo There is no validation suite for this package.
 
 
 .PHONY: clean_project_unix distclean_project_unix

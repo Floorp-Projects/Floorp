@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,7 +27,7 @@
 FT_BEGIN_HEADER
 
 
-  FT_EXPORT_VAR( const FT_Driver_Class )  winfnt_driver_class;
+  FT_EXPORT_VAR( const FT_Driver_ClassRec )  winfnt_driver_class;
 
 
 FT_END_HEADER

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Simple LRU list-cache (body).                                        */
 /*                                                                         */
-/*  Copyright 2000-2001 by                                                 */
+/*  Copyright 2000-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,7 +40,7 @@
       return FTC_Err_Invalid_Argument;
 
     *alist = NULL;
-    if ( !ALLOC( list, clazz->list_size ) )
+    if ( !FT_ALLOC( list, clazz->list_size ) )
     {
       /* initialize common fields */
       list->clazz      = clazz;
@@ -56,7 +56,7 @@
           if ( clazz->list_done )
             clazz->list_done( list );
 
-          FREE( list );
+          FT_FREE( list );
         }
       }
 
@@ -85,7 +85,7 @@
     if ( clazz->list_done )
       clazz->list_done( list );
 
-    FREE( list );
+    FT_FREE( list );
   }
 
 
@@ -112,7 +112,7 @@
       if ( clazz->node_done )
         clazz->node_done( node, list->data );
 
-      FREE( node );
+      FT_FREE( node );
       node = next;
     }
 
@@ -233,20 +233,20 @@
         *plast = NULL;
         list->num_nodes--;
 
-        FREE( last );
+        FT_FREE( last );
         goto Exit;
       }
     }
 
     /* otherwise, simply allocate a new node */
-    if ( ALLOC( node, clazz->node_size ) )
+    if ( FT_ALLOC( node, clazz->node_size ) )
       goto Exit;
 
     node->key = key;
     error = clazz->node_init( node, key, list->data );
     if ( error )
     {
-      FREE( node );
+      FT_FREE( node );
       goto Exit;
     }
 
@@ -286,7 +286,7 @@
         if ( clazz->node_done )
           clazz->node_done( node, list->data );
 
-        FREE( node );
+        FT_FREE( node );
         list->num_nodes--;
         break;
       }
@@ -327,7 +327,7 @@
         if ( clazz->node_done )
           clazz->node_done( node, list );
 
-        FREE( node );
+        FT_FREE( node );
       }
       else
         pnode = &(*pnode)->next;

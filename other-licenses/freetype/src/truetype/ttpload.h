@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType glyph data/program tables loader (specification).           */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,15 +27,15 @@
 FT_BEGIN_HEADER
 
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   TT_Load_Locations( TT_Face    face,
                      FT_Stream  stream );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   TT_Load_CVT( TT_Face    face,
                FT_Stream  stream );
 
-  FT_LOCAL FT_Error
+  FT_LOCAL( FT_Error )
   TT_Load_Programs( TT_Face    face,
                     FT_Stream  stream );
 

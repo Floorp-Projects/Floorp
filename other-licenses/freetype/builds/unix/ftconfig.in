@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    UNIX-specific configuration file (specification only).               */
 /*                                                                         */
-/*  Copyright 1996-2000 by                                                 */
+/*  Copyright 1996-2000, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,6 +39,7 @@
 
 #include <ft2build.h>
 #include FT_CONFIG_OPTIONS_H
+#include FT_CONFIG_STANDARD_LIBRARY_H
 
 
 FT_BEGIN_HEADER
@@ -62,7 +63,6 @@ FT_BEGIN_HEADER
 #define SIZEOF_INT   2
 #define SIZEOF_LONG  2
 
-
 #define FT_SIZEOF_INT   SIZEOF_INT
 #define FT_SIZEOF_LONG  SIZEOF_LONG
 
@@ -71,8 +71,8 @@ FT_BEGIN_HEADER
 #define FT_ALIGNMENT  8
 
 
-  /* UNUSED is a macro used to indicate that a given parameter is not used */
-  /* -- this is only used to get rid of unpleasant compiler warnings       */
+  /* FT_UNUSED is a macro used to indicate that a given parameter is not  */
+  /* used -- this is only used to get rid of unpleasant compiler warnings */
 #ifndef FT_UNUSED
 #define FT_UNUSED( arg )  ( (arg) = (arg) )
 #endif
@@ -141,17 +141,17 @@ FT_BEGIN_HEADER
 
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT
 
-#define FT_LOCAL      static
-#define FT_LOCAL_DEF  static
+#define FT_LOCAL( x )      static  x
+#define FT_LOCAL_DEF( x )  static  x
 
 #else
 
 #ifdef __cplusplus
-#define FT_LOCAL      extern "C"
-#define FT_LOCAL_DEF  extern "C"
+#define FT_LOCAL( x )      extern "C"  x
+#define FT_LOCAL_DEF( x )  extern "C"  x
 #else
-#define FT_LOCAL      extern
-#define FT_LOCAL_DEF  extern
+#define FT_LOCAL( x )      extern  x
+#define FT_LOCAL_DEF( x )  extern  x
 #endif
 
 #endif /* FT_MAKE_OPTION_SINGLE_OBJECT */
@@ -236,9 +236,9 @@ FT_BEGIN_HEADER
   /*                                                                 */
 #ifndef FT_CALLBACK_DEF
 #ifdef __cplusplus
-#define FT_CALLBACK_DEF( x )  extern "C" x
+#define FT_CALLBACK_DEF( x )  extern "C"  x
 #else
-#define FT_CALLBACK_DEF( x )  static x
+#define FT_CALLBACK_DEF( x )  static  x
 #endif
 #endif /* FT_CALLBACK_DEF */
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Routines used to compute global metrics automatically (body).        */
 /*                                                                         */
-/*  Copyright 2000-2001 Catharon Productions Inc.                          */
+/*  Copyright 2000-2001, 2002 Catharon Productions Inc.                    */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -158,7 +158,7 @@
         /* segment; we first need to find in which contour the extremum */
         /* lies, then see its previous and next points                  */
         {
-          FT_Int  index = (FT_Int)( extremum - points );
+          FT_Int  idx = (FT_Int)( extremum - points );
           FT_Int  n;
           FT_Int  first, last, prev, next, end;
           FT_Pos  dist;
@@ -170,7 +170,7 @@
           for ( n = 0; n < glyph->outline.n_contours; n++ )
           {
             end = glyph->outline.contours[n];
-            if ( end >= index )
+            if ( end >= idx )
             {
               last = end;
               break;
@@ -185,7 +185,7 @@
           /* now look for the previous and next points that are not on the */
           /* same Y coordinate.  Threshold the `closeness'...              */
 
-          prev = index;
+          prev = idx;
           next = prev;
 
           do
@@ -199,7 +199,7 @@
             if ( dist < -5 || dist > 5 )
               break;
 
-          } while ( prev != index );
+          } while ( prev != idx );
 
           do
           {
@@ -212,7 +212,7 @@
             if ( dist < -5 || dist > 5 )
               break;
 
-          } while ( next != index );
+          } while ( next != idx );
 
           /* now, set the `round' flag depending on the segment's kind */
           round = FT_BOOL(
@@ -384,7 +384,7 @@
   }
 
 
-  FT_LOCAL_DEF FT_Error
+  FT_LOCAL_DEF( FT_Error )
   ah_hinter_compute_globals( AH_Hinter*  hinter )
   {
     return ah_hinter_compute_widths( hinter ) ||

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2002 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -28,6 +28,7 @@ SFNT_COMPILE := $(FT_COMPILE) $I$(SFNT_DIR)
 #
 SFNT_DRV_SRC := $(SFNT_DIR_)ttload.c   \
                 $(SFNT_DIR_)ttcmap.c   \
+                $(SFNT_DIR_)ttcmap0.c  \
                 $(SFNT_DIR_)ttsbit.c   \
                 $(SFNT_DIR_)ttpost.c   \
                 $(SFNT_DIR_)sfobjs.c   \

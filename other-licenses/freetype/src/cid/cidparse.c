@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 parser (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,8 +25,6 @@
 #include "cidparse.h"
 
 #include "ciderrs.h"
-
-#include <string.h>     /* for strncmp() */
 
 
   /*************************************************************************/
@@ -50,11 +48,11 @@
   /*************************************************************************/
 
 
-  FT_LOCAL_DEF FT_Error
-  CID_New_Parser( CID_Parser*       parser,
-                  FT_Stream         stream,
-                  FT_Memory         memory,
-                  PSAux_Interface*  psaux )
+  FT_LOCAL_DEF( FT_Error )
+  CID_New_Parser( CID_Parser*    parser,
+                  FT_Stream      stream,
+                  FT_Memory      memory,
+                  PSAux_Service  psaux )
   {
     FT_Error  error;
     FT_ULong  base_offset, offset, ps_len;
@@ -62,25 +60,25 @@
     FT_Int    buff_len;
 
 
-    MEM_Set( parser, 0, sizeof ( *parser ) );
-    psaux->t1_parser_funcs->init( &parser->root, 0, 0, memory );
+    FT_MEM_SET( parser, 0, sizeof ( *parser ) );
+    psaux->ps_parser_funcs->init( &parser->root, 0, 0, memory );
 
     parser->stream = stream;
 
-    base_offset = FILE_Pos();
+    base_offset = FT_STREAM_POS();
 
     /* first of all, check the font format in the  header */
-    if ( ACCESS_Frame( 31 ) )
+    if ( FT_FRAME_ENTER( 31 ) )
       goto Exit;
 
-    if ( strncmp( (char *)stream->cursor,
-                  "%!PS-Adobe-3.0 Resource-CIDFont", 31 ) )
+    if ( ft_strncmp( (char *)stream->cursor,
+                     "%!PS-Adobe-3.0 Resource-CIDFont", 31 ) )
     {
       FT_TRACE2(( "[not a valid CID-keyed font]\n" ));
       error = CID_Err_Unknown_File_Format;
     }
 
-    FORGET_Frame();
+    FT_FRAME_EXIT();
     if ( error )
       goto Exit;
 
@@ -95,20 +93,20 @@
       /* fill input buffer */
       buff_len -= 256;
       if ( buff_len > 0 )
-        MEM_Move( buffer, limit, buff_len );
+        FT_MEM_MOVE( buffer, limit, buff_len );
 
       p = buffer + buff_len;
 
-      if ( FILE_Read( p, 256 + 10 - buff_len ) )
+      if ( FT_STREAM_READ( p, 256 + 10 - buff_len ) )
         goto Exit;
 
-      top_position = FILE_Pos() - buff_len;
+      top_position = FT_STREAM_POS() - buff_len;
       buff_len = 256 + 10;
 
       /* look for `StartData' */
       for ( p = buffer; p < limit; p++ )
       {
-        if ( p[0] == 'S' && strncmp( (char*)p, "StartData", 9 ) == 0 )
+        if ( p[0] == 'S' && ft_strncmp( (char*)p, "StartData", 9 ) == 0 )
         {
           /* save offset of binary data after `StartData' */
           offset = (FT_ULong)( top_position - ( limit - p ) + 10 );
@@ -123,8 +121,8 @@
     /* section                                                         */
 
     ps_len = offset - base_offset;
-    if ( FILE_Seek( base_offset )                    ||
-         EXTRACT_Frame( ps_len, parser->postscript ) )
+    if ( FT_STREAM_SEEK( base_offset )                    ||
+         FT_FRAME_EXTRACT( ps_len, parser->postscript ) )
       goto Exit;
 
     parser->data_offset    = offset;
@@ -139,7 +137,7 @@
   }
 
 
-  FT_LOCAL_DEF void
+  FT_LOCAL_DEF( void )
   CID_Done_Parser( CID_Parser*  parser )
   {
     /* always free the private dictionary */
@@ -148,7 +146,7 @@
       FT_Stream  stream = parser->stream;
 
 
-      RELEASE_Frame( parser->postscript );
+      FT_FRAME_RELEASE( parser->postscript );
     }
     parser->root.funcs.done( &parser->root );
   }
