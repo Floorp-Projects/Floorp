@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.25 2002/08/02 21:41:00 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.26 2002/08/08 18:02:34 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -956,7 +956,7 @@ nsslowkey_OpenKeyDB(PRBool readOnly, const char *appName, const char *prefix,
     }
 
     handle->appname = appName ? PORT_Strdup(appName) : NULL ;
-    handle->dbname = appName ? PORT_Strdup(dbname) : 
+    handle->dbname = (appName == NULL) ? PORT_Strdup(dbname) : 
 			(prefix ? PORT_Strdup(prefix) : NULL);
     handle->readOnly = readOnly;
    
