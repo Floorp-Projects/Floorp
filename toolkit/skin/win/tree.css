@@ -217,11 +217,11 @@ treechildren:-moz-tree-column(insertafter) {
   list-style-image: none;
 }
 
-treecol:not([hideheader="true"] > .treecol-sortdirection[sortDirection="ascending"] {
+treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
   list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
 }
 
-treecol:not([hideheader="true"] > .treecol-sortdirection[sortDirection="descending"] {
+treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
   list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
 }
 
