@@ -42,7 +42,7 @@
 
 #ifdef RICHIE_VCARD
 # include "mimevcrd.h"  /* for MIME_VCardConverter */
-#endif RICHIE_VCARD
+#endif 
 
 # include "edt.h"
 extern int XP_FORWARDED_MESSAGE_ATTACHMENT;

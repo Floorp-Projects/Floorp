@@ -23,12 +23,6 @@
 #include "prmem.h"
 #include "plstr.h"
 
-void * 
-FE_SetTimeout(TimeoutCallbackFunction func, void * closure, PRUint32 msecs)
-{
-	return NULL;
-}
-
 /* RICHIE - THIS HACK MUST GO!!! - INCLUDING FILE TO TRY TO KEEP DIRECTORY CLEAN */
 #ifdef XP_UNIX
 #define PUBLIC
@@ -36,6 +30,11 @@ FE_SetTimeout(TimeoutCallbackFunction func, void * closure, PRUint32 msecs)
 #include "..\..\..\lib\xp\xp_time.c"
 #endif
 
+PUBLIC void * 
+FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
+{
+    return NULL;
+}
 
 char 
 *XP_GetStringForHTML (int i, PRInt16 wincsid, char* english)

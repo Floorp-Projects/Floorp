@@ -91,10 +91,6 @@ OBJS=							\
 			.\$(OBJDIR)\mimeunty.obj	\
 			.\$(OBJDIR)\mimemoz.obj		\
 			.\$(OBJDIR)\mimecth.obj		\
-# VCARD REMOVAL EFFORT
-			.\$(OBJDIR)\mimevcrd.obj	\
-			.\$(OBJDIR)\oldvcc.obj		\
-			.\$(OBJDIR)\oldvobj.obj		\
 #
 # THIS WILL NEED WORK AFTER WE GET A LIBMSG MORE XP-COM-afied
 #			.\$(OBJDIR)\mimedrft.obj	\
@@ -104,14 +100,11 @@ OBJS=							\
 # EXTERNAL (OLD) DEPENDENCIES - SHOULD EVENTUALLY BE REMOVED 
 # WHEN NEW WORLD FUNCTIONS ARE FOUND 
 			.\$(OBJDIR)\oldnet.obj		\
-			.\$(OBJDIR)\oldxp.obj		\
 			.\$(OBJDIR)\oldi18n.obj		\
 			.\$(OBJDIR)\oldmsg.obj		\
 			.\$(OBJDIR)\oldmaddr.obj	\
 			.\$(OBJDIR)\oldfile.obj		\
-# I18N STUFF THAT HAS TO BE REMOVED! 
-#			.\$(OBJDIR)\cvchcode.obj	\
-#			.\$(OBJDIR)\doc_ccc.obj	\
+			.\$(OBJDIR)\oldxp.obj		\
 			$(NULL)
 
 #//------------------------------------------------------------------------

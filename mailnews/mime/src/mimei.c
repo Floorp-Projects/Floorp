@@ -50,7 +50,6 @@
 #include "mimetenr.h"	/*   |     |     |     |--- MimeInlineTextEnriched	*/
 /* SUPPORTED VIA PLUGIN    |     |     |--------- MimeInlineTextCalendar  */
 
-#define RICHIE_VCARD 1
 #ifdef RICHIE_VCARD
 #include "mimevcrd.h" /*   |     |     |--------- MimeInlineTextVCard		*/
 #endif
@@ -76,6 +75,7 @@ static int mime_classinit(MimeObjectClass *class);
  */
 typedef struct {
   char        *content_type;
+  PRBool      force_inline_display;
   char        *file_name;
   PRLibrary   *ct_handler;
 } cthandler_struct;
@@ -143,8 +143,12 @@ char *
 get_content_type(cthandler_struct *ct)
 {
   typedef char * (*mime_get_ct_fn_type)(void);
+  mime_get_ct_fn_type     getct_fn;
 
-  mime_get_ct_fn_type getct_fn = (mime_get_ct_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_GetContentType"); 
+  if (!ct)
+    return NULL;
+
+  getct_fn = (mime_get_ct_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_GetContentType"); 
   if (!getct_fn)
     return NULL;
 
@@ -154,11 +158,15 @@ get_content_type(cthandler_struct *ct)
 MimeObjectClass * 
 create_content_type_handler_class(cthandler_struct *ct)
 {
-  typedef MimeObjectClass * (*mime_create_class_fn_type)(const char *);
+  typedef MimeObjectClass * (*mime_create_class_fn_type)(const char *, PRBool *);
+  mime_create_class_fn_type   class_fn;
 
-  mime_create_class_fn_type class_fn = (mime_create_class_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_CreateContentTypeHandlerClass"); 
+  if (!ct)
+    return NULL;
+
+  class_fn = (mime_create_class_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_CreateContentTypeHandlerClass"); 
   if (class_fn)
-    return (class_fn)(ct->content_type);
+    return (class_fn)(ct->content_type, &(ct->force_inline_display));
   else
     return NULL;
 }
@@ -194,6 +202,7 @@ do_plugin_discovery(void)
   cthandler_list = PR_MALLOC(count * sizeof(cthandler_struct));
   if (!cthandler_list)
     return 0;
+  XP_MEMSET(cthandler_list, 0, (count * sizeof(cthandler_struct)));
 
   dir = PR_OpenDir(path);
   if (!dir)
@@ -258,6 +267,25 @@ mime_locate_external_content_handler(const char *content_type)
 
   return NULL;
 }
+
+/* 
+ * This routine will find all content type handler for a specifc content
+ * type (if it exists)
+ */
+PRBool
+force_inline_display(const char *content_type)
+{
+  PRInt32           i;
+
+  for (i=0; i<plugin_count; i++)
+  {
+    if (PL_strcasecmp(content_type, cthandler_list[i].content_type) == 0)
+      return( cthandler_list[i].force_inline_display );
+  }
+
+  return FALSE;
+}
+
 
 /* This is necessary to expose the MimeObject method outside of this DLL */
 int
@@ -636,23 +664,23 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
     if (mime_subclass_p(class,(MimeObjectClass *)&mimeInlineTextVCardClass))
   		StrAllocCopy(content_disposition, "inline");
 	  else
-#else
-    if (!PL_strcasecmp(content_type+5,		"x-vcard"))
-  		StrAllocCopy(content_disposition, "inline");
-    else
 #endif
 
-		content_disposition = (hdrs
-							   ? MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION,
-												 PR_TRUE, PR_FALSE)
+    /* Check to see if the plugin should override the content disposition
+       to make it appear inline. One example is a vcard which has a content
+       disposition of an "attachment;" */
+    if (force_inline_display(content_type))
+  		StrAllocCopy(content_disposition, "inline");
+    else
+  		content_disposition = (hdrs
+							   ? MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION, PR_TRUE, PR_FALSE)
 							   : 0);
   }
 
-  if (!content_disposition ||
-	  !PL_strcasecmp(content_disposition, "inline"))
-	;	/* Use the class we've got. */
+  if (!content_disposition || !PL_strcasecmp(content_disposition, "inline"))
+    ;	/* Use the class we've got. */
   else
-	class = (MimeObjectClass *)&mimeExternalObjectClass;
+    class = (MimeObjectClass *)&mimeExternalObjectClass;
 
   PR_FREEIF(content_disposition);
   obj = mime_new (class, hdrs, content_type);
