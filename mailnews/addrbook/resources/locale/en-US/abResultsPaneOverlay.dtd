@@ -1,0 +1,4 @@
+<!ENTITY nameCol.label                     "Name">
+<!ENTITY emailCol.label                    "Email">
+<!ENTITY workPhoneCol.label                "Phone">
+<!ENTITY organizationCol.label             "Company">
