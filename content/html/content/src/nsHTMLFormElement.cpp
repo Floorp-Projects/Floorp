@@ -744,47 +744,47 @@ nsHTMLFormElement::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIDOMNode> parentA;
+  nsCOMPtr<nsIDOMNode> parentANode;
   PRInt32 indexA;
-  rv = a->GetParentNode(getter_AddRefs(parentA));
+  rv = a->GetParentNode(getter_AddRefs(parentANode));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!parentA) {
+  if (!parentANode) {
     return NS_ERROR_UNEXPECTED;
   }
 
   {
     // To get the index, we must turn them both into contents
     // and do IndexOf().  Ick.
-    nsCOMPtr<nsIContent> parentA(do_QueryInterface(parentA));
+    nsCOMPtr<nsIContent> parentA(do_QueryInterface(parentANode));
     nsCOMPtr<nsIContent> contentA(do_QueryInterface(a));
-    if (!parentA && !contentA) {
+    if (!parentA || !contentA) {
       return NS_ERROR_UNEXPECTED;
     }
     rv = parentA->IndexOf(contentA, indexA);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIDOMNode> parentB;
+  nsCOMPtr<nsIDOMNode> parentBNode;
   PRInt32 indexB;
-  rv = b->GetParentNode(getter_AddRefs(parentB));
+  rv = b->GetParentNode(getter_AddRefs(parentBNode));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!parentB) {
+  if (!parentBNode) {
     return NS_ERROR_UNEXPECTED;
   }
 
   {
     // To get the index, we must turn them both into contents
     // and do IndexOf().  Ick.
-    nsCOMPtr<nsIContent> parentB(do_QueryInterface(parentB));
+    nsCOMPtr<nsIContent> parentB(do_QueryInterface(parentBNode));
     nsCOMPtr<nsIContent> bContent(do_QueryInterface(b));
-    if (!parentB && !bContent) {
+    if (!parentB || !bContent) {
       return NS_ERROR_UNEXPECTED;
     }
     rv = parentB->IndexOf(bContent, indexB);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  *retval = ComparePoints(parentA, indexA, parentB, indexB);
+  *retval = ComparePoints(parentANode, indexA, parentBNode, indexB);
   return NS_OK;
 }
 
