@@ -2871,7 +2871,6 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
                                            const nsHTMLReflowState& aReflowState, 
                                            nscoord aDefaultHeight) 
 {
-  NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
   nsresult rv = NS_OK;
   nscoord result = aDefaultHeight;
