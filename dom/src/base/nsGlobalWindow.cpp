@@ -64,6 +64,7 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIDocCharset.h"
 #include "nsIDocument.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
@@ -72,7 +73,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventStateManager.h"
 #include "nsIHttpProtocolHandler.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -236,6 +236,7 @@ NS_INTERFACE_MAP_BEGIN(GlobalWindowImpl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
 NS_INTERFACE_MAP_END
 
@@ -2955,6 +2956,28 @@ GlobalWindowImpl::GetDocument(nsIDOMDocumentView ** aDocumentView)
   }
 
   return rv;
+}
+
+///*****************************************************************************
+// GlobalWindowImpl::nsIInterfaceRequestor
+//*****************************************************************************   
+NS_IMETHODIMP GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
+{
+  NS_ENSURE_ARG_POINTER(aSink);
+  *aSink = nsnull;
+
+  if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
+    if (mDocShell) {
+      nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
+      *aSink = docCharset;
+    }
+  }
+  else {
+    return QueryInterface(aIID, aSink);
+  }
+
+  NS_IF_ADDREF(((nsISupports *) * aSink));
+  return NS_OK;
 }
 
 //*****************************************************************************
