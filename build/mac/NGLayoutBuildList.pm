@@ -472,6 +472,7 @@ sub MakeResourceAliases()
 
         _copy(":mozilla:profile:defaults:bookmarks.html",                                                                       "$default_profile_dir"."bookmarks.html");
         _copy(":mozilla:profile:defaults:panels.rdf",                                                                           "$default_profile_dir"."panels.rdf");
+        _copy(":mozilla:profile:defaults:search.rdf",                                                                           "$default_profile_dir"."search.rdf");
 
 	# Default _pref_ directory stuff
 	my($default_pref_dir) = "$defaults_dir"."Pref:";
@@ -662,8 +663,8 @@ sub MakeResourceAliases()
                 _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-skin",            "$search_skin_chrome_dir");
                 _InstallResources(":mozilla:xpfe:components:search:resources:locale:en-US:MANIFEST",            "$search_locale_chrome_dir");
 
-		my($searchdatasets_dir) = "$resource_dir" . "rdf:datasets:";
-                _InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",                          "$searchdatasets_dir");
+		# Make copies (not aliases) of the various search files
+                _InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",                  "${dist_dir}Search Plugins", 1);
         }
         {
             my($sidebar_content_chrome_dir) = "$communicator_content_chrome_dir"."sidebar:";
