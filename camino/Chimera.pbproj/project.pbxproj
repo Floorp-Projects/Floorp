@@ -466,6 +466,7 @@
 				F632AF8502B9AEBB01000103,
 				F59236C202C89ACA0100012B,
 				F5A3669802CCFAF601DC3354,
+				F55C4DD402D2864E0130B065,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -1169,6 +1170,7 @@
 		};
 		F512F53302D17A2601072C9F = {
 			children = (
+				F55C4DD302D2864D0130B065,
 				29B97316FDCFA39411CA2CEA,
 				F59236C002C89AC90100012B,
 				F5AE04BA0206A4FE01A967DF,
@@ -2784,6 +2786,17 @@
 		};
 		F55A9BC70228CCE201DAE4DB = {
 			fileRef = F55A9BC60228CCE101DAE4DB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F55C4DD302D2864D0130B065 = {
+			isa = PBXFileReference;
+			path = CHUserDefaults.h;
+			refType = 4;
+		};
+		F55C4DD402D2864E0130B065 = {
+			fileRef = F55C4DD302D2864D0130B065;
 			isa = PBXBuildFile;
 			settings = {
 			};
