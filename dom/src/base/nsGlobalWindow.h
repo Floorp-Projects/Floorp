@@ -435,16 +435,22 @@ protected:
 #define DOM_CONTROLLER
 #ifdef DOM_CONTROLLER
 class nsIContentViewerEdit;
-#include "nsWeakReference.h"
-class nsDOMWindowController : public nsIController, public nsSupportsWeakReference 
+
+class nsISelectionController;
+
+class nsDOMWindowController : public nsIController
 {
 public:
 	nsDOMWindowController( nsIDOMWindow* aWindow );
+    NS_DECL_ISUPPORTS
   	NS_DECL_NSICONTROLLER
-  	NS_DECL_ISUPPORTS
+  	
 private:
+  nsresult GetPresShell(nsIPresShell **aPresShell);
 	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);	
-	nsCOMPtr<nsIWeakReference> mWindow;
+  nsresult GetSelectionController(nsISelectionController ** aSelCon);
+
+	nsIDOMWindow *mWindow;
 };
 #endif // DOM_CONTROLLER
 

@@ -68,6 +68,7 @@
 #include "nsIContentViewerEdit.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
+#include "nsISelectionController.h"
 #include "nsIScrollableView.h"
 #include "nsIDeviceContext.h"
 #include "nsScreen.h"
@@ -117,6 +118,36 @@ static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static NS_DEFINE_CID(kXULControllersCID,          NS_XULCONTROLLERS_CID);
+
+//STATIC METHOD
+//one MORE implementation of this function
+static
+nsIPresShell*
+GetPresShellFor(nsIWebShell* aWebShell)
+{
+  nsIPresShell* shell = nsnull;
+  if (nsnull != aWebShell) {
+    nsIContentViewer* cv = nsnull;
+    aWebShell->GetContentViewer(&cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx;
+        docv->GetPresContext(cx);
+	      if (nsnull != cx) {
+	        cx->GetShell(&shell);
+	        NS_RELEASE(cx);
+	      }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  return shell;
+}
+//END STATICS
+
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
@@ -390,7 +421,7 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
     mWebShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
     if(chromeEventHandler)
-      mChromeEventHandler = chromeEventHandler.get(); // Weak ref
+      mChromeEventHandler = chromeEventHandler.get(); //   ref
   }
    
   return NS_OK;
@@ -3519,25 +3550,65 @@ const   char* sCutString = "cmd_cut";
 const   char* sPasteString = "cmd_paste";
 const   char* sSelectAllString = "cmd_selectAll";
 
+const   char* sBeginLineString = "cmd_beginLine";
+const   char* sEndLineString   = "cmd_endLine";
+const   char* sSelectBeginLineString = "cmd_selectBeginLine";
+const   char* sSelectEndLineString   = "cmd_selectEndLine";
+
+const   char* sScrollTopString = "cmd_scrollTop";
+const   char* sScrollBottomString = "cmd_scrollBottom";
+
+const   char* sMoveTopString   = "cmd_moveTop";
+const   char* sMoveBottomString= "cmd_moveBottom";
+const   char* sSelectMoveTopString   = "cmd_selectTop";
+const   char* sSelectMoveBottomString= "cmd_selectBottom";
+
+const   char* sDownString      = "cmd_linedown";
+const   char* sUpString        = "cmd_lineup";
+const   char* sSelectDownString = "cmd_selectLineDown";
+const   char* sSelectUpString   = "cmd_selectLineUp";
+
+const   char* sLeftString      = "cmd_charPrevious";
+const   char* sRightString     = "cmd_charNext";
+const   char* sSelectLeftString = "cmd_selectCharPrevious";
+const   char* sSelectRightString= "cmd_selectCharNext";
+
+
+const   char* sWordLeftString      = "cmd_wordPrevious";
+const   char* sWordRightString     = "cmd_wordNext";
+const   char* sSelectWordLeftString = "cmd_selectWordPrevious";
+const   char* sSelectWordRightString= "cmd_selectWordNext";
+
+const   char* sScrollPageUp    = "cmd_scrollPageUp";
+const   char* sScrollPageDown  = "cmd_scrollPageDown";
+
+const   char* sMovePageUp    = "cmd_scrollPageUp";
+const   char* sMovePageDown  = "cmd_scrollPageDown";
+const   char* sSelectMovePageUp     = "cmd_selectPageUp";
+const   char* sSelectMovePageDown   = "cmd_selectPageDown";
+
 NS_IMPL_ADDREF( nsDOMWindowController )
 NS_IMPL_RELEASE( nsDOMWindowController )
 
 
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowController)
-   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIController)
    NS_INTERFACE_MAP_ENTRY(nsIController)
 NS_INTERFACE_MAP_END
+
+
+//NS_IMPL_QUERY_INTERFACE1(nsDOMWindowController, nsIController)
 
 nsDOMWindowController::nsDOMWindowController( nsIDOMWindow* aWindow)
 {
 	NS_INIT_REFCNT();
-	mWindow = do_QueryInterface( aWindow );
+	mWindow =  aWindow;
 }
 
 nsresult nsDOMWindowController::GetEditInterface( nsIContentViewerEdit** aEditInterface)
 {	 
 	nsresult result = NS_ERROR_FAILURE;
-	nsCOMPtr<nsPIDOMWindow> PIWindow = do_QueryReferent(mWindow );
+	nsCOMPtr<nsPIDOMWindow> PIWindow = do_QueryInterface(mWindow );
 	if ( PIWindow.get() == NULL ) 
 		return result;
 	nsCOMPtr<nsIWebShell> webshell;
@@ -3552,6 +3623,7 @@ nsresult nsDOMWindowController::GetEditInterface( nsIContentViewerEdit** aEditIn
     		if ( edit.get() != NULL )
 			{
 				*aEditInterface = edit;
+        NS_ADDREF((*aEditInterface));
 				return NS_OK;
 			}
     	}
@@ -3560,14 +3632,54 @@ nsresult nsDOMWindowController::GetEditInterface( nsIContentViewerEdit** aEditIn
   return result;
 }
 
+nsresult
+nsDOMWindowController::GetPresShell(nsIPresShell** aPresShell)
+{
+	nsresult result = NS_ERROR_FAILURE;
+	nsCOMPtr<nsPIDOMWindow> PIWindow = do_QueryInterface(mWindow );
+	if ( PIWindow.get() == NULL ) 
+		return NS_ERROR_FAILURE;
+	nsCOMPtr<nsIWebShell> webshell;
+	result = PIWindow->GetWebShell( getter_AddRefs( webshell ) );
+  if (NS_SUCCEEDED(result) && webshell)
+  {
+    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(GetPresShellFor(webshell));
+    if (presShell)
+    {
+      *aPresShell = presShell;
+      NS_ADDREF((*aPresShell));
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsDOMWindowController::GetSelectionController(nsISelectionController **aSelCon)
+{
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult result = GetPresShell(getter_AddRefs(presShell));
+  if (presShell && NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsISelectionController> selController = do_QueryInterface(presShell); 
+    if (selController)
+    {
+      *aSelCon = selController;
+      NS_ADDREF(*aSelCon);
+      return NS_OK;
+    }
+  }
+  return result ? result : NS_ERROR_FAILURE;
+}
+
+
+
 NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
 
-  *aResult = PR_TRUE;
-  return NS_OK;
-  #if 0
+  *aResult = PR_FALSE;
   nsresult rv = NS_ERROR_FAILURE;
   
   nsCOMPtr< nsIContentViewerEdit> editInterface;
@@ -3577,8 +3689,11 @@ NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
   	
   if (PR_TRUE== nsAutoString(sCopyString).Equals(aCommand))
   { 
-    rv = editInterface->GetCopyable( aResult );
+    //1rv = editInterface->GetCopyable( aResult );
+    rv = NS_OK;
+    *aResult = PR_TRUE;//hack for now
   }
+#if 0
   else if (PR_TRUE==nsAutoString(sCutString).Equals(aCommand))    
   { 
     rv =  editInterface->GetCutable( aResult);
@@ -3592,9 +3707,9 @@ NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
     *aResult = PR_TRUE;
     rv = NS_OK;
   }
-
+#endif 
   return rv;
-  #endif 
+
 }
 
 NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand, PRBool *aResult)
@@ -3604,11 +3719,39 @@ NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand, 
   
   *aResult = PR_FALSE;
   if (
-  	(PR_TRUE== nsAutoString(sCopyString).Equals(aCommand))
-  	|| (PR_TRUE== nsAutoString(sSelectAllString).Equals(aCommand))
-  	|| (PR_TRUE== nsAutoString(sCutString).Equals(aCommand))
-  	|| (PR_TRUE== nsAutoString(sPasteString).Equals(aCommand))
-)
+  	(PR_TRUE== nsAutoString(sCopyString).Equals(aCommand)) ||
+  	  (PR_TRUE== nsAutoString(sSelectAllString).Equals(aCommand)) ||
+  	  (PR_TRUE== nsAutoString(sCutString).Equals(aCommand)) ||
+  	  (PR_TRUE== nsAutoString(sPasteString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sBeginLineString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sEndLineString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectBeginLineString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectEndLineString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sScrollTopString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sScrollBottomString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sMoveTopString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sMoveBottomString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectMoveTopString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectMoveBottomString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sDownString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sUpString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sLeftString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sRightString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectDownString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectUpString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectLeftString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectRightString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sWordLeftString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sWordRightString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectWordLeftString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectWordRightString).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sScrollPageUp).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sScrollPageDown).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sMovePageUp).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sMovePageDown).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectMovePageUp).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sSelectMovePageDown).Equals(aCommand))
+      )
   {
     *aResult = PR_TRUE;
   }
@@ -3621,13 +3764,19 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   NS_ENSURE_ARG_POINTER(aCommand);
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr< nsIContentViewerEdit> editInterface;
+  nsCOMPtr<nsISelectionController> selCont;
   rv = GetEditInterface( getter_AddRefs( editInterface ) );
+  nsCOMPtr<nsIPresShell> presShell;
   if ( NS_FAILED ( rv ) )
   	return rv;
   	
   if (PR_TRUE== nsAutoString(sCopyString).Equals(aCommand))
   { 
-    rv = editInterface->CopySelection();
+    //rv = editInterface->CopySelection();
+    if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
+    {
+      rv = presShell->DoCopy();
+    }
   }
   else if (PR_TRUE== nsAutoString(sSelectAllString).Equals(aCommand))    
   { 
@@ -3640,6 +3789,16 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   else if (PR_TRUE== nsAutoString( sSelectAllString ).Equals(aCommand))    
   { 
     rv = editInterface->SelectAll();
+  }
+  else if (PR_TRUE==nsAutoString(sScrollPageUp).Equals(aCommand))  //ScrollPageUp
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->ScrollPage(PR_FALSE);
+  }
+  else if (PR_TRUE==nsAutoString(sScrollPageDown).Equals(aCommand))  //ScrollPageDown
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->ScrollPage(PR_TRUE);
   }
 
   return NS_OK;
