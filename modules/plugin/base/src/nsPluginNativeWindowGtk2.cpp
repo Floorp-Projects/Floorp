@@ -65,6 +65,7 @@ public:
 private:
   GtkWidget*  mGtkSocket;
   nsresult  CreateXEmbedWindow();
+  void      SetAllocation();
   PRBool    CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstance> &aPluginInstance);
 };
 
@@ -116,15 +117,19 @@ nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aP
                ((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &val);
     }
 #ifdef DEBUG
-    printf("nsPluginNativeWindowGtk2: NPPVpluginNeedsXEmbed=%d\n", &val);
+    printf("nsPluginNativeWindowGtk2: NPPVpluginNeedsXEmbed=%d\n", val);
 #endif
     if(val) {
       CreateXEmbedWindow();
     }
-    if(mGtkSocket) 
+
+    if(mGtkSocket) {
+      // Make sure to resize and re-place the window if required
+      SetAllocation();
       window = (nsPluginPort *)gtk_socket_get_id(GTK_SOCKET(mGtkSocket));
+    }
 #ifdef DEBUG
-    printf("nsPluginNativeWindowGtk2: call SetWindow with xid=%p\n", window);
+    printf("nsPluginNativeWindowGtk2: call SetWindow with xid=%p\n", (void *)window);
 #endif
     aPluginInstance->SetWindow(this);
   }
@@ -150,12 +155,9 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
     gtk_container_add(container, mGtkSocket);
     gtk_widget_realize(mGtkSocket);
 
-    GtkAllocation new_allocation;
-    new_allocation.x = 0;
-    new_allocation.y = 0;
-    new_allocation.width = width;
-    new_allocation.height = height;
-    gtk_widget_size_allocate(mGtkSocket, &new_allocation);
+    // Resize before we show
+    SetAllocation();
+
     gtk_widget_show(mGtkSocket);
 
     gdk_flush();
@@ -163,6 +165,18 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
   }
 
   return NS_OK;
+}
+
+void nsPluginNativeWindowGtk2::SetAllocation() {
+  if (!mGtkSocket)
+    return;
+
+  GtkAllocation new_allocation;
+  new_allocation.x = 0;
+  new_allocation.y = 0;
+  new_allocation.width = width;
+  new_allocation.height = height;
+  gtk_widget_size_allocate(mGtkSocket, &new_allocation);
 }
 
 PRBool nsPluginNativeWindowGtk2::CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstance> &aPluginInstance)
