@@ -835,11 +835,13 @@ void nsTableFrame::SetMinColSpanForTable()
     if (1<minColSpan)
     {
       mCellMap->SetMinColSpan(colIndex, minColSpan);
+#ifdef NS_DEBUG
       if (gsDebug==PR_TRUE)
       {
         printf("minColSpan for col %d set to %d\n", colIndex, minColSpan);
         DumpCellMap();
       }
+#endif
     }
   }
 }
@@ -889,8 +891,10 @@ void nsTableFrame::AddCellToTable (nsTableRowFrame *aRowFrame,
     colIndex++;
   }
 
+#ifdef NS_DEBUG
   if (gsDebug==PR_TRUE)
     DumpCellMap ();
+#endif
 }
 
 NS_METHOD nsTableFrame::ReBuildCellMap()
@@ -1492,11 +1496,13 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
         delete mCellMap;
       mCellMap = new nsCellMap(0,0);
       ReBuildCellMap();
+#ifdef NS_DEBUG
       if (PR_TRUE==gsDebugIR)
       {
         DumpCellMap();
         printf("tableFrame thinks colCount is %d\n", mEffectiveColCount);
       }
+#endif
       needsRecalc=PR_TRUE;
     }
     if (PR_FALSE==IsFirstPassValid())
