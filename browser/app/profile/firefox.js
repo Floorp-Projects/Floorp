@@ -203,7 +203,7 @@ pref("browser.link.open_newwindow", 2);
 // 0: no restrictions - divert everything
 // 1: don't divert window.open at all
 // 2: don't divert window.open with features
-pref("browser.link.open_newwindow.restriction", 2);
+pref("browser.link.open_newwindow.restriction", 0);
 
 // Tab browser preferences.
 pref("browser.tabs.loadInBackground", true);
