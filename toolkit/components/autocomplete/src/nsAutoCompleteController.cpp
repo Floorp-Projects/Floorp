@@ -67,7 +67,7 @@ nsAutoCompleteController::nsAutoCompleteController() :
 
 nsAutoCompleteController::~nsAutoCompleteController()
 {
-  DetachFromInput();
+  SetInput(nsnull);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -88,18 +88,35 @@ nsAutoCompleteController::GetMatchCount(PRUint32 *aMatchCount)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::AttachToInput(nsIAutoCompleteInput *aInput, const nsAString &aSearchString)
+nsAutoCompleteController::GetInput(nsIAutoCompleteInput **aInput)
 {
-  if (!aInput)
-    return NS_ERROR_ILLEGAL_VALUE;
+  *aInput = mInput;
+  NS_IF_ADDREF(*aInput);
+  return NS_OK;
+}
 
-  if (mInput)
-    DetachFromInput();
-
+NS_IMETHODIMP
+nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
+{
+  // Don't do anything if the input isn't changing.
+  if (mInput == aInput)
+    return NS_OK;
+  
+  // Clear out the current search context
+  if (mInput) {
+    ClearSearchTimer();
+    ClearResults();
+    ClosePopup();
+    mSearches->Clear();
+  }
+    
   mInput = aInput;
-  mSearchString = aSearchString;
 
-  // reset all search state members to default values
+  // Nothing more to do if the input was just being set to null.
+  if (!aInput)
+    return NS_OK;
+  
+  // Reset all search state members to default values
   mSearchString.Truncate(0);
   mEnterAfterSearch = PR_FALSE;
   mNeedToComplete = PR_FALSE;
@@ -109,7 +126,7 @@ nsAutoCompleteController::AttachToInput(nsIAutoCompleteInput *aInput, const nsAS
   mRowCount = 0;
   mSearchesOngoing = 0;
   
-  // initialize our list of search objects
+  // Initialize our list of search objects
   PRUint32 searchCount;
   mInput->GetSearchCount(&searchCount);
   mResults->SizeTo(searchCount);
@@ -131,26 +148,15 @@ nsAutoCompleteController::AttachToInput(nsIAutoCompleteInput *aInput, const nsAS
       mSearches->AppendElement(search);
   }
 
-  if (!mSearchString.IsEmpty())
-    StartSearchTimer();
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::DetachFromInput()
-{
-  if (mInput) {
-    ClearSearchTimer();
-    ClearResults();
-    ClosePopup();
-    
-    // release refcounted and allocated members
-    mInput = nsnull;
-    mSearches->Clear();
-    mSearchString.Truncate(0);
-  }
-    
+nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
+{ 
+  mSearchString = aSearchString;
+  StartSearchTimer();
+
   return NS_OK;
 }
 

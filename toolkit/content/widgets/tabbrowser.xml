@@ -97,7 +97,7 @@
           </xul:tabs>
         </xul:hbox>
         <xul:tabpanels flex="1" class="plain">
-          <xul:browser type="content-primary" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
+          <xul:browser type="content-primary" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
         </xul:tabpanels>
       </xul:tabbox>
       <children/>
@@ -789,6 +789,9 @@
             // clean up the before/afterselected attributes before removing the tab
             oldTab.selected = false;
 
+            // XXX browser's destructor isn't always called, so we force a cleanup ourselves
+            oldBrowser.destroy();
+            
             this.mTabContainer.removeChild(oldTab);
             this.mPanelContainer.removeChild(oldBrowser);
 

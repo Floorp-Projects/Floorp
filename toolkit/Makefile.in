@@ -42,7 +42,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= xre skin/win
+DIRS	= xre components skin/win
 
 ifeq (,$(filter OS2 WINNT,$(OS_ARCH)))
 DIRS	+= skin/unix

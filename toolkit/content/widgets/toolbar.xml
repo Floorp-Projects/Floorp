@@ -196,6 +196,9 @@
               }
             }
             
+            if (!newItem)
+              return;
+
             var insertItem = newItem;
             
             // Wrap the item in another node if so inclined.

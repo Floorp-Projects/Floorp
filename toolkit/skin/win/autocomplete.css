@@ -67,7 +67,7 @@ textbox {
 
 /* ::::: autocomplete popups ::::: */
 
-.autocomplete-result-popup,
+popup[type="autocomplete"],
 .autocomplete-history-popup {
   border-width: 1px;
   -moz-border-top-colors: ThreeDDarkShadow;
