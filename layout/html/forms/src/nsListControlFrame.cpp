@@ -631,8 +631,35 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     // of the smallest box that can drawn around it's contents.
     visibleHeight = scrolledAreaHeight;
 
-    if (visibleHeight > (kMaxDropDownRows * heightOfARow)) {
-      visibleHeight = (kMaxDropDownRows * heightOfARow);
+    nscoord maxRows = kMaxDropDownRows;
+    if (visibleHeight > (maxRows * heightOfARow)) {
+      visibleHeight = (maxRows * heightOfARow);
+      // This is an adaptive algorithm for figuring out how many rows 
+      // should be displayed in the drop down. The standard size is 20 rows, 
+      // but on 640x480 it is typically too big.
+      // This takes the height of the screen divides it by two and then subtracts off 
+      // an estimated height of the combobox. I estimate it by taking the max element size
+      // of the drop down and multiplying it by 2 (this is arbitrary) then subtract off
+      // the border and padding of the drop down (again rather arbitrary)
+      // This all breaks down if the font of the combobox is a lot larger then the option items
+      // or CSS style has set the height of the combobox to be rather large.
+      // We can fix these cases later if they actually happen.
+      if (isInDropDownMode) {
+        nscoord screenHeightInPixels = 0;
+        if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
+          float   p2t;
+          aPresContext->GetPixelsToTwips(&p2t);
+          nscoord screenHeight = NSIntPixelsToTwips(screenHeightInPixels, p2t);
+
+          nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size
+          availDropHgt -= (border.top + border.bottom + padding.top + padding.bottom);
+
+          nscoord hgt = visibleHeight + border.top + border.bottom + padding.top + padding.bottom;
+          if (hgt > availDropHgt) {
+            visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
+          }
+        }
+      }
     }
    
   } else {
@@ -727,15 +754,20 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
+  if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
+    mCachedAvailableSize.width  = aDesiredSize.width - (border.left + border.right + padding.left + padding.right);
+    REFLOW_DEBUG_MSG2("** nsLCF Caching AW: %d\n", PX(mCachedAvailableSize.width));
+  }
+  if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+    mCachedAvailableSize.height = aDesiredSize.height - (border.top + border.bottom + padding.top + padding.bottom);
+    REFLOW_DEBUG_MSG2("** nsLCF Caching AH: %d\n", PX(mCachedAvailableSize.height));
+  }
 
-  mCachedAvailableSize.width  = aDesiredSize.width - (border.left + border.right + padding.left + padding.right);
-  mCachedAvailableSize.height = aDesiredSize.height - (border.top + border.bottom + padding.top + padding.bottom);
-
-  REFLOW_DEBUG_MSG3("** nsLCF Caching AW: %d  AH: %d\n", PX(mCachedAvailableSize.width), PX(mCachedAvailableSize.height));
+  //REFLOW_DEBUG_MSG3("** nsLCF Caching AW: %d  AH: %d\n", PX(mCachedAvailableSize.width), PX(mCachedAvailableSize.height));
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
 
-  REFLOW_DEBUG_MSG3("** Done nsLCF DW: %d  DH: %d\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
+  REFLOW_DEBUG_MSG3("** Done nsLCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
 
   REFLOW_COUNTER();
 
@@ -2219,6 +2251,12 @@ nsListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate
   return rv;
 }
 
+NS_IMETHODIMP
+nsListControlFrame::GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame** aFrame)
+{
+  return FirstChild(aPresContext, nsnull, aFrame);
+}
+
 // Send out an onchange notification.
 nsresult
 nsListControlFrame::SelectionChanged(nsIContent* aContent)
@@ -2759,9 +2797,8 @@ nsListControlFrame::GetScrollableView(nsIScrollableView*& aScrollableView)
 
   nsIView * scrollView;
   GetView(mPresContext, &scrollView);
-  nsIScrollableView * scrollableView = nsnull;
-  nsresult rv = scrollView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
-  NS_ASSERTION(NS_SUCCEEDED(rv) && scrollableView, "We must be able to get a ScrollableView");
+  nsresult rv = scrollView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&aScrollableView);
+  NS_ASSERTION(NS_SUCCEEDED(rv) && aScrollableView, "We must be able to get a ScrollableView");
 }
 
 //----------------------------------------------------------------------
@@ -3112,6 +3149,14 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
                 mStartExtendedIndex = mSelectedIndex;
                 mEndExtendedIndex   = kNothingSelected;
               }
+              // XXX - Are we cover up a problem here???
+              // Why aren't they getting flushed each time?
+              // because this isn't needed for Gfx
+              if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+                nsCOMPtr<nsIPresShell> presShell;
+                mPresContext->GetShell(getter_AddRefs(presShell));
+                presShell->FlushPendingNotifications();
+              }
             }
             REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
             } break;
@@ -3140,6 +3185,14 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
                 }
                 mStartExtendedIndex = mSelectedIndex;
                 mEndExtendedIndex   = kNothingSelected;
+              }
+              // XXX - Are we cover up a problem here???
+              // Why aren't they getting flushed each time?
+              // because this isn't needed for Gfx
+              if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+                nsCOMPtr<nsIPresShell> presShell;
+                mPresContext->GetShell(getter_AddRefs(presShell));
+                presShell->FlushPendingNotifications();
               }
             }
             REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
