@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 PROTOCOLS = $(filter data keyword gopher viewsource,$(NECKO_PROTOCOLS))
 
 # we don't need to build anything here at all if there are no protocols
-ifdef PROTOCOLS
+ifneq (,$(strip $(PROTOCOLS)))
 
 MODULE		= necko2
 LIBRARY_NAME	= necko2
