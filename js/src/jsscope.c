@@ -558,8 +558,12 @@ js_DestroyScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop)
 	}
     }
 
-    /* Purge any cached weak links to prop, then free it. */
-    js_FlushPropertyCacheByProp(cx, (JSProperty *)sprop);
+    /*
+     * Purge any cached weak links to prop (unless we're running the gc, which
+     * flushed the whole cache), then free prop.
+     */
+    if (!cx->runtime->gcRunning)
+        js_FlushPropertyCacheByProp(cx, (JSProperty *)sprop);
     JS_free(cx, sprop);
 }
 
