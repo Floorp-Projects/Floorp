@@ -2175,6 +2175,7 @@ dnl = NS_USE_GCC
 dnl = NO_MDUPDATE
 dnl = NS_USE_NATIVE
 dnl = MOZILLA_CLIENT
+dnl = CLASSIC_NSPR
 dnl = 
 dnl = my_overrides.mk:
 dnl = 
@@ -2202,6 +2203,24 @@ dnl
 dnl Same as detected above.
 dnl
 MOZ_NSPRENV_USE_PTHREADS=$USE_PTHREADS
+
+dnl
+dnl CLASSIC_NSPR
+dnl
+dnl On Linux libc5, CLASSIC_NSPR needs to be set so that NSPR chooses
+dnl the correct threading implementation (user threads - not pthreads).
+dnl On Linux, CLASSIC_NSPR's only purpose to to control linking against
+dnl libpthreads.
+dnl
+MOZ_NSPRENV_CLASSIC_NSPR=
+case "$target" in
+	*-linux*)
+		if test "$USE_PTHREADS"x = x
+		then
+			MOZ_NSPRENV_CLASSIC_NSPR=1
+		fi
+	;;
+esac
 
 dnl 
 dnl BUILD_OPT
@@ -2238,24 +2257,10 @@ dnl use these anymore.
 dnl 
 MOZ_NSPRENV_NO_MDUPDATE=1
 
-dnl 
+dnl
 dnl MOZILLA_CLIENT
 dnl
-dnl On linux libc5, MOZILLA_CLIENT needs to be set so that NSPR chooses 
-dnl the correct threading implementation (user threads - not pthreads)
-dnl 
-dnl But, on libc6 linux, you cant set MOZILLA_CLIENT for NSPR cause it
-dnl screws things up.
-dnl
 MOZ_NSPRENV_MOZILLA_CLIENT=
-case "$target" in
-	*-linux*)
-		if test ! -x /lib/libc.so.6
-		then
-			MOZ_NSPRENV_MOZILLA_CLIENT=1
-		fi
-	;;
-esac
 
 dnl 
 dnl DIST
