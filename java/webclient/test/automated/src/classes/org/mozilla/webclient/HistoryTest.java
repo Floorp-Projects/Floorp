@@ -1,5 +1,5 @@
 /*
- * $Id: HistoryTest.java,v 1.2 2004/06/23 19:58:12 edburns%acm.org Exp $
+ * $Id: HistoryTest.java,v 1.3 2004/10/26 19:33:15 edburns%acm.org Exp $
  */
 
 /* 
@@ -25,8 +25,6 @@
  */
 
 package org.mozilla.webclient;
-
-import org.mozilla.util.THTTPD;
 
 import junit.framework.TestSuite;
 import junit.framework.TestResult;
@@ -55,29 +53,10 @@ public class HistoryTest extends WebclientTestCase {
     }
 
     public static Test suite() {
-	TestSuite result = new TestSuite() {
-		public void run(TestResult result) {
-		    serverThread = 
-			new THTTPD.ServerThread("LocalHTTPD",
-						new File (getBrowserBinDir() +
-							  "/../../java/webclient/build.test"), -1);
-		    serverThread.start();
-		    serverThread.P();
-		    super.run(result);
-		    try {
-			BrowserControlFactory.appTerminate();
-		    }
-		    catch (Exception e) {
-			fail();
-		    }
-		    serverThread.stopRunning();
-		}
-	    };
+	TestSuite result = createServerTestSuite();
 	result.addTestSuite(HistoryTest.class);
 	return (result);
     }
-
-    static THTTPD.ServerThread serverThread;
 
     static EventRegistration2 eventRegistration;
 
