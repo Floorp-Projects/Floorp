@@ -105,7 +105,7 @@ public:
     nsresult GetAgeValue(PRUint32 *result);
     nsresult GetMaxAgeValue(PRUint32 *result);
     nsresult GetDateValue(PRUint32 *result)         { return ParseDateHeader(nsHttp::Date, result); }
-    nsresult GetExpiresValue(PRUint32 *result)      { return ParseDateHeader(nsHttp::Expires, result); }
+    nsresult GetExpiresValue(PRUint32 *result);
     nsresult GetLastModifiedValue(PRUint32 *result) { return ParseDateHeader(nsHttp::Last_Modified, result); }
 
 private:
