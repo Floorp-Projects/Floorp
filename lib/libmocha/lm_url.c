@@ -617,7 +617,7 @@ lm_CheckURL(JSContext *cx, const char *url_string, JSBool checkFile)
     MochaDecoder *decoder;
 
     protocol = NET_ParseURL(url_string, GET_PROTOCOL_PART);
-    if (!protocol || *protocol == '\0') {
+    if (!protocol || *protocol == '\0' || XP_STRCHR(protocol, '?')) {
         lo_TopState *top_state;
 
 	obj = JS_GetGlobalObject(cx);
