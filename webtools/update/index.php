@@ -174,7 +174,6 @@ if ($securitywarning=="true") {
             }
         ?>
 	</ol>
-	<a href="/rss/?application=<?php echo"$application"; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
 	<h2>Most Popular <?php echo ucwords($application); ?> Themes</h2>
 	<ol class="popularlist">
 
@@ -216,7 +215,7 @@ if ($securitywarning=="true") {
             }
         ?>
 	</ol>
-
+	<a href="/rss/?application=<?php echo"$application"; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
 	<h2>New Additions</h2>
 	<ol class="popularlist">
 
