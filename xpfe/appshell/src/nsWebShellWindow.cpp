@@ -2741,7 +2741,7 @@ NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
 
 }
  
-NS_IMETHODIMP nsWebShellWindow::GetTitle(const PRUnichar** aResult)
+NS_IMETHODIMP nsWebShellWindow::GetTitle(PRUnichar** aResult)
 {
    // no, we didn't store the title for you. why so nosy?
    return NS_ERROR_FAILURE;
