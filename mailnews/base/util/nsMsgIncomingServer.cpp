@@ -775,6 +775,13 @@ nsMsgIncomingServer::ForgetPassword()
 }
 
 NS_IMETHODIMP
+nsMsgIncomingServer::ForgetSessionPassword()
+{
+    m_password.Truncate(0);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgIncomingServer::SetDefaultLocalPath(nsIFileSpec *aDefaultLocalPath)
 {
     nsresult rv;

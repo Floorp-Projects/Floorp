@@ -51,6 +51,7 @@
 #include "nsIWindowsHooks.h"
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
+#include "nsIObserverService.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -397,6 +398,7 @@ private:
     static DWORD mInstance;
     static char *mAppName;
     static nsIDOMWindow *mInitialWindow;
+    static PRBool mDidProfileStartup;
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
 
@@ -720,6 +722,7 @@ HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 nsIDOMWindow* nsNativeAppSupportWin::mInitialWindow = nsnull;
+PRBool nsNativeAppSupportWin::mDidProfileStartup = PR_FALSE;
 
 NOTIFYICONDATA nsNativeAppSupportWin::mIconData = { sizeof(NOTIFYICONDATA),
                                                     0,
@@ -1593,7 +1596,7 @@ nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
   // If we have a profile, everything is fine.
   PRBool haveProfile;
   rv = profileMgr->IsCurrentProfileAvailable(&haveProfile);
-  if (NS_SUCCEEDED(rv) && haveProfile)
+  if (mDidProfileStartup && NS_SUCCEEDED(rv) && haveProfile)
       return NS_OK;
 
   // If the profile selection is happening, fail.
@@ -1602,6 +1605,8 @@ nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
   if (NS_FAILED(rv) || doingProfileStartup) return NS_ERROR_FAILURE;
 
   rv = appShell->DoProfileStartup(args, PR_TRUE);
+
+  mDidProfileStartup = PR_TRUE;
 
   return rv;
 }
@@ -2051,10 +2056,11 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         }
     }
 
-    nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+    nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
-    if (NS_FAILED(rv)) return rv;
+    observerService->Notify(nsnull, NS_LITERAL_STRING("session-logout").get(), nsnull);
+
+    mDidProfileStartup = PR_FALSE;
 
     return NS_OK;
 }

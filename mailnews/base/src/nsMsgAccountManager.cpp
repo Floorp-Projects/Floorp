@@ -173,6 +173,7 @@ nsresult nsMsgAccountManager::Init()
     observerService->AddObserver(this, topic.get());
     observerService->AddObserver(this, NS_LITERAL_STRING("quit-application").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("network:offline-status-changed").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("session-logout").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
   }
 
@@ -213,6 +214,7 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
   nsAutoString quitApplicationString;
   quitApplicationString.AssignWithConversion("quit-application");
   nsAutoString offlineStatusChangedString(NS_LITERAL_STRING("network:offline-status-changed"));
+  NS_NAMED_LITERAL_STRING(sessionLogoutString, "session-logout");
   NS_NAMED_LITERAL_STRING(beforeProfileChangeString, "profile-before-change");
   if(topicString == shutdownString)
   {
@@ -232,7 +234,12 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
         CloseCachedConnections();
     }
   }
-  else if (beforeProfileChangeString.Equals(topicString)) {
+  else if (sessionLogoutString.Equals(topicString))
+  {
+    m_incomingServers.Enumerate(hashLogoutOfServer, nsnull);
+  }
+  else if (beforeProfileChangeString.Equals(topicString))
+  {
     Shutdown();
   }
 	
@@ -850,6 +857,22 @@ nsMsgAccountManager::hashUnloadServer(nsHashKey *aKey, void *aData,
 
 	return PR_TRUE;
 
+}
+
+PRBool
+nsMsgAccountManager::hashLogoutOfServer(nsHashKey *aKey, void *aData,
+                                               void *closure)
+{
+    nsresult rv;
+    nsCOMPtr<nsIMsgIncomingServer> server =
+      do_QueryInterface((nsISupports*)aData, &rv);
+    if (NS_FAILED(rv)) return PR_TRUE;
+    
+    rv = server->CloseCachedConnections();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
+    server->ForgetSessionPassword();
+
+    return PR_TRUE;
 }
 
 nsresult nsMsgAccountManager::GetFolderCache(nsIMsgFolderCache* *aFolderCache)

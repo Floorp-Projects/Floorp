@@ -126,6 +126,10 @@ private:
   static PRBool PR_CALLBACK hashUnloadServer(nsHashKey *aKey, void *aData,
                                      void *closure);
 
+  // close connection and forget cached password
+  static PRBool PR_CALLBACK hashLogoutOfServer(nsHashKey *aKey, void *aData,
+                                     void *closure);
+
   // clean up on exit
   static PRBool PR_CALLBACK cleanupOnExit(nsHashKey *aKey, void *aData,
                                      void *closure);
