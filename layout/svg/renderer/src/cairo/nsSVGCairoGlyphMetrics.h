@@ -14,9 +14,14 @@
  *
  * The Original Code is the Mozilla SVG Cairo Renderer project.
  *
- * The Initial Developer of the Original Code is Crocodile Clips Ltd..
+ * The Initial Developer of the Original Code is IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
+ *
+ * Parts of this file contain code derived from the following files(s)
+ * of the Mozilla SVG project (these parts are Copyright (C) by their
+ * respective copyright-holders):
+ *    layout/svg/renderer/src/gdiplus/nsSVGGDIPlusGlyphMetrics.h
  *
  * Contributor(s):
  *
@@ -34,15 +39,13 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#ifndef __NS_SVGCAIRO_REGION_H__
-#define __NS_SVGCAIRO_REGION_H__
+#ifndef __NS_SVGCAIRO_GLYPHMETRICS_H__
+#define __NS_SVGCAIRO_GLYPHMETRICS_H__
 
-class nsISVGRendererRegion;
+class nsISVGRendererGlyphMetrics;
+class nsISVGGlyphMetricsSource;
 
-//----------------------------------------------------------------------
-// region constructors:
+nsresult NS_NewSVGCairoGlyphMetrics(nsISVGRendererGlyphMetrics **result,
+				    nsISVGGlyphMetricsSource *src);
 
-nsresult NS_NewSVGCairoRectRegion(nsISVGRendererRegion** result,
-                                  float x, float y, float width, float height);
-
-#endif // __NS_SVGCAIRO_REGION_H__
+#endif // __NS_SVGCAIRO_GLYPHMETRICS_H__

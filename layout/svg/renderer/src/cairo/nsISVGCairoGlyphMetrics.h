@@ -14,9 +14,14 @@
  *
  * The Original Code is the Mozilla SVG Cairo Renderer project.
  *
- * The Initial Developer of the Original Code is Crocodile Clips Ltd..
+ * The Initial Developer of the Original Code is IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
+ *
+ * Parts of this file contain code derived from the following files(s)
+ * of the Mozilla SVG project (these parts are Copyright (C) by their
+ * respective copyright-holders):
+ *    layout/svg/renderer/src/gdiplus/nsSVGGDIPlusGlyphGeometry.cpp
  *
  * Contributor(s):
  *
@@ -34,15 +39,35 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#ifndef __NS_SVGCAIRO_REGION_H__
-#define __NS_SVGCAIRO_REGION_H__
+#ifndef __NS_ISVGCAIRO_GLYPHMETRICS_H__
+#define __NS_ISVGCAIRO_GLYPHMETRICS_H__
 
-class nsISVGRendererRegion;
+#include "nsISVGRendererGlyphMetrics.h"
+#include <cairo.h>
 
-//----------------------------------------------------------------------
-// region constructors:
+// 193e2d48-3898-4bf3-b6bf-d7c00a8aba1f
+#define NS_ISVGCAIROGLYPHMETRICS_IID \
+{ 0x193e2d48, 0x3898, 0x4bf3, { 0xb6, 0xbf, 0xd7, 0xc0, 0x0a, 0x8a, 0xba, 0x1f } }
 
-nsresult NS_NewSVGCairoRectRegion(nsISVGRendererRegion** result,
-                                  float x, float y, float width, float height);
 
-#endif // __NS_SVGCAIRO_REGION_H__
+/**
+ * \addtogroup gdiplus_renderer Cairo Rendering Engine
+ * @{
+ */
+
+/**
+ * 'Private' rendering engine interface
+ */
+class nsISVGCairoGlyphMetrics : public nsISVGRendererGlyphMetrics
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCAIROGLYPHMETRICS_IID)
+
+  NS_IMETHOD_(void) GetSubBoundingBox(PRUint32 charoffset, PRUint32 count, nsIDOMSVGRect * *aBoundingBox)=0;
+
+  NS_IMETHOD_(cairo_font_t*) GetFont() = 0;
+};
+
+/** @} */
+
+#endif // __NS_ISVGCAIRO_GLYPHMETRICS_H__
