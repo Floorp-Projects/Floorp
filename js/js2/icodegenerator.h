@@ -266,7 +266,7 @@ namespace ICG {
         void startStatement(uint32 pos)         { (*mInstructionMap)[iCode->size()] = pos; }
 
         ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
-
+        ExprNode::Kind mapICodeOpToExprNode(ICodeOp op);
 
         bool isTopLevel()       { return (mFlags & kIsTopLevel) != 0; }
         bool isWithinWith()     { return (mFlags & kIsWithinWith) != 0; }
@@ -300,7 +300,8 @@ namespace ICG {
         void readICode(const char *fileName);
 
         JSType *extractType(ExprNode *t);
-
+        JSType *getParameterType(FunctionDefinition &function, int index);
+    
         TypedRegister genExpr(ExprNode *p, 
                                 bool needBoolValueInBranch = false, 
                                 Label *trueBranch = NULL, 

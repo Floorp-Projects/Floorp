@@ -44,11 +44,17 @@ namespace ICodeASM {
     using namespace LexUtils;
     
     static char *keyword_offset = "offset";
-    static char *keyword_binaryops[] = {"add", "subtract", "multiply", "divide",
+    static char *keyword_exprNodeKinds[] = {"add", "subtract", "multiply", "divide",
                                         "remainder", "leftshift", "rightshift",
                                         "logicalrightshift", "bitwiseor",
                                         "bitwisexor", "bitwiseand", "less",
                                         "lessorequal", "equal", "identical", 0};
+    static ExprNode::Kind exprNodeOps[] = 
+            { ExprNode::add, ExprNode::subtract, ExprNode::multiply, ExprNode::divide, 
+              ExprNode::modulo, ExprNode::leftShift, ExprNode::rightShift, 
+              ExprNode::logicalRightShift, ExprNode::bitwiseOr,
+              ExprNode::bitwiseXor, ExprNode::bitwiseAnd, ExprNode::lessThan,
+              ExprNode::lessThanOrEqual, ExprNode::equal, ExprNode::identical }; 
 
     void
     ICodeParser::parseSourceFromString (const string8 &source)
@@ -158,8 +164,8 @@ namespace ICodeASM {
     }
 
     string8_citer
-    ICodeParser::parseBinaryOpOperand (string8_citer begin, string8_citer end,
-                                       VM::BinaryOperator::BinaryOp *rval)
+    ICodeParser::parseExprNodeKindOperand (string8_citer begin, string8_citer end,
+                                       ExprNode::Kind *rval)
     {
         TokenLocation tl = seekTokenStart (begin, end);
 
@@ -168,10 +174,10 @@ namespace ICodeASM {
         string8 *str;
         end = lexAlpha (tl.begin, end, &str);
 
-        for (int i = 0; keyword_binaryops[i] != 0; ++i)
-            if (cmp_nocase (*str, keyword_binaryops[i], keyword_binaryops[i] +
-                            strlen (keyword_binaryops[i]) + 1) == 0) {
-                *rval = static_cast<VM::BinaryOperator::BinaryOp>(i);
+        for (int i = 0; keyword_exprNodeKinds[i] != 0; ++i)
+            if (cmp_nocase (*str, keyword_exprNodeKinds[i], keyword_exprNodeKinds[i] +
+                            strlen (keyword_exprNodeKinds[i]) + 1) == 0) {
+                *rval = exprNodeOps[i];
                 delete str;
                 return end;
             }
@@ -381,8 +387,7 @@ namespace ICodeASM {
             switch (icodemap[icodeID].otype[i])
             {
                 CASE_TYPE(ArgumentList, VM::ArgumentList *, reinterpret_cast);
-                CASE_TYPE(BinaryOp, VM::BinaryOperator::BinaryOp,
-                          static_cast);
+                CASE_TYPE(ExprNodeKind, ExprNode::Kind, static_cast);
                 CASE_TYPE(Bool, bool, static_cast);
                 CASE_TYPE(Double, double, static_cast);
                 CASE_TYPE(ICodeModule, string *, reinterpret_cast);

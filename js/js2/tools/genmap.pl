@@ -136,8 +136,8 @@ sub get_map {
             for $p (@params) {
                 if ($p eq "ArgumentList*") {
                     push (@ot, "otArgumentList");
-                } elsif ($p eq "BinaryOperator::BinaryOp") {
-                    push (@ot, "otBinaryOp");
+                } elsif ($p eq "ExprNode::Kind") {
+                    push (@ot, "otExprNodeKind");
                 } elsif ($p eq "ICodeModule*") {
                     push (@ot, "otICodeModule");
                 } elsif ($p eq "JSClass*") {

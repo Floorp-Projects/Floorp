@@ -702,6 +702,8 @@ namespace JSTypes {
 
         const String& getName() const { return mName; }
 
+        bool isSubTypeOf(const JSType *other) const;
+
         int32 distance(const JSType *other) const;
 
         JSFunction *getConstructor() const { return mConstructor; }

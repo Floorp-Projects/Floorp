@@ -228,6 +228,7 @@ namespace JavaScript {
 			Namespace,					// namespace
 			Set,						// set
 			Use,						// use
+			Operator,					// operator
 			
 			identifier,					// Non-keyword identifier (may be same as a keyword if it contains an escape code)
 
@@ -243,7 +244,8 @@ namespace JavaScript {
 #define CASE_TOKEN_ATTRIBUTE_IDENTIFIER	\
 		 Token::Get:					\
 	case Token::Set:					\
-	case Token::identifier
+    case Token::identifier:				\
+	case Token::Operator				\
 
 #define CASE_TOKEN_NONRESERVED			\
 		 Token::Attribute:				\
@@ -417,20 +419,6 @@ namespace JavaScript {
 	struct AttributeStmtNode;
 	struct BlockStmtNode;
 	
-	struct FunctionName {
-		enum Prefix {
-			normal,						// No prefix
-			Get,						// get
-			Set							// set
-		};
-		
-		Prefix prefix;					// The name's prefix, if any
-		ExprNode *name;					// The name; nil if omitted
-		
-		FunctionName(): prefix(normal), name(0) {}
-
-		void print(PrettyPrinter &f) const;
-	};
 	
     struct IdentifierList;
     struct VariableBinding: ParseNode {
@@ -445,18 +433,6 @@ namespace JavaScript {
 
 		void print(PrettyPrinter &f) const;
 	};
-
-	struct FunctionDefinition: FunctionName {
-		VariableBinding *parameters;	// Linked list of all parameters, including optional and rest parameters, if any
-		VariableBinding *optParameters;	// Pointer to first non-required parameter inside parameters list; nil if none
-		VariableBinding *namedParameters; // The first parameter after the named parameter marker. May or may not have aliases.
-		VariableBinding *restParameter;	// Pointer to rest parameter inside parameters list; nil if none
-		ExprNode *resultType;			// Result type expression or nil if not provided
-		BlockStmtNode *body;			// Body; nil if none
-
-		void print(PrettyPrinter &f, bool isConstructor, const AttributeStmtNode *attributes, bool noSemi) const;
-	};
-
 
 	struct ExprNode: ParseNode {
 		enum Kind {						// Actual class			Operands	// Keep synchronized with kindNames
@@ -565,10 +541,38 @@ namespace JavaScript {
 		bool isPostfix() const {return kind >= identifier && kind <= at;}
 
 		virtual void print(PrettyPrinter &f) const;
+		friend Formatter &operator<<(Formatter &f, Kind k) {f << kindName(k); return f;}
 	};
 
 	// Print e onto f.
 	inline PrettyPrinter &operator<<(PrettyPrinter &f, const ExprNode *e) {ASSERT(e); e->print(f); return f;}
+
+	struct FunctionName {
+		enum Prefix {
+			normal,						// No prefix
+			Get,						// get
+			Set, 						// set
+            Operator                    // operator
+		};
+		
+		Prefix prefix;					// The name's prefix, if any
+        ExprNode::Kind op;              // The operator, if appropriate
+		ExprNode *name;					// The name; nil if omitted
+		
+		FunctionName(): prefix(normal), name(0) {}
+
+		void print(PrettyPrinter &f) const;
+	};
+	struct FunctionDefinition: FunctionName {
+		VariableBinding *parameters;	// Linked list of all parameters, including optional and rest parameters, if any
+		VariableBinding *optParameters;	// Pointer to first non-required parameter inside parameters list; nil if none
+		VariableBinding *namedParameters; // The first parameter after the named parameter marker. May or may not have aliases.
+		VariableBinding *restParameter;	// Pointer to rest parameter inside parameters list; nil if none
+		ExprNode *resultType;			// Result type expression or nil if not provided
+		BlockStmtNode *body;			// Body; nil if none
+
+		void print(PrettyPrinter &f, bool isConstructor, const AttributeStmtNode *attributes, bool noSemi) const;
+	};
 
 
 	struct IdentifierExprNode: ExprNode {
@@ -763,6 +767,7 @@ namespace JavaScript {
 		const StringAtom &name;			// The identifier
 		
 		explicit IdentifierList(const StringAtom &name): next(0), name(name) {}
+        bool contains(Token::Kind kind);
 	};
 	
 	struct AttributeStmtNode: StmtNode {
@@ -1052,6 +1057,7 @@ namespace JavaScript {
 		enum AttributeStatement {asAny, asBlock, asConstVar};
 		StmtNode *parseBlock(bool inSwitch, bool noCloseBrace);
 		BlockStmtNode *parseBody(SemicolonState *semicolonState);
+        ExprNode::Kind validateOperatorName(const Token &name);
 		StmtNode *parseAttributeStatement(uint32 pos, IdentifierList *attributes, const Token &t, bool noIn, SemicolonState &semicolonState);
 		StmtNode *parseAttributesAndStatement(const Token *t, AttributeStatement as, SemicolonState &semicolonState);
 		StmtNode *parseAnnotatedBlock();

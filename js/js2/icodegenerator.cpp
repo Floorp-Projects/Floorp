@@ -456,7 +456,7 @@ TypedRegister ICodeGenerator::op(ICodeOp op, TypedRegister source1,
     iCode->push_back(instr);
     return dest;
 } 
-    
+
 TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1, 
                             TypedRegister source2)
 {
@@ -469,7 +469,7 @@ TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1,
         iCode->push_back(instr);
     }
     else {
-        GenericBinaryOP *instr = new GenericBinaryOP(dest, BinaryOperator::mapICodeOp(op), source1, source2);
+        GenericBinaryOP *instr = new GenericBinaryOP(dest, mapICodeOpToExprNode(op), source1, source2);
         iCode->push_back(instr);
     }
     return dest;
@@ -596,7 +596,48 @@ Label *ICodeGenerator::setLabel(Label *l)
 
 /************************************************************************/
 
-
+ExprNode::Kind ICodeGenerator::mapICodeOpToExprNode(ICodeOp op)
+{
+    switch (op) {
+    case ADD:
+        return ExprNode::add;
+    case SUBTRACT:
+        return ExprNode::subtract;
+    case MULTIPLY:
+        return ExprNode::multiply;
+    case DIVIDE:
+        return ExprNode::divide;
+    case REMAINDER:
+        return ExprNode::modulo;
+    case SHIFTLEFT:
+        return ExprNode::leftShift;
+    case SHIFTRIGHT:
+        return ExprNode::rightShift;
+    case USHIFTRIGHT:
+        return ExprNode::logicalRightShift;
+    case AND:
+        return ExprNode::bitwiseAnd;
+    case OR:
+        return ExprNode::bitwiseOr;
+    case XOR:
+        return ExprNode::bitwiseXor;
+    case POSATE:
+        return ExprNode::plus;
+    case NEGATE:
+        return ExprNode::minus;
+    case BITNOT:
+        return ExprNode::complement;
+    case COMPARE_EQ:
+        return ExprNode::equal;
+    case COMPARE_LT:
+        return ExprNode::lessThan;
+    case COMPARE_LE:
+        return ExprNode::lessThanOrEqual;
+    case STRICT_EQ:
+        return ExprNode::identical;
+    }
+    return ExprNode::none;
+}
 
 
 ICodeOp ICodeGenerator::mapExprNodeToICodeOp(ExprNode::Kind kind)
@@ -1709,6 +1750,18 @@ JSType *ICodeGenerator::extractType(ExprNode *t)
     return type;
 }
 
+JSType *ICodeGenerator::getParameterType(FunctionDefinition &function, int index)
+{
+    VariableBinding *v = function.parameters;
+    while (v) {
+        if (index-- == 0)
+            return extractType(v->type);
+        else
+            v = v->next;
+    }
+    return NULL;
+}
+
 ICodeModule *ICodeGenerator::genFunction(FunctionDefinition &function, bool isStatic, bool isConstructor, JSClass *superclass)
 {
     ICodeGeneratorFlags flags = (isStatic) ? kIsStaticMethod : kNoFlags;
@@ -1901,27 +1954,31 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             FunctionStmtNode *f = static_cast<FunctionStmtNode *>(s);
                             bool isStatic = hasAttribute(f->attributes, Token::Static);
                             bool isConstructor = (s->getKind() == StmtNode::Constructor);
-                            if (f->function.name->getKind() == ExprNode::identifier) {
-                                const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
-                                if (isConstructor)
-                                    thisClass->defineConstructor(name);
-                                else
-                                    if (isStatic)
-                                        thisClass->defineStatic(name, &Function_Type);
-                                    else {
-                                        switch (f->function.prefix) {
-                                        case FunctionName::Get:
-                                            thisClass->setGetter(name, NULL, extractType(f->function.resultType));
-                                            break;
-                                        case FunctionName::Set:
-                                            thisClass->setSetter(name, NULL, extractType(f->function.resultType));
-                                            break;
-                                        case FunctionName::normal:
-                                            thisClass->defineMethod(name, NULL);
-                                            break;
-                                        }
-                                    }
+                            if (f->function.prefix == FunctionName::Operator) {
+                                thisClass->defineOperator(f->function.op, getParameterType(f->function, 0), getParameterType(f->function, 1), NULL);
                             }
+                            else
+                                if (f->function.name->getKind() == ExprNode::identifier) {
+                                    const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
+                                    if (isConstructor)
+                                        thisClass->defineConstructor(name);
+                                    else
+                                        if (isStatic)
+                                            thisClass->defineStatic(name, &Function_Type);
+                                        else {
+                                            switch (f->function.prefix) {
+                                            case FunctionName::Get:
+                                                thisClass->setGetter(name, NULL, extractType(f->function.resultType));
+                                                break;
+                                            case FunctionName::Set:
+                                                thisClass->setSetter(name, NULL, extractType(f->function.resultType));
+                                                break;
+                                            case FunctionName::normal:
+                                                thisClass->defineMethod(name, NULL);
+                                                break;
+                                            }
+                                        }
+                                }
                         }                        
                         break;
                     default:
@@ -1990,30 +2047,34 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
 
                             ICodeGenerator mcg(classContext, NULL, thisClass, flags);   // method code generator.
                             ICodeModule *icm = mcg.genFunction(f->function, isStatic, isConstructor, superclass);
-                            if (f->function.name->getKind() == ExprNode::identifier) {
-                                const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
-                                if (isConstructor) {
-                                    if (name == nameExpr->name)
-                                        hasDefaultConstructor = true;
-                                    scg.setStatic(thisClass, name, scg.newFunction(icm));
-                                }
-                                else
-                                    if (isStatic)
-                                        scg.setStatic(thisClass, name, scg.newFunction(icm));
-                                    else {
-                                        switch (f->function.prefix) {
-                                        case FunctionName::Get:
-                                            thisClass->setGetter(name, new JSFunction(icm), icm->mResultType);
-                                            break;
-                                        case FunctionName::Set:
-                                            thisClass->setSetter(name, new JSFunction(icm), icm->mResultType);
-                                            break;
-                                        case FunctionName::normal:
-                                            thisClass->defineMethod(name, new JSFunction(icm));
-                                            break;
-                                        }
-                                    }
+                            if (f->function.prefix == FunctionName::Operator) {
+                                thisClass->defineOperator(f->function.op, getParameterType(f->function, 0), getParameterType(f->function, 1),  new JSFunction(icm));
                             }
+                            else
+                                if (f->function.name->getKind() == ExprNode::identifier) {
+                                    const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
+                                    if (isConstructor) {
+                                        if (name == nameExpr->name)
+                                            hasDefaultConstructor = true;
+                                        scg.setStatic(thisClass, name, scg.newFunction(icm));
+                                    }
+                                    else
+                                        if (isStatic)
+                                            scg.setStatic(thisClass, name, scg.newFunction(icm));
+                                        else {
+                                            switch (f->function.prefix) {
+                                            case FunctionName::Get:
+                                                thisClass->setGetter(name, new JSFunction(icm), icm->mResultType);
+                                                break;
+                                            case FunctionName::Set:
+                                                thisClass->setSetter(name, new JSFunction(icm), icm->mResultType);
+                                                break;
+                                            case FunctionName::normal:
+                                                thisClass->defineMethod(name, new JSFunction(icm));
+                                                break;
+                                            }
+                                        }
+                                }
                         }                        
                         break;
                     default:

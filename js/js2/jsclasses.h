@@ -76,6 +76,15 @@ namespace JSClasses {
     typedef std::vector<MethodEntry, gc_allocator<MethodEntry> > JSMethods;
     typedef std::vector<JSFunction*, gc_allocator<JSFunction*> > JSFunctions;
 
+    struct JSOperator {
+        JSType *mOperand1;
+        JSType *mOperand2;
+        JSFunction *mFunction;
+        JSOperator(JSType *op1, JSType *op2, JSFunction *f) : mOperand1(op1), mOperand2(op2), mFunction(f) { }
+    };
+    typedef std::vector<JSOperator *, gc_allocator<JSOperator *> > JSOperatorList;
+
+
     /**
      * Represents a class in the JavaScript 2 (ECMA 4) language.
      * Since a class defines a scope, and is defined in a scope,
@@ -83,6 +92,7 @@ namespace JSClasses {
      * class definition.
      */
     class JSClass : public JSType {
+
     protected:
         JSScope* mScope;        
         uint32 mSlotCount;
@@ -95,6 +105,7 @@ namespace JSClasses {
         bool mHasSetters;
         JSFunctions mGetters;       // allocated at 'complete()' time
         JSFunctions mSetters;
+        JSOperatorList *mOperators[ExprNode::kindsEnd];
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
             :   JSType(name, superClass),
@@ -112,7 +123,9 @@ namespace JSClasses {
                 for (JSSlots::iterator si = superClass->mSlots.begin(); si != sEnd; si++)
                     if (si->second.isVirtual())
                         mSlots[si->first] = si->second;
-            }    
+            }
+            for (uint32 i = 0; i < ExprNode::kindsEnd; i++)
+                mOperators[i] = NULL;
         }
         
         JSClass* getSuperClass()
@@ -305,6 +318,35 @@ namespace JSClasses {
             }
         }
 
+        void defineOperator(ExprNode::Kind op, JSType *operand1, JSType *operand2, JSFunction *f)
+        {
+            if (!mOperators[op])
+                mOperators[op] = new JSOperatorList();
+            else {
+                for (JSOperatorList::iterator i = mOperators[op]->begin(), 
+                                    end = mOperators[op]->end(); i != end; ++i) {
+                    if (((*i)->mOperand1 == operand1)
+                            && ((*i)->mOperand2 == operand2)) {
+                        (*i)->mFunction = f;
+                        return;
+                    }
+                }
+            }                
+            mOperators[op]->push_back(new JSOperator(operand1, operand2, f));
+        }
+
+        void addApplicableOperators(JSOperatorList &list, ExprNode::Kind op, const JSType *operand1, const JSType *operand2)
+        {
+            if (mOperators[op]) {
+                for (JSOperatorList::iterator i = mOperators[op]->begin(), 
+                                    end = mOperators[op]->end(); i != end; ++i) {
+                    if (operand1->isSubTypeOf((*i)->mOperand1) && operand2->isSubTypeOf((*i)->mOperand2)) {
+                       list.push_back(*i);
+                    }
+                }
+            }
+        }
+
         void defineMethod(const String& name, JSFunction *f)
         {
             uint32 slot;
@@ -345,27 +387,10 @@ namespace JSClasses {
             if (slotCount > 0) n += sizeof(JSValue) * (slotCount - 1);
             return gc_base::operator new(n);
         }
-        
-        void* operator new(size_t n, uint32 slotCount)
-        {
-            if (slotCount > 0) n += sizeof(JSValue) * (slotCount - 1);
-            return gc_base::operator new(n);
-        }
-        
+
         void operator delete(void* /*ptr*/) {}
         void operator delete(void* /*ptr*/, JSClass* /*thisClass*/) {}
-        void operator delete(void* /*ptr*/, uint32 /*slotCount*/) {}
-        
-        JSInstance(uint32 slotCount)
-        {
-            mType = NULL;
-            // initialize extra slots with undefined.
-            if (slotCount > 0) {
-                std::uninitialized_fill(&mSlots[1], &mSlots[1] + (slotCount - 1),
-                                        JSTypes::kUndefinedValue);
-            }
-        }
-        
+
         JSInstance(JSClass* thisClass)
         {
             mType = thisClass;

@@ -355,6 +355,7 @@ const char *const JS::Token::kindNames[kindsEnd] = {
 	"namespace",		// Namespace
 	"set",				// Set
 	"use",				// Use
+	"operator",			// Operator
 
 	"identifier"		// identifier
 };
@@ -494,6 +495,7 @@ const uchar JS::Token::kindFlags[kindsEnd] = {
 	followAttr|followGet,	// Namespace
 	isAttr|followGet,		// Set
 	followGet,				// Use
+	isAttr,				    // Operator
 
 	isAttr|followGet		// identifier
 };
@@ -1205,7 +1207,7 @@ const int32 functionHeaderIndent = 9;	// Indentation of function signature
 const int32 namespaceHeaderIndent = 4;	// Indentation of class, interface, or namespace header
 
 
-static const char functionPrefixNames[3][5] = {"", "get ", "set "};
+static const char functionPrefixNames[3][5] = {"", "get ", "set " };
 
 // Print this onto f.  name must be non-nil.
 void JS::FunctionName::print(PrettyPrinter &f) const
@@ -2801,6 +2803,7 @@ void JS::Parser::parseFunctionName(FunctionName &fn)
 			t = &lexer.get(true);
 		}
 	}
+
 	fn.name = parseQualifiedIdentifier(*t, true);
 }
 
@@ -2923,6 +2926,75 @@ JS::BlockStmtNode *JS::Parser::parseBody(SemicolonState *semicolonState)
 	}
 }
 
+JS::ExprNode::Kind JS::Parser::validateOperatorName(const Token &name)
+{
+    Lexer operatorLexer(getWorld(), copyTokenChars(name), getReader().sourceLocation);     // XXX line number ???
+
+    const Token &t = operatorLexer.get(false);                                             // XXX preferRegExp ???
+
+    // XXX switch to a table lookup instead
+    switch (t.getKind()) {
+    default:
+        syntaxError("Illegal operator name");
+
+    case Token::complement:
+        return ExprNode::complement;
+	case Token::increment:
+        return ExprNode::postIncrement;
+	case Token::decrement:
+        return ExprNode::postDecrement;
+	case Token::Const:
+        return ExprNode::none;      // XXX
+
+    case Token::plus:
+        return ExprNode::add;
+	case Token::minus:
+        return ExprNode::subtract;
+	case Token::times:
+        return ExprNode::multiply;
+	case Token::divide:
+        return ExprNode::divide;
+	case Token::modulo:
+        return ExprNode::modulo;
+	case Token::leftShift:
+        return ExprNode::leftShift;
+	case Token::rightShift:
+        return ExprNode::rightShift;
+	case Token::logicalRightShift:
+        return ExprNode::logicalRightShift;
+	case Token::lessThan:
+        return ExprNode::lessThan;
+	case Token::lessThanOrEqual:
+        return ExprNode::lessThanOrEqual;
+	case Token::equal:
+        return ExprNode::equal;
+	case Token::bitwiseAnd:
+        return ExprNode::bitwiseAnd;
+	case Token::bitwiseXor:
+        return ExprNode::bitwiseXor;
+	case Token::bitwiseOr:
+        return ExprNode::bitwiseOr;
+	case Token::identical:
+        return ExprNode::identical;
+	case Token::In:
+        return ExprNode::In;
+
+    case Token::openParenthesis:
+        return ExprNode::call;
+
+    case Token::New:
+        return ExprNode::New;
+
+    case Token::openBracket:
+        return ExprNode::index;
+
+    case Token::Delete:
+        return ExprNode::Delete;
+    }
+
+    return ExprNode::none;
+
+}
 
 // Parse and return a statement that takes zero or more initial attributes, which have already been parsed.
 // If noIn is false, allow the in operator.
@@ -2975,7 +3047,17 @@ JS::StmtNode *JS::Parser::parseAttributeStatement(uint32 pos, IdentifierList *at
 				if (lineBreakBefore(t2) || !(f->function.name = makeIdentifierExpression(t2)))
 					syntaxError("Constructor name expected");
 			} else
-				parseFunctionName(f->function);
+                if (attributes && attributes->contains(Token::Operator)) {
+                    // expecting a string literal matching one of the legal operator names
+			        const Token &t2 = lexer.get(false);
+                    if (!t2.hasKind(Token::string))
+                        syntaxError("Operator name (as string literal) expected");
+	                f->function.prefix = FunctionName::Operator;
+                    f->function.op = validateOperatorName(t2);
+                    f->function.name = NULL;
+                }
+                else
+				    parseFunctionName(f->function);
 			parseFunctionSignature(f->function);
 			f->function.body = parseBody(&semicolonState);
 			return f;
@@ -3839,3 +3921,9 @@ JS::ExprNode *JS::Parser::parseResultSignature() {
 }
 
 
+bool JS::IdentifierList::contains(Token::Kind kind)  { 
+    if (name.tokenKind == kind) 
+        return true; 
+    else 
+        return (next) ? next->contains(kind) : false; 
+}

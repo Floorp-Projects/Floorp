@@ -120,57 +120,6 @@ Formatter& operator<< (Formatter &f, InstructionStream &is)
     return f;
 }
 
-BinaryOperator::BinaryOp BinaryOperator::mapICodeOp(ICodeOp op) {
-    // a table later... or maybe we need a grand opcode re-unification 
-    switch (op) {
-    case ADD        : return Add;
-    case SUBTRACT   : return Subtract;
-    case MULTIPLY   : return Multiply;
-    case DIVIDE     : return Divide;
-    case REMAINDER  : return Remainder;
-    case SHIFTLEFT  : return LeftShift;
-    case SHIFTRIGHT : return RightShift;
-    case USHIFTRIGHT: return LogicalRightShift;
-
-    case AND        : return BitwiseAnd;
-    case OR         : return BitwiseOr;
-    case XOR        : return BitwiseXor;
-    
-    case COMPARE_LT : return Less;
-    case COMPARE_LE : return LessOrEqual;
-    case COMPARE_EQ : return Equal;
-    case STRICT_EQ  : return Identical;
-    default :
-        NOT_REACHED("Unsupported binary op");
-        return (BinaryOp)-1;
-    }
-}
-
-Formatter& operator<< (Formatter &f, BinaryOperator::BinaryOp &b)
-{
-    switch (b) {
-    case BinaryOperator::Add:               return f << "Add";
-    case BinaryOperator::Subtract:          return f << "Subtract";
-    case BinaryOperator::Multiply:          return f << "Multiply";
-    case BinaryOperator::Divide:            return f << "Divide";
-    case BinaryOperator::Remainder:         return f << "Remainder";
-    case BinaryOperator::LeftShift:         return f << "LeftShift";
-    case BinaryOperator::RightShift:        return f << "RightShift";
-    case BinaryOperator::LogicalRightShift: return f << "LogicalRightShift";
-
-    case BinaryOperator::BitwiseAnd:        return f << "BitwiseAnd";
-    case BinaryOperator::BitwiseOr:         return f << "BitwiseOr";
-    case BinaryOperator::BitwiseXor:        return f << "BitwiseXor";
-    
-    case BinaryOperator::Less:              return f << "Less";
-    case BinaryOperator::LessOrEqual:       return f << "LessOrEqual";
-    case BinaryOperator::Equal:             return f << "Equal";
-    case BinaryOperator::Identical:         return f << "Identical";
-    default :
-        NOT_REACHED("inner peace, either");
-        return f;
-    }
-}
 
 } /* namespace VM */
 } /* namespace JavaScript */

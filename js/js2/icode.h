@@ -388,11 +388,11 @@
         }
     };
 
-    class GenericBinaryOP : public Instruction_4<TypedRegister, BinaryOperator::BinaryOp, TypedRegister, TypedRegister> {
+    class GenericBinaryOP : public Instruction_4<TypedRegister, ExprNode::Kind, TypedRegister, TypedRegister> {
     public:
         /* dest, op, source1, source2 */
-        GenericBinaryOP (TypedRegister aOp1, BinaryOperator::BinaryOp aOp2, TypedRegister aOp3, TypedRegister aOp4) :
-            Instruction_4<TypedRegister, BinaryOperator::BinaryOp, TypedRegister, TypedRegister>
+        GenericBinaryOP (TypedRegister aOp1, ExprNode::Kind aOp2, TypedRegister aOp3, TypedRegister aOp4) :
+            Instruction_4<TypedRegister, ExprNode::Kind, TypedRegister, TypedRegister>
             (GENERIC_BINARY_OP, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[GENERIC_BINARY_OP] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
