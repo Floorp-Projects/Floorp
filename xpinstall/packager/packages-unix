@@ -142,6 +142,7 @@ bin/components/libgkplugin.so
 bin/components/libhtmlpars.so
 bin/components/librdf.so
 bin/components/libtxmgr.so
+bin/components/txmgr.xpt
 bin/components/libuconv.so
 bin/components/libucvmath.so
 bin/components/libwebbrwsr.so
@@ -351,7 +352,6 @@ bin/components/msglocal.xpt
 bin/components/msgnews.xpt
 bin/components/msgsearch.xpt
 bin/components/nsLDAPPrefsService.js
-bin/components/txmgr.xpt
 bin/components/import.xpt
 bin/components/impComm4xMail.xpt
 bin/chrome/messenger.jar
