@@ -35,21 +35,42 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef _nsDocAccessible_H_
+#define _nsDocAccessible_H_
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#include "nsAccessibleWrap.h"
+#include "nsIAccessibleDocument.h"
+#include "nsIDocument.h"
+#include "nsIAccessibleEventReceiver.h"
 
-#ifndef _nsDocAccessibleWrap_H_
-#define _nsDocAccessibleWrap_H_
+class nsIWeakReference;
 
-#include "nsDocAccessible.h"
-
-class nsDocAccessibleWrap: public nsDocAccessible
+class nsDocAccessible : public nsAccessibleWrap,
+                        public nsIAccessibleDocument,
+                        public nsIAccessibleEventReceiver
 {
-public:
-    nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsDocAccessibleWrap();
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEDOCUMENT
+  NS_DECL_NSIACCESSIBLEEVENTRECEIVER
+
+  public:
+    nsDocAccessible(nsIDOMNode *aNode, nsIWeakReference* aShell);
+    virtual ~nsDocAccessible();
+
+    NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
+    NS_IMETHOD GetAccName(nsAString& aAccName);
+    NS_IMETHOD GetAccValue(nsAString& aAccValue);
+
+    // nsIAccessNode
+    NS_IMETHOD Shutdown();
+
+  protected:  
+    virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
+    virtual nsIFrame* GetFrame();
+
+    nsCOMPtr<nsIDocument> mDocument;
+    void *mWnd;
 };
 
-#endif
+
+#endif  
