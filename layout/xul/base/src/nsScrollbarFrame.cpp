@@ -91,7 +91,22 @@ nsScrollbarFrame::Init(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIViewManager> vm;
   view->GetViewManager(*getter_AddRefs(vm));
   vm->SetViewContentTransparency(view, PR_TRUE);
+
+  // We want to be a reflow root since we use reflows to move the
+  // slider.  Any reflow inside the scrollbar frame will be a reflow to
+  // move the slider and will thus not change anything outside of the
+  // scrollbar or change the size of the scrollbar frame.
+  mState |= NS_FRAME_REFLOW_ROOT;
+
   return rv;
+}
+
+NS_IMETHODIMP nsScrollbarFrame::IsPercentageBase(PRBool& aBase) const
+{
+  // Return true so that the nsHTMLReflowState code is happy with us
+  // being a reflow root.
+  aBase = PR_TRUE;
+  return NS_OK;
 }
 
 
