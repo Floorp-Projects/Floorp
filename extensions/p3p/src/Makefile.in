@@ -50,7 +50,6 @@ MODULE_NAME	   = nsP3PModule
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  cookie \
 		  xmlextras \
 		  dom \
 		  $(NULL)
