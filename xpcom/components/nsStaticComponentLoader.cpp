@@ -51,14 +51,14 @@ protected:
     static PLDHashTableOps        sInfoHashOps;
 };
 
-static const void *
+PR_STATIC_CALLBACK(const void *)
 info_GetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     StaticModuleInfo *info = NS_STATIC_CAST(StaticModuleInfo *, entry);
     return info->info.name;
 }
 
-static PRBool
+PR_STATIC_CALLBACK(PRBool)
 info_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                 const void *key)
 {
@@ -68,7 +68,7 @@ info_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
     return !strcmp(info->info.name, name);
 }
 
-static void
+PR_STATIC_CALLBACK(void)
 info_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     StaticModuleInfo *info = NS_STATIC_CAST(StaticModuleInfo *, entry);
@@ -76,7 +76,7 @@ info_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     info->~StaticModuleInfo();
 }
 
-static void
+PR_STATIC_CALLBACK(void)
 info_InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 {
     // Construct so that our nsCOMPtr is zeroed, etc.
@@ -180,7 +180,7 @@ struct RegisterSelfData
     nsIFile             *dir;
 };
 
-static PR_CALLBACK PLDHashOperator
+PR_STATIC_CALLBACK(PLDHashOperator)
 info_RegisterSelf(PLDHashTable *table, PLDHashEntryHdr *hdr,
                   PRUint32 number, void *arg)
 {
