@@ -637,9 +637,9 @@ nsOperaCookieMigrator::Migrate()
         mStream->Read16(&length);
         
         mStream->ReadBytes(length, &buf);
+        buf = (char*)nsMemory::Realloc(buf, length+1);
         buf[length] = '\0';
         mDomainStack.AppendElement((void*)buf);
-	buf = nsnull;
       }
       break;
     case END_DOMAIN_SEGMENT:
@@ -650,11 +650,11 @@ nsOperaCookieMigrator::Migrate()
         // Pop the domain stack
         PRUint32 count = mDomainStack.Count();
         if (count > 0) {
-	  char* segment = (char*)mDomainStack.ElementAt(count - 1);
-	  if (segment)
-	    nsMemory::Free(segment);
+          char* segment = (char*)mDomainStack.ElementAt(count - 1);
+          if (segment) 
+            nsMemory::Free(segment);
           mDomainStack.RemoveElementAt(count - 1);
-	}
+        }
       }
       break;
 
@@ -666,9 +666,9 @@ nsOperaCookieMigrator::Migrate()
         mStream->Read16(&length);
         
         mStream->ReadBytes(length, &buf);
+        buf = (char*)nsMemory::Realloc(buf, length+1);
         buf[length] = '\0';
         mPathStack.AppendElement((void*)buf);
-	buf = nsnull;
       }
       break;
     case END_PATH_SEGMENT:
@@ -683,11 +683,11 @@ nsOperaCookieMigrator::Migrate()
         // Pop the path stack
         PRUint32 count = mPathStack.Count();
         if (count > 0) {
-	  char* segment = (char*)mPathStack.ElementAt(count - 1);
-	  if (segment)
-	    nsMemory::Free(segment);
+          char* segment = (char*)mPathStack.ElementAt(count - 1);
+          if (segment)
+            nsMemory::Free(segment);
           mPathStack.RemoveElementAt(count - 1);
-	}
+        }
       }
       break;
 
@@ -719,20 +719,26 @@ nsOperaCookieMigrator::Migrate()
       {
         mStream->Read16(&length);
         mStream->ReadBytes(length, &buf);
+        buf = (char*)nsMemory::Realloc(buf, length+1);
         buf[length] = '\0';
         mCurrCookie.id.Assign(buf);
-	nsMemory::Free(buf);
-	buf = nsnull;
+        if (buf) {
+          nsMemory::Free(buf);
+          buf = nsnull;
+        }
       }
       break;
     case COOKIE_DATA:
       {
         mStream->Read16(&length);
         mStream->ReadBytes(length, &buf);
+        buf = (char*)nsMemory::Realloc(buf, length+1);
         buf[length] = '\0';
         mCurrCookie.data.Assign(buf);
-	nsMemory::Free(buf);
-	buf = nsnull;
+        if (buf) {
+          nsMemory::Free(buf);
+          buf = nsnull;
+        }
       }
       break;
     case COOKIE_EXPIRY:
@@ -760,9 +766,10 @@ nsOperaCookieMigrator::Migrate()
       {
         mStream->Read16(&length);
         mStream->ReadBytes(length, &buf);
-        buf[length] = '\0';
-	nsMemory::Free(buf);
-	buf = nsnull;
+        if (buf) {
+          nsMemory::Free(buf);
+          buf = nsnull;
+        }
       }
       break;
     case COOKIE_VERSION: 
