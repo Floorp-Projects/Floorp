@@ -21,6 +21,8 @@
 #include <windows.h>
 #endif
 
+#define NSPIPE2
+
 #include "nspr.h"
 #include "nscore.h"
 #include "nsISocketTransportService.h"
@@ -29,9 +31,15 @@
 #include "nsIChannel.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
+#ifndef NSPIPE2
 #include "nsIBuffer.h"
+#else
+#include "nsIPipe.h"
+#include "nsIBufferOutputStream.h"
+#endif
 #include "nsIBufferInputStream.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -223,16 +231,26 @@ main(int argc, char* argv[])
   nsIBufferInputStream* stream;
   PRUint32 bytesWritten;
 
-  nsIBuffer* buf;
+#ifndef NSPIPE2
+  nsCOMPtr<nsIBuffer> buf;
   rv = NS_NewBuffer(&buf, 1024, 4096, nsnull);
   rv = NS_NewBufferInputStream(&stream, buf);
+#else
+  nsCOMPtr<nsIBufferOutputStream> out;
+  rv = NS_NewPipe(&stream, getter_AddRefs(out), nsnull,
+                  1024, 4096);
+#endif
   if (NS_FAILED(rv)) return rv;
 
   char *buffer = PR_smprintf("GET %s HTML/1.0%s%s", fileName, CRLF, CRLF);
 #if 0
   stream->Fill(buffer, strlen(buffer), &bytesWritten);
 #else
+#ifndef NSPIPE2
   buf->Write(buffer, strlen(buffer), &bytesWritten);
+#else
+  out->Write(buffer, strlen(buffer), &bytesWritten);
+#endif
 #endif
   printf("\n+++ Request is: %s\n", buffer);
 

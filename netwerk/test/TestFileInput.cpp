@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#define NSPIPE2
+
 #include "nsIFileTransportService.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
@@ -29,11 +31,17 @@
 #include "prio.h"
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
+#ifndef NSPIPE2
 #include "nsIBuffer.h"
+#else
+#include "nsIPipe.h"
+#include "nsIBufferOutputStream.h"
+#endif
 #include "nsIBufferInputStream.h"
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
 #include "nsIChannel.h"
+#include "nsCOMPtr.h"
 #include <stdio.h>
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -194,6 +202,11 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     nsIBufferInputStream* bufStr = nsnull;
     nsFileSpec spec(path);
     PRUint32 sourceOffset = 0;
+#ifndef NSPIPE2
+    nsCOMPtr<nsIBuffer> buf;
+#else
+    nsCOMPtr<nsIBufferOutputStream> out;
+#endif
 
     rv = reader->OnStartRequest(nsnull, nsnull);
     if (NS_FAILED(rv)) goto done;       // XXX should this abort the transfer?
@@ -205,11 +218,17 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     NS_RELEASE(fs);
     if (NS_FAILED(rv)) goto done;
 
-    nsIBuffer* buf;
-    rv = NS_NewBuffer(&buf, NS_FILE_TRANSPORT_BUFFER_SIZE,
+#ifndef NSPIPE2
+    rv = NS_NewBuffer(getter_AddRefs(buf), NS_FILE_TRANSPORT_BUFFER_SIZE,
                       NS_FILE_TRANSPORT_BUFFER_SIZE, nsnull);
     rv = NS_NewBufferInputStream(&bufStr, buf);
     if (NS_FAILED(rv)) goto done;
+#else
+    rv = NS_NewPipe(&bufStr, getter_AddRefs(out), nsnull,
+                    NS_FILE_TRANSPORT_BUFFER_SIZE,
+                    NS_FILE_TRANSPORT_BUFFER_SIZE);
+    if (NS_FAILED(rv)) goto done;
+#endif
 
     /*
     if ( spec.GetFileSize() == 0) goto done;
@@ -221,7 +240,11 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
 #if 0
         rv = bufStr->FillFrom(fileStr, spec.GetFileSize(), &amt);
 #else
+#ifndef NSPIPE2
         rv = buf->WriteFrom(fileStr, spec.GetFileSize(), &amt);
+#else
+        rv = out->WriteFrom(fileStr, spec.GetFileSize(), &amt);
+#endif
 #endif
         if (rv == NS_BASE_STREAM_EOF) {
             rv = NS_OK;

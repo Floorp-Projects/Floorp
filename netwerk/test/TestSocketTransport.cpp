@@ -24,13 +24,19 @@
 
 #include "nspr.h"
 
+#define NSPIPE2
+
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
+#ifndef NSPIPE2
 #include "nsIBuffer.h"
+#else
+#include "nsIPipe.h"
+#endif
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIThread.h"
@@ -131,7 +137,11 @@ public:
   nsresult Resume(void);
 
 protected:
+#ifndef NSPIPE2
   nsIBuffer* mBuffer;
+#else
+  nsIBufferOutputStream* mOut;
+#endif
   nsIBufferInputStream* mStream;
 
   nsIInputStream*  mInStream;
@@ -209,7 +219,11 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
   mBytesRead    = 0;
 
   mTransport = nsnull;
+#ifndef NSPIPE2
   mBuffer    = nsnull;
+#else
+  mOut       = nsnull;
+#endif
   mStream    = nsnull;
 
   mInStream  = nsnull;
@@ -226,8 +240,12 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
     if (mIsAsync) {
       // Create a stream for the data being written to the server...
       if (NS_SUCCEEDED(rv)) {
+#ifndef NSPIPE2
         rv = NS_NewBuffer(&mBuffer, 1024, 4096, nsnull);
         rv = NS_NewBufferInputStream(&mStream, mBuffer);
+#else
+        rv = NS_NewPipe(&mStream, &mOut, nsnull, 1024, 4096);
+#endif
       }
     } 
     // Synchronous transport...
@@ -244,7 +262,11 @@ TestConnection::~TestConnection()
   NS_IF_RELEASE(mTransport);
   // Async resources...
   NS_IF_RELEASE(mStream);
+#ifndef NSPIPE2
   NS_IF_RELEASE(mBuffer);
+#else
+  NS_IF_RELEASE(mOut);
+#endif
 
   // Sync resources...
   NS_IF_RELEASE(mInStream);
@@ -361,7 +383,11 @@ nsresult TestConnection::WriteBuffer(void)
 #if 0
       rv = mStream->Fill(buffer, size, &bytesWritten);
 #else
+#ifndef NSPIPE2
       rv = mBuffer->Write(buffer, size, &bytesWritten);
+#else
+      rv = mOut->Write(buffer, size, &bytesWritten);
+#endif
 #endif
 
       // Write the buffer to the server...

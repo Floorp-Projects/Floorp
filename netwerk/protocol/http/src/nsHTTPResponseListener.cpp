@@ -33,7 +33,11 @@
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
+#ifndef NSPIPE2
 #include "nsIBuffer.h"
+#else
+#include "nsIPipe.h"
+#endif
 
 #include "nsIIOService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -118,16 +122,22 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
     // Parse the status line and the response headers from the server
     //
     if (!mHeadersDone) {
+#ifndef NSPIPE2
         nsCOMPtr<nsIBuffer> pBuffer;
 
         rv = bufferInStream->GetBuffer(getter_AddRefs(pBuffer));
         if (NS_FAILED(rv)) return rv;
+#endif
         //
         // Parse the status line from the server.  This is always the 
         // first line of the response...
         //
         if (!mFirstLineParsed) {
+#ifndef NSPIPE2
             rv = ParseStatusLine(pBuffer, i_Length, &actualBytesRead);
+#else
+            rv = ParseStatusLine(bufferInStream, i_Length, &actualBytesRead);
+#endif
             i_Length -= actualBytesRead;
         }
 
@@ -138,7 +148,11 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         // the headers are not done...
         //
         while (NS_SUCCEEDED(rv) && i_Length && !mHeadersDone) {
+#ifndef NSPIPE2
             rv = ParseHTTPHeader(pBuffer, i_Length, &actualBytesRead);
+#else
+            rv = ParseHTTPHeader(bufferInStream, i_Length, &actualBytesRead);
+#endif
 			NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
             i_Length -= actualBytesRead;
         }
@@ -316,9 +330,15 @@ nsWriteToString(void* closure,
 }
 
 
+#ifndef NSPIPE2
 nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer, 
                                                  PRUint32 aLength,
                                                  PRUint32 *aBytesRead)
+#else
+nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in, 
+                                                 PRUint32 aLength,
+                                                 PRUint32 *aBytesRead)
+#endif
 {
   nsresult rv = NS_OK;
 
@@ -337,7 +357,11 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer,
   }
 
   // Look for the LF which ends the Status-Line.
+#ifndef NSPIPE2
   rv = aBuffer->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
+#else
+  rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
+#endif
   if (NS_FAILED(rv)) return rv;
 
   if (!bFoundString) {
@@ -351,10 +375,17 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer,
     totalBytesToRead = offsetOfEnd+1;
   }
 
+#ifndef NSPIPE2
   rv = aBuffer->ReadSegments(nsWriteToString, 
                              (void*)&mHeaderBuffer, 
                              totalBytesToRead, 
                              &actualBytesRead);
+#else
+  rv = in->ReadSegments(nsWriteToString, 
+                        (void*)&mHeaderBuffer, 
+                        totalBytesToRead, 
+                        &actualBytesRead);
+#endif
   if (NS_FAILED(rv)) return rv;
 
   *aBytesRead += actualBytesRead;
@@ -442,13 +473,21 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer,
 
 
 
+#ifndef NSPIPE2
 nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
                                                  PRUint32 aLength,
                                                  PRUint32 *aBytesRead)
+#else
+nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
+                                                 PRUint32 aLength,
+                                                 PRUint32 *aBytesRead)
+#endif
 {
   nsresult rv = NS_OK;
 
+#ifndef NSPIPE2
   const char *buf;
+#endif
   PRBool bFoundString;
   PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
 
@@ -470,6 +509,7 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
     // may be complete...
     //
     if (mHeaderBuffer.Last() == '\n' ) {
+#ifndef NSPIPE2
       rv = aBuffer->GetReadSegment(0, &buf, &actualBytesRead);
       // Need to wait for more data to see if the header is complete.
       if (0 == actualBytesRead) {
@@ -480,14 +520,41 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
       if (mHeaderBuffer.Length() <= 2) {
         break;
       }
+
       // Not LWS - The header is complete...
       if ((*buf != ' ') && (*buf != '\t')) {
         break;
       }
+#else
+      // This line is either LF or CRLF so the header is complete...
+      if (mHeaderBuffer.Length() <= 2) {
+          break;
+      }
+
+      rv = in->Search(" ", PR_FALSE, &bFoundString, &offsetOfEnd);
+      if (NS_FAILED(rv)) return rv;
+      if (!bFoundString && offsetOfEnd == 0) 
+          return NS_OK;     // Need to wait for more data to see if the header is complete
+
+      if (!bFoundString || offsetOfEnd != 0) {
+          // then check for tab too
+          rv = in->Search("\t", PR_FALSE, &bFoundString, &offsetOfEnd);
+          if (NS_FAILED(rv)) return rv;
+          NS_ASSERTION(!(!bFoundString && offsetOfEnd == 0), "should have been checked above");
+          if (!bFoundString || offsetOfEnd != 0) {
+              break; // neither space nor tab, so jump out of the loop
+          }
+      }
+      // else, go around the loop again and accumulate the rest of the header...
+#endif
     }
 
     // Look for the next LF in the buffer...
+#ifndef NSPIPE2
     rv = aBuffer->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
+#else
+    rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
+#endif
     if (NS_FAILED(rv)) return rv;
 
     if (!bFoundString) {
@@ -502,10 +569,17 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
     }
 
     // Append the buffer into the header string...
+#ifndef NSPIPE2
     rv = aBuffer->ReadSegments(nsWriteToString, 
                                (void*)&mHeaderBuffer, 
                                totalBytesToRead, 
                                &actualBytesRead);
+#else
+    rv = in->ReadSegments(nsWriteToString, 
+                          (void*)&mHeaderBuffer, 
+                          totalBytesToRead, 
+                          &actualBytesRead);
+#endif
     if (NS_FAILED(rv)) return rv;
 
     *aBytesRead += actualBytesRead;
