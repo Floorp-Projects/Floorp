@@ -66,7 +66,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	//
 	// first check for the nsILocaleFactory interfaces
 	//  
-	if (aCID.Equals(kLocaleFactoryCID))
+	if (aClass.Equals(kLocaleFactoryCID))
 	{
 		nsLocaleFactory *factory = new nsLocaleFactory();
 		res = factory->QueryInterface(kILocaleFactoryIID, (void **) aFactory);
@@ -83,7 +83,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	//
 	// let the nsLocaleFactoryWin logic take over from here
 	//
-	factoryInstance = new nsLocaleMacFactory(aCID);
+	factoryInstance = new nsLocaleMacFactory(aClass);
 
 	if(NULL == factoryInstance) 
 	{
