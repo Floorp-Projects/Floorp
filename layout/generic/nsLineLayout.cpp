@@ -860,7 +860,19 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // Make up a width to use for reflowing into.  XXX what value to
       // use? for tables, we want to limit it; for other elements
       // (e.g. text) it can be unlimited...
-      availSize.width = psd->mReflowState->availableWidth;
+      // especially we won't use the unlimited size for <hr> (bug 60992), 
+      // the following code is a consequence of setting 
+      // hr  display:inline in quirks.css (bug 18754)
+      if (!InStrictMode()) {
+        nsCOMPtr<nsIAtom> frameType;
+        aFrame->GetFrameType(getter_AddRefs(frameType));
+        if (nsLayoutAtoms::hrFrame != frameType.get()) {
+          availSize.width = psd->mReflowState->availableWidth;
+        }
+      }
+      else {
+        availSize.width = psd->mReflowState->availableWidth;
+      }
     }
   }
   if (NS_UNCONSTRAINEDSIZE == mBottomEdge) {
@@ -1381,9 +1393,10 @@ nsLineLayout::ApplyLeftMargin(PerFrameData* pfd,
   }
 
   // Adjust available width to account for the indent and the margins
-  aReflowState.availableWidth -= indent + pfd->mMargin.left +
-    pfd->mMargin.right;
-
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
+    aReflowState.availableWidth -= indent + pfd->mMargin.left +
+      pfd->mMargin.right;
+  }
   // NOTE: While the x coordinate remains relative to the parent span,
   // the y coordinate is fixed at the top edge for the line. During
   // VerticalAlignFrames we will repair this so that the y coordinate
