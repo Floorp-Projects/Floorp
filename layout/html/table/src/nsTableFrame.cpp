@@ -375,7 +375,11 @@ nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
         mFrames.SetFrames(childFrame);
       else
         prevMainChild->SetNextSibling(childFrame);
-      rv = DidAppendRowGroup(GetRowGroupFrameFor(childFrame, childDisplay));
+      // If we have a prev-in-flow, then we're a table that has been split and
+      // so don't treat this like an append
+      if (!mPrevInFlow) {
+        rv = DidAppendRowGroup(GetRowGroupFrameFor(childFrame, childDisplay));
+      }
       prevMainChild = childFrame;
     }
     else if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
@@ -2683,8 +2687,14 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
   //PreReflowCheck();
 #endif
 
-  // Check for an overflow list
-  MoveOverflowToChildList();
+  // Check for an overflow list, and append any row group frames being
+  // pushed
+  nsTableFrame* prevInFlow = (nsTableFrame*)mPrevInFlow;
+  if (prevInFlow) {
+    if (prevInFlow->mOverflowFrames.NotEmpty()) {
+      mFrames.Join(this, prevInFlow->mOverflowFrames);
+    }
+  }
 
   // Reflow the existing frames
   if (mFrames.NotEmpty()) {
@@ -3635,6 +3645,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
          
         kidFrame->GetNextSibling(&nextSibling);
         if (nsnull != nextSibling) {
+          // XXX Don't push header/footer frames...
           PushChildren(nextSibling, kidFrame);
         }
         break;

@@ -53,6 +53,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsITextContent.h"
 #include "nsPlaceholderFrame.h"
+#include "nsTableRowGroupFrame.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -4176,6 +4177,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresCon
         ProcessChildren(aPresContext, caption, captionFrame, absoluteItems, 
                         childItems, fixedItems, floaterList);
         captionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+        // XXX Deal with absolute and fixed frames...
         if (floaterList.childList) {
           captionFrame->SetInitialChildList(*aPresContext,
                                             nsLayoutAtoms::floaterList,
@@ -4191,6 +4193,80 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresCon
 
     // Set the outer table's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, newChildFrames.childList);
+  }
+
+  *aContinuingFrame = newFrame;
+  return rv;
+}
+
+nsresult
+nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresContext*  aPresContext,
+                                                  nsIFrame*        aFrame,
+                                                  nsIFrame*        aParentFrame,
+                                                  nsIContent*      aContent,
+                                                  nsIStyleContext* aStyleContext,
+                                                  nsIFrame**       aContinuingFrame)
+{
+  nsIFrame* newFrame;
+  nsresult  rv;
+    
+  rv = NS_NewTableFrame(newFrame);
+  if (NS_SUCCEEDED(rv)) {
+    newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, aFrame);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // Replicate any header/footer frames
+    nsIFrame*     rowGroupFrame;
+    nsFrameItems  childFrames;
+
+    aFrame->FirstChild(nsnull, &rowGroupFrame);
+    while (rowGroupFrame) {
+      // See if it's a header/footer
+      nsIStyleContext*      rowGroupStyle;
+      const nsStyleDisplay* display;
+
+      rowGroupFrame->GetStyleContext(&rowGroupStyle);
+      display = (const nsStyleDisplay*)rowGroupStyle->GetStyleData(eStyleStruct_Display);
+
+      if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ||
+          (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay)) {
+        
+        // Get the containing block for absolutely positioned elements
+        nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
+                                                                       newFrame);
+        // Replicate the header/footer frame
+        nsIFrame*        headerFooterFrame;
+        nsFrameItems     childItems;
+        nsAbsoluteItems  absoluteItems(absoluteContainingBlock);
+        nsAbsoluteItems  fixedItems(mFixedContainingBlock);
+        nsAbsoluteItems  floaterList(nsnull);
+        nsIContent*      headerFooter;
+
+        NS_NewTableRowGroupFrame(headerFooterFrame);
+        rowGroupFrame->GetContent(&headerFooter);
+        headerFooterFrame->Init(*aPresContext, headerFooter, newFrame,
+                                rowGroupStyle, nsnull);
+        ProcessChildren(aPresContext, headerFooter, headerFooterFrame, absoluteItems, 
+                        childItems, fixedItems, floaterList);
+        NS_ASSERTION(!floaterList.childList, "unexpected floated element");
+        NS_RELEASE(headerFooter);
+        headerFooterFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+
+        // Table specific initialization
+        ((nsTableRowGroupFrame*)headerFooterFrame)->InitRepeatedFrame
+          ((nsTableRowGroupFrame*)rowGroupFrame);
+
+        // XXX Deal with absolute and fixed frames...
+        childFrames.AddChild(headerFooterFrame);
+      }
+
+      NS_RELEASE(rowGroupStyle);
+      rowGroupFrame->GetNextSibling(&rowGroupFrame);
+    }
+    
+    // Set the table frame's initial child list
+    newFrame->SetInitialChildList(*aPresContext, nsnull, childFrames.childList);
   }
 
   *aContinuingFrame = newFrame;
@@ -4259,12 +4335,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                          content, styleContext, &newFrame);
 
   } else if (nsLayoutAtoms::tableFrame == frameType) {
-    rv = NS_NewTableFrame(newFrame);
-    if (NS_SUCCEEDED(rv)) {
-      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
-      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
-    }
+    rv = CreateContinuingTableFrame(aPresContext, aFrame, aParentFrame,
+                                    content, styleContext, &newFrame);
 
   } else if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
     rv = NS_NewTableRowGroupFrame(newFrame);
