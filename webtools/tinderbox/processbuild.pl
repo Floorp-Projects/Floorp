@@ -52,9 +52,16 @@ close(LOG);
 &compress_log_file;
 &unlink_log_file;
 
-$err = system("./buildwho.pl $tree");
+system "./buildwho.pl $tree";
 
-#
+# Build static pages for Sidebar flash and tinderbox panels.
+$ENV{QUERY_STRING}="tree=$tree&static=1";
+system './showbuilds.cgi';
+
+# end of main
+######################################################################
+
+
 # This routine will scan through log looking for 'tinderbox:' variables
 #
 sub  get_variables{
