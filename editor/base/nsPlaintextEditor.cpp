@@ -1073,6 +1073,22 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   return res;
 }
 
+NS_IMETHODIMP
+nsPlaintextEditor::BeginComposition(nsTextEventReply* aReply)
+{
+  if(mFlags & nsIPlaintextEditor::eEditorPasswordMask)  {
+    if (mRules) {
+      nsIEditRules *p = mRules.get();
+      nsTextEditRules *textEditRules = NS_STATIC_CAST(nsTextEditRules *, p);
+      textEditRules->ResetIMETextPWBuf();
+    }
+    else  {
+      return NS_ERROR_NULL_POINTER;
+    }
+  }
+
+  return nsEditor::BeginComposition(aReply);
+}
 
 NS_IMETHODIMP
 nsPlaintextEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)

@@ -85,6 +85,9 @@ public:
     kInsertElement       = 3008
   };
   
+public:
+  nsresult ResetIMETextPWBuf();
+
 protected:
 
   // nsTextEditRules implementation methods
@@ -159,6 +162,9 @@ protected:
       insertion text to '*'s */                                        
   nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAWritableString *aOutString);
 
+  /** Remove IME composition text from password buffer */
+  nsresult RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAWritableString *aIMEString);
+
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
   PRBool DeleteEmptyTextNode(nsIDOMNode *aNode);
@@ -173,6 +179,8 @@ protected:
   // data members
   nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
   nsString             mPasswordText;  // a buffer we use to store the real value of password editors
+  nsString             mPasswordIMEText;  // a buffer we use to track the IME composition string
+  PRInt32              mPasswordIMEIndex;
   nsCOMPtr<nsIDOMNode> mBogusNode;     // magic node acts as placeholder in empty doc
   nsCOMPtr<nsIDOMNode> mBody;          // cached root node
   PRUint32             mFlags;

@@ -89,6 +89,7 @@ public:
   NS_IMETHOD GetReconversionString(nsReconversionEventReply* aReply);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
+  NS_IMETHOD BeginComposition(nsTextEventReply* aReply);
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);

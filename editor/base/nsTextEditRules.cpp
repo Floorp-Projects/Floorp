@@ -75,6 +75,8 @@ NS_NewTextEditRules(nsIEditRules** aInstancePtrResult)
 nsTextEditRules::nsTextEditRules()
 : mEditor(nsnull)
 , mPasswordText()
+, mPasswordIMEText()
+, mPasswordIMEIndex(0)
 , mBogusNode(nsnull)
 , mBody(nsnull)
 , mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
@@ -504,6 +506,11 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // to the replacement character
   if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
   {
+    if (aAction == kInsertTextIME)  {
+      res = RemoveIMETextFromPWBuf(start, outString);
+      if (NS_FAILED(res)) return res;
+    }
+
     res = EchoInsertionToPWBuff(start, end, outString);
     if (NS_FAILED(res)) return res;
   }
@@ -1257,6 +1264,34 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
   return res;
 }
 
+nsresult
+nsTextEditRules::ResetIMETextPWBuf()
+{
+  mPasswordIMEText.SetLength(0);
+  return NS_OK;
+}
+
+nsresult
+nsTextEditRules::RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAWritableString *aIMEString)
+{
+  if (!aIMEString) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // initialize PasswordIME
+  if (!mPasswordIMEText.Length()) {
+    mPasswordIMEIndex = aStart;
+    mPasswordIMEText.Assign(*aIMEString);
+    return NS_OK;
+  }
+
+  // manage the password buffer
+  mPasswordText.Cut(mPasswordIMEIndex, mPasswordIMEText.Length());
+  aStart = mPasswordIMEIndex;
+  mPasswordIMEText.Assign(*aIMEString);
+
+  return NS_OK;
+}
 
 nsresult
 nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAWritableString *aOutString)
