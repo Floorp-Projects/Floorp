@@ -45,6 +45,11 @@ public:
                          nsIContent** aNewContent,
                          PRInt32& aContentOffset,
                          PRInt32& aContentOffsetEnd);
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                         const nsPoint& aPoint,
+                         nsIContent** aNewContent,
+                         PRInt32& aContentOffset,
+                         PRInt32& aContentOffsetEnd);
 
 protected:
   virtual ~BRFrame();
@@ -169,4 +174,21 @@ NS_IMETHODIMP BRFrame::GetPosition(nsIPresContext& aCX,
   if (NS_SUCCEEDED(returnval))
     aOffsetEnd = aOffsetBegin;//BRFrames should return a collapsed selection before itself
   return returnval;
+}
+
+NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                                                     const nsPoint&  aPoint,
+                                                     nsIContent **   aContent,
+                                                     PRInt32&        aOffsetBegin,
+                                                     PRInt32&        aOffsetEnd)
+{
+  nsresult result = nsFrame::GetContentAndOffsetsFromPoint(aCX,aPoint,aContent,aOffsetBegin,aOffsetEnd);
+
+  if (NS_SUCCEEDED(result))
+  {
+    // BRFrames should return a collapsed selection before itself
+    aOffsetEnd = aOffsetBegin;
+  }
+
+  return result;
 }

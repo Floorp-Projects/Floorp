@@ -793,6 +793,9 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
         frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
       HandlePress(aPresContext, aEvent, aEventStatus);
     }break;
+  case NS_MOUSE_LEFT_BUTTON_UP:
+    HandleRelease(aPresContext, aEvent, aEventStatus);
+    break;
   default:
     break;
   }//end switch
@@ -822,7 +825,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
 //    PRUint32 contentOffset = 0;
     PRInt32 contentOffsetEnd = 0;
     nsCOMPtr<nsIContent> newContent;
-    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
+    if (NS_SUCCEEDED(GetContentAndOffsetsFromPoint(aPresContext, aEvent->point,
                                  getter_AddRefs(newContent),
                                  startPos, contentOffsetEnd))){
       nsCOMPtr<nsIFrameSelection> frameselection;
@@ -866,7 +869,7 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
       PRInt32 startPos = 0;
       PRInt32 contentOffsetEnd = 0;
       nsCOMPtr<nsIContent> newContent;
-      if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
+      if (NS_SUCCEEDED(GetContentAndOffsetsFromPoint(aPresContext, aEvent->point,
                                    getter_AddRefs(newContent),
                                    startPos, contentOffsetEnd))) {
         // find which word needs to be selected! use peek offset one
@@ -929,23 +932,26 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
-//  printf("handledrag %x\n",this);
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) {
-    PRInt32 startPos = 0;
-    PRInt32 contentOffsetEnd = 0;
-    nsCOMPtr<nsIContent> newContent;
-    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
-                                 getter_AddRefs(newContent), 
-                                 startPos, contentOffsetEnd))) {
-      nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
-        frameselection->HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE); //TRUE IS THE DIFFERENCE for continue selection
-      }
-      //no release 
-    }
+  nsresult result;
+
+  nsCOMPtr<nsIPresShell> presShell;
+
+  result = aPresContext.GetShell(getter_AddRefs(presShell));
+
+  if (NS_FAILED(result))
+    return result;
+
+  nsCOMPtr<nsIFrameSelection> frameselection;
+
+  result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
+
+  if (NS_SUCCEEDED(result) && frameselection)
+  {
+    frameselection->StopAutoScrollTimer();
+    frameselection->HandleDrag(&aPresContext, this, aEvent->point);
+    frameselection->StartAutoScrollTimer(&aPresContext, this, aEvent->point, 30);
   }
+
   return NS_OK;
 }
 
@@ -953,7 +959,151 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext,
                                      nsGUIEvent*     aEvent,
                                      nsEventStatus&  aEventStatus)
 {
+  if (!DisplaySelection(aPresContext))
+    return NS_OK;
+
+  nsresult result;
+
+  nsCOMPtr<nsIPresShell> presShell;
+
+  result = aPresContext.GetShell(getter_AddRefs(presShell));
+
+  if (NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsIFrameSelection> frameselection;
+
+    result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
+
+    if (NS_SUCCEEDED(result) && frameselection)
+      frameselection->StopAutoScrollTimer();
+  }
+
   return NS_OK;
+}
+
+
+nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                                                const nsPoint&  aPoint,
+                                                nsIContent **   aNewContent,
+                                                PRInt32&        aContentOffset,
+                                                PRInt32&        aContentOffsetEnd)
+{
+  nsresult result = NS_ERROR_FAILURE;
+
+  if (!aNewContent)
+    return NS_ERROR_NULL_POINTER;
+
+  // Traverse through children and look for the best one to give this
+  // to if it fails the getposition call, make it yourself also only
+  // look at primary list
+  nsIView  *view         = nsnull;
+  nsIFrame *kid          = nsnull;
+  nsIFrame *closestFrame = nsnull;
+
+  result = GetClosestViewForFrame(this, &view);
+
+  if (NS_FAILED(result))
+    return result;
+
+  result = FirstChild(nsnull, &kid);
+
+  if (NS_SUCCEEDED(result) && nsnull != kid) {
+
+#define HUGE_DISTANCE 999999 //some HUGE number that will always fail first comparison
+
+    PRInt32 closestXDistance = HUGE_DISTANCE;
+    PRInt32 closestYDistance = HUGE_DISTANCE;
+
+    while (nsnull != kid) {
+      nsRect rect;
+      nsPoint offsetPoint(0,0);
+      nsIView * kidView = nsnull;
+
+      kid->GetRect(rect);
+      kid->GetOffsetFromView(offsetPoint, &kidView);
+
+      rect.x = offsetPoint.x;
+      rect.y = offsetPoint.y;
+
+      nscoord y1 = rect.y;
+      nscoord y2 = rect.y + rect.height;
+
+      PRInt32 yDistance = PR_MIN(abs(y1 - aPoint.y),abs(y2 - aPoint.y));
+
+      if (yDistance <= closestYDistance && rect.width > 0 && rect.height > 0)
+      {
+        if (yDistance < closestYDistance)
+          closestXDistance = HUGE_DISTANCE;
+
+        nscoord x1 = rect.x;
+        nscoord x2 = rect.x + rect.width;
+
+        if (x1 <= aPoint.x && x2 >= aPoint.x && y1 <= aPoint.y && y2 >= aPoint.y)
+        {
+          closestFrame = kid;
+          break;
+        }
+
+        PRInt32 xDistance = PR_MIN(abs(x1 - aPoint.x),abs(x2 - aPoint.x));
+
+        if (xDistance < closestXDistance)
+        {
+          closestXDistance = xDistance;
+          closestYDistance = yDistance;
+          closestFrame     = kid;
+        }
+        // else if (xDistance > closestXDistance)
+        //   break;//done
+      }
+      
+      kid->GetNextSibling(&kid);
+    }
+    if (closestFrame) {
+
+      // If we cross a view boundary, we need to adjust
+      // the coordinates because GetPosition() expects
+      // them to be relative to the closest view.
+
+      nsPoint newPoint     = aPoint;
+      nsIView *closestView = nsnull;
+
+      result = GetClosestViewForFrame(closestFrame, &closestView);
+
+      if (NS_FAILED(result))
+        return result;
+
+      if (closestView && view != closestView)
+      {
+        nscoord vX = 0, vY = 0;
+        result = closestView->GetPosition(&vX, &vY);
+        if (NS_SUCCEEDED(result))
+        {
+          newPoint.x -= vX;
+          newPoint.y -= vY;
+        }
+      }
+
+      // printf("      0x%.8x   0x%.8x  %4d  %4d\n",
+      //        closestFrame, closestView, closestXDistance, closestYDistance);
+
+      return closestFrame->GetContentAndOffsetsFromPoint(aCX, newPoint, aNewContent,
+                                                         aContentOffset, aContentOffsetEnd);
+    }
+  }
+
+  if (!mContent)
+    return NS_ERROR_NULL_POINTER;
+
+  result = mContent->GetParent(*aNewContent);
+  if (*aNewContent){
+    result = (*aNewContent)->IndexOf(mContent, aContentOffset);
+    if (NS_FAILED(result)) 
+    {
+      return result;
+    }
+    aContentOffsetEnd = aContentOffset +1;
+  }
+  return result;
 }
 
 //--------------------------------------------------------------------------
@@ -2307,6 +2457,36 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       return newFrame->PeekOffset(aPos);
     }
   }                          
+  return result;
+}
+
+nsresult nsFrame::GetClosestViewForFrame(nsIFrame *aFrame, nsIView **aView)
+{
+  if (!aView)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult result = NS_OK;
+
+  *aView = 0;
+
+  nsIFrame *parent = aFrame;
+
+  while (parent && !*aView)
+  {
+    result = parent->GetView(aView);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!*aView)
+    {
+      result = parent->GetParent(&parent);
+
+      if (NS_FAILED(result))
+        return result;
+    }
+  }
+
   return result;
 }
 

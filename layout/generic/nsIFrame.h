@@ -457,6 +457,12 @@ public:
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd) = 0;
 
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                                           const nsPoint&  aPoint,
+                                           nsIContent **   aNewContent,
+                                           PRInt32&        aContentOffset,
+                                           PRInt32&        aContentOffsetEnd) = 0;
+
 
   /**
    * Get the cursor for a given frame.

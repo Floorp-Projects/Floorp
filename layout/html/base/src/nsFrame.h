@@ -274,6 +274,13 @@ public:
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd);
 
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                                           const nsPoint& aPoint,
+                                           nsIContent **   aNewContent,
+                                           PRInt32&        aContentOffset,
+                                           PRInt32&        aContentOffsetEnd);
+
+
   //--------------------------------------------------
   // Additional methods
 
@@ -302,6 +309,8 @@ public:
   // returned.
   PRBool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
                             nsHTMLReflowMetrics& aMetrics);
+
+  virtual nsresult GetClosestViewForFrame(nsIFrame *aFrame, nsIView **aView);
 
 #ifdef NS_DEBUG
   /**

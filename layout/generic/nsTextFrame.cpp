@@ -348,6 +348,12 @@ public:
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd);
 
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                         const nsPoint&  aPoint,
+                         nsIContent **   aNewContent,
+                         PRInt32&        aContentOffset,
+                         PRInt32&        aContentOffsetEnd);
+
   NS_IMETHOD GetPositionSlowly(nsIPresContext& aCX,
                          nsIRenderingContext * aRendContext,
                          nscoord         aXCoord,
@@ -1827,6 +1833,16 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                                           const nsPoint&  aPoint,
+                                           nsIContent **   aNewContent,
+                                           PRInt32&        aContentOffset,
+                                           PRInt32&        aContentOffsetEnd)
+{
+  return GetPosition(aCX, (aPoint.x < 0) ? 0 : aPoint.x, aNewContent, aContentOffset, aContentOffsetEnd);
 }
 
 
