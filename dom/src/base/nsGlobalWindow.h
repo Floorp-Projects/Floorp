@@ -26,6 +26,7 @@
 // Local Includes
 // Helper Classes
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 #include "nsHashtable.h"
 
 // Interfaces Needed
@@ -78,7 +79,8 @@ class GlobalWindowImpl :   public nsIScriptGlobalObject,
                            public nsIScriptObjectPrincipal,
                            public nsIDOMEventReceiver,
                            public nsPIDOMWindow, 
-                           public nsIDOMViewCSS
+                           public nsIDOMViewCSS,
+                           public nsSupportsWeakReference
 {
 public:
    // nsISupports
