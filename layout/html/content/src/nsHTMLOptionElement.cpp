@@ -31,9 +31,12 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIDOMText.h"
+#include "nsITextContent.h"
 #include "nsIDOMNode.h"
 #include "nsGenericElement.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsIJSNativeInitializer.h"
+#include "nsISelectElement.h"
 
 // Notify/query select frame for selected state
 #include "nsIFormControlFrame.h"
@@ -49,14 +52,17 @@ static NS_DEFINE_IID(kIDOMHTMLOptGroupElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kISelectElementIID, NS_ISELECTELEMENT_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
+static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
 class nsHTMLOptionElement : public nsIDOMHTMLOptionElement,
-                     public nsIScriptObjectOwner,
-                     public nsIDOMEventReceiver,
-                     public nsIHTMLContent
-                     //public nsIFormControl
+                            public nsIScriptObjectOwner,
+                            public nsIDOMEventReceiver,
+                            public nsIHTMLContent,
+                            public nsIJSNativeInitializer
+                            //public nsIFormControl
 {
 public:
   nsHTMLOptionElement(nsIAtom* aTag);
@@ -96,10 +102,13 @@ public:
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_SETPARENT_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+
+  // nsIJSNativeInitializer
+  NS_IMETHOD        Initialize(JSContext* aContext, PRUint32 argc, jsval *argv);
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -148,6 +157,12 @@ nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     mRefCnt++;
     return NS_OK;
   }
+  if (aIID.Equals(kIJSNativeInitializerIID)) {
+    nsIJSNativeInitializer* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    AddRef();
+    return NS_OK;
+  }                                                             
   return NS_NOINTERFACE;
 }
 
@@ -163,6 +178,47 @@ nsHTMLOptionElement::Release()
   } else {
     return mRefCnt;
   }
+}
+
+NS_IMETHODIMP 
+nsHTMLOptionElement::SetParent(nsIContent* aParent)
+{
+  nsresult result = NS_OK;
+
+  // Remove us from our old select element
+  if (nsnull != mInner.mParent) {
+    nsIDOMHTMLSelectElement* oldSelectElement = nsnull;
+    GetSelect(oldSelectElement);
+    if (nsnull != oldSelectElement) {
+      nsISelectElement* select;
+      
+      if (NS_SUCCEEDED(oldSelectElement->QueryInterface(kISelectElementIID, (void**)&select))) {
+        select->RemoveOption(this);
+        NS_RELEASE(select);
+      }
+
+      NS_RELEASE(oldSelectElement);
+    }
+  }
+
+  result = mInner.SetParent(aParent);
+
+  if (nsnull != aParent) {
+    nsIDOMHTMLSelectElement* newSelectElement = nsnull;
+    GetSelect(newSelectElement);
+    if (nsnull != newSelectElement) {
+      nsISelectElement* select;
+      
+      if (NS_SUCCEEDED(newSelectElement->QueryInterface(kISelectElementIID, (void**)&select))) {
+        select->AddOption(this);
+        NS_RELEASE(select);
+      }
+
+      NS_RELEASE(newSelectElement);
+    }
+  }
+
+  return result;
 }
 
 nsresult
@@ -405,31 +461,117 @@ nsresult nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement
   nsIDOMNode* parentNode = nsnull;
   nsresult res = NS_ERROR_FAILURE;
   if (NS_OK == this->GetParentNode(&parentNode)) {
-    aSelectElement = nsnull;
-    res = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&aSelectElement);
+      aSelectElement = nsnull;
+      if (nsnull != parentNode) {
+        
+        res = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&aSelectElement);
 
-    // If we are in an OptGroup we need to GetParentNode again (at least once)
-    if (NS_OK != res) {
-      nsIDOMHTMLOptGroupElement* optgroupElement = nsnull;
-      while (1) { // Be ready for nested OptGroups
-        if (NS_OK == parentNode->QueryInterface(kIDOMHTMLOptGroupElementIID, (void**)&optgroupElement)) {
-          NS_RELEASE(optgroupElement); // Don't need the optgroup, just seeing if it IS one.
-          nsIDOMNode* grandParentNode = nsnull;
-          if (NS_OK == parentNode->GetParentNode(&grandParentNode)) {
-            NS_RELEASE(parentNode);
-            parentNode = grandParentNode;
-          } else {
-            break; // Break out if we can't get our parent (we're screwed)
+        // If we are in an OptGroup we need to GetParentNode again (at least once)
+        if (NS_OK != res) {
+          nsIDOMHTMLOptGroupElement* optgroupElement = nsnull;
+          while (1) { // Be ready for nested OptGroups
+            if ((nsnull != parentNode) && (NS_OK == parentNode->QueryInterface(kIDOMHTMLOptGroupElementIID, (void**)&optgroupElement))) {
+              NS_RELEASE(optgroupElement); // Don't need the optgroup, just seeing if it IS one.
+              nsIDOMNode* grandParentNode = nsnull;
+              if (NS_OK == parentNode->GetParentNode(&grandParentNode)) {
+                NS_RELEASE(parentNode);
+                parentNode = grandParentNode;
+              } else {
+                break; // Break out if we can't get our parent (we're screwed)
+              }
+            } else {
+              break; // Break out if not a OptGroup (hopefully we have a select)
+            }
           }
-        } else {
-          break; // Break out if not a OptGroup (hopefully we have a select)
+          res = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&aSelectElement);
         }
+
+        // We have a select if we're gonna get one, so let go of the generic node
+        NS_RELEASE(parentNode);
       }
-      res = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&aSelectElement);
+  }
+
+  return res;
+}
+
+NS_IMETHODIMP    
+nsHTMLOptionElement::Initialize(JSContext* aContext, 
+                                PRUint32 argc, 
+                                jsval *argv)
+{
+  nsresult result = NS_OK;
+
+  if (argc > 0) {
+    // The first (optional) parameter is the text of the option
+    JSString* jsstr = JS_ValueToString(aContext, argv[0]);
+    if (nsnull != jsstr) {
+      // Create a new text node and append it to the option
+      nsIContent* textNode;
+      nsITextContent* content;
+
+      result = NS_NewTextNode(&textNode);
+      if (NS_FAILED(result)) {
+        return result;
+      }
+      
+      result = textNode->QueryInterface(kITextContentIID, (void**)&content);
+      if (NS_FAILED(result)) {
+        return result;
+      }
+
+      result = content->SetText(JS_GetStringChars(jsstr),
+                                JS_GetStringLength(jsstr),
+                                PR_FALSE);
+      NS_RELEASE(content);
+      if (NS_FAILED(result)) {
+        return result;
+      }
+      
+      result = mInner.AppendChildTo(textNode, PR_FALSE);
+      if (NS_FAILED(result)) {
+        return result;
+      }
     }
 
-    // We have a select if we're gonna get one, so let go of the generic node
-    NS_RELEASE(parentNode);
+    if (argc > 1) {
+      // The second (optional) parameter is the value of the option
+      jsstr = JS_ValueToString(aContext, argv[1]);
+      if (nsnull != jsstr) {
+        // Set the value attribute for this element
+        nsAutoString value(JS_GetStringChars(jsstr));
+
+        result = mInner.SetAttribute(kNameSpaceID_HTML,
+                                     nsHTMLAtoms::value,
+                                     value,
+                                     PR_FALSE);
+        if (NS_FAILED(result)) {
+          return result;
+        }
+      }
+
+      if (argc > 2) {
+        // The third (optional) parameter is the defaultSelected value
+        JSBool defaultSelected;
+        if ((JS_TRUE == JS_ValueToBoolean(aContext,
+                                         argv[2],
+                                         &defaultSelected)) &&
+            (JS_TRUE == defaultSelected)) {
+          nsHTMLValue empty(eHTMLUnit_Empty);
+          result = mInner.SetHTMLAttribute(nsHTMLAtoms::selected, 
+                                           empty, 
+                                           PR_FALSE);
+          if (NS_FAILED(result)) {
+            return result;
+          }          
+        }
+
+        // XXX Since we don't store the selected state, we can't deal
+        // with the fourth (optional) parameter that is meant to specify
+        // whether the option element should be currently selected or
+        // not. Does anyone depend on this behavior?
+      }
+    }
   }
-  return res;
+
+  return result;
 }
