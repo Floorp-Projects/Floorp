@@ -64,8 +64,6 @@ typedef enum
 
 // View interface
 
-// Note that nsIView does not support reference counting; view object
-// have their lifetime bound to the view manager that contains them.
 class nsIView : public nsISupports
 {
 public:
