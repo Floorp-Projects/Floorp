@@ -47,29 +47,16 @@ public:
 
   void Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
-  void SetIsFirstChild(PRBool aValue) {
-    mIsFirstChild = aValue;
-  }
-
-  void SetRunInFrame(nsBlockFrame* aBlockFrame) {
-    mRunInFrame = aBlockFrame;
-  }
-
-  void SetCompactMarginWidth(nscoord aWidth) {
-    mCompactMarginWidth = aWidth;
-  }
-
   void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                   PRBool aPlacedLeftFloater);
 
-  nsReflowStatus ReflowFrame(nsIFrame* aFrame);
+  nsresult ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus);
 
   void VerticalAlignFrames(nsRect& aLineBox,
                            nscoord& aMaxAscent,
                            nscoord& aMaxDescent);
 
-  void HorizontalAlignFrames(nsRect& aLineBox,
-                             PRBool aIsLastLine = PR_FALSE);
+  void HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify);
 
   void RelativePositionFrames(nsRect& aCombinedArea);
 
@@ -80,15 +67,11 @@ public:
     mFrameNum = aCount;
   }
 
-  PRBool GetIsBlock() const { return mIsBlock; }
-
   const nsSize& GetMaxElementSize() const { return mMaxElementSize; }
 
   nscoord GetCarriedOutTopMargin() const { return mCarriedOutTopMargin; }
 
   nscoord GetCarriedOutBottomMargin() const { return mCarriedOutBottomMargin; }
-
-  nscoord GetCarriedOutMarginFlags() const { return mCarriedOutMarginFlags; }
 
   nscoord GetTopMargin() const {
     return mFrameData->mMargin.top;
@@ -96,10 +79,6 @@ public:
 
   nscoord GetBottomMargin() const {
     return mFrameData->mMargin.bottom;
-  }
-
-  PRUintn GetMarginFlags() const {
-    return mFrameData->mMarginFlags;
   }
 
   nscoord GetAvailWidth() const {
@@ -162,9 +141,6 @@ protected:
   nsIPresContext& mPresContext;
   PRBool mOuterIsBlock;
 
-  nsBlockFrame* mRunInFrame;
-  nscoord mCompactMarginWidth;
-
   PRIntn mFrameNum;
 
   /*
@@ -177,7 +153,6 @@ protected:
     nscoord mDescent;           // computed descent value
 
     nsMargin mMargin;           // computed margin value
-    PRUintn mMarginFlags;
 
     // Location and size of frame after its reflowed but before it is
     // positioned finally by VerticalAlignFrames
@@ -200,16 +175,8 @@ protected:
   const nsStyleSpacing* mSpacing;
   const nsStylePosition* mPosition;
   const nsStyleDisplay* mDisplay;
-  PRBool mTreatFrameAsBlock;            // treat the frame as a block frame
-
-  // Entire reflow should act like a block; this means that somewhere
-  // during reflow we encountered a block frame. There can be more one
-  // than one frame in the reflow group (because of empty frames), so
-  // this flag keeps us honest regarding the state of this reflow.
-  PRBool mIsBlock;
 
   PRBool mCanBreakBeforeFrame;          // we can break before the frame
-  PRBool mIsFirstChild;
 
   PRBool mComputeMaxElementSize;
   nsSize mMaxElementSize;
@@ -219,7 +186,6 @@ protected:
   nscoord mRightMargin;/* XXX */
   nscoord mCarriedOutTopMargin;
   nscoord mCarriedOutBottomMargin;
-  PRUintn mCarriedOutMarginFlags;
 
   // The computed available size and location for the frame
   nsSize mFrameAvailSize;
@@ -232,25 +198,8 @@ protected:
   nscoord mBottomEdge;
 
   PRBool mUpdatedBand;
-  PRBool mPlacedLeftFloater;
+  PRUint8 mPlacedFloaters;
   PRBool mInWord;
 };
-
-inline nscoord
-nsInlineReflow::MaxMargin(nscoord a, nscoord b)
-{
-  if (a < 0) {
-    if (b < 0) {
-      if (a < b) return a;
-      return b;
-    }
-    return b + a;
-  }
-  else if (b < 0) {
-    return a + b;
-  }
-  if (a > b) return a;
-  return b;
-}
 
 #endif /* nsInlineReflow_h___ */
