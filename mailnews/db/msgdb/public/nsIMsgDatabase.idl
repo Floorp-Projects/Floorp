@@ -117,6 +117,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   void MarkHasAttachments(in nsMsgKey key, in boolean bHasAttachments, 
                                 in nsIDBChangeListener instigator);
 
+  [noscript] void MarkThreadRead(in nsIMsgThread thread, in nsIDBChangeListener instigator, in nsMsgKeyArrayPtr thoseMarked);
+
   void MarkThreadIgnored(in nsIMsgThread thread, in nsMsgKey threadKey, in boolean bIgnored,
                                in nsIDBChangeListener instigator);
   void MarkThreadWatched(in nsIMsgThread thread, in nsMsgKey threadKey, in boolean bWatched,

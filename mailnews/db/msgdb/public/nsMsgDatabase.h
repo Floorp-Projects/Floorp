@@ -133,6 +133,7 @@ public:
   NS_IMETHOD MarkHasAttachments(nsMsgKey key, PRBool bHasAttachments, 
                                 nsIDBChangeListener *instigator);
 
+  NS_IMETHOD MarkThreadRead(nsIMsgThread *thread, nsIDBChangeListener *instigator, nsMsgKeyArray *thoseMarked);
   NS_IMETHOD MarkThreadIgnored(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bIgnored,
                                nsIDBChangeListener *instigator);
   NS_IMETHOD MarkThreadWatched(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bWatched,

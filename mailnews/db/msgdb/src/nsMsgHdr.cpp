@@ -36,6 +36,7 @@ static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 #define FLAGS_INITED 0x1
 #define CACHED_VALUES_INITED 0x2
 #define REFERENCES_INITED 0x4
+#define THREAD_PARENT_INITED 0x8
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
@@ -84,7 +85,6 @@ nsresult nsMsgHdr::InitCachedValues()
 
 		err = GetUInt32Column(m_mdb->m_messageThreadIdColumnToken, &m_threadId);
 		err = GetUInt32Column(m_mdb->m_numReferencesColumnToken, &uint32Value);
-		err = GetUInt32Column(m_mdb->m_threadParentColumnToken, &m_threadParent);
 		if (NS_SUCCEEDED(err))
 			m_numReferences = (PRUint16) uint32Value;
 
@@ -660,13 +660,19 @@ NS_IMETHODIMP nsMsgHdr::SetThreadParent(nsMsgKey inKey)
 {
 	m_threadParent = inKey;
 	SetUInt32Column(m_threadParent, m_mdb->m_threadParentColumnToken);
+	m_initedValues |= THREAD_PARENT_INITED;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetThreadParent(nsMsgKey *result)
 {
 	nsresult res;
-    res = GetUInt32Column(m_mdb->m_threadParentColumnToken, &m_threadParent, nsMsgKey_None);
+	if(!(m_initedValues & THREAD_PARENT_INITED))
+	{
+		res = GetUInt32Column(m_mdb->m_threadParentColumnToken, &m_threadParent, nsMsgKey_None);
+		if (NS_SUCCEEDED(res))
+			m_initedValues |= THREAD_PARENT_INITED;
+	}
     *result = m_threadParent;
     return NS_OK;
 }
