@@ -200,6 +200,14 @@ nsDownloadListener::SetObserver(nsIObserver * aObserver)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDownloadListener::GetTargetFile(nsILocalFile ** aTargetFile)
+{
+  NS_ENSURE_ARG_POINTER(aTargetFile);
+  NS_IF_ADDREF(*aTargetFile = mDestinationFile);
+  return NS_OK;
+}
+
 #pragma mark -
 
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
