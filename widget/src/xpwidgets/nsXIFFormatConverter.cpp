@@ -30,16 +30,6 @@
 
 #include "nsITransferable.h" // for mime defs, this is BAD
 
-
-// These are temporary
-#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
-#include <strstream.h>
-#endif
-
-#ifdef XP_PC
-#include <strstrea.h>
-#endif
-
 // XIF convertor stuff
 #include "nsIParser.h"
 #include "nsParserCIID.h"
