@@ -32,6 +32,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
@@ -465,6 +466,14 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType)
 {
+  // Check the preventDefault flag.  We don't ever execute a XUL key binding
+  // if this flag is set.
+  nsCOMPtr<nsIDOMNSUIEvent> evt = do_QueryInterface(aKeyEvent);
+  PRBool prevent;
+  evt->GetPreventDefault(&prevent);
+  if (prevent)
+    return NS_OK;
+
   static PRBool executingKeyBind = PR_FALSE;
   nsresult ret = NS_OK;
 
@@ -1545,8 +1554,6 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 
               masterContext->BindCompiledEventHandler(scriptObject, eventName, nsnull);
 
-              //aKeyEvent->PreventBubble();
-              //aKeyEvent->PreventCapture();
               return NS_OK;
             }
           }
@@ -1575,6 +1582,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           }
           aKeyEvent->PreventBubble();
           aKeyEvent->PreventCapture();
+          aKeyEvent->PreventDefault();
           content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
           nsresult ret = NS_ERROR_BASE;
 
