@@ -23,7 +23,7 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@:@srcdir@/../src/
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/../src/objs.mk
@@ -32,7 +32,7 @@ MODULE		= zlib
 LIBRARY_NAME	= mozz_s
 
 CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
-EXPORTS		= $(MODULES_ZLIB_SRC_LEXPORTS)
+EXPORTS		= $(MODULES_ZLIB_SRC_EXPORTS)
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 FORCE_STATIC_LIB = 1
@@ -40,9 +40,11 @@ endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
 
-MDDEPDIR	:= $(MDDEPDIR)_S
-OBJ_SUFFIX	:= S.$(OBJ_SUFFIX)
-COMPILER_DEPEND :=
+GARBAGE		+= $(MODULES_ZLIB_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES = -I$(srcdir)/../src
+
+export:: $(MODULES_ZLIB_SRC_CSRCS)
+	$(INSTALL) $^ .
