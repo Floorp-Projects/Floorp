@@ -68,7 +68,20 @@ NS_IMETHODIMP nsPrintOptionsWin::CreatePrintSettings(nsIPrintSettings **_retval)
   rv = printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
   NS_ENSURE_SUCCESS(rv, rv);
 
-  InitPrintSettingsFromPrefs(*_retval, PR_FALSE, 0); // ignore return value
+  // nsPrintOptionImpl actually initials with "kInitSaveAll", but that is a 
+  // little extreme for Windows, so here we will initialize with a sub-set of 
+  // the settings
+  PRUint32 flags = nsIPrintSettings.kInitSaveHeaderLeft | 
+                   nsIPrintSettings.kInitSaveHeaderCenter |
+                   nsIPrintSettings.kInitSaveHeaderRight |
+                   nsIPrintSettings.kInitSaveFooterLeft | 
+                   nsIPrintSettings.kInitSaveFooterCenter |
+                   nsIPrintSettings.kInitSaveFooterRight |
+                   nsIPrintSettings.kInitSaveBGColors |
+                   nsIPrintSettings.kInitSaveBGImages |
+                   nsIPrintSettings.kInitSaveMargins;
+
+  InitPrintSettingsFromPrefs(*_retval, PR_FALSE, flags); // ignore return value
 
   return rv;
 }
