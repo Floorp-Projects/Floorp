@@ -29,4 +29,8 @@ BUILD_SMIME=1
 DIRS=smime
 !endif
 
+!if defined(BUILD_MAIL_SMOKETEST)
+DIRS=smoketest
+!endif
+
 include <$(DEPTH)\config\rules.mak>
