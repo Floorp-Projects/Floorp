@@ -118,7 +118,7 @@ protected:
     
     nsresult GetFileSpec(nsIFileSpec* *aFileSpec);
 
-    void NoteDownloadTime(PRTime start, PRTime end);
+    void NoteDownloadTime(PRIntervalTime start, PRIntervalTime end);
 
     // placement new for arena-allocation
     void *operator new (size_t aSize, nsIArena *aArena);

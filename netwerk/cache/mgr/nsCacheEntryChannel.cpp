@@ -50,11 +50,11 @@ class CacheOutputStream : public nsIOutputStream {
 
 public:
     CacheOutputStream(nsIOutputStream *aOutputStream, nsCachedNetData *aCacheEntry):
-        mOutputStream(aOutputStream), mCacheEntry(aCacheEntry), mStartTime(PR_Now())
+        mOutputStream(aOutputStream), mCacheEntry(aCacheEntry), mStartTime(PR_IntervalNow())
         { NS_INIT_REFCNT(); }
 
     virtual ~CacheOutputStream() {
-        mCacheEntry->NoteDownloadTime(mStartTime, PR_Now());
+        mCacheEntry->NoteDownloadTime(mStartTime, PR_IntervalNow());
         mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
     }
     
@@ -83,7 +83,7 @@ protected:
     nsCOMPtr<nsCachedNetData> mCacheEntry;
 
     // Time at which stream was opened
-    PRTime mStartTime;
+    PRIntervalTime mStartTime;
 };
 
 NS_IMPL_ISUPPORTS(CacheOutputStream, NS_GET_IID(nsIOutputStream))
