@@ -747,6 +747,16 @@ nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 NS_IMETHODIMP    
 nsXMLDocument::CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASection** aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsReadingIterator<PRUnichar> begin;
+  nsReadingIterator<PRUnichar> end;
+  aData.BeginReading(begin);
+  aData.EndReading(end);
+  if (FindInReadable(NS_LITERAL_STRING("]]>"),begin,end))
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+
   nsIContent* content;
   nsresult rv = NS_NewXMLCDATASection(&content);
 
@@ -762,6 +772,8 @@ nsXMLDocument::CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASec
 NS_IMETHODIMP    
 nsXMLDocument::CreateEntityReference(const nsAReadableString& aName, nsIDOMEntityReference** aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+
   *aReturn = nsnull;
   return NS_OK;
 }
@@ -771,6 +783,9 @@ nsXMLDocument::CreateProcessingInstruction(const nsAReadableString& aTarget,
                                            const nsAReadableString& aData, 
                                            nsIDOMProcessingInstruction** aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
   nsIContent* content;
   nsresult rv = NS_NewXMLProcessingInstruction(&content, aTarget, aData);
 
@@ -789,6 +804,7 @@ nsXMLDocument::CreateElement(const nsAReadableString& aTagName,
                               nsIDOMElement** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
   NS_ENSURE_TRUE(aTagName.Length(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
 
   nsIXMLContent* content;
@@ -899,6 +915,9 @@ nsXMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
                                const nsAReadableString& aQualifiedName,
                                nsIDOMElement** aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -975,8 +994,6 @@ NS_IMETHODIMP
 nsXMLDocument::GetElementById(const nsAReadableString& aElementId,
                              nsIDOMElement** aReturn)
 {
-  // XXX Since we don't have a validating parser, the only content
-  // that this applies to is HTML content.
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
