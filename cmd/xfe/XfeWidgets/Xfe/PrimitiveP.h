@@ -220,6 +220,9 @@ _XfePrimitiveAllocateBackgroundGC	(Widget			w);
 extern void
 _XfePrimitiveReleaseBackgroundGC	(Widget			w);
 /*----------------------------------------------------------------------*/
+extern void
+_XfePrimitiveUpdateBackgroundGC		(Widget			w);
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/

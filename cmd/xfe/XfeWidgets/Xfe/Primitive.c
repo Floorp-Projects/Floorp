@@ -582,30 +582,30 @@ Destroy(Widget w)
 static void
 Redisplay(Widget w,XEvent *event,Region region)
 {
-   /* Make sure the widget is realized before drawing ! */
-   if (!XtIsRealized(w))
-   {
-      return;
-   }
-
-   switch(_XfeBufferType(w))
-   {
-       /* No buffer: simply re-draw everything */
-   case XmBUFFER_NONE:
-       _XfePrimitiveDrawEverything(w,event,region);
-       break;
-       
-       /* Single buffer: draw the buffer only */
-   case XmBUFFER_PRIVATE:
-       _XfePrimitiveDrawBuffer(w,event,region);
-       break;
-       
-       /* Multiple buffer: update the buffer and draw it */
-   case XmBUFFER_SHARED:
-       _XfePrimitiveDrawEverything(w,event,region);
-       _XfePrimitiveDrawBuffer(w,event,region);
-       break;
-   }
+	/* Make sure the widget is realized before drawing ! */
+	if (!XtIsRealized(w))
+	{
+		return;
+	}
+	
+	switch(_XfeBufferType(w))
+	{
+		/* No buffer: simply re-draw everything */
+	case XmBUFFER_NONE:
+		_XfePrimitiveDrawEverything(w,event,region);
+		break;
+		
+		/* Single buffer: draw the buffer only */
+	case XmBUFFER_PRIVATE:
+		_XfePrimitiveDrawBuffer(w,event,region);
+		break;
+		
+		/* Multiple buffer: update the buffer and draw it */
+	case XmBUFFER_SHARED:
+		_XfePrimitiveDrawEverything(w,event,region);
+		_XfePrimitiveDrawBuffer(w,event,region);
+		break;
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -777,9 +777,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     {
 		if(_XfeUsePreferredWidth(nw))
 		{
-			_XfeConfigFlags(nw) |= (XfeConfigLayout|
-									XfeConfigGeometry|
-									XfeConfigExpose);
+			_XfeConfigFlags(nw) |= XfeConfigGLE;
 		}
     }
 
@@ -788,9 +786,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     {
 		if(_XfeUsePreferredHeight(nw))
 		{
-			_XfeConfigFlags(nw) |= (XfeConfigLayout|
-									XfeConfigGeometry|
-									XfeConfigExpose);
+			_XfeConfigFlags(nw) |= XfeConfigGLE;
 		}
     }
     
@@ -804,7 +800,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		}
 		else
 		{
-			_XfeConfigFlags(nw) |= (XfeConfigLayout|XfeConfigExpose);
+			_XfeConfigFlags(nw) |= XfeConfigLE;
 		}
     }
     
@@ -818,7 +814,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		}
 		else
 		{
-			_XfeConfigFlags(nw) |= (XfeConfigLayout|XfeConfigExpose);
+			_XfeConfigFlags(nw) |= XfeConfigLE;
 		}
     }
     
@@ -845,7 +841,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		(_XfeShadowThickness(nw)		!= _XfeShadowThickness(ow)) ||
 		(_XfeUnitType(nw)			!= _XfeUnitType(ow)))
     {
-		_XfeConfigFlags(nw) |= (XfeConfigLayout|XfeConfigGeometry|XfeConfigExpose);
+		_XfeConfigFlags(nw) |= XfeConfigGLE; 
     }
     
     /* shadow_type */
@@ -870,16 +866,15 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     }
     
     /* background_pixel or background_pixmap */
-    if (((_XfeBackgroundPixel(nw) != _XfeBackgroundPixel(ow)) ||
-		 (_XfeBackgroundPixmap(nw) != _XfeBackgroundPixmap(ow))) &&
-		(_XfeBufferType(nw) != XmBUFFER_NONE))
-    {
-		/* Release the old background GC */
-		_XfePrimitiveReleaseBackgroundGC(nw);
-		
-		/* Allocate the new background GC */
-		_XfePrimitiveAllocateBackgroundGC(nw);
-    }
+    if (_XfeBackgroundPixel(nw) != _XfeBackgroundPixel(ow) ||
+		_XfeBackgroundPixmap(nw) != _XfeBackgroundPixmap(ow))
+	{
+		/* Update the old background GC if needed */
+		if (_XfeBufferType(nw) != XmBUFFER_NONE)
+		{
+			_XfePrimitiveUpdateBackgroundGC(nw);
+		}
+	}
 	
     return _XfePrimitiveChainSetValues(ow,rw,nw,xfePrimitiveWidgetClass);
 }
@@ -1016,7 +1011,7 @@ SetValuesPostHook(Widget ow,Widget rw,Widget nw)
 			_XfePrimitiveDrawEverything(nw,NULL,NULL);
 	    
 			/* Draw the buffer onto the window */
-			XfeExpose(nw,NULL,NULL);
+ 			XfeExpose(nw,NULL,NULL);
 		}
     }
     else
@@ -1537,11 +1532,15 @@ _XfePrimitiveClearBackground(Widget w)
 /* extern */ void
 _XfePrimitiveAllocateBackgroundGC(Widget w)
 {
+#if 0
 	/* Make sure the background gc gets allocated only once */
 	if (_XfeBackgroundGC(w))
 	{
 		return;
 	}
+#endif
+
+	assert( _XfeBackgroundGC(w) == NULL );
 
 	if (_XfePixmapGood(_XfeBackgroundPixmap(w)))
 	{
@@ -1557,14 +1556,27 @@ _XfePrimitiveAllocateBackgroundGC(Widget w)
 /* extern */ void
 _XfePrimitiveReleaseBackgroundGC(Widget w)
 {
+#if 0
 	/* Make sure the gc has been allocated */
 	if (!_XfeBackgroundGC(w))
 	{
 		return;
 	}
+#endif
+
+	assert( _XfeBackgroundGC(w) != NULL );
 
     /* Free the background gc */
     XtReleaseGC(w,_XfeBackgroundGC(w));
+
+	_XfeBackgroundGC(w) = NULL;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+_XfePrimitiveUpdateBackgroundGC(Widget w)
+{
+	_XfePrimitiveReleaseBackgroundGC(w);
+	_XfePrimitiveAllocateBackgroundGC(w);
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
