@@ -40,7 +40,7 @@ interface nsIMsgAccount : nsISupports {
   attribute nsIMsgIncomingServer incomingServer;
 
   /* outgoing identity list */
-  nsISupportsArray GetIdentities();
+  readonly attribute nsISupportsArray identities;
 
   attribute nsIMsgIdentity defaultIdentity;
   
