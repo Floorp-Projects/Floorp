@@ -270,22 +270,8 @@ sub FindMakefiles {
   print "\nConfiguring ... \n";
   unlink("$basedir/mozilla/config.cache");
   chdir("$basedir/mozilla");
-  my $configure_cmd = "./configure --enable-standalone-modules=$root_modules --disable-ldap";
+  my $configure_cmd = "./configure --enable-standalone-modules=$root_modules --disable-ldap --disable-tests";
   $rv = run_shell_command("$configure_cmd");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   #
   # Construct a build/unix/modules.mk file, this let's us do
@@ -332,16 +318,6 @@ sub FindMakefiles {
   #}
 
   close MODULESMK;
-
-  exit(1);
-
-
-
-
-
-
-
-
 
   # Now try and build.
   # Not a top-level build, but build each directory.
