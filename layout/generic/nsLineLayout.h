@@ -53,6 +53,7 @@ public:
     mBRFrame = nsnull;
     mPlacedFrames.Clear();
     ForgetWordFrames();
+    mFirstLetterStyleOK = 0 == mLineNumber;
   }
 
   // Add to the placed-frame count
@@ -180,11 +181,20 @@ public:
     return mEndsInWhiteSpace;
   }
 
+  PRBool GetFirstLetterStyleOK() const {
+    return mFirstLetterStyleOK;
+  }
+
+  void SetFirstLetterStyleOK(PRBool aSetting) {
+    mFirstLetterStyleOK = aSetting;
+  }
+
 protected:
   nsIFrame* mBRFrame;
 
   PRBool mEndsInWhiteSpace;
   PRBool mUnderstandsWhiteSpace;
+  PRBool mFirstLetterStyleOK;
 
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mPlacedFrames;
