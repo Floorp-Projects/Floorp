@@ -135,8 +135,7 @@ public final class OptRuntime extends ScriptRuntime
                 }
                 obj = obj.getParentScope();
             }
-            String msg = ScriptRuntime.getMessage1("msg.is.not.defined", id);
-            throw ScriptRuntime.constructError("ReferenceError", msg);
+            throw ScriptRuntime.notFoundError(scope, id);
         }
 
         Scriptable thisArg = ScriptRuntime.getThis(obj);

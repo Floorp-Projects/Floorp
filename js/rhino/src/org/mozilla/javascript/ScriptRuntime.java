@@ -1254,8 +1254,7 @@ public class ScriptRuntime {
                 return result;
             obj = obj.getParentScope();
         }
-        String msg = getMessage1("msg.is.not.defined", id.toString());
-        throw constructError("ReferenceError", msg);
+        throw notFoundError(scopeChain, id);
     }
 
     /**
@@ -1286,8 +1285,7 @@ public class ScriptRuntime {
         if (base != null) {
             return base;
         }
-        String msg = getMessage1("msg.is.not.defined", id);
-        throw constructError("ReferenceError", msg);
+        throw notFoundError(scope, id);
     }
 
     public static Scriptable getThis(Scriptable base) {
@@ -1637,8 +1635,7 @@ public class ScriptRuntime {
             } while (m != null);
             obj = obj.getParentScope();
         }
-        String msg = getMessage1("msg.is.not.defined", id);
-        throw constructError("ReferenceError", msg);
+        throw notFoundError(scopeChain, id);
     }
 
     public static Object postIncrDecr(Object obj, String id, Scriptable scope, boolean increment)
@@ -2164,6 +2161,13 @@ public class ScriptRuntime {
                           ? value.toString() : toString(value);
         String msg = getMessage2(messageId, property, valueStr);
         return typeError2(messageId, valueStr, msg);
+    }
+
+    public static RuntimeException notFoundError(Scriptable object, String property)
+    {
+        // XXX: use object to improve the error message
+        String msg = getMessage1("msg.is.not.defined", property);
+        throw constructError("ReferenceError", msg);
     }
 
     public static RegExpProxy getRegExpProxy(Context cx)
