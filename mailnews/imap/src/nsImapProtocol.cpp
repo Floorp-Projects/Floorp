@@ -2718,7 +2718,8 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 
 void nsImapProtocol::UpdatedMailboxSpec(mailbox_spec *aSpec)
 {
-	m_imapMailFolderSink->UpdateImapMailboxInfo(this, aSpec);
+	if (m_imapMailFolderSink)
+		m_imapMailFolderSink->UpdateImapMailboxInfo(this, aSpec);
 }
 
 void nsImapProtocol::FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount)
