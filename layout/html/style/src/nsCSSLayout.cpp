@@ -258,12 +258,30 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
   nsIFrame* kid = aFirstChild;
   while (--aChildCount >= 0) {
     const nsStylePosition* kidPosition;
-    kid->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)kidPosition);
+    kid->GetStyleData(eStyleStruct_Position,
+                      (const nsStyleStruct*&)kidPosition);
     if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
       kid->GetOrigin(origin);
-      // XXX Check the unit: could be auto or percent (not just length)
-      nscoord dx = kidPosition->mLeftOffset.GetCoordValue();
-      nscoord dy = kidPosition->mTopOffset.GetCoordValue();
+      nscoord dx = 0;
+      switch (kidPosition->mLeftOffset.GetUnit()) {
+      case eStyleUnit_Percent:
+        printf("XXX: not yet implemented: % relative position\n");
+      case eStyleUnit_Auto:
+        break;
+      case eStyleUnit_Coord:
+        dx = kidPosition->mLeftOffset.GetCoordValue();
+        break;
+      }
+      nscoord dy = 0;
+      switch (kidPosition->mTopOffset.GetUnit()) {
+      case eStyleUnit_Percent:
+        printf("XXX: not yet implemented: % relative position\n");
+      case eStyleUnit_Auto:
+        break;
+      case eStyleUnit_Coord:
+        dx = kidPosition->mTopOffset.GetCoordValue();
+        break;
+      }
       kid->MoveTo(origin.x + dx, origin.y + dy);
     }
     kid->GetNextSibling(kid);
