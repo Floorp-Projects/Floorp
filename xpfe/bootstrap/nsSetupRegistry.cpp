@@ -40,7 +40,7 @@
 #include "nsIWindowMediator.h"
 #include "nsICommonDialogs.h"
 #include "nsIDialogParamBlock.h"
-
+#include "nsAbout.h"
 static NS_DEFINE_CID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 static NS_DEFINE_CID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
 static NS_DEFINE_CID(kDOMPropsCoreCID,     NS_DOMPROPSCORE_CID);
@@ -84,6 +84,7 @@ static NS_DEFINE_CID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID( kDialogParamBlockCID, NS_DialogParamBlock_CID );
+static NS_DEFINE_CID( kAboutModuleCID,      NS_ABOUT_CID);
 nsresult NS_AutoregisterComponents()
 {
   nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
@@ -127,7 +128,7 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponentLib(kSessionHistoryCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
    nsComponentManager::RegisterComponentLib(kCommonDialogsCID,   NULL, "component://netscape/appshell/commonDialogs", APPSHELL_DLL, PR_FALSE, PR_FALSE);
  nsComponentManager::RegisterComponentLib(kDialogParamBlockCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-
+     nsComponentManager::RegisterComponentLib(kAboutModuleCID,  "about:", NS_ABOUT_MODULE_PROGID_PREFIX, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   // APPCORES_DLL
   nsComponentManager::RegisterComponentLib(kAppCoresManagerCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kToolkitCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);

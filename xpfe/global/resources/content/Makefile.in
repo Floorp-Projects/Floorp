@@ -35,6 +35,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/commonDialog.xul \
 	$(srcdir)/commonDialog.js \
 	$(srcdir)/strres.js \
+	$(srcdir)/about.html \
 	$(NULL)
 
 install:: 
