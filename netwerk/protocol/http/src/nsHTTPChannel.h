@@ -25,6 +25,7 @@
 #include "nsIURI.h"
 #include "nsHTTPHandler.h"
 #include "nsIEventQueue.h"
+#include "nsIEventSinkGetter.h"
 #include "nsIHttpEventSink.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
