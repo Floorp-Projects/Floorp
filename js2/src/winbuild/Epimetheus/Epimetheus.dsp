@@ -131,6 +131,10 @@ SOURCE=..\..\js2eval.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\js2function.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\js2math.cpp
 # End Source File
 # Begin Source File
