@@ -9,14 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     org_mozilla_dom_NodeListImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeListImpl_finalize
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_mozilla_dom_NodeListImpl
  * Method:    getLength
  * Signature: ()I
  */
@@ -30,6 +22,30 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_getLength
  */
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeListImpl_item
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     org_mozilla_dom_NodeListImpl
+ * Method:    finalize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeListImpl_finalize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeListImpl
+ * Method:    XPCOM_equals
+ * Signature: (Ljava/lang/Object;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeListImpl_XPCOM_1equals
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeListImpl
+ * Method:    XPCOM_hashCode
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_XPCOM_1hashCode
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

@@ -20,6 +20,92 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_NodeListImpl.h"
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+/*
+ * Class:     org_mozilla_dom_NodeListImpl
+ * Method:    XPCOM_equals
+ * Signature: (Ljava/lang/Object;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeListImpl_XPCOM_1equals
+  (JNIEnv *env, jobject jthis, jobject jarg)
+{
+  jboolean b_retFlag = JNI_FALSE;
+
+  nsIDOMNodeList* p_this = 
+    (nsIDOMNodeList*) env->GetLongField(jthis, JavaDOMGlobals::nodeListPtrFID);
+  if (!p_this) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("NodeList.equals: NULL pointer\n"));
+    return b_retFlag;
+  }
+
+  nsIDOMNodeList* p_arg = 
+    (nsIDOMNodeList*) env->GetLongField(jarg, JavaDOMGlobals::nodeListPtrFID);
+  if (!p_arg) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("NodeList.equals: NULL arg pointer\n"));
+    return b_retFlag;
+  }
+
+  nsISupports* thisSupports = nsnull;
+  nsISupports* argSupports = nsnull;
+
+  nsresult rvThis = 
+    p_this->QueryInterface(kISupportsIID, (void**)(&thisSupports));
+  if (NS_FAILED(rvThis) || !thisSupports) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("NodeList.equals: this->QueryInterface failed (%x)\n", rvThis));
+    return b_retFlag; 	
+  }
+
+  nsresult rvArg =
+    p_arg->QueryInterface(kISupportsIID, (void**)(&argSupports));
+  if (NS_FAILED(rvArg) || !argSupports) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("NodeList.equals: arg->QueryInterface failed (%x)\n", rvArg));
+    thisSupports->Release();
+    return b_retFlag;
+  }
+
+  if (thisSupports == argSupports)
+    b_retFlag = JNI_TRUE;
+  
+  thisSupports->Release();
+  argSupports->Release();
+
+  return b_retFlag;
+}
+
+/*
+ * Class:     org_mozilla_dom_NodeListImpl
+ * Method:    XPCOM_hashCode
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_XPCOM_1hashCode
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMNodeList* p_this = 
+    (nsIDOMNodeList*) env->GetLongField(jthis, JavaDOMGlobals::nodeListPtrFID);
+  if (!p_this) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("NodeList.hashCode: NULL pointer\n"));
+    return (jint) 0;
+  }
+
+  nsISupports* thisSupports = nsnull;
+  nsresult rvThis = 
+    p_this->QueryInterface(kISupportsIID, (void**)(&thisSupports));
+  if (NS_FAILED(rvThis) || !thisSupports) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("NodeList.hashCode: QueryInterface failed (%x)\n", rvThis));
+    return (jint) 0;
+  }
+
+  thisSupports->Release();
+  return (jint) thisSupports;
+}
+
 /*
  * Class:     org_mozilla_dom_NodeListImpl
  * Method:    finalize

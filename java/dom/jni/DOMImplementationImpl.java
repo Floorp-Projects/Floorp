@@ -25,7 +25,21 @@ public class DOMImplementationImpl implements DOMImplementation {
     // instantiated from JNI only
     private DOMImplementationImpl() {}
 
+    public boolean equals(Object o) {
+	if (!(o instanceof NodeListImpl))
+	    return false;
+	else
+	    return (XPCOM_equals(o));
+    }
+
+    public int hashCode(){
+	return XPCOM_hashCode();
+    }
+
     public native boolean hasFeature(String feature, String version);
 
     protected native void finalize();
+
+    private native boolean XPCOM_equals(Object o);
+    private native int XPCOM_hashCode();
 }

@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     org_mozilla_dom_DOMImplementationImpl
+ * Method:    hasFeature
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_DOMImplementationImpl
  * Method:    finalize
  * Signature: ()V
  */
@@ -17,11 +25,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMImplementationImpl_finalize
 
 /*
  * Class:     org_mozilla_dom_DOMImplementationImpl
- * Method:    hasFeature
- * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
+ * Method:    XPCOM_equals
+ * Signature: (Ljava/lang/Object;)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
-  (JNIEnv *, jobject, jstring, jstring);
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_XPCOM_1equals
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_mozilla_dom_DOMImplementationImpl
+ * Method:    XPCOM_hashCode
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_DOMImplementationImpl_XPCOM_1hashCode
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

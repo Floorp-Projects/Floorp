@@ -26,8 +26,22 @@ public class NodeListImpl implements NodeList {
     // instantiated from JNI or Document.createAttribute()
     private NodeListImpl() {}
 
+    public boolean equals(Object o) {
+	if (!(o instanceof NodeListImpl))
+	    return false;
+	else
+	    return (XPCOM_equals(o));
+    }
+
+    public int hashCode(){
+	return XPCOM_hashCode();
+    }
+
     public native int getLength();
     public native Node item(int index);
 
     protected native void finalize();
+
+    private native boolean XPCOM_equals(Object o);
+    private native int XPCOM_hashCode();
 }
