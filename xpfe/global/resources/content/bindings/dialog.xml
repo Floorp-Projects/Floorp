@@ -67,14 +67,16 @@
         this._configureButtons(this.getAttribute("buttons"));
 
         // give focus to the first focusable element in the dialog
-        this.addEventListener("load", this.setInitialFocus, true);
+        window.addEventListener("load", this.setInitialFocus, false);
       ]]>
       </constructor>
 
       <method name="setInitialFocus">
+        <parameter name="event"/>
         <body>
         <![CDATA[
-          document.commandDispatcher.advanceFocusIntoSubtree(this);
+          if (!document.commandDispatcher.focusedElement)
+            document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
         ]]>
         </body>
       </method>                
