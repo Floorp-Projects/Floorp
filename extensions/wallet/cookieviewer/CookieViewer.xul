@@ -80,34 +80,56 @@
                 <column flex="1"/>
               </columns>
               <rows>
+
                 <row align="center">
-                  <label value="&props.name.label;"/>
-                  <textbox id="ifl_name" readonly="true"/>
+                  <hbox align="center" pack="end">
+                    <label value="&props.name.label;"/>
+                  </hbox>
+                  <textbox id="ifl_name" readonly="true" class="plain"/>
                 </row>
+
                 <row align="center">
-                  <label value="&props.value.label;"/>
-                  <textbox id="ifl_value" readonly="true"/>
+                  <hbox align="center" pack="end">
+                    <label value="&props.value.label;"/>
+                  </hbox>
+                  <textbox id="ifl_value" readonly="true" class="plain"/>
                 </row>
+
                 <row align="center">
-                  <label id="ifl_isDomain" value="&props.domain.label;"/>
-                  <textbox id="ifl_host" readonly="true"/>
+                  <hbox align="center" pack="end">
+                    <label id="ifl_isDomain" value="&props.domain.label;"/>
+                  </hbox>
+                  <textbox id="ifl_host" readonly="true" class="plain"/>
                 </row>
+
                 <row align="center">
-                  <label value="&props.path.label;"/>
-                  <textbox id="ifl_path" readonly="true"/>
+                  <hbox align="center" pack="end">
+                    <label value="&props.path.label;"/>
+                  </hbox>
+                  <textbox id="ifl_path" readonly="true" class="plain"/>
                 </row>
+
                 <row align="center">
-                  <label value="&props.secure.label;"/>
-                  <textbox id="ifl_isSecure" readonly="true"/>
+                  <hbox align="center" pack="end">
+                    <label value="&props.secure.label;"/>
+                  </hbox>
+                  <textbox id="ifl_isSecure" readonly="true" class="plain"/>
                 </row>
+
                 <row align="center">
-                  <label value="&props.expires.label;"/>
-                  <textbox id="ifl_expires" readonly="true"/>
+                  <hbox align="center" pack="end">
+                    <label value="&props.expires.label;"/>
+                  </hbox>
+                  <textbox id="ifl_expires" readonly="true" class="plain"/>
                 </row>
+
                 <row align="center" id="policyField" hidden="true">
-                  <label value="&props.policy.label;"/>
-                  <textbox id="ifl_policy" readonly="true"/>
+                  <hbox align="center" pack="end">
+                    <label value="&props.policy.label;"/>
+                  </hbox>
+                  <textbox id="ifl_policy" readonly="true" class="plain"/>
                 </row>
+
               </rows>
             </grid>
           </groupbox>
