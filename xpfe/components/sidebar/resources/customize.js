@@ -117,8 +117,8 @@ function SelectChangeForOtherPanels(event, target)
       target.setAttribute('container', 'true');
       target.setAttribute('open', 'true');
     }
-    enable_buttons_for_other_panels();
   }
+  enable_buttons_for_other_panels();
 }
 
 function add_datasource_to_other_panels(link) {
