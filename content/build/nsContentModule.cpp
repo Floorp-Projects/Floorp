@@ -161,7 +161,7 @@ Initialize(nsIModule* aSelf)
 
   nsContentUtils::Init();
 
-  // XXXwaterson why do we need this?
+  // Add our shutdown observer.
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
 
