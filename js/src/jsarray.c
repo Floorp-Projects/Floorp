@@ -600,12 +600,12 @@ js_qsort_r(QSortArgs *qa, int lo, int hi)
 	a = (char *)qa->vec + i * qa->elsize;
 	memmove(pivot, a, qa->elsize);
 	while (i < j) {
-	    for (;;) {
+	    do {
 		b = (char *)qa->vec + j * qa->elsize;
 		if ((*qa->cmp)(b, pivot, qa->arg) <= 0)
 		    break;
 		j--;
-	    }
+	    } while (j > i);
 	    memmove(a, b, qa->elsize);
 	    while (i < j && (*qa->cmp)(a, pivot, qa->arg) <= 0) {
 		i++;
