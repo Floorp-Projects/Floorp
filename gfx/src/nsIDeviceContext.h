@@ -108,6 +108,11 @@ public:
                            PRInt32              aId,
                            nsIImage*&           aImage) = 0;
 
+  /**
+   * Check to see if a particular named font exists.
+   * @param aFontName character string of font face name
+   * @return NS_OK if font is available, else font is unavailable
+   */
   NS_IMETHOD CheckFontExistence(const char * aFontName) = 0;
 };
 
