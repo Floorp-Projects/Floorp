@@ -27,7 +27,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE dialog [
+<!DOCTYPE window [
     <!ENTITY % prefValDTD SYSTEM "chrome://pippki/locale/pref-validation.dtd">
     %prefValDTD;
     <!ENTITY % prefCertMgrDTD SYSTEM "chrome://pippki/locale/certManager.dtd">

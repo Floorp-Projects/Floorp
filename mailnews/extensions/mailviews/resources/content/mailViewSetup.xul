@@ -25,7 +25,7 @@ Rights Reserved.
 
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailViewSetup.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/mailViewSetup.dtd" >
 
 <dialog id="mailViewSetupDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
