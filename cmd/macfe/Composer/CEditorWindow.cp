@@ -38,6 +38,7 @@
 #include "uprefd.h"
 #include "uerrmgr.h"
 #include "uapp.h"
+#include "mforms.h"	// CTabbedDialog
 #include "meditdlg.h"	// CTabbedDialog
 #include "meditor.h"	// HandleModalDialog
 #include "CEditView.h"
@@ -381,6 +382,7 @@ void CEditorWindow::RegisterViewTypes()
 	RegisterClass_( CTarget);
 	RegisterClass_( CLineProp);
 	RegisterClass_( CFormattingToolBar);
+	RegisterClass_( CFormattingToolFloatView);	 
 	
 	RegisterClass_( CToolbarPopup);					// newer, better class?
 	RegisterClass_( CIconToolbarPopup);				// newer, better class?
@@ -399,7 +401,7 @@ void CEditorWindow::RegisterViewTypes()
 	RegisterClass_( COpenRecentlyEditedPopup );
 	
 	RegisterClass_( CEditDictionary);
-	RegisterClass_( CEditDictionaryTable);	
+	RegisterClass_( CEditDictionaryTable);
 }
 
 
