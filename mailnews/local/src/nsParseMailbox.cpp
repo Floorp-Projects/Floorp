@@ -1555,7 +1555,7 @@ nsOutputFileStream * nsParseNewMailState::GetLogFile ()
     nsCOMPtr<nsIFile> logDir;
     NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(logDir));
 
-    logDir->Append(NS_LITERAL_CSTRING("filter.log"));
+    logDir->AppendNative(NS_LITERAL_CSTRING("filter.log"));
 
     nsCAutoString pathBuf;
     nsresult rv = logDir->GetNativePath(pathBuf);

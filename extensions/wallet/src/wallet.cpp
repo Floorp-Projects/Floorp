@@ -1307,7 +1307,7 @@ PUBLIC nsresult Wallet_DefaultsDirectory(nsFileSpec& dirSpec) {
   
   res = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR, getter_AddRefs(aFile));
   if (NS_FAILED(res)) return res;
-  res = aFile->Append(NS_LITERAL_CSTRING("wallet"));
+  res = aFile->AppendNative(NS_LITERAL_CSTRING("wallet"));
   if (NS_FAILED(res)) return res;
 
   res = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(tempSpec));

@@ -356,8 +356,8 @@ Test(CreateFun create, PRUint32 count,
     
     nsCAutoString inDir;
     nsCAutoString outDir;
-    (void)inDirSpec->GetPath(inDir);
-    (void)outDirSpec->GetPath(outDir);
+    (void)inDirSpec->GetNativePath(inDir);
+    (void)outDirSpec->GetNativePath(outDir);
     printf("###########\nTest: from %s to %s, bufSize = %d\n",
            inDir.get(), outDir.get(), bufSize);
     gTimeSampler.Reset();
@@ -387,10 +387,10 @@ Test(CreateFun create, PRUint32 count,
         if (NS_FAILED(rv)) goto done;
 
         nsCAutoString leafName;
-        rv = inSpec->GetLeafName(leafName);
+        rv = inSpec->GetNativeLeafName(leafName);
         if (NS_FAILED(rv)) goto done;
 
-        rv = outSpec->Append(leafName);
+        rv = outSpec->AppendNative(leafName);
         if (NS_FAILED(rv)) goto done;
 
         PRBool exists;

@@ -2603,15 +2603,15 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
                                      getter_AddRefs(defaultUserChromeFile));
        if (NS_FAILED(rv))
          return(rv);
-       defaultUserContentFile->Append(NS_LITERAL_CSTRING("chrome"));
-       defaultUserContentFile->Append(NS_LITERAL_CSTRING("userContent.css"));
-       defaultUserChromeFile->Append(NS_LITERAL_CSTRING("chrome"));
-       defaultUserChromeFile->Append(NS_LITERAL_CSTRING("userChrome.css"));
+       defaultUserContentFile->AppendNative(NS_LITERAL_CSTRING("chrome"));
+       defaultUserContentFile->AppendNative(NS_LITERAL_CSTRING("userContent.css"));
+       defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("chrome"));
+       defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("userChrome.css"));
 
        // copy along
        // It aint an error if these files dont exist
-       (void) defaultUserContentFile->CopyTo(userChromeDir, nsCString());
-       (void) defaultUserChromeFile->CopyTo(userChromeDir, nsCString());
+       (void) defaultUserContentFile->CopyToNative(userChromeDir, nsCString());
+       (void) defaultUserChromeFile->CopyToNative(userChromeDir, nsCString());
      }
    }
    if (NS_FAILED(rv))
@@ -3043,12 +3043,12 @@ nsChromeRegistry::CheckForNewChrome()
   nsCOMPtr<nsIFile> chromeFile;
   rv = listFile->Clone(getter_AddRefs(chromeFile));
   if (NS_FAILED(rv)) return rv;
-  rv = chromeFile->Append(kChromeFileName);
+  rv = chromeFile->AppendNative(kChromeFileName);
   if (NS_FAILED(rv)) return rv;
   nsInt64 chromeDate;
   (void)chromeFile->GetLastModifiedTime(&chromeDate.mValue);
 
-  rv = listFile->AppendRelativePath(kInstalledChromeFileName);
+  rv = listFile->AppendRelativeNativePath(kInstalledChromeFileName);
   if (NS_FAILED(rv)) return rv;
   nsInt64 listFileDate;
   (void)listFile->GetLastModifiedTime(&listFileDate.mValue);

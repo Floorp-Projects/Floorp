@@ -1935,7 +1935,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   // do the migration in a subdirectory of temp, to prevent 
   // collision (between multiple users), deleting TMPDIR
   // and privacy issues (where the temp ldif files are readable)
-  rv = tmpLDIFFile->Append(NS_LITERAL_CSTRING("addr-migrate"));
+  rv = tmpLDIFFile->AppendNative(NS_LITERAL_CSTRING("addr-migrate"));
   if (NS_FAILED(rv) || !tmpLDIFFile) return;
 
   rv = tmpLDIFFile->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700);

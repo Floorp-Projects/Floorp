@@ -708,8 +708,7 @@ nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
         return NS_OK;
     }
     nsCOMPtr<nsILocalFile> folder;
-    NS_NewLocalFile(NS_ConvertUCS2toUTF8(aFolder), PR_TRUE,
-                    getter_AddRefs(folder));
+    NS_NewLocalFile(aFolder, PR_TRUE, getter_AddRefs(folder));
 
     result = folder->GetDiskSpaceAvailable(aReturn);
     return NS_OK;
@@ -2587,7 +2586,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
             aJarfile.Right(extension, (aJarfile.Length() - extpos) );
             tempFileName += extension;
         }
-        tempFile->Append(NS_ConvertUCS2toUTF8(tempFileName));
+        tempFile->Append(tempFileName);
 
         // Create a temporary file to extract to
         MakeUnique(tempFile);
@@ -2616,7 +2615,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
                 return nsInstall::OUT_OF_MEMORY;
 
             //get the leafname so we can convert its extension to .new
-            nsCAutoString newLeafName;
+            nsAutoString newLeafName;
             tempFile->GetLeafName(newLeafName);
 
             PRInt32 extpos = newLeafName.RFindChar('.');
@@ -2625,7 +2624,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
                 // We found the extension;
                 newLeafName.Truncate(extpos + 1); //strip off the old extension
             }
-            newLeafName.Append("new");
+            newLeafName.Append(NS_LITERAL_STRING("new"));
 
             //Now reset the leafname
             tempFile->SetLeafName(newLeafName);
@@ -2808,7 +2807,7 @@ nsresult MakeUnique(nsILocalFile* file)
 
     nsCAutoString leafNameBuf;
 
-    rv = file->GetLeafName(leafNameBuf);
+    rv = file->GetNativeLeafName(leafNameBuf);
     if (NS_FAILED(rv)) return rv;
 
     // XXX this code should use iterators
@@ -2833,7 +2832,7 @@ nsresult MakeUnique(nsILocalFile* file)
         // start with "Picture-1.jpg" after "Picture.jpg" exists
         char newName[32];
         sprintf(newName, "%s-%d%s", leafName, indx, suffix);
-        file->SetLeafName(nsDependentCString(newName));
+        file->SetNativeLeafName(nsDependentCString(newName));
 
         rv = file->Exists(&flagExists);
         if (NS_FAILED(rv)) return rv;

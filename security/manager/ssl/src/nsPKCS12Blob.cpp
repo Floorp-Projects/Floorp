@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.25 2002/04/27 05:32:35 darin%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.26 2002/05/07 23:06:45 darin%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -258,7 +258,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   SEC_PKCS12ExportContext *ecx = NULL;
   SEC_PKCS12SafeInfo *certSafe = NULL, *keySafe = NULL;
   SECItem unicodePw;
-  nsCAutoString filePath;
+  nsAutoString filePath;
   int i;
   nsCOMPtr<nsILocalFile> localFileRef;
   NS_ASSERTION(mToken, "Need to set the token before exporting");
@@ -360,7 +360,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     // We're going to add the .p12 extension to the file name just like
     // Communicator used to.  We create a new nsILocalFile and initialize
     // it with the new patch.
-    filePath.Append(NS_LITERAL_CSTRING(".p12"));
+    filePath.Append(NS_LITERAL_STRING(".p12"));
     localFileRef = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) goto finish;
     localFileRef->InitWithPath(filePath);
@@ -531,7 +531,7 @@ nsPKCS12Blob::digest_open(void *arg, PRBool reading)
                         NS_GET_IID(nsILocalFile),
                         getter_AddRefs(tmpFile));
   if (tmpFile) {
-    tmpFile->Append(PIP_PKCS12_TMPFILENAME);
+    tmpFile->AppendNative(PIP_PKCS12_TMPFILENAME);
     nsCAutoString pathBuf;
     tmpFile->GetNativePath(pathBuf);
     cx->mTmpFilePath = ToNewCString(pathBuf);

@@ -852,9 +852,7 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
           // get the file name
           if (component)
           {
-            nsCAutoString leafName;
-            component->GetLeafName(leafName);
-            fileName.Assign(NS_ConvertUTF8toUCS2(leafName));
+            component->GetLeafName(fileName);
           }
           
           // this string can't come from a string bundle, because we

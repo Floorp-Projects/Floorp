@@ -357,7 +357,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
       return rv;
     
     nsCOMPtr<nsILocalFile> theFile;
-    rv = NS_NewLocalFile(nsCString(), PR_TRUE, getter_AddRefs(theFile));
+    rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(theFile));
     if (NS_FAILED(rv))
       return rv;
     rv = theFile->SetRelativeDescriptor(fromFile, Substring(++keyEnd, strEnd));

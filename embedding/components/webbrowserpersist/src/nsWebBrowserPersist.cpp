@@ -839,9 +839,7 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(
     nsAutoString path;
     if (file)
     {
-        nsCAutoString filePath;
-        file->GetPath(filePath);
-        path = NS_ConvertUTF8toUCS2(filePath);
+        file->GetPath(path);
     }
     else
     {

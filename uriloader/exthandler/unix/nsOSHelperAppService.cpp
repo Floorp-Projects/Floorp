@@ -328,7 +328,7 @@ CreateInputStream(const nsAString& aFilename,
   nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  rv = file->InitWithPath(NS_ConvertUCS2toUTF8(aFilename));
+  rv = file->InitWithPath(aFilename);
   if (NS_FAILED(rv))
     return rv;
 
@@ -896,7 +896,7 @@ GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
   nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  rv = file->InitWithPath(NS_ConvertUCS2toUTF8(aFilename));
+  rv = file->InitWithPath(aFilename);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1094,7 +1094,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   // first check if this is a full path
   PRBool exists = PR_FALSE;
   if (*platformAppPath == '/') {
-    localFile->InitWithPath(NS_ConvertUCS2toUTF8(platformAppPath));
+    localFile->InitWithPath(nsDependentString(platformAppPath));
     localFile->Exists(&exists);
   } else {
 
@@ -1111,8 +1111,10 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
       while (colon_iter != end_iter && *colon_iter != ':') {
         ++colon_iter;
       }
+      // XXX provided the string code has all it's bugs fixed, we should be able to
+      // remove this PromiseFlatCString call.
       localFile->InitWithNativePath(PromiseFlatCString(Substring(start_iter, colon_iter)));
-      rv = localFile->AppendRelativePath(NS_ConvertUCS2toUTF8(platformAppPath));
+      rv = localFile->AppendRelativePath(nsDependentString(platformAppPath));
       if (NS_SUCCEEDED(rv)) {
         localFile->Exists(&exists);
         if (!exists) {

@@ -63,7 +63,7 @@ FileToURI(const char *aFilename)
 {
     nsCOMPtr<nsILocalFile> lf(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
     // XXX Handle relative paths somehow.
-    lf->InitWithPath(nsDependentCString(aFilename));
+    lf->InitWithNativePath(nsDependentCString(aFilename));
 
     nsIFileURL *url;
     CallCreateInstance(kStandardURLCID, &url);

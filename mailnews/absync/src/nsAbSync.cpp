@@ -1175,7 +1175,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(historyFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = historyFile->Append(NS_LITERAL_CSTRING("absync.dat"));
+  rv = historyFile->AppendNative(NS_LITERAL_CSTRING("absync.dat"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // TODO: Convert the rest of the code to use
@@ -1223,7 +1223,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(lockFile));
   if (NS_SUCCEEDED(rv)) 
   {
-    rv = lockFile->Append(NS_LITERAL_CSTRING("absync.lck"));
+    rv = lockFile->AppendNative(NS_LITERAL_CSTRING("absync.lck"));
     if (NS_SUCCEEDED(rv)) 
     {
     

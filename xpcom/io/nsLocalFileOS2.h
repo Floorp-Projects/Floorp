@@ -115,11 +115,8 @@ public:
 public:
     static void GlobalInit();
     static void GlobalShutdown();
-    static PRBool FSCharsetIsUTF8() { return mFSCharsetIsUTF8; }
 
 private:
-
-    static PRBool mFSCharsetIsUTF8;
 
     // this is the flag which indicates if I can used cached information about the file
     PRPackedBool mDirty;
@@ -147,12 +144,6 @@ private:
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool followSymlinks, PRBool move);
 
     nsresult SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal);
-
-    // XXX impl
-    PRBool PathIsASCII() { return PR_FALSE; }
-    PRBool LeafIsASCII() { return PR_FALSE; }
-
-    NS_DECL_NSLOCALFILE_UNICODE_METHODS
 };
 
 #endif

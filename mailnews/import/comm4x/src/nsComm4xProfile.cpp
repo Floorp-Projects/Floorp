@@ -89,7 +89,7 @@ nsComm4xProfile::GetMailDir(const PRUnichar *profileName, char **_retval)
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr <nsILocalFile> profileLocation;
         profileLocation = do_QueryInterface(file);
-        rv = profileLocation->Append(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
+        rv = profileLocation->AppendNative(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
         if (NS_FAILED(rv)) return rv;
         PRBool exists = PR_FALSE;
         rv = profileLocation->Exists(&exists);
@@ -115,7 +115,7 @@ nsComm4xProfile::GetMailDir(const PRUnichar *profileName, char **_retval)
                 nsCOMPtr <nsIFile> mailLocation;
                 rv =  resolvedLocation->Clone(getter_AddRefs(mailLocation));
                 if (NS_FAILED(rv)) return rv;
-                rv = mailLocation->Append(NS_LITERAL_CSTRING("Mail"));
+                rv = mailLocation->AppendNative(NS_LITERAL_CSTRING("Mail"));
                 if (NS_FAILED(rv)) return rv;
                 nsCAutoString nativePath;
                 rv = mailLocation->GetNativePath(nativePath);

@@ -165,7 +165,7 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
                         if (NS_SUCCEEDED(rv))
                         {
                           nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
-                          nsCAutoString leafName;
+                          nsAutoString leafName;
                           dirEntry->GetLeafName(leafName);
                           newChild->AppendRelativePath(leafName);
                           rv = newChild->Exists(&exists);
@@ -175,7 +175,7 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
                         }
                       }
                       else
-                        rv = dirEntry->CopyTo(destDir, nsCString());
+                        rv = dirEntry->CopyTo(destDir, nsString());
                     }
                     
     }

@@ -161,10 +161,10 @@ public:
         rv = NS_NewNativeLocalFile(nsDependentCString(origFile), PR_FALSE, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
         nsCAutoString name;
-        rv = file->GetLeafName(name);
+        rv = file->GetNativeLeafName(name);
         if (NS_FAILED(rv)) return rv;
         name += NS_LITERAL_CSTRING(".bak");
-        rv = file->SetLeafName(name);
+        rv = file->SetNativeLeafName(name);
         if (NS_FAILED(rv)) return rv;
         rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOut),
                                          file, 

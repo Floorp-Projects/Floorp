@@ -34,18 +34,12 @@ interface nsISimpleEnumerator;
  * may think they are.  Welcome to reality.
  *
  * All methods with string parameters have two forms.  The preferred
- * form operates on UTF-8 encoded characters strings.  An alternate
+ * form operates on UCS-2 encoded characters strings.  An alternate
  * form operates on characters strings encoded in the "native" charset.
- * On platforms that use UTF-8 as the native charset, there is no
- * difference between the two set of methods.  See, for example: Append
- * and AppendNative.
  *
  * A string containing characters encoded in the native charset cannot
  * be safely passed to javascript via xpconnect.  Therefore, the "native
  * methods" are not scriptable. 
- *
- * The abstract string types, AUTF8String and ACString are used to signify
- * UTF-8 encoded strings and native encoded strings, respectively.
  *
  * @status UNDER_REVIEW
  */
@@ -70,7 +64,7 @@ interface nsIFile : nsISupports
      *   @param node
      *       A string which is intended to be a child node of the nsIFile.
      */
-    void append(in AUTF8String node);
+    void append(in AString node);
     [noscript] void appendNative(in ACString node);
 
     /**
@@ -103,7 +97,7 @@ interface nsIFile : nsISupports
     /**
      *  Accessor to the leaf name of the file itself.
      */
-    attribute AUTF8String leafName;
+    attribute AString leafName;
     [noscript] attribute ACString nativeLeafName;
 
     /**
@@ -131,7 +125,7 @@ interface nsIFile : nsISupports
      *       the file to be copied. This param may be empty, in
      *       which case the current leaf name will be used.
      */
-    void copyTo(in nsIFile newParentDir, in AUTF8String newName);
+    void copyTo(in nsIFile newParentDir, in AString newName);
     [noscrpit] void CopyToNative(in nsIFile newParentDir, in ACString newName);
 
     /**
@@ -141,7 +135,7 @@ interface nsIFile : nsISupports
      *  as the name implies, it follows symbolic links.  The XP_UNIX
      *  implementation always follow symbolic links when copying.
      */
-    void copyToFollowingLinks(in nsIFile newParentDir, in AUTF8String newName);
+    void copyToFollowingLinks(in nsIFile newParentDir, in AString newName);
     [noscript] void copyToFollowingLinksNative(in nsIFile newParentDir, in ACString newName);
 
     /**
@@ -168,7 +162,7 @@ interface nsIFile : nsISupports
      *       the file to be moved. This param may be empty, in
      *       which case the current leaf name will be used.
      */
-    void moveTo(in nsIFile newParentDir, in AUTF8String newName);
+    void moveTo(in nsIFile newParentDir, in AString newName);
     [noscript] void moveToNative(in nsIFile newParentDir, in ACString newName);
 
     /**
@@ -224,9 +218,9 @@ interface nsIFile : nsISupports
      *  path
      *      Find out what the nsIFile points at.
      */
-    readonly attribute AUTF8String target;
+    readonly attribute AString target;
     [noscript] readonly attribute ACString nativeTarget;
-    readonly attribute AUTF8String path;
+    readonly attribute AString path;
     [noscript] readonly attribute ACString nativePath;
 
     boolean exists();

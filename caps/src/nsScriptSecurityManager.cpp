@@ -1869,10 +1869,10 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 #ifdef XP_MAC
         // On Mac, this file will be located in the Essential Files folder
-        systemCertFile->Append(NS_LITERAL_CSTRING("Essential Files"));
+        systemCertFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 #endif
-        systemCertFile->Append(NS_LITERAL_CSTRING("systemSignature.jar"));
+        systemCertFile->AppendNative(NS_LITERAL_CSTRING("systemSignature.jar"));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         nsCOMPtr<nsIZipReader> systemCertZip;
         rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull,

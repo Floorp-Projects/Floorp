@@ -383,7 +383,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
         }
         else {
           // input is unicode
-          rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(aIn), PR_FALSE, getter_AddRefs(filePath));
+          rv = NS_NewLocalFile(aIn, PR_FALSE, getter_AddRefs(filePath));
         }
 
         if (NS_SUCCEEDED(rv))

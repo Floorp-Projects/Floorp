@@ -545,7 +545,7 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
             Done(PR_FALSE);
             return rv;
         }
-        nsCAutoString backupFileLeafName;
+        nsAutoString backupFileLeafName;
         rv = mBackupReplicationFile->GetLeafName(backupFileLeafName);
         if(NS_FAILED(rv))  {
             delete dbPath;
@@ -570,7 +570,7 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
         }
         else {
             // set backup file to existing replication file for copy
-            mBackupReplicationFile->SetLeafName(nsDependentCString(mDirServerInfo->replInfo->fileName));
+            mBackupReplicationFile->SetNativeLeafName(nsDependentCString(mDirServerInfo->replInfo->fileName));
             // specify the parent here specifically, 
             // passing nsnull to copy to the same dir actually renames existing file
             // instead of making another copy of the existing file.

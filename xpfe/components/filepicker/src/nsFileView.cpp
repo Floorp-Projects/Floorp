@@ -540,9 +540,7 @@ nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
   }
 
   if (NS_LITERAL_STRING("FilenameColumn").Equals(aColID)) {
-    nsCAutoString temp;
-    curFile->GetLeafName(temp);
-    aCellText = NS_ConvertUTF8toUCS2(temp);
+    curFile->GetLeafName(aCellText);
   } else if (NS_LITERAL_STRING("LastModifiedColumn").Equals(aColID)) {
     PRInt64 lastModTime;
     curFile->GetLastModifiedTime(&lastModTime);
@@ -647,13 +645,11 @@ nsFileView::FilterFiles()
     if (!mShowHiddenFiles)
       file->IsHidden(&isHidden);
     
-    nsCAutoString leafName;
-    if(NS_FAILED(file->GetLeafName(leafName))) {
+    nsAutoString ucsLeafName;
+    if(NS_FAILED(file->GetLeafName(ucsLeafName))) {
       // need to check return value for GetLeafName()
       continue;
     }
-
-    NS_ConvertUTF8toUCS2 ucsLeafName(leafName);
     
     if (!isHidden) {
       for (PRInt32 j = 0; j < filterCount; ++j) {
@@ -692,7 +688,7 @@ SortNameCallback(const void* aElement1, const void* aElement2, void* aContext)
   nsIFile* file1 = *NS_STATIC_CAST(nsIFile* const *, aElement1);
   nsIFile* file2 = *NS_STATIC_CAST(nsIFile* const *, aElement2);
   
-  nsCAutoString leafName1, leafName2;
+  nsAutoString leafName1, leafName2;
   file1->GetLeafName(leafName1);
   file2->GetLeafName(leafName2);
 

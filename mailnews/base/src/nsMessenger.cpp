@@ -213,6 +213,7 @@ nsresult ConvertAndSanitizeFileName(const char * displayName, PRUnichar ** unico
      The display name is in UTF-8 because it has been escaped from JS
   */ 
   NS_UnescapeURL(unescapedName);
+  NS_ConvertUTF8toUCS2 ucs2Str(unescapedName);
 
   nsresult rv = NS_OK;
 #if defined(XP_MAC)
@@ -220,13 +221,11 @@ nsresult ConvertAndSanitizeFileName(const char * displayName, PRUnichar ** unico
      correctly support long file name. Using a nsILocalFile will do the trick...
   */
   nsCOMPtr<nsILocalFile> aLocalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(aLocalFile->SetLeafName(unescapedName)))
+  if (NS_SUCCEEDED(aLocalFile->SetLeafName(ucs2Str)))
   {
-    aLocalFile->GetLeafName(unescapedName);
+    aLocalFile->GetLeafName(ucs2Str);
   }
 #endif
-
-  NS_ConvertUTF8toUCS2 ucs2Str(unescapedName);
 
   // replace platform specific path separator and illegale characters to avoid any confusion
   ucs2Str.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
@@ -974,7 +973,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         if (NS_FAILED(rv)) 
           goto done;
         
-        nsCAutoString fileName;
+        nsAutoString fileName;
         rv = localFile->GetLeafName(fileName);
         if (NS_FAILED(rv)) goto done;
             

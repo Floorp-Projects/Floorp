@@ -377,7 +377,7 @@ nsresult nsMapiRegistryUtils::CopyMozMapiToWinSysDir()
                               getter_AddRefs(pMozMapiFile));
 
     if (NS_FAILED(rv)) return rv;
-    pMozMapiFile->Append(NS_LITERAL_CSTRING("mozMapi32.dll"));
+    pMozMapiFile->AppendNative(NS_LITERAL_CSTRING("mozMapi32.dll"));
 
     PRBool bExist;
     rv = pMozMapiFile->Exists(&bExist);
@@ -395,7 +395,7 @@ nsresult nsMapiRegistryUtils::CopyMozMapiToWinSysDir()
     rv = pCurrentMapiFile->Exists(&bExist);
     if (NS_SUCCEEDED(rv) && bExist)
     {
-        rv = pCurrentMapiFile->MoveTo(nsnull, NS_LITERAL_CSTRING("Mapi32_moz_bak.dll"));
+        rv = pCurrentMapiFile->MoveToNative(nsnull, NS_LITERAL_CSTRING("Mapi32_moz_bak.dll"));
         if (NS_FAILED(rv)) return rv;
         nsCAutoString fullFilePath(buffer);
         fullFilePath.Append(NS_LITERAL_CSTRING("\\Mapi32_moz_bak.dll"));
@@ -412,7 +412,7 @@ nsresult nsMapiRegistryUtils::CopyMozMapiToWinSysDir()
     NS_NAMED_LITERAL_CSTRING(fileName, "Mapi32.dll");
     filePath.Assign(buffer);
     pCurrentMapiFile->InitWithNativePath(filePath);
-    rv = pMozMapiFile->CopyTo(pCurrentMapiFile, fileName);
+    rv = pMozMapiFile->CopyToNative(pCurrentMapiFile, fileName);
     if (NS_FAILED(rv))
         RestoreBackedUpMapiDll();
     return rv;
@@ -450,7 +450,7 @@ nsresult nsMapiRegistryUtils::RestoreBackedUpMapiDll()
 
     rv = pPreviousMapiFile->Exists(&bExist);
     if (NS_SUCCEEDED(rv) && bExist)
-        rv = pPreviousMapiFile->MoveTo(nsnull, NS_LITERAL_CSTRING("Mapi32.dll"));
+        rv = pPreviousMapiFile->MoveToNative(nsnull, NS_LITERAL_CSTRING("Mapi32.dll"));
     if (NS_SUCCEEDED(rv))
         DeleteRegistryValue(HKEY_LOCAL_MACHINE,
                             "Software\\Mozilla\\Desktop", 

@@ -1529,7 +1529,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
     if (aFileLocal)
         aFileLocal->SetFollowLinks(PR_FALSE);
 
-    nsCAutoString name;
+    nsAutoString name;
     if (NS_FAILED(rv = aFile->GetLeafName(name)))
         return(rv);
     if (name.IsEmpty())
@@ -1559,7 +1559,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
     PRInt32 nameLen = name.Length();
     if ((strncmp(uri, ieFavoritesDir, strlen(ieFavoritesDir)) == 0) && (nameLen > 4))
     {
-        nsCAutoString extension;
+        nsAutoString extension;
         name.Right(extension, 4);
         if (extension.EqualsIgnoreCase(".url") ||
             extension.EqualsIgnoreCase(".lnk"))
@@ -1593,21 +1593,21 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
                         0, beNameAttr, sizeof(beNameAttr)-1)) > 0)
                     {
                         beNameAttr[len] = '\0';
-                        name = beNameAttr;
+                        name = NS_ConvertUTF8toUCS2(beNameAttr);
                         rv = NS_OK;
                     }
                 }
             }
             if (NS_OK != rv)
             {
-                name = spec.GetLeafName();
+                name = NS_ConvertUTF8toUCS2(spec.GetLeafName());
                 rv = NS_OK;
             }
         }
     }
 #endif
 
-    gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(name).get(), aResult);
+    gRDFService->GetLiteral(name.get(), aResult);
 
     return NS_OK;
 }

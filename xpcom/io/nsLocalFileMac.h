@@ -86,15 +86,6 @@ protected:
 
     nsresult    ExtensionIsOnExceptionList(const char *extension, PRBool *onList);
 
-    // XXX needs impl
-    static PRBool FSCharsetIsUTF8() { return PR_FALSE; }
-    
-    // XXX we should compute and store these values
-    PRBool        LeafIsASCII() { return PR_FALSE; }
-    PRBool        PathIsASCII() { return PR_FALSE; }
-
-	NS_DECL_NSLOCALFILE_UNICODE_METHODS
-
 private:
     nsLocalFile(const nsLocalFile& srcFile);
     nsLocalFile(const FSSpec& aSpec, const nsACString& aAppendedPath);

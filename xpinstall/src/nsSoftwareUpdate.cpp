@@ -204,7 +204,7 @@ nsSoftwareUpdate::Shutdown()
             nsCOMPtr<nsIFile> tmp;
             rv = nsSoftwareUpdate::GetProgramDirectory()->Clone(getter_AddRefs(tmp));
 #if defined (XP_MAC)
-            tmp->Append(ESSENTIAL_FILES);
+            tmp->AppendNative(ESSENTIAL_FILES);
 #endif
             pathToCleanupUtility = do_QueryInterface(tmp);
 
@@ -219,7 +219,7 @@ nsSoftwareUpdate::Shutdown()
         NS_ASSERTION(pathToCleanupUtility,"No path to cleanup utility in nsSoftwareUpdate::Shutdown()");
 
         //Create the Process framework
-        pathToCleanupUtility->Append(CLEANUP_UTIL);
+        pathToCleanupUtility->AppendNative(CLEANUP_UTIL);
         nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(kIProcessCID);
         rv = cleanupProcess->Init(pathToCleanupUtility);
         if (NS_SUCCEEDED(rv))

@@ -221,18 +221,18 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName,
             return rv;
         
 #ifdef XP_MAC
-        jsFile->Append(NS_LITERAL_CSTRING("Essential Files"));
+        jsFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
 #endif
     } else {
         rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR,
                                     getter_AddRefs(jsFile));
         if (NS_FAILED(rv)) 
             return rv;
-        rv = jsFile->Append(NS_LITERAL_CSTRING("autoconfig"));
+        rv = jsFile->AppendNative(NS_LITERAL_CSTRING("autoconfig"));
         if (NS_FAILED(rv))
             return rv;
     }
-    rv = jsFile->Append(nsDependentCString(aFileName));
+    rv = jsFile->AppendNative(nsDependentCString(aFileName));
     if (NS_FAILED(rv)) 
         return rv;
 

@@ -1184,7 +1184,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
   if (NS_FAILED(rv) || !registryFile)
     return NS_ERROR_FAILURE;
 
-  registryFile->Append(CLEANUP_REGISTRY);
+  registryFile->AppendNative(CLEANUP_REGISTRY);
 
   PRBool exists;
   registryFile->Exists(&exists);
@@ -1197,7 +1197,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
 
     nsCOMPtr<nsIFile> cleanupUtility;
     registryFile->Clone(getter_AddRefs(cleanupUtility));
-    cleanupUtility->SetLeafName(CLEANUP_UTIL);
+    cleanupUtility->SetNativeLeafName(CLEANUP_UTIL);
 
     //Create the process framework to run the cleanup utility
     nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(kIProcessCID);

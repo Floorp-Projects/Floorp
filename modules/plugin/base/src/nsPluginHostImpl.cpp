@@ -1897,7 +1897,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
     rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
     if (NS_FAILED(rv)) return rv;
     
-    rv = pluginTmp->Append(kPluginTmpDirName);
+    rv = pluginTmp->AppendNative(kPluginTmpDirName);
     if (NS_FAILED(rv)) return rv;
     
     (void) pluginTmp->Create(nsIFile::DIRECTORY_TYPE,0777);
@@ -3325,7 +3325,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
   if (NS_FAILED(rv)) return rv;
     
-  rv = pluginTmp->Append(kPluginTmpDirName);
+  rv = pluginTmp->AppendNative(kPluginTmpDirName);
   if (NS_FAILED(rv)) return rv;
 
   pluginTmp->Remove(PR_TRUE);
@@ -5140,7 +5140,7 @@ cidToDllname(nsIComponentManager* aComponentManager, nsIRegistry* aRegistry,
                                                       getter_AddRefs(file));
 
       if (NS_SUCCEEDED(rv)) {
-        file->GetPath(dllName);
+        file->GetNativePath(dllName);
       }
 
       nsCRT::free(NS_REINTERPRET_CAST(char*, library));
@@ -6379,7 +6379,7 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
     if (NS_FAILED(rv))
       return rv;
     
-    rv = tempFile->Append(kPluginTmpDirName);
+    rv = tempFile->AppendNative(kPluginTmpDirName);
     if (NS_FAILED(rv))
       return rv;
 
@@ -6389,8 +6389,10 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
       (void) tempFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
     
     nsCAutoString inFileName;
-    inFile->GetLeafName(inFileName);
-    rv = tempFile->Append(NS_LITERAL_CSTRING("post-") + inFileName);
+    inFile->GetNativeLeafName(inFileName);
+    // XXX hack around bug 70083
+    inFileName.Insert(NS_LITERAL_CSTRING("post-"), 0);
+    rv = tempFile->AppendNative(inFileName);
     
     if (NS_FAILED(rv)) 
       return rv;
@@ -6481,7 +6483,7 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
     return rv;
     
   // make sure the file is actually there
-  RealPlugin->Append(nsDependentCString("nppl3260.dll"));
+  RealPlugin->AppendNative(nsDependentCString("nppl3260.dll"));
   PRBool exists;
   nsCAutoString filePath;
   RealPlugin->Exists(&exists);

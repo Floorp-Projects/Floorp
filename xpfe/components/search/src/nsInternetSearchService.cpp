@@ -2433,7 +2433,7 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	if (NS_FAILED(context->GetBufferLength(&bufferLength)))	return(rv);
 	if (bufferLength < 1)	return(NS_OK);
 	
-	rv = outFile->Append(baseName);
+	rv = outFile->Append(NS_ConvertUTF8toUCS2(baseName));
 	if (NS_FAILED(rv)) return rv;
 	
 	// save data to file
@@ -3831,11 +3831,9 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	if (NS_FAILED(rv)) return(rv);
 	if (!exists) return(NS_ERROR_UNEXPECTED);
 
-	nsCAutoString leafName;
-	rv = native->GetLeafName(leafName);
+	nsAutoString basename;
+	rv = native->GetLeafName(basename);
 	if (NS_FAILED(rv)) return rv;
-
-    NS_ConvertUTF8toUCS2 basename(leafName);
 
 	// ensure that the basename points to the search engine file
 	PRInt32		extensionOffset;
@@ -4054,12 +4052,11 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
         if (NS_FAILED(rv) || (fileSize == 0))
             continue;
     
-        nsCAutoString pathBuf;
-        rv = dirEntry->GetPath(pathBuf);
+        nsAutoString uri;
+        rv = dirEntry->GetPath(uri);
         if (NS_FAILED(rv))
         continue;
 
-		NS_ConvertUTF8toUCS2 uri(pathBuf);
 		PRInt32		len = uri.Length();
 		if (len < 5)
 		{

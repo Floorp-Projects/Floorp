@@ -746,7 +746,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
 
                 if (NS_SUCCEEDED(rv))
                 {
-                    userChrome->Append(NS_ConvertUCS2toUTF8(leaf));
+                    userChrome->Append(leaf);
                     MakeUnique(userChrome);
                     *file = userChrome;
                     NS_IF_ADDREF(*file);

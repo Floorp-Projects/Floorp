@@ -1324,7 +1324,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
   }
 
   nsCAutoString leafName;
-  rv = localFile->GetLeafName(leafName);
+  rv = localFile->GetNativeLeafName(leafName);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // we're looking for .tab, .txt, .csv, .ldi or .ldif

@@ -183,7 +183,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
                 if (NS_SUCCEEDED(rv))
                 {
-                    mFileSpec->Append(INSTALL_PLUGINS_DIR);
+                    mFileSpec->AppendNative(INSTALL_PLUGINS_DIR);
                 }
                 else
                     mFileSpec = nsnull;
@@ -286,7 +286,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
                 if (NS_SUCCEEDED(rv))
                 {
-                    mFileSpec->Append(INSTALL_COMPONENTS_DIR);
+                    mFileSpec->AppendNative(INSTALL_COMPONENTS_DIR);
                 }
                 else
                   mFileSpec = nsnull;
@@ -309,7 +309,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
                 if (NS_SUCCEEDED(rv))
                 {
-                    mFileSpec->Append(INSTALL_CHROME_DIR);
+                    mFileSpec->AppendNative(INSTALL_CHROME_DIR);
                 }
             }
             break;
@@ -528,7 +528,7 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
             start = curr+1;
         }
             
-        nsresult rv = mFileSpec->Append(NS_ConvertUCS2toUTF8(segment));
+        nsresult rv = mFileSpec->Append(segment);
         if (NS_FAILED(rv))
         {
             // Unicode converters not present (likely wizard case)
@@ -575,27 +575,16 @@ nsInstallFolder::ToString(nsAutoString* outString)
   //     This will appear to work on Latin-1 charsets but won't work on Mac or other charsets.
   //     On the other hand doing it right requires intl charset converters
   //     which we don't yet have in the initial install case.
+  //
+  //     However, nsLocalFile now uses the native charset conversion implementation, so this
+  //     code should always work.
 
   if (!mFileSpec || !outString)
       return NS_ERROR_NULL_POINTER;
 
-  nsCAutoString temp;
-  nsresult rv = mFileSpec->GetPath(temp);
-  if (NS_SUCCEEDED(rv))
-  {
-      outString->Assign(NS_ConvertUTF8toUCS2(temp));
-  }
-  else
-  {
-      // converters not present, most likely in wizard case;
-      // do best we can with stock ASCII conversion
-
-      // XXX NOTE we can make sure our filenames are ASCII, but we have no
-      // control over the directory name which might be localized!!!
-      nsCAutoString temp;
-      rv = mFileSpec->GetPath(temp);
-      outString->Assign(NS_ConvertUTF8toUCS2(temp));
-  }
+  nsresult rv = mFileSpec->GetPath(*outString);
+  if (NS_FAILED(rv))
+      return rv;
 
   PRBool flagIsFile;
   mFileSpec->IsFile(&flagIsFile);

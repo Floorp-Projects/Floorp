@@ -755,7 +755,7 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
             return rv;
 
         nsCOMPtr<nsILocalFile> file;
-        rv = NS_NewLocalFile(filename, PR_TRUE, getter_AddRefs(file));
+        rv = NS_NewNativeLocalFile(filename, PR_TRUE, getter_AddRefs(file));
         if (NS_FAILED(rv))
             return rv;
 
@@ -767,7 +767,7 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
         if (LL_NE(fastLoadMtime, currentMtime)) {
 #ifdef DEBUG
             nsCAutoString path;
-            file->GetPath(path);
+            file->GetNativePath(path);
             printf("%s mtime changed, invalidating FastLoad file\n",
                    path.get());
 #endif
@@ -1524,7 +1524,7 @@ NS_IMETHODIMP
 nsFastLoadFileWriter::AddDependency(nsIFile* aFile)
 {
     nsCAutoString path;
-    nsresult rv = aFile->GetPath(path);
+    nsresult rv = aFile->GetNativePath(path);
     if (NS_FAILED(rv))
         return rv;
 

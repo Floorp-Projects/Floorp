@@ -29,7 +29,6 @@
 #include "nsXPIDLString.h" 
 
 #include "nsLocalFileMac.h"
-#include "nsLocalFileUnicode.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIComponentManager.h"
 #include "nsIInternetConfigService.h"
@@ -1318,12 +1317,12 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
+nsLocalFile::InitWithPath(const nsAString &filePath)
 {
    nsresult rv;
    nsCAutoString fsStr;
    
-   if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(nsDependentString(filePath), fsStr)))
+   if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(filePath, fsStr)))
      rv = InitWithNativePath(fsStr);
 
    return rv;
@@ -1546,12 +1545,12 @@ nsLocalFile::AppendNative(const nsACString &aNode)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::AppendUnicode(const PRUnichar *node)
+nsLocalFile::Append(const nsAString &node)
 {
    nsresult rv;
    nsCAutoString fsStr;
    
-   if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(nsDependentString(node), fsStr)))
+   if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(node, fsStr)))
      rv = AppendNative(fsStr);
 
    return rv;
@@ -1578,12 +1577,12 @@ nsLocalFile::AppendRelativeNativePath(const nsACString &relPath)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *relPath)
+nsLocalFile::AppendRelativePath(const nsAString &relPath)
 {
    nsresult rv;
    nsCAutoString fsStr;
    
-   if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(nsDependentString(relPath), fsStr)))
+   if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(relPath, fsStr)))
      rv = AppendRelativeNativePath(fsStr);
 
    return rv;
@@ -1628,18 +1627,13 @@ nsLocalFile::GetNativeLeafName(nsACString &aLeafName)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
+nsLocalFile::GetLeafName(nsAString &aLeafName)
 {
    nsresult rv;
    nsCAutoString fsStr;
    
-   if (NS_SUCCEEDED(rv = GetNativeLeafName(fsStr))) {
-     nsAutoString ucStr;
-     if (NS_SUCCEEDED(rv = nsFSStringConversionMac::FSToUCS(fsStr, ucStr))) {
-       if ((*aLeafName = ToNewUnicode(ucStr)) == nsnull)
-         rv = NS_ERROR_OUT_OF_MEMORY;
-     }
-   }
+   if (NS_SUCCEEDED(rv = GetNativeLeafName(fsStr)))
+     rv = nsFSStringConversionMac::FSToUCS(fsStr, aLeafName);
    return rv;
 }
 
@@ -1673,12 +1667,12 @@ nsLocalFile::SetNativeLeafName(const nsACString &aLeafName)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::SetUnicodeLeafName(const PRUnichar * aLeafName)
+nsLocalFile::SetLeafName(const nsAString &aLeafName)
 {
    nsresult rv;
    nsCAutoString fsStr;
    
-   if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(nsDependentString(aLeafName), fsStr)))
+   if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(aLeafName, fsStr)))
      rv = SetNativeLeafName(fsStr);
 
    return rv;
@@ -1738,10 +1732,9 @@ nsLocalFile::GetNativePath(nsACString &_retval)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::GetUnicodePath(PRUnichar **_retval)
+nsLocalFile::GetPath(nsAString &_retval)
 {
     nsresult rv = NS_OK;
-    NS_ENSURE_ARG_POINTER(_retval);
                 
 #if TARGET_CARBON
     if (sHasHFSPlusAPIs) // should always be true under Carbon, but in case...
@@ -1770,9 +1763,7 @@ nsLocalFile::GetUnicodePath(PRUnichar **_retval)
             ucPathString.Append(ucAppendage);
         }
         
-        *_retval = ToNewUnicode(ucPathString);
-        if (!*_retval)
-            return NS_ERROR_OUT_OF_MEMORY;
+        _retval = ucPathString;
     }
     else
 #endif
@@ -1780,11 +1771,7 @@ nsLocalFile::GetUnicodePath(PRUnichar **_retval)
         nsCAutoString fsStr;
 
         if (NS_SUCCEEDED(rv = GetNativePath(fsStr))) {
-            nsAutoString ucStr;
-            if (NS_SUCCEEDED(rv = nsFSStringConversionMac::FSToUCS(fsStr, ucStr))) {
-                if ((*_retval = ToNewUnicode(ucStr)) == nsnull)
-                rv = NS_ERROR_OUT_OF_MEMORY;
-            }
+            rv = nsFSStringConversionMac::FSToUCS(fsStr, _retval);
         }
     }
     return rv;
@@ -1877,14 +1864,14 @@ nsLocalFile::CopyToNative(nsIFile *newParentDir, const nsACString &newName)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
-    if (!newName)
+    if (newName.IsEmpty())
         return CopyToNative(newParentDir, nsCString());
         
     nsresult rv;
     nsCAutoString fsStr;
-    if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(nsDependentString(newName), fsStr)))
+    if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(newName, fsStr)))
         rv = CopyToNative(newParentDir, fsStr);
     return rv;
 }
@@ -1896,14 +1883,14 @@ nsLocalFile::CopyToFollowingLinksNative(nsIFile *newParentDir, const nsACString 
 }
 
 NS_IMETHODIMP  
-nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
-    if (!newName)
+    if (newName.IsEmpty())
         return CopyToFollowingLinksNative(newParentDir, nsCString());
 
     nsresult rv;
     nsCAutoString fsStr;
-    if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(nsDependentString(newName), fsStr)))
+    if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(newName, fsStr)))
         rv = CopyToFollowingLinksNative(newParentDir, fsStr);
     return rv;
 }
@@ -1915,14 +1902,14 @@ nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString &newName)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
-    if (!newName)
+    if (newName.IsEmpty())
         return MoveToNative(newParentDir, nsCString());
         
     nsresult rv;
     nsCAutoString fsStr;
-    if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(nsDependentString(newName), fsStr)))
+    if (NS_SUCCEEDED(rv = nsFSStringConversionMac::UCSToFS(newName, fsStr)))
         rv = MoveToNative(newParentDir, fsStr);
     return rv;
 }
@@ -2550,17 +2537,13 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
+nsLocalFile::GetTarget(nsAString &_retval)
 {   
    nsresult rv;
    nsCAutoString fsStr;
    
    if (NS_SUCCEEDED(rv = GetNativeTarget(fsStr))) {
-     nsAutoString ucStr;
-     if (NS_SUCCEEDED(rv = nsFSStringConversionMac::FSToUCS(fsStr, ucStr))) {
-       if ((*_retval = ToNewUnicode(ucStr)) == nsnull)
-         rv = NS_ERROR_OUT_OF_MEMORY;
-     }
+     rv = nsFSStringConversionMac::FSToUCS(fsStr, _retval);
    }
    return rv;
 }
@@ -3563,10 +3546,10 @@ NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* 
 }
 
 nsresult 
-NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result)
+NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result)
 {
     nsCAutoString fsCharSetStr;   
-    nsresult rv = nsFSStringConversionMac::UCSToFS(nsDependentString(path), fsCharSetStr);
+    nsresult rv = nsFSStringConversionMac::UCSToFS(path, fsCharSetStr);
     if (NS_FAILED(rv))
         return rv;
     return NS_NewNativeLocalFile(fsCharSetStr, followLinks, result);

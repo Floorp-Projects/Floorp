@@ -1371,7 +1371,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 #endif
 
         // Now we have a unicode path - make it into a file
-        rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(convertedProfLoc), PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(convertedProfLoc, PR_TRUE, getter_AddRefs(tempLocal));
     }
     else
     {
@@ -1388,13 +1388,13 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         PRInt32 firstColon = regLocationData.FindChar(PRUnichar(':'));
         if (firstColon == -1)
         {
-            rv = NS_NewLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
+            rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
             if (NS_SUCCEEDED(rv)) // XXX this only works on XP_MAC because regLocationData is ASCII
                 rv = tempLocal->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(regLocationData));
         }
         else
 #endif
-        rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(regLocationData), PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(regLocationData, PR_TRUE, getter_AddRefs(tempLocal));
     }
 
     if (NS_SUCCEEDED(rv) && tempLocal)
@@ -1428,10 +1428,8 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
             resolvedLocation->Remove(PR_FALSE);
         regData = NS_ConvertUTF8toUCS2(descBuf);
 #else
-        nsCAutoString utf8Path;
-        rv = resolvedLocation->GetPath(utf8Path);
+        rv = resolvedLocation->GetPath(regData);
         if (NS_FAILED(rv)) return rv;
-        regData = NS_ConvertUTF8toUCS2(utf8Path);
 #endif
 
         rv = aRegistry->SetString(profKey,
@@ -1467,7 +1465,7 @@ nsresult ProfileStruct::InternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
     if (NS_SUCCEEDED(rv))
     {
 #ifdef XP_MAC
-        rv = NS_NewLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(tempLocal));
         if (NS_SUCCEEDED(rv))
         {
             // The persistent desc on Mac is base64 encoded so plain ASCII
@@ -1476,7 +1474,7 @@ nsresult ProfileStruct::InternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
                 migratedFrom = tempLocal;
         }
 #else
-        rv = NS_NewLocalFile(regData, PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(NS_ConvertUTF8toUCS2(regData), PR_TRUE, getter_AddRefs(tempLocal));
         if (NS_SUCCEEDED(rv))
             migratedFrom = tempLocal;
 #endif
@@ -1494,7 +1492,9 @@ nsresult ProfileStruct::ExternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
 #if XP_MAC
         rv = migratedFrom->GetPersistentDescriptor(regData);
 #else
-        rv = resolvedLocation->GetPath(regData);
+        nsAutoString path;
+        rv = resolvedLocation->GetPath(path);
+        regData = NS_ConvertUCS2toUTF8(path);
 #endif
 
         if (NS_SUCCEEDED(rv))

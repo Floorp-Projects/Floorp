@@ -285,7 +285,7 @@ PRInt32 nsRegisterItem::Complete()
 
             if (NS_SUCCEEDED(rv))
             {
-                tmp->Append(INSTALL_CHROME_DIR);
+                tmp->AppendNative(INSTALL_CHROME_DIR);
             }
         }
         nsCOMPtr<nsILocalFile> startupFile( do_QueryInterface(tmp, &rv) );
@@ -297,7 +297,7 @@ PRInt32 nsRegisterItem::Complete()
                 rv = startupFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
             if (NS_SUCCEEDED(rv))
             {
-                rv = startupFile->Append(NS_LITERAL_CSTRING("installed-chrome.txt"));
+                rv = startupFile->AppendNative(NS_LITERAL_CSTRING("installed-chrome.txt"));
                 if (NS_SUCCEEDED(rv))
                 {
                     rv = startupFile->OpenNSPRFileDesc(

@@ -565,7 +565,7 @@ nsMsgMailSession::GetSelectedLocaleDataDir(nsIFile *defaultsDir)
         rv = defaultsDir->Clone(getter_AddRefs(localeDataDir));     
         NS_ENSURE_SUCCESS(rv,rv);                                       
 
-        rv = localeDataDir->Append(NS_ConvertUCS2toUTF8(localeName));
+        rv = localeDataDir->Append(localeName);
         NS_ENSURE_SUCCESS(rv,rv);                                       
 
         rv = localeDataDir->Exists(&localeDirExists);                   
@@ -573,7 +573,7 @@ nsMsgMailSession::GetSelectedLocaleDataDir(nsIFile *defaultsDir)
 
         if (localeDirExists) {                                          
           // use locale provider instead                              
-          rv = defaultsDir->Append(NS_ConvertUCS2toUTF8(localeName));
+          rv = defaultsDir->Append(localeName);
           NS_ENSURE_SUCCESS(rv,rv);                                   
         }                                                               
       }                                                                   

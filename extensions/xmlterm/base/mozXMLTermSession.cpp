@@ -1208,7 +1208,7 @@ NS_IMETHODIMP mozXMLTermSession::ExportHTML(const PRUnichar* aFilename,
   XMLT_LOG(mozXMLTermSession::ExportHTML,0,
            ("Exporting %d\n", mCountExportHTML));
 
-  result = localFile->InitWithPath(NS_ConvertUCS2toUTF8(filename));
+  result = localFile->InitWithPath(filename);
   if (NS_FAILED(result))
     return NS_ERROR_FAILURE;
 

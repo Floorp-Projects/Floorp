@@ -531,7 +531,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *
     mPath->GetNativePath(getter_Copies(nativePath));
 
     nsCOMPtr <nsILocalFile> localStore;
-    rv = NS_NewLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
+    rv = NS_NewNativeLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
     if (NS_SUCCEEDED(rv) && localStore)
     {
       NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);

@@ -454,11 +454,9 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   }
 
   // Set and assert the "pretty" (display) name of the download
-  nsCAutoString prettyName;
   nsAutoString displayName; displayName.Assign(aDisplayName);
   if (displayName.IsEmpty()) {
-    aTarget->GetLeafName(prettyName);
-    displayName.Assign(NS_ConvertUTF8toUCS2(prettyName));
+    aTarget->GetLeafName(displayName);
   }
   (*aDownload)->SetDisplayName(displayName.get());
  
