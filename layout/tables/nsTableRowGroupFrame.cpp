@@ -485,6 +485,11 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
 
       // Any row frames?
       if (nextInFlow->mFrames.NotEmpty()) {
+        // When pushing and pulling frames we need to check for whether any
+        // views need to be reparented.
+        for (nsIFrame* f = nextInFlow->mFrames.FirstChild(); f; f->GetNextSibling(&f)) {
+          nsHTMLContainerFrame::ReparentFrameView(f, nextInFlow, this);
+        }
         // Append them to our child list
         mFrames.AppendFrames(this, nextInFlow->mFrames);
       }
