@@ -85,14 +85,11 @@ ICodeGenerator::ICodeGenerator(World *world, bool hasTryStatement, uint32 switch
         else
             allocateVariable(world->identifiers[s]);
     }
-    labelSet = new StatementLabels();
 }
 
 
 ICodeModule *ICodeGenerator::complete()
 {
-    ASSERT(stitcher.empty());
-    //ASSERT(labelSet == NULL);
 #ifdef DEBUG
     for (LabelList::iterator i = labels.begin();
          i != labels.end(); i++) {
@@ -101,6 +98,11 @@ ICodeModule *ICodeGenerator::complete()
     }
 #endif
     /*
+    XXX FIXME
+    I wanted to do the following rather than have to have the label set hanging around as well
+    as the ICodeModule. Branches have since changed, but the concept is still good and should
+    be re-introduced at some point.
+
     for (InstructionIterator ii = iCode->begin(); 
          ii != iCode->end(); ii++) {            
         if ((*ii)->op() == BRANCH) {
@@ -122,20 +124,6 @@ ICodeModule *ICodeGenerator::complete()
     ICodeModule* module = new ICodeModule(iCode, variableList, maxRegister, 0);
     iCodeOwner = false;   // give ownership to the module.
     return module;
-}
-
-TryCodeState::TryCodeState(Label *catchLabel, Label *finallyLabel, ICodeGenerator *icg) 
-    : ICodeState(Try_state, icg), 
-            catchHandler(catchLabel), 
-            finallyHandler(finallyLabel),
-            finallyInvoker(NULL),
-            beyondCatch(NULL)
-{ 
-    if (catchHandler) {
-        beyondCatch = icg->getLabel();
-        if (finallyLabel)
-            finallyInvoker = icg->getLabel();
-    }
 }
 
 
@@ -398,494 +386,6 @@ void ICodeGenerator::setLabel(Label *l)
     l->mOffset = iCode->size();
 }
 
-void ICodeGenerator::setLabel(InstructionStream *stream, Label *l)
-{
-    l->mBase = stream;
-    l->mOffset = stream->size();
-}
-
-/********************************************************************/
-
-void ICodeGenerator::mergeStream(InstructionStream *sideStream)
-{
-    // change InstructionStream to be a class that also remembers
-    // if it contains any labels (maybe even remembers the labels
-    // themselves?) in order to avoid running this loop unnecessarily.
-    for (LabelList::iterator i = labels.begin();
-         i != labels.end(); i++) {
-        if ((*i)->mBase == sideStream) {
-            (*i)->mBase = iCode;
-            (*i)->mOffset += iCode->size();
-        }
-    }
-
-    for (InstructionIterator ii = sideStream->begin();
-         ii != sideStream->end(); ii++) {
-        iCode->push_back(*ii);
-    }
-
-}
-
-/********************************************************************/
-
-void ICodeGenerator::beginWhileStatement(uint32)
-{
-    WhileCodeState *ics = new WhileCodeState(this);
-    addStitcher(ics);
-
-    // insert a branch to the while condition, which we're 
-    // moving to follow the while block
-    branch(ics->whileCondition);
-
-    iCode = new InstructionStream();
-}
-
-void ICodeGenerator::endWhileExpression(Register condition)
-{
-    WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == While_state);
-
-    branchConditional(ics->whileBody, condition);
-    resetTopRegister();
-    // stash away the condition expression and switch 
-    // back to the main stream
-    iCode = ics->swapStream(iCode);
-    // mark the start of the while block
-    setLabel(ics->whileBody);
-}
-
-void ICodeGenerator::endWhileStatement()
-{
-    // recover the while stream
-    WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == While_state);
-    stitcher.pop_back();
-
-        // mark the start of the condition code
-        // which is where continues will target
-    setLabel(ics->whileCondition);
-    
-    // and re-attach it to the main stream
-    mergeStream(ics->whileExpressionStream);
-
-    if (ics->breakLabel != NULL)
-        setLabel(ics->breakLabel);
-
-    delete ics;
-
-    resetStatement();
-}
-
-/********************************************************************/
-
-void ICodeGenerator::beginForStatement(uint32)
-{
-    ForCodeState *ics = new ForCodeState(this);
-    addStitcher(ics);
-    branch(ics->forCondition);
-
-    // begin the stream for collecting the condition expression
-    iCode = new InstructionStream();
-    setLabel(ics->forCondition);
-
-    resetTopRegister();
-}
-
-void ICodeGenerator::forCondition(Register condition)
-{
-    ForCodeState *ics = static_cast<ForCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == For_state);
-
-    // finsh off the test expression by adding the branch to the body
-    branchConditional(ics->forBody, condition);
-
-    // switch back to main stream
-    iCode = ics->swapStream(iCode);
-    // begin the stream for collecting the increment expression
-    iCode = new InstructionStream();
-
-    ics->continueLabel = getLabel();
-    // can't lazily insert this since we haven't seen the body yet
-    // ??? could just remember the offset
-    setLabel(ics->continueLabel);       
-
-    resetTopRegister();
-}
-
-void ICodeGenerator::forIncrement()
-{
-    ForCodeState *ics = static_cast<ForCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == For_state);
-
-    // now switch back to the main stream
-    iCode = ics->swapStream2(iCode);
-    setLabel(ics->forBody);
-
-    resetTopRegister();
-}
-
-void ICodeGenerator::endForStatement()
-{
-    ForCodeState *ics = static_cast<ForCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == For_state);
-    stitcher.pop_back();
-
-    mergeStream(ics->forIncrementStream);
-    mergeStream(ics->forConditionStream);
-
-    if (ics->breakLabel != NULL)
-        setLabel(ics->breakLabel);
-
-    delete ics;
-    resetStatement();
-}
-
-/********************************************************************/
-
-void ICodeGenerator::beginDoStatement(uint32)
-{
-    DoCodeState *ics = new DoCodeState(this);
-    addStitcher(ics);
-
-    // mark the top of the loop body
-    setLabel(ics->doBody);
-}
-
-void ICodeGenerator::endDoStatement()
-{
-    DoCodeState *ics = static_cast<DoCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Do_state);
-
-    // mark the start of the do conditional
-    setLabel(ics->doCondition);
-    if (ics->continueLabel != NULL)
-        setLabel(ics->continueLabel);
-
-    resetTopRegister();
-}
-
-void ICodeGenerator::endDoExpression(Register condition)
-{
-    DoCodeState *ics = static_cast<DoCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Do_state);
-    stitcher.pop_back();
-
-    // add branch to top of do block
-    branchConditional(ics->doBody, condition);
-    if (ics->breakLabel != NULL)
-        setLabel(ics->breakLabel);
-
-    delete ics;
-
-    resetStatement();
-}
-
-/********************************************************************/
-
-void ICodeGenerator::beginSwitchStatement(uint32, Register expression)
-{
-    // stash the control expression value
-
-    // hmmm, need to track depth of nesting here....
-    move(switchRegister, expression);
-
-    // build an instruction stream for the case statements, the case
-    // expressions are generated into the main stream directly, the
-    // case statements are then added back in afterwards.
-    InstructionStream *x = new InstructionStream();
-    SwitchCodeState *ics = new SwitchCodeState(switchRegister++, this);
-    ics->swapStream(x);
-    addStitcher(ics);
-}
-
-void ICodeGenerator::endCaseCondition(Register expression)
-{
-    SwitchCodeState *ics =
-        static_cast<SwitchCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Switch_state);
-
-    Label *caseLabel = getLabel();
-    Register r = op(COMPARE_EQ, expression, ics->controlValue);
-    branchConditional(caseLabel, r);
-
-    // mark the case in the Case Statement stream 
-    setLabel(ics->caseStatementsStream, caseLabel);
-    resetTopRegister();
-}
-
-void ICodeGenerator::beginCaseStatement(uint32 /* pos */)
-{
-    SwitchCodeState *ics = 
-        static_cast<SwitchCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Switch_state);
-    // switch to Case Statement stream
-    iCode = ics->swapStream(iCode);
-}
-
-void ICodeGenerator::endCaseStatement()
-{
-    SwitchCodeState *ics = 
-        static_cast<SwitchCodeState *>(stitcher.back());
-    // do more to guarantee correct blocking?
-    ASSERT(ics->stateKind == Switch_state);
-    // switch back to Case Conditional stream
-    iCode = ics->swapStream(iCode);
-    resetTopRegister();
-}
-
-void ICodeGenerator::beginDefaultStatement(uint32 /* pos */)
-{
-    SwitchCodeState *ics = 
-        static_cast<SwitchCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Switch_state);
-    ASSERT(ics->defaultLabel == NULL);
-    ics->defaultLabel = getLabel();
-    setLabel(ics->caseStatementsStream, ics->defaultLabel);
-    // switch to Case Statement stream
-    iCode = ics->swapStream(iCode);
-}
-
-void ICodeGenerator::endDefaultStatement()
-{
-    SwitchCodeState *ics = 
-        static_cast<SwitchCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Switch_state);
-    // do more to guarantee correct blocking?
-    ASSERT(ics->defaultLabel != NULL);
-    // switch to Case Statement stream
-    iCode = ics->swapStream(iCode);
-    resetTopRegister();
-}
-
-void ICodeGenerator::endSwitchStatement()
-{
-    SwitchCodeState *ics = 
-        static_cast<SwitchCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Switch_state);
-    stitcher.pop_back();
-
-    // ground out the case chain at the default block or fall thru
-    // to the break label
-    if (ics->defaultLabel != NULL)       
-        branch(ics->defaultLabel);
-    else {
-        if (ics->breakLabel == NULL)
-            ics->breakLabel = getLabel();
-        branch(ics->breakLabel);
-    }
-
-    // dump all the case statements into the main stream
-    mergeStream(ics->caseStatementsStream);
-
-    if (ics->breakLabel != NULL)
-        setLabel(ics->breakLabel);
-
-    delete ics;
-    
-    --switchRegister;
-
-    resetStatement();
-}
-
-
-/********************************************************************/
-
-void ICodeGenerator::beginIfStatement(uint32, Register condition)
-{
-    IfCodeState *ics = new IfCodeState(this);
-    addStitcher(ics);
-
-    branchNotConditional(ics->elseLabel, condition);
-
-    resetTopRegister();
-}
-
-void ICodeGenerator::beginElseStatement(bool hasElse)
-{
-    IfCodeState *ics = static_cast<IfCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == If_state);
-
-    if (hasElse) {
-        Label *beyondElse = getLabel();
-        ics->beyondElse = beyondElse;
-        branch(beyondElse);
-    }
-    setLabel(ics->elseLabel);
-    resetTopRegister();
-}
-
-void ICodeGenerator::endIfStatement()
-{
-    IfCodeState *ics = static_cast<IfCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == If_state);
-    stitcher.pop_back();
-
-    if (ics->beyondElse != NULL) {   // had an else
-        setLabel(ics->beyondElse);   // the beyond else label
-    }
-
-    delete ics;
-    resetStatement();
-}
-
-/************************************************************************/
-
-void ICodeGenerator::breakStatement(uint32 /* pos */)
-{
-    for (std::vector<ICodeState *>::reverse_iterator p =
-             stitcher.rbegin(); p != stitcher.rend(); p++) {
-        if ((*p)->breakLabel != NULL) {
-            branch((*p)->breakLabel);
-            return;
-        }
-        if (((*p)->stateKind == While_state)
-            || ((*p)->stateKind == Do_state)
-            || ((*p)->stateKind == For_state)
-            || ((*p)->stateKind == Switch_state)) {
-            (*p)->breakLabel = getLabel();
-            branch((*p)->breakLabel);
-            return;
-        }
-    }
-    NOT_REACHED("no break target available");
-}
-
-void ICodeGenerator::breakStatement(uint32 /* pos */,
-                                    const StringAtom &label)
-{
-    for (std::vector<ICodeState *>::reverse_iterator p =
-                stitcher.rbegin(); p != stitcher.rend(); p++) {
-        if ((*p)->labelSet) {
-            for (StatementLabels::iterator i = (*p)->labelSet->begin();
-                        i != (*p)->labelSet->end(); i++) {
-                if ((*i) == &label) {
-		            if ((*p)->breakLabel == NULL)
-			            (*p)->breakLabel = getLabel();
-                    branch((*p)->breakLabel);
-                    return;
-                }
-            }
-        }
-    }
-    NOT_REACHED("no break target available");
-}
-
-void ICodeGenerator::continueStatement(uint32 /* pos */)
-{
-    for (std::vector<ICodeState *>::reverse_iterator p =
-             stitcher.rbegin(); p != stitcher.rend(); p++) {
-        if ((*p)->continueLabel != NULL) {
-            branch((*p)->continueLabel);
-            return;
-        }
-        if (((*p)->stateKind == While_state)
-            || ((*p)->stateKind == Do_state)
-            || ((*p)->stateKind == For_state)) {
-            (*p)->continueLabel = getLabel();
-            branch((*p)->continueLabel);
-            return;
-        }
-    }
-    NOT_REACHED("no continue target available");
-}    
-
-void ICodeGenerator::continueStatement(uint32 /* pos */,
-                                       const StringAtom &label)
-{
-    for (std::vector<ICodeState *>::reverse_iterator p =
-                stitcher.rbegin(); p != stitcher.rend(); p++) {
-        if ((*p)->labelSet) {
-            for (StatementLabels::iterator i = (*p)->labelSet->begin();
-                        i != (*p)->labelSet->end(); i++) {
-                if ((*i) == &label) {
-        		    if ((*p)->continueLabel == NULL)
-		            	(*p)->continueLabel = getLabel();
-                    branch((*p)->continueLabel);
-                    return;
-                }
-            }
-        }
-    }
-    NOT_REACHED("no continue target available");
-}
-/********************************************************************/
-
-void ICodeGenerator::beginTryStatement(uint32 /* pos */,
-                                       bool hasCatch, bool hasFinally)
-{
-    ASSERT(exceptionRegister != NotARegister);
-    TryCodeState *ics = new TryCodeState((hasCatch) ? getLabel() : NULL,
-                                 (hasFinally) ? getLabel() : NULL, this);
-    addStitcher(ics);
-    beginTry(ics->catchHandler, ics->finallyInvoker);
-}
-
-void ICodeGenerator::endTryBlock()
-{
-    TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Try_state);
-
-    endTry();
-    if (ics->finallyHandler)
-        jsr(ics->finallyHandler);
-    if (ics->beyondCatch)
-        branch(ics->beyondCatch);
-}
-
-void ICodeGenerator::endTryStatement()
-{
-    TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Try_state);
-    stitcher.pop_back();
-    if (ics->beyondCatch)
-        setLabel(ics->beyondCatch);
-    resetStatement();
-}
-
-void ICodeGenerator::beginCatchStatement(uint32 /* pos */)
-{
-    TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Try_state);
-    ASSERT(ics->catchHandler);
-    setLabel(ics->catchHandler);
-}
-
-void ICodeGenerator::endCatchExpression(Register exceptionId)
-{
-    TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Try_state);
-    move(exceptionRegister, exceptionId);
-}
-
-void ICodeGenerator::endCatchStatement()
-{
-    TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Try_state);
-    if (ics->finallyHandler)
-        jsr(ics->finallyHandler);
-    throwStatement(0, exceptionRegister);
-}
-
-void ICodeGenerator::beginFinallyStatement(uint32 /* pos */)
-{
-    TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Try_state);
-    ASSERT(ics->finallyHandler);
-    if (ics->finallyInvoker) {
-        setLabel(ics->finallyInvoker);
-        jsr(ics->finallyHandler);
-        throwStatement(0, exceptionRegister);
-    }
-    setLabel(ics->finallyHandler);
-}
-
-void ICodeGenerator::endFinallyStatement()
-{
-    TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
-    ASSERT(ics->stateKind == Try_state);
-    rts();
-}
-
 /************************************************************************/
 
 
@@ -1025,6 +525,12 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             ret = genExpr(u->op, needBoolValueInBranch, trueBranch, falseBranch);
         }
         break;
+    case ExprNode::New:
+        {
+            // FIXME - handle args, etc...
+            ret = newObject();
+        }
+        break;
     case ExprNode::call : 
         {
             InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
@@ -1059,8 +565,11 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
                 variable or name? If there's a 'with' in this scope, then it's
                 a name, otherwise look it up in the function variable map.
             */
-
-            ret = loadName((static_cast<IdentifierExprNode *>(p))->name);
+            Register v = findVariable((static_cast<IdentifierExprNode *>(p))->name);
+            if (v != NotARegister)
+                ret = v;
+            else
+                ret = loadName((static_cast<IdentifierExprNode *>(p))->name);
         }
         break;
     case ExprNode::number :
@@ -1145,7 +654,11 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             ret = genExpr(b->op2);
             if (b->op1->getKind() == ExprNode::identifier) {
-                saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
+                Register v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
+                if (v != NotARegister)
+                    move(v, ret);
+                else
+                    saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
             }
             else
                 if (b->op1->getKind() == ExprNode::dot) {
@@ -1282,10 +795,8 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             Label *fBranch = getLabel();
             Label *beyondBranch = getLabel();
             Register c = genExpr(t->op1, false, NULL, fBranch);
-            if (!generatedBoolean(t->op1)) {
-                c = test(c);
-                branchNotConditional(fBranch, c);
-            }
+            if (!generatedBoolean(t->op1))
+                branchNotConditional(fBranch, test(c));
             Register r1 = genExpr(t->op2);
             branch(beyondBranch);
             setLabel(fBranch);
@@ -1305,12 +816,202 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
 }
 
 /*
- pre-pass to find: 
+ need pre-pass to find: 
     variable & function definitions,
     #nested switch statements
     contains 'with' or 'eval'
     contains 'try {} catch {} finally {}'
 */
+
+
+bool LabelEntry::containsLabel(const StringAtom *label)
+{
+    if (labelSet) {
+        for (LabelSet::iterator i = labelSet->begin(); i != labelSet->end(); i++)
+            if ( (*i) == label )
+                return true;
+    }
+    return false;
+}
+
+Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
+{
+    Register ret = NotARegister;
+
+    switch (p->getKind()) {
+    case StmtNode::expression:
+        {
+            ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
+            ret = genExpr(e->expr);
+        }
+        break;
+    case StmtNode::If:
+        {
+            Label *falseLabel = getLabel();
+            UnaryStmtNode *i = static_cast<UnaryStmtNode *>(p);
+            Register c = genExpr(i->expr, false, NULL, falseLabel);
+            if (!generatedBoolean(i->expr))
+                branchNotConditional(falseLabel, test(c));
+            genStmt(i->stmt);
+            setLabel(falseLabel);
+        }
+        break;
+    case StmtNode::IfElse:
+        {
+            Label *falseLabel = getLabel();
+            Label *beyondLabel = getLabel();
+            BinaryStmtNode *i = static_cast<BinaryStmtNode *>(p);
+            Register c = genExpr(i->expr, false, NULL, falseLabel);
+            if (!generatedBoolean(i->expr))
+                branchNotConditional(falseLabel, test(c));
+            genStmt(i->stmt);
+            branch(beyondLabel);
+            setLabel(falseLabel);
+            genStmt(i->stmt2);
+        }
+        break;
+    case StmtNode::Switch:
+        {
+            LabelEntry *e = new LabelEntry(currentLabelSet, getLabel());
+            mLabelStack.push_back(e);
+            SwitchStmtNode *sw = static_cast<SwitchStmtNode *>(p);
+            Register sc = genExpr(sw->expr);
+            StmtNode *s = sw->statements;
+            // ECMA requires case & default statements to be immediate children of switch
+            // unlike C where they can be arbitrarily deeply nested in other statements.
+            while (s) {
+                ASSERT(s->getKind() == StmtNode::Case);
+                UnaryStmtNode *c = static_cast<UnaryStmtNode *>(s);
+                if (c->expr) {
+                    Label *beyondCaseLabel = getLabel();
+                    Register r = genExpr(c->expr);
+                    Register eq = op(COMPARE_EQ, r, sc);
+                    branchNotConditional(beyondCaseLabel, eq);
+                    genStmt(c->stmt);
+                    setLabel(beyondCaseLabel);
+                }
+                // else it's the default case... THIS IS NOT DONE YET....
+                else
+                    genStmt(c->stmt);
+                s = s->next;
+            }
+            setLabel(e->breakLabel);
+            mLabelStack.pop_back();
+        }
+        break;
+    case StmtNode::While:
+        {
+            LabelEntry *e = new LabelEntry(currentLabelSet, getLabel(), getLabel());
+            mLabelStack.push_back(e);
+            branch(e->continueLabel);
+            
+            UnaryStmtNode *w = static_cast<UnaryStmtNode *>(p);
+
+            Label *whileBodyTopLabel = getLabel();
+            setLabel(whileBodyTopLabel);
+            genStmt(w->stmt);
+
+            setLabel(e->continueLabel);
+            Register c = genExpr(w->expr, false, whileBodyTopLabel, NULL);
+            if (!generatedBoolean(w->expr))
+                branchConditional(whileBodyTopLabel, test(c));
+
+            setLabel(e->breakLabel);
+            mLabelStack.pop_back();
+        }
+        break;
+    case StmtNode::For:
+        {
+            LabelEntry *e = new LabelEntry(currentLabelSet, getLabel(), getLabel());
+            mLabelStack.push_back(e);
+
+            ForStmtNode *f = static_cast<ForStmtNode *>(p);
+            if (f->initializer) 
+                genStmt(f->initializer);
+            Label *forTestLabel = getLabel();
+            branch(forTestLabel);
+
+            Label *forBlockTop = getLabel();
+            setLabel(forBlockTop);
+            genStmt(f->stmt);
+            
+            setLabel(e->continueLabel);
+            if (f->expr3)
+                genExpr(f->expr3);
+            
+            setLabel(forTestLabel);
+            if (f->expr2) {
+                Register c = genExpr(f->expr2, false, forBlockTop, NULL);
+                if (!generatedBoolean(f->expr2))
+                    branchConditional(forBlockTop, test(c));
+            }
+            
+            setLabel(e->breakLabel);
+
+            mLabelStack.pop_back();
+        }
+        break;
+    case StmtNode::block:
+        {
+            BlockStmtNode *b = static_cast<BlockStmtNode *>(p);
+            StmtNode *s = b->statements;
+            while (s) {
+                genStmt(s);
+                s = s->next;
+            }            
+        }
+        break;
+
+    case StmtNode::label:
+        {
+            LabelStmtNode *l = static_cast<LabelStmtNode *>(p);
+            // ok, there's got to be a cleverer way of doing this...
+            if (currentLabelSet != NULL) {
+                currentLabelSet = new LabelSet();
+                currentLabelSet->push_back(&l->name);
+                genStmt(l->stmt, currentLabelSet);
+                delete currentLabelSet;
+            }
+            else {
+                currentLabelSet->push_back(&l->name);
+                genStmt(l->stmt, currentLabelSet);
+                currentLabelSet->pop_back();
+            }
+        }
+        break;
+
+    case StmtNode::Break:
+        {
+            GoStmtNode *g = static_cast<GoStmtNode *>(p);
+            if (g->label) {
+                LabelEntry *e = NULL;
+                for (LabelStack::reverse_iterator i = mLabelStack.rbegin(); i != mLabelStack.rend(); i++) {
+                    e = (*i);
+                    if (e->containsLabel(g->name))
+                        break;
+                }
+                if (e) {
+                    ASSERT(e->breakLabel);
+                    branch(e->breakLabel);
+                }
+                else
+                    NOT_REACHED("break label not in label set");
+            }
+            else {
+                ASSERT(!mLabelStack.empty());
+                LabelEntry *e = mLabelStack.back();
+                ASSERT(e->breakLabel);
+                branch(e->breakLabel);
+            }
+
+        }
+        break;
+    default:
+        NOT_REACHED("unimplemented statement kind");
+    }
+    return ret;
+}
+
 
 /************************************************************************/
 

@@ -99,15 +99,18 @@ static JSValue print(const JSValues &argv)
 }
 
 
-static void genCode(World &world, Context &cx, ExprNode *p)
+static void genCode(World &world, Context &cx, StmtNode *p)
 {
     ICodeGenerator icg(&world);
-    
-    icg.beginStatement(0);
-    Register ret = icg.genExpr(p);
-    icg.endStatement();
-
-    icg.returnStatement(ret);
+    Register ret = NotARegister;
+    while (p) {
+        ret = icg.genStmt(p);
+        p = p->next;
+    }
+    if (ret != NotARegister)
+        icg.addInstruction(new Return(ret));
+    else
+        icg.addInstruction(new ReturnVoid());
     stdOut << '\n';
     stdOut << icg;
     JSValue result = cx.interpret(icg.complete(), JSValues());
@@ -120,25 +123,6 @@ static void readEvalPrint(FILE *in, World &world)
     Context cx(world, &glob);
     StringAtom& printName = world.identifiers[widenCString("print")];
     glob.defineNativeFunction(printName, print);
-/*
-        hack an object a, with property p = 4.0 into the global scope
-*/
-    {
-        ICodeGenerator icg;
-        // var global = new Object();
-        StringAtom& global = world.identifiers[widenCString("a")];
-        icg.beginStatement(0);
-        icg.saveName(global, icg.newObject());
-        
-        // global.counter = 0;
-        StringAtom& prop = world.identifiers[widenCString("p")];
-        icg.beginStatement(0);
-        icg.setProperty(icg.loadName(global), prop, icg.loadImmediate(4.0));
-
-        icg.returnStatement();
-        cx.interpret(icg.complete(), JSValues());
-    }
-
 
     String buffer;
     string line;
@@ -177,7 +161,7 @@ static void readEvalPrint(FILE *in, World &world)
         	    stdOut << '\n';
 #if 0
 				// Generate code for parsedStatements, which is a linked list of zero or more statements
-                genCode(world, cx, parseTree);
+                genCode(world, cx, parsedStatements);
 #endif
             }
             clear(buffer);
@@ -227,248 +211,60 @@ class Tracer : public Context::Listener {
     }
 };
 
-static void testICG(World &world)
-{
-    //
-    // testing ICG 
-    //
-    uint32 pos = 0;
-    ICodeGenerator icg(&world, true, 1);
-    
-    // var i,j;
-    // i is bound to var #0, j to var #1
-    Register r_i = icg.allocateVariable(world.identifiers[widenCString("i")]);
-    Register r_j = icg.allocateVariable(world.identifiers[widenCString("j")]);
-    Register r_x = icg.allocateVariable(world.identifiers[widenCString("x")]);
-
-    //  i = j + 2;
-    icg.beginStatement(pos);
-    Register r1 = icg.loadImmediate(2.0);
-    icg.move(r_i, icg.op(ADD, r1, r_j));
-    
-    // j = a.b
-    icg.beginStatement(pos);
-    r1 = icg.loadName(world.identifiers[widenCString("a")]);
-    r1 = icg.getProperty(r1, world.identifiers[widenCString("b")]);
-    icg.move(r_j, r1);
-
-    // label1 : while (i) { while (i) { i = i + j; break label1; } }
-    icg.beginLabelStatement(pos, world.identifiers[widenCString("label1")]);            
-    icg.beginWhileStatement(pos);
-    icg.endWhileExpression(icg.test(r_i));        
-
-        icg.beginWhileStatement(pos);
-        icg.endWhileExpression(icg.test(r_i));        
-        icg.move(r_i, icg.op(ADD, r_i, r_j));
-        icg.breakStatement(pos, world.identifiers[widenCString("label1")]);
-        icg.endWhileStatement();
-
-    icg.endWhileStatement();
-    icg.endLabelStatement();
-
-    // if (i) if (j) i = 3; else j = 4;
-    icg.beginIfStatement(pos, icg.test(r_i));
-    icg.beginIfStatement(pos, icg.test(r_j));
-    icg.move(r_i, icg.loadImmediate(3));
-    icg.beginElseStatement(true);
-    icg.move(r_j, icg.loadImmediate(4));
-    icg.endIfStatement();
-    icg.beginElseStatement(false);
-    icg.endIfStatement();
-    
-    // try {
-    //   if (i) if (j) i = 3; else j = 4;
-    //   throw j;
-    // } 
-    // catch (x) {
-    //  j = x;
-    // }
-    // finally {
-    //  i = 5;
-    // }
-    icg.beginTryStatement(pos, true, true);    // hasCatch, hasFinally
-        icg.beginIfStatement(pos, icg.test(r_i));
-        icg.beginIfStatement(pos, icg.test(r_j));
-        icg.move(r_i, icg.loadImmediate(3));
-        icg.beginElseStatement(true);
-        icg.beginStatement(pos);
-        icg.move(r_j, icg.loadImmediate(4));
-        icg.endIfStatement();
-        icg.beginElseStatement(false);
-        icg.endIfStatement();
-        icg.throwStatement(pos, r_j);
-    icg.endTryBlock();
-        icg.beginCatchStatement(pos);
-        icg.endCatchExpression(r_x);
-        icg.beginStatement(pos);
-        icg.move(r_j, r_x);
-        icg.endCatchStatement();
-        icg.beginFinallyStatement(pos);
-        icg.beginStatement(pos);
-        icg.move(r_i, icg.loadImmediate(5));
-        icg.endFinallyStatement();
-    icg.endTryStatement();
-    
-
-    // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
-    icg.beginSwitchStatement(pos, r_i);
-    // case 3, note empty case statement (?necessary???)
-    icg.endCaseCondition(icg.loadImmediate(3));
-    icg.beginCaseStatement(pos);
-    icg.endCaseStatement();
-    // case 4
-    icg.endCaseCondition(icg.loadImmediate(4));
-    icg.beginCaseStatement(pos);
-    icg.beginStatement(pos);
-    icg.move(r_j, icg.loadImmediate(4));
-    icg.breakStatement(pos);
-    icg.endCaseStatement();
-    // case 5
-    icg.endCaseCondition(icg.loadImmediate(5));
-    icg.beginCaseStatement(pos);
-    icg.beginStatement(pos);
-    icg.move(r_j, icg.loadImmediate(5));
-    icg.breakStatement(pos);
-    icg.endCaseStatement();
-    // default
-    icg.beginDefaultStatement(pos);
-    icg.beginStatement(pos);
-    icg.move(r_j, icg.loadImmediate(6));
-    icg.endDefaultStatement();
-    icg.endSwitchStatement();
-    
-    // for ( ; i; i = i + 1 ) j = 99;
-    icg.beginForStatement(pos);
-    icg.forCondition(icg.test(r_i));
-    icg.move(r_i, icg.op(ADD, r_i, icg.loadImmediate(1)));
-    icg.forIncrement();
-    icg.move(r_j, icg.loadImmediate(99));
-    icg.endForStatement();
-        
-    ICodeModule *icm = icg.complete();
-        
-    stdOut << icg;
-        
-    delete icm;
-}
-
-static float64 testFunctionCall(World &world, float64 n)
-{
-    JSScope glob;
-    Context cx(world, &glob);
-    /*
-    Tracer t;
-    cx.addListener(&t);
-    */
-    jsd.attachToContext(&cx);
-    
-    uint32 position = 0;
-    //StringAtom& global = world.identifiers[widenCString("global")];
-    StringAtom& sum = world.identifiers[widenCString("sum")];
-        
-    ICodeGenerator fun;
-    // function sum(n) { if (n > 1) return 1 + sum(n - 1); else return 1; }
-    // n is bound to var #0.
-    Register r_n =
-        fun.allocateVariable(world.identifiers[widenCString("n")]);
-    fun.beginStatement(position);
-    Register r1 = fun.op(COMPARE_LT, fun.loadImmediate(1.0), r_n);
-    fun.beginIfStatement(position, r1);
-    fun.beginStatement(position);
-    r1 = fun.op(SUBTRACT, r_n, fun.loadImmediate(1.0));
-    RegisterList args(1);
-    args[0] = r1;
-    r1 = fun.call(fun.loadName(sum), args);
-    fun.returnStatement(fun.op(ADD, fun.loadImmediate(1.0), r1));
-    fun.beginElseStatement(true);
-    fun.beginStatement(position);
-    fun.returnStatement(fun.loadImmediate(1.0));
-    fun.endIfStatement();
-        
-    ICodeModule *funCode = fun.complete();
-    stdOut << fun;
-        
-    // now a script : 
-    // return sum(n);
-    ICodeGenerator script;
-    script.beginStatement(position);
-    r1 = script.loadName(sum);
-    RegisterList args_2(1);
-    args_2[0] = script.loadImmediate(n);
-    script.returnStatement(script.call(r1, args_2));
-        
-    stdOut << script;
-        
-    // preset the global property "sum" to contain the above function
-    glob.defineFunction(sum, funCode);
-        
-    JSValue result = cx.interpret(script.complete(), JSValues());
-    stdOut << "sum(" << n << ") = " << result.f64 << "\n";
-        
-    return result.f64;    
-}
-
-static void testPrint(World &world)
-{
-    JSScope glob;
-    Context cx(world, &glob);
-    uint32 position = 0;
-
-    StringAtom& printName = world.identifiers[widenCString("print")];
-    String text = widenCString("pi is ");
-    String piVal = widenCString("3.14159");
-
-    ICodeGenerator script;
-    script.beginStatement(position);
-    Register r1 = script.loadName(printName);
-    RegisterList args_2(1);
-    Register r2 = script.op(POSATE, script.loadString(piVal));
-    args_2[0] = script.op(ADD, script.loadString(text), r2);
-    script.returnStatement(script.call(r1, args_2));
-        
-    stdOut << script;
-
-    glob.defineNativeFunction(printName, print);
-
-    JSValue result = cx.interpret(script.complete(), JSValues());
-}
 
 static float64 testFactorial(World &world, float64 n)
 {
     JSScope glob;
     Context cx(world, &glob);
     // generate code for factorial, and interpret it.
-    uint32 position = 0;
+    uint32 pos = 0;
     ICodeGenerator icg;
         
     // fact(n) {
     // var result = 1;
-    Register r_n = icg.allocateVariable(world.identifiers[widenCString("n")]);
-    Register r_result = icg.allocateVariable(world.identifiers[widenCString("result")]);
 
-    icg.beginStatement(position);
-    icg.move(r_result, icg.loadImmediate(1.0));
-        
+    StringAtom &n_name = world.identifiers[widenCString("n")];
+    StringAtom &result_name = world.identifiers[widenCString("result")];
+
+    Register r_n = icg.allocateVariable(n_name);
+    Register r_result = icg.allocateVariable(result_name);
+
+    Arena a;
+
+    ExprStmtNode *e = new(a) ExprStmtNode(pos, StmtNode::expression, new(a) BinaryExprNode(pos, ExprNode::assignment, 
+                                                                    new(a) IdentifierExprNode(pos, ExprNode::identifier, result_name),
+                                                                    new(a) NumberExprNode(pos, 1.0) ) );
+    icg.genStmt(e);
+
     // while (n > 1) {
     //   result = result * n;
     //   n = n - 1;
     // }
     {
-        icg.beginWhileStatement(position);
-        Register r1 = icg.loadImmediate(1.0);
-        Register r2 = icg.op(COMPARE_LT, r1, r_n);
-        icg.endWhileExpression(r2);
-        r2 = icg.op(MULTIPLY, r_result, r_n);
-        icg.move(r_result, r2);
-        icg.beginStatement(position);
-        r1 = icg.loadImmediate(1.0); 
-        r2 = icg.op(SUBTRACT, r_n, r1);
-        icg.move(r_n, r2);
-        icg.endWhileStatement();
+        BinaryExprNode *c = new(a) BinaryExprNode(pos, ExprNode::greaterThan, 
+                                                new(a) IdentifierExprNode(pos, ExprNode::identifier, n_name),
+                                                new(a) NumberExprNode(pos, 1.0) ) ;
+        ExprStmtNode *e1 = new(a) ExprStmtNode(pos, StmtNode::expression, new(a) BinaryExprNode(pos, ExprNode::assignment, 
+                                                                        new(a) IdentifierExprNode(pos, ExprNode::identifier, result_name),
+                                                                        new(a) BinaryExprNode(pos, ExprNode::multiply, 
+                                                                                new(a) IdentifierExprNode(pos, ExprNode::identifier, result_name),
+                                                                                new(a) IdentifierExprNode(pos, ExprNode::identifier, n_name) ) ) );
+        ExprStmtNode *e2 = new(a) ExprStmtNode(pos, StmtNode::expression, new(a) BinaryExprNode(pos, ExprNode::assignment, 
+                                                                        new(a) IdentifierExprNode(pos, ExprNode::identifier, n_name),
+                                                                        new(a) BinaryExprNode(pos, ExprNode::subtract, 
+                                                                                new(a) IdentifierExprNode(pos, ExprNode::identifier, n_name),
+                                                                                new(a) NumberExprNode(pos, 1.0) ) ) );
+        e1->next = e2;
+        BlockStmtNode *b = new(a) BlockStmtNode(pos, StmtNode::block, NULL, e1);
+
+        UnaryStmtNode *w = new(a) UnaryStmtNode(pos, StmtNode::While, c, b);
+
+        icg.genStmt(w);
+
     }
         
     // return result;
-    icg.returnStatement(r_result);
+    icg.addInstruction(new Return(r_result));
     ICodeModule *icm = icg.complete();
     stdOut << icg;
         
@@ -479,10 +275,9 @@ static float64 testFactorial(World &world, float64 n)
     // now a script : 
     // return fact(n);
     ICodeGenerator script;
-    script.beginStatement(position);
     RegisterList args(1);
     args[0] = script.loadImmediate(n);
-    script.returnStatement(script.call(script.loadName(fact), args));
+    script.addInstruction(new Return(script.call(script.loadName(fact), args)));
     stdOut << script;
     
     // install a listener so we can trace execution of factorial.
@@ -498,161 +293,6 @@ static float64 testFactorial(World &world, float64 n)
     return result.f64;
 }
     
-static float64 testObjects(World &world, int32 n)
-{
-    JSScope glob;
-    Context cx(world, &glob);
-    // create some objects, put some properties, and retrieve them.
-    uint32 position = 0;
-    ICodeGenerator initCG;
-    
-    // var global = new Object();
-    StringAtom& global = world.identifiers[widenCString("global")];
-    initCG.beginStatement(position);
-    initCG.saveName(global, initCG.newObject());
-        
-    // global.counter = 0;
-    StringAtom& counter = world.identifiers[widenCString("counter")];
-    initCG.beginStatement(position);
-    initCG.setProperty(initCG.loadName(global), counter, initCG.loadImmediate(0.0));
-        
-    // var array = new Array();
-    StringAtom& array = world.identifiers[widenCString("array")];
-    initCG.beginStatement(position);
-    initCG.saveName(array, initCG.newArray());
-    initCG.returnStatement();
-        
-    ICodeModule* initCode = initCG.complete();
-        
-    stdOut << initCG;
-    
-    // function increment()
-    // {
-    //   var i = global.counter;
-    //   array[i] = i;
-    //   return ++global.counter;
-    // }
-    ICodeGenerator incrCG;
-        
-    incrCG.beginStatement(position);
-    Register robject = incrCG.loadName(global);
-    Register roldvalue = incrCG.getProperty(robject, counter);
-    Register rarray = incrCG.loadName(array);
-    incrCG.setElement(rarray, roldvalue, roldvalue);
-    Register rvalue = incrCG.op(ADD, roldvalue, incrCG.loadImmediate(1.0));
-    incrCG.setProperty(robject, counter, rvalue);
-    incrCG.returnStatement(rvalue);
-        
-    ICodeModule* incrCode = incrCG.complete();
-        
-    stdOut << incrCG;
-        
-    // run initialization code.
-    JSValues args;
-    cx.interpret(initCode, args);
-        
-    // call the increment function some number of times.
-    JSValue result;
-    while (n-- > 0)
-        result = cx.interpret(incrCode, args);
-        
-    stdOut << "result = " << result.f64 << "\n";
-        
-    delete initCode;
-    delete incrCode;
-        
-    return result.f64;
-}
-
-
-static float64 testProto(World &world, int32 n)
-{
-    JSScope glob;
-    Context cx(world, &glob);
-
-    Tracer t;
-    cx.addListener(&t);
-    
-    // create some objects, put some properties, and retrieve them.
-    uint32 position = 0;
-    ICodeGenerator initCG;
-    
-    // var proto = new Object();
-    StringAtom& proto = world.identifiers[widenCString("proto")];
-    initCG.beginStatement(position);
-    initCG.saveName(proto, initCG.newObject());
-    
-    // function increment()
-    // {
-    //   this.counter = this.counter + 1;
-    // }
-    ICodeGenerator incrCG;
-    StringAtom& counter = world.identifiers[widenCString("counter")];
-    
-    incrCG.beginStatement(position);
-    Register rthis = incrCG.allocateVariable(world.identifiers[widenCString("counter")]);
-    Register rcounter = incrCG.getProperty(rthis, counter);
-    incrCG.setProperty(rthis, counter, incrCG.op(ADD, rcounter, incrCG.loadImmediate(1.0)));
-    incrCG.returnStatement();
-    
-    StringAtom& increment = world.identifiers[widenCString("increment")];
-    ICodeModule* incrCode = incrCG.complete();
-    glob.defineFunction(increment, incrCode);
-    
-    // proto.increment = increment;
-    initCG.beginStatement(position);
-    initCG.setProperty(initCG.loadName(proto), increment, initCG.loadName(increment));
-
-    // var global = new Object();
-    StringAtom& global = world.identifiers[widenCString("global")];
-    initCG.beginStatement(position);
-    initCG.saveName(global, initCG.newObject());
-        
-    // global.counter = 0;
-    initCG.beginStatement(position);
-    initCG.setProperty(initCG.loadName(global), counter, initCG.loadImmediate(0.0));
-    
-    // global.proto = proto;
-    // initCG.beginStatement(position);
-    // initCG.setProperty(initCG.loadName(global), proto, initCG.loadName(proto));
-    initCG.returnStatement();
-    
-    ICodeModule* initCode = initCG.complete();
-        
-    stdOut << initCG;
-            
-    // run initialization code.
-    JSValues args;
-    cx.interpret(initCode, args);
-    
-    // objects now exist, do real prototype chain manipulation.
-    JSObject* globalObject = glob.getVariable(global).object;
-    globalObject->setPrototype(glob.getVariable(proto).object);
-    
-    // generate call to global.increment()
-    ICodeGenerator callCG;
-    callCG.beginStatement(position);
-    RegisterList argList(1);
-    Register rglobal = argList[0] = callCG.loadName(global);
-    callCG.call(callCG.getProperty(rglobal, increment), argList);
-    callCG.returnStatement();
-    
-    ICodeModule* callCode = callCG.complete();
-    
-    // call the increment method some number of times.
-    while (n-- > 0)
-        (void) cx.interpret(callCode, args);
-    
-    JSValue result = glob.getVariable(global).object->getProperty(counter);
-    
-    stdOut << "result = " << result.f64 << "\n";
-        
-    delete initCode;
-    delete incrCode;
-    delete callCode;
-    
-    return result.f64;
-}
 
 
 } /* namespace Shell */
@@ -668,11 +308,6 @@ int main(int argc, char **argv)
     using namespace Shell;
   #if 0
     assert(testFactorial(world, 5) == 120);
-    assert(testObjects(world, 5) == 5);
-    assert(testProto(world, 5) == 5);
-    testICG(world);
-//    assert(testFunctionCall(world, 5) == 5);
-    testPrint(world);
   #endif
     readEvalPrint(stdin, world);
     return 0;
