@@ -1085,7 +1085,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
     uri.Append(aSpec->hostName);
 
 #if 0    
-    PRInt32 leafPos = folderName.RFind("/", PR_TRUE);
+    PRInt32 leafPos = folderName.RFindChar('/');
     if (leafPos > 0)
     {
         uri.Append('/');

@@ -229,7 +229,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
  
     /* assume the name always ends with this
      */
-    PRInt32 dot = strFile.RFindCharInSet(".");
+    PRInt32 dot = strFile.RFindChar('.');
     count = strFile.Left(fileLeft, (dot>0)?dot:mylen);
     strFile2 += fileLeft;
 

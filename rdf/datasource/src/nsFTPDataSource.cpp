@@ -437,7 +437,7 @@ FTPDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	}
 
 	// get basename
-	PRInt32		slash = url.RFind('/');
+	PRInt32		slash = url.RFindChar('/');
 	if (slash > 0)
 	{
 		url.Cut(0, slash+1);

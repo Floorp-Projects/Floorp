@@ -187,7 +187,7 @@ nsresult nsXPInstallManager::DownloadNext()
 
             // --- figure out a temp file name
             nsSpecialSystemDirectory temp(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-            PRInt32 pos = mItem->mURL.RFind('/');
+            PRInt32 pos = mItem->mURL.RFindChar('/');
             if ( pos != -1 )
             {
                 nsString jarleaf;

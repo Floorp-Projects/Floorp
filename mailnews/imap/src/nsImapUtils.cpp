@@ -177,7 +177,7 @@ nsImapURI2Name(const char* rootURI, const char* uriStr, nsString& name)
   nsAutoString uri = uriStr;
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
-  PRInt32 pos = uri.RFind("/");
+  PRInt32 pos = uri.RFindChar('/');
   PRInt32 length = uri.Length();
   PRInt32 count = length - (pos + 1);
   return uri.Right(name, count);

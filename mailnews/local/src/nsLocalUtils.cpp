@@ -210,14 +210,14 @@ nsLocalURI2Name(const char* rootURI, char* uriStr, nsString& name)
   nsAutoString uri = uriStr;
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
-  PRInt32 pos = uri.RFind('/');
+  PRInt32 pos = uri.RFindChar('/');
   PRInt32 length = uri.Length();
 
   // if the last character is a /, chop it off and search again
   if (pos == (length-1)) {
     uri.Truncate(length-1);     // chop the last character
     length--;
-    pos = uri.RFind('/');
+    pos = uri.RFindChar('/');
   }
 
   PRInt32 count = length - (pos + 1);

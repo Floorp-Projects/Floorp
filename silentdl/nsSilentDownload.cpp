@@ -148,7 +148,7 @@ CreateOutFileLocation(const nsString& url, const nsString& directory)
 {
     nsSpecialSystemDirectory outFileLocation(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     
-    PRInt32 result = url.RFind('/');
+    PRInt32 result = url.RFindChar('/');
     if (result != -1)
     {            
         nsString fileName;

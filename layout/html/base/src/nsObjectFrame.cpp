@@ -322,7 +322,7 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
     nsAutoString ext;
     
     PRInt32 iLastCharOffset = data.Length() - 1;
-    PRInt32 iPointOffset = data.RFind(".");
+    PRInt32 iPointOffset = data.RFindChar('.');
 
     if(iPointOffset != -1)
     {

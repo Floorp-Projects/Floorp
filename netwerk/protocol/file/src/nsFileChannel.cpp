@@ -499,7 +499,7 @@ nsFileChannel::GetContentType(char * *aContentType)
     // find the file extension
     nsString2 specStr(cStrSpec);
     nsString2 extStr;
-    PRInt32 extLoc = specStr.RFind('.');
+    PRInt32 extLoc = specStr.RFindChar('.');
     if (-1 != extLoc) {
         specStr.Right(extStr, specStr.Length() - extLoc - 1);
         char *ext = extStr.ToNewCString();

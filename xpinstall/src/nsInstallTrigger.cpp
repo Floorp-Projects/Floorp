@@ -285,14 +285,14 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
     {
         nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
     
-        PRInt32 result = aURL.RFind("/");
+        PRInt32 result = aURL.RFindChar('/');
         if (result != -1)
         {    
             nsString jarName;
                        
             aURL.Right(jarName, (aURL.Length() - result) );
             
-            PRInt32 argOffset = jarName.RFind("?");
+            PRInt32 argOffset = jarName.RFindChar('?');
 
             if (argOffset != -1)
             {
