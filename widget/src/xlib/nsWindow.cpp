@@ -793,18 +793,18 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
   nsCOMPtr<nsIUnicodeEncoder> encoder;
   /* get the charset */
-  nsAutoString platformCharset;
+  nsCAutoString platformCharset;
   nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
   
   if (NS_FAILED(rv))
-    platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+    platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
 
   /* get the encoder */
   nsCOMPtr<nsICharsetConverterManager> ccm = 
            do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
-  rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+  rv = ccm->GetUnicodeEncoder(platformCharset.get(), getter_AddRefs(encoder));
 
   /* Estimate out length and allocate the buffer based on a worst-case estimate, then do
      the conversion. */
