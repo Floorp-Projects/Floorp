@@ -183,7 +183,7 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
 {
   nsresult rv;
   nsAutoString formatStr;
-  rv = GetStringFromName(aName, formatStr);
+  rv = GetStringFromName(nsAutoString(aName), formatStr);
   if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.GetUnicode(), aParams, aLength, aResult);

@@ -1486,7 +1486,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
         // Note that we are in whitespace.
         mInWhitespace = PR_TRUE;
         if(!mCacheLine) {
-          nsAutoString whitestring=aString[nextpos];
+          nsAutoString whitestring(aString[nextpos]);
           WriteSimple(whitestring);
         } else {
           offsetIntoBuffer = aString.GetUnicode();

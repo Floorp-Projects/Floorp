@@ -812,8 +812,8 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
 #ifdef XML_DTD
   // Load the external entity into a buffer
   nsCOMPtr<nsIInputStream> in = nsnull;
-  nsAutoString urlSpec = (const PRUnichar*) systemId;
-  nsAutoString baseURL = (const PRUnichar*) base;
+  nsAutoString urlSpec( (const PRUnichar*) systemId );
+  nsAutoString baseURL( (const PRUnichar*) base );
   nsAutoString absURL;
 
   nsresult rv = OpenInputStream(urlSpec, baseURL, getter_AddRefs(in), &absURL);
