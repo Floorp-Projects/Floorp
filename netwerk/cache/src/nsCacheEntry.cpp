@@ -453,6 +453,8 @@ nsCacheEntryHashTable::GetEntry( const nsCString * key)
     nsCacheEntry    *result = nsnull;
 
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
+    if (!initialized)  return nsnull;
+    
     hashEntry = PL_DHashTableOperate(&table, key, PL_DHASH_LOOKUP);
     if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
         result = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
@@ -467,7 +469,8 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
     PLDHashEntryHdr    *hashEntry;
 
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
-    if (!cacheEntry) return NS_ERROR_NULL_POINTER;
+    if (!initialized)  return NS_ERROR_NOT_INITIALIZED;
+    if (!cacheEntry)   return NS_ERROR_NULL_POINTER;
 
     hashEntry = PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_ADD);
 #ifndef DEBUG_dougt
@@ -486,6 +489,8 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     NS_ASSERTION(cacheEntry, "### cacheEntry == nsnull");
 
+    if (!initialized)  return; // NS_ERROR_NOT_INITIALIZED
+
 #if DEBUG
     // XXX debug code to make sure we have the entry we're trying to remove
     nsCacheEntry *check = GetEntry(cacheEntry->mKey);
@@ -498,6 +503,8 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 void
 nsCacheEntryHashTable::VisitEntries( nsCacheEntryHashTable::Visitor *visitor)
 {
+    NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
+    if (!initialized)  return; // NS_ERROR_NOT_INITIALIZED
     PL_DHashTableEnumerate(&table, VisitEntry, visitor);
 }
 
