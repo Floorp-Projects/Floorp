@@ -232,7 +232,7 @@ nsAbSyncPostEngine::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, n
   if (NS_FAILED(rv)) return rv;
 
   // write to the protocol response buffer...
-  mProtocolResponse.Append(NS_ConvertASCIItoUCS2(buf), readLen);
+  mProtocolResponse.Append(NS_ConvertASCIItoUCS2(buf, readLen));
   PR_FREEIF(buf);
   mTotalWritten += readLen;
 

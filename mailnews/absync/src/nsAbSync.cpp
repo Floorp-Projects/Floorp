@@ -1705,7 +1705,7 @@ nsAbSync::ExtractCurrentLine()
           ( (*mProtocolOffset != CR) && (*mProtocolOffset != LF) )
         )
   {
-    extractString.Append(NS_ConvertASCIItoUCS2(mProtocolOffset), 1);
+    extractString.Append(PRUnichar(*mProtocolOffset));
     mProtocolOffset++;
   }
 
