@@ -20,7 +20,7 @@
 #define nsIMailboxUrl_h___
 
 #include "nscore.h"
-#include "nsIURL.h"
+#include "nsIMsgMailNewsUrl.h"
 
 #include "nsISupports.h"
 #include "nsFileSpec.h"
@@ -30,11 +30,17 @@
 
 /* C272A1C1-C166-11d2-804E-006008128C4E */
 
-#define NS_IMAILBOXURL_IID                         \
+#define NS_IMAILBOXURL_IID                     \
 { 0xc272a1c1, 0xc166, 0x11d2,                  \
     { 0x80, 0x4e, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
-class nsIMailboxUrl : public nsIURL
+/* 46EFCB10-CB6D-11d2-8065-006008128C4E */
+
+#define NS_MAILBOXURL_CID                      \
+{ 0x46efcb10, 0xcb6d, 0x11d2,                  \
+    { 0x80, 0x65, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
+
+class nsIMailboxUrl : public nsIMsgMailNewsUrl
 {
 public:
   static const nsIID& IID() {
@@ -57,17 +63,6 @@ public:
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer) = 0;
 
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer) = 0;
-
-	// 
-	
-	// mscott: this interface really belongs in nsIURL and I will move it there after talking
-	// it over with core netlib. This error message replaces the err_msg which was in the 
-	// old URL_struct. Also, it should probably be a nsString or a PRUnichar *. I don't know what
-	// XP_GetString is going to return in mozilla. 
-
-	NS_IMETHOD SetErrorMessage (char * errorMessage) = 0;
-	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const = 0;
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the mailbox url state
