@@ -349,7 +349,7 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
                             XPTHeader *header, const int indent,
                             PRBool verbose_mode)
 {
-    XPTInterfaceDirectoryEntry *ide;
+    XPTInterfaceDirectoryEntry *parent_ide;
     int i;
     int new_indent = indent + BASE_INDENT;
     int more_indent = new_indent + BASE_INDENT;
@@ -359,15 +359,15 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
         return PR_TRUE;
     }
 
-    if (id->parent_interface) {
+    if (id->parent_interface && id->parent_interface != 0) {
 
-        ide = XPT_GetAddrForOffset(cursor, id->parent_interface);
+        parent_ide = &header->interface_directory[id->parent_interface - 1];
         
-        if (ide) {
+        if (parent_ide) {
             fprintf(stdout, "%*sParent: %s::%s\n", indent, " ", 
-                    ide->name_space ? 
-                    ide->name_space : "", 
-                    ide->name);
+                    parent_ide->name_space ? 
+                    parent_ide->name_space : "", 
+                    parent_ide->name);
         }
         
     }
@@ -379,47 +379,66 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
                     indent, " ", id->parent_interface);
             
         }
-        fprintf(stdout, "%*s# of Method Descriptors:                   %d\n", 
-                indent, " ", id->num_methods);
     } else {
-        fprintf(stdout, "%*sMethods:\n", indent, " ");
     }   
-    
-    if (id->num_methods == 0) {
-        fprintf(stdout, "%*sNo Methods\n", new_indent, " ");
-    } else {
+
+    if (id->num_methods > 0) {
+        if (verbose_mode) {
+            fprintf(stdout, 
+                    "%*s# of Method Descriptors:                   %d\n", 
+                    indent, " ", id->num_methods);
+        } else {
+            fprintf(stdout, "%*sMethods:\n", indent, " ");
+        }
+
         for (i=0; i<id->num_methods; i++) {
             if (verbose_mode) {
                 fprintf(stdout, "%*sMethod #%d:\n", new_indent, " ", i);
                 if (!XPT_DumpMethodDescriptor(header,
                                               &id->method_descriptors[i], 
-                                              more_indent, verbose_mode))
+                                              more_indent, verbose_mode)) {
                     return PR_FALSE;
-            } else {
+                } 
+            } else { 
                 if (!XPT_DumpMethodDescriptor(header,
                                               &id->method_descriptors[i], 
-                                              new_indent, verbose_mode))
+                                              new_indent, verbose_mode)) {
                     return PR_FALSE;
-            }            
-        }
-    }
-
-    if (verbose_mode) {
-        fprintf(stdout, "%*s# of Constant Descriptors:                  %d\n", 
-                indent, " ", id->num_constants);
-        for (i=0; i<id->num_constants; i++) {
-            fprintf(stdout, "%*sConstant #%d:\n", new_indent, " ", i);
-            if (!XPT_DumpConstDescriptor(header, &id->const_descriptors[i], 
-                                         more_indent, verbose_mode))
-                return PR_FALSE;
-        }
+                } 
+            }
+        }        
     } else {
-        fprintf(stdout, "%*sConstants:\n", indent, " ");
-        for (i=0; i<id->num_constants; i++) {
-            if (!XPT_DumpConstDescriptor(header, &id->const_descriptors[i], 
-                                         new_indent, verbose_mode))
-                return PR_FALSE;
+        fprintf(stdout, "%*sMethods:\n", indent, " ");
+        fprintf(stdout, "%*sNo Methods\n", new_indent, " ");
+    }
+    
+    if (id->num_constants > 0) {
+        if (verbose_mode) {
+            fprintf(stdout, 
+                    "%*s# of Constant Descriptors:                  %d\n", 
+                    indent, " ", id->num_constants);
+        } else {
+            fprintf(stdout, "%*sConstants:\n", indent, " ");
         }
+        
+        for (i=0; i<id->num_constants; i++) {
+            if (verbose_mode) {
+                fprintf(stdout, "%*sConstant #%d:\n", new_indent, " ", i);
+                if (!XPT_DumpConstDescriptor(header, 
+                                             &id->const_descriptors[i], 
+                                             more_indent, verbose_mode))
+                return PR_FALSE;
+            } else {
+                if (!XPT_DumpConstDescriptor(header, 
+                                             &id->const_descriptors[i], 
+                                             new_indent, verbose_mode)) {
+                    return PR_FALSE;
+                }
+            }
+        }
+    } else { 
+        fprintf(stdout, "%*sConstants:\n", indent, " ");
+        fprintf(stdout, "%*sNo Constants\n", new_indent, " ");
     }
 
     return PR_TRUE;
