@@ -60,6 +60,10 @@
 #include "prprf.h"
 #include "nsEscape.h"
 #include "nsMsgUtils.h"
+#include "nsIMsgAccountManager.h"
+#include "nsIMsgAccount.h"
+#include "nsLocalMailFolder.h"
+#include "nsIMailboxUrl.h"
 
 #define POP3_PORT 110 // The IANA port for Pop3
 #define SECURE_POP3_PORT 995 // The port for Pop3 over SSL
@@ -290,6 +294,10 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
     if (offset != -1)
         folderUri.Truncate(offset);
 
+    const nsCString &flatSpec = PromiseFlatCString(aSpec);
+    const char *uidl = PL_strstr(flatSpec.get(), "uidl=");
+    if (!uidl) return NS_ERROR_FAILURE;
+
     nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv)); 
     if (NS_FAILED(rv)) return rv;
     rv = rdfService->GetResource(folderUri, getter_AddRefs(resource));
@@ -297,6 +305,39 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(resource, &rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIMsgIncomingServer> server;
+
+    nsLocalFolderScanState folderScanState;
+    nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(folder);
+    nsCOMPtr <nsIMailboxUrl> mailboxUrl = do_QueryInterface(aBaseURI);
+
+    nsCOMPtr<nsIFileSpec> path;
+    folder->GetPath(getter_AddRefs(path));
+    nsFileSpec fileSpec;
+    path->GetFileSpec(&fileSpec);
+    folderScanState.m_fileSpec = &fileSpec;
+    if (mailboxUrl && localFolder)
+    {
+      rv = localFolder->GetFolderScanState(&folderScanState);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      mailboxUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+      // we do this to get the account key
+      localFolder->GetUidlFromFolder(&folderScanState, msgHdr);
+      if (!folderScanState.m_accountKey.IsEmpty())
+      {
+        nsCOMPtr<nsIMsgAccountManager> accountManager = 
+                 do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+        if (accountManager)
+        {
+          nsCOMPtr <nsIMsgAccount> account;
+          accountManager->GetAccount(folderScanState.m_accountKey.get(), getter_AddRefs(account));
+          if (account)
+            account->GetIncomingServer(getter_AddRefs(server));
+        }
+      }
+    }
+
+    if (!server)
     rv = folder->GetServer(getter_AddRefs(server));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIPop3IncomingServer> popServer = do_QueryInterface(server,&rv);
@@ -323,9 +364,6 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
     popSpec += ":";
     popSpec.AppendInt(port);
     popSpec += "?";
-    const nsCString &flatSpec = PromiseFlatCString(aSpec);
-    const char *uidl = PL_strstr(flatSpec.get(), "uidl=");
-    if (!uidl) return NS_ERROR_FAILURE;
     popSpec += uidl;
     nsCOMPtr<nsIUrlListener> urlListener = do_QueryInterface(folder, &rv);
     if (NS_FAILED(rv)) return rv;
