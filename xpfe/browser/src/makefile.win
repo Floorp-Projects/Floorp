@@ -27,17 +27,12 @@ include <$(DEPTH)\config\rules.mak>
 # Define this so nobody can screw it up.
 DISTRES=$(DIST)\bin\res\samples
 
-install:: 
-	$(MAKE_INSTALL) appshell.html $(DISTRES)
-	$(MAKE_INSTALL) status.html $(DISTRES)
+install::
 	$(MAKE_INSTALL) status.xul $(DISTRES)
 	$(MAKE_INSTALL) toolbar.xml $(DISTRES)
-	$(MAKE_INSTALL) BrowserInitPage.html $(DISTRES)
 	$(MAKE_INSTALL) contentframe.css $(DISTRES)
-	$(MAKE_INSTALL) contentframe.html $(DISTRES)
 	$(MAKE_INSTALL) contentframe.js $(DISTRES)
 	$(MAKE_INSTALL) contentframe.xul $(DISTRES)
-	$(MAKE_INSTALL) sidebar.html $(DISTRES)
 	$(MAKE_INSTALL) xul.css $(DISTRES)
 	$(MAKE_INSTALL) dialogs.css $(DISTRES)
 	$(MAKE_INSTALL) navigator.css $(DISTRES)
@@ -86,12 +81,6 @@ install::
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DISTRES)\appshell.html
-	rm -f $(DISTRES)\status.html
-	rm -f $(DISTRES)\status.xul
-	rm -f $(DISTRES)\BrowserInitPage.html
-	rm -f $(DISTRES)\contentframe.html
-	rm -f $(DISTRES)\sidebar.html
 	rm -f $(DISTRES)\xul.css
 	rm -f $(DISTRES)\navigator.xul
 	rm -f $(DISTRES)\viewSource.xul
@@ -112,6 +101,7 @@ clobber::
 	rm -f $(DISTRES)\NetSupportAlert.xul 
 	rm -f $(DISTRES)\NetSupportConfirm.xul
 	rm -f $(DISTRES)\NetSupportConfirmCheck.xul
+	rm -f $(DISTRES)\status.xul
 	rm -f $(DISTRES)\alertl.gif
 	rm -f $(DISTRES)\errorI.gif
 	rm -f $(DISTRES)\messagel.gif

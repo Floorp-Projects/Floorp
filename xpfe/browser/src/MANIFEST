@@ -1,14 +1,9 @@
 
-appshell.html
 status.xul
-status.html
 toolbar.xml
-BrowserInitPage.html
 contentframe.css
-contentframe.html
 contentframe.js
 contentframe.xul
-sidebar.html
 xul.css
 dialogs.css
 navigator.css
