@@ -788,17 +788,18 @@ function displayAttachmentsForExpandedView()
       // we need to create a tree item, a tree row and a tree cell to insert the attachment
       // into the attachment tree..
 
-		  item = document.createElement("treeitem");
-		  row = document.createElement("treerow");
-		  cell = document.createElement("treecell");
+	  item = document.createElement("treeitem");
+	  row = document.createElement("treerow");
+	  cell = document.createElement("treecell");
 
       cell.setAttribute('class', "treecell-iconic"); 
-     	cell.setAttribute("label", attachment.displayName);
+      cell.setAttribute("label", attachment.displayName);
+      cell.setAttribute("tooltip", "attachmentTreeTooltip");
       item.setAttribute("commandSuffix", generateCommandSuffixForAttachment(attachment)); // set the command suffix on the tree item...
       setApplicationIconForAttachment(attachment, cell);
-		  row.appendChild(cell);
-		  item.appendChild(row);
-		  attachmentList.appendChild(item);
+	  row.appendChild(cell);
+	  item.appendChild(row);
+	  attachmentList.appendChild(item);
     } // for each attachment
     gBuildAttachmentsForCurrentMsg = true;
   }
@@ -830,6 +831,15 @@ function displayAttachmentsForCollapsedView()
   {
     attachmentNode.setAttribute('hide', true);
   }
+}
+
+// Public method called to generate a tooltip over an attachment
+function FillInAttachmentTooltip(cellNode)
+{
+  var attachmentName = cellNode.getAttribute("label");
+  var textNode = document.getElementById("attachmentTreeTooltipText");
+  textNode.setAttribute('value', attachmentName);
+  return true;
 }
 
 // Public method called when we create the attachments file menu

@@ -36,8 +36,6 @@ Rights Reserved.
      oncommand="handleAttachmentSelection('openAttachment');"/>
   <menuitem id="context-saveAttachment" label="&saveAsAttachmentCmd.label;" accesskey="&saveAsAttachmentCmd.accesskey;"
      oncommand="handleAttachmentSelection('saveAttachment');"/>
-  <menuitem id="context-printAttachment" disabled="true" label="&printAttachmentCmd.label;" accesskey="&printAttachmentCmd.accesskey;"
-    oncommand="handleAttachmentSelection('printAttachment');"/>
   <menuseparator/>
   <menuitem id="context-saveAllAttachments" oncommand="SaveAllAttachments();" label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;"/>
 </popup>
@@ -45,6 +43,10 @@ Rights Reserved.
 <popup id="attachmentMenuList">
   <menuseparator/>
   <menuitem label="&saveAllAttachmentsCmd.label;" oncommand="SaveAllAttachments();"/>
+</popup>
+
+<popup id="attachmentTreeTooltip" class="tooltip" oncreate="return FillInAttachmentTooltip(document.tooltipNode);" > 
+    <text id="attachmentTreeTooltipText"/>
 </popup>
 
 <box id="msgHeaderView" persist="state">
