@@ -32,28 +32,39 @@
 # GPL.
 #
 
-# Input: -d dir foo1 foo2 . . .
+# Input: -d dir -j javahcmd foo1 foo2 . . .
 #        Compares generated "_jni/foo1.h" file with "foo1.class", and
 #        generated "_jni/foo2.h" file with "foo2.class", etc.
 #        (NOTE:  unlike its closely related cousin, outofdate.pl,
 #                the "-d dir" must always be specified)
+#        Runs the javahcmd on all files that are different.
 #
 # Returns: list of headers which are OLDER than corresponding class
 #          files (non-existant class files are considered to be real old :-)
 
-$found = 1;
+my $javah = "";
+my $classdir = "";
 
-if ($ARGV[0] eq '-d')
-{
-    $classdir = $ARGV[1];
-    $classdir .= "/";
-    shift;
-    shift;
+while(1) {
+    if ($ARGV[0] eq '-d') {
+        $classdir = $ARGV[1];
+        $classdir .= "/";
+        shift;
+        shift;
+    } elsif($ARGV[0] eq '-j') {
+        $javah = $ARGV[1];
+        shift;
+        shift;
+    } else {
+        last;
+    }
 }
-else
-{
-    print STDERR "Usage:  perl ", $0, " -d dir foo1 foo2 . . .\n";
-    exit -1;
+
+if( $javah  eq "") {
+    die "Must specify -j <javah command>";
+}
+if( $classdir eq "") {
+    die "Must specify -d <classdir>";
 }
 
 foreach $filename (@ARGV)
@@ -81,12 +92,15 @@ foreach $filename (@ARGV)
 	# NOTE:  Since this is used by "javah", and "javah" refuses to overwrite
 	#        an existing file, we force an unlink from this script, since
 	#        we actually want to regenerate the header file at this time.
-	unlink $headerfilename;
-        print $filename, " ";
-        $found = 0;
+        unlink $headerfilename;
+        push @filelist, $filename;
     }
 }
 
-print "\n";
-exit 0;
-
+if( @filelist ) {
+    $cmd = "$javah " . join(" ",@filelist);
+    print "$cmd\n";
+    system("$cmd");
+} else {
+    print "All JNI header files up to date.\n"
+}

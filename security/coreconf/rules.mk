@@ -567,7 +567,14 @@ ifdef NETLIBDEPTH
 	CORE_DEPTH := $(NETLIBDEPTH)
 endif
 
+# !!!!! THIS WILL CRASH SHMSDOS.EXE !!!!!
+# shmsdos does not support shell variables. It will crash when it tries
+# to parse the '=' character. A solution is to rewrite outofdate.pl so it
+# takes the Javac command as an argument and executes the command itself,
+# instead of returning a list of files.
 export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
+	@echo "!!! THIS COMMAND IS BROKEN ON WINDOWS--SEE rules.mk FOR DETAILS !!!"
+	return -1
 	@for d in $(JDIRS); do							\
 		if test -d $$d; then						\
 			set $(EXIT_ON_ERROR);					\
@@ -701,14 +708,8 @@ export::
 		$(JAVAH) -jni -d $(JNI_GEN_DIR) $(JNI_GEN);				\
 	else										\
 		echo "Checking for out of date header files" ;                          \
-		cmd="perl $(CORE_DEPTH)/coreconf/jniregen.pl $(PERLARG)			\
-				-d $(JAVA_DESTPATH) $(JNI_GEN)";			\
-		echo $$cmd;								\
-		list=`$$cmd`;								\
-		if test "$${list}x" != "x"; then					\
-			echo $(JAVAH) -jni -d $(JNI_GEN_DIR) $$list;			\
-			$(JAVAH) -jni -d $(JNI_GEN_DIR) $$list;				\
-		fi									\
+		perl $(CORE_DEPTH)/coreconf/jniregen.pl $(PERLARG)			\
+		 -d $(JAVA_DESTPATH) -j "$(JAVAH) -jni -d $(JNI_GEN_DIR)" $(JNI_GEN);\
 	fi
 endif
 endif
