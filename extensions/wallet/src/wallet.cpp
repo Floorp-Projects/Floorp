@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifdef ClientWallet
+//#ifdef ClientWallet
 
 /*
    wallet.cpp
@@ -1976,25 +1976,25 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
   }
 }
 
-#else
-#include "prtypes.h"
-extern "C" {
+//#else
+//#include "prtypes.h"
+//extern "C" {
 
-PUBLIC void
-WLLT_PreEdit(nsIURL* url) {
-}
+//PUBLIC void
+//WLLT_PreEdit(nsIURL* url) {
+//}
 
-PUBLIC void
-WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
-}
+//PUBLIC void
+//WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
+//}
 
-PUBLIC void
-WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
-}
+//PUBLIC void
+//WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
+//}
 
-PUBLIC void
-WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
-}
+//PUBLIC void
+//WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
+//}
 
-}
-#endif
+//}
+//#endif
