@@ -164,8 +164,12 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAReadableString& aPropertyN
     nsCOMPtr<nsIDocument> doc;
     mContent->GetDocument(*getter_AddRefs(doc));
 
-    if (doc)
+    if (doc) {
       doc->BeginUpdate();
+
+      doc->AttributeWillChange(mContent, kNameSpaceID_None,
+                               nsHTMLAtoms::style);
+    }
 
     PRInt32 hint;
     decl->GetStyleImpact(&hint);
@@ -203,7 +207,7 @@ nsDOMCSSAttributeDeclaration::DropReference()
 
 nsresult
 nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
-                                                  PRBool aAllocate)
+                                                PRBool aAllocate)
 {
   nsHTMLValue val;
   nsIStyleRule* rule;
@@ -306,6 +310,9 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
       PRInt32 hint;
       if (doc) {
         doc->BeginUpdate();
+
+        doc->AttributeWillChange(mContent, kNameSpaceID_None,
+                                 nsHTMLAtoms::style);
       }
       nsCOMPtr<nsICSSDeclaration> declClone;
       decl->Clone(*getter_AddRefs(declClone));
@@ -335,7 +342,8 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
       }
       if (doc) {
         if (NS_SUCCEEDED(result) && result != NS_CSS_PARSER_DROP_DECLARATION) {
-          doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style, hint);
+          doc->AttributeChanged(mContent, kNameSpaceID_None,
+                                nsHTMLAtoms::style, hint);
         }
         doc->EndUpdate();
       }
@@ -908,9 +916,11 @@ nsGenericHTMLElement::SetInnerHTML(const nsAReadableString& aInnerHTML)
 {
   nsresult rv = NS_OK;
 
-  nsRange *range = new nsRange;
+  nsCOMPtr<nsIDOMRange> range = new nsRange;
   NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(range);
+
+  nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *,
                                                                  this)));
@@ -922,10 +932,8 @@ nsGenericHTMLElement::SetInnerHTML(const nsAReadableString& aInnerHTML)
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
-  rv = range->CreateContextualFragment(aInnerHTML, getter_AddRefs(df));
+  rv = nsrange->CreateContextualFragment(aInnerHTML, getter_AddRefs(df));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_RELEASE(range);
 
   nsCOMPtr<nsIDOMNode> tmpNode;
   return thisNode->AppendChild(df, getter_AddRefs(tmpNode));
@@ -1328,6 +1336,8 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
 
     if (aNotify && (nsnull != mDocument)) {
       mDocument->BeginUpdate();
+
+      mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
     }
 
     // set as string value to avoid another string copy
@@ -1452,10 +1462,14 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
   if (mDocument) {
     if (aNotify) {
       mDocument->BeginUpdate();
+
+      mDocument->AttributeWillChange(this, kNameSpaceID_None, aAttribute);
+
       if (nsHTMLAtoms::style == aAttribute) {
         nsHTMLValue oldValue;
         PRInt32 oldImpact = NS_STYLE_HINT_NONE;
-        if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
+        if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute,
+                                                          oldValue)) {
           oldImpact = GetStyleImpactFrom(oldValue);
         }
         impact = GetStyleImpactFrom(aValue);
@@ -1548,9 +1562,13 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
     PRInt32 impact = NS_STYLE_HINT_UNKNOWN;
     if (aNotify) {
       mDocument->BeginUpdate();
+
+      mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
+
       if (nsHTMLAtoms::style == aAttribute) {
         nsHTMLValue oldValue;
-        if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
+        if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute,
+                                                          oldValue)) {
           impact = GetStyleImpactFrom(oldValue);
         }
         else {
@@ -3581,20 +3599,24 @@ nsGenericHTMLContainerFormElement::QueryInterface(REFNSIID aIID,
 }
 
 NS_IMETHODIMP
-nsGenericHTMLContainerFormElement::SetForm(nsIDOMHTMLFormElement* aForm)
+nsGenericHTMLContainerFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
+                                           PRBool aRemoveFromForm)
 {
   nsAutoString nameVal, idVal;
-  GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-  GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
 
-  if (mForm) {
-    mForm->RemoveElement(this);
+  if (aRemoveFromForm) {
+    GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
+    GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
 
-    if (!nameVal.IsEmpty())
-      mForm->RemoveElementFromTable(this, nameVal);
+    if (mForm) {
+      mForm->RemoveElement(this);
 
-    if (!idVal.IsEmpty())
-      mForm->RemoveElementFromTable(this, idVal);
+      if (!nameVal.IsEmpty())
+        mForm->RemoveElementFromTable(this, nameVal);
+
+      if (!idVal.IsEmpty())
+        mForm->RemoveElementFromTable(this, idVal);
+    }
   }
 
   if (aForm) {
@@ -3720,26 +3742,85 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
   return rv;
 }
 
+nsresult
+nsGenericHTMLElement::SetFormControlAttribute(nsIForm* aForm,
+                                              PRInt32 aNameSpaceID,
+                                              nsIAtom* aName,
+                                              const nsAReadableString& aValue,
+                                              PRBool aNotify)
+{
+  nsCOMPtr<nsIFormControl> thisControl;
+  nsAutoString tmp;
+  nsresult rv = NS_OK;
+
+  QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(thisControl));
+
+  // Add & remove the control to and/or from the hash table
+  if (aForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
+    GetAttribute(kNameSpaceID_None, aName, tmp);
+
+    if (!tmp.IsEmpty()) {
+      aForm->RemoveElementFromTable(thisControl, tmp);
+    }
+
+    aForm->RemoveElement(thisControl);
+  }
+
+  if (aForm && aName == nsHTMLAtoms::type) {
+    GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
+
+    if (!tmp.IsEmpty()) {
+      aForm->RemoveElementFromTable(thisControl, tmp);
+    }
+
+    GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
+
+    if (!tmp.IsEmpty()) {
+      aForm->RemoveElementFromTable(thisControl, tmp);
+    }
+
+    aForm->RemoveElement(thisControl);
+  }
+
+  rv = nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue,
+                                          aNotify);
+
+  if (aForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
+    GetAttribute(kNameSpaceID_None, aName, tmp);
+
+    if (!tmp.IsEmpty()) {
+      aForm->AddElementToTable(thisControl, tmp);
+    }
+
+    aForm->AddElement(thisControl);
+  }
+
+  if (aForm && aName == nsHTMLAtoms::type) {
+    GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
+
+    if (!tmp.IsEmpty()) {
+      aForm->AddElementToTable(thisControl, tmp);
+    }
+
+    GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
+
+    if (!tmp.IsEmpty()) {
+      aForm->AddElementToTable(thisControl, tmp);
+    }
+
+    aForm->AddElement(thisControl);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::SetAttribute(PRInt32 aNameSpaceID,
                                                 nsIAtom* aName,
-                                                const nsAReadableString& aValue,
+                                                const nsAReadableString& aVal,
                                                 PRBool aNotify)
 {
-  // Add & remove the control to and/or from the hash table
-  if (mForm && (nsHTMLAtoms::name == aName || nsHTMLAtoms::id == aName)) {
-    nsAutoString tmp;
-    nsresult rv = GetAttribute(kNameSpaceID_None, aName, tmp);
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      mForm->RemoveElementFromTable(this, tmp);
-    }
-
-    mForm->AddElementToTable(this, aValue);
-  }
-
-  return nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue,
-                                            aNotify);
+  return SetFormControlAttribute(mForm, aNameSpaceID, aName, aVal, aNotify);
 }
 
 //----------------------------------------------------------------------
@@ -3778,20 +3859,24 @@ nsGenericHTMLLeafFormElement::QueryInterface(REFNSIID aIID,
 }
 
 NS_IMETHODIMP
-nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm)
+nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
+                                      PRBool aRemoveFromForm)
 {
   nsAutoString nameVal, idVal;
-  GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-  GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
 
-  if (mForm) {
-    mForm->RemoveElement(this);
+  if (aRemoveFromForm) {
+    GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
+    GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
 
-    if (nameVal.Length())
-      mForm->RemoveElementFromTable(this, nameVal);
+    if (mForm) {
+      mForm->RemoveElement(this);
 
-    if (idVal.Length())
-      mForm->RemoveElementFromTable(this, idVal);
+      if (nameVal.Length())
+        mForm->RemoveElementFromTable(this, nameVal);
+
+      if (idVal.Length())
+        mForm->RemoveElementFromTable(this, idVal);
+    }
   }
 
   if (aForm) {
@@ -3931,20 +4016,7 @@ nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID,
                                            const nsAReadableString& aValue,
                                            PRBool aNotify)
 {
-  // Add & remove the control to and/or from the hash table
-  if (mForm && (nsHTMLAtoms::name == aName || nsHTMLAtoms::id == aName)) {
-    nsAutoString tmp;
-    nsresult rv = GetAttribute(kNameSpaceID_None, aName, tmp);
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      mForm->RemoveElementFromTable(this, tmp);
-    }
-
-    mForm->AddElementToTable(this, aValue);
-  }
-
-  return nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue,
-                                            aNotify);
+  return SetFormControlAttribute(mForm, aNameSpaceID, aName, aValue, aNotify);
 }
 
 nsresult

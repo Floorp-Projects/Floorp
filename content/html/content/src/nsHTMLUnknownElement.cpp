@@ -239,6 +239,8 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
 
     if (aNotify && (mDocument)) {
       mDocument->BeginUpdate();
+
+      mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
     }
 
     // set as string value to avoid another string copy

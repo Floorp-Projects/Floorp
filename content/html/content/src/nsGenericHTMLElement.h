@@ -340,6 +340,11 @@ public:
   // mode enabled.
   static PRBool InNavQuirksMode(nsIDocument* aDoc);
 
+  nsresult SetFormControlAttribute(nsIForm* aForm, PRInt32 aNameSpaceID,
+                                   nsIAtom* aName,
+                                   const nsAReadableString& aValue,
+                                   PRBool aNotify);
+
   nsIHTMLAttributes* mAttributes;
 
 protected:
@@ -489,7 +494,8 @@ public:
 
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
+                     PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD Init();
 
   NS_IMETHOD SetParent(nsIContent *aParent);
@@ -523,7 +529,8 @@ public:
 
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
+                     PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD Init();
 
   NS_IMETHOD SetParent(nsIContent *aParent);

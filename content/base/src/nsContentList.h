@@ -30,15 +30,64 @@
 #include "nsIDocumentObserver.h"
 #include "nsIScriptObjectOwner.h"
 
-typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent, nsString* aData);
+typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent,
+                                         nsString* aData);
 
 class nsIDocument;
+class nsIDOMHTMLFormElement;
 
-class nsContentList : public nsIDOMNodeList, 
-                      public nsIDOMHTMLCollection, 
-                      public nsIScriptObjectOwner, 
-                      public nsIDocumentObserver {
+
+class nsBaseContentList : public nsIDOMNodeList,
+                          public nsIScriptObjectOwner
+{
 public:
+  nsBaseContentList();
+  virtual ~nsBaseContentList();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMNodeList
+  NS_DECL_IDOMNODELIST
+
+  // nsIScriptObjectOwner
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
+  
+  NS_IMETHOD AppendElement(nsIContent *aContent);
+  NS_IMETHOD RemoveElement(nsIContent *aContent);
+  NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex);
+  NS_IMETHOD Reset();
+
+protected:
+  nsVoidArray mElements;
+  void *mScriptObject;
+};
+
+
+// This class is used only by form element code and this is a static
+// list of elements. NOTE! This list holds strong references to
+// the elements in the list.
+class nsFormContentList : public nsBaseContentList
+{
+public:
+  nsFormContentList(nsIDOMHTMLFormElement *aForm,
+                    nsBaseContentList& aContentList);
+  virtual ~nsFormContentList();
+
+  NS_IMETHOD AppendElement(nsIContent *aContent);
+  NS_IMETHOD RemoveElement(nsIContent *aContent);
+
+  NS_IMETHOD Reset();
+};
+
+class nsContentList : public nsBaseContentList,
+                      public nsIDOMHTMLCollection,
+                      public nsIDocumentObserver
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsContentList(const nsContentList& aContentList);
   nsContentList(nsIDocument *aDocument);
   nsContentList(nsIDocument *aDocument, 
                 nsIAtom* aMatchAtom, 
@@ -46,23 +95,18 @@ public:
                 nsIContent* aRootContent=nsnull);
   nsContentList(nsIDocument *aDocument, 
                 nsContentListMatchFunc aFunc,
-                const nsString* aData,
+                const nsAReadableString& aData,
                 nsIContent* aRootContent=nsnull);
   virtual ~nsContentList();
 
-  NS_DECL_ISUPPORTS
-
   // nsIDOMHTMLCollection
   NS_IMETHOD GetLength(PRUint32* aLength);
-
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-
   NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
 
   // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-  
+
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
@@ -118,13 +162,8 @@ public:
                               nsIStyleRule* aStyleRule) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
-  nsresult Add(nsIContent *aContent);
-  nsresult Remove(nsIContent *aContent);
-  nsresult IndexOf(nsIContent *aContent, PRInt32& aIndex);
-
 protected:
   nsresult Match(nsIContent *aContent, PRBool *aMatch);
-  nsresult Reset();
   void Init(nsIDocument *aDocument);
   void PopulateWith(nsIContent *aContent, PRBool aIncludeRoot);
   PRBool MatchSelf(nsIContent *aContent);
@@ -138,8 +177,6 @@ protected:
   PRInt32 mMatchNameSpaceId;
   nsContentListMatchFunc mFunc;
   nsString* mData;
-  nsVoidArray mContent;
-  void *mScriptObject;
   nsIDocument* mDocument;
   nsIContent* mRootContent;
   PRBool mMatchAll;

@@ -2922,6 +2922,10 @@ nsXULElement::SetAttribute(nsINodeInfo* aNodeInfo,
     aNodeInfo->GetNameAtom(*getter_AddRefs(attrName));
     aNodeInfo->GetNamespaceID(attrns);
 
+    if (mDocument) {
+        mDocument->AttributeWillChange(this, attrns, attrName);
+    }
+
     if (! Attributes()) {
         rv = EnsureSlots();
         if (NS_FAILED(rv)) return rv;
@@ -3096,7 +3100,8 @@ nsXULElement::SetAttribute(nsINodeInfo* aNodeInfo,
             (tagName.get() == nsXULAtoms::command) ||
             (tagName.get() == nsXULAtoms::key))
             return rv;
-        mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), attrns, attrName, NS_STYLE_HINT_UNKNOWN);
+        mDocument->AttributeChanged(this, attrns, attrName,
+                                    NS_STYLE_HINT_UNKNOWN);
       }
     }
 

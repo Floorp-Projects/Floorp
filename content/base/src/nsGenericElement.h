@@ -122,7 +122,6 @@ typedef struct {
   nsDOMCSSDeclaration *mStyle;
   nsDOMAttributeMap* mAttributeMap;
   nsVoidArray *mRangeList;
-  nsIContent* mCapturer;
   nsIEventListenerManager* mListenerManager;
   nsIContent* mBindingParent; // The nearest enclosing content node with a binding
                               // that created us. [Weak]

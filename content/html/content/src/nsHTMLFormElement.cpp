@@ -26,7 +26,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsIDOMHTMLFormControlList.h"
-#include "nsIDOMHTMLDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -47,7 +47,7 @@
 #include "nsHashtable.h"
 #include "nsContentList.h"
 
-static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 64;
+static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
 class nsFormControlList;
 
@@ -141,13 +141,68 @@ public:
 #endif
 
   void        *mScriptObject;
-  nsVoidArray mElements;  // WEAK - bug 36639
   nsIDOMHTMLFormElement* mForm;  // WEAK - the form owns me
 
+  nsVoidArray mElements;  // Holds WEAK references - bug 36639
+
+  // This hash holds on to all form controls that are not named form
+  // control (see IsNamedFormControl()), this is needed to properly
+  // clean up the bi-directional references (both weak and strong)
+  // between the form and its form controls.
+
+  nsHashtable* mNoNameLookupTable; // Holds WEAK references
+
 protected:
-  // A map from an ID or NAME attribute to the form control(s)
-  nsSupportsHashtable* mLookupTable;
+  // A map from an ID or NAME attribute to the form control(s), this
+  // hash holds strong references either to the named form control, or
+  // to a list of named form controls, in the case where this hash
+  // holds on to a list of named form controls the list has weak
+  // references to the form control.
+
+  nsSupportsHashtable mNameLookupTable;
 };
+
+static PRBool
+IsNamedFormControl(nsIFormControl* aFormControl)
+{
+  PRInt32 type;
+
+  aFormControl->GetType(&type);
+
+  // For backwards compatibility (with 4.x and IE) we must not add
+  // <input type=image> elements to the list of form controls in a
+  // form.
+
+  switch (type) {
+  case NS_FORM_BUTTON_BUTTON :
+  case NS_FORM_BUTTON_RESET :
+  case NS_FORM_BUTTON_SUBMIT :
+  case NS_FORM_INPUT_BUTTON :
+  case NS_FORM_INPUT_CHECKBOX :
+  case NS_FORM_INPUT_FILE :
+  case NS_FORM_INPUT_HIDDEN :
+  case NS_FORM_INPUT_RESET :
+  case NS_FORM_INPUT_PASSWORD :
+  case NS_FORM_INPUT_RADIO :
+  case NS_FORM_INPUT_SUBMIT :
+  case NS_FORM_INPUT_TEXT :
+  case NS_FORM_SELECT :
+  case NS_FORM_TEXTAREA :
+  case NS_FORM_FIELDSET :
+    return PR_TRUE;
+  }
+
+  // These form control types are not supposed to end up in the
+  // form.elements array
+  //
+  // NS_FORM_INPUT_IMAGE
+  // NS_FORM_LABEL
+  // NS_FORM_OPTION
+  // NS_FORM_OPTGROUP
+  // NS_FORM_LEGEND
+
+  return PR_FALSE;
+}
 
 // nsHTMLFormElement implementation
 
@@ -185,19 +240,16 @@ nsHTMLFormElement::nsHTMLFormElement()
   NS_IF_ADDREF(mControls);
 }
 
+
+
 nsHTMLFormElement::~nsHTMLFormElement()
 {
-  // Null out childrens' pointer to me.  No refcounting here
-  PRUint32 numControls;
-  GetElementCount(&numControls);
-  while (numControls--) {
-    nsIFormControl* control = (nsIFormControl*)mControls->mElements.ElementAt(numControls); 
-    if (control) {
-      control->SetForm(nsnull); 
-    }
+  if (mControls) {
+    mControls->Clear();
+    mControls->SetForm(nsnull);
+
+    NS_RELEASE(mControls);
   }
-  mControls->SetForm(nsnull);
-  NS_RELEASE(mControls);
 }
 
 
@@ -469,15 +521,36 @@ nsHTMLFormElement::GetElementAt(PRInt32 aIndex,
 NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild)
 {
-  PRBool rv = mControls->mElements.AppendElement(aChild);
-  // WEAK - don't addref
-  return rv;
+  NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
+
+  if (IsNamedFormControl(aChild)) {
+    mControls->mElements.AppendElement(aChild);
+    // WEAK - don't addref
+  } else {
+    if (!mControls->mNoNameLookupTable) {
+      mControls->mNoNameLookupTable = new nsHashtable();
+      NS_ENSURE_TRUE(mControls->mNoNameLookupTable, NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    nsISupportsKey key(aChild);
+
+    nsISupports *item =
+      NS_STATIC_CAST(nsISupports *, mControls->mNoNameLookupTable->Get(&key));
+
+    if (!item) {
+      mControls->mNoNameLookupTable->Put(&key, aChild);
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::AddElementToTable(nsIFormControl* aChild,
                                      const nsAReadableString& aName)
 {
+  NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
+
   return mControls->AddElementToTable(aChild, aName);  
 }
 
@@ -485,7 +558,15 @@ nsHTMLFormElement::AddElementToTable(nsIFormControl* aChild,
 NS_IMETHODIMP 
 nsHTMLFormElement::RemoveElement(nsIFormControl* aChild) 
 {
+  NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
+
   mControls->mElements.RemoveElement(aChild);
+
+  if (mControls->mNoNameLookupTable) {
+    nsISupportsKey key(aChild);
+
+    mControls->mNoNameLookupTable->Remove(&key);
+  }
 
   return NS_OK;
 }
@@ -494,6 +575,8 @@ NS_IMETHODIMP
 nsHTMLFormElement::RemoveElementFromTable(nsIFormControl* aElement,
                                           const nsAReadableString& aName)
 {
+  NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
+
   return mControls->RemoveElementFromTable(aElement, aName);
 }
 
@@ -537,42 +620,28 @@ nsHTMLFormElement::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc,
       result = globalObject->GetContext(getter_AddRefs(scriptContext));
     }
     
-    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+    nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
 
-    if (htmlDoc) {
-      nsCOMPtr<nsIDOMNodeList> list;
+    if (html_doc) {
+      nsCOMPtr<nsISupports> item;
 
-      result = htmlDoc->GetElementsByName(nsLiteralString(str),
-                                          getter_AddRefs(list));
+      result = html_doc->ResolveName(nsLiteralString(str), this,
+                                     getter_AddRefs(item));
       if (NS_FAILED(result)) {
         return result;
       }
-    
-      if (list) {
-        PRUint32 count;
-        list->GetLength(&count);
 
-        if (count > 0) {
-          nsCOMPtr<nsIDOMNode> node;
-          
-          result = list->Item(0, getter_AddRefs(node));
+      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(item));
 
-          if (NS_FAILED(result)) {
-            return result;
-          }
+      if (owner) {
+        JSObject* obj;
 
-          if (node) {
-            nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(node);
-            JSObject* obj;
-            
-            result = owner->GetScriptObject(scriptContext, (void**)&obj);
-            if (NS_FAILED(result)) {
-              return result;
-            }
-
-            *aReturn = OBJECT_TO_JSVAL(obj);
-          }
+        result = owner->GetScriptObject(scriptContext, (void**)&obj);
+        if (NS_FAILED(result)) {
+          return result;
         }
+
+        *aReturn = OBJECT_TO_JSVAL(obj);
       }
     }
   }
@@ -609,55 +678,25 @@ nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
   }
 
   if (!obj && mDocument) {
-    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+    nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
 
-    if (htmlDoc) {
-      nsCOMPtr<nsIDOMNodeList> list;
+    if (html_doc) {
+      nsCOMPtr<nsISupports> item;
 
-      rv = htmlDoc->GetElementsByName(nsLiteralString(NS_REINTERPRET_CAST(PRUnichar *, str), str_len), getter_AddRefs(list));
+      nsLiteralString name(NS_REINTERPRET_CAST(PRUnichar *, str), str_len);
+
+      rv = html_doc->ResolveName(name, this, getter_AddRefs(item));
       if (NS_FAILED(rv)) {
         return PR_FALSE;
       }
 
-      if (list) {
-        PRUint32 count;
-        list->GetLength(&count);
+      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(item));
 
-        if (count > 0) {
-          nsCOMPtr<nsIDOMNode> node;
+      if (owner) {
+        rv = owner->GetScriptObject(scriptContext, (void**)&obj);
 
-          rv = list->Item(0, getter_AddRefs(node));
-          if (NS_FAILED(rv)) {
-            return PR_FALSE;
-          }
-
-          nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(node));
-
-          // If htmlDoc->GetElementsByName() found a formcontrol we
-          // check to see if the formcontrol is part of this form, if
-          // it's not we don't define the property here...
-          if (formControl) {
-            nsCOMPtr<nsIDOMHTMLFormElement> formElement;
-
-            formControl->GetForm(getter_AddRefs(formElement));
-
-            if (formElement.get() != NS_STATIC_CAST(nsIDOMHTMLFormElement *,
-                                                    this)) {
-              // Set node to null so that we don't define the property
-              // here...
-              node = nsnull;
-            }
-          }
-
-          if (node) {
-            nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(node));
-
-            rv = owner->GetScriptObject(scriptContext, (void**)&obj);
-
-            if (NS_FAILED(rv)) {
-              return PR_FALSE;
-            }
-          }
+        if (NS_FAILED(rv)) {
+          return PR_FALSE;
         }
       }
     }
@@ -688,8 +727,7 @@ nsHTMLFormElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
     nsresult result = mControls->Item(aIndex, getter_AddRefs(node));
 
     if (node) {
-      result = node->QueryInterface(NS_GET_IID(nsIDOMElement),
-                                    (void **)aReturn);
+      result = CallQueryInterface(node, aReturn);
     } else {
       *aReturn = nsnull;
     }
@@ -705,21 +743,19 @@ nsHTMLFormElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
 // nsFormControlList implementation, this could go away if there were
 // a lightweight collection implementation somewhere
 
-
-nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm) 
+nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
+  : mScriptObject(nsnull), mForm(aForm),
+    mNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE),
+    mNoNameLookupTable(nsnull)
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
-  mForm = aForm; // WEAK - the form owns me
-  mLookupTable = nsnull;
 }
 
 nsFormControlList::~nsFormControlList()
 {
-  if (mLookupTable) {
-    delete mLookupTable;
-    mLookupTable = nsnull;
-  }
+  delete mNoNameLookupTable;
+  mNoNameLookupTable = nsnull;
+
   mForm = nsnull;
   Clear();
 }
@@ -737,13 +773,38 @@ nsFormControlList::SetForm(nsIDOMHTMLFormElement* aForm)
   mForm = aForm; // WEAK - the form owns me
 }
 
+static PRBool FormControlResetEnumFunction(nsHashKey *aKey, void *aData,
+                                           void* closure)
+{
+  nsIFormControl *f = NS_STATIC_CAST(nsIFormControl *, aData);
+
+  f->SetForm(nsnull, PR_FALSE);
+
+  return PR_TRUE;
+}
+
 void
 nsFormControlList::Clear()
 {
+  // Null out childrens' pointer to me.  No refcounting here
+  PRInt32 numControls = mElements.Count();
+
+  while (numControls-- > 0) {
+    nsIFormControl* f = NS_STATIC_CAST(nsIFormControl *,
+                                       mElements.ElementAt(numControls)); 
+
+    if (f) {
+      f->SetForm(nsnull, PR_FALSE); 
+    }
+  }
+
   mElements.Clear();
 
-  if (mLookupTable)
-    mLookupTable->Reset();
+  mNameLookupTable.Reset();
+
+  if (mNoNameLookupTable) {
+    mNoNameLookupTable->Reset(FormControlResetEnumFunction);
+  }
 }
 
 NS_IMPL_ADDREF(nsFormControlList)
@@ -793,8 +854,7 @@ nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsIFormControl *control = (nsIFormControl*)mElements.ElementAt(aIndex);
 
   if (control) {
-    return control->QueryInterface(NS_GET_IID(nsIDOMNode),
-                                   (void**)aReturn);
+    return CallQueryInterface(control, aReturn);
   }
 
   *aReturn = nsnull;
@@ -885,19 +945,17 @@ nsFormControlList::GetNamedObject(JSContext* aContext, jsval aID,
   nsCOMPtr<nsIScriptContext> scriptContext;
   nsCOMPtr<nsIScriptObjectOwner> owner;
   char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+  nsAutoString ustr; ustr.AssignWithConversion(str);
 
-  if (mLookupTable) {
-    // Get the hash entry
-    nsAutoString ustr; ustr.AssignWithConversion(str);
-    nsStringKey key(ustr);
+  // Get the hash entry
+  nsStringKey key(ustr);
 
-    nsCOMPtr<nsISupports> tmp = dont_AddRef((nsISupports *)mLookupTable->Get(&key));
+  nsCOMPtr<nsISupports> item(dont_AddRef(mNameLookupTable.Get(&key)));
 
-    if (tmp) {
-      // Found something, we don't care here if it's a element or a node
-      // list, we just return the script object
-      owner = do_QueryInterface(tmp);
-    }
+  if (item) {
+    // Found something, we don't care here if it's a element or a node
+    // list, we just return the script object
+    owner = do_QueryInterface(item);
   }
 
   if (!owner) {
@@ -960,16 +1018,13 @@ nsFormControlList::NamedItem(const nsAReadableString& aName,
 
   nsresult rv = NS_OK;
   nsStringKey key(aName);
-  nsCOMPtr<nsISupports> supports;
   *aReturn = nsnull;
 
-  if (mLookupTable) {
-    supports = dont_AddRef((nsISupports *)mLookupTable->Get(&key));
-  }
+  nsCOMPtr<nsISupports> supports(dont_AddRef(mNameLookupTable.Get(&key)));
 
   if (supports) {
     // We found something, check if it's a node
-    rv = supports->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
+    rv = CallQueryInterface(supports, aReturn);
 
     if (NS_FAILED(rv)) {
       // If not, we check if it's a node list.
@@ -990,20 +1045,34 @@ nsresult
 nsFormControlList::AddElementToTable(nsIFormControl* aChild,
                                      const nsAReadableString& aName)
 {
-  nsStringKey key(aName);
-  if (!mLookupTable) {
-    mLookupTable = new nsSupportsHashtable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
-    NS_ENSURE_TRUE(mLookupTable, NS_ERROR_OUT_OF_MEMORY);
+  if (!IsNamedFormControl(aChild)) {
+    if (!mNoNameLookupTable) {
+      mNoNameLookupTable = new nsHashtable();
+      NS_ENSURE_TRUE(mNoNameLookupTable, NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    nsISupportsKey key(aChild);
+
+    nsISupports *item = NS_STATIC_CAST(nsISupports *,
+                                       mNoNameLookupTable->Get(&key));
+
+    if (!item) {
+      mNoNameLookupTable->Put(&key, aChild);
+    }
+
+    return NS_OK;
   }
 
+  nsStringKey key(aName);
+
   nsCOMPtr<nsISupports> supports;
-  supports = dont_AddRef((nsISupports *)mLookupTable->Get(&key));
+  supports = dont_AddRef(mNameLookupTable.Get(&key));
 
   if (!supports) {
     // No entry found, add the form control
     nsCOMPtr<nsISupports> child(do_QueryInterface(aChild));
 
-    mLookupTable->Put(&key, child.get());
+    mNameLookupTable.Put(&key, child);
   } else {
     // Found something in the hash, check its type
     nsCOMPtr<nsIContent> content(do_QueryInterface(supports));
@@ -1023,16 +1092,21 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
       nsContentList *list = new nsContentList(nsnull);
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-      list->Add(content);
+      list->AppendElement(content);
 
       // Add the new child too
-      list->Add(newChild);
+      list->AppendElement(newChild);
 
       nsCOMPtr<nsISupports> listSupports;
       list->QueryInterface(NS_GET_IID(nsISupports),
                            getter_AddRefs(listSupports));
+
+      // Remove the current item from the hash so that we don't create
+      // a leak when we add the new item to the hash.
+      mNameLookupTable.Remove(&key);
+
       // Replace the element with the list.
-      mLookupTable->Put(&key, listSupports.get());
+      mNameLookupTable.Put(&key, listSupports);
     } else {
       // There's already a list in the hash, add the child to the list
       nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
@@ -1047,7 +1121,7 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
 
       // Add the new child only if it's not in our list already
       if (oldIndex < 0) {
-        list->Add(newChild);
+        list->AppendElement(newChild);
       }
     }
   }
@@ -1059,51 +1133,65 @@ nsresult
 nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
                                           const nsAReadableString& aName)
 {
+  if (!IsNamedFormControl(aChild)) {
+    if (mNoNameLookupTable) {
+      nsISupportsKey key(aChild);
+
+      mNoNameLookupTable->Remove(&key);
+    }
+
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aChild);  
-  if (mLookupTable && content) {
-    nsStringKey key(aName);
+  if (!content) {
+    return NS_OK;
+  }
 
-    nsCOMPtr<nsISupports> supports;
-    supports = dont_AddRef((nsISupports *)mLookupTable->Get(&key));
+  nsStringKey key(aName);
 
-    if (!supports)
-      return NS_OK;
+  nsCOMPtr<nsISupports> supports(dont_AddRef(mNameLookupTable.Get(&key)));
 
-    nsCOMPtr<nsIFormControl> fctrl(do_QueryInterface(supports));
+  if (!supports)
+    return NS_OK;
 
-    if (fctrl) {
-      // Single element in the hash, just remove it...
-      mLookupTable->Remove(&key);
-    } else {
-      nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
-      NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIFormControl> fctrl(do_QueryInterface(supports));
 
-      // Upcast, uggly, but it works!
-      nsContentList *list = NS_STATIC_CAST(nsContentList *,
-                                           (nsIDOMNodeList *)nodeList.get());
+  if (fctrl) {
+    // Single element in the hash, just remove it...
+    mNameLookupTable.Remove(&key);
 
-      list->Remove(content);
+    return NS_OK;
+  }
 
-      PRUint32 length = 0;
-      list->GetLength(&length);
+  nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
+  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
-      if (!length) {
-        // If the list is empty we remove if from our hash, this shouldn't
-        // happen tho
-        mLookupTable->Remove(&key);
-      } else if (length == 1) {
-        // Only one element left, replace the list in the hash with the
-        // single element.
-        nsCOMPtr<nsIDOMNode> node;
-        list->Item(0, getter_AddRefs(node));
+  // Upcast, uggly, but it works!
+  nsContentList *list = NS_STATIC_CAST(nsContentList *,
+                                       (nsIDOMNodeList *)nodeList.get());
 
-        if (node) {
-          nsCOMPtr<nsISupports> tmp(do_QueryInterface(node));
-          mLookupTable->Put(&key, tmp.get());
-        }
-      }
+  list->RemoveElement(content);
+
+  PRUint32 length = 0;
+  list->GetLength(&length);
+
+  if (!length) {
+    // If the list is empty we remove if from our hash, this shouldn't
+    // happen tho
+    mNameLookupTable.Remove(&key);
+  } else if (length == 1) {
+    // Only one element left, replace the list in the hash with the
+    // single element.
+    nsCOMPtr<nsIDOMNode> node;
+    list->Item(0, getter_AddRefs(node));
+
+    if (node) {
+      nsCOMPtr<nsISupports> tmp(do_QueryInterface(node));
+      mNameLookupTable.Put(&key, tmp.get());
     }
   }
+
   return NS_OK;
 }
 
