@@ -40,6 +40,12 @@ typedef enum {
   eXMLContentSinkState_InEpilog
 } XMLContentSinkState;
 
+#ifdef XSL
+typedef struct _XSLStyleSheetState {
+  PRBool sheetExists;
+  nsIXSLContentSink* sink;
+} XSLStyleSheetState;
+#endif
 
 // XXX Till the parser knows a little bit more about XML, 
 // this is a HTMLContentSink.
@@ -108,6 +114,11 @@ protected:
   nsresult ProcessEndSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
 
+#ifdef XSL
+  nsresult CreateStyleSheetURL(nsIURL** aUrl, const nsAutoString& aHref);
+  nsresult LoadXSLStyleSheet(const nsIURL* aUrl);
+#endif
+
   nsIDocument* mDocument;
   nsIURL* mDocumentURL;
   nsIWebShell* mWebShell;
@@ -131,6 +142,10 @@ protected:
   // something similar for STYLE.
   PRBool mInScript;
   PRUint32 mScriptLineNo;
+
+#ifdef XSL
+  XSLStyleSheetState mXSLState;
+#endif
 };
 
 #endif // nsXMLContentSink_h__

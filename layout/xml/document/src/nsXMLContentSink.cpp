@@ -57,6 +57,11 @@ static char kCSSType[] = "text/css";
 static char kQuote = '\"';
 static char kApostrophe = '\'';
 
+#ifdef XSL
+static char kXSLType[] = "text/xsl";
+#endif
+
+
 static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
@@ -118,6 +123,11 @@ nsXMLContentSink::nsXMLContentSink()
   mTextSize = 0;
   mConstrainSize = PR_TRUE;
   mInScript = PR_FALSE;
+
+#ifdef XSL
+  mXSLState.sheetExists = PR_FALSE;
+  mXSLState.sink = nsnull;
+#endif
 }
 
 nsXMLContentSink::~nsXMLContentSink()
@@ -858,6 +868,75 @@ nsDoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
   NS_RELEASE(aLoader);
 }
 
+#ifdef XSL
+nsresult
+nsXMLContentSink::CreateStyleSheetURL(nsIURL** aUrl, 
+                                      const nsAutoString& aHref)
+{
+  nsAutoString absURL;
+  nsIURL* docURL = mDocument->GetDocumentURL();
+  nsIURLGroup* urlGroup; 
+  nsresult result = NS_OK;
+  
+  result = docURL->GetURLGroup(&urlGroup);
+
+  if ((NS_SUCCEEDED(result)) && urlGroup) {
+    result = urlGroup->CreateURL(aUrl, docURL, aHref, nsnull);
+    NS_RELEASE(urlGroup);
+  }
+  else {
+    result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
+    if (NS_SUCCEEDED(result)) {
+      result = NS_NewURL(aUrl, absURL);
+    }
+  }
+  NS_RELEASE(docURL);
+  return result;
+}
+
+
+// Create an XML parser and an XSL content sink and start parsing
+// the XSL stylesheet located at the given URL.
+nsresult
+nsXMLContentSink::LoadXSLStyleSheet(const nsIURL* aUrl)
+{  
+  nsresult rv = NS_OK;
+
+  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+  // Create the XML parser
+  rv = nsRepository::CreateInstance(kCParserCID, 
+                                    nsnull, 
+                                    kCParserIID, 
+                                    (void **)&parser);
+  if (NS_SUCCEEDED(rv)) {
+    nsIXSLContentSink* sink;
+    
+    // Create the XSL content sink
+    rv = NS_NewXSLContentSink(&sink, mDocument, aUrl, mWebShell);
+    if (NS_OK == rv) {
+      // Set up XSL state in the XML content sink
+      mXSLState.sheetExists = PR_TRUE;
+      mXSLState.sink = sink;
+
+      // Hook up the content sink to the parser's output and ask the parser
+      // to start parsing the URL specified by aURL.
+      nsIDTD* theDTD=0;
+      NS_NewWellFormed_DTD(&theDTD);
+      parser->RegisterDTD(theDTD);
+      parser->SetContentSink(sink);
+      parser->Parse(aUrl);
+      
+      // XXX Don't we have to NS_RELEASE() theDTD?
+      NS_RELEASE(sink);
+    }
+  }
+  return rv;
+}
+#endif
+
+#ifndef XSL
 NS_IMETHODIMP 
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
@@ -945,6 +1024,97 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 
   return result;
 }
+#else
+/* The version of AddProcessingInstruction down below is being hacked on for XSL...
+   Please make changes to the version above this comment.  
+   I'll merge the changes when I un-ifdef stuff.
+
+NS_IMETHODIMP 
+nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
+{
+  nsIURL* url = nsnull;
+  FlushText();
+
+  // XXX For now, we don't add the PI to the content model.
+  // We just check for a style sheet PI
+  nsAutoString text, type, href, title, media;
+  PRInt32 offset;
+  nsresult result = NS_OK;
+
+  text = aNode.GetText();
+
+  offset = text.Find(kStyleSheetPI);
+  // If it's a stylesheet PI...
+  if (0 == offset) {
+    result = GetQuotedAttributeValue(text, "href", href);
+    // If there was an error or there's no href, we can't do
+    // anything with this PI
+    if ((NS_OK != result) || (0 == href.Length())) {
+      return result;
+    }
+    
+    result = GetQuotedAttributeValue(text, "type", type);
+    if (NS_OK != result) {
+      return result;
+    }
+    result = GetQuotedAttributeValue(text, "title", title);
+    if (NS_OK != result) {
+      return result;
+    }
+    title.CompressWhitespace();
+    result = GetQuotedAttributeValue(text, "media", media);
+    if (NS_OK != result) {
+      return result;
+    }
+    media.ToUpperCase();
+
+    // XXX At some point, we need to have a registry based mechanism
+    // for dealing with loading stylesheets attached to XML documents
+    if (type.Equals(kCSSType) || type.Equals(kXSLType)) {
+      result = CreateStylesheetURL(&url, href);
+      if (NS_OK != result) {
+        return result;
+      }
+    }
+
+    if (type.Equals(kCSSType)) {
+      nsAsyncStyleProcessingDataXML* d = new nsAsyncStyleProcessingDataXML;
+      if (nsnull == d) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      d->mTitle.SetString(title);
+      d->mMedia.SetString(media);
+      d->mIsActive = PR_TRUE;
+      d->mURL = url;
+      NS_ADDREF(url);
+      // XXX Need to create PI node
+      d->mElement = nsnull;
+      d->mSink = this;
+      NS_ADDREF(this);
+
+      nsIUnicharStreamLoader* loader;
+      result = NS_NewUnicharStreamLoader(&loader,
+                                         url, 
+                                         (nsStreamCompleteFunc)nsDoneLoadingStyle, 
+                                         (void *)d);
+      if (NS_SUCCEEDED(result)) {
+        result = NS_ERROR_HTMLPARSER_BLOCK;
+      }
+    }
+    else if (type.Equals(kXSLType)) {
+      result = LoadXSLStyleSheet(url);
+    }
+
+    if (type.Equals(kCSSType) || type.Equals(kXSLType)) {
+      NS_RELEASE(url);
+    }
+  }
+                     
+  return result;
+}
+*/
+#endif
+
 
 NS_IMETHODIMP 
 nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
