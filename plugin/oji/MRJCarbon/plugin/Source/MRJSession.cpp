@@ -369,7 +369,10 @@ Boolean MRJSession::addToClassPath(const FSSpec& fileSpec)
         return false;
 
     // keep accumulating paths.
-    mClassPath.push_back(fileSpec);
+    FSRef ref;
+    OSStatus status = FSpMakeFSRef(&fileSpec, &ref);
+    if (status == noErr)
+        mClassPath.push_back(ref);
 
     return true;
 }
@@ -387,8 +390,19 @@ Boolean MRJSession::addToClassPath(const char* dirPath)
 
 Boolean MRJSession::addURLToClassPath(const char* fileURL)
 {
+    Boolean success = false;
     // Use CFURL, FSRef and FSSpec?
-    return false;
+    CFURLRef fileURLRef = CFURLCreateWithBytes(NULL, (UInt8*)fileURL, strlen(fileURL),
+                                               kCFStringEncodingUTF8, NULL);
+    if (fileURLRef) {
+        FSRef fsRef;
+        if (CFURLGetFSRef(fileURLRef, &fsRef)) {
+            mClassPath.push_back(fsRef);
+            success = true;
+        }
+        CFRelease(fileURLRef);
+    }
+    return success;
 }
 
 char* MRJSession::getProperty(const char* propertyName)
@@ -493,16 +507,9 @@ void MRJSession::unlock()
 	--mLockCount;
 }
 
-static OSStatus spec2path(const FSSpec& spec, char* path, UInt32 maxPathSize)
+static OSStatus ref2path(const FSRef& ref, char* path, UInt32 maxPathSize)
 {
-    OSStatus status;
-    FSRef ref;
-    
-    status = FSpMakeFSRef(&spec, &ref);
-    if (status == noErr)
-        status = FSRefMakePath(&ref, (UInt8*)path, maxPathSize);
-
-    return status;
+    return FSRefMakePath(&ref, (UInt8*)path, maxPathSize);
 }
 
 std::string MRJSession::getClassPath()
@@ -510,14 +517,14 @@ std::string MRJSession::getClassPath()
     std::string classPath("-Djava.class.path=");
     
     // keep appending paths make from FSSpecs.
-    std::vector<FSSpec>::const_iterator i = mClassPath.begin();
+    MRJClassPath::const_iterator i = mClassPath.begin();
     if (i != mClassPath.end()) {
         char path[1024];
-        if (spec2path(*i, path, sizeof(path)) == noErr)
+        if (ref2path(*i, path, sizeof(path)) == noErr)
             classPath += path;
         ++i;
         while (i != mClassPath.end()) {
-            if (spec2path(*i, path, sizeof(path)) == noErr) {
+            if (ref2path(*i, path, sizeof(path)) == noErr) {
                 classPath += ":";
                 classPath += path;
             }    

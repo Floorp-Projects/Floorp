@@ -110,7 +110,8 @@ private:
 private:
 	OSStatus mStatus;
 	
-	std::vector<FSSpec> mClassPath;
+	typedef std::vector<FSRef> MRJClassPath;
+	MRJClassPath mClassPath;
 
 	JNIEnv* mMainEnv;
 	JavaVM* mJavaVM;
