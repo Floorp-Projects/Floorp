@@ -497,7 +497,7 @@ nsXULKeyListenerImpl::Init(
   NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && prefs)
   {
-    rv = prefs->GetIntPref("ui.key.acceleratorKey",
+    rv = prefs->GetIntPref("ui.key.accelKey",
                            (PRInt32*)&mXULKeyModifier);
   }
 #ifdef DEBUG_akkana

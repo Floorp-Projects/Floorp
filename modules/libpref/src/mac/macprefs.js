@@ -140,7 +140,7 @@ pref("font.name.fantasy.zh-TW", "XXX.fantasy");
 
 // Override the Windows settings: no menu key, meta accelerator key.
 pref("ui.key.menuAccessKey", 0);
-pref("ui.key.acceleratorKey", 224);
+pref("ui.key.accelKey", 224);
 
 // This overrides the setting in config.js (which points to the Windows page)
 config("menu.help.item_0.label","Help Contents");
