@@ -35,7 +35,7 @@
 #include "nsIControllers.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDOMAbstractView.h"
+#include "nsIDOMViewCSS.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNSLocation.h"
@@ -77,7 +77,7 @@ class GlobalWindowImpl :   public nsIScriptGlobalObject,
                            public nsIScriptObjectPrincipal,
                            public nsIDOMEventReceiver,
                            public nsPIDOMWindow, 
-                           public nsIDOMAbstractView
+                           public nsIDOMViewCSS
 {
 public:
    // nsISupports
@@ -147,8 +147,11 @@ public:
    NS_IMETHOD Activate();
    NS_IMETHOD Deactivate();
 
+   // nsIDOMViewCSS
+   NS_DECL_IDOMVIEWCSS
+
    // nsIDOMAbstractView
-   NS_IMETHOD GetDocument(nsIDOMDocumentView** aDocumentView);
+   NS_DECL_IDOMABSTRACTVIEW
 
 public:
    // Object Management
