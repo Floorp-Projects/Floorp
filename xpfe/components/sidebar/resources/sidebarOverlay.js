@@ -320,9 +320,10 @@ function update_panels() {
   // be selected.
   var panels = document.getElementById('sidebar-panels');
   var selected_id = panels.getAttribute('last-selected-panel');
-  var have_set_top = 0
-  var have_set_after_selected = 0
-  var is_after_selected = 0
+  var have_set_top = 0;
+  var have_set_after_selected = 0;
+  var is_after_selected = 0;
+  var last_header = 0;
   for (var ii=1; ii < panels.childNodes.length; ii += 2) {
     var header = panels.childNodes.item(ii);
     var content = panels.childNodes.item(ii+1);
@@ -332,6 +333,8 @@ function update_panels() {
       header.setAttribute('hidden','true');
       content.setAttribute('hidden','true');
     } else {
+      last_header = header;
+      header.removeAttribute('last-panel');
       if (!have_set_top) {
         header.setAttribute('top-panel','true');
         have_set_top = 1
@@ -366,6 +369,9 @@ function update_panels() {
         content.setAttribute('collapsed','true');
       }
     }
+  }
+  if (last_header) {
+    last_header.setAttribute('last-panel','true');
   }
 }
 
