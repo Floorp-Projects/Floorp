@@ -28,6 +28,9 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsEditorBoxObject.cpp \
+        nsIFrameBoxObject.cpp \
+        nsBrowserBoxObject.cpp \
         nsTreeBoxObject.cpp \
         nsPopupSetBoxObject.cpp \
         nsMenuBoxObject.cpp \
@@ -92,6 +95,9 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+  .\$(OBJDIR)\nsEditorBoxObject.obj \
+  .\$(OBJDIR)\nsIFrameBoxObject.obj \
+  .\$(OBJDIR)\nsBrowserBoxObject.obj \
   .\$(OBJDIR)\nsTreeBoxObject.obj \
   .\$(OBJDIR)\nsPopupSetBoxObject.obj \
   .\$(OBJDIR)\nsMenuBoxObject.obj \
