@@ -39,19 +39,15 @@ ConnectToDatabase();
 
 quietly_check_login();
 
-print "Content-Type: text/html\n\n";
-
 if (defined $::FORM{'id'}) {
     $::FORM{'id'} =~ s/[^\w-]//g;
 
     if ($pages{$::FORM{'id'}}) {
+        print "Content-Type: text/html\n\n"; 
         $template->process($pages{$::FORM{'id'}}, $vars)
           || ThrowTemplateError($template->error());
         exit;
     }
 }
 
-$vars->{'message'} = "page_not_found";
-
-$template->process("global/message.html.tmpl", $vars)
-  || ThrowTemplateError($template->error());
+ThrowUserError("page_not_found");

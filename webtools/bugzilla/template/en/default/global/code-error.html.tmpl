@@ -21,9 +21,7 @@
 
 [%# INTERFACE:
   # header_done: boolean. True if the header has already been printed.
-  # error: string. The tag of the error, or the error message to be displayed
-  # (deprecated). May contain HTML if it's an error message.
-  # title: string. If error is an error message, the title (deprecated.)
+  # error: string. The tag of the error.
   # variables: hash. Useful data about the problem. The keys are the variable
   #  names, and the values the variable values.
   #%]
@@ -72,7 +70,7 @@
     [%# Give sensible error if error functions are used incorrectly.
       #%]        
     You are using Bugzilla's ThrowCodeError() function incorrectly. You
-    passed in the string '[% message_tag %]'. The correct use is to pass
+    passed in the string '[% error %]'. The correct use is to pass
     in a tag, and define that tag in the file code-error.html.tmpl.<br>
     <br>
     If you are a Bugzilla end-user seeing this message, please save this

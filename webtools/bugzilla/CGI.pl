@@ -861,10 +861,6 @@ sub ThrowCodeError {
 }
 
 # For errors made by the user.
-# The correct use of this function is to pass an error tag, defined in
-# user-error.html.tmpl, as the first parameter, and then, optionally,
-# undef as the second parameter and $unlock_tables as the third.
-# The second parameter will eventually go away.
 sub ThrowUserError {
   ($vars->{'error'}, my $unlock_tables) = (@_);
 
