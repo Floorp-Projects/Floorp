@@ -42,6 +42,7 @@
 #include "nsVoidArray.h"
 #include "nsIThread.h"
 #include "nsITimerInternal.h"
+#include "nsIObserver.h"
 
 #include "nsCOMPtr.h"
 
@@ -102,6 +103,14 @@ public:
 
 private:
   nsresult InitCommon(PRUint32 aType, PRUint32 aDelay);
+
+  void ReleaseCallback()
+  {
+    if (mCallbackType == CALLBACK_TYPE_INTERFACE)
+      NS_RELEASE(mCallback.i);
+    else if (mCallbackType == CALLBACK_TYPE_OBSERVER)
+      NS_RELEASE(mCallback.o);
+  }
 
   nsCOMPtr<nsIThread>   mCallingThread;
 
