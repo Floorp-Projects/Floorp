@@ -145,7 +145,7 @@ function commonDialogOnLoad()
     case 3:
       newButton = document.documentElement.getButton("extra1");
       firstButton = firstButton || newButton;
-      setLabelForNode(button, gCommonDialogParam.GetString(10));
+      setLabelForNode(newButton, gCommonDialogParam.GetString(10));
       // fall through
     default:
     case 2:
