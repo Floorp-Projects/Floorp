@@ -31,6 +31,7 @@ INCS= \
 	-I. -I..\include \
 	-I$(DEPTH)\dist\public\java \
 	-I$(DEPTH)\dist\public\nspr \
+	-I$(DEPTH)\dist\public\libreg \
 !ifdef MOZ_PRIV
 	-I$(PRIVDIR) \
 	-I$(PRIVDIR)\..\..\shiva \
@@ -123,6 +124,8 @@ DLL_LIBS=mapi32.lib \
 	comdlg32.lib \
 	uuid.lib \
 	ole32.lib \
+	$(LIBNSPR) \
+	$(DEPTH)\dist\$(OBJDIR)\lib\libreg32.lib \
 	$(DLL_LIBS)
 !endif
 
