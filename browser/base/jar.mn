@@ -38,6 +38,11 @@ classic.jar:
         skin/classic/browser/browser.xml              (skin/browser.xml)
         skin/classic/browser/throbber-stopped.gif     (skin/throbber-stopped.gif)
         skin/classic/browser/throbber.gif             (skin/throbber.gif)
+        skin/classic/browser/lock-broken.gif          (skin/lock-broken.gif)
+        skin/classic/browser/lock-insecure.gif        (skin/lock-insecure.gif)
+        skin/classic/browser/lock-mixed.gif           (skin/lock-mixed.gif)
+        skin/classic/browser/lock-secure.gif          (skin/lock-secure.gif)
+        skin/classic/browser/loading.gif              (skin/loading.gif)
         
 en-US.jar:
         locale/en-US/browser/contents.rdf             (locale/contents.rdf)

@@ -175,15 +175,10 @@ toolbarbutton, menubutton {
 
 .toolbarbutton-1 {
   min-width: 0px;
-  padding: 2px !important;
-  margin: 0px 1px !important;
+  padding: 2px 0px !important;
+  margin: 0px !important;
   border: 0px !important;
   -moz-appearance: none !important;
-}
-
-toolbar[mode="text"] .toolbarbutton-text {
--moz-box-pack: center;  
--moz-box-align: center;
 }
 
 toolbarbutton:not([disabled="true"]):hover,
@@ -206,13 +201,7 @@ menubutton:not([disabled="true"]):hover:active {
 
 .toolbarbutton-menubutton-dropmarker {
   list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png");
-  -moz-box-align: center;
-  -moz-box-pack: center;
   -moz-image-region: rect(0 14px 15px 0px) !important;
-  margin-left: 0px;
-  margin-top: 0px;
-  margin-bottom: 0px;
-  border: 0px !important;
 }
 
 toolbarbutton:hover > stack > .toolbarbutton-menubutton-dropmarker {
@@ -232,17 +221,15 @@ toolbarbutton[open="true"] > stack > .toolbarbutton-menubutton-dropmarker {
 #back-button > .toolbarbutton-menubutton-stack
     > .toolbarbutton-menubutton-dropmarker,
 #forward-button > .toolbarbutton-menubutton-stack
-    > .toolbarbutton-menubutton-dropmarker
-{
+    > .toolbarbutton-menubutton-dropmarker {
   margin-left: 38px;
-  margin-top: 16px;
+  margin-top: 8px;
 }
-
+       
 toolbar[mode="icons"] #back-button > .toolbarbutton-menubutton-stack
     > .toolbarbutton-menubutton-dropmarker,
 toolbar[mode="icons"] #forward-button > .toolbarbutton-menubutton-stack
-    > .toolbarbutton-menubutton-dropmarker
-{
+    > .toolbarbutton-menubutton-dropmarker {
   margin-left: 38px;
   margin-top: 22px;
 }
@@ -269,10 +256,20 @@ toolbar[mode="icons"] .toolbarbutton-text {
   display: none;
 }
 
+toolbar[mode="icons"] .toolbarbutton-icon {
+  padding: 0px 0px 2px 0px important;
+}
+
 toolbar[mode="text"] .toolbarbutton-menubutton-dropmarker,
 toolbar[mode="text"] .toolbarbutton-icon {
   display: none;
 }
+
+toolbar[mode="text"] .toolbarbutton-text {
+  padding: 4px 4px 5px 4px !important;
+  margin: 5px !important;
+}
+
 
 #back-button {
   -moz-binding: url('chrome://browser/skin/browser.xml#toolbar-menu-button');
@@ -280,13 +277,13 @@ toolbar[mode="text"] .toolbarbutton-icon {
   -moz-image-region: rect(0px 46px 42px 0px);
   -moz-box-orient: vertical;
 }
-#back-button[buttonover="true"] {
+#back-button:hover {
   -moz-image-region: rect(0px 100px 42px 54px);
 }
 #back-button[disabled="true"] {
   -moz-image-region: rect(0px 154px 42px 108px);
 }
-#back-button[buttondown="true"] {
+#back-button:hover:active {
   -moz-image-region: rect(0px 208px 42px 162px);
 }
 
@@ -296,13 +293,13 @@ toolbar[mode="text"] .toolbarbutton-icon {
   -moz-image-region: rect(0px 46px 42px 0px);
   -moz-box-orient: vertical;
 }
-#forward-button[buttonover="true"] {
+#forward-button:hover {
   -moz-image-region: rect(0px 100px 42px 54px);
 }
 #forward-button[disabled="true"] {
   -moz-image-region: rect(0px 154px 42px 108px) !important;
 }
-#forward-button[buttondown="true"] {
+#forward-button:hover:active {
   -moz-image-region: rect(0px 208px 42px 162px);
 }
 
@@ -383,13 +380,13 @@ toolbar[iconsize="small"]  #back-button {
   list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
   -moz-image-region: rect(0px 28px 25px 0px);
 }
-toolbar[iconsize="small"] #back-button[buttonover="true"] {
+toolbar[iconsize="small"] #back-button:hover {
   -moz-image-region: rect(0px 56px 25px 28px);
 }
 toolbar[iconsize="small"] #back-button[disabled="true"] {
   -moz-image-region: rect(0px 84px 25px 56px);
 }
-toolbar[iconsize="small"] #back-button[buttondown="true"] {
+toolbar[iconsize="small"] #back-button:hover:active {
   -moz-image-region: rect(0px 112px 25px 84px) !important;
 }
 
@@ -397,10 +394,10 @@ toolbar[iconsize="small"] #forward-button {
   list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
   -moz-image-region: rect(25px 28px 50px 0px);
 }
-toolbar[iconsize="small"] #forward-button[buttonover="true"] {
+toolbar[iconsize="small"] #forward-button:hover {
   -moz-image-region: rect(25px 56px 50px 28px);
 }
-toolbar[iconsize="small"] #forward-button[buttondown="true"] {
+toolbar[iconsize="small"] #forward-button:hover:active {
   -moz-image-region: rect(25px 84px 50px 56px);
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"] {
@@ -472,24 +469,17 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 #minimize-button {
   list-style-image: url("chrome://navigator/skin/icons/minimize.gif");
 }
-
 #restore-button {
   list-style-image: url("chrome://navigator/skin/icons/restore.gif");
 }
-
 #close-button {
   list-style-image: url("chrome://navigator/skin/icons/close.gif");
 }
 
 /* ::::: nav-bar-inner ::::: */
 
-#nav-bar-inner {
-  -moz-box-align: center;
-  min-width: 0px;
-}
-
 #urlbar {
-  margin: 2px 6px 2px 3px;
+  margin: 2px 3px;
 }
 
 /* ::::: page proxy icon ::::: */
@@ -577,22 +567,12 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 
 /* ::::: go button ::::: */
 
-#go-button > .button-box > .button-text {
-  display: none !important;
-  max-width: 0px !important;
-  min-width: 0px;
-  padding: 0px !important;
-  margin: 0px !important;
-  border: 0px !important;
-}
-
 #go-button,
 #go-container {
-  -moz-appearance: none !importan;
-  min-width: 0px;
-  padding: 0px !important;
-  margin: 0px !important;
-  border: 0px !important;
+  border: 0px;
+  padding: 0px;
+  margin: 0px;
+  -moz-appearance: none !important;
   list-style-image: url("chrome://browser/skin/go-large.png");
   -moz-image-region: rect(0px 26px 27px 0px) !important;
 }
@@ -604,6 +584,10 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 #go-button:hover:active {
   -moz-image-region: rect(0px 107px 27px 81px) !important;
+}
+
+#go-button > .button-box > .button-text {
+  display: none !important;
 }
 
 /* ::::: content area ::::: */
@@ -620,19 +604,19 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 #security-button {
-  list-style-image: url("chrome://communicator/skin/icons/lock-insecure.gif");
+  list-style-image: url("chrome://browser/skin/lock-insecure.gif");
 }
 
 #security-button[level="high"] {
-  list-style-image: url("chrome://communicator/skin/icons/lock-secure.gif");
+  list-style-image: url("chrome://browser/skin/lock-secure.gif");
 }
 
 #security-button[level="low"] {
-  list-style-image: url("chrome://communicator/skin/icons/lock-secure.gif");
+  list-style-image: url("chrome://browser/skin/lock-secure.gif");
 }
 
 #security-button[level="broken"] {
-  list-style-image: url("chrome://communicator/skin/icons/lock-broken.gif");
+  list-style-image: url("chrome://browser/skin/lock-broken.gif");
 }
 
 /* ::::: tabs ::::: */
@@ -655,17 +639,18 @@ tab {
 }
 
 tab[busy] {
-  list-style-image: url("chrome://communicator/skin/icons/loading.gif");
+  list-style-image: url("chrome://browser/skin/loading.gif") !important;
 }
 
 .tab-icon {
   margin-right: 3px;
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-n.png") !important;
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-n.png");
 }
 
-/* ::::: close button ::::: */
+
+/* --- close button --- */
 
 .tabs-closebutton {
   margin: 0px 4px;
@@ -701,9 +686,6 @@ tab[busy] {
 
 /* ::::: throbber ::::: */
 
-#throbber-box {
-}
-
 #navigator-throbber {
   -moz-user-focus: ignore !important;
   -moz-box-align: center;
@@ -711,25 +693,13 @@ tab[busy] {
 
   padding: 0px !important;
   border: none !important;
-  margin: 5px !important;
+  margin: 2px 4px !important;
 
   background-color: transparent;
 
   list-style-image: url("chrome://browser/skin/throbber-stopped.gif");
 }
 
-#navigator-throbber[toolbarmode="small"] {
-}
-
-#navigator-throbber:hover,
-#navigator-throbber:hover[toolbarmode="small"] {
-}
-
-#navigator-throbber:hover:active,
-#navigator-throbber:hover:active[toolbarmode="small"] {}
-
-#navigator-throbber[busy="true"],
-#navigator-throbber[toolbarmode="small"][busy="true"] {
+#navigator-throbber[busy="true"] {
   list-style-image: url("chrome://browser/skin/throbber.gif");
 }
-
