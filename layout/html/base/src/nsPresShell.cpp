@@ -1185,7 +1185,6 @@ public:
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
                             nsEvent* aEvent,
                             nsEventStatus* aStatus);
-  NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
   //nsIFocusTracker interface
@@ -6432,26 +6431,6 @@ PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent,
 
   PopCurrentEventInfo();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::Scrolled(nsIView *aView)
-{
-  void*     clientData;
-  nsIFrame* frame;
-  nsresult  rv;
-  
-  NS_ASSERTION(!(nsnull == aView), "null view");
-
-  aView->GetClientData(clientData);
-  frame = (nsIFrame *)clientData;
-
-  if (nsnull != frame)
-    rv = frame->Scrolled(aView);
-  else
-    rv = NS_OK;
-
-  return rv;
 }
 
 NS_IMETHODIMP

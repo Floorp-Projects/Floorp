@@ -2787,11 +2787,6 @@ NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::Scrolled(nsIView *aView)
-{
-  return NS_OK;
-}
-
 PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 {
   PRInt32     result = -1;

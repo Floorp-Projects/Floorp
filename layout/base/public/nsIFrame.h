@@ -1044,12 +1044,6 @@ public:
    */
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const = 0;
 
-  /**
-   * called when the frame has been scrolled to a new
-   * position. only called for frames with views.
-   */
-  NS_IMETHOD  Scrolled(nsIView *aView) = 0;
-
   /** Selection related calls
    */
   /** 

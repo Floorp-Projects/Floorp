@@ -247,7 +247,6 @@ public:
   NS_IMETHOD  GetWindow(nsIPresContext* aPresContext, nsIWidget**) const;
   NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
-  NS_IMETHOD  Scrolled(nsIView *aView);
 #ifdef NS_DEBUG
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;

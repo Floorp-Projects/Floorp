@@ -78,11 +78,6 @@ public:
                          PRBool          aForceHandle,
                          PRBool&         aHandled) = 0;
 
-  /* called when the view has been repositioned due to scrolling
-   * @return error status
-   */
-  NS_IMETHOD Scrolled(nsIView * aView) = 0;
-
   /* called when the view has been resized and the
    * content within the view needs to be reflowed.
    * @param aWidth - new width of view

@@ -84,7 +84,6 @@ public:
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
   virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
