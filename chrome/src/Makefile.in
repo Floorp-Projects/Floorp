@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  js \
 		  appshell \
+		  appstartup \
 		  appcomps \
 		  caps \
 		  pref \
