@@ -243,7 +243,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
  //       inst = (nsISupports*)new nsPopUpMenu();
     }/* */
     else if (mClassID.Equals(kCTreeView)) {
-        inst = (nsISupports*)(nsITreeView *) new nsTreeView();
+        inst = (nsISupports*)(nsWindow*) new nsTreeView();
     }
   
     if (inst == NULL) {  
