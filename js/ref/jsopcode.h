@@ -47,9 +47,8 @@ typedef enum JSOp {
 #define JOF_UINT16        3       /* unsigned 16-bit immediate operand */
 #define JOF_TABLESWITCH   4       /* table switch */
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
-#define JOF_CONDSWITCH    6       /* cond switch */
-#define JOF_QARG          7       /* quickened get/set function argument ops */
-#define JOF_QVAR          8       /* quickened get/set local variable ops */
+#define JOF_QARG          6       /* quickened get/set function argument ops */
+#define JOF_QVAR          7       /* quickened get/set local variable ops */
 #define JOF_TYPEMASK      0x000f  /* mask for above immediate types */
 #define JOF_NAME          0x0010  /* name operation */
 #define JOF_PROP          0x0020  /* obj.prop operation */
