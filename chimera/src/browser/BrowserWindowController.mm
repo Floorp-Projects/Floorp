@@ -381,11 +381,10 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
                                         LocationToolbarItemIdentifier,
 #if CORPORATE_BRANDING
                                         SearchToolbarItemIdentifier,
+                                        ThrobberToolbarItemIdentifier,
+                                        NSToolbarSeparatorItemIdentifier,
 #endif
                                         SidebarToolbarItemIdentifier,
-#if CORPORATE_BRANDING
-                                        ThrobberToolbarItemIdentifier,
-#endif
                                         nil];
 }
 
