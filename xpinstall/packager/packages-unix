@@ -228,6 +228,8 @@ bin/components/xmlextras_interfaceinfo.xpt
 bin/components/libxmlextras.so
 bin/components/xmlsoap.xpt
 bin/components/xmlschema.xpt
+bin/components/wsdl.xpt
+bin/components/wsproxy.xpt
 bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
 bin/components/nsProgressDialog.js
