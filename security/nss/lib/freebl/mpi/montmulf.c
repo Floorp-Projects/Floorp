@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: montmulf.c,v 1.4 2000/12/09 03:32:41 nelsonb%netscape.com Exp $
+ *  $Id: montmulf.c,v 1.5 2001/10/17 20:35:04 nelsonb%netscape.com Exp $
  */
 
 #ifdef SOLARIS
@@ -196,7 +196,7 @@ int i;
  if(i32[len]>0) i=-1;
  else
    {
-     for(i=len-1; i>=0; i++)
+     for(i=len-1; i>=0; i--)
        {
 	 if(i32[i]!=nint[i]) break;
        }
