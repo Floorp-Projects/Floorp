@@ -300,13 +300,23 @@ if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
 
-AC_MSG_CHECKING([for minimum required perl version $PERL_VERSION])
-_perl_version=`$PERL -e 'use Config; print "$Config{version}"; if ($Config{version} >= $PERL_VERSION) { exit(0); } else { exit(1); }' 2>&5`
+AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
+_perl_version=`$PERL -e 'print "$]"; if ($] >= $PERL_VERSION) { exit(0); } else { exit(1); }' 2>&5`
 _perl_res=$?
 AC_MSG_RESULT([$_perl_version])
 
 if test "$_perl_res" != 0; then
     AC_MSG_ERROR([Perl $PERL_VERSION or higher is required.])
+fi
+
+AC_MSG_CHECKING([for full perl installation])
+_perl_archlib=`$PERL -e 'use Config; if ( -d $Config{archlib} ) { exit(0); } else { exit(1); }' 2>&5`
+_perl_res=$?
+if test "$_perl_res" != 0; then
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([Cannot find Config.pm or \$Config{archlib}.  A full perl installation is required.])
+else
+    AC_MSG_RESULT([yes])    
 fi
 
 AC_PATH_PROG(WHOAMI, whoami, :)
