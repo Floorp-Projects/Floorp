@@ -3686,6 +3686,10 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 {
   PRBool scripts_enabled = PR_TRUE;
 
+  if (!mContext) {
+    return;
+  }
+
   mContext->GetScriptsEnabled(&scripts_enabled);
 
   if (!scripts_enabled) {
@@ -3708,9 +3712,6 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   nsresult rv;
   PRUint32 firingDepth = mTimeoutFiringDepth + 1;
 
-  if (!mContext) {
-    return;
-  }
 
   // Make sure that the window or the script context don't go away as
   // a result of running timeouts
