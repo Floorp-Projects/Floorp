@@ -101,6 +101,13 @@ nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
+nsCommentNode::GetNodeName(nsString& aNodeName)
+{
+  aNodeName.SetString("#comment");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCommentNode::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = (PRUint16)nsIDOMNode::COMMENT_NODE;

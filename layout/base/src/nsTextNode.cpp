@@ -125,6 +125,13 @@ nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
+nsTextNode::GetNodeName(nsString& aNodeName)
+{
+  aNodeName.SetString("#text");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTextNode::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = (PRUint16)nsIDOMNode::TEXT_NODE;

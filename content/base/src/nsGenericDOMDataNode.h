@@ -50,10 +50,6 @@ struct nsGenericDOMDataNode {
   void Init(nsIContent* aOuterContentObject);
 
   // Implementation for nsIDOMNode
-  nsresult    GetNodeName(nsString& aNodeName) {
-    aNodeName.Truncate();
-    return NS_OK;
-  }
   nsresult    GetNodeValue(nsString& aNodeValue);
   nsresult    SetNodeValue(const nsString& aNodeValue);
   nsresult    GetParentNode(nsIDOMNode** aParentNode);
@@ -238,9 +234,7 @@ struct nsGenericDOMDataNode {
  *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
  */
 #define NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(_g)                     \
-  NS_IMETHOD GetNodeName(nsString& aNodeName) {                         \
-    return _g.GetNodeName(aNodeName);                                   \
-  }                                                                     \
+  NS_IMETHOD GetNodeName(nsString& aNodeName);                          \
   NS_IMETHOD GetNodeValue(nsString& aNodeValue) {                       \
     return _g.GetNodeValue(aNodeValue);                                 \
   }                                                                     \

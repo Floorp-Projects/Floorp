@@ -28,6 +28,7 @@
 #include "nsIPresContext.h" 
 #include "nsIHTMLContent.h"
 #include "nsIDOMNode.h" // for Find
+#include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
@@ -74,6 +75,7 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
@@ -746,7 +748,12 @@ nsHTMLDocument::GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** 
 NS_IMETHODIMP    
 nsHTMLDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  return NS_OK;
+  nsHTMLDocumentChildNodes* childNodes = new nsHTMLDocumentChildNodes((nsIDOMDocument*)(nsIDOMHTMLDocument*)this);
+  if (nsnull == childNodes) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return childNodes->QueryInterface(kIDOMNodeListIID, (void**)aChildNodes);
 }
 
 NS_IMETHODIMP    
