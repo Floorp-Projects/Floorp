@@ -147,6 +147,11 @@ public:
                                     nscoord              aX,
                                     nscoord              aY,
                                     PRUint32             aFlags);
+
+  static PRBool IsDescendant(nsIFrame* aAncestor, 
+                             nsIFrame *aFrame, 
+                             nsIFrame *aStopFrame); 
+
   
   static void PositionChildViews(nsIPresContext* aPresContext,
                                  nsIFrame*       aFrame);

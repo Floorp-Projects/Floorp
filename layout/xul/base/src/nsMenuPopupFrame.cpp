@@ -107,7 +107,12 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell)
     mMenuCanOverlapOSBar(PR_FALSE)
 {
   SetIsContextMenu(PR_FALSE);   // we're not a context menu by default
-
+  // Don't allow container frames to automatically position
+  // the popup because they will put it in the wrong position.
+  nsFrameState state;
+  GetFrameState(&state);
+  state &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
+  SetFrameState(state);
 } // ctor
 
 
