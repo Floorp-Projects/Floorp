@@ -15,7 +15,6 @@
     </content>
   
     <implementation>
-    
       <property name="count">
         <getter>return this.mCount</getter>
       </property>
@@ -38,7 +37,7 @@
           }
         ]]></setter>
       </property>
-    
+      <field name="mSelectedItem">null</field>
       <property name="selectedItem">
         <getter>return this.mSelectedItem</getter>
         <setter><![CDATA[
@@ -349,21 +348,21 @@
         </xul:box>
         <xul:vbox class="console-row-content" inherits="selected" flex="1">
           <xul:box class="console-row-msg" align="start">
-            <xul:text class="label" inherits="value=typetext"/>
-            <xul:html class="console-error-msg" inherits="value=msg" flex="1"/>
+            <xul:label class="label" inherits="value=typetext"/>
+            <xul:description class="console-error-msg" inherits="value=msg" flex="1"/>
           </xul:box>
           <xul:box class="console-row-file" inherits="hidden=hideSource">
-            <xul:text class="label" value="&errFile.label;"/>
+            <xul:label class="label" value="&errFile.label;"/>
             <xul:box class="console-error-source" inherits="url"/>
             <spacer flex="1"/>
-            <xul:text class="label" value="&errLine.label;"/>
-            <xul:text class="label" inherits="value=line" flex="1"/>
+            <xul:label class="label" value="&errLine.label;"/>
+            <xul:label class="label" inherits="value=line" flex="1"/>
           </xul:box>
           <xul:vbox class="console-row-code" inherits="selected,hidden=hideCode">
-            <xul:text class="monospace console-code" inherits="value=code"/>
+            <xul:label class="monospace console-code" inherits="value=code"/>
             <xul:box inherits="hidden=hideCaret">
-              <xul:text class="monospace console-dots" inherits="value=errorDots"/>
-              <xul:text class="monospace console-caret" inherits="value=errorCaret"/>
+              <xul:label class="monospace console-dots" inherits="value=errorDots"/>
+              <xul:label class="monospace console-caret" inherits="value=errorCaret"/>
               <xul:spacer flex="1"/>
             </xul:box>
           </xul:vbox>
@@ -408,7 +407,7 @@
         </xul:box>
         <xul:vbox class="console-row-content" inherits="selected" flex="1">
           <xul:vbox class="console-row-msg" flex="1">
-            <xul:html class="console-msg-text" inherits="value=msg" flex="1"/>
+            <xul:description class="console-msg-text" inherits="value=msg" flex="1"/>
           </xul:vbox>
         </xul:vbox>
       </xul:box>
@@ -425,7 +424,7 @@
 
   <binding id="console-error-source" extends="xul:box">
     <content>
-      <xul:text class="text-link" inherits="value=url" crop="right"/>
+      <xul:label class="text-link" inherits="value=url" crop="right"/>
     </content>
 
     <handlers>
