@@ -18,7 +18,9 @@
 #include <stdio.h>
 #include "nscore.h"
 #include "nsCRT.h"
+#ifndef XP_UNIX
 #include "nscoord.h"
+#endif
 #include "nsSpaceManager.h"
 
 class MySpaceManager: public nsSpaceManager {
