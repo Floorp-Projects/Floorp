@@ -217,7 +217,7 @@ nsIOService::Init()
     if (prefBranch) {
         nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
         if (pbi)
-            pbi->AddObserver(PORT_PREF_PREFIX, this, PR_TRUE);
+            pbi->AddObserver(PORT_PREF_PREFIX, this);
         PrefsChanged(prefBranch);
     }
 
