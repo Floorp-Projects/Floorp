@@ -237,30 +237,21 @@ typedef int (*PrefChangedFunc) (const char *, void *);
 PUBLIC void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
   nsresult ret;
-  nsIPref* pPrefService = nsnull;
-  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
-    (nsISupports**) &pPrefService);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->RegisterCallback(domain, callback, instance_data);
-    if (!NS_FAILED(ret)) {
-      ret = pPrefService->SavePrefFile(); 
-    }
-    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
   }
 }
 
 PUBLIC void
 SI_SetBoolPref(const char * prefname, PRBool prefvalue) {
   nsresult ret;
-  nsIPref* pPrefService = nsnull;
-  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
-    (nsISupports**) &pPrefService);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->SetBoolPref(prefname, prefvalue);
     if (!NS_FAILED(ret)) {
       ret = pPrefService->SavePrefFile(); 
     }
-    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
   }
 }
 
@@ -268,15 +259,9 @@ PUBLIC PRBool
 SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
   nsresult ret;
   PRBool prefvalue = defaultvalue;
-  nsIPref* pPrefService = nsnull;
-  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
-    (nsISupports**) &pPrefService);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->GetBoolPref(prefname, &prefvalue);
-    if (!NS_FAILED(ret)) {
-      ret = pPrefService->SavePrefFile(); 
-    }
-    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
   }
   return prefvalue;
 }
@@ -284,32 +269,24 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
 PUBLIC void
 SI_SetCharPref(const char * prefname, const char * prefvalue) {
   nsresult ret;
-  nsIPref* pPrefService = nsnull;
-  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
-    (nsISupports**) &pPrefService);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->SetCharPref(prefname, prefvalue);
     if (!NS_FAILED(ret)) {
       ret = pPrefService->SavePrefFile(); 
     }
-    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
   }
 }
 
 PUBLIC void
 SI_GetCharPref(const char * prefname, char** aPrefvalue) {
   nsresult ret;
-  nsIPref* pPrefService = nsnull;
-  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
-    (nsISupports**) &pPrefService);
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
   if (!NS_FAILED(ret)) {
     ret = pPrefService->CopyCharPref(prefname, aPrefvalue);
-    if (!NS_FAILED(ret)) {
-      ret = pPrefService->SavePrefFile(); 
-    } else {
+    if (NS_FAILED(ret)) {
       *aPrefvalue = nsnull;
     }
-    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
   } else {
     *aPrefvalue = nsnull;
   }
@@ -442,7 +419,7 @@ SI_InitSignonFileName() {
  * Utility Routines *
  ********************/
 
-/* StrAllocCopy and StrAllocCat should really be defined elsewhere */
+/* StrAllocCopy should really be defined elsewhere */
 #include "plstr.h"
 #include "prmem.h"
 
@@ -458,25 +435,6 @@ Local_SACopy(char **destination, const char *source) {
   return *destination;
 }
 
-#undef StrAllocCat
-#define StrAllocCat(dest, src) Local_SACat (&(dest), src)
-PRIVATE char *
-Local_SACat(char **destination, const char *source) {
-  if (source && *source) {
-    if (*destination) {
-      int length = PL_strlen (*destination);
-      *destination = (char *) PR_Realloc(*destination, length + PL_strlen(source) + 1);
-      if (*destination == NULL) {
-        return(NULL);
-      }
-      PL_strcpy (*destination + length, source);
-    } else {
-      *destination = PL_strdup(source);
-    }
-  }
-  return *destination;
-}
-  
 /* Remove misleading portions from URL name */
 
 const char* empty = "empty";
@@ -818,7 +776,7 @@ si_CheckForUser(char *URLName, nsAutoString userName) {
 PRIVATE si_SignonUserStruct*
 si_GetUser(char* URLName, PRBool pickFirstUser, nsAutoString userText) {
   si_SignonURLStruct* url;
-  si_SignonUserStruct* user;
+  si_SignonUserStruct* user = nsnull;
   si_SignonDataStruct* data;
 
   /* get to node for this URL */
@@ -1243,7 +1201,7 @@ si_PutData(char * URLName, nsVoidArray * signonData, PRBool save) {
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
   si_SignonDataStruct * data2;
-  PRBool mismatch;
+  PRBool mismatch = PR_FALSE;
 
   /* discard this if the password is empty */
   PRInt32 count = signonData->Count();
@@ -1496,7 +1454,6 @@ PRIVATE PRInt32
 si_ReadLine
   (nsInputFileStream strm, nsInputFileStream strmx, nsAutoString& lineBuffer, PRBool obscure) {
 
-  int count = 0;
   lineBuffer = nsAutoString("");
 
   /* read the line */
@@ -1969,7 +1926,7 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
   } else if (passwordCount == 3) {
     /* three-password form is a change-of-password request */
 
-    si_SignonDataStruct* data;
+    si_SignonDataStruct* data = nsnull;
     si_SignonUserStruct* user;
 
     /* make sure all passwords are non-null and 2nd and 3rd are identical */
@@ -2440,7 +2397,7 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
   int signonNum = 0;
   si_SignonURLStruct *url;
   si_SignonUserStruct * user;
-  si_SignonDataStruct* data;
+  si_SignonDataStruct* data = nsnull;
 
   /* force loading of the signons file */
   si_RegisterSignonPrefCallbacks();

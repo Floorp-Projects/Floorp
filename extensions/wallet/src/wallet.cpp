@@ -581,7 +581,7 @@ wallet_GetWalletNotificationPref(void) {
   static PRBool first_time = PR_TRUE;
   if (first_time) {
     PRBool x = SI_GetBoolPref(pref_WalletNotified, PR_FALSE);
-    wallet_SetWalletNotificationPref(x);        
+    wallet_Notified = x;
   }
   return wallet_Notified;
 }
