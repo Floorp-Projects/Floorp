@@ -85,8 +85,7 @@ public:
   virtual void BeginUpdate() { }
   virtual void EndUpdate() { }
   virtual void ContentChanged(nsIContent* aContent,
-                              nsISubContent* aSubContent,
-                              PRInt32 aChangeType) { }
+                              nsISupports* aSubContent) {}
   virtual void ContentAppended(nsIContent* aContainer) { }
   virtual void ContentInserted(nsIContent* aContainer,
                                nsIContent* aChild,
