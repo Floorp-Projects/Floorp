@@ -55,6 +55,10 @@
 ## rdf
 #       Most of the rdf allocations. rdf cost from xul, chromeregistry,
 #       is assigned to xul. 
+#
+# wallet
+#       Form cache.
+#
 # xbl
 #       xbl stuff. Includes js in xbl.
 # xpcom
@@ -136,6 +140,9 @@ nsSocketTransport::
 
 <necko>
 nsCacheService::
+
+<wallet>
+WLLT
 
 <xul>
 nsXULElement::Create
