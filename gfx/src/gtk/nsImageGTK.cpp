@@ -845,6 +845,7 @@ void nsImageGTK::SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY)
   {
     // Setup gc to use the given alpha-pixmap for clipping
     XGCValues xvalues;
+    memset(&xvalues, 0, sizeof(XGCValues));
     unsigned long xvalues_mask = 0;
     xvalues.clip_x_origin = aX;
     xvalues.clip_y_origin = aY;
@@ -982,6 +983,8 @@ static void TileImage(GdkWindow *dest, GdkGC *gc, GdkWindow *src, nsRect &aSrcRe
                       PRInt16 aWidth, PRInt16 aHeight)
 {
   nsRect  destRect;
+
+  printf("  TileImage()\n");
   
   if(aSrcRect.width < aWidth) {
     // width is less than double so double our source bitmap width
@@ -1022,6 +1025,8 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   mWidth = aX1 - aX0;
   mHeight = aY1 - aY0;
 
+  printf("nsImageGTK::DrawTile((0, 0, %d, %d), %d, %d) %p\n", mWidth, mHeight, aWidth, aHeight, this);
+
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
   GdkGC *copyGC;
@@ -1032,20 +1037,21 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
   if (mAlphaBits) {
     // tile images...
-    DrawImageOffscreen(aX0, aY0, mWidth, mHeight);
+    DrawImageOffscreen(0, 0, mWidth, mHeight);
 
-    SetupGCForAlpha(copyGC, aX0, aY0);
+    SetupGCForAlpha(copyGC, 0, 0);
 
-    nsRect srcRect(aX0, aY0, mWidth, mHeight);
+    nsRect srcRect(0, 0, mWidth, mHeight);
     TileImage(drawing->GetDrawable(), copyGC, mImagePixmap, srcRect, aWidth, aHeight);
   }
 
   else {
     // XXX we should properly handle the image not being completly decoded here
     
-    DrawImageOffscreen(aX0, aY0, mWidth, mHeight);
+    DrawImageOffscreen(0, 0, mWidth, mHeight);
 
     XGCValues xvalues;
+    memset(&xvalues, 0, sizeof(XGCValues));
     unsigned long xvalues_mask = 0;
     xvalues.fill_style = FillTiled;
     xvalues.tile = GDK_WINDOW_XWINDOW(mImagePixmap);
