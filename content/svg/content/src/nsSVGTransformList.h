@@ -51,7 +51,6 @@ class nsSVGTransformList : public nsSVGValue,
                            public nsSupportsWeakReference
 {
 public:
-  static nsresult Create(const nsAString& aValue, nsISVGValue** aResult);
   static nsresult Create(nsIDOMSVGTransformList** aResult);
   
 protected:
@@ -79,9 +78,7 @@ public:
   
   // other methods:
   nsIDOMSVGTransform* ElementAt(PRInt32 index);
-  void AppendElement(nsIDOMSVGTransform* aElement);
-  void RemoveElementAt(PRInt32 index);
-  void InsertElementAt(nsIDOMSVGTransform* aElement, PRInt32 index);
+  PRBool AppendElement(nsIDOMSVGTransform* aElement);
   
 protected:
   void ReleaseTransforms();
