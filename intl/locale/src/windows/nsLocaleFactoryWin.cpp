@@ -49,32 +49,7 @@ nsLocaleWinFactory::~nsLocaleWinFactory()
 {   
 }   
 
-nsresult nsLocaleWinFactory::QueryInterface(const nsIID &aIID,   
-                                      void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  NS_ADDREF_THIS(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsLocaleWinFactory);
-NS_IMPL_RELEASE(nsLocaleWinFactory);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleWinFactory, nsIFactory)
 
 nsresult nsLocaleWinFactory::CreateInstance(nsISupports *aOuter,  
                                          const nsIID &aIID,  

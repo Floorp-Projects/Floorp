@@ -49,7 +49,7 @@ nsLocaleUnixFactory::~nsLocaleUnixFactory()
 {   
 }   
 
-NS_IMPL_ISUPPORTS(nsLocaleUnixFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleUnixFactory, nsIFactory)
 
 nsresult nsLocaleUnixFactory::CreateInstance(nsISupports *aOuter,  
                                          const nsIID &aIID,  
