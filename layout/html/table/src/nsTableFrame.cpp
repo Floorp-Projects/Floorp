@@ -3299,7 +3299,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       if (RowGroupsShouldBeConstrained()) {
         // Only applies to the tree widget.
         nscoord tableSpecifiedHeight;
-        GetTableSpecifiedHeight(tableSpecifiedHeight, kidReflowState);
+        GetTableSpecifiedHeight(tableSpecifiedHeight, aReflowState.reflowState);
         if (tableSpecifiedHeight != -1) {
           kidReflowState.availableHeight = tableSpecifiedHeight - y;
           if (kidReflowState.availableHeight < 0)
@@ -3792,7 +3792,10 @@ NS_IMETHODIMP nsTableFrame::GetTableSpecifiedHeight(nscoord& aResult, const nsHT
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   nscoord tableSpecifiedHeight=-1;
-  if (eStyleUnit_Coord == tablePosition->mHeight.GetUnit())
+  if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE &&
+      aReflowState.mComputedHeight > 0)
+      tableSpecifiedHeight = aReflowState.mComputedHeight;
+  else if (eStyleUnit_Coord == tablePosition->mHeight.GetUnit())
     tableSpecifiedHeight = tablePosition->mHeight.GetCoordValue();
   else if (eStyleUnit_Percent == tablePosition->mHeight.GetUnit())
   {
