@@ -34,6 +34,7 @@
    #ifdef TEMP_MAC_HACK
 	   #include <MacTypes.h>
 	   #include <Processes.h>
+	   #include <string.h>
 
 	   // TEMPORARY UNTIL WE HAVE MACINTOSH ENVIRONMENT VARIABLES THAT CAN TURN ON
 	   // LOGGING ON MACINTOSH
@@ -43,7 +44,9 @@
 	   #include <stdio.h>
 	 
 	   #undef PR_LOG
+	   #undef PR_LogFlush
 	   #define PR_LOG(module,level,args) dprintf args
+	   #define PR_LogFlush()
 	   static void dprintf(const char *format, ...)
 	   {
 	      va_list ap;
@@ -52,8 +55,10 @@
 	      va_start(ap, format);
 	      buffer[0] = vsnprintf((char *)buffer + 1, sizeof(buffer) - 1, format, ap);
 	      va_end(ap);
-
-		    DebugStr(buffer);
+	      if (strstr(format, "Warning: ") == format)
+	 	      printf("еее%s\n", (char*)buffer + 1);
+	 	  else
+	 	      DebugStr(buffer);
 	   }
    #endif // TEMP_MAC_HACK
    //------------------------
@@ -101,7 +106,6 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
   PR_LOG(gDebugLog, PR_LOG_ERROR,
          ("Break: at file %s, line %d", aFile, aLine));
   PR_LogFlush();
-  //XXX this works on win32 only for now. For all the other platforms call Abort
 #if defined(_WIN32)
   ::DebugBreak();
 #elif defined(XP_UNIX) && !defined(UNIX_CRASH_ON_ASSERT)
