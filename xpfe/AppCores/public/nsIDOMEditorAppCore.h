@@ -25,6 +25,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMBaseAppCore.h"
 
+class nsIDOMElement;
 class nsIDOMDocument;
 class nsIDOMSelection;
 class nsIDOMWindow;
@@ -77,6 +78,12 @@ public:
 
   NS_IMETHOD    InsertImage()=0;
 
+  NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
+
+  NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
+
+  NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)=0;
+
   NS_IMETHOD    Exit()=0;
 
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
@@ -108,6 +115,9 @@ public:
   NS_IMETHOD    InsertText(const nsString& aTextToInsert);  \
   NS_IMETHOD    InsertLink();  \
   NS_IMETHOD    InsertImage();  \
+  NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);  \
   NS_IMETHOD    Exit();  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
@@ -136,6 +146,9 @@ public:
   NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to##InsertText(aTextToInsert); }  \
   NS_IMETHOD    InsertLink() { return _to##InsertLink(); }  \
   NS_IMETHOD    InsertImage() { return _to##InsertImage(); }  \
+  NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn) { return _to##GetSelectedElement(aTagName, aReturn); }  \
+  NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn) { return _to##CreateElementWithDefaults(aTagName, aReturn); }  \
+  NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn) { return _to##InsertElement(aElement, aDeleteSelection, aReturn); }  \
   NS_IMETHOD    Exit() { return _to##Exit(); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to##SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to##SetContentWindow(aWin); }  \

@@ -54,6 +54,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsEditorMode.h"
+#include "nsIDOMSelection.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -668,7 +669,7 @@ nsEditorAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 
 #ifdef APP_DEBUG
     char* cstr = str.ToNewCString();
-    printf("Attaching to WebShellWindow[%s]\n", str.ToNewCString());
+    printf("Attaching to WebShellWindow[%s]\n", cstr);
     delete[] cstr;
 #endif
 
@@ -944,21 +945,18 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
   return err;
 }
 
-
-NS_IMETHODIMP
+NS_METHOD
 nsEditorAppCore::GetEditorDocument(nsIDOMDocument** aEditorDocument)
 {
-
-	if (mEditor)
-	{
+  if (mEditor)
+  {
 		nsCOMPtr<nsIEditor>	editor = do_QueryInterface(mEditor);
 		if (editor)
-		{
-			return editor->GetDocument(aEditorDocument);
-		}
-	}
-	
-	return NS_NOINTERFACE;
+    {
+      return editor->GetDocument(aEditorDocument);
+    }
+  }
+  return NS_NOINTERFACE;
 }
 
 NS_IMETHODIMP
@@ -1000,7 +998,6 @@ nsEditorAppCore::InsertLink()
 
   return err;
 }
-
 // Pop up the image dialog once we have dialogs ...  for now, hardwire it
 NS_IMETHODIMP
 nsEditorAppCore::InsertImage()
@@ -1032,6 +1029,78 @@ nsEditorAppCore::InsertImage()
   return err;
 }
 
+NS_IMETHODIMP
+nsEditorAppCore::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)
+{
+  if (!aReturn)
+    return NS_ERROR_NULL_POINTER;
+
+	nsresult	err = NS_NOINTERFACE;
+ 	switch (mEditorType)
+	{
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					return htmlEditor->GetSelectedElement(aTagName, aReturn);
+			}
+			break;
+		case ePlainTextEditorType:
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)
+{
+  if (!aReturn)
+    return NS_ERROR_NULL_POINTER;
+
+	nsresult	err = NS_NOINTERFACE;
+ 	switch (mEditorType)
+	{
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					return htmlEditor->CreateElementWithDefaults(aTagName, aReturn);
+			}
+			break;
+		case ePlainTextEditorType:
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+
+NS_IMETHODIMP
+nsEditorAppCore::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)
+{
+  if (!aElement || !aReturn)
+    return NS_ERROR_NULL_POINTER;
+
+	nsresult	err = NS_NOINTERFACE;
+ 	switch (mEditorType)
+	{
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->InsertElement(aElement, aDeleteSelection, aReturn);
+			}
+			break;
+		case ePlainTextEditorType:
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
 
 NS_IMETHODIMP
 nsEditorAppCore::BeginBatchChanges()
@@ -1356,7 +1425,7 @@ nsEditorAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScr
 
 #ifdef APP_DEBUG
     char* script_str = aScript.ToNewCString();
-    printf("Executing [%s]\n", aScript.ToNewCString());
+    printf("Executing [%s]\n", script_str);
     delete[] script_str;
 #endif
 

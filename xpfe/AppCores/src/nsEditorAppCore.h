@@ -60,6 +60,10 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)  { return nsBaseAppCore::SetDocumentCharset(aCharset); } 
 
+    NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument);
+    NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
+    NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
+    NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);
 	  NS_IMETHOD    SetEditorType(const nsString& aEditorType);
 		NS_IMETHOD    SetTextProperty(const nsString& aProp, 
                                   const nsString& aAttr, 
@@ -71,7 +75,6 @@ class nsEditorAppCore : public nsBaseAppCore,
                                   PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas);
 		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
 		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
-		NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument);
 		NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);
 
     NS_IMETHOD    Undo();
@@ -95,9 +98,10 @@ class nsEditorAppCore : public nsBaseAppCore,
 
     NS_IMETHOD		InsertText(const nsString& textToInsert);
 
+    // These next two will be replaced with the SetElementProperties
     NS_IMETHOD		InsertLink();
     NS_IMETHOD		InsertImage();
-    
+
 	  NS_IMETHOD    BeginBatchChanges();
 	  NS_IMETHOD    EndBatchChanges();
 
