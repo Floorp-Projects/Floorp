@@ -956,6 +956,11 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "buildconfig",
       nsAboutRedirector::Create
     },
+    { "about:about",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "about",
+      nsAboutRedirector::Create
+    },
 
     { "about:cache", 
       NS_ABOUT_CACHE_MODULE_CID,

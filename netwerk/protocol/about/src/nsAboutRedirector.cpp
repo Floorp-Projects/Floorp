@@ -57,7 +57,6 @@ struct RedirEntry {
     PRBool dropChromePrivs; // if PR_TRUE, the page will not have chrome privileges
 };
 
-// if you add something here, make sure you update the total
 /*
   Entries with dropChromePrivs == PR_FALSE will run with chrome
   privileges. This is potentially dangerous. Please use PR_TRUE
@@ -72,6 +71,7 @@ static RedirEntry kRedirMap[] = {
     { "config", "chrome://global/content/config.xul", PR_FALSE },
     { "logo", "chrome://global/content/logo.gif", PR_TRUE },
     { "buildconfig", "chrome://global/content/buildconfig.html", PR_TRUE },
+    { "about", "chrome://global/content/aboutAbout.html", PR_FALSE }
 };
 static const int kRedirTotal = sizeof(kRedirMap)/sizeof(*kRedirMap);
 
