@@ -472,7 +472,7 @@ case "$target" in
     dnl -pedantic doesn't play well with BSDI's _very_ modified gcc (shlicc2)
     _PEDANTIC=
     _IGNORE_LONG_LONG_WARNINGS=
-    case `uname -r` in
+    case $OS_RELEASE in
 	4.*) ;;
 	*)
 	    DSO_CFLAGS=''
@@ -609,7 +609,7 @@ case "$target" in
     # At least for 1.3 and up, ld supports this, despite the test failing above.
     MKSHLIB_FORCE_ALL='--whole-archive'
     MKSHLIB_UNFORCE_ALL='--no-whole-archive'
-    case `uname -m` in
+    case $OS_TEST in
 	*86)
 		MKSHLIB='$(LD) $(DSO_LDOPTS)'
 		MKCSHLIB='$(LD) $(DSO_LDOPTS)'
@@ -739,7 +739,7 @@ dnl the qsort routine under solaris is faulty
        AS='/usr/ccs/bin/as'
        AS_DASH_C_FLAG=''
        NS_USE_NATIVE=1
-       case `uname -m` in
+       case $OS_TEST in
          sun4u)
            ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
            AC_DEFINE(ULTRA_SPARC)
@@ -763,6 +763,10 @@ dnl the qsort routine under solaris is faulty
        DSO_LDOPTS='-G -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
+       if test "$OS_RELEASE" = "5.3"; then
+	  dnl So jmorecfg.h won't redefine boolean.
+	  AC_DEFINE(HAVE_BOOLEAN)
+       fi
     fi
     ;;
 
