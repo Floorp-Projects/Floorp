@@ -409,31 +409,55 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 
 extern struct PRThread * _MD_CURRENT_THREAD(void);
 
-#ifdef _PR_USE_STATIC_TLS
+extern BOOL _pr_use_static_tls;
+
 extern __declspec(thread) struct PRThread *_pr_currentThread;
-#define _MD_GET_ATTACHED_THREAD() _pr_currentThread
-#define _MD_SET_CURRENT_THREAD(_thread) (_pr_currentThread = (_thread))
+extern DWORD _pr_currentThreadIndex;
+
+#define _MD_GET_ATTACHED_THREAD() \
+    (_pr_use_static_tls ? _pr_currentThread \
+    : (PRThread *) TlsGetValue(_pr_currentThreadIndex))
+
+#define _MD_SET_CURRENT_THREAD(_thread) \
+    PR_BEGIN_MACRO \
+        if (_pr_use_static_tls) { \
+            _pr_currentThread = (_thread); \
+        } else { \
+            TlsSetValue(_pr_currentThreadIndex, (_thread)); \
+        } \
+    PR_END_MACRO
 
 extern __declspec(thread) struct PRThread *_pr_thread_last_run;
-#define _MD_LAST_THREAD() _pr_thread_last_run
-#define _MD_SET_LAST_THREAD(_thread) (_pr_thread_last_run = 0)
+extern DWORD _pr_lastThreadIndex;
+
+#define _MD_LAST_THREAD() \
+    (_pr_use_static_tls ? _pr_thread_last_run \
+    : (PRThread *) TlsGetValue(_pr_lastThreadIndex))
+
+#define _MD_SET_LAST_THREAD(_thread) \
+    PR_BEGIN_MACRO \
+        if (_pr_use_static_tls) { \
+            _pr_thread_last_run = 0; \
+        } else { \
+            TlsSetValue(_pr_lastThreadIndex, 0); \
+        } \
+    PR_END_MACRO
 
 extern __declspec(thread) struct _PRCPU *_pr_currentCPU;
-#define _MD_CURRENT_CPU() _pr_currentCPU
-#define _MD_SET_CURRENT_CPU(_cpu) (_pr_currentCPU = 0)
-#else /* _PR_USE_STATIC_TLS */
-extern DWORD _pr_currentThreadIndex;
-#define _MD_GET_ATTACHED_THREAD() ((PRThread *) TlsGetValue(_pr_currentThreadIndex))
-#define _MD_SET_CURRENT_THREAD(_thread) TlsSetValue(_pr_currentThreadIndex, (_thread))
-
-extern DWORD _pr_lastThreadIndex;
-#define _MD_LAST_THREAD() ((PRThread *) TlsGetValue(_pr_lastThreadIndex))
-#define _MD_SET_LAST_THREAD(_thread) TlsSetValue(_pr_lastThreadIndex, 0)
-
 extern DWORD _pr_currentCPUIndex;
-#define _MD_CURRENT_CPU() ((struct _PRCPU *) TlsGetValue(_pr_currentCPUIndex))
-#define _MD_SET_CURRENT_CPU(_cpu) TlsSetValue(_pr_currentCPUIndex, 0)
-#endif /* _PR_USE_STATIC_TLS */
+
+#define _MD_CURRENT_CPU() \
+    (_pr_use_static_tls ? _pr_currentCPU \
+    : (struct _PRCPU *) TlsGetValue(_pr_currentCPUIndex))
+
+#define _MD_SET_CURRENT_CPU(_cpu) \
+    PR_BEGIN_MACRO \
+        if (_pr_use_static_tls) { \
+            _pr_currentCPU = 0; \
+        } else { \
+            TlsSetValue(_pr_currentCPUIndex, 0); \
+        } \
+    PR_END_MACRO
 
 /* --- Scheduler stuff --- */
 #define LOCK_SCHEDULER()                 0
