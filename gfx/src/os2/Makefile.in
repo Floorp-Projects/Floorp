@@ -75,10 +75,14 @@ OS_LIBS		+= $(NSPR_LIBS)
 # I guess eventually we ought to use an xml dialog...
 # XXX Have to copy files because rc is too stupid for an objdir build
 
-MOZ_POST_DSO_LIB_COMMAND = rc $(RES_FILE)
+MOZ_POST_DSO_LIB_COMMAND = rc -n -x2 $(RES_FILE)
 
 $(SHARED_LIBRARY): $(OBJS) $(RES_FILE)
 
 $(RES_FILE): $(srcdir)/libprint.rc
-	rc -r -I $(srcdir) $(srcdir)/libprint.rc
+ifneq ($(DEPTH),$(topsrcdir))
+	cp $(srcdir)/libprint.ico ./libprint.ico
+	cp $(srcdir)/libprres.h ./libprres.h
+endif
+	rc -n -x2 -r $(srcdir)/libprint.rc
 
