@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.7 2000/07/28 22:49:42 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.8 2000/07/30 06:35:38 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -448,6 +448,35 @@ mp_err mpl_get_bit(mp_int *a, mp_size bitNum)
   bit   = bitNum % MP_DIGIT_BIT;
   rv = (mp_err)(MP_DIGIT(a, ix) >> bit) & 1;
   return rv;
+}
+
+/*
+  mpl_get_bits
+  - Extracts numBits bits from a, where the least significant extracted bit
+  is bit lsbNum.  Returns a negative value if error occurs.
+  - Because sign bit is used to indicate error, maximum number of bits to 
+  be returned is the lesser of (a) the number of bits in an mp_digit, or
+  (b) one less than the number of bits in an mp_err.
+  - lsbNum + numbits can be greater than the number of significant bits in
+  integer a, as long as bit lsbNum is in the high order digit of a.
+ */
+mp_err mpl_get_bits(mp_int *a, mp_size lsbNum, mp_size numBits) 
+{
+  mp_size    rshift = (lsbNum % MP_DIGIT_BIT);
+  mp_size    lsWndx = (lsbNum / MP_DIGIT_BIT);
+  mp_digit * digit  = MP_DIGITS(a) + lsWndx;
+  mp_digit   mask   = ((1 << numBits) - 1);
+
+  ARGCHK(numBits < CHAR_BIT * sizeof mask, MP_BADARG);
+  ARGCHK(((lsbNum + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT) <= MP_USED(a), MP_RANGE);
+
+  if ((numBits + lsbNum % MP_DIGIT_BIT <= MP_DIGIT_BIT) ||
+      (lsWndx + 1 >= MP_USED(a))) {
+    mask &= (digit[0] >> rshift);
+  } else {
+    mask &= ((digit[0] >> rshift) | (digit[1] << (MP_DIGIT_BIT - rshift)));
+  }
+  return (mp_err)mask;
 }
 
 /*
