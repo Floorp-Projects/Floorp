@@ -59,6 +59,7 @@
 #ifdef XP_MAC
 #include "nsILocalFileMac.h"
 #include "nsIInternetConfigService.h"
+#include "nsDecodeAppleFile.h"
 #endif // XP_MAC
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -757,7 +758,21 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     rv = fileChannel->Init(mTempFile, -1, 0);
     if (NS_FAILED(rv)) return rv; 
     rv = fileChannel->OpenOutputStream(getter_AddRefs(mOutStream));
-    if (NS_FAILED(rv)) return rv; 
+    if (NS_FAILED(rv)) return rv;
+#ifdef XP_MAC
+    nsXPIDLCString contentType;
+    mMimeInfo->GetMIMEType(getter_Copies(contentType));
+    if (contentType && !nsCRT::strcasecmp(contentType, APPLICATION_APPLEFILE))
+    {
+      nsCOMPtr<nsIOutputStream> appleFileDecoder;
+      NS_NEWXPCOM(appleFileDecoder, nsAppleFileDecoder);
+      if (appleFileDecoder)
+      {
+        NS_STATIC_CAST(nsAppleFileDecoder*, NS_STATIC_CAST(nsIOutputStream*, appleFileDecoder))->Initialize(mOutStream, mTempFile);
+        mOutStream = appleFileDecoder;
+      }
+    }
+#endif
   }
 
   return rv;
@@ -772,6 +787,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
     return aChannel->Cancel(NS_BINDING_ABORTED);
 
   nsresult rv = SetUpTempFile(aChannel);
+  
+  
   // retarget all load notifcations to our docloader instead of the original window's docloader...
   RetargetLoadNotifications(aChannel);
   // ignore failure...
