@@ -24,12 +24,12 @@
 
 #include "nsIBoxObject.idl"
 
-interface nsIWebBrowser;
+interface nsIDocShell;
 
 [scriptable, uuid(F2504C26-7CF5-426a-86A7-E50998AC57C1)]
 interface nsIBrowserBoxObject : nsISupports
 {
-  readonly attribute nsIWebBrowser webBrowser;
+  readonly attribute nsIDocShell docShell;
 };
 
 %{C++

@@ -26,7 +26,7 @@
 #include "nsBoxObject.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
-#include "nsIWebBrowser.h"
+#include "nsIDocShell.h"
 
 class nsBrowserBoxObject : public nsIBrowserBoxObject, public nsBoxObject
 {
@@ -70,7 +70,7 @@ nsBrowserBoxObject::~nsBrowserBoxObject()
 }
 
 /* void openBrowser (in boolean openFlag); */
-NS_IMETHODIMP nsBrowserBoxObject::GetWebBrowser(nsIWebBrowser** aResult)
+NS_IMETHODIMP nsBrowserBoxObject::GetDocShell(nsIDocShell** aResult)
 {
   *aResult = nsnull;
   if (!mPresShell)
