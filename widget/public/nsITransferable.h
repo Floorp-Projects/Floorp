@@ -101,11 +101,10 @@ class nsITransferable : public nsISupports {
     NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor) = 0;
 
   /**
-    * Returns whether the data is large
+    * Returns PR_TRUE if the data is large.
     *
-    * @return NS_OK is data set is larg, NS_ERROR_FAILURE if data set is small
     */
-    NS_IMETHOD IsLargeDataSet() = 0;
+    NS_IMETHOD_(PRBool) IsLargeDataSet() = 0;
 
   /**
     * Sets the converter for this transferable

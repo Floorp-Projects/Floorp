@@ -56,7 +56,7 @@ public:
   NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen);
 
   NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor);
-  NS_IMETHOD IsLargeDataSet();
+  NS_IMETHOD_(PRBool) IsLargeDataSet();
 
   NS_IMETHOD SetConverter(nsIFormatConverter * aConverter);
   NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter);
