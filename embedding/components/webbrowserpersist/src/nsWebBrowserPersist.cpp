@@ -1013,7 +1013,7 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 
 #ifdef  XP_MAC
         // Set appropriate Mac file type/creator for this mime type
-        nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(aFile));
+        nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(localFile));
         if (macFile)
         {
             macFile->SetFileTypeAndCreatorFromMIMEType(contentType.get());
