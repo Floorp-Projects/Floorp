@@ -57,3 +57,16 @@ menu ul, menu dir, menu menu, menu ol,
 ol ul, ol dir, ol menu, ol ol {
   list-style-position: inherit;
 }
+
+/* Ensure that we get proper padding if the very first node
+   beneath an <li> is another <ul>. This is an ugly way to
+   fix the problem, because it extends the <li> up into
+   what would otherwise appear to be the <ul>'s space. */
+li > ul:first-node {
+  padding-top: 1em;
+}
+
+li > ol:first-node {
+  padding-top: 1em;
+}
+
