@@ -71,42 +71,42 @@ DIV {
 }
 H1 {
   display: block;
-  font-size: x-large;
+  font-size: xx-large;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
 H2 {
   display: block;
-  font-size: large;
+  font-size: x-large;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
 H3 {
   display: block;
-  font-size: medium;
+  font-size: large;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
 H4 {
   display: block;
-  font-size: small;
+  font-size: medium;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
 H5 {
   display: block;
-  font-size: x-small;
+  font-size: small;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
 H6 {
   display: block;
-  font-size: xx-small;
+  font-size: x-small;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
@@ -118,7 +118,7 @@ LAYER {
 LISTING {
   display: block;
   font-family: monospace;
-  font-size: small;
+  font-size: medium;
   white-space: pre;
   margin-bottom: auto;
   margin-top: auto;
@@ -140,7 +140,7 @@ MULTICOL {
 
 TABLE {
   display: table;
-  border-style: outset;
+//  border-style: outset;
   border-color: #C0C0C0;
   cell-spacing: 2px;
   cell-padding: 2px;
@@ -150,7 +150,7 @@ TABLE {
 TD, TH {
   vertical-align: middle;
   text-align: left;
-  border-style: inset;
+//  border-style: inset;
   border-color: #C0C0C0;
   line-height: 1.1;
   display: table-cell;
