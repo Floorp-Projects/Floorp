@@ -251,7 +251,15 @@ endif
 ifneq ($(OS_ARCH),OS2)
 # special rule for jsmath.o since we want to incrementally link
 # against fdlibm to pull in only what is needed
-jsmath.o: $(FDLIBM_LIBRARY) $(JSMATH_PRELINK)
+# Do this in a single step to avoid dependency problems
+jsmath.o: jsmath.c $(FDLIBM_LIBRARY) Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS)
+ifeq ($(OS_ARCH),WINNT)
+	$(ELOG) $(CC) -Fo$(JSMATH_PRELINK) -c $(CFLAGS) $<
+else
+	$(ELOG) $(CC) -o $(JSMATH_PRELINK) -c $(COMPILE_CFLAGS) $<
+endif
 ifeq ($(OS_ARCH),QNX)
 ifneq ($(OS_TARGET),NTO)
 	@cp $(JSMATH_PRELINK) $@
@@ -261,22 +269,16 @@ endif
 else
 	$(LD) $(DASH_R) -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
 endif
-
-$(JSMATH_PRELINK): jsmath.c
-ifeq ($(OS_ARCH),WINNT)
-	$(CC) -Fo$@ -c $(CFLAGS) $<
-else
-	$(CC) -o $@ -c $(COMPILE_CFLAGS) $<
-endif
+	@$(RM) -f $(JSMATH_PRELINK)
 else
 # Create dependency so we build fdlibm
-jsmath.o: $(FDLIBM_LIBRARY)
+jsmath.o: $(FDLIBM_LIBRARY) Makefile.in
 endif
 
 # An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.
 ifeq ($(OS_ARCH),AIX)
-jsdtoa.o: jsdtoa.c
+jsdtoa.o: jsdtoa.c Makefile.in
 	$(CC) -o $@ -c $(filter-out -O, $(COMPILE_CFLAGS)) $<
 endif
 
@@ -300,14 +302,14 @@ endif
 ifeq ($(OS_ARCH),QNX)
 ifneq ($(OS_TARGET),NTO)
 # QNX's compiler apparently can't build a binary directly from a source file.
-jscpucfg.o: jscpucfg.c
+jscpucfg.o: jscpucfg.c Makefile.in
 	$(HOST_CC) $(HOST_CFLAGS) -c $(DEFINES) $(NSPR_CFLAGS) -o $@ $<
 
 jscpucfg: jscpucfg.o
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) -o $@ $<
 endif
 else
-jscpucfg$(BIN_SUFFIX): jscpucfg.c
+jscpucfg$(BIN_SUFFIX): jscpucfg.c Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) /Fe$@ $<
 else
