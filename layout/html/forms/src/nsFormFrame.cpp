@@ -506,7 +506,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
     // gets the name of the radio group and the group
     nsRadioControlGroup * group;
     nsAutoString name;
-    nsresult rv = GetRadioInfo(&aFrame, name, group);
+    rv = GetRadioInfo(&aFrame, name, group);
     if (NS_SUCCEEDED(rv) && nsnull != group) {
       group->AddRadio(radioFrame);
     } else {
