@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.3 $ $Date: 2001/01/05 01:38:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: bfind.c,v $ $Revision: 1.1 $ $Date: 2002/02/08 00:10:02 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -67,9 +67,13 @@ builtins_mdFindObjects_Final
 )
 {
   struct builtinsFOStr *fo = (struct builtinsFOStr *)mdFindObjects->etc;
+  NSSArena *arena = fo->arena;
 
   nss_ZFreeIf(fo->objs);
   nss_ZFreeIf(fo);
+  if ((NSSArena *)NULL != arena) {
+    NSSArena_Destroy(arena);
+  }
 
   return;
 }
@@ -175,7 +179,7 @@ nss_builtins_FindObjectsInit
   builtinsInternalObject **temp = (builtinsInternalObject **)NULL;
   PRUint32 i;
 
-  arena = NSSCKFWSession_GetArena(fwSession, pError);
+  arena = NSSArena_Create();
   if( (NSSArena *)NULL == arena ) {
     goto loser;
   }

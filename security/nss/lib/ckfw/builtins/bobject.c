@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.2 $ $Date: 2001/01/05 01:38:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: bobject.c,v $ $Revision: 1.1 $ $Date: 2002/02/08 00:10:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "builtins.h"
@@ -216,7 +216,7 @@ builtins_mdObject_GetObjectSize
   return rv;
 }
 
-static NSSCKMDObject
+static const NSSCKMDObject
 builtins_prototype_mdObject = {
   (void *)NULL, /* etc */
   NULL, /* Finalize */
@@ -239,16 +239,11 @@ nss_builtins_CreateMDObject
   CK_RV *pError
 )
 {
-  NSSCKMDObject *rv;
-
-  rv = nss_ZNEW(arena, NSSCKMDObject);
-  if( (NSSCKMDObject *)NULL == rv ) {
-    *pError = CKR_HOST_MEMORY;
-    return (NSSCKMDObject *)NULL;
+  if ( (void*)NULL == io->mdObject.etc) {
+    (void) nsslibc_memcpy(&io->mdObject,&builtins_prototype_mdObject,
+					sizeof(builtins_prototype_mdObject));
+    io->mdObject.etc = (void *)io;
   }
 
-  *rv = builtins_prototype_mdObject;
-  rv->etc = (void *)io;
-
-  return rv;
+  return &io->mdObject;
 }

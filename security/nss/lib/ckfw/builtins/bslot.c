@@ -32,46 +32,36 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: bslot.c,v $ $Revision: 1.1 $ $Date: 2002/02/08 00:10:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "builtins.h"
 
 /*
- * builtins/instance.c
+ * builtins/slot.c
  *
- * This file implements the NSSCKMDInstance object for the 
+ * This file implements the NSSCKMDSlot object for the
  * "builtin objects" cryptoki module.
  */
 
-/*
- * NSSCKMDInstance methods
- */
-
-static CK_ULONG
-builtins_mdInstance_GetNSlots
+static NSSUTF8 *
+builtins_mdSlot_GetSlotDescription
 (
+  NSSCKMDSlot *mdSlot,
+  NSSCKFWSlot *fwSlot,
   NSSCKMDInstance *mdInstance,
   NSSCKFWInstance *fwInstance,
   CK_RV *pError
 )
 {
-  return (CK_ULONG)1;
-}
-
-static CK_VERSION
-builtins_mdInstance_GetCryptokiVersion
-(
-  NSSCKMDInstance *mdInstance,
-  NSSCKFWInstance *fwInstance
-)
-{
-  return nss_builtins_CryptokiVersion;
+  return (NSSUTF8 *)nss_builtins_SlotDescription;
 }
 
 static NSSUTF8 *
-builtins_mdInstance_GetManufacturerID
+builtins_mdSlot_GetManufacturerID
 (
+  NSSCKMDSlot *mdSlot,
+  NSSCKFWSlot *fwSlot,
   NSSCKMDInstance *mdInstance,
   NSSCKFWInstance *fwInstance,
   CK_RV *pError
@@ -80,51 +70,55 @@ builtins_mdInstance_GetManufacturerID
   return (NSSUTF8 *)nss_builtins_ManufacturerID;
 }
 
-static NSSUTF8 *
-builtins_mdInstance_GetLibraryDescription
+static CK_VERSION
+builtins_mdSlot_GetHardwareVersion
 (
+  NSSCKMDSlot *mdSlot,
+  NSSCKFWSlot *fwSlot,
+  NSSCKMDInstance *mdInstance,
+  NSSCKFWInstance *fwInstance
+)
+{
+  return nss_builtins_HardwareVersion;
+}
+
+static CK_VERSION
+builtins_mdSlot_GetFirmwareVersion
+(
+  NSSCKMDSlot *mdSlot,
+  NSSCKFWSlot *fwSlot,
+  NSSCKMDInstance *mdInstance,
+  NSSCKFWInstance *fwInstance
+)
+{
+  return nss_builtins_FirmwareVersion;
+}
+
+static NSSCKMDToken *
+builtins_mdSlot_GetToken
+(
+  NSSCKMDSlot *mdSlot,
+  NSSCKFWSlot *fwSlot,
   NSSCKMDInstance *mdInstance,
   NSSCKFWInstance *fwInstance,
   CK_RV *pError
 )
 {
-  return (NSSUTF8 *)nss_builtins_LibraryDescription;
+  return (NSSCKMDToken *)&nss_builtins_mdToken;
 }
 
-static CK_VERSION
-builtins_mdInstance_GetLibraryVersion
-(
-  NSSCKMDInstance *mdInstance,
-  NSSCKFWInstance *fwInstance
-)
-{
-  return nss_builtins_LibraryVersion;
-}
-
-static CK_RV
-builtins_mdInstance_GetSlots
-(
-  NSSCKMDInstance *mdInstance,
-  NSSCKFWInstance *fwInstance,
-  NSSCKMDSlot *slots[]
-)
-{
-  slots[0] = (NSSCKMDSlot *)&nss_builtins_mdSlot;
-  return CKR_OK;
-}
-
-NSS_IMPLEMENT_DATA const NSSCKMDInstance
-nss_builtins_mdInstance = {
+NSS_IMPLEMENT_DATA const NSSCKMDSlot
+nss_builtins_mdSlot = {
   (void *)NULL, /* etc */
   NULL, /* Initialize */
-  NULL, /* Finalize */
-  builtins_mdInstance_GetNSlots,
-  builtins_mdInstance_GetCryptokiVersion,
-  builtins_mdInstance_GetManufacturerID,
-  builtins_mdInstance_GetLibraryDescription,
-  builtins_mdInstance_GetLibraryVersion,
-  NULL, /* ModuleHandlesSessionObjects -- defaults to false */
-  builtins_mdInstance_GetSlots,
-  NULL, /* WaitForSlotEvent */
+  NULL, /* Destroy */
+  builtins_mdSlot_GetSlotDescription,
+  builtins_mdSlot_GetManufacturerID,
+  NULL, /* GetTokenPresent -- defaults to true */
+  NULL, /* GetRemovableDevice -- defaults to false */
+  NULL, /* GetHardwareSlot -- defaults to false */
+  builtins_mdSlot_GetHardwareVersion,
+  builtins_mdSlot_GetFirmwareVersion,
+  builtins_mdSlot_GetToken,
   (void *)NULL /* null terminator */
 };

@@ -31,7 +31,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.6 $ $Date: 2000/09/06 22:23:59 $ $Name:  $';
+my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.7 $ $Date: 2002/02/08 00:10:06 $ $Name:  $';
 use strict;
 
 my %constants;
@@ -259,7 +259,7 @@ for( $i = 0; $i <= $count; $i++ ) {
   }
 }
 
-print CFILE "\nPR_IMPLEMENT_DATA(const builtinsInternalObject)\n";
+print CFILE "\nPR_IMPLEMENT_DATA(builtinsInternalObject)\n";
 print CFILE "nss_builtins_data[] = {\n";
 
 for( $i = 0; $i <= $count; $i++ ) {
@@ -268,7 +268,7 @@ for( $i = 0; $i <= $count; $i++ ) {
     print CFILE "#ifdef DEBUG\n";
   }
 
-  print CFILE "  { $objsize[$i], nss_builtins_types_$i, nss_builtins_items_$i }";
+  print CFILE "  { $objsize[$i], nss_builtins_types_$i, nss_builtins_items_$i, {NULL} }";
 
   if( $i == $count ) {
     print CFILE "\n";

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char BUILTINS_CVS_ID[] = "@(#) $RCSfile: builtins.h,v $ $Revision: 1.2 $ $Date: 2001/01/05 01:38:06 $ $Name:  $";
+static const char BUILTINS_CVS_ID[] = "@(#) $RCSfile: builtins.h,v $ $Revision: 1.3 $ $Date: 2002/02/08 00:10:05 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "nssckmdt.h"
@@ -57,10 +57,11 @@ struct builtinsInternalObjectStr {
   CK_ULONG n;
   const CK_ATTRIBUTE_TYPE *types;
   const NSSItem *items;
+  NSSCKMDObject mdObject;
 };
 typedef struct builtinsInternalObjectStr builtinsInternalObject;
 
-NSS_EXTERN_DATA const builtinsInternalObject nss_builtins_data[];
+NSS_EXTERN_DATA builtinsInternalObject nss_builtins_data[];
 NSS_EXTERN_DATA const PRUint32               nss_builtins_nObjects;
 
 NSS_EXTERN_DATA const CK_VERSION   nss_builtins_CryptokiVersion;
