@@ -28,7 +28,6 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsIIOService.h"
-#include "nsUnixColorPrintf.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
