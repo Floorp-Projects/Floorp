@@ -839,7 +839,7 @@ sub do_rdf {
     for my $buildname (sort(keys %build)) {
         if ($build{$buildname} eq 'busted') {
             $image = "channelflames.gif";
-            my $imagetitle = "Bad";
+            $imagetitle = "Bad";
             last;
         }
     }
