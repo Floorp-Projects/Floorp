@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.61 $ ';
+$Version = '$Revision: 1.62 $ ';
 
 
 sub PrintUsage {
@@ -273,8 +273,10 @@ sub BuildIt {
 		# first time around, you get two dialogs, which sets this pref:
 		#   user_pref("security.principal.X0", "[Codebase http://www.mozilla.org/quality/mailnews/APITest.html] UniversalBrowserRead=1 UniversalXPConnect=1");
 		#
-
-		if ($BuildStatus == 0 and $MailNewsTest) {
+                
+                # XXX MailNewsTest will not work for clobber builds because they
+                # trash the dist directory every time (where the pref is set)
+		if ($BuildStatus == 0 and $MailNewsTest and $BuildDepend) {
 		  $BuildStatusStr = 'success';
 		  print LOG "Running MailNewsTest ...\n";
           print "Running MailNewsTest ...\n";
