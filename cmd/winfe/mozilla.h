@@ -424,9 +424,6 @@ public:
 	BOOL m_bSynchronizing;  //Are we currently synchronizing
 #endif /* MOZ_OFFLINE */
 
-    BOOL m_bAnon;
-    BOOL m_bReceipt;
-
     // preference type stuff
     int    m_nConfig;
     int    m_iNumTypesInINIFile;
@@ -650,4 +647,3 @@ extern CNetscapeFontModule    theGlobalNSFont;
 #endif
 
 #endif
-

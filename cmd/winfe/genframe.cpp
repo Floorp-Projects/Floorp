@@ -2236,39 +2236,28 @@ void CGenericFrame::OnShowBookmarkWindow()
 
 void CGenericFrame::OnTogglePrivacyAnonymous()
 {
-    if (theApp.m_bAnon) {
-	NET_UnanonymizeCookies();
-	theApp.m_bAnon = FALSE;
-    } else {
-	NET_AnonymizeCookies();
-	theApp.m_bAnon = TRUE;
-    }
+    PRVCY_ToggleAnonymous();
 }
 
 void CGenericFrame::OnUpdatePrivacyAnonymous(CCmdUI* pCmdUI)
 {
-//  if( pCmdUI->m_pMenu ){
-//      pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_PRIVACY_ANONYMOUS),
-//          CASTUINT(MF_BYCOMMAND | MF_STRING),
-//          CASTUINT(ID_PRIVACY_ANONYMOUS),
-//          szLoadString(CASTUINT(theApp.m_bAnon ?
-//              IDS_PRIVACY_LEAVE_ANONYMOUS : IDS_PRIVACY_ENTER_ANONYMOUS)) );
-//  } else {
-	pCmdUI->SetCheck(theApp.m_bAnon);
-//  }
+    pCmdUI->SetCheck(PRVCY_IsAnonymous());
 }
 
 void CGenericFrame::OnTogglePrivacyReceipt()
 {
+#ifdef TRANSACTION_RECEIPTS
     if (theApp.m_bReceipt) {
 	theApp.m_bReceipt = FALSE;
     } else {
 	theApp.m_bReceipt = TRUE;
     }
+#endif
 }
 
 void CGenericFrame::OnUpdatePrivacyReceipt(CCmdUI* pCmdUI)
 {
+#ifdef TRANSACTION_RECEIPTS
     if( pCmdUI->m_pMenu ){
 	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_PRIVACY_RECEIPT),
 	    CASTUINT(MF_BYCOMMAND | MF_STRING),
@@ -2278,6 +2267,7 @@ void CGenericFrame::OnUpdatePrivacyReceipt(CCmdUI* pCmdUI)
     } else {
 	pCmdUI->SetCheck(theApp.m_bReceipt);
     }
+#endif
 }
 
 void CGenericFrame::OnDisplayPrivacyPolicy()
