@@ -21,11 +21,13 @@
 
 DEPTH=..\..\..
 
-include <$(DEPTH)\config\config.mak>
-
-MODULE=xpcom_nativeapp
+MODULE=xpcom
+REQUIRES=string
+XPIDL_MODULE=xpcom_nativeapp
 LIBRARY_NAME=nativapp
 MODULE_NAME=nsCNativeAppModule
+
+include <$(DEPTH)\config\config.mak>
 
 XPIDLSRCS=						\
 		.\nsCNativeApp.idl	\

@@ -23,6 +23,7 @@ DEPTH=..\..\..
 
 
 LIBRARY_NAME=xpcomproxy_s
+REQUIRES	= string
 
 LINCS =                        \
     -I$(PUBLIC)\xpcom	       \

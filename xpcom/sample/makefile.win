@@ -21,6 +21,7 @@
 
 DEPTH=..\..
 MODULE=sample
+REQUIRES=xpcom
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=$(MODULE)

@@ -22,7 +22,8 @@
 
 
 DEPTH=..\..
-MODULE = xpcom_threads
+MODULE = xpcom
+REQUIRES	= string
 
 ################################################################################
 ## exports
