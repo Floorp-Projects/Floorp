@@ -199,6 +199,7 @@ typedef PRUnichar chartype;
 		static	PRBool					mSelfTested;
 };
 
+ostream& operator<<(ostream& os,nsString& aString);
 extern NS_BASE int fputs(const nsString& aString, FILE* out);
 
 //----------------------------------------------------------------------
@@ -235,6 +236,8 @@ protected:
 
   PRUnichar mBuf[32];
 };
+
+ostream& operator<<(ostream& os,nsAutoString& aString);
 
 #endif
 
