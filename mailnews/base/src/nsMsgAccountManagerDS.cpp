@@ -104,8 +104,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Account);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Server);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Identity);
 
-nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
-    nsMsgRDFDataSource::nsMsgRDFDataSource()
+nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
 {
   fprintf(stderr, "nsMsgAccountManagerDataSource() being created\n");
 }
