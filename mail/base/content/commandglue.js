@@ -820,6 +820,7 @@ function FolderPaneSelectionChange()
         }
         else
         {
+            OnLeavingFolder(gPrevSelectedFolder);  // mark all read in last folder
             var sortType = 0;
             var sortOrder = 0;
             var viewFlags = 0;
@@ -1147,6 +1148,19 @@ function CreateGroupedSearchTerms(searchTermsArray)
     searchTermsArrayForQS.AppendElement(searchTermForQS);
   }
   return searchTermsArrayForQS;
+}
+
+function OnLeavingFolder(aFolder)
+{
+  try
+  {
+    if (gPrefBranch.getBoolPref("mailnews.mark_message_read." + aFolder.server.type))
+    {
+      // mark all messages of aFolder as read
+      goDoCommand('cmd_markAllRead');
+    }
+  }
+  catch(e){/* ignore */}
 }
 
 var gViewDebug = false;

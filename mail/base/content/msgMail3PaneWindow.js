@@ -827,6 +827,7 @@ function delayedOnLoadMessenger()
 
 function OnUnloadMessenger()
 {
+  OnLeavingFolder(gMsgFolderSelected);  // mark all read in current folder
   accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
   pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pref.removeObserver("mail.pane_config.dynamic", MailPrefObserver);

@@ -745,6 +745,7 @@ function OnUnloadMessenger()
 {
   pref.removeObserver("mail.pane_config.dynamic", MailPaneConfigObserver, false);
 
+  OnLeavingFolder(gMsgFolderSelected);  // mark all read in current folder
   accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
   RemoveToolBarPrefListener();
   // FIX ME - later we will be able to use onload from the overlay
