@@ -225,31 +225,42 @@ sub init {
         }
     }
 
+    my $chfieldfrom = trim(lc($params->param('chfieldfrom'))) || '';
+    my $chfieldto = trim(lc($params->param('chfieldto'))) || '';
+    $chfieldfrom = '' if ($chfieldfrom eq 'now');
+    $chfieldto = '' if ($chfieldto eq 'now');
+    my @chfield = $params->param('chfield');
+    my $chvalue = trim($params->param('chfieldvalue')) || '';
+
     # 2003-05-20: The 'changedin' field is no longer in the UI, but we continue
     # to process it because it will appear in stored queries and bookmarks.
-    my $changedin = $params->param('changedin') || '';
-    $changedin = trim($changedin);
+    my $changedin = trim($params->param('changedin')) || '';
     if ($changedin) {
         if ($changedin !~ /^[0-9]*$/) {
             ThrowUserError("illegal_changed_in_last_x_days",
                               { value => $changedin });
         }
-        push(@specialchart, ["changedin", "lessthan", $changedin + 1]);
+
+        if (!$chfieldfrom
+            && !$chfieldto
+            && scalar(@chfield) == 1
+            && $chfield[0] eq "[Bug creation]")
+        {
+            # Deal with the special case where the query is using changedin
+            # to get bugs created in the last n days by converting the value
+            # into its equivalent for the chfieldfrom parameter.
+            $chfieldfrom = "-" . ($changedin - 1) . "d";
+        }
+        else {
+            # Oh boy, the general case.  Who knows why the user included
+            # the changedin parameter, but do our best to comply.
+            push(@specialchart, ["changedin", "lessthan", $changedin + 1]);
+        }
     }
 
-    my $chfieldfrom = $params->param('chfieldfrom') || '';
-    my $chfieldto = $params->param('chfieldto') || '';
-    my @chfield = $params->param('chfield');
-    my $chvalue = $params->param('chfieldvalue') || '';
-    my $lcchfieldfrom = trim(lc($chfieldfrom));
-    my $lcchfieldto = trim(lc($chfieldto));
-    $chvalue = trim($chvalue);
-
-    $lcchfieldfrom = '' if ($lcchfieldfrom eq 'now');
-    $lcchfieldto = '' if ($lcchfieldto eq 'now');
-    if ($lcchfieldfrom ne '' || $lcchfieldto ne '') {
-        my $sql_chfrom = $lcchfieldfrom ? &::SqlQuote(SqlifyDate($lcchfieldfrom)):'';
-        my $sql_chto   = $lcchfieldto   ? &::SqlQuote(SqlifyDate($lcchfieldto))  :'';
+    if ($chfieldfrom ne '' || $chfieldto ne '') {
+        my $sql_chfrom = $chfieldfrom ? &::SqlQuote(SqlifyDate($chfieldfrom)):'';
+        my $sql_chto   = $chfieldto   ? &::SqlQuote(SqlifyDate($chfieldto))  :'';
         my $sql_chvalue = $chvalue ne '' ? &::SqlQuote($chvalue) : '';
         if(!@chfield) {
             push(@wherepart, "bugs.delta_ts >= $sql_chfrom") if ($sql_chfrom);
