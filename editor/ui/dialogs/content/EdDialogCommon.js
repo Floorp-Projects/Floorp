@@ -800,8 +800,9 @@ function GetLocalFileURL(filterType)
 
   /* doesn't handle *.shtml files */
   try {
-    fp.show();
-    /* need to handle cancel (uncaught exception at present) */
+    var ret = fp.show();
+    if (ret == nsIFilePicker.returnCancel)
+      return null;
   }
   catch (ex) {
     dump("filePicker.chooseInputFile threw an exception\n");
