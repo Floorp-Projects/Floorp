@@ -399,6 +399,8 @@ sub histogram_fragments() {
 
     my $max_power = 0;
 
+    my $tally_sizes = 0;
+
     while ($index <= $#::SortedAddresses) {
 	my $address = $::SortedAddresses[$index];
 
@@ -420,35 +422,47 @@ sub histogram_fragments() {
 	if ($power > $max_power) {
 	    $max_power = $power;
 	}
-
-	$prev_addr_end = $address + $::Objects{$address}->{'size'} - 1;
+	my $size = $::Objects{$address}->{'size'}; 
+	$tally_sizes += $size;
+	$prev_addr_end = $address + $size - 1;
 	$index++;
     }
 
     print "\nInterobject spacing (fragmentation waste) Statistics\n";
+
+    $power = 0;
+    $bucket_size = 1;
+    print "Basic gap histogram is (max_size:count):\n";
+    while ($power <= $max_power) {
+	if (! defined $fragment_count[$power]) {
+	    $fragment_count[$power] = $fragment_tally[$power] = 0;
+	}
+	print " $bucket_size:", $fragment_count[$power];
+	$power++;
+	$bucket_size *= $::opt_fragment;
+    }
+    print "\n";
+
+    print "Summary gap analysis:\n";
+
     $power = 0;
     $bucket_size = 1;
     my $tally = 0;
     my $count = 0;
     while ($power <= $max_power) {
-	if (! defined $fragment_count[$power]) {
-	    $fragment_count[$power] = $fragment_tally[$power] = 0;
-	}
 	$count += $fragment_count[$power];
 	$tally += $fragment_tally[$power];
-	print "$count gaps, totaling $tally bytes, were under $bucket_size each, for an average of ", $tally/$count, " bytes per gap\n";
+	print "$count gaps, totaling $tally bytes, were under $bucket_size bytes each";
+	if ($count) {
+	    print ", for an average of ", $tally/$count, " bytes per gap";
+	}
+	print "\n";
 	$power++;
 	$bucket_size *= $::opt_fragment;
     }
 
-    $power = 0;
-    $bucket_size = 1;
-    print "Basic gap histogram is: ";
-    while ($power <= $max_power) {
-	print " $bucket_size:", $fragment_count[$power];
-	$power++;
-	$bucket_size *= $::opt_fragment;
-    }    
+    print "Total allocation was $tally_sizes bytes";
+    print ", or ", $tally_sizes/($count+1), " bytes per allocation block\n";
     print "\n";
     
 }
