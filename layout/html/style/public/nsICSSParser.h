@@ -53,9 +53,10 @@ public:
                                nsIURL*         aBaseURL,
                                nsIStyleRule*&  aResult) = 0;
 
-  NS_IMETHOD ParseAndAppendDeclaration(const nsString& aBuffer,
-                                       nsIURL*         aBaseURL,
-                                       nsICSSDeclaration& aDeclaration) = 0;
+  NS_IMETHOD ParseAndAppendDeclaration(const nsString&    aBuffer,
+                                       nsIURL*            aBaseURL,
+                                       nsICSSDeclaration* aDeclaration,
+                                       PRInt32*           aHint) = 0;
 
 };
 
