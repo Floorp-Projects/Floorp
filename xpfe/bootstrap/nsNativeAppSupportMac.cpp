@@ -20,88 +20,114 @@
  * Contributor(s): 
  */
 #include "nsNativeAppSupport.h"
- 
+#include "nsString.h"
+
 #include <Gestalt.h>
 #include <Dialogs.h>
 #include <Resources.h>
- 
- 
+
+#include "nsIObserver.h"
+
 #define rSplashDialog 512
 
-class nsSplashScreenMac : public nsISplashScreen {
+class nsSplashScreenMac : public nsISplashScreen,
+                          public nsIObserver
+{
 public:
-    nsSplashScreenMac()
-        : mDialog( 0 ), mPicHandle( 0 ), mRefCnt( 0 ) {
-    }
-    ~nsSplashScreenMac() {
-        Hide();
-    }
+
+    // dialog itemse
+    enum {
+      eSplashPictureItem = 1,
+      eSplashStatusTextItem    
+    };
+    
+            nsSplashScreenMac();    
+    virtual ~nsSplashScreenMac();
+
+    NS_DECL_ISUPPORTS
 
     NS_IMETHOD Show();
     NS_IMETHOD Hide();
 
-    // nsISupports methods
-    NS_IMETHOD_(nsrefcnt) AddRef() {
-        mRefCnt++;
-        return mRefCnt;
-    }
-    NS_IMETHOD_(nsrefcnt) Release() {
-        --mRefCnt;
-        if ( !mRefCnt ) {
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
-    NS_IMETHOD QueryInterface( const nsIID &iid, void**p ) {
-        nsresult rv = NS_OK;
-        if ( p ) {
-            *p = 0;
-            if ( iid.Equals( NS_GET_IID( nsISplashScreen ) ) ) {
-                nsISplashScreen *result = this;
-                *p = result;
-                NS_ADDREF( result );
-            } else if ( iid.Equals( NS_GET_IID( nsISupports ) ) ) {
-                nsISupports *result = NS_STATIC_CAST( nsISupports*, this );
-                *p = result;
-                NS_ADDREF( result );
-            } else {
-                rv = NS_NOINTERFACE;
-            }
-        } else {
-            rv = NS_ERROR_NULL_POINTER;
-        }
-        return rv;
-    }
+    NS_DECL_NSIOBSERVER
+
+protected:
 
     DialogPtr mDialog;
-    PicHandle mPicHandle;
-    nsrefcnt mRefCnt;
+
 }; // class nsSplashScreenMac
 
+
+nsSplashScreenMac::nsSplashScreenMac()
+: mDialog(nsnull)
+{
+  NS_INIT_REFCNT();
+}
+
+
+nsSplashScreenMac::~nsSplashScreenMac()
+{
+  Hide();
+}
+
+
+NS_IMPL_ISUPPORTS2(nsSplashScreenMac, nsISplashScreen, nsIObserver);
+
 NS_IMETHODIMP
-nsSplashScreenMac::Show() {
-	mDialog = ::GetNewDialog( rSplashDialog, nil, (WindowPtr)-1L );
-	mPicHandle = GetPicture( rSplashDialog );
-	SetWindowPic( mDialog, mPicHandle );
-	::ShowWindow( mDialog );
-	::SetPort( mDialog );
-	Rect rect = (**mPicHandle).picFrame;
-	::DrawPicture( mPicHandle, &rect ); 
-    return NS_OK;
+nsSplashScreenMac::Show()
+{
+	mDialog = ::GetNewDialog(rSplashDialog, nil, (WindowPtr)-1L);
+	if (!mDialog) return NS_ERROR_FAILURE;
+	
+	::ShowWindow(mDialog);
+	::SetPort(mDialog);
+	
+	::DrawDialog(mDialog);    // we don't handle events for this dialog, so we
+	                          // need to draw explicitly. Yuck.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSplashScreenMac::Hide() {
-	if ( mDialog ) {
-		ReleaseResource( (Handle)mPicHandle );
-        mPicHandle = 0;
-		SetWindowPic( mDialog, NULL );
-		DisposeWindow( mDialog );
-        mDialog = 0;
+nsSplashScreenMac::Hide()
+{
+	if (mDialog)
+	{
+		::DisposeDialog( mDialog );
+    mDialog = nsnull;
 	}
-    return NS_OK;
+  return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsSplashScreenMac::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+  // update a string in the dialog
+  
+  nsCAutoString statusString;
+  statusString.AssignWithConversion(someData);
+
+  Handle    item = nsnull;
+  Rect      itemRect;
+  short     itemType;
+  ::GetDialogItem(mDialog, eSplashStatusTextItem, &itemType, &item, &itemRect);
+  if (!item) return NS_OK;
+  
+  // convert string to Pascal string
+  Str255    statusPStr;
+  PRInt32   maxLen = statusString.Length();
+  if (maxLen > 254)
+    maxLen = 254;
+  strncpy((char *)&statusPStr[1], (const char *)statusString, maxLen);
+  statusPStr[0] = maxLen;
+  
+  ::SetDialogItemText(item, statusPStr);
+  ::DrawDialog(mDialog);
+  return NS_OK;
+}
+
+
+#pragma mark -
 
 nsresult NS_CreateSplashScreen(nsISplashScreen**aResult)
 {
