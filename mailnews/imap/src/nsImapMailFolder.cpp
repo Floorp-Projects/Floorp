@@ -4296,20 +4296,20 @@ nsresult nsImapMailFolder::GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, 
 	
 	nsIMsgFolder *sourceFolder = GetMaster()->FindImapMailFolder(originalBoxName);
 	if (!sourceFolder)
-		sourceFolder = GetMaster()->FindMailFolder(originalBoxName,FALSE);
+		sourceFolder = GetMaster()->FindMailFolder(originalBoxName,PR_FALSE);
 	if (sourceFolder)
 	{
 		if (sourceFolder->GetFlags() & MSG_FOLDER_FLAG_IMAPBOX)
 		{
 			PRBool wasCreated = PR_FALSE;
-			ImapMailDB::Open(sourceFolder->GetPathname(), TRUE, originalDB, GetMaster(), &wasCreated);
+			ImapMailDB::Open(sourceFolder->GetPathname(), PR_TRUE, originalDB, GetMaster(), &wasCreated);
 		}
 		else
-			MailDB::Open(sourceFolder->GetPathname(), TRUE, originalDB);
+			MailDB::Open(sourceFolder->GetPathname(), PR_TRUE, originalDB);
 		
 		if (*originalDB)
 		{
-			nsresult rv = (*originalDB)->GetOfflineOpForKey(originalKey, FALSE, &returnOp);
+      nsresult rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
 			if (NS_SUCCEEDED(rv) && returnOp)
 			{
 				nsCAutoString moveDestination;
@@ -4341,7 +4341,7 @@ nsresult nsImapMailFolder::GetOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgO
 	{
 		if (sourceFolder->GetFlags() & MSG_FOLDER_FLAG_IMAPBOX)
 		{
-			PRBool wasCreated=FALSE;
+			PRBool wasCreated=PR_FALSE;
 			ImapMailDB::Open(sourceFolder->GetPathname(), PR_TRUE, originalDB, GetMaster(), &wasCreated);
 		}
 		else
@@ -4418,7 +4418,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
 			// put fake message in destination db, delete source if move
 			for (PRInt32 sourceKeyIndex=0; !stopit && (sourceKeyIndex < srcCount); sourceKeyIndex++)
 			{
-				PRBool	messageReturningHome = FALSE;
+				PRBool	messageReturningHome = PR_FALSE;
         nsXPIDLCString destOnlineName;
         GetOnlineName(getter_Copies(destOnlineName));
         char *originalBoxName = nsCRT::strdup(destOnlineName);
@@ -4438,7 +4438,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
           continue;
         }
 				nsCOMPtr <nsIMsgOfflineImapOperation> sourceOp;
-        rv = sourceMailDB->GetOfflineOpForKey(originalKey, TRUE, getter_AddRefs(sourceOp));
+        rv = sourceMailDB->GetOfflineOpForKey(originalKey, PR_TRUE, getter_AddRefs(sourceOp));
 				if (NS_SUCCEEDED(rv) && sourceOp)
 				{
 					nsCOMPtr <nsIMsgDatabase> originalDB;
