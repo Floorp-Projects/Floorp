@@ -50,15 +50,44 @@ ToNewUnicode( const nsAReadableString& aSourceString )
   }
 
 
+template <class FromT, class ToT>
+class LossyConversionSink
+  {
+    public:
+      typedef FromT input_type;
+      typedef ToT   output_type;
+
+    public:
+      LossyConversionSink( output_type* aDestination ) : mDestination(aDestination) { }
+
+      PRUint32
+      write( const input_type* aSource, PRUint32 aSourceLength )
+        {
+          const input_type* done_writing = aSource + aSourceLength;
+          while ( aSource < done_writing )
+            *mDestination++ = NS_STATIC_CAST(output_type, *aSource++);
+        }
+
+    private:
+      OutputCharT* mDestination;
+  };
+
+
 
 char*
 ToNewCString( const nsAReadableString& aSourceString )
   {
+    char* result = NS_STATIC_CAST(char*, nsMemory::Alloc(aSourceString.Length()+1));
+    *copy_string(aSourceString.BeginReading(), aSourceString.EndReading(), LossyConversionSink<PRUnichar, char>(result)) = char(0);
+    return result;
   }
 
 PRUnichar*
 ToNewUnicode( const nsAReadableCString& aSourceCString )
   {
+    PRUnichar* result = NS_STATIC_CAST(char*, nsMemory::Alloc( (aSourceString.Length()+1) * sizeof(PRUnichar) ));
+    *copy_string(aSourceCString.BeginReading(), aSourceCString.EndReading(), LossyConversionSink<char, PRUnichar>(result)) = PRUnichar(0);
+    return result;
   }
 
 
@@ -91,3 +120,4 @@ IsASCII( const nsAReadableString& aSourceString )
 
     return PR_TRUE;
   }
+
