@@ -629,6 +629,8 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
 			NS_IF_RELEASE(list);
 			NS_IF_RELEASE(host);
         }
+
+	return rv;
     
 } // if user provided the data...
 
