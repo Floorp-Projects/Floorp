@@ -69,6 +69,8 @@ public:
 protected:
   virtual ~nsDeviceContextPh();
   nsresult Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext);
+  nsresult GetDisplayInfo(PRInt32 &aWidth, PRInt32 &aHeight, PRUint32 &aDepth);
+  void     CommonInit(nsNativeDeviceContext aDC);
 
   nsDrawingSurface      mSurface;
   PRUint32              mDepth;  // bit depth of device
@@ -78,12 +80,9 @@ protected:
   float                 mHeightFloat;
   PRInt32               mWidth;
   PRInt32               mHeight;
-  PRInt32		        mStupid;		/* do we really need this?? */
 
   nsIDeviceContextSpec  *mSpec;
   nsNativeDeviceContext mDC;
-public:
-//  HDC                   mDC;
 };
 
 #endif /* nsDeviceContextPh_h___ */

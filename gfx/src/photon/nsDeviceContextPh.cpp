@@ -19,7 +19,8 @@
 #include "nsDeviceContextPh.h"
 #include "nsRenderingContextPh.h"
 #include "nsDeviceContextSpecPh.h"
-#include "../ps/nsDeviceContextPS.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 #include "il_util.h"
 #include "nsPhGfxLog.h"
 
@@ -34,7 +35,6 @@ nsDeviceContextPh :: nsDeviceContextPh()
   mPaletteInfo.sizePalette = 0;
   mPaletteInfo.numReserved = 0;
   mPaletteInfo.palette = NULL;
-//  mDC = NULL;
   mPixelScale = 1.0f;
   mWidthFloat = 0.0f;
   mHeightFloat = 0.0f;
@@ -42,7 +42,6 @@ nsDeviceContextPh :: nsDeviceContextPh()
   mHeight = -1;
   mWidth = 0;
   mHeight = 0;
-  mStupid = 1;
   mSpec = nsnull;
   mDC = nsnull;
 }
@@ -56,10 +55,10 @@ nsDeviceContextPh :: ~nsDeviceContextPh()
   NS_IF_RELEASE(surf);    //this clears the surf pointer...
   mSurface = nsnull;
 
-#if 0
   if (NULL != mPaletteInfo.palette)
-    ::DeleteObject((HPALETTE)mPaletteInfo.palette);
+    PR_Free(mPaletteInfo.palette);
 
+#if 0
   if (NULL != mDC)
   {
     ::DeleteDC(mDC);
@@ -70,75 +69,172 @@ nsDeviceContextPh :: ~nsDeviceContextPh()
   NS_IF_RELEASE(mSpec);
 }
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+
 NS_IMETHODIMP nsDeviceContextPh :: Init(nsNativeWidget aWidget)
 {
-  PhSysInfo_t SysInfo;
-  PhRect_t                        rect;
-  PtArg_t                         arg[15];
-  char                            c, *p;
-  int                             inp_grp = 0;
-  PhRid_t                         rid;
-  PhRegion_t                      region;
-														
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with aWidget aWidget=<%p>\n", aWidget));
+
+  CommonInit(NULL);
+ 
+  {
+  float newscale, origscale;
   
-  // this is a temporary hack!
-  mPixelsToTwips = 15.0f;		// from debug under windows
-  mTwipsToPixels = 1 / mPixelsToTwips;  
+  GetTwipsToDevUnits(newscale);
+  GetAppUnitsToDevUnits(origscale);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init newscale=<%f> origscale=<%f>\n", newscale, origscale));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init mPixelScale=<%f>\n", mPixelScale));
 
- /* Get the Screen Size */
- p = getenv("PHIG");
- if (p)
-   inp_grp = atoi(p);
- else
-   abort();
+  float a2d,t2d;
+  GetTwipsToDevUnits(t2d);
+  GetAppUnitsToDevUnits(a2d);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init t2d=<%f> a2d=<%f> mTwipsToPixels=<%f>\n", t2d,a2d,mTwipsToPixels));
 
- PhQueryRids( 0, 0, inp_grp, Ph_INPUTGROUP_REGION, 0, 0, 0, &rid, 1 );
- PhRegionQuery( rid, &region, &rect, NULL, 0 );
- inp_grp = region.input_group;
- PhWindowQueryVisible( Ph_QUERY_INPUT_GROUP | Ph_QUERY_EXACT, 0, inp_grp, &rect );
- mWidthFloat  = (float) rect.lr.x - rect.ul.x+1;
- mHeightFloat = (float) rect.lr.y - rect.ul.y+1;  
-
- PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with aWidget: Screen Size (%f,%f)\n", mWidthFloat,mHeightFloat));
-
-
- /* Get the System Info for the RID */
- if (!PhQuerySystemInfo(rid, NULL, &SysInfo))
- {
-    PR_LOG(PhGfxLog, PR_LOG_ERROR,("nsDeviceContextPh::Init with aWidget: Error getting SystemInfo\n"));
- }
- else
- {
-   /* Make sure the "color_bits" field is valid */
-   if (SysInfo.gfx.valid_fields & Ph_GFX_COLOR_BITS)
-   {
-     mDepth = SysInfo.gfx.color_bits;
-     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with aWidget: Pixel Depth = %d\n", mDepth));
-   }
- }	 
-
-  /* Palette Information: just a guess!  REVISIT */
-  mPaletteInfo.isPaletteDevice = 1;
-  mPaletteInfo.sizePalette = 255;
-  mPaletteInfo.numReserved = 16;
-
+  } 
+ 
+ 
   // Call my base class
   return DeviceContextImpl::Init(aWidget);
 }
 
-//local method...
 
+/* Called for Printing */
 nsresult nsDeviceContextPh :: Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with nsNativeDeviceContext aContext=<%p> aOrigContext=<%p>\n", aContext, aOrigContext));
 
-  /* REVISIT: This is not right, but it gets the job done for right now */
-  mPixelsToTwips =  1.0f;
-  mTwipsToPixels = 1 / mPixelsToTwips;  
+  nsDeviceContextSpecPh * PrintSpec = nsnull;
+  PpPrintContext_t      *PrinterContext = nsnull;
+  float origscale, newscale;
+  float t2d, a2d;
+    
+  /* convert the mSpec into a nsDeviceContextPh */
+  if (mSpec)
+  {
+    mSpec->QueryInterface(kIDeviceContextSpecIID, (void**) &PrintSpec);
+    if (PrintSpec)
+    {
+  	  PrintSpec->GetPrintContext( PrinterContext );
+
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init PpPrinterContext=<%p>\n", PrinterContext));
+
+    }	    
+  }
+  
   mDC = aContext;
 
+  CommonInit(mSpec);		/* HACK! */
+
+#if 1
+  GetTwipsToDevUnits(newscale);
+  aOrigContext->GetAppUnitsToDevUnits(origscale);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init printing newscale=<%f> origscale=<%f>\n", newscale, origscale));
+  
+  mPixelScale = newscale / origscale;
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init printing mPixelScale=<%f>\n", mPixelScale));
+
+  aOrigContext->GetTwipsToDevUnits(t2d);
+  aOrigContext->GetAppUnitsToDevUnits(a2d);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init printing t2d=<%f> a2d=<%f> mTwipsToPixels=<%f>\n", t2d,a2d,mTwipsToPixels));
+
+  mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
+  mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
+  
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init mAppUnitsToDevUnits=<%f>\n", mAppUnitsToDevUnits));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init mDevUnitsToAppUnits=<%f>\n", mDevUnitsToAppUnits));
+#endif
+
   return NS_OK;
+}
+
+void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit mSpec=<%p>\n", mSpec));
+
+  PRInt32           aWidth, aHeight;
+  nsresult          err;
+  static nscoord    dpi = 96;
+  static int        initialized = 0;
+
+  if (!initialized)
+  {
+    initialized = 1;
+    nsIPref* prefs = nsnull;
+    nsresult res = nsServiceManager::GetService(kPrefCID, kIPrefIID,
+      (nsISupports**) &prefs);
+    if (NS_SUCCEEDED(res) && prefs)
+	{
+      PRInt32 intVal = 96;
+      res = prefs->GetIntPref("browser.screen_resolution", &intVal);
+      if (NS_SUCCEEDED(res))
+	  {
+        if (intVal)
+		{
+          dpi = intVal;
+        }
+//        else {
+//          // Compute dpi of display
+//          float screenWidth = float(::gdk_screen_width());
+//          float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
+//          dpi = nscoord(screenWidth / screenWidthIn);
+//        }
+      }
+      nsServiceManager::ReleaseService(kPrefCID, prefs);
+    }
+  }
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit dpi=<%d>\n", dpi));
+
+  mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit mPixelsToTwips=<%f>\n", mPixelsToTwips));
+  
+//  if (aDC != NULL)
+//  {
+//    mWidthFloat  = (float) 480;
+//    mHeightFloat = (float) 320;  
+//  }
+//  else
+  {
+    err = GetDisplayInfo(aWidth, aHeight, mDepth);
+    if (err == NS_ERROR_FAILURE)
+      abort();
+
+    mWidthFloat  = (float) aWidth;
+    mHeightFloat = (float) aHeight;  
+  }
+    
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit with aWidget: Screen Size (%f,%f)\n", mWidthFloat,mHeightFloat));
+
+  int res;
+  PgColor_t color[_Pg_MAX_PALETTE];  
+
+  res = PgGetPalette(color);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit PgGetPalette err=<%d>\n", res));
+  if (res == -1)
+  {
+    mPaletteInfo.isPaletteDevice = PR_FALSE;
+    mPaletteInfo.sizePalette = 0;
+    mPaletteInfo.numReserved = 0;
+    mPaletteInfo.palette = NULL;
+  }
+  else
+  {
+    mPaletteInfo.isPaletteDevice = PR_TRUE;
+    mPaletteInfo.sizePalette = _Pg_MAX_PALETTE;
+    mPaletteInfo.numReserved = 16;  				/* GUESS */
+    mPaletteInfo.palette = PR_Malloc(sizeof(color));
+    if (NULL != mPaletteInfo.palette)
+	{
+      /* If the memory was allocated */
+	  memcpy(mPaletteInfo.palette, color, sizeof(color));
+	}
+  }
+
+  /* Call Base Class */
+  DeviceContextImpl::CommonInit();
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext(nsIRenderingContext *&aContext)
@@ -158,8 +254,14 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext(nsIRenderingContext *&
 	  surf = new nsDrawingSurfacePh();
 	  if (nsnull != surf)
 	  {
-//        rv = surf->Init(mDC);
-//        if (NS_OK == rv)
+#if 0
+  /* This is untested and may be breaking things */
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CreateRenderingContext - mDC=<%p>\n", mDC));
+
+		PhGC_t * aGC = (PhGC_t *) mDC;
+        rv = surf->Init(aGC);
+        if (NS_OK == rv)
+#endif
           rv = pContext->Init(this, surf);
       }
 	  else
@@ -192,10 +294,10 @@ NS_IMETHODIMP nsDeviceContextPh :: SupportsNativeWidgets(PRBool &aSupportsWidget
 
 NS_IMETHODIMP nsDeviceContextPh :: GetCanonicalPixelScale(float &aScale) const
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetCanonicalPixelScale <%f>\n", mPixelScale));
+//  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetCanonicalPixelScale <%f>\n", mPixelScale));
 
   aScale = mPixelScale;		// mPixelScale should be 1.0f
-  
+
   return NS_OK;
 }
 
@@ -234,6 +336,21 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDrawingSurface(nsIRenderingContext &aConte
   aSurface = mSurface;
 */
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextPh :: GetClientRect(nsRect &aRect)
+{
+  PRInt32 width, height;
+  nsresult rv;
+	
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetClientRect\n"));
+
+  rv = GetDeviceSurfaceDimensions(width, height);
+  aRect.x = 0;
+  aRect.y = 0;
+  aRect.width = width;
+  aRect.height = height;
+  return rv;
 }
 
 /* I need to know the requested font size to finish this function */
@@ -285,8 +402,8 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextPh::GetDepth(PRUint32& aDepth)
 {
-  aDepth = 24;	//kedl, FIXME!
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDepth - Not Implemented\n"));
+  aDepth = mDepth; // 24; /* REVISIT: Should be mDepth, kedl, FIXME */
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDepth aDepth=<%d> - Not Implemented\n", aDepth));
   return NS_OK;
 }
 
@@ -301,6 +418,21 @@ NS_IMETHODIMP nsDeviceContextPh::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 NS_IMETHODIMP nsDeviceContextPh::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetPaletteInfo - Not Implemented\n"));
+
+  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
+  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
+  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
+  aPaletteInfo.palette = NULL;
+  if (NULL != mPaletteInfo.palette)
+  {
+    aPaletteInfo.palette = PR_Malloc( sizeof(PgColor_t) * _Pg_MAX_PALETTE );
+    if (NULL != aPaletteInfo.palette)
+    {
+      /* If the memory was allocated */
+	  memcpy(aPaletteInfo.palette, mPaletteInfo.palette, sizeof(PgColor_t)*_Pg_MAX_PALETTE);
+	}
+  }
+  
   return NS_OK;
 }
 
@@ -312,42 +444,20 @@ NS_IMETHODIMP nsDeviceContextPh :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
 
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  if (mStupid)
-  {
-	mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
-	mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
-	mStupid=0;
-  }
-/*
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceSurfaceDimensions mDevUnitsToAppUnits=<%f> mWidth=<%d> mHeight=<%d>\n", mDevUnitsToAppUnits, mWidth, mHeight));
+
   if (mWidth == -1)
-	mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+    mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
 
   if (mHeight == -1)
     mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
-*/
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceSurfaceDimensions mDevUnitsToAppUnits=<%f> mWidth=<%d> mHeight=<%f>\n", mDevUnitsToAppUnits, mWidth, mHeight));
 
   aWidth = mWidth;
   aHeight = mHeight;
+  
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceSurfaceDimensions mDevUnitsToAppUnits=<%f> mWidth=<%d> mHeight=<%d>\n", mDevUnitsToAppUnits, mWidth, mHeight));
 
   return NS_OK;
-}
-
-
-NS_IMETHODIMP nsDeviceContextPh :: GetClientRect(nsRect &aRect)
-{
-  PRInt32 width, height;
-  nsresult rv;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetClientRect\n"));
-
-  rv = GetDeviceSurfaceDimensions(width, height);
-  aRect.x = 0;
-  aRect.y = 0;
-  aRect.width = width;
-  aRect.height = height;
-  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
@@ -365,7 +475,8 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDe
 NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
 {
   nsresult    ret_code = NS_ERROR_FAILURE;
-
+  int         err;
+  
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - Not Implemented\n"));
 
   /* convert the mSpec into a nsDeviceContextPh */
@@ -383,7 +494,17 @@ NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
       if (PrinterContext)
 	  {
         PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - PrinterContext=<%p>\n", PrinterContext));
+#if 1
+		PhRect_t Rect = {1500,1500,1500,1500};
+		err=PpPrintSetPC( PrinterContext, INTERACTIVE_PC, 0, Pp_PC_MARGINS, &Rect);
 
+		PhDim_t Dim = {720,960};
+		err=PpPrintSetPC( PrinterContext, INITIAL_PC, 0, Pp_PC_SOURCE_SIZE, &Dim);
+
+//		PhPoint_t Point = {100,100};
+//		err=PpPrintSetPC( PrinterContext, INITIAL_PC, 0, Pp_PC_SCALE, &Point);
+
+#endif
 		PhDrawContext_t *DrawContext = nsnull;
 		DrawContext = PpPrintStart(PrinterContext);
 		if (DrawContext)
@@ -477,3 +598,55 @@ NS_IMETHODIMP nsDeviceContextPh :: EndPage(void)
 
   return ret_code;
 }
+
+nsresult nsDeviceContextPh :: GetDisplayInfo(PRInt32 &aWidth, PRInt32 &aHeight, PRUint32 &aDepth)
+{
+//PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDisplayInfo\n"));
+  nsresult    		res = NS_ERROR_FAILURE;
+  PhSysInfo_t       SysInfo;
+  PhRect_t          rect;
+  char              *p = NULL;
+  int               inp_grp = 0;
+  PhRid_t           rid;
+  PhRegion_t        region;
+
+  /* Initialize variables */
+  aWidth  = 0;
+  aHeight = 0;
+  aDepth  = 0;
+  
+  /* Get the Screen Size and Depth*/
+   p = getenv("PHIG");
+   if (p)
+   {
+     inp_grp = atoi(p);
+
+     PhQueryRids( 0, 0, inp_grp, Ph_INPUTGROUP_REGION, 0, 0, 0, &rid, 1 );
+     PhRegionQuery( rid, &region, &rect, NULL, 0 );
+     inp_grp = region.input_group;
+     PhWindowQueryVisible( Ph_QUERY_INPUT_GROUP | Ph_QUERY_EXACT, 0, inp_grp, &rect );
+     aWidth  = rect.lr.x - rect.ul.x + 1;
+     aHeight = rect.lr.y - rect.ul.y + 1;  
+
+     /* Get the System Info for the RID */
+     if (!PhQuerySystemInfo(rid, NULL, &SysInfo))
+     {
+       PR_LOG(PhGfxLog, PR_LOG_ERROR,("nsDeviceContextPh::GetDisplayInfo with aWidget: Error getting SystemInfo\n"));
+	   return NS_ERROR_FAILURE;
+     }
+     else
+     {
+       /* Make sure the "color_bits" field is valid */
+       if (SysInfo.gfx.valid_fields & Ph_GFX_COLOR_BITS)
+       {
+        aDepth = SysInfo.gfx.color_bits;
+        res = NS_OK;
+       }
+     }	
+  }
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDisplayInfo aWidth=<%d> aHeight=<%d> aDepth=<%d>\n", aWidth, aHeight, aDepth));
+  
+  return res;
+}
+
