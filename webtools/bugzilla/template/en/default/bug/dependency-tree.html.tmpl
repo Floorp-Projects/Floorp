@@ -1,3 +1,4 @@
+<!-- 1.0@bugzilla.org -->
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -52,9 +53,9 @@
 [%# Display the tree of bugs that this bug blocks. %]
 <h3>Bugs that bug <a href="show_bug.cgi?id=[% bugid %]">[% bugid %]</a> blocks
 [% IF blocked_ids.size > 0 %]
-  (<a href="buglist.cgi?branch_id=[% blocked_ids.join(",") %]">view as bug list</a>
+  (<a href="buglist.cgi?bug_id=[% blocked_ids.join(",") %]">view as bug list</a>
   [% IF canedit && blocked_ids.size > 1 %]
-    | <a href="buglist.cgi?branch_id=[% blocked_ids.join(",") %]&amp;tweak=1">change several</a>
+    | <a href="buglist.cgi?bug_id=[% blocked_ids.join(",") %]&amp;tweak=1">change several</a>
   [% END %])
   [% IF maxdepth || hide_resolved %]
     <small><b>
@@ -86,7 +87,7 @@
     <li>
       [% "<strike>" IF !dep.open %]
       <a href="show_bug.cgi?id=[% dep_id %]">[% dep_id %] 
-        [[% dep.milestone FILTER html %], 
+        [[% IF dep.milestone %][% dep.milestone FILTER html %], [% END %]
         [% dep.assignee_email FILTER html %]] - 
         [% IF dep.seen %]
           <i>&lt;This bug appears elsewhere in this tree&gt;</i></a>
@@ -116,7 +117,7 @@
            style="display: inline; margin: 0px;">
      <input name="id" type="hidden" value="[% bugid %]">
      [% IF maxdepth %]
-       <input name="maxdepth" type="hidden" value="$maxdepth">
+       <input name="maxdepth" type="hidden" value="[% maxdepth %]">
      [% END %]
      <input type="hidden" name="hide_resolved" value="[% hide_resolved ? 0 : 1 %]">
      <input type="submit" value="[% hide_resolved ? "Show" : "Hide" %] Resolved">

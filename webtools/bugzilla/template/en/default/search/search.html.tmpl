@@ -331,17 +331,6 @@ function selectProduct(f) {
   { value => "anywords", description => "contains any of the words" },
   { value => "regexp", description => "matches the regexp" },
   { value => "notregexp", description => "doesn&#8217;t match the regexp" } ] %]
-
-[%# The decent help requires Javascript %]
-<script> <!--
-   document.write("<p><a href='query.cgi?help=1'>Give me help</a> with this form (reloads page.)</p>");
-// -->
-</script>
-<noscript>
-  <p>
-    <a href="queryhelp.cgi">Give me help</a> with this form.
-  </p>
-</noscript>
      
 <form method="get" action="buglist.cgi" name="queryform">
 
