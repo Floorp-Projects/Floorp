@@ -754,7 +754,7 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
           return NULL;
         }
         // utf-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
-        if (MIME_ConvertCharset("utf-8", !PL_strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
+        if (MIME_ConvertCharset(PR_FALSE, "utf-8", !PL_strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
                                 (const char*) begin, (const PRInt32) len, &buf1, (PRInt32 *) &iBufLen)) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);
@@ -1254,6 +1254,185 @@ static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBu
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 ////////////////////////////////////////////////////////////////////////////////
+#define USE_NONXPCOM_AUTODETECTION
+// TODO: This part should be entirly replaced by XPCOM version of charset detection.
+#ifdef USE_NONXPCOM_AUTODETECTION
+class nsCharsetDetect {
+public:
+  PRBool AutoCharsetDetectionAvailable(const nsString& aCharset);
+  nsresult AutoCharsetDetectBuffer(const char* aBuffer, const PRInt32 aLen, PRBool& bDetected,
+                                   const nsString& aCharsetIn, nsString& aCharsetDetected);
+};
+					/* values for EUC shift chars	*/
+#define SS2		0x8E		/* Single Shift 2		*/
+#define SS3		0x8F		/* Single Shift 3		*/
+#define IsRoman(c)			((c) < 0x80)
+#define IsSJIS2ndByte(c)	(((c) > 0x3F) && ((c) < 0xFD))
+#define IsLoSJIS2ndByte(c)	(((c) > 0x3F) && ((c) < 0xA1))
+#define IsHiSJIS2ndByte(c)	(((c) > 0xA0) && ((c) < 0xFD))
+#define IsEUCJPKana(b1)		(((b1) > 0xA0) && ((b1) < 0xE0))
+#define IsEUCJPKanji(b1or2)	(((b1or2) > 0xA0) && ((b1or2) < 0xFF))
+
+#define	YES		1
+#define NO		0
+#define	MAYBE	-1
+
+static int
+isSJIS(const unsigned char *cp, PRInt32 len)
+{
+	while (len) {
+		if (IsRoman(*cp)) {
+			cp++, len--;
+		} else if (*cp == 0x80) {		/* illegal SJIS 1st byte			*/
+			return NO;
+		} else if ((*cp < 0xA0)) {		/* byte 1 of 2byte SJIS 1st range	*/
+			if (len > 1) {
+				if (IsSJIS2ndByte(cp[1])) {
+					if ((*cp != 0x8E && *cp != 0x8F) || (*(cp+1) <= 0xA0))
+						return YES;
+					cp += 2, len -= 2;	/* valid 2 byte SJIS				*/
+				} else {
+					return NO;			/* invalid SJIS	2nd byte			*/
+				}
+			} else
+				break;						/* buffer ended w/1of2 byte SJIS */
+		} else if (*cp == 0xA0) {			/* illegal EUCJP byte		*/
+#if ALLOW_NBSP
+			cp++, len--; /* allow nbsp */
+#endif
+		} else if (*cp < 0xE0) {		/* SJIS half-width kana				*/
+			cp++, len--;
+		} else if (*cp < 0xF0) {		/* byte 1 of 2byte SJIS	 2nd range	*/
+			if (len > 1) {
+				if (IsSJIS2ndByte(cp[1])) {
+					cp += 2, len -= 2;	/* valid 2 byte SJIS				*/
+				} else {
+					return NO;			/* invalid SJIS						*/
+				}
+			} else
+				break;					/* buffer ended w/1of2 byte SJIS	*/
+		} else {
+			return NO;					/* invalid SJIS 1st byte			*/
+		}
+	}
+	return MAYBE;						/* No illegal SJIS values found		*/
+}
+
+static int
+isEUCJP(const unsigned char *cp, PRInt32 len)
+{
+	while (len) {
+		if (IsRoman(*cp)) {			/* Roman						*/
+			cp++, len--;
+		} else if (*cp == SS2) {		/* EUCJP JIS201 half-width kana */
+			if (len > 1) {
+				if (IsEUCJPKana(cp[1]))
+					cp += 2, len -= 2;		/* valid half-width kana */
+				else
+					return NO;				/* invalid 2of3 byte EUC */ 
+			} else
+				break;						/* buffer ended w/1of2 byte EUC	*/
+		} else if (*cp == SS3) {			/* EUCJP JIS212					*/
+			 if (len > 1) {
+			 	if (IsEUCJPKanji(cp[1])) {
+			 		if (len > 2) {
+				 		if (IsEUCJPKanji(cp[2]))
+							cp += 2, len -= 2;	/* valid 3 byte EUCJP		*/
+						else
+							return NO;		/* invalid 3of3 byte EUCJP	*/
+					} else
+						break;				/* buffer ended w/2of3 byte EUCJP */
+				} else
+					return NO;				/* invalid 2of3 byte EUCJP	*/
+			} else
+				break;						/* buffer ended w/1of3 byte EUCJP */
+		} else if (*cp == 0xA0) {			/* illegal EUCJP byte		*/
+#if ALLOW_NBSP
+			cp++, len--; /* allow nbsp */
+#else
+			return NO;
+#endif
+		} else if (*cp < 0xF0) {		/* EUCJP JIS208 (overlaps SJIS)		*/
+			if (len > 1) {
+			 	if (IsEUCJPKanji(cp[1]))
+					cp += 2, len -= 2;		/* valid 2 byte EUCJP		*/
+				else
+					return NO;				/* invalid 2of2 byte EUCJP	*/
+			} else
+				break;						/* buffer ended w/1of2 byte EUCJP */
+		} else if (*cp < 0xFF) {		/* EUCJP JIS208 only:			*/
+			if (len > 1) {
+			 	if (IsEUCJPKanji(cp[1]))
+					return YES;			/* valid 2 byte EUCJP, invalid SJIS	*/
+				else
+					return NO;				/* invalid 2of2 byte EUCJP	*/
+			} else
+				break;						/* buffer ended w/1of2 byte EUCJP */
+		} else {
+			return NO;					/* invalid EUCJP 1st byte: 0xFF	*/
+		}
+	}
+	return MAYBE;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PRBool nsCharsetDetect::AutoCharsetDetectionAvailable(const nsString& aCharset)
+{
+  if (!aCharset.EqualsIgnoreCase("Shift_JIS") &&
+      !aCharset.EqualsIgnoreCase("EUC-JP") &&
+      !aCharset.EqualsIgnoreCase("ISO-2022-JP")) {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+nsresult nsCharsetDetect::AutoCharsetDetectBuffer(const char* aBuffer, const PRInt32 aLen, PRBool& bDetected,
+                                                  const nsString& aCharsetIn, nsString& aCharsetDetected)
+{
+  PRBool doAutoDetect = PR_FALSE;
+
+  if (!AutoCharsetDetectionAvailable(aCharsetIn)) {
+    bDetected = PR_FALSE;
+    return NS_OK;
+  }
+  // check 7 bit only or ESC
+  for (int i = 0; i < aLen; i++) {
+    if ((unsigned char) aBuffer[i] > 127 || aBuffer[i] == 0x1B) {
+      if (aBuffer[i] == 0x1B) {
+        aCharsetDetected.SetString("ISO-2022-JP");
+      }
+      doAutoDetect = PR_TRUE;
+      break;
+    }
+  }
+
+  if (!doAutoDetect) {
+    aCharsetDetected.SetString("ISO-8859-1");
+  }
+  else {
+   if (!aCharsetDetected.EqualsIgnoreCase("ISO-2022-JP")) {
+    // use old japanese auto detect code
+      int euc, sjis;
+      aCharsetDetected.SetString("ISO-8859-1");
+      euc = isEUCJP((unsigned char *) aBuffer, aLen);
+      if (YES == euc || MAYBE == euc) {
+        aCharsetDetected.SetString("EUC-JP");
+      }
+      else {
+        sjis = isSJIS((unsigned char *) aBuffer, aLen);
+        if (YES == sjis || MAYBE == sjis) {
+          aCharsetDetected.SetString("Shift_JIS");
+        }
+      }
+    }
+  }
+  bDetected = PR_TRUE;
+
+  return NS_OK;
+}
+#endif//USE_NONXPCOM_AUTODETECTION
+
 class MimeCharsetConverterClass {
 public:
   MimeCharsetConverterClass();
@@ -1272,7 +1451,7 @@ public:
 protected:
   nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
   nsIUnicodeEncoder * GetUnicodeEncoder() {return mEncoder;}
-  PRBool NeedCharsetConversion(const char* from_charset, const char* to_charset);
+  PRBool NeedCharsetConversion(const nsString& from_charset, const nsString& to_charset);
 
 private:
   nsIUnicodeDecoder *mDecoder;          // decoder (convert to unicode)  
@@ -1282,6 +1461,8 @@ private:
                                         // (-1 for no limit)
   PRInt32 mNumChars;                    // accumulated number of characters converted in bytes
   PRBool mAutoDetect;                   // true if apply auto detection
+  nsString mInputCharset;               // input charset for auto detection hint as well as need conversion check
+  nsString mOutputCharset;              // output charset for need conversion check
 };
 
 MimeCharsetConverterClass::MimeCharsetConverterClass()
@@ -1306,8 +1487,20 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
 {
   nsresult res;
 
+  NS_ASSERTION(NULL == mEncoder, "No reinitialization allowed.");
+
+  mInputCharset.SetString(from_charset);     // remember input charset for a hint
+  mOutputCharset.SetString(to_charset);      // remember output charset
+  mAutoDetect = autoDetect;
+  mMaxNumCharsDetect = maxNumCharsDetect;
+
+  // Check if auto detection is available for the input charset
+  nsCharsetDetect aCharsetDetect;
+  if (mAutoDetect && !aCharsetDetect.AutoCharsetDetectionAvailable(from_charset)) {
+    mAutoDetect = PR_FALSE;
+  }
   // No need to do the conversion then do not create converters. 
-  if (!autoDetect && !NeedCharsetConversion(from_charset, to_charset)) {
+  if (!mAutoDetect && !NeedCharsetConversion(mInputCharset, mOutputCharset)) {
     return 0;
   }
 
@@ -1320,7 +1513,7 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     // create a decoder (conv to unicode), ok if failed if we do auto detection
     aCharset.SetString(from_charset);
     res = ccm->GetUnicodeDecoder(&aCharset, &mDecoder);
-    if (NS_FAILED(res) && !autoDetect) {
+    if (NS_FAILED(res) && !mAutoDetect) {
       return -1;
     }
     // create an encoder (conv from unicode)
@@ -1334,14 +1527,13 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     return -1;
   }
 
-  mAutoDetect = autoDetect;
-  mMaxNumCharsDetect = maxNumCharsDetect;
-
   return 0;
 }
 
 PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
 {
+  nsresult res;
+
   // Encoder is not available, duplicate the input.
   if (NULL == mEncoder) {
     *outBuffer = (char *) PR_Malloc(inLength+1);
@@ -1359,7 +1551,34 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
 
   // try auto detection for this string
   if (mAutoDetect && (mMaxNumCharsDetect == -1 || mMaxNumCharsDetect > mNumChars)) {
-    // Call NeedCharsetConversion for detected charset, avoid create decoder.
+    nsCharsetDetect aCharsetDetect;   //TODO: replace this by XPCOM interface
+    PRBool bDetected;
+    nsString aCharsetDetected;
+    res = aCharsetDetect.AutoCharsetDetectBuffer(inBuffer, inLength, bDetected, mInputCharset, aCharsetDetected);
+    if (NS_SUCCEEDED(res) && bDetected) {
+      // Check if need a conversion.
+      if (!NeedCharsetConversion(aCharsetDetected, mOutputCharset)) {
+        *outBuffer = (char *) PR_Malloc(inLength+1);
+        if (NULL != *outBuffer) {
+          nsCRT::memcpy(*outBuffer, inBuffer, inLength);
+          *outLength = inLength;
+          (*outBuffer)[inLength] = '\0';
+          return 0;
+        }
+        return -1;
+      }
+      else {
+        NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+        if (NS_SUCCEEDED(res) && (nsnull != ccm)) {
+          NS_IF_RELEASE(mDecoderDetected);
+          mDecoderDetected = nsnull;
+          res = ccm->GetUnicodeDecoder(&aCharsetDetected, &mDecoderDetected);
+          if (NS_SUCCEEDED(res)) {
+            decoder = mDecoderDetected;   // use detected charset instead
+          }
+        }
+      }
+    }
   }
 
   // update the total so far
@@ -1378,7 +1597,6 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
   }
 
   // do the conversion
-  nsresult res;
   PRUnichar *unichars;
   PRInt32 unicharLength;
   PRInt32 srcLen = inLength;
@@ -1417,17 +1635,15 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
-PRBool MimeCharsetConverterClass::NeedCharsetConversion(const char* from_charset, const char* to_charset)
+PRBool MimeCharsetConverterClass::NeedCharsetConversion(const nsString& from_charset, const nsString& to_charset)
 {
-  if (nsnull == from_charset || nsnull == to_charset || 
-      '\0' == *from_charset || '\0' == *to_charset) 
+  if (from_charset.Length() == 0 || to_charset.Length() == 0) 
     return PR_FALSE;
-  else if (!PL_strcasecmp(from_charset, to_charset)) {
+  else if (from_charset.EqualsIgnoreCase(to_charset)) {
     return PR_FALSE;
   }
-  else if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
-      (!PL_strcasecmp(from_charset, "utf-8") && !PL_strcasecmp(to_charset, "us-ascii")))
-  {
+  else if ((from_charset.EqualsIgnoreCase("us-ascii") && to_charset.EqualsIgnoreCase("utf-8")) ||
+      (from_charset.EqualsIgnoreCase("utf-8") && to_charset.EqualsIgnoreCase("us-ascii"))) {
     return PR_FALSE;
   }
   return PR_TRUE;
@@ -1461,16 +1677,16 @@ PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
                            const char* inCstring, char** outCstring)
 {
   PRInt32 outLength;
-  return MIME_ConvertCharset(from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring, &outLength);
+  return MIME_ConvertCharset(PR_FALSE, from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring, &outLength);
 }
 
-PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
+PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
 {
   MimeCharsetConverterClass aMimeCharsetConverterClass;
   PRInt32 res;
 
-  res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, PR_FALSE, -1);
+  res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, autoDetection, -1);
 
   if (res != -1) {
     res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength);

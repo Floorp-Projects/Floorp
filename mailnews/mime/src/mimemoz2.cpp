@@ -154,7 +154,7 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
   // Now do conversion to UTF-8 for output
   char  *convertedString = NULL;
   PRInt32 convertedStringLen;
-  PRInt32 res = MIME_ConvertCharset(input_charset, "UTF-8", input_line, input_length, 
+  PRInt32 res = MIME_ConvertCharset(PR_TRUE, input_charset, "UTF-8", input_line, input_length, 
                                     &convertedString, &convertedStringLen);
   if (res != 0)
   {

@@ -83,6 +83,7 @@ PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
  * since this will not save a state info (i.e. converter instance will be created/destroyed for every call).
  * The caller should instanticate converters by XPCOM for that purpose.
  *
+ * @param autoDetection [IN] True if apply auto charset detection.
  * @param from_charset[IN] A charset name in C string.
  * @param to_charset  [IN] A charset name in C string.
  * @param inBuffer    [IN] Input buffer to convert.
@@ -91,7 +92,7 @@ PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
  * @param outLength   [OUT] Converted buffer length is set.
  * @return            0 is success, otherwise error.
  */
-PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
+PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength);
 
 /**
