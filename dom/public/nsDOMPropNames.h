@@ -897,6 +897,8 @@
     "xulelement.removebroadcastlistener", \
     "xulelement.resource", \
     "xulelement.style", \
+    "xulpopupelement.openpopup", \
+    "xulpopupelement.closepopup", \
     "xultreeelement.addcelltoselection", \
     "xultreeelement.additemtoselection", \
     "xultreeelement.clearcellselection", \
