@@ -278,10 +278,11 @@ public:
   static PRBool IsLower(char aChar);
 
   static PRBool IsAscii(PRUnichar aChar);
-  static PRBool IsAscii(PRUnichar* aString);
+  static PRBool IsAscii(const PRUnichar* aString);
   static PRBool IsAsciiAlpha(PRUnichar aChar);
   static PRBool IsAsciiDigit(PRUnichar aChar);
   static PRBool IsAsciiSpace(PRUnichar aChar);
+  static PRBool IsAscii(const char* aString);
 };
 
 #define FF '\014'
