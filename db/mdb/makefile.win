@@ -17,8 +17,8 @@
 
 DEPTH=..\..\..
 
-#tests no tests yet
+#tests src no tests or src yet
 
-DIRS=public src 
+DIRS=public 
 
 include <$(DEPTH)\config\rules.mak>
