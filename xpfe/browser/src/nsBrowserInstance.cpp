@@ -156,7 +156,7 @@ static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
 #endif                                                                 
 
 
-#define PREF_HOMEPAGE_OVERRIDE_URL "startup.homepage_override_url.1"
+#define PREF_HOMEPAGE_OVERRIDE_URL "startup.homepage_override_url"
 #define PREF_HOMEPAGE_OVERRIDE "browser.startup.homepage_override.1"
 #define PREF_HOMEPAGE_OVERRIDE_MSTONE "browser.startup.homepage_override.mstone"
 #define PREF_BROWSER_STARTUP_PAGE "browser.startup.page"
