@@ -2204,7 +2204,7 @@ nsXULDocument::Init()
         gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "value"),
                                  &kNC_value);
 
-        rv = CallCreateInstance(kHTMLElementFactoryCID, &gHTMLElementFactory);
+        rv = CallGetService(kHTMLElementFactoryCID, &gHTMLElementFactory);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get HTML element factory");
         if (NS_FAILED(rv)) return rv;
 
