@@ -52,8 +52,9 @@ use Cwd;
 my @dirs;
 my $curdir = getcwd();
 
-my $list_only_mode = 0;  # --list-only argument, only print out module names
-my $opt_list_only;
+my $opt_list_only = 0;          # --list-only: only print out module names
+my $opt_dont_print_tree = 0;    # --skip-tree: don't print dependency tree
+my $opt_dont_print_dep_map = 0; # --skip-dep-map: don't print dependency map
 
 my $load_file = 0;       # --file
 my $opt_start_module;    # --start-module optionally print out dependencies    
@@ -67,13 +68,16 @@ sub parse_args() {
   # Stuff arguments into variables.
   # Print usage if we get an unknown argument.
   PrintUsage() if !GetOptions('list-only' => \$opt_list_only,
+							  'skip-dep-map' => \$opt_dont_print_dep_map,
+							  'skip-tree' => \$opt_dont_print_tree,
 							  'start-module=s' => \$opt_start_module,
 							  'file=s' => \$load_file,
 							  'force-order=s' => \$force_order);
 
-  # Pick up arguments, if any.
+  # list-only: don't print tree + don't pring dep map
   if($opt_list_only) {
-	$list_only_mode = 1;
+     $opt_dont_print_tree = 1;
+	 $opt_dont_print_dep_map = 1;
   }
 
   # Last args are directories, if not in load-from-file mode.
@@ -100,7 +104,7 @@ MFILE:
 	# pop the curdir
 	$curdir = pop @dirs;
 	
-	if(!$list_only_mode) {
+	if(!$opt_list_only) {
 	  print STDERR "Entering $curdir..                 \r";
 	}
 	chdir "$curdir" || next;
@@ -140,7 +144,7 @@ MFILE:
 	}
   }
 
-  if(!$list_only_mode) {
+  if(!$opt_list_only) {
 	print STDERR "\n";
   }
 }
@@ -175,7 +179,7 @@ sub build_deps_matrix_from_file {
 # Print out %deps.
 sub print_deps_matrix() {
   my $module;
-  if(!$list_only_mode) {
+  if(!$opt_dont_print_dep_map) {
 	print "digraph G {\n";
 	print "    concentrate=true;\n";
 	
@@ -192,7 +196,7 @@ sub print_deps_matrix() {
 
   print_dependency_list();
 
-  if(!$list_only_mode) {
+  if(!$opt_dont_print_dep_map) {
 	print "}\n";
   }
 }
@@ -303,7 +307,7 @@ sub print_dependency_list() {
 	foreach $req ( sort { $deps{$module}{$b} <=> $deps{$module}{$a} }
 				   keys %{ $deps{$module} } ) {
 	  #    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
-	  if(!$list_only_mode) {
+	  if(!$opt_dont_print_dep_map) {
 		print "    $module -> $req;\n";
 	  } else {
 		# print "$req ";
@@ -313,7 +317,7 @@ sub print_dependency_list() {
   }
 
   # generate unique list, print it out.
-  if($list_only_mode) {
+  if($opt_list_only) {
 	my %saw;
 	undef %saw;
 	@unique_list = grep(!$saw{$_}++, @raw_list);
@@ -399,7 +403,7 @@ sub walk_module_digraph {
   $visited_nodes{$module}++;
 
   # Print this node.
-  if (!$list_only_mode) {
+  if (!$opt_dont_print_tree) {
 	my $i;
 	for ($i=0; $i<$level; $i++) {
 	  print "  ";
@@ -421,7 +425,7 @@ sub walk_module_digraph {
   # Post-recursion.  Store in array form so we keep the order.
   push(@visited_nodes_leaf_first_order, $module);
 
-  if (!$list_only_mode) {
+  if (!$opt_dont_print_tree) {
 	if($level == 1) {
 	  print "\n";
 	}
@@ -480,7 +484,7 @@ sub get_matrix_size {
   # Print out deps matrix.
   # --list-only and --start-module together mean to
   # print out the module deps, not the matrix.
-  if (not ($list_only_mode and $opt_start_module)) {
+  if (not ($opt_list_only)) {
     print_deps_matrix();
   }
 
