@@ -2942,8 +2942,6 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
       return rv;
     }
     // Now we need to copy all of the style sheets from the parent document
-    
-    
     PRInt32 count = mStyleSheets.Count();
     for (PRInt32 i = 0; i < count; i++) {
       // Don't bother addrefing. We don't live as long as our parent document
@@ -2951,17 +2949,66 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
         popupDoc->mStyleSheets.AppendElement(sheet);  
     }
 
+    // We don't share builders, but we do share the DB that the current
+    // XUL builder has.
+    // Create a XUL content model builder
+    rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
+                                                nsnull,
+                                                kIRDFContentModelBuilderIID,
+                                                (void**) &(popupDoc->mXULBuilder));
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("couldn't create XUL builder");
+        return rv;
+    }
+
+    nsCOMPtr<nsIRDFCompositeDataSource> db;
+    mXULBuilder->GetDataBase(getter_AddRefs(db));
+    if (NS_FAILED(rv = popupDoc->mXULBuilder->SetDataBase(db))) {
+        NS_ERROR("couldn't set builder's db");
+        return rv;
+    }
+
+    if (NS_FAILED(rv = popupDoc->AddContentModelBuilder(popupDoc->mXULBuilder))) {
+        NS_ERROR("could't add XUL builder");
+        return rv;
+    }
+
     // We share the same data sources
+    NS_IF_ADDREF(mLocalDataSource);
+    popupDoc->mLocalDataSource = mLocalDataSource;
+    NS_IF_ADDREF(mDocumentDataSource);
+    popupDoc->mDocumentDataSource = mDocumentDataSource;
 
     // We share the same namespace manager
+    NS_IF_ADDREF(mNameSpaceManager);
+    popupDoc->mNameSpaceManager = mNameSpaceManager;
 
     // We share the mPopup
-
-    // We share the element map
+    NS_IF_ADDREF(mPopup);
+    popupDoc->mPopup = mPopup;
 
     // Our root content is the first child of the popup 
     // node.
-   
+    nsCOMPtr<nsIContent> firstChild;
+    PRInt32 childCount;
+    aPopupElement->ChildCount(childCount);
+    if (childCount == 0)
+      return NS_OK;
+    
+    aPopupElement->ChildAt(0, *getter_AddRefs(firstChild));
+
+    // Our root is firstChild. Suck all of this
+    // content into our document.
+    popupDoc->SetRootContent(firstChild);
+
+    // XXX Need to make it so that the parent link can't be
+    // followed.  Could sever it, but would then have to know
+    // how to put it back.  Will have to think about this.
+
+    // Return the doc
+    *aResult = popupDoc;
+
     return NS_OK;
 }
 
