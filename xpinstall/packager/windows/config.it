@@ -127,7 +127,21 @@ Show Banner Image=TRUE
 ; installation of the product. If so, then prompt the user that cleanup
 ; of destination folder is highly recommended, or instability of product
 ; can occurr.
-Cleanup On Upgrade=TRUE
+[Cleanup On Upgrade]
+Cleanup=TRUE
+ObjectToIgnore0=plugins
+ObjectToIgnore1=uninstall
+ObjectToIgnore2=install_status.log
+
+; List of files/dirs that is used to determine if a directory is a profile
+; or not.  This is so the directory is not deleted as part of the Cleanup
+; On Upgrade.
+; All of the object files must be found in order for a dir to be assumed
+; to be a Profile dir.
+[Profile Dir Object List]
+Object0=chrome
+Object1=bookmarks.html
+Object2=localstore.rdf
 
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.

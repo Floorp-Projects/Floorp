@@ -57,18 +57,18 @@ void    LaunchExistingGreInstaller(greInfo *gre);
 HRESULT GetInstalledGreConfigIni(greInfo *aGre, char *aGreConfigIni, DWORD aGreConfigIniBufSize);
 HRESULT GetInfoFromInstalledGreConfigIni(greInfo *aGre);
 HRESULT DetermineGreComponentDestinationPath(char *aInPath, char *aOutPath, DWORD aOutPathBufSize);
-BOOL    IsOkToRemoveFileOrDirname(char *aFileOrDirname);
+BOOL    IsOkToRemoveFileOrDirname(char *aFileOrDirname, char **aListToIgnore,
+int     aListToIgnoreLength, char **aListProfileObjects, int aListProfileLength);
+int     GetTotalNumKeys(char *aSectionName, char *aBaseKeyName);
+void    CleanupArrayList(char **aList, int aListLength);
+char    **BuildArrayList(char *aSectionName, char *aBaseKeyName, int *aArrayLength);
+BOOL    IsDirAProfileDir(char *aParentPath, char **aListProfileObjects, int aListLength);
 
 static greInfo gGre;
 
 char *ArchiveExtensions[] = {"zip",
                              "xpi",
                              "jar",
-                             ""};
-
-char *ExcludeRemoveList[] = {"plugins",
-                             "uninstall",
-                             "install_status.log",
                              ""};
 
 // Path and filename to the GRE's uninstaller.  This is used to cleanup
@@ -233,10 +233,7 @@ void *NS_GlobalAlloc(DWORD dwMaxBuf)
     return(NULL);
   }
   else
-  {
-    ZeroMemory(vBuf, dwMaxBuf);
     return(vBuf);
-  }
 }
 
 void FreeMemory(void **vPointer)
@@ -2309,13 +2306,33 @@ HRESULT CleanupOrphanedGREs()
   DWORD     indexOfGREID;
   DWORD     indexOfGREAppList;
   int       rv = WIZ_OK;
+  int       regRv = WIZ_OK;
+  char      buf[MAX_BUF];
 
   DecryptString(greUninstaller, GRE_UNINSTALLER_FILE);
+
+  _snprintf(buf, sizeof(buf), "    GRE Cleanup Orphans: %s\n", sgProduct.greCleanupOrphans ? "true" : "false");
+  buf[sizeof(buf) - 1] = '\0';
+  UpdateInstallStatusLog(buf);
+
+  _snprintf(buf, sizeof(buf), "    GRE Uninstaller Path: %s\n", greUninstaller);
+  buf[sizeof(buf) - 1] = '\0';
+  UpdateInstallStatusLog(buf);
+
+  _snprintf(buf, sizeof(buf), "    GRE Uninstaller found: %s\n", FileExists(greUninstaller) ? "true" : "false");
+  buf[sizeof(buf) - 1] = '\0';
+  UpdateInstallStatusLog(buf);
+
   // If greCleanupOrphans is false (set either in config.ini or passed in
   // thru the cmdline) or GRE's uninstaller file does not exist, then
   // simply do nothing and return.
   if(!sgProduct.greCleanupOrphans || !FileExists(greUninstaller))
+  {
+    _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return: %d\n", WIZ_OK);
+    buf[sizeof(buf) - 1] = '\0';
+    UpdateInstallStatusLog(buf);
     return(WIZ_OK);
+  }
 
   // If GRE is installed locally, then use the private GRE key, else
   // use the default global GRE key in the windows registry.
@@ -2325,7 +2342,12 @@ HRESULT CleanupOrphanedGREs()
     MozCopyStr(GRE_REG_KEY, greRegKey, sizeof(greRegKey));
 
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, greRegKey, 0, KEY_READ, &greIDKeyHandle) != ERROR_SUCCESS)
+  {
+    _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return (RegOpenKeyEx: %s): %d\n", greRegKey, WIZ_ERROR_UNDEFINED);
+    buf[sizeof(buf) - 1] = '\0';
+    UpdateInstallStatusLog(buf);
     return(WIZ_ERROR_UNDEFINED);
+  }
 
   // Build the list of GRE's given greRegKey.  For example, if greRegKey is:
   //
@@ -2333,12 +2355,22 @@ HRESULT CleanupOrphanedGREs()
   //
   // then build a list of the GRE IDs inside this key.
   totalGreIDSubKeys = 0;
-  if(RegQueryInfoKey(greIDKeyHandle, NULL, NULL, NULL, &totalGreIDSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+  regRv = RegQueryInfoKey(greIDKeyHandle, NULL, NULL, NULL, &totalGreIDSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+  if((regRv != ERROR_SUCCESS) || (totalGreIDSubKeys == 0))
+  {
     rv = WIZ_ERROR_UNDEFINED;
+    _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return (RegQueryInfoKey: all keys): %d\n", rv);
+    buf[sizeof(buf) - 1] = '\0';
+    UpdateInstallStatusLog(buf);
+    return(rv);
+  }
 
   if((rv == WIZ_OK) && (greIDListToClean = NS_GlobalAlloc(sizeof(char *) * totalGreIDSubKeys)) == NULL)
   {
     RegCloseKey(greIDKeyHandle);
+    _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return.  Failed to allocate memory for greIDListToClean: %d\n", WIZ_OUT_OF_MEMORY);
+    buf[sizeof(buf) - 1] = '\0';
+    UpdateInstallStatusLog(buf);
     return(WIZ_OUT_OF_MEMORY);
   }
 
@@ -2362,6 +2394,9 @@ HRESULT CleanupOrphanedGREs()
         {
           RegCloseKey(greIDKeyHandle);
           rv = WIZ_OUT_OF_MEMORY;
+          _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return.  Failed to add %s to greIDListToClean[]: %d\n", greKeyID, rv);
+          buf[sizeof(buf) - 1] = '\0';
+          UpdateInstallStatusLog(buf);
           break;
         }
         MozCopyStr(greKeyID, greIDListToClean[indexOfGREID], idKeySize + 1);
@@ -2393,17 +2428,30 @@ HRESULT CleanupOrphanedGREs()
         if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, greAppListKeyPath, 0, KEY_READ, &greAppListKeyHandle) != ERROR_SUCCESS)
         {
           rv = WIZ_ERROR_UNDEFINED;
+          _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return.  Failed to open key %s: %d\n", greAppListKeyPath, rv);
+          buf[sizeof(buf) - 1] = '\0';
+          UpdateInstallStatusLog(buf);
           break;
         }
 
         totalGREAppListSubKeys = 0;
         if(RegQueryInfoKey(greAppListKeyHandle, NULL, NULL, NULL, &totalGREAppListSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        {
+          RegCloseKey(greAppListKeyHandle);
           rv = WIZ_ERROR_UNDEFINED;
+          _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return.  Failed to regquery for all keys in %s: %d\n", greAppListKeyPath, rv);
+          buf[sizeof(buf) - 1] = '\0';
+          UpdateInstallStatusLog(buf);
+          break;
+        }
     
         if((rv == WIZ_OK) && (greAppListToClean = NS_GlobalAlloc(sizeof(char *) * totalGREAppListSubKeys)) == NULL)
         {
           RegCloseKey(greAppListKeyHandle);
           rv = WIZ_OUT_OF_MEMORY;
+          _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return.  Failed to allocate memory for greAppListToClean: %d\n", rv);
+          buf[sizeof(buf) - 1] = '\0';
+          UpdateInstallStatusLog(buf);
           break;
         }
 
@@ -2421,6 +2469,9 @@ HRESULT CleanupOrphanedGREs()
             {
               RegCloseKey(greAppListKeyHandle);
               rv = WIZ_OUT_OF_MEMORY;
+              _snprintf(buf, sizeof(buf), "    Cleanup Orphaned GRE premature return.  Failed to add %s to greAppListToClean[]: %d\n", greKeyAppList, rv);
+              buf[sizeof(buf) - 1] = '\0';
+              UpdateInstallStatusLog(buf);
               break;
             }
             MozCopyStr(greKeyAppList, greAppListToClean[indexOfGREAppList], appListKeySize + 1);
@@ -2431,6 +2482,7 @@ HRESULT CleanupOrphanedGREs()
         if(rv != WIZ_OK)
           break;
 
+        UpdateInstallStatusLog("\n    Cleanup Orphaned GRE's uninstall commandline:\n");
         // Enumerate the saved GREAppList and start calling GREUninstall.exe
         // to remove them if appropriate.
         // GREUninstall.exe will take care of determining if the particular
@@ -2447,6 +2499,9 @@ HRESULT CleanupOrphanedGREs()
           _snprintf(greUninstallParam, sizeof(greUninstallParam), "-mmi -ms -ua \"%s\" -app \"%s\" -app_path \"%s\"",
               greIDListToClean[indexOfGREID], greAppListToClean[indexOfGREAppList], programNamePath);
           greUninstallParam[sizeof(greUninstallParam) - 1] = '\0';
+          UpdateInstallStatusLog("        ");
+          UpdateInstallStatusLog(greUninstallParam);
+          UpdateInstallStatusLog("\n");
           WinSpawn(greUninstaller, greUninstallParam, szTempDir, SW_SHOWNORMAL, WS_WAIT);
         }
 
@@ -2459,9 +2514,9 @@ HRESULT CleanupOrphanedGREs()
     }
   }
 
+  //
   // Cleanup allocated memory
-  for(indexOfGREID = 0; indexOfGREID < totalGreIDSubKeys; indexOfGREID++)
-    FreeMemory(&greIDListToClean[indexOfGREID]);
+  CleanupArrayList(greIDListToClean, totalGreIDSubKeys);
   if(greIDListToClean)
     GlobalFree(greIDListToClean);
 
@@ -2624,9 +2679,9 @@ BOOL IsPathWithinWindir(char *aTargetPath)
   if(GetWindowsDirectory(windir, sizeof(windir)))
   {
     MozCopyStr(aTargetPath, targetPath, sizeof(targetPath));
-    RemoveBackSlash(targetPath);
+    AppendBackSlash(targetPath, sizeof targetPath);
     CharUpperBuff(targetPath, sizeof(targetPath));
-    RemoveBackSlash(windir);
+    AppendBackSlash(windir, sizeof(windir));
     CharUpperBuff(windir, sizeof(windir));
     if(strstr(targetPath, windir) == targetPath)
       return(TRUE);
@@ -2643,22 +2698,210 @@ BOOL IsPathWithinWindir(char *aTargetPath)
   return(FALSE);
 }
 
+/* Function: CleanupArrayList()
+ *       in: char **aList - array to cleanup
+ *           int  aListLength - length of array
+ *      out: none.
+ *  purpose: Cleans up memory.
+ */
+void CleanupArrayList(char **aList, int aListLength)
+{
+  int index = 0;
+
+  // Free allocated memory
+  for(index = 0; index < aListLength; index++)
+    FreeMemory(&aList[index]);
+}
+
+/* Function: GetTotalNumKeys()
+ *       in: char *aSectionName - name of section to get info on
+ *           char *aBaseKeyName - base name of key to count
+ *      out: none.
+ *  purpose: To get the total number of 'aBaseKeyName's in aSection.
+ *           A base key name is just the name of the key without the
+ *           numbers, ie:
+ *             base key name          : Object
+ *             actual key in .ini file: Object0, Object1, etc...
+ */
+int GetTotalNumKeys(char *aSectionName, char *aBaseKeyName)
+{
+  int index = 0;
+  char keyName[MAX_BUF_TINY];
+  char buf[MAX_BUF];
+
+  assert(aSectionName);
+  assert(aBaseKeyName);
+
+  _snprintf(keyName, sizeof(keyName), "%s%d", aBaseKeyName, index);
+  keyName[sizeof(keyName) - 1] = '\0';
+  GetPrivateProfileString(aSectionName, keyName, "", buf, sizeof(buf), szFileIniConfig);
+  while(*buf != '\0')
+  {
+    ++index;
+    _snprintf(keyName, sizeof(keyName), "%s%d", aBaseKeyName, index);
+    keyName[sizeof(keyName) - 1] = '\0';
+    GetPrivateProfileString(aSectionName, keyName, "", buf, sizeof(buf), szFileIniConfig);
+  }
+
+  return(index);
+}
+
+/* Function: BuildArrayList()
+ *       in: char *aSectionName - section name to look for info to build array
+ *           char *aBaseKeyName - base key name to use to build array from
+ *      out: returns char ** - array list built
+ *           int *aArrayLength - length of array built
+ *  purpose: To build an Array list given the aSectionName and aBaseKeyName.
+ *           Caller is responsible for cleaning up of allocated memory done
+ *           in this function!
+ */
+char **BuildArrayList(char *aSectionName, char *aBaseKeyName, int *aArrayLength)
+{
+  int index = 0;
+  int totalKeys = 0;
+  char **list;
+  char keyName[MAX_BUF_TINY];
+  char buf[MAX_BUF];
+
+  *aArrayLength = 0;
+  totalKeys = GetTotalNumKeys(aSectionName, aBaseKeyName);
+
+  // if totalKeys is <= 0, then there's nothing to do.
+  if(totalKeys <= 0)
+    return(NULL);
+
+  if((list = NS_GlobalAlloc(sizeof(char *) * totalKeys)) == NULL)
+    return(NULL);
+
+  // Create and initialize the array of pointers
+  for(index = 0; index < totalKeys; index++)
+  {
+    // build the actual key name to use.
+    _snprintf(keyName, sizeof(keyName), "%s%d", aBaseKeyName, index);
+    keyName[sizeof(keyName) - 1] = '\0';
+    GetPrivateProfileString(aSectionName, keyName, "", buf, sizeof(buf), szFileIniConfig);
+    if(*buf != '\0')
+    {
+      if((list[index] = NS_GlobalAlloc(sizeof(char) * (lstrlen(buf) + 1))) == NULL)
+      {
+        // couldn't allocate memory for an array, cleanup the array list that
+        // has been currently built, and return NULL.
+        CleanupArrayList(list, index);
+        if(list)
+          GlobalFree(list);
+
+        return(NULL);
+      }
+      MozCopyStr(buf, list[index], lstrlen(buf) + 1);
+    }
+    else
+      list[index] = NULL;
+  }
+  *aArrayLength = index;
+
+  // caller is responsible for garbage cleanup of list.
+  return(list);
+}
+
+/* Function: IsDirAProfileDir()
+ *       in: char *aParentPath - path to start the check.
+ *           char **aListProfileObjects - array list of profile files/dirs to
+ *                  use to determine if a dir is a profile dir or not.
+ *           int  aListLength
+ *      out: BOOL
+ *  purpose: To check to see if a dir is a profile dir or not.  If any of it's
+ *           subdirectories is a profile dir, then the initial aParentPath is
+ *           considered to be a profile dir.
+ */
+BOOL IsDirAProfileDir(char *aParentPath, char **aListProfileObjects, int aListLength)
+{
+  HANDLE          fileHandle;
+  WIN32_FIND_DATA fdFile;
+  char            destPathTemp[MAX_BUF];
+  BOOL            found;
+  BOOL            isProfileDir;
+  int             index;
+
+  if((aListLength <= 0) || !aListProfileObjects || !*aListProfileObjects)
+    return(FALSE);
+
+  /* check the initial aParentPath to see if the dir contains the
+   * files/dirs that contitute a profile dir */
+  isProfileDir = TRUE;
+  for(index = 0; index < aListLength; index++)
+  {
+    /* create full path */
+    _snprintf(destPathTemp, sizeof(destPathTemp), "%s\\%s", aParentPath, aListProfileObjects[index]);
+    destPathTemp[sizeof(destPathTemp) - 1] = '\0';
+
+    /* if any of the files/dirs that make up a profile dir is missing,
+     * then it's not a profile dir */
+    if(!FileExists(destPathTemp))
+    {
+      isProfileDir = FALSE;
+      break;
+    }
+  }
+
+  /* If it's determined to be a profile dir, then return immediately.  If it's
+   * not, then continue searching the other dirs to see if any constitute a
+   * profile dir. */
+  if(isProfileDir)
+    return(TRUE);
+
+  _snprintf(destPathTemp, sizeof(destPathTemp), "%s\\*", aParentPath);
+  destPathTemp[sizeof(destPathTemp) - 1] = '\0';
+
+  found = TRUE;
+  fileHandle = FindFirstFile(destPathTemp, &fdFile);
+  while((fileHandle != INVALID_HANDLE_VALUE) && found)
+  {
+    if((lstrcmpi(fdFile.cFileName, ".") != 0) && (lstrcmpi(fdFile.cFileName, "..") != 0))
+    {
+      // if it's a directory, there we need to traverse it to see if there are
+      // dirs that are profile dirs.
+      if(fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      {
+        _snprintf(destPathTemp, sizeof(destPathTemp), "%s\\%s", aParentPath, fdFile.cFileName);
+        destPathTemp[sizeof(destPathTemp) - 1] = '\0';
+        isProfileDir = IsDirAProfileDir(destPathTemp, aListProfileObjects, aListLength);
+        if(isProfileDir)
+          break;
+          
+      }
+    }
+    found = FindNextFile(fileHandle, &fdFile);
+  }
+
+  FindClose(fileHandle);
+  return(isProfileDir);
+}
+
 /* Function: IsOkToRemoveFileOrDir()
  *       in: char *aFileOrDirname
  *      out: bool return type
- *  purpose: To check if the file or dirname is not in the ExcludeRemoveList.
+ *  purpose: To check if the file or dirname is not in the aListToIgnore.
  */
-BOOL IsOkToRemoveFileOrDirname(char *aFileOrDirname)
+BOOL IsOkToRemoveFileOrDirname(char *aFileOrDirname, char **aListToIgnore,
+    int aListToIgnoreLength, char **aListProfileObjects, int aListProfileLength)
 {
   int  i;
+  char filename[MAX_BUF];
 
-  i = 0;
-  while(*ExcludeRemoveList[i] != '\0')
-  {
-    if(lstrcmpi(aFileOrDirname, ExcludeRemoveList[i]) == 0)
+  if(!aListToIgnore || !*aListToIgnore)
+    return(TRUE);
+
+  ParsePath(aFileOrDirname, filename, sizeof(filename), FALSE, PP_FILENAME_ONLY);
+
+  // check to see if this is a profile folder
+  if(FileExists(aFileOrDirname) & FILE_ATTRIBUTE_DIRECTORY)
+    if(IsDirAProfileDir(aFileOrDirname, aListProfileObjects, aListProfileLength))
       return(FALSE);
 
-    ++i;
+  for(i = 0; i < aListToIgnoreLength; i++)
+  {
+    if(lstrcmpi(filename, aListToIgnore[i]) == 0)
+      return(FALSE);
   }
   return(TRUE);
 }
@@ -2668,7 +2911,7 @@ BOOL IsOkToRemoveFileOrDirname(char *aFileOrDirname)
  *      out: none.
  *  purpose: To cleanup/remove files and dirs within the user chosen
  *           installation path, excluding the list in
- *           ExcludeRemoveList.
+ *           aListToIgnore.
  */
 void CleanupOnUpgrade()
 {
@@ -2678,6 +2921,11 @@ void CleanupOnUpgrade()
   char            targetPath[MAX_BUF];
   char            buf[MAX_BUF];
   BOOL            found;
+  char            **listObjectsToIgnore;
+  int             listTotalObjectsToIgnore;
+  char            **listProfileObjects;
+  int             listTotalProfileObjects;
+  int             index;
 
   MozCopyStr(sgProduct.szPath, targetPath, sizeof(targetPath));
   RemoveBackSlash(targetPath);
@@ -2704,12 +2952,20 @@ void CleanupOnUpgrade()
     return;
   }
 
+  // param1: section name
+  // param2: base key name within section name
+  //         ie: ObjectToIgnore0=
+  //             ObjectToIgnore1=
+  //             ObjectToIgnore2=
+  listObjectsToIgnore = BuildArrayList("Cleanup On Upgrade", "ObjectToIgnore", &listTotalObjectsToIgnore);
+  listProfileObjects  = BuildArrayList("Profile Dir Object List", "Object", &listTotalProfileObjects);
+
   _snprintf(destPathTemp, sizeof(destPathTemp), "%s\\*", targetPath);
   destPathTemp[sizeof(destPathTemp) - 1] = '\0';
 
   found = TRUE;
   fileHandle = FindFirstFile(destPathTemp, &fdFile);
-  while((fileHandle != INVALID_HANDLE_VALUE) && (found == TRUE))
+  while((fileHandle != INVALID_HANDLE_VALUE) && found)
   {
     if((lstrcmpi(fdFile.cFileName, ".") != 0) && (lstrcmpi(fdFile.cFileName, "..") != 0))
     {
@@ -2717,7 +2973,8 @@ void CleanupOnUpgrade()
       _snprintf(destPathTemp, sizeof(destPathTemp), "%s\\%s", targetPath, fdFile.cFileName);
       destPathTemp[sizeof(destPathTemp) - 1] = '\0';
 
-      if(IsOkToRemoveFileOrDirname(fdFile.cFileName))
+      if(IsOkToRemoveFileOrDirname(destPathTemp, listObjectsToIgnore,
+            listTotalObjectsToIgnore, listProfileObjects, listTotalProfileObjects))
       {
         if(fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
@@ -2744,6 +3001,33 @@ void CleanupOnUpgrade()
   }
 
   FindClose(fileHandle);
+
+  // Log the array lists to make sure it matches the list of files/dirs that
+  // were processed.
+  UpdateInstallStatusLog("\n    Files/Dirs list to ignore:\n");
+  for(index = 0; index < listTotalObjectsToIgnore; index++)
+  {
+    _snprintf(buf, sizeof(buf), "        ObjectToIgnore%d: %s\n", index + 1, listObjectsToIgnore[index]);
+    buf[sizeof(buf) - 1] = '\0';
+    UpdateInstallStatusLog(buf);
+  }
+
+  CleanupArrayList(listObjectsToIgnore, listTotalObjectsToIgnore);
+  if(listObjectsToIgnore)
+    GlobalFree(listObjectsToIgnore);
+
+  UpdateInstallStatusLog("\n    Files/Dirs list to verify dir is a Profile dir:\n");
+  for(index = 0; index < listTotalProfileObjects; index++)
+  {
+    _snprintf(buf, sizeof(buf), "        Object%d: %s\n", index + 1, listProfileObjects[index]);
+    buf[sizeof(buf) - 1] = '\0';
+    UpdateInstallStatusLog(buf);
+  }
+
+  CleanupArrayList(listProfileObjects, listTotalProfileObjects);
+  if(listProfileObjects)
+    GlobalFree(listProfileObjects);
+
 }
 
 /* Function: ProcessGre()
@@ -2773,6 +3057,7 @@ HRESULT ProcessGre(greInfo *aGre)
    * If aGre->homePath does exist, then we simply call LaunchExistingGreInstaller()
    * to run the existing GRE's installer app to register mozilla.
    */
+  UpdateInstallStatusLog("\n");
   if((*aGre->homePath == '\0') || (gbForceInstallGre))
     LaunchOneComponent(aGre->siCGreComponent, aGre);
   else
@@ -6740,7 +7025,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* find out if we need to cleanup previous installation on upgrade
    * (installing ontop of - not related to cleaning up olde GRE's
    *  installed elsewhere) */
-  GetPrivateProfileString("General", "Cleanup On Upgrade", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  GetPrivateProfileString("Cleanup On Upgrade", "Cleanup", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if(lstrcmpi(szBuf, "TRUE") == 0)
     sgProduct.checkCleanupOnUpgrade = TRUE;
 
