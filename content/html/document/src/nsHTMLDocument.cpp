@@ -1709,28 +1709,6 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
   return NS_OK;
 }
 
-PRInt32
-GetHTMLDocumentNamespace(nsIContent *aContent)
-{
-  NS_ASSERTION(aContent->GetDocument(),
-               "This method should never be called on content nodes "
-               "that are not in a document!");
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIHTMLDocument> htmldoc(do_QueryInterface(aContent->GetDocument()));
-
-    if (!htmldoc) {
-      NS_ERROR("Huh, how did this happen? This should only be used with "
-               "HTML documents!");
-    }
-  }
-#endif
-
-  return aContent->GetDocument()->IsCaseSensitive() ?
-    kNameSpaceID_XHTML : kNameSpaceID_None;
-}
-
 PRBool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
                            nsIAtom* aAtom, const nsAString& aData)
@@ -1738,7 +1716,20 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
   nsINodeInfo *ni = aContent->GetNodeInfo();
 
   if (ni) {
-    PRInt32 namespaceID = GetHTMLDocumentNamespace(aContent);
+    NS_ASSERTION(aContent->IsInDoc(),
+                 "This method should never be called on content nodes that "
+                 "are not in a document!");
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIHTMLDocument> htmldoc =
+        do_QueryInterface(aContent->GetCurrentDoc());
+      NS_ASSERTION(htmldoc,
+                   "Huh, how did this happen? This should only be used with "
+                   "HTML documents!");
+    }
+#endif
+
+    PRInt32 namespaceID = aContent->GetCurrentDoc()->GetDefaultNamespaceID();
 
     if (ni->Equals(nsHTMLAtoms::a, namespaceID) ||
         ni->Equals(nsHTMLAtoms::area, namespaceID)) {
@@ -1772,9 +1763,21 @@ nsHTMLDocument::MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
   nsINodeInfo *ni = aContent->GetNodeInfo();
 
   if (ni) {
-    PRInt32 namespaceID = GetHTMLDocumentNamespace(aContent);
+    NS_ASSERTION(aContent->IsInDoc(),
+                 "This method should never be called on content nodes that "
+                 "are not in a document!");
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIHTMLDocument> htmldoc =
+        do_QueryInterface(aContent->GetCurrentDoc());
+      NS_ASSERTION(htmldoc,
+                   "Huh, how did this happen? This should only be used with "
+                   "HTML documents!");
+    }
+#endif
 
-    if (ni->Equals(nsHTMLAtoms::a, namespaceID)) {
+    if (ni->Equals(nsHTMLAtoms::a,
+                   aContent->GetCurrentDoc()->GetDefaultNamespaceID())) {
       return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name);
     }
   }
