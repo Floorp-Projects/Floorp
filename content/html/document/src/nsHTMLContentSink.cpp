@@ -43,7 +43,7 @@
 #include "prlog.h"
 
 #include "nsHTMLParts.h"
-#include "nsIHTMLElementFactory.h"
+#include "nsIElementFactory.h"
 #include "nsITextContent.h"
 
 #include "nsIDOMText.h"
@@ -958,9 +958,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, PRInt32 aID)
 //----------------------------------------------------------------------
 
 
-static NS_DEFINE_IID(kIHTMLElementFactoryIID, NS_IHTML_ELEMENT_FACTORY_IID);
-
-class nsHTMLElementFactory : public nsIHTMLElementFactory {
+class nsHTMLElementFactory : public nsIElementFactory {
 public:
   nsHTMLElementFactory();
   virtual ~nsHTMLElementFactory();
@@ -968,11 +966,11 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CreateInstanceByTag(const nsString& aTag,
-                                 nsIHTMLContent** aResult);
+                                 nsIContent** aResult);
 };
 
 nsresult
-NS_NewHTMLElementFactory(nsIHTMLElementFactory** aInstancePtrResult)
+NS_NewHTMLElementFactory(nsIElementFactory** aInstancePtrResult)
 {
   NS_PRECONDITION(aInstancePtrResult, "null OUT ptr");
   if (!aInstancePtrResult) {
@@ -982,7 +980,7 @@ NS_NewHTMLElementFactory(nsIHTMLElementFactory** aInstancePtrResult)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLElementFactoryIID,
+  return it->QueryInterface(nsIElementFactory::GetIID(),
                             (void**)aInstancePtrResult);
 }
 
@@ -995,14 +993,18 @@ nsHTMLElementFactory::~nsHTMLElementFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsHTMLElementFactory, kIHTMLElementFactoryIID);
+NS_IMPL_ISUPPORTS1(nsHTMLElementFactory, nsIElementFactory);
 
 NS_IMETHODIMP
 nsHTMLElementFactory::CreateInstanceByTag(const nsString& aTag,
-                                          nsIHTMLContent** aResult)
+                                          nsIContent** aResult)
 {
   nsresult rv;
-  rv = NS_CreateHTMLElement(aResult, aTag);
+  nsCOMPtr<nsIHTMLContent> htmlContent;
+  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aTag);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(htmlContent);
+  *aResult = content;
+  NS_IF_ADDREF(*aResult);
   return rv;
 }
 

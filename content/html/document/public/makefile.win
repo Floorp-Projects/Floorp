@@ -22,7 +22,6 @@
 DEPTH=..\..\..\..
 
 EXPORTS =				\
-	nsIHTMLElementFactory.h		\
 	$(NULL)
 
 MODULE=raptor 
