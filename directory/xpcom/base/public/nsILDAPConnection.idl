@@ -82,7 +82,19 @@ interface nsILDAPConnection : nsISupports
      * @exception NS_ERROR_INVALID_POINTER  aOperation was NULL
      * @exception NS_ERROR_UNEXPECTED	    this operation's msgId was not
      *	                                    unique to this connection
+     * @exception NS_ERROR_OUT_OF_MEMORY    out of memory
      */
     void addPendingOperation(in nsILDAPOperation aOperation);
+
+    /**
+     * Remove an nsILDAPOperation from the list of operations pending on this
+     * connection.  Mainly intended for use by the nsLDAPOperation code.
+     *
+     * @param aOperation	operation to add
+     * @exception NS_ERROR_INVALID_POINTER  aOperation was NULL
+     * @exception NS_ERROR_OUT_OF_MEMORY    out of memory
+     * @exception NS_ERROR_FAILURE	    could not delete the operation 
+     */
+    void removePendingOperation(in nsILDAPOperation aOperation);
 };
 

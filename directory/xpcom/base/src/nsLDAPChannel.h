@@ -97,7 +97,10 @@ protected:
   nsCOMPtr<nsISupports> mResponseContext; 
   nsCOMPtr<nsIBufferInputStream> mReadPipeIn; // this end given to the listener
   nsCOMPtr<nsIBufferOutputStream> mReadPipeOut; // for writes from the channel
+  nsCOMPtr<nsILDAPOperation> mCurrentOperation; // current ldap operation
   PRUint32 mReadPipeOffset; // how many bytes written so far?
+  PRBool mReadPipeClosed; // has the pipe already been closed?
+  nsresult mStatus;
 
 };
 

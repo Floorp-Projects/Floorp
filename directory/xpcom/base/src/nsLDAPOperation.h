@@ -58,8 +58,11 @@ class nsLDAPOperation : public nsILDAPOperation
     virtual ~nsLDAPOperation();
 
   protected:
-    // wrapper for ldap_search_ext 
-    //
+    /**
+     * wrapper for ldap_search_ext()
+     *
+     * XXX should move to idl, once LDAPControls have an IDL representation
+     */
     int SearchExt(const char *base, // base DN to search
 		  int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
 		  const char* filter, // search filter
@@ -69,6 +72,13 @@ class nsLDAPOperation : public nsILDAPOperation
 		  LDAPControl **clientctrls,
 		  struct timeval *timeoutp, // how long to wait
 		  int sizelimit); // max # of entries to return
+
+    /** 
+     * wrapper for ldap_abandon_ext().
+     *
+     * XXX should move to idl, once LDAPControls have an IDL representation
+     */
+    nsresult AbandonExt(LDAPControl **serverctrls, LDAPControl **clientctrls);
 
     nsCOMPtr<nsILDAPConnection> mConnection; // connection this op is on
     nsCOMPtr<nsILDAPMessageListener> mMessageListener; // results go here

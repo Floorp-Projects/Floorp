@@ -6,8 +6,6 @@ housecleaning
 
 * deal with timeouts
 
-* add request cancel/abandon functionality
-
 * come up with a strategy for removing completed nsILDAPOperations from
   the connection's pending request queue
 
@@ -44,7 +42,6 @@ housecleaning
 * implement nsIPipeObserver in nsLDAPChannel in case pipe fills up?
 
 * audit for and implement any appropriate NOT_IMPLEMENTED functions
-  (eg nsLDAPChannel::Cancel() and friends)
 
 * grep for XXXs and fix the issues 
 
@@ -52,8 +49,8 @@ housecleaning
 
 * use bloat tools to ensure code is not doing anything dumb
 
-* re-read (esp nsIChannel) idl and make sure all interfaces are 
-  implemented correctly
+* re-read the IDL for interfaces implemented by nsLDAPChannel.cpp make sure 
+  all interfaces are implemented correctly
 
 * go through the various options that can be used with the SDK function 
   ldap_set_options() and decide if and where the various functions should 
@@ -79,7 +76,7 @@ housecleaning
   boundaries to make sure they do appropriate checking.
 
 * migrate from "#ifdef DEBUG_dmose PR_fprintf(PR_STDERR)" to a more
-  general logging mechanism (NSPR logging facilities? nsIConsoleService?)
+  general logging mechanism (PR_Log)
 
 * does always using this-> for member vars cause inheritance problems?  if so, 
   does it matter in an XPCOM world?

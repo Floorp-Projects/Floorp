@@ -133,8 +133,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     // be threadsafe
     //
     mPendingOperations = new nsSupportsHashtable(10, PR_TRUE);
-    if (!mPendingOperations)
-	return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(mPendingOperations, NS_ERROR_FAILURE);
 
 #ifdef DEBUG_dmose
     const int lDebug = 0;
@@ -268,6 +267,58 @@ nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
     return NS_OK;
 }
 
+/**
+ * Remove an nsILDAPOperation from the list of operations pending on this
+ * connection.  Mainly intended for use by the nsLDAPOperation code.
+ *
+ * @param aOperation	operation to add
+ * @exception NS_ERROR_INVALID_POINTER  aOperation was NULL
+ * @exception NS_ERROR_OUT_OF_MEMORY    out of memory
+ * @exception NS_ERROR_FAILURE	    could not delete the operation 
+ *
+ * void removePendingOperation(in nsILDAPOperation aOperation);
+ */
+NS_IMETHODIMP
+nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
+{
+    nsresult rv;
+    PRInt32 msgId;
+
+    NS_ENSURE_ARG_POINTER(aOperation);
+
+    // find the message id
+    //
+    rv = aOperation->GetMessageId(&msgId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // turn it into an nsVoidKey.  note that this is another spot that
+    // assumes that sizeof(void*) >= sizeof(PRInt32).  
+    //
+    // XXXdmose  should really create an nsPRInt32Key.
+    //
+    nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgId));
+    if (!key) {
+	return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (!mPendingOperations->Remove(key)) {
+#ifdef DEBUG
+	PR_fprintf(PR_STDERR, "nsLDAPConnection::RemovePendingOperation was\n"
+		   " unable to remove the requested item from the pending\n"
+		   " operations queue.  This probably means that the item\n"
+		   " in question didn't exist in the queue, which in turn\n"
+		   " probably means that you have found a bug in the code\n"
+		   " that calls this function.\n");
+#endif
+
+	delete key;
+	return NS_ERROR_FAILURE;
+    }
+
+    delete key;
+    return NS_OK;
+}
+
 // for nsIRunnable.  this thread spins in ldap_result() awaiting the next
 // message.  once one arrives, it dispatches it to the nsILDAPMessageListener 
 // on the main thread.
@@ -341,6 +392,12 @@ nsLDAPConnection::Run(void)
 	    //
 	    msg = 0;
 
+#if 0
+	    // sleep for a while to workaround event queue flooding so that
+	    // it's possible to test pressing the stop button.
+	    //
+	    PR_Sleep(2000);
+#endif
 	    break;
 	}	
 
@@ -390,13 +447,16 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     //
     nsISupports *data = mPendingOperations->Get(key);
     if (data == nsnull) {
-#ifdef DEBUG
+#ifdef DEBUG_dmose
 	PR_fprintf(PR_STDERR, "InvokeMessageCallback(): couldn't find "
 		   "nsILDAPOperation corresponding to this message id\n");
 #endif
 	delete key;
 
-	return NS_ERROR_UNEXPECTED;
+	// this may well be ok, since it could just mean that the operation
+	// was aborted while some number of messages were already in transit.
+	//
+	return NS_OK;
     }
 
     operation = getter_AddRefs(NS_STATIC_CAST(nsILDAPOperation *, data));

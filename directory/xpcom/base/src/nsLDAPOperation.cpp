@@ -66,6 +66,11 @@ NS_IMETHODIMP
 nsLDAPOperation::Init(nsILDAPConnection *aConnection,
 		      nsILDAPMessageListener *aMessageListener)
 {
+
+    // so we know that the operation is not yet running
+    //
+    mMsgId = 0;
+
     // set the connection 
     //
     mConnection = aConnection;
@@ -274,4 +279,74 @@ nsLDAPOperation::GetMessageId(PRInt32 *aMsgId)
     *aMsgId = this->mMsgId;
    
     return NS_OK;
+}
+
+nsresult
+nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
+			    LDAPControl **clientctrls)
+{
+    nsresult rv;
+    int retVal;
+
+    NS_ENSURE_TRUE(mMessageListener != 0, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_TRUE(mMsgId != 0, NS_ERROR_NOT_INITIALIZED);
+
+    retVal = ldap_abandon_ext(mConnectionHandle, mMsgId, serverctrls, 
+				  clientctrls);
+    switch (retVal) {
+
+    case LDAP_SUCCESS:
+	break;
+
+    case LDAP_PARAM_ERROR:
+	return NS_ERROR_ILLEGAL_VALUE;
+	break;
+
+    case LDAP_ENCODING_ERROR:
+	return NS_ERROR_LDAP_ENCODING_ERROR;
+	break;
+    
+    case LDAP_SERVER_DOWN:
+	return NS_ERROR_LDAP_SERVER_DOWN;
+	break;
+
+    case LDAP_NO_MEMORY:
+	return NS_ERROR_OUT_OF_MEMORY;
+	break;
+
+    default: 
+	// XXX PR_Log stuff here
+	//
+	return NS_ERROR_UNEXPECTED;
+    }
+
+    // try to remove it from the pendingOperations queue, if it's there.
+    // even if something goes wrong here, the abandon() has already succeeded
+    // succeeded (and there's nothing else the caller can reasonably do), 
+    // so we only pay attention to this in debug builds.
+    //
+    rv = mConnection->RemovePendingOperation(this);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPOperation::AbandonExt: "
+		 "mConnection->RemovePendingOperation(this) failed\n");
+
+    return NS_OK;
+}
+
+/**  
+ * wrapper for ldap_abandon_ext() with NULL LDAPControl
+ * parameters, equivalent to old-style ldap_abandon(), thus the name.
+ *
+ * @exception NS_ERROR_ILLEGAL_VALUE  	    	an argument was invalid
+ * @exception NS_ERROR_LDAP_ENCODING_ERROR  	error during BER-encoding
+ * @exception NS_ERROR_LDAP_SERVER_DOWN	    	the LDAP server did not
+ *					    	receive the request or the
+ *					    	connection was lost
+ * @exception NS_ERROR_OUT_OF_MEMORY	    	out of memory
+ * @exception NS_ERROR_UNEXPECTED		internal error
+ */
+
+NS_IMETHODIMP
+nsLDAPOperation::Abandon(void)
+{
+    return nsLDAPOperation::AbandonExt(NULL, NULL);
 }

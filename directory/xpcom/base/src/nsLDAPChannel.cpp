@@ -72,7 +72,9 @@ nsLDAPChannel::Init(nsIURI *uri)
     nsresult rv;
 
     mURI = uri;
+    mStatus = NS_OK;
     mReadPipeOffset = 0;
+    mReadPipeClosed = PR_FALSE;
 
     // create an LDAP connection
     //
@@ -114,24 +116,48 @@ nsLDAPChannel::IsPending(PRBool *result)
 NS_IMETHODIMP
 nsLDAPChannel::GetStatus(nsresult *status)
 {
-    return NS_OK;
+    return mStatus;
 }
 
 NS_IMETHODIMP
-nsLDAPChannel::Cancel(nsresult status)
+nsLDAPChannel::Cancel(nsresult aStatus)
 {
-  // should assert if called after OnStop fired?
-  //
-  //NS_NOTYETIMPLEMENTED("nsLDAPChannel::Cancel");
-  //return NS_ERROR_NOT_IMPLEMENTED;
-  return NS_OK;
+    nsresult rv;
+
+    // set the status
+    //
+    mStatus = aStatus;
+
+    // if there is an operation running, abandon it and remove it from the 
+    //
+    if (mCurrentOperation) {
+
+	// if this fails in a non-debug build, there's not much we can do
+	//
+	rv = mCurrentOperation->Abandon();
+	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
+		     "mCurrentOperation->Abandon() failed\n");
+    }
+
+    // if the read pipe exists and hasn't already been closed, close it
+    //
+    if (mReadPipeOut != 0 && !mReadPipeClosed) {
+
+	// if this fails in a non-debug build, there's not much we can do
+	//
+	rv = mReadPipeOut->Close();
+	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
+		     "mReadPipeOut->Close() failed");
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLDAPChannel::Suspend(void)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::Suspend");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::Suspend");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -504,7 +530,6 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 			 nsISupports* aCtxt)
 {
     nsresult rv;
-    nsCOMPtr<nsILDAPOperation> bindOperation;
     nsXPIDLCString host;
     PRInt32 port;
 
@@ -569,12 +594,13 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 
     // create and initialize an LDAP operation (to be used for the bind)
     //	
-    bindOperation = do_CreateInstance("mozilla.network.ldapoperation", &rv);
+    mCurrentOperation = do_CreateInstance("mozilla.network.ldapoperation", 
+					  &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // our OnLDAPMessage accepts all result callbacks
     //
-    rv = bindOperation->Init(mConnection, this);
+    rv = mCurrentOperation->Init(mConnection, this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // kick off a bind operation 
@@ -583,10 +609,11 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 #ifdef DEBUG_dmose
     PR_fprintf(PR_STDERR, "initiating SimpleBind\n");
 #endif
-    rv = bindOperation->SimpleBind(NULL);
+    rv = mCurrentOperation->SimpleBind(NULL);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
-	PR_fprintf(PR_STDERR, "bindOperation->SimpleBind failed. rv=%d\n", rv);
+	PR_fprintf(PR_STDERR, "mCurrentOperation->SimpleBind failed. rv=%d\n",
+		   rv);
 #endif
 	return(rv);
     }
@@ -681,7 +708,6 @@ nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage, PRInt32 aRetVal)
 nsresult
 nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage) 
 {
-    nsCOMPtr<nsILDAPOperation> searchOperation;
     nsCOMPtr<nsILDAPURL> url;
     nsXPIDLCString baseDn;
     nsXPIDLCString filter;
@@ -690,12 +716,15 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 
     // XXX should call ldap_parse_result() here
 
+    mCurrentOperation = 0;	// done with bind operation
+
     // create and initialize an LDAP operation (to be used for the bind)
     //	
-    searchOperation = do_CreateInstance("mozilla.network.ldapoperation", &rv);
+    mCurrentOperation = do_CreateInstance("mozilla.network.ldapoperation", 
+					  &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = searchOperation->Init(mConnection, this);
+    rv = mCurrentOperation->Init(mConnection, this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // QI() the URI to an nsILDAPURL so we get can the LDAP specific portions
@@ -730,7 +759,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 #ifdef DEBUG_dmose
     PR_fprintf(PR_STDERR, "bind completed; starting search\n");
 #endif
-    rv = searchOperation->SearchExt(baseDn, scope, filter, 0, LDAP_NO_LIMIT);
+    rv = mCurrentOperation->SearchExt(baseDn, scope, filter, 0, LDAP_NO_LIMIT);
     NS_ENSURE_SUCCESS(rv,rv);
     
     return NS_OK;
@@ -758,19 +787,21 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
 	return NS_ERROR_FAILURE;
     }
 
-    // XXXdmose this is synchronous!  (and presumably could conceivably stall)
-    // should check SDK code to verify, and somehow deal with this better.
+    // close the pipe 
     //
-    mConnection = 0;
+    rv = mReadPipeOut->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
+    mReadPipeClosed = PR_TRUE;
+
+    // we're done with the current operation.  cause nsCOMPtr to Release() it
+    // so that if nsLDAPChannel::Cancel gets called, that doesn't try to call 
+    // mCurrentOperation->Abandon().
+    //
+    mCurrentOperation = 0;
 
     // all done
     //
     mListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
-
-    // close the pipe
-    //
-    rv = mReadPipeOut->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
 }
