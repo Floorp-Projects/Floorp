@@ -36,7 +36,7 @@ CVSCO_IMGLIB = $(CVSCO) -r $(IMGLIB_BRANCH)
 CVSCO_NETLIB = $(CVSCO)
 CVSCO_NGLAYOUT = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
-CVSCO_PLUGIN = $(CVSCO) - $(PLUGIN_BRANCH)
+CVSCO_PLUGIN = $(CVSCO) -r $(PLUGIN_BRANCH)
 
 # The list of directories that need to be built to build the standalone
 # nglayout test program. The order is important.
