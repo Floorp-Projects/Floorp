@@ -330,14 +330,8 @@ ULONG nsClipboard::GetFormatID(const char *aMimeStr, FormatRecord **pFmtRec)
     }
 
   if (!ulFormat) {
-    if ( strstr(pszFmt, "text") == NULL) {
-      ulFormat = gModuleData.GetAtom(pszFmt);
-      *pFmtRec = NULL;
-    }
-    else {
-      ulFormat = records[0].ulClipboardFmt;
-      *pFmtRec = &records[0];
-    }
+    ulFormat = gModuleData.GetAtom(pszFmt);
+    *pFmtRec = NULL;
   }
 
   NS_ASSERTION(ulFormat, "Clipboard besieged by unknown mimetype");
