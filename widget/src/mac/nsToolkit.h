@@ -40,7 +40,7 @@
 
 #include <memory>
 
-#include "nsIToolkit.h"
+#include "nsToolkitBase.h"
 #include "nsRepeater.h"
 
 #include "nsCOMPtr.h"
@@ -77,20 +77,20 @@ class nsIEventSink;
 class nsIWidget;
 
 
-class nsToolkit : public nsIToolkit
+class nsToolkit : public nsToolkitBase
 {
 
 public:
   nsToolkit();
   virtual				~nsToolkit();
   
-  NS_DECL_ISUPPORTS
-    
-  NS_IMETHOD  	Init(PRThread *aThread);
-  
   // are there pending events on the toolkit's event queue?
   PRBool        ToolkitBusy();
-  
+
+protected:
+
+  virtual nsresult  InitEventQueue(PRThread * aThread);
+
 public:
 
   // Appearance Mgr
@@ -111,12 +111,6 @@ public:
 
 protected:
 
-#if TARGET_CARBON
-  static int QuartzChangedCallback(const char* pref, void* data);
-  static void SetupQuartzRendering();
-#endif
-
-  bool          mInited;
   static bool   sInForeground;
 };
 

@@ -51,32 +51,6 @@
 #undef DARWIN
 #import <Cocoa/Cocoa.h>
 
-static CFBundleRef getBundle(CFStringRef frameworkPath)
-{
-  CFBundleRef bundle = NULL;
- 
-  //	Make a CFURLRef from the CFString representation of the bundle's path.
-  //	See the Core Foundation URL Services chapter for details.
-  CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, frameworkPath, kCFURLPOSIXPathStyle, true);
-  if (bundleURL != NULL) {
-    bundle = CFBundleCreate(NULL, bundleURL);
-    if (bundle != NULL)
-      CFBundleLoadExecutable(bundle);
-    CFRelease(bundleURL);
-  }
-
-  return bundle;
-}
-
-static void* getQDFunction(CFStringRef functionName)
-{
-  static CFBundleRef systemBundle = getBundle(CFSTR("/System/Library/Frameworks/ApplicationServices.framework"));
-  if (systemBundle)
-    return CFBundleGetFunctionPointerForName(systemBundle, functionName);
-  return NULL;
-}
-
-
 //
 // interface EventQueueHanlder
 //
@@ -95,13 +69,6 @@ static void* getQDFunction(CFStringRef functionName)
 
 
 static EventQueueHandler*  gEventQueueHandler = nsnull;
-
-
-//
-// Static thread local storage index of the Toolkit 
-// object associated with a given thread...
-//
-static PRUintn gToolkitTLSIndex = 0;
 
 
 @implementation EventQueueHandler
@@ -149,10 +116,6 @@ static PRUintn gToolkitTLSIndex = 0;
 //
 - (void) dealloc
 {
-#if DEBUG
-  printf("shutting down event queue\n");
-#endif
-  
   [mEventTimer release];
   NS_IF_RELEASE(mMainThreadEventQueue);
   
@@ -234,19 +197,10 @@ static PRUintn gToolkitTLSIndex = 0;
 
 #pragma mark -
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit)
-
-
-// assume we begin as the fg app
-bool nsToolkit::sInForeground = true;
-
-static const char* gQuartzRenderingPref = "browser.quartz.enable";
-
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()
-: mInited(false)
 {
   if (!gEventQueueHandler)
   {
@@ -268,133 +222,28 @@ nsToolkit::~nsToolkit()
   */
   if (mInited && gEventQueueHandler)
     [gEventQueueHandler release];
-  
-  // Remove the TLS reference to the toolkit...
-  PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
 
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
+nsresult
+nsToolkit::InitEventQueue(PRThread * aThread)
 {
   if (!gEventQueueHandler)
     return NS_ERROR_FAILURE;
   
   [gEventQueueHandler retain];
 
-  nsWidgetAtoms::RegisterAtoms();
-
-  mInited = true;
-
-  SetupQuartzRendering();
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if ( prefs )
-    prefs->RegisterCallback(gQuartzRenderingPref, QuartzChangedCallback, nsnull);
-
   return NS_OK;
 }
 
 
-//
-// QuartzChangedCallback
-//
-// The pref changed, reset the app to use quartz rendering as dictated by the pref
-//
-int nsToolkit::QuartzChangedCallback(const char* pref, void* data)
-{
-  SetupQuartzRendering();
-  return NS_OK;
-}
-
-
-//
-// SetupQuartzRendering
-//
-// Use apple's technote for 10.1.5 to turn on quartz rendering with CG metrics. This
-// slows us down about 12% when turned on.
-//
-void nsToolkit::SetupQuartzRendering()
-{
-  // from Apple's technote, yet un-numbered.
-#if UNIVERSAL_INTERFACES_VERSION <= 0x0400
-  enum {
-    kQDDontChangeFlags = 0xFFFFFFFF,         // don't change anything
-    kQDUseDefaultTextRendering = 0,          // bit 0
-    kQDUseTrueTypeScalerGlyphs = (1 << 0),   // bit 1
-    kQDUseCGTextRendering = (1 << 1),        // bit 2
-    kQDUseCGTextMetrics = (1 << 2)
-  };
-#endif
-  const int kFlagsWeUse = kQDUseCGTextRendering | kQDUseCGTextMetrics;
-  
-  // turn on quartz rendering if we find the symbol in the app framework. Just turn
-  // on the bits that we need, don't turn off what someone else might have wanted. If
-  // the pref isn't found, assume we want it on. That way, we have to explicitly put
-  // in a pref to disable it, rather than force everyone who wants it to carry around
-  // an extra pref.
-  typedef UInt32 (*qd_procptr)(UInt32);  
-  static qd_procptr SwapQDTextFlags = (qd_procptr) getQDFunction(CFSTR("SwapQDTextFlags"));
-  if ( SwapQDTextFlags ) {
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (!prefs)
-      return;
-    PRBool enableQuartz = PR_TRUE;
-    nsresult rv = prefs->GetBoolPref(gQuartzRenderingPref, &enableQuartz);
-    UInt32 oldFlags = SwapQDTextFlags(kQDDontChangeFlags);
-    if ( NS_FAILED(rv) || enableQuartz )
-      SwapQDTextFlags(oldFlags | kFlagsWeUse);
-    else 
-      SwapQDTextFlags(oldFlags & !kFlagsWeUse);
-  }
-}
-
 //-------------------------------------------------------------------------
 //
-// Return the nsIToolkit for the current thread.  If a toolkit does not
-// yet exist, then one will be created...
-//
 //-------------------------------------------------------------------------
-NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
+nsToolkitBase* NS_CreateToolkitInstance()
 {
-  nsIToolkit* toolkit = nsnull;
-  nsresult rv = NS_OK;
-  PRStatus status;
-
-  // Create the TLS index the first time through...
-  if (0 == gToolkitTLSIndex) {
-    status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL);
-    if (PR_FAILURE == status) {
-      rv = NS_ERROR_FAILURE;
-    }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex);
-
-    //
-    // Create a new toolkit for this thread...
-    //
-    if (!toolkit) {
-      toolkit = new nsToolkit();
-
-      if (!toolkit) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      } else {
-        NS_ADDREF(toolkit);
-        toolkit->Init(PR_GetCurrentThread());
-        //
-        // The reference stored in the TLS is weak.  It is removed in the
-        // nsToolkit destructor...
-        //
-        PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit);
-      }
-    } else {
-      NS_ADDREF(toolkit);
-    }
-    *aResult = toolkit;
-  }
-
-  return rv;
+  return new nsToolkit();
 }
