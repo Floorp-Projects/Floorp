@@ -298,8 +298,23 @@ sub DoPermissions {
 
 
 sub DoSavedSearches() {
+    # 2004-12-13 - colin.ogilvie@gmail.com, bug 274397
+    # Need to work around the possibly missing query_format=advanced
     $vars->{'user'} = Bugzilla->user;
-    $vars->{'queries'} = Bugzilla->user->queries;
+    my @queries = @{Bugzilla->user->queries};
+    my @newqueries;
+    foreach my $q (@queries) {
+        if ($q->{'query'} !~ /query_format=(advanced|specific)/) {
+            if ($q->{'query'} =~ /query_format=&/) {
+                $q->{'query'} =~ s/query_format=&/query_format=advanced&/;
+            }
+            else {
+                $q->{'query'} .= '&query_format=advanced';
+            }
+        }
+        push @newqueries, $q;
+    }
+    $vars->{'queries'} = \@newqueries;
 }
 
 sub SaveSavedSearches() {

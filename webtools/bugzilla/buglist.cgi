@@ -132,10 +132,11 @@ if ($::FORM{'regetlastlist'}) {
     $cgi->cookie('BUGLIST') || ThrowUserError("missing_cookie");
 
     $order = "reuse last sort" unless $order;
-
+    my $bug_id = $cgi->cookie('BUGLIST');
+    $bug_id =~ s/:/,/g;
     # set up the params for this new query
     $params = new Bugzilla::CGI({
-                                 bug_id => [split(/:/, $cgi->cookie('BUGLIST'))],
+                                 bug_id => $bug_id,
                                  order => $order,
                                 });
 }
@@ -309,13 +310,6 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
 
-        # backward compatibility hack: if the saved query doesn't say which
-        # form was used to create it, assume it was on the advanced query
-        # form - see bug 252295
-        if (!$params->param('query_format')) {
-            $params->param('query_format', 'advanced');
-            $::buffer = $params->query_string;
-        }
     }
     elsif ($::FORM{'remaction'} eq "runseries") {
         $::buffer = LookupSeries($::FORM{"series_id"});
@@ -418,6 +412,13 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     }
 }
 
+# backward compatibility hack: if the saved query doesn't say which
+# form was used to create it, assume it was on the advanced query
+# form - see bug 252295
+if (!$params->param('query_format')) {
+    $params->param('query_format', 'advanced');
+    $::buffer = $params->query_string;
+}
 
 ################################################################################
 # Column Definition
