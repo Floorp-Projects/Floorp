@@ -54,8 +54,6 @@ function selectTOC(link_attr) {
 }
 
 
-}
-
 function getWebNavigation()
 {
   return gBrowser.webNavigation;
