@@ -49,6 +49,9 @@ window.onload = function()
   
   updateSortCommand(gConsole.sortOrder);
   updateModeCommand(gConsole.mode);
+
+  var iframe = document.getElementById("Evaluator");
+  iframe.addEventListener("load", displayResult, true);
 }
 
 /* :::::::: Console UI Functions ::::::::::::::: */
@@ -133,6 +136,14 @@ function evaluateTypein()
   var code = document.getElementById("TextboxEval").value;
   var iframe = document.getElementById("Evaluator");
   iframe.setAttribute("src", "javascript: " + code);
+}
+
+function displayResult()
+{
+  var result = Evaluator.document.documentElement.lastChild.firstChild;
+  if (result && result.data)
+    gConsole.mCService.logStringMessage(result.data);
+    // or could use appendMessage which doesn't persist
 }
 
 /* :::::::: Command Controller for the Window ::::::::::::::: */
