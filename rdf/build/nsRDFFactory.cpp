@@ -61,8 +61,6 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID,               NS_RDFCONTAINERUTILS_C
 static NS_DEFINE_CID(kRDFContentSinkCID,                  NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFDefaultResourceCID,              NS_RDFDEFAULTRESOURCE_CID);
 static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,         NS_RDFFILESYSTEMDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFSearchDataSourceCID,             NS_RDFSEARCHDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFFindDataSourceCID,               NS_RDFFINDDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFFTPDataSourceCID,                NS_RDFFTPDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,           NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,                      NS_RDFSERVICE_CID);
@@ -344,16 +342,6 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "files",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kRDFSearchDataSourceCID,  
-                                         "RDF Internet Search Data Source",
-                                         NS_RDF_DATASOURCE_PROGID_PREFIX "internetsearch",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kRDFFindDataSourceCID,  
-                                         "RDF Find Data Source",
-                                         NS_RDF_DATASOURCE_PROGID_PREFIX "find",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFFTPDataSourceCID,  
                                          "RDF FTP Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "ftp",
@@ -479,10 +467,6 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kRDFFileSystemDataSourceCID,aPath);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kRDFSearchDataSourceCID,aPath);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kRDFFindDataSourceCID,      aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFFTPDataSourceCID,       aPath);
     if (NS_FAILED(rv)) goto done;
