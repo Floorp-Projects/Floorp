@@ -49,11 +49,45 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLImage.h"
 
+// XXX temporary for :first-letter support
+#include "nsITextContent.h"
+static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
+
+#ifdef NS_DEBUG
+#undef NOISY_FIRST_LINE
+#undef REALLY_NOISY_FIRST_LINE
+#else
+#undef NOISY_FIRST_LINE
+#endif
+
+#ifdef REALLY_NOISY_FIRST_LINE
+static void
+DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
+{
+  fputs(gap, stdout);
+  aFrame->ListTag(stdout);
+  printf(": ");
+  nsIStyleContext* sc;
+  aFrame->GetStyleContext(sc);
+  while (nsnull != sc) {
+    nsIStyleContext* psc;
+    printf("%p ", sc);
+    psc = sc->GetParent();
+    NS_RELEASE(sc);
+    sc = psc;
+  }
+  printf("\n");
+}
+#endif
+
 /* 52b33130-0b99-11d2-932e-00805f8add32 */
 #define NS_BLOCK_FRAME_CID \
 { 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
+
+// 11-03-98: low hanging memory fruit: get rid of text-runs that have
+// only one piece of text in them!
 
 // 09-15-98: make sure that the outer container of the block (e.g. the
 // body sets up the outer top margin feed in properly so that the top
@@ -133,7 +167,7 @@ struct nsBlockReflowState : public nsFrameReflowState {
 
   void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool& aIsLeftFloater);
 
-  void PlaceFloaters(nsVoidArray* aFloaters);
+  void PlaceFloaters(nsVoidArray* aFloaters, PRBool aAllOfThem);
 
   void ClearFloaters(PRUint8 aBreakType);
 
@@ -154,6 +188,7 @@ struct nsBlockReflowState : public nsFrameReflowState {
   PRUintn mPrevMarginFlags;
 // previous margin flag bits (above and beyond the carried-out-margin flags)
 #define HAVE_CARRIED_MARGIN 0x100
+#define ALREADY_APPLIED_BOTTOM_MARGIN 0x200
 
   nscoord mBottomEdge;          // maximum Y
 
@@ -222,6 +257,8 @@ public:
 
   // nsIFrame
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
+                                   nsIStyleContext* aParentContext);
   NS_IMETHOD FirstChild(nsIFrame*& aFirstChild) const;
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
@@ -279,6 +316,8 @@ public:
 
   virtual PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext,
                                         nsIFrame* aNextInFlow);
+
+  void RestoreStyleFor(nsIPresContext& aPresContext, nsIFrame* aFrame);
 
   void SetFlags(PRUint32 aFlags) {
     mFlags = aFlags;
@@ -389,6 +428,9 @@ public:
 #ifdef NS_DEBUG
   PRBool IsChild(nsIFrame* aFrame);
 #endif
+
+  nsIStyleContext* mFirstLineStyle;
+  nsIStyleContext* mFirstLetterStyle;
 
   LineData* mLines;
 
@@ -871,6 +913,7 @@ struct LineData {
     mCombinedArea.SetRect(0,0,0,0);
     mCarriedOutTopMargin = 0;
     mCarriedOutBottomMargin = 0;
+    mBreakType = NS_STYLE_CLEAR_NONE;
   }
 
   ~LineData();
@@ -1005,6 +1048,7 @@ struct LineData {
   nsIFrame* mFirstChild;
   PRUint16 mChildCount;
   PRUint16 mState;
+  PRUint8 mBreakType;
   nsRect mBounds;
   nsRect mCombinedArea;
   nscoord mCarriedOutTopMargin;
@@ -1466,6 +1510,8 @@ nsBlockFrame::nsBlockFrame(nsIContent* aContent, nsIFrame* aParent)
 
 nsBlockFrame::~nsBlockFrame()
 {
+  NS_IF_RELEASE(mFirstLineStyle);
+  NS_IF_RELEASE(mFirstLetterStyle);
   nsTextRun::DeleteTextRuns(mTextRuns);
 }
 
@@ -1491,6 +1537,81 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
   return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
+nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
+                                    nsIStyleContext* aParentContext)
+{
+  nsIStyleContext* oldContext = mStyleContext;
+  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  if (oldContext != mStyleContext) {
+    // Re-resolve the :first-line pseudo style context
+    if (nsnull == mPrevInFlow) {
+      nsIStyleContext* newFirstLineStyle =
+        aPresContext->ProbePseudoStyleContextFor(mContent,
+                                                 nsHTMLAtoms::firstLinePseudo,
+                                                 mStyleContext);
+      if (newFirstLineStyle != mFirstLineStyle) {
+        NS_IF_RELEASE(mFirstLineStyle);
+        mFirstLineStyle = newFirstLineStyle;
+      }
+      else {
+        NS_IF_RELEASE(newFirstLineStyle);
+      }
+
+      // Re-resolve the :first-letter pseudo style context
+      nsIStyleContext* newFirstLetterStyle =
+        aPresContext->ProbePseudoStyleContextFor(mContent,
+                                                 nsHTMLAtoms::firstLetterPseudo,
+                                                 (nsnull != mFirstLineStyle
+                                                  ? mFirstLineStyle
+                                                  : mStyleContext));
+      if (newFirstLetterStyle != mFirstLetterStyle) {
+        NS_IF_RELEASE(mFirstLetterStyle);
+        mFirstLetterStyle = newFirstLetterStyle;
+      }
+      else {
+        NS_IF_RELEASE(newFirstLetterStyle);
+      }
+    }
+
+    // Update the child frames on each line
+    LineData* line = mLines;
+    while (nsnull != line) {
+      nsIFrame* child = line->mFirstChild;
+      PRInt32 n = line->mChildCount;
+      while ((--n >= 0) && NS_SUCCEEDED(rv)) {
+        if (line == mLines) {
+          rv = child->ReResolveStyleContext(aPresContext,
+                                            (nsnull != mFirstLineStyle
+                                             ? mFirstLineStyle
+                                             : mStyleContext));
+        }
+        else {
+          rv = child->ReResolveStyleContext(aPresContext, mStyleContext);
+        }
+        child->GetNextSibling(child);
+      }
+      line = line->mNext;
+    }
+
+    // Update the child frames on each overflow line too
+    line = mOverflowLines;
+    while (nsnull != line) {
+      nsIFrame* child = line->mFirstChild;
+      PRInt32 n = line->mChildCount;
+      while ((--n >= 0) && NS_SUCCEEDED(rv)) {
+        rv = child->ReResolveStyleContext(aPresContext, mStyleContext);
+        child->GetNextSibling(child);
+      }
+      line = line->mNext;
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1527,11 +1648,23 @@ nsBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
     // it to the flow now.
     const nsStyleList* styleList;
     GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
-//XXX ListTag(stdout); printf(": lsp=%d\n", styleList->mListStylePosition);
     if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
       InsertNewFrame(aPresContext, this, mBullet, nsnull);
     }
   }
+
+  // Lookup up the two pseudo style contexts
+  if (nsnull == mPrevInFlow) {
+    mFirstLineStyle = aPresContext.
+      ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLinePseudo,
+                                 mStyleContext);
+    mFirstLetterStyle = aPresContext.
+      ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLetterPseudo,
+                                 (nsnull != mFirstLineStyle
+                                  ? mFirstLineStyle
+                                  : mStyleContext));
+  }
+
   return NS_OK;
 }
 
@@ -1744,7 +1877,6 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   nsInlineReflow inlineReflow(state.mLineLayout, state, this, PR_TRUE);
   state.mInlineReflow = &inlineReflow;
   state.mLineLayout.PushInline(&inlineReflow);
-// ListTag(stdout); printf(": enter isMarginRoot=%c\n", state.mIsMarginRoot?'T':'F');
 
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
@@ -2302,10 +2434,40 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
   }
 
   if (nsnull != lastCleanLine) {
-    // Place any floaters the line has
+    // Unplace any floaters on the lastCleanLine and every line that
+    // follows it (which shouldn't be much given that this is
+    // frame-appended reflow)
+    LineData* line = lastCleanLine;
+    while (nsnull != line) {
+      line->UnplaceFloaters(aState.mSpaceManager);
+      line = line->mNext;
+    }
+
+    // Place any floaters the last clean line has
     if (nsnull != lastCleanLine->mFloaters) {
       aState.mCurrentLine = lastCleanLine;
-      aState.PlaceFloaters(lastCleanLine->mFloaters);
+      aState.PlaceFloaters(lastCleanLine->mFloaters, PR_TRUE);
+    }
+
+    // Apply any clear-after semantics the line might have
+    nscoord y0, dy;
+    switch (lastCleanLine->mBreakType) {
+    case NS_STYLE_CLEAR_LEFT:
+    case NS_STYLE_CLEAR_RIGHT:
+    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                     ("line %p: ClearFloaters: y=%d, break-type=%d\n",
+                      lastCleanLine, aState.mY, lastCleanLine->mBreakType));
+      y0 = aState.mY;
+      aState.ClearFloaters(lastCleanLine->mBreakType);
+      dy = aState.mY - y0;
+      if (dy > aState.mPrevBottomMargin) {
+        aState.mPrevBottomMargin = dy;
+        aState.mPrevMarginFlags |= ALREADY_APPLIED_BOTTOM_MARGIN;
+      }
+      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                     ("  cleared floaters, now y=%d\n", aState.mY));
+      break;
     }
   }
 
@@ -2393,6 +2555,7 @@ nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
   // other lines can be moved; recover state before first dirty line.
 
   // XXX temporary
+  aState.mSpaceManager->ClearRegions();
   aState.GetAvailableSpace();
   aState.mPrevLine = nsnull;
   return ReflowLinesAt(aState, mLines);
@@ -2512,6 +2675,7 @@ nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
   // other lines can be moved; recover state before first dirty line.
 
   // XXX temporary
+  aState.mSpaceManager->ClearRegions();
   aState.GetAvailableSpace();
   aState.mPrevLine = nsnull;
   return ReflowLinesAt(aState, mLines);
@@ -2538,6 +2702,7 @@ nsBlockFrame::ChildIncrementalReflow(nsBlockReflowState& aState)
 #endif
 
   // XXX temporary
+  aState.mSpaceManager->ClearRegions();
   aState.GetAvailableSpace();
   aState.mPrevLine = nsnull;
   return ReflowLinesAt(aState, mLines);
@@ -2547,6 +2712,7 @@ nsresult
 nsBlockFrame::StyleChangedReflow(nsBlockReflowState& aState)
 {
   // XXX temporary
+  aState.mSpaceManager->ClearRegions();
   aState.GetAvailableSpace();
   aState.mPrevLine = nsnull;
   return ReflowLinesAt(aState, mLines);
@@ -2882,6 +3048,15 @@ nsBlockFrame::PrepareInlineReflow(nsBlockReflowState& aState,
   }
   aState.mInlineReflow->Init(x, aState.mY, availWidth, availHeight);
   aState.mInlineReflowPrepared = PR_TRUE;
+
+  // Setup the first-letter-style-ok flag
+  nsLineLayout& lineLayout = aState.mLineLayout;
+  if (mFirstLetterStyle && (0 == lineLayout.GetLineNumber())) {
+    lineLayout.SetFirstLetterStyleOK(PR_TRUE);
+  }
+  else {
+    lineLayout.SetFirstLetterStyleOK(PR_FALSE);
+  }
 }
 
 // XXX switch to two versions: inline vs. block?
@@ -3201,7 +3376,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   // Refresh our available space in case a floater was placed by our
   // child.
   // XXX expensive!
+  // XXX unnecessary because the child block will contain the floater!
   aState.GetAvailableSpace();
+
+  aLine->mBreakType = NS_STYLE_CLEAR_NONE;
 
   if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus)) {
     // Some of the block fit. We need to have the block frame
@@ -3260,6 +3438,50 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     PrepareInlineReflow(aState, aFrame, PR_FALSE);
   }
 
+  // When reflowing a frame that is on the first-line, check and see
+  // if a special style context should be placed in the context chain.
+  PRBool reflowingFirstLetter = PR_FALSE;
+  if ((nsnull == mPrevInFlow) &&
+      (0 == aState.mLineLayout.GetLineNumber())) {
+    if (nsnull != mFirstLineStyle) {
+      // Update the child frames style to inherit from the first-line
+      // style.
+      // XXX add code to check first and only do it if it needs doing!
+#ifdef REALLY_NOISY_FIRST_LINE
+      DumpStyleGeneaology(aFrame, "");
+#endif
+#ifdef NOISY_FIRST_LINE
+      aFrame->ListTag(stdout);
+      printf(": adding in first-line style\n");
+#endif
+      aFrame->ReResolveStyleContext(&aState.mPresContext, mFirstLineStyle);
+#ifdef REALLY_NOISY_FIRST_LINE
+      DumpStyleGeneaology(aFrame, "  ");
+#endif
+    }
+    if ((nsnull != mFirstLetterStyle) &&
+        aState.mLineLayout.GetFirstLetterStyleOK()) {
+      // XXX For now, we only allow text objects to have :first-letter
+      // style.
+      nsIContent* c;
+      nsresult rv = aFrame->GetContent(c);
+      if (NS_SUCCEEDED(rv) && (nsnull != c)) {
+        nsITextContent* tc;
+        nsresult rv = c->QueryInterface(kITextContentIID, (void**)&tc);
+        if (NS_SUCCEEDED(rv)) {
+          // XXX add code to check first and only do it if it needs doing!
+          // Update the child frames style to inherit from the
+          // first-letter style.
+          aFrame->ReResolveStyleContext(&aState.mPresContext,
+                                        mFirstLetterStyle);
+          reflowingFirstLetter = PR_TRUE;
+          NS_RELEASE(tc);
+        }
+        NS_RELEASE(c);
+      }
+    }
+  }
+
   PRBool isFirstChild = (aLine == mLines) &&
     (aFrame == aLine->mFirstChild);
   aState.mInlineReflow->SetIsFirstChild(isFirstChild);
@@ -3292,6 +3514,17 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       aLine->mChildCount++;
     }
     aFrame->GetNextSibling(aFrame);
+
+#if 0
+    // XXX Special hackery to keep going if we just split because of a
+    // :first-letter situation.
+    if (reflowingFirstLetter) {
+      if (aState.mInlineReflow->GetAvailWidth() > 0) {
+        aLine->SetLastContentIsComplete();/* XXX what to do??? */
+        return PR_TRUE;
+      }
+    }
+#endif
   }
   else {
     if (NS_INLINE_IS_BREAK_AFTER(aReflowResult)) {
@@ -3331,6 +3564,37 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   return PR_FALSE;
 }
 
+void
+nsBlockFrame::RestoreStyleFor(nsIPresContext& aPresContext, nsIFrame* aFrame)
+{
+#ifdef REALLY_NOISY_FIRST_LINE
+  DumpStyleGeneaology(aFrame, "");
+#endif
+
+  nsIStyleContext* kidSC;
+  aFrame->GetStyleContext(kidSC);
+  if (nsnull != kidSC) {
+    nsIStyleContext* kidParentSC;
+    kidParentSC = kidSC->GetParent();
+    if ((kidParentSC == mFirstLineStyle) ||
+        (kidParentSC == mFirstLetterStyle)) {
+#ifdef NOISY_FIRST_LINE
+      printf("  ");
+      aFrame->ListTag(stdout);
+      printf(": removing first-line style\n");
+#endif
+
+      aFrame->ReResolveStyleContext(&aPresContext, mStyleContext);
+
+#ifdef REALLY_NOISY_FIRST_LINE
+      DumpStyleGeneaology(aFrame, "  ");
+#endif
+    }
+    NS_IF_RELEASE(kidParentSC);
+    NS_RELEASE(kidSC);
+  }
+}
+
 // XXX alloc lines using free-list in aState
 
 // XXX refactor this since the split NEVER has to deal with blocks
@@ -3344,8 +3608,8 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
   PRInt32 pushCount = aLine->ChildCount() -
     aState.mInlineReflow->GetCurrentFrameNum();
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("nsBlockFrame::SplitLine: pushing %d frames",
-      pushCount));
+                 ("nsBlockFrame::SplitLine: pushing %d frames",
+                  pushCount));
   if (0 != pushCount) {
     NS_ASSERTION(nsnull != aFrame, "whoops");
     LineData* to = aLine->mNext;
@@ -3382,6 +3646,19 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     // Let inline reflow know that some frames are no longer part of
     // its state.
     aState.mInlineReflow->ChangeFrameCount(aLine->ChildCount());
+
+    // Repair style contexts when frames move to the next line and
+    // this is the first line.
+    if (((nsnull != mFirstLineStyle) || (nsnull != mFirstLetterStyle)) &&
+        (0 == aState.mLineLayout.GetLineNumber())) {
+      // Take the pseudo-style out of the style context chain
+      nsIFrame* kid = to->mFirstChild;
+      PRInt32 n = pushCount;
+      while (--n >= 0) {
+        RestoreStyleFor(aState.mPresContext, kid);
+        kid->GetNextSibling(kid);
+      }
+    }
   }
   return NS_OK;
 }
@@ -3671,7 +3948,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // Any below current line floaters to place?
   if (0 != aState.mPendingFloaters.Count()) {
-    aState.PlaceFloaters(&aState.mPendingFloaters);
+    aState.PlaceFloaters(&aState.mPendingFloaters, PR_FALSE);
     aState.mPendingFloaters.Clear();
 
     // XXX Factor in the height of the floaters as well when considering
@@ -3682,8 +3959,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // Based on the last child we reflowed reflow status, we may need to
   // clear past any floaters.
+  aLine->mBreakType = NS_STYLE_CLEAR_NONE;
   if (NS_INLINE_IS_BREAK_AFTER(aReflowStatus)) {
     PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(aReflowStatus);
+    aLine->mBreakType = breakType;
     // Apply break to the line
     switch (breakType) {
     default:
@@ -3694,6 +3973,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                      ("nsBlockFrame::PlaceLine: clearing floaters=%d",
                       breakType));
+#if XXX
       {
         nscoord y0 = aState.mY;
         aState.ClearFloaters(breakType);
@@ -3702,6 +3982,18 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
           aLine->mCarriedOutBottomMargin = dy;
         }
       }
+#else
+      aState.ClearFloaters(breakType);
+#if 0
+      y0 = aState.mY;
+      aState.ClearFloaters(lastCleanLine->mBreakType);
+      dy = aState.mY - y0;
+      if (dy > aState.mPrevBottomMargin) {
+        aState.mPrevBottomMargin = dy;
+        aState.mPrevMarginFlags |= ALREADY_APPLIED_BOTTOM_MARGIN;
+      }
+#endif
+#endif
       break;
     }
     // XXX page breaks, etc, need to be passed upwards too!
@@ -4273,6 +4565,12 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
        ("nsBlockReflowState::AddFloater: IsLeftMostChild, placeHolder=%p",
         aPlaceholder));
 
+    // Flush out pending bottom margin before placing floater
+    if (0 != mPrevBottomMargin) {
+      mY += mPrevBottomMargin;
+      mPrevMarginFlags |= ALREADY_APPLIED_BOTTOM_MARGIN;
+    }
+
     // Because we are in the middle of reflowing a placeholder frame
     // within a line (and possibly nested in an inline frame or two
     // that's a child of our block) we need to restore the space
@@ -4456,7 +4754,7 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
  * Place below-current-line floaters.
  */
 void
-nsBlockReflowState::PlaceFloaters(nsVoidArray* aFloaters)
+nsBlockReflowState::PlaceFloaters(nsVoidArray* aFloaters, PRBool aAllOfThem)
 {
   NS_PRECONDITION(aFloaters->Count() > 0, "no floaters");
 
@@ -4464,7 +4762,7 @@ nsBlockReflowState::PlaceFloaters(nsVoidArray* aFloaters)
   for (PRInt32 i = 0; i < numFloaters; i++) {
     nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)
       aFloaters->ElementAt(i);
-    if (IsLeftMostChild(placeholderFrame)) {
+    if (!aAllOfThem && IsLeftMostChild(placeholderFrame)) {
       // Left-most children are placed during the line's reflow
       continue;
     }
