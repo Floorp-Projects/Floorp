@@ -754,6 +754,14 @@ var BookmarksCommand = {
         if (!fileName) return;
       }
       else return;
+
+      var aFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+      if (!aFile)
+        return;
+      aFile.initWithPath(fileName);
+      if (!aFile.exists()) {
+        aFile.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0644);
+      }
     }
     catch (e) {
       return;
