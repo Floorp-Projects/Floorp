@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			printf("  Depends on:\n");
+			printf("  Statically linked to:\n");
 			std::vector<library>::const_iterator l;
 			for (l = listComponents.begin(); l != listComponents.end(); l++)
 			{
