@@ -36,7 +36,7 @@
 #include "nsVoidArray.h"
 
 //#define DRAG_DROP
-#if DRAG_DROP
+#ifdef DRAG_DROP
 class CfDropTarget;
 class CfDropSource;
 class CfDragDrop;
