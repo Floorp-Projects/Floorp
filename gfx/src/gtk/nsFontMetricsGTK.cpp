@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * ex: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -49,19 +50,34 @@
 #undef NS_FONT_DEBUG
 #define NS_FONT_DEBUG 1
 #ifdef NS_FONT_DEBUG
-#define NS_FONT_DEBUG_LOAD_FONT  0x01
-#define NS_FONT_DEBUG_CALL_TRACE 0x02
-#define NS_FONT_DEBUG_FIND_FONT  0x04
+#define NS_FONT_DEBUG_LOAD_FONT   0x01
+#define NS_FONT_DEBUG_CALL_TRACE  0x02
+#define NS_FONT_DEBUG_FIND_FONT   0x04
+#define NS_FONT_DEBUG_SIZE_FONT   0x08
+#define NS_FONT_DEBUG_SCALED_FONT 0x10
 static PRUint32 gDebug = 0;
+
+#define DEBUG_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, 0xFFFF)
+
 #define FIND_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_FIND_FONT)
+
+#define SIZE_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_SIZE_FONT)
+
+#define SCALED_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_SCALED_FONT)
+
+#define DEBUG_PRINTF_MACRO(x, type) \
             PR_BEGIN_MACRO \
-              if (gDebug & NS_FONT_DEBUG_FIND_FONT) { \
+              if (gDebug & (type)) { \
                 printf x ; \
                 printf(", %s %d\n", __FILE__, __LINE__); \
               } \
             PR_END_MACRO 
 #else
-#define FIND_FONT_PRINTF(x) \
+#define FIND_FONT_PRINTF(x, type) \
             PR_BEGIN_MACRO \
             PR_END_MACRO 
 #endif
@@ -74,7 +90,7 @@ struct nsFontFamilyName;
 struct nsFontPropertyName;
 struct nsFontStyle;
 struct nsFontWeight;
-struct FontLangGroup;
+struct nsFontLangGroup;
 
 class nsFontNodeArray : public nsVoidArray
 {
@@ -98,7 +114,7 @@ struct nsFontCharSetInfo
 struct nsFontCharSetMap
 {
   char*              mName;
-  FontLangGroup* mFontLangGroup;
+  nsFontLangGroup*   mFontLangGroup;
   nsFontCharSetInfo* mInfo;
 };
 
@@ -180,7 +196,7 @@ static nsICharsetConverterManager2* gCharSetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 
 static nsHashtable* gAliases = nsnull;
-static nsHashtable* gCharSets = nsnull;
+static nsHashtable* gCharSetMaps = nsnull;
 static nsHashtable* gFamilies = nsnull;
 static nsHashtable* gNodes = nsnull;
 // gCachedFFRESearches holds the "already looked up"
@@ -313,17 +329,17 @@ static nsFontCharSetInfo Mathematica5 =
  * encodings to look at when searching for glyphs 
  *
  */
-typedef struct FontLangGroup {
-  const char *mLangGroupName;
-  nsIAtom*    mLangGroup;
-} FontLangGroup;
+typedef struct nsFontLangGroup {
+  const char *mFontLangGroupName;
+  nsIAtom*    mFontLangGroupAtom;
+} nsFontLangGroup;
 
-FontLangGroup FLG_WESTERN = { "x-western", nsnull };
-FontLangGroup FLG_ZHCN =    { "zh-CN", nsnull };
-FontLangGroup FLG_ZHTW =    { "zh-TW", nsnull };
-FontLangGroup FLG_JA =      { "ja", nsnull };
-FontLangGroup FLG_KO =      { "ko", nsnull };
-FontLangGroup FLG_NONE =    { "" , nsnull };
+nsFontLangGroup FLG_WESTERN = { "x-western", nsnull };
+nsFontLangGroup FLG_ZHCN =    { "zh-CN", nsnull };
+nsFontLangGroup FLG_ZHTW =    { "zh-TW", nsnull };
+nsFontLangGroup FLG_JA =      { "ja", nsnull };
+nsFontLangGroup FLG_KO =      { "ko", nsnull };
+nsFontLangGroup FLG_NONE =    { nsnull , nsnull };
 
 /*
  * Normally, the charset of an X font can be determined simply by looking at
@@ -482,6 +498,8 @@ static nsFontFamilyName gFamilyNameTable[] =
   { nsnull, nsnull }
 };
 
+static nsFontCharSetMap gNoneCharSetMap[] = { { nsnull }, };
+
 static nsFontCharSetMap gSpecialCharSetMap[] =
 {
   { "symbol-adobe-fontspecific", &FLG_NONE, &AdobeSymbol  },
@@ -547,12 +565,12 @@ atomToName(nsIAtom* aAtom)
 static PRUint32 gUserDefinedMap[2048];
 
 static PRBool
-FreeCharSet(nsHashKey* aKey, void* aData, void* aClosure)
+FreeCharSetMap(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  nsFontCharSetInfo* charset = (nsFontCharSetInfo*) aData;
-  NS_IF_RELEASE(charset->mConverter);
-  NS_IF_RELEASE(charset->mLangGroup);
-  PR_FREEIF(charset->mMap);
+  nsFontCharSetMap* charsetMap = (nsFontCharSetMap*) aData;
+  NS_IF_RELEASE(charsetMap->mInfo->mConverter);
+  NS_IF_RELEASE(charsetMap->mInfo->mLangGroup);
+  PR_FREEIF(charsetMap->mInfo->mMap);
 
   return PR_TRUE;
 }
@@ -659,10 +677,10 @@ FreeGlobals(void)
     gAliases = nsnull;
   }
   NS_IF_RELEASE(gCharSetManager);
-  if (gCharSets) {
-    gCharSets->Reset(FreeCharSet, nsnull);
-    delete gCharSets;
-    gCharSets = nsnull;
+  if (gCharSetMaps) {
+    gCharSetMaps->Reset(FreeCharSetMap, nsnull);
+    delete gCharSetMaps;
+    gCharSetMaps = nsnull;
   }
   if (gFamilies) {
     gFamilies->Reset(FreeFamily, nsnull);
@@ -699,6 +717,11 @@ FreeGlobals(void)
   if (gWeights) {
     delete gWeights;
     gWeights = nsnull;
+  }
+  nsFontCharSetMap* charSetMap;
+  for (charSetMap=gCharSetMap; charSetMap->mFontLangGroup; charSetMap++) {
+    NS_IF_RELEASE(charSetMap->mFontLangGroup->mFontLangGroupAtom);
+    charSetMap->mFontLangGroup->mFontLangGroupAtom = nsnull;
   }
 }
 
@@ -776,15 +799,15 @@ InitGlobals(void)
     gStretches->Put(&key, (void*) p->mValue);
     p++;
   }
-  gCharSets = new nsHashtable();
-  if (!gCharSets) {
+  gCharSetMaps = new nsHashtable();
+  if (!gCharSetMaps) {
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsFontCharSetMap* charSetMap = gCharSetMap;
   while (charSetMap->mName) {
     nsCStringKey key(charSetMap->mName);
-    gCharSets->Put(&key, charSetMap->mInfo);
+    gCharSetMaps->Put(&key, charSetMap);
     charSetMap++;
   }
   gSpecialCharSets = new nsHashtable();
@@ -795,7 +818,7 @@ InitGlobals(void)
   nsFontCharSetMap* specialCharSetMap = gSpecialCharSetMap;
   while (specialCharSetMap->mName) {
     nsCStringKey key(specialCharSetMap->mName);
-    gSpecialCharSets->Put(&key, specialCharSetMap->mInfo);
+    gSpecialCharSets->Put(&key, specialCharSetMap);
     specialCharSetMap++;
   }
 
@@ -2247,28 +2270,39 @@ nsFontGTKUserDefined::GetBoundingMetrics(const PRUnichar*   aString,
 
 nsFontGTK*
 nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
-  nsFontCharSetInfo* aCharSet, PRUnichar aChar)
+  nsFontCharSetInfo* aCharSet, PRUnichar aChar, const char *aName)
 {
   nsFontGTK* font = nsnull;
-  int scalable = 0;
+  PRBool use_scaled_font = PR_FALSE;
+// define a size such that a scaled font would always be closer
+// to the desired size than this
+#define NOT_FOUND_FONT_SIZE 1000*1000*1000
+  PRInt32 bitmap_size = NOT_FOUND_FONT_SIZE;
+  PRInt32 scale_size = mPixelSize;
   if (aStretch->mSizes) {
     nsFontGTK** begin = aStretch->mSizes;
     nsFontGTK** end = &aStretch->mSizes[aStretch->mSizesCount];
     nsFontGTK** s;
+    // scan the list of sizes
     for (s = begin; s < end; s++) {
+      // stop when we hit or overshoot the size
       if ((*s)->mSize >= mPixelSize) {
         break;
       }
     }
+    // backup if we hit the end of the list
     if (s == end) {
       s--;
     }
     else if (s != begin) {
+      // if we overshot pick the closest size
       if (((*s)->mSize - mPixelSize) >= (mPixelSize - (*(s - 1))->mSize)) {
         s--;
       }
     }
+    // this is the nearest bitmap font
     font = *s;
+    bitmap_size = (*s)->mSize;
   
     if (aStretch->mScalable) {
       double ratio = ((*s)->mSize / ((double) mPixelSize));
@@ -2278,15 +2312,20 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
        * order to avoid scaling Japanese fonts (ugly).
        */
       if ((ratio > 1.8) || (ratio < 0.8)) {
-        scalable = 1;
+        use_scaled_font = PR_TRUE;
       }
+
     }
   }
   else {
-    scalable = 1;
+    use_scaled_font = PR_TRUE;
   }
 
-  if (scalable) {
+  if (use_scaled_font) {
+   SIZE_FONT_PRINTF(("scaled font:_______ %s\n"
+                     "                    desired=%d, scaled=%d, bitmap=%d",
+                     aName, mPixelSize, scale_size, bitmap_size));
+
     PRInt32 i;
     PRInt32 n = aStretch->mScaledFonts.Count();
     nsFontGTK* p;
@@ -2300,15 +2339,15 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
       font = new nsFontGTKNormal;
       if (font) {
         /*
-         * XXX Instead of passing mPixelSize, we ought to take underline
+         * XXX Instead of passing pixel size, we ought to take underline
          * into account. (Extra space for underline for Asian fonts.)
          */
-        font->mName = PR_smprintf(aStretch->mScalable, mPixelSize);
+        font->mName = PR_smprintf(aStretch->mScalable, scale_size);
         if (!font->mName) {
           delete font;
           return nsnull;
         }
-        font->mSize = mPixelSize;
+        font->mSize = scale_size;
         font->mCharSetInfo = aCharSet;
 	aStretch->mScaledFonts.AppendElement(font);
       }
@@ -2675,7 +2714,25 @@ nsFontMetricsGTK::SearchNode(nsFontNode* aNode, PRUnichar aChar)
 
   FIND_FONT_PRINTF(("        load font %s", aNode->mName.get()));
   return PickASizeAndLoad(weights[weightIndex]->mStretches[mStretchIndex],
-    charSetInfo, aChar);
+    charSetInfo, aChar, aNode->mName.get());
+}
+
+static void 
+SetFontLangGroupInfo(nsFontCharSetMap* aCharSetMap)
+{
+  nsFontLangGroup *fontLangGroup = aCharSetMap->mFontLangGroup;
+  if (!fontLangGroup)
+    return;
+
+  // get the atom for mFontLangGroup->mFontLangGroupName so we can
+  // apply fontLangGroup operations to it
+  // eg: search for related groups, check for scaling prefs
+  if (!fontLangGroup->mFontLangGroupAtom) {
+    const char *langGroup = fontLangGroup->mFontLangGroupName;
+    if (!langGroup)
+      langGroup = "";
+    fontLangGroup->mFontLangGroupAtom = NS_NewAtom(langGroup);
+  }
 }
 
 static void
@@ -2768,8 +2825,11 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       continue;
     }
     nsCStringKey charSetKey(charSetName);
-    nsFontCharSetInfo* charSetInfo =
-      (nsFontCharSetInfo*) gCharSets->Get(&charSetKey);
+    nsFontCharSetMap* charSetMap =
+      (nsFontCharSetMap*) gCharSetMaps->Get(&charSetKey);
+    if (!charSetMap)
+      charSetMap = gNoneCharSetMap;
+    nsFontCharSetInfo* charSetInfo = charSetMap->mInfo;
     // indirection for font specific charset encoding 
     if (charSetInfo == &Special) {
       nsCAutoString familyCharSetName(familyName);
@@ -2803,6 +2863,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
         }
       }
     }
+    SetFontLangGroupInfo(charSetMap);
 
     nsCAutoString nodeName(foundry);
     nodeName.Append('-');
@@ -3552,35 +3613,17 @@ nsFontMetricsGTK::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCStr
   //  scan gCharSetMap for encodings with matching lang groups
   nsFontCharSetMap* charSetMap;
   for (charSetMap=gCharSetMap; charSetMap->mName; charSetMap++) {
-    FontLangGroup* mFontLangGroup = charSetMap->mFontLangGroup;
-    nsFontCharSetInfo* charSetInfo = charSetMap->mInfo;
+    nsFontLangGroup* mFontLangGroup = charSetMap->mFontLangGroup;
 
-    if (!charSetInfo->mCharSet) {
+    if ((!mFontLangGroup) || (!mFontLangGroup->mFontLangGroupName)) {
       continue;
     }
 
-    if (!mFontLangGroup->mLangGroup) {
-      if (charSetInfo->mLangGroup) {
-        mFontLangGroup->mLangGroup = charSetInfo->mLangGroup;
-      }
-      else {
-        nsCOMPtr<nsIAtom> charset;
-        nsresult res = gCharSetManager->GetCharsetAtom2(charSetInfo->mCharSet,
-          getter_AddRefs(charset));
-        if (NS_FAILED(res)) {
-          continue;
-        }
-        res = gCharSetManager->GetCharsetLangGroup(charset, &charSetInfo->mLangGroup);
-        if (NS_SUCCEEDED(res)) {
-          mFontLangGroup->mLangGroup = charSetInfo->mLangGroup;
-        }
-        else {
-          mFontLangGroup->mLangGroup = NS_NewAtom(mFontLangGroup->mLangGroupName);
-        }
-      }
+    if (!mFontLangGroup->mFontLangGroupAtom) {
+      SetFontLangGroupInfo(charSetMap);
     }
 
-    if (aLangGroup != mFontLangGroup->mLangGroup) {
+    if (aLangGroup != mFontLangGroup->mFontLangGroupAtom) {
       continue;
     }
     // look for a font with this charset (registry-encoding) & char
