@@ -669,8 +669,22 @@ nsHttpHandler::InitUserAgentComponents()
     if (ret >= 0) {
         nsCAutoString buf;
         buf =  (char*)name.sysname;
-        buf += ' ';
-        buf += (char*)name.machine;
+
+        if (strcmp(name.machine, "x86_64") == 0 &&
+            sizeof(void *) == sizeof(PRInt32)) {
+            // We're running 32-bit code on x86_64. Make this browser
+            // look like it's running on i686 hardware, but append "
+            // (x86_64)" to the end of the oscpu identifier to be able
+            // to differentiate this from someone running 64-bit code
+            // on x86_64..
+
+            buf += " i686 (x86_64)";
+        } else {
+            buf += ' ';
+
+            buf += (char*)name.machine;
+        }
+
         mOscpu.Assign(buf);
     }
 #endif
