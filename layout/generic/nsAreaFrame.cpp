@@ -312,58 +312,6 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     mCombinedArea = aDesiredSize.mCombinedArea;
   }
 
-  // XXX This code is really temporary; the lower level frame
-  // classes need to contribute to the area that needs damage
-  // repair. This class should only worry about damage repairing
-  // it's border+padding area.
-  nsRect  damageArea(0, 0, 0, 0);
-
-  // Decide how much to repaint based on the reflow type.
-  // Note: we don't have to handle the initial reflow case and the
-  // resize reflow case, because they're handled by the scroll frame
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIReflowCommand::ReflowType  reflowType;
-    aReflowState.reflowCommand->GetType(reflowType);
-
-    // For append reflow commands that target the flowed frames just
-    // repaint the newly added part of the frame.
-    if (nsIReflowCommand::FrameAppended == reflowType) {
-      //this blows. we're repainting everything, but we have no choice
-      //since we don't know how we got here. see the XXX above for a
-      //real fix.
-#if 1
-      damageArea.y = 0;
-      damageArea.height = aDesiredSize.height;
-      damageArea.width = aDesiredSize.width;
-#else
-      // It's an append reflow command
-      damageArea.y = mRect.YMost();
-      damageArea.width = aDesiredSize.width;
-      damageArea.height = aDesiredSize.height - mRect.height;
-      if ((damageArea.height < 0) ||
-          (aDesiredSize.height == mRect.height)) {
-        // Since we don't know what changed, assume it all changed.
-        damageArea.y = 0;
-        damageArea.height = aDesiredSize.height;
-      }
-#endif
-    } else {
-      // Ideally the frame that is the target of the reflow command
-      // (or its parent frame) would generate a damage rect, but
-      // since none of the frame classes know how to do this then
-      // for the time being just repaint the entire frame
-      damageArea.width = aDesiredSize.width;
-      // If the new height is smaller than the old height then make
-      // sure we erase whatever used to be displayed
-      damageArea.height = PR_MAX(aDesiredSize.height, mRect.height);
-    }
-  }
-
-  // If this is really the body, force a repaint of the damage area
-  if ((NS_BLOCK_DOCUMENT_ROOT & mFlags) && !damageArea.IsEmpty()) {
-    Invalidate(damageArea);
-  }
-
   return rv;
 }
 
