@@ -113,23 +113,36 @@
         <body>
         <![CDATA[
           var currentElement = this.focusedItem;
-          var index;
+          var index, i;
           var children = this._getRadioChildren();
-          for (var i = 0; i < children.length; ++i ) {
-            if (children[i] != currentElement) 
-              continue;
-            if (aNextFlag) {
-              index = (i + 1) % children.length;
-              this.selectedItem = children[index];
-              children[index].doCommand();
+          for (i = 0; i < children.length; ++i ) {
+            if (children[i] == currentElement) 
               break;
+          }
+          
+          if (aNextFlag) {
+            do {
+              index = ++i % children.length;             
+              if (i > children.length)
+                break;
             }
-            else {              
-              index = i > 0 ? i - 1 : children.length - 1;
-              this.selectedItem = children[index];
-              children[index].doCommand();
-              break;
+            while (children[index].getAttribute("hidden") == "true" || children[index].disabled);
+            // XXX check for collapsed attr and display/visibility props too
+
+            this.selectedItem = children[index];
+            children[index].doCommand();
+          }
+          else {              
+            do {
+              index = i > 0 ? --i : (i = children.length - 1);
+              if (i == children.length)
+                break;
             }
+            while (children[index].getAttribute("hidden") == "true" || children[index].disabled);
+            // XXX check for collapsed attr and display/visibility props too
+
+            this.selectedItem = children[index];
+            children[index].doCommand();
           }
         ]]>
         </body>
