@@ -19,6 +19,8 @@
 #ifndef nsGfxTextControlFrame_h___
 #define nsGfxTextControlFrame_h___
 
+#include "nsCOMPtr.h"
+#include "nsCWeakReference.h"
 #include "nsFormControlFrame.h"
 #include "nsTextControlFrame.h"
 #include "nsIStreamObserver.h"
@@ -219,10 +221,15 @@ protected:
   nsEnderKeyListener();
 
 protected:
-  nsGfxTextControlFrame    *mFrame;   // not ref counted
+  nsCWeakReference<nsGfxTextControlFrame> mFrame;
   nsIView                  *mView;    // not ref counted
   nsCOMPtr<nsIPresContext>  mContext; // ref counted
   nsCOMPtr<nsIContent>      mContent; // ref counted
+                            // note nsGfxTextControlFrame is held as a weak ptr
+                            // because the frame can be deleted in the middle
+                            // of event processing.  See the KeyUp handler
+                            // for places where this is a problem, and see
+                            // nsCWeakReference.h for notes on use.
 };
 
 /******************************************************************************
@@ -469,6 +476,9 @@ public:
 
   void RemoveNewlines(nsString &aString);
 
+  nsCWeakReferent *WeakReferent()
+    { return &mWeakReferent; }
+
 protected:
 
  
@@ -520,6 +530,8 @@ protected:
   nsIPresContext *mFramePresContext; // not ref counted
   nsString* mCachedState; // this is used for caching changed between frame creation
                           // and full initialization
+  nsCWeakReferent mWeakReferent; // so this obj can be used as a weak ptr
 };
 
 #endif
+
