@@ -1,8 +1,15 @@
 #!/bin/sh
 
+# Relative location of |makefiles|
 MODULE_DIR="mozilla/netwerk"
+
+# Name of module
+MODULE=`basename $MODULE_DIR`
+
+# Depth of module from topsrcdir
 MODULE_DEPTH=`echo $MODULE_DIR | sed -e 's|[^/]||g' -e 's|/|../|g' -e 's|/$||'`
 
+# Relative directory script was run from
 RUN_DIR=`echo $PWD | sed -e 's|.*\('$MODULE_DIR'\)$|\1|'`
 
 if [ -z "$RUN_DIR" -o "$RUN_DIR" != "$MODULE_DIR" ]
@@ -20,7 +27,7 @@ fi
 
 if [ -f config.status ]
 then
-  CONFIG_FILES=`cat netwerk/makefiles` ./config.status
+  CONFIG_FILES=`cat $MODULE/makefiles` ./config.status
 else
   echo
   echo "Missing config.status in $PWD"
