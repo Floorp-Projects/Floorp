@@ -343,6 +343,7 @@ pref("dom.disable_open_during_load", false);
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
+pref("javascript.options.showInConsole",    true);
 
 // advanced prefs
 pref("advanced.always_load_images",         true);

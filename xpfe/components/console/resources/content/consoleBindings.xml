@@ -18,6 +18,23 @@
       <field name="limit" readonly="true">
         250
       </field>
+      <field name="_showChromeErrors">-1</field>
+      
+      <property name="showChromeErrors">
+        <getter><![CDATA[
+          if (this._showChromeErrors != -1)
+            return this._showChromeErrors;
+          var pref = Components.classes['@mozilla.org/preferences-service;1'].getService();
+          pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
+
+          try {
+            return this._showChromeErrors = pref.getBoolPref("javascript.options.showInConsole");
+          }
+          catch(ex) {
+            return this._showChromeErrors = false;
+          }
+        ]]></getter>
+      </property>          
 
       <property name="count" readonly="true">
         <getter>return this.mCount</getter>
@@ -115,6 +132,11 @@
           try {
             // Try to QI it to a script error to get more info
             var scriptError = aObject.QueryInterface(Components.interfaces.nsIScriptError);
+            
+            // filter chrome urls
+            if (!this.showChromeErrors && scriptError.sourceName.substr(0, 9) == "chrome://")
+              return;
+ 
             this.appendError(scriptError);
           } catch (ex) {
             try {
