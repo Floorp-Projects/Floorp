@@ -22,6 +22,7 @@
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
+#include "net_xp_file.h"
 #include "mkgeturl.h"
 #include <signal.h>
 
