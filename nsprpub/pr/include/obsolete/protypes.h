@@ -39,7 +39,7 @@ typedef PRIntn intn;
 
 #include <support/SupportDefs.h>
 
-#elif VMS
+#elif defined(VMS)
 /*
  * OpenVMS already defines the integer types below in its standard
  * header files ints.h and types.h.
