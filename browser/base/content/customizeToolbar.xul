@@ -49,8 +49,8 @@
 </description>
 
 <toolbox id="cloned-bar-container"
-         ondragover="nsDragAndDrop.dragOver(event, dropObserver)"
-         ondragdrop="nsDragAndDrop.drop(event, dropObserver);"
+         ondragover="nsDragAndDrop.dragOver(event, toolbarDNDObserver)"
+         ondragdrop="nsDragAndDrop.drop(event, toolbarDNDObserver);"
          ondragexit="gCurrentDragOverItem.removeAttribute('dragactive');"/>
 
 <separator class="groove"/>
@@ -60,27 +60,22 @@
 </description>
 
 <vbox flex="1" id="palette-box"
-      ondragover="nsDragAndDrop.dragOver(event, paletteDropObserver);"
-      ondragdrop="nsDragAndDrop.drop(event, paletteDropObserver);"/>
+      ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+      ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
 
 <separator class="groove"/>
 
 <box align="center">
-<label value="&show.label;"/>
-<menulist>
-  <menupopup>
-     <menuitem label="&iconsAndText.label;"/>
-     <menuitem label="&icons.label;"/>
-     <menuitem label="&text.label;"/>
-  </menupopup>
-</menulist>
-<checkbox label="&useSmallIcons.label;"/>
-<button label="&restoreDefaultSet.label;" oncommand="resetToDefault()"/>
-<spacer flex="1"/>
-<image id="trash-can"
-        ondragover="nsDragAndDrop.dragOver(event, trashObserver);"
-        ondragdrop="nsDragAndDrop.drop(event, trashObserver);"
-        ondragexit="this.removeAttribute('dragactive');"/>
+  <label value="&show.label;"/>
+  <menulist>
+    <menupopup>
+       <menuitem label="&iconsAndText.label;"/>
+       <menuitem label="&icons.label;"/>
+       <menuitem label="&text.label;"/>
+    </menupopup>
+  </menulist>
+  <checkbox label="&useSmallIcons.label;"/>
+  <button label="&restoreDefaultSet.label;" oncommand="resetToDefault()"/>
 </box>
 
 <separator class="groove"/>
