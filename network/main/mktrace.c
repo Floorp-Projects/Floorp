@@ -15,12 +15,16 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#define FORCE_PR_LOG /* So that this works in an optimized build */
+
 #include "mkutils.h"
 #include "mktrace.h"
 #include "timing.h"
 #include "prprf.h"
 #include "plstr.h"
 #include "prlog.h"
+#include "prsystem.h"
 #include "prtime.h"
 #include "plhash.h"
 
@@ -98,6 +102,11 @@ static PRLogModuleInfo* gTimingLog   = NULL;
 static const char* gTimingModuleName = "nsTiming";
 
 /**
+ * Rev this if the output format changes significantly
+ */
+#define TIMING_VERSION 0x10000
+
+/**
  * Ensure that the log module actually exists before trying to use it.
  * @return <tt>FALSE</tt> if something goes wrong.
  */
@@ -105,9 +114,42 @@ static PRBool
 EnsureLogModule(void)
 {
     if (gTimingLog == NULL) {
-        if ((gTimingLog = PR_NewLogModule(gTimingModuleName)) != NULL) {
-            /* Off to start with */
-            gTimingLog->level = PR_LOG_NONE;
+        if ((gTimingLog = PR_NewLogModule(gTimingModuleName)) == NULL)
+            return PR_FALSE;
+
+        /* _On_ to start with -- if the env is set up */
+        gTimingLog->level = PR_LOG_NOTICE;
+
+        {
+            /* Dump the session info */
+            char hostname[SYS_INFO_BUFFER_LENGTH];
+            char sysname[SYS_INFO_BUFFER_LENGTH];
+            char release[SYS_INFO_BUFFER_LENGTH];
+            char arch[SYS_INFO_BUFFER_LENGTH];
+
+            if (PR_GetSystemInfo(PR_SI_HOSTNAME, hostname, sizeof(hostname)) != PR_SUCCESS)
+                hostname[0] = '\0';
+
+            if (PR_GetSystemInfo(PR_SI_SYSNAME, sysname, sizeof(sysname)) != PR_SUCCESS)
+                sysname[0] = '\0';
+
+            if (PR_GetSystemInfo(PR_SI_RELEASE, release, sizeof(release)) != PR_SUCCESS)
+                release[0] = '\0';
+
+            if (PR_GetSystemInfo(PR_SI_ARCHITECTURE, arch, sizeof(arch)) != PR_SUCCESS)
+                arch[0] = '\0';
+
+            TimingWriteMessage("begin-session,%08x,%s,%s,%s,%s,%s,%ld",
+                               TIMING_VERSION, hostname, sysname,
+                               release, arch,
+#ifdef DEBUG
+                               "debug",
+#else
+                               "opt",
+#endif
+                               0 /* XXX build number */
+                               );
+
         }
     }
 
