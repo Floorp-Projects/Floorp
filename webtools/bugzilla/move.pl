@@ -50,11 +50,7 @@ sub Log {
 sub Lock {
     if ($::lockcount <= 0) {
         $::lockcount = 0;
-        if (!open(LOCKFID, ">>data/maillock")) {
-            mkdir "data", 0777;
-            chmod 0777, "data";
-            open(LOCKFID, ">>data/maillock") || die "Can't open lockfile.";
-        }
+        open(LOCKFID, ">>data/maillock") || die "Can't open data/maillock: $!";
         my $val = flock(LOCKFID,2);
         if (!$val) { # '2' is magic 'exclusive lock' const.
             print "Content-type: text/html\n\n";

@@ -117,6 +117,18 @@ $::superusergroupset = "9223372036854775807";
 #}
 #$::SIG{__DIE__} = \&die_with_dignity;
 
+# Some files in the data directory must be world readable iff we don't have
+# a webserver group. Call this function to do this.
+sub ChmodDataFile($$) {
+    my ($file, $mask) = @_;
+    my $perm = 0770;
+    if ((stat('data'))[2] & 0002) {
+        $perm = 0777;
+    }
+    $perm = $perm & $mask;
+    chmod $perm,$file;
+}
+
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
     if (!defined $::db) {
@@ -565,8 +577,6 @@ sub GenerateVersionTable {
 
     my @list = sort { uc($a) cmp uc($b)} keys(%::versions);
     @::legal_product = @list;
-    mkdir("data", 0777);
-    chmod 0777, "data";
     my $tmpname = "data/versioncache.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
 
@@ -636,7 +646,7 @@ sub GenerateVersionTable {
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
-    chmod 0666, "data/versioncache";
+    ChmodDataFile('data/versioncache', 0666);
 }
 
 
