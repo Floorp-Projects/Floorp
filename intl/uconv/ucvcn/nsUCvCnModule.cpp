@@ -81,7 +81,7 @@ static FactoryData g_FactoryData[] =
 {
   {
     &kGB2312ToUnicodeCID,
-    nsGB2312ToUnicode::CreateInstance,
+    nsGBKToUnicode::CreateInstance,
     "GB2312",
     "Unicode"
   },
@@ -93,7 +93,7 @@ static FactoryData g_FactoryData[] =
   },
   {
     &kCP936ToUnicodeCID,
-    nsGB2312ToUnicodeV2::CreateInstance,
+    nsGBKToUnicode::CreateInstance,
     "windows-936",
     "Unicode"
   },
