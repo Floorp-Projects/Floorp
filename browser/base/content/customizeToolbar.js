@@ -198,6 +198,9 @@ var dropObserver = {
 
     var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "toolbarpaletteitem");
+    if (paletteItem.getAttribute("flex"))
+      enclosure.setAttribute("flex", paletteItem.getAttribute("flex"));
+
     enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
     cleanUpItemForAdding(paletteItem);
     enclosure.appendChild(paletteItem);
