@@ -211,7 +211,7 @@ FindDataSource::~FindDataSource (void)
 	PL_strfree(mURI);
 	if (nsnull != mObservers)
 	{
-		for (PRInt32 i = mObservers->Count(); i >= 0; --i)
+		for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i)
 		{
 			nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
 			NS_RELEASE(obs);
@@ -245,6 +245,10 @@ NS_IMPL_ISUPPORTS(FindDataSource, nsIRDFDataSource::GetIID());
 NS_IMETHODIMP
 FindDataSource::Init(const char *uri)
 {
+    NS_PRECONDITION(uri != nsnull, "null ptr");
+    if (! uri)
+        return NS_ERROR_NULL_POINTER;
+
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 
 	if ((mURI = PL_strdup(uri)) == nsnull)
@@ -261,6 +265,10 @@ FindDataSource::Init(const char *uri)
 NS_IMETHODIMP
 FindDataSource::GetURI(char **uri)
 {
+    NS_PRECONDITION(uri != nsnull, "null ptr");
+    if (! uri)
+        return NS_ERROR_NULL_POINTER;
+
     if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     else
@@ -275,6 +283,19 @@ FindDataSource::GetSource(nsIRDFResource* property,
                           PRBool tv,
                           nsIRDFResource** source /* out */)
 {
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    *source = nsnull;
 	return NS_RDF_NO_VALUE;
 }
 
@@ -286,7 +307,7 @@ FindDataSource::GetSources(nsIRDFResource *property,
 			   PRBool tv,
                            nsISimpleEnumerator **sources /* out */)
 {
-	PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -298,6 +319,18 @@ FindDataSource::GetTarget(nsIRDFResource *source,
                           PRBool tv,
                           nsIRDFNode **target /* out */)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
 	nsresult		rv = NS_RDF_NO_VALUE;
 
 	// we only have positive assertions in the find data source.
@@ -574,6 +607,18 @@ FindDataSource::GetTargets(nsIRDFResource *source,
                            PRBool tv,
                            nsISimpleEnumerator **targets /* out */)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(targets != nsnull, "null ptr");
+    if (! targets)
+        return NS_ERROR_NULL_POINTER;
+
 	nsresult		rv = NS_ERROR_FAILURE;
 
 	// we only have positive assertions in the find data source.
@@ -658,7 +703,7 @@ FindDataSource::Assert(nsIRDFResource *source,
                        PRBool tv)
 {
 //	PR_ASSERT(0);
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_RDF_ASSERTION_REJECTED;
 }
 
 
@@ -669,7 +714,7 @@ FindDataSource::Unassert(nsIRDFResource *source,
                          nsIRDFNode *target)
 {
 //	PR_ASSERT(0);
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_RDF_ASSERTION_REJECTED;
 }
 
 
@@ -681,6 +726,23 @@ FindDataSource::HasAssertion(nsIRDFResource *source,
                              PRBool tv,
                              PRBool *hasAssertion /* out */)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(hasAssertion != nsnull, "null ptr");
+    if (! hasAssertion)
+        return NS_ERROR_NULL_POINTER;
+
+
 	PRBool			retVal = PR_FALSE;
 	nsresult		rv = NS_OK;
 
@@ -709,7 +771,7 @@ NS_IMETHODIMP
 FindDataSource::ArcLabelsIn(nsIRDFNode *node,
                             nsISimpleEnumerator ** labels /* out */)
 {
-	PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -719,6 +781,15 @@ NS_IMETHODIMP
 FindDataSource::ArcLabelsOut(nsIRDFResource *source,
                              nsISimpleEnumerator **labels /* out */)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(labels != nsnull, "null ptr");
+    if (! labels)
+        return NS_ERROR_NULL_POINTER;
+
+
 	nsresult		rv;
 
 	if (isFindURI(source))
@@ -757,13 +828,16 @@ FindDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 NS_IMETHODIMP
 FindDataSource::AddObserver(nsIRDFObserver *n)
 {
+    NS_PRECONDITION(n != nsnull, "null ptr");
+    if (! n)
+        return NS_ERROR_NULL_POINTER;
+
 	if (nsnull == mObservers)
 	{
 		if ((mObservers = new nsVoidArray()) == nsnull)
 			return NS_ERROR_OUT_OF_MEMORY;
 	}
-	mObservers->AppendElement(n);
-	return NS_OK;
+	return mObservers->AppendElement(n) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -771,9 +845,14 @@ FindDataSource::AddObserver(nsIRDFObserver *n)
 NS_IMETHODIMP
 FindDataSource::RemoveObserver(nsIRDFObserver *n)
 {
+    NS_PRECONDITION(n != nsnull, "null ptr");
+    if (! n)
+        return NS_ERROR_NULL_POINTER;
+
 	if (nsnull == mObservers)
 		return NS_OK;
-	mObservers->RemoveElement(n);
+
+	NS_VERIFY(mObservers->RemoveElement(n), "observer not present");
 	return NS_OK;
 }
 
@@ -782,7 +861,7 @@ FindDataSource::RemoveObserver(nsIRDFObserver *n)
 NS_IMETHODIMP
 FindDataSource::Flush()
 {
-	PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
