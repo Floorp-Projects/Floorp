@@ -36,6 +36,7 @@
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsCertTree.h"
 #include "nsIX509Cert.h"
+#include "nsIX509CertValidity.h"
 #include "nsIX509CertDB.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -650,6 +651,7 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
                         nsAString& _retval)
 {
   nsresult rv;
+  _retval.Truncate();
   NS_ConvertUCS2toUTF8 aUtf8ColID(colID);
   const char *col = aUtf8ColID.get();
   treeArrayEl *el = GetThreadDescAtIndex(row);
@@ -690,21 +692,16 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
     rv = cert->GetEmailAddress(_retval);
   } else if (strcmp(col, "purposecol") == 0 && mNSSComponent) {
     PRUint32 verified;
-    PRBool ocspEnabled;
-    cert->GetUsesOCSP(&ocspEnabled);
-    if (ocspEnabled) {
-      mNSSComponent->DisableOCSP();
-    }
 
-    nsAutoString dummyPurposes;
-    rv = cert->GetPurposes(&verified, dummyPurposes);
+    nsAutoString theUsages;
+    rv = cert->GetUsagesString(PR_TRUE, &verified, theUsages); // ignore OCSP
     if (NS_FAILED(rv)) {
       verified = nsIX509Cert::NOT_VERIFIED_UNKNOWN;
     }
 
     switch (verified) {
       case nsIX509Cert::VERIFIED_OK:
-        rv = cert->GetPurposes(&verified, _retval);
+        _retval = theUsages;
         break;
 
       case nsIX509Cert::CERT_REVOKED:
@@ -738,14 +735,20 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
                                   NS_LITERAL_STRING("VerifyUnknown").get(), _retval);
         break;
     }
-
-    if (ocspEnabled) {
-      mNSSComponent->EnableOCSP();
-    }
   } else if (strcmp(col, "issuedcol") == 0) {
-    rv = cert->GetIssuedDate(_retval);
+    nsCOMPtr<nsIX509CertValidity> validity;
+
+    rv = cert->GetValidity(getter_AddRefs(validity));
+    if (NS_SUCCEEDED(rv)) {
+      validity->GetNotBeforeLocalDay(_retval);
+    }
   } else if (strcmp(col, "expiredcol") == 0) {
-    rv = cert->GetExpiresDate(_retval);
+    nsCOMPtr<nsIX509CertValidity> validity;
+
+    rv = cert->GetValidity(getter_AddRefs(validity));
+    if (NS_SUCCEEDED(rv)) {
+      validity->GetNotAfterLocalDay(_retval);
+    }
   } else if (strcmp(col, "serialnumcol") == 0) {
     rv = cert->GetSerialNumber(_retval);
   } else {
@@ -933,7 +936,25 @@ nsCertTree::CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
       cert->GetCommonName(str);
       break;
     case sort_IssuedDateDescending:
-      cert->GetIssuedDateSortable(str);
+      {
+        nsresult rv;
+        nsCOMPtr<nsIX509CertValidity> validity;
+        PRTime notBefore;
+
+        rv = cert->GetValidity(getter_AddRefs(validity));
+        if (NS_SUCCEEDED(rv)) {
+          rv = validity->GetNotBefore(&notBefore);
+        }
+
+        if (NS_SUCCEEDED(rv)) {
+          PRExplodedTime explodedTime;
+          PR_ExplodeTime(notBefore, PR_GMTParameters, &explodedTime);
+          char datebuf[20]; // 4 + 2 + 2 + 2 + 2 + 2 + 1 = 15
+          if (0 != PR_FormatTime(datebuf, sizeof(datebuf), "%Y%m%d%H%M%S", &explodedTime)) {
+            str = NS_ConvertASCIItoUCS2(nsDependentCString(datebuf));
+          }
+        }
+      }
       break;
     case sort_Email:
       cert->GetEmailAddress(str);

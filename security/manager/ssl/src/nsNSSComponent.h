@@ -112,11 +112,11 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   // This method will just disable OCSP in NSS, it will not
   // alter the respective pref values.
-  NS_IMETHOD DisableOCSP() = 0;
+  NS_IMETHOD SkipOcsp() = 0;
 
   // This method will set the OCSP value according to the 
   // values in the preferences.
-  NS_IMETHOD EnableOCSP() = 0;
+  NS_IMETHOD SkipOcspOff() = 0;
 
   NS_IMETHOD RememberCert(CERTCertificate *cert) = 0;
 
@@ -160,8 +160,8 @@ public:
                                            const PRUnichar **params,
                                            PRUint32 numParams,
                                            PRUnichar **outString);
-  NS_IMETHOD DisableOCSP();
-  NS_IMETHOD EnableOCSP();
+  NS_IMETHOD SkipOcsp();
+  NS_IMETHOD SkipOcspOff();
   nsresult InitializeCRLUpdateTimer();
   nsresult StopCRLUpdateTimer();
   NS_IMETHOD RemoveCrlFromList(nsAutoString);

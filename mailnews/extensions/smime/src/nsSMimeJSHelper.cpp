@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIX509CertDB.h"
+#include "nsIX509CertValidity.h"
 #include "nsIServiceManager.h"
 #include "nsPromiseFlatString.h"
 #include "nsCRT.h"
@@ -153,7 +154,7 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
         ToLowerCase(email, email_lowercase);
 
         nsCOMPtr<nsIX509Cert> cert;
-        if (NS_SUCCEEDED(certdb->GetCertByEmailAddress(nsnull, email_lowercase.get(), getter_AddRefs(cert))) 
+        if (NS_SUCCEEDED(certdb->FindCertByEmailAddress(nsnull, email_lowercase.get(), getter_AddRefs(cert))) 
             && cert)
         {
           *iCert = cert;
@@ -177,23 +178,28 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
             }
           }
           
-          nsXPIDLString id, ed;
+          nsCOMPtr<nsIX509CertValidity> validity;
+          rv = cert->GetValidity(getter_AddRefs(validity));
 
-          if (NS_SUCCEEDED(cert->GetIssuedDate(id)))
-          {
-            *iCII = ToNewUnicode(id);
-            if (!*iCII) {
-              memory_failure = PR_TRUE;
-              continue;
+          if (NS_SUCCEEDED(rv)) {
+            nsXPIDLString id, ed;
+
+            if (NS_SUCCEEDED(validity->GetNotBeforeLocalDay(id)))
+            {
+              *iCII = ToNewUnicode(id);
+              if (!*iCII) {
+                memory_failure = PR_TRUE;
+                continue;
+              }
             }
-          }
-          
-          if (NS_SUCCEEDED(cert->GetExpiresDate(ed)))
-          {
-            *iCEI = ToNewUnicode(ed);
-            if (!*iCEI) {
-              memory_failure = PR_TRUE;
-              continue;
+
+            if (NS_SUCCEEDED(validity->GetNotAfterLocalDay(ed)))
+            {
+              *iCEI = ToNewUnicode(ed);
+              if (!*iCEI) {
+                memory_failure = PR_TRUE;
+                continue;
+              }
             }
           }
         }
@@ -295,7 +301,7 @@ NS_IMETHODIMP nsSMimeJSHelper::GetNoCertAddresses(
       ToLowerCase(email, email_lowercase);
 
       nsCOMPtr<nsIX509Cert> cert;
-      if (NS_SUCCEEDED(certdb->GetCertByEmailAddress(nsnull, email_lowercase.get(), getter_AddRefs(cert))) 
+      if (NS_SUCCEEDED(certdb->FindCertByEmailAddress(nsnull, email_lowercase.get(), getter_AddRefs(cert))) 
           && cert)
       {
         PRUint32 verification_result;

@@ -873,8 +873,8 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   PRBool no_clearsigning_p = PR_FALSE;
 
   PR_ASSERT(aEncrypt || aSign);
-  certdb->GetEmailEncryptionCert(mEncryptionCertName, getter_AddRefs(mSelfEncryptionCert));
-  certdb->GetEmailSigningCert(mSigningCertName, getter_AddRefs(mSelfSigningCert));
+  certdb->FindEmailEncryptionCert(mEncryptionCertName, getter_AddRefs(mSelfEncryptionCert));
+  certdb->FindEmailSigningCert(mSigningCertName, getter_AddRefs(mSelfSigningCert));
 
   // must have both the signing and encryption certs to sign
 	if ((mSelfSigningCert == nsnull) && aSign) {
@@ -929,7 +929,7 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
 	    nsCString mailbox_lowercase;
 	    ToLowerCase(nsDependentCString(mailbox), mailbox_lowercase);
       nsCOMPtr<nsIX509Cert> cert;
-      certdb->GetCertByEmailAddress(nsnull, mailbox_lowercase.get(), getter_AddRefs(cert));
+      certdb->FindCertByEmailAddress(nsnull, mailbox_lowercase.get(), getter_AddRefs(cert));
       PRBool foundValidCert = PR_FALSE;
 
 		  if (cert) {
@@ -960,7 +960,7 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
 	   */
 
       PRBool isSame;
-      if (NS_SUCCEEDED(cert->IsSameCert(mSelfEncryptionCert, &isSame))
+      if (NS_SUCCEEDED(cert->Equals(mSelfEncryptionCert, &isSame))
           && isSame) {
         already_added_self_cert = PR_TRUE;
       }

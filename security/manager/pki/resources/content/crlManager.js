@@ -55,8 +55,8 @@ function onLoad()
 
   for (i=0; i<crls.length; i++) {
     crlEntry = crls.queryElementAt(i, nsICRLInfo);
-    var org = crlEntry.org;
-    var orgUnit = crlEntry.orgUnit;
+    var org = crlEntry.organization;
+    var orgUnit = crlEntry.organizationalUnit;
     var lastUpdate = crlEntry.lastUpdateLocale;
     var nextUpdate = crlEntry.nextUpdateLocale;
     autoupdateEnabledString    = autoupdateEnabledBaseString + crlEntry.nameInDb;

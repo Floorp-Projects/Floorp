@@ -220,10 +220,10 @@ function checkOtherCert(nickname, pref, usage, msgNeedCertWantSame, msgWantSame,
     return;
   
   if (email_recipient_cert_usage == usage) {
-    matchingOtherCert = certdb.getEmailEncryptionCert(nickname);
+    matchingOtherCert = certdb.findEmailEncryptionCert(nickname);
   }
   else if (email_signing_cert_usage == usage) {
-    matchingOtherCert = certdb.getEmailSigningCert(nickname);
+    matchingOtherCert = certdb.findEmailSigningCert(nickname);
   }
   else
     return;

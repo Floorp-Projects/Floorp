@@ -90,7 +90,7 @@ nsNSSCertificateDB::~nsNSSCertificateDB()
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::GetCertByNickname(nsISupports *aToken,
+nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
                                       const nsAString &nickname,
                                       nsIX509Cert **_rvCert)
 {
@@ -123,7 +123,7 @@ nsNSSCertificateDB::GetCertByNickname(nsISupports *aToken,
 }
 
 NS_IMETHODIMP 
-nsNSSCertificateDB::GetCertByDBKey(const char *aDBkey, nsISupports *aToken,
+nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
                                    nsIX509Cert **_cert)
 {
   SECItem keyItem = {siBuffer, nsnull, 0};
@@ -160,7 +160,7 @@ nsNSSCertificateDB::GetCertByDBKey(const char *aDBkey, nsISupports *aToken,
 }
 
 NS_IMETHODIMP 
-nsNSSCertificateDB::GetCertNicknames(nsISupports *aToken, 
+nsNSSCertificateDB::FindCertNicknames(nsISupports *aToken, 
                                      PRUint32      aType,
                                      PRUint32     *_count,
                                      PRUnichar  ***_certNames)
@@ -344,18 +344,18 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
 
   CERTCertificateCleaner tmpCertCleaner(tmpCert);
 
-  PRBool canceled;
   if (tmpCert->isperm) {
-    dialogs->CACertExists(ctx, &canceled);
+    dialogs->NotifyCACertExists(ctx);
     return NS_ERROR_FAILURE;
   }
 
   PRUint32 trustBits;
-  rv = dialogs->DownloadCACert(ctx, certToShow, &trustBits, &canceled);
+  PRBool allows;
+  rv = dialogs->ConfirmDownloadCACert(ctx, certToShow, &trustBits, &allows);
   if (NS_FAILED(rv))
     return rv;
 
-  if (canceled)
+  if (!allows)
     return NS_ERROR_NOT_AVAILABLE;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("trust is %d\n", trustBits));
@@ -729,16 +729,11 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-/*
- * boolean getCertTrust(in nsIX509Cert cert,
- *                      in unsigned long certType,
- *                      in unsigned long trustType);
- */
 NS_IMETHODIMP 
-nsNSSCertificateDB::GetCertTrust(nsIX509Cert *cert, 
-                                 PRUint32 certType,
-                                 PRUint32 trustType,
-                                 PRBool *_isTrusted)
+nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert, 
+                                  PRUint32 certType,
+                                  PRUint32 trustType,
+                                  PRBool *_isTrusted)
 {
   SECStatus srv;
   nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
@@ -1029,9 +1024,8 @@ finish:
 /* somewhat follows logic of cert_list_include_cert from PSM 1.x */
 
 
-/* readonly attribute boolean ocspOn; */
 NS_IMETHODIMP 
-nsNSSCertificateDB::GetOcspOn(PRBool *aOcspOn)
+nsNSSCertificateDB::GetIsOcspOn(PRBool *aOcspOn)
 {
   nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
 
@@ -1041,33 +1035,9 @@ nsNSSCertificateDB::GetOcspOn(PRBool *aOcspOn)
   return NS_OK;
 }
 
-/* void disableOCSP (); */
-NS_IMETHODIMP 
-nsNSSCertificateDB::DisableOCSP()
-{
-  nsresult rv;
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  return nssComponent->DisableOCSP();
-}
-
-/* void enableOCSP (); */
-NS_IMETHODIMP 
-nsNSSCertificateDB::EnableOCSP()
-{
-  nsresult rv;
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  return nssComponent->EnableOCSP();
-}
-
 /* nsIX509Cert getDefaultEmailEncryptionCert (); */
 NS_IMETHODIMP
-nsNSSCertificateDB::GetEmailEncryptionCert(const nsAString &aNickname, nsIX509Cert **_retval)
+nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString &aNickname, nsIX509Cert **_retval)
 {
   if (!_retval)
     return NS_ERROR_FAILURE;
@@ -1106,7 +1076,7 @@ loser:
 
 /* nsIX509Cert getDefaultEmailSigningCert (); */
 NS_IMETHODIMP
-nsNSSCertificateDB::GetEmailSigningCert(const nsAString &aNickname, nsIX509Cert **_retval)
+nsNSSCertificateDB::FindEmailSigningCert(const nsAString &aNickname, nsIX509Cert **_retval)
 {
   if (!_retval)
     return NS_ERROR_FAILURE;
@@ -1144,7 +1114,7 @@ loser:
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::GetCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval)
+nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval)
 {
   CERTCertificate *any_cert = CERT_FindCertByNicknameOrEmailAddr(CERT_GetDefaultCertDB(), (char*)aEmailAddress);
   if (!any_cert)

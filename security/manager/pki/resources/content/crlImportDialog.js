@@ -56,9 +56,9 @@ function onLoad()
     var nextUpdate = document.getElementById("nextUpdate");
     nextUpdate.setAttribute("value",nextUpdateStr);
     var org = document.getElementById("orgText");
-    org.setAttribute("value",crl.org);
+    org.setAttribute("value", crl.organization);
     var orgUnit = document.getElementById("orgUnitText");
-    orgUnit.setAttribute("value",crl.orgUnit);
+    orgUnit.setAttribute("value", crl.organizationalUnit);
 
     prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
     var autoupdateEnabledString   = "security.crl.autoupdate.enable." + crl.nameInDb;

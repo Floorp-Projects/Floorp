@@ -156,9 +156,9 @@ nsNSSDialogs::GetPassword(nsIInterfaceRequestor *ctx,
 }
 
 NS_IMETHODIMP
-nsNSSDialogs::UnknownIssuer(nsIInterfaceRequestor *socketInfo,
-                            nsIX509Cert *cert, PRInt16 *outAddType,
-                            PRBool *_retval)
+nsNSSDialogs::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
+                                   nsIX509Cert *cert, PRInt16 *outAddType,
+                                   PRBool *_retval)
 {
   nsresult rv;
   PRInt32 addType;
@@ -214,9 +214,9 @@ nsNSSDialogs::UnknownIssuer(nsIInterfaceRequestor *socketInfo,
 }
 
 NS_IMETHODIMP 
-nsNSSDialogs::MismatchDomain(nsIInterfaceRequestor *socketInfo, 
-                             const nsACString &targetURL, 
-                             nsIX509Cert *cert, PRBool *_retval) 
+nsNSSDialogs::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo, 
+                                    const nsACString &targetURL, 
+                                    nsIX509Cert *cert, PRBool *_retval) 
 {
   nsresult rv;
 
@@ -254,8 +254,8 @@ nsNSSDialogs::MismatchDomain(nsIInterfaceRequestor *socketInfo,
 }
 
 NS_IMETHODIMP 
-nsNSSDialogs::CertExpired(nsIInterfaceRequestor *socketInfo, 
-                          nsIX509Cert *cert, PRBool *_retval)
+nsNSSDialogs::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo, 
+                                 nsIX509Cert *cert, PRBool *_retval)
 {
   nsresult rv;
   PRTime now = PR_Now();
@@ -341,8 +341,8 @@ nsNSSDialogs::CertExpired(nsIInterfaceRequestor *socketInfo,
 }
 
 NS_IMETHODIMP 
-nsNSSDialogs::CrlNextupdate(nsIInterfaceRequestor *socketInfo, 
-                          const nsACString &targetURL, nsIX509Cert *cert)
+nsNSSDialogs::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo, 
+                                  const nsACString &targetURL, nsIX509Cert *cert)
 {
   nsresult rv;
 
@@ -382,19 +382,15 @@ nsNSSDialogs::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl)
   return NS_OK;
 }
 
-/* void downloadCACert (in nsIInterfaceRequestor ctx,
-                        in nsIX509Cert cert,
-                        out trust,
-                        out canceled); */
 NS_IMETHODIMP 
-nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx, 
-                             nsIX509Cert *cert,
-                             PRUint32 *_trust,
-                             PRBool *_canceled)
+nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, 
+                                    nsIX509Cert *cert,
+                                    PRUint32 *_trust,
+                                    PRBool *_retval)
 {
   nsresult rv;
 
-  *_canceled = PR_FALSE;
+  *_retval = PR_TRUE;
 
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
@@ -431,18 +427,16 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
   *_trust |= (email) ? nsIX509CertDB::TRUSTED_EMAIL : 0;
   *_trust |= (objsign) ? nsIX509CertDB::TRUSTED_OBJSIGN : 0;
 
-  *_canceled = (status == 0)?PR_TRUE:PR_FALSE;
+  *_retval = (status == 0)?PR_FALSE:PR_TRUE;
 
   return rv;
 }
 
 
 NS_IMETHODIMP 
-nsNSSDialogs::CACertExists(nsIInterfaceRequestor *ctx,PRBool *_canceled)
+nsNSSDialogs::NotifyCACertExists(nsIInterfaceRequestor *ctx)
 {
   nsresult rv;
-
-  *_canceled = PR_FALSE;
 
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
@@ -574,10 +568,10 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx,
 NS_IMETHODIMP 
 nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
                                     nsAString &_password,
-                                    PRBool *_canceled)
+                                    PRBool *_retval)
 {
   nsresult rv;
-  *_canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
   nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
@@ -591,8 +585,8 @@ nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   PRInt32 status;
   rv = block->GetInt(1, &status);
   if (NS_FAILED(rv)) return rv;
-  *_canceled = (status == 0) ? PR_TRUE : PR_FALSE;
-  if (!*_canceled) {
+  *_retval = (status == 0) ? PR_FALSE : PR_TRUE;
+  if (*_retval) {
     // retrieve the password
     PRUnichar *pw;
     rv = block->GetString(2, &pw);
@@ -607,10 +601,10 @@ nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
 NS_IMETHODIMP 
 nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
                                     nsAString &_password,
-                                    PRBool *_canceled)
+                                    PRBool *_retval)
 {
   nsresult rv;
-  *_canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
   nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
@@ -624,8 +618,8 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   PRInt32 status;
   rv = block->GetInt(1, &status);
   if (NS_FAILED(rv)) return rv;
-  *_canceled = (status == 0) ? PR_TRUE : PR_FALSE;
-  if (!*_canceled) {
+  *_retval = (status == 0) ? PR_FALSE : PR_TRUE;
+  if (*_retval) {
     // retrieve the password
     PRUnichar *pw;
     rv = block->GetString(2, &pw);

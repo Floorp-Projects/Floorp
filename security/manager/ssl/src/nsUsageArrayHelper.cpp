@@ -170,7 +170,8 @@ nsUsageArrayHelper::verifyFailed(PRUint32 *_verified)
 }
 
 nsresult
-nsUsageArrayHelper::GetUsageArray(char *suffix,
+nsUsageArrayHelper::GetUsagesArray(char *suffix,
+                      PRBool ignoreOcsp,
                       PRUint32 outArraySize,
                       PRUint32 *_verified,
                       PRUint32 *_count,
@@ -181,6 +182,19 @@ nsUsageArrayHelper::GetUsageArray(char *suffix,
 
   if (outArraySize < max_returned_out_array_size)
     return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsINSSComponent> nssComponent;
+
+  if (ignoreOcsp) {
+    nsresult rv;
+    nssComponent = do_GetService(kNSSComponentCID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+    
+    if (nssComponent) {
+      nssComponent->SkipOcsp();
+    }
+  }
 
   PRUint32 &count = *_count;
   count = 0;
@@ -205,6 +219,11 @@ nsUsageArrayHelper::GetUsageArray(char *suffix,
 #if 0
   check(suffix, certUsageAnyCA, count, outUsages);
 #endif
+
+  if (ignoreOcsp && nssComponent) {
+    nssComponent->SkipOcspOff();
+  }
+
   if (count == 0) {
     verifyFailed(_verified);
   } else {
@@ -212,4 +231,3 @@ nsUsageArrayHelper::GetUsageArray(char *suffix,
   }
   return NS_OK;
 }
-

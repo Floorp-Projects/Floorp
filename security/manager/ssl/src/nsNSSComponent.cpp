@@ -320,7 +320,7 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
 }
 
 NS_IMETHODIMP
-nsNSSComponent::DisableOCSP()
+nsNSSComponent::SkipOcsp()
 {
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
 
@@ -329,7 +329,7 @@ nsNSSComponent::DisableOCSP()
 }
 
 NS_IMETHODIMP
-nsNSSComponent::EnableOCSP()
+nsNSSComponent::SkipOcspOff()
 {
   setOCSPOptions(mPref);
   return NS_OK;
