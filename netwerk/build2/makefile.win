@@ -38,6 +38,7 @@ LLIBS=                          \
         $(DIST)\lib\nkftp_s.lib \
         $(DIST)\lib\nkfinger_s.lib \
         $(DIST)\lib\nkdatetm_s.lib \
+	$(DIST)\lib\nkviewsource_s.lib \
         $(LIBNSPR)  
 
 INCS = $(INCS)                               \
@@ -46,6 +47,7 @@ INCS = $(INCS)                               \
         -I$(DEPTH)\netwerk\protocol\ftp\src \
         -I$(DEPTH)\netwerk\protocol\finger\src \
         -I$(DEPTH)\netwerk\protocol\datetime\src \
+	-I$(DEPTH)\netwerk\protocol\viewsource\src \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

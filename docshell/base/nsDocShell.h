@@ -95,6 +95,11 @@ enum LoadType {
   LOAD_REFRESH = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH)
 };
 
+/* internally used ViewMode types */
+enum ViewMode {
+	viewNormal = 0x0,
+	viewSource = 0x1
+};
 
 //*****************************************************************************
 //***    nsRefreshTimer
@@ -289,9 +294,6 @@ protected:
    PRBool                     mAllowJavascript;
    PRBool                     mAllowMetaRedirects;
    PRUint32                   mAppType;
-   PRInt32                    mViewMode;
-   PRInt32                    mLastViewMode;
-   PRBool                     mRestoreViewMode;
    PRInt32                    mChildOffset;  // Offset in the parent's child list.
    PRUint32                   mBusyFlags;
    // Reference to the SHEntry for this docshell until the page is destroyed.

@@ -38,6 +38,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libnkftp_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkfinger_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnkdatetm_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkviewsource_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -45,6 +46,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../protocol/ftp/src \
 		-I$(srcdir)/../protocol/finger/src \
 		-I$(srcdir)/../protocol/datetime/src \
+		-I$(srcdir)/../protocol/viewsource/src \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
