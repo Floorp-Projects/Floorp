@@ -47,10 +47,8 @@
 class nsISizeOfHandler;
 
 
-#ifdef  USE_STRING2
 #define nsString2     nsString
 #define nsAutoString2 nsAutoString
-#endif
 
 
 class NS_COM nsSubsumeStr;

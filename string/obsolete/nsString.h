@@ -41,12 +41,7 @@
 #include <stdio.h>
 #include "nsStr.h"
 
-#ifndef USE_STRING2
-#define nsString1     nsString
-#define nsAutoString1 nsAutoString
-#else 
 #include "nsString2.h"  //get new string class
-#endif
 
 class nsISizeOfHandler;
 
