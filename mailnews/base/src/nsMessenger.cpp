@@ -1528,7 +1528,7 @@ NS_IMETHODIMP nsMessenger::DoPrint()
     nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_QueryInterface(viewer);
     if (webBrowserPrint) {
       nsCOMPtr<nsIPrintSettings> printSettings;
-      webBrowserPrint->GetNewPrintSettings(getter_AddRefs(printSettings));
+      webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
       rv = webBrowserPrint->Print(printSettings, (nsIWebProgressListener*)nsnull);
     }
 #ifdef DEBUG_MESSENGER

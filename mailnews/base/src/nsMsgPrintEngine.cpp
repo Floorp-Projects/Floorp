@@ -147,7 +147,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
             {
               if (!mPrintSettings) 
               {
-                mWebBrowserPrint->GetNewPrintSettings(getter_AddRefs(mPrintSettings));
+                mWebBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(mPrintSettings));
               }
               mPrintSettings->SetPrintSilent(mCurrentlyPrintingURI != 0);
               rv = mWebBrowserPrint->Print(mPrintSettings, (nsIWebProgressListener *)this);
