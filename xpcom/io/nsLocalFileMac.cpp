@@ -949,14 +949,19 @@ nsLocalFile::GetPath(char **_retval)
     	{	// Now would be a good time to call the code that makes an FSSpec into a path
     		short	fullPathLen;
     		Handle	fullPathHandle;
-    		OSErr	err;
     		ResolveAndStat(PR_TRUE);
-    		err = FSpGetFullPath(&mResolvedSpec, &fullPathLen, &fullPathHandle);
-    		*_retval = (char*) nsAllocator::Clone(*fullPathHandle, fullPathLen+1);
-    		DisposeHandle(fullPathHandle);
+    		(void)::FSpGetFullPath(&mResolvedSpec, &fullPathLen, &fullPathHandle);
+    		if (!fullPathHandle) return NS_ERROR_OUT_OF_MEMORY;
     		
-    		((*_retval)+fullPathLen)[0] = 0;
+    		char* fullPath = (char *)nsAllocator::Alloc(fullPathLen + 1);
+    		if (!fullPath) return NS_ERROR_OUT_OF_MEMORY;
     		
+    		::HLock(fullPathHandle);
+    		nsCRT::memcpy(fullPath, *fullPathHandle, fullPathLen);    		
+    		fullPath[fullPathLen] = '\0';
+    		
+    		*_retval = fullPath;
+    		::DisposeHandle(fullPathHandle);
     		break;
     	}
     		
@@ -1014,7 +1019,7 @@ nsLocalFile::Load(PRLibrary * *_retval)
         return NS_ERROR_FILE_IS_DIRECTORY;
 	
 	// Use the new PR_LoadLibraryWithFlags which allows us to use a FSSpec
-	PRLibSpec	libSpec;
+    PRLibSpec libSpec;
     libSpec.type = PR_LibSpec_MacIndexedFragment;
     libSpec.value.mac_indexed_fragment.fsspec = &mResolvedSpec;
     libSpec.value.mac_indexed_fragment.index = 0;
