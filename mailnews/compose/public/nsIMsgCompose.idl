@@ -179,10 +179,6 @@ interface nsIMsgCompose : nsISupports {
   */
   void SetSignature(in nsIMsgIdentity identity);
 
-  /* ResetNodeEventHandlers: Temporary API to go around bug 26528. THis API will be removed when bug 26528 is fixed.
-  */
-  void ResetNodeEventHandlers(in nsIDOMNode node);
-
   /* Check if the composing mail headers (and identity) can be converted to a mail charset.
   */
   boolean checkCharsetConversion(in nsIMsgIdentity identity, out string fallbackCharset);

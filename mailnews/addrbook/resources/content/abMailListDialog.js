@@ -474,8 +474,6 @@ function _awSetFocus()
   try
   {
     var theNewRow = awGetListItem(top.awRow);
-    //temporary patch for bug 26344
-//    awFinishCopyNode(theNewRow);
 
     listbox.ensureElementIsVisible(theNewRow);
     top.awInputElement.focus();
@@ -491,14 +489,6 @@ function _awSetFocus()
     else
       dump("_awSetFocus failed, forget about it!\n");
   }
-}
-
-
-//temporary patch for bug 26344 & 26528
-function awFinishCopyNode(node)
-{
-    msgCompose.ResetNodeEventHandlers(node);
-    return;
 }
 
 function awTabFromRecipient(element, event)

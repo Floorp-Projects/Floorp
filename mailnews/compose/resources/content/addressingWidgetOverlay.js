@@ -233,7 +233,6 @@ function CompFields2Recipients(msgCompFields, msgType)
     var parent = listbox.parentNode;
     parent.replaceChild(newListBoxNode, listbox);
     awFitDummyRows(2);
-    setTimeout("awFinishCopyNodes();", 0);
 
     gMimeHeaderParser = null; //Release the mime parser
   }
@@ -672,8 +671,6 @@ function _awSetFocus()
   //try
   //{
     var theNewRow = awGetListItem(top.awRow);
-    //temporary patch for bug 26344
-    awFinishCopyNode(theNewRow);
 
     //Warning: firstVisibleRow is zero base but top.awRow is one base!
     var firstVisibleRow = listbox.getIndexOfFirstVisibleRow();
@@ -701,21 +698,6 @@ function _awSetFocus()
     else
       dump("_awSetFocus failed, forget about it!\n");
   }*/
-}
-
-
-//temporary patch for bug 26344 & 26528
-function awFinishCopyNode(node)
-{
-    gMsgCompose.ResetNodeEventHandlers(node);
-    return;
-}
-
-
-function awFinishCopyNodes()
-{
-  var listbox = document.getElementById('addressingWidget');
-  awFinishCopyNode(listbox);
 }
 
 function awTabFromRecipient(element, event)
