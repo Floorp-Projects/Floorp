@@ -127,6 +127,7 @@
        onget="return this.mValue"
        onset="this.update(val,false)" />
 
+      <!-- called from datetimepicker.timepickerdisabled and datetimepicker.setDisabled -->
       <property name="disabled"
        onget="return this.mDisabled;" 
        onset="this.setDisabled( val );" />
@@ -142,7 +143,7 @@
 	this.kFormatter = new DateFormater();
 
 	// whether currently disabled
-	this.mDisabled = false;
+	this.mDisabled = this.getAttribute("disabled") ? true : false;
 
 	var val = this.getAttribute("value");
 	if (val) update(new Date(val), false);
@@ -193,15 +194,11 @@
 	<body><![CDATA[
 	  this.mDisabled = aDisabled;
 	  if (this.mDisabled) {
-	    // disable popups by removing the popup attribute
 	    this.kTextBox.setAttribute( "disabled", "true" );
 	    this.kButton.setAttribute( "disabled", "true" );
-	    //this.kButton.removeAttribute( "popup" );
 	  } else {
-	    // enable popups by setting the popup attribute
 	    this.kTextBox.removeAttribute( "disabled" );
 	    this.kButton.removeAttribute( "disabled" );
-	    //this.kButton.setAttribute( "popup", "oe-time-picker-popup" );
 	  }
 	]]></body>
       </method>

@@ -118,6 +118,11 @@
             onset="this.update(val,false)"
             onget="return this.mValue"/>
 
+        <!-- called from datetimepicker.datepickerdisabled and datetimepicker.setDisabled -->
+        <property name="disabled"
+         onget="return this.mDisabled;" 
+         onset="this.setDisabled( val );" />
+
         <constructor>
             <![CDATA[
                 //var hbox = document.getAnonymousElementByAttribute(this,"id","hbox");
@@ -127,10 +132,15 @@
                 // Fails:
                 //  this.kTextBoxInput = document.getAnonymousNodes(this.kTextBox).childNodes[0].childNodes[0];
                 //  this.kTextBoxInput.kDatePicker = this;
-                this.kPopup = hbox.childNodes[1].childNodes[0];
-                this.kCalendar = this.kPopup.childNodes[0];
-                this.kCalendar.kDatePicker = this; // enable call back to method in Moz1.6
+                //document.getAnonymousElementByAttribute(this, "id", "button");
+                this.kButton = hbox.childNodes[1];
+                this.kPopup = kButton.childNodes[0];
+                this.kMinimonth = this.kPopup.childNodes[0];
+                this.kMinimonth.kDatePicker = this; // enable call back to method in Moz1.6
                 this.kFormatter = new DateFormater();
+
+                // whether currently disabled
+                this.mDisabled = this.getAttribute("disabled") ? true : false;
 
                 this.mValue = null;
                 var val = this.getAttribute("value");
@@ -146,8 +156,8 @@
         </constructor>
 
         <method name="update">
-        <parameter name="aValue"/>
-        <parameter name="refresh"/>
+            <parameter name="aValue"/>
+            <parameter name="refresh"/>
             <body><![CDATA[
                 if (aValue == null) {  // invalid date, revert to previous date
                 // set textBox.value property, not attribute
@@ -163,10 +173,24 @@
         </method>
 
         <method name="formatDate">
-        <parameter name="aValue"/>
+            <parameter name="aValue"/>
             <body><![CDATA[
                 return this.kFormatter.getShortFormatedDate(aValue);
             ]]></body>
+        </method>
+
+        <method name="setDisabled">
+          <parameter name="aDisabled" />
+          <body><![CDATA[
+            this.mDisabled = aDisabled;
+            if (this.mDisabled) {
+              this.kTextBox.setAttribute( "disabled", "true" );
+              this.kButton.setAttribute( "disabled", "true" );
+            } else {
+              this.kTextBox.removeAttribute( "disabled" );
+              this.kButton.removeAttribute( "disabled" );
+            }
+          ]]></body>
         </method>
 
         <method name="onPopup">
