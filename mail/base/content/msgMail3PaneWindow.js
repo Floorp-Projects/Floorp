@@ -154,7 +154,7 @@ var folderListener = {
     OnItemIntPropertyChanged: function(item, property, oldValue, newValue) {
       if (item == msgWindow.openFolder) {
         if(property.toString() == "TotalMessages" || property.toString() == "TotalUnreadMessages") {
-          UpdateStatusMessageCounts(msgWindow.openFolder);
+          UpdateStatusMessageCounts(gMsgFolderSelected);
         }      
       }
     },
