@@ -20,7 +20,7 @@ MOZ_SRC=y:
 
 !if !defined(MOZ_TOP)
 #enable builds from changed top level directories
-MOZ_TOP=ns
+MOZ_TOP=mozilla
 !endif
 
 #//------------------------------------------------------------------------
