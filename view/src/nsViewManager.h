@@ -138,6 +138,8 @@ private:
                        nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
                        nscoord aX = 0, nscoord aY = 0);
   PRBool DoesViewHaveNativeWidget(nsIView &aView);
+  void PauseTimer(void);
+  void RestartTimer(void);
 
 
   nsIDeviceContext  *mContext;
@@ -170,6 +172,7 @@ public:
   nsRect            mDirtyRect;
   nsIView           *mRootView;
   PRUint32          mFrameRate;
+  PRUint32          mTrueFrameRate;
 };
 
 #endif
