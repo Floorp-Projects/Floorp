@@ -139,22 +139,27 @@ if (-d "$CVS_ROOT/$dir") {
 
 print "
 <TABLE CELLPADDING=0 CELLSPACING=0>
-<FORM action=rview.cgi method=get><TR><TD>
+<TR><TD>
 Goto Directory:
-</TD><TD><INPUT name=dir value='$dir' size=30>
+</TD><TD>
+<FORM action=rview.cgi method=get>
+<INPUT name=dir value='$dir' size=30>
 <INPUT name=rev value='$rev' type=hidden>
 <INPUT name=module value='$::TreeID' type=hidden>
 <INPUT name=cvsroot value='$CVS_ROOT' type=hidden>
 <INPUT type=submit value='chdir'>
-</TD></TR></FORM>
-<FORM action=rview.cgi method=get><TR><TD>
+</FORM>
+</TD></TR>
 Branch:
-</TD><TD><INPUT name=rev value='$rev' size=30>
+</TD><TD>
+<FORM action=rview.cgi method=get><TR><TD>
+<INPUT name=rev value='$rev' size=30>
 <INPUT name=dir value='$dir' type=hidden>
 <INPUT name=module value='$::TreeID' type=hidden>
 <INPUT name=cvsroot value='$CVS_ROOT' type=hidden>
 <INPUT type=submit value='Set Branch'>
-</TR></FORM>
+</FORM>
+</TR>
 </TABLE>
 
 ";
