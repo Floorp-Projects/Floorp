@@ -151,9 +151,9 @@ function CalendarWindow( calendarDataSource )
          {
              if( calendarEvent )
              {
-                calendarWindow.currentView.refreshEvents( );
-                
                 calendarWindow.setSelectedEvent( calendarEvent );
+
+                calendarWindow.currentView.refreshEvents( );
              }
          }
       },
@@ -162,11 +162,6 @@ function CalendarWindow( calendarDataSource )
       {
         if( !gICalLib.batchMode )
         {
-             if( calendarEvent )
-             {
-                calendarWindow.setSelectedEvent( calendarEvent );
-                
-             }
              calendarWindow.currentView.refreshEvents( );
         }
       },
