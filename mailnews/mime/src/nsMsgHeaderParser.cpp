@@ -17,7 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
-
+#include "xp_core.h"            // for FALSE
 #include "nsISupports.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgHeaderParser.h"	 

@@ -1180,8 +1180,8 @@ PUBLIC char *INTL_GetAcceptCharset(void);
  */
 PUBLIC char *INTL_DecodeMimePartIIStr(
     const char *header, 
-    int16 wincsid, 
-    XP_Bool dontConvert
+    PRInt16 wincsid, 
+    PRBool dontConvert
 );
 
 /**
@@ -1208,8 +1208,8 @@ PUBLIC char *INTL_DecodeMimePartIIStr(
  */
 PUBLIC char *INTL_EncodeMimePartIIStr(
     char *header, 
-    int16 wincsid, 
-    XP_Bool bUseMime
+    PRInt16 wincsid, 
+    PRBool bUseMime
 );
 
 /**
@@ -1237,8 +1237,8 @@ PUBLIC char *INTL_EncodeMimePartIIStr(
  */
 PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(
     char * header, 
-    int16 wincsid, 
-    XP_Bool bUseMime, 
+    PRInt16 wincsid, 
+    PRBool bUseMime, 
     int encodedWordSize
 );
 

@@ -1515,12 +1515,12 @@ PRBool MimeCharsetConverterClass::NeedCharsetConversion(const nsString& from_cha
 // BEGIN PUBLIC INTERFACE
 extern "C" {
 #define PUBLIC
-PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid, XP_Bool dontConvert)
+PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, PRInt16 wincsid, PRBool dontConvert)
 {
 // Obsolescent
   return PL_strdup(header);
 }
-PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid, XP_Bool bUseMime)
+PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, PRInt16 wincsid, PRBool bUseMime)
 {
 // Obsolescent
   return PL_strdup(subject);
@@ -1529,7 +1529,7 @@ PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, int16 wincsid, XP_Bool bUse
     The reason why we specify a different length here is because we are not encoding
     the string for use in a mail message, but rather want to stuff as much content
     into the subject string as possible. */
-PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, XP_Bool bUseMime, int encodedWordSize)
+PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, PRInt16 wincsid, PRBool bUseMime, int encodedWordSize)
 {
 // Obsolescent
   return PL_strdup(subject);
