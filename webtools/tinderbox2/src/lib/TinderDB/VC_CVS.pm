@@ -126,7 +126,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.8 $ )[1];
+$VERSION = ( qw $Revision: 1.9 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -181,7 +181,7 @@ sub apply_db_updates {
     # for debuging and for "redundancy". Only delete duplicates during
     # the list hour.  Notice we are still removing 90% of the duplicates.
 
-    ( ($main::$TIME - $time) < $SECONDS_PER_HOUR ) &&
+    ( ($main::TIME - $time) < $SECONDS_PER_HOUR ) &&
     ($DATABASE{$tree}{$time}{'treestate'}) &&
     ($DATABASE{$tree}{$time}{'treestate'} eq $tree_state) &&
       delete $DATABASE{$tree}{$time}{'treestate'};
