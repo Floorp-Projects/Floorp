@@ -124,7 +124,7 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
   nsITokenizer(), mTokenDeque(0), mParseMode(aParseMode)
 {
   NS_INIT_REFCNT();
-  mDoXMLEmptyTags=PR_FALSE;
+  mDoXMLEmptyTags=(eDTDMode_strict==aParseMode);
   mDocType=aDocType;
   mRecordTrailingContent=PR_FALSE;
   mParserCommand=aCommand;

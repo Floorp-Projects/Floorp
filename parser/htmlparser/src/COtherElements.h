@@ -1803,6 +1803,13 @@ public:
       default:
         //for now, let's drop other elements onto the floor.
         result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);
+        if(NS_SUCCEEDED(result)) {
+          nsCParserNode *theNode=(nsCParserNode*)aNode;
+          CStartToken *theToken=(CStartToken*)theNode->mToken;
+          if(theToken->IsEmpty()){
+            result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+          }
+        }
         break;
     }//switch
 
