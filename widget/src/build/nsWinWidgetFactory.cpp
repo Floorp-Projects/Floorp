@@ -244,7 +244,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
     }
-    else if (mClassID.Equals(kCDataFlavor)) {
+/*    else if (mClassID.Equals(kCDataFlavor)) {
         inst = (nsISupports*)new nsDataFlavor();
     }
     else if (mClassID.Equals(kCTransferable)) {
@@ -265,6 +265,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCDraggedObject)) {
         inst = (nsISupports*)new nsDraggedObject();
     }
+    */
 #ifdef DRAG_DROP
     else if (mClassID.Equals(kCDataObj)) {
         inst = (nsISupports*)new CfDataObj();
