@@ -437,10 +437,19 @@ public:
   // aSelection is optional -- if null, we get current seletion
   nsresult CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode);
 
+  nsresult IsVisTextNode( nsIDOMNode *aNode, 
+                          PRBool *outIsEmptyNode, 
+                          PRBool aSafeToAskFrames);
   nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyBlock, 
                        PRBool aMozBRDoesntCount = PR_FALSE,
                        PRBool aListOrCellNotEmpty = PR_FALSE,
                        PRBool aSafeToAskFrames = PR_FALSE);
+  nsresult IsEmptyNodeImpl(nsIDOMNode *aNode,
+                           PRBool *outIsEmptyBlock, 
+                           PRBool aMozBRDoesntCount,
+                           PRBool aListOrCellNotEmpty,
+                           PRBool aSafeToAskFrames,
+                           PRBool *aSeenBR);
                        
 protected:
 

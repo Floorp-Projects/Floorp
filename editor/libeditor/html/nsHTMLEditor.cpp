@@ -131,6 +131,8 @@
 #include "nsEditorUtils.h"
 #include "nsIPref.h"
 #include "nsParserCIID.h"
+#include "nsITextContent.h"
+#include "nsWSRunObject.h"
 
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
@@ -4860,6 +4862,74 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
 #endif
 
 
+
+///////////////////////////////////////////////////////////////////////////
+// IsVisTextNode: figure out if textnode aTextNode has any visible content.
+//                  
+nsresult
+nsHTMLEditor::IsVisTextNode( nsIDOMNode *aNode, 
+                             PRBool *outIsEmptyNode, 
+                             PRBool aSafeToAskFrames)
+{
+  if (!aNode || !outIsEmptyNode) 
+    return NS_ERROR_NULL_POINTER;
+  *outIsEmptyNode = PR_TRUE;
+  nsresult res = NS_OK;
+
+  PRUint32 length = 0;
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
+  // callers job to only call us with text nodes
+  if (!nodeAsText) 
+    return NS_ERROR_NULL_POINTER;
+  nodeAsText->GetLength(&length);
+  if (aSafeToAskFrames)
+  {
+    nsCOMPtr<nsISelectionController> selCon;
+    res = GetSelectionController(getter_AddRefs(selCon));
+    if (NS_FAILED(res)) return res;
+    if (!selCon) return NS_ERROR_FAILURE;
+    PRBool isVisible = PR_FALSE;
+    // ask the selection controller for information about whether any
+    // of the data in the node is really rendered.  This is really
+    // something that frames know about, but we aren't supposed to talk to frames.
+    // So we put a call in the selection controller interface, since it's already
+    // in bed with frames anyway.  (this is a fix for bug 22227, and a
+    // partial fix for bug 46209)
+    res = selCon->CheckVisibility(aNode, 0, length, &isVisible);
+    if (NS_FAILED(res)) return res;
+    if (isVisible) 
+    {
+      *outIsEmptyNode = PR_FALSE;
+    }
+  }
+  else if (length)
+  {
+    nsCOMPtr<nsITextContent> tc = do_QueryInterface(nodeAsText);
+    PRBool justWS = PR_FALSE;
+    tc->IsOnlyWhitespace(&justWS);
+    if (justWS)
+    {
+      nsWSRunObject wsRunObj(this, aNode, 0);
+      nsCOMPtr<nsIDOMNode> visNode;
+      PRInt32 outVisOffset=0;
+      PRInt16 visType=0;
+      res = wsRunObj.NextVisibleNode(aNode, 0, address_of(visNode), &outVisOffset, &visType);
+      if (NS_FAILED(res)) return res;
+      if ( (visType == nsWSRunObject::eNormalWS) ||
+           (visType == nsWSRunObject::eText) )
+      {
+        *outIsEmptyNode = (aNode != visNode);
+      }
+    }
+    else
+    {
+      *outIsEmptyNode = PR_FALSE;
+    }
+  }
+  return NS_OK;  
+}
+  
+
 ///////////////////////////////////////////////////////////////////////////
 // IsEmptyNode: figure out if aNode is an empty node.
 //               A block can have children and still be considered empty,
@@ -4874,17 +4944,29 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
 {
   if (!aNode || !outIsEmptyNode) return NS_ERROR_NULL_POINTER;
   *outIsEmptyNode = PR_TRUE;
+  PRBool seenBR = PR_FALSE;
+  return IsEmptyNodeImpl(aNode, outIsEmptyNode, aSingleBRDoesntCount,
+                         aListOrCellNotEmpty, aSafeToAskFrames, &seenBR);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// IsEmptyNodeImpl: workhorse for IsEmptyNode.
+//                  
+nsresult
+nsHTMLEditor::IsEmptyNodeImpl( nsIDOMNode *aNode, 
+                               PRBool *outIsEmptyNode, 
+                               PRBool aSingleBRDoesntCount,
+                               PRBool aListOrCellNotEmpty,
+                               PRBool aSafeToAskFrames,
+                               PRBool *aSeenBR)
+{
+  if (!aNode || !outIsEmptyNode || !aSeenBR) return NS_ERROR_NULL_POINTER;
   nsresult res = NS_OK;
-  
-  // effeciency hack - special case if it's a text node
+
   if (nsEditor::IsTextNode(aNode))
   {
-    PRUint32 length = 0;
-    nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-    nodeAsText = do_QueryInterface(aNode);
-    nodeAsText->GetLength(&length);
-    if (length) *outIsEmptyNode = PR_FALSE;
-    return NS_OK;
+    res = IsVisTextNode(aNode, outIsEmptyNode, aSafeToAskFrames);
+    return res;
   }
 
   // if it's not a text node (handled above) and it's not a container,
@@ -4901,12 +4983,7 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
     *outIsEmptyNode = PR_FALSE;
     return NS_OK;
   }
-  
-  // are we checking a block node?
-  PRBool isBlock = IsBlockNode(aNode);
-  // if so, we allow one br without violating emptiness
-  PRBool seenBR = PR_FALSE;
-  
+    
   // need this for later
   PRBool isListItemOrCell = 
        nsHTMLEditUtils::IsListItem(aNode) || nsHTMLEditUtils::IsTableCell(aNode);
@@ -4924,45 +5001,18 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
     {
       if (nsEditor::IsTextNode(node))
       {
-        PRUint32 length = 0;
-        nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-        nodeAsText = do_QueryInterface(node);
-        nodeAsText->GetLength(&length);
-        if (aSafeToAskFrames)
-        {
-          nsCOMPtr<nsISelectionController> selCon;
-          res = GetSelectionController(getter_AddRefs(selCon));
-          if (NS_FAILED(res)) return res;
-          if (!selCon) return NS_ERROR_FAILURE;
-          PRBool isVisible = PR_FALSE;
-        // ask the selection controller for information about whether any
-        // of the data in the node is really rendered.  This is really
-        // something that frames know about, but we aren't supposed to talk to frames.
-        // So we put a call in the selection controller interface, since it's already
-        // in bed with frames anyway.  (this is a fix for bug 22227, and a
-        // partial fix for bug 46209)
-          res = selCon->CheckVisibility(node, 0, length, &isVisible);
-          if (NS_FAILED(res)) return res;
-          if (isVisible) 
-          {
-            *outIsEmptyNode = PR_FALSE;
-            return NS_OK;
-          }
-        }
-        else if (length)
-        {
-          *outIsEmptyNode = PR_FALSE;
-          return NS_OK;
-        }
+        res = IsVisTextNode(node, outIsEmptyNode, aSafeToAskFrames);
+        if (NS_FAILED(res)) return res;
+        if (!*outIsEmptyNode) return NS_OK;  // break out if we find we aren't emtpy
       }
       else  // an editable, non-text node.  we need to check it's content.
       {
         // is it the node we are iterating over?
         if (node.get() == aNode) break;
-        else if (aSingleBRDoesntCount && isBlock && !seenBR && nsTextEditUtils::IsBreak(node))
+        else if (aSingleBRDoesntCount && !*aSeenBR && nsTextEditUtils::IsBreak(node))
         {
           // the first br in a block doesn't count if the caller so indicated
-          seenBR = PR_TRUE;
+          *aSeenBR = PR_TRUE;
         }
         else
         {
@@ -4972,23 +5022,24 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
           if (isListItemOrCell)
           {
             if (nsHTMLEditUtils::IsList(node) || nsHTMLEditUtils::IsTable(node))
-            {
+            { // break out if we find we aren't emtpy
               *outIsEmptyNode = PR_FALSE;
               return NS_OK;
             }
           }
           // is it a form widget?
           else if (nsHTMLEditUtils::IsFormWidget(aNode))
-          {
+          { // break out if we find we aren't emtpy
             *outIsEmptyNode = PR_FALSE;
             return NS_OK;
           }
           
           PRBool isEmptyNode;
-          res = IsEmptyNode(node, &isEmptyNode, aSingleBRDoesntCount, aListOrCellNotEmpty);
+          res = IsEmptyNodeImpl(node, &isEmptyNode, aSingleBRDoesntCount, 
+                                aListOrCellNotEmpty, aSafeToAskFrames, aSeenBR);
           if (NS_FAILED(res)) return res;
           if (!isEmptyNode) 
-          {
+          { 
             // otherwise it ain't empty
             *outIsEmptyNode = PR_FALSE;
             return NS_OK;
@@ -5430,8 +5481,7 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
   }
   nsCOMPtr<nsIDOMNode> newStyles = nsnull, deepestStyle = nsnull;
   while (child && (child != aPreviousBlock)) {
-    if (nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("a"))      ||
-        nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("b"))      ||
+    if (nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("b"))      ||
         nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("i"))      ||
         nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("u"))      ||
         nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("tt"))     ||
