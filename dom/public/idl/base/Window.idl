@@ -10,6 +10,7 @@
         readonly attribute  Window parent;
         readonly attribute  Window top;
         readonly attribute  Window content;
+        readonly attribute  xpidl nsISidebar sidebar;
         readonly attribute  BarProp menubar;
         readonly attribute  BarProp toolbar;
         readonly attribute  BarProp locationbar;

@@ -195,6 +195,7 @@ protected:
    nsCOMPtr<nsIDOMWindow>        mOpener;
    nsCOMPtr<nsIControllers>      mControllers;
    nsCOMPtr<nsIEventListenerManager> mListenerManager;
+   nsCOMPtr<nsISidebar>          mSidebar;
    void*                         mScriptObject;
    NavigatorImpl*                mNavigator;
    ScreenImpl*                   mScreen;
