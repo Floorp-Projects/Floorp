@@ -109,3 +109,176 @@ extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aColorName, nscolor* aR
   }
   return PR_FALSE;
 }
+
+// Weird color computing code stolen from winfe which was stolen
+// from the xfe which was written originally by Eric Bina. So there.
+
+#define RED_LUMINOSITY        30
+#define GREEN_LUMINOSITY      59
+#define BLUE_LUMINOSITY       11
+#define INTENSITY_FACTOR      25
+#define LIGHT_FACTOR          0
+#define LUMINOSITY_FACTOR     75
+#define MAX_COLOR             255
+#define COLOR_DARK_THRESHOLD  51
+#define COLOR_LIGHT_THRESHOLD 204
+ 
+extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor)
+{
+  int rb = NS_GET_R(aColor);
+  int gb = NS_GET_G(aColor);
+  int bb = NS_GET_B(aColor);
+  int intensity = (rb + gb + bb) / 3;
+  int luminosity =
+    ((RED_LUMINOSITY * rb) / 100) +
+    ((GREEN_LUMINOSITY * gb) / 100) +
+    ((BLUE_LUMINOSITY * bb) / 100);
+  int brightness = ((intensity * INTENSITY_FACTOR) +
+                    (luminosity * LUMINOSITY_FACTOR)) / 100;
+  int f0, f1;
+  if (brightness < COLOR_DARK_THRESHOLD) {
+    f0 = 30;
+    f1 = 50;
+  } else if (brightness > COLOR_LIGHT_THRESHOLD) {
+    f0 = 45;
+    f1 = 50;
+  } else {
+    f0 = 30 + (brightness * (45 - 30) / MAX_COLOR);
+    f1 = f0;
+  }
+  int r = rb - (f0 * rb / 100);
+  int g = gb - (f0 * gb / 100);
+  int b = bb - (f0 * bb / 100);
+  aResult[0] = NS_RGB(r, g, b);
+  r = rb + (f1 * (MAX_COLOR - rb) / 100);
+  if (r > 255) r = 255;
+  g = gb + (f1 * (MAX_COLOR - gb) / 100);
+  if (g > 255) g = 255;
+  b = bb + (f1 * (MAX_COLOR - bb) / 100);
+  if (b > 255) b = 255;
+  aResult[1] = NS_RGB(r, g, b);
+}
+
+extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor)
+{
+  PRIntn r, g, b, max, over;
+
+  r = NS_GET_R(inColor);
+  g = NS_GET_G(inColor);
+  b = NS_GET_B(inColor);
+
+  //10% of max color increase across the board
+  r += 25;
+  g += 25;
+  b += 25;
+
+  //figure out which color is largest
+  if (r > g)
+  {
+    if (b > r)
+      max = b;
+    else
+      max = r;
+  }
+  else
+  {
+    if (b > g)
+      max = b;
+    else
+      max = g;
+  }
+
+  //if we overflowed on this max color, increase
+  //other components by the overflow amount
+  if (max > 255)
+  {
+    over = max - 255;
+
+    if (max == r)
+    {
+      g += over;
+      b += over;
+    }
+    else if (max == g)
+    {
+      r += over;
+      b += over;
+    }
+    else
+    {
+      r += over;
+      g += over;
+    }
+  }
+
+  //clamp
+  if (r > 255)
+    r = 255;
+  if (g > 255)
+    g = 255;
+  if (b > 255)
+    b = 255;
+
+  return NS_RGBA(r, g, b, NS_GET_A(inColor));
+}
+
+extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
+{
+  PRIntn r, g, b, max;
+
+  r = NS_GET_R(inColor);
+  g = NS_GET_G(inColor);
+  b = NS_GET_B(inColor);
+
+  //10% of max color decrease across the board
+  r -= 25;
+  g -= 25;
+  b -= 25;
+
+  //figure out which color is largest
+  if (r > g)
+  {
+    if (b > r)
+      max = b;
+    else
+      max = r;
+  }
+  else
+  {
+    if (b > g)
+      max = b;
+    else
+      max = g;
+  }
+
+  //if we underflowed on this max color, decrease
+  //other components by the underflow amount
+  if (max < 0)
+  {
+    if (max == r)
+    {
+      g += max;
+      b += max;
+    }
+    else if (max == g)
+    {
+      r += max;
+      b += max;
+    }
+    else
+    {
+      r += max;
+      g += max;
+    }
+  }
+
+  //clamp
+  if (r < 0)
+    r = 0;
+  if (g < 0)
+    g = 0;
+  if (b < 0)
+    b = 0;
+
+  return NS_RGBA(r, g, b, NS_GET_A(inColor));
+}

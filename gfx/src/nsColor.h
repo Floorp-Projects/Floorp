@@ -49,4 +49,16 @@ extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aBuf, nscolor* aResult);
 // otherwise return false.
 extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aBuf, nscolor* aResult);
 
+// Weird color computing code stolen from winfe which was stolen
+// from the xfe which was written originally by Eric Bina. So there.
+extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor);
+
+// Special method to brighten a Color and have it shift to white when
+// fully saturated.
+extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor);
+
+// Special method to darken a Color and have it shift to black when
+// darkest component underflows
+extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor);
+
 #endif /* nsColor_h___ */
