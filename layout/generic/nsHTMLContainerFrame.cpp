@@ -377,6 +377,21 @@ nsHTMLContainerFrame::ReparentFrameViewList(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+static PRBool
+IsContainerContent(nsIFrame* aFrame)
+{
+  nsIContent* content;
+  PRBool      result = PR_FALSE;
+
+  aFrame->GetContent(&content);
+  if (content) {
+    content->CanContainChildren(result);
+    NS_RELEASE(content);
+  }
+
+  return result;
+}
+
 nsresult
 nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
@@ -458,6 +473,33 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
       NS_IF_RELEASE(pseudoTag);
     }
 
+    // See if the frame is block-level and has 'overflow' set to 'hidden'. If
+    // so and it can have child frames, then we need to give it a view so clipping
+    // of any child views works correctly. Note that if it's floated it is also
+    // block-level, but we can't trust that the style context 'display' value is
+    // set correctly
+    if (!aForce) {
+      if ((display->IsBlockLevel() || display->IsFloating()) &&
+          (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN)) {
+
+        // The reason for the check of whether it can contain children is just
+        // to avoid giving it a view unnecessarily
+        if (::IsContainerContent(aFrame)) {
+          // XXX Check for the frame being a block frame and only force a view
+          // in that case, because adding a view for box frames seems to cause
+          // problems for XUL...
+          nsIAtom*  frameType;
+
+          aFrame->GetFrameType(&frameType);
+          if ((frameType == nsLayoutAtoms::blockFrame) ||
+              (frameType == nsLayoutAtoms::areaFrame)) {
+            aForce = PR_TRUE;
+          }
+          NS_IF_RELEASE(frameType);
+        }
+      }
+    }
+
     if (aForce) {
       // Create a view
       nsIFrame* parent;
@@ -528,26 +570,18 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
             // If it's a container element, then leave the view visible, but
             // mark it as having transparent content. The reason we need to
             // do this is that child elements can override their parent's
-            // hidden visibility and be visible anyway
-            nsIContent* content;
-
+            // hidden visibility and be visible anyway.
+            //
             // Because this function is called before processing the content
             // object's child elements, we can't tell if it's a leaf by looking
             // at whether the frame has any child frames
-            aFrame->GetContent(&content);
-            if (content) {
-              PRBool  isContainer;
-
-              content->CanContainChildren(isContainer);
-              if (isContainer) {
-                // The view needs to be visible, but marked as having transparent
-                // content
-                viewHasTransparentContent = PR_TRUE;
-              } else {
-                // Go ahead and hide the view
-                viewIsVisible = PR_FALSE;
-              }
-              NS_RELEASE(content);
+            if (::IsContainerContent(aFrame)) {
+              // The view needs to be visible, but marked as having transparent
+              // content
+              viewHasTransparentContent = PR_TRUE;
+            } else {
+              // Go ahead and hide the view
+              viewIsVisible = PR_FALSE;
             }
           }
         }
