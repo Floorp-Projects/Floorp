@@ -19,29 +19,49 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public nglsrc default/unix
+#MODULE		= plugin
+LIBRARY_NAME	= nullplugin
+#IS_COMPONENT    = 1
 
-ifdef ENABLE_TESTS
+CSRCS		= \
+		npshell.c\
+		nullplugin.c\
+		npunix.c\
+		$(NULL)
 
-# This test relies on GTK libraries and header files, it is not
-#  buildable on other non-GTK uinix builds
-ifdef MOZ_ENABLE_GTK
-DIRS		+= test
-endif
+DEFINES		+= -D_IMPL_NS_PLUGIN
 
-endif
- 
+#CFLAGS += `gtk-config --cflags`
+#
+#LIBS		= \
+#		`gtk-config --libs`\
+#		$(NULL)
+
+
 include $(topsrcdir)/config/rules.mk
 
-$(DIST)/bin/plugins:
-	$(NSINSTALL) -D $@
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 
-export:: $(DIST)/bin/plugins
+ifndef MOZ_MONOLITHIC_TOOLKIT
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
+CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
+CFLAGS		+= $(MOZ_GTK_CFLAGS)
+else
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+CXXFLAGS	+= $(TK_CFLAGS)
+CFLAGS		+= $(TK_CFLAGS)
+endif
+
+install-plugin: libnullplugin.so
+	$(INSTALL) libnullplugin.so $(DIST)/bin/plugins
+install:: install-plugin
+
 

@@ -341,6 +341,7 @@ modules/plugin/public/Makefile
 modules/plugin/src/Makefile
 modules/plugin/test/Makefile
 modules/plugin/SanePlugin/Makefile
+modules/plugin/default/unix/Makefile
 "
 
 MAKEFILES_netwerk="
