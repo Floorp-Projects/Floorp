@@ -350,7 +350,8 @@ NS_IMETHODIMP nsMsgProtocol::GetContentLength(PRInt32 * aContentLength)
 
 NS_IMETHODIMP nsMsgProtocol::GetOwner(nsISupports * *aPrincipal)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    *aPrincipal = nsnull;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgProtocol::SetOwner(nsISupports * aPrincipal)

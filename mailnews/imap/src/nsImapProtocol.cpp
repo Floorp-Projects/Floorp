@@ -6407,7 +6407,8 @@ NS_IMETHODIMP nsImapMockChannel::GetContentLength(PRInt32 * aContentLength)
 
 NS_IMETHODIMP nsImapMockChannel::GetOwner(nsISupports * *aPrincipal)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aPrincipal = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::SetOwner(nsISupports * aPrincipal)
