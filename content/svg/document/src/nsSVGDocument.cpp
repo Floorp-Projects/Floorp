@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Bradley Baetz <bbaetz@cs.mcgill.ca> (original author)
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,14 +38,24 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGDocument.h"
-#include "nsIDOMClassInfo.h"
 #include "nsContentUtils.h"
-#include "nsIHttpChannel.h"
 #include "nsString.h"
 #include "nsLiteralString.h"
-#include "nsReadableUtils.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsCOMPtr.h"
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsSVGDocument::nsSVGDocument()
+{
+}
+
+nsSVGDocument::~nsSVGDocument()
+{
+}
+
+//----------------------------------------------------------------------
+// nsISupports methods:
 
 NS_INTERFACE_MAP_BEGIN(nsSVGDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGDocument)
@@ -55,68 +66,75 @@ NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
 NS_IMPL_ADDREF_INHERITED(nsSVGDocument, nsXMLDocument)
 NS_IMPL_RELEASE_INHERITED(nsSVGDocument, nsXMLDocument)
 
-nsSVGDocument::nsSVGDocument() {
+//----------------------------------------------------------------------
+// nsIDOMSVGDocument methods:
 
-}
-
-nsSVGDocument::~nsSVGDocument() {
-
-}
-
-// nsIDOMSVGDocument
-
+/* readonly attribute DOMString title; */
 NS_IMETHODIMP
-nsSVGDocument::GetTitle(nsAString& aTitle) {
+nsSVGDocument::GetTitle(nsAString& aTitle)
+{
   return nsXMLDocument::GetTitle(aTitle);
 }
 
+/* readonly attribute DOMString referrer; */
 NS_IMETHODIMP
-nsSVGDocument::GetReferrer(nsAString& aReferrer) {
+nsSVGDocument::GetReferrer(nsAString& aReferrer)
+{
   return nsDocument::GetReferrer(aReferrer);
 }
 
+/* readonly attribute DOMString domain; */
 NS_IMETHODIMP
-nsSVGDocument::GetDomain(nsAString& aDomain) {
-  nsCAutoString domain;
+nsSVGDocument::GetDomain(nsAString& aDomain)
+{
+  SetDOMStringToNull(aDomain);
 
   if (mDocumentURI) {
+    nsCAutoString domain;
     nsresult rv = mDocumentURI->GetHost(domain);
-    if (NS_FAILED(rv)) return rv;
+    if (domain.IsEmpty() || NS_FAILED(rv))
+      return rv;
+    CopyUTF8toUTF16(domain, aDomain);
   }
 
-  CopyUTF8toUTF16(domain, aDomain);
-  
   return NS_OK;
 }
 
+/* readonly attribute DOMString URL; */
 NS_IMETHODIMP
-nsSVGDocument::GetURL(nsAString& aURL) {
-  nsCAutoString url;
+nsSVGDocument::GetURL(nsAString& aURL)
+{
+  SetDOMStringToNull(aURL);
 
   if (mDocumentURI) {
+    nsCAutoString url;
     nsresult rv = mDocumentURI->GetSpec(url);
-    if (NS_FAILED(rv)) return rv;    
+    if (url.IsEmpty() || NS_FAILED(rv))
+      return rv;
+    CopyUTF8toUTF16(url, aURL);
   }
 
-  CopyUTF8toUTF16(url, aURL);
-
   return NS_OK;
 }
 
+/* readonly attribute SVGSVGElement rootElement; */
 NS_IMETHODIMP
-nsSVGDocument::GetRootElement(nsIDOMSVGSVGElement** aRootElement) {
-  nsCOMPtr<nsIDOMSVGSVGElement> root = do_QueryInterface(mRootContent);
-  *aRootElement = root;
-  NS_IF_ADDREF(*aRootElement);
-  return NS_OK;
+nsSVGDocument::GetRootElement(nsIDOMSVGSVGElement** aRootElement)
+{
+  return CallQueryInterface(mRootContent, aRootElement);
 }
+
+////////////////////////////////////////////////////////////////////////
+// Exported creation functions
 
 nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult)
 {
+  *aInstancePtrResult = nsnull;
   nsSVGDocument* doc = new nsSVGDocument();
 
-  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
+  if (!doc)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(doc);
   nsresult rv = doc->Init();
