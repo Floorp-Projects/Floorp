@@ -90,6 +90,12 @@ compile_bin_code: build
 	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|initrc|Storable.pm" | \
 	  xargs -l perl -T -c 
 
+
+popup_test: compile_bin_code
+	rm -rf $(html_prefix)/popup
+	mkdir -p $(html_prefix)/popup
+	perl $(builddir)/test/popup.tst
+
 gen_test: compile_bin_code
 	rm -rf $(html_prefix)
 	perl $(builddir)/test/genbuilds.tst
