@@ -83,8 +83,8 @@ protected:
     nsCOMPtr<nsIEventQueue>       mEventQ;
     nsCOMPtr<nsIInputStream>      mStream;
     nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
-    nsInt64                       mStreamOffset;
-    nsInt64                       mStreamLength;
+    nsUint64                      mStreamOffset;
+    nsUint64                      mStreamLength;
     PRUint32                      mSegSize;
     PRUint32                      mSegCount;
     nsresult                      mStatus;

@@ -212,7 +212,7 @@ private:
 
     PRUint32                          mLoadFlags;
     PRUint32                          mStatus;
-    nsInt64                           mLogicalOffset;
+    nsUint64                          mLogicalOffset;
     PRUint8                           mCaps;
 
     nsCString                         mContentTypeHint;
