@@ -25,7 +25,7 @@
 #define _nsXtManageWidth_h_
 
 #include "nsXtManageWidget.h"
-#include <Xm/ManagerP.h>
+#include "Xm/ManagerP.h"
 
 typedef struct
 {
