@@ -1,8 +1,0 @@
-/* jband - 01/03/99 -  */
-
-see http://www.mozilla.org/scriptable
-
-This is an initial checkin of a *very* unfinished and not yet functional
-implementation of XPConnect. This is not yet part of the Gecko build.
-
-Pretty near everyone in the universe can ignore it for now.
