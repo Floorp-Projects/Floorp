@@ -118,7 +118,7 @@
   </groupbox>
   <groupbox orient="horizontal">
     <caption label="&cookies.label;"/>
-    <vbox flex="1" align="start">
+    <vbox flex="1">
       <label value="&cookieExplanation.label;"/>
       <separator class="thin"/>
       <checkbox id="enableCookies"
@@ -143,7 +143,7 @@
   </groupbox>
   <groupbox orient="horizontal">
     <caption label="&images.label;"/>
-    <vbox flex="1" align="start">
+    <vbox flex="1">
       <checkbox id="enableImages"
                 oncommand="document.getElementById('imageBroadcaster').setAttribute('disabled', this.checked ? 'false' : 'true');"
                 label="&enableImages.label;" accesskey="&enableImages.accesskey;"
