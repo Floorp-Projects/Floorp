@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.16 $ $Date: 2002/04/22 14:14:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.17 $ $Date: 2002/04/22 19:08:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -158,6 +158,15 @@ nssToken_Destroy
 	}
     }
     return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT void
+nssToken_Remove
+(
+  NSSToken *tok
+)
+{
+    nssTokenObjectCache_Clear(tok->cache);
 }
 
 NSS_IMPLEMENT void

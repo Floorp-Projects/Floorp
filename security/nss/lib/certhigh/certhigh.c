@@ -91,6 +91,31 @@ CERT_MatchNickname(char *name1, char *name2) {
     return PR_TRUE;
 }
 
+static SECStatus
+cert_UserCertsOnly(CERTCertList *certList)
+{
+    CERTCertListNode *node, *freenode;
+    CERTCertificate *cert;
+    
+    node = CERT_LIST_HEAD(certList);
+    
+    while ( ! CERT_LIST_END(node, certList) ) {
+	cert = node->cert;
+	if ( !( cert->trust->sslFlags & CERTDB_USER ) &&
+	     !( cert->trust->emailFlags & CERTDB_USER ) &&
+	     !( cert->trust->objectSigningFlags & CERTDB_USER ) ) {
+	    /* Not a User Cert, so remove this cert from the list */
+	    freenode = node;
+	    node = CERT_LIST_NEXT(node);
+	    CERT_RemoveCertListNode(freenode);
+	} else {
+	    /* Is a User cert, so leave it in the list */
+	    node = CERT_LIST_NEXT(node);
+	}
+    }
+    
+    return(SECSuccess);
+}
 
 /*
  * Find all user certificates that match the given criteria.
@@ -157,6 +182,8 @@ CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
 	   /* collect certs for this nickname, sorting them into the list */
 	    certList = CERT_CreateSubjectCertList(certList, handle, 
 				&cert->derSubject, time, validOnly);
+
+	    cert_UserCertsOnly(certList);
 	
 	    /* drop the extra reference */
 	    CERT_DestroyCertificate(cert);

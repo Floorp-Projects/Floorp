@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.5 $ $Date: 2002/04/19 23:06:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.6 $ $Date: 2002/04/22 19:08:54 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -301,6 +301,8 @@ nssSlot_IsTokenPresent
 	}
 #endif
 	slot->token->base.name[0] = 0; /* XXX */
+	/* clear the token cache */
+	nssToken_Remove(slot->token);
 	return PR_FALSE;
 #ifdef PURE_STAN_CODE
     } else if (!slot->token) {

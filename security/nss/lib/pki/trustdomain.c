@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.40 $ $Date: 2002/04/18 19:37:12 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.41 $ $Date: 2002/04/22 19:09:01 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1099,6 +1099,7 @@ NSSTrustDomain_TraverseCertificates
 	    }
 	}
     }
+
     /* Traverse the collection */
     pkiCallback.func.cert = callback;
     pkiCallback.arg = arg;
@@ -1116,6 +1117,104 @@ loser:
     }
     return NULL;
 }
+
+#ifdef notdef
+/*
+ * search for Public and Private keys first
+ */
+NSS_IMPLEMENT PRStatus *
+NSSTrustDomain_TraverseUserCertificates
+(
+  NSSTrustDomain *td,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+)
+{
+    PRStatus status;
+    NSSToken *token = NULL;
+    NSSSlot **slots = NULL;
+    NSSSlot **slotp;
+    nssPKIObjectCollection *collection = NULL;
+    nssPKIObjectCallback pkiCallback;
+    nssUpdateLevel updateLevel;
+    NSSCertificate **cached = NULL;
+    nssList *certList;
+    certList = nssList_Create(NULL, PR_FALSE);
+    if (!certList) return NULL;
+    (void *)nssTrustDomain_GetCertsFromCache(td, certList);
+    cached = get_certs_from_list(certList);
+    collection = nssCertificateCollection_Create(td, cached);
+    nssCertificateArray_Destroy(cached);
+    nssList_Destroy(certList);
+    if (!collection) {
+	return (PRStatus *)NULL;
+    }
+    /* obtain the current set of active slots in the trust domain */
+    slots = nssTrustDomain_GetActiveSlots(td, &updateLevel);
+    if (!slots) {
+	goto loser;
+    }
+    /* iterate over the slots */
+    for (slotp = slots; *slotp; slotp++) {
+	/* get the token for the slot, if present */
+	token = nssSlot_GetToken(*slotp);
+	if (token) {
+	    nssSession *session;
+	    nssCryptokiObject **instances;
+	    nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
+	    /* get a session for the token */
+	    session = nssTrustDomain_GetSessionForToken(td, token);
+	    if (!session) {
+		nssToken_Destroy(token);
+		goto loser;
+	    }
+	    /* perform the traversal */
+	    if (!isLoggedIn(tok)) {
+	    	instances = nssToken_FindPublicKeys(token,
+	                                          session,
+	                                          tokenOnly,
+	                                          0, &status);
+	    } else {
+	    	instances = nssToken_FindPrivateKeys(token,
+	                                          session,
+	                                          tokenOnly,
+	                                          0, &status);
+	    }
+	    nssToken_Destroy(token);
+	    if (status != PR_SUCCESS) {
+		goto loser;
+	    }
+	    /* add the found certificates to the collection */
+	    status = nssPKIObjectCollection_AddInstances(collection, 
+	                                                 instances, 0);
+	    nss_ZFreeIf(instances);
+	    if (status != PR_SUCCESS) {
+		goto loser;
+	    }
+	}
+    }
+    status = nssPKIObjectCollection_MatchCerts(collection);
+    if (status != PR_SUCCESS) {
+	goto loser;
+    }
+    /* Traverse the collection */
+    pkiCallback.func.cert = callback;
+    pkiCallback.arg = arg;
+    status = nssPKIObjectCollection_Traverse(collection, &pkiCallback);
+    /* clean up */
+    nssPKIObjectCollection_Destroy(collection);
+    nssSlotArray_Destroy(slots);
+    return NULL;
+loser:
+    if (slots) {
+	nssSlotArray_Destroy(slots);
+    }
+    if (collection) {
+	nssPKIObjectCollection_Destroy(collection);
+    }
+    return NULL;
+}
+#endif
 
 NSS_IMPLEMENT NSSTrust *
 nssTrustDomain_FindTrustForCertificate

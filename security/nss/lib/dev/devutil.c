@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.10 $ $Date: 2002/04/22 15:21:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.11 $ $Date: 2002/04/22 19:08:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -620,6 +620,17 @@ clear_cache
 }
 
 NSS_IMPLEMENT void
+nssTokenObjectCache_Clear
+(
+  nssTokenObjectCache *cache
+)
+{
+    if (cache) {
+	clear_cache(cache);
+    }
+}
+
+NSS_IMPLEMENT void
 nssTokenObjectCache_Destroy
 (
   nssTokenObjectCache *cache
@@ -777,7 +788,7 @@ search_for_objects
     NSSSlot *slot = nssToken_GetSlot(cache->token);
     if (!nssSlot_IsTokenPresent(slot)) {
 	/* The token is no longer present, destroy any cached objects */
-	clear_cache(cache);
+	/* clear_cache(cache); */
 	nssSlot_Destroy(slot);
 	return PR_FALSE;
     }

@@ -971,7 +971,9 @@ pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *),
              rv = PK11_Authenticate(le->slot, PR_FALSE, wincx);
              if (rv != SECSuccess) continue;
 	}
-	(*callback)(le->slot,arg);
+	if (callback) {
+	    (*callback)(le->slot,arg);
+	}
     }
 
     PK11_FreeSlotList(list);
@@ -3206,11 +3208,15 @@ pk11ListCertCallback(CERTCertificate *cert, void *arg)
     CERTCertList *certList = listCertP->certList;
     CERTCertTrust *trust;
     PRBool isUnique = PR_FALSE;
+    PRBool isCA = PR_FALSE;
     char *nickname = NULL;
     unsigned int certType;
 
     if ((type == PK11CertListUnique) || (type == PK11CertListRootUnique)) {
 	isUnique = PR_TRUE;
+    }
+    if ((type == PK11CertListCA) || (type == PK11CertListRootUnique)) {
+	isCA = PR_TRUE;
     }
     /* at this point the nickname is correct for the cert. save it for later */
     if (!isUnique && cert->nickname) {
@@ -3255,7 +3261,7 @@ pk11ListCertCallback(CERTCertificate *cert, void *arg)
     }
 
     /* if we want CA certs and it ain't one, skip it */
-    if( type == PK11CertListCA  && (!CERT_IsCACert(newCert, &certType)) ) {
+    if( isCA  && (!CERT_IsCACert(newCert, &certType)) ) {
 	CERT_DestroyCertificate(newCert);
 	return SECSuccess;
     }
@@ -3298,7 +3304,18 @@ PK11_ListCerts(PK11CertListType type, void *pwarg)
     listCerts.certList = certList;
     pk11cb.callback = pk11ListCertCallback;
     pk11cb.arg = &listCerts;
-    NSSTrustDomain_TraverseCertificates(defaultTD, convert_cert, &pk11cb);
+
+    /* authenticate to the slots */
+    (void) pk11_TraverseAllSlots( NULL, NULL, pwarg);
+#ifdef notdef
+    if (type == PK11CertListUser) {
+	NSSTrustDomain_TraverseUserCertificates(defaultTD, convert_cert &pk11cb);
+    } else {
+	NSSTrustDomain_TraverseCertificates(defaultTD, convert_cert, &pk11cb);
+    }
+#else
+	NSSTrustDomain_TraverseCertificates(defaultTD, convert_cert, &pk11cb);
+#endif
     return certList;
 #endif
 }
