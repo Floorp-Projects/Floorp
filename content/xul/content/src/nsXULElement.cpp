@@ -657,14 +657,17 @@ nsXULElement::GetNodeName(nsAString& aNodeName)
 NS_IMETHODIMP
 nsXULElement::GetNodeValue(nsAString& aNodeValue)
 {
-    aNodeValue.Truncate();
+    SetDOMStringToNull(aNodeValue);
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULElement::SetNodeValue(const nsAString& aNodeValue)
 {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    // The DOM spec says that when nodeValue is defined to be null "setting it
+    // has no effect", so we don't throw an exception.
+    return NS_OK;
 }
 
 
