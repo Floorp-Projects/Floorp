@@ -190,59 +190,68 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAReadableString & aInput
   // force IME commit; set up rules sniffing and batching
   ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, kOpHTMLLoad, nsIEditor::eNext);
+  nsAutoRules beginRulesSniffing(this, kOpLoadHTML, nsIEditor::eNext);
   
   // Get selection
   nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   
-  PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kLoadHTML);
+  PRBool cancel, handled;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(res)) return res;
-
-  // Delete Selection, but only if it isn't collapsed, see bug #106269
-  if (!isCollapsed) 
+  if (cancel) return NS_OK; // rules canceled the operation
+  if (!handled)
   {
-    res = DeleteSelection(eNone);
+    PRBool isCollapsed;
+    res = selection->GetIsCollapsed(&isCollapsed);
     if (NS_FAILED(res)) return res;
-  }
 
-  // Get the first range in the selection, for context:
-  nsCOMPtr<nsIDOMRange> range, clone;
-  res = selection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res);
-  if (!range)
-    return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
-  if (!nsrange)
-    return NS_ERROR_NO_INTERFACE;
+    // Delete Selection, but only if it isn't collapsed, see bug #106269
+    if (!isCollapsed) 
+    {
+      res = DeleteSelection(eNone);
+      if (NS_FAILED(res)) return res;
+    }
 
-  // create fragment for pasted html
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  {
-    res = nsrange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
+    // Get the first range in the selection, for context:
+    nsCOMPtr<nsIDOMRange> range, clone;
+    res = selection->GetRangeAt(0, getter_AddRefs(range));
     NS_ENSURE_SUCCESS(res, res);
-  }
-  // put the fragment into the document
-  nsCOMPtr<nsIDOMNode> parent, junk;
-  res = range->GetStartContainer(getter_AddRefs(parent));
-  NS_ENSURE_SUCCESS(res, res);
-  if (!parent)
-    return NS_ERROR_NULL_POINTER;
-  PRInt32 childOffset;
-  res = range->GetStartOffset(&childOffset);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  nsCOMPtr<nsIDOMNode> nodeToInsert;
-  docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
-  while (nodeToInsert)
-  {
-    res = InsertNode(nodeToInsert, parent, childOffset++);
+    if (!range)
+      return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
+    if (!nsrange)
+      return NS_ERROR_NO_INTERFACE;
+
+    // create fragment for pasted html
+    nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+    {
+      res = nsrange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
     NS_ENSURE_SUCCESS(res, res);
+    }
+    // put the fragment into the document
+    nsCOMPtr<nsIDOMNode> parent, junk;
+    res = range->GetStartContainer(getter_AddRefs(parent));
+    NS_ENSURE_SUCCESS(res, res);
+    if (!parent)
+      return NS_ERROR_NULL_POINTER;
+    PRInt32 childOffset;
+    res = range->GetStartOffset(&childOffset);
+    NS_ENSURE_SUCCESS(res, res);
+
+    nsCOMPtr<nsIDOMNode> nodeToInsert;
     docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
+    while (nodeToInsert)
+    {
+      res = InsertNode(nodeToInsert, parent, childOffset++);
+      NS_ENSURE_SUCCESS(res, res);
+      docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
+    }
   }
-  return res;
+
+  return mRules->DidDoAction(selection, &ruleInfo, res);
 }
 
 

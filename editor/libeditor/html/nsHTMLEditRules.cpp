@@ -407,7 +407,7 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
         (action == nsHTMLEditor::kOpInsertQuotation) ||
         (action == nsEditor::kOpInsertNode) ||
         (action == nsHTMLEditor::kOpHTMLPaste ||
-        (action == nsHTMLEditor::kOpHTMLLoad)))
+        (action == nsHTMLEditor::kOpLoadHTML)))
     {
       res = ReplaceNewlines(mDocChangeRange);
     }
@@ -436,7 +436,7 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
         (action == nsEditor::kOpDeleteSelection) ||
         (action == nsEditor::kOpInsertBreak) || 
         (action == nsHTMLEditor::kOpHTMLPaste ||
-        (action == nsHTMLEditor::kOpHTMLLoad)))
+        (action == nsHTMLEditor::kOpLoadHTML)))
     {
       res = AdjustSelection(selection, aDirection);
       if (NS_FAILED(res)) return res;
@@ -483,6 +483,8 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
                             info->inString,
                             info->outString,
                             info->maxLength);
+    case kLoadHTML:
+      return WillLoadHTML(aSelection, aCancel);
     case kInsertBreak:
       return WillInsertBreak(aSelection, aCancel, aHandled);
     case kDeleteSelection:
@@ -1239,6 +1241,25 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     if (NS_FAILED(res)) return res;
   }
   return res;
+}
+
+nsresult
+nsHTMLEditRules::WillLoadHTML(nsISelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) return NS_ERROR_NULL_POINTER;
+
+  *aCancel = PR_FALSE;
+
+  // Delete mBogusNode if it exists. If we really need one,
+  // it will be added during post-processing in AfterEditInner().
+
+  if (mBogusNode)
+  {
+    mEditor->DeleteNode(mBogusNode);
+    mBogusNode = nsnull;
+  }
+
+  return NS_OK;
 }
 
 nsresult

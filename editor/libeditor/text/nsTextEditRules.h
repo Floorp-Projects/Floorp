@@ -98,7 +98,8 @@ public:
     kMakeBasicBlock      = 3005,
     kRemoveList          = 3006,
     kMakeDefListItem     = 3007,
-    kInsertElement       = 3008
+    kInsertElement       = 3008,
+    kLoadHTML            = 3013
   };
   
 public:
