@@ -130,31 +130,31 @@
 <!ENTITY navigatorCmd.label     "Prohlížeč">
 <!ENTITY navigatorCmd.accesskey "P">
 
-<!ENTITY messengerCmd.label     "Pošta">
+<!ENTITY messengerCmd.label     "Pošta &amp; Diskusní skupiny">
 <!ENTITY messengerCmd.accesskey "o">
 
 <!ENTITY addressBookCmd.label     "Databáze kontaktů">
 <!ENTITY addressBookCmd.accesskey "A">
 
-<!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey            "H">
+<!ENTITY helpMenu.label         "Nápověda"> 
+<!ENTITY helpMenu.accesskey            "v">
 
-<!ENTITY walletPasswordManager.label     "Password Manager">
-<!ENTITY walletPasswordManager.accesskey "p">
+<!ENTITY walletPasswordManager.label     "Správce hesel">
+<!ENTITY walletPasswordManager.accesskey "h">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "File"> 
-<!ENTITY fileMenu.accesskey       "F">
+<!ENTITY fileMenu.label         "Soubor"> 
+<!ENTITY fileMenu.accesskey       "S">
 
-<!ENTITY editMenu.label         "Edit"> 
-<!ENTITY editMenu.accesskey       "E"> 
-<!ENTITY preferencesCmd.label       "Options...">
-<!ENTITY preferencesCmd.accesskey     "O"> 
+<!ENTITY editMenu.label         "Úpravy"> 
+<!ENTITY editMenu.accesskey       "p"> 
+<!ENTITY preferencesCmd.label       "Předvolby...">
+<!ENTITY preferencesCmd.accesskey     "e"> 
 
-<!ENTITY viewMenu.label         "View"> 
-<!ENTITY viewMenu.accesskey       "V"> 
+<!ENTITY viewMenu.label         "Zobrazit"> 
+<!ENTITY viewMenu.accesskey       "Z"> 
 
-<!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "About &brandFullName;">
+<!ENTITY releaseCmd.label       "Poznámky k verzi">
+<!ENTITY releaseCmd.accesskey       "r">
+<!ENTITY aboutCmd.label         "O aplikaci &brandFullName;">
 <!ENTITY aboutCmd.accesskey       "A">

@@ -296,10 +296,10 @@
 <!ENTITY window.title            "Mozilla Kalendář">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Customize">
-<!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
-<!ENTITY calendar.maintoolbar.accesskey               "M">
+<!ENTITY calendar.context.customize.label             "Vlastní">
+<!ENTITY calendar.context.customize.accesskey         "V">
+<!ENTITY calendar.maintoolbar.name                    "Hlavní lišta">
+<!ENTITY calendar.maintoolbar.accesskey               "H">
 
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Nová událost">

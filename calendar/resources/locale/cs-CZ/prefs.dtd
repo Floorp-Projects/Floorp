@@ -68,12 +68,12 @@
 <!ENTITY pref.dateformat.label      "Formát data:" >
 <!ENTITY pref.dateformat.long       "Dlouhý" >
 <!ENTITY pref.dateformat.short      "Krátký"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
+<!ENTITY pref.dateformat.storeingmt "Ukládat data v greenwichském čase" >
 <!ENTITY pref.defaultlength.label   "Výchozí délka události:" >
 <!ENTITY pref.defaultsnoozelength.label   "Výchozí délka periody:" >
 
 <!ENTITY pref.weekstarts.label     "První den týdne:" >
-<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+<!ENTITY pref.daysoff.label     "Dny víkendu:" >
 
 <!ENTITY pref.numberofweeks.label     "Výchozí počet týdnů:" >
 <!ENTITY pref.numberofweeks.0      "Žádný" >
@@ -126,9 +126,9 @@
 
 <!ENTITY pref.categories.help.description   "Nezapomínejte na čárky mezi kategoriemi.">
 
-<!ENTITY pref.categories.add.title    "Add Category">
-<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
-<!ENTITY pref.categories.edit.title   "Edit Category">
+<!ENTITY pref.categories.add.title    "Přidat kategorii">
+<!ENTITY pref.categories.add.prompt   "Vložte jméno kategorie">
+<!ENTITY pref.categories.edit.title   "Upravit kategorii">
 
 
 <!ENTITY pref.reloadonlaunch       "Znovu načíst kalendáře při startu">

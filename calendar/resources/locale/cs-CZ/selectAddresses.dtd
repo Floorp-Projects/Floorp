@@ -36,10 +36,10 @@
 
 <!-- Select addresses for mail message dialog -->
 <!ENTITY ab-selectAddressesDialog.title "Pomocný dialog - výběr adres">
-<!ENTITY ab-selectAddressesDialogHeader.label "Vyber adresy">
+<!ENTITY ab-selectAddressesDialogHeader.label "Výběr adresy">
 <!ENTITY ab-selectAddressesDialogLookIn.label "Navštívit: ">
 <!ENTITY ab-selectAddressesDialogNameColumn.label "Jméno">
-<!ENTITY ab-selectAddressesDialogEmailColumn.label "Emailová adresa">
+<!ENTITY ab-selectAddressesDialogEmailColumn.label "E-mailová adresa">
 <!ENTITY ab-selectAddressesDialogFor.label "pro: ">
 <!ENTITY ab-selectAddressesDialogClearButton.label "Vymazat">
 <!ENTITY ab-selectAddressesDialogToButton.label "Komu ">
@@ -50,7 +50,7 @@
 <!ENTITY ab-selectAddressesDialogPrefixTo.label "Komu: ">
 <!ENTITY ab-selectAddressesDialogPrefixCc.label "Kopie: ">
 <!ENTITY ab-selectAddressesDialogPrefixBcc.label "Skrytá kopie: ">
-<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Žádná emailová adresa">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Žádná e-mailová adresa">
 <!ENTITY ab-selectAddressesDialogInvite.label "Pozvat">
 <!ENTITY ab-selectAddressesDialogUninvite.label "Odebrat">
 <!ENTITY ab-selectAddressesDialogInviteList.label "Seznam pozvaných:">
