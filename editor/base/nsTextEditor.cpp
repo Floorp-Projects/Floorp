@@ -545,10 +545,10 @@ NS_IMETHODIMP nsTextEditor::Insert(nsIInputStream *aInputStream)
 static void WriteFromStringstream(stringstream& aIn, nsString& aOutputString)
 {
   string      theString = aIn.str();
-  PRInt32     len = theString.length();
 
-	aOutputString.SetLength(0);		// empty the string
+	aOutputString.SetLength(0);											// empty the string
 	aOutputString += theString.data();
+	aOutputString.SetLength(theString.length());		// make sure it's terminated
 	
 	/* relace LF with CR. Don't do this here, because strings passed out
 	   to JavaScript need LF termination.
@@ -560,10 +560,11 @@ static void WriteFromStringstream(stringstream& aIn, nsString& aOutputString)
 #else
 static void WriteFromOstrstream(ostrstream& aIn, nsString& aOutputString)
 {
-  char* strData = aIn.str();
+  char* strData = aIn.str();		// get a copy of the buffer (unterminated)
 
 	aOutputString.SetLength(0);		// empty the string
 	aOutputString += strData;
+	aOutputString.SetLength(aIn.pcount());		// terminate
 
   // in ostrstreams if you call the str() function
   // then you are responsible for deleting the string
