@@ -86,12 +86,12 @@ nsDeque& nsDeque::Erase() {
 
 
 /**
- * This method adds an item to the end of the queue. 
+ * This method adds an item to the end of the deque. 
  * This operation has the potential to cause the 
  * underlying buffer to resize.
  *
  * @update	gess4/18/98
- * @param   anItem: new item to be added to queue
+ * @param   anItem: new item to be added to deque
  * @return  nada
  */
 nsDeque& nsDeque::Push(void* anItem) {
@@ -123,6 +123,50 @@ nsDeque& nsDeque::Push(void* anItem) {
 
 
 /**
+ * This method adds an item to the front of the deque. 
+ * This operation has the potential to cause the 
+ * underlying buffer to resize.
+ *
+ * @update	gess4/18/98
+ * @param   anItem: new item to be added to deque
+ * @return  nada
+ */
+nsDeque& nsDeque::PushFront(void* anItem) {
+  if(mOrigin>0) {
+    mOrigin-=1;
+    mData[mOrigin]=anItem;
+    mSize++;
+  }
+  else {
+    Push(anItem);
+    mOrigin=mSize-1;
+  }
+  return *this;
+}
+
+/**
+ * Remove and return the last item in the container.
+ * 
+ * @update	gess4/18/98
+ * @param   none
+ * @return  ptr to last item in container
+ */
+void* nsDeque::Pop(void) {
+  void* result=0;
+  if(mSize>0) {
+    int offset=mOrigin+mSize-1;
+    if(offset>=mCapacity) 
+      offset-=mCapacity;
+    result=mData[offset];
+    mData[offset]=0;
+    mSize--;
+    if(0==mSize)
+      mOrigin=0;
+  }
+  return result;
+}
+
+/**
  * This method gets called you want to remove and return
  * the first member in the container.
  *
@@ -130,7 +174,7 @@ nsDeque& nsDeque::Push(void* anItem) {
  * @param   nada
  * @return  last item in container
  */
-void* nsDeque::Pop() {
+void* nsDeque::PopFront() {
   void* result=0;
   if(mSize>0) {
     result=mData[mOrigin];
@@ -157,28 +201,6 @@ void* nsDeque::Peek() {
   void* result=0;
   if(mSize>0) {
     result=mData[mOrigin];
-  }
-  return result;
-}
-
-/**
- * Remove and return the last item in the container.
- * 
- * @update	gess4/18/98
- * @param   none
- * @return  ptr to last item in container
- */
-void* nsDeque::PopBack(void) {
-  void* result=0;
-  if(mSize>0) {
-    int offset=mOrigin+mSize-1;
-    if(offset>=mCapacity) 
-      offset-=mCapacity;
-    result=mData[offset];
-    mData[offset]=0;
-    mSize--;
-    if(0==mSize)
-      mOrigin=0;
   }
   return result;
 }
