@@ -51,7 +51,11 @@ static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
  *
  * Until then, include the real file to keep everything in sync.
  */
+#ifdef XP_MAC
+#include ":::webshell:tests:viewer:nsSetupRegistry.cpp"
+#else
 #include "../../webshell/tests/viewer/nsSetupRegistry.cpp"
+#endif
 
 extern "C" void
 NS_SetupRegistry_1()
