@@ -146,9 +146,7 @@ static void readEvalPrint(istream &in)
 	while (promptLine(in, line, buffer.empty() ? "js> " : "")) {
 		if (!buffer.empty())
 			buffer += uni::lf;
-		String::size_type bufferLen = buffer.size();
-		buffer.append(line.size(), uni::null);
-		std::transform(line.begin(), line.end(), buffer.begin()+bufferLen, widen);
+		appendChars(buffer, line.data(), line.size());
 		if (!buffer.empty()) {
 			showString(std::cout, buffer);
 			std::cout << std::endl;
