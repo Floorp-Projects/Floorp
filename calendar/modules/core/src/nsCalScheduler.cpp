@@ -254,7 +254,12 @@ nsresult nsCalScheduler::InitialLoadData()
   for ( i = 0; i < pParsedCalList->GetSize(); i++)
   {
     pCal = (NSCalendar*)pParsedCalList->GetAt(i);
-    pEventList = pCal->getEvents();
+
+    /**
+     *  Change the ownership of the pCal's VEvents' vector
+     *  from pCal to m_pCalendar
+     */
+    pEventList = pCal->changeEventsOwnership();
     if (0 != pEventList)
     {
       for (j = 0; j < pEventList->GetSize(); j++)
@@ -264,22 +269,36 @@ nsresult nsCalScheduler::InitialLoadData()
           mpShell->mpCalendar->addEvent(pEvent);
       }
     }
+
+    /**
+     * delete pEventList since the vector is no longer needed
+     * (I only care about the VEvents inside the vector, 
+     *  not the vector itself)
+     */
+    delete pEventList; pEventList = 0;
   }
 
   /**
    * cleanup allocated memory
    */
+
+  /**
+   *  Delete each calendar in pParsedCalList.
+   *  I won't delete the events in them because there ownership
+   *  has been changed.
+   */
+  for (i = pParsedCalList->GetSize() - 1; i >= 0; i--)
+  {
+    pCal = (NSCalendar *)pParsedCalList->GetAt(i);
+    delete pCal; pCal = 0;
+  }
+  
   delete [] psDTStart; psDTStart = 0;
   delete [] psDTEnd; psDTEnd = 0;
   delete pCalStreamReader; pCalStreamReader = 0;
   delete capiReader; capiReader = 0;
   PR_DestroyMonitor(pThreadMonitor);
   PR_DestroyMonitor(pCBReaderMonitor);
-
-  /*
-   * todo: need to delete calendars in pParsedCalList without 
-   * deleting events in it 
-   */
   capiStatus = pCapi->CAPI_DestroyStreams(mpShell->mCAPISession, &RcvStream, 1, 0);
   if (CAPI_ERR_OK != capiStatus)
     return 1;   /* XXX: really need to fix this up */
