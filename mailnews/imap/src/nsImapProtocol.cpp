@@ -124,6 +124,7 @@ static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 #define IMAP_ENV_AND_DB_HEADERS IMAP_ENV_HEADERS IMAP_DB_HEADERS
 static const PRIntervalTime kImapSleepTime = PR_MillisecondsToInterval(1000);
 static PRInt32 gPromoteNoopToCheckCount = 0;
+nsXPIDLString nsImapProtocol::mAcceptLanguages;
 
 // **** helper class for downloading line ****
 TLineDownloadCache::TLineDownloadCache()
@@ -203,7 +204,7 @@ static PRBool gUseEnvelopeCmd = PR_FALSE;
 nsresult nsImapProtocol::GlobalInitialization()
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
     prefs->GetIntPref("mail.imap.chunk_fast", &gTooFastTime);   // secs we read too little too fast
@@ -4834,9 +4835,14 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
       
       nsImapAction imapAction;
       m_runningUrl->GetImapAction(&imapAction);
-      
+
+      // this code used to check for imapAction==nsIImapUrl::nsImapAppendMsgFromFile, which
+      // meant we'd get into this code whenever sending a message, as well
+      // as when copying messages to an imap folder from local folders or an other imap server.
+      // This made sending a message slow when there was a large sent folder. I don't believe
+      // we need to do this code when appending a msg from a file.
       if (GetServerStateParser().LastCommandSuccessful() &&  (
-        imapAction == nsIImapUrl::nsImapAppendDraftFromFile || imapAction == nsIImapUrl::nsImapAppendMsgFromFile ))
+        imapAction == nsIImapUrl::nsImapAppendDraftFromFile ))
       {
         if (GetServerStateParser().GetCapabilityFlag() &
           kUidplusCapability)
