@@ -69,7 +69,6 @@
 #include "zipstruct.h"
 #include "nsZipArchive.h"
 
-
 static PRUint16 xtoint(unsigned char *ii);
 static PRUint32 xtolong(unsigned char *ll);
 static PRUint16 ExtractMode(PRUint32 ext_attr);
@@ -975,6 +974,7 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
   PRBool      bRead;
   PRBool      bWrote;
   PRBool      bToFile;
+  Bytef*      old_next_out;
 
 #if defined STANDALONE && defined WIN32
   MSG msg;
@@ -1002,10 +1002,7 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
     status = ZIP_ERR_MEMORY;
     goto cleanup;
   }
-
-  //-- initialize crc
-  crc = crc32(0L, Z_NULL, 0);
-
+  
   //-- We should already be at the correct spot in the archive.
   //-- ReadInitImpl did the seek().
 
@@ -1036,6 +1033,7 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
   outpos = inpos = 0;
   zs.next_out = outbuf;
   zs.avail_out = ZIP_BUFLEN;
+  crc = crc32(0L, Z_NULL, 0);
   while ( zerr == Z_OK )
   {
     bRead  = PR_FALSE;
@@ -1090,10 +1088,12 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
 
     if(bRead || bWrote)
     {
+      old_next_out = zs.next_out;
+       
       zerr = inflate( &zs, Z_PARTIAL_FLUSH );
-
+      
       //-- incrementally update crc32
-      crc = crc32(crc, (const unsigned char*)outbuf, zs.total_out - outpos);
+      crc = crc32(crc, (const unsigned char*)old_next_out, zs.next_out - old_next_out);
     }
     else
       zerr = Z_STREAM_END;
@@ -1112,7 +1112,7 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
   {
       status = ZIP_ERR_CORRUPT;
       goto cleanup;
-  }
+  } 
 
   //-- write last inflated bit to disk
   if ( zerr == Z_STREAM_END && outpos < zs.total_out )
