@@ -22,6 +22,8 @@
 package mozLock;
 
 use strict;
+use IO::File;
+use Cwd;
 
 BEGIN {
     use Exporter ();
@@ -37,23 +39,67 @@ BEGIN {
 my $lockcounter = 0;
 my $locklimit = 60;
 my $locksleep = 1;
+my %lockhash;
+
+# File::Spec->rel2abs appears to be broken in ActiveState Perl 5.22
+# so roll our own
+sub priv_abspath($) {
+    my ($file) = @_;
+    my ($dir, $out);
+    my (@inlist, @outlist);
+
+    # Force files to have unix paths.
+    $file =~ s/\\/\//g;
+
+    # Check if file is already absolute
+    if ($file =~ m/^\// || substr($file, 1, 0) eq ':') {
+	return $file;
+    }
+    $out = cwd . "/$file";
+
+    # Do what File::Spec->canonpath should do
+    @inlist = split(/\//, $out);
+    foreach $dir (@inlist) {
+	if ($dir eq '..') {
+	    pop @outlist;
+	} else {
+	    push @outlist, $dir;
+	}
+    }
+    $out = join '/',@outlist;
+    return $out;
+}
 
 sub mozLock($) {
-    my ($lockfile) = @_;
+    my ($inlockfile) = @_;
+    my ($lockhandle, $lockfile);
+    $lockfile = priv_abspath($inlockfile);
     $lockcounter = 0;
     while ( -e $lockfile && $lockcounter < $locklimit) {
 	$lockcounter++;
 	sleep(1);
     }
     die "$0: Could not get lockfile $lockfile.\nRemove $lockfile to clear up\n" if ($lockcounter >= $locklimit);
+    $lockhandle = new IO::File || die "Could not create filehandle for $lockfile: $!\n";
     #print "LOCK: $lockfile\n";
-    open(LOCK, ">$lockfile") || die "$lockfile: $!\n";
+    open($lockhandle, ">$lockfile") || die "$lockfile: $!\n";
+    $lockhash{$lockfile} = $lockhandle;
 }
 
 sub mozUnlock($) {
-    my ($lockfile) = @_;
+    my ($inlockfile) = @_;
+    my ($lockhandle, $lockfile);
+    #$lockfile = File::Spec->rel2abs($inlockfile);
+    $lockfile = priv_abspath($inlockfile);
     #print "UNLOCK: $lockfile\n";
-    unlink($lockfile);
+    $lockhandle = $lockhash{$lockfile};
+    if (defined($lockhandle)) {
+	close($lockhandle);
+	$lockhash{$lockfile} = undef;
+	unlink($lockfile);
+    } else {
+	print "WARNING: $0: lockhandle for $lockfile not defined.  Lock may not be removed.\n";
+    }
 }
 
 END {};
