@@ -415,14 +415,20 @@ public:
                                 nsLineLayout& aLineLayout,
                                 const nsHTMLReflowState& aReflowState,
                                 nsIFrame* aNextFrame,
-                                nscoord aBaseWidth);
+                                nscoord aBaseWidth,
+                                const PRUnichar* aWordBuf,
+                                PRUint32   aWordBufLen,
+                                PRUint32   aWordBufSize);
 
   nscoord ComputeWordFragmentWidth(nsIPresContext* aPresContext,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
                                    nsITextContent* aText,
-                                   PRBool* aStop);
+                                   PRBool* aStop,
+                                   const PRUnichar* aWordBuf,
+                                   PRUint32 &aWordBufLen,
+                                   PRUint32 aWordBufSize);
 
   void ToCString(nsString& aBuf, PRInt32* aContentLength) const;
 
@@ -2394,6 +2400,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   PRInt32 prevColumn = column;
   mColumn = column;
   PRBool breakable = lineLayout.LineIsBreakable();
+  PRInt32 lastWordLen;
   for (;;) {
     // Get next word/whitespace from the text
     PRBool isWhitespace;
@@ -2402,6 +2409,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     if (nsnull == bp) {
       break;
     }
+    lastWordLen = wordLen;
     inWord = PR_FALSE;
 
     // Measure the word/whitespace
@@ -2535,7 +2543,11 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
           // at the first breakable point.
           nscoord wordWidth = ComputeTotalWordWidth(&aPresContext, lineLayout,
                                                     aReflowState, next,
-                                                    lastWordWidth);
+                                                    lastWordWidth,
+                                                    wordBuf,
+                                                    lastWordLen,
+                                                    WORD_BUF_SIZE
+                                                    );
           if (!breakable || (x - lastWordWidth + wordWidth <= maxWidth)) {
             // The fully joined word has fit. Account for the joined
             // word's affect on the max-element-size here (since the
@@ -2776,7 +2788,10 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
-                                   nscoord aBaseWidth)
+                                   nscoord aBaseWidth,
+                                   const PRUnichar* aWordBuf,
+                                   PRUint32 aWordBufLen,
+                                   PRUint32 aWordBufSize)
 {
   nscoord addedWidth = 0;
   while (nsnull != aNextFrame) {
@@ -2794,7 +2809,10 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
                                                      aLineLayout,
                                                      aReflowState,
                                                      aNextFrame, tc,
-                                                     &stop);
+                                                     &stop,
+                                                     aWordBuf,
+                                                     aWordBufLen,
+                                                     aWordBufSize);
         NS_RELEASE(tc);
         NS_RELEASE(content);
         addedWidth += moreWidth;
@@ -2842,7 +2860,10 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
                                       const nsHTMLReflowState& aReflowState,
                                       nsIFrame* aTextFrame,
                                       nsITextContent* aText,
-                                      PRBool* aStop)
+                                      PRBool* aStop,
+                                      const PRUnichar* aWordBuf,
+                                      PRUint32 &aWordBufLen,
+                                      PRUint32 aWordBufSize)
 {
   PRUnichar buf[TEXT_BUF_SIZE];
   nsIDocument* doc;
@@ -2878,6 +2899,38 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
     return 0;
   }
   *aStop = contentLen < tx.GetContentLength();
+
+  // we need to adjust the length by look at the two pieces together
+  PRUint32 copylen = 2*( ((wordLen + aWordBufLen) > aWordBufSize) ? 
+                         (aWordBufSize - aWordBufLen) : 
+                         wordLen
+                       );
+  if(copylen > 0)
+  {
+    nsCRT::memcpy((void*)&(aWordBuf[aWordBufLen]), buf, copylen);
+
+    PRUint32 breakP=0;
+    PRBool needMore=PR_TRUE;
+    nsresult lres = lb->Next(aWordBuf, aWordBufLen+wordLen, 0, &breakP, &needMore);
+    if(NS_SUCCEEDED(lres)) 
+    {
+       // when we look at two pieces text together, we might decide to break
+       // eariler than if we only look at the 2nd pieces of text
+       if(!needMore && (breakP < (aWordBufLen + wordLen)))
+       {
+           wordLen = breakP - aWordBufLen; 
+           if(wordLen < 0)
+               wordLen = 0;
+           *aStop = PR_TRUE;
+       } 
+    }
+    // if we don't stop, we need to extent the buf so the next
+    // one can see this part otherwise, it does not matter since we will stop anyway
+    if(! *aStop) 
+       aWordBufLen += wordLen;
+  }
+  if((*aStop) && (wordLen == 0))
+	  return 0;
 
   nsIStyleContext* sc;
   if ((NS_OK == aTextFrame->GetStyleContext(&sc)) &&
