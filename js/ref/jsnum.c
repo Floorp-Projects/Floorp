@@ -76,25 +76,22 @@ num_isFinite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-num_parseFloat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	       jsval *rval)
+num_parseFloat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
-    jsdouble d, *dp;
-    jschar *ep;
+    jsdouble d;
+    const jschar *ep;
 
     str = js_ValueToString(cx, argv[0]);
     if (!str)
 	return JS_FALSE;
-    if (!js_strtod(str->chars, &ep, &d) || ep == str->chars) {
+    if (!js_strtod(cx, str->chars, &ep, &d))
+        return JS_FALSE;
+    if (ep == str->chars) {
 	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-    } else {
-	dp = js_NewDouble(cx, d);
-	if (!dp)
-	    return JS_FALSE;
-	*rval = DOUBLE_TO_JSVAL(dp);
+        return JS_TRUE;
     }
-    return JS_TRUE;
+    return js_NewNumberValue(cx, d, rval);
 }
 
 /* See ECMA 15.1.2.2. */
@@ -103,113 +100,32 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
     jsint radix;
-    const jschar *chars, *start;
-    jsdouble sum;
-    JSBool negative;
-    uintN digit, newDigit;
-    jschar c;
-    jschar digitMax = '9';
-    jschar lowerCaseBound = 'a';
-    jschar upperCaseBound = 'A';
-    
+    jsdouble d;
+    const jschar *ep;
+
     str = js_ValueToString(cx, argv[0]);
     if (!str)
 	return JS_FALSE;
-    chars = str->chars;
-
-    /* This assumes that the char strings are null-terminated - JS_ISSPACE will
-     * always evaluate to false at the end of a string containing only
-     * whitespace.
-     */
-    while (JS_ISSPACE(*chars))
-        chars++;
-
-    if ((negative = (*chars == '-')) != 0 || *chars == '+')
-        chars++;
 
     if (argc > 1) {
 	if (!js_ValueToECMAInt32(cx, argv[1], &radix))
 	    return JS_FALSE;
-    } else {
+    } else
         radix = 0;
-    }
 
-    if (radix != 0) {
-        /* Some explicit radix was supplied */
-        if (radix < 2 || radix > 36) {
-            *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-            return JS_TRUE;
-        } else {
-            if (radix == 16 && *chars == '0' &&
-                (*(chars + 1) == 'X' || *(chars + 1) == 'x'))
-                /* If radix is 16, ignore hex prefix. */
-                chars += 2;
-        }
-    } else {
-        /* No radix supplied, or some radix that evaluated to 0. */ 
-        if (*chars == '0') {
-            /* It's either hex or octal; only increment char if str isn't '0' */
-            if (*(chars + 1) == 'X' || *(chars + 1) == 'x') /* Hex */
-            {
-                chars += 2;
-                radix = 16;
-            } else { /* Octal */
-                radix = 8;
-            }
-        } else {
-            radix = 10; /* Default to decimal. */
-        }
-    }
-
-    /* Done with the preliminaries; find some prefix of the string that's
-     * a number in the given radix.  XXX might want to farm this out to
-     * a utility function, to share with the lexer's handling of
-     * literal constants.
-     */
-    start = chars; /* Mark - if string is empty, we return NaN. */
-    if (radix < 10) {
-        digitMax = (char) ('0' + radix - 1);
-    } else {
-        digitMax = '9';
-    }
-    if (radix > 10) {
-        lowerCaseBound = (char) ('a' + radix - 10);
-        upperCaseBound = (char) ('A' + radix - 10);
-    } else {
-        lowerCaseBound = 'a';
-        upperCaseBound = 'A';
-    }
-    digit = 0; /* how many digits have we seen? (if radix == 10) */
-    sum = 0;
-    while ((c = *chars) != 0) { /* 0 is never a valid character. */
-        if ('0' <= c && c <= digitMax)
-            newDigit = c - '0';
-        else if ('a' <= c && c < lowerCaseBound)
-            newDigit = c - 'a' + 10;
-        else if ('A' <= c && c < upperCaseBound)
-            newDigit = c - 'A' + 10;
-        else
-            break;
-        /* ECMA: 'But if R is 10 and Z contains more than 20 significant
-         * digits, every digit after the 20th may be replaced by a 0...'
-         * I'm not sure if doing this way is actually an improvement.
-         * XXX this may bear closer examination......
-         */
-        if (radix == 10 && ++digit > 20)
-            sum = sum*radix;
-        else
-            sum = sum*radix + newDigit;
-        chars++;
-    }
-
-    if (chars == start) {
+    if (radix != 0 && (radix < 2 || radix > 36)) {
         *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-    } else {
-        if (!js_NewNumberValue(cx, (negative ? -sum : sum), rval))
-            return JS_FALSE;
+        return JS_TRUE;
     }
-    return JS_TRUE;
+    if (!js_strtointeger(cx, str->chars, &ep, radix, &d))
+        return JS_FALSE;
+    if (ep == str->chars) {
+	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
+    }
+    return js_NewNumberValue(cx, d, rval);
 }
+
 
 static JSFunctionSpec number_functions[] = {
     {"isNaN",           num_isNaN,              1},
@@ -525,7 +441,7 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 {
     JSObject *obj;
     JSString *str;
-    jschar *ep;
+    const jschar *ep;
     jsdouble d;
 
     if (JSVAL_IS_OBJECT(v)) {
@@ -544,8 +460,11 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     } else if (JSVAL_IS_STRING(v)) {
 	str = JSVAL_TO_STRING(v);
 	errno = 0;
-	if ((!js_strtod(str->chars, &ep, &d) || *ep != 0) &&
-	    (!js_strtol(str->chars, &ep, 0, &d) || *ep != 0)) {
+	/* Note that ECMAScript doesn't treat numbers beginning with a zero as octal numbers here.
+	 * This works because all such numbers will be interpreted as decimal by js_strtod and
+	 * will never get passed to js_strtointeger, which would interpret them as octal. */
+	if ((!js_strtod(cx, str->chars, &ep, &d) || js_SkipWhiteSpace(ep) != str->chars + str->length) &&
+	    (!js_strtointeger(cx, str->chars, &ep, 0, &d) || js_SkipWhiteSpace(ep) != str->chars + str->length)) {
 	    goto badstr;
 	}
 	*dp = d;
@@ -695,60 +614,214 @@ js_DoubleToInteger(jsdouble d)
     return neg ? -d : d;
 }
 
-/* XXXbe rewrite me! */
-JSBool
-js_strtod(const jschar *s, jschar **ep, jsdouble *dp)
-{
-    size_t i, n;
-    char *cstr, *estr;
-    jsdouble d;
 
-    n = js_strlen(s);
-    cstr = malloc(n + 1);
+JSBool
+js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
+{
+    size_t i;
+    char *cstr, *istr, *estr;
+    JSBool negative;
+    jsdouble d;
+    const jschar *s1 = js_SkipWhiteSpace(s);
+    size_t length = js_strlen(s1);
+
+    cstr = malloc(length + 1);
     if (!cstr)
 	return JS_FALSE;
-    for (i = 0; i <= n; i++) {
-	if (s[i] >> 8) {
-	    free(cstr);
-	    return JS_FALSE;
+    for (i = 0; i <= length; i++) {
+	if (s1[i] >> 8) {
+	    cstr[i] = 0;
+	    break;
 	}
-	cstr[i] = (char)s[i];
+	cstr[i] = (char)s1[i];
     }
-    errno = 0;
-    d = PR_strtod(cstr, &estr);
+
+    istr = cstr;
+    if ((negative = (*istr == '-')) != 0 || *istr == '+')
+        istr++;
+    if (!strncmp(istr, "Infinity", 8)) {
+        d = *(negative ? cx->runtime->jsNegativeInfinity : cx->runtime->jsPositiveInfinity);
+        estr = istr + 8;
+    } else {
+	errno = 0;
+	d = PR_strtod(cstr, &estr);
+	if (errno == ERANGE)
+	    if (d == HUGE_VAL)
+		d = *cx->runtime->jsPositiveInfinity;
+	    else if (d == -HUGE_VAL)
+		d = *cx->runtime->jsNegativeInfinity;
+    }
+
     free(cstr);
-    if (errno == ERANGE)
-	return JS_FALSE;
-    *ep = (jschar *)s + (estr - cstr);
+    i = estr - cstr;
+    *ep = i ? s1 + i : s;
     *dp = d;
     return JS_TRUE;
 }
 
-/* XXXbe rewrite me! */
-JSBool
-js_strtol(const jschar *s, jschar **ep, jsint base, jsdouble *dp)
+struct BinaryDigitReader
 {
-    size_t i, n;
-    char *cstr, *estr;
-    long l;
+    uintN base;			/* Base of number; must be a power of 2 */
+    uintN digit;		/* Current digit value in radix given by base */
+    uintN digitMask;		/* Mask to extract the next bit from digit */
+    const jschar *digits;	/* Pointer to the remaining digits */
+    const jschar *end;		/* Pointer to first non-digit */
+};
 
-    n = js_strlen(s);
-    cstr = malloc(n + 1);
-    if (!cstr)
-	return JS_FALSE;
-    for (i = 0; i <= n; i++) {
-	if (s[i] >> 8) {
-	    free(cstr);
-	    return JS_FALSE;
-	}
-	cstr[i] = (char)s[i];
+/* Return the next binary digit from the number or -1 if done */
+static intN GetNextBinaryDigit(struct BinaryDigitReader *bdr)
+{
+    intN bit;
+
+    if (bdr->digitMask == 0) {
+        uintN c;
+
+        if (bdr->digits == bdr->end)
+            return -1;
+
+        c = *bdr->digits++;
+        if ('0' <= c && c <= '9')
+            bdr->digit = c - '0';
+        else if ('a' <= c && c <= 'z')
+            bdr->digit = c - 'a' + 10;
+        else bdr->digit = c - 'A' + 10;
+        bdr->digitMask = bdr->base >> 1;
     }
-    errno = 0;
-    l = strtol(cstr, &estr, base);
-    free(cstr);
-    if (errno == ERANGE)
-	return JS_FALSE;
-    *ep = (jschar *)s + (estr - cstr);
-    *dp = (jsdouble)l;
+    bit = (bdr->digit & bdr->digitMask) != 0;
+    bdr->digitMask >>= 1;
+    return bit;
+}
+
+JSBool
+js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, jsdouble *dp)
+{
+    JSBool negative;
+    jsdouble value;
+    const jschar *start;
+    const jschar *s1 = js_SkipWhiteSpace(s);
+
+    if ((negative = (*s1 == '-')) != 0 || *s1 == '+')
+        s1++;
+
+    if (base == 0)
+        /* No base supplied, or some base that evaluated to 0. */ 
+        if (*s1 == '0')
+            /* It's either hex or octal; only increment char if str isn't '0' */
+            if (s1[1] == 'X' || s1[1] == 'x') { /* Hex */
+                s1 += 2;
+                base = 16;
+            } else /* Octal */
+                base = 8;
+        else
+            base = 10; /* Default to decimal. */
+    else if (base == 16 && *s1 == '0' && (s1[1] == 'X' || s1[1] == 'x'))
+        /* If base is 16, ignore hex prefix. */
+        s1 += 2;
+
+    /* Done with the preliminaries; find some prefix of the string that's
+     * a number in the given base.
+     */
+    start = s1; /* Mark - if string is empty, we return NaN. */
+    value = 0.0;
+    while (1) {
+        uintN digit;
+        jschar c = *s1;
+        if ('0' <= c && c <= '9')
+            digit = c - '0';
+        else if ('a' <= c && c <= 'z')
+            digit = c - 'a' + 10;
+        else if ('A' <= c && c <= 'Z')
+            digit = c - 'A' + 10;
+        else
+            break;
+        if (digit >= base)
+            break;
+        value = value*base + digit;
+        s1++;
+    }
+
+    if (value >= 9007199254740992.0)
+        if (base == 10) {
+	    /* If we're accumulating a decimal number and the number is >= 2^53, then
+	     * the result from the repeated multiply-add above may be inaccurate.  Call
+	     * PR_strtod to get the correct answer.
+	     */
+	    size_t i;
+	    size_t length = s1 - start;
+	    char *cstr = malloc(length + 1);
+	    char *estr;
+
+	    if (!cstr)
+	        return JS_FALSE;
+	    for (i = 0; i != length; i++)
+	        cstr[i] = (char)start[i];
+	    cstr[length] = 0;
+
+	    errno = 0;
+	    value = PR_strtod(cstr, &estr);
+	    if (errno == ERANGE && value == HUGE_VAL)
+	        value = *cx->runtime->jsPositiveInfinity;
+	    free(cstr);
+
+	} else if (base == 2 || base == 4 || base == 8 || base == 16 || base == 32) {
+	    /* The number may also be inaccurate for one of these bases.  This
+	     * happens if the addition in value*base + digit causes a round-down
+	     * to an even least significant mantissa bit when the first dropped bit
+	     * is a one.  If any of the following digits in the number (which haven't
+	     * been added in yet) are nonzero then the correct action would have
+	     * been to round up instead of down.  An example of this occurs when
+	     * reading the number 0x1000000000000081, which rounds to 0x1000000000000000
+	     * instead of 0x1000000000000100.
+	     */
+	    struct BinaryDigitReader bdr;
+	    intN bit, bit2;
+	    intN j;
+	    
+	    bdr.base = base;
+	    bdr.digitMask = 0;
+	    bdr.digits = start;
+	    bdr.end = s1;
+	    value = 0.0;
+	    
+	    /* Skip leading zeros. */
+	    do {
+	        bit = GetNextBinaryDigit(&bdr);
+	    } while (bit == 0);
+	    
+	    if (bit == 1) {
+	        /* Gather the 53 significant bits (including the leading 1) */
+	        value = 1.0;
+	        for (j = 52; j; j--) {
+	            bit = GetNextBinaryDigit(&bdr);
+	            if (bit < 0)
+	                goto done;
+	            value = value*2 + bit;
+	        }
+	        /* bit2 is the 54th bit (the first dropped from the mantissa) */
+	        bit2 = GetNextBinaryDigit(&bdr);
+	        if (bit2 >= 0) {
+	            jsdouble factor = 2.0;
+	            intN sticky = 0;  /* sticky is 1 if any bit beyond the 54th is 1 */
+	            intN bit3;
+	            
+	            while ((bit3 = GetNextBinaryDigit(&bdr)) >= 0) {
+	                sticky |= bit3;
+	                factor *= 2;
+	            }
+	            value += bit2 & (bit | sticky);
+	            value *= factor;
+	        }
+	      done:;
+	    }
+	}
+    /* We don't worry about inaccurate numbers for any other base. */
+
+    if (s1 == start) {
+        *dp = 0.0;
+        *ep = s;
+    } else {
+        *dp = negative ? -value : value;
+        *ep = s1;
+    }
     return JS_TRUE;
 }
