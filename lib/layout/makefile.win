@@ -15,5 +15,9 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+DEPTH = ..\..
+LIBRARY_NAME = layout
+MODULE = layout
+EXPORTS = layout.h
 !include $(DEPTH)\config\rules.mak
 # 
