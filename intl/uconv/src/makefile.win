@@ -41,6 +41,15 @@ CPPSRCS =				\
 	nsMappingCache.cpp		\
 	nsURLProperties.cpp		\
 	nsCharsetMenu.cpp		\
+	nsISO88591ToUnicode.cpp     \
+	nsCP1252ToUnicode.cpp     \
+	nsMacRomanToUnicode.cpp     \
+	nsUTF8ToUnicode.cpp     \
+	nsUnicodeToISO88591.cpp     \
+	nsUnicodeToCP1252.cpp     \
+	nsUnicodeToMacRoman.cpp     \
+	nsUnicodeToUTF8.cpp     \
+	nsUCvMinSupport.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -54,6 +63,15 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsMappingCache.obj 			\
 	.\$(OBJDIR)\nsURLProperties.obj 		\
 	.\$(OBJDIR)\nsCharsetMenu.obj 			\
+	.\$(OBJDIR)\nsISO88591ToUnicode.obj			\
+	.\$(OBJDIR)\nsCP1252ToUnicode.obj			\
+	.\$(OBJDIR)\nsMacRomanToUnicode.obj			\
+	.\$(OBJDIR)\nsUTF8ToUnicode.obj			\
+	.\$(OBJDIR)\nsUnicodeToISO88591.obj			\
+	.\$(OBJDIR)\nsUnicodeToCP1252.obj			\
+	.\$(OBJDIR)\nsUnicodeToMacRoman.obj			\
+	.\$(OBJDIR)\nsUnicodeToUTF8.obj			\
+	.\$(OBJDIR)\nsUCvMinSupport.obj			\
 	$(NULL)
 
 CSRCS =		\
@@ -71,12 +89,18 @@ OBJS = 				\
 EXPORTS=				\
 	$(NULL)
 
+#LINCS=					\
+#	-I$(PUBLIC)\raptor		\
+#	-I$(PUBLIC)\xpcom 		\
+#	-I$(PUBLIC)\uconv		\
+#	-I..\ucvja	  		\
+#	-I..\ucvlatin			\
+#	$(NULL)
+
 LINCS=					\
 	-I$(PUBLIC)\raptor		\
 	-I$(PUBLIC)\xpcom 		\
 	-I$(PUBLIC)\uconv		\
-	-I..\ucvja	  		\
-	-I..\ucvlatin			\
 	$(NULL)
 
 LLIBS=					\

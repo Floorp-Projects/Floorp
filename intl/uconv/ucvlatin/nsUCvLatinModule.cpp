@@ -39,7 +39,6 @@
 #include "nsUEscapeToUnicode.h"
 #include "nsUnicodeToUEscape.h"
 #include "nsAsciiToUnicode.h"
-#include "nsISO88591ToUnicode.h"
 #include "nsISO88592ToUnicode.h"
 #include "nsISO88593ToUnicode.h"
 #include "nsISO88594ToUnicode.h"
@@ -59,7 +58,6 @@
 #include "nsISOIR111ToUnicode.h"
 #include "nsCP1250ToUnicode.h"
 #include "nsCP1251ToUnicode.h"
-#include "nsCP1252ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
 #include "nsCP1254ToUnicode.h"
 #include "nsCP1255ToUnicode.h"
@@ -70,7 +68,6 @@
 #include "nsCP866ToUnicode.h"
 #include "nsKOI8RToUnicode.h"
 #include "nsKOI8UToUnicode.h"
-#include "nsMacRomanToUnicode.h"
 #include "nsMacCEToUnicode.h"
 #include "nsMacGreekToUnicode.h"
 #include "nsMacTurkishToUnicode.h"
@@ -83,7 +80,6 @@
 #include "nsTCVN5712ToUnicode.h"
 #include "nsVISCIIToUnicode.h"
 #include "nsVPSToUnicode.h"
-#include "nsUTF8ToUnicode.h"
 #include "nsUTF7ToUnicode.h"
 #include "nsMUTF7ToUnicode.h"
 #include "nsUCS4BEToUnicode.h"
@@ -93,7 +89,6 @@
 #include "nsT61ToUnicode.h"
 #include "nsUserDefinedToUnicode.h"
 #include "nsUnicodeToAscii.h"
-#include "nsUnicodeToISO88591.h"
 #include "nsUnicodeToISO88592.h"
 #include "nsUnicodeToISO88593.h"
 #include "nsUnicodeToISO88594.h"
@@ -113,7 +108,6 @@
 #include "nsUnicodeToISOIR111.h"
 #include "nsUnicodeToCP1250.h"
 #include "nsUnicodeToCP1251.h"
-#include "nsUnicodeToCP1252.h"
 #include "nsUnicodeToCP1253.h"
 #include "nsUnicodeToCP1254.h"
 #include "nsUnicodeToCP1255.h"
@@ -124,7 +118,6 @@
 #include "nsUnicodeToCP866.h"
 #include "nsUnicodeToKOI8R.h"
 #include "nsUnicodeToKOI8U.h"
-#include "nsUnicodeToMacRoman.h"
 #include "nsUnicodeToMacCE.h"
 #include "nsUnicodeToMacGreek.h"
 #include "nsUnicodeToMacTurkish.h"
@@ -137,7 +130,6 @@
 #include "nsUnicodeToTCVN5712.h"
 #include "nsUnicodeToVISCII.h"
 #include "nsUnicodeToVPS.h"
-#include "nsUnicodeToUTF8.h"
 #include "nsUnicodeToUTF7.h"
 #include "nsUnicodeToMUTF7.h"
 #include "nsUnicodeToUCS2BE.h"
@@ -164,7 +156,6 @@ NS_IMPL_NSUCONVERTERREGSELF
 
 NS_UCONV_REG_UNREG(nsAsciiToUnicode, "us-ascii", "Unicode" , NS_ASCIITOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUEscapeToUnicode, "x-u-escaped", "Unicode" , NS_UESCAPETOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsISO88591ToUnicode, "ISO-8859-1", "Unicode" , NS_ISO88591TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsISO88592ToUnicode, "ISO-8859-2", "Unicode" , NS_ISO88592TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsISO88593ToUnicode, "ISO-8859-3", "Unicode" , NS_ISO88593TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsISO88594ToUnicode, "ISO-8859-4", "Unicode" , NS_ISO88594TOUNICODE_CID);
@@ -184,7 +175,6 @@ NS_UCONV_REG_UNREG(nsISO885915ToUnicode, "ISO-8859-15", "Unicode" , NS_ISO885915
 NS_UCONV_REG_UNREG(nsISOIR111ToUnicode, "ISO-IR-111", "Unicode" , NS_ISOIR111TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsCP1250ToUnicode, "windows-1250", "Unicode" , NS_CP1250TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsCP1251ToUnicode, "windows-1251", "Unicode" , NS_CP1251TOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsCP1252ToUnicode, "windows-1252", "Unicode" , NS_CP1252TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsCP1253ToUnicode, "windows-1253", "Unicode" , NS_CP1253TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsCP1254ToUnicode, "windows-1254", "Unicode" , NS_CP1254TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsCP1255ToUnicode, "windows-1255", "Unicode" , NS_CP1255TOUNICODE_CID);
@@ -195,7 +185,6 @@ NS_UCONV_REG_UNREG(nsCP874ToUnicode, "TIS-620", "Unicode" , NS_CP874TOUNICODE_CI
 NS_UCONV_REG_UNREG(nsCP866ToUnicode, "IBM866", "Unicode" , NS_CP866TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsKOI8RToUnicode, "KOI8-R", "Unicode" , NS_KOI8RTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsKOI8UToUnicode, "KOI8-U", "Unicode" , NS_KOI8UTOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsMacRomanToUnicode, "x-mac-roman", "Unicode" , NS_MACROMANTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsMacCEToUnicode, "x-mac-ce", "Unicode" , NS_MACCETOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsMacGreekToUnicode, "x-mac-greek", "Unicode" , NS_MACGREEKTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsMacTurkishToUnicode, "x-mac-turkish", "Unicode" , NS_MACTURKISHTOUNICODE_CID);
@@ -208,7 +197,6 @@ NS_UCONV_REG_UNREG(nsARMSCII8ToUnicode, "armscii-8", "Unicode" , NS_ARMSCII8TOUN
 NS_UCONV_REG_UNREG(nsTCVN5712ToUnicode, "x-viet-tcvn5712", "Unicode" , NS_TCVN5712TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsVISCIIToUnicode, "VISCII", "Unicode" , NS_VISCIITOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsVPSToUnicode, "x-viet-vps", "Unicode" , NS_VPSTOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsUTF8ToUnicode, "UTF-8", "Unicode" , NS_UTF8TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUTF7ToUnicode, "UTF-7", "Unicode" , NS_UTF7TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsMUTF7ToUnicode, "x-imap4-modified-utf7", "Unicode" , NS_MUTF7TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUTF16BEToUnicode, "UTF-16BE", "Unicode" , NS_UTF16BETOUNICODE_CID);
@@ -219,7 +207,6 @@ NS_UCONV_REG_UNREG(nsT61ToUnicode, "T.61-8bit", "Unicode" , NS_T61TOUNICODE_CID)
 NS_UCONV_REG_UNREG(nsUserDefinedToUnicode, "x-user-defined", "Unicode" , NS_USERDEFINEDTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToAscii, "Unicode", "us-ascii" , NS_UNICODETOASCII_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToUEscape, "Unicode", "x-u-escaped" , NS_UNICODETOUESCAPE_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToISO88591, "Unicode", "ISO-8859-1" , NS_UNICODETOISO88591_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToISO88592, "Unicode", "ISO-8859-2" , NS_UNICODETOISO88592_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToISO88593, "Unicode", "ISO-8859-3" , NS_UNICODETOISO88593_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToISO88594, "Unicode", "ISO-8859-4" , NS_UNICODETOISO88594_CID);
@@ -239,7 +226,6 @@ NS_UCONV_REG_UNREG(nsUnicodeToISO885915, "Unicode", "ISO-8859-15" , NS_UNICODETO
 NS_UCONV_REG_UNREG(nsUnicodeToISOIR111, "Unicode", "ISO-IR-111" , NS_UNICODETOISOIR111_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP1250, "Unicode", "windows-1250" , NS_UNICODETOCP1250_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP1251, "Unicode", "windows-1251" , NS_UNICODETOCP1251_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToCP1252, "Unicode", "windows-1252" , NS_UNICODETOCP1252_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP1253, "Unicode", "windows-1253" , NS_UNICODETOCP1253_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP1254, "Unicode", "windows-1254" , NS_UNICODETOCP1254_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP1255, "Unicode", "windows-1255" , NS_UNICODETOCP1255_CID);
@@ -250,7 +236,6 @@ NS_UCONV_REG_UNREG(nsUnicodeToCP874, "Unicode", "TIS-620" , NS_UNICODETOCP874_CI
 NS_UCONV_REG_UNREG(nsUnicodeToCP866, "Unicode", "IBM866" , NS_UNICODETOCP866_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToKOI8R, "Unicode", "KOI8-R" , NS_UNICODETOKOI8R_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToKOI8U, "Unicode", "KOI8-U" , NS_UNICODETOKOI8U_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToMacRoman, "Unicode", "x-mac-roman" , NS_UNICODETOMACROMAN_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMacCE, "Unicode", "x-mac-ce" , NS_UNICODETOMACCE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMacGreek, "Unicode", "x-mac-greek" , NS_UNICODETOMACGREEK_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMacTurkish, "Unicode", "x-mac-turkish" , NS_UNICODETOMACTURKISH_CID);
@@ -263,7 +248,6 @@ NS_UCONV_REG_UNREG(nsUnicodeToARMSCII8, "Unicode", "armscii-8" , NS_UNICODETOARM
 NS_UCONV_REG_UNREG(nsUnicodeToTCVN5712, "Unicode", "x-viet-tcvn5712" , NS_UNICODETOTCVN5712_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToVISCII, "Unicode", "VISCII" , NS_UNICODETOVISCII_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToVPS, "Unicode", "x-viet-vps" , NS_UNICODETOVPS_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToUTF8, "Unicode", "UTF-8" , NS_UNICODETOUTF8_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToUTF7, "Unicode", "UTF-7" , NS_UNICODETOUTF7_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMUTF7, "Unicode", "x-imap4-modified-utf7" , NS_UNICODETOMUTF7_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToUTF16BE, "Unicode", "UTF-16BE" , NS_UNICODETOUTF16BE_CID);
@@ -278,7 +262,6 @@ NS_UCONV_REG_UNREG(nsUnicodeToZapfDingbat, "Unicode", "x-zapf-dingbats" , NS_UNI
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAsciiToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUEscapeToUnicode);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO88591ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO88592ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO88593ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO88594ToUnicode);
@@ -298,7 +281,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO885915ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsISOIR111ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP1250ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP1251ToUnicode);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP1252ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP1253ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP1254ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP1255ToUnicode);
@@ -309,7 +291,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP874ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP866ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsKOI8RToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsKOI8UToUnicode);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacRomanToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacCEToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacGreekToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacTurkishToUnicode);
@@ -322,7 +303,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsARMSCII8ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTCVN5712ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVISCIIToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVPSToUnicode);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF7ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMUTF7ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF16BEToUnicode);
@@ -333,7 +313,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsT61ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserDefinedToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToAscii);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUEscape);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO88591);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO88592);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO88593);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO88594);
@@ -353,7 +332,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO885915);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISOIR111);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP1250);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP1251);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP1252);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP1253);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP1254);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP1255);
@@ -364,7 +342,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP874);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP866);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToKOI8R);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToKOI8U);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacRoman);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacCE);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacGreek);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacTurkish);
@@ -377,7 +354,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToARMSCII8);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTCVN5712);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToVISCII);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToVPS);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF8);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF7);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMUTF7);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF16BE);
@@ -403,12 +379,6 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEDECODER_CONTRACTID_BASE "x-u-escaped",
     nsUEscapeToUnicodeConstructor ,
     nsUEscapeToUnicodeRegSelf , nsUEscapeToUnicodeUnRegSelf 
-  },
-  { 
-    DECODER_NAME_BASE "ISO-8859-1" , NS_ISO88591TOUNICODE_CID, 
-    NS_UNICODEDECODER_CONTRACTID_BASE "ISO-8859-1",
-    nsISO88591ToUnicodeConstructor ,
-    nsISO88591ToUnicodeRegSelf , nsISO88591ToUnicodeUnRegSelf 
   },
   { 
     DECODER_NAME_BASE "ISO-8859-2" , NS_ISO88592TOUNICODE_CID, 
@@ -525,12 +495,6 @@ static nsModuleComponentInfo components[] =
     nsCP1251ToUnicodeRegSelf , nsCP1251ToUnicodeUnRegSelf 
   },
   { 
-    DECODER_NAME_BASE "windows-1252" , NS_CP1252TOUNICODE_CID, 
-    NS_UNICODEDECODER_CONTRACTID_BASE "windows-1252",
-    nsCP1252ToUnicodeConstructor ,
-    nsCP1252ToUnicodeRegSelf , nsCP1252ToUnicodeUnRegSelf 
-  },
-  { 
     DECODER_NAME_BASE "windows-1253" , NS_CP1253TOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "windows-1253",
     nsCP1253ToUnicodeConstructor ,
@@ -591,13 +555,7 @@ static nsModuleComponentInfo components[] =
     nsKOI8UToUnicodeRegSelf , nsKOI8UToUnicodeUnRegSelf 
   },
   { 
-    DECODER_NAME_BASE "x-mac-roman" , NS_MACROMANTOUNICODE_CID, 
-    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-roman",
-    nsMacRomanToUnicodeConstructor ,
-    nsMacRomanToUnicodeRegSelf , nsMacRomanToUnicodeUnRegSelf 
-  },
-  { 
-    DECODER_NAME_BASE "x-mac-ce" , NS_MACROMANTOUNICODE_CID, 
+    DECODER_NAME_BASE "x-mac-ce" , NS_MACCETOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-ce",
     nsMacCEToUnicodeConstructor ,
     nsMacCEToUnicodeRegSelf , nsMacCEToUnicodeUnRegSelf 
@@ -613,12 +571,6 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-turkish",
     nsMacTurkishToUnicodeConstructor ,
     nsMacTurkishToUnicodeRegSelf , nsMacTurkishToUnicodeUnRegSelf 
-  },
-  { 
-    DECODER_NAME_BASE "x-mac-roman" , NS_MACROMANTOUNICODE_CID, 
-    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-roman",
-    nsMacRomanToUnicodeConstructor ,
-    nsMacRomanToUnicodeRegSelf , nsMacRomanToUnicodeUnRegSelf 
   },
   { 
     DECODER_NAME_BASE "x-mac-croatian" , NS_MACCROATIANTOUNICODE_CID, 
@@ -673,12 +625,6 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEDECODER_CONTRACTID_BASE "x-viet-vps",
     nsVPSToUnicodeConstructor ,
     nsVPSToUnicodeRegSelf , nsVPSToUnicodeUnRegSelf 
-  },
-  { 
-    DECODER_NAME_BASE "UTF-8" , NS_UTF8TOUNICODE_CID, 
-    NS_UNICODEDECODER_CONTRACTID_BASE "UTF-8",
-    nsUTF8ToUnicodeConstructor ,
-    nsUTF8ToUnicodeRegSelf , nsUTF8ToUnicodeUnRegSelf 
   },
   { 
     DECODER_NAME_BASE "UTF-7" , NS_UTF7TOUNICODE_CID, 
@@ -739,12 +685,6 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "x-u-escaped",
     nsUnicodeToUEscapeConstructor, 
     nsUnicodeToUEscapeRegSelf, nsUnicodeToUEscapeUnRegSelf
-  },
-  { 
-    ENCODER_NAME_BASE "ISO-8859-1" , NS_UNICODETOISO88591_CID, 
-    NS_UNICODEENCODER_CONTRACTID_BASE "ISO-8859-1",
-    nsUnicodeToISO88591Constructor, 
-    nsUnicodeToISO88591RegSelf, nsUnicodeToISO88591UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "ISO-8859-2" , NS_UNICODETOISO88592_CID, 
@@ -861,12 +801,6 @@ static nsModuleComponentInfo components[] =
     nsUnicodeToCP1251RegSelf, nsUnicodeToCP1251UnRegSelf
   },
   { 
-    ENCODER_NAME_BASE "windows-1252" , NS_UNICODETOCP1252_CID, 
-    NS_UNICODEENCODER_CONTRACTID_BASE "windows-1252",
-    nsUnicodeToCP1252Constructor, 
-    nsUnicodeToCP1252RegSelf, nsUnicodeToCP1252UnRegSelf
-  },
-  { 
     ENCODER_NAME_BASE "windows-1253" , NS_UNICODETOCP1253_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "windows-1253",
     nsUnicodeToCP1253Constructor, 
@@ -925,12 +859,6 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "KOI8-U",
     nsUnicodeToKOI8UConstructor, 
     nsUnicodeToKOI8URegSelf, nsUnicodeToKOI8UUnRegSelf
-  },
-  { 
-    ENCODER_NAME_BASE "x-mac-roman" , NS_UNICODETOMACROMAN_CID, 
-    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-roman",
-    nsUnicodeToMacRomanConstructor, 
-    nsUnicodeToMacRomanRegSelf, nsUnicodeToMacRomanUnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-mac-ce" , NS_UNICODETOMACCE_CID, 
@@ -999,12 +927,6 @@ static nsModuleComponentInfo components[] =
     nsUnicodeToVPSRegSelf, nsUnicodeToVPSUnRegSelf
   },
   { 
-    ENCODER_NAME_BASE "UTF-8" , NS_UNICODETOUTF8_CID, 
-    NS_UNICODEENCODER_CONTRACTID_BASE "UTF-8",
-    nsUnicodeToUTF8Constructor, 
-    nsUnicodeToUTF8RegSelf, nsUnicodeToUTF8UnRegSelf
-  },
-  { 
     ENCODER_NAME_BASE "UTF-7" , NS_UNICODETOUTF7_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "UTF-7",
     nsUnicodeToUTF7Constructor, 
@@ -1046,7 +968,7 @@ static nsModuleComponentInfo components[] =
     nsUnicodeToUCS4LEConstructor, 
     nsUnicodeToUCS4LERegSelf, nsUnicodeToUCS4LEUnRegSelf
   },
-  { 
+    { 
     ENCODER_NAME_BASE "T.61-8bit" , NS_UNICODETOT61_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "T.61-8bit",
     nsUnicodeToT61Constructor, 

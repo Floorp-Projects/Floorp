@@ -61,4 +61,36 @@ NS_NewTextToSubURI(nsISupports* aOuter, const nsIID& aIID,
 NS_IMETHODIMP
 NS_RegisterConverterManagerData();
 
+NS_IMETHODIMP
+NS_NewISO88591ToUnicode(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
+NS_IMETHODIMP
+NS_NewCP1252ToUnicode(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
+NS_IMETHODIMP
+NS_NewMacRomanToUnicode(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
+NS_IMETHODIMP
+NS_NewUTF8ToUnicode(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
+NS_IMETHODIMP
+NS_NewUnicodeToISO88591(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
+NS_IMETHODIMP
+NS_NewUnicodeToCP1252(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
+NS_IMETHODIMP
+NS_NewUnicodeToMacRoman(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
+NS_IMETHODIMP
+NS_NewUnicodeToUTF8(nsISupports* aOuter, const nsIID& aIID,
+                   void** aResult);
+
 #endif /* nsUConvDll_h___ */

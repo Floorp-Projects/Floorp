@@ -34,7 +34,6 @@ REQUIRES	= xpcom uconv
 CPPSRCS		= \
 		nsUEscapeToUnicode.cpp \
 		nsAsciiToUnicode.cpp \
-		nsISO88591ToUnicode.cpp \
 		nsISO88592ToUnicode.cpp \
 		nsISO88593ToUnicode.cpp \
 		nsISO88594ToUnicode.cpp \
@@ -54,7 +53,6 @@ CPPSRCS		= \
 		nsISOIR111ToUnicode.cpp \
 		nsCP1250ToUnicode.cpp \
 		nsCP1251ToUnicode.cpp \
-		nsCP1252ToUnicode.cpp \
 		nsCP1253ToUnicode.cpp \
 		nsCP1254ToUnicode.cpp \
 		nsCP1255ToUnicode.cpp \
@@ -65,7 +63,6 @@ CPPSRCS		= \
 		nsCP874ToUnicode.cpp \
 		nsKOI8UToUnicode.cpp \
 		nsKOI8RToUnicode.cpp \
-		nsMacRomanToUnicode.cpp \
 		nsMacCEToUnicode.cpp \
 		nsMacGreekToUnicode.cpp \
 		nsMacTurkishToUnicode.cpp \
@@ -80,7 +77,6 @@ CPPSRCS		= \
 		nsVPSToUnicode.cpp \
 		nsVIQRToUnicode.cpp \
 		nsVNIToUnicode.cpp \
-		nsUTF8ToUnicode.cpp \
 		nsUTF7ToUnicode.cpp \
 		nsMUTF7ToUnicode.cpp \
 		nsUCS2BEToUnicode.cpp \
@@ -91,7 +87,6 @@ CPPSRCS		= \
 		nsUserDefinedToUnicode.cpp \
 		nsUnicodeToUEscape.cpp \
 		nsUnicodeToAscii.cpp \
-		nsUnicodeToISO88591.cpp \
 		nsUnicodeToISO88592.cpp \
 		nsUnicodeToISO88593.cpp \
 		nsUnicodeToISO88594.cpp \
@@ -111,7 +106,6 @@ CPPSRCS		= \
 		nsUnicodeToISOIR111.cpp \
 		nsUnicodeToCP1250.cpp \
 		nsUnicodeToCP1251.cpp \
-		nsUnicodeToCP1252.cpp \
 		nsUnicodeToCP1253.cpp \
 		nsUnicodeToCP1254.cpp \
 		nsUnicodeToCP1255.cpp \
@@ -122,7 +116,6 @@ CPPSRCS		= \
 		nsUnicodeToCP866.cpp \
 		nsUnicodeToKOI8R.cpp \
 		nsUnicodeToKOI8U.cpp \
-		nsUnicodeToMacRoman.cpp \
 		nsUnicodeToMacCE.cpp \
 		nsUnicodeToMacGreek.cpp \
 		nsUnicodeToMacTurkish.cpp \
@@ -137,7 +130,6 @@ CPPSRCS		= \
 		nsUnicodeToVPS.cpp \
 		nsUnicodeToVIQR.cpp \
 		nsUnicodeToVNI.cpp \
-		nsUnicodeToUTF8.cpp \
 		nsUnicodeToUTF7.cpp \
 		nsUnicodeToMUTF7.cpp \
 		nsUnicodeToUCS2BE.cpp \

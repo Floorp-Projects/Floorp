@@ -32,7 +32,6 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS =				\
 	nsUEscapeToUnicode.cpp		\
 	nsAsciiToUnicode.cpp		\
-	nsISO88591ToUnicode.cpp		\
 	nsISO88592ToUnicode.cpp		\
 	nsISO88593ToUnicode.cpp		\
 	nsISO88594ToUnicode.cpp		\
@@ -52,7 +51,6 @@ CPPSRCS =				\
 	nsISOIR111ToUnicode.cpp	\
 	nsCP1250ToUnicode.cpp		\
 	nsCP1251ToUnicode.cpp		\
-	nsCP1252ToUnicode.cpp		\
 	nsCP1253ToUnicode.cpp		\
 	nsCP1254ToUnicode.cpp		\
 	nsCP1255ToUnicode.cpp		\
@@ -63,7 +61,6 @@ CPPSRCS =				\
 	nsCP866ToUnicode.cpp		\
 	nsKOI8UToUnicode.cpp		\
 	nsKOI8RToUnicode.cpp		\
-	nsMacRomanToUnicode.cpp		\
 	nsMacCEToUnicode.cpp		\
 	nsMacGreekToUnicode.cpp		\
 	nsMacTurkishToUnicode.cpp	\
@@ -78,7 +75,6 @@ CPPSRCS =				\
 	nsVPSToUnicode.cpp		\
 	nsVIQRToUnicode.cpp		\
 	nsVNIToUnicode.cpp		\
-	nsUTF8ToUnicode.cpp		\
 	nsUTF7ToUnicode.cpp		\
 	nsMUTF7ToUnicode.cpp		\
 	nsUCS2BEToUnicode.cpp		\
@@ -89,7 +85,6 @@ CPPSRCS =				\
 	nsUserDefinedToUnicode.cpp		\
 	nsUnicodeToUEscape.cpp		\
 	nsUnicodeToAscii.cpp		\
-	nsUnicodeToISO88591.cpp		\
 	nsUnicodeToISO88592.cpp		\
 	nsUnicodeToISO88593.cpp		\
 	nsUnicodeToISO88594.cpp		\
@@ -109,7 +104,6 @@ CPPSRCS =				\
 	nsUnicodeToISOIR111.cpp	\
 	nsUnicodeToCP1250.cpp		\
 	nsUnicodeToCP1251.cpp		\
-	nsUnicodeToCP1252.cpp		\
 	nsUnicodeToCP1253.cpp		\
 	nsUnicodeToCP1254.cpp		\
 	nsUnicodeToCP1255.cpp		\
@@ -120,7 +114,6 @@ CPPSRCS =				\
 	nsUnicodeToCP866.cpp		\
 	nsUnicodeToKOI8R.cpp		\
 	nsUnicodeToKOI8U.cpp		\
-	nsUnicodeToMacRoman.cpp		\
 	nsUnicodeToMacCE.cpp		\
 	nsUnicodeToMacGreek.cpp		\
 	nsUnicodeToMacTurkish.cpp	\
@@ -129,7 +122,6 @@ CPPSRCS =				\
 	nsUnicodeToMacCyrillic.cpp	\
 	nsUnicodeToMacUkrainian.cpp	\
 	nsUnicodeToMacIcelandic.cpp	\
-	nsUnicodeToUTF8.cpp		\
 	nsUnicodeToUTF7.cpp		\
 	nsUnicodeToMUTF7.cpp		\
 	nsUnicodeToUCS2BE.cpp		\
@@ -153,7 +145,6 @@ CPPSRCS =				\
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsUEscapeToUnicode.obj 		\
 	.\$(OBJDIR)\nsAsciiToUnicode.obj 		\
-	.\$(OBJDIR)\nsISO88591ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88592ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88593ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88594ToUnicode.obj 		\
@@ -173,7 +164,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsISOIR111ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1250ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1251ToUnicode.obj 		\
-	.\$(OBJDIR)\nsCP1252ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1253ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1254ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1255ToUnicode.obj 		\
@@ -184,11 +174,9 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsCP866ToUnicode.obj 		\
 	.\$(OBJDIR)\nsKOI8RToUnicode.obj 		\
 	.\$(OBJDIR)\nsKOI8UToUnicode.obj 		\
-	.\$(OBJDIR)\nsMacRomanToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacCEToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacGreekToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacTurkishToUnicode.obj 		\
-	.\$(OBJDIR)\nsUTF8ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUTF7ToUnicode.obj 		\
 	.\$(OBJDIR)\nsMUTF7ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUCS2BEToUnicode.obj 		\
@@ -210,7 +198,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUserDefinedToUnicode.obj			\
 	.\$(OBJDIR)\nsUnicodeToUEscape.obj		\
 	.\$(OBJDIR)\nsUnicodeToAscii.obj		\
-	.\$(OBJDIR)\nsUnicodeToISO88591.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88592.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88593.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88594.obj		\
@@ -230,7 +217,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToISOIR111.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1250.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1251.obj		\
-	.\$(OBJDIR)\nsUnicodeToCP1252.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1253.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1254.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1255.obj		\
@@ -241,11 +227,9 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToCP866.obj		\
 	.\$(OBJDIR)\nsUnicodeToKOI8R.obj		\
 	.\$(OBJDIR)\nsUnicodeToKOI8U.obj		\
-	.\$(OBJDIR)\nsUnicodeToMacRoman.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacCE.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacGreek.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacTurkish.obj		\
-	.\$(OBJDIR)\nsUnicodeToUTF8.obj			\
 	.\$(OBJDIR)\nsUnicodeToUTF7.obj			\
 	.\$(OBJDIR)\nsUnicodeToMUTF7.obj		\
 	.\$(OBJDIR)\nsUnicodeToUCS2BE.obj			\

@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
+#include "nsIRegistry.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
@@ -36,6 +37,17 @@
 #include "nsUConvDll.h"
 #include "nsFileSpec.h"
 #include "nsIFile.h"
+
+#include "nsUCvMinSupport.h"
+#include "nsISO88591ToUnicode.h"
+#include "nsCP1252ToUnicode.h"
+#include "nsMacRomanToUnicode.h"
+#include "nsUTF8ToUnicode.h"
+#include "nsUnicodeToISO88591.h"
+#include "nsUnicodeToCP1252.h"
+#include "nsUnicodeToMacRoman.h"
+#include "nsUnicodeToUTF8.h"
+
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
@@ -45,10 +57,18 @@ static NS_DEFINE_CID(kCharsetMenuCID, NS_CHARSETMENU_CID);
 static NS_DEFINE_CID(kTextToSubURICID, NS_TEXTTOSUBURI_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 
+// converters
+NS_DEFINE_CID(kISO88591ToUnicodeCID, NS_ISO88591TOUNICODE_CID);
+NS_DEFINE_CID(kCP1252ToUnicodeCID, NS_CP1252TOUNICODE_CID);
+NS_DEFINE_CID(kMacRomanToUnicodeCID, NS_MACROMANTOUNICODE_CID);
+NS_DEFINE_CID(kUTF8ToUnicodeCID, NS_UTF8TOUNICODE_CID);
+NS_DEFINE_CID(kUnicodeToISO88591CID, NS_UNICODETOISO88591_CID);
+NS_DEFINE_CID(kUnicodeToCP1252CID, NS_UNICODETOCP1252_CID);
+NS_DEFINE_CID(kUnicodeToMacRomanCID, NS_UNICODETOMACROMAN_CID);
+NS_DEFINE_CID(kUnicodeToUTF8CID, NS_UNICODETOUTF8_CID);
+
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
-
-//----------------------------------------------------------------------
 
 class nsUConvModule : public nsIModule {
 public:
@@ -138,6 +158,30 @@ nsUConvModule::GetClassObject(nsIComponentManager *aCompMgr,
   else if (aClass.Equals(kTextToSubURICID)) {
     rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewTextToSubURI);
   }
+  else if (aClass.Equals(kISO88591ToUnicodeCID)) {
+    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewISO88591ToUnicode);
+  }
+  else if (aClass.Equals(kCP1252ToUnicodeCID)) {
+    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewCP1252ToUnicode);
+  }
+  else if (aClass.Equals(kMacRomanToUnicodeCID)) {
+    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewMacRomanToUnicode);
+  }
+  else if (aClass.Equals(kUTF8ToUnicodeCID)) {
+    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUTF8ToUnicode);
+  }
+  else if (aClass.Equals(kUnicodeToISO88591CID)) {
+    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeToISO88591);
+  }
+  else if (aClass.Equals(kUnicodeToCP1252CID)) {
+    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeToCP1252);
+  }
+  else if (aClass.Equals(kUnicodeToMacRomanCID)) {
+    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeToMacRoman);
+  }
+  else if (aClass.Equals(kUnicodeToUTF8CID)) {
+    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeToUTF8);
+  }
   else {
 		return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
@@ -155,24 +199,42 @@ struct Components {
   const char* mDescription;
   const nsID* mCID;
   const char* mContractID;
+  const char* mCharsetSrc;
+  const char* mCharsetDest;
 };
 
 // The list of components we register
 static Components gComponents[] = {
   { "Charset Conversion Manager", &kCharsetConverterManagerCID,
-    NS_CHARSETCONVERTERMANAGER_CONTRACTID, },
+    NS_CHARSETCONVERTERMANAGER_CONTRACTID, NULL, NULL, },
   { "Unicode Decode Helper", &kUnicodeDecodeHelperCID,
-    NS_UNICODEDECODEHELPER_CONTRACTID, },
+    NS_UNICODEDECODEHELPER_CONTRACTID, NULL, NULL, },
   { "Unicode Encode Helper", &kUnicodeEncodeHelperCID,
-    NS_UNICODEENCODEHELPER_CONTRACTID, },
+    NS_UNICODEENCODEHELPER_CONTRACTID, NULL, NULL, },
   { "Platform Charset Information", &kPlatformCharsetCID,
-    NS_PLATFORMCHARSET_CONTRACTID, },
+    NS_PLATFORMCHARSET_CONTRACTID, NULL, NULL, },
   { "Charset Alias Information",  &kCharsetAliasCID,
-    NS_CHARSETALIAS_CONTRACTID, },
+    NS_CHARSETALIAS_CONTRACTID, NULL, NULL, },
   { NS_CHARSETMENU_PID, &kCharsetMenuCID,
-    NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID, },
+    NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID, NULL, NULL, },
   { "Text To Sub URI Helper", &kTextToSubURICID,
-    NS_ITEXTTOSUBURI_CONTRACTID, },
+    NS_ITEXTTOSUBURI_CONTRACTID, NULL, NULL, },
+  { "ISO-8859-1 To Unicode Converter", &kISO88591ToUnicodeCID,
+    NS_ISO88591TOUNICODE_CONTRACTID, "ISO-8859-1", "Unicode", },
+  { "windows-1252 To Unicode Converter", &kCP1252ToUnicodeCID,
+    NS_CP1252TOUNICODE_CONTRACTID, "windows-1252", "Unicode", },
+  { "x-mac-roman To Unicode Converter", &kMacRomanToUnicodeCID,
+    NS_MACROMANTOUNICODE_CONTRACTID, "x-mac-roman", "Unicode", },
+  { "UTF-8 To Unicode Converter", &kUTF8ToUnicodeCID,
+    NS_UTF8TOUNICODE_CONTRACTID, "UTF-8", "Unicode", },
+  { "Unicode To ISO-8859-1 Converter", &kUnicodeToISO88591CID,
+    NS_UNICODETOISO88591_CONTRACTID, "Unicode", "ISO-8859-1", },
+  { "Unicode To windows-1252 Converter", &kUnicodeToCP1252CID,
+    NS_UNICODETOCP1252_CONTRACTID, "Unicode", "windows-1252", },
+  { "Unicode To x-mac-roman Converter", &kUnicodeToMacRomanCID,
+    NS_UNICODETOMACROMAN_CONTRACTID, "Unicode", "x-mac-roman", },
+  { "Unicode To UTF-8 Converter", &kUnicodeToUTF8CID,
+    NS_UNICODETOUTF8_CONTRACTID, "Unicode", "UTF-8", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
@@ -183,10 +245,25 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
                             const char* componentType)
 {
   nsresult rv = NS_OK;
+  char * cid_string;                                                            
+  char buff[1024]; 
+  nsIRegistry * registry = NULL;
+  nsRegistryKey key;                                                            
 
 #ifdef DEBUG
   printf("*** Registering uconv components\n");
 #endif
+ 
+  // get the registry                                                           
+  rv = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID, 
+      NS_GET_IID(nsIRegistry), (nsISupports**)&registry);                       
+  if (NS_FAILED(rv))   
+    return rv;
+
+  // open the registry                                                          
+  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);                               
+  if (NS_FAILED(rv)) 
+    return rv;
 
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
@@ -201,7 +278,36 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
 #endif
       break;
     }
+
+    // register Unicode converter component info here.
+    if (NULL != cp->mCharsetSrc) {
+      cid_string = cp->mCID->ToString();                             
+      sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cid_string);         
+      nsCRT::free(cid_string);                                                    
+
+      rv = registry -> AddSubtree(nsIRegistry::Common, buff, &key);              
+      if (NS_FAILED(rv))
+        break;
+
+      rv = registry -> SetStringUTF8(key, "source", cp->mCharsetSrc);
+      if (NS_FAILED(rv)) 
+        break;
+
+      rv = registry -> SetStringUTF8(key, "destination", cp->mCharsetDest);
+      if (NS_FAILED(rv)) 
+        break;
+    }
     cp++;
+  }
+
+  if (registry != NULL) {                                                       
+    nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);         
+  }
+  else  {
+#ifdef DEBUG
+      printf("nsUConvModule: unable to register %s component => %x\n",
+             cp->mDescription, rv);
+#endif
   }
 
   // XXX also unregister this stuff when time comes
