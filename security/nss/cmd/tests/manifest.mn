@@ -36,8 +36,7 @@ CORE_DEPTH = ../../..
 # MODULE public and private header  directories are implicitly REQUIRED.
 MODULE = nss
 
-CSRCS = vercrt.c \
-	vercrtfps.c
+#CSRCS = testname.c \
 
 # The MODULE is always implicitly required.
 # Listing it here in REQUIRES makes it appear twice in the cc command line.
