@@ -1076,7 +1076,7 @@ treeitem > treerow > treecell > titledbutton.twisty {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
- list-style-image: url("chrome:/global/skin/closedtwisty.gif");
+ list-style-image: url("chrome://global/skin/closedtwisty.gif");
  visibility: visible;
 }
 
@@ -1092,7 +1092,7 @@ treeitem [open="true"]> treerow > treecell > titledbutton.twisty {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
- list-style-image: url("chrome:/global/skin/opentwisty.gif");
+ list-style-image: url("chrome://global/skin/opentwisty.gif");
  visibility: visible;
 }
 
