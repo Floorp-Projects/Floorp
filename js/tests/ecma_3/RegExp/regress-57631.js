@@ -16,7 +16,7 @@
 * Copyright (C) 1998 Netscape Communications Corporation. All
 * Rights Reserved.
 *
-* Contributor(s): pschwartau@netscape.com  
+* Contributor(s): pschwartau@netscape.com, zack-weg@gmx.de  
 * Date: 26 November 2000
 *
 *
@@ -50,10 +50,10 @@ legalpatterns[4] = '[^A-Za-z0-9_]';
 legalpatterns[5] = '[^\f\n\r\t\v](123.5)([4 - 8]$)';
 
 // invalid regular expressions to try - 
-illegalpatterns[0] = '()';
+illegalpatterns[0] = '(?)';
 illegalpatterns[1] = '(a';
 illegalpatterns[2] = '( ]';
-illegalpatterns[3] = '\d{s}';
+illegalpatterns[3] = '\d{1,s}';
 
 // valid flags to try -
 legalflags[0] = 'i';
@@ -98,6 +98,8 @@ function testIllegalRegExps(patterns, flags)
       {
         f = flags[j];
         status = getStatus(s, f);
+        actual = cnFAILURE;
+        expect = cnSUCCESS;
   
         try 
         {
@@ -107,10 +109,11 @@ function testIllegalRegExps(patterns, flags)
         catch(e) 
         {
           // We expect to get a SyntaxError - test for this:
-          actual = (e instanceof SyntaxError)? cnSUCCESS : cnFAILURE; 
-          expect = cnSUCCESS;
-          reportCompare(expect, actual, status);   
+          if (e instanceof SyntaxError)
+            actual = cnSUCCESS;
         }
+        
+        reportCompare(expect, actual, status);
       }
     }
 }
