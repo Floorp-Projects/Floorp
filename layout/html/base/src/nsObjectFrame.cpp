@@ -480,17 +480,18 @@ PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
   PRBool haveType = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!type.IsEmpty());
   if (!haveType) 
   {
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
     nsAutoString data;
-    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+
+    // If this is an OBJECT tag, we should look for a DATA attribute.
+    // If not, it's an EMBED tag, and so we should look for a SRC attribute.
+    if (tag == nsHTMLAtoms::object)
+      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+    else
+      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
 
     PRBool havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!data.IsEmpty());
-
-    if (!havedata)
-    {// try it once more for SRC attribute
-      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
-      havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!data.IsEmpty());
-    }
-
     if (!havedata)
       return PR_FALSE;
  
@@ -621,10 +622,14 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIAtom> tag;
     aContent->GetTag(*getter_AddRefs(tag));
     nsAutoString data;
-    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+    
+    // If this is an OBJECT tag, we should look for a DATA attribute.
+    // If not, it's an EMBED tag, and so we should look for a SRC attribute.
+    if (tag == nsHTMLAtoms::object)
+      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+    else
       rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
-    }
+    
     imageLoader->ImageURIChanged(data);
     
     nsCOMPtr<nsIPresShell> shell;
@@ -1123,7 +1128,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         return NS_OK;
       }
     }
-    else { // the object is either an applet or a plugin
+    else { // no clsid - the object is either an applet or a plugin
       nsAutoString    src;
       if (!baseURL) return NS_ERROR_FAILURE;
 
@@ -1153,11 +1158,15 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         if (type.Length()) {
           mimeTypeStr.Adopt(ToNewCString(type));
         }
-        //stream in the object source if there is one...
-        if (NS_CONTENT_ATTR_HAS_VALUE ==
-              mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src) ||
-            NS_CONTENT_ATTR_HAS_VALUE ==
-              mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, src)) {
+        // Stream in the object source if there is one...
+        // If this is an OBJECT tag, we should look for a DATA attribute.
+        // If not, it's an EMBED tag, and so we should look for a SRC attribute.
+        if (tag == nsHTMLAtoms::object)
+          rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, src);
+        else
+          rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
+        
+        if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
           // Create an absolute URL
           rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
           if (NS_FAILED(rv)) {
