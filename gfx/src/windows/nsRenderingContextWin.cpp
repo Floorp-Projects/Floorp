@@ -738,7 +738,7 @@ nscolor nsRenderingContextWin :: GetColor() const
 void nsRenderingContextWin :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
-  mFontMetrics = mFontCache->GetMetricsFor(aFont);
+  mFontCache->GetMetricsFor(aFont, mFontMetrics);
 }
 
 const nsFont& nsRenderingContextWin :: GetFont()

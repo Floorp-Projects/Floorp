@@ -44,22 +44,22 @@ public:
    * Initialize the font cache. Call this after creating the font
    * cache and before trying to use it.
    */
-  virtual nsresult Init(nsIDeviceContext* aContext) = 0;
+  NS_IMETHOD  Init(nsIDeviceContext* aContext) = 0;
 
   /**
    * Get the device context associated with this cache
    */
-  virtual nsIDeviceContext* GetDeviceContext() const = 0;
+  NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext) const = 0;
 
   /**
    * Get metrics for a given font.
    */
-  virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont) = 0;
+  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMetrics) = 0;
 
   /**
    * Flush the cache.
    */
-  virtual void Flush() = 0;
+  NS_IMETHOD  Flush() = 0;
 };
 
 extern "C" NS_GFX_(nsresult)

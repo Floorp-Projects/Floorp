@@ -199,8 +199,7 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetri
       return rv;
     }
   }
-  aMetrics = mFontCache->GetMetricsFor(aFont);
-  return NS_OK;
+  return mFontCache->GetMetricsFor(aFont, aMetrics);
 }
 
 NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)

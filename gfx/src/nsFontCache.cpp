@@ -33,10 +33,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsIDeviceContext* aContext);
-  virtual nsIDeviceContext* GetDeviceContext() const;
-  virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
-  virtual void Flush();
+  NS_IMETHOD  Init(nsIDeviceContext* aContext);
+  NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext) const;
+  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMetrics);
+  NS_IMETHOD  Flush();
 
 protected:
   nsVoidArray       mFontMetrics;
@@ -57,7 +57,7 @@ FontCacheImpl :: ~FontCacheImpl()
 
 NS_IMPL_ISUPPORTS(FontCacheImpl, kIFontCacheIID)
 
-nsresult FontCacheImpl :: Init(nsIDeviceContext* aContext)
+NS_IMETHODIMP FontCacheImpl :: Init(nsIDeviceContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
   // Note: we don't hold a reference to the device context, because it
@@ -66,27 +66,26 @@ nsresult FontCacheImpl :: Init(nsIDeviceContext* aContext)
   return NS_OK;
 }
 
-nsIDeviceContext* FontCacheImpl::GetDeviceContext() const
+NS_IMETHODIMP FontCacheImpl::GetDeviceContext(nsIDeviceContext *&aContext) const
 {
   NS_IF_ADDREF(mContext);
-  return mContext;
+  aContext = mContext;
+  return NS_OK;
 }
 
-nsIFontMetrics* FontCacheImpl :: GetMetricsFor(const nsFont& aFont)
+NS_IMETHODIMP FontCacheImpl :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMetrics)
 {
-  nsIFontMetrics* fm;
-
   // First check our cache
   PRInt32 n = mFontMetrics.Count();
 
   for (PRInt32 cnt = 0; cnt < n; cnt++)
   {
-    fm = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
+    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
 
-    if (aFont.Equals(fm->GetFont()))
+    if (aFont.Equals(aMetrics->GetFont()))
     {
-      NS_ADDREF(fm);
-      return fm;
+      NS_ADDREF(aMetrics);
+      return NS_OK;
     }
   }
 
@@ -95,24 +94,29 @@ nsIFontMetrics* FontCacheImpl :: GetMetricsFor(const nsFont& aFont)
   static NS_DEFINE_IID(kFontMetricsCID, NS_FONT_METRICS_CID);
   static NS_DEFINE_IID(kFontMetricsIID, NS_IFONT_METRICS_IID);
 
-  nsresult rv = NSRepository::CreateInstance(kFontMetricsCID, nsnull,
-                                             kFontMetricsIID, (void **)&fm);
-  if (NS_OK != rv)
-    return nsnull;
+  nsIFontMetrics* fm;
+  nsresult        rv = NSRepository::CreateInstance(kFontMetricsCID, nsnull,
+                                                    kFontMetricsIID, (void **)&fm);
+  if (NS_OK != rv) {
+    aMetrics = nsnull;
+    return rv;
+  }
 
   rv = fm->Init(aFont, mContext);
 
-  if (NS_OK != rv)
-    return nsnull;/* XXX losing error code */
+  if (NS_OK != rv) {
+    aMetrics = nsnull;
+    return rv;
+  }
 
   mFontMetrics.AppendElement(fm);
 
   NS_ADDREF(fm);
-
-  return fm;
+  aMetrics = fm;
+  return NS_OK;
 }
 
-void FontCacheImpl::Flush()
+NS_IMETHODIMP FontCacheImpl::Flush()
 {
   PRInt32 i, n = mFontMetrics.Count();
   for (i = 0; i < n; i++) {
@@ -120,6 +124,7 @@ void FontCacheImpl::Flush()
     NS_RELEASE(fm);
   }
   mFontMetrics.Clear();
+  return NS_OK;
 }
 
 extern "C" NS_GFX_(nsresult)

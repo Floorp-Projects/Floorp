@@ -469,7 +469,8 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsInputFrame* aFrame,
   nsIFontCache* fontCache;
   deviceContext->GetFontCache(fontCache);
 
-  nsIFontMetrics* fontMet = fontCache->GetMetricsFor(font);
+  nsIFontMetrics* fontMet;
+  fontCache->GetMetricsFor(font, fontMet);
   aSize.width  = fontMet->GetWidth(aString);
   aSize.height = fontMet->GetHeight(); 
 
