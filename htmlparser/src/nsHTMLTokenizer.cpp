@@ -177,7 +177,7 @@ nsITokenRecycler* nsHTMLTokenizer::GetTokenRecycler(void) {
  * @return  ptr to token
  */
 CToken* nsHTMLTokenizer::PeekToken() {
-  return (CToken*)mTokenDeque.Peek();
+  return (CToken*)mTokenDeque.PeekFront();
 }
 
 
