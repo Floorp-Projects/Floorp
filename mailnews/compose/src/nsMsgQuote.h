@@ -29,7 +29,7 @@
 
 class nsMsgQuote;
 
-class nsMsgQuoteListener: public nsIMimeStreamConverterListener
+class nsMsgQuoteListener: public nsIMsgQuoteListener
 {
 public:
 	nsMsgQuoteListener();
@@ -39,10 +39,10 @@ public:
 
 	// nsIMimeStreamConverterListener support
 	NS_DECL_NSIMIMESTREAMCONVERTERLISTENER
+  NS_DECL_NSIMSGQUOTELISTENER
 
-	void SetMsgQuote(nsMsgQuote * msgQuote);
 private:
-	nsMsgQuote * mMsgQuote;
+	nsIMsgQuote * mMsgQuote;
 };
 
 class nsMsgQuote: public nsIMsgQuote {
@@ -56,15 +56,10 @@ public:
   // 
   // Implementation data...
   //
-  nsIStreamListener* mStreamListener;
-  char            *mURI;
-  nsIMsgMessageService    *mMessageService;
+  nsCOMPtr<nsIStreamListener> mStreamListener;
   PRBool			mQuoteHeaders;
-  nsMsgQuoteListener *mQuoteListener;
+  nsCOMPtr<nsIMsgQuoteListener> mQuoteListener;
   nsCOMPtr<nsIChannel> mQuoteChannel;
 };
-
-// Will be used by factory to generate a nsMsgQuote class...
-nsresult      NS_NewMsgQuote(const nsIID &aIID, void ** aInstancePtrResult);
 
 #endif /* __nsMsgQuote_h__ */
