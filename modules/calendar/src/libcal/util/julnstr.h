@@ -54,9 +54,7 @@
 #include <ctype.h>
 #include <nspr.h>
 
-#ifdef NSPR20
 #include "plstr.h"
-#endif
 
 #include "julnstr.h"
 

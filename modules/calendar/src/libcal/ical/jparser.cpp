@@ -130,11 +130,7 @@ void JulianParser::ParseCalendars(ICalReader * reader,
 #if TESTING_ITIPRIG
                 if (FALSE) TRACE("\t--jParser: yielding\r\n");
 #endif
-#ifdef NSPR20
                 PR_Sleep(PR_INTERVAL_NO_WAIT);
-#else
-                PR_Yield();
-#endif
                 //break;
             }
 
@@ -183,11 +179,7 @@ void jparser_ParseCalendarsZero(void * jp, void * nPtr)
 #if TESTING_ITIPRIG
     TRACE("\t--killing parseThread\r\n");
 #endif
-#ifdef NSPR20
     PR_ProcessExit(0);
-#else
-    PR_Exit();
-#endif
 }
 
 //---------------------------------------------------------------------

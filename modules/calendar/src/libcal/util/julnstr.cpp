@@ -28,9 +28,7 @@
 #endif
 
 #include "nspr.h"
-#ifdef NSPR20
 #include "plstr.h"
-#endif
 
 #if 0
 /* Breaks SINIX5.4 build */
