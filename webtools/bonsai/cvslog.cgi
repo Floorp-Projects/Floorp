@@ -66,6 +66,7 @@ if ($filename eq '')
 {
     print "Content-Type:text/html\n\n";
     &print_usage;
+    PutsTrailer();
     exit;
 }
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
@@ -96,8 +97,7 @@ if (defined $root && $root ne '') {
         print "Content-Type:text/html\n\n";
         &print_top;
         print "Error:  Root, $root, is not a directory.<BR><BR>\n";
-        print "</BODY></HTML>\n";
-        &print_bottom;
+        PutsTrailer();
         exit;
     }
 }
@@ -124,7 +124,7 @@ unless ($found_rcs_file) {
     my $escaped_filename = html_quote($filename);
     print "Rcs file, $escaped_filename, does not exist.<BR><BR>\n";
     print "</BODY></HTML>\n";
-    &print_bottom;
+    PutsTrailer();
     exit;
 }
 
@@ -367,7 +367,7 @@ foreach $revision (@revisions)
     print $output;
 }
 print "</TABLE>";
-&print_bottom;
+PutsTrailer();
 }
 
 sub display_rss {
@@ -573,7 +573,7 @@ Add parameters to the query string to view a file.
   <TD>author</TD>
   <TD>--</TD>
   <TD>slamm,mtoy</TD>
-  <TD>Filter out these authors</TD>
+  <TD>Only show changes by these authors</TD>
 </TR>
 </TR><TR>
   <TD>#&lt;rev_number&gt;</TD>
@@ -601,21 +601,7 @@ Add parameters to the query string to view a file.
 You may also begin a query with the <A HREF="cvsqueryform.cgi">CVS Query Form</A>.
 </P>
 __USAGE__
-    &print_bottom;
-} # sub print_usage
-
-sub print_bottom {
-     my $maintainer = Param('maintainer');
-
-     print <<__BOTTOM__;
-<HR WIDTH="100%">
-<FONT SIZE=-1>
-<A HREF="cvslog.cgi">Page configuration and help</A>.
-Mail feedback to <A HREF="mailto:$maintainer?subject=About the cvslog script">&lt;$maintainer&gt;</A>. 
-</FONT></BODY>
-</HTML>
-__BOTTOM__
-} # print_bottom
+}
 
 sub print_useful_links {
     my ($path) = @_;
