@@ -991,6 +991,7 @@ wallet_CryptSetup() {
 }
 
 #include "nsIPref.h"
+#include "plbase64.h"
 
 PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
 
@@ -1011,27 +1012,23 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
     return rv;
   }
 
-  /* otherwise do our own obscuring *
-   *   obscuring algorithm is as follows:
-   *   1. start with a prefix that is not in base64 so we can identify it as obscuring
-   *   2. xor each text character with the corresponding character of a key string
-   *   3. break up each xor-ed character into a pair of nibbles
-   *   4. add each nibble to a base character and append to result
-   */
+  /* otherwise do our own obscuring using Base64 encoding */
+
 #define PREFIX "~"
-#define KEY "mozilla"
-#define BASE 'a'
-  crypt = (char *)PR_Malloc(PL_strlen(PREFIX) + 2*PL_strlen(text) + 1);
-  PRUint32 i;
-  for (i=0; i<PL_strlen(PREFIX); i++) {
+
+  char * crypt0 = PL_Base64Encode((const char *)text, 0, NULL);
+  if (!crypt0) {
+    return NS_ERROR_FAILURE;
+  }
+  crypt = (char *)PR_Malloc(PL_strlen(PREFIX) + PL_strlen(crypt0) + 1);
+  for (PRUint32 i=0; i<PL_strlen(PREFIX); i++) {
     crypt[i] = PREFIX[i];
   }
-  for (i=0; i<PL_strlen(text); i++) {
-    char ret = text[i]^KEY[i%PL_strlen(KEY)];
-    crypt[PL_strlen(PREFIX)+2*i] = BASE + (ret >> 4);
-    crypt[PL_strlen(PREFIX)+2*i+1] = BASE + (ret & 0x0F);
+  for (i=0; i<PL_strlen(crypt0); i++) {
+    crypt[PL_strlen(PREFIX)+i] = crypt0[i];
   }
-  crypt[PL_strlen(PREFIX) + 2*PL_strlen(text)] = '\0';
+  crypt[PL_strlen(PREFIX) + PL_strlen(crypt0)] = '\0';
+  Recycle(crypt0);
   return NS_OK;
 }
 
@@ -1050,13 +1047,11 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
   }
 
   /* otherwise do our own de-obscuring */
-  text = (char *)PR_Malloc((PL_strlen(crypt)-PL_strlen(PREFIX))/2 + 1);
-  for (PRUint32 i=0; i<(PL_strlen(crypt)-PL_strlen(PREFIX))/2; i++) {
-    text[i] =
-      (((crypt[PL_strlen(PREFIX)+2*i] - BASE)<<4) +
-        (crypt[PL_strlen(PREFIX)+2*i+1] - BASE))^KEY[i%PL_strlen(KEY)];
+
+  text = PL_Base64Decode(&crypt[PL_strlen(PREFIX)], 0, NULL);
+  if (!text) {
+    return NS_ERROR_FAILURE;
   }
-  text[(PL_strlen(crypt)-PL_strlen(PREFIX))/2] = '\0';
   return NS_OK;
 }
 
