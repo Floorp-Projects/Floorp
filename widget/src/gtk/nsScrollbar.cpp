@@ -23,8 +23,9 @@
 
 #include "nsGtkEventHandler.h"
 
-NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsWidget);
-NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsWidget);
+NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -53,7 +54,7 @@ nsScrollbar::~nsScrollbar ()
 // Create the native scrollbar widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::CreateNative (GtkWidget * parentWindow)
+NS_IMETHODIMP nsScrollbar::CreateNative (GtkWidget * parentWindow)
 {
   // Create scrollbar, random default values
   mAdjustment = GTK_ADJUSTMENT (gtk_adjustment_new (0, 0, 100, 1, 25, 25));
@@ -95,28 +96,10 @@ nsScrollbar::OnDestroySignal(GtkWidget* aGtkWidget)
 
 //-------------------------------------------------------------------------
 //
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsScrollbar::QueryInterface (const nsIID & aIID, void **aInstancePtr)
-{
-    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-    if (result == NS_NOINTERFACE && aIID.Equals(nsIScrollbar::GetIID())) {
-        *aInstancePtr = (void*) ((nsIScrollbar*)this);
-        NS_ADDREF_THIS();
-        result = NS_OK;
-    }
-
-    return result;
-}
-
-//-------------------------------------------------------------------------
-//
 // Define the range settings
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetMaxRange (PRUint32 aEndRange)
+NS_IMETHODIMP nsScrollbar::SetMaxRange (PRUint32 aEndRange)
 {
   if (mAdjustment) {
     GTK_ADJUSTMENT (mAdjustment)->upper = (float) aEndRange;
@@ -131,7 +114,7 @@ NS_METHOD nsScrollbar::SetMaxRange (PRUint32 aEndRange)
 // Return the range settings
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
+NS_IMETHODIMP nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
 {
   if (mAdjustment)
     aMaxRange = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->upper;
@@ -147,7 +130,7 @@ NS_METHOD nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
 // Set the thumb position
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetPosition (PRUint32 aPos)
+NS_IMETHODIMP nsScrollbar::SetPosition (PRUint32 aPos)
 {
 //   if (mAdjustment)
 //     gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), (float) aPos);
@@ -197,7 +180,7 @@ NS_METHOD nsScrollbar::SetPosition (PRUint32 aPos)
 // Get the current thumb position.
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetPosition (PRUint32 & aPos)
+NS_IMETHODIMP nsScrollbar::GetPosition (PRUint32 & aPos)
 {
   if (mAdjustment)
     aPos = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->value;
@@ -213,7 +196,7 @@ NS_METHOD nsScrollbar::GetPosition (PRUint32 & aPos)
 // Set the thumb size
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetThumbSize (PRUint32 aSize)
+NS_IMETHODIMP nsScrollbar::SetThumbSize (PRUint32 aSize)
 {
   if (aSize > 0)
     {
@@ -232,7 +215,7 @@ NS_METHOD nsScrollbar::SetThumbSize (PRUint32 aSize)
 // Get the thumb size
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetThumbSize (PRUint32 & aThumbSize)
+NS_IMETHODIMP nsScrollbar::GetThumbSize (PRUint32 & aThumbSize)
 {
   if (mAdjustment)
     aThumbSize = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->page_size;
@@ -248,7 +231,7 @@ NS_METHOD nsScrollbar::GetThumbSize (PRUint32 & aThumbSize)
 // Set the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetLineIncrement (PRUint32 aLineIncrement)
+NS_IMETHODIMP nsScrollbar::SetLineIncrement (PRUint32 aLineIncrement)
 {
   if (aLineIncrement > 0)
     {
@@ -266,7 +249,7 @@ NS_METHOD nsScrollbar::SetLineIncrement (PRUint32 aLineIncrement)
 // Get the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetLineIncrement (PRUint32 & aLineInc)
+NS_IMETHODIMP nsScrollbar::GetLineIncrement (PRUint32 & aLineInc)
 {
   if (mAdjustment) {
     aLineInc = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->step_increment;
@@ -283,7 +266,7 @@ NS_METHOD nsScrollbar::GetLineIncrement (PRUint32 & aLineInc)
 // Set all scrolling parameters
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSize,
+NS_IMETHODIMP nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSize,
 	       PRUint32 aPosition, PRUint32 aLineIncrement)
 {
   if (mAdjustment) {

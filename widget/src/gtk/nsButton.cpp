@@ -25,6 +25,7 @@
 
 NS_IMPL_ADDREF_INHERITED(nsButton, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsButton, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsButton, nsIButton, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -40,7 +41,7 @@ nsButton::nsButton() : nsWidget() , nsIButton()
 // Create the native Button widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsButton::CreateNative(GtkWidget *parentWindow)
+NS_IMETHODIMP nsButton::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_button_new_with_label("");
   gtk_widget_set_name(mWidget, "nsButton");
@@ -77,36 +78,12 @@ void nsButton::InitCallbacks(char * aName)
                  GDK_POINTER_MOTION_MASK);
 }
 
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- *
-*/
-nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    if (aIID.Equals(nsIButton::GetIID())) {
-        *aInstancePtr = (void*) ((nsIButton*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return nsWidget::QueryInterface(aIID, aInstancePtr);
-}
-
-
 //-------------------------------------------------------------------------
 //
 // Set this button label
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsButton::SetLabel(const nsString& aText)
+NS_IMETHODIMP nsButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
 
@@ -121,7 +98,7 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsButton::GetLabel(nsString& aBuffer)
+NS_IMETHODIMP nsButton::GetLabel(nsString& aBuffer)
 {
   char * text;
 

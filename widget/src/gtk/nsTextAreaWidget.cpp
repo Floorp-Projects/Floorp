@@ -21,7 +21,9 @@
 #include "nsTextAreaWidget.h"
 #include "nsString.h"
 
-#define DBG 0
+NS_IMPL_ADDREF_INHERITED(nsTextAreaWidget, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsTextAreaWidget, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsTextAreaWidget, nsITextAreaWidget, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -68,25 +70,6 @@ NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
   gtk_container_add(GTK_CONTAINER(mWidget), mTextWidget);
 
   return NS_OK;
-}
-
-nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (aIID.Equals(nsITextAreaWidget::GetIID())) {
-      nsITextAreaWidget* textArea = this;
-      *aInstancePtr = (void*) (textArea);
-      AddRef();
-      return NS_OK;
-  }
-  else if (aIID.Equals(nsIWidget::GetIID()))
-  {
-      nsIWidget* widget = this;
-      *aInstancePtr = (void*) (widget);
-      AddRef();
-      return NS_OK;
-  }
-
-  return nsWidget::QueryInterface(aIID, aInstancePtr);
 }
 
 //-------------------------------------------------------------------------

@@ -276,6 +276,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
   if (aGEK!=nsnull) {
     anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
     anEvent.charCode = nsConvertCharCodeToUnicode(aGEK->string);
+    g_print("%s\n", aGEK->string);
     anEvent.time = aGEK->time;
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
@@ -562,7 +563,6 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
   nsKeyEvent kevent;
   nsWindow* win = (nsWindow*)p;
-  int isModifier;
 
   // work around for annoying things.
   if (event->keyval == GDK_Tab)
@@ -591,10 +591,6 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-  isModifier = event->state &(GDK_CONTROL_MASK|GDK_MOD1_MASK);
-#ifdef DEBUG_EVENTS
-  if (isModifier) printf("isModifier\n");
-#endif
   if (event->length) {
      InitKeyPressEvent(event,p,kevent);
      win->OnKey(kevent);

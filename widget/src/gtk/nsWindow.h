@@ -15,8 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef Window_h__
-#define Window_h__
+#ifndef nsWindow_h__
+#define nsWindow_h__
 
 #include "nsISupports.h"
 
@@ -26,10 +26,6 @@
 
 class nsFont;
 class nsIAppShell;
-
-#define NSRGB_2_COLOREF(color) \
-            RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
-
 
 /**
  * Native GTK++ window wrapper.
@@ -41,58 +37,58 @@ class nsWindow : public nsWidget
 public:
       // nsIWidget interface
 
-    nsWindow();
-    virtual ~nsWindow();
+  nsWindow();
+  virtual ~nsWindow();
 
-    NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
-    NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);  
+  NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
+  NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);  
 
-    virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+  virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
-    NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData);
+  NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData);
 
-    virtual void*        GetNativeData(PRUint32 aDataType);
+  virtual void*        GetNativeData(PRUint32 aDataType);
 
-    NS_IMETHOD           SetColorMap(nsColorMap *aColorMap);
-    NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+  NS_IMETHOD           SetColorMap(nsColorMap *aColorMap);
+  NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 
-    NS_IMETHOD           SetTitle(const nsString& aTitle);
-    nsresult             SetIcon(GdkPixmap *window_pixmap, 
-                                 GdkBitmap *window_mask);
-    NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
-    NS_IMETHOD           Show(PRBool aShow);
-    NS_IMETHOD           ShowMenuBar(PRBool aShow);
-    NS_IMETHOD           CaptureMouse(PRBool aCapture);
+  NS_IMETHOD           SetTitle(const nsString& aTitle);
+  nsresult             SetIcon(GdkPixmap *window_pixmap, 
+                               GdkBitmap *window_mask);
+  NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
+  NS_IMETHOD           Show(PRBool aShow);
+  NS_IMETHOD           ShowMenuBar(PRBool aShow);
+  NS_IMETHOD           CaptureMouse(PRBool aCapture);
 
-    NS_IMETHOD           Move(PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD           Move(PRInt32 aX, PRInt32 aY);
 
-    NS_IMETHOD           Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-    NS_IMETHOD           Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-                                PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD           Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD           Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+                              PRInt32 aHeight, PRBool aRepaint);
 
-    NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+  NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
+  NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
 
-    NS_IMETHOD           BeginResizingChildren(void);
-    NS_IMETHOD           EndResizingChildren(void);
-    NS_IMETHOD           Destroy(void);
+  NS_IMETHOD           BeginResizingChildren(void);
+  NS_IMETHOD           EndResizingChildren(void);
+  NS_IMETHOD           Destroy(void);
 
-    gint                 ConvertBorderStyles(nsBorderStyle bs);
+  gint                 ConvertBorderStyles(nsBorderStyle bs);
 
-    virtual PRBool IsChild() const;
+  virtual PRBool IsChild() const;
 
-    void SetIsDestroying(PRBool val) {
-      mIsDestroyingWindow = val;
-    }
+  void SetIsDestroying(PRBool val) {
+    mIsDestroyingWindow = val;
+  }
 
-    PRBool IsDestroying() const {
-      return mIsDestroyingWindow;
-    }
+  PRBool IsDestroying() const {
+    return mIsDestroyingWindow;
+  }
 
-     // Utility methods
-    virtual  PRBool OnPaint(nsPaintEvent &event);
-    PRBool   OnKey(nsKeyEvent &aEvent);
-    virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
+  // Utility methods
+  virtual  PRBool OnPaint(nsPaintEvent &event);
+  PRBool   OnKey(nsKeyEvent &aEvent);
+  virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
   // in nsWidget now
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
 

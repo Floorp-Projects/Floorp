@@ -51,7 +51,7 @@ nsTextHelper::~nsTextHelper()
 // Set initial parameters
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_IMETHODIMP nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     nsTextWidgetInitData* data = (nsTextWidgetInitData *) aInitData;
@@ -62,7 +62,7 @@ NS_METHOD nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
+NS_IMETHODIMP nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 {
   // This is a normal entry only thing, not a text box
   gtk_entry_set_max_length(GTK_ENTRY(mTextWidget), (int)aChars);
@@ -70,7 +70,7 @@ NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize)
+NS_IMETHODIMP  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize)
 {
   char *str = nsnull;
   if (GTK_IS_ENTRY(mTextWidget))
@@ -91,7 +91,7 @@ NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PR
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
+NS_IMETHODIMP  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 {
   if (GTK_IS_ENTRY(mTextWidget)) {
     gtk_entry_set_text(GTK_ENTRY(mTextWidget),
@@ -111,7 +111,7 @@ NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::InsertText(const nsString &aText,
+NS_IMETHODIMP  nsTextHelper::InsertText(const nsString &aText,
                                     PRUint32 aStartPos,
                                     PRUint32 aEndPos,
                                     PRUint32& aActualSize)
@@ -126,7 +126,7 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText,
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::RemoveText()
+NS_IMETHODIMP  nsTextHelper::RemoveText()
 {
   if (GTK_IS_ENTRY(mTextWidget)) {
     gtk_entry_set_text(GTK_ENTRY(mTextWidget), "");
@@ -138,7 +138,7 @@ NS_METHOD  nsTextHelper::RemoveText()
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
+NS_IMETHODIMP  nsTextHelper::SetPassword(PRBool aIsPassword)
 {
   mIsPassword = aIsPassword?PR_FALSE:PR_TRUE;
   if (GTK_IS_ENTRY(mTextWidget)) {
@@ -149,7 +149,7 @@ NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyFlag)
+NS_IMETHODIMP  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyFlag)
 {
   NS_ASSERTION(nsnull != mTextWidget,
                "SetReadOnly - Widget is NULL, Create may not have been called!");
@@ -161,7 +161,7 @@ NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyF
 
 
 //-------------------------------------------------------------------------
-NS_METHOD nsTextHelper::SelectAll()
+NS_IMETHODIMP nsTextHelper::SelectAll()
 {
   nsString text;
   PRUint32 actualSize = 0;
@@ -172,7 +172,7 @@ NS_METHOD nsTextHelper::SelectAll()
 
 
 //-------------------------------------------------------------------------
-NS_METHOD nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
+NS_IMETHODIMP nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
   gtk_editable_select_region(GTK_EDITABLE(mTextWidget), aStartSel, aEndSel);
   return NS_OK;
@@ -180,7 +180,7 @@ NS_METHOD nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 
 
 //-------------------------------------------------------------------------
-NS_METHOD nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
+NS_IMETHODIMP nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
 #if 0
   XmTextPosition left;
@@ -198,14 +198,14 @@ NS_METHOD nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
+NS_IMETHODIMP  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
 {
   gtk_editable_set_position(GTK_EDITABLE(mTextWidget), aPosition);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::GetCaretPosition(PRUint32& aPosition)
+NS_IMETHODIMP  nsTextHelper::GetCaretPosition(PRUint32& aPosition)
 {
   aPosition = (PRUint32)GTK_EDITABLE(mTextWidget)->current_pos;
   return NS_OK;

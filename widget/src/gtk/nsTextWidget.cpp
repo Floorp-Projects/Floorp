@@ -26,6 +26,12 @@
 
 extern int mIsPasswordCallBacksInstalled;
 
+
+NS_IMPL_ADDREF_INHERITED(nsTextWidget, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsTextWidget, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsTextWidget, nsITextWidget, nsIWidget)
+
+
 //-------------------------------------------------------------------------
 //
 // nsTextWidget constructor
@@ -51,7 +57,7 @@ nsTextWidget::~nsTextWidget()
 // Create the native Entry widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
+NS_IMETHODIMP nsTextWidget::CreateNative(GtkWidget *parentWindow)
 {
   PRBool oldIsReadOnly;
   mWidget = gtk_entry_new();
@@ -85,22 +91,4 @@ NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
                  GDK_POINTER_MOTION_MASK);
 
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-    if (result == NS_NOINTERFACE && aIID.Equals(nsITextWidget::GetIID())) {
-        *aInstancePtr = (void*) ((nsITextWidget*)this);
-        AddRef();
-        result = NS_OK;
-    }
-
-    return result;
 }

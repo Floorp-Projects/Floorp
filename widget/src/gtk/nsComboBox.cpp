@@ -29,6 +29,7 @@
 
 NS_IMPL_ADDREF_INHERITED(nsComboBox, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsComboBox, nsWidget)
+NS_IMPL_QUERY_INTERFACE3(nsComboBox, nsIComboBox, nsIListWidget, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -268,28 +269,6 @@ NS_METHOD nsComboBox::Deselect()
 
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (aIID.Equals(nsIComboBox::GetIID())) {
-    *aInstancePtr = (void*) ((nsIComboBox*)this);
-    AddRef();
-    return NS_OK;
-  }
-  else if (aIID.Equals(nsIListWidget::GetIID())) {
-    *aInstancePtr = (void*) ((nsIListWidget*)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  return nsWidget::QueryInterface(aIID,aInstancePtr);
-}
-
 
 //-------------------------------------------------------------------------
 //

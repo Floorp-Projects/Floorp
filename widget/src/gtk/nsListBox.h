@@ -34,14 +34,7 @@ public:
   nsListBox();
   virtual ~nsListBox();
 
-  // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
-  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
-  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIListBox interface
   NS_IMETHOD PreCreateWidget(nsWidgetInitData *aInitData);

@@ -34,12 +34,7 @@ public:
   nsTextWidget();
   virtual ~nsTextWidget();
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
-  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
-  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
+  NS_DECL_ISUPPORTS_INHERITED
 
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);
