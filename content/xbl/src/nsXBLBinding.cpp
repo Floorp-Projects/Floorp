@@ -573,7 +573,7 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
     }
     
     if (!pseudoPoint) {
-      NS_NewXBLInsertionPoint(parent, -1, nsnull, getter_AddRefs(pseudoPoint));
+      NS_NewXBLInsertionPoint(parent.get(), -1, nsnull, getter_AddRefs(pseudoPoint));
       contentList->AppendElement(pseudoPoint);
     }
 
@@ -711,7 +711,7 @@ nsXBLBinding::GenerateAnonymousContent()
     mPrototypeBinding->GetDocURI(uri);
     message += uri;
     message += " is still using the deprecated\n<content includes=\"\"> syntax! Use <children> instead!\n"; 
-    NS_WARNING(message);
+    NS_WARNING(message.get());
   }
 #endif
 
@@ -1374,7 +1374,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
   jsval vp;
   JSObject* proto;
 
-  if ((! ::JS_LookupProperty(jscontext, global, aClassName, &vp)) ||
+  if ((! ::JS_LookupProperty(jscontext, global, aClassName.get(), &vp)) ||
       JSVAL_IS_PRIMITIVE(vp)) {
     // We need to initialize the class.
 

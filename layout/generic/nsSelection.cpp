@@ -1732,13 +1732,10 @@ nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags,
   if (!aReturn)
     return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIDocumentEncoder> encoder;
   nsCAutoString formatType( NS_DOC_ENCODER_CONTRACTID_BASE );
   formatType.Append(aFormatType);
-  rv = nsComponentManager::CreateInstance(formatType,
-                                          nsnull,
-                                          NS_GET_IID(nsIDocumentEncoder),
-                                          getter_AddRefs(encoder));
+  nsCOMPtr<nsIDocumentEncoder> encoder =
+           do_CreateInstance(formatType.get(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPresShell> shell;

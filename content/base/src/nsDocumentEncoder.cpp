@@ -886,7 +886,7 @@ nsDocumentEncoder::EncodeToString(nsAWritableString& aOutputString)
   nsCAutoString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
   progId.AppendWithConversion(mMimeType);
 
-  mSerializer = do_CreateInstance(NS_STATIC_CAST(const char *, progId));
+  mSerializer = do_CreateInstance(progId.get());
   NS_ENSURE_TRUE(mSerializer, NS_ERROR_NOT_IMPLEMENTED);
 
   nsresult rv = NS_OK;

@@ -193,7 +193,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
     }
   }
 
-  return aBaseURI->Resolve(spec, aResult);
+  return aBaseURI->Resolve(spec.get(), aResult);
 }
 
 

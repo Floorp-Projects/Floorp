@@ -315,7 +315,7 @@ void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
   nsAutoString buffer;
 
   if (eCSSProperty_UNKNOWN < aPropID) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID));
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID).get());
     buffer.AppendWithConversion(": ");
   }
 
@@ -333,22 +333,22 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
   nsAutoString buffer;
 
   if (eCSSUnit_Null != mTop.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[0]));
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[0]).get());
     buffer.AppendWithConversion(": ");
     mTop.AppendToString(buffer);
   }
   if (eCSSUnit_Null != mRight.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[1]));
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[1]).get());
     buffer.AppendWithConversion(": ");
     mRight.AppendToString(buffer);
   }
   if (eCSSUnit_Null != mBottom.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[2]));
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[2]).get());
     buffer.AppendWithConversion(": ");
     mBottom.AppendToString(buffer); 
   }
   if (eCSSUnit_Null != mLeft.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[3]));
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[3]).get());
     buffer.AppendWithConversion(": ");
     mLeft.AppendToString(buffer);
   }
