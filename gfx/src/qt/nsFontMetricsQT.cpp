@@ -614,6 +614,30 @@ static void ParseFontPref(nsCAutoString &aPrefValue,QString &aFontName,
   } 
 }
 
+//
+// There is a bug in QT 2.x and 3.0 when using the QFontDatabase
+// font method to obtain a specific QFont. Some QFont::CharSet
+// do not have a string mapping. Use this function after calling
+// QFontDatabase::font().
+//
+// Note: This should be fixed in QT 3.1 - JCB 2001-03-09
+//
+static QFont::CharSet getExtendedCharSet(const QString &name)
+{
+  if (name == "jisx0208.1983-0")
+    return QFont::JIS_X_0208;
+  if (name == "jisx0201.1976-0")
+    return QFont::JIS_X_0201;
+  if (name == "ksc5601.1987-0")
+    return QFont::KSC_5601;
+  if (name == "gb2312.1980-0")
+    return QFont::GB_2312;
+  if (name == "big5-0")
+    return QFont::Big5;
+ 
+  return QFont::AnyCharSet;
+}
+
 nsFontMetricsQT::nsFontMetricsQT()
 {
 #ifdef DBG_JCG
@@ -1259,10 +1283,19 @@ nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
 {
   QFontDatabase *qFontDB;
   QFont *qFont;
+  QFont::CharSet charset;
 
   qFontDB = GetQFontDB();
   if (qFontDB->isSmoothlyScalable(aName,*mQStyle,aCharSet)) {
     qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)mPixelSize,aCharSet));
+    if (qFont->charSet() == QFont::AnyCharSet) {
+      charset = getExtendedCharSet(aCharSet);
+      if (charset == QFont::AnyCharSet) {
+        delete qFont;
+        return nsnull;
+      }
+      qFont->setCharSet(charset);
+    }
   }
   else {
     typedef QValueList<int> QFSList;
@@ -1270,7 +1303,7 @@ nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
     PRUint16 curSz = mPixelSize, loSz = 0;
     PRBool exactMatch = PR_FALSE, nameFound = PR_FALSE;
  
-    qSizes = nsFontMetricsQT::GetQFontDB()->smoothSizes(aName,*mQStyle,aCharSet);
+    qSizes = qFontDB->smoothSizes(aName,*mQStyle,aCharSet);
     for (QFSList::Iterator szIt = qSizes.begin(); szIt != qSizes.end();
          ++szIt) {
       nameFound = PR_TRUE;
@@ -1290,6 +1323,14 @@ nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
     if (nameFound) {
       if (exactMatch) {
         qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)mPixelSize,aCharSet));
+        if (qFont->charSet() == QFont::AnyCharSet) {
+          charset = getExtendedCharSet(aCharSet);
+          if (charset == QFont::AnyCharSet) {
+            delete qFont;
+            return nsnull;
+          }
+          qFont->setCharSet(charset);
+        }
       }
       else {
         PRUint16 loDiff,hiDiff,pixSz;
@@ -1303,6 +1344,14 @@ nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
           pixSz = curSz;
         }
         qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)pixSz,aCharSet));
+        if (qFont->charSet() == QFont::AnyCharSet) {
+          charset = getExtendedCharSet(aCharSet);
+          if (charset == QFont::AnyCharSet) {
+            delete qFont;
+            return nsnull;
+          }
+          qFont->setCharSet(charset);
+        }
       }
     }
     else {
@@ -1310,7 +1359,9 @@ nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
     }
   }
   if (qFont->family() == aName || qFont->family() == QFont::substitute(aName)) {
-    qFont->setWeight((int)(mWeight / 10));
+    // We need to map CSS2 font weight (ranging from [100..900]) to
+    // qt font weight (ranging from [0..99]) - JCB 2001-03-09
+    qFont->setWeight((int)((((mWeight - 100) * 99) + 400) / 800));
   }
   else {
     delete qFont;
@@ -1606,15 +1657,12 @@ nsFontQTNormal::GetWidth(const PRUnichar *aString,PRUint32 aLength)
   int result = 0;
 
   if (mFontMetrics) {
-    char strBuf[1024];
-    PRUint32 len = mCharSetInfo->Convert(mCharSetInfo,mFontMetrics,aString,
-                                         aLength,strBuf,sizeof(strBuf));
+    QChar *buf = new QChar[aLength + 1];
 
-    QChar *buf = new QChar[len];
-
-    for (PRUint32 i = 0; i < len; i++)
-      buf[i] = QChar(strBuf[i]); 
-    result = mFontMetrics->width(QString(buf,len));
+    for (PRUint32 i = 0; i < aLength; i++) {
+      buf[i] = QChar(*aString++); 
+    }
+    result = mFontMetrics->width(QString(buf,aLength));
     delete [] buf;
   }
   return result;
@@ -1628,16 +1676,12 @@ nsFontQTNormal::DrawString(nsRenderingContextQT *aContext,
 {
   int result = 0; 
   if (mFontMetrics) {
-    char strBuf[1024];
-    PRUint32 len = mCharSetInfo->Convert(mCharSetInfo,mFontMetrics,aString,
-                                         aLength,strBuf,sizeof(strBuf));
-
-    QChar *buf = new QChar[len + 1];
+    QChar *buf = new QChar[aLength + 1];
  
-    for (PRUint32 i = 0; i < len; i++)
-      buf[i] = QChar(strBuf[i]); 
-    buf[len] = QChar();
-    QString qStr(buf,len);
+    for (PRUint32 i = 0; i < aLength; i++) {
+      buf[i] = QChar(*aString++); 
+    }
+    QString qStr(buf,aLength);
     aContext->MyDrawString(aSurface->GetGC(),aX,aY,qStr);
     result = mFontMetrics->width(qStr);
     delete [] buf;
@@ -1662,17 +1706,18 @@ nsFontQTNormal::GetBoundingMetrics(const PRUnichar *aString,
     int len = mCharSetInfo->Convert(mCharSetInfo,mFontMetrics,aString,
                                     aLength,strBuf,sizeof(strBuf));
 
-    QChar *buf = new QChar[len];
+    QChar *buf = new QChar[aLength + 1];
  
-    for (int i = 0; i < len; i++)
-      buf[i] = QChar(strBuf[i]);
- 
-    QString qStr(buf,len);
+    for (int i = 0; i < aLength; i++) {
+      buf[i] = QChar(*aString++);
+    } 
+    QString qStr(buf,aLength);
+
     aBoundingMetrics.width = mFontMetrics->width(qStr);
     aBoundingMetrics.leftBearing
       = mFontMetrics->leftBearing(buf)[0]);
     aBoundingMetrics.rightBearing
-      = mFontMetrics->rightBearing(buf[len - 1]);
+      = mFontMetrics->rightBearing(buf[aLength - 1]);
     aBoundingMetrics.ascent = mFontMetrics->ascent();
     aBoundingMetrics.descent = mFontMetrics->descent();
     delete [] buf;
@@ -1828,13 +1873,12 @@ nsFontQTUserDefined::GetWidth(const PRUnichar *aString,PRUint32 aLength)
   int result = 0;
 
   if (mFontMetrics) {
-    char strBuf[1024];
-    PRUint32 len = Convert(aString,aLength,strBuf,sizeof(strBuf));
+    QChar *buf = new QChar[aLength + 1];
 
-    QChar *buf = new QChar[len];
-    for (PRUint32 i = 0; i < len; i++)
-      buf[i] = QChar(strBuf[i]);
-    result = mFontMetrics->width(QString(buf,len));
+    for (PRUint32 i = 0; i < aLength; i++) {
+      buf[i] = QChar(*aString++);
+    }
+    result = mFontMetrics->width(QString(buf,aLength));
     delete [] buf;
   } 
   return result;
@@ -1849,15 +1893,12 @@ nsFontQTUserDefined::DrawString(nsRenderingContextQT *aContext,
   int result = 0;
  
   if (mFontMetrics) {
-    char strBuf[1024];
-    PRUint32 len = Convert(aString,aLength,strBuf,sizeof(strBuf));
-    QChar *buf = new QChar[len + 1];
+    QChar *buf = new QChar[aLength + 1];
  
-    for (PRUint32 i = 0; i < len; i++)
-      buf[i] = QChar(strBuf[i]);
-    buf[len] = QChar();
-
-    QString qStr(buf,len);
+    for (PRUint32 i = 0; i < aLength; i++) {
+      buf[i] = QChar(*aString++);
+    }
+    QString qStr(buf,aLength);
 
     aContext->MyDrawString(aSurface->GetGC(),aX,aY,qStr);
     result = mFontMetrics->width(qStr);
@@ -1879,18 +1920,16 @@ nsFontQTUserDefined::GetBoundingMetrics(const PRUnichar *aString,
     return NS_ERROR_FAILURE;
   }
   if (aString && 0 < aLength) {
-    char strBuf[1024]; // XXX watch buffer length !!!
-    PRUint32 len = Convert(aString,aLength,strBuf,sizeof(strBuf));
-    QChar *buf = new QChar[len];
+    QChar *buf = new QChar[aLength + 1];
  
-    for (int i = 0; i < len; i++)
-      buf[i] = QChar(strBuf[i]);
- 
-    QString qStr(buf,len);
+    for (int i = 0; i < aLength; i++) {
+      buf[i] = QChar(*aString++);
+    } 
+    QString qStr(buf,aLength);
 
     aBoundingMetrics.width = mFontMetrics->width(qStr);
     aBoundingMetrics.leftBearing = mFontMetrics->leftBearing(buf)[0]);
-    aBoundingMetrics.rightBearing = mFontMetrics->rightBearing(buf[len - 1]);
+    aBoundingMetrics.rightBearing = mFontMetrics->rightBearing(buf[aLength - 1]);
     aBoundingMetrics.ascent = mFontMetrics->ascent();
     aBoundingMetrics.descent = mFontMetrics->descent();
     delete [] buf;
