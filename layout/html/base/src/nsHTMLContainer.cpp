@@ -827,9 +827,7 @@ nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
   if (NS_OK == res) {
     if (nsnull == refChild) {
       // Append the new child to the end
-      if (PR_FALSE == AppendChild(newContent, PR_TRUE)) {
-        res = NS_ERROR_FAILURE;
-      }
+      res = AppendChild(newContent, PR_TRUE);
     } else {
       nsIContent* content = nsnull;
 
@@ -839,9 +837,7 @@ nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
       if (NS_OK == res) {
         PRInt32 pos = IndexOf(content);
         if (pos >= 0) {
-          if (PR_FALSE == InsertChildAt(newContent, pos, PR_TRUE)) {
-            res = NS_ERROR_FAILURE;
-          }
+          res = InsertChildAt(newContent, pos, PR_TRUE);
         }
         NS_RELEASE(content);
       }
@@ -853,8 +849,8 @@ nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
   return res;
 }
 
-nsresult nsHTMLContainer::ReplaceChild(nsIDOMNode *newChild, 
-                                        nsIDOMNode *oldChild)
+nsresult
+nsHTMLContainer::ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild)
 {
   nsIContent* content = nsnull;
   nsresult res = oldChild->QueryInterface(kIContentIID, (void**)&content);
@@ -866,9 +862,7 @@ nsresult nsHTMLContainer::ReplaceChild(nsIDOMNode *newChild,
       nsresult res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
       NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
       if (NS_OK == res) {
-        if (PR_FALSE == ReplaceChildAt(newContent, pos, PR_TRUE)) {
-          res = NS_ERROR_FAILURE;
-        }
+        res = ReplaceChildAt(newContent, pos, PR_TRUE);
         NS_RELEASE(newContent);
       }
     }
@@ -878,7 +872,8 @@ nsresult nsHTMLContainer::ReplaceChild(nsIDOMNode *newChild,
   return res;
 }
 
-nsresult nsHTMLContainer::RemoveChild(nsIDOMNode *oldChild)
+nsresult
+nsHTMLContainer::RemoveChild(nsIDOMNode *oldChild)
 {
   nsIContent* content = nsnull;
   nsresult res = oldChild->QueryInterface(kIContentIID, (void**)&content);
@@ -886,9 +881,7 @@ nsresult nsHTMLContainer::RemoveChild(nsIDOMNode *oldChild)
   if (NS_OK == res) {
     PRInt32 pos = IndexOf(content);
     if (pos >= 0) {
-      if (PR_TRUE == RemoveChildAt(pos, PR_TRUE)) {
-        res = NS_ERROR_FAILURE;
-      }
+      res = RemoveChildAt(pos, PR_TRUE);
     }
     NS_RELEASE(content);
   }
