@@ -3576,6 +3576,17 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
                 (*aNodeList)->AppendElement(node);
           }
         }
+        else if (tagName.Equals(NS_LITERAL_STRING("body")))
+        {
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+          if (element)
+          {
+            PRBool hasBackground = PR_FALSE;
+            if (NS_SUCCEEDED(element->HasAttribute(NS_LITERAL_STRING("background"), &hasBackground)))
+              if (hasBackground)
+                (*aNodeList)->AppendElement(node);
+          }
+        }
       }
       iter->Next();
     }
