@@ -66,7 +66,7 @@ ziperr2nsresult(PRInt32 ziperr)
 #define JAR_NULLFREE(_ptr) \
   {                        \
     PR_FREEIF(_ptr);       \
-    *(_ptr) = nsnull;      \
+    _ptr = nsnull;         \
   }
 
 //-- Used by the JAR hashtables to delete their entries.
