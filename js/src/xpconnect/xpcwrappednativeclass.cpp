@@ -105,6 +105,8 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         return JS_TRUE;
     }
 
+    // XXX since getters and setters share a descriptor, we might not use all
+    // of the objects that get alloc'd here
     mMembers = new XPCNativeMemberDescriptor[totalCount];
     if(!mMembers)
         return JS_FALSE;
@@ -119,6 +121,11 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         if(NS_FAILED(mInfo->GetMethodInfo(i, &info)))
             return JS_FALSE;
 
+        // XX perhaps this should be extended to be 'CanBeReflected()' to
+        // also cover methods with non-complient signatures.
+        if(info->IsHidden())
+            continue;
+
         idval = STRING_TO_JSVAL(JS_InternString(cx, info->GetName()));
         JS_ValueToId(cx, idval, &id);
         if(!id)
@@ -130,6 +137,7 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         if(info->IsSetter())
         {
             NS_ASSERTION(mMemberCount,"bad setter");
+            // XXX ASSUMES Getter/Setter pairs are next to each other
             desc = &mMembers[mMemberCount-1];
             NS_ASSERTION(desc->id == id,"bad setter");
             NS_ASSERTION(desc->category == XPCNativeMemberDescriptor::ATTRIB_RO,"bad setter");
@@ -880,3 +888,13 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
     return jsobj;
 }
 
+// static
+nsXPCWrappedNative*
+nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(JSContext* cx, 
+                                                    JSObject* jsobj)
+{
+    NS_PRECONDITION(jsobj, "bad param");
+    if(jsobj && JS_InstanceOf(cx, jsobj, &WrappedNative_class, NULL))
+        return (nsXPCWrappedNative*) JS_GetPrivate(cx, jsobj);
+    return NULL;
+}

@@ -32,6 +32,7 @@
 
 #include "xpcbogusjs.h"
 #include "xpcbogusii.h"
+#include "xpcbogusmem.h"
 
 extern const char* XPC_VAL_STR; // 'val' property name for out params
 
@@ -67,13 +68,22 @@ class nsXPConnect : public nsIXPConnect
     NS_IMETHOD GetNativeOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
                                         nsISupports** aObj);
 
+    NS_IMETHOD GetWrappedNativeOfJSObject(nsIJSContext* aJSContext,
+                                    nsIJSObject* aJSObj,
+                                    nsIXPConnectWrappedNative** aWrapper);
 
-    /// non-interface implementation
+    // non-interface implementation
 public:
     static nsXPConnect* GetXPConnect();
 
-    JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
     XPCContext*              GetContext(JSContext* cx);
+    JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
+    nsIMalloc*               GetAllocator()
+    {
+        if(mAllocator)
+            NS_ADDREF(mAllocator); 
+        return mAllocator;
+    }
 
     virtual ~nsXPConnect();
 private:
@@ -81,8 +91,9 @@ private:
     XPCContext*  NewContext(JSContext* cx, JSObject* global);
 
 private:
+    static nsXPConnect* mSelf;
     JSContext2XPCContextMap* mContextMap;
-    static nsXPConnect*           mSelf;
+    nsIMalloc* mAllocator;
 };
 
 /***************************************************************************/
@@ -270,6 +281,8 @@ public:
 
     static JSBool InitForContext(XPCContext* xpcc);
     JSObject* NewInstanceJSObject(nsXPCWrappedNative* self);
+    static nsXPCWrappedNative* GetWrappedNativeOfJSObject(JSContext* cx,
+                                                          JSObject* jsobj);
 
     int GetMemberCount() const {return mMemberCount;}
     const XPCNativeMemberDescriptor* GetMemberDescriptor(int i) const
