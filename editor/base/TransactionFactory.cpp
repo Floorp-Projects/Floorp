@@ -35,7 +35,10 @@
 #include "JoinElementTxn.h"
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
+
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "SetDocTitleTxn.h"
+#endif // MOZILLA_PLAINTEXT_EDITOR_ONLY
 
 TransactionFactory::TransactionFactory()
 {
@@ -76,8 +79,10 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new AddStyleSheetTxn();
   else if (aTxnType.Equals(RemoveStyleSheetTxn::GetCID()))
     *aResult = new RemoveStyleSheetTxn();
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   else if (aTxnType.Equals(SetDocTitleTxn::GetCID()))
     *aResult = new SetDocTitleTxn();
+#endif // MOZILLA_PLAINTEXT_EDITOR_ONLY
   else if (aTxnType.Equals(PlaceholderTxn::GetCID()))
     *aResult = new PlaceholderTxn();
   else

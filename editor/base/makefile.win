@@ -32,6 +32,7 @@ LIBRARY_NAME=editor
 # Editor Core Source Files and Objects:
 
 CPPSRCS =                         \
+      nsAOLCiter.cpp              \
       ChangeAttributeTxn.cpp      \
       CreateElementTxn.cpp        \
       DeleteElementTxn.cpp        \
@@ -51,19 +52,22 @@ CPPSRCS =                         \
       nsEditorEventListeners.cpp  \
       nsEditorUtils.cpp           \
       nsEditProperty.cpp          \
-      nsTextEditUtils.cpp         \
+      nsInternetCiter.cpp         \
       nsHTMLEditUtils.cpp         \
       nsPlaintextDataTransfer.cpp \
       nsPlaintextEditor.cpp       \
       nsSelectionState.cpp        \
       nsStyleSheetTxns.cpp        \
       nsTextEditRules.cpp         \
+      nsTextEditUtils.cpp         \
+      nsWrapUtils.cpp             \
       PlaceholderTxn.cpp          \
       SplitElementTxn.cpp         \
       TransactionFactory.cpp      \
       $(NULL)
 
 CPP_OBJS =                                \
+  .\$(OBJDIR)\nsAOLCiter.obj              \
   .\$(OBJDIR)\ChangeAttributeTxn.obj      \
   .\$(OBJDIR)\CreateElementTxn.obj        \
   .\$(OBJDIR)\DeleteElementTxn.obj        \
@@ -83,16 +87,18 @@ CPP_OBJS =                                \
   .\$(OBJDIR)\nsEditor.obj                \
   .\$(OBJDIR)\nsEditorUtils.obj           \
   .\$(OBJDIR)\nsEditProperty.obj          \
-  .\$(OBJDIR)\nsTextEditUtils.obj         \
   .\$(OBJDIR)\nsHTMLEditUtils.obj         \
+  .\$(OBJDIR)\nsInternetCiter.obj         \
   .\$(OBJDIR)\nsPlaintextDataTransfer.obj \
   .\$(OBJDIR)\nsPlaintextEditor.obj       \
   .\$(OBJDIR)\nsSelectionState.obj        \
   .\$(OBJDIR)\nsStyleSheetTxns.obj        \
   .\$(OBJDIR)\nsTextEditRules.obj         \
+  .\$(OBJDIR)\nsTextEditUtils.obj         \
   .\$(OBJDIR)\PlaceholderTxn.obj          \
   .\$(OBJDIR)\SplitElementTxn.obj         \
   .\$(OBJDIR)\TransactionFactory.obj      \
+  .\$(OBJDIR)\nsWrapUtils.obj             \
   $(NULL)
 
 !if defined(MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY)
@@ -107,12 +113,14 @@ CPPSRCS = $(CPPSRCS)          \
 CPP_OBJS = $(CPP_OBJS)                     \
            .\$(OBJDIR)\nsTextEditorReg.obj \
            $(NULL)
+
+DEFINES = -DMOZILLA_PLAINTEXT_EDITOR_ONLY $(DEFINES)
+
 !else
 
 # Building the full blown HTML Editor  so add it's source files and objects:
 
 CPPSRCS = $(CPPSRCS)                      \
-           nsAOLCiter.cpp                 \
            nsEditorParserObserver.cpp     \
            nsEditorRegistration.cpp       \
            nsEditorService.cpp            \
@@ -123,9 +131,7 @@ CPPSRCS = $(CPPSRCS)                      \
            nsHTMLEditorStyle.cpp          \
            nsHTMLEditRules.cpp            \
            nsInterfaceState.cpp           \
-           nsInternetCiter.cpp            \
            nsTableEditor.cpp              \
-           nsWrapUtils.cpp                \
            nsWSRunObject.cpp              \
            TextEditorTest.cpp             \
            TypeInState.cpp                \
@@ -133,7 +139,6 @@ CPPSRCS = $(CPPSRCS)                      \
            $(NULL)
 
 CPP_OBJS = $(CPP_OBJS)                                \
-           .\$(OBJDIR)\nsAOLCiter.obj                 \
            .\$(OBJDIR)\nsEditorParserObserver.obj     \
            .\$(OBJDIR)\nsEditorRegistration.obj       \
            .\$(OBJDIR)\nsEditorService.obj            \
@@ -144,9 +149,7 @@ CPP_OBJS = $(CPP_OBJS)                                \
            .\$(OBJDIR)\nsHTMLEditorStyle.obj          \
            .\$(OBJDIR)\nsHTMLEditRules.obj            \
            .\$(OBJDIR)\nsInterfaceState.obj           \
-           .\$(OBJDIR)\nsInternetCiter.obj            \
            .\$(OBJDIR)\nsTableEditor.obj              \
-           .\$(OBJDIR)\nsWrapUtils.obj                \
            .\$(OBJDIR)\nsWSRunObject.obj              \
            .\$(OBJDIR)\TextEditorTest.obj             \
            .\$(OBJDIR)\TypeInState.obj                \
