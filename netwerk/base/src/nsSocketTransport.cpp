@@ -789,7 +789,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
       }
 
       // XXX: Is this still necessary?
-#if defined(XP_WIN16) || (defined(XP_OS2) && !defined(XP_OS2_DOUGSOCK))
+#if defined(XP_WIN16) // || (defined(XP_OS2) && !defined(XP_OS2_DOUGSOCK))
       opt.option = PR_SockOpt_Linger;
       opt.value.linger.polarity = PR_TRUE;
       opt.value.linger.linger = PR_INTERVAL_NO_WAIT;
