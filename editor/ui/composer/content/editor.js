@@ -1238,7 +1238,7 @@ function SetDisplayMode(mode)
     document.getElementById("viewPreviewMode").setAttribute("checked","false");
     document.getElementById("viewNormalMode").setAttribute("checked","false");
     document.getElementById("viewAllTagsMode").setAttribute("checked","false");
-    document.getElementById("viewSourceMode").setAttribute("checked","true");
+    document.getElementById("viewSourceMode").setAttribute("checked","false");
 
     var menuID;
     switch(mode)
