@@ -79,8 +79,10 @@ nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
                                    outUser,
                                    outPassword);
 
-    if (!outUser.IsEmpty())
+    if (!outUser.IsEmpty()) {
       value = ToNewUnicode(outUser);
+      checkValue = PR_TRUE;
+    }
   }
 
   if (!value && aDefaultText)
@@ -151,6 +153,8 @@ nsSingleSignonPrompt::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
 
     user = ToNewUnicode(outUser);
     password = ToNewUnicode(outPassword);
+    if (!outUser.IsEmpty() || !outPassword.IsEmpty())
+      checkValue = PR_TRUE;
   }
 
   mPrompt->PromptUsernameAndPassword(aDialogTitle,
@@ -222,6 +226,8 @@ nsSingleSignonPrompt::PromptPassword(const PRUnichar* aDialogTitle,
                                    outPassword);
 
     password = ToNewUnicode(outPassword);
+    if (!outPassword.IsEmpty())
+      checkValue = PR_TRUE;
   }
 
   mPrompt->PromptPassword(aDialogTitle,

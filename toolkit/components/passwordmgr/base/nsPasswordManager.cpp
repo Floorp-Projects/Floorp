@@ -348,6 +348,21 @@ nsPasswordManager::AddUser(const nsACString& aHost,
                            const nsAString& aUser,
                            const nsAString& aPassword)
 {
+  // First check for an existing entry for this host + user
+  if (!aHost.IsEmpty()) {
+    SignonHashEntry *hashEnt;
+    if (mSignonTable.Get(aHost, &hashEnt)) {
+      nsString empty;
+      SignonDataEntry *entry = nsnull;
+      FindPasswordEntryInternal(hashEnt->head, aUser, empty, empty, &entry);
+      if (entry) {
+        // Just change the password
+        EncryptDataUCS2(aPassword, entry->passValue);
+        return NS_OK;
+      }
+    }
+  }
+
   SignonDataEntry* entry = new SignonDataEntry();
   EncryptDataUCS2(aUser, entry->userValue);
   EncryptDataUCS2(aPassword, entry->passValue);
