@@ -482,7 +482,16 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
   if (nsnull!=spanList)
     delete spanList;
   if (nsnull!=colSpanList)
+  {
+    PRInt32 colSpanListCount = colSpanList->Count();
+    for (PRInt32 i=0; i<colSpanListCount; i++)
+    {
+      ColSpanStruct * colSpanInfo = (ColSpanStruct *)(colSpanList->ElementAt(i));
+      if (nsnull!=colSpanInfo)
+        delete colSpanInfo;
+    }
     delete colSpanList;
+  }
   return PR_TRUE;
 }
 
@@ -1281,8 +1290,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
           printf ("    after cell %d, minColWidth=%d  maxColWidth=%d  effColWidth[%d]=%d,%d\n", 
                   rowIndex, minColWidth, maxColWidth, 
                   colIndex, effectiveMaxColumnWidths[colIndex], effectiveMaxColumnWidths[colIndex]);
-        if (1<colSpan)
-        {
+        if ((1<colSpan) && (cellFrame->GetColIndex()==colIndex))
+        { // if this cell spans columns and we are processing the column that owns the cell
           // add the cell to our list of spanners
           SpanInfo *spanInfo = new SpanInfo(colSpan-1, cellMinWidth, cellDesiredWidth);
           if (nsnull==spanList)
@@ -1466,7 +1475,10 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
   if (nsnull!=effectiveMaxColumnWidths)
     delete [] effectiveMaxColumnWidths;
   if (nsnull!=spanList)
+  {
+    NS_ASSERTION(0==spanList->Count(), "space leak, span list not empty");
     delete spanList;
+  }
 
   return result;
 }
