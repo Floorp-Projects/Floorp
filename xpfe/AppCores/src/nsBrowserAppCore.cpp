@@ -832,13 +832,7 @@ PRInt32
 newWind(char* urlName)
 {
   nsresult rv;
-  
-  char *  urlstr=nsnull;
-  char *   progname = nsnull;
-  char *   width=nsnull, *height=nsnull;
-  char *  iconic_state=nsnull;
-
-  urlstr = urlName;
+	  char *  urlstr=urlName;
 
   /*
    * Create the Application Shell instance...
