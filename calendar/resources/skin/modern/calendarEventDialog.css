@@ -37,12 +37,6 @@
 
 
 
-#standard-dialog-title-icon
-{
-  padding-left				: 2px;
-  list-style-image		: url("chrome://calendar/skin/ca-event-dialog/new_event_icon.png");
-}
-
 #repeat-box,
 #repeat-end-box,
 #alarm-box,

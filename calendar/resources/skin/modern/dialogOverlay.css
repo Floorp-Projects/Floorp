@@ -49,64 +49,11 @@
 	background-color		:#c7d0d9;
 }
 
-/* dialog title */
-#standard-dialog-title
-{
-	border					:1px #000000 solid;
-	background-image			:url('chrome://calendar/skin/dialog/standard-dialog-title-background.png');
-	background-repeat			:repeat;
-   -moz-box-pack       : end;
-}
-
-/* this needs 1 px padding because of the 1 px border in the standard-dialog-title */
-#standard-dialog-title-icon
-{
-	padding : 1px;
-}
-
-#standard-dialog-title-text
-{
-	color						:#FFFFFF;
-	font-family					:Helvetica;
-	font-size					:14pt;
-}
-
 /* the main content of the dialog */
 #standard-dialog-content
 {
 	backround-color				:#c7d0d9;
 	padding					:10px;
-}
-
-/* Bigger margin and make the default button bigger than regular buttons */
-.dialog-btn-class[default="true"]
-{
-  min-height: 20px;
-}
-
-.dialog-btn-class
-{
-  height: 15px;
-  margin-left: 4px;
-  margin-right: 4px;
-}
-
-/* Standard Dialog Command Button Bars */
-#standard-dialog-command
-{
-	background-color: #083A7C;
-}
-
-/* center the content vertically instead of stretching it */
-
-#standard-dialog-commands-wizard,
-#standard-dialog-commands-confirmation,
-#standard-dialog-commands-confirmation-nocancel,
-#standard-dialog-commands-standard,
-#standard-dialog-commands-standard-nocancel
-{
-   -moz-box-align : center;
-   min-height : 30px;
 }
 
 /* center the buttons vertically instead of stretching them,
