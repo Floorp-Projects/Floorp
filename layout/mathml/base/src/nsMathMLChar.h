@@ -29,34 +29,32 @@
 typedef PRUnichar nsGlyphCode;
 class nsGlyphTable;
 
-// List of enums of all known chars
-enum nsMathMLCharEnum {
-  eMathMLChar_DONT_STRETCH = -1,
-#define WANT_CHAR_ENUM	
-  #include "nsMathMLCharList.h"
-#undef WANT_CHAR_ENUM
-  eMathMLChar_COUNT
-};
-
 // Hints for Stretch() to indicate criteria for stretching
-#define NS_STRETCH_SMALLER -1 // don't stretch more than requested size
-#define NS_STRETCH_NORMAL   0 // try to stretch to requested size - DEFAULT
-#define NS_STRETCH_LARGER   1 // try to stretch more than requested size
+#define NS_STRETCH_NORMAL  0x00000001 // try to stretch to requested size - DEFAULT
+#define NS_STRETCH_NEARER  0x00000002 // stretch very close to requested size
+#define NS_STRETCH_SMALLER 0x00000004 // don't stretch more than requested size
+#define NS_STRETCH_LARGER  0x00000008 // don't stretch less than requested size
+#define NS_STRETCH_LARGEOP 0x00000010 // for a largeop in displaystyle
 
 // class used to handle stretchy symbols (accent, delimiter and boundary symbols)
 class nsMathMLChar
 {
 public:
   // constructor and destructor
-  nsMathMLChar()
-  {
+  nsMathMLChar(nsMathMLChar* aParent = nsnull) {
+    MOZ_COUNT_CTOR(nsMathMLChar);
     mStyleContext = nsnull;
+    mSibling = nsnull;
+    mParent = aParent;
   }
 
-  ~nsMathMLChar() // not a virtual destructor: this class is not intended to be subclassed
-  {
+  ~nsMathMLChar() { // not a virtual destructor: this class is not intended to be subclassed
+    MOZ_COUNT_DTOR(nsMathMLChar);
+    if (mSibling) {
+      delete mSibling;
+    }
   }
- 
+
   nsresult
   Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
@@ -65,21 +63,16 @@ public:
         nsIFrame*            aForFrame);
 
   // This is the method called to ask the char to stretch itself.
-  // aDesiredStretchSize is an IN/OUT parameter.
-  // On input  - it contains our current size, or zero if current size is unknown
-  // On output - the same size or the new size that the char wants.
+  // @param aContainerSize - IN - suggested size for the stretched char
+  // @param aDesiredStretchSize - OUT - the size that the char wants
   nsresult
   Stretch(nsIPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsBoundingMetrics&   aDesiredStretchSize,
-          PRInt32              aStretchHint = NS_STRETCH_NORMAL);
+          PRUint32             aStretchHint = NS_STRETCH_NORMAL);
 
-  // If you call SetData(), it will lookup the enum of the data
-  // and set mEnum for you. If the data is an arbitrary string for 
-  // which no enum is defined, mEnum is set to eMathMLChar_DONT_STRETCH
-  // and the data is interpreted as a normal string.
   void
   SetData(nsIPresContext* aPresContext,
           nsString&       aData);
@@ -87,17 +80,6 @@ public:
   void
   GetData(nsString& aData) {
     aData = mData;
-  }
-
-  // If you call SetEnum(), it will lookup the actual value of the data and
-  // set it for you. All the enums listed above have their corresponding data.
-  void
-  SetEnum(nsIPresContext*  aPresContext,
-          nsMathMLCharEnum aEnum);
-
-  nsMathMLCharEnum
-  GetEnum() {
-    return mEnum;
   }
 
   PRInt32
@@ -125,9 +107,18 @@ public:
   void
   SetRect(const nsRect& aRect) {
     mRect = aRect;
+    // shift the orgins of child chars if any 
+    if (!mParent && mSibling) { // only a "root" having child chars can enter here
+      for (nsMathMLChar* child = mSibling; child; child = child->mSibling) {
+        nsRect rect; 
+        child->GetRect(rect);
+        rect.MoveBy(mRect.x, mRect.y);
+        child->SetRect(rect);
+      }
+    }
   }
 
-  // Metrics that _exactly_ enclose the char. The char *must* have *already* 
+  // Metrics that _exactly_ enclose the char. The char *must* have *already*
   // being stretched before you can call the GetBoundingMetrics() method.
   // IMPORTANT: since chars have their own style contexts, and may be rendered
   // with glyphs that are not in the parent font, just calling the default
@@ -147,24 +138,38 @@ public:
   nsresult
   SetStyleContext(nsIStyleContext* aStyleContext);
 
-private:
+protected:
+  friend class nsGlyphTable;
   nsString           mData;
-  nsMathMLCharEnum   mEnum;
-  nsStretchDirection mDirection;
+
+  // support for handling composite stretchy chars like TeX over/under braces
+  nsMathMLChar*      mSibling;
+  nsMathMLChar*      mParent;
+
+private:
   nsRect             mRect;
+  nsStretchDirection mDirection;
   nsBoundingMetrics  mBoundingMetrics;
   nsIStyleContext*   mStyleContext;
   nsGlyphTable*      mGlyphTable;
   nsGlyphCode        mGlyph;
 
   // helper methods
+  nsresult
+  ComposeChildren(nsIPresContext*      aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  nsGlyphTable*        aGlyphTable,
+                  nsBoundingMetrics&   aContainerSize,
+                  nsBoundingMetrics&   aCompositeSize,
+                  PRUint32             aStretchHint);
+
   static nsresult
   PaintVertically(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   nscoord              aFontAscent,
                   nsIStyleContext*     aStyleContext,
                   nsGlyphTable*        aGlyphTable,
-                  nsMathMLCharEnum     aCharEnum,
+                  nsMathMLChar*        aChar,
                   nsRect               aRect);
 
   static nsresult
@@ -173,7 +178,7 @@ private:
                     nscoord              aFontAscent,
                     nsIStyleContext*     aStyleContext,
                     nsGlyphTable*        aGlyphTable,
-                    nsMathMLCharEnum     aCharEnum,
+                    nsMathMLChar*        aChar,
                     nsRect               aRect);
 };
 
