@@ -119,14 +119,12 @@ public:
   PRUint32                  mTotalSendCount;
   nsCOMPtr<nsISupportsArray> mMessagesToSend;
   nsCOMPtr<nsIEnumerator> mEnumerator;
-  nsIMsgIdentity            *mIdentity;
   nsCOMPtr<nsIMsgFolder>    mMessageFolder;
   nsCOMPtr<nsIMsgWindow>    m_window;
  
   // Private Information
 private:
-  NS_IMETHOD                DealWithTheIdentityMojo(nsIMsgIdentity *identity,
-                                                    PRBool         aSearchHeadersOnly);
+  nsresult GetIdentityFromKey(const char *aKey, nsIMsgIdentity **aIdentity);
 
   nsIMsgSendLaterListener   **mListenerArray;
   PRInt32                   mListenerArrayCount;

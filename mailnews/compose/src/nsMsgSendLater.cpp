@@ -73,15 +73,12 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
-static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
-static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
 
 NS_IMPL_ISUPPORTS2(nsMsgSendLater, nsIMsgSendLater, nsIStreamListener)
 
 nsMsgSendLater::nsMsgSendLater()
 {
-  mIdentity = nsnull;  
   mTempIFileSpec = nsnull;
   mTempFileSpec = nsnull;
   mOutFile = nsnull;
@@ -128,8 +125,6 @@ nsMsgSendLater::~nsMsgSendLater()
   PR_FREEIF(m_headers);
   PR_FREEIF(mLeftoverBuffer);
   PR_FREEIF(mIdentityKey);
-
-  NS_IF_RELEASE(mIdentity);
 }
 
 // Stream is done...drive on!
@@ -153,9 +148,6 @@ nsMsgSendLater::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult s
   SET_SIMULATED_ERROR(SIMULATED_SEND_ERROR_13, status, NS_ERROR_FAILURE);
   if (NS_SUCCEEDED(status))
   {
-    // Now, so some analysis on the identity for this particular message!
-    DealWithTheIdentityMojo(nsnull, PR_TRUE);
-
     // Message is done...send it!
     rv = CompleteMailFileSend();
 
@@ -465,39 +457,32 @@ SendOperationListener::OnStopCopy(nsresult aStatus)
 nsresult
 nsMsgSendLater::CompleteMailFileSend()
 {
-nsresult                    rv;
-nsXPIDLCString                    recips;
-nsXPIDLCString                    ccList;
-PRBool                      created;
-nsCOMPtr<nsIMsgCompFields>  compFields = nsnull;
-nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
+  // get the identity from the key
+  // if no key, or we fail to find the identity
+  // use the default identity on the default account
+  nsCOMPtr<nsIMsgIdentity> identity;
+  nsresult rv = GetIdentityFromKey(mIdentityKey, getter_AddRefs(identity));
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // If for some reason the tmp file didn't get created, we've failed here
+  PRBool created;
   mTempIFileSpec->Exists(&created);
   if (!created)
     return NS_ERROR_FAILURE;
 
   // Get the recipients...
+  nsXPIDLCString recips;
+  nsXPIDLCString ccList;
   if (NS_FAILED(mMessage->GetRecipients(getter_Copies(recips))))
     return NS_ERROR_UNEXPECTED;
   else
     mMessage->GetCcList(getter_Copies(ccList));
 
-  // Get the composition fields interface
-  nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, NS_GET_IID(nsIMsgCompFields), 
-                                                    (void **) getter_AddRefs(compFields)); 
-  if (NS_FAILED(res) || !compFields)
-  {
-    return NS_ERROR_FACTORY_NOT_LOADED;
-  }
+  nsCOMPtr<nsIMsgCompFields> compFields = do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  // Get the message send interface
-  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, NS_GET_IID(nsIMsgSend), 
-                                          (void **) getter_AddRefs(pMsgSend)); 
-  if (NS_FAILED(res) || !pMsgSend)
-  {
-    return NS_ERROR_FACTORY_NOT_LOADED;
-  }
+  nsCOMPtr<nsIMsgSend> pMsgSend = do_CreateInstance(NS_MSGSEND_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -559,7 +544,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   if (m_window)
     m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
   NS_ADDREF(this);  //TODO: We should remove this!!!
-  rv = pMsgSend->SendMessageFile(mIdentity,
+  rv = pMsgSend->SendMessageFile(identity,
                                  compFields, // nsIMsgCompFields *fields,
                                  mTempIFileSpec, // nsIFileSpec *sendFileSpec,
                                  PR_TRUE, // PRBool deleteSendFileOnCompletion,
@@ -663,15 +648,14 @@ nsMsgSendLater::StartNextMailFileSend()
 }
 
 NS_IMETHODIMP 
-nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
+nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *aIdentity, nsIMsgFolder **folder)
 {
-  nsresult    rv;
-  char        *uri = GetFolderURIFromUserPrefs(nsIMsgSend::nsMsgQueueForLater, userIdentity);
+  char *uri = GetFolderURIFromUserPrefs(nsIMsgSend::nsMsgQueueForLater, aIdentity);
 
   if (!uri)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgQueueForLater, uri, folder);
+  nsresult rv = LocateMessageFolder(aIdentity, nsIMsgSend::nsMsgQueueForLater, uri, folder);
   PR_FREEIF(uri);
   return rv;
 }
@@ -702,25 +686,14 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFold
 NS_IMETHODIMP 
 nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity *identity)
 {
-  nsresult rv = NS_OK;
-
-  DealWithTheIdentityMojo(identity, PR_FALSE);
-
-  rv = GetUnsentMessagesFolder(mIdentity, getter_AddRefs(mMessageFolder));
-  if (NS_FAILED(rv) || !mMessageFolder)
-  {
-    NS_IF_RELEASE(mIdentity);
-    mIdentity = nsnull;
-    return NS_ERROR_FAILURE;
-  }
+  nsresult rv = GetUnsentMessagesFolder(identity, getter_AddRefs(mMessageFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // ### fix me - if we need to reparse the folder, this will be asynchronous
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   nsresult ret = mMessageFolder->GetMessages(m_window, getter_AddRefs(enumerator));
   if (NS_FAILED(ret) || (!enumerator))
   {
-    NS_IF_RELEASE(mIdentity);
-    mIdentity = nsnull;
     return NS_ERROR_FAILURE;
   }
 
@@ -787,6 +760,8 @@ nsMsgSendLater::BuildHeaders()
   PR_FREEIF(m_bcc);
   PR_FREEIF(m_newsgroups);
   PR_FREEIF(m_newshost);
+  PR_FREEIF(m_fcc);
+  PR_FREEIF(mIdentityKey);
   m_flags = 0;
 
   while (buf < buf_end)
@@ -1058,6 +1033,7 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
       PR_FREEIF(m_newsgroups);
       PR_FREEIF(m_newshost);
       PR_FREEIF(m_fcc);
+      PR_FREEIF(mIdentityKey);
     }
     
     if (line[0] == nsCRT::CR || line[0] == nsCRT::LF || line[0] == 0)
@@ -1219,97 +1195,53 @@ nsMsgSendLater::NotifyListenersOnStopSending(nsresult aStatus, const PRUnichar *
   return NS_OK;
 }
 
+// XXX todo
+// maybe this should just live in the account manager?
 nsresult
-nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity, 
-                                        PRBool          aSearchHeadersOnly)
+nsMsgSendLater::GetIdentityFromKey(const char *aKey, nsIMsgIdentity  **aIdentity)
 {
-  //
-  // Ok, here's the deal. This is the part where we need to determine the identity
-  // to use for this particular email message since we should observer that setting.
-  // If this comes up snake-eyes, then we should fall back to a default identity, BUT
-  // if aSearchHeadersOnly is TRUE, then we should ONLY look for the header identity
-  //
-  nsIMsgIdentity  *tIdentity = nsnull;
-  nsresult        rv;
+  NS_ENSURE_ARG_POINTER(aIdentity);
 
-  if (mIdentityKey)
+  nsresult rv;
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+ 
+  if (aKey)
   {
-    // get the account manager
-    nsCOMPtr<nsIMsgAccountManager> accountManager = 
-             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-      return rv;
-
-    nsCOMPtr<nsIMsgAccount>     defAcc = nsnull;
-    if (NS_SUCCEEDED(accountManager->GetDefaultAccount( getter_AddRefs(defAcc) )) && defAcc)
+    nsCOMPtr<nsISupportsArray> identities;
+    if (NS_SUCCEEDED(accountManager->GetAllIdentities(getter_AddRefs(identities))))
     {
-      nsCOMPtr<nsISupportsArray> identities;
-      if (NS_SUCCEEDED(defAcc->GetIdentities(getter_AddRefs(identities))))
+      nsCOMPtr<nsIMsgIdentity> lookupIdentity;
+      PRUint32          count = 0;
+
+      identities->Count(&count);
+      for (PRUint32 i = 0; i < count; i++)
       {
-        nsCOMPtr<nsIMsgIdentity>  lookupIdentity;
-        PRUint32          count = 0;
-        char              *tName = nsnull;
+        rv = identities->QueryElementAt(i, NS_GET_IID(nsIMsgIdentity),
+                                  getter_AddRefs(lookupIdentity));
+        if (NS_FAILED(rv))
+          continue;
 
-        identities->Count(&count);
-        for (PRUint32 i=0; i < count; i++)
+        nsXPIDLCString key;
+        lookupIdentity->GetKey(getter_Copies(key));
+        if (key.Equals(aKey))
         {
-          rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
-                                    getter_AddRefs(lookupIdentity));
-          if (NS_FAILED(rv))
-            continue;
-
-          lookupIdentity->GetKey(&tName);
-          if (!nsCRT::strcasecmp(mIdentityKey, tName))
-          {
-            PR_FREEIF(tName);
-            NS_IF_RELEASE(mIdentity);
-            mIdentity = lookupIdentity.get();
-            NS_IF_ADDREF(mIdentity);
-            return NS_OK;
-          }
-          else
-            PR_FREEIF(tName);
+          NS_IF_ADDREF(*aIdentity = lookupIdentity);
+          return NS_OK;
         }
       }
     }
   }
 
-  // At this point, if we are only looking for something in the email headers, 
-  // we should just bail
-  //
-  if (aSearchHeadersOnly)
-    return NS_OK;
-
-  // Ok, the sucker is still null, assign the identity arg
-  // to the temp variable.
-  if ( (!tIdentity) && (!identity) )
-  {
-    // get the account manager
-    nsCOMPtr<nsIMsgAccountManager> accountManager = 
-             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-      return rv;
-
-    nsCOMPtr<nsIMsgAccount>     defAcc = nsnull;
-    if (NS_SUCCEEDED(accountManager->GetDefaultAccount( getter_AddRefs(defAcc) )) && defAcc)
-    {
-      if (NS_FAILED(defAcc->GetDefaultIdentity(&tIdentity)))
-        return NS_ERROR_INVALID_ARG;
-    }
-  }
-  else
-  {
-    tIdentity = identity;
-  }
-
-  if (!tIdentity)
-    return NS_ERROR_INVALID_ARG;
-
-  // Now setup and addref the identity
-  NS_IF_RELEASE(mIdentity);
-  mIdentity = tIdentity;
-  NS_IF_ADDREF(mIdentity);
-
-  return NS_OK;
+  // if no aKey, or we failed to find the identity from the key
+  // use the identity from the default account.
+  nsCOMPtr<nsIMsgAccount> defaultAccount;
+  rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = defaultAccount->GetDefaultIdentity(aIdentity);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
 

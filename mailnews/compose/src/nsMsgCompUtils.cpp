@@ -1910,24 +1910,20 @@ mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
 }
 
 char *
-GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
-                          nsIMsgIdentity* identity)
+GetFolderURIFromUserPrefs(nsMsgDeliverMode aMode, nsIMsgIdentity* identity)
 {
-  nsresult      rv = NS_OK;
-  char          *uri = nsnull;
-
-  if (!identity) return nsnull;
-
+  nsresult rv;
+  char *uri = nsnull;
+  
   if (aMode == nsIMsgSend::nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     if (NS_FAILED(rv) || !prefs) 
       return nsnull;
-    rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);
-   
-    if (NS_FAILED(rv) || !uri) {
-  uri = PR_smprintf("%s", ANY_SERVER);
-  rv = NS_OK;
+    rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);   
+    if (NS_FAILED(rv) || !uri) 
+    {
+      uri = PR_smprintf("%s", ANY_SERVER);
     }
     else
     {
@@ -1941,8 +1937,13 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
         prefs->SetCharPref("mail.default_sendlater_uri", uriStr.get());
       }
     }
+    return uri;
   }
-  else if (aMode == nsIMsgSend::nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+
+  if (!identity)
+    return nsnull;
+
+  if (aMode == nsIMsgSend::nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
     rv = identity->GetDraftFolder(&uri);
   }
@@ -1959,7 +1960,6 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
     else
       uri = PL_strdup("");
   }
-
   return uri;
 }
 
