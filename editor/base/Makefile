@@ -25,9 +25,9 @@ CPPSRCS =                       \
     $(NULL)
 
 
-MODULE = raptor
+MODULE = editor
 
-REQUIRES = xpcom raptor
+REQUIRES = xpcom raptor dom js
 
 include $(DEPTH)/config/config.mk
 

@@ -26,14 +26,14 @@
 Editor::Editor()
 {
   //initialize member variables here
-};
+}
 
 
 
 Editor::~Editor()
 {
   //the autopointers will clear themselves up.
-};
+}
 
 
 
@@ -49,13 +49,13 @@ Editor::Init(nsIDOMDocument *aDomInterface)
 
   mDomInterfaceP = aDomInterface;
 
-  nsresult t_result = NS_NewEditorKeyListener(context_AddRefs<nsEditorKeyListener>(mKeyListenerP), this);
+  nsresult t_result = NS_NewEditorKeyListener(context_AddRefs(mKeyListenerP), this);
   if (NS_OK != t_result)
   {
     assert(FALSE);
     return t_result;
   }
-  t_result = NS_NewEditorMouseListener(context_AddRefs<nsEditorMouseListener>(mMouseListenerP), this);
+  t_result = NS_NewEditorMouseListener(context_AddRefs(mMouseListenerP), this);
   if (NS_OK != t_result)
   {
     mKeyListener = 0; //dont keep the key listener if the mouse listener fails.
@@ -63,7 +63,7 @@ Editor::Init(nsIDOMDocument *aDomInterface)
     return t_result;
   }
   COM_auto_ptr<nsIDOMEventReceiver> erP;
-  t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, context_AddRefs<nsIDOMEventReceiver>(erP));
+  t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, context_AddRefs(erP));
   if (NS_OK != t_result) 
   {
     mKeyListener = 0;
@@ -71,8 +71,8 @@ Editor::Init(nsIDOMDocument *aDomInterface)
     assert(FALSE);
     return t_result;
   }
-  er->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
-  er->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+  erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
+  erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
 }
 
 
@@ -81,14 +81,14 @@ Editor::Init(nsIDOMDocument *aDomInterface)
 
 
 //BEGIN Editor Calls from public
-PR_Bool
+PRBool
 Editor::KeyDown(int aKeycode)
 {
 }
 
 
 
-PR_Bool
+PRBool
 Editor::MouseClick(int aX,int aY)
 {
 }

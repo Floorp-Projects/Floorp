@@ -20,9 +20,10 @@ DEPTH=../..
 
 EXPORTS =		\
     nsIEditor.h	\
+    nsEditorInterfaces.h   \
     $(NULL)
 
-MODULE = raptor
+MODULE = editor
 
 include $(DEPTH)/config/config.mk
 

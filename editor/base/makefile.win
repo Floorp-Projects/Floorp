@@ -28,13 +28,15 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\editor.obj		\
 	$(NULL)
 
-MODULE=raptor 
+MODULE=editor 
 
 REQUIRES=xpcom raptor dom
 
-LINCS=-I$(PUBLIC)\xpcom \
+LINCS=-I$(PUBLIC)\editor \
+    -I$(PUBLIC)\xpcom \
     -I$(PUBLIC)\raptor \
-    -I$(PUBLIC)\dom 
+    -I$(PUBLIC)\js \
+    -I$(PUBLIC)\dom
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = ender

@@ -20,9 +20,10 @@ IGNORE_MANIFEST=1
 
 EXPORTS =		\
     nsIEditor.h	\
+    nsEditorInterfaces.h	\
     $(NULL)
 
-MODULE = raptor 
+MODULE = editor 
 
 include <$(DEPTH)\config\rules.mak>
 
