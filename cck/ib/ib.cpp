@@ -1094,6 +1094,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 		CString shellPath = workspacePath + "\\Autorun\\";
 		CopyDir(shellPath, outputPath, NULL, TRUE);
 		CreateRshell ();
+		WritePrivateProfileString("Message Stream", "Status", "Disabled", iniDstPath);
 
 	}
 	else
