@@ -17,3 +17,5 @@ nsContextMenu.js
 navigatorDD.js
 sessionHistoryUI.js
 keywords.js
+askViewZoom.xul
+askViewZoom.js

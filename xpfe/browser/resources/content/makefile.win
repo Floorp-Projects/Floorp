@@ -45,6 +45,8 @@ CHROME_CONTENT = \
 	.\NetSupportConfirmCheckYN.xul \
 	.\tooltip.js \
 	.\nsContextMenu.js \
+	.\askViewZoom.xul \
+	.\askViewZoom.js \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -47,7 +47,6 @@ catch (ex)
 
   var appCore = null;
   var explicitURL = false;
-  var textZoom = 1.0;
 
   // Stored Status, Link and Loading values
   var defaultStatus = bundle.GetStringFromName( "defaultStatus" );
@@ -1030,27 +1029,331 @@ function BrowserEditBookmarks()
     }
   }
 
-  function BrowserChangeTextZoom(aChange)
+  function initViewMenu()
   {
-    if (appCore != null) {
-      textZoom += (aChange * 0.1);
-      if (textZoom < 0.1) {
-        textZoom = 0.1;
+    updateTextSizeMenuLabel();
+  }
+
+  {
+    var zoomFactors; // array with factors
+    var zoomAccessKeys; // array with access keys
+    var zoomFactor = 100; // start value
+    var zoomLevel;
+    var zoomStep;
+    var zoomOther;
+    var zoomAnchor;
+    var zoomSteps = 0;
+    var zoomMenuLabel;
+    var zoomLabel;
+    var zoomLabelOther;
+    var zoomLabelOriginal;
+  
+    try {
+      zoomMenuLabel = bundle.GetStringFromName("textZoomMenuLabel");
+    } catch (exception) {
+      zoomMenuLabel = "Text Size (%zoom% %)"; // better suggestion?
+    }
+
+    try {
+      zoomLabel = bundle.GetStringFromName("textZoomLabel");
+    } catch (exception) {
+      zoomLabel = "%zoom% %"; // better suggestion?
+    }
+
+    try {
+      zoomLabelOther = bundle.GetStringFromName("textZoomLabelOther");
+    } catch (exception) {
+      zoomLabelOther = "%zoom% % ..."; // better suggestion?
+    }
+
+    try {
+      var zoomFactorsString = bundle.GetStringFromName("textZoomValues");
+      var zoomAccessKeysString = bundle.GetStringFromName("textZoomAccessKeys");
+      var zoomStepString = bundle.GetStringFromName("textZoomStepFactor");
+      zoomLabelOriginal = bundle.GetStringFromName("textZoomLabelOriginal");
+      zoomOther = bundle.GetStringFromName("textZoomValueOther");
+      zoomOther = parseInt(zoomOther);
+      zoomStep = parseFloat(zoomStepString);
+      zoomFactors = zoomFactorsString.split(",");
+      for (var i=0; i<zoomFactors.length; i++) {
+        zoomFactors[i] = parseInt(zoomFactors[i]);
+	if (zoomFactors[i] == 100) zoomLevel = i;
       }
-      appCore.setTextZoom(textZoom);
+      zoomAccessKeys = zoomAccessKeysString.split(",");
+      if (zoomAccessKeys.length != zoomFactors.length)
+        throw "Different amount of text zoom access keys and text zoom values";
+    } catch (e) {
+      zoomLabelOriginal = " (Original size)";
+      zoomFactors = [ 50, 75, 90, 100, 120, 150, 200 ];
+      zoomAccessKeys = [ "5", "7", "9", "z", "1", "0", "2" ];
+      zoomOther = 300;
+      zoomStep = 1.5;
+      zoomLevel = 3;
+    }
+    zoomAnchor = zoomOther;
+  }
+
+  function GetBrowserDocShell() {
+    var docShell = null;
+    var browserElement = document.getElementById("content");
+    if (browserElement) {
+      docShell = browserElement.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;
+    } else {
+      dump("no browserElement found\n");
+    }
+    return docShell;
+  }
+
+  function setTextZoom() {
+    // dump("Level: "+zoomLevel+" Factor: "+zoomFactor+" Anchor: "+zoomAnchor+" Steps: "+zoomSteps+"\n");
+    if (appCore) {
+      appCore.setTextZoom(zoomFactor / 100.0);
+    }
+/* 
+    // bah, docShell.zoom doesn't work
+    var docShell = GetBrowserDocShell();
+    if (docShell) {
+      docShell.zoom = zoomFactor / 100.0;
+    }
+*/
+  }
+
+  function initTextZoomMenu() {
+    var popup = document.getElementById("textZoomPopup");
+    var insertBefore = document.getElementById("textZoomInsertBefore");
+    if (!insertBefore || insertBefore.previousSibling.tagName != "menuseparator")
+      return; // nothing to be done
+
+    for (var i=0; i < zoomFactors.length; i++) {
+      var menuItem = document.createElement("menuitem");
+      menuItem.setAttribute("type", "radio");
+      menuItem.setAttribute("name", "textZoom");
+      var value;
+      if (zoomFactors[i] == 100) {
+        value = zoomLabelOriginal.replace(/%zoom%/, zoomFactors[i]);
+      } else {
+        value = zoomLabel.replace(/%zoom%/, zoomFactors[i]);
+      }
+      menuItem.setAttribute("value", value); 
+      menuItem.setAttribute("accesskey", zoomAccessKeys[i]);
+      menuItem.setAttribute("oncommand","browserSetTextZoom(this.data);");
+      menuItem.setAttribute("data", zoomFactors[i].toString());
+      popup.insertBefore(menuItem, insertBefore);
+    }
+    updateTextZoomMenu();
+    updateTextZoomOtherMenu();
+  }
+
+  function isZoomLevelInRange(aZoomLevel) {
+    return aZoomLevel>=0 && aZoomLevel<=zoomFactors.length-1;
+  }
+
+  function isZoomFactorInRange(aZoomFactor) {
+    return aZoomFactor>=zoomFactors[0] && aZoomFactor<=zoomFactors[zoomFactors.length-1];
+  }
+
+  function findZoomLevel(aZoomFactor) {
+    var aZoomLevel = -1;
+    for (var i=0; i<zoomFactors.length && zoomFactors[i]<=aZoomFactor; i++) {
+      if (zoomFactors[i]==aZoomFactor) {
+        aZoomLevel = i;
+      }
+    }
+    return aZoomLevel;
+  }
+  
+  function updateTextZoomMenu() {
+    var textZoomPopup = document.getElementById("textZoomPopup");
+    if (textZoomPopup) {
+      var item = textZoomPopup.firstChild;
+      var count = 0;
+      while (item) {
+        if (item.getAttribute("name")=="textZoom") {
+          if (count < zoomFactors.length) { 
+            if (item.getAttribute("data") == zoomFactor) {
+              item.setAttribute("checked","true");
+            } else {
+              item.removeAttribute("checked");
+            }
+          } else {
+            if (!isZoomLevelInRange(zoomLevel)) {
+              item.setAttribute("checked","true");
+            } else {
+              item.removeAttribute("checked");
+            }
+          }
+          count++;
+        }
+        item = item.nextSibling;
+      }
     }
   }
 
-function BrowserChangeTextSize(newSize)
-  {
-
-      var oldSize = document.getElementById("menu_TextSize_Popup").getAttribute("oldsize");
-      var diff = (newSize - oldSize); 
-      if (diff != 0) BrowserChangeTextZoom(diff);
-      document.getElementById("menu_TextSize_Popup").setAttribute("oldsize", newSize);           
-      
+  function updateTextZoomOtherMenu() {
+    var textZoomOther = document.getElementById("textZoomOther");
+    if (textZoomOther) {
+      textZoomOther.setAttribute("value", zoomLabelOther.replace(/%zoom%/, zoomOther));
+    }
   }
-                
+
+  function updateTextSizeMenuLabel() {
+    var textSizeMenu = document.getElementById("menu_TextZoom");
+    if (textSizeMenu) {
+      textSizeMenu.setAttribute("value", zoomMenuLabel.replace(/%zoom%/, zoomFactor));
+    }
+  }
+
+  function setTextZoomOther() {
+    // open dialog and ask for new value
+    var o = { retvals: {zoom: zoomOther}, zoomMin: 1, zoomMax: 5000 };
+    window.openDialog( "chrome://navigator/content/askViewZoom.xul", "", "chrome,modal,titlebar", o);
+    if (o.retvals.zoomOK) {
+      zoomOther = o.retvals.zoom;
+      zoomAnchor = zoomOther;
+      zoomSteps = 0;
+      browserSetTextZoom(zoomOther);
+      updateTextZoomMenu();
+      updateTextZoomOtherMenu();
+    }
+  }
+
+  function browserSetTextZoom(aZoomFactor) {
+    if (aZoomFactor < 1 || aZoomFactor > 5000)
+      return;
+
+    if (aZoomFactor == zoomFactor)
+      return;
+
+    zoomFactor = aZoomFactor;
+
+    if (isZoomFactorInRange(zoomFactor)) {
+      zoomLevel = findZoomLevel(zoomFactor);
+    } else {
+      zoomLevel = -1;
+    }
+    setTextZoom();
+    updateTextZoomMenu();
+  }
+
+  function textZoomSnap() {
+    zoomLevel = 0;
+    while (zoomFactors[zoomLevel]<zoomFactor) {
+      zoomLevel++;
+    }
+    if (zoomFactors[zoomLevel]!=zoomFactor) {
+      if ((zoomFactor-zoomFactors[zoomLevel])>(zoomFactors[zoomLevel+1]-zoomFactor)) {
+        zoomLevel++;
+      }
+      zoomFactor = zoomFactors[zoomLevel];
+    }
+  }
+
+  function enlargeTextZoom() {
+    if (isZoomLevelInRange(zoomLevel) || isZoomFactorInRange(zoomOther)) {
+      var insertLevel = -1;
+      if (isZoomFactorInRange(zoomOther)) { // add current zoom factor as step
+        insertLevel = 0;
+        while (zoomFactors[insertLevel]<zoomOther) {
+          insertLevel++;
+        }
+        if (zoomFactors[insertLevel] != zoomOther) {
+          zoomFactors.splice(insertLevel, 0, zoomOther);
+          if (!isZoomLevelInRange(zoomLevel)) {
+            zoomLevel = insertLevel;
+          } else if (zoomLevel >= insertLevel) {
+            zoomLevel++;
+          }
+        }
+      }
+      zoomLevel++;
+      if (zoomLevel==zoomFactors.length) {
+        zoomAnchor = zoomFactors[zoomFactors.length - 1];
+        zoomSteps = 1;
+        zoomFactor = Math.round(zoomAnchor * zoomStep);
+        zoomOther = zoomFactor;
+      } else {
+        zoomFactor = zoomFactors[zoomLevel];
+      }
+      if (insertLevel != -1) {
+        if (zoomLevel > insertLevel) {
+          zoomLevel--;
+        } else if (zoomLevel == insertLevel) {
+          zoomLevel = -1;
+        }
+        zoomFactors.splice(insertLevel, 1);
+      }
+    } else {
+      zoomSteps++;
+      zoomFactor = zoomAnchor * Math.pow(zoomStep,zoomSteps);
+      if (zoomFactor>5000) { // 5,000% zoom, get real
+        zoomSteps--;
+        zoomFactor = zoomAnchor * Math.pow(zoomStep,zoomSteps);
+      }
+      zoomFactor = Math.round(zoomFactor);
+      if (isZoomFactorInRange(zoomFactor)) {
+        textZoomSnap();
+      } else {
+        zoomOther = zoomFactor;
+      }
+    }
+    setTextZoom();
+    updateTextZoomMenu();
+    updateTextZoomOtherMenu();
+  }
+
+  function reduceTextZoom() {
+    if (isZoomLevelInRange(zoomLevel) || isZoomFactorInRange(zoomOther)) {
+      var insertLevel = -1;
+      if (isZoomFactorInRange(zoomOther)) { // add current zoom factor as step
+        insertLevel = 0;
+        while (zoomFactors[insertLevel]<zoomOther) {
+          insertLevel++;
+        }
+        if (zoomFactors[insertLevel] != zoomOther) {
+          zoomFactors.splice(insertLevel, 0, zoomOther);
+          if (!isZoomLevelInRange(zoomLevel)) {
+            zoomLevel = insertLevel;
+          } else if (zoomLevel >= insertLevel) {
+            zoomLevel++;
+          }
+        }
+      }
+      zoomLevel--;
+      if (zoomLevel==-1) {
+        zoomAnchor = zoomFactors[0];
+        zoomSteps = -1;
+        zoomFactor = Math.round(zoomAnchor / zoomStep);
+        zoomOther = zoomFactor;
+      } else {
+        zoomFactor = zoomFactors[zoomLevel];
+      }
+      if (insertLevel != -1) { // remove current zoom factor as step
+        if (zoomLevel > insertLevel) {
+          zoomLevel--;
+        } else if (zoomLevel == insertLevel) {
+          zoomLevel = -1;
+        }
+        zoomFactors.splice(insertLevel, 1);
+      }
+    } else {
+      zoomSteps--;
+      zoomFactor = zoomAnchor * Math.pow(zoomStep,zoomSteps);
+      if (zoomFactor<1) {
+        zoomSteps++;
+        zoomFactor = zoomAnchor * Math.pow(zoomStep,zoomSteps);
+      }
+      zoomFactor = Math.round(zoomFactor);
+      if (isZoomFactorInRange(zoomFactor)) {
+        textZoomSnap();
+      } else {
+        zoomOther = zoomFactor;
+      }
+    }
+    setTextZoom();
+    updateTextZoomMenu();
+    updateTextZoomOtherMenu();
+  }
+
   function BrowserSetDefaultCharacterSet(aCharset)
   {
     if (appCore != null) {

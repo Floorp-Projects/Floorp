@@ -49,6 +49,8 @@ CHROME_CONTENT = \
 	NetSupportConfirmCheckYN.xul \
 	pageInfo.xul \
 	pageInfo.js \
+	askViewZoom.xul \
+	askViewZoom.js \
 	viewSource.xul \
 	$(NULL)
 
