@@ -496,6 +496,8 @@ void nsPop3Protocol::UpdateProgressPercent (PRUint32 totalDone, PRUint32 total)
     mProgressEventSink->OnProgress(this, m_channelContext, (PRInt32) totalDone, (PRInt32) total); 
 }
 
+// note:  SetUsername() expects an unescaped string
+// do not pass in an escaped string
 void nsPop3Protocol::SetUsername(const char* name)
 {
 	NS_ASSERTION(name, "no name specified!");

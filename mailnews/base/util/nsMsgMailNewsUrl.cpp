@@ -151,10 +151,11 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
 	nsXPIDLCString userName;
 
 	nsresult rv = GetHost(getter_Copies(host));
-	GetUsername(getter_Copies(userName));
 
-  if ((const char *) userName)
-	nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
+	/* GetUsername() returns an unescaped string.
+	 * do not unescape it again.
+	 */
+	GetUsername(getter_Copies(userName));
 
 	rv = GetScheme(getter_Copies(scheme));
     if (NS_SUCCEEDED(rv))
@@ -392,6 +393,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetPreHost(const char * aPreHost)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetUsername(char * *aUsername)
 {
+	/* note:  this will return an unescaped string */
 	return m_baseURL->GetUsername(aUsername);
 }
 
