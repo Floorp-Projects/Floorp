@@ -40,7 +40,7 @@ function OnLoad()
     Registry = Components.classes['component://netscape/registry-viewer'].createInstance();
     Registry = Registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
 
-    Registry.openWellKnownRegistry(1); // application component registry
+    Registry.openWellKnownRegistry(Registry.ApplicationComponentRegistry);
 
     Registry = Registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
 

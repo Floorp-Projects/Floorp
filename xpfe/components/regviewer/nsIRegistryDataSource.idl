@@ -27,6 +27,8 @@
 [scriptable, uuid(8FA81100-6F88-11d3-BE43-00104BDE6048)]
 interface nsIRegistryDataSource : nsISupports
 {
+    const long ApplicationComponentRegistry = 1;
+
     /**
      * Open and initialize the registry viewer
      */
