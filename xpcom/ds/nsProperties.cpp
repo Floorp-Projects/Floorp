@@ -61,7 +61,7 @@ nsProperties::nsProperties()
   mTable = nsnull;
 }
 
-PR_CALLBACK PRIntn
+PR_STATIC_CALLBACK(PRIntn)
 FreeHashEntries(PLHashEntry* he, PRIntn i, void* arg)
 {
   delete[] (PRUnichar*)he->key;
