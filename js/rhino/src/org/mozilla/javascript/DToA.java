@@ -461,15 +461,18 @@ class DToA {
 
     static boolean roundOff(StringBuffer buf)
     {
-        char lastCh;
-        while ((lastCh = buf.charAt(buf.length() - 1)) == '9') {
-            buf.setLength(buf.length() - 1);
-            if (buf.length() == 0) {
-                return true;
+        int i = buf.length();
+        while (i != 0) {
+            --i;
+            char c = buf.charAt(i);
+            if (c != '9') {
+                buf.setCharAt(i, (char)(c + 1));
+                buf.setLength(i + 1);
+                return false;
             }
         }
-        buf.append((char)(lastCh + 1));
-        return false;
+        buf.setLength(0);
+        return true;
     }
 
     /* Always emits at least one digit. */
