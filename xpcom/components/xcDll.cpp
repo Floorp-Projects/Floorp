@@ -35,9 +35,6 @@
 #include "nsILocalFile.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#ifdef XP_MAC
-#include "prlink_mac.h"
-#endif
 
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL),
