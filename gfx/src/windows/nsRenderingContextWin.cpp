@@ -192,6 +192,7 @@ nsDrawingSurfaceWin :: nsDrawingSurfaceWin()
   mDCOwner = nsnull;
   mOrigBitmap = nsnull;
   mSelectedBitmap = nsnull;
+  mKillDC = PR_TRUE;
 
 #ifdef NGLAYOUT_DDRAW
   mSurface = NULL;
@@ -234,8 +235,8 @@ nsDrawingSurfaceWin :: ~nsDrawingSurfaceWin()
         ::ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mDC);
         NS_RELEASE(mDCOwner);
       }
-//      else
-//        ::DeleteDC(mDC);
+      else if (PR_TRUE == mKillDC)
+        ::DeleteDC(mDC);
 
       mDC = NULL;
     }
@@ -252,9 +253,10 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: QueryInterface(REFNSIID aIID, void** aInsta
 NS_IMPL_ADDREF(nsDrawingSurfaceWin)
 NS_IMPL_RELEASE(nsDrawingSurfaceWin)
 
-nsresult nsDrawingSurfaceWin :: Init(HDC aDC)
+nsresult nsDrawingSurfaceWin :: Init(HDC aDC, PRBool aDSOwnsDC)
 {
   mDC = aDC;
+  mKillDC = aDSOwnsDC;
 
   if (nsnull != mDC)
     return NS_OK;
@@ -586,7 +588,11 @@ nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
 
 nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
 {
-  ::SetTextColor(aNewDC, RGB(0, 0, 0));
+  HBRUSH  prevbrush;
+  HFONT   prevfont;
+  HPEN    prevpen;
+
+  ::SetTextColor(aNewDC, mCurrTextColor);
   ::SetBkMode(aNewDC, TRANSPARENT);
   ::SetPolyFillMode(aNewDC, WINDING);
   ::SetStretchBltMode(aNewDC, COLORONCOLOR);
@@ -594,21 +600,37 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   if (nsnull != aOldDC)
   {
     if (nsnull != mOrigSolidBrush)
-      ::SelectObject(aOldDC, mOrigSolidBrush);
+      prevbrush = ::SelectObject(aOldDC, mOrigSolidBrush);
 
     if (nsnull != mOrigFont)
-      ::SelectObject(aOldDC, mOrigFont);
+      prevfont = ::SelectObject(aOldDC, mOrigFont);
 
     if (nsnull != mOrigSolidPen)
-      ::SelectObject(aOldDC, mOrigSolidPen);
+      prevpen = ::SelectObject(aOldDC, mOrigSolidPen);
 
     if (nsnull != mOrigPalette)
       ::SelectPalette(aOldDC, mOrigPalette, TRUE);
   }
+  else
+  {
+    prevbrush = mBlackBrush;
+    prevfont = mDefFont;
+    prevpen = mBlackPen;
+  }
 
-  mOrigSolidBrush = (HBRUSH)::SelectObject(aNewDC, mBlackBrush);
-  mOrigFont = (HFONT)::SelectObject(aNewDC, mDefFont);
-  mOrigSolidPen = (HPEN)::SelectObject(aNewDC, mBlackPen);
+  mOrigSolidBrush = (HBRUSH)::SelectObject(aNewDC, prevbrush);
+  mOrigFont = (HFONT)::SelectObject(aNewDC, prevfont);
+  mOrigSolidPen = (HPEN)::SelectObject(aNewDC, prevpen);
+
+#if 0
+  GraphicsState *pstate = mStates;
+
+  while ((nsnull != pstate) && !(pstate->mFlags & FLAG_CLIP_VALID))
+    pstate = pstate->mNext;
+
+  if (nsnull != pstate)
+    ::SelectClipRgn(aNewDC, pstate->mClipRegion);
+#endif
 
   // If this is a palette device, then select and realize the palette
   nsPaletteInfo palInfo;
@@ -1062,11 +1084,11 @@ NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, PRU
         NS_RELEASE(ddsurf);
       }
       else
-        surf->Init(::CreateCompatibleDC(mMainDC));
+        surf->Init(::CreateCompatibleDC(mMainDC), PR_TRUE);
     }
     else
 #endif
-      surf->Init(::CreateCompatibleDC(mMainDC));
+      surf->Init(::CreateCompatibleDC(mMainDC), PR_TRUE);
 
 #ifdef NGLAYOUT_DDRAW
     if (nsnull == surf->mSurface)
@@ -1097,13 +1119,20 @@ NS_IMETHODIMP nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aD
 {
   nsDrawingSurfaceWin *surf = (nsDrawingSurfaceWin *)aDS;
 
+  //are we using the surface that we want to kill?
   if (surf->mDC == mDC)
   {
+    //remove our local ref to the surface
+    NS_IF_RELEASE(mSurface);
+
     mDC = mMainDC;
     mSurface = mMainSurface;
+
+    //two pointers: two refs
     NS_IF_ADDREF(mSurface);
   }
 
+  //release it...
   NS_IF_RELEASE(surf);
 
   return NS_OK;
