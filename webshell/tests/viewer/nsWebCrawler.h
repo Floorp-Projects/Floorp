@@ -103,6 +103,12 @@ public:
   /** set the web crawler filter, used for automatical output of frames */
   void SetOutputDir(const nsString& aOutputDir);
 
+  void SetRegressionDir(const nsString& aOutputDir);
+
+  void SetEnableRegression(PRBool aSetting) {
+    mRegressing = aSetting;
+  }
+
   void LoadNextURL();
 
   void SetVerbose(PRBool aSetting) {
@@ -123,9 +129,11 @@ protected:
   void RecordLoadedURL(const nsString& aURLSpec);
 
   /** generate an output name from a URL */
-  FILE * GetOutputFile(nsIURL *aURL);
+  FILE* GetOutputFile(nsIURL *aURL, nsString& aOutputName);
 
   nsIPresShell* GetPresShell();
+
+  void PerformRegressionTest(const nsString& aOutputName);
 
   nsIBrowserWindow* mBrowser;
   nsViewerApp* mViewer;
@@ -136,7 +144,7 @@ protected:
   nsIAtom* mIFrameTag;
   AtomHashTable* mVisited;
   nsString* mFilter;
-  nsString* mOutputDir;
+  nsString mOutputDir;
 
   PRBool mCrawl;
   PRBool mJiggleLayout;
@@ -148,6 +156,8 @@ protected:
 
   nsString mCurrentURL;
   PRBool mVerbose;
+  PRBool mRegressing;
+  nsString mRegressionDir;
 
   nsVoidArray mPendingURLs;
   nsVoidArray mSafeDomains;
