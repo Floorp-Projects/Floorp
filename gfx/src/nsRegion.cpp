@@ -46,10 +46,10 @@ class RgnRectMemoryAllocator
   void DestroyLock() { PR_DestroyLock(mLock); }
   void Lock ()       { PR_Lock(mLock); }
   void Unlock ()     { PR_Unlock(mLock); }
-#elsif defined(DEBUG)
+#elif defined(DEBUG)
   NS_DECL_OWNINGTHREAD
 
-  void InitLock()    { NS_IMPL_OWNINGTHREAD }
+  void InitLock()    { NS_IMPL_OWNINGTHREAD(); }
   void DestroyLock() { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
   void Lock ()       { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
   void Unlock ()     { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
