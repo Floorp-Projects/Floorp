@@ -49,7 +49,7 @@
 #include "nsIGenericFactory.h"
 #include "nsAVLTree.h"
 #include "nsHashtableEnumerator.h"
-#include "nsPipe2.h"
+#include "nsIPipe.h"
 #include "nsCWeakReference.h"
 #include "nsWeakReference.h"
 #include "nsISizeOfHandler.h"
@@ -84,7 +84,6 @@ void XXXNeverCalled()
     nsSupportsArray();
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
-//    NS_NewPipe(NULL, NULL, 0, 0, 0, NULL);
     NS_NewPipe(NULL, NULL, NULL, 0, 0);
     nsFileSpec s;
     NS_NewIOFileStream(NULL, s, 0, 0);
@@ -128,8 +127,7 @@ void XXXNeverCalled()
     NS_NewSizeOfHandler(0);
     nsStorageStream();
     NS_NewBinaryInputStream(0, 0);
-	nsString foo;
-	nsLinebreakConverter::ConvertStringLineBreaks(foo, 
-		nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
-
+    nsString foo;
+    nsLinebreakConverter::ConvertStringLineBreaks(foo, 
+      nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
 }
