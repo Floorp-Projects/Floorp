@@ -363,8 +363,6 @@ nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
 nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIMsgCopyServiceListener> copyServListener;//= do_QueryInterface(this);
-    rv = this->QueryInterface(NS_GET_IID(nsIMsgCopyServiceListener), getter_AddRefs(copyServListener));
 
     nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFolders->ElementAt(mCurIndex));
     NS_ASSERTION(curSupports, "curSupports is null");
@@ -375,17 +373,16 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 
     // called for delete with trash, copy and move
     if (mCommand == nsMsgViewCommandType::deleteMsg)
-        curFolder->DeleteMessages(messageArray, window, PR_FALSE /* delete storage */, PR_FALSE /* is move*/, copyServListener, PR_FALSE /*allowUndo*/);
+        curFolder->DeleteMessages(messageArray, window, PR_FALSE /* delete storage */, PR_FALSE /* is move*/, this, PR_FALSE /*allowUndo*/);
     else 
     {
-      NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID,&rv);
       NS_ASSERTION(!(curFolder == mDestFolder), "The source folder and the destination folder are the same");
       if (NS_SUCCEEDED(rv) && curFolder != mDestFolder)
       {
          if (mCommand == nsMsgViewCommandType::moveMessages)
-           copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_TRUE /* isMove */,copyServListener, window, PR_FALSE /*allowUndo*/);
+           mDestFolder->CopyMessages(curFolder, messageArray, PR_TRUE /* isMove */,window, this, PR_FALSE /*is_Folder*/, PR_FALSE /*allowUndo*/);
          else if (mCommand == nsMsgViewCommandType::copyMessages)
-           copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_FALSE /* isMove */,copyServListener, window, PR_FALSE /*allowUndo*/);
+           mDestFolder->CopyMessages(curFolder, messageArray, PR_FALSE /* isMove */, window, this, PR_FALSE /*is_Folder*/, PR_FALSE /*allowUndo*/);
       }
     }
     return rv;
