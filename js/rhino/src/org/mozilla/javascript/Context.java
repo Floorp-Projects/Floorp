@@ -2094,8 +2094,13 @@ public class Context {
 
     /**
      * Throws RuntimeException to indicate failed assertion.
+     * The function never returns and its return type is RuntimeException
+     * only to be able to write <tt>throw Context.codeBug()</tt> if plain
+     * <tt>Context.codeBug()</tt> triggers unreachable code error.
      */
-    public static void codeBug() throws RuntimeException {
+    public static RuntimeException codeBug()
+        throws RuntimeException
+    {
         throw new RuntimeException("FAILED ASSERTION");
     }
 
