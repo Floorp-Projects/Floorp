@@ -1792,13 +1792,17 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
         childIndex = aOffset;
     }
 
-    result = theNode->ChildAt(childIndex, *getter_AddRefs(theNode));
+    nsCOMPtr<nsIContent> childNode;
+
+    result = theNode->ChildAt(childIndex, *getter_AddRefs(childNode));
 
     if (NS_FAILED(result))
       return result;
 
-    if (!theNode)
+    if (!childNode)
       return NS_ERROR_FAILURE;
+
+    theNode = childNode;
 
 #ifdef DONT_DO_THIS_YET
     // XXX: We can't use this code yet because the hinting
