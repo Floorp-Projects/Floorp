@@ -179,6 +179,26 @@ class nsInstall
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
         
+        PRInt32    FileOpDirCreate(nsFileSpec& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpDirGetParent(nsFileSpec& aTarget, nsFileSpec* aReturn);
+        PRInt32    FileOpDirRemove(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpDirRename(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpFileCopy(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpFileDelete(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpFileExists(nsFileSpec& aTarget, PRBool* aReturn);
+        PRInt32    FileOpFileExecute(nsFileSpec& aTarget, nsString& aParams, PRInt32* aReturn);
+        PRInt32    FileOpFileGetNativeVersion(nsFileSpec& aTarget, nsString* aReturn);
+        PRInt32    FileOpFileGetDiskSpaceAvailable(nsFileSpec& aTarget, PRUint32* aReturn);
+        PRInt32    FileOpFileGetModDate(nsFileSpec& aTarget, nsFileSpec::TimeStamp* aReturn);
+        PRInt32    FileOpFileGetSize(nsFileSpec& aTarget, PRUint32* aReturn);
+        PRInt32    FileOpFileIsDirectory(nsFileSpec& aTarget, PRBool* aReturn);
+        PRInt32    FileOpFileIsFile(nsFileSpec& aTarget, PRBool* aReturn);
+        PRInt32    FileOpFileModDateChanged(nsFileSpec& aTarget, nsFileSpec::TimeStamp& aOldStamp, PRBool* aReturn);
+        PRInt32    FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpFileRename(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn);
+        PRInt32    FileOpFileWinShortcutCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpFileMacAliasCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpFileUnixLinkCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
 
         PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName);
         void       AddPatch(nsHashKey *aKey, nsFileSpec* fileName);

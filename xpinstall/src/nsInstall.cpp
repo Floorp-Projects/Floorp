@@ -59,6 +59,9 @@
 #include "nsWinProfile.h"
 #endif
 
+#include "nsInstallFileOpEnums.h"
+#include "nsInstallFileOpItem.h"
+
 #ifdef XP_MAC
 #include "Gestalt.h"
 #endif 
@@ -1044,6 +1047,249 @@ nsInstall::GetPatch(nsHashKey *aKey, nsFileSpec* fileName)
     {
         fileName = (nsFileSpec*) mPatchList->Get(aKey);
     }
+}
+
+PRInt32
+nsInstall::FileOpDirCreate(nsFileSpec& aTarget, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_CREATE, aTarget, aReturn);
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpDirGetParent(nsFileSpec& aTarget, nsFileSpec* aReturn)
+{
+//  nsInstallFileOpItem ifop(this, aTarget, aReturn);
+
+  aTarget.GetParent(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpDirRemove(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_REMOVE, aTarget, aFlags, aReturn);
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpDirRename(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_RENAME, aSrc, aTarget, aReturn);
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileCopy(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_COPY, aSrc, aTarget, aReturn);
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileDelete(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_DELETE, aTarget, aFlags, aReturn);
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileExecute(nsFileSpec& aTarget, nsString& aParams, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_EXECUTE, aTarget, aParams, aReturn);
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileExists(nsFileSpec& aTarget, PRBool* aReturn)
+{
+  *aReturn = aTarget.Exists();
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileGetNativeVersion(nsFileSpec& aTarget, nsString* aReturn)
+{
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileGetDiskSpaceAvailable(nsFileSpec& aTarget, PRUint32* aReturn)
+{
+  *aReturn = aTarget.GetDiskSpaceAvailable();
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileGetModDate(nsFileSpec& aTarget, nsFileSpec::TimeStamp* aReturn)
+{
+  aTarget.GetModDate(*aReturn);
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileGetSize(nsFileSpec& aTarget, PRUint32* aReturn)
+{
+  *aReturn = aTarget.GetFileSize();
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileIsDirectory(nsFileSpec& aTarget, PRBool* aReturn)
+{
+  *aReturn = aTarget.IsDirectory();
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileIsFile(nsFileSpec& aTarget, PRBool* aReturn)
+{
+  *aReturn = aTarget.IsFile();
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileModDateChanged(nsFileSpec& aTarget, nsFileSpec::TimeStamp& aOldStamp, PRBool* aReturn)
+{
+  *aReturn = aTarget.ModDateChanged(aOldStamp);
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_MOVE, aSrc, aTarget, aReturn);
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileRename(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_RENAME, aSrc, aTarget, aReturn);
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileWinShortcutCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+{
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileMacAliasCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+{
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileUnixLinkCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+{
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////

@@ -94,6 +94,7 @@ OBJS =                                          \
        .\$(OBJDIR)\nsWinProfile.obj             \
        .\$(OBJDIR)\nsJSWinProfile.obj           \
        .\$(OBJDIR)\nsWinProfileItem.obj         \
+       .\$(OBJDIR)\nsInstallFileOpItem.obj      \
        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
