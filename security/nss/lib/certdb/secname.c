@@ -161,24 +161,24 @@ SetupAVAValue(PRArenaPool *arena, int valueType, char *value, SECItem *it,
 	break;
       case SEC_ASN1_UNIVERSAL_STRING:
 	valueLen = PORT_Strlen(value);
-	ucs4Val = (unsigned char *)PORT_ArenaZAlloc(arena, 
-						    PORT_Strlen(value) * 6);
-	ucs4MaxLen = PORT_Strlen(value) * 6;
-	if(!ucs4Val || !PORT_UCS4_UTF8Conversion(PR_TRUE, (unsigned char *)value, valueLen,
+	ucs4MaxLen = valueLen * 6;
+	ucs4Val = (unsigned char *)PORT_ArenaZAlloc(arena, ucs4MaxLen);
+	if(!ucs4Val || !PORT_UCS4_UTF8Conversion(PR_TRUE, 
+	                                (unsigned char *)value, valueLen,
 					ucs4Val, ucs4MaxLen, &ucs4Len)) {
 	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	    return SECFailure;
 	}
 	value = (char *)ucs4Val;
 	valueLen = ucs4Len;
+    	maxLen *= 4;
 	break;
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
 
-    if (((valueType != SEC_ASN1_UNIVERSAL_STRING) && (valueLen > maxLen)) ||
-      ((valueType == SEC_ASN1_UNIVERSAL_STRING) && (valueLen > (maxLen * 4)))) {
+    if (valueLen > maxLen) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     } 
@@ -654,9 +654,11 @@ CERT_DecodeAVAValue(const SECItem *derAVAValue)
 	unsigned char *utf8Val    = (unsigned char*)
 				    PORT_ArenaZAlloc(newarena, utf8ValLen);
 
-	if(!PORT_UCS4_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
+	if(avaValue.len % 4 != 0 ||
+	   !PORT_UCS4_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
 				     utf8Val, utf8ValLen, &utf8ValLen)) {
             PORT_FreeArena(newarena, PR_FALSE);
+	    PORT_SetError(SEC_ERROR_INVALID_AVA);
 	    return NULL;
 	}
 
@@ -669,9 +671,11 @@ CERT_DecodeAVAValue(const SECItem *derAVAValue)
 	unsigned char *utf8Val    = (unsigned char*)
 				    PORT_ArenaZAlloc(newarena, utf8ValLen);
 
-	if(!PORT_UCS2_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
+	if(avaValue.len % 2 != 0 ||
+	   !PORT_UCS2_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
 				     utf8Val, utf8ValLen, &utf8ValLen)) {
             PORT_FreeArena(newarena, PR_FALSE);
+	    PORT_SetError(SEC_ERROR_INVALID_AVA);
 	    return NULL;
 	}
 
