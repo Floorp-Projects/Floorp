@@ -1441,7 +1441,14 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     }
   }
 
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
+  if (aData->mSID == eStyleStruct_Background) {
+    const nsStyleDisplay* readDisplay = (nsStyleDisplay*)
+                  aData->mStyleContext->GetStyleData(eStyleStruct_Display);
+  
+    if (readDisplay &&
+        (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL))
+      nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
+  }
 }
 
 NS_IMETHODIMP
