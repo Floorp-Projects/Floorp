@@ -105,16 +105,19 @@ public class Codegen extends Interpreter
         return f;
     }
 
-    private static Class defineClass(Object bytecode,
-                                     Object staticSecurityDomain)
+    private Class defineClass(Object bytecode,
+                              Object staticSecurityDomain)
     {
         Object[] nameBytesPair = (Object[])bytecode;
         String className = (String)nameBytesPair[0];
         byte[] classBytes = (byte[])nameBytesPair[1];
 
+        // The generated classes in this case refer only to Rhino classes
+        // which must be accessible through this class loader
+        ClassLoader rhinoLoader = getClass().getClassLoader();
         GeneratedClassLoader loader;
-        loader = SecurityController.createLoader(null, staticSecurityDomain);
-
+        loader = SecurityController.createLoader(rhinoLoader,
+                                                 staticSecurityDomain);
         Exception e;
         try {
             Class cl = loader.defineClass(className, classBytes);

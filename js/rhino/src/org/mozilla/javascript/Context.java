@@ -2179,9 +2179,15 @@ public class Context
         f.observeInstructionCount(this, instructionCount);
     }
 
+    /**
+     * Create class loader for generated classes.
+     * The method calls {@link ContextFactory#createClassLoader(ClassLoader)}
+     * using the result of {@link #getFactory()}.
+     */
     public GeneratedClassLoader createClassLoader(ClassLoader parent)
     {
-        return new DefiningClassLoader(parent);
+        ContextFactory f = getFactory();
+        return f.createClassLoader(parent);
     }
 
     public final ClassLoader getApplicationClassLoader()

@@ -273,6 +273,20 @@ public class ContextFactory
         throw new IllegalArgumentException(String.valueOf(featureIndex));
     }
 
+
+    /**
+     * Create class loader for generated classes.
+     * This method creates an instance of the default implementation
+     * of {@link GeneratedClassLoader}. Rhino uses this interface to load
+     * generated JVM classes when no {@link SecurityController}
+     * is installed.
+     * Application can override the method to provide custom class loading.
+     */
+    protected GeneratedClassLoader createClassLoader(ClassLoader parent)
+    {
+        return new DefiningClassLoader(parent);
+    }
+
     /**
      * Execute top call to script or function.
      * When the runtime is about to execute a script or function that will
