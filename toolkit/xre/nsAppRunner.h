@@ -90,4 +90,6 @@ NS_GetFileFromPath(const char *aPath, nsILocalFile* *aResult);
 NS_HIDDEN_(nsresult)
 NS_LockProfilePath(nsILocalFile* aPath, nsIProfileLock* *aResult);
 
+#define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"
+
 #endif // nsAppRunner_h__

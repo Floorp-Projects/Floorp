@@ -948,12 +948,69 @@ ScopedXPCOMStartup::DoAutoreg()
 }
 
 /**
+ * This is a little factory class that serves as a singleton-service-factory
+ * for the nativeappsupport object.
+ */
+class nsSingletonFactory : public nsIFactory
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFACTORY
+
+  nsSingletonFactory(nsISupports* aSingleton);
+  ~nsSingletonFactory();
+
+private:
+  nsCOMPtr<nsISupports> mSingleton;
+};
+
+nsSingletonFactory::nsSingletonFactory(nsISupports* aSingleton)
+  : mSingleton(aSingleton)
+{
+  NS_ASSERTION(mSingleton, "Singleton was null!");
+}
+
+nsSingletonFactory::~nsSingletonFactory()
+{ }
+
+NS_IMPL_ISUPPORTS1(nsSingletonFactory, nsIFactory)
+
+NS_IMETHODIMP
+nsSingletonFactory::CreateInstance(nsISupports* aOuter,
+                                   const nsIID& aIID,
+                                   void* *aResult)
+{
+  NS_ENSURE_NO_AGGREGATION(aOuter);
+
+  return mSingleton->QueryInterface(aIID, aResult);
+}
+
+NS_IMETHODIMP
+nsSingletonFactory::LockFactory(PRBool)
+{
+  return NS_OK;
+}
+
+/**
  * Set our windowcreator on the WindowWatcher service.
  */
 nsresult
 ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
 {
   nsresult rv;
+
+  nsCOMPtr<nsIComponentRegistrar> registrar
+    (do_QueryInterface(mServiceManager));
+  NS_ASSERTION(registrar, "Where's the component registrar?");
+
+  nsCOMPtr<nsIFactory> nativeFactory = new nsSingletonFactory(native);
+  NS_ENSURE_TRUE(nativeFactory, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = registrar->RegisterFactory(kNativeAppSupportCID,
+                                  "Native App Support",
+                                  NS_NATIVEAPPSUPPORT_CONTRACTID,
+                                  nativeFactory);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the cmd line service
   nsCOMPtr<nsICmdLineService> cmdLineArgs
