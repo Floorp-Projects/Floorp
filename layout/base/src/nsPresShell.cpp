@@ -33,6 +33,7 @@
 #include "nsIPref.h"
 #include "nsIViewObserver.h"
 
+static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
 
 #if 0
@@ -285,8 +286,29 @@ PresShell::PresShell()
 {
 }
 
+#ifdef NS_DEBUG
+// for debugging only
+nsrefcnt PresShell::AddRef(void)
+{
+  if (gsNoisyRefs) printf("PresShell: AddRef: %x, cnt = %d \n",this, mRefCnt+1);
+  return ++mRefCnt;
+}
+
+// for debugging only
+nsrefcnt PresShell::Release(void)
+{
+  if (gsNoisyRefs==PR_TRUE) printf("PresShell Release: %x, cnt = %d \n",this, mRefCnt-1);
+  if (--mRefCnt == 0) {
+    if (gsNoisyRefs==PR_TRUE) printf("PresShell Delete: %x, \n",this);
+    delete this;
+    return 0;
+  }
+  return mRefCnt;
+}
+#else
 NS_IMPL_ADDREF(PresShell)
 NS_IMPL_RELEASE(PresShell)
+#endif
 
 nsresult
 PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)

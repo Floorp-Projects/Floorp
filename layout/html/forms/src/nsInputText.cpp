@@ -148,11 +148,13 @@ nscoord nsInputTextFrame::GetHorizontalInsidePadding(float aPixToTwip,
 #endif
 }
 
+static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kTextAreaIID, NS_ITEXTAREAWIDGET_IID);
+
+
 const nsIID&
 nsInputTextFrame::GetIID()
 {
-  static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
-  static NS_DEFINE_IID(kTextAreaIID, NS_ITEXTAREAWIDGET_IID);
 
   if (kInputText_Area == GetTextType()) {
     return kTextAreaIID;
@@ -292,22 +294,48 @@ nsInputTextFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 void 
 nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
-  nsITextWidget* text;
-  if (NS_OK == GetWidget(aView, (nsIWidget **)&text)) {
-    const nsStyleFont* fontStyle = (const nsStyleFont*)(mStyleContext->GetStyleData(eStyleStruct_Font));
-	  text->SetFont(fontStyle->mFixedFont);
-    nsInputText* content;
-    GetContent((nsIContent *&) content);
-    nsAutoString valAttr;
-    nsresult valStatus = ((nsHTMLTagContent *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
-    text->SetText(valAttr);
-    PRInt32 maxLength = content->GetMaxLength();
-    if (ATTR_NOTSET != maxLength) {
-      text->SetMaxTextLength(maxLength);
+  nsIWidget* widget = nsnull;
+  if (NS_OK == GetWidget(aView, &widget)) {
+    nsITextWidget* text = nsnull;
+    nsITextAreaWidget* textArea = nsnull;
+
+    // This is replicated code for both text interfaces -- this should be factored
+    if (widget != nsnull && NS_OK == widget->QueryInterface(kTextIID,(void**)&text))  
+    {
+      const nsStyleFont* fontStyle = (const nsStyleFont*)(mStyleContext->GetStyleData(eStyleStruct_Font));
+	    widget->SetFont(fontStyle->mFixedFont);
+      nsInputText* content;
+      GetContent((nsIContent *&) content);
+      nsAutoString valAttr;
+      nsresult valStatus = ((nsHTMLTagContent *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
+      PRUint32 size;
+      text->SetText(valAttr,size);
+      PRInt32 maxLength = content->GetMaxLength();
+      if (ATTR_NOTSET != maxLength) {
+        text->SetMaxTextLength(maxLength);
+      }
+      widget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+      NS_RELEASE(content);
+      NS_RELEASE(text);
     }
-    text->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
-    NS_RELEASE(text);
-    NS_RELEASE(content);
+    else if (widget != nsnull && NS_OK == widget->QueryInterface(kTextAreaIID,(void**)&textArea))
+    {
+      const nsStyleFont* fontStyle = (const nsStyleFont*)(mStyleContext->GetStyleData(eStyleStruct_Font));
+	    widget->SetFont(fontStyle->mFixedFont);
+      nsInputText* content;
+      GetContent((nsIContent *&) content);
+      nsAutoString valAttr;
+      nsresult valStatus = ((nsHTMLTagContent *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
+      PRUint32 size;
+      textArea->SetText(valAttr,size);
+      PRInt32 maxLength = content->GetMaxLength();
+      if (ATTR_NOTSET != maxLength) {
+        textArea->SetMaxTextLength(maxLength);
+      }
+      widget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+      NS_RELEASE(content);
+      NS_RELEASE(textArea);
+    }
   }
 }
 
@@ -360,26 +388,63 @@ nsInputText::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   if ((aMaxNumValues <= 0) || (nsnull == mName)) {
     return PR_FALSE;
   }
-  nsITextWidget* text = (nsITextWidget *)GetWidget();
-  nsString value;
-  text->GetText(aValues[0], 0);  // the last parm is not used
-  aNames[0] = *mName;
-  
-  aNumValues = 1;
+  nsIWidget* widget = GetWidget();
+  nsITextWidget* text = nsnull;
+  nsITextAreaWidget* textArea = nsnull;
 
-  return PR_TRUE;
+  if (widget != nsnull && NS_OK == widget->QueryInterface(kTextIID,(void**)text))
+  {
+    nsString value;
+    PRUint32 size;
+    text->GetText(aValues[0],0,size);  // the last parm is not used
+    aNames[0] = *mName;  
+    aNumValues = 1;
+
+    NS_RELEASE(text);
+    return PR_TRUE;
+  }
+  else if (widget != nsnull && NS_OK == widget->QueryInterface(kTextAreaIID,(void**)textArea))
+  {
+    nsString value;
+    PRUint32 size;
+    textArea->GetText(aValues[0],0,size);  // the last parm is not used
+    aNames[0] = *mName;  
+    aNumValues = 1;
+
+    NS_RELEASE(textArea);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 
 void 
 nsInputText::Reset() 
 {
-  nsITextWidget* text = (nsITextWidget *)GetWidget();
-  if (nsnull == mValue) {
-    text->SetText("");
-  } else {
-    text->SetText(*mValue);
+  nsIWidget* widget = GetWidget();
+  nsITextWidget* text = nsnull;
+  nsITextAreaWidget* textArea = nsnull;
+  if (widget != nsnull && NS_OK == widget->QueryInterface(kTextIID,(void**)text))
+  {
+    PRUint32 size;
+    if (nsnull == mValue) {
+      text->SetText("",size);
+    } else {
+      text->SetText(*mValue,size);
+    }
+    NS_RELEASE(text);
   }
+  else if (widget != nsnull && NS_OK == widget->QueryInterface(kTextAreaIID,(void**)textArea))
+  {
+    PRUint32 size;
+    if (nsnull == mValue) {
+      textArea->SetText("",size);
+    } else {
+      textArea->SetText(*mValue,size);
+    }
+    NS_RELEASE(textArea);
+  }
+
 }  
 
 void nsInputText::GetType(nsString& aResult) const

@@ -33,6 +33,16 @@
 #include "nsIStyleContext.h"
 #include "nsStyleUtil.h"
 
+
+static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
+
+
+// Prototypes
+nsresult
+NS_NewHTMLInputCheckbox(nsIHTMLContent** aInstancePtrResult,
+                        nsIAtom* aTag, nsIFormManager* aManager);
+
+
 class nsInputCheckboxFrame : public nsInputFrame {
 public:
   nsInputCheckboxFrame(nsIContent* aContent, nsIFrame* aParentFrame);
@@ -119,34 +129,43 @@ nsInputCheckboxFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aV
   PRBool checked = (result != NS_CONTENT_ATTR_NOT_THERE) ? PR_TRUE : PR_FALSE;
 
   // set the widget to the initial state
-  nsICheckButton* checkbox;
-  if (NS_OK == GetWidget(aView, (nsIWidget **)&checkbox)) {
+  nsIWidget*			widget = nsnull;
+  nsICheckButton* checkbox = nsnull;
+  
+  if (NS_OK == GetWidget(aView, &widget)) {
+  	widget->QueryInterface(GetIID(),(void**)&checkbox);
 	  checkbox->SetState(checked);
 
     const nsStyleColor* color = 
       nsStyleUtil::FindNonTransparentBackground(mStyleContext);
 
     if (nsnull != color) {
-      checkbox->SetBackgroundColor(color->mBackgroundColor);
+      widget->SetBackgroundColor(color->mBackgroundColor);
     }
     else {
-      checkbox->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+      widget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
     }
 
-    NS_RELEASE(checkbox);
+    NS_IF_RELEASE(checkbox);
+    NS_IF_RELEASE(widget);
   }
 }
 
 void 
 nsInputCheckboxFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  nsICheckButton* checkbox;
+	nsIWidget*			widget = nsnull;
+  nsICheckButton* checkbox = nsnull;
   nsIView* view;
   GetView(view);
-  if (NS_OK == GetWidget(view, (nsIWidget **)&checkbox)) {
-	PRBool newState = (checkbox->GetState()) ? PR_FALSE : PR_TRUE;
-	checkbox->SetState(newState);
-    NS_RELEASE(checkbox);
+  if (NS_OK == GetWidget(view, &widget)) {
+  	widget->QueryInterface(GetIID(),(void**)&checkbox);
+  	PRBool oldState;
+  	checkbox->GetState(oldState);
+		PRBool newState = oldState ? PR_FALSE : PR_TRUE;
+		checkbox->SetState(newState);
+    NS_IF_RELEASE(checkbox);
+    NS_IF_RELEASE(widget);
   }
 }
 
@@ -218,29 +237,39 @@ nsInputCheckbox::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   if ((aMaxNumValues <= 0) || (nsnull == mName)) {
     return PR_FALSE;
   }
-  nsICheckButton* checkBox = (nsICheckButton *)GetWidget();
-  PRBool state = checkBox->GetState();
-  if(PR_TRUE != state) {
-    return PR_FALSE;
-  }
 
-  if (nsnull == mValue) {
-    aValues[0] = "on";
-  } else {
-    aValues[0] = *mValue;
-  }
-  aNames[0] = *mName;
-  aNumValues = 1;
+  nsIWidget* widget = GetWidget();
+  nsICheckButton* checkBox = nsnull;
+  if (widget != nsnull && NS_OK == widget->QueryInterface(kICheckButtonIID,(void**)&checkBox))
+  {
+    PRBool state = PR_FALSE;
+    checkBox->GetState(state);
+    if(PR_TRUE != state) {
+      return PR_FALSE;
+    }
 
-  return PR_TRUE;
+    if (nsnull == mValue) {
+      aValues[0] = "on";
+    } else {
+      aValues[0] = *mValue;
+    }
+    aNames[0] = *mName;
+    aNumValues = 1;
+    NS_RELEASE(checkBox);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 void 
 nsInputCheckbox::Reset() 
-{
-  nsICheckButton* checkbox = (nsICheckButton *)GetWidget();
-  if (nsnull != checkbox) {
-    checkbox->SetState(mChecked);
+{ 
+  nsIWidget*       widget = GetWidget();
+  nsICheckButton*  checkBox = nsnull;
+  if (widget != nsnull && NS_OK == widget->QueryInterface(kICheckButtonIID,(void**)&checkBox))
+  {
+    checkBox->SetState(mChecked);
+    NS_RELEASE(checkBox);
   }
 }  
 

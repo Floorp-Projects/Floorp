@@ -35,6 +35,16 @@
 #include "nsIStyleContext.h"
 #include "nsStyleUtil.h"
 
+
+// prototypes
+nsresult
+NS_NewHTMLInputRadio(nsIHTMLContent** aInstancePtrResult,
+                     nsIAtom* aTag, nsIFormManager* aManager);
+
+
+static NS_DEFINE_IID(kRadioIID, NS_IRADIOBUTTON_IID);
+
+
 class nsInputRadioFrame : public nsInputFrame {
 public:
   nsInputRadioFrame(nsIContent* aContent, nsIFrame* aParentFrame);
@@ -81,7 +91,6 @@ nsInputRadioFrame::~nsInputRadioFrame()
 const nsIID&
 nsInputRadioFrame::GetIID()
 {
-  static NS_DEFINE_IID(kRadioIID, NS_IRADIOBUTTON_IID);
   return kRadioIID;
 }
   
@@ -114,21 +123,27 @@ nsInputRadioFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView
   //PRInt32 checkedAttr; 
   //nsContentAttr result = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::checked, checkedAttr); 
   //if ((result == eContentAttr_HasValue) && (PR_FALSE != checkedAttr)) {
-  nsIRadioButton* radio;
-  if (NS_OK == GetWidget(aView, (nsIWidget **)&radio)) {
-	  radio->SetState(content->mForcedChecked);
+  nsIWidget* widget = nsnull;
+  nsIRadioButton* radio = nsnull;
+  nsresult result = GetWidget(aView, &widget);
+  if (NS_OK == result) {
+  	result = widget->QueryInterface(GetIID(),(void**)&radio);
+  	if (result == NS_OK)
+  	{
+		  radio->SetState(content->mForcedChecked);
 
-    const nsStyleColor* color = 
-      nsStyleUtil::FindNonTransparentBackground(mStyleContext);
+	    const nsStyleColor* color = 
+	      nsStyleUtil::FindNonTransparentBackground(mStyleContext);
 
-    if (nsnull != color) {
-      radio->SetBackgroundColor(color->mBackgroundColor);
-    }
-    else {
-      radio->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
-    }
-
-    NS_RELEASE(radio);
+	    if (nsnull != color) {
+	      widget->SetBackgroundColor(color->mBackgroundColor);
+	    }
+	    else {
+	      widget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+	    }
+	    NS_RELEASE(radio);
+	   }
+	   NS_RELEASE(widget);
   }
 }
 
@@ -221,7 +236,15 @@ nsInputRadio::GetChecked(PRBool aGetInitialValue) const
   }
   else {
     if (mWidget) {
-      return ((nsIRadioButton *)mWidget)->GetState();
+      PRBool state = PR_FALSE;
+    	nsIRadioButton* radio = nsnull;
+    	nsresult result = mWidget->QueryInterface(kRadioIID,(void**)&radio);
+      if (result == NS_OK)
+      {     	
+      	radio->GetState(state);
+      	NS_IF_RELEASE(radio);
+      }
+      return state;
     }
     else {
       return mForcedChecked;
@@ -294,8 +317,17 @@ nsInputRadio::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   if ((aMaxNumValues <= 0) || (nsnull == mName)) {
     return PR_FALSE;
   }
-  nsIRadioButton* radio = (nsIRadioButton *)GetWidget();
-  PRBool state = radio->GetState();
+  
+  nsIWidget*		  widget = GetWidget();
+  nsIRadioButton* radio = nsnull;
+  PRBool state = PR_FALSE;
+ 	
+ 	if (widget != nsnull)
+ 	{
+ 		widget->QueryInterface(kRadioIID,(void**)&radio);
+  	radio->GetState(state);
+	  NS_IF_RELEASE(radio);
+  }
   if(PR_TRUE != state) {
     return PR_FALSE;
   }
@@ -314,9 +346,12 @@ nsInputRadio::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 void 
 nsInputRadio::Reset() 
 {
-  nsIRadioButton* radio = (nsIRadioButton *)GetWidget();
-  if (nsnull != radio) {
+  nsIWidget* widget = GetWidget();
+  nsIRadioButton* radio = nsnull;
+  if (widget != nsnull && NS_OK == widget->QueryInterface(kRadioIID,(void**)&radio))
+  {
     radio->SetState(mInitialChecked);
+    NS_RELEASE(radio);
   }
 }  
 

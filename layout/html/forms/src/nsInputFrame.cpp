@@ -50,6 +50,10 @@
 #include "nsCSSLayout.h"
 #include "nsStyleUtil.h"
 
+
+static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+
+
 nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsInputFrameSuper(aContent, aParentFrame)
 {
@@ -352,7 +356,7 @@ nsInputFrame::GetWidget(nsIView* aView, nsIWidget** aWidget)
   } else {
     const nsIID id = GetIID();
 
-    result =  widget->QueryInterface(id, (void**)aWidget);
+    result =  widget->QueryInterface(kIWidgetIID, (void**)aWidget);
     if (NS_FAILED(result)) {
       NS_ASSERTION(0, "The widget interface is invalid");  // need to print out more details of the widget
     }

@@ -367,8 +367,7 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     NS_ASSERTION(PR_FALSE, "invalid widget");
     return;
   }
-  NS_RELEASE(widget);
-  list->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+  widget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
 
   const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
   if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
@@ -379,7 +378,7 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
       widgetFont.name = "Arial";  // XXX windows specific font
     }
-    list->SetFont(widgetFont);
+    widget->SetFont(widgetFont);
   }
   else {
     // use arial, scaled down one HTML size
@@ -392,7 +391,7 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
     PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(widgetFont.size, (PRInt32)normal.size, scaleFactor);
     widgetFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
-    list->SetFont(widgetFont);
+    widget->SetFont(widgetFont);
   }
 
   PRInt32 numChildren;
@@ -416,6 +415,7 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
   }
 
   NS_RELEASE(list);
+  NS_RELEASE(widget);
 
   select->Reset();  // initializes selections 
 }
