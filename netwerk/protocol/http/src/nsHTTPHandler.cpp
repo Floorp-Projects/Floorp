@@ -66,7 +66,7 @@ NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler)
         gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
     }
 #endif /* PR_LOGGING */
-
+    
     if (o_HTTPHandler)
     {
         *o_HTTPHandler = nsHTTPHandler::GetInstance();
@@ -118,7 +118,8 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
 {
     nsresult rv;
     nsHTTPChannel* pChannel = nsnull;
-    char* scheme = 0;
+    char* scheme        = nsnull;
+    char* handlerScheme = nsnull;
 
     // Initial checks...
     if (!i_URL || !o_Instance) {
@@ -126,7 +127,17 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
     }
 
     i_URL->GetScheme(&scheme);
-    if (0 == PL_strcasecmp(scheme, "http")) {
+    GetScheme(&handlerScheme);
+    
+    if (scheme != nsnull  && handlerScheme != nsnull  &&
+        0 == PL_strcasecmp(scheme, handlerScheme)) 
+    {
+        if (scheme)
+            nsCRT::free(scheme);
+        
+        if (handlerScheme)
+            nsCRT::free(handlerScheme);
+        
         nsCOMPtr<nsIURI> channelURI;
         PRUint32 count;
         PRInt32 index;
@@ -170,6 +181,12 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         }
         return rv;
     }
+
+    if (scheme)
+            nsCRT::free(scheme);
+        
+    if (handlerScheme)
+            nsCRT::free(handlerScheme);
 
     NS_ERROR("Non-HTTP request coming to HTTP Handler!!!");
     //return NS_ERROR_MISMATCHED_URL;
