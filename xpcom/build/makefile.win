@@ -76,6 +76,9 @@ LLIBS =                                \
 WIN_LIBS =                             \
         shell32.lib                    \
         ole32.lib                      \
+!ifdef GC_LEAK_DETECTOR
+	$(DIST)\lib\boehm.lib  		\
+!endif
 !if defined(MOZ_DEBUG)
         imagehlp.lib                   \
 !endif
