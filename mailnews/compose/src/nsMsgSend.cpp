@@ -34,7 +34,7 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 #include "structs.h"
 #include "xlate.h"		/* Text and PostScript converters */
 #include "merrors.h"
-#include "gui.h"		/* for XP_AppCodeName */
+//#include "gui.h"		/* for XP_AppCodeName */
 #include "mime.h"
 #include "xp_time.h"	/* For XP_LocalZoneOffset() */
 #include "libi18n.h"
@@ -59,18 +59,15 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 #include "addrbook.h"
 #include "imaphost.h"
 #include "imapoff.h"
-#ifdef XP_MAC
-#include "errors.h"
-#endif
 #include "intl_csi.h"
 #include "msgimap.h"
 #include "msgurlq.h"
+#endif //JFD
 
 #ifdef XP_MAC
-#pragma warn_unusedarg off
+//#pragma warn_unusedarg off
+#include "errors.h"
 #endif // XP_MAC
-
-#endif //JFD
 
 // defined in msgCompGlue.cpp
 extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
@@ -269,7 +266,7 @@ static char* NET_GetURLFromLocalFile(char *filename)
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-static char * WH_TempName(XP_FileType /*type*/, const char * prefix)
+char * WH_TempName(XP_FileType /*type*/, const char * prefix)
 {
 	nsresult res;
 	nsString tempPath = "c:\\temp\\";
@@ -765,7 +762,7 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 	  char* src_filename = NET_GetLocalFileFromURL (m_url->address);
 
 		// ### mwelch Only use appledouble if we aren't uuencoding.
-	  if(isMacFile(src_filename) && (! UseUUEncode_p()))
+	  if(/*JFD isMacFile(src_filename) && */ (! UseUUEncode_p()))
 		{
 
 		  char	*separator, tmp[128];
@@ -778,14 +775,15 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 		  m_ap_filename  = WH_TempName (xpFileToPost, "nsmail");
 
 		  ad_encode_stream = (NET_StreamClass *)		/* need a prototype */
-			fe_MakeAppleDoubleEncodeStream (FO_CACHE_AND_MAIL_TO,
-											NULL,
+NULL; /* JFD			fe_MakeAppleDoubleEncodeStream (FO_CACHE_AND_MAIL_TO,
+											(void*)NULL,
 											m_url,
 											m_mime_delivery_state->GetContext(),
 											src_filename,
 											m_ap_filename,
 											separator,
 											m_real_name);
+JFD */
 
 		  if (ad_encode_stream == NULL)
 			{
@@ -795,13 +793,13 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 
 		  do {
 			status = (*ad_encode_stream->put_block)
-			  (ad_encode_stream->data_object, NULL, 1024);
+			  ((NET_StreamClass *)ad_encode_stream->data_object, NULL, 1024);
 		  } while (status == noErr);
 
 		  if (status >= 0)
-			ad_encode_stream->complete (ad_encode_stream->data_object);
+			ad_encode_stream->complete ((NET_StreamClass *)ad_encode_stream->data_object);
 		  else
-			ad_encode_stream->abort (ad_encode_stream->data_object, status);
+			ad_encode_stream->abort ((NET_StreamClass *)ad_encode_stream->data_object, status);
 
 		  PR_Free(ad_encode_stream);
 
@@ -826,12 +824,12 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 
 		  PR_FREEIF(separator);
 
-		PR_FREIF (m_type);
+		PR_FREEIF (m_type);
 		m_type = PL_strdup(tmp);
 		}
 	  else
 		{
-			if (isMacFile(src_filename))
+//JFD			if (isMacFile(src_filename))
 			{
 				// The only time we want to send just the data fork of a two-fork
 				// Mac file is if uuencoding has been requested.
@@ -855,7 +853,9 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 		  Bool 	useDefault;
 		  char	*macType, *macEncoding;
 
+/*JFD
 		  my_FSSpecFromPathname(src_filename, &fsSpec);
+*/
 		  if (FSpGetFInfo (&fsSpec, &info) == noErr)
 			{
 			  XP_SPRINTF(filetype, "%X", info.fdType);
@@ -873,8 +873,10 @@ MSG_DeliverMimeAttachment::SnarfAttachment ()
 
 				  if (info.fdType != TEXT_TYPE && info.fdType != text_TYPE)
 					{
+/*JFD
 					  FE_FileType(m_url->address, &useDefault,
 								  &macType, &macEncoding);
+*/
 
 					  PR_FREEIF(m_type);
 					  m_type = macType;
@@ -2178,6 +2180,17 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	char *buffer_tail = 0;
 	char* error_msg = 0;
  
+  // to news is true if we have a m_field and we have a Newsgroup and it is not empty
+	PRBool tonews = PR_FALSE;
+	if (m_fields) {
+		const char* pstrzNewsgroup = m_fields->GetNewsgroups();
+		if (pstrzNewsgroup && *pstrzNewsgroup)
+			tonews = PR_TRUE;
+	}
+
+	INTL_MessageSendToNews(tonews);			// hack to make Korean Mail/News work correctly 
+											// Look at libi18n/doc_ccc.c for details 
+											// temp solution for bug 30725
 
 	nsMsgSendPart* toppart = NULL;			// The very top most container of the message
 											// that we are going to send.
@@ -3602,10 +3615,24 @@ int MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 
   if (!subject_p)
 	{
+		char* sAppName = nsnull;
+
+		nsINetService * pNetService;
+//		nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, "netlib.dll", PR_FALSE, PR_FALSE); /*JFD - Should go away when netlib will register itself! */
+		nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
+		if (NS_SUCCEEDED(rv) && pNetService)
+		{
+			nsString aNSStr;
+
+			pNetService->GetAppCodeName(aNSStr);
+			sAppName = aNSStr.ToNewCString();
+
+			pNetService->Release();
+		}
 	  /* If the URL didn't provide a subject, we will. */
 	  StrAllocCat (extra_headers, "Subject: Form posted from ");
-	  NS_ASSERTION (XP_AppCodeName, "null XP_AppCodeName");
-	  StrAllocCat (extra_headers, XP_AppCodeName);
+	  NS_ASSERTION (sAppName, "null XP_AppCodeName");
+	  StrAllocCat (extra_headers, sAppName);
 	  StrAllocCat (extra_headers, CRLF);
 	}
 
@@ -3689,7 +3716,7 @@ static char * mime_generate_attachment_headers (const char *type, const char *en
     PL_strcpy(charset_label, charset);
 
 		/* If the characters are all 7bit, then it's better (and true) to
-		claim the charset to be US-ASCII rather than Latin1.  Should we
+		claim the charset to be US-  rather than Latin1.  Should we
 		do this all the time, for all charsets?  I'm not sure.  But we
 		should definitely do it for Latin1. */
 		if (encoding &&
