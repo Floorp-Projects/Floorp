@@ -278,6 +278,20 @@ function prepareChooseDate()
 }
 
 /** 
+* Called on double click in the day view all-day area
+* Could be used for week view too...
+*
+*/
+function dayAllDayDoubleClick( event )
+{
+  if( event ) {
+    if( event.button == 0 )
+      newEvent( null, null, true );
+    event.stopPropagation();
+  }
+}
+
+/** 
 * Called on single click in the day view, select an event
 *
 * PARAMETERS
@@ -683,7 +697,7 @@ function isToDo ( aObject )
 * When the user clicks OK "addEventDialogResponse" is called
 */
 
-function newEvent( startDate, endDate )
+function newEvent( startDate, endDate, allDay )
 {
    // create a new event to be edited and added
    var calendarEvent = createEvent();
@@ -705,6 +719,9 @@ function newEvent( startDate, endDate )
    {
       calendarEvent.end.setTime( endDate.getTime() );
    }
+   
+   if( allDay )
+     calendarEvent.allDay = true;
    
    //get the selected calendar
    var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;

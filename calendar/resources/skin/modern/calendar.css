@@ -792,7 +792,9 @@
     -moz-image-region: rect(0 60px 33px 40px);
 }
 
-/* Day title Stuff */
+/*--------------------------------------------------------------------
+ * Day title stuff
+ *-------------------------------------------------------------------*/
 #day-title-container
 {
     -moz-box-align: center;
@@ -842,51 +844,103 @@
  * Box around the all day content at the top
  *-------------------------------------------------------------------*/
 
+#all-day-collapsible-box
+{
+   border-top           : 1px solid #1D7AB5;
+   background-color     : #ffffff;
+   padding-top          : 1px;
+}
+
 #all-day-content-box
 {
-   min-height           : 25px;
-   max-height           : 25px;
-   overflow             : auto;
-   border-top           : 1px solid #1D7AB5;
-   border-left          : 1px solid #1D7AB5;
-   border-right         : 1px solid #1D7AB5;
-	background-color		: #ffffff;
+   padding-top          : 2px;
+   padding-bottom       : 2px;
+   padding-right        : 7px;
 }
 
 /*--------------------------------------------------------------------
  * Box around the tree content
  *-------------------------------------------------------------------*/
-
 #day-view-content-box
 {
    overflow             : auto;
    background-color     : white;
-   border             : 1px solid #2085c4;
+   border               : 1px solid #2085c4;
 }
 
 /*--------------------------------------------------------------------
- * Box around the tree content
+ * Box for all day events
+ *-------------------------------------------------------------------*/
+
+.day-view-all-day-event-class
+{
+  -moz-user-focus   : normal;
+  cursor            : pointer;
+  margin-bottom     : 1px;
+  margin-right      : 1px;
+  border            : 1px solid #1D7AB5;
+  /* calendar-specific color setting overrides this */
+  background-color  : #F9F4FF;
+}
+
+.day-view-all-day-event-class[continues-left="true"]
+{
+  border-left-color : white;
+}
+
+.day-view-all-day-event-class[continues-right="true"]
+{
+  border-right-color: white;
+}
+
+.day-view-all-day-event-class:hover
+{
+  border            : 1px solid #003366;
+}
+
+.day-view-all-day-event-class[eventselected="true"]
+{
+  border            : 2px solid #990000;
+  /* !important to prevent calendar-specific color setting from overriding this */
+  background-color  : #D5E3F2 !important;
+  /* set margins to prevent jittering when border width is changed */
+  margin-top        : -1px;
+  margin-left       : -1px;
+  margin-bottom     : 0px;
+  margin-right      : 0px;
+}
+
+/*--------------------------------------------------------------------
+ * Box for non- all day events
  *-------------------------------------------------------------------*/
 
 .day-view-event-class
 {
-   margin-bottom     : 1px;
-   margin-top        : 1px;
-   border            : 1px solid #1D7AB5;
-   background-color  : #F9F4FF;
-   -moz-user-focus   : normal;
-   cursor            : pointer;
+  -moz-user-focus   : normal;
+  cursor            : pointer;
+  padding-left      : 1px;
+  padding-right     : 1px;
+  padding-top       : 1px;
+  border            : 1px solid #1D7AB5;
+  overflow          : hidden;
+  /* calendar-specific color setting overrides this */
+  background-color  : #F9F4FF;
 }
 
 .day-view-event-class:hover
 {
-  border		: 1px solid #003366;
+  border            : 1px solid #003366;
 }
 
 .day-view-event-class[eventselected="true"]
 {
-   background-color     :  #D5E3F2;
-   border               : 2px solid #990000;
+  border            : 2px solid #990000;
+  /* set padding to prevent jittering when border width is changed */
+  padding-left      : 0px;
+  padding-right     : 0px;
+  padding-top       : 0px;
+  /* !important to prevent calendar-specific color setting from overriding this */
+  background-color  : #D5E3F2 !important;
 }
  
 /*--------------------------------------------------------------------
@@ -901,7 +955,7 @@
    -moz-box-align       : center;
    height               : 50px;
    padding-top          : 2px;
-   margin-right 	: 5px;
+   margin-right         : 5px;
    -moz-user-focus      : normal;
 }
 
@@ -909,12 +963,6 @@
 {
    background-color     : #2085c4;
 }
-
-#day-tree-item-0
-{
-   border-top           : none;
-}
-
 
 .day-view-hour-box-class[selected="true"]
 {
@@ -937,17 +985,42 @@
    -moz-box-align       : center;
 }
 
-/*--------------------------------------------------------------------
- * Class for text of events
- *-------------------------------------------------------------------*/
-
-.day-view-event-text-class
+#all-day-content-title
 {
-   font-size            : 10pt;
+   margin-right         : 6px;
+   margin-left          : 6px;
+   font-size            : 8pt;
    font-family          : Arial, Helvetica;
-   color                : #000000;
-   -moz-user-focus      : normal;
-   cursor               : pointer;
+   color                : #1d7ab5;
+   -moz-box-pack        : start;
+   -moz-box-align       : center;
+}
+
+/*--------------------------------------------------------------------
+ * Classes for text of events
+ *-------------------------------------------------------------------*/
+.day-view-allday-event-title-label-class
+{
+  cursor               : pointer;
+  font-size            : 8pt;
+  font-family          : Arial, Helvetica;
+  color                : #000000;
+}
+
+.day-view-event-title-label-class
+{
+  cursor               : pointer;
+  font-size            : 10pt;
+  font-family          : Arial, Helvetica;
+  color                : #000000;
+}
+
+.day-view-event-description-class
+{
+  cursor            : pointer;
+  font-size            : 8pt;
+  font-family          : Arial, Helvetica;
+  color                : grey;
 }
 
 /*--------------------------------------------------------------------

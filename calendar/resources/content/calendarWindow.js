@@ -523,8 +523,7 @@ CalendarWindow.prototype.getLowestElementNotInArray = function calWin_getLowestE
 
 /** PRIVATE
 *
-*   Use this function to compare two numbers. Returns the difference.
-*   This is used to sort an array, and sorts it in ascending order.
+*   Use these comparison functions in Array.sort
 *
 */
 
@@ -532,6 +531,13 @@ CalendarWindow.prototype.compareNumbers = function calWin_compareNumbers(a, b) {
    return a - b
 }
 
+CalendarWindow.prototype.compareDisplayEventStart = function calWin_compareDisplayEventStart(a, b) {
+   return ( a.displayDate - b.displayDate );
+}
+
+CalendarWindow.prototype.compareDisplayEventEnd = function calWin_compareDisplayEventStart(a, b) {
+   return ( a.displayEndDate - b.displayEndDate );
+}
 
 CalendarWindow.prototype.onMouseUpCalendarSplitter = function calWinOnMouseUpCalendarSplitter()
 {
@@ -633,16 +639,20 @@ CalendarView.prototype.refresh = function calView_refresh( ShowEvent )
    this.refreshEvents()
 }
 
-// Returns startHour (the first hour of 'date' that has events) and 
-//         endHour (the last hour of 'date' that has events).
-// Used in weekview and dayview
+/** PRIVATE
+ * 
+ * Calculate startHour (the first hour of 'date' that has events, 
+ *                      or default value from prefs) and  
+ *           endHour (the last hour of 'date' that has events,
+ *                    or default value from prefs).
+ */
 
-CalendarView.prototype.getViewLimits = function ( dayDisplayEventList, date )
+CalendarView.prototype.getViewLimits = function calView_getViewLimits( dayDisplayEventList, date )
 {
   //set defaults from preferences
-  var sHour = getIntPref( gCalendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
-  var eHour = getIntPref( gCalendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
-  
+  var sHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
+  var eHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
+
   //get date start and end as millisecs for comparisons
   var tmpDate =new Date(date);
   tmpDate.setHours(0,0,0);
@@ -669,4 +679,121 @@ CalendarView.prototype.getViewLimits = function ( dayDisplayEventList, date )
     }
   }
   return { startHour: sHour, endHour: eHour };
+}
+
+/** PRIVATE
+*   Sets the following for all events in dayEventList 
+*      event.startDrawSlot  - the first horizontal slot the event occupies
+*      event.drawSlotCount  - how many slots the event occupies
+*      event.totalSlotCount - total horizontal slots (during  events duration)
+*   Used in Dayview, usable also in  weekview
+*/
+CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( dayEventList ) {
+  //non-allday Events sorted on displayDate
+  var dayEventStartList = new Array();
+  var eventStartListIndex = 0;
+
+  //non-allday Events sorted on displayEndDate
+  var dayEventEndList = new Array();
+  var eventEndListIndex = 0;
+  
+  // parallel events
+  var currEventSlots = new Array();
+
+  // start index of the current (contiguous) group of events.
+  var groupStartIndex = 0;
+
+  var nextEventIsStarting = true;
+  var currEventSlotsIsEmpty
+  var done = false;
+
+  for( var i = 0; i < dayEventList.length; i++ )
+    if( !dayEventList[i].event.allDay) {
+      dayEventStartList.push(dayEventList[i]);
+      dayEventEndList.push(dayEventList[i]);
+    }
+    
+  if( dayEventStartList.length > 0 ) {
+
+    dayEventStartList.sort(this.calendarWindow.compareDisplayEventStart);
+    dayEventEndList.sort(this.calendarWindow.compareDisplayEventEnd);
+    
+    //init (horizontal) event draw slots .
+    for ( var i = 0; i < dayEventStartList.length; i++ ) 
+    {
+      dayEventStartList[i].startDrawSlot  = -1;
+      dayEventStartList[i].drawSlotCount  = -1;
+      dayEventStartList[i].totalSlotCount = -1;
+    }
+    
+    while( !done ) {
+      if( nextEventIsStarting ) { 
+        
+        //find a slot for the event
+        for( var i = 0; i <currEventSlots.length; i++ )
+          if( currEventSlots[i] == null ) {            
+            // found empty slot, set event here
+            // also check if there is room for event wider than 1 slot.
+            var k = i;
+            dayEventStartList[eventStartListIndex].startDrawSlot = i;
+            while( ( k < currEventSlots.length ) && ( currEventSlots[k] == null )) {
+              currEventSlots[k] = dayEventStartList[eventStartListIndex];
+              dayEventStartList[eventStartListIndex].drawSlotCount = k - i + 1;
+              k++;
+            }
+            break;
+          }
+        if( dayEventStartList[eventStartListIndex].startDrawSlot == -1 ) {
+          // there were no empty slots, see if some existing event could be thinner
+          for( var m = currEventSlots.length - 1; m > 0; m-- )
+            if( currEventSlots[m] == currEventSlots[m-1] ) {
+              dayEventStartList[eventStartListIndex].drawSlotCount = 1;
+              currEventSlots[m] = dayEventStartList[eventStartListIndex];
+              currEventSlots[m-1].drawSlotCount--;
+              break;
+            }
+            
+          if( dayEventStartList[eventStartListIndex].startDrawSlot == -1 ) {
+            
+            //event's not yet placed: must add a new slot
+            currEventSlots[currEventSlots.length] = dayEventStartList[eventStartListIndex];
+            dayEventStartList[eventStartListIndex].startDrawSlot = i;
+            dayEventStartList[eventStartListIndex].drawSlotCount = 1;
+          }
+        }
+        eventStartListIndex++;
+      } else {
+        
+        // nextEventIsStarting==false, remove one event from the slots
+        currEventSlotsIsEmpty = true;
+        for( i = 0; i < currEventSlots.length; i++ ) {
+          if( currEventSlots[i] == dayEventEndList[eventEndListIndex] )
+            currEventSlots[i] = null;
+          
+          if( currEventSlots[i] != null )
+            currEventSlotsIsEmpty = false;
+        }
+        
+        if( currEventSlotsIsEmpty ) {
+          // There are no events in the slots, so we can set totalSlotCount 
+          // for the previous contiguous group of events
+          for( i = groupStartIndex; i < eventStartListIndex; i++ ) {
+            dayEventStartList[i].totalSlotCount = currEventSlots.length;
+          }
+          currEventSlots.length = 0;
+          groupStartIndex = eventStartListIndex;
+        }         
+        eventEndListIndex++;
+      }
+       
+      //update vars for next loop
+      if( dayEventStartList[eventStartListIndex] == null )
+        done = true;
+      else
+        nextEventIsStarting = ( dayEventStartList[eventStartListIndex].displayDate <  dayEventEndList[eventEndListIndex].displayEndDate );     
+    }
+    //  set totalSlotCount for the last contiguous group of events
+    for ( var i = groupStartIndex; i < dayEventStartList.length; i++ )
+      dayEventStartList[i].totalSlotCount = currEventSlots.length;
+  }
 }

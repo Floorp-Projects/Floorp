@@ -56,8 +56,7 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    >
 
-<script type="application/x-javascript" src="chrome://calendar/content/dayView.js"/>
-   
+   <script type="application/x-javascript" src="chrome://calendar/content/dayView.js"/>
    <script src="chrome://global/content/nsDragAndDrop.js"/>
    <script src="chrome://global/content/nsTransferable.js"/>
    <script src="chrome://global/content/nsJSSupportsUtils.js"/>
@@ -65,8 +64,7 @@
    
    <vbox id="day-view-box" flex="1">
    
-        <!-- Day View: Controls-->
-           
+      <!-- Day View: Controls-->
       <hbox id="day-controls-box"> <!-- DO NOT SET FLEX, breaks resizing -->
          <box class="day-previous-button-box">
             <image id="day-previous-button" class="prevnextbuttons" onclick="gCalendarWindow.goToPrevious()"/>
@@ -103,16 +101,19 @@
       </hbox>
       
       <!-- Day View:  -->
-            
+      
       <vbox id="inner-day-view-box" flex="1">
-         <box id="all-day-content-box" align="center" collapsed="true" flex="1">
-            <label class="all-day-content-box-text-title" value="All Day Events"/>
-         </box>
-               
+         <hbox id="all-day-collapsible-box" collapsed="true"
+                                            ondblclick="dayAllDayDoubleClick( event )">
+            <label id="all-day-content-title" value="All-day Events"/>
+            <vbox id="all-day-content-box" flex="1">
+            </vbox>
+         </hbox>
+
          <!-- This is an overlay being included from above -->
          <box id="day-view-content-box" flex="1">
          <stack id="day-view-content-board" flex="1">
-            <vbox id="day-hour-content-holder" flex="1">    
+            <vbox id="day-hour-content-holder" flex="1">
                 <box top="0"
                      left="31"
                      class="day-view-hour-box-class"
@@ -523,7 +524,7 @@
                       <label class="day-time-class-label" id="day-view-hour-23"/>
                    </box>
                 </box>
-            </vbox>    
+            </vbox>
          </stack>
          </box>   <!-- End: day-tree-content-box -->
       </vbox>
