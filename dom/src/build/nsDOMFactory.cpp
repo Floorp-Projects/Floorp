@@ -113,7 +113,7 @@ static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_I
 class nsDOMNativeObjectRegistry : public nsIDOMNativeObjectRegistry {
 public:
   nsDOMNativeObjectRegistry();
-  ~nsDOMNativeObjectRegistry();
+  virtual ~nsDOMNativeObjectRegistry();
 
   NS_DECL_ISUPPORTS
 
@@ -192,7 +192,7 @@ static NS_DEFINE_IID(kIDOMScriptObjectFactory, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID
 class nsDOMScriptObjectFactory : public nsIDOMScriptObjectFactory {
 public:  
   nsDOMScriptObjectFactory();
-  ~nsDOMScriptObjectFactory();
+  virtual ~nsDOMScriptObjectFactory();
 
   NS_DECL_ISUPPORTS
 
@@ -342,6 +342,9 @@ nsDOMScriptObjectFactory::NewScriptCharacterData(PRUint16 aNodeType,
 {
   if (aNodeType == nsIDOMNode::CDATA_SECTION_NODE) {
     return NS_NewScriptCDATASection(aContext, aData, aParent, aReturn);
+  }
+  else if (aNodeType == nsIDOMNode::COMMENT_NODE) {
+    return NS_NewScriptComment(aContext, aData, aParent, aReturn);
   }
   else {
     return NS_NewScriptText(aContext, aData, aParent, aReturn);

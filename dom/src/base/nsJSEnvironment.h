@@ -33,7 +33,7 @@ private:
 
 public:
   nsJSContext(JSRuntime *aRuntime);
-  ~nsJSContext();
+  virtual ~nsJSContext();
 
   NS_DECL_ISUPPORTS
 
