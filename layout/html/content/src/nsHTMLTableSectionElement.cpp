@@ -134,10 +134,10 @@ nsHTMLTableSectionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Align, align, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, VAlign, valign, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Ch, ch, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, choff, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, VAlign, valign)
+NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Ch, ch)
+NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, choff)
 
 NS_IMETHODIMP
 nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)

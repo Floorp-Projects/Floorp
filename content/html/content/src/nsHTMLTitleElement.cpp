@@ -123,7 +123,7 @@ nsHTMLTitleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTitleElement, Text, text, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLTitleElement, Text, text)
 
 NS_IMETHODIMP
 nsHTMLTitleElement::StringToAttribute(nsIAtom* aAttribute,

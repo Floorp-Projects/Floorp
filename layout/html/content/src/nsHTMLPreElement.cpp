@@ -125,7 +125,7 @@ nsHTMLPreElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width, eSetAttrNotify_Reflow)
+NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,

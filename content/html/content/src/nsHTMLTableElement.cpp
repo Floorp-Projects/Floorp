@@ -159,15 +159,15 @@ nsHTMLTableElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 // the DOM spec says border, cellpadding, cellSpacing are all "wstring"
 // in fact, they are integers or they are meaningless.  so we store them here as ints.
 
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, Align, align, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, BgColor, bgcolor, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, Border, border, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, CellPadding, cellpadding, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, CellSpacing, cellspacing, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, Frame, frame, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, Rules, rules, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, Summary, summary, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLTableElement, Width, width, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, BgColor, bgcolor)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, Border, border)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, CellPadding, cellpadding)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, CellSpacing, cellspacing)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, Frame, frame)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, Rules, rules)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, Summary, summary)
+NS_IMPL_STRING_ATTR(nsHTMLTableElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetCaption(nsIDOMHTMLTableCaptionElement** aValue)

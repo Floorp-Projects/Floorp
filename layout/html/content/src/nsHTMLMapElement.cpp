@@ -131,7 +131,7 @@ nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLMapElement, Name, name, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLMapElement, Name, name)
 
 NS_IMETHODIMP
 nsHTMLMapElement::StringToAttribute(nsIAtom* aAttribute,

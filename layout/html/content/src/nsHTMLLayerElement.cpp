@@ -127,7 +127,7 @@ nsHTMLLayerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLLayerElement, Cite, cite, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLLayerElement, Cite, cite)
 
 static nsGenericHTMLElement::EnumTable kVisibilityTable[] = {
   {"hide", NS_STYLE_VISIBILITY_HIDDEN},

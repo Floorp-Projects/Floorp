@@ -127,7 +127,7 @@ nsHTMLMenuElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLMenuElement, Compact, compact, eSetAttrNotify_Reflow)
+NS_IMPL_BOOL_ATTR(nsHTMLMenuElement, Compact, compact)
 
 NS_IMETHODIMP
 nsHTMLMenuElement::StringToAttribute(nsIAtom* aAttribute,

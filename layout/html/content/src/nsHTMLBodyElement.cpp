@@ -284,12 +284,12 @@ nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, ALink, alink, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, BgColor, bgcolor, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Link, link, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLBodyElement, ALink, alink)
+NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background)
+NS_IMPL_STRING_ATTR(nsHTMLBodyElement, BgColor, bgcolor)
+NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Link, link)
+NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text)
+NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink)
 
 NS_IMETHODIMP
 nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,

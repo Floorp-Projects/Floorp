@@ -199,11 +199,11 @@ nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
   return NS_OK;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Align, align, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, BgColor, bgcolor, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Ch, ch, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, ChOff, choff, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, BgColor, bgcolor)
+NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Ch, ch)
+NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, ChOff, choff)
+NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign)
 
 
 NS_IMETHODIMP

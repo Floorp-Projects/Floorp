@@ -189,11 +189,11 @@ nsHTMLOptionElement::GetSelected(PRBool *aSelected)
   return NS_OK;
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected, eSetAttrNotify_None)
-NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index, eSetAttrNotify_None)
-NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value, eSetAttrNotify_Render)
+NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
+NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index)
+NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
+NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
 
 NS_IMETHODIMP
 nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,

@@ -130,7 +130,7 @@ nsHTMLParagraphElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLParagraphElement, Align, align, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLParagraphElement, Align, align)
 
 NS_IMETHODIMP
 nsHTMLParagraphElement::StringToAttribute(nsIAtom* aAttribute,

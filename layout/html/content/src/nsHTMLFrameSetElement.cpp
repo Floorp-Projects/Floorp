@@ -124,8 +124,8 @@ nsHTMLFrameSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Cols, cols, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Rows, rows, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Cols, cols)
+NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Rows, rows)
 
 NS_IMETHODIMP
 nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,

@@ -208,8 +208,8 @@ nsHTMLLabelElement::SetForm(nsIDOMHTMLFormElement* aForm)
   return result;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey, eSetAttrNotify_None)
-//NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
+//NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
 
 NS_IMETHODIMP
 nsHTMLLabelElement::GetHtmlFor(nsString& aValue)

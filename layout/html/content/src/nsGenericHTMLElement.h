@@ -878,7 +878,7 @@ public:
  * valued content property. The method uses the generic SetAttr and
  * GetAttribute methods.
  */
-#define NS_IMPL_STRING_ATTR(_class, _method, _atom, _notify)         \
+#define NS_IMPL_STRING_ATTR(_class, _method, _atom)                  \
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsString& aValue)                             \
   {                                                                  \
@@ -896,7 +896,7 @@ public:
  * valued content property. The method uses the generic SetAttr and
  * GetAttribute methods.
  */
-#define NS_IMPL_BOOL_ATTR(_class, _method, _atom, _notify)            \
+#define NS_IMPL_BOOL_ATTR(_class, _method, _atom)                     \
   NS_IMETHODIMP                                                       \
   _class::Get##_method(PRBool* aValue)                                \
   {                                                                   \
@@ -923,7 +923,7 @@ public:
  * valued content property. The method uses the generic SetAttr and
  * GetAttribute methods.
  */
-#define NS_IMPL_INT_ATTR(_class, _method, _atom, _notify)           \
+#define NS_IMPL_INT_ATTR(_class, _method, _atom)                    \
   NS_IMETHODIMP                                                     \
   _class::Get##_method(PRInt32* aValue)                             \
   {                                                                 \

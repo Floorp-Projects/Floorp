@@ -136,14 +136,14 @@ nsHTMLAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLAreaElement, AccessKey, accesskey, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Alt, alt, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Coords, coords, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Href, href, eSetAttrNotify_None)
-NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape, eSetAttrNotify_None)
-NS_IMPL_INT_ATTR(nsHTMLAreaElement, TabIndex, tabindex, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Target, target, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAreaElement, AccessKey, accesskey)
+NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Alt, alt)
+NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Coords, coords)
+NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Href, href)
+NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref)
+NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape)
+NS_IMPL_INT_ATTR(nsHTMLAreaElement, TabIndex, tabindex)
+NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Target, target)
 
 NS_IMETHODIMP
 nsHTMLAreaElement::StringToAttribute(nsIAtom* aAttribute,

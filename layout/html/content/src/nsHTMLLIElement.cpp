@@ -125,8 +125,8 @@ nsHTMLLIElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type, eSetAttrNotify_Reflow)
-NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type)
+NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value)
 
 static nsGenericHTMLElement::EnumTable kListItemTypeTable[] = {
   { "circle", NS_STYLE_LIST_STYLE_CIRCLE },

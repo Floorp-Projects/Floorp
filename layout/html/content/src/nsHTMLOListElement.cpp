@@ -127,9 +127,9 @@ nsHTMLOListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLOListElement, Compact, compact, eSetAttrNotify_Reflow)
-NS_IMPL_INT_ATTR(nsHTMLOListElement, Start, start, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLOListElement, Type, type, eSetAttrNotify_Reflow)
+NS_IMPL_BOOL_ATTR(nsHTMLOListElement, Compact, compact)
+NS_IMPL_INT_ATTR(nsHTMLOListElement, Start, start)
+NS_IMPL_STRING_ATTR(nsHTMLOListElement, Type, type)
 
 nsGenericHTMLElement::EnumTable kListTypeTable[] = {
   { "none", NS_STYLE_LIST_STYLE_NONE },

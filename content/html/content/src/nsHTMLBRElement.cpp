@@ -123,7 +123,7 @@ nsHTMLBRElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLBRElement, Clear, clear, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLBRElement, Clear, clear)
 
 static nsGenericHTMLElement::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },

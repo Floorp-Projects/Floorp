@@ -124,8 +124,8 @@ nsHTMLModElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLModElement, Cite, cite, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLModElement, DateTime, datetime, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLModElement, Cite, cite)
+NS_IMPL_STRING_ATTR(nsHTMLModElement, DateTime, datetime)
 
 NS_IMETHODIMP
 nsHTMLModElement::StringToAttribute(nsIAtom* aAttribute,

@@ -125,7 +125,7 @@ nsHTMLDivElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLDivElement, Align, align, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLDivElement, Align, align)
 
 NS_IMETHODIMP
 nsHTMLDivElement::StringToAttribute(nsIAtom* aAttribute,

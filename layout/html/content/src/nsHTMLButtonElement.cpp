@@ -209,11 +209,11 @@ nsHTMLButtonElement::GetType(nsString& aType)
   return NS_OK;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey, eSetAttrNotify_None)
-NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name, eSetAttrNotify_Restart)
-NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
+NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
+NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex)
+NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 
 static nsGenericHTMLElement::EnumTable kButtonTypeTable[] = {
   { "button", NS_FORM_BUTTON_BUTTON },
