@@ -2667,8 +2667,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                                 windowless);
       if (NS_OK == rv)
       {
-        nsIView   *view;
-
         mOwner->GetView(&view);
         view->GetWidget(mWidget);
 
