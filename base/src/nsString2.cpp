@@ -1605,6 +1605,10 @@ public:
   nsDeque mDeque;
 };
 
+void Subsume(nsStr& aDest,nsStr& aSource);
+nsStringRecycler& GetRecycler(void);
+
+
 /**
  * 
  * @update	gess 01/04/99
@@ -1694,6 +1698,8 @@ NS_BASE int fputs(const nsString2& aString, FILE* out)
   return (int) len;
 }
        
+
+
 
 /**
  * 
@@ -2039,7 +2045,7 @@ nsAutoString2::nsAutoString2(eCharSize aCharSize) : nsString2(aCharSize){
  */
 nsAutoString2::nsAutoString2(nsStr& aStr,const char* aCString) : nsString2((eCharSize)aStr.mMultibyte) {
   eCharSize theSize=(eCharSize)aStr.mMultibyte;
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>theCharSize)-1,0,theCharSize,PR_FALSE);
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>theSize)-1,0,theSize,PR_FALSE);
   mAgent=0;
   AddNullTerminator(*this);
   Assign(aCString);
