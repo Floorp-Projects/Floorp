@@ -1098,8 +1098,6 @@ nsWidget::InstallDragMotionSignal(GtkWidget * aWidget)
 void 
 nsWidget::InstallDragBeginSignal(GtkWidget * aWidget)
 {
-  printf("nsWidget::InstallDragBeginSignal\n");
-
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
@@ -1110,8 +1108,6 @@ nsWidget::InstallDragBeginSignal(GtkWidget * aWidget)
 void 
 nsWidget::InstallDragDropSignal(GtkWidget * aWidget)
 {
-  printf("nsWidget::InstallDragDropSignal\n");
-
   NS_ASSERTION( nsnull != aWidget, "widget is null");
 
   InstallSignal(aWidget,
