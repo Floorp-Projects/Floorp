@@ -177,6 +177,8 @@ nsLayoutModule::Initialize()
     return NS_OK;
   }
 
+  mInitialized = PR_TRUE;
+    
   // Register all of our atoms once
   nsCSSAtoms::AddRefAtoms();
   nsCSSKeywords::AddRefTable();
@@ -253,7 +255,6 @@ nsLayoutModule::GetClassObject(nsIComponentManager *aCompMgr,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    mInitialized = PR_TRUE;
   }
 
   nsIFactory* f = new nsLayoutFactory(aClass);
