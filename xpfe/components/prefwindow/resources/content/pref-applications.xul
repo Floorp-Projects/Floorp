@@ -48,6 +48,8 @@
     <hbox flex="1">
       <vbox flex="1">
         <listbox id="appList" flex="1"
+              sortResource="http://home.netscape.com/NC-rdf#value"
+              sortDirection="ascending"
               datasources="rdf:null" ref="urn:mimetypes"
               onselect="selectApplication();">
           <template>
