@@ -2441,7 +2441,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
                 for (m = serial; m != 0; m /= 10)
                     *--dp = (jschar)('0' + m % 10);
                 *--dp = '-';
-                JS_ASSERT(dp == cp + length);
+                JS_ASSERT(dp == bp + length);
 
                 done = JS_FALSE;
                 break;
