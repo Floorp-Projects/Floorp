@@ -21,6 +21,7 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=ender
 
 CPPSRCS =				\
+      nsInsertHTMLTxn.cpp			     \
       nsEditor.cpp			     \
       nsTextEditor.cpp       \
       nsTextEditRules.cpp    \
@@ -58,6 +59,7 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS =					\
+	.\$(OBJDIR)\nsInsertHTMLTxn.obj		        \
 	.\$(OBJDIR)\nsEditor.obj		        \
   .\$(OBJDIR)\nsTextEditor.obj        \
   .\$(OBJDIR)\nsTextEditRules.obj     \
