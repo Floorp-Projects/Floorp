@@ -987,7 +987,7 @@
         (map (& read-bindings frame) b b (and (in b lexical-binding :narrow-true) (set-in (& qname b) multiname))))
       (cond
        ((nonempty lexical-bindings)
-        *****)
+        (todo))
        (nil
         (const shadow-bindings (list-set shadow-binding)
           (map (& read-bindings frame) b b (and (in b shadow-binding :narrow-true) (set-in (& qname b) multiname))))
