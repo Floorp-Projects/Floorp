@@ -738,7 +738,7 @@ OK, you have a new query named <code>$name</code>
 }
 
 
-if ($ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/ ) {
+if (exists $ENV{'HTTP_USER_AGENT'} && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/ ) {
     # Search for real Netscape 3 and up.  http://www.browsercaps.org used as source of
     # browsers compatbile with server-push.  It's a Netscape hack, incompatbile
     # with MSIE and Lynx (at least).  Even Communicator 4.51 has bugs with it,
