@@ -207,6 +207,8 @@ nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
 // It's important that all setting of the range start/end pionts 
 // go through this function, which will do all the right voodoo
 // for both refcounting and content notification of range ownership  
+// Calling DoSetRange with either parent argument null will collapse
+// the range to have both endpoints point to the other node
 nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset)
 {
@@ -225,7 +227,7 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
     }
   }
   mStartOffset = aStartOffset;
-  
+
   if (mEndParent != aEndN)
   {
     if (mEndParent) // if it had a former end node, take it off it's list
@@ -241,7 +243,21 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
     }
   }
   mEndOffset = aEndOffset;
-  
+
+  if (mStartParent && (mEndParent == 0))
+  {
+    NS_ADDREF(mStartParent);
+    mEndParent = mStartParent;
+    mEndOffset = mStartOffset;
+  }
+
+  if (mEndParent && (mStartParent == 0))
+  {
+    NS_ADDREF(mEndParent);
+    mStartParent = mEndParent;
+    mStartOffset = mEndOffset;
+  }
+
   if (mStartParent) mIsPositioned = PR_TRUE;
   else mIsPositioned = PR_FALSE;
   
@@ -681,7 +697,7 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
   
   // must be in same document as startpoint, else 
   // endpoint is collapsed to new end.
-  if (mIsPositioned && !InSameDoc(aParent,mEndParent))
+  if (mIsPositioned && !InSameDoc(aParent,mStartParent))
   {
     res = DoSetRange(aParent,aOffset,aParent,aOffset);
     return res;
