@@ -27,7 +27,7 @@
   <binding id="button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
-      <xul:box class="box-inherit" orient="horizontal" dir="normal" flex="1">
+      <xul:box class="box-inherit" orient="horizontal" dir="ltr" flex="1">
         <xul:vbox class="button-box-left" dir="normal" inherits="default,disabled">
           <xul:spring class="button-left-top" inherits="default,disabled"/>
           <xul:spring class="button-left-mid" inherits="default,disabled" flex="1"/>

@@ -679,6 +679,10 @@ nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::dir, value)) {
     if (value.EqualsIgnoreCase("reverse"))
       aIsNormal = !aIsNormal; // Invert our direction.
+    else if (value.EqualsIgnoreCase("ltr"))
+      aIsNormal = PR_TRUE;
+    else if (value.EqualsIgnoreCase("rtl"))
+      aIsNormal = PR_FALSE;
   }
 }
 
