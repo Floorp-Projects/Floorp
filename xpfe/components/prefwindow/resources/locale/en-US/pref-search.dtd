@@ -1,10 +1,10 @@
 <!-- extracted from content/pref-search.xul -->
 
-<!--LOCALIZATION NOTE : FILE The Search prefs dialog -->
-<!--LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
+<!-- LOCALIZATION NOTE : FILE The Search prefs dialog -->
+<!-- LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
 <!ENTITY  title.label "Search">
 
-<!--LOCALIZATION NOTE (lHeader): Translate "Search" according to Netscape glossary -->
+<!--L OCALIZATION NOTE (lHeader): Translate "Search" according to Netscape glossary -->
 <!ENTITY  lHeader "Search">
 <!ENTITY  rHeader "Configure Search">
 <!ENTITY  legendHeader "When clicking the 'Search' button:">
@@ -12,6 +12,6 @@
 <!ENTITY  enablePowerSearch.label "Open the Search window (search multiple engines)">
 <!ENTITY  openSidebarSearchPanel.label "Open the 'Search Results' Sidebar panel when results are available">
 
-<!--LOCALIZATION NOTE (defaultengine.label): Keep parenthesis so it sorts to the first position in the list -->
+<!-- LOCALIZATION NOTE (defaultengine.label): Keep parenthesis so it sorts to the first position in the list -->
 <!ENTITY  defaultengine.label "(Default)">
 <!ENTITY  searchResults.label "Search Results">

@@ -1,9 +1,9 @@
+<!-- LOCALIZATION NOTE : FILE Cookie management prefs -->
+
 <!ENTITY window.title "Cookies">
 <!ENTITY lHeader "Cookies">
 <!ENTITY remSignCheck.label "Automatically prefill usernames and passwords">
 <!ENTITY rHeader "Manage cookies stored on your computer">
-<!--LOCALIZATION NOTE (server.label): 'Wallet' is a product name and should not be translated. -->
-
 <!ENTITY cookies "Cookies">
 <!ENTITY accAllCookiesRadio.label "Accept all cookies">
 <!ENTITY accpOrgCookiesRadio.label "Only accept only cookies that get sent back to the originating server">
