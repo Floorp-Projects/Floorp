@@ -22,6 +22,7 @@
 #define nsIInterfaceInfoManager_h___
 
 #include "nsIInterfaceInfo.h"
+#include "nsIEnumerator.h"
 
 // This should be implemented as a Service
 
@@ -43,6 +44,9 @@ public:
     // NOTE: these return IAllocatator alloc'd copies of the data
     NS_IMETHOD GetIIDForName(const char* name, nsIID** iid) = 0;
     NS_IMETHOD GetNameForIID(const nsIID* iid, char** name) = 0;
+
+    // Get an enumeration of all the interfaces
+    NS_IMETHOD GetInterfaceEnumerator(nsIEnumerator** emumerator) = 0;
 
     // XXX other methods?
 
