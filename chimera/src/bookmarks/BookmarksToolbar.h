@@ -43,4 +43,6 @@ class BookmarksService;
 -(void)reflowButtons;
 -(void)reflowButtonsStartingAtIndex: (int)aIndex;
 
+-(void)showBookmarksToolbar: (BOOL)aShow;
+
 @end

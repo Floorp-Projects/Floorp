@@ -90,6 +90,7 @@ class BookmarksService;
 -(IBAction) nextTab:(id)aSender;
 
 // View menu actions.
+-(IBAction) toggleBookmarksToolbar:(id)aSender;
 -(IBAction) doReload:(id)aSender;
 -(IBAction) doStop:(id)aSender;
 -(IBAction) biggerTextSize:(id)aSender;
