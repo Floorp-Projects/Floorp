@@ -50,7 +50,12 @@ endif
 
 DIST_GARBAGE = config.cache config.log config.status
 
+all:: config.status export
+
 include $(topsrcdir)/config/rules.mk
+
+config.status:: configure
+	./config.status --recheck && ./config.status
 
 #
 # The -ll option of zip converts CR LF to LF.
