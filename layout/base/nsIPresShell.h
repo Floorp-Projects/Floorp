@@ -18,6 +18,20 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Steve Clark (buster@netscape.com)
+ *
+ *   IBM Corporation
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 05/03/2000   IBM Corp.       Observer related defines for reflow
  */
 #ifndef nsIPresShell_h___
 #define nsIPresShell_h___
@@ -65,6 +79,11 @@ class nsIArena;
 #define NS_PRESSHELL_SCROLL_ANYWHERE -1
 #define NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE -2
 
+// Observer related defines
+#define NS_PRESSHELL_REFLOW_TOPIC         "REFLOW"              // Observer Topic
+#define NS_PRESSHELL_INITIAL_REFLOW       "INITIAL REFLOW"      // Observer Data
+#define NS_PRESSHELL_RESIZE_REFLOW        "RESIZE REFLOW"       // Observer Data
+#define NS_PRESSHELL_STYLE_CHANGE_REFLOW  "STYLE CHANGE REFLOW" // Observer Data
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON              0x01
