@@ -43,6 +43,9 @@
 #include <Path.h>
 #include <Entry.h>
 #endif
+#if defined(VMS)
+#include <fabdef.h>
+#endif
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -920,6 +923,14 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
     NS_ENSURE_ARG_POINTER(aFileSize);
     VALIDATE_STAT_CACHE();
+
+#if defined(VMS)
+    /* Only two record formats can report correct file content size */
+    if ((mCachedStat.st_fab_rfm != FAB$C_STMLF) &&
+        (mCachedStat.st_fab_rfm != FAB$C_STMCR)) {
+	return NS_ERROR_FAILURE;
+    }
+#endif
 
     /* XXX autoconf for and use stat64 if available */
     if (S_ISDIR(mCachedStat.st_mode)) {
