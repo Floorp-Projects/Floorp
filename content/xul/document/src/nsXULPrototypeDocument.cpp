@@ -180,8 +180,19 @@ protected:
     friend NS_IMETHODIMP
     NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID,
                                void** aResult);
+
+    nsresult NewXULPDGlobalObject(nsIScriptGlobalObject** aResult);
+
+    static nsIPrincipal* gSystemPrincipal;
+    static nsIScriptGlobalObject* gSystemGlobal;
+    static PRUint32 gRefCnt;
+
+    friend class nsXULPDGlobalObject;
 };
 
+nsIPrincipal* nsXULPrototypeDocument::gSystemPrincipal;
+nsIScriptGlobalObject* nsXULPrototypeDocument::gSystemGlobal;
+PRUint32 nsXULPrototypeDocument::gRefCnt;
 
 
 void PR_CALLBACK
@@ -229,6 +240,7 @@ nsXULPrototypeDocument::nsXULPrototypeDocument()
       mGlobalObject(nsnull),
       mLoaded(PR_FALSE)
 {
+    ++gRefCnt;
 }
 
 
@@ -261,6 +273,11 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
     
     if (mRoot)
         mRoot->ReleaseSubtree();
+
+    if (--gRefCnt == 0) {
+        NS_IF_RELEASE(gSystemPrincipal);
+        NS_IF_RELEASE(gSystemGlobal);
+    }
 }
 
 NS_IMPL_ISUPPORTS3(nsXULPrototypeDocument,
@@ -293,6 +310,42 @@ NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
+// Helper method that shares a system global among all prototype documents
+// that have the system principal as their security principal.   Called by
+// nsXULPrototypeDocument::Read and nsXULPDGlobalObject::GetGlobalObject.
+// This method greatly reduces the number of nsXULPDGlobalObjects and their
+// nsIScriptContexts in apps that load many XUL documents via chrome: URLs.
+
+nsresult
+nsXULPrototypeDocument::NewXULPDGlobalObject(nsIScriptGlobalObject** aResult)
+{
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = GetDocumentPrincipal(getter_AddRefs(principal));
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Now that GetDocumentPrincipal has succeeded, we can safely compare its
+    // result to gSystemPrincipal, in order to create gSystemGlobal if the two
+    // pointers are equal.  Thus, gSystemGlobal implies gSystemPrincipal.
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    if (principal == gSystemPrincipal) {
+        if (!gSystemGlobal) {
+            gSystemGlobal = new nsXULPDGlobalObject();
+            if (! gSystemGlobal)
+                return NS_ERROR_OUT_OF_MEMORY;
+            NS_ADDREF(gSystemGlobal);
+        }
+        global = gSystemGlobal;
+    } else {
+        global = new nsXULPDGlobalObject();
+        if (! global)
+            return NS_ERROR_OUT_OF_MEMORY;
+        global->SetGlobalObjectOwner(this); // does not refcount
+    }
+    *aResult = global;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
 
 //----------------------------------------------------------------------
 //
@@ -333,28 +386,19 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     }
 
     // nsIPrincipal mDocumentPrincipal
-    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-
-    if (! securityManager)
-        return NS_ERROR_FAILURE;
-
-    rv |= NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(mDocumentPrincipal));
-    if (!mDocumentPrincipal) {
-        // XXX This should be handled by the security manager, see bug 160042
-        PRBool isChrome = PR_FALSE;
-        if (NS_SUCCEEDED(mURI->SchemeIs("chrome", &isChrome)) && isChrome)
-            rv |= securityManager->GetSystemPrincipal(getter_AddRefs(mDocumentPrincipal));
-        else
-            rv |= securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
+    nsCOMPtr<nsIPrincipal> principal;
+    rv |= NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(principal));
+    if (! principal) {
+        rv |= GetDocumentPrincipal(getter_AddRefs(principal));
+    } else {
+        mNodeInfoManager->SetDocumentPrincipal(principal);
+        mDocumentPrincipal = principal;
     }
-    mNodeInfoManager->SetDocumentPrincipal(mDocumentPrincipal);
 
     // nsIScriptGlobalObject mGlobalObject
-    mGlobalObject = new nsXULPDGlobalObject();
+    NewXULPDGlobalObject(getter_AddRefs(mGlobalObject));
     if (! mGlobalObject)
         return NS_ERROR_OUT_OF_MEMORY;
-    rv |= mGlobalObject->SetGlobalObjectOwner(this); // does not refcount
 
     mRoot = new nsXULPrototypeElement();
     if (! mRoot)
@@ -590,10 +634,18 @@ nsXULPrototypeDocument::GetDocumentPrincipal(nsIPrincipal** aResult)
 
         // XXX This should be handled by the security manager, see bug 160042
         PRBool isChrome = PR_FALSE;
-        if (NS_SUCCEEDED(mURI->SchemeIs("chrome", &isChrome)) && isChrome)
-            rv = securityManager->GetSystemPrincipal(getter_AddRefs(mDocumentPrincipal));
-        else
-            rv = securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
+        if (NS_SUCCEEDED(mURI->SchemeIs("chrome", &isChrome)) && isChrome) {
+            if (gSystemPrincipal) {
+                mDocumentPrincipal = gSystemPrincipal;
+            } else {
+                rv = securityManager->
+                     GetSystemPrincipal(getter_AddRefs(mDocumentPrincipal));
+                NS_IF_ADDREF(gSystemPrincipal = mDocumentPrincipal);
+            }
+        } else {
+            rv = securityManager->
+                 GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
+        }
 
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
@@ -683,17 +735,12 @@ nsXULPrototypeDocument::NotifyLoadDone()
 NS_IMETHODIMP
 nsXULPrototypeDocument::GetScriptGlobalObject(nsIScriptGlobalObject** _result)
 {
-    if (!mGlobalObject) {
-        mGlobalObject = new nsXULPDGlobalObject();
-        if (!mGlobalObject) {
-            *_result = nsnull;
-            return NS_ERROR_OUT_OF_MEMORY;
-            }
-        mGlobalObject->SetGlobalObjectOwner(this); // does not refcount
-    }
+    nsresult rv = NS_OK;
+    if (!mGlobalObject)
+         rv = NewXULPDGlobalObject(getter_AddRefs(mGlobalObject));
     *_result = mGlobalObject;
-    NS_ADDREF(*_result);
-    return NS_OK;
+    NS_IF_ADDREF(*_result);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -900,6 +947,13 @@ NS_IMETHODIMP
 nsXULPDGlobalObject::GetPrincipal(nsIPrincipal** aPrincipal)
 {
     if (!mGlobalObjectOwner) {
+        // See nsXULPrototypeDocument::NewXULPDGlobalObject, the comment
+        // about gSystemGlobal implying gSystemPrincipal.
+        if (this == nsXULPrototypeDocument::gSystemGlobal) {
+            *aPrincipal = nsXULPrototypeDocument::gSystemPrincipal;
+            NS_ADDREF(*aPrincipal);
+            return NS_OK;
+        }
         *aPrincipal = nsnull;
         return NS_ERROR_FAILURE;
     }
