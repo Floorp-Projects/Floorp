@@ -367,7 +367,7 @@ private:
 /*HELPER METHODS*/
   nsresult     MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aAmount);
 
-  nscoord      FetchDesiredX(); //the x position requested by the Key Handling for up down
+  nsresult     FetchDesiredX(nscoord &aDesiredX); //the x position requested by the Key Handling for up down
   void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
   void         SetDesiredX(nscoord aX); //set the mDesiredX
 
@@ -942,38 +942,54 @@ nsSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 
-nscoord
-nsSelection::FetchDesiredX() //the x position requested by the Key Handling for up down
+nsresult
+nsSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested by the Key Handling for up down
 {
   if (!mTracker)
   {
     NS_ASSERTION(0,"fetch desired X failed\n");
-    return -1;
+    return NS_ERROR_FAILURE;
   }
   if (mDesiredXSet)
-    return mDesiredX;
-  else {
-    nsRect coord;
-    PRBool  collapsed;
-    nsCOMPtr<nsICaret> caret;
-    nsCOMPtr<nsIPresContext> context;
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult result = mTracker->GetPresContext(getter_AddRefs(context));
-    if (NS_FAILED(result) || !context)
-      return result;
-    result = context->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(result) || !shell)
-      return result;
-    result = shell->GetCaret(getter_AddRefs(caret));
-    if (NS_FAILED(result) || !caret)
-      return result;
-
-    PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-    result = caret->GetWindowRelativeCoordinates(coord,collapsed,mDomSelections[index]);
-    if (NS_FAILED(result))
-      return result;
-    return coord.x;
+  {
+    aDesiredX = mDesiredX;
+    return NS_OK;
   }
+
+  nsCOMPtr<nsIPresContext> context;
+  nsresult result = mTracker->GetPresContext(getter_AddRefs(context));
+  if (NS_FAILED(result))
+    return result;
+  if (!context)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIPresShell> shell;
+  result = context->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(result))
+    return result;
+  if (!shell)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsICaret> caret;
+  result = shell->GetCaret(getter_AddRefs(caret));
+  if (NS_FAILED(result))
+    return result;
+  if (!caret)
+    return NS_ERROR_NULL_POINTER;
+
+  nsRect coord;
+  PRBool  collapsed;
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  result = caret->SetCaretDOMSelection(mDomSelections[index]);
+  if (NS_FAILED(result))
+    return result;
+
+  result = caret->GetCaretCoordinates(nsICaret::eClosestViewCoordinates, mDomSelections[index], &coord, &collapsed);
+  if (NS_FAILED(result))
+    return result;
+   
+  aDesiredX = coord.x;
+  return NS_OK;
 }
 
 
@@ -1384,7 +1400,9 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
     return result;
   if (aKeycode == nsIDOMKeyEvent::DOM_VK_UP || aKeycode == nsIDOMKeyEvent::DOM_VK_DOWN)
   {
-    desiredX= FetchDesiredX();
+    result = FetchDesiredX(desiredX);
+    if (NS_FAILED(result))
+      return result;
     SetDesiredX(desiredX);
   }
 
