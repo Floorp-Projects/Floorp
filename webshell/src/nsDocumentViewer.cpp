@@ -650,6 +650,13 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
     // Setup hierarchical relationship in view manager
     mViewManager->SetRootView(mView);
 
+#ifdef XP_MAC
+		// Making the root view invisible on Mac slightly improves the performance.
+		// It's not much but it helps. Besides, there is no reason not to make it invisble:
+		// it's entirely covered by other views and we don't use it to paint, just to resize.
+		mView->SetVisibility(nsViewVisibility_kHide);
+#endif
+
     mView->GetWidget(mWindow);
 
     //set frame rate to 25 fps
