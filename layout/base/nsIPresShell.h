@@ -381,11 +381,8 @@ public:
    * Get and set the history state for the current document 
    */
 
-  // XXX This function needs to be renamed to something better.
-  // It is not simply a getter for the layout history state.  It
-  // creates a new state object and captures frame state onto it
+  NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
-
   NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState) = 0;
 
   /** 
