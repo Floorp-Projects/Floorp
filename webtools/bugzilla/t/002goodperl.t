@@ -48,7 +48,7 @@ foreach my $file (@testitems) {
     $file =~ m/.*\.(.*)/;
     my $ext = $1;
 
-    if ($file_line1 !~ m#/usr/bin/perl#) {
+    if ($file_line1 !~ m/^#\!/) {
         ok(1,"$file does not have a shebang");	
     } else {
         my $flags;
@@ -66,10 +66,14 @@ foreach my $file (@testitems) {
             next;
         }
 
-        if ($file_line1 =~ m#/usr/bin/perl -$flags#) {
-            ok(1,"$file uses -$flags");
+        if ($file_line1 =~ m#^\#\!/usr/bin/perl\s#) {
+            if ($file_line1 =~ m#\s-$flags#) {
+                ok(1,"$file uses standard perl location and -$flags");
+            } else {
+                ok(0,"$file is MISSING -$flags --WARNING");
+            }
         } else {
-            ok(0,"$file is MISSING -$flags --WARNING");
+            ok(0,"$file uses non-standard perl location");
         }
     }
 }
