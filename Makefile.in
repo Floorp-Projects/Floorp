@@ -80,11 +80,10 @@ DIRS +=				\
   silentdl			\
   xpinstall			\
   sun-java			\
-  extensions                    \
   $(NULL)
 
 ifdef MOZ_BUILD_XPFE
-DIRS += xpfe
+DIRS += xpfe extensions
 endif
 
 ifdef MOZ_MAIL_NEWS
