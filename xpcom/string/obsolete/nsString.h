@@ -870,6 +870,34 @@ NS_DEF_STRING_COMPARISON_OPERATORS(nsCAutoString, char)
 NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCAutoString, char)
 #endif
 
+/**
+ * A helper class that converts a UCS2 string to UTF8
+ */
+class NS_COM NS_ConvertUCS2toUTF8
+      : public nsCAutoString
+    /*
+      ...
+    */
+  {
+    public:
+      NS_ConvertUCS2toUTF8( const PRUnichar* aString )
+        { Init( aString, ~PRUint32(0) /* MAXINT */); }
+
+      NS_ConvertUCS2toUTF8( const PRUnichar* aString, PRUint32 aLength )
+        { Init( aString, aLength ); }
+
+      NS_ConvertUCS2toUTF8( PRUnichar aChar )
+        { Init( &aChar, 1 ); }
+
+    protected:
+      Init( const PRUnichar* aString, PRUint32 aLength );
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      NS_ConvertUCS2toUTF8( char );
+  };
+
+
 /***************************************************************
   The subsumestr class is very unusual. 
   It differs from a normal string in that it doesn't use normal

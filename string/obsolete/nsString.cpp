@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -1862,6 +1861,94 @@ void nsCString::DebugDump(void) const {
   }
 }
        
+//----------------------------------------------------------------------
+
+NS_ConvertUCS2toUTF8::Init( const PRUnichar* aString, PRUint32 aLength )
+  {
+    // Caculate how many bytes we need
+    const PRUnichar* p;
+    PRInt32 count, utf8len;
+    for (p = aString, utf8len = 0, count = aLength; 0 != count && 0 != (*p); count--, p++)
+      {
+        if (! ((*p) & 0xFF80))
+          utf8len += 1; // 0000 0000 - 0000 007F
+        else if (! ((*p) & 0xF800))
+          utf8len += 2; // 0000 0080 - 0000 07FF
+        else 
+          utf8len += 3; // 0000 0800 - 0000 FFFF
+        // Note: Surrogate pair needs 4 bytes, but in this calcuation
+        // we count it as 6 bytes. It will waste 2 bytes per surrogate pair
+      }
+
+    // Make sure our buffer's big enough, so we don't need to do
+    // multiple allocations.
+    if((utf8len+1) > sizeof(mBuffer))
+      SetCapacity(utf8len+1); 
+
+    char* out = mStr;
+    PRUint32 ucs4=0;
+
+    for (p = aString, utf8len=0, count = aLength; 0 != count && 0 != (*p); count--, p++)
+      {
+        if (0 == ucs4)
+          {
+            if (! ((*p) & 0xFF80))
+              {
+                *out++ = (char)*p;
+              } 
+            else if (! ((*p) & 0xF800))
+              {
+                *out++ = 0xC0 | (char)((*p) >> 6);
+                *out++ = 0x80 | (char)(0x003F & (*p));
+              }
+            else
+              {
+                if (0xD800 == (0xFC00 & (*p))) 
+                  {
+                    // D800- DBFF - High Surrogate 
+                    // N = (H- D800) *400 + 10000 + ...
+                    ucs4 = 0x10000 | ((0x03FF & (*p)) << 10);
+                  }
+                else if (0xDC00 == (0xFC00 & (*p)))
+                  { 
+                    // DC00- DFFF - Low Surrogate 
+                    // error here. We should hit High Surrogate first
+                    // Do not output any thing in this case
+                  }
+                else
+                  {
+                    *out++ = 0xE0 | (char)((*p) >> 12);
+                    *out++ = 0x80 | (char)(0x003F & (*p >> 6));
+                    *out++ = 0x80 | (char)(0x003F & (*p) );
+                  }
+              }
+          }
+        else
+          {
+            if (0xDC00 == (0xFC00 & (*p)))
+              { 
+                // DC00- DFFF - Low Surrogate 
+                // N += ( L - DC00 )  
+                ucs4 |= (0x03FF & (*p));
+
+                // 0001 0000-001F FFFF
+                *out++ = 0xF0 | (char)(ucs4 >> 18);
+                *out++ = 0x80 | (char)(0x003F & (ucs4 >> 12));
+                *out++ = 0x80 | (char)(0x003F & (ucs4 >> 6));
+                *out++ = 0x80 | (char)(0x003F & ucs4) ;
+              }
+            else
+              {
+                // Got a High Surrogate but no low surrogate
+                // output nothing.
+              }
+            ucs4 = 0;
+          }
+      }
+
+    *out = '\0'; // null terminate
+  }
+
 
 /***********************************************************************
   IMPLEMENTATION NOTES: AUTOSTRING...
