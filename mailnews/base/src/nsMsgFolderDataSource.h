@@ -176,6 +176,8 @@ protected:
   static nsIRDFResource* kNC_Rename;
   static nsIRDFResource* kNC_EmptyTrash;
 
+  static nsrefcnt gFolderResourceRefCnt;
+
 	nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;
 
 };

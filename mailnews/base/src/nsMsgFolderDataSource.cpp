@@ -70,6 +70,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_Compact= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Rename= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_EmptyTrash= nsnull;
 
+nsrefcnt nsMsgFolderDataSource::gFolderResourceRefCnt = 0;
 
 nsMsgFolderDataSource::nsMsgFolderDataSource():
   mInitialized(PR_FALSE)
@@ -81,33 +82,35 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 {
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		mailSession->RemoveFolderListener(this);
+	if (--gFolderResourceRefCnt == 0)
+	{
+		nsrefcnt refcnt;
+		NS_RELEASE2(kNC_Child, refcnt);
+		NS_RELEASE2(kNC_MessageChild, refcnt);
+		NS_RELEASE2(kNC_Folder, refcnt);
+		NS_RELEASE2(kNC_Name, refcnt);
+		NS_RELEASE2(kNC_NameSort, refcnt);
+		NS_RELEASE2(kNC_SpecialFolder, refcnt);
+		NS_RELEASE2(kNC_ServerType, refcnt);
+		NS_RELEASE2(kNC_IsServer, refcnt);
+		NS_RELEASE2(kNC_TotalMessages, refcnt);
+		NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
+		NS_RELEASE2(kNC_Charset, refcnt);
+		NS_RELEASE2(kNC_BiffState, refcnt);
 
-  nsrefcnt refcnt;
-  NS_RELEASE2(kNC_Child, refcnt);
-  NS_RELEASE2(kNC_MessageChild, refcnt);
-  NS_RELEASE2(kNC_Folder, refcnt);
-  NS_RELEASE2(kNC_Name, refcnt);
-  NS_RELEASE2(kNC_NameSort, refcnt);
-  NS_RELEASE2(kNC_SpecialFolder, refcnt);
-  NS_RELEASE2(kNC_ServerType, refcnt);
-  NS_RELEASE2(kNC_IsServer, refcnt);
-  NS_RELEASE2(kNC_TotalMessages, refcnt);
-  NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
-  NS_RELEASE2(kNC_Charset, refcnt);
-  NS_RELEASE2(kNC_BiffState, refcnt);
-
-  NS_RELEASE2(kNC_Delete, refcnt);
-  NS_RELEASE2(kNC_NewFolder, refcnt);
-  NS_RELEASE2(kNC_GetNewMessages, refcnt);
-  NS_RELEASE2(kNC_Copy, refcnt);
-  NS_RELEASE2(kNC_Move, refcnt);
-  NS_RELEASE2(kNC_MarkAllMessagesRead, refcnt);
-  NS_RELEASE2(kNC_Compact, refcnt);
-  NS_RELEASE2(kNC_Rename, refcnt);
-  NS_RELEASE2(kNC_EmptyTrash, refcnt);
+		NS_RELEASE2(kNC_Delete, refcnt);
+		NS_RELEASE2(kNC_NewFolder, refcnt);
+		NS_RELEASE2(kNC_GetNewMessages, refcnt);
+		NS_RELEASE2(kNC_Copy, refcnt);
+		NS_RELEASE2(kNC_Move, refcnt);
+		NS_RELEASE2(kNC_MarkAllMessagesRead, refcnt);
+		NS_RELEASE2(kNC_Compact, refcnt);
+		NS_RELEASE2(kNC_Rename, refcnt);
+		NS_RELEASE2(kNC_EmptyTrash, refcnt);
+	}
 
 }
 
@@ -126,7 +129,7 @@ nsresult nsMsgFolderDataSource::Init()
 	if(!rdf)
 		return NS_ERROR_FAILURE;
 
-  if (! kNC_Child) {
+  if (gFolderResourceRefCnt++ == 0) {
     rdf->GetResource(NC_RDF_CHILD,   &kNC_Child);
     rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
     rdf->GetResource(NC_RDF_FOLDER,  &kNC_Folder);

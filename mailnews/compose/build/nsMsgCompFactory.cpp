@@ -80,7 +80,6 @@ public:
     nsCID mClassID;
 	char* mClassName;
 	char* mProgID;
-	nsIServiceManager* mServiceManager;
 };   
 
 nsMsgComposeFactory::nsMsgComposeFactory(const nsCID &aClass,
@@ -93,16 +92,12 @@ nsMsgComposeFactory::nsMsgComposeFactory(const nsCID &aClass,
 {   
 	NS_INIT_REFCNT();
 
-	// store a copy of the 
-  compMgrSupports->QueryInterface(nsCOMTypeInfo<nsIServiceManager>::GetIID(),
-                                  (void **)&mServiceManager);
 }   
 
 nsMsgComposeFactory::~nsMsgComposeFactory()   
 {   
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 
-	NS_IF_RELEASE(mServiceManager);
 	PL_strfree(mClassName);
 	PL_strfree(mProgID);
 }   

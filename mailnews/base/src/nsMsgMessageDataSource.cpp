@@ -66,6 +66,8 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_ToggleRead= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MarkFlagged= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnflagged= nsnull;
 
+nsrefcnt nsMsgMessageDataSource::gMessageResourceRefCnt = 0;
+
 
 nsMsgMessageDataSource::nsMsgMessageDataSource():
   mInitialized(PR_FALSE),
@@ -78,52 +80,34 @@ nsMsgMessageDataSource::nsMsgMessageDataSource():
 nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 {
 	nsresult rv;
-	nsIRDFService *rdf = getRDFService();
-	if(rdf)
-		rdf->UnregisterDataSource(this);
 
 	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 
 	if(NS_SUCCEEDED(rv))
 		mailSession->RemoveFolderListener(this);
+	if (--gMessageResourceRefCnt == 0)
+	{
+		nsrefcnt refcnt;
 
-	nsrefcnt refcnt;
-
-	if (kNC_Subject)
 		NS_RELEASE2(kNC_Subject, refcnt);
-	if (kNC_SubjectCollation)
 		NS_RELEASE2(kNC_SubjectCollation, refcnt);
-	if (kNC_Sender)
 		NS_RELEASE2(kNC_Sender, refcnt);
-	if (kNC_SenderCollation)
 		NS_RELEASE2(kNC_SenderCollation, refcnt);
-	if (kNC_Date)
 		NS_RELEASE2(kNC_Date, refcnt);
-	if (kNC_Status)
 		NS_RELEASE2(kNC_Status, refcnt);
-	if (kNC_Flagged)
 		NS_RELEASE2(kNC_Flagged, refcnt);
-	if (kNC_Priority)
 		NS_RELEASE2(kNC_Priority, refcnt);
-	if (kNC_Size)
 		NS_RELEASE2(kNC_Size, refcnt);
-	if (kNC_Total)
 		NS_RELEASE2(kNC_Total, refcnt);
-	if (kNC_Unread)
 		NS_RELEASE2(kNC_Unread, refcnt);
-	if (kNC_MessageChild)
 		NS_RELEASE2(kNC_MessageChild, refcnt);
 
-	if (kNC_MarkRead)
 		NS_RELEASE2(kNC_MarkRead, refcnt);
-	if (kNC_MarkUnread)
 		NS_RELEASE2(kNC_MarkUnread, refcnt);
-	if (kNC_ToggleRead)
 		NS_RELEASE2(kNC_ToggleRead, refcnt);
-	if (kNC_MarkRead)
 		NS_RELEASE2(kNC_MarkFlagged, refcnt);
-	if (kNC_MarkUnread)
 		NS_RELEASE2(kNC_MarkUnflagged, refcnt);
+	}
 
 	NS_IF_RELEASE(mHeaderParser);
 }
@@ -151,7 +135,7 @@ nsresult nsMsgMessageDataSource::Init()
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
 	PR_ASSERT(NS_SUCCEEDED(rv));
-	if (! kNC_Subject) {
+	if (gMessageResourceRefCnt++ == 0) {
     
 		rdf->GetResource(NC_RDF_SUBJECT, &kNC_Subject);
 		rdf->GetResource(NC_RDF_SUBJECT_COLLATION_SORT, &kNC_SubjectCollation);

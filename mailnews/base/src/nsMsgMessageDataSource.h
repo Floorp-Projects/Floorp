@@ -200,6 +200,8 @@ protected:
 	nsCOMPtr<nsISupportsArray> kThreadsArcsOutArray;
 	nsCOMPtr<nsISupportsArray> kNoThreadsArcsOutArray;
 
+	static nsrefcnt gMessageResourceRefCnt;
+
 };
 
 PR_EXTERN(nsresult)

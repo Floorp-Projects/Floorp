@@ -99,7 +99,8 @@ protected:
   static nsIRDFResource* kNC_PageTitleCopies;
   static nsIRDFResource* kNC_PageTitleAdvanced;
   static nsIRDFResource* kNC_PageTitleSMTP;
-  
+
+  static nsrefcnt gAccountManagerResourceRefCnt;
 
 private:
   // enumeration function to convert each server (element)
@@ -135,6 +136,8 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleCopies=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAdvanced=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
 
+nsrefcnt nsMsgAccountManagerDataSource::gAccountManagerResourceRefCnt = 0;
+
 // RDF to match
 #define NC_RDF_ACCOUNT NC_NAMESPACE_URI "Account"
 #define NC_RDF_SERVER  NC_NAMESPACE_URI "Server"
@@ -161,9 +164,27 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
 
 nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
 {
-  if (getRDFService()) nsServiceManager::ReleaseService(kRDFServiceCID,
-                                                    getRDFService(),
-                                                    this);
+	if (--gAccountManagerResourceRefCnt == 0)
+	{
+      NS_IF_RELEASE(kNC_Child);
+      NS_IF_RELEASE(kNC_Name);
+      NS_IF_RELEASE(kNC_NameSort);
+      NS_IF_RELEASE(kNC_PageTag);
+      NS_IF_RELEASE(kNC_Account);
+      NS_IF_RELEASE(kNC_Server);
+      NS_IF_RELEASE(kNC_Identity);
+      NS_IF_RELEASE(kNC_PageTitleMain);
+      NS_IF_RELEASE(kNC_PageTitleServer);
+      NS_IF_RELEASE(kNC_PageTitleCopies);
+      NS_IF_RELEASE(kNC_PageTitleAdvanced);
+      NS_IF_RELEASE(kNC_PageTitleSMTP);
+      
+      NS_IF_RELEASE(kNC_AccountRoot);
+      
+      // eventually these need to exist in some kind of array
+      // that's easily extensible
+      NS_IF_RELEASE(kNC_Settings);
+	}
 
 }
 
@@ -182,7 +203,7 @@ nsMsgAccountManagerDataSource::Init()
         if (NS_FAILED(rv)) return rv;
     }
     
-    if (! kNC_Child) {
+	if (gAccountManagerResourceRefCnt++ == 0) {
       getRDFService()->GetResource(NC_RDF_CHILD, &kNC_Child);
       getRDFService()->GetResource(NC_RDF_NAME, &kNC_Name);
       getRDFService()->GetResource(NC_RDF_NAME_SORT, &kNC_NameSort);
