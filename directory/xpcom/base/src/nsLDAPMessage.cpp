@@ -31,15 +31,24 @@
  * GPL.
  */
 
-#include "nsLDAPMessage.h"
 #include <stdio.h>
+#include "nsLDAPMessage.h"
+
+#ifdef DEBUG
+#include "nspr.h"
+#endif
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPMessage, nsILDAPMessage);
 
 // constructor
-nsLDAPMessage::nsLDAPMessage(class nsLDAPOperation *op)
+//
+nsLDAPMessage::nsLDAPMessage()
 {
-  this->operation = op;
-  this->message = NULL;
-  this->position = NULL;
+    NS_INIT_ISUPPORTS();
+
+    mMsgHandle = NULL;
+    mConnectionHandle = NULL;
+    mPosition = NULL;
 }
 
 // destructor
@@ -47,66 +56,94 @@ nsLDAPMessage::nsLDAPMessage(class nsLDAPOperation *op)
 //
 nsLDAPMessage::~nsLDAPMessage(void)
 {
-  int rc;
+    int rc;
 
-  if (this->message != NULL) {
-    rc = ldap_msgfree(this->message);
+    if (mMsgHandle != NULL) {
+	rc = ldap_msgfree(mMsgHandle);
 
-    switch(rc) {
-    case LDAP_RES_BIND:
-    case LDAP_RES_SEARCH_ENTRY:
-    case LDAP_RES_SEARCH_RESULT:
-    case LDAP_RES_MODIFY:
-    case LDAP_RES_ADD:
-    case LDAP_RES_DELETE:
-    case LDAP_RES_MODRDN:
-    case LDAP_RES_COMPARE:
-    case LDAP_RES_SEARCH_REFERENCE:
-    case LDAP_RES_EXTENDED:
-    case LDAP_RES_ANY:
-      // success
-      break;
-    case LDAP_SUCCESS:
-      // timed out (dunno why LDAP_SUCESS is used to indicate this) 
-      fprintf(stderr, 
-	      "nsLDAPMessage::~nsLDAPMessage: ldap_msgfree() timed out.\n");
-      fflush(stderr);
-      break;
-    default:
-      // other failure
-      // XXX - might errno conceivably be useful here?
-      fprintf(stderr,"nsLDAPMessage::~nsLDAPMessage: ldap_msgfree: %s\n",
-	      ldap_err2string(rc));
-      fflush(stderr);
-      break;
+	switch(rc) {
+	case LDAP_RES_BIND:
+	case LDAP_RES_SEARCH_ENTRY:
+	case LDAP_RES_SEARCH_RESULT:
+	case LDAP_RES_MODIFY:
+	case LDAP_RES_ADD:
+	case LDAP_RES_DELETE:
+	case LDAP_RES_MODRDN:
+	case LDAP_RES_COMPARE:
+	case LDAP_RES_SEARCH_REFERENCE:
+	case LDAP_RES_EXTENDED:
+	case LDAP_RES_ANY:
+	    // success
+	    break;
+	case LDAP_SUCCESS:
+	    // timed out (dunno why LDAP_SUCCESS is used to indicate this) 
+	    fprintf(stderr, 
+		"nsLDAPMessage::~nsLDAPMessage: ldap_msgfree() timed out.\n");
+	    break;
+	default:
+	    // other failure
+	    // XXX - might errno conceivably be useful here?
+	    fprintf(stderr,"nsLDAPMessage::~nsLDAPMessage: ldap_msgfree: %s\n",
+		    ldap_err2string(rc));
+	    break;
+	}
     }
-  }
 
-  if ( this->position != NULL ) {
-      ldap_ber_free(this->position, 0);
-  }
+    if ( mPosition != NULL ) {
+	ldap_ber_free(mPosition, 0);
+    }
 
+}
+
+// associate this message with an existing operation
+//
+NS_IMETHODIMP
+nsLDAPMessage::Init(nsILDAPOperation *aOperation, LDAPMessage *aMsgHandle)
+{
+    nsresult rv;
+    nsCOMPtr<nsILDAPConnection> connection; 
+
+    NS_ENSURE_ARG_POINTER(aOperation);
+    NS_ENSURE_ARG_POINTER(aMsgHandle);
+    
+    // initialize the appropriate member vars
+    //
+    mOperation = aOperation;
+    mMsgHandle = aMsgHandle;
+
+    // cache the connection handle associated with this operation
+    //
+    rv = mOperation->GetConnection(getter_AddRefs(connection));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = connection->GetConnectionHandle(&mConnectionHandle);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return NS_OK;
 }
 
 // XXX - both this and GetErrorString should be based on a separately
 // broken out ldap_parse_result
 //
-int
-nsLDAPMessage::GetErrorCode(void)
+NS_IMETHODIMP
+nsLDAPMessage::GetErrorCode(PRInt32 *aErrCode)
 {
-  int errcode;
-  int rc;
+    PRInt32 rc;
 
-  rc = ldap_parse_result(this->operation->connection->connectionHandle,
-			 this->message, &errcode, NULL, NULL,
-			 NULL, NULL, 0);
-  if (rc != LDAP_SUCCESS) {
-    fprintf(stderr, "nsLDAPMessage::ErrorToString: ldap_parse_result: %s\n",
-	    ldap_err2string(rc));
-    exit(-1);
-  }
+    rc = ldap_parse_result(mConnectionHandle, mMsgHandle, aErrCode, 
+			   NULL, NULL, NULL, NULL, 0);
 
-  return(errcode);
+    if (rc != LDAP_SUCCESS) {
+
+#ifdef DEBUG
+	PR_fprintf(PR_STDERR,
+		   "nsLDAPMessage::ErrorToString: ldap_parse_result: %s\n",
+		   ldap_err2string(rc));
+#endif	
+	return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
 }
 
 // XXX deal with extra params (make client not have to use ldap_memfree() on 
@@ -124,9 +161,8 @@ nsLDAPMessage::GetErrorString(void)
 
   int rc;
 
-  rc = ldap_parse_result(this->operation->connection->connectionHandle,
-			 this->message, &errcode, &matcheddn, &errmsg,
-			 &referrals, &serverctrls, 0);
+  rc = ldap_parse_result(mConnectionHandle, mMsgHandle, &errcode, &matcheddn,
+			 &errmsg, &referrals, &serverctrls, 0);
   if (rc != LDAP_SUCCESS) {
     fprintf(stderr, "nsLDAPMessage::ErrorToString: ldap_parse_result: %s\n",
 	    ldap_err2string(rc));
@@ -143,20 +179,34 @@ nsLDAPMessage::GetErrorString(void)
 
 // wrapper for ldap_first_attribute 
 //
-char *
-nsLDAPMessage::FirstAttribute(void)
+NS_IMETHODIMP
+nsLDAPMessage::FirstAttribute(char* *aAttribute)
 {
-    return ldap_first_attribute(this->operation->connection->connectionHandle,
-				this->message, &(this->position));
+    NS_ENSURE_ARG_POINTER(aAttribute);
+
+    *aAttribute = ldap_first_attribute(mConnectionHandle, mMsgHandle, 
+				       &mPosition);
+    if (*aAttribute) {
+	return NS_OK;
+    } else {
+	return NS_ERROR_FAILURE;
+    }
 }
 
 // wrapper for ldap_next_attribute()
 //
-char * 
-nsLDAPMessage::NextAttribute(void)
+NS_IMETHODIMP
+nsLDAPMessage::NextAttribute(char* *aAttribute)
 {
-    return ldap_next_attribute(this->operation->connection->connectionHandle,
-			       this->message, this->position);
+    NS_ENSURE_ARG_POINTER(aAttribute);
+
+    *aAttribute = ldap_next_attribute(mConnectionHandle, mMsgHandle, 
+				      mPosition);
+    if (*aAttribute) {
+	return NS_OK;
+    } else {
+	return NS_ERROR_FAILURE;
+    }
 }
 
 // wrapper for ldap_msgtype()
@@ -164,23 +214,50 @@ nsLDAPMessage::NextAttribute(void)
 int
 nsLDAPMessage::Type(void)
 {
-    return (ldap_msgtype(this->message));
+    return (ldap_msgtype(mMsgHandle));
 }
 
 // wrapper for ldap_get_dn
 //
-char * 
-nsLDAPMessage::GetDN(void)
+NS_IMETHODIMP
+nsLDAPMessage::GetDN(char* *aDN)
 {
-    return ldap_get_dn(this->operation->connection->connectionHandle,
-		       this->message);
+    NS_ENSURE_ARG_POINTER(aDN);
+
+    *aDN = ldap_get_dn(mConnectionHandle, mMsgHandle);
+
+    if (*aDN) {
+	return NS_OK;
+    } else {
+	return NS_ERROR_FAILURE;
+    }
+
 }
 
 // wrapper for ldap_get_values()
 //
-char **
-nsLDAPMessage::GetValues(const char *attr)
+NS_IMETHODIMP
+nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount, 
+			 char** *aValues)
 {
-    return ldap_get_values(this->operation->connection->connectionHandle,
-			   this->message, attr);
+    PRUint32 i;
+    char **values;
+
+    values = ldap_get_values(mConnectionHandle, mMsgHandle, aAttr);
+
+    // bail out if there was a problem
+    // XXX - better err handling
+    //
+    if (!values) {
+	return NS_ERROR_FAILURE;	
+    }
+
+    // count the values
+    //
+    for ( i=0 ; values[i] != NULL; i++ ) {
+    }
+
+    *aCount = i + 1;    // include the NULL-terminator in our count
+    *aValues = values;
+    return NS_OK;
 }

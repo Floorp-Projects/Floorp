@@ -33,13 +33,15 @@
 
 #include "ldap.h"
 #include "nsLDAPOperation.h"
-#include "nsLDAPConnection.h"
-#include "nsLDAPMessage.h"
+#include "nsILDAPMessage.h"
+#include "nsIComponentManager.h"
+
+struct timeval nsLDAPOperation::sNullTimeval = {0, 0};
 
 // constructor
-nsLDAPOperation::nsLDAPOperation(class nsLDAPConnection *c)
+nsLDAPOperation::nsLDAPOperation()
 {
-  this->connection = c;
+    NS_INIT_ISUPPORTS();
 }
 
 // destructor
@@ -47,28 +49,99 @@ nsLDAPOperation::~nsLDAPOperation()
 {
 }
 
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPOperation, nsILDAPOperation);
+
+// the connection this operation is on
+//
+// attribute nsILDAPConnection connection;
+//
+NS_IMETHODIMP
+nsLDAPOperation::SetConnection(nsILDAPConnection *aConnection)
+{
+    nsresult rv;
+
+    // set the connection
+    //
+    mConnection = aConnection;
+
+    // get and cache the connection handle
+    //	
+    rv = this->mConnection->GetConnectionHandle(&this->mConnectionHandle);
+    if (NS_FAILED(rv)) 
+	return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPOperation::GetConnection(nsILDAPConnection* *aConnection)
+{
+    NS_ENSURE_ARG_POINTER(aConnection);
+
+    *aConnection = mConnection;
+    NS_IF_ADDREF(*aConnection);
+
+    return NS_OK;
+}
+
 // wrapper for ldap_simple_bind()
 //
-bool
+NS_IMETHODIMP
 nsLDAPOperation::SimpleBind(const char *who, const char *passwd)
 {
-  this->msgId = ldap_simple_bind(this->connection->connectionHandle, who, 
-				 passwd);
+    NS_ENSURE_ARG(who);
+    NS_ENSURE_ARG(passwd);
 
-  if (this->msgId == -1) {
-    return false;
-  } else {
-    return true;
-  }
+    this->mMsgId = ldap_simple_bind(this->mConnectionHandle, who, 
+				   passwd);
+
+    if (this->mMsgId == -1) {
+        return NS_ERROR_FAILURE;
+    } else {
+        return NS_OK;
+    }
 }
 
 // wrapper for ldap_result
-int
-nsLDAPOperation::Result(int all, struct timeval *timeout, 
-		      class nsLDAPMessage *msg)
+NS_IMETHODIMP
+nsLDAPOperation::Result(PRInt32 aAll, 
+			PRTime timeout, 
+			nsILDAPMessage* *aMessage,
+			PRInt32 *_retval)
 {
-  return ( ldap_result(this->connection->connectionHandle, this->msgId,
-		       all, timeout, &(msg->message)) );
+    LDAPMessage *msgHandle;
+    nsCOMPtr<nsILDAPMessage> msg;
+
+    nsresult rv;
+
+    NS_ENSURE_ARG_POINTER(aMessage);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    // make the call
+    //
+    *_retval =	ldap_result(mConnectionHandle, mMsgId,
+			    aAll, &sNullTimeval, &msgHandle);
+    
+    // if we didn't error or timeout, create an nsILDAPMessage
+    //	
+    if (*_retval != 0 && *_retval != -1) {
+	
+	// create the message
+	//
+	msg = do_CreateInstance("mozilla.network.ldapmessage", &rv);
+	NS_ENSURE_SUCCESS(rv, rv);
+
+	// initialize it
+        //	
+	rv = msg->Init(this, msgHandle);
+	NS_ENSURE_SUCCESS(rv, rv);
+
+    }
+
+    *aMessage = msg;
+    NS_IF_ADDREF(*aMessage);
+
+    return NS_OK;
 }
 
 // wrappers for ldap_search_ext
@@ -84,9 +157,9 @@ nsLDAPOperation::SearchExt(const char *base, // base DN to search
 			   struct timeval *timeoutp, // how long to wait
 			   int sizelimit) // max # of entries to return
 {
-    return ldap_search_ext(this->connection->connectionHandle, base, scope, 
+    return ldap_search_ext(this->mConnectionHandle, base, scope, 
 			   filter, attrs, attrsOnly, serverctrls, 
-			   clientctrls, timeoutp, sizelimit, &(this->msgId));
+			   clientctrls, timeoutp, sizelimit, &(this->mMsgId));
 }
 
 int
@@ -97,16 +170,22 @@ nsLDAPOperation::SearchExt(const char *base, // base DN to search
 			   int sizelimit) // max # of entries to return
 {
     return nsLDAPOperation::SearchExt(base, scope, filter, NULL, 0, NULL,
-				    NULL, timeoutp, sizelimit);
+				      NULL, timeoutp, sizelimit);
 }
 
 // wrapper for ldap_url_search
 //
-int
-nsLDAPOperation::URLSearch(const char *URL, // the search URL
-			   int attrsonly) // skip attribute names?
+NS_IMETHODIMP
+nsLDAPOperation::URLSearch(const char *aURL, // the search URL
+			   PRBool aAttrsOnly) // skip attribute names?
 {
-  this->msgId = ldap_url_search(this->connection->connectionHandle, URL, 
-				attrsonly);
-  return this->msgId;
+    NS_ENSURE_ARG(aURL);
+
+    this->mMsgId = ldap_url_search(this->mConnectionHandle, aURL, 
+				   aAttrsOnly);
+    if (this->mMsgId == -1) {
+	return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
 }

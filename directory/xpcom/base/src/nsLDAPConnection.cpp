@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include "nsLDAPConnection.h"
 
-NS_IMPL_ISUPPORTS1(nsLDAPConnection, nsILDAPConnection);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPConnection, nsILDAPConnection);
 
 // constructor
 //
@@ -50,7 +50,7 @@ nsLDAPConnection::~nsLDAPConnection()
 {
   int rc;
 
-  rc = ldap_unbind_s(this->connectionHandle);
+  rc = ldap_unbind_s(this->mConnectionHandle);
   if (rc != LDAP_SUCCESS) {
     fprintf(stderr, "nsLDAPConnection::~nsLDAPConnection: %s\n", 
 	    ldap_err2string(rc));
@@ -60,20 +60,26 @@ nsLDAPConnection::~nsLDAPConnection()
 // wrapper for ldap_init()
 //
 NS_IMETHODIMP
-nsLDAPConnection::Init(const char *defhost, PRInt16 defport)
+nsLDAPConnection::Init(const char *aDefHost, PRInt16 aDefPort)
 {
-  this->connectionHandle = ldap_init(defhost, defport);
-  return (this->connectionHandle == NULL ? NS_ERROR_FAILURE : NS_OK);
+    NS_ENSURE_ARG(aDefHost);
+    NS_ENSURE_ARG(aDefPort);
+
+    this->mConnectionHandle = ldap_init(aDefHost, aDefPort);
+    return (this->mConnectionHandle == NULL ? NS_ERROR_FAILURE : NS_OK);
 }
 
 // wrapper for ldap_get_lderrno
 //
 NS_IMETHODIMP
 nsLDAPConnection::GetLdErrno(char **matched, char **errString, 
-			     PRInt16 *_retval)
+			     PRInt32 *_retval)
 {
-  *_retval = ldap_get_lderrno(this->connectionHandle, matched, errString);
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    *_retval = ldap_get_lderrno(this->mConnectionHandle, matched, errString);
+
+    return NS_OK;
 }
 
 // return the error string corresponding to GetLdErrno.
@@ -84,7 +90,23 @@ nsLDAPConnection::GetLdErrno(char **matched, char **errString,
 NS_IMETHODIMP
 nsLDAPConnection::GetErrorString(char **_retval)
 {
-  *_retval = ldap_err2string(ldap_get_lderrno(this->connectionHandle, 
-					      NULL, NULL));
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    *_retval = ldap_err2string(ldap_get_lderrno(this->mConnectionHandle, 
+						NULL, NULL));
+    return NS_OK;
+}
+
+// really only for the internal use of nsLDAPOperation and friends
+//
+// [ptr] native ldapPtr(LDAP);
+// [noscript] readonly attribute ldapPtr connection;
+//
+NS_IMETHODIMP
+nsLDAPConnection::GetConnectionHandle(LDAP* *aConnectionHandle)
+{
+    NS_ENSURE_ARG_POINTER(aConnectionHandle);
+
+    *aConnectionHandle = mConnectionHandle;
+    return NS_OK;
 }

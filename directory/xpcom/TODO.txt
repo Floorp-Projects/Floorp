@@ -1,10 +1,5 @@
 implementation
 --------------
-
-* finish XPCOMifying nsLDAP{Message,Connection,Operation} in order to allow
-  XPCOM proxies to be used for thread-crossing operations (side benefit: also
-  exposes more LDAPy goodness to JS) (in progres: dmose) 
-
 * make AsyncRead actually be asynchronous (and probably cause ldapSearch.cpp 
   to be split and moved) by factoring out the lowlevel stuff into another
   thread (in progress: dmose)
@@ -76,6 +71,20 @@ housecleaning
 
 * investigate the MOZILLA_CLIENT define as used by the SDK. eg do we still
   want the reference to "xp_sort.h"?
+
+* does NS_ENSURE_* provide adequate error-checking at interface boundaries
+  for JS in non-debug builds?
+
+* does always using this-> for member vars cause inheritance problems?  if so, 
+  does it matter in an XPCOM world?
+
+* shouldn't be casting results of nsILDAPConnection::GetErrorString to void
+  in ldapSearch
+
+* finish XPCOMifying nsLDAP{Message,Connection,Operation} and check 
+  thread-safety in order to allow XPCOM proxies to be used for
+  thread-crossing operations (side benefit: also exposes more LDAPy
+  goodness to JS) 
 
 features
 --------

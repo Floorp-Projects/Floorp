@@ -33,6 +33,14 @@
 
 #include "nsISupports.idl"
 
+// for the ldapPtr typedef
+//
+%{C++
+#include "ldap.h"
+%}
+
+[ptr] native ldapConnectionHandle(LDAP);
+
 [scriptable, uuid(337ad2fe-1dd2-11b2-89f8-aae1221ec86c)]
 interface nsILDAPConnection : nsISupports
 {
@@ -43,6 +51,11 @@ interface nsILDAPConnection : nsISupports
     void Init(in string defhost, in short defport);
   
     // wrapper for ldap_get_lderrno()
-    short GetLdErrno(out string matched, out string s);
+    long GetLdErrno(out string matched, out string s);
+
+    // really only for the internal use of nsLDAPOperation and friends
+    //
+    [noscript] readonly attribute ldapConnectionHandle connectionHandle;
+
 };
 

@@ -34,40 +34,53 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
+#include "nspr.h"
 #include "ldap.h"
-#include "nsLDAPConnection.h"
-#include "nsLDAPOperation.h"
-#include "nsLDAPMessage.h"
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
+#include "nsILDAPConnection.h"
+#include "nsILDAPOperation.h"
+#include "nsILDAPMessage.h"
 #include "nsLDAPChannel.h"
 
-void
+NS_METHOD
 lds(class nsLDAPChannel *chan, const char *url)
 {
-  class nsLDAPConnection *myConnection;
-  class nsLDAPMessage *myMessage;
-  class nsLDAPOperation *myOperation;
-  struct timeval nullTimeval = {0,0};
-  // struct timeval timeout = {10,0};
-  int returnCode;
-  char *errString;
-  PRInt16 lden;
+    nsCOMPtr<nsILDAPConnection> myConnection;
+    nsCOMPtr<nsILDAPMessage> myMessage;
+    nsCOMPtr<nsILDAPOperation> myOperation;
+    int returnCode;
+    char *errString;
+    PRInt32 lden;
+    nsresult rv;
 
-  myConnection = new nsLDAPConnection();
-  if ( !myConnection->Init("nsdirectory.netscape.com", LDAP_PORT) ) {
-    fprintf(stderr, "main: nsLDAPConnection::Init failed\n");
-    exit(-1);
-  }
 
-  myOperation = new nsLDAPOperation(myConnection);
+    // create an LDAP connection
+    //
+    myConnection = do_CreateInstance("mozilla.network.ldapconnection", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // initialize it with the defaults
+    // XXX should return reasonable err msg, not assert
+    //	
+    rv = myConnection->Init("nsdirectory.netscape.com", LDAP_PORT);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create and initialize an LDAP operation on the new connection
+    //	
+    myOperation = do_CreateInstance("mozilla.network.ldapoperation", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = myOperation->SetConnection(myConnection);
+    NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef NO_URL_SEARCH
   fprintf(stderr, "starting bind\n");
-  fflush(stderr);
   
   if ( !myOperation->SimpleBind(NULL, NULL) ) {
     (void)myConnection->GetErrorString(&errString);
     fprintf(stderr, "ldap_simple_bind: %s\n", errString);
-    exit(-1);
+    return NS_ERROR_FAILURE;
   }
 
   fprintf(stderr, "waiting for bind to complete");
@@ -92,154 +105,170 @@ lds(class nsLDAPChannel *chan, const char *url)
 	    "myOperation->Result() [myOperation->SimpleBind]: %s: errno=%d\n",
 	    errString, errno);
     ldap_memfree(errString); 
-    exit(-1);
+    return NS_ERROR_FAILURE;
     break;
   default:
     fprintf(stderr, "\nmyOperation->Result() returned unexpected value: %d", 
 	    returnCode);
-    exit(-1);
+    return NS_ERROR_FAILURE;
   }
 
   fprintf(stderr, "bound\n");
 
-  delete myMessage;
-  delete myOperation;
-
 #endif 
 
-  // start search
-  
-  fprintf(stderr, "starting search\n");
-  fflush(stderr);
-  myOperation = new nsLDAPOperation(myConnection);
+    // start search
+    //
+    PR_fprintf(PR_STDERR, "starting search\n");
 
-  // XXX what about timeouts?
-  //
-  returnCode = myOperation->URLSearch(url, 0);
-  if (returnCode == -1) {
-    exit(-1);
-  }
+    myOperation = do_CreateInstance("mozilla.network.ldapoperation", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // poll for results
-  //
-  fprintf(stderr, "polling search operation");
-  returnCode = LDAP_SUCCESS;
-  while ( returnCode != LDAP_RES_SEARCH_RESULT ) {
+    rv = myOperation->SetConnection(myConnection);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      char *dn, *attr;
-      int rc2;
+    // XXX what about timeouts? 
+    // XXX failure is a reasonable thing; don't assert
+    //
+    rv = myOperation->URLSearch(url, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-      fputc('.', stderr);
+    // poll for results
+    //
+    fprintf(stderr, "polling search operation");
+    returnCode = LDAP_SUCCESS;
+    while ( returnCode != LDAP_RES_SEARCH_RESULT ) {
 
-      myMessage = new nsLDAPMessage(myOperation);
-      returnCode = myOperation->Result(LDAP_MSG_ONE, &nullTimeval, 
-				       myMessage);
+	char *dn, *attr;
+	int rc2;
 
-      switch (returnCode) {
-      case -1: // something went wrong
-	  (void)myConnection->GetErrorString(&errString);
-	  fprintf(stderr, 
-		  "\nmyOperation->Result() [URLSearch]: %s: errno=%d\n",
-		  errString, errno);
-	  ldap_memfree(errString); 
-	  exit(-1);
-      case 0: // nothing's been returned yet
-	  break; 	
+	fputc('.', stderr);
 
-      case LDAP_RES_SEARCH_ENTRY:
-	  fprintf(stderr, "\nentry returned!\n");
+	// XXX is 0 the right value?
+	//
+	rv = myOperation->Result(LDAP_MSG_ONE, (PRTime)0,
+				 getter_AddRefs(myMessage), &returnCode);
 
-	  // get the DN
-	  dn = myMessage->GetDN();
-	  if (!dn) {
-	      (void)myConnection->GetErrorString(&errString);
-	      fprintf(stderr, "myMessage->GetDN(): %s\n", errString);
-		     
-	      exit(-1);
-	  }
-	  chan->pipeWrite("dn: ");
-	  chan->pipeWrite(dn);
-	  chan->pipeWrite("\n");
+	switch (returnCode) {
+	case -1: // something went wrong
+	    (void)myConnection->GetErrorString(&errString);
+	    fprintf(stderr, 
+		    "\nmyOperation->Result() [URLSearch]: %s: errno=%d\n",
+		    errString, errno);
+	    ldap_memfree(errString); 
+	    return NS_ERROR_FAILURE;
+	case 0: // nothing's been returned yet
+	    break; 	
 
-	  ldap_memfree(dn);
+	case LDAP_RES_SEARCH_ENTRY:
+	    fprintf(stderr, "\nentry returned!\n");
 
-	  // fetch the attributesget the first attribute
-	  for (attr = myMessage->FirstAttribute();
-	       attr != NULL;
-	       attr = myMessage->NextAttribute()) {
+	    // get the DN
+	    // XXX better err handling
+	    //
+	    rv = myMessage->GetDN(&dn);
+	    NS_ENSURE_SUCCESS(rv, rv);
 
-	      int i;
-	      char **vals;
+	    chan->pipeWrite("dn: ");
+	    chan->pipeWrite(dn);
+	    chan->pipeWrite("\n");
 
-	      // get the values of this attribute
-	      vals = myMessage->GetValues(attr);
-	      if (vals == NULL) {
-   		  (void)myConnection->GetErrorString(&errString);
-		  fprintf(stderr, "myMessage->GetValues: %s\n", errString); 
+	    ldap_memfree(dn);
 
-		  exit(-1);
-	      }
+	    // fetch the attributes
+	    for (rv = myMessage->FirstAttribute(&attr);
+		 attr != NULL;
+		 rv = myMessage->NextAttribute(&attr)) {
 
-	      // print all values of this attribute
-	      for ( i=0 ; vals[i] != NULL; i++ ) {
-		chan->pipeWrite(attr);
-		chan->pipeWrite(": ");
-		chan->pipeWrite(vals[i]);
-		chan->pipeWrite("\n");
-	      }
+		if ( NS_FAILED(rv) ) {
+		    PR_fprintf(PR_STDERR, "failure getting attribute\n");
+		    return rv;
+		}
 
-	      ldap_value_free(vals);
-	      ldap_memfree(attr);
-	  }
+		int i;
+		char **vals;
+		PRUint32 attrCount;
+
+		// get the values of this attribute
+		// XXX better failure handling
+		//
+		rv = myMessage->GetValues(attr, &attrCount, &vals);
+		if (NS_FAILED(rv)) {
+		    (void)myConnection->GetErrorString(&errString);
+		    PR_fprintf(PR_STDERR, "myMessage->GetValues: %s\n", 
+			       errString); 
+		    return rv;;
+		}
+
+		// print all values of this attribute
+		for ( i=0 ; vals[i] != NULL; i++ ) {
+		    chan->pipeWrite(attr);
+		    chan->pipeWrite(": ");
+		    chan->pipeWrite(vals[i]);
+		    chan->pipeWrite("\n");
+		}
+
+		ldap_value_free(vals);
+		ldap_memfree(attr);
+	    }
 	  
-	  // did we reach this statement because of an error?
-	  (void)myConnection->GetLdErrno(NULL, NULL, &lden);
-	  if ( lden != LDAP_SUCCESS ) {
+	    // did we reach this statement because of an error?
+	    (void)myConnection->GetLdErrno(NULL, NULL, &lden);
+	    if ( lden != LDAP_SUCCESS ) {
 
-	      (void)myConnection->GetErrorString(&errString);
-	      fprintf(stderr, "myMessage: error getting attribute: %s\n", 
-		      errString);
+		(void)myConnection->GetErrorString(&errString);
+		fprintf(stderr, "myMessage: error getting attribute: %s\n", 
+			errString);
+		return NS_ERROR_FAILURE;
+	    }
 
-	      exit(-1);
-	  }
+	    // separate this entry from the next
+	    chan->pipeWrite("\n");
 
-	  // separate this entry from the next
-	  chan->pipeWrite("\n");
+	    // continue polling
+#ifdef DEBUG_dmose	    
+	    PR_fprintf(PR_STDERR, "polling search operation");
+#endif
+	    break;
 
-	  // continue polling
-	  fprintf(stderr, "polling search operation");
-	  break;
+	case LDAP_RES_SEARCH_REFERENCE: // referral
+	    fprintf(stderr, 
+		    "LDAP_RES_SEARCH_REFERENCE returned; not implemented!");
+	    return NS_ERROR_FAILURE;
+	    break;
 
-      case LDAP_RES_SEARCH_REFERENCE: // referral
-	  fprintf(stderr, 
-		  "LDAP_RES_SEARCH_REFERENCE returned; not implemented!");
-	  exit(-1);
-	  break;
+	case LDAP_RES_SEARCH_RESULT: // all done (the while condition sees this)
+	    fprintf(stderr, "\nresult returned: \n");
 
-      case LDAP_RES_SEARCH_RESULT: // all done (the while condition sees this)
-	  fprintf(stderr, "\nresult returned: \n");
-
-	  rc2 = myMessage->GetErrorCode();
-	  if ( rc2 != LDAP_SUCCESS ) {
-	      fprintf(stderr, " %s\n", 
-		      ldap_err2string(rc2));
-	      exit(-1);
-	  }
-	  fprintf(stderr, "success\n");
-	  break;
+	    // XXX should use GetErrorString here?
+	    //
+	    rv = myMessage->GetErrorCode(&rc2);
+	    if ( NS_FAILED(rv) ) {
+		PR_fprintf(PR_STDERR, " %s\n", ldap_err2string(rc2));
+		return NS_ERROR_FAILURE;
+	    }
+	    PR_fprintf(PR_STDERR, "success\n");
+	    break;
 	  
-      default:
-	  fprintf(stderr,"unexpected result returned");
-	  exit(-1);
-	  break;
-      }
+	default:
+	    PR_fprintf(PR_STDERR, "unexpected result returned");
+	    return NS_ERROR_FAILURE;
+	    break;
+	}
+	myMessage = 0;
 
-      delete myMessage;
+	usleep(200);
+    }
 
-      usleep(200);
-  }
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR,"unbinding\n");
+#endif    
 
-  fprintf(stderr,"unbinding\n");
-  delete myConnection;	
-  fprintf(stderr,"unbound\n");
+    myConnection = 0;
+
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR,"unbound\n");
+#endif
+
+    return NS_OK;
 }

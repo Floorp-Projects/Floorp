@@ -31,46 +31,49 @@
  * GPL.
  */
 
-#ifndef _nsLDAPMessage_h_
-#define _nsLDAPMessage_h_
+#include "nsISupports.idl"
+#include "nsILDAPOperation.idl"
 
-#include "ldap.h"
-#include "nsILDAPMessage.h"
-#include "nsILDAPOperation.h"
-#include "nsILDAPConnection.h"
-#include "nsCOMPtr.h"
-
-// 76e061ad-a59f-43b6-b812-ee6e8e69423f
+// for the ldapMsgHandle typedef
 //
-#define NS_LDAPMESSAGE_CID \
-{ 0x76e061ad, 0xa59f, 0x43b6, \
-  { 0xb8, 0x12, 0xee, 0x6e, 0x8e, 0x69, 0x42, 0x3f }}
+%{C++
+#include "ldap.h"
+%}
 
-class nsLDAPMessage : public nsILDAPMessage
+[ptr] native ldapMsgHandle(LDAPMessage);
+
+[scriptable, uuid(973ff50f-2002-4f0c-b57d-2242156139a2)]
+interface nsILDAPMessage : nsISupports
 {
-    friend class nsLDAPOperation;
-
-  public:	
-
-    NS_DECL_ISUPPORTS;
-    NS_DECL_NSILDAPMESSAGE;
-
-    // constructor & destructor
+    // initialize an operation
     //
-    nsLDAPMessage();
-    virtual ~nsLDAPMessage();
+    [noscript] void Init(in nsILDAPOperation operation, 
+			 in ldapMsgHandle msgHandle);
 
-    // turn an error condition associated with this message into a string
-    char *GetErrorString(void);
+    // wrapper for ldap_get_dn
+    //
+    // XXX - currently must use ldap_mem_free to free
+    //
+    readonly attribute string DN;
 
-    // wrapper for ldap_msgtype()
-    int Type(void);
+    // wrappers for ldap_{first,next}_attribute
+    //	
+    // XXX - currently must use ldap_mem_free to free the results
+    //
+    string firstAttribute();
+    string nextAttribute();
 
-  protected:
-    LDAPMessage *mMsgHandle; // the message we're wrapping
-    BerElement *mPosition; // position in the associated attr list
-    nsCOMPtr<nsILDAPOperation> mOperation;  // operation this msg relates to
-    LDAP *mConnectionHandle; // cached connection handle
+    // wrapper for ldap_get_values
+    //
+    // XXX - values must be freed with ldap_value_free
+    //
+    void GetValues(in string attr, out unsigned long count, 
+		   [retval, array, size_is(count)] out string values);
+
+
+    // turn an error condition associated with this message into an LDAP 
+    // errcode (wrapper around ldap_parse_result)
+    //
+    long GetErrorCode();
+    
 };
-
-#endif /* _nsLDAPMessage_h */

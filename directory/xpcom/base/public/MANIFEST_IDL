@@ -1,3 +1,4 @@
 nsILDAPURI.idl
 nsILDAPConnection.idl
-
+nsILDAPOperation.idl
+nsILDAPMessage.idl

@@ -35,55 +35,50 @@
 #define _nsLDAPOperation_h_
 
 #include "ldap.h"
-#include "nsLDAPConnection.h"
+#include "nsCOMPtr.h"
+#include "nsILDAPConnection.h"
+#include "nsILDAPOperation.h"
 
-class nsLDAPOperation {
+// 97a479d0-9a44-47c6-a17a-87f9b00294bb
+#define NS_LDAPOPERATION_CID \
+{ 0x97a479d0, 0x9a44, 0x47c6, \
+  { 0xa1, 0x7a, 0x87, 0xf9, 0xb0, 0x02, 0x94, 0xbb}}
 
-  friend class nsLDAPMessage;
+class nsLDAPOperation : public nsILDAPOperation
+{
+  public:
 
- public:
+    NS_DECL_ISUPPORTS;
+    NS_DECL_NSILDAPOPERATION;
 
-  // constructor
-  //
-  nsLDAPOperation(class nsLDAPConnection *c);
+    // constructor & destructor
+    //
+    nsLDAPOperation();
+    virtual ~nsLDAPOperation();
 
-  // destructor
-  //
-  ~nsLDAPOperation();
+    // wrappers for ldap_search_ext
+    //
+    int SearchExt(const char *base, // base DN to search
+		  int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
+		  const char* filter, // search filter
+		  char **attrs, // attribute types to be returned
+		  int attrsOnly, // attrs only, or values too?
+		  LDAPControl **serverctrls, 
+		  LDAPControl **clientctrls,
+		  struct timeval *timeoutp, // how long to wait
+		  int sizelimit); // max # of entries to return
 
-  // wrapper for ldap_simple_bind()
-  //
-  bool SimpleBind(const char *who, const char *passwd);
-  
-  // wrapper for ldap_result()
-  // XXX - should this really be part of the nsLDAPMessage class?
-  int Result(int all, struct timeval *timeout, class nsLDAPMessage *m);
+    int SearchExt(const char *base, // base DN to search
+		  int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
+		  const char* filter, // search filter
+		  struct timeval *timeoutp, // how long to wait
+		  int sizelimit); // max # of entries to return
 
-  // wrappers for ldap_search_ext
-  //
-  int SearchExt(const char *base, // base DN to search
-		int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
-		const char* filter, // search filter
-		char **attrs, // attribute types to be returned
-		int attrsOnly, // attrs only, or values too?
-		LDAPControl **serverctrls, 
-		LDAPControl **clientctrls,
-		struct timeval *timeoutp, // how long to wait
-		int sizelimit); // max # of entries to return
-
-  int SearchExt(const char *base, // base DN to search
-		int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
-		const char* filter, // search filter
-		struct timeval *timeoutp, // how long to wait
-		int sizelimit); // max # of entries to return
-
-  // wrapper for ldap_search_url.  returns msg id #; -1 is an error.
-  //
-  int URLSearch(const char *URL, // the URL to search
-		int attrsonly);  // skip the attr names?
- protected:
-  int msgId;         
-  class nsLDAPConnection *connection; // connection this op is happening on.
+  protected:
+    PRInt32 mMsgId;
+    nsCOMPtr<nsILDAPConnection> mConnection;
+    LDAP *mConnectionHandle; // cached from mConnection->GetConnectionHandle()
+    static struct timeval sNullTimeval;
 };
 
 #endif /* _nsLDAPOperation_h */

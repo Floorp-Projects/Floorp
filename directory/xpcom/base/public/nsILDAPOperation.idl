@@ -31,46 +31,29 @@
  * GPL.
  */
 
-#ifndef _nsLDAPMessage_h_
-#define _nsLDAPMessage_h_
+#include "nsISupports.idl"
+#include "nsILDAPConnection.idl"
 
-#include "ldap.h"
-#include "nsILDAPMessage.h"
-#include "nsILDAPOperation.h"
-#include "nsILDAPConnection.h"
-#include "nsCOMPtr.h"
+interface nsILDAPMessage;
 
-// 76e061ad-a59f-43b6-b812-ee6e8e69423f
-//
-#define NS_LDAPMESSAGE_CID \
-{ 0x76e061ad, 0xa59f, 0x43b6, \
-  { 0xb8, 0x12, 0xee, 0x6e, 0x8e, 0x69, 0x42, 0x3f }}
-
-class nsLDAPMessage : public nsILDAPMessage
+[scriptable, uuid(fd3d413b-14b0-49c4-8348-a4fc0edba9ff)]
+interface nsILDAPOperation : nsISupports
 {
-    friend class nsLDAPOperation;
-
-  public:	
-
-    NS_DECL_ISUPPORTS;
-    NS_DECL_NSILDAPMESSAGE;
-
-    // constructor & destructor
+    // the connection this operation is on
     //
-    nsLDAPMessage();
-    virtual ~nsLDAPMessage();
+    attribute nsILDAPConnection connection;
+    
+    // wrapper for ldap_simple_bind()
+    //
+    void SimpleBind(in string binddn, in string passwd);
 
-    // turn an error condition associated with this message into a string
-    char *GetErrorString(void);
+    // wrapper for ldap_search_url()
+    //
+    void URLSearch(in string url, in boolean attrsonly);
 
-    // wrapper for ldap_msgtype()
-    int Type(void);
-
-  protected:
-    LDAPMessage *mMsgHandle; // the message we're wrapping
-    BerElement *mPosition; // position in the associated attr list
-    nsCOMPtr<nsILDAPOperation> mOperation;  // operation this msg relates to
-    LDAP *mConnectionHandle; // cached connection handle
+    // wrapper for ldap_result()
+    // XXX - timeout currently ignored
+    // XXX - should add consts for all param
+    //
+    long Result(in long all, in PRTime timeout, out nsILDAPMessage message);
 };
-
-#endif /* _nsLDAPMessage_h */

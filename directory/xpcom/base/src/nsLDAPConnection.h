@@ -37,6 +37,12 @@
 #include "nsILDAPConnection.h"
 #include "ldap.h"
 
+// 0d871e30-1dd2-11b2-8ea9-831778c78e93
+//
+#define NS_LDAPCONNECTION_CID \
+{ 0x0d871e30, 0x1dd2, 0x11b2, \
+ { 0x8e, 0xa9, 0x83, 0x17, 0x78, 0xc7, 0x8e, 0x93 }}
+
 class nsLDAPConnection : public nsILDAPConnection {
 
     friend class nsLDAPOperation;
@@ -54,7 +60,7 @@ class nsLDAPConnection : public nsILDAPConnection {
   protected:
   
     // the LDAP SDK's struct for the connection
-    LDAP *connectionHandle;
+    LDAP *mConnectionHandle;
 
 };
 

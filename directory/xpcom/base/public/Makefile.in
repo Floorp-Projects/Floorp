@@ -42,6 +42,8 @@ MODULE		= mozldap
 XPIDL_MODULE	= mozldap
 
 XPIDLSRCS	= 	nsILDAPConnection.idl \
+			nsILDAPOperation.idl \
+			nsILDAPMessage.idl \
 	  		nsILDAPURI.idl \
 			$(NULL)
 
