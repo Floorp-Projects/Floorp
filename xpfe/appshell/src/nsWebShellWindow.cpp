@@ -1413,12 +1413,12 @@ void nsWebShellWindow::LoadContentAreas() {
       docViewer->GetDocument(getter_AddRefs(doc));
       nsIURI *mainURL = doc->GetDocumentURI();
 
-      nsCAutoString search;
       nsCOMPtr<nsIURL> url = do_QueryInterface(mainURL);
       if (url) {
+        nsCAutoString search;
         url->GetQuery(search);
 
-        CopyUTF8toUTF16(search, searchSpec);
+        AppendUTF8toUTF16(search, searchSpec);
       }
     }
   }
