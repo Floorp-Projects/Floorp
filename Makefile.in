@@ -478,8 +478,8 @@ ifdef MOZILLA_OFFICIAL
 	/bin/find $(DIST) -name "*.dll" -exec splitsym {} \;
 	/bin/find $(DIST) -name "*.exe" -exec splitsym {} \;
 	/bin/find $(DIST) -name "*.EXE" -exec splitsym {} \;
-	mkdir -p $(DIST)/symbols
-	/bin/find $(DIST) -name "*.dbg" -exec mv {} $(DIST)/symbols \;
+	mkdir -p $(DIST)/$(BUILDID)
+	/bin/find $(DIST) -name "*.dbg" -exec mv {} $(DIST)/$(BUILDID) \;
 endif # MOZILLA_OFFICIAL
 
 signnss:
@@ -488,6 +488,7 @@ ifdef MOZILLA_OFFICIAL
 	cd $(DIST)/bin; ./shlibsign.exe -v -i softokn3.dll
 endif # MOZILLA_OFFICIAL
 
+BUILDID = $(shell cat $(DEPTH)/config/build_number)
 deliver: splitsymbols rebase signnss
 
 endif # WINNT
