@@ -60,7 +60,8 @@ class Arguments extends ScriptableObject {
                        ScriptableObject.DONTENUM);
         defineProperty("callee", callee, ScriptableObject.DONTENUM);
 
-        hasCaller = activation.funObj.version <= Context.VERSION_1_3;
+        hasCaller = (activation.funObj.version <= Context.VERSION_1_3 &&
+                     activation.funObj.version != Context.VERSION_DEFAULT);
     }
 
     public String getClassName() {
