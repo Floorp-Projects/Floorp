@@ -120,7 +120,6 @@ void nsImageGTK :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 
 }
 
-
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates

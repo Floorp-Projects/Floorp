@@ -30,11 +30,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-#define NS_TO_X_RED(a)   (((NS_GET_R(a) >> (8 - mRedBits)) << mRedOffset) & mRedMask)
-#define NS_TO_X_GREEN(a) (((NS_GET_G(a) >> (8 - mGreenBits)) << mGreenOffset) & mGreenMask)
-#define NS_TO_X_BLUE(a)  (((NS_GET_B(a) >> (8 - mBlueBits)) << mBlueOffset) & mBlueMask)
-
-#define NS_TO_X(a) (NS_TO_X_RED(a) | NS_TO_X_GREEN(a) | NS_TO_X_BLUE(a))
+typedef unsigned char BYTE;
 
 nsDeviceContextGTK :: nsDeviceContextGTK()
 {
@@ -134,9 +130,9 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDrawingSurface(nsIRenderingContext &aContex
 NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor, 
                                                PRUint32 & aPixel)
 {
-//  ::gdk_rgb_init ();
-//  aPixel = ::gdk_rgb_xpixel_from_rgb ((guint32)aColor);
-  aPixel = ::gdk_rgb_xpixel_from_rgb ((PRUint32)NS_TO_X(aColor));
+  aPixel = ::gdk_rgb_xpixel_from_rgb ((aColor & 0xff) << 16 |
+                                      (aColor & 0xff00) |
+                                      ((aColor >> 16) & 0xff));
 
   return NS_OK;
 }
