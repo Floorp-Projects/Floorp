@@ -549,7 +549,6 @@ nsRefData			*theRefData;
 		thewindow = thewindow->FindWidgetHit(hitPoint);
 		}
 
-
 	// the mouse is down, and moving
 	if(gGrabWindow)
 		{
