@@ -264,12 +264,8 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_LEFT_BUTTON_UP:
     {
       // Store click point for GetNamesValues
-      // Do this on MouseUp because the specs don't say and that's what IE does.
-      float t2p;
-      t2p = aPresContext->TwipsToPixels();
-      mLastClickPoint.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
-      mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
-
+      // Do this on MouseUp because the specs don't say and that's what IE does
+      TranslateEventCoords(aPresContext, aEvent->point, mLastClickPoint);
       break;
     }
   }
