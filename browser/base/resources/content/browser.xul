@@ -76,14 +76,16 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-
-  <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
-  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-  <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
-  <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
-  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-  <stringbundle id="bundle_viewZoom"/>
-
+ 
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
+    <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
+    <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
+    <stringbundle id="bundle_viewZoom"/>
+  </stringbundleset>
+  
   <commandset id="globalEditMenuItems"
               commandupdater="true"
               events="focus"
@@ -102,8 +104,8 @@ Contributor(s):
               oncommandupdate="goUpdatePasteMenuItems()"/>
   <command id="cmd_newNavigator"
            oncommand="OpenBrowserWindow()"/>
+  <commands id="commands"/>
   <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
-
   <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
   <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
   <command id="Browser:EditPage" oncommand="editPageOrFrame();" observes="isImage"/>
