@@ -260,6 +260,82 @@ Miscellaneous Improvements
 - Mail handling is now between 125% to 175% faster.
 
 
+What's Changed?
+***************
+
+There have been some changes to the rules governing who can change which fields
+of a bug report.  The rules for Bugzilla version 2.16 and 2.18, along with
+differences between them, are listed below.  Bear in mind that there are other
+restrictions on bug manipulation besides the ones listed below.  In particular,
+the groups system enforces restrictions on who can create, edit, or even see
+any given bug.
+
+Bugzilla 2.16 rules:
+
+- anyone can make a null change;
+- anyone can add a comment;
+- anyone in the editbugs group can make any change;
+- the reporter can make any change to the status;
+- anyone in the canconfirm group can change the status
+  to any opened state (NEW, REOPENED, ASSIGNED).
+- anyone can change the status to any opened state
+  if the everconfirmed flag is set;
+- the owner, QA contact, or reporter can make any change
+  *except* changing the status to an opened state;
+- No other changes are permitted.
+
+[Note that these rules combine to allow the reporter to make any change
+to the bug.]
+
+Bugzilla 2.18 rules:
+
+- anyone can make a null change;
+- anyone can add a comment;
+- anyone in the editbugs group can make any change;
+- anyone in the canconfirm group can change the status
+  from UNCONFIRMED to any opened state;
+- the owner or QA contact can make any change;
+- the reporter can make any change *except*:
+  - changing the status from UNCONFIRMED to any opened state; or
+  - changing the target milestone; or
+  - changing the priority (unless the letsubmitterchoosepriority
+    parameter is set).
+- No other changes are permitted.
+
+The effective differences in the rules:
+
+- In 2.16, the reporter could always change anything about a bug.
+
+  In 2.18, the reporter can't:
+
+  - confirm the bug unless he is in the canconfirm group;
+  - change the target milestone;
+  - change the priority (unless the 'letsubmitterchoosepriority'
+    parameter is set;
+
+  (unless he is also the owner, the QA contact, or in the editbugs
+  group, in which case he can do all these things).
+
+- In 2.16, the owner or QA contact (if the 'useqacontact' parameter
+  is set) can't change the bug status to an opened status unless they
+  are also the reporter, or have editbugs or canconfirm, or the
+  everconfirmed flag is set on the bug).
+
+  In 2.18 the owner or QA contact can make any change to a bug.
+
+- In 2.16, a member of the canconfirm group can set the status
+  to any opened status.
+
+  In 2.18 this is only possible if the status was previously
+  the unconfirmed status.
+
+- In 2.16, the status can be set to anything by anybody
+  if the 'everconfirmed' flag is set.
+
+  In 2.18, this authorization code does not pay any attention
+  to the 'everconfirmed' flag.
+
+
 Code Changes Which May Affect Customizations
 ********************************************
 
