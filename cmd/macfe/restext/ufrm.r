@@ -80,6 +80,9 @@ resource 'UFRM' ( CS_MAC_TURKISH, "macturki.uf- CS_MAC_TURKISH", purgeable) {{
 resource 'UFRM' ( CS_LATIN1, "8859-1.uf- CS_LATIN1", purgeable) {{ 
 #include "8859-1.uf"
 }};
+resource 'UFRM' ( CS_T61, "t61.uf- CS_T61", purgeable) {{ 
+#include "t61.uf"
+}};
 resource 'UFRM' ( CS_TIS620, "macthai.uf- CS_TIS620", purgeable) {{ 
 #include "macthai.uf"
 }};
@@ -123,6 +126,9 @@ resource 'UTO ' ( CS_MAC_TURKISH, "macturki.ut- CS_MAC_TURKISH", purgeable) {{
 }};
 resource 'UTO ' ( CS_LATIN1, "8859-1.ut- CS_LATIN1", purgeable) {{ 
 #include "8859-1.ut"
+}};
+resource 'UTO ' ( CS_T61, "t61.ut- CS_T61", purgeable) {{ 
+#include "t61.ut"
 }};
 resource 'UTO ' ( CS_TIS620, "macthai.ut- CS_TIS620", purgeable) {{ 
 #include "macthai.ut"

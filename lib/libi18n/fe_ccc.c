@@ -66,6 +66,7 @@ PRIVATE int16 intl_CharLen_CGK(		unsigned char ch);
 PRIVATE int16 intl_CharLen_CNS_8BIT(	unsigned char ch);
 PRIVATE int16 intl_CharLen_UTF8(		unsigned char ch);
 PRIVATE int16 intl_CharLen_SingleByte(unsigned char ch);
+PRIVATE int16 intl_CharLen_T61(unsigned char ch);
 
 #define INTL_CHARLEN_SJIS 		0
 #define INTL_CHARLEN_EUC_JP 	1
@@ -73,6 +74,7 @@ PRIVATE int16 intl_CharLen_SingleByte(unsigned char ch);
 #define INTL_CHARLEN_CNS_8BIT 	3
 #define INTL_CHARLEN_UTF8 		4
 #define INTL_CHARLEN_SINGLEBYTE 5
+#define INTL_CHARLEN_T61 6
 /* a conversion flag for JIS, set if converting hankaku (1byte) kana to zenkaku (2byte) */
 #define INTL_SEND_HANKAKU_KANA	128
 
@@ -84,6 +86,7 @@ PRIVATE intl_CharLenFunc intl_char_len_func[]=
 	intl_CharLen_CNS_8BIT,
 	intl_CharLen_UTF8,
  	intl_CharLen_SingleByte,
+ 	intl_CharLen_T61,
 };
 
 #ifdef XP_UNIX
@@ -216,6 +219,9 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		/*  UNICODE */
 		{CS_UTF8,		CS_UTF8,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_UTF8 },
+
+ 		{CS_T61,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_T61},
+ 		{CS_UTF8,		CS_T61,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
 
 		{CS_UTF8,		CS_UCS2,		0, (CCCFunc)mz_utf82ucs,	0},
 		{CS_UTF8,		CS_UTF7,		0, (CCCFunc)mz_utf82utf7,	0},
@@ -386,6 +392,9 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
                 {CS_VIET_VISCII, CS_UTF8,   0,      (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
                 {CS_UTF8,        CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_UTF8},
                 /*******************************************/
+
+ 		{CS_T61,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_T61},
+ 		{CS_UTF8,		CS_T61,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
 
 		{CS_UTF8,		CS_UCS2,		0, (CCCFunc)mz_utf82ucs,	0},
 		{CS_UTF8,		CS_UTF7,		0, (CCCFunc)mz_utf82utf7,	0},
@@ -584,6 +593,10 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		/* UNICODE                                           */
 		{CS_UTF8,		CS_UTF8,		0, mz_mbNullConv,	INTL_CHARLEN_UTF8},
+
+ 		{CS_T61,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_T61},
+ 		{CS_UTF8,		CS_T61,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
+
 		{CS_UTF8,		CS_UCS2,		0, (CCCFunc)mz_utf82ucs,	0},
 		{CS_UTF8,		CS_UTF7,		0, (CCCFunc)mz_utf82utf7,	0},
 		{CS_UTF8,		CS_UCS2_SWAP,	0, (CCCFunc)mz_utf82ucsswap,	0},
@@ -902,8 +915,8 @@ MODULE_PRIVATE unsigned char* mz_AnyToAnyThroughUCS2(CCCDataObject obj, const un
 	free( fromBuf );
 	free( ucs2Buf );
 
-	/* In order to let the caller know how long the buffer is, i have to set its tail NULL. */
-	toBuf[ toBufLen ] = 0;
+	INTL_SetCCCLen(obj, XP_STRLEN(toBuf));
+
 	return toBuf;
 }
 
@@ -931,6 +944,10 @@ PRIVATE int16 intl_CharLen_UTF8(		unsigned char ch)
 PRIVATE int16 intl_CharLen_SingleByte( unsigned char ch)
 {
 	return 1;
+}
+PRIVATE int16 intl_CharLen_T61( unsigned char ch)
+{
+	return (	((ch >= 0xC0) && (ch <= 0xCF))  ?	2 :		1);
 }
 
 
