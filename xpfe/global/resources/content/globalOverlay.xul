@@ -107,7 +107,7 @@
 
 	
 	<!-- View Menu -->
-	<menu id="menu_View" value="&viewMenu.label;"/>
+	<menu id="menu_View" value="&viewMenu.label;" accesskey="&viewMenu.accesskey;"/>
 	<menu id="menu_Toolbars" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"/>
 	<menuitem id="menu_showTaskbar"
 			  value="&showTaskbarCmd.label;"

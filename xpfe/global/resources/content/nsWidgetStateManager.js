@@ -129,6 +129,8 @@ nsWidgetStateManager.prototype =
               {
                 var elementID   = elements[i].id;
                 var elementType = elements[i].nodeName;
+                if (!this.dataManager.pageData[aPageTag])
+                    this.dataManager.pageData[aPageTag] = [];
                 this.dataManager.pageData[aPageTag][elementID] = [];
                 // persist element Type
                 this.dataManager.pageData[aPageTag][elementID].nodeName = elementType;
