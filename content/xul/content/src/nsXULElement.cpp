@@ -1511,7 +1511,7 @@ nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
 
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
-                (attr->mName == aName)) {
+                (attr->mName.get() == aName)) {
                 *aHandler = attr->mEventHandler;
                 break;
             }
@@ -1528,7 +1528,7 @@ nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
 
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
-                (attr->mName == aName)) {
+                (attr->mName.get() == aName)) {
                 attr->mEventHandler = aHandler;
                 break;
             }
