@@ -150,14 +150,6 @@ function(aRow, aColId)
     return this.mStyleList.item(aRow);
   } else if (aColId == "olcStyleValue") {
     var prop = this.mStyleList.item(aRow);
-    // The computed style getters for these properties are not yet
-    // implemented properly, and trying to fetch them results in
-    // a hailstorm of assertions.
-    switch (prop) {
-      case "-moz-outline-width":
-      case "marker-offset":
-        return "";
-    }
     return this.mStyleList.getPropertyValue(prop);
   }
   
