@@ -44,6 +44,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // NSPR
 #include "prmem.h"
 #include "plstr.h"
+#include "prenv.h"
 
 // Universal
 #include <AppleEvents.h>
@@ -139,6 +140,8 @@ private:
 	OSErr				AddToCommandLine(const char*	inOptionString,
 									const FSSpec&		inFileSpec);
 
+	void				AddToEnvironmentVars(const char* inArgText);
+	
 	OSErr				DispatchURLToNewBrowser(const char* url);
 	
 	OSErr 				HandleOpenURLEvent(const AppleEvent	&inAppleEvent,
@@ -489,6 +492,13 @@ OSErr nsAppleEventHandler::AddToCommandLine(const char* inArgText)
 }
 
 //----------------------------------------------------------------------------------------
+void nsAppleEventHandler::AddToEnvironmentVars(const char* inArgText)
+//----------------------------------------------------------------------------------------
+{
+	(void)PR_PutEnv(inArgText);
+}
+
+//----------------------------------------------------------------------------------------
 OSErr nsAppleEventHandler::HandleOpen1Doc(const FSSpec& inFileSpec, OSType inFileType)
 //----------------------------------------------------------------------------------------
 {
@@ -501,15 +511,34 @@ OSErr nsAppleEventHandler::HandleOpen1Doc(const FSSpec& inFileSpec, OSType inFil
 			nsInputFileStream s(inFileSpec);
 			if (s.is_open())
 			{
+				Boolean foundArgs = false;
 				char chars[1024];
-				s.readline(chars, sizeof(chars));
-				// Does the text in it have the right prefix?
 				const char* kCommandLinePrefix = "ARGS:";
-				if (PL_strstr(chars, kCommandLinePrefix) == chars)
-				{
-					return AddToCommandLine(chars + PL_strlen(kCommandLinePrefix));
-					 // That's all we have to do.
-				}
+				const char* kEnvVarLinePrefix = "ENV:";
+				s.readline(chars, sizeof(chars));
+				
+				do
+				{	// See if there are any command line or environment var settings
+					if (PL_strstr(chars, kCommandLinePrefix) == chars)
+					{
+						(void)AddToCommandLine(chars + PL_strlen(kCommandLinePrefix));
+						foundArgs = true;
+					}
+					else if (PL_strstr(chars, kEnvVarLinePrefix) == chars)
+					{
+						(void)AddToEnvironmentVars(chars + PL_strlen(kEnvVarLinePrefix));
+						foundArgs = true;
+					}
+					
+					// Clear the buffer and get the next line from the command line file
+					chars[0] = '\0';
+					s.readline(chars, sizeof(chars));
+				} while (PL_strlen(chars));
+				
+				// If we found a command line or environment vars we want to return now
+				// raather than trying to open the file as a URL
+				if (foundArgs)
+					return noErr;
 			}
 		}
 		// If it's not a command-line argument, and we are starting up the application,
