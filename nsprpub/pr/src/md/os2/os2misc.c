@@ -487,7 +487,7 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
 
 void * _MD_MemMap(
     PRFileMap *fmap,
-    PRInt64 offset,
+    PROffset64 offset,
     PRUint32 len)
 {
     PR_ASSERT(!"Not implemented");

@@ -2460,10 +2460,10 @@ _PR_MD_SOCKETAVAILABLE(PRFileDesc *fd)
     return result;
 }
 
-PRInt32
-_PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, int whence)
+PROffset32
+_PR_MD_LSEEK(PRFileDesc *fd, PROffset32 offset, int whence)
 {
-    PRInt32 rv;
+    PROffset32 rv;
 
     rv = SetFilePointer((HANDLE)fd->secret->md.osfd, offset, NULL, whence);
     /*
@@ -2476,8 +2476,8 @@ _PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, int whence)
     return rv;
 }
 
-PRInt64
-_PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, int whence)
+PROffset64
+_PR_MD_LSEEK64(PRFileDesc *fd, PROffset64 offset, int whence)
 {
     PRUint64 result;
     PRUint32 position, uhi;
@@ -2516,7 +2516,7 @@ _PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, int whence)
     PR_ASSERT((PRInt64)result >= 0);
     result += position;
     PR_ASSERT((PRInt64)result >= 0);
-    return (PRInt64)result;
+    return (PROffset64)result;
 }
 
 /*

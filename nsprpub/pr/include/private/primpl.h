@@ -1196,10 +1196,10 @@ extern void *_PR_MD_GET_SP(PRThread *thread);
 *************************************************************************/
 /************************************************************************/
 
-extern PRInt32 _PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence);
+extern PROffset32 _PR_MD_LSEEK(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence);
 #define    _PR_MD_LSEEK _MD_LSEEK
 
-extern PRInt64 _PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence);
+extern PROffset64 _PR_MD_LSEEK64(PRFileDesc *fd, PROffset64 offset, PRSeekWhence whence);
 #define    _PR_MD_LSEEK64 _MD_LSEEK64
 
 extern PRInt32 _PR_MD_GETFILEINFO(const char *fn, PRFileInfo *info);
@@ -1799,7 +1799,7 @@ extern PRStatus _PR_MD_CREATE_FILE_MAP(PRFileMap *fmap, PRInt64 size);
 
 extern void * _PR_MD_MEM_MAP(
     PRFileMap *fmap,
-    PRInt64 offset,
+    PROffset64 offset,
     PRUint32 len);
 #define _PR_MD_MEM_MAP _MD_MEM_MAP
 

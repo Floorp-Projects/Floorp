@@ -425,7 +425,7 @@ ErrorExit:
 
 /* _MD_CLOSE_FILE, _MD_READ, _MD_WRITE, _MD_GET_FILE_ERROR are defined in _macos.h */
 
-PRInt32 _MD_LSeek(PRFileDesc *fd, PRInt32 offset, PRSeekWhence how)
+PROffset32 _MD_LSeek(PRFileDesc *fd, PROffset32 offset, PRSeekWhence how)
 {
 	PRInt32 refNum = fd->secret->md.osfd;
 	OSErr 	err = noErr;
@@ -1880,7 +1880,7 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
 
 void * _MD_MemMap(
     PRFileMap *fmap,
-    PRInt64 offset,
+    PROffset64 offset,
     PRUint32 len)
 {
 #pragma unused (fmap, offset, len)

@@ -2256,9 +2256,9 @@ static void sigbushandler() {
 
 #endif  /* !defined(_PR_PTHREADS) */
 
-PRInt32 _MD_lseek(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence)
+PROffset32 _MD_lseek(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence)
 {
-    PRInt32 rv, where;
+    PROffset32 rv, where;
 
     switch (whence) {
         case PR_SEEK_SET:
@@ -2285,10 +2285,10 @@ done:
     return(rv);
 }
 
-PRInt64 _MD_lseek64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence)
+PROffset64 _MD_lseek64(PRFileDesc *fd, PROffset64 offset, PRSeekWhence whence)
 {
     PRInt32 where;
-    PRInt64 rv;
+    PROffset64 rv;
 
     switch (whence)
     {
@@ -2661,10 +2661,10 @@ static PRIntn _MD_solaris25_stat64(const char *fn, _MDStat64 *buf)
 
 #if defined(_PR_NO_LARGE_FILES) || defined(SOLARIS2_5)
 
-static PRInt64 _MD_Unix_lseek64(PRIntn osfd, PRInt64 offset, PRIntn whence)
+static PROffset64 _MD_Unix_lseek64(PRIntn osfd, PROffset64 offset, PRIntn whence)
 {
     PRUint64 maxoff;
-    PRInt64 rv = minus_one;
+    PROffset64 rv = minus_one;
     LL_I2L(maxoff, 0x7fffffff);
     if (LL_CMP(offset, <=, maxoff))
     {

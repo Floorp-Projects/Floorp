@@ -669,7 +669,7 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
 extern PRLogModuleInfo *_pr_shma_lm;
 void * _MD_MemMap(
     PRFileMap *fmap,
-    PRInt64 offset,
+    PROffset64 offset,
     PRUint32 len)
 {
     DWORD dwHi, dwLo;
