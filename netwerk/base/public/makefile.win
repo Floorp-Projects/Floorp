@@ -39,14 +39,13 @@ XPIDLSRCS =                             \
         .\nsINetModRegEntry.idl         \
         .\nsINetModuleMgr.idl           \
         .\nsINetNotify.idl              \
-        .\nsINetPrompt.idl    		    \
         .\nsIProgressEventSink.idl      \
         .\nsIPrompt.idl                 \
         .\nsIProtocolHandler.idl        \
-		.\nsIProtocolProxyService.idl   \
-		.\nsIProxyAutoConfig.idl        \
-		.\nsIProxyAutoConfigUtils.idl   \
-		.\nsIProxy.idl                  \
+        .\nsIProtocolProxyService.idl   \
+        .\nsIProxyAutoConfig.idl        \
+        .\nsIProxyAutoConfigUtils.idl   \
+        .\nsIProxy.idl                  \
         .\nsIRequest.idl                \
         .\nsISocketTransport.idl        \
         .\nsISocketTransportService.idl \
