@@ -1,0 +1,3 @@
+xforms.jar:
+	content/xforms/contents.rdf
+*	content/xforms/xforms.css

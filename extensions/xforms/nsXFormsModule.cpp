@@ -62,7 +62,7 @@ RegisterXFormsModule(nsIComponentManager *aCompMgr,
   nsXPIDLCString previous;
   return catman->AddCategoryEntry("agent-style-sheets",
                                   "xforms stylesheet",
-                                  "resource://gre/res/xforms.css",
+                                  "chrome://xforms/content/xforms.css",
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
@@ -86,7 +86,10 @@ static const nsModuleComponentInfo components[] = {
   { "XForms element factory",
     NS_XFORMSELEMENTFACTORY_CID,
     NS_XTF_ELEMENT_FACTORY_CONTRACTID_PREFIX NS_NAMESPACE_XFORMS,
-    nsXFormsElementFactoryConstructor }
+    nsXFormsElementFactoryConstructor,
+    RegisterXFormsModule,
+    UnregisterXFormsModule
+  }
 };
 
 PR_STATIC_CALLBACK(nsresult)
