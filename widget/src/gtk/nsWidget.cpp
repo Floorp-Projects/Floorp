@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Andrew Wellington <proton@wiretapped.net>
+ *   Graham Dennis <u3952328@anu.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1851,8 +1853,14 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
     case 4:
     case 5:
-      scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
-      if (aGdkButtonEvent->button == 4)
+    case 6:
+    case 7:
+      if (aGdkButtonEvent->button == 4 || aGdkButtonEvent->button == 5)
+        scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
+      else
+        scrollEvent.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+
+      if (aGdkButtonEvent->button == 4 || aGdkButtonEvent->button == 6)
         scrollEvent.delta = -3;
       else
         scrollEvent.delta = 3;
@@ -1938,6 +1946,8 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 
   case 4:
   case 5:
+  case 6:
+  case 7:
     // We don't really need to do anything here, but we don't want
     // LEFT_BUTTON_UP to happen
     return;

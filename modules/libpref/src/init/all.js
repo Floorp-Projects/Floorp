@@ -681,6 +681,18 @@ pref("mousewheel.withshiftkey.sysnumlines",false);
 pref("mousewheel.withaltkey.action",2);
 pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
+pref("mousewheel.horizscroll.withnokey.action",2);
+pref("mousewheel.horizscroll.withnokey.numlines",-1);	
+pref("mousewheel.horizscroll.withnokey.sysnumlines",true);
+pref("mousewheel.horizscroll.withcontrolkey.action",0);
+pref("mousewheel.horizscroll.withcontrolkey.numlines",1);
+pref("mousewheel.horizscroll.withcontrolkey.sysnumlines",true);
+pref("mousewheel.horizscroll.withshiftkey.action",0);
+pref("mousewheel.horizscroll.withshiftkey.numlines",1);
+pref("mousewheel.horizscroll.withshiftkey.sysnumlines",false);
+pref("mousewheel.horizscroll.withaltkey.action",2);
+pref("mousewheel.horizscroll.withaltkey.numlines",-1);
+pref("mousewheel.horizscroll.withaltkey.sysnumlines",false);
 
 pref("profile.confirm_automigration",true);
 // profile.migration_behavior determines how the profiles root is set

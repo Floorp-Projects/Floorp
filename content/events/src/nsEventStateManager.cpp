@@ -1599,14 +1599,46 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   return NS_OK;
 }
 
+void
+nsEventStateManager::DoScrollHistory(PRInt32 direction)
+{
+  nsCOMPtr<nsISupports> pcContainer(mPresContext->GetContainer());
+  if (pcContainer) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
+    if (webNav) {
+      // negative direction to go back one step, nonneg to go forward
+      if (direction < 0)
+        webNav->GoBack();
+      else
+        webNav->GoForward();
+    }
+  }
+}
+
+void
+nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
+                                      PRInt32 adjustment)
+{
+  // Exclude form controls and XUL content.
+  nsIContent *content = aTargetFrame->GetContent();
+  if (content &&
+      !content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL) &&
+      !content->IsContentOfType(nsIContent::eXUL))
+    {
+      // positive adjustment to increase text size, non-positive to decrease
+      ChangeTextSize((adjustment > 0) ? 1 : -1);
+    }
+}
 
 //
 nsresult
-nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
-                                   nsIFrame* aTargetFrame,
-                                   nsMouseScrollEvent* aMSEvent,
-                                   PRInt32 aNumLines, PRBool aScrollHorizontal, PRBool aScrollPage,
-                                   PRBool aUseTargetFrame)
+nsEventStateManager::DoScrollText(nsIPresContext* aPresContext,
+                                  nsIFrame* aTargetFrame,
+                                  nsInputEvent* aEvent,
+                                  PRInt32 aNumLines,
+                                  PRBool aScrollHorizontal,
+                                  PRBool aScrollPage,
+                                  PRBool aUseTargetFrame)
 {
   nsCOMPtr<nsIContent> targetContent = aTargetFrame->GetContent();
   if (!targetContent)
@@ -1633,11 +1665,13 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
       }
     }
 
-    mouseEvent->InitMouseEvent(NS_LITERAL_STRING("DOMMouseScroll"), PR_TRUE, PR_TRUE, 
+    mouseEvent->InitMouseEvent(NS_LITERAL_STRING("DOMMouseScroll"),
+                               PR_TRUE, PR_TRUE, 
                                view, aNumLines,
-                               aMSEvent->refPoint.x, aMSEvent->refPoint.y,
-                               aMSEvent->point.x, aMSEvent->point.y,
-                               aMSEvent->isControl, aMSEvent->isAlt, aMSEvent->isShift, aMSEvent->isMeta,
+                               aEvent->refPoint.x, aEvent->refPoint.y,
+                               aEvent->point.x,    aEvent->point.y,
+                               aEvent->isControl,  aEvent->isAlt,
+                               aEvent->isShift,    aEvent->isMeta,
                                0, nsnull);
     PRBool allowDefault;
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(targetContent));
@@ -1655,7 +1689,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   // Create a mouseout event that we fire to the content before
   // scrolling, to allow tooltips to disappear, etc.
 
-  nsMouseEvent mouseOutEvent(NS_MOUSE_EXIT, aMSEvent->widget);
+  nsMouseEvent mouseOutEvent(NS_MOUSE_EXIT, aEvent->widget);
 
   nsIPresShell *presShell = aPresContext->PresShell();
 
@@ -1725,8 +1759,9 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
           return NS_ERROR_FAILURE;
         nsRect portRect = portView->GetBounds();
 
-        passToParent = aScrollHorizontal ? (xPos + portRect.width >= scrolledSize.width)
-          : (yPos + portRect.height >= scrolledSize.height);
+        passToParent = (aScrollHorizontal ?
+                        (xPos + portRect.width >= scrolledSize.width) :
+                        (yPos + portRect.height >= scrolledSize.height));
       }
     }
 
@@ -1759,11 +1794,11 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     nsIFrame* newFrame = nsnull;
     nsCOMPtr<nsIPresContext> newPresContext;
 
-    rv = GetParentScrollingView(aMSEvent, aPresContext, newFrame,
+    rv = GetParentScrollingView(aEvent, aPresContext, newFrame,
                                 *getter_AddRefs(newPresContext));
     if (NS_SUCCEEDED(rv) && newFrame)
-      return DoWheelScroll(newPresContext, newFrame, aMSEvent, aNumLines,
-                           aScrollHorizontal, aScrollPage, PR_TRUE);
+      return DoScrollText(newPresContext, newFrame, aEvent, aNumLines,
+                          aScrollHorizontal, aScrollPage, PR_TRUE);
     else
       return NS_ERROR_FAILURE;
   }
@@ -1772,7 +1807,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
+nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
                                             nsIPresContext* aPresContext,
                                             nsIFrame* &targetOuterFrame,
                                             nsIPresContext* &presCtxOuter)
@@ -1806,7 +1841,7 @@ nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
     get this content node's frame, and use it as the new event target,
     so the event can be processed in the parent docshell.
     Note that we don't actually need to translate the event coordinates
-    because they are not used by DoWheelScroll().
+    because they are not used by DoScrollText().
   */
 
   nsIFrame* frameFrame = nsnull;
@@ -1958,56 +1993,60 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       rv = getPrefBranch();
       if (NS_FAILED(rv)) return rv;
 
+      // Build the preference keys, based on the event properties.
       nsMouseScrollEvent *msEvent = (nsMouseScrollEvent*) aEvent;
+
+      NS_NAMED_LITERAL_CSTRING(prefbase,        "mousewheel");
+      NS_NAMED_LITERAL_CSTRING(horizscroll,     ".horizscroll");
+      NS_NAMED_LITERAL_CSTRING(withshift,       ".withshiftkey");
+      NS_NAMED_LITERAL_CSTRING(withalt,         ".withaltkey");
+      NS_NAMED_LITERAL_CSTRING(withcontrol,     ".withcontrolkey");
+      NS_NAMED_LITERAL_CSTRING(withno,          ".withnokey");
+      NS_NAMED_LITERAL_CSTRING(actionslot,      ".action");
+      NS_NAMED_LITERAL_CSTRING(numlinesslot,    ".numlines");
+      NS_NAMED_LITERAL_CSTRING(sysnumlinesslot, ".sysnumlines");
+
+      nsCAutoString baseKey(prefbase);
+      if (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) {
+        baseKey.Append(horizscroll);
+      }
+      if (msEvent->isShift) {
+        baseKey.Append(withshift);
+      } else if (msEvent->isControl) {
+        baseKey.Append(withcontrol);
+      } else if (msEvent->isAlt) {
+        baseKey.Append(withalt);
+      } else {
+        baseKey.Append(withno);
+      }
+
+      // Extract the preferences
+      nsCAutoString actionKey(baseKey);
+      actionKey.Append(actionslot);
+
+      nsCAutoString sysNumLinesKey(baseKey);
+      sysNumLinesKey.Append(sysnumlinesslot);
+
       PRInt32 action = 0;
       PRInt32 numLines = 0;
-      PRBool aBool;
-      if (msEvent->isShift) {
-        mPrefBranch->GetIntPref("mousewheel.withshiftkey.action", &action);
-        mPrefBranch->GetBoolPref("mousewheel.withshiftkey.sysnumlines",
-                                 &aBool);
-        if (aBool) {
-          numLines = msEvent->delta;
-          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
-            action = MOUSE_SCROLL_PAGE;
-        }
-        else
-          mPrefBranch->GetIntPref("mousewheel.withshiftkey.numlines",
-                                  &numLines);
-      } else if (msEvent->isControl) {
-        mPrefBranch->GetIntPref("mousewheel.withcontrolkey.action", &action);
-        mPrefBranch->GetBoolPref("mousewheel.withcontrolkey.sysnumlines",
-                                 &aBool);
-        if (aBool) {
-          numLines = msEvent->delta;
-          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
-            action = MOUSE_SCROLL_PAGE;          
-        }
-        else
-          mPrefBranch->GetIntPref("mousewheel.withcontrolkey.numlines",
-                                  &numLines);
-      } else if (msEvent->isAlt) {
-        mPrefBranch->GetIntPref("mousewheel.withaltkey.action", &action);
-        mPrefBranch->GetBoolPref("mousewheel.withaltkey.sysnumlines", &aBool);
-        if (aBool) {
-          numLines = msEvent->delta;
-          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
-            action = MOUSE_SCROLL_PAGE;
-        }
-        else
-          mPrefBranch->GetIntPref("mousewheel.withaltkey.numlines",
-                                  &numLines);
-      } else {
-        mPrefBranch->GetIntPref("mousewheel.withnokey.action", &action);
-        mPrefBranch->GetBoolPref("mousewheel.withnokey.sysnumlines", &aBool);
-        if (aBool) {
-          numLines = msEvent->delta;
-          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
-            action = MOUSE_SCROLL_PAGE;
-        }
-        else
-          mPrefBranch->GetIntPref("mousewheel.withnokey.numlines", &numLines);
+      PRBool useSysNumLines;
+
+      mPrefBranch->GetIntPref(PromiseFlatCString(actionKey).get(), &action);
+      mPrefBranch->GetBoolPref(PromiseFlatCString(sysNumLinesKey).get(),
+                               &useSysNumLines);
+      if (useSysNumLines) {
+        numLines = msEvent->delta;
+        if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
+          action = MOUSE_SCROLL_PAGE;
       }
+      else
+        {
+          nsCAutoString numLinesKey(baseKey);
+          numLinesKey.Append(numlinesslot);
+
+          mPrefBranch->GetIntPref(PromiseFlatCString(numLinesKey).get(),
+                                  &numLines);
+        }
 
       if ((msEvent->delta < 0) && (numLines > 0))
         numLines = -numLines;
@@ -2016,40 +2055,26 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       case MOUSE_SCROLL_N_LINES:
       case MOUSE_SCROLL_PAGE:
         {
-          DoWheelScroll(aPresContext, aTargetFrame, msEvent, numLines,
-                        (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
-                        (action == MOUSE_SCROLL_PAGE), PR_FALSE);
-
+          DoScrollText(aPresContext, aTargetFrame, msEvent, numLines,
+                       (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                       (action == MOUSE_SCROLL_PAGE), PR_FALSE);
         }
 
         break;
 
       case MOUSE_SCROLL_HISTORY:
         {
-          nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
-          if (pcContainer) {
-            nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
-            if (webNav) {
-              if (msEvent->delta > 0)
-                 webNav->GoBack();
-              else
-                 webNav->GoForward();
-            }
-          }
+          DoScrollHistory(numLines);
         }
         break;
 
       case MOUSE_SCROLL_TEXTSIZE:
         {
-          // Exclude form controls and XUL content.
-          nsIContent* content = aTargetFrame->GetContent();
-          if (content &&
-              !content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL) &&
-              !content->IsContentOfType(nsIContent::eXUL))
-            {
-              ChangeTextSize((msEvent->delta > 0) ? 1 : -1);
-            }
+          DoScrollTextsize(aTargetFrame, numLines);
         }
+        break;
+
+      default:  // Including -1 (do nothing)
         break;
       }
       *aStatus = nsEventStatus_eConsumeNoDefault;
