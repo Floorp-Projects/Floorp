@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.43 2003/05/13 20:22:07 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.44 2003/06/09 20:05:36 edburns%acm.org Exp $
  *
  * @see org.mozilla.webclient.BrowserControlFactory
 
@@ -728,11 +728,13 @@ public void eventDispatched(WebclientEvent event)
             break;
         case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
             stopButton.setEnabled(false);
-            backButton.setEnabled(history.canBack());
-            backMenuItem.setEnabled(history.canBack());
-            forwardButton.setEnabled(history.canForward());
-            forwardMenuItem.setEnabled(history.canForward());
-            populateHistoryMenu();
+            if (null != history) {
+                backButton.setEnabled(history.canBack());
+                backMenuItem.setEnabled(history.canBack());
+                forwardButton.setEnabled(history.canForward());
+                forwardMenuItem.setEnabled(history.canForward());
+                populateHistoryMenu();
+            }
             statusLabel.setText("Done.");
             urlStatusLabel.setText("");
             if (null != currentPage) {

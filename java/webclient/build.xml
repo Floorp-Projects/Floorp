@@ -258,12 +258,10 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
-<!--
     <exec os="Windows 2000" dir="${basedir}/src_ie" executable="make" 
                      failonerror="yes">
-      <arg line="clean"/>
+      <arg line="clobber_all"/>
     </exec>
--->
 
     <exec os="SunOS" dir="${basedir}/src_share" executable="gmake"
           failonerror="yes">
