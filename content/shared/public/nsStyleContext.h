@@ -49,11 +49,11 @@ class nsStyleContext
 {
 public:
   nsStyleContext(nsStyleContext* aParent, nsIAtom* aPseudoTag, 
-                 nsRuleNode* aRuleNode, nsIPresContext* aPresContext);
-  ~nsStyleContext();
+                 nsRuleNode* aRuleNode, nsIPresContext* aPresContext) NS_HIDDEN;
+  ~nsStyleContext() NS_HIDDEN;
 
-  void* operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW;
-  void Destroy();
+  NS_HIDDEN_(void*) operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW;
+  NS_HIDDEN_(void) Destroy();
 
   nsrefcnt AddRef() {
     ++mRefCnt;
@@ -79,15 +79,15 @@ public:
 
   nsIAtom* GetPseudoType() const { return mPseudoTag; }
 
-  already_AddRefed<nsStyleContext> 
+  NS_HIDDEN_(already_AddRefed<nsStyleContext>)
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules);
 
-  PRBool    Equals(const nsStyleContext* aOther) const;
+  NS_HIDDEN_(PRBool)    Equals(const nsStyleContext* aOther) const;
   PRBool    HasTextDecorations() { return mBits & NS_STYLE_HAS_TEXT_DECORATIONS; };
 
-  void GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding);
+  NS_HIDDEN_(void) GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding);
 
-  void SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct);
+  NS_HIDDEN_(void) SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct);
 
   nsRuleNode* GetRuleNode() { return mRuleNode; }
   void AddStyleBit(const PRUint32& aBit) { mBits |= aBit; }
@@ -97,7 +97,7 @@ public:
    * Mark this style context's rule node (and its ancestors) to prevent
    * it from being garbage collected.
    */
-  void Mark();
+  NS_HIDDEN_(void) Mark();
 
   /*
    * Get the style data for a style struct.  This is the most important
@@ -117,7 +117,7 @@ public:
    * See also |nsIFrame::GetStyleData| and the other global
    * |GetStyleData| in nsIFrame.h.
    */
-  const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
+  NS_HIDDEN_(const nsStyleStruct*) GetStyleData(nsStyleStructID aSID);
 
   /**
    * Define typesafe getter functions for each style struct by
@@ -136,25 +136,26 @@ public:
   #undef STYLE_STRUCT
 
 
-  const nsStyleStruct* PeekStyleData(nsStyleStructID aSID);
+  NS_HIDDEN_(const nsStyleStruct*) PeekStyleData(nsStyleStructID aSID);
 
-  nsStyleStruct* GetUniqueStyleData(const nsStyleStructID& aSID);
+  NS_HIDDEN_(nsStyleStruct*) GetUniqueStyleData(const nsStyleStructID& aSID);
 
-  void ClearStyleData(nsIPresContext* aPresContext);
+  NS_HIDDEN_(void) ClearStyleData(nsIPresContext* aPresContext);
 
-  nsChangeHint CalcStyleDifference(nsStyleContext* aOther);
+  NS_HIDDEN_(nsChangeHint) CalcStyleDifference(nsStyleContext* aOther);
 
 #ifdef DEBUG
-  void DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+  NS_HIDDEN_(void) DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
+                                      PRInt32 aIndent);
 
-  void List(FILE* out, PRInt32 aIndent);
+  NS_HIDDEN_(void) List(FILE* out, PRInt32 aIndent);
 #endif
 
 protected:
-  void AppendChild(nsStyleContext* aChild);
-  void RemoveChild(nsStyleContext* aChild);
+  NS_HIDDEN_(void) AppendChild(nsStyleContext* aChild);
+  NS_HIDDEN_(void) RemoveChild(nsStyleContext* aChild);
 
-  void ApplyStyleFixups(nsIPresContext* aPresContext);
+  NS_HIDDEN_(void) ApplyStyleFixups(nsIPresContext* aPresContext);
 
   nsStyleContext* mParent;
   nsStyleContext* mChild;
@@ -180,7 +181,7 @@ protected:
   PRUint32                mRefCnt;
 };
 
-already_AddRefed<nsStyleContext>
+NS_HIDDEN_(already_AddRefed<nsStyleContext>)
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsRuleNode* aRuleNode,
