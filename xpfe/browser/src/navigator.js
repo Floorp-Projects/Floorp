@@ -499,6 +499,21 @@
   function BrowserClose()
   {
     dump("BrowserClose\n");
+  // Currently window.close doesn't work unless the window was opened from JS
+  //	 window.close();
+  
+   core = XPAppCoresManager.Find("toolkitCore");
+    if ( !core ) {
+        core = new ToolkitCore();
+        if ( core ) {
+            core.Init("toolkitCore");
+        }
+    }
+    if ( core ) {
+        core.CloseWindow( window );
+    } else {
+        dump("Error can't create toolkitCore\n");
+    }
   }
 
   function BrowserExit()
@@ -800,4 +815,21 @@
             dump( "meter value=" + meter.getAttribute("value") + "\n" );
         }
 
-
+function ShowWindowFromResource( node )
+{
+	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	dump("got window Manager \n");
+	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+    dump("got interface \n");
+    
+    var desiredWindow = null;
+    var url = node.getAttribute('id');
+    dump( url +" finding \n" );
+	desiredWindow = windowManagerInterface.GetWindowForResource( url );
+	dump( "got window \n");
+	if ( desiredWindow )
+	{
+		dump("focusing \n");
+		desiredWindow.focus();
+	}
+}
