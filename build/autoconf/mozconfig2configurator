@@ -1,0 +1,70 @@
+#! /bin/sh
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1999 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): Stephen Lamm (slamm@netscape.com)
+#
+
+# mozconfig2configurator - Translates .mozconfig into options for
+#    the online configurator,
+#
+#        http://webtools.mozilla.org/build/config.cgi
+#    
+#   This is called by the 'webconfig' target of mozilla/client.mk
+#
+
+ac_add_options() {
+  for _opt
+  do
+    # Escape special url characters
+    _opt=`echo $_opt | sed -e 's/%/%25/g;s/ /%20/g;s/&/%26/g;'`
+    case "$_opt" in
+      --*-*= ) url="$url$_opt&"     ;;
+      --*-* )  url="$url$_opt=yes&" ;;
+    esac
+  done
+}
+
+mk_add_options() {
+  for _opt
+  do
+    # Escape special url characters
+    # Escape special url characters
+    _opt=`echo $_opt | sed -e 's/%/%25/g;s/ /%20/g;s/&/%26/g;'`
+    url="$url$_opt&"
+  done
+}
+
+#
+# main
+#
+
+# find-mozconfig.sh 
+#   In params:   $MOZCONFIG $HOME ($MOZ_MYCONFIG)
+scriptdir=`dirname $0`
+MOZCONFIG=`$scriptdir/mozconfig-find $topsrcdir`
+
+if [ "$MOZCONFIG" ]
+then
+  url="http://webtools.mozilla.org/build/config.cgi?"
+  . $MOZCONFIG
+
+  # Drop the last character of $url
+  echo `expr "$url" : "\(.*\)."`
+fi
+
