@@ -157,7 +157,6 @@ nsMailCore::SendMail(const nsString& aAddrTo, const nsString& aSubject, const ns
     PRBool isUndefined = PR_FALSE;
     nsString rVal;
     mScriptContext->EvaluateString(mScript, url, 0, rVal, &isUndefined);
-    //printf("SendMail [%s] %d [%s]\n", mScript.ToNewCString(), isUndefined, rVal.ToNewCString());
   } 
   return NS_OK;
 }

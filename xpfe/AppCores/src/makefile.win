@@ -84,10 +84,10 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
-	$(MAKE_INSTALL) ..\xul\MailAppShell.html     $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\MailAppShellNoTB.html $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\MailFrame.html        $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\MailToolbar.xml       $(DIST)\bin\res\samples
+#	$(MAKE_INSTALL) ..\xul\MailAppShell.html     $(DIST)\bin\res\samples
+#	$(MAKE_INSTALL) ..\xul\MailAppShellNoTB.html $(DIST)\bin\res\samples
+#	$(MAKE_INSTALL) ..\xul\MailFrame.html        $(DIST)\bin\res\samples
+#	$(MAKE_INSTALL) ..\xul\MailToolbar.xml       $(DIST)\bin\res\samples
 
 	$(MAKE_INSTALL) ..\xul\resources\Mail_SendMsg.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\Mail_GetMsg.gif  $(DIST)\bin\res\toolbar
