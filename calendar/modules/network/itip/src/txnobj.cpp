@@ -324,6 +324,9 @@ TransactionObject::executeIMIP(JulianPtrArray * out,
     }
     createContentTypeHeader(sMethod, sCharSet, sComponentType, sContentTypeHeader);
 
+    // 10/12/98 10:24 AM
+    // if' 0 out because this won't interoperate with Microsoft
+#if 0
      // added content-disposition to work with Lotus
     if (((ICalComponent *)m_ICalComponentVctr->GetAt(0))->GetType() == ICalComponent::ICAL_COMPONENT_VEVENT)
     {
@@ -333,6 +336,8 @@ TransactionObject::executeIMIP(JulianPtrArray * out,
     {
       sContentTypeHeader += "\r\nContent-Dispostion: inline; filename=\"freebusy.ifb\"";
     }
+#endif
+    
 //#ifdef DEBUG_ITIP
     m_DebugITIPMessage = itipMessage;
 //#endif /* DEBUG_ITIP */
