@@ -762,14 +762,14 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
       {
         // XXX: we'll want to deleteRange if the selection isn't just an insertion point
         // for now, just insert text after the start of the first node
-        nsCOMPtr<nsIDOMRange> range = currentItem;
+        nsCOMPtr<nsIDOMRange> range(currentItem);
         if (range)
         {
           nsCOMPtr<nsIDOMNode> node;
           result = range->GetStartParent(getter_AddRefs(node));
           if ((NS_SUCCEEDED(result)) && (node))
           {
-            nsCOMPtr<nsIDOMCharacterData> nodeAsText = (nsISupports*)node;
+            nsCOMPtr<nsIDOMCharacterData> nodeAsText(node);
             if (nodeAsText)
             {
               PRInt32 offset;
@@ -856,7 +856,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(EditAggregateTxn ** aTxn)
       result = enumerator->CurrentItem(&currentItem);
       while ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
-        nsCOMPtr<nsIDOMRange> range = currentItem;
+        nsCOMPtr<nsIDOMRange> range(currentItem);
         DeleteRangeTxn *txn;
         result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
         if (nsnull!=txn)
