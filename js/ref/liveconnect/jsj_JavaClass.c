@@ -461,7 +461,7 @@ JSObjectOps JavaClass_ops = {
     JavaClass_hasInstance,      /* hasInstance */
 };
 
-JSObjectOps *
+static JSObjectOps *
 JavaClass_getObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &JavaClass_ops;
@@ -474,7 +474,7 @@ JSClass JavaClass_class = {
     JavaClass_getObjectOps,
 };
 
-JSObject *
+static JSObject *
 jsj_new_JavaClass(JSContext *cx, JNIEnv *jEnv, JSObject* parent_obj,
                   JavaClassDescriptor *class_descriptor)
 {
