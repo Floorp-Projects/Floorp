@@ -64,18 +64,21 @@ public:
   // method overrides for windows registry look up steps....
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound);
 
+  /** Get the string value of a registry value and store it in result.
+   * @return PR_TRUE on success, PR_FALSE on failure
+   */
+  static PRBool GetValueString(HKEY hKey, const PRUnichar* pValueName, nsAString& result);
+
 protected:
   // Lookup a mime info by extension, using an optional type hint
-  already_AddRefed<nsMIMEInfoWin> GetByExtension(const char *aFileExt, const char *aTypeHint = nsnull);
+  already_AddRefed<nsMIMEInfoWin> GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint = nsnull);
   nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);
 
   /** Whether we're running on an OS that supports the *W registry functions */
   static PRBool mIsNT;
-  /** Get the string value of a registry value and store it in result.
-   * @return PR_TRUE on success, PR_FALSE on failure
-   */
-  static PRBool GetValueString(HKEY hKey, PRUnichar* pValueName, nsAString& result);
   static nsresult GetMIMEInfoFromRegistry(const nsAFlatString& fileType, nsIMIMEInfo *pInfo);
+  /// Looks up the type for the extension aExt and compares it to aType
+  static PRBool typeFromExtEquals(const PRUnichar* aExt, const char *aType);
 };
 
 #endif // nsOSHelperAppService_h__

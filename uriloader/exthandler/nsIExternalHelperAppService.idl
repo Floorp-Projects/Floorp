@@ -74,7 +74,7 @@ interface nsIExternalHelperAppService : nsISupports
    * is to be decoded from aEncodingType prior to saving or passing
    * off to helper apps, false otherwise.
    */
-  boolean applyDecodingForExtension(in ACString aExtension,
+  boolean applyDecodingForExtension(in AUTF8String aExtension,
                                     in ACString aEncodingType);
 
 };

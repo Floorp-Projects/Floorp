@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:set ts=2 sts=2 sw=2 et cin:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -61,8 +62,8 @@
 
 // helper methods: forward declarations...
 static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen=0);
-static nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension);
-static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& aFileExtension);
+static nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsString& aFileExtension);
+static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsString& aFileExtension);
 
 // static member
 PRBool nsOSHelperAppService::mIsNT = PR_FALSE;
@@ -87,7 +88,7 @@ nsOSHelperAppService::~nsOSHelperAppService()
 
 // The windows registry provides a mime database key which lists a set of mime types and corresponding "Extension" values. 
 // we can use this to look up our mime type to see if there is a preferred extension for the mime type.
-static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& aFileExtension)
+static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsString& aFileExtension)
 {
    HKEY hKey;
    nsCAutoString mimeDatabaseKey ("MIME\\Database\\Content Type\\");
@@ -97,14 +98,9 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCS
    LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, mimeDatabaseKey.get(), 0, KEY_QUERY_VALUE, &hKey);
    if (err == ERROR_SUCCESS)
    {
-      LPBYTE pBytes = GetValueBytes( hKey, "Extension");
-      if (pBytes)
-      { 
-        aFileExtension = (char * )pBytes;
-      }
-
-      delete[] pBytes;
-
+      nsOSHelperAppService::GetValueString(hKey,
+                                           NS_LITERAL_STRING("Extension").get(),
+                                           aFileExtension);
       ::RegCloseKey(hKey);
    }
 
@@ -115,7 +111,7 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCS
 // helper apps based on extension. Right now, we really don't have a good place to go for 
 // trying to figure out the extension for a particular mime type....One short term hack is to look
 // this information in 4.x (it's stored in the windows regsitry). 
-static nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension)
+static nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsString& aFileExtension)
 {
    nsCAutoString command ("Software\\Netscape\\Netscape Navigator\\Suffixes");
    nsresult rv = NS_OK;
@@ -123,21 +119,20 @@ static nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString
    LONG err = ::RegOpenKeyEx( HKEY_CURRENT_USER, command.get(), 0, KEY_QUERY_VALUE, &hKey);
    if (err == ERROR_SUCCESS)
    {
-      LPBYTE pBytes = GetValueBytes( hKey, aMimeType);
-      if (pBytes) // only try to get the extension if we have a value!
+      PRBool found = nsOSHelperAppService::GetValueString( hKey,
+          NS_ConvertASCIItoUTF16(aMimeType).get(), aFileExtension);
+      if (found) // only try to get the extension if we have a value!
       {
-        aFileExtension = ".";
-        aFileExtension.Append( (char *) pBytes);
+        aFileExtension.Insert(PRUnichar('.'), 0);
       
         // this may be a comma separate list of extensions...just take the first one
         // for now...
 
-        PRInt32 pos = aFileExtension.FindChar(',');
+        PRInt32 pos = aFileExtension.FindChar(PRUnichar(','));
         if (pos > 0) // we have a comma separated list of languages...
           aFileExtension.Truncate(pos); // truncate everything after the first comma (including the comma)
       }
    
-      delete [] pBytes;
       // close the key
       ::RegCloseKey(hKey);
    }
@@ -172,7 +167,7 @@ static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen)
 }
 
 /* static */
-PRBool nsOSHelperAppService::GetValueString(HKEY hKey, PRUnichar* pValueName, nsAString& result)
+PRBool nsOSHelperAppService::GetValueString(HKEY hKey, const PRUnichar* pValueName, nsAString& result)
 {
   if (!mIsNT) {
     nsCAutoString cValueName;
@@ -309,19 +304,31 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry( const nsAFlatString& fil
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Looks up the type for the extension aExt and compares it to aType
-static PRBool typeFromExtEquals(const char *aExt, const char *aType)
+/* static */ PRBool
+nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType)
 {
   if (!aType)
     return PR_FALSE;
-  nsCAutoString fileExtToUse;
-  if (aExt[0] != '.')
-    fileExtToUse = '.';
+  nsAutoString fileExtToUse;
+  if (aExt[0] != PRUnichar('.'))
+    fileExtToUse = PRUnichar('.');
 
   fileExtToUse.Append(aExt);
 
   HKEY hKey;
   PRBool eq = PR_FALSE;
-  LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
+  LONG err;
+  if (mIsNT) {
+    err = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
+  }
+  else {
+    nsCAutoString ansiKey;
+    nsresult rv = NS_CopyUnicodeToNative(fileExtToUse, ansiKey);
+    if (NS_FAILED(rv))
+      return eq;
+
+    err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, ansiKey.get(), 0, KEY_QUERY_VALUE, &hKey);
+  }
   if (err == ERROR_SUCCESS)
   {
      LPBYTE pBytes = GetValueBytes(hKey, "Content Type");
@@ -335,22 +342,34 @@ static PRBool typeFromExtEquals(const char *aExt, const char *aType)
   return eq;
 }
 
-already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const char *aFileExt, const char *aTypeHint)
+already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint)
 {
-  if (!aFileExt || !*aFileExt)
+  if (aFileExt.IsEmpty())
     return nsnull;
 
   // windows registry assumes your file extension is going to include the '.'.
   // so make sure it's there...
-  nsCAutoString fileExtToUse;
-  if (*aFileExt != '.')
-    fileExtToUse = '.';
+  nsAutoString fileExtToUse;
+  if (aFileExt.First() != PRUnichar('.'))
+    fileExtToUse = PRUnichar('.');
 
   fileExtToUse.Append(aFileExt);
 
   // o.t. try to get an entry from the windows registry.
   HKEY hKey;
-  LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
+  LONG err;
+  if (mIsNT) {
+    err = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
+  }
+  else {
+    nsCAutoString ansiKey;
+    nsresult rv = NS_CopyUnicodeToNative(fileExtToUse, ansiKey);
+    if (NS_FAILED(rv))
+      return nsnull;
+
+    err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, ansiKey.get(), 0, KEY_QUERY_VALUE, &hKey);
+  }
+
   if (err == ERROR_SUCCESS)
   {
     nsCAutoString typeToUse;
@@ -371,7 +390,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const char 
     {
       NS_ADDREF(mimeInfo);
       // don't append the '.'
-      mimeInfo->AppendExtension(Substring(fileExtToUse, 1));
+      mimeInfo->AppendExtension(NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1)));
 
       mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
@@ -411,7 +430,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
   const nsCString& flatType = PromiseFlatCString(aMIMEType);
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
 
-  nsCAutoString fileExtension;
+  nsAutoString fileExtension;
   /* XXX The Equals is a gross hack to wallpaper over the most common Win32
    * extension issues caused by the fix for bug 116938.  See bug
    * 120327, comment 271 for why this is needed.  Not even sure we
@@ -420,7 +439,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
    * useless....
    * We'll do extension-based lookup for this type later in this function.
    */
-  if (!aMIMEType.Equals(APPLICATION_OCTET_STREAM, nsCaseInsensitiveCStringComparator())) {
+  if (!aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM)) {
     // (1) try to use the windows mime database to see if there is a mapping to a file extension
     // (2) try to see if we have some left over 4.x registry info we can peek at...
     GetExtensionFromWindowsMimeDatabase(flatType.get(), fileExtension);
@@ -433,7 +452,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
   // If we found an extension for the type, do the lookup
   nsMIMEInfoWin* mi = nsnull;
   if (!fileExtension.IsEmpty())
-    mi = GetByExtension(fileExtension.get(), flatType.get()).get();
+    mi = GetByExtension(fileExtension, flatType.get()).get();
   LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(), mi));
 
   PRBool hasDefault = PR_FALSE;
@@ -444,7 +463,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     // to the mimeinfo that we have. (E.g.: We are asked for video/mpeg and
     // .mpg, but the primary extension for video/mpeg is .mpeg. But because
     // .mpg is an extension for video/mpeg content, we want to append it)
-    if (!aFileExt.IsEmpty() && typeFromExtEquals(flatExt.get(), flatType.get())) {
+    if (!aFileExt.IsEmpty() && typeFromExtEquals(NS_ConvertUTF8toUTF16(flatExt).get(), flatType.get())) {
       LOG(("Appending extension '%s' to mimeinfo, because its mimetype is '%s'\n",
            flatExt.get(), flatType.get()));
       PRBool extExist = PR_FALSE;
@@ -454,7 +473,8 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     }
   }
   if (!mi || !hasDefault) {
-    nsRefPtr<nsMIMEInfoWin> miByExt = GetByExtension(flatExt.get(), flatType.get());
+    nsRefPtr<nsMIMEInfoWin> miByExt =
+      GetByExtension(NS_ConvertUTF8toUTF16(aFileExt), flatType.get());
     LOG(("Ext. lookup for '%s' found 0x%p\n", flatExt.get(), miByExt.get()));
     if (!miByExt && mi)
       return mi;

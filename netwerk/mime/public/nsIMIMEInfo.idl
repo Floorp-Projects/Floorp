@@ -67,7 +67,7 @@ interface nsIMIMEInfo : nsISupports {
     /**
      * Set File Extensions. Input is a comma delimited list of extensions.
      */
-    void setFileExtensions(in ACString aExtensions);
+    void setFileExtensions(in AUTF8String aExtensions);
  
     /**
      * Returns whether or not the given extension is
@@ -75,12 +75,12 @@ interface nsIMIMEInfo : nsISupports {
      *
      * @return TRUE if the association exists. 
      */
-    boolean extensionExists(in ACString aExtension);
+    boolean extensionExists(in AUTF8String aExtension);
 
     /**
      * Append a given extension to the set of extensions
      */
-    void appendExtension(in ACString aExtension);
+    void appendExtension(in AUTF8String aExtension);
 
     /**
      * Returns the first extension association in
@@ -88,7 +88,7 @@ interface nsIMIMEInfo : nsISupports {
      *
      * @return The first extension.
      */
-    attribute ACString primaryExtension;
+    attribute AUTF8String primaryExtension;
     
     /**
      * The MIME type of this MIMEInfo.
