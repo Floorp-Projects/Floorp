@@ -65,7 +65,7 @@ LIBS := \
 	-lreg \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lwidget$(MOZ_TOOLKIT) \
-        -lgfxgtk    \
+        -lgfx$(MOZ_TOOLKIT)    \
         -lraptorgfx \
         -lgfxps \
 	-lxp \
