@@ -115,15 +115,12 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
     mLocale.Assign(aLocaleUnichar); // cache locale name
     nsAllocator::Free(aLocaleUnichar);
 
-    nsCOMPtr <nsIWin32Locale> win32Locale;
-    res = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, getter_AddRefs(win32Locale));
+    nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(kWin32LocaleFactoryCID, &res);
     if (NS_SUCCEEDED(res)) {
   	  res = win32Locale->GetPlatformLocale(&mLocale, (LCID *) &mLCID);
     }
 
-    nsCOMPtr <nsIPlatformCharset> platformCharset;
-    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
