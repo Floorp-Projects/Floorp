@@ -218,6 +218,8 @@ protected:
   const char* GetEventName(PRUint32 aEventType);
   already_AddRefed<nsIDOMEventTarget> GetTargetFromFrame();
   void AllocateEvent(const nsAString& aEventType);
+  nsPoint GetClientPoint();
+  nsPoint GetScreenPoint();
 
   nsEvent* mEvent;
   nsCOMPtr<nsIPresContext> mPresContext;
