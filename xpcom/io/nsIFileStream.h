@@ -128,7 +128,7 @@ public:
 #endif // NO_XPCOM_FILE_STREAMS
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewTypicalInputFileStream(
+nsresult NS_NewTypicalInputFileStream(
     nsISupports** aStreamResult,
     const nsFileSpec& inFile
     /*Default nsprMode == PR_RDONLY*/
@@ -136,26 +136,12 @@ extern "C" NS_COM nsresult NS_NewTypicalInputFileStream(
 // Factory method to get an nsInputStream from a file, using most common options
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewOutputConsoleStream(
-    nsISupports** aStreamResult);
-    // Factory method to get an nsOutputStream to the console.
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewTypicalOutputFileStream(
+nsresult NS_NewTypicalOutputFileStream(
     nsISupports** aStreamResult, // will implement all the above interfaces
     const nsFileSpec& inFile
     /*default nsprMode= (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE)*/
     /*Default accessMode= 0700 (octal)*/);
     // Factory method to get an nsOutputStream to a file - most common case.
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewTypicalIOFileStream(
-    nsISupports** aStreamResult, // will implement all the above interfaces
-    const nsFileSpec& inFile
-    /*default nsprMode = (PR_RDWR | PR_CREATE_FILE)*/
-    /*Default accessMode = 0700 (octal)*/);
-    // Factory method to get an object that implements both nsIInputStream
-    // and nsIOutputStream, associated with a single file.
 
 //----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewIOFileStream(

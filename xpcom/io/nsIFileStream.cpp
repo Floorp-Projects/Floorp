@@ -603,7 +603,7 @@ nsresult FileImpl::AllocateBuffers(PRUint32 segmentSize, PRUint32 maxBufSize)
 
 
 //----------------------------------------------------------------------------------------
-NS_COM nsresult NS_NewTypicalInputFileStream(
+nsresult NS_NewTypicalInputFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile
     /*Default nsprMode == PR_RDONLY*/
@@ -615,7 +615,6 @@ NS_COM nsresult NS_NewTypicalInputFileStream(
   // does a cast from (void *) to (nsISupports *) thus causing a 
   // vtable problem on Windows, where we really didn't have the proper pointer
   // to an nsIInputStream, this ensures that we do 
-#if 1
     nsISupports    * supports;
     nsIInputStream * inStr;
 
@@ -629,32 +628,10 @@ NS_COM nsresult NS_NewTypicalInputFileStream(
       NS_RELEASE(supports);
     }
     return rv;
-#else
-    return NS_NewIOFileStream(aResult, inFile, PR_RDONLY, 0666);
-#endif
 }
 
 //----------------------------------------------------------------------------------------
-NS_COM nsresult NS_NewOutputConsoleStream(
-    nsISupports** aResult)
-// Factory method to get an nsOutputStream to the console.
-//----------------------------------------------------------------------------------------
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    FileImpl* stream = new FileImpl(PR_STDOUT);
-    if (! stream)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(stream);
-    *aResult = (nsISupports*)(void*)stream;
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------------------------
-NS_COM nsresult NS_NewTypicalOutputFileStream(
+nsresult NS_NewTypicalOutputFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile
     /*default nsprMode= (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE)*/
@@ -744,19 +721,3 @@ NS_COM nsresult NS_NewIOFileStream(
     return NS_OK;
 }
 
-//----------------------------------------------------------------------------------------
-NS_COM nsresult NS_NewTypicalIOFileStream(
-    nsISupports** aResult,
-    const nsFileSpec& inFile
-    /*default nsprMode= (PR_RDWR | PR_CREATE_FILE)*/
-    /*Default accessMode= 0666 (octal)*/)
-    // Factory method to get an object that implements both nsIInputStream
-    // and nsIOutputStream, associated with a single file.
-//----------------------------------------------------------------------------------------
-{
-    return NS_NewIOFileStream(
-        aResult,
-        inFile,
-        (PR_RDWR | PR_CREATE_FILE),
-        0666);
-}
