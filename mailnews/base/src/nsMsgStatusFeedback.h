@@ -38,6 +38,7 @@ public:
 	NS_IMETHOD StartMeteors();
 	NS_IMETHOD StopMeteors();
 	NS_IMETHOD ShowProgress(PRInt32 percent);
+	NS_IMETHOD SetWebShell(nsIWebShell *shell,  nsIDOMWindow  *mWindow);
 
 	// nsIDocumntLoaderObserver
     NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
@@ -48,7 +49,6 @@ public:
     NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
     NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
 
-	void SetWebShell(nsIWebShell *shell,  nsIDOMWindow  *mWindow);
 
 	nsresult setAttribute( nsIWebShell *shell,
                               const char *id,
@@ -59,6 +59,13 @@ protected:
 	nsCOMPtr <nsIDOMWindow> mWindow;
 	PRBool					m_meteorsSpinning;
 };
+
+NS_BEGIN_EXTERN_C
+
+nsresult
+NS_NewMsgStatusFeedback(const nsIID& iid, void **result);
+
+NS_END_EXTERN_C
 
 
 #endif // _nsMsgStatusFeedback_h

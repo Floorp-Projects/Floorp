@@ -25,6 +25,19 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULDocument.h"
 
+NS_BEGIN_EXTERN_C
+
+nsresult
+NS_NewMsgStatusFeedback(const nsIID& iid, void **result)
+{
+	nsMsgStatusFeedback *statusFeedback = new nsMsgStatusFeedback();
+	if(!statusFeedback)
+		return NS_ERROR_OUT_OF_MEMORY;
+	return statusFeedback->QueryInterface(iid, result);
+}
+
+NS_END_EXTERN_C
+
 nsMsgStatusFeedback::nsMsgStatusFeedback()
 {
 	NS_INIT_REFCNT();
@@ -193,7 +206,7 @@ nsMsgStatusFeedback::StopMeteors()
 }
 
 
-void nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow *aWindow)
 {
 	if (aWindow)
 	{
@@ -206,6 +219,7 @@ void nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow *aWindow)
 			webshell->GetRootWebShell(*getter_AddRefs(mWebShell));
 	}
 	mWindow = aWindow;
+	return NS_OK;
 }
 
 static int debugSetAttr = 0;
