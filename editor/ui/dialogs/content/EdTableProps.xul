@@ -84,11 +84,7 @@
         </groupbox>
         <groupbox orient="vertical"><label align="left" value="&tableBorderSpacing.label;"/>
         <grid>
-          <columns>
-            <column flex="1"/>
-            <column flex="1"/>
-            <column flex="9"/>
-          </columns>
+          <columns><column/><column/><column/></columns>
           <rows>
             <row valign="middle">
               <text class="label" value="&tableBorderWidth.label;"/>
@@ -179,11 +175,7 @@
           <!-- cell size groupbox -->
           <groupbox><label align="left" value="&size.label;"/>
             <grid>
-              <columns>
-                <column flex="3"/>
-                <column flex="2"/>
-                <column flex="4"/>
-              </columns>
+              <columns><column/><column/><column flex="1"/></columns>
               <rows>
                 <row valign="middle" autostretch="never">
                   <checkbox id="CellHeightCheckbox" label="&tableHeight.label;"/>
@@ -204,10 +196,7 @@
           <!-- Alignment -->
           <groupbox><label value="&cellContentAlignment.label;"/>
             <grid>
-              <columns>
-                <column flex="4"/>
-                <column flex="5"/>
-              </columns>
+              <columns><column/><column flex="1"/><column/></columns>
               <rows>
                 <row valign="middle" autostretch="never">
                   <checkbox id="CellVAlignCheckbox" label="&cellVertical.label;"/>

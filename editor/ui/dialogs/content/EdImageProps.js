@@ -91,7 +91,6 @@ function Startup()
   dialog.PreviewWidth      = document.getElementById( "PreviewWidth" );
   dialog.PreviewHeight     = document.getElementById( "PreviewHeight" );
   dialog.PreviewSize       = document.getElementById( "PreviewSize" );
-  dialog.PreviewImageData  = document.getElementById( "PreviewImageData" );
 
   // Get a single selected image element
   var tagName = "img"
@@ -284,6 +283,7 @@ function PreviewImageLoaded()
       dialog.PreviewWidth.setAttribute("value", actualWidth);
       dialog.PreviewHeight.setAttribute("value", actualHeight);
 
+      dialog.PreviewSize.setAttribute("collapsed", "false");
       dialog.ImageHolder.setAttribute("collapsed", "false");
 
       // Use values as start for constrain proportions
@@ -296,9 +296,8 @@ function PreviewImageLoaded()
 
 function GetImageFromURL()
 {
-  dialog.PreviewWidth.setAttribute("value", dialog.PreviewImageData.getAttribute("value"));
-  dialog.PreviewHeight.setAttribute("value", dialog.PreviewImageData.getAttribute("value"));
-  
+  dialog.PreviewSize.setAttribute("collapsed", "true");
+
   var imageSrc = dialog.srcInput.value;
   if (imageSrc) imageSrc = imageSrc.trimString();
   if (!imageSrc) return;
@@ -362,6 +361,9 @@ function onMoreFewer()
     dialog.MoreFewerButton.setAttribute("label", GetString("MoreProperties"));
     dialog.MoreFewerButton.setAttribute("more","0");
     SeeMore = false;
+    // Show the "Advanced Edit" button on same line as "More Properties"
+    dialog.AdvancedEditButton.setAttribute("collapsed","false");
+    dialog.AdvancedEditButton2.setAttribute("collapsed","true");
     // Weird caret appearing when we collapse, so force focus to URL textbox
     dialog.srcInput.focus();
   }
@@ -371,6 +373,10 @@ function onMoreFewer()
     dialog.MoreFewerButton.setAttribute("label", GetString("FewerProperties"));
     dialog.MoreFewerButton.setAttribute("more","1");
     SeeMore = true;
+
+    // Show the "Advanced Edit" button at bottom
+    dialog.AdvancedEditButton.setAttribute("collapsed","true");
+    dialog.AdvancedEditButton2.setAttribute("collapsed","false");
   }
   window.sizeToContent();
 }
