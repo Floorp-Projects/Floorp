@@ -38,6 +38,8 @@
 
 #include "nsCookieManager.h"
 #include "nsCookies.h"
+#include "nsICookieService.h"
+#include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIScriptGlobalObject.h"
 
@@ -127,6 +129,12 @@ nsCookieManager::~nsCookieManager()
 
 nsresult nsCookieManager::Init()
 {
+  // XXX we need this until we merge the cookiemanager into the cookieservice.
+  // otherwise, sCookieList is un-initialized (required by COOKIE_Read).
+  nsresult rv;
+  nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   COOKIE_Read();
   return NS_OK;
 }
