@@ -955,7 +955,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
               mOffsetY = 0;
               else
             {
-              mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), p2t);
+              mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(oldpos), scale), p2t);
 
               if ((mSizeY - mOffsetY) < availheight)
               {
@@ -1027,7 +1027,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
               mOffsetX = 0;
             else
             {
-              mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeX) / oldsizex), scale), p2t);
+              mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(oldpos), scale), p2t);
 
               if ((mSizeX - mOffsetX) < availwidth)
               {
