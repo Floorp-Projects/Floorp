@@ -200,6 +200,8 @@ nsHelperAppDialog.prototype = {
 
          // Put file name in window title.
          var win   = this.dialogElement( "nsHelperAppDlg" );
+         var suggestedFileName = this.mLauncher.suggestedFileName;
+
          var url   = this.mLauncher.source.QueryInterface( Components.interfaces.nsIURL );
          var fname = "";
          this.mSourcePath = url.prePath;
@@ -212,6 +214,10 @@ nsHelperAppDialog.prototype = {
              fname = this.mLauncher.source.path;
              this.mSourcePath += url.path;
          }
+
+         if (suggestedFileName)
+           fname = suggestedFileName;
+           
 
          var title = this.replaceInsert( win.getAttribute( "title" ), 1, fname);
          win.setAttribute( "title", title );
