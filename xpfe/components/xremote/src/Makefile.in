@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  appshell \
 		  toolkitcomps \
+		  appcomps \
 		  exthandler \
 		  profile \
 		  $(NULL)
