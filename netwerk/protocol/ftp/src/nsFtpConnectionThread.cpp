@@ -324,16 +324,16 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
     }
     buffer[aCount] = '\0';
         
+
 #if defined(PR_LOGGING)
-    nsCString logString(buffer);
-    logString.ReplaceChar(CRLF, ' ');
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) reading %d bytes: \"%s\"", this, aCount, logString.get()));
-
-#ifdef DEBUG_dougt
-printf("!!! %s\n", logString.get());
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) reading %d bytes: \"%s\"", this, aCount, buffer));
+#if 0 //#ifdef DEBUG_dougt
+    printf("!!! %s\n", buffer);
+#endif
 #endif
 
-#endif
+    if (mFTPEventSink)
+        mFTPEventSink->OnFTPControlLog(PR_TRUE, buffer);
     
     // get the response code out.
     if (!mControlReadContinue && !mControlReadBrokenLine) {
@@ -1929,12 +1929,15 @@ nsFtpState::SetLoadFlags(nsLoadFlags aLoadFlags)
 
 nsresult
 nsFtpState::Init(nsIFTPChannel* aChannel,
-                 nsIPrompt* aPrompter,
-                 nsIAuthPrompt* aAuthPrompter) {
+                 nsIPrompt*  aPrompter,
+                 nsIAuthPrompt* aAuthPrompter,
+                 nsIFTPEventSink* sink) 
+{
     nsresult rv = NS_OK;
 
     mKeepRunning = PR_TRUE;
     mPrompter = aPrompter;
+    mFTPEventSink = sink;
     mAuthPrompter = aAuthPrompter;
 
     // parameter validation
@@ -2360,15 +2363,15 @@ nsFtpState::SendFTPCommand(nsCString& command)
     NS_ASSERTION(mControlConnection, "null control connection");
 
 #if defined(PR_LOGGING)
-    nsCString logString(command);
-    logString.ReplaceChar(CRLF, ' ');
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Writing \"%s\"\n", this, logString.get()));
-
-#ifdef DEBUG_dougt
-printf("!!! %s\n", logString.get());
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Writing \"%s\"\n", this, command.get()));
+#if 0 // #ifdef DEBUG_dougt
+    printf("!!! %s\n", command.get());
+#endif
 #endif
 
-#endif
+    if (mFTPEventSink)
+        mFTPEventSink->OnFTPControlLog(PR_FALSE, command.get());
+
     if (mControlConnection) {
         return mControlConnection->Write(command, mWaitingForDConn);
     }
