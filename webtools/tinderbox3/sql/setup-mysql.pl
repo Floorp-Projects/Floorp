@@ -180,8 +180,10 @@ sub execute_sql_file {
 	push @exec_params, ("-P", $args{port}) if $args{port};
 	push @exec_params, ("-u", $args{username}) if $args{username};
 	push @exec_params, ("-p", $args{password}) if $args{password};
-	push @exec_params, ("-e", "\\. $sql_file.new", $dbname);
-	print "Executing " . join(' ', @exec_params) . " ...\n";
-	system(@exec_params);
+  push @exec_params, $dbname;
+  my $cmd = join(' ', @exec_params);
+  $cmd .= " < $sql_file.new";
+  print "Executing $cmd ...\n";
+	system($cmd);
   unlink("$sql_file.new");
 }
