@@ -4281,7 +4281,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           // won't do any harm.
             imapMessageFlagsType flags = 0;
             imapUrl->GetMsgFlags(&flags);
-            if (flags & kImapMsgDeletedFlag && !DeleteIsMoveToTrash())
+            //we need to subtract the delete flag in db only in case when we show deleted msgs
+            if (flags & kImapMsgDeletedFlag && ShowDeletedMessages())
             {
               nsCOMPtr<nsIMsgDatabase> db;
               rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
@@ -4305,7 +4306,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
         {
             imapMessageFlagsType flags = 0;
             imapUrl->GetMsgFlags(&flags);
-            if (flags & kImapMsgDeletedFlag && DeleteIsMoveToTrash())
+            //we need to delete headers from db only when we don't show deleted msgs
+            if (flags & kImapMsgDeletedFlag && !ShowDeletedMessages())
             {
                 nsCOMPtr<nsIMsgDatabase> db;
                 rv = GetMsgDatabase(nsnull, getter_AddRefs(db));

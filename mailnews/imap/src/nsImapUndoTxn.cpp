@@ -208,7 +208,7 @@ nsImapMoveCopyMsgTxn::UndoTransaction(void)
       if (NS_FAILED(rv)) 
         return rv;
 
-      if (deleteIsMoveToTrash)
+      if (deleteModel != nsMsgImapDeleteModels::IMAPDelete)
         rv = imapService->GetHeaders(m_eventQueue, srcFolder,
         srcListener, nsnull,
         m_srcMsgIdString.get(),
