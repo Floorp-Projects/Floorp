@@ -289,7 +289,7 @@
 <!ENTITY forwardButton.label          "Forward">
 <!ENTITY forwardButton.tooltip        "Go forward one page">
 <!ENTITY reloadButton.label           "Reload">
-<!ENTITY reloadButton.tooltip         "Reload page to latest version">
+<!ENTITY reloadButton.tooltip         "Reload current page">
 <!ENTITY stopButton.label             "Stop">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
 <!ENTITY searchButton.label           "Search">
@@ -301,7 +301,7 @@
 <!ENTITY throbber.tooltip             "Go to the &vendorShortName; home page">
 
 <!ENTITY locationBar.tooltip          "Location and search field">
-<!ENTITY internetKeyword.tooltip      "Choose Internet Keywords">
+<!ENTITY internetKeyword.tooltip      "Return to previously viewed page or choose keyword">
 
 <!ENTITY personalBar.tooltip          "Personal toolbar">
 <!ENTITY navigationBar.tooltip        "Navigation toolbar">
