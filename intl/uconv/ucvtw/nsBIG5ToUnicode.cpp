@@ -18,16 +18,11 @@
  */
 
 #include "nsBIG5ToUnicode.h"
+#include "nsUCvTWDll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_BIG5MappingTable[] = {
-#include "big5.ut"
-};
-static PRUint16 g_ASCIIMappingTable[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
-};
 
 static PRInt16 g_BIG5ShiftTable[] =  {
   0, u2BytesCharset,  
@@ -45,8 +40,8 @@ static PRInt16 *g_BIG5ShiftTableSet [] = {
 };
 
 static PRUint16 *g_BIG5MappingTableSet [] ={
-  g_ASCIIMappingTable,
-  g_BIG5MappingTable
+  g_ASCIIMapping,
+  g_utBIG5Mapping
 };
 
 static uRange g_BIG5Ranges[] = {
