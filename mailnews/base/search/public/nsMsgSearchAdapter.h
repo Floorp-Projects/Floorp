@@ -72,12 +72,14 @@ public:
 	
 	static nsresult EncodeImapValue(char *encoding, const char *value, PRBool useQuotes, PRBool reallyDredd);
 
-	static char *TryToConvertCharset(const char *sourceStr, const PRUnichar *srcCharset, const PRUnichar *destCharset, PRBool useMIME2Style);
+	static char *TryToConvertCharset(const PRUnichar *sourceStr,
+                                     const PRUnichar *destCharset,
+                                     PRBool useMIME2Style);
 	static char *GetImapCharsetParam(const PRUnichar *destCharset);
 	void GetSearchCharsets(nsString &srcCharset, nsString &destCharset);
-  static char *EscapeSearchUrl (const char *nntpCommand);
-  static char *EscapeImapSearchProtocol(const char *imapCommand);
-  static char *EscapeQuoteImapSearchProtocol(const char *imapCommand);
+  static PRUnichar *EscapeSearchUrl (const PRUnichar *nntpCommand);
+  static PRUnichar *EscapeImapSearchProtocol(const PRUnichar *imapCommand);
+  static PRUnichar *EscapeQuoteImapSearchProtocol(const PRUnichar *imapCommand);
   static char *UnEscapeSearchUrl (const char *commandSpecificData);
 
 	// This stuff lives in the base class because the IMAP search syntax 
