@@ -33,47 +33,86 @@
  *
  */
 
-var dbg;
-var ts;
-var cx;
-
 const JSD_CTRID = "@mozilla.org/js/jsd/debugger-service;1";
 const jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
 const jsdIExecutionHook = Components.interfaces.jsdIExecutionHook;
 
-var scriptHooker = new Object();
-scriptHooker.onScriptHook =
+console.scriptHooker = new Object();
+console.scriptHooker.onScriptLoaded =
 function sh_scripthook (cx, script, creating)
 {
-    dd ("onScriptHook (" + cx + ", " + script + ", " + creating + ")");
+    dd ("script created (" + creating + "): " + script.fileName + " (" +
+        script.functionName + ") " + script.baseLineNumber + "..." + 
+        script.lineExtent);
 }
 
-var interruptHooker = new Object();
-interruptHooker.onExecute =
+console.interruptHooker = new Object();
+console.interruptHooker.onExecute =
 function ih_exehook (cx, state, type, rv)
 {
     dd ("onInterruptHook (" + cx + ", " + state + ", " + type + ")");
     return jsdIExecutionHook.RETURN_CONTINUE;
 }
 
-var debuggerHooker = new Object();
-debuggerHooker.onExecute =
+console.debuggerHooker = new Object();
+console.debuggerHooker.onExecute =
 function dh_exehook (aCx, state, type, rv)
 {
     dd ("onDebuggerHook (" + aCx + ", " + state + ", " + type + ")");
-    cx = aCx;
-    ts = state;
-    display ("Stopped for debugger keyword.");
-    dbg.enterNestedEventLoop();
-    display ("Continuing from debugger keyword.");    
-    return jsdIExecutionHook.RETURN_CONTINUE;
+
+    ++console.stopLevel;
+
+    /* set our default return value */
+    console.continueCodeStack.push (jsdIExecutionHook.RETURN_CONTINUE);
+
+    console.currentContext = aCx;
+    console.currentThreadState = state;
+
+    display (getMsg(MSG_STOP_DEBUGGER), MT_STOP);
+
+    console.jsds.enterNestedEventLoop(); 
+
+    /* execution pauses here until someone calls 
+     * console.dbg.exitNestedEventLoop() 
+     */
+
+    delete console.currentContext;
+    delete console.currentThreadState;
+
+    display (getMsg(MSG_CONT_DEBUGGER), MT_CONT);
+
+    return console.continueCodeStack.pop();
 }
 
 function initDebugger()
 {   
-    dbg = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
-    dbg.init();
-    dbg.scriptHook = scriptHooker;
-    dbg.debuggerHook = debuggerHooker;
+    console.continueCodeStack = new Array();
+    
+    /* create the debugger instance */
+    console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
+    console.jsds.init();
+    console.jsds.scriptHook = console.scriptHooker;
+    console.jsds.debuggerHook = console.debuggerHooker;
     //dbg.interruptHook = interruptHooker;
+}
+
+function detachDebugger()
+{
+    var count = console.stopLevel;
+    var i;
+
+    for (i = 0; i < count; ++i)
+        console.jsds.exitNestedEventLoop();
+
+    ASSERT (console.stopLevel == 0,
+            "console.stopLevel != 0 after detachDebugger");
+    
+    console.jsds.scriptHook = null;
+    console.jsds.debuggerHook = null;
+}
+
+console.printCallStack =
+function jsd_pcallstack ()
+{
+    display ();
 }
