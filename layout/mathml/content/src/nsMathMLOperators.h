@@ -25,8 +25,6 @@
 #include "nslayout.h"
 #include "nsCoord.h"
 
-// #define NS_MATHML_STRICT_LOOKUP 1  // see documentation of LookupOperator() below
-
 typedef PRUint32 nsOperatorFlags;
 
 // define the bits used to handle the operator
@@ -34,7 +32,7 @@ typedef PRUint32 nsOperatorFlags;
 #define NS_MATHML_OPERATOR_MUTABLE     0x80000000 // the very first bit
 #define NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR     0x40000000 // the second bit
 
-// define the bits used in the operator dictionary
+// define the bits used in the Operator Dictionary
 // XXX replace with the PR_BIT(n) macro
 
 #define NS_MATHML_OPERATOR_FORM  0x3 // the very last two bits tell us the form
@@ -107,27 +105,37 @@ public:
   static void AddRefTable(void);
   static void ReleaseTable(void);
 
+  // LookupOperator:
   // Given the string value of an operator and its form (last two bits of flags),
-  // this method returns true if the operator is found in the operator dictionary.
+  // this method returns true if the operator is found in the Operator Dictionary.
   // Attributes of the operator are returned in the output parameters.
   // If the operator is not found under the supplied form but is found under a 
-  // different form, the method returns true as well (it is possible to set
-  // NS_MATHML_STRICT_LOOKUP to disable this feature). The caller can test the
+  // different form, the method returns true as well. The caller can test the
   // output parameter aFlags to know exactly under which form the operator was
-  // found in the operator dictionary.
+  // found in the Operator Dictionary.
+  static PRBool
+  LookupOperator(const nsString&       aOperator,
+                 const nsOperatorFlags aForm,
+                 nsOperatorFlags*      aFlags,
+                 float*                aLeftSpace,
+                 float*                aRightSpace);
+  static PRBool
+  LookupOperator(const nsCString&      aOperator,
+                 const nsOperatorFlags aForm,
+                 nsOperatorFlags*      aFlags,
+                 float*                aLeftSpace,
+                 float*                aRightSpace);
 
-  static PRBool LookupOperator(const nsString&       aOperator,
-                               const nsOperatorFlags aForm,
-                               nsOperatorFlags*      aFlags,
-                               float*                aLeftSpace,
-                               float*                aRightSpace);
-
-  static PRBool LookupOperator(const nsCString&      aOperator,
-                               const nsOperatorFlags aForm,
-                               nsOperatorFlags*      aFlags,
-                               float*                aLeftSpace,
-                               float*                aRightSpace);
-
+  // MatchOperator:
+  // Given the string value of an operator and *some* bits of its flags,
+  // this function will return true if this operator matches with another
+  // in the Operator Dictionary, i.e., if its string is the same as the 
+  // other's string and its flags constitute a subset of the other's flags.
+  // For example, to see if a string is a stretchy fence, the call will be:
+  // MatchOperator(aString, NS_MATHML_OPERATOR_FENCE | NS_MATHML_OPERATOR_STRETCHY).
+  static PRBool
+  MatchOperator(const nsString&       aOperator,
+                const nsOperatorFlags aFlags);
 };
 
 #endif /* nsMathMLOperators_h___ */

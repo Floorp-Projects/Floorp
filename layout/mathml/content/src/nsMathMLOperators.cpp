@@ -32,11 +32,11 @@
 
 
 // define a zero-separated linear array of all MathML Operators in Unicode
-#define WANT_MATHML_OPERATOR_UNICHAR
 const PRUnichar kMathMLOperator[] = {
+#define MATHML_OPERATOR(_i,_operator,_flags,_lspace,_rspace) _operator, 0x0000,
 #include "nsMathMLOperatorList.h"
+#undef MATHML_OPERATOR
 };
-#undef WANT_MATHML_OPERATOR_UNICHAR
 
 
 // operator dictionary entry
@@ -87,17 +87,15 @@ struct OperatorNode {
   The following variable will be used to keep track of all possible forms
   encountered in the Operator Dictionary. 
 */
-#ifndef NS_MATHML_STRICT_LOOKUP
 static OperatorNode* gOperatorFound[4];
-#endif
 
 // index comparitor: based on the string of the operator and its form bits
 class OperatorComparitor: public nsAVLNodeComparitor {
 public:
   virtual ~OperatorComparitor(void) {}
-  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
-    OperatorNode* one = (OperatorNode*)anItem1;
-    OperatorNode* two = (OperatorNode*)anItem2;
+  virtual PRInt32 operator()(void* aItem1, void* aItem2) {
+    OperatorNode* one = (OperatorNode*)aItem1;
+    OperatorNode* two = (OperatorNode*)aItem2;
 
     PRInt32 rv;
     rv = one->mStr.Compare(two->mStr, PR_FALSE);
@@ -108,16 +106,36 @@ public:
       else {
         rv = (form1 < form2) ? -1 : 1;
 
-#ifndef NS_MATHML_STRICT_LOOKUP
         // Record that the operator was found in a different form.
-        // We don't know which is the input, we grab both of them and check later
+        // We don't know which is the input, we grab both of them and 
+        // we check later (see below).
         gOperatorFound[form1] = one;
         gOperatorFound[form2] = two;
-#endif
       }
     }
     return rv;
   }
+};
+
+// an operator matches with another if its string is the same as the 
+// other's string and its flags constitute a subset of the other's flags.
+class OperatorMatch: public nsAVLNodeFunctor {
+public:
+  OperatorMatch(const nsString& aString, const nsOperatorFlags aFlags)
+    : mStr(aString), 
+      mFlags(aFlags) 
+  {
+  }
+  virtual void* operator()(void* aItem)
+  {
+    OperatorNode* node = (OperatorNode*)aItem;
+    return ((node->mStr.Compare(mStr, PR_FALSE) == 0) &&
+            (node->mFlags & mFlags) == mFlags) ?
+      aItem : nsnull;
+  }
+protected:
+  nsString        mStr;
+  nsOperatorFlags mFlags;
 };
 
 
@@ -131,7 +149,7 @@ void
 nsMathMLOperators::AddRefTable(void)
 {
   if (0 == gTableRefCount++) {
-    if (! gOperatorArray) {
+    if (!gOperatorArray) {
       gOperatorArray = new OperatorNode[NS_MATHML_OPERATOR_COUNT];
       gComparitor = new OperatorComparitor();
       if (gComparitor) {
@@ -176,34 +194,31 @@ nsMathMLOperators::ReleaseTable(void)
 
 
 PRBool
-nsMathMLOperators::LookupOperator(const nsString&          aOperator, 
+nsMathMLOperators::LookupOperator(const nsString&       aOperator, 
                                   const nsOperatorFlags aForm,
                                   nsOperatorFlags*      aFlags,
                                   float*                aLeftSpace,
                                   float*                aRightSpace)
 {
+  NS_ASSERTION(aFlags && aLeftSpace && aRightSpace, "bad usage");
   NS_ASSERTION(gOperatorTree, "no lookup table, needs addref");
   if (gOperatorTree) {
 
-#ifndef NS_MATHML_STRICT_LOOKUP
     gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX] = nsnull;
     gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX] = nsnull;
     gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX] = nsnull;
-#endif
 
     OperatorNode node(aOperator, aForm);
     OperatorNode* found = (OperatorNode*)gOperatorTree->FindItem(&node);
 
-#ifndef NS_MATHML_STRICT_LOOKUP
-    // Check if the operator was perhaps found in a different form
-    // Here we check that we are not referring to the input itself
+    // Check if the operator was perhaps found in a different form.
+    // This is where we check that we are not referring to the input itself.
     if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX];
     if (found == &node) found = nsnull;
     if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX];
     if (found == &node) found = nsnull;
     if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX]; 
     if (found == &node) found = nsnull;
-#endif
 
     if (found) {
       NS_ASSERTION(found->mStr.Equals(aOperator), "bad tree");
@@ -216,8 +231,6 @@ nsMathMLOperators::LookupOperator(const nsString&          aOperator,
   return PR_FALSE;
 }
 
-
-
 PRBool
 nsMathMLOperators::LookupOperator(const nsCString&      aOperator, 
                                   const nsOperatorFlags aForm,
@@ -229,6 +242,17 @@ nsMathMLOperators::LookupOperator(const nsCString&      aOperator,
   return LookupOperator(theOperator,aForm,aFlags,aLeftSpace,aRightSpace);
 }
 
+PRBool
+nsMathMLOperators::MatchOperator(const nsString&       aOperator, 
+                                 const nsOperatorFlags aFlags)
+{
+  NS_ASSERTION(gOperatorTree, "no lookup table, needs addref");
+  if (gOperatorTree) {
+    OperatorMatch functor(aOperator, aFlags);
+    return PRBool(gOperatorTree->FirstThat(functor));
+  }
+  return PR_FALSE;
+}
 
 #if 0
 // DEBUG
