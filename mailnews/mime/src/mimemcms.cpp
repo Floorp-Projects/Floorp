@@ -197,7 +197,8 @@ MimeMultCMS_init (MimeObject *obj)
   ct = 0;
   if (!micalg) return 0; /* #### bogus message?  out of memory? */
 
-  if (!nsCRT::strcasecmp(micalg, PARAM_MICALG_MD5))
+  if (!nsCRT::strcasecmp(micalg, PARAM_MICALG_MD5) ||
+      !nsCRT::strcasecmp(micalg, PARAM_MICALG_MD5_2))
 	hash_type = nsIHash::HASH_AlgMD5;
   else if (!nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1) ||
 		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_2) ||

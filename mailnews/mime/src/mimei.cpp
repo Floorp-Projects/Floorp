@@ -548,6 +548,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
                    !nsCRT::strcasecmp(proto, APPLICATION_PKCS7_SIGNATURE))
                   && micalg
                   && (!nsCRT::strcasecmp(micalg, PARAM_MICALG_MD5) ||
+                      !nsCRT::strcasecmp(micalg, PARAM_MICALG_MD5_2) ||
                       !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1) ||
                       !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_2) ||
                       !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_3) ||
