@@ -21,6 +21,7 @@
 
 nsXlibWindowService::nsXlibWindowService()
 {
+  NS_INIT_REFCNT();
 }
 
 nsXlibWindowService::~nsXlibWindowService()
