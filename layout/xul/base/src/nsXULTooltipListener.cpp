@@ -437,6 +437,7 @@ nsXULTooltipListener::ShowTooltip()
 }
 
 #ifdef MOZ_XUL
+#ifdef DEBUG_crap
 static void
 GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode, 
                   PRInt32 aRow, nsAutoString aCol, PRInt32* aX, PRInt32* aY)
@@ -453,6 +454,7 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
   *aX += myX;
   *aY += myY;
 }
+#endif
 
 static void
 SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,

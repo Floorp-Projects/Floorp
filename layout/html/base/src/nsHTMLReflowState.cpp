@@ -1599,6 +1599,7 @@ static PRBool BlinkIsAllowed(void)
   return sBlinkIsAllowed;
 }
 
+#ifdef FONT_LEADING_APIS_V2
 static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
 {
   if (sNormalLineHeightControl == eUninitialized) {
@@ -1614,6 +1615,7 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
   }
   return sNormalLineHeightControl;
 }
+#endif
 
 // Reset mFlags.mTableDerivedComputedWidth if there is a non percent style width
 // or if there is a percent style width and the parent has a style width.

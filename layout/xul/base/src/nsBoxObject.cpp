@@ -289,7 +289,7 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
       
       if (presContext) {
         nsIFrame* frame;
-        nsresult rv = presShell->GetPrimaryFrameFor(mContent, &frame);
+        presShell->GetPrimaryFrameFor(mContent, &frame);
         
         PRInt32 offsetX = 0;
         PRInt32 offsetY = 0;
