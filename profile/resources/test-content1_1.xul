@@ -25,10 +25,10 @@
 [
 <!ENTITY heading "Communicator Profile Manager">
 <!ENTITY title "Creating a New Profile"> 
-<!ENTITY para.one "Communicator stores information about your settings, preferences, bookmarks and stored messages in your personal profile."> 
+<!ENTITY para.one "Communicator stores information about your settings, preferences, bookmarks, and stored messages in your personal profile."> 
 <!ENTITY para.two "If you are sharing this copy of Communicator with other users, you can use profiles to keep each user's information separate. To do this, each user should create his or her own profile and optionally protect it with a password.">
-<!ENTITY para.three "If you are the only person using this copy of Communicator, you must create atleast one profile. If you would like, you can create multiple profiles for yourself to store different sets of setting and preferences. For example, you may want to have separate profiles for business and personal use.">
-<!ENTITY para.four "To begin Creating your profile, click Next.">
+<!ENTITY para.three "If you are the only person using this copy of Communicator, you must create at least one profile. If you would like, you can create multiple profiles for yourself to store different sets of setting and preferences. For example, you may want to have separate profiles for business and personal use.">
+<!ENTITY para.four "To begin creating your profile, click Next.">
 ]>
 
 <xul:window 
