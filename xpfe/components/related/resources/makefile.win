@@ -17,11 +17,16 @@
 
 DEPTH=..\..\..\..
 
+FILES=\
+        related-panel.xul       \
+        related-panel.js        \
+        $(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(FILES:/=\)
 	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\samples
 
 clobber:: $(FILES:/=\)
-        !@$(RM) $(DIST)\bin\res\samples\$**
+        !$(RM) $(DIST)\bin\res\samples\$**
 
