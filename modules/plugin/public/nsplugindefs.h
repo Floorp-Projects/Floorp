@@ -199,7 +199,9 @@ enum nsPluginInstancePeerVariable {
 
 enum nsPluginInstanceVariable {
     nsPluginInstanceVariable_WindowlessBool          = 3,
-    nsPluginInstanceVariable_TransparentBool         = 4
+    nsPluginInstanceVariable_TransparentBool         = 4,
+    nsPluginInstanceVariable_DoCacheBool             = 5,
+    nsPluginInstanceVariable_CallSetWindowAfterDestroyBool = 6
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -747,11 +747,22 @@ pluginInstanceOwner :: ~pluginInstanceOwner()
 {
   if (nsnull != mInstance)
   {
+    PRBool doCache = PR_TRUE;
+    
+    // determine if the plugin wants to be cached
+    mInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, 
+                        (void *) &doCache);
     mInstance->Stop();
-    nsCOMPtr<nsIPluginHost> host;
-    host = do_GetService(kCPluginManagerCID);
-    if(host)
-      host->StopPluginInstance(mInstance);
+    if (!doCache) {
+      // if not, destroy the instance
+      mInstance->Destroy();
+    }
+    else {
+      nsCOMPtr<nsIPluginHost> host;
+      host = do_GetService(kCPluginManagerCID);
+      if(host)
+        host->StopPluginInstance(mInstance);
+    }
     NS_RELEASE(mInstance);
   }
 
