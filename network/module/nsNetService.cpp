@@ -78,6 +78,9 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
     /* Initialize netlib with 32 sockets... */
     NET_InitNetLib(0, 32);
 
+    /* Initialize the file extension -> content-type mappings */
+    NET_InitFileFormatTypes(nsnull, nsnull);
+
     mContainer = aContainerApp;
     NS_IF_ADDREF(mContainer);
     if (NULL != mContainer) {
