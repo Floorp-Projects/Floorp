@@ -243,7 +243,12 @@ nsIWidget *aWidget,
 				       where == inGoAway || where == inZoomIn || where == inZoomOut ))
 					*aForWindow = PR_TRUE;
 				break;
-
+			case keyDown:
+			case keyUp:
+			case autoKey:
+				if ( window == eventWindow )
+					*aForWindow = PR_TRUE;
+				break;
 			case updateEvt:
 				// always let update events through, because if we don't handle them, we're
 				// doomed!
