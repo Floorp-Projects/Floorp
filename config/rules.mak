@@ -575,7 +575,7 @@ export:: $(JMC_STUBS) $(OBJDIR) $(JMC_OBJS)
 #// EXPORTS Names of headers to be copied to MODULE
 #//
 #//------------------------------------------------------------------------
-!if defined(EXPORTS)
+!if "$(EXPORTS)" != "$(NULL)"
 export:: $(XPDIST)\public\$(MODULE)
     for %f in ($(EXPORTS)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\public\$(MODULE:/=\)
 
