@@ -413,7 +413,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
       FindLastInList(commandString, lastCommand, &indexRet);
       if (!lastCommand.IsEmpty())
       {
-	nsCAutoString title = lastCommand;
+	nsCAutoString title(lastCommand);
 	commandString.Truncate(indexRet);
 	rv = NS_ERROR_NOT_IMPLEMENTED;
       }
@@ -531,7 +531,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
   nsresult rv;
   nsString newURL;
   nsString name;
-  nsCString navChromeURL = NULL;
+  nsCString navChromeURL;
   nsXPIDLCString tempString;
   NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
   if (NS_SUCCEEDED(rv))
