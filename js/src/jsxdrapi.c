@@ -60,15 +60,16 @@ typedef struct JSXDRMemState {
 #define MEM_NEED(xdr, bytes)                                                  \
     JS_BEGIN_MACRO                                                            \
 	if ((xdr)->mode == JSXDR_ENCODE) {                                    \
+            uint32 _new_limit = JS_ROUNDUP(MEM_COUNT(xdr) + bytes, MEM_BLOCK);\
 	    if (MEM_LIMIT(xdr) &&                                             \
 		MEM_COUNT(xdr) + bytes > MEM_LIMIT(xdr)) {                    \
 		void *_data = JS_realloc((xdr)->cx,                           \
 					 (xdr)->data,                         \
-					 MEM_LIMIT(xdr) + MEM_BLOCK);         \
+					 _new_limit);                         \
 		if (!_data)                                                   \
 		    return 0;                                                 \
 		(xdr)->data = _data;                                          \
-		MEM_LIMIT(xdr) += MEM_BLOCK;                                  \
+		MEM_LIMIT(xdr) = _new_limit;                                  \
 	    }                                                                 \
 	} else {                                                              \
 	    if (MEM_LIMIT(xdr) < MEM_COUNT(xdr) + bytes) {                    \

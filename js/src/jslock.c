@@ -338,44 +338,46 @@ deleteListOfFatlocks(JSFatLock *m)
     }
 }
 
-static JSFatLockTable _fl_table;
+static JSFatLockTable* _fl_tables;
 
 static JSFatLock *
-allocateFatlock()
+allocateFatlock(void *id)
 {
   JSFatLock *m;
 
-  if (_fl_table.free == NULL) {
+  int i = ((int)id/4)%_nr_of_globals;
+  if (_fl_tables[i].free == NULL) {
 #ifdef DEBUG
       printf("Ran out of fat locks!\n");
 #endif
-      _fl_table.free = listOfFatlocks(10);
+      _fl_tables[i].free = listOfFatlocks(10);
   }
-  m = _fl_table.free;
-  _fl_table.free = m->next;
-  _fl_table.free->prev = NULL;
+  m = _fl_tables[i].free;
+  _fl_tables[i].free = m->next;
+  _fl_tables[i].free->prev = NULL;
   m->susp = 0;
-  m->next = _fl_table.taken;
+  m->next = _fl_tables[i].taken;
   m->prev = NULL;
-  if (_fl_table.taken != NULL)
-	_fl_table.taken->prev = m;
-  _fl_table.taken = m;
+  if (_fl_tables[i].taken != NULL)
+	_fl_tables[i].taken->prev = m;
+  _fl_tables[i].taken = m;
   return m;
 }
 
 static void
-deallocateFatlock(JSFatLock *m)
+deallocateFatlock(JSFatLock *m, void *id)
 {
-  if (m == NULL)
+    int i = ((int)id/4)%_nr_of_globals;
+    if (m == NULL)
 	return;
-  if (m->prev != NULL)
+    if (m->prev != NULL)
 	m->prev->next = m->next;
-  if (m->next != NULL)
+    if (m->next != NULL)
 	m->next->prev = m->prev;
-  if (m == _fl_table.taken)
-	_fl_table.taken = m->next;
-  m->next = _fl_table.free;
-  _fl_table.free = m;
+    if (m == _fl_tables[i].taken)
+	_fl_tables[i].taken = m->next;
+    m->next = _fl_tables[i].free;
+    _fl_tables[i].free = m;
 }
 
 int
@@ -408,8 +410,12 @@ js_SetupLocks(int l, int g)
     _compare_and_swap_lock = PR_NewLock();
     JS_ASSERT(_compare_and_swap_lock);
 #endif
-    _fl_table.free = listOfFatlocks(l);
-    _fl_table.taken = NULL;
+    _fl_tables = (JSFatLockTable*)malloc(_nr_of_globals * sizeof(JSFatLockTable));
+    JS_ASSERT(_fl_tables != NULL);
+    for (i=0; i<_nr_of_globals; i++) {
+        _fl_tables[i].free = listOfFatlocks(l);
+        _fl_tables[i].taken = NULL;
+    }
     return 1;
 }
 
@@ -419,12 +425,13 @@ js_CleanupLocks()
     int i;
 
     if (_global_locks != NULL) {
-        deleteListOfFatlocks(_fl_table.free);
-        _fl_table.free = NULL;
-        deleteListOfFatlocks(_fl_table.taken);
-        _fl_table.taken = NULL;
-        for (i=0; i<_nr_of_globals; i++)
+        for (i=0; i<_nr_of_globals; i++) {
             PR_DestroyLock(_global_locks[i]);
+            deleteListOfFatlocks(_fl_tables[i].free);
+            _fl_tables[i].free = NULL;
+            deleteListOfFatlocks(_fl_tables[i].taken);
+            _fl_tables[i].taken = NULL;
+        }
         _global_locks = NULL;
 #ifdef UsingCounterLock
         PR_DestroyLock(_counter_lock);
@@ -487,7 +494,7 @@ js_SuspendThread(JSThinLock *p)
     int o;
     
     if (p->fat == NULL)
-        fl = p->fat = allocateFatlock();
+        fl = p->fat = allocateFatlock(p);
     else
         fl = p->fat;
     JS_ASSERT(fl->susp >= 0);
@@ -498,6 +505,11 @@ js_SuspendThread(JSThinLock *p)
     JS_ASSERT(stat != JS_FAILURE);
     PR_Unlock(fl->slock);
     js_LockGlobal(p);
+    fl->susp--;
+    if (fl->susp == 0) {
+        deallocateFatlock(fl,p);
+        p->fat = NULL;
+    }
     return p->fat == NULL;
 }
 
@@ -513,11 +525,6 @@ js_ResumeThread(JSThinLock *p)
 
     JS_ASSERT(fl != NULL);
     JS_ASSERT(fl->susp > 0);
-    fl->susp--;
-    if (fl->susp == 0) {
-        deallocateFatlock(fl);
-        p->fat = NULL;
-    }
     PR_Lock(fl->slock);
     js_UnlockGlobal(p);
     stat = (JSStatus)PR_NotifyCondVar(fl->svar);

@@ -198,7 +198,8 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval v;
     jsdouble d;
-    jsint base, ival, dval;
+    jsint base, dval;
+    unsigned int ival;
     char *bp, buf[32];
     JSString *str;
 
@@ -219,14 +220,22 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 	}
 	if (base != 10 && JSDOUBLE_IS_FINITE(d)) {
-	    ival = (jsint) js_DoubleToInteger(d);
+            JSBool isNegative;
+            if (isNegative = (d < 0)) d = -d;
+	    ival = (unsigned int) js_DoubleToInteger(d);
 	    bp = buf + sizeof buf;
-	    for (*--bp = '\0'; ival != 0 && --bp >= buf; ival /= base) {
+	    for (*--bp = '\0'; ival != 0 && bp > buf; ival /= base) {
 		dval = ival % base;
-		*bp = (char)((dval >= 10) ? 'a' - 10 + dval : '0' + dval);
+		*--bp = (char)((dval >= 10) ? 'a' - 10 + dval : '0' + dval);
 	    }
 	    if (*bp == '\0')
 		*--bp = '0';
+            if (isNegative)
+                if (bp > buf) 
+                    *--bp = '-';
+                else
+                    /* sacrifice the leading digit or lose the '-' ?*/
+                    *bp = '-'; 
 	    str = JS_NewStringCopyZ(cx, bp);
 	} else {
 	    str = js_NumberToString(cx, d);

@@ -1069,18 +1069,19 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 	return JS_FALSE;
 
     if (xdr->mode == JSXDR_DECODE) {
+	*objp = fun->object;
 	if (atomstr) {
 	    fun->atom = js_AtomizeString(xdr->cx, atomstr, 0);
 	    if (!fun->atom)
 		return JS_FALSE;
+
+	    if (!OBJ_DEFINE_PROPERTY(xdr->cx, xdr->cx->globalObject,
+				     (jsid)fun->atom, OBJECT_TO_JSVAL(*objp),
+				     NULL, NULL, JSPROP_ENUMERATE,
+				     (JSProperty **)&sprop))
+		return JS_FALSE;
+	    JS_UNLOCK_OBJ(xdr->cx, xdr->cx->globalObject);
 	}
-	*objp = fun->object;
-	if (!OBJ_DEFINE_PROPERTY(xdr->cx, xdr->cx->globalObject,
-				 (jsid)fun->atom, OBJECT_TO_JSVAL(*objp),
-				 NULL, NULL, JSPROP_ENUMERATE,
-				 (JSProperty **)&sprop))
-	    return JS_FALSE;
-        JS_UNLOCK_OBJ(xdr->cx, xdr->cx->globalObject);
     }
 
     return JS_TRUE;

@@ -121,7 +121,7 @@ DestroyTrap(JSContext *cx, JSTrap *trap)
 {
     JS_REMOVE_LINK(&trap->links);
     *trap->pc = (jsbytecode)trap->op;
-    js_RemoveRoot(cx, &trap->closure);
+    js_RemoveRoot(cx->runtime, &trap->closure);
     JS_free(cx, trap);
 }
 
@@ -240,7 +240,7 @@ DropWatchPoint(JSContext *cx, JSWatchPoint *wp)
 		     js_DropScopeProperty(cx, (JSScope *)wp->object->map,
 					  wp->sprop));
     JS_REMOVE_LINK(&wp->links);
-    js_RemoveRoot(cx, &wp->closure);
+    js_RemoveRoot(cx->runtime, &wp->closure);
     JS_free(cx, wp);
 }
 
@@ -813,10 +813,10 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 
     pd = pda->array;
     for (i = 0; i < pda->length; i++) {
-	js_RemoveRoot(cx, &pd[i].id);
-	js_RemoveRoot(cx, &pd[i].value);
+	js_RemoveRoot(cx->runtime, &pd[i].id);
+	js_RemoveRoot(cx->runtime, &pd[i].value);
 	if (pd[i].flags & JSPD_ALIAS)
-	    js_RemoveRoot(cx, &pd[i].alias);
+	    js_RemoveRoot(cx->runtime, &pd[i].alias);
     }
     JS_free(cx, pd);
 }

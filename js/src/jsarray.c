@@ -508,10 +508,10 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
     if (!IndexToValue(cx, length, &v))
 	return JS_FALSE;
     id = (jsid) cx->runtime->atomState.lengthAtom;
-    if (!js_DefineProperty(cx, obj, id, v,
-			   array_length_getter, array_length_setter,
-			   JSPROP_PERMANENT,
-			   NULL)) {
+    if (!OBJ_DEFINE_PROPERTY(cx, obj, id, v,
+                             array_length_getter, array_length_setter,
+                             JSPROP_PERMANENT,
+                             NULL)) {
 	  return JS_FALSE;
     }
     if (!vector)
@@ -519,10 +519,10 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
     for (index = 0; index < length; index++) {
 	if (!IndexToId(cx, index, &id))
 	    return JS_FALSE;
-	if (!js_DefineProperty(cx, obj, id, vector[index],
-			       JS_PropertyStub, JS_PropertyStub,
-			       JSPROP_ENUMERATE,
-			       NULL)) {
+	if (!OBJ_DEFINE_PROPERTY(cx, obj, id, vector[index],
+                                 JS_PropertyStub, JS_PropertyStub,
+                                 JSPROP_ENUMERATE,
+                                 NULL)) {
 	    return JS_FALSE;
 	}
     }

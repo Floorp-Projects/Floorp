@@ -606,7 +606,8 @@ JS_EndRequest(JSContext *cx)
 	JS_LOCK_GC(rt);
 	JS_ASSERT(rt->requestCount > 0);
 	rt->requestCount--;
-	JS_NOTIFY_REQUEST_DONE(rt);
+        if (rt->requestCount == 0)
+	    JS_NOTIFY_REQUEST_DONE(rt);
 	JS_UNLOCK_GC(rt);
     }
 }
@@ -621,7 +622,8 @@ JS_YieldRequest(JSContext *cx)
 	rt = cx->runtime;
     JS_ASSERT(rt->requestCount > 0);
     rt->requestCount--;
-    JS_NOTIFY_REQUEST_DONE(rt);
+    if (rt->requestCount == 0)
+        JS_NOTIFY_REQUEST_DONE(rt);
     JS_UNLOCK_GC(rt);
     JS_LOCK_GC(rt);
     rt->requestCount++;
@@ -687,7 +689,13 @@ JS_NewContext(JSRuntime *rt, size_t stacksize)
 JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext *cx)
 {
-    js_DestroyContext(cx);
+    js_DestroyContext(cx, JS_TRUE);
+}
+
+JS_PUBLIC_API(void)
+JS_DestroyContextNoGC(JSContext *cx)
+{
+    js_DestroyContext(cx, JS_FALSE);
 }
 
 JS_PUBLIC_API(void*)
@@ -907,7 +915,13 @@ JS_PUBLIC_API(JSBool)
 JS_RemoveRoot(JSContext *cx, void *rp)
 {
     CHECK_REQUEST(cx);
-    return js_RemoveRoot(cx, rp);
+    return js_RemoveRoot(cx->runtime, rp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_RemoveRootRT(JSRuntime *rt, void *rp)
+{
+    return js_RemoveRoot(rt, rp);
 }
 
 JS_PUBLIC_API(JSBool)

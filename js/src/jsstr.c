@@ -894,7 +894,7 @@ str_match(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval);
     if (ok && mdata.arrayobj)
 	*rval = OBJECT_TO_JSVAL(mdata.arrayobj);
-    js_RemoveRoot(cx, &mdata.arrayobj);
+    js_RemoveRoot(cx->runtime, &mdata.arrayobj);
     return ok;
 #else
     return str_nyi(cx, "match");

@@ -1990,6 +1990,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	if (!js_EmitTree(cx, cg, pn2))
 	    return JS_FALSE;
 
+        /* Remember start of callable-object bytecode for decompilation hint. */
+        off = pn2->pn_offset;
+
 	/*
 	 * Push the virtual machine's "obj" register, which was set by a name,
 	 * property, or element get (or set) bytecode.
@@ -2007,7 +2010,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		return JS_FALSE;
 	}
 	argc = pn->pn_count - 1;
-	if (js_Emit3(cx, cg, op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
+        if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
+                           (ptrdiff_t)(CG_OFFSET(cg) - off)) < 0 ||
+            js_Emit3(cx, cg, op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
 	    return JS_FALSE;
 	break;
 
