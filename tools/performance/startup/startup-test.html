@@ -1,0 +1,18 @@
+<!-- Pick off begin time as a cgi argument and print it out -->
+<html>
+
+<!-- call this with an arg, e.g. file://foo/startup-test.html?begin=12345678 -->
+
+<!-- In-line this to avoid compilation. -->
+<body onload="
+    var now = (new Date()).getTime();  
+    var begin = document.location.search.split('=')[1]; // ?begin=nnnnn
+    var startupTime = now - begin;
+	document.write('\n\nStartup time = ' + startupTime + ' ms<br>');
+    if (window.dump) {
+	  dump('\n\n__startuptime,' + startupTime + '\n\n');
+	}
+}
+">
+</body>
+</html>
