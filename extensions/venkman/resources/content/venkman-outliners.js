@@ -120,14 +120,21 @@ function initOutliners()
     outliner = document.getElementById("project-outliner");
     outliner.outlinerBoxObject.view = console.projectView;
     
+    console.projectView.atomBlacklist   = atomsvc.getAtom("pj-blacklist");
+    console.projectView.atomBLItem      = atomsvc.getAtom("pj-bl-item");
     console.projectView.atomBreakpoints = atomsvc.getAtom("pj-breakpoints");
     console.projectView.atomBreakpoint  = atomsvc.getAtom("pj-breakpoint");
     
+    console.blacklist.property = console.projectView.atomBlacklist;
+    console.blacklist.reserveChildren();
+    //console.projectView.childData.appendChild (console.blacklist);
+
     console.breakpoints.property = console.projectView.atomBreakpoints;
     console.breakpoints.reserveChildren();
     console.projectView.childData.appendChild (console.breakpoints);
 
-    BPRecord.prototype.property = console.projectView.atomBreakpoint;
+    BLRecord.prototype.property = console.projectView.atomBreakpoint;
+    BPRecord.prototype.property = console.projectView.atomBLItem;
     
 }
 
@@ -179,10 +186,20 @@ function sov_dsource (source)
     if ("childData" in this)
         this.childData.lastTopRow = this.outliner.getFirstVisibleRow() + 1;
     
-    /* if the source for his record isn't loaded yet, load it and call ourselves
+    if (!source)
+    {
+        delete this.childData;
+        this.rowCount = 0;
+        this.outliner.rowCountChanged(0, 0);
+        this.outliner.invalidate();
+        return;
+    }
+    
+    /* if the source for this record isn't loaded yet, load it and call ourselves
      * back after */
     if (!source.isLoaded)
     {
+        disableReloadCommand();
         /* clear the view while we wait for the source */
         delete this.childData;
         this.rowCount = 0;
@@ -193,6 +210,7 @@ function sov_dsource (source)
         return;
     }
 
+    enableReloadCommand();
     this.childData = source;    
     this.rowCount = source.sourceText.length;
     this.tabString = leftPadString ("", source.tabWidth, " ");
@@ -397,6 +415,41 @@ function sr_makecur ()
     }
 }
 
+SourceRecord.prototype.reloadSource =
+function sr_reloadsrc (cb)
+{
+    var sourceRec = this;
+    var needRedisplay = (console.sourceView.childData == this);
+    var topLine = (!needRedisplay) ? 0 :
+        console.sourceView.outliner.getFirstVisibleRow() + 1;
+    
+    function reloadCB (status)
+    {
+        if (status == Components.results.NS_OK && needRedisplay)
+        {
+            console.sourceView.displaySource(sourceRec);
+            console.sourceView.scrollTo(topLine);
+        }
+        if (typeof cb == "function")
+            cb(status);
+    }
+
+    if (needRedisplay)
+    {
+        console.sourceView.displaySource(null);
+    }
+    
+    if (this.isLoaded)
+    {
+        this.isLoaded = false;
+        this.loadSource(reloadCB);
+    }
+    else
+    {
+        this.loadSource(cb);
+    }
+}
+
 SourceRecord.prototype.loadSource =
 function sr_loadsrc (cb)
 {
@@ -429,6 +482,8 @@ function sr_loadsrc (cb)
                         delete sourceRec.extraCallbacks;
                 }
             }
+            
+            delete this.isLoading;
             
             if (status != Components.results.NS_OK)
             {
@@ -493,6 +548,8 @@ function sr_loadsrc (cb)
         /* if we can't load it now, try to load it later */
         loadURLAsync (this.fileName, observer);
     }
+
+    delete this.isLoading;
 }
 
 SourceRecord.prototype.setFullNameMode =
@@ -1092,6 +1149,53 @@ function pv_cellprops (index, colID, properties)
     }
 }
 
+console.blacklist = new TOLabelRecord ("project-col-0", MSG_BLACKLIST);
+
+console.blacklist.addItem =
+function bl_additem (fileName, functionName, startLine, endLine)
+{
+    var len = this.childData.length;
+    for (var i = 0; i < len; ++i)
+    {
+        var cd = this.childData[i];
+        if (startLine == cd.startLine && endLine == cd.endLine &&
+            fileName == cd.fileName)
+            return cd;
+    }
+    
+    var rec = new BLRecord (fileName, functionName, startLine, endLine);
+    this.appendChild (rec);
+    return rec;
+}
+
+console.blacklist.isSourceBlacklisted =
+function bl_islisted (fileName, line)
+{
+    var len = this.childData.length;
+    for (var i = 0; i < len; ++i)
+    {
+        var cd = this.childData[i];
+        if (line >= cd.startLine && line <= cd.endLine &&
+            fileName == cd.fileName && cd.enabled == true)
+            return true;
+    }
+    
+    return false;
+}
+
+function BLRecord (fileName, functionName, startLine, endLine)
+{
+    this.setColumnPropertyName ("project-col-0", "fileName");
+    this.setColumnPropertyName ("project-col-1", "functionName");
+    this.setColumnPropertyName ("project-col-2", "startLine");
+    this.setColumnPropertyName ("project-col-3", "endLine");
+    this.fileName = fileName;
+    this.functionName = functionName;
+    this.startLine = startLine;
+    this.endLine = endLine;
+    this.enabled = true;
+}
+
 console.breakpoints = new TOLabelRecord ("project-col-0", MSG_BREAK_REC);
 
 console.breakpoints.locateChildByFileLine =
@@ -1122,8 +1226,8 @@ function BPRecord (fileName, line)
     this.stop = true;
 
     this.setColumnPropertyName ("project-col-0", "shortName");
-    this.setColumnPropertyName ("project-col-1", "line");
     this.setColumnPropertyName ("project-col-2", "functionName");
+    this.setColumnPropertyName ("project-col-1", "line");
     this.setColumnPropertyName ("project-col-3", getMatchLength);
 
     var ary = fileName.match(/\/([^\/?]+)(\?|$)/);
