@@ -145,10 +145,6 @@ EXTRA_DSO_LDOPTS += \
 	$(NULL)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXPORT_OBJS	= 1
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/../base/src \
