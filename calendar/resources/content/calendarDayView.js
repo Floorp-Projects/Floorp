@@ -338,11 +338,11 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
    var daywidth = parseInt(document.defaultView.getComputedStyle(document.getElementById("day-tree-item-0"), "").getPropertyValue("width"));
    var width = Math.round( ( daywidth-kDayViewHourLeftStart ) / calendarEventDisplay.NumberOfSameTimeEvents );
    eventBox.setAttribute( "width", width );
-   eventBox.setAttribute( "style", "max-width: "+width+"px;" );
    var left = eval( ( ( calendarEventDisplay.CurrentSpot - 1 ) * width )  + kDayViewHourLeftStart );
    left = left - ( 1 * ( calendarEventDisplay.CurrentSpot - 1 ));
    eventBox.setAttribute( "left", Math.round( left ) );
-   eventBox.setAttribute( "style", "max-width: "+width+";max-height: "+eventBox.getAttribute( "height" )+";overflow: never;" );
+   //eventBox.setAttribute( "style", "border: 1px solid red; width: "+width+"px; max-width: "+width+"px;max-height: "+eventBox.getAttribute( "height" )+"px;overflow: never;" );
+   //eventBox.setAttribute( "style", "border: 1px solid red;" );
 
    eventBox.setAttribute( "class", "day-view-event-class" );
    eventBox.setAttribute( "flex", "1" );
@@ -353,12 +353,14 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
    eventBox.setAttribute( "tooltip", "savetip" );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
 
-   var eventHTMLElement = document.createElement( "description" );
+   var eventHTMLElement = document.createElement( "label" );
    eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEventDisplay.event.id );
    var eventTextElement = document.createTextNode( eventText );
-   eventHTMLElement.setAttribute( "class", "day-view-event-text-class" );
+   //eventHTMLElement.setAttribute( "class", "day-view-event-text-class" );
    eventHTMLElement.appendChild( eventTextElement );
-   
+   eventHTMLElement.setAttribute( "flex", "1" );
+   eventHTMLElement.setAttribute( "crop", "end" );
+
    eventBox.appendChild( eventHTMLElement );
 
    // add a property to the event box that holds the calendarEvent that the
