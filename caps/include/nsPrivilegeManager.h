@@ -56,6 +56,7 @@ nsHashtable * itsPrinToMacroTargetPrivTable;
 NS_DEFINE_STATIC_CID_ACCESSOR(NS_PRIVILEGEMANAGER_CID)
 
 NS_DECL_ISUPPORTS
+NS_DECL_NSIPRIVILEGEMANAGER
 
 static nsPrivilegeManager *
 GetPrivilegeManager();
@@ -77,9 +78,6 @@ Add(nsIPrivilege * privilege1, nsIPrivilege * privilege2);
 PRBool 
 IsPrivilegeEnabled(nsITarget *target, PRInt32 callerDepth);
 
-NS_IMETHOD 
-IsPrivilegeEnabled(nsIScriptContext * context, nsITarget * target, PRInt32 callerDepth, PRBool * result);
-
 PRBool 
 EnablePrivilege(nsITarget * target, PRInt32 callerDepth);
 
@@ -89,20 +87,11 @@ EnablePrivilege(nsIScriptContext * context, nsITarget * target, PRInt32 callerDe
 PRBool 
 EnablePrivilege(nsITarget * target, nsIPrincipal * preferredPrincipal, PRInt32 callerDepth);
 
-NS_IMETHOD
-EnablePrivilege(nsIScriptContext * context, nsITarget * target, nsIPrincipal * preferredPrincipal, PRInt32 callerDepth, PRBool * result);
-
 PRBool 
 RevertPrivilege(nsITarget * target, PRInt32 callerDepth);
 
-NS_IMETHOD
-RevertPrivilege(nsIScriptContext * context, nsITarget *target, PRInt32 callerDepth, PRBool * result);
-
 PRBool 
 DisablePrivilege(nsITarget *target, PRInt32 callerDepth);
-
-NS_IMETHOD
-DisablePrivilege(nsIScriptContext * context, nsITarget *target, PRInt32 callerDepth, PRBool * result);
 
 PRBool
 EnablePrincipalPrivilegeHelper(nsITarget *target, PRInt32 callerDepth, 
@@ -123,12 +112,6 @@ nsPrivilegeTable *
 EnableScopePrivilegeHelper(nsIScriptContext * context, nsITarget *target, PRInt32 callerDepth, void *data, 
 							PRBool helpingSetScopePrivilege, nsIPrincipal * prefPrin);
 
-NS_IMETHOD
-AskPermission(nsIPrincipal * useThisPrin, nsITarget* target, void* data, PRBool * result);
-
-NS_IMETHOD
-SetPermission(nsIPrincipal * useThisPrin, nsITarget * target, nsIPrivilege * newPrivilege);
-
 void 
 UpdatePrivilegeTable(nsITarget *target, nsPrivilegeTable * privTable, nsIPrivilege * newPrivilege);
 
@@ -144,12 +127,6 @@ CheckPrivilegeGranted(nsITarget * target, nsIPrincipal * principal, void *data);
 PRBool 
 CheckPrivilegeGranted(nsITarget * target, PRInt32 callerDepth, void * data);
 
-NS_IMETHOD
-CheckPrivilegeGranted(nsIScriptContext * context, nsITarget * target, PRInt32 callerDepth, void * data, PRBool * result);
-
-NS_IMETHOD
-GetPrincipalPrivilege(nsITarget * target, nsIPrincipal * prin, void * data, nsIPrivilege * * result);
-
 char * 
 CheckPrivilegeEnabled(nsTargetArray * targetArray, PRInt32 callerDepth, void *data);
 
@@ -164,9 +141,6 @@ GetPrivilegeTableFromStack(PRInt32 callerDepth, PRBool createIfNull);
 
 nsPrivilegeTable * 
 GetPrivilegeTableFromStack(nsIScriptContext * context, PRInt32 callerDepth, PRBool createIfNull);
-
-NS_IMETHODIMP
-RemovePrincipalsPrivilege(const char * prinName, const char * targetName, PRBool * result);
 
 void 
 Remove(nsIPrincipal *prin, nsITarget *target);

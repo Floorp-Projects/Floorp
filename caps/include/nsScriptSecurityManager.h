@@ -37,18 +37,11 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_SCRIPTSECURITYMANAGER_CID)
   
   NS_DECL_ISUPPORTS
+  NS_DECL_NSISCRIPTSECURITYMANAGER
   
   static nsScriptSecurityManager *
   GetScriptSecurityManager();
 
-  NS_IMETHOD CheckScriptAccess(nsIScriptContext* aContext, void* aObj, const char* aProp, PRBool* aResult);
-  NS_IMETHOD GetSubjectOriginURL(JSContext *aCx, char** aOrigin);
-  NS_IMETHOD GetObjectOriginURL(JSContext *aCx, JSObject *object, char** aOrigin);
-  NS_IMETHOD NewJSPrincipals(nsIURI *aURL, nsString* aName, nsIPrincipal * * aPrin);
-  NS_IMETHOD CheckPermissions(JSContext *aCx, JSObject *aObj, short target, PRBool* aReturn);  
-  NS_IMETHOD GetContainerPrincipals(JSContext *aCx, JSObject *aContainer, nsIPrincipal * * result);
-  NS_IMETHOD GetPrincipalsFromStackFrame(JSContext *aCx, JSPrincipals** aPrincipals);
-	NS_IMETHOD CanAccessTarget(JSContext *aCx, PRInt16 target, PRBool* aReturn);
 private:
   char * GetCanonicalizedOrigin(JSContext *cx, const char* aUrlString);
   NS_IMETHOD GetOriginFromSourceURL(nsIURI * origin, char * * result);

@@ -29,45 +29,10 @@
 class nsCertificatePrincipal : public nsICertificatePrincipal {
 public:
 
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_CERTIFICATEPRINCIPALMANAGER_CID)
-
-	NS_DECL_ISUPPORTS
-
-	NS_IMETHOD
-	GetPublicKey(char ** pk);
-
-	NS_IMETHOD
-	GetCompanyName(char ** cn);
-
-	NS_IMETHOD
-	GetCertificateAuthority(char ** ca);
-
-	NS_IMETHOD
-	GetSerialNumber(char ** sn);
-
-	NS_IMETHOD
-	GetExpirationDate(char ** ed);
-
-	NS_IMETHOD
-	GetFingerPrint(char ** fp);
-
-  NS_IMETHOD
-  ToJSPrincipal(JSPrincipals * * jsprin);
-  
-	NS_IMETHOD
-	GetType(PRInt16 * type);
-
-	NS_IMETHOD
-	IsSecure(PRBool * result);
-
-	NS_IMETHOD
-	ToString(char ** result);
-
-	NS_IMETHOD
-	HashCode(PRUint32 * code);
-
-	NS_IMETHOD
-	Equals(nsIPrincipal * other, PRBool * result);
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_CERTIFICATEPRINCIPALMANAGER_CID)
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIPRINCIPAL
+    NS_DECL_NSICERTIFICATEPRINCIPAL
 
 	nsCertificatePrincipal(PRInt16 type, const char * key);
 	nsCertificatePrincipal(PRInt16 type, const unsigned char ** certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts);

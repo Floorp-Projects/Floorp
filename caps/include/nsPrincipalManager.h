@@ -33,6 +33,7 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_PRINCIPALMANAGER_CID)
 
 	NS_DECL_ISUPPORTS
+    NS_DECL_NSIPRINCIPALMANAGER
 
 	static nsresult
 	GetPrincipalManager(nsPrincipalManager * * prinMan);
@@ -40,28 +41,10 @@ public:
 	virtual ~nsPrincipalManager(void);
 
 	NS_IMETHOD
-	CreateCodebasePrincipal(const char *codebaseURL, nsIURI * url, nsIPrincipal * * prin);
-
-	NS_IMETHOD
 	CreateCertificatePrincipal(const unsigned char * * certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts, nsIPrincipal * * prin);
-
-	NS_IMETHOD
-	RegisterPrincipal(nsIPrincipal * prin);
-
-	NS_IMETHOD
-	UnregisterPrincipal(nsIPrincipal * prin, PRBool * result);
 
 	void 
 	RegisterSystemPrincipal(nsIPrincipal * principal);
-
-	NS_IMETHOD
-	CanExtendTrust(nsIPrincipalArray * fromPrinArray, nsIPrincipalArray * toPrinArray, PRBool * result);
-
-	NS_IMETHOD
-	NewPrincipalArray(PRUint32 count, nsIPrincipalArray * * result);
-
-	NS_IMETHOD
-	CheckMatchPrincipal(nsIScriptContext * context, nsIPrincipal * principal, PRInt32 callerDepth, PRBool * result);
 
 	static nsIPrincipalArray *
 	GetMyPrincipals(PRInt32 callerDepth);

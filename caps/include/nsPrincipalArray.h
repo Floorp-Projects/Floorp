@@ -33,6 +33,7 @@ class nsPrincipalArray : public nsIPrincipalArray {
 public:
 
 NS_DECL_ISUPPORTS
+NS_DECL_NSIPRINCIPALARRAY
 
 nsPrincipalArray(void);
 nsPrincipalArray(PRUint32 count);
@@ -41,27 +42,6 @@ void
 Init(PRUint32 count);
 
 virtual ~nsPrincipalArray();
-
-NS_IMETHOD
-ComparePrincipalArray(nsIPrincipalArray * other, PRInt16 * comparisonType);
-
-NS_IMETHOD
-IntersectPrincipalArray(nsIPrincipalArray * other , nsIPrincipalArray * * result);
-
-NS_IMETHOD
-FreePrincipalArray();
-
-NS_IMETHOD
-AddPrincipalArrayElement(nsIPrincipal * principal);
-
-NS_IMETHOD
-GetPrincipalArrayElement(PRUint32 index, nsIPrincipal * * result);
-
-NS_IMETHOD
-SetPrincipalArrayElement(PRUint32 index, nsIPrincipal * principal);
-
-NS_IMETHOD
-GetPrincipalArraySize(PRUint32 * result);
 
 private:
 nsVector * itsArray;
