@@ -22,7 +22,9 @@
 #include "nsweb.h"
 #include "prtypes.h"
 #include "nsISupports.h"
-#ifndef NECKO
+#ifdef NECKO
+#include "nsIChannel.h"
+#else
 #include "nsILoadAttribs.h"
 #endif // NECKO
 
@@ -100,20 +102,18 @@ public:
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
 #ifdef NECKO
-                            PRBool bypassCache = PR_FALSE,
-                            PRBool bypassProxy = PR_FALSE,
+                            PRUint32 aType = nsIChannel::LOAD_NORMAL,
 #else
-                            nsURLReloadType type = nsURLReload,
+                            nsURLReloadType aType = nsURLReload,
 #endif
                             const PRUint32 aLocalIP = 0) = 0;
 
     NS_IMETHOD LoadSubDocument(const nsString& aURLSpec,
                                nsISupports* aExtraInfo = nsnull,
 #ifdef NECKO
-                               PRBool bypassCache = PR_FALSE,
-                               PRBool bypassProxy = PR_FALSE,
+                               PRUint32 aType = nsIChannel::LOAD_NORMAL,
 #else
-                               nsURLReloadType type = nsURLReload,
+                               nsURLReloadType aType = nsURLReload,
 #endif
                                const PRUint32 aLocalIP = 0) = 0;
 

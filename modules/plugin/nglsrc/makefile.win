@@ -47,7 +47,11 @@ LINCS = \
         -I$(PUBLIC)\xpcom \
         -I$(PUBLIC)\plugin \
         -I$(PUBLIC)\java \
+!ifdef NECKO
+        -I$(PUBLIC)\necko \
+!else
         -I$(PUBLIC)\netlib \
+!endif
         -I$(PUBLIC)\oji \
 	-I$(PUBLIC)\cache \
 	-I$(PUBLIC)\pref	\
@@ -69,8 +73,12 @@ CACHELIBNAME=netcache.lib
 OURLIBS = \
  $(DIST)\lib\xpcom.lib \
  $(DIST)\lib\plc3.lib \
+!ifdef NECKO
+ $(DIST)\lib\neckoutil_s.lib	\
+!else
  $(DIST)\lib\netlib.lib	\
  $(DIST)\lib\$(CACHELIBNAME) \
+!endif
  $(DIST)\lib\xppref32.lib \
  $(DIST)\lib\dbm32.lib \
  $(LIBNSPR)  

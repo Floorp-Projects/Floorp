@@ -860,7 +860,11 @@ char *str;
     if (gImageGroup == NULL) 
       {
       nsIDeviceContext *deviceCtx = scribbleData.mContext;
+#ifdef NECKO
+      if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(deviceCtx) != NS_OK) 
+#else
       if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(deviceCtx, nsnull) != NS_OK) 
+#endif
         {
         NS_RELEASE(deviceCtx);
         return;

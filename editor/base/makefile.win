@@ -127,7 +127,10 @@ LLIBS=				\
  $(DIST)\lib\plc3.lib       \
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorwidget_s.lib		\
+!ifdef NECKO
+!else
  $(DIST)\lib\netlib.lib           \
+!endif
  $(LIBNSPR)  
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
@@ -136,7 +139,7 @@ LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
+install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 

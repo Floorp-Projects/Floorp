@@ -20,9 +20,7 @@
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIWidget.h"
 #include "nsIWebShellWindow.h"
@@ -160,10 +158,6 @@ int main(int argc, char* argv[])
   nsIDOMAppCoresManager *appCoresManager = nsnull;
   nsIURI* url = nsnull;
   nsIPref *prefs = nsnull;
-#ifdef NECKO
-  nsIIOService* service = nsnull;
-  nsIURI *uri = nsnull;
-#endif // NECKO
 
   // initialization for Full Circle
 #ifdef MOZ_FULLCIRCLE
@@ -536,16 +530,7 @@ int main(int argc, char* argv[])
 #ifndef NECKO
   rv = NS_NewURL(&url, urlstr);
 #else
-  rv = nsServiceManager::GetService(kIOServiceCID, 
-                                    nsIIOService::GetIID(), 
-                                    (nsISupports **)&service);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = service->NewURI(urlstr, nsnull, &uri);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-  NS_RELEASE(uri);
+  rv = NS_NewURI(&url, urlstr);
 #endif // NECKO
 
   if (NS_FAILED(rv)) {
@@ -620,7 +605,11 @@ int main(int argc, char* argv[])
 
 		if (profstr)
 		{
+#ifdef NECKO
+			rv = NS_NewURI(&profURL, profstr);
+#else
 			rv = NS_NewURL(&profURL, profstr);
+#endif
 	
 			if (NS_FAILED(rv)) {
 				goto done;
@@ -733,10 +722,6 @@ done:
   /* 
    * Translate the nsresult into an appropriate platform-specific return code.
    */
-
-#ifdef NECKO
-    nsServiceManager::ReleaseService(kIOServiceCID, service);
-#endif // NECKO
 
   return TranslateReturnValue(rv);
 }

@@ -42,7 +42,6 @@ LINCS = \
 	-I$(PUBLIC)/xpcom \
 	-I$(PUBLIC)/xpfe/components \
 	-I$(PUBLIC)/raptor \
-	-I$(PUBLIC)/netlib \
 	-I$(PUBLIC)/rdf \
 	-I$(PUBLIC)/dom \
 	$(NULL)
@@ -50,7 +49,9 @@ LINCS = \
 LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
+!ifndef NECKO
 	$(DIST)\lib\netlib.lib \
+!endif
 	$(NULL)
 
 #//------------------------------------------------------------------------

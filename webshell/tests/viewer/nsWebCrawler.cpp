@@ -212,19 +212,41 @@ nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
+                                nsIChannel* channel,
+                                PRInt32 aStatus,
+                                nsIDocumentLoaderObserver* aObserver)
+#else
 nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                 nsIURI* aURL,
                                 PRInt32 aStatus,
                                 nsIDocumentLoaderObserver * aObserver)
+#endif
 {
+  nsresult rv;
+
+#ifdef NECKO
+  nsCOMPtr<nsIURI> aURL;
+  rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+#endif
+  
   if (nsnull == aURL) {
     return NS_OK;
   }
 
   if (mVerbose) {
+#ifdef NECKO
+    char* spec;
+#else
     const char* spec;
+#endif
     aURL->GetSpec(&spec);
     printf("Crawler: done loading %s\n", spec);
+#ifdef NECKO
+    nsCRT::free(spec);
+#endif
   }
 
   // Make sure the document bits make it to the screen at least once
@@ -262,9 +284,17 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
             }
           }
           else {
+#ifdef NECKO
+            char* file;
+            (void)aURL->GetPath(&file);
+#else
             const char* file;
             (void)aURL->GetFile(&file);
+#endif
             printf("could not open output file for %s\n", file);
+#ifdef NECKO
+            nsCRT::free(file);
+#endif
           }
         }
         else
@@ -302,40 +332,72 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader,
+                             nsIChannel* channel,
+                             const char* aContentType,
+                             nsIContentViewer* aViewer)
+#else
 nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                              const char* aContentType, 
                              nsIContentViewer* aViewer)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
+                                nsIChannel* channel,
+                                PRUint32 aProgress, 
+                                PRUint32 aProgressMax)
+#else
 nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
                                 nsIURI* aURL, PRUint32 aProgress, 
                                 PRUint32 aProgressMax)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader,
+                              nsIChannel* channel, 
+                              nsString& aMsg)
+#else
 nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                               nsString& aMsg)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
+                           PRInt32 aStatus)
+#else
 nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                            PRInt32 aStatus)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebCrawler::HandleUnknownContentType(nsIDocumentLoader* loader,
+                                       nsIChannel* channel,
+                                       const char *aContentType,
+                                       const char *aCommand)
+#else
 nsWebCrawler::HandleUnknownContentType(nsIDocumentLoader* loader,
                                        nsIURI *aURL,
                                        const char *aContentType,
                                        const char *aCommand)
+#endif
 {
   return NS_OK;
 }
@@ -348,9 +410,17 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
   if (nsnull!=aURL)
   {
     char *inputFileName;
+#ifdef NECKO
+    char* file;
+    (void)aURL->GetPath(&file);
+#else
     const char* file;
     (void)aURL->GetFile(&file);
+#endif
     nsAutoString inputFileFullPath(file);
+#ifdef NECKO
+    nsCRT::free(file);
+#endif
     PRInt32 fileNameOffset = inputFileFullPath.RFind('/');
     if (-1==fileNameOffset)
     {
@@ -538,7 +608,11 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
 #endif // NECKO
 
   if (NS_OK == rv) {
+#ifdef NECKO
+    char* host;
+#else
     const char* host;
+#endif
     rv = url->GetHost(&host);
     if (rv == NS_OK) {
       PRInt32 hostlen = PL_strlen(host);
@@ -569,6 +643,9 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
         }
       }
       ok = PR_FALSE;
+#ifdef NECKO
+      nsCRT::free(host);
+#endif
     }
     NS_RELEASE(url);
   }

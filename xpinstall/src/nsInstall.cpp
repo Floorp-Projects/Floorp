@@ -53,6 +53,9 @@
 #include "nsInstallExecute.h"
 #include "nsInstallPatch.h"
 #include "nsInstallUninstall.h"
+#ifdef NECKO
+#include "nsNeckoUtil.h"
+#endif
 
 #ifdef _WINDOWS
 #include "nsWinReg.h"
@@ -74,6 +77,16 @@
 #define FILESEP "/"
 #endif
 
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+#ifdef NECKO
+#else
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+#endif
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+	
 
 nsInstallInfo::nsInstallInfo(nsIFileSpec* aFile, 
                              const PRUnichar* aArgs, 
@@ -834,20 +847,15 @@ nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aRe
 PRInt32
 nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn)
 {
-    static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-    static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-    static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-    static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-    static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-    static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
-	
     nsresult ret;
     nsFileSpec* resFile;
     nsFileURL* resFileURL = nsnull;
     nsIURI *url = nsnull;
     nsILocale* locale = nsnull;
     nsIStringBundleService* service = nsnull;
+#ifndef NECKO
     nsINetService* pNetService = nsnull;
+#endif
     nsIEventQueueService* pEventQueueService = nsnull;
     nsIStringBundle* bundle = nsnull;
     nsIBidirectionalEnumerator* propEnum = nsnull;
@@ -878,9 +886,11 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
                     kIStringBundleServiceIID, (nsISupports**) &service);
     if (NS_FAILED(ret)) 
         goto handle_err;
+#ifndef NECKO
     ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID, (nsISupports**) &pNetService);
     if (NS_FAILED(ret)) 
         goto handle_err;
+#endif
     ret = nsServiceManager::GetService(kEventQueueServiceCID,
                     kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
     if (NS_FAILED(ret)) 
@@ -891,7 +901,11 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 
     // construct properties file URL as required by StringBundle interface
     resFileURL = new nsFileURL( *resFile );
+#ifdef NECKO
+    ret = NS_NewURI(&url, resFileURL->GetURLString());
+#else
     ret = pNetService->CreateURL(&url, nsString( resFileURL->GetURLString()), nsnull, nsnull, nsnull);
+#endif
     if (resFileURL)
         delete resFileURL;
     if (resFile)

@@ -28,7 +28,10 @@
 #include "nsXPBaseWindow.h"
 #endif
 
+#ifdef NECKO
+#else
 #include "nsINetSupport.h"
+#endif
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
 #include "nsIDOMDocument.h"
@@ -86,7 +89,10 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 
+#ifdef NECKO
+#else
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+#endif
 
 //----------------------------------------------------------------------
 nsXPBaseWindow::nsXPBaseWindow() :
@@ -136,11 +142,14 @@ nsresult nsXPBaseWindow::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
+#ifdef NECKO
+#else
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtrResult = (void*) ((nsINetSupport*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
+#endif
   if (aIID.Equals(kIDOMMouseListenerIID)) {
     NS_ADDREF_THIS(); // Increase reference count for caller
     *aInstancePtrResult = (void *)((nsIDOMMouseListener*)this);
@@ -574,7 +583,7 @@ nsXPBaseWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupConten
 //----------------------------------------
 
 // Stream observer implementation
-
+#ifndef NECKO
 NS_IMETHODIMP
 nsXPBaseWindow::OnProgress(nsIURI* aURL,
                            PRUint32 aProgress,
@@ -588,15 +597,25 @@ NS_IMETHODIMP nsXPBaseWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
+#endif
 
 //----------------------------------------
+#ifdef NECKO
+NS_IMETHODIMP nsXPBaseWindow::OnStartBinding(nsISupports *ctxt)
+#else
 NS_IMETHODIMP nsXPBaseWindow::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
 {
   return NS_OK;
 }
 
 //----------------------------------------
+#ifdef NECKO
+NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsISupports *ctxt, nsresult status, 
+                                            const PRUnichar *errorMsg)
+#else
 NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+#endif
 {
   return NS_OK;
 }

@@ -25,7 +25,9 @@
 class nsIURI;
 class nsIContentViewer;
 class nsIDocumentLoader;
-
+#ifdef NECKO
+class nsIChannel;
+#endif
 
 /* f6b4f550-317c-11d2-bd8c-00805f8ae3f4 */
 #define NS_IDOCUMENT_LOADER_OBSERVER_IID   \
@@ -52,8 +54,13 @@ public:
   /**
    * Notify the observer that a document has been completely loaded.
    */
+#ifdef NECKO
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus,
+								nsIDocumentLoaderObserver * aObserver) = 0;
+#else
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
 								nsIDocumentLoaderObserver * aObserver) = 0;
+#endif
 
   /**
    * Notify the observer that the specified nsIURI has just started to load.
@@ -61,36 +68,62 @@ public:
    * This notification occurs after DNS resolution, and a connection to the
    * server has been established.
    */
+#ifdef NECKO
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, const char* aContentType, 
+                            nsIContentViewer* aViewer) = 0;
+#else
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer) = 0;
+#endif
   
   /**
    * Notify the observer that progress has occurred in the loading of the 
    * specified URL...
    */
+#ifdef NECKO
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
+                               nsIChannel* channel, PRUint32 aProgress, 
+                               PRUint32 aProgressMax) = 0;
+#else
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
                                nsIURI* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax) = 0;
+#endif
 
   /**
    * Notify the observer that status text is available regarding the URL
    * being loaded...
    */
+#ifdef NECKO
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg) = 0;
+#else
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsString& aMsg) = 0;
+#endif
 
   /**
    * Notify the observer that the specified nsIURI has finished loading.
    */
+#ifdef NECKO
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus) = 0;
+#else
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus) = 0;
+#endif
 
   /**
    * Notify the observer that some content of unknown type has been
    * encountered...
    */
+#ifdef NECKO
+  NS_IMETHOD HandleUnknownContentType( nsIDocumentLoader* loader,
+                                       nsIChannel* channel,
+                                       const char *aContentType,
+                                       const char *aCommand ) = 0;
+#else
   NS_IMETHOD HandleUnknownContentType( nsIDocumentLoader* loader,
                                        nsIURI *aURL,
                                        const char *aContentType,
                                        const char *aCommand ) = 0;
+#endif
 };
 
 

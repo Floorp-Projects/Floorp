@@ -36,7 +36,11 @@ LINCS= \
         -I$(XPDIST)\public\browser      \
     -I$(XPDIST)\public\txtsvc   \
     -I$(XPDIST)\public\js       \
+!ifdef NECKO
+	-I$(XPDIST)\public\necko 	\
+!else
 	-I$(XPDIST)\public\netlib 	\
+!endif
     -I$(XPDIST)\public\network 	\
 	-I$(XPDIST)\public\dom      \
 	-I$(XPDIST)\public\xpcom    \
@@ -52,7 +56,11 @@ LINCS= \
     $(NULL)
 
 LLIBS =				            \
+!ifdef NECKO
+    $(DIST)\lib\neckoutil_s.lib      \
+!else
     $(DIST)\lib\netlib.lib      \
+!endif
  	$(DIST)\lib\xpcom.lib     \
     $(DIST)\lib\xppref32.lib    \
     $(DIST)\lib\xplib.lib       \

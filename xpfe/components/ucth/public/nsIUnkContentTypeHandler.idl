@@ -18,13 +18,16 @@
 
 #include "nsIAppShellComponent.idl"
 
-[ptr] native nsIURI( nsIURI );
-[ptr] native nsIDocumentLoader( nsIDocumentLoader );
+interface nsIURI;
+interface nsIDocumentLoader;
+interface nsIChannel;
 
 %{C++
-class nsIURI;
-class nsIDocumentLoader;
+#ifndef NECKO   // gross hack since we can't put ifdefs in idl:
+#define nsIChannel nsIURI
+#endif
 %}
+
 
 /*----------------------- nsIUnknownContentTypeHandler -------------------------
 | This file describes the interface for Mozilla's "unknown content-type        |
@@ -45,7 +48,7 @@ class nsIDocumentLoader;
 [scriptable, uuid(a6cf90ef-15b3-11d2-932e-00805f8add32)]
 interface nsIUnknownContentTypeHandler : nsIAppShellComponent {
 
-    void HandleUnknownContentType( in nsIURI aURL,
+    void HandleUnknownContentType( in nsIChannel aURL,
                                    in string aContentType, 
                                    in nsIDocumentLoader aDocLoader );
 };

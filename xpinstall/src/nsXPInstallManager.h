@@ -32,8 +32,10 @@
 #include "nsString.h"
 
 #include "nsIURL.h"
+#ifndef NECKO
 #include "nsINetlibURL.h"
 #include "nsINetService.h"
+#endif
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIXPINotifier.h"
@@ -60,6 +62,20 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
 
         NS_IMETHOD InitManager( nsXPITriggerInfo* aTrigger );
 
+#ifdef NECKO
+        // nsIStreamObserver
+        NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+        NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, 
+                                 const PRUnichar *errorMsg);
+        NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
+        NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
+                                 const PRUnichar *errorMsg) { return NS_OK; }
+        // nsIStreamListener
+        NS_IMETHOD OnDataAvailable(nsISupports *ctxt, 
+                                   nsIBufferInputStream *inStr,
+                                   PRUint32 sourceOffset, 
+                                   PRUint32 count);
+#else
         // IStreamListener methods
         NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info);
         NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
@@ -67,6 +83,7 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
         NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
         NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
         NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+#endif
         
         // IXPINotifier methods
         NS_IMETHOD BeforeJavascriptEvaluation();

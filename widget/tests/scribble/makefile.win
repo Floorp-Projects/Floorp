@@ -35,7 +35,10 @@ MYLIBS=				\
  $(LIBNSPR)			\
  $(DIST)\lib\raptorgfxwin.lib \
  $(DIST)\lib\raptorwidget.lib \
+!ifdef NECKO
+!else
  $(DIST)\lib\netlib.lib\
+!endif
  $(NULL)
 
 LLIBS= $(MYLIBS)		\

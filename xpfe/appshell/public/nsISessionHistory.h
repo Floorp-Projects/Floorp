@@ -65,7 +65,7 @@ public:
    * Reload the current history entry
    */
 #ifdef NECKO
-  NS_IMETHOD Reload(PRBool bypassCache, PRBool bypassProxy) = 0;
+  NS_IMETHOD Reload(nsIWebShell * aPrev, PRUint32 aReloadFlags) = 0;
 #else
   NS_IMETHOD Reload(nsIWebShell * aPrev, nsURLReloadType aReloadType) = 0;
 #endif

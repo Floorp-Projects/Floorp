@@ -194,7 +194,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
               if(ws) {
                 char * text = PR_GetEnv("NGLAYOUT_HOME");
                 nsString mtemplateURL = text ? text : "resource:/res/samples/picstest1.html";
-              //  ws->LoadURL(mtemplateURL, nsnull, nsnull);
+                //  ws->LoadURL(mtemplateURL, nsnull, nsnull);
                 nsCharsetSource s;
                 ws->SetRendering(PR_TRUE);
                 ws->StopDocumentLoad();

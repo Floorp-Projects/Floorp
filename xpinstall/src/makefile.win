@@ -42,7 +42,11 @@ LINCS=                          \
         -I$(PUBLIC)\xpinstall   \
         -I$(PUBLIC)\jar         \
         -I$(PUBLIC)\libreg      \
-        -I$(PUBLIC)\netlib      \
+!ifdef NECKO
+        -I$(PUBLIC)\necko                 \
+!else
+        -I$(PUBLIC)\netlib                \
+!endif
         -I$(PUBLIC)\xpcom       \
         -I$(PUBLIC)\pref        \
         -I$(PUBLIC)\rdf         \
@@ -59,7 +63,11 @@ LINCS=                          \
 LLIBS =                                \
         $(DIST)\lib\jar50.lib          \
         $(DIST)\lib\libreg32.lib       \
+!ifdef NECKO
+        $(DIST)\lib\neckoutil_s.lib    \
+!else
         $(DIST)\lib\netlib.lib         \
+!endif
         $(DIST)\lib\xpcom.lib          \
         $(DIST)\lib\js3250.lib         \
         $(DIST)\lib\jsdombase_s.lib    \

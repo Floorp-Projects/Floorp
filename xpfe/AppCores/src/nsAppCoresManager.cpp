@@ -37,12 +37,12 @@
 #include "pratom.h"
 #include "prmem.h"
 #include "prio.h"
-#include "mkutils.h"
 #include "prefapi.h"
 
 #include "nsIURL.h"
-#include "nsINetlibURL.h"
 #ifndef NECKO
+#include "mkutils.h"
+#include "nsINetlibURL.h"
 #include "nsINetService.h"
 #endif // NECKO
 #include "nsIInputStream.h"
@@ -77,9 +77,9 @@ static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 #ifndef NECKO
 static NS_DEFINE_IID(kInetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kInetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kInetLibURLIID, NS_INETLIBURL_IID);
 #endif // NECKO
 
-static NS_DEFINE_IID(kInetLibURLIID, NS_INETLIBURL_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);

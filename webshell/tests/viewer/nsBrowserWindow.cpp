@@ -175,7 +175,10 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
+#ifdef NECKO
+#else
 static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
+#endif
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
@@ -1088,11 +1091,19 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
+#ifdef NECKO
+  if (aIID.Equals(nsIProgressEventSink::GetIID())) {
+    *aInstancePtrResult = (void*) ((nsIProgressEventSink*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+#else
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtrResult = (void*) ((nsINetSupport*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
+#endif
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
     NS_ADDREF_THIS();
@@ -1845,17 +1856,40 @@ nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTak
 // Stream observer implementation
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserWindow::OnProgress(nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
+#else
 nsBrowserWindow::OnProgress(nsIURI* aURL,
                             PRUint32 aProgress,
                             PRUint32 aProgressMax)
+#endif
 {
+  nsresult rv;
+
+#ifdef NECKO
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
+  if (channel == nsnull) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIURI> aURL;
+  rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+#endif
+  
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
+#ifdef NECKO
+      char* str;
+      aURL->GetSpec(&str);
+#else
       PRUnichar* str;
       aURL->ToString(&str);
+#endif
       url = str;
+#ifdef NECKO
+      nsCRT::free(str);
+#else
       delete[] str;
+#endif
     }
     url.Append(": progress ");
     url.Append(aProgress, 10);
@@ -1871,7 +1905,11 @@ nsBrowserWindow::OnProgress(nsIURI* aURL,
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserWindow::OnStatus(nsISupports *ctxt, const PRUnichar *aMsg)
+#else
 nsBrowserWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
+#endif
 {
   if (mStatus) {
     PRUint32 size;
@@ -1881,15 +1919,38 @@ nsBrowserWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserWindow::OnStartBinding(nsISupports *ctxt)
+#else
 nsBrowserWindow::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
 {
+  nsresult rv;
+
+#ifdef NECKO
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
+  if (channel == nsnull) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIURI> aURL;
+  rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+#endif
+  
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
+#ifdef NECKO
+      char* str;
+      aURL->GetSpec(&str);
+#else
       PRUnichar* str;
       aURL->ToString(&str);
+#endif
       url = str;
+#ifdef NECKO
+      nsCRT::free(str);
+#else
       delete[] str;
+#endif
     }
     url.Append(": start");
     PRUint32 size;
@@ -1899,17 +1960,40 @@ nsBrowserWindow::OnStartBinding(nsIURI* aURL, const char *aContentType)
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserWindow::OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+#else
 nsBrowserWindow::OnStopBinding(nsIURI* aURL,
                                nsresult status,
                                const PRUnichar* aMsg)
+#endif
 {
+  nsresult rv;
+
+#ifdef NECKO
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
+  if (channel == nsnull) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIURI> aURL;
+  rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+#endif
+  
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
+#ifdef NECKO
+      char* str;
+      aURL->GetSpec(&str);
+#else
       PRUnichar* str;
       aURL->ToString(&str);
+#endif
       url = str;
+#ifdef NECKO
+      nsCRT::free(str);
+#else
       delete[] str;
+#endif
     }
     url.Append(": stop");
     PRUint32 size;
