@@ -52,8 +52,8 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext, 
-                                     nsIStyleContext* aParentContext);
+  NS_IMETHOD ReResolveStyleContext(nsIPresContext*  aPresContext, 
+                                   nsIStyleContext* aParentContext);
 
 protected:
   virtual PRIntn GetSkipSides() const;
