@@ -144,6 +144,7 @@ bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
 bin\components\webbrowserpersist.xpt
 bin\components\embed_base.xpt
+bin\components\commandhandler.xpt
 bin\components\webshell_idls.xpt
 bin\components\widget.xpt
 bin\components\windowwatcher.xpt
