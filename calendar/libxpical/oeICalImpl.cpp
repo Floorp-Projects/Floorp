@@ -1381,7 +1381,7 @@ void oeICalImpl::ChopAndAddEventToEnum( struct icaltimetype initialdisplaydate,
             eventDisplay->SetDisplayEndDate( enddateinms );
             break;
         }
-    } while ( 1 );
+    } while ( 0 );
 }
 
 NS_IMETHODIMP

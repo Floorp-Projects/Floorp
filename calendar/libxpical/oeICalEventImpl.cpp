@@ -859,74 +859,15 @@ NS_IMETHODIMP oeICalEventImpl::SetLastAlarmAck(PRTime aNewVal)
 
 NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, PRBool *isvalid ) {
 #ifdef ICAL_DEBUG_ALL
-    printf( "GetNextRecurrence()\n" );
+    printf( "oeICalEventImpl::GetNextRecurrence()\n" );
 #endif
-    //for non recurring events
     *isvalid = false;
-    if( !m_recur ) {
-        PRTime start;
-        m_start->GetTime( &start );
-
-        PRInt64 startinsec,begininsec,msecpersec;
-        LL_I2L( msecpersec, PR_MSEC_PER_SEC );
-        LL_DIV( startinsec, start, msecpersec );
-        LL_DIV( begininsec, begin, msecpersec );
-
-        if( LL_CMP( startinsec, > , begininsec ) ) {
-            *retval = start;
-            *isvalid = true;
-        }
+    icaltimetype begindate,result;
+    result = GetNextRecurrence( begindate );
+    if( icaltime_is_null_time( result ) )
         return NS_OK;
-    }
-
-    //for recurring events
-    icalcomponent *vcalendar = AsIcalComponent();
-    if ( !vcalendar ) {
-        #ifdef ICAL_DEBUG
-        printf( "oeICalEventImpl::GetNextRecurrence() failed!\n" );
-        #endif
-        return NS_OK;
-    }
-
-    icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
-
-    icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_RRULE_PROPERTY );
-    if ( prop != 0) {
-        struct icalrecurrencetype recur = icalproperty_get_rrule(prop);
-//        printf("#### %s\n",icalrecurrencetype_as_string(&recur));
-        icalrecur_iterator* ritr = icalrecur_iterator_new(recur,m_start->m_datetime);
-        struct icaltimetype next;
-        for(next = icalrecur_iterator_next(ritr);
-            !icaltime_is_null_time(next);
-            next = icalrecur_iterator_next(ritr)){
-
-            next.is_date = false;
-            next = icaltime_normalize( next );
-
-//            printf( "recur: %d-%d-%d %d:%d:%d\n" , next.year, next.month, next.day, next.hour, next.minute, next.second );
-            
-            //quick fix for the recurrence getting out of the end of the month into the next month
-            //like 31st of each month but when you get February
-            if( recur.freq == ICAL_MONTHLY_RECURRENCE && !m_recurweeknumber && next.day != m_start->m_datetime.day) {
-//#ifdef ICAL_DEBUG
-//                printf( "Wrong day in month\n" );
-//#endif
-//                continue;
-                next.day = 0;
-                icaltime_normalize( next );
-            }
-            PRTime nextinms = ConvertToPrtime( next );
-            if( LL_CMP(nextinms, > ,begin) && !IsExcepted( nextinms ) ) {
-//                printf( "Result: %d-%d-%d %d:%d\n" , next.year, next.month, next.day, next.hour, next.minute );
-                *retval = nextinms;
-                *isvalid = true;
-                break;
-            }
-        }
-        icalrecur_iterator_free(ritr);
-    }
-
-    icalcomponent_free( vcalendar );
+    *retval = ConvertToPrtime( result );
+    *isvalid = true;
     return NS_OK;
 }
 
@@ -999,15 +940,102 @@ NS_IMETHODIMP oeICalEventImpl::GetPreviousOccurrence( PRTime beforethis, PRTime 
 }
 
 icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin ) {
-    icaltimetype result = icaltime_null_time();
-    PRTime begininms = ConvertToPrtime( begin );
-    PRTime resultinms;
-    PRBool isvalid;
-    GetNextRecurrence( begininms ,&resultinms, &isvalid );
-    if( !isvalid )
-        return result;
 
-    result = ConvertFromPrtime( resultinms );
+    icaltimetype result = icaltime_null_time();
+
+    if( icaltime_compare( m_start->m_datetime , begin ) > 0 )
+        return m_start->m_datetime;
+
+    //for non recurring events
+    if( !m_recur ) {
+
+        if( icaltime_compare( m_end->m_datetime , begin ) <= 0 )
+            return result;
+
+        struct icaltimetype nextday = begin;
+        nextday.hour = 0; nextday.minute = 0; nextday.second = 0;
+        icaltime_adjust( &nextday, 1, 0, 0, 0 );
+        if( icaltime_compare( nextday, m_end->m_datetime ) < 0 )
+            return nextday;
+        return result;
+    }
+
+    //for recurring events
+    icalcomponent *vcalendar = AsIcalComponent();
+    if ( !vcalendar ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::GetNextRecurrence() failed!\n" );
+        #endif
+        return result;
+    }
+
+    icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
+
+    icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_RRULE_PROPERTY );
+    if ( prop != 0) {
+        struct icaltimetype next,nextpropagation=icaltime_null_time();
+        struct icalrecurrencetype recur = icalproperty_get_rrule(prop);
+        //printf("#### %s\n",icalrecurrencetype_as_string(&recur));
+        icalrecur_iterator* ritr = icalrecur_iterator_new(recur,m_start->m_datetime);
+        for(next = icalrecur_iterator_next(ritr);
+            !icaltime_is_null_time(next);
+            next = icalrecur_iterator_next(ritr)){
+
+            next.is_date = false;
+            next = icaltime_normalize( next );
+
+            //printf( "recur: %d-%d-%d %d:%d:%d\n" , next.year, next.month, next.day, next.hour, next.minute, next.second );
+            
+            //quick fix for the recurrence getting out of the end of the month into the next month
+            //like 31st of each month but when you get February
+            if( recur.freq == ICAL_MONTHLY_RECURRENCE && !m_recurweeknumber && next.day != m_start->m_datetime.day) {
+                //#ifdef ICAL_DEBUG
+                //printf( "Wrong day in month\n" );
+                //#endif
+                //continue;
+                next.day = 0;
+                icaltime_normalize( next );
+            }
+
+            if( icaltime_compare( next, begin ) > 0 ) {
+                PRTime nextinms = ConvertToPrtime( next );
+                 if( !IsExcepted( nextinms ) ) {
+                    //printf( "Result: %d-%d-%d %d:%d\n" , next.year, next.month, next.day, next.hour, next.minute );
+                    result = next;
+                    break;
+                 }
+            }
+
+            if( icaltime_is_null_time( nextpropagation ) ) {
+                struct icaldurationtype eventlength = icaltime_subtract( m_end->m_datetime, m_start->m_datetime );
+                struct icaltimetype end = icaltime_add( next, eventlength );
+
+                if( icaltime_compare( end , begin ) <= 0 )
+                    continue;
+
+                struct icaltimetype nextday = begin;
+                nextday.hour = 0; nextday.minute = 0; nextday.second = 0;
+                icaltime_adjust( &nextday, 1, 0, 0, 0 );
+                if( icaltime_compare( nextday, end ) < 0 ) {
+                    PRTime nextdayinms = ConvertToPrtime( nextday );
+                     if( !IsExcepted( nextdayinms ) ) {
+                        nextpropagation = nextday;
+                     }
+                }
+            }
+        }
+        icalrecur_iterator_free(ritr);
+        if( !icaltime_is_null_time( result ) ) {
+            if( !icaltime_is_null_time( nextpropagation ) ) {
+                if( icaltime_compare( nextpropagation , result ) < 0 ) {
+                    result = nextpropagation;
+                }
+            }
+        }
+    }
+
+    icalcomponent_free( vcalendar );
+
     return result;
 }
 
