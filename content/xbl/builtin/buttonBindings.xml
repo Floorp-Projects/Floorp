@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-
-<bindings id="formWidgets"
-          xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-          
-  <binding id="button" extends="xul:button"/>
-  
-</bindings>          

@@ -29,16 +29,4 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(TARGETS)
-	$(INSTALL) $(srcdir)/button-disabled-left.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/button-disabled-middle.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/button-disabled-right.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/button-normal-left.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/button-normal-middle.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/button-normal-right.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/button-pressed-left.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/button-pressed-middle.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/button-pressed-right.gif $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/buttons.css $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/platformButtonBindings.xml $(DIST)/bin/res/builtin
 	$(INSTALL) $(srcdir)/platformHTMLBindings.xml $(DIST)/bin/res/builtin
-	$(INSTALL) $(srcdir)/xbl-forms.css $(DIST)/bin/res/builtin
