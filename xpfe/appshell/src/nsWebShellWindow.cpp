@@ -2918,4 +2918,4 @@ PRBool nsWebShellWindow::PromptPassword(const nsString &aText,
 	}
 	 return result ? PR_TRUE : PR_FALSE;
  }
-#endif 
+#endif
