@@ -869,6 +869,11 @@ function loadStartFolder(initialUri)
         }
 
         var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+        // it is possible we were given an initial uri and we need to subscribe or try to add
+        // the folder. i.e. the user just clicked on a news folder they aren't subscribed to from a browser
+        // the news url comes in here.   
+
         SelectFolder(startFolder.URI);        
 
         // only do this on startup, when we pass in null
@@ -890,8 +895,15 @@ function loadStartFolder(initialUri)
     }
     catch(ex)
     {
-        dump(ex);
-        dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
+
+      if (initialUri)
+      {
+        messenger.loadURL(window, initialUri);
+        return;
+      }
+
+      dump(ex);
+      dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
     }
 
     MsgGetMessagesForAllServers(defaultServer);
