@@ -2992,7 +2992,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
 
   // collapse the cols and/or col groups
   PRInt32 numRows = mCellMap->GetRowCount();
-  nsTableIterator groupIter(mColGroups, PR_TRUE);
+  nsTableIterator groupIter(mColGroups, eTableDIR);
   nsIFrame* groupFrame = groupIter.First(); 
   nscoord cellSpacingX = GetCellSpacingX();
   nscoord xOffset = 0;
@@ -3002,7 +3002,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
     const nsStyleDisplay* groupDisplay;
     groupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
     PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
-    nsTableIterator colIter(*groupFrame, PR_TRUE);
+    nsTableIterator colIter(*groupFrame, eTableDIR);
     nsIFrame* colFrame = colIter.First();
     while (nsnull != colFrame) {
       const nsStyleDisplay* colDisplay;
@@ -4136,7 +4136,8 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
           // and the rowgroup itself needs to be expanded by SUM(row height deltas)
           nscoord excessForRowGroup=0;
           nsIFrame * rowFrame=nsnull;
-          rv = rowGroupFrame->FirstChild(nsnull, &rowFrame);
+          nsTableIterator iter(*rowGroupFrame, eTableLTR);
+          rowFrame = iter.First();
           while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
           {
             const nsStyleDisplay *rowDisplay;
@@ -4158,18 +4159,29 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
                   (mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
                 border->mLength=newRowRect.height;
               }
-              // resize cells, too
-              ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
               // better if this were part of an overloaded row::SetRect
               y += excessForRow+rowRect.height;
               excessForRowGroup += excessForRow;
             }
-            rowFrame->GetNextSibling(&rowFrame);
+            //rowFrame->GetNextSibling(&rowFrame);
+            rowFrame = iter.Next();
           }
           nsRect rowGroupRect;
           rowGroupFrame->GetRect(rowGroupRect);
           nsRect newRowGroupRect(rowGroupRect.x, rowGroupRect.y, rowGroupRect.width, excessForRowGroup+rowGroupRect.height);
           rowGroupFrame->SetRect(newRowGroupRect);
+
+          // now that all of the rows have been resized, resize the cells       
+          nsTableIterator iter2(*rowGroupFrame, eTableLTR);
+          rowFrame = iter2.First();
+          while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame)) {
+            const nsStyleDisplay *rowDisplay;
+            rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
+            if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) { 
+              ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
+            }
+            rowFrame = iter2.Next();
+          }
         }
         rowGroupFrame->GetNextSibling(&rowGroupFrame);
       }
@@ -5302,34 +5314,34 @@ nsTableFrame::IsFinalPass(const nsReflowState& aState)
 }
 
 // nsTableIterator
-nsTableIterator::nsTableIterator(nsIFrame& aSource,
-                                 PRBool    aUseDirection)
+nsTableIterator::nsTableIterator(nsIFrame&        aSource,
+                                 nsTableIteration aType)
 {
   nsIFrame* firstChild;
   aSource.FirstChild(nsnull, &firstChild);
-  Init(firstChild, aUseDirection);
+  Init(firstChild, aType);
 }
 
-nsTableIterator::nsTableIterator(nsFrameList& aSource,
-                                 PRBool       aUseDirection)
+nsTableIterator::nsTableIterator(nsFrameList&     aSource,
+                                 nsTableIteration aType)
 {
   nsIFrame* firstChild = aSource.FirstChild();
-  Init(firstChild, aUseDirection);
+  Init(firstChild, aType);
 }
 
-void nsTableIterator::Init(nsIFrame* aFirstChild,
-                           PRBool    aUseDirection)
+void nsTableIterator::Init(nsIFrame*        aFirstChild,
+                           nsTableIteration aType)
 {
   mFirstListChild = aFirstChild;
   mFirstChild     = aFirstChild;
   mCurrentChild   = nsnull;
-  mLeftToRight    = PR_TRUE;
+  mLeftToRight    = (eTableRTL == aType) ? PR_FALSE : PR_TRUE; 
   mCount          = -1;
 
   if (!mFirstChild) {
     return;
   }
-  if (aUseDirection) {
+  if (eTableDIR == aType) {
     nsTableFrame* table = nsnull;
     nsresult rv = nsTableFrame::GetTableFrame(mFirstChild, table);
     if (NS_SUCCEEDED(rv) && (table != nsnull)) {
