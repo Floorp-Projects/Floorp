@@ -377,12 +377,8 @@ MOZ_COMPONENT_XPCOM_LIBS += -lboehm
 XPCOM_LIBS += -lboehm
 endif
 
-ifeq (xpcom, $(findstring xpcom, $(BUILD_MODULES)))
-DEFINES += -DXPCOM_STANDALONE
-endif
-
 ifeq (xpconnect, $(findstring xpconnect, $(BUILD_MODULES)))
-DEFINES +=  -DXPCOM_STANDALONE -DXPCONNECT_STANDALONE
+DEFINES +=  -DXPCONNECT_STANDALONE
 endif
 
 ifeq ($(OS_ARCH),OS2)
