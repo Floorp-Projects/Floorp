@@ -24,14 +24,18 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+MODULE		= nkcache
+
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsICacheManager.h \
-		nsICacheObject.h \
-		nsICachePref.h \
-		nsICacheModule.h \
-		$(NULL)
+XPIDLSRCS	= \
+		nsICachedNetData.idl          \
+	        nsINetDataCacheManager.idl    \
+		nsINetDataCache.idl           \
+		nsINetDataCacheRecord.idl     \
+	        nsINetDataDiskCache.idl       \
+		nsIStreamAsFile.idl           \
+	        $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
