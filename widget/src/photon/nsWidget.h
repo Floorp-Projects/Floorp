@@ -95,7 +95,7 @@ public:
   NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD SetFocus(PRBool aRaise);
 
-  virtual void LooseFocus(void);
+  virtual void LoseFocus(void);
 
   PRBool OnResize(nsSizeEvent event);
   virtual PRBool OnResize(nsRect &aRect);
@@ -250,7 +250,9 @@ protected:
   static int  DestroyedCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 
   PtWidget_t          *mWidget;
-  nsCOMPtr<nsIWidget>  mParent;
+  nsIWidget						*mParent;
+
+  static nsWidget* gFocusWidget; // Current Focus Widget;
 
   // This is the composite update area (union of all the calls to Invalidate)
   nsIRegion *mUpdateArea;
@@ -264,23 +266,12 @@ protected:
   /* These variables help us close the Menu when the clicks outside the application */
   static nsIRollupListener *gRollupListener;
   static nsIWidget         *gRollupWidget;
-  static PRBool             gRollupConsumeRollupEvent;
-  static PtWidget_t        *gRollupScreenRegion; 
 
   static nsILookAndFeel *sLookAndFeel;
   static PRUint32 sWidgetCount;
 
   static PhRid_t          gLastUnrealizedRegion;
   static PhRid_t          gLastUnrealizedRegionsParent;
-    
-  //
-  // Keep track of the last widget being "dragged"
-  //
-  static nsWidget *sButtonMotionTarget;
-  static int sButtonMotionRootX;
-  static int sButtonMotionRootY;
-  static int sButtonMotionWidgetX;
-  static int sButtonMotionWidgetY;
 };
 
 #endif /* nsWidget_h__ */

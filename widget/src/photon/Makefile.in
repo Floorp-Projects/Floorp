@@ -27,43 +27,21 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= widget_photon
-EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 
 
-OLD_WIDGETS = \
-		nsCheckButton.cpp \
-		nsComboBox.cpp \
-		nsLabel.cpp \
-		nsListBox.cpp \
-		nsMenu.cpp \
-		nsMenuBar.cpp \
-		nsMenuItem.cpp \
-		nsPopUpMenu.cpp \
-		nsRadioButton.cpp
-	
-
-						
 CPPSRCS		= \
-		nsBidiKeyboard.cpp \
-		nsButton.cpp \
-		nsTextAreaWidget.cpp \
-		nsTextHelper.cpp \
-		nsTextWidget.cpp \
+		nsDragService.cpp \
 		PtRawDrawContainer.cpp \
 		nsAppShell.cpp \
 		nsClipboard.cpp \
-		nsDragService.cpp \
-		nsFileWidget.cpp \
-		nsFontRetrieverService.cpp \
-		nsFontSizeIterator.cpp \
 		nsLookAndFeel.cpp \
 		nsScrollbar.cpp \
-		nsSound.cpp \
 		nsToolkit.cpp \
 		nsWidget.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
+		nsBidiKeyboard.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a

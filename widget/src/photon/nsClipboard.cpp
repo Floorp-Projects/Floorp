@@ -202,7 +202,7 @@ nsClipboard::GetNativeClipboardData( nsITransferable * aTransferable, PRInt32 aW
 		  }
 #endif
 
-
+		
           	nsCOMPtr<nsISupports> genericDataWrapper;
           	nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, unicode, len_unicode, getter_AddRefs(genericDataWrapper) );
           	aTransferable->SetTransferData(flavorStr, genericDataWrapper, len_unicode );
@@ -223,9 +223,55 @@ NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, 
                                     PRInt32 aWhichClipboard, 
                                     PRBool * outResult) {
-  *outResult = PR_TRUE;  // say we always do.
-  return NS_OK;
+
+  nsresult res = NS_ERROR_FAILURE;
+  * outResult = PR_FALSE;
+
+ // Walk through flavors and see which flavor matches the one being pasted:
+  PRUint32 cnt;
+
+  aFlavorList->Count(&cnt);
+  nsCAutoString foundFlavor;
+  if (cnt > 0) {
+    void         *clipPtr;
+    PhClipHeader  cliptype;
+    PhClipHeader *cliphdr;
+    void         *data = nsnull;
+    PRUint32      dataLen;
+
+    clipPtr = PhClipboardPasteStart( 1 );
+	if(nsnull == clipPtr)
+		return res;
+
+    for ( PRUint32 i = 0; i < cnt; ++i ) {
+      nsCOMPtr<nsISupports> genericFlavor;
+      aFlavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+      nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+
+      if ( currentFlavor ) {
+
+        nsXPIDLCString flavorStr;
+        currentFlavor->ToString ( getter_Copies(flavorStr) );
+
+        nsresult err = GetFormat( flavorStr, &cliptype);
+        if (err != NS_OK) continue;
+
+        cliphdr = PhClipboardPasteType( clipPtr, cliptype.type );
+        if (cliphdr) 
+		{
+
+          	res = NS_OK;
+			*outResult = PR_TRUE;
+		  			break;
+    	}
+	  }
 	}
+
+   	PhClipboardPasteFinish( clipPtr );
+  }
+    
+  return res;
+}
 
 //=========================================================================
 

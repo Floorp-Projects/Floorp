@@ -57,7 +57,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   switch (aID) 
   {
 	  case eColor_WindowBackground:
-		aColor = PH_TO_NS_RGB(Pg_GREY);
+		aColor = PH_TO_NS_RGB(Pg_WHITE);
 		break;
 	  case eColor_WindowForeground:
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
@@ -170,6 +170,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		break;
 
 	  case eColor_window:
+		aColor = PH_TO_NS_RGB(Pg_WHITE);
+		break;
+
+
 	  case eColor_windowframe:
 		aColor = PH_TO_NS_RGB(Pg_GREY);
 		break;
@@ -184,19 +188,25 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 	  case eColor__moz_field:
 		aColor = PH_TO_NS_RGB(Pg_WHITE);
 		break;
-      case eColor__moz_fieldtext:
-        aColor = PH_TO_NS_RGB(Pg_BLACK);
-        break;
-      case eColor__moz_dialog:
-        aColor = PH_TO_NS_RGB(Pg_GREY);
-        break;
-      case eColor__moz_dialogtext:
-        aColor = PH_TO_NS_RGB(Pg_BLACK);
-        break;
-  default:
-    /* default color is BLACK */
-    aColor = PH_TO_NS_RGB(Pg_BLACK);;
-    res    = NS_ERROR_FAILURE;
+
+	case eColor__moz_fieldtext:
+	  aColor = PH_TO_NS_RGB(Pg_BLACK);
+	  break;
+
+	case eColor__moz_dialog:
+	  aColor = PH_TO_NS_RGB(Pg_GREY);
+	  break;
+
+	case eColor__moz_dialogtext:
+	  aColor = PH_TO_NS_RGB(Pg_BLACK);
+	  break;
+
+	case eColor__moz_dragtargetzone:
+	  aColor = PH_TO_NS_RGB(Pg_GREY);
+	  break;
+
+  	default:
+    aColor = PH_TO_NS_RGB(Pg_WHITE);
     break;
   }
 
@@ -250,10 +260,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     aMetric = 0;
     break;
   case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-    aMetric = 0;
+  	aMetric = 10;
     break;
   case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-    aMetric = 0;
+  	aMetric = 8;
     break;
   case eMetric_CheckboxSize:
     aMetric = 10;
@@ -283,6 +293,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   case eMetric_SubmenuDelay:
     aMetric = 200;
     break;
+	case eMetric_DragFullWindow:
+		aMetric = 0;
+		break;
   default:
     aMetric = -1;
     res     = NS_ERROR_FAILURE;
