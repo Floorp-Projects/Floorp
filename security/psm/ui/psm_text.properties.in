@@ -414,7 +414,7 @@ module_del_failure="Unable to delete module"
 ; Token password prompt strings
 ;
 ask_token_password="Please enter the Personal Security Password for the %1$s security device. "
-retry_token_password="Please retype the Personal Security Password for the %1$s security device.<psm:lf>Warning: Successive failures may disable the security device."
+retry_token_password="The password for the %1$s security device is incorrect. Please retype it. Successive failures may disable the device."
 
 ;
 ; PKCS 12 prompt strings
