@@ -225,10 +225,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (void)onLoadingStarted 
 {
-  // clear out the last tooltip rect
-  [self removeToolTip:mTipTag];
-  mTipTag = [self addToolTipRect:[self bounds] owner:self userData:nil];
-  
   if (defaultStatus) {
     [defaultStatus release];
     defaultStatus = NULL;
