@@ -76,6 +76,9 @@ typedef enum
 class nsIView : public nsISupports
 {
 public:
+
+  static const nsIID& GetIID() { static nsIID iid = NS_IVIEW_IID; return iid; }
+
   /**
    * Initialize the view
    * @param aManager view manager that "owns" the view. The view does NOT

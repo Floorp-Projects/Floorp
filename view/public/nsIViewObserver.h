@@ -32,6 +32,8 @@ struct nsRect;
 class nsIViewObserver : public nsISupports
 {
 public:
+  
+  static const nsIID& GetIID() { static nsIID iid = NS_IVIEWOBSERVER_IID; return iid; }
 
   /* called when the observer needs to paint
    * @param aRenderingContext - rendering context to paint to

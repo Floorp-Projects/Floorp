@@ -47,6 +47,8 @@ typedef enum
 class nsIViewManager : public nsISupports
 {
 public:
+
+  static const nsIID& GetIID() { static nsIID iid = NS_IVIEWMANAGER_IID; return iid; }
   /**
    * Initialize the ViewManager
    * Note: this instance does not hold a reference to the viewobserver
