@@ -67,7 +67,7 @@ function SelectAddressOKButton()
 	var body = document.getElementById('bucketBody');
 	var item, row, cell, text, colon;
 	var toAddress="", ccAddress="", bccAddress="";
-	
+
 	for ( var index = 0; index < body.childNodes.length; index++ )
 	{
 		item = body.childNodes[index];
@@ -77,35 +77,32 @@ function SelectAddressOKButton()
 			if (  row.childNodes &&  row.childNodes.length )
 			{
 				cell = row.childNodes[0];
-				if ( cell.childNodes &&  cell.childNodes.length )
+				text = cell.getAttribute('value');
+				if ( text )
 				{
-					text = cell.getAttribute('value');
-					if ( text )
+					switch ( text[0] )
 					{
-						switch ( text[0] )
-						{
-							case prefixTo[0]:
-								if ( toAddress )
-									toAddress += ", ";
-								toAddress += text.substring(prefixTo.length, text.length);
-								break;
-							case prefixCc[0]:
-								if ( ccAddress )
-									ccAddress += ", ";
-								ccAddress += text.substring(prefixCc.length, text.length);
-								break;
-							case prefixBcc[0]:
-								if ( bccAddress )
-									bccAddress += ", ";
-								bccAddress += text.substring(prefixBcc.length, text.length);
-								break;
-						}
+						case prefixTo[0]:
+							if ( toAddress )
+								toAddress += ", ";
+							toAddress += text.substring(prefixTo.length, text.length);
+							break;
+						case prefixCc[0]:
+							if ( ccAddress )
+								ccAddress += ", ";
+							ccAddress += text.substring(prefixCc.length, text.length);
+							break;
+						case prefixBcc[0]:
+							if ( bccAddress )
+								bccAddress += ", ";
+							bccAddress += text.substring(prefixBcc.length, text.length);
+							break;
 					}
 				}
 			}
 		}
 	}
-	
+
 	// reset the UI in compose window
 	msgCompFields.SetTo(toAddress);
 	msgCompFields.SetCc(ccAddress);
