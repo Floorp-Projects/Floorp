@@ -70,6 +70,24 @@ nsresult nsDeviceContextUnix :: Init()
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
 
+
+  // XXX We really need to have Display passed to us since it could be specified
+  //     not from the environment, which is the one we use here.
+  Display * display = ::XOpenDisplay(nsnull);
+
+  if (display) {
+
+    mTwipsToPixels = (((float)::XDisplayWidth(display, DefaultScreen(display))) /
+		      ((float)::XDisplayWidthMM(display,DefaultScreen(display) )) * 25.4) / 
+      NS_POINTS_TO_TWIPS_FLOAT(72.0f);
+    
+    mPixelsToTwips = 1.0f / mTwipsToPixels;
+
+    ::XCloseDisplay(display);
+
+  }
+
+
   return NS_OK;
 }
 
@@ -143,14 +161,6 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
 void nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
   aContext->Init(this, aWin);
-
-  mTwipsToPixels = (((float)::XDisplayWidth(mSurface->display, DefaultScreen(mSurface->display))) /
-		    ((float)::XDisplayWidthMM(mSurface->display,DefaultScreen(mSurface->display) )) * 25.4) / 
-    NS_POINTS_TO_TWIPS_FLOAT(72.0f);
-
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
-
-  //InstallColormap();
 }
 
 PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
