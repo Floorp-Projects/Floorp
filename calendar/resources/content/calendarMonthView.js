@@ -118,18 +118,41 @@ function MonthView( calendarWindow )
    
    this.superConstructor( calendarWindow );
    
-   // set up, see notes above
-   
-   this.selectedEventBoxes = new Array();
-   
-   this.selectedEvent = null;
+   var monthViewEventSelectionObserver = 
+   {
+      onSelectionChanged : function( EventSelectionArray )
+      {
+         if( EventSelectionArray.length > 0 )
+         {
+            //if there are selected events.
 
-   this.selectedTodayBox = null;
+            gCalendarWindow.monthView.clearSelectedDate();
+
+            gCalendarWindow.monthView.clearSelectedBoxes();
+            
+            for( i = 0; i < EventSelectionArray.length; i++ )
+            {
+               var EventBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+EventSelectionArray[i].id );
+               
+               for ( j = 0; j < EventBoxes.length; j++ ) 
+               {
+                  EventBoxes[j].setAttribute( "eventselected", "true" );
+               }
+            }
+            
+         }
+         else
+         {
+            //select the proper day
+            gCalendarWindow.monthView.hiliteSelectedDate();
+         }
+      }
+   }
+      
+   calendarWindow.EventSelection.addObserver( monthViewEventSelectionObserver );
    
    this.showingLastDay = false;
   
-   this.selectedBox = null;
-
    // set up month day box's and day number text items, see notes above
    
    this.dayNumberItemArray = new Array();
@@ -186,10 +209,9 @@ MonthView.prototype.refreshEvents = function( )
 
    for( var eventBoxIndex = 0;  eventBoxIndex < eventBoxList.length; ++eventBoxIndex )
    {
-		eventBox = eventBoxList[ eventBoxIndex ];
+      eventBox = eventBoxList[ eventBoxIndex ];
       
       eventBox.parentNode.removeChild( eventBox );
-
    }
    
    // clear calendarEvent counts, we only display 3 events per day 
@@ -201,10 +223,6 @@ MonthView.prototype.refreshEvents = function( )
       
       dayItem.numEvents = 0;
    }  
-   
-   // remove the old selection
-   
-   this.selectedEventBoxes = Array();
    
    // add each calendarEvent
    
@@ -243,7 +261,7 @@ MonthView.prototype.refreshEvents = function( )
          eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
          eventBox.setAttribute( "class", "month-day-event-box-class" );
          eventBox.setAttribute( "eventbox", "monthview" );
-         eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
+         eventBox.setAttribute( "onclick", "gCalendarWindow.monthView.clickEventBox( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
          eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
          eventBox.setAttribute( "tooltip", "savetip" );
@@ -321,11 +339,9 @@ MonthView.prototype.refreshEvents = function( )
 
       // mark the box as selected, if the event is
          
-      if( this.calendarWindow.getSelectedEvent() === calendarEventDisplay.event )
+      if( this.calendarWindow.EventSelection.isSelectedEvent( calendarEventDisplay.event ) )
       {
-         eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEventDisplay.event );
-   
-         gCalendarWindow.currentView.clickEventBox( eventBox ); 
+         this.selectBoxForEvent( calendarEventDisplay.event ); 
       } 
    }
 }
@@ -338,7 +354,7 @@ MonthView.prototype.refreshEvents = function( )
 
 MonthView.prototype.switchFrom = function( )
 {
-   this.selectedEventBoxes = Array();
+   
 }
 
 
@@ -375,7 +391,7 @@ MonthView.prototype.switchTo = function( )
 *   Redraw the display, but not the events
 */
 
-MonthView.prototype.refreshDisplay = function( ShowEvent )
+MonthView.prototype.refreshDisplay = function( )
 { 
    // set the month/year in the header
    
@@ -442,9 +458,8 @@ MonthView.prototype.refreshDisplay = function( ShowEvent )
    }
   
    // if we aren't showing an event, highlite the selected date.
-   if ( !ShowEvent ) 
+   if ( this.calendarWindow.EventSelection.selectedEvents.length < 1 ) 
    {
-      //debug("\n\n-->>>>Im' going to be highlightin the date from refresh display!!!");
       this.hiliteSelectedDate( );
    }
    
@@ -462,16 +477,15 @@ MonthView.prototype.hiliteSelectedDate = function( )
 {
    // Clear the old selection if there was one
 
-   if( this.selectedBox )
-   { 
-      this.selectedBox.setAttribute( "selected" , "false" );
-      this.selectedBox = null;
-   }
-   
+   this.clearSelectedDate();
+
+   this.clearSelectedBoxes();
+
    // Set the background for selection
    
-   this.selectedBox = this.dayBoxItemByDateArray[ this.calendarWindow.getSelectedDate().getDate() ];
-   this.selectedBox.setAttribute( "selected" , "true" );
+   var ThisBox = this.dayBoxItemByDateArray[ this.calendarWindow.getSelectedDate().getDate() ];
+   
+   ThisBox.setAttribute( "monthselected" , "true" );
 }
 
 
@@ -482,12 +496,29 @@ MonthView.prototype.hiliteSelectedDate = function( )
 
 MonthView.prototype.clearSelectedDate = function( )
 {
-   if ( this.selectedBox ) 
+   var SelectedBoxes = document.getElementsByAttribute( "monthselected", "true" );
+   
+   for( i = 0; i < SelectedBoxes.length; i++ )
    {
-      this.selectedBox.setAttribute( "selected", "false" );
-      this.selectedBox = null;
+      SelectedBoxes[i].removeAttribute( "monthselected" );
    }
 }
+
+/** PUBLIC
+*
+*  Unmark the selected date if there is one.
+*/
+
+MonthView.prototype.clearSelectedBoxes = function( )
+{
+   var SelectedBoxes = document.getElementsByAttribute( "eventselected", "true" );
+   
+   for( i = 0; i < SelectedBoxes.length; i++ )
+   {
+      SelectedBoxes[i].removeAttribute( "eventselected" );
+   }
+}
+
 
 /** PRIVATE
 *
@@ -501,10 +532,11 @@ MonthView.prototype.hiliteTodaysDate = function( )
    var Year = this.calendarWindow.getSelectedDate().getFullYear();
 
    // Clear the old selection if there was one
-   if ( this.selectedTodayBox ) 
+   var TodayBox = document.getElementsByAttribute( "today", "true" );
+   
+   for( i = 0; i < TodayBox.length; i++ )
    {
-      this.selectedTodayBox.setAttribute( "today", "false" );
-      this.selectedTodayBox = null;
+      TodayBox[i].removeAttribute( "today" );
    }
 
    //highlight today.
@@ -512,33 +544,9 @@ MonthView.prototype.hiliteTodaysDate = function( )
    
    if ( Year == Today.getFullYear() && Month == Today.getMonth() ) 
    {
-      this.selectedTodayBox = this.dayBoxItemByDateArray[ Today.getDate() ];
+      var ThisBox = this.dayBoxItemByDateArray[ Today.getDate() ];
       
-      this.selectedTodayBox.setAttribute( "today", "true" );
-   }
-   else
-      this.selectedTodayBox = null;
-      
-}
-
-
-/** PUBLIC
-*
-*   Get the selected event and delete it.
-*/
-
-MonthView.prototype.deletedSelectedEvent = function( )
-{
-   if( this.selectedEventBoxes.length > 0 )
-   {
-      for ( i = 0; i < this.selectedEventBoxes.length; i++ ) 
-      {
-         var calendarEvent =  this.selectedEventBoxes[i].calendarEventDisplay.event;
-      
-         // tell the event source to delete it, the observers will be called
-         // back into to update the display
-      }
-      this.calendarWindow.eventSource.deleteEvent( calendarEvent );
+      ThisBox.setAttribute( "today", "true" );
    }
 }
 
@@ -668,9 +676,7 @@ MonthView.prototype.clickDay = function( dayBoxItem )
       
       this.calendarWindow.selectedDate.setDate( dayBoxItem.dayNumber );
       
-      this.hiliteSelectedDate( );
-
-      this.clearSelectedEvent( );
+      this.calendarWindow.EventSelection.emptySelection();
    }
 }
 
@@ -682,9 +688,7 @@ MonthView.prototype.doubleClickDay = function( dayBoxItem )
 
       gCalendarWindow.selectedDate.setDate( dayBoxItem.dayNumber );
 
-      this.hiliteSelectedDate( );
-
-      this.clearSelectedEvent( );
+      this.calendarWindow.EventSelection.emptySelection();
       
       var startDate = this.getNewEventDate();
       
@@ -701,85 +705,27 @@ MonthView.prototype.doubleClickDay = function( dayBoxItem )
 
 MonthView.prototype.clickEventBox = function( eventBox, event )
 {
-   //deselect the selected day in the month view
-   
-   this.clearSelectedDate( );
+   this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
 
-   //set the selected date to the start date of this event.
-   if( eventBox) 
+   this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+
+   // Do not let the click go through, suppress default selection
+   if ( event ) 
    {
-      this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
-      
-      // clear the old selected box
-      
-      this.clearSelectedEvent( );
-   
-      // select the event
-      
-      this.calendarWindow.setSelectedEvent( eventBox.calendarEventDisplay.event );
-      
-      // mark new box as selected
-      
-      var ArrayOfBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+eventBox.calendarEventDisplay.event.id );
-   
-      for ( var i = 0; i < ArrayOfBoxes.length; i++ ) 
-      {
-         ArrayOfBoxes[i].setAttribute( "selected", "true" );
-         this.selectedEventBoxes[ this.selectedEventBoxes.length ] = ArrayOfBoxes[i];
-      }
-   
-      // Do not let the click go through, suppress default selection
-      
-      if ( event ) 
-      {
-         event.stopPropagation();
-      }
-      
-      //select the event in the unifinder
-   
-      selectEventInUnifinder( eventBox.calendarEventDisplay.event );
+      event.stopPropagation();
    }
-}
-
-MonthView.prototype.selectEvent = function( calendarEvent )
-{
-   //clear the selected event
-   gCalendarWindow.clearSelectedEvent( );
-   
-   gCalendarWindow.setSelectedEvent( calendarEvent );
-   
-   var EventBoxes = document.getElementsByAttribute( "name", "week-view-event-box-"+calendarEvent.id );
-   
-   for ( i = 0; i < EventBoxes.length; i++ ) 
-   {
-      EventBoxes[i].setAttribute( "selected", "true" );
-      
-      this.selectedEventBoxes[ this.selectedEventBoxes.length ] = EventBoxes[i];
-   }
-   
-
-   selectEventInUnifinder( calendarEvent );
 }
 
 MonthView.prototype.clearSelectedEvent = function ( )
 {
-   Event = gCalendarWindow.getSelectedEvent();
-   
-   //if ( Event && document.getElementById( "month-view-event-box-"+Event.id ) )
-   if ( Event && document.getElementsByAttribute( "name", "month-view-event-box-"+Event.id ).length > 0 )
+   gCalendarWindow.EventSelection.emptySelection();
+
+   var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
+
+   for( i = 0; i < ArrayOfBoxes.length; i++ )
    {
-      var ArrayOfElements = document.getElementsByAttribute( "id", "month-view-event-box-"+Event.id );
-      for ( var i = 0; i < ArrayOfElements.length; i++ ) 
-      {
-         ArrayOfElements[i].setAttribute( "selected", false );
-      }
+      ArrayOfBoxes[i].removeAttribute( "eventselected" );   
    }
-   
-   this.selectedEventBoxes = Array();
-
-   //clear the selection in the unifinder
-   deselectEventInUnifinder( );
-
 }
 
 
@@ -793,7 +739,16 @@ MonthView.prototype.getVisibleEvent = function( calendarEvent )
    }
    else
       return null;
+}
 
+MonthView.prototype.selectBoxForEvent = function( calendarEvent )
+{
+   var EventBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+calendarEvent.id );
+            
+   for ( j = 0; j < EventBoxes.length; j++ ) 
+   {
+      EventBoxes[j].setAttribute( "eventselected", "true" );
+   }
 }
 
 /*Just calls setCalendarSize, it's here so it can be implemented on the other two views without difficulty.*/
@@ -804,7 +759,7 @@ MonthView.prototype.doResize = function(){
 /*Takes in a height, sets the calendar's container box to that height, the grid expands and contracts to fit it.*/
 MonthView.setCalendarSize = function( height ){
     var offset = document.defaultView.getComputedStyle(document.getElementById("month-controls-box"), "").getPropertyValue("height");
-    offset = offset.substring(0,offset.length-2);
+    offset = parseInt( offset );
     height = (height-offset)+"px";
     document.getElementById( "month-content-box" ).setAttribute( "height", height );
 } 
@@ -812,7 +767,7 @@ MonthView.setCalendarSize = function( height ){
 /*returns the height of the current view in pixels*/ 
 MonthView.getViewHeight = function( ){
     toReturn = document.defaultView.getComputedStyle(document.getElementById("calendar-top-box"), "").getPropertyValue("height");
-    toReturn = toReturn.substring(0, toReturn.length-2); //strip off the px at the end
+    toReturn = parseInt( toReturn ); //strip off the px at the end
     return toReturn;
 }
 

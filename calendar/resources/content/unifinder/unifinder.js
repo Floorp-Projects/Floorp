@@ -43,8 +43,33 @@
 *   improve this to make it usable in general.
 */
 
-function unifinderInit()
+function unifinderInit( CalendarWindow )
 {
+   var unifinderEventSelectionObserver = 
+   {
+      onSelectionChanged : function( EventSelectionArray )
+      {
+         var CategoriesTree = document.getElementById( "unifinder-categories-tree" );
+
+         var SearchTree = document.getElementById( "unifinder-search-tree" );
+
+         CategoriesTree.clearSelection();
+         
+         if( EventSelectionArray.length > 0 )
+         {
+            for( i = 0; i < EventSelectionArray.length; i++ )
+            {
+               CategoriesTree.addItemToSelection( document.getElementById( "unifinder-treeitem-"+EventSelectionArray[i].id ) );
+   
+               CategoriesTree.addItemToSelection( document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id ) );
+            }
+         }
+      }
+   }
+      
+   gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
+
+
 }
 
 
@@ -69,9 +94,6 @@ function unifinderSelectTab( tabid )
 var gSearchEventTable = new Array();
 
 var gDateFormater = new DateFormater();
-
-var gUnifinderSelection = null;
-
 
 /**
 *   Observer for the calendar event data source. This keeps the unifinder
@@ -99,22 +121,17 @@ var unifinderEventDataSourceObserver =
       if( calendarEvent )
       {
          unifinderRefesh();
-
-         selectEventInUnifinder( calendarEvent );
       }
    },
 
    onModifyItem : function( calendarEvent, originalEvent )
    {
       unifinderRefesh();
-
-      selectEventInUnifinder( calendarEvent );
    },
 
    onDeleteItem : function( calendarEvent )
    {
       unifinderRefesh();
-
    },
 
    onAlarm : function( calendarEvent )
@@ -239,34 +256,18 @@ function unifinderDoubleClickEvent( id )
 
 function unifinderClickEvent( id, event )
 {
-   gUnifinderSelection = id;
-   
    var calendarEvent = gICalLib.fetchEvent( id );
    
+   gCalendarWindow.EventSelection.replaceSelection( calendarEvent );
+
    var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
-   
-   if ( eventBox )
+   if ( !eventBox )
    {
-      //the event box exists, so the event is visible.
-      gCalendarWindow.currentView.clickEventBox( eventBox, event );
-   }
-   else //else we go to the day
-   {
-      gCalendarWindow.currentView.clearSelectedDate( );
-
-      gCalendarWindow.setSelectedEvent( calendarEvent );
-
       var eventStartDate = new Date( calendarEvent.start.getTime() );
+      
       gCalendarWindow.currentView.goToDay( eventStartDate, true);
       
-      eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
-   
-      gCalendarWindow.currentView.clickEventBox( eventBox, event );
-
-      
    }
-   
-
 }
 
 /**
@@ -285,15 +286,12 @@ function unifinderModifyCommand()
       }
       else
       {
-         if( gUnifinderSelection != null )
+         var calendarEvent = gCalendarWindow.EventSelection.selectedEvents[0];
+
+         if( calendarEvent != null )
          {
-            var calendarEvent = gICalLib.fetchEvent( gUnifinderSelection );
-      
-            if( calendarEvent != null )
-            {
-               editEvent( calendarEvent );
-            }  
-         }
+            editEvent( calendarEvent );
+         }  
       }
    }
 }
@@ -303,40 +301,39 @@ function unifinderModifyCommand()
 *  This is called from the unifinder's remove command
 */
 
-function unifinderRemoveCommand()
+function unifinderRemoveCommand( DoNotConfirm )
 {
-   var SelectedItem = document.getElementById( "unifinder-categories-tree" ).selectedItems[0];
-
-   if( SelectedItem )
+   var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
+   
+   if( SelectedItems.length == 1 )
    {
-      if ( SelectedItem.getAttribute( "container" ) == "true" ) 
-      {
-         if ( confirm( "Are you sure you want to delete this category?" ) ) 
-         {
-            gCategoryManager.deleteCategory( SelectedItem.categoryobject );
+      var calendarEvent = SelectedItems[0];
+
+      if ( calendarEvent.title != "" ) {
+         if( !DoNotConfirm ) {        
+            if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
+               gICalLib.deleteEvent( calendarEvent.id );
+            }
          }
       }
       else
       {
-         if( gUnifinderSelection != null )
-         {
-            var calendarEvent = gICalLib.fetchEvent( gUnifinderSelection );
-         
-            if( calendarEvent != null )
-            {
-               if ( calendarEvent.title != "" )
-               {
-                  if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
-                     gICalLib.deleteEvent( calendarEvent.id );
-                  }
-               }
-               else
-               {
-                  if ( confirm( confirmDeleteUntitledEvent ) ) {
-                     gICalLib.deleteEvent( calendarEvent.id );
-                  }
-               }
+         if( !DoNotConfirm ) {        
+            if ( confirm( confirmDeleteUntitledEvent ) ) {
+               gICalLib.deleteEvent( calendarEvent.id );
             }
+         }
+      }
+   }
+   else if( SelectedItems.length > 1 )
+   {
+      if( confirm( "Are you sure you want to delete everything?" ) )
+      {
+         while( SelectedItems.length )
+         {
+            var ThisItem = SelectedItems.pop();
+
+            gICalLib.deleteEvent( gICalLib.fetchEvent( ThisItem.calendarEvent.id ) );
          }
       }
    }
@@ -351,7 +348,7 @@ function onUnifinderCategoriesKeyPress(event)
 {
 	if ((event.keyCode == 8)||(event.keyCode == 46))
 	{
-		unifinderRemoveCommand();
+		unifinderRemoveCommand( true );
 	}
 }
 

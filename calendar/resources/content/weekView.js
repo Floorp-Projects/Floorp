@@ -75,14 +75,26 @@ function WeekView( calendarWindow )
    
    gHeaderDateItemArray = new Array();
    
-   this.selectedEventBoxes = new Array();
-   
    for( var dayIndex = 1; dayIndex <= 7; ++dayIndex )
    {
       var headerDateItem = document.getElementById( "week-header-date-" + dayIndex );
       
       gHeaderDateItemArray[ dayIndex ] = headerDateItem;
    }
+
+   var weekViewEventSelectionObserver = 
+   {
+      onSelectionChanged : function( EventSelectionArray )
+      {
+         for( i = 0; i < EventSelectionArray.length; i++ )
+         {
+            gCalendarWindow.weekView.selectBoxForEvent( EventSelectionArray[i] );
+         }
+      }
+   }
+      
+   calendarWindow.EventSelection.addObserver( weekViewEventSelectionObserver );
+
 }
 
 
@@ -294,18 +306,15 @@ WeekView.prototype.refreshEvents = function( )
             //add the box to the bulletin board.
             document.getElementById( "week-view-content-board" ).appendChild( eventBox );
          }
+
+         if( this.calendarWindow.EventSelection.isSelectedEvent( calendarEventDisplay.event ) )
+         {
+            this.selectBoxForEvent( calendarEventDisplay.event );
+         }
       }
          
    }
    //--> END THE FOR LOOP FOR THE WEEK VIEW
-
-   var selectedEvent = this.calendarWindow.getSelectedEvent();
-
-   //if the selected event is today, highlight it.  Otherwise, don't highlight anything.
-   if ( selectedEvent ) 
-   {
-      this.selectEvent( selectedEvent );
-   }
 }
 
 
@@ -468,17 +477,6 @@ WeekView.prototype.refreshDisplay = function( )
 
 /** PUBLIC
 *
-*   Get the selected event and delete it.
-*/
-
-WeekView.prototype.deletedSelectedEvent = function( )
-{
-   // :TODO:
-}
- 
-
-/** PUBLIC
-*
 *   This is called when we are about the make a new event
 *   and we want to know what the default start date should be for the event.
 */
@@ -514,6 +512,16 @@ WeekView.prototype.goToPrevious = function()
    this.goToDay( prevWeek );
 }
 
+
+WeekView.prototype.selectBoxForEvent = function( calendarEvent )
+{
+   var EventBoxes = document.getElementsByAttribute( "name", "week-view-event-box-"+calendarEvent.id );
+            
+   for ( j = 0; j < EventBoxes.length; j++ ) 
+   {
+      EventBoxes[j].setAttribute( "eventselected", "true" );
+   }
+}
 
 WeekView.prototype.getVisibleEvent = function( calendarEvent )
 {
@@ -580,22 +588,16 @@ WeekView.prototype.hiliteTodaysDate = function( )
 */
 WeekView.prototype.clearSelectedEvent = function( )
 {
-   Event = gCalendarWindow.getSelectedEvent();
-   
-   //if there is an event, and if the event is in the current view.
-   if ( Event && document.getElementsByAttribute( "name", "week-view-event-box-"+Event.id ).length > 0 )
-   {
-      for ( i = 0; i < this.selectedEventBoxes.length; i++ ) 
-      {
-         this.selectedEventBoxes[i].setAttribute( "selected", "false" );
-      }
-      //document.getElementById( "week-view-event-box-"+Event.id ).setAttribute( "selected", false );
-   }
-   
-   this.selectedEventBoxes = Array();
+   gCalendarWindow.EventSelection.emptySelection();
 
-   //clear the selection in the unifinder
-   deselectEventInUnifinder( );
+   //Event = gCalendarWindow.getSelectedEvent();
+   
+   var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
+
+   for( i = 0; i < ArrayOfBoxes.length; i++ )
+   {
+      ArrayOfBoxes[i].removeAttribute( "eventselected" );   
+   }
 }
 
 
@@ -606,44 +608,14 @@ WeekView.prototype.clearSelectedEvent = function( )
 
 WeekView.prototype.clickEventBox = function( eventBox, event )
 {
-   // clear the old selected box
-   
-   if( this.selectedEventBoxes.length > 0 )
-   {
-      this.clearSelectedEvent();
-   }
-   
-   if( eventBox )
-   {
-      // select the event
-      this.selectEvent( eventBox.calendarEventDisplay.event );
-      
-      //set the selected date to the start date of this event.
-   
-      this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
-         
-      // mark new box as selected
-      var ArrayOfBoxes = document.getElementsByAttribute( "name", "week-view-event-box-"+eventBox.calendarEventDisplay.event.id );
-      for ( i = 0; i < ArrayOfBoxes.length; i++ ) 
-      {
-         ArrayOfBoxes[i].setAttribute( "selected", "true" );
-   
-         this.selectedEventBoxes[ this.selectedEventBoxes.length ] = ArrayOfBoxes[i];
-      }
-      
-      //select the event in the unifinder
-   
-      selectEventInUnifinder( eventBox.calendarEventDisplay.event );
+   this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
 
-
-   }
-      // Do not let the click go through, suppress default selection
+   // Do not let the click go through, suppress default selection
    
    if ( event )
    {
       event.stopPropagation();
    }
-
 }
 
 
@@ -667,30 +639,6 @@ WeekView.prototype.getNewEventDate = function( )
 
 /** PUBLIC
 *
-*   select an event.
-*/
-WeekView.prototype.selectEvent = function( calendarEvent )
-{
-   //clear the selected event
-   gCalendarWindow.clearSelectedEvent( );
-   
-   gCalendarWindow.setSelectedEvent( calendarEvent );
-   
-   var EventBoxes = document.getElementsByAttribute( "name", "week-view-event-box-"+calendarEvent.id );
-   
-   for ( i = 0; i < EventBoxes.length; i++ ) 
-   {
-      EventBoxes[i].setAttribute( "selected", "true" );
-      
-      this.selectedEventBoxes[ this.selectedEventBoxes.length ] = EventBoxes[i];
-   }
-   
-
-   selectEventInUnifinder( calendarEvent );
-}
-
-/** PUBLIC
-*
 *  Unmark the selected date if there is one.
 */
 
@@ -698,7 +646,7 @@ WeekView.prototype.clearSelectedDate = function( )
 {
    if ( this.selectedBox ) 
    {
-      this.selectedBox.setAttribute( "selected", "false" );
+      this.selectedBox.removeAttribute( "eventselected" );
       this.selectedBox = null;
    }
 }

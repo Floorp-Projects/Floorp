@@ -13,6 +13,7 @@ calendar.jar:
     content/calendar/calendarMonthView.xul (content/calendarMonthView.xul)
     content/calendar/calendarOverlay.js  (content/calendarOverlay.js)
     content/calendar/calendarOverlay.xul (content/calendarOverlay.xul) 
+    content/calendar/calendarSelection.js (content/calendarSelection.js) 
     content/calendar/calendarWeekView.js (content/calendarWeekView.js)
     content/calendar/calendarWeekView.xul (content/calendarWeekView.xul)
     content/calendar/contents.rdf (content/contents.rdf)

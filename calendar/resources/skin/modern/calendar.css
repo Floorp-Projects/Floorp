@@ -410,7 +410,7 @@ button.calendar-management-button:hover:active
     border: 2px solid #1D7AB5;
 }
 /*the selected day box, since it's last, it has the highest priority*/
-.month-day-box-class[selected="true"]{
+.month-day-box-class[monthselected="true"]{
    background-color: #d5e3f2;
 }
 
@@ -453,7 +453,7 @@ button.calendar-management-button:hover:active
 
 }
 
-.month-day-event-box-class[selected="true"]
+.month-day-event-box-class[eventselected="true"]
 {
    background-color:  #D5E3F2;  
    border-color:  #003366;
@@ -515,7 +515,7 @@ button.calendar-management-button:hover:active
    list-style-image        : url("chrome://calendar/skin/dot.png");
 }
 
-.month-view-event-dot-class[selected="true"]
+.month-view-event-dot-class[eventselected="true"]
 {
    list-style-image        : url("chrome://calendar/skin/dot_selected.png");
 }
@@ -693,7 +693,7 @@ button.calendar-management-button:hover:active
    background-color  : #F9F4FF;
 }
 
-.day-view-event-class[selected="true"]
+.day-view-event-class[eventselected="true"]
 {
    background-color  : #d5e3f2;
 	border-color      : #003366
@@ -929,7 +929,7 @@ button.calendar-management-button:hover:active
    min-width         : 20px;
 }
 
-.week-view-event-class[selected="true"]
+.week-view-event-class[eventselected="true"]
 {
    background-color  : #D5E3F2;
 	border				: 1px solid #003366;

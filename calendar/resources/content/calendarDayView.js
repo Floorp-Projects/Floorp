@@ -42,9 +42,6 @@
 *  Calendar day view class
 *
 * PROPERTIES
-*     dayEvents     - Event text is displayed in the hour items of the view. The items that currently
-*                     have an event are stored here. The hour items have a calendarEvent property 
-*                     added so we know which event is displayed for the day.
 *
 *    NOTES
 *
@@ -71,11 +68,18 @@ function DayView( calendarWindow )
    
    this.superConstructor( calendarWindow );
    
-   this.selectedEventBoxes = new Array();
-   
-   // set up dayEvents array
-   this.dayEvents = new Array(); 
-
+   var dayViewEventSelectionObserver = 
+   {
+      onSelectionChanged : function( EventSelectionArray )
+      {
+         for( i = 0; i < EventSelectionArray.length; i++ )
+         {
+            gCalendarWindow.dayView.selectBoxForEvent( EventSelectionArray[i] );
+         }
+      }
+   }
+      
+   calendarWindow.EventSelection.addObserver( dayViewEventSelectionObserver );
 }
 
 
@@ -261,16 +265,14 @@ DayView.prototype.refreshEvents = function( )
          document.getElementById( "day-view-content-board" ).appendChild( eventBox );
       }
 
-   }
+      // select the hour of the selected item, if there is an item whose date matches
       
-   // select the hour of the selected item, if there is an item whose date matches
-   
-   var selectedEvent = this.calendarWindow.getSelectedEvent();
-
-   //if the selected event is today, highlight it.  Otherwise, don't highlight anything.
-   if ( selectedEvent ) 
-   {
-      this.selectEvent( selectedEvent );
+      // mark the box as selected, if the event is
+            
+      if( this.calendarWindow.EventSelection.isSelectedEvent( calendarEventDisplay.event ) )
+      {
+         this.selectBoxForEvent( calendarEventDisplay.event );
+      }
    }
 }
 
@@ -328,7 +330,6 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "savetip" );
-   eventBox.setAttribute( "id", "day-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
 
    var eventHTMLElement = document.createElement( "description" );
@@ -382,8 +383,6 @@ DayView.prototype.switchTo = function( )
    // switch views in the deck
    
    var calendarDeckItem = document.getElementById( "calendar-deck" );
-   
-
    calendarDeckItem.setAttribute( "selectedIndex", 2 );
 }
 
@@ -452,19 +451,6 @@ DayView.prototype.refreshDisplay = function( )
 }
 
 
-
-/** PUBLIC
-*
-*   Get the selected event and delete it.
-*/
-
-DayView.prototype.deletedSelectedEvent = function( )
-{
-   // :TODO: 
-}
- 
-
-
 /** PUBLIC  -- monthview only
 *
 *   Called when an event box item is single clicked
@@ -472,22 +458,8 @@ DayView.prototype.deletedSelectedEvent = function( )
 
 DayView.prototype.clickEventBox = function( eventBox, event )
 {
-   // clear the old selected box
-   
-   for ( i = 0; i < this.selectedEventBoxes.length; i++ ) 
-   {
-      this.selectedEventBoxes[i].setAttribute( "selected", false );
-   }
-   
-   this.selectedEventBoxes = Array();
+   this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
 
-   if( eventBox )
-   {
-      // select the event
-      this.selectEvent( eventBox.calendarEventDisplay.event );
-         
-      selectEventInUnifinder( eventBox.calendarEventDisplay.event );
-   }
    // Do not let the click go through, suppress default selection
    
    if ( event )
@@ -556,29 +528,15 @@ DayView.prototype.goToPrevious = function( goDays )
 }
 
 
-/** PUBLIC
-*
-*   select an event.
-*/
-DayView.prototype.selectEvent = function( calendarEvent )
+DayView.prototype.selectBoxForEvent = function( calendarEvent )
 {
-   //clear the selected event
-   gCalendarWindow.clearSelectedEvent( );
-   
-   gCalendarWindow.setSelectedEvent( calendarEvent );
-   
-   EventBoxes = document.getElementsByAttribute( "name", "day-view-event-box-"+calendarEvent.id );
-   
-   for ( i = 0; i < EventBoxes.length; i++ ) 
+   var EventBoxes = document.getElementsByAttribute( "name", "day-view-event-box-"+calendarEvent.id );
+            
+   for ( j = 0; j < EventBoxes.length; j++ ) 
    {
-      EventBoxes[i].setAttribute( "selected", "true" );
-
-      this.selectedEventBoxes[ this.selectedEventBoxes.length ] = EventBoxes[i];
+      EventBoxes[j].setAttribute( "eventselected", "true" );
    }
-      
-   selectEventInUnifinder( calendarEvent );
 }
-
 
 /** PUBLIC
 *
@@ -586,20 +544,16 @@ DayView.prototype.selectEvent = function( calendarEvent )
 */
 DayView.prototype.clearSelectedEvent = function( )
 {
+   gCalendarWindow.EventSelection.emptySelection();
+
    //Event = gCalendarWindow.getSelectedEvent();
    
-   //if there is an event, and if the event is in the current view.
-   //var SelectedBoxes = document.getElementsByAttribute( "name", "day-view-event-box-"+Event.id );
+   var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
-   for ( i = 0; i < this.selectedEventBoxes.length; i++ ) 
+   for( i = 0; i < ArrayOfBoxes.length; i++ )
    {
-      this.selectedEventBoxes[i].setAttribute( "selected", false );
+      ArrayOfBoxes[i].removeAttribute( "eventselected" );   
    }
-   
-   this.selectedEventBoxes = Array();
-
-   //clear the selection in the unifinder
-   deselectEventInUnifinder( );
 }
 
 

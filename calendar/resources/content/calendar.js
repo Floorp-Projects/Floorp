@@ -145,10 +145,6 @@ function calendarInit()
    gCalendarWindow.switchToMonthView( );
 
    update_date( );
-
-   deselectEventInUnifinder();
-   //sizeToContent();
-   //window.resizeTo(1024,708);
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -193,7 +189,6 @@ function prepareChooseDate()
    datePickerPopup.setAttribute( "value", gCalendarWindow.getSelectedDate() );
 }
 
-
 /** 
 * Called on single click in the day view, select an event
 *
@@ -204,8 +199,8 @@ function prepareChooseDate()
 
 function dayEventItemClick( eventBox, event )
 {
-   gCalendarWindow.dayView.clickEventBox( eventBox, event );
-   
+   gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+      
    if ( event ) 
    {
       event.stopPropagation();
@@ -244,8 +239,6 @@ function dayEventItemDoubleClick( eventBox, event )
 function dayViewHourClick( hourNumber, event )
 {
    gCalendarWindow.setSelectedHour( hourNumber );
-
-   deselectEventInUnifinder();
 }
 
 
@@ -261,8 +254,6 @@ function dayViewHourDoubleClick( hourNumber, event )
    
    var startDate = gCalendarWindow.dayView.getNewEventDate();
    newEvent( startDate );
-
-   deselectEventInUnifinder();
 }
 
 
@@ -276,8 +267,8 @@ function dayViewHourDoubleClick( hourNumber, event )
 
 function weekEventItemClick( eventBox, event )
 {
-   gCalendarWindow.weekView.clickEventBox( eventBox, event );
-
+   gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+      
    if ( event ) 
    {
       event.stopPropagation();
@@ -320,8 +311,6 @@ function weekViewHourClick( dayIndex, hourNumber, event )
    gCalendarWindow.setSelectedDate( newDate );
 
    gCalendarWindow.setSelectedHour( hourNumber );
-
-   deselectEventInUnifinder();
 }
 
 
@@ -341,9 +330,6 @@ function weekViewHourDoubleClick( dayIndex, hourNumber, event )
    
    var startDate = gCalendarWindow.weekView.getNewEventDate();
    newEvent( startDate );
-
-   deselectEventInUnifinder();
-   
 }
 
 
@@ -357,7 +343,12 @@ function weekViewHourDoubleClick( dayIndex, hourNumber, event )
 
 function monthEventBoxClickEvent( eventBox, event )
 {
-   gCalendarWindow.monthView.clickEventBox( eventBox, event );
+   gCalendarWindow.MonthView.clickEventBox( eventBox, event );
+
+   if ( event ) 
+   {
+      event.stopPropagation();
+   }
 }
 
 
@@ -371,8 +362,6 @@ function monthEventBoxClickEvent( eventBox, event )
 
 function monthEventBoxDoubleClickEvent( eventBox, event )
 {
-   selectEventInUnifinder( eventBox.calendarEventDisplay.event );
-
    gCalendarWindow.monthView.clearSelectedDate( );
    
    editEvent( eventBox.calendarEventDisplay.event );
@@ -382,56 +371,6 @@ function monthEventBoxDoubleClickEvent( eventBox, event )
       event.stopPropagation();
    }
    
-}
-   
-
-/** 
-*   Called when an event is clicked on.
-*   Hightlights the event in the unifinder
-*/
-
-function selectEventInUnifinder( calendarEvent )
-{
-   gUnifinderSelection = calendarEvent.id;
-
-   var Tree = document.getElementById( "unifinder-categories-tree" );
-   
-   var TreeItem = document.getElementById( "unifinder-treeitem-"+gUnifinderSelection );
-   
-   if ( Tree && TreeItem )
-   {
-      Tree.selectItem( TreeItem );
-
-   }
-
-   document.getElementById( "delete_command" ).removeAttribute( "disabled" );
-   
-   document.getElementById( "modify_command" ).removeAttribute( "disabled" );
-}
-
-
-/** 
-*   Called when a day is clicked on.
-*   deSelects the selected item in the unifinder.
-*/
-
-function deselectEventInUnifinder( )
-{
-   if ( gUnifinderSelection ) 
-   {
-      var Tree = document.getElementById( "unifinder-categories-tree" );
-      
-      var TreeItem = document.getElementById( "unifinder-treeitem-"+gUnifinderSelection );
-      
-      if( TreeItem )
-         Tree.removeItemFromSelection( TreeItem );
-      
-      gUnifinderSelection = null;
-   }
-
-   document.getElementById( "delete_command" ).setAttribute( "disabled", true );
-
-   document.getElementById( "modify_command" ).setAttribute( "disabled", true );
 }
    
 
@@ -618,6 +557,8 @@ function CalendarWindow( calendarDataSource )
 {
    this.eventSource = calendarDataSource;
    
+   this.EventSelection = new CalendarEventSelection( this );
+
    this.dateFormater = new DateFormater();
    
    this.monthView = new MonthView( this );
@@ -667,7 +608,7 @@ function CalendarWindow( calendarDataSource )
              if( calendarEvent )
              {
                 calendarWindow.setSelectedEvent( calendarEvent );
-                calendarWindow.currentView.clearSelectedDate( );
+                
                 calendarWindow.currentView.refreshEvents( );
              }
          }
@@ -682,8 +623,6 @@ function CalendarWindow( calendarDataSource )
                 calendarWindow.setSelectedEvent( calendarEvent );
                 
              }
-             calendarWindow.currentView.clearSelectedDate( );
-                
              calendarWindow.currentView.refreshEvents( );
         }
       },
@@ -697,8 +636,6 @@ function CalendarWindow( calendarDataSource )
             if ( nextEvent ) 
             {
                 calendarWindow.setSelectedEvent( nextEvent );
-                
-                calendarWindow.currentView.clearSelectedDate( );
             }
             else
             {
@@ -789,7 +726,6 @@ CalendarWindow.prototype.goToToday = function( )
 
 CalendarWindow.prototype.goToNext = function( value )
 {
-   this.clearSelectedEvent( );
    if(value){
       this.currentView.goToNext( value );
    }else{
@@ -805,7 +741,6 @@ CalendarWindow.prototype.goToNext = function( value )
 
 CalendarWindow.prototype.goToPrevious = function( value )
 {   
-   this.clearSelectedEvent( );
    if(value){
       this.currentView.goToPrevious( value );
    }else{
@@ -821,8 +756,6 @@ CalendarWindow.prototype.goToPrevious = function( value )
 
 CalendarWindow.prototype.goToDay = function( newDate )
 {
-   this.clearSelectedEvent( );
-
    this.currentView.goToDay( newDate );
 }
 
@@ -838,8 +771,7 @@ CalendarWindow.prototype.goToDay = function( newDate )
 
 CalendarWindow.prototype.setSelectedEvent = function( selectedEvent )
 {
-   this.selectedEvent = selectedEvent;
-
+   this.EventSelection.replaceSelection( selectedEvent );
 }
 
 
@@ -855,27 +787,15 @@ CalendarWindow.prototype.setSelectedEvent = function( selectedEvent )
 
 CalendarWindow.prototype.clearSelectedEvent = function( unSelectedEvent )
 {
-  var undefined;
+   var undefined;
    
+   gCalendarWindow.EventSelection.emptySelection( );
+      
    if( unSelectedEvent === undefined ||
-       unSelectedEvent == null || 
-       unSelectedEvent === this.selectedEvent )
+       unSelectedEvent == null )
    {
       this.currentView.clearSelectedEvent( );
-      this.selectedEvent = null;
-
    }
-}
-
-
-/** PUBLIC
-*
-*   Returns the selected event, or NULL if none selected
-*/
-
-CalendarWindow.prototype.getSelectedEvent = function( )
-{
-   return this.selectedEvent;
 }
 
 
@@ -1059,8 +979,6 @@ CalendarView.prototype.superConstructor = CalendarView;
 
 CalendarView.prototype.goToDay = function( newDate, ShowEvent )
 {
-   this.clearSelectedEvent ( this.selectedEvent );
-   
    this.calendarWindow.setSelectedDate( newDate ); 
    
    this.refresh( ShowEvent )
@@ -1079,10 +997,4 @@ CalendarView.prototype.refresh = function( ShowEvent )
 
    if(this.calendarWindow.currentView.doResize)
       this.calendarWindow.currentView.doResize();
-}
-
-   
-function reloadApplication()
-{
-	gCalendarWindow.currentView.refreshEvents( );
 }
