@@ -385,6 +385,7 @@ sub setupInstall {
     my $userDataSource = $app->getService('dataSource.user');
     $userDataSource->addRight($app, 'cosesEditor');
     $self->dump(9, 'done configuring COSES editor');
+    return;
 }
 
 
