@@ -26,11 +26,13 @@
 #ifndef _nsNSSComponent_h_
 #define _nsNSSComponent_h_
 
+#include "nsCOMPtr.h"
 #include "nsISecurityManagerComponent.h"
 #include "nsISignatureVerifier.h"
 #include "nsIContentHandler.h"
 #include "nsIEntropyCollector.h"
 #include "nsString.h"
+#include "nsIStringBundle.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 
@@ -56,14 +58,22 @@ public:
   NS_DECL_NSIENTROPYCOLLECTOR
 
   NS_METHOD Init();
-  static nsresult GetPIPNSSBundleString(const PRUnichar *name,
-                                        nsString &outString);
-  static nsresult PIPBundleFormatStringFromName(const PRUnichar *name,
-                                                const PRUnichar **params,
-                                                PRUint32 numParams,
-                                                PRUnichar **outString);
+
+  nsresult GetPIPNSSBundleString(const PRUnichar *name,
+                                 nsString &outString);
+  nsresult PIPBundleFormatStringFromName(const PRUnichar *name,
+                                         const PRUnichar **params,
+                                         PRUint32 numParams,
+                                         PRUnichar **outString);
+  nsresult InitializeNSS();
+
 private:
+
   void InstallLoadableRoots();
+  nsresult InitializePIPNSSBundle();
+
+  nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
+  static PRBool mNSSInitialized;
 };
 
 #endif // _nsNSSComponent_h_

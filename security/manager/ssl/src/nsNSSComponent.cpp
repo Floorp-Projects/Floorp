@@ -46,10 +46,8 @@
 PRLogModuleInfo* gPIPNSSLog = nsnull;
 #endif
 
-static PRBool gNSSInitialized = PR_FALSE;
-static nsrefcnt gRefCnt = 0;
 static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static nsIStringBundle* gPIPNSSBundle = nsnull;
+PRBool nsNSSComponent::mNSSInitialized = PR_FALSE;
 
 #ifdef XP_MAC
 extern OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
@@ -75,8 +73,6 @@ OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath)
 }
 #endif
 
-static void InitializePIPNSSBundle();
-
 #define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
 
 
@@ -87,10 +83,8 @@ nsNSSComponent::nsNSSComponent()
 
 nsNSSComponent::~nsNSSComponent()
 {
-  
-  if (--gRefCnt == 0) {
-    NS_IF_RELEASE(gPIPNSSBundle);
-  }
+  if (mNSSInitialized)
+    NSS_Shutdown();  
 }
 
 #ifdef XP_MAC
@@ -109,11 +103,8 @@ nsNSSComponent::PIPBundleFormatStringFromName(const PRUnichar *name,
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (!gPIPNSSBundle) {
-    InitializePIPNSSBundle();
-  }
-  if (gPIPNSSBundle && name) {
-    rv = gPIPNSSBundle->FormatStringFromName(name, params, 
+  if (mPIPNSSBundle && name) {
+    rv = mPIPNSSBundle->FormatStringFromName(name, params, 
                                              numParams, outString);
   }
   return rv;
@@ -123,12 +114,9 @@ nsresult
 nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
                                       nsString &outString)
 {
-  if (!gPIPNSSBundle) {
-    InitializePIPNSSBundle();
-  }
   PRUnichar *ptrv = nsnull;
-  if (gPIPNSSBundle && name) {
-    nsresult rv = gPIPNSSBundle->GetStringFromName(name, &ptrv);
+  if (mPIPNSSBundle && name) {
+    nsresult rv = mPIPNSSBundle->GetStringFromName(name, &ptrv);
     if (NS_SUCCEEDED(rv)) {
       outString = ptrv;
     } else {
@@ -159,8 +147,6 @@ nsNSSComponent::InstallLoadableRoots()
   }
   if (!hasRoot) {
     nsresult rv;
-    nsCOMPtr<nsIStringBundleService> service(do_GetService(kCStringBundleServiceCID, &rv));
-    if (NS_FAILED(rv)) return;
     nsString modName;
     rv = GetPIPNSSBundleString(NS_LITERAL_STRING("RootCertModuleName"),
                                modName);
@@ -206,63 +192,84 @@ nsNSSComponent::InstallLoadableRoots()
   }
 }
 
-static void
-InitializePIPNSSBundle()
+nsresult
+nsNSSComponent::InitializePIPNSSBundle()
 {
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-  if (NS_FAILED(rv) || !bundleService) return;
+  if (NS_FAILED(rv) || !bundleService) 
+    return NS_ERROR_FAILURE;
   
   bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL, nsnull,
-                              &gPIPNSSBundle);
-  if (gPIPNSSBundle)
-    NS_ADDREF(gPIPNSSBundle); 
+                              getter_AddRefs(mPIPNSSBundle));
+  if (!mPIPNSSBundle)
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+nsresult
+nsNSSComponent::InitializeNSS()
+{
+  nsresult rv;
+  nsXPIDLCString profileStr;
+  nsCOMPtr<nsIFile> profilePath;
+
+  if (mNSSInitialized) {
+    PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to 
+                                                  // initialize NSS more than
+                                                  // once in a process.
+    return NS_ERROR_FAILURE;
+  }
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization beginning\n"));
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(profilePath));
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
+    return rv;
+  }
+
+  rv = profilePath->GetPath(getter_Copies(profileStr));
+  if (NS_FAILED(rv)) 
+    return rv;
+    
+  PK11_SetPasswordFunc(PK11PasswordPrompt);
+  NSS_InitReadWrite(profileStr);
+  NSS_SetDomesticPolicy();
+  //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
+    
+  // XXX should use prefs
+  SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_TRUE);
+  SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE);
+  SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE);
+  InstallLoadableRoots();
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSComponent::Init()
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 #ifdef PR_LOGGING
   if (!gPIPNSSLog)
     gPIPNSSLog = PR_NewLogModule("pipnss");
 #endif
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Beginning NSS initialization\n"));
-  gRefCnt++;
-  if (!gPIPNSSBundle) {
-    InitializePIPNSSBundle();
+  rv = InitializeNSS();
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS.\n"));
+    return rv;
   }
-  if (!gNSSInitialized) {
-    nsXPIDLCString profileStr;
-    nsCOMPtr<nsIFile> profilePath;
-    
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                getter_AddRefs(profilePath));
-    if (NS_FAILED(rv)) {
-      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
-      return rv;
-    }
-    
-    rv = profilePath->GetPath(getter_Copies(profileStr));
-    if (NS_FAILED(rv)) return rv;
-    
-    PK11_SetPasswordFunc(PK11PasswordPrompt);
-    NSS_InitReadWrite(profileStr);
-    NSS_SetDomesticPolicy();
-    //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
-    
-    // XXX should use prefs
-    SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_TRUE);
-    SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE);
-    SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE);
-    InstallLoadableRoots();
-    gNSSInitialized = PR_TRUE;
-  } else {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS has already been initialized\n"));
-  }
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
-  
+
+  rv = InitializePIPNSSBundle();
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to create pipnss bundle.\n"));
+    return rv;
+  }      
+
   return rv;
 }
 
@@ -473,7 +480,6 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
 NS_IMETHODIMP
 nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 {
-  if (gNSSInitialized)
-    PK11_RandomUpdate(entropy, bufLen);
+  PK11_RandomUpdate(entropy, bufLen);
   return NS_OK;
 }
