@@ -22,6 +22,7 @@
  *  Don Bragg (dbragg@netscape.com) 12/08/1999
  *  Blake Ross (BlakeR1234@aol.com)  6/12/2000
  *  Joe Hewitt <hewitt@netscape.com>
+ *  Daniel Veditz <dveditz@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -41,35 +42,32 @@
   == Styles used by the XPInstall dialogs.
   ======================================================================= */
 
-@import url("chrome://global/skin");
+@import url("chrome://communicator/skin");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: Install Confirm and Progress dialogs ::::: */
 
-#mainBox {
-  margin: 5px;
-}
-
-.headline {
-  margin: 4px;
-  font-size: x-large;
+.packageName {
   font-weight: bold;
 }
 
-.warning-text {
-  max-width: 40em;
+#confirmBox {
+  margin: 1ex;
 }
 
-#modulesTree {
-  height: 16ex;
+.confirmSeparator {
+  height: 1em;
 }
 
-[id="dialog.progress"] {
-  width: 200px;
+.confirmName {
+  font-weight: bold;
 }
 
-.vertical-small-spacer {
-  height: 1ex;
+#urlColumn {
+  margin-left: 1ex;
 }
 
+#alert-image {
+  margin: 1em;
+}

@@ -32,11 +32,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpinstall
 
 XPIDLSRCS	= \
+		nsIXPIDialogService.idl \
+		nsIXPIProgressDialog.idl \
 		nsIXPINotifier.idl \
-		nsIXPIProgressDlg.idl \
 		nsPIXPIProxy.idl \
 		nsPIXPIStubHook.idl \
-		nsPIXPIManagerCallbacks.idl \
 		$(NULL)
 
 EXPORTS		= \

@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Daniel Veditz <dveditz@netscape.com>
  */
 
@@ -35,10 +35,12 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIXPINotifier.h"
+#include "nsIXPIDialogService.h"
 #include "nsXPITriggerInfo.h"
-#include "nsIXPIProgressDlg.h"
+#include "nsIXPIProgressDialog.h"
 #include "nsIChromeRegistry.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIObserver.h"
 
 #include "nsISoftwareUpdate.h"
 
@@ -47,68 +49,58 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsPIXPIManagerCallbacks.h"
 
 #include "nsIDialogParamBlock.h"
 
+#define NS_XPIDIALOGSERVICE_CONTRACTID "@mozilla.org/embedui/xpinstall-dialog-service;1"
+#define XPI_PROGRESS_TOPIC "xpinstall-progress"
 
-class nsXPInstallManager : public nsIXPIListener, 
+class nsXPInstallManager : public nsIXPIListener,
+                           public nsIXPIDialogService,
+                           public nsIObserver,
                            public nsIStreamListener,
                            public nsIProgressEventSink,
-                           public nsIInterfaceRequestor,
-                           public nsPIXPIManagerCallbacks
+                           public nsIInterfaceRequestor
 {
     public:
         nsXPInstallManager();
         virtual ~nsXPInstallManager();
 
         NS_DECL_ISUPPORTS
+        NS_DECL_NSIXPILISTENER
+        NS_DECL_NSIXPIDIALOGSERVICE
+        NS_DECL_NSIOBSERVER
+        NS_DECL_NSISTREAMLISTENER
+        NS_DECL_NSIPROGRESSEVENTSINK
+        NS_DECL_NSIREQUESTOBSERVER
+        NS_DECL_NSIINTERFACEREQUESTOR
 
         NS_IMETHOD InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
-
-        // nsIRequestObserver
-        NS_DECL_NSIREQUESTOBSERVER
-
-        // nsIStreamListener
-        NS_DECL_NSISTREAMLISTENER
-        
-        // IXPIListener methods
-        NS_DECL_NSIXPILISTENER
-
-        // nsIProgressEventSink
-        NS_DECL_NSIPROGRESSEVENTSINK
-
-        // nsIInterfaceRequestor
-        NS_DECL_NSIINTERFACEREQUESTOR
-    
-        //nsPIXPIMANAGERCALLBACKS
-        NS_DECL_NSPIXPIMANAGERCALLBACKS
-
 
     private:
         NS_IMETHOD  DownloadNext();
         void        Shutdown();
         NS_IMETHOD  GetDestinationFile(nsString& url, nsILocalFile* *file);
-        void        LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
-        PRBool      ConfirmInstall(nsIScriptGlobalObject* aGlobalObject, nsIDialogParamBlock* ioParamBlock);
-        PRBool      ConfirmChromeInstall(nsIScriptGlobalObject* aGlobalObject);
+        NS_IMETHOD  LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, nsIDialogParamBlock** aParams);
+        PRBool      ConfirmChromeInstall(nsIDOMWindowInternal* aParentWindow, const PRUnichar** aPackage);
         PRBool      TimeToUpdate(PRTime now);
-        
+        PRInt32     GetIndexFromURL(const PRUnichar* aUrl);
+
         nsXPITriggerInfo*   mTriggers;
         nsXPITriggerItem*   mItem;
+        PRTime              mLastUpdate;
         PRUint32            mNextItem;
         PRInt32             mNumJars;
-        PRBool              mFinalizing;
-        PRBool              mCancelled;
         PRUint32            mChromeType;
-        PRBool              mSelectChrome;
         PRInt32             mContentLength;
-        PRTime              mLastUpdate;
+        PRBool              mDialogOpen;
+        PRBool              mCancelled;
+        PRBool              mSelectChrome;
         PRBool              mNeedsShutdown;
 
-        nsCOMPtr<nsIXPIProgressDlg>  mDlg;
-        nsCOMPtr<nsIDOMWindowInternal> mParentWindow;
-        nsCOMPtr<nsIStringBundle>    mStringBundle;
+        nsCOMPtr<nsIXPIProgressDialog>  mDlg;
+        nsCOMPtr<nsIStringBundle>       mStringBundle;
+        nsCOMPtr<nsISoftwareUpdate>     mInstallSvc;
 };
 
 #endif

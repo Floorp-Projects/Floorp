@@ -14,7 +14,7 @@
  *
  * The Original Code is Mozilla Communicator client code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998-1999
  * the Initial Developer. All Rights Reserved.
@@ -22,9 +22,10 @@
  * Contributor(s):
  *   Don Bragg (dbragg@netscape.com) 12/08/1999
  *   Blake Ross (BlakeR1234@aol.com)  6/12/2000
+ *   Daniel Veditz <dveditz@netscape.com> 2002
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -37,73 +38,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("chrome://global/skin");
+@import url("chrome://communicator/skin");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-div.label {
-  margin                    : 3px;
+#confirmBox {
+  margin: 1ex;
 }
 
-div#tree-housing {
-  height                    : 3em;
+#urlColumn {
+  margin-left: 1ex;
 }
 
-box#mainBox{
-  margin                    : 5px;
-  width                     : 40em;  
+.confirmSeparator {
+  height: 1em;
 }
 
-box#okcancelBox{
-  margin-left               : 22em;
-  margin-top                : 3px;
-  margin-bottom             : 3px;
-}
-
-
-box#treeBox{
-  height                    : 18ex;
-  margin                    : 0em;
-}
-
-box#statusMessages{
-  width                     : 36em;
-}
-
-
-/*
-div#table-housing {
-  height                    : 100%;
-}
-*/
-
-#modulesTree {
-  height                    : 16ex;
-  width                     : 32em;
-}
-
-spacer#verticalSmallSpacer {
-  height                    : 1ex;
-}
-
-spacer#verticalLargeSpacer {
-  height                    : 6ex;
-}
-
-spacer#verticalMediumSpacer {
-  height                    : 3ex;
-}
-
-spacer#horizontalSmallSpacer {
-  width                     : 2em;
-}
-
-spacer#horizontalLargeSpacer {
-  width                     : 10em;
-}
-
-.headline {
-  font-size                 : x-large;
-  margin                    : 4px;
+.confirmName {
   font-weight               : bold;
+}
+
+.packageName {
+  font-weight               : bold;
+}
+
+#alert-image {
+  margin: 1em;
 }

@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  dom \
 		  windowwatcher \
+		  plugin \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
@@ -84,7 +85,6 @@ CPPSRCS		= \
 		nsTopProgressNotifier.cpp \
 		nsLoggingProgressNotifier.cpp \
 		ScheduledTasks.cpp \
-		nsInstallProgressDialog.cpp \
 		nsXPIProxy.cpp \
 		nsXPITriggerInfo.cpp \
 		nsXPInstallManager.cpp \

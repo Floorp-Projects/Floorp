@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Douglas Turner <dougt@netscape.com>
  *     Pierre Phaneuf <pp@ludusdesign.com>
  *     Samir Gehani <sgehani@netscape.com>
@@ -63,16 +63,16 @@ nsLoggingProgressListener::~nsLoggingProgressListener()
 NS_IMPL_ISUPPORTS1(nsLoggingProgressListener, nsIXPIListener)
 
 NS_IMETHODIMP
-nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
+nsLoggingProgressListener::OnInstallStart(const PRUnichar *URL)
 {
     nsCOMPtr<nsIFile> iFile;
     nsFileSpec *logFile = nsnull;
     nsresult rv = NS_OK;
 
     // Not in stub installer
-    if (!nsSoftwareUpdate::GetProgramDirectory()) 
+    if (!nsSoftwareUpdate::GetProgramDirectory())
     {
-        nsCOMPtr<nsIProperties> dirSvc = 
+        nsCOMPtr<nsIProperties> dirSvc =
                  do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (!dirSvc) return NS_ERROR_FAILURE;
         dirSvc->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
@@ -108,11 +108,11 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
         {
             nsCOMPtr<nsILocalFileMac> iMacFile = do_QueryInterface(iFile);
             iMacFile->SetFileType('TEXT');
-            iMacFile->SetFileCreator('R*ch');  
+            iMacFile->SetFileCreator('R*ch');
         }
 #endif
     }
-            
+
     if (!bTryProfileDir)
     {
         rv = iFile->IsWritable(&bWritable);
@@ -122,14 +122,14 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
 
     if (bTryProfileDir)
     {
-        // failed to create the log file in the application directory 
+        // failed to create the log file in the application directory
         // so try to create the log file in the user's profile directory
-        nsCOMPtr<nsIProperties> dirSvc = 
+        nsCOMPtr<nsIProperties> dirSvc =
                  do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (!dirSvc) return NS_ERROR_FAILURE;
         dirSvc->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
                     getter_AddRefs(iFile));
-    
+
         if (!nsSoftwareUpdate::GetLogName())
             rv = iFile->Append(INSTALL_LOG);
         else
@@ -145,14 +145,14 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
         {
             rv = iFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
             if (NS_FAILED(rv)) return rv;
-            
-#ifdef XP_MAC            
+
+#ifdef XP_MAC
             nsCOMPtr<nsILocalFileMac> iMacFile = do_QueryInterface(iFile);
             iMacFile->SetFileType('TEXT');
-            iMacFile->SetFileCreator('R*ch');  
-#endif            
+            iMacFile->SetFileCreator('R*ch');
+#endif
         }
-         
+
         rv = iFile->IsWritable(&bWritable);
         if (NS_FAILED(rv) || !bWritable) return NS_ERROR_FAILURE;
     }
@@ -162,7 +162,7 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
     if (!logFile) return NS_ERROR_NULL_POINTER;
 
     mLogStream = new nsOutputFileStream(*logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
-    if (!mLogStream) 
+    if (!mLogStream)
         return NS_ERROR_NULL_POINTER;
 
     char* time;
@@ -183,15 +183,39 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
 }
 
 NS_IMETHODIMP
-nsLoggingProgressListener::AfterJavascriptEvaluation(const PRUnichar *URL)
+nsLoggingProgressListener::OnInstallDone(const PRUnichar *aURL, PRInt32 aStatus)
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
-    
+
+    *mLogStream << nsEndl;
+
+    switch (aStatus)
+    {
+    case nsInstall::SUCCESS:
+        *mLogStream << "     Install completed successfully";
+        break;
+
+    case nsInstall::REBOOT_NEEDED:
+        *mLogStream << "     Install completed successfully, restart required";
+        break;
+
+    case nsInstall::INSTALL_CANCELLED:
+        *mLogStream << "     Install cancelled by script";
+        break;
+
+    case nsInstall::USER_CANCELLED:
+        *mLogStream << "     Install cancelled by user";
+        break;
+
+    default:
+        *mLogStream << "     Install **FAILED** with error " << aStatus;
+        break;
+    }
+
     char* time;
     GetTime(&time);
 
-//    *mLogStream << nsEndl;
-    *mLogStream << "     Finished Installation  " << time << nsEndl << nsEndl;
+    *mLogStream << "  --  " << time << nsEndl << nsEndl;
 
     PL_strfree(time);
 
@@ -203,7 +227,7 @@ nsLoggingProgressListener::AfterJavascriptEvaluation(const PRUnichar *URL)
 }
 
 NS_IMETHODIMP
-nsLoggingProgressListener::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
+nsLoggingProgressListener::OnPackageNameSet(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
@@ -220,7 +244,7 @@ nsLoggingProgressListener::InstallStarted(const PRUnichar *URL, const PRUnichar*
     *mLogStream << "     " << uline.get() << nsEndl;
 
     *mLogStream << nsEndl;
-//    *mLogStream << "     Starting Installation at " << time << nsEndl;   
+//    *mLogStream << "     Starting Installation at " << time << nsEndl;
 //    *mLogStream << nsEndl;
 
 
@@ -229,13 +253,13 @@ nsLoggingProgressListener::InstallStarted(const PRUnichar *URL, const PRUnichar*
 }
 
 NS_IMETHODIMP
-nsLoggingProgressListener::ItemScheduled(const PRUnichar* message )
+nsLoggingProgressListener::OnItemScheduled(const PRUnichar* message )
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLoggingProgressListener::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+nsLoggingProgressListener::OnFinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
     nsCString messageConverted;
     messageConverted.AssignWithConversion(message);
@@ -246,40 +270,7 @@ nsLoggingProgressListener::FinalizeProgress(const PRUnichar* message, PRInt32 it
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsLoggingProgressListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
-{
-    if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
-
-    *mLogStream << nsEndl;
-
-    switch (status)
-    {
-    case nsInstall::SUCCESS:
-        *mLogStream << "     Install completed successfully" << nsEndl;
-        break;
-
-    case nsInstall::REBOOT_NEEDED:
-        *mLogStream << "     Install completed successfully, restart required" << nsEndl;
-        break;
-
-    case nsInstall::INSTALL_CANCELLED:
-        *mLogStream << "     Install cancelled by script" << nsEndl;
-        break;
-
-    case nsInstall::USER_CANCELLED:
-        *mLogStream << "     Install cancelled by user" << nsEndl;
-        break;
-
-    default:
-        *mLogStream << "     Install **FAILED** with error " << status << nsEndl;
-        break;
-    }
-
-    return NS_OK;
-}
-
-void 
+void
 nsLoggingProgressListener::GetTime(char** aString)
 {
     PRExplodedTime et;
@@ -290,7 +281,7 @@ nsLoggingProgressListener::GetTime(char** aString)
 }
 
 NS_IMETHODIMP
-nsLoggingProgressListener::LogComment(const PRUnichar* comment)
+nsLoggingProgressListener::OnLogComment(const PRUnichar* comment)
 {
     nsCString commentConverted;
     commentConverted.AssignWithConversion(comment);
@@ -310,7 +301,7 @@ Convert_nsIFile_To_nsFileSpec(nsIFile *aInIFile, nsFileSpec **aOutFileSpec)
         return NS_ERROR_FAILURE;
 
     *aOutFileSpec = nsnull;
-    
+
 #ifdef XP_MAC
     FSSpec fsSpec;
     nsCOMPtr<nsILocalFileMac> iFileMac;
@@ -329,7 +320,7 @@ Convert_nsIFile_To_nsFileSpec(nsIFile *aInIFile, nsFileSpec **aOutFileSpec)
     {
         *aOutFileSpec = new nsFileSpec(path, PR_FALSE);
     }
-    // NOTE: don't release path since nsFileSpec's mPath points to it 
+    // NOTE: don't release path since nsFileSpec's mPath points to it
 #endif
 
     if (!*aOutFileSpec)

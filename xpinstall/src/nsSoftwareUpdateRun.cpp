@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
  */
@@ -58,14 +58,14 @@
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, nsIDOMWindowInternal* aParent, nsIZipReader* hZip);
+extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, nsIZipReader* hZip);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 PR_STATIC_CALLBACK(void) XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, nsIDOMWindowInternal* aParent, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
+static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
@@ -93,7 +93,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
      */
     nsCOMPtr<nsIScriptError>
         errorObject(do_CreateInstance("@mozilla.org/scripterror;1"));
-    
+
     if (consoleService != nsnull && errorObject != nsnull && report != nsnull) {
         /*
          * Got an error object; prepare appropriate-width versions of
@@ -116,14 +116,14 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
             }
         }
     }
-    
+
     if (!report)
         return;
 
     nsIXPIListener *listener;
 
     // lets set up an eventQ so that our xpcom/proxies will not have to:
-    nsCOMPtr<nsISoftwareUpdate> softwareUpdate = 
+    nsCOMPtr<nsISoftwareUpdate> softwareUpdate =
              do_GetService(kSoftwareUpdateCID, &rv);
 
     if (NS_FAILED(rv))
@@ -134,7 +134,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
     }
 
     softwareUpdate->GetMasterListener(&listener);
-    
+
     if(listener)
     {
         nsAutoString logMessage;
@@ -142,11 +142,11 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         logMessage.AppendInt(report->lineno, 10);
         logMessage.Append(NS_LITERAL_STRING("\t"));
         if (report->ucmessage)
-            logMessage.Append( NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage) ); 
+            logMessage.Append( NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage) );
         else
-            logMessage.AppendWithConversion( message ); 
+            logMessage.AppendWithConversion( message );
 
-        listener->LogComment( logMessage.get() );
+        listener->OnLogComment( logMessage.get() );
     }
 }
 
@@ -157,7 +157,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Function name    : GetInstallScriptFromJarfile
 // Description      : Extracts and reads in a install.js file from a passed jar file.
-// Return type      : static PRInt32 
+// Return type      : static PRInt32
 // Argument         : const char* jarFile     - **NSPR** filepath
 // Argument         : char** scriptBuffer     - must be deleted via delete []
 // Argument         : PRUint32 *scriptLength
@@ -167,7 +167,7 @@ static PRInt32
 GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength)
 {
     PRInt32 result = NS_OK;
-    
+
     *scriptBuffer = nsnull;
     *scriptLength = 0;
 
@@ -244,7 +244,7 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
         result = nsInstall::NO_INSTALL_SCRIPT;
     }
 
-    return result;   
+    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
 // Description      : Creates a Javascript context and adds our xpinstall objects to it.
 // Return type      : static nsresult
 // Argument         : nsIZipReader hZip - the handle to the open archive file
-// Argument         : const char* jarFile - native filepath to where jar exists on disk 
+// Argument         : const char* jarFile - native filepath to where jar exists on disk
 // Argument         : const PRUnichar* url  - URL of where this package came from
 // Argument         : const PRUnichar* args    - any arguments passed into the javascript context
 // Argument         : PRUint32 flags   - bitmask of flags passed in
@@ -267,18 +267,17 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
                                     const PRUnichar* args,
                                     PRUint32 flags,
                                     nsIChromeRegistry* reg,
-                                    nsIDOMWindowInternal* aParent,
-                                    JSRuntime *rt, 
-                                    JSContext **jsCX, 
+                                    JSRuntime *rt,
+                                    JSContext **jsCX,
                                     JSObject **jsGlob)
 {
     JSContext   *cx;
     JSObject    *glob;
-    
+
     *jsCX   = nsnull;
     *jsGlob = nsnull;
 
-    if (!rt) 
+    if (!rt)
         return NS_ERROR_OUT_OF_MEMORY;
 
     cx = JS_NewContext(rt, 8192);
@@ -290,7 +289,7 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
     JS_SetErrorReporter(cx, XPInstallErrorReporter);
 
 
-    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, flags, reg, aParent, hZip);
+    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, flags, reg, hZip);
     // Init standard classes
     JS_InitStandardClasses(cx, glob);
 
@@ -308,13 +307,13 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// Function name	: RunInstall
-// Description	    : Creates our Install Thread.
-// Return type		: PRInt32 
+// Function name    : RunInstall
+// Description      : Creates our Install Thread.
+// Return type      : PRInt32
 // Argument         : nsInstallInfo *installInfo
 ///////////////////////////////////////////////////////////////////////////////////////////////
 PRInt32 RunInstall(nsInstallInfo *installInfo)
-{   
+{
     if (installInfo->GetFlags() & XPI_NO_NEW_THREAD)
     {
         RunInstallOnThread((void *)installInfo);
@@ -323,28 +322,28 @@ PRInt32 RunInstall(nsInstallInfo *installInfo)
     {
         PR_CreateThread(PR_USER_THREAD,
                         RunInstallOnThread,
-                        (void*)installInfo, 
-                        PR_PRIORITY_NORMAL, 
-                        PR_GLOBAL_THREAD, 
+                        (void*)installInfo,
+                        PR_PRIORITY_NORMAL,
+                        PR_GLOBAL_THREAD,
                         PR_UNJOINABLE_THREAD,
-                        0);  
+                        0);
     }
     return 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// Function name	: RunInstallOnThread
-// Description	    : called by starting thread.  It directly calls the C api for xpinstall, 
+// Function name    : RunInstallOnThread
+// Description      : called by starting thread.  It directly calls the C api for xpinstall,
 //                  : and once that returns, it calls the completion routine to notify installation
 //                  : completion.
-// Return type		: extern "C" 
+// Return type      : extern "C"
 // Argument         : void *data
 ///////////////////////////////////////////////////////////////////////////////////////////////
 extern "C" void RunInstallOnThread(void *data)
 {
     nsInstallInfo *installInfo = (nsInstallInfo*)data;
-    
+
     char        *scriptBuffer = nsnull;
     PRUint32    scriptLength;
 
@@ -356,7 +355,7 @@ extern "C" void RunInstallOnThread(void *data)
 
     static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
     static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
-    nsresult rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, kIZipReaderIID, 
+    nsresult rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, kIZipReaderIID,
                                                      getter_AddRefs(hZip));
 
     if (NS_FAILED(rv))
@@ -365,21 +364,20 @@ extern "C" void RunInstallOnThread(void *data)
     // we will plan on sending a failure status back from here unless we
     // find positive acknowledgement that the script sent the status
     PRInt32     finalStatus;
-    PRBool      sendStatus = PR_TRUE;
 
     nsCOMPtr<nsIXPIListener> listener;
 
     // lets set up an eventQ so that our xpcom/proxies will not have to:
     nsCOMPtr<nsIEventQueue> eventQ;
-    nsCOMPtr<nsIEventQueueService> eventQService = 
+    nsCOMPtr<nsIEventQueueService> eventQService =
              do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) 
-    {   
+    if (NS_SUCCEEDED(rv))
+    {
         eventQService->CreateMonitoredThreadEventQueue();
         eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     }
 
-    nsCOMPtr<nsISoftwareUpdate> softwareUpdate = 
+    nsCOMPtr<nsISoftwareUpdate> softwareUpdate =
              do_GetService(kSoftwareUpdateCID, &rv);
 
     if (NS_FAILED(rv))
@@ -390,23 +388,23 @@ extern "C" void RunInstallOnThread(void *data)
 
     softwareUpdate->SetActiveListener( installInfo->GetListener() );
     softwareUpdate->GetMasterListener(getter_AddRefs(listener));
-    
+
     if(listener)
-        listener->BeforeJavascriptEvaluation( installInfo->GetURL() );
-    
+        listener->OnInstallStart( installInfo->GetURL() );
+
     nsCOMPtr<nsIFile> jarpath = installInfo->GetFile();
     if (NS_SUCCEEDED(rv))
     {
         finalStatus = GetInstallScriptFromJarfile( hZip,
                                                    jarpath,
-                                                   &scriptBuffer, 
+                                                   &scriptBuffer,
                                                    &scriptLength);
 
         if ( finalStatus == NS_OK && scriptBuffer )
         {
             PRBool ownRuntime = PR_FALSE;
 
-            nsCOMPtr<nsIJSRuntimeService> rtsvc = 
+            nsCOMPtr<nsIJSRuntimeService> rtsvc =
                      do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
             if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
             {
@@ -421,7 +419,6 @@ extern "C" void RunInstallOnThread(void *data)
                                       installInfo->GetArguments(),
                                       installInfo->GetFlags(),
                                       installInfo->GetChromeRegistry(),
-                                      installInfo->GetParentDOMWindow(),
                                       rt, &cx, &glob);
 
             if (NS_SUCCEEDED(rv))
@@ -429,7 +426,7 @@ extern "C" void RunInstallOnThread(void *data)
                 // Go ahead and run!!
                 jsval rval;
                 jsval installedFiles;
-                JS_BeginRequest(cx); //Increment JS thread counter associated 
+                JS_BeginRequest(cx); //Increment JS thread counter associated
                                      //with this context
                 PRBool ok = JS_EvaluateScript(  cx,
                                                 glob,
@@ -458,20 +455,19 @@ extern "C" void RunInstallOnThread(void *data)
                     // not the install may have been syntactically correct but
                     // left the init/(perform|cancel) transaction open
 
-                    jsval sent;
-
                     if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
                        JSVAL_TO_BOOLEAN(installedFiles))
                     {
-                      nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
-                      a->InternalAbort(nsInstall::MALFORMED_INSTALL);
+                        // install items remain in queue, must clean up!
+                        nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
+                        a->InternalAbort(nsInstall::MALFORMED_INSTALL);
                     }
 
-                    if ( JS_GetProperty( cx, glob, "_statusSent", &sent ) &&
-                         JSVAL_TO_BOOLEAN(sent) )
-                        sendStatus = PR_FALSE;
+                    jsval sent;
+                    if ( JS_GetProperty( cx, glob, "_finalStatus", &sent ) )
+                        finalStatus = JSVAL_TO_INT(sent);
                     else
-                        finalStatus = nsInstall::MALFORMED_INSTALL;
+                        finalStatus = nsInstall::UNEXPECTED_ERROR;
                 }
                 JS_EndRequest(cx); //Decrement JS thread counter
                 JS_DestroyContextMaybeGC(cx);
@@ -483,25 +479,20 @@ extern "C" void RunInstallOnThread(void *data)
             }
 
             // clean up Runtime if we created it ourselves
-            if ( ownRuntime ) 
+            if ( ownRuntime )
                 JS_DestroyRuntime(rt);
         }
         // force zip archive closed before other cleanup
         hZip = 0;
     }
-    else 
+    else
     {
         // no path to local jar archive
         finalStatus = nsInstall::DOWNLOAD_ERROR;
     }
 
-    if(listener) 
-    {
-        if ( sendStatus )
-            listener->FinalStatus( installInfo->GetURL(), finalStatus );
-
-        listener->AfterJavascriptEvaluation( installInfo->GetURL() );
-    }
+    if(listener)
+        listener->OnInstallDone( installInfo->GetURL(), finalStatus );
 
     if (scriptBuffer) delete [] scriptBuffer;
 
@@ -528,7 +519,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
     nsIXPIListener* listener = info->GetListener();
 
     if (listener)
-        listener->BeforeJavascriptEvaluation(info->GetURL());
+        listener->OnInstallStart(info->GetURL());
 
     // make sure we've got a chrome registry -- can't proceed if not
     nsIChromeRegistry* reg = info->GetChromeRegistry();
@@ -541,7 +532,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
         nsCOMPtr<nsIURI> pURL;
         rv = NS_NewURI(getter_AddRefs(pURL), "file:");
-        if (NS_SUCCEEDED(rv)) 
+        if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(pURL);
             if (fileURL)
@@ -565,7 +556,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
             PRBool isLocale  = (info->GetType() & CHROME_LOCALE);
             PRBool isContent = (info->GetType() & CHROME_CONTENT);
             PRBool selected  = (info->GetFlags() != 0);
- 
+
             if ( isContent )
             {
                 rv = reg->InstallPackage(spec.get(), PR_TRUE);
@@ -580,7 +571,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
                 }
             }
 
-            if ( isLocale ) 
+            if ( isLocale )
             {
                 rv = reg->InstallLocale(spec.get(), PR_TRUE);
                 if (NS_SUCCEEDED(rv) && selected)
@@ -592,7 +583,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
             // now that all types are registered try to activate
             if ( isSkin && selected )
                 reg->RefreshSkins();
- 
+
 #ifdef RELOAD_CHROME_WORKS
 // XXX ReloadChrome() crashes right now
             if ( isContent || (isLocale && selected) )
@@ -602,7 +593,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
     }
 
     if (listener)
-        listener->AfterJavascriptEvaluation(info->GetURL());
+        listener->OnInstallDone(info->GetURL(), nsInstall::SUCCESS);
 
     delete info;
 }

@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Douglas Turner <dougt@netscape.com>
  *     Daniel Veditz <dveditz@netscape.com>
  *     Pierre Phaneuf <pp@ludusdesign.com>
@@ -41,7 +41,7 @@ nsTopProgressListener::~nsTopProgressListener()
     if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mListeners->Count(); i++) 
+        for (; i < mListeners->Count(); i++)
         {
             nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             NS_IF_RELEASE(element);
@@ -89,79 +89,60 @@ nsTopProgressListener::UnregisterListener(long id)
 
 
 NS_IMETHODIMP
-nsTopProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
+nsTopProgressListener::OnInstallStart(const PRUnichar *URL)
 {
     if (mActive)
-        mActive->BeforeJavascriptEvaluation(URL);
+        mActive->OnInstallStart(URL);
 
     if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mListeners->Count(); i++) 
+        for (; i < mListeners->Count(); i++)
         {
             nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
-                element->BeforeJavascriptEvaluation(URL);
+                element->OnInstallStart(URL);
         }
     }
-    
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTopProgressListener::AfterJavascriptEvaluation(const PRUnichar *URL)
+nsTopProgressListener::OnPackageNameSet(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
     if (mActive)
-        mActive->AfterJavascriptEvaluation(URL);
+        mActive->OnPackageNameSet(URL, UIPackageName);
 
     if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mListeners->Count(); i++) 
+        for (; i < mListeners->Count(); i++)
         {
             nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
-                element->AfterJavascriptEvaluation(URL);
-        }
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTopProgressListener::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
-{
-    if (mActive)
-        mActive->InstallStarted(URL, UIPackageName);
-
-    if (mListeners)
-    {
-        PRInt32 i=0;
-        for (; i < mListeners->Count(); i++) 
-        {
-            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
-            if (element != NULL)
-                element->InstallStarted(URL, UIPackageName);
+                element->OnPackageNameSet(URL, UIPackageName);
         }
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTopProgressListener::ItemScheduled( const PRUnichar* message )
+nsTopProgressListener::OnItemScheduled( const PRUnichar* message )
 {
     long rv = 0;
 
     if (mActive)
-        mActive->ItemScheduled( message );
+        mActive->OnItemScheduled( message );
 
     if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mListeners->Count(); i++) 
+        for (; i < mListeners->Count(); i++)
         {
             nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
-                element->ItemScheduled( message );
+                element->OnItemScheduled( message );
         }
     }
 
@@ -169,59 +150,58 @@ nsTopProgressListener::ItemScheduled( const PRUnichar* message )
 }
 
 NS_IMETHODIMP
-nsTopProgressListener::FinalizeProgress( const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+nsTopProgressListener::OnFinalizeProgress( const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
     if (mActive)
-        mActive->FinalizeProgress( message, itemNum, totNum );
+        mActive->OnFinalizeProgress( message, itemNum, totNum );
 
     if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mListeners->Count(); i++) 
+        for (; i < mListeners->Count(); i++)
         {
             nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
-                element->FinalizeProgress( message, itemNum, totNum );
+                element->OnFinalizeProgress( message, itemNum, totNum );
         }
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTopProgressListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
+nsTopProgressListener::OnInstallDone(const PRUnichar *URL, PRInt32 status)
 {
     if (mActive)
-        mActive->FinalStatus(URL, status);
+        mActive->OnInstallDone(URL, status);
 
     if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mListeners->Count(); i++) 
+        for (; i < mListeners->Count(); i++)
         {
             nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
-                element->FinalStatus(URL,status);
+                element->OnInstallDone(URL,status);
         }
     }
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTopProgressListener::LogComment(const PRUnichar* comment)
+nsTopProgressListener::OnLogComment(const PRUnichar* comment)
 {
     if (mActive)
-        mActive->LogComment(comment);
+        mActive->OnLogComment(comment);
 
    if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mListeners->Count(); i++) 
+        for (; i < mListeners->Count(); i++)
         {
             nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
-                element->LogComment(comment);
+                element->OnLogComment(comment);
         }
     }
    return NS_OK;
 }
-

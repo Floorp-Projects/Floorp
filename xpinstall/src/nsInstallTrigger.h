@@ -16,6 +16,7 @@
 
 #include "nsIContentHandler.h"
 
+#define NOT_CHROME          0
 #define CHROME_SKIN         1
 #define CHROME_LOCALE       2
 #define CHROME_SAFEMAX      CHROME_SKIN

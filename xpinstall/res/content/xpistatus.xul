@@ -1,26 +1,27 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
-<!-- 
+<!--
   The contents of this file are subject to the Netscape Public
   License Version 1.1 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of
   the License at http://www.mozilla.org/NPL/
-   
+
   Software distributed under the License is distributed on an "AS
   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
   implied. See the License for the specific language governing
   rights and limitations under the License.
-   
+
   The Original Code is Mozilla Communicator client code.
-  
+
   The Initial Developer of the Original Code is Netscape
   Communications Corporation. Portions created by Netscape are
-  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Copyright (C) 1998-2002 Netscape Communications Corporation. All
   Rights Reserved.
-  
-  Contributor(s): 
+
+  Contributor(s):
     Don Bragg (dbragg@netscape.com) 12/08/1999
     Blake Ross (BlakeR1234@aol.com) 7/05/2000
+    Daniel Veditz <dveditz@netscape.com> 1/2002
  -->
 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
@@ -30,61 +31,35 @@
 
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onLoad()"
-        onclose="return false"
         title="&progressTitle.label;"
-        class = "dialog"
-> 
+        onload="onLoad()"
+        onclose="return gCanClose"
+        id="statusDlg"
+        class="dialog"
+        style="width: 50em"
+>
 
     <script src="chrome://communicator/content/xpinstall/xpistatus.js"/>
-    <keyset id="keyset"/>
+    <keyset id="dialogKeys"/>
+    <stringbundle id="xpinstallBundle" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
 
-    <vbox id="mainBox">
-        <hbox id="interiorTitleBox" align="center">
-            <label class="headline" id="interiorTitle" value="&progress.label;"/>
-            <spacer flex="100%"/>
-            <image src="chrome://global/skin/animthrob_single.gif" />
-        </hbox>
+    <vbox id="mainProgressBox" flex="1">
+        <groupbox id="progressGroup" orient="vertical" flex="1">
+            <caption id="progressCaption" label="&group.caption;"/>
+            <grid id="progressGrid" flex="1">
+                <columns>
+                    <column id="xpiColumn" flex="3"/>
+                    <column id="statusColumn" flex="2"/>
+                    <column id="progressColumn"/>
+                </columns>
+                <rows id="xpirows">
+                </rows>
+            </grid>
+        </groupbox>
 
-        <spacer class="vertical-small-spacer"/>
-        <separator class="groove" flex="100%"/>            
-        <spacer class="vertical-small-spacer"/>
+        <separator class="thin"/>
 
-        <label id="componentList" value="&downloadBeforeUpdate.text;"/>
-        <spacer class="vertical-small-spacer"/>
-        <spacer class="vertical-small-spacer"/>            
-
-        <vbox id="treebox">  
-                <tree id="modulesTree" class="inset">
-                    <treecolgroup>
-                      <treecol flex="1"/>
-                      <splitter class="tree-splitter"/>
-                      <treecol flex="1"/>
-                    </treecolgroup>
-                    <treehead>
-                        <treerow>
-                            <treecell id="moduleName" class="treecell-header" label="&moduleName.label;" />
-                            <treecell id="moduleSource" class="treecell-header" label="&moduleSource.label;"/>
-                        </treerow>
-                    </treehead>
-
-                    <treechildren id="theTreeBody" flex="1">
-                    </treechildren>
-                </tree>
-        </vbox>
-    
-        <spacer class="vertical-small-spacer"/>
-
-        <vbox id="statusMessages">
-            <textbox id="dialog.uiPackageName" readonly="" />
-            <textbox id="dialog.currentAction" readonly="" />
-        </vbox>
-
-        <hbox id="progressBox" align="center">
-            <progressmeter id="dialog.progress" mode="normal" value="0"/>
-            <button id="cancel" oncommand="cancel()" label="&dialogCancel.label;"/>
-        </hbox>
-
+    <hbox id="okCancelButtonsRight"/>
     </vbox>
 
 </window>

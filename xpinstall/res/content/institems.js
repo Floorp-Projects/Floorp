@@ -4,68 +4,65 @@
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released March
  * 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation. Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation. All Rights Reserved.
  */
 
-var toolkit;
-var browser;
-var dialog;
-
 // dialog param block
-var param;
+var gParams;
 
-function addTreeItem(num, modName, url)
+function addTreeItem(num, aName, aUrl)
 {
-  dump("Adding element " + num + " : " + name + "\n");
-  var body = document.getElementById("theTreeBody");
+  // first column is the package name
+  var item = document.createElement("description");
+  item.setAttribute("value", aName);
+  item.setAttribute("tooltiptext", aUrl);
+  item.setAttribute("class", "confirmName");
 
-  var newitem = document.createElement('treeitem');
-  var newrow = document.createElement('treerow');
-  
-  newrow.setAttribute("rowNum", num);
-  newrow.setAttribute("rowName", modName);
+  // second column is the host serving the file
+  var urltext = aUrl.replace(/^([^:]*:\/*[^\/]+).*/, "$1");
+  var url = document.createElement('description');
+  url.setAttribute("value", aUrl);
+  url.setAttribute("tooltiptext", aUrl);
+  url.setAttribute("class", "confirmURL");
+  url.setAttribute("crop", "end");
 
-  var elem = document.createElement('treecell');
-  elem.setAttribute("label", modName);
-  newrow.appendChild(elem);
+  // create row and add it to the grid
+  var row  = document.createElement("row");
+  row.appendChild(item);
+  row.appendChild(url);
 
-  elem = document.createElement('treecell');
-  elem.setAttribute("label", url);
-  newrow.appendChild(elem);
-
-  newitem.appendChild(newrow);
-  body.appendChild(newitem);
+  document.getElementById("xpirows").appendChild(row);
 }
 
 
-function onLoad() 
+function onLoad()
 {
   var row = 0;
   var moduleName, URL, numberOfDialogTreeElements;
 
   doSetOKCancel(onOk, onCancel);
 
-  param = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+  gParam = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 
-  param.SetInt(0, 1 ); /* Set the default return to Cancel */
+  gParam.SetInt(0, 1 ); /* Set the default return to Cancel */
 
-  numberOfDialogTreeElements = param.GetInt(1);
+  numberOfDialogTreeElements = gParam.GetInt(1);
 
   for (var i=0; i < numberOfDialogTreeElements; i++)
   {
-    moduleName = param.GetString(i);
-    URL = param.GetString(++i);
+    moduleName = gParam.GetString(i);
+    URL = gParam.GetString(++i);
     addTreeItem(row++, moduleName, URL);
   }
 
@@ -74,21 +71,21 @@ function onLoad()
   document.getElementById("ok").label = okButton;
 }
 
-function onOk() 
+function onOk()
 {
    // set the okay button in the param block
-   if (param)
-	param.SetInt(0, 0 );
+   if (gParam)
+     gParam.SetInt(0, 0 );
 
    window.close();
 }
 
-function onCancel() 
+function onCancel()
 {
-	// set the cancel button in the param block
-	if (param)
-	  param.SetInt(0, 1 );
-    
-	window.close();
+    // set the cancel button in the param block
+    if (gParam)
+      gParam.SetInt(0, 1 );
+
+    window.close();
 }
 

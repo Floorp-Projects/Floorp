@@ -68,11 +68,6 @@ static nsXPIResourceTableItem XPIResTable[] =
     // XXX WinReg and WinProfile action strings
 
     /*---------------------------------------------------------------------*
-     *   Dialog Messages 
-     *---------------------------------------------------------------------*/
-    { "FinishingInstallMsg", "Finishing install... please wait." },
-
-    /*---------------------------------------------------------------------*
      *    Miscellaneous 
      *---------------------------------------------------------------------*/
     { "ERROR", "ERROR" },
