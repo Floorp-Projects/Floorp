@@ -25,6 +25,7 @@
 #header-img {
   float: right;
   border: 1px grey solid;
+  margin-left: 10px;
 }
 
 p.error {
@@ -53,4 +54,8 @@ input[type="text"] {
 
 #comments {
   height: 20ex;
+}
+
+.newsgroup {
+  font-family: monospace;
 }

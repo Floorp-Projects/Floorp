@@ -60,10 +60,12 @@ function onLoad() {
    onload = "onLoad()"
 %]
 
-<p>This is Hendrix - the mozilla.org system for leaving quick and general feedback. If you have a specific and detailed bug report, please file it in 
+<p>This is Hendrix - the mozilla.org system for leaving quick feedback on and suggestions for our products. If you have a specific and detailed bug report, please file it in 
 <a href="http://bugzilla.mozilla.org/enter_bug.cgi">Bugzilla</a>.</p>
 
-<form id="feedback-form" method="GET">
+<p>Due to the number of suggestions and comments that are received, you should not expect a direct response. But your views are important to us, so please do let us know what you think.</p>
+
+<form id="feedback-form" method="POST">
   <table id="feedback-table">
     <tr>
       <td class="label">Name:</td>
@@ -119,8 +121,8 @@ function onLoad() {
   <input id="send-feedback" type="submit" value="Send Feedback"/>
 </form>
 
-<p>Information from this form is placed in the newsgroup 
-<tt>[% newsgroup %]</tt> where it can be viewed by any mozilla.org contributor.
+<p>
+Information from this form will be published to the newsgroup <span class="newsgroup">[% newsgroup %]</span> so project contributors can read it. Do not submit any information unless you wish it to be made public. Your email address will be spam-proofed.
 </p>
 
 <p class="footnote">Why "Hendrix"? The late 
