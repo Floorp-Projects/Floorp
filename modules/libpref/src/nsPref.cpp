@@ -38,6 +38,7 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
+#include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "prefapi.h"
@@ -137,6 +138,7 @@ nsPref::nsPref()
   NS_INIT_REFCNT();
 
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ASSERTION(mPrefService, "Preference Service failed to start up!!");
 
   if (mPrefService)
     mPrefService->GetDefaultBranch("", getter_AddRefs(mDefaultBranch));

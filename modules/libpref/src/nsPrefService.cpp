@@ -38,25 +38,22 @@
 
 #include "nsPrefService.h"
 #include "jsapi.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
-#include "nsISignatureVerifier.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
 #include "nsIAutoConfig.h"
 
 #include "nsQuickSort.h"
+#include "prmem.h"
+
 #include "prefapi.h"
 class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 #include "prefapi_private_data.h"
 
-// supporting lock files
-#include "nsDirectoryServiceDefs.h"
-#include "prmem.h"
-#include "prprf.h"
-
 // supporting PREF_Init()
 #include "nsIJSRuntimeService.h"
-#include "nsAppDirectoryServiceDefs.h"
 
 // lose these if possible (supporting nsIFileToFileSpec)
 #include "nsIFileSpec.h"
@@ -66,6 +63,7 @@ class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 #define PREFS_HEADER_LINE_1 "# Mozilla User Preferences"
 #define PREFS_HEADER_LINE_2	"// This is a generated file!"
 #define INITIAL_MAX_DEFAULT_PREF_FILES 10
+
 
 // Prototypes
 static nsresult nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec);
@@ -230,7 +228,7 @@ NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_r
 {
   nsresult rv;
 
-  if ((nsnull != aPrefRoot) && (aPrefRoot != "")) {
+  if ((nsnull != aPrefRoot) && (*aPrefRoot != '\0')) {
     // TODO: - cache this stuff and allow consumers to share branches (hold weak references I think)
     nsPrefBranch* prefBranch = new nsPrefBranch(aPrefRoot, PR_FALSE);
 

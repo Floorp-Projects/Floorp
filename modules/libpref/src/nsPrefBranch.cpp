@@ -65,7 +65,6 @@ struct PrefCallbackData {
 
 
 static NS_DEFINE_CID(kSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 // Prototypes
 extern "C" PrefResult pref_UnlockPref(const char *key);
@@ -93,7 +92,7 @@ static nsresult _convertRes(int res)
       return NS_ERROR_UNEXPECTED;
 
     case PREF_VALUECHANGED:
-      return 1;
+      return NS_OK;
   }
 
   NS_ASSERTION((res >= PREF_DEFAULT_VALUE_NOT_INITIALIZED) && (res <= PREF_PROFILE_UPGRADE), "you added a new error code to prefapi.h and didn't update _convertRes");
@@ -580,6 +579,10 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
 }
 
 
+/*
+ *  nsIPrefBranchInternal methods
+ */
+
 NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver)
 {
  PrefCallbackData *pCallback;
@@ -656,7 +659,7 @@ static int PR_CALLBACK NotifyObserver(const char *newpref, void *data)
 
   nsCOMPtr<nsIObserver> observer = NS_STATIC_CAST(nsIObserver *, pData->pObserver);
   observer->Observe(pData->pBranch,
-                    NS_LITERAL_STRING("nsPref:changed").get(),
+                    NS_LITERAL_STRING(NS_PREFBRANCH_PREFCHANGE_OBSERVER_ID).get(),
                     NS_ConvertASCIItoUCS2(newpref).get());
 
     return 0;
@@ -675,7 +678,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUni
     return rv;
     
   nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(kStringBundleServiceCID, &rv);
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -759,6 +762,8 @@ PR_STATIC_CALLBACK(PRIntn) pref_enumChild(PLHashEntry *he, int i, void *arg)
 
 
 /*
+ * nsISecurityPref methods
+ *
  * Pref access without security check - these are here
  * to support nsScriptSecurityManager.
  * These functions are part of nsISecurityPref, not nsIPref.
