@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
+ * Alec Flett <alecf@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
