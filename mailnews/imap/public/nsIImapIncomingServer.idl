@@ -109,4 +109,6 @@ interface nsIImapIncomingServer : nsISupports {
   void hideFolderName(in string originalName, out boolean hideFolder);
   string getTrashFolderByRedirectorType();
   attribute string redirectorType;
+
+  string getUriWithNamespacePrefixIfNecessary(in long namespaceType, in string originalUri);
 };

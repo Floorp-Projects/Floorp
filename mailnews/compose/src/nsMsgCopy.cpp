@@ -56,6 +56,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgCompUtils.h"
 #include "prcmon.h"
+#include "nsImapCore.h"
 #include "nsIMsgImapMailFolder.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIEventQueueService.h"
@@ -424,7 +425,7 @@ nsresult
 LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
                     nsMsgDeliverMode aFolderType,
                     const char       *aFolderURI,
-		    nsIMsgFolder     **msgFolder)
+                    nsIMsgFolder     **msgFolder)
 {
   nsresult                  rv = NS_OK;
 
@@ -462,7 +463,19 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
         if (rootMsgFolder)
         {
           nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
-          rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, imapServer == nsnull /*caseInsensitive*/, msgFolder);
+          // Make sure an specific IMAP folder has correct personal namespace
+          // See bugzilla bug 90494 (http://bugzilla.mozilla.org/show_bug.cgi?id=90494)
+          if (imapServer)
+          {
+            nsXPIDLCString folderUriWithNamespace;
+            imapServer->GetUriWithNamespacePrefixIfNecessary(kPersonalNamespace, aFolderURI, getter_Copies(folderUriWithNamespace));
+            if (!folderUriWithNamespace.IsEmpty())
+              rv = rootMsgFolder->GetChildWithURI(folderUriWithNamespace, PR_TRUE, PR_FALSE, msgFolder);
+            else
+              rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, PR_FALSE, msgFolder);
+          }
+          else
+            rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, imapServer == nsnull /*caseInsensitive*/, msgFolder);
           /* we didn't find the folder so we will have to create new one.
              CreateIfMissing does that provided we pass in a dummy folder */
           if (!*msgFolder)

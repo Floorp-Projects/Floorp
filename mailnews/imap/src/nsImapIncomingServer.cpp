@@ -89,6 +89,7 @@
 #include "nsFileStream.h"
 #include "nsIMsgProtocolInfo.h"
 #include "nsIMsgMailSession.h"
+#include "nsIMAPNamespace.h"
 
 #include "nsITimer.h"
 #include "nsMsgUtils.h"
@@ -100,6 +101,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgLogonRedirectorServiceCID, NS_MSGLOGONREDIRECTORSERVICE_CID);
 static NS_DEFINE_CID(kImapServiceCID, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kSubscribableServerCID, NS_SUBSCRIBABLESERVER_CID);
+static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
 NS_IMPL_RELEASE_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
@@ -3678,5 +3680,35 @@ nsImapIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *n
   return NS_OK;
 }
 
+// use canonical format in originalUri & convertedUri
+NS_IMETHODIMP
+nsImapIncomingServer::GetUriWithNamespacePrefixIfNecessary(PRInt32 namespaceType,
+                                                           const char *originalUri,
+                                                           char **convertedUri)
+{
+  NS_ENSURE_ARG_POINTER(convertedUri);
+  *convertedUri = nsnull;
 
-
+  nsresult rv = NS_OK;
+  nsXPIDLCString serverKey;
+  rv = GetKey(getter_Copies(serverKey));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIImapHostSessionList> hostSessionList = do_GetService(kCImapHostSessionListCID, &rv);
+  nsIMAPNamespace *ns = nsnull;
+  rv = hostSessionList->GetDefaultNamespaceOfTypeForHost(serverKey, (EIMAPNamespaceType)namespaceType, ns);
+  if (ns)
+  {
+    nsCAutoString namespacePrefix(ns->GetPrefix());
+    if (!namespacePrefix.IsEmpty())
+    {
+      namespacePrefix.ReplaceChar(ns->GetDelimiter(), '/'); // use canonical format
+      nsCAutoString resultUri(originalUri);
+      PRInt32 index = resultUri.Find("//");           // find scheme
+      index = resultUri.Find("/", PR_FALSE, index+2); // find '/' after scheme
+      if (resultUri.Find(namespacePrefix.get()) != 0) // Necessary to insert namespace prefix
+        resultUri.Insert(namespacePrefix, index+1);   // insert namespace prefix
+      *convertedUri = nsCRT::strdup(resultUri.get());
+    }
+  }
+  return rv;
+}
