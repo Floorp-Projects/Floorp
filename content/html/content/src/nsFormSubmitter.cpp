@@ -627,7 +627,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
   if (tempDir) {
     tempDir->Append("formpost");
     // mode is 0600 so that it's not world-readable
-    rv = tempDir->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0600);
+    rv = tempDir->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
   }
   nsCOMPtr<nsIOutputStream> outStream;
   if (NS_SUCCEEDED(rv)) {

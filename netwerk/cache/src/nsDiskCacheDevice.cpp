@@ -759,7 +759,7 @@ nsDiskCacheDevice::InitializeCacheDirectory()
         // create a directory with unique name to contain existing cache directory
         rv = cacheTrashDir->Append("Cache");
         if (NS_FAILED(rv))  return rv;
-        rv = cacheTrashDir->CreateUnique(nsnull,nsIFile::DIRECTORY_TYPE, 0777); 
+        rv = cacheTrashDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0777); 
         if (NS_FAILED(rv))  return rv;
         
         // move existing cache directory into profileDir/Cache.Trash/CacheUnique

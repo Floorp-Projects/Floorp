@@ -1909,7 +1909,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   rv = tmpLDIFFile->Append("addr-migrate");
   if (NS_FAILED(rv) || !tmpLDIFFile) return;
 
-  rv = tmpLDIFFile->CreateUnique("addr-migrate", nsIFile::DIRECTORY_TYPE, 0700);
+  rv = tmpLDIFFile->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700);
   if (NS_FAILED(rv) || !tmpLDIFFile) return;
 
   // TODO: Change users of nsIFileSpec to nsIFile and avoid this.
