@@ -24,6 +24,8 @@
 
 DEPTH=..\..
 
+MODULE=string
+
 EXPORTS =                               \
         nsAFlatString.h                 \
         nsAlgorithm.h                   \
