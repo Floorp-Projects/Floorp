@@ -1,3 +1,4 @@
+// vim:cindent:sw=4:et:ts=8:
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License
@@ -231,6 +232,7 @@ void setupProfilingStuff(void)
 	int  startTimer = 1;
 	int  doNotStart = 1;
 	int  firstDelay = 0;
+        int  append = O_TRUNC;
         char *tst  = getenv("JPROF_FLAGS");
 
 	/* Options from JPROF_FLAGS environment variable:
@@ -244,6 +246,9 @@ void setupProfilingStuff(void)
 	 *               rather than time used by the process (and the
 	 *               system for the process).  This is useful for
 	 *               finding time spent by the X server.
+         *   JP_APPEND -> Append to jprof-log rather than overwriting it.
+         *               This is somewhat risky since it depends on the
+         *               address map staying constant across multiple runs.
 	*/
 	if(tst) {
 	    if(strstr(tst, "JP_DEFER"))
@@ -253,6 +258,7 @@ void setupProfilingStuff(void)
 	    }
 	    if(strstr(tst, "JP_START")) doNotStart = 0;
 	    if(strstr(tst, "JP_REALTIME")) realTime = 1;
+	    if(strstr(tst, "JP_APPEND")) append = O_APPEND;
 
 	    char *delay = strstr(tst,"JP_PERIOD=");
 	    if(delay) {
@@ -271,7 +277,7 @@ void setupProfilingStuff(void)
 	if(!doNotStart) {
 
 	    if(gLogFD<0) {
-		gLogFD = open(M_LOGFILE, O_CREAT|O_WRONLY|O_TRUNC, 0666);
+		gLogFD = open(M_LOGFILE, O_CREAT | O_WRONLY | append, 0666);
 		if(gLogFD<0) {
 		    fprintf(stderr, "Unable to create " M_LOGFILE);
 		    perror(":");
