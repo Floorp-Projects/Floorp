@@ -43,7 +43,7 @@
 
 <dialog id="domainMismatch" title="&domainMismatch.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  style="width: 32em;"
+  style="width: 32em; height: 12em;"
   spacerflex="1"
   buttons="accept,cancel,help,extra2"
   buttonlabelextra2="&examineCert.label;"
