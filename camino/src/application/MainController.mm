@@ -438,8 +438,26 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 }
 
 
--(BOOL)validateMenuItem: (id <NSMenuItem> )aMenuItem
+-(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
 {
+  // disable items that aren't relevant if there's no main browser window open
+  if ([aMenuItem action] == @selector(newTab:) ||
+        /* ... many more items go here ... */
+        [aMenuItem action] == @selector(savePage:)) {
+    if ([[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]])
+      return YES;
+    return NO;
+  }
+  
+  // only activate if we've got multiple tabs open.
+  if (([aMenuItem action] == @selector(closeTab:) ||
+       [aMenuItem action] == @selector (nextTab:) ||
+       [aMenuItem action] == @selector (previousTab:))) {
+    if ([[[[mApplication mainWindow] windowController] getTabBrowser] numberOfTabViewItems] > 1)
+      return YES;
+    return NO;
+  }
+  // default return
   return YES;
 }
 
