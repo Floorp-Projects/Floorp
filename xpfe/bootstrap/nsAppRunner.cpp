@@ -81,7 +81,6 @@
 #include "nsIContentHandler.h"
 #include "nsIEventQueueService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIHttpProtocolHandler.h"
 #include "nsBuildID.h"
 #include "nsWindowCreator.h"
 #include "nsIWindowWatcher.h"
@@ -1658,21 +1657,12 @@ static void DumpHelp(char *appname)
 }
 
 
-// Print out user agent from the HTTP Handler service,
-// and the Build ID from nsBuildID.h.
 static nsresult DumpVersion(char *appname)
 {
   nsresult rv = NS_OK;
   long buildID = NS_BUILD_ID;  // 10-digit number
 
-  // Get httpHandler service.
-  nsCOMPtr <nsIHttpProtocolHandler> httpHandler(do_GetService("@mozilla.org/network/protocol;1?name=http", &rv));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCAutoString agent;
-  httpHandler->GetUserAgent(agent);
-
-  printf("%s", agent.get());
+  printf("Mozilla %s, Copyright (c) 2003 mozilla.org", MOZILLA_VERSION);
 
   if(buildID) {
     printf(", build %u\n", (unsigned int)buildID);
