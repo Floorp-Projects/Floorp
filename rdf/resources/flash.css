@@ -4,6 +4,10 @@
 
  */
 
+window { 
+  background-color: white;
+}
+
 treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treerow > treecell > titledbutton {
   list-style-image: url("resource:/res/rdf/flames.gif");
 }
