@@ -176,7 +176,6 @@ calDavCalendar.prototype = {
                                                aItem);
         }
 
-        dump("icalString = " + aItem.icalString + "\n");
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
@@ -255,15 +254,15 @@ calDavCalendar.prototype = {
     },
 
 
-    // void deleteItem( in string id, in calIOperationListener aListener );
-    deleteItem: function (aId, aListener) {
+    // void deleteItem( in calIItemBase aItem, in calIOperationListener aListener );
+    deleteItem: function (aItem, aListener) {
 
-        if (aId == null) {
+        if (aItem.id == null) {
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.DELETE,
-                                               aId,
+                                               aItem.id,
                                                "ID doesn't exist for deleteItem");
             return;
         }
@@ -278,18 +277,14 @@ calDavCalendar.prototype = {
         listener.onOperationComplete = function(aStatusCode, aResource,
                                                 aOperation, aClosure) {
 
-            // 200 = HTTP "OK"
+            // 204 = HTTP "No content"
             //
-            if (aStatusCode == 201) {
+            if (aStatusCode == 204) {
                 dump("Item deleted successfully.\n");
                 var retVal = Components.results.NS_OK;
-
-                // notify observers
-                // XXX should be called after listener?
-                savedthis.observeAddItem(aItem);
-
             } else {
                 dump("Error deleting item: " + aStatusCode + "\n");
+                // XXX real error handling here
                 retVal = Components.results.NS_ERROR_FAILURE;
             }
 
@@ -298,10 +293,11 @@ calDavCalendar.prototype = {
                 aListener.onOperationComplete (savedthis,
                                                Components.results.NS_OK,
                                                aListener.DELETE,
-                                               aId,
+                                               aItem.id,
                                                null);
             // notify observers
-            observeDeleteItem(deletedItem);
+            // XXX call only if successful
+            savedthis.observeDeleteItem(aItem);
         }
 
         // do WebDAV remove
@@ -540,7 +536,7 @@ calDavCalendar.prototype = {
                     // add the event to the array of all items
                     allItems[item.id] = item;
                     dump("getListener.onOperationDetail: item " + item.id +
-                         " added\n");
+                         " found\n");
 
                 } else {
                     // XXX do real error handling here
