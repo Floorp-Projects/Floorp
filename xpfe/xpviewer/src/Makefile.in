@@ -86,7 +86,6 @@ OBJS	= $(CPPSRCS:.cpp=.o)
 EX_LIBS = \
 	-L$(DIST)/bin \
 	-lraptorbase    \
-	$(PNG_LIBS) \
 	-lpref \
 	-lraptorbase \
 	$(TOOLKIT_WIDGET_LIB) \
@@ -105,6 +104,7 @@ EX_LIBS = \
 	-lhttpurl \
 	-limg \
 	$(JPEG_LIBS) \
+	$(PNG_LIBS) \
 	-ljs \
 	-ljsdom \
 	$(DIST)/lib/libjsdomcore_s.a \
