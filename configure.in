@@ -80,7 +80,7 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GTK_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
-PERL_VERSION=5.000
+PERL_VERSION=5.004
 
 dnl Set various checks
 dnl ========================================================
@@ -289,7 +289,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_AWK
 AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
-AC_PATH_PROGS(PERL, perl5 perl )
+AC_PATH_PROGS(PERL, $PERL perl5 perl )
 if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
