@@ -321,7 +321,10 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetDeviceContext(nsIDeviceContext *&aConte
 NS_IMETHODIMP nsRenderingContextBeOS::PushState(void)
 {
 	GraphicsState * state = new GraphicsState();
-	
+
+	if(!state)
+		return NS_ERROR_OUT_OF_MEMORY;
+
 	// Push into this state object, add to vector
 	state->mMatrix = mTMatrix;
 	
@@ -721,6 +724,11 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawLine(nscoord aX0, nscoord aY0, nscoord
 	
 	mTMatrix->TransformCoord(&aX0, &aY0);
 	mTMatrix->TransformCoord(&aX1, &aY1);
+
+	if (aY0 != aY1)
+		aY1--;
+	if (aX0 != aX1)
+		aX1--;
 
 	if(mView && mView->LockLooper())
 	{
@@ -1143,6 +1151,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 		{
 			PRIntn dxMem[500];
 			PRIntn *dx0;
+			PRInt32 currentX = x;
 
 			dx0 = dxMem;
 			if(aLength > 500)
@@ -1150,7 +1159,10 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 			mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
 
 			for(PRUint32 i = 0; i < aLength; i++)
-				mView->DrawString(&aString[i], 1L, BPoint(dx0[i], y));
+			{
+				mView->DrawString(&aString[i], 1L, BPoint(currentX, y));
+				currentX += dx0[i];
+			}
 	
 			if((nsnull != aSpacing) && (dx0 != dxMem))
 				delete [] dx0;
