@@ -43,7 +43,7 @@
 #include "nsCarbonHelpers.h"
 #endif // CarbonHelpers_h__
 
-#if !defined(XP_MACOSX)
+#if DEBUG && !defined(XP_MACOSX)
 #include "macstdlibextras.h"
 #endif
 
@@ -89,8 +89,13 @@ inline PRBool ValidateDrawingState()
 #else
   // all our ports should be onscreen or offscreen color graphics ports
   // Onscreen ports have portVersion 0xC000, GWorlds have 0xC001.
+#if DEBUG
   if ((((UInt16)curPort->portVersion & 0xC000) != 0xC000) && !IsSIOUXWindow((GrafPtr)curPort))
     return false;
+#else
+  if ((((UInt16)curPort->portVersion & 0xC000) != 0xC000))
+    return false;
+#endif
 #endif
 
   // see if the device is in the device list. If not, it probably means that
