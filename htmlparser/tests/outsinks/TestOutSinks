@@ -41,6 +41,13 @@ if ($status != 0) then
   set errmsg = ($errmsg "simplecopy.out")
 endif
 
+echo "Testing simple html to plaintext formatting ..."
+TestOutput -i text/html -o text/plain -f 34 -w 70 -c OutTestData/simplefmt.out OutTestData/simple.html
+if ($status != 0) then
+  echo "Simple copy test failed.\n"
+  set errmsg = ($errmsg "simplefmt.out")
+endif
+
 echo "Testing non-wrapped plaintext ..."
 TestOutput -i text/html -o text/plain -f 0 -w 0 -c OutTestData/plainnowrap.out OutTestData/plain.html
 if ($status != 0) then
@@ -48,7 +55,7 @@ if ($status != 0) then
   set errmsg = ($errmsg "plainnowrap.out")
 endif
 
-echo "Testing wrapped bug unformatted plaintext ..."
+echo "Testing wrapped but unformatted plaintext ..."
 TestOutput -i text/html -o text/plain -f 32 -w 50 -c OutTestData/plainwrap.out OutTestData/plain.html
 if ($status != 0) then
   echo "Wrapped plaintext test failed."
@@ -56,7 +63,7 @@ if ($status != 0) then
 endif
 
 echo "Testing mail quoting ..."
-TestOutput -i text/html -o text/plain -c OutTestData/mailquote.out OutTestData/mailquote.html
+TestOutput -i text/html -o text/plain -f 2 -w 50 -c OutTestData/mailquote.out OutTestData/mailquote.html
 if ($status != 0) then
   echo "Mail quoting test failed."
   set errmsg = ($errmsg "mailquote.out")
