@@ -64,4 +64,4 @@ NS_NewISupportsArray__FPP16nsISupportsArray		# NS_NewISupportsArray(nsISupportsA
 #AddRef__17SupportsArrayImplFv		# SupportsArrayImpl::AddRef()
 #__dt__17SupportsArrayImplFv		# SupportsArrayImpl::~SupportsArrayImpl()
 #__ct__17SupportsArrayImplFv		# SupportsArrayImpl::SupportsArrayImpl()
-Create__8nsMallocFP11nsISupportsRC4nsIDPPv		# nsMalloc::Create(nsISupports*,const nsID&,void**)
+
