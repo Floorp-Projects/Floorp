@@ -84,7 +84,8 @@ MODULE = raptor
 XPIDL_MODULE = widget
 
 XPIDLSRCS =                              \
-	\nsISound.idl                        \
+	nsIFileSpecWithUI.idl              \
+	nsISound.idl                       \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
