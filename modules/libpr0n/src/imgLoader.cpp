@@ -893,7 +893,10 @@ imgCacheValidator::imgCacheValidator(imgRequest *request, void *aContext) :
 imgCacheValidator::~imgCacheValidator()
 {
   /* destructor code */
-  NS_IF_RELEASE(mRequest);
+  if (mRequest) {
+    mRequest->mValidator = nsnull;
+    NS_RELEASE(mRequest);
+  }
 }
 
 void imgCacheValidator::AddProxy(imgRequestProxy *aProxy)
@@ -923,8 +926,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
       mRequest->SetLoadId(mContext);
       mRequest->mValidator = nsnull;
 
-      NS_RELEASE(mRequest);
-      mRequest = nsnull;
+      NS_RELEASE(mRequest); // assigns null
 
       return NS_OK;
     }
@@ -941,8 +943,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   mRequest->GetURI(getter_AddRefs(uri));
 
   mRequest->mValidator = nsnull;
-  NS_RELEASE(mRequest);
-  mRequest = nsnull;
+  NS_RELEASE(mRequest); // assigns null
 
   nsresult rv;
   nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);

@@ -2203,42 +2203,6 @@ nsXULDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-//
-// nsIHTMLContentContainer interface
-//
-
-NS_IMETHODIMP
-nsXULDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-
-    *aResult = mAttrStyleSheet;
-    if (!mAttrStyleSheet) {
-        return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
-    }
-
-    NS_ADDREF(*aResult);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
-{
-    NS_PRECONDITION(nsnull != aResult, "null ptr");
-    if (!aResult) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    *aResult = mInlineStyleSheet;
-    if (!mInlineStyleSheet) {
-        return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
-    }
-
-    NS_ADDREF(*aResult);
-
-    return NS_OK;
-}
-
 //----------------------------------------------------------------------
 //
 // Implementation methods
