@@ -213,6 +213,7 @@ int main(int argc, char **argv)
   NS_NewImageManager(&manager);
 
   gTheApp = new nsNativeViewerApp();
+  NS_ADDREF(gTheApp);
   gTheApp->Initialize(argc, argv);
   gTheApp->Run();
 
