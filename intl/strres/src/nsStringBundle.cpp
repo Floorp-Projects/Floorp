@@ -38,11 +38,15 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "pratom.h"
+#include "prclist.h"
+#include "plarena.h"
+#include "prlog.h"              // for PR_ASSERT
 #include "prmem.h"
 #include "nsIServiceManager.h"
 #include "nsIModule.h"
 #include "nsIRegistry.h"
 #include "nsISupportsArray.h"
+#include "nsHashtable.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -72,7 +76,8 @@ protected:
 
   nsresult GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in);
   nsresult OpenInputStream(nsString& aURLStr, nsIInputStream*& in);
-  nsresult GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& country);
+public:
+  static nsresult GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& country);
  };
 
 nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult)
@@ -518,6 +523,15 @@ nsresult nsExtensibleStringBundle::GetEnumeration(nsIBidirectionalEnumerator ** 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+#define MAX_CACHED_BUNDLES 10
+
+struct bundleCacheEntry_t {
+  PRCList list;
+  nsOpaqueKey *mHashKey;
+  // do not use a nsCOMPtr - this is a struct not a class!
+  nsIStringBundle* mBundle;
+};
+
 class nsStringBundleService : public nsIStringBundleService
 {
 public:
@@ -526,21 +540,161 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLESERVICE
+    
+private:
+  nsresult getStringBundle(const char *aUrl, nsILocale* aLocale,
+                           nsIStringBundle** aResult);
+  
+  bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
+                                      nsOpaqueKey *aHashKey);
+
+  static void recycleEntry(bundleCacheEntry_t*);
+  
+  nsHashtable mBundleMap;
+  PRCList mBundleCache;
+  PLArenaPool mCacheEntryPool;
 };
 
-nsStringBundleService::nsStringBundleService()
+nsStringBundleService::nsStringBundleService() :
+  mBundleMap(MAX_CACHED_BUNDLES, PR_TRUE)
 {
 #ifdef DEBUG_tao
   printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
 #endif
   NS_INIT_REFCNT();
+
+  PR_INIT_CLIST(&mBundleCache);
+  PL_InitArenaPool(&mCacheEntryPool, "srEntries",
+                   sizeof(bundleCacheEntry_t)*MAX_CACHED_BUNDLES,
+                   sizeof(bundleCacheEntry_t));
 }
 
 nsStringBundleService::~nsStringBundleService()
 {
+  PRCList *current = PR_LIST_HEAD(&mBundleCache);
+  while (current != &mBundleCache) {
+    bundleCacheEntry_t *cacheEntry = (bundleCacheEntry_t*)current;
+
+    recycleEntry(cacheEntry);
+    
+    current = PR_NEXT_LINK(current);
+  }
+  
+  PL_FinishArenaPool(&mCacheEntryPool);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsStringBundleService, NS_GET_IID(nsIStringBundleService))
+
+nsresult
+nsStringBundleService::getStringBundle(const char *aURLSpec,
+                                       nsILocale* aLocale,
+                                       nsIStringBundle **aResult)
+{
+  nsresult ret;
+  
+  nsAutoString lc_country;
+  nsAutoString lc_lang;
+  nsStringBundle::GetLangCountry(aLocale, lc_lang, lc_country);
+  
+  nsStringKey urlKey(aURLSpec);
+  nsStringKey countryKey(lc_country);
+  nsStringKey langKey(lc_lang);
+
+  // create a "composite" key by stuffing all the keys into an array
+  // and hashing that.
+  
+  PRUint32 opaqueValue[3];
+  opaqueValue[0] = urlKey.HashValue();
+  opaqueValue[1] = countryKey.HashValue();
+  opaqueValue[2] = langKey.HashValue();
+
+  nsOpaqueKey completeKey((char *)opaqueValue, sizeof(PRUint32)*3);
+
+  bundleCacheEntry_t* cacheEntry =
+    (bundleCacheEntry_t*)mBundleMap.Get(&completeKey);
+  
+  if (cacheEntry) {
+    // cache hit!
+    // remove it from the list, it will later be reinserted
+    // at the head of the list
+    PR_REMOVE_LINK((PRCList*)cacheEntry);
+    
+  } else {
+
+    // hasn't been cached, so insert it into the hash table
+    nsStringBundle* bundle = new nsStringBundle(aURLSpec, nsnull, &ret);
+    if (!bundle) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    cacheEntry = insertIntoCache(bundle, &completeKey);
+  }
+
+  // at this point the cacheEntry should exist in the hashtable,
+  // but is not in the LRU cache.
+  // put the cache entry at the front of the list
+  
+  PR_INSERT_LINK((PRCList *)cacheEntry, &mBundleCache);
+
+  // finally, return the value
+  *aResult = cacheEntry->mBundle;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+bundleCacheEntry_t *
+nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
+                                       nsOpaqueKey* aHashKey)
+{
+  bundleCacheEntry_t *cacheEntry;
+  
+  if (mBundleMap.Count() < MAX_CACHED_BUNDLES) {
+    // create a new entry
+    
+    void *cacheEntryArena;
+    PL_ARENA_ALLOCATE(cacheEntryArena, &mCacheEntryPool, sizeof(bundleCacheEntry_t));
+    cacheEntry = (bundleCacheEntry_t*)cacheEntryArena;
+      
+  } else {
+    // take the last entry in the list, and recycle it.
+    cacheEntry = (bundleCacheEntry_t*)PR_LIST_TAIL(&mBundleCache);
+      
+    // remove it from the hash table and linked list
+    NS_ASSERTION(mBundleMap.Exists(cacheEntry->mHashKey),
+                 "Element will not be removed!");
+    mBundleMap.Remove(cacheEntry->mHashKey);
+    PR_REMOVE_LINK((PRCList*)cacheEntry);
+
+    // free up excess memory
+    recycleEntry(cacheEntry);
+  }
+    
+  // at this point we have a new cacheEntry that doesn't exist
+  // in the hashtable, so set up the cacheEntry
+  cacheEntry->mBundle = aBundle;
+  NS_ADDREF(cacheEntry->mBundle);
+
+  // need to make a copy of it for the hashkey
+  char* opaqueValue = (char*)PR_Malloc(sizeof (PRUint32)*3);
+  nsCRT::memcpy(opaqueValue, aHashKey->GetKey(), sizeof(PRUint32)*3);
+  
+  cacheEntry->mHashKey = new nsOpaqueKey(opaqueValue,
+                                         aHashKey->GetKeyLength());
+
+  // insert the entry into the cache and map, make it the MRU
+  mBundleMap.Put(cacheEntry->mHashKey, cacheEntry);
+
+  return cacheEntry;
+}
+
+void
+nsStringBundleService::recycleEntry(bundleCacheEntry_t *aEntry)
+{
+  PR_Free(NS_CONST_CAST(char *,aEntry->mHashKey->GetKey()));
+  delete aEntry->mHashKey;
+  NS_RELEASE(aEntry->mBundle);
+}
 
 NS_IMETHODIMP
 nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
@@ -555,21 +709,9 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
     delete s;
   }
 #endif
-  nsresult ret = NS_OK;
-  nsStringBundle* bundle = new nsStringBundle(aURLSpec, aLocale, &ret);
-  if (!bundle) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (NS_FAILED(ret)) {
-    delete bundle;
-    return ret;
-  }
-  ret = bundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void**) aResult);
-  if (NS_FAILED(ret)) {
-    delete bundle;
-  }
 
-  return ret;
+  
+  return getStringBundle(aURLSpec, aLocale, aResult);
 }
 
 NS_IMETHODIMP
@@ -595,36 +737,6 @@ nsStringBundleService::CreateExtensibleBundle(const char* aRegistryKey,
   return res;
 }
 
-/* void CreateXPCBundle ([const] in string aURLSpec, [const] in wstring aLocaleName, out nsIStringBundle aResult); */
-NS_IMETHODIMP 
-nsStringBundleService::CreateXPCBundle(const char *aURLSpec, const PRUnichar *aLocaleName, nsIStringBundle **aResult)
-{
-
-#ifdef DEBUG_tao
-  printf("\n++ nsStringBundleService::CreateXPCBundle ++\n");
-  {
-    nsString aURLStr(aURLSpec);
-    char *s = aURLStr.ToNewCString();
-    printf("\n** nsStringBundleService::XPCCreateBundle: %s\n", s?s:"null");
-    delete s;
-  }
-#endif
-  nsresult ret = NS_OK;
-  nsStringBundle* bundle = new nsStringBundle(aURLSpec, nsnull, &ret);
-  if (!bundle) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (NS_FAILED(ret)) {
-    delete bundle;
-    return ret;
-  }
-  ret = bundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void**) aResult);
-  if (NS_FAILED(ret)) {
-    delete bundle;
-  }
-
-  return ret;
-}
 
 NS_IMETHODIMP
 NS_NewStringBundleService(nsISupports* aOuter, const nsIID& aIID,
