@@ -1572,70 +1572,21 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     
     ResolveAndStat(PR_FALSE);
     
-#ifdef XP_OS2
     ULONG ulDriveNo = toupper(mResolvedPath.CharAt(0)) + 1 - 'A';
     FSALLOCATE fsAllocate;
-    APIRET rv = DosQueryFSInfo(ulDriveNo,
-                                            FSIL_ALLOC,
-                                            &fsAllocate,
-                                            sizeof(fsAllocate));
+    APIRET rc = DosQueryFSInfo(ulDriveNo,
+                               FSIL_ALLOC,
+                               &fsAllocate,
+                               sizeof(fsAllocate));
 
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (rc != NO_ERROR)
+       return NS_ERROR_FAILURE;
 
-    *aDiskSpaceAvailable = (PRInt64)(fsAllocate.cUnitAvail  *
-                                                    fsAllocate.cSectorUnit *
-                                                    (ULONG)fsAllocate.cbSector);
-#else   
-    const char *filePath = mResolvedPath.get();
-
-    PRInt64 int64;
-    
-    LL_I2L(int64 , LONG_MAX);
-
-    char aDrive[_MAX_DRIVE + 2];
-	_splitpath( (const char*)filePath, aDrive, NULL, NULL, NULL);
-	strcat(aDrive, "\\");
-
-    // Check disk space
-    DWORD dwSecPerClus, dwBytesPerSec, dwFreeClus, dwTotalClus;
-    ULARGE_INTEGER liFreeBytesAvailableToCaller, liTotalNumberOfBytes, liTotalNumberOfFreeBytes;
-    double nBytes = 0;
-
-    BOOL (WINAPI* getDiskFreeSpaceExA)(LPCTSTR lpDirectoryName, 
-                                       PULARGE_INTEGER lpFreeBytesAvailableToCaller,
-                                       PULARGE_INTEGER lpTotalNumberOfBytes,    
-                                       PULARGE_INTEGER lpTotalNumberOfFreeBytes) = NULL;
-
-    HINSTANCE hInst = LoadLibrary("KERNEL32.DLL");
-    NS_ASSERTION(hInst != NULL, "COULD NOT LOAD KERNEL32.DLL");
-    if (hInst != NULL)
-    {
-        getDiskFreeSpaceExA =  (BOOL (WINAPI*)(LPCTSTR lpDirectoryName, 
-                                               PULARGE_INTEGER lpFreeBytesAvailableToCaller,
-                                               PULARGE_INTEGER lpTotalNumberOfBytes,    
-                                               PULARGE_INTEGER lpTotalNumberOfFreeBytes)) 
-        GetProcAddress(hInst, "GetDiskFreeSpaceExA");
-        FreeLibrary(hInst);
-    }
-
-    if (getDiskFreeSpaceExA && (*getDiskFreeSpaceExA)(aDrive,
-                                                      &liFreeBytesAvailableToCaller, 
-                                                      &liTotalNumberOfBytes,  
-                                                      &liTotalNumberOfFreeBytes))
-    {
-        nBytes = (double)(signed __int64)liFreeBytesAvailableToCaller.QuadPart;
-    }
-    else if ( GetDiskFreeSpace(aDrive, &dwSecPerClus, &dwBytesPerSec, &dwFreeClus, &dwTotalClus))
-    {
-        nBytes = (double)dwFreeClus*(double)dwSecPerClus*(double) dwBytesPerSec;
-    }
-
-    LL_D2L(*aDiskSpaceAvailable, nBytes);
-#endif
+    *aDiskSpaceAvailable = fsAllocate.cUnitAvail;
+    *aDiskSpaceAvailable *= fsAllocate.cSectorUnit;
+    *aDiskSpaceAvailable *= fsAllocate.cbSector;
 
     return NS_OK;
-
 }
 
 NS_IMETHODIMP  

@@ -746,93 +746,21 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
-#ifdef XP_OS2
     PRInt64 nBytes = 0;
-    PRUint32 cbAvail = UINT_MAX;    // OS2TODO - compare w/Windows
     ULONG ulDriveNo = toupper(mPath[0]) + 1 - 'A';
     FSALLOCATE fsAllocate;
-    APIRET rc;
+    APIRET rc = DosQueryFSInfo(ulDriveNo,
+                               FSIL_ALLOC,
+                               &fsAllocate,
+                               sizeof(fsAllocate));
 
-    rc = DosQueryFSInfo(ulDriveNo,
-                                 FSIL_ALLOC,
-                                 &fsAllocate,
-                                 sizeof(fsAllocate));
-
-    if (rc == NO_ERROR) 
-    {
-       cbAvail = (PRInt64)(fsAllocate.cUnitAvail  *
-                                   fsAllocate.cSectorUnit *
-                                   (ULONG)fsAllocate.cbSector);
-       LL_I2L(nBytes , cbAvail);
-    }
-    else
-    {
-       // Note that nBytes will be 0 on error path.
+    if (rc == NO_ERROR) {
+       nBytes = fsAllocate.cUnitAvail;
+       nBytes *= fsAllocate.cSectorUnit;
+       nBytes *= fsAllocate.cbSector;
     }
 
     return nBytes;
-#else
-    PRInt64 int64;
-    
-    LL_I2L(int64 , LONG_MAX);
-
-    char aDrive[_MAX_DRIVE + 2];
-	_splitpath( (const char*)mPath, aDrive, NULL, NULL, NULL);
-
-	if (aDrive[0] == '\0')
-	{
-        // The back end is always trying to pass us paths that look
-        //   like /c|/netscape/mail.  See if we've got one of them
-        if (mPath.Length() > 2 && mPath[0] == '/' && mPath[2] == '|')
-        {
-            aDrive[0] = mPath[1];
-            aDrive[1] = ':';
-            aDrive[2] = '\0';
-        }
-        else
-        {
-            // Return bogus large number and hope for the best
-            return int64; 
-        }
-    }
-
-	strcat(aDrive, "\\");
-
-    // Check disk space
-    DWORD dwSecPerClus, dwBytesPerSec, dwFreeClus, dwTotalClus;
-    ULARGE_INTEGER liFreeBytesAvailableToCaller, liTotalNumberOfBytes, liTotalNumberOfFreeBytes;
-    double nBytes = 0;
-
-    BOOL (WINAPI* getDiskFreeSpaceExA)(LPCTSTR lpDirectoryName, 
-                                       PULARGE_INTEGER lpFreeBytesAvailableToCaller,
-                                       PULARGE_INTEGER lpTotalNumberOfBytes,    
-                                       PULARGE_INTEGER lpTotalNumberOfFreeBytes) = NULL;
-
-    HINSTANCE hInst = LoadLibrary("KERNEL32.DLL");
-    NS_ASSERTION(hInst != NULL, "COULD NOT LOAD KERNEL32.DLL");
-    if (hInst != NULL)
-    {
-        getDiskFreeSpaceExA =  (BOOL (WINAPI*)(LPCTSTR lpDirectoryName, 
-                                               PULARGE_INTEGER lpFreeBytesAvailableToCaller,
-                                               PULARGE_INTEGER lpTotalNumberOfBytes,    
-                                               PULARGE_INTEGER lpTotalNumberOfFreeBytes)) 
-        GetProcAddress(hInst, "GetDiskFreeSpaceExA");
-        FreeLibrary(hInst);
-    }
-
-    if (getDiskFreeSpaceExA && (*getDiskFreeSpaceExA)(aDrive,
-                                                      &liFreeBytesAvailableToCaller, 
-                                                      &liTotalNumberOfBytes,  
-                                                      &liTotalNumberOfFreeBytes))
-    {
-        nBytes = (double)(signed __int64)liFreeBytesAvailableToCaller.QuadPart;
-    }
-    else if ( GetDiskFreeSpace(aDrive, &dwSecPerClus, &dwBytesPerSec, &dwFreeClus, &dwTotalClus))
-    {
-        nBytes = (double)dwFreeClus*(double)dwSecPerClus*(double) dwBytesPerSec;
-    }
-    return (PRInt64)nBytes;
-#endif
 }
 
 
