@@ -209,7 +209,7 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
   <menu id="menu_View" accesskey="&viewMenu.accesskey;" value="&viewMenu.label;">
     <menupopup id="menu_View_Popup">
     	 <menu value="&toolbarsCmd.label;" id="view_toolbars">
-		  	<menupopup> 
+		  	<menupopup id="view_toolbars_popup"> 
 		  		<menuitem value="&navbarCmd.label;" observes="cmd_viewnavbar"  />
 		  		<menuitem value="&personalbarCmd.label;" observes="cmd_viewpersonaltoolbar" />
 		  		<menuitem value="&taskbarCmd.label;" observes="cmd_viewtaskbar" />
