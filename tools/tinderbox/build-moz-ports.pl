@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.14 $';
+$Version = '$Revision: 1.15 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -14,10 +14,11 @@ sub InitVars {
 
     # Default values of cmdline opts
     $BuildDepend = 1;	# Depend or Clobber
-    $ReportStatus = 1;	# Send results to server or not
+    $ReportStatus = 1;	# Send results to server, or not
     $BuildOnce = 0;	# Build once, don't send results to server
     $BuildClassic = 0;	# Build classic source
     $RunTest = 1;	# Run the smoke test on successful build, or not
+    $UseTimeStamp = 1;	# Use the CVS 'pull-by-timestamp' option, or not
 
     # Relative path to binary
     $BinaryName{'x'} = 'mozilla-export';
@@ -31,7 +32,7 @@ sub InitVars {
     $MakeOverrides = '';
     $mail = '/bin/mail';
     $CVS = 'cvs -q -z3';
-    $CVSCO = 'co -P';
+    $CVSCO = 'checkout -P';
 
     # Set these proper values for your tinderbox server
     $Tinderbox_server = 'tinderbox-daemon\@cvs-mirror.mozilla.org';
@@ -42,12 +43,13 @@ sub InitVars {
     $BuildTree = 'MozillaTest'; # until you get the script working.
                                 # when it works, change to the tree you're
                                 # actually building
-    $BuildTag = '';
     $BuildName = '';
-    $TopLevel = '.';
-    $Topsrcdir = 'mozilla';
+    $BuildTag = '';
     $BuildObjName = '';
     $BuildConfigDir = 'mozilla/config';
+    $BuildStart = '';
+    $TopLevel = '.';
+    $Topsrcdir = 'mozilla';
     $ClobberStr = 'realclean';
     $ConfigureEnvArgs = 'CFLAGS=-pipe CXXFLAGS=-pipe';
     $ConfigureArgs = '--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null --enable-editor ';
@@ -155,7 +157,7 @@ sub SetupPath {
 	$ENV{'PATH'} = '/usr/local/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11/lib';
 	$ConfigureArgs .= '--disable-shared --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
-	$ConfigureEnvArgs = 'CC=cc CXX=cc';
+	$ConfigureEnvArgs = 'CC="cc -DQNX" CXX="cc -DQNX"';
 	$Compiler = 'cc';
 	$mail = '/usr/bin/sendmail';
     }
@@ -338,6 +340,12 @@ sub GetSystemInfo {
     } else {
 	$logfile = "${DirName}.log";
     }
+
+    if ( $UseTimeStamp ) {
+	$BuildStart = `date '+%D %H:%M'`;
+	chop($BuildStart);
+	$CVSCO .= " -D '$BuildStart'";
+    }
 }
 
 sub BuildIt {
@@ -416,8 +424,8 @@ sub BuildIt {
 
 	# Do a separate checkout with toplevel makefile
 	if ( $BuildClassic == 0 ) {
-	    print LOG "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO'|\n";
-	    open (PULLALL, "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO' |\n");
+	    print LOG "$Make -f mozilla/client.mk checkout CVSCO=\"$CVS $CVSCO\"|\n";
+	    open (PULLALL, "$Make -f mozilla/client.mk checkout CVSCO=\"$CVS $CVSCO\" |\n");
 	    while (<PULLALL>) {
 		print LOG $_;
 		print $_;
@@ -698,6 +706,9 @@ sub ParseArgs {
 	}
 	elsif ( $ARGV[$i] eq '--notest' ) {
 	    $RunTest = 0;
+	}
+	elsif ( $ARGV[$i] eq '--notime' ) {
+	    $UseTimeStamp = 0;
 	}
 	elsif ( $ARGV[$i] eq '--once' ) {
 	    $BuildOnce = 1;
