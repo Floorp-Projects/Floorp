@@ -2005,4 +2005,4 @@ endif
 
 documentation:
 	@cd $(DEPTH)
-	$(DOXYGEN) $(topsrcdir)/config/doxygen.cfg
+	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
