@@ -189,7 +189,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
 nsTitledButtonFrame::nsTitledButtonFrame()
 {
 	mTitle = "";
-	mAlign = NS_SIDE_BOTTOM;
+	mAlign = NS_SIDE_TOP;
 	mCropType = CropRight;
 	mNeedsLayout = PR_TRUE;
 	mHasImage = PR_FALSE;
@@ -294,10 +294,10 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
 	  mAlign = NS_SIDE_LEFT;
   else if (value.EqualsIgnoreCase(ALIGN_RIGHT))
 	  mAlign = NS_SIDE_RIGHT;
-  else if (value.EqualsIgnoreCase(ALIGN_TOP))
-	  mAlign = NS_SIDE_TOP;
-  else 
+  else if (value.EqualsIgnoreCase(ALIGN_BOTTOM))
 	  mAlign = NS_SIDE_BOTTOM;
+  else 
+	  mAlign = NS_SIDE_TOP;
 
   value="";
 	mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, value);
@@ -441,54 +441,45 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
      spacing = mSpacing;
    }
 
-   /*
-	 // if we don't have a title
-	 if (mTitle.Length() == 0)
-	 {
-		// have an image
-		 if (PR_TRUE == mHasImage) {
-			 // just center the image
- 			 mImageRect.x = center_x  - mImageRect.width/2;
-			 mImageRect.y = center_y  - mImageRect.height/2;
-		 } else { // no image
-			 //do nothing
-		 }
-	 } else if (mTitle.Length() > 0) {  // have a title
-		 // but no image
-		 if (PR_FALSE == mHasImage) {
-			 // just center the title
-             CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width);
-      		 // title top
-			 mTitleRect.x = center_x  - mTitleRect.width/2;
-			 mTitleRect.y = center_y  - mTitleRect.height/2;
-		 } else { // image too?
-			*/		 
+  
 		// for each type of alignment layout of the image and the text.
 			 switch (mAlign) {
-			  case NS_SIDE_TOP: {
+			  case NS_SIDE_BOTTOM: {
 				  // get title and center it
 				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width);
 
-				  // title top
-				  mTitleRect.x = center_x  - mTitleRect.width/2;
-				  mTitleRect.y = top_y;
+          if (mHasImage) {
 
-				  // image bottom center
-				  mImageRect.x = center_x - mImageRect.width/2;
-				  mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + mTitleRect.height + spacing;
+				    // title top
+				    mTitleRect.x = center_x  - mTitleRect.width/2;
+				    mTitleRect.y = top_y;
+
+				    // image bottom center
+				    mImageRect.x = center_x - mImageRect.width/2;
+				    mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + mTitleRect.height + spacing;
+          } else {
+				    // title bottom
+				    mTitleRect.x = center_x - mTitleRect.width/2;
+				    mTitleRect.y = bottom_y - mTitleRect.height;	  
+          }
 			  }       
 			  break;
-			  case NS_SIDE_BOTTOM:{
+			  case NS_SIDE_TOP:{
 				  // get title and center it
 				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width);
 
-				  // image top center
-				  mImageRect.x = center_x  - mImageRect.width/2;
-				  mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + spacing;
+          if (mHasImage) {
+				    // image top center
+				    mImageRect.x = center_x  - mImageRect.width/2;
+				    mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + spacing;
 
-				  // title bottom
-				  mTitleRect.x = center_x - mTitleRect.width/2;
-				  mTitleRect.y = bottom_y - mTitleRect.height;
+				    // title bottom
+				    mTitleRect.x = center_x - mTitleRect.width/2;
+				    mTitleRect.y = bottom_y - mTitleRect.height;
+          } else {
+				    mTitleRect.x = center_x  - mTitleRect.width/2;
+				    mTitleRect.y = top_y;
+          }
 			  }       
 			  break;
 			 case NS_SIDE_LEFT: {
@@ -518,9 +509,6 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 			   }
 			  break;
 		   }
-
-		 //}
-	 //}
 	 
    // ok layout complete
    mNeedsLayout = PR_FALSE;
