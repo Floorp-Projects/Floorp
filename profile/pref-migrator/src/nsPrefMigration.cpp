@@ -23,7 +23,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "VerReg.h"
-#include "nsFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 #include "prio.h"
 #include "prerror.h"
@@ -105,10 +104,10 @@ NS_IMETHODIMP
 nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult *aResult)
 {
 
-  char *mailFileArray[200], *newsFileArray[200];
   char *oldMailPath, *oldNewsPath;
   char *newMailPath, *newNewsPath;
-  PRUint32 totalMailSize = 0, totalNewsSize = 0, numberOfMailFiles = 0, numberOfNewsFiles = 0;
+  PRUint32 totalMailSize = 0, totalNewsSize = 0, totalProfileSize = 0, totalSize = 0,
+           numberOfMailFiles = 0, numberOfNewsFiles = 0, numberOfProfileFiles = 0;
   PRInt32 oldDirLength = 0;
 
 #if defined(NS_DEBUG)
@@ -171,9 +170,12 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult 
     PL_strcat(newNewsPath, "\\News\0");
   }
 
-  /* Read the user's 4.x files from their profile */
-  success = Read4xFiles(oldMailPath, mailFileArray, &numberOfMailFiles, &totalMailSize);
-  success = Read4xFiles(oldNewsPath, newsFileArray, &numberOfNewsFiles, &totalNewsSize);
+  nsFileSpec inputPath(profilePath);
+  success = GetSizes(inputPath, PR_FALSE, &totalProfileSize);
+  inputPath = oldMailPath;
+  success = GetSizes(inputPath, PR_TRUE, &totalMailSize);
+  inputPath = oldNewsPath;
+  success = GetSizes(inputPath, PR_TRUE, &totalNewsSize);
 
   if(CheckForSpace(newMailPath, totalMailSize) != NS_OK)
 	  return -1;  /* Need error code for not enough space */
@@ -184,16 +186,27 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult 
   PR_MkDir(newMailPath, PR_RDWR);
   PR_MkDir(newNewsPath, PR_RDWR);
 
-  success = DoTheCopy(oldMailPath, newMailPath, mailFileArray);
-  success = DoTheCopy(oldNewsPath, newNewsPath, newsFileArray);
+  nsFileSpec oldPath(profilePath);
+  nsFileSpec newPath(newProfilePath);
+  success = DoTheCopy(oldPath, newPath, PR_FALSE);
+  
+  oldPath = oldMailPath;
+  newPath = newMailPath;
+  success = DoTheCopy(oldPath, newPath, PR_TRUE);
+
+  oldPath = oldNewsPath;
+  newPath = newNewsPath;
+  success = DoTheCopy(oldPath, newPath, PR_TRUE);
+
+//  success = DoTheCopy(profilePath, newProfilePath, profileFileArray);
+//  success = DoTheCopy(oldMailPath, newMailPath, mailFileArray);
+//  success = DoTheCopy(oldNewsPath, newNewsPath, newsFileArray);
 
   //PR_Free(newProfilePath);
   PR_Free(oldMailPath);
   PR_Free(oldNewsPath);
   PR_Free(newMailPath);
   PR_Free(newNewsPath);
-  //PR_Free(mailFileArray);
-  //PR_Free(newsFileArray);
 
   return NS_OK;
 }
@@ -283,66 +296,52 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
   return NS_ERROR_FAILURE;   /* need error code for pref file not found */
 }
 
+
 /*---------------------------------------------------------------------------------
- * Read4xFiles reads the files contained in the profile path and loads the 
- *             names into an array
+ * GetSizes reads the 4.x files in the profile tree and accumulates their sizes
  *
- * INPUT: ProfilePath - The 4.x profile path plus the data dir (e.g. mail or news
- *        fileArray - A blank array to be filled by this function
- *        sizeTotal - A total byte accumulator
+ * INPUT:
  *
- * OUTPUT: fileArray - The input fileArray filled with filenames
- *         sizeTotal - The total (in bytes) of the file sizes in fileArray
+ * OUPUT:
  *
- * RETURNS: NS_OK if successful
+ * RETURNS:
+ *
  *--------------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::Read4xFiles(char* ProfilePath, char* fileArray[], 
-                             PRUint32* fileTotal, PRUint32* sizeTotal)
+nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *sizeTotal)
 {
-  char* fullFileName;
   int i = 0;
+  char* folderName;
+  nsAutoString fileOrDirNameStr;
+  PRInt32 len;
 
-  PRUint32 fileSize = 0, length = 0;
-  PRDir *ProfileDir;
-  PRDirEntry *filename;
-  PRFileInfo fileInfo;
-  bool pr_succeeded;
-
-  if((fullFileName = (char*) PR_MALLOC(PL_strlen(ProfilePath) + 64)) == NULL)
+  for (nsDirectoryIterator dir(inputPath); dir.Exists(); dir++)
   {
-    PR_Free(fullFileName);
-    return -1;
-  }
-
-  /* Load files into an array while adding up their size */
-  ProfileDir = PR_OpenDir(ProfilePath);
-  while ((filename = PR_ReadDir(ProfileDir, PR_SKIP_BOTH)) != NULL)
-  {
-    length = PL_strlen(filename->name);
-	  if(PL_strcmp(&filename->name[length -3], "snm") != 0) /* Don't copy the summary files */
+    nsFileSpec fileOrDirName = (nsFileSpec&)dir;
+    folderName = fileOrDirName.GetLeafName();
+    fileOrDirNameStr = folderName;
+    len = fileOrDirNameStr.Length();
+    if (fileOrDirNameStr.Find(".snm", PR_TRUE) != -1)  /* Don't copy the summary files */
+      continue;
+    else
     {
-      fileArray[i] = (char*) PR_MALLOC(length);
-	    PL_strcpy(fileArray[i], (char*)filename->name);
-      PL_strcpy(fullFileName, ProfilePath);
-      PL_strcat(fullFileName, "\\");
-      PL_strcat(fullFileName, (char*) filename->name);
-      PL_strcat(fullFileName, "\0");
-
-	    i++;
-      if (pr_succeeded = PR_GetFileInfo(fullFileName, &fileInfo) == PR_SUCCESS)
+      if (fileOrDirName.IsDirectory())
       {
-        *sizeTotal = *sizeTotal + fileInfo.size;
+        if(readSubdirs)
+        {
+          GetSizes(fileOrDirName, PR_TRUE, sizeTotal); /* re-enter the GetSizes function */
+        }
+        else
+          continue;
       }
-      fileSize = 0;	
+      else
+        *sizeTotal += fileOrDirName.GetFileSize();
     }
   }
-  *fileTotal = i-1;
-  fileArray[i] = NULL; /* Put a Null in the array after the last file name */
-  PR_Free(fullFileName);
 
   return NS_OK;
 }
+
 
 /*--------------------------------------------------------------------------
  * CheckForSpace checks the target drive for enough space
@@ -365,64 +364,54 @@ nsPrefMigration::CheckForSpace(char* newProfilePath, PRFloat64 requiredSpace)
 }
 
 /*-------------------------------------------------------------------------
- * DoTheCopy copies the files listed in fileArray from oldPath to newPath
+ * DoTheCopy copies the files listed in oldPath to newPath
  * 
  * INPUT: oldPath - The old profile path plus the specific data type 
  *                  (e.g. mail or news)
  *        newPath - The new profile path plus the specific data type
- *        fileArray - The list of filenames read from the old profile path
  *
  * RETURNS: NS_OK if successful
  *          NS_ERROR_FAILURE if failed
  *
  *--------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::DoTheCopy(const char* oldPath, const char* newPath, char* fileArray[])
+nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSubdirs)
 {
-  PRInt32 i = 0, succeeded = 0;
-
-  nsPrefMigrationProgressDialog* pProgressMeter = new nsPrefMigrationProgressDialog;
-
-  
-  pProgressMeter->CreateProfileProgressDialog();
-
-  while ((fileArray[i] != NULL) && (i < 200))
+  int i = 0;
+  char* folderName;
+  nsAutoString fileOrDirNameStr;
+  PRInt32 len;
+ 
+  for (nsDirectoryIterator dir(oldPath); dir.Exists(); dir++)
   {
-	  nsFileSpec sourceFile(oldPath);
-	  sourceFile += fileArray[i];
-	  nsFileSpec targetFile(newPath);
+    nsFileSpec fileOrDirName = (nsFileSpec&)dir; //set first file or dir to a nsFileSpec
+    folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
+    fileOrDirNameStr = folderName;
 
-  	//nsFileSpec parentofTargetFile;
-  	//targetFile.GetParent(parentofTargetFile);
-
-	  succeeded = sourceFile.Copy(targetFile);
-    pProgressMeter->IncrementProgressBar();
-    i++;
-  }
-  pProgressMeter->KillProfileProgressDialog();
+    if (fileOrDirNameStr.Find(".snm", PR_TRUE) != -1)  /* Don't copy the summary files */
+      continue;
+    else
+    {
+      if (fileOrDirName.IsDirectory())
+      {
+        if(readSubdirs)
+        {
+          nsFileSpec newPathExtended = newPath;
+          newPathExtended += folderName;
+          newPathExtended.CreateDirectory();
+          DoTheCopy(fileOrDirName, newPathExtended, PR_TRUE); /* re-enter the DoTheCopy function */
+        }
+        else
+          continue;
+      }
+      else
+        fileOrDirName.Copy(newPath);
+    }
+  }  
+  
   return NS_OK;
 }
 
-
-/*
-
-NS_IMETHODIMP
-nsPrefMigration::Startup()
-{
-  VR_SetRegDirectory("C:\\temp\\");
-  NR_StartupRegistry();   
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefMigration::Shutdown()
-{
-  NR_ShutdownRegistry();
-  return NS_OK;
-}
-
-*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
