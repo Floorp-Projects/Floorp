@@ -70,7 +70,7 @@ public:
 				
     }; // nsFindComponent::Context
 
-private:
+protected:
     nsCOMPtr<nsIAppShellService>	mAppShell;
     nsString                    	mLastSearchString;
     
