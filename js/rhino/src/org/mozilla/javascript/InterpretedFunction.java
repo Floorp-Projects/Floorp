@@ -77,26 +77,7 @@ class InterpretedFunction extends NativeFunction
                        Object[] args)
         throws JavaScriptException
     {
-        if (itsClosure != null)
-            scope = itsClosure;
-        else if (!itsData.itsUseDynamicScope)
-            scope = getParentScope();
-
-        if (itsData.itsCheckThis)
-            thisObj = ScriptRuntime.getThis(thisObj);
-
-        if (itsData.itsNeedsActivation) {
-            scope = ScriptRuntime.initVarObj(cx, scope, this, thisObj, args);
-        }
-        try {
-            return Interpreter.interpret(cx, scope, thisObj, args, this,
-                                         itsData);
-        }
-        finally {
-            if (itsData.itsNeedsActivation) {
-                ScriptRuntime.popActivation(cx);
-            }
-        }
+        return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);
     }
 
     public boolean isFunction() {
@@ -124,6 +105,5 @@ class InterpretedFunction extends NativeFunction
     }
 
     InterpreterData itsData;
-    Scriptable itsClosure;
 }
 

@@ -63,8 +63,6 @@ public class InterpretedScript extends NativeScript implements DebuggableScript 
                        Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        scope = ScriptRuntime.initScript(cx, scope, this, thisObj,
-                                         itsData.itsFromEvalCode);
         return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);
     }
 

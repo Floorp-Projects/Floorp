@@ -46,18 +46,13 @@ class InterpreterData implements Serializable {
     static final int INITIAL_STRINGTABLE_SIZE = 64;
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
 
-    InterpreterData(int lastICodeTop, int lastStringTableIndex,
-                    Object securityDomain,
+    InterpreterData(Object securityDomain,
                     boolean useDynamicScope, boolean checkThis)
     {
-        itsICodeTop = lastICodeTop == 0
-                      ? INITIAL_MAX_ICODE_LENGTH
-                      : lastICodeTop * 2;
+        itsICodeTop = INITIAL_MAX_ICODE_LENGTH;
         itsICode = new byte[itsICodeTop];
 
-        itsStringTable = new String[lastStringTableIndex == 0
-                                    ? INITIAL_STRINGTABLE_SIZE
-                                    : lastStringTableIndex * 2];
+        itsStringTable = new String[INITIAL_STRINGTABLE_SIZE];
 
         itsUseDynamicScope = useDynamicScope;
         itsCheckThis = checkThis;
@@ -100,6 +95,7 @@ class InterpreterData implements Serializable {
         return -1;
     }
 
+    boolean isFunction;
     String itsName;
     String itsSource;
     String itsSourceFile;
