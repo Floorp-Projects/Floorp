@@ -42,22 +42,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= resources
-
 include $(topsrcdir)/config/rules.mk
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CHROME_PLATFORM = mac
-else
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-CHROME_PLATFORM = win
-else
-CHROME_PLATFORM = unix
-endif
-endif
-
-libs realchrome::
-	@$(REGCHROME) locale en-US/communicator-platform en-$(CHROME_PLATFORM).jar
-
-install::
-	@$(REGCHROME_INSTALL) locale en-US/communicator-platform en-$(CHROME_PLATFORM).jar

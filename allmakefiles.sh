@@ -711,13 +711,6 @@ xpfe/bootstrap/init.d/Makefile
 xpfe/bootstrap/appleevents/Makefile
 xpfe/browser/Makefile
 xpfe/browser/src/Makefile
-xpfe/browser/resources/Makefile
-xpfe/browser/resources/content/Makefile
-xpfe/browser/resources/content/unix/Makefile
-xpfe/browser/resources/content/win/Makefile
-xpfe/browser/resources/locale/Makefile
-xpfe/browser/resources/locale/en-US/Makefile
-xpfe/browser/resources/locale/en-US/unix/Makefile
 xpfe/global/Makefile
 xpfe/global/buildconfig.html
 xpfe/global/resources/Makefile
@@ -731,12 +724,6 @@ xpfe/global/resources/locale/en-US/os2/Makefile
 xpfe/global/resources/locale/en-US/unix/Makefile
 xpfe/global/resources/locale/en-US/win/Makefile
 xpfe/communicator/Makefile
-xpfe/communicator/resources/Makefile
-xpfe/communicator/resources/locale/Makefile
-xpfe/communicator/resources/locale/en-US/Makefile
-xpfe/communicator/resources/content/Makefile
-xpfe/communicator/resources/content/unix/Makefile
-xpfe/communicator/resources/content/win/Makefile
 "
 
 MAKEFILES_embedding="

@@ -29,6 +29,21 @@ comm.jar:
         content/navigator/viewPartialSource.xul        (resources/content/viewPartialSource.xul)
         content/navigator/mailNavigatorOverlay.xul     (resources/content/mailNavigatorOverlay.xul)
         content/navigator/searchconfig.properties      (resources/content/searchconfig.properties)
+#ifdef XP_MACOSX
+*       content/navigator-platform/contents.rdf        (resources/content/mac/contents-platform.rdf)
+        content/navigator/platformNavigationBindings.xul (resources/content/mac/platformNavigationBindings.xul)
+        content/navigator/platformMailOverlay.xul      (resources/content/mac/platformMailOverlay.xul)
+#else
+#ifdef XP_UNIX
+*       content/navigator-platform/contents.rdf        (resources/content/unix/contents-platform.rdf)
+        content/navigator/platformNavigationBindings.xul (resources/content/unix/platformNavigationBindings.xul)
+        content/navigator/platformMailOverlay.xul      (resources/content/unix/platformMailOverlay.xul)
+#else
+*       content/navigator-platform/contents.rdf        (resources/content/win/contents-platform.rdf)
+        content/navigator/platformNavigationBindings.xul (resources/content/win/platformNavigationBindings.xul)
+        content/navigator/platformMailOverlay.xul      (resources/content/win/platformMailOverlay.xul)
+#endif
+#endif
 
 en-US.jar:
 *       locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
@@ -48,3 +63,18 @@ en-US.jar:
 US.jar:
 *       locale/US/navigator-region/contents.rdf             (resources/locale/en-US/contents-region.rdf)
         locale/US/navigator-region/region.properties        (resources/locale/en-US/region.properties)
+
+en-mac.jar:
+*       locale/en-US/navigator-platform/contents.rdf        (resources/locale/en-US/mac/contents-platform.rdf)
+        locale/en-US/navigator-platform/platformNavigationBindings.dtd (resources/locale/en-US/mac/platformNavigationBindings.dtd)
+        locale/en-US/navigator-platform/navigator.properties (resources/locale/en-US/mac/navigator.properties)
+
+en-unix.jar:
+*       locale/en-US/navigator-platform/contents.rdf        (resources/locale/en-US/unix/contents-platform.rdf)
+        locale/en-US/navigator-platform/platformNavigationBindings.dtd (resources/locale/en-US/unix/platformNavigationBindings.dtd)
+        locale/en-US/navigator-platform/navigator.properties (resources/locale/en-US/unix/navigator.properties)
+
+en-win.jar:
+*       locale/en-US/navigator-platform/contents.rdf        (resources/locale/en-US/win/contents-platform.rdf)
+        locale/en-US/navigator-platform/platformNavigationBindings.dtd (resources/locale/en-US/win/platformNavigationBindings.dtd)
+        locale/en-US/navigator-platform/navigator.properties (resources/locale/en-US/win/navigator.properties)
