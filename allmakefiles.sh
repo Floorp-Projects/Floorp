@@ -292,6 +292,7 @@ profile/public/Makefile
 profile/resources/Makefile
 profile/defaults/Makefile
 profile/idlservices/Makefile
+profile/Acct/Makefile
 rdf/Makefile
 rdf/base/Makefile
 rdf/base/idl/Makefile
