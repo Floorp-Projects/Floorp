@@ -25,11 +25,20 @@
 #ifndef nsSharedBufferList_h___
 #define nsSharedBufferList_h___
 
+#ifndef nsBufferHandle_h___
 #include "nsBufferHandle.h"
   // for |nsSharedBufferHandle|
+#endif
 
+#ifndef nscore_h___
 #include "nscore.h"
   // for |PRUnichar|
+#endif
+
+#ifndef nsAReadableString_h___
+#include "nsAReadableString.h"
+  // for |nsReadingIterator|
+#endif
 
   /**
    * This class forms the basis for several multi-fragment string classes, in
@@ -56,6 +65,11 @@ class nsSharedBufferList
 
             Buffer* mPrev;
             Buffer* mNext;
+
+          private:
+              // pass-by-value is explicitly denied
+            Buffer( const Buffer& );          // NOT TO BE IMPLEMENTED
+            void operator=( const Buffer& );  // NOT TO BE IMPLEMENTED
         };
 
       struct Position
@@ -65,6 +79,35 @@ class nsSharedBufferList
 
           Position() { }
           Position( Buffer* aBuffer, PRUnichar* aPosInBuffer ) : mBuffer(aBuffer), mPosInBuffer(aPosInBuffer) { }
+
+          // Position( const Position& );             -- auto-generated copy-constructor OK
+          // Position& operator=( const Position& );  -- auto-generated copy-assignment OK
+          // ~Position();                             -- auto-generated destructor OK
+
+            // iff |aIter| is a valid iterator into a |nsSharedBufferList|
+          explicit
+          Position( const nsReadingIterator<PRUnichar>& aIter )
+              : mBuffer( NS_CONST_CAST(Buffer*, NS_REINTERPRET_CAST(const Buffer*, aIter.fragment().mFragmentIdentifier)) ),
+                mPosInBuffer( NS_CONST_CAST(PRUnichar*, aIter.get()) )
+            {
+              // nothing else to do here
+            }
+
+            // iff |aIter| is a valid iterator into a |nsSharedBufferList|
+          Position&
+          operator=( const nsReadingIterator<PRUnichar>& aIter )
+            {
+              mBuffer       = NS_CONST_CAST(Buffer*, NS_REINTERPRET_CAST(const Buffer*, aIter.fragment().mFragmentIdentifier));
+              mPosInBuffer  = NS_CONST_CAST(PRUnichar*, aIter.get());
+              return *this;
+            }
+
+          void PointTo( Buffer* aBuffer, PRUnichar* aPosInBuffer )  { mBuffer=aBuffer; mPosInBuffer=aPosInBuffer; }
+          void PointBefore( Buffer* aBuffer )                       { PointTo(aBuffer, aBuffer->DataStart()); }
+          void PointAfter( Buffer* aBuffer )                        { PointTo(aBuffer, aBuffer->DataEnd()); }
+
+          // Position( const Position& );             -- automatically generated copy-constructor is OK
+          // Position& operator=( const Position& );  -- automatically generated copy-assignment operator is OK
         };
 
 
@@ -85,7 +128,7 @@ class nsSharedBufferList
       virtual ~nsSharedBufferList();
 
     private:
-        // pass by value is not supported
+        // pass-by-value is explicitly denied
       nsSharedBufferList( const nsSharedBufferList& );  // NOT TO BE IMPLEMENTED
       void operator=( const nsSharedBufferList& );      // NOT TO BE IMPLEMENTED
 

@@ -70,27 +70,29 @@ class nsSlidingSharedBufferList
 class nsSlidingSubstring
      : public nsPromiseReadable<PRUnichar>
   {
-    friend class nsSlidingSharedBufferList;
-
     public:
-      nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList, const nsSharedBufferList::Position& aStart, const nsSharedBufferList::Position& aEnd );
-      nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList );
-     ~nsSlidingSubstring();
+      typedef nsSlidingSharedBufferList::Buffer   Buffer;
+      typedef nsSlidingSharedBufferList::Position Position;
 
-      // need to take care of
-      //  copy-constructor
-      //  copy-assignment
+      nsSlidingSubstring( const nsSlidingSubstring& );  // copy-constructor
+      nsSlidingSubstring( const nsSlidingSubstring& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd );
+     ~nsSlidingSubstring();
 
       virtual PRUint32 Length() const { return mLength; }
 
     protected:
+      nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList );
       virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
-      
+
+    private:
+        // can't assign into me, I'm a read-only reference
+      void operator=( const nsSlidingSubstring& );  // NOT TO BE IMPLEMENTED
+
     protected:
-      nsSharedBufferList::Position  mStart;
-      nsSharedBufferList::Position  mEnd;
-      nsSlidingSharedBufferList&    mBufferList;
-      PRUint32                      mLength;
+      Position                    mStart;
+      Position                    mEnd;
+      nsSlidingSharedBufferList&  mBufferList;
+      PRUint32                    mLength;
   };
 
 
@@ -105,13 +107,20 @@ class nsSlidingString
   {
     public:
       nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd );
+        // ...created by consuming ownership of a buffer ... |aStorageStart| must point to something
+        //  that it will be OK for the slidking string to call |nsMemory::Free| on
 
-        // you are giving ownership to the string, it takes and keeps your buffer, deleting it when done
+        // you are giving ownership to the string, it takes and keeps your buffer, deleting it (with |nsMemory::Free|) when done
       void AppendBuffer( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd );
+
 //    void Append( ... ); do you want some |Append|s that copy the supplied data?
 
       void DiscardPrefix( const nsReadingIterator<PRUnichar>& );
         // any other way you want to do this?
+
+    private:
+      nsSlidingString( const nsSlidingString& );  // NOT TO BE IMPLEMENTED
+      void operator=( const nsSlidingString& );   // NOT TO BE IMPLEMENTED
   };
 
 

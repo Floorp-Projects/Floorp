@@ -443,8 +443,28 @@ main()
 
       nsSlidingString ss0(buffer, buffer+5, buffer+6);
 //    ss0.AppendBuffer(buffer, buffer+5, buffer+6);
+      nsReadingIterator<PRUnichar> ri0;
+      ss0.BeginReading(ri0);
 
       tests_failed += test_readable_hello(ss0);
+
+      nsSlidingSubstring ss1(ss0);
+      tests_failed += test_readable_hello(ss1);
+
+      buffer = ToNewUnicode(literal);
+      ss0.AppendBuffer(buffer, buffer+5, buffer+6);
+
+      ri0.advance(5);
+      ss0.DiscardPrefix(ri0);
+
+      tests_failed += test_readable_hello(ss0);
+      tests_failed += test_readable_hello(ss1);
+
+      nsReadingIterator<PRUnichar> ri1;
+      ss0.EndReading(ri1);
+
+      nsSlidingSubstring ss2(ss0, ri0, ri1);
+      tests_failed += test_readable_hello(ss2);
     }
 
 
