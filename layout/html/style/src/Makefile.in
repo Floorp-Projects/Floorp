@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsCSSColorUtils.cpp \
 		nsFrameContentIterator.cpp \
 		nsChildIterator.cpp \
+		nsQuoteList.cpp \
 		$(NULL)
 
 EXPORTS		= \

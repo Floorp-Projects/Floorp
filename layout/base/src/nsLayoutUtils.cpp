@@ -217,8 +217,12 @@ nsLayoutUtils::IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
 
 // static
 PRInt32
-nsLayoutUtils::CompareTreePosition(nsIContent* aContent1, nsIContent* aContent2,
-                                   nsIContent* aCommonAncestor) {
+nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
+                                     nsIContent* aContent2,
+                                     PRInt32 aIf1Ancestor,
+                                     PRInt32 aIf2Ancestor,
+                                     nsIContent* aCommonAncestor)
+{
   NS_PRECONDITION(aContent1, "aContent1 must not be null");
   NS_PRECONDITION(aContent2, "aContent2 must not be null");
 
@@ -241,7 +245,8 @@ nsLayoutUtils::CompareTreePosition(nsIContent* aContent1, nsIContent* aContent2,
   if (!c2 && aCommonAncestor) {
     // So, it turns out aCommonAncestor was not an ancestor of c2.
     // We need to retry with no common ancestor hint.
-    return CompareTreePosition(aContent1, aContent2, nsnull);
+    return DoCompareTreePosition(aContent1, aContent2,
+                                 aIf1Ancestor, aIf2Ancestor, nsnull);
   }
   
   int last1 = content1Ancestors.Count() - 1;
@@ -261,12 +266,12 @@ nsLayoutUtils::CompareTreePosition(nsIContent* aContent1, nsIContent* aContent2,
       return 0;
     } else {
       // aContent1 is an ancestor of aContent2
-      return -1;
+      return aIf1Ancestor;
     }
   } else {
     if (last2 < 0) {
       // aContent2 is an ancestor of aContent1
-      return 1;
+      return aIf2Ancestor;
     } else {
       // content1Ancestor != content2Ancestor, so they must be siblings with the same parent
       nsIContent* parent = content1Ancestor->GetParent();

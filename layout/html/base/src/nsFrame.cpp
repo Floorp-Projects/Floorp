@@ -79,6 +79,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContentSink.h" 
+#include "nsCSSFrameConstructor.h"
 
 #include "nsFrameTraversal.h"
 #include "nsCOMPtr.h"
@@ -609,22 +610,25 @@ nsFrame::ReplaceFrame(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFrame::Destroy(nsIPresContext* aPresContext)
 {
-  nsIPresShell *shell = aPresContext->GetPresShell();
-
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
   nsIView* view = GetView();
-  
-  // XXX Rather than always doing this it would be better if it was part of
-  // a frame observer mechanism and the pres shell could register as an
-  // observer of the frame while the reflow command is pending...
-  if (shell) {
-    shell->NotifyDestroyingFrame(this);
-  }
 
-  if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||
-      (mState & NS_FRAME_SELECTED_CONTENT)) {
-    if (shell) {
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (shell) {
+    // If the frame contains generated context, remove it from
+    // the quoteList.
+    if (mState & NS_FRAME_GENERATED_CONTENT) {
+      shell->FrameConstructor()->GeneratedContentFrameRemoved(this);
+    }
+
+    // XXX Rather than always doing this it would be better if it was part of
+    // a frame observer mechanism and the pres shell could register as an
+    // observer of the frame while the reflow command is pending...
+    shell->NotifyDestroyingFrame(this);
+
+    if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||
+        (mState & NS_FRAME_SELECTED_CONTENT)) {
       shell->ClearFrameRefs(this);
     }
   }
