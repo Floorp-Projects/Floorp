@@ -612,15 +612,31 @@ Boolean CPageTitle::CommitChanges( Boolean /* isAllPanes */ )
 MultipleSelectionSingleColumn::MultipleSelectionSingleColumn( LStream* inStream ) : LListBox( inStream )
 {
 	FocusDraw();
-	if((*mMacListH)->dataBounds.right == 0)
+#if TARGET_CARBON
+	ListBounds dataBounds;
+	::GetListDataBounds(mMacListH, &dataBounds);
+#else
+	ListBounds dataBounds = (**mMacListH).dataBounds;
+#endif // TARGET_CARBON
+	if ( dataBounds.right == 0 )
 		::LAddColumn(1 , 0, mMacListH);
-	(*mMacListH)->selFlags &= ~lOnlyOne;			// make sure this bit is cleared.
+#if TARGET_CARBON
+	::SetListSelectionFlags(mMacListH, ::GetListSelectionFlags(mMacListH) & ~lOnlyOne );			// make sure this bit is cleared.
+#else
+	(**mMacListH).selFlags &= ~lOnlyOne;
+#endif // TARGET_CARBON
 }
 
 
 int16 MultipleSelectionSingleColumn::NumItems() 
-{ 
-	return ((**mMacListH).dataBounds.bottom);
+{
+#if TARGET_CARBON
+	ListBounds dataBounds;
+	::GetListDataBounds(mMacListH, &dataBounds);
+#else
+	ListBounds dataBounds = (**mMacListH).dataBounds;
+#endif // TARGET_CARBON
+	return (dataBounds.bottom);
 }
 
 
@@ -658,7 +674,15 @@ void MultipleSelectionSingleColumn::AddItem( char* data, Boolean isSelected )
 		FocusDraw();
 		Cell theCell;
 		theCell.h = 0;
-		rowNum = ::LAddRow(1 , (**mMacListH).dataBounds.bottom, mMacListH);
+
+#if TARGET_CARBON
+		ListBounds dataBounds;
+		::GetListDataBounds(mMacListH, &dataBounds);
+#else
+		ListBounds dataBounds = (**mMacListH).dataBounds;
+#endif // TARGET_CARBON
+
+		rowNum = ::LAddRow(1 , dataBounds.bottom, mMacListH);
 		theCell.v = rowNum;
 		::LSetCell(data, strlen(data) + 1 ,theCell, mMacListH);
 		::LSetSelect( isSelected, theCell, mMacListH );
@@ -692,8 +716,14 @@ Boolean MultipleSelectionSingleColumn::IsSelected(int32 rowNum)	// rowNum is zer
 void MultipleSelectionSingleColumn::RemoveAllItems()
 {
 	FocusDraw();
-	if ((**mMacListH).dataBounds.bottom)
-		::LDelRow((**mMacListH).dataBounds.bottom, 0, mMacListH);
+#if TARGET_CARBON
+	ListBounds dataBounds;
+	::GetListDataBounds(mMacListH, &dataBounds);
+#else
+	ListBounds dataBounds = (**mMacListH).dataBounds;
+#endif // TARGET_CARBON
+	if ( dataBounds.bottom )
+		::LDelRow(dataBounds.bottom, 0, mMacListH);
 }
 
 
