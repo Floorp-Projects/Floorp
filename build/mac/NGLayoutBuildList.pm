@@ -472,6 +472,9 @@ sub BuildDist()
    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
    # find
    InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST",				"$distdirectory:xpfe:components");
+   # history
+   InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   BuildOneProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp", 		"headers", "", 0, 0, 0);
    # sample
    InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST",			"$distdirectory:xpfe:components");
    # ucth
@@ -853,6 +856,7 @@ sub MakeResourceAliases()
 		
 	# Install XPFE component resources
 	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",					"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",					"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",					"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",					"$samples_dir");
 
@@ -1001,7 +1005,7 @@ sub BuildXPAppProjects()
 
 	# Components
 	BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp",	"FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	
+	BuildOneProject(":mozilla:xpfe:components:history:macbuild:historyComponent.mcp", "historyComponent$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	# Applications
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
