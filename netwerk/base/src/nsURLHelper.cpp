@@ -56,7 +56,7 @@ NS_NET nsresult
 nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
 {
     if (!str) {
-        *result = nsnull;
+        result = "";
         return NS_OK;
     }
 
