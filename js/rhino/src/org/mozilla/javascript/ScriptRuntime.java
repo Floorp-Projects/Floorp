@@ -1228,7 +1228,7 @@ public class ScriptRuntime {
                 return call(cx, fun, jsThis, args, scope);
 
         if (isCall)
-            return call(cx, fun, thisArg, args, scope);
+            return call(cx, fun, jsThis, args, scope);
         return newObject(cx, fun, args, scope);
     }
 
