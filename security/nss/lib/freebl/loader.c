@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.14 2003/02/27 01:31:14 nelsonb%netscape.com Exp $
+ * $Id: loader.c,v 1.15 2003/03/18 03:24:59 nelsonb%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -1262,7 +1262,7 @@ AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
 		   const unsigned char *input, unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-      return NULL;
+      return SECFailure;
   return vector->p_AESKeyWrap_Encrypt(cx, output, outputLen, maxOutputLen,
                                       input, inputLen);
 }
@@ -1272,7 +1272,7 @@ AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
 		   const unsigned char *input, unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-      return NULL;
+      return SECFailure;
   return vector->p_AESKeyWrap_Decrypt(cx, output, outputLen, maxOutputLen,
 		                      input, inputLen);
 }
