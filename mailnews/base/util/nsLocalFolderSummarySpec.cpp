@@ -17,6 +17,7 @@
  */
 
 #include "nsLocalFolderSummarySpec.h"
+#include "plstr.h"
 #include "nsString.h"
 
 nsLocalFolderSummarySpec::nsLocalFolderSummarySpec()
@@ -58,6 +59,6 @@ void nsLocalFolderSummarySpec::	CreateSummaryFileName()
 	char *cLeafName = fullLeafName.ToNewCString();
 	SetLeafName(cLeafName);
 	delete [] cLeafName;	// ###use nsCString when it's available!@
-	delete [] leafName;
+	PL_strfree(leafName);
 }
 
