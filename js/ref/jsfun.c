@@ -1361,11 +1361,13 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScopeProperty *sprop;
     JSString *str, *arg;
     JSStackFrame *fp;
+    void *mark;
     JSTokenStream *ts;
     JSPrincipals *principals;
     jschar *collected_args, *cp;
     size_t args_length;
     JSTokenType tt;
+    JSBool ok;
 
     if (cx->fp && !cx->fp->constructing) {
 	obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
@@ -1451,8 +1453,11 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	}
 
 	/*
-	 * Make a tokenstream that reads from the given string.
+	 * Make a tokenstream that reads from the given string.  Save the
+	 * watermark below it in tempPool, whence it's allocated, for later
+	 * release before returning.
 	 */
+	mark = PR_ARENA_MARK(&cx->tempPool);
 	ts = js_NewTokenStream(cx, collected_args, args_length, filename,
 			       lineno, principals);
 	if (!ts) {
@@ -1533,7 +1538,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 	/* Clean up. */
 	JS_free(cx, collected_args);
-	if (!js_CloseTokenStream(cx, ts))
+	ok = js_CloseTokenStream(cx, ts);
+	PR_ARENA_RELEASE(&cx->tempPool, mark);
+	if (!ok)
 	    return JS_FALSE;
     }
 
@@ -1559,12 +1566,18 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	lineno = 0;
 	principals = NULL;
     }
+
+    mark = PR_ARENA_MARK(&cx->tempPool);
     ts = js_NewTokenStream(cx, str->chars, str->length, filename, lineno,
 			   principals);
-    if (!ts)
-	return JS_FALSE;
-    return js_ParseFunctionBody(cx, ts, fun) &&
-	   js_CloseTokenStream(cx, ts);
+    if (!ts) {
+	ok = JS_FALSE;
+    } else {
+	ok = js_ParseFunctionBody(cx, ts, fun) &&
+	     js_CloseTokenStream(cx, ts);
+    }
+    PR_ARENA_RELEASE(&cx->tempPool, mark);
+    return ok;
 
 bad_formal:
     /*
@@ -1580,6 +1593,7 @@ bad_formal:
      */
     JS_free(cx, collected_args);
     (void)js_CloseTokenStream(cx, ts);
+    PR_ARENA_RELEASE(&cx->tempPool, mark);
     return JS_FALSE;
 }
 
