@@ -315,7 +315,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
   nsresult rv = doc->CreateEntityReference(*name, &ret);  
   nsMemory::Free(name);
 
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || ret == nsnull) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
         (rv == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
