@@ -109,14 +109,11 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull)
 {
-	mPath = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
 }
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
-	if (mPath)
-		delete mPath;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
@@ -843,8 +840,6 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
     if(!db || !folderInfo)
 		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
 
-	if (!mPath)
-		return NS_ERROR_NULL_POINTER;
 
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 	nsCOMPtr<nsIMsgDatabase> mailDB;
@@ -852,9 +847,7 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-		nsCOMPtr <nsIFileSpec> dbFileSpec;
-		NS_NewFileSpecWithSpec(*mPath, getter_AddRefs(dbFileSpec));
-		openErr = mailDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &mailDB);
+		openErr = mailDBFactory->Open(mPath, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &mailDB);
 	}
 
     *db = mailDB;

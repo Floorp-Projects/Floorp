@@ -83,7 +83,6 @@ nsImapMailFolder::nsImapMailFolder() :
 	m_verifiedAsOnlineFolder(PR_FALSE),
 	m_explicitlyVerify(PR_FALSE) 
 {
-	m_pathName = nsnull;
     m_appendMsgMonitor = nsnull;	// since we're not using this (yet?) make it null.
 								// if we do start using it, it should be created lazily
 
@@ -103,8 +102,6 @@ nsImapMailFolder::nsImapMailFolder() :
 
 nsImapMailFolder::~nsImapMailFolder()
 {
-	if (m_pathName)
-		delete m_pathName;
     if (m_appendMsgMonitor)
         PR_DestroyMonitor(m_appendMsgMonitor);
 
@@ -161,38 +158,6 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 	return nsMsgDBFolder::QueryInterface(aIID, aInstancePtr);
 }
 
-#if 0
-NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec** aPathName)
-{
-	nsresult rv;
-    if (! m_pathName) 
-    {
-    	m_pathName = new nsNativeFileSpec("");
-    	if (! m_pathName)
-    		return NS_ERROR_OUT_OF_MEMORY;
-   
-        rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
-//		printf("constructing path %s\n", (const char *) *m_pathName);
-        if (NS_FAILED(rv)) return rv;
-    }
-	rv = NS_NewFileSpecWithSpec(*m_pathName, aPathName);
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::SetPath(nsIFileSpec * aPathName)
-{
-	if (!aPathName)
-		return NS_ERROR_NULL_POINTER;
-    if (! m_pathName) 
-    {
-    	m_pathName = new nsFileSpec("");
-    	if (! m_pathName)
-    		return NS_ERROR_OUT_OF_MEMORY;
-	}
-	return aPathName->GetFileSpec(m_pathName);
-}
-#endif
 
 
 NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)

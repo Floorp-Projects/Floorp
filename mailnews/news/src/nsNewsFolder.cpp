@@ -78,7 +78,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
-    mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
+     mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(nsnull)
 {
   /* we're parsing the newsrc file, and the line breaks are platform specific.
@@ -92,10 +92,6 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
 
 nsMsgNewsFolder::~nsMsgNewsFolder(void)
 {
-	if (mPath) {
-		delete mPath;
-    mPath = nsnull;
-  }
 
   PR_FREEIF(mOptionLines);
   mOptionLines = nsnull;
@@ -690,17 +686,12 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
   if(!db || !folderInfo)
 		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
 		
-	if (!mPath)
-		return NS_ERROR_NULL_POINTER;
-
 	nsCOMPtr <nsIMsgDatabase> newsDBFactory;
 	nsIMsgDatabase *newsDB;
 
 	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
-		nsCOMPtr <nsIFileSpec> dbFileSpec;
-		NS_NewFileSpecWithSpec(*mPath, getter_AddRefs(dbFileSpec));
-		openErr = newsDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
+		openErr = newsDBFactory->Open(mPath, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
 	}
   else {
     return rv;

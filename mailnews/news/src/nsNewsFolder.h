@@ -117,7 +117,6 @@ protected:
   nsByteArray		m_inputStream;
 
 protected:
-	nsNativeFileSpec *mPath;
 	PRUint32  mExpungedBytes;
 	PRBool		mGettingNews;
 	PRBool		mInitialized;

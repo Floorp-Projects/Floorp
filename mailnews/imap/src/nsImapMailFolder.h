@@ -319,7 +319,6 @@ protected:
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                  nsCString& msgIds, nsMsgKeyArray& keyArray);
 
-    nsFileSpec *m_pathName;
     PRBool m_initialized;
     PRBool m_haveDiscoveredAllFolders;
     PRBool m_haveReadNameFromDB;
