@@ -5312,6 +5312,10 @@ MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_SUBST(MOZILLA_VERSION)
 
+. ${srcdir}/config/chrome-versions.sh
+AC_SUBST(MOZILLA_LOCALE_VERSION)
+AC_SUBST(MOZILLA_REGION_VERSION)
+
 AC_SUBST(ac_configure_args)
 
 dnl Spit out some output

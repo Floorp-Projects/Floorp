@@ -693,6 +693,8 @@ CONFIG_STATUS_DEPS := \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
 	$(CONFIG_STATUS_DEPS_L10N) \
 	$(wildcard $(TOPSRCDIR)/themes/makefiles) \
+	$(wildcard $(TOPSRCDIR)/config/milestone.txt) \
+	$(wildcard $(TOPSRCDIR)/config/chrome-versions.sh) \
 	$(NULL)
 
 # configure uses the program name to determine @srcdir@. Calling it without

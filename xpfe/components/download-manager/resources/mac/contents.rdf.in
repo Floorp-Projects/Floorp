@@ -11,7 +11,7 @@
                    chrome:displayName="Mac-specific dl mgr files"
                    chrome:author="mozilla.org"
                    chrome:name="dlmgr"
-                   chrome:localeVersion="@MOZILLA_VERSION@"
+                   chrome:localeVersion="@MOZILLA_LOCALE_VERSION@"
                    chrome:skinVersion="1.5">
   </RDF:Description>
  

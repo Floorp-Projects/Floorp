@@ -12,7 +12,7 @@
         chrome:displayName="Content Pack Switching"
         chrome:author="mozilla.org"
         chrome:name="content-packs"
- 	chrome:localeVersion="@MOZILLA_VERSION@">
+ 	chrome:localeVersion="@MOZILLA_LOCALE_VERSION@">
   </RDF:Description>
 
   <!-- overlay information -->
