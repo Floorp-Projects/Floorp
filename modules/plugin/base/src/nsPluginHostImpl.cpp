@@ -65,7 +65,6 @@
 
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileSpec.h"
-#include "nsPluginsDir.h"
 
 //uncomment this to use netlib to determine what the
 //user agent string is. we really *want* to do this,
@@ -141,7 +140,37 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
 	mLibrary = nsnull;
 	mEntryPoint = nsnull;
 	mFlags = NS_PLUGIN_FLAG_ENABLED;
-    mFileName = new_str(aPluginTag->mFileName);
+  mFileName = new_str(aPluginTag->mFileName);
+}
+
+nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
+{
+	mNext = nsnull;
+  mName = new_str(aPluginInfo->fName);
+	mDescription = new_str(aPluginInfo->fDescription);
+	mMimeType = new_str(aPluginInfo->fMimeType);
+	mMimeDescription = new_str(aPluginInfo->fMimeDescription);
+	mExtensions = new_str(aPluginInfo->fExtensions);
+	mVariants = aPluginInfo->fVariantCount;
+
+	mMimeTypeArray = new char*[mVariants];
+	mMimeDescriptionArray = new char*[mVariants];
+	mExtensionsArray = new char*[mVariants];
+
+  if(mMimeTypeArray && mMimeDescriptionArray && mExtensionsArray) 
+  {
+		for (int i = 0; i < mVariants; i++) {
+			mMimeTypeArray[i] = new_str(aPluginInfo->fMimeTypeArray[i]);
+			mMimeDescriptionArray[i] = new_str(aPluginInfo->fMimeDescriptionArray[i]);
+			mExtensionsArray[i] = new_str(aPluginInfo->fExtensionArray[i]);
+		}
+	}
+
+	mFileName = new_str(aPluginInfo->fFileName);
+
+	mLibrary = nsnull;
+	mEntryPoint = nsnull;
+	mFlags = NS_PLUGIN_FLAG_ENABLED;
 }
 
 nsPluginTag::~nsPluginTag()
@@ -2150,26 +2179,6 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 
 #else // go for new plugin finding logic on Windows
 
-static void fillPluginTagStruct(nsPluginTag* pluginTag, nsPluginFile* pluginFile)
-{
-	nsPluginInfo info = { sizeof(info) };
-	if (pluginFile->GetPluginInfo(info) == NS_OK) 
-  {
-		pluginTag->mName = info.fName;
-		pluginTag->mDescription = info.fDescription;
-		pluginTag->mMimeType = info.fMimeType;
-		pluginTag->mMimeDescription = info.fMimeDescription;
-		pluginTag->mExtensions = info.fExtensions;
-		pluginTag->mVariants = info.fVariantCount;
-		pluginTag->mMimeTypeArray = info.fMimeTypeArray;
-		pluginTag->mMimeDescriptionArray = info.fMimeDescriptionArray;
-		pluginTag->mExtensionsArray = info.fExtensionArray;
-		pluginTag->mFileName = info.fFileName;
-	}
-	pluginTag->mEntryPoint = NULL;
-	pluginTag->mFlags = 0;
-}
-
 static PRBool areTheSameFileNames(char * name1, char * name2)
 {
   if((name1 == nsnull) || (name2 == nsnull))
@@ -2238,14 +2247,17 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
       {
 #endif
 				// create a tag describing this plugin.
-				nsPluginTag* pluginTag = new nsPluginTag();
+	      nsPluginInfo info = { sizeof(info) };
+	      if (pluginFile.GetPluginInfo(info) != NS_OK)
+        	return NS_ERROR_FAILURE;
+
+        nsPluginTag* pluginTag = new nsPluginTag(&info);
         if(pluginTag == nsnull)
           return NS_ERROR_OUT_OF_MEMORY;
 
 				pluginTag->mNext = mPlugins;
 				mPlugins = pluginTag;
 				
-        fillPluginTagStruct(pluginTag, &pluginFile);
         pluginTag->mLibrary = pluginLibrary;
 
 #ifndef XP_WIN
@@ -2269,11 +2281,14 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
       {
 #endif
 				// create a tag describing this plugin.
-				nsPluginTag* pluginTag = new nsPluginTag();
+	      nsPluginInfo info = { sizeof(info) };
+	      if (pluginFile.GetPluginInfo(info) != NS_OK)
+        	return NS_ERROR_FAILURE;
+
+				nsPluginTag* pluginTag = new nsPluginTag(&info);
         if(pluginTag == nsnull)
           return NS_ERROR_OUT_OF_MEMORY;
 
-        fillPluginTagStruct(pluginTag, &pluginFile);
 				pluginTag->mLibrary = pluginLibrary;
 
         // search for a match in the list of MOZ_LOCAL plugins, ignore if found, add if not

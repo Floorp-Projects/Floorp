@@ -31,6 +31,7 @@
 #include "prlink.h"
 #include "nsIFileUtilities.h"
 #include "nsICookieStorage.h"
+#include "nsPluginsDir.h"
 
 class ns4xPlugin;
 class nsFileSpec;
@@ -41,6 +42,7 @@ class nsPluginTag
 public:
   nsPluginTag();
   nsPluginTag(nsPluginTag* aPluginTag);
+  nsPluginTag(nsPluginInfo* aPluginInfo);
   ~nsPluginTag();
 
   nsPluginTag   *mNext;
