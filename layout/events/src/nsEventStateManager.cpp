@@ -591,7 +591,7 @@ nsEventStateManager::SetActiveLink(nsIContent *aLink)
 
   if (nsnull != mActiveLink) {
     if (NS_OK == mActiveLink->GetDocument(mDocument)) {
-      mDocument->ContentChanged(mActiveLink, nsnull);
+      mDocument->ContentStateChanged(mActiveLink);
       NS_RELEASE(mDocument);
     }
   }
@@ -602,7 +602,7 @@ nsEventStateManager::SetActiveLink(nsIContent *aLink)
   NS_IF_ADDREF(mActiveLink);
   if (nsnull != mActiveLink) {
     if (NS_OK == mActiveLink->GetDocument(mDocument)) {
-      mDocument->ContentChanged(mActiveLink, nsnull);
+      mDocument->ContentStateChanged(mActiveLink);
       NS_RELEASE(mDocument);
     }
   }
@@ -617,7 +617,7 @@ nsEventStateManager::SetHoverLink(nsIContent *aLink)
 
   if (nsnull != mHoverLink) {
     if (NS_OK == mHoverLink->GetDocument(mDocument)) {
-      mDocument->ContentChanged(mHoverLink, nsnull);
+      mDocument->ContentStateChanged(mHoverLink);
       NS_RELEASE(mDocument);
     }
   }
@@ -628,7 +628,7 @@ nsEventStateManager::SetHoverLink(nsIContent *aLink)
   NS_IF_ADDREF(mHoverLink);
   if (nsnull != mHoverLink) {
     if (NS_OK == mHoverLink->GetDocument(mDocument)) {
-      mDocument->ContentChanged(mHoverLink, nsnull);
+      mDocument->ContentStateChanged(mHoverLink);
       NS_RELEASE(mDocument);
     }
   }
