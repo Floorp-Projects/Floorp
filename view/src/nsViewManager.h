@@ -58,11 +58,6 @@ public:
 
   virtual void ResetScrolling(void);
 
-  virtual void Refresh(nsIView *aView, nsIRenderingContext *aContext,
-                       nsIRegion *region, PRUint32 aUpdateFlags);
-  virtual void Refresh(nsIView* aView, nsIRenderingContext *aContext,
-                       nsRect *rect, PRUint32 aUpdateFlags);
-
   virtual void Composite();
 
   virtual void UpdateView(nsIView *aView, nsIRegion *aRegion,
@@ -117,11 +112,19 @@ public:
   virtual PRBool GetShowQuality(void);
   virtual void SetQuality(nsContentQuality aQuality);
 
+  NS_IMETHOD DisableRefresh(void);
+  NS_IMETHOD EnableRefresh(void);
+
 private:
   virtual ~nsViewManager();
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);
   void AddRectToDirtyRegion(nsRect &aRect);
   void UpdateTransCnt(nsIView *oldview, nsIView *newview);
+
+  void Refresh(nsIView *aView, nsIRenderingContext *aContext,
+                       nsIRegion *region, PRUint32 aUpdateFlags);
+  void Refresh(nsIView* aView, nsIRenderingContext *aContext,
+                       nsRect *rect, PRUint32 aUpdateFlags);
 
   nsIPresContext    *mContext;
   nsIWidget         *mRootWindow;
@@ -130,13 +133,14 @@ private:
   PRTime            mLastRefresh;
   nsIRegion         *mDirtyRegion;
   PRInt32           mTransCnt;
+  PRBool            mRefreshEnabled;
                             
 public:
   //these are public so that our timer callback can poke them.
   nsITimer          *mTimer;
   nsRect            mDirtyRect;
   nsIView           *mRootView;
-  PRUint32           mFrameRate;
+  PRUint32          mFrameRate;
 };
 
 #endif

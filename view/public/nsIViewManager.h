@@ -135,27 +135,6 @@ public:
   virtual void ResetScrolling(void) = 0;
 
   /**
-   * Called to refresh an area of the root window. Often called in
-   * response to a paint/redraw event from the native windowing system.
-   * @param aContext rendering context to draw into
-   * @param region nsIRegion to be updated
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
-   */
-  virtual void Refresh(nsIView *aView, nsIRenderingContext *aContext,
-                       nsIRegion *region, PRUint32 aUpdateFlags) = 0;
-
-  /**
-   * Called to refresh an area of the root window. Often called in
-   * response to a paint/redraw event from the native windowing system.
-   * @param aView view to paint. should be root view
-   * @param aContext rendering context to draw into
-   * @param rect nsRect to be updated
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
-   */
-  virtual void Refresh(nsIView* aView, nsIRenderingContext *aContext,
-                       nsRect *rect, PRUint32 aUpdateFlags) = 0;
-
-  /**
    * Called to force a redrawing of any dirty areas.
    */
   virtual void Composite() = 0;
@@ -384,6 +363,19 @@ public:
    * @param aShow if PR_TRUE, quality level will be displayed, else hidden
    */
   virtual void SetQuality(nsContentQuality aQuality) = 0;
+
+  /**
+   * prevent the view manager from refreshing.
+   * @return error status
+   */
+  NS_IMETHOD DisableRefresh(void) = 0;
+
+  /**
+   * allow the view manager to refresh. this may cause a synchronous
+   * paint to occur inside the call.
+   * @return error status
+   */
+  NS_IMETHOD EnableRefresh(void) = 0;
 };
 
 //when the refresh happens, should it be double buffered?

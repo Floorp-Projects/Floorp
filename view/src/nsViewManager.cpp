@@ -137,6 +137,8 @@ nsresult nsViewManager::Init(nsIPresContext* aPresContext)
 
   mLastRefresh = PR_Now();
 
+  mRefreshEnabled = PR_TRUE;
+
   return rv;
 }
 
@@ -285,6 +287,9 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   nscoord             xoff, yoff;
   float               scale;
 
+  if (PR_FALSE == mRefreshEnabled)
+    return;
+
 //printf("refreshing region...\n");
   //force double buffering because of non-opaque views?
 
@@ -352,6 +357,9 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
   nscoord             xoff, yoff;
+
+  if (PR_FALSE == mRefreshEnabled)
+    return;
 
   //force double buffering because of non-opaque views?
 
@@ -1011,3 +1019,33 @@ void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)
       (newview->GetOpacity() != 1.0f)))
     mTransCnt++;
 }
+
+NS_IMETHODIMP nsViewManager :: DisableRefresh(void)
+{
+  mRefreshEnabled = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
+{
+  mRefreshEnabled = PR_TRUE;
+
+  if (mFrameRate > 0)
+  {
+    PRTime now = PR_Now();
+    PRTime conversion, ustoms;
+    PRInt32 deltams;
+
+    LL_I2L(ustoms, 1000);
+    LL_SUB(conversion, now, mLastRefresh);
+    LL_DIV(conversion, conversion, ustoms);
+    LL_L2I(deltams, conversion);
+
+    if (deltams > (1000 / (PRInt32)mFrameRate))
+      Composite();
+  }
+
+  return NS_OK;
+}
+

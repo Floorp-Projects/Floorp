@@ -312,6 +312,7 @@ nsScrollingView :: nsScrollingView()
   mHScrollBarView = nsnull;
   mCornerView = nsnull;
   mScrollPref = nsScrollPreference_kAuto;
+  mClipView = nsnull;
 }
 
 nsScrollingView :: ~nsScrollingView()
@@ -334,6 +335,12 @@ nsScrollingView :: ~nsScrollingView()
   {
     NS_RELEASE(mCornerView);
     mCornerView = nsnull;
+  }
+
+  if (nsnull != mClipView)
+  {
+    NS_RELEASE(mClipView);
+    mClipView = nsnull;
   }
 }
 
@@ -404,6 +411,28 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
       mViewManager->InsertChild(this, mCornerView, -1);
     }
 
+#if 0
+    // Create a view for clipping
+
+    mClipView = new ClipView();
+
+    if (nsnull != mClipView)
+    {
+      NS_ADDREF(mClipView);
+
+      nsRect trect;
+
+      trect.width = aBounds.XMost() - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+      trect.x = 0;
+      trect.height = aBounds.YMost() - NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+      trect.y = 0;
+
+      rv = mClipView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull, -1);
+
+      mViewManager->InsertChild(this, mCornerView, -1);
+    }
+#endif
+
     // Create a view for a vertical scrollbar
 
     mVScrollBarView = new ScrollBarView(this);
@@ -422,7 +451,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       rv = mVScrollBarView->Init(mViewManager, trect, this, &kCScrollbarIID, nsnull, nsnull, -2);
 
-      mViewManager->InsertChild(this, mVScrollBarView, -2);
+      mViewManager->InsertChild(this, mVScrollBarView, -3);
     }
 
     // Create a view for a horizontal scrollbar
@@ -443,7 +472,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       rv = mHScrollBarView->Init(mViewManager, trect, this, &kCHScrollbarIID, nsnull, nsnull, -2);
 
-      mViewManager->InsertChild(this, mHScrollBarView, -2);
+      mViewManager->InsertChild(this, mHScrollBarView, -3);
     }
 
     NS_RELEASE(dx);
@@ -1041,6 +1070,14 @@ nsScrollingView :: ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
     }
     NS_RELEASE(win);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollingView :: GetClipView(nsIView ** aClipView)
+{
+  NS_IF_ADDREF(mClipView);
+  *aClipView = mClipView;
+
   return NS_OK;
 }
 

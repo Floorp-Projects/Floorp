@@ -109,8 +109,19 @@ public:
    * Scroll the view to the given x,y, update's the scrollbar's thumb
    * positions and the view's offset. Clamps the values to be
    * legal. Updates the display based on aUpdateFlags.
+   * @param aX left edge to scroll to
+   * @param aY top edge to scroll to
+   * @param aUpdateFlags passed onto nsIViewManager->UpdateView()
+   * @return error status
    */
   NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags) = 0;
+
+  /**
+   * Get the view that clips the contents of the scrolling view
+   * @param aClipView out param to hold view pointer
+   * @return error status
+   */
+  NS_IMETHOD GetClipView(nsIView ** aClipView) = 0;
 };
 
 #endif

@@ -96,8 +96,9 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 //printf("damage repair...\n");
 
         vm->UpdateView(view, trect,
-                       NS_VMREFRESH_SCREEN_RECT);
-        vm->Composite();
+                       NS_VMREFRESH_SCREEN_RECT |
+                       NS_VMREFRESH_IMMEDIATE |
+                       NS_VMREFRESH_DOUBLE_BUFFER);
 
         NS_RELEASE(dx);
         NS_RELEASE(px);

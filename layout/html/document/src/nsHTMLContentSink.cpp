@@ -909,7 +909,7 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
               rootView->GetBounds(rect);
               rect.x = 0;
               rect.y = 0;
-              vm->Refresh(rootView, nsnull, &rect, NS_VMREFRESH_IMMEDIATE);
+              vm->UpdateView(rootView, rect, NS_VMREFRESH_IMMEDIATE);
               NS_RELEASE(rootView);
             }
             NS_RELEASE(vm);
