@@ -35,11 +35,11 @@ class NS_COM nsAFlatString
   {
     public:
         // don't really want this to be virtual, and won't after |obsolete_nsString| is really dead
-      virtual const PRUnichar* get() const      { return GetBufferHandle()->DataStart(); }
+      virtual const PRUnichar* get() const;
       PRUnichar  operator[]( PRUint32 i ) const { return get()[ i ]; }
       PRUnichar  CharAt( PRUint32 ) const;
 
-      virtual PRUint32 Length() const           { return PRUint32(GetBufferHandle()->DataLength()); }
+      virtual PRUint32 Length() const;
 
 //  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatString|
     public:
@@ -52,11 +52,11 @@ class NS_COM nsAFlatCString
   {
     public:
         // don't really want this to be virtual, and won't after |obsolete_nsCString| is really dead
-      virtual const char* get() const           { return GetBufferHandle()->DataStart(); }
+      virtual const char* get() const;
       char  operator[]( PRUint32 i ) const      { return get()[ i ]; }
       char  CharAt( PRUint32 ) const;
 
-      virtual PRUint32 Length() const           { return PRUint32(GetBufferHandle()->DataLength()); }
+      virtual PRUint32 Length() const;
 
 //  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatCString|
     public:
