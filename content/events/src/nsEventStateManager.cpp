@@ -4489,7 +4489,6 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       domNode->GetNodeType(&nodeType);
 
       if (nodeType == nsIDOMNode::TEXT_NODE) {
-        nsCOMPtr<nsIContent> origStartContent(startContent);
         nsAutoString nodeValue;
         domNode->GetNodeValue(nodeValue);
 
@@ -4509,24 +4508,43 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
                                        mPresContext, startFrame);
           NS_ENSURE_SUCCESS(rv, rv);
 
+          nsIFrame *newCaretFrame = nsnull;
+          nsCOMPtr<nsIContent> newCaretContent = startContent;
+          PRBool endOfSelectionInStartNode(startContent == endContent);
           do {
-            // Get the next logical frame, and set the start of
-            // focusable elements. Search for focusable elements from there.
-            // Continue getting next frame until the primary node for the frame
+            // Continue getting the next frame until the primary content for the frame
             // we are on changes - we don't want to be stuck in the same place
             frameTraversal->Next();
             nsISupports* currentItem;
             frameTraversal->CurrentItem(&currentItem);
-            startFrame = NS_STATIC_CAST(nsIFrame*, currentItem);
-            if (startFrame) {
-              PRBool endEqualsStart(startContent == endContent);
-              startContent = startFrame->GetContent();
-              if (endEqualsStart)
-                endContent = startContent;
+            if (nsnull == (newCaretFrame = NS_STATIC_CAST(nsIFrame*, currentItem))) {
+              break;
             }
-            else break;
+            newCaretContent = newCaretFrame->GetContent();            
+          } while (!newCaretContent || newCaretContent == startContent);
+
+          if (newCaretFrame && newCaretContent) {
+            // If the caret is exactly at the same position of the new frame,
+            // then we can use the newCaretFrame and newCaretContent for our position
+            nsCOMPtr<nsICaret> caret;
+            shell->GetCaret(getter_AddRefs(caret));
+            nsRect caretRect;
+            nsIView *caretView;
+            caret->GetCaretCoordinates(nsICaret::eClosestViewCoordinates, 
+                                       domSelection, &caretRect,
+                                       &isCollapsed, &caretView);
+            nsPoint framePt;
+            nsIView *frameClosestView = newCaretFrame->GetClosestView(&framePt);
+            if (caretView == frameClosestView && caretRect.y == framePt.y &&
+                caretRect.x == framePt.x) {
+              // The caret is at the start of the new element.
+              startFrame = newCaretFrame;
+              startContent = newCaretContent;
+              if (endOfSelectionInStartNode) {
+                endContent = newCaretContent; // Ensure end of selection is not before start
+              }
+            }
           }
-          while (startContent == origStartContent);
         }
       }
     }
