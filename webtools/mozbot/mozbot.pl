@@ -128,7 +128,7 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.6 $;
+my $VERSION = q$Revision: 2.7 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
@@ -813,7 +813,7 @@ sub sendmsg {
         cluck('Wrong arguments passed to sendmsg() - ignored');
     } else {
         $self->schedule($delaytime / 2, \&drainmsgqueue) unless @msgqueue;
-        if ($msg eq 'msg' or $msg eq 'me') {
+        if ($do eq 'msg' or $do eq 'me') {
             foreach (splitMessageAcrossLines($msg)) {
                 push(@msgqueue, [$who, $_, $do]);
             }
@@ -871,7 +871,7 @@ sub splitMessageAcrossLines {
     foreach my $line (split(/\n/, $str)) {
         while (length($line) > $MAXPROTOCOLLENGTH) {
             # position is zero-based index
-            my $pos = rindex($line, " ", $MAXPROTOCOLLENGTH - 1);
+            my $pos = rindex($line, ' ', $MAXPROTOCOLLENGTH - 1);
             if ($pos < 0) {
                 $pos = $MAXPROTOCOLLENGTH - 1;
             }
@@ -879,7 +879,7 @@ sub splitMessageAcrossLines {
             $line = substr($line, $pos);
             $line =~ s/^\s+//gos;
         }
-        push(@output, $line) if $line;
+        push(@output, $line) if length($line);
     }
     return @output;
 }
