@@ -124,7 +124,6 @@ static void SetMIMETypeSeparator(char *minfo)
     }
 }
 
-#ifdef MOZ_WIDGET_GTK 
 
 #define LOCAL_PLUGIN_DLL_SUFFIX ".so"
 #if defined(HPUX11)
@@ -138,6 +137,8 @@ static void SetMIMETypeSeparator(char *minfo)
 #else
 #define DEFAULT_X11_PATH ""
 #endif
+
+#ifdef MOZ_WIDGET_GTK 
 
 #define PLUGIN_MAX_LEN_OF_TMP_ARR 512
 
