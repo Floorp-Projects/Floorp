@@ -2600,9 +2600,11 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       nsCollapsingMargin oldPrevBottomMargin(aState.mPrevBottomMargin);
       PRBool  oldUnconstrainedWidth = aState.GetFlag(BRS_UNCONSTRAINEDWIDTH);
 
-#ifdef DEBUG_waterson
+#if defined(DEBUG_waterson) || defined(DEBUG_dbaron)
       if (oldUnconstrainedWidth)
-        printf("*** oldUnconstrainedWidth was already set.\n");
+        printf("*** oldUnconstrainedWidth was already set.\n"
+               "*** This code (%s:%d) could be optimized a lot!\n",
+               __FILE__, __LINE__);
 #endif
 
       // When doing this we need to set the block reflow state's
@@ -2610,11 +2612,13 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       // a placeholder and then reflow its associated floater we don't
       // end up resetting the line's right edge and have it think the
       // width is unconstrained...
+      aState.mSpaceManager->PushState();
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, PR_TRUE);
       ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea, PR_TRUE);
       aState.mY = oldY;
       aState.mPrevBottomMargin = oldPrevBottomMargin;
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, oldUnconstrainedWidth);
+      aState.mSpaceManager->PopState();
 
 #ifdef DEBUG_waterson
       // XXXwaterson if oldUnconstrainedWidth was set, why do we need
@@ -2630,10 +2634,6 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
              this, NS_STATIC_CAST(void*, aLine.get()), aLine->mMaximumWidth);
 #endif
       aState.UpdateMaximumWidth(aLine->mMaximumWidth);
-
-      // Remove any floaters associated with the line from the space
-      // manager
-      aLine->RemoveFloatersFromSpaceManager(aState.mSpaceManager);
 
       // Now reflow the line again this time without having it compute
       // the maximum width or max-element-size.
