@@ -20,6 +20,7 @@
 
 #include "xpt_xdr.h"
 #include <stdio.h>
+#include <string.h> /* for memcpy */
 
 #define PASS(msg)							      \
   fprintf(stderr, "PASSED : %s\n", msg);
