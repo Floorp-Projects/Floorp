@@ -25,6 +25,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
+#include "nsVoidArray.h"
 #include "xcDll.h"
 
 #ifndef nsNativeComponentLoader_h__
@@ -49,11 +50,13 @@ class nsNativeComponentLoader : public nsIComponentLoader {
     nsObjectHashtable*  mDllStore;
     NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
     nsRegistryKey mXPCOMKey;
+    nsVoidArray mDeferredComponents;
 
  private:
     nsresult CreateDll(nsIFileSpec *aSpec, const char *aLocation,
                        PRUint32 modifiedTime, PRUint32 fileSize, nsDll **aDll);
-    nsresult SelfRegisterDll(nsDll *dll, const char *registryLocation);
+    nsresult SelfRegisterDll(nsDll *dll, const char *registryLocation,
+                             PRBool deferred);
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult GetRegistryDllInfo(const char *aLocation, PRUint32 *lastModifiedTime,
                                 PRUint32 *fileSize);

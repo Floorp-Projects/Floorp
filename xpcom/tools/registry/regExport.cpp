@@ -244,7 +244,7 @@ static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
                                         rv = reg->GetString( root, name, &strValue );
                                         if ( rv == NS_OK ) {
                                             printString( strValue, strlen(name) );
-                                            PR_Free( strValue );
+                                            nsAllocator::Free( strValue );
                                         } else {
                                             printf( "\t Error getting string value, rv=0x%08X", (int)rv );
                                         }
@@ -280,6 +280,7 @@ static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
                             printf( "\t= ? (error getting value, rv=0x%08X)", (int)rv );
                         }
                         printf("\n");
+                        nsAllocator::Free( name );
                     } else {
                         printf( "Error getting value name, rv=0x%08X\n", (int)rv );
                     }

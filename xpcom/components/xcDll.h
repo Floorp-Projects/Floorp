@@ -109,6 +109,8 @@ public:
 	const char *GetNativePath(void);
     // WARNING: DONT FREE string returned.
     const char *GetPersistentDescriptorString(void);
+    // WARNING: DONT FREE string returned.
+    const char *GetRegistryLocation(void) { return m_registryLocation; }
 	PRUint32 GetLastModifiedTime(void) { return(m_modDate); }
 	PRUint32 GetSize(void) { return(m_size); }
 	PRLibrary *GetInstance(void) { return (m_instance); }

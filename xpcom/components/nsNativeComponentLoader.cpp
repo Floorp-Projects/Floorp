@@ -28,39 +28,13 @@
 #include "xcDll.h"
 #include "nsHashtable.h"
 #include "nsHashtableEnumerator.h"
+#include "nsXPIDLString.h"
 
 #define PRINT_CRITICAL_ERROR_TO_SCREEN 1
 #define USE_REGISTRY 1
 #define XPCOM_USE_NSGETFACTORY 1
 
 extern PRLogModuleInfo *nsComponentManagerLog;
-
-/* XXX consolidate with one in nsComponentManager.cpp */
-//
-// To prevent leaks, we are using this class. Typical use would be
-// for each ptr to be deleted, create an object of these types with that ptr.
-// Once that object goes out of scope, deletion and hence memory free will
-// automatically happen.
-//
-class autoStringFree
-{
-public:
-    enum DeleteModel {
-        NSPR_Delete = 1,
-        nsCRT_String_Delete = 2
-    };
-    autoStringFree(char *Ptr, DeleteModel whichDelete): mPtr(Ptr), mWhichDelete(whichDelete) {}
-    ~autoStringFree() {
-        if (mPtr)
-            if (mWhichDelete == NSPR_Delete) { PR_FREEIF(mPtr); }
-            else if (mWhichDelete == nsCRT_String_Delete) nsCRT::free(mPtr);
-            else PR_ASSERT(0);
-    }
-private:
-    char *mPtr;
-    DeleteModel mWhichDelete;
-    
-};
 
 nsNativeComponentLoader::nsNativeComponentLoader() :
     mRegistry(nsnull), mCompMgr(nsnull), mDllStore(nsnull)
@@ -140,6 +114,14 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
     if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_FACTORY_NOT_LOADED) {
             rv = GetFactoryFromNSGetFactory(dll, aCID, serviceMgr, _retval);
+#ifdef WARN_ABOUT_NSGETFACTORY
+            if (NS_SUCCEEDED(rv)) {
+                fprintf(stderr,
+                        "XPCOM: Component %s uses DEPRECATED\n"
+                        "       NSGetFactory interface. This could break "
+                        "AT ANY TIME.\n", dll->GetNativePath());
+            }
+#endif
         }
     }
 #endif
@@ -166,10 +148,6 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 {
     nsresult rv;
 
-#ifdef DEBUG_shaver
-    fprintf(stderr, "nNCL: Init()\n");
-#endif
-
     mCompMgr = aCompMgr;
     mRegistry = do_QueryInterface(aReg);
     if (!mCompMgr || !mRegistry)
@@ -177,23 +155,15 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 
     rv = mRegistry->GetSubtree(nsIRegistry::Common, xpcomKeyName,
                                &mXPCOMKey);
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "nsNCL::Init: registry is hosed\n");
-#endif
+    if (NS_FAILED(rv))
         return rv;
-    }
 
     if (!mDllStore) {
         mDllStore = new nsObjectHashtable(nsnull, nsnull, // never copy
                                           nsDll_Destroy, nsnull,
                                           256, /* Thead Safe */ PR_TRUE);
-        if (!mDllStore) {
-#ifdef DEBUG_shaver
-            fprintf(stderr, "nNCL::Init: couldn't build hash table\n");
-#endif            
+        if (!mDllStore)
             return NS_ERROR_OUT_OF_MEMORY;
-        }
     }
 
 
@@ -216,10 +186,9 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
         if (NS_FAILED(rv)) continue;
 
         // Get library name
-        char *library = NULL;
-        rv = node->GetName(&library);
+        nsXPIDLCString library;
+        rv = node->GetName(getter_Copies(library));
         if (NS_FAILED(rv)) continue;
-        autoStringFree delete_library(library, autoStringFree::nsCRT_String_Delete);
 
         // Get key associated with library
         nsRegistryKey libKey;
@@ -441,10 +410,12 @@ nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure)
  *
  */
 nsresult
-nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocation)
+nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
+                                         const char *registryLocation,
+                                         PRBool deferred)
 {
-    // Precondition: dll is not loaded already
-    PR_ASSERT(dll->IsLoaded() == PR_FALSE);
+    // Precondition: dll is not loaded already, unless we're deferred
+    PR_ASSERT(deferred || dll->IsLoaded() == PR_FALSE);
 
     nsIServiceManager* serviceMgr = NULL;
     nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
@@ -505,8 +476,14 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocatio
 #endif /* OBSOLETE_MODULE_LOADING */
 
     // Update the timestamp and size of the dll in registry
-    dll->Sync();
-    SetRegistryDllInfo(registryLocation, dll->GetLastModifiedTime(), dll->GetSize());
+    // Don't enter deferred modules in the registry, because it might only be
+    // able to register on some later autoreg, after another component has been
+    // installed.
+    if (res != NS_ERROR_FACTORY_REGISTER_AGAIN) {
+        dll->Sync();
+        SetRegistryDllInfo(registryLocation, dll->GetLastModifiedTime(),
+                           dll->GetSize());
+    }
 
     return res;
 }
@@ -573,7 +550,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
 #endif // MOZ_DEMANGLE_SYMBOLS
     
     // Do NSPR log
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
            ("nsNativeComponentLoader: %s(%s) Load FAILED with error:%s", 
             aCallerName,
             dll->GetNativePath(), 
@@ -656,12 +633,12 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     /* this should be a pref or registry entry, or something */
     const char *ValidDllExtensions[] = {
         ".dll",     /* Windows */
+        ".so",      /* Unix */
+        ".shlb",    /* Mac ? */
         ".dso",     /* Unix ? */
         ".dylib",   /* Unix: Rhapsody */
-        ".so",      /* Unix */
         ".so.1.0",  /* Unix: BSD */
         ".sl",      /* Unix: HP-UX */
-        ".shlb",    /* Mac ? */
 #if defined(VMS)
         ".exe",     /* Open VMS */
 #endif
@@ -731,20 +708,11 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         // Skip invalid extensions
         return NS_OK;
 
-
-    /*
-     * Get the name of the dll
-     * I think I get to go through every type of string here.
-     * Pink would be so proud.
-     */
-    char *persistentDescriptor;
-    rv = mCompMgr->RegistryLocationForSpec(component, &persistentDescriptor);
+    nsXPIDLCString persistentDescriptor;
+    rv = mCompMgr->RegistryLocationForSpec(component, 
+                                           getter_Copies(persistentDescriptor));
     if (NS_FAILED(rv))
         return rv;
-
-    autoStringFree
-        delete_persistentDescriptor(persistentDescriptor,
-                                    autoStringFree::nsCRT_String_Delete);
 
     nsStringKey key(persistentDescriptor);
 
@@ -834,19 +802,19 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     // changed since we last saw it and it is unloaded successfully.
     //
     // Now we can try register the dll for sure. 
-    nsresult res = SelfRegisterDll(dll, persistentDescriptor);
-    nsresult ret = NS_OK;
+    nsresult res = SelfRegisterDll(dll, persistentDescriptor, PR_FALSE);
     if (NS_FAILED(res))
     {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("nsNativeComponentLoader: Autoregistration FAILED for "
-                "\"%s\". Skipping...", dll->GetNativePath()));
-        // Mark dll as not xpcom dll along with modified time and size in
-        // the registry so that we wont need to load the dll again every
-        // session until the dll changes.
-#ifdef USE_REGISTRY
-#endif /* USE_REGISTRY */
-        ret = NS_ERROR_FAILURE;
+        if (res == NS_ERROR_FACTORY_REGISTER_AGAIN) {
+            /* defer for later loading */
+            mDeferredComponents.AppendElement(dll);
+            return NS_OK;
+        } else {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+                   ("nsNativeComponentLoader: Autoregistration FAILED for "
+                    "\"%s\". Skipping...", dll->GetNativePath()));
+            return NS_ERROR_FACTORY_NOT_REGISTERED;
+        }
     }
     else
     {
@@ -857,7 +825,39 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         // registry happens at PlatformRegister(). No need to do it
         // here again.
     }
-    return ret;
+    return NS_OK;
+}
+
+nsresult
+nsNativeComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
+                                                    PRBool *aRegistered)
+{
+    fprintf(stderr, "nNCL: registering deferred (%d)\n",
+            mDeferredComponents.Count());
+    *aRegistered = PR_FALSE;
+    if (!mDeferredComponents.Count())
+        return NS_OK;
+    
+    for (int i = mDeferredComponents.Count() - 1; i >= 0; i--) {
+        nsDll *dll = NS_STATIC_CAST(nsDll *, mDeferredComponents[i]);
+        nsresult rv = SelfRegisterDll(dll,
+                                      dll->GetRegistryLocation(),
+                                      PR_TRUE);
+        if (rv != NS_ERROR_FACTORY_REGISTER_AGAIN) {
+            if (NS_SUCCEEDED(rv))
+                *aRegistered = PR_TRUE;
+            mDeferredComponents.RemoveElementAt(i);
+        }
+    }
+
+    if (*aRegistered)
+        fprintf(stderr, "nNCL: registered deferred, %d left\n",
+                mDeferredComponents.Count());
+    else
+        fprintf(stderr, "nNCL: didn't register any components, %d left\n",
+                mDeferredComponents.Count());
+    /* are there any fatal errors? */
+    return NS_OK;
 }
 
 nsresult

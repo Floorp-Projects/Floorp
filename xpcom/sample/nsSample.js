@@ -44,6 +44,8 @@ mySample.prototype = {
 }
 
 var myModule = {
+    firstTime: true,
+
     /*
      * RegisterSelf is called at registration time (component installation
      * or the only-until-release startup autoregistration) and is responsible
@@ -53,6 +55,12 @@ var myModule = {
      * unmolested.
      */
     registerSelf: function (compMgr, fileSpec, location, type) {
+        if (this.firstTime) {
+            dump("*** Deferring registration of sample JS components\n");
+            this.firstTime = false;
+            throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
+        }
+        dump("*** Registering sample JS components\n");
         compMgr.registerComponentWithType(this.myCID,
                                           "Sample JS Component",
                                           "mozilla.jssample.1", fileSpec,
@@ -104,6 +112,22 @@ var myModule = {
 
             return new mySample();
         }
+    },
+
+    /*
+     * canUnload is used to signal that the component is about to be unloaded.
+     * C++ components can return false to indicate that they don't wish to
+     * be unloaded, but the return value from JS components' canUnload is
+     * ignored: mark-and-sweep will keep everything around until it's no
+     * longer in use, making unconditional ``unload'' safe.
+     *
+     * You still need to provide a (likely useless) canUnload method, though:
+     * it's part of the nsIModule interface contract, and the JS loader _will_
+     * call it.
+     */
+    canUnload: function(compMgr) {
+        dump("*** Unloading sample JS components\n");
+        return true;
     }
 };
     

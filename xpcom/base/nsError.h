@@ -172,6 +172,9 @@ typedef PRUint32 nsresult;
 /* Returned when a class is not registered */
 #define NS_ERROR_FACTORY_NOT_REGISTERED    ((nsresult) 0x80040154L)
 
+/* Returned when a class cannot be registered, but may be tried again later */
+#define NS_ERROR_FACTORY_REGISTER_AGAIN    ((nsresult) 0x80040155L)
+
 /* Returned when a dynamically loaded factory couldn't be found */
 #define NS_ERROR_FACTORY_NOT_LOADED        ((nsresult) 0x800401f8L)
 

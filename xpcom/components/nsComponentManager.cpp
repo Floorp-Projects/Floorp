@@ -32,6 +32,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
+#include "nsXPIDLString.h"
 
 #include "plstr.h"
 #include "prlink.h"
@@ -130,8 +131,8 @@ nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
-                               char *aLocation,
-                               char *aType,
+                               const char *aLocation,
+                               const char *aType,
                                nsIComponentLoader *aLoader)
     : cid(aClass), factory(nsnull), loader(aLoader)
 {
@@ -141,7 +142,7 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
-    : cid(aClass), location(nsnull), type(nsnull), loader(nsnull)
+    : cid(aClass), loader(nsnull)
 
 {
     factory = aFactory;
@@ -151,42 +152,7 @@ nsFactoryEntry::~nsFactoryEntry(void)
 {
     factory = 0;
     loader = 0;
-    if (location)
-	nsAllocator::Free(location);
-    if (type)
-	nsAllocator::Free(type);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// autoStringFree
-////////////////////////////////////////////////////////////////////////////////
-
-//
-// To prevent leaks, we are using this class. Typical use would be
-// for each ptr to be deleted, create an object of these types with that ptr.
-// Once that object goes out of scope, deletion and hence memory free will
-// automatically happen.
-//
-class autoStringFree
-{
-public:
-    enum DeleteModel {
-        NSPR_Delete = 1,
-        nsCRT_String_Delete = 2
-    };
-    autoStringFree(char *Ptr, DeleteModel whichDelete): mPtr(Ptr), mWhichDelete(whichDelete) {}
-    ~autoStringFree() {
-        if (mPtr)
-            if (mWhichDelete == NSPR_Delete) { PR_FREEIF(mPtr); }
-            else if (mWhichDelete == nsCRT_String_Delete) nsCRT::free(mPtr);
-            else PR_ASSERT(0);
-    }
-private:
-    char *mPtr;
-    DeleteModel mWhichDelete;
-    
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl
@@ -474,17 +440,18 @@ nsComponentManagerImpl::PlatformVersionCheck()
     		
     if (NS_FAILED(rv)) return rv;
     
-    char *buf;
-    nsresult err = mRegistry->GetString(xpcomKey, versionValueName, &buf);
-    autoStringFree delete_buf(buf, autoStringFree::NSPR_Delete);
+    nsXPIDLCString buf;
+    nsresult err = mRegistry->GetString(xpcomKey, versionValueName, 
+                                        getter_Copies(buf));
 
     // If there is a version mismatch or no version string, we got an old registry.
     // Delete the old repository hierarchies and recreate version string
     if (NS_FAILED(err) || PL_strcmp(buf, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING))
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("nsComponentManager: Registry version mismatch (%s vs %s). Nuking xpcom "
-                "registry hierarchy.", buf, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
+               ("nsComponentManager: Registry version mismatch (%s vs %s)."
+                "Nuking xpcom registry hierarchy.", (const char *)buf,
+                NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
 
         // Delete the XPCOM and CLSID hierarchy
         nsRegistryKey mozillaKey;
@@ -708,28 +675,25 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 
     if (NS_FAILED(rv)) return rv;
 
-    char *library = NULL;
-    rv = mRegistry->GetString(cidKey, inprocServerValueName, &library);
+    nsXPIDLCString library;
+    rv = mRegistry->GetString(cidKey, inprocServerValueName,
+                              getter_Copies(library));
     if (NS_FAILED(rv))
     {
         // Registry inconsistent. No File name for CLSID.
         return rv;
     }
 
-    autoStringFree delete_library(library, autoStringFree::NSPR_Delete);
+    nsXPIDLCString componentType;
+    rv = mRegistry->GetString(cidKey, componentTypeValueName, 
+                              getter_Copies(componentType));
 
-    char *componentType = NULL;
-    rv = mRegistry->GetString(cidKey, componentTypeValueName, &componentType);
-    if (rv == NS_ERROR_REG_NOT_FOUND)  {
+    if (NS_FAILED(rv))
+    if (rv == NS_ERROR_REG_NOT_FOUND)
         /* missing componentType, we assume application/x-moz-native */
-        componentType = PL_strdup(nativeComponentType);
-        if (!componentType)
-            return NS_ERROR_OUT_OF_MEMORY;
-    } else if (NS_FAILED(rv)) {
+        componentType = nativeComponentType;
+    else 
         return rv;              // XXX translate error code?
-    }
-
-    autoStringFree delete_type(componentType, autoStringFree::NSPR_Delete);
 
     nsCOMPtr<nsIComponentLoader> loader;
 
@@ -824,10 +788,9 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         if (!node) continue;
 
         // Get library name
-        char *cidString = NULL;
-        rv = node->GetName(&cidString);
+        nsXPIDLCString cidString;
+        rv = node->GetName(getter_Copies(cidString));
         if (NS_FAILED(rv)) continue;
-        autoStringFree delete_cidString(cidString, autoStringFree::nsCRT_String_Delete);
 
         // Get key associated with library
         nsRegistryKey cidKey;
@@ -835,19 +798,20 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         if (NS_FAILED(rv)) continue;
 
         // Create the CID entry
-        char *library = NULL;
-        rv = mRegistry->GetString(cidKey, inprocServerValueName, &library);
+        nsXPIDLCString library;
+        rv = mRegistry->GetString(cidKey, inprocServerValueName,
+                                  getter_Copies(library));
         if (NS_FAILED(rv)) continue;
         nsCID aClass;
+
         if (!(aClass.Parse(cidString))) continue;
 
-        char *componentType;
+        nsXPIDLCString componentType;
         if (NS_FAILED(mRegistry->GetString(cidKey, componentTypeValueName,
-                                           &componentType)))
+                                           getter_Copies(componentType))))
             continue;
 
         nsFactoryEntry* entry = 
-            /* hand off componentType and library to factory */
             new nsFactoryEntry(aClass, library, componentType,
                                nsCRT::strcmp(componentType,
                                              nativeComponentType) ?
@@ -878,19 +842,20 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         if (NS_FAILED(rv)) continue;
 
         // Get the progid string
-        char *progidString = NULL;
-        rv = node->GetName(&progidString);
+        nsXPIDLCString progidString;
+        rv = node->GetName(getter_Copies(progidString));
         if (NS_FAILED(rv)) continue;
-        autoStringFree delete_progidString(progidString, autoStringFree::nsCRT_String_Delete);
 
         // Get cid string
         nsRegistryKey progidKey;
         rv = node->GetKey(&progidKey);
         if (NS_FAILED(rv)) continue;
-        char *cidString = NULL;
-        rv = mRegistry->GetString(progidKey, classIDValueName, &cidString);
+
+        nsXPIDLCString cidString;
+        rv = mRegistry->GetString(progidKey, classIDValueName,
+                                  getter_Copies(cidString));
         if (NS_FAILED(rv)) continue;
-        autoStringFree delete_cidString(cidString, autoStringFree::NSPR_Delete);
+
         nsCID *aClass = new nsCID();
         if (!aClass) continue;		// Protect against out of memory.
         if (!(aClass->Parse(cidString)))
@@ -1038,7 +1003,7 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("nsComponentManager: failed to load factory from %s (%s)\n",
-                aEntry->location, aEntry->type));
+                (const char *)aEntry->location, (const char *)aEntry->type));
         return rv;
     }
     	
@@ -1054,8 +1019,8 @@ nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, PRBool checkRegistr
 
     if (entry) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-	       ("\t\tfound %s as %p in factory cache.", entry->location,
-                entry));
+	       ("\t\tfound %s as %p in factory cache.",
+                (const char *)entry->location, entry));
     } else {
 #ifdef USE_REGISTRY
         if (checkRegistry)
@@ -1619,16 +1584,11 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         goto out;
     }
 
-    /* hand off aRegistryName to entry */
-    newEntry = new nsFactoryEntry(aClass, aRegistryName,
-                                  nsCRT::strdup(aType),
-                                  loader);
+    newEntry = new nsFactoryEntry(aClass, aRegistryName, aType, loader);
     if (!newEntry) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto out;
     }
-
-    aRegistryName = nsnull;     // handed to nsFactoryEntry, so don't free
 
     if (entry) {                // aReplace implicit from test above
 	delete entry;
@@ -1637,6 +1597,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     /* unless the fabric of the universe bends, we'll get entry back */
     sanity = (entry == mFactories->Put(&key, newEntry));
     PR_ASSERT(sanity);
+
     /* don't try to clean up, just drop everything and run */
     if (!sanity)
 	return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1670,7 +1631,8 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         goto out;
     }
     
-    PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
+    PR_LOG(nsComponentManagerLog,
+           NS_SUCCEEDED(rv) ? PR_LOG_DEBUG : PR_LOG_ERROR, 
            ("\t\tFactory register %s progID=%s.",
             NS_SUCCEEDED(rv) ? "succeeded" : "failed",
             aProgID ? aProgID : "<none>"));
@@ -1710,7 +1672,7 @@ nsComponentManagerImpl::GetLoaderForType(const char *aType,
     if (NS_FAILED(rv))
         return rv;
 
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_off
     fprintf(stderr, "nCMI: constructing loader for type %s = %s\n", aType, progID);
 #endif
 
@@ -1741,7 +1703,7 @@ nsComponentManagerImpl::RegisterComponentLoader(const char *aType, const char *a
     
     rv = mRegistry->SetString(loaderKey, progIDValueName, aProgID);
 
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_off
     fprintf(stderr, "nNCI: registered %s as component loader for %s\n",
             aProgID, aType);
 #endif
@@ -2014,28 +1976,39 @@ struct AutoReg_closure {
     nsIFileSpec *spec;
     nsresult status;   // this is a hack around Enumerate's void return
     nsIComponentLoader *native;
+    PRBool registered;
 };
 
 static PRBool
 AutoRegister_enumerate(nsHashKey *key, void *aData, void *aClosure)
 {
-    nsIComponentLoader *loader = (nsIComponentLoader *)aData;
+    nsIComponentLoader *loader = NS_STATIC_CAST(nsIComponentLoader *, aData);
     struct AutoReg_closure *closure =
 	(struct AutoReg_closure *)aClosure;
 
-    if (loader == closure->native) {
-#ifdef DEBUG_shaver
-	fprintf(stderr, "AutoRegister_enumerate: skipping native\n");
-#endif
+    if (loader == closure->native)
 	return PR_TRUE;
-    }
 
     PR_ASSERT(NS_SUCCEEDED(closure->status));
 
-    closure->status = loader->AutoRegisterComponents(closure->when, closure->spec);
-    if (NS_FAILED(closure->status))
-	return PR_FALSE;
-    return PR_TRUE;
+    closure->status = loader->AutoRegisterComponents(closure->when,
+                                                     closure->spec);
+    return NS_SUCCEEDED(closure->status) ? PR_TRUE : PR_FALSE;
+}
+
+static PRBool
+RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
+{
+    nsIComponentLoader *loader = NS_STATIC_CAST(nsIComponentLoader *, aData);
+    struct AutoReg_closure *closure =
+	(struct AutoReg_closure *)aClosure;
+    PR_ASSERT(NS_SUCCEEDED(closure->status));
+    
+    PRBool registered;
+    closure->status = loader->RegisterDeferredComponents(closure->when,
+                                                         &registered);
+    closure->registered |= registered;
+    return NS_SUCCEEDED(closure->status) ? PR_TRUE : PR_FALSE;
 }
 
 nsresult
@@ -2082,24 +2055,16 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFileSpec *inDirSpec)
         if (NS_FAILED(rv))
             continue;
 
-        char *type;
-        rv = node->GetName(&type);
+        nsXPIDLCString type;
+        rv = node->GetName(getter_Copies(type));
         if (NS_FAILED(rv))
             continue;
-        autoStringFree del_type(type, autoStringFree::nsCRT_String_Delete);
         
         nsStringKey typeKey(type);
-        nsCOMPtr<nsIComponentLoader> loader =
-            (nsIComponentLoader *)mLoaders->Get(&typeKey);
-        if (loader.get())
-            continue;
-        
-#ifdef DEBUG_shaver
-        fprintf(stderr, "nCMI: creating %s loader for enumeration\n",
-                type);
-#endif
-        /* this will get it added to the hashtable and stuff */
+        nsCOMPtr<nsIComponentLoader> loader;
+        /* this will create it if we haven't already */
         GetLoaderForType(type, getter_AddRefs(loader));
+
         continue;
     }
 
@@ -2112,6 +2077,14 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFileSpec *inDirSpec)
     closure.native = mNativeComponentLoader; // prevent duplicate autoreg
     
     mLoaders->Enumerate(AutoRegister_enumerate, &closure);
+    if (NS_FAILED(closure.status))
+        return closure.status;
+
+    do {
+        closure.registered = PR_FALSE;
+        mLoaders->Enumerate(RegisterDeferred_enumerate, &closure);
+    } while (NS_SUCCEEDED(closure.status) && closure.registered);
+
     return closure.status;
 }
 
