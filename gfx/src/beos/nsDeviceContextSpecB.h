@@ -40,6 +40,7 @@
 #ifndef nsDeviceContextSpecB_h___
 #define nsDeviceContextSpecB_h___
 
+#include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecB.h" 
 #include "nsVoidArray.h"
