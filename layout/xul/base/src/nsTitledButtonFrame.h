@@ -65,7 +65,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  virtual void UpdateAttributes(nsIPresContext*  aPresContext);
+  virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute);
   virtual void UpdateImage(nsIPresContext*  aPresContext);
 
   // nsIHTMLReflow overrides

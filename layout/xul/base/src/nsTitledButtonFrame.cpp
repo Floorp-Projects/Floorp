@@ -178,7 +178,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
                                PRInt32 aHint)
 {
   mNeedsLayout = PR_TRUE;
-  UpdateAttributes(aPresContext);
+  UpdateAttributes(aPresContext, aAttribute);
 
   // added back in because boxes now handle only redraw what is reflowed.
   // reflow
@@ -293,7 +293,7 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
   mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
   NS_IF_RELEASE(baseURL);
 
-  UpdateAttributes(aPresContext);
+  UpdateAttributes(aPresContext, nsnull /* all */);
 
   return rv;
 }
@@ -326,37 +326,45 @@ nsTitledButtonFrame::GetImageSource(nsString& aResult)
 }
 
 void
-nsTitledButtonFrame::UpdateAttributes(nsIPresContext*  aPresContext)
+nsTitledButtonFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute)
 {
+    if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::align) {
 	nsAutoString value;
 	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
 
-  if (value.EqualsIgnoreCase(ALIGN_LEFT))
-	  mAlign = NS_SIDE_LEFT;
-  else if (value.EqualsIgnoreCase(ALIGN_RIGHT))
-	  mAlign = NS_SIDE_RIGHT;
-  else if (value.EqualsIgnoreCase(ALIGN_BOTTOM))
-	  mAlign = NS_SIDE_BOTTOM;
-  else 
-	  mAlign = NS_SIDE_TOP;
+        if (value.EqualsIgnoreCase(ALIGN_LEFT))
+            mAlign = NS_SIDE_LEFT;
+        else if (value.EqualsIgnoreCase(ALIGN_RIGHT))
+            mAlign = NS_SIDE_RIGHT;
+        else if (value.EqualsIgnoreCase(ALIGN_BOTTOM))
+            mAlign = NS_SIDE_BOTTOM;
+        else 
+            mAlign = NS_SIDE_TOP;
+    }
 
-  value="";
-	mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, value);
+    if (aAttribute == nsnull || aAttribute == nsXULAtoms::crop) {
+        nsAutoString value;
+        mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, value);
 
-  if (value.EqualsIgnoreCase(CROP_LEFT))
-	  mCropType = CropLeft;
-  else if (value.EqualsIgnoreCase(CROP_CENTER))
-	  mCropType = CropCenter;
-  else if (value.EqualsIgnoreCase(CROP_RIGHT))
-	  mCropType = CropRight;
-  else 
-    mCropType = CropNone;
+        if (value.EqualsIgnoreCase(CROP_LEFT))
+            mCropType = CropLeft;
+        else if (value.EqualsIgnoreCase(CROP_CENTER))
+            mCropType = CropCenter;
+        else if (value.EqualsIgnoreCase(CROP_RIGHT))
+            mCropType = CropRight;
+        else 
+            mCropType = CropNone;
+    }
 
-  value = "";
-	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-  mTitle = value;
+    if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::value) {
+        nsAutoString value;
+        mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+        mTitle = value;
+    }
 
-  UpdateImage(aPresContext);
+    if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::src) {
+        UpdateImage(aPresContext);
+    }
 }
 
 void
