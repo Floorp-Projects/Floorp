@@ -99,10 +99,16 @@ Rights Reserved.
 							</box>
 						</box>
 						<box orient="horizontal">
-							<spring flex="1"/>
-							<box class="CardEditWidth">
-								<checkbox id="SendPlainText" value="&SendPlainText.label;"/>
+							<box orient="vertical" valign="middle">
+							<text for="PreferMailFormatPopup" value="&PreferMailFormat.label;"/>
 							</box>
+							<menulist id="PreferMailFormatPopup">
+								<menupopup>
+									<menuitem data="0" value="&Unknown.label;"/>
+									<menuitem data="1" value="&PlainText.label;"/>
+									<menuitem data="2" value="&HTML.label;"/>
+								</menupopup>
+							</menulist>
 						</box>
 					</box>
 				</titledbox>

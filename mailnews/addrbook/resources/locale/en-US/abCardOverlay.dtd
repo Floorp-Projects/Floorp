@@ -28,7 +28,10 @@ Rights Reserved.
 	<!ENTITY Internet.box			"Internet"> 
 		<!ENTITY PrimaryEmail.label		"Email:"> 
 		<!ENTITY SecondEmail.label		"Additional Email:"> 
-		<!ENTITY SendPlainText.label	"Send email as plain text (no html)"> 
+		<!ENTITY PreferMailFormat.label	"Prefers to receive messages formatted as:"> 
+		<!ENTITY PlainText.label		"Plain Text"> 
+		<!ENTITY HTML.label				"HTML"> 
+		<!ENTITY Unknown.label			"Unknown"> 
 	<!ENTITY Phones.box				"Phones"> 
 		<!ENTITY WorkPhone.label		"Work:"> 
 		<!ENTITY HomePhone.label		"Home:"> 

@@ -51,7 +51,7 @@ extern const char *kDisplayNameColumn;
 extern const char *kNicknameColumn;
 extern const char *kPriEmailColumn;
 extern const char *k2ndEmailColumn;
-extern const char *kPlainTextColumn;
+extern const char *kPreferMailFormatColumn;
 extern const char *kWorkPhoneColumn;
 extern const char *kHomePhoneColumn;
 extern const char *kFaxColumn;
@@ -643,7 +643,7 @@ nsAddbookProtocolHandler::InitPrintColumns()
     mReportColumns[3].abField = kNicknameColumn;
     mReportColumns[4].abField = kPriEmailColumn;
     mReportColumns[5].abField = k2ndEmailColumn;
-    mReportColumns[6].abField = kPlainTextColumn;
+    mReportColumns[6].abField = kPreferMailFormatColumn;
     mReportColumns[7].abField = kWorkPhoneColumn;
     mReportColumns[8].abField = kHomePhoneColumn;
     mReportColumns[9].abField = kFaxColumn;

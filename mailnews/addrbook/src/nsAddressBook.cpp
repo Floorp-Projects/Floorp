@@ -1387,9 +1387,9 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	  {
 		column.ToLowerCase();
 		if (-1 != column.Find("true"))
-			mDatabase->AddSendPlainText(newRow, PR_TRUE);
+			mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::html);
 		else
-			mDatabase->AddSendPlainText(newRow, PR_FALSE);
+			mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::unknown);
 	  }
 
 	  break; // 'x'

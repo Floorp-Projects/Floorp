@@ -30,6 +30,13 @@ interface nsIAddrDatabase;
 #include "nsVoidArray.h"
 %}
 
+[uuid(97448252-F189-11d4-A422-001083003D0C)]
+interface nsIAbPreferMailFormat { 
+    const unsigned long unknown   = 0; 
+    const unsigned long plaintext = 1; 
+    const unsigned long html      = 2; 
+}; 
+
 [scriptable, uuid(FA5C977F-04C8-11d3-A2EB-001083003D0C)]
 interface nsIAbCard : nsISupports {
 
@@ -74,7 +81,7 @@ interface nsIAbCard : nsISupports {
 	readonly attribute string printCardUrl;
 	readonly attribute unsigned long key;
 
-	attribute boolean sendPlainText;
+	attribute unsigned long preferMailFormat;
 	attribute boolean isMailList;
 
     attribute unsigned long dbTableID;

@@ -36,7 +36,7 @@ extern const char *kDisplayNameColumn;
 extern const char *kNicknameColumn;
 extern const char *kPriEmailColumn;
 extern const char *k2ndEmailColumn;
-extern const char *kPlainTextColumn;
+extern const char *kPreferMailFormatColumn;
 extern const char *kWorkPhoneColumn;
 extern const char *kHomePhoneColumn;
 extern const char *kFaxColumn;
@@ -196,7 +196,7 @@ nsresult nsAddbookUrl::CleanupAddbookState()
   mAbCardProperty->SetCardValue(kNicknameColumn, tString);
   mAbCardProperty->SetCardValue(kPriEmailColumn, tString);
   mAbCardProperty->SetCardValue(k2ndEmailColumn, tString);
-  mAbCardProperty->SetCardValue(kPlainTextColumn, tString);
+  mAbCardProperty->SetCardValue(kPreferMailFormatColumn, tString);
   mAbCardProperty->SetCardValue(kWorkPhoneColumn, tString);
   mAbCardProperty->SetCardValue(kHomePhoneColumn, tString);
   mAbCardProperty->SetCardValue(kFaxColumn, tString);

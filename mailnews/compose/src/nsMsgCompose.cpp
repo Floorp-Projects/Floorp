@@ -2585,11 +2585,14 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
                     }
                     else
                     {
-    			            PRBool bPlainText;
-    			            rv = existingCard->GetSendPlainText(&bPlainText);
-    			            if (NS_SUCCEEDED(rv))
-    			            {
-                        newRecipient->mAcceptHtml = ! bPlainText;
+                      PRUint32 preferFormat = nsIAbPreferMailFormat::unknown;
+                      rv = existingCard->GetPreferMailFormat(&preferFormat);
+                      if (NS_SUCCEEDED(rv))
+                      {
+                        if (preferFormat == nsIAbPreferMailFormat::html)  
+                          newRecipient->mAcceptHtml = PR_TRUE;
+                        else
+                          newRecipient->mAcceptHtml = PR_FALSE;
                         newRecipient->mProcessed = PR_TRUE;
                       }
                     }
@@ -2613,12 +2616,15 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
    			    rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
     			  if (NS_SUCCEEDED(rv) && existingCard)
             {
-    			    PRBool bPlainText;
-    			    rv = existingCard->GetSendPlainText(&bPlainText);
-    			    if (NS_SUCCEEDED(rv))
-    			    {
-                recipient->mAcceptHtml = ! bPlainText;
-                recipient->mProcessed = PR_TRUE;
+              PRUint32 preferFormat;
+              rv = existingCard->GetPreferMailFormat(&preferFormat);
+              if (NS_SUCCEEDED(rv))
+              {
+                if (preferFormat == nsIAbPreferMailFormat::html)
+                  recipient->mAcceptHtml = PR_TRUE;
+                else
+                  recipient->mAcceptHtml = PR_FALSE;
+               recipient->mProcessed = PR_TRUE;
               }
             }
             else

@@ -1305,9 +1305,9 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	  {
 		column.ToLowerCase();
 		if (-1 != column.Find("true"))
-			m_database->AddSendPlainText(newRow, PR_TRUE);
+			m_database->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::html);
 		else
-			m_database->AddSendPlainText(newRow, PR_FALSE);
+			m_database->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::unknown);
 	  }
 
 	  break; // 'x'

@@ -90,7 +90,7 @@ const char *kDisplayNameColumn = "DisplayName";
 const char *kNicknameColumn = "NickName";
 const char *kPriEmailColumn = "PrimaryEmail";
 const char *k2ndEmailColumn = "SecondEmail";
-const char *kPlainTextColumn = "SendPlainText";
+const char *kPreferMailFormatColumn = "PreferMailFormat"; // nsIAbPreferMailFormat
 const char *kWorkPhoneColumn = "WorkPhone";
 const char *kHomePhoneColumn = "HomePhone";
 const char *kFaxColumn = "FaxNumber";
@@ -187,7 +187,7 @@ nsAddrDatabase::nsAddrDatabase()
       m_Custom4ColumnToken(0),
       m_NotesColumnToken(0),
 	  m_LastModDateColumnToken(0),
-      m_PlainTextColumnToken(0),
+	  m_MailFormatColumnToken(0),
       m_AddressCharSetColumnToken(0),
 	  m_LastRecordKey(0),
 	  m_dbDirectory(nsnull)
@@ -1168,7 +1168,7 @@ nsresult nsAddrDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kPriEmailColumn, &m_PriEmailColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kLowerPriEmailColumn, &m_LowerPriEmailColumnToken);
 			GetStore()->StringToToken(GetEnv(),  k2ndEmailColumn, &m_2ndEmailColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kPlainTextColumn, &m_PlainTextColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kPreferMailFormatColumn, &m_MailFormatColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kWorkPhoneColumn, &m_WorkPhoneColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kHomePhoneColumn, &m_HomePhoneColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kFaxColumn, &m_FaxColumnToken);
@@ -1321,9 +1321,9 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 		}
 		PR_FREEIF(pUnicodeStr);
 
-		PRBool bValue = PR_FALSE;
-		card->GetSendPlainText(&bValue);
-		AddSendPlainText(cardRow, bValue);
+		PRUint32 format = nsIAbPreferMailFormat::unknown;
+		card->GetPreferMailFormat(&format);
+		AddPreferMailFormat(cardRow, format);
 
 		card->GetWorkPhone(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
@@ -3148,10 +3148,10 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
         newCard->SetSecondEmail(tempString.GetUnicode());
 	}
 
-	PRBool bValue = PR_FALSE;
-	err = GetBoolColumn(cardRow, m_PlainTextColumnToken, &bValue);
+	PRUint32 format = nsIAbPreferMailFormat::unknown;
+	err = GetIntColumn(cardRow, m_MailFormatColumnToken, &format, 0);
 	if (NS_SUCCEEDED(err))
-		newCard->SetSendPlainText(bValue);
+		newCard->SetPreferMailFormat(format);
 
 	err = GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())

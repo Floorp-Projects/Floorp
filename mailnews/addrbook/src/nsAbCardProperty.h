@@ -98,8 +98,8 @@ protected:
 	nsString m_Note;
 	PRUint32 m_LastModDate;
 	PRUint32 m_Key;
+	PRUint32 m_PreferMailFormat;
 
-	PRBool   m_bSendPlainText;
 	PRBool   m_bIsMailList;
 
 	PRUint32 m_dbTableID;

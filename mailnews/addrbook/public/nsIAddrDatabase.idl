@@ -97,7 +97,6 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addNickName(in nsIMdbRow row, in string value);
 	[noscript] void addPrimaryEmail(in nsIMdbRow row, in string value);
 	[noscript] void add2ndEmail(in nsIMdbRow row, in string value);
-	[noscript] void addSendPlainText(in nsIMdbRow row, in boolean value);
 	[noscript] void addWorkPhone(in nsIMdbRow row, in string value);
 	[noscript] void addHomePhone(in nsIMdbRow row, in string value);
 	[noscript] void addFaxNumber(in nsIMdbRow row, in string value);
@@ -128,6 +127,7 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addCustom3(in nsIMdbRow row, in string value);
 	[noscript] void addCustom4(in nsIMdbRow row, in string value);
 	[noscript] void addNotes(in nsIMdbRow row, in string value);
+	[noscript] void addPreferMailFormat(in nsIMdbRow row, in unsigned long value);
 
 	[noscript] void addListName(in nsIMdbRow row, in string value);
 	[noscript] void addListNickName(in nsIMdbRow row, in string value);

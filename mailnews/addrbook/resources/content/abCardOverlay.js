@@ -222,14 +222,10 @@ function GetCardValues(cardproperty, doc)
 		doc.getElementById('PrimaryEmail').value = cardproperty.primaryEmail;
 		doc.getElementById('SecondEmail').value = cardproperty.secondEmail;
 
-		var checkbox = doc.getElementById('SendPlainText');
-		if (checkbox)
-		{
-			if (cardproperty.sendPlainText)
-				checkbox.checked = true;
-			else
-				checkbox.removeAttribute('checked', 'false');
-		}
+		var popup = document.getElementById('PreferMailFormatPopup');
+		if ( popup )
+			popup.data = cardproperty.preferMailFormat;
+
 		doc.getElementById('WorkPhone').value = cardproperty.workPhone;
 		doc.getElementById('HomePhone').value = cardproperty.homePhone;
 		doc.getElementById('FaxNumber').value = cardproperty.faxNumber;
@@ -277,9 +273,9 @@ function SetCardValues(cardproperty, doc)
 		cardproperty.primaryEmail = doc.getElementById('PrimaryEmail').value;
 		cardproperty.secondEmail = doc.getElementById('SecondEmail').value;
 
-		var checkbox = doc.getElementById('SendPlainText');
-		if (checkbox)
-            cardproperty.sendPlainText = checkbox.checked;
+		var popup = document.getElementById('PreferMailFormatPopup');
+		if ( popup )
+			cardproperty.preferMailFormat = popup.data;
 		
 		cardproperty.workPhone = doc.getElementById('WorkPhone').value;
 		cardproperty.homePhone = doc.getElementById('HomePhone').value;

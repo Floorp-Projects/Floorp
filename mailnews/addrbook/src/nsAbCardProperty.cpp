@@ -57,7 +57,7 @@ extern const char *kDisplayNameColumn;
 extern const char *kNicknameColumn;
 extern const char *kPriEmailColumn;
 extern const char *k2ndEmailColumn;
-extern const char *kPlainTextColumn;
+extern const char *kPreferMailFormatColumn;
 extern const char *kWorkPhoneColumn;
 extern const char *kHomePhoneColumn;
 extern const char *kFaxColumn;
@@ -97,8 +97,8 @@ nsAbCardProperty::nsAbCardProperty(void)
 
 	m_LastModDate = 0;
 	m_Key = 0;
+	m_PreferMailFormat = nsIAbPreferMailFormat::unknown;
 
-	m_bSendPlainText = PR_TRUE;
 	m_bIsMailList = PR_FALSE;
 
 	m_dbTableID = 0;
@@ -189,15 +189,15 @@ nsresult nsAbCardProperty::SetAttributeName(const PRUnichar *aName, nsString& ar
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::GetSendPlainText(PRBool *aSendPlainText)
+NS_IMETHODIMP nsAbCardProperty::GetPreferMailFormat(PRUint32 *aFormat)
 {
-	*aSendPlainText = m_bSendPlainText;
+	*aFormat = m_PreferMailFormat;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::SetSendPlainText(PRBool aSendPlainText)
+NS_IMETHODIMP nsAbCardProperty::SetPreferMailFormat(PRUint32 aFormat)
 {
-	m_bSendPlainText = aSendPlainText;
+	m_PreferMailFormat = aFormat;
 	return NS_OK;
 }
 
@@ -311,6 +311,10 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
 		GetCustom4(value);
     else if (!PL_strcmp(attrname, kNotesColumn))
 		GetNotes(value);
+	else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
+	{	// PreferMailFormat is interger, not a string
+		return NS_OK;
+	}
 	/* else handle pass down attribute */
 
 	return NS_OK;
@@ -393,10 +397,14 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
 		rv = SetDepartment((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kCompanyColumn))
 		rv = SetCompany((PRUnichar *)value);
+	else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
+	{	// PreferMailFormat is interger, not a string
+		return NS_OK;
+	}
 	else
 	{
 		nsAutoString cardValue(value);
-    char* valueStr = cardValue.ToNewUTF8String();
+		char* valueStr = cardValue.ToNewUTF8String();
 		rv = SetAnonymousStringAttribute(attrname, valueStr);
 		nsMemory::Free(valueStr);
 	}
@@ -749,9 +757,9 @@ NS_IMETHODIMP nsAbCardProperty::CopyCard(nsIAbCard* srcCard)
 	SetSecondEmail(str);
 	PR_FREEIF(str);
 
-	PRBool bValue = PR_FALSE;
-	srcCard->GetSendPlainText(&bValue);
-	SetSendPlainText(bValue);
+	PRUint32 format = nsIAbPreferMailFormat::unknown;
+	srcCard->GetPreferMailFormat(&format);
+	SetPreferMailFormat(format);
 
 	srcCard->GetWorkPhone(&str);
 	SetWorkPhone(str);

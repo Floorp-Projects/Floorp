@@ -210,7 +210,7 @@ nsAbSync::InitSchemaColumns()
   mSchemaMappingList[3].abField = kNicknameColumn;
   mSchemaMappingList[4].abField = kPriEmailColumn;
   mSchemaMappingList[5].abField = k2ndEmailColumn;
-  mSchemaMappingList[6].abField = kPlainTextColumn;
+  mSchemaMappingList[6].abField = kPreferMailFormatColumn;
   mSchemaMappingList[7].abField = kWorkPhoneColumn;
   mSchemaMappingList[8].abField = kHomePhoneColumn;
   mSchemaMappingList[9].abField = kFaxColumn;
@@ -865,12 +865,12 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
   {
     // Now, check if this is that flag for the plain text email selection...if so,
     // then tack this information on as well...
-    PRBool bValue = PR_FALSE;
-    if (NS_SUCCEEDED(aCard->GetSendPlainText(&bValue)))
+    PRUint32 format = nsIAbPreferMailFormat::unknown;
+    if (NS_SUCCEEDED(aCard->GetPreferMailFormat(&format)))
     {
-      if (bValue)
+      if (format != nsIAbPreferMailFormat::html)
         aName = nsString(NS_ConvertASCIItoUCS2("0")).ToNewUnicode();
-      else
+      else  
         aName = nsString(NS_ConvertASCIItoUCS2("1")).ToNewUnicode();
     
       // Just some sanity...
@@ -2944,9 +2944,9 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   {
     // This is plain text pref...have to add a little logic.
     if (!aTagValue->CompareWithConversion("1"))
-      aCard->SetSendPlainText(PR_FALSE);
+      aCard->SetPreferMailFormat(nsIAbPreferMailFormat::html);
     else if (!aTagValue->CompareWithConversion("0"))
-      aCard->SetSendPlainText(PR_TRUE);
+      aCard->SetPreferMailFormat(nsIAbPreferMailFormat::unknown);
   }
 
   return rv;

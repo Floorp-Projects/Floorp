@@ -38,7 +38,7 @@ extern char *kDisplayNameColumn;
 extern char *kNicknameColumn;
 extern char *kPriEmailColumn;
 extern char *k2ndEmailColumn;
-extern char *kPlainTextColumn;
+extern char *kPreferMailFormatColumn;
 extern char *kWorkPhoneColumn;
 extern char *kHomePhoneColumn;
 extern char *kFaxColumn;
