@@ -606,7 +606,7 @@
 
       <menuseparator />
 
-      <menuitem label="Bugs Filed Today" oncommand="loadURI('https://bugzilla.mozilla.org/buglist.cgi?chfield=%5BBug+creation%5D&amp;chfieldfrom=0d&amp;chfieldto=Now&amp;product=Browser&amp;product=MailNews');"/>
+      <menuitem label="Bugs Filed Today" oncommand="loadURI('https://bugzilla.mozilla.org/buglist.cgi?product=Core&amp;product=Mozilla+Application+Suite&amp;chfieldfrom=0d&amp;chfieldto=Now&amp;chfield=%5BBug+creation%5D');"/>
       <menuitem label="CVS Checkins Today" oncommand="loadURI('http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&amp;module=SeaMonkeyAll&amp;branch=HEAD&amp;branchtype=match&amp;sortby=Date&amp;date=day&amp;cvsroot=%2Fcvsroot');"/>
       <menuitem label="Tree Status" oncommand="loadURI('http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey');"/>
 
