@@ -1886,7 +1886,7 @@
 </hbox>
 
 <statusbar class="chromeclass-status" id="status-bar">
-  <hbox insertbefore="unreadMessageCount" flex="1">
+  <hbox insertbefore="unreadMessageCount"  id="statusTextBox" flex="1">
     <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>

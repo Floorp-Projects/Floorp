@@ -46,11 +46,9 @@
     <stringbundle id="bundle_offlinePrompts" src="chrome://messenger-offline/locale/offline.properties"/>
   </stringbundleset>
   
-  <statusbar class="chromeclass-status" id="status-bar"> 
-    <hbox insertafter="totalMessageCount" id="status-bar-end-box">
-      <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/> 
-    </hbox>
-  </statusbar> 
+  <hbox id="statusTextBox">
+    <statusbarpanel insertbefore="statusText" checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/> 
+  </hbox>
 
   <commandset id="mailFileMenuItems">
     <command id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
