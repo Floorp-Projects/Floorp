@@ -109,13 +109,12 @@ Contributor(s):
           </box>
         </row>
         <separator/>
-        <row>
-          <hbox flex="1">
-            <checkbox id="keepProgressDialogUp" label="&keepProgressDialogUpMsg.label;"/>
-          </hbox>
-        </row>
       </rows>
     </grid>
+    <hbox autostretch="never">
+      <checkbox id="keepProgressDialogUp" label="&keepProgressDialogUpMsg.label;"/>
+    </hbox>
+
     
     <separator/>
     
