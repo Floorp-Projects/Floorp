@@ -204,7 +204,7 @@ protected:
   PRBool       mIsContentEmpty;  // PR_TRUE if the cell's contents take up no space
   //XXX: mIsContentEmpty should get yanked in favor of using free a bit on the frame base class
   //     the FrameState slot (mState; GetFrameState/SetFrameState)
-
+public:
   nsBorderEdges mBorderEdges;       // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model
 

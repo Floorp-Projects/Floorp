@@ -1177,11 +1177,18 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
                                                          PRInt32 aEndRowIndex)
 {
   // XXX: for now, this only does table edges.  May need to do interior edges also?  Probably not.
-  PRInt32 lastRowIndex = mCellMap->GetRowCount()-1;
-  PRInt32 lastColIndex = mCellMap->GetColCount()-1;
+  nsCellMap *cellMap = GetCellMap();
+  PRInt32 lastRowIndex = cellMap->GetRowCount()-1;
+  PRInt32 lastColIndex = cellMap->GetColCount()-1;
   if (0==aStartRowIndex)
   {
     nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(0, 0);
+    if (nsnull==cellFrame)
+    {
+      CellData *cellData = mCellMap->GetCellAt(0, 0);
+      if (nsnull!=cellData)
+        cellFrame = cellData->mRealCell->mCell;
+    }
     nsRect rowRect(0,0,0,0);
     if (nsnull!=cellFrame)
     {
@@ -1192,16 +1199,20 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
       nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(0));
       nsBorderEdge *topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(0));
       leftBorder->mLength = rowRect.height + topBorder->mWidth;
-      printf("DidComputeHCB: top leftBorder->mLength set to %d\n", leftBorder->mLength);
       topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(lastColIndex));
       rightBorder->mLength = rowRect.height + topBorder->mWidth;
-      printf("DidComputeHCB: top rightBorder->mLength set to %d\n", rightBorder->mLength);
     }
   }
 
   if (lastRowIndex<=aEndRowIndex)
   {
     nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(lastRowIndex, 0);
+    if (nsnull==cellFrame)
+    {
+      CellData *cellData = mCellMap->GetCellAt(lastRowIndex, 0);
+      if (nsnull!=cellData)
+        cellFrame = cellData->mRealCell->mCell;
+    }
     nsRect rowRect(0,0,0,0);
     if (nsnull!=cellFrame)
     {
@@ -1210,12 +1221,10 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
       rowFrame->GetRect(rowRect);
       nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(lastRowIndex));
       nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(lastRowIndex));
-      nsBorderEdge *topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(0));
-      leftBorder->mLength = rowRect.height + topBorder->mWidth;
-      printf("DidComputeHCB: bottom leftBorder->mLength set to %d\n", leftBorder->mLength);
-      topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(lastColIndex));
-      rightBorder->mLength = rowRect.height + topBorder->mWidth;
-      printf("DidComputeHCB: bottom rightBorder->mLength set to %d\n", rightBorder->mLength);
+      nsBorderEdge *bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(0));
+      leftBorder->mLength = rowRect.height + bottomBorder->mWidth;
+      bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(lastColIndex));
+      rightBorder->mLength = rowRect.height + bottomBorder->mWidth;
     }
   }
 
@@ -1257,8 +1266,6 @@ void nsTableFrame::ComputeHorizontalCollapsingBorders(nsIPresContext& aPresConte
       ComputeBottomBorderForEdgeAt(aPresContext, rowIndex, colIndex);
     }
   }
-  // once horizontal borders are computed, need to fix up length of vertical edges
-  DidComputeHorizontalCollapsingBorders(aPresContext, aStartRowIndex, aEndRowIndex);
 }
 
 /* compute the left and right collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
@@ -1336,7 +1343,12 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
   styles.AppendElement((void*)spacing);
   //    4. rowgroup
   nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(aRowIndex, aColIndex);
-  // XXX: some decision needs to be made about row-spanning cell
+  if (nsnull==cellFrame)
+  {
+    CellData *cellData = mCellMap->GetCellAt(aRowIndex, aColIndex);
+    if (nsnull!=cellData)
+      cellFrame = cellData->mRealCell->mCell;
+  }
   nsRect rowRect(0,0,0,0);
   if (nsnull!=cellFrame)
   {
@@ -1367,11 +1379,10 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
     widthToAdd = NSToCoordCeil(p2t);
   border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = rowRect.height;
+  border->mInsideNeighbor = &cellFrame->mBorderEdges;
   // we need to factor in the table's horizontal borders.
   // but we can't compute that length here because we don't know how thick top and bottom borders are
   // see DidComputeHorizontalCollapsingBorders
-  printf("table computed left border width=%d length=%d, color=%d style=%d maxWidth=%d \n",
-          border->mWidth, border->mLength, border->mColor, border->mStyle, mBorderEdges.mMaxBorderWidth.left);
   if (nsnull!=cellFrame)
   {
     cellFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, border, 0);  // set the left edge of the cell frame
@@ -1435,7 +1446,7 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
     GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
   }
-  //    2. colgroup
+  //    2. colgroup //XXX: need to test if we're really on a colgroup border
   nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
   nsIFrame *colGroupFrame;
   colFrame->GetContentParent(colGroupFrame);
@@ -1446,7 +1457,12 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   styles.AppendElement((void*)spacing);
   //    4. rowgroup
   nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(aRowIndex, aColIndex);
-  // XXX: some decision needs to be made about row-spanning cell
+  if (nsnull==cellFrame)
+  {
+    CellData *cellData = mCellMap->GetCellAt(aRowIndex, aColIndex);
+    if (nsnull!=cellData)
+      cellFrame = cellData->mRealCell->mCell;
+  }
   nsRect rowRect(0,0,0,0);
   if (nsnull!=cellFrame)
   {
@@ -1455,11 +1471,14 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
     rowFrame->GetRect(rowRect);
     nsIFrame *rowGroupFrame;
     rowFrame->GetContentParent(rowGroupFrame);
-    rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
-    //    5. row
-    rowFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    if (nsnull==rightNeighborFrame)
+    { // if rightNeighborFrame is null, our right neighbor is the table so we include the rowgroup and row
+      rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+      styles.AppendElement((void*)spacing);
+      //    5. row
+      rowFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+      styles.AppendElement((void*)spacing);
+    }
     //    6. cell (need to do something smart for rowspanner with row frame)
     cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
@@ -1488,33 +1507,21 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
     *tableBorder = border;
+    tableBorder->mInsideNeighbor = &cellFrame->mBorderEdges;
     mBorderEdges.mMaxBorderWidth.right = PR_MAX(border.mWidth, mBorderEdges.mMaxBorderWidth.right);
     // since the table is our right neightbor, we need to factor in the table's horizontal borders.
     // can't compute that length here because we don't know how thick top and bottom borders are
     // see DidComputeHorizontalCollapsingBorders
-
-/*
-    PRInt32 lastRowIndex = mCellMap->GetRowCount()-1;
-    if (0==aRowIndex)
-    { // if we're the first row, factor in the thickness of the top table border
-      nsBorderEdge *topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(lastRowIndex));
-      tableBorder->mLength += topBorder->mWidth;
-    }
-    if (lastRowIndex==aRowIndex)
-    { // if we're the last column, factor in the thickness of the bottom table border
-      nsBorderEdge *bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(lastRowIndex));
-      tableBorder->mLength += bottomBorder->mWidth;
-    }
-*/
   }
   else
+  {
+    border.mWidth += widthToAdd;  // right edge of this cell get's odd pixel
     rightNeighborFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, &border, 0);
+  }
   if (nsnull!=cellFrame)
   {
     cellFrame->SetBorderEdge(NS_SIDE_RIGHT, aRowIndex, aColIndex, &border, widthToAdd);
   }
-  printf("table computed right border width=%d length=%d, color=%d style=%d maxWidth=%d \n",
-          border.mWidth, border.mLength, border.mColor, border.mStyle, mBorderEdges.mMaxBorderWidth.right);
 }
 
 void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
@@ -1550,7 +1557,12 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
   styles.AppendElement((void*)spacing);
   //    4. rowgroup
   nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(aRowIndex, aColIndex);
-  // XXX: some decision needs to be made about row-spanning cell
+  if (nsnull==cellFrame)
+  {
+    CellData *cellData = mCellMap->GetCellAt(aRowIndex, aColIndex);
+    if (nsnull!=cellData)
+      cellFrame = cellData->mRealCell->mCell;
+  }
   if (nsnull!=cellFrame)
   {
     nsIFrame *rowFrame;
@@ -1579,6 +1591,7 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
     widthToAdd = NSToCoordCeil(p2t);
   border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = GetColumnWidth(aColIndex);
+  border->mInsideNeighbor = &cellFrame->mBorderEdges;
   if (0==aColIndex)
   { // if we're the first column, factor in the thickness of the left table border
     nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
@@ -1595,8 +1608,6 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
   }
   border->mWidth += widthToAdd;
   mBorderEdges.mMaxBorderWidth.top = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.top);
-  printf("table computed top border width=%d length=%d, color=%d style=%d maxWidth=%d \n",
-          border->mWidth, border->mLength, border->mColor, border->mStyle, mBorderEdges.mMaxBorderWidth.top);
 }
 
 void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
@@ -1653,19 +1664,25 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   { // if bottomNeighborFrame is null, our bottom neighbor is the table 
     GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
+
+    //    2. colgroup   // XXX: need to deterine if we're on a colgroup boundary
+    nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
+    nsIFrame *colGroupFrame;
+    colFrame->GetContentParent(colGroupFrame);
+    colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+    styles.AppendElement((void*)spacing);
+    //    3. col
+    colFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+    styles.AppendElement((void*)spacing);
   }
-  //    2. colgroup   // XXX: need to deterine if we're on a colgroup boundary
-  nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
-  nsIFrame *colGroupFrame;
-  colFrame->GetContentParent(colGroupFrame);
-  colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
-  //    3. col
-  colFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
   //    4. rowgroup // XXX: use rowgroup only if we're on a table edge
   nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(aRowIndex, aColIndex);
-  // XXX: some decision needs to be made about col-spanning cell
+  if (nsnull==cellFrame)
+  {
+    CellData *cellData = mCellMap->GetCellAt(aRowIndex, aColIndex);
+    if (nsnull!=cellData)
+      cellFrame = cellData->mRealCell->mCell;
+  }
   nsRect rowRect(0,0,0,0);
   if (nsnull!=cellFrame)
   {
@@ -1707,6 +1724,7 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
     *tableBorder = border;
+    tableBorder->mInsideNeighbor = &cellFrame->mBorderEdges;
     mBorderEdges.mMaxBorderWidth.bottom = PR_MAX(border.mWidth, mBorderEdges.mMaxBorderWidth.bottom);
     // since the table is our bottom neightbor, we need to factor in the table's vertical borders.
     PRInt32 lastColIndex = mCellMap->GetColCount()-1;
@@ -1722,13 +1740,14 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
     }
   }
   else
+  {
+    border.mWidth += widthToAdd;  // bottom edge of this cell get's odd pixel
     bottomNeighborFrame->SetBorderEdge(NS_SIDE_TOP, aRowIndex, aColIndex, &border, 0);
+  }
   if (nsnull!=cellFrame)
   {
     cellFrame->SetBorderEdge(NS_SIDE_BOTTOM, aRowIndex, aColIndex, &border, widthToAdd);
   }
-  printf("table computed bottom border width=%d length=%d, color=%d style=%d maxWidth=%d \n",
-          border.mWidth, border.mLength, border.mColor, border.mStyle, mBorderEdges.mMaxBorderWidth.bottom);
 }
 
 nscoord nsTableFrame::GetWidthForSide(const nsMargin &aBorder, PRUint8 aSide)
@@ -1939,7 +1958,7 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8       aSide,
         PRUint8 winningStyle=NS_STYLE_BORDER_STYLE_NONE;
         for (i=0; i<styleCount; i++)
         {
-          spacing = (nsStyleSpacing *)(aStyles->ElementAt(i));
+          spacing = (nsStyleSpacing *)(sameWidthBorders.ElementAt(i));
           side=aSide;
           if (spacing==lastSpacing)
             side=GetOpposingEdge(aSide);
@@ -2183,8 +2202,6 @@ nsTableFrame::GetAdditionalChildListName(PRInt32   aIndex,
   return NS_OK;
 }
 
-static int xxxpaingborders=1;
-
 /* SEC: TODO: adjust the rect for captions */
 NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,
@@ -2215,7 +2232,6 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
       else
       {
         printf("paint table frame\n");
-        if (xxxpaingborders)
         nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
                                          aDirtyRect, rect, &mBorderEdges, skipSides);
       }
@@ -2615,7 +2631,12 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
   aDesiredSize.width = ComputeDesiredWidth(aReflowState);
   nscoord defaultHeight = state.y + borderPadding.top + borderPadding.bottom;
   aDesiredSize.height = ComputeDesiredHeight(aPresContext, aReflowState, defaultHeight);
-
+  
+  // once horizontal borders are computed and all row heights are set, 
+  // we need to fix up length of vertical edges
+  // XXX need to figure start row and end row correctly
+  if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
+    DidComputeHorizontalCollapsingBorders(aPresContext, 0, 10000);
 
   if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     // Don't forget to add in the bottom margin from our last child.
