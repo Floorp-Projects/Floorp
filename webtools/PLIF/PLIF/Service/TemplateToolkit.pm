@@ -59,6 +59,7 @@ sub expand {
     my $template = Template->new({
         'CONTEXT' => PLIF::Service::TemplateToolkit::Context->new($app, $output, $session, $protocol),
     });
+    local $Template::Stash::Context::SCALAR_OPS->{'sprintf'} = sub { sprintf($_[1], $_[0]) };
     my $document;
     if ($type eq 'TemplateToolkitCompiled') {
         # what we have here is a potential Template::Document
@@ -104,6 +105,7 @@ sub new {
         }
     });
     if (defined($self)) {
+        # don't worry, this doesn't cause any referential loops, because the Template object is short-lived
         $self->{'__PLIF__app'} = $app;
         $self->{'__PLIF__output'} = $output; # unused (it's a handle to the dataSource.strings service but we look one up instead of using it directly)
         $self->{'__PLIF__session'} = $session;
