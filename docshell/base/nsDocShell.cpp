@@ -1247,9 +1247,10 @@ NS_IMETHODIMP nsDocShell::Destroy()
    if(docShellParentAsNode)
       docShellParentAsNode->RemoveChild(this);
 
+   mContentViewer = nsnull;
+
    DestroyChildren();
 
-   mContentViewer = nsnull;
    mDocLoader = nsnull;
    mDocLoaderObserver = nsnull;
    mParentWidget = nsnull;
