@@ -97,7 +97,6 @@ static void DisplayError(void)
     promptService->Alert(nsnull, title.get(), err.get());
 }
 
-
 // nsISupports Implementation
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsReadConfig, nsIReadConfig, nsIObserver)
@@ -179,12 +178,12 @@ nsresult nsReadConfig::readConfigFile()
             return rv;
         
         // Open and evaluate function calls to set/lock/unlock prefs
-        rv = openAndEvaluateJSFile("prefcalls.js", PR_FALSE, PR_FALSE);
+        rv = openAndEvaluateJSFile("prefcalls.js", 0, PR_FALSE, PR_FALSE);
         if (NS_FAILED(rv)) 
             return rv;
 
         // Evaluate platform specific directives
-        rv = openAndEvaluateJSFile("platform.js", PR_FALSE, PR_FALSE);
+        rv = openAndEvaluateJSFile("platform.js", 0, PR_FALSE, PR_FALSE);
         if (NS_FAILED(rv)) 
             return rv;
 
@@ -198,7 +197,9 @@ nsresult nsReadConfig::readConfigFile()
     // file we allow for the preference to be set (and locked) by the creator 
     // of the cfg file meaning the file can not be renamed (successfully).
 
-    rv = openAndEvaluateJSFile(lockFileName.get(), PR_TRUE, PR_TRUE);
+    PRInt32 obscureValue = 0;
+    (void) prefBranch->GetIntPref("general.config.obscure_value", &obscureValue);
+    rv = openAndEvaluateJSFile(lockFileName.get(), PR_TRUE, obscureValue, PR_TRUE);
     if (NS_FAILED(rv)) 
         return rv;
     
@@ -246,8 +247,8 @@ nsresult nsReadConfig::readConfigFile()
 } // ReadConfigFile
 
 
-nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, 
-                                             PRBool isEncoded, 
+nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRBool isEncoded, 
+                                             PRInt32 obscureValue,
                                              PRBool isBinDir)
 {
     nsresult rv;
@@ -292,11 +293,11 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName,
     rv = inStr->Read(buf, fs, &amt);
     NS_ASSERTION((amt == fs), "failed to read the entire configuration file!!");
     if (NS_SUCCEEDED(rv)) {
-        if (isEncoded) {
+        if (obscureValue > 0) {
+
             // Unobscure file by subtracting some value from every char. 
-            const int obscure_value = 13;
             for (PRUint32 i = 0; i < amt; i++)
-                buf[i] -= obscure_value;
+                buf[i] -= obscureValue;
         }
         nsCAutoString path;
 
