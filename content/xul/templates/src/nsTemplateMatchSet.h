@@ -169,12 +169,15 @@ protected:
     /**
      * Hashtable entry; holds weak reference to a match object.
      */
+
+public:
     struct Entry {
         friend class ConstIterator;
 
         PLDHashEntryHdr  mHdr;
         nsTemplateMatch* mMatch;
     };
+protected:
 
     enum { kMaxInlineMatches = (sizeof(PLDHashTable) / sizeof(void*)) - 1 };
 
