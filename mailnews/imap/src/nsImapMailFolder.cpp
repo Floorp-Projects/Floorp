@@ -243,7 +243,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
 #if 0
     else if(name->EqualsIgnoreCase(kSentName))
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name->EqualsIgnoreCase(kDraftsName")
+    else if(name->EqualsIgnoreCase(kDraftsName))
       folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
     else if (name->EqualsIgnoreCase(kTemplatesName));
       folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
