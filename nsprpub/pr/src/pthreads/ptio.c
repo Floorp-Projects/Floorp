@@ -1661,6 +1661,14 @@ static PRFileDesc* pt_Accept(
     {
         PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
         PR_ASSERT(IsValidNetAddrLen(addr, addr_len) == PR_TRUE);
+#ifdef LINUX
+        /*
+         * On Linux, experiments showed that the accepted sockets
+         * inherit the TCP_NODELAY socket option of the listening
+         * socket.
+         */
+        newfd->secret->md.tcp_nodelay = fd->secret->md.tcp_nodelay;
+#endif
     }
     return newfd;
 
@@ -2512,14 +2520,28 @@ static PRInt32 pt_LinuxSendFile(PRFileDesc *sd, PRSendFileData *sfd,
         file_nbytes_to_send = sfd->file_nbytes;
     }
 
-    if (sfd->hlen != 0 || sfd->tlen != 0) {
+    if ((sfd->hlen != 0 || sfd->tlen != 0)
+            && sd->secret->md.tcp_nodelay == 0) {
         tcp_cork = 1;
         if (setsockopt(sd->secret->md.osfd, SOL_TCP, TCP_CORK,
-                &tcp_cork, sizeof tcp_cork) == -1) {
-            _PR_MD_MAP_SETSOCKOPT_ERROR(errno);
-            return -1;
+                &tcp_cork, sizeof tcp_cork) == 0) {
+            tcp_cork_enabled = PR_TRUE;
+        } else {
+            syserrno = errno;
+            if (syserrno != EINVAL) {
+                _PR_MD_MAP_SETSOCKOPT_ERROR(syserrno);
+                return -1;
+            }
+            /*
+             * The most likely reason for the EINVAL error is that
+             * TCP_NODELAY is set (with a function other than
+             * PR_SetSocketOption).  This is not fatal, so we keep
+             * on going.
+             */
+            PR_LOG(_pr_io_lm, PR_LOG_WARNING,
+                ("pt_LinuxSendFile: "
+                "setsockopt(TCP_CORK) failed with EINVAL\n"));
         }
-        tcp_cork_enabled = PR_TRUE;
     }
 
     if (sfd->hlen != 0) {
@@ -2899,6 +2921,12 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
                 rv = setsockopt(
                     fd->secret->md.osfd, level, name,
                     (char*)&value, sizeof(PRIntn));
+#ifdef LINUX
+                /* for pt_LinuxSendFile */
+                if (name == TCP_NODELAY && rv == 0) {
+                    fd->secret->md.tcp_nodelay = value;
+                }
+#endif
                 break;
             }
             case PR_SockOpt_McastLoopback:
