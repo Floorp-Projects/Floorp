@@ -188,7 +188,7 @@ typedef struct _jobject *jref;
 #endif
 
 typedef unsigned char	jbool;
-typedef char			jbyte;
+typedef signed char	jbyte;
 #ifdef IS_64 /* XXX ok for alpha, but not right on all 64-bit architectures */
 typedef unsigned int	juint;
 typedef int				jint;
