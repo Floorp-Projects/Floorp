@@ -54,13 +54,15 @@ LocationStep::LocationStep(nsAutoPtr<txNodeTest> aNodeTest,
  * @return the result of the evaluation
  * @see Expr
 **/
-ExprResult* LocationStep::evaluate(txIEvalContext* aContext)
+nsresult
+LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     NS_ASSERTION(aContext, "internal error");
+    *aResult = nsnull;
 
-    NodeSet* nodes = new NodeSet();
-    if (!nodes)
-        return 0;
+    nsRefPtr<NodeSet> nodes;
+    nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     MBool reverse = MB_FALSE;
 
@@ -188,13 +190,18 @@ ExprResult* LocationStep::evaluate(txIEvalContext* aContext)
     } //-- switch
 
     //-- apply predicates
-    if (!isEmpty())
-        evaluatePredicates(nodes, aContext);
+    if (!isEmpty()) {
+        rv = evaluatePredicates(nodes, aContext);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     if (reverse)
         nodes->reverse();
 
-    return nodes;
+    *aResult = nodes;
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
 }
 
 void LocationStep::fromDescendants(Node* node, txIMatchContext* cs,

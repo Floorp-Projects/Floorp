@@ -103,7 +103,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
                     }
                     else {
                         if (!buffer.IsEmpty()) {
-                            Expr* strExpr = new StringExpr(buffer);
+                            Expr* strExpr = new txLiteralExpr(buffer);
                             if (!strExpr) {
                                 // XXX ErrorReport: out of memory
                                 delete avt;
@@ -154,7 +154,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
     }
 
     if (!buffer.IsEmpty()) {
-        Expr* strExpr = new StringExpr(buffer);
+        Expr* strExpr = new txLiteralExpr(buffer);
         if (!strExpr) {
             // XXX ErrorReport: out of memory
             delete avt;
@@ -351,11 +351,11 @@ Expr* ExprParser::createFilterExpr(ExprLexer& lexer, txIParseContext* aContext)
             }
             break;
         case Token::LITERAL :
-            expr = new StringExpr(tok->value);
+            expr = new txLiteralExpr(tok->value);
             break;
         case Token::NUMBER:
         {
-            expr = new NumberExpr(Double::toDouble(tok->value));
+            expr = new txLiteralExpr(Double::toDouble(tok->value));
             break;
         }
         default:
@@ -507,8 +507,8 @@ Expr* ExprParser::createFunctionCall(ExprLexer& lexer,
             if (!parseParameters(0, lexer, aContext)) {
                 return 0;
             }
-            return new StringExpr(tok->value +
-                                  NS_LITERAL_STRING(" not implemented."));
+            return new txLiteralExpr(tok->value +
+                                     NS_LITERAL_STRING(" not implemented."));
         }
 
         if (NS_FAILED(rv)) {

@@ -240,7 +240,7 @@ protected:
 class txIGlobalParameter : public TxObject
 {
 public:
-    virtual nsresult getValue(ExprResult** aValue) = 0;
+    virtual nsresult getValue(txAExprResult** aValue) = 0;
 };
 
 

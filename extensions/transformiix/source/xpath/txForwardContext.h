@@ -40,6 +40,7 @@
 #define __TX_XPATH_CONTEXT
 
 #include "txIXPathContext.h"
+#include "nsAutoPtr.h"
 
 class NodeSet;
 
@@ -58,7 +59,7 @@ public:
 
 private:
     Node* mContext;
-    NodeSet* mContextSet;
+    nsRefPtr<NodeSet> mContextSet;
     txIMatchContext* mInner;
 };
 

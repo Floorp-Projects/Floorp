@@ -45,20 +45,24 @@ static const int kTxNodeSetGrowFactor = 2;
 /*
  * Creates a new empty NodeSet
  */
-NodeSet::NodeSet() : mElements(0),
-                     mBufferSize(0),
-                     mElementCount(0)
+NodeSet::NodeSet(txResultRecycler* aRecycler)
+    : txAExprResult(aRecycler),
+      mElements(0),
+      mBufferSize(0),
+      mElementCount(0)
 {
 }
 
 /*
  * Creates a new NodeSet containing the supplied Node
  */
-NodeSet::NodeSet(Node* aNode) : mBufferSize(1), 
-                                mElementCount(1)
+NodeSet::NodeSet(Node* aNode, txResultRecycler* aRecycler)
+    : txAExprResult(aRecycler),
+      mElements(new Node*[1]),
+      mBufferSize(1),
+      mElementCount(1)
 {
-    NS_ASSERTION(aNode, "missing node to NodeSet::add");
-    mElements = new Node*[1];
+    NS_ASSERTION(aNode, "missing node to NodeSet::NodeSet");
     if (!mElements) {
         NS_ASSERTION(0, "out of memory");
         mBufferSize = 0;
@@ -73,9 +77,11 @@ NodeSet::NodeSet(Node* aNode) : mBufferSize(1),
  * Creates a new NodeSet, copying the Node references from the source
  * NodeSet
  */
-NodeSet::NodeSet(const NodeSet& aSource) : mElements(0),
-                                           mBufferSize(0),
-                                           mElementCount(0)
+NodeSet::NodeSet(const NodeSet& aSource, txResultRecycler* aRecycler)
+    : txAExprResult(aRecycler),
+      mElements(0),
+      mBufferSize(0),
+      mElementCount(0)
 {
     append(&aSource);
 }
@@ -348,21 +354,12 @@ Node* NodeSet::get(int aIndex) const
 }
 
 /*
- * Clones this ExprResult
- * @return clone of this ExprResult
- */
-ExprResult* NodeSet::clone()
-{
-    return new NodeSet(*this);
-}
-
-/*
  * Returns the type of ExprResult represented
  * @return the type of ExprResult represented
  */
 short NodeSet::getResultType()
 {
-    return ExprResult::NODESET;
+    return txAExprResult::NODESET;
 }
 
 /*
@@ -415,7 +412,8 @@ MBool NodeSet::ensureSize(int aSize)
 
     // This isn't 100% safe. But until someone manages to make a 1gig nodeset
     // it should be ok.
-    int newSize = mBufferSize ? mBufferSize : kTxNodeSetMinSize;
+    int newSize = mBufferSize > kTxNodeSetMinSize ? mBufferSize :
+                                                    kTxNodeSetMinSize;
     while (newSize < aSize)
         newSize *= kTxNodeSetGrowFactor;
 

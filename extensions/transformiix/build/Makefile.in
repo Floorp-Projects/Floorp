@@ -86,20 +86,20 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/xpath/nsXPathNSResolver.$(OBJ_SUFFIX) \
   ../source/xpath/nsXPathResult.$(OBJ_SUFFIX) \
   ../source/xpath/nsXPath1Scheme.$(OBJ_SUFFIX) \
-  ../source/xpath/NumberExpr.$(OBJ_SUFFIX) \
   ../source/xpath/NumberFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/NumberResult.$(OBJ_SUFFIX) \
   ../source/xpath/PathExpr.$(OBJ_SUFFIX) \
   ../source/xpath/PredicateList.$(OBJ_SUFFIX) \
   ../source/xpath/RelationalExpr.$(OBJ_SUFFIX) \
   ../source/xpath/RootExpr.$(OBJ_SUFFIX) \
-  ../source/xpath/StringExpr.$(OBJ_SUFFIX) \
   ../source/xpath/StringFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/StringResult.$(OBJ_SUFFIX) \
+  ../source/xpath/txLiteralExpr.$(OBJ_SUFFIX) \
   ../source/xpath/txNameTest.$(OBJ_SUFFIX) \
   ../source/xpath/txNodeTypeTest.$(OBJ_SUFFIX) \
   ../source/xpath/txForwardContext.$(OBJ_SUFFIX) \
   ../source/xpath/txNodeSetContext.$(OBJ_SUFFIX) \
+  ../source/xpath/txResultRecycler.$(OBJ_SUFFIX) \
   ../source/xpath/UnionExpr.$(OBJ_SUFFIX) \
   ../source/xpath/UnaryExpr.$(OBJ_SUFFIX) \
   ../source/xpath/VariableRefExpr.$(OBJ_SUFFIX) \

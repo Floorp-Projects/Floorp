@@ -64,74 +64,69 @@ FunctionAvailableFunctionCall::FunctionAvailableFunctionCall(txNamespaceMap* aMa
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext,
+                                        txAExprResult** aResult)
 {
-    ExprResult* result = nsnull;
-
-    if (requireParams(1, 1, aContext)) {
-        txListIterator iter(&params);
-        Expr* param = (Expr*)iter.next();
-        ExprResult* exprResult = param->evaluate(aContext);
-        if (exprResult &&
-            exprResult->getResultType() == ExprResult::STRING) {
-            nsAutoString property;
-            exprResult->stringValue(property);
-            txExpandedName qname;
-            nsresult rv = qname.init(property, mMappings, MB_FALSE);
-            if (NS_SUCCEEDED(rv) &&
-                qname.mNamespaceID == kNameSpaceID_None &&
-                (qname.mLocalName == txXPathAtoms::boolean ||
-                 qname.mLocalName == txXPathAtoms::ceiling ||
-                 qname.mLocalName == txXPathAtoms::concat ||
-                 qname.mLocalName == txXPathAtoms::contains ||
-                 qname.mLocalName == txXPathAtoms::count ||
-                 qname.mLocalName == txXPathAtoms::_false ||
-                 qname.mLocalName == txXPathAtoms::floor ||
-                 qname.mLocalName == txXPathAtoms::id ||
-                 qname.mLocalName == txXPathAtoms::lang ||
-                 qname.mLocalName == txXPathAtoms::last ||
-                 qname.mLocalName == txXPathAtoms::localName ||
-                 qname.mLocalName == txXPathAtoms::name ||
-                 qname.mLocalName == txXPathAtoms::namespaceUri ||
-                 qname.mLocalName == txXPathAtoms::normalizeSpace ||
-                 qname.mLocalName == txXPathAtoms::_not ||
-                 qname.mLocalName == txXPathAtoms::number ||
-                 qname.mLocalName == txXPathAtoms::position ||
-                 qname.mLocalName == txXPathAtoms::round ||
-                 qname.mLocalName == txXPathAtoms::startsWith ||
-                 qname.mLocalName == txXPathAtoms::string ||
-                 qname.mLocalName == txXPathAtoms::stringLength ||
-                 qname.mLocalName == txXPathAtoms::substring ||
-                 qname.mLocalName == txXPathAtoms::substringAfter ||
-                 qname.mLocalName == txXPathAtoms::substringBefore ||
-                 qname.mLocalName == txXPathAtoms::sum ||
-                 qname.mLocalName == txXPathAtoms::translate ||
-                 qname.mLocalName == txXPathAtoms::_true ||
-                 qname.mLocalName == txXSLTAtoms::current ||
-                 qname.mLocalName == txXSLTAtoms::document ||
-                 qname.mLocalName == txXSLTAtoms::elementAvailable ||
-                 qname.mLocalName == txXSLTAtoms::formatNumber ||
-                 qname.mLocalName == txXSLTAtoms::functionAvailable ||
-                 qname.mLocalName == txXSLTAtoms::generateId ||
-                 qname.mLocalName == txXSLTAtoms::key ||
-//                 qname.mLocalName == txXSLTAtoms::unparsedEntityUri ||
-                 qname.mLocalName == txXSLTAtoms::systemProperty)) {
-                result = new BooleanResult(MB_TRUE);
-            }
-        }
-        else {
-            NS_NAMED_LITERAL_STRING(err, "Invalid argument passed to function-available, expecting String");
-            aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
-            result = new StringResult(err);
-        }
-        delete exprResult;
+    *aResult = nsnull;
+    if (!requireParams(1, 1, aContext)) {
+        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
-    if (!result) {
-        result = new BooleanResult(MB_FALSE);
-    }
+    txListIterator iter(&params);
+    Expr* param = (Expr*)iter.next();
+    nsRefPtr<txAExprResult> exprResult;
+    nsresult rv = param->evaluate(aContext, getter_AddRefs(exprResult));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return result;
+    nsAutoString property;
+    exprResult->stringValue(property);
+    txExpandedName qname;
+    rv = qname.init(property, mMappings, MB_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool val = qname.mNamespaceID == kNameSpaceID_None &&
+                 (qname.mLocalName == txXPathAtoms::boolean ||
+                  qname.mLocalName == txXPathAtoms::ceiling ||
+                  qname.mLocalName == txXPathAtoms::concat ||
+                  qname.mLocalName == txXPathAtoms::contains ||
+                  qname.mLocalName == txXPathAtoms::count ||
+                  qname.mLocalName == txXPathAtoms::_false ||
+                  qname.mLocalName == txXPathAtoms::floor ||
+                  qname.mLocalName == txXPathAtoms::id ||
+                  qname.mLocalName == txXPathAtoms::lang ||
+                  qname.mLocalName == txXPathAtoms::last ||
+                  qname.mLocalName == txXPathAtoms::localName ||
+                  qname.mLocalName == txXPathAtoms::name ||
+                  qname.mLocalName == txXPathAtoms::namespaceUri ||
+                  qname.mLocalName == txXPathAtoms::normalizeSpace ||
+                  qname.mLocalName == txXPathAtoms::_not ||
+                  qname.mLocalName == txXPathAtoms::number ||
+                  qname.mLocalName == txXPathAtoms::position ||
+                  qname.mLocalName == txXPathAtoms::round ||
+                  qname.mLocalName == txXPathAtoms::startsWith ||
+                  qname.mLocalName == txXPathAtoms::string ||
+                  qname.mLocalName == txXPathAtoms::stringLength ||
+                  qname.mLocalName == txXPathAtoms::substring ||
+                  qname.mLocalName == txXPathAtoms::substringAfter ||
+                  qname.mLocalName == txXPathAtoms::substringBefore ||
+                  qname.mLocalName == txXPathAtoms::sum ||
+                  qname.mLocalName == txXPathAtoms::translate ||
+                  qname.mLocalName == txXPathAtoms::_true ||
+                  qname.mLocalName == txXSLTAtoms::current ||
+                  qname.mLocalName == txXSLTAtoms::document ||
+                  qname.mLocalName == txXSLTAtoms::elementAvailable ||
+                  qname.mLocalName == txXSLTAtoms::formatNumber ||
+                  qname.mLocalName == txXSLTAtoms::functionAvailable ||
+                  qname.mLocalName == txXSLTAtoms::generateId ||
+                  qname.mLocalName == txXSLTAtoms::key ||
+                  //qname.mLocalName == txXSLTAtoms::unparsedEntityUri ||
+                  qname.mLocalName == txXSLTAtoms::systemProperty);
+
+    aContext->recycler()->getBoolResult(val, aResult);
+        
+    return NS_OK;
+
 }
 
 nsresult FunctionAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)

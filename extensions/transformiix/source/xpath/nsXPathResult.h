@@ -46,7 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 
-class ExprResult;
+class txAExprResult;
 
 // {15b9b301-2012-11d6-a7f2-e6d0a678995c}
 #define NS_IXPATHRESULT_IID \
@@ -56,7 +56,7 @@ class nsIXPathResult : public nsISupports
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPATHRESULT_IID)
-    NS_IMETHOD SetExprResult(ExprResult* aExprResult,
+    NS_IMETHOD SetExprResult(txAExprResult* aExprResult,
                              PRUint16 aResultType) = 0;
 };
 
@@ -81,7 +81,7 @@ public:
     NS_DECL_NSIDOCUMENTOBSERVER
 
     // nsIXPathResult interface
-    NS_IMETHOD SetExprResult(ExprResult* aExprResult,
+    NS_IMETHOD SetExprResult(txAExprResult* aExprResult,
                              PRUint16 aResultType);
 private:
     void Invalidate();

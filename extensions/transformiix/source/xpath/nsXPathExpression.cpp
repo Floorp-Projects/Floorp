@@ -58,7 +58,10 @@ NS_INTERFACE_MAP_BEGIN(nsXPathExpression)
   NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathExpression)
 NS_INTERFACE_MAP_END
 
-nsXPathExpression::nsXPathExpression(Expr* aExpression) : mExpression(aExpression)
+nsXPathExpression::nsXPathExpression(Expr* aExpression,
+                                     txResultRecycler* aRecycler)
+    : mExpression(aExpression),
+      mRecycler(aRecycler)
 {
 }
 
@@ -119,29 +122,29 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
     Document document(ownerDOMDocument);
     Node* node = document.createWrapper(aContextNode);
 
-    EvalContextImpl eContext(node);
-    ExprResult* exprResult = mExpression->evaluate(&eContext);
-    NS_ENSURE_TRUE(exprResult, NS_ERROR_OUT_OF_MEMORY);
+    EvalContextImpl eContext(node, mRecycler);
+    nsRefPtr<txAExprResult> exprResult;
+    rv = mExpression->evaluate(&eContext, getter_AddRefs(exprResult));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint16 resultType = aType;
     if (aType == nsIDOMXPathResult::ANY_TYPE) {
         short exprResultType = exprResult->getResultType();
         switch (exprResultType) {
-            case ExprResult::NUMBER:
+            case txAExprResult::NUMBER:
                 resultType = nsIDOMXPathResult::NUMBER_TYPE;
                 break;
-            case ExprResult::STRING:
+            case txAExprResult::STRING:
                 resultType = nsIDOMXPathResult::STRING_TYPE;
                 break;
-            case ExprResult::BOOLEAN:
+            case txAExprResult::BOOLEAN:
                 resultType = nsIDOMXPathResult::BOOLEAN_TYPE;
                 break;
-            case ExprResult::NODESET:
+            case txAExprResult::NODESET:
                 resultType = nsIDOMXPathResult::UNORDERED_NODE_ITERATOR_TYPE;
                 break;
-            case ExprResult::RESULT_TREE_FRAGMENT:
+            case txAExprResult::RESULT_TREE_FRAGMENT:
                 NS_ERROR("Can't return a tree fragment!");
-                delete exprResult;
                 return NS_ERROR_FAILURE;
         }
     }
@@ -154,7 +157,6 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
         NS_ENSURE_TRUE(xpathResult, NS_ERROR_OUT_OF_MEMORY);
     }
     rv = xpathResult->SetExprResult(exprResult, resultType);
-    delete exprResult;
     NS_ENSURE_SUCCESS(rv, rv);
 
     return CallQueryInterface(xpathResult, aResult);
@@ -165,9 +167,10 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
  * EvalContextImpl bases on only one context node and no variables
  */
 
-nsresult nsXPathExpression::EvalContextImpl::getVariable(PRInt32 aNamespace, 
-                                                         nsIAtom* aLName,
-                                                         ExprResult*& aResult)
+nsresult
+nsXPathExpression::EvalContextImpl::getVariable(PRInt32 aNamespace,
+                                                nsIAtom* aLName,
+                                                txAExprResult*& aResult)
 {
     aResult = 0;
     return NS_ERROR_INVALID_ARG;
@@ -182,6 +185,11 @@ void* nsXPathExpression::EvalContextImpl::getPrivateContext()
 {
     // we don't have a private context here.
     return nsnull;
+}
+
+txResultRecycler* nsXPathExpression::EvalContextImpl::recycler()
+{
+    return mRecycler;
 }
 
 void nsXPathExpression::EvalContextImpl::receiveError(const nsAString& aMsg,

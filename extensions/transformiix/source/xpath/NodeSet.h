@@ -39,7 +39,7 @@
 
 class Node;
 
-class NodeSet : public ExprResult
+class NodeSet : public txAExprResult
 {
 
 public:
@@ -47,18 +47,18 @@ public:
     /*
      * Creates a new empty NodeSet
      */
-    NodeSet();
+    NodeSet(txResultRecycler* aRecycler);
 
     /*
      * Creates a new NodeSet containing the supplied node
      */
-    NodeSet(Node* aNode);
+    NodeSet(Node* aNode, txResultRecycler* aRecycler);
 
     /*
      * Creates a new NodeSet, copying the Node references from the source
      * NodeSet
      */
-    NodeSet(const NodeSet& aSource);
+    NodeSet(const NodeSet& aSource, txResultRecycler* aRecycler);
 
     /*
      * Destructor for NodeSet, will not delete referenced Nodes

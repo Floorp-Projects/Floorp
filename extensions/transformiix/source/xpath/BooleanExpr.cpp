@@ -36,6 +36,7 @@
 
 #include "Expr.h"
 #include "ExprResult.h"
+#include "txIXPathContext.h"
 
 /**
  * Creates a new BooleanExpr using the given operator
@@ -58,30 +59,36 @@ BooleanExpr::~BooleanExpr() {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* BooleanExpr::evaluate(txIEvalContext* aContext)
+nsresult
+BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    MBool lval = MB_FALSE;
-    ExprResult* exprRes = 0;
-    if ( leftExpr ) {
-        exprRes = leftExpr->evaluate(aContext);
-        if ( exprRes ) lval = exprRes->booleanValue();
-        delete exprRes;
+    *aResult = nsnull;
+
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = leftExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    PRBool lval = exprRes->booleanValue();
+
+    // check for early decision
+    if (op == OR && lval) {
+        aContext->recycler()->getBoolResult(PR_TRUE, aResult);
+        
+        return NS_OK;
+    }
+    if (op == AND && !lval) {
+        aContext->recycler()->getBoolResult(PR_FALSE, aResult);
+
+        return NS_OK;
     }
 
+    rv = rightExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    //-- check left expression for early decision
-    if (( op == OR ) && (lval)) return new BooleanResult(MB_TRUE);
-    else if ((op == AND) && (!lval)) return new BooleanResult(MB_FALSE);
+    // just use rval, since we already checked lval
+    aContext->recycler()->getBoolResult(exprRes->booleanValue(), aResult);
 
-    MBool rval = MB_FALSE;
-    if ( rightExpr ) {
-        exprRes = rightExpr->evaluate(aContext);
-        if ( exprRes ) rval = exprRes->booleanValue();
-        delete exprRes;
-    }
-    //-- just use rval, since we already checked lval
-    return new BooleanResult(rval);
-
+    return NS_OK;
 } //-- evaluate
 
 /**

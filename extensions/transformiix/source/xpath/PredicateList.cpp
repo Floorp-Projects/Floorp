@@ -56,14 +56,15 @@ void PredicateList::add(Expr* expr)
     predicates.add(expr);
 } // add
 
-void PredicateList::evaluatePredicates(NodeSet* nodes,
-                                       txIMatchContext* aContext)
+nsresult
+PredicateList::evaluatePredicates(NodeSet* nodes,
+                                  txIMatchContext* aContext)
 {
     NS_ASSERTION(nodes, "called evaluatePredicates with NULL NodeSet");
-    if (!nodes)
-        return;
-
-    NodeSet newNodes;
+    nsRefPtr<NodeSet> newNodes;
+    nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     txListIterator iter(&predicates);
     while (iter.hasNext() && !nodes->isEmpty()) {
         Expr* expr = (Expr*)iter.next();
@@ -73,30 +74,32 @@ void PredicateList::evaluatePredicates(NodeSet* nodes,
          * or, if the result is a number, add the node with the right
          * position
          */
-        newNodes.clear();
+        newNodes->clear();
         while (predContext.hasNext()) {
             predContext.next();
-            ExprResult* exprResult = expr->evaluate(&predContext);
-            if (!exprResult)
-                break;
+            nsRefPtr<txAExprResult> exprResult;
+            rv = expr->evaluate(&predContext, getter_AddRefs(exprResult));
+            NS_ENSURE_SUCCESS(rv, rv);
+
             switch(exprResult->getResultType()) {
-                case ExprResult::NUMBER :
+                case txAExprResult::NUMBER:
                     // handle default, [position() == numberValue()]
                     if ((double)predContext.position() ==
                         exprResult->numberValue())
-                        newNodes.append(predContext.getContextNode());
+                        newNodes->append(predContext.getContextNode());
                     break;
                 default:
                     if (exprResult->booleanValue())
-                        newNodes.append(predContext.getContextNode());
+                        newNodes->append(predContext.getContextNode());
                     break;
             }
-            delete exprResult;
         }
         // Move new NodeSet to the current one
         nodes->clear();
-        nodes->append(&newNodes);
+        nodes->append(newNodes);
     }
+    
+    return NS_OK;
 }
 
 /*

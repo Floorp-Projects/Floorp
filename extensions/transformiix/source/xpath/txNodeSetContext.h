@@ -41,6 +41,7 @@
 
 #include "txIXPathContext.h"
 #include "NodeSet.h"
+#include "nsAutoPtr.h"
 
 class txNodeSetContext : public txIEvalContext
 {
@@ -67,22 +68,9 @@ public:
     TX_DECL_EVAL_CONTEXT;
 
 protected:
-    NodeSet* mContextSet;
+    nsRefPtr<NodeSet> mContextSet;
     PRUint32 mPosition;
     txIMatchContext* mInner;
-};
-
-class txOwningNodeSetContext : public txNodeSetContext
-{
-public:
-    txOwningNodeSetContext(NodeSet* aContextNodeSet, txIMatchContext* aContext)
-        : txNodeSetContext(aContextNodeSet, aContext)
-    {
-    }
-    virtual ~txOwningNodeSetContext()
-    {
-        delete mContextSet;
-    }
 };
 
 #endif // __TX_XPATH_SET_CONTEXT

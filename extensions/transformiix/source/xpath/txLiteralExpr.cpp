@@ -15,13 +15,12 @@
  * The Original Code is TransforMiiX XSLT processor.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2003
- * Jonas Sicking. All Rights Reserved.
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <jonas@sicking.cc>
- *   Peter Van der Beken <peterv@netscape.com>
+ *   IBM Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,43 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef txBufferingHandler_h__
-#define txBufferingHandler_h__
+#include "Expr.h"
 
-#include "txXMLEventHandler.h"
-#include "nsString.h"
-#include "nsVoidArray.h"
-#include "nsAutoPtr.h"
-
-class txOutputTransaction;
-class txCharacterTransaction;
-
-class txResultBuffer
+txLiteralExpr::txLiteralExpr(double aDbl)
+    : mValue(new NumberResult(aDbl, nsnull))
 {
-public:
-    ~txResultBuffer();
+}
 
-    nsresult addTransaction(txOutputTransaction* aTransaction);
-    nsresult flushToHandler(txAXMLEventHandler* aHandler);
-    txOutputTransaction* getLastTransaction();
-
-    nsString mStringValue;
-
-private:
-    nsVoidArray mTransactions;
-};
-
-class txBufferingHandler : public txAXMLEventHandler
+txLiteralExpr::txLiteralExpr(const nsAString& aStr)
+    : mValue(new StringResult(aStr, nsnull))
 {
-public:
-    txBufferingHandler();
-    ~txBufferingHandler();
+}
 
-    TX_DECL_TXAXMLEVENTHANDLER
+nsresult
+txLiteralExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
+{
+    NS_ENSURE_TRUE(mValue, NS_ERROR_OUT_OF_MEMORY);
 
-protected:
-    nsAutoPtr<txResultBuffer> mBuffer;
-    PRPackedBool mCanAddAttribute;
-};
+    *aResult = mValue;
+    NS_ADDREF(*aResult);
 
-#endif /* txBufferingHandler_h__ */
+    return NS_OK;
+}
+
+void
+txLiteralExpr::toString(nsAString& aStr)
+{
+    switch (mValue->getResultType()) {
+        case txAExprResult::NUMBER:
+        {
+            Double::toString(mValue->numberValue(), aStr);
+            return;
+        }
+        case txAExprResult::STRING:
+        {
+            StringResult* strRes =
+                NS_STATIC_CAST(StringResult*, NS_STATIC_CAST(txAExprResult*,
+                                                             mValue));
+            PRUnichar ch = '\'';
+            if (strRes->mValue.FindChar(ch) != kNotFound) {
+                ch = '\"';
+            }
+            aStr.Append(ch);
+            aStr.Append(strRes->mValue);
+            aStr.Append(ch);
+            return;
+        }
+    }
+}
