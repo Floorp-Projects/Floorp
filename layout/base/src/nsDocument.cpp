@@ -41,6 +41,9 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetCollection.h"
 #include "nsDOMAttribute.h"
+#include "nsDOMCID.h"
+#include "nsIDOMScriptObjectFactory.h"
+#include "nsIDOMDOMImplementation.h"
 #include "nsGenericElement.h"
 
 #include "nsCSSPropIDs.h"
@@ -57,6 +60,7 @@
 #include "nsIDOMComment.h"
 
 #include "nsINameSpaceManager.h"
+#include "nsIServiceManager.h"
 
 #include "nsLayoutCID.h"
 #include "nsISelection.h"
@@ -81,6 +85,7 @@ static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);
 static NS_DEFINE_IID(kIDOMStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
 static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
+static NS_DEFINE_IID(kIDOMDOMImplementationIID, NS_IDOMDOMIMPLEMENTATION_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
@@ -88,6 +93,8 @@ static NS_DEFINE_IID(kIDOMRange, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
+static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
+static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
                                   public nsIScriptObjectOwner,
@@ -328,6 +335,123 @@ nsDOMStyleSheetCollection::DocumentWillBeDestroyed(nsIDocument *aDocument)
     mDocument = nsnull;
   }
   
+  return NS_OK;
+}
+
+// ==================================================================
+// =
+// ==================================================================
+
+class nsDOMImplementation : public nsIDOMDOMImplementation,
+                            public nsIScriptObjectOwner
+{
+public:
+  nsDOMImplementation();
+  ~nsDOMImplementation();
+
+  NS_DECL_ISUPPORTS
+  
+  NS_IMETHOD    HasFeature(const nsString& aFeature, 
+                           const nsString& aVersion, 
+                           PRBool* aReturn);
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
+
+protected:
+  void *mScriptObject;
+};
+
+nsDOMImplementation::nsDOMImplementation()
+{
+  NS_INIT_REFCNT();
+  mScriptObject = nsnull;
+}
+
+nsDOMImplementation::~nsDOMImplementation()
+{
+}
+
+NS_IMPL_ADDREF(nsDOMImplementation)
+NS_IMPL_RELEASE(nsDOMImplementation)
+
+nsresult 
+nsDOMImplementation::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIDOMDOMImplementationIID)) {
+    nsIDOMDOMImplementation* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    nsIDOMDOMImplementation* tmp = this;
+    nsISupports* tmp2 = tmp;
+    *aInstancePtr = (void*) tmp2;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP    
+nsDOMImplementation::HasFeature(const nsString& aFeature, 
+                                const nsString& aVersion, 
+                                PRBool* aReturn)
+{
+  // XXX Currently this is hardcoded. In the future, we should
+  // probably figure out some of this by querying the registry??
+  if (aFeature.EqualsIgnoreCase("HTML") ||
+      aFeature.EqualsIgnoreCase("XML")) {
+    *aReturn = PR_TRUE;
+  }
+  else {
+    *aReturn = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDOMImplementation::GetScriptObject(nsIScriptContext *aContext, 
+                                     void** aScriptObject)
+{
+  nsresult result = NS_OK;
+
+  if (nsnull == mScriptObject) {
+    nsIDOMScriptObjectFactory *factory;
+
+    result = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
+                                          kIDOMScriptObjectFactoryIID,
+                                          (nsISupports **)&factory);
+    if (NS_OK == result) {
+      nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+
+      result = factory->NewScriptDOMImplementation(aContext, (nsISupports*)(nsIDOMDOMImplementation*)this,
+                                                   global, &mScriptObject);
+      NS_RELEASE(global);
+      NS_RELEASE(factory);
+    }
+  }
+  
+  *aScriptObject = mScriptObject;
+  return result;
+}
+
+NS_IMETHODIMP 
+nsDOMImplementation::SetScriptObject(void *aScriptObject)
+{
+  mScriptObject = nsnull;
   return NS_OK;
 }
 
@@ -1183,8 +1307,14 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 NS_IMETHODIMP    
 nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
-  // XXX To be implemented
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // For now, create a new implementation every time. This shouldn't
+  // be a high bandwidth operation
+  nsDOMImplementation* impl = new nsDOMImplementation();
+  if (nsnull == impl) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return impl->QueryInterface(kIDOMDOMImplementationIID, (void**)aImplementation);
 }
 
 NS_IMETHODIMP    
