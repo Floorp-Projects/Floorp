@@ -40,30 +40,30 @@
 
 class nsIMAPNamespace
 {
-
+  
 public:
-	nsIMAPNamespace(EIMAPNamespaceType type, const char *prefix, char delimiter, PRBool from_prefs);
-
-	~nsIMAPNamespace();
-
-	EIMAPNamespaceType	GetType() { return m_namespaceType; }
-	const char *		GetPrefix() { return m_prefix; }
-	char				GetDelimiter() { return m_delimiter; }
-	void				SetDelimiter(char delimiter);
-	PRBool				GetIsDelimiterFilledIn() { return m_delimiterFilledIn; }
-	PRBool				GetIsNamespaceFromPrefs() { return m_fromPrefs; }
-
-	// returns -1 if this box is not part of this namespace,
-	// or the length of the prefix if it is part of this namespace
-	int					MailboxMatchesNamespace(const char *boxname);
-
+  nsIMAPNamespace(EIMAPNamespaceType type, const char *prefix, char delimiter, PRBool from_prefs);
+  
+  ~nsIMAPNamespace();
+  
+  EIMAPNamespaceType    GetType() { return m_namespaceType; }
+  const char *          GetPrefix() { return m_prefix; }
+  char                  GetDelimiter() { return m_delimiter; }
+  void                  SetDelimiter(char delimiter, PRBool delimiterFilledIn);
+  PRBool                GetIsDelimiterFilledIn() { return m_delimiterFilledIn; }
+  PRBool                GetIsNamespaceFromPrefs() { return m_fromPrefs; }
+  
+  // returns -1 if this box is not part of this namespace,
+  // or the length of the prefix if it is part of this namespace
+  int                   MailboxMatchesNamespace(const char *boxname);
+  
 protected:
-	EIMAPNamespaceType m_namespaceType;
-	char	*m_prefix;
-	char	m_delimiter;
-	PRBool	m_fromPrefs;
-	PRBool m_delimiterFilledIn;
-
+  EIMAPNamespaceType m_namespaceType;
+  char    *m_prefix;
+  char    m_delimiter;
+  PRBool  m_fromPrefs;
+  PRBool  m_delimiterFilledIn;
+  
 };
 
 
@@ -71,30 +71,41 @@ protected:
 class nsIMAPNamespaceList
 {
 public:
-	~nsIMAPNamespaceList();
-
-	static nsIMAPNamespaceList *CreatensIMAPNamespaceList();
-
-	nsresult InitFromString(const char *nameSpaceString, EIMAPNamespaceType nstype);
-	nsresult OutputToString(nsCString &OutputString);
-	int UnserializeNamespaces(const char *str, char **prefixes, int len);
-	nsresult SerializeNamespaces(char **prefixes, int len, nsCString &serializedNamespace);
-
-	void ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBool deleteServerAdvertisedNamespaces, PRBool reallyDelete);
-	int	GetNumberOfNamespaces();
-	int	GetNumberOfNamespaces(EIMAPNamespaceType);
-	nsIMAPNamespace *GetNamespaceNumber(int nodeIndex);
-	nsIMAPNamespace *GetNamespaceNumber(int nodeIndex, EIMAPNamespaceType);
-
-	nsIMAPNamespace *GetDefaultNamespaceOfType(EIMAPNamespaceType type);
-	int AddNewNamespace(nsIMAPNamespace *ns);
-	nsIMAPNamespace *GetNamespaceForMailbox(const char *boxname);
+  ~nsIMAPNamespaceList();
+  
+  static nsIMAPNamespaceList *CreatensIMAPNamespaceList();
+  
+  nsresult InitFromString(const char *nameSpaceString, EIMAPNamespaceType nstype);
+  nsresult OutputToString(nsCString &OutputString);
+  int UnserializeNamespaces(const char *str, char **prefixes, int len);
+  nsresult SerializeNamespaces(char **prefixes, int len, nsCString &serializedNamespace);
+  
+  void ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBool deleteServerAdvertisedNamespaces, PRBool reallyDelete);
+  int	GetNumberOfNamespaces();
+  int	GetNumberOfNamespaces(EIMAPNamespaceType);
+  nsIMAPNamespace *GetNamespaceNumber(int nodeIndex);
+  nsIMAPNamespace *GetNamespaceNumber(int nodeIndex, EIMAPNamespaceType);
+  
+  nsIMAPNamespace *GetDefaultNamespaceOfType(EIMAPNamespaceType type);
+  int AddNewNamespace(nsIMAPNamespace *ns);
+  nsIMAPNamespace *GetNamespaceForMailbox(const char *boxname);
+  static nsIMAPNamespace* GetNamespaceForFolder(const char *hostName,
+                                           const char *canonicalFolderName,
+                                           char delimiter);
+  static PRBool GetFolderIsNamespace(const char *hostName,
+                              const char *canonicalFolderName,
+                              char delimiter,nsIMAPNamespace *namespaceForFolder);
+  static char* GetFolderNameWithoutNamespace(nsIMAPNamespace *namespaceForFolder, const char *canonicalFolderName);
+  static char *AllocateServerFolderName(const char *canonicalFolderName, char delimiter);
+  static char *GetFolderOwnerNameFromPath(nsIMAPNamespace *namespaceForFolder, const char *canonicalFolderName);
+  static char *AllocateCanonicalFolderName(const char *onlineFolderName, char delimiter);
+  static void  SuggestHierarchySeparatorForNamespace(nsIMAPNamespace *namespaceForFolder, char delimiterFromFolder);
 
 protected:
-	nsIMAPNamespaceList();	// use CreatensIMAPNamespaceList to create one
-
-	nsVoidArray m_NamespaceList;
-
+  nsIMAPNamespaceList();	// use CreatensIMAPNamespaceList to create one
+  
+  nsVoidArray m_NamespaceList;
+  
 };
 
 

@@ -94,6 +94,8 @@
 #include "nsIImapMockChannel.h"
 #include "nsIWebNavigation.h"
 #include "nsNetUtil.h"
+#include "nsIMAPNamespace.h"
+#include "nsHashtable.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -212,6 +214,8 @@ nsImapMailFolder::nsImapMailFolder() :
   m_uidValidity = 0;
   m_hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
   m_pathName = nsnull;
+  m_folderACL = nsnull;
+  m_namespace = nsnull;
 }
 
 nsImapMailFolder::~nsImapMailFolder()
@@ -223,6 +227,7 @@ nsImapMailFolder::~nsImapMailFolder()
   if (m_moveCoalescer)
     delete m_moveCoalescer;
   delete m_pathName;
+  delete m_folderACL;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImapMailFolder, nsMsgDBFolder)
@@ -1949,7 +1954,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
             else
             {
                 EnableNotifications(allMessageCountNotifications, PR_FALSE);  //"remove it immediately" model
-                mDatabase->DeleteMessages(&srcKeyArray,NULL);
+                mDatabase->DeleteMessages(&srcKeyArray,nsnull);
                 EnableNotifications(allMessageCountNotifications, PR_TRUE);
                 NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);            
             }
@@ -2358,7 +2363,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
         
       // It would be nice to notify RDF or whoever of a mass delete here.
       if (mDatabase) {
-          mDatabase->DeleteMessages(&keysToDelete,NULL);
+          mDatabase->DeleteMessages(&keysToDelete,nsnull);
           total = keysToDelete.GetSize();
       }
     }
@@ -2382,7 +2387,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     {
             // let the imap libnet module know that we don't need headers
       if (aProtocol)
-        aProtocol->NotifyHdrsToDownload(NULL, 0);
+        aProtocol->NotifyHdrsToDownload(nsnull, 0);
       PRBool gettingNewMessages;
       GetGettingNewMessages(&gettingNewMessages);
       if (gettingNewMessages)
@@ -3013,15 +3018,132 @@ NS_IMETHODIMP nsImapMailFolder::LiteSelect(nsIUrlListener *aUrlListener)
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::FolderPrivileges(nsIMsgWindow *window)
+nsresult nsImapMailFolder::GetFolderOwnerUserName(char **userName)
+{
+  
+  if ((mFlags & MSG_FOLDER_FLAG_IMAP_PERSONAL) ||
+    !(mFlags & (MSG_FOLDER_FLAG_IMAP_PUBLIC | MSG_FOLDER_FLAG_IMAP_OTHER_USER)))
+  {
+    // this is one of our personal mail folders
+    // return our username on this host
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv) && server)
+    return server->GetUsername(userName);
+  else
+    return rv;
+  }
+  
+  // the only other type of owner is if it's in the other users' namespace
+  if (!(mFlags & MSG_FOLDER_FLAG_IMAP_OTHER_USER))
+    return NS_OK;
+  
+  if (!m_ownerUserName.Length())
+  {
+    nsXPIDLCString onlineName;
+    GetOnlineName(getter_Copies(onlineName));
+    m_ownerUserName = nsIMAPNamespaceList::GetFolderOwnerNameFromPath(GetNamespaceForFolder(), onlineName.get());
+  }
+  *userName = (m_ownerUserName.Length()) ? ToNewCString(m_ownerUserName) : nsnull;
+  return NS_OK;
+}
+
+// returns the online folder name, with the other users' namespace and his username
+// stripped out
+nsresult nsImapMailFolder::GetOwnersOnlineFolderName(char **retName)
+{
+  nsXPIDLCString onlineName;
+
+  GetOnlineName(getter_Copies(onlineName));
+  if (mFlags & MSG_FOLDER_FLAG_IMAP_OTHER_USER)
+  {
+    nsXPIDLCString user;
+    GetFolderOwnerUserName(getter_Copies(user));
+    if (onlineName.Length() && user.Length())
+    {
+      const char *where = PL_strstr(onlineName.get(), user.get());
+      NS_ASSERTION(where, "user name not in online name");
+      if (where)
+      {
+        const char *relativeFolder = where + strlen(user) + 1;
+        if (!relativeFolder)	// root of this user's personal namespace
+        {
+          *retName = strdup("");
+          return NS_OK;
+        }
+        else
+        {
+          *retName = strdup(relativeFolder);
+          return NS_OK;
+        }
+      }
+    }
+
+    *retName = strdup(onlineName.get());
+    return NS_OK;
+  }
+  else if (!(mFlags & MSG_FOLDER_FLAG_IMAP_PUBLIC))
+  {
+    // We own this folder.
+    *retName = nsIMAPNamespaceList::GetFolderNameWithoutNamespace(GetNamespaceForFolder(), onlineName);
+    
+  }
+  else
+    *retName = strdup(onlineName.get());
+  return NS_OK;
+}
+
+nsIMAPNamespace *nsImapMailFolder::GetNamespaceForFolder()
+{
+  if (!m_namespace)
+  {
+#ifdef DEBUG_bienvenu
+    // Make sure this isn't causing us to open the database
+    NS_ASSERTION(m_hierarchyDelimiter != kOnlineHierarchySeparatorUnknown, "haven't set hierarchy delimiter");
+#endif
+    nsXPIDLCString serverKey;
+    nsXPIDLCString onlineName;
+    GetServerKey(getter_Copies(serverKey));
+    GetOnlineName(getter_Copies(onlineName));
+    PRUnichar hierarchyDelimiter;
+    GetHierarchyDelimiter(&hierarchyDelimiter);
+
+    m_namespace = nsIMAPNamespaceList::GetNamespaceForFolder(serverKey.get(), onlineName.get(), (char) hierarchyDelimiter);
+    NS_ASSERTION(m_namespace, "didn't get namespace for folder");
+    if (m_namespace)
+    {
+      nsIMAPNamespaceList::SuggestHierarchySeparatorForNamespace(m_namespace, (char) hierarchyDelimiter);
+      m_folderIsNamespace = nsIMAPNamespaceList::GetFolderIsNamespace(serverKey.get(), onlineName.get(), (char) hierarchyDelimiter, m_namespace);
+    }
+  }
+  return m_namespace;
+}
+
+void nsImapMailFolder::SetNamespaceForFolder(nsIMAPNamespace *ns)
+{
+#ifdef DEBUG_bienvenu
+  NS_ASSERTION(ns, "null namespace");
+#endif
+  m_namespace = ns;
+}
+
+nsresult nsImapMailFolder::GetServerAdminUrl(char **aAdminUrl)
 {
   nsCOMPtr<nsIImapIncomingServer> imapServer;
   nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
 
-  if (window && NS_SUCCEEDED(rv) && imapServer) 
+  if (NS_SUCCEEDED(rv) && imapServer) 
+    rv = imapServer->GetManageMailAccountUrl(aAdminUrl);
+  return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::FolderPrivileges(nsIMsgWindow *window)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;  // if no window...
+  if (window) 
   {
     nsXPIDLCString manageMailAccountUrl;
-    rv = imapServer->GetManageMailAccountUrl(getter_Copies(manageMailAccountUrl));
+    rv = GetServerAdminUrl(getter_Copies(manageMailAccountUrl));
     if (NS_SUCCEEDED(rv) && manageMailAccountUrl.Length())
     {
       nsCOMPtr <nsIDocShell> docShell;
@@ -3036,6 +3158,15 @@ NS_IMETHODIMP nsImapMailFolder::FolderPrivileges(nsIMsgWindow *window)
       }
     }
   }
+  return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetHasAdminUrl(PRBool *aBool)
+{
+  NS_ENSURE_ARG_POINTER(aBool);
+  nsXPIDLCString manageMailAccountUrl;
+  nsresult rv = GetServerAdminUrl(getter_Copies(manageMailAccountUrl));
+  *aBool = (NS_SUCCEEDED(rv) && manageMailAccountUrl.Length());
   return rv;
 }
 
@@ -3225,7 +3356,7 @@ void nsImapMailFolder::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, c
       SetParseMailboxState(new ParseIMAPMailboxState(m_master, m_host, this,
                                urlQueue,
                                boxSpec->flagState));
-          boxSpec->flagState = NULL;    // adopted by ParseIMAPMailboxState
+          boxSpec->flagState = nsnull;    // adopted by ParseIMAPMailboxState
       GetParseMailboxState()->SetPane(url_pane);
 
             GetParseMailboxState()->SetDB(mailDB);
@@ -3241,12 +3372,12 @@ void nsImapMailFolder::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, c
         aProtocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
       // now, tell it we don't need any bodies.
       if (aProtocol)
-        aProtocol->NotifyBodysToDownload(NULL, 0);
+        aProtocol->NotifyBodysToDownload(nsnull, 0);
         }
         else
         {
       if (aProtocol)
-        aProtocol->NotifyHdrsToDownload(NULL, 0);
+        aProtocol->NotifyHdrsToDownload(nsnull, 0);
         }
     }
 }
@@ -3546,7 +3677,7 @@ nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopy
         char *keyTokenString = nsCRT::strdup(messageIds);
         ParseUidString(keyTokenString, affectedMessages);
         if (mDatabase) 
-          mDatabase->DeleteMessages(&affectedMessages,NULL);
+          mDatabase->DeleteMessages(&affectedMessages,nsnull);
         nsCRT::free(keyTokenString);
         return rv;
       }
@@ -3667,7 +3798,7 @@ nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool delet
   if (deleteAllMsgs)
   {
 #ifdef HAVE_PORT    
-    TNeoFolderInfoTransfer *originalInfo = NULL;
+    TNeoFolderInfoTransfer *originalInfo = nsnull;
     nsIMsgDatabase *folderDB;
     if (ImapMailDB::Open(GetPathname(), PR_FALSE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
     {
@@ -4195,28 +4326,45 @@ NS_IMETHODIMP
 nsImapMailFolder::ClearFolderRights(nsIImapProtocol* aProtocol,
                                     nsIMAPACLRightsInfo* aclRights)
 {
-    return NS_ERROR_FAILURE;
+  SetFolderNeedsACLListed(PR_FALSE);
+  delete m_folderACL;
+  m_folderACL = new nsMsgIMAPFolderACL(this);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::AddFolderRights(nsIImapProtocol* aProtocol,
-                                  nsIMAPACLRightsInfo* aclRights)
+nsImapMailFolder::AddFolderRights(const char *userName, const char *rights)
 {
-    return NS_ERROR_FAILURE;
+  SetFolderNeedsACLListed(PR_FALSE);
+  GetFolderACL()->SetFolderRightsForUser(userName, rights);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapMailFolder::RefreshFolderRights(nsIImapProtocol* aProtocol,
                                       nsIMAPACLRightsInfo* aclRights)
 {
-    return NS_ERROR_FAILURE;
+  if (GetFolderACL()->GetIsFolderShared())
+  {
+    SetFlag(MSG_FOLDER_FLAG_PERSONAL_SHARED);
+  }
+  else
+  {
+    ClearFlag(MSG_FOLDER_FLAG_PERSONAL_SHARED);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapMailFolder::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
                                             nsIMAPACLRightsInfo* aclRights)
 {
-    return NS_ERROR_FAILURE;
+  PRBool noSelect;
+
+  GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
+  return (m_folderNeedsACLListed &&
+    !GetFolderIsNamespace() &&
+    !noSelect);
 }
 
 NS_IMETHODIMP
@@ -4459,7 +4607,7 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
       aProtocol->NotifyBodysToDownload(keysToDownload.GetArray(), keysToDownload.GetSize());
     }
     else
-      aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
+      aProtocol->NotifyBodysToDownload(nsnull, 0/*keysToFetch.GetSize() */);
   }
   return NS_OK;
 }
@@ -4494,6 +4642,502 @@ nsImapMailFolder::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
   m_uidValidity = uidValidity;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
+{
+  NS_ENSURE_ARG(aFolderProps);
+  PRUint32 folderTypeStringID;
+  PRUint32 folderTypeDescStringID = 0;
+  nsXPIDLString folderType;
+  nsXPIDLString folderTypeDesc;
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = IMAPGetStringBundle(getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mFlags & MSG_FOLDER_FLAG_IMAP_PUBLIC)
+  {
+    folderTypeStringID = IMAP_PUBLIC_FOLDER_TYPE_NAME;
+    folderTypeDescStringID = IMAP_PUBLIC_FOLDER_TYPE_DESCRIPTION;
+  }
+  else if (mFlags & MSG_FOLDER_FLAG_IMAP_OTHER_USER)
+  {
+    folderTypeStringID = IMAP_OTHER_USERS_FOLDER_TYPE_NAME;
+    nsXPIDLCString owner;
+    nsXPIDLString uniOwner;
+    GetFolderOwnerUserName(getter_Copies(owner));
+    if (!owner.Length())
+    {
+      rv = IMAPGetStringByID(folderTypeStringID, getter_Copies(uniOwner));
+      // Another user's folder, for which we couldn't find an owner name
+      NS_ASSERTION(PR_FALSE, "couldn't get owner name for other user's folder");
+    }
+    else
+    {
+      // is this right? It doesn't leak, does it?
+      uniOwner.Assign(NS_ConvertASCIItoUCS2(owner.get()));
+    }
+    const PRUnichar *params[] = { uniOwner.get() };
+    rv = bundle->FormatStringFromID(IMAP_OTHER_USERS_FOLDER_TYPE_DESCRIPTION, params, 1, getter_Copies(folderTypeDesc));
+  }
+
+  // personal folder - 4.x distinguished between shared and not personal folders,
+  // but put up the same folder type, so we don't need to distinguish here, I guess.
+//  else if (GetFolderACL()->GetIsFolderShared())
+//    folderTypeStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_NAME;
+  else
+  {
+    folderTypeStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_NAME;
+    folderTypeDescStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_DESCRIPTION;
+  }
+
+  rv = IMAPGetStringByID(folderTypeStringID, getter_Copies(folderType));
+  if (NS_SUCCEEDED(rv))
+    aFolderProps->SetFolderType(folderType);
+
+  if (!folderTypeDesc.Length() && folderTypeDescStringID != 0)
+    rv = IMAPGetStringByID(folderTypeDescStringID, getter_Copies(folderTypeDesc));
+  if (folderTypeDesc.Length())
+    aFolderProps->SetFolderTypeDescription(folderTypeDesc.get());
+
+  nsXPIDLString rightsString;
+  rv = CreateACLRightsStringForFolder(getter_Copies(rightsString));
+  if (NS_SUCCEEDED(rv))
+    aFolderProps->SetFolderPermissions(rightsString.get());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetAclFlags(PRUint32 aclFlags)
+{
+  nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
+  nsresult rv = GetDatabase(nsnull);
+
+  if (mDatabase)
+  {
+    rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    if (NS_SUCCEEDED(rv) && dbFolderInfo)
+      dbFolderInfo->SetUint32Property("aclFlags", aclFlags);
+  }
+
+
+  return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetAclFlags(PRUint32 *aclFlags)
+{
+  NS_ENSURE_ARG_POINTER(aclFlags);
+
+  nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
+  nsresult rv = GetDatabase(nsnull);
+
+  if (mDatabase)
+  {
+    rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    if (NS_SUCCEEDED(rv) && dbFolderInfo)
+      rv = dbFolderInfo->GetUint32Property("aclFlags", aclFlags, 0);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetCanIOpenThisFolder(PRBool *aBool)
+{
+  NS_ENSURE_ARG_POINTER(aBool);
+  PRBool noSelect;
+  GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
+  *aBool = (noSelect) ? PR_FALSE : GetFolderACL()->GetCanIReadFolder();
+
+  return NS_OK;
+
+}
+
+///////// nsMsgIMAPFolderACL class ///////////////////////////////
+
+// This string is defined in the ACL RFC to be "anyone"
+#define IMAP_ACL_ANYONE_STRING "anyone"
+
+
+static int
+imap_hash_strcmp (const void *a, const void *b)
+{
+  return strcmp ((const char *) a, (const char *) b);
+}
+
+/* static */PRBool nsMsgIMAPFolderACL::FreeHashRights(nsHashKey *aKey, void *aData,
+                                        void *closure)
+{
+  PR_FREEIF(aData);
+  return PR_TRUE;
+}
+
+nsMsgIMAPFolderACL::nsMsgIMAPFolderACL(nsImapMailFolder *folder)
+{
+  NS_ASSERTION(folder, "need folder");
+  m_folder = folder;
+  m_rightsHash = new nsHashtable(24);
+  m_aclCount = 0;
+  BuildInitialACLFromCache();
+}
+
+nsMsgIMAPFolderACL::~nsMsgIMAPFolderACL()
+{
+  m_rightsHash->Reset(FreeHashRights, nsnull);
+  delete m_rightsHash;
+}
+
+// We cache most of our own rights in the MSG_FOLDER_PREF_* flags
+void nsMsgIMAPFolderACL::BuildInitialACLFromCache()
+{
+  nsCAutoString myrights;
+  
+  PRUint32 startingFlags;
+  m_folder->GetAclFlags(&startingFlags);
+  
+  if (startingFlags & IMAP_ACL_READ_FLAG)
+    myrights += "r";
+  if (startingFlags & IMAP_ACL_STORE_SEEN_FLAG)
+    myrights += "s";
+  if (startingFlags & IMAP_ACL_WRITE_FLAG)
+    myrights += "w";
+  if (startingFlags & IMAP_ACL_INSERT_FLAG)
+    myrights += "i";
+  if (startingFlags & IMAP_ACL_POST_FLAG)
+    myrights += "p";
+  if (startingFlags & IMAP_ACL_CREATE_SUBFOLDER_FLAG)
+    myrights +="c";
+  if (startingFlags & IMAP_ACL_DELETE_FLAG)
+    myrights += "d";
+  if (startingFlags & IMAP_ACL_ADMINISTER_FLAG)
+    myrights += "a";
+  
+  if (myrights.Length())
+    SetFolderRightsForUser(nsnull, myrights.get());
+}
+
+void nsMsgIMAPFolderACL::UpdateACLCache()
+{
+  PRUint32 startingFlags = 0;
+  m_folder->GetAclFlags(&startingFlags);
+  
+  if (GetCanIReadFolder())
+    startingFlags |= IMAP_ACL_READ_FLAG;
+  else
+    startingFlags &= ~IMAP_ACL_READ_FLAG;
+  
+  if (GetCanIStoreSeenInFolder())
+    startingFlags |= IMAP_ACL_STORE_SEEN_FLAG;
+  else
+    startingFlags &= ~IMAP_ACL_STORE_SEEN_FLAG;
+  
+  if (GetCanIWriteFolder())
+    startingFlags |= IMAP_ACL_WRITE_FLAG;
+  else
+    startingFlags &= ~IMAP_ACL_WRITE_FLAG;
+  
+  if (GetCanIInsertInFolder())
+    startingFlags |= IMAP_ACL_INSERT_FLAG;
+  else
+    startingFlags &= ~IMAP_ACL_INSERT_FLAG;
+  
+  if (GetCanIPostToFolder())
+    startingFlags |= IMAP_ACL_POST_FLAG;
+  else
+    startingFlags &= ~IMAP_ACL_POST_FLAG;
+  
+  if (GetCanICreateSubfolder())
+    startingFlags |= IMAP_ACL_CREATE_SUBFOLDER_FLAG;
+  else
+    startingFlags &= ~IMAP_ACL_CREATE_SUBFOLDER_FLAG;
+  
+  if (GetCanIDeleteInFolder())
+    startingFlags |= IMAP_ACL_DELETE_FLAG;
+  else
+    startingFlags &= ~IMAP_ACL_DELETE_FLAG;
+  
+  if (GetCanIAdministerFolder())
+    startingFlags |= IMAP_ACL_ADMINISTER_FLAG;
+  else
+    startingFlags &= ~IMAP_ACL_ADMINISTER_FLAG;
+  
+  m_folder->SetAclFlags(startingFlags);
+}
+
+PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const char *rights)
+{
+  PRBool rv = PR_FALSE;
+  nsXPIDLCString myUserName;
+  m_folder->GetUsername(getter_Copies(myUserName));
+  char *ourUserName = nsnull;
+  
+  if (!userName)
+    ourUserName = strdup(myUserName.get());
+  else
+    ourUserName = strdup(userName);
+  
+  char *rightsWeOwn = strdup(rights);
+  nsCStringKey hashKey(ourUserName);
+  if (rightsWeOwn && ourUserName)
+  {
+    char *oldValue = (char *) m_rightsHash->Get(&hashKey);
+    if (oldValue)
+    {
+      PR_FREEIF(oldValue);
+      m_rightsHash->Remove(&hashKey);
+      m_aclCount--;
+      NS_ASSERTION(m_aclCount >= 0, "acl count can't go negative");
+    }
+    m_aclCount++;
+    rv = (m_rightsHash->Put(&hashKey, rightsWeOwn) == 0);
+  }
+  
+  if (ourUserName && 
+    (!strcmp(ourUserName, myUserName) || !strcmp(ourUserName, IMAP_ACL_ANYONE_STRING)))
+  {
+    // if this is setting an ACL for me, cache it in the folder pref flags
+    UpdateACLCache();
+  }
+  
+  return rv;
+}
+
+const char *nsMsgIMAPFolderACL::GetRightsStringForUser(const char *inUserName)
+{
+  nsXPIDLCString userName;
+  userName.Assign(inUserName);
+  if (!userName.Length())
+    m_folder->GetUsername(getter_Copies(userName));
+  nsCStringKey userKey(userName.get());
+  
+  return (const char *)m_rightsHash->Get(&userKey);
+}
+
+// First looks for individual user;  then looks for 'anyone' if the user isn't found.
+// Returns defaultIfNotFound, if neither are found.
+PRBool nsMsgIMAPFolderACL::GetFlagSetInRightsForUser(const char *userName, char flag, PRBool defaultIfNotFound)
+{
+  const char *flags = GetRightsStringForUser(userName);
+  if (!flags)
+  {
+    const char *anyoneFlags = GetRightsStringForUser(IMAP_ACL_ANYONE_STRING);
+    if (!anyoneFlags)
+      return defaultIfNotFound;
+    else
+      return (strchr(anyoneFlags, flag) != nsnull);
+  }
+  else
+    return (strchr(flags, flag) != nsnull);
+}
+
+PRBool nsMsgIMAPFolderACL::GetCanUserLookupFolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 'l', PR_FALSE);
+}
+
+PRBool nsMsgIMAPFolderACL::GetCanUserReadFolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 'r', PR_FALSE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanUserStoreSeenInFolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 's', PR_FALSE);
+}
+
+PRBool nsMsgIMAPFolderACL::GetCanUserWriteFolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 'w', PR_FALSE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanUserInsertInFolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 'i', PR_FALSE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanUserPostToFolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 'p', PR_FALSE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanUserCreateSubfolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 'c', PR_FALSE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanUserDeleteInFolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 'd', PR_FALSE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanUserAdministerFolder(const char *userName)
+{
+  return GetFlagSetInRightsForUser(userName, 'a', PR_FALSE);
+}
+
+PRBool nsMsgIMAPFolderACL::GetCanILookupFolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 'l', PR_TRUE);
+}
+
+PRBool nsMsgIMAPFolderACL::GetCanIReadFolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 'r', PR_TRUE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanIStoreSeenInFolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 's', PR_TRUE);
+}
+
+PRBool nsMsgIMAPFolderACL::GetCanIWriteFolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 'w', PR_TRUE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanIInsertInFolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 'i', PR_TRUE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanIPostToFolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 'p', PR_TRUE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanICreateSubfolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 'c', PR_TRUE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanIDeleteInFolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 'd', PR_TRUE);
+}
+
+PRBool	nsMsgIMAPFolderACL::GetCanIAdministerFolder()
+{
+  return GetFlagSetInRightsForUser(nsnull, 'a', PR_TRUE);
+}
+
+// We use this to see if the ACLs think a folder is shared or not.
+// We will define "Shared" in 5.0 to mean:
+// At least one user other than the currently authenticated user has at least one
+// explicitly-listed ACL right on that folder.
+PRBool	nsMsgIMAPFolderACL::GetIsFolderShared()
+{
+  // If we have more than one ACL count for this folder, which means that someone
+  // other than ourself has rights on it, then it is "shared."
+  if (m_aclCount > 1)
+    return PR_TRUE;
+  
+  // Or, if "anyone" has rights to it, it is shared.
+  nsCStringKey hashKey(IMAP_ACL_ANYONE_STRING);
+  const char *anyonesRights = (const char *)m_rightsHash->Get(&hashKey);
+  
+  return (anyonesRights != nsnull);
+}
+
+PRBool nsMsgIMAPFolderACL::GetDoIHaveFullRightsForFolder()
+{
+  return (GetCanIReadFolder() &&
+    GetCanIWriteFolder() &&
+    GetCanIInsertInFolder() &&
+    GetCanIAdministerFolder() &&
+    GetCanICreateSubfolder() &&
+    GetCanIDeleteInFolder() &&
+    GetCanILookupFolder() &&
+    GetCanIStoreSeenInFolder() &&
+    GetCanIPostToFolder());
+}
+
+// Returns a newly allocated string describing these rights
+nsresult nsMsgIMAPFolderACL::CreateACLRightsString(PRUnichar **rightsString)
+{
+  nsAutoString rights;
+  nsXPIDLString curRight;
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = IMAPGetStringBundle(getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (GetDoIHaveFullRightsForFolder())
+  {
+    return bundle->GetStringFromID(IMAP_ACL_FULL_RIGHTS, rightsString);
+  }
+  else
+  {
+    if (GetCanIReadFolder())
+    {
+      bundle->GetStringFromID(IMAP_ACL_READ_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+    if (GetCanIWriteFolder())
+    {
+      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      bundle->GetStringFromID(IMAP_ACL_WRITE_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+    if (GetCanIInsertInFolder())
+    {
+      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      bundle->GetStringFromID(IMAP_ACL_INSERT_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+    if (GetCanILookupFolder())
+    {
+      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      bundle->GetStringFromID(IMAP_ACL_LOOKUP_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+    if (GetCanIStoreSeenInFolder())
+    {
+      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      bundle->GetStringFromID(IMAP_ACL_SEEN_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+    if (GetCanIDeleteInFolder())
+    {
+      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      bundle->GetStringFromID(IMAP_ACL_DELETE_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+    if (GetCanICreateSubfolder())
+    {
+      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      bundle->GetStringFromID(IMAP_ACL_CREATE_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+    if (GetCanIPostToFolder())
+    {
+      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      bundle->GetStringFromID(IMAP_ACL_POST_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+    if (GetCanIAdministerFolder())
+    {
+      if (rights.Length()) rights += NS_LITERAL_STRING(", ");
+      bundle->GetStringFromID(IMAP_ACL_ADMINISTER_RIGHT, getter_Copies(curRight));
+      rights.Append(curRight);
+    }
+  }
+  *rightsString = ToNewUnicode(rights);
+  return rv;
+}
+
+#ifdef WE_HAVE_NS_YET
+PRBool MSG_IsFolderACLInitialized(const char *folderName, const char *hostName)
+{
+  MSG_IMAPFolderInfoMail *fi = master->FindImapMailFolder(hostName, folderName, nsnull, PR_FALSE);
+  if (fi)
+    return ((fi->GetFolderPrefFlags() & MSG_FOLDER_PREF_IMAP_ACL_RETRIEVED) ||
+				fi->GetFolderIsNamespace() ||
+                                fi->GetFolderIsNoSelect());		// If a namespace or \Noselect, treat it as if initialized
+  else
+  {
+    NS_ASSERTION(PR_FALSE, "no folder");
+    return PR_TRUE;	// If we can't find the folder, we don't want to get ACLs for it
+  }
+}
+#endif
 
 NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
 {
@@ -5456,7 +6100,7 @@ nsImapMailFolder::CopyStreamMessage(nsIMsgDBHdr* message,
     nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener;
 
     rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID,
-               NULL, NS_GET_IID(nsICopyMessageStreamListener),
+               nsnull, NS_GET_IID(nsICopyMessageStreamListener),
          getter_AddRefs(copyStreamListener)); 
   if(NS_FAILED(rv))
     return rv;
@@ -5616,10 +6260,28 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsSubscribing(PRBool bVal)
     return NS_OK;
 }
 
+nsMsgIMAPFolderACL * nsImapMailFolder::GetFolderACL()
+{
+  if (!m_folderACL)
+    m_folderACL = new nsMsgIMAPFolderACL(this);
+  return m_folderACL;
+}
+
+nsresult nsImapMailFolder::CreateACLRightsStringForFolder(PRUnichar **rightsString)
+{
+  NS_ENSURE_ARG_POINTER(rightsString);
+  GetFolderACL();	// lazy create
+  if (m_folderACL)
+  {
+    return m_folderACL->CreateACLRightsString(rightsString);
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
+
 NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsACLListed(PRBool *bVal)
 {
-    if (!bVal)
-        return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(bVal);
     // *** jt -- come back later; still need to worry about if the folder
     // itself is a namespace
     *bVal = (m_folderNeedsACLListed && !(mFlags &
@@ -5632,6 +6294,125 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsACLListed(PRBool bVal)
 {
     m_folderNeedsACLListed = bVal;
     return NS_OK;
+}
+
+PRBool nsImapMailFolder::GetFolderIsNamespace()
+{
+  if (!m_namespace)
+  {
+#ifdef DEBUG_bienvenu
+    // Make sure this isn't causing us to open the database
+    NS_ASSERTION(m_hierarchyDelimiter != kOnlineHierarchySeparatorUnknown, "hierarchy delimiter not set");
+#endif
+
+    nsXPIDLCString hostName;
+    nsXPIDLCString onlineName;
+    GetHostname(getter_Copies(hostName));
+    GetOnlineName(getter_Copies(onlineName));
+    PRUnichar hierarchyDelimiter;
+    GetHierarchyDelimiter(&hierarchyDelimiter);
+
+    nsresult rv;
+    nsCOMPtr<nsIImapHostSessionList> hostSession = 
+             do_GetService(kCImapHostSessionList, &rv);
+
+    if (NS_SUCCEEDED(rv) && hostSession)
+    {
+      m_namespace = nsIMAPNamespaceList::GetNamespaceForFolder(hostName.get(), onlineName.get(), (char) hierarchyDelimiter);
+      if (m_namespace == nsnull)
+      {
+        if (mFlags & MSG_FOLDER_FLAG_IMAP_OTHER_USER)
+        {
+           rv = hostSession->GetDefaultNamespaceOfTypeForHost(hostName.get(), kOtherUsersNamespace, m_namespace);
+        }
+        else if (mFlags & MSG_FOLDER_FLAG_IMAP_PUBLIC)
+        {
+          rv = hostSession->GetDefaultNamespaceOfTypeForHost(hostName.get(), kPublicNamespace, m_namespace);
+        }
+        else 
+        {
+          rv = hostSession->GetDefaultNamespaceOfTypeForHost(hostName.get(), kPersonalNamespace, m_namespace);
+        }
+      }
+      NS_ASSERTION(m_namespace, "failed to get namespace");
+      if (m_namespace)
+      {
+        nsIMAPNamespaceList::SuggestHierarchySeparatorForNamespace(m_namespace, (char) hierarchyDelimiter);
+        m_folderIsNamespace = nsIMAPNamespaceList::GetFolderIsNamespace(hostName.get(), onlineName.get(), (char) hierarchyDelimiter, m_namespace);
+      }
+    }
+  } 
+  return m_folderIsNamespace;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderIsNamespace(PRBool isNamespace)
+{
+  m_folderIsNamespace = isNamespace;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::ResetNamespaceReferences()
+{
+  nsXPIDLCString serverKey;
+  nsXPIDLCString onlineName;
+  GetServerKey(getter_Copies(serverKey));
+  GetOnlineName(getter_Copies(onlineName));
+  PRUnichar hierarchyDelimiter;
+  GetHierarchyDelimiter(&hierarchyDelimiter);
+  m_namespace = nsIMAPNamespaceList::GetNamespaceForFolder(serverKey.get(), onlineName.get(), (char) hierarchyDelimiter);
+  NS_ASSERTION(m_namespace, "resetting null namespace");
+  if (m_namespace)
+    m_folderIsNamespace = nsIMAPNamespaceList::GetFolderIsNamespace(serverKey.get(), onlineName.get(), (char) hierarchyDelimiter, m_namespace);
+  else
+    m_folderIsNamespace = PR_FALSE;
+  
+  nsCOMPtr<nsIEnumerator> aEnumerator;
+  GetSubFolders(getter_AddRefs(aEnumerator));
+  if (!aEnumerator)
+    return NS_OK;
+  nsCOMPtr<nsISupports> aSupport;
+  nsresult rv = aEnumerator->First();
+  while (NS_SUCCEEDED(rv))
+  {
+     rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+			
+     nsCOMPtr<nsIMsgImapMailFolder> folder = do_QueryInterface(aSupport, &rv);
+     if (NS_FAILED(rv)) return rv;
+     folder->ResetNamespaceReferences();
+     rv = aEnumerator->Next();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::FindOnlineSubFolder(const char *targetOnlineName, nsIMsgImapMailFolder **aResultFolder)
+{
+  nsresult rv = NS_OK;
+
+  nsXPIDLCString onlineName;
+  GetOnlineName(getter_Copies(onlineName));
+
+  if (onlineName.Equals(targetOnlineName))
+  {
+    return QueryInterface(NS_GET_IID(nsIMsgImapMailFolder), (void **) aResultFolder);
+  }
+  nsCOMPtr<nsIEnumerator> aEnumerator;
+  GetSubFolders(getter_AddRefs(aEnumerator));
+  if (!aEnumerator)
+    return NS_OK;
+  nsCOMPtr<nsISupports> aSupport;
+  rv = aEnumerator->First();
+  while (NS_SUCCEEDED(rv))
+  {
+     rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+			
+     nsCOMPtr<nsIMsgImapMailFolder> folder = do_QueryInterface(aSupport, &rv);
+     if (NS_FAILED(rv)) return rv;
+     rv = folder->FindOnlineSubFolder(targetOnlineName, aResultFolder);
+     if (*aResultFolder)
+       return rv;
+     rv = aEnumerator->Next();
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsAdded(PRBool *bVal)

@@ -60,8 +60,8 @@
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapServerSink.h"
 class nsImapMoveCoalescer;
-
-
+class nsHashtable;
+class nsHashKey;
 #define COPY_BUFFER_SIZE 16384
 
 /* b64534f0-3d53-11d3-ac2a-00805f8ac968 */
@@ -106,6 +106,86 @@ public:
     PRUint32 m_leftOver;
     PRBool m_allowUndo;
 };
+
+// ACLs for this folder.
+// Generally, we will try to always query this class when performing
+// an operation on the folder.
+// If the server doesn't support ACLs, none of this data will be filled in.
+// Therefore, we can assume that if we look up ourselves and don't find
+// any info (and also look up "anyone") then we have full rights, that is, ACLs don't exist.
+class nsImapMailFolder;
+
+#define IMAP_ACL_READ_FLAG 0x0000001 /* SELECT, CHECK, FETCH, PARTIAL, SEARCH, COPY from folder */
+#define IMAP_ACL_STORE_SEEN_FLAG 0x0000002 /* STORE SEEN flag */
+#define IMAP_ACL_WRITE_FLAG 0x0000004 /* STORE flags other than SEEN and DELETED */
+#define IMAP_ACL_INSERT_FLAG 0x0000008 /* APPEND, COPY into folder */
+#define IMAP_ACL_POST_FLAG 0x0000010 /* Can I send mail to the submission address for folder? */
+#define IMAP_ACL_CREATE_SUBFOLDER_FLAG 0x0000020 /* Can I CREATE a subfolder of this folder? */
+#define IMAP_ACL_DELETE_FLAG 0x0000040 /* STORE DELETED flag, perform EXPUNGE */
+#define IMAP_ACL_ADMINISTER_FLAG 0x0000080 /* perform SETACL */
+#define IMAP_ACL_RETRIEVED_FLAG 0x0000100 /* ACL info for this folder has been initialized */
+
+class nsMsgIMAPFolderACL
+{
+public:
+	nsMsgIMAPFolderACL(nsImapMailFolder *folder);
+	~nsMsgIMAPFolderACL();
+	
+	PRBool SetFolderRightsForUser(const char *userName, const char *rights);
+
+public:
+
+	// generic for any user, although we might not use them in
+	// DO NOT use these for looking up information about the currently authenticated user.
+	// (There are some different checks and defaults we do).
+	// Instead, use the functions below, GetICan....()
+	PRBool GetCanUserLookupFolder(const char *userName);		// Is folder visible to LIST/LSUB?
+	PRBool GetCanUserReadFolder(const char *userName);			// SELECT, CHECK, FETCH, PARTIAL, SEARCH, COPY from folder?
+	PRBool	GetCanUserStoreSeenInFolder(const char *userName);	// STORE SEEN flag?
+	PRBool GetCanUserWriteFolder(const char *userName);		// STORE flags other than SEEN and DELETED?
+	PRBool	GetCanUserInsertInFolder(const char *userName);		// APPEND, COPY into folder?
+	PRBool	GetCanUserPostToFolder(const char *userName);		// Can I send mail to the submission address for folder?
+	PRBool	GetCanUserCreateSubfolder(const char *userName);	// Can I CREATE a subfolder of this folder?
+	PRBool	GetCanUserDeleteInFolder(const char *userName);		// STORE DELETED flag, perform EXPUNGE?
+	PRBool	GetCanUserAdministerFolder(const char *userName);	// perform SETACL?
+
+	// Functions to find out rights for the currently authenticated user.
+
+	PRBool GetCanILookupFolder();		// Is folder visible to LIST/LSUB?
+	PRBool GetCanIReadFolder();		// SELECT, CHECK, FETCH, PARTIAL, SEARCH, COPY from folder?
+	PRBool	GetCanIStoreSeenInFolder();	// STORE SEEN flag?
+	PRBool GetCanIWriteFolder();		// STORE flags other than SEEN and DELETED?
+	PRBool	GetCanIInsertInFolder();	// APPEND, COPY into folder?
+	PRBool	GetCanIPostToFolder();		// Can I send mail to the submission address for folder?
+	PRBool	GetCanICreateSubfolder();	// Can I CREATE a subfolder of this folder?
+	PRBool	GetCanIDeleteInFolder();	// STORE DELETED flag, perform EXPUNGE?
+	PRBool	GetCanIAdministerFolder();	// perform SETACL?
+
+	PRBool GetDoIHaveFullRightsForFolder();	// Returns TRUE if I have full rights on this folder (all of the above return TRUE)
+
+	PRBool	GetIsFolderShared();		// We use this to see if the ACLs think a folder is shared or not.
+										// We will define "Shared" in 5.0 to mean:
+										// At least one user other than the currently authenticated user has at least one
+										// explicitly-listed ACL right on that folder.
+
+        // Returns a newly allocated string describing these rights
+        nsresult CreateACLRightsString(PRUnichar **rightsString);
+
+protected:
+	const char *GetRightsStringForUser(const char *userName);
+	PRBool GetFlagSetInRightsForUser(const char *userName, char flag, PRBool defaultIfNotFound);
+	void BuildInitialACLFromCache();
+	void UpdateACLCache();
+        static PRBool FreeHashRights(nsHashKey *aKey, void *aData, void *closure);
+
+protected:
+	nsHashtable    *m_rightsHash;	// Hash table, mapping username strings to rights strings.
+	nsImapMailFolder *m_folder;
+	PRInt32        m_aclCount;
+
+};
+
+
 
 class nsImapMailFolder : public nsMsgDBFolder, 
                          public nsIMsgImapMailFolder,
@@ -227,8 +307,6 @@ public:
   NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                nsIMAPACLRightsInfo* aclRights);
 
-  NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
-                             nsIMAPACLRightsInfo* aclRights);
   NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
                                  nsIMAPACLRightsInfo* aclRights);
   NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
@@ -317,6 +395,17 @@ protected:
 	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
 	virtual const char *GetIncomingServerType() {return "imap";}
 
+  nsresult        GetFolderOwnerUserName(char **userName);
+  nsresult        GetOwnersOnlineFolderName(char **onlineName);
+  nsIMAPNamespace *GetNamespaceForFolder();
+  void            SetNamespaceForFolder(nsIMAPNamespace *ns);
+  PRBool          GetFolderIsNamespace();
+  // ### TODO if this is supposed to be a method of an interface, which interface, and who will call it?
+  NS_IMETHODIMP   SetFolderIsNamespace(PRBool isNamespace);
+
+  nsresult GetServerAdminUrl(char **aAdminUrl);
+  nsMsgIMAPFolderACL * GetFolderACL();
+  nsresult CreateACLRightsStringForFolder(PRUnichar **rightsString);
 
   nsresult GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDownload);
   // Uber message copy service
@@ -371,16 +460,23 @@ protected:
   nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
   nsCOMPtr<nsImapMailCopyState> m_copyState;
   PRMonitor *m_appendMsgMonitor;
-  PRBool	m_verifiedAsOnlineFolder;
-	PRBool	m_explicitlyVerify; // whether or not we need to explicitly verify this through LIST
-	PRUnichar m_hierarchyDelimiter;
-	PRInt32 m_boxFlags;
-	nsCString m_onlineFolderName;
-	nsFileSpec *m_pathName;
+  PRUnichar m_hierarchyDelimiter;
+  PRInt32 m_boxFlags;
+  nsCString m_onlineFolderName;
+  nsFileSpec *m_pathName;
+  nsCString m_ownerUserName;  // username of the "other user," as in
+                              // "Other Users' Mailboxes"
 
-  PRBool m_folderNeedsSubscribing;
-  PRBool m_folderNeedsAdded;
-  PRBool m_folderNeedsACLListed;
+  nsIMAPNamespace  *m_namespace;	// Opaque pointer to the IMAP namespace for this folder
+											// Use libnet accessors for various namespace functionality
+  PRPackedBool m_verifiedAsOnlineFolder;
+  PRPackedBool m_explicitlyVerify; // whether or not we need to explicitly verify this through LIST
+  PRPackedBool m_folderIsNamespace;
+  PRPackedBool m_folderNeedsSubscribing;
+  PRPackedBool m_folderNeedsAdded;
+  PRPackedBool m_folderNeedsACLListed;
+
+  nsMsgIMAPFolderACL *m_folderACL;
 
   nsCOMPtr<nsIMsgMailNewsUrl> mUrlToRelease;
 
@@ -388,5 +484,7 @@ protected:
   PRBool m_downloadMessageForOfflineUse;
   PRBool m_downloadingFolderForOfflineUse;
 };
+
+
 
 #endif

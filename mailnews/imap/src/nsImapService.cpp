@@ -373,62 +373,62 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 							              nsIMsgWindow *aMsgWindow,
                             nsIURI ** aURL)
 {
-
-
-	// create a protocol instance to handle the request.
-	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
-	// just create a connection and process the request.
+  // create a protocol instance to handle the request.
+  // NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+  // just create a connection and process the request.
   NS_ASSERTION (aImapMailFolder && aClientEventQueue,
-                "Oops ... null pointer");
+    "Oops ... null pointer");
   if (!aImapMailFolder || !aClientEventQueue)
-      return NS_ERROR_NULL_POINTER;
-
+    return NS_ERROR_NULL_POINTER;
+  
   if (WeAreOffline())
     return NS_MSG_ERROR_OFFLINE;
-
-  PRBool noSelect = PR_FALSE;
-  aImapMailFolder->GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
-
-  if (noSelect) return NS_OK;
-
-	nsCOMPtr<nsIImapUrl> imapUrl;
-	nsCAutoString urlSpec;
-    nsresult rv;
-	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
-	rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), aImapMailFolder, aUrlListener, urlSpec, hierarchySeparator);
-
-	if (NS_SUCCEEDED(rv) && imapUrl)
-	{
-        // nsImapUrl::SetSpec() will set the imap action properly
-		// rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
-		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
-
-		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+  
+  PRBool canOpenThisFolder = PR_TRUE;
+  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aImapMailFolder);
+  if (imapFolder)
+    imapFolder->GetCanIOpenThisFolder(&canOpenThisFolder);
+  
+  if (!canOpenThisFolder) return NS_OK;
+  
+  nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCAutoString urlSpec;
+  nsresult rv;
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
+  rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), aImapMailFolder, aUrlListener, urlSpec, hierarchySeparator);
+  
+  if (NS_SUCCEEDED(rv) && imapUrl)
+  {
+    // nsImapUrl::SetSpec() will set the imap action properly
+    // rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
+    rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
+    
+    nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
     // if no msg window, we won't put up error messages (this is almost certainly a biff-inspired get new msgs)
     if (!aMsgWindow)
       mailNewsUrl->SetSuppressErrorMsgs(PR_TRUE);
-		mailNewsUrl->SetMsgWindow(aMsgWindow);
-		mailNewsUrl->SetUpdatingFolder(PR_TRUE);
-		imapUrl->AddChannelToLoadGroup();
-        rv = SetImapUrlSink(aImapMailFolder, imapUrl);
-
-		if (NS_SUCCEEDED(rv))
-		{
+    mailNewsUrl->SetMsgWindow(aMsgWindow);
+    mailNewsUrl->SetUpdatingFolder(PR_TRUE);
+    imapUrl->AddChannelToLoadGroup();
+    rv = SetImapUrlSink(aImapMailFolder, imapUrl);
+    
+    if (NS_SUCCEEDED(rv))
+    {
       nsXPIDLCString folderName;
       GetFolderName(aImapMailFolder, getter_Copies(folderName));
-			urlSpec.Append("/select>");
-			urlSpec.AppendWithConversion(hierarchySeparator);
+      urlSpec.Append("/select>");
+      urlSpec.AppendWithConversion(hierarchySeparator);
       urlSpec.Append((const char *) folderName);
       rv = mailNewsUrl->SetSpec(urlSpec.get());
       if (NS_SUCCEEDED(rv))
-          rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
-                                                 imapUrl,
-                                                 nsnull,
-                                                 aURL);
-		}
-	} // if we have a url to run....
-
-	return rv;
+        rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+        imapUrl,
+        nsnull,
+        aURL);
+    }
+  } // if we have a url to run....
+  
+  return rv;
 }
 
 // lite select, used to verify UIDVALIDITY while going on/offline

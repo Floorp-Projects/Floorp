@@ -41,11 +41,13 @@
 #include "nsIMAPNamespace.h"
 #include "nsImapProtocol.h"
 #include "nsIMAPGenericParser.h"
+#include "nsMsgImapCID.h"
+#include "nsImapUrl.h"
 #include "nsString.h"
 
 //////////////////// nsIMAPNamespace  /////////////////////////////////////////////////////////////
 
-
+static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
 
 nsIMAPNamespace::nsIMAPNamespace(EIMAPNamespaceType type, const char *prefix, char delimiter, PRBool from_prefs)
 {
@@ -62,10 +64,10 @@ nsIMAPNamespace::~nsIMAPNamespace()
 	PR_FREEIF(m_prefix);
 }
 
-void nsIMAPNamespace::SetDelimiter(char delimiter)
+void nsIMAPNamespace::SetDelimiter(char delimiter, PRBool delimiterFilledIn)
 {
-	m_delimiter = delimiter;
-	m_delimiterFilledIn = PR_TRUE;
+  m_delimiter = delimiter;
+  m_delimiterFilledIn = delimiterFilledIn;
 }
 
 // returns -1 if this box is not part of this namespace,
@@ -345,62 +347,270 @@ nsresult nsIMAPNamespaceList::SerializeNamespaces(char **prefixes, int len, nsCS
 */
 int nsIMAPNamespaceList::UnserializeNamespaces(const char *str, char **prefixes, int len)
 {
-	if (!str)
-		return 0;
-	if (!prefixes)
-	{
-		if (str[0] != '"')
-			return 1;
-		else
-		{
-			int count = 0;
-			char *ourstr = PL_strdup(str);
-			char *origOurStr = ourstr;
-			if (ourstr)
-			{
-				char *token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
-				while (token != nsnull)
-				{
-					token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
-					count++;
-				}
-				PR_Free(origOurStr);
-			}
-			return count;
-		}
-	}
-	else
-	{
-		if ((str[0] != '"') && (len >= 1))
-		{
-			prefixes[0] = PL_strdup(str);
-			return 1;
-		}
-		else
-		{
-			int count = 0;
-			char *ourstr = PL_strdup(str);
-			char *origOurStr = ourstr;
-			if (ourstr)
-			{
-				char *token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
-				while ((count < len) && (token != nsnull))
-				{
-
-					char *current = PL_strdup(token), *where = current;
-					if (where[0] == '"')
-						where++;
-					if (where[PL_strlen(where)-1] == '"')
-						where[PL_strlen(where)-1] = 0;
-					prefixes[count] = PL_strdup(where);
-					PR_FREEIF(current);
-					token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
-					count++;
-				}
-				PR_Free(origOurStr);
-			}
-			return count;
-		}
-	}
+  if (!str)
+    return 0;
+  if (!prefixes)
+  {
+    if (str[0] != '"')
+      return 1;
+    else
+    {
+      int count = 0;
+      char *ourstr = PL_strdup(str);
+      char *origOurStr = ourstr;
+      if (ourstr)
+      {
+        char *token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
+        while (token != nsnull)
+        {
+          token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
+          count++;
+        }
+        PR_Free(origOurStr);
+      }
+      return count;
+    }
+  }
+  else
+  {
+    if ((str[0] != '"') && (len >= 1))
+    {
+      prefixes[0] = PL_strdup(str);
+      return 1;
+    }
+    else
+    {
+      int count = 0;
+      char *ourstr = PL_strdup(str);
+      char *origOurStr = ourstr;
+      if (ourstr)
+      {
+        char *token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
+        while ((count < len) && (token != nsnull))
+        {
+          
+          char *current = PL_strdup(token), *where = current;
+          if (where[0] == '"')
+            where++;
+          if (where[PL_strlen(where)-1] == '"')
+            where[PL_strlen(where)-1] = 0;
+          prefixes[count] = PL_strdup(where);
+          PR_FREEIF(current);
+          token = nsCRT::strtok( ourstr, SERIALIZER_SEPARATORS, &ourstr );
+          count++;
+        }
+        PR_Free(origOurStr);
+      }
+      return count;
+    }
+  }
 }
 
+
+
+
+char *nsIMAPNamespaceList::AllocateCanonicalFolderName(const char *onlineFolderName, char delimiter)
+{
+  char *canonicalPath = nsnull;
+  if (delimiter)
+    canonicalPath = nsImapUrl::ReplaceCharsInCopiedString(onlineFolderName, delimiter , '/');
+  else
+    canonicalPath = strdup(onlineFolderName);
+  
+  // eat any escape characters for escaped dir separators
+  if (canonicalPath)
+  {
+    char *currentEscapeSequence = strstr(canonicalPath, "\\/");
+    while (currentEscapeSequence)
+    {
+      strcpy(currentEscapeSequence, currentEscapeSequence+1);
+      currentEscapeSequence = strstr(currentEscapeSequence+1, "\\/");
+    }
+  }
+  
+  return canonicalPath;
+}
+
+
+
+/*
+  GetFolderNameWithoutNamespace takes as input a folder name
+  in canonical form, and the namespace for the given folder.  It returns an allocated
+  string of the folder's path with the namespace string stripped out.  For instance,
+  when passed the folder Folders/a/b where the namespace is "Folders/", it will return
+  "a/b".  Similarly, if the folder name is "#news/comp/mail/imap" in canonical form,
+  with a real delimiter of "." and a namespace of "#news.", it will return "comp/mail/imap".
+  The return value is always in canonical form.
+*/
+char* nsIMAPNamespaceList::GetFolderNameWithoutNamespace(nsIMAPNamespace *namespaceForFolder, const char *canonicalFolderName)
+{
+  NS_ASSERTION(canonicalFolderName, "null folder name");
+#ifdef DEBUG
+  NS_ASSERTION(namespaceForFolder || !PL_strcasecmp(canonicalFolderName, "INBOX"), "need namespace or INBOX");
+#endif
+  
+  char *retFolderName = nsnull;
+  
+  if (!PL_strcasecmp(canonicalFolderName, "INBOX"))
+    return strdup(canonicalFolderName);
+  
+  // convert the canonical path to the online path
+  char *convertedFolderName = nsIMAPNamespaceList::AllocateServerFolderName(canonicalFolderName, namespaceForFolder->GetDelimiter());
+  if (convertedFolderName)
+  {
+    char *beginFolderPath = nsnull;
+    if (strlen(convertedFolderName) <= strlen(namespaceForFolder->GetPrefix()))
+      beginFolderPath = convertedFolderName;
+    else
+      beginFolderPath = convertedFolderName + strlen(namespaceForFolder->GetPrefix());
+    NS_ASSERTION(beginFolderPath, "empty folder path");
+    retFolderName = nsIMAPNamespaceList::AllocateCanonicalFolderName(beginFolderPath, namespaceForFolder->GetDelimiter());
+    PR_Free(convertedFolderName);
+  }
+  
+  NS_ASSERTION(retFolderName, "returning null folder name");
+  return retFolderName;
+}
+
+
+nsIMAPNamespace* nsIMAPNamespaceList::GetNamespaceForFolder(const char *hostName,
+                                                    const char *canonicalFolderName,
+                                                    char delimiter)
+{
+  if (!hostName || !canonicalFolderName)
+    return nsnull;
+  
+  nsIMAPNamespace *resultNamespace = nsnull;
+  nsresult rv;
+  char *convertedFolderName = nsIMAPNamespaceList::AllocateServerFolderName(canonicalFolderName, delimiter);
+
+  if (convertedFolderName)
+  {
+
+    nsCOMPtr<nsIImapHostSessionList> hostSessionList = 
+             do_GetService(kCImapHostSessionListCID, &rv);
+    if (NS_FAILED(rv)) 
+      return nsnull;
+    hostSessionList->GetNamespaceForMailboxForHost(hostName, convertedFolderName, resultNamespace);
+    PR_Free(convertedFolderName);
+  }
+  else
+  {
+    NS_ASSERTION(PR_FALSE, "couldn't get converted folder name");
+  }
+  
+  return resultNamespace;
+}
+
+/* static */
+char *nsIMAPNamespaceList::AllocateServerFolderName(const char *canonicalFolderName, char delimiter)
+{
+  if (delimiter)
+    return nsImapUrl::ReplaceCharsInCopiedString(canonicalFolderName, '/', delimiter);
+  else
+    return nsCRT::strdup(canonicalFolderName);
+}
+
+/*
+	GetFolderOwnerNameFromPath takes as inputs a folder name
+	in canonical form, and a namespace for that folder.
+	The namespace MUST be of type kOtherUsersNamespace, hence the folder MUST be
+	owned by another user.  This function extracts the folder owner's name from the
+	canonical name of the folder, and returns an allocated copy of that owner's name
+*/
+/* static */
+char *nsIMAPNamespaceList::GetFolderOwnerNameFromPath(nsIMAPNamespace *namespaceForFolder, const char *canonicalFolderName)
+{
+  if (!namespaceForFolder || !canonicalFolderName)
+  {
+    NS_ASSERTION(PR_FALSE,"null namespace or canonical folder name");
+    return nsnull;
+  }
+  
+  char *rv = nsnull;
+  
+  // convert the canonical path to the online path
+  char *convertedFolderName = AllocateServerFolderName(canonicalFolderName, namespaceForFolder->GetDelimiter());
+  if (convertedFolderName)
+  {
+#ifdef DEBUG
+    NS_ASSERTION(strlen(convertedFolderName) > strlen(namespaceForFolder->GetPrefix()), "server folder name invalid");
+#endif
+    if (strlen(convertedFolderName) > strlen(namespaceForFolder->GetPrefix()))
+    {
+      char *owner = convertedFolderName + strlen(namespaceForFolder->GetPrefix());
+      NS_ASSERTION(owner, "couldn't find folder owner");
+      char *nextDelimiter = strchr(owner, namespaceForFolder->GetDelimiter());
+      // if !nextDelimiter, then the path is of the form Shared/Users/chrisf   (no subfolder)
+      if (nextDelimiter)
+      {
+        *nextDelimiter = 0;
+      }
+      rv = strdup(owner);
+    }
+    PR_Free(convertedFolderName);
+  }
+  else
+  {
+    NS_ASSERTION(PR_FALSE, "couldn't allocate server folder name");
+  }
+  
+  return rv;
+}
+
+/*
+GetFolderIsNamespace returns TRUE if the given folder is the folder representing
+a namespace.
+*/
+
+PRBool nsIMAPNamespaceList::GetFolderIsNamespace(const char *hostName,
+                                                 const char *canonicalFolderName,
+                                                 char delimiter,nsIMAPNamespace *namespaceForFolder)
+{
+  NS_ASSERTION(namespaceForFolder, "null namespace");
+  
+  PRBool rv = PR_FALSE;
+  
+  const char *prefix = namespaceForFolder->GetPrefix();
+  NS_ASSERTION(prefix, "namespace has no prefix");
+  if (!prefix || !*prefix)	// empty namespace prefix
+    return PR_FALSE;
+  
+  char *convertedFolderName = AllocateServerFolderName(canonicalFolderName, delimiter);
+  if (convertedFolderName)
+  {
+    PRBool lastCharIsDelimiter = (prefix[strlen(prefix) - 1] == delimiter);
+    
+    if (lastCharIsDelimiter)
+    {
+      rv = ((strncmp(convertedFolderName, prefix, strlen(convertedFolderName)) == 0) &&
+        (strlen(convertedFolderName) == strlen(prefix) - 1));
+    }
+    else
+    {
+      rv = (strcmp(convertedFolderName, prefix) == 0);
+    }
+    
+    PR_FREEIF(convertedFolderName);
+  }
+  else
+  {
+    NS_ASSERTION(PR_FALSE, "couldn't allocate server folder name");
+  }
+  
+  return rv;
+}
+
+/*
+  SuggestHierarchySeparatorForNamespace takes a namespace from libmsg
+  and a hierarchy delimiter.  If the namespace has not been filled in from
+  online NAMESPACE command yet, it fills in the suggested delimiter to be
+  used from then on (until it is overridden by an online response).
+*/
+
+void nsIMAPNamespaceList::SuggestHierarchySeparatorForNamespace(nsIMAPNamespace *namespaceForFolder, char delimiterFromFolder)
+{
+  NS_ASSERTION(namespaceForFolder, "need namespace");
+  if (namespaceForFolder && !namespaceForFolder->GetIsDelimiterFilledIn())
+    namespaceForFolder->SetDelimiter(delimiterFromFolder, PR_FALSE);
+}

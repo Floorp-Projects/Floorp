@@ -81,8 +81,6 @@ public:
   
     NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                  nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
-                             nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
                                    nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
@@ -165,15 +163,6 @@ struct ClearFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
     ClearFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 nsIMAPACLRightsInfo* aclRights);
     virtual ~ClearFolderRightsProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsIMAPACLRightsInfo m_aclRightsInfo;
-};
-
-struct AddFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    AddFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                nsIMAPACLRightsInfo* aclRights);
-    virtual ~AddFolderRightsProxyEvent();
     NS_IMETHOD HandleEvent();
     nsIMAPACLRightsInfo m_aclRightsInfo;
 };

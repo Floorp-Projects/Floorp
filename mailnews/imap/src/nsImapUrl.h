@@ -83,6 +83,7 @@ public:
   static nsresult ConvertToCanonicalFormat(const char *folderName, char onlineDelimiter, char **resultingCanonicalPath);
   static nsresult EscapeSlashes(const char *sourcePath, char **resultPath);
   static nsresult UnescapeSlashes(char *path);
+  static char *	ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
 
 protected:
 	virtual nsresult ParseUrl();
@@ -93,7 +94,6 @@ protected:
 	// handle the imap specific parsing
 	void		ParseImapPart(char *imapPartOfUrl);
 
-	static char *		ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
 	void		ParseFolderPath(char **resultingCanonicalPath);
 	void		ParseSearchCriteriaString();
 	void		ParseChildDiscoveryDepth();

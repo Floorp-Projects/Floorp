@@ -41,6 +41,18 @@
 interface nsIMsgWindow;
 interface nsIImapIncomingServer;
 
+// this is a simple interface which allows the imap folder to update some values
+// that the folder props js code will use to update the sharing tab in the folder props.
+
+[scriptable, uuid(239472a2-6e8f-46f0-9507-887998da49e5)] 
+interface nsIMsgImapFolderProps : nsISupports {
+
+    void setFolderType(in wstring folderType);
+    void setFolderTypeDescription(in wstring folderTypeDescription);
+    void setFolderPermissions(in wstring permissions);
+};
+
+
 [scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {
   void removeSubFolder(in nsIMsgFolder folder);
@@ -59,12 +71,18 @@ interface nsIMsgImapMailFolder : nsISupports {
                          in nsIUrlListener aUrlListener, in nsIMsgWindow aWindow);
   void playbackOfflineFolderCreate(in wstring folderName, in nsIMsgWindow aWindow, out nsIURI url);
   void liteSelect(in nsIUrlListener aUrlListener);
-
+  void fillInFolderProps(in nsIMsgImapFolderProps aFolderProps);
+  void resetNamespaceReferences();
   void folderPrivileges(in nsIMsgWindow aWindow);
+  nsIMsgImapMailFolder findOnlineSubFolder(in string onlineName);
+  void addFolderRights(in string userName, in string rights);
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;
   attribute long boxFlags;
   attribute string onlineName;
+  attribute unsigned long aclFlags;
+  readonly attribute boolean canIOpenThisFolder;
+  readonly attribute boolean hasAdminUrl;
 };
 

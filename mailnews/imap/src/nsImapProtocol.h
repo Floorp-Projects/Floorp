@@ -483,7 +483,8 @@ private:
 	void OnSubscribe(const char * aSourceMailbox);
 	void OnUnsubscribe(const char * aSourceMailbox);
   void RefreshACLForFolderIfNecessary(const char * mailboxName);
-	void OnRefreshACLForFolder(const char * aSourceMailbox);
+	void RefreshACLForFolder(const char * aSourceMailbox);
+        void GetACLForFolder(const char *aMailboxName);
 	void OnRefreshAllACLs();
 	void OnListFolder(const char * aSourceMailbox, PRBool aBool);
 	void OnStatusForFolder(const char * sourceMailbox);

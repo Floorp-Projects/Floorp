@@ -3682,10 +3682,9 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
             aclRightsInfo->mailboxName && aclRightsInfo->rights && 
       userName ? (aclRightsInfo->userName != NULL) : PR_TRUE)
     {
-            if (m_imapExtensionSink)
+            if (m_imapServerSink)
             {
-                m_imapExtensionSink->AddFolderRights(this, aclRightsInfo);
-                WaitForFEEventCompletion();
+                m_imapServerSink->AddFolderRights(mailboxName, userName, rights);
             }
         }
         PR_FREEIF(aclRightsInfo->hostName);
@@ -3871,64 +3870,64 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
 {
   // IMAP_LoadTrashFolderName(); **** needs to work on localization issues
   nsIMAPNamespace *ns = nsnull;
-
-    NS_ASSERTION (m_hostSessionList, "fatal null host session list");
-    if (!m_hostSessionList) return;
-
-    m_hostSessionList->GetDefaultNamespaceOfTypeForHost(
-        GetImapServerKey(), kPersonalNamespace, ns);
+  
+  NS_ASSERTION (m_hostSessionList, "fatal null host session list");
+  if (!m_hostSessionList) return;
+  
+  m_hostSessionList->GetDefaultNamespaceOfTypeForHost(
+    GetImapServerKey(), kPersonalNamespace, ns);
   const char *nsPrefix = ns ? ns->GetPrefix() : 0;
-
+  
   nsCString canonicalSubDir;
   if (nsPrefix)
   {
-        PRUnichar slash = '/';
+    PRUnichar slash = '/';
     canonicalSubDir = nsPrefix;
     if (canonicalSubDir.Length() && canonicalSubDir.Last() == slash)
-        canonicalSubDir.SetLength((PRUint32) canonicalSubDir.Length()-1);
+      canonicalSubDir.SetLength((PRUint32) canonicalSubDir.Length()-1);
   }
-    
+  
   switch (m_hierarchyNameState)
   {
-    case kListingForCreate:
-    case kNoOperationInProgress:
-    case kDiscoverTrashFolderInProgress:
-    case kListingForInfoAndDiscovery:
+  case kListingForCreate:
+  case kNoOperationInProgress:
+  case kDiscoverTrashFolderInProgress:
+  case kListingForInfoAndDiscovery:
     {
-            if (canonicalSubDir.Length() &&
-                PL_strstr(adoptedBoxSpec->allocatedPathName,
-                          canonicalSubDir.get()))
-                m_onlineBaseFolderExists = PR_TRUE;
-
-            if (ns && nsPrefix) // if no personal namespace, there can be no Trash folder
+      if (canonicalSubDir.Length() &&
+        PL_strstr(adoptedBoxSpec->allocatedPathName,
+        canonicalSubDir.get()))
+        m_onlineBaseFolderExists = PR_TRUE;
+      
+      if (ns && nsPrefix) // if no personal namespace, there can be no Trash folder
       {
-                PRBool onlineTrashFolderExists = PR_FALSE;
-                if (m_hostSessionList)
-                    m_hostSessionList->GetOnlineTrashFolderExistsForHost(
-                        GetImapServerKey(), onlineTrashFolderExists);
-
+        PRBool onlineTrashFolderExists = PR_FALSE;
+        if (m_hostSessionList)
+          m_hostSessionList->GetOnlineTrashFolderExistsForHost(
+          GetImapServerKey(), onlineTrashFolderExists);
+        
         if (GetDeleteIsMoveToTrash() && // don't set the Trash flag
-                                        // if not using the Trash model
-            !onlineTrashFolderExists && 
-                    PL_strstr(adoptedBoxSpec->allocatedPathName, 
-                              kImapTrashFolderName))
+          // if not using the Trash model
+          !onlineTrashFolderExists && 
+          PL_strstr(adoptedBoxSpec->allocatedPathName, 
+          kImapTrashFolderName))
         {
           PRBool trashExists = PR_FALSE;
-                    nsCString trashMatch;
-                    trashMatch = nsPrefix;
-                    trashMatch += kImapTrashFolderName;
+          nsCString trashMatch;
+          trashMatch = nsPrefix;
+          trashMatch += kImapTrashFolderName;
           {
             char *serverTrashName = nsnull;
-                        m_runningUrl->AllocateCanonicalPath(
-                            trashMatch.get(),
-                            ns->GetDelimiter(), &serverTrashName); 
+            m_runningUrl->AllocateCanonicalPath(
+              trashMatch.get(),
+              ns->GetDelimiter(), &serverTrashName); 
             if (serverTrashName)
             {
               if (!PL_strcasecmp(nsPrefix, "INBOX.")) // need to special-case this because it should be case-insensitive
               {
 #ifdef DEBUG
                 NS_ASSERTION (PL_strlen(serverTrashName) > 6,
-                                              "Oops.. less that 6");
+                  "Oops.. less that 6");
 #endif
                 trashExists = ((PL_strlen(serverTrashName) > 6 /* nsCRT::strlen("INBOX.") */) &&
                   (PL_strlen(adoptedBoxSpec->allocatedPathName) > 6 /* nsCRT::strlen("INBOX.") */) &&
@@ -3939,70 +3938,75 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
               {
                 trashExists = (PL_strcmp(serverTrashName, adoptedBoxSpec->allocatedPathName) == 0);
               }
-                            if (m_hostSessionList)
-              m_hostSessionList->
-                                SetOnlineTrashFolderExistsForHost(
-                                    GetImapServerKey(), trashExists);
+              if (m_hostSessionList)
+                m_hostSessionList->
+                SetOnlineTrashFolderExistsForHost(
+                GetImapServerKey(), trashExists);
               PR_Free(serverTrashName);
             }
           }
           
           if (trashExists)
-                    adoptedBoxSpec->box_flags |= kImapTrash;
+            adoptedBoxSpec->box_flags |= kImapTrash;
         }
       }
-
+      
       // Discover the folder (shuttle over to libmsg, yay)
       // Do this only if the folder name is not empty (i.e. the root)
       if (adoptedBoxSpec->allocatedPathName &&
-                *adoptedBoxSpec->allocatedPathName)
+        *adoptedBoxSpec->allocatedPathName)
       {
-                nsCString boxNameCopy; 
-                
+        nsCString boxNameCopy; 
+        
         boxNameCopy = adoptedBoxSpec->allocatedPathName;
         if (m_hierarchyNameState == kListingForCreate)
           adoptedBoxSpec->box_flags |= kNewlyCreatedFolder;
-
-                if (m_imapServerSink)
-                {
-                    m_imapServerSink->PossibleImapMailbox(boxNameCopy.get(), 
-									adoptedBoxSpec->hierarchySeparator,
-                                    adoptedBoxSpec->box_flags);
-                
-                    PRBool useSubscription = PR_FALSE;
-
-                    if (m_hostSessionList)
-                        m_hostSessionList->GetHostIsUsingSubscription(
-                            GetImapServerKey(),
-                            useSubscription);
-
+        
+        if (m_imapServerSink)
+        {
+          PRBool newFolder;
+          m_imapServerSink->PossibleImapMailbox(boxNameCopy.get(), 
+            adoptedBoxSpec->hierarchySeparator,
+            adoptedBoxSpec->box_flags, &newFolder);
+          // if it's a new folder to the server sink, setting discovery status to
+          // eContinueNew will cause us to get the ACL for the new folder.
+          if (newFolder)
+            SetMailboxDiscoveryStatus(eContinueNew);
+          
+          PRBool useSubscription = PR_FALSE;
+          
+          if (m_hostSessionList)
+            m_hostSessionList->GetHostIsUsingSubscription(
+            GetImapServerKey(),
+            useSubscription);
+          
           if ((GetMailboxDiscoveryStatus() != eContinue) && 
             (GetMailboxDiscoveryStatus() != eContinueNew) &&
             (GetMailboxDiscoveryStatus() != eListMyChildren))
           {
-                      SetConnectionStatus(-1);
+            SetConnectionStatus(-1);
           }
           else if (boxNameCopy.Length() && 
-                             (GetMailboxDiscoveryStatus() == 
-                              eListMyChildren) &&
-                             (!useSubscription || GetSubscribingNow()))
+            (GetMailboxDiscoveryStatus() == 
+            eListMyChildren) &&
+            (!useSubscription || GetSubscribingNow()))
           {
             NS_ASSERTION (PR_FALSE, 
-                                      "we should never get here anymore");
-                      SetMailboxDiscoveryStatus(eContinue);
+              "we should never get here anymore");
+            SetMailboxDiscoveryStatus(eContinue);
           }
           else if (GetMailboxDiscoveryStatus() == eContinueNew)
           {
             if (m_hierarchyNameState ==
-                            kListingForInfoAndDiscovery &&
-                            boxNameCopy.Length() && 
-                            !(adoptedBoxSpec->box_flags & kNameSpace))
+              kListingForInfoAndDiscovery &&
+              boxNameCopy.Length() && 
+              !(adoptedBoxSpec->box_flags & kNameSpace))
             {
               // remember the info here also
               nsIMAPMailboxInfo *mb = new
-                                nsIMAPMailboxInfo(boxNameCopy.get(),
-                                    adoptedBoxSpec->hierarchySeparator); 
-                            m_listedMailboxList.AppendElement((void*) mb);
+                nsIMAPMailboxInfo(boxNameCopy.get(),
+                adoptedBoxSpec->hierarchySeparator); 
+              m_listedMailboxList.AppendElement((void*) mb);
             }
             SetMailboxDiscoveryStatus(eContinue);
           }
@@ -4012,45 +4016,45 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
         NS_IF_RELEASE( adoptedBoxSpec);
         break;
     case kDiscoverBaseFolderInProgress:
-        {
-            if (canonicalSubDir.Length() &&
-                PL_strstr(adoptedBoxSpec->allocatedPathName,
-                          canonicalSubDir.get()))
-                m_onlineBaseFolderExists = PR_TRUE;
-        }
-        break;
+      {
+        if (canonicalSubDir.Length() &&
+          PL_strstr(adoptedBoxSpec->allocatedPathName,
+          canonicalSubDir.get()))
+          m_onlineBaseFolderExists = PR_TRUE;
+      }
+      break;
     case kDeleteSubFoldersInProgress:
-        {
-            NS_ASSERTION(m_deletableChildren, 
-                         "Oops .. null m_deletableChildren\n");
-            m_deletableChildren->AppendElement((void*)
-                nsCRT::strdup(adoptedBoxSpec->allocatedPathName));
-            PR_FREEIF(adoptedBoxSpec->hostName);
-            NS_IF_RELEASE( adoptedBoxSpec);
-        }
-        break;
-  case kListingForInfoOnly:
-    {
-      //UpdateProgressWindowForUpgrade(adoptedBoxSpec->allocatedPathName);
-      ProgressEventFunctionUsingIdWithString(IMAP_DISCOVERING_MAILBOX,
-                adoptedBoxSpec->allocatedPathName);
-      nsIMAPMailboxInfo *mb = new
-                nsIMAPMailboxInfo(adoptedBoxSpec->allocatedPathName,
-                                  adoptedBoxSpec->hierarchySeparator);
-      m_listedMailboxList.AppendElement((void*) mb);
-            PR_FREEIF(adoptedBoxSpec->allocatedPathName);
-            NS_IF_RELEASE(adoptedBoxSpec);
-    }
-    break;
-  case kDiscoveringNamespacesOnly:
-    {
-            PR_FREEIF(adoptedBoxSpec->allocatedPathName);
-            NS_IF_RELEASE(adoptedBoxSpec);
-    }
-    break;
+      {
+        NS_ASSERTION(m_deletableChildren, 
+          "Oops .. null m_deletableChildren\n");
+        m_deletableChildren->AppendElement((void*)
+          nsCRT::strdup(adoptedBoxSpec->allocatedPathName));
+        PR_FREEIF(adoptedBoxSpec->hostName);
+        NS_IF_RELEASE( adoptedBoxSpec);
+      }
+      break;
+    case kListingForInfoOnly:
+      {
+        //UpdateProgressWindowForUpgrade(adoptedBoxSpec->allocatedPathName);
+        ProgressEventFunctionUsingIdWithString(IMAP_DISCOVERING_MAILBOX,
+          adoptedBoxSpec->allocatedPathName);
+        nsIMAPMailboxInfo *mb = new
+          nsIMAPMailboxInfo(adoptedBoxSpec->allocatedPathName,
+          adoptedBoxSpec->hierarchySeparator);
+        m_listedMailboxList.AppendElement((void*) mb);
+        PR_FREEIF(adoptedBoxSpec->allocatedPathName);
+        NS_IF_RELEASE(adoptedBoxSpec);
+      }
+      break;
+    case kDiscoveringNamespacesOnly:
+      {
+        PR_FREEIF(adoptedBoxSpec->allocatedPathName);
+        NS_IF_RELEASE(adoptedBoxSpec);
+      }
+      break;
     default:
-        NS_ASSERTION (PR_FALSE, "we aren't supposed to be here");
-        break;
+      NS_ASSERTION (PR_FALSE, "we aren't supposed to be here");
+      break;
   }
 }
 
@@ -4974,27 +4978,72 @@ void nsImapProtocol::RefreshACLForFolderIfNecessary(const char *mailboxName)
             m_imapMailFolderSink->GetFolderNeedsACLListed(&m_folderNeedsACLRefreshed);
         if (m_folderNeedsACLRefreshed)
         {
-            OnRefreshACLForFolder(mailboxName);
+            RefreshACLForFolder(mailboxName);
             m_folderNeedsACLRefreshed = PR_FALSE;
         }
     }
 }
 
-void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
+void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
 {
-    IncrementCommandTagNumber();
+  
+  nsIMAPNamespace *ns = nsnull;
+  m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(), mailboxName, ns);
+  if (ns)
+  {
+    switch (ns->GetType())
+    {
+    case kPersonalNamespace:
+      // It's a personal folder, most likely.
+      // I find it hard to imagine a server that supports ACL that doesn't support NAMESPACE,
+      // so most likely we KNOW that this is a personal, rather than the default, namespace.
+      
+      // First, clear what we have.
+      ClearAllFolderRights(mailboxName, ns);
+      // Now, get the new one.
+      GetACLForFolder(mailboxName);
+      // We're all done, refresh the icon/flags for this folder
+#ifdef REFRESHING_VIEW
+      RefreshFolderACLView(mailboxName, ns);
+#endif
+      break;
+    default:
+      // We know it's a public folder or other user's folder.
+      // We only want our own rights
+      
+      // First, clear what we have
+      ClearAllFolderRights(mailboxName, ns);
+      // Now, get the new one.
+      GetMyRightsForFolder(mailboxName);
+      // We're all done, refresh the icon/flags for this folder
+#ifdef REFRESHING_VIEW
+      RefreshFolderACLView(mailboxName, ns);
+#endif
+      break;
+    }
+  }
+  else
+  {
+    // no namespace, not even default... can this happen?
+    NS_ASSERTION(PR_FALSE, "couldn't get namespace");
+  }
+}
+
+void nsImapProtocol::GetACLForFolder(const char *mailboxName)
+{
+  IncrementCommandTagNumber();
 
   nsCString command(GetServerCommandTag());
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
-    command.Append(" getacl \"");
+  char *escapedName = CreateEscapedMailboxName(mailboxName);
+  command.Append(" getacl \"");
   command.Append(escapedName);
   command.Append("\"" CRLF);
             
-    nsMemory::Free(escapedName);
+  nsMemory::Free(escapedName);
             
-    nsresult rv = SendData(command.get());
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail();
+  nsresult rv = SendData(command.get());
+  if (NS_SUCCEEDED(rv))
+    ParseIMAPandCheckForNewMail();
 }
 
 void nsImapProtocol::OnRefreshAllACLs()
@@ -5017,7 +5066,7 @@ void nsImapProtocol::OnRefreshAllACLs()
                                              mb->GetDelimiter(), &onlineName);
 			if (onlineName)
 			{
-				OnRefreshACLForFolder(onlineName);
+				RefreshACLForFolder(onlineName);
 				nsCRT::free(onlineName);
 			}
 			PercentProgressUpdateEvent(NULL, count, total);
@@ -5150,20 +5199,20 @@ void nsImapProtocol::MailboxData()
 
 void nsImapProtocol::GetMyRightsForFolder(const char *mailboxName)
 {
-    IncrementCommandTagNumber();
+  IncrementCommandTagNumber();
 
   nsCString command(GetServerCommandTag());
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
+  char *escapedName = CreateEscapedMailboxName(mailboxName);
     
   command.Append(" myrights \"");
   command.Append(escapedName);
   command.Append("\"" CRLF);
             
-    nsMemory::Free(escapedName);
+  nsMemory::Free(escapedName);
             
-    nsresult rv = SendData(command.get());
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail();
+  nsresult rv = SendData(command.get());
+  if (NS_SUCCEEDED(rv))
+    ParseIMAPandCheckForNewMail();
 }
 
 void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
@@ -5859,7 +5908,7 @@ void nsImapProtocol::DiscoverMailboxList()
             m_runningUrl->AllocateServerPath(mb->GetMailboxName(), mb->GetDelimiter(), &onlineName);
             if (onlineName)
             {
-              OnRefreshACLForFolder(onlineName);
+              RefreshACLForFolder(onlineName);
               PR_Free(onlineName);
             }
           }
@@ -5879,8 +5928,7 @@ PRBool nsImapProtocol::FolderNeedsACLInitialized(const char *folderName)
   char *name = PL_strdup(folderName);
   if (!name)
     return PR_FALSE;
-  // mscott - big hack...where do we get a IMAPACLRights object from??????
-//  m_imapServerSink->FolderNeedsACLInitialized(name, nsnull);
+  m_imapServerSink->FolderNeedsACLInitialized(name, &rv);
 
   PR_Free(name);
   return rv;
@@ -6341,7 +6389,7 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
       break;
     case nsIImapUrl::nsImapRefreshACL:
       sourceMailbox = OnCreateServerSourceFolderPathString(); 
-      OnRefreshACLForFolder(sourceMailbox);
+      RefreshACLForFolder(sourceMailbox);
       break;
     case nsIImapUrl::nsImapRefreshAllACLs:
       OnRefreshAllACLs();

@@ -89,7 +89,6 @@
 
 #include "nsITimer.h"
 #include "nsMsgUtils.h"
-
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1061,7 +1060,9 @@ NS_IMETHODIMP nsImapIncomingServer::GetSentMailPFC(PRBool createIfMissing, nsIMs
 }
 
 // nsIImapServerSink impl
-NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, PRUnichar hierarchyDelimiter, PRInt32 boxFlags)
+// aNewFolder will not be set if we're listing for the subscribe UI, since that's the way 4.x worked.
+NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, PRUnichar hierarchyDelimiter, 
+                                                        PRInt32 boxFlags, PRBool *aNewFolder)
 {
   // folderPath is in canonical format, i.e., hierarchy separator has been replaced with '/'
   nsresult rv;
@@ -1071,8 +1072,9 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
   nsCOMPtr<nsIMsgFolder> aFolder;
   PRBool explicitlyVerify = PR_FALSE;
     
-  if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
+  if (!folderPath || !*folderPath || !aNewFolder) return NS_ERROR_NULL_POINTER;
 
+  *aNewFolder = PR_FALSE;
   nsCOMPtr<nsIFolder> rootFolder;
   rv = GetRootFolder(getter_AddRefs(rootFolder));
 
@@ -1142,79 +1144,82 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
   nsXPIDLCString serverUri;
 
   GetServerURI(getter_Copies(serverUri));
-
-    uri.Assign(serverUri);
-
-    PRInt32 leafPos = folderName.RFindChar('/');
-
-    nsCAutoString parentName(folderName);
-	nsCAutoString parentUri(uri);
-
-    if (leafPos > 0)
-	{
-		// If there is a hierarchy, there is a parent.
-		// Don't strip off slash if it's the first character
-        parentName.Truncate(leafPos);
-        folderName.Cut(0, leafPos + 1);	// get rid of the parent name
-		haveParent = PR_TRUE;
-        parentUri.Append('/');
-        parentUri.Append(parentName);
+  
+  uri.Assign(serverUri);
+  
+  PRInt32 leafPos = folderName.RFindChar('/');
+  
+  nsCAutoString parentName(folderName);
+  nsCAutoString parentUri(uri);
+  
+  if (leafPos > 0)
+  {
+    // If there is a hierarchy, there is a parent.
+    // Don't strip off slash if it's the first character
+    parentName.Truncate(leafPos);
+    folderName.Cut(0, leafPos + 1);	// get rid of the parent name
+    haveParent = PR_TRUE;
+    parentUri.Append('/');
+    parentUri.Append(parentName);
+  }
+  if (nsCRT::strcasecmp("INBOX", folderPath) == 0 &&
+    hierarchyDelimiter == kOnlineHierarchySeparatorNil)
+  {
+    hierarchyDelimiter = '/'; // set to default in this case (as in 4.x)
+    hostFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+  }
+  
+  // Check to see if we need to ignore this folder (like AOL's 'RECYCLE_OUT').
+  PRBool hideFolder;
+  rv = HideFolderName(dupFolderPath.get(), &hideFolder);
+  if (hideFolder)
+    return NS_OK;
+  
+  nsCOMPtr <nsIMsgFolder> child;
+  
+  //	nsCString possibleName(aSpec->allocatedPathName);
+  
+  
+  uri.Append('/');
+  uri.Append(dupFolderPath);
+  
+  
+  PRBool caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath.get()) == 0);
+  a_nsIFolder->GetChildWithURI(uri.get(), PR_TRUE, caseInsensitive, getter_AddRefs(child));
+  // if we couldn't find this folder by URI, tell the imap code it's a new folder to us
+  *aNewFolder = !child;
+  if (child)
+    found = PR_TRUE;
+  if (!found)
+  {
+    // trying to find/discover the parent
+    if (haveParent)
+    {	
+      nsCOMPtr <nsIMsgFolder> parent;
+      PRBool parentIsNew;
+      caseInsensitive = (nsCRT::strcasecmp("INBOX", parentName.get()) == 0);
+      a_nsIFolder->GetChildWithURI(parentUri.get(), PR_TRUE, caseInsensitive, getter_AddRefs(parent));
+      if (!parent /* || parentFolder->GetFolderNeedsAdded()*/)
+      {
+        PossibleImapMailbox(parentName.get(), hierarchyDelimiter, kNoselect |	// be defensive
+          ((boxFlags  &	//only inherit certain flags from the child
+          (kPublicMailbox | kOtherUsersMailbox | kPersonalMailbox))), &parentIsNew); 
+      }
     }
-    if (nsCRT::strcasecmp("INBOX", folderPath) == 0 &&
-        hierarchyDelimiter == kOnlineHierarchySeparatorNil)
+    
+    hostFolder->CreateClientSubfolderInfo(dupFolderPath.get(), hierarchyDelimiter,boxFlags);
+    caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath.get())== 0);
+    a_nsIFolder->GetChildWithURI(uri.get(), PR_TRUE, caseInsensitive , getter_AddRefs(child));
+  }
+  if (child)
+  {
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
+    if (imapFolder)
     {
-        hierarchyDelimiter = '/'; // set to default in this case (as in 4.x)
-        hostFolder->SetHierarchyDelimiter(hierarchyDelimiter);
-    }
-
-    // Check to see if we need to ignore this folder (like AOL's 'RECYCLE_OUT').
-    PRBool hideFolder;
-    rv = HideFolderName(dupFolderPath.get(), &hideFolder);
-    if (hideFolder)
-      return NS_OK;
-
-	nsCOMPtr <nsIMsgFolder> child;
-
-//	nsCString possibleName(aSpec->allocatedPathName);
-
-
-  	uri.Append('/');
-	uri.Append(dupFolderPath);
-
-
-    PRBool caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath.get()) == 0);
-    a_nsIFolder->GetChildWithURI(uri.get(), PR_TRUE, caseInsensitive, getter_AddRefs(child));
-	if (child)
-		found = PR_TRUE;
-    if (!found)
-    {
-		// trying to find/discover the parent
-		if (haveParent)
-		{	
-            nsCOMPtr <nsIMsgFolder> parent;
-            caseInsensitive = (nsCRT::strcasecmp("INBOX", parentName.get()) == 0);
-            a_nsIFolder->GetChildWithURI(parentUri.get(), PR_TRUE, caseInsensitive, getter_AddRefs(parent));
-			if (!parent /* || parentFolder->GetFolderNeedsAdded()*/)
-            {
-				PossibleImapMailbox(parentName.get(), hierarchyDelimiter, kNoselect |	// be defensive
-											((boxFlags  &	//only inherit certain flags from the child
-											(kPublicMailbox | kOtherUsersMailbox | kPersonalMailbox)))); 
-			}
-		}
-
-        hostFolder->CreateClientSubfolderInfo(dupFolderPath.get(), hierarchyDelimiter,boxFlags);
-        caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath.get())== 0);
-		a_nsIFolder->GetChildWithURI(uri.get(), PR_TRUE, caseInsensitive , getter_AddRefs(child));
-    }
-	if (child)
-	{
-		nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
-		if (imapFolder)
-		{
       PRBool isAOLServer = PR_FALSE;
-
+      
       GetIsAOLServer(&isAOLServer);
-
+      
       nsXPIDLCString onlineName;
       nsXPIDLString unicodeName;
       imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
@@ -1241,14 +1246,14 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       dupFolderPath.ReplaceChar('/', hierarchyDelimiter);
       if (hierarchyDelimiter != '/')
         nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, dupFolderPath.get()));
-
+      
       if (! (onlineName.get()) || nsCRT::strlen(onlineName.get()) == 0
-				|| nsCRT::strcmp(onlineName.get(), dupFolderPath.get()))
-				imapFolder->SetOnlineName(dupFolderPath.get());
+        || nsCRT::strcmp(onlineName.get(), dupFolderPath.get()))
+        imapFolder->SetOnlineName(dupFolderPath.get());
       if (hierarchyDelimiter != '/')
         nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, folderName.get()));
-			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName.get(), getter_Copies(unicodeName))))
-				child->SetName(unicodeName);
+      if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName.get(), getter_Copies(unicodeName))))
+        child->SetName(unicodeName);
       // Call ConvertFolderName() and HideFolderName() to do special folder name
       // mapping and hiding, if configured to do so. For example, need to hide AOL's
       // 'RECYCLE_OUT' & convert a few AOL folder names. Regular imap accounts
@@ -1269,6 +1274,48 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       }
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::AddFolderRights(const char *mailboxName, const char *userName, const char *rights)
+{
+  nsCOMPtr <nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if(NS_SUCCEEDED(rv) && rootFolder)
+  {
+    nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder);
+    if (imapRoot)
+    {
+      nsCOMPtr <nsIMsgImapMailFolder> foundFolder;
+      rv = imapRoot->FindOnlineSubFolder(mailboxName, getter_AddRefs(foundFolder));
+      if (NS_SUCCEEDED(rv) && foundFolder)
+        return foundFolder->AddFolderRights(userName, rights);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::FolderNeedsACLInitialized(const char *folderPath, PRBool *aNeedsACLInitialized)
+{
+  NS_ENSURE_ARG_POINTER(aNeedsACLInitialized);
+  nsCOMPtr <nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if(NS_SUCCEEDED(rv) && rootFolder)
+  {
+    nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder);
+    if (imapRoot)
+    {
+      nsCOMPtr <nsIMsgImapMailFolder> foundFolder;
+      rv = imapRoot->FindOnlineSubFolder(folderPath, getter_AddRefs(foundFolder));
+      if (NS_SUCCEEDED(rv) && foundFolder)
+      {
+        nsCOMPtr <nsIImapMailFolderSink> folderSink = do_QueryInterface(foundFolder);
+        if (folderSink)
+          return folderSink->GetFolderNeedsACLListed(aNeedsACLInitialized);
+      }
+    }
+  }
+  *aNeedsACLInitialized = PR_FALSE; // maybe we want to say TRUE here...
   return NS_OK;
 }
 
@@ -2048,23 +2095,24 @@ nsresult nsImapIncomingServer::GetStringBundle()
 
 NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar **aString)
 {
-	nsresult res = NS_OK;
+  nsresult res = NS_OK;
+  
 
   GetStringBundle();
-	if (m_stringBundle)
-	{
+  if (m_stringBundle)
+  {
     res = m_stringBundle->GetStringFromID(aMsgId, aString);
     if (NS_SUCCEEDED(res))
       return res;
   }
   nsAutoString	resultString(NS_LITERAL_STRING("String ID "));
   resultString.AppendInt(aMsgId);
-			*aString = ToNewUnicode(resultString);
+  *aString = ToNewUnicode(resultString);
   return NS_OK;
-		}
+}
 
 NS_IMETHODIMP  nsImapIncomingServer::FormatStringWithHostNameByID(PRInt32 aMsgId, PRUnichar **aString)
-		{
+{
   nsresult res = NS_OK;
   
   GetStringBundle();
@@ -2080,11 +2128,11 @@ NS_IMETHODIMP  nsImapIncomingServer::FormatStringWithHostNameByID(PRInt32 aMsgId
       res = m_stringBundle->FormatStringFromID(aMsgId, params, 1, aString);
       if (NS_SUCCEEDED(res))
         return res;
-		}
-	}
+    }
+  }
   nsAutoString	resultString(NS_LITERAL_STRING("String ID "));
   resultString.AppendInt(aMsgId);
-		*aString = ToNewUnicode(resultString);
+  *aString = ToNewUnicode(resultString);
   return NS_OK;
 }
 
@@ -2255,101 +2303,50 @@ NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 
 NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted)
 {
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIImapProtocol> connection;
-
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIImapProtocol> connection;
+  
   PR_CEnterMonitor(this);
-
-	// iterate through the connection cache for a connection that is loading
-	// a message in this folder and should be pseudo-interrupted.
-	PRUint32 cnt;
+  
+  // iterate through the connection cache for a connection that is loading
+  // a message in this folder and should be pseudo-interrupted.
+  PRUint32 cnt;
   nsCOMPtr<nsISupports> aSupport;
-
+  
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) 
   {	
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
-		if (connection)
-			rv = connection->PseudoInterruptMsgLoad(aImapUrl, interrupted);
-	}
-    
+    if (connection)
+      rv = connection->PseudoInterruptMsgLoad(aImapUrl, interrupted);
+  }
+  
   PR_CExitMonitor(this);
-	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::ResetNamespaceReferences()
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsCOMPtr <nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if (NS_SUCCEEDED(rv) && rootFolder)
+  {
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(rootFolder);
+    if (imapFolder)
+      rv = imapFolder->ResetNamespaceReferences();
+  }
+  return rv;
 }
 
-#if FINISHED_PORTED_NAMESPACE_STUFF
-		int numberOfChildren = GetNumSubFolders();
-	for (int childIndex = 0; childIndex < numberOfChildren; childIndex++)
-	{
-		MSG_IMAPFolderInfoMail *currentChild = (MSG_IMAPFolderInfoMail *) GetSubFolder(childIndex);
-		currentChild->ResetNamespaceReferences();
-	}
+//void MSG_IMAPFolderInfoMail::InitializeFolderCreatedOffline()
+//{
+//	TIMAPNamespace *ns = IMAPNS_GetNamespaceForFolder(m_host->GetHostName(), GetOnlineName(), '/');
+//	SetOnlineHierarchySeparator(IMAPNS_GetDelimiterForNamespace(ns));
+//}
 
-	void MSG_IMAPFolderInfoMail::SetFolderIsNamespace(XP_Bool isNamespace)
-{
-	m_folderIsNamespace = isNamespace;
-}
-
-void MSG_IMAPFolderInfoMail::InitializeFolderCreatedOffline()
-{
-	TIMAPNamespace *ns = IMAPNS_GetNamespaceForFolder(m_host->GetHostName(), GetOnlineName(), '/');
-	SetOnlineHierarchySeparator(IMAPNS_GetDelimiterForNamespace(ns));
-}
-
-TIMAPNamespace *MSG_IMAPFolderInfoMail::GetNamespaceForFolder()
-{
-	if (!m_namespace)
-	{
-#ifdef DEBUG_bienvenu
-		// Make sure this isn't causing us to open the database
-		PR_ASSERT(m_OnlineHierSeparator != kOnlineHierarchySeparatorUnknown);
-#endif
-		m_namespace = IMAPNS_GetNamespaceForFolder(m_host->GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator());
-		PR_ASSERT(m_namespace);
-		if (m_namespace)
-		{
-			IMAPNS_SuggestHierarchySeparatorForNamespace(m_namespace, GetOnlineHierarchySeparator());
-			m_folderIsNamespace = IMAPNS_GetFolderIsNamespace(m_host->GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator(), m_namespace);
-		}
-	}
-	return m_namespace;
-}
-
-void MSG_IMAPFolderInfoMail::SetNamespaceForFolder(TIMAPNamespace *ns)
-{
-#ifdef DEBUG_bienvenu
-	NS_ASSERTION(ns, "null namespace");
-#endif
-	m_namespace = ns;
-}
-
-void MSG_IMAPFolderInfoMail::ResetNamespaceReferences()
-{
-	// this
-	m_namespace = IMAPNS_GetNamespaceForFolder(GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator());
-	NS_ASSERTION(m_namespace, "resetting null namespace");
-	if (m_namespace)
-		m_folderIsNamespace = IMAPNS_GetFolderIsNamespace(GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator(), m_namespace);
-	else
-		m_folderIsNamespace = PR_FALSE;
-
-	// children
-	int numberOfChildren = GetNumSubFolders();
-	for (int childIndex = 0; childIndex < numberOfChildren; childIndex++)
-	{
-		MSG_IMAPFolderInfoMail *currentChild = (MSG_IMAPFolderInfoMail *) GetSubFolder(childIndex);
-		currentChild->ResetNamespaceReferences();
-	}
-}
-
-#endif  //FINISHED_PORTED_NAMESPACE_STUFF
 
 NS_IMPL_GETSET(nsImapIncomingServer, UserAuthenticated, PRBool, m_userAuthenticated);
 

@@ -2223,43 +2223,43 @@ void nsImapServerResponseParser::myrights_data()
 
 void nsImapServerResponseParser::acl_data()
 {
-	fNextToken = GetNextToken();
-	if (ContinueParse() && !at_end_of_line())
-	{
-		char *mailboxName = CreateAstring();	// PL_strdup(fNextToken);
-		if (mailboxName && ContinueParse())
-		{
-			fNextToken = GetNextToken();
-			while (ContinueParse() && !at_end_of_line())
-			{
-				char *userName = CreateAstring(); // PL_strdup(fNextToken);
-				if (userName && ContinueParse())
-				{
-					fNextToken = GetNextToken();
-					if (ContinueParse())
-					{
-						char *rights = CreateAstring(); // PL_strdup(fNextToken);
-						if (rights)
-						{
-							fServerConnection.AddFolderRightsForUser(mailboxName, userName, rights);
-							PR_Free(rights);
-						}
-						else
-							HandleMemoryFailure();
-
-						if (ContinueParse())
-							fNextToken = GetNextToken();
-					}
-					PR_Free(userName);
-				}
-				else
-					HandleMemoryFailure();
-			}
-			PR_Free(mailboxName);
-		}
-		else
-			HandleMemoryFailure();
-	}
+  fNextToken = GetNextToken();
+  if (ContinueParse() && !at_end_of_line())
+  {
+    char *mailboxName = CreateAstring();	// PL_strdup(fNextToken);
+    if (mailboxName && ContinueParse())
+    {
+      fNextToken = GetNextToken();
+      while (ContinueParse() && !at_end_of_line())
+      {
+        char *userName = CreateAstring(); // PL_strdup(fNextToken);
+        if (userName && ContinueParse())
+        {
+          fNextToken = GetNextToken();
+          if (ContinueParse())
+          {
+            char *rights = CreateAstring(); // PL_strdup(fNextToken);
+            if (rights)
+            {
+              fServerConnection.AddFolderRightsForUser(mailboxName, userName, rights);
+              PR_Free(rights);
+            }
+            else
+              HandleMemoryFailure();
+            
+            if (ContinueParse())
+              fNextToken = GetNextToken();
+          }
+          PR_Free(userName);
+        }
+        else
+          HandleMemoryFailure();
+      }
+      PR_Free(mailboxName);
+    }
+    else
+      HandleMemoryFailure();
+  }
 }
 
 
