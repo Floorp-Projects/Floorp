@@ -45,8 +45,14 @@ nsresult InsertTextTxn::Do(void)
 
 nsresult InsertTextTxn::Undo(void)
 {
+  nsresult result;
   PRUint32 length = mStringToInsert.Length();
-  return (mElement->DeleteData(mOffset, length));
+  result = mElement->DeleteData(mOffset, length);
+  if (NS_SUCCEEDED(result))
+  { // set the selection to the insertion point where the string was removed
+
+  }
+  return result;
 }
 
 nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
@@ -62,10 +68,13 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
     nsresult result=NS_OK;// = aTransaction->QueryInterface(kInsertTextTxnIID, getter_AddRefs(otherTxn));
     if (NS_SUCCEEDED(result) && (otherTxn))
     {
-      nsAutoString otherData;
-      otherTxn->GetData(otherData);
-      mStringToInsert += otherData;
-      *aDidMerge = PR_TRUE;
+      if (PR_TRUE==IsSequentialInsert(otherTxn))
+      {
+        nsAutoString otherData;
+        otherTxn->GetData(otherData);
+        mStringToInsert += otherData;
+        *aDidMerge = PR_TRUE;
+      }
     }
   }
   return NS_OK;
@@ -118,4 +127,22 @@ nsresult InsertTextTxn::GetData(nsString& aResult)
 {
   aResult = mStringToInsert;
   return NS_OK;
+}
+
+PRBool InsertTextTxn::IsSequentialInsert(InsertTextTxn *aOtherTxn)
+{
+  NS_ASSERTION(nsnull!=aOtherTxn, "null param");
+  PRBool result=PR_FALSE;
+  if (nsnull!=aOtherTxn)
+  {
+    if (aOtherTxn->mElement == mElement)
+    {
+      // here, we need to compare offsets.
+      // if (something about offsets is true)
+      {
+        result = PR_TRUE;
+      }
+    }
+  }
+  return result;
 }
