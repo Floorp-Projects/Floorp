@@ -229,9 +229,9 @@ nsDownloadListener::OnProgressChange64(nsIWebProgress *aWebProgress,
                                        PRInt64 aMaxTotalProgress)
 {
   // XXX truncates 64-bit to 32-bit
-  return OnProgressChange(aProgress, aRequest,
-                          PRInt32(curSelfProgress), PRInt32(maxSelfProgress),
-                          PRInt32(curTotalProgress), PRInt32(maxTotalProgress));
+  return OnProgressChange(aWebProgress, aRequest,
+                          PRInt32(aCurSelfProgress), PRInt32(aMaxSelfProgress),
+                          PRInt32(aCurTotalProgress), PRInt32(aMaxTotalProgress));
 
 }
 
