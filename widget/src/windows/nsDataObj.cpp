@@ -32,132 +32,58 @@ static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 #include "OLE2.h"
 #include "URLMON.h"
 
-//static int gCounter = 0;
+#if 1
+#define PRNTDEBUG(_x) printf(_x);
+#define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
+#define PRNTDEBUG3(_x1, _x2, _x3) printf(_x1, _x2, _x3);
+#else
+#define PRNTDEBUG(_x) // printf(_x);
+#define PRNTDEBUG2(_x1, _x2) // printf(_x1, _x2);
+#define PRNTDEBUG3(_x1, _x2, _x3) // printf(_x1, _x2, _x3);
+#endif
 
-ULONG nsDataObjClassFactory::g_cLock = 0;
 ULONG nsDataObj::g_cRef = 0;
 
 EXTERN_C GUID CDECL CLSID_nsDataObj =
 	{ 0x1bba7640, 0xdf52, 0x11cf, { 0x82, 0x7b, 0, 0xa0, 0x24, 0x3a, 0xe5, 0x05 } };
 
-/*
- * class nsDataObjClassFactory
- */
-
-nsDataObjClassFactory::nsDataObjClassFactory()
-{
-	 m_cRef = 0L;
-    return;
-}
-
-nsDataObjClassFactory::~nsDataObjClassFactory()
-{
-    return;
-}
-
-// IUnknown Interface - see iunknown.h for documentation
-
-STDMETHODIMP nsDataObjClassFactory::QueryInterface(REFIID riid, void** ppv)
-{
-	 *ppv = NULL;
-
-	 if (IID_IUnknown == riid || IID_IClassFactory == riid)
-		  *ppv = this;
-
-	 if (NULL != *ppv) {
-        ((LPUNKNOWN)*ppv)->AddRef();
-        return NOERROR;
-	 }
-
-    return ResultFromScode(E_NOINTERFACE);
-}
-
-
-STDMETHODIMP_(ULONG) nsDataObjClassFactory::AddRef()
-{
-	return ++m_cRef;
-}
-
-
-STDMETHODIMP_(ULONG) nsDataObjClassFactory::Release()
-{
-	if (0L != --m_cRef)
-		return m_cRef;
-
-	delete this;
-	return 0L;
-}
-
-// IClassFactory methods
-
-STDMETHODIMP nsDataObjClassFactory::CreateInstance
-	(LPUNKNOWN pUnkOuter, REFIID riid, void** ppvObj)
-{
-	 nsDataObj*          pObj;
-	 HRESULT             hr;
-
-    *ppvObj=NULL;
-    hr=ResultFromScode(E_OUTOFMEMORY);
-
-    //Verify that a controlling unknown asks for IUnknown
-	 if (NULL != pUnkOuter && IID_IUnknown != riid)
-		  return ResultFromScode(E_NOINTERFACE);
-
-	 //Create the object.
-	 pObj = new nsDataObj();
-
-	 if (NULL == pObj)
-        return hr;
-
-	 hr = pObj->QueryInterface(riid, ppvObj);
-
-    //Kill the object if initial creation or Init failed.
-	 if (FAILED(hr))
-		  delete pObj;
-
-    return hr;
-}
-
-
-STDMETHODIMP nsDataObjClassFactory::LockServer(BOOL fLock)
-{
-	if (fLock) {
-		++g_cLock;
-	} else if (0 < g_cLock) {
-		--g_cLock;
-	}
-
-	return NOERROR;
-}
 
 /*
  * Class nsDataObj
  */
 
-// construction, destruction
-
+//-----------------------------------------------------
+// construction 
+//-----------------------------------------------------
 nsDataObj::nsDataObj()
 {
 	m_cRef	        = 0;
   mTransferable   = nsnull;
   nsresult result = NS_NewISupportsArray(&mDataFlavors);
+  NS_ADDREF(mDataFlavors);
 
-  m_enumFE = new CEnumFormatEtc(this, 32);
+  m_enumFE = new CEnumFormatEtc(32);
   m_enumFE->AddRef();
-  //printf("**************************** Counter %d\n", (++gCounter));
+
 }
 
+//-----------------------------------------------------
+// destruction
+//-----------------------------------------------------
 nsDataObj::~nsDataObj()
 {
+  NS_IF_RELEASE(mTransferable);
+  NS_IF_RELEASE(mDataFlavors);
+
 	m_cRef = 0;
   m_enumFE->Release();
-  //printf("**************************** Counter %d\n", (--gCounter));
 
 }
 
 
+//-----------------------------------------------------
 // IUnknown interface methods - see inknown.h for documentation
-
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::QueryInterface(REFIID riid, void** ppv)
 {
 	*ppv=NULL;
@@ -171,18 +97,19 @@ STDMETHODIMP nsDataObj::QueryInterface(REFIID riid, void** ppv)
 	return ResultFromScode(E_NOINTERFACE);
 }
 
-
+//-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsDataObj::AddRef()
 {
 	++g_cRef;
-  //printf("AddRef >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef+1), this);
+  //PRNTDEBUG3("nsDataObj::AddRef  >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef+1), this);
 	return ++m_cRef;
 }
 
 
+//-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsDataObj::Release()
 {
-  //printf("Release>>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef-1), this);
+  //PRNTDEBUG3("nsDataObj::Release >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef-1), this);
 	if (0 < g_cRef)
 		--g_cRef;
 
@@ -190,9 +117,11 @@ STDMETHODIMP_(ULONG) nsDataObj::Release()
 		return m_cRef;
 
 	delete this;
+
 	return 0;
 }
 
+//-----------------------------------------------------
 BOOL nsDataObj::FormatsMatch(const FORMATETC& source, const FORMATETC& target) const
 {
 	if ((source.cfFormat == target.cfFormat) &&
@@ -204,13 +133,14 @@ BOOL nsDataObj::FormatsMatch(const FORMATETC& source, const FORMATETC& target) c
 	}
 }
 
-
+//-----------------------------------------------------
 // IDataObject methods
-
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
-  //printf("nsDataObj::GetData\n");
-  //printf("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
+  printf("nsDataObj::GetData2\n");
+  PRNTDEBUG("nsDataObj::GetData\n");
+  PRNTDEBUG3("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
   if (nsnull == mTransferable) {
 	  return ResultFromScode(DATA_E_FORMATETC);
   }
@@ -237,7 +167,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 				  //case CF_METAFILEPICT:
 				  //	return GetMetafilePict(*pFE, *pSTM);
 				  default:
-            //printf("***** nsDataObj::GetData - Unknown format %d\n", format);
+            PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %d\n", format);
 					  return GetText(df, *pFE, *pSTM);
             break;
         } //switch
@@ -252,21 +182,22 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 }
 
 
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::GetDataHere(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
-  //printf("nsDataObj::GetDataHere\n");
-	//if (m_dragDrop) {
-	//	return m_dragDrop->GetDataHere(pFE, pSTM);
-	//} else {
+  PRNTDEBUG("nsDataObj::GetDataHere\n");
 		return ResultFromScode(E_FAIL);
-	//}
 }
 
 
+//-----------------------------------------------------
+// Other objects querying to see if we support a 
+// particular format
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::QueryGetData(LPFORMATETC pFE)
 {
-  //printf("nsDataObj::QueryGetData  ");
-  //printf("format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
+  PRNTDEBUG("nsDataObj::QueryGetData  ");
+  PRNTDEBUG3("format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
 
   PRUint32 dfInx = 0;
 
@@ -278,33 +209,33 @@ STDMETHODIMP nsDataObj::QueryGetData(LPFORMATETC pFE)
       return S_OK;
     }
   }
-  //printf("***** nsDataObj::QueryGetData - Unknown format %d\n", pFE->cfFormat);
+
+  PRNTDEBUG2("***** nsDataObj::QueryGetData - Unknown format %d\n", pFE->cfFormat);
 	return ResultFromScode(E_FAIL);
 }
 
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::GetCanonicalFormatEtc
 	 (LPFORMATETC pFEIn, LPFORMATETC pFEOut)
 {
-  //printf("nsDataObj::GetCanonicalFormatEtc\n");
-	//if (m_dragDrop) {
-	//	return m_dragDrop->GetCanonicalFormatEtc(pFEIn, pFEOut);
-	//} else {
+  PRNTDEBUG("nsDataObj::GetCanonicalFormatEtc\n");
 		return ResultFromScode(E_FAIL);
-	//}
 }
 
 
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
 {
-  //printf("nsDataObj::SetData\n");
+  PRNTDEBUG("nsDataObj::SetData\n");
+
   return ResultFromScode(E_FAIL);
-	//return m_dragDrop->SetData(pFE, pSTM, fRelease);
 }
 
 
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
 {
-  //printf("nsDataObj::EnumFormatEtc\n");
+  PRNTDEBUG("nsDataObj::EnumFormatEtc\n");
 
   switch (dwDir) {
     case DATADIR_GET: {
@@ -317,7 +248,11 @@ STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
         *ppEnum=NULL;
         break;
   } // switch
-  if (NULL==*ppEnum)
+
+  // Since a new one has been created, 
+  // we will ref count the new clone here 
+  // before giving it back
+  if (NULL == *ppEnum)
     return ResultFromScode(E_FAIL);
   else
     (*ppEnum)->AddRef();
@@ -326,63 +261,74 @@ STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
 
 }
 
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::DAdvise(LPFORMATETC pFE, DWORD dwFlags,
-										  LPADVISESINK pIAdviseSink, DWORD* pdwConn)
+										            LPADVISESINK pIAdviseSink, DWORD* pdwConn)
 {
-  //printf("nsDataObj::DAdvise\n");
+  PRNTDEBUG("nsDataObj::DAdvise\n");
 	return ResultFromScode(E_FAIL);
 }
 
 
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::DUnadvise(DWORD dwConn)
 {
-  //printf("nsDataObj::DUnadvise\n");
+  PRNTDEBUG("nsDataObj::DUnadvise\n");
 	return ResultFromScode(E_FAIL);
 }
 
+//-----------------------------------------------------
 STDMETHODIMP nsDataObj::EnumDAdvise(LPENUMSTATDATA *ppEnum)
 {
-  //printf("nsDataObj::EnumDAdvise\n");
+  PRNTDEBUG("nsDataObj::EnumDAdvise\n");
 	return ResultFromScode(E_FAIL);
 }
 
+//-----------------------------------------------------
 // other methods
-
+//-----------------------------------------------------
 ULONG nsDataObj::GetCumRefCount()
 {
 	return g_cRef;
 }
 
+//-----------------------------------------------------
 ULONG nsDataObj::GetRefCount() const
 {
 	return m_cRef;
 }
 
+//-----------------------------------------------------
 // GetData and SetData helper functions
-
+//-----------------------------------------------------
 HRESULT nsDataObj::AddSetFormat(FORMATETC& aFE)
 {
-  //m_setFormats[m_numSetFormats++] = aFE;
+  PRNTDEBUG("nsDataObj::AddSetFormat\n");
 	return ResultFromScode(S_OK);
 }
 
+//-----------------------------------------------------
 HRESULT nsDataObj::AddGetFormat(FORMATETC& aFE)
 {
-  //m_getFormats[m_numGetFormats++] = aFE;
-
+  PRNTDEBUG("nsDataObj::AddGetFormat\n");
 	return ResultFromScode(S_OK);
 }
 
+//-----------------------------------------------------
 HRESULT nsDataObj::GetBitmap(FORMATETC&, STGMEDIUM&)
 {
+  PRNTDEBUG("nsDataObj::GetBitmap\n");
 	return ResultFromScode(E_NOTIMPL);
 }
 
+//-----------------------------------------------------
 HRESULT nsDataObj::GetDib(FORMATETC&, STGMEDIUM&)
 {
+  PRNTDEBUG("nsDataObj::GetDib\n");
 	return ResultFromScode(E_NOTIMPL);
 }
 
+//-----------------------------------------------------
 HRESULT nsDataObj::GetText(nsIDataFlavor * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   char     * data;
@@ -449,20 +395,25 @@ HRESULT nsDataObj::GetText(nsIDataFlavor * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
 	return ResultFromScode(S_OK);
 }
 
+//-----------------------------------------------------
 HRESULT nsDataObj::GetMetafilePict(FORMATETC&, STGMEDIUM&)
 {
 	return ResultFromScode(E_NOTIMPL);
 }
 
+//-----------------------------------------------------
 HRESULT nsDataObj::SetBitmap(FORMATETC&, STGMEDIUM&)
 {
 	return ResultFromScode(E_NOTIMPL);
 }
+
+//-----------------------------------------------------
 HRESULT nsDataObj::SetDib   (FORMATETC&, STGMEDIUM&)
 {
 	return ResultFromScode(E_FAIL);
 }
 
+//-----------------------------------------------------
 HRESULT nsDataObj::SetText  (FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   if (aFE.cfFormat == CF_TEXT && aFE.tymed ==  TYMED_HGLOBAL) {
@@ -475,40 +426,14 @@ HRESULT nsDataObj::SetText  (FORMATETC& aFE, STGMEDIUM& aSTG)
 		if(!pString)
 			return(FALSE);
 
-		//tmpUrl = XP_STRDUP(pString);
-
 		GlobalUnlock(hString);
     nsAutoString str(pString);
 
-    /*  nsEventStatus status;
-      nsDragDropEvent event;
-      ((nsWindow *)mWindow)->InitEvent(event, NS_DRAGDROP_EVENT);
-      event.mType      = nsDragDropEventStatus_eDrop;
-      event.mIsFileURL = PR_FALSE;
-      event.mURL       = (PRUnichar *)str.GetUnicode();          
-      mWindow->DispatchEvent(&event, status);
-      */
-    /*typedef struct tagKBDEV {
-    WORD	vkCode;
-    WORD	scanCode;
-    DWORD	flags;
-    DWORD	time;
-    DWORD	dwExtraInfo;
-    } KBDEV, FAR *LPKBDEV, *PKBDEV;
-    
-    KBDEV kbDev[1];
-    for (int i=0;i<strlen(pString);i++) {
-      kbDev.vkCode = VkKeyScan(pString[i]);
-      kbDev.scanCode = OemKeyScan(pString[i]);
-      kbDev.flags = 0;
-      KeyboardEventEx(&kbDev, 1, sizeof(KBDEV), KEYF_IGNORETIME);
-      kbDev.flags = KEYEVENTF_KEYUP;
-      KeyboardEventEx(&kbDev, 1, sizeof(KBDEV), KEYF_IGNORETIME);
-    }*/
   }
 	return ResultFromScode(E_FAIL);
 }
 
+//-----------------------------------------------------
 HRESULT nsDataObj::SetMetafilePict (FORMATETC&, STGMEDIUM&)
 {
 	return ResultFromScode(E_FAIL);
@@ -516,15 +441,16 @@ HRESULT nsDataObj::SetMetafilePict (FORMATETC&, STGMEDIUM&)
 
 
 
+//-----------------------------------------------------
+//-----------------------------------------------------
 CLSID nsDataObj::GetClassID() const
 {
 	return CLSID_nsDataObj;
 }
 
-/**
-  * Registers a the DataFlavor/FE pair
-  *
-  */
+//-----------------------------------------------------
+// Registers a the DataFlavor/FE pair
+//-----------------------------------------------------
 void nsDataObj::AddDataFlavor(nsIDataFlavor * aDataFlavor, LPFORMATETC aFE)
 {
   // These two lists are the mapping to and from data flavors and FEs
@@ -536,15 +462,13 @@ void nsDataObj::AddDataFlavor(nsIDataFlavor * aDataFlavor, LPFORMATETC aFE)
 
 }
 
-/**
-  * Sets the transferable object
-  *
-  */
+//-----------------------------------------------------
+// Sets the transferable object
+//-----------------------------------------------------
 void nsDataObj::SetTransferable(nsITransferable * aTransferable)
 {
-  if (nsnull != mTransferable) {
-    NS_RELEASE(mTransferable);
-  }
+    NS_IF_RELEASE(mTransferable);
+
   mTransferable = aTransferable;
   if (nsnull == mTransferable) {
     return;

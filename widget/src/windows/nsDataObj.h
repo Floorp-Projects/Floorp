@@ -32,42 +32,6 @@ class CEnumFormatEtc;
 class nsITransferable;
 
 /*
- * nsDataObjClassFactory - the class factory for nsDataObj objects.
- */
-class nsDataObjClassFactory : public IClassFactory
-{
-	public: // construction, destruction
-		nsDataObjClassFactory();
-		~nsDataObjClassFactory();
-
-	public: // IUnknown methods - see iunknown.h for documentation
-		STDMETHODIMP_(ULONG) AddRef        ();
-		STDMETHODIMP         QueryInterface(REFIID, void**);
-		STDMETHODIMP_(ULONG) Release       ();
-
-	public: // IClassFactory methods
-
-		// Create an object of this factory with interface refIID and store
-		// the interface pointer in iface. pUnkOuter is not used in this
-		// implmentation, but in general if it were not NULL, it would reference
-		// the controlling IUnknown allowing iface to be used in aggregation.
-		// Return NOERROR if successful, E_NOINTERFACE if refIID cannot be supported.
-		// This factory only supports a refIID of IID_IUnknown.
-		STDMETHODIMP CreateInstance(LPUNKNOWN pUnkOuter, REFIID refIID, void** iface);
-
-		// Increment or decrement the lock count of the server controlling this
-		// factory depending on whether increment is TRUE or FALSE. When the lock
-		// count is 0 and the reference count (cumulative total of ref counts of
-		// all objects created by this factory) is 0, the factory object is deleted,
-		// and a call to DllCanUnloadNow() will return TRUE.
-		STDMETHODIMP LockServer (BOOL increment);
-
-	protected:
-		static ULONG g_cLock; // lock server count
-		ULONG        m_cRef;  // ref count
-};
-
-/*
  * This ole registered class is used to facilitate drag-drop of objects which
  * can be adapted by an object derived from CfDragDrop. The CfDragDrop is
  * associated with instances via SetDragDrop().
@@ -172,14 +136,17 @@ class nsDataObj : public IDataObject
 
     BOOL FormatsMatch(const FORMATETC& source, const FORMATETC& target) const;
 
-   	static ULONG g_cRef;         // the cum reference count of all instances
-		ULONG        m_cRef;         // the reference count
-		//CfDragDrop*  m_dragDrop;     // the adapter which provides the behavior
+   	static ULONG g_cRef;              // the cum reference count of all instances
+		ULONG        m_cRef;              // the reference count
 
-    nsISupportsArray * mDataFlavors;
-    CEnumFormatEtc   * m_enumFE;
+    nsISupportsArray * mDataFlavors;  // we own and ref count the array
 
-    nsITransferable * mTransferable;
+    nsITransferable  * mTransferable; // nsDataObj owns and ref counts nsITransferable, 
+                                      // the nsITransferable does know anything about the nsDataObj
+
+    CEnumFormatEtc   * m_enumFE;      // Ownership Rules: 
+                                      // nsDataObj owns and ref counts CEnumFormatEtc,
+
 };
 
 
