@@ -107,60 +107,67 @@ NS_IMPL_ISUPPORTS(ns4xPluginStreamListener, kIPluginStreamListenerIID);
 NS_IMETHODIMP
 ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 {
+  if(!mInst)
+    return NS_ERROR_FAILURE;
 
-	NPP npp;
-	const NPPluginFuncs *callbacks;
-	PRBool seekable;
-	nsMIMEType contentType;
-	PRUint16 streamType = NP_NORMAL;
-	NPError error;
+  NPP npp;
+  const NPPluginFuncs *callbacks = nsnull;
 
-    mNPStream.ndata        = (void*) this;
-    pluginInfo->GetURL(&mNPStream.url);
-	mNPStream.notifyData   = mNotifyData;
- 
-	pluginInfo->GetLength((PRUint32*)&(mNPStream.end));
-    pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
-	pluginInfo->IsSeekable(&seekable);
-	pluginInfo->GetContentType(&contentType);
+  mInst->GetCallbacks(&callbacks);
+  mInst->GetNPP(&npp);
 
-    mInst->GetCallbacks(&callbacks);
-    mInst->GetNPP(&npp);
+  if(!callbacks || !npp->pdata)
+    return NS_ERROR_FAILURE;
 
-    PRLibrary* lib = nsnull;
-    if(mInst)
-    lib = mInst->fLibrary;
+  PRBool seekable;
+  nsMIMEType contentType;
+  PRUint16 streamType = NP_NORMAL;
+  NPError error;
 
-    // if we don't know the end of the stream, use 0 instead of -1. bug 59571
-    if (mNPStream.end == -1)
+  mNPStream.ndata = (void*) this;
+  pluginInfo->GetURL(&mNPStream.url);
+  mNPStream.notifyData = mNotifyData;
+
+  pluginInfo->GetLength((PRUint32*)&(mNPStream.end));
+  pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
+  pluginInfo->IsSeekable(&seekable);
+  pluginInfo->GetContentType(&contentType);
+
+  PRLibrary* lib = mInst->fLibrary;
+
+  // if we don't know the end of the stream, use 0 instead of -1. bug 59571
+  if (mNPStream.end == -1)
     mNPStream.end = 0;
 
-    NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewStreamProc(callbacks->newstream,
-                                                         npp,
-                                                         (char *)contentType,
-                                                         &mNPStream,
-                                                         seekable,
-                                                         &streamType), lib);
-    if(error != NPERR_NO_ERROR)
-        return NS_ERROR_FAILURE;
+  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewStreamProc(callbacks->newstream,
+                                                       npp,
+                                                       (char *)contentType,
+                                                       &mNPStream,
+                                                       seekable,
+                                                       &streamType), lib);
+  if(error != NPERR_NO_ERROR)
+    return NS_ERROR_FAILURE;
 
-	// translate the old 4x style stream type to the new one
-	switch(streamType)
-	{
-		case NP_NORMAL : mStreamType = nsPluginStreamType_Normal; break;
+  // translate the old 4x style stream type to the new one
+  switch(streamType)
+  {
+    case NP_NORMAL:
+      mStreamType = nsPluginStreamType_Normal; 
+      break;
+    case NP_ASFILEONLY:
+      mStreamType = nsPluginStreamType_AsFileOnly; 
+      break;
+    case NP_ASFILE:
+      mStreamType = nsPluginStreamType_AsFile; 
+      break;
+    case NP_SEEK:
+      mStreamType = nsPluginStreamType_Seek; 
+      break;
+    default:
+      return NS_ERROR_FAILURE;
+  }
 
-		case NP_ASFILEONLY : mStreamType = nsPluginStreamType_AsFileOnly; 
-          break;
-
-		case NP_ASFILE : mStreamType = nsPluginStreamType_AsFile; break;
-
-		case NP_SEEK : mStreamType = nsPluginStreamType_Seek; break;
-
-		default: return NS_ERROR_FAILURE;
-	}
-
-	
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -168,8 +175,18 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                           nsIInputStream* input,
                                           PRUint32 length)
 {
-    const NPPluginFuncs *callbacks;
-  NPP       npp;
+  if(!mInst)
+    return NS_ERROR_FAILURE;
+
+  const NPPluginFuncs *callbacks = nsnull;
+  NPP npp;
+
+  mInst->GetCallbacks(&callbacks);
+  mInst->GetNPP(&npp);
+
+  if(!callbacks || !npp->pdata)
+    return NS_ERROR_FAILURE;
+
   PRUint32  numtowrite = 0;
   PRUint32  amountRead = 0;
   PRInt32   writeCount = 0;
@@ -177,13 +194,10 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   pluginInfo->GetURL(&mNPStream.url);
   pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
 
-  mInst->GetCallbacks(&callbacks);
-  mInst->GetNPP(&npp);
-
-  if (callbacks->write == NULL || length == 0)
+  if (callbacks->write == nsnull || length == 0)
     return NS_OK; // XXX ?
 
-	// Get the data from the input stream
+  // Get the data from the input stream
   char* buffer = (char*) PR_Malloc(length);
   if (buffer) 
     input->Read(buffer, length, &amountRead);
@@ -196,20 +210,21 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   {
     if (callbacks->writeready != NULL)
     {
-    PRLibrary* lib = nsnull;
-    PRBool started = PR_FALSE;
-    if(mInst) {
-      lib = mInst->fLibrary;
-      started = mInst->IsStarted();
-    }
+      PRLibrary* lib = nsnull;
+      PRBool started = PR_FALSE;
+      if(mInst) 
+      {
+        lib = mInst->fLibrary;
+        started = mInst->IsStarted();
+      }
 
-    if (started)
-    {
-      NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
-                                              npp,
-                                              &mNPStream), lib);
-    }
-		    
+      if (started)
+      {
+        NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
+                                                                   npp,
+                                                                   &mNPStream), lib);
+      }
+
       // if WriteReady returned 0, the plugin is not ready to handle 
       // the data, return FAILURE for now
       if(numtowrite <= 0)
@@ -219,24 +234,25 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
         numtowrite = amountRead;
     }
     else 
+    {
       // if WriteReady is not supported by the plugin, 
       // just write the whole buffer
       numtowrite = length;
+    }
 
     if(numtowrite > 0)
     {
-      PRLibrary* lib = nsnull;
-      if(mInst)
-          lib = mInst->fLibrary;
+      PRLibrary* lib = mInst->fLibrary;
 
       NS_TRY_SAFE_CALL_RETURN(writeCount, CallNPP_WriteProc(callbacks->write,
-                              npp,
-                              &mNPStream, 
-                              mPosition,
-                              numtowrite,
-                              (void *)buffer), lib);
+                                                            npp,
+                                                            &mNPStream, 
+                                                            mPosition,
+                                                            numtowrite,
+                                                            (void *)buffer), lib);
       if(writeCount < 0)
-          return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
+
       amountRead -= numtowrite;
       mPosition += numtowrite;
     }
@@ -249,55 +265,70 @@ NS_IMETHODIMP
 ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo, 
                                           const char* fileName)
 {
-    const NPPluginFuncs *callbacks;
-    NPP                 npp;
+  if(!mInst)
+    return NS_ERROR_FAILURE;
 
-    pluginInfo->GetURL(&mNPStream.url);
+  NPP npp;
+  const NPPluginFuncs *callbacks = nsnull;
 
-    mInst->GetCallbacks(&callbacks);
-    mInst->GetNPP(&npp);
+  mInst->GetCallbacks(&callbacks);
+  mInst->GetNPP(&npp);
 
-    if (callbacks->asfile == NULL)
-        return NS_OK;
+  if(!callbacks || !npp->pdata)
+    return NS_ERROR_FAILURE;
 
-    PRLibrary* lib = nsnull;
-    PRBool started = PR_FALSE;
-    if(mInst) {
-      lib = mInst->fLibrary;
-      started = mInst->IsStarted();
-    }
+  pluginInfo->GetURL(&mNPStream.url);
 
-    if (started)
-    {
-      NS_TRY_SAFE_CALL_VOID(CallNPP_StreamAsFileProc(callbacks->asfile,
-                             npp,
-                             &mNPStream,
-                             fileName), lib);
-    }
- 
+  if (callbacks->asfile == NULL)
     return NS_OK;
+
+  PRLibrary* lib = nsnull;
+  PRBool started = PR_FALSE;
+  if(mInst) 
+  {
+    lib = mInst->fLibrary;
+    started = mInst->IsStarted();
+  }
+
+  if (started)
+  {
+    NS_TRY_SAFE_CALL_VOID(CallNPP_StreamAsFileProc(callbacks->asfile,
+                                                   npp,
+                                                   &mNPStream,
+                                                   fileName), lib);
+  }
+ 
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
                                         nsresult status)
 {
-    const NPPluginFuncs *callbacks;
-    NPP                 npp;
-    NPError error;
+  if(!mInst)
+    return NS_ERROR_FAILURE;
 
-    pluginInfo->GetURL(&mNPStream.url);
-    pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
+  NPP npp;
+  const NPPluginFuncs *callbacks = nsnull;
 
-    mInst->GetCallbacks(&callbacks);
-    mInst->GetNPP(&npp);
+  mInst->GetCallbacks(&callbacks);
+  mInst->GetNPP(&npp);
 
-    if (callbacks->destroystream != NULL)
-    {
-      // XXX need to convert status to NPReason
+  if(!callbacks || !npp->pdata)
+    return NS_ERROR_FAILURE;
+
+  NPError error;
+
+  pluginInfo->GetURL(&mNPStream.url);
+  pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
+
+  if (callbacks->destroystream != NULL)
+  {
+    // XXX need to convert status to NPReason
     PRLibrary* lib = nsnull;
     PRBool started = PR_FALSE;
-    if(mInst) {
+    if(mInst) 
+    {
       lib = mInst->fLibrary;
       started = mInst->IsStarted();
     }
@@ -305,31 +336,28 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
     if (started)
     {
       NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
-                                        npp,
-                                        &mNPStream,
-                                        NPRES_DONE), lib);
-	}
-      if(error != NPERR_NO_ERROR)
-        return NS_ERROR_FAILURE;
+                                                               npp,
+                                                               &mNPStream,
+                                                               NPRES_DONE), lib);
     }
+    if(error != NPERR_NO_ERROR)
+      return NS_ERROR_FAILURE;
+  }
 
-	// check to see if we have a call back
-    if (callbacks->urlnotify != NULL && mNotifyData != nsnull)
-    {
-      PRLibrary* lib = nsnull;
-      if(mInst)
-        lib = mInst->fLibrary;
+  // check to see if we have a call back
+  if (callbacks->urlnotify != NULL && mNotifyData != nsnull)
+  {
+    PRLibrary* lib = nsnull;
+    lib = mInst->fLibrary;
 
-      NS_TRY_SAFE_CALL_VOID(CallNPP_URLNotifyProc(callbacks->urlnotify,
-                            npp,
-                            mNPStream.url,
-                            nsPluginReason_Done,
-                            mNotifyData), lib);
-    }
-    
+    NS_TRY_SAFE_CALL_VOID(CallNPP_URLNotifyProc(callbacks->urlnotify,
+                                                npp,
+                                                mNPStream.url,
+                                                nsPluginReason_Done,
+                                                mNotifyData), lib);
+  }
 
-
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -463,11 +491,9 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   nsCOMPtr<nsIPluginTagInfo> taginfo = do_QueryInterface(mPeer, &rv);
 
   if (NS_SUCCEEDED(rv))
-  {
     taginfo->GetAttributes(count, names, values);
-  }
 
-  if (fCallbacks->newp == NULL)
+  if (fCallbacks->newp == nsnull)
     return NS_ERROR_FAILURE; // XXX right error?
   
   // XXX Note that the NPPluginType_* enums were crafted to be
@@ -504,6 +530,9 @@ NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
+  if (fNPP.pdata == nsnull)
+    return NS_ERROR_FAILURE;
+
 #ifdef MOZ_WIDGET_GTK
   NPSetWindowCallbackStruct *ws;
 #endif
