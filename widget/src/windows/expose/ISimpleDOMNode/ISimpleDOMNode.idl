@@ -28,9 +28,10 @@ cpp_quote("//")
 cpp_quote("// get_nodeInfo(")
 cpp_quote("//  /* [out] */ BSTR  *nodeName,   // For elements, this is the tag name")
 cpp_quote("//  /* [out] */ short  *nameSpaceID,")
-cpp_quote("//  /* [out] */ unsigned short  *nodeType,")
 cpp_quote("//  /* [out] */ BSTR  *nodeValue, ")
 cpp_quote("//  /* [out] */ unsigned int  *numChildren); ") 
+cpp_quote("//  /* [out] */ unsigned int *uniqueID;  // In Win32 accessible events we generate, the target's childID matches to this")
+cpp_quote("//  /* [out] */ unsigned short  *nodeType,")
 cpp_quote("// ---------------------------------------------------------------------------------------------------=")
 cpp_quote("// Get the basic information about a node.")
 cpp_quote("// The namespace ID can be mapped to an URI using nsISimpleDOMDocument::get_nameSpaceURIForID()")
@@ -43,6 +44,15 @@ cpp_quote("//  /* [out] */ short  *nameSpaceID,")
 cpp_quote("//  /* [out] */ BSTR  *attribValues);")
 cpp_quote("// ---------------------------------------------------------------------------------------------------=")
 cpp_quote("// Returns 3 arrays - the attribute names and values, and a namespace ID for each")
+cpp_quote("// If the namespace ID is 0, it's the same namespace as the node's namespace")
+cpp_quote("//")
+cpp_quote("// get_attributesForNames(")
+cpp_quote("//  /* [in] */ unsigned short numAttribs,")
+cpp_quote("//  /* [in] */ BSTR  *attribNames,")
+cpp_quote("//  /* [in] */ short  *nameSpaceID,")
+cpp_quote("//  /* [out] */ BSTR  *attribValues);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Takes 2 arrays - the attribute names and namespace IDs, and returns an array of corresponding values")
 cpp_quote("// If the namespace ID is 0, it's the same namespace as the node's namespace")
 cpp_quote("//")
 cpp_quote("// computedStyle(  ")
@@ -89,8 +99,7 @@ const long DISPID_NODE_ATTRIBUTESFORNAMES = -5902;
 const long DISPID_NODE_COMPSTYLE  = -5903;
 const long DISPID_NODE_COMPSTYLEFORPROPS = -5904;
 
-[object, uuid(772cf37b-261b-4b5e-87ba-ff629cfcab3a)]
-
+[object, uuid(0c365a54-70b7-4317-a68f-aad8d3f45da7)]
 interface ISimpleDOMNode : IUnknown
 {
   const unsigned short NODETYPE_ELEMENT = 1;
@@ -111,6 +120,7 @@ interface ISimpleDOMNode : IUnknown
     [out] short *nameSpaceID,
     [out] BSTR *nodeValue,
     [out] unsigned int *numChildren,
+    [out] unsigned int *uniqueID, // In Win32 accessible events we generate, the target's childID matches to this
     [out, retval] unsigned short *nodeType
   );
 

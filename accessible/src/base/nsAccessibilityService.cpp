@@ -685,7 +685,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   // ---- Check if area node ----
   nsCOMPtr<nsIDOMHTMLAreaElement> areaContent(do_QueryInterface(aNode));
   if (areaContent)   // Area elements are implemented in nsHTMLImageAccessible as children of the image
-    return PR_FALSE; // Return, otherwise the image frame looks like an accessible object in the wrong place
+    return NS_ERROR_FAILURE; // Return, otherwise the image frame looks like an accessible object in the wrong place
 
   // ---- Check if we need outer owning doc ----
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
@@ -702,13 +702,13 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 
   // ---- If still no nsIContent, return ----
   if (!content)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   // ---- Try using frame to get IAccessible ----
   nsIFrame* frame = nsnull;
   shell->GetPrimaryFrameFor(content, &frame);
   if (!frame)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessible> newAcc;
   frame->GetAccessible(getter_AddRefs(newAcc));
