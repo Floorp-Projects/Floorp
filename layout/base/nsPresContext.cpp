@@ -232,6 +232,7 @@ nsPresContext::~nsPresContext()
 
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mLookAndFeel);
+  NS_IF_RELEASE(mLanguage);
 }
 
 NS_IMPL_ISUPPORTS2(nsPresContext, nsIPresContext, nsIObserver)
@@ -706,8 +707,8 @@ void
 nsPresContext::UpdateCharSet(const char* aCharSet)
 {
   if (mLangService) {
-    mLangService->LookupCharSet(aCharSet,
-                                getter_AddRefs(mLanguage));
+    NS_IF_RELEASE(mLanguage);
+    mLangService->LookupCharSet(aCharSet, &mLanguage);  // addrefs
     GetFontPreferences();
     if (mLanguage) {
       nsCOMPtr<nsIAtom> langGroupAtom;
@@ -935,20 +936,6 @@ nsPresContext::GetUseFocusColors(PRBool& aUseFocusColors)
 
 
 NS_IMETHODIMP
-nsPresContext::GetVisibleArea(nsRect& aResult)
-{
-  aResult = mVisibleArea;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::SetVisibleArea(const nsRect& r)
-{
-  mVisibleArea = r;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPresContext::GetPixelsToTwips(float* aResult) const
 {
   NS_PRECONDITION(aResult, "null out param");
@@ -1032,7 +1019,7 @@ nsPresContext::GetDeviceContext(nsIDeviceContext** aResult) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPresContext::LoadImage(nsIURI* aURL,
                          nsIFrame* aTargetFrame,//may be null (precached image)
                          imgIRequest **aRequest)
@@ -1093,7 +1080,7 @@ nsPresContext::LoadImage(nsIURI* aURL,
 }
 
 
-NS_IMETHODIMP
+void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 {
   nsVoidKey key(aTargetFrame);
@@ -1105,47 +1092,28 @@ nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 
     mImageLoaders.Remove(&key);
   }
-
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsPresContext::SetLinkHandler(nsILinkHandler* aHandler)
-{
-  mLinkHandler = aHandler;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetLinkHandler(nsILinkHandler** aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-  *aResult = mLinkHandler;
-  NS_IF_ADDREF(mLinkHandler);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
   mContainer = do_GetWeakReference(aHandler);
   if (mContainer) {
     GetDocumentColorPreferences();
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPresContext::GetContainer(nsISupports** aResult)
+already_AddRefed<nsISupports>
+nsPresContext::GetContainer()
 {
-  NS_PRECONDITION(aResult, "null out param");
-  if (!mContainer) {
-    *aResult = nsnull;
-    return NS_OK;
-  }
+  nsISupports *result;
+  if (mContainer)
+    CallQueryReferent(mContainer.get(), &result);
+  else
+    result = nsnull;
 
-  return CallQueryReferent(mContainer.get(), aResult);
+  return result;
 }
 
 nsIEventStateManager*
@@ -1306,17 +1274,6 @@ nsPresContext::GetBidiCharset(nsACString &aCharSet) const
 //Mohamed End
 
 #endif //IBMBIDI
-
-NS_IMETHODIMP
-nsPresContext::GetLanguage(nsILanguageAtom** aLanguage)
-{
-  NS_PRECONDITION(aLanguage, "null out param");
-
-  *aLanguage = mLanguage;
-  NS_IF_ADDREF(*aLanguage);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsPresContext::GetLanguageSpecificTransformType(

@@ -59,8 +59,8 @@ public:
   NS_IMETHOD IsPaginated(PRBool* aResult);
   NS_IMETHOD SetPaginatedScrolling(PRBool aResult) { mCanPaginatedScroll = aResult; return NS_OK; }
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
-  NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
-  NS_IMETHOD SetPageDim(nsRect* aRect);
+  virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
+  virtual void SetPageDim(nsRect* aRect);
   virtual void SetImageAnimationMode(PRUint16 aMode);
   NS_IMETHOD SetPrintSettings(nsIPrintSettings* aPS);
   NS_IMETHOD GetPrintSettings(nsIPrintSettings** aPS);
@@ -124,26 +124,23 @@ PrintPreviewContext::GetPaginatedScrolling(PRBool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PrintPreviewContext::GetPageDim(nsRect* aActualRect, nsRect* aAdjRect)
 {
-  NS_ENSURE_ARG_POINTER(aActualRect);
-  NS_ENSURE_ARG_POINTER(aAdjRect);
-
-  PRInt32 width,height;
-  if (NS_SUCCEEDED(mDeviceContext->GetDeviceSurfaceDimensions(width, height))) {
-    aActualRect->SetRect(0, 0, width, height);
+  if (aActualRect && aAdjRect) {
+    PRInt32 width,height;
+    nsresult rv = mDeviceContext->GetDeviceSurfaceDimensions(width, height);
+    if (NS_SUCCEEDED(rv))
+      aActualRect->SetRect(0, 0, width, height);
   }
   *aAdjRect = mPageDim;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PrintPreviewContext::SetPageDim(nsRect* aPageDim)
 {
-  NS_ENSURE_ARG_POINTER(aPageDim);
-  mPageDim = *aPageDim;
-  return NS_OK;
+  if (aPageDim)
+    mPageDim = *aPageDim;
 }
 
 /**

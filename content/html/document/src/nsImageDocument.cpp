@@ -529,8 +529,7 @@ nsImageDocument::CheckOverflowing()
   nsCOMPtr<nsIPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
 
-  nsRect visibleArea;
-  context->GetVisibleArea(visibleArea);
+  nsRect visibleArea = context->GetVisibleArea();
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mBodyContent);
   nsRefPtr<nsStyleContext> styleContext =

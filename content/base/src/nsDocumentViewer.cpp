@@ -2685,12 +2685,11 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
    GetPresContext(getter_AddRefs(presContext));
    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-   nsRect  shellArea;
    PRInt32 width, height;
    float   pixelScale;
 
    // so how big is it?
-   presContext->GetVisibleArea(shellArea);
+   nsRect shellArea = presContext->GetVisibleArea();
    presContext->GetTwipsToPixels(&pixelScale);
    width = PRInt32((float)shellArea.width*pixelScale);
    height = PRInt32((float)shellArea.height*pixelScale);
@@ -3591,8 +3590,7 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   }
 
   // Get the current size of what is being viewed
-  nsRect area;
-  mPresContext->GetVisibleArea(area);
+  nsRect area = mPresContext->GetVisibleArea();
 
   nsRect bounds;
   mWindow->GetBounds(bounds);
@@ -3697,8 +3695,7 @@ DocumentViewerImpl::InstallNewPresentation()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   // Get the current size of what is being viewed
-  nsRect area;
-  mPresContext->GetVisibleArea(area);
+  nsRect area = mPresContext->GetVisibleArea();
 
   nsRect bounds;
   mWindow->GetBounds(bounds);

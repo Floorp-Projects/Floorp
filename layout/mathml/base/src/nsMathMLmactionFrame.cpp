@@ -357,9 +357,8 @@ nsresult
 nsMathMLmactionFrame::ShowStatus(nsIPresContext* aPresContext,
                                  nsString&       aStatusMsg)
 {
-  nsCOMPtr<nsISupports> cont;
-  nsresult rv = aPresContext->GetContainer(getter_AddRefs(cont));
-  if (NS_SUCCEEDED(rv) && cont) {
+  nsCOMPtr<nsISupports> cont = aPresContext->GetContainer();
+  if (cont) {
     nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont));
     if (docShellItem) {
       nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
@@ -372,7 +371,7 @@ nsMathMLmactionFrame::ShowStatus(nsIPresContext* aPresContext,
       }
     }
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

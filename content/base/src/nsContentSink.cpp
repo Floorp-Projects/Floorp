@@ -954,8 +954,7 @@ nsContentSink::StartLayout(PRBool aIsFrameset)
       // Resize-reflow this time
       nsCOMPtr<nsIPresContext> cx;
       shell->GetPresContext(getter_AddRefs(cx));
-      nsRect r;
-      cx->GetVisibleArea(r);
+      nsRect r = cx->GetVisibleArea();
       shell->InitialReflow(r.width, r.height);
 
       // Now trigger a refresh

@@ -2161,8 +2161,7 @@ nsXULDocument::StartLayout(void)
         if (! cx)
             return NS_ERROR_UNEXPECTED;
 
-        nsCOMPtr<nsISupports> container;
-        cx->GetContainer(getter_AddRefs(container));
+        nsCOMPtr<nsISupports> container = cx->GetContainer();
         NS_ASSERTION(container != nsnull, "pres context has no container");
         if (! container)
             return NS_ERROR_UNEXPECTED;
@@ -2172,8 +2171,7 @@ nsXULDocument::StartLayout(void)
         if (! docShell)
             return NS_ERROR_UNEXPECTED;
 
-        nsRect r;
-        cx->GetVisibleArea(r);
+        nsRect r = cx->GetVisibleArea();
 
         // Trigger a refresh before the call to InitialReflow(),
         // because the view manager's UpdateView() function is

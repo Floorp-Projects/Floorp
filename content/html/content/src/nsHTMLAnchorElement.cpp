@@ -271,9 +271,8 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
   }
 
   // don't make the link grab the focus if there is no link handler
-  nsCOMPtr<nsILinkHandler> handler;
-  nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
-  if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
+  nsILinkHandler *handler = aPresContext->GetLinkHandler();
+  if (handler) {
     nsCOMPtr<nsIEventStateManager> stateManager;
 
     aPresContext->GetEventStateManager(getter_AddRefs(stateManager));

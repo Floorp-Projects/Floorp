@@ -502,9 +502,7 @@ nsSubDocumentFrame::AttributeChanged(nsIPresContext* aPresContext,
     // If our container is a web-shell, inform it that it has a new
     // child. If it's not a web-shell then some things will not operate
     // properly.
-    nsCOMPtr<nsISupports> container;
-    aPresContext->GetContainer(getter_AddRefs(container));
-
+    nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
     nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
 
     if (parentAsNode) {

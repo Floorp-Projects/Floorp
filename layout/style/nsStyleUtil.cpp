@@ -447,8 +447,7 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresConte
         link->GetHrefURI(getter_AddRefs(hrefURI));
 
         if (hrefURI) {
-          nsCOMPtr<nsILinkHandler> linkHandler;
-          aPresContext->GetLinkHandler(getter_AddRefs(linkHandler));
+          nsILinkHandler *linkHandler = aPresContext->GetLinkHandler();
           if (linkHandler) {
             linkHandler->GetLinkState(hrefURI, linkState);
           }
@@ -502,8 +501,7 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
         // XXX should we make sure to get the right charset off the document?
         (void) NS_NewURI(getter_AddRefs(absURI), val, nsnull, baseURI);
 
-        nsCOMPtr<nsILinkHandler> linkHandler;
-        aPresContext->GetLinkHandler(getter_AddRefs(linkHandler));
+        nsILinkHandler *linkHandler = aPresContext->GetLinkHandler();
         if (linkHandler) {
           linkHandler->GetLinkState(absURI, *aState);
         }

@@ -84,22 +84,18 @@ public:
   NS_IMETHOD GetUseFocusColors(PRBool& useFocusColors);
   NS_IMETHOD GetFocusRingOnAnything(PRBool& focusRingOnAnything);
 
-  NS_IMETHOD LoadImage(nsIURI* aURL,
-                       nsIFrame* aTargetFrame,
-                       imgIRequest **aRequest);
+  virtual nsresult LoadImage(nsIURI* aURL,
+                             nsIFrame* aTargetFrame,
+                             imgIRequest **aRequest);
 
-  NS_IMETHOD StopImagesFor(nsIFrame* aTargetFrame);
-  NS_IMETHOD SetContainer(nsISupports* aContainer);
-  NS_IMETHOD GetContainer(nsISupports** aResult);
-  NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler);
-  NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
-  NS_IMETHOD GetVisibleArea(nsRect& aResult);
-  NS_IMETHOD SetVisibleArea(const nsRect& r);
+  virtual void StopImagesFor(nsIFrame* aTargetFrame);
+  virtual void SetContainer(nsISupports* aContainer);
+  virtual already_AddRefed<nsISupports>  GetContainer();
   NS_IMETHOD IsPaginated(PRBool* aResult) = 0;
   NS_IMETHOD SetPaginatedScrolling(PRBool aResult) = 0;
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult) = 0;
-  NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
-  NS_IMETHOD SetPageDim(nsRect* aRect) = 0;
+  virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
+  virtual void SetPageDim(nsRect* aRect) = 0;
   NS_IMETHOD GetPixelsToTwips(float* aResult) const;
   NS_IMETHOD GetTwipsToPixels(float* aResult) const;
   NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const;
@@ -109,7 +105,6 @@ public:
   nsIEventStateManager* GetEventStateManager() {
     return nsIPresContext::GetEventStateManager();
   }
-  NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage);
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType);
 
@@ -163,11 +158,8 @@ protected:
   virtual ~nsPresContext();
 
   nsCOMPtr<nsIPref>     mPrefs;
-  nsRect                mVisibleArea;
   nsCOMPtr<nsILanguageAtomService> mLangService;
-  nsCOMPtr<nsILanguageAtom> mLanguage;
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
-  nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsWeakPtr             mContainer;
 
   nsFont                mDefaultVariableFont;

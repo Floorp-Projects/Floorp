@@ -503,9 +503,8 @@ nsDOMEvent::GetView(nsIDOMAbstractView** aView)
   nsresult rv = NS_OK;
 
   if (mPresContext) {
-    nsCOMPtr<nsISupports> container;
-    rv = mPresContext->GetContainer(getter_AddRefs(container));
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
+    nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+    NS_ENSURE_TRUE(container, NS_OK);
     
     nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
     NS_ENSURE_TRUE(window, NS_OK);

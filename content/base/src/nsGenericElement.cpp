@@ -3053,10 +3053,9 @@ nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsGenericElement::LeaveLink(nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsILinkHandler> handler;
-  nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
-  if (NS_FAILED(rv) || !handler) {
-    return rv;
+  nsILinkHandler *handler = aPresContext->GetLinkHandler();
+  if (!handler) {
+    return NS_OK;
   }
 
   return handler->OnLeaveLink();
@@ -3071,9 +3070,10 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               PRBool aClick)
 {
   NS_PRECONDITION(aLinkURI, "No link URI");
-  nsCOMPtr<nsILinkHandler> handler;
-  nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
-  if (NS_FAILED(rv) || !handler) return rv;
+  nsresult rv = NS_OK;
+
+  nsILinkHandler *handler = aPresContext->GetLinkHandler();
+  if (!handler) return NS_OK;
 
   if (aClick) {
     nsresult proceed = NS_OK;

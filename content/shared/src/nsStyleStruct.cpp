@@ -1100,7 +1100,7 @@ nsStyleVisibility::nsStyleVisibility(nsIPresContext* aPresContext)
   else
     mDirection = NS_STYLE_DIRECTION_LTR;
 
-  aPresContext->GetLanguage(getter_AddRefs(mLanguage));
+  mLanguage = aPresContext->GetLanguage();
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
 }
 

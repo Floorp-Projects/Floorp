@@ -605,10 +605,7 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
   result = fontMetrics->GetMaxAdvance(fontWidth);
 
   // Determine docshell size in twips
-  nsRect shellArea;
-  result = presContext->GetVisibleArea(shellArea);
-  if (NS_FAILED(result))
-    return result;
+  nsRect shellArea = presContext->GetVisibleArea();
 
   // Determine twips to pixels conversion factor
   float pixelScale;

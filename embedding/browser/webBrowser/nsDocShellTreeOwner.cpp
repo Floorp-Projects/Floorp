@@ -468,9 +468,8 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE,
       NS_UNCONSTRAINEDSIZE), NS_ERROR_FAILURE);
    
-   nsRect shellArea;
+   nsRect shellArea = presContext->GetVisibleArea();
 
-   presContext->GetVisibleArea(shellArea);
    float pixelScale;
    presContext->GetTwipsToPixels(&pixelScale);
    PRInt32 browserCX = PRInt32((float)shellArea.width*pixelScale);

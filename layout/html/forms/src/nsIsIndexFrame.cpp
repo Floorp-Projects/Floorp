@@ -406,91 +406,90 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
   // End ProcessAsURLEncoded
 
   // make the url string
-  nsCOMPtr<nsILinkHandler> handler;
-  if (NS_OK == aPresContext->GetLinkHandler(getter_AddRefs(handler))) {
-    nsAutoString href;
+  nsILinkHandler *handler = aPresContext->GetLinkHandler();
 
-    // Get the document.
-    // We'll need it now to form the URL we're submitting to.
-    // We'll also need it later to get the DOM window when notifying form submit observers (bug 33203)
-    nsCOMPtr<nsIDocument> document = mContent->GetDocument();
-    if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
+  nsAutoString href;
 
-    // Resolve url to an absolute url
-    nsIURI *docURL = document->GetBaseURI();
-    if (!docURL) {
-      NS_ERROR("No Base URL found in Form Submit!\n");
-      return NS_OK; // No base URL -> exit early, see Bug 30721
+  // Get the document.
+  // We'll need it now to form the URL we're submitting to.
+  // We'll also need it later to get the DOM window when notifying form submit observers (bug 33203)
+  nsCOMPtr<nsIDocument> document = mContent->GetDocument();
+  if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
+
+  // Resolve url to an absolute url
+  nsIURI *docURL = document->GetBaseURI();
+  if (!docURL) {
+    NS_ERROR("No Base URL found in Form Submit!\n");
+    return NS_OK; // No base URL -> exit early, see Bug 30721
+  }
+
+  // If an action is not specified and we are inside 
+  // a HTML document then reload the URL. This makes us
+  // compatible with 4.x browsers.
+  // If we are in some other type of document such as XML or
+  // XUL, do nothing. This prevents undesirable reloading of
+  // a document inside XUL.
+
+  nsresult rv;
+  nsCOMPtr<nsIHTMLDocument> htmlDoc;
+  htmlDoc = do_QueryInterface(document, &rv);
+  if (NS_FAILED(rv)) {   
+    // Must be a XML, XUL or other non-HTML document type
+    // so do nothing.
+    return NS_OK;
+  } 
+
+  // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
+  // passed a zero length rel path.
+  nsCAutoString relPath;
+  docURL->GetSpec(relPath);
+  if (!relPath.IsEmpty()) {
+    CopyUTF8toUTF16(relPath, href);
+
+    // If re-using the same URL, chop off old query string (bug 25330)
+    PRInt32 queryStart = href.FindChar('?');
+    if (kNotFound != queryStart) {
+      href.Truncate(queryStart);
     }
+  } else {
+    NS_ERROR("Rel path couldn't be formed in form submit!\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    // If an action is not specified and we are inside 
-    // a HTML document then reload the URL. This makes us
-    // compatible with 4.x browsers.
-    // If we are in some other type of document such as XML or
-    // XUL, do nothing. This prevents undesirable reloading of
-    // a document inside XUL.
+  // Add the URI encoded form values to the URI
+  // Get the scheme of the URI.
+  nsCOMPtr<nsIURI> actionURL;
+  nsXPIDLCString scheme;
+  PRBool isJSURL = PR_FALSE;
+  const nsACString &docCharset = document->GetDocumentCharacterSet();
+  const nsPromiseFlatCString& flatDocCharset = PromiseFlatCString(docCharset);
 
-    nsresult rv;
-    nsCOMPtr<nsIHTMLDocument> htmlDoc;
-    htmlDoc = do_QueryInterface(document, &rv);
-    if (NS_FAILED(rv)) {   
-      // Must be a XML, XUL or other non-HTML document type
-      // so do nothing.
-      return NS_OK;
-    } 
-
-    // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
-    // passed a zero length rel path.
-    nsCAutoString relPath;
-    docURL->GetSpec(relPath);
-    if (!relPath.IsEmpty()) {
-      CopyUTF8toUTF16(relPath, href);
-
-      // If re-using the same URL, chop off old query string (bug 25330)
-      PRInt32 queryStart = href.FindChar('?');
-      if (kNotFound != queryStart) {
-        href.Truncate(queryStart);
+  if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href,
+                                      flatDocCharset.get(),
+                                      docURL))) {
+    result = actionURL->SchemeIs("javascript", &isJSURL);
+  }
+  // Append the URI encoded variable/value pairs for GET's
+  if (!isJSURL) { // Not for JS URIs, see bug 26917
+    if (href.FindChar('?') == kNotFound) { // Add a ? if needed
+      href.Append(PRUnichar('?'));
+    } else {                              // Adding to existing query string
+      if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
+        href.Append(PRUnichar('&'));
       }
-    } else {
-      NS_ERROR("Rel path couldn't be formed in form submit!\n");
-      return NS_ERROR_OUT_OF_MEMORY;
     }
+    href.Append(data);
+  }
+  nsCOMPtr<nsIURI> uri;
+  result = NS_NewURI(getter_AddRefs(uri), href,
+                     flatDocCharset.get(), docURL);
+  if (NS_FAILED(result)) return result;
 
-    // Add the URI encoded form values to the URI
-    // Get the scheme of the URI.
-    nsCOMPtr<nsIURI> actionURL;
-    nsXPIDLCString scheme;
-    PRBool isJSURL = PR_FALSE;
-    const nsACString &docCharset = document->GetDocumentCharacterSet();
-    const nsPromiseFlatCString& flatDocCharset = PromiseFlatCString(docCharset);
-
-    if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href,
-                                        flatDocCharset.get(),
-                                        docURL))) {
-      result = actionURL->SchemeIs("javascript", &isJSURL);
-    }
-    // Append the URI encoded variable/value pairs for GET's
-    if (!isJSURL) { // Not for JS URIs, see bug 26917
-        if (href.FindChar('?') == kNotFound) { // Add a ? if needed
-          href.Append(PRUnichar('?'));
-        } else {                              // Adding to existing query string
-          if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
-            href.Append(PRUnichar('&'));
-          }
-        }
-        href.Append(data);
-    }
-    nsCOMPtr<nsIURI> uri;
-    result = NS_NewURI(getter_AddRefs(uri), href,
-                       flatDocCharset.get(), docURL);
-    if (NS_FAILED(result)) return result;
-
-    // Now pass on absolute url to the click handler
-    if (handler) {
-      handler->OnLinkClick(mContent, eLinkVerb_Replace,
-                           uri,
-                           nsnull, nsnull);
-    }
+  // Now pass on absolute url to the click handler
+  if (handler) {
+    handler->OnLinkClick(mContent, eLinkVerb_Replace,
+                         uri,
+                         nsnull, nsnull);
   }
   return result;
 }

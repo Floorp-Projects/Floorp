@@ -1733,9 +1733,8 @@ PresShell::Init(nsIDocument* aDocument,
   //SetCaretEnabled(PR_TRUE);       // make it show in browser windows
 #endif  
 //set up selection to be displayed in document
-  nsCOMPtr<nsISupports> container;
-  result = aPresContext->GetContainer(getter_AddRefs(container));
-  if (NS_SUCCEEDED(result) && container) {
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+  if (container) {
     nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
     if (NS_SUCCEEDED(result) && docShell){
       PRInt32 docShellType;
@@ -2165,9 +2164,8 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
     }
 
     // first, make sure this is not a chrome shell 
-    nsCOMPtr<nsISupports> container;
-    result = mPresContext->GetContainer(getter_AddRefs(container));
-    if (NS_SUCCEEDED(result) && container) {
+    nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+    if (container) {
       nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
       if (NS_SUCCEEDED(result) && docShell){
         PRInt32 docShellType;
@@ -2806,8 +2804,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 #ifdef DEBUG_kipp
     nsPresShell_ReflowStackPointerTop = (char*) &aWidth;
 #endif
-    nsRect                bounds;
-    mPresContext->GetVisibleArea(bounds);
+    nsRect                bounds = mPresContext->GetVisibleArea();
     nsSize                maxSize(bounds.width, bounds.height);
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsReflowStatus        status;
@@ -2946,8 +2943,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #ifdef DEBUG_kipp
     nsPresShell_ReflowStackPointerTop = (char*) &aWidth;
 #endif
-    nsRect                bounds;
-    mPresContext->GetVisibleArea(bounds);
+    nsRect                bounds = mPresContext->GetVisibleArea();
     nsSize                maxSize(bounds.width, bounds.height);
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsReflowStatus        status;
@@ -3472,8 +3468,7 @@ PresShell::StyleChangeReflow()
       }
     }
 #endif
-    nsRect                bounds;
-    mPresContext->GetVisibleArea(bounds);
+    nsRect                bounds = mPresContext->GetVisibleArea();
     nsSize                maxSize(bounds.width, bounds.height);
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsReflowStatus        status;
@@ -3620,8 +3615,7 @@ PresShell::EndLoad(nsIDocument *aDocument)
   // Restore frame state for the root scroll frame
   nsIFrame* rootFrame = nsnull;
   GetRootFrame(&rootFrame);
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
   if (!container)
     return;
 
@@ -4642,8 +4636,7 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
 
   NS_PRECONDITION(nsnull != aState, "null state pointer");
 
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
   if (!container)
     return NS_ERROR_FAILURE;
 
@@ -4855,8 +4848,7 @@ PresShell::UnsuppressAndInvalidate()
     // causes us to blur incorrectly.
     focusController->SetSuppressFocus(PR_TRUE, "PresShell suppression on Web page loads");
 
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
   if (container) {
     nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
     if (cvc) {
@@ -5764,8 +5756,7 @@ nsresult PresShell::RetargetEventToParent(nsIView         *aView,
 
   // Next, update the display so the old focus ring is no longer visible
 
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
   NS_ASSERTION(docShell, "No docshell for container.");
@@ -6167,8 +6158,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 NS_IMETHODIMP
 PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent, nsEventStatus* aStatus)
 {
-  nsresult ret;
-
   PushCurrentEventInfo(nsnull, aTargetContent);
 
   // Bug 41013: Check if the event should be dispatched to content.
@@ -6176,12 +6165,12 @@ PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent,
   // and the js context is out of date. This check detects the case
   // that caused a crash in bug 41013, but there may be a better way
   // to handle this situation!
-  nsCOMPtr<nsISupports> container;
-  ret = mPresContext->GetContainer(getter_AddRefs(container));
-  if (NS_SUCCEEDED(ret) && container) {
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (container) {
 
     // Dispatch event to content
-    ret = aTargetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, aStatus);
+    aTargetContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
+                                   NS_EVENT_FLAG_INIT, aStatus);
   }
 
   PopCurrentEventInfo();
@@ -7033,17 +7022,13 @@ PresShell::VerifyIncrementalReflow()
     rv = NS_NewGalleyContext(&cx);
   }
 
-  nsISupports* container;
-  if (NS_SUCCEEDED(mPresContext->GetContainer(&container)) &&
-      (nsnull != container)) {
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (container) {
     cx->SetContainer(container);
-    nsILinkHandler* lh;
-    if (NS_SUCCEEDED(container->QueryInterface(NS_GET_IID(nsILinkHandler),
-                                               (void**)&lh))) {
+    nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
+    if (lh) {
       cx->SetLinkHandler(lh);
-      NS_RELEASE(lh);
     }
-    NS_RELEASE(container);
   }
 
   NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create presentation context");
@@ -7074,8 +7059,7 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a child window of the parent that is our "root view/window"
   // Create a view
-  nsRect tbounds;
-  mPresContext->GetVisibleArea(tbounds);
+  nsRect tbounds = mPresContext->GetVisibleArea();
   nsIView* view;
   rv = nsComponentManager::CreateInstance(kViewCID, nsnull,
                                           NS_GET_IID(nsIView),
@@ -7095,8 +7079,7 @@ PresShell::VerifyIncrementalReflow()
 
   // Make the new presentation context the same size as our
   // presentation context.
-  nsRect r;
-  mPresContext->GetVisibleArea(r);
+  nsRect r = mPresContext->GetVisibleArea();
   cx->SetVisibleArea(r);
 
   // Create a new presentation shell to view the document. Use the
