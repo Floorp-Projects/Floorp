@@ -1030,20 +1030,27 @@ function serv_onRawData(e)
 
     if (l[0] == ":")
     {
-        ary = l.match (/:(\S+)\s(.*)/);
+        // Must split only on a REAL space here, not just any old whitespace.
+        ary = l.match(/:(\S+) (.*)/);
         e.source = ary[1];
         l = ary[2];
-        ary = e.source.match (/(\S+)!(\S+)@(.*)/);
+        ary = e.source.match(/(\S+)!(\S+)@(.*)/);
         if (ary)
         {
             e.user = new CIRCUser(this, null, ary[1], ary[2], ary[3]);
         }
         else
         {
-            ary = e.source.match (/(\S+)@(.*)/);
+            ary = e.source.match(/(\S+)@(.*)/);
             if (ary)
             {
-                e.user = new CIRCUser(this, null, "", ary[1], ary[2]);
+                e.user = new CIRCUser(this, null, ary[1], null, ary[2]);
+            }
+            else
+            {
+                ary = e.source.match(/(\S+)!(.*)/);
+                if (ary)
+                    e.user = new CIRCUser(this, null, ary[1], ary[2], null);
             }
         }
     }
