@@ -452,8 +452,9 @@ nsXULPrototypeDocument::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
 NS_IMETHODIMP
 nsXULPrototypeDocument::GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner)
 {
-    NS_NOTREACHED("waaah!");
-    return NS_ERROR_UNEXPECTED;
+    *aOwner = NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this);
+    NS_ADDREF(*aOwner);
+    return NS_OK;
 }
 
 
@@ -499,14 +500,13 @@ nsXULPrototypeDocument::ReportScriptError(const char* aErrorString,
     }
 
     if (aLineNo) {
-        error += ", line";
+        error += ", line ";
         error += aLineNo;
     }
 
     if (aLineBuf) {
         error += "\n";
         error += aLineBuf;
-        error += "\n";
     }
 
     printf("%s\n", (const char*) nsCAutoString(error));
