@@ -127,7 +127,7 @@ function PrefNetwork(parent, name, force, show)
     this.users = this.primServ.users;
     this.prefManager = getNetworkPrefManager(this);
     this.prefs = this.prefManager.prefs;
-    delete this.prefManager.onPrefChanged;
+    this.prefManager.onPrefChanged = function(){};
     
     if (force)
         this.prefs["hasPrefs"] = true;
@@ -185,7 +185,7 @@ function PrefChannel(parent, name, force, show)
                              [this.parent.parent.unicodeName, this.unicodeName]);
     this.prefManager = getChannelPrefManager(this);
     this.prefs = this.prefManager.prefs;
-    delete this.prefManager.onPrefChanged;
+    this.prefManager.onPrefChanged = function(){};
     
     if (force)
         this.prefs["hasPrefs"] = true;
@@ -223,7 +223,7 @@ function PrefUser(parent, name, force, show)
                              [this.parent.parent.unicodeName, this.unicodeName]);
     this.prefManager = getUserPrefManager(this);
     this.prefs = this.prefManager.prefs;
-    delete this.prefManager.onPrefChanged;
+    this.prefManager.onPrefChanged = function(){};
     
     if (force)
         this.prefs["hasPrefs"] = true;
@@ -978,7 +978,7 @@ function pwin_onLoad()
     
     // Turn off all notifications, or it'll get confused when any pref 
     // does change.
-    delete client.prefManager.onPrefChanged;
+    client.prefManager.onPrefChanged = function(){};
     
     // The list of objects we're tacking the prefs of.
     this.prefObjects = new PrefObjectList();
