@@ -293,6 +293,7 @@ public:
 
   // nsIRefreshURL interface methods...
   NS_IMETHOD RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat);
+  NS_IMETHOD RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat);
   NS_IMETHOD CancelRefreshURLTimers(void);
 
 
@@ -2027,7 +2028,18 @@ nsWebShell::ReloadDocument(const char* aCharset,
   mHintCharset = aCharset;
   mHintCharsetSource= aSource;
   
-  return this->Reload(nsURLReload);
+  nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
+
+  nsresult rv = NS_OK;
+  if(s) {
+    char* url = s->ToNewCString();
+    if(url) {
+      mHistoryIndex--;
+      rv =  this->RefreshURL((const char*)url,0,PR_FALSE);
+      delete [] url;
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2641,6 +2653,24 @@ void refreshData::Notify(nsITimer *aTimer)
 NS_IMETHODIMP
 nsWebShell::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
 {
+  
+  nsresult rv = NS_OK;
+  if (nsnull == aURL) {
+    NS_PRECONDITION((aURL != nsnull), "Null pointer");
+    rv = NS_ERROR_NULL_POINTER;
+    goto done;
+  }
+
+  const char* spec;
+  aURL->GetSpec(&spec);
+  rv = RefreshURL(spec, millis, repeat);
+done:
+  return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat)
+{
   nsresult rv = NS_OK;
   nsITimer *timer=nsnull;
   refreshData *data;
@@ -2663,10 +2693,7 @@ nsWebShell::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
   data->mShell = this;
   NS_ADDREF(data->mShell);
 
-  const char* spec;
-  rv = aURL->GetSpec(&spec);
-
-  data->mUrlSpec  = spec;
+  data->mUrlSpec  = aURL;
   data->mDelay    = millis;
   data->mRepeat   = repeat;
 
