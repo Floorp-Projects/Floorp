@@ -70,28 +70,7 @@ public final class Context {
     public Context() {
         setLanguageVersion(VERSION_DEFAULT);
         this.generatingDebug = true;
-        if (codegenClass != null) {
-            optimizationLevel = 0;
-            Exception e = null;
-            try {
-                Class nameHelperClass = Class.forName(
-                    "com.netscape.javascript.optimizer.OptClassNameHelper");
-                nameHelper = (ClassNameHelper)nameHelperClass.newInstance();
-            }
-            catch (ClassNotFoundException x) {
-                e = x;
-            }
-            catch (IllegalAccessException x) {
-                e = x;
-            }
-            catch (InstantiationException x) {
-                e = x;
-            }
-            if (e != null) 
-                throw new RuntimeException("Malformed optimizer package " + e);
-        } else {
-            optimizationLevel = -1;
-        }
+        optimizationLevel = codegenClass != null ? 0 : -1;
     }
     
     /**
@@ -107,34 +86,28 @@ public final class Context {
     }
         
     /**
-     * Get the current Context.
+     * Get a context associated with the current thread, creating
+     * one if need be.
      *
-     * The current Context is per-thread; this method looks up
-     * the Context associated with the current thread. <p>
-     *
-     * @return the Context associated with the current thread, or
-     *         null if no context is associated with the current 
-     *         thread.
-     * @see org.mozilla.javascript.Context#enter
-     * @see org.mozilla.javascript.Context#exit
-     */
-    public static Context getCurrentContext() {
-        Thread t = Thread.currentThread();
-        return (Context) threadContexts.get(t);
-    }
-
-    /**
-     * Associate the Context with the current thread.
-     *
-     * Note that each thread can only enter one Context at a time.
      * The Context stores the execution state of the JavaScript
      * engine, so it is required that the context be entered
      * before execution may begin. Once a thread has entered
      * a Context, then getCurrentContext() may be called to find
-     * the context that is associated with the current thread.<p>
-     * TODO: doc
-     * Calling exit() will disassociate the thread and the Context.
-     *
+     * the context that is associated with the current thread.
+     * <p>
+     * Calling <code>enter()</code> will
+     * return either the Context currently associated with the
+     * thread, or will create a new context and associate it 
+     * with the current thread. Each call to <code>enter()</code>
+     * must have a matching call to <code>exit()</code>. For example,
+     * <pre>
+     *      Context cx = Context.enter();
+     *      ...
+     *      cx.evaluateString(...);
+     *      cx.exit();
+     * </pre>
+     * @return a Context associated with the current thread
+     * @see org.mozilla.javascript.Context#getCurrentContext
      * @see org.mozilla.javascript.Context#exit
      */
     public static Context enter() {
@@ -152,14 +125,15 @@ public final class Context {
     }     
         
     /**
-     * Disassociate the Context from the current thread.
+     * Exit a block of code requiring a Context.
      *
+     * Calling <code>exit()</code> will disassociate the Context with the 
+     * current thread if the matching call to <code>enter()</code>
+     * had created a new Context. 
      * Once the current thread no longer has an associated Context,
-     * it cannot be used to execute JavaScript until it is
-     * associated with a Context again using enter().
-     * TODO: doc
-     * @exception ThreadLinkException if this context
-     *            is not associated with the current thread
+     * it cannot be used to execute JavaScript until it is again associated
+     * with a Context.
+     *
      * @see org.mozilla.javascript.Context#enter
      */
     public synchronized void exit() {
@@ -169,6 +143,23 @@ public final class Context {
         }
     }
 
+    /**
+     * Get the current Context.
+     *
+     * The current Context is per-thread; this method looks up
+     * the Context associated with the current thread. <p>
+     *
+     * @return the Context associated with the current thread, or
+     *         null if no context is associated with the current 
+     *         thread.
+     * @see org.mozilla.javascript.Context#enter
+     * @see org.mozilla.javascript.Context#exit
+     */
+    public static Context getCurrentContext() {
+        Thread t = Thread.currentThread();
+        return (Context) threadContexts.get(t);
+    }
+    
     /**
      * Language versions
      *
@@ -433,7 +424,30 @@ public final class Context {
         return initStandardObjects(scope, false);
     }
     
-    // TODO: doc
+    /**
+     * Initialize the standard objects.
+     *
+     * Creates instances of the standard objects and their constructors
+     * (Object, String, Number, Date, etc.), setting up 'scope' to act
+     * as a global object as in ECMA 15.1.<p>
+     *
+     * This method must be called to initialize a scope before scripts
+     * can be evaluated in that scope.<p>
+     * 
+     * This form of the method also allows for creating "sealed" standard
+     * objects. An object that is sealed cannot have properties added or
+     * removed. This is useful to create a "superglobal" that can be shared 
+     * among several top-level objects. Note that sealing is not allowed in
+     * the current ECMA/ISO language specification, but is likely for
+     * the next version.
+     *
+     * @param scope the scope to initialize, or null, in which case a new
+     *        object will be created to serve as the scope
+     * @param sealed whether or not to create sealed standard objects that
+     *        cannot be modified. 
+     * @return the initialized scope
+     * @since 1.4R3
+     */
     public ScriptableObject initStandardObjects(ScriptableObject scope, 
                                                 boolean sealed) 
     {
@@ -1452,13 +1466,20 @@ public final class Context {
     }
 
     private static Class codegenClass;
+    private static ClassNameHelper nameHelper;
     static {
         try {
             codegenClass = Class.forName(
                 "com.netscape.javascript.optimizer.Codegen");
-        }
-        catch (ClassNotFoundException x) {
+            Class nameHelperClass = Class.forName(
+                "com.netscape.javascript.optimizer.OptClassNameHelper");
+            nameHelper = (ClassNameHelper)nameHelperClass.newInstance();
+        } catch (ClassNotFoundException x) {
             // ...must be running lite, that's ok
+            codegenClass = null;
+        } catch (IllegalAccessException x) {
+            codegenClass = null;
+        } catch (InstantiationException x) {
             codegenClass = null;
         }
     }
@@ -1649,7 +1670,6 @@ public final class Context {
     private ErrorReporter errorReporter;
     private Thread currentThread;
     private static Hashtable threadContexts = new Hashtable(11);
-    private static ClassNameHelper nameHelper;
     private RegExpProxy regExpProxy;
     private Locale locale;
     private boolean generatingDebug;
