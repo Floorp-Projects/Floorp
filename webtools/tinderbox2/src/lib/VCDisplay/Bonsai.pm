@@ -4,8 +4,8 @@
 # installed bonsai and are using cvsblame cvsguess and cvsquery to let
 # your webserver render html pages of your CVS repository.
 
-# $Revision: 1.9 $ 
-# $Date: 2002/12/10 19:32:46 $ 
+# $Revision: 1.10 $ 
+# $Date: 2003/02/11 00:16:34 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Bonsai.pm,v $ 
 # $Name:  $ 
@@ -138,7 +138,7 @@ sub prepare_bonsai_args {
     my ($root) = TreeData::TreeName2Root($tree);
     $root = remote_cvsroot2local_cvsroot($root);
         
-    my ($branch) = TreeData::TreeName2Module($tree);
+    my ($branch) = TreeData::TreeName2Branch($tree);
     
     ($tree) &&
         (push @url_args, "treeid=".HTMLPopUp::escapeURL($tree));
