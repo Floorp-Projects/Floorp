@@ -482,16 +482,26 @@ void nsHTMLFramesetFrame::Scale(nscoord  aDesired,
     actual += aItems[j];
   }
 
-  float factor = (float)aDesired / (float)actual;
-  actual = 0;
-  // scale the items up or down
-  for (i = 0; i < aNumIndicies; i++) {
-    j = aIndicies[i];
-    aItems[j] = NSToCoordRound((float)aItems[j] * factor);
-    actual += aItems[j];
+  if (actual > 0) {
+    float factor = (float)aDesired / (float)actual;
+    actual = 0;
+    // scale the items up or down
+    for (i = 0; i < aNumIndicies; i++) {
+      j = aIndicies[i];
+      aItems[j] = NSToCoordRound((float)aItems[j] * factor);
+      actual += aItems[j];
+    }
+  } else if (aNumIndicies != 0) {
+    // All the specs say zero width, but we have to fill up space
+    // somehow.  Distribute it equally.
+    nscoord width = NSToCoordRound((float)aDesired / (float)aNumIndicies);
+    actual = width * aNumIndicies;
+    for (i = 0; i < aNumIndicies; i++) {
+      aItems[aIndicies[i]] = width;
+    }
   }
 
-  if ((aNumIndicies > 0) && (aDesired != actual)) {
+  if (aNumIndicies > 0 && aDesired != actual) {
     PRInt32 unit = (aDesired > actual) ? 1 : -1;
     for (i=0; (i < aNumIndicies) && (aDesired != actual); i++) {
       j = aIndicies[i];
