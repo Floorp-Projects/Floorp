@@ -51,6 +51,7 @@ use Net::IRC;
 use LWP::Simple;
 use Tinderbox;
 use Carp;
+use Chatbot::Eliza;
 
 $|++;
 
@@ -222,11 +223,10 @@ sub do_command {
 
 # on_msg: private message received via /msg
 
-sub on_msg
-    {
-  	my ($self, $event) = @_;
-  	my ($nick) = $event->nick;
-  	my ($arg) = $event->args;
+sub on_msg {
+    my ($self, $event) = @_;
+    my ($nick) = $event->nick;
+    my ($arg) = $event->args;
     my @arglist = split(' ', $arg);
     my $cmd = shift @arglist;
     my $rest = join(' ', @arglist);
@@ -241,7 +241,10 @@ sub on_msg
     if (do_command(\%pubcmds, $nick, $cmd, $rest)) {
         return;
     }
-    do_command(\%msgcmds, $nick, $cmd, $rest);
+    if (do_command(\%msgcmds, $nick, $cmd, $rest)) {
+        return;
+    }
+    do_unknown($nick, $cmd, $rest);
 }
 
 
@@ -329,12 +332,20 @@ sub on_public {
         if (do_command(\%pubcmds, $channel, $cmd, $rest)) {
             return;
         } else {
-            $self->privmsg($channel, $nick . ": Um, your what hurts?");
+            do_unknown($channel, $cmd, $rest);
         }
     }
 }
 
 
+sub do_unknown {
+    my ($nick, $cmd, $rest) = (@_);
+    if (!defined $::eliza) {
+        $::eliza = new Chatbot::Eliza;
+    }
+    my $result = $::eliza->transform("$cmd $rest");
+    $bot->privmsg($nick, $result);
+}
 
 
 sub saylongline {
