@@ -23,17 +23,22 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define NS_MSGCOMPOSE_CID						              \
+#define NS_MSGCOMPOSESERVICE_CID				  \
+{ /* 588595FE-1ADA-11d3-A715-0060B0EB39B5 */      \
+ 0x588595fe, 0x1ada, 0x11d3,                      \
+ {0xa7, 0x15, 0x0, 0x60, 0xb0, 0xeb, 0x39, 0xb5}}
+
+#define NS_MSGCOMPOSE_CID						  \
 { /* EB5BDAF8-BBC6-11d2-A6EC-0060B0EB39B5 */      \
  0xeb5bdaf8, 0xbbc6, 0x11d2,                      \
  {0xa6, 0xec, 0x0, 0x60, 0xb0, 0xeb, 0x39, 0xb5}}
 
-#define NS_MSGCOMPFIELDS_CID	                    \
+#define NS_MSGCOMPFIELDS_CID	                  \
 { /* 6D222BA0-BD46-11d2-8293-000000000000 */      \
  0x6d222ba0, 0xbd46, 0x11d2,                      \
  {0x82, 0x93, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}}
 
-#define NS_MSGSEND_CID							              \
+#define NS_MSGSEND_CID							  \
 { /* 935284E0-C5D8-11d2-8297-000000000000 */      \
  0x935284e0, 0xc5d8, 0x11d2,                      \
  {0x82, 0x97, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}}
