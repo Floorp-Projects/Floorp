@@ -106,7 +106,7 @@ NS_IMETHODIMP nsMsgMailSession::RemoveFolderListener(nsIFolderListener * listene
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::OnItemPropertyChanged(nsISupports *item,
+nsMsgMailSession::OnItemPropertyChanged(nsIRDFResource *item,
                                         nsIAtom *property,
                                         const char* oldValue,
                                         const char* newValue)
@@ -128,7 +128,7 @@ nsMsgMailSession::OnItemPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::OnItemUnicharPropertyChanged(nsISupports *item,
+nsMsgMailSession::OnItemUnicharPropertyChanged(nsIRDFResource *item,
                                                nsIAtom *property,
                                                const PRUnichar* oldValue,
                                                const PRUnichar* newValue)
@@ -150,7 +150,7 @@ nsMsgMailSession::OnItemUnicharPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::OnItemIntPropertyChanged(nsISupports *item,
+nsMsgMailSession::OnItemIntPropertyChanged(nsIRDFResource *item,
                                            nsIAtom *property,
                                            PRInt32 oldValue,
                                            PRInt32 newValue)
@@ -172,7 +172,7 @@ nsMsgMailSession::OnItemIntPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::OnItemBoolPropertyChanged(nsISupports *item,
+nsMsgMailSession::OnItemBoolPropertyChanged(nsIRDFResource *item,
                                             nsIAtom *property,
                                             PRBool oldValue,
                                             PRBool newValue)

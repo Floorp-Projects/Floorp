@@ -472,13 +472,13 @@ nsMessengerWinIntegration::Init()
 }
 
 NS_IMETHODIMP
-nsMessengerWinIntegration::OnItemPropertyChanged(nsISupports *, nsIAtom *, char const *, char const *)
+nsMessengerWinIntegration::OnItemPropertyChanged(nsIRDFResource *, nsIAtom *, char const *, char const *)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMessengerWinIntegration::OnItemUnicharPropertyChanged(nsISupports *, nsIAtom *, const PRUnichar *, const PRUnichar *)
+nsMessengerWinIntegration::OnItemUnicharPropertyChanged(nsIRDFResource *, nsIAtom *, const PRUnichar *, const PRUnichar *)
 {
   return NS_OK;
 }
@@ -849,7 +849,7 @@ nsMessengerWinIntegration::OnItemAdded(nsIRDFResource *, nsISupports *)
 }
 
 NS_IMETHODIMP
-nsMessengerWinIntegration::OnItemBoolPropertyChanged(nsISupports *aItem,
+nsMessengerWinIntegration::OnItemBoolPropertyChanged(nsIRDFResource *aItem,
                                                          nsIAtom *aProperty,
                                                          PRBool aOldValue,
                                                          PRBool aNewValue)
@@ -885,18 +885,15 @@ nsMessengerWinIntegration::OnItemEvent(nsIMsgFolder *, nsIAtom *)
 }
 
 NS_IMETHODIMP
-nsMessengerWinIntegration::OnItemIntPropertyChanged(nsISupports *aItem, nsIAtom *aProperty, PRInt32 aOldValue, PRInt32 aNewValue)
+nsMessengerWinIntegration::OnItemIntPropertyChanged(nsIRDFResource *aItem, nsIAtom *aProperty, PRInt32 aOldValue, PRInt32 aNewValue)
 {
   nsresult rv;
 
   if (!mStoreUnreadCounts) return NS_OK; // don't do anything here if we aren't storing unread counts...
 
   if (aProperty == mTotalUnreadMessagesAtom) {
-    nsCOMPtr <nsIRDFResource> folderResource = do_QueryInterface(aItem, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
     const char *itemURI = nsnull;
-    rv = folderResource->GetValueConst(&itemURI);
+    rv = aItem->GetValueConst(&itemURI);
     NS_ENSURE_SUCCESS(rv,rv);
 
     // Today, if the user brings up the mail app and gets his/her mail and read 

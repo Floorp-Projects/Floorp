@@ -198,12 +198,12 @@ protected:
 
   nsresult OnItemAddedOrRemoved(nsIRDFResource *parentItem, nsISupports *item, PRBool added);
 
-	nsresult OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
-	nsresult OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
-        nsresult OnFolderSizePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
-  nsresult NotifyFolderTreeNameChanged(nsIMsgFolder *folder, PRInt32 aUnreadMessages);
-  nsresult NotifyFolderTreeSimpleNameChanged(nsIMsgFolder *folder);
-  nsresult NotifyFolderNameChanged(nsIMsgFolder *folder);
+  nsresult OnUnreadMessagePropertyChanged(nsIRDFResource *folderResource, PRInt32 oldValue, PRInt32 newValue);
+  nsresult OnTotalMessagePropertyChanged(nsIRDFResource *folderResource, PRInt32 oldValue, PRInt32 newValue);
+  nsresult OnFolderSizePropertyChanged(nsIRDFResource *folderResource, PRInt32 oldValue, PRInt32 newValue);
+  nsresult NotifyFolderTreeNameChanged(nsIMsgFolder *folder, nsIRDFResource *folderResource, PRInt32 aUnreadMessages);
+  nsresult NotifyFolderTreeSimpleNameChanged(nsIMsgFolder *folder, nsIRDFResource *folderResource);
+  nsresult NotifyFolderNameChanged(nsIMsgFolder *folder, nsIRDFResource *folderResource);
   nsresult NotifyAncestors(nsIMsgFolder *aFolder, nsIRDFResource *aPropertyResource, nsIRDFNode *aNode);
   nsresult GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node);
   nsresult GetFolderSizeNode(PRInt32 folderSize, nsIRDFNode **node);

@@ -107,13 +107,13 @@ nsMessengerOS2Integration::Init()
 }
 
 NS_IMETHODIMP
-nsMessengerOS2Integration::OnItemPropertyChanged(nsISupports *, nsIAtom *, char const *, char const *)
+nsMessengerOS2Integration::OnItemPropertyChanged(nsIRDFResource *, nsIAtom *, char const *, char const *)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMessengerOS2Integration::OnItemUnicharPropertyChanged(nsISupports *, nsIAtom *, const PRUnichar *, const PRUnichar *)
+nsMessengerOS2Integration::OnItemUnicharPropertyChanged(nsIRDFResource *, nsIAtom *, const PRUnichar *, const PRUnichar *)
 {
   return NS_OK;
 }
@@ -154,7 +154,7 @@ nsMessengerOS2Integration::OnItemAdded(nsIRDFResource *, nsISupports *)
 }
 
 NS_IMETHODIMP
-nsMessengerOS2Integration::OnItemBoolPropertyChanged(nsISupports *aItem,
+nsMessengerOS2Integration::OnItemBoolPropertyChanged(nsIRDFResource *aItem,
                                                          nsIAtom *aProperty,
                                                          PRBool aOldValue,
                                                          PRBool aNewValue)
@@ -169,7 +169,7 @@ nsMessengerOS2Integration::OnItemEvent(nsIMsgFolder *, nsIAtom *)
 }
 
 NS_IMETHODIMP
-nsMessengerOS2Integration::OnItemIntPropertyChanged(nsISupports *aItem, nsIAtom *aProperty, PRInt32 aOldValue, PRInt32 aNewValue)
+nsMessengerOS2Integration::OnItemIntPropertyChanged(nsIRDFResource *aItem, nsIAtom *aProperty, PRInt32 aOldValue, PRInt32 aNewValue)
 {
   return NS_OK;
 }

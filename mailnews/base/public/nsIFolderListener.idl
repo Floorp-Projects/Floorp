@@ -54,25 +54,25 @@ interface nsIFolderListener : nsISupports {
                      in nsISupports item);
   
   const folderListenerNotifyFlagValue propertyChanged = 0x4;
-  void OnItemPropertyChanged(in nsISupports item,
+  void OnItemPropertyChanged(in nsIRDFResource item,
                              in nsIAtom property,
                              in string oldValue,
                              in string newValue);
   
   const folderListenerNotifyFlagValue intPropertyChanged = 0x8;
-  void OnItemIntPropertyChanged(in nsISupports item,
+  void OnItemIntPropertyChanged(in nsIRDFResource item,
                                 in nsIAtom property,
                                 in long oldValue,
                                 in long newValue);
   
   const folderListenerNotifyFlagValue boolPropertyChanged = 0x10;
-  void OnItemBoolPropertyChanged(in nsISupports item,
+  void OnItemBoolPropertyChanged(in nsIRDFResource item,
                                  in nsIAtom property,
                                  in boolean oldValue,
                                  in boolean newValue);
   
   const folderListenerNotifyFlagValue unicharPropertyChanged = 0x20;
-  void OnItemUnicharPropertyChanged(in nsISupports item,
+  void OnItemUnicharPropertyChanged(in nsIRDFResource item,
                                     in nsIAtom property,
                                     in wstring oldValue,
                                     in wstring newValue);

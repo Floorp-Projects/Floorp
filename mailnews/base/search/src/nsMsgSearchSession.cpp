@@ -766,7 +766,7 @@ nsMsgSearchSession::OnItemRemoved(nsIRDFResource *parentItem,
 }
 
 NS_IMETHODIMP
-nsMsgSearchSession::OnItemPropertyChanged(nsISupports *item,
+nsMsgSearchSession::OnItemPropertyChanged(nsIRDFResource *item,
                                         nsIAtom *property,
                                         const char* oldValue,
                                         const char* newValue)
@@ -776,7 +776,7 @@ nsMsgSearchSession::OnItemPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgSearchSession::OnItemIntPropertyChanged(nsISupports *item,
+nsMsgSearchSession::OnItemIntPropertyChanged(nsIRDFResource *item,
                                             nsIAtom *property,
                                             PRInt32 oldValue,
                                             PRInt32 newValue)
@@ -785,7 +785,7 @@ nsMsgSearchSession::OnItemIntPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgSearchSession::OnItemBoolPropertyChanged(nsISupports *item,
+nsMsgSearchSession::OnItemBoolPropertyChanged(nsIRDFResource *item,
                                             nsIAtom *property,
                                             PRBool oldValue,
                                             PRBool newValue)
@@ -794,7 +794,7 @@ nsMsgSearchSession::OnItemBoolPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgSearchSession::OnItemUnicharPropertyChanged(nsISupports *item,
+nsMsgSearchSession::OnItemUnicharPropertyChanged(nsIRDFResource *item,
                                                 nsIAtom *property,
                                                 const PRUnichar* oldValue,
                                                 const PRUnichar* newValue)

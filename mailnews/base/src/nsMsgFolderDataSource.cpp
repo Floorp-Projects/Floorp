@@ -838,7 +838,7 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsIRDFResource *parentItem,
 }
 
 NS_IMETHODIMP
-nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item,
+nsMsgFolderDataSource::OnItemPropertyChanged(nsIRDFResource *resource,
                                              nsIAtom *property,
                                              const char *oldValue,
                                              const char *newValue)
@@ -848,63 +848,45 @@ nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
-nsMsgFolderDataSource::OnItemIntPropertyChanged(nsISupports *item,
+nsMsgFolderDataSource::OnItemIntPropertyChanged(nsIRDFResource *resource,
                                                 nsIAtom *property,
                                                 PRInt32 oldValue,
                                                 PRInt32 newValue)
 {
-	//We only care about folder changes
-	nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
-	if(folder)
-	{
-    if (kTotalMessagesAtom == property)
-      OnTotalMessagePropertyChanged(folder, oldValue, newValue);
-    else if (kTotalUnreadMessagesAtom == property)
-      OnUnreadMessagePropertyChanged(folder, oldValue, newValue);
-    else if (kFolderSizeAtom == property)
-      OnFolderSizePropertyChanged(folder, oldValue, newValue);
-	}
-	return NS_OK;
+  if (kTotalMessagesAtom == property)
+    OnTotalMessagePropertyChanged(resource, oldValue, newValue);
+  else if (kTotalUnreadMessagesAtom == property)
+    OnUnreadMessagePropertyChanged(resource, oldValue, newValue);
+  else if (kFolderSizeAtom == property)
+    OnFolderSizePropertyChanged(resource, oldValue, newValue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgFolderDataSource::OnItemUnicharPropertyChanged(nsISupports *item,
+nsMsgFolderDataSource::OnItemUnicharPropertyChanged(nsIRDFResource *resource,
                                                     nsIAtom *property,
                                                     const PRUnichar *oldValue,
                                                     const PRUnichar *newValue)
 {
-  nsresult rv=NS_OK;
-
   if (kNameAtom == property) {
-    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(item, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        PRInt32 numUnread;
-        folder->GetNumUnread(PR_FALSE, &numUnread);
-        NotifyFolderTreeNameChanged(folder, numUnread);
-        NotifyFolderTreeSimpleNameChanged(folder);
-        NotifyFolderNameChanged(folder);
-      }
+    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(resource));
+    if (folder) {
+      PRInt32 numUnread;
+      folder->GetNumUnread(PR_FALSE, &numUnread);
+      NotifyFolderTreeNameChanged(folder, resource, numUnread);
+      NotifyFolderTreeSimpleNameChanged(folder, resource);
+      NotifyFolderNameChanged(folder, resource);
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item,
+nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsIRDFResource *resource,
                                                  nsIAtom *property,
                                                  PRBool oldValue,
                                                  PRBool newValue)
 {
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item)); 
-  if (!folder) return rv;
-
-  nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item)); 
-  if (!item) return rv;
-
   if (newValue != oldValue) {
     nsIRDFNode* literalNode = newValue?kTrueLiteral:kFalseLiteral;
     if (kNewMessagesAtom == property) {
@@ -918,7 +900,7 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item,
     }
   } 
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1679,10 +1661,10 @@ nsMsgFolderDataSource::createHasUnreadMessagesNode(nsIMsgFolder *folder, PRBool 
 }
 
 nsresult
-nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
+nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIRDFResource *folderResource, PRInt32 oldValue, PRInt32 newValue)
 {
-  nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
-  if(folderResource)
+  nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(folderResource);
+  if(folder)
   {
     //First send a regular unread message changed notification
     nsCOMPtr<nsIRDFNode> newNode;
@@ -1703,13 +1685,13 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
     }
 
     //We will have to change the folderTreeName if the unread column is hidden
-    NotifyFolderTreeNameChanged(folder, newValue);
+    NotifyFolderTreeNameChanged(folder, folderResource, newValue);
   }
   return NS_OK;
 }
 
 nsresult
-nsMsgFolderDataSource::NotifyFolderNameChanged(nsIMsgFolder* aFolder)
+nsMsgFolderDataSource::NotifyFolderNameChanged(nsIMsgFolder* aFolder, nsIRDFResource *folderResource)
 {
   nsXPIDLString name;
   nsresult rv = aFolder->GetName(getter_Copies(name));
@@ -1717,21 +1699,19 @@ nsMsgFolderDataSource::NotifyFolderNameChanged(nsIMsgFolder* aFolder)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIRDFNode> newNameNode;
     createNode(name.get(), getter_AddRefs(newNameNode), getRDFService());
-    nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(aFolder);
     NotifyPropertyChanged(folderResource, kNC_Name, newNameNode);
   }
   return NS_OK;
 }
 
 nsresult
-nsMsgFolderDataSource::NotifyFolderTreeSimpleNameChanged(nsIMsgFolder* aFolder)
+nsMsgFolderDataSource::NotifyFolderTreeSimpleNameChanged(nsIMsgFolder* aFolder, nsIRDFResource *folderResource)
 {
   nsXPIDLString abbreviatedName;
   nsresult rv = aFolder->GetAbbreviatedName(getter_Copies(abbreviatedName));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIRDFNode> newNameNode;
     createNode(abbreviatedName.get(), getter_AddRefs(newNameNode), getRDFService());
-    nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(aFolder);
     NotifyPropertyChanged(folderResource, kNC_FolderTreeSimpleName, newNameNode);
   }
 
@@ -1740,6 +1720,7 @@ nsMsgFolderDataSource::NotifyFolderTreeSimpleNameChanged(nsIMsgFolder* aFolder)
 
 nsresult
 nsMsgFolderDataSource::NotifyFolderTreeNameChanged(nsIMsgFolder* aFolder,
+                                                   nsIRDFResource* aFolderResource,
                                                    PRInt32 aUnreadMessages)
 {
   nsXPIDLString name;
@@ -1751,9 +1732,7 @@ nsMsgFolderDataSource::NotifyFolderTreeNameChanged(nsIMsgFolder* aFolder,
 			
     nsCOMPtr<nsIRDFNode> newNameNode;
     createNode(newNameString.get(), getter_AddRefs(newNameNode), getRDFService());
-    nsCOMPtr<nsIRDFResource> folderResource =
-    do_QueryInterface(aFolder);
-    NotifyPropertyChanged(folderResource, kNC_FolderTreeName, newNameNode);
+    NotifyPropertyChanged(aFolderResource, kNC_FolderTreeName, newNameNode);
   }
   return NS_OK;
 }
@@ -1857,32 +1836,21 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
 **/
 
 nsresult
-nsMsgFolderDataSource::OnFolderSizePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
+nsMsgFolderDataSource::OnFolderSizePropertyChanged(nsIRDFResource *folderResource, PRInt32 oldValue, PRInt32 newValue)
 {
-  nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
-  if(folderResource)
-  {
-    nsCOMPtr<nsIRDFNode> newNode;
-    
-    GetFolderSizeNode(newValue, getter_AddRefs(newNode));
-    NotifyPropertyChanged(folderResource, kNC_FolderSize, newNode);
-  }
+  nsCOMPtr<nsIRDFNode> newNode;
+  GetFolderSizeNode(newValue, getter_AddRefs(newNode));
+  NotifyPropertyChanged(folderResource, kNC_FolderSize, newNode);
   return NS_OK;
 }
 
 nsresult
-nsMsgFolderDataSource::OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
+nsMsgFolderDataSource::OnTotalMessagePropertyChanged(nsIRDFResource *folderResource, PRInt32 oldValue, PRInt32 newValue)
 {
-	nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
-	if(folderResource)
-	{
-		//First send a regular unread message changed notification
-		nsCOMPtr<nsIRDFNode> newNode;
-
-		GetNumMessagesNode(newValue, getter_AddRefs(newNode));
-		NotifyPropertyChanged(folderResource, kNC_TotalMessages, newNode);
-	}
-	return NS_OK;
+  nsCOMPtr<nsIRDFNode> newNode;
+  GetNumMessagesNode(newValue, getter_AddRefs(newNode));
+  NotifyPropertyChanged(folderResource, kNC_TotalMessages, newNode);
+  return NS_OK;
 }
 
 nsresult 

@@ -114,8 +114,6 @@ protected:
   static PRBool isContainment(nsIRDFResource *aProperty);
   nsresult getServerForFolderNode(nsIRDFNode *aResource,
                                   nsIMsgIncomingServer **aResult);
-  nsresult getServerForObject(nsISupports *aObject,
-                              nsIMsgIncomingServer **aResult);
   
   nsresult createRootResources(nsIRDFResource *aProperty,
                                nsISupportsArray* aNodeArray);

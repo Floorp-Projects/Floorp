@@ -1204,15 +1204,8 @@ nsresult
 nsMsgAccountManagerDataSource::getServerForFolderNode(nsIRDFNode *aResource,
                                                       nsIMsgIncomingServer **aResult)
 {
-  return getServerForObject(aResource, aResult);
-}
-
-nsresult
-nsMsgAccountManagerDataSource::getServerForObject(nsISupports *aObject,
-                                                  nsIMsgIncomingServer **aResult)
-{
   nsresult rv;
-  nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(aObject, &rv);
+  nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(aResource, &rv);
   if (NS_SUCCEEDED(rv)) {
     PRBool isServer;
     rv = folder->GetIsServer(&isServer);
@@ -1317,13 +1310,13 @@ nsMsgAccountManagerDataSource::OnServerChanged(nsIMsgIncomingServer *server)
 }
 
 nsresult
-nsMsgAccountManagerDataSource::OnItemPropertyChanged(nsISupports *, nsIAtom *, char const *, char const *)
+nsMsgAccountManagerDataSource::OnItemPropertyChanged(nsIRDFResource *, nsIAtom *, char const *, char const *)
 {
   return NS_OK;
 }
 
 nsresult
-nsMsgAccountManagerDataSource::OnItemUnicharPropertyChanged(nsISupports *, nsIAtom *, const PRUnichar *, const PRUnichar *)
+nsMsgAccountManagerDataSource::OnItemUnicharPropertyChanged(nsIRDFResource *, nsIAtom *, const PRUnichar *, const PRUnichar *)
 {
   return NS_OK;
 }
@@ -1348,30 +1341,13 @@ nsMsgAccountManagerDataSource::OnItemAdded(nsIRDFResource *, nsISupports *)
 
 
 nsresult
-nsMsgAccountManagerDataSource::OnItemBoolPropertyChanged(nsISupports *aItem,
+nsMsgAccountManagerDataSource::OnItemBoolPropertyChanged(nsIRDFResource *aItem,
                                                          nsIAtom *aProperty,
                                                          PRBool aOldValue,
                                                          PRBool aNewValue)
 {
-  nsresult rv;
-
-  // server properties
-  // check property first because that's fast
-  if (aProperty == kDefaultServerAtom) {
-
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = getServerForObject(aItem, getter_AddRefs(server));
-    if (NS_FAILED(rv))
-      return NS_OK;
-
-    // tricky - turn aItem into a resource -
-    // aItem should be an nsIMsgFolder
-    nsCOMPtr<nsIRDFResource> serverResource = do_QueryInterface(aItem, &rv);
-    if (NS_FAILED(rv)) return NS_OK;
-
-    NotifyObservers(serverResource, kNC_IsDefaultServer, kTrueLiteral, aNewValue, PR_FALSE);
-
-  }
+  if (aProperty == kDefaultServerAtom)
+    NotifyObservers(aItem, kNC_IsDefaultServer, kTrueLiteral, aNewValue, PR_FALSE);
   return NS_OK;
 }
 
@@ -1382,7 +1358,7 @@ nsMsgAccountManagerDataSource::OnItemEvent(nsIMsgFolder *, nsIAtom *)
 }
 
 nsresult
-nsMsgAccountManagerDataSource::OnItemIntPropertyChanged(nsISupports *, nsIAtom *, PRInt32, PRInt32)
+nsMsgAccountManagerDataSource::OnItemIntPropertyChanged(nsIRDFResource *, nsIAtom *, PRInt32, PRInt32)
 {
   return NS_OK;
 }

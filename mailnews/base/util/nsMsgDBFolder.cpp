@@ -3915,7 +3915,7 @@ nsMsgDBFolder::NotifyPropertyChanged(nsIAtom *property,
   {
     //Folderlisteners aren't refcounted.
     nsIFolderListener* listener =(nsIFolderListener*)mListeners.ElementAt(i);
-    listener->OnItemPropertyChanged((nsIRDFResource *)this, property, oldValue, newValue);
+    listener->OnItemPropertyChanged(this, property, oldValue, newValue);
   }
 
   //Notify listeners who listen to every folder
@@ -3923,7 +3923,7 @@ nsMsgDBFolder::NotifyPropertyChanged(nsIAtom *property,
   nsCOMPtr<nsIFolderListener> folderListenerManager =
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-    folderListenerManager->OnItemPropertyChanged((nsIRDFResource *)this, property, oldValue, newValue);
+    folderListenerManager->OnItemPropertyChanged(this, property, oldValue, newValue);
 
   return NS_OK;
 
@@ -3940,14 +3940,14 @@ nsMsgDBFolder::NotifyUnicharPropertyChanged(nsIAtom *property,
   {
     // folderlisteners aren't refcounted in the array
     nsIFolderListener* listener=(nsIFolderListener*)mListeners.ElementAt(i);
-    listener->OnItemUnicharPropertyChanged((nsIRDFResource *)this, property, oldValue, newValue);
+    listener->OnItemUnicharPropertyChanged(this, property, oldValue, newValue);
   }
 
   // Notify listeners who listen to every folder
   nsCOMPtr<nsIFolderListener> folderListenerManager =
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-    rv = folderListenerManager->OnItemUnicharPropertyChanged((nsIRDFResource *)this,
+    rv = folderListenerManager->OnItemUnicharPropertyChanged(this,
                                                    property,
                                                    oldValue,
                                                    newValue);
@@ -3964,7 +3964,7 @@ nsresult nsMsgDBFolder::NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldV
   {
     //Folderlisteners aren't refcounted.
     nsIFolderListener* listener =(nsIFolderListener*)mListeners.ElementAt(i);
-    listener->OnItemIntPropertyChanged((nsIRDFResource *)this, property, oldValue, newValue);
+    listener->OnItemIntPropertyChanged(this, property, oldValue, newValue);
   }
 
   //Notify listeners who listen to every folder
@@ -3972,7 +3972,7 @@ nsresult nsMsgDBFolder::NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldV
   nsCOMPtr<nsIFolderListener> folderListenerManager =
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-    folderListenerManager->OnItemIntPropertyChanged((nsIRDFResource *)this, property, oldValue, newValue);
+    folderListenerManager->OnItemIntPropertyChanged(this, property, oldValue, newValue);
 
   return NS_OK;
 
@@ -3986,7 +3986,7 @@ nsMsgDBFolder::NotifyBoolPropertyChanged(nsIAtom* property,
   {
     //Folderlisteners aren't refcounted.
     nsIFolderListener* listener =(nsIFolderListener*)mListeners.ElementAt(i);
-    listener->OnItemBoolPropertyChanged((nsIRDFResource *)this, property, oldValue, newValue);
+    listener->OnItemBoolPropertyChanged(this, property, oldValue, newValue);
   }
 
   //Notify listeners who listen to every folder
@@ -3994,7 +3994,7 @@ nsMsgDBFolder::NotifyBoolPropertyChanged(nsIAtom* property,
   nsCOMPtr<nsIFolderListener> folderListenerManager =
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-    folderListenerManager->OnItemBoolPropertyChanged((nsIRDFResource *)this, property, oldValue, newValue);
+    folderListenerManager->OnItemBoolPropertyChanged(this, property, oldValue, newValue);
 
   return NS_OK;
 

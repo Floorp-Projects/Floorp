@@ -52,23 +52,9 @@ var folderListener = {
 
   OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
   OnItemIntPropertyChanged: function(item, property, oldValue, newValue) { 
-    var currentLoadedFolder = GetLoadedMsgFolder();
-    if (!currentLoadedFolder) return;
-    var currentURI = currentLoadedFolder.URI;
-
-    //if we don't have a folder loaded, don't bother.
-    if (currentURI) {
+    if (item.Value == gCurrentFolderUri) {
       if (property.toString() == "TotalMessages" || property.toString() == "TotalUnreadMessages") {
-        var folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
-        if (folder) {
-          var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource); 
-          if (folderResource) {
-            var folderURI = folderResource.Value;
-            if (currentURI == folderURI) {
-              UpdateStandAloneMessageCounts();
-            }
-          }
-        }
+        UpdateStandAloneMessageCounts();
       }      
     }
   },
