@@ -1757,7 +1757,7 @@ int std::fprintf(FILE* file, const char *format, ...)
 
 
 
-static const printCharBufferSize = 64;
+static const int printCharBufferSize = 64;
 
 // Print ch count times.
 void JS::printChar(Formatter &f, char ch, int count)
