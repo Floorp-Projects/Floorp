@@ -937,13 +937,55 @@ SSMStatus SSM_ShowFollowupKeywordHandler(SSMTextGenContext * cx)
   return rv;
 }
 
+char *
+SSM_SetPasswordHTMLParamsFromTokenName(char *tokenName)
+{
+    char *url = NULL;
+    tokenName = SSM_ConvertStringToHTMLString(tokenName);
+    url = PR_smprintf("slot=%s&mechanism=%d", tokenName, 
+                      CKM_INVALID_MECHANISM);
+    PR_Free(tokenName);
+    return url;
+}
+
+char *
+SSM_SetPasswordHTMLParams(PK11SlotInfo *slot) {
+  return SSM_SetPasswordHTMLParamsFromTokenName(PK11_GetTokenName(slot));
+}
+
+char * SSM_GenerateChangePasswordURL(PK11SlotInfo *slot, SSMResource *target)
+{
+    PRUint32 width, height;
+    char *slotHTMLName = NULL, *url = NULL, *extraParams = NULL;
+    SSMStatus rv;
+
+    if (slot) {
+        slotHTMLName = 
+          SSM_ConvertStringToHTMLString(PK11_GetTokenName(slot));
+    } else {
+        slotHTMLName = PL_strdup("all");
+    }
+    extraParams = SSM_SetPasswordHTMLParams(slot);
+    rv = SSM_GenerateURL(target->m_connection,"get", "set_password", target, 
+                         extraParams, &width, &height, &url);
+    if (rv != SSM_SUCCESS) {
+        goto loser;
+    }
+    PR_Free(slotHTMLName);
+    PR_Free(extraParams);
+    return url;
+ loser:
+    PR_FREEIF(slotHTMLName);
+    PR_FREEIF(extraParams);
+   
+    return NULL;
+}
+
 SSMStatus SSM_SetUserPassword(PK11SlotInfo * slot, SSMResource * ct)
 {
   SSMStatus rv;
-  char * params = PR_smprintf("slot=%s&mechanism=%d",
-                              PK11_GetTokenName(slot), 
-                              CKM_INVALID_MECHANISM);
-  
+  char *params = SSM_SetPasswordHTMLParams(slot);
+
   SSM_LockUIEvent(ct);
   rv = SSMControlConnection_SendUIEvent(ct->m_connection,
                                         "get", "set_password",
@@ -973,22 +1015,18 @@ SSMStatus SSM_ProcessPasswordWindow(HTTPRequest * req)
    * a NO_CONTENT error which causes leave its content as is.
    */
   rv = SSM_HTTPReportError(req, HTTP_NO_CONTENT);
-  target = (req->target ? req->target : (SSMResource *) req->ctrlconn);
+  target = REQ_TARGET(req);
   /* First let's figure out if there are more than one token installed,
    * if so ask the user which one to change the password on
    */
   slotName = SSM_GetSlotNameForPasswordChange(req);
-  /* send UI event to bring up the dialog */
   if (slotName == NULL) {
     goto loser;
   }
-  slotHTMLName = SSM_ConvertStringToHTMLString(slotName);
-  PR_FREEIF(slotName);
-  if (slotHTMLName == NULL) {
-    goto loser;
-  }
-  extraParams = PR_smprintf("slot=%s&mech=1", slotHTMLName);
+
+  extraParams = SSM_SetPasswordHTMLParamsFromTokenName(slotName);
   SSM_LockUIEvent(target);
+  /* send UI event to bring up the dialog */
   rv = SSMControlConnection_SendUIEvent(req->ctrlconn, "get", 
                                         "set_password", target, 
                                         extraParams, 
