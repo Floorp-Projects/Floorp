@@ -55,6 +55,7 @@ REQUIRES    = xpcom \
 			  find \
 			  appcomps \
 			  mimetype \
+			  webbrowserpersist \
  	          $(NULL)
 
 CPPSRCS		= \
