@@ -1,0 +1,235 @@
+<!-- ============================================================================================ -->
+<!-- Browser Window ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+
+<!ENTITY  browserWindow.title                                               "Neutron">
+
+
+<!-- ============================================================================================ -->
+<!-- File Menu :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+<!ENTITY  fileMenu.label                                                    "File">
+<!ENTITY  fileMenu.accesskey                                                "f">
+
+<!ENTITY  fileNewBrowser.label                                              "New Window">
+<!ENTITY  fileNewBrowser.accesskey                                          "n">
+<!ENTITY  fileNewTab.label                                                  "New Tab">
+<!ENTITY  fileNewTab.accesskey                                              "t">
+<!ENTITY  fileOpenLocation.label                                            "Open Location...">
+<!ENTITY  fileOpenLocation.accesskey                                        "l">
+<!ENTITY  fileOpenFile.label                                                "Open File...">
+<!ENTITY  fileOpenFile.accesskey                                            "f">
+
+<!ENTITY  fileSavePage.label                                                "Save As...">
+<!ENTITY  fileSavePage.accesskey                                            "s">
+
+<!ENTITY  filePageSetup.label                                               "Page Setup">
+<!ENTITY  filePageSetup.accesskey                                           "u">
+<!ENTITY  filePrintPreview.label                                            "Print Preview">
+<!ENTITY  filePrintPreview.accesskey                                        "v">
+<!ENTITY  filePrint.label                                                   "Print...">
+<!ENTITY  filePrint.accesskey                                               "p">
+
+<!ENTITY  fileProperties.label                                              "Properties">
+<!ENTITY  fileProperties.accesskey                                          "i">
+<!ENTITY  fileClose.label                                                   "Close">
+<!ENTITY  fileClose.accesskey                                               "c">
+<!ENTITY  fileExit.label                                                   "Exit">
+<!ENTITY  fileExit.accesskey                                                "x">
+
+<!-- ============================================================================================ -->
+<!-- Edit Menu :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+<!ENTITY  editMenu.label                                                    "Edit">
+<!ENTITY  editMenu.accesskey                                                "e">
+
+<!ENTITY  editUndo.label                                                    "Undo">
+<!ENTITY  editUndo.accesskey                                                "u">
+<!ENTITY  editRedo.label                                                    "Redo">
+<!ENTITY  editRedo.accesskey                                                "r">
+
+<!ENTITY  editCut.label                                                     "Cut">
+<!ENTITY  editCut.accesskey                                                 "t">
+<!ENTITY  editCopy.label                                                    "Copy">
+<!ENTITY  editCopy.accesskey                                                "c">
+<!ENTITY  editPaste.label                                                   "Paste">
+<!ENTITY  editPaste.accesskey                                               "p">
+<!ENTITY  editDelete.label                                                  "Delete">
+<!ENTITY  editDelete.accesskey                                              "d">
+
+<!ENTITY  editSelectAll.label                                               "Select All">
+<!ENTITY  editSelectAll.accesskey                                           "a">
+
+<!ENTITY  editFindPage.label                                                "Find in Page...">
+<!ENTITY  editFindPage.accesskey                                            "f">
+<!ENTITY  editFindAgain.label                                               "Find Again">
+<!ENTITY  editFindAgain.accesskey                                           "g">
+
+<!-- ============================================================================================ -->
+<!-- View Menu :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+<!ENTITY  viewMenu.label                                                    "View">
+<!ENTITY  viewMenu.accesskey                                                "v">
+
+<!ENTITY  viewToolbars.label                                                "Toolbars">
+<!ENTITY  viewToolbars.accesskey                                            "t">
+
+  <!ENTITY  viewToolbarsCommand.label                                       "Command">
+  <!ENTITY  viewToolbarsCommand.accesskey                                   "c">
+  <!ENTITY  viewToolbarsLocation.label                                      "Location">
+  <!ENTITY  viewToolbarsLocation.accesskey                                  "l">
+  <!ENTITY  viewToolbarsPersonal.label                                      "Bookmarks">
+  <!ENTITY  viewToolbarsPersonal.accesskey                                  "b">
+
+  <!ENTITY  viewToolbarsStatus.label                                        "Status bar">
+  <!ENTITY  viewToolbarsStatus.accesskey                                    "s">
+
+<!ENTITY  viewSidebar.label                                                 "Sidebar">
+<!ENTITY  viewSidebar.accesskey                                             "s">
+<!ENTITY  viewFullScreen.label                                              "Full Screen">
+<!ENTITY  viewFullScreen.accesskey                                          "f">
+
+<!ENTITY  viewTextZoom.label                                                "Text Zoom (125)">
+<!ENTITY  viewTextZoom.accesskey                                            "z">
+
+  <!ENTITY  viewTextZoomSmaller.label                                       "Smaller">
+  <!ENTITY  viewTextZoomSmaller.accesskey                                   "s">
+  <!ENTITY  viewTextZoomLarger.label                                        "Larger">
+  <!ENTITY  viewTextZoomLarger.accesskey                                    "l">
+
+  <!ENTITY  viewTextZoom50Pc.label                                          "50">
+  <!ENTITY  viewTextZoom50Pc.accesskey                                      "5">
+  <!ENTITY  viewTextZoom75Pc.label                                          "75">
+  <!ENTITY  viewTextZoom75Pc.accesskey                                      "7">
+  <!ENTITY  viewTextZoom90Pc.label                                          "90">
+  <!ENTITY  viewTextZoom90Pc.accesskey                                      "9">
+  <!ENTITY  viewTextZoom100Pc.label                                         "100 (Original Size)">
+  <!ENTITY  viewTextZoom100Pc.accesskey                                     "z">
+  <!ENTITY  viewTextZoom125Pc.label                                         "125">
+  <!ENTITY  viewTextZoom125Pc.accesskey                                     "1">
+  <!ENTITY  viewTextZoom150Pc.label                                         "150">
+  <!ENTITY  viewTextZoom150Pc.accesskey                                     "0">
+  <!ENTITY  viewTextZoom200Pc.label                                         "200">
+  <!ENTITY  viewTextZoom200Pc.accesskey                                     "2">
+
+  <!ENTITY  viewTextZoomOther.label                                         "Other (300)...">
+  <!ENTITY  viewTextZoomOther.accesskey                                     "o">
+
+<!ENTITY  viewStylesheet.label                                              "Use Style Sheet">
+<!ENTITY  viewStylesheet.accesskey                                          "u">
+
+  <!ENTITY  viewStylesheetDefault.label                                     "Default">
+  <!ENTITY  viewStylesheetDefault.accesskey                                 "d">
+  <!ENTITY  viewStylesheetSummer.label                                      "Summer">
+  <!ENTITY  viewStylesheetSummer.accesskey                                  "s">
+
+<!ENTITY  viewStop.label                                                    "Stop">
+<!ENTITY  viewStop.accesskey                                                "s">
+<!ENTITY  viewReload.label                                                  "Reload">
+<!ENTITY  viewReload.accesskey                                              "r">
+
+<!ENTITY  viewSource.label                                                  "Source">
+<!ENTITY  viewSource.accesskey                                              "o">
+<!ENTITY  viewTranslate.label                                               "Translate...">
+<!ENTITY  viewTranslate.accesskey                                           "l">
+<!ENTITY  viewEncoding.label                                                "Encoding">
+<!ENTITY  viewEncoding.accesskey                                            "e">
+
+<!-- ============================================================================================ -->
+<!-- Bookmarks Menu ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+<!ENTITY  bookmarksMenu.label                                               "Bookmarks">
+<!ENTITY  bookmarksMenu.accesskey                                           "b">
+
+<!ENTITY  bookmarksAdd.label                                                "Add Bookmark...">
+<!ENTITY  bookmarksAdd.accesskey                                            "a">
+<!ENTITY  bookmarksManage.label                                             "Manage Bookmarks">
+<!ENTITY  bookmarksManage.accesskey                                         "m">
+
+<!ENTITY  bookmarksSampleBookmark.label                                     "Sample Bookmark">
+
+<!-- ============================================================================================ -->
+<!-- Tools Menu ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+<!ENTITY  toolsMenu.label                                                   "Tools">
+<!ENTITY  toolsMenu.accesskey                                               "t">
+
+<!ENTITY  toolsMailNews.label                                               "Mail &amp; News">
+<!ENTITY  toolsMailNews.accesskey                                           "m">
+
+  <!ENTITY  toolsMailNewsReadMail.label                                     "Read Mail">
+  <!ENTITY  toolsMailNewsReadMail.accesskey                                 "r">
+  <!ENTITY  toolsMailNewsNewMessage.label                                   "New Message...">
+  <!ENTITY  toolsMailNewsNewMessage.accesskey                               "m">
+  <!ENTITY  toolsMailNewsSendLink.label                                     "Send Link to Current Page...">
+  <!ENTITY  toolsMailNewsSendLink.accesskey                                 "l">
+  <!ENTITY  toolsMailNewsSendPage.label                                     "Send Current Page...">
+  <!ENTITY  toolsMailNewsSendPage.accesskey                                 "p">
+
+  <!ENTITY  toolsMailNewsReadNews.label                                     "Read News">
+  <!ENTITY  toolsMailNewsReadNews.accesskey                                 "n">
+
+<!ENTITY  toolsHistory.label                                                "Browsing History">
+<!ENTITY  toolsHistory.accesskey                                            "h">
+<!ENTITY  toolsDownloadManager.label                                        "Downloaded Files">
+<!ENTITY  toolsDownloadManager.accesskey                                    "d">
+<!ENTITY  toolsErrorConsole.label                                           "Error Console">
+<!ENTITY  toolsErrorConsole.accesskey                                       "c">
+
+<!ENTITY  toolsOptions.label                                                "Options">
+<!ENTITY  toolsOptions.accesskey                                            "o">
+
+<!-- ============================================================================================ -->
+<!-- Help Menu :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+<!ENTITY  helpMenu.label                                                    "Help">
+<!ENTITY  helpMenu.accesskey                                                "h">
+
+<!ENTITY  helpContentsAndIndex.label                                        "Contents and Index">
+<!ENTITY  helpContentsAndIndex.accesskey                                    "c">
+<!ENTITY  helpTipOfTheDay.label                                             "Tip of the Day">
+<!ENTITY  helpTipOfTheDay.accesskey                                         "t">
+<!ENTITY  helpForNetscapeUsers.label                                        "For Netscape Users">
+<!ENTITY  helpForNetscapeUsers.accesskey                                    "n">
+<!ENTITY  helpForIEUsers.label                                              "For Internet Explorer Users">
+<!ENTITY  helpForIEUsers.accesskey                                          "i">
+
+<!ENTITY  helpSendFeedback.label                                            "Send Feedback...">
+<!ENTITY  helpSendFeedback.accesskey                                        "f">
+<!ENTITY  helpNeutronOnline.label                                           "Neutron Online">
+<!ENTITY  helpNeutronOnline.accesskey                                       "o">
+
+<!ENTITY  helpAboutNeutron.label                                            "About Neutron...">
+<!ENTITY  helpAboutNeutron.accesskey                                        "a">
+
+<!-- ============================================================================================ -->
+<!-- Command Toolbar :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+<!ENTITY  toolbarBack.label                                                 "Back">
+<!ENTITY  toolbarBack.tooltip                                               "Go back to PAGE_TITLE">
+<!ENTITY  toolbarForward.label                                              "Forward">
+<!ENTITY  toolbarForward.tooltip                                            "Go forward to PAGE_TITLE">
+<!ENTITY  toolbarReload.label                                               "Reload">
+<!ENTITY  toolbarReload.tooltip                                             "Reload the Current Page">
+<!ENTITY  toolbarStop.label                                                 "Stop">
+<!ENTITY  toolbarStop.tooltip                                               "Stop Load the Current Page">
+<!ENTITY  toolbarHome.label                                                 "Home">
+<!ENTITY  toolbarHome.tooltip                                               "Go to the Home Page">
+
+<!ENTITY  toolbarBookmarks.label                                            "Bookmarks">
+<!ENTITY  toolbarBookmarks.tooltip                                          "Open Bookmarks Panel">
+<!ENTITY  toolbarSearch.label                                               "Search">
+<!ENTITY  toolbarSearch.tooltip                                             "Open Search Panel">
+<!ENTITY  toolbarHistory.label                                              "History">
+<!ENTITY  toolbarHistory.tooltip                                            "Open History Panel">
+  
+<!ENTITY  toolbarMail.label                                                 "Mail">
+<!ENTITY  toolbarMail.tooltip                                               "Mail">
+
+<!-- ============================================================================================ -->
+<!-- Command Toolbar :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+<!-- ============================================================================================ -->
+<!ENTITY  toolbarLocation.label                                             "Location:">
+<!ENTITY  toolbarGo.label                                                   "Go">
+<!ENTITY  toolbarGo.tooltip                                                 "Go to PAGE_URL">
+
