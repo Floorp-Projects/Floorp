@@ -29,12 +29,13 @@
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsIObserver.h"
 #include "nsITransactionManager.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgRDFDataSource.h"
 
 class nsMsgRDFDataSource : public nsIRDFDataSource,
-                           public nsIShutdownListener,
+                           public nsIObserver,
   						   public nsIMsgRDFDataSource
 {
  public:
@@ -45,7 +46,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGRDFDATASOURCE
   NS_DECL_NSIRDFDATASOURCE
-  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports* service);
+  NS_DECL_NSIOBSERVER
 
   virtual void Close();
 
@@ -65,7 +66,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 	nsresult GetViewType(PRUint32 *viewType);
 
  private:
-  nsIRDFService *mRDFService;
+  nsCOMPtr<nsIRDFService> mRDFService;
   nsCOMPtr<nsISupportsArray> mObservers;
 
 };

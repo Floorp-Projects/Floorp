@@ -27,6 +27,7 @@
 #include "nsXPIDLString.h"
 #include "nsMsgRDFUtils.h"
 #include "nsEnumeratorUtils.h"
+#include "nsIObserverService.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -39,9 +40,6 @@ nsMsgRDFDataSource::nsMsgRDFDataSource():
 
 nsMsgRDFDataSource::~nsMsgRDFDataSource()
 {
-    if (mRDFService) nsServiceManager::ReleaseService(kRDFServiceCID,
-                                                      mRDFService,
-                                                      this);
 }
 
 /* void Init (); */
@@ -49,9 +47,17 @@ nsresult
 nsMsgRDFDataSource::Init()
 {
     nsresult rv=NS_OK;
-    
+
+    /* Add an observer to XPCOM shutdown */
+    nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_PROGID,
+                                                     &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsAutoString topic = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
+    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), topic.GetUnicode());
+    if (NS_FAILED(rv)) return rv;
+
+    /* Get and keep the rdf service. Will be released by the observer */
     getRDFService();
-    
     
 	//Create Empty Enumerator
 
@@ -84,8 +90,8 @@ nsMsgRDFDataSource::QueryInterface(const nsIID& iid, void **result)
   if (iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
       iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
       res = NS_STATIC_CAST(nsIRDFDataSource*, this);
-  else if(iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
-      res = NS_STATIC_CAST(nsIShutdownListener*, this);
+  else if(iid.Equals(nsCOMTypeInfo<nsIObserver>::GetIID()))
+      res = NS_STATIC_CAST(nsIObserver*, this);
   else if(iid.Equals(nsCOMTypeInfo<nsIMsgRDFDataSource>::GetIID()))
 	  res = NS_STATIC_CAST(nsIMsgRDFDataSource*, this);
 
@@ -283,16 +289,13 @@ nsMsgRDFDataSource::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 }
 
 
+/* XPCOM Shutdown observer */
 NS_IMETHODIMP
-nsMsgRDFDataSource::OnShutdown(const nsCID& aClass, nsISupports* service)
+nsMsgRDFDataSource::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData )
 {
-    
-    mRDFService=nsnull;
+    mRDFService = nsnull;
 	m_shuttingDown = PR_TRUE;
 	Close();
-    // the question is do we release the service or what?
-    // at the very least we set our member variable to nsnull so
-    // that getRDFService knows to re-get the service
 	return NS_OK;
 }
 
@@ -352,14 +355,9 @@ nsMsgRDFDataSource::GetViewType(PRUint32 *viewType)
 nsIRDFService *
 nsMsgRDFDataSource::getRDFService()
 {
-    
     if (!mRDFService && !m_shuttingDown) {
         nsresult rv;
-        
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsCOMTypeInfo<nsIRDFService>::GetIID(),
-                                          (nsISupports**) &mRDFService,
-                                          this);
+        mRDFService = do_GetService(kRDFServiceCID, &rv);
         if (NS_FAILED(rv)) return nsnull;
     }
     
