@@ -28,6 +28,7 @@ CPPSRCS =              \
 	nsToolbarItemHolder.cpp           \
 	nsToolbarManager.cpp       \
 	nsToolBar.cpp         \
+	nsHTToolbarDataModel.cpp \
 	nsHTColumn.cpp	\
 	nsHTControlStripItem.cpp \
 	nsHTTreeItem.cpp \

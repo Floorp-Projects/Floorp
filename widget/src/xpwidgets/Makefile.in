@@ -44,6 +44,7 @@ CPPSRCS=nsBaseWidget.cpp                \
 	nsToolbarManager.cpp            \
 	nsImageButton.cpp               \
 	nsToolbar.cpp                   \
+	nsHTToolbarDataModel.cpp        \
 	nsHTColumn.cpp \
 	nsHTControlStripItem.cpp \
 	nsHTTreeItem.cpp \
