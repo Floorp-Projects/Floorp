@@ -64,8 +64,22 @@ sub infer_type($) {
       last FRAME unless $link;
 
       $frame =~ s/\[.*\]$//; # ignore exact addresses, as they'll drift
+
       $last = $link;
       $link = $link->{$frame};
+
+      if (! $link) {
+        CHILD: foreach my $child (keys %$last) {
+            next CHILD unless $child =~ /^~/;
+
+            $child =~ s/^~//;
+
+            if ($frame =~ $child) {
+                $link = $last->{'~' . $child};
+                last CHILD;
+            }
+          }
+      }
   }
 
     if ($last && $last->{'#type#'}) {
