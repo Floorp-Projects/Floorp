@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.39 $ ';
+$::UtilsVersion = '$Revision: 1.40 $ ';
 
 package TinderUtils;
 
@@ -771,11 +771,29 @@ sub run_all_tests {
 	# bug to push this out to mozilla.org is:
     #   http://bugzilla.mozilla.org/show_bug.cgi?id=75073
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
+	  # Settle OS.
+	  run_system_cmd("sync; sleep 30", 35);
+
 	  $test_result = AliveTest("LayoutPerformanceTest", $build_dir,
 							   $binary, 
 							   "\"http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0\"",
 							   $Settings::LayoutPerformanceTestTimeout);
     }
+
+	# Startup performance test.  Time how fast it takes the browser
+	# to start up.
+    if ($Settings::StartupPerformanceTest and $test_result eq 'success') {
+	  # Settle OS.
+	  run_system_cmd("sync; sleep 30", 35);
+
+	  $test_result = AliveTest("StartupPerformanceTest", $build_dir,
+							   $binary, 
+							   "\"http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0\"",
+							   $Settings::StartupPerformanceTestTimeout);
+    }
+
+
+
 
     return $test_result;
 }
@@ -920,6 +938,21 @@ sub fork_and_log {
     return $pid;
 }
 
+# Stripped down version of fork_and_log().
+sub system_fork_and_log {
+    # Fork a sub process and log the output.
+    my ($cmd) = @_;
+
+    my $pid = fork; # Fork off a child process.
+    
+    unless ($pid) { # child
+        exec $cmd;
+        die "Could not exec()";
+    }
+    return $pid;
+}
+
+
 sub wait_for_pid {
     # Wait for a process to exit or kill it if it takes too long.
     my ($pid, $timeout_secs) = @_;
@@ -971,6 +1004,17 @@ sub run_cmd {
 
     return $result;
 }    
+
+# System version of run_cmd().
+sub run_system_cmd {
+    my ($cmd, $timeout_secs) = @_;
+
+	print_log "cmd = $cmd\n";
+    my $pid = system_fork_and_log($cmd);
+    my $result = wait_for_pid($pid, $timeout_secs);
+
+	return $result;
+}
 
 sub print_test_errors {
     my ($result, $name) = @_;
