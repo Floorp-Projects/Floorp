@@ -169,7 +169,7 @@ protected:
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
     BOOL                    OnChar(UINT aVirtualKeyCode, bool isMultibyte);
 #else
    BOOL                    OnChar(UINT aVirtualKeyCode);
@@ -235,7 +235,7 @@ protected:
 	PRUnichar*	mIMECompositionUniString;
 	PRInt32		mIMECompositionStringLength;
 	PRInt32		mIMECompositionStringSize;
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 	BOOL		mHaveDBCSLeadByte;
 	unsigned char mDBCSLeadByte;
 #endif
