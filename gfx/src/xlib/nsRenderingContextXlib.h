@@ -40,6 +40,7 @@
 #include "nsVoidArray.h"
 #include "nsDrawingSurfaceXlib.h"
 #include "nsRegionXlib.h"
+#include "nsCOMPtr.h"
 
 class GraphicsState;
 
