@@ -58,6 +58,7 @@ viewer:Components:chardet.shlb
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
 viewer:Components:Cookie.shlb 
+viewer:Components:cookieviewer.xpt 
 viewer:Components:data.shlb 
 viewer:Components:data.shlb 
 viewer:Components:data.xpt 
@@ -127,6 +128,7 @@ viewer:Components:res.xpt
 viewer:Components:resource.shlb
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
+viewer:Components:signonviewer.xpt 
 viewer:Components:streamconv.shlb 
 viewer:Components:streamconv.xpt 
 viewer:Components:strres.shlb 
@@ -151,6 +153,8 @@ viewer:Components:uriloader.xpt
 viewer:Components:view.shlb 
 viewer:Components:Wallet.shlb 
 viewer:Components:wallet.xpt 
+viewer:Components:walleteditor.xpt 
+viewer:Components:walletpreview.xpt 
 viewer:Components:WalletViewers.shlb 
 viewer:Components:widget.xpt 
 viewer:Components:xfer.shlb 

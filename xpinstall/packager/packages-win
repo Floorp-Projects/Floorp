@@ -143,6 +143,7 @@ bin\components\unicharutil.xpt
 bin\components\urildr.dll
 bin\components\uriloader.xpt
 bin\components\wallet.dll
+bin\components\wallet.xpt
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
 bin\components\widget.xpt

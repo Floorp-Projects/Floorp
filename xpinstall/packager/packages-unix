@@ -142,6 +142,7 @@ bin/components/sidebar.xpt
 bin/components/signonviewer.xpt
 bin/components/unicharutil.xpt
 bin/components/uriloader.xpt
+bin/components/wallet.xpt
 bin/components/walleteditor.xpt
 bin/components/walletpreview.xpt
 bin/components/widget.xpt
