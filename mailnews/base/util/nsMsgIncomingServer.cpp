@@ -931,9 +931,46 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
     
 }    
 
+// if the user has a : appended, then
+nsresult
+nsMsgIncomingServer::SetHostName(const char *aHostname)
+{
+    nsresult rv;
+    if (PL_strchr(aHostname, ':')) {
+	nsCAutoString newHostname(aHostname);
+	PRInt32 colonPos = newHostname.FindChar(':');
+
+        nsCAutoString portString;
+        newHostname.Right(portString, newHostname.Length() - colonPos);
+
+        newHostname.Truncate(colonPos);
+        
+	PRInt32 err;
+        PRInt32 port = portString.ToInteger(&err);
+        if (!err) SetPort(port);
+
+	rv = SetCharValue("hostname", (const char*)newHostname);
+    } else {
+        rv = SetCharValue("hostname", aHostname);
+    }
+    return rv;
+}
+
+nsresult
+nsMsgIncomingServer::GetHostName(char **aResult)
+{
+    nsresult rv;
+    rv = GetCharValue("hostname", aResult);
+    if (PL_strchr(*aResult, ':')) {
+	// gack, we need to reformat the hostname - SetHostName will do that
+        SetHostName(*aResult);
+        rv = GetCharValue("hostname", aResult);
+    }
+    return rv;
+}
 
 // use the convenience macros to implement the accessors
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
+//NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, Port, "port");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
