@@ -72,8 +72,8 @@ static void
 info_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     StaticModuleInfo *info = NS_STATIC_CAST(StaticModuleInfo *, entry);
-    info->~StaticModuleInfo();
     info->module = 0;
+    info->~StaticModuleInfo();
 }
 
 static void
