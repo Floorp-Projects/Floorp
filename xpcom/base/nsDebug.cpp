@@ -268,9 +268,10 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
       PR_snprintf(msg, sizeof(msg),
                 "%s\n\nClick Cancel to Debug Application.\n"
                 "Click Enter to continue running the Application.", buf);
-      ULONG code = WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, msg, 
-                                 "nsDebug::Assertion", 0,
-                                 MB_ERROR | MB_ENTERCANCEL);
+      ULONG code = MBID_ERROR;
+      code = WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, msg, 
+                           "nsDebug::Assertion", 0,
+                           MB_ERROR | MB_ENTERCANCEL);
 
       /* It is possible that we are executing on a thread that doesn't have a
        * message queue.  In that case, the message won't appear, and code will
