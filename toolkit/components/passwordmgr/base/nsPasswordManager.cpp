@@ -78,11 +78,6 @@ static nsIStringBundle* sPMBundle;
 static nsISecretDecoderRing* sDecoderRing;
 static nsPasswordManager* sPasswordManager;
 
-static void PMLocalizedString(const nsAString& key, nsAString& aResult,
-                              PRBool aFormatted = PR_FALSE,
-                              const PRUnichar** aFormatArgs = nsnull,
-                              PRUint32 aFormatArgsLength = 0);
-
 class nsPasswordManager::SignonDataEntry
 {
 public:
@@ -835,11 +830,11 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
       }
 
       nsAutoString dialogTitle, dialogText, neverText;
-      PMLocalizedString(NS_LITERAL_STRING("savePasswordTitle"), dialogTitle);
-      PMLocalizedString(NS_LITERAL_STRING("savePasswordText"),
-                        dialogText,
-                        PR_TRUE);
-      PMLocalizedString(NS_LITERAL_STRING("neverForSite"), neverText);
+      GetLocalizedString(NS_LITERAL_STRING("savePasswordTitle"), dialogTitle);
+      GetLocalizedString(NS_LITERAL_STRING("savePasswordText"),
+                         dialogText,
+                         PR_TRUE);
+      GetLocalizedString(NS_LITERAL_STRING("neverForSite"), neverText);
 
       PRInt32 selection;
       prompt->ConfirmEx(dialogTitle.get(),
@@ -914,8 +909,10 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
               }
 
               nsAutoString dialogTitle, dialogText;
-              PMLocalizedString(NS_LITERAL_STRING("passwordChangeTitle"), dialogTitle);
-              PMLocalizedString(NS_LITERAL_STRING("userSelectText"), dialogText);
+              GetLocalizedString(NS_LITERAL_STRING("passwordChangeTitle"),
+                                 dialogTitle);
+              GetLocalizedString(NS_LITERAL_STRING("userSelectText"),
+                                 dialogText);
 
               PRInt32 selection;
               PRBool confirm;
@@ -941,12 +938,13 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
               DecryptData(entry->userValue, ptUser);
               const PRUnichar* formatArgs[1] = { ptUser.get() };
 
-              PMLocalizedString(NS_LITERAL_STRING("passwordChangeTitle"), dialogTitle);
-              PMLocalizedString(NS_LITERAL_STRING("passwordChangeText"),
-                                dialogText,
-                                PR_TRUE,
-                                formatArgs,
-                                1);
+              GetLocalizedString(NS_LITERAL_STRING("passwordChangeTitle"),
+                                 dialogTitle);
+              GetLocalizedString(NS_LITERAL_STRING("passwordChangeText"),
+                                 dialogText,
+                                 PR_TRUE,
+                                 formatArgs,
+                                 1);
 
               PRBool confirm;
               prompt->Confirm(dialogTitle.get(), dialogText.get(), &confirm);
@@ -1634,228 +1632,12 @@ nsPasswordManager::AttachToInput(nsIDOMHTMLInputElement* aElement)
 //////////////////////////////////////
 // nsSingleSignonPrompt
 
-NS_IMPL_ISUPPORTS2(nsSingleSignonPrompt,
-                   nsIAuthPromptWrapper,
-                   nsIAuthPrompt)
-
-// nsIAuthPrompt
-NS_IMETHODIMP
-nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
-                             const PRUnichar* aText,
-                             const PRUnichar* aPasswordRealm,
-                             PRUint32 aSavePassword,
-                             const PRUnichar* aDefaultText,
-                             PRUnichar** aResult,
-                             PRBool* aConfirm)
-{
-  nsAutoString checkMsg;
-  nsString emptyString;
-  PRBool checkValue = PR_FALSE;
-  PRBool *checkPtr = nsnull;
-  PRUnichar* value = nsnull;
-  nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
-
-  if (nsPasswordManager::SingleSignonEnabled() && aPasswordRealm) {
-    if (aSavePassword == SAVE_PASSWORD_PERMANENTLY) {
-      PMLocalizedString(NS_LITERAL_STRING("rememberValue"), checkMsg);
-      checkPtr = &checkValue;
-    }
-
-    mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
-    nsCAutoString outHost;
-    nsAutoString outUser, outPassword;
-
-    mgrInternal->FindPasswordEntry(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                                   emptyString,
-                                   emptyString,
-                                   outHost,
-                                   outUser,
-                                   outPassword);
-
-    value = ToNewUnicode(outUser);
-  }
-
-  mPrompt->Prompt(aDialogTitle,
-                  aText,
-                  &value,
-                  checkMsg.get(),
-                  checkPtr,
-                  aConfirm);
-
-  if (*aConfirm) {
-    if (checkValue && value[0] != '\0') {
-      // The user requested that we save the value
-      // TODO: support SAVE_PASSWORD_FOR_SESSION
-
-      nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
-
-      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                       nsDependentString(value),
-                       emptyString);
-    }
-
-    *aResult = value;
-  } else {
-    if (value)
-      nsMemory::Free(value);
-    *aResult = nsnull;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSingleSignonPrompt::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
-                                                const PRUnichar* aText,
-                                                const PRUnichar* aPasswordRealm,
-                                                PRUint32 aSavePassword,
-                                                PRUnichar** aUser,
-                                                PRUnichar** aPassword,
-                                                PRBool* aConfirm)
-{
-  nsAutoString checkMsg;
-  nsString emptyString;
-  PRBool checkValue = PR_FALSE;
-  PRBool *checkPtr = nsnull;
-  PRUnichar *user = nsnull, *password = nsnull;
-  nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
-
-  if (nsPasswordManager::SingleSignonEnabled() && aPasswordRealm) {
-    if (aSavePassword == SAVE_PASSWORD_PERMANENTLY) {
-      PMLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
-      checkPtr = &checkValue;
-    }
-
-    mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
-    nsCAutoString outHost;
-    nsAutoString outUser, outPassword;
-
-    mgrInternal->FindPasswordEntry(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                                   emptyString,
-                                   emptyString,
-                                   outHost,
-                                   outUser,
-                                   outPassword);
-
-    user = ToNewUnicode(outUser);
-    password = ToNewUnicode(outPassword);
-  }
-
-  mPrompt->PromptUsernameAndPassword(aDialogTitle,
-                                     aText,
-                                     &user,
-                                     &password,
-                                     checkMsg.get(),
-                                     checkPtr,
-                                     aConfirm);
-
-  if (*aConfirm) {
-    if (checkValue && user[0] != '\0') {
-      // The user requested that we save the values
-      // TODO: support SAVE_PASSWORD_FOR_SESSION
-
-      nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
-
-      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                       nsDependentString(user),
-                       nsDependentString(password));
-    }
-
-    *aUser = user;
-    *aPassword = password;
-
-  } else {
-    if (user)
-      nsMemory::Free(user);
-    if (password)
-      nsMemory::Free(password);
-
-    *aUser = *aPassword = nsnull;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSingleSignonPrompt::PromptPassword(const PRUnichar* aDialogTitle,
-                                     const PRUnichar* aText,
-                                     const PRUnichar* aPasswordRealm,
-                                     PRUint32 aSavePassword,
-                                     PRUnichar** aPassword,
-                                     PRBool* aConfirm)
-{
-  nsAutoString checkMsg;
-  nsString emptyString;
-  PRBool checkValue = PR_FALSE;
-  PRBool *checkPtr = nsnull;
-  PRUnichar* password = nsnull;
-  nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
-
-  if (nsPasswordManager::SingleSignonEnabled() && aPasswordRealm) {
-    if (aSavePassword == SAVE_PASSWORD_PERMANENTLY) {
-      PMLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
-      checkPtr = &checkValue;
-    }
-
-    mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
-    nsCAutoString outHost;
-    nsAutoString outUser, outPassword;
-
-    mgrInternal->FindPasswordEntry(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                                   emptyString,
-                                   emptyString,
-                                   outHost,
-                                   outUser,
-                                   outPassword);
-
-    password = ToNewUnicode(outPassword);
-  }
-
-  mPrompt->PromptPassword(aDialogTitle,
-                          aText,
-                          &password,
-                          checkMsg.get(),
-                          checkPtr,
-                          aConfirm);
-
-  if (*aConfirm) {
-    if (checkValue && password[0] != '\0') {
-      // The user requested that we save the password
-      // TODO: support SAVE_PASSWORD_FOR_SESSION
-
-      nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
-
-      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                       emptyString,
-                       nsDependentString(password));
-    }
-
-    *aPassword = password;
-
-  } else {
-    if (password)
-      nsMemory::Free(password);
-    *aPassword = nsnull;
-  }
-
-  return NS_OK;
-}
-
-// nsIAuthPromptWrapper
-
-NS_IMETHODIMP
-nsSingleSignonPrompt::SetPromptDialogs(nsIPrompt* aDialogs)
-{
-  mPrompt = aDialogs;
-  return NS_OK;
-}
-
-static void
-PMLocalizedString(const nsAString& key,
-                  nsAString& aResult,
-                  PRBool aIsFormatted,
-                  const PRUnichar** aFormatArgs,
-                  PRUint32 aFormatArgsLength)
+/* static */ void
+nsPasswordManager::GetLocalizedString(const nsAString& key,
+                                      nsAString& aResult,
+                                      PRBool aIsFormatted,
+                                      const PRUnichar** aFormatArgs,
+                                      PRUint32 aFormatArgsLength)
 {
   if (!sPMBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
