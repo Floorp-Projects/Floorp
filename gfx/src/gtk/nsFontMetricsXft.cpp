@@ -72,7 +72,7 @@ public:
     ~nsFontXft();
 
     XftFont   *GetXftFont (void);
-    gint       GetWidth32 (const FcChar32 aString);
+    gint       GetWidth32 (FcChar32 aString);
 
 #ifdef MOZ_MATHML
     void       GetBoundingMetrics8  (const char *aString, PRUint32 aLength,
@@ -1542,7 +1542,7 @@ nsFontXft::GetXftFont(void)
 }
 
 gint
-nsFontXft::GetWidth32(const FcChar32 aString)
+nsFontXft::GetWidth32(FcChar32 aString)
 {
     XGlyphInfo glyphInfo;
     if (!mXftFont)
