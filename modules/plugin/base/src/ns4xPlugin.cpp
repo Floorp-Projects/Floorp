@@ -300,7 +300,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   gServiceMgr = serviceMgr;
   fLibrary = nsnull;
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_OS2)
   // On Windows (and Mac) we need to keep a direct reference to the fCallbacks and NOT
   // just copy the struct. See Bugzilla 85334
 
@@ -541,27 +541,8 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
 #endif
 
 #ifdef XP_OS2
-  // XXX Do we need to do this on OS/2 or can we look more like Windows?
-  NP_GETENTRYPOINTS pfnGetEntryPoints = (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
-
-  if (pfnGetEntryPoints == NULL)
-    return NS_ERROR_FAILURE;
-
-  NPPluginFuncs callbacks;
-  memset((void*) &callbacks, 0, sizeof(callbacks));
-
-  callbacks.size = sizeof(callbacks);
-
-  if (pfnGetEntryPoints(&callbacks) != NS_OK)
-    return NS_ERROR_FAILURE; // XXX
-
-  if (HIBYTE(callbacks.version) < NP_VERSION_MAJOR)
-    return NS_ERROR_FAILURE;
-
-  NP_PLUGINSHUTDOWN pfnShutdown = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
-
   // create the new plugin handler
-  *aResult = new ns4xPlugin(&callbacks, aLibrary, pfnShutdown, aServiceMgr);
+  *aResult = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
 
   if (*aResult == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
