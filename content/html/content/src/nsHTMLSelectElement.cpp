@@ -82,6 +82,7 @@ public:
   NS_DECL_NSIDOMHTMLCOLLECTION
 
   void AddOption(nsIContent* aOption);
+  void AddOptionIndexed(nsIContent* aOption, PRInt32 aIndex);
   void RemoveOption(nsIContent* aOption);
   PRInt32 IndexOf(nsIContent* aOption);
 
@@ -92,7 +93,8 @@ public:
 
 private:
   nsVoidArray mElements;
-  PRBool mDirty;
+  PRPackedBool mDirty;
+  PRPackedBool mFlat;
   nsHTMLSelectElement* mSelect;
 };
 
@@ -161,6 +163,8 @@ public:
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
+
+  NS_IMETHOD AddOptionIndexed(nsIContent* aContent, PRInt32 aIndex);
 
 protected:
   // Helper Methods
@@ -286,7 +290,12 @@ nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                                                   aNotify,
                                                                   aDeepSetDocument);
   if (NS_SUCCEEDED(res)) {
-    AddOption(aKid);
+    PRInt32 numChildren;
+    ChildCount(numChildren);
+
+    // this is effectively where we added it.  May not be the same as
+    // mOptions->GetLength if there are <optgroup>s
+    res = AddOptionIndexed(aKid, numChildren-1);
   }
 
   return res;
@@ -300,10 +309,7 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
                                                                   aNotify,
                                                                   aDeepSetDocument);
   if (NS_SUCCEEDED(res)) {
-    // No index is necessary
-    // It dirties list and the list automatically 
-    // refreshes itself on next access
-    AddOption(aKid); 
+    res = AddOptionIndexed(aKid, aIndex); 
   }
 
   return res;
@@ -324,7 +330,7 @@ nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
                                                                    aDeepSetDocument);
 
   if (NS_SUCCEEDED(res)) {
-    AddOption(aKid);
+    res = AddOptionIndexed(aKid, aIndex);
   }
 
   return res;
@@ -361,7 +367,7 @@ nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
     // element
     nsCOMPtr<nsIDOMNode> parent;
     
-    aBefore->GetParentNode(getter_AddRefs(parent));
+    result = aBefore->GetParentNode(getter_AddRefs(parent));
     if (parent) {
       result = parent->InsertBefore(aElement, aBefore, getter_AddRefs(ret));
     }
@@ -1115,6 +1121,40 @@ nsHTMLSelectElement::NamedItem(const nsAReadableString& aName,
 }
 
 NS_IMETHODIMP
+nsHTMLSelectElement::AddOptionIndexed(nsIContent* aContent, PRInt32 aIndex)
+{
+  // When first populating the select, this will be null but that's ok
+  // as we will manually update the widget at frame construction time.
+  if (!mOptions)
+    return NS_OK;
+
+  // Add the option to the option list.
+  mOptions->AddOptionIndexed(aContent, aIndex);
+
+  // Update the widget
+  nsIFormControlFrame* fcFrame = nsnull;
+
+  nsresult result = GetPrimaryFrame(this, fcFrame, PR_FALSE);
+
+  if (fcFrame) {
+    nsISelectControlFrame* selectFrame = nsnull;
+
+    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
+                                     (void **) &selectFrame);
+
+    if (NS_SUCCEEDED(result) && selectFrame) {
+      nsCOMPtr<nsIPresContext> presContext;
+
+      GetPresContext(this, getter_AddRefs(presContext));
+
+      result = selectFrame->AddOption(presContext, aIndex);
+    }
+  }
+  
+  return result;
+}
+
+NS_IMETHODIMP
 nsHTMLSelectElement::AddOption(nsIContent* aContent)
 {
   // When first populating the select, this will be null but that's ok
@@ -1130,7 +1170,7 @@ nsHTMLSelectElement::AddOption(nsIContent* aContent)
 
   nsresult result = GetPrimaryFrame(this, fcFrame, PR_FALSE);
 
-  if (NS_SUCCEEDED(result) && fcFrame) {
+  if (fcFrame) {
     nsISelectControlFrame* selectFrame = nsnull;
 
     result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
@@ -1440,6 +1480,8 @@ nsHTMLSelectElement::Init()
   if (!mOptions) {
     mOptions = new nsHTMLOptionCollection(this);
     NS_ADDREF(mOptions);
+  } else {
+    mOptions->Clear();
   }
 
   return NS_OK;
@@ -1451,9 +1493,10 @@ nsHTMLSelectElement::Init()
 // XXX this was modified form nsHTMLFormElement.cpp. We need a base
 // class implementation
 
-static void
+static PRBool
 GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
 {
+  PRBool result = PR_TRUE;
   PRInt32 numChildren;
   aContent->ChildCount(numChildren);
 
@@ -1471,6 +1514,9 @@ GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
       if (option) {
         aOptions.AppendElement(option); // keep the ref count
       } else {
+        // there must be an <optgroup> element; disable flat options speedup
+        result = PR_FALSE;
+        // ignore return from lower levels.
         GetOptionsRecurse(child, aOptions);
       }
     }
@@ -1481,7 +1527,7 @@ void
 nsHTMLOptionCollection::GetOptions()
 {
   Clear();
-  GetOptionsRecurse(mSelect, mElements);
+  mFlat = GetOptionsRecurse(mSelect, mElements);
   mDirty = PR_FALSE;
 }
 
@@ -1489,6 +1535,7 @@ nsHTMLOptionCollection::GetOptions()
 nsHTMLOptionCollection::nsHTMLOptionCollection(nsHTMLSelectElement* aSelect) 
 {
   mDirty = PR_TRUE;
+  mFlat = PR_TRUE;
   // Do not maintain a reference counted reference. When
   // the select goes away, it will let us know.
   mSelect = aSelect;
@@ -1559,7 +1606,7 @@ nsHTMLOptionCollection::SetOption(PRInt32 aIndex,
     return NS_OK;
   }
 
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
 
   // Update the options list
   if (mDirty) {
@@ -1693,6 +1740,52 @@ nsHTMLOptionCollection::AddOption(nsIContent* aOption)
 }
 
 void 
+nsHTMLOptionCollection::AddOptionIndexed(nsIContent* aOption, PRInt32 aIndex)
+{
+  if (!mDirty) {
+    PRBool insertAsFlat = mFlat;
+
+    if (!insertAsFlat) {
+      // try to find a way to avoid rebuilding the list
+      if (aIndex > 0) {
+        PRInt32 numChildren;
+        mSelect->ChildCount(numChildren);
+
+        // Note: we're called _after_ adding the child, so compare to
+        // numchildren-1
+        if (aIndex == mElements.Count() ||
+            aIndex == numChildren-1) {
+          // insert at end
+          insertAsFlat = PR_TRUE;
+        }
+        nsCOMPtr<nsIContent> content;
+        mSelect->ChildAt(aIndex-1, *getter_AddRefs(content));
+        aIndex = mElements.IndexOf(content);
+        if (aIndex != -1) {
+          // the previous element is in the list, so we know we insert
+          // right after it.
+          aIndex += 1;
+          insertAsFlat = PR_TRUE;
+        }
+      } else {
+        insertAsFlat = PR_TRUE;
+      }
+    }
+    if (insertAsFlat) {
+      nsIDOMHTMLOptionElement *option = nsnull;
+      
+      aOption->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),
+                              (void**)&option);
+      // option was addrefed for us
+      if (option)
+        mElements.InsertElementAt(option, aIndex);
+    } else {
+      mDirty = PR_TRUE;
+    }
+  }
+}
+
+void 
 nsHTMLOptionCollection::RemoveOption(nsIContent* aOption)
 {
   nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(aOption));
@@ -1731,6 +1824,7 @@ nsHTMLOptionCollection::Clear()
   }
 
   mElements.Clear();
+  mFlat = PR_TRUE;
 }
 
 
