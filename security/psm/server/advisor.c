@@ -1716,11 +1716,39 @@ SSM_IsOCSPEnabled(SSMControlConnection *connection)
     PRBool isOCSPEnabled = PR_FALSE;
 
     rv = PREF_GetBoolPref(connection->m_prefs, "security.OCSP.enabled",
-			  &isOCSPEnabled);
+                          &isOCSPEnabled);
     return (rv == SSM_SUCCESS) ? isOCSPEnabled : PR_FALSE; 
 }
 
+char *
+SSM_GetGenericOCSPWarning(SSMControlConnection *ctrl,
+                          CERTCertificate *cert)
+{
+    char *retString = NULL;
+    char *responderURL = NULL;
+    SSMTextGenContext *cx = NULL;
+    SSMStatus rv;
 
+    retString = PL_strdup("");
+    if (SSM_IsOCSPEnabled(ctrl)) {
+        responderURL = SSM_GetOCSPURL(cert, ctrl->m_prefs);
+        if (responderURL == NULL) {
+            goto done;
+        }
+        rv = SSMTextGen_NewTopLevelContext(NULL, &cx);
+        if (rv != SSM_SUCCESS) {
+            goto done;
+        }
+        SSM_GetAndExpandTextKeyedByString(cx, "ocsp_fail_message_generic",
+                                          &retString);
+    } 
+ done:
+    PR_FREEIF(responderURL);
+    if (cx) {
+        SSMTextGen_DestroyContext(cx);
+    }
+    return retString;
+}
 
 SSMStatus sa_message(SSMTextGenContext *cx)
 {
@@ -1728,6 +1756,7 @@ SSMStatus sa_message(SSMTextGenContext *cx)
     SSMResource *target = NULL;
     SSMSecurityAdvisorContext* res = NULL;
 	char *fmt = NULL, *fmtSigned = NULL, *fmtEncrypted = NULL;
+    char *genericOCSPWarning = NULL;
 
     /* get the connection object */
     target = SSMTextGen_GetTargetObject(cx);
@@ -1779,50 +1808,60 @@ SSMStatus sa_message(SSMTextGenContext *cx)
 			fmtSigned = PR_smprintf(fmt, signer_email, target->m_id, signerCertResID);
 			PR_Free(fmt);
 		} else {
+            CERTCertificate *signerCert;
+
+            /* Get the signing certificate */
+            signerCert = get_signer_cert(res);
+            if (!signerCert) {
+                goto loser;
+            }
+
+            genericOCSPWarning = 
+                SSM_GetGenericOCSPWarning(target->m_connection,
+                                          signerCert);
 			switch(res->verifyError) {
 				case SEC_ERROR_PKCS7_BAD_SIGNATURE:
 					{
-						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_bad_signature", &fmtSigned);
+						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_bad_signature", &fmt);
 						if (rv != SSM_SUCCESS) {
 							goto loser;
 						}
+                        fmtSigned = PR_smprintf(fmt, genericOCSPWarning);
+                        PR_FREEIF(fmt);
 					}
 					break;
 
 				/* This case handles both expired and not yet valid certs */
 				case SEC_ERROR_EXPIRED_CERTIFICATE:
 					{
-						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_expired_signing_cert", &fmtSigned);
+						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_expired_signing_cert", &fmt);
 						if (rv != SSM_SUCCESS) {
 							goto loser;
 						}
+                        fmtSigned = PR_smprintf(fmt, genericOCSPWarning);
+                        PR_FREEIF(fmt);
 					}
 					break;
 
 				case SEC_ERROR_REVOKED_CERTIFICATE:
 					{
-						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_revoked_signing_cert", &fmtSigned);
+						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_revoked_signing_cert", &fmt);
 						if (rv != SSM_SUCCESS) {
 							goto loser;
 						}
+                        fmtSigned = PR_smprintf(fmt, genericOCSPWarning);
+                        PR_FREEIF(fmt);
 					}
 					break;
 
 				case SEC_ERROR_UNKNOWN_ISSUER:
 					{
-						CERTCertificate *signerCert;
 						SSMResourceCert *signerCertRes;
 						PRUint32 signerCertResID;
 						char *fmt;
 
 						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_unknown_issuer", &fmt);
 						if (rv != SSM_SUCCESS) {
-							goto loser;
-						}
-
-						/* Get the signing certificate */
-						signerCert = get_signer_cert(res);
-						if (!signerCert) {
 							goto loser;
 						}
 
@@ -1835,8 +1874,9 @@ SSMStatus sa_message(SSMTextGenContext *cx)
 						if (rv != PR_SUCCESS) {
 							goto loser;
 						}
-
-						fmtSigned = PR_smprintf(fmt, target->m_id, signerCertResID);
+						fmtSigned = PR_smprintf(fmt, target->m_id, 
+                                                signerCertResID, 
+                                                genericOCSPWarning);
 						PR_Free(fmt);
 					}
 					break;
@@ -1844,19 +1884,13 @@ SSMStatus sa_message(SSMTextGenContext *cx)
 				case SEC_ERROR_CA_CERT_INVALID:
 				case SEC_ERROR_UNTRUSTED_ISSUER:
 					{
-						CERTCertificate * signerCert, *issuerCert;
+						CERTCertificate *issuerCert;
 						SSMResourceCert * signerCertRes, issuerCertRes;
 						PRInt32 signerCertResID, issuerCertResID;
 						char *fmt = NULL;
 
 						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_untrusted_issuer", &fmt);
 						if (rv != SSM_SUCCESS) {
-							goto loser;
-						}
-
-						/* Get the signer cert */
-						signerCert = get_signer_cert(res);
-						if (!signerCert) {
 							goto loser;
 						}
 
@@ -1885,7 +1919,10 @@ SSMStatus sa_message(SSMTextGenContext *cx)
 							goto loser;
 						}
 
-						fmtSigned = PR_smprintf(fmt, target->m_id, signerCertResID, issuerCertResID);
+						fmtSigned = PR_smprintf(fmt, target->m_id, 
+                                                signerCertResID, 
+                                                issuerCertResID,
+                                                genericOCSPWarning);
 						PR_Free(fmt);
 					}
 					break;
@@ -1893,10 +1930,12 @@ SSMStatus sa_message(SSMTextGenContext *cx)
 				/* This case handles both expired and not yet valid certs */
 				case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
 					{
-						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_expired_issuer_cert", &fmtSigned);
+						rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_signed_expired_issuer_cert", &fmt);
 						if (rv != SSM_SUCCESS) {
 							goto loser;
 						}
+                        fmtSigned = PR_smprintf(fmt, genericOCSPWarning);
+                        PR_FREEIF(fmt);
 					}
 					break;
 
@@ -1985,7 +2024,7 @@ SSMStatus sa_message(SSMTextGenContext *cx)
 			}
 		}
 	}
-
+    PR_FREEIF(genericOCSPWarning);
 	/* Now deal with the encrypted part */
 	if (!res->encrypted_b) {
 		rv = SSM_GetAndExpandTextKeyedByString(cx, "sa_message_not_encrypted", &fmtEncrypted);
