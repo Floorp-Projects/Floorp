@@ -89,28 +89,28 @@
   color: #9DB8C1;
 }
 
-/* ::::: standard toolbar buttons on a tabpanel ::::: */
+/* ::::: standard toolbar buttons on a tabpanels ::::: */
 
-.button-toolbar.tabpanel,
-.button-toolbar.tabpanel:hover,
-.button-toolbar.tabpanel:hover:active {
+.button-toolbar.tabpanels,
+.button-toolbar.tabpanels:hover,
+.button-toolbar.tabpanels:hover:active {
   padding: 2px;
   background-color: transparent;
   color: #000000;
 }
 
-.button-toolbar.tabpanel,
-.button-toolbar.tabpanel[disabled="true"],
-.button-toolbar.tabpanel[disabled="true"]:hover,
-.button-toolbar.tabpanel[disabled="true"]:hover:active {
+.button-toolbar.tabpanels,
+.button-toolbar.tabpanels[disabled="true"],
+.button-toolbar.tabpanels[disabled="true"]:hover,
+.button-toolbar.tabpanels[disabled="true"]:hover:active {
   border: 1px solid transparent;
 }
 
-.button-toolbar.tabpanel:hover {
+.button-toolbar.tabpanels:hover {
   border: 1px outset #C2D0D0;
 }
 
-.button-toolbar.tabpanel:hover:active {
+.button-toolbar.tabpanels:hover:active {
   border-style: inset;
 }
 

@@ -79,7 +79,7 @@ function Startup()
     }
     try {
       var tab = window.arguments[0];
-      var element2 = document.getElementById("tabcontrol");
+      var element2 = document.getElementById("tabcontrols");
       if (tab == "0") {
         element = document.getElementById("cookiesTab");
         element2.selectedTab = element;

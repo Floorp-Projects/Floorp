@@ -95,9 +95,9 @@ function folderPropsOnLoad()
 
   // select the initial tab
   if (window.arguments[0].tabID) {
-    // set index for starting panel on the <tabpanel> element
-    var folderPropTabPanel = document.getElementById("folderPropTabPanel");
-    folderPropTabPanel.setAttribute("index", window.arguments[0].tabIndex);
+    // set index for starting panel on the <tabpanels> element
+    var folderPropTabPanels = document.getElementById("folderPropTabPanels");
+    folderPropTabPanels.setAttribute("index", window.arguments[0].tabIndex);
 
     var tab = document.getElementById(window.arguments[0].tabID);
     tab.setAttribute("selected", "true");

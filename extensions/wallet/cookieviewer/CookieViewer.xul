@@ -44,13 +44,13 @@
 
   <keyset id="dialogKeys"/>
            
-  <tabcontrol id="tabcontrol" flex="1" orient="vertical">
-    <tabbox>
+  <tabbox id="tabbox" flex="1" orient="vertical">
+    <tabs>
       <tab id="cookiesTab" label="&tab.cookiesonsystem.label;"/>
       <tab id="serversTab" label="&tab.bannedservers.label;"/>
       <tab id="imagesTab" hidden="true" label="&tab.bannedimages.label;"/>
-    </tabbox>
-    <tabpanel id="panel" flex="1">
+    </tabs>
+    <tabpanels id="panel" flex="1">
       <box class="tabpanel" id="system" flex="1" orient="vertical">
           <text class="label" value="&div.cookiesonsystem.label;"/>
           <separator class="thin"/>
@@ -193,8 +193,8 @@
           </box>
       </box>
 
-    </tabpanel>
-  </tabcontrol>
+    </tabpanels>
+  </tabbox>
   
   <separator class="thin"/>
   <box id="okCancelButtonsRight"/>

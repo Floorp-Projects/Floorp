@@ -31,8 +31,8 @@
         windowtype="xuledit:document"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <tabcontrol id="scratchView" flex="1" orient="vertical">
-    <tabpanel flex="1">
+  <tabbox id="scratchView" flex="1" orient="vertical">
+    <tabpanels flex="1">
       <box orient="vertical">
         <iframe name="vfView" id="vfView" flex="1"
                 style="overflow: auto;"
@@ -69,12 +69,11 @@
           <spring flex="1"/>
         </box>
       </box>
-    </tabpanel>
-    <tabbox>
+    </tabpanels>
+    <tabs>
       <tab label="Designer"/>
       <tab label="DOM Tree"/>
-    </tabbox>
-  </tabcontrol>
+    </tabs>
+  </tabbox>
 </window>
 
-        

@@ -174,13 +174,13 @@
     </content>
   </binding>
 
-  <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
+  <binding id="tabs" extends="chrome://global/content/tabBindings.xml#tabs">
     <content>
-    <xul:spring class="tabbox-top-left-cap"/>
-    <xul:spring class="tabbox-top-left"/>
+    <xul:spring class="tabs-top-left-cap"/>
+    <xul:spring class="tabs-top-left"/>
     <children/>
-    <xul:spring class="tabbox-top-right" flex="1"/>
-    <xul:spring class="tabbox-top-right-cap"/>
+    <xul:spring class="tabs-top-right" flex="1"/>
+    <xul:spring class="tabs-top-right-cap"/>
   </content>
   </binding>
 

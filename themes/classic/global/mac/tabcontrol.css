@@ -90,8 +90,8 @@ tab:hover:active[selected="true"] > .tab-image-right {
   width				: 2px;
 }
 
-tabbox {
-  -moz-binding		: url(chrome://global/skin/classicBindings.xml#tabbox);
+tabs {
+  -moz-binding		: url(chrome://global/skin/classicBindings.xml#tabs);
   padding			: 0px;
 }
 
@@ -153,33 +153,33 @@ tabbox {
   background		: url(chrome://global/skin/tab-sm-bot-sel-right.gif) no-repeat;
 }
 
-.tabbox-bottom > .tab-border-top-left {
+.tabs-bottom > .tab-border-top-left {
   background		: url(chrome://global/skin/tab-border-bot.gif) repeat-x top;
   width				: 2px;
 }
 
-.tabbox-bottom > .tab-border-top-left-cap {
+.tabs-bottom > .tab-border-top-left-cap {
   background		: url(chrome://global/skin/tab-border-bot-left-cap.gif) no-repeat top;
   width				: 2px;
 }
 
-.tabbox-bottom > .tab-border-top-right {
+.tabs-bottom > .tab-border-top-right {
   background		: url(chrome://global/skin/tab-border-bot.gif) repeat-x top;
 }
 
-.tabbox-bottom > .tab-border-top-right-cap {
+.tabs-bottom > .tab-border-top-right-cap {
   background		: url(chrome://global/skin/tab-border-bot-right-cap.gif) no-repeat top;
   width				: 2px;
 }
 
     /* top tabs */
-tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
+tabbox[orient="vertical"] tabs[orient="horizontal"] tab { 
   padding: 0px;
   margin: 0px;
 }
 
 	/* bottom tabs */
-tabcontrol[align="vertical"] tabpanel + tabbox[align="horizontal"] tab { 
+tabbox[orient="vertical"] tabpanels + tabs[orient="horizontal"] tab { 
   border-top: none;
   border-bottom: 1px solid #666666;
   border-left: 1px solid white;
@@ -190,7 +190,7 @@ tabcontrol[align="vertical"] tabpanel + tabbox[align="horizontal"] tab {
 }
 
 	/* left tabs */
-tabcontrol[align="horizontal"] tabbox[align="vertical"] tab { 
+tabbox[orient="horizontal"] tabs[orient="vertical"] tab { 
   border-right: none;
   -moz-border-radius: 8px 0px 0px 8px;
   padding-right: 1px;
@@ -198,7 +198,7 @@ tabcontrol[align="horizontal"] tabbox[align="vertical"] tab {
 }
 
 	/* right tabs */
-tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab { 
+tabbox[orient="horizontal"] tabpanels + tabs[orient="vertical"]  tab { 
   border-top: 1px solid white;
   border-bottom: 1px solid #666666;
   border-left: none;
@@ -208,18 +208,18 @@ tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab {
   margin: 2px 1px 2px 1px;
 }
 
-tabcontrol { 
+tabbox { 
   border: none; 
 }
 
 /* border on bottom only, no padding (used in search) */
-tabpanel.light {
+tabpanels.light {
   border: none;
   border-bottom: 1px outset #CCCCCC;
   padding: 0px;
 }
 
-tabpanel {
+tabpanels {
   border-top: 0px;
   border-bottom: 2px ridge #000000;
   border-left: 2px groove #000000;

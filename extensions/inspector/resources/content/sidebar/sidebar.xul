@@ -37,12 +37,12 @@
   <popupset id="ppsGlobalPopupset" collapsed="true"/>
   <broadcasterset id="brsGlobalCommands"/>
 
-  <tabcontrol id="tbcInspectorSidebar" flex="1">
-    <tabbox>
+  <tabbox id="tabboxInspectorSidebar" flex="1">
+    <tabs>
       <tab label="Document"/>
       <tab label="Node"/>
-    </tabbox>
-    <tabpanel flex="1">
+    </tabs>
+    <tabpanels flex="1">
       <box id="bxDocPane" flex="1" orient="vertical">
         <box id="bxDocHeader" autostretch="never">
           <menubutton class="viewer-list" ins-role="viewer-list" disabled="true"/>
@@ -60,6 +60,6 @@
         </box>
         <iframe id="ifObjViewer" class="viewer-iframe" flex="1" ins-role="viewer-iframe"/>
       </box>
-    </tabpanel>
-  </tabcontrol>
+    </tabpanels>
+  </tabbox>
 </window>

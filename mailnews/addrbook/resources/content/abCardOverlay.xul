@@ -32,14 +32,14 @@ Rights Reserved.
 
 <box id="editcard" align="vertical">
 
-	<tabcontrol orient="vertical" style="margin:5px">
-	   <tabbox id="abTabBox">
+	<tabbox orient="vertical" style="margin:5px">
+	   <tabs id="abTabs">
         <tab label="&Name.tab;"/>
         <tab label="&Address.tab;"/>
         <tab label="&Other.tab;"/>
-	   </tabbox>
+	   </tabs>
 	   
-	   <tabpanel id="abTabPanel" flex="1">
+	   <tabpanels id="abTabPanels" flex="1">
 
 			<!-- ** Name Tab ** -->
 			<box index="name" align="vertical" flex="1">
@@ -319,8 +319,8 @@ Rights Reserved.
 
       </box>
 
-     </tabpanel> 
-  </tabcontrol>
+     </tabpanels> 
+  </tabbox>
 </box>
 
 </overlay>

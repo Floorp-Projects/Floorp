@@ -26,7 +26,7 @@ var tagname = "table"
 var TableElement;
 var CellElement;
 var TableCaptionElement;
-var TabPanel;
+var TabPanels;
 var dialog;
 var globalCellElement;
 var globalTableElement
@@ -142,7 +142,7 @@ function Startup()
   dialog.TextWrapCheckbox = document.getElementById("TextWrapCheckbox");
   dialog.CellColorCheckbox = document.getElementById("CellColorCheckbox");
 
-  TabPanel = document.getElementById("TabPanel");
+  TabPanels = document.getElementById("TabPanels");
   var TableTab = document.getElementById("TableTab");
   var CellTab = document.getElementById("CellTab");
 
@@ -195,8 +195,8 @@ function Startup()
     {
       currentPanel = CellPanel;
 
-      //Set index for starting panel on the <tabpanel> element
-      TabPanel.setAttribute("index", CellPanel);
+      //Set index for starting panel on the <tabpanels> element
+      TabPanels.setAttribute("index", CellPanel);
 
       // Trigger setting of style for the tab widgets
       CellTab.setAttribute("selected", "true");
@@ -771,8 +771,8 @@ function SwitchToValidatePanel()
 {
   if (currentPanel != validatePanel)
   {
-    //Set index for starting panel on the <tabpanel> element
-    TabPanel.setAttribute("index", validatePanel);
+    //Set index for starting panel on the <tabpanels> element
+    TabPanels.setAttribute("index", validatePanel);
     if (validatePanel == CellPanel)
     {
       // Trigger setting of style for the tab widgets

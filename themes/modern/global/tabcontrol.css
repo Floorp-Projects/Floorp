@@ -27,33 +27,33 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: tabbox ::::: */
+/* ::::: tabs ::::: */
 
-tabbox {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabbox");
+tabs {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabs");
 }
 
 .tab-border-top-left,
-.tabbox-top-right {
+.tabs-top-right {
   height: 2px;
   background: url("chrome://global/skin/tabcontrol/tabbox-mid.gif") repeat-x bottom;
 }
 
-.tabbox-top-left-cap {
+.tabs-top-left-cap {
   width: 2px;
   height: 2px;
   background: url("chrome://global/skin/tabcontrol/tabbox-lft.gif") no-repeat bottom;
 }
 
-.tabbox-top-right-cap {
+.tabs-top-right-cap {
   width: 2px;
   height: 2px;
   background: url("chrome://global/skin/tabcontrol/tabbox-rit.gif") no-repeat bottom;
 }
 
-/* ::::: tabpanel ::::: */
+/* ::::: tabpanels ::::: */
 
-tabpanel {
+tabpanels {
   border-top: none;
   border-right: 1px solid #313948;
   border-bottom: 1px solid #313948;
@@ -198,7 +198,7 @@ tab:hover:active[selected="true"] > box > box > .tab-image-right-btm {
 
 /* ::::: tab-bottom ::::::::::
    :: Tabs that are attached to the bottom of a panel, but not necessarily
-   :: a tabpanel.
+   :: a tabpanels.
    ::::: */
 
 .tab-bottom {
@@ -293,39 +293,39 @@ tab:hover:active[selected="true"] > box > box > .tab-image-right-btm {
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-rit.gif");
 }
 
-/* ::::: tabbox-bottom ::::: */
+/* ::::: tabs-bottom ::::: */
 
-.tabbox-bottom > .tabbox-top-left,
-.tabbox-bottom > .tabbox-top-right {
+.tabs-bottom > .tabs-top-left,
+.tabs-bottom > .tabs-top-right {
   background: url("chrome://global/skin/tabcontrol/tabbox-bot-mid.gif") repeat-x top;
   width: 2px;
 }
 
-.tabbox-bottom > .tabbox-top-left-cap {
+.tabs-bottom > .tabs-top-left-cap {
   background: url("chrome://global/skin/tabcontrol/tabbox-bot-lft.gif") no-repeat top;
   width: 2px;
 }
 
-.tabbox-bottom > .tabbox-top-right-cap {
+.tabs-bottom > .tabs-top-right-cap {
   background: url("chrome://global/skin/tabcontrol/tabbox-bot-rit.gif") no-repeat top;
   width: 2px;
 }
 
 /* ::::: special looks for widgets in tabpanels ::::: */
 
-tree.tabpanel,
-textbox.tabpanel {
+tree.tabpanels,
+textbox.tabpanels {
   border-top: 1px solid #ACB9B9;
   border-right: 1px solid #ECF0F0;
   border-bottom: 1px solid #ECF0F0;
   border-left: 1px solid #ACB9B9;
 }
 
-tree.tabpanel > .tree-container-treerows,
-textbox.tabpanel > .textbox-internal-box {
+tree.tabpanels > .tree-container-treerows,
+textbox.tabpanels > .textbox-internal-box {
   border: 1px solid #6E7676;
 }
 
-textbox.tabpanel[focused="true"] {
+textbox.tabpanels[focused="true"] {
   border: 1px solid #909090;
 }

@@ -69,12 +69,12 @@
           <text value="&t3.label;"/>
         </box>
 
-        <tabcontrol orient="vertical" flex="1">
-          <tabbox orient="horizontal">
+        <tabbox orient="vertical" flex="1">
+          <tabs orient="horizontal">
             <tab label="&tab1.label;"/>
             <tab label="&tab2.label;"/>
-          </tabbox>
-          <tabpanel flex="1">
+          </tabs>
+          <tabpanels flex="1">
             <box id="help-toc">
               <tree id="help-toc-tree" ref="urn:root" flex="1*"
                     datasources="chrome://help/locale/help-toc.rdf"
@@ -129,8 +129,8 @@
 		src="chrome://help/locale/help_index.html" />
             </box>
 
-          </tabpanel>
-        </tabcontrol>
+          </tabpanels>
+        </tabbox>
       </box>
 
       <splitter id="helpsidebar-splitter"

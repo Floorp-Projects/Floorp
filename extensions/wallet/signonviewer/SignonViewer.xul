@@ -44,14 +44,14 @@
 
   <keyset id="dialogKeys"/>
            
-  <tabcontrol flex="1" orient="vertical">
-    <tabbox orient="horizontal">
+  <tabbox flex="1" orient="vertical">
+    <tabs orient="horizontal">
       <tab id="signonTab" label="&tab.signonsstored.label;"/>
       <tab id="signonSitesTab" label="&tab.signonsnotstored.label;"/>
       <tab id="nopreview" label="&tab.nopreview.label;"/>
       <tab id="nocapture" label="&tab.nocapture.label;"/>
-    </tabbox>
-    <tabpanel id="panel" flex="1">
+    </tabs>
+    <tabpanels id="panel" flex="1">
       <!-- saved signons -->
       <box id="savedsignons" flex="1" orient="vertical">
           <html>&spiel.signonsstored.label;</html>
@@ -170,8 +170,8 @@
                           oncommand="DeleteAllNocaptures();"/>
           </box>
       </box>
-    </tabpanel>
-  </tabcontrol>
+    </tabpanels>
+  </tabbox>
     
   <separator class="thin"/>
 

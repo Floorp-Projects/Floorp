@@ -48,13 +48,13 @@
   
   <keyset id="keyset"/>  
     
-  <tabcontrol orient="vertical">
-    <tabbox>
+  <tabbox orient="vertical">
+    <tabs>
       <tab label="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
       <tab id="ScheduleTab" label="&schedule.label;" accesskey="&schedule.accesskey;"/>
       <tab id="NotifyTab" label="&notification.label;" accesskey="&notification.accesskey;"/>
-    </tabbox>
-    <tabpanel>
+    </tabs>
+    <tabpanels>
       <vbox>
         <separator class="thin"/>
         <hbox autostretch="never" valign="top">
@@ -233,8 +233,8 @@
           <spring flex="1"/>
         </hbox>
       </vbox>
-    </tabpanel>
-  </tabcontrol>
+    </tabpanels>
+  </tabbox>
   
   <separator/>
     

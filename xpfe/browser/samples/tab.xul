@@ -7,8 +7,8 @@ xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 
 <box align="vertical" flex="1">
-  <tabcontrol align="vertical" flex="100%" >
-     <tabbox align="horizontal">
+  <tabbox orient="vertical" flex="100%" >
+     <tabs orient="horizontal">
       <tab selected="true" label="centered"/>
       <tab label="percent"/>
       <tab label="html"/>
@@ -17,9 +17,9 @@ xmlns:html="http://www.w3.org/1999/xhtml"
       <tab label="iframe"/>
       <tab label="dialog"/>
       <spring flex="1"/>
-     </tabbox>
+     </tabs>
    
-    <tabpanel flex="100%" style="border: 2px outset gray">
+    <tabpanels flex="100%" style="border: 2px outset gray">
 
        <!-- tab 1 -->
        <box align="horizontal">
@@ -143,8 +143,8 @@ xmlns:html="http://www.w3.org/1999/xhtml"
     </box>
 
 
-     </tabpanel> 
-  </tabcontrol>
+     </tabpanels> 
+  </tabbox>
 </box>
 
 </window>

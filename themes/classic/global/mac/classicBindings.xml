@@ -174,7 +174,7 @@
     </content>
   </binding>
 
-  <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
+  <binding id="tabs" extends="chrome://global/content/tabBindings.xml#tabs">
     <content>
       <xul:spring class="tab-border-top-left-cap"/>
     <xul:spring class="tab-border-top-left"/>

@@ -1,20 +1,20 @@
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); 
 
-/*============ tabpanel widget =============*/
+/*============ tabpanels widget =============*/
 
-tabpanel {
-  /*-moz-binding: url("chrome://global/skin/tabBindings.xml#tabpanel"); */
+tabpanels {
+  /*-moz-binding: url("chrome://global/skin/tabBindings.xml#tabpanels"); */
   padding: 5px;
 }
 
 /* top tabs */
-tabcontrol[orient="vertical"] > tabbox + tabpanel {
+tabbox[orient="vertical"] > tabs + tabpanels {
   border-top: none !important;
   border-bottom: 1px solid ThreeDShadow !important;
 }
 
 /* bottom tabs */
-tabcontrol[orient="vertical"] > tabpanel {
+tabbox[orient="vertical"] > tabpanels {
   border-top: 1px solid ThreeDHighlight;
   border-bottom: none;
   border-left: 1px solid ThreeDHighlight;
@@ -22,13 +22,13 @@ tabcontrol[orient="vertical"] > tabpanel {
 }
 
 /* left tabs */
-tabcontrol[orient="horizontal"] > tabbox + tabpanel {
+tabbox[orient="horizontal"] > tabs + tabpanels {
   border-left: none !important;
   border-right: 1px solid ThreeDShadow !important;
 }
 
 /* right tabs */
-tabcontrol[orient="horizontal"] > tabpanel {
+tabbox[orient="horizontal"] > tabpanels {
   border-top: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDShadow;
   border-right: none;
@@ -36,43 +36,43 @@ tabcontrol[orient="horizontal"] > tabpanel {
 }
 
 /* border on bottom only, no padding (used in search) */
-tabpanel.light {
+tabpanels.light {
   border: none;
   border-bottom: 1px outset #CCCCCC;
   padding: 0px;
 }
 
-.tabpanel-inner-box {
+.tabpanels-inner-box {
   border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
 }
 
-/*============ tabbox widget ============*/
+/*============ tabs widget ============*/
 
-tabbox {
-  -moz-binding: url("chrome://global/skin/tabBindings.xml#tabbox");
+tabs {
+  -moz-binding: url("chrome://global/skin/tabBindings.xml#tabs");
 }
 
-/* tabbox-spring ========================== */
+/* tabs-spring ========================== */
 
 /* top tabs */
-tabcontrol[orient="vertical"] > tabbox > .tabbox-spring {
+tabbox[orient="vertical"] > tabs > .tabs-spring {
   border-bottom: 1px solid ThreeDHighlight;
 }
 
 /* bottom tabs */
-tabcontrol[orient="vertical"] > tabpanel + tabbox > .tabbox-spring {
+tabbox[orient="vertical"] > tabpanels + tabs > .tabs-spring {
   border-top: 1px solid ThreeDShadow !important;
   border-bottom: none;
 }
 
 /* left tabs */
-tabcontrol[orient="horizontal"] > tabbox > .tabbox-spring {
+tabbox[orient="horizontal"] > tabs > .tabs-spring {
   border-right: 1px solid ThreeDHighlight;
 }
 
 /* right tabs */
-tabcontrol[orient="horizontal"] > tabpanel + tabbox > .tabbox-spring {
+tabbox[orient="horizontal"] > tabpanels + tabs > .tabs-spring {
   border-left: 1px solid ThreeDShadow !important;
   border-right: none;
 }
@@ -104,17 +104,17 @@ tab:focus > .tab-box > .tab-text {
 }
 
 /* top tabs */
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab[first-tab="true"]  { 
+tabbox[orient="vertical"] > tabs[orient="horizontal"] tab[first-tab="true"]  { 
   margin-left: 2px;
 }
 
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab  { 
+tabbox[orient="vertical"] > tabs[orient="horizontal"] tab  { 
   margin-top: 2px;
   border-right: 1px solid ThreeDDarkShadow;
   -moz-border-radius: 4px 4px 0px 0px;
 }
 
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab > .tab-box { 
+tabbox[orient="vertical"] > tabs[orient="horizontal"] tab > .tab-box { 
   border-left: 1px solid ThreeDHighlight;
   border-top: 1px solid ThreeDHighlight;
   border-right: 1px solid ThreeDShadow;
@@ -123,7 +123,7 @@ tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab > .tab-box {
 }
 
 /* bottom tabs */
-tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab { 
+tabbox[orient="vertical"] > tabpanels + tabs[orient="horizontal"] > tab { 
   margin-top: 0px;
   margin-bottom: 2px;
   border-right: 1px solid ThreeDDarkShadow;
@@ -131,7 +131,7 @@ tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab {
   -moz-border-radius: 0px 0px 4px 4px;
 }
 
-tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab > .tab-box { 
+tabbox[orient="vertical"] > tabpanels + tabs[orient="horizontal"] > tab > .tab-box { 
   border-top: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
@@ -139,17 +139,17 @@ tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab > .
 }
 
 /* left tabs */
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab[first-tab="true"]  { 
+tabbox[orient="horizontal"] > tabs[orient="vertical"] tab[first-tab="true"]  { 
   margin-top: 2px;
 }
 
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab  { 
+tabbox[orient="horizontal"] > tabs[orient="vertical"] tab  { 
   margin-left: 2px;
   border-bottom: 1px solid ThreeDDarkShadow;
   -moz-border-radius: 4px 0px 0px 4px;
 }
 
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab > .tab-box  { 
+tabbox[orient="horizontal"] > tabs[orient="vertical"] tab > .tab-box  { 
   border-left: 1px solid ThreeDHighlight;
   border-top: 1px solid ThreeDHighlight;
   border-right: 1px solid ThreeDHighlight;
@@ -158,7 +158,7 @@ tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab > .tab-box  {
 }
 
 /* right tabs */
-tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab { 
+tabbox[orient="horizontal"] > tabpanels + tabs[orient="vertical"] > tab { 
   margin-right: 2px;
   margin-left: 0px;
   border-bottom: 1px solid ThreeDDarkShadow;
@@ -166,7 +166,7 @@ tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab {
   -moz-border-radius: 0px 4px 4px 0px !important;
 }
 
-tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab > .tab-box { 
+tabbox[orient="horizontal"] > tabpanels + tabs[orient="vertical"] > tab > .tab-box { 
   border-left: 1px solid ThreeDShadow !important;
   border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow !important;
@@ -183,58 +183,58 @@ tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab > .
 */
 
 /* top tabs */
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true"]  {
+tabbox[orient="vertical"] > tabs[orient="horizontal"] > tab[selected="true"]  {
   margin-left: 0px;
   margin-top: 0px;
 }
 
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true"] > .tab-box {
+tabbox[orient="vertical"] > tabs[orient="horizontal"] > tab[selected="true"] > .tab-box {
   border-bottom: 1px solid ThreeDFace;
   padding-left: 5px !important;
   padding-right: 4px !important;
 }
 
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true"][first-tab="true"] > .tab-box {
+tabbox[orient="vertical"] > tabs[orient="horizontal"] > tab[selected="true"][first-tab="true"] > .tab-box {
   border-bottom: 1px solid ThreeDFace;
   padding-left: 5px !important;
   padding-right: 4px !important;
 }
 
 /* bottom tabs */
-tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab[selected="true"] {
+tabbox[orient="vertical"] > tabpanels + tabs[orient="horizontal"] > tab[selected="true"] {
   margin-bottom: 0px;
   border-bottom: 1px solid ThreeDDarkShadow !important;
 }
 
-tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab[selected="true"] > .tab-box {
+tabbox[orient="vertical"] > tabpanels + tabs[orient="horizontal"] > tab[selected="true"] > .tab-box {
   border-top: 1px solid ThreeDFace;
   border-bottom: 1px solid ThreeDShadow !important;
 }
 
 /* left tabs */
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true"]  {
+tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[selected="true"]  {
   margin-left: 0px;
   margin-top: 0px;
 }
 
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true"] > .tab-box {
+tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[selected="true"] > .tab-box {
   border-right: 1px solid ThreeDFace;
   padding-top: 3px !important;
   padding-bottom: 2px !important;
 }
 
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true"][first-tab="true"] > .tab-box {
+tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[selected="true"][first-tab="true"] > .tab-box {
   border-right: 1px solid ThreeDFace;
   padding-top: 3px !important;
   padding-bottom: 2px !important;
 }
 
 /* right tabs */
-tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab[selected="true"] {
+tabbox[orient="horizontal"] > tabpanels + tabs[orient="vertical"] > tab[selected="true"] {
   margin-right: 0px;
 }
 
-tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab[selected="true"] > .tab-box {
+tabbox[orient="horizontal"] > tabpanels + tabs[orient="vertical"] > tab[selected="true"] > .tab-box {
   border-left: 1px solid ThreeDFace !important;
   border-right: 1px solid ThreeDShadow !important;
 }
@@ -242,40 +242,40 @@ tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab[sel
 /* before selected tabs ====================== */
 
 /* top & bottom tabs */
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[beforeselected="true"] {
+tabbox[orient="vertical"] > tabs[orient="horizontal"] > tab[beforeselected="true"] {
   border-right: none !important;
 }
 
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[beforeselected="true"] > .tab-box {
+tabbox[orient="vertical"] > tabs[orient="horizontal"] > tab[beforeselected="true"] > .tab-box {
   border-right: none !important;
 }
 
 /* left & right tabs */
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[beforeselected="true"]  {
+tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[beforeselected="true"]  {
   border-bottom: none !important;
 }
 
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[beforeselected="true"] > .tab-box {
+tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[beforeselected="true"] > .tab-box {
   border-bottom: none !important;
 }
 
 /* after selected tabs ====================== */
 
 /* top & bottom tabs */
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[afterselected="true"]  {
+tabbox[orient="vertical"] > tabs[orient="horizontal"] > tab[afterselected="true"]  {
   border-left: none !important;
 }
 
-tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[afterselected="true"] > .tab-box {
+tabbox[orient="vertical"] > tabs[orient="horizontal"] > tab[afterselected="true"] > .tab-box {
   border-left: none !important;
 }
 
 /* left & right tabs */
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[afterselected="true"]  {
+tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[afterselected="true"]  {
   border-top: none !important;
 }
 
-tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[afterselected="true"] > .tab-box {
+tabbox[orient="horizontal"] > tabs[orient="vertical"] > tab[afterselected="true"] > .tab-box {
   border-top: none !important;
 }
 

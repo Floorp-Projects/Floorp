@@ -40,13 +40,13 @@
 
 <keyset id="dialogKeys"/>  
   
-<tabcontrol orient="vertical">
-  <tabbox>
+<tabbox orient="vertical">
+  <tabs>
     <tab id="GeneralTab" label="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
     <tab id="DownloadTab" label="&download.label;" accesskey="&download.accesskey;"/>
     <tab id="folderCharsetTab" label="&folderCharsetTab.label;" accesskey="&folderCharsetTab.accesskey;"/>
-  </tabbox>
-  <tabpanel id="folderPropTabPanel">
+  </tabs>
+  <tabpanels id="folderPropTabPanels">
   	<box orient="vertical">
   		<box id="nameBox" orient="vertical">
   			<text class="label" value="&folderProps.name.label;" />
@@ -74,8 +74,8 @@
       <checkbox id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
     </box>
  
-  </tabpanel>
-</tabcontrol>
+  </tabpanels>
+</tabbox>
   
 <box id="okCancelButtonsRight"/>
 

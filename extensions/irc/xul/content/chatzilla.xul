@@ -136,7 +136,7 @@
 
 <vbox id="outer-box" flex="1">
   <vbox id="upper-box" flex="1">
-    <hbox id="tabpanel-contents-box" flex="1">
+    <hbox id="tabpanels-contents-box" flex="1">
       <vbox id="user-list-box" flex="1" width="20%" persist="collapsed width">
   
         <tree id="user-list" container="true" datasources="rdf:null" flex="1"
@@ -206,18 +206,18 @@
           flex="1" src="chrome://chatzilla/content/outputwindow.html"/>
       </vbox>
 
-    </hbox> <!-- tabpanel-contents-box -->
+    </hbox> <!-- tabpanels-contents-box -->
   
     <hbox id="tabstrip-box" flex="0" crop="right">
       <scrollbox id="views-tbar" persist="collapsed" orient="horizontal"
         flex="1" onoverflow="dd('views-tbar overflow');"
         onunderflow="dd('views-tbar underflow');">
 
-        <tabbox class="tabbox-bottom" id="views-tbar-inner" flex="1"
+        <tabs class="tabs-bottom" id="views-tbar-inner" flex="1"
           crop="right">
           <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from 
                                        causing an exception -->
-        </tabbox>
+        </tabs>
       </scrollbox>
     </hbox>
 

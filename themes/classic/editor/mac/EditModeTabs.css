@@ -1,17 +1,17 @@
-/* ............. edit mode tabbox ............... */  
+/* ............. edit mode tabs ............... */  
 
-.tabbox-bottom {
+.tabs-bottom {
   border-top: none;
 }
 
-.tabbox-bottom > .tabbox-spring {
+.tabs-bottom > .tabs-spring {
   border-top: 1px solid threedshadow !important;
   border-bottom: none;
 }
 
 /* ............. edit mode tabs ............... */  
 
-.tabbox-bottom > tab { 
+.tabs-bottom > tab { 
   margin-top: 0px;
   margin-bottom: 2px;
   border-top: none;
@@ -20,7 +20,7 @@
   -moz-user-focus: ignore;
 }
 
-.tabbox-bottom > tab > .tab-box { 
+.tabs-bottom > tab > .tab-box { 
   border-left: 1px solid threedhighlight;
   border-top: 1px solid threedshadow;
   border-right: 1px solid threedshadow;
@@ -30,32 +30,32 @@
 
 /* ............. selected state ............... */
   
-.tabbox-bottom > tab[selected="true"] {
+.tabs-bottom > tab[selected="true"] {
   margin-bottom: 0px;
 }
 
-.tabbox-bottom > tab[selected="true"] > .tab-box {
+.tabs-bottom > tab[selected="true"] > .tab-box {
   background-color: #ffffff;
   border-bottom: 1px solid threedshadow !important;
   border-top: 1px solid #ffffff !important;
 }
 
 /* ............. after selected ............... */
-.tabbox-bottom > tab[afterselected="true"]  {
+.tabs-bottom > tab[afterselected="true"]  {
   border-left: none !important;
 }
 
-.tabbox-bottom > tab[afterselected="true"] > .tab-box {
+.tabs-bottom > tab[afterselected="true"] > .tab-box {
   border-left: none !important;
 }
 
 /* ............. before selected ............... */
 
 /* top & bottom tabs */
-.tabbox-bottom > tab[beforeselected="true"] {
+.tabs-bottom > tab[beforeselected="true"] {
   border-right: none !important;
 }
 
-.tabbox-bottom > tab[beforeselected="true"] > .tab-box {
+.tabs-bottom > tab[beforeselected="true"] > .tab-box {
   border-right: none !important;
 }

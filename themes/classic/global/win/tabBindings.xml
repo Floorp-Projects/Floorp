@@ -4,18 +4,18 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
+  <binding id="tabs" extends="chrome://global/content/tabBindings.xml#tabs">
     <content>
       <xul:box class="tabcontainer">
 	      <children/>
       </xul:box>
-	    <xul:spring class="tabbox-spring" flex="1"/>
+	    <xul:spring class="tabs-spring" flex="1"/>
     </content>
   </binding>
 
-  <binding id="tabpanel" extends="chrome://global/content/tabBindings.xml#tabpanel">
+  <binding id="tabpanels" extends="chrome://global/content/tabBindings.xml#tabpanels">
     <content>
-  	  <xul:box class="tabpanel-inner-box" flex="1">
+  	  <xul:box class="tabpanels-inner-box" flex="1">
         <children/> 
       </xul:box>
     </content>
