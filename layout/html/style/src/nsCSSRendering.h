@@ -150,7 +150,8 @@ protected:
                           const nsStyleSpacing& aBorderStyle,
                           nsIStyleContext* aStyleContext,
                           PRIntn aSkipSides,
-                          PRInt16 aBorderRadius[4],nsRect* aGap = 0);
+                          PRInt16 aBorderRadius[4],nsRect* aGap = 0,
+                          PRBool aIsOutline=PR_FALSE);
 
 
   static void RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingContext,

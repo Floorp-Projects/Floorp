@@ -1375,8 +1375,6 @@ nsMargin            border;
 const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
 nsStyleCoord        bordStyleRadius[4];
 PRInt16             borderRadii[4],i;
-//nsStyleCoord        tr,lr,rr,br;
-//nsStyleCoord        borderRadius;
 float               percent;
 
   if (aHardBorderSize > 0) {
@@ -1414,15 +1412,12 @@ float               percent;
     }
   }
 
-
-  // rounded version of the border
-  if (!aShouldIgnoreRounded) {
-    // check for any corner that is rounded
-    for(i=0;i<4;i++){
-      if(borderRadii[i] > 0){
-        PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,borderRadii,aGap);
-        return;
-      }
+  // rounded version of the outline
+  // check for any corner that is rounded
+  for(i=0;i<4;i++){
+    if(borderRadii[i] > 0){
+      PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,borderRadii,aGap,PR_FALSE);
+      return;
     }
   }
 
@@ -1515,15 +1510,43 @@ void nsCSSRendering::PaintOutline(nsIPresContext* aPresContext,
                                  PRIntn aSkipSides,
                                  nsRect* aGap)
 {
-  const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
+nsStyleCoord        bordStyleRadius[4];
+PRInt16             borderRadii[4],i;
+float               percent;
+const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
+nscoord width;
 
-  nscoord width;
+
   aBorderStyle.GetOutlineWidth(width);
 
   if (0 == width) {
     // Empty outline
     return;
   }
+
+  // get the radius for our border
+  aBorderStyle.mOutlineRadius.GetTop(bordStyleRadius[0]);      //topleft
+  aBorderStyle.mOutlineRadius.GetRight(bordStyleRadius[1]);    //topright
+  aBorderStyle.mOutlineRadius.GetBottom(bordStyleRadius[2]);   //bottomright
+  aBorderStyle.mOutlineRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
+
+  for(i=0;i<4;i++) {
+    borderRadii[i] = 0;
+    switch ( bordStyleRadius[i].GetUnit()) {
+    case eStyleUnit_Inherit:
+      break;
+    case eStyleUnit_Percent:
+      percent = bordStyleRadius[i].GetPercentValue();
+      borderRadii[i] = (nscoord)(percent * aBorderArea.width);
+      break;
+    case eStyleUnit_Coord:
+      borderRadii[i] = bordStyleRadius[i].GetCoordValue();
+      break;
+    default:
+      break;
+    }
+  }
+
 
   nsRect inside(aBorderArea);
   nsRect outside(inside);
@@ -1535,6 +1558,15 @@ void nsCSSRendering::PaintOutline(nsIPresContext* aPresContext,
   PRBool clipState = PR_FALSE;
   aRenderingContext.PushState();
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
+
+  // rounded version of the border
+  for(i=0;i<4;i++){
+    if(borderRadii[i] > 0){
+      PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,borderRadii,aGap,PR_TRUE);
+      return;
+    }
+  }
+
 
   PRUint8 outlineStyle = aBorderStyle.GetOutlineStyle();
   //see if any sides are dotted or dashed
@@ -2111,7 +2143,7 @@ PRInt16       borderRadii[4],i;
     PRInt32             flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
     PRUint32            dsFlag = 0;
     float               t2p,app2dev;
-    PRBool              clip;
+    PRBool              clip,hasMask;
     nsTransform2D       *theTransform;
     nsIDeviceContext    *theDevContext;
 
@@ -2121,7 +2153,10 @@ PRInt16       borderRadii[4],i;
     tvrect.SetRect(0,0,x1-x0,y1-y0);
     aPresContext->GetTwipsToPixels(&t2p);
 
-    if ((tileWidth<(tvrect.width/16)) || (tileHeight<(tvrect.height/16))) {
+    // check to see if the background image has a mask
+    hasMask = image->GetHasAlphaMask();
+
+    if(!hasMask &&  ((tileWidth<(tvrect.width/16)) || (tileHeight<(tvrect.height/16)))) {
       //tvrect.width /=4;
       //tvrect.height /=4;
 
@@ -2138,7 +2173,7 @@ PRInt16       borderRadii[4],i;
     }
 
     // did we need to create an offscreen drawing surface because the image was so small
-    if( nsnull != ts) {
+    if(!hasMask && (nsnull != ts) ) {
       aRenderingContext.SelectOffScreenDrawingSurface(ts);
 
       // create a bigger tile in our new drawingsurface                    
@@ -2382,7 +2417,8 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
                                  nsIStyleContext* aStyleContext,
                                  PRIntn aSkipSides,
                                  PRInt16 aBorderRadius[4],
-                                 nsRect* aGap)
+                                 nsRect* aGap,
+                                 PRBool aIsOutline)
 {
 RoundedRect   outerPath;
 QBCurve       UL,LL,UR,LR;
@@ -2397,9 +2433,11 @@ float         p2t;
 
 
   aBorderStyle.CalcBorderFor(aForFrame, border);
-  if ((0 == border.left) && (0 == border.right) &&
-      (0 == border.top) && (0 == border.bottom)) {
-    return;
+  if (!aIsOutline) {
+    if ((0 == border.left) && (0 == border.right) &&
+        (0 == border.top) && (0 == border.bottom)) {
+      return;
+    }
   }
 
   // needed for our border thickness
