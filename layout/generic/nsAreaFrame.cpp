@@ -456,11 +456,14 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 
       // See if it's one of our absolutely positioned child frames
       if (mAbsoluteFrames.ContainsFrame(nextFrame)) {
+        // Remove the next frame from the reflow path
+        aReflowState.reflowCommand->GetNext(nextFrame, PR_TRUE);
+
         nsReflowStatus  kidStatus;
         rv = ReflowAbsoluteFrame(aPresContext, aReflowState, nextFrame,
                                  PR_FALSE, kidStatus);
-        // XXX Make sure the frame is repainted. For the time being since we
-        // have no idea what changed repaint it all...
+        // XXX Make sure the frame is repainted. For the time being, since we
+        // have no idea what actually changed repaint it all...
         nsIView*  view;
         nextFrame->GetView(view);
         if (nsnull != view) {
