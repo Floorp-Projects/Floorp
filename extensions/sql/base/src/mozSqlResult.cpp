@@ -159,7 +159,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(mozSqlResult,
                               mozISqlDataSource,
                               nsIRDFDataSource,
                               nsIRDFRemoteDataSource,
-                              nsITreeView);
+                              nsITreeView)
 
 NS_IMETHODIMP
 mozSqlResult::GetDisplayNullAsText(PRBool* aDisplayNullAsText)
@@ -1547,7 +1547,7 @@ mozSqlResultEnumerator::~mozSqlResultEnumerator()
 
 NS_IMPL_ISUPPORTS2(mozSqlResultEnumerator,
                    mozISqlResultEnumerator,
-                   nsISimpleEnumerator);
+                   nsISimpleEnumerator)
 
 NS_IMETHODIMP
 mozSqlResultEnumerator::GetErrorMessage(nsAString& aErrorMessage)
@@ -2143,7 +2143,7 @@ mozSqlResultStream::~mozSqlResultStream()
 
 NS_IMPL_ISUPPORTS2(mozSqlResultStream,
                    mozISqlInputStream,
-                   nsIInputStream);
+                   nsIInputStream)
 
 
 NS_IMETHODIMP

@@ -95,7 +95,7 @@ mozSqlService::~mozSqlService()
 NS_IMPL_ISUPPORTS3(mozSqlService,
                    mozISqlService,
                    nsIRDFDataSource,
-                   nsIRDFRemoteDataSource);
+                   nsIRDFRemoteDataSource)
 
 NS_IMETHODIMP
 mozSqlService::GetErrorMessage(nsAString& aErrorMessage)
