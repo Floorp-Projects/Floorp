@@ -250,7 +250,7 @@ static PRStatus PR_CALLBACK Ipv6ToIpv4SocketGetPeerName(PRFileDesc *fd,
 	PRStatus result;
 	PRNetAddr tmp_ipv4addr;
 
-	result = (fd->lower->methods->getsockname)(fd->lower, &tmp_ipv4addr);
+	result = (fd->lower->methods->getpeername)(fd->lower, &tmp_ipv4addr);
 	if (PR_SUCCESS == result) {
 		_PR_ConvertToIpv6NetAddr(&tmp_ipv4addr, ipv6addr);
 		PR_ASSERT(IsValidNetAddr(ipv6addr) == PR_TRUE);
