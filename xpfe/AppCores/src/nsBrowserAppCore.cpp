@@ -67,7 +67,7 @@
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 
-#ifdef ClientWallet
+#if defined(ClientWallet) || defined(SingleSignon)
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -460,6 +460,54 @@ nsBrowserAppCore::WalletQuickFillin() {
 NS_IMETHODIMP
 nsBrowserAppCore::WalletSafeFillin() {
   return NS_OK;
+}
+#endif
+
+#ifdef SingleSignon
+NS_IMETHODIMP    
+nsBrowserAppCore::SignonViewer()
+{
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->SI_DisplaySignonInfoAsHTML();
+    NS_RELEASE(walletservice);
+  }
+#ifndef HTMLDialogs 
+  return newWind("file:///y|/htmldlgs.htm");
+#endif
+  return NS_OK;
+}
+#else
+nsBrowserAppCore::SignonViewer()
+{
+}
+#endif
+
+#ifdef CookieManagement
+NS_IMETHODIMP    
+nsBrowserAppCore::CookieViewer()
+{
+  nsINetService *netservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&netservice);
+  if ((NS_OK == res) && (nsnull != netservice)) {
+    res = netservice->NET_DisplayCookieInfoAsHTML();
+    NS_RELEASE(netservice);
+  }
+#ifndef HTMLDialogs 
+  return newWind("file:///y|/htmldlgs.htm");
+#endif
+  return NS_OK;
+}
+#else
+nsBrowserAppCore::CookieViewer()
+{
 }
 #endif
 
