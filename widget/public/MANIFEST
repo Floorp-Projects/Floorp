@@ -29,4 +29,16 @@ nsIDialog.h
 nsILabel.h
 nsILookAndFeel.h
 nsWidgetSupport.h
+<<<<<<< MANIFEST
+nsIMenu.h
+nsIMenuBar.h
+nsIMenuButton.h
+nsIMenuItem.h
+nsIPopUpMenu.h
+nsIToolbar.h
 nsIToolbarItem.h
+nsIToolbarItemHolder.h
+nsIToolbarManager.h
+nsIToolbarManagerListener.h
+nsIImageButton.h
+nsIImageButtonListener.h
