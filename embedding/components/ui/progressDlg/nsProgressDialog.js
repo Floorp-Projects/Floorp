@@ -1,3 +1,4 @@
+/* vim:set ts=4 sts=4 sw=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -84,6 +85,7 @@ const nsITextToSubURI        = Components.interfaces.nsITextToSubURI;
 const nsIChannel             = Components.interfaces.nsIChannel;
 const nsIFileURL             = Components.interfaces.nsIFileURL;
 const nsIURL                 = Components.interfaces.nsIURL;
+const nsILocalFile           = Components.interfaces.nsILocalFile;
 
 nsProgressDialog.prototype = {
     // Turn this on to get debugging messages.
@@ -136,7 +138,11 @@ nsProgressDialog.prototype = {
     set target(newval) { 
         // If newval references a file on the local filesystem, then grab a
         // reference to its corresponding nsIFile.
-        this.mTargetFile = newval instanceof nsIFileURL ? newval.file : null;
+        if (newval instanceof nsIFileURL && newval.file instanceof nsILocalFile) {
+            this.mTargetFile = newval.file.QueryInterface(nsILocalFile);
+        } else {
+            this.mTargetFile = null;
+        }
 
         return this.mTarget = newval;
     },
