@@ -396,18 +396,30 @@
                id="button-address" label="&addressButton.label;" 
                tooltiptext="&addressButton.tooltip;" 
                command="cmd_selectAddress"/>
-       <toolbarbutton class="toolbarbutton-1"
+       <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-attach" label="&attachButton.label;" 
                tooltiptext="&attachButton.tooltip;" 
-               command="cmd_attachFile"/>
+               command="cmd_attachFile">
+         <menupopup>
+           <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
+           <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
+         </menupopup>
+       </toolbarbutton>
        <toolbarbutton class="toolbarbutton-1"
                id="spellingButton" label="&spellingButton.label;" 
                command="cmd_spelling"/>
        <toolbarseparator id="saveSeparator" class="toolbarseparator-primary"/>
-       <toolbarbutton class="toolbarbutton-1"
+       <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-save" label="&saveButton.label;" 
                tooltiptext="&saveButton.tooltip;" 
-               command="cmd_saveDefault"/>
+               command="cmd_saveDefault">
+         <menupopup>
+           <menuitem label="&saveAsFileCmd.label;" accesskey="&saveAsFileCmd.accesskey;" command="cmd_saveAsFile"/>
+           <menuseparator/>
+           <menuitem label="&saveAsDraftCmd.label;" accesskey="&saveAsDraftCmd.accesskey;" command="cmd_saveAsDraft"/>
+           <menuitem label="&saveAsTemplateCmd.label;" accesskey="&saveAsTemplateCmd.accesskey;" command="cmd_saveAsTemplate"/>
+         </menupopup>
+       </toolbarbutton>
        <spacer flex="1"/>
        <hbox id="throbber-box" align="center">
          <button id="navigator-throbber" 
