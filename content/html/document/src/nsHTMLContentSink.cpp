@@ -3168,7 +3168,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
    */
   PRInt32 nameEnd = 0;
 
-  if (name.Length() && name.First() != '"' && name.First() != '\'') {
+  if (name.IsEmpty() || (name.First() != '"' && name.First() != '\'')) {
     nameEnd = name.FindCharInSet(" \n\r\t");
   }
 
