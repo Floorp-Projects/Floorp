@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include <windows.h>
 #include "nsNativeAppSupportWin.h"
+#include "nsINativeAppSupportWin.h"
 
 // Program icon.
 IDI_APPLICATION ICON
@@ -65,4 +66,5 @@ IDB_SPLASH BITMAP
 STRINGTABLE DISCARDABLE
 BEGIN
 	ID_DDE_APPLICATION_NAME,            "Mozilla"
+    IDS_STARTMENU_APPNAME,              "Mozilla"
 END

@@ -93,6 +93,10 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
+RCFLAGS = \
+        $(RCFLAGS) \
+        -I $(XPDIST)\include\appshell
+
 # This code removes the console from release builds
 # (unless you've set MOZ_WINCONSOLE=1).
 !ifndef MOZ_WINCONSOLE
