@@ -95,6 +95,15 @@ public:
                               PRIntn aSkipSides,
                               nsRect* aGap);
 
+  /** draw the dashed segements of a segmented border */
+  //XXX: boy is it annoying that we have 3 methods to draw dashed sides!
+  //     they clearly can be factored.
+  static void DrawDashedSegments(nsIRenderingContext& aContext,
+                                 const nsRect& aBounds,
+                                 nsBorderEdges * aBorderEdges,
+                                 PRIntn aSkipSides,
+                                 nsRect* aGap);
+
 protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor baseColor,

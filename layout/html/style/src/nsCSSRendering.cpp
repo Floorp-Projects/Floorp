@@ -915,6 +915,401 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
   }
 }
 
+int xxx=0;
+
+void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
+                                        const nsRect& aBounds,
+                                        nsBorderEdges * aBorderEdges,
+                                        PRIntn aSkipSides,
+                                        nsRect* aGap)
+{
+  PRIntn dashLength;
+  nsRect dashRect, firstRect, currRect;
+
+  PRBool bSolid = PR_TRUE;
+  float over = 0.0f;
+  PRBool skippedSide = PR_FALSE;
+  PRIntn whichSide=0;
+  // do this just to set up initial condition for loop
+  nsBorderEdge * segment =  (nsBorderEdge *)(aBorderEdges->mEdges[whichSide].ElementAt(0));
+  PRUint8 style = segment->mStyle;  
+  for ( ; whichSide < 4; whichSide++) 
+  {
+    PRUint8 prevStyle = style;
+    if ((1<<whichSide) & aSkipSides) {
+      // Skipped side
+      skippedSide = PR_TRUE;
+      continue;
+    }
+    nscoord x=0;  nscoord y=0;
+    PRInt32 i;
+    PRInt32 segmentCount = aBorderEdges->mEdges[whichSide].Count();
+    for (i=0; i<segmentCount; i++)
+    {
+      bSolid=PR_TRUE;
+      over = 0.0f;
+      segment =  (nsBorderEdge *)(aBorderEdges->mEdges[whichSide].ElementAt(i));
+      style = segment->mStyle;
+
+      // XXX units for dash & dot?
+      if (style == NS_STYLE_BORDER_STYLE_DASHED) {
+        dashLength = DASH_LENGTH;
+      } else {
+        dashLength = DOT_LENGTH;
+      }
+
+      aContext.SetColor(segment->mColor);  
+      switch (whichSide) {
+      case NS_SIDE_LEFT:
+      {
+        nsBorderEdge * topEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(0));
+        if (0==y)
+        {
+          y = aBorderEdges->mMaxBorderWidth.top - topEdge->mWidth;
+          if (PR_TRUE==aBorderEdges->mOutsideEdge)
+            y += topEdge->mWidth;
+        }
+        x = aBounds.x + (aBorderEdges->mMaxBorderWidth.left - segment->mWidth);
+        nscoord height = segment->mLength;
+        nsRect borderOutside(x, y, aBounds.width, height);
+/*        printf("DASHED LEFT: xywh borderOutside = %d %d %d %d\n", 
+            borderOutside.x, borderOutside.y, borderOutside.width, borderOutside.height);*/
+        y += segment->mLength;
+        if ((style == NS_STYLE_BORDER_STYLE_DASHED) ||
+            (style == NS_STYLE_BORDER_STYLE_DOTTED))
+        {
+          nsRect borderInside(borderOutside);
+          nsMargin outsideMargin(segment->mWidth, 0, 0, 0);
+          borderInside.Deflate(outsideMargin);
+/*          printf("DASHED LEFT: xywh borderInside = %d %d %d %d\n", 
+            borderInside.x, borderInside.y, borderInside.width, borderInside.height);*/
+
+          nscoord totalLength = segment->mLength;
+          if (PR_TRUE==aBorderEdges->mOutsideEdge)
+          {
+            nsBorderEdge * neighborLeft = (nsBorderEdge *)(segment->mInsideNeighbor->mEdges[NS_SIDE_LEFT].ElementAt(0));
+            totalLength = neighborLeft->mLength;
+          }
+          dashRect.width = borderInside.x - borderOutside.x;
+          dashRect.height = nscoord(dashRect.width * dashLength);
+          dashRect.x = borderOutside.x;
+          dashRect.y = borderOutside.y + (totalLength/2) - dashRect.height;
+          printf("  totalLength = %d, borderOutside.y = %d, midpoint %d, dashRect.y = %d\n", 
+            totalLength, borderOutside.y, borderOutside.y +(totalLength/2), dashRect.y); 
+          currRect = dashRect;
+
+          // draw the top half
+          while (currRect.YMost() > borderInside.y) {
+            //clip if necessary
+            if (currRect.y < borderInside.y) {
+              over = float(borderInside.y - dashRect.y) /
+                float(dashRect.height);
+              currRect.height = currRect.height - (borderInside.y - currRect.y);
+              currRect.y = borderInside.y;
+            }
+
+            //draw if necessary
+/*            printf("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
+                 currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");*/
+            if (bSolid) {
+              aContext.FillRect(currRect);
+            }
+
+            //setup for next iteration
+            if (over == 0.0f) {
+              bSolid = PRBool(!bSolid);
+            }
+            dashRect.y = dashRect.y - currRect.height;
+            currRect = dashRect;
+          }
+
+          // draw the bottom half
+          dashRect.y = borderOutside.y + (totalLength/2) + dashRect.height;
+          currRect = dashRect;
+          bSolid=PR_TRUE;
+          over = 0.0f;
+          while (currRect.YMost() < borderInside.YMost()) {
+            //clip if necessary
+            if (currRect.y < borderInside.y) {
+              over = float(borderInside.y - dashRect.y) /
+                float(dashRect.height);
+              currRect.height = currRect.height - (borderInside.y - currRect.y);
+              currRect.y = borderInside.y;
+            }
+
+            //draw if necessary
+/*            printf("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
+                 currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");*/
+            if (bSolid) {
+              aContext.FillRect(currRect);
+            }
+
+            //setup for next iteration
+            if (over == 0.0f) {
+              bSolid = PRBool(!bSolid);
+            }
+            dashRect.y = dashRect.y + currRect.height;
+            currRect = dashRect;
+          }
+        }
+      }
+      break;
+
+      case NS_SIDE_TOP:
+      {
+        if (0==x)
+        {
+          nsBorderEdge * leftEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
+          x = aBorderEdges->mMaxBorderWidth.left - leftEdge->mWidth;
+        }
+        y = aBounds.y;
+        if (PR_TRUE==aBorderEdges->mOutsideEdge) // segments of the outside edge are bottom-aligned
+          y += aBorderEdges->mMaxBorderWidth.top - segment->mWidth;
+        nsRect borderOutside(x, y, segment->mLength, aBounds.height);
+        x += segment->mLength;
+        if ((style == NS_STYLE_BORDER_STYLE_DASHED) ||
+            (style == NS_STYLE_BORDER_STYLE_DOTTED))
+        {
+          nsRect borderInside(borderOutside);
+          nsBorderEdge * neighbor;
+          if (PR_TRUE==aBorderEdges->mOutsideEdge)
+            neighbor = (nsBorderEdge *)(segment->mInsideNeighbor->mEdges[NS_SIDE_LEFT].ElementAt(0));
+          else
+            neighbor = (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
+          nsMargin outsideMargin(neighbor->mWidth, segment->mWidth, 0, segment->mWidth);
+          borderInside.Deflate(outsideMargin);
+          nscoord firstRectWidth = 0;
+          if (PR_TRUE==aBorderEdges->mOutsideEdge && 0==i)
+          {
+            firstRectWidth = borderInside.x - borderOutside.x;
+            aContext.FillRect(borderOutside.x, borderOutside.y,
+                              firstRectWidth,
+                              borderInside.y - borderOutside.y);
+          }
+
+          dashRect.height = borderInside.y - borderOutside.y;
+          dashRect.width = dashRect.height * dashLength;
+          dashRect.x = borderOutside.x + firstRectWidth;
+          dashRect.y = borderOutside.y;
+          currRect = dashRect;
+
+          while (currRect.x < borderInside.XMost()) {
+            //clip if necessary
+            if (currRect.XMost() > borderInside.XMost()) {
+              over = float(dashRect.XMost() - borderInside.XMost()) /
+                float(dashRect.width);
+              currRect.width = currRect.width -
+                (currRect.XMost() - borderInside.XMost());
+            }
+
+            //draw if necessary
+            if (bSolid) {
+              aContext.FillRect(currRect);
+            }
+
+            //setup for next iteration
+            if (over == 0.0f) {
+              bSolid = PRBool(!bSolid);
+            }
+            dashRect.x = dashRect.x + currRect.width;
+            currRect = dashRect;
+          }
+        }
+      }
+      break;
+
+      case NS_SIDE_RIGHT:
+      {
+        nsBorderEdge * topEdge =  (nsBorderEdge *)
+            (aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(aBorderEdges->mEdges[NS_SIDE_TOP].Count()-1));
+        nsBorderEdge * bottomEdge =  (nsBorderEdge *)
+            (aBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(aBorderEdges->mEdges[NS_SIDE_BOTTOM].Count()-1));
+        if (0==y)
+        {
+          y = aBorderEdges->mMaxBorderWidth.top - topEdge->mWidth;
+          if (PR_TRUE==aBorderEdges->mOutsideEdge)
+            y += topEdge->mWidth;
+        }
+        nscoord width;
+        if (PR_TRUE==aBorderEdges->mOutsideEdge)
+        {
+          width = aBounds.width - aBorderEdges->mMaxBorderWidth.right;
+          width += segment->mWidth;
+        }
+	      else
+        {
+          width = aBounds.width;
+        }
+        nscoord height = segment->mLength;
+        /*
+        if (PR_TRUE==aBorderEdges->mOutsideEdge)
+          height -= bottomEdge->mWidth;
+          */
+        nsRect borderOutside(aBounds.x, y, width, height);
+        y += segment->mLength;
+        if ((style == NS_STYLE_BORDER_STYLE_DASHED) ||
+            (style == NS_STYLE_BORDER_STYLE_DOTTED))
+        {
+          nsRect borderInside(borderOutside);
+          nsMargin outsideMargin(segment->mWidth, 0, (segment->mWidth), 0);
+          borderInside.Deflate(outsideMargin);
+/*          printf("DASHED RIGHT: xywh borderInside = %d %d %d %d\n", 
+            borderInside.x, borderInside.y, borderInside.width, borderInside.height);
+  */        
+          nscoord totalLength = segment->mLength;
+          if (PR_TRUE==aBorderEdges->mOutsideEdge)
+          {
+            if (0==i)
+            {
+              nsBorderEdge * neighborBottom = (nsBorderEdge *)(segment->mInsideNeighbor->mEdges[NS_SIDE_BOTTOM].ElementAt(0));
+              totalLength -= neighborBottom->mWidth;
+            }
+            if (segmentCount-1 == i)
+              {
+              nsBorderEdge * neighborTop = (nsBorderEdge *)(segment->mInsideNeighbor->mEdges[NS_SIDE_TOP].ElementAt(0));
+              totalLength -= neighborTop->mWidth;
+            }
+          }
+
+          dashRect.width = borderOutside.XMost() - borderInside.XMost();
+          dashRect.height = nscoord(dashRect.width * dashLength);
+          dashRect.x = borderInside.XMost();
+          dashRect.y = (borderOutside.y +(totalLength/2)) - dashRect.height;
+          currRect = dashRect;
+
+          // draw the top half
+          while (currRect.YMost() > borderInside.y) {
+            //clip if necessary
+            if (currRect.y < borderInside.y) {
+              over = float(borderInside.y - dashRect.y) /
+                float(dashRect.height);
+              currRect.height = currRect.height - (borderInside.y - currRect.y);
+              currRect.y = borderInside.y;
+            }
+
+            //draw if necessary
+            /*
+            printf("DASHED RIGHT: xywh in loop currRect = %d %d %d %d %s\n", 
+                   currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
+                   */
+            if (bSolid) {
+              aContext.FillRect(currRect);
+            }
+
+            //setup for next iteration
+            if (over == 0.0f) {
+              bSolid = PRBool(!bSolid);
+            }
+            dashRect.y = dashRect.y - currRect.height;
+            currRect = dashRect;
+          }
+
+          // draw the bottom half
+          dashRect.y = (borderOutside.y +(totalLength/2)) + dashRect.height;
+          if ((PR_TRUE==aBorderEdges->mOutsideEdge) && (0==i))
+            dashRect.y += topEdge->mWidth;
+          currRect = dashRect;
+          bSolid=PR_TRUE;
+          over = 0.0f;
+          while (currRect.YMost() < borderInside.YMost()) {
+            //clip if necessary
+            if (currRect.y < borderInside.y) {
+              over = float(borderInside.y - dashRect.y) /
+                float(dashRect.height);
+              currRect.height = currRect.height - (borderInside.y - currRect.y);
+              currRect.y = borderInside.y;
+            }
+
+            //draw if necessary
+            /*
+            printf("DASHED RIGHT: xywh in loop currRect = %d %d %d %d %s\n", 
+                 currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
+                 */
+            if (bSolid) {
+              aContext.FillRect(currRect);
+            }
+
+            //setup for next iteration
+            if (over == 0.0f) {
+              bSolid = PRBool(!bSolid);
+            }
+            dashRect.y = dashRect.y + currRect.height;
+            currRect = dashRect;
+          }
+
+        }
+      }
+      break;
+
+      case NS_SIDE_BOTTOM:
+      {
+        if (0==x)
+        {
+          nsBorderEdge * leftEdge =  (nsBorderEdge *)
+            (aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(aBorderEdges->mEdges[NS_SIDE_LEFT].Count()-1));
+          x = aBorderEdges->mMaxBorderWidth.left - leftEdge->mWidth;
+        }
+        y = aBounds.y;
+        if (PR_TRUE==aBorderEdges->mOutsideEdge) // segments of the outside edge are top-aligned
+          y -= aBorderEdges->mMaxBorderWidth.bottom - segment->mWidth;
+        nsRect borderOutside(x, y, segment->mLength, aBounds.height);
+        x += segment->mLength;
+        if ((style == NS_STYLE_BORDER_STYLE_DASHED) ||
+            (style == NS_STYLE_BORDER_STYLE_DOTTED))
+        {
+          nsRect borderInside(borderOutside);
+          nsBorderEdge * neighbor;
+          if (PR_TRUE==aBorderEdges->mOutsideEdge)
+            neighbor = (nsBorderEdge *)(segment->mInsideNeighbor->mEdges[NS_SIDE_LEFT].ElementAt(0));
+          else
+            neighbor = (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
+          nsMargin outsideMargin(neighbor->mWidth, segment->mWidth, 0, segment->mWidth);
+          borderInside.Deflate(outsideMargin);
+          nscoord firstRectWidth = 0;
+          if (PR_TRUE==aBorderEdges->mOutsideEdge  &&  0==i)
+          {
+            firstRectWidth = borderInside.x - borderOutside.x;
+            aContext.FillRect(borderOutside.x, borderInside.YMost(),
+                              firstRectWidth,
+                              borderOutside.YMost() - borderInside.YMost());
+          }
+
+          dashRect.height = borderOutside.YMost() - borderInside.YMost();
+          dashRect.width = nscoord(dashRect.height * dashLength);
+          dashRect.x = borderOutside.x + firstRectWidth;
+          dashRect.y = borderInside.YMost();
+          currRect = dashRect;
+
+          while (currRect.x < borderInside.XMost()) {
+            //clip if necessary
+            if (currRect.XMost() > borderInside.XMost()) {
+              over = float(dashRect.XMost() - borderInside.XMost()) / 
+                float(dashRect.width);
+              currRect.width = currRect.width -
+                (currRect.XMost() - borderInside.XMost());
+            }
+
+            //draw if necessary
+            if (bSolid) {
+              aContext.FillRect(currRect);
+            }
+
+            //setup for next iteration
+            if (over == 0.0f) {
+              bSolid = PRBool(!bSolid);
+            }
+            dashRect.x = dashRect.x + currRect.width;
+            currRect = dashRect;
+          }
+        }
+      }
+      break;
+      }
+    }
+    skippedSide = PR_FALSE;
+  }
+}
+
 // XXX improve this to constrain rendering to the damaged area
 void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  nsIRenderingContext& aRenderingContext,
@@ -995,7 +1390,6 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
                                       PRIntn aSkipSides,
                                       nsRect* aGap)
 {
-  //PRIntn    cnt;
   PRBool    printing = nsGlobalVariables::Instance()->GetPrinting(&aPresContext);
   if (nsnull==aBorderEdges) {  // Empty border segments
     return;
@@ -1011,20 +1405,8 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
   if (0 == aBorderEdges->mMaxBorderWidth.left) 
     aSkipSides |= (1 << NS_SIDE_LEFT);
 
-/* XXX ignoring dotted and dashed for now */
-#if 0
-  //see if any sides are dotted or dashed
-  for (cnt = 0; cnt < 4; cnt++) {
-    if ((aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 
-        (aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DASHED))  {
-      break;
-    }
-  }
-  if (cnt < 4) {
-    DrawDashedSides(cnt, aRenderingContext,aStyle,
-                    inside, outside, aSkipSides, aGap);
-  }
-#endif    //XXX
+  // Draw any dashed or dotted segments separately
+  DrawDashedSegments(aRenderingContext, aBounds, aBorderEdges, aSkipSides, aGap);
 
   // Draw all the other sides
   nscoord twipsPerPixel = (nscoord)aPresContext.GetPixelsToTwips();
@@ -1032,21 +1414,18 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
     PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_TOP].Count();
     PRInt32 i;
     nsBorderEdge * leftEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
-    //printf("TOP  leftEdge.max=%d, leftEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.left, leftEdge->mWidth);
     nscoord x = aBorderEdges->mMaxBorderWidth.left - leftEdge->mWidth;
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(i));
-      nscoord y = aBounds.y + (aBorderEdges->mMaxBorderWidth.top - borderEdge->mWidth);
-      //printf("  topEdge.max=%d, topEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.top, borderEdge->mWidth);
+      nscoord y = aBounds.y;
+      if (PR_TRUE==aBorderEdges->mOutsideEdge) // segments of the outside edge are bottom-aligned
+        y += aBorderEdges->mMaxBorderWidth.top - borderEdge->mWidth;
       nsRect inside(x, y, borderEdge->mLength, aBounds.height);
-      //printf("inside xywh=%d %d %d %d\n", inside.x, inside.y, inside.width, inside.height);
       x += borderEdge->mLength;
       nsRect outside(inside);
-      //outside.Deflate(aBorderEdges->mMaxBorderWidth);
       nsMargin outsideMargin(0, borderEdge->mWidth, 0, 0);
       outside.Deflate(outsideMargin);
-      //printf("outside xywh=%d %d %d %d\n", outside.x, outside.y, outside.width, outside.height);
       DrawSide(aRenderingContext, NS_SIDE_TOP,
                borderEdge->mStyle,
                borderEdge->mColor,
@@ -1065,7 +1444,6 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
       nsRect inside(x, y, aBounds.width, borderEdge->mLength);
       y += borderEdge->mLength;
       nsRect outside(inside);
-      //outside.Deflate(aBorderEdges->mMaxBorderWidth);
       nsMargin outsideMargin(borderEdge->mWidth, 0, 0, 0);
       outside.Deflate(outsideMargin);
       DrawSide(aRenderingContext, NS_SIDE_LEFT,
@@ -1079,21 +1457,18 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
     PRInt32 i;
     nsBorderEdge * leftEdge =  (nsBorderEdge *)
       (aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(aBorderEdges->mEdges[NS_SIDE_LEFT].Count()-1));
-    //printf("BOTTOM  leftEdge.max=%d, leftEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.left, leftEdge->mWidth);
     nscoord x = aBorderEdges->mMaxBorderWidth.left - leftEdge->mWidth;
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(i));
-      nscoord y = aBounds.y - (aBorderEdges->mMaxBorderWidth.bottom - borderEdge->mWidth);
-      //printf("  bottomEdge.max=%d, bottomEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.bottom, borderEdge->mWidth);
+      nscoord y = aBounds.y;
+      if (PR_TRUE==aBorderEdges->mOutsideEdge) // segments of the outside edge are top-aligned
+        y -= (aBorderEdges->mMaxBorderWidth.bottom - borderEdge->mWidth);
       nsRect inside(x, y, borderEdge->mLength, aBounds.height);
-      //printf("inside xywh=%d %d %d %d\n", inside.x, inside.y, inside.width, inside.height);
       x += borderEdge->mLength;
       nsRect outside(inside);
-      //outside.Deflate(aBorderEdges->mMaxBorderWidth);
       nsMargin outsideMargin(0, 0, 0, borderEdge->mWidth);
       outside.Deflate(outsideMargin);
-      //printf("outside xywh=%d %d %d %d\n", outside.x, outside.y, outside.width, outside.height);
       DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
                borderEdge->mStyle,
                borderEdge->mColor,
@@ -1105,23 +1480,25 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
     PRInt32 i;
     nsBorderEdge * topEdge =  (nsBorderEdge *)
       (aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(aBorderEdges->mEdges[NS_SIDE_TOP].Count()-1));
-    printf("RIGHT  topEdge.max=%d, topEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.right, topEdge->mWidth);
     nscoord y = aBorderEdges->mMaxBorderWidth.top - topEdge->mWidth;
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(i));
-      nscoord width = aBounds.width;
+      nscoord width;
       if (PR_TRUE==aBorderEdges->mOutsideEdge)
-        width -= aBorderEdges->mMaxBorderWidth.left + borderEdge->mWidth;
-      printf("  rightEdge.max=%d, rightEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.right, borderEdge->mWidth);
+      {
+        width = aBounds.width - aBorderEdges->mMaxBorderWidth.right;
+        width += borderEdge->mWidth;
+      }
+	    else
+      {
+        width = aBounds.width;
+      }
       nsRect inside(aBounds.x, y, width, borderEdge->mLength);
-      printf("inside xywh=%d %d %d %d\n", inside.x, inside.y, inside.width, inside.height);
       y += borderEdge->mLength;
       nsRect outside(inside);
-      //outside.Deflate(aBorderEdges->mMaxBorderWidth);
-      nsMargin outsideMargin(0, 0, borderEdge->mWidth, 0);
+      nsMargin outsideMargin(0, 0, (borderEdge->mWidth), 0);
       outside.Deflate(outsideMargin);
-      printf("outside xywh=%d %d %d %d\n", outside.x, outside.y, outside.width, outside.height);
       DrawSide(aRenderingContext, NS_SIDE_RIGHT,
                borderEdge->mStyle,
                borderEdge->mColor,
