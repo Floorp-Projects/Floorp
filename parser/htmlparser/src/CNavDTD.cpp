@@ -1093,6 +1093,10 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
 nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode& aNode) {
   nsresult  result=NS_OK;
 
+  // Some tags need no to be opened regardless of what the parent says.
+  if(gHTMLElements[aChildTag].HasSpecialProperty(kLegalOpen)) {
+    return !NS_OK;
+  }
   //The trick here is to see if the parent can contain the child, but prefers not to.
   //Only if the parent CANNOT contain the child should we look to see if it's potentially a child
   //of another section. If it is, the cache it for later.
@@ -1134,7 +1138,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           case eHTMLTag_body:
             if(mHadBodyOrFrameset) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,attrNode);
-              return result;
+              if(result == NS_OK)
+                return result;
             }
             break;
           case eHTMLTag_frameset:
@@ -2241,13 +2246,11 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
       break;
 
     case eHTMLTag_body:
-      if(!mHasOpenBody){
         mHasOpenBody=PR_TRUE;
         if(mHasOpenHead)
           mHasOpenHead=1;
         CloseHead(aNode); //do this just in case someone left it open...
         result=OpenBody(aNode); 
-      }
       break;
 
     case eHTMLTag_style:
