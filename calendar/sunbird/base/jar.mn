@@ -2,3 +2,4 @@ calendar.jar:
 +  content/calendar/calendar.xul                 (content/calendar.xul)
 +  content/calendar/menuOverlay.xul              (content/menuOverlay.xul)
 *  content/calendar/customizeToolbar.xul         (content/customizeToolbar.xul)
+*  content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)

@@ -42,7 +42,7 @@
 pref("general.startup.calendar", true);
 
 pref("browser.chromeURL","chrome://calendar/content/");
-pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
+pref("browser.hiddenWindowChromeURL", "chrome://calendar/content/hiddenWindow.xul");
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
 pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
 pref("xpinstall.dialog.progress.type", "Download:Manager");
