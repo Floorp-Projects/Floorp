@@ -1876,7 +1876,7 @@ if test "$result" = "yes"; then
     AC_DEFINE(HAVE_64BIT_OS)
 fi
 
-dnl Check for short-wchar
+dnl Check for usable wchar_t (2 bytes, unsigned)
 dnl ========================================================
 
 TEST_SHORT_WCHAR=1
@@ -1884,39 +1884,48 @@ MOZ_ARG_DISABLE_BOOL(short-wchar,
 [  --disable-short-wchar   Disable compiler short-wchar option],
   TEST_SHORT_WCHAR= )
 
-AC_CACHE_CHECK(for size of wchar_t == 2,
-    ac_cv_have_short_wchar_t,
+AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
+    ac_cv_have_usable_wchar,
     [AC_TRY_RUN([#include <wchar.h>
-                 int main () { return (sizeof(wchar_t) != 2); } ],
-                ac_cv_have_short_wchar_t="yes",
-                ac_cv_have_short_wchar_t="no",
-                ac_cv_have_short_wchar_t="maybe")])
-if test "$ac_cv_have_short_wchar_t" = "yes"; then
+                 int main () {
+                   return (sizeof(wchar_t) != 2) ||
+                          (wchar_t)-1 < (wchar_t) 0 ; } ],
+                ac_cv_have_usable_wchar="yes",
+                ac_cv_have_usable_wchar="no",
+                ac_cv_have_usable_wchar="maybe")])
+if test "$ac_cv_have_usable_wchar" = "yes"; then
     AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
     HAVE_CPP_2BYTE_WCHAR_T=1
 else
 dnl This is really gcc-only
+dnl Do this test using CXX instead of CC since some versions of gcc
+dnl 2.96-2.97 have a signed wchar_t in c++ only.
 
   if test "$TEST_SHORT_WCHAR"; then
     _SAVE_CFLAGS=$CFLAGS
+    _SAVE_CC=$CC
+    CC=$CXX
     CFLAGS="$CFLAGS -fshort-wchar"
 
-    AC_CACHE_CHECK(for compiler short-wchar option, 
-        ac_cv_have_short_wchar_t_option,
+    AC_CACHE_CHECK(for compiler -fshort-wchar option, 
+        ac_cv_have_usable_wchar_option,
         [AC_TRY_RUN([#include <wchar.h>
-                     int main () { return (sizeof(wchar_t) != 2); } ],
-                    ac_cv_have_short_wchar_t_option="yes",
-                    ac_cv_have_short_wchar_t_option="no",
-                    ac_cv_have_short_wchar_t_option="maybe")])
+                     int main () {
+                       return (sizeof(wchar_t) != 2) ||
+                              (wchar_t)-1 < (wchar_t) 0 ; } ],
+                    ac_cv_have_usable_wchar_option="yes",
+                    ac_cv_have_usable_wchar_option="no",
+                    ac_cv_have_usable_wchar_option="maybe")])
 
-    if test "$ac_cv_have_short_wchar_t_option" = "yes"; then
+    if test "$ac_cv_have_usable_wchar_option" = "yes"; then
         AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
         HAVE_CPP_2BYTE_WCHAR_T=1
-dnl Is it OK to assume CXX and CC take the same arguments?
+dnl Since this is gcc-only, CC and CXX should take the same arguments.
         CXXFLAGS="$CXXFLAGS -fshort-wchar"
     else    
         CFLAGS=$_SAVE_CFLAGS
     fi
+    CC=$_SAVE_CC
   fi
 fi
 
