@@ -192,6 +192,12 @@ public:
 
     virtual void SetRootContent(nsIContent* aRoot);
 
+    NS_IMETHOD AppendToProlog(nsIContent* aContent);
+    NS_IMETHOD AppendToEpilog(nsIContent* aContent);
+    NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+    NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
+    NS_IMETHOD GetChildCount(PRInt32& aCount);
+
     virtual PRInt32 GetNumberOfStyleSheets();
 
     virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
@@ -288,11 +294,6 @@ public:
 
 
     // nsIXMLDocument interface
-    NS_IMETHOD PrologElementAt(PRUint32 aOffset, nsIContent** aContent);
-    NS_IMETHOD PrologCount(PRUint32* aCount);
-    NS_IMETHOD AppendToProlog(nsIContent* aContent);
-    NS_IMETHOD EpilogElementAt(PRUint32 aOffset, nsIContent** aContent);
-    NS_IMETHOD EpilogCount(PRUint32* aCount);
     NS_IMETHOD AppendToEpilog(nsIContent* aContent);
 
     NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
@@ -970,6 +971,41 @@ RDFDocumentImpl::SetRootContent(nsIContent* aRoot)
     }
 }
 
+NS_IMETHODIMP 
+RDFDocumentImpl::AppendToProlog(nsIContent* aContent)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+RDFDocumentImpl::AppendToEpilog(nsIContent* aContent)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+RDFDocumentImpl::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+RDFDocumentImpl::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+RDFDocumentImpl::GetChildCount(PRInt32& aCount)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 PRInt32 
 RDFDocumentImpl::GetNumberOfStyleSheets()
 {
@@ -1516,50 +1552,6 @@ RDFDocumentImpl::HandleDOMEvent(nsIPresContext& aPresContext,
 
 ////////////////////////////////////////////////////////////////////////
 // nsIXMLDocument interface
-
-NS_IMETHODIMP
-RDFDocumentImpl::PrologElementAt(PRUint32 aOffset, nsIContent** aContent)
-{
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFDocumentImpl::PrologCount(PRUint32* aCount)
-{
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFDocumentImpl::AppendToProlog(nsIContent* aContent)
-{
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-RDFDocumentImpl::EpilogElementAt(PRUint32 aOffset, nsIContent** aContent)
-{
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFDocumentImpl::EpilogCount(PRUint32* aCount)
-{
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFDocumentImpl::AppendToEpilog(nsIContent* aContent)
-{
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP 
 RDFDocumentImpl::GetContentById(const nsString& aName, nsIContent** aContent)
 {
