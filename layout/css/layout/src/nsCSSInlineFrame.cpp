@@ -390,7 +390,7 @@ nsCSSInlineFrame::InitialReflow(nsCSSInlineReflowState& aState)
   NS_PRECONDITION(nsnull == mNextInFlow, "bad frame-appended-reflow");
   NS_PRECONDITION(mLastContentIsComplete == PR_TRUE, "bad state");
 
-  nsresult rv = ProcessInitialReflow(aLineLayout.mPresContext);
+  nsresult rv = ProcessInitialReflow(aState.mPresContext);
   if (NS_OK != rv) {
     return rv;
   }
