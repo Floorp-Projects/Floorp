@@ -1081,9 +1081,12 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   if ((mTextTransform != NS_STYLE_TEXT_TRANSFORM_NONE) ||
       (*aWordLenResult != *aContentLenResult)) {
     *aWasTransformed = PR_TRUE;
+    mBufferPos = prevBufferPos + *aWordLenResult;
   }
 
   mOffset = offset;
+
+  NS_ASSERTION(mBufferPos == prevBufferPos + *aWordLenResult, "internal error");
   return result;
 }
 
