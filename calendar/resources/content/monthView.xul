@@ -295,7 +295,7 @@
 			    </vbox>    
 			</row>
 
-			<row flex="1"  >
+			<row id="month-week-5-row" flex="1"  >
 			    <vbox class="month-leftcol-box-class" flex="1" id="month-week-5-left-box">
 				    <label class="week-short-text" value="&week.short;" />
 				    <label class="month-leftcol-number-class" id="month-week-5-left"/>

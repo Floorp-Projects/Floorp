@@ -136,7 +136,7 @@ function MultiweekView( calendarWindow )
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
                var EventBoxes;
-               if( EventSelectionArray[i].due ) 
+               if("due" in EventSelectionArray[i] && EventSelectionArray[i].due ) 
 		 {
 		   EventBoxes = document.getElementsByAttribute( "name", "multiweek-view-todo-box-"+EventSelectionArray[i].id );		   
 		 }
@@ -144,7 +144,7 @@ function MultiweekView( calendarWindow )
 		 {
 		   EventBoxes = document.getElementsByAttribute( "name", "multiweek-view-event-box-"+EventSelectionArray[i].id );
 		 }
-               for ( j = 0; j < EventBoxes.length; j++ ) 
+               for (var j = 0; j < EventBoxes.length; j++ ) 
                {
                   EventBoxes[j].setAttribute( "eventselected", "true" );
                }
@@ -170,8 +170,8 @@ function MultiweekView( calendarWindow )
    this.lastDateOfView = new Date();
 
    // Get the default number of WeeksInView
-   this.categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   var defaultWeeksInView = this.categoriesStringBundle.GetStringFromName("defaultWeeksInView" );
+   this.localeDefaultsStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   var defaultWeeksInView = this.localeDefaultsStringBundle.GetStringFromName("defaultWeeksInView" );
    var WeeksInView = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "weeks.inview", defaultWeeksInView );
    this.WeeksInView = ( WeeksInView >= 6 ) ? 6 : WeeksInView ;
 
@@ -267,16 +267,15 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 	 // Only displayed if there is enough room
 	 if( dayBoxItem.numEvents <= this.numberOfEventsToShow)
 	   {
-	     eventBox = this.getToDoBox( calendarToDo,"due" );
-	     dayBoxItem.appendChild( eventBox );
+	     var todoBox = this.getToDoBox( calendarToDo,"due" );
+	     dayBoxItem.appendChild( todoBox );
 	   }
        }
    }
-   var calendarEventDisplay;
    // add each calendarEvent
    for( var eventIndex = 0; eventIndex < viewEventList.length; ++eventIndex )
    {
-      calendarEventDisplay = viewEventList[ eventIndex ];
+      var calendarEventDisplay = viewEventList[ eventIndex ];
       
       // get the day box for the calendarEvent's day
       DisplayDate.setTime( calendarEventDisplay.displayDate );
@@ -290,6 +289,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
       
       dayBoxItem.numEvents +=  1;
       
+      var eventBox;
       if( dayBoxItem.numEvents <= this.numberOfEventsToShow )
       {
          // Make a box item to hold the event
@@ -332,7 +332,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
          {
             eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
             // Create an image
-            newImage = document.createElement("image");
+            var newImage = document.createElement("image");
             newImage.setAttribute( "class", "all-day-event-class" );
             eventBox.appendChild( newImage );
          }
@@ -356,6 +356,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
       else
       {
          //if there is not a box to hold the little dots for this day...
+	     var dotBoxHolder;
          if ( !document.getElementById( "multiweekdotbox"+eventDayInView ) )
          {
             //make one
@@ -374,7 +375,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
          
          if( dotBoxHolder.childNodes.length < kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW )
          {
-            eventDotBox = document.createElement( "box" );
+            var eventDotBox = document.createElement( "box" );
             eventDotBox.setAttribute( "eventbox", "multiweekview" );
             
             //show a dot representing an event.
@@ -534,17 +535,17 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
    var newYear =  selectedDate.getFullYear();
    document.getElementById( "multiweek-title" ).setAttribute( "value" , newYear );
 
+  var Offset = this.preferredWeekStart();
+  var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
+  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
 
-   var defaultWeekStart = this.categoriesStringBundle.GetStringFromName("defaultWeekStart" );
-   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
-
-   var defaultPreviousWeeksInView = this.categoriesStringBundle.GetStringFromName("defaultPreviousWeeksInView" );
+   var defaultPreviousWeeksInView = this.localeDefaultsStringBundle.GetStringFromName("defaultPreviousWeeksInView" );
    var PreviousWeeksInView = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "previousweeks.inview", defaultPreviousWeeksInView );
    this.PreviousWeeksInView = ( PreviousWeeksInView >= this.WeeksInView - 1 ) ? this.WeeksInView - 1 : PreviousWeeksInView ;
 
    var NewArrayOfDayNames = new Array();
    
-   for( i = 0; i < ArrayOfDayNames.length; i++ )
+   for(var i = 0; i < ArrayOfDayNames.length; i++ )
    {
       NewArrayOfDayNames[i] = ArrayOfDayNames[i];
    }
@@ -576,43 +577,41 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
    
    // figure out first and last days of the month, first and last date of view
    
-   newDay = newDay - 7 * this.PreviousWeeksInView ;
-   var firstDate = new Date( newYear, newMonth, newDay );
-   var firstDayOfWeek = firstDate.getDay() - Offset;
-   if( firstDayOfWeek < 0 ) 
-      firstDayOfWeek+=7;
-   
-   newDay = newDay  - firstDayOfWeek ;
-
-   var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
+   { // set newDay to first day of newMonth in prev week (negative ok)
+     var prevWeekDay = newDay - 7 * this.PreviousWeeksInView;
+     var prevWeekDate = new Date( newYear, newMonth, prevWeekDay );
+     var prevWeekDateCol = (7 - Offset + prevWeekDate.getDay()) % 7;
+     newDay = prevWeekDay - prevWeekDateCol;
+   }
    this.firstDateOfView = new Date( newYear, newMonth, newDay );
    this.lastDateOfView = new Date( newYear, newMonth,  newDay + this.WeeksInView*7 -1, 23, 59, 59 );
 
    var firstDayOfMonth  = new Date( newYear, newMonth, 1 );
    var firstDayOfMonthIndex = this.indexOfDate( firstDayOfMonth );
+   var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
    var lastDayOfMonthDate  = new Date( newYear, newMonth, lastDayOfMonth );
    var lastDayOfMonthIndex = this.indexOfDate( lastDayOfMonthDate );
 
-   var Checked = gOnlyWorkdayChecked ;
+  // hide or unhide columns for days off
+  for(var day = 0; day < 7; day++) {
+    var col = ((7 - Offset + day) % 7) + 1;
+    if( isOnlyWorkDays && isDayOff[day])
+      document.getElementById( "multiweek-view-column-"+col ).setAttribute( "collapsed", "true" );
+    else 
+      document.getElementById( "multiweek-view-column-"+col ).removeAttribute( "collapsed" );
+  }
 
-   for( var i = - Offset; i <= 1 - Offset; i++ ){
-     //ni = i - Offset ;
-     var ni = (i >0)? i : i + 7;
-     if( Checked === "true" )
-       document.getElementById( "multiweek-view-column-"+ ni).setAttribute( "collapsed", "true" );
-     else 
-       document.getElementById( "multiweek-view-column-"+ ni).removeAttribute( "collapsed");	      
-   }
-
-   if( Checked === "true" ) {
+   if( isOnlyWorkDays ) {
      //Is firstDayOfMonth and firstDayOfNextMonth during a weekend ?
      //If so we change the firstDayOfMonthIndex to the first day displayed
-     var tempvar = 7 - firstDayOfMonth.getDay() ;
-     tempvar = ( tempvar >= 7) ? tempvar - 6 : tempvar + 1 ;
-     if( tempvar <= 2)  firstDayOfMonthIndex += tempvar ;
-     tempvar = 7 - (lastDayOfMonthDate.getDay()+1) ;
-     tempvar = ( tempvar >= 7) ? tempvar - 6 : tempvar + 1 ;
-     if( tempvar <= 2)  lastDayOfMonthIndex += tempvar ;
+     var firstOfMonthWeekDay = firstDayOfMonth.getDay();
+     for (var addDays = 0; addDays < 7; addDays++) {
+       var weekDay = (7 - Offset + firstOfMonthWeekDay + addDays) % 7;
+       if (!isDayOff[weekDay]) {
+	 firstDayOfMonthIndex += addDays;
+	 break;
+       }
+     }
    }
 
 
@@ -732,11 +731,12 @@ MultiweekView.prototype.hiliteSelectedDate = function multiweekView_hiliteSelect
    this.clearSelectedEvent();
 
    // Set the background for selection
-   var IndexInView = this.indexOfDate( this.calendarWindow.getSelectedDate() );
-   var ThisBox = this.dayBoxItemArray[ IndexInView ];
-  
-   if( ThisBox )
-      ThisBox.setAttribute( "multiweekselected" , "true" );
+   var indexInView = this.indexOfDate( this.calendarWindow.getSelectedDate() );
+   if (indexInView in this.dayBoxItemArray) { 
+     var thisBox = this.dayBoxItemArray[ indexInView ];
+     if( thisBox )
+       thisBox.setAttribute( "multiweekselected" , "true" );
+   }
 }
 
 
@@ -925,7 +925,7 @@ MultiweekView.prototype.selectBoxForEvent = function multiweekView_selectBoxForE
 {
    var EventBoxes = document.getElementsByAttribute( "name", "multiweek-view-event-box-"+calendarEvent.id );
             
-   for ( j = 0; j < EventBoxes.length; j++ ) 
+   for (var j = 0; j < EventBoxes.length; j++ ) 
    {
       EventBoxes[j].setAttribute( "eventselected", "true" );
    }

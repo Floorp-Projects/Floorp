@@ -242,14 +242,13 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
    var DisplayDate = new Date( );
    var eventDayInView;
    var dayBoxItem;
-   var calendarEventDisplay;
    var calIndex;
    var calNumber;
 
    // add each calendarEvent
    for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
    {
-      calendarEventDisplay = monthEventList[ eventIndex ];
+      var calendarEventDisplay = monthEventList[ eventIndex ];
       
       // get the day box for the calendarEvent's day
       DisplayDate.setTime( calendarEventDisplay.displayDate );
@@ -263,6 +262,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
       
       dayBoxItem.numEvents +=  1;
       
+      var eventBox;
       if( dayBoxItem.numEvents <= this.numberOfEventsToShow )
       {
          // Make a box item to hold the event
@@ -303,7 +303,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          {
             eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
             // Create an image
-            newImage = document.createElement("image");
+            var newImage = document.createElement("image");
             newImage.setAttribute( "class", "all-day-event-class" );
             eventBox.appendChild( newImage );
          }
@@ -329,6 +329,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
       else
       {
          //if there is not a box to hold the little dots for this day...
+         var dotBoxHolder;
          if ( !document.getElementById( "dotboxholder"+eventDayInView ) )
          {
             //make one
@@ -451,11 +452,10 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    
    document.getElementById( "m0-month-title" ).setAttribute( "value" , titleMonthArray[0] + " " + newYear );
    
-   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
-      
-   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
-   
+  var Offset = this.preferredWeekStart();
+  var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
+  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
+
    var NewArrayOfDayNames = new Array();
    
    for( i = 0; i < ArrayOfDayNames.length; i++ )
@@ -483,44 +483,77 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    // figure out first and last days of the month, first and last date of view
    
    var firstDate = new Date( newYear, newMonth, 1 );
-   var firstDayOfWeek = firstDate.getDay() - Offset;
-   if( firstDayOfWeek < 0 )
-      firstDayOfWeek+=7;
-
-   this.firstDayOfWeek = firstDayOfWeek;
+   var firstDateCol = (7 - Offset + firstDate.getDay()) % 7;
 
    var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
-   this.firstDateOfView = new Date( newYear, newMonth, 1 - firstDayOfWeek, 0, 0, 0 );
-   this.lastDateOfView = new Date( newYear, newMonth,  42 - firstDayOfWeek, 23, 59, 59 );
-   
-   var Checked = gOnlyWorkdayChecked ;
+   var lastDateCol = (firstDateCol + lastDayOfMonth - 1) % 7;
 
-   for( i = - Offset; i <= 1 - Offset; i++ ){
-     //ni = i - Offset ;
-     var ni = (i >0)? i : i + 7;
-     if( Checked === "true" )
-         document.getElementById( "month-view-column-"+ni ).setAttribute( "collapsed", "true" );
-     else 
-       document.getElementById( "month-view-column-"+ ni).removeAttribute( "collapsed");	      
-   }
-       
-   if( Checked === "true" && Offset <= 1 && firstDayOfWeek >= 6-Offset) {
-	      document.getElementById( "month-week-1-row" ).setAttribute( "collapsed", "true" );
-   }
-   else
-   {
-       document.getElementById( "month-week-1-row" ).removeAttribute( "collapsed" );
-   }
-
-   if(this.dayNumberItemArray.length-firstDayOfWeek-lastDayOfMonth >= 7)
-   {
-       document.getElementById( "month-week-6-row" ).setAttribute( "collapsed", "true" );
-   }
-   else
-   {
-       document.getElementById( "month-week-6-row" ).removeAttribute( "collapsed" );
-   }
+   this.firstDateOfView = new Date( newYear, newMonth, 1 - firstDateCol, 0, 0, 0 );
+   this.lastDateOfView = new Date( newYear, newMonth,  42 - firstDateCol, 23, 59, 59 );
    
+  // hide or unhide columns for days off
+  for(var day = 0; day < 7; day++) {
+    var dayCol = ((7 - Offset + day) % 7) + 1;
+    if( isOnlyWorkDays && isDayOff[day])
+      document.getElementById( "month-view-column-"+dayCol ).setAttribute( "collapsed", "true" );
+    else 
+      document.getElementById( "month-view-column-"+dayCol ).removeAttribute( "collapsed" );
+  }
+
+  { // first week should not display if holds only off days and only work days displayed
+    var isFirstWeekDisplayed = true;
+    if (isOnlyWorkDays) {
+      isFirstWeekDisplayed = false;
+      for (var col = firstDateCol; col < 7; col++) {
+	if (!isDayOff[(Offset + col) % 7]) {
+	  isFirstWeekDisplayed = true;
+	  break;
+	}
+      }
+    }
+    if (!isFirstWeekDisplayed) {
+      document.getElementById( "month-week-1-row" ).setAttribute( "collapsed", "true" );
+    } else {
+      document.getElementById( "month-week-1-row" ).removeAttribute( "collapsed" );
+    }
+  }
+
+  { // sixth week should not display if holds only off days and only work days displayed
+    var isSixthWeekDisplayed = (firstDateCol + lastDayOfMonth > 5 * 7);
+    if (isSixthWeekDisplayed && isOnlyWorkDays) {
+      isSixthWeekDisplayed = false;
+      for (var sixthWeekCol = 0; sixthWeekCol <= lastDateCol; sixthWeekCol++) {
+	if (!isDayOff[(Offset + sixthWeekCol) % 7]) {
+	  isSixthWeekDisplayed = true;
+	  break;
+	}
+      }
+    }
+    if(!isSixthWeekDisplayed) {
+      document.getElementById( "month-week-6-row" ).setAttribute( "collapsed", "true" );
+    } else {
+      document.getElementById( "month-week-6-row" ).removeAttribute( "collapsed" );
+    }
+
+    // fifth week should not display if holds only off days and only work days displayed
+    var isFifthWeekDisplayed = (firstDateCol + lastDayOfMonth > 4 * 7);
+    if (isFifthWeekDisplayed && !isSixthWeekDisplayed && isOnlyWorkDays) {
+      isFifthWeekDisplayed = false;
+      for (var fifthWeekCol = 0; fifthWeekCol <= lastDateCol; fifthWeekCol++) {
+	if (!isDayOff[(Offset + fifthWeekCol) % 7]) {
+	  isFifthWeekDisplayed = true;
+	  break;
+	}
+      }
+    }
+    if(!isFifthWeekDisplayed) {
+      document.getElementById( "month-week-5-row" ).setAttribute( "collapsed", "true" );
+    } else {
+      document.getElementById( "month-week-5-row" ).removeAttribute( "collapsed" );
+    }
+  }
+
+
   // To Set Week Number 
   var weekNumberItem;
   var weekNumber ;
@@ -545,13 +578,13 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    {
       var dayNumberItem = this.dayNumberItemArray[ dayIndex ];
       var dayBoxItem = this.dayBoxItemArray[ dayIndex ];
-      var thisDate = new Date( newYear, newMonth, 1-(firstDayOfWeek - dayIndex ) );
+      var thisDate = new Date( newYear, newMonth, 1-(firstDateCol - dayIndex ) );
 
       dayBoxItem.date = thisDate;
 
       dayNumberItem.setAttribute( "value" , thisDate.getDate() );  
 
-      if( dayIndex < firstDayOfWeek || dayNumber > lastDayOfMonth )
+      if( dayIndex < firstDateCol || dayNumber > lastDayOfMonth )
       {
          // this day box is NOT in the month, 
          dayBoxItem.dayNumber = null;
@@ -612,11 +645,12 @@ MonthView.prototype.hiliteSelectedDate = function monthView_hiliteSelectedDate( 
    this.clearSelectedBoxes();
 
    // Set the background for selection
-   var IndexInView = this.indexOfDate(this.calendarWindow.getSelectedDate());
-   var ThisBox = this.dayBoxItemArray[ IndexInView ];
-   
-   if( ThisBox )
-      ThisBox.setAttribute( "monthselected" , "true" );
+   var indexInView = this.indexOfDate(this.calendarWindow.getSelectedDate());
+   if (indexInView in this.dayBoxItemArray) { 
+     var thisBox = this.dayBoxItemArray[ indexInView ];
+     if( thisBox )
+       thisBox.setAttribute( "monthselected" , "true" );
+   }
 }
 
 

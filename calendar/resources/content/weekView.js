@@ -111,6 +111,9 @@ function WeekView( calendarWindow )
 */
 WeekView.prototype.refreshEvents = function( )
 {
+  var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
+  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
+
    this.kungFooDeathGripOnEventBoxes = new Array();
    
    this.removeElementsByAttribute("eventbox","weekview");
@@ -140,10 +143,9 @@ WeekView.prototype.refreshEvents = function( )
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
       // get the events for the day and loop through them
       var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
-      
       var dayToGetDay = dayToGet.getDay() ;
-      if( gOnlyWorkdayChecked === "true" && ( dayToGetDay == 0 || dayToGetDay == 6 )) {
-         continue ;
+      if (isOnlyWorkDays && isDayOff[dayToGetDay]) {
+         continue;
       }
       
       eventList[dayIndex] = gEventSource.getEventsForDay( dayToGet );
@@ -193,9 +195,8 @@ WeekView.prototype.refreshEvents = function( )
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
       dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
       dayToGetDay = dayToGet.getDay() ;
-      if( gOnlyWorkdayChecked == "true" && ( dayToGetDay == 0 || dayToGetDay == 6 )) {
-        /* its a weekend */
-        continue ;
+      if (isOnlyWorkDays && isDayOff[dayToGetDay]) {
+        continue;
       }
      
       // Calculate event draw properties (where events are drawn on view)
@@ -243,7 +244,7 @@ WeekView.prototype.refreshEvents = function( )
             
             //note the use of the WeekViewAllDayText Attribute.
             //This is used to remove the text when the day is changed.
-            newHTMLNode = document.createElement( "label" );
+            var newHTMLNode = document.createElement( "label" );
             newHTMLNode.setAttribute( "crop", "end" );
             newHTMLNode.setAttribute( "flex", "1" );
             newHTMLNode.setAttribute( "value", eventText );
@@ -254,7 +255,7 @@ WeekView.prototype.refreshEvents = function( )
             newHTMLNode.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
             newHTMLNode.setAttribute( "tooltip", "eventTooltip" );
          
-            newImage = document.createElement("image");
+            var newImage = document.createElement("image");
             newImage.setAttribute( "class", "all-day-event-class" );
             newImage.setAttribute( "WeekViewAllDayText", "true" );
             newImage.calendarEventDisplay = calendarEventDisplay;
@@ -400,17 +401,24 @@ WeekView.prototype.switchTo = function( )
 */
 WeekView.prototype.refreshDisplay = function( )
 {
-   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
+  var Offset = this.preferredWeekStart();
+  var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
+  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
    
-   // Set the from-to title string, based on the selected date
-   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
    // Define a reference column (which will not be collapsed latter) to use to get its width. 
    // This is used to place the event Box
-   if (Offset == 0 || Offset == 6) {
-       gRefColumnIndex = 3 ;
+  gRefColumnIndex = Offset;
+  if (isOnlyWorkDays) { 
+    for (var day = 0; day < 7; day++) {
+      if (!isDayOff[day]) {
+        gRefColumnIndex = day;
+        break;
+      }
+    }
+    isDayOff[gRefColumnIndex] = false; // in case all days off, make one visible.
    }
    
+   // Set the from-to title string, based on the selected date
    var selectedDate = this.calendarWindow.getSelectedDate();
    var viewDay = selectedDate.getDay();
    var viewDayOfMonth = selectedDate.getDate();
@@ -443,10 +451,10 @@ WeekView.prototype.refreshDisplay = function( )
    var firstDayMonthName = this.calendarWindow.dateFormater.getFormatedDateWithoutYear( firstDayOfWeek );
    var lastDayMonthName =  this.calendarWindow.dateFormater.getFormatedDateWithoutYear( lastDayOfWeek );
    
-   var newoffset = (Offset >= 5) ? 8 -Offset : 1 - Offset ;
+   var mondayDiff = (Offset >= 5) ? 8 - Offset : 1 - Offset ;
    var mondayDate = new Date( firstDayOfWeek.getFullYear(), 
                               firstDayOfWeek.getMonth(),
-                              firstDayOfWeek.getDate()+newoffset );
+                              firstDayOfWeek.getDate() + mondayDiff );
    
    var weekNumber = DateUtils.getWeekNumber(mondayDate);
    
@@ -458,7 +466,7 @@ WeekView.prototype.refreshDisplay = function( )
    /* done setting the header information */
    
    /* Fix the day names because users can choose which day the week starts on  */
-   for( var dayIndex = 1; dayIndex < 8; ++dayIndex ) {
+   for( var dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
       var dateOfDay = firstDayOfWeek.getDate();
       
       var headerDateItem = document.getElementById( "week-header-date-"+dayIndex );
@@ -466,28 +474,16 @@ WeekView.prototype.refreshDisplay = function( )
       headerDateItem.setAttribute( "date", firstDayOfWeek );
       headerDateItem.numEvents = 0;
       
-      document.getElementById( "week-header-date-text-"+dayIndex ).setAttribute( "value", NewArrayOfDayNames[dayIndex-1] );
-      
-      var arrayOfBoxes = new Array();
-      
-      if( firstDayOfWeek.getDay() == 0 || firstDayOfWeek.getDay() == 6 ) {
-         /* its a weekend */
-         arrayOfBoxes = document.getElementsByAttribute( "day", dayIndex );
+     var col = dayIndex - 1;
+
+      document.getElementById( "week-header-date-text-"+dayIndex ).setAttribute( "value", NewArrayOfDayNames[col] );
          
-         if( gOnlyWorkdayChecked === "true" ) {
+      if( isOnlyWorkDays && isDayOff[(Offset + col) % 7]) {
             document.getElementById( "weekview-column-day-"+dayIndex ).setAttribute( "collapsed", "true" );
          } else {
             document.getElementById( "weekview-column-day-"+dayIndex ).removeAttribute( "collapsed" );
          }
          
-         for( i = 0; i < arrayOfBoxes.length; i++ ) {
-            arrayOfBoxes[i].setAttribute( "weekend", "true" );
-         }
-      } else {
-         /* it's not a weekend */
-        this.removeAttributeFromElements("weekend", dayIndex);
-      }
-      
       // advance to next day 
       firstDayOfWeek.setDate( dateOfDay + 1 );
    }
@@ -574,7 +570,7 @@ WeekView.prototype.hiliteSelectedDate = function multiweekView_hiliteSelectedDat
          }
       }
       //dayIndex now contains the box numbers that we need.
-      for ( i = 0; i < 24; i++ ) {
+      for (var i = 0; i < 24; i++ ) {
          document.getElementById( "week-tree-day-"+(dayIndex-1)+"-item-"+i ).setAttribute( "weekselected", "true" );
       }
    }
@@ -609,7 +605,7 @@ WeekView.prototype.hiliteTodaysDate = function( )
          }
       }
       //dayIndex now contains the box numbers that we need.
-      for ( i = 0; i < 24; i++ ) {
+      for (var i = 0; i < 24; i++ ) {
          document.getElementById( "week-tree-day-"+(dayIndex-1)+"-item-"+i ).setAttribute( "today", "true" );
       }
    }

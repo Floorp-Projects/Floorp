@@ -599,6 +599,7 @@ CalendarWindow.prototype.onMouseUpCalendarViewSplitter = function calWinOnMouseU
 function CalendarView( calendarWindow )
 {
    this.calendarWindow = calendarWindow;
+   this.localeDefaultsStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
 }
 
 /** A way for subclasses to invoke the super constructor */
@@ -805,7 +806,7 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
       }
        
       //update vars for next loop
-      if( dayEventStartList[eventStartListIndex] == null )
+      if( !(eventStartListIndex in dayEventStartList) || dayEventStartList[eventStartListIndex] == null )
         done = true;
       else
         nextEventIsStarting = ( dayEventStartList[eventStartListIndex].displayDate <  dayEventEndList[eventEndListIndex].displayEndDate );     
@@ -967,4 +968,33 @@ CalendarView.prototype.removeAttributeFromElements =
   for (var i = liveList.length - 1; i >= 0; i--) {
     liveList.item(i).removeAttribute(attributeName);
   }
+}
+
+/** PROTECTED
+
+    Return the preferred start day of the week as an integer.
+    0: Sun, 1: Mon, 2: Tue, 3: Wed, 4: Thu, 5: Fri, 6: Sat
+    Based on current preference setting or locale default.
+ **/
+CalendarView.prototype.preferredWeekStart = function() {
+  var defaultWeekStart = this.localeDefaultsStringBundle.GetStringFromName("defaultWeekStart" );
+  return getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
+}
+
+/** PROTECTED
+
+    Return an array of booleans for each day of week: true means isDayOff.
+    Indexed using integers for days of the week.
+    0: Sun, 1: Mon, 2: Tue, 3: Wed, 4: Thu, 5: Fri, 6: Sat
+    Constructed based on current preference settings or locale default.
+ **/
+CalendarView.prototype.preferredDaysOff = function() {
+  var isDayOff = new Array();
+  var daysOffPropNames = ["SundaysOff","MondaysOff","TuesdaysOff","WednesdaysOff","ThursdaysOff","FridaysOff","SaturdaysOff"];
+  for (var i = 0; i < daysOffPropNames.length; i++) { 
+    var isDefaultDayOff = ("true"==this.localeDefaultsStringBundle.GetStringFromName("defaultWeek"+ daysOffPropNames[i]));
+    var prefName = "week.d"+i+daysOffPropNames[i].toLowerCase();
+    isDayOff[i] = getBoolPref(this.calendarWindow.calendarPreferences.calendarPref, prefName, isDefaultDayOff);
+  }
+  return isDayOff;
 }

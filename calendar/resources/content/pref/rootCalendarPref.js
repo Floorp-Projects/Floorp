@@ -59,6 +59,14 @@ calendarPrefObserver.prototype =
             case "calendar.event.defaultendhour":
             case "calendar.weeks.inview":
             case "calendar.previousweeks.inview":
+            case "calendar.week.d0sundaysoff":
+            case "calendar.week.d1mondaysoff":
+            case "calendar.week.d2tuesdaysoff":
+            case "calendar.week.d2wednesdaysoff":
+            case "calendar.week.d2thursdaysoff":
+            case "calendar.week.d2fridaysoff":
+            case "calendar.week.d2saturdaysoff":
+                if (this.CalendarPreferences.calendarWindow.currentView != null)
                 this.CalendarPreferences.calendarWindow.currentView.refresh();
                 break;
 
@@ -124,6 +132,13 @@ function calendarPreferences( CalendarWindow )
    getIntPref( this.calendarPref, "event.defaultstarthour", calendarStringBundle.GetStringFromName("defaultStartHour" ) );
    getIntPref( this.calendarPref, "event.defaultendhour", calendarStringBundle.GetStringFromName("defaultEndHour" ) );
    getIntPref( this.calendarPref, "week.start", calendarStringBundle.GetStringFromName("defaultWeekStart" ) );
+   getBoolPref( this.calendarPref, "week.d0sundaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekSundaysOff" ) );
+   getBoolPref( this.calendarPref, "week.d1mondaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekMondaysOff" ) );
+   getBoolPref( this.calendarPref, "week.d2tuesdaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekTuesdaysOff" ) );
+   getBoolPref( this.calendarPref, "week.d3wednesdaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekWednesdaysOff" ) );
+   getBoolPref( this.calendarPref, "week.d4thursdaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekThursdaysOff" ) );
+   getBoolPref( this.calendarPref, "week.d5fridaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekFridaysOff" ) );
+   getBoolPref( this.calendarPref, "week.d6saturdaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekSaturdaysOff" ) );
    getIntPref( this.calendarPref, "weeks.inview", calendarStringBundle.GetStringFromName("defaultWeeksInView" ) );
    getIntPref( this.calendarPref, "previousweeks.inview", calendarStringBundle.GetStringFromName("defaultPreviousWeeksInView" ) );
    getIntPref( this.calendarPref, "alarms.onforevents", 0 );

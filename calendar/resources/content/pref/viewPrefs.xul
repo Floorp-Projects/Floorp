@@ -44,6 +44,7 @@
 <!DOCTYPE page 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd2;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -61,15 +62,16 @@
       */
        
       var _elementIDs = [
-          "nbofpreviousweeks", "nbofweeks", "weekstarts", "daystarthour", "dayendhour"
+          "nbofpreviousweeks", "nbofweeks", "weekstarts", "daystarthour", "dayendhour",
+          "sundaysoff","mondaysoff","tuesdaysoff","wednesdaysoff","thursdaysoff","fridaysoff","saturdaysoff"
        ];
-   </script>>
+   </script>
 
 <groupbox>
 	<caption label="&pref.calendar.view.allview.caption;"/>
 	<hbox  align="center">
-         <description>&pref.weekstarts.label;</description>
-         <menulist id="weekstarts" prefstring="calendar.week.start">
+        <description>&pref.weekstarts.label;</description>
+        <menulist id="weekstarts" prefstring="calendar.week.start">
           <menupopup id="weekstarts">
             <menuitem label="&pref.weekstarts.sunday;"    value="0"/>
             <menuitem label="&pref.weekstarts.monday;"    value="1"/>
@@ -80,7 +82,35 @@
             <menuitem label="&pref.weekstarts.saturday;"  value="6" selected="true"/>
           </menupopup>
         </menulist>   
-</hbox>
+    </hbox>
+    <vbox align="start">
+      <description>&pref.daysoff.label;</description>
+      <grid id="daysoffgrid">
+        <columns>
+          <column /> <column /> <column /> <column /> <column /> <column /> <column />
+        </columns>
+        <rows>
+          <row>
+            <caption label="&day.1.Ddd;" />
+            <caption label="&day.2.Ddd;" />
+            <caption label="&day.3.Ddd;" />
+            <caption label="&day.4.Ddd;" />
+            <caption label="&day.5.Ddd;" />
+            <caption label="&day.6.Ddd;" />
+            <caption label="&day.7.Ddd;" />
+          </row>
+          <row>
+            <checkbox id="sundaysoff"    prefstring="calendar.week.d0sundaysoff" />
+            <checkbox id="mondaysoff"    prefstring="calendar.week.d1mondaysoff" />
+            <checkbox id="tuesdaysoff"   prefstring="calendar.week.d2tuesdaysoff"/>
+            <checkbox id="wednesdaysoff" prefstring="calendar.week.d3wednesdaysoff"/>
+            <checkbox id="thursdaysoff"  prefstring="calendar.week.d4thursdaysoff"/>
+            <checkbox id="fridaysoff"    prefstring="calendar.week.d5fridaysoff"/>
+            <checkbox id="saturdaysoff"  prefstring="calendar.week.d6saturdaysoff"/>
+          </row>
+        </rows>
+      </grid>
+    </vbox>
 </groupbox>
 
 <groupbox>
