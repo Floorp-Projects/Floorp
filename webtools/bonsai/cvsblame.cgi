@@ -351,7 +351,7 @@ foreach $revision (@::revision_map)
 	}
       }
     } elsif ($lines_in_table > 200 and not $inMark) {
-      $output .= "</TD></TR></TABLE>$open_table_tag<TR><TDcolspan=3$row_color><PRE>";
+      $output .= "</TD></TR></TABLE>$open_table_tag<TR><TD colspan=3$row_color><PRE>";
       $lines_in_table=0;
     }
 
