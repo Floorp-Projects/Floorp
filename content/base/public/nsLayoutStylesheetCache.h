@@ -63,6 +63,7 @@ private:
   ~nsLayoutStylesheetCache();
 
   static void EnsureGlobal();
+  void InitFromSkin();
   void InitFromProfile();
   static void LoadSheetFile(nsIFile* aFile, nsCOMPtr<nsICSSStyleSheet> &aSheet);
   static void LoadSheet(nsIURI* aURI, nsCOMPtr<nsICSSStyleSheet> &aSheet);
