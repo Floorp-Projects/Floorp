@@ -599,6 +599,10 @@ case "$target" in
         PR_MD_ASFILES=os_Linux_x86.s
         _OPTIMIZE_FLAGS=-O2
         ;;
+    ia64)
+        PR_MD_ASFILES=os_Linux_ia64.s
+        _OPTIMIZE_FLAGS=-O2
+        ;;
     m68k)
         _OPTIMIZE_FLAGS=-O
         CFLAGS="$CFLAGS -m68020-40"
