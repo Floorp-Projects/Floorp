@@ -57,7 +57,7 @@ class nsStaticAtomWrapper;
  * sure it's only manipulated from the main thread.  Probably the latter
  * is better, since the former would hurt performance.
  *
- * If |gAtomTable.entryCount| is 0, then the table is uninitialized.
+ * If |gAtomTable.ops| is 0, then the table is uninitialized.
  */
 static PLDHashTable gAtomTable;
 
@@ -262,7 +262,7 @@ void PromoteToPermanent(AtomImpl* aAtom)
 
 void NS_PurgeAtomTable()
 {
-  if (gAtomTable.entryCount) {
+  if (gAtomTable.ops) {
 #ifdef DEBUG
     if (PR_GetEnv("MOZ_DUMP_ATOM_LEAKS")) {
       PRUint32 leaked = 0;
@@ -274,6 +274,7 @@ void NS_PurgeAtomTable()
 #endif
     PL_DHashTableFinish(&gAtomTable);
     gAtomTable.entryCount = 0;
+    gAtomTable.ops = nsnull;
 
     if (gStaticAtomArena) {
       PL_FinishArenaPool(gStaticAtomArena);
@@ -289,7 +290,7 @@ AtomImpl::AtomImpl()
 
 AtomImpl::~AtomImpl()
 {
-  NS_PRECONDITION(gAtomTable.entryCount, "uninitialized atom hashtable");
+  NS_PRECONDITION(gAtomTable.ops, "uninitialized atom hashtable");
   // Permanent atoms are removed from the hashtable at shutdown, and we
   // don't want to remove them twice.  See comment above in
   // |AtomTableClearEntry|.
@@ -481,10 +482,12 @@ WrapStaticAtom(const nsStaticAtom* aAtom)
 
 static AtomTableEntry* GetAtomHashEntry(const char* aString)
 {
-  if ( !gAtomTable.entryCount )
-    PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
-                      sizeof(AtomTableEntry), 2048);
-
+  if (!gAtomTable.ops &&
+      !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
+                         sizeof(AtomTableEntry), 2048)) {
+    gAtomTable.ops = nsnull;
+    return nsnull;
+  }
   return NS_STATIC_CAST(AtomTableEntry*,
                         PL_DHashTableOperate(&gAtomTable,
                                              aString,
