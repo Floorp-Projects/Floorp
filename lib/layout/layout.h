@@ -1560,7 +1560,7 @@ lo_ConvertMochaEntities(MWContext * context, lo_DocState *state, PA_Tag * tag);
 
 extern void
 LO_EditorReflow(MWContext *context, ED_TagCursor *pCursor, 
-			int32 iStartLine, int iStartEditOffset, XP_Bool bDisplayTables);
+			int32 iStartLine, int iStartEditOffset);
 
 /********************** Image observers and observer lists. ******************/
 /* The layout observer for an image request. */
