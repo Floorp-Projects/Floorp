@@ -282,3 +282,8 @@ res\builtin\selectBindings.xml
 res\builtin\textfields.css
 res\builtin\xbl-forms.css
 res\fonts\fontEncoding.properties
+res\entityTables\html40Latin1.properties
+res\entityTables\html40Special.properties
+res\entityTables\html40Symbols.properties
+res\entityTables\htmlEntityVersions.properties
+res\entityTables\transliterate.properties
