@@ -66,6 +66,12 @@ typedef int PRInt32;
 #define WIZ_TEMP_DIR                    "ns_temp"
 #define FILE_INSTALL_LOG                "install.log"
 
+/* UG: Upgrade */
+#define UG_NONE                         0
+#define UG_DELETE                       1
+#define UG_IGNORE                       2
+#define UG_GOBACK                       3
+
 /* PP: Parse Path */
 #define PP_FILENAME_ONLY                1
 #define PP_PATH_ONLY                    2

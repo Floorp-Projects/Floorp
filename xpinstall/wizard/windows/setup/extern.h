@@ -39,7 +39,7 @@ extern HBITMAP          hbmpBoxUnChecked;
 
 extern HANDLE           hAccelTable;
 
-extern HWND             hDlg;
+extern HWND             hDlgCurrent;
 extern HWND             hDlgMessage;
 extern HWND             hWndMain;
 
@@ -66,6 +66,7 @@ extern DWORD            dwScreenY;
 extern ULONG            ulOSType;
 
 extern DWORD            dwTempSetupType;
+extern DWORD            gdwUpgradeValue;
 
 extern BOOL             bSDUserCanceled;
 extern BOOL             bIdiArchivesExists;

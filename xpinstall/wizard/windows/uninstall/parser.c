@@ -457,29 +457,6 @@ BOOL DetermineUnRegisterServer(sil *silInstallLogHead, LPSTR szFile)
   return(bRv);
 }
 
-DWORD AskWhatToDo(LPSTR szFile)
-{
-  MSG     msg;
-  HWND    hDlg = NULL;
-  char    szBuf[MAX_BUF];
-
-  gszSharedFilename = szFile;
-  NS_LoadString(hInst, IDS_DLG_REMOVE_FILE_TITLE, szBuf, MAX_BUF);
-  if((hDlg = InstantiateDialog(hDlgUninstall, DLG_WHAT_TO_DO, szBuf, DlgProcWhatToDo)) != NULL)
-  {
-    while(GetMessage(&msg, NULL, 0, 0))
-    {
-      if((!IsDialogMessage(hDlg, &msg)) && (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)))
-      {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
-    }
-  }
-
-  return(gdwWhatToDo);
-}
-
 DWORD Uninstall(sil* silInstallLogHead)
 {
   sil   *silInstallLogTemp;
@@ -515,7 +492,10 @@ DWORD Uninstall(sil* silInstallLogHead)
         if(DecrementSharedFileCounter(szFile) == 0)
         {
           if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
-            gdwWhatToDo = AskWhatToDo(szFile);
+          {
+            MessageBeep(MB_ICONEXCLAMATION);
+            gdwWhatToDo = DialogBoxParam(hInst, MAKEINTRESOURCE(DLG_WHAT_TO_DO), hDlgUninstall, DlgProcWhatToDo, (LPARAM)szFile);
+          }
 
           if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
           {
@@ -541,7 +521,7 @@ DWORD Uninstall(sil* silInstallLogHead)
         if(DecrementSharedFileCounter(szFile) == 0)
         {
           if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
-            gdwWhatToDo = AskWhatToDo(szFile);
+            gdwWhatToDo = DialogBoxParam(hInst, MAKEINTRESOURCE(DLG_WHAT_TO_DO), hDlgUninstall, DlgProcWhatToDo, (LPARAM)szFile);
 
           if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
           {

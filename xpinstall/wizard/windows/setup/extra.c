@@ -271,6 +271,7 @@ HRESULT Initialize(HINSTANCE hInstance)
   siComponents          = NULL;
   bCreateDestinationDir = FALSE;
   bReboot               = FALSE;
+  gdwUpgradeValue       = UG_NONE;
 
   if((szSetupDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -3947,7 +3948,7 @@ BOOL CheckLegacy(HWND hDlg)
 {
   char      szSection[MAX_BUF];
   char      szFilename[MAX_BUF];
-  char      szMessage[MAX_BUF];
+  LPSTR     szMessage[2];
   char      szIndex[MAX_BUF];
   char      szVersionNew[MAX_BUF];
   char      szDecryptedFilePath[MAX_BUF];
@@ -3964,7 +3965,6 @@ BOOL CheckLegacy(HWND hDlg)
   {
     ZeroMemory(szFilename,      sizeof(szFilename));
     ZeroMemory(szVersionNew,    sizeof(szVersionNew));
-    ZeroMemory(szMessage,       sizeof(szMessage));
 
     ++iIndex;
     itoa(iIndex, szIndex, 10);
@@ -3979,8 +3979,14 @@ BOOL CheckLegacy(HWND hDlg)
     }
     else if(*szFilename != '\0')
     {
-      GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniConfig);
-      if(*szMessage == '\0')
+      if((szMessage[0] = NS_GlobalAlloc(MAX_BUF)) == NULL)
+        return(1);
+      if((szMessage[1] = NS_GlobalAlloc(MAX_BUF)) == NULL)
+        return(1);
+
+      GetPrivateProfileString(szSection, "Message0", "", szMessage[0], MAX_BUF, szFileIniConfig);
+      GetPrivateProfileString(szSection, "Message1", "", szMessage[1], MAX_BUF, szFileIniConfig);
+      if((*szMessage[0] == '\0') && (*szMessage[1] == '\0'))
         /* no message string input. so just continue with the next check */
         continue;
 
@@ -3989,12 +3995,8 @@ BOOL CheckLegacy(HWND hDlg)
       {
         if(FileExists(szDecryptedFilePath))
         {
-          char szMBWarningStr[MAX_BUF];
-
-          if(NS_LoadString(hSetupRscInst, IDS_MB_WARNING_STR, szMBWarningStr, MAX_BUF) != WIZ_OK)
-            lstrcpy(szMBWarningStr, "Warning");
-
-          if(MessageBox(hDlg, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
+          MessageBeep(MB_ICONEXCLAMATION);
+          if((gdwUpgradeValue = DialogBoxParam(hSetupRscInst, MAKEINTRESOURCE(DLG_UPGRADE), hDlgCurrent, DlgProcUpgrade, (LPARAM)szMessage)) == UG_GOBACK)
             return(TRUE);
         }
         /* file does not exist, so it's okay.  Continue with the next check */
@@ -4006,15 +4008,13 @@ BOOL CheckLegacy(HWND hDlg)
         TranslateVersionStr(szVersionNew, &vbVersionNew);
         if(CompareVersion(vbVersionOld, vbVersionNew) < 0)
         {
-          char szMBWarningStr[MAX_BUF];
-
-          if(NS_LoadString(hSetupRscInst, IDS_MB_WARNING_STR, szMBWarningStr, MAX_BUF) != WIZ_OK)
-            lstrcpy(szMBWarningStr, "Warning");
-
-          if(MessageBox(hDlg, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
+          MessageBeep(MB_ICONEXCLAMATION);
+          if((gdwUpgradeValue = DialogBoxParam(hSetupRscInst, MAKEINTRESOURCE(DLG_UPGRADE), hDlgCurrent, DlgProcUpgrade, (LPARAM)szMessage)) == UG_GOBACK)
             return(TRUE);
         }
       }
+      FreeMemory(&szMessage[0]);
+      FreeMemory(&szMessage[1]);
     }
   }
   /* returning TRUE means the user wants to go back and choose a different destination path
