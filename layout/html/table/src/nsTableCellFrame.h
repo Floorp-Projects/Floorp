@@ -91,7 +91,7 @@ protected:
   NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
   void      MapTextAttributes(nsIPresContext* aPresContext);
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
-  void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
+  void      MapHTMLBorderStyle(nsIPresContext* aPresContext,nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 };
 

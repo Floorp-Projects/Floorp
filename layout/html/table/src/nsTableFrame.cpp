@@ -40,6 +40,7 @@
 #include "prinrval.h"
 #include "nsIPtr.h"
 #include "nsIView.h"
+#include "nsHTMLAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -268,8 +269,11 @@ void nsTableFrame::RecalcLayoutData()
     {
       for (col = 0; col < colCount; col++)
       {
+        nsTableCell*  cell = nsnull;
         CellData*     cellData = cellMap->GetCellAt(row,col);
-        nsTableCell*  cell = cellData->mCell;
+        
+        if (cellData)
+          cell = cellData->mCell;
         
         if (!cell)
           continue;
@@ -336,7 +340,7 @@ void nsTableFrame::RecalcLayoutData()
             if (c != col)
             {
               cellData = cellMap->GetCellAt(r1,c);
-              if (cellData->mCell != above)
+              if ((cellData != nsnull) && (cellData->mCell != above))
               {
                 above = cellData->mCell;
                 if (above != nsnull)
@@ -353,7 +357,7 @@ void nsTableFrame::RecalcLayoutData()
           {
             // Add bottom edge cells
             cellData = cellMap->GetCellAt(r2,c);
-            if (cellData->mCell != below)
+            if ((cellData != nsnull) && cellData->mCell != below)
             {
               below = cellData->mCell;
               if (below != nsnull)
@@ -377,7 +381,7 @@ void nsTableFrame::RecalcLayoutData()
             if (r != row)
             {
               cellData = cellMap->GetCellAt(r,c1);
-              if (cellData->mCell != left)
+              if ((cellData != nsnull) && (cellData->mCell != left))
               {
                 left = cellData->mCell;
                 if (left != nsnull)
@@ -394,7 +398,7 @@ void nsTableFrame::RecalcLayoutData()
           {
             // Add right edge cells
             cellData = cellMap->GetCellAt(r,c2);
-            if (cellData->mCell != right)
+            if ((cellData != nsnull) && (cellData->mCell != right))
             {
               right = cellData->mCell;
               if (right != nsnull)
@@ -2173,12 +2177,139 @@ void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, PRInt32 aWidth)
   }
 }
 
+
+
+
+/**
+  *
+  * Update the border style to map to the HTML border style
+  *
+  */
+void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth)
+{
+  nsStyleCoord  width;
+  width.SetCoordValue(aBorderWidth);
+  aSpacingStyle.mBorder.SetTop(width);
+  aSpacingStyle.mBorder.SetLeft(width);
+  aSpacingStyle.mBorder.SetBottom(width);
+  aSpacingStyle.mBorder.SetRight(width);
+
+  aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  
+
+  nsIStyleContext* styleContext = mStyleContext; 
+  nsStyleColor*   colorData = (nsStyleColor*)styleContext->GetData(eStyleStruct_Color);
+
+  // Look until we find a style context with a NON-transparent background color
+  while (styleContext)
+  {
+    if ((colorData->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)!=0)
+    {
+      nsIStyleContext* temp = styleContext;
+      styleContext = styleContext->GetParent();
+      if (temp != mStyleContext)
+        NS_RELEASE(temp);
+      colorData = (nsStyleColor*)styleContext->GetData(eStyleStruct_Color);
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  // Yaahoo, we found a style context which has a background color 
+  
+  nscolor borderColor = 0xFFC0C0C0;
+
+  if (styleContext != nsnull)
+  {
+    borderColor = colorData->mBackgroundColor;
+    if (styleContext != mStyleContext)
+      NS_RELEASE(styleContext);
+  }
+
+  // if the border color is white, then shift to grey
+  if (borderColor == 0xFFFFFFFF)
+    borderColor = 0xFFC0C0C0;
+
+  aSpacingStyle.mBorderColor[NS_SIDE_TOP]     = borderColor;
+  aSpacingStyle.mBorderColor[NS_SIDE_LEFT]    = borderColor;
+  aSpacingStyle.mBorderColor[NS_SIDE_BOTTOM]  = borderColor;
+  aSpacingStyle.mBorderColor[NS_SIDE_RIGHT]   = borderColor;
+
+}
+
+
+
+PRBool nsTableFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
+{
+  PRInt32 result = 0;
+
+  if (aValue.GetUnit() == eHTMLUnit_Pixel)
+    aResult = aValue.GetPixelValue();
+  else if (aValue.GetUnit() == eHTMLUnit_Empty)
+    aResult = aDefault;
+  else
+  {
+    NS_ERROR("Unit must be pixel or empty");
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
+{
+  // Check to see if the table has either cell padding or 
+  // Cell spacing defined for the table. If true, then
+  // this setting overrides any specific border, margin or 
+  // padding information in the cell. If these attributes
+  // are not defined, the the cells attributes are used
+  
+  nsHTMLValue padding_value;
+  nsHTMLValue spacing_value;
+  nsHTMLValue border_value;
+
+
+  nsContentAttr border_result;
+
+  nscoord   padding = 0;
+  nscoord   spacing = 0;
+  nscoord   border  = 1;
+
+  float     p2t = aPresContext->GetPixelsToTwips();
+
+  nsTablePart*  table = (nsTablePart*)mContent;
+
+  NS_ASSERTION(table,"Table Must not be null");
+  if (!table)
+    return;
+
+  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+
+  border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
+  if (border_result == eContentAttr_HasValue)
+  {
+    PRInt32 intValue = 0;
+
+    if (ConvertToPixelValue(border_value,1,intValue))
+      border = nscoord(p2t*(float)intValue); 
+  }
+  MapHTMLBorderStyle(*spacingData,border);
+}
+
+
+
+
 // Subclass hook for style post processing
 NS_METHOD nsTableFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 {
 #ifdef NOISY_STYLE
   printf("nsTableFrame::DidSetStyleContext \n");
 #endif
+  MapBorderMarginPadding(aPresContext);
   return NS_OK;
 }
 
