@@ -70,7 +70,6 @@
 
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 // -----------------------------------------------------------------------
@@ -802,7 +801,7 @@ PRBool nsFind::IsBlockNode(nsIContent* aContent)
     return PR_TRUE;
 
   if (!mParserService) {
-    mParserService = do_GetService(kParserServiceCID);
+    mParserService = do_GetService(NS_PARSERSERVICE_CONTRACTID);
     if (!mParserService)
       return PR_FALSE;
   }
