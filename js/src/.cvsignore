@@ -5,3 +5,5 @@
 Debug
 Release
 Makefile
+jscpucfg
+jsautocfg.h
