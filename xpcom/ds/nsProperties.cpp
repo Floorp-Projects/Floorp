@@ -152,11 +152,7 @@ NS_IMETHODIMP
 nsProperties::Has(const char* prop, PRBool *result)
 {
     nsCStringKey key(prop);
-    nsISupports* value = (nsISupports*)nsHashtable::Get(&key);
-    // XXX this is bogus because it doesn't distinguish between properties
-    // defined with a value NULL, and undefined properties, but we'll fix
-    // it later if it becomes a problem
-    *result = value != nsnull;
+    *result = nsHashtable::Exists(&key);
     return NS_OK;
 }
 
