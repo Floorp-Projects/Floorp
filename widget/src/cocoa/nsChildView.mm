@@ -2656,8 +2656,9 @@ nsChildView::Idle()
 
 - (void)mouseExited:(NSEvent*)theEvent
 {
-  // checks to see if we should change from the hand cursor
-  [self flagsChanged:theEvent];
+  // Gecko may have set the cursor to ibeam or link hand, or handscroll may
+  // have set it to the open hand cursor. Cocoa won't call this during a drag.
+  mGeckoChild->SetCursor(eCursor_standard);
   // no need to monitor mouse movements outside of the gecko view
   [[self window] setAcceptsMouseMovedEvents: NO];
 }
