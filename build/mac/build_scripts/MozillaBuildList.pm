@@ -112,40 +112,26 @@ sub GenBuildSystemInfo()
     close(F);
 }
 
+
 #//--------------------------------------------------------------------------------------------------
-#// ConfigureBuildSystem
+#// DoPrebuildCheck
 #//
-#// defines some build-system configuration variables.
+#// Check the build tools etc before running the build.
 #//--------------------------------------------------------------------------------------------------
-sub ConfigureBuildSystem()
+sub DoPrebuildCheck()
 {
-    #// In the future, we may want to do configurations based on the actual build system itself.
-    #// GenBuildSystemInfo();
-
-    # launch codewarrior and write idepath.txt. This is required for getCodeWarriorPath() to work.
-    LaunchCodeWarrior();
-    
     SanityCheckJarOptions();
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Regenerate DefinesOptions.h if necessary
+#//
+#//--------------------------------------------------------------------------------------------------
+sub UpdateConfigHeader($)
+{
+    my($config_path) = @_;
     
-    #// For now, if we discover a newer header file than existed in Universal Interfaces 3.2,
-    #// we'll assume that 3.3 or later is in use.
-    my($universal_interfaces) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:Universal:Interfaces:CIncludes:");
-    if (-e ($universal_interfaces . "ControlDefinitions.h")) {
-        $UNIVERSAL_INTERFACES_VERSION = 0x0330;
-    }
-
-    #// Rename IC SDK folder in the Mac OS Support folder
-    my($ic_sdk_folder) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:ICProgKit2.0.2");
-    if( -e $ic_sdk_folder)
-    {
-        my($new_ic_folder_name) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:(ICProgKit2.0.2)");
-        rename ($ic_sdk_folder, $new_ic_folder_name);
-        # note that CodeWarrior doesn't descnet into folders with () the name
-        print "Mozilla no longer needs the Internet Config SDK to build:\n  Renaming the 'ICProgKit2.0.2' folder to '(ICProgKit2.0.2)'\n";
-    }
-
-    printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $UNIVERSAL_INTERFACES_VERSION);
-
     my($line, $config, $oldconfig, $define, $definevalue, $defines);
     my($k, $l,);
 
@@ -156,14 +142,15 @@ sub ConfigureBuildSystem()
             foreach $l (keys(%{$main::optiondefines{$k}}))
             {
                 $my::defines{$l} = $main::optiondefines{$k}{$l};
+                print "Setting up my::defines{$l}\n";
             }
         }
     }
 
-    my $config_headerfile = current_directory() . ":mozilla:config:mac:DefinesOptions.h";
+    my $config_headerfile = current_directory().$config_path;
     if (-e $config_headerfile)
     {
-        open(CONFIG_HEADER, "< $config_headerfile") || die "Can't open configuration header, check the file path.\n";
+        open(CONFIG_HEADER, "< $config_headerfile") || die "$config_headerfile: $!\n";
         while ($line = <CONFIG_HEADER>)
         {
             $oldconfig .= $line;
@@ -192,74 +179,56 @@ sub ConfigureBuildSystem()
     if (($config ne $oldconfig) || (!-e $config_headerfile))
     {
         printf("Writing new DefinesOptions.h\n");
-        open(CONFIG_HEADER, "> $config_headerfile") || die "Can't open configuration header, check the file path.\n";
+        open(CONFIG_HEADER, "> $config_headerfile") || die "$config_headerfile: $!\n";
         MacPerl::SetFileInfo("CWIE", "TEXT", $config_headerfile);
         print CONFIG_HEADER ($config);
         close(CONFIG_HEADER);
     }
 }
 
-#//--------------------------------------------------------------------------------------------------
-#// Recurse into the skin directories
-#//--------------------------------------------------------------------------------------------------
 
-sub ScanForManifestFiles($$$$)
+#//--------------------------------------------------------------------------------------------------
+#// ConfigureBuildSystem
+#//
+#// defines some build-system configuration variables.
+#//--------------------------------------------------------------------------------------------------
+sub ConfigureBuildSystem()
 {
-    my($dir, $theme_root, $theme_name, $dist_dir) = @_;
+    # launch codewarrior and write idepath.txt. This is required for getCodeWarriorPath() to work.
+    LaunchCodeWarrior();
 
-    opendir(DIR, $dir) or die "Cannot open dir $dir\n";
-    my @files = readdir(DIR);
-    closedir DIR;
-
-    my $file;
-
-    foreach $file (@files)
-    {    
-        my $filepath = $dir.":".$file;
-
-        if (-d $filepath)
-        {
-            # print "Looking for MANIFEST files in $filepath\n";        
-            ScanForManifestFiles($filepath, $theme_root, $theme_name, $dist_dir);
-        }
-        elsif ($file eq "MANIFEST")
-        {
-            # print "Doing manifest file $filepath\n";
-
-            # Get the dest path from the first line of the file
-
-            open(MANIFEST, $filepath) || die "Could not open file $file";
-            # Read in the path if available
-            my($dest_line) = <MANIFEST>;
-            chomp $dest_line;
-            close MANIFEST;
-
-            $dest_line =~ s|^#!dest[\t ]+|| || die "No destination line found in $filepath\n";
-
-            my($dest_path) = $dist_dir."chrome:skins:$theme_name:$dest_line";
-            # print " Destination is $dest_path\n";
-
-            InstallResources($filepath, "$dest_path", 0);
-        }
+    #// In the future, we may want to do configurations based on the actual build system itself.
+    #// GenBuildSystemInfo();
+        
+    #// For now, if we discover a newer header file than existed in Universal Interfaces 3.2,
+    #// we'll assume that 3.3 or later is in use.
+    my($universal_interfaces) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:Universal:Interfaces:CIncludes:");
+    if (-e ($universal_interfaces . "ControlDefinitions.h")) {
+        $UNIVERSAL_INTERFACES_VERSION = 0x0330;
     }
-}
 
-#//--------------------------------------------------------------------------------------------------
-#// Install skin files
-#//--------------------------------------------------------------------------------------------------
+    #// Rename IC SDK folder in the Mac OS Support folder
+    my($ic_sdk_folder) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:ICProgKit2.0.2");
+    if( -e $ic_sdk_folder)
+    {
+        my($new_ic_folder_name) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:(ICProgKit2.0.2)");
+        rename ($ic_sdk_folder, $new_ic_folder_name);
+        # note that CodeWarrior doesn't descnet into folders with () the name
+        print "Mozilla no longer needs the Internet Config SDK to build:\n  Renaming the 'ICProgKit2.0.2' folder to '(ICProgKit2.0.2)'\n";
+    }
 
-sub InstallSkinFiles($)
-{
-    my($theme_name) = @_;
+    printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $UNIVERSAL_INTERFACES_VERSION);
 
-    unless( $main::build{resources} ) { return; }
-    assertRightDirectory();
+    UpdateConfigHeader(":mozilla:config:mac:DefinesOptions.h");
 
-    my($dist_dir) = GetBinDirectory();
-    my($themes_dir) = ":mozilla:themes:".$theme_name;
+    my(@gen_files) = (
+        ":mozilla:config:nsBuildID.h",
+        ":mozilla:xpfe:global:build.dtd"
+    );
+    SetBuildNumber(":mozilla:config:build_number", \@gen_files);
 
-    print "Installing skin files from $themes_dir\n";
-    ScanForManifestFiles($themes_dir, $themes_dir, $theme_name, $dist_dir);
+    # alias required CodeWarrior libs into the Essential Files folder (only the Profiler lib now)
+    MakeLibAliases();
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -467,19 +436,6 @@ sub MakeNonChromeAliases()
 }
 
 #//--------------------------------------------------------------------------------------------------
-#// MakeResourceAliases
-#//--------------------------------------------------------------------------------------------------
-
-sub MakeResourceAliases()
-{
-    unless( $main::build{resources} ) { return; }
-    assertRightDirectory();
-
-    InstallChromeFiles();
-    MakeNonChromeAliases();
-}
-
-#//--------------------------------------------------------------------------------------------------
 #// ProcessJarManifests
 #//--------------------------------------------------------------------------------------------------
 
@@ -549,7 +505,7 @@ sub ProcessJarManifests()
 
 sub BuildJarFiles()
 {
-    unless( $main::build{resources} && $main::options{jars} ) { return; }
+    unless( $main::build{resources} ) { return; }
     assertRightDirectory();
 
     print("--- Starting JAR building ----\n");
@@ -1913,8 +1869,6 @@ sub BuildMozilla()
 
 sub BuildProjects()
 {
-    MakeLibAliases();
-
     # activate CodeWarrior
     ActivateApplication('CWIE');
 
@@ -2023,6 +1977,7 @@ sub RunBuild($$$)
 {
     my($do_pull, $do_build, $build_prefs) = @_;
     
+    # setup the build log
     SetupBuildLog($main::USE_TIMESTAMPED_LOGS);
     
     StopForErrors();
@@ -2033,33 +1988,32 @@ sub RunBuild($$$)
         ClearBuildProgress();    
     }
     
+    # read local prefs, and the build progress file, and set flags to say what to build
     SetupBuildParams(\%main::pull, \%main::build, \%main::options, \%main::optiondefines, $build_prefs);
 
     if ($main::LOG_TO_FILE) {
         RedirectOutputToFile("Mozilla script log");
     }
     
-    ConfigureBuildSystem();
+    # run a pre-build check to see that the tools etc are in order
+    DoPrebuildCheck();
     
     if ($do_pull) {
         Checkout();
     }
     
     unless ($do_build) { return; }
-    
-    my(@gen_files) = (
-        ":mozilla:config:nsBuildID.h",
-        ":mozilla:xpfe:global:build.dtd"
-    );
-    SetBuildNumber(":mozilla:config:build_number", \@gen_files);
-        
-die;
+
+    # create generated headers
+    ConfigureBuildSystem();
+            
     chdir($main::MOZ_SRC);
     BuildDist();
     
     chdir($main::MOZ_SRC);
     BuildProjects();
     
+    # the build finished, so clear the build progress state
     ClearBuildProgress();    
     print "Build complete\n";
 }
