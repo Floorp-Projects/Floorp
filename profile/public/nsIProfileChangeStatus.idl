@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): ccarlen@netscape.com
+ */
+
+#include "nsISupports.idl"
+
+%{C++
+
+   /**
+    * nsIObserver topics for profile changing. Profile changing happens in 5 phases
+    * in the order given below. An observer may register separately for each phase
+    * of the process depending on its needs. The subject passed to the observer's
+    * Observe() method can be QI'd to an nsIProfileChangeStatus.
+    *
+    * PROFILE_APPROVE_CHANGE_TOPIC
+    *   Called before a profile switch is attempted. Typically,
+    *   the application level observer will ask the user if
+    *   he/she wants to stop all network activity, close all open
+    *   windows, etc. If the user says NO, the observer should
+    *   call the subject's vetoChange(). If any observer does
+    *   this, the profile will not be switched.
+    *
+    * PROFILE_CHANGE_TEARDOWN_TOPIC
+    *   All async activity must be stopped in this phase. Typically,
+    *   the application level observer will close all open windows. 
+    *
+    * PROFILE_BEFORE_CHANGE_TOPIC
+    *   Called before the profile has changed. Use this notification
+    *   to prepare for the profile being switched. If a component is
+    *   holding any state which needs to be flushed to a profile-relative
+    *   location, it should be done here.
+    *
+    * PROFILE_DO_CHANGE_TOPIC
+    *   Called after the profile has changed. Do the work to
+    *   respond to having a new profile. Any change which
+    *   affects others must be done in this phase.
+    *
+    * PROFILE_AFTER_CHANGE_TOPIC
+    *   Called after the profile has changed. Use this notification
+    *   to make changes that are dependent on what some other listener
+    *   did during its PROFILE_DO_CHANGE. For example, to respond to
+    *   new preferences. 
+    */
+
+#define PROFILE_APPROVE_CHANGE_TOPIC (NS_LITERAL_STRING("profile-approve-change").get())
+#define PROFILE_CHANGE_TEARDOWN_TOPIC (NS_LITERAL_STRING("profile-change-teardown").get())
+#define PROFILE_BEFORE_CHANGE_TOPIC (NS_LITERAL_STRING("profile-before-change").get())
+#define PROFILE_DO_CHANGE_TOPIC (NS_LITERAL_STRING("profile-do-change").get())
+#define PROFILE_AFTER_CHANGE_TOPIC (NS_LITERAL_STRING("profile-after-change").get())
+  
+%}
+
+
+[scriptable, uuid(2f977d43-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIProfileChangeStatus : nsISupports {
+        
+    void vetoChange();
+
+};
+
+#endif /* nsIProfileChangeStatus_h__ */
