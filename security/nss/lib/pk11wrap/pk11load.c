@@ -46,6 +46,15 @@ extern void FC_GetFunctionList(void);
 extern void NSC_GetFunctionList(void);
 extern void NSC_ModuleDBFunc(void);
 
+static char *modToDBG = NULL;
+
+#ifdef DEBUG
+#define DEBUG_MODULE 1
+#endif
+
+#ifdef DEBUG_MODULE
+#include "debug_module.c"
+#endif
 
 /* build the PKCS #11 2.01 lock files */
 CK_RV PR_CALLBACK secmodCreateMutext(CK_VOID_PTR_PTR pmutex) {
@@ -203,6 +212,16 @@ SECMOD_LoadPKCS11Module(SECMODModule *mod) {
     if ((*entry)((CK_FUNCTION_LIST_PTR *)&mod->functionList) != CKR_OK) 
 								goto fail;
 
+#ifdef DEBUG_MODULE
+    if (PR_TRUE) {
+	modToDBG = PR_GetEnv("NSS_DEBUG_PKCS11_MODULE");
+	if (modToDBG && strcmp(mod->commonName, modToDBG) == 0) {
+	    mod->functionList = (void *)nss_InsertDeviceLog(
+	                           (CK_FUNCTION_LIST_PTR)mod->functionList);
+	}
+    }
+#endif
+
     mod->isThreadSafe = PR_TRUE;
     /* Now we initialize the module */
     if (mod->libraryParams) {
@@ -301,4 +320,14 @@ SECMOD_UnloadModule(SECMODModule *mod) {
 
     PR_UnloadLibrary(library);
     return SECSuccess;
+}
+
+void
+nss_DumpModuleLog(void)
+{
+#ifdef DEBUG_MODULE
+    if (modToDBG) {
+	print_final_statistics();
+    }
+#endif
 }
