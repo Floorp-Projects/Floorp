@@ -18,25 +18,29 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Chak Nanga <chak@netscape.com> 
+ *   Chak Nanga <chak@netscape.com>
+ *   David Epstein <depstein@netscape.com>
  */
 
-This sample shows how to embed Mozilla from within 
-an MFC Windows application
+TestEmbed is a C++ test app based upon mfcEmbed. It includes
+individual test cases for Embedding interface methods. Interfaces
+include nsIFile & nsILocalFile, nsISHistory, nsIWebNavigation,
+nsIWebProgressListener, nsIClipboardCommands, and nsIRequest.
+Individual tests also exist for methods found in nsIGlobalHistory
+and nsIProfile.
 
-Mainly demonstrates the use of the following interfaces:
+In addition to the mfcEmbed menus, it contains 5 menus: Tests,
+Interfaces, Tools, Verified Bugs, and Clipboard Commands.
 
-	nsIWebBrowserChrome
-	nsIEmbeddingSiteWindow
-	nsIWebProgressListener
-	nsIContextMenuListener
-	nsIPrompt
-	nsIWebBrowserFind
+Executed test cases print output to a file called TestOutput.txt.
+This will be created in the C:\temp folder.
+
+See build instructions below.
 	
 General Overview:
 -----------------
 
-1. The MfcEmbedApp creates BrowserFrames
+1. The TestEmbedApp creates BrowserFrames
 
 2. BrowserFrame creates the toolbar, statusbar, URLbar 
    BrowserView etc.
@@ -53,14 +57,14 @@ General Overview:
    embedding interfaces
    
 
-Start by first looking at MfcEmbed.cpp
+Start by first looking at TestEmbed.cpp
 
 Files:
 
 StdAfx.h	 
 	- Includes the required Mozilla header files
 
-MfcEmbed.cpp 
+TestEmbed.cpp 
 	- CWinApp derived class
 	- Creates the browser's main frame window etc
 	  using the CreateNewBrowserFrame() and loads
@@ -113,18 +117,21 @@ Dialogs.cpp
 winEmbedFileLocProvider.cpp, ProfilesDlg.cpp, ProfileMgr.cpp
 	- Profile management related code (by Conrad Carlen)
 
-MfcEmbed.htm
-	- This is a simple test harness for excercising some of the
-	implemented interfaces . For ex, the nsIWebBrowserChrome.
-	- Open the file in mfcemed by typing the following in it's
-	location bar. For ex: 
+Tests.cpp
+	- This is where individual test cases are stored. The file
+	is divided into three sections: 1) individual test cases
+	corresponding to the "Tests" menu. 2) tools that are helpful,
+	corresponding to the "Tools" menu. These include routines like
+	removing all entries from Global History. 3) Interfaces. These
+	correspond to the "Interfaces" menu and contain modular tests
+	for embedding interface methods.
 
-			file:///c:/tmp/mfcembed.htm
-	- Read/Click on the links on that page more info
-	- This test page is just a start and will add more test
-	case to it over time
+QAUtils.cpp
+	- This contains routines that are useful to QA. Such tasks as
+	printing to a logfile, displaying messages to the screen, formatting
+	output data, and retrieving the name of an nsI request are stored
+	here.
 
- 
 makefile.win
 	- We define "_AFXDLL" and for the compiler and specify
 	"-SUBSYSTEM:windows" for the linker using LCFLAGS and 
@@ -132,6 +139,31 @@ makefile.win
 	- We also define "USE_SINGLE_SIGN_ON" to enable the
 	single sign-on support
 
-mfcembed.dsp and mfcembed.dsw
+testembed.dsp and testembed.dsw
 	- These VisualStudio workspace/project files can be used
 	to open/build this sample inside of the VC++ IDE
+
+Instructions for building:
+	1) Open a dos shell.
+	2) cd ../mozilla/embedding/qa/testembed	   // testEmbed directory
+	3) nmake -f makefile.win		   // compile testEmbed
+	4) cd ../../../dist/WIN32_D.OBJ/bin/	   // navigate to the bin dir
+	5) testembed.exe			   // run testEmbed.exe
+
+A few suggestions:
+	1) Don't run nsIWebNavigation tests after turning on the Web
+	Progress listener (from Tests menu). This will create all types
+	of listener msgs in your logfile and display many msgs on the 
+	screen.
+	2) Best way to use web progress listener is to turn it on, then
+	change URL (from the Tests menu). Change a few more urls and
+	monitor the output.
+	3) Before running nsISHistory interface tests, load 1-2 urls.
+	That will create a session history. The same applies for the
+	nsIWebNavigation interfaces tests. One loaded url will enable
+	back/forward navigation.
+	4) nsIRequest tests are in progress. They are implemented in
+	BrowserImplWebPrgrsLstnr.cpp. A menu item was created under
+	"Interfaces". This basically does the setup for nsIRequest
+	tests: turns on web progress listener, and prompts user for
+	a url. 
