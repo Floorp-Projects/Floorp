@@ -496,8 +496,7 @@ protected:
                                nsIAtom*                 aTag,
                                PRInt32                  aNameSpaceID,
                                nsIStyleContext*         aStyleContext,
-                               nsFrameItems&            aFrameItems,
-                               PRBool*                  aWhiteSpaceContent = nsnull);
+                               nsFrameItems&            aFrameItems);
 
   nsresult ConstructFrameInternal( nsIPresShell*            aPresShell, 
                                    nsIPresContext*          aPresContext,
