@@ -99,3 +99,9 @@ SSL_SetURL;
 ;+    local:
 ;+*;
 ;+};
+;+NSS_3.2.1 {       # NSS 3.2.1 release
+;+    global:
+NSSSSL_VersionCheck;
+;+    local:
+;+*;
+;+};
