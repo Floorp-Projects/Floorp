@@ -63,7 +63,7 @@
 
 #calendar-controls-box
 {
-   background-image        : url("chrome://calendar/skin/calendar_topbar.png");
+   background-image        : url("chrome://calendar/skin/calendar_topbar.gif");
    background-repeat       : no-repeat;
    min-height              : 33px;
    max-height              : 33px;
