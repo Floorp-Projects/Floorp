@@ -181,9 +181,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
         inst = (nsISupports*)new nsLookAndFeel();
     } 
     else if (mClassID.Equals(kCSound)) {
-    	  nsISound* aSound = nsnull;
-    	  NS_NewSound(&aSound);
-        inst = (nsISupports*) aSound;
+    	  inst = (nsISupports*)(nsISound*)new nsSound();
     } 
     else if (mClassID.Equals(kCFileSpecWithUI)) {
     	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;

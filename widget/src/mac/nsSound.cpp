@@ -17,12 +17,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
-#include "nsIMemory.h"
+#include "nsIAllocator.h"
 #include "plstr.h"
 
 #include "nsSound.h"
@@ -34,7 +34,7 @@
 #include <Sound.h>
 #include <QuickTimeComponents.h>
 
-NS_IMPL_ISUPPORTS(nsSound, NS_GET_IID(nsISound));
+NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver);
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
@@ -45,25 +45,6 @@ nsSound::nsSound()
 nsSound::~nsSound()
 {
 }
-
-nsresult NS_NewSound(nsISound** aSound)
-{
-  NS_PRECONDITION(aSound != nsnull, "null ptr");
-  if (! aSound)
-    return NS_ERROR_NULL_POINTER;
-
-  nsSound** mySound;
-
-  *aSound = new nsSound();
-  if (! *aSound)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  mySound = (nsSound **) aSound;
-  
-  NS_ADDREF(*aSound);
-  return NS_OK;
-}
-
 
 NS_METHOD nsSound::Beep()
 {
@@ -76,66 +57,39 @@ NS_METHOD nsSound::Beep()
 #define kReadBufferSize		(4 * 1024)
 
 // this currently does no cacheing of the sound buffer. It should
-NS_METHOD nsSound::Play(nsIURI *aURI)
+NS_METHOD nsSound::Play(nsIURL *aURL)
 {
   // if quicktime is not installed, we can't do anything
   if (!HaveQuickTime())
     return NS_ERROR_NOT_IMPLEMENTED;
-  
-#if !TARGET_CARBON
-  nsresult rv;
-  nsCOMPtr<nsIInputStream> inputStream;
 
-  rv = NS_OpenURI(getter_AddRefs(inputStream), aURI);
-  if (NS_FAILED(rv)) return rv;
-  
-  PRUint32 handleLen = kReadBufferSize;
+  nsCOMPtr<nsIStreamLoader> loader;
+  nsresult rv = NS_NewStreamLoader(getter_AddRefs(loader), aURL, this);
 
-  Handle dataHandle = ::NewHandle(handleLen);  
-  if (dataHandle == NULL)
-  {
-    OSErr err;
-    dataHandle = ::TempNewHandle(handleLen, &err);
-    if (!dataHandle) return NS_ERROR_OUT_OF_MEMORY;
-  }
+  return rv;
+}
 
-  PRUint32 len = 0;
-  PRUint32 writeOffset = 0;
-  
-  do
-  {
-    ::HLock(dataHandle);
-    rv = inputStream->Read(*dataHandle + writeOffset, kReadBufferSize, &len);
-    ::HUnlock(dataHandle);
-    
-    writeOffset += len;
-    
-    // resize the handle in preparation for more
-    if (len > 0)
-    {
-      ::SetHandleSize(dataHandle, writeOffset + kReadBufferSize);
-      OSErr err = ::MemError();
-      if (err != noErr)
-      {
-        ::DisposeHandle(dataHandle);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }    
-    }
-    
-  }
-  while(len > 0);
-  
-  // resize the handle to the final size
-  if (::GetHandleSize(dataHandle) != writeOffset)
-  {
-    ::SetHandleSize(dataHandle, writeOffset);
-  }
-  
-  rv = PlaySound(dataHandle, writeOffset);
-  
+
+NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
+                                        nsISupports *context,
+                                        nsresult aStatus,
+                                        PRUint32 stringLen,
+                                        const char *stringData)
+{
+  if (NS_FAILED(aStatus))
+    return NS_ERROR_FAILURE;
+
+  // we should really verify that this is a .wav file
+  OSErr     err;
+  Handle    dataHandle = ::TempNewHandle(stringLen, &err);
+  if (!dataHandle) return NS_ERROR_OUT_OF_MEMORY;
+
+  BlockMoveData(stringData, *dataHandle, stringLen);
+
+  nsresult rv = PlaySound(dataHandle, stringLen);
+
   ::DisposeHandle(dataHandle);
-#endif
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsSound::PlaySound(Handle waveDataHandle, long waveDataSize)
@@ -149,22 +103,22 @@ nsresult nsSound::PlaySound(Handle waveDataHandle, long waveDataSize)
   long                    outFlags = 0;
   OSErr                   err = noErr;
   ComponentResult         compErr = noErr;
-  
+
   err = ::PtrToHand(&waveDataHandle, &dataRef, sizeof(Handle));
   if (err != noErr) goto bail;
-  
+
   miComponent = ::OpenDefaultComponent(MovieImportType, kQTFileTypeWave);
   if (!miComponent) {
     err = paramErr;
     goto bail;
   }
-  
+
   movie = ::NewMovie(0);
   if (!movie) {
     err = paramErr;
     goto bail;
   }
-  
+
   compErr = ::MovieImportDataRef(miComponent,
                               dataRef,
                               HandleDataHandlerSubType,
@@ -180,7 +134,7 @@ nsresult nsSound::PlaySound(Handle waveDataHandle, long waveDataSize)
     err = compErr;
     goto bail;
   }
-  
+
   ::SetMovieVolume(movie, kFullVolume);
   ::GoToBeginningOfMovie(movie);
   ::StartMovie(movie);
@@ -195,13 +149,13 @@ bail:		// gasp, a goto label
 
   if (dataRef)
     ::DisposeHandle(dataRef);
-  
+
   if (miComponent)
     ::CloseComponent(miComponent);
-  
+
   if (movie)
     ::DisposeMovie(movie);
-  
+
   return (err == noErr) ? NS_OK : NS_ERROR_FAILURE;
 #else
   return NS_OK;

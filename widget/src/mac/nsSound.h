@@ -17,21 +17,23 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 #ifndef __nsSound_h__
 #define __nsSound_h__
 
 #include "nsISound.h"
+#include "nsIStreamLoader.h"
 
-class nsSound : public nsISound
+class nsSound : public nsISound,
+                public nsIStreamLoaderObserver
 {
-public: 
+public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
-
+  NS_DECL_NSISTREAMLOADEROBSERVER
 
           nsSound();
   virtual ~nsSound();
@@ -40,7 +42,7 @@ protected:
 
   nsresult    PlaySound(Handle waveDataHandle, long waveDataSize);
   PRBool      HaveQuickTime();
-  
+
 };
 
 #endif /* __nsSound_h__ */

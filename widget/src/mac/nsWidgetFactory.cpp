@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 #include "nsIFactory.h"
@@ -103,40 +103,40 @@ static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
 //
 //-------------------------------------------------------------------------
 class nsWidgetFactory : public nsIFactory
-{   
-public:   
+{
+public:
 
     NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
+    // nsIFactory methods
+    NS_IMETHOD CreateInstance(nsISupports *aOuter,
+                              const nsIID &aIID,
+                              void **aResult);
 
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_IMETHOD LockFactory(PRBool aLock);
 
-    nsWidgetFactory(const nsCID &aClass);   
-    ~nsWidgetFactory();   
+    nsWidgetFactory(const nsCID &aClass);
+    ~nsWidgetFactory();
 private:
   nsCID mClassID;
 
-};   
+};
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
+nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)
 {
  NS_INIT_REFCNT();
  mClassID = aClass;
-}   
+}
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-nsWidgetFactory::~nsWidgetFactory()   
-{   
-}   
+nsWidgetFactory::~nsWidgetFactory()
+{
+}
 
 //-------------------------------------------------------------------------
 //
@@ -152,14 +152,14 @@ NS_IMPL_ISUPPORTS1(nsWidgetFactory, nsIFactory)
 // our Widget factory where all our widgets, including the XP widgets, inherit from nsWindow.
 // A similar warning is in nsWindow.cpp.
 //-------------------------------------------------------------------------
-nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,  
-                                          const nsIID &aIID,  
-                                          void **aResult)  
-{  
-    if (aResult == NULL) {  
-        return NS_ERROR_NULL_POINTER;  
-    }  
-    *aResult = NULL;  
+nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
+                                          const nsIID &aIID,
+                                          void **aResult)
+{
+    if (aResult == NULL) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aResult = NULL;
     if (nsnull != aOuter) {
         return NS_ERROR_NO_AGGREGATION;
     }
@@ -239,9 +239,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
 					NS_NOTYETIMPLEMENTED("nsPopUpMenu");
     }
     else if (mClassID.Equals(kCSound)) {
-    	nsISound* aSound = nsnull;
-    	NS_NewSound(&aSound);
-        inst = (nsISupports*) aSound;
+        inst = (nsISupports*)(nsISound*) new nsSound();
     }
     else if (mClassID.Equals(kCFileSpecWithUI))
     	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
@@ -253,33 +251,33 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)new nsClipboard();
     else if (mClassID.Equals(kCDragService))
         inst = (nsISupports*)NS_STATIC_CAST(nsIDragService*, new nsDragService());
-  
-    if (inst == NULL) {  
-        return NS_ERROR_OUT_OF_MEMORY;  
-    }  
+
+    if (inst == NULL) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
 		NS_ADDREF(inst);
     nsresult res = inst->QueryInterface(aIID, aResult);
     NS_RELEASE(inst);
 
-    return res;  
-}  
+    return res;
+}
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-nsresult nsWidgetFactory::LockFactory(PRBool aLock)  
-{  
-    // Not implemented in simplest case.  
+nsresult nsWidgetFactory::LockFactory(PRBool aLock)
+{
+    // Not implemented in simplest case.
     return NS_OK;
-}  
+}
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
 // return the proper factory to the caller
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_WIDGET nsresult 
+extern "C" NS_WIDGET nsresult
 NSGetFactory_WIDGET_DLL(nsISupports* serviceMgr,
                         const nsCID &aClass,
                         const char *aClassName,
