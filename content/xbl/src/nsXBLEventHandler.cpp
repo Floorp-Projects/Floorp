@@ -95,8 +95,8 @@ nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsICon
     InitAccessKey();
   }
 
-  // Make sure our key mask is initialized.
-  ConstructKeyMask();
+  // Make sure our mask is initialized.
+  ConstructMask();
 }
 
 nsXBLEventHandler::~nsXBLEventHandler()
@@ -408,36 +408,21 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
   if (!mHandlerElement)
     return PR_FALSE;
 
-  nsAutoString trueString; trueString.AssignWithConversion("true");
-  nsAutoString falseString; falseString.AssignWithConversion("false");
+  if (mDetail == 0 && mDetail2 == 0 && mKeyMask == 0)
+    return PR_TRUE; // No filters set up. It's generic.
 
   // Get the keycode and charcode of the key event.
   PRUint32 keyCode, charCode;
   aKeyEvent->GetKeyCode(&keyCode);
   aKeyEvent->GetCharCode(&charCode);
 
-  PRBool keyMatched = PR_TRUE;
-  
-  nsAutoString key, keyCodeStr, charCodeStr;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyAtom, key);
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, keyCodeStr);
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, charCodeStr);
-  
-  if (key.IsEmpty() && keyCodeStr.IsEmpty() && charCodeStr.IsEmpty() && mKeyMask == 0)
-    return PR_TRUE;
+  PRBool keyMatched = (mDetail == (mDetail2 ? charCode : keyCode));
 
-  if (!key.IsEmpty())
-    keyMatched = IsMatchingCharCode(charCode, key);
-  else if (!keyCodeStr.IsEmpty())
-    keyMatched = IsMatchingKeyCode(keyCode, keyCodeStr);
-  else if (!charCodeStr.IsEmpty())
-    keyMatched = IsMatchingCharCode(charCode, charCodeStr);
-  
   if (!keyMatched)
     return PR_FALSE;
 
   // Now check modifier keys
-  return MatchesMask(aKeyEvent);
+  return ModifiersMatchMask(aKeyEvent);
 }
 
 PRBool 
@@ -446,36 +431,20 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
   if (!mHandlerElement)
     return PR_FALSE;
 
-  nsAutoString trueString; trueString.AssignWithConversion("true");
-  nsAutoString falseString; falseString.AssignWithConversion("false");
+  if (mDetail == 0 && mDetail2 == 0 && mKeyMask == 0)
+    return PR_TRUE; // No filters set up. It's generic.
 
-  // Check for button and modifier keys.
-  // Check button and clickcounts
-  nsAutoString buttonStr, clickCountStr;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kClickCountAtom, clickCountStr);
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kButtonAtom, buttonStr);
+  unsigned short button;
+  aMouseEvent->GetButton(&button);
+  if (mDetail != 0 && (button != mDetail))
+    return PR_FALSE;
+
+  PRInt32 clickcount;
+  aMouseEvent->GetDetail(&clickcount);
+  if (mDetail2 != 0 && (clickcount != mDetail2))
+    return PR_FALSE;
   
-  if (buttonStr.IsEmpty() && clickCountStr.IsEmpty() && mKeyMask == 0)
-    return PR_TRUE;
-
-  if (!clickCountStr.IsEmpty()) {
-    PRInt32 val, error, clickcount;
-    val = clickCountStr.ToInteger(&error);
-    aMouseEvent->GetDetail(&clickcount);
-    if (val != clickcount)
-      return PR_FALSE;
-  }
-
-  if (!buttonStr.IsEmpty()) {
-    PRInt32 val, error;
-    unsigned short button;
-    val = buttonStr.ToInteger(&error);
-    aMouseEvent->GetButton(&button);
-    if (val != button)
-      return PR_FALSE;
-  }
-  
-  return MatchesMask(aMouseEvent);
+  return ModifiersMatchMask(aMouseEvent);
 }
 
 NS_IMETHODIMP
@@ -776,462 +745,275 @@ enum {
     VK_QUOTE = 222
 };
 
-PRBool nsXBLEventHandler::IsMatchingKeyCode(const PRUint32 aChar, const nsString& aKeyName)
+PRUint32 nsXBLEventHandler::GetMatchingKeyCode(const nsString& aKeyName)
 {
   PRBool ret = PR_FALSE;
 
-  switch(aChar) {
-    case VK_CANCEL:
-      if(aKeyName.EqualsIgnoreCase("VK_CANCEL"))
-        ret = PR_TRUE;
-        break;
-    case VK_BACK:
-      if(aKeyName.EqualsIgnoreCase("VK_BACK"))
-        ret = PR_TRUE;
-        break;
-    case VK_TAB:
-      if(aKeyName.EqualsIgnoreCase("VK_TAB"))
-        ret = PR_TRUE;
-        break;
-    case VK_CLEAR:
-      if(aKeyName.EqualsIgnoreCase("VK_CLEAR"))
-        ret = PR_TRUE;
-        break;
-    case VK_RETURN:
-      if(aKeyName.EqualsIgnoreCase("VK_RETURN"))
-        ret = PR_TRUE;
-        break;
-    case VK_ENTER:
-      if(aKeyName.EqualsIgnoreCase("VK_ENTER"))
-        ret = PR_TRUE;
-        break;
-    case VK_SHIFT:
-      if(aKeyName.EqualsIgnoreCase("VK_SHIFT"))
-        ret = PR_TRUE;
-        break;
-    case VK_CONTROL:
-      if(aKeyName.EqualsIgnoreCase("VK_CONTROL"))
-        ret = PR_TRUE;
-        break;
-    case VK_ALT:
-      if(aKeyName.EqualsIgnoreCase("VK_ALT"))
-        ret = PR_TRUE;
-        break;
-    case VK_PAUSE:
-      if(aKeyName.EqualsIgnoreCase("VK_PAUSE"))
-        ret = PR_TRUE;
-        break;
-    case VK_CAPS_LOCK:
-      if(aKeyName.EqualsIgnoreCase("VK_CAPS_LOCK"))
-        ret = PR_TRUE;
-        break;
-    case VK_ESCAPE:
-      if(aKeyName.EqualsIgnoreCase("VK_ESCAPE"))
-        ret = PR_TRUE;
-        break;
-    case VK_SPACE:
-      if(aKeyName.EqualsIgnoreCase("VK_SPACE"))
-        ret = PR_TRUE;
-        break;
-    case VK_PAGE_UP:
-      if(aKeyName.EqualsIgnoreCase("VK_PAGE_UP"))
-        ret = PR_TRUE;
-        break;
-    case VK_PAGE_DOWN:
-      if(aKeyName.EqualsIgnoreCase("VK_PAGE_DOWN"))
-        ret = PR_TRUE;
-        break;
-    case VK_END:
-      if(aKeyName.EqualsIgnoreCase("VK_END"))
-        ret = PR_TRUE;
-        break;
-    case VK_HOME:
-      if(aKeyName.EqualsIgnoreCase("VK_HOME"))
-        ret = PR_TRUE;
-        break;
-    case VK_LEFT:
-      if(aKeyName.EqualsIgnoreCase("VK_LEFT"))
-        ret = PR_TRUE;
-        break;
-    case VK_UP:
-      if(aKeyName.EqualsIgnoreCase("VK_UP"))
-        ret = PR_TRUE;
-        break;
-    case VK_RIGHT:
-      if(aKeyName.EqualsIgnoreCase("VK_RIGHT"))
-        ret = PR_TRUE;
-        break;
-    case VK_DOWN:
-      if(aKeyName.EqualsIgnoreCase("VK_DOWN"))
-        ret = PR_TRUE;
-        break;
-    case VK_PRINTSCREEN:
-      if(aKeyName.EqualsIgnoreCase("VK_PRINTSCREEN"))
-        ret = PR_TRUE;
-        break;
-    case VK_INSERT:
-      if(aKeyName.EqualsIgnoreCase("VK_INSERT"))
-        ret = PR_TRUE;
-        break;
-    case VK_DELETE:
-      if(aKeyName.EqualsIgnoreCase("VK_DELETE"))
-        ret = PR_TRUE;
-        break;
-    case VK_0:
-      if(aKeyName.EqualsIgnoreCase("VK_0"))
-        ret = PR_TRUE;
-        break;
-    case VK_1:
-      if(aKeyName.EqualsIgnoreCase("VK_1"))
-        ret = PR_TRUE;
-        break;
-    case VK_2:
-      if(aKeyName.EqualsIgnoreCase("VK_2"))
-        ret = PR_TRUE;
-        break;
-    case VK_3:
-      if(aKeyName.EqualsIgnoreCase("VK_3"))
-        ret = PR_TRUE;
-        break;
-    case VK_4:
-      if(aKeyName.EqualsIgnoreCase("VK_4"))
-        ret = PR_TRUE;
-        break;
-    case VK_5:
-      if(aKeyName.EqualsIgnoreCase("VK_5"))
-        ret = PR_TRUE;
-        break;
-    case VK_6:
-      if(aKeyName.EqualsIgnoreCase("VK_6"))
-        ret = PR_TRUE;
-        break;
-    case VK_7:
-      if(aKeyName.EqualsIgnoreCase("VK_7"))
-        ret = PR_TRUE;
-        break;
-    case VK_8:
-      if(aKeyName.EqualsIgnoreCase("VK_8"))
-        ret = PR_TRUE;
-        break;
-    case VK_9:
-      if(aKeyName.EqualsIgnoreCase("VK_9"))
-        ret = PR_TRUE;
-        break;
-    case VK_SEMICOLON:
-      if(aKeyName.EqualsIgnoreCase("VK_SEMICOLON"))
-        ret = PR_TRUE;
-        break;
-    case VK_EQUALS:
-      if(aKeyName.EqualsIgnoreCase("VK_EQUALS"))
-        ret = PR_TRUE;
-        break;
-    case VK_A:
-      if(aKeyName.EqualsIgnoreCase("VK_A"))
-        ret = PR_TRUE;
-        break;
-    case VK_B:
-      if(aKeyName.EqualsIgnoreCase("VK_B"))
-        ret = PR_TRUE;
-    break;
-    case VK_C:
-      if(aKeyName.EqualsIgnoreCase("VK_C"))
-        ret = PR_TRUE;
-        break;
-    case VK_D:
-      if(aKeyName.EqualsIgnoreCase("VK_D"))
-        ret = PR_TRUE;
-        break;
-    case VK_E:
-      if(aKeyName.EqualsIgnoreCase("VK_E"))
-        ret = PR_TRUE;
-        break;
-    case VK_F:
-      if(aKeyName.EqualsIgnoreCase("VK_F"))
-        ret = PR_TRUE;
-        break;
-    case VK_G:
-      if(aKeyName.EqualsIgnoreCase("VK_G"))
-        ret = PR_TRUE;
-        break;
-    case VK_H:
-      if(aKeyName.EqualsIgnoreCase("VK_H"))
-        ret = PR_TRUE;
-        break;
-    case VK_I:
-      if(aKeyName.EqualsIgnoreCase("VK_I"))
-        ret = PR_TRUE;
-        break;
-    case VK_J:
-      if(aKeyName.EqualsIgnoreCase("VK_J"))
-        ret = PR_TRUE;
-        break;
-    case VK_K:
-      if(aKeyName.EqualsIgnoreCase("VK_K"))
-        ret = PR_TRUE;
-        break;
-    case VK_L:
-      if(aKeyName.EqualsIgnoreCase("VK_L"))
-        ret = PR_TRUE;
-        break;
-    case VK_M:
-      if(aKeyName.EqualsIgnoreCase("VK_M"))
-        ret = PR_TRUE;
-        break;
-    case VK_N:
-      if(aKeyName.EqualsIgnoreCase("VK_N"))
-        ret = PR_TRUE;
-        break;
-    case VK_O:
-      if(aKeyName.EqualsIgnoreCase("VK_O"))
-        ret = PR_TRUE;
-        break;
-    case VK_P:
-      if(aKeyName.EqualsIgnoreCase("VK_P"))
-        ret = PR_TRUE;
-        break;
-    case VK_Q:
-      if(aKeyName.EqualsIgnoreCase("VK_Q"))
-        ret = PR_TRUE;
-        break;
-    case VK_R:
-      if(aKeyName.EqualsIgnoreCase("VK_R"))
-        ret = PR_TRUE;
-        break;
-    case VK_S:
-      if(aKeyName.EqualsIgnoreCase("VK_S"))
-        ret = PR_TRUE;
-        break;
-    case VK_T:
-      if(aKeyName.EqualsIgnoreCase("VK_T"))
-        ret = PR_TRUE;
-        break;
-    case VK_U:
-      if(aKeyName.EqualsIgnoreCase("VK_U"))
-        ret = PR_TRUE;
-        break;
-    case VK_V:
-      if(aKeyName.EqualsIgnoreCase("VK_V"))
-        ret = PR_TRUE;
-        break;
-    case VK_W:
-      if(aKeyName.EqualsIgnoreCase("VK_W"))
-        ret = PR_TRUE;
-        break;
-    case VK_X:
-      if(aKeyName.EqualsIgnoreCase("VK_X"))
-        ret = PR_TRUE;
-        break;
-    case VK_Y:
-      if(aKeyName.EqualsIgnoreCase("VK_Y"))
-        ret = PR_TRUE;
-        break;
-    case VK_Z:
-      if(aKeyName.EqualsIgnoreCase("VK_Z"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD0:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD0"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD1:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD1"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD2:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD2"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD3:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD3"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD4:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD4"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD5:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD5"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD6:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD6"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD7:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD7"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD8:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD8"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUMPAD9:
-      if(aKeyName.EqualsIgnoreCase("VK_NUMPAD9"))
-        ret = PR_TRUE;
-        break;
-    case VK_MULTIPLY:
-      if(aKeyName.EqualsIgnoreCase("VK_MULTIPLY"))
-        ret = PR_TRUE;
-        break;
-    case VK_ADD:
-      if(aKeyName.EqualsIgnoreCase("VK_ADD"))
-        ret = PR_TRUE;
-        break;
-    case VK_SEPARATOR:
-      if(aKeyName.EqualsIgnoreCase("VK_SEPARATOR"))
-        ret = PR_TRUE;
-        break;
-    case VK_SUBTRACT:
-      if(aKeyName.EqualsIgnoreCase("VK_SUBTRACT"))
-        ret = PR_TRUE;
-        break;
-    case VK_DECIMAL:
-      if(aKeyName.EqualsIgnoreCase("VK_DECIMAL"))
-        ret = PR_TRUE;
-        break;
-    case VK_DIVIDE:
-      if(aKeyName.EqualsIgnoreCase("VK_DIVIDE"))
-        ret = PR_TRUE;
-        break;
-    case VK_F1:
-      if(aKeyName.EqualsIgnoreCase("VK_F1"))
-        ret = PR_TRUE;
-        break;
-    case VK_F2:
-      if(aKeyName.EqualsIgnoreCase("VK_F2"))
-        ret = PR_TRUE;
-        break;
-    case VK_F3:
-      if(aKeyName.EqualsIgnoreCase("VK_F3"))
-        ret = PR_TRUE;
-        break;
-    case VK_F4:
-      if(aKeyName.EqualsIgnoreCase("VK_F4"))
-        ret = PR_TRUE;
-        break;
-    case VK_F5:
-      if(aKeyName.EqualsIgnoreCase("VK_F5"))
-        ret = PR_TRUE;
-        break;
-    case VK_F6:
-      if(aKeyName.EqualsIgnoreCase("VK_F6"))
-        ret = PR_TRUE;
-        break;
-    case VK_F7:
-      if(aKeyName.EqualsIgnoreCase("VK_F7"))
-        ret = PR_TRUE;
-        break;
-    case VK_F8:
-      if(aKeyName.EqualsIgnoreCase("VK_F8"))
-        ret = PR_TRUE;
-        break;
-    case VK_F9:
-      if(aKeyName.EqualsIgnoreCase("VK_F9"))
-        ret = PR_TRUE;
-        break;
-    case VK_F10:
-      if(aKeyName.EqualsIgnoreCase("VK_F10"))
-        ret = PR_TRUE;
-        break;
-    case VK_F11:
-      if(aKeyName.EqualsIgnoreCase("VK_F11"))
-        ret = PR_TRUE;
-        break;
-    case VK_F12:
-      if(aKeyName.EqualsIgnoreCase("VK_F12"))
-        ret = PR_TRUE;
-        break;
-    case VK_F13:
-      if(aKeyName.EqualsIgnoreCase("VK_F13"))
-        ret = PR_TRUE;
-        break;
-    case VK_F14:
-      if(aKeyName.EqualsIgnoreCase("VK_F14"))
-        ret = PR_TRUE;
-        break;
-    case VK_F15:
-      if(aKeyName.EqualsIgnoreCase("VK_F15"))
-        ret = PR_TRUE;
-        break;
-    case VK_F16:
-      if(aKeyName.EqualsIgnoreCase("VK_F16"))
-        ret = PR_TRUE;
-        break;
-    case VK_F17:
-      if(aKeyName.EqualsIgnoreCase("VK_F17"))
-        ret = PR_TRUE;
-        break;
-    case VK_F18:
-      if(aKeyName.EqualsIgnoreCase("VK_F18"))
-        ret = PR_TRUE;
-        break;
-    case VK_F19:
-      if(aKeyName.EqualsIgnoreCase("VK_F19"))
-        ret = PR_TRUE;
-        break;
-    case VK_F20:
-      if(aKeyName.EqualsIgnoreCase("VK_F20"))
-        ret = PR_TRUE;
-        break;
-    case VK_F21:
-      if(aKeyName.EqualsIgnoreCase("VK_F21"))
-        ret = PR_TRUE;
-        break;
-    case VK_F22:
-      if(aKeyName.EqualsIgnoreCase("VK_F22"))
-        ret = PR_TRUE;
-        break;
-    case VK_F23:
-      if(aKeyName.EqualsIgnoreCase("VK_F23"))
-        ret = PR_TRUE;
-        break;
-    case VK_F24:
-      if(aKeyName.EqualsIgnoreCase("VK_F24"))
-        ret = PR_TRUE;
-        break;
-    case VK_NUM_LOCK:
-      if(aKeyName.EqualsIgnoreCase("VK_NUM_LOCK"))
-        ret = PR_TRUE;
-        break;
-    case VK_SCROLL_LOCK:
-      if(aKeyName.EqualsIgnoreCase("VK_SCROLL_LOCK"))
-        ret = PR_TRUE;
-        break;
-    case VK_COMMA:
-      if(aKeyName.EqualsIgnoreCase("VK_COMMA"))
-        ret = PR_TRUE;
-        break;
-    case VK_PERIOD:
-      if(aKeyName.EqualsIgnoreCase("VK_PERIOD"))
-        ret = PR_TRUE;
-        break;
-    case VK_SLASH:
-      if(aKeyName.EqualsIgnoreCase("VK_SLASH"))
-        ret = PR_TRUE;
-        break;
-    case VK_BACK_QUOTE:
-      if(aKeyName.EqualsIgnoreCase("VK_BACK_QUOTE"))
-        ret = PR_TRUE;
-        break;
-    case VK_OPEN_BRACKET:
-      if(aKeyName.EqualsIgnoreCase("VK_OPEN_BRACKET"))
-        ret = PR_TRUE;
-        break;
-    case VK_BACK_SLASH:
-      if(aKeyName.EqualsIgnoreCase("VK_BACK_SLASH"))
-        ret = PR_TRUE;
-        break;
-    case VK_CLOSE_BRACKET:
-      if(aKeyName.EqualsIgnoreCase("VK_CLOSE_BRACKET"))
-        ret = PR_TRUE;
-        break;
-    case VK_QUOTE:
-      if(aKeyName.EqualsIgnoreCase("VK_QUOTE"))
-        ret = PR_TRUE;
-        break;
-  }
+  nsCAutoString keyName; keyName.AssignWithConversion(aKeyName);
 
-  return ret;
+  if (keyName.EqualsIgnoreCase("VK_CANCEL"))
+    return VK_CANCEL;
+  
+  if(keyName.EqualsIgnoreCase("VK_BACK"))
+    return VK_BACK;
+
+  if(keyName.EqualsIgnoreCase("VK_TAB"))
+    return VK_TAB;
+  
+  if(keyName.EqualsIgnoreCase("VK_CLEAR"))
+    return VK_CLEAR;
+
+  if(keyName.EqualsIgnoreCase("VK_RETURN"))
+    return VK_RETURN;
+
+  if(keyName.EqualsIgnoreCase("VK_ENTER"))
+    return VK_ENTER;
+
+  if(keyName.EqualsIgnoreCase("VK_SHIFT"))
+    return VK_SHIFT;
+
+  if(keyName.EqualsIgnoreCase("VK_CONTROL"))
+    return VK_CONTROL;
+
+  if(keyName.EqualsIgnoreCase("VK_ALT"))
+    return VK_ALT;
+
+  if(keyName.EqualsIgnoreCase("VK_PAUSE"))
+    return VK_PAUSE;
+
+  if(keyName.EqualsIgnoreCase("VK_CAPS_LOCK"))
+    return VK_CAPS_LOCK;
+
+  if(keyName.EqualsIgnoreCase("VK_ESCAPE"))
+    return VK_ESCAPE;
+
+   
+  if(keyName.EqualsIgnoreCase("VK_SPACE"))
+    return VK_SPACE;
+
+  if(keyName.EqualsIgnoreCase("VK_PAGE_UP"))
+    return VK_PAGE_UP;
+
+  if(keyName.EqualsIgnoreCase("VK_PAGE_DOWN"))
+    return VK_PAGE_DOWN;
+
+  if(keyName.EqualsIgnoreCase("VK_END"))
+    return VK_END;
+
+  if(keyName.EqualsIgnoreCase("VK_HOME"))
+    return VK_HOME;
+
+  if(keyName.EqualsIgnoreCase("VK_LEFT"))
+    return VK_LEFT;
+
+  if(keyName.EqualsIgnoreCase("VK_UP"))
+    return VK_UP;
+
+  if(keyName.EqualsIgnoreCase("VK_RIGHT"))
+    return VK_RIGHT;
+
+  if(keyName.EqualsIgnoreCase("VK_DOWN"))
+    return VK_DOWN;
+
+  if(keyName.EqualsIgnoreCase("VK_PRINTSCREEN"))
+    return VK_PRINTSCREEN;
+
+  if(keyName.EqualsIgnoreCase("VK_INSERT"))
+    return VK_INSERT;
+
+  if(keyName.EqualsIgnoreCase("VK_DELETE"))
+    return VK_DELETE;
+
+  if(keyName.EqualsIgnoreCase("VK_0"))
+    return VK_0;
+
+  if(keyName.EqualsIgnoreCase("VK_1"))
+    return VK_1;
+
+  if(keyName.EqualsIgnoreCase("VK_2"))
+    return VK_2;
+
+  if(keyName.EqualsIgnoreCase("VK_3"))
+    return VK_3;
+
+  if(keyName.EqualsIgnoreCase("VK_4"))
+    return VK_4;
+
+  if(keyName.EqualsIgnoreCase("VK_5"))
+    return VK_5;
+
+  if(keyName.EqualsIgnoreCase("VK_6"))
+    return VK_6;
+
+  if(keyName.EqualsIgnoreCase("VK_7"))
+    return VK_7;
+
+  if(keyName.EqualsIgnoreCase("VK_8"))
+    return VK_8;
+
+  if(keyName.EqualsIgnoreCase("VK_9"))
+    return VK_9;
+
+  if(keyName.EqualsIgnoreCase("VK_SEMICOLON"))
+    return VK_SEMICOLON;
+
+  if(keyName.EqualsIgnoreCase("VK_EQUALS"))
+    return VK_EQUALS;
+  if(keyName.EqualsIgnoreCase("VK_A"))
+    return VK_A;
+  if(keyName.EqualsIgnoreCase("VK_B"))
+    return VK_B;
+  if(keyName.EqualsIgnoreCase("VK_C"))
+    return VK_C;
+  if(keyName.EqualsIgnoreCase("VK_D"))
+    return VK_D;
+  if(keyName.EqualsIgnoreCase("VK_E"))
+    return VK_E;
+  if(keyName.EqualsIgnoreCase("VK_F"))
+    return VK_F;
+  if(keyName.EqualsIgnoreCase("VK_G"))
+    return VK_G;
+  if(keyName.EqualsIgnoreCase("VK_H"))
+    return VK_H;
+  if(keyName.EqualsIgnoreCase("VK_I"))
+    return VK_I;
+  if(keyName.EqualsIgnoreCase("VK_J"))
+    return VK_J;
+  if(keyName.EqualsIgnoreCase("VK_K"))
+    return VK_K;
+  if(keyName.EqualsIgnoreCase("VK_L"))
+    return VK_L;
+  if(keyName.EqualsIgnoreCase("VK_M"))
+    return VK_M;
+  if(keyName.EqualsIgnoreCase("VK_N"))
+    return VK_N;
+  if(keyName.EqualsIgnoreCase("VK_O"))
+    return VK_O;
+  if(keyName.EqualsIgnoreCase("VK_P"))
+    return VK_P;
+  if(keyName.EqualsIgnoreCase("VK_Q"))
+    return VK_Q;
+  if(keyName.EqualsIgnoreCase("VK_R"))
+    return VK_R;
+  if(keyName.EqualsIgnoreCase("VK_S"))
+    return VK_S;
+  if(keyName.EqualsIgnoreCase("VK_T"))
+    return VK_T;
+  if(keyName.EqualsIgnoreCase("VK_U"))
+    return VK_U;
+  if(keyName.EqualsIgnoreCase("VK_V"))
+    return VK_V;
+  if(keyName.EqualsIgnoreCase("VK_W"))
+    return VK_W;
+  if(keyName.EqualsIgnoreCase("VK_X"))
+    return VK_X;
+  if(keyName.EqualsIgnoreCase("VK_Y"))
+    return VK_Y;
+  if(keyName.EqualsIgnoreCase("VK_Z"))
+    return VK_Z;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD0"))
+    return VK_NUMPAD0;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD1"))
+    return VK_NUMPAD1;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD2"))
+    return VK_NUMPAD2;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD3"))
+    return VK_NUMPAD3;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD4"))
+    return VK_NUMPAD4;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD5"))
+    return VK_NUMPAD5;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD6"))
+    return VK_NUMPAD6;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD7"))
+    return VK_NUMPAD7;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD8"))
+    return VK_NUMPAD8;
+  if(keyName.EqualsIgnoreCase("VK_NUMPAD9"))
+    return VK_NUMPAD9;
+  if(keyName.EqualsIgnoreCase("VK_MULTIPLY"))
+    return VK_MULTIPLY;
+  if(keyName.EqualsIgnoreCase("VK_ADD"))
+    return VK_ADD;
+  if(keyName.EqualsIgnoreCase("VK_SEPARATOR"))
+    return VK_SEPARATOR;
+  if(keyName.EqualsIgnoreCase("VK_SUBTRACT"))
+    return VK_SUBTRACT;
+  if(keyName.EqualsIgnoreCase("VK_DECIMAL"))
+    return VK_DECIMAL;
+  if(keyName.EqualsIgnoreCase("VK_DIVIDE"))
+    return VK_DIVIDE;
+  if(keyName.EqualsIgnoreCase("VK_F1"))
+    return VK_F1;
+  if(keyName.EqualsIgnoreCase("VK_F2"))
+    return VK_F2;
+  if(keyName.EqualsIgnoreCase("VK_F3"))
+    return VK_F3;
+  if(keyName.EqualsIgnoreCase("VK_F4"))
+    return VK_F4;
+  if(keyName.EqualsIgnoreCase("VK_F5"))
+    return VK_F5;
+  if(keyName.EqualsIgnoreCase("VK_F6"))
+    return VK_F6;
+  if(keyName.EqualsIgnoreCase("VK_F7"))
+    return VK_F7;
+  if(keyName.EqualsIgnoreCase("VK_F8"))
+    return VK_F8;
+  if(keyName.EqualsIgnoreCase("VK_F9"))
+    return VK_F9;
+  if(keyName.EqualsIgnoreCase("VK_F10"))
+    return VK_F10;
+  if(keyName.EqualsIgnoreCase("VK_F11"))
+    return VK_F11;
+  if(keyName.EqualsIgnoreCase("VK_F12"))
+    return VK_F12;
+  if(keyName.EqualsIgnoreCase("VK_F13"))
+    return VK_F13;
+  if(keyName.EqualsIgnoreCase("VK_F14"))
+    return VK_F14;
+  if(keyName.EqualsIgnoreCase("VK_F15"))
+    return VK_F15;
+  if(keyName.EqualsIgnoreCase("VK_F16"))
+    return VK_F16;
+  if(keyName.EqualsIgnoreCase("VK_F17"))
+    return VK_F17;
+  if(keyName.EqualsIgnoreCase("VK_F18"))
+    return VK_F18;
+  if(keyName.EqualsIgnoreCase("VK_F19"))
+    return VK_F19;
+  if(keyName.EqualsIgnoreCase("VK_F20"))
+    return VK_F20;
+  if(keyName.EqualsIgnoreCase("VK_F21"))
+    return VK_F21;
+  if(keyName.EqualsIgnoreCase("VK_F22"))
+    return VK_F22;
+  if(keyName.EqualsIgnoreCase("VK_F23"))
+    return VK_F23;
+  if(keyName.EqualsIgnoreCase("VK_F24"))
+    return VK_F24;
+  if(keyName.EqualsIgnoreCase("VK_NUM_LOCK"))
+    return VK_NUM_LOCK;
+  if(keyName.EqualsIgnoreCase("VK_SCROLL_LOCK"))
+    return VK_SCROLL_LOCK;
+  if(keyName.EqualsIgnoreCase("VK_COMMA"))
+    return VK_COMMA;
+  if(keyName.EqualsIgnoreCase("VK_PERIOD"))
+    return VK_PERIOD;
+  if(keyName.EqualsIgnoreCase("VK_SLASH"))
+    return VK_SLASH;
+  if(keyName.EqualsIgnoreCase("VK_BACK_QUOTE"))
+    return VK_BACK_QUOTE;
+  if(keyName.EqualsIgnoreCase("VK_OPEN_BRACKET"))
+    return VK_OPEN_BRACKET;
+  if(keyName.EqualsIgnoreCase("VK_BACK_SLASH"))
+    return VK_BACK_SLASH;
+  if(keyName.EqualsIgnoreCase("VK_CLOSE_BRACKET"))
+    return VK_CLOSE_BRACKET;
+  if(keyName.EqualsIgnoreCase("VK_QUOTE"))
+    return VK_QUOTE;
+
+
+  return 0;
 }
 
 nsresult
@@ -1256,21 +1038,42 @@ nsXBLEventHandler::GetTextData(nsIContent *aParent, nsString& aResult)
   return NS_OK;
 }
 
-PRBool 
-nsXBLEventHandler::IsMatchingCharCode(const PRUint32 aChar, const nsString& aKeyName)
-{
-  char tempChar[2];
-  tempChar[0] = aChar;
-  tempChar[1] = 0;
-  nsAutoString tempChar2; tempChar2.AssignWithConversion(tempChar);
-  
-  return tempChar2.EqualsIgnoreCase(aKeyName);
-}
-
 void
-nsXBLEventHandler::ConstructKeyMask()
+nsXBLEventHandler::ConstructMask()
 {
+  mDetail = 0;
+  mDetail2 = 0;
   mKeyMask = 0;
+
+  nsAutoString key;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyAtom, key);
+  if (key.IsEmpty()) 
+    mHandlerElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, key);
+  
+  if (!key.IsEmpty()) {
+    // We have a charcode.
+    mDetail2 = 1;
+    mDetail = key[0];
+  }
+  else {
+    mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, key);
+    if (!key.IsEmpty())
+      mDetail = GetMatchingKeyCode(key);
+  }
+
+  nsAutoString buttonStr, clickCountStr;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kClickCountAtom, clickCountStr);
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kButtonAtom, buttonStr);
+
+  if (!buttonStr.IsEmpty()) {
+    PRInt32 error;
+    mDetail = buttonStr.ToInteger(&error);
+  }
+
+  if (!clickCountStr.IsEmpty()) {
+    PRInt32 error;
+    mDetail2 = clickCountStr.ToInteger(&error);
+  }
 
   nsAutoString modifiers;
   mHandlerElement->GetAttribute(kNameSpaceID_None, kModifiersAtom, modifiers);
@@ -1313,7 +1116,7 @@ nsXBLEventHandler::ConstructKeyMask()
 }
 
 PRBool
-nsXBLEventHandler::MatchesMask(nsIDOMUIEvent* aEvent)
+nsXBLEventHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
   nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));

@@ -101,15 +101,14 @@ protected:
   inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
   inline PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
   
-  inline PRBool IsMatchingKeyCode(const PRUint32 aChar, const nsString& aKeyName);
-  inline PRBool IsMatchingCharCode(const PRUint32 aChar, const nsString& aKeyName);
+  inline PRUint32 GetMatchingKeyCode(const nsString& aKeyName);
 
   NS_IMETHOD GetController(nsIController** aResult);
 
   NS_IMETHOD ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEvent* aEvent);
 
-  void ConstructKeyMask();
-  PRBool MatchesMask(nsIDOMUIEvent* aEvent);
+  void ConstructMask();
+  PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
 
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyAtom;
@@ -140,6 +139,13 @@ protected:
 
   PRInt32 mKeyMask;          // Which modifier keys this event handler expects to have down
                              // in order to be matched.
+
+  PRUint32 mDetail;          // For key events, contains a charcode or keycode. For
+                             // mouse events, stores the button info.
+  
+  PRInt32 mDetail2;          // Miscellaneous extra information.  For key events,
+                             // stores whether or not we're a key code or char code.
+                             // For mouse events, stores the clickCount.
 
   nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 };
