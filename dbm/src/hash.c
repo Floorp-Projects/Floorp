@@ -477,7 +477,7 @@ init_htab(HTAB *hashp, int nelem)
 	 */
 	nelem = (nelem - 1) / hashp->FFACTOR + 1;
 
-	l2 = __log2((uint32)MAX(nelem, 2));
+	l2 = __log2((uint32)PR_MAX(nelem, 2));
 	nbuckets = 1 << l2;
 
 	hashp->SPARES[l2] = l2 + 1;
@@ -491,7 +491,7 @@ init_htab(HTAB *hashp, int nelem)
 
 	hashp->MAX_BUCKET = hashp->LOW_MASK = nbuckets - 1;
 	hashp->HIGH_MASK = (nbuckets << 1) - 1;
-	hashp->HDRPAGES = ((MAX(sizeof(HASHHDR), MINHDRSIZE) - 1) >>
+	hashp->HDRPAGES = ((PR_MAX(sizeof(HASHHDR), MINHDRSIZE) - 1) >>
 	    hashp->BSHIFT) + 1;
 
 	nsegs = (nbuckets - 1) / hashp->SGSIZE + 1;

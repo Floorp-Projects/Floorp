@@ -343,7 +343,7 @@ extern void __buf_init(HTAB *hashp, int32 nbytes)
 
 	bfp = &(hashp->bufhead);
 	npages = (nbytes + hashp->BSIZE - 1) >> hashp->BSHIFT;
-	npages = MAX(npages, MIN_BUFFERS);
+	npages = PR_MAX(npages, MIN_BUFFERS);
 
 	hashp->nbufs = npages;
 	bfp->next = bfp;
