@@ -914,7 +914,6 @@ PRIVATE PRInt32
 si_SetChosenUser(si_SignonURLStruct *url, si_SignonUserStruct *chosen_user)
 {
   PRInt32 index;
-  si_SignonUserStruct *user;
 
   index = url->signonUser_list.IndexOf(chosen_user);
   if (index < 0) {
@@ -1001,9 +1000,6 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, 
     si_unlock_signon_list();
     return PR_FALSE; /* user not found so nothing to remove */
     foundUser: ;
-    if (loginFailure && (user->time + 300) < SecondsFromPRTime(PR_Now())) {
-      return PR_FALSE; /* password was set more than 5 minutes (300 seconds) ago */
-    }
   }
 
   /* free the user node */
