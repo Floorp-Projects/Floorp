@@ -403,7 +403,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
       nsresult         result;
 
       aPresContext->ResolveStyleContextFor(child, mStyleContext,
-                                           PR_FALSE, getter_AddRefs(kidSC));
+                                           getter_AddRefs(kidSC));
       if (nsHTMLAtoms::frameset == tag) {
         result = NS_NewHTMLFramesetFrame(shell, &frame);
 
@@ -446,7 +446,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
     nsHTMLFramesetBlankFrame* blankFrame = new (shell.get()) nsHTMLFramesetBlankFrame;
     nsCOMPtr<nsIStyleContext> pseudoStyleContext;
     aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
-                                               mStyleContext, PR_FALSE,
+                                               mStyleContext,
                                                getter_AddRefs(pseudoStyleContext));
     if(blankFrame)
       blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
@@ -1213,7 +1213,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
         borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
         nsIStyleContext* pseudoStyleContext;
         aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo,
-                                                   mStyleContext, PR_FALSE,
+                                                   mStyleContext,
                                                    &pseudoStyleContext);
         borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
         NS_RELEASE(pseudoStyleContext);
@@ -1242,7 +1242,6 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
             nsIStyleContext* pseudoStyleContext;
             aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::verticalFramesetBorderPseudo,
                                                        mStyleContext,
-                                                       PR_FALSE,
                                                        &pseudoStyleContext);
             borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
             NS_RELEASE(pseudoStyleContext);

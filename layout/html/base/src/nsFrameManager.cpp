@@ -1636,24 +1636,40 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
       aPresContext->ResolveStyleContextForNonElement(parentContext,
-                                                     PR_TRUE, &newContext);
+                                                     &newContext);
     }
     else if (pseudoTag) {
       nsIContent* pseudoContent =
           aParentContent ? aParentContent : localContent;
       aPresContext->ResolvePseudoStyleContextFor(pseudoContent, pseudoTag,
                                                  parentContext, 
-                                                 PR_FALSE, &newContext);
+                                                 &newContext);
       NS_RELEASE(pseudoTag);
     }
     else {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
       aPresContext->ResolveStyleContextFor(content, parentContext,
-                                           PR_TRUE, &newContext);
+                                           &newContext);
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
+      if (!parentContext) {
+        nsRuleNode *oldNode, *newNode;
+        oldContext->GetRuleNode(&oldNode);
+        newContext->GetRuleNode(&newNode);
+        if (oldNode == newNode) {
+          // We're the root of the style context tree and the new style
+          // context returned has the same rule node.  This means that
+          // we can use FindChildWithRules to keep a lot of the old
+          // style contexts around.  However, we need to start from the
+          // same root.
+          NS_RELEASE(newContext);
+          newContext = oldContext;
+          NS_ADDREF(newContext);
+        }
+      }
+
       if (newContext != oldContext) {
         aMinChange = CaptureChange(oldContext, newContext, aFrame, content, aChangeList, aMinChange);
         if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) { // if frame gets regenerated, let it keep old context
@@ -1673,7 +1689,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       else {
         // XXXdwh figure this out.
         // oldContext->RemapStyle(aPresContext, PR_FALSE);
-        if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
+        if (pseudoTag && pseudoTag != nsHTMLAtoms::mozNonElementPseudo &&
+            aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
             HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
           aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
         }
@@ -1683,6 +1700,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     else {
       NS_ERROR("resolve style context failed");
       newContext = oldContext;  // new context failed, recover... (take ref)
+      oldContext = nsnull;
     }
 
     // do additional contexts 
@@ -1698,7 +1716,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                        pseudoTag != nsHTMLAtoms::mozNonElementPseudo,
                        "extra style context is not pseudo element");
           result = aPresContext->ResolvePseudoStyleContextFor(content, pseudoTag, newContext,
-                                                             PR_FALSE, &newExtraContext);
+                                                              &newExtraContext);
           NS_RELEASE(pseudoTag);
           if (NS_SUCCEEDED(result) && newExtraContext) {
             if (oldExtraContext != newExtraContext) {
@@ -1711,7 +1729,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
             else {
               // XXXdwh figure this out.
               // oldExtraContext->RemapStyle(aPresContext, PR_FALSE);
-              if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
+              // XXXldb |oldContext| is null by this point, so this will
+              // never do anything.
+              if (pseudoTag && pseudoTag != nsHTMLAtoms::mozNonElementPseudo &&
+                  aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
                   HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
                 aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
               }
@@ -1734,16 +1755,17 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         undisplayed->mStyle->GetPseudoType(pseudoTag);
         if (undisplayed->mContent && pseudoTag == nsnull) {  // child content
           aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
-                                              PR_TRUE, &undisplayedContext);
+                                               &undisplayedContext);
         }
         else if (pseudoTag == nsHTMLAtoms::mozNonElementPseudo) {
           aPresContext->ResolveStyleContextForNonElement(newContext, 
-                                                 PR_TRUE, &undisplayedContext);
+                                                         &undisplayedContext);
         }
         else {  // pseudo element
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
-          aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag, newContext, PR_FALSE,
-                                                    &undisplayedContext);
+          aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag,
+                                                     newContext,
+                                                     &undisplayedContext);
         }
         NS_IF_RELEASE(pseudoTag);
         if (undisplayedContext) {

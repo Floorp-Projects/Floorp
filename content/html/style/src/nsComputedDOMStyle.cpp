@@ -3461,11 +3461,11 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
     if(pctx) {
       nsCOMPtr<nsIStyleContext> sctx;
       if(!mPseudo) {
-        pctx->ResolveStyleContextFor(mContent, nsnull, PR_FALSE,
+        pctx->ResolveStyleContextFor(mContent, nsnull,
                                      getter_AddRefs(sctx));
       }
       else {
-        pctx->ResolvePseudoStyleContextFor(mContent, mPseudo, nsnull, PR_FALSE,
+        pctx->ResolvePseudoStyleContextFor(mContent, mPseudo, nsnull,
                                            getter_AddRefs(sctx));
       }
       if(sctx) {

@@ -142,7 +142,6 @@ nsFirstLetterFrame::Init(nsIPresContext*  aPresContext,
     if (parentStyleContext) {
       rv = aPresContext->ResolveStyleContextForNonElement(
                                                    parentStyleContext,
-                                                   PR_FALSE,
                                                    getter_AddRefs(newSC));
       NS_RELEASE(parentStyleContext);
       if (NS_FAILED(rv))
@@ -365,7 +364,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
       NS_ASSERTION(kidContent->IsContentOfType(nsIContent::eTEXT),
                    "should contain only text nodes");
       aPresContext->ResolveStyleContextForNonElement(mStyleContext,
-                                                 PR_FALSE, getter_AddRefs(sc));
+                                                     getter_AddRefs(sc));
       if (sc) {
         kid->SetStyleContext(aPresContext, sc);
       }

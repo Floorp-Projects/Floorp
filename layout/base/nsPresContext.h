@@ -190,7 +190,6 @@ public:
    */
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
                                     nsIStyleContext* aParentContext,
-                                    PRBool aForceUnique,
                                     nsIStyleContext** aResult) = 0;
 
   /**
@@ -207,7 +206,6 @@ public:
    */
   NS_IMETHOD ResolveStyleContextForNonElement(
                                     nsIStyleContext* aParentContext,
-                                    PRBool aForceUnique,
                                     nsIStyleContext** aResult) = 0;
 
   /**
@@ -218,7 +216,6 @@ public:
   NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsIStyleContext* aParentContext,
-                                          PRBool aForceUnique,
                                           nsIStyleContext** aResult) = 0;
 
   /**
@@ -232,7 +229,6 @@ public:
   NS_IMETHOD ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
                                               nsIAtom* aPseudoTag,
                                               nsIStyleContext* aParentContext,
-                                              PRBool aForceUnique,
                                               nsICSSPseudoComparator* aComparator,
                                               nsIStyleContext** aResult) = 0;
 
@@ -245,7 +241,6 @@ public:
   NS_IMETHOD ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                         nsIAtom* aPseudoTag,
                                         nsIStyleContext* aParentContext,
-                                        PRBool aForceUnique,
                                         nsIStyleContext** aResult) = 0;
 
   /** 

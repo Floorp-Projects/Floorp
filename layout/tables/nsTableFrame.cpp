@@ -925,7 +925,6 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
   aPresContext.ResolvePseudoStyleContextFor(colGroupContent,
                                             nsHTMLAtoms::tableColGroupPseudo,
                                             mStyleContext,
-                                            PR_FALSE,
                                             getter_AddRefs(colGroupStyle));        
   // Create a col group frame
   nsIFrame* newFrame;
@@ -1043,7 +1042,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
       aColGroupFrame.GetContent(getter_AddRefs(iContent));
       aColGroupFrame.GetStyleContext(getter_AddRefs(parentStyleContext));
       aPresContext.ResolvePseudoStyleContextFor(iContent, nsHTMLAtoms::tableColPseudo,
-                                                parentStyleContext, PR_FALSE, getter_AddRefs(styleContext));
+                                                parentStyleContext, getter_AddRefs(styleContext));
     }
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");

@@ -83,26 +83,21 @@ public:
   NS_IMETHOD ClearStyleDataAndReflow(void);
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
                                     nsIStyleContext* aParentContext,
-                                    PRBool aForceUnique,
                                     nsIStyleContext** aResult);
   NS_IMETHOD ResolveStyleContextForNonElement(nsIStyleContext* aParentContext,
-                                              PRBool aForceUnique,
                                               nsIStyleContext** aResult);
   NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsIStyleContext* aParentContext,
-                                          PRBool aForceUnique,
                                           nsIStyleContext** aResult);
   NS_IMETHOD ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsIStyleContext* aParentContext,
-                                          PRBool aForceUnique,
                                           nsICSSPseudoComparator* aComparator,
                                           nsIStyleContext** aResult);
   NS_IMETHOD ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                         nsIAtom* aPseudoTag,
                                         nsIStyleContext* aParentContext,
-                                        PRBool aForceUnique,
                                         nsIStyleContext** aResult);
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
                                   nsIStyleContext* aNewParentContext);

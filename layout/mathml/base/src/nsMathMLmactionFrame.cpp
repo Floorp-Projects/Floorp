@@ -149,7 +149,7 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
         aParent->GetStyleContext(getter_AddRefs(parentStyleContext));
         nsIStyleContext* newStyleContext;
         aPresContext->ResolveStyleContextFor(aContent, parentStyleContext,
-                                             PR_FALSE, &newStyleContext);
+                                             &newStyleContext);
         if (!newStyleContext) 
           mRestyle.Truncate();
         else {

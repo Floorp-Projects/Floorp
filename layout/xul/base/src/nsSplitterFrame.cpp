@@ -357,7 +357,7 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
         aContent->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                           NS_LITERAL_STRING("vertical"), PR_FALSE);
         nsCOMPtr<nsIStyleContext> parent = dont_AddRef(aContext->GetParent());
-        aPresContext->ResolveStyleContextFor(aContent, parent, PR_FALSE,
+        aPresContext->ResolveStyleContextFor(aContent, parent,
                                              getter_AddRefs(newContext));
         aContext = newContext;
       }

@@ -155,8 +155,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   if (!*aResult) {
     // We missed the cache. Resolve this pseudo-style.
     aPresContext->ResolvePseudoStyleWithComparator(aContent, aPseudoElement,
-                                                   aContext, PR_FALSE,
-                                                   aComparator,
+                                                   aContext, aComparator,
                                                    aResult); // Addref occurs on *aResult.
     // Put it in our table.
     if (!mCache)

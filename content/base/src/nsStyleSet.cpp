@@ -125,26 +125,22 @@ public:
 
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
-                                           nsIStyleContext* aParentContext,
-                                           PRBool aForceUnique = PR_FALSE);
+                                           nsIStyleContext* aParentContext);
 
   virtual nsIStyleContext* ResolveStyleForNonElement(
                                            nsIPresContext* aPresContext,
-                                           nsIStyleContext* aParentContext,
-                                           PRBool aForceUnique = PR_FALSE);
+                                           nsIStyleContext* aParentContext);
 
   virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
                                                  nsIContent* aParentContent,
                                                  nsIAtom* aPseudoTag,
                                                  nsIStyleContext* aParentContext,
-                                                 PRBool aForceUnique = PR_FALSE,
                                                  nsICSSPseudoComparator* aComparator = nsnull);
 
   virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                nsIContent* aParentContent,
                                                nsIAtom* aPseudoTag,
-                                               nsIStyleContext* aParentContext,
-                                               PRBool aForceUnique = PR_FALSE);
+                                               nsIStyleContext* aParentContext);
 
   NS_IMETHOD Shutdown();
 
@@ -311,8 +307,8 @@ protected:
 
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, 
                               nsIStyleContext* aParentContext,
-                              nsIAtom* aPseudoTag, 
-                              PRBool aForceUnique);
+                              nsIAtom* aPseudoTag);
+
 #ifdef DEBUG
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
   void  ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent);
@@ -897,31 +893,24 @@ EnumRulesMatching(nsISupports* aProcessor, void* aData)
  */
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, 
                                           nsIStyleContext* aParentContext, 
-                                          nsIAtom* aPseudoTag, 
-                                          PRBool aForceUnique)
+                                          nsIAtom* aPseudoTag)
 {
   nsIStyleContext* result = nsnull;
-  
   nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
       
-  if ((PR_FALSE == aForceUnique) && (nsnull != aParentContext)) {
+  if (aParentContext)
     aParentContext->FindChildWithRules(aPseudoTag, ruleNode, result);
-  }
 
-  if (nsnull == result) {
-    if (NS_SUCCEEDED(NS_NewStyleContext(&result, aParentContext, aPseudoTag, ruleNode, aPresContext))) {
-      if (PR_TRUE == aForceUnique)
-        result->ForceUnique();
-    }
 #ifdef NOISY_DEBUG
+  if (result)
+    fprintf(stdout, "--- SharedSC %d ---\n", ++gSharedCount);
+  else
     fprintf(stdout, "+++ NewSC %d +++\n", ++gNewCount);
 #endif
-  }
-#ifdef NOISY_DEBUG
-  else {
-    fprintf(stdout, "--- SharedSC %d ---\n", ++gSharedCount);
-  }
-#endif
+
+  if (!result)
+    NS_NewStyleContext(&result, aParentContext, aPseudoTag, ruleNode,
+                       aPresContext);
 
   return result;
 }
@@ -1055,8 +1044,7 @@ void StyleSetImpl::EnsureRuleWalker(nsIPresContext* aPresContext)
 
 nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                nsIContent* aContent,
-                                               nsIStyleContext* aParentContext,
-                                               PRBool aForceUnique)
+                                               nsIStyleContext* aParentContext)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
   STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
@@ -1079,7 +1067,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
       aPresContext->GetMedium(getter_AddRefs(medium));
       RulesMatchingData data(aPresContext, medium, aContent, mRuleWalker);
       FileRules(EnumRulesMatching, &data);
-      result = GetContext(aPresContext, aParentContext, nsnull, aForceUnique);
+      result = GetContext(aPresContext, aParentContext, nsnull);
      
       // Now reset the walker back to the root of the tree.
       mRuleWalker->Reset();
@@ -1093,8 +1081,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
 nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
                                                nsIPresContext* aPresContext,
-                                               nsIStyleContext* aParentContext,
-                                               PRBool aForceUnique)
+                                               nsIStyleContext* aParentContext)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolveStyleForNonElement(), this=%p\n", this));
   STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
@@ -1111,7 +1098,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
         mOverrideRuleProcessors) {
       EnsureRuleWalker(aPresContext);
       result = GetContext(aPresContext, aParentContext,
-                          nsHTMLAtoms::mozNonElementPseudo, aForceUnique);
+                          nsHTMLAtoms::mozNonElementPseudo);
       NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     }
   }
@@ -1151,7 +1138,6 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                                      nsIContent* aParentContent,
                                                      nsIAtom* aPseudoTag,
                                                      nsIStyleContext* aParentContext,
-                                                     PRBool aForceUnique,
                                                      nsICSSPseudoComparator* aComparator)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
@@ -1178,7 +1164,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                    aPseudoTag, aComparator, mRuleWalker);
       FileRules(EnumPseudoRulesMatching, &data);
 
-      result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
+      result = GetContext(aPresContext, aParentContext, aPseudoTag);
      
       // Now reset the walker back to the root of the tree.
       mRuleWalker->Reset();
@@ -1193,8 +1179,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
 nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                    nsIContent* aParentContent,
                                                    nsIAtom* aPseudoTag,
-                                                   nsIStyleContext* aParentContext,
-                                                   PRBool aForceUnique)
+                                                   nsIStyleContext* aParentContext)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
   STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
@@ -1221,7 +1206,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
       FileRules(EnumPseudoRulesMatching, &data);
 
       if (!mRuleWalker->AtRoot())
-        result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
+        result = GetContext(aPresContext, aParentContext, aPseudoTag);
  
       // Now reset the walker back to the root of the tree.
       mRuleWalker->Reset();
