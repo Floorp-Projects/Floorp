@@ -19,6 +19,19 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 /*
@@ -158,7 +171,7 @@ Assertion::~Assertion()
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
 
-static inline PLHashNumber
+static inline PLHashNumber PR_CALLBACK
 rdf_HashPointer(const void* key)
 {
     return NS_REINTERPRET_CAST(PLHashNumber, key) >> 2;
@@ -184,7 +197,7 @@ protected:
 
     static const PRInt32 kInitialTableSize;
 
-    static PRIntn DeleteForwardArcsEntry(PLHashEntry* he, PRIntn i, void* arg);
+    static PRIntn PR_CALLBACK DeleteForwardArcsEntry(PLHashEntry* he, PRIntn i, void* arg);
 
     friend class InMemoryResourceEnumeratorImpl; // b/c it needs to enumerate mForwardArcs
 
@@ -218,7 +231,7 @@ public:
     NS_DECL_NSIRDFPURGEABLEDATASOURCE
 
 protected:
-    static PRIntn SweepForwardArcsEntries(PLHashEntry* he, PRIntn i, void* arg);
+    static PRIntn PR_CALLBACK SweepForwardArcsEntries(PLHashEntry* he, PRIntn i, void* arg);
 
 public:
     // Implementation methods
@@ -1372,7 +1385,7 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* aSource, nsISimpleEnumerator** 
     return NS_OK;
 }
 
-static PRIntn
+static PRIntn PR_CALLBACK
 rdf_ResourceEnumerator(PLHashEntry* he, PRIntn i, void* closure)
 {
     nsISupportsArray* resources = NS_STATIC_CAST(nsISupportsArray*, closure);
