@@ -13,7 +13,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 1998-2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -35,24 +35,20 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/center.gif \
 		$(srcdir)/images/right.gif \
 		$(srcdir)/images/justify.gif \
-		$(srcdir)/images/copy.gif \
-		$(srcdir)/images/cut.gif \
 		$(srcdir)/images/outdent.gif \
 		$(srcdir)/images/find.gif \
 		$(srcdir)/images/hline.gif \
+		$(srcdir)/images/hover-teal.gif \
 		$(srcdir)/images/image.gif \
 		$(srcdir)/images/indent.gif \
 		$(srcdir)/images/italic.gif \
 		$(srcdir)/images/link.gif \
 		$(srcdir)/images/numbers.gif \
-		$(srcdir)/images/paste.gif \
-		$(srcdir)/images/redo.gif \
 		$(srcdir)/images/spell.gif \
 		$(srcdir)/images/table.gif \
 		$(srcdir)/images/anchor.gif \
 		$(srcdir)/images/anchor-in-doc.gif \
 		$(srcdir)/images/underline.gif \
-		$(srcdir)/images/undo.gif \
 		$(srcdir)/images/color.gif \
 		$(srcdir)/images/align.gif \
 		$(srcdir)/images/object-popup.gif \
@@ -61,7 +57,6 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/savefile.gif \
 		$(srcdir)/images/savemod.gif \
 		$(srcdir)/images/publish.gif \
-		$(srcdir)/images/preview.gif \
 		$(srcdir)/images/print.gif \
 		$(srcdir)/images/find.gif \
 		$(srcdir)/images/img-align-bottom.gif \
