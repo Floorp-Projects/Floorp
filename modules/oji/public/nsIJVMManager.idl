@@ -85,6 +85,11 @@ interface nsIJVMManager : nsISupports {
 	void IsJavaEnabled(out boolean outEnabled);
 
 	/**
+	 * Returns whether or not Java is enabled.
+	 */
+	boolean JavaEnabled();
+
+	/**
 	 * Called from Java Console menu item.
 	 */
 

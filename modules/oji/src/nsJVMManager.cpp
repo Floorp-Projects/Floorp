@@ -152,6 +152,14 @@ nsJVMManager::IsJavaEnabled(PRBool* outEnabled)
 }
 
 NS_METHOD
+nsJVMManager::JavaEnabled(PRBool* outEnabled)
+{
+	nsJVMStatus status = GetJVMStatus();
+	*outEnabled = (status == nsJVMStatus_Enabled || status == nsJVMStatus_Running);
+	return NS_OK;
+}
+
+NS_METHOD
 nsJVMManager::ShowJavaConsole(void)
 {
     JVM_ShowConsole();
