@@ -71,8 +71,6 @@
 #include <malloc.h>    // for _heapmin()
 #endif
 
-#define ABS(x) ((x)<0?-(x):x)
-
 // XXX Get rid of this
 #pragma message("WARNING: XXX bad include, remove it.")
 #include "nsIWebShellWindow.h"
@@ -1089,7 +1087,7 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
       if (listXULWindow != ourXULWindow) {
         listBaseWindow->GetPosition(&listX, &listY);
 
-        if (ABS(listX-aRequestedX) <= kSlop && ABS(listY-aRequestedY) <= kSlop) {
+        if (PR_ABS(listX-aRequestedX) <= kSlop && PR_ABS(listY-aRequestedY) <= kSlop) {
           // collision! offset and stop. save the DOMWindow corresponding
           // to the colliding window for later. (we'll need its nsIDOMScreen
           nsCOMPtr<nsIDocShell> listDocShell;

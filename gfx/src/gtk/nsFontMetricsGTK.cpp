@@ -2884,7 +2884,7 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     if (aStretch->mOutlineScaled) {
       scale_size = PR_MAX(mPixelSize, aCharSet->mOutlineScaleMin);
 
-      if (ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size)) {
+      if (PR_ABS(mPixelSize-scale_size) < PR_ABS(mPixelSize-bitmap_size)) {
         use_scaled_font = 1;
         SIZE_FONT_PRINTF(("outline font:______ %s\n"
                   "                    desired=%d, scaled=%d, bitmap=%d", 
@@ -2921,7 +2921,7 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
       double ratio = (bitmap_size / ((double) mPixelSize));
       if ((ratio < aCharSet->mBitmapUndersize)
         || (ratio > aCharSet->mBitmapOversize)) {
-        if ((ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size))) {
+        if ((PR_ABS(mPixelSize-scale_size) < PR_ABS(mPixelSize-bitmap_size))) {
           use_scaled_font = 1;
           SIZE_FONT_PRINTF(("bitmap scaled font: %s\n"
                 "                    desired=%d, scaled=%d, bitmap=%d", 

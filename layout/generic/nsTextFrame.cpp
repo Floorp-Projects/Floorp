@@ -105,10 +105,6 @@
 #include "nsILE.h"
 #endif /* SUNCTL */
 
-#ifndef PR_ABS
-#define PR_ABS(x) ((x) < 0 ? -(x) : (x))
-#endif
-
 static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);
 
 #ifdef NS_DEBUG
