@@ -214,15 +214,16 @@ protected:
 // unchanged. 
 //
 // structure of extended charmap:
-//    ccmap flag      1 PRUint16 , indication if this is extended one or not
-//    bmp ccmap size  1 PRUint16 , the size of BMP ccmap, 
+//    ccmap flag      1 PRUint16 (PRUint32) , indicates if this is extended or not
+//    bmp ccmap size  1 PRUint16 (PRUint32) , the size of BMP ccmap, 
 //    BMP ccmap       size varies, 
 //    plane index     16 PRUint32, use to index ccmap for non-BMP plane
 //    empty ccmap     16 PRUint16, a total empty ccmap
 //    non-BMP ccmaps  size varies, other non-empty, non-BMP ccmap
 //   
 // Changes to basic ccmap 
-//  2 PRUint16 are added in the very beginning. One is used to  descript the size 
+//  2 PRUint16 (PRUint32 on 64bit machines) are added in the very beginning. 
+// One is used to specify the size 
 // of the ccmap, the other is used as a flag. But these 2 fields are indexed 
 // negatively so that all other operation remain unchanged to keep efficiency. 
 // ccmap memory allocation is moved from nsCompressedCharMap::NewCCMap to 

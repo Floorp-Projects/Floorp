@@ -58,8 +58,9 @@ const static PRUint16 gIgnorableCCMapExtRaw[] =
 #include "ignorables_abjadpoints.x-ccmap"
 };
 
-// 1st Two elements of ext. ccmap need to have negative indices.
-const static PRUint16 *gIgnorableCCMapExt = gIgnorableCCMapExtRaw + 2; 
+// 1st CCMAP_EXTRA (2 on 32bit, 4 on 64bit machines) elements of ext. ccmap 
+// need to have negative indices.
+const static PRUint16 *gIgnorableCCMapExt = gIgnorableCCMapExtRaw + CCMAP_EXTRA; 
 
 //
 // nsSaveAsCharset
