@@ -1566,6 +1566,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     if (mouseContent) {
       ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull,
                                          NS_EVENT_FLAG_INIT, aStatus); 
+	  NS_ASSERTION(NS_SUCCEEDED(ret), "HandleDOMEvent failed");
     }
 
     if (nsnull != mCurrentTarget) {
