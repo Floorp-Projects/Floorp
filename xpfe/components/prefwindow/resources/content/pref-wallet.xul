@@ -55,8 +55,7 @@
 
   <!--should use titledbox instead of fieldset, but that was causing an assertion
       when pref.js was setting it to display:none--> 
-  <!--titledbox orient="vertical" id="walletAreax"-->
-  <html:fieldset id="walletArea">
+  <titledbox orient="vertical" id="walletAreax">
     <title><text value="&walletHeader;"/></title>
     <html:div>&walletDetails;</html:div>
     <spring class="vgap"/>
@@ -80,8 +79,7 @@
       <spring flex="1"/>
       <titledbutton value="&viewWallet.label;" class="dialog push" onclick="viewWallet();"/>
     </box>
-  </html:fieldset>
-  <!--/titledbox-->
+  </titledbox>
 
   <titledbox orient="vertical" id="signonArea">
     <title><text value="&signonHeader;"/></title>
