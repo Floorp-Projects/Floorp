@@ -32,6 +32,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
 #include "nsIMenu.h"
+#include "nsITimer.h"
 
 #include "nsIPrompt.h"
 #include "nsINetPrompt.h"
@@ -263,6 +264,11 @@ protected:
   nsString mStatus;
   nsString mDefaultStatus;
 
+  nsCOMPtr<nsITimer>      mSPTimer;
+  PRLock *                mSPTimerLock;
+
+  void        SetPersistenceTimer(void);
+  static void FirePersistenceTimer(nsITimer *aTimer, void *aClosure);
 
 private:
 

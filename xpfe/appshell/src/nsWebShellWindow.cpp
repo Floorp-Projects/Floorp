@@ -67,6 +67,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 #include "nsIContextMenu.h"
+#include "nsITimer.h"
 
 // For JS Execution
 #include "nsIScriptGlobalObjectOwner.h"
@@ -75,6 +76,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIEventQueueService.h"
 #include "plevent.h"
 #include "prmem.h"
+#include "prlock.h"
 
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -150,6 +152,8 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIWebShell.h"
 
+#define SIZE_PERSISTENCE_TIMEOUT 500 // msec
+
 const char * kPrimaryContentTypeValue  = "content-primary";
 
 struct ThreadedWindowEvent {
@@ -222,6 +226,7 @@ nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
   mIntrinsicallySized = PR_FALSE;
   mDebuting = PR_FALSE;
   mLoadDefaultPage = PR_TRUE;
+  mSPTimerLock = PR_NewLock();
 }
 
 
@@ -234,6 +239,13 @@ nsWebShellWindow::~nsWebShellWindow()
   }
 
   mWindow = nsnull; // Force release here.
+
+  PR_Lock(mSPTimerLock);
+  if (mSPTimer)
+    mSPTimer->Cancel();
+  PR_Unlock(mSPTimerLock);
+  PR_DestroyLock(mSPTimerLock);
+
   NS_IF_RELEASE(mCallbacks);
 }
 
@@ -427,7 +439,9 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         nsWebShellWindow *win;
         aEvent->widget->GetClientData(data);
         win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
-        win->StoreBoundsToXUL(PR_TRUE, PR_FALSE);
+        // persist position, but not immediately, in case this OS is firing
+        // repeated move events as the user drags the window
+        win->SetPersistenceTimer();
         break;
       }
       case NS_SIZE: {
@@ -439,7 +453,9 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           sizeEvent->windowSize->height, PR_FALSE);  
         aEvent->widget->GetClientData(data);
         win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
-        win->StoreBoundsToXUL(PR_FALSE, PR_TRUE);
+        // persist size, but not immediately, in case this OS is firing
+        // repeated size events as the user drags the sizing handle
+        win->SetPersistenceTimer();
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
@@ -1228,6 +1244,28 @@ nsWebShellWindow::DestroyModalDialogEvent(PLEvent *aEvent)
   PR_Free(aEvent);
 }
 
+void
+nsWebShellWindow::SetPersistenceTimer(void)
+{
+  PR_Lock(mSPTimerLock);
+  if (mSPTimer)
+    mSPTimer->SetDelay(SIZE_PERSISTENCE_TIMEOUT);
+  else
+    if (NS_SUCCEEDED(NS_NewTimer(getter_AddRefs(mSPTimer))))
+      mSPTimer->Init(FirePersistenceTimer, this,
+                     SIZE_PERSISTENCE_TIMEOUT, NS_TYPE_ONE_SHOT);
+  PR_Unlock(mSPTimerLock);
+}
+
+void
+nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
+{
+  nsWebShellWindow *win = NS_STATIC_CAST(nsWebShellWindow *, aClosure);
+  PR_Lock(win->mSPTimerLock);
+  win->mSPTimer = nsnull;
+  PR_Unlock(win->mSPTimerLock);
+  win->StoreBoundsToXUL(PR_TRUE, PR_TRUE);
+}
 
 
 //----------------------------------------
