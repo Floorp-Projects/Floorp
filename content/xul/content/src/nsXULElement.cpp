@@ -295,7 +295,6 @@ nsIAtom*             nsXULElement::kBrowserAtom;
 nsIAtom*             nsXULElement::kEditorAtom;
 nsIAtom*             nsXULElement::kWidthAtom;
 nsIAtom*             nsXULElement::kWindowAtom;
-nsIAtom*             nsXULElement::kNullAtom;
 nsIAtom*             nsXULElement::kCheckboxAtom;
 nsIAtom*             nsXULElement::kRadioAtom;
 nsIAtom*             nsXULElement::kRadioGroupAtom;
@@ -373,7 +372,6 @@ nsXULElement::Init()
         kRadioGroupAtom     = NS_NewAtom("radiogroup");
         kMenuListAtom     = NS_NewAtom("menulist");
         kMenuButtonAtom     = NS_NewAtom("menubutton");
-        kNullAtom           = NS_NewAtom("");
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
@@ -456,7 +454,6 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kRadioGroupAtom);
         NS_IF_RELEASE(kMenuListAtom);
         NS_IF_RELEASE(kMenuButtonAtom);
-        NS_IF_RELEASE(kNullAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 

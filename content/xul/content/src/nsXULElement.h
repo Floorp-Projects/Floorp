@@ -359,7 +359,6 @@ protected:
     static nsIAtom*             kWindowAtom;
     static nsIAtom*             kMenuButtonAtom;
     static nsIAtom*             kMenuListAtom;
-	  static nsIAtom*             kNullAtom;
 
 public:
     static nsresult
