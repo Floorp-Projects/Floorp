@@ -1341,7 +1341,9 @@ case "$target" in
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
     *-solaris*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-M $(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
+        if test -z "$GNU_LD"; then
+            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-M -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
+        fi
         ;;
     *-nto*) 
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
