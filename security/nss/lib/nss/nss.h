@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.11 2001/06/12 20:57:13 nicolson%netscape.com Exp $
+ * $Id: nss.h,v 1.12 2001/06/12 22:25:13 nicolson%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -130,13 +130,6 @@ SECStatus NSS_NoDB_Init(const char *configdir);
  * Close the Cert, Key databases.
  */
 extern void NSS_Shutdown(void);
-
-/*
- * Returns PR_TRUE if NSS has already been successfully initialized,
- * PR_FALSE otherwise.
- */
-PRBool NSS_IsInitialized();
-
 
 SEC_END_PROTOS
 
