@@ -63,7 +63,6 @@
 #include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
-#include "nsInt64.h"
 #include "prtime.h"
 #include "prprf.h"
 #include "prnetdb.h"
