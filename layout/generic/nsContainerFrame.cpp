@@ -65,21 +65,27 @@ nsContainerFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 NS_IMETHODIMP
 nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  // Delete our child frames before doing anything else. In particular
-  // we do all of this before our base class releases it's hold on the
-  // view.
-  for (nsIFrame* child = mFirstChild; child; ) {
-    mFirstChild = nsnull;  // XXX hack until HandleEvent is not called until after destruction
-    nsIFrame* nextChild;
-     
-    child->GetNextSibling(nextChild);
-    child->DeleteFrame(aPresContext);
-    child = nextChild;
+  // Prevent event dispatch during destruct
+  nsIView*  view;
+  GetView(view);
+  if (nsnull != view) {
+    view->SetClientData(nsnull);
   }
 
-  nsFrame::DeleteFrame(aPresContext);
+  // Delete our child frames
+  while (nsnull != mFirstChild) {
+    nsIFrame* nextChild;
 
-  return NS_OK;
+    mFirstChild->GetNextSibling(nextChild);
+    mFirstChild->DeleteFrame(aPresContext);
+
+    // Once we've deleted the child frame make sure it's no longer in
+    // our child list
+    mFirstChild = nextChild;
+  }
+
+  // Base class will delete the frame
+  return nsFrame::DeleteFrame(aPresContext);
 }
 
 void
