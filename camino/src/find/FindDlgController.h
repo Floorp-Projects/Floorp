@@ -41,13 +41,16 @@
     IBOutlet NSTextField* mSearchField;
     IBOutlet NSButton* mIgnoreCaseBox;
     IBOutlet NSButton* mWrapAroundBox;
-    IBOutlet NSButton* mSearchBackwardsBox;
-    IBOutlet NSButton* mFindButton;
+    IBOutlet NSButton* mFindNextButton;
+    IBOutlet NSButton* mFindPrevButton;
 }
 
-- (IBAction) find: (id)aSender;
+- (IBAction) findNextButton: (id)aSender;
+- (IBAction) findPreviousButton: (id)aSender;
+- (IBAction) findNextAndOrderOut: (id)aSender;
 
   // delegates for NSTextView
 - (void)controlTextDidChange:(NSNotification *)aNotification;
-
+- (void)loadFindStringFromPasteboard;
+- (void)putFindStringOnPasteboard;
 @end

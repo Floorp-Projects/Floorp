@@ -39,75 +39,121 @@
 #import "Find.h"
 
 @interface FindDlgController(Private)
-  - (NSString*)getSearchText;
+- (NSString*)getSearchText;
+- (BOOL)find:(BOOL)searchBack;
 @end
 
 @implementation FindDlgController
 
+- (void)loadFindStringFromPasteboard
+{
+  NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+  if ([[pasteboard types] containsObject:NSStringPboardType]) {
+    NSString *string = [pasteboard stringForType:NSStringPboardType];
+    if (string && [string length]) {
+      [mSearchField setStringValue: string];
+      [mFindNextButton setEnabled:YES];
+      [mFindPrevButton setEnabled:YES];
+    }
+  }
+}
+
+- (void)putFindStringOnPasteboard
+{
+  NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+  [pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+  [pasteboard setString:[mSearchField stringValue] forType:NSStringPboardType];
+}
+
 //
 // -find
 //
-// User clicked the find button, send the action to the window controller of the
-// frontmost browser window. If we found something, hide the window. If not, beep.
+// Performs the actual search.  returns YES on success.
 //
--(IBAction) find: (id)aSender
+
+-(BOOL) find:(BOOL)searchBack
 {
   NSWindowController* controller = [[NSApp mainWindow] windowController];
   if ( [controller conformsToProtocol:@protocol(Find)] ) {
     id<Find> browserController = controller;
     BOOL ignoreCase = [mIgnoreCaseBox state];
     BOOL wrapSearch = [mWrapAroundBox state];
-    BOOL searchBack = [mSearchBackwardsBox state];
-
-    BOOL found = [browserController findInPageWithPattern:[mSearchField stringValue]
-                  caseSensitive:!ignoreCase wrap:wrapSearch
-                  backwards:searchBack];
-
-    if (! found ) 
-      NSBeep();
-    // we stay open
-  }
+    return [browserController findInPageWithPattern:[mSearchField stringValue] caseSensitive:!ignoreCase wrap:wrapSearch backwards:searchBack];
+  } 
   else
+    return NO;
+}
+
+- (IBAction) findNextButton: (id)aSender
+{
+  [self putFindStringOnPasteboard];
+  if (![self find:NO])
+    NSBeep();  
+}
+
+- (IBAction) findPreviousButton: (id)aSender
+{
+  [self putFindStringOnPasteboard];
+  if (![self find:YES])
     NSBeep();
+}
+
+- (IBAction) findNextAndOrderOut: (id)aSender
+{
+  [self putFindStringOnPasteboard];
+  if (![self find:NO])
+    NSBeep();
+  else
+    [self close];
 }
 
 
 //
-// controlTextDidChange
+// -controlTextDidChange:
 //
 // Check if there is anything in the text field, and if not, disable the find button
 //
 - (void)controlTextDidChange:(NSNotification *)aNotification
 {
-  if ( [[mSearchField stringValue] length] )
-    [mFindButton setEnabled:YES];
-  else
-    [mFindButton setEnabled:NO];
+  if ( [[mSearchField stringValue] length] ) {
+    [mFindNextButton setEnabled:YES];
+    [mFindPrevButton setEnabled:YES];
+  } 
+  else {
+    [mFindNextButton setEnabled:NO];
+    [mFindPrevButton setEnabled:NO];
+  }
 }
 
+//
+// -getSearchText
+//
 // Retrieve the most recent search string
+//
 - (NSString*)getSearchText
 {
-  NSWindowController* controller = [[NSApp mainWindow] windowController];
-  if (![controller conformsToProtocol:@protocol(Find)])
-    return nil;
+  NSPasteboard *findPboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+  if ([[findPboard types] indexOfObject:NSStringPboardType] != NSNotFound) 
+    return [findPboard stringForType:NSStringPboardType];
 
-  id<Find> browserController = controller;
-  return [browserController lastFindText];
+  return [NSString string];
 }
 
+//
+// -showWindow:
+//
+// override to set the current search text in the text area before showing 
+// the window
+//
 - (IBAction)showWindow:(id)sender
 {
-  // Sync our text field with the most recent browser search string.
-  // We assume here that the frontmost window is a browser window.
-
-  NSWindowController* controller = [[NSApp mainWindow] windowController];
-  if ( [controller conformsToProtocol:@protocol(Find)] ) {
-    id<Find> browserController = controller;
-    [mSearchField setStringValue:[browserController lastFindText]];
-  }
-
+  [mSearchField setStringValue:[self getSearchText]];
   [super showWindow:sender];
+}
+
+-(void)windowDidLoad
+{
+  [mSearchField setStringValue:[self getSearchText]];  
 }
 
 @end
