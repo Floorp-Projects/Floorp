@@ -2345,9 +2345,9 @@ nsMsgAccountManager::SaveAccountInfo()
 }
 
 NS_IMETHODIMP
-nsMsgAccountManager::GetChromePackageName(const char *aExtenstionName, char **aChromePackageName)
+nsMsgAccountManager::GetChromePackageName(const char *aExtensionName, char **aChromePackageName)
 {
-  NS_ENSURE_ARG_POINTER(aExtenstionName);
+  NS_ENSURE_ARG_POINTER(aExtensionName);
   NS_ENSURE_ARG_POINTER(aChromePackageName);
  
   nsresult rv;
@@ -2382,7 +2382,7 @@ nsMsgAccountManager::GetChromePackageName(const char *aExtenstionName, char **aC
       if (NS_FAILED(rv))
         break;
       
-      if (!strcmp(name.get(), aExtenstionName))
+      if (!strcmp(name.get(), aExtensionName))
         return extension->GetChromePackageName(aChromePackageName);
     }
   }

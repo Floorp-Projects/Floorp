@@ -193,7 +193,7 @@ interface nsIMsgAccountManager : nsISupports {
   // force account info out to prefs file
   void saveAccountInfo();
 
-  string getChromePackageName(in string aExtenstionName);
+  string getChromePackageName(in string aExtensionName);
 };
 
 
