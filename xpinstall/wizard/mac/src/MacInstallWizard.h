@@ -405,6 +405,9 @@ typedef struct Config {
 	 *   Dialog Keys 
 	 *------------------------------------------------------------*/
 	 
+	/* General */
+	Handle  targetSubfolder;
+	
 	/* LicenseWin */
 	Handle	licFileName;
 	
@@ -578,6 +581,7 @@ void		Shutdown(void);
 pascal void *PullDownConfig(void*);
 void		ParseConfig(void);
 Boolean		ReadConfigFile(char **);
+OSErr       PopulateGeneralKeys(char *);
 OSErr		PopulateLicWinKeys(char *);
 OSErr		PopulateWelcWinKeys(char *);
 OSErr		PopulateSetupTypeWinKeys(char *);
