@@ -176,9 +176,6 @@ pref("view_source.wrap_long_lines", false);
 pref("nglayout.widget.mode", 2);
 pref("nglayout.widget.gfxscrollbars", true);
 
-// use nsViewManager2
-pref("nglayout.view.useViewManager2", true);
-
 // css2 hover pref
 pref("nglayout.events.showHierarchicalHover", false);
 
