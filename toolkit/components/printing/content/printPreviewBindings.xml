@@ -38,6 +38,7 @@
 # ***** END LICENSE BLOCK ***** -->
 
 # this file depends on printUtils.js
+# caller must define the routine |exitPrintPreview| to restore the normal state
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/printPreview.dtd">
 
@@ -118,14 +119,11 @@
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>
       <xul:button label="&close.label;" accesskey="&close.accesskey;"
-        oncommand="BrowserExitPrintPreview();"/>
+        oncommand="PrintUtils.exitPrintPreview();"/>
       <xul:data value="&customPrompt.title;"/>
     </content>
 
     <implementation>
-      <field name="mDebug">
-        false
-      </field>
       <field name="mPrintButton">
         document.getAnonymousNodes(this)[0]
       </field>
@@ -160,12 +158,10 @@
      
       <constructor>
       <![CDATA[
-        this._debug("constructor");
-
-        var print = _getWebBrowserPrint();
+        var print = getWebBrowserPrint();
         this.mTotalPages.value = print.printPreviewNumPages;
 
-        _getValuesFromPS();
+        this.getValuesFromPS();
 
         // Hide the ``Print...'' button when the underlying gfx code does not
         // support multiple devicecontext to be used concurrently
@@ -223,10 +219,10 @@
           var didOK = BrowserPrintSetup();
           if (didOK) {
             // the changes that effect the UI
-            this._getValuesFromPS();
+            this.getValuesFromPS();
 
             // Now do PrintPreview
-            var print    = this._getWebBrowserPrint();
+            var print    = this.getWebBrowserPrint();
             var settings = print.currentPrintSettings;
             this.doPrintPreview(print, settings, this.mTotalPages, null);
           }
@@ -239,11 +235,8 @@
         <parameter name="aPageNum"/>
         <parameter name="aHomeOrEnd"/>
         <body>
-        <![CDATA[
-          this._debug("navigate: " + aDirection + " " + aPageNum + 
-                      " " + aHomeOrEnd);
-          
-          var print = this._getWebBrowserPrint();
+        <![CDATA[          
+          var print = this.getWebBrowserPrint();
           var validInput = false;
           var total;
 
@@ -320,7 +313,6 @@
           var renameTitle = this.mCustomTitle;
           var result = {value:value};
           var confirmed = promptService.prompt(window, renameTitle, promptStr, result, null, {value:value});
-          this._debug("confirmed: " + confirmed);
           if (!confirmed || (!result.value) || (result.value == "") || result.value == value) {
             return(-1);
           }
@@ -434,14 +426,11 @@
         </body>
       </method>
 
-
       <method name="scale">
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          this._debug("scale: " + aValue);
-
-          var print = this._getWebBrowserPrint();
+          var print = this.getWebBrowserPrint();
           var settings = print.currentPrintSettings;
           if (aValue == "ShrinkToFit") {
             if (!settings.shrinkToFit) {
@@ -455,7 +444,6 @@
 
           if (aValue == "Custom") {
             aValue = this.promptForScaleValue(settings.scaling * 100.0);
-            this._debug("promptForScaleValue "+aValue);
             if (aValue >= 10) {
               aValue /= 100.0;
             } else {
@@ -478,8 +466,6 @@
         <parameter name="aOrientation"/>
         <body>
         <![CDATA[
-          this._debug("orient: " + aOrientation);
-
           var orientValue;
           const kIPrintSettings = Components.interfaces.nsIPrintSettings;
           if (aOrientation == "portrait")
@@ -495,7 +481,7 @@
             orientValue = kIPrintSettings.kLandscapeOrientation;
           }
 
-          var print = this._getWebBrowserPrint();
+          var print = this.getWebBrowserPrint();
           var settings = print.currentPrintSettings;
           settings.orientation = orientValue;
           this.doPrintPreview(print, settings, this.mTotalPages, null);
@@ -503,7 +489,7 @@
         </body>
       </method>
 
-      <method name="_getWebBrowserPrint">
+      <method name="getWebBrowserPrint">
         <body>
         <![CDATA[
           var ifreq = _content.QueryInterface(
@@ -513,10 +499,10 @@
         </body>
       </method>
 
-      <method name="_getValuesFromPS">
+      <method name="getValuesFromPS">
         <body>
         <![CDATA[
-          var print = this._getWebBrowserPrint();
+          var print = this.getWebBrowserPrint();
           var settings = print.currentPrintSettings;
 
           var isPortrait = settings.orientation == Components.interfaces.nsIPrintSettings.kPortraitOrientation;
@@ -525,22 +511,10 @@
           this.mLandscapeButton.checked = !isPortrait;
 
           if (settings.shrinkToFit) {
-            this._debug("setting ShrinkToFit");
             this.mScaleCombobox.value = "ShrinkToFit";
           } else {
             this.setScaleCombobox(settings.scaling);
           }
-
-        ]]>
-        </body>
-      </method>
-
-      <method name="_debug">
-        <parameter name="aMsg"/>
-        <body>
-        <![CDATA[
-          if (this.mDebug)
-            dump("\t *** pptoolbar: " + aMsg + "\n");
         ]]>
         </body>
       </method>
