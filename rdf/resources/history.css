@@ -2,6 +2,10 @@ window {
  display: block; 
 } 
 
+menubar { 
+ display: none; 
+} 
+
 tree { 
  display: table; 
  table-layout: fixed;

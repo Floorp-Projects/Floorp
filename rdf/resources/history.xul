@@ -19,16 +19,16 @@
 <!ENTITY findAgainCmd.label "Find Again...">
 <!ENTITY historyBySite.label "History By Site">
 <!ENTITY historyByDate.label "History By Date">
-
-
+<!ENTITY historyWindowTitle.label "History">
 ]>
 
-<xul:window
+<xul:window title="&historyWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <html:script>
+
   function HistoryNewWindow()
   {
     var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
@@ -43,7 +43,6 @@
                              window);
     }
   }
-
 
   function OpenURL(event,node)
   {
@@ -101,7 +100,6 @@ function doSort(sortColName)
 			return(false);
 		}
 		rdfCore.Init("RDFCore");
-                XPAppCoresManager.Add(rdfCore);
 	}
 	// sort!!!
         rdfCore.doSort(node, sortResource, sortDirection);
@@ -131,7 +129,33 @@ function doSort(sortColName)
     </menu>
   </menubar>
 
-<tree rdf:datasources="rdf:history" onclick="return OpenURL(event,event.target.parentNode);">
+<tree rdf:datasources="rdf:history" ondblclick="return OpenURL(event,event.target.parentNode);">
+
+  <template>
+  	<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
+  		<treeitem uri="...">
+  			<treecell>
+  				<html:hr width="75%" align="center" size="1" />
+  			</treecell>
+		</treeitem>  		
+  	</rule>
+  	
+  	<rule rootcontainment="treebody" subcontainment="treechildren">
+	  	<treeitem uri="...">
+			<treecell>
+				<treeindentation />
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+			</treecell>
+			<treecell>
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+			</treecell>
+			<treecell>
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
+			</treecell>
+	  	</treeitem>
+	</rule>
+  </template>
+
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
@@ -153,14 +177,14 @@ function doSort(sortColName)
   </treehead>
 
  <treebody>
-    <treeitem id="NC:HistoryBySite">
+    <treeitem id="NC:HistoryBySite" open="true">
       <treecell>&historyBySite.label;</treecell>
       <treecell></treecell>
       <treecell></treecell>
       <treecell></treecell>
     </treeitem>
 
-    <treeitem id="NC:HistoryByDate">
+    <treeitem id="NC:HistoryByDate" open="true">
       <treecell>&historyByDate.label;</treecell>
       <treecell></treecell>
       <treecell></treecell>

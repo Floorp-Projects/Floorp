@@ -55,12 +55,6 @@ function doSort(sortColName)
 
 function OpenURL(event,node)
 {
-/*
-	if (node.getAttribute('type') != "http://home.netscape.com/NC-rdf#Bookmark")
-	{
-		return false;
-	}
-*/
 	if (node.getAttribute('container') == "true")
 	{
 		return false;
@@ -81,11 +75,19 @@ function OpenURL(event,node)
 
 </html:script>
 
-<tree flex="100%" datasources="rdf:find rdf:files rdf:ftp rdf:relatedlinks rdf:bookmarks rdf:history"  onclick="return OpenURL(event,event.target.parentNode);">
+<tree flex="100%" datasources="rdf:find rdf:files rdf:ftp rdf:relatedlinks rdf:bookmarks rdf:history"  ondblclick="return OpenURL(event,event.target.parentNode);">
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
   <treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+
+	<popup id="popupmenu">
+		<menu>
+			<menuitem name="Cut" />
+			<menuitem name="Copy" />
+			<menuitem name="Paste" />
+		</menu>
+	</popup>
 
   <template>
   	<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
@@ -104,6 +106,12 @@ function OpenURL(event,node)
 			</treecell>
 			<treecell>
 				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+			</treecell>
+			<treecell>
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
+			</treecell>
+			<treecell context="popupmenu">
+				<titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" align="right" style="list-style-image: none;" />
 			</treecell>
 	  	</treeitem>
 	</rule>

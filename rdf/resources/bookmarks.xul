@@ -23,9 +23,10 @@
 <!ENTITY tree.header.name.label           "Name">
 <!ENTITY tree.header.url.label            "URL">
 <!ENTITY tree.header.shortcut.label       "Shortcut URL">
+<!ENTITY bookmarksWindowTitle.label	"Bookmarks">
 ]>
 
-<xul:window
+<xul:window title="&bookmarksWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
