@@ -21,7 +21,6 @@
 #ifndef nsIXPConnect_h___
 #define nsIXPConnect_h___
 
-// XXX for now...
 #include "nsISupports.h"
 #include "jsapi.h"
 
@@ -42,8 +41,42 @@
 #define XPC_FRIEND_API(t)    XPC_PUBLIC_API(t)
 #define XPC_FRIEND_DATA(t)   XPC_PUBLIC_DATA(t)
 
+#include "nsIInterfaceInfo.h"
+#include "nsIInterfaceInfoManager.h"
+
+
 // XXX break these up into separate files...
 // XXX declare them in XPIDL :)
+
+/***************************************************************************/
+/***************************************************************************/
+// this is here just for testing...
+
+// {159E36D0-991E-11d2-AC3F-00C09300144B}
+#define NS_ITESTXPC_FOO_IID       \
+{ 0x159e36d0, 0x991e, 0x11d2,   \
+  { 0xac, 0x3f, 0x0, 0xc0, 0x93, 0x0, 0x14, 0x4b } }
+
+class nsITestXPCFoo : public nsISupports
+{
+public:
+    NS_IMETHOD Test(int p1, int p2, int* retval) = 0;
+    NS_IMETHOD Test2() = 0;
+};
+
+// {5F9D20C0-9B6B-11d2-9FFE-000064657374}
+#define NS_ITESTXPC_FOO2_IID       \
+{ 0x5f9d20c0, 0x9b6b, 0x11d2,     \
+  { 0x9f, 0xfe, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+
+class nsITestXPCFoo2 : public nsITestXPCFoo
+{
+public:
+};
+
+/***************************************************************************/
+/***************************************************************************/
+
 
 /***************************************************************************/
 // forward declarations...
@@ -101,34 +134,6 @@ public:
 };
 
 /***************************************************************************/
-// forward declarations of 2 non-XPCOM classes...
-class nsXPCMethodInfo;
-class nsXPCConstant;
-
-// {215DBE04-94A7-11d2-BA58-00805F8A5DD7}
-#define NS_IINTERFACEINFO_IID   \
-{ 0x215dbe04, 0x94a7, 0x11d2,   \
-  { 0xba, 0x58, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-
-class nsIInterfaceInfo : public nsISupports
-{
-public:
-    // XXX should return IAllocatator alloc'd copy
-    NS_IMETHOD GetName(const char** name) = 0;
-    NS_IMETHOD GetIID(const nsIID** iid) = 0;
-
-    NS_IMETHOD GetParent(nsIInterfaceInfo** parent) = 0;
-
-    // these include counts of parents
-    NS_IMETHOD GetMethodCount(int* count) = 0;
-    NS_IMETHOD GetConstantCount(int* count) = 0;
-
-    // these include methods and constants of parents
-    NS_IMETHOD GetMethodInfo(unsigned index, const nsXPCMethodInfo** info) = 0;
-    NS_IMETHOD GetConstant(unsigned index, const nsXPCConstant** constant) = 0;
-};
-
-/***************************************************************************/
 // {EFAE37B0-946D-11d2-BA58-00805F8A5DD7}
 #define NS_IXPCONNECT_IID    \
 { 0xefae37b0, 0x946d, 0x11d2, \
@@ -140,9 +145,6 @@ public:
 
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
                              JSObject* aGlobalJSObj) = 0;
-
-    NS_IMETHOD GetInterfaceInfo(REFNSIID aIID,
-                                nsIInterfaceInfo** info) = 0;
 
     NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
@@ -163,18 +165,19 @@ public:
 };
 
 JS_BEGIN_EXTERN_C
-
+// XXX remove this an use ServiceManager instead
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect();
+JS_END_EXTERN_C
 
 #ifdef DEBUG
+JS_BEGIN_EXTERN_C
 // XXX temporary forward declaration
 struct nsXPCVariant;
 XPC_PUBLIC_API(nsresult)
 XPC_TestInvoke(void* that, PRUint32 index,
                uint32 paramCount, nsXPCVariant* params);
-#endif
-
 JS_END_EXTERN_C
+#endif
 
 #endif /* nsIXPConnect_h___ */

@@ -44,13 +44,18 @@ nsXPConnect::GetXPConnect()
         mSelf = new nsXPConnect();
         if(mSelf && (!mSelf->mContextMap ||
                      !mSelf->mAllocator ||
-                     !mSelf->mArbitraryScriptable))
+                     !mSelf->mArbitraryScriptable ||
+                     !mSelf->mInterfaceInfoManager))
             NS_RELEASE(mSelf);
     }
     return mSelf;
 }
 
 nsXPConnect::nsXPConnect()
+    :   mContextMap(NULL),
+        mAllocator(NULL),
+        mArbitraryScriptable(NULL),
+        mInterfaceInfoManager(NULL)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -60,6 +65,9 @@ nsXPConnect::nsXPConnect()
     nsServiceManager::GetService(kAllocatorCID,
                                  kIAllocatorIID,
                                  (nsISupports **)&mAllocator);
+
+    // XXX later this will be a service
+    mInterfaceInfoManager = XPT_GetInterfaceInfoManager();
 }
 
 nsXPConnect::~nsXPConnect()
@@ -70,6 +78,9 @@ nsXPConnect::~nsXPConnect()
         nsServiceManager::ReleaseService(kAllocatorCID, mAllocator);
     if(mArbitraryScriptable)
         NS_RELEASE(mArbitraryScriptable);
+    // XXX later this will be a service
+    if(mInterfaceInfoManager)
+        NS_RELEASE(mInterfaceInfoManager);
 
     mSelf = NULL;
 }
@@ -114,18 +125,6 @@ nsXPConnect::NewContext(JSContext* cx, JSObject* global)
     if(xpcc)
         mContextMap->Add(xpcc);
     return xpcc;
-}
-
-NS_IMETHODIMP
-nsXPConnect::GetInterfaceInfo(REFNSIID aIID,
-                               nsIInterfaceInfo** info)
-{
-    NS_PRECONDITION(info,"bad param");
-    // XXX implement...FOR REAL...
-
-    *info = new nsInterfaceInfo(aIID, "HARDCODED_INTERFACE_NAME", NULL);
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP

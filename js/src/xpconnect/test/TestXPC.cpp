@@ -1,10 +1,140 @@
 
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
+#include "nsIInterfaceInfo.h"
+#include "nsIInterfaceInfoManager.h"
+#include "nsIXPCScriptable.h"
 #include "jsapi.h"
 #include <stdio.h>
 
-#include "xpcbogusii.h"
+
+// XXX this should not be necessary, but the nsIAllocator service is not being 
+// started right now.
+#include "nsAllocator.h"
+#include "nsRepository.h"
+
+/***************************************************************************/
+/***************************************************************************/
+// copying in the contents of nsAllocator.cpp as a test...
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
+
+nsAllocator::nsAllocator(nsISupports* outer)
+{
+    NS_INIT_AGGREGATED(outer);
+}
+
+nsAllocator::~nsAllocator(void)
+{
+}
+
+NS_IMPL_AGGREGATED(nsAllocator);
+
+NS_METHOD
+nsAllocator::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
+{
+    if (NULL == aInstancePtr) {                                            
+        return NS_ERROR_NULL_POINTER;                                        
+    }                                                                      
+    if (aIID.Equals(kIAllocatorIID) || 
+        aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = (void*) this; 
+        AddRef(); 
+        return NS_OK; 
+    } 
+    return NS_NOINTERFACE;
+}
+
+NS_METHOD
+nsAllocator::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+{
+    if (outer && !aIID.Equals(kISupportsIID))
+        return NS_NOINTERFACE;   // XXX right error?
+    nsAllocator* mm = new nsAllocator(outer);
+    if (mm == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    mm->AddRef();
+    if (aIID.Equals(kISupportsIID))
+        *aInstancePtr = mm->GetInner();
+    else
+        *aInstancePtr = mm;
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_METHOD_(void*)
+nsAllocator::Alloc(PRUint32 size)
+{
+    return PR_Malloc(size);
+}
+
+NS_METHOD_(void*)
+nsAllocator::Realloc(void* ptr, PRUint32 size)
+{
+    return PR_Realloc(ptr, size);
+}
+
+NS_METHOD
+nsAllocator::Free(void* ptr)
+{
+    PR_Free(ptr);
+    return NS_OK;
+}
+
+NS_METHOD
+nsAllocator::HeapMinimize(void)
+{
+#ifdef XP_MAC
+    // This used to live in the memory allocators no Mac, but does no more
+    // Needs to be hooked up in the new world.
+//    CallCacheFlushers(0x7fffffff);
+#endif
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsAllocatorFactory::nsAllocatorFactory(void)
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+}
+
+nsAllocatorFactory::~nsAllocatorFactory(void)
+{
+}
+
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+NS_IMPL_ISUPPORTS(nsAllocatorFactory, kIFactoryIID);
+
+NS_METHOD
+nsAllocatorFactory::CreateInstance(nsISupports *aOuter,
+                                   REFNSIID aIID,
+                                   void **aResult)
+{
+    return nsAllocator::Create(aOuter, aIID, aResult);
+}
+
+NS_METHOD
+nsAllocatorFactory::LockFactory(PRBool aLock)
+{
+    return NS_OK;       // XXX what?
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/***************************************************************************/
+/***************************************************************************/
+
+static void RegAllocator()
+{
+    static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+    nsRepository::RegisterFactory(kAllocatorCID,
+                                  (nsIFactory*)new nsAllocatorFactory(),
+                                  PR_FALSE);
+}    
+
 
 /***************************************************************************/
 class MyScriptable : public nsIXPCScriptable
@@ -49,28 +179,6 @@ MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,
 
 
 /***************************************************************************/
-// {159E36D0-991E-11d2-AC3F-00C09300144B}
-#define NS_ITESTXPC_FOO_IID       \
-{ 0x159e36d0, 0x991e, 0x11d2,   \
-  { 0xac, 0x3f, 0x0, 0xc0, 0x93, 0x0, 0x14, 0x4b } }
-
-class nsITestXPCFoo : public nsISupports
-{
-public:
-    NS_IMETHOD Test(int p1, int p2, int* retval) = 0;
-    NS_IMETHOD Test2() = 0;
-};
-
-// {5F9D20C0-9B6B-11d2-9FFE-000064657374}
-#define NS_ITESTXPC_FOO2_IID       \
-{ 0x5f9d20c0, 0x9b6b, 0x11d2,     \
-  { 0x9f, 0xfe, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
-
-class nsITestXPCFoo2 : public nsITestXPCFoo
-{
-public:
-};
-
 
 class nsTestXPCFoo : public nsITestXPCFoo2
 {
@@ -180,6 +288,8 @@ int main()
     JSObject *glob;
 
     gOutFile = stdout;
+
+    RegAllocator();
 
     rt = JS_NewRuntime(8L * 1024L * 1024L);
     if (!rt)

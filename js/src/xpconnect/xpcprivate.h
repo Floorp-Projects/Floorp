@@ -28,12 +28,14 @@
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
 #include "nsIXPConnect.h"
+#include "nsIInterfaceInfo.h"
+#include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
 #include "jsapi.h"
 #include "jshash.h"
+#include "xpt_cpp.h"
 #include "xpcforwards.h"
-
-#include "xpcbogusii.h"
+#include "xpcvariant.h"
 
 extern const char* XPC_VAL_STR; // 'val' property name for out params
 
@@ -46,9 +48,6 @@ class nsXPConnect : public nsIXPConnect
 
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
                              JSObject* aGlobalJSObj);
-
-    NS_IMETHOD GetInterfaceInfo(REFNSIID aIID,
-                                nsIInterfaceInfo** info);
 
     NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
@@ -78,6 +77,13 @@ public:
         return mAllocator;
     }
 
+    nsIInterfaceInfoManager* GetInterfaceInfoManager()
+    {
+        if(mInterfaceInfoManager)
+            NS_ADDREF(mInterfaceInfoManager);
+        return mInterfaceInfoManager;
+    }
+
     virtual ~nsXPConnect();
 private:
     nsXPConnect();
@@ -88,6 +94,7 @@ private:
     JSContext2XPCContextMap* mContextMap;
     nsIAllocator* mAllocator;
     nsIXPCScriptable* mArbitraryScriptable;
+    nsIInterfaceInfoManager* mInterfaceInfoManager;
 };
 
 /***************************************************************************/
@@ -169,7 +176,7 @@ public:
     JSObject* GetRootJSObject(JSObject* aJSObj);
 
     NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper,
-                        const nsXPCMethodInfo* info,
+                        const nsXPTMethodInfo* info,
                         nsXPCMiniVariant* params);
 
     ~nsXPCWrappedJSClass();
@@ -290,7 +297,7 @@ public:
                                                      REFNSIID aIID);
 
     REFNSIID GetIID() const {return mIID;}
-    const char* GetInterfaceName() const;
+    const char* GetInterfaceName();
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
     JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
@@ -361,6 +368,7 @@ private:
 private:
     XPCContext* mXPCContext;
     nsIID mIID;
+    char* mName;
     nsIInterfaceInfo* mInfo;
     int mMemberCount;
     XPCNativeMemberDescriptor* mMembers;
@@ -438,11 +446,11 @@ xpc_NewIDObject(JSContext *cx, const nsID& aID);
 
 JSBool
 xpc_ConvertNativeData2JS(jsval* d, const void* s,
-                         const nsXPCType& type);
+                         const nsXPTType& type);
 
 JSBool
 xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s,
-                         const nsXPCType& type);
+                         const nsXPTType& type);
 
 /***************************************************************************/
 

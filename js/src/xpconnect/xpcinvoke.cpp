@@ -37,31 +37,31 @@ invoke_count_words(uint32 paramCount, nsXPCVariant* s)
         }
         switch(s->type)
         {
-        case nsXPCType::T_I8     :
-        case nsXPCType::T_I16    :
-        case nsXPCType::T_I32    :
-        case nsXPCType::T_I64    :
-        case nsXPCType::T_U8     :
-        case nsXPCType::T_U16    :
-        case nsXPCType::T_U32    :
+        case nsXPTType::T_I8     :
+        case nsXPTType::T_I16    :
+        case nsXPTType::T_I32    :
+        case nsXPTType::T_I64    :
+        case nsXPTType::T_U8     :
+        case nsXPTType::T_U16    :
+        case nsXPTType::T_U32    :
             result++;
             break;
-        case nsXPCType::T_U64    :
+        case nsXPTType::T_U64    :
             result+=2;
             break;
-        case nsXPCType::T_FLOAT  :
+        case nsXPTType::T_FLOAT  :
             result++;
             break;
-        case nsXPCType::T_DOUBLE :
+        case nsXPTType::T_DOUBLE :
             result+=2;
             break;
-        case nsXPCType::T_BOOL   :
-        case nsXPCType::T_CHAR   :
-        case nsXPCType::T_WCHAR  :
+        case nsXPTType::T_BOOL   :
+        case nsXPTType::T_CHAR   :
+        case nsXPTType::T_WCHAR  :
             result++;
             break;
         default:
-            NS_ASSERTION(s->type & nsXPCType::IS_POINTER, "bad type");
+            NS_ASSERTION(s->type.IsPointer(), "bad type");
             result++;
             break;
         }
@@ -81,21 +81,21 @@ invoke_copy_to_stack(uint32* d, uint32 paramCount, nsXPCVariant* s)
         }
         switch(s->type)
         {
-        case nsXPCType::T_I8     : *((int8*)   d) = s->val.i8;          break;
-        case nsXPCType::T_I16    : *((int16*)  d) = s->val.i16;         break;
-        case nsXPCType::T_I32    : *((int32*)  d) = s->val.i32;         break;
-        case nsXPCType::T_I64    : *((int64*)  d) = s->val.i64; d++;    break;
-        case nsXPCType::T_U8     : *((uint8*)  d) = s->val.u8;          break;
-        case nsXPCType::T_U16    : *((uint16*) d) = s->val.u16;         break;
-        case nsXPCType::T_U32    : *((uint32*) d) = s->val.u32;         break;
-        case nsXPCType::T_U64    : *((uint64*) d) = s->val.u64; d++;    break;
-        case nsXPCType::T_FLOAT  : *((float*)  d) = s->val.f;           break;
-        case nsXPCType::T_DOUBLE : *((double*) d) = s->val.d;   d++;    break;
-        case nsXPCType::T_BOOL   : *((PRBool*) d) = s->val.b;           break;
-        case nsXPCType::T_CHAR   : *((char*)   d) = s->val.c;           break;
-        case nsXPCType::T_WCHAR  : *((wchar_t*)d) = s->val.wc;          break;
+        case nsXPTType::T_I8     : *((int8*)   d) = s->val.i8;          break;
+        case nsXPTType::T_I16    : *((int16*)  d) = s->val.i16;         break;
+        case nsXPTType::T_I32    : *((int32*)  d) = s->val.i32;         break;
+        case nsXPTType::T_I64    : *((int64*)  d) = s->val.i64; d++;    break;
+        case nsXPTType::T_U8     : *((uint8*)  d) = s->val.u8;          break;
+        case nsXPTType::T_U16    : *((uint16*) d) = s->val.u16;         break;
+        case nsXPTType::T_U32    : *((uint32*) d) = s->val.u32;         break;
+        case nsXPTType::T_U64    : *((uint64*) d) = s->val.u64; d++;    break;
+        case nsXPTType::T_FLOAT  : *((float*)  d) = s->val.f;           break;
+        case nsXPTType::T_DOUBLE : *((double*) d) = s->val.d;   d++;    break;
+        case nsXPTType::T_BOOL   : *((PRBool*) d) = s->val.b;           break;
+        case nsXPTType::T_CHAR   : *((char*)   d) = s->val.c;           break;
+        case nsXPTType::T_WCHAR  : *((wchar_t*)d) = s->val.wc;          break;
         default:
-            NS_ASSERTION(s->type & nsXPCType::IS_POINTER, "bad type");
+            NS_ASSERTION(s->type.IsPointer(), "bad type");
             *((void**)d) = s->val.p;
             break;
         }
