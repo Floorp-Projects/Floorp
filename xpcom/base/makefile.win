@@ -45,6 +45,7 @@ XPIDL_MODULE = xpcom_base
 
 XPIDLSRCS =               \
         .\nsrootidl.idl   \
+	.\nsILeakDetector.idl \
         .\nsISupports.idl \
         .\nsIWeakReference.idl \
         $(NULL)
@@ -60,6 +61,7 @@ LIBRARY_NAME=xpcombase_s
 
 LINCS =                   \
 	-I$(PUBLIC)\xpcom \
+	-I$(PUBLIC)\xpcom\components \
 	$(NULL)
 
 LCFLAGS = -D_IMPL_NS_COM -DWIN32_LEAN_AND_MEAN
@@ -74,6 +76,7 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsWeakReference.obj \
 !ifdef GC_LEAK_DETECTOR
 	.\$(OBJDIR)\nsGarbageCollector.obj \
+	.\$(OBJDIR)\nsLeakDetector.obj \
 !endif
         $(NULL)
 

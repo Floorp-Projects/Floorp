@@ -20,6 +20,7 @@
  *   Patrick C. Beard <beard@netscape.com>
  */
 
+#define GC_LEAK_DETECTOR
 #if defined(GC_LEAK_DETECTOR)
 
 #include "nsLeakDetector.h"
@@ -65,7 +66,9 @@ public:
 
 NS_IMPL_ISUPPORTS1(nsLeakDetector, nsILeakDetector)
 
-nsLeakDetector::nsLeakDetector() {}
+nsLeakDetector::nsLeakDetector() {
+   NS_INIT_REFCNT();
+   }
 nsLeakDetector::~nsLeakDetector() {}
 
 NS_METHOD nsLeakDetector::DumpLeaks()
