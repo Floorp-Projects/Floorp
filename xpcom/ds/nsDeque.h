@@ -218,12 +218,12 @@ protected:
   PRInt32         mCapacity;
   PRInt32         mOrigin;
   nsDequeFunctor* mDeallocator;
+  void*           mBuffer[8];
   void**          mData;
 
 
 private: 
   
-  enum {eGrowthDelta=64}; 
 
   /**
    * Simple default constructor (PRIVATE)
