@@ -1361,7 +1361,8 @@ private:
 public:
   PRBool                  mAbort;
   PRInt32                 mPendingRequests;
-
+  nsWeakPtr               mWeakPtrChannelCallbacks;
+  nsWeakPtr               mWeakPtrChannelLoadGroup;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -1568,8 +1569,10 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
   
   rv = NS_NewURI(getter_AddRefs(url), nsDependentCString(mURL));
   
+  nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryReferent(mPluginStreamListenerPeer->mWeakPtrChannelCallbacks);
+  nsCOMPtr<nsILoadGroup> loadGroup = do_QueryReferent(mPluginStreamListenerPeer->mWeakPtrChannelLoadGroup);
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, nsnull, nsnull);
+  rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, loadGroup, callbacks);
   if (NS_FAILED(rv)) 
     return rv;
   
@@ -2104,6 +2107,19 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
                                 nsCaseInsensitiveCStringComparator())) {
       useCacheAsFile = PR_FALSE;
     }
+
+    // Get the notification callbacks from the channel and save it as week ref
+    // we'll use it in nsPluginStreamInfo::RequestRead()
+    // when we'll create channel for byte range request.
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    if (callbacks)
+      mWeakPtrChannelCallbacks = getter_AddRefs(NS_GetWeakReference(callbacks));
+
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    channel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (loadGroup)
+      mWeakPtrChannelLoadGroup = getter_AddRefs(NS_GetWeakReference(loadGroup));
   }
 
   if (useCacheAsFile) {
