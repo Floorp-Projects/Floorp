@@ -3133,8 +3133,12 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsDocument::CreateEvent(const nsAReadableString& aEventType, nsIDOMEvent** aReturn)
+nsDocument::CreateEvent(const nsAReadableString& aEventType,
+                        nsIDOMEvent** aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
   // Obtain a presentation context
   PRInt32 count = GetNumberOfShells();
   if (count == 0)
