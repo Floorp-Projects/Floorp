@@ -1112,10 +1112,12 @@ DeleteInsertionPointEntry(nsHashKey* aKey, void* aData, void* aClosure)
 void 
 nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
 {
-  nsCOMPtr<nsISupportsArray> childrenElements;
-  GetNestedChildren(nsXBLAtoms::children, aContent, getter_AddRefs(childrenElements));
+  nsCOMArray<nsIContent> childrenElements;
+  GetNestedChildren(nsXBLAtoms::children, kNameSpaceID_XBL, aContent,
+                    childrenElements);
 
-  if (!childrenElements)
+  PRInt32 count = childrenElements.Count();
+  if (count == 0)
     return;
 
   mInsertionPointTable = new nsObjectHashtable(nsnull, nsnull,
@@ -1124,78 +1126,74 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
   if (!mInsertionPointTable)
     return;
 
-  PRUint32 count;
-  childrenElements->Count(&count);
-  PRUint32 i;
+  PRInt32 i;
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> supp;
-    childrenElements->GetElementAt(i, getter_AddRefs(supp));
-    nsCOMPtr<nsIContent> child(do_QueryInterface(supp));
-    if (child) {
-      nsCOMPtr<nsIContent> parent = child->GetParent(); 
+    nsIContent* child = childrenElements[i];
+    nsIContent* parent = child->GetParent(); 
 
-      // Create an XBL insertion point entry.
-      nsXBLInsertionPointEntry* xblIns = nsXBLInsertionPointEntry::Create(parent);
+    // Create an XBL insertion point entry.
+    nsXBLInsertionPointEntry* xblIns = nsXBLInsertionPointEntry::Create(parent);
 
-      nsAutoString includes;
-      child->GetAttr(kNameSpaceID_None, nsXBLAtoms::includes, includes);
-      if (includes.IsEmpty()) {
-        nsISupportsKey key(nsXBLAtoms::children);
+    nsAutoString includes;
+    child->GetAttr(kNameSpaceID_None, nsXBLAtoms::includes, includes);
+    if (includes.IsEmpty()) {
+      nsISupportsKey key(nsXBLAtoms::children);
+      xblIns->AddRef();
+      mInsertionPointTable->Put(&key, xblIns);
+    }
+    else {
+      // The user specified at least one attribute.
+      char* str = ToNewCString(includes);
+      char* newStr;
+      // XXX We should use a strtok function that tokenizes PRUnichar's
+      // so that we don't have to convert from Unicode to ASCII and then back
+
+      char* token = nsCRT::strtok( str, "| ", &newStr );
+      while( token != NULL ) {
+        nsAutoString tok;
+        tok.AssignWithConversion(token);
+
+        // Build an atom out of this string.
+        nsCOMPtr<nsIAtom> atom = do_GetAtom(tok);
+           
+        nsISupportsKey key(atom);
         xblIns->AddRef();
         mInsertionPointTable->Put(&key, xblIns);
-      }
-      else {
-        // The user specified at least one attribute.
-        char* str = ToNewCString(includes);
-        char* newStr;
-        // XXX We should use a strtok function that tokenizes PRUnichar's
-        // so that we don't have to convert from Unicode to ASCII and then back
-
-        char* token = nsCRT::strtok( str, "| ", &newStr );
-        while( token != NULL ) {
-          nsAutoString tok;
-          tok.AssignWithConversion(token);
-
-          // Build an atom out of this string.
-          nsCOMPtr<nsIAtom> atom = do_GetAtom(tok);
-           
-          nsISupportsKey key(atom);
-          xblIns->AddRef();
-          mInsertionPointTable->Put(&key, xblIns);
           
-          token = nsCRT::strtok( newStr, "| ", &newStr );
-        }
-
-        nsMemory::Free(str);
+        token = nsCRT::strtok( newStr, "| ", &newStr );
       }
 
-      // Compute the index of the <children> element.  This index is
-      // equal to the index of the <children> in the template minus the #
-      // of previous insertion point siblings removed.  Because our childrenElements
-      // array was built in a DFS that went from left-to-right through siblings,
-      // if we dynamically obtain our index each time, then the removals of previous
-      // siblings will cause the index to adjust (and we won't have to take that into
-      // account explicitly).
-      PRInt32 index = parent->IndexOf(child);
-      xblIns->SetInsertionIndex((PRUint32)index);
+      nsMemory::Free(str);
+    }
 
-      // Now remove the <children> element from the template.  This ensures that the
-      // binding instantiation will not contain a clone of the <children> element when
-      // it clones the binding template.
-      parent->RemoveChildAt(index, PR_FALSE);
+    // Compute the index of the <children> element.  This index is
+    // equal to the index of the <children> in the template minus the #
+    // of previous insertion point siblings removed.  Because our childrenElements
+    // array was built in a DFS that went from left-to-right through siblings,
+    // if we dynamically obtain our index each time, then the removals of previous
+    // siblings will cause the index to adjust (and we won't have to take that into
+    // account explicitly).
+    PRInt32 index = parent->IndexOf(child);
+    xblIns->SetInsertionIndex((PRUint32)index);
 
-      // See if the insertion point contains default content.  Default content must
-      // be cached in our insertion point entry, since it will need to be cloned
-      // in situations where no content ends up being placed at the insertion point.
-      PRUint32 defaultCount = child->GetChildCount();
-      if (defaultCount > 0) {
-        // Annotate the insertion point with our default content.
-        xblIns->SetDefaultContent(child);
+    // Now remove the <children> element from the template.  This ensures that the
+    // binding instantiation will not contain a clone of the <children> element when
+    // it clones the binding template.
+    parent->RemoveChildAt(index, PR_FALSE);
 
-        // Reconnect back to our parent for access later.  This makes "inherits" easier
-        // to work with on default content.
-        child->SetParent(parent);
-      }
+    // See if the insertion point contains default content.  Default content must
+    // be cached in our insertion point entry, since it will need to be cloned
+    // in situations where no content ends up being placed at the insertion point.
+    PRUint32 defaultCount = child->GetChildCount();
+    if (defaultCount > 0) {
+      // Annotate the insertion point with our default content.
+      xblIns->SetDefaultContent(child);
+
+      // Reconnect back to our parent for access later.  This makes "inherits" easier
+      // to work with on default content.
+      // XXXbz this is somewhat screwed up, since it's sort of like anonymous
+      // content... but not.
+      child->SetParent(parent);
     }
   }
 }
@@ -1274,21 +1272,21 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
 }
 
 void
-nsXBLPrototypeBinding::GetNestedChildren(nsIAtom* aTag, nsIContent* aContent,
-                                         nsISupportsArray** aList)
+nsXBLPrototypeBinding::GetNestedChildren(nsIAtom* aTag, PRInt32 aNamespace,
+                                         nsIContent* aContent,
+                                         nsCOMArray<nsIContent> & aList)
 {
   PRUint32 childCount = aContent->GetChildCount();
 
   for (PRUint32 i = 0; i < childCount; i++) {
     nsIContent *child = aContent->GetChildAt(i);
 
-    if (aTag == child->Tag()) {
-      if (!*aList)
-        NS_NewISupportsArray(aList); // Addref happens here.
-      (*aList)->AppendElement(child);
+    nsINodeInfo *nodeInfo = child->GetNodeInfo();
+    if (nodeInfo && nodeInfo->Equals(aTag, aNamespace)) {
+      aList.AppendObject(child);
     }
     else
-      GetNestedChildren(aTag, child, aList);
+      GetNestedChildren(aTag, aNamespace, child, aList);
   }
 }
 
