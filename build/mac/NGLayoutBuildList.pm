@@ -18,6 +18,7 @@ use File::Copy;
 
 # homegrown
 use Moz;
+use MozJar;
 use MacCVS;
 use MANIFESTO;
 
@@ -258,9 +259,10 @@ sub Checkout()
 	#//
 	if ($main::pull{moz})
 	{
-		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)				|| print "checkout of nsprpub failed";		
-		$session->checkout("mozilla/security",	"SeaMonkey_M14_BRANCH")		|| print "checkout of security failed";		
-		$session->checkout("SeaMonkeyAll")									|| print "checkout of SeaMonkeyAll failed";
+		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)				|| print "checkout of nsprpub failed\n";		
+		$session->checkout("mozilla/security",	"SeaMonkey_M14_BRANCH")		|| print "checkout of security failed\n";		
+		$session->checkout("SeaMonkeyAll")									|| 
+		     print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
 	}
 	elsif ($main::pull{runtime})
 	{
@@ -749,6 +751,29 @@ sub MakeResourceAliases()
 
 	print("--- Resource copying complete ----\n");
 }
+
+
+#//--------------------------------------------------------------------------------------------------
+#// BuildJarFiles
+#//--------------------------------------------------------------------------------------------------
+
+
+sub BuildJarFiles()
+{
+	unless( $main::build{jars} ) { return; }
+	_assertRightDirectory();
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	print("--- Starting JAR building ----\n");
+
+	my($chrome_dir) = "$dist_dir"."Chrome";
+
+    CreateJarFile("$chrome_dir:communicator", "$chrome_dir:communicator.jar");
+}
+
 
 #//--------------------------------------------------------------------------------------------------
 #// Make library aliases
@@ -1930,6 +1955,7 @@ sub BuildMozilla()
 sub BuildProjects()
 {
 	MakeResourceAliases();
+	# BuildJarFiles();
 	MakeLibAliases();
 
 	# activate CodeWarrior
