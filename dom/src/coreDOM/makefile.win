@@ -35,7 +35,6 @@ CPPSRCS =				\
 	nsJSCharacterData.cpp		\
 	nsJSDocument.cpp		\
 	nsJSDocumentFragment.cpp	\
-	nsJSDocumentStyle.cpp		\
 	nsJSDocumentType.cpp		\
 	nsJSDocumentView.cpp		\
 	nsJSElement.cpp			\
@@ -60,7 +59,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsJSCharacterData.obj		\
 	.\$(OBJDIR)\nsJSDocument.obj			\
 	.\$(OBJDIR)\nsJSDocumentFragment.obj		\
-	.\$(OBJDIR)\nsJSDocumentStyle.obj		\
 	.\$(OBJDIR)\nsJSDocumentType.obj		\
 	.\$(OBJDIR)\nsJSDocumentView.obj		\
 	.\$(OBJDIR)\nsJSElement.obj			\

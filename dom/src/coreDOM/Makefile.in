@@ -39,7 +39,6 @@ CPPSRCS		= \
 		nsJSCharacterData.cpp \
 		nsJSDocument.cpp \
 		nsJSDocumentFragment.cpp \
-		nsJSDocumentStyle.cpp \
 		nsJSDocumentType.cpp \
 		nsJSDocumentView.cpp \
 		nsJSElement.cpp \
