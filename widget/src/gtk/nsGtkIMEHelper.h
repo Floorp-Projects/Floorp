@@ -112,12 +112,6 @@ typedef struct {
 
 class nsWindow;
 
-enum nsIMEPolicy {
-  NSIME_UNKNOWN=0,
-  NSIME_IC_PER_SHELL=1,
-  NSIME_IC_PER_WIDGET=2
-};
-
 class nsIMEGtkIC {
  private:
   static int preedit_start_cbproc(XIC, XPointer, XPointer);
@@ -127,8 +121,6 @@ class nsIMEGtkIC {
   static int status_start_cbproc(XIC, XPointer, XPointer);
   static int status_draw_cbproc(XIC, XPointer, XPointer);
   static int status_done_cbproc(XIC, XPointer, XPointer);
-  static GdkIMStyle gInputStyle;
-  static nsIMEPolicy gInputPolicy;
   static nsIMEStatus *gStatus;
   nsWindow *mClientWindow;
   nsWindow *mFocusWindow;
@@ -147,8 +139,8 @@ class nsIMEGtkIC {
   nsWindow* GetFocusWindow();
   static void UnsetFocusWindow();
   static GdkIMStyle GetInputStyle();
-  static nsIMEPolicy GetInputPolicy();
 
+  GdkIMStyle mInputStyle;
   GdkFont *GetPreeditFont();
   void SetPreeditFont(GdkFont*);
   void SetStatusFont(GdkFont*);

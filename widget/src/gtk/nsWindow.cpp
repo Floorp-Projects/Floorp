@@ -131,7 +131,6 @@ struct nsXICLookupEntry {
 PLDHashTable nsWindow::gXICLookupTable;
 GdkFont *nsWindow::gPreeditFontset = nsnull;
 GdkFont *nsWindow::gStatusFontset = nsnull;
-GdkIMStyle nsWindow::gInputStyle = (GdkIMStyle)nsnull;
 #endif // USE_XIM
 
 static void printDepth(int depth) {
@@ -3722,7 +3721,7 @@ nsWindow::IMESetFocusWindow()
       IMEComposeEnd(nsnull);
     }
     xic->SetFocusWindow(this);
-    if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
+    if (xic->mInputStyle & GDK_IM_PREEDIT_POSITION) {
       UpdateICSpot(xic);
       PrimeICSpotTimer();
     }
@@ -3776,9 +3775,6 @@ nsWindow::IMEGetInputContext(PRBool aCreate)
 
   // create new XIC
   if (aCreate) {
-    if (gInputStyle == nsnull) {
-      gInputStyle = nsIMEGtkIC::GetInputStyle();
-    }
     if (gPreeditFontset == nsnull) {
       gPreeditFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
       mXICFontSize = 16;          // default
@@ -3786,7 +3782,7 @@ nsWindow::IMEGetInputContext(PRBool aCreate)
     if (gStatusFontset == nsnull) {
       gStatusFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
     }
-    if (!gInputStyle || !gPreeditFontset || !gStatusFontset) {
+    if (!gPreeditFontset || !gStatusFontset) {
       return nsnull;
     }
     nsIMEGtkIC *xic = nsIMEGtkIC::GetXIC(mIMEShellWindow, gPreeditFontset,
@@ -3906,10 +3902,9 @@ nsWindow::IMECommitEvent(GdkEventKey *aEvent) {
   }
 
 #ifdef USE_XIM
-  if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
-    // update spot location
-    nsIMEGtkIC *xic = IMEGetInputContext(PR_FALSE);
-    if (xic) {
+  nsIMEGtkIC *xic = IMEGetInputContext(PR_FALSE);
+  if (xic) {
+    if (xic->mInputStyle & GDK_IM_PREEDIT_POSITION) {
       nsWindow *window = xic->GetFocusWindow();
       if (window) {
         window->UpdateICSpot(xic);
@@ -4016,7 +4011,7 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 
     // Call IMEComposeEnd() to reset the state of field
     IMEComposeEnd(nsnull);
-    if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
+    if (xic->mInputStyle & GDK_IM_PREEDIT_POSITION) {
       UpdateICSpot(xic);
     }
   }
