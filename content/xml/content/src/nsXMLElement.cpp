@@ -176,31 +176,6 @@ DocShellToPresContext(nsIDocShell *aShell, nsIPresContext **aPresContext)
   return ds->GetPresContext(aPresContext);
 }
 
-static nsresult
-CheckLoadURI(const nsString& aSpec, nsIURI *aBaseURI, nsIDocument* aDocument,
-             nsIURI **aAbsURI)
-{
-  *aAbsURI = nsnull;
-
-  nsresult rv;
-  rv = nsContentUtils::NewURIWithDocumentCharset(aAbsURI, aSpec, aDocument,
-                                                 aBaseURI);
-  if (NS_SUCCEEDED(rv)) {
-    nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
-    if (NS_SUCCEEDED(rv)) {
-      rv = securityManager->CheckLoadURI(aBaseURI, *aAbsURI,
-                                         nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
-    }
-  }
-
-  if (NS_FAILED(rv)) {
-    NS_IF_RELEASE(*aAbsURI);
-  }
-
-  return rv;
-}
-
 static inline
 nsresult SpecialAutoLoadReturn(nsresult aRv, nsLinkVerb aVerb)
 {
@@ -306,13 +281,16 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
                                                 value);
         if (rv == NS_CONTENT_ATTR_HAS_VALUE && !value.IsEmpty()) {
           nsCOMPtr<nsIURI> uri;
-          rv = CheckLoadURI(value, base, mDocument, getter_AddRefs(uri));
+          rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
+                                                         value,
+                                                         mDocument,
+                                                         base);
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIPresContext> pc;
             rv = DocShellToPresContext(aShell, getter_AddRefs(pc));
             if (NS_SUCCEEDED(rv)) {
               rv = TriggerLink(pc, verb, base, uri,
-                               EmptyString(), PR_TRUE);
+                               EmptyString(), PR_TRUE, PR_FALSE);
 
               return SpecialAutoLoadReturn(rv,verb);
             }
@@ -362,7 +340,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
               inputEvent->isAlt || inputEvent->isShift) {
             break;  // let the click go through so we can handle it in JS/XUL
           }
-          nsAutoString show, href, target;
+          nsAutoString show, href;
           nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
           nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
                                              nsHTMLAtoms::href,
@@ -402,8 +380,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                           mDocument,
                                                           baseURI);
           if (NS_SUCCEEDED(ret)) {
-            ret = TriggerLink(aPresContext, verb, baseURI, uri, target,
-                              PR_TRUE);
+            ret = TriggerLink(aPresContext, verb, baseURI, uri, EmptyString(),
+                              PR_TRUE, PR_TRUE);
           }
 
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
@@ -444,7 +422,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
     case NS_MOUSE_ENTER_SYNTH:
       {
-        nsAutoString href, target;
+        nsAutoString href;
         nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
                                            nsHTMLAtoms::href,
                                            href);
@@ -462,7 +440,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                         baseURI);
         if (NS_SUCCEEDED(ret)) {
           ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURI, uri,
-                            target, PR_FALSE);
+                            EmptyString(), PR_FALSE, PR_TRUE);
         }
         
         *aEventStatus = nsEventStatus_eConsumeDoDefault; 
