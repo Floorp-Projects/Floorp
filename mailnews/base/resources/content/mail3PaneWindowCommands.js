@@ -398,7 +398,7 @@ var DefaultController =
       case "cmd_synchronizeOffline":
         return true;
       case "cmd_settingsOffline":
-        return (MailAreaHasFocus() && DoesAccountHaveOfflineFunc());
+        return (MailAreaHasFocus() && DoesAccountHaveOfflineSupport());
       case "cmd_selectFlagged":
         // disable select flagged until I finish the code in nsMsgDBView.cpp
         return false;

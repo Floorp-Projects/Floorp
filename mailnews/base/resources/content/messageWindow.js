@@ -528,7 +528,7 @@ var MessageWindowController =
 			case "cmd_downloadSelected":
                 return true;
 			case "cmd_settingsOffline":
-                return (MailAreaHasFocus() && DoesAccountHaveOfflineSupport());
+                return DoesAccountHaveOfflineSupport());
 			case "cmd_close":
 			case "cmd_nextMsg":
       case "button_next":
