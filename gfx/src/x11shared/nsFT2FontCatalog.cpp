@@ -119,6 +119,9 @@ nsIPref*     nsFT2FontCatalog::sPref = nsnull;
 NS_IMPL_ISUPPORTS1(nsFT2FontCatalog, nsIFontCatalogService)
 
 nsFT2FontCatalog::nsFT2FontCatalog()
+ : mFontCatalog(nsnull),
+   mRange1Language(nsnull),
+   mRange2Language(nsnull)
 {
 #if (defined(MOZ_ENABLE_FREETYPE2))
   nsresult rv;
