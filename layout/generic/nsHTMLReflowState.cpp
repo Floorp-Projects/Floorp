@@ -27,6 +27,12 @@
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 
+#ifdef NS_DEBUG
+#undef NOISY_VERTICAL_ALIGN
+#else
+#undef NOISY_VERTICAL_ALIGN
+#endif
+
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
@@ -1024,12 +1030,12 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
         sc->GetStyleData(eStyleStruct_Text);
       if (nsnull != text) {
         nsStyleUnit unit = text->mLineHeight.GetUnit();
-#ifdef NOISY_VERTICAL_ALIGN
-        printf("  styleUnit=%d\n", unit);
-#endif
         if (eStyleUnit_Enumerated == unit) {
           // Normal value; we use 1.0 for normal
           // XXX could come from somewhere else
+#ifdef NOISY_VERTICAL_ALIGN
+          printf("  line-height: normal\n");
+#endif
           break;
         } else if (eStyleUnit_Factor == unit) {
           if (nsnull != elementFont) {
@@ -1038,6 +1044,10 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
             // element times the inherited number.
             nscoord size = elementFont->mFont.size;
             lineHeight = nscoord(size * text->mLineHeight.GetFactorValue());
+#ifdef NOISY_VERTICAL_ALIGN
+            printf("  line-height: factor=%g result=%d\n",
+                   text->mLineHeight.GetFactorValue(), lineHeight);
+#endif
           }
           break;
         }
