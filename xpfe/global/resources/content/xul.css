@@ -143,30 +143,27 @@ title {
 
 /******* ToolBox & ToolBar *******/
 
-toolbox { 
-  user-focus: ignore;
-  behavior: url(chrome://global/content/xulBindings.xml#toolbox);
-}
+toolbox 
+  { 
+    user-focus            : ignore;
+    behavior              : url(chrome://global/content/toolbarBindings.xml#toolbox);
+  }
+  
+toolbar, menubar
+  {
+    user-focus            : ignore;
+    behavior              : url(chrome://global/content/toolbarBindings.xml#toolbar);
+  }
 
-toolbar, menubar {
-  user-focus: ignore;
-}
+toolbargrippy 
+  {
+    behavior              : url(chrome://global/content/toolbarBindings.xml#toolbargrippy);
+  }
 
-toolbar,menubar {
-  behavior: url(chrome://global/content/xulBindings.xml#toolbar);
-}
-
-toolbargrippy {
-  behavior: url(chrome://global/content/xulBindings.xml#toolbargrippy);
-}
-
-toolbar[collapsed="true"] {
-  visibility: visible;
-}
-
-box.toolbar-holder[collapsed="true"] {
-  visibility: collapse;
-}
+.toolbar-holder[collapsed="true"] 
+  {
+    visibility            : collapse;
+  }
 
 /********* XP Menus ***********/
 
@@ -588,17 +585,20 @@ statusbarpanel
   }
 
 /**
-* AutoRepeater
-*/
-autorepeater {
+ * AutoRepeater
+ */
+autorepeater 
+  {
     user-focus            : ignore;
-}
+  }
 
-autorepeatbutton.up {
+autorepeatbutton.up 
+  {
     behavior              : url("chrome://global/content/xulBindings.xml#autorepeatbutton-up");  
-}
+  }
 
-autorepeatbutton.down {
+autorepeatbutton.down 
+  {
     behavior              : url("chrome://global/content/xulBindings.xml#autorepeatbutton-down");  
 }
 

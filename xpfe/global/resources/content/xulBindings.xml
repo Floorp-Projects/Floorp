@@ -81,7 +81,7 @@
 
   <binding id="menuitem-iconic">
     <content excludes="template,observes,menupopup">
-      <xul:box class="menu-iconic-left" orient="vertical" autostretch="never" inherits="selected,menuactive,disabled">
+      <xul:box class="menu-iconic-left" orient="vertical" autostretch="never" inherits="selected,menuactive,disabled,checked">
         <xul:image/>
       </xul:box>
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
@@ -160,7 +160,7 @@
   	  <xul:box class="button-internal-box" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-          <xul:text class="button-text" inherits="value,accesskey,crop"/>
+          <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
       </xul:box>
     </content>
@@ -171,7 +171,7 @@
   	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-          <xul:text class="button-text" inherits="value,accesskey,crop"/>
+          <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
       </xul:box>
     </content>
@@ -181,7 +181,7 @@
     <content excludes="observes,template">
   	  <xul:box class="button-internal-box" inherits="orient" autostretch="never" flex="1">
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-          <xul:text class="button-text" inherits="value,accesskey,crop"/>
+          <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
         <xul:image class="button-icon" inherits="src"/>
       </xul:box>
@@ -192,7 +192,7 @@
     <content excludes="observes,template">
   	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-          <xul:text class="button-text" inherits="value,accesskey,crop"/>
+          <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
         </xul:box>
         <xul:image class="button-icon" inherits="src"/>
       </xul:box>
@@ -353,60 +353,6 @@
     </interface>     
   </binding>
   
-  <binding id="toolbargrippy" extends="xul:button"/>
-
-  <binding id="toolbox">
-    <content orient="vertical">
-      <xul:box orient="vertical" flex="1" class="internal-box">
-        <children/>
-      </xul:box>
-      <xul:box class="collapsed-tray"/>
-    </content>
-    <interface>
-      <method name="collapseToolbar">
-        <argument name="toolbar"/>
-        <body>
-          var v = this.removeChild(toolbar);
-          document.getAnonymousNodes(this)[1].appendChild(v);
-        </body>
-      </method>
-      <method name="expandToolbar">
-        <argument name="toolbar"/>
-        <body>
-          var v = document.getAnonymousNodes(this)[1].removeChild(toolbar);
-          this.appendChild(v);
-        </body>
-      </method>
-    </interface>
-  </binding>
-
-  <binding id="toolbar">
-    <content>
-      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
-                         onclick="var v = parentNode;
-                                  var attr = v.getAttribute('collapsed');
-                                  if (attr == 'true') {
-                                    v.removeAttribute('collapsed');
-                                    try {
-                                      parentNode.parentNode.parentNode.expandToolbar(parentNode);
-                                    }
-                                    catch(e) {
-                                      dump('huh?' + parentNode.parentNode.parentNode + '\n');
-                                    }
-                                  }
-                                  else {
-                                    v.setAttribute('collapsed', 'true');
-                                    try {
-                                      parentNode.parentNode.collapseToolbar(parentNode);
-                                    }
-                                    catch(e) {}
-                                  }"/>
-      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">
-        <children/>
-      </xul:box>
-    </content>
-  </binding>
-
   <binding id="colorpicker" extends="xul:box">
     <interface>
       <property name="color" onset="return this.setAttribute('color', val);"
@@ -558,30 +504,30 @@
 
   <binding id="titledbox">
     <content>
-	  <xul:box class="titledbox-title">
-	    <children includes="title"/>
-	  </xul:box>
-	  <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
-      <children/>
-	  </xul:box>
+      <xul:box class="titledbox-title" autostretch="never" orient="vertical">
+        <children includes="title"/>
+      </xul:box>
+      <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
+        <children/>
+      </xul:box>
     </content>    
   </binding>
-
+  
   <binding id="titledboxvalue">
     <content>
-	  <xul:box class="titledbox-title">
-	    <xul:title inherits="value"/>
-	  </xul:box>
-	  <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
+      <xul:box class="titledbox-title" autostretch="never" orient="vertical">
+        <xul:title inherits="value"/>
+      </xul:box>
+      <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
         <children/>
-	  </xul:box>
+      </xul:box>
     </content>    
   </binding>
-
+  
   <binding id="title">
-     <content>
-	    <xul:text inherits="value"/>
-	 </content>
+    <content>
+      <xul:text inherits="value"/>
+    </content>
   </binding>
 
   <binding id="autorepeatbutton-up">
