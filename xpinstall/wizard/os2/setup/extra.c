@@ -5921,31 +5921,27 @@ HRESULT FileExists(PSZ szFile)
 
 BOOL isFAT(char* szPath)
 {
-    APIRET rc;
-    ULONG ulSize;
-    PFSQBUFFER2 pfsqbuf2;
-    CHAR szDrive[3];
+  APIRET rc;
+  ULONG ulSize;
+  PFSQBUFFER2 pfsqbuf2;
+  CHAR szDrive[3];
 
-    ulSize = sizeof(FSQBUFFER2) + 3 * CCHMAXPATH;
-    pfsqbuf2 = (PFSQBUFFER2)malloc(ulSize);
-    strncpy(szDrive, szPath, 2);
-    szDrive[2] = '\0';
+  ulSize = sizeof(FSQBUFFER2) + 3 * CCHMAXPATH;
+  pfsqbuf2 = (PFSQBUFFER2)malloc(ulSize);
+  strncpy(szDrive, szPath, 2);
+  szDrive[2] = '\0';
 
-    DosError(FERR_DISABLEHARDERR);
-    rc = DosQueryFSAttach(szDrive, 0, FSAIL_QUERYNAME,
-                          pfsqbuf2, &ulSize);
-    DosError(FERR_ENABLEHARDERR);
+  DosError(FERR_DISABLEHARDERR);
+  rc = DosQueryFSAttach(szDrive, 0, FSAIL_QUERYNAME,
+                        pfsqbuf2, &ulSize);
+  DosError(FERR_ENABLEHARDERR);
 
-    if (rc == NO_ERROR) {
-      if (strcmp(pfsqbuf2->szFSDName + pfsqbuf2->cbName, "FAT") == 0) {
-        return TRUE;
-      }
-    }
   if (rc == NO_ERROR) {
-    return FALSE;
-  } else {
-    return TRUE;
+    if (strcmp(pfsqbuf2->szFSDName + pfsqbuf2->cbName, "FAT") != 0)
+      return FALSE;
   }
+
+  return TRUE;
 }
 
 BOOL NeedReboot()
