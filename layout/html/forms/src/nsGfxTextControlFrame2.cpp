@@ -1959,6 +1959,17 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     }
   }
 
+  // Temporary fix for the password dialog.
+  // We need to figure out why Reflow() and GetPrefSize() are
+  // not called for that dialog.
+
+  rv = SetInitialValue();
+  
+  if (NS_FAILED(rv))
+    return rv;
+
+  // End temporary fix.
+
   return NS_OK;
 }
 
