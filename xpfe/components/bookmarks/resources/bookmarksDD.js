@@ -336,7 +336,7 @@ var bookmarksDNDObserver = {
       // this will result in the creation of multiple copies in the datasource
       // but will not result in an update of the UI. (In Short: we don't
       // handle multiple bookmarks well)
-      var ix = RDFC.IndexOf(rSource);
+      ix = RDFC.IndexOf(rSource);
       if (ix != -1)
         continue;
       
