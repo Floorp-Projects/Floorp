@@ -163,9 +163,11 @@ nsRegressionTester::CompareFrameModels(nsILocalFile *aBaseFile, nsILocalFile *aV
   {
     PRInt32 outputLevel = (aFlags == COMPARE_FLAGS_VERBOSE) ? 0 : 1;
     rv = frameUtil->CompareRegressionData(baseFile, verFile, outputLevel);
+    // CompareRegressionData closes |baseFile| and |verFile|.
+  } else {
+    fclose(verFile);          
+    fclose(baseFile);
   }
-  fclose(verFile);          
-  fclose(baseFile);
 
   *aResult = NS_FAILED(rv);
   return NS_OK;
