@@ -59,6 +59,8 @@
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
+#include "nsIScrollableView.h"
+#include "nsIDeviceContext.h"
 #include "nsScreen.h"
 #include "nsHistory.h"
 #include "nsBarProps.h"
@@ -1419,17 +1421,112 @@ GlobalWindowImpl::SizeToContent()
   return NS_ERROR_NOT_INITIALIZED;
 }
 
+nsresult
+GlobalWindowImpl::GetScrollInfo(nsIScrollableView** aScrollableView,
+                                float* aP2T, float* aT2P)
+{
+  nsresult result = NS_OK;
+
+  nsCOMPtr<nsIContentViewer> viewer;
+  result = mWebShell->GetContentViewer(getter_AddRefs(viewer));
+  if (NS_SUCCEEDED(result) && viewer) {
+    nsCOMPtr<nsIDocumentViewer> docv = do_QueryInterface(viewer, &result);
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIPresContext> cx;
+      result = docv->GetPresContext(*getter_AddRefs(cx));
+      if (NS_SUCCEEDED(result)) {
+
+        cx->GetPixelsToTwips(aP2T);
+        cx->GetTwipsToPixels(aT2P);
+
+        nsCOMPtr<nsIPresShell> shell;
+        result = cx->GetShell(getter_AddRefs(shell));
+        if (NS_SUCCEEDED(result)) {
+          nsCOMPtr<nsIViewManager> vm;
+          result = shell->GetViewManager(getter_AddRefs(vm));
+          if (NS_SUCCEEDED(result)) {
+            result = vm->GetRootScrollableView(aScrollableView);
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 {
-  return NS_OK;
+  nsresult result;
+  nsIScrollableView* view;
+  float p2t, t2p;
+
+  result = GetScrollInfo(&view, &p2t, &t2p);
+  if (NS_SUCCEEDED(result) && view) {
+    result = view->ScrollTo(NSIntPixelsToTwips(aXScroll, p2t),
+                            NSIntPixelsToTwips(aYScroll, p2t), 
+                            NS_VMREFRESH_IMMEDIATE);
+  }
+  
+  return result;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif)
 {
-  return NS_OK;
+  nsresult result;
+  nsIScrollableView* view;
+  float p2t, t2p;
+
+  result = GetScrollInfo(&view, &p2t, &t2p);
+  if (NS_SUCCEEDED(result) && view) {
+    nscoord xPos, yPos;
+    result = view->GetScrollPosition(xPos, yPos);
+    if (NS_SUCCEEDED(result)) {
+      result = view->ScrollTo(xPos + NSIntPixelsToTwips(aXScrollDif, p2t),
+                              yPos + NSIntPixelsToTwips(aYScrollDif, p2t), 
+                              NS_VMREFRESH_IMMEDIATE);
+    }
+  }
+
+  return result;
 }
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
+{
+  nsresult result;
+  nsIScrollableView* view;
+  float p2t, t2p;
+
+  result = GetScrollInfo(&view, &p2t, &t2p);
+  if (NS_SUCCEEDED(result) && view) {
+    nscoord xPos, yPos;
+    result = view->GetScrollPosition(xPos, yPos);
+    *aScrollX = NSTwipsToIntPixels(xPos, t2p);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
+{
+  nsresult result;
+  nsIScrollableView* view;
+  float p2t, t2p;
+
+  result = GetScrollInfo(&view, &p2t, &t2p);
+  if (NS_SUCCEEDED(result) && view) {
+    nscoord xPos, yPos;
+    result = view->GetScrollPosition(xPos, yPos);
+    *aScrollY = NSTwipsToIntPixels(yPos, t2p);
+  }
+
+  return result;
+}
+
 
 nsresult
 GlobalWindowImpl::ClearTimeoutOrInterval(PRInt32 aTimerID)

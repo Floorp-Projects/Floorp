@@ -31,6 +31,8 @@
                  attribute  long screenY;
                  attribute  long pageXOffset;
                  attribute  long pageYOffset;
+        readonly attribute  long scrollX;
+        readonly attribute  long scrollY;
 
         void  dump(in wstring str);
         void  alert(/* ... */);
