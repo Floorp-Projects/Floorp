@@ -89,7 +89,7 @@ class CCalICalendarBeginToken: public CCalICalendarToken {
 public:
 
                       CCalICalendarBeginToken(eCalICalendarTags aTag);
-                      CCalICalendarBeginToken(nsString& aName, eCalICalendarTags aTag=eCalICalendarTag_unknown);
+                      CCalICalendarBeginToken(const nsString& aName, eCalICalendarTags aTag=eCalICalendarTag_unknown);
   virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
   virtual PRInt32     GetTypeID(void);
   virtual const char* GetClassName(void);  
@@ -110,7 +110,7 @@ protected:
 class CCalICalendarEndToken: public CCalICalendarToken {
 public:
                       CCalICalendarEndToken(eCalICalendarTags aTag);
-                      CCalICalendarEndToken(const nsString& aString);
+                      CCalICalendarEndToken(const nsString& aString, eCalICalendarTags aTag=eCalICalendarTag_unknown);
   virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
   virtual PRInt32     GetTypeID(void);
   virtual const char* GetClassName(void);

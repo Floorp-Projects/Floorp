@@ -117,11 +117,11 @@ NS_IMETHODIMP nsCalICalendarContentSink::OpenContainer(const nsIParserNode& aNod
 
 NS_IMETHODIMP nsCalICalendarContentSink::CloseContainer(const nsIParserNode& aNode)
 {
-  nsISupports * container = (nsISupports *)mXPFCStack->Pop();
+  //nsISupports * container = (nsISupports *)mXPFCStack->Pop();
   
   // todo: finish
   
-  NS_IF_RELEASE(container);
+  //NS_IF_RELEASE(container);
   return NS_OK;
 }
 

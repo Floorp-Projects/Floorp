@@ -193,7 +193,7 @@ CCalICalendarBeginToken::CCalICalendarBeginToken(eCalICalendarTags aTag) :
   mEmpty=PR_FALSE;
 }
 
-CCalICalendarBeginToken::CCalICalendarBeginToken(nsString& aString,
+CCalICalendarBeginToken::CCalICalendarBeginToken(const nsString& aString,
                                                  eCalICalendarTags aTag) :
   CCalICalendarToken(aString,aTag) {
   mAttributed=PR_FALSE;
@@ -302,10 +302,12 @@ void CCalICalendarBeginToken::DebugDumpSource(ostream& out) {
     out << "\r\n";
 }
 
-CCalICalendarEndToken::CCalICalendarEndToken(eCalICalendarTags aTag) : CCalICalendarToken(aTag) {
+CCalICalendarEndToken::CCalICalendarEndToken(eCalICalendarTags aTag)
+  : CCalICalendarToken(aTag) {
 }
 
-CCalICalendarEndToken::CCalICalendarEndToken(const nsString& aName) : CCalICalendarToken(aName) {
+CCalICalendarEndToken::CCalICalendarEndToken(const nsString& aName, eCalICalendarTags aTag)
+  : CCalICalendarToken(aName, aTag) {
 }
 
 // todo: revisit

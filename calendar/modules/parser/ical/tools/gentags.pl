@@ -38,6 +38,7 @@ $tags[$i++] = "daylight";
 $tags[$i++] = "description";
 $tags[$i++] = "dtend";
 $tags[$i++] = "dtstart";
+$tags[$i++] = "dtstamp";
 $tags[$i++] = "due";
 $tags[$i++] = "duration";
 $tags[$i++] = "end";

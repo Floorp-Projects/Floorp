@@ -39,7 +39,7 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_ICALICALENDAR_DTD_IID);
 static NS_DEFINE_IID(kBaseClassIID, NS_ICALICALENDAR_DTD_IID);
 
-static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
+static NS_DEFINE_IID(kCalICalendarCParserNodeCID, NS_CALICALENDARPARSER_NODE_IID);
 static NS_DEFINE_IID(kCParserNodeIID, NS_IPARSER_NODE_IID);
 
 static const char* kNullToken = "Error: Null token given";
@@ -199,8 +199,8 @@ CToken * nsCalTokenRecycler::CreateTokenOfType(eCalICalendarTokenTypes aType,
   else {
     switch(aType) {
       //todo: finish
-      case eCalICalendarToken_begin:          result=new CCalICalendarBeginToken(aTag); break;
-      case eCalICalendarToken_end:            result=new CCalICalendarEndToken(aTag); break;
+      case eCalICalendarToken_begin:          result=new CCalICalendarBeginToken(aString, aTag); break;
+      case eCalICalendarToken_end:            result=new CCalICalendarEndToken(aString, aTag); break;
       case eCalICalendarToken_propertyname:   result=new CCalICalendarIdentifierToken(aTag); break;
       case eCalICalendarToken_attribute:      result=new CCalICalendarAttributeToken(); break;
       case eCalICalendarToken_propertyvalue:  result=new CCalICalendarPropertyValueToken(); break;
@@ -338,13 +338,13 @@ nsresult nsCalICalendarDTD::HandleBeginToken(CToken* aToken)
 {
   CCalICalendarBeginToken * st  = (CCalICalendarBeginToken*)aToken;
   eCalICalendarTags tokenTagType = (eCalICalendarTags) st->GetTypeID();
-  nsCParserNode * attrNode = nsnull;
+  nsCalICalendarCParserNode * attrNode = nsnull;
 
   //Begin by gathering up attributes...
-  static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
+  static NS_DEFINE_IID(kCalICalendarCParserNodeCID, NS_CALICALENDARPARSER_NODE_IID);
   static NS_DEFINE_IID(kCParserNodeIID, NS_IPARSER_NODE_IID);
 
-  nsresult result = nsRepository::CreateInstance(kCParserNodeCID, nsnull, kCParserNodeIID,(void**) &attrNode);
+  nsresult result = nsRepository::CreateInstance(kCalICalendarCParserNodeCID, nsnull, kCParserNodeIID,(void**) &attrNode);
 
   if (NS_OK != result)
     return result;
@@ -372,7 +372,9 @@ nsresult nsCalICalendarDTD::HandleBeginToken(CToken* aToken)
       case eCalICalendarTag_valarm:
       case eCalICalendarTag_vtimezone:          
       {
-        mSink->OpenContainer(*attrNode);
+        // todo: xxx: close any already open containers;
+        if (eCalICalendarTag_begin == aToken->GetTypeID())
+          mSink->OpenContainer(*attrNode);
       }
       break;
 
@@ -389,6 +391,7 @@ nsresult nsCalICalendarDTD::HandleBeginToken(CToken* aToken)
       case eCalICalendarTag_description:
       case eCalICalendarTag_dtend:
       case eCalICalendarTag_dtstart:
+      case eCalICalendarTag_dtstamp:
       case eCalICalendarTag_due:
       case eCalICalendarTag_duration:
       case eCalICalendarTag_exdate:
@@ -446,21 +449,21 @@ nsresult nsCalICalendarDTD::HandleBeginToken(CToken* aToken)
   return result;
 }
 
-PRInt32 nsCalICalendarDTD::CollectPropertyValue(nsCParserNode& aNode,PRInt32 aCount) {
+PRInt32 nsCalICalendarDTD::CollectPropertyValue(nsCalICalendarCParserNode& aNode,PRInt32 aCount) {
   
   CToken* theToken=mParser->PeekToken();
   if(theToken) {
     eCalICalendarTokenTypes theType=eCalICalendarTokenTypes(theToken->GetTokenType());
     if(eCalICalendarToken_propertyvalue==theType){
         mParser->PopToken(); //pop it for real...
-        aNode.SetSkippedContent(theToken);
+        aNode.SetSkippedContent((CCalICalendarToken*)theToken);
     }
     else return kInterrupted;
   }
   return kNoError;
 }
 
-PRInt32 nsCalICalendarDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount) {
+PRInt32 nsCalICalendarDTD::CollectAttributes(nsCalICalendarCParserNode& aNode,PRInt32 aCount) {
   int attr=0;
   for(attr=0;attr<aCount;attr++){
     CToken* theToken=mParser->PeekToken();
@@ -468,7 +471,7 @@ PRInt32 nsCalICalendarDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount
       eCalICalendarTokenTypes theType=eCalICalendarTokenTypes(theToken->GetTokenType());
       if(eCalICalendarToken_attribute==theType){
         mParser->PopToken(); //pop it for real...
-        aNode.AddAttribute(theToken);
+        aNode.AddAttribute((CCalICalendarToken*)theToken);
       }
     }
     else return kInterrupted;
@@ -483,10 +486,10 @@ nsresult nsCalICalendarDTD::HandleEndToken(CToken* aToken)
   eCalICalendarTags tokenTagType=(eCalICalendarTags)et->GetTypeID();
   nsCParserNode * attrNode = nsnull;
 
-  static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
+  static NS_DEFINE_IID(kCalICalendarCParserNodeCID, NS_CALICALENDARPARSER_NODE_IID);
   static NS_DEFINE_IID(kCParserNodeIID, NS_IPARSER_NODE_IID);
 
-  result = nsRepository::CreateInstance(kCParserNodeCID, nsnull, kCParserNodeIID, (void**)&attrNode);
+  result = nsRepository::CreateInstance(kCalICalendarCParserNodeCID, nsnull, kCParserNodeIID, (void**)&attrNode);
 
   if (NS_OK != result)
     return result;
@@ -775,6 +778,15 @@ nsCalICalendarDTD::ConsumePropertyNameAndAttributes(PRUnichar aChar, CScanner& a
         }
       } //if
     } //if
+    if (eCalICalendarTag_end == aToken->GetTypeID())
+    {
+      nsString endval = aToken->GetStringValueXXX();
+      delete aToken;
+      aToken = 0;
+      // 
+      aToken=gCalTokenRecycler.CreateTokenOfType(eCalICalendarToken_end,
+                                                 eCalICalendarTag_end, endval);
+    }
   }// if (eCalICalendar_begin ...)
   return result;
 }

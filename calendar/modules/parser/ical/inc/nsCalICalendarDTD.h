@@ -31,6 +31,7 @@
 #include "nscalicalendarpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
+#include "nsCalICalendarParserNode.h"
 //#include "nsCalICalendarParserCIID.h"
 //#include "nsCalICalendarStrings.h" // todo:
 
@@ -111,8 +112,8 @@ private:
   //NS_IMETHOD_(eCalICalendarTags) ComponentTypeFromObject(const nsIParserNode& aNode); 
 
 protected:
-  PRInt32 CollectPropertyValue(nsCParserNode& aNode, PRInt32 aCount);
-  PRInt32 CollectAttributes(nsCParserNode& aNode, PRInt32 aCount);
+  PRInt32 CollectPropertyValue(nsCalICalendarCParserNode& aNode, PRInt32 aCount);
+  PRInt32 CollectAttributes(nsCalICalendarCParserNode& aNode, PRInt32 aCount);
   
   nsParser* mParser;
   nsIContentSink* mSink;
