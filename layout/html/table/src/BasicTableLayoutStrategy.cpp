@@ -1859,6 +1859,8 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
     // proportional and desired widths are handled together
     PRBool haveProWidth = PR_FALSE;
     if (DES_CON == aWidthType) {
+      // Take into acount MIN_adj width as it has been included in totals before
+      maxWidth = PR_MAX(maxWidth, colFrame->GetWidth(MIN_ADJ));
       nscoord proWidth = colFrame->GetWidth(MIN_PRO);
       if (proWidth >= 0) {
         haveProWidth = PR_TRUE;
