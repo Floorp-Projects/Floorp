@@ -158,6 +158,9 @@ function calendarInit()
    {
       gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].url );
    }
+
+   //a bit of a hack since the menulist doesn't remember the selected value
+   document.getElementById( 'event-filter-menulist' ).setAttribute( "label", document.getElementById( 'event-filter-menulist' ).selectedItem.getAttribute( 'label' ) );
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
