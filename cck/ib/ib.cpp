@@ -1923,7 +1923,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	nsinstallerDir = "netscape-installer";
 	xpiDir         = "\\xpi";
 	templinuxDir   = "tempLinux";
-	tarfile        = GetGlobal("InstallerFilename");
+	tarfile        = "netscape-i686-pc-linux-gnu-sea.tar.gz";
 
 //  AfxMessageBox("set breakpoint",MB_OK);
 
