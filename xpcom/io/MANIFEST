@@ -11,4 +11,3 @@ nsStorageStream.h
 nsLocalFile.h
 nsLocalFileMac.h
 nsILocalFileMac.h
-nsIByteArrayInputStream.h
