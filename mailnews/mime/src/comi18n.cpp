@@ -571,7 +571,7 @@ static unsigned char * utf8_nextchar(unsigned char *str)
   else if ((len >= 2) && (*str >= 0xC0)) {
     return (str+2);
   }
-  PR_ASSERT(PR_FALSE);
+
   return (str+1); // error, return +1 to avoid infinite loop
 }
 
