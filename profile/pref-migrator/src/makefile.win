@@ -22,7 +22,9 @@ include <$(DEPTH)/config/config.mak>
 
 MODULE=nsprefm
 DLL=.\$(OBJDIR)\$(MODULE).dll
-EXPORTS=nsPrefMigration.h
+EXPORTS=nsPrefMigration.h	\
+	nsPrefMigrationFactory.h	\
+	$(NULL)
 
 DEFINES=-D_IMPL_NS_DOM 
 #        -DXP_MAC

@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsPrefMigration.h"
+#include "nsPrefMigrationFactory.h"
 
 /*-------------------------------------------------------------------------*/
 /* Pref Migration Factory routines                                         */
