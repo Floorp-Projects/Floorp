@@ -209,7 +209,7 @@ function Startup()
     }
   }
 
-  doSetOKCancel(onOK, onCancel, 0, onApply);
+  doSetOKCancel(onAccept, onCancel, 0, onApply);
 
   // Note: we must use TableElement, not globalTableElement for these,
   //  thus we should not put this in InitDialog.
