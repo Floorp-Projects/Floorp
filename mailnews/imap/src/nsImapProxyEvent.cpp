@@ -441,38 +441,6 @@ nsImapMiscellaneousSinkProxy::GetShouldDownloadArbitraryHeaders(
 }
 
 NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::GetShowAttachmentsInline(
-    nsIImapProtocol* aProtocol, PRBool* aBool)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aBool, "Oops... null aBool");
-    if(!aBool)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        GetShowAttachmentsInlineProxyEvent *ev =
-            new GetShowAttachmentsInlineProxyEvent(this, aBool);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-        {
-            ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-        }
-    }
-    else
-    {
-        res =
-            m_realImapMiscellaneousSink->GetShowAttachmentsInline(aProtocol,
-                                                              aBool);
-        aProtocol->NotifyFEEventCompletion();
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
     nsresult res = NS_OK;
@@ -1110,27 +1078,6 @@ GetShouldDownloadArbitraryHeadersProxyEvent::HandleEvent()
     return res;
 }
 
-GetShowAttachmentsInlineProxyEvent::GetShowAttachmentsInlineProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, PRBool* aBool) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aBool, "Oops... a null bool pointer");
-    m_bool = aBool;
-}
-
-GetShowAttachmentsInlineProxyEvent::~GetShowAttachmentsInlineProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-GetShowAttachmentsInlineProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->GetShowAttachmentsInline(
-        m_proxy->m_protocol, m_bool);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
 
 HeaderFetchCompletedProxyEvent::HeaderFetchCompletedProxyEvent(
     nsImapMiscellaneousSinkProxy* aProxy) :

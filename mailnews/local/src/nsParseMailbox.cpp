@@ -472,6 +472,7 @@ NS_IMETHODIMP nsParseMailMessageState::Clear()
 	m_priority.length = 0;
 	m_mdn_dnt.length = 0;
 	m_return_path.length = 0;
+  m_in_reply_to.length = 0;
 	m_mdn_original_recipient.length = 0;
 	m_body_lines = 0;
 	m_newMsgHdr = null_nsCOMPtr();
@@ -797,6 +798,10 @@ int nsParseMailMessageState::ParseHeaders ()
 		  if (!nsCRT::strncasecmp ("From", buf, end - buf))
 			header = &m_from;
 		  break;
+    case 'I' : case 'i':
+      if (!nsCRT::strncasecmp ("In-Reply-To", buf, end - buf))
+        header = &m_in_reply_to;
+      break;
 		case 'M': case 'm':
 		  if (!nsCRT::strncasecmp ("Message-ID", buf, end - buf))
 			header = &m_message_id;
@@ -1073,6 +1078,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 	struct message_header *recipient;
 	struct message_header *subject;
 	struct message_header *id;
+  struct message_header *inReplyTo;
 	struct message_header *references;
 	struct message_header *date;
 	struct message_header *statush;
@@ -1118,6 +1124,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				0);
 	priority   = (m_priority.length   ? &m_priority   : 0);
 	mdn_dnt	   = (m_mdn_dnt.length	  ? &m_mdn_dnt	  : 0);
+  inReplyTo = (m_in_reply_to.length ? &m_in_reply_to : 0);
 
 	if (mozstatus) 
 	{

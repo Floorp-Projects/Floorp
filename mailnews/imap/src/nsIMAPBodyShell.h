@@ -255,8 +255,6 @@ public:
 									// If partNum is not NULL, then this works to generates a MIME part that hasn't been downloaded yet
 									// and leaves out all other parts.  By default, to generate a normal message, partNum should be NULL.
 
-	PRBool	GetShowAttachmentsInline();		// Returns PR_TRUE if the user has the pref "Show Attachments Inline" set.
-											// Returns PR_FALSE if the setting is "Show Attachments as Links"
 	PRBool	PreflightCheckAllInline();		// Returns PR_TRUE if all parts are inline, PR_FALSE otherwise.  Does not generate anything.
 
 	// Helpers
@@ -286,7 +284,6 @@ protected:
 	char				*m_folderName;			// folder that contains this message
 	char				*m_generatingPart;		// If a specific part is being generated, this is it.  Otherwise, NULL.
 	PRBool				m_isBeingGenerated;		// PR_TRUE if this body shell is in the process of being generated
-	PRBool				m_showAttachmentsInline;
 	PRBool				m_gotAttachmentPref;
 	PRBool				m_cached;				// Whether or not this shell is cached
 	PRBool				m_generatingWholeMessage;	// whether or not we are generating the whole (non-MPOD) message

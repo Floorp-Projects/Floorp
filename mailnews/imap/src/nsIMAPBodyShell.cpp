@@ -77,7 +77,6 @@ nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char 
 	m_cached = PR_FALSE;
 	m_gotAttachmentPref = PR_FALSE;
 	m_generatingWholeMessage = PR_FALSE;
-	m_showAttachmentsInline = PR_TRUE;
 	m_generatingPart = NULL;
 	m_protocolConnection = protocolConnection;
 	NS_ASSERTION(m_protocolConnection, "non null connection");
@@ -99,10 +98,7 @@ nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char 
 	m_folderName = nsCRT::strdup(folderName);
 	if (!m_folderName)
 		return;
-	if (GetShowAttachmentsInline())
-		SetContentModified(IMAP_CONTENT_MODIFIED_VIEW_INLINE);
-	else
-		SetContentModified(IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS);
+	SetContentModified(IMAP_CONTENT_MODIFIED_VIEW_INLINE);
 	// Turn the BODYSTRUCTURE response into a form that the nsIMAPBodypartMessage can be constructed from.
 	char *doctoredBuf = PR_smprintf("(\"message\" \"rfc822\" NIL NIL NIL NIL 0 () %s 0)", buf);
 	if (!doctoredBuf)
@@ -126,18 +122,6 @@ void nsIMAPBodyShell::SetIsValid(PRBool valid)
 //	if (!valid)
 //		PR_LOG(IMAP, out, ("BODYSHELL: Shell is invalid."));
 	m_isValid = valid;
-}
-
-
-PRBool	nsIMAPBodyShell::GetShowAttachmentsInline()
-{
-	if (!m_gotAttachmentPref)
-	{
-		m_showAttachmentsInline = m_protocolConnection->GetShowAttachmentsInline();
-		m_gotAttachmentPref = PR_TRUE;
-	}
-
-	return m_showAttachmentsInline;
 }
 
 
@@ -1137,9 +1121,6 @@ PRBool	nsIMAPBodypartMessage::ShouldFetchInline()
 		if (ShouldExplicitlyNotFetchInline())
 			return PR_FALSE;
 
-
-		if (!m_shell->GetShowAttachmentsInline())
-			return PR_FALSE;
 
 		// Message types are inline, by default.
 		return PR_TRUE;

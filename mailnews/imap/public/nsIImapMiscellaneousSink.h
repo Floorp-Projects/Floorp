@@ -54,8 +54,6 @@ public:
 																 GenericInfo* aInfo) = 0;
 	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
 																							 GenericInfo* aInfo) = 0;
-  NS_IMETHOD GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
-                                      PRBool* aBool) = 0;
 	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol) = 0;
 	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol) = 0;
 	// ****

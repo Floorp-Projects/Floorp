@@ -3344,19 +3344,6 @@ nsImapMailFolder::GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
-                                           PRBool* aBool)
-{
-  if (!aBool)
-    return NS_ERROR_NULL_POINTER;
-  nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_SUCCEEDED(rv) && prefs) 
-    prefs->GetBoolPref("mail.inline_attachments", aBool);  
-  return rv;
-}
-
-NS_IMETHODIMP
 nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
   nsresult rv;

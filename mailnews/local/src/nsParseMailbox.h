@@ -108,6 +108,7 @@ public:
 	struct message_header m_status;
 	struct message_header m_mozstatus;
 	struct message_header m_mozstatus2;
+	struct message_header m_in_reply_to;
 
 	// Support for having multiple To or CC header lines in a message
 	nsVoidArray m_toList;

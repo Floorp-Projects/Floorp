@@ -1677,9 +1677,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 // We actually want a specific MIME part of the message.
                 // The Body Shell will generate it, even though we haven't downloaded it yet.
 
-                IMAP_ContentModifiedType modType = GetShowAttachmentsInline() ? 
-                  IMAP_CONTENT_MODIFIED_VIEW_INLINE :
-                  IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS;
+                IMAP_ContentModifiedType modType = IMAP_CONTENT_MODIFIED_VIEW_INLINE ;
 
                 nsIMAPBodyShell *foundShell = nsnull;
                 res = m_hostSessionList->FindShellInCacheForHost(GetImapServerKey(),
@@ -1738,9 +1736,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 // Before fetching the bodystructure, let's check our body shell cache to see if
                 // we already have it around.
                 nsIMAPBodyShell *foundShell = NULL;
-                IMAP_ContentModifiedType modType = GetShowAttachmentsInline() ? 
-                  IMAP_CONTENT_MODIFIED_VIEW_INLINE :
-                  IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS;
+                IMAP_ContentModifiedType modType = IMAP_CONTENT_MODIFIED_VIEW_INLINE;
 
                 nsCOMPtr<nsIMsgMailNewsUrl> mailurl = do_QueryInterface(m_runningUrl);
                 if (mailurl)
@@ -3334,20 +3330,6 @@ PRUint32 nsImapProtocol::GetMessageSize(const char * messageId,
     return rv;
   }
   return 0;
-}
-
-
-PRBool  nsImapProtocol::GetShowAttachmentsInline()
-{
-    PRBool *rv = (PRBool*) new PRBool(PR_FALSE);
-
-    if (m_imapMiscellaneousSink && rv)
-    {
-        m_imapMiscellaneousSink->GetShowAttachmentsInline(this, rv);
-        WaitForFEEventCompletion();
-        return *rv;
-    }
-    return PR_FALSE;
 }
 
 // message id string utility functions

@@ -182,7 +182,6 @@ public:
 
 	// Comment from 4.5: We really need to break out the thread synchronizer from the
 	// connection class...Not sure what this means
-	PRBool	GetShowAttachmentsInline();
 	PRBool  GetPseudoInterrupted();
 	void	PseudoInterrupt(PRBool the_interrupt);
 
