@@ -752,7 +752,7 @@ sub init {
                         "entire URL out of the address bar at the top of your browser " .
                         "window and email it to <109679\@bugzilla.org>";
                     die "Internal error: $errstr" if $chart < 0;
-                    return Error($errstr);
+                    return &::DisplayError($errstr);
                 }
 
                 # This is either from the internal chart (in which case we
