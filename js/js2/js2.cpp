@@ -264,6 +264,17 @@ static float64 testFunctionCall(World &world, float64 n)
     return result.f64;    
 }
 
+class Tracer : public Context::Listener {
+    typedef InstructionStream::difference_type InstructionOffset;
+    void listen(Context* /*context*/, InstructionIterator pc,
+                JSValues* /*registers*/, ICodeModule* iCode)
+    {
+        InstructionOffset offset = (pc - iCode->its_iCode->begin());
+        printFormat(stdOut, "%04X: ", offset);
+        stdOut << **pc << '\n';
+    }
+};
+
 static float64 testFactorial(World &world, float64 n)
 {
     JSObject glob;
@@ -317,16 +328,6 @@ static float64 testFactorial(World &world, float64 n)
     stdOut << script;
     
     // install a listener so we can trace execution of factorial.
-    class Tracer : public Context::Listener {
-        typedef InstructionStream::difference_type InstructionOffset;
-        void listen(Context* /*context*/, InstructionIterator pc,
-                    JSValues* /*registers*/, ICodeModule* iCode)
-        {
-            InstructionOffset offset = (pc - iCode->its_iCode->begin());
-            printFormat(stdOut, "%04X: ", offset);
-            stdOut << **pc << '\n';
-        }
-    };
     Tracer t;
     cx.addListener(&t);
     
