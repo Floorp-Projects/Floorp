@@ -201,6 +201,11 @@ TestWriteObserver::OnStopBinding(nsISupports* context,
   return NS_OK;
 }
 
+nsresult NS_AutoregisterComponents()
+{
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  return rv;
+}
 
 int
 main(int argc, char* argv[])
@@ -215,10 +220,9 @@ main(int argc, char* argv[])
   char* hostName = argv[1];
   char* fileName = argv[2];
   int port = 80;
- 
-  // XXX why do I have to do this?!
-  rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                        "components");
+
+  rv =  NS_AutoregisterComponents();
+
   if (NS_FAILED(rv)) return rv;
 
   // Create the Event Queue for this thread...

@@ -375,6 +375,12 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
     NS_ASSERTION(status == PR_SUCCESS, "can't close dir");
 }
 
+nsresult NS_AutoregisterComponents()
+{
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  return rv;
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -386,9 +392,7 @@ main(int argc, char* argv[])
     }
     char* dirName = argv[1];
 
-    // XXX why do I have to do this?!
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                          "components");
+    rv = NS_AutoregisterComponents();
     if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
@@ -407,3 +411,4 @@ main(int argc, char* argv[])
 
     return 0;
 }
+

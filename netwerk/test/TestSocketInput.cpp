@@ -121,6 +121,12 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
 }
 
 
+nsresult NS_AutoregisterComponents()
+{
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  return rv;
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -138,9 +144,7 @@ main(int argc, char* argv[])
 //port = portString.ToInteger(&rv);
   port = 13;
 
-  // XXX why do I have to do this?!
-  rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                        "components");
+  rv = NS_AutoregisterComponents();
   if (NS_FAILED(rv)) return rv;
 
   // Create the Event Queue for this thread...
@@ -192,3 +196,4 @@ main(int argc, char* argv[])
 
   return 0;
 }
+

@@ -335,7 +335,11 @@ nsresult StartLoadingURL(const char* aUrlString)
     return rv;
 }
 
-
+nsresult NS_AutoregisterComponents()
+{
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  return rv;
+}
 
 int
 main(int argc, char* argv[])
@@ -350,10 +354,8 @@ main(int argc, char* argv[])
       The following code only deals with XPCOM registration stuff. and setting
       up the event queues. Copied from TestSocketIO.cpp
     */
-    // XXX why do I have to do this?!
 
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                          "components");
+    rv = NS_AutoregisterComponents();
     if (NS_FAILED(rv)) return rv;
 
     
