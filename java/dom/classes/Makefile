@@ -32,12 +32,11 @@ JDIRS = org/mozilla/dom 	\
 	org/mozilla/dom/util	\
 	$(NULL)
 
+
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 JAVAC_PROG = $(JDKHOME)/bin/javac
-JAVAC_FLAGS = -classpath $(CLASSPATH) -d $(JAVA_DESTPATH)
+JAVAC_FLAGS = -classpath $(CLASSPATH):$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
 JAVAC = $(JAVAC_PROG) $(JAVAC_FLAGS)
-
-
 
