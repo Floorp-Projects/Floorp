@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.1 1998/07/22 22:35:46 leif Exp $
+# $Id: Utils.pm,v 1.2 1998/07/22 22:38:38 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -26,6 +26,8 @@
 
 package Mozilla::LDAP::Utils;
 
+require Mozilla::LDAP::API;
+
 
 #############################################################################
 # Normalize the DN string (first argument), and return the new, normalized,
@@ -39,7 +41,7 @@ sub normalizeDN
   $dn = $self->{dn} unless $dn;
   return "" if ($dn eq "");
 
-  $vals = Ldapc::ldap_explode_dn(lc $dn, 0);
+  $vals = Mozilla::LDAP::API::ldap_explode_dn(lc $dn, 0);
 
   return join(",", @{$vals});
 }
