@@ -58,14 +58,14 @@ if [  ! -h SunOS5.8_OPT.OBJ ]
 then 
     ln -s SunOS5.6_OPT.OBJ SunOS5.8_OPT.OBJ || ErrorFlag=1
 fi
-if [ ! -h Linux2.4_x86_glibc_PTH_DBG.OBJ ]
-then
-    ln -s Linux2.2_x86_glibc_PTH_DBG.OBJ Linux2.4_x86_glibc_PTH_DBG.OBJ || ErrorFlag=1
-fi
-if [ ! -h Linux2.4_x86_glibc_PTH_OPT.OBJ ]
-then
-    ln -s Linux2.2_x86_glibc_PTH_OPT.OBJ Linux2.4_x86_glibc_PTH_OPT.OBJ || ErrorFlag=1
-fi
+#if [ ! -h Linux2.4_x86_glibc_PTH_DBG.OBJ ]
+#then
+    #ln -s Linux2.2_x86_glibc_PTH_DBG.OBJ Linux2.4_x86_glibc_PTH_DBG.OBJ || ErrorFlag=1
+#fi
+#if [ ! -h Linux2.4_x86_glibc_PTH_OPT.OBJ ]
+#then
+    #ln -s Linux2.2_x86_glibc_PTH_OPT.OBJ Linux2.4_x86_glibc_PTH_OPT.OBJ || ErrorFlag=1
+#fi
 
 tell
 
