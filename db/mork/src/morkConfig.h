@@ -52,7 +52,7 @@
 
 //#define XP_MAC 1
 
-#ifdef XP_MAC
+#ifdef XP_MACOSX
 #define MORK_MAC 1
 #endif
 
