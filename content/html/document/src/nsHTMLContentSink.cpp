@@ -2580,6 +2580,11 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenHTML", aNode, 0, this);
+  if(mRoot) {
+    // Add attributes to the node...if found.
+    PRInt32 ac = aNode.GetAttributeCount();
+    if(ac>0) AddAttributes(aNode,mRoot,PR_TRUE);
+  }
 
   MOZ_TIMER_STOP(mWatch);
   return NS_OK;
