@@ -6,17 +6,18 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = "1.000";
+$Version = "1.060";
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
     $BuildAdministrator = "$ENV{'USER'}\@$ENV{'HOST'}";
 
     #Default values of cmdline opts
-    $BuildDepend = 1;	#depend or clobber
-    $ReportStatus = 1;  # Send results to server or not
-    $BuildOnce = 0;     # Build once, don't send results to server
-    $BuildClassic = 0;  # Build classic source
+    $BuildDepend = 1;	# Depend or Clobber
+    $ReportStatus = 1;	# Send results to server or not
+    $BuildOnce = 0;	# Build once, don't send results to server
+    $BuildClassic = 0;	# Build classic source
+    $RunTest = 1;	# Run the smoke test on successful build, or not
 
     #relative path to binary
     $BinaryName{'x'} = 'mozilla-export';
@@ -124,7 +125,7 @@ sub SetupPath {
 	if ( $OSVerMajor eq '4' ) {
 	    $ENV{'PATH'} = '/usr/gnu/bin:/usr/local/sun4/bin:/usr/bin:' . $ENV{'PATH'};
 	    $ENV{'LD_LIBRARY_PATH'} = '/home/motif/usr/lib:' . $ENV{'LD_LIBRARY_PATH'};
-	    $ConfigureArgs .= '--x-libraries=/home/motif/usr/lib';
+	    $ConfigureArgs .= '--x-includes=/home/motif/usr/include/X11 --x-libraries=/home/motif/usr/lib';
 	    $ConfigureEnvArgs = 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
 	} else {
 	    $ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
@@ -140,7 +141,8 @@ sub SetupPath {
 	} else {
 	    # This is utterly lame....
 	    if ( $ENV{'HOST'} eq 'fugu' ) {
-		$ENV{'PATH'} = '/tools/ns/workshop/bin:' . $ENV{'PATH'};
+		$ENV{'PATH'} = '/tools/ns/workshop/bin:/usrlocal/bin:' . $ENV{'PATH'};
+		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop/lib:/usrlocal/lib:' . $ENV{'LD_LIBRARY_PATH'};
 		$ConfigureEnvArgs = 'CC=cc CXX=CC';
 		$NSPRArgs .= 'NS_USE_NATIVE=1';
 	    } else {
@@ -161,18 +163,23 @@ sub SetupPath {
 ##########################################################################
 
 sub GetSystemInfo {
-
     $OS = `uname -s`;
     $OSVer = `uname -r`;
     $CPU = `uname -m`;
+    $BuildName = ""; 
+
+    my($host) = "";
+    my($myhost) = hostname;
 
     chop($OS, $OSVer, $CPU);
+    chomp($myhost);
+
+    ($host, $junk) = split(/\./, $myhost);
 
     if ( $OS eq 'AIX' ) {
-	$OSVer = `uname -v`;
-	chop($OSVer);
-	$OSVer = $OSVer . "." . `uname -r`;
-	chop($OSVer);
+	my($osAltVer) = `uname -v`;
+	chop($osAltVer);
+	$OSVer = $osAltVer . "." . $OSVer;
     }
 
     if ( $OS eq 'BSD/OS' ) {
@@ -188,16 +195,9 @@ sub GetSystemInfo {
 	$OSVer = '5.0';
     }
 
-    my $host, $myhost = hostname;
-    chomp($myhost);
-    ($host, $junk) = split(/\./, $myhost);
-
-    $BuildName = ""; 
-
     if ( "$host" ne "" ) {
-	$BuildName = $host . ' ';
+	$BuildName = $host . ' ' . $OS . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
     }
-    $BuildName .= $OS . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
     $DirName = $OS . '_' . $OSVer . '_' . ($BuildDepend?'depend':'clobber');
 
     #
@@ -221,12 +221,12 @@ sub GetSystemInfo {
 	$ObjDir =~ s/(bsd[0-9]\.[0-9])(-[A-Za-z]*)$/$1/o;
 	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
     }
-    
+
     if ( $OS eq 'HP-UX' ) {
 	$ObjDir = 'obj-hppa1.1-hp-hpux' . $OSVer;
 	$ObjDir =~ s/hpux[AB]\./hpux/o;
     }
-    
+
     if ( $OS eq 'Linux' ) {
 	if ( $CPU eq 'alpha' ) {
 	    $ObjDir = 'obj-' . $CPU . '-unknown-linux-gnu';
@@ -275,14 +275,13 @@ sub BuildIt {
 
     mkdir("$DirName", 0777);
     chdir("$DirName") || die "Couldn't enter $DirName";
-    
+
     $StartDir = getcwd();
     $LastTime = 0;
-    
-    print "Starting dir is : $StartDir\n";
-    
     $EarlyExit = 0;
-    
+
+    print "Starting dir is : $StartDir\n";
+
     while ( ! $EarlyExit ) {
 	chdir("$StartDir");
 	if ( time - $LastTime < (60 * $BuildSleep) ) {
@@ -290,12 +289,12 @@ sub BuildIt {
 	    print "\n\nSleeping $SleepTime seconds ...\n";
 	    sleep($SleepTime);
 	}
-	
+
 	$LastTime = time;
-	
+
 	$StartTime = time - 60 * 10;
 	$StartTimeStr = &CVSTime($StartTime);
-	
+
 	&StartBuild if ($ReportStatus);
  	$CurrentDir = getcwd();
 	if ( $CurrentDir ne $StartDir ) {
@@ -304,20 +303,20 @@ sub BuildIt {
 	}
 
 	$BuildDir = $CurrentDir;
-	
+
 	unlink( "$logfile" );
-	
+
 	print "opening $logfile\n";
 	open( LOG, ">$logfile" ) || print "can't open $?\n";
 	print LOG "current dir is -- " . $ENV{'HOST'} . ":$CurrentDir\n";
 	print LOG "Build Administrator is $BuildAdministrator\n";
 	&PrintEnv;
-	
+
 	$BuildStatus = 0;
 
 	mkdir($TopLevel, 0777);
 	chdir($TopLevel) || die "chdir($TopLevel): $!\n";
-	
+
 	if ( $BuildClassic ) {
 	    print"$CVS $CVSCO $BuildModule\n";
 	    print LOG "$CVS $CVSCO $BuildModule\n";
@@ -332,7 +331,7 @@ sub BuildIt {
 	    print LOG $_;
 	}
 	close(PULL);
-	
+
 	# Do a separate checkout with toplevel makefile
 	if (! $BuildClassic) {
 	    print LOG "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO'|\n";
@@ -361,10 +360,10 @@ sub BuildIt {
 	    chomp($BuildObjName .= $_); 
 	}
 	close (GETOBJ); 
-	
+
 	mkdir($BuildObjName, 0777);
 	chdir($BuildObjName) || die "chdir($BuildObjName): $!\n";
-	
+
 	print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
 	open (CONFIGURE, "$ConfigureEnvArgs ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
 	while (<CONFIGURE>) {
@@ -383,9 +382,9 @@ sub BuildIt {
 	close(CONFIGURE);
 	print "--- config.cache.\n";
 	print LOG "--- config.cache.\n";
-	    
+
 	# if we are building depend, rebuild dependencies
-	
+
 	if ($BuildDepend) {
 	    print LOG "$Make MAKE='$Make -j $cpus' depend 2>&1 |\n";
 	    open ( MAKEDEPEND, "$Make MAKE='$Make -j $cpus' depend 2>&1 |\n");
@@ -408,7 +407,7 @@ sub BuildIt {
 	}
 
 	@felist = split(/,/, $FE);
-	    
+
 	foreach $fe ( @felist ) {	    
 	    if (&BinaryExists($fe)) {
 		print LOG "deleting existing binary\n";
@@ -420,7 +419,7 @@ sub BuildIt {
 	    # Build the BE only	    
 	    print LOG "$Make MAKE='$Make -j $cpus' MOZ_FE= 2>&1 |\n";
 	    open( BEBUILD, "$Make MAKE='$Make -j $cpus' MOZ_FE= 2>&1 |");
-	    
+
 	    while ( <BEBUILD> ) {
 		print $_;
 		print LOG $_;
@@ -449,24 +448,26 @@ sub BuildIt {
 
 	foreach $fe (@felist) {
 	    if (&BinaryExists($fe)) {
-		   print LOG "export binary exists, build successful. Testing...\n";
-#return 0 if no problem, else 333 for a runtime error
-           $BuildStatus = &RunSmokeTest($fe);
+		if ( $RunTest ) {
+		    print LOG "export binary exists, build successful.  Testing...\n";
+		    $BuildStatus = &RunSmokeTest($fe);
+		} else {
+		    print LOG "export binary exists, build successful.  Skipping test.\n";
+		    $BuildStatus = 0;
+		}
+	    } else {
+		print LOG "export binary missing, build FAILED\n";
+		$BuildStatus = 666;
 	    }
-	    else {
-		   print LOG "export binary missing, build FAILED\n";
-		   $BuildStatus = 666;
-	    }
-	   
+
 	    if ( $BuildStatus == 0 ) {
- 	       $BuildStatusStr = 'success';
+		$BuildStatusStr = 'success';
 	    }
 	    elsif ( $BuildStatus == 333 ) {
-           $BuildStatusStr = 'testfailed';
-        }
-		else {
-           $BuildStatusStr = 'busted';
-        }
+		$BuildStatusStr = 'testfailed';
+	    } else {
+		$BuildStatusStr = 'busted';
+	    }
 	    print LOG "tinderbox: tree: $BuildTree\n";
 	    print LOG "tinderbox: builddate: $StartTime\n";
 	    print LOG "tinderbox: status: $BuildStatusStr\n";
@@ -477,65 +478,62 @@ sub BuildIt {
 	}
 	close(LOG);
 	chdir("$StartDir");
-	
-# this fun line added on 2/5/98. do not remove. Translated to english,
-# that's "take any line longer than 1000 characters, and split it into less
-# than 1000 char lines.  If any of the resulting lines is
-# a dot on a line by itself, replace that with a blank line."  
-# This is to prevent cases where a <cr>.<cr> occurs in the log file.  Sendmail
-# interprets that as the end of the mail, and truncates the log before
-# it gets to Tinderbox.  (terry weismann, chris yeh)
-#
-# This was replaced by a perl 'port' of the above, writen by 
-# preed@netscape.com; good things: no need for system() call, and now it's
-# all in perl, so we don't have to do OS checking like before.
+
+	# this fun line added on 2/5/98. do not remove. Translated to english,
+	# that's "take any line longer than 1000 characters, and split it into less
+	# than 1000 char lines.  If any of the resulting lines is
+	# a dot on a line by itself, replace that with a blank line."  
+	# This is to prevent cases where a <cr>.<cr> occurs in the log file.  Sendmail
+	# interprets that as the end of the mail, and truncates the log before
+	# it gets to Tinderbox.  (terry weismann, chris yeh)
+	#
+	# This was replaced by a perl 'port' of the above, writen by 
+	# preed@netscape.com; good things: no need for system() call, and now it's
+	# all in perl, so we don't have to do OS checking like before.
 
 	open(LOG, "$logfile") || die "Couldn't open logfile: $!\n";
 	open(OUTLOG, ">${logfile}.last") || die "Couldn't open logfile: $!\n";
-	    
+
 	while (<LOG>) {
 	    $q = 0;
-	    
+
 	    for (;;) {
 		$val = $q * 1000;
 		$Output = substr($_, $val, 1000);
-		
+
 		last if $Output eq undef;
-		
+
 		$Output =~ s/^\.$//g;
 		$Output =~ s/\n//g;
 		print OUTLOG "$Output\n";
 		$q++;
 	    } #EndFor
-		
+
 	} #EndWhile
-	    
+
 	close(LOG);
 	close(OUTLOG);
 
-	system( "$mail $Tinderbox_server < ${logfile}.last" )
-	    if ($ReportStatus );
+	system( "$mail $Tinderbox_server < ${logfile}.last" ) if ( $ReportStatus );
 	unlink("$logfile");
-	
+
 	# if this is a test run, set early_exit to 0. 
 	#This mean one loop of execution
 	$EarlyExit++ if ($BuildOnce);
     }
-    
 } #EndSub-BuildIt
 
 sub CVSTime {
     my($StartTimeArg) = @_;
     my($RetTime, $StartTimeArg, $sec, $minute, $hour, $mday, $mon, $year);
-    
+
     ($sec,$minute,$hour,$mday,$mon,$year) = localtime($StartTimeArg);
     $mon++; # month is 0 based.
-    
+
     sprintf("%02d/%02d/%02d %02d:%02d:00", $mon,$mday,$year,$hour,$minute );
 }
 
 sub StartBuild {
-    
     my($fe, @felist);
 
     @felist = split(/,/, $FE);
@@ -598,26 +596,25 @@ sub ParseArgs {
     $i = 0;
     $manArg = 0;
     while( $i < @ARGV ) {
-	if ($ARGV[$i] eq '--depend') {
-	    $BuildDepend = 1;
- 	    $manArg++;
+	if ($ARGV[$i] eq '--classic') {
+	    $BuildClassic = 1;
 	}
 	elsif ($ARGV[$i] eq '--clobber') {
 	    $BuildDepend = 0;
 	    $manArg++;
 	}
-	elsif ( $ARGV[$i] eq '--once' ) {
-	    $BuildOnce = 1;
-	    #$ReportStatus = 0;
-	}
-	elsif ($ARGV[$i] eq '--classic') {
-	    $BuildClassic = 1;
+	elsif ($ARGV[$i] eq '--depend') {
+	    $BuildDepend = 1;
+ 	    $manArg++;
 	}
 	elsif ($ARGV[$i] eq '--noreport') {
 	    $ReportStatus = 0;
 	}
-	elsif ($ARGV[$i] eq '--version' || $ARGV[$i] eq '-v') {
-	    die "$0: version $Version\n";
+	elsif ($ARGV[$i] eq '--notest') {
+	    $RunTest = 0;
+	}
+	elsif ( $ARGV[$i] eq '--once' ) {
+	    $BuildOnce = 1;
 	}
 	elsif ( $ARGV[$i] eq '-tag' ) {
 	    $i++;
@@ -632,6 +629,9 @@ sub ParseArgs {
 	    if ( $BuildTree eq '' ) {
 		&PrintUsage;
 	    }
+	}
+	elsif ($ARGV[$i] eq '--version' || $ARGV[$i] eq '-v') {
+	    die "$0: version $Version\n";
 	} else {
 	    &PrintUsage;
 	}
@@ -648,7 +648,6 @@ sub ParseArgs {
     }
 
     &PrintUsage if (! $manArg );
-
 } #EndSub-ParseArgs
 
 sub PrintUsage {
@@ -666,37 +665,36 @@ sub PrintEnv {
 sub RunSmokeTest {
     my($fe) = @_;
     my($Binary);
+    my($status) = 0;
+    my($waittime) = 30;
+    my($pid) = fork;
     $fe = 'x' if (!defined($fe));
 
     $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
     print LOG $Binary . "\n";
 
-   $waittime = 30;
+    exec $Binary if (!$pid);
 
-   $pid = fork;
+    # parent - wait $waittime seconds then check on child
+    sleep $waittime;
+    $status = waitpid($pid, WNOHANG());
+    if ($status != 0) {
+	print LOG "$Binary has crashed or quit.  Turn the tree orange now.\n";
+	return 333;
+    }
 
-   exec $Binary if !$pid;
-
-   # parent - wait $waittime seconds then check on child
-   sleep $waittime;
-   $status = waitpid $pid, WNOHANG();
-   if ($status != 0) {
-     print LOG "$Binary has crashed or quit. Turn the tree orange now.\n";
-     return 333;
-   }
-
-   print LOG "Success! $Binary is still running. Killing..\n";
-   # try to kill 3 times, then try a kill -9
-   for ($i=0 ; $i<3 ; $i++) {
-     kill 'TERM',$pid,;
-     # give it 3 seconds to actually die
-     sleep 3;
-     $status = waitpid $pid, WNOHANG();
-    last if ($status != 0);
-   }
-   return 0;
+    print LOG "Success! $Binary is still running.  Killing...\n";
+    # try to kill 3 times, then try a kill -9
+    for ($i=0 ; $i<3 ; $i++) {
+	kill('TERM',$pid,);
+	# give it 3 seconds to actually die
+	sleep 3;
+	$status = waitpid($pid, WNOHANG());
+	last if ($status != 0);
+    }
+    return 0;
 } #EndSub-RunSmokeTest
- 
+
 # Main function
 &InitVars;
 &ParseArgs;
