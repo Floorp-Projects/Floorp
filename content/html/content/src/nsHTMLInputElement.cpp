@@ -67,11 +67,7 @@
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
-#ifdef ENDER_LITE
 typedef nsIGfxTextControlFrame2 textControlPlace;
-#else
-typedef nsIGfxTextControlFrame textControlPlace;
-#endif
 
 class nsHTMLInputElement : public nsGenericHTMLLeafFormElement,
                            public nsIDOMHTMLInputElement,

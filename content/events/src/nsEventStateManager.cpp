@@ -51,7 +51,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIGfxTextControlFrame.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIEnumerator.h"
@@ -86,6 +85,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsIDOMHTMLFormElement.h"
+
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
@@ -3280,13 +3280,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 
   // Find the window that this frame is in and
   // make sure it has focus
-  // GFX Text Control frames handle their own focus
-  // and must be special-cased.
-  nsCOMPtr<nsIGfxTextControlFrame> gfxFrame = do_QueryInterface(currentFocusFrame);
-  if (gfxFrame) {
-    gfxFrame->SetInnerFocus();
-  } 
-  else if (currentFocusFrame) {
+  if (currentFocusFrame) {
     nsIFrame * parentFrame;
     currentFocusFrame->GetParentWithView(aPresContext, &parentFrame);
     if (nsnull != parentFrame) {
