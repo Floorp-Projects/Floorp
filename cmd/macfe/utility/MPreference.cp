@@ -559,40 +559,40 @@ template class MPreference<LControl,int32>;
 
 //----------------------------------------------------------------------------------------
 #pragma mark
-MPreference<LTextEdit,char*>::~MPreference()
+MPreference<LTextEditView,char*>::~MPreference()
 //----------------------------------------------------------------------------------------
 {
 	XP_FREEIF(mInitialControlValue);
-} // MPreference<LTextEdit,char*>::CleanUpData
+} // MPreference<LTextEditView,char*>::CleanUpData
 
 //----------------------------------------------------------------------------------------
-char* MPreference<LTextEdit,char*>::GetPaneValue() const
+char* MPreference<LTextEditView,char*>::GetPaneValue() const
 //----------------------------------------------------------------------------------------
 {
 	CStr255 value;
 	mPaneSelf->GetDescriptor(value);
 	return (char*)value;
-} // MPreference<LTextEdit,char*>::GetPaneValue
+} // MPreference<LTextEditView,char*>::GetPaneValue
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,char*>::SetPaneValue(char* inData)
+void MPreference<LTextEditView,char*>::SetPaneValue(char* inData)
 //----------------------------------------------------------------------------------------
 {
-	((LTextEdit*)mPaneSelf)->SetDescriptor(CStr255(inData));
-} // MPreference<LTextEdit,char*>:SetPaneValue
+	((LTextEditView*)mPaneSelf)->SetDescriptor(CStr255(inData));
+} // MPreference<LTextEditView,char*>:SetPaneValue
 
 //----------------------------------------------------------------------------------------
-Boolean MPreference<LTextEdit,char*>::Changed() const
+Boolean MPreference<LTextEditView,char*>::Changed() const
 //----------------------------------------------------------------------------------------
 {
 	char* value = GetPaneValue();
 	if (value && *value)
 		return (strcmp(value, mInitialControlValue) != 0);
 	return true;
-} // MPreference<LTextEdit,char*>::Changed
+} // MPreference<LTextEditView,char*>::Changed
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,char*>::InitializeUsing(PrefReadFunc inFunc)
+void MPreference<LTextEditView,char*>::InitializeUsing(PrefReadFunc inFunc)
 //----------------------------------------------------------------------------------------
 {
 	char* value;
@@ -602,40 +602,40 @@ void MPreference<LTextEdit,char*>::InitializeUsing(PrefReadFunc inFunc)
 		SetPaneValue(value);
 		XP_FREEIF(value);
 	}
-} // MPreference<LTextEdit,char*>::InitializeUsing
+} // MPreference<LTextEditView,char*>::InitializeUsing
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,char*>::ReadSelf()
+void MPreference<LTextEditView,char*>::ReadSelf()
 //----------------------------------------------------------------------------------------
 {
 	InitializeUsing(PREF_CopyCharPref);
 	mInitialControlValue = XP_STRDUP(GetPaneValue());
-} // MPreference<LTextEdit,char*>::ReadSelf
+} // MPreference<LTextEditView,char*>::ReadSelf
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,char*>::ReadDefaultSelf()
+void MPreference<LTextEditView,char*>::ReadDefaultSelf()
 //----------------------------------------------------------------------------------------
 {
 	if (!IsLocked())
 		InitializeUsing(PREF_CopyDefaultCharPref);
-} // MPreference<LTextEdit,char*>::ReadDefaultSelf
+} // MPreference<LTextEditView,char*>::ReadDefaultSelf
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,char*>::WriteSelf()
+void MPreference<LTextEditView,char*>::WriteSelf()
 //----------------------------------------------------------------------------------------
 {
 	if (ShouldWrite())
 		PREF_SetCharPref(GetPrefName(), GetPaneValue());
-} // MPreference<LTextEdit,char*>::WriteSelf
+} // MPreference<LTextEditView,char*>::WriteSelf
 
 //----------------------------------------------------------------------------------------
-char* MPreference<LTextEdit,char*>::GetPrefValue() const
+char* MPreference<LTextEditView,char*>::GetPrefValue() const
 //----------------------------------------------------------------------------------------
 {
 	return GetPaneValue();
-} // MPreference<LTextEdit,char*>::GetPrefValue
+} // MPreference<LTextEditView,char*>::GetPrefValue
 
-template class MPreference<LTextEdit,char*>;
+template class MPreference<LTextEditView,char*>;
 
 // This is used for captions, and for mixing in with another pref control (eg, to
 // control the descriptor of a checkbox).
@@ -824,74 +824,74 @@ template class MPreference<LGAPopup,char*>;
 #pragma mark -
 
 //----------------------------------------------------------------------------------------
-MPreference<LTextEdit,int32>::~MPreference()
+MPreference<LTextEditView,int32>::~MPreference()
 //----------------------------------------------------------------------------------------
 {
-} // MPreference<LTextEdit,int32>::CleanUpData
+} // MPreference<LTextEditView,int32>::CleanUpData
 
 //----------------------------------------------------------------------------------------
-int32 MPreference<LTextEdit,int32>::GetPaneValue() const
+int32 MPreference<LTextEditView,int32>::GetPaneValue() const
 //----------------------------------------------------------------------------------------
 {
-	return ((LTextEdit*)mPaneSelf)->GetValue();
-} // MPreference<LTextEdit,int32>::GetPaneValue
+	return ((LTextEditView*)mPaneSelf)->GetValue();
+} // MPreference<LTextEditView,int32>::GetPaneValue
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,int32>::SetPaneValue(int32 inData)
+void MPreference<LTextEditView,int32>::SetPaneValue(int32 inData)
 //----------------------------------------------------------------------------------------
 {
-	((LTextEdit*)mPaneSelf)->SetValue(inData);
-} // MPreference<LTextEdit,int32>:SetPaneValue
+	((LTextEditView*)mPaneSelf)->SetValue(inData);
+} // MPreference<LTextEditView,int32>:SetPaneValue
 
 //----------------------------------------------------------------------------------------
-Boolean MPreference<LTextEdit,int32>::Changed() const
+Boolean MPreference<LTextEditView,int32>::Changed() const
 //----------------------------------------------------------------------------------------
 {
 	return GetPaneValue() != mInitialControlValue;
-} // MPreference<LTextEdit,int32>::Changed
+} // MPreference<LTextEditView,int32>::Changed
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,int32>::InitializeUsing(PrefReadFunc inFunc)
+void MPreference<LTextEditView,int32>::InitializeUsing(PrefReadFunc inFunc)
 //----------------------------------------------------------------------------------------
 {
 	int32 value;
 	int	prefResult = inFunc(GetValidPrefName(), &value);
 	if (prefResult == PREF_NOERROR)
 		SetPaneValue(value);
-} // MPreference<LTextEdit,int32>::InitializeUsing
+} // MPreference<LTextEditView,int32>::InitializeUsing
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,int32>::ReadSelf()
+void MPreference<LTextEditView,int32>::ReadSelf()
 //----------------------------------------------------------------------------------------
 {
 	InitializeUsing(PREF_GetIntPref);
 	mInitialControlValue = GetPaneValue();
-} // MPreference<LTextEdit,int32>::ReadSelf
+} // MPreference<LTextEditView,int32>::ReadSelf
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,int32>::ReadDefaultSelf()
+void MPreference<LTextEditView,int32>::ReadDefaultSelf()
 //----------------------------------------------------------------------------------------
 {
 	if (!IsLocked())
 		InitializeUsing(PREF_GetDefaultIntPref);
-} // MPreference<LTextEdit,int32>::ReadDefaultSelf
+} // MPreference<LTextEditView,int32>::ReadDefaultSelf
 
 //----------------------------------------------------------------------------------------
-void MPreference<LTextEdit,int32>::WriteSelf()
+void MPreference<LTextEditView,int32>::WriteSelf()
 //----------------------------------------------------------------------------------------
 {
 	if (ShouldWrite())
 		PREF_SetIntPref(GetPrefName(), GetPaneValue());
-} // MPreference<LTextEdit,int32>::WriteSelf
+} // MPreference<LTextEditView,int32>::WriteSelf
 
 //----------------------------------------------------------------------------------------
-int32 MPreference<LTextEdit,int32>::GetPrefValue() const
+int32 MPreference<LTextEditView,int32>::GetPrefValue() const
 //----------------------------------------------------------------------------------------
 {
 	return GetPaneValue();
-} // MPreference<LTextEdit,int32>::GetPrefValue
+} // MPreference<LTextEditView,int32>::GetPrefValue
 
-template class MPreference<LTextEdit,int32>;
+template class MPreference<LTextEditView,int32>;
 
 #pragma mark -
 
