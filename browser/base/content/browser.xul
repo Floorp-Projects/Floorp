@@ -185,7 +185,7 @@
     
       <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&reloadCmd.label;"
-                     oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
+                     command="Browser:Reload"
                      tooltiptext="&reloadButton.tooltip;"/>
                     
       <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"

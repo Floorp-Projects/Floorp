@@ -959,8 +959,8 @@ function nonBrowserWindowStartup()
   // Disable inappropriate commands / submenus
   var disabledItems = ['cmd_newNavigatorTab', 'cmd_close', 'Browser:SavePage', 'Browser:SendLink',
                        'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain', 'viewToolbarsMenu',
-                       'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'viewTextZoomMenu',
-                       'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
+                       'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'Browser:ReloadSkipCache',
+                       'viewTextZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
                        'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Tools:Search', 'View:PageInfo'];
   var element;
 
@@ -2948,12 +2948,14 @@ nsBrowserStatusHandler.prototype =
 
   init : function()
   {
-    this.throbberElement = document.getElementById("navigator-throbber");
-    this.statusMeter     = document.getElementById("statusbar-icon");
-    this.stopCommand     = document.getElementById("Browser:Stop");
-    this.statusTextField = document.getElementById("statusbar-display");
-    this.securityButton  = document.getElementById("security-button");
-    this.urlBar          = document.getElementById("urlbar");
+    this.throbberElement        = document.getElementById("navigator-throbber");
+    this.statusMeter            = document.getElementById("statusbar-icon");
+    this.stopCommand            = document.getElementById("Browser:Stop");
+    this.reloadCommand          = document.getElementById("Browser:Reload");
+    this.reloadSkipCacheCommand = document.getElementById("Browser:ReloadSkipCache");
+    this.statusTextField        = document.getElementById("statusbar-display");
+    this.securityButton         = document.getElementById("security-button");
+    this.urlBar                 = document.getElementById("urlbar");
 
     // Initialize the security button's state and tooltip text
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
@@ -2963,14 +2965,16 @@ nsBrowserStatusHandler.prototype =
   destroy : function()
   {
     // XXXjag to avoid leaks :-/, see bug 60729
-    this.throbberElement = null;
-    this.statusMeter     = null;
-    this.stopCommand     = null;
-    this.statusTextField = null;
-    this.securityButton  = null;
-    this.urlBar          = null;
-    this.statusText      = null;
-    this.lastURI         = null;
+    this.throbberElement        = null;
+    this.statusMeter            = null;
+    this.stopCommand            = null;
+    this.reloadCommand          = null;
+    this.reloadSkipCacheCommand = null;
+    this.statusTextField        = null;
+    this.securityButton         = null;
+    this.urlBar                 = null;
+    this.statusText             = null;
+    this.lastURI                = null;
   },
 
   setJSStatus : function(status)
@@ -3167,8 +3171,14 @@ nsBrowserStatusHandler.prototype =
 
     var location = aLocation.spec;
 
-    if (location == "about:blank")
-      location = "";
+    if (location == "about:blank" || location == "") {   //second condition is for new tabs, otherwise
+      location = "";                                     //reload function is enabled until tab is refreshed
+      this.reloadCommand.setAttribute("disabled", "true");
+      this.reloadSkipCacheCommand.setAttribute("disabled", "true");
+    } else {
+      this.reloadCommand.removeAttribute("disabled");
+      this.reloadSkipCacheCommand.removeAttribute("disabled");
+    }
     
     // We should probably not do this if the value has changed since the user
     // searched
