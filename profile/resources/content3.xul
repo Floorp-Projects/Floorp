@@ -9,17 +9,30 @@
 
 
 <script>
+function InitializeValues()
+{
+	element = document.getElementById("FullName");
+	element.value = parent.fullName;
+
+	element = document.getElementById("Email");
+	element.value = parent.emailAddr;
+}
+
 function commit()
 {
 	var element;
 
 	element = document.getElementById("FullName");
 	parent.SetValue(element.id, element.value);
+	parent.fullName = element.value;
 
 	element = document.getElementById("Email");
 	data += "ProfileDir="+element.value+"%";
 	parent.SetValue(element.id, element.value);
+	parent.emailAddr = element.value;
 }
+
+setTimeout("InitializeValues()", 0);
 </script>
 
 

@@ -9,17 +9,30 @@
 
 
 <script>
+function InitializeValues()
+{
+	element = document.getElementById("ProfileName");
+	element.value = parent.profName;
+	
+	element = document.getElementById("ProfileDir");
+	element.value = parent.profDir;
+}
+
 function commit()
 {
 	var element;
 
 	element = document.getElementById("ProfileName");
 	parent.SetValue(element.id, element.value);
+	parent.profName = element.value;
 
 	element = document.getElementById("ProfileDir");
 	data += "ProfileDir="+element.value+"%";
 	parent.SetValue(element.id, element.value);
+	parent.profDir = element.value;
 }
+
+setTimeout("InitializeValues()", 0);
 </script>
 
 
