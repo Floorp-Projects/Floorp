@@ -395,7 +395,7 @@ function selectProduct(f) {
 
           [% PROCESS select sel = { name => 'version', size => 5 } %]
 
-        [% IF target_milestone.size > 0 %]
+        [% IF Param('usetargetmilestone') && target_milestone.size > 0 %]
           [% PROCESS select sel = { name => 'target_milestone', size => 5 } %]
         [% END %]
         </tr>
