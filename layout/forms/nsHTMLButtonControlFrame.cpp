@@ -119,6 +119,7 @@ protected:
   nsCursor mPreviousCursor;
   PRBool mGotFocus;
   nsRect mTranslatedRect;
+  PRBool mDidInit;
 };
 
 nsresult
@@ -142,6 +143,7 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsIContent* aContent,
   mPreviousCursor = eCursor_standard;
   mGotFocus = PR_FALSE;
   mTranslatedRect = nsRect(0,0,0,0);
+  mDidInit = PR_FALSE;
 }
 
 nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
@@ -534,32 +536,6 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // add ourself as an nsIFormControlFrame
   nsFormFrame::AddFormControlFrame(aPresContext, *this);
 
-  // create our view, we need a view to grab the mouse 
-  nsIView* view;
-  GetView(view);
-  if (!view) {
-    nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
-	  nsIPresShell   *presShell = aPresContext.GetShell();     
-	  nsIViewManager *viewMan   = presShell->GetViewManager();  
-    NS_RELEASE(presShell);
-
-    nsIFrame* parWithView;
-	  nsIView *parView;
-    GetParentWithView(parWithView);
-	  parWithView->GetView(parView);
-    // the view's size is not know yet, but its size will be kept in synch with our frame.
-    nsRect boundBox(0, 0, 500, 500); 
-    result = view->Init(viewMan, boundBox, parView, nsnull);
-    viewMan->InsertChild(parView, view, 0);
-    SetView(view);
-
-    const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
-    // set the opacity
-    viewMan->SetViewOpacity(view, color->mOpacity);
-
-    NS_RELEASE(viewMan);
-  }
-
   // cache our display type
   const nsStyleDisplay* styleDisplay;
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
@@ -627,6 +603,35 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
+  if (!mDidInit) {
+    // create our view, we need a view to grab the mouse 
+    nsIView* view;
+    GetView(view);
+    if (!view) {
+      nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+	    nsIPresShell   *presShell = aPresContext.GetShell();     
+	    nsIViewManager *viewMan   = presShell->GetViewManager();  
+      NS_RELEASE(presShell);
+
+      nsIFrame* parWithView;
+	    nsIView *parView;
+      GetParentWithView(parWithView);
+	    parWithView->GetView(parView);
+      // the view's size is not know yet, but its size will be kept in synch with our frame.
+      nsRect boundBox(0, 0, 500, 500); 
+      result = view->Init(viewMan, boundBox, parView, nsnull);
+      viewMan->InsertChild(parView, view, 0);
+      SetView(view);
+
+      const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
+      // set the opacity
+      viewMan->SetViewOpacity(view, color->mOpacity);
+
+      NS_RELEASE(viewMan);
+    }
+    mDidInit = PR_TRUE;
+  }
+
   nsSize availSize(aReflowState.maxSize);
 
   // reflow the child

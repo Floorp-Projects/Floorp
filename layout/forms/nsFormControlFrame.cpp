@@ -52,7 +52,9 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-//static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
+static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+
 
 nsFormControlFrame::nsFormControlFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsLeafFrame(aContent, aParentFrame)
@@ -218,21 +220,106 @@ nsFormControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_METHOD
 nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
-                     nsHTMLReflowMetrics& aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&      aStatus)
+                           nsHTMLReflowMetrics& aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&      aStatus)
+{
+  nsresult result = NS_OK;
+
+  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+
+  if (!mDidInit) {
+	  nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
+  	nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
+	  NS_RELEASE(presShell); 
+    nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
+
+    // absolutely positioned controls already have a view but not a widget
+    nsIView* view = nsnull;
+    GetView(view);
+    if (nsnull == view) {
+      result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+	    if (!NS_SUCCEEDED(result)) {
+	      NS_ASSERTION(0, "Could not create view for form control"); 
+        aStatus = NS_FRAME_NOT_COMPLETE;
+        return result;
+	    }
+
+      nsIFrame* parWithView;
+	    nsIView *parView;
+
+      GetParentWithView(parWithView);
+	    parWithView->GetView(parView);
+
+	    // initialize the view as hidden since we don't know the (x,y) until Paint
+      result = view->Init(viewMan, boundBox, parView, nsnull, nsViewVisibility_kHide);
+      if (NS_OK != result) {
+	      NS_ASSERTION(0, "view initialization failed"); 
+        aStatus = NS_FRAME_NOT_COMPLETE;
+        return NS_OK;
+	    }
+
+      viewMan->InsertChild(parView, view, 0);
+      SetView(view);
+    }
+
+ 	  const nsIID& id = GetCID();
+    nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
+    view->CreateWidget(id, initData);
+
+    if (nsnull != initData) {
+      delete(initData);
+    }
+
+ 	  // set our widget
+	  result = GetWidget(view, &mWidget);
+	  if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
+      nsIFormControl* formControl = nsnull;
+      result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+      if ((NS_OK == result) && formControl) {
+        // set the content's widget, so it can get content modified by the widget
+        formControl->SetWidget(mWidget);
+        NS_RELEASE(formControl);
+      }
+      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+      mDidInit = PR_TRUE;
+	  } else {
+	    NS_ASSERTION(0, "could not get widget");
+	  }
+
+    if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {
+      viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
+    }
+
+	  NS_IF_RELEASE(viewMan);    
+  } 
+  
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+    
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+#if 0
+NS_METHOD
+nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
+                           nsHTMLReflowMetrics& aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&      aStatus)
 {
   nsIView* view = nsnull;
   GetView(view);
   if (nsnull == view) {
-    static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-    static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-
     nsresult result = 
-	    nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
-                                   (void **)&view);
+	    nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	  if (NS_OK != result) {
-	    NS_ASSERTION(0, "Could not create view for button"); 
+	    NS_ASSERTION(0, "Could not create view for form control"); 
       aStatus = NS_FRAME_NOT_COMPLETE;
       return result;
 	  }
@@ -251,19 +338,19 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
     GetParentWithView(parWithView);
 	  parWithView->GetView(parView);
 
-	  const nsIID& id = GetCID();
-    nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView,
                         nsnull, nsViewVisibility_kHide);
     if (NS_OK != result) {
-	    NS_ASSERTION(0, "widget initialization failed"); 
+	    NS_ASSERTION(0, "view initialization failed"); 
       aStatus = NS_FRAME_NOT_COMPLETE;
       return NS_OK;
 	  }
 
     viewMan->InsertChild(parView, view, 0);
 
+ 	  const nsIID& id = GetCID();
+    nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
     view->CreateWidget(id, initData);
 
     if (nsnull != initData) {
@@ -313,6 +400,8 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
+
+#endif
 
 NS_IMETHODIMP
 nsFormControlFrame::AttributeChanged(nsIPresContext* aPresContext,

@@ -101,6 +101,7 @@ protected:
   PRBool mControlIsInside;
   nsIFormControlFrame* mControlFrame;
   nsRect mTranslatedRect;
+  PRBool mDidInit;
 };
 
 nsresult
@@ -124,7 +125,8 @@ nsLabelFrame::nsLabelFrame(nsIContent* aContent,
   mPreviousCursor  = eCursor_standard;
   mControlIsInside = PR_FALSE;
   mControlFrame    = nsnull;
-  mTranslatedRect = nsRect(0,0,0,0);
+  mTranslatedRect  = nsRect(0,0,0,0);
+  mDidInit         = PR_FALSE;
 }
 
 nsLabelFrame::~nsLabelFrame()
@@ -400,28 +402,6 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
-  // create our view, we need a view to grab the mouse 
-  nsIView* view;
-  GetView(view);
-  if (!view) {
-    nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
-                                                  (void **)&view);
-	  nsIPresShell   *presShell = aPresContext.GetShell();     
-	  nsIViewManager *viewMan   = presShell->GetViewManager();  
-    NS_RELEASE(presShell);
-
-    nsIFrame* parWithView;
-	  nsIView *parView;
-    GetParentWithView(parWithView);
-	  parWithView->GetView(parView);
-    // the view's size is not know yet, but its size will be kept in synch with our frame.
-    nsRect boundBox(0, 0, 500, 500); 
-    result = view->Init(viewMan, boundBox, parView, nsnull);
-    viewMan->InsertChild(parView, view, 0);
-    SetView(view);
-    NS_RELEASE(viewMan);
-  }
-
   // cache our display type
   const nsStyleDisplay* styleDisplay;
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
@@ -460,6 +440,31 @@ nsLabelFrame::Reflow(nsIPresContext& aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
+  if (!mDidInit) {
+    // create our view, we need a view to grab the mouse 
+    nsIView* view;
+    GetView(view);
+    if (!view) {
+      nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+                                                    (void **)&view);
+	    nsIPresShell   *presShell = aPresContext.GetShell();     
+	    nsIViewManager *viewMan   = presShell->GetViewManager();  
+      NS_RELEASE(presShell);
+
+      nsIFrame* parWithView;
+	    nsIView *parView;
+      GetParentWithView(parWithView);
+	    parWithView->GetView(parView);
+      // the view's size is not know yet, but its size will be kept in synch with our frame.
+      nsRect boundBox(0, 0, 500, 500); 
+      result = view->Init(viewMan, boundBox, parView, nsnull);
+      viewMan->InsertChild(parView, view, 0);
+      SetView(view);
+      NS_RELEASE(viewMan);
+    }
+    mDidInit = PR_TRUE;
+  }
+
   if (nsnull == mControlFrame) {
     // check to see if a form control is referenced via the "for" attribute
     if (FindForControl(mControlFrame)) {
