@@ -227,6 +227,7 @@ nsImapMailFolder::nsImapMailFolder() :
   m_pathName = nsnull;
   m_folderACL = nsnull;
   m_aclFlags = 0;
+  m_supportedUserFlags = 0;
   m_namespace = nsnull;
   m_numFilterClassifyRequests = 0; 
 }
@@ -5050,6 +5051,51 @@ NS_IMETHODIMP nsImapMailFolder::GetAclFlags(PRUint32 *aclFlags)
   return rv;
 }
 
+
+nsresult nsImapMailFolder::SetSupportedUserFlags(PRUint32 userFlags)
+{
+  nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
+  nsresult rv = GetDatabase(nsnull);
+
+  m_supportedUserFlags = userFlags;
+  if (mDatabase)
+  {
+    rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    if (NS_SUCCEEDED(rv) && dbFolderInfo)
+      dbFolderInfo->SetUint32Property("imapFlags", userFlags);
+  }
+
+
+  return rv;
+}
+
+nsresult nsImapMailFolder::GetSupportedUserFlags(PRUint32 *userFlags)
+{
+  NS_ENSURE_ARG_POINTER(userFlags);
+
+  nsresult rv = NS_OK;
+
+  ReadDBFolderInfo(PR_FALSE); // update cache first.
+  if (m_supportedUserFlags == 0) // 0 means invalid value, so get it from db.
+  {
+    nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
+    rv = GetDatabase(nsnull);
+
+    if (mDatabase)
+    {
+      rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+      if (NS_SUCCEEDED(rv) && dbFolderInfo)
+      {
+        rv = dbFolderInfo->GetUint32Property("imapFlags", userFlags, 0);
+        m_supportedUserFlags = *userFlags;
+      }
+    }
+  }
+  else
+    *userFlags = m_supportedUserFlags;
+  return rv;
+}
+
 NS_IMETHODIMP nsImapMailFolder::GetCanIOpenThisFolder(PRBool *aBool)
 {
   NS_ENSURE_ARG_POINTER(aBool);
@@ -5165,9 +5211,18 @@ void nsMsgIMAPFolderACL::UpdateACLCache()
 
 PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const char *rights)
 {
-  PRBool rv = PR_FALSE;
+  PRBool ret = PR_FALSE;
   nsXPIDLCString myUserName;
-  m_folder->GetUsername(getter_Copies(myUserName));
+  nsCOMPtr <nsIMsgIncomingServer> server;
+
+  nsresult rv = m_folder->GetServer(getter_AddRefs(server));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "error getting server");
+  if (NS_FAILED(rv)) 
+    return PR_FALSE;
+  // we need the real user name to match with what the imap server returns
+  // in the acl response.
+  server->GetRealUsername(getter_Copies(myUserName));
+
   char *ourUserName = nsnull;
   
   if (!userName)
@@ -5188,7 +5243,7 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
       NS_ASSERTION(m_aclCount >= 0, "acl count can't go negative");
     }
     m_aclCount++;
-    rv = (m_rightsHash->Put(&hashKey, rightsWeOwn) == 0);
+    ret = (m_rightsHash->Put(&hashKey, rightsWeOwn) == 0);
   }
   
   if (ourUserName && 
@@ -5198,7 +5253,7 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
     UpdateACLCache();
   }
   
-  return rv;
+  return ret;
 }
 
 const char *nsMsgIMAPFolderACL::GetRightsStringForUser(const char *inUserName)

@@ -474,7 +474,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 
    m_flagState = new nsImapFlagAndUidState(kImapFlagAndUidStateSize, PR_FALSE);
    if (!m_flagState)
-	   return NS_ERROR_OUT_OF_MEMORY;
+     return NS_ERROR_OUT_OF_MEMORY;
 
    NS_ADDREF(m_flagState);
 
@@ -4779,7 +4779,7 @@ void nsImapProtocol::HandleCurrentUrlError()
     nsImapMailboxSpec *notSelectedSpec = new nsImapMailboxSpec;
     if (notSelectedSpec)
     {
-	  NS_ADDREF(notSelectedSpec);
+      NS_ADDREF(notSelectedSpec);
       notSelectedSpec->allocatedPathName = fCurrentUrl->CreateCanonicalSourceFolderPathString();
       notSelectedSpec->hostName = fCurrentUrl->GetUrlHost();
       notSelectedSpec->folderSelected = PR_FALSE;
@@ -5353,16 +5353,16 @@ void nsImapProtocol::OnUnsubscribe(const char * sourceMailbox)
 
 void nsImapProtocol::RefreshACLForFolderIfNecessary(const char *mailboxName)
 {
-    if (GetServerStateParser().ServerHasACLCapability())
+  if (GetServerStateParser().ServerHasACLCapability())
+  {
+    if (!m_folderNeedsACLRefreshed && m_imapMailFolderSink)
+      m_imapMailFolderSink->GetFolderNeedsACLListed(&m_folderNeedsACLRefreshed);
+    if (m_folderNeedsACLRefreshed)
     {
-        if (!m_folderNeedsACLRefreshed && m_imapMailFolderSink)
-            m_imapMailFolderSink->GetFolderNeedsACLListed(&m_folderNeedsACLRefreshed);
-        if (m_folderNeedsACLRefreshed)
-        {
-            RefreshACLForFolder(mailboxName);
-            m_folderNeedsACLRefreshed = PR_FALSE;
-        }
+      RefreshACLForFolder(mailboxName);
+      m_folderNeedsACLRefreshed = PR_FALSE;
     }
+  }
 }
 
 void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
@@ -5383,6 +5383,7 @@ void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
       ClearAllFolderRights(mailboxName, ns);
       // Now, get the new one.
       GetACLForFolder(mailboxName);
+      GetMyRightsForFolder(mailboxName);
       // We're all done, refresh the icon/flags for this folder
       RefreshFolderACLView(mailboxName, ns);
       break;
