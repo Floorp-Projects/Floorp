@@ -338,29 +338,32 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
             if (!ok)
                 break;
-            ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, &attrs);
-            if (ok) {
-                if (prop &&
-                    OBJ_IS_NATIVE(obj2) &&
-                    (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-                    val = JSVAL_NULL;
-                    if (attrs & JSPROP_GETTER)
-                        val = (jsval)SPROP_GETTER((JSScopeProperty*)prop, obj2);
-                    if (attrs & JSPROP_SETTER) {
-                        if (val != JSVAL_NULL) {
-                            /* Mark the getter here, then set val to setter. */
-                            ok = (MarkSharpObjects(cx, JSVAL_TO_OBJECT(val),
-                                                   NULL)
-                                  != NULL);
+            if (prop) {
+                ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &attrs);
+                if (ok) {
+                    if (OBJ_IS_NATIVE(obj2) &&
+                        (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+                        val = JSVAL_NULL;
+                        if (attrs & JSPROP_GETTER) {
+                            val = (jsval)
+                                SPROP_GETTER((JSScopeProperty*)prop, obj2);
                         }
-                        val = (jsval)SPROP_SETTER((JSScopeProperty*)prop, obj2);
+                        if (attrs & JSPROP_SETTER) {
+                            if (val != JSVAL_NULL) {
+                                /* Mark the getter, then set val to setter. */
+                                ok = (MarkSharpObjects(cx, JSVAL_TO_OBJECT(val),
+                                                       NULL)
+                                      != NULL);
+                            }
+                            val = (jsval)
+                                SPROP_SETTER((JSScopeProperty*)prop, obj2);
+                        }
+                    } else {
+                        ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
                     }
-                } else {
-                    ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
                 }
-            }
-            if (prop)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
+            }
 #else
             ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
 #endif
@@ -595,10 +598,11 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
 	if (!ok)
 	    goto error;
-        ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &attrs);
-        if (ok) {
-            if (prop &&
-                OBJ_IS_NATIVE(obj2) &&
+        if (prop) {
+            ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &attrs);
+            if (!ok)
+                goto error;
+            if (OBJ_IS_NATIVE(obj2) &&
                 (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
                 valcnt = 0;
                 if (attrs & JSPROP_GETTER) {
@@ -630,9 +634,8 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 gsop[0] = NULL;
                 ok = OBJ_GET_PROPERTY(cx, obj, id, &val[0]);
             }
-        }
-        if (prop)
             OBJ_DROP_PROPERTY(cx, obj2, prop);
+        }
 
 #else  /* !JS_HAS_GETTER_SETTER */
 
