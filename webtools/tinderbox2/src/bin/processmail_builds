@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.26 $ 
-# $Date: 2002/05/08 00:39:52 $ 
+# $Revision: 1.27 $ 
+# $Date: 2002/05/08 00:44:45 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -860,6 +860,9 @@ sub parse_mail_body {
   # calling the symbolic reference to the function continually.  This
   # is also how we check that the function exists.
 
+    my $func_line_type = '';
+    my $func_parse_errorline = "";
+
     my ($out, $func);
 
     $func = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
@@ -871,9 +874,6 @@ sub parse_mail_body {
     $out = eval "\$func_parse_errorline = \\&${func};";
     ($@) &&
         die("Errorparser is not set. $@");
-
-    my $func_line_type = '';
-    my $func_parse_errorline = "";
 
   open(BINARY, ">$TMP_FILE{'binaryfile'}") ||
     die("Could not write to file: '$TMP_FILE{'binaryfile'}'. $!\n");
