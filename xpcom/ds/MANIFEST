@@ -27,3 +27,4 @@ nsVector.h
 nsVoidArray.h
 nsXPIDLString.h
 plvector.h
+nsTextFormater.h
