@@ -34,16 +34,16 @@
         alttitle="&windowalttitle.label;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical"
+        orient="vertical" style="width: 30em!important;"
         class="dialog"
         onload="Startup()">
 
-  <html:script src="chrome://communicator/content/wallet/SignonViewer.js"/>
-	<html:script src="chrome://global/content/strres.js" />
+  <script src="chrome://communicator/content/wallet/SignonViewer.js"></script>
+	<script src="chrome://global/content/strres.js"></script>
 
   <keyset id="keyset"/>
            
-  <tabcontrol flex="100%" align="vertical">
+  <tabcontrol flex="1" orient="vertical">
     <tabbox>
       <tab id="signonTab" style="display:none" value="&tab.signonsstored.label;"/>
       <tab id="signonSitesTab" style="display:none" value="&tab.signonsnotstored.label;"/>
@@ -51,13 +51,13 @@
       <tab id="nocapture" style="display:none" value="&tab.nocapture.label;"/>
       <spring flex="1"/>
     </tabbox>
-    <tabpanel id="panel" align="horizontal" style="width: 480px;">
+    <tabpanel id="panel">
       <!-- saved signons -->
-      <box class="tabpanel" id="savedsignons" flex="100%" align="vertical">
-          <text class="label" value="&spiel.signonsstored.label;"/>
-          <spring style="height: 10px;"/>
-          <tree id="signonstree" class="inset" style="height: 30em; width: 440px;" align="vertical"
-                onclick="HandleEvent(event);"
+      <box id="savedsignons" flex="1" orient="vertical">
+          <html>&spiel.signonsstored.label;</html>
+          <separator class="thin"/>
+          <tree id="signonstree" class="inset" style="height: 20em;"
+                onclick="HandleEvent(event);" flex="1"
                 multiple="true" onkeypress="HandleEvent(event,0)">
             <treecolgroup>
               <treecol width="0" flex="45"/>
@@ -71,22 +71,21 @@
             </treehead>
             <treechildren id="savesignonlist" flex="1"/>
           </tree>
-          <spring style="height: 5px;"/>
-          <box align="horizontal">
+          <separator class="thin"/>
+          <box>
             <button id="removeSignon" disabled="true" class="dialog push"
-                          value="&remove.label;" onclick="DeleteSignon();"/>
+                          value="&remove.label;" oncommand="DeleteSignon();"/>
             <button id="removeAllSignons" class="dialog push"
                           value="&removeall.label;"
-                          onclick="DeleteAllSignons();"/>
+                          oncommand="DeleteAllSignons();"/>
           </box>
-          <spring style="height: 5px;"/>
       </box>
       <!-- ignored signon sites -->
-      <box class="tabpanel" id="ignoredsites" flex="100%" align="vertical">
-          <text class="label" value="&spiel.signonsnotstored.label;"/>
-          <spring style="height: 10px;"/>
-          <tree id="ignoretree" class="inset" style="height: 30em; width: 440px;" align="vertical"
-                onclick="HandleEvent(event);"
+      <box id="ignoredsites" flex="1" orient="vertical">
+          <html>&spiel.signonsnotstored.label;</html>
+          <separator class="thin"/>
+          <tree id="ignoretree" class="inset" style="height: 20em;"
+                onclick="HandleEvent(event);" flex="1"
                 multiple="true" onkeypress="HandleEvent(event,1)">
             <treecolgroup>
               <treecol flex="1"/>
@@ -98,22 +97,21 @@
             </treehead>
             <treechildren flex="1" id="ignoredlist"/>
           </tree>
-          <spring style="height: 5px;"/>
-          <box align="horizontal">
+          <separator class="thin"/>
+          <box>
             <button id="removeIgnoredSite" disabled="true" class="dialog push"
-                          value="&remove.label;" onclick="DeleteIgnoredSite();"/>
+                          value="&remove.label;" oncommand="DeleteIgnoredSite();"/>
             <button id="removeAllSites" class="dialog push"
                           value="&removeall.label;"
-                          onclick="DeleteAllSites();"/>
+                          oncommand="DeleteAllSites();"/>
           </box>
-          <spring style="height: 5px;"/>
       </box>
       <!-- do not preview panel -->
-      <box class="tabpanel" id="nopreviewforms" flex="100%" align="vertical">
-          <text class="label" value="&spiel.nopreview.label;"/>
-          <spring style="height: 10px;"/>
-          <tree id="nopreviewtree" class="inset" style="height: 30em; width: 440px;" align="vertical"
-                onclick="HandleEvent(event);"
+      <box class="tabpanel" id="nopreviewforms" flex="1" orient="vertical">
+          <html>&spiel.nopreview.label;</html>
+          <separator class="thin"/>
+          <tree id="nopreviewtree" class="inset" style="height: 20em;" 
+                onclick="HandleEvent(event);" flex="1"
                 multiple="true" onkeypress="HandleEvent(event,2)">
             <treecolgroup>
               <treecol flex="1"/>
@@ -126,22 +124,21 @@
             </treehead>
             <treechildren flex="1" id="nopreviewlist"/>
           </tree>
-          <spring style="height: 5px;"/>
-          <box align="horizontal">
+          <separator class="thin"/>
+          <box>
             <button id="removeNoPreview" disabled="true" class="dialog push"
-                          value="&remove.label;" onclick="DeleteNoPreviewForm();"/>
+                          value="&remove.label;" oncommand="DeleteNoPreviewForm();"/>
             <button id="removeAllNopreviews" class="dialog push"
                           value="&removeall.label;"
-                          onclick="DeleteAllNopreviews();"/>
+                          oncommand="DeleteAllNopreviews();"/>
           </box>
-          <spring style="height: 5px;"/>
       </box>
       <!-- do not capture panel -->
-      <box class="tabpanel" id="nocaptureforms" flex="100%" align="vertical">
-          <text class="label" value="&spiel.nocapture.label;"/>
-          <spring style="height: 10px;"/>
-          <tree id="nocapturetree" class="inset" style="height: 30em; width: 440px;" align="vertical"
-                onclick="HandleEvent(event);"
+      <box class="tabpanel" id="nocaptureforms" flex="1" orient="vertical">
+          <html>&spiel.nocapture.label;</html>
+          <separator class="thin"/>
+          <tree id="nocapturetree" class="inset" style="height: 20em;" 
+                onclick="HandleEvent(event);" flex="1"
                 multiple="true" onkeypress="HandleEvent(event,3)">
             <treecolgroup>
               <treecol flex="1"/>
@@ -153,24 +150,21 @@
             </treehead>
             <treechildren flex="1" id="nocapturelist"/>
           </tree>
-          <spring style="height: 5px;"/>
-          <box align="horizontal">
+          <separator class="thin"/>
+          <box>
             <button id="removeNoCapture" disabled="true" class="dialog push"
-                          value="&remove.label;" onclick="DeleteNoCaptureForm();"/>
+                          value="&remove.label;" oncommand="DeleteNoCaptureForm();"/>
             <button id="removeAllNocaptures" class="dialog push"
                           value="&removeall.label;"
-                          onclick="DeleteAllNocaptures();"/>
+                          oncommand="DeleteAllNocaptures();"/>
           </box>
-          <spring style="height: 5px;"/>
       </box>
     </tabpanel>
   </tabcontrol>
-  
-  <!-- from dialogOverlay.xul -->
-  <box align="horizontal">
-    <spring flex="100%"/>
-    <box id="okCancelButtons"/>
-  </box>
+    
+  <separator class="thin"/>
+
+  <box id="okCancelButtonsRight"/>
  
 </window>
 
