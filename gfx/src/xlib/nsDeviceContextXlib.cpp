@@ -30,10 +30,12 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
+static PRLogModuleInfo *DeviceContextXlibLM = PR_NewLogModule("DeviceContextXlib");
+
 nsDeviceContextXlib::nsDeviceContextXlib()
   : DeviceContextImpl()
 {
-  printf("nsDeviceContextXlib::nsDeviceContextXlib()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::nsDeviceContextXlib()\n"));
   NS_INIT_REFCNT();
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
@@ -54,7 +56,7 @@ nsDeviceContextXlib::~nsDeviceContextXlib()
 
 NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 {
-  printf("nsDeviceContextXlib::Init()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::Init()\n"));
 
   mWidget = aNativeWidget;
 
@@ -95,14 +97,14 @@ nsDeviceContextXlib::CommonInit(void)
   mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
-  //  printf("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips);
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips));
 
   DeviceContextImpl::CommonInit();
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-  printf("nsDeviceContextXlib::CreateRenderingContext()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::CreateRenderingContext()\n"));
 
   nsIRenderingContext  *context = nsnull;
   nsDrawingSurfaceXlib *surface = nsnull;
@@ -138,14 +140,14 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
 
 NS_IMETHODIMP nsDeviceContextXlib::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
-  printf("nsDeviceContextXlib::SupportsNativeWidgets()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::SupportsNativeWidgets()\n"));
   aSupportsWidgets = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-  printf("nsDeviceContextXlib::GetScrollBarDimensions()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetScrollBarDimensions()\n"));
   // XXX Oh, yeah.  These are hard coded.
   aWidth = 5 * mPixelsToTwips;
   aHeight = 5 * mPixelsToTwips;
@@ -155,7 +157,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetScrollBarDimensions(float &aWidth, float &
 
 NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
 {
-  printf("nsDeviceContextXlib::GetSystemAttribute()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetSystemAttribute()\n"));
   nsresult status = NS_OK;
 
   switch (anID) {
@@ -241,7 +243,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-  printf("nsDeviceContextXlib::GetDrawingSurface()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetDrawingSurface()\n"));
   if (NULL == mSurface) {
     aContext.CreateDrawingSurface(nsnull, 0, mSurface);
   }
@@ -255,14 +257,14 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDrawingSurface(nsIRenderingContext &aConte
 
 NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
-  printf("nsDeviceContextXlib::ConvertPixel()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::ConvertPixel()\n"));
   aPixel = xlib_rgb_xpixel_from_rgb(aPixel);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 {
-  printf("nsDeviceContextXlib::CheckFontExistence()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::CheckFontExistence()\n"));
   char        **fnames = nsnull;
   PRInt32     namelen = aFontName.Length() + 1;
   char        *wildstring = (char *)PR_Malloc(namelen + 200);
@@ -301,7 +303,7 @@ NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  printf("nsDeviceContextXlib::GetDeviceSurfaceDimensions()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetDeviceSurfaceDimensions()\n"));
   aWidth = 1;
   aHeight = 1;
   return NS_OK;
@@ -310,7 +312,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
-  printf("nsDeviceContextXlib::GetDeviceContextFor()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetDeviceContextFor()\n"));
   aContext = new nsDeviceContextPS();
   ((nsDeviceContextPS *)aContext)->SetSpec(aDevice);
   NS_ADDREF(aDevice);
@@ -319,24 +321,24 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDe
 
 NS_IMETHODIMP nsDeviceContextXlib::BeginDocument(void)
 {
-  printf("nsDeviceContextXlib::BeginDocument()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::BeginDocument()\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::EndDocument(void)
 {
-  printf("nsDeviceContextXlib::EndDocument()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::EndDocument()\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::BeginPage(void)
 {
-  printf("nsDeviceContextXlib::BeginPage()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::BeginPage()\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::EndPage(void)
 {
-  printf("nsDeviceContextXlib::EndPage()\n");
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::EndPage()\n"));
   return NS_OK;
 }
