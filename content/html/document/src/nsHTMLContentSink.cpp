@@ -2523,7 +2523,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
       nsIDOMText* tc;
       rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
       if (NS_OK == rv) {
-        tc->SetData(aValue);
+        tc->SetData(*mTitle);
         NS_RELEASE(tc);
       }
       it->AppendChildTo(text, PR_FALSE);
