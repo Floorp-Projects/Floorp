@@ -50,19 +50,14 @@ content/communicator/XPCNativeWrapper.js,             comm/content/communicator/
 
 # from xpfe\components jar.mn
 content/communicator/alerts,                          comm/content/communicator/alerts
-content/communicator/pref/overrideHandler.js,         comm/content/communicator/pref/overrideHandler.js
-content/communicator/pref/pref-help.js,               comm/content/communicator/pref/pref-help.js
 content/communicator/pref/pref-themes.xul,            comm/content/communicator/pref/pref-themes.xul
 content/communicator/pref/pref-themes.js,             comm/content/communicator/pref/pref-themes.js
 content/communicator/pref/pref-extensions.xul,        comm/content/communicator/pref/pref-extensions.xul
 content/communicator/pref/pref-extensions.js,         comm/content/communicator/pref/pref-extensions.js
-content/communicator/pref/pref-charset.js,            comm/content/communicator/pref/pref-charset.js
-content/communicator/pref/pref-charset.xul,           comm/content/communicator/pref/pref-charset.xul
 content/communicator/pref/pref-fonts.js,              comm/content/communicator/pref/pref-fonts.js
 content/communicator/pref/pref-fonts.xul,             comm/content/communicator/pref/pref-fonts.xul
 content/communicator/pref/pref.xul,                   comm/content/communicator/pref/pref.xul
 content/communicator/pref/nsPrefWindow.js,            comm/content/communicator/pref/nsPrefWindow.js
-content/communicator/pref/pref-applications-edit.xul, comm/content/communicator/pref/pref-applications-edit.xul
 content/communicator/pref/pref-calibrate-screen.xul,  comm/content/communicator/pref/pref-calibrate-screen.xul
 
 # dummy contextHelp.js file so we don't get a bunch of errors about this file not being found
