@@ -87,10 +87,6 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD Show(PRBool state);
     NS_IMETHOD IsVisible(PRBool &aState);
 
-    NS_IMETHOD Minimize(void) {return NS_OK; }
-    NS_IMETHOD Maximize(void) {return NS_OK; }
-    NS_IMETHOD Restore(void) {return NS_OK; }
-
     NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,

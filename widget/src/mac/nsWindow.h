@@ -82,11 +82,6 @@ public:
     virtual nsIWidget*    	GetParent(void);
 
     NS_IMETHOD              Show(PRBool aState);
-    NS_IMETHOD              Minimize(void);
-    NS_IMETHOD              Maximize(void);
-    NS_IMETHOD              Restore(void);
-	    
-
     NS_IMETHOD 							IsVisible(PRBool & aState);
 
     NS_IMETHOD            	Move(PRInt32 aX, PRInt32 aY);

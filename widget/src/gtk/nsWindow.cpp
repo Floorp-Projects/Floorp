@@ -694,28 +694,6 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::Minimize(void)
-{
-  int status;
-  if (mIsToplevel && mShell)
-  {
-    // ret val 0 == successful
-    status = XIconifyWindow(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell), 0);
-    return status ? NS_ERROR_FAILURE : NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsWindow::Maximize(void)
-{
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::Restore(void)
-{
-  return NS_OK;
-}
-
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   // not implimented for toplevel windows

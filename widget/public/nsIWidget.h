@@ -293,24 +293,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Show(PRBool aState) = 0;
 
     /**
-     * Minimize or iconify the window.  Not for child windows.
-     *
-     */
-    NS_IMETHOD Minimize(void) = 0;
-
-    /**
-     * Maximize the window.  Not for child windows.
-     *
-     */
-    NS_IMETHOD Maximize(void) = 0;
-
-    /**
-     * Undo maximize or minimize.  Not for child windows.
-     *
-     */
-    NS_IMETHOD Restore(void) = 0;
-
-    /**
      * Make the window modal 
      *
      * 
