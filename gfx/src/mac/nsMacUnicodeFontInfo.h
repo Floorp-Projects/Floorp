@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1999
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Frank Yung-Fong Tang <ftang@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,17 +37,14 @@
  * ***** END LICENSE BLOCK ***** */
 #ifndef nsMacUnicodeFontInfo_h__
 #define nsMacUnicodeFontInfo_h__
+
 #include "nscore.h"
-class nsMacUnicodeFontInfo {
- public:
-  PRUint32* GetGlobalFontInfo();
- protected:   
-  void InitGolbal();
- private:
-	static PRUint32 gGlobalFontInfo[2048];
-	static PRBool gGlobalFontInfoInit;
-	static PRUint32 gFontsCount;
-	static PRUint32 gTTFFontsCount;
-	static PRUint32 gGlyphCount;
+
+class nsMacUnicodeFontInfo 
+{
+public:
+  PRBool HasGlyphFor(PRUnichar aChar);
+  static void FreeGlobal();
 };
+
 #endif 
