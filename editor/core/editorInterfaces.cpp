@@ -124,6 +124,8 @@ editorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
         if (!mIsShift) {
           key->ToLowerCase();
         }
+        mEditor->InsertString(key);
+        delete key;
       }
       break;
     }
@@ -234,6 +236,7 @@ editorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 nsresult
 editorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
+  mEditor->MouseClick(0,0);
   return NS_OK;
 }
 
@@ -270,14 +273,14 @@ editorMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
 
 
 nsresult 
-NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, Editor *aEditorP)
+NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor)
 {
   editorKeyListener* it = new editorKeyListener();
   if (NULL == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  it->SetEditor(aEditorP);
+  it->SetEditor(aEditor);
 
   static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 
@@ -287,14 +290,14 @@ NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, Editor *aEdit
 
 
 nsresult
-NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, Editor *aEditorP)
+NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor)
 {
   editorMouseListener* it = new editorMouseListener();
   if (NULL == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  it->SetEditor(aEditorP);
+  it->SetEditor(aEditor);
 
   static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 

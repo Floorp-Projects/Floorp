@@ -25,7 +25,7 @@
  *  manager, event interfaces. the idea for the event interfaces is to have them 
  *  delegate the actual commands to the editor independent of the XPFE implementation.
  */
-class Editor : public nsIEditor
+class nsEditor : public nsIEditor
 {
 private:
   COM_auto_ptr<nsIDOMDocument> mDomInterfaceP;
@@ -35,11 +35,11 @@ public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
    */
-  Editor();
+  nsEditor();
   /** The default destructor. This should suffice. Should this be pure virtual 
-   *  for someone to derive from the Editor later? I dont believe so.
+   *  for someone to derive from the nsEditor later? I dont believe so.
    */
-  ~Editor();
+  ~nsEditor();
 
 /*BEGIN nsIEditor interfaces*/
 /*see the nsIEditor for more details*/
@@ -47,15 +47,19 @@ public:
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-    virtual nsresult Init(nsIDOMDocument *aDomInterface);
+  virtual nsresult Init(nsIDOMDocument *aDomInterface);
 
   virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface){*aDomInterface = mDomInterfaceP; return NS_OK;}
 
   virtual nsresult SetProperties(PROPERTIES aProperty){return NS_OK;}
-  virtual nsresult GetProperties(PROPERTIES &){return NS_OK;}
+
+  virtual nsresult GetProperties(PROPERTIES **){return NS_OK;}
+
+  virtual nsresult InsertString(nsString *aString);
+  
 /*END nsIEditor interfaces*/
 
-/*BEGIN Editor interfaces*/
+/*BEGIN nsEditor interfaces*/
 
 
 /*KeyListener Methods*/
@@ -72,6 +76,30 @@ public:
    *  @param int y the yposition of the click
    */
   PRBool MouseClick(int aX,int aY); //it should also tell us the dom element that was selected.
+
+/*BEGIN private methods used by the implementations of the above functions*/
+
+  /** AppendText is a private method that accepts a pointer to a string
+   *  and will append it to the current node.  this will be depricated
+   *  @param nsString *aStr is the pointer to the valid string
+   */
+  nsresult AppendText(nsString *aStr);
+
+  /** GetCurrentNode ADDREFFS and will get the current node from selection.
+   *  now it simply returns the first node in the dom
+   *  @param nsIDOMNode **aNode is the return location of the dom node
+   */
+  nsresult GetCurrentNode(nsIDOMNode ** aNode);
+
+  /** GetFirstTextNode ADDREFFS and will get the next available text node from the passed
+   *  in node parameter it can also return NS_ERROR_FAILURE if no text nodes are available
+   *  now it simply returns the first node in the dom
+   *  @param nsIDOMNode *aNode is the node to start looking from
+   *  @param nsIDOMNode **aRetNode is the return location of the text dom node
+   */
+  nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
+
+/*END private methods of nsEditor*/
 };
 
 
