@@ -408,6 +408,7 @@ il_alpha_mask(
 	        int tmprand=0;
 	        tmprand = 1+(int)(200.0*rand()/(RAND_MAX+1.0));
             not_transparent = (*(src+3) > tmprand);
+            if(!not_transparent) { *src = 0; src[1] = 0; src[2] = 0; }
 	 
             SHIFT_IMAGE_MASK(not_transparent);
             n += src_len;
@@ -428,7 +429,7 @@ il_alpha_mask(
             while (n >= src_len) {
                tmprand = 1+(int)(200.0*rand()/(RAND_MAX+1.0));
                not_transparent = (*(src+3) > tmprand);
-
+               if(!not_transparent) { *src = 0; src[1] = 0; src[2] = 0; }
                 SHIFT_IMAGE_MASK(not_transparent);
                 n -= src_len;
             }
