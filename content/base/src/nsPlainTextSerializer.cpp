@@ -867,10 +867,13 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   else if (type == eHTMLTag_span) {
     --mSpanLevel;
   }
-
+  else if (type == eHTMLTag_div) {
+    if (mFloatingLines < 0)
+      mFloatingLines = 0;
+    mLineBreakDue = PR_TRUE;
+  }
   else if (IsBlockLevel(aTag)
            && type != eHTMLTag_blockquote
-           && type != eHTMLTag_div
            && type != eHTMLTag_script
            && type != eHTMLTag_doctypeDecl
            && type != eHTMLTag_markupDecl) {
