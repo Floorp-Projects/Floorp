@@ -24,7 +24,7 @@
 
 #include "nslayout.h"
 
-struct nsStr;
+class nsString;
 class nsCString;
 
 /*
@@ -49,7 +49,8 @@ public:
   static void ReleaseTable(void);
 
   // Given a keyword string, return the enum value
-  static nsCSSKeyword LookupKeyword(const nsStr& aKeyword);
+  static nsCSSKeyword LookupKeyword(const nsCString& aKeyword);
+  static nsCSSKeyword LookupKeyword(const nsString& aKeyword);
 
   // Given a keyword enum, get the string value
   static const nsCString& GetStringValue(nsCSSKeyword aKeyword);

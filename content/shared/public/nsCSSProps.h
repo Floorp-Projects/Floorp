@@ -24,8 +24,8 @@
 
 #include "nslayout.h"
 
-struct nsStr;
 class nsCString;
+class nsString;
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -49,7 +49,8 @@ public:
   static void ReleaseTable(void);
 
   // Given a property string, return the enum value
-  static nsCSSProperty LookupProperty(const nsStr& aProperty);
+  static nsCSSProperty LookupProperty(const nsString& aProperty);
+  static nsCSSProperty LookupProperty(const nsCString& aProperty);
 
   // Given a property enum, get the string value
   static const nsCString& GetStringValue(nsCSSProperty aProperty);

@@ -119,7 +119,7 @@ nsCSSProps::ReleaseTable(void)
 
 
 nsCSSProperty 
-nsCSSProps::LookupProperty(const nsStr& aProperty)
+nsCSSProps::LookupProperty(const nsCString& aProperty)
 {
   NS_ASSERTION(gPropertyTree, "no lookup table, needs addref");
   if (gPropertyTree) {
@@ -131,6 +131,13 @@ nsCSSProps::LookupProperty(const nsStr& aProperty)
     }
   }
   return eCSSProperty_UNKNOWN;
+}
+
+
+nsCSSProperty 
+nsCSSProps::LookupProperty(const nsString& aProperty) {
+  nsCAutoString theProp(aProperty);
+  return LookupProperty(theProp);
 }
 
 

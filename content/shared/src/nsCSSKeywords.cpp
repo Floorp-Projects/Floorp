@@ -114,7 +114,7 @@ nsCSSKeywords::ReleaseTable(void)
 
 
 nsCSSKeyword 
-nsCSSKeywords::LookupKeyword(const nsStr& aKeyword)
+nsCSSKeywords::LookupKeyword(const nsCString& aKeyword)
 {
   NS_ASSERTION(gKeywordTree, "no lookup table, needs addref");
   if (gKeywordTree) {
@@ -126,6 +126,12 @@ nsCSSKeywords::LookupKeyword(const nsStr& aKeyword)
     }
   }
   return eCSSKeyword_UNKNOWN;
+}
+
+nsCSSKeyword 
+nsCSSKeywords::LookupKeyword(const nsString& aKeyword) {
+  nsCAutoString theKeyword(aKeyword);
+  return LookupKeyword(theKeyword);
 }
 
 
