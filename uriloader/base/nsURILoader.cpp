@@ -89,6 +89,10 @@ public:
 protected:
     virtual ~nsDocumentOpenInfo();
     nsDocumentOpenInfo* Clone();
+    // ProcessCanceledCase will do a couple of things....(1) it checks to see if the channel was canceled,
+    // if it was, it will go out and release all of the document open info's local state for this load
+    // and it will return TRUE.
+    PRBool ProcessCanceledCase(nsIChannel * aChannel);
 
     nsresult InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindow * aDomWindow);
 
@@ -144,6 +148,31 @@ nsDocumentOpenInfo* nsDocumentOpenInfo::Clone()
   return newObject;
 }
 
+// ProcessCanceledCase will do a couple of things....(1) it checks to see if the channel was canceled,
+// if it was, it will go out and release all of the document open info's local state for this load
+// and it will return TRUE.
+PRBool nsDocumentOpenInfo::ProcessCanceledCase(nsIChannel * aChannel)
+{
+  PRBool canceled = PR_FALSE;
+  nsresult rv = NS_OK;
+
+  if (aChannel)
+  {
+    aChannel->GetStatus(&rv);
+    if (rv == NS_BINDING_ABORTED)
+    {
+      canceled = PR_TRUE;
+      // free any local state for this load since we are aborting it so we 
+      // can break any cycles...
+      m_contentListener = nsnull;
+      m_targetStreamListener = nsnull;
+      m_originalContext = nsnull;
+    }
+  }
+
+  return canceled;
+}
+
 nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,  
                                   nsURILoadCommand aCommand,
                                   const char * aWindowTarget,
@@ -173,7 +202,7 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,
 
 NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   //
   // Deal with "special" HTTP responses:
@@ -193,6 +222,9 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISuppo
     }
   }
 
+  if (ProcessCanceledCase(aChannel))
+    return NS_OK;
+
   rv = DispatchContent(aChannel, aCtxt);
   if (m_targetStreamListener)
     rv = m_targetStreamListener->OnStartRequest(aChannel, aCtxt);
@@ -206,6 +238,10 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIChannel * aChannel, nsISupp
   // otherwise, don't do anything
 
   nsresult rv = NS_OK;
+  
+  if (ProcessCanceledCase(aChannel))
+    return NS_OK;
+
   if (m_targetStreamListener)
     rv = m_targetStreamListener->OnDataAvailable(aChannel, aCtxt, inStr, sourceOffset, count);
   return rv;
@@ -215,6 +251,9 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISuppor
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
   nsresult rv = NS_OK;
+  
+  if (ProcessCanceledCase(aChannel))
+    return NS_OK;
 
   if (!mOnStopFired && m_targetStreamListener)
   {
