@@ -133,6 +133,7 @@ viewer:Components:unicharutil.shlb
 viewer:Components:unicharutil.xpt 
 viewer:Components:uriloader.shlb 
 viewer:Components:uriloader.xpt 
+viewer:Components:exthandler.xpt 
 viewer:Components:urlbarhistory.shlb
 viewer:Components:urlbarhistory.xpt
 viewer:Components:view.shlb 
