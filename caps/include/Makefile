@@ -22,7 +22,8 @@ EXPORTS	= nsZip.h nsZig.h nsLoadZig.h nsPrincipal.h nsPrivilege.h nsPrivilegeMan
  nsCCapsManager.h       \
  nsCCertPrincipal.h     \
  nsCCodebasePrincipal.h \
- nsCCapsManagerFactory.h
+ nsCCapsManagerFactory.h \
+ nsCCodeSourcePrincipal.h
 
 
 
