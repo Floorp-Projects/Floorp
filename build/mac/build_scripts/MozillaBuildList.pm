@@ -670,6 +670,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",       "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",       "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:mime:public:MANIFEST",                   "$distdirectory:netwerk:");
+    InstallFromManifest(":mozilla:netwerk:cookie:public:MANIFEST_IDL",             "$distdirectory:idl:");
 
     #EXTENSIONS
     InstallFromManifest(":mozilla:extensions:cookie:MANIFEST_IDL",                 "$distdirectory:idl:");

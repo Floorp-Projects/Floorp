@@ -27,6 +27,7 @@ MODULE = necko
 DIRS=              \
 	base       \
 	cache      \
+	cookie     \
 	dns        \
 	socket     \
 	mime       \
