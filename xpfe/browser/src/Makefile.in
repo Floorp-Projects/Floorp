@@ -54,6 +54,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/raindrops_light.gif \
 	$(srcdir)/skindemo.xul \
 	$(srcdir)/NetSupportUserPassword.xul \
+	$(srcdir)/NetSupportPrompt.xul \
+	$(srcdir)/NetSupportPassword.xul \
 	$(srcdir)/NetSupportAlert.xul \
 	$(srcdir)/NetSupportConfirm.xul \
 	$(srcdir)/NetSupportConfirmCheck.xul \
