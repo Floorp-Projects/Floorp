@@ -38,12 +38,17 @@
  */
 
 #include <stdio.h> 
+
+/* Hmm, everyone seems to be defining this. */
+#define STDARG
 #include <stdlib.h>
 #ifdef STDARG
 #include <stdarg.h>
 #else
 #include <varargs.h>
 #endif
+
+
 #include <memory.h>
 #include <string.h>
 #include <assert.h>
@@ -59,6 +64,9 @@ int MsgPriority=5;
 #define int32 int
 #define uint32 unsigned int
 #endif
+
+/* Hmm, everyone seems to be defining this. */
+#define STDARG
 
 typedef enum {
 USE_LARGE_KEY,
