@@ -85,6 +85,7 @@ protected:
 
   nsIMenuListener * mXULCommandListener;
   PRBool      mIsSeparator;
+  nsIMenuListener * mListener;
 
 };
 
