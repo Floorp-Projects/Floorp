@@ -89,3 +89,25 @@ function doUncheckAll()
 
 	return(true);
 }
+
+
+
+function saveSearch()
+{
+	var resultsTree = parent.frames[1].document.getElementById("internetresultstree");
+	if (!resultsTree)	return(false);
+	x = resultsTree.childNodes.length;
+	if (x < 1)		return(false);
+	// XXX shouldn't assume that treebody is the last child node in the tree!
+	var searchURL = resultsTree.childNodes[x-1].getAttribute("id");
+	if (!searchURL)		return(false);
+
+	dump("Bookmark search URL: " + searchURL + "\n");
+
+	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
+	// XXX should construct a more interesting/useful title
+	bmks.AddBookmark(searchURL, "Saved Internet Search");
+
+	return(true);
+}

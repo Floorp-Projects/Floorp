@@ -21,7 +21,7 @@
 
 	<html:script src="shared.js" />
 	
-	<titledbutton id="internetresultssummary" value="&results.title.label;" width="200" size="200" />
+	<titledbutton id="internetresultssummary" value="&results.title.label;" />
 	<html:p />
 
 	<tree id="internetresultstree" flex="100%" border="1" datasources="rdf:internetsearch"  ondblclick="return OpenURL(event,event.target.parentNode);">
@@ -85,5 +85,6 @@
 		</treehead>
 
 		<treebody open="true" />
+
 	</tree>
 </window>
