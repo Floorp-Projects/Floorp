@@ -851,6 +851,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		  }
 		  else if (PL_strstr(commandSpecificData, "?list-ids"))
 		  {
+	          m_currentGroup = group;
 			  m_typeWanted= IDS_WANTED;
 			  m_commandSpecificData = nsCRT::strdup(commandSpecificData);
 		  }
@@ -869,7 +870,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		 news:/GROUP
 		 news://HOST/GROUP
 	   */
-	  m_currentGroup.Assign(group);
+	  m_currentGroup = group;
 
 	  if (PL_strchr ((const char *)m_currentGroup, '*')) {
 		m_typeWanted = LIST_WANTED;
@@ -3767,27 +3768,19 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 
 	nsCOMPtr<nsIFolder> currFolder;
     currFolder = do_QueryInterface(currChild, &rv);
-	if (NS_FAILED(rv))
-    return -1;
-	if (!currFolder) 
-    return -1;
+	if (NS_FAILED(rv)) return -1;
+	if (!currFolder) return -1;
 
     m_newsFolder = do_QueryInterface(currFolder, &rv);
-	if (NS_FAILED(rv)) 
-    return -1;
-	if (!m_newsFolder) 
-    return -1;
+	if (NS_FAILED(rv)) return -1;
+	if (!m_newsFolder) return -1;
 
-	nsXPIDLString name;
-	rv = currFolder->GetName(getter_Copies(name));
-	if (NS_FAILED(rv)) 
-    return -1;
-	if (!name) 
-    return -1;
+	nsXPIDLCString name;
+    rv = m_newsFolder->GetAsciiName(getter_Copies(name));
+	if (NS_FAILED(rv)) return -1;
+	if (!name) return -1;
 
-	// do I need asciiName?
-	nsCAutoString asciiName; asciiName.AssignWithConversion(name);
-	m_currentGroup = (const char *)asciiName;
+	m_currentGroup = (const char *)name;
 
 	if(NS_SUCCEEDED(rv) && ((const char *)m_currentGroup))
     {
@@ -4592,16 +4585,14 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 PRInt32 nsNNTPProtocol::ListGroup()
 {
     nsresult rv;
-    nsXPIDLCString group_name;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	PRInt32 status = 0; 
-    rv = m_newsgroup->GetName(getter_Copies(group_name));
-    NS_ENSURE_SUCCESS(rv,rv);
-    
+
 	PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
 			"listgroup %.512s" CRLF,
-                (const char *) group_name);
+            (const char *)m_currentGroup);
+
     rv = nsComponentManager::CreateInstance(kNNTPArticleListCID,
                                             nsnull,
                                             NS_GET_IID(nsINNTPArticleList),
@@ -4647,12 +4638,15 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 
 	if (line)
 	{
+#ifdef DEBUG_seth
+        printf("line == %s\n",line);
+#endif
+
 		if (line[0] != '.')
 		{
 			nsMsgKey found_id = nsMsgKey_None;
             nsresult rv;
 			PR_sscanf(line, "%ld", &found_id);
-            
             rv = m_articleList->AddArticleKey(found_id);
 		}
 		else
