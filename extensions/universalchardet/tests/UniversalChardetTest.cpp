@@ -119,10 +119,10 @@ int main(int argc, char** argv) {
   }
   nsresult rev = NS_OK;
   nsICharsetDetector *det = nsnull;
-  rev = GetDetector("all_charset_detector", &det);
+  rev = GetDetector("universal_charset_detector", &det);
   if(NS_FAILED(rev) || (nsnull == det) ){
     usage();
-    printf("Could not find All Detector\n");
+    printf("Error: Could not find Universal Detector\n");
     printf("XPCOM ERROR CODE = %x\n", rev);
     return(-1);
   }

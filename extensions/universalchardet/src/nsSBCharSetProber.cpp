@@ -35,6 +35,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include <stdio.h>
 #include "nsSBCharSetProber.h"
 
 nsProbingState nsSingleByteCharSetProber::HandleData(const char* aBuf, PRUint32 aLen)
@@ -53,9 +54,8 @@ nsProbingState nsSingleByteCharSetProber::HandleData(const char* aBuf, PRUint32 
 
       if (mLastOrder < SAMPLE_SIZE)
       {
-        if (mModel->precedenceMatrix[mLastOrder*SAMPLE_SIZE+order] == 0)
-          mNegativeSeqs++;
         mTotalSeqs++;
+        ++(mSeqCounters[mModel->precedenceMatrix[mLastOrder*SAMPLE_SIZE+order]]);
       }
     }
     mLastOrder = order;
@@ -78,16 +78,40 @@ void  nsSingleByteCharSetProber::Reset(void)
 {
   mState = eDetecting;
   mLastOrder = 255;
+  for (PRUint32 i = 0; i < NUMBER_OF_SEQ_CAT; i++)
+    mSeqCounters[i] = 0;
   mTotalSeqs = 0;
-  mNegativeSeqs = 0;
   mTotalChar = 0;
   mFreqChar = 0;
 }
 
+//#define NEGATIVE_APPROACH 1
+
 float nsSingleByteCharSetProber::GetConfidence(void)
 {
+#ifdef NEGATIVE_APPROACH
   if (mTotalSeqs > 0)
-    if (mTotalSeqs > mNegativeSeqs*10 )
-      return ((float)(mTotalSeqs - mNegativeSeqs*10))/mTotalSeqs * mFreqChar / mTotalChar;
+    if (mTotalSeqs > mSeqCounters[NEGATIVE_CAT]*10 )
+      return ((float)(mTotalSeqs - mSeqCounters[NEGATIVE_CAT]*10))/mTotalSeqs * mFreqChar / mTotalChar;
   return (float)0.01;
+#else  //POSITIVE_APPROACH
+  float r;
+
+  if (mTotalSeqs > 0) {
+    r = ((float)1.2) * mSeqCounters[POSITIVE_CAT] / mTotalSeqs / mModel->mTypicalPositiveRatio;
+    r = r*mFreqChar/mTotalChar;
+    if (r >= (float)1.00)
+      r = (float)0.99;
+    return r;
+  }
+  return (float)0.01;
+#endif
 }
+
+#ifdef DEBUG_chardet
+void 
+nsSingleByteCharSetProber::DumpStatus()
+{
+  printf("[%s] prober has confidence %f\r\n", GetCharSetName(), GetConfidence());
+}
+#endif

@@ -51,12 +51,12 @@ nsSBCSGroupProber::nsSBCSGroupProber()
   mProbers[3] = new nsSingleByteCharSetProber(&MacCyrillicModel);
   mProbers[4] = new nsSingleByteCharSetProber(&Ibm866Model);
   mProbers[5] = new nsSingleByteCharSetProber(&Ibm855Model);
-  mProbers[6] = new nsSingleByteCharSetProber(&Win1253Model);
-  mProbers[7] = new nsSingleByteCharSetProber(&Latin7Model);
-  mProbers[8] = new nsSingleByteCharSetProber(&Win1251BulgarianModel);
-  mProbers[9] = new nsSingleByteCharSetProber(&Latin5BulgarianModel);
-  mProbers[10] = new nsSingleByteCharSetProber(&Win1250HungarianModel);
-  mProbers[11] = new nsSingleByteCharSetProber(&Latin2HungarianModel);
+  mProbers[6] = new nsSingleByteCharSetProber(&Latin7Model);
+  mProbers[7] = new nsSingleByteCharSetProber(&Win1253Model);
+  mProbers[8] = new nsSingleByteCharSetProber(&Latin5BulgarianModel);
+  mProbers[9] = new nsSingleByteCharSetProber(&Win1251BulgarianModel);
+  mProbers[10] = new nsSingleByteCharSetProber(&Latin2HungarianModel);
+  mProbers[11] = new nsSingleByteCharSetProber(&Win1250HungarianModel);
 
   Reset();
 }
@@ -194,9 +194,6 @@ nsProbingState nsSBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
      {
        mBestGuess = i;
        mState = eFoundIt;
-#ifdef DEBUG_chardet
-       printf("MBCS Prober found charset %d in HandleData. \r\n", i);
-#endif
        break;
      }
      else if (st == eNotMe)
@@ -240,19 +237,26 @@ float nsSBCSGroupProber::GetConfidence(void)
       }
     }
   }
-#ifdef DEBUG_chardet
-       printf("SBCS Group Prober confidence is %f in charset %d . \r\n", bestConf, mBestGuess);
-       for (i = 0; i < NUM_OF_SBCS_PROBERS; i++)
-       {
-          if (!mIsActive[i])
-            printf("[%s] is inactive\r\n", mProbers[i]->GetCharSetName(), i);
-          else
-          {
-            cf = mProbers[i]->GetConfidence();
-            printf("[%s] detector has confidence %f\r\n", mProbers[i]->GetCharSetName(), cf);
-          }
-       }
-#endif
   return bestConf;
 }
 
+#ifdef DEBUG_chardet
+void 
+nsSBCSGroupProber::DumpStatus()
+{
+  PRUint32 i;
+  float cf;
+  
+  cf = GetConfidence();
+  printf("SBCS Group Prober --------begin status \r\n");
+  for (i = 0; i < NUM_OF_SBCS_PROBERS; i++)
+  {
+    if (!mIsActive[i])
+      printf("[%s] is inactive(ie. cofidence is too low).\r\n", mProbers[i]->GetCharSetName(), i);
+    else
+      mProbers[i]->DumpStatus();
+  }
+  printf("SBCS Group found best match [%s] confidence %f.\r\n", 
+        mProbers[mBestGuess]->GetCharSetName(), cf);
+}
+#endif
