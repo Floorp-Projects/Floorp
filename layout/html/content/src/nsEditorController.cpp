@@ -246,3 +246,4 @@ PRBool nsEditorController::IsEnabled()
       check eEditorReadonlyBit and eEditorDisabledBit
    */
 }
+
