@@ -2509,6 +2509,16 @@ nc:link="chrome://help/locale/mail_help.html#mail-account-receipts"/> </rdf:li>
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
+	<rdf:Description ID="advanced_pref_keyboard_nav" nc:name="Keyboard Navigation"
+  		nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#keyboard_navigation"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#advanced_pref_advanced">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
 	<rdf:Description ID="advanced_pref_cache" nc:name="Cache"
   		nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Cache"/> </rdf:li>
       </rdf:Seq>
