@@ -220,6 +220,7 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
       {
         folder->ShouldStoreMsgOffline(key, &shouldStoreMsgOffline);
         folder->HasMsgOffline(key, &hasMsgOffline);
+        msgUrl->SetMsgIsInLocalCache(hasMsgOffline);
       }
       newsFolder->SetSaveArticleOffline(shouldStoreMsgOffline);
     }

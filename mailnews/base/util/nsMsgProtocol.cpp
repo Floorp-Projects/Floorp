@@ -295,6 +295,9 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
   if (NS_SUCCEEDED(rv) && aMsgUrl)
 	{
+    PRBool msgIsInLocalCache;
+    aMsgUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
+
 		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
 
         // if the url is given a stream consumer then we should use it to forward calls to...
@@ -325,7 +328,7 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
         m_socketIsOpen = PR_TRUE; // mark the channel as open
       }
 		} // if we got an event queue service
-		else  // the connection is already open so we should begin processing our new url...
+		else if (!msgIsInLocalCache) // the connection is already open so we should begin processing our new url...
 			rv = ProcessProtocolState(aURL, nsnull, 0, 0); 
 	}
 

@@ -168,7 +168,7 @@ public:
 
 	NS_IMETHOD Cancel(nsresult status);  // handle stop button
 	NS_IMETHOD GetContentType(char * *aContentType);
-
+  NS_IMETHOD AsyncRead(nsIStreamListener *listener, nsISupports *ctxt);
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 private:
@@ -202,7 +202,6 @@ private:
 	nsCOMPtr<nsIInputStream> mDisplayInputStream;
 	nsCOMPtr<nsIOutputStream> mDisplayOutputStream;
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
-
 	// the nsINntpURL that is currently running
 	nsCOMPtr<nsINntpUrl> m_runningURL;
   PRBool      m_connectionBusy;

@@ -75,6 +75,9 @@
 #include "nsIMsgFolder.h"
 #include "nsIMsgNewsFolder.h"
 
+// for the memory cache...
+#include "nsICachedNetData.h"
+
 #include "nsIPref.h"
 
 #include "nsIMsgWindow.h"
@@ -558,11 +561,15 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
    
 	m_runningURL = do_QueryInterface(m_url);
   m_connectionBusy = PR_TRUE;
+  PRBool msgIsInLocalCache = PR_FALSE;
 	if (NS_SUCCEEDED(rv) && m_runningURL)
 	{
   	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
     if (mailnewsUrl)
+    {
       mailnewsUrl->SetMsgWindow(aMsgWindow);
+      mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
+    }
 		// okay, now fill in our event sinks...Note that each getter ref counts before
 		// it returns the interface to us...we'll release when we are done
 		m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
@@ -570,6 +577,9 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 		m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
 		m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
 		m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
+    if (msgIsInLocalCache)
+      return NS_OK; // probably don't need to do anything else - definitely don't want
+                    // to open the socket.
 	}
   else {
     return rv;
@@ -672,6 +682,161 @@ NS_IMETHODIMP nsNNTPProtocol::LoadNewsUrl(nsIURI * aURL, nsISupports * aConsumer
 }
 
 
+// WARNING: the cache stream listener is intended to be accessed from the UI thread!
+// it will NOT create another proxy for the stream listener that gets passed in...
+class nsNntpCacheStreamListener : public nsIStreamListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
+  nsNntpCacheStreamListener ();
+  virtual ~nsNntpCacheStreamListener();
+
+  nsresult Init(nsIStreamListener * aStreamListener, nsIChannel * aChannelToUse);
+protected:
+  nsCOMPtr<nsIChannel> mChannelToUse;
+  nsCOMPtr<nsIStreamListener> mListener;
+};
+
+NS_IMPL_ADDREF(nsNntpCacheStreamListener);
+NS_IMPL_RELEASE(nsNntpCacheStreamListener);
+
+NS_INTERFACE_MAP_BEGIN(nsNntpCacheStreamListener)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+NS_INTERFACE_MAP_END
+
+nsNntpCacheStreamListener::nsNntpCacheStreamListener()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsNntpCacheStreamListener::~nsNntpCacheStreamListener()
+{}
+
+nsresult nsNntpCacheStreamListener::Init(nsIStreamListener * aStreamListener, nsIChannel * aChannelToUse)
+{
+  NS_ENSURE_ARG(aStreamListener);
+  NS_ENSURE_ARG(aChannelToUse);
+
+  mChannelToUse = aChannelToUse;
+  mListener = aStreamListener;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpCacheStreamListener::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
+{
+  nsCOMPtr <nsILoadGroup> loadGroup;
+  mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (loadGroup)
+    loadGroup->AddChannel(mChannelToUse, nsnull /* context isupports */);
+  return mListener->OnStartRequest(mChannelToUse, aCtxt);
+}
+
+NS_IMETHODIMP
+nsNntpCacheStreamListener::OnStopRequest(nsIChannel * aChannel, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
+{
+  nsresult rv = mListener->OnStopRequest(mChannelToUse, aCtxt, aStatus, aMsg);
+  nsCOMPtr <nsILoadGroup> loadGroup;
+  mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (loadGroup)
+			loadGroup->RemoveChannel(mChannelToUse, nsnull, aStatus, nsnull);
+
+  mListener = nsnull;
+  mChannelToUse = nsnull;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsNntpCacheStreamListener::OnDataAvailable(nsIChannel * aChannel, nsISupports * aCtxt, nsIInputStream * aInStream, PRUint32 aSourceOffset, PRUint32 aCount)
+{
+  return mListener->OnDataAvailable(mChannelToUse, aCtxt, aInStream, aSourceOffset, aCount);
+}
+
+
+NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+	SetNewsFolder(); // make sure m_newsFolder is set.
+  m_channelContext = ctxt;
+  m_channelListener = listener;
+  m_runningURL->GetNewsAction(&m_newsAction);
+  // first, check if this is a message load that should come from either
+  // the memory cache or the local msg cache.
+  if (mailnewsUrl && m_newsAction == nsINntpUrl::ActionDisplayArticle)
+  {
+    nsCOMPtr<nsICachedNetData>  cacheEntry;
+    PRUint32 contentLength = 0;
+    PRBool partialFlag = PR_FALSE;
+    PRBool msgIsInLocalCache;
+
+    mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
+    if (msgIsInLocalCache)
+    {
+      nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder);
+      if (folder && NS_SUCCEEDED(rv))
+      {
+      // we want to create a file channel and read the msg from there.
+        nsMsgKey key = nsMsgKey_None;
+        rv = m_runningURL->GetMessageKey(&key);
+        nsCOMPtr<nsIFileChannel> fileChannel;
+        rv = folder->GetOfflineFileChannel(key, getter_AddRefs(fileChannel));
+        // get the file channel from the folder, somehow (through the message or
+        // folder sink?) We also need to set the transfer offset to the message offset
+        if (fileChannel && NS_SUCCEEDED(rv))
+        {
+          fileChannel->SetLoadGroup(m_loadGroup);
+          m_typeWanted = ARTICLE_WANTED;
+          nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
+          NS_ADDREF(cacheListener);
+          cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
+          rv = fileChannel->AsyncRead(cacheListener, m_channelContext);
+          NS_RELEASE(cacheListener);
+
+          if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
+            return NS_OK;
+        }
+      }
+    }
+
+    // look to see if this url should be added to the memory cache..
+    PRBool useMemoryCache = PR_FALSE;
+    mailnewsUrl->GetAddToMemoryCache(&useMemoryCache);
+    rv = mailnewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
+    if (NS_SUCCEEDED(rv) && cacheEntry)
+    {
+      PRBool updateInProgress;
+      cacheEntry->GetPartialFlag(&partialFlag);
+      cacheEntry->GetUpdateInProgress(&updateInProgress);        
+      cacheEntry->GetStoredContentLength(&contentLength);
+      // only try to update the cache entry if it isn't being used.
+      // We always want to try to write to the cache entry if we can
+      if (!updateInProgress)
+      {
+        // now we need to figure out if the entry is new / or partially unfinished...
+        // this determines if we are going to USE the cache entry for reading the data
+        // vs. if we need to write data into the cache entry...
+        if (!contentLength || partialFlag)
+        {
+          // we're going to fill up this cache entry, 
+          // do we have a listener here?
+          nsIStreamListener *listener = m_channelListener;
+          rv = cacheEntry->InterceptAsyncRead(listener, 0, getter_AddRefs(m_channelListener));
+        }
+      }
+    }
+  }
+  return nsMsgProtocol::AsyncRead(listener, ctxt);
+}
+
 nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
   NS_ENSURE_ARG_POINTER(aURL);
@@ -684,11 +849,12 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsCOMPtr <nsINNTPNewsgroupPost> message;
   nsresult rv = NS_OK;
 
-  // if this connection comes from the cache, we need to initialize the
-  // load group here, by generating the start request notification. nsMsgProtocol::OnStartRequest
-  // ignores the first parameter (which is supposed to be the channel) so we'll pass in null.
-  if (m_fromCache)
-    nsMsgProtocol::OnStartRequest(nsnull, aURL);
+  m_runningURL = do_QueryInterface(aURL, &rv);
+  if (NS_FAILED(rv)) return rv;
+  m_runningURL->GetNewsAction(&m_newsAction);
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+
+	SetNewsFolder(); // make sure m_newsFolder is set.
 
   m_articleNumber = -1;
   rv = aURL->GetHost(getter_Copies(m_hostName));
@@ -696,10 +862,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   rv = aURL->GetPreHost(getter_Copies(m_userName));
   if (NS_FAILED(rv)) return rv;
 
-  m_runningURL = do_QueryInterface(aURL, &rv);
-  if (NS_FAILED(rv)) return rv;
   m_connectionBusy = PR_TRUE;
-  m_runningURL->GetNewsAction(&m_newsAction);
 
   // okay, now fill in our event sinks...Note that each getter ref counts before
   // it returns the interface to us...we'll release when we are done
@@ -927,6 +1090,13 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
     }
 #endif
+
+  // if this connection comes from the cache, we need to initialize the
+  // load group here, by generating the start request notification. nsMsgProtocol::OnStartRequest
+  // ignores the first parameter (which is supposed to be the channel) so we'll pass in null.
+  if (m_fromCache)
+    nsMsgProtocol::OnStartRequest(nsnull, aURL);
+
   /* At this point, we're all done parsing the URL, and know exactly
 	 what we want to do with it.
    */
