@@ -66,15 +66,9 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
 CFLAGS		+= $(MOZ_QT_CFLAGS)
-else
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-CXXFLAGS	+= $(TK_CFLAGS)
-CFLAGS		+= $(TK_CFLAGS)
-endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
                 -lgkgfx \

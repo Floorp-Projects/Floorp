@@ -26,9 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_MONOLITHIC_TOOLKIT
-DIRS		= $(MOZ_WIDGET_TOOLKIT)
-else
 DIRS		=
 
 ifdef MOZ_ENABLE_GTK
@@ -39,8 +36,6 @@ DIRS		+= qt
 endif
 ifdef MOZ_ENABLE_XLIB
 DIRS		+= xlib
-endif
-
 endif
 
 include $(topsrcdir)/config/rules.mk

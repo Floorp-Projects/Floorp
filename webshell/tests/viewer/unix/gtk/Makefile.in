@@ -67,9 +67,5 @@ DEFINES		+= -D_TIME_H=1
 endif
 endif
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
-else
-CXXFLAGS	+= $(TK_CFLAGS)
-endif
 

@@ -41,23 +41,14 @@ MOCSRCS         = \
 		moc_nsTimerEventHandler.cpp \
 		$(NULL)
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXPORT_LIBRARY = 1
 TIMER_SUFFIX	= qt
 IS_COMPONENT	= 1
 MODULE_NAME	= nsQtTimerModule
 CPPSRCS		+= nsTimerQtFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_QT_LDFLAGS) $(MOZ_COMPONENT_LIBS)
-else
-TIMER_SUFFIX	= s
-FORCE_STATIC_LIB = 1
-endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 INCLUDES        += $(MOZ_QT_CFLAGS) -I$(srcdir)/..
-else
-CXXFLAGS        += $(TK_CFLAGS)
-INCLUDES        += $(TK_CFLAGS) -I$(srcdir)/..
-endif
+

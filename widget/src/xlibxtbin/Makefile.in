@@ -36,21 +36,13 @@ CPPSRCS         = \
 
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -L$(DIST)/lib -lxlibrgb
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += $(MOZ_XLIB_LDFLAGS) -L/usr/X11R6/lib -lXt
-else
-EXTRA_DSO_LDOPTS += $(TK_LIBS) -L/usr/X11R6/lib -lXt
-endif
 
 EXPORTS         = xlibxtbin.h 
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 CFLAGS		+= $(MOZ_XLIB_CFLAGS)
-else
-CFLAGS		+= $(TK_CFLAGS)
-endif
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_XIM
 
