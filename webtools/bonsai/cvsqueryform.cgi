@@ -275,7 +275,7 @@ PutsTrailer();
 sub sortTest {
      return ""
           unless (exists($::FORM{sortby}) && defined($_[0]) &&
-                 ($_[0] ne $::FORM{sortby}));
+                 ($_[0] eq $::FORM{sortby}));
 
      return " SELECTED";
 }
