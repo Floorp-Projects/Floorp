@@ -38,10 +38,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public idl src loader
+DIRS		= public idl src loader shell
 
 ifdef ENABLE_TESTS
-DIRS		+= tests shell
+DIRS		+= tests
 endif
 
 ifdef MOZ_XPC_TOOLS_SUPPORT
