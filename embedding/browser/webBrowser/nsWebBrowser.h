@@ -89,7 +89,9 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIInterfaceRequestor,
                      public nsIWebBrowserPersist,
                      public nsIWebBrowserFocus,
-                     public nsIWebBrowserPrint
+                     public nsIWebBrowserPrint,
+                     public nsIWebProgressListener,
+                     public nsSupportsWeakReference
 {
 friend class nsDocShellTreeOwner;
 public:
@@ -108,6 +110,7 @@ public:
     NS_DECL_NSIWEBBROWSERPERSIST
     NS_DECL_NSIWEBBROWSERFOCUS
     NS_DECL_NSIWEBBROWSERPRINT
+    NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
     virtual ~nsWebBrowser();
@@ -136,12 +139,18 @@ protected:
    nsWebBrowserInitInfo*      mInitInfo;
    PRUint32                   mContentType;
    nativeWindow               mParentNativeWindow;
-   nsIWebBrowserPersistProgress *mProgressListener;
+   nsIWebProgressListener    *mProgressListener;
    nsCOMPtr<nsIWebProgress>      mWebProgress;
    nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
 
    // cached background color
    nscolor                       mBackgroundColor;
+
+   // persistence object
+   nsCOMPtr<nsIWebBrowserPersist> mPersist;
+   PRUint32                       mPersistCurrentState;
+   PRUint32                       mPersistResult;
+   PRUint32                       mPersistFlags;
 
    //Weak Reference interfaces...
    nsIWidget*                 mParentWidget;

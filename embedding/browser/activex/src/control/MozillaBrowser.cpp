@@ -561,6 +561,7 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
     if (GetSaveFileName(&SaveFileName))
     {
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
+        USES_CONVERSION;
 
         char szDataFile[_MAX_PATH];
         char szDataPath[_MAX_PATH];
@@ -572,7 +573,14 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
         _splitpath(szFile, drive, dir, fname, ext);
         sprintf(szDataFile, "%s_files", fname);
         _makepath(szDataPath, drive, dir, szDataFile, "");
-        persist->SaveDocument(nsnull, szFile, szDataPath);
+
+        nsCOMPtr<nsILocalFile> file;
+        NS_NewLocalFile(T2A(szFile), TRUE, getter_AddRefs(file));
+
+        nsCOMPtr<nsILocalFile> dataPath;
+        NS_NewLocalFile(szDataPath, TRUE, getter_AddRefs(dataPath));
+
+        persist->SaveDocument(nsnull, file, dataPath);
     }
 
     return hr;

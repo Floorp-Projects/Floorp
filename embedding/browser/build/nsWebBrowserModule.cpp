@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -27,6 +27,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsWebBrowser.h"
+#include "nsWebBrowserPersist.h"
 #include "nsCommandHandler.h"
 #include "nsWebBrowserContentPolicy.h"
 
@@ -35,6 +36,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserPersist)
 
 static NS_METHOD
 RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
@@ -71,6 +73,8 @@ UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 static nsModuleComponentInfo components[] =
 {
+   { "WebBrowserPersist Component", NS_WEBBROWSERPERSIST_CID, 
+     NS_WEBBROWSERPERSIST_CONTRACTID, nsWebBrowserPersistConstructor },
    { "WebBrowser Component", NS_WEBBROWSER_CID, 
      NS_WEBBROWSER_CONTRACTID, nsWebBrowserConstructor },
    { "CommandHandler Component", NS_COMMANDHANDLER_CID,
@@ -80,8 +84,6 @@ static nsModuleComponentInfo components[] =
      NS_WEBBROWSERCONTENTPOLICY_CONTRACTID,
      nsWebBrowserContentPolicyConstructor,
      RegisterContentPolicy, UnregisterContentPolicy }
-//   { "WebBrowserSetup Component", NS_WEBBROWSER_SETUP_CID, 
-//      NS_WEBBROWSER_SETUP_CONTRACTID, nsWebBrowserSetupConstructor }
 };
 
 

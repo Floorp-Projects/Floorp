@@ -78,7 +78,10 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
    mInitInfo(nsnull), mContentType(typeContentWrapper),
    mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull),
    mProgressListener(nsnull), mListenerArray(nsnull),
-   mBackgroundColor(0)
+   mBackgroundColor(0),
+   mPersistCurrentState(nsIWebBrowserPersist::PERSIST_STATE_READY),
+   mPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_NONE),
+   mPersistResult(NS_OK)
 {
     NS_INIT_REFCNT();
     mInitInfo = new nsWebBrowserInitInfo();
@@ -146,6 +149,8 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPrint)
+    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 ///*****************************************************************************
@@ -691,12 +696,128 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
     return rv;
 }
 
+
+//*****************************************************************************
+// nsWebBrowser::nsIWebProgressListener
+//*****************************************************************************
+
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+NS_IMETHODIMP nsWebBrowser::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+{
+    if (mPersist)
+    {
+        mPersist->GetCurrentState(&mPersistCurrentState);
+    }
+    if (aStateFlags & STATE_IS_NETWORK && aStateFlags & STATE_STOP)
+    {
+        mPersist = nsnull;
+    }
+    if (mProgressListener)
+    {
+        return mProgressListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+    }
+    return NS_OK;
+}
+
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP nsWebBrowser::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+    if (mPersist)
+    {
+        mPersist->GetCurrentState(&mPersistCurrentState);
+    }
+    if (mProgressListener)
+    {
+        return mProgressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+    }
+    return NS_OK;
+}
+
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
+NS_IMETHODIMP nsWebBrowser::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
+{
+    if (mProgressListener)
+    {
+        return mProgressListener->OnLocationChange(aWebProgress, aRequest, location);
+    }
+    return NS_OK;
+}
+
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
+NS_IMETHODIMP nsWebBrowser::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+    if (mProgressListener)
+    {
+        return mProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+    }
+    return NS_OK;
+}
+
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+NS_IMETHODIMP nsWebBrowser::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+{
+    if (mProgressListener)
+    {
+        return mProgressListener->OnSecurityChange(aWebProgress, aRequest, state);
+    }
+    return NS_OK;
+}
+
 //*****************************************************************************
 // nsWebBrowser::nsIWebBrowserPersist
 //*****************************************************************************
 
+/* attribute unsigned long persistFlags; */
+NS_IMETHODIMP nsWebBrowser::GetPersistFlags(PRUint32 *aPersistFlags)
+{
+    NS_ENSURE_ARG_POINTER(aPersistFlags);
+    nsresult rv = NS_OK;
+    if (mPersist)
+    {
+        rv = mPersist->GetPersistFlags(&mPersistFlags);
+    }
+    *aPersistFlags = mPersistFlags;
+    return rv;
+}
+NS_IMETHODIMP nsWebBrowser::SetPersistFlags(PRUint32 aPersistFlags)
+{
+    nsresult rv = NS_OK;
+    mPersistFlags = aPersistFlags;
+    if (mPersist)
+    {
+        rv = SetPersistFlags(mPersistFlags);
+        mPersist->GetPersistFlags(&mPersistFlags);
+    }
+    return rv;
+}
+
+
+/* readonly attribute unsigned long currentState; */
+NS_IMETHODIMP nsWebBrowser::GetCurrentState(PRUint32 *aCurrentState)
+{
+    NS_ENSURE_ARG_POINTER(aCurrentState);
+    if (mPersist)
+    {
+        mPersist->GetCurrentState(&mPersistCurrentState);
+    }
+    *aCurrentState = mPersistCurrentState;
+    return NS_OK;
+}
+
+/* readonly attribute unsigned long result; */
+NS_IMETHODIMP nsWebBrowser::GetResult(PRUint32 *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    if (mPersist)
+    {
+        mPersist->GetResult(&mPersistResult);
+    }
+    *aResult = mPersistResult;
+    return NS_OK;
+}
+
 /* attribute nsIWebBrowserPersistProgress progressListener; */
-NS_IMETHODIMP nsWebBrowser::GetProgressListener(nsIWebBrowserPersistProgress * *aProgressListener)
+NS_IMETHODIMP nsWebBrowser::GetProgressListener(nsIWebProgressListener * *aProgressListener)
 {
     NS_ENSURE_ARG_POINTER(aProgressListener);
     *aProgressListener = mProgressListener;
@@ -704,44 +825,76 @@ NS_IMETHODIMP nsWebBrowser::GetProgressListener(nsIWebBrowserPersistProgress * *
     return NS_OK;
 }
   
-NS_IMETHODIMP nsWebBrowser::SetProgressListener(nsIWebBrowserPersistProgress * aProgressListener)
+NS_IMETHODIMP nsWebBrowser::SetProgressListener(nsIWebProgressListener * aProgressListener)
 {
     mProgressListener = aProgressListener;
     return NS_OK;
 }
 
-/* void saveURI (in nsIURI aURI, in string aFileName); */
-NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, const char *aFileName)
+/* void saveURI (in nsIURI aURI, in nsILocalFile aFile); */
+NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, nsILocalFile *aFile)
 {
+    if (mPersist)
+    {
+        PRUint32 currentState;
+        mPersist->GetCurrentState(&currentState);
+        if (currentState == PERSIST_STATE_FINISHED)
+        {
+            mPersist = nsnull;
+        }
+        else
+        {
+            // You can't save again until the last save has completed
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    if (aURI)
+    {
+        uri = aURI;
+    }
+    else
+    {
+        nsresult rv = GetCurrentURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv))
+        {
+            return NS_ERROR_FAILURE;
+        }
+    }
+
     // Create a throwaway persistence object to do the work
     nsWebBrowserPersist *persist = new nsWebBrowserPersist();
-    if (persist == nsnull)
+    mPersist = do_QueryInterface(NS_STATIC_CAST(nsIWebBrowserPersist *, persist));
+    mPersist->SetProgressListener(this);
+    mPersist->SetPersistFlags(mPersistFlags);
+    mPersist->GetCurrentState(&mPersistCurrentState);
+    nsresult rv = mPersist->SaveURI(uri, aPostData, aFile);
+    if (NS_FAILED(rv))
     {
-        return NS_ERROR_OUT_OF_MEMORY;
+        mPersist = nsnull;
     }
-    persist->AddRef();
-    persist->SetProgressListener(mProgressListener);
-    nsresult rv = persist->SaveURI(aURI, aPostData, aFileName);
     return rv;
 }
 
-/* void saveCurrentURI (in string aFileName); */
-NS_IMETHODIMP nsWebBrowser::SaveCurrentURI(const char *aFileName)
+/* void saveDocument (in nsIDOMDocument document, in nsILocalFile aFile, in nsILocalFile aDataPath); */
+NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, nsILocalFile *aFile, nsILocalFile *aDataPath)
 {
-    // Get the current URI
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = GetCurrentURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv))
+    if (mPersist)
     {
-        return NS_ERROR_FAILURE;
+        PRUint32 currentState;
+        mPersist->GetCurrentState(&currentState);
+        if (currentState == PERSIST_STATE_FINISHED)
+        {
+            mPersist = nsnull;
+        }
+        else
+        {
+            // You can't save again until the last save has completed
+            return NS_ERROR_FAILURE;
+        }
     }
 
-    return SaveURI(uri, nsnull, aFileName);
-}
-
-/* void saveDocument (in nsIDOMDocument document); */
-NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, const char *aFileName, const char *aDataPath)
-{
     // Use the specified DOM document, or if none is specified, the one
     // attached to the web browser.
 
@@ -761,15 +914,28 @@ NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, const char *
 
     // Create a throwaway persistence object to do the work
     nsWebBrowserPersist *persist = new nsWebBrowserPersist();
-    if (persist == nsnull)
+    mPersist = do_QueryInterface(NS_STATIC_CAST(nsIWebBrowserPersist *, persist));
+    mPersist->SetProgressListener(this);
+    mPersist->SetPersistFlags(mPersistFlags);
+    mPersist->GetCurrentState(&mPersistCurrentState);
+    nsresult rv = mPersist->SaveDocument(doc, aFile, aDataPath);
+    if (NS_FAILED(rv))
     {
-        return NS_ERROR_OUT_OF_MEMORY;
+        mPersist = nsnull;
     }
-    persist->AddRef();
-    persist->SetProgressListener(mProgressListener);
-    nsresult rv = persist->SaveDocument(doc, aFileName, aDataPath);
     return rv;
 }
+
+/* void cancelSave(); */
+NS_IMETHODIMP nsWebBrowser::CancelSave()
+{
+    if (mPersist)
+    {
+        return mPersist->CancelSave();
+    }
+    return NS_OK;
+}
+
 
 //*****************************************************************************
 // nsWebBrowser::nsIBaseWindow
@@ -1383,7 +1549,7 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
       rc->FillRect(*paintEvent->rect);
       rc->SetColor(oldColor);
       break;
-  }
+    }
 
   default:
     break;
@@ -1581,7 +1747,11 @@ NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
   return NS_OK;
 }
 
-//------------------------------------------------------
+
+//*****************************************************************************
+// nsWebBrowser::nsIWebBrowserPrint
+//*****************************************************************************   
+
 /* void Print (in nsIDOMWindow aDOMWindow, in nsIPrintOptions aThePrintOptions); */
 NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow, 
                                   nsIPrintOptions *aThePrintOptions,

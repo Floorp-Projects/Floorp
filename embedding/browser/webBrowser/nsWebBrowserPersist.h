@@ -24,7 +24,9 @@
 #define nsWebBrowserPersist_h__
 
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 
+#include "nsIInterfaceRequestor.h"
 #include "nsIMIMEService.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
@@ -33,17 +35,24 @@
 #include "nsIStyleSheet.h"
 #include "nsIDocumentEncoder.h"
 #include "nsITransport.h"
+#include "nsIProgressEventSink.h"
+#include "nsILocalFile.h"
+
 #include "nsHashtable.h"
+#include "nsVoidArray.h"
 
 #include "nsIWebBrowserPersist.h"
 #include "nsDOMWalker.h"
 
 class nsEncoderNodeFixup;
+struct URIData;
 
-class nsWebBrowserPersist : public nsIWebBrowserPersist,
-                            public nsIWebBrowserPersistProgress,
+class nsWebBrowserPersist : public nsIInterfaceRequestor,
+                            public nsIWebBrowserPersist,
                             public nsIStreamListener,
-                            public nsDOMWalkerCallback
+                            public nsDOMWalkerCallback,
+                            public nsIProgressEventSink,
+                            public nsSupportsWeakReference
 {
     friend class nsEncoderNodeFixup;
 
@@ -52,61 +61,91 @@ public:
     nsWebBrowserPersist();
     
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIWEBBROWSERPERSIST
-    NS_DECL_NSIWEBBROWSERPERSISTPROGRESS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIPROGRESSEVENTSINK
     
 // Protected members
 protected:    
     virtual ~nsWebBrowserPersist();
-    nsresult CloneNodeWithFixedUpURIAttributes(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
+    nsresult CloneNodeWithFixedUpURIAttributes(
+        nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
+    nsresult SaveURIInternal(
+        nsIURI *aURI, nsIInputStream *aPostData, nsILocalFile *aFile,
+        PRBool aCalcFileExt);
+    nsresult SaveDocumentInternal(nsIDOMDocument *aDocument,
+        nsILocalFile *aFile, nsILocalFile *aDataPath);
+    nsresult SaveDocuments();
 
 // Private members
 private:
     void CleanUp();
-    nsresult MakeAndStoreLocalFilenameInURIMap(const char *aURI, nsString &aFilename, PRBool aNeedsPersisting);
-    nsresult MakeFilenameFromURI(nsIURI *aURI, nsIChannel *aChannel, nsString &aFilename);
-    nsresult StoreURIAttribute(nsIDOMNode *aNode, char *aAttribute, PRBool aNeedsPersisting = PR_TRUE, nsString *aFilename = nsnull);
+    nsresult MakeAndStoreLocalFilenameInURIMap(
+        const char *aURI, PRBool aNeedsPersisting, URIData **aData);
+    nsresult MakeOutputStream(
+        nsILocalFile *aFile, PRBool aCalcFileExt,
+        nsIChannel *aChannel, nsIOutputStream **aOutputStream);
+    nsresult MakeFilenameFromURI(
+        nsIURI *aURI, nsString &aFilename);
+    nsresult StoreURIAttribute(
+        nsIDOMNode *aNode, char *aAttribute, PRBool aNeedsPersisting = PR_TRUE,
+        URIData **aData = nsnull);
     nsresult FixupNodeAttribute(nsIDOMNode *aNode, char *aAttribute);
     nsresult FixupAnchor(nsIDOMNode *aNode);
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentToFileWithFixup(
-        nsIDocument    *pDocument,
-        nsIDocumentEncoderNodeFixup *pFixup,
-        nsIFile*        aFileSpec,
-        PRBool          aReplaceExisting,
-        PRBool          aSaveCopy,
-        const nsString& aFormatType,
-        const nsString& aSaveCharset,
-        PRUint32        aFlags);
-    nsresult SaveSubframeContent(nsIDOMDocument *aFrameContent, const nsString &aFilename);
+        nsIDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
+        nsIFile *aFile, PRBool aReplaceExisting, PRBool aSaveCopy,
+        const nsString &aFormatType, const nsString &aSaveCharset,
+        PRUint32  aFlags);
+    nsresult SaveSubframeContent(
+        nsIDOMDocument *aFrameContent, URIData *aData);
     nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);
 
-    void OnBeginDownload();
-    void OnEndDownload();
+    nsresult FixRedirectedChannelEntry(nsIChannel *aNewChannel);
+
+    void EndDownload(nsresult aResult = NS_OK);
+    void CalcTotalProgress();
 
     // nsDOMWalkerCallback method
     nsresult OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort);
 
     // Hash table enumerators
-    static PRBool PR_CALLBACK PersistURIs(nsHashKey *aKey, void *aData, void* closure);
-    static PRBool PR_CALLBACK CleanupURIMap(nsHashKey *aKey, void *aData, void* closure);
+    static PRBool PR_CALLBACK EnumPersistURIs(
+        nsHashKey *aKey, void *aData, void* closure);
+    static PRBool PR_CALLBACK EnumCleanupURIMap(
+        nsHashKey *aKey, void *aData, void* closure);
+    static PRBool PR_CALLBACK EnumCleanupOutputMap(
+        nsHashKey *aKey, void *aData, void* closure);
+    static PRBool PR_CALLBACK EnumCalcProgress(
+        nsHashKey *aKey, void *aData, void* closure);
+    static PRBool PR_CALLBACK EnumFixRedirect(
+        nsHashKey *aKey, void *aData, void* closure);
+
+    nsCOMPtr<nsILocalFile>    mCurrentDataPath;
+    PRBool                    mCurrentDataPathIsRelative;
+    nsCString                 mCurrentRelativePathToData;
+    nsCOMPtr<nsIURI>          mCurrentBaseURI;
 
     nsCOMPtr<nsIMIMEService>  mMIMEService;
-    nsCOMPtr<nsITransport>    mOutputTransport;
-    nsCOMPtr<nsIOutputStream> mOutputStream;
-    nsCOMPtr<nsIURI>          mBaseURI;
     nsCOMPtr<nsIURI>          mURI;
-    nsCOMPtr<nsIWebBrowserPersistProgress> mProgressListener;
+    nsCOMPtr<nsIWebProgressListener> mProgressListener;
+    nsHashtable               mOutputMap;
+    nsHashtable               mURIMap;
+    nsVoidArray               mDocList;
     PRUint32                  mFileCounter;
     PRUint32                  mFrameCounter;
-    PRUint32                  mTaskCounter;
-    nsCString                 mDataPath;
-    PRBool                    mDataPathIsRelative;
-    nsCString                 mRelativeDataPathURL;
-    nsHashtable               mURIMap;
     PRBool                    mFirstAndOnlyUse;
+    PRBool                    mCancel;
+    PRBool                    mJustStartedLoading;
+    PRBool                    mCompleted;
+    PRUint32                  mPersistFlags;
+    PRUint32                  mPersistResult;
+    PRInt32                   mTotalCurrentProgress;
+    PRInt32                   mTotalMaxProgress;
+
 };
 
 // Helper class does node fixup during persistence

@@ -403,7 +403,17 @@ void SaveWebPage(nsIWebBrowser *aWebBrowser)
 
         // Save away
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(aWebBrowser));
-        persist->SaveDocument(nsnull, szFile, pszDataPath);
+
+        nsCOMPtr<nsILocalFile> file;
+        NS_NewLocalFile(szFile, TRUE, getter_AddRefs(file));
+
+        nsCOMPtr<nsILocalFile> dataPath;
+        if (pszDataPath)
+        {
+            NS_NewLocalFile(pszDataPath, TRUE, getter_AddRefs(dataPath));
+        }
+
+        persist->SaveDocument(nsnull, file, dataPath);
 	}
 }
 
@@ -1120,6 +1130,21 @@ void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
     }
 }
 
+
+//
+// FUNCTION: Set the input focus onto the browser window
+//
+void WebBrowserChromeUI::SetFocus(nsIWebBrowserChrome *chrome)
+{
+    HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
+	if (hwndDlg == NULL)
+	{
+		return;
+	}
+    
+    HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
+    ::SetFocus(hwndBrowser);
+}
 
 //
 //  FUNCTION: UpdateStatusBarText()

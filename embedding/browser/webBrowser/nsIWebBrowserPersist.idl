@@ -25,76 +25,92 @@
 interface nsIURI;
 interface nsIInputStream;
 interface nsIDOMDocument;
+interface nsIWebProgressListener;
+interface nsILocalFile;
 
 /**
  * @status UNDER_REVIEW
  */
 
-[scriptable, uuid(F823C5B0-AF6C-11d4-9597-0020183BF181)]
-interface nsIWebBrowserPersistProgress : nsISupports
-{
-	/**
-	 * Flags that indicate the beginning and end of ALL downloading.
-	 * Every operation with begin with a call to the listener with a
-	 * PROGRESS_STARTED flag and finish with a PROGRESS_FINISHED flag.
-	 */
-	const unsigned long PROGRESS_STARTED    = 1;
-	const unsigned long PROGRESS_FINISHED   = 2;
-
-	/**
-	 * Flags that indicate the progress of a particular URI
-	 */
-	const unsigned long PROGRESS_START_URI  = 4;
-	const unsigned long PROGRESS_END_URI    = 8;
-
-    /**
-	 * Called as the downloading progresses.
-     *
-	 * aStatus - Status flags indicating the state of progress. 
-	 * aURI - URI to which the progress refers or nsnull when it refers
-	 *        to everything.
-	 * aAbort - 
-	 */
-	void OnProgress(in unsigned long aStatus, in nsIURI aURI, out boolean aAbort);
-};
-
-
 /**
- * The nsIWebBrowserPersist
+ * Interface for persisting DOM documents and URIs to local storage.
  */
 [scriptable, uuid(814ba433-a816-4785-9f95-ad3ba0a43dab)]
 interface nsIWebBrowserPersist : nsISupports
 {
+  /** No special persistence behaviour. */
+  const unsigned long PERSIST_FLAGS_NONE = 0;
+  /** Only use cached data (could result in failure if data is not cached). */
+  const unsigned long PERSIST_FLAGS_FROM_CACHE = 1;
+  /** Bypass the cached data. */
+  const unsigned long PERSIST_FLAGS_BYPASS_CACHE = 2;
+  /** Ignore any redirected data (usually adverts). */
+  const unsigned long PERSIST_FLAGS_IGNORE_REDIRECTED_DATA = 4;
+  /** Ignore IFRAME content (usually adverts). */
+  const unsigned long PERSIST_FLAGS_IGNORE_IFRAMES = 8;
+
+  /** Flags governing how data is fetched from the network. */
+  attribute unsigned long persistFlags;
+    
+  /** Persister is ready to save data */
+  const unsigned long PERSIST_STATE_READY = 1;
+  /** Persister is saving data */
+  const unsigned long PERSIST_STATE_SAVING = 2;
+  /** Persister has finished saving data */
+  const unsigned long PERSIST_STATE_FINISHED = 3;
+
+  /**
+   * Current state of the persister object.
+   */
+  readonly attribute unsigned long currentState;
+
+  /**
+   * Value indicating the success or failure of the persist
+   * operation.
+   *
+   * @return NS_OK Operation was successful or is still ongoing.
+   * @return NS_BINDING_ABORTED Operation cancelled.
+   * @return NS_ERROR_FAILURE Non-specific failure.
+   */
+  readonly attribute unsigned long result;
+
   /**
    * Callback listener for progress notifications.
    */
-  attribute nsIWebBrowserPersistProgress progressListener;
+  attribute nsIWebProgressListener progressListener;
 
   /**
    * Save the specified URI to file.
    *
-   * aURI - The URI to save to file.
-   * aPostData - Data to pass with in an HTTP request or nsnull.
-   * aFileName - Target local filename.
-   */
-  void saveURI(in nsIURI aURI, in nsIInputStream aPostData, in string aFileName);
-
-  /*
-   * Save the current URI (in the browser) to file. Internal implementation
-   * calls saveURI passing in the current URI and postdata.
+   * @param aURI       URI to save to file or <CODE>nsnull</CODE> 
+   *                   to use current URI if the implementation supports such
+   *                   a concept.
+   * @param aPostData  Data to pass with in an HTTP request or nsnull.
+   * @param aFile      Target local file.
    *
-   * aFileName - Target local filename.
+   * @return NS_OK Operation has been started.
+   * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
-  void saveCurrentURI(in string aFileName);
+  void saveURI(in nsIURI aURI, in nsIInputStream aPostData, in nsILocalFile aFile);
 
   /**
    * Save the specified DOM document to file and optionally all linked files
-   * including images, CSS, JS & frames.
+   * (e.g. images, CSS, JS & subframes). Do not call this method until the
+   * document has finished loading!
    *
-   * aDocument - Document to save.
-   * aFileName - Target local filename.
-   * aDataPath - Path to folder (which must exist) to save linked files to,
-   *             or nsnull.
+   * @param aDocument  Document to save to file.
+   * @param aFile      Target local file.
+   * @param aDataPath  Path to folder (which must already exist) to save
+   *                   linked files to or nsnull.
+   *
+   * @return NS_OK Operation has been started.
+   * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
-  void saveDocument(in nsIDOMDocument aDocument, in string aFileName, in string aDataPath);
+  void saveDocument(in nsIDOMDocument aDocument, in nsILocalFile aFile, in nsILocalFile aDataPath);
+
+  /**
+   * Cancels the current operation. The caller is responsible for cleaning up
+   * partially written files or directories.
+   */
+  void cancelSave();
 };

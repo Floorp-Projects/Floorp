@@ -699,12 +699,10 @@ NS_METHOD CBrowserShell::SaveDocument(const FSSpec& outSpec)
     nsCOMPtr<nsIFile> parentDir;
     rv = localFile->GetParent(getter_AddRefs(parentDir));
     if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsILocalFile> parentDirAsLocal(do_QueryInterface(parentDir, &rv));
+    if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString outDirPath, outFilePath;    
-    parentDir->GetPath(getter_Copies(outDirPath));
-    localFile->GetPath(getter_Copies(outFilePath));
-    
-    rv = wbPersist->SaveDocument(domDoc, outFilePath, outDirPath);
+    rv = wbPersist->SaveDocument(domDoc, localFile, parentDirAsLocal);
     
     return rv;
 }
@@ -723,10 +721,7 @@ NS_METHOD CBrowserShell::SaveCurrentURI(const FSSpec& outSpec)
     nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(localMacFile, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString outFilePath;    
-    localFile->GetPath(getter_Copies(outFilePath));
-    
-    rv = wbPersist->SaveCurrentURI(outFilePath);
+    rv = wbPersist->SaveURI(nsnull, nsnull, localFile);
     
     return rv;
 }
