@@ -61,7 +61,7 @@
 class nsIOutputStream;
 
 #ifdef DEBUG
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Timer.h>
 #endif
 #endif
@@ -95,19 +95,19 @@ protected:
     PRBool        busySchedule;
 
     // System Bookmark parsing
-#ifdef XP_WIN
+#if defined(XP_WIN)
     // @param aDirectory      - Favorites Folder to import from.
     // @param aParentResource - Folder into which to place imported
     //                          Favorites.
     nsresult      ParseFavoritesFolder(nsIFile* aDirectory, 
                                        nsIRDFResource* aParentResource);
-#elif XP_MAC
+#elif defined(XP_MAC) || defined(XP_MACOSX)
     PRBool        mIEFavoritesAvailable;
 
     nsresult      ReadFavorites();
 #endif
 
-#if defined(XP_WIN) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
     void          HandleSystemBookmarks(nsIRDFNode* aNode);
 #endif
 
