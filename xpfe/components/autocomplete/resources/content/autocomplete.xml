@@ -1469,13 +1469,10 @@
       <method name="getHoverCell">
         <parameter name="aEvent"/>
         <body><![CDATA[
-           var obox = this.textbox.view.outlinerBoxObject;
-           var pbox = this.textbox.resultsPopup.boxObject;
-
            var row = {}; var col = {}; var obj = {};
-           var x = aEvent.screenX-pbox.screenX + this.boxObject.x;
-           var y = aEvent.screenY-pbox.screenY + this.boxObject.y;
-           obox.getCellAt(x-1, y-1, row, col, obj);
+           var x = aEvent.screenX - this.boxObject.screenX + this.boxObject.x;
+           var y = aEvent.screenY - this.boxObject.screenY + this.boxObject.y;
+           this.textbox.view.outlinerBoxObject.getCellAt(x, y, row, col, obj);
            if (row.value >= 0 && row.value < this.textbox.view.rowCount)
              return {row: row.value, column: col.value};
            else
