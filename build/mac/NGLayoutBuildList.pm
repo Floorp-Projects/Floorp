@@ -779,6 +779,8 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:mailnews:db:macbuild:msgDBIDL.mcp",					"MsgDB");
 	BuildIDLProject(":mozilla:mailnews:mime:macbuild:mimeIDL.mcp",					"Mime");
 
+	BuildIDLProject(":mozilla:caps:macbuild:CapsIDL.mcp",							"caps");
+
 	print("--- IDL projects complete ----\n")
 }
 
