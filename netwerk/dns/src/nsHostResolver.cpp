@@ -63,7 +63,7 @@
 //----------------------------------------------------------------------------
 
 #define MAX_THREADS 8
-#define IDLE_TIMEOUT PR_SecondsToInterval(5)
+#define IDLE_TIMEOUT PR_SecondsToInterval(60)
 
 //----------------------------------------------------------------------------
 
@@ -226,11 +226,13 @@ HostDB_ClearEntry(PLDHashTable *table,
         void *iter = nsnull;
         PRNetAddr addr;
         char buf[64];
-        do {
+        for (;;) {
             iter = PR_EnumerateAddrInfo(iter, he->rec->addrinfo, 0, &addr);
+            if (!iter)
+                break;
             PR_NetAddrToString(&addr, buf, sizeof(buf));
             LOG(("  %s\n", buf));
-        } while (iter);
+        }
     }
 #endif
     NS_RELEASE(he->rec);
