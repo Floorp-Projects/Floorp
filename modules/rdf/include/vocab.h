@@ -112,6 +112,13 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource titleBarFGColor;
   RDF_Resource titleBarBGColor;
   RDF_Resource titleBarBGURL;
+
+  RDF_Resource dividerColor;
+  RDF_Resource showDivider;
+  RDF_Resource selectedColumnHeaderFGColor;
+  RDF_Resource selectedColumnHeaderBGColor;
+  RDF_Resource showColumnHilite;
+  RDF_Resource triggerPlacement;
 } RDF_NCVocabStruct;
 
 typedef RDF_NCVocabStruct* RDF_NCVocab;

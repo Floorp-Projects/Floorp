@@ -172,6 +172,13 @@ createNavCenterVocab () {
   gNavCenter->titleBarFGColor = RDF_GetResource (gCoreDB, "titleBarFGColor", true);
   gNavCenter->titleBarBGColor = RDF_GetResource (gCoreDB, "titleBarBGColor", true);
   gNavCenter->titleBarBGURL = RDF_GetResource (gCoreDB, "titleBarBGURL", true);
+
+  gNavCenter->dividerColor = RDF_GetResource (gCoreDB, "dividerColor", true);
+  gNavCenter->showDivider = RDF_GetResource (gCoreDB, "showDivider", true);
+  gNavCenter->selectedColumnHeaderFGColor = RDF_GetResource (gCoreDB, "selectedColumnHeaderFGColor", true);
+  gNavCenter->selectedColumnHeaderBGColor = RDF_GetResource (gCoreDB, "selectedColumnHeaderBGColor", true);
+  gNavCenter->showColumnHilite = RDF_GetResource (gCoreDB, "showColumnHilite", true);
+  gNavCenter->triggerPlacement = RDF_GetResource (gCoreDB, "triggerPlacement", true);
 }
 
 

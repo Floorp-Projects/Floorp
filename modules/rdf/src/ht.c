@@ -4361,7 +4361,10 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 		    (token == gNavCenter->showColumnHeaders) || (token == gNavCenter->showColumnHeaderDividers) ||
 		    (token == gNavCenter->sortColumnFGColor) || (token == gNavCenter->sortColumnBGColor) ||
 		    (token == gNavCenter->titleBarFGColor) || (token == gNavCenter->titleBarBGColor) ||
-		    (token == gNavCenter->titleBarBGURL) ||
+		    (token == gNavCenter->titleBarBGURL) || (token == gNavCenter->dividerColor) ||
+		    (token == gNavCenter->showDivider) || (token == gNavCenter->selectedColumnHeaderFGColor) ||
+		    (token == gNavCenter->selectedColumnHeaderBGColor) || (token == gNavCenter->showColumnHilite) ||
+		    (token == gNavCenter->triggerPlacement) ||
 		/*  ((token == gWebData->RDF_URL) && ht_isURLReal(node)) || */
 #ifdef	HT_PASSWORD_RTNS
 			(token == gNavCenter->RDF_Password) ||
@@ -4808,6 +4811,12 @@ rdfColorProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsign
 		freeHtmlElement(gNavCenter->titleBarFGColor);
 		freeHtmlElement(gNavCenter->titleBarBGColor);
 		freeHtmlElement(gNavCenter->titleBarBGURL);
+		freeHtmlElement(gNavCenter->dividerColor);
+		freeHtmlElement(gNavCenter->showDivider);
+		freeHtmlElement(gNavCenter->selectedColumnHeaderFGColor);
+		freeHtmlElement(gNavCenter->selectedColumnHeaderBGColor);
+		freeHtmlElement(gNavCenter->showColumnHilite);
+		freeHtmlElement(gNavCenter->triggerPlacement);
 	}
 
 	return(retVal);
@@ -4947,13 +4956,20 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 		dynStr = constructHTML(dynStr, node, gNavCenter->columnHeaderBGURL, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->showColumnHeaders, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->showColumnHeaderDividers, HT_COLUMN_STRING);
-
+		dynStr = constructHTML(dynStr, node, gNavCenter->selectedColumnHeaderFGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->selectedColumnHeaderBGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->sortColumnBGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->showColumnHilite, HT_COLUMN_STRING);
 
 		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarFGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarBGColor, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarBGURL, HT_COLUMN_STRING);
+
+		dynStr = constructHTML(dynStr, node, gNavCenter->showDivider, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->dividerColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->triggerPlacement, HT_COLUMN_STRING);
+
 		strings = XP_GetDialogStrings(RDF_HTML_STR);
 		if (strings != NULL && dynStr != NULL)
 		{
