@@ -655,8 +655,10 @@ DragMotion(Widget w,Widget descendant,int x,int y)
 static void
 DescendantMotion(Widget w,Widget descendant,int x,int y)
 {
+#if 0
 	printf("DescendantMotion(%s,%s,%d,%d)\n",
 		   XtName(w),descendant ? XtName(descendant) : "NULL",x,y);
+#endif
 }
 /*----------------------------------------------------------------------*/
 static void
