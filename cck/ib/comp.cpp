@@ -2,6 +2,7 @@
 #include "globals.h"
 #include "ib.h"
 #include "comp.h"
+#include <direct.h>
 
 #define MAX_SIZE 1024
 
@@ -16,11 +17,19 @@ extern CString iniDstPath;
 extern CString scriptPath;
 extern CString nscpxpiPath;
 
+extern CString linuxOption;
+extern CString linuxblobPath;
+extern CString linuxDir;
+extern CString nsinstPath;
+extern CString xpiDir;
+extern CString tarfile;
+
 extern COMPONENT Components[100];
 extern int numComponents;
 
 extern "C" __declspec(dllexport)
-int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int invisibleCount)
+int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
+					   int invisibleCount)
 {
 	*compNum = 0;
 	int invNum = *compNum;
@@ -36,9 +45,11 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int in
 	
 	componentstr.Format("C%d", *compNum);
 	strcpy(tempcomponentstr, componentstr);
-	GetPrivateProfileString("Setup Type2", tempcomponentstr, "", component, MAX_SIZE, iniSrcPath);
+	GetPrivateProfileString("Setup Type2", tempcomponentstr, "", component, 
+		MAX_SIZE, iniSrcPath);
 
-	GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
+	GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, 
+		iniSrcPath);
 	while (*archive)
 	{
 		GetPrivateProfileString(component, "Description Short", "", 
@@ -57,25 +68,30 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int in
 		comps[*compNum].launchapp = (strstr(attr, "LAUNCHAPP") != NULL);
 		comps[*compNum].additional = (strstr(attr, "ADDITIONAL") != NULL);
 		comps[*compNum].disabled = (strstr(attr, "DISABLED") != NULL);
-        comps[*compNum].forceupgrade = (strstr(attr, "FORCE_UPGRADE") != NULL);
+		comps[*compNum].forceupgrade = (strstr(attr, "FORCE_UPGRADE") != NULL);
+		comps[*compNum].downloadonly = (strstr(attr, "DOWNLOAD_ONLY") != NULL);
 
 		
-		if (!(comps[*compNum].selected && comps[*compNum].invisible && invisibleCount))
+		if (!(comps[*compNum].selected && comps[*compNum].invisible && 
+			invisibleCount))
 		{
 			(*compNum)++;
 			invNum++;
 			componentstr.Format("C%d", invNum);
 			strcpy(tempcomponentstr, componentstr);
-			GetPrivateProfileString("Setup Type2", tempcomponentstr, "", component, MAX_SIZE, iniSrcPath);
+			GetPrivateProfileString("Setup Type2", tempcomponentstr, "", 
+				component, MAX_SIZE, iniSrcPath);
 		}
 		else
 		{
 			invNum++;
 			componentstr.Format("C%d", invNum);
 			strcpy(tempcomponentstr, componentstr);
-			GetPrivateProfileString("Setup Type2", tempcomponentstr, "", component, MAX_SIZE, iniSrcPath);
+			GetPrivateProfileString("Setup Type2", tempcomponentstr, "", 
+				component, MAX_SIZE, iniSrcPath);
 		}
-		GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, iniSrcPath);
+		GetPrivateProfileString(component, "Archive", "", archive, MAX_SIZE, 
+			iniSrcPath);
 	}
 
 
@@ -85,16 +101,55 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int in
 extern "C" __declspec(dllexport)
 int GenerateComponentList(CString parms, WIDGET *curWidget)
 {
-	rootPath	= GetGlobal("Root");
-	configName	= GetGlobal("CustomizationList");
-	configPath  = rootPath + "Configs\\" + configName;
+	rootPath = GetGlobal("Root");
+	configName = GetGlobal("CustomizationList");
+	configPath = rootPath + "Configs\\" + configName;
 	workspacePath = configPath + "\\Workspace";
 	nscpxpiPath;
+
+	linuxOption = GetGlobal("lPlatform");
+	if (linuxOption == "Linux")
+	{
+		linuxblobPath = GetGlobal("LinuxPath");
+		linuxDir = "nscpxpiLinux";
+		nsinstPath = "\\netscape-installer\\xpi";
+		xpiDir = "\\xpi";
+		CString tnscpxpilinuxPath = rootPath + linuxDir;
+		CString nscpxpilinuxPath = tnscpxpilinuxPath;
+		int pathlen = linuxblobPath.GetLength();
+		int pos = linuxblobPath.ReverseFind('\\');
+		pos += 1;
+		CString linuxinstDirPath = linuxblobPath.Left(pos);
+		tarfile = linuxblobPath.Right(pathlen-pos);
+
+		int direxist = GetFileAttributes(nscpxpilinuxPath);
+		if (direxist == -1) // nscpxpiLinux directory does not exist
+		{
+			char currentdir[_MAX_PATH];
+			_getcwd(currentdir, _MAX_PATH);
+			_chdir(rootPath);
+			_mkdir(linuxDir);
+			_chdir(linuxinstDirPath);
+			tnscpxpilinuxPath.Replace("\\","/");
+			CString command = "tar -zxvf " + tarfile + " -C " + tnscpxpilinuxPath;
+			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+			nscpxpiPath = nscpxpilinuxPath + nsinstPath;
+			CString tempxpiPath = nscpxpiPath;
+			tempxpiPath.Replace(xpiDir,"");
+			CopyFile(tempxpiPath+"\\Config.ini", nscpxpiPath+"\\Config.ini", 
+				FALSE);
+			_chdir(currentdir);
+		}
+		nscpxpiPath = nscpxpilinuxPath + nsinstPath;
+	}
+	else
+	{
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
 		nscpxpiPath = rootPath + "NSCPXPI";
-	iniSrcPath		= nscpxpiPath + "\\config.ini";
+	}
+	iniSrcPath = nscpxpiPath + "\\config.ini";
 
 	BuildComponentList(Components, &numComponents, iniSrcPath, 1);
 	

@@ -27,6 +27,17 @@ CString nscpxpiPath;
 CString cdshellPath;
 CString outputPath; 
 CString xpiDstPath;
+// variables for CCK Linux build
+CString linuxOption;
+CString linuxblobPath;
+CString templinuxPath;
+CString linuxDir;
+CString nscpxpilinuxPath;
+CString nsinstPath;
+CString nsinstallerDir;
+CString xpiDir;
+CString templinuxDir;
+CString tarfile;
 
 WIDGET *tempWidget;
 char buffer[50000];
@@ -670,6 +681,55 @@ void invisible()
 			WritePrivateProfileString(Components[i].compname, "Attributes", "INVISIBLE", iniDstPath);
 	}
 }
+
+void LinuxInvisible()
+{
+	Setup0Short = "Recommended";
+	Setup1Short = "Custom";
+	CString Setup0Long = "Installs the most common options.  Quickest to download; recommended for most users.  Java not included.";
+	CString Setup1Long = "Recommended for advanced users or users with specific international language package requirements.  (Navigator will be installed by default.)";
+
+	WritePrivateProfileString("Setup Type0", NULL, "", iniDstPath);
+	WritePrivateProfileString("Setup Type1", NULL, "", iniDstPath);
+
+	WritePrivateProfileString("Setup Type0","Description Short",
+		(LPCTSTR)Setup0Short,iniDstPath);
+	WritePrivateProfileString("Setup Type0","Description Long", 
+		(LPCTSTR)Setup0Long,iniDstPath);
+	WritePrivateProfileString("Setup Type1","Description Short",
+		(LPCTSTR)Setup1Short,iniDstPath);
+	WritePrivateProfileString("Setup Type1","Description Long", 
+		(LPCTSTR)Setup1Long,iniDstPath);
+	WritePrivateProfileString("Setup Type2",NULL," ",iniDstPath);
+	WritePrivateProfileString("Setup Type3",NULL," ",iniDstPath);
+	CString Cee;
+	tempWidget = findWidget("SelectedComponents");
+	CString component;
+	for (int i=0; i<numComponents; i++)
+	{
+		if (Components[i].selected)
+		{
+			component = Components[i].compname;	
+			Cee.Format("C%d", componentOrder);
+			WritePrivateProfileString("Setup Type0",(LPCTSTR)Cee,
+				(LPCTSTR)component,iniDstPath);
+			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,
+				(LPCTSTR)component,iniDstPath);
+
+			if ((Components[i].invisible) && (Components[i].downloadonly))
+				WritePrivateProfileString(Components[i].compname,"Attributes",
+				"SELECTED|INVISIBLE|DOWNLOAD_ONLY",iniDstPath);
+			else if ((Components[i].invisible) && !(Components[i].downloadonly))
+				WritePrivateProfileString(Components[i].compname,"Attributes",
+				"SELECTED|INVISIBLE",iniDstPath);
+			else
+				WritePrivateProfileString(Components[i].compname,"Attributes",
+				"SELECTED",iniDstPath);
+			componentOrder++;
+		}
+	}
+}
+
 void AddThirdParty()
 {
 	CString tpCompPath1 = GetGlobal("CustomComponent1");
@@ -892,6 +952,51 @@ void EraseDirectory(CString sPath)
      }
 }
 
+void CopyDirectory(CString source, CString dest)
+{
+	CFileFind finder;
+	CString sFileToFind = source + "\\*.*";
+	BOOL bWorking = finder.FindFile(sFileToFind);
+	while (bWorking) 
+	{
+		bWorking = finder.FindNextFile();
+		CString newPath=dest + "\\";
+	
+		if (finder.IsDots()) continue;
+		if (finder.IsDirectory()) 
+		{
+			CString dirPath = finder.GetFilePath();
+			newPath += finder.GetFileName();
+			_mkdir(newPath);
+			CopyDirectory(dirPath, newPath);
+			if (!CopyFile(dirPath,newPath,0))
+				DWORD e = GetLastError();
+			continue; 
+		}
+		
+		newPath += finder.GetFileName();
+		CString source = finder.GetFilePath();
+		if (!CopyFile(source,newPath,0))
+			DWORD e = GetLastError();
+	}
+}
+
+void CreateLinuxInstaller()
+{
+	char currentdir[_MAX_PATH];
+	_getcwd(currentdir,_MAX_PATH);
+	CopyDirectory(xpiDstPath, templinuxPath + xpiDir);
+	remove(templinuxPath + xpiDir + "\\N6Setup.exe");
+	CopyFile(xpiDstPath+"\\Config.ini", templinuxPath+"\\Config.ini",FALSE);
+	remove(templinuxPath + xpiDir + "\\Config.ini");
+	_chdir(outputPath);
+	templinuxPath = tempPath;
+	templinuxPath.Replace("\\", "/");
+	CString command = "tar -zcvf " + tarfile + " -C " + templinuxPath + "/" + templinuxDir + spaces + nsinstallerDir;
+	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+	_chdir(currentdir);
+}
+
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
 {
@@ -911,10 +1016,39 @@ int StartIB(CString parms, WIDGET *curWidget)
 	scriptPath	= rootPath + "\\script.ib";
 	workspacePath = configPath + "\\Workspace";
 	xpiDstPath	= cdPath;
+	// initializing variables for CCK linux build
+	linuxOption = GetGlobal("lPlatform");
+	linuxblobPath = GetGlobal("LinuxPath");
+	templinuxPath = tempPath + "\\templinux\\netscape-installer";
+	linuxDir = "nscpxpiLinux";
+	nscpxpilinuxPath = rootPath + linuxDir;
+	nsinstPath = "\\netscape-installer\\xpi";
+	nsinstallerDir = "netscape-installer";
+	xpiDir = "\\xpi";
+	templinuxDir = "tempLinux";
+	tarfile = "netscape-i686-pc-linux-gnu-sea.tar.gz";
+
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
 		nscpxpiPath = rootPath + "NSCPXPI";
+	if (linuxOption == "Linux")
+	{
+		nscpxpiPath = nscpxpilinuxPath + nsinstPath;
+		char currentdir[_MAX_PATH];
+		_getcwd(currentdir,_MAX_PATH);
+		_mkdir(tempPath);
+		_chdir(tempPath);
+		_mkdir(templinuxDir);
+		_chdir(templinuxDir);
+		_mkdir(nsinstallerDir);
+		_chdir(nsinstallerDir);
+
+		CString tPath = nscpxpiPath;
+		tPath.Replace(xpiDir,"");
+		CopyDirectory(tPath, templinuxPath);
+		_chdir(currentdir);
+	}
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
 //Check for disk space before continuing
 
@@ -1132,7 +1266,12 @@ int StartIB(CString parms, WIDGET *curWidget)
 	// Didn't work...
 	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||");
 
-	invisible();
+	if (linuxOption == "Linux")
+	{
+		LinuxInvisible();
+	}
+	else
+		invisible();
 	
 	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||");
 
@@ -1141,7 +1280,13 @@ int StartIB(CString parms, WIDGET *curWidget)
 	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||");
 
 	ReplaceINIFile();
-
+	
+	if (linuxOption == "Linux")
+	{
+		dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||||");
+		CreateLinuxInstaller();
+	}
+	
 	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 
 	SetCurrentDirectory(olddir);
