@@ -687,10 +687,10 @@ CWebBrowserContainer::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::OnStopRequest(nsIRequest *request, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
+CWebBrowserContainer::OnStopRequest(nsIRequest *request, nsISupports* aContext, nsresult aStatus)
 {
 	USES_CONVERSION;
-	NG_TRACE(_T("CWebBrowserContainer::OnStopRequest(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
+	NG_TRACE(_T("CWebBrowserContainer::OnStopRequest(..., %d)\n"), (int) aStatus);
 
 	// Fire a DownloadComplete event
 	m_pEvents1->Fire_DownloadComplete();
