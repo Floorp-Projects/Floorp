@@ -1,6 +1,9 @@
 inspector.jar:
 *+ content/inspector/contents.rdf                                      (content/contents.rdf)
++  content/inspector/inspector.xul                                     (content/inspector.xul)
 +  content/inspector/tasksOverlay.xul                                  (content/tasksOverlay.xul)
++  content/inspector/toolboxOverlay.xul                                (content/toolboxOverlay.xul)
++  content/inspector/popupOverlay.xul                                  (content/popupOverlay.xul)
 *+ locale/en-US/inspector/contents.rdf                                 (locale/contents.rdf)
 +  locale/en-US/inspector/tasksOverlay.dtd                             (locale/tasksOverlay.dtd)
 +  icon.png                                                            (content/inspector.gif)

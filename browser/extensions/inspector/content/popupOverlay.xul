@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<?xul-overlay href="chrome://inspector/content/editingOverlay.xul"?>
+
+<overlay id="ovPopupsMain"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <popupset id="ppsGlobalPopupset">
+    <popup id="ppSearchResults">
+      <!--
+        <menuitem id="ppSearchResults-view" label="&cmdViewSearchItem.label;" observes="cmdViewSearchItem"/>
+        <menuitem id="ppSearchResults-edit" label="&cmdEditSearchItem.label;" observes="cmdEditSearchItem"/>
+      -->
+      <menuseparator id="ppSearchResults-insertion"/>
+      <menuitem id="ppSearchResults-copyLine" label="&cmdCopySearchItemLine.label;" observes="cmdCopySearchItemLine"/>
+      <menuitem id="ppSearchResults-copyAll" label="&cmdCopySearchItemAll.label;" observes="cmdCopySearchItemAll"/>
+      <menuitem id="ppSearchResults-save" label="&cmdSaveSearchItemText.label;" observes="cmdSaveSearchItemText"/>
+      <menuseparator/>
+      <menuitem id="ppSearchResults-clear" label="&cmdClearSearch.label;" observes="cmdClearSearch"/>
+      <menuitem id="ppSearchResults-hide" label="&cmdHideSearchItems.label;" observes="cmdToggleSearch"/>
+    </popup>
+  </popupset>
+
+  <menupopup id="menu_FilePopup">
+    <menu oncommand="inspector.goToWindow(event.target);"
+      id="mnWindowsFile" label="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
+      datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+      <template>
+        <rule>
+          <menupopup>
+            <menuitem uri="rdf:*" label="&NC-rdf;KeyIndex &NC-rdf;Name" accesskey="&NC-rdf;KeyIndex"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+    <menuitem label="&cmdShowOpenURLDialog.label;" accesskey="&cmdShowOpenURLDialog.accesskey;"
+              observes="cmdShowOpenURLDialog"/>
+    <menuseparator/>
+    <menuitem label="&cmdClose.label;" accesskey="&cmdClose.accesskey;"
+              observes="cmdClose" key="key_closeInspector"/>
+  </menupopup>
+
+  <menupopup id="mppEdit">
+    <menuitem id="mnEditUndo"/>
+    <menuitem id="mnEditRedo"/>
+    <menuseparator/>
+    <menuitem id="mnEditCut"/>
+    <menuitem id="mnEditCopy"/>
+    <menuitem id="mnEditPaste"/>
+    <menuseparator/>
+    <menuitem id="mnEditInsert"/>
+    <menuitem id="mnEditDelete"/>
+  </menupopup>
+
+  <menupopup id="mppSearch">
+    <!--
+    <menuseparator/>
+    <menu label="&mnSearchPlugins.label;" accesskey="&mnSearchPlugins.accesskey;">
+      <menupopup id="mppSearchPlugins">
+        <menuitem label="&cmdRunSearch.label;" accesskey="&cmdRunSearch.accesskey;" observes="cmdRunSearch"/>
+      </menupopup>
+    </menu>
+    -->
+  </menupopup>
+
+  <menupopup id="mppView" >
+    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
+    <!--
+    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleSearch.label;" observes="cmdToggleSearch"/>
+    -->
+    <menuseparator/>
+  </menupopup>
+
+  <popupset id="ppsViewerPopupset"/>
+
+</overlay>

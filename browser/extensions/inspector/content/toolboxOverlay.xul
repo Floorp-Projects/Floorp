@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<overlay id="ovToolbox"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <popupset id="ppsGlobalPopupset"/>
+
+  <menubar id="mbrInspectorMain">
+
+    <menu id="mnFile" label="&mnFile.label;" accesskey="&mnFile.accesskey;">
+      <menupopup id="menu_FilePopup"/>
+    </menu>
+
+    <menu id="mnEdit" label="&mnEdit.label;" accesskey="&mnEdit.accesskey;">
+      <menupopup id="mppEdit"/>
+    </menu>
+
+    <menu id="mnSearch" label="&mnSearch.label;" accesskey="&mnSearch.accesskey;">
+      <menupopup id="mppSearch"/>
+    </menu>
+
+    <menu id="mnView" label="&mnView.label;" accesskey="&mnView.accesskey;">
+      <menupopup id="mppView"/>
+    </menu>
+
+  </menubar>
+
+  <toolbar id="tbInspectorPrimary" class="chromeclass-toolbar">
+
+    <hbox id="bxURLBar" flex="1">
+      <toolbarbutton id="btnSelecting" type="checkbox" observes="cmd:selectByClick"
+              tooltiptext="&btnSelecting.tooltip;"/>
+
+      <toolbarbutton id="btnFind" observes="cmd:find"
+              tooltiptext="&btnFind.tooltip;"/>
+
+      <hbox id="bxURLBarContainer" flex="1">
+        <hbox align="center" flex="1">
+          <textbox id="tfURLBar" type="autocomplete" flex="1"
+            searchSessions="history" timeout="50" maxrows="6"
+            observes="cmdGotoURL">
+            <image id="imgURLBarIcon"/>
+
+          </textbox>
+        </hbox>
+
+      </hbox>
+
+      <toolbarbutton label="&btnInspect.label;" observes="cmdGotoURL"/>
+    </hbox>
+
+  </toolbar>
+
+</overlay>
