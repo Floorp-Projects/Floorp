@@ -55,6 +55,7 @@
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
 #include "nsIWeakReference.h"
+#include "nsIMsgWindow.h"
 
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilterHitNotify.h"
@@ -225,14 +226,14 @@ class nsParseNewMailState : public nsMsgMailboxParser
 , public nsIMsgFilterHitNotify
 {
 public:
-	nsParseNewMailState();
-	virtual ~nsParseNewMailState();
-	NS_DECL_ISUPPORTS_INHERITED
-    nsresult Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow);
+  nsParseNewMailState();
+  virtual ~nsParseNewMailState();
+  NS_DECL_ISUPPORTS_INHERITED
+  nsresult Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow);
 
-	virtual void	DoneParsingFolder(nsresult status);
+  virtual void	DoneParsingFolder(nsresult status);
 
-	void DisableFilters() {m_disableFilters = PR_TRUE;}
+  void DisableFilters() {m_disableFilters = PR_TRUE;}
 
 #ifdef DOING_JSFILTERS
 	// from jsmsg.cpp
@@ -247,25 +248,27 @@ public:
 
 	nsOutputFileStream *GetLogFile();
 	virtual PRInt32	PublishMsgHeader(nsIMsgWindow *msgWindow);
+  void            GetMsgWindow(nsIMsgWindow **aMsgWindow);
 protected:
 	virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow);
 	virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
 	virtual nsresult	MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
-											   nsIMsgDatabase *sourceDB, 
-                                                const nsACString& destFolder,
+                                            nsIMsgDatabase *sourceDB, 
+                                            const nsACString& destFolder,
                                             nsIMsgFilter *filter,
                                             nsIMsgWindow *msgWindow);
 	virtual	int			MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
   void		LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
 	nsCOMPtr <nsIMsgFilterList> m_filterList;
 	nsCOMPtr <nsIFolder> m_rootFolder;
+  nsCOMPtr <nsIMsgWindow> m_msgWindow;
 	nsIOFileStream		*m_inboxFileStream;
-	nsFileSpec			m_inboxFileSpec;
-	PRBool				m_disableFilters;
-	PRBool				m_msgMovedByFilter;
-	PRUint32			m_ibuffer_fp;
-	char			*m_ibuffer;
-	PRUint32			m_ibuffer_size;
+	nsFileSpec    m_inboxFileSpec;
+	PRBool        m_disableFilters;
+	PRBool        m_msgMovedByFilter;
+	PRUint32      m_ibuffer_fp;
+	char          *m_ibuffer;
+	PRUint32      m_ibuffer_size;
 };
 
 #endif

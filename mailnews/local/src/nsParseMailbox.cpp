@@ -71,7 +71,6 @@
 #include "prprf.h"
 #include "nsEscape.h"
 #include "nsIMimeHeaders.h"
-
 #include "nsIMsgMdnGenerator.h"
 #include "nsMsgSearchCore.h"
 
@@ -162,39 +161,6 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports
         m_mailDB->RemoveListener(this);
     // and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
     // available for another url if there is one....
-#ifdef DEBUG1
-    // let's dump out the contents of our db, if possible.
-    if (m_mailDB)
-    {
-        nsMsgKeyArray	keys;
-        nsCAutoString	author;
-        nsCAutoString	subject;
-
-    //	m_mailDB->PrePopulate();
-        m_mailDB->ListAllKeys(keys);
-        PRUint32 size = keys.GetSize();
-        for (PRUint32 keyindex = 0; keyindex < size; keyindex++)
-        {
-            nsCOMPtr<nsIMsgDBHdr> msgHdr;
-            nsresult ret =
-                m_mailDB->GetMsgHdrForKey(keys[keyindex],
-                                          getter_AddRefs(msgHdr));
-            if (NS_SUCCEEDED(ret) && msgHdr)
-            {
-                nsMsgKey key;
-
-                msgHdr->GetMessageKey(&key);
-                msgHdr->GetAuthor(&author);
-                msgHdr->GetSubject(&subject);
-#ifdef DEBUG_bienvenu
-                // leak nsString return values...
-                printf("hdr key = %d, author = %s subject = %s\n", key, author.get(), subject.get());
-#endif
-            }
-        }
-        m_mailDB->Close(PR_TRUE);
-    }
-#endif
 
     ReleaseFolderLock();
     // be sure to clear any status text and progress info..
@@ -1467,6 +1433,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, n
 	m_rootFolder = rootFolder;
 	m_inboxFileSpec = folder;
 	m_inboxFileStream = inboxFileStream;
+  m_msgWindow = aMsgWindow;
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
 	nsCOMPtr<nsIMsgDatabase> mailDB;
@@ -1504,6 +1471,13 @@ nsParseNewMailState::~nsParseNewMailState()
 #ifdef DOING_JSFILTERS
   JSFilter_cleanup();
 #endif
+}
+
+// not an IMETHOD so we don't need to do error checking or return an error.
+// We only have one caller.
+void nsParseNewMailState::GetMsgWindow(nsIMsgWindow **aMsgWindow)
+{
+  NS_IF_ADDREF(*aMsgWindow = m_msgWindow);
 }
 
 
@@ -1929,7 +1903,6 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
     
     destMailDB->Commit(nsMsgDBCommitType::kLargeCommit);
   }  
-  
   return err;
 }
 

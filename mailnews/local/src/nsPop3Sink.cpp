@@ -261,6 +261,26 @@ nsPop3Sink::EndMailDelivery()
   // in case it's not the open folder
   m_folder->UpdateSummaryTotals(PR_TRUE);
  
+  // check if the folder open in this window is not the current folder, and if it has new
+  // message, in which case we need to try to run the
+  // filter plugin.
+  if (m_newMailParser)
+  {
+    nsCOMPtr <nsIMsgWindow> msgWindow;
+    m_newMailParser->GetMsgWindow(getter_AddRefs(msgWindow));
+    if (msgWindow)
+    {
+      nsCOMPtr <nsIMsgFolder> openFolder;
+      (void) msgWindow->GetOpenFolder(getter_AddRefs(openFolder));
+      if (openFolder && openFolder != m_folder)
+      {
+        PRBool hasNew;
+        (void) openFolder->GetHasNewMessages(&hasNew);
+        if (hasNew)
+          openFolder->CallFilterPlugins(nsnull);
+      }
+    }
+  }
 #ifdef DEBUG
   printf("End mail message delivery.\n");
 #endif 
