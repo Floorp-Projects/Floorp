@@ -438,7 +438,7 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAReadableString
 
     // XXX FIX ME to not do a copy
     nsAutoString str(aURI);
-    if (str.Find(spec) == 0) {
+    if (str.Find(spec.get()) == 0) {
 #ifdef USE_BROKEN_RELATIVE_PARSING
         static const PRInt32 kFudge = 1;  // XXX assume '#'
 #else
