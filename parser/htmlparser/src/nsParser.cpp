@@ -198,6 +198,8 @@ void nsParser::FreeSharedObjects(void) {
   }
 }
 
+static PRBool gDumpContent=PR_FALSE;
+
 /** 
  *  default constructor
  *   
@@ -207,6 +209,13 @@ void nsParser::FreeSharedObjects(void) {
  */
 nsParser::nsParser(nsITokenObserver* anObserver) {
   NS_INIT_REFCNT();
+
+#ifdef NS_DEBUG
+  if(!gDumpContent) {
+    gDumpContent=(PR_GetEnv("PARSER_DUMP_CONTENT"))? PR_TRUE:PR_FALSE;
+  }
+#endif
+
   mCharset.AssignWithConversion("ISO-8859-1");
   mParserFilter = 0;
   mObserver = 0;
@@ -236,6 +245,21 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
  *  @return  
  */
 nsParser::~nsParser() {
+
+#ifdef NS_DEBUG
+  if(gDumpContent) {
+    if(mSink) {
+      // Sink ( HTMLContentSink at this time) supports nsIDebugDumpContent
+      // interface. We can get to the content model through the sink.
+      nsresult result=NS_OK;
+      nsCOMPtr<nsIDebugDumpContent> trigger=do_QueryInterface(mSink,&result);
+      if(NS_SUCCEEDED(result)) {
+        trigger->DumpContentModel();
+      }
+    }
+  }
+#endif
+
   NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mProgressEventSink);
   NS_IF_RELEASE(mSink);

@@ -49,6 +49,9 @@
 #define NS_IPARSER_BUNDLE_IID \
 { 0x8b6a98a0, 0x260e, 0x11d4, { 0x81, 0x53, 0x0, 0x10, 0xa4, 0xe0, 0xc7, 0x6 } };
 
+// {41421C60-310A-11d4-816F-000064657374}
+#define NS_IDEBUG_DUMP_CONTENT_IID \
+{ 0x41421c60, 0x310a, 0x11d4, { 0x81, 0x6f, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
 
 class nsIContentSink;
 class nsIStreamObserver;
@@ -105,6 +108,20 @@ public:
   virtual PRUint32    GetSize(void)=0;
 };
 
+/**
+ *  FOR DEBUG PURPOSE ONLY
+ *
+ *  Use this interface to query objects that contain content information.
+ *  Ex. Parser can trigger dump content by querying the sink that has
+ *      access to the content.
+ *  
+ *  @update  harishd 05/25/00
+ */
+class nsIDebugDumpContent : public nsISupports {
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IDEBUG_DUMP_CONTENT_IID; return iid; }
+  NS_IMETHOD DumpContentModel()=0;
+};
 
 class nsISupportsParserBundle : public nsISupports {
 public:
