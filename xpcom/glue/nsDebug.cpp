@@ -52,8 +52,9 @@
 	      va_start(ap, format);
 	      buffer[0] = vsnprintf((char *)buffer + 1, sizeof(buffer) - 1, format, ap);
 	      va_end(ap);
-	      
-	      DebugStr(buffer);
+
+//	    DebugStr(buffer);
+	      printf("еее%s\n", (char*)buffer + 1);
 	   }
    #endif // TEMP_MAC_HACK
    //------------------------
