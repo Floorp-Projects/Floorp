@@ -335,6 +335,8 @@ NS_IMETHODIMP                                                           \
 calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
 {                                                                       \
     struct icaltimetype itt;                                            \
+    if (!dt)                                                            \
+        return NS_ERROR_INVALID_ARG;                                    \
     dt->ToIcalTime(&itt);                                               \
     icalvalue *val = icalvalue_new_datetime(itt);                       \
     if (!val)                                                           \
