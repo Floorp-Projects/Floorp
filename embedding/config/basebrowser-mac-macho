@@ -128,7 +128,6 @@ components/necko_res.xpt
 components/necko_strconv.xpt            
 
 ; imagelib
-libmozjpeg.dylib
 components/libimglib2.dylib
 components/imglib2.xpt
 
