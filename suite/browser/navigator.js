@@ -457,7 +457,6 @@ function savePage( url ) {
 
 function UpdateBookmarksLastVisitedDate(event)
 {
-
 	if (window.content.location.href && window.content.location.href != "")
 	{
 		try
@@ -478,7 +477,6 @@ function UpdateBookmarksLastVisitedDate(event)
 
 function UpdateInternetSearchResults(event)
 {
-
 	if (window.content.location.href && window.content.location.href != "")
 	{
 		try
@@ -888,9 +886,7 @@ function OpenSearch(tabName, searchStr)
 		searchMode = pref.GetIntPref("browser.search.powermode");
 		autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
 		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-
-		// rjc Note: don't use this old default preference, its for fuzzy URL matching
-		// defaultSearchURL = pref.CopyCharPref("network.search.url");
+		defaultSearchURL = pref.CopyCharPref("browser.search.defaulturl");
 	}
 	catch(ex)
 	{
@@ -899,7 +895,7 @@ function OpenSearch(tabName, searchStr)
 	if ((defaultSearchURL == null) || (defaultSearchURL == ""))
 	{
 		// Fallback to a Netscape default (one that we can get sidebar search results for)
-		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?";
+		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
 	}
 
 	if (searchMode == 1)
