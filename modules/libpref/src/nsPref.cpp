@@ -1008,7 +1008,7 @@ PrefResult pref_OpenFileSpec(
     if (NS_FAILED(fileSpec->ResolveSymlink()))
       return PREF_ERROR;
 
-    if (!fileSpec->Exists())
+    if (!Exists(fileSpec))
         return PREF_ERROR;
     
     char* readBuf;
