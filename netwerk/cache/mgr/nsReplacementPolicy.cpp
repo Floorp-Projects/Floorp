@@ -428,7 +428,7 @@ nsReplacementPolicy::CheckForTooManyCacheEntries()
         rv = cacheInfo->mCache->GetMaxEntries(&maxEntries);
         if (NS_FAILED(rv)) return rv;
 
-        if (undeletedEntries >= mMaxEntries) {
+        if (undeletedEntries >= (mMaxEntries-1)) {
 			deleteEntries = PR_TRUE;    
         } else {
         
@@ -512,6 +512,10 @@ nsReplacementPolicy::AssociateCacheEntryWithRecord(nsINetDataCacheRecord *aRecor
             mRankedEntries[i] = 0;
     }
 
+    // We should never hit this condition, should return otherwise it will cause an ABR
+    if (mNumEntries >= mMaxEntries)
+        return NS_ERROR_FAILURE;
+
     // Recycle the record after the last in-use record in the array
     nsCachedNetData *entry = mRankedEntries[mNumEntries];
     NS_ASSERTION(!entry || entry->GetFlag(nsCachedNetData::RECYCLED),
@@ -551,14 +555,15 @@ nsReplacementPolicy::GetCachedNetData(const char* cacheKey, PRUint32 cacheKeyLen
     nsresult rv;
     nsCOMPtr<nsINetDataCacheRecord> record;
 
-    rv = aCache->GetCachedNetData(cacheKey, cacheKeyLength,
-                                  getter_AddRefs(record));
-    if (NS_FAILED(rv)) return rv;
-
     // If number of tracked cache entries exceeds limits, delete one
     rv = CheckForTooManyCacheEntries();
     if (NS_FAILED(rv)) return rv;
 
+
+    rv = aCache->GetCachedNetData(cacheKey, cacheKeyLength,
+                                  getter_AddRefs(record));
+    if (NS_FAILED(rv)) return rv;
+    
     return AssociateCacheEntryWithRecord(record, aCache, aResult);
 }
 

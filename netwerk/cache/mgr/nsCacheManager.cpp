@@ -38,10 +38,10 @@
 #define FILE_CACHE_IS_READY
 // Limit the number of entries in the cache to conserve memory space
 // in the nsReplacementPolicy code.
-// MAX_DISK_CACHE_ENTRIES should be the same as MAX_DISK_CACHE_RECORDS
+// MAX_DISK_CACHE_ENTRIES should be one more than MAX_DISK_CACHE_RECORDS
 // defined in nsNetDiskCache.cpp
 #define MAX_MEM_CACHE_ENTRIES    800
-#define MAX_DISK_CACHE_ENTRIES   512 
+#define MAX_DISK_CACHE_ENTRIES   513 
 
 // Cache capacities in MB, overridable via APIs
 #define DEFAULT_MEMORY_CACHE_CAPACITY  1024

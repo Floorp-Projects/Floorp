@@ -73,7 +73,7 @@ static const char * const DISK_CACHE_SIZE_PREF  = "browser.cache.disk_cache_size
 static const char * const CACHE_DIR_PREF   = "browser.cache.directory";
 static const char * const CACHE_ENABLE_PREF   = "browser.cache.disk.enable";
 
-// This number should be the same as MAX_DISK_CACHE_ENTRIES
+// This number should be one less than MAX_DISK_CACHE_ENTRIES
 // defined in nsCacheManager.cpp
 #define MAX_DISK_CACHE_RECORDS   512
 
@@ -270,8 +270,14 @@ nsNetDiskCache::InitDB(void)
 		}
 	#endif
   rv = mDB->Init(mDBFile) ;
-	if ( NS_SUCCEEDED( rv ) )
+  if ( NS_SUCCEEDED( rv ) ) {
 	  rv = GetSizeEntry();
+      if ( NS_SUCCEEDED( rv ) ) {
+          if (mNumEntries > mMaxEntries)
+              rv = NS_ERROR_FAILURE;
+      }
+
+  }
   return rv ;
 }
 
