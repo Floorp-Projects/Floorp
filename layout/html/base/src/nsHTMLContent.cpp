@@ -26,9 +26,11 @@
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
 #include "nsIDocument.h"
-#include "nsIEventListenerManager.h"
 #include "nsEventListenerManager.h"
+#include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
+#include "nsDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 
 static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
@@ -38,6 +40,7 @@ static NS_DEFINE_IID(kIHTMLContent, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 
 static nsIContentDelegate* gContentDelegate;
 
@@ -154,6 +157,8 @@ nsHTMLContent::~nsHTMLContent()
       gContentDelegate = nsnull;
     }
   }
+
+  NS_IF_RELEASE(mListenerManager);
 }
 
 NS_IMPL_ADDREF(nsHTMLContent)
@@ -589,9 +594,9 @@ nsresult nsHTMLContent::GetListenerManager(nsIEventListenerManager **aInstancePt
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    
     if (NS_OK == l->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult)) {
       mListenerManager = l;
+      NS_ADDREF(mListenerManager);
       return NS_OK;
     }
 
@@ -601,10 +606,11 @@ nsresult nsHTMLContent::GetListenerManager(nsIEventListenerManager **aInstancePt
 
 nsresult nsHTMLContent::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  nsIEventListenerManager *manager;
+  nsIEventListenerManager *mManager;
 
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->AddEventListener(aListener, aIID);
+  if (NS_OK == GetListenerManager(&mManager)) {
+    mManager->AddEventListener(aListener, aIID);
+    NS_RELEASE(mManager);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -612,20 +618,32 @@ nsresult nsHTMLContent::AddEventListener(nsIDOMEventListener *aListener, const n
 
 nsresult nsHTMLContent::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->RemoveEventListener(aListener, aIID);
+  if (nsnull != mListenerManager) {
+    mListenerManager->RemoveEventListener(aListener, aIID);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
 
 nsresult nsHTMLContent::HandleDOMEvent(nsIPresContext& aPresContext,
-                                            nsGUIEvent* aEvent,
-                                            nsIDOMEvent* aDOMEvent,
-                                            nsEventStatus& aEventStatus)
+                                       nsEvent* aEvent,
+                                       nsIDOMEvent** aDOMEvent,
+                                       PRUint32 aFlags,
+                                       nsEventStatus& aEventStatus)
 {  
+  nsresult mRet = NS_OK;
+
+  if (DOM_EVENT_INIT == aFlags) {
+    nsIEventStateManager *mManager;
+    if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
+      mManager->SetEventTarget((nsIHTMLContent*)this);
+      NS_RELEASE(mManager);
+    }
+ 
+    nsIDOMEvent* mDOMEvent = nsnull;
+    aDOMEvent = &mDOMEvent;
+  }
+  
   //Capturing stage
   
   //Local handling stage
@@ -635,10 +653,25 @@ nsresult nsHTMLContent::HandleDOMEvent(nsIPresContext& aPresContext,
 
   //Bubbling stage
   if (mParent != nsnull) {
-    return mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+    mRet = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, DOM_EVENT_BUBBLE, aEventStatus);
   }
 
-  return NS_OK;
+  if (DOM_EVENT_INIT == aFlags) {
+    // We're leaving the DOM event loop so if we created a DOM event, release here.
+    if (nsnull != *aDOMEvent) {
+      if (0 != (*aDOMEvent)->Release()) {
+      //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
+      //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
+        nsIPrivateDOMEvent *mPrivateEvent;
+        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&mPrivateEvent)) {
+          mPrivateEvent->DuplicatePrivateData();
+          NS_RELEASE(mPrivateEvent);
+        }
+      }
+    }
+  }
+
+  return mRet;
 }
 
 // XXX i18n: this is wrong (?) because we need to know the outgoing

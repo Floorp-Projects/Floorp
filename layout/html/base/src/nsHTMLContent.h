@@ -137,8 +137,9 @@ public:
   NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
-                            nsGUIEvent* aEvent, 
-                            nsIDOMEvent* aDOMEvent,
+                            nsEvent* aEvent, 
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
                             nsEventStatus& aEventStatus);
 
 protected:

@@ -32,6 +32,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsGUIEvent.h"
+#include "nsDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
@@ -155,13 +156,7 @@ NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext,
                                  nsGUIEvent* aEvent,
                                  nsEventStatus& aEventStatus)
 {
-  nsIEventStateManager *mManager;
-
-  if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
-    mManager->SetEventTarget((nsISupports*)mContent);
-    NS_RELEASE(mManager);
-  }
-  mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
+  mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
 
 #if 0
   if (aEventStatus != nsEventStatus_eConsumeNoDefault) {
@@ -494,13 +489,7 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
                                         nsEventStatus& aEventStatus)
 {
 #if 0
-  nsIEventStateManager *mManager;
-
-  if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
-    mManager->SetEventTarget((nsISupports*)mContent);
-    NS_RELEASE(mManager);
-  }
-  mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
+  mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
 #else
   nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 #endif
@@ -544,12 +533,23 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
           if (mLastContent != mTargetContent) {
             if (nsnull != mLastContent) {
               //fire mouseout
-              /*mLastContent->HandleDOMEvent(*/
+              nsEventStatus mStatus;
+              nsMouseEvent mEvent;
+              mEvent.eventStructType = NS_MOUSE_EVENT;
+              mEvent.message = NS_MOUSE_EXIT;
+              mLastContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+
+              NS_RELEASE(mLastContent);
             }
-            NS_IF_RELEASE(mLastContent);
             //fire mouseover
-            /*mTargetContent->HandleDOMEvent(*/
+            nsEventStatus mStatus;
+            nsMouseEvent mEvent;
+            mEvent.eventStructType = NS_MOUSE_EVENT;
+            mEvent.message = NS_MOUSE_ENTER;
+            mTargetContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
             mStateManager->SetLastMouseOverContent(mTargetContent);
+
+            NS_RELEASE(mStateManager);
           }
         }
       }
@@ -564,9 +564,16 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
           mStateManager->GetLastMouseOverContent(&mLastContent);
           if (nsnull != mLastContent) {
             //fire mouseout
-            /*mLastContent->HandleDOMEvent(*/
+            nsEventStatus mStatus;
+            nsMouseEvent mEvent;
+            mEvent.eventStructType = NS_MOUSE_EVENT;
+            mEvent.message = NS_MOUSE_EXIT;
+            mLastContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+            mStateManager->SetLastMouseOverContent(nsnull);
+
+            NS_RELEASE(mLastContent);
           }
-          NS_IF_RELEASE(mLastContent);
+          NS_RELEASE(mStateManager);
         }
       }
       break;
@@ -588,9 +595,10 @@ public:
                                nsIFrame*& aResult);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
-                               nsGUIEvent* aEvent, 
-                               nsIDOMEvent* aDOMEvent,
-                               nsEventStatus& aEventStatus);
+                            nsEvent* aEvent, 
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus& aEventStatus);
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
@@ -626,11 +634,12 @@ RootPart::CreateFrame(nsIPresContext* aPresContext,
 
 nsresult 
 RootPart::HandleDOMEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent, 
-                         nsIDOMEvent* aDOMEvent,
+                         nsEvent* aEvent, 
+                         nsIDOMEvent** aDOMEvent,
+                         PRUint32 aFlags,
                          nsEventStatus& aEventStatus)
 {
-  return mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+  return mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
 }
 
 nsresult 

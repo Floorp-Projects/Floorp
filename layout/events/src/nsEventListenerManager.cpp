@@ -29,6 +29,7 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIEventStateManager.h"
+#include "nsIPrivateDOMEvent.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -40,7 +41,8 @@ static NS_DEFINE_IID(kIDOMLoadListenerIID, NS_IDOMLOADLISTENER_IID);
 static NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMDRAGLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 
-nsEventListenerManager::nsEventListenerManager() {
+nsEventListenerManager::nsEventListenerManager() 
+{
   mEventListeners = nsnull;
   mMouseListeners = nsnull;
   mMouseMotionListeners = nsnull;
@@ -48,9 +50,18 @@ nsEventListenerManager::nsEventListenerManager() {
   mLoadListeners = nsnull;
   mFocusListeners = nsnull;
   mDragListeners = nsnull;
+  NS_INIT_REFCNT();
 }
 
-nsEventListenerManager::~nsEventListenerManager() {
+nsEventListenerManager::~nsEventListenerManager() 
+{
+  ReleaseListeners(mEventListeners);
+  ReleaseListeners(mMouseListeners);
+  ReleaseListeners(mMouseMotionListeners);
+  ReleaseListeners(mKeyListeners);
+  ReleaseListeners(mLoadListeners);
+  ReleaseListeners(mFocusListeners);
+  ReleaseListeners(mDragListeners);
 }
 
 NS_IMPL_ADDREF(nsEventListenerManager)
@@ -71,48 +82,49 @@ nsresult nsEventListenerManager::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-nsresult nsEventListenerManager::TranslateGUI2DOM(nsGUIEvent*& aGUIEvent, 
-                                                  nsIPresContext& aPresContext, 
-                                                  nsIDOMEvent** aDOMEvent)
+nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
 {
-  nsIEventStateManager *mManager;
-  nsISupports *mTarget;
-  
-  nsDOMEvent* it = new nsDOMEvent(&aPresContext);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (aIID.Equals(kIDOMMouseListenerIID)) {
+    return &mMouseListeners;
   }
-  
-  it->SetGUIEvent(aGUIEvent);
-  if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
-    mManager->GetEventTarget(&mTarget);
-    NS_RELEASE(mManager);
+  else if (aIID.Equals(kIDOMMouseMotionListenerIID)) {
+    return &mMouseMotionListeners;
   }
-  it->SetEventTarget(mTarget);
+  else if (aIID.Equals(kIDOMKeyListenerIID)) {
+    return &mKeyListeners;
+  }
+  else if (aIID.Equals(kIDOMLoadListenerIID)) {
+    return &mLoadListeners;
+  }
+  else if (aIID.Equals(kIDOMFocusListenerIID)) {
+    return &mFocusListeners;
+  }
+  else if (aIID.Equals(kIDOMDragListenerIID)) {
+    return &mDragListeners;
+  }
+  return nsnull;
+}
 
-  return it->QueryInterface(kIDOMEventIID, (void **) aDOMEvent);
+void nsEventListenerManager::ReleaseListeners(nsVoidArray* aListeners)
+{
+  if (nsnull != aListeners) {
+    PRInt32 i, count = aListeners->Count();
+    nsIDOMEventListener *mElement;
+    for (i = 0; i < count; i++) {
+      mElement = (nsIDOMEventListener *)aListeners->ElementAt(i);
+      if (mElement != nsnull) {
+        NS_RELEASE(mElement);
+      }
+    }
+    delete aListeners;
+  }
 }
 
 nsresult nsEventListenerManager::GetEventListeners(nsVoidArray **aListeners, const nsIID& aIID)
 {
-  if (aIID.Equals(kIDOMMouseListenerIID)) {
-    *aListeners = mMouseListeners;
-  }
-  if (aIID.Equals(kIDOMMouseMotionListenerIID)) {
-    *aListeners = mMouseMotionListeners;
-  }
-  if (aIID.Equals(kIDOMKeyListenerIID)) {
-    *aListeners = mKeyListeners;
-  }
-  if (aIID.Equals(kIDOMLoadListenerIID)) {
-    *aListeners = mLoadListeners;
-  }
-  if (aIID.Equals(kIDOMFocusListenerIID)) {
-    *aListeners = mFocusListeners;
-  }
-  if (aIID.Equals(kIDOMDragListenerIID)) {
-    *aListeners = mDragListeners;
-  }
+  nsVoidArray** mListeners = GetListenersByIID(aIID);
+
+  *aListeners = *mListeners;
 
   return NS_OK;
 }
@@ -124,42 +136,20 @@ nsresult nsEventListenerManager::GetEventListeners(nsVoidArray **aListeners, con
 
 nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  if (aIID.Equals(kIDOMMouseListenerIID)) {
-    if (nsnull == mMouseListeners) {
-      mMouseListeners = new nsVoidArray();
-      mMouseListeners->InsertElementAt((void*)aListener, mMouseListeners->Count());
-    }
+  nsVoidArray** mListeners = GetListenersByIID(aIID);
+
+  if (nsnull == *mListeners) {
+    *mListeners = new nsVoidArray();
   }
-  if (aIID.Equals(kIDOMMouseMotionListenerIID)) {
-    if (nsnull == mMouseMotionListeners) {
-      mMouseMotionListeners = new nsVoidArray();
-      mMouseMotionListeners->InsertElementAt((void*)aListener, mMouseMotionListeners->Count());
-    }
+
+  if (nsnull == *mListeners) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  if (aIID.Equals(kIDOMKeyListenerIID)) {
-    if (nsnull == mKeyListeners) {
-      mKeyListeners = new nsVoidArray();
-      mKeyListeners->InsertElementAt((void*)aListener, mKeyListeners->Count());
-    }
-  }
-  if (aIID.Equals(kIDOMLoadListenerIID)) {
-    if (nsnull == mLoadListeners) {
-      mLoadListeners = new nsVoidArray();
-      mLoadListeners->InsertElementAt((void*)aListener, mLoadListeners->Count());
-    }
-  }
-  if (aIID.Equals(kIDOMFocusListenerIID)) {
-    if (nsnull == mFocusListeners) {
-      mFocusListeners = new nsVoidArray();
-      mFocusListeners->InsertElementAt((void*)aListener, mFocusListeners->Count());
-    }
-  }
-  if (aIID.Equals(kIDOMDragListenerIID)) {
-    if (nsnull == mDragListeners) {
-      mDragListeners = new nsVoidArray();
-      mDragListeners->InsertElementAt((void*)aListener, mDragListeners->Count());
-    }
-  }
+
+  (*mListeners)->InsertElementAt((void*)aListener, (*mListeners)->Count());
+
+  NS_ADDREF(aListener);
+
   return NS_OK;
 }
 
@@ -170,43 +160,13 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
 
 nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  if (aIID.Equals(kIDOMMouseListenerIID)) {
-    if (nsnull == mMouseListeners) {
-      mMouseListeners = new nsVoidArray();
-      mMouseListeners->RemoveElement((void*)aListener);
-    }
+  nsVoidArray** mListeners = GetListenersByIID(aIID);
+ 
+  if (nsnull != *mListeners && PR_TRUE == (*mListeners)->RemoveElement((void*)aListener)) {
+    NS_RELEASE(aListener);
+    return NS_OK;
   }
-  if (aIID.Equals(kIDOMMouseMotionListenerIID)) {
-    if (nsnull == mMouseMotionListeners) {
-      mMouseMotionListeners = new nsVoidArray();
-      mMouseMotionListeners->RemoveElement((void*)aListener);
-    }
-  }
-  if (aIID.Equals(kIDOMKeyListenerIID)) {
-    if (nsnull == mKeyListeners) {
-      mKeyListeners = new nsVoidArray();
-      mKeyListeners->RemoveElement((void*)aListener);
-    }
-  }
-  if (aIID.Equals(kIDOMLoadListenerIID)) {
-    if (nsnull == mLoadListeners) {
-      mLoadListeners = new nsVoidArray();
-      mLoadListeners->RemoveElement((void*)aListener);
-    }
-  }
-  if (aIID.Equals(kIDOMFocusListenerIID)) {
-    if (nsnull == mFocusListeners) {
-      mFocusListeners = new nsVoidArray();
-      mFocusListeners->RemoveElement((void*)aListener);
-    }
-  }
-  if (aIID.Equals(kIDOMDragListenerIID)) {
-    if (nsnull == mDragListeners) {
-      mDragListeners = new nsVoidArray();
-      mDragListeners->RemoveElement((void*)aListener);
-    }
-  }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 /**
@@ -215,9 +175,9 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
 */
 
 nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
-                                            nsGUIEvent* aEvent,
-                                            nsIDOMEvent* aDOMEvent,
-                                            nsEventStatus& aEventStatus)
+                                             nsEvent* aEvent,
+                                             nsIDOMEvent** aDOMEvent,
+                                             nsEventStatus& aEventStatus)
 {
   nsresult mRet = NS_OK;
 
@@ -233,10 +193,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_ENTER:
     case NS_MOUSE_EXIT:
       if (nsnull != mMouseListeners) {
-        if (nsnull == aDOMEvent) {
-          TranslateGUI2DOM(aEvent, aPresContext, &aDOMEvent);
+        if (nsnull == *aDOMEvent) {
+          mRet = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
         }
-        if (nsnull != aDOMEvent) {
+        if (NS_OK == mRet) {
           for (int i=0; i<mMouseListeners->Count(); i++) {
             nsIDOMEventListener *mEventListener;
             nsIDOMMouseListener *mMouseListener;
@@ -248,22 +208,22 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 case NS_MOUSE_LEFT_BUTTON_DOWN:
                 case NS_MOUSE_MIDDLE_BUTTON_DOWN:
                 case NS_MOUSE_RIGHT_BUTTON_DOWN:
-                  mRet = mMouseListener->MouseDown(aDOMEvent);
+                  mRet = mMouseListener->MouseDown(*aDOMEvent);
                   break;
                 case NS_MOUSE_LEFT_BUTTON_UP:
                 case NS_MOUSE_MIDDLE_BUTTON_UP:
                 case NS_MOUSE_RIGHT_BUTTON_UP:
-                  mRet = mMouseListener->MouseUp(aDOMEvent);
+                  mRet = mMouseListener->MouseUp(*aDOMEvent);
                   break;
                 case NS_MOUSE_LEFT_DOUBLECLICK:
                 case NS_MOUSE_RIGHT_DOUBLECLICK:
-                  mRet = mMouseListener->MouseDblClick(aDOMEvent);
+                  mRet = mMouseListener->MouseDblClick(*aDOMEvent);
                   break;
                 case NS_MOUSE_ENTER:
-                  mRet = mMouseListener->MouseOver(aDOMEvent);
+                  mRet = mMouseListener->MouseOver(*aDOMEvent);
                   break;
                 case NS_MOUSE_EXIT:
-                  mRet = mMouseListener->MouseOut(aDOMEvent);
+                  mRet = mMouseListener->MouseOut(*aDOMEvent);
                   break;
                 default:
                   break;
@@ -271,7 +231,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
               NS_RELEASE(mMouseListener);
             }
             else {
-              mRet = mEventListener->ProcessEvent(aDOMEvent);
+              mRet = mEventListener->ProcessEvent(*aDOMEvent);
             }
             aEventStatus = (NS_OK == mRet) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
           }
@@ -281,10 +241,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
   
     case NS_MOUSE_MOVE:
       if (nsnull != mMouseMotionListeners) {
-        if (nsnull == aDOMEvent) {
-          TranslateGUI2DOM(aEvent, aPresContext, &aDOMEvent);
+        if (nsnull == *aDOMEvent) {
+          mRet = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
         }
-        if (nsnull != aDOMEvent) {
+        if (NS_OK == mRet) {
           for (int i=0; i<mMouseMotionListeners->Count(); i++) {
             nsIDOMEventListener *mEventListener;
             nsIDOMMouseMotionListener *mMouseMotionListener;
@@ -294,7 +254,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
             if (NS_OK == mEventListener->QueryInterface(kIDOMMouseMotionListenerIID, (void**)&mMouseMotionListener)) {
               switch(aEvent->message) {
                 case NS_MOUSE_MOVE:
-                  mRet = mMouseMotionListener->MouseMove(aDOMEvent);
+                  mRet = mMouseMotionListener->MouseMove(*aDOMEvent);
                   break;
                 default:
                   break;
@@ -302,7 +262,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
               NS_RELEASE(mMouseMotionListener);
             }
             else {
-              mRet = mEventListener->ProcessEvent(aDOMEvent);
+              mRet = mEventListener->ProcessEvent(*aDOMEvent);
             }
             aEventStatus = (NS_OK == mRet) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
           }
@@ -313,10 +273,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_KEY_UP:
     case NS_KEY_DOWN:
       if (nsnull != mKeyListeners) {
-        if (nsnull == aDOMEvent) {
-          TranslateGUI2DOM(aEvent, aPresContext, &aDOMEvent);
+        if (nsnull == *aDOMEvent) {
+          mRet = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
         }
-        if (nsnull != aDOMEvent) {
+        if (NS_OK == mRet) {
           for (int i=0; i<mKeyListeners->Count(); i++) {
             nsIDOMEventListener *mEventListener;
             nsIDOMKeyListener *mKeyListener;
@@ -326,10 +286,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
             if (NS_OK == mEventListener->QueryInterface(kIDOMKeyListenerIID, (void**)&mKeyListener)) {
               switch(aEvent->message) {
                 case NS_KEY_UP:
-                  mRet = mKeyListener->KeyUp(aDOMEvent);
+                  mRet = mKeyListener->KeyUp(*aDOMEvent);
                   break;
                 case NS_KEY_DOWN:
-                  mRet = mKeyListener->KeyDown(aDOMEvent);
+                  mRet = mKeyListener->KeyDown(*aDOMEvent);
                   break;
                 default:
                   break;
@@ -337,7 +297,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
               NS_RELEASE(mKeyListener);
             }
             else {
-              mRet = mEventListener->ProcessEvent(aDOMEvent);
+              mRet = mEventListener->ProcessEvent(*aDOMEvent);
             }
             aEventStatus = (NS_OK == mRet) ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
           }

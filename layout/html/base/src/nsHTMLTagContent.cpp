@@ -572,7 +572,7 @@ nsresult nsHTMLTagContent::SetScriptEventListener(JSContext *aContext, REFNSIID 
   }
 
   if (nsnull != mScriptObject) {
-    nsIEventListenerManager *mManager;
+    nsIEventListenerManager *mManager = nsnull;
     nsVoidArray *mListeners;
 
     if (NS_OK == GetListenerManager(&mManager) && 
@@ -586,6 +586,7 @@ nsresult nsHTMLTagContent::SetScriptEventListener(JSContext *aContext, REFNSIID 
           mEventListener = (nsIDOMEventListener*)mListeners->ElementAt(i);
           if (NS_OK == mEventListener->QueryInterface(kIScriptEventListenerIID, (void**)&mScriptListener)) {
             NS_RELEASE(mScriptListener);
+            NS_RELEASE(mManager);
             return NS_OK;
           }
         }
@@ -594,9 +595,12 @@ nsresult nsHTMLTagContent::SetScriptEventListener(JSContext *aContext, REFNSIID 
       nsIDOMEventListener *mScriptListener;
       if (NS_OK == NS_NewScriptEventListener(&mScriptListener, mScriptCX, mScriptObject)) {
         mManager->AddEventListener(mScriptListener, aListenerTypeIID);
+        NS_RELEASE(mScriptListener);
+        NS_RELEASE(mManager);
         return NS_OK;
       }
     }
+    NS_IF_RELEASE(mManager);
   }
   return NS_ERROR_FAILURE;
 }
@@ -880,13 +884,14 @@ void nsHTMLTagContent::TriggerLink(nsIPresContext& aPresContext,
 }
 
 nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
-                                            nsGUIEvent* aEvent,
-                                            nsIDOMEvent* aDOMEvent,
+                                            nsEvent* aEvent,
+                                            nsIDOMEvent** aDOMEvent,
+                                            PRUint32 aFlags,
                                             nsEventStatus& aEventStatus)
 {
   nsresult ret = NS_OK;
   
-  ret = nsHTMLContent::HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+  ret = nsHTMLContent::HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
 
   if (NS_OK == ret && nsEventStatus_eIgnore == aEventStatus) {
     switch (aEvent->message) {
@@ -904,25 +909,24 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
       // XXX Bring up a contextual menu provided by the application
       break;
 
-// XXX kipp: I disabled this to make cursors over links work again.
-#if 0
+    //case NS_MOUSE_ENTER:
+    //mouse enter doesn't work yet.  Use move until then.
     case NS_MOUSE_MOVE:
       if (mTag == nsHTMLAtoms::a) {
         nsAutoString base, href, target;
         GetAttribute(nsString("href"), href);
         GetAttribute(nsString("target"), target);
         TriggerLink(aPresContext, base, href, target, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
-#endif
 
       // XXX this doesn't seem to do anything yet
     case NS_MOUSE_EXIT:
       if (mTag == nsHTMLAtoms::a) {
         nsAutoString empty;
         TriggerLink(aPresContext, empty, empty, empty, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
 

@@ -21,6 +21,7 @@ IGNORE_MANIFEST=1
 EXPORTS =			    \
 	nsIEventListenerManager.h   \
 	nsIEventStateManager.h	    \
+	nsIPrivateDOMEvent.h	    \
         $(NULL)
 
 MODULE=raptor 

@@ -30,6 +30,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIParser.h"
+#include "nsDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIEventStateManager.h"
 #include "nsContentList.h"
 
 #include "nsCSSPropIDs.h"
@@ -57,6 +60,7 @@ static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
@@ -193,6 +197,7 @@ nsDocument::~nsDocument()
   NS_IF_RELEASE(mSelection);
   NS_IF_RELEASE(mScriptContextOwner);
   NS_IF_RELEASE(mParser);
+  NS_IF_RELEASE(mListenerManager);
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -848,6 +853,7 @@ nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrRe
     
     if (NS_OK == l->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult)) {
       mListenerManager = l;
+      NS_ADDREF(mListenerManager);
       return NS_OK;
     }
 
@@ -856,10 +862,24 @@ nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrRe
 }
 
 nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext, 
-                                 nsGUIEvent* aEvent, 
-                                 nsIDOMEvent* aDOMEvent,
-                                 nsEventStatus& aEventStatus)
+                                    nsEvent* aEvent, 
+                                    nsIDOMEvent** aDOMEvent,
+                                    PRUint32 aFlags,
+                                    nsEventStatus& aEventStatus)
 {
+  nsresult mRet = NS_OK;
+
+  if (DOM_EVENT_INIT == aFlags) {
+    nsIEventStateManager *mManager;
+    if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
+      mManager->SetEventTarget((nsIDocument*)this);
+      NS_RELEASE(mManager);
+    }
+ 
+    nsIDOMEvent* mDOMEvent = nsnull;
+    aDOMEvent = &mDOMEvent;
+  }
+  
   //Capturing stage
   
   //Local handling stage
@@ -870,15 +890,31 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   //Bubbling stage
   /*Need to go to window here*/
 
-  return NS_OK;
+  if (DOM_EVENT_INIT == aFlags) {
+    // We're leaving the DOM event loop so if we created a DOM event, release here.
+    if (nsnull != *aDOMEvent) {
+      if (0 != (*aDOMEvent)->Release()) {
+      //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
+      //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
+        nsIPrivateDOMEvent *mPrivateEvent;
+        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&mPrivateEvent)) {
+          mPrivateEvent->DuplicatePrivateData();
+          NS_RELEASE(mPrivateEvent);
+        }
+      }
+    }
+  }
+
+  return mRet;
 }
 
 nsresult nsDocument::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  nsIEventListenerManager *manager;
+  nsIEventListenerManager *mManager;
 
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->AddEventListener(aListener, aIID);
+  if (NS_OK == GetListenerManager(&mManager)) {
+    mManager->AddEventListener(aListener, aIID);
+    NS_RELEASE(mManager);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -886,10 +922,8 @@ nsresult nsDocument::AddEventListener(nsIDOMEventListener *aListener, const nsII
 
 nsresult nsDocument::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->RemoveEventListener(aListener, aIID);
+  if (nsnull != mListenerManager) {
+    mListenerManager->RemoveEventListener(aListener, aIID);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -897,10 +931,11 @@ nsresult nsDocument::RemoveEventListener(nsIDOMEventListener *aListener, const n
 
 nsresult nsDocument::CaptureEvent(nsIDOMEventListener *aListener)
 {
-  nsIEventListenerManager *manager;
+  nsIEventListenerManager *mManager;
 
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->CaptureEvent(aListener);
+  if (NS_OK == GetListenerManager(&mManager)) {
+    mManager->CaptureEvent(aListener);
+    NS_RELEASE(mManager);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -908,16 +943,12 @@ nsresult nsDocument::CaptureEvent(nsIDOMEventListener *aListener)
 
 nsresult nsDocument::ReleaseEvent(nsIDOMEventListener *aListener)
 {
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->ReleaseEvent(aListener);
+  if (nsnull != mListenerManager) {
+    mListenerManager->ReleaseEvent(aListener);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
-
-
 
 /**
   * Returns the Selection Object

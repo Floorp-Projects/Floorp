@@ -267,7 +267,7 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
     }
 
     event.time = ::GetMessageTime();
-    event.message = aEventType;  
+    event.message = aEventType;
 
     mLastPoint.x = event.point.x;
     mLastPoint.y = event.point.y;
@@ -305,6 +305,7 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 {
   nsGUIEvent event;
+  event.eventStructType = NS_GUI_EVENT;
   InitEvent(event, aMsg);
   return(DispatchEvent(&event));
 }
@@ -1282,6 +1283,7 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
     event.isShift   = mIsShiftDown;
     event.isControl = mIsControlDown;
     event.isAlt     = mIsAltDown;
+    event.eventStructType = NS_KEY_EVENT;
     return(DispatchEvent(&event));
 }
 
@@ -1305,6 +1307,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           if (wNotifyCode == 0) { // Menu selection
             nsMenuEvent event;
             event.menuItem = LOWORD(wParam);
+            event.eventStructType = NS_MENU_EVENT;
             InitEvent(event, NS_MENU_SELECTED);
             result = DispatchEvent(&event);
           }
@@ -1328,6 +1331,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                   nsTooltipEvent event;
                   InitEvent(event, NS_SHOW_TOOLTIP);
                   event.tipIndex = (PRUint32)wParam;
+                  event.eventStructType = NS_TOOLTIP_EVENT;
                   result = DispatchEvent(&event);
               }
               break;
@@ -1708,6 +1712,7 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   InitEvent(event, NS_MOVE);
   event.point.x = aX;
   event.point.y = aY;
+  event.eventStructType = NS_GUI_EVENT;
   return DispatchEvent(&event);
 }
 
@@ -1736,6 +1741,7 @@ PRBool nsWindow::OnPaint()
                         ps.rcPaint.right - ps.rcPaint.left, 
                         ps.rcPaint.bottom - ps.rcPaint.top);
             event.rect = &rect;
+            event.eventStructType = NS_PAINT_EVENT;
 
             ::EndPaint(mWnd, &ps);
 
@@ -1777,6 +1783,7 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
         nsSizeEvent event;
         InitEvent(event, NS_SIZE);
         event.windowSize = &aWindowRect;
+        event.eventStructType = NS_SIZE_EVENT;
         return(DispatchEvent(&event));
     }
 
@@ -1806,6 +1813,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   event.isAlt     = GetKeyState(VK_LMENU) < 0    || GetKeyState(VK_RMENU) < 0;
   event.clickCount = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
                       aEventType == NS_MOUSE_LEFT_DOUBLECLICK)? 2:1;
+  event.eventStructType = NS_MOUSE_EVENT;
 
   // call the event callback 
   if (nsnull != mEventCallback) {

@@ -25,6 +25,7 @@
 #include "nsIPresContext.h"
 #include "nsCRT.h"
 #include "nsGUIEvent.h"
+#include "nsDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
 #include "prlog.h"
@@ -32,7 +33,6 @@
 #include <stdarg.h>
 #include "nsIPtr.h"
 #include "nsISizeOfHandler.h"
-#include "nsIEventStateManager.h"
 
 #include "nsIDOMText.h"
 #include "nsSelectionRange.h"
@@ -548,13 +548,7 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
   aEventStatus = nsEventStatus_eIgnore;
   
   if (nsnull != mContent) {
-    nsIEventStateManager *manager = nsnull;
-    aPresContext.GetEventStateManager(&manager);
-    if (nsnull != manager) {
-      manager->SetEventTarget((nsISupports*)mContent);
-      NS_RELEASE(manager);
-    }
-    mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
+    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
   }
 
 #if DO_SELECTION

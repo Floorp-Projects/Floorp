@@ -36,6 +36,10 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
+  nsVoidArray** GetListenersByIID(const nsIID& aIID);
+  
+  void ReleaseListeners(nsVoidArray* aListeners);
+
   /**
   * Retrieves events listeners of all types. 
   * @param
@@ -55,15 +59,11 @@ public:
   virtual nsresult CaptureEvent(nsIDOMEventListener *aListener);
   virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener);
 
-  virtual nsresult HandleEvent(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsIDOMEvent* aDOMEvent, nsEventStatus& aEventStatus);
+  virtual nsresult HandleEvent(nsIPresContext& aPresContext, nsEvent* aEvent, nsIDOMEvent** aDOMEvent, nsEventStatus& aEventStatus);
 
 protected:
 
   PRUint32 mRefCnt : 31;
-
-  virtual nsresult TranslateGUI2DOM(nsGUIEvent*& aGUIEvent, 
-                                                  nsIPresContext& aPresContext, 
-                                                  nsIDOMEvent** aDOMEvent);
 
   nsVoidArray* mEventListeners;
   nsVoidArray* mMouseListeners;

@@ -39,20 +39,29 @@ enum nsEventStatus {
 };
 
 /**
+ * General event
+ */
+
+struct nsEvent {
+  /// See event struct types
+  PRUint8     eventStructType;
+  /// See GUI MESSAGES,
+  PRUint32    message;              
+  /// in widget relative coordinates
+  nsPoint     point;               
+  /// elapsed time, in milliseconds, from the time the system was started to the time the message was created
+  PRUint32    time;                                                
+};
+
+/**
  * General graphic user interface event
  */
 
-struct nsGUIEvent {
-                /// See GUI MESSAGES,
-  PRUint32    message;              
+struct nsGUIEvent : public nsEvent {
                 /// Originator of the event
   nsIWidget*  widget;           
-                /// in widget relative coordinates
-  nsISupports* widgetSupports; 
                 /// nsISupports of widget XXX remove the one above and rename this
-  nsPoint     point;               
-                /// elapsed time, in milliseconds, from the time the system was started to the time the message was created
-  PRUint32    time;                                                
+  nsISupports* widgetSupports; 
                 /// Internal platform specific message.
   void*     nativeMsg;        
 };
@@ -132,8 +141,21 @@ struct nsMenuEvent : public nsGUIEvent {
     PRUint32        menuItem;           
 };
 
-
 /**
+ * Event Struct Types
+ */
+#define NS_EVENT            1
+#define NS_GUI_EVENT        2
+#define NS_SIZE_EVENT       3
+#define NS_PAINT_EVENT      4
+#define NS_SCROLLBAR_EVENT  5
+#define NS_INPUT_EVENT      6
+#define NS_KEY_EVENT        7
+#define NS_MOUSE_EVENT      8
+#define NS_TOOLTIP_EVENT    9
+#define NS_MENU_EVENT       10
+ 
+ /**
  * GUI MESSAGES
  */
  //@{

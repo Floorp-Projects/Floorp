@@ -66,9 +66,9 @@ public:
   */
 
   virtual nsresult HandleEvent(nsIPresContext& aPresContext,
-                              nsGUIEvent* aEvent,
-                              nsIDOMEvent* aDOMEvent,
-                              nsEventStatus& aEventStatus) = 0;
+                               nsEvent* aEvent,
+                               nsIDOMEvent** aDOMEvent,
+                               nsEventStatus& aEventStatus) = 0;
 
   /**
   * Captures all events designated for descendant objects at the current level.

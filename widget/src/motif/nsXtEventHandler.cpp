@@ -41,6 +41,7 @@ void nsXtWidget_InitNSEvent(XEvent   * anXEv,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWindow *) p;
+  anEvent.eventStructType = NS_GUI_EVENT;
 
   if (anXEv != NULL) {
     anEvent.point.x = anXEv->xbutton.x;
@@ -64,6 +65,7 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
     anEvent.time      = anXEv->xbutton.time;
     anEvent.isShift   = anXEv->xbutton.state | ShiftMask;
     anEvent.isControl = anXEv->xbutton.state | ControlMask;
+    anEvent.eventStructType = NS_MOUSE_EVENT;
   }
 
   //anEvent.isAlt      = GetKeyState(VK_LMENU) < 0    || GetKeyState(VK_RMENU) < 0;
