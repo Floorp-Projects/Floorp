@@ -46,6 +46,7 @@ function nsProgressDialog() {
     this.mParent      = null;
     this.mOperation   = null;
     this.mStartTime   = ( new Date() ).getTime();
+    this.observer     = null;
     this.mLastUpdate  = Number.MIN_VALUE; // To ensure first onProgress causes update.
     this.mInterval    = 750; // Default to .75 seconds.
     this.mElapsed     = 0;
@@ -68,9 +69,9 @@ const nsIProgressDialog = Components.interfaces.nsIProgressDialog;
 
 nsProgressDialog.prototype = {
     // Turn this on to get debugging messages.
-    debug: true,
+    debug: false,
 
-    // Currently, use old helperAppDldProgress.xul.
+    // Chrome-related constants.
     dialogChrome:   "chrome://global/content/nsProgressDialog.xul",
     dialogFeatures: "chrome,titlebar,minimizable=yes",
 
@@ -80,6 +81,8 @@ nsProgressDialog.prototype = {
     set parent(newval)      { return this.mParent = newval; },
     get operation()         { return this.mOperation; },
     set operation(newval)   { return this.mOperation = newval; },
+    get observer()          { return this.mObserver; },
+    set observer(newval)    { return this.mObserver = newval; },
     get startTime()         { return this.mStartTime; },
     set startTime(newval)   { return this.mStartTime = newval/1000; }, // PR_Now() is in microseconds, so we convert.
     get lastUpdate()        { return this.mLastUpdate; },
@@ -227,6 +230,7 @@ nsProgressDialog.prototype = {
     onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
         // Check for error condition (only if dialog is still open).
         if ( this.dialog && aStatus != Components.results.NS_OK ) {
+this.dump( "nsProgressDialog::onStatusChange, status=" + this.hex( aStatus ) + "\n" );
             // Get prompt service.
             var prompter = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
                                .getService( Components.interfaces.nsIPromptService );
@@ -380,15 +384,22 @@ nsProgressDialog.prototype = {
     // Cancel button stops the download (if not completed),
     // and closes the dialog.
     onCancel: function() {
+         // Cancel the download, if not completed.
+         if ( !this.completed ) {
+             if ( this.operation ) {
+                 this.operation.cancelSave();
+                 // XXX We're supposed to clean up files/directories.
+             }
+             if ( this.observer ) {
+                 this.observer.observe( this, "oncancel", "" );
+             }
+             this.paused = false;
+         }
         // Test whether the dialog is already closed.
         // This will be the case if we've come through onUnload.
         if ( this.dialog ) {
             // Close the dialog.
             this.dialog.close();
-        }
-        // Cancel the download, if not completed.
-        if ( !this.completed && this.operation ) {
-            this.operation.cancelDownload();
         }
     },
 

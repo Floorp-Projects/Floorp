@@ -47,7 +47,7 @@ Contributor(s):
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        title="&savingTitle;"
+        title="&defaultTitle;"
         onload="notifyObserver('onload')"
         onunload="notifyObserver('onunload')">
 
@@ -76,7 +76,6 @@ Contributor(s):
     <data id="string.longTimeFormat">&longTimeFormat;</data>
     <data id="string.unknownTime">&unknownTime;</data>
     <data id="string.pausedMsg">&pausedMsg;</data>
-    <data id="string.filesFolder">&filesFolder;</data>
     <data id="string.savingTitle">&savingTitle;</data>
     <data id="string.savingAlertTitle">&savingAlertTitle;</data>
     <data id="string.openingTitle">&openingTitle;</data>
