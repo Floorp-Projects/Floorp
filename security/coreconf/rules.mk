@@ -301,7 +301,7 @@ get_objs:
 $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 	$(AR) $(subst /,\\,$(OBJS))
 else
 	$(AR) $(OBJS)

@@ -52,6 +52,7 @@ ifeq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
 PROGRAM		=
 else
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
+INSTALL		= true
 endif
 
 ifdef NATIVE_CC
