@@ -77,6 +77,7 @@ Rights Reserved.
 				 valueAddressBook="&deleteAbCmd.label;"
 				 valueCard="&deleteCardCmd.label;"
 				 valueCards="&deleteCardsCmd.label;"/>
+	<broadcaster id='button_delete'/>
 	<broadcaster id='cmd_selectAll'/>
 	<broadcaster id="cmd_preferences"/>
 
@@ -101,6 +102,7 @@ Rights Reserved.
 	<key id="key_preferences"/>
 </keyset>
 
+<popupset id="aTooltipSet"/>
 
 	<menubar>
 		<menu id="menu_File">
@@ -220,12 +222,12 @@ Rights Reserved.
 	<toolbox>
 		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed">
 			<box id="toolbar_button_box">
-				<button class="button-toolbar-2 top" orient="vertical" id="button_newcard" value="&newcardButton.label;" onclick="AbNewCard()"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button_newlist" value="&newlistButton.label;" disabled="true" onclick="AbNewList()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-newcard" value="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" onclick="AbNewCard()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-newlist" value="&newlistButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" onclick="AbNewList()"/>
             	<toolbarseparator/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button_editcard" value="&editButton.label;" onclick="AbEditCard()"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button_newmessage" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button_delete" disabled="true" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-editcard" value="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" onclick="AbEditCard()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" value="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" onclick="AbNewMessage()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-delete" disabled="true" observes="button_delete" value="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" onclick="goDoCommand('button_delete')"/>
 
 				<box align="vertical" flex="100%">
 					<spring flex="1"/> 
@@ -234,8 +236,8 @@ Rights Reserved.
 					<spring flex="1"/--> 
 				</box>
 
-				<!--button id="button_stop" class="other28" align="top" value="&stopButton.label;" disabled="true" oncommand="AbStop()"/>
-				<button id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" oncommand="AbSearch()"/-->
+				<!--button id="button_stop" class="other28" align="top" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>
+				<button id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
 			</box>
 
       <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")'>

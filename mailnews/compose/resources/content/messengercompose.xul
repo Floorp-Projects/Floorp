@@ -96,6 +96,7 @@ Rights Reserved.
 	<popup id="TextColorPopup"/>
 	<popup id="BackColorPopup"/>
 </popupset>
+<popupset id="aTooltipSet"/>
 
 <keyset id="keyset">
 	<!-- File Menu -->
@@ -380,15 +381,15 @@ END of Deprecated -->
   <toolbox>
     <toolbar class="toolbar-primary" id="composeToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
-	 		<button class="button-toolbar-2 top" id="button_send" value="&sendButton.label;" onclick="SendMessage()"/>
+	 		<button class="button-toolbar-2 top" id="button-send" value="&sendButton.label;" tooltip="aTooltip" tooltiptext="&sendButton.tooltip;"  onclick="SendMessage()"/>
             <toolbarseparator/>
-	 		<button class="button-toolbar-2 top" id="button_address" value="&addressButton.label;" onclick="SelectAddress()"/>
-	 		<button class="button-toolbar-2 top" id="button_attach" value="&attachButton.label;" onclick="AttachFile()"/>
-	 		<button class="button-toolbar-2 top" id="button_quote" disabled="true" value="&quoteButton.label;" onclick="QuoteMessage()"/>
-            <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
+	 		<button class="button-toolbar-2 top" id="button-address" value="&addressButton.label;" tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" onclick="SelectAddress()"/>
+	 		<button class="button-toolbar-2 top" id="button-attach" value="&attachButton.label;" tooltip="aTooltip" tooltiptext="&attachButton.tooltip;"  onclick="AttachFile()"/>
+	 		<button class="button-toolbar-2 top" id="button-quote" disabled="true" value="&quoteButton.label;" tooltip="aTooltip" tooltiptext="&quoteButton.tooltip;"  onclick="QuoteMessage()"/>
+            <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" tooltip="aTooltip" tooltiptext="&spellingButton.tooltip;"  observes="cmd_spelling"/>
             <toolbarseparator/>
-	 		<button class="button-toolbar-2 top" id="button_save" value="&saveButton.label;" onclick="SaveAsDraft()"/>
-	 		<button class="button-toolbar-2 top" id="button_stop" disabled="true" value="&stopButton.label;" onclick="Stop()"/>
+	 		<button class="button-toolbar-2 top" id="button-save" value="&saveButton.label;" tooltip="aTooltip" tooltiptext="&saveButton.tooltip;"  onclick="SaveAsDraft()"/>
+	 		<button class="button-toolbar-2 top" id="button-stop" disabled="true" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"  onclick="Stop()"/>
 	    	<spring flex="100%"/>
 		</box>
     <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("compose.throbber.url")'>

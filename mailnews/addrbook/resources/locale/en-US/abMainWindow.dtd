@@ -84,6 +84,15 @@ Rights Reserved.
 <!ENTITY searchButton.label ".Search">  
 <!ENTITY showNames.label "Show names containing:">  
 
+<!-- Tooltips -->
+<!ENTITY newcardButton.tooltip "New Card">  
+<!ENTITY newlistButton.tooltip "New List">  
+<!ENTITY editButton.tooltip "Edit">  
+<!ENTITY newmsgButton.tooltip "New Msg">  
+<!ENTITY deleteButton.tooltip "Delete">  
+<!ENTITY stopButton.tooltip "Stop">  
+<!ENTITY searchButton.tooltip "Search">  
+
 <!-- Sidebar -->  
 <!ENTITY addressbook-sidebar-header.label "Address Books">  
 

@@ -153,6 +153,15 @@
 <!ENTITY saveButton.label "Save">
 <!ENTITY stopButton.label "Stop">
 
+<!--tooltips-->
+<!ENTITY sendButton.tooltip "Send">
+<!ENTITY quoteButton.tooltip "Quote">
+<!ENTITY addressButton.tooltip "Address">
+<!ENTITY attachButton.tooltip "Attach">
+<!ENTITY spellingButton.tooltip "Spelling">
+<!ENTITY saveButton.tooltip "Save">
+<!ENTITY stopButton.tooltip "Stop">
+
 <!-- Toolbar items, imported from editorAppShell.xul -->
 <!--LOCALIZATION NOTE formatToolbar. Don't change any of these Style Characters -->
 <!ENTITY formatToolbar.boldChar "B">

@@ -89,31 +89,31 @@ textfield.addressingWidget[autocomplete="true"] > box
     border              : none;
 }
 
-#button_send {
+#button-send {
 	list-style-image:url("chrome://messenger/skin/messengercompose/send.gif");
 }
 
-#button_address {
+#button-address {
 	list-style-image:url("chrome://messenger/skin/messengercompose/address.gif");
 }
 
-#button_attach {
+#button-attach {
 	list-style-image:url("chrome://messenger/skin/messengercompose/attach.gif");
 }
 
-#button_quote {
+#button-quote {
 	list-style-image:url("chrome://messenger/skin/messengercompose/quote.gif");
 }
 
-#button_spelling {
+#button-spelling {
 	list-style-image:url("chrome://messenger/skin/messengercompose/spelling.gif");
 }
 
-#button_save {
+#button-save {
 	list-style-image:url("chrome://messenger/skin/messengercompose/save.gif");
 }
 
-#button_stop {
+#button-stop {
 	list-style-image:url("chrome://global/skin/stop.gif");
 }
 
