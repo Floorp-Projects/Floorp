@@ -94,7 +94,7 @@ void abnormal_exit_handler(int signum)
        || (signum == SIGABRT)
      )
   {
-    PR_CurrentThread();
+    PR_GetCurrentThread();
     printf("prog = %s\npid = %d\nsignal = %s\n", 
            _progname, getpid(), strsignal(signum));
 
@@ -118,7 +118,7 @@ void abnormal_exit_handler(int signum)
 void
 ah_crap_handler(int signum)
 {
-  PR_CurrentThread();
+  PR_GetCurrentThread();
 
   // I don't think strsignal is portable.  If it is, this can be changed.
 #ifdef LINUX

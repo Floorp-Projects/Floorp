@@ -193,7 +193,7 @@ nsFileChannel::Cancel(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
 #endif
     mStatus = status;
@@ -206,7 +206,7 @@ NS_IMETHODIMP
 nsFileChannel::Suspend()
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
 #endif
     if (mCurrentRequest)
@@ -218,7 +218,7 @@ NS_IMETHODIMP
 nsFileChannel::Resume()
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
 #endif
     if (mCurrentRequest)
@@ -323,9 +323,9 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     nsresult rv;
 
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_CurrentThread(),
+    NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
-    mInitiator = PR_CurrentThread();
+    mInitiator = PR_GetCurrentThread();
 #endif
 
     if (mFileTransport)
@@ -522,7 +522,7 @@ nsFileChannel::OnStartRequest(nsIRequest* request, nsISupports* context)
     // unconditionally inherit the status of the file transport
     request->GetStatus(&mStatus);
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
 #endif
     NS_ASSERTION(mRealListener, "No listener...");
@@ -554,7 +554,7 @@ nsFileChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
         mStatus = aStatus;
 
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
 #endif
 
@@ -583,7 +583,7 @@ nsFileChannel::OnDataAvailable(nsIRequest* request, nsISupports* context,
                                PRUint32 aLength)
 {
 #ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+    NS_ASSERTION(mInitiator == PR_GetCurrentThread(),
                  "wrong thread calling this routine");
 #endif
 
