@@ -158,6 +158,7 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
 static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     js2val S = STRING_TO_JS2VAL(meta->toString(thisValue));
+    DEFINE_ROOTKEEPER(rk0, S);
 
     js2val regexp = argv[0];
     if ((argc == 0) || (meta->objectType(argv[0]) != meta->regexpClass)) {        
@@ -179,7 +180,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
 		bool globalMultiline = meta->toBoolean(globalMultilineVal);
 
         ArrayInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
-        DEFINE_ROOTKEEPER(rk, A);
+        DEFINE_ROOTKEEPER(rk2, A);
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
@@ -191,6 +192,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
             else
                 lastIndex = match->endIndex;
             js2val matchStr = meta->engine->allocString(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
+            DEFINE_ROOTKEEPER(rk3, matchStr);
             meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(index), true, matchStr);
             index++;
         }
@@ -465,12 +467,14 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
     String *T = NULL;
     DEFINE_ROOTKEEPER(rk3, T);
+    js2val v = JS2VAL_VOID;
+    DEFINE_ROOTKEEPER(rk4, v);
 
     while (true) {
         uint32 q = p;
 step11:
         if (q == s) {
-            js2val v = meta->engine->allocString(S, p, (s - p));
+            v = meta->engine->allocString(S, p, (s - p));
             meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(getLength(meta, A)), true, v);
             return result;
         }
@@ -489,7 +493,7 @@ step11:
             goto step11;
         }
         T = meta->engine->allocStringPtr(S, p, (q - p));   // XXX
-        js2val v = STRING_TO_JS2VAL(T);
+        v = STRING_TO_JS2VAL(T);
         meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToString(getLength(meta, A)), true, v);
         if (getLength(meta, A) == lim)
             return result;
