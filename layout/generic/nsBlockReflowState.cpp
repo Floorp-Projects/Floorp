@@ -940,7 +940,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
 const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
 nsresult
-NS_NewBlockFrame(nsIFrame** aNewFrame)
+NS_NewBlockFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
@@ -950,6 +950,7 @@ NS_NewBlockFrame(nsIFrame** aNewFrame)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  it->SetFlags(aFlags);
   *aNewFrame = it;
   return NS_OK;
 }
@@ -1340,6 +1341,30 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
 
+  if (mFlags & NS_BLOCK_WRAP_SIZE) {
+    // When the area frame is supposed to wrap around all in-flow
+    // children, make sure its big enough to include those that stick
+    // outside the box.
+    if (NS_FRAME_OUTSIDE_CHILDREN & mState) {
+      nscoord xMost = aMetrics.mCombinedArea.XMost();
+      if (xMost > aMetrics.width) {
+#ifdef NOISY_FINAL_SIZE
+        ListTag(stdout);
+        printf(": changing desired width from %d to %d\n", aMetrics.width, xMost);
+#endif
+        aMetrics.width = xMost;
+      }
+      nscoord yMost = aMetrics.mCombinedArea.YMost();
+      if (yMost > aMetrics.height) {
+#ifdef NOISY_FINAL_SIZE
+        ListTag(stdout);
+        printf(": changing desired height from %d to %d\n", aMetrics.height, yMost);
+#endif
+        aMetrics.height = yMost;
+      }
+    }
+  }
+  
   // If this is an incremental reflow and we changed size, then make sure our
   // border is repainted if necessary
   if (eReflowReason_Incremental == aReflowState.reason) {
