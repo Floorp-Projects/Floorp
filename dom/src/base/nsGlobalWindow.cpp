@@ -3300,6 +3300,112 @@ NavigatorImpl::JavaEnabled(PRBool* aReturn)
   return rv;
 }
 
+NS_IMETHODIMP
+NavigatorImpl::TaintEnabled(PRBool* aReturn)
+{
+  *aReturn = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+NavigatorImpl::Preference(JSContext* cx, 
+                          jsval* argv, 
+                          PRUint32 argc, 
+                          jsval* aReturn)
+{
+  nsresult result = NS_OK;
+
+  *aReturn = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  JSObject* self;
+  result = scriptCX->GetSecurityManager(getter_AddRefs(secMan));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  result = GetScriptObject(scriptCX, (void**)&self);
+  if (NS_FAILED(result)) {
+    return result;
+  }  
+  PRBool ok;
+  secMan->CheckScriptAccess(scriptCX, self, "navigator.preference", &ok);
+  if (!ok) {
+    //Need to throw error here
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_WITH_SERVICE(nsIPref, pref, kPrefServiceCID, &result);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  if (argc > 0) {
+    JSString* str = JS_ValueToString(cx, argv[0]);
+    if (str) {
+      char* prefStr = JS_GetStringBytes(str);
+      if (argc == 1) {
+        PRInt32 prefType;
+        pref->GetPrefType(prefStr, &prefType);
+        switch (prefType & nsIPref::ePrefValuetypeMask) {
+          case nsIPref::ePrefString:
+          {
+            char* prefCharVal;
+            result = pref->CopyCharPref(prefStr, &prefCharVal);
+            if (NS_SUCCEEDED(result)) {
+              JSString* retStr = JS_NewStringCopyZ(cx, prefCharVal);
+              if (retStr) {
+                *aReturn = STRING_TO_JSVAL(retStr);
+              }
+              PL_strfree(prefCharVal);
+            }
+            break;
+          }
+          case nsIPref::ePrefInt:
+          {
+            PRInt32 prefIntVal;
+            result = pref->GetIntPref(prefStr, &prefIntVal);
+            if (NS_SUCCEEDED(result)) {
+              *aReturn = INT_TO_JSVAL(prefIntVal);
+            }
+            break;
+          }
+          case nsIPref::ePrefBool:
+          {
+            PRBool prefBoolVal;
+            result = pref->GetBoolPref(prefStr, &prefBoolVal);
+            if (NS_SUCCEEDED(result)) {
+              *aReturn = BOOLEAN_TO_JSVAL(prefBoolVal);
+            }
+            break;
+          }
+        }
+      }
+      else {
+        if (JSVAL_IS_STRING(argv[1])) {
+          JSString* valueJSStr = JS_ValueToString(cx, argv[1]);
+          if (valueJSStr) {
+            result = pref->SetCharPref(prefStr, JS_GetStringBytes(valueJSStr));
+          }
+        }
+        else if (JSVAL_IS_INT(argv[1])) {
+          jsint valueInt = JSVAL_TO_INT(argv[1]);
+          result = pref->SetIntPref(prefStr, (PRInt32)valueInt);
+        }
+        else if (JSVAL_IS_BOOLEAN(argv[1])) {
+          JSBool valueBool = JSVAL_TO_BOOLEAN(argv[1]);
+          result = pref->SetBoolPref(prefStr, (PRBool)valueBool);
+        }
+        else if (JSVAL_IS_NULL(argv[1])) {
+          result = pref->DeleteBranch(prefStr);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 nsresult
 GlobalWindowImpl::GetModalWindowSupport(nsIModalWindowSupport **msw)
 {
