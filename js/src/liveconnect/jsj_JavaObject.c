@@ -912,9 +912,11 @@ JSClass JavaObject_class = {
 
 extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-// This is just a wrapper around the JS engine's newObjectMap() function,
-// required to avoid the JS engine confusing a JavaObject for a native 
-// object.  See bug #12367 for details
+/*
+   This is just a wrapper around the JS engine's newObjectMap() function,
+   required to avoid the JS engine confusing a JavaObject for a native 
+   object.  See bug #12367 for details
+*/
 JSObjectMap *
 jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
                          JSClass *clasp, JSObject *obj)
