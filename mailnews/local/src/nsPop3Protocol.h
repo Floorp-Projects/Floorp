@@ -19,7 +19,6 @@
 #ifndef nsPop3Protocol_h__
 #define nsPop3Protocol_h__
 
-#include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
@@ -28,12 +27,12 @@
 #include "nsMsgLineBuffer.h"
 #include "nsMsgProtocol.h"
 #include "MailNewsTypes.h"
-
+#include "nsIMsgStatusFeedback.h"
 #include "rosetta.h"
 
 #include "prerror.h"
 #include "plhash.h"
-#include "xpgetstr.h"
+#include "nsCOMPtr.h"
 
 /* A more guaranteed way of making sure that we never get duplicate messages
 is to always get each message's UIDL (if the server supports it)
@@ -53,35 +52,6 @@ and change the POP3_QUIT_RESPONSE state to flush the newly committed deletes. */
  *
  */
 
-// Temporary implementation
-#if 0
-extern int MK_OUT_OF_MEMORY;
-extern int MK_POP3_DELE_FAILURE;
-extern int MK_POP3_LIST_FAILURE;
-extern int MK_POP3_MESSAGE_WRITE_ERROR;
-extern int MK_POP3_NO_MESSAGES;
-extern int MK_POP3_OUT_OF_DISK_SPACE;
-extern int MK_POP3_PASSWORD_FAILURE;
-extern int MK_POP3_PASSWORD_UNDEFINED;
-extern int MK_POP3_RETR_FAILURE;
-extern int MK_POP3_SERVER_ERROR;
-extern int MK_POP3_USERNAME_FAILURE;
-extern int MK_POP3_USERNAME_UNDEFINED;
-extern int MK_TCP_READ_ERROR;
-extern int MK_TCP_WRITE_ERROR;
-extern int XP_ERRNO_EWOULDBLOCK;
-extern int XP_NO_ANSWER;
-extern int XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC;
-extern int XP_RECEIVING_MESSAGE_OF;
-extern int XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND;
-extern int XP_THE_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC;
-extern int XP_CONNECT_HOST_CONTACTED_SENDING_LOGIN_INFORMATION;
-extern int XP_PASSWORD_FOR_POP3_USER;
-extern int MK_MSG_DOWNLOAD_COUNT;
-extern int MK_UNABLE_TO_CONNECT;
-extern int MK_CONNECTION_REFUSED;
-extern int MK_CONNECTION_TIMED_OUT;
-#else
 #define MK_OUT_OF_MEMORY -207
 #define MK_POP3_DELE_FAILURE -320
 #define MK_POP3_LIST_FAILURE -317
@@ -108,7 +78,6 @@ extern int MK_CONNECTION_TIMED_OUT;
 #define MK_UNABLE_TO_CONNECT -281
 #define MK_CONNECTION_REFUSED -242
 #define MK_CONNECTION_TIMED_OUT -241
-#endif
 
 #define OUTPUT_BUFFER_SIZE 8192 // maximum size of command string
 
@@ -239,12 +208,6 @@ typedef struct _Pop3ConData {
   	nsMsgBiffState biffstate;     /* If just checking for, what the answer is. */
     
     void *msg_closure;
-    PRInt32	bytes_received_in_message; 
-    PRInt32	total_folder_size;
-    
-  	PRInt32	total_download_size; /* Number of bytes we're going to
-                                    download.  Might be much less
-                                    than the total_folder_size. */
     
     PRBool graph_progress_bytes_p; /* whether we should display info about
                                       the bytes transferred (usually we
@@ -307,6 +270,16 @@ private:
     Pop3ConData* m_pop3ConData;
 	nsCString m_senderInfo;
 	nsCString m_commandResponse;
+	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
+
+	// progress state information
+	void UpdateProgressPercent (PRUint32 totalDone, PRUint32 total);
+	PRInt32	m_bytesInMsgReceived; 
+    PRInt32	m_totalFolderSize;    
+  	PRInt32	m_totalDownloadSize; /* Number of bytes we're going to
+                                    download.  Might be much less
+                                    than the total_folder_size. */
+	PRInt32 m_totalBytesReceived; // total # bytes received for the connection
 
 	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
 									      PRUint32 sourceOffset, PRUint32 length);

@@ -30,6 +30,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsLocalStringBundle.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -370,11 +371,21 @@ void nsPop3Protocol::Initialize(nsIURI * aURL)
 				            POP3_XTND_XLST_UNDEFINED;
 
 	m_pop3ConData = (Pop3ConData *)PR_NEWZAP(Pop3ConData);
+	m_totalBytesReceived = 0;
+	m_bytesInMsgReceived = 0; 
+    m_totalFolderSize = 0;    
+  	m_totalDownloadSize = 0;
+	m_totalBytesReceived = 0;
 
     PR_ASSERT(m_pop3ConData);
 
 	if (aURL)
 	{
+		// extract out message feedback if there is any.
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
+		if (mailnewsUrl)
+			mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+
 		m_nsIPop3URL = do_QueryInterface(aURL);
 		if (m_nsIPop3URL)
 		{
@@ -390,14 +401,7 @@ nsPop3Protocol::~nsPop3Protocol()
 	if (m_pop3ConData->newuidl) PL_HashTableDestroy(m_pop3ConData->newuidl);
 		net_pop3_free_state(m_pop3ConData->uidlinfo);
 
-#if 0
-		if (m_pop3ConData->graph_progress_bytes_p) {
-				/* Only destroy it if we have initialized it. */
-				FE_GraphProgressDestroy(ce->window_id, ce->URL_s,
-																m_pop3ConData->cur_msg_size,
-																ce->bytes_received);
-		}
-#endif 
+	UpdateProgressPercent(0, 0);
 
 	FreeMsgInfo();
 	PR_FREEIF(m_pop3ConData->only_uidl);
@@ -406,6 +410,15 @@ nsPop3Protocol::~nsPop3Protocol()
 
 	if (m_lineStreamBuffer)
 		delete m_lineStreamBuffer;
+}
+
+
+void nsPop3Protocol::UpdateProgressPercent (PRUint32 totalDone, PRUint32 total)
+{
+	if (m_statusFeedback && total > 0)
+	{
+		m_statusFeedback->ShowProgress((100 *(totalDone))  / total);	
+	}
 }
 
 void nsPop3Protocol::SetUsername(const char* name)
@@ -830,7 +843,7 @@ PRInt32 nsPop3Protocol::SendPassword()
     if (!m_pop3ConData->command_succeeded)
         return(Error(MK_POP3_USERNAME_FAILURE));
     const char * password = GetPassword();
-    if (!password && !*password)
+    if (!password || !*password)
         return Error(MK_POP3_PASSWORD_UNDEFINED);
 
 #if 0
@@ -974,12 +987,12 @@ nsPop3Protocol::GetStat()
     num = nsCRT::strtok(newStr, " ", &newStr);
 	m_commandResponse = newStr;
 	
-    m_pop3ConData->total_folder_size = (PRInt32) atol(num);
+    m_totalFolderSize = (PRInt32) atol(num);
 	PR_FREEIF(oldStr);
     m_pop3ConData->really_new_messages = 0;
     m_pop3ConData->real_new_counter = 1;
 
-    m_pop3ConData->total_download_size = -1; /* Means we need to calculate it, later. */
+    m_totalDownloadSize = -1; /* Means we need to calculate it, later. */
 
     if(m_pop3ConData->number_of_messages <= 0) {
         /* We're all done.  We know we have no mail. */
@@ -1543,7 +1556,7 @@ nsPop3Protocol::GetMsg()
         return 0;
     }
 
-    if (m_pop3ConData->total_download_size < 0) {
+    if (m_totalDownloadSize < 0) {
         /* First time.  Figure out how many bytes we're about to get.
            If we didn't get any message info, then we are going to get
            everything, and it's easy.  Otherwise, if we only want one
@@ -1555,7 +1568,7 @@ nsPop3Protocol::GetMsg()
         m_pop3ConData->really_new_messages = 0;
         m_pop3ConData->real_new_counter = 1;
         if (m_pop3ConData->msg_info) {
-            m_pop3ConData->total_download_size = 0;
+            m_totalDownloadSize = 0;
             for (i=0 ; i < m_pop3ConData->number_of_messages ; i++) {
                 c = 0;
                 if (m_pop3ConData->only_uidl) {
@@ -1563,9 +1576,9 @@ nsPop3Protocol::GetMsg()
                         PL_strcmp(m_pop3ConData->msg_info[i].uidl, 
                                   m_pop3ConData->only_uidl) == 0) {
 			  /*if (m_pop3ConData->msg_info[i].size > m_pop3ConData->size_limit)
-				  m_pop3ConData->total_download_size = m_pop3ConData->size_limit;	*/	/* if more than max, only count max */
+				  m_totalDownloadSize = m_pop3ConData->size_limit;	*/	/* if more than max, only count max */
 			  /*else*/
-                        m_pop3ConData->total_download_size =
+                        m_totalDownloadSize =
                             m_pop3ConData->msg_info[i].size;
                         m_pop3ConData->really_new_messages = 1;		/* we are
                                                                    * only
@@ -1607,21 +1620,21 @@ nsPop3Protocol::GetMsg()
                 if ((c != KEEP) && (c != DELETE_CHAR) && (c != TOO_BIG)) 
                 {	/* mesage left on server */
                     /*if (m_pop3ConData->msg_info[i].size > m_pop3ConData->size_limit)
-                      m_pop3ConData->total_download_size +=
+                      m_totalDownloadSize +=
                       m_pop3ConData->size_limit;	*/	
                     /* if more than max, only count max */
                     /*else*/
-                    m_pop3ConData->total_download_size +=
+                    m_totalDownloadSize +=
                         m_pop3ConData->msg_info[i].size; 
                     m_pop3ConData->really_new_messages++;		
                     /* a message we will really download */
                 }
             }
         } else {
-            m_pop3ConData->total_download_size = m_pop3ConData->total_folder_size;
+            m_totalDownloadSize = m_totalFolderSize;
         }
         if (m_pop3ConData->only_check_for_new_mail) {
-            if (m_pop3ConData->total_download_size > 0)
+            if (m_totalDownloadSize > 0)
                 m_pop3ConData->biffstate = nsMsgBiffState_NewMail; 
             m_pop3ConData->next_state = POP3_SEND_QUIT;
             return(0);
@@ -1639,8 +1652,8 @@ nsPop3Protocol::GetMsg()
              * size is. Also, due to disk sector sizes, allocation blocks,
              * etc. The space "available" may be greater than the actual space
              * usable. */ 
-            if((m_pop3ConData->total_download_size > 0)
-               && ((PRUint32)m_pop3ConData->total_download_size + (PRUint32)
+            if((m_totalDownloadSize > 0)
+               && ((PRUint32)m_totalDownloadSize + (PRUint32)
                    3096) > FE_DiskSpaceAvailable(ce->window_id, dir))
             {
                 return(Error(MK_POP3_OUT_OF_DISK_SPACE));
@@ -1763,7 +1776,7 @@ nsPop3Protocol::SendTop()
 		/* zero the bytes received in message in preparation for
 		* the next
 		*/
-		m_pop3ConData->bytes_received_in_message = 0;
+		m_bytesInMsgReceived = 0;
 		nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 		status = SendData(url,cmd);
 	}
@@ -1830,32 +1843,37 @@ nsPop3Protocol::SendRetr()
 		/* zero the bytes received in message in preparation for
 		* the next
 		*/
-		m_pop3ConData->bytes_received_in_message = 0;
+		m_bytesInMsgReceived = 0;
     
 		if (m_pop3ConData->only_uidl)
 		{
 			/* Display bytes if we're only downloading one message. */
 			PR_ASSERT(!m_pop3ConData->graph_progress_bytes_p);
+			UpdateProgressPercent(0, m_totalDownloadSize);
 #if 0
 			if (!m_pop3ConData->graph_progress_bytes_p)
 				FE_GraphProgressInit(ce->window_id, ce->URL_s,
-                                 m_pop3ConData->total_download_size);
+                                 m_totalDownloadSize);
 #endif 
 			m_pop3ConData->graph_progress_bytes_p = PR_TRUE;
 		}
 		else
 		{
-#if 0
-        PR_snprintf(buf, OUTPUT_BUFFER_SIZE,
-                    XP_GetString( XP_RECEIVING_MESSAGE_OF ),
-                    /* m_pop3ConData->last_accessed_msg+1,
-                       m_pop3ConData->number_of_messages); */ 
-                    m_pop3ConData->real_new_counter,
-                    m_pop3ConData->really_new_messages);	/* (rb) real
-                                                             counts... */ 
-        NET_Progress(ce->window_id, buf);
-#endif 
+			PRUnichar * statusString = LocalGetStringByID(LOCAL_STATUS_RECEIVING_MESSAGE_OF);
+			if (statusString && m_statusFeedback)
+			{
+				// all this ugly conversion stuff is necessary because we can't sprintf a value
+				// with a PRUnichar string.
+				nsCAutoString cstr (statusString);
+				char * finalString = PR_smprintf(cstr.GetBuffer(),m_pop3ConData->real_new_counter, m_pop3ConData->really_new_messages);
+				nsAutoString uniFinalString(finalString);
+				if (m_statusFeedback)
+					m_statusFeedback->ShowStatusString(uniFinalString.GetUnicode());
+				PL_strfree(finalString);
+			}
+			nsCRT::free(statusString);
 		}
+
 		nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
 		status = SendData(url, cmd);
 	} // if cmd
@@ -1897,9 +1915,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     PRInt32 flags = 0;
     char *uidl = NULL;
     char *newStr;
-#if 0
-    PRInt32 old_bytes_received = ce->bytes_received;
-#endif 
+    PRInt32 old_bytes_received = m_totalBytesReceived;
     PRBool fix = PR_FALSE;
     PRUint32 status = 0;
 	
@@ -2021,16 +2037,13 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 	buffer_size = status;  // status holds # bytes we've actually buffered so far...
   
     /* normal read. Yay! */
-    if ((PRInt32) (m_pop3ConData->bytes_received_in_message + buffer_size) >
+    if ((PRInt32) (m_bytesInMsgReceived + buffer_size) >
         m_pop3ConData->cur_msg_size) 
         buffer_size = m_pop3ConData->cur_msg_size -
-            m_pop3ConData->bytes_received_in_message; 
+            m_bytesInMsgReceived; 
     
-    m_pop3ConData->bytes_received_in_message += buffer_size;
-    
-#if 0
-    ce->bytes_received            += buffer_size;
-#endif 
+    m_bytesInMsgReceived += buffer_size;
+    m_totalBytesReceived            += buffer_size;
     
     if (!m_pop3ConData->msg_closure) 
         /* meaning _handle_line read ".\r\n" at end-of-msg */
@@ -2049,29 +2062,28 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
             m_pop3ConData->next_state = POP3_SEND_DELE;
         }
         
-#if 0
         /* if we didn't get the whole message add the bytes that we didn't get
            to the bytes received part so that the progress percent stays sane.
            */
-        if(m_pop3ConData->bytes_received_in_message < m_pop3ConData->cur_msg_size)
-            ce->bytes_received += (m_pop3ConData->cur_msg_size -
-                                   m_pop3ConData->bytes_received_in_message);
-#endif 
+        if(m_bytesInMsgReceived < m_pop3ConData->cur_msg_size)
+            m_totalBytesReceived += (m_pop3ConData->cur_msg_size -
+                                   m_bytesInMsgReceived);
     }
 
 #if 0
     if (m_pop3ConData->graph_progress_bytes_p)
         FE_GraphProgress(ce->window_id, ce->URL_s,
-                         ce->bytes_received,
-                         ce->bytes_received - old_bytes_received,
+                         m_totalBytesReceived,
+                         m_totalBytesReceived - old_bytes_received,
                          m_pop3ConData->cur_msg_size);
-    
+#endif
     /* set percent done to portion of total bytes of all messages
        that we're going to download. */
-    if (m_pop3ConData->total_download_size)
-        FE_SetProgressBarPercent(ce->window_id, ((ce->bytes_received*100) /
-                                                 m_pop3ConData->total_download_size));
-#endif 
+    if (m_totalDownloadSize)
+		UpdateProgressPercent(m_totalBytesReceived, m_totalDownloadSize);
+
+//        FE_SetProgressBarPercent(ce->window_id, ((m_totalBytesReceived*100) /
+//			m_totalDownloadSize)); 
 	PR_FREEIF(line);    
     return(0);
 }
@@ -2606,7 +2618,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                             context = MSG_GetContext(parentpane);
                     }
 #endif
-                    if (m_pop3ConData->total_download_size <= 0) {
+                    if (m_totalDownloadSize <= 0) {
 #if 0
                         /* There are no new messages.  */
                         if (context)
@@ -2752,12 +2764,13 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             break;
             
         case POP3_FREE:
-#if 0
+			UpdateProgressPercent(0,0); // clear out the progress meter
+#if 0 // mscott - i believe this can be removed now
             if (m_pop3ConData->graph_progress_bytes_p) {
                 /* Only destroy it if we have initialized it. */
                 FE_GraphProgressDestroy(ce->window_id, ce->URL_s,
 										  m_pop3ConData->cur_msg_size,
-										  ce->bytes_received);
+										  m_totalBytesReceived);
             }
 #endif          
 			CloseSocket();
