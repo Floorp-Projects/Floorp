@@ -59,6 +59,8 @@
 #include "nsQuickSort.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
+#include "nsISupportsArray.h"
+
 #include "nsIProfileChangeStatus.h"
 
 #include "nsTextFormatter.h"
@@ -135,6 +137,9 @@ protected:
     nsresult useUserPrefFile();
     nsresult useLockPrefFile();
     nsresult getLockPrefFileInfo();
+
+    nsresult unregisterObservers();
+    
     inline static nsresult SecurePrefCheck(const char* aPrefName);
 
     static nsPref *gInstance;
@@ -144,8 +149,13 @@ protected:
 
     static nsresult convertUTF8ToUnicode(const char *utf8String,
                                          PRUnichar **aResult);
-    /* used to ref-count the pref observers */
-    nsSupportsHashtable             mObservers;
+    
+    // these two objects must be updated together such that the
+    // observer the observer in mObservers[i] matches the domain in
+    // mObserverDomains[i]
+    nsCOMPtr<nsISupportsArray> mObservers;
+    nsCStringArray mObserverDomains;
+    
 }; // class nsPref
 
 nsPref* nsPref::gInstance = NULL;
@@ -624,20 +634,47 @@ NotifyObserver(const char *newpref, void *data)
     return 0;
 }
 
-static PRBool PR_CALLBACK
-UnregisterObservers(nsHashKey *aKey, void *aData, void *closure)
+// unregisters the observers
+nsresult
+nsPref::unregisterObservers()
 {
-    nsCStringKey *stringKey = NS_REINTERPRET_CAST(nsCStringKey *, aKey);
-    nsCOMPtr<nsIObserver> obs = do_QueryInterface((nsISupports *)aData);
-    PREF_UnregisterCallback(stringKey->GetString(), NotifyObserver, obs);
-    return PR_TRUE;
+    nsresult rv;
+
+    if (!mObservers) return NS_OK;
+    
+    PRUint32 count = 0;
+    rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIObserver> obs;
+    nsCAutoString domain;
+    
+    PRUint32 i;
+    for (i=0; i< count; i++) {
+        rv = mObservers->QueryElementAt(i, NS_GET_IID(nsIObserver),
+                                        getter_AddRefs(obs));
+        if (NS_SUCCEEDED(rv)) {
+            mObserverDomains.CStringAt(i, domain);
+        
+            PREF_UnregisterCallback(domain, NotifyObserver, obs);
+        }
+    }
+    
+    // clear the last reference
+    obs = nsnull;
+    
+    // now empty the observer arrays in bulk
+    mObservers->Clear();
+    mObserverDomains.Clear();
+    
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::ShutDown()
 //----------------------------------------------------------------------------------------
 {
-    mObservers.Enumerate(UnregisterObservers, nsnull);
+    unregisterObservers();
 #ifdef DEBUG_alecf
     printf("PREF_Cleanup()\n");
 #endif
@@ -1236,21 +1273,58 @@ NS_IMETHODIMP nsPref::AddObserver(const char *domain,
 {
     NS_ENSURE_ARG_POINTER(domain);
     NS_ENSURE_ARG_POINTER(observer);
+    
+    nsresult rv = NS_OK;
+    if (!mObservers) {
+        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-    nsCStringKey key(domain);
-    mObservers.Put(&key, observer);
+    mObservers->AppendElement(observer);
+    mObserverDomains.AppendCString(nsCAutoString(domain));
+    
     return RegisterCallback(domain, NotifyObserver, observer);
 }
 
-NS_IMETHODIMP nsPref::RemoveObserver(const char *domain,
-                                     nsIObserver *observer)
+NS_IMETHODIMP nsPref::RemoveObserver(const char *aDomain,
+                                     nsIObserver *aObserver)
 {
-    NS_ENSURE_ARG_POINTER(domain);
-    NS_ENSURE_ARG_POINTER(observer);
+    NS_ENSURE_ARG_POINTER(aDomain);
+    NS_ENSURE_ARG_POINTER(aObserver);
 
-    nsCStringKey key(domain);
-    mObservers.Remove(&key);
-    return UnregisterCallback(domain, NotifyObserver, observer);
+    nsresult rv;
+
+    if (!mObservers) return NS_OK;
+    
+    // need to find the index of observer, so we can remove it from
+    // the domain list too
+    PRUint32 count;
+    rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return NS_OK;
+
+    PRUint32 i;
+    nsCOMPtr<nsIObserver> obs;
+    nsCAutoString domain;
+    for (i=0; i< count; i++) {
+        rv = mObservers->QueryElementAt(i, NS_GET_IID(nsIObserver),
+                                        getter_AddRefs(obs));
+        if (NS_SUCCEEDED(rv) && obs.get() == aObserver) {
+            mObserverDomains.CStringAt(i, domain);
+            if (domain.Equals(aDomain))
+                break;
+        }
+    }
+
+    if (i == count)             // not found, just return
+        return NS_OK;
+    
+    // clear the last reference
+    obs = nsnull;
+    
+    mObservers->RemoveElementAt(i);
+    mObserverDomains.RemoveCStringAt(i);
+
+    return UnregisterCallback(aDomain, NotifyObserver, aObserver);
 }
 
 /*
