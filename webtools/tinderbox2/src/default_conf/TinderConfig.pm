@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2001/02/16 00:10:48 $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/02/16 20:04:08 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -221,6 +221,11 @@ $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 $BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
 
 
+# If you your using BT_Generic we need to know how to make HMTL
+# to point to the bug tracking CGI programs.
+
+$BT_URL	= 'http://bugzilla.mozilla.org/';
+
 # The default number of hours shown on the status page
 
 $DEFAULT_DISPLAY_HOURS = 6;
@@ -245,9 +250,10 @@ $LOG_PERFORMANCE = 0;
 # administrative functions.
 
 $ADMINISTRATIVE_NETWORK_PAT = ( 
-                                '(^207\.200\.81\..*)|'.
-                                '(mozilla.org$)|'.
-                                '(netscape.com$)|'.
+                                '(^10\.10\.[0-9\.]*$)|'.
+                                '(^207\.200\.81\.[0-9\.]*)$|'.
+                                '(\.mozilla\.org$)|'.
+                                '(\.netscape\.com$)|'.
                                 '(^localhost$)'
                               );
 
