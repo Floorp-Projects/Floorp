@@ -1879,14 +1879,14 @@ net_ReadCookiePermissions()
   while(cookie_GetLine(strm,buffer) != -1) {
     if (buffer->CharAt(0) == '#' || buffer->CharAt(0) == CR ||
         buffer->CharAt(0) == LF || buffer->CharAt(0) == 0) {
-      PR_Free(buffer);
+      delete buffer;
       continue;
     }
 
     int hostIndex, permissionIndex;
     hostIndex = 0;
     if ((permissionIndex=buffer->Find('\t', hostIndex)+1) == 0) {
-      PR_Free(buffer);
+      delete buffer;
       continue;      
     }
 
@@ -1902,6 +1902,7 @@ net_ReadCookiePermissions()
     /* create a new cookie_struct and fill it in */
     new_cookie_permission = PR_NEW(net_CookiePermissionStruct);
     if (!new_cookie_permission) {
+      delete buffer;
       net_unlock_cookie_permission_list();
       strm.close();
       return;
@@ -1913,6 +1914,7 @@ net_ReadCookiePermissions()
     } else {
       new_cookie_permission->permission = PR_FALSE;
     }
+    delete buffer;
 
     /*
      * a host value of "@@@@" is a special code designating the
@@ -2060,7 +2062,7 @@ net_ReadCookies()
 
     if (buffer->CharAt(0) == '#' || buffer->CharAt(0) == CR ||
         buffer->CharAt(0) == LF || buffer->CharAt(0) == 0) {
-      PR_Free(buffer);
+      delete buffer;
       continue;
     }
 
@@ -2072,7 +2074,7 @@ net_ReadCookies()
         (expiresIndex=buffer->Find('\t', xxxIndex)+1) == 0 ||
         (nameIndex=buffer->Find('\t', expiresIndex)+1) == 0 ||
         (cookieIndex=buffer->Find('\t', nameIndex)+1) == 0 ) {
-      PR_Free(buffer);
+      delete buffer;
       continue;
     }
 
@@ -2084,11 +2086,11 @@ net_ReadCookies()
     buffer->Mid(expires, expiresIndex, nameIndex-expiresIndex-1);
     buffer->Mid(name, nameIndex, cookieIndex-nameIndex-1);
     buffer->Mid(cookie, cookieIndex, buffer->Length()-cookieIndex);
-    PR_Free(buffer);
 
     /* create a new cookie_struct and fill it in */
     new_cookie = PR_NEW(net_CookieStruct);
     if (!new_cookie) {
+      delete buffer;
       net_unlock_cookie_list();
       strm.close();
       return;
@@ -2111,6 +2113,7 @@ net_ReadCookies()
     char * expiresCString = expires.ToNewCString();
     new_cookie->expires = atol(expiresCString);
     delete[] expiresCString;
+    delete buffer;
 
     /* start new cookie list if one does not already exist */
     if (!net_cookie_list) {
