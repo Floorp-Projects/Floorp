@@ -32,11 +32,11 @@ Contributor(s): ______________________________________. -->
       <menu value="&charsetDetectorsMenu.label;"
                            datasources="rdf:null" id="CharsetDetectorsMenu" 
                            containment="urn:mozilla-registry:subkeys"
-                           >
+                           oncommand="SelectDetectors( event )" >
 		<template>
 			  <menupopup>
 				<menuitem uri="rdf:*" value="rdf:urn:mozilla-registry:value:defaultEnglishText" 
-                                          oncommand="SelectDetectors( event )" />
+                                           />
 			  </menupopup>
 		</template>
     </menu>
