@@ -37,7 +37,7 @@ nsMIMEInfoImpl::~nsMIMEInfoImpl() {
 
 PRBool
 nsMIMEInfoImpl::InExtensions(nsIAtom* anIAtom) {
-    nsString2 extension;
+    nsAutoString extension;
     anIAtom->ToString(extension);
     
     // XXX this is broken. need to use gessner's tokenizer stuff to delimit the commas
@@ -67,7 +67,7 @@ NS_IMETHODIMP
 nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
     if (!aMIMEType) return NS_ERROR_NULL_POINTER;
 
-    nsString2 strMIMEType;
+    nsAutoString strMIMEType;
     mMIMEType->ToString(strMIMEType);
     *aMIMEType = strMIMEType.ToNewCString();
     if (!*aMIMEType) return NS_ERROR_OUT_OF_MEMORY;

@@ -284,9 +284,9 @@ NS_SetupRegistry()
   NS_ASSERTION(rv == NS_OK,"Cannot obtain unix toolkit service.");
 
 
-  nsString unixToolkitName = "error";
-  nsString unixWidgetDllName = "error";
-  nsString unixGfxDllName = "error";
+  nsAutoString unixToolkitName("error");
+  nsAutoString unixWidgetDllName("error");
+  nsAutoString unixGfxDllName("error");
   
   if (NS_OK == rv && nsnull != unixToolkitService)
   {
