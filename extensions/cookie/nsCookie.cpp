@@ -75,6 +75,7 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #define pref_cookieBehavior         "network.cookie.cookieBehavior"
 #define pref_warnAboutCookies       "network.cookie.warnAboutCookies"
 #define pref_scriptName             "network.cookie.filterName"
+#define pref_strictCookieDomains    "network.cookie.strictDomains"
 
 #define DEF_COOKIE_BEHAVIOR     0
 
@@ -1156,6 +1157,7 @@ net_IntSetCookieString(char * cur_url,
 	PRBool HG83744 is_domain=FALSE, accept=FALSE;
 //	MWContextType type;
 	Bool bCookieAdded;
+	PRBool pref_scd = PR_FALSE;
 
 	/* Only allow cookies to be set in the listed contexts. We
 	 * don't want cookies being set in html mail. 
@@ -1314,6 +1316,17 @@ net_IntSetCookieString(char * cur_url,
  *    cookies for the entire .co.nz domain.
  */
 
+/*
+ *  Although this is the right thing to do(tm), it breaks too many sites.  
+ *  So only do it if the restrictCookieDomains pref is TRUE.
+ *
+ */
+            if ( PREF_GetBoolPref(pref_strictCookieDomains, &pref_scd) < 0 ) {
+               pref_scd = PR_FALSE;
+            }
+
+            if ( pref_scd == PR_TRUE ) {
+
 			cur_host[cur_host_length-domain_length] = '\0';
 			dot = XP_STRCHR(cur_host, '.');
 			cur_host[cur_host_length-domain_length] = '.';
@@ -1327,6 +1340,7 @@ net_IntSetCookieString(char * cur_url,
 				net_UndeferCookies();
 				return;
 			}
+            }
 
 			/* all tests passed, copy in domain to hostname field
 			 */

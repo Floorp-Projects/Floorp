@@ -1144,6 +1144,7 @@ net_IntSetCookieString(MWContext * context,
 	PRBool HG83744 is_domain=FALSE, accept=FALSE;
 	MWContextType type;
 	Bool bCookieAdded;
+	PRBool pref_scd = PR_FALSE;
 
 	if(!context) {
 		PR_Free(cur_path);
@@ -1307,6 +1308,17 @@ net_IntSetCookieString(MWContext * context,
  *    cookies for the entire .co.nz domain.
  */
 
+/*
+ *  Although this is the right thing to do(tm), it breaks too many sites.  
+ *  So only do it if the restrictCookieDomains pref is TRUE.
+ *
+ */
+            if ( PREF_GetBoolPref(pref_strictCookieDomains, &pref_scd) < 0 ) {
+               pref_scd = PR_FALSE;
+            }
+
+            if ( pref_scd == PR_TRUE ) {
+
 			cur_host[cur_host_length-domain_length] = '\0';
 			dot = XP_STRCHR(cur_host, '.');
 			cur_host[cur_host_length-domain_length] = '.';
@@ -1320,6 +1332,7 @@ net_IntSetCookieString(MWContext * context,
 				net_UndeferCookies();
 				return;
 			}
+            }
 
 			/* all tests passed, copy in domain to hostname field
 			 */
