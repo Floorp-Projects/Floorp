@@ -352,22 +352,10 @@ sub GetKeywordIdFromName {
 }
 
 
-
-
-# Returns the modification time of a file.
-
-sub ModTime {
-    my ($filename) = (@_);
-    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-        $atime,$mtime,$ctime,$blksize,$blocks)
-        = stat($filename);
-    return $mtime;
-}
-
 $::VersionTableLoaded = 0;
 sub GetVersionTable {
     return if $::VersionTableLoaded;
-    my $mtime = ModTime("$datadir/versioncache");
+    my $mtime = file_mod_time("$datadir/versioncache");
     if (!defined $mtime || $mtime eq "" || !-r "$datadir/versioncache") {
         $mtime = 0;
     }

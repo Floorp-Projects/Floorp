@@ -33,7 +33,8 @@ use base qw(Exporter);
                              css_class_quote
                              lsearch max min
                              trim diff_strings
-                             format_time format_time_decimal);
+                             format_time format_time_decimal
+                             file_mod_time);
 
 use Bugzilla::Config;
 use Bugzilla::Error;
@@ -223,6 +224,14 @@ sub format_time_decimal {
     return $newtime;
 }
 
+sub file_mod_time ($) {
+    my ($filename) = (@_);
+    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+        $atime,$mtime,$ctime,$blksize,$blocks)
+        = stat($filename);
+    return $mtime;
+}
+
 sub ValidateDate {
     my ($date, $format) = @_;
 
@@ -271,6 +280,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Functions for formatting time
   format_time($time);
+
+  # Functions for dealing with files
+  $time = file_mod_time($filename);
 
 =head1 DESCRIPTION
 
@@ -408,6 +420,13 @@ shown in different formats.
 Returns a number with 2 digit precision, unless the last digit is a 0. Then it 
 returns only 1 digit precision.
 
+=head2 Files
+
+=over 4
+
+=item C<file_mod_time($filename)>
+
+Takes a filename and returns the modification time. It returns it in the format of the "mtime" parameter of the perl "stat" function.
 
 =back
 

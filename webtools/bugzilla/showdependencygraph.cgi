@@ -28,6 +28,7 @@ use lib qw(.);
 use File::Temp;
 use Bugzilla;
 use Bugzilla::Config qw(:DEFAULT $webdotdir);
+use Bugzilla::Util;
 
 require "CGI.pl";
 
@@ -271,7 +272,7 @@ foreach my $f (@files)
     # symlinks), this can't escape to delete anything it shouldn't
     # (unless someone moves the location of $webdotdir, of course)
     trick_taint($f);
-    if (ModTime($f) < $since) {
+    if (file_mod_time($f) < $since) {
         unlink $f;
     }
 }
