@@ -5106,16 +5106,29 @@ nsDocShell::InternalLoad(nsIURI * aURI,
              * recorded in session and global history.
              */             
             OnNewURI(aURI, nsnull, mLoadType);
-
-            /* save current position of scroller(s) (bug 59774) */
-            if (mOSHE)
+            nsCOMPtr<nsIInputStream> postData;
+            
+            if (mOSHE) {
+                /* save current position of scroller(s) (bug 59774) */
                 mOSHE->SetScrollPosition(cx, cy);
+                // Get the postdata from the current page, if it was
+                // loaded through normal means.
+                if (aLoadType == LOAD_NORMAL || aLoadType == LOAD_LINK)
+                    mOSHE->GetPostData(getter_AddRefs(postData));
+            }
             
             /* Assign mOSHE to mLSHE. This will either be a new entry created
              * by OnNewURI() for normal loads or aSHEntry for history loads.
              */
-            if (mLSHE)
+            if (mLSHE) {
                 mOSHE = mLSHE;
+                // Save the postData obtained from the previous page
+                // in to the session history entry created for the 
+                // anchor page, so that any history load of the anchor
+                // page will restore the appropriate postData.
+                if (postData)
+                    mOSHE->SetPostData(postData);
+            }
 
             /* restore previous position of scroller(s), if we're moving
              * back in history (bug 59774)
