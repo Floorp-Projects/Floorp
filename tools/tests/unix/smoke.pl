@@ -12,8 +12,8 @@ $test_duration = 120; # seconds before i deem this url timed out
 #       this is LD_LIBRARY_PATH and MOZILLA_FIVE_HOME want absolute
 #       paths, so we need to get the pwd and replace 'tools/tests/unix'
 #       with 'dist/bin' -- then we're golden.
-$apprunner_bin = '/u/phillip/seamonkey/linux/package';
-#$apprunner_bin = '../../../dist/bin';
+#$apprunner_bin = '/u/phillip/seamonkey/linux/package';
+$apprunner_bin = '../../../dist/bin';
 
 #nothing else needs to be changed
 $apprunner = "$apprunner_bin/apprunner";
@@ -186,7 +186,7 @@ sub test_url {
     $| = 1; # gotta love autoflushing
     local $reaperchild;
     local $url = shift || "";
-    local $run_time = 'FAIL';
+    local $run_time = 'E2-FAILED';
 
     if ( $reaperchild = fork ) {
     ## ok, the parent spins until apprunner
