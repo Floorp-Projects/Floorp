@@ -127,8 +127,8 @@ ifeq ($(OS_ARCH), IRIX)
 $(OBJDIR)/xptcstubs_asm_irix.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_irix.s
 	@rm -f ./xptcstubsdef.inc
 	@cp $(DIST)/include/xptcstubsdef.inc .
-	@if test "$(DEPTH)" != "$(topsrcdir)"; then rm -f ./xptcstubs_asm_irix.s; cp $(srcdir)/xptcstubs_asm_irix.s .; else true; fi
+	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; cp $(srcdir)/xptcstubs_asm_irix.s .; else true; fi
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_irix.s
 	@rm -f ./xptcstubsdef.inc
-	@if test "$(DEPTH)" != "$(topsrcdir)"; then rm -f ./xptcstubs_asm_irix.s; else true; fi
+	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; else true; fi
 endif
