@@ -15,6 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+
 DEPTH = ../..
 
 LIBRARY_NAME = raptorwebwidget
@@ -22,6 +23,8 @@ LIBRARY_NAME = raptorwebwidget
 MODULE=raptor
 
 REQUIRES=xpcom raptor dom js netlib
+
+INCLUDES += -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$(PUBLIC)/js -I(PUBLIC)/netlib
 
 DEFINES = -D_IMPL_NS_WEB
 
@@ -40,3 +43,4 @@ include $(DEPTH)/config/config.mk
 TARGETS = $(LIBRARY)
 
 include $(DEPTH)/config/rules.mk
+
