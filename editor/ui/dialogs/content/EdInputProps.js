@@ -41,8 +41,12 @@ var inputElement;
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog = {
     accept:             document.documentElement.getButton("accept"),
@@ -69,7 +73,7 @@ function Startup()
 
   // Get a single selected input element
   var tagName = "input";
-  inputElement = editorShell.GetSelectedElement(tagName);
+  inputElement = editor.getSelectedElement(tagName);
 
   if (inputElement)
     // We found an element and don't need to insert one
@@ -81,7 +85,7 @@ function Startup()
     // We don't have an element selected,
     //  so create one with default attributes
 
-    inputElement = editorShell.CreateElementWithDefaults(tagName);
+    inputElement = editor.createElementWithDefaults(tagName);
     if (!inputElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -89,7 +93,7 @@ function Startup()
       return;
     }
 
-    var imageElement = editorShell.GetSelectedElement("img");
+    var imageElement = editor.getSelectedElement("img");
     if (imageElement)
     {
       // We found an image element, convert it to an input type="image"
@@ -326,14 +330,16 @@ function onAccept()
     // All values are valid - copy to actual element in doc or
     //   element created to insert
 
-    editorShell.CloneAttributes(inputElement, globalElement);
+    var editor = GetCurrentEditor();
+
+    editor.cloneAttributes(inputElement, globalElement);
 
     if (insertNew)
     {
       try {
         // 'true' means delete the selection before inserting
         // in case were are converting an image to an input type="image"
-        editorShell.InsertElementAtSelection(inputElement, true);
+        editor.insertElementAtSelection(inputElement, true);
       } catch (e) {
         dump(e);
       }
