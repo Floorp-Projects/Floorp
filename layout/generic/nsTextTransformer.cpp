@@ -575,7 +575,7 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
         mLineBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
       }
       else {
-        mWordBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
+        mWordBreaker->NextWord(cp0, fragLen, offset, &next, &tryNextFrag);
       }
       numChars = (PRInt32) (next - (PRUint32) offset) + 1;
 
@@ -1231,7 +1231,7 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
         mLineBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
       }
       else {
-        mWordBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
+        mWordBreaker->PrevWord(cp0, offset, offset, &prev, &tryPrevFrag);
       }
       numChars = (PRInt32) ((PRUint32) offset - prev) + 1;
 

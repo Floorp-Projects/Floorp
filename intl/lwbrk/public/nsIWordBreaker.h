@@ -62,11 +62,11 @@ public:
                                       PRUint32 aOffset,
                                       PRUint32 *oWordBegin,
                                       PRUint32 *oWordEnd) =   0;
-  NS_IMETHOD Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oNext, PRBool *oNeedMoreText) = 0;
+  NS_IMETHOD NextWord(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+                      PRUint32* oNext, PRBool *oNeedMoreText) = 0;
 
-  NS_IMETHOD Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oPrev, PRBool *oNeedMoreText) = 0;
+  NS_IMETHOD PrevWord(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+                      PRUint32* oPrev, PRBool *oNeedMoreText) = 0;
 
 };
 

@@ -170,7 +170,7 @@ nsresult nsSampleWordBreaker::FindWord(
   return NS_OK;
 }
 
-nsresult nsSampleWordBreaker::Next( 
+nsresult nsSampleWordBreaker::NextWord( 
   const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
   PRUint32* oNext, PRBool *oNeedMoreText) 
 {
@@ -194,7 +194,7 @@ nsresult nsSampleWordBreaker::Next(
   return NS_OK;
 }
 
-nsresult nsSampleWordBreaker::Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+nsresult nsSampleWordBreaker::PrevWord(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
   PRUint32* oPrev, PRBool *oNeedMoreText) 
 {
   PRInt8 c1, c2;
