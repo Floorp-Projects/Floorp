@@ -43,9 +43,12 @@
 #include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsFormFrame.h"
+#include "nsILookAndFeel.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
+static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 void
 nsButtonControlFrame::GetDefaultLabel(nsString& aString) 
@@ -144,16 +147,13 @@ nscoord
 nsButtonControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
                                                      nscoord aInnerHeight) const
 {
-  //return NSIntPixelsToTwips(4, aPixToTwip);
-#ifdef XP_PC
-  return (nscoord)NSToIntRound((float)aInnerHeight * 0.25f);
-#endif
-#ifdef XP_UNIX
-  return (nscoord)NSToIntRound((float)aInnerHeight * 0.50f);
-#endif
-#ifdef XP_MAC
-  return (nscoord)NSToIntRound((float)aInnerHeight * 0.50f);
-#endif
+  float pad;
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ButtonVerticalInsidePadding,  pad);
+   NS_RELEASE(lookAndFeel);
+  }
+  return (nscoord)NSToIntRound((float)aInnerHeight * pad);
 }
 
 nscoord 
@@ -165,27 +165,21 @@ nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   nsCompatibility mode;
   aPresContext.GetCompatibilityMode(mode);
 
-#ifdef XP_PC
-  if (eCompatibility_NavQuirks == mode) {
-    return (nscoord)NSToIntRound(float(aInnerWidth) * 0.25f);
-  } else {
-    return NSIntPixelsToTwips(10, aPixToTwip) + 8;
+  float   pad;
+  PRInt32 padQuirks;
+  PRInt32 padQuirksOffset;
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ButtonHorizontalInsidePadding,  pad);
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ButtonHorizontalInsidePaddingNavQuirks,  padQuirks);
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks,  padQuirksOffset);
+    NS_RELEASE(lookAndFeel);
   }
-#endif
-#ifdef XP_UNIX
   if (eCompatibility_NavQuirks == mode) {
-    return (nscoord)NSToIntRound(float(aInnerWidth) * 0.5f);
+    return (nscoord)NSToIntRound(float(aInnerWidth) * pad);
   } else {
-    return NSIntPixelsToTwips(20, aPixToTwip);
+    return NSIntPixelsToTwips(padQuirks, aPixToTwip) + padQuirksOffset;
   }
-#endif
-#ifdef XP_MAC
-  if (eCompatibility_NavQuirks == mode) {
-    return (nscoord)NSToIntRound(float(aInnerWidth) * 0.5f);
-  } else {
-    return NSIntPixelsToTwips(20, aPixToTwip);
-  }
-#endif
 }
 
 

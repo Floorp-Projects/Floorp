@@ -43,6 +43,7 @@
 #include "nsCSSRendering.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
+#include "nsILookAndFeel.h"
 
 #ifdef SingleSignon
 #include "nsIDocument.h"
@@ -61,6 +62,8 @@ static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
+static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 nsresult
 NS_NewTextControlFrame(nsIFrame*& aResult)
@@ -89,27 +92,42 @@ nscoord
 nsTextControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
-#ifdef XP_PC
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_TEXTAREA == type) {
-    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.40f);
-  } else {
-    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.25f);
+
+  // XXX NOTE: the enums eMetric_TextShouldUseVerticalInsidePadding and eMetric_TextVerticalInsidePadding
+  // are ONLY needed because GTK is not using the "float" padding values and wants to only use an 
+  // integer value for the padding instead of calculating like the other platforms.
+  //
+  // If GTK decides to start calculating the value, PLEASE remove these two enum from nsILookAndFeel and
+  // all the platforms nsLookAndFeel impementations so we don't have these extra values remaining in the code.
+  // The two enums are:
+  //    eMetric_TextVerticalInsidePadding
+  //    eMetric_TextShouldUseVerticalInsidePadding
+  //
+  float   padTextArea;
+  float   padTextField;
+  PRInt32 vertPad;
+  PRInt32 shouldUseVertPad;
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextAreaVerticalInsidePadding,  padTextArea);
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextFieldVerticalInsidePadding,  padTextField);
+   // These two (below) are really only needed for GTK
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextVerticalInsidePadding,  vertPad);
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextShouldUseVerticalInsidePadding,  shouldUseVertPad);
+   NS_RELEASE(lookAndFeel);
   }
-#endif
-#ifdef XP_UNIX
-  return NSIntPixelsToTwips(10, aPixToTwip); // XXX this is probably wrong
-#endif
-#ifdef XP_MAC
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_TEXTAREA == type) {
-    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.40f);
+
+  if (1 == shouldUseVertPad) {
+    return NSIntPixelsToTwips(vertPad, aPixToTwip); // XXX this is probably wrong (for GTK)
   } else {
-    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.25f);
+    PRInt32 type;
+    GetType(&type);
+    if (NS_FORM_TEXTAREA == type) {
+      return (nscoord)NSToIntRound(float(aInnerHeight) * padTextArea);
+    } else {
+      return (nscoord)NSToIntRound(float(aInnerHeight) * padTextField);
+    }
   }
-#endif
 }
 
 nscoord 
@@ -118,41 +136,46 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
 {
-#ifdef XP_PC
+  // XXX NOTE: the enum eMetric_TextShouldUseHorizontalInsideMinimumPadding
+  // is ONLY needed because GTK is not using the "float" padding values and wants to only use the 
+  // "minimum" integer value for the padding instead of calculating and comparing like the other platforms.
+  //
+  // If GTK decides to start calculating and comparing the values, 
+  // PLEASE remove these the enum from nsILookAndFeel and
+  // all the platforms nsLookAndFeel impementations so we don't have these extra values remaining in the code.
+  // The enum is:
+  //    eMetric_TextShouldUseHorizontalInsideMinimumPadding
+  //
+  float   padTextField;
+  float   padTextArea;
+  PRInt32 padMinText;
+  PRInt32 shouldUsePadMinText;
+
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextFieldHorizontalInsidePadding,  padTextField);
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextAreaHorizontalInsidePadding,  padTextArea);
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextHorizontalInsideMinimumPadding,  padMinText);
+   // This one (below) is really only needed for GTK
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextShouldUseHorizontalInsideMinimumPadding,  shouldUsePadMinText);
+   NS_RELEASE(lookAndFeel);
+  }
+
   nscoord padding;
   PRInt32 type;
   GetType(&type);
   if (NS_FORM_TEXTAREA == type) {
-    padding = (nscoord)(40 * aCharWidth / 100);
+    padding = (nscoord)(aCharWidth * padTextArea);
   } else {
-    padding = (nscoord)(95 * aCharWidth / 100);
+    padding = (nscoord)(aCharWidth * padTextField);
   }
-  nscoord min = NSIntPixelsToTwips(3, aPixToTwip);
-  if (padding > min) {
+  nscoord min = NSIntPixelsToTwips(padMinText, aPixToTwip);
+  if (padding > min && (1 == shouldUsePadMinText)) {
     return padding;
   } else {
     return min;
   }
-#endif
-#ifdef XP_UNIX
-  return NSIntPixelsToTwips(6, aPixToTwip);  // XXX this is probably wrong
-#endif
-#ifdef XP_MAC
-  nscoord padding;
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_TEXTAREA == type) {
-    padding = (nscoord)(40 * aCharWidth / 100);
-  } else {
-    padding = (nscoord)(95 * aCharWidth / 100);
-  }
-  nscoord min = NSIntPixelsToTwips(3, aPixToTwip);
-  if (padding > min) {
-    return padding;
-  } else {
-    return min;
-  }
-#endif
+
 }
 
 
