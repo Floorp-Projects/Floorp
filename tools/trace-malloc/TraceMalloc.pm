@@ -89,13 +89,7 @@ sub read {
       next OBJECT unless /^0x(\S+) <(.*)> \((\d+)\)/;
       my ($addr, $type, $size) = (hex $1, $2, $3);
 
-      my $object = $::Objects{$addr};
-      if (! $object) {
-          # Found a new object entry. Record its type and size
-          $::Objects{$addr} =
-              $object =
-              { 'type' => $type, 'size' => $size };
-      }
+      my $object = { 'type' => $type, 'size' => $size };
 
       # Record the object's slots
       my @slots;
