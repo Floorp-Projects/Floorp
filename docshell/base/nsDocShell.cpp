@@ -55,12 +55,15 @@
 // Interfaces Needed
 #include "nsICharsetConverterManager.h"
 #include "nsIHTTPChannel.h"
+#include "nsIDataChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
 #include "nsITimer.h"
 #include "nsIFileStream.h"
+
+#include "nsIPrincipal.h"
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
@@ -204,6 +207,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
    NS_ENSURE_ARG(aURI);
 
    nsCOMPtr<nsIURI> referrer;
+   nsCOMPtr<nsISupports> owner;
    PRBool replace = PR_FALSE;
    PRBool refresh = PR_FALSE;
    if(aLoadInfo)
@@ -211,10 +215,10 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
       aLoadInfo->GetReferrer(getter_AddRefs(referrer));
       aLoadInfo->GetReplaceSessionHistorySlot(&replace);
       aLoadInfo->GetRefresh(&refresh);
+      aLoadInfo->GetOwner(getter_AddRefs(owner));
       }
-      
 
-   NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, nsnull, nsnull, 
+   NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, 
        replace ? loadNormalReplace : (refresh ? loadRefresh : loadNormal)), NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -1090,7 +1094,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    	type = loadReloadBypassProxyAndCache;
    
    NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
-      type), NS_ERROR_FAILURE);
+      nsnull, type), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -2358,7 +2362,8 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 //*****************************************************************************   
   
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType)
+   nsISupports* aOwner, const char* aWindowTarget, nsIInputStream* aPostData, 
+   loadType aLoadType)
 {
     // Check to see if the new URI is an anchor in the existing document.
     if (aLoadType == loadNormal ||
@@ -2385,7 +2390,7 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
     if(loadLink == aLoadType)
         loadCmd = nsIURILoader::viewUserClick;
-    NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, loadCmd, aWindowTarget, 
+    NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, aOwner, loadCmd, aWindowTarget, 
         aPostData), NS_ERROR_FAILURE);
 
     return NS_OK;
@@ -2597,8 +2602,24 @@ NS_IMETHODIMP nsDocShell::KeywordURIFixup(const PRUnichar* aStringURI,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI, 
-   nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
+NS_IMETHODIMP nsDocShell::GetCurrentDocumentOwner(nsISupports** aOwner)
+{
+    nsresult rv;
+    *aOwner = nsnull;
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+    if (!docv) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDocument> doc;
+    rv = docv->GetDocument(*getter_AddRefs(doc));
+    if (NS_FAILED(rv) || !doc) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = doc->GetPrincipal(getter_AddRefs(principal));
+    if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
+    rv = principal->QueryInterface(NS_GET_IID(nsISupports),(void**)aOwner);
+    return rv;
+}
+
+NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,  
+   nsISupports* aOwner, nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
    nsIInputStream* aPostData)
 {
    nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
@@ -2622,17 +2643,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       else
          return NS_ERROR_FAILURE;
       }
-
-   //XXX Wrong, but needed for now. See bug 31818.
-   static const char kJavaScriptScheme[] = "javascript";
-   nsXPIDLCString scheme;
-   aURI->GetScheme(getter_Copies(scheme));
-   if (0 == PL_strncasecmp(NS_STATIC_CAST(const char*, scheme), kJavaScriptScheme, sizeof(kJavaScriptScheme) - 1)) {
-      channel->SetOriginalURI(aReferrerURI ? aReferrerURI : aURI);
-   }
-   else {
-      channel->SetOriginalURI(aURI);
-   }
+   channel->SetOriginalURI(aURI);
    
    // Mark the channel as being a document URI...
    nsLoadFlags loadAttribs = 0;
@@ -2705,6 +2716,24 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       if(aReferrerURI) // Referrer is currenly only set for link clicks here.
          httpChannel->SetReferrer(aReferrerURI, 
                                     nsIHTTPChannel::REFERRER_LINK_CLICK);
+      }
+      else
+      {
+          nsCOMPtr<nsIStreamIOChannel> ioChannel(do_QueryInterface(channel));
+          if(ioChannel) // Might be a javascript: URL load, need to set owner
+          {
+              static const char jsSchemeName[] = "javascript";
+              char* scheme;
+              aURI->GetScheme(&scheme);
+              if (PL_strcasecmp(scheme, jsSchemeName) == 0)
+                  channel->SetOwner(aOwner);
+          }
+          else
+          { // Also set owner for data: URLs
+              nsCOMPtr<nsIDataChannel> dataChannel(do_QueryInterface(channel));
+              if (dataChannel)
+                  channel->SetOwner(aOwner);
+          }
       }
 
    NS_ENSURE_SUCCESS(uriLoader->OpenURI(channel, aLoadCmd,
@@ -3143,7 +3172,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
     }
     
 
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, postData, loadHistory),
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, postData, loadHistory),
       NS_ERROR_FAILURE);
 
    return NS_OK;

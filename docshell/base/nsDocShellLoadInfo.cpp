@@ -96,6 +96,21 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetRefresh(PRBool aRefresh)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShellLoadInfo::GetOwner(nsISupports** aOwner)
+{
+   NS_ENSURE_ARG_POINTER(aOwner);
+
+   *aOwner = mOwner;
+   NS_IF_ADDREF(*aOwner);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetOwner(nsISupports* aOwner)
+{
+   mOwner = aOwner;
+   return NS_OK;
+}
+
 //*****************************************************************************
 // nsDocShellLoadInfo: Helpers
 //*****************************************************************************   

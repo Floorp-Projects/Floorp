@@ -1019,7 +1019,10 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         nsCOMPtr<nsIURI> uri;
         NS_NewURI(getter_AddRefs(uri), aURLSpec, nsnull);
 
-        InternalLoad(uri, mCurrentURI, target, aPostDataStream, loadLink); 
+        nsCOMPtr<nsISupports> owner;
+        GetCurrentDocumentOwner(getter_AddRefs(owner));
+        
+        InternalLoad(uri, mCurrentURI, owner, target, aPostDataStream, loadLink); 
       }
       break;
     case eLinkVerb_Embed:
