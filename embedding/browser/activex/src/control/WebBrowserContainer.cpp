@@ -357,7 +357,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortO
     SysFreeString(bstrTargetFrameName);
     SysFreeString(bstrHeaders);
 
-    if (bCancel == VARIANT_TRUE)
+    if (bCancel != VARIANT_FALSE)
     {
         *aAbortOpen = PR_TRUE;
         return NS_ERROR_ABORT;
