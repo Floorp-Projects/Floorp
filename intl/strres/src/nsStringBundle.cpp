@@ -49,11 +49,12 @@
 #include "nsHashtable.h"
 #include "nsAutoLock.h"
 
+#include "nsAcceptLang.h" // for nsIAcceptLang
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 // XXX investigate need for proper locking in this module
 //static PRInt32 gLockCount = 0;
-
 NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 
@@ -791,10 +792,12 @@ NS_NewStringBundleService(nsISupports* aOuter, const nsIID& aIID,
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStringBundleService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAcceptLang)
 
 static nsModuleComponentInfo components[] =
 {
-   { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_PROGID, nsStringBundleServiceConstructor}
+  { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_PROGID, nsStringBundleServiceConstructor},
+  { "Accept Language", NS_ACCEPTLANG_CID, NS_ACCEPTLANG_PROGID, nsAcceptLangConstructor}
 };
 
 NS_IMPL_NSGETMODULE("nsStringBundleModule", components)
