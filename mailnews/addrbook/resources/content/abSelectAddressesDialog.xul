@@ -68,7 +68,10 @@ Rights Reserved.
 			<!-- dir tree -->
 			<box align="horizontal"
 				 style="width:200px; height:100%; background-color:white; border-right:solid black 1px">
-				<tree id="dirTree"/>
+				<!-- FIX ME - div is hack to make tree scroll properly -->
+				<html:div style="width:100px;height:0px" flex="1">
+					<tree id="dirTree"/>
+				</html:div>
 			</box>
 				
 			<splitter collapse="before"/>
@@ -80,7 +83,10 @@ Rights Reserved.
 					<!-- results tree -->
 					<box flex="100%" align="vertical"
 						 style="background-color:white; border-bottom:solid black 1px">
-						<tree id="resultsTree"/>
+						<!-- FIX ME - div is hack to make tree scroll properly -->
+						<html:div style="width:100px;height:0px" flex="1">
+							<tree id="resultsTree"/>
+						</html:div>
 					</box>
 					
 					<!-- Box that holds (to,cc,bcc buttons) -->

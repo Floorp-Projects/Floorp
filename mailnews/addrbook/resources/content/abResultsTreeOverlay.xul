@@ -30,7 +30,7 @@ Rights Reserved.
 	<!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
 	 <tree id="resultsTree"
 		  class="abResults" 
-		  flex="100%"
+		  style="width:100%; height:100%"
 		  datasources="rdf:addressdirectory rdf:addresscard"
 		  onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('select');"
 		  ondblclick="top.AbEditCard()"
