@@ -2725,7 +2725,7 @@ nsBookmarksService::CreateBookmarkEx(const PRUnichar* aName, const char* aURL,
     return rv;
 
   // Resource: URL
-  rv = mInner->Assert(bookmarkResource, kNC_URL, bookmarkResource, true);
+  rv = mInner->Assert(bookmarkResource, kNC_URL, bookmarkResource, PR_TRUE);
   if (NS_FAILED(rv)) 
     return rv;
 
