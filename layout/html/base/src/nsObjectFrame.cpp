@@ -739,6 +739,25 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   }
 
   {
+    // Here we set the background color for this widget because some plugins will use 
+    // the child window background color when painting. If it's not set, it may default to gray
+    // Sometimes, a frame doesn't have a background color or is transparent. In this
+    // case, walk up the frame tree until we do find a frame with a background color
+    for (nsIFrame* frame = this; frame; frame->GetParent(&frame)) {
+      const nsStyleBackground*  color;
+      frame->GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)color);
+      if (!color->BackgroundIsTransparent()) {  // make sure we got an actual color
+        nsCOMPtr<nsIWidget> win;
+        view->GetWidget(*getter_AddRefs(win));
+        if (win)
+          win->SetBackgroundColor(color->mBackgroundColor);
+        else 
+          NS_ASSERTION(win, "failed to get widget to set background color on");
+        break;
+      }
+    }
+
+    
     //this is ugly. it was ripped off from didreflow(). MMP
     // Position and size view relative to its parent, not relative to our
     // parent frame (our parent frame may not have a view).
