@@ -118,13 +118,14 @@ NS_IMETHODIMP PluginArrayImpl::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
 			return rv;
 	}
 	
+	*aReturn = nsnull;
+
 	if (aIndex < mPluginCount) {
 		*aReturn = mPluginArray[aIndex];
 		NS_IF_ADDREF(*aReturn);
-		return NS_OK;
 	}
 	
-	return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP PluginArrayImpl::NamedItem(const nsString& aName, nsIDOMPlugin** aReturn)
@@ -146,12 +147,12 @@ NS_IMETHODIMP PluginArrayImpl::NamedItem(const nsString& aName, nsIDOMPlugin** a
 			if (pluginName == aName) {
 				*aReturn = plugin;
 				NS_IF_ADDREF(plugin);
-				return NS_OK;
+        break;
 			}
 		}
 	}
 
-	return NS_ERROR_FAILURE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP PluginArrayImpl::Refresh(PRBool aReloadDocuments)
@@ -294,6 +295,8 @@ NS_IMETHODIMP PluginElementImpl::NamedItem(const nsString& aName, nsIDOMMimeType
 		if (rv != NS_OK)
 			return rv;
 	}
+  
+  *aReturn = nsnull;
 	for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
 		nsString type;
 		nsIDOMMimeType* mimeType = mMimeTypeArray[i];
@@ -301,11 +304,12 @@ NS_IMETHODIMP PluginElementImpl::NamedItem(const nsString& aName, nsIDOMMimeType
 			if (type == aName) {
 				*aReturn = mimeType;
 				NS_ADDREF(mimeType);
-				return NS_OK;
+        break;
 			}
 		}
 	}
-	return NS_ERROR_FAILURE;
+  
+  return NS_OK;
 }
 
 nsresult PluginElementImpl::GetMimeTypes()
