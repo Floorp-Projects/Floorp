@@ -35,6 +35,7 @@ CPPSRCS =              \
 	nsMenuBar.cpp        \
 	nsMenu.cpp           \
 	nsMenuItem.cpp       \
+	nsContextMenu.cpp    \
 	nsWindow.cpp         \
 	nsButton.cpp         \
 	nsCheckButton.cpp    \
@@ -70,6 +71,7 @@ OBJS =                             \
 	.\$(OBJDIR)\nsMenuBar.obj  \
 	.\$(OBJDIR)\nsMenu.obj  \
 	.\$(OBJDIR)\nsMenuItem.obj  \
+	.\$(OBJDIR)\nsContextMenu.obj    \
 	.\$(OBJDIR)\nsWindow.obj         \
 	.\$(OBJDIR)\nsButton.obj         \
 	.\$(OBJDIR)\nsCheckButton.obj    \
