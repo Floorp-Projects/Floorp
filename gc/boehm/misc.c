@@ -624,7 +624,7 @@ out:
 
 #endif
 
-#if defined(OS2) || defined(MACOS)
+#if defined(OS2) || defined(MACOS) || defined(linux)
 FILE * GC_stdout = NULL;
 FILE * GC_stderr = NULL;
 int GC_tmp;  /* Should really be local ... */
@@ -640,7 +640,7 @@ int GC_tmp;  /* Should really be local ... */
   }
 #endif
 
-#if !defined(OS2) && !defined(MACOS) && !defined(MSWIN32)
+#if !defined(OS2) && !defined(MACOS) && !defined(MSWIN32) && !defined(linux)
   int GC_stdout = 1;
   int GC_stderr = 2;
 # if !defined(AMIGA)
@@ -677,7 +677,7 @@ size_t len;
 			       			  (len), &GC_junk, NULL),\
 			       (GC_tmp? 1 : -1))
 #else
-#   if defined(OS2) || defined(MACOS)
+#   if defined(OS2) || defined(MACOS) || defined(linux)
 #   define WRITE(f, buf, len) (GC_set_files(), \
 			       GC_tmp = fwrite((buf), 1, (len), (f)), \
 			       fflush(f), GC_tmp)

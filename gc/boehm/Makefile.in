@@ -27,16 +27,26 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=boehm
 LIBRARY_NAME=boehm
 
-DEFINES += -DATOMIC_UNCOLLECTABLE -DNO_SIGNALS -DNO_EXECUTE_PERMISSION -DALL_INTERIOR_POINTERS -DSILENT
+DEFINES += -DATOMIC_UNCOLLECTABLE -DNO_SIGNALS -DNO_EXECUTE_PERMISSION -DALL_INTERIOR_POINTERS -DSILENT -DLARGE_CONFIG
 
 DEFINES += -DREDIRECT_MALLOC=GC_malloc
 
-# linux-specific stuff
+ifeq ($(OS_ARCH),Linux)
 DEFINES += -DLINUX_THREADS -D_REENTRANT
+endif
+ifdef ($(OS_ARCH)$(OS_RELEASE),SUNOS5)
+DEFINES += -DSOLARIS_THREADS -D_SOLARIS_PTHREADS -D_REENTRANT
+endif
+ifdef ($(OS_ARCH),IRIX)
+DEFINES	+= -DIRIX_THREADS
+endif
+
 
 EXPORTS = gc.h \
 	generic_threads.h \
 	$(NULL)
+
+#EXPORTS	:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 CSRCS= allchblk.c \
 		alloc.c \
@@ -68,11 +78,9 @@ CSRCS= allchblk.c \
 		generic_threads.c \
 		$(NULL)
 
-CPPSRCS = gc_cpp.cc
-
-EXTRA_DSO_LDOPTS += \
-	-lpthread	\
-	$(NULL)
-
+LCPPSRCS = gc_cpp.cc
+LOBJS	:= $(LCPPSRCS:.cc=.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
+
+
