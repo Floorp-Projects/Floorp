@@ -1,7 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head>
   <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
   <meta name="author" content="Steve Meredith"><title>Structure of the Pref Editor XML File for the PrefsTree Widget</title></head><body text="#000000" bgcolor="#ffffcc" link="#0000ff" alink="darkblue" vlink="#cc0000">
-<div align="right">Added <tt>useradded</tt> attribute&nbsp;&nbsp;&nbsp; 28 Jan 2002<br>
+<div align="right">Mention the XSL stylesheet.&nbsp;&nbsp;&nbsp; 30 Jan 2002<br>
+Added <tt>useradded</tt> attribute&nbsp;&nbsp;&nbsp; <strike>28 Jan 2002</strike><br>
 Added the <tt>MANAGE </tt>element.&nbsp;&nbsp;&nbsp; <strike>24 Jan 2002</strike><br>
 Removed elements <tt>INSTALLATIONFILE </tt>and <tt>PREFFILE. </tt>Changed <tt>processPrefsTree()</tt> number of params. &nbsp;&nbsp; <strike>02 Jan 2002</strike><br>
 Removed <tt>choose </tt>attribute. &nbsp;&nbsp; <strike>13 Dec 2001</strike><br>
@@ -25,9 +26,12 @@ Widget. The default file must be located in the same directory as the <tt>WIZARD
 This copy contains the changes made by the CCK/Factory user, and is used
 by the install builder to write preferences in the install image. A <tt>SCRIPT.IB</tt>
 entry must be made in order for it process the .XML file: <tt>processPrefsTree(,browser.xpi,bin/netscp6.cfg</tt><tt>)</tt>. Note that spaces are not allowed between the parameters. For details on
-adding a PrefsTree control to wizard pages, see the document&nbsp;<a href="PrefsTree.htm">PrefsTree.htm</a>
-
+adding a PrefsTree control to wizard pages, see the document&nbsp;<a href="PrefsTree.htm">PrefsTree.htm</a><br>
+<h2>Who This Document is For</h2>
+You will need to understand the structure of the XML file if you want to
+add or remove prefs to the Pref Editor or change how they are grouped. <br>
 <h2>A Note on Prefs</h2>
+
 The XML described herein contains elements for prefs and elements to control how they are
 grouped in a UI. It was specifically designed for use in this <i>Pref Editor</i>
 tree control, but a complete representation of prefs in XML could be useful
@@ -59,19 +63,21 @@ to point to the file created by the install builder and prefs editor.<br>
 
 <h3>Problem Prefs</h3>
 
-<tt>browser.search.defaultengine</tt>: This is a string type, but it looks
+<ul>
+  <li><tt>browser.search.defaultengine</tt>: This is a string type, but it looks
 like it's a URL to a local file (engine://). I can't set this to a resonable
-default value as I don't know where Netscape is going to be installed. <br>
-<tt>
-browser.startup.homepage</tt>:&nbsp;&nbsp;&nbsp; <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=109932">Problem when used with lockPref().</a><br>
+default value as I don't know where Netscape is going to be installed. </li>
+  <li><tt>
+browser.startup.homepage</tt>:&nbsp;&nbsp;&nbsp; <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=109932">Problem when used with lockPref().</a></li>
+  <li><tt>network.cookie.p3plevel</tt> has an interaction with <tt>network.cookie.p3p</tt>. When you change <tt>network.cookie.p3p</tt>,<tt> network.cookie.p3plevel</tt>
+ should get set to some value. This happens in the pref code in the browser.
+There is no way to do this with the Pref Editor right now--prefs are treated
+as individual entities. For now I have commented what is supposed to happen
+in the description text for these prefs. In the future, perhaps we could
+define such relationships in the XML. </li>
+</ul>
 
-<h2>Who This Document is For</h2>
 
-
-
-
-You will need to understand the structure of the XML file if you want to
-add or remove prefs to the Pref Editor or change how they are grouped. <br>
 
 <h2>Conventions</h2>
 
@@ -80,8 +86,18 @@ For XML item tags, we use ALL CAPS. For attribute names, we use lower case.
 the attributes are those things about the pref which are fixed, and use elements
 for thing the CCK/Factory app will change. The exception is for <tt>&lt;CHOICES&gt;</tt>, which are difficult to represent as attributes, so these are elements.<br>
 
-<h2>General Structure</h2>
-<h3>Example 1</h3>
+<h2>General Structure of the XML File</h2>
+<h3>XSL Stylesheet</h3>
+There may be a reference to an XSL stylesheet at the start of the XML file. For example, <tt>&lt;?xml-stylesheet type="text/xsl" href="metaprefs.xsl"?&gt;</tt>
+ . This is not used by the Pref Editor. It is used when the XML file is loaded 
+into a Gecko browser (or IE 6) to format the XML into an HTML table that
+is easy to read. It is included so that the XML file may be self-documenting
+for internal use. The referenced XSL file must also exist in the same directory
+for the stylesheet to work.<br>
+
+<h3>Examples</h3>The easiest way to understand the format of the XML is to look at some short examples. <br>
+<h4>Example1</h4>
+
 
 The simplest file that may exist consists of one group containing one pref. <br>
 
@@ -90,8 +106,8 @@ The simplest file that may exist consists of one group containing one pref. <br>
 <code>&lt;?xml version="1.0"?&gt;<br>
 &lt;PREFSGROUP uiname="Netscape Preferences"&gt;<br>
 &nbsp; &lt;PREF uiname="Open Browser on Startup" prefname="general.startup.browser"
-type="bool" lockable="true" description="When the application starts, open
-a browser window."&gt;<br>
+type="bool" lockable="true" description="When the app starts, open
+a browser."&gt;<br>
 &nbsp;&nbsp;&nbsp; &lt;VALUE&gt;true&lt;/VALUE&gt;<br>
 &nbsp;&nbsp;&nbsp; &lt;LOCKED&gt;false&lt;/LOCKED&gt;<br>&nbsp; &lt;/PREF&gt;<br>
 &lt;/PREFSGROUP&gt;</code><br>
@@ -105,7 +121,8 @@ The above file will result in a tree control with one parent, the group, and one
 <img src="PrefsTreeEx1.jpg" alt="Example 1">
 
  
-<h3>Example 2</h3>
+<h4>Example 2</h4>
+
 
 The more complicated example below shows the top level group, with two sub groups, each with two preferences.<br>
 
