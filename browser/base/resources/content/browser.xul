@@ -71,7 +71,6 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://browser/content/personalToolbar.js"/>
   
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/browser-2.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
   <script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
