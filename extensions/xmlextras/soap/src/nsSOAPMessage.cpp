@@ -44,6 +44,7 @@
 #include "nsSOAPParameter.h"
 #include "nsSOAPHeaderBlock.h"
 #include "nsSOAPEncoding.h"
+#include "nsSOAPException.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMParser.h"
@@ -299,7 +300,7 @@ NS_IMETHODIMP
   NS_ENSURE_ARG_POINTER(&aTargetObjectURI);
   if (aVersion != nsISOAPMessage::VERSION_1_1
       && aVersion != nsISOAPMessage::VERSION_1_2)
-    return NS_ERROR_ILLEGAL_VALUE;
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_BAD_VALUE","Cannot encode message blocks without a valid SOAP version specified.");
 
 //  Construct the message skeleton
 
@@ -373,7 +374,7 @@ NS_IMETHODIMP
     for (i = 0; i < aHeaderBlockCount; i++) {
       header = aHeaderBlocks[i];
       if (!header)
-        return NS_ERROR_FAILURE;
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_NULL_HEADER","Cannot encode null in header array.");
       rv = header->GetElement(getter_AddRefs(element));
       if (element) {
         nsCOMPtr < nsIDOMNode > node1;
@@ -478,7 +479,7 @@ NS_IMETHODIMP
   for (i = 0; i < aParameterCount; i++) {
     param = aParameters[i];
     if (!param)
-      return NS_ERROR_FAILURE;
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_NULL_PARAMETER","Cannot encode null in parameter array.");
     rv = param->GetElement(getter_AddRefs(element));
     if (element) {
       nsCOMPtr < nsIDOMNode > node1;
@@ -684,7 +685,7 @@ NS_IMETHODIMP
   if (!aDocumentStyle) {
     element = next;
     if (!element)
-      return NS_ERROR_ILLEGAL_VALUE;
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_MISSING_METHOD","Cannot decode rpc-style message due to missing method element.");
     nsSOAPUtils::GetFirstChildElement(element, getter_AddRefs(next));
   }
   nsCOMPtr < nsISOAPEncoding > encoding;

@@ -40,6 +40,7 @@
 #include "nsSOAPUtils.h"
 #include "nsIDOMNodeList.h"
 #include "nsISOAPMessage.h"
+#include "nsSOAPException.h"
 
 static NS_NAMED_LITERAL_STRING(kEmpty, "");
 
@@ -74,10 +75,10 @@ NS_IMETHODIMP nsSOAPFault::SetElement(nsIDOMElement * aElement)
                         kSOAPEnvURI[nsISOAPMessage::VERSION_1_1])) {
         mVersion = nsISOAPMessage::VERSION_1_1;
       } else {
-        return NS_ERROR_ILLEGAL_VALUE;
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_BADFAULT", "Cannot recognize SOAP version from namespace URI of fault");
       }
     } else {
-      return NS_ERROR_ILLEGAL_VALUE;
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_BADFAULT", "Cannot recognize element tag of fault.");
     }
   }
   mFaultElement = aElement;
@@ -106,7 +107,9 @@ NS_IMETHODIMP nsSOAPFault::GetFaultCode(nsAString & aFaultCode)
                                        getter_AddRefs(faultcode));
   if (faultcode) {
     nsAutoString combined;
-    nsSOAPUtils::GetElementTextContent(faultcode, combined);
+    nsresult rc = nsSOAPUtils::GetElementTextContent(faultcode, combined);
+    if (NS_FAILED(rc))
+      return rc;
     return nsSOAPUtils::GetLocalName(combined, aFaultCode);
   }
   return NS_OK;
@@ -126,7 +129,9 @@ NS_IMETHODIMP nsSOAPFault::GetFaultNamespaceURI(nsAString & aNamespaceURI)
                                        getter_AddRefs(faultcode));
   if (faultcode) {
     nsAutoString combined;
-    nsSOAPUtils::GetElementTextContent(faultcode, combined);
+    nsresult rc = nsSOAPUtils::GetElementTextContent(faultcode, combined);
+    if (NS_FAILED(rc))
+      return rc;
     return nsSOAPUtils::GetNamespaceURI(nsnull, faultcode, combined, aNamespaceURI);
   }
   return NS_OK;
@@ -146,7 +151,9 @@ NS_IMETHODIMP nsSOAPFault::GetFaultString(nsAString & aFaultString)
                                        nsSOAPUtils::kFaultStringTagName,
                                        getter_AddRefs(element));
   if (element) {
-    nsSOAPUtils::GetElementTextContent(element, aFaultString);
+    nsresult rc = nsSOAPUtils::GetElementTextContent(element, aFaultString);
+    if (NS_FAILED(rc))
+      return rc;
   }
   return NS_OK;
 }
@@ -165,7 +172,9 @@ NS_IMETHODIMP nsSOAPFault::GetFaultActor(nsAString & aFaultActor)
                                        nsSOAPUtils::kFaultActorTagName,
                                        getter_AddRefs(element));
   if (element) {
-    nsSOAPUtils::GetElementTextContent(element, aFaultActor);
+    nsresult rc = nsSOAPUtils::GetElementTextContent(element, aFaultActor);
+    if (NS_FAILED(rc))
+      return rc;
   }
   return NS_OK;
 }

@@ -44,6 +44,7 @@
 #include "nsIComponentManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsSOAPException.h"
 
 /////////////////////////////////////////////
 //
@@ -130,7 +131,7 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse ** _retval)
   nsCOMPtr < nsISOAPTransport > transport;
 
   if (mTransportURI.Length() == 0) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
   }
 
   rv = GetTransport(getter_AddRefs(transport));
@@ -172,7 +173,7 @@ NS_IMETHODIMP
   nsCOMPtr < nsISOAPTransport > transport;
 
   if (mTransportURI.Length() == 0) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
   }
 
   rv = GetTransport(getter_AddRefs(transport));

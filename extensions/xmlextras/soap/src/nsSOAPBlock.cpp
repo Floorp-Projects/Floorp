@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsISOAPAttachments.h"
 #include "nsISOAPMessage.h"
+#include "nsSOAPException.h"
 
 nsSOAPBlock::nsSOAPBlock()
 {
@@ -63,7 +64,7 @@ NS_IMETHODIMP nsSOAPBlock::Init(nsISOAPAttachments * aAttachments,
     mVersion = aVersion;
     return NS_OK;
   }
-  return NS_ERROR_ILLEGAL_VALUE;
+  return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_BAD_VERSION", "Bad version used to initialize block.");
 }
 
 /* attribute AString namespaceURI; */
@@ -177,7 +178,7 @@ NS_IMETHODIMP nsSOAPBlock::GetValue(nsIVariant * *aValue)
             mEncoding->Decode(mElement, mSchemaType, mAttachments,
                               getter_AddRefs(mValue));
       } else {
-        mStatus = NS_ERROR_NOT_INITIALIZED;
+        mStatus = SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_NO_ENCODING","No encoding found to decode block.");
       }
     }
   }
@@ -202,19 +203,24 @@ NS_IMETHODIMP
 
 //  Get the arguments.
 
-  nsCOMPtr < nsIVariant > value;
+
   nsAutoString name;
   nsAutoString namespaceURI;
-  nsCOMPtr < nsISupports > schemaType;
-  nsCOMPtr < nsISupports > encoding;
+  nsIVariant* s1 = nsnull;
+  nsISupports* s2 = nsnull;
+  nsISupports* s3 = nsnull;
 
   if (!JS_ConvertArguments(cx, argc, argv, "/%iv %is %is %ip %ip",
-                           getter_AddRefs(value),
+                           &s1,
                            NS_STATIC_CAST(nsAString *, &name),
                            NS_STATIC_CAST(nsAString *, &namespaceURI),
-                           getter_AddRefs(schemaType),
-                           getter_AddRefs(encoding)))
-    return NS_ERROR_ILLEGAL_VALUE;
+                           &s2,
+                           &s3))
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_BLOCK_INIT", "Could not interpret block initialization arguments.");
+  
+  nsCOMPtr < nsIVariant > value = dont_AddRef(s1);
+  nsCOMPtr < nsISupports > schemaType = dont_AddRef(s2);
+  nsCOMPtr < nsISupports > encoding = dont_AddRef(s3);
 
   nsresult rc = SetValue(value);
   if (NS_FAILED(rc))

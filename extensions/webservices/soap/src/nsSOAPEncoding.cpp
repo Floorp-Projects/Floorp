@@ -43,6 +43,7 @@
 #include "nsISOAPDecoder.h"
 #include "nsSOAPEncoding.h"
 #include "nsSOAPUtils.h"
+#include "nsSOAPException.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMNodeList.h"
@@ -57,7 +58,11 @@ NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncoding) nsSOAPEncodingRegist
   NS_INIT_ISUPPORTS();
 
   nsAutoString style;
-  aEncoding->GetStyleURI(style);
+  nsresult rc = aEncoding->GetStyleURI(style);
+  if (NS_FAILED(rc)) {
+    mEncodings = nsnull;
+  }
+  //  If there are any failures, encodings becomes null, and calls fail.
   nsStringKey styleKey(style);
   mEncodings->Put(&styleKey, aEncoding);
   /* member initializers and constructor code */
@@ -76,6 +81,8 @@ GetAssociatedEncoding(const nsAString & aStyleURI, PRBool aCreateIf,
 {
   NS_SOAP_ENSURE_ARG_STRING(aStyleURI);
   NS_ENSURE_ARG_POINTER(aEncoding);
+  if (!mEncodings)
+    return NS_ERROR_FAILURE;
   nsStringKey styleKey(aStyleURI);
   *aEncoding = (nsISOAPEncoding *) mEncodings->Get(&styleKey);
   if (!*aEncoding) {
@@ -87,8 +94,14 @@ GetAssociatedEncoding(const nsAString & aStyleURI, PRBool aCreateIf,
     if (defaultEncoding || aCreateIf) {
       nsCOMPtr < nsISOAPEncoding > encoding = new nsSOAPEncoding(aStyleURI,this,defaultEncoding);
       *aEncoding = encoding;
-      NS_IF_ADDREF(*aEncoding);
-      mEncodings->Put(&styleKey, encoding);
+      if (encoding) {
+        NS_ADDREF(*aEncoding);
+        mEncodings->Put(&styleKey, encoding);
+      }
+      else
+      {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
   return NS_OK;
@@ -279,6 +292,8 @@ nsresult
                                         aSchemaCollection)
 {
   NS_ENSURE_ARG(aSchemaCollection);
+  if (!mRegistry)
+    return NS_ERROR_FAILURE;
   return mRegistry->SetSchemaCollection(aSchemaCollection);
 }
 
@@ -287,6 +302,8 @@ nsresult
                                         aSchemaCollection)
 {
   NS_ENSURE_ARG_POINTER(aSchemaCollection);
+  if (!mRegistry)
+    return NS_ERROR_FAILURE;
   return mRegistry->GetSchemaCollection(aSchemaCollection);
 }
 
@@ -306,6 +323,8 @@ NS_IMETHODIMP
 {
   NS_SOAP_ENSURE_ARG_STRING(aStyleURI);
   NS_ENSURE_ARG_POINTER(_retval);
+  if (!mRegistry)
+    return NS_ERROR_FAILURE;
   return mRegistry->GetAssociatedEncoding(aStyleURI, aCreateIf, _retval);
 }
 
@@ -394,7 +413,7 @@ NS_IMETHODIMP
                            _retval);
   }
   *_retval = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return SOAP_EXCEPTION(NS_ERROR_NOT_IMPLEMENTED,"SOAP_DEFAULT_ENCODER", "Encoding style does not have a default encoder.");
 }
 
 /* nsIVariant decode (in nsIDOMElement aSource, in nsISchemaType aSchemaType, in nsISOAPAttachments aAttachments); */
@@ -415,7 +434,7 @@ NS_IMETHODIMP
                            _retval);
   }
   *_retval = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return SOAP_EXCEPTION(NS_ERROR_NOT_IMPLEMENTED,"SOAP_DEFAULT_ENCODER", "Encoding style does not have a default decoder.");
 }
 
 /* attribute nsISOAPEncoder defaultEncoder; */
@@ -449,7 +468,6 @@ NS_IMETHODIMP
   *aDefaultDecoder = mDefaultDecoder;
   NS_IF_ADDREF(*aDefaultDecoder);
   return NS_OK;
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -465,7 +483,7 @@ NS_IMETHODIMP nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI, const
   NS_ENSURE_ARG_POINTER(&aExternalURI);
   NS_ENSURE_ARG_POINTER(&aInternalURI);
   if (aExternalURI.IsEmpty() || aInternalURI.IsEmpty())  //  Permit no empty URIs.
-    return NS_ERROR_ILLEGAL_VALUE;
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_SCHEMA_URI_MAPPING", "No schema URI mapping possible of empty strings.");
   nsStringKey externalKey(aExternalURI);
   if (mMappedExternal->Exists(&externalKey)) {
     *_retval = PR_FALSE;  //  Do not permit duplicate external

@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsISOAPAttachments.h"
 #include "nsISOAPMessage.h"
+#include "nsSOAPException.h"
 
 nsSOAPHeaderBlock::nsSOAPHeaderBlock()
 {
@@ -67,7 +68,7 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetActorURI(nsAString & aActorURI)
   NS_ENSURE_ARG_POINTER(&aActorURI);
   if (mElement) {
     if (mVersion == nsISOAPMessage::VERSION_UNKNOWN)
-      return NS_ERROR_NOT_AVAILABLE;
+      return SOAP_EXCEPTION(NS_ERROR_NOT_AVAILABLE,"SOAP_HEADER_INIT", "Header has not been properly initialized.");
     return mElement->GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],
                                     nsSOAPUtils::kActorAttribute,
                                     aActorURI);
@@ -93,7 +94,7 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool *
   NS_ENSURE_ARG_POINTER(&aMustUnderstand);
   if (mElement) {
     if (mVersion == nsISOAPMessage::VERSION_UNKNOWN)
-      return NS_ERROR_NOT_AVAILABLE;
+      return SOAP_EXCEPTION(NS_ERROR_NOT_AVAILABLE,"SOAP_HEADER_INIT", "Header has not been properly initialized.");
     nsAutoString m;
     nsresult
         rc =
@@ -111,7 +112,7 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool *
              || m.Equals(nsSOAPUtils::kFalseA))
       *aMustUnderstand = PR_FALSE;
     else
-      return NS_ERROR_ILLEGAL_VALUE;
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_HEADER_MUSTUNDERSTAND", "Must understand value in header has an illegal value.");
     return NS_OK;
   } else {
     *aMustUnderstand = mMustUnderstand;

@@ -228,85 +228,6 @@ nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2() : nsSOAPEncoding(nsSOAPUtil
 }
 
 //  Here is the implementation of the encoders.
-static
-    nsresult
-EncodeSimpleValue(nsISOAPEncoding * aEncoding,
-                  const nsAString & aValue,
-                  const nsAString & aNamespaceURI,
-                  const nsAString & aName,
-                  nsISchemaType * aSchemaType,
-                  nsIDOMElement * aDestination, nsIDOMElement ** _retval)
-{
-  nsAutoString ns;
-  nsresult rc = aEncoding->GetExternalSchemaURI(aNamespaceURI, ns);
-  if (NS_FAILED(rc))
-    return rc;
-  nsCOMPtr < nsIDOMDocument > document;
-  rc = aDestination->GetOwnerDocument(getter_AddRefs(document));
-  if (NS_FAILED(rc))
-    return rc;
-  nsCOMPtr < nsIDOMElement > element;
-  rc = document->CreateElementNS(ns, aName, getter_AddRefs(element));
-  if (NS_FAILED(rc))
-    return rc;
-  nsCOMPtr < nsIDOMNode > ignore;
-  rc = aDestination->AppendChild(element, getter_AddRefs(ignore));
-  if (NS_FAILED(rc))
-    return rc;
-  if (aSchemaType) {
-    nsAutoString name;
-    rc = aSchemaType->GetName(name);
-    if (NS_FAILED(rc))
-      return rc;
-    rc = aSchemaType->GetTargetNamespace(ns);
-    if (NS_FAILED(rc))
-      return rc;
-    nsAutoString type;
-    rc = nsSOAPUtils::MakeNamespacePrefix(aEncoding, element,
-                                            ns, type);
-    if (NS_FAILED(rc))
-      return rc;
-    type.Append(nsSOAPUtils::kQualifiedSeparator);
-    type.Append(name);
-    rc = aEncoding->GetExternalSchemaURI(nsSOAPUtils::kXSIURI, ns);
-    if (NS_FAILED(rc))
-      return rc;
-    rc = (element)->
-        SetAttributeNS(ns, nsSOAPUtils::kXSITypeAttribute, type);
-    if (NS_FAILED(rc))
-      return rc;
-  }
-  if (!aValue.IsEmpty()) {
-    nsCOMPtr < nsIDOMText > text;
-    rc = document->CreateTextNode(aValue, getter_AddRefs(text));
-    if (NS_FAILED(rc))
-      return rc;
-    rc = (element)->AppendChild(text, getter_AddRefs(ignore));
-    if (NS_FAILED(rc))
-      return rc;
-  }
-  *_retval = element;
-  NS_IF_ADDREF(element);
-  return rc;
-}
-
-//  Testing for a simple value
-static nsresult HasSimpleValue(nsISchemaType * aSchemaType, PRBool * aResult) {
-  PRUint16 typevalue;
-  nsresult rc = aSchemaType->GetSchemaType(&typevalue);
-  if (NS_FAILED(rc))
-    return rc;
-  if (typevalue == nsISchemaComplexType::SCHEMA_TYPE_COMPLEX) {
-    nsCOMPtr<nsISchemaComplexType> ct = do_QueryInterface(aSchemaType);
-    rc = ct->GetContentModel(&typevalue);
-    if (NS_FAILED(rc))
-      return rc;
-    *aResult = typevalue == nsISchemaComplexType::CONTENT_MODEL_SIMPLE;
-  } else {
-    *aResult = PR_TRUE;
-  }
-  return NS_OK;
-}
 
 //  Getting the immediate supertype of any type
 static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, nsISchemaType** _retval)
@@ -523,6 +444,7 @@ static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, 
           }
         }
       }
+      break;
     }
   }
   if (!base) {
@@ -547,6 +469,122 @@ static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, 
   }
   *_retval = base;
   NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
+
+static nsresult
+EncodeSimpleValue(nsISOAPEncoding * aEncoding,
+                  const nsAString & aValue,
+                  const nsAString & aNamespaceURI,
+                  const nsAString & aName,
+                  nsISchemaType * aSchemaType,
+                  nsIDOMElement * aDestination, nsIDOMElement ** _retval)
+{
+  nsresult rc;
+  nsAutoString typeName;
+  nsAutoString typeNS;
+  if (aSchemaType) {
+    rc = aSchemaType->GetName(typeName);
+    if (NS_FAILED(rc))
+      return rc;
+    rc = aSchemaType->GetTargetNamespace(typeNS);
+    if (NS_FAILED(rc))
+      return rc;
+  }
+  nsAutoString name;      //  First choose the appropriate name and namespace for the element.
+  nsAutoString ns;
+  if (aName.IsEmpty()) {  //  We automatically choose appropriate element names where none exist.
+    ns = nsSOAPUtils::kSOAPEncURI;
+    nsAutoString currentURI = ns;
+    nsCOMPtr<nsISchemaType>currentType = aSchemaType;
+    while (!(typeNS.Equals(nsSOAPUtils::kXSURI)
+      || typeNS.Equals(nsSOAPUtils::kSOAPEncURI))) {
+      nsCOMPtr<nsISchemaType> supertype;
+      rc = GetSupertype(aEncoding, currentType, getter_AddRefs(supertype));
+      if (NS_FAILED(rc))
+        return rc;
+      if (!currentType) {
+        currentURI = nsSOAPUtils::kXSURI;
+        break;
+      }
+      currentType = supertype;
+      rc = currentType->GetTargetNamespace(typeNS);
+      if (NS_FAILED(rc))
+        return rc;
+    }
+    if (currentType) {
+      rc = aSchemaType->GetName(name);
+      if (NS_FAILED(rc))
+        return rc;
+    }
+    else {
+      name = kAnyTypeSchemaType;
+    }
+    rc = aEncoding->GetExternalSchemaURI(nsSOAPUtils::kSOAPEncURI, ns);
+  }
+  else {
+    name = aName;
+    rc = aEncoding->GetExternalSchemaURI(aNamespaceURI, ns);
+  }
+  if (NS_FAILED(rc))
+    return rc;
+  nsCOMPtr < nsIDOMDocument > document;
+  rc = aDestination->GetOwnerDocument(getter_AddRefs(document));
+  if (NS_FAILED(rc))
+    return rc;
+  nsCOMPtr < nsIDOMElement > element;
+  rc = document->CreateElementNS(ns, name, getter_AddRefs(element));
+  if (NS_FAILED(rc))
+    return rc;
+  nsCOMPtr < nsIDOMNode > ignore;
+  rc = aDestination->AppendChild(element, getter_AddRefs(ignore));
+  if (NS_FAILED(rc))
+    return rc;
+  if (!typeName.IsEmpty()) {
+    nsAutoString type;
+    rc = nsSOAPUtils::MakeNamespacePrefix(aEncoding, element,
+                                            typeNS, type);
+    if (NS_FAILED(rc))
+      return rc;
+    type.Append(nsSOAPUtils::kQualifiedSeparator);
+    type.Append(typeName);
+    rc = aEncoding->GetExternalSchemaURI(nsSOAPUtils::kXSIURI, ns);
+    if (NS_FAILED(rc))
+      return rc;
+    rc = (element)->
+        SetAttributeNS(ns, nsSOAPUtils::kXSITypeAttribute, type);
+    if (NS_FAILED(rc))
+      return rc;
+  }
+  if (!aValue.IsEmpty()) {
+    nsCOMPtr < nsIDOMText > text;
+    rc = document->CreateTextNode(aValue, getter_AddRefs(text));
+    if (NS_FAILED(rc))
+      return rc;
+    rc = (element)->AppendChild(text, getter_AddRefs(ignore));
+    if (NS_FAILED(rc))
+      return rc;
+  }
+  *_retval = element;
+  NS_IF_ADDREF(*_retval);
+  return rc;
+}
+
+//  Testing for a simple value
+static nsresult HasSimpleValue(nsISchemaType * aSchemaType, PRBool * aResult) {
+  PRUint16 typevalue;
+  nsresult rc = aSchemaType->GetSchemaType(&typevalue);
+  if (NS_FAILED(rc))
+    return rc;
+  if (typevalue == nsISchemaComplexType::SCHEMA_TYPE_COMPLEX) {
+    nsCOMPtr<nsISchemaComplexType> ct = do_QueryInterface(aSchemaType);
+    rc = ct->GetContentModel(&typevalue);
+    if (NS_FAILED(rc))
+      return rc;
+    *aResult = typevalue == nsISchemaComplexType::CONTENT_MODEL_SIMPLE;
+  } else {
+    *aResult = PR_TRUE;
+  }
   return NS_OK;
 }
 
@@ -941,17 +979,9 @@ NS_IMETHODIMP
           return rc;
       }
     }
-    if (aName.IsEmpty()) {
-      rc = EncodeSimpleValue(aEncoding, kEmpty,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kStructSOAPType, aSchemaType, aDestination,
-                             aReturnValue);
-    }
-    else {
-      rc = EncodeSimpleValue(aEncoding, kEmpty,
+    rc = EncodeSimpleValue(aEncoding, kEmpty,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
-    }
     if (NS_FAILED(rc))
       return rc;
     return EncodeStructParticle(aEncoding, pbptr, modelGroup, aAttachments, *aReturnValue);
@@ -982,12 +1012,6 @@ NS_IMETHODIMP
   rc = aSource->GetAsAString(value);
   if (NS_FAILED(rc))
     return rc;
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kAnySimpleTypeSchemaType,
-                             aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1067,8 +1091,8 @@ static nsresult GetArrayType(nsIVariant* aSource, PRUint32 aDimensionCount, PRUi
     PRUint64 tot = 1;  //  Collect in 64 bits, just to make sure combo fits
     for (i = 0; i < aDimensionCount; i++) {
       tot = tot * aDimensionSizes[i];
-      if (tot > 4294967295U) {
-        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","When encoding an object as an array, the items exceeded 4294967295");
+      if (tot > 0xffffffffU) {
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","When encoding an object as an array, the total count of items exceeded maximum.");
       }
     }
   }
@@ -1345,15 +1369,9 @@ NS_IMETHODIMP
     if (NS_FAILED(rc))
       return rc;
   }
-  if (aName.IsEmpty()) {        //  Now create the element to hold the array
-    rc = EncodeSimpleValue(aEncoding, kEmpty,
-                           nsSOAPUtils::kSOAPEncURI,
-                           kArraySOAPType, aSchemaType, aDestination, aReturnValue);
-  } else {
-    rc = EncodeSimpleValue(aEncoding, kEmpty,
-                           aNamespaceURI,
-                           aName, aSchemaType, aDestination, aReturnValue);
-  }
+  rc = EncodeSimpleValue(aEncoding, kEmpty,
+                         aNamespaceURI,
+                         aName, aSchemaType, aDestination, aReturnValue);
   if (NS_FAILED(rc))
     return rc;
 
@@ -1411,12 +1429,6 @@ NS_IMETHODIMP
   rc = aSource->GetAsAString(value);
   if (NS_FAILED(rc))
     return rc;
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kStringSchemaType,
-                             aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1445,13 +1457,6 @@ NS_IMETHODIMP
   rc = aSource->GetAsBool(&b);
   if (NS_FAILED(rc))
     return rc;
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, b ? nsSOAPUtils::kTrueA : nsSOAPUtils::
-                             kFalseA,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kBooleanSchemaType, aSchemaType, aDestination,
-                             aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, b ? nsSOAPUtils::kTrueA : nsSOAPUtils::kFalseA,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1486,12 +1491,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kDoubleSchemaType,
-                             aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1526,11 +1525,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kFloatSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1565,11 +1559,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kLongSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1604,11 +1593,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kIntSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1643,11 +1627,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kShortSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1682,11 +1661,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kByteSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1721,11 +1695,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kLongSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1760,11 +1729,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kIntSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1799,11 +1763,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kShortSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1838,11 +1797,6 @@ NS_IMETHODIMP
   nsAutoString value;
   CopyASCIItoUCS2(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
-  if (aName.IsEmpty()) {
-    return EncodeSimpleValue(aEncoding, value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kByteSchemaType, aSchemaType, aDestination, aReturnValue);
-  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -2403,12 +2357,12 @@ static PRUint32 DecodeArrayDimensions(const nsAString& src, PRInt32* aDimensionS
     && *(--i2) <= ' ') //  In XML, all valid characters <= space are the only whitespace
     ;
   if (*i2 != ']') {                  //  In this case, not an array dimension
-    int len = Distance(i1, i2) - 1;  //  This is the size to truncate to at the end.
+    PRInt32 len = Distance(i1, i2) - 1;  //  This is the size to truncate to at the end.
     src.Left(dst, len);              //  Truncate the string.
     return 0;                       //  Eliminated white space.
   }
 
-  int dimensionCount = 1;    //  Counting the dimensions
+  PRInt32 dimensionCount = 1;    //  Counting the dimensions
   for (;;) {        //  First look for the matching bracket from reverse and commas.
     if (i1 == i2) {                  //  No matching bracket.
       return 0;
@@ -2421,7 +2375,7 @@ static PRUint32 DecodeArrayDimensions(const nsAString& src, PRInt32* aDimensionS
       dimensionCount++;
     }
   }
-  int len;
+  PRInt32 len;
   {
     nsReadingIterator < PRUnichar > i3 = i2++;  //  Cover any extra white space
     while (i1 != i3) {      //  Loop past white space
@@ -2629,8 +2583,8 @@ NS_IMETHODIMP
           break;
         }
         tot = tot * next;
-        if (tot > 2147483647) {
-          return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","When encoding an object as an array, the items exceeded 2147483647");
+        if (tot > 0x7fffffff) {
+          return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","When decoding an object as an array, the total count of items exceeded maximum.");
         }
       }
       size = (PRInt32)tot;
@@ -2794,8 +2748,8 @@ NS_IMETHODIMP
         dimensionSizes[i] = next = pp[i];
       }
       tot = tot * next;
-      if (tot > 2147483647) {
-        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","More than 2147483647 items found to go in array.");
+      if (tot > 0x7fffffff) {
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","When decoding an object as an array, the total count of items exceeded maximum.");
       }
     }
     size = (PRInt32)tot;  //  At last, we know the dimensions of the array.
@@ -2977,8 +2931,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   double f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lf %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lf %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_DOUBLE","Illegal value discovered for double");
 
@@ -3008,8 +2962,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   float f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %f %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %f %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_FLOAT","Illegal value discovered for float");
 
@@ -3039,8 +2993,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   PRInt64 f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lld %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lld %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_LONG","Illegal value discovered for long");
 
@@ -3070,8 +3024,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   PRInt32 f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %ld %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %ld %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_INT","Illegal value discovered for int");
 
@@ -3101,8 +3055,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   PRInt16 f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_SHORT","Illegal value discovered for short");
 
@@ -3132,8 +3086,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   PRInt16 f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
   if (r == 0 || n < value.Length() || f < -128 || f > 127)
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_BYTE","Illegal value discovered for byte");
 
@@ -3163,8 +3117,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   PRUint64 f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %llu %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %llu %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_ULONG","Illegal value discovered for unsigned long");
 
@@ -3194,8 +3148,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   PRUint32 f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lu %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lu %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_UINT","Illegal value discovered for unsigned int");
 
@@ -3225,8 +3179,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   PRUint16 f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_USHORT","Illegal value discovered for unsigned short");
 
@@ -3256,8 +3210,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   PRUint16 f;
-  unsigned int n;
-  int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
+  PRUint32 n;
+  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
   if (r == 0 || n < value.Length() || f > 255)
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_UBYTE","Illegal value discovered for unsigned byte");
 

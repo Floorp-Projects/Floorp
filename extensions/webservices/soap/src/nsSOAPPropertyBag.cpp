@@ -251,7 +251,7 @@ NS_IMPL_ISUPPORTS1_CI(nsSOAPPropertyBagMutator, nsISOAPPropertyBagMutator)
 NS_IMETHODIMP nsSOAPPropertyBagMutator::GetPropertyBag(nsIPropertyBag ** aPropertyBag) {
   NS_ENSURE_ARG_POINTER(aPropertyBag);
   *aPropertyBag = mBag;
-  NS_ADDREF(*aPropertyBag);
+  NS_IF_ADDREF(*aPropertyBag);
   return NS_OK;
 }
 
@@ -261,5 +261,8 @@ NS_IMETHODIMP
 {
   NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aValue);
+  if (!mSOAPBag) {  //  In case of initialization failure...
+    return NS_ERROR_FAILURE;
+  }
   return mSOAPBag->SetProperty(aName, aValue);
 }

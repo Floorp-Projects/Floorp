@@ -61,7 +61,7 @@ interface nsISOAPMessage : nsISupports {
 
   const unsigned short VERSION_1_1 = 0;
   const unsigned short VERSION_1_2 = 1;
-  const unsigned short VERSION_UNKNOWN = 32767;
+  const unsigned short VERSION_UNKNOWN = 0xFFFF;
 
   /**
    * The document which captures the message, if any.  A simple 

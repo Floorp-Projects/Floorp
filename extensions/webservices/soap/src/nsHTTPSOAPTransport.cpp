@@ -131,14 +131,14 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
       if (NS_FAILED(rc)) 
         return rc;
       if (!principal) {
-        return NS_ERROR_FAILURE;  //  There must be a principal to send a source-verified message.
+        return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_VERIFY_PRINCIPAL", "Source-verified message cannot be sent without principal.");
       }
       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal,&rc);
       if (NS_FAILED(rc)) 
         return rc;
   
       if (!codebase) {
-        return NS_ERROR_FAILURE;  //  There must be a principal to send a source-verified message.
+        return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_VERIFY_CODEBASE", "Source-verified message cannot be sent without codebase.");
       }
   
       char* str;
@@ -158,7 +158,7 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
     if (NS_FAILED(rc)) 
       return rc;
     if (!element)
-      return NS_ERROR_FAILURE;
+      return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_VERIFY_HEADER", "Source-verified message cannot be sent without a header.");
     //  Node ignored on remove / append calls
     nsCOMPtr<nsIDOMNode> ignore;
     //  Remove any existing elements that may conflict with this verifySource identification
@@ -265,14 +265,14 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
   if (NS_FAILED(rv))
     return rv;
   if (!messageDocument)
-    return NS_ERROR_NOT_INITIALIZED;
+    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_MESSAGE_DOCUMENT", "No message document is present.");
 
   nsAutoString uri;
   rv = GetTransportURI(aCall, uri);
   if (NS_FAILED(rv))
     return rv;
   if (AStringIsNull(uri))
-    return NS_ERROR_NOT_INITIALIZED;
+    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
 
   DEBUG_DUMP_DOCUMENT("Synchronous Request", messageDocument)
 
@@ -457,7 +457,7 @@ NS_IMETHODIMP
   if (NS_FAILED(rv))
     return rv;
   if (!messageDocument)
-    return NS_ERROR_NOT_INITIALIZED;
+    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_MESSAGE_DOCUMENT", "No message document is present.");
 
   request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv))
@@ -473,7 +473,7 @@ NS_IMETHODIMP
   if (NS_FAILED(rv))
     return rv;
   if (AStringIsNull(uri))
-    return NS_ERROR_NOT_INITIALIZED;
+    return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
 
   DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),

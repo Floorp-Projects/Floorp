@@ -42,6 +42,7 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
 #include "nsCOMPtr.h"
+#include "nsSOAPException.h"
 
 NS_NAMED_LITERAL_STRING(realSOAPEnvURI1,
                         "http://schemas.xmlsoap.org/soap/envelope/");
@@ -270,7 +271,7 @@ nsresult
       text->GetData(data);
       rtext.Append(data);
     } else if (nsIDOMNode::ELEMENT_NODE == type) {
-      return NS_ERROR_ILLEGAL_VALUE;        //  This was interpreted as a simple value, yet had complex content in it.
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_UNEXPECTED_ELEMENT", "Unable to retrieve simple content because a child element was present.");
     }
     nsCOMPtr < nsIDOMNode > temp = child;
     GetNextSibling(temp, getter_AddRefs(child));
@@ -378,7 +379,7 @@ nsresult
       current = temp;
     }
     if (!current)
-      return NS_ERROR_FAILURE;
+      return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_NAMESPACE", "Unable to resolve prefix in attribute value to namespace URI");
   }
   if (aEncoding) {
     return aEncoding->GetInternalSchemaURI(result,aURI);
