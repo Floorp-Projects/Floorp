@@ -70,7 +70,6 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
    void FlushFontCache();
 
    NS_IMETHOD GetBitmap( HBITMAP &aBitmap); // yuck (for blender, may go)
-   NS_IMETHOD RequiresInvertedMask( PRBool *aBool); // double yuck (images)
 
  protected:
    void DisposeFonts();     // MUST be called before disposing of PS
@@ -153,7 +152,6 @@ class nsPrintSurface : public nsOnscreenSurface
    virtual ~nsPrintSurface();
 
    NS_IMETHOD Init( HPS aPS, PRInt32 aWidth, PRInt32 aHeight);
-   NS_IMETHOD RequiresInvertedMask( PRBool *aNeedsIMask);
    NS_IMETHOD GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
 };
 
