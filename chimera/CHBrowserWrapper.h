@@ -39,7 +39,7 @@
 #import "CHBrowserView.h"
 
 @class BrowserWindowController;
-@class CHToolTip;
+@class ToolTip;
 
 @interface CHBrowserWrapper : NSView <NSBrowserListener, NSBrowserContainer>
 {
@@ -62,7 +62,7 @@
   CHBrowserView* mBrowserView;
   NSString* defaultStatus;
   NSString* loadingStatus;
-  CHToolTip* toolTip;
+  ToolTip* toolTip;
 
   BOOL mIsPrimary;
   BOOL mIsBusy;
