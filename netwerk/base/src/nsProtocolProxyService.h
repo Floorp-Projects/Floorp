@@ -80,6 +80,11 @@ public:
             return mType;
         }
 
+        NS_IMETHOD GetNext(nsIProxyInfo **result) {
+            NS_IF_ADDREF(*result = mNext);
+            return NS_OK;
+        }
+
         virtual ~nsProxyInfo() {
             if (mHost) nsMemory::Free(mHost);
         }
@@ -87,12 +92,15 @@ public:
         nsProxyInfo() : mType(nsnull), mHost(nsnull), mPort(-1) {
         }
 
-        const char *mType;
-        char       *mHost;
-        PRInt32     mPort;
+        const char            *mType;
+        char                  *mHost; // owning reference
+        PRInt32                mPort;
+        nsCOMPtr<nsIProxyInfo> mNext;
     };
 
 protected:
+
+    const char *ExtractProxyInfo(const char *proxy, PRBool permitHttp, nsProxyInfo **);
 
     nsresult GetProtocolInfo(const char *scheme, PRUint32 &flags, PRInt32 &defaultPort);
     nsresult NewProxyInfo_Internal(const char *type, char *host, PRInt32 port, nsIProxyInfo **);
