@@ -197,7 +197,7 @@ public:
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aSheet);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
-                   nsIURL*                aInputURL,
+                   nsIURL*          aInputURL,
                    nsIStyleSheet*&        aResult);
 
   NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
@@ -208,6 +208,8 @@ public:
                                        nsIURL*            aBaseURL,
                                        nsICSSDeclaration* aDeclaration,
                                        PRInt32*           aHint);
+
+  NS_IMETHOD ProcessImport(const nsString& aURLSpec);
 
 protected:
   PRBool GetToken(PRInt32* aErrorCode, PRBool aSkipWS);
@@ -280,8 +282,6 @@ protected:
                       PRInt32* aTable);
   PRBool TranslateLength(nsICSSDeclaration* aDeclaration, const char* aName,
                          float aNumber, const nsString& aDimension);
-
-  void ProcessImport(const nsString& aURLSpec);
 
   // Current token. The value is valid after calling GetToken
   nsCSSToken mToken;
@@ -364,7 +364,7 @@ CSSParserImpl::SetStyleSheet(nsIStyleSheet* aSheet)
 
 NS_METHOD
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
-                     nsIURL*                aInputURL,
+                     nsIURL*          aInputURL,
                      nsIStyleSheet*&        aResult)
 {
   if (nsnull == mSheet) {
@@ -598,7 +598,7 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32* aErrorCode)
   return PR_TRUE;
 }
 
-void CSSParserImpl::ProcessImport(const nsString& aURLSpec)
+NS_IMETHODIMP CSSParserImpl::ProcessImport(const nsString& aURLSpec)
 {
   // XXX probably need a way to encode unicode junk for the part of
   // the url that follows a "?"
@@ -609,7 +609,7 @@ void CSSParserImpl::ProcessImport(const nsString& aURLSpec)
   if (NS_OK != rv) {
     // import url is bad
     // XXX log this somewhere for easier web page debugging
-    return;
+    return rv;
   }
 
   if (PR_FALSE == mSheet->ContainsStyleSheet(url)) { // don't allow circular references
@@ -656,6 +656,8 @@ void CSSParserImpl::ProcessImport(const nsString& aURLSpec)
     }
   }
   NS_RELEASE(url);
+  
+  return rv;
 }
 
 void CSSParserImpl::SkipUntil(PRInt32* aErrorCode, PRUnichar aStopSymbol)

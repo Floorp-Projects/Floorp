@@ -35,6 +35,7 @@ CPPSRCS =				\
 	nsCSSScanner.cpp		\
 	nsCSSStyleRule.cpp		\
 	nsCSSStyleSheet.cpp		\
+	nsDOMCSSDeclaration.cpp         \
 	nsHTMLAttributes.cpp		\
 	nsHTMLStyleSheet.cpp		\
 	nsHTMLCSSStyleSheet.cpp		\
@@ -43,6 +44,7 @@ CPPSRCS =				\
 	$(NULL)
 
 EXPORTS =				\
+  nsDOMCSSDeclaration.h \
   nsCSSProps.h  \
   nsCSSPropIDs.h \
   nsICSSStyleSheet.h \

@@ -38,7 +38,6 @@ public:
   NS_IMETHOD    SetSelectorText(const nsString& aSelectorText)=0;
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle)=0;
 };
 
 
@@ -46,7 +45,6 @@ public:
   NS_IMETHOD    GetSelectorText(nsString& aSelectorText);  \
   NS_IMETHOD    SetSelectorText(const nsString& aSelectorText);  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle);  \
 
 
 
@@ -54,7 +52,6 @@ public:
   NS_IMETHOD    GetSelectorText(nsString& aSelectorText) { return _to##GetSelectorText(aSelectorText); } \
   NS_IMETHOD    SetSelectorText(const nsString& aSelectorText) { return _to##SetSelectorText(aSelectorText); } \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to##GetStyle(aStyle); } \
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to##SetStyle(aStyle); } \
 
 
 extern nsresult NS_InitCSSStyleRuleSimpleClass(nsIScriptContext *aContext, void **aPrototype);

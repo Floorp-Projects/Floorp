@@ -32,6 +32,7 @@ class nsContentList;
 class nsIContentViewerContainer;
 class nsIParser;
 class BlockText;
+class nsDOMStyleSheetCollection;
 
 class nsHTMLDocument : public nsMarkupDocument, public nsIHTMLDocument, public nsIDOMHTMLDocument, public nsIDOMNSHTMLDocument {
 public:
@@ -161,6 +162,7 @@ protected:
   nsContentList *mLinks;
   nsContentList *mAnchors;
   nsContentList *mForms;
+  nsDOMStyleSheetCollection *mDOMStyleSheets;
   
   PLHashTable *mNamedItems;
 

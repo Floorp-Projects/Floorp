@@ -158,29 +158,6 @@ SetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
-      case CSSSTYLERULESIMPLE_STYLE:
-      {
-        nsIDOMCSSStyleDeclaration* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kICSSStyleDeclarationIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type CSSStyleDeclaration");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetStyle(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
       default:
       {
         nsIJSScriptObject *object;
@@ -292,7 +269,7 @@ JSClass CSSStyleRuleSimpleClass = {
 static JSPropertySpec CSSStyleRuleSimpleProperties[] =
 {
   {"selectorText",    CSSSTYLERULESIMPLE_SELECTORTEXT,    JSPROP_ENUMERATE},
-  {"style",    CSSSTYLERULESIMPLE_STYLE,    JSPROP_ENUMERATE},
+  {"style",    CSSSTYLERULESIMPLE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
