@@ -1658,6 +1658,8 @@ static NSArray* sToolbarDefaults = nil;
   BrowserTabViewItem* newTab  = [self createNewTabItem];
   BrowserWrapper*     newView = [newTab view];
 
+  [self ensureBrowserVisible:self];
+  
   // hyatt originally made new tabs open on the far right and tabs opened from a content
   // link open to the right of the current tab. The idea was to keep the new tab
   // close to the tab that spawned it, since they are related. Users, however, got confused
