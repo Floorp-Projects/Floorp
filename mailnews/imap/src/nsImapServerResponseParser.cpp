@@ -2333,42 +2333,42 @@ void nsImapServerResponseParser::namespace_data()
 
 void nsImapServerResponseParser::myrights_data()
 {
-	fNextToken = GetNextToken();
-	if (ContinueParse() && !at_end_of_line())
-	{
-		char *mailboxName = CreateAstring(); // PL_strdup(fNextToken);
-		if (mailboxName)
-		{
-			fNextToken = GetNextToken();
-			if (ContinueParse())
-			{
-				char *myrights = CreateAstring(); // PL_strdup(fNextToken);
-				if (myrights)
-				{
-					nsImapProtocol *navCon = &fServerConnection;
-					NS_ASSERTION(navCon, "null connection parsing my rights");	// we should always have this
-					if (navCon)
-						navCon->AddFolderRightsForUser(mailboxName, nsnull /* means "me" */, myrights);
-					PR_Free(myrights);
-				}
-				else
-				{
-					HandleMemoryFailure();
-				}
-				if (ContinueParse())
-					fNextToken = GetNextToken();
-			}
-			PR_Free(mailboxName);
-		}
-		else
-		{
-			HandleMemoryFailure();
-		}
-	}
-	else
-	{
-		SetSyntaxError(PR_TRUE);
-	}
+  fNextToken = GetNextToken();
+  if (ContinueParse() && !at_end_of_line())
+  {
+    char *mailboxName = CreateAstring(); // PL_strdup(fNextToken);
+    if (mailboxName)
+    {
+      fNextToken = GetNextToken();
+      if (ContinueParse())
+      {
+        char *myrights = CreateAstring(); // PL_strdup(fNextToken);
+        if (myrights)
+        {
+          nsImapProtocol *navCon = &fServerConnection;
+          NS_ASSERTION(navCon, "null connection parsing my rights");	// we should always have this
+          if (navCon)
+            navCon->AddFolderRightsForUser(mailboxName, nsnull /* means "me" */, myrights);
+          PR_Free(myrights);
+        }
+        else
+        {
+          HandleMemoryFailure();
+        }
+        if (ContinueParse())
+          fNextToken = GetNextToken();
+      }
+      PR_Free(mailboxName);
+    }
+    else
+    {
+      HandleMemoryFailure();
+    }
+  }
+  else
+  {
+    SetSyntaxError(PR_TRUE);
+  }
 }
 
 void nsImapServerResponseParser::acl_data()
@@ -2744,102 +2744,102 @@ PRUint32 nsImapServerResponseParser::CurrentResponseUID()
 
 PRUint32 nsImapServerResponseParser::HighestRecordedUID()
 {
-	return fHighestRecordedUID;
+  return fHighestRecordedUID;
 }
 
 PRBool nsImapServerResponseParser::IsNumericString(const char *string)
 {
-	int i;
-	for(i = 0; i < (int) PL_strlen(string); i++)
-	{
-		if (! isdigit(string[i]))
-		{
-			return PR_FALSE;
-		}
-	}
-
-	return PR_TRUE;
+  int i;
+  for(i = 0; i < (int) PL_strlen(string); i++)
+  {
+    if (! isdigit(string[i]))
+    {
+      return PR_FALSE;
+    }
+  }
+  
+  return PR_TRUE;
 }
 
 
 nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const char *mailboxName /* = nsnull */)
 {
-	nsImapMailboxSpec *returnSpec = new nsImapMailboxSpec;
-	NS_ADDREF(returnSpec);
-	if (returnSpec)
-	{	
-		const char *mailboxNameToConvert = (mailboxName) ? mailboxName : fSelectedMailboxName;
-	    if (mailboxNameToConvert)
-	    {
-			const char *serverKey = 				
-                fServerConnection.GetImapServerKey();
-			nsIMAPNamespace *ns = nsnull;
-			if (serverKey && fHostSessionList)
-			{
-				fHostSessionList->GetNamespaceForMailboxForHost(serverKey, mailboxNameToConvert, ns);	// for
-                                                                // delimiter
-			}
-
-			if (ns)
-				returnSpec->hierarchySeparator = ns->GetDelimiter();
-			else
-				returnSpec->hierarchySeparator = '/';	// a guess?
-
-	    }
-
-		returnSpec->folderSelected = PR_TRUE;
-		returnSpec->folder_UIDVALIDITY = fFolderUIDValidity;
-		returnSpec->number_of_messages = fNumberOfExistingMessages;
-		returnSpec->number_of_unseen_messages = fNumberOfUnseenMessages;
-		returnSpec->number_of_recent_messages = fNumberOfRecentMessages;
-		
-		returnSpec->box_flags = kNoFlags;	// stub
-		returnSpec->onlineVerified = PR_FALSE;	// we're fabricating this.  The flags aren't verified.
-		returnSpec->allocatedPathName = nsCRT::strdup(mailboxNameToConvert);
-		returnSpec->connection = &fServerConnection;
-		if (returnSpec->connection)
-		{
-			nsIURI * aUrl = nsnull;
-			nsresult rv = NS_OK;
-			returnSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aUrl);
-			if (NS_SUCCEEDED(rv) && aUrl) {
-                nsCAutoString host;
-				aUrl->GetHost(host);
-                returnSpec->hostName = ToNewCString(host);
-            }
-			NS_IF_RELEASE(aUrl);
-			
-		}
-		else
-			returnSpec->hostName = nsnull;
-		if (fFlagState)
-			returnSpec->flagState = fFlagState; //copies flag state
-		else
-			returnSpec->flagState = nsnull;
-	}
-	else
-		HandleMemoryFailure();
-	
-	return returnSpec;
-	
+  nsImapMailboxSpec *returnSpec = new nsImapMailboxSpec;
+  NS_ADDREF(returnSpec);
+  if (returnSpec)
+  {	
+    const char *mailboxNameToConvert = (mailboxName) ? mailboxName : fSelectedMailboxName;
+    if (mailboxNameToConvert)
+    {
+      const char *serverKey = 				
+        fServerConnection.GetImapServerKey();
+      nsIMAPNamespace *ns = nsnull;
+      if (serverKey && fHostSessionList)
+      {
+        fHostSessionList->GetNamespaceForMailboxForHost(serverKey, mailboxNameToConvert, ns);	// for
+        // delimiter
+      }
+      
+      if (ns)
+        returnSpec->hierarchySeparator = ns->GetDelimiter();
+      else
+        returnSpec->hierarchySeparator = '/';	// a guess?
+      
+    }
+    
+    returnSpec->folderSelected = PR_TRUE;
+    returnSpec->folder_UIDVALIDITY = fFolderUIDValidity;
+    returnSpec->number_of_messages = fNumberOfExistingMessages;
+    returnSpec->number_of_unseen_messages = fNumberOfUnseenMessages;
+    returnSpec->number_of_recent_messages = fNumberOfRecentMessages;
+    
+    returnSpec->box_flags = kNoFlags;	// stub
+    returnSpec->onlineVerified = PR_FALSE;	// we're fabricating this.  The flags aren't verified.
+    returnSpec->allocatedPathName = nsCRT::strdup(mailboxNameToConvert);
+    returnSpec->connection = &fServerConnection;
+    if (returnSpec->connection)
+    {
+      nsIURI * aUrl = nsnull;
+      nsresult rv = NS_OK;
+      returnSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aUrl);
+      if (NS_SUCCEEDED(rv) && aUrl) {
+        nsCAutoString host;
+        aUrl->GetHost(host);
+        returnSpec->hostName = ToNewCString(host);
+      }
+      NS_IF_RELEASE(aUrl);
+      
+    }
+    else
+      returnSpec->hostName = nsnull;
+    if (fFlagState)
+      returnSpec->flagState = fFlagState; //copies flag state
+    else
+      returnSpec->flagState = nsnull;
+  }
+  else
+    HandleMemoryFailure();
+  
+  return returnSpec;
+  
 }
 // zero stops a list recording of flags and causes the flags for
 // each individual message to be sent back to libmsg 
 void nsImapServerResponseParser::ResetFlagInfo(int numberOfInterestingMessages)
 {
-	if (fFlagState)
-		fFlagState->Reset(numberOfInterestingMessages);
+  if (fFlagState)
+    fFlagState->Reset(numberOfInterestingMessages);
 }
 
 
 PRBool nsImapServerResponseParser::GetLastFetchChunkReceived()
 {
-	return fLastChunk;
+  return fLastChunk;
 }
 
 void nsImapServerResponseParser::ClearLastFetchChunkReceived()
 {
-	fLastChunk = PR_FALSE;
+  fLastChunk = PR_FALSE;
 }
 
 void nsImapServerResponseParser::SetHostSessionList(nsIImapHostSessionList*

@@ -47,53 +47,48 @@ nsImapSearchResultSequence::nsImapSearchResultSequence()
 
 nsImapSearchResultSequence *nsImapSearchResultSequence::CreateSearchResultSequence()
 {
-	nsImapSearchResultSequence *returnObject = new nsImapSearchResultSequence;
-	if (!returnObject)
-	{
-		delete returnObject;
-		returnObject = nsnull;
-	}
-	
-	return returnObject;
+  return new nsImapSearchResultSequence;
 }
 
 void nsImapSearchResultSequence::Clear(void)
 {
-    if (mImpl) {
-        PRInt32 i = mImpl->mCount;
-        while (0 <= --i) {
-            char* string = (char*)mImpl->mArray[i];
-            delete string;
-        }
-        nsVoidArray::Clear();
+  if (mImpl) 
+  {
+    PRInt32 i = mImpl->mCount;
+    while (0 <= --i) 
+    {
+      char* string = (char*)mImpl->mArray[i];
+      delete string;
     }
+    nsVoidArray::Clear();
+  }
 }
 
 nsImapSearchResultSequence::~nsImapSearchResultSequence()
 {
-	Clear();
+  Clear();
 }
 
 
 void nsImapSearchResultSequence::ResetSequence()
 {
-	Clear();
+  Clear();
 }
 
 void nsImapSearchResultSequence::AddSearchResultLine(const char *searchLine)
 {
-	// The first add becomes node 2.  Fix this.
-	char *copiedSequence = PL_strdup(searchLine + 9); // 9 == "* SEARCH "
-
-	if (copiedSequence)	// if we can't allocate this then the search won't hit
-		AppendElement(copiedSequence);
+  // The first add becomes node 2.  Fix this.
+  char *copiedSequence = PL_strdup(searchLine + 9); // 9 == "* SEARCH "
+  
+  if (copiedSequence)	// if we can't allocate this then the search won't hit
+    AppendElement(copiedSequence);
 }
 
 
 nsImapSearchResultIterator::nsImapSearchResultIterator(nsImapSearchResultSequence &sequence) :
-	fSequence(sequence)
+fSequence(sequence)
 {
-	ResetIterator();
+  ResetIterator();
 }
 
 nsImapSearchResultIterator::~nsImapSearchResultIterator()
@@ -102,32 +97,32 @@ nsImapSearchResultIterator::~nsImapSearchResultIterator()
 
 void  nsImapSearchResultIterator::ResetIterator()
 {
-	fSequenceIndex = 0;
-	fCurrentLine = (char *) fSequence.SafeElementAt(fSequenceIndex);
-	fPositionInCurrentLine = fCurrentLine;
+  fSequenceIndex = 0;
+  fCurrentLine = (char *) fSequence.SafeElementAt(fSequenceIndex);
+  fPositionInCurrentLine = fCurrentLine;
 }
 
 PRInt32 nsImapSearchResultIterator::GetNextMessageNumber()
 {
-	int32 returnValue = 0;
-	if (fPositionInCurrentLine)
-	{	
-		returnValue = atoi(fPositionInCurrentLine);
-		
-		// eat the current number
-		while (isdigit(*++fPositionInCurrentLine))
-			;
-		
-		if (*fPositionInCurrentLine == 0xD)	// found CR, no more digits on line
-		{
-			fCurrentLine = (char *) fSequence.SafeElementAt(++fSequenceIndex);
-			fPositionInCurrentLine = fCurrentLine;
-		}
-		else	// eat the space
-			fPositionInCurrentLine++;
-	}
-	
-	return returnValue;
+  int32 returnValue = 0;
+  if (fPositionInCurrentLine)
+  {	
+    returnValue = atoi(fPositionInCurrentLine);
+    
+    // eat the current number
+    while (isdigit(*++fPositionInCurrentLine))
+      ;
+    
+    if (*fPositionInCurrentLine == 0xD)	// found CR, no more digits on line
+    {
+      fCurrentLine = (char *) fSequence.SafeElementAt(++fSequenceIndex);
+      fPositionInCurrentLine = fCurrentLine;
+    }
+    else	// eat the space
+      fPositionInCurrentLine++;
+  }
+  
+  return returnValue;
 }
 
 

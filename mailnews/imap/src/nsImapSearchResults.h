@@ -47,7 +47,7 @@ public:
     
     virtual void AddSearchResultLine(const char *searchLine);
     virtual void ResetSequence();
-	void		Clear();
+    void  Clear();
     
     friend class nsImapSearchResultIterator;
 private:
@@ -63,9 +63,9 @@ public:
     PRInt32 GetNextMessageNumber();   // returns 0 at end of list
 private:
     nsImapSearchResultSequence &fSequence;
-	PRInt32 fSequenceIndex;
-	char	*fCurrentLine;
-    char    *fPositionInCurrentLine;
+    PRInt32 fSequenceIndex;
+    char  *fCurrentLine;
+    char  *fPositionInCurrentLine;
 };
 
 

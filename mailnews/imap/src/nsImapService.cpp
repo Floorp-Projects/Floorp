@@ -202,7 +202,7 @@ NS_IMETHODIMP
 nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
-							              nsIMsgWindow *aMsgWindow,
+                            nsIMsgWindow *aMsgWindow,
                             nsIURI ** aURL)
 {
   NS_ASSERTION (aImapMailFolder && aClientEventQueue,
@@ -1596,8 +1596,8 @@ nsImapService::AddMessageFlags(nsIEventQueue * aClientEventQueue,
                                imapMessageFlagsType flags,
                                PRBool messageIdsAreUID)
 {
-	return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
-		"addmsgflags", flags, messageIdsAreUID);
+  return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
+                    "addmsgflags", flags, messageIdsAreUID);
 }
 
 NS_IMETHODIMP
@@ -1609,8 +1609,8 @@ nsImapService::SubtractMessageFlags(nsIEventQueue * aClientEventQueue,
                                     imapMessageFlagsType flags,
                                     PRBool messageIdsAreUID)
 {
-	return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
-		"subtractmsgflags", flags, messageIdsAreUID);
+  return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
+                    "subtractmsgflags", flags, messageIdsAreUID);
 }
 
 NS_IMETHODIMP
@@ -1626,8 +1626,8 @@ nsImapService::SetMessageFlags(nsIEventQueue * aClientEventQueue,
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
 
-	return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
-		"setmsgflags", flags, messageIdsAreUID);
+  return DiddleFlags(aClientEventQueue, aImapMailFolder, aUrlListener, aURL, messageIdentifierList,
+                    "setmsgflags", flags, messageIdsAreUID);
 }
 
 nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue, 
@@ -1639,51 +1639,51 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
                                     imapMessageFlagsType flags,
                                     PRBool messageIdsAreUID)
 {
-	// create a protocol instance to handle the request.
-	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
-	// just create a connection and process the request.
-    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
-                  "Oops ... null pointer");
-    if (!aImapMailFolder || !aClientEventQueue)
-        return NS_ERROR_NULL_POINTER;
-	
-	nsCOMPtr<nsIImapUrl> imapUrl;
-	nsCAutoString urlSpec;
-
-	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
-	nsresult rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl),
-                                          aImapMailFolder,
-                                          aUrlListener, urlSpec, hierarchySeparator); 
-	if (NS_SUCCEEDED(rv) && imapUrl)
-	{
-
-		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
-        rv = SetImapUrlSink(aImapMailFolder, imapUrl);
-
-		if (NS_SUCCEEDED(rv))
-		{
-            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
-
-			urlSpec.Append('/');
-			urlSpec.Append(howToDiddle);
-			urlSpec.Append('>');
-			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
-			urlSpec.Append(">");
-			urlSpec.Append(char(hierarchySeparator));
-            nsXPIDLCString folderName;
-            GetFolderName(aImapMailFolder, getter_Copies(folderName));
-            urlSpec.Append((const char *) folderName);
-			urlSpec.Append(">");
-			urlSpec.Append(messageIdentifierList);
-			urlSpec.Append('>');
-			urlSpec.AppendInt(flags);
-			rv = uri->SetSpec(urlSpec);
-            if (NS_SUCCEEDED(rv))
-                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                  nsnull, aURL);
-		}
-	}
-	return rv;
+  // create a protocol instance to handle the request.
+  // NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+  // just create a connection and process the request.
+  NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+    "Oops ... null pointer");
+  if (!aImapMailFolder || !aClientEventQueue)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCAutoString urlSpec;
+  
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
+  nsresult rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl),
+    aImapMailFolder,
+    aUrlListener, urlSpec, hierarchySeparator); 
+  if (NS_SUCCEEDED(rv) && imapUrl)
+  {
+    
+    rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
+    rv = SetImapUrlSink(aImapMailFolder, imapUrl);
+    
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+      
+      urlSpec.Append('/');
+      urlSpec.Append(howToDiddle);
+      urlSpec.Append('>');
+      urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+      urlSpec.Append(">");
+      urlSpec.Append(char(hierarchySeparator));
+      nsXPIDLCString folderName;
+      GetFolderName(aImapMailFolder, getter_Copies(folderName));
+      urlSpec.Append((const char *) folderName);
+      urlSpec.Append(">");
+      urlSpec.Append(messageIdentifierList);
+      urlSpec.Append('>');
+      urlSpec.AppendInt(flags);
+      rv = uri->SetSpec(urlSpec);
+      if (NS_SUCCEEDED(rv))
+        rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+        nsnull, aURL);
+    }
+  }
+  return rv;
 }
 
 nsresult
@@ -1695,9 +1695,9 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
   nsCOMPtr <nsIMsgIncomingServer> incomingServer;
   nsCOMPtr <nsIImapServerSink> imapServerSink;
 
-    NS_ASSERTION (aMsgFolder && aImapUrl, "Oops ... null pointers");
-    if (!aMsgFolder || !aImapUrl)
-        return rv;
+  NS_ASSERTION (aMsgFolder && aImapUrl, "Oops ... null pointers");
+  if (!aMsgFolder || !aImapUrl)
+      return rv;
     
   rv = aMsgFolder->GetServer(getter_AddRefs(incomingServer));
   if (NS_SUCCEEDED(rv) && incomingServer)
@@ -2218,18 +2218,14 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
   rv = msgUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
     
   if (aURL)
-  {
-      *aURL = msgUrl;
-      NS_IF_ADDREF(*aURL);
-  }
+      NS_IF_ADDREF(*aURL = msgUrl);
 
   if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
   {
     nsCOMPtr<nsIImapIncomingServer> aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
     if (NS_SUCCEEDED(rv) && aImapServer)
       rv = aImapServer->GetImapConnectionAndLoadUrl(aClientEventQueue,
-                                                        aImapUrl,
-                                                        aConsumer);
+                                                    aImapUrl, aConsumer);
   }
   return rv;
 }
@@ -2417,7 +2413,7 @@ nsImapService::EnsureFolderExists(nsIEventQueue* eventQueue, nsIMsgFolder* paren
     nsCAutoString urlSpec;
     nsresult rv;
 
-	PRUnichar hierarchySeparator = GetHierarchyDelimiter(parent);
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(parent);
     rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), parent, urlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
