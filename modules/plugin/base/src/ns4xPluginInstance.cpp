@@ -116,7 +116,7 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   mInst->GetCallbacks(&callbacks);
   mInst->GetNPP(&npp);
 
-  if(!callbacks || !npp->pdata)
+  if(!callbacks || !npp->pdata || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
   PRBool seekable;
