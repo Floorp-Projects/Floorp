@@ -1931,10 +1931,9 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
 
   // deduce what tag to use for list items
   nsAutoString itemType;
-  nsString tString(*aListType);//MJUDGE SCC NEED HELP
   if (aItemType) 
     itemType = *aItemType;
-  else if (tString.EqualsWithConversion("dl"))
+  else if (!Compare(*aListType,NS_LITERAL_STRING("dl"),nsCaseInsensitiveStringComparator()))
     itemType.AssignWithConversion("dd");
   else
     itemType.AssignWithConversion("li");
@@ -4598,7 +4597,9 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
   // we special case an empty tag name to mean "remove block parents".
   // This is used for the "normal" paragraph style in mail-compose
   nsString tString(*aBlockTag);////MJUDGE SCC NEED HELP
-  if (tString.IsEmpty() || tString.EqualsWithConversion("normal")) bNoParent = PR_TRUE;
+  if (tString.IsEmpty() || 
+    !Compare(tString,NS_LITERAL_STRING("normal"),nsCaseInsensitiveStringComparator())) 
+    bNoParent = PR_TRUE;
   
   arrayOfNodes->Count(&listCount);
   
@@ -4690,8 +4691,8 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
     else if (IsInlineNode(curNode) && !bNoParent)
     {
       // if curNode is a non editable, drop it if we are going to <pre>
-      nsString tString(*aBlockTag); ////MJUDGE SCC NEED HELP
-      if ((tString.EqualsWithConversion("pre")) && (!mHTMLEditor->IsEditable(curNode)))
+      if (!Compare(tString,NS_LITERAL_STRING("pre"),nsCaseInsensitiveStringComparator()) 
+        && (!mHTMLEditor->IsEditable(curNode)))
         continue; // do nothing to this block
       
       // if no curBlock, make one
@@ -5490,14 +5491,15 @@ nsresult
 nsHTMLEditRules::ConvertWhitespace(const nsAReadableString & inString, nsAWritableString & outString)
 {
   PRUint32 j,len = inString.Length();
-  nsString tString(inString);////MJUDGE SCC NEED HELP
+  nsReadingIterator <PRUnichar> iter;
+  inString.BeginReading(iter);
   switch (len)
   {
     case 0:
       outString.SetLength(0);
       return NS_OK;
     case 1:
-      if (tString.EqualsWithConversion("\n"))   // a bit of a hack: don't convert single newlines that 
+      if (*iter == '\n')   // a bit of a hack: don't convert single newlines that 
         outString.Assign(NS_LITERAL_STRING("\n"));     // dont have whitespace adjacent.  This is to preserve 
       else                    // html source formatting to some degree.
         outString.Assign(NS_LITERAL_STRING(" "));

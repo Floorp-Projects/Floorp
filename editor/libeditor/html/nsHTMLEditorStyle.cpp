@@ -582,7 +582,6 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   nsCOMPtr<nsIAtom> attrName, prefix;
   content->GetAttributeCount(attrCount);
   
-  nsString tString(*aAttribute);//MJUDGE SCC NEED HELP
   for (i=0; i<attrCount; i++)
   {
     content->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
@@ -591,10 +590,10 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
     // if it's the attribute we know about, keep looking
-    if (attrString.EqualsIgnoreCase(tString)) continue;
+    if (!Compare(attrString,*aAttribute,nsCaseInsensitiveStringComparator())) continue;
     // if it's a special _moz... attribute, keep looking
     attrString.Left(tmp,4);
-    if (tmp.EqualsWithConversion("_moz")) continue;
+    if (!Compare(attrString,NS_LITERAL_STRING("_moz"),nsCaseInsensitiveStringComparator())) continue;
     // otherwise, it's another attribute, so return false
     return PR_FALSE;
   }
@@ -702,8 +701,7 @@ PRBool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode,
   attNode->GetValue(attrVal);
   
   // do values match?
-  nsString tString(*aValue);//MJUDGE SCC NEED HELP
-  if (attrVal.EqualsIgnoreCase(tString)) return PR_TRUE;
+  if (!Compare(attrVal,*aValue,nsCaseInsensitiveStringComparator())) return PR_TRUE;
   return PR_FALSE;
 }
 
