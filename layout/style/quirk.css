@@ -183,7 +183,7 @@ dl > dd:before {
   white-space: normal;
   font-size: inherit;
   line-height: inherit;
-  content: none;
+  content: "";
   margin: 0;
 }
 dl > dd {
