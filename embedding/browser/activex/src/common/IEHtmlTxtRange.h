@@ -61,7 +61,7 @@ protected:
 
 class CIEHtmlTxtRange :
     public CRange,
-    public IDispatchImpl<IHTMLTxtRange, &IID_IHTMLTxtRange, &LIBID_MOZILLAHTMLLib>
+    public IDispatchImpl<IHTMLTxtRange, &IID_IHTMLTxtRange, &LIBID_MSHTML>
 {
 public:
     CIEHtmlTxtRange();
@@ -119,7 +119,7 @@ typedef CComObject<CIEHtmlTxtRange> CIEHtmlTxtRangeInstance;
 
 class CIEHtmlControlRange :
     public CRange,
-    public IDispatchImpl<IHTMLControlRange, &IID_IHTMLControlRange, &LIBID_MOZILLAHTMLLib>
+    public IDispatchImpl<IHTMLControlRange, &IID_IHTMLControlRange, &LIBID_MSHTML>
 {
 public:
     CIEHtmlControlRange();

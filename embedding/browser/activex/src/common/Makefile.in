@@ -50,6 +50,8 @@ CPPSRCS         = \
                 ControlEventSink.cpp \
                 PropertyBag.cpp \
                 ItemContainer.cpp \
+                IEHtmlSelectionObject.cpp \
+                IEHtmlTxtRange.cpp \
                 $(NULL)
 
 EXPORTS         = \
@@ -65,8 +67,9 @@ EXPORTS         = \
                 IOleCommandTargetImpl.h \
                 IWebBrowserImpl.h \
                 IHTMLLocationImpl.h \
-                CPMozillaControl.h
-
+                CPMozillaControl.h \
+                IEHtmlSelectionObject.h \
+                IEHtmlTxtRange.h
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
