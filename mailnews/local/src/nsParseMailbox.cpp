@@ -109,8 +109,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 				printf("hdr key = %ld, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
 				delete [] authorStr;
 				delete [] subjectStr;
-				//Once again this is part of the problem caused by the RDF/nsMsgHdr problem.
-				//msgHdr->Release();
+				msgHdr->Release();
 			}
 		}
 		m_mailDB->Close(TRUE);
@@ -268,8 +267,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 		else if (m_mailDB != NULL)
 		{
 			m_mailDB->AddNewHdrToDB(m_newMsgHdr, m_updateAsWeGo);
-			//XXXX this needs to be put back in when we fix nsMsgHdr rdf dependency.
-		//	m_newMsgHdr->Release();
+			m_newMsgHdr->Release();
 			// should we release here?
 			m_newMsgHdr = NULL;
 		}
