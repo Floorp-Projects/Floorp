@@ -2119,8 +2119,9 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
         //phrasal elements can close other phrasals, along with fontstyle and special tags...
 
         if((eHTMLTag_userdefined==theTag) ||
-            gHTMLElements[theTag].IsSpecialEntity() || 
-            gHTMLElements[theTag].IsFontStyleEntity()) {
+            gHTMLElements[theTag].IsSpecialEntity()  || 
+            gHTMLElements[theTag].IsFontStyleEntity()||
+            gHTMLElements[theTag].IsPhraseEntity()) { // Added Phrasel to fix bug 26347
           continue;
         }
         else {
