@@ -1120,7 +1120,7 @@ quick_test(TestTransactionFactory *factory)
   result = mgr->AddListener(0);
 
   if (NS_FAILED(result)
-      && result != NS_ERROR_NOT_IMPLEMENTED) {
+      && result != NS_ERROR_NULL_POINTER) {
     printf("ERROR: AddListener() returned unexpected error. (%d)\n", result);
     return result;
   }
@@ -1138,7 +1138,7 @@ quick_test(TestTransactionFactory *factory)
   result = mgr->RemoveListener(0);
 
   if (NS_FAILED(result)
-      && result != NS_ERROR_NOT_IMPLEMENTED) {
+      && result != NS_ERROR_NULL_POINTER) {
     printf("ERROR: RemoveListener() returned unexpected error. (%d)\n", result);
     return result;
   }

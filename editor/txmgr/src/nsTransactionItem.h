@@ -19,11 +19,10 @@
 #ifndef nsTransactionItem_h__
 #define nsTransactionItem_h__
 
-#include "nsITransaction.h"
-#include "nsTransactionStack.h"
-
+class nsITransaction;
 class nsTransactionStack;
 class nsTransactionRedoStack;
+class nsTransactionManager;
 
 class nsTransactionItem
 {
@@ -41,17 +40,17 @@ public:
   virtual nsresult GetNumberOfChildren(PRInt32 *aNumChildren);
 
   virtual nsresult Do(void);
-  virtual nsresult Undo(void);
-  virtual nsresult Redo(void);
+  virtual nsresult Undo(nsTransactionManager *aTxMgr);
+  virtual nsresult Redo(nsTransactionManager *aTxMgr);
   virtual nsresult Write(nsIOutputStream *aOutputStream);
 
 private:
 
-  virtual nsresult UndoChildren();
-  virtual nsresult RedoChildren();
+  virtual nsresult UndoChildren(nsTransactionManager *aTxMgr);
+  virtual nsresult RedoChildren(nsTransactionManager *aTxMgr);
 
-  virtual nsresult RecoverFromUndoError();
-  virtual nsresult RecoverFromRedoError();
+  virtual nsresult RecoverFromUndoError(nsTransactionManager *aTxMgr);
+  virtual nsresult RecoverFromRedoError(nsTransactionManager *aTxMgr);
 
   virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems);
   virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems);

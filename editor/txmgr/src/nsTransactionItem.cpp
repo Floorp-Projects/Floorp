@@ -16,12 +16,12 @@
  * Reserved.
  */
 
+#include "nsITransaction.h"
+#include "nsITransactionManager.h"
+#include "nsTransactionStack.h"
+#include "nsTransactionManager.h"
 #include "nsTransactionItem.h"
 #include "nsCOMPtr.h"
-
-#ifdef NS_DEBUG
-//#define NOISY
-#endif
 
 nsTransactionItem::nsTransactionItem(nsITransaction *aTransaction)
     : mTransaction(aTransaction), mUndoStack(0), mRedoStack(0)
@@ -104,28 +104,22 @@ nsTransactionItem::Do()
 }
 
 nsresult
-nsTransactionItem::Undo()
+nsTransactionItem::Undo(nsTransactionManager *aTxMgr)
 {
-  nsresult result = UndoChildren();
+  nsresult result = UndoChildren(aTxMgr);
 
   if (NS_FAILED(result)) {
-    RecoverFromUndoError();
+    RecoverFromUndoError(aTxMgr);
     return result;
   }
 
   if (!mTransaction)
     return NS_OK;
 
-#ifdef NOISY
-  nsAutoString redoString;
-  mTransaction->GetRedoString(&redoString);
-  printf("undoing %s\n", redoString);
-#endif
-
   result = mTransaction->Undo();
 
   if (NS_FAILED(result)) {
-    RecoverFromUndoError();
+    RecoverFromUndoError(aTxMgr);
     return result;
   }
 
@@ -133,10 +127,10 @@ nsTransactionItem::Undo()
 }
 
 nsresult
-nsTransactionItem::UndoChildren()
+nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
 {
   nsTransactionItem *item;
-  nsresult result;
+  nsresult result = NS_OK;
   PRInt32 sz = 0;
 
   if (mUndoStack) {
@@ -159,61 +153,65 @@ nsTransactionItem::UndoChildren()
         return result;
       }
 
-#ifdef NOISY
-  nsAutoString redoString;
-  item->GetRedoString(&redoString);
-  printf("undoing %s\n", redoString);
-#endif
+      nsITransaction *t = 0;
 
-      result = item->Undo();
+      result = item->GetTransaction(&t);
 
       if (NS_FAILED(result)) {
         return result;
       }
 
-      result = mUndoStack->Pop(&item);
+      result = aTxMgr->WillUndoNotify(t);
 
       if (NS_FAILED(result)) {
         return result;
       }
 
-      result = mRedoStack->Push(item);
+      if (result == NS_COMFALSE) {
+        return NS_OK;
+      }
 
-      if (NS_FAILED(result)) {
-        /* XXX: If we got an error here, I doubt we can recover!
-         * XXX: Should we just push the item back on the undo stack?
-         */
-        return result;
+      result = item->Undo(aTxMgr);
+
+      if (NS_SUCCEEDED(result)) {
+        result = mUndoStack->Pop(&item);
+
+        if (NS_SUCCEEDED(result)) {
+          result = mRedoStack->Push(item);
+
+          /* XXX: If we got an error here, I doubt we can recover!
+           * XXX: Should we just push the item back on the undo stack?
+           */
+        }
+      }
+
+      nsresult result2 = aTxMgr->DidUndoNotify(t, result);
+
+      if (NS_SUCCEEDED(result)) {
+        result = result2;
       }
     }
   }
 
-  return NS_OK;
+  return result;
 }
 
 nsresult
-nsTransactionItem::Redo()
+nsTransactionItem::Redo(nsTransactionManager *aTxMgr)
 {
   nsresult result;
 
   if (mTransaction) {
-
-#ifdef NOISY
-  nsAutoString undoString;
-  mTransaction->GetUndoString(&undoString);
-  printf("redoing %s\n", undoString);
-#endif
-
     result = mTransaction->Redo();
 
     if (NS_FAILED(result))
       return result;
   }
 
-  result = RedoChildren();
+  result = RedoChildren(aTxMgr);
 
   if (NS_FAILED(result)) {
-    RecoverFromRedoError();
+    RecoverFromRedoError(aTxMgr);
     return result;
   }
 
@@ -221,10 +219,10 @@ nsTransactionItem::Redo()
 }
 
 nsresult
-nsTransactionItem::RedoChildren()
+nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
 {
   nsTransactionItem *item;
-  nsresult result;
+  nsresult result = NS_OK;
   PRInt32 sz = 0;
 
   if (!mRedoStack)
@@ -244,34 +242,45 @@ nsTransactionItem::RedoChildren()
       return result;
     }
 
-#ifdef NOISY
-  nsAutoString undoString;
-  item->GetUndoString(&undoString);
-  printf("redoing %s\n", undoString);
-#endif
+    nsITransaction *t = 0;
 
-    result = item->Redo();
+    result = item->GetTransaction(&t);
 
     if (NS_FAILED(result)) {
       return result;
     }
 
-    result = mRedoStack->Pop(&item);
+    result = aTxMgr->WillRedoNotify(t);
 
     if (NS_FAILED(result)) {
       return result;
     }
 
-    result = mUndoStack->Push(item);
+    if (result == NS_COMFALSE) {
+      return NS_OK;
+    }
 
-    if (NS_FAILED(result)) {
-      // XXX: If we got an error here, I doubt we can recover!
-      // XXX: Should we just push the item back on the redo stack?
-      return result;
+    result = item->Redo(aTxMgr);
+
+    if (NS_SUCCEEDED(result)) {
+      result = mRedoStack->Pop(&item);
+
+      if (NS_SUCCEEDED(result)) {
+        result = mUndoStack->Push(item);
+
+        // XXX: If we got an error here, I doubt we can recover!
+        // XXX: Should we just push the item back on the redo stack?
+      }
+    }
+
+    nsresult result2 = aTxMgr->DidUndoNotify(t, result);
+
+    if (NS_SUCCEEDED(result)) {
+      result = result2;
     }
   }
 
-  return NS_OK;
+  return result;
 }
 
 nsresult
@@ -325,18 +334,18 @@ nsTransactionItem::Write(nsIOutputStream *aOutputStream)
 }
 
 nsresult
-nsTransactionItem::RecoverFromUndoError(void)
+nsTransactionItem::RecoverFromUndoError(nsTransactionManager *aTxMgr)
 {
   //
   // If this method gets called, we never got to the point where we
   // successfully called Undo() for the transaction item itself.
   // Just redo any children that successfully called undo!
   //
-  return RedoChildren();
+  return RedoChildren(aTxMgr);
 }
 
 nsresult
-nsTransactionItem::RecoverFromRedoError(void)
+nsTransactionItem::RecoverFromRedoError(nsTransactionManager *aTxMgr)
 {
   //
   // If this method gets called, we already successfully called Redo()
@@ -346,7 +355,7 @@ nsTransactionItem::RecoverFromRedoError(void)
 
   nsresult result;
 
-  result = UndoChildren();
+  result = UndoChildren(aTxMgr);
 
   if (NS_FAILED(result)) {
     return result;
