@@ -1,0 +1,51 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH	= ..\..\..\..
+include <$(DEPTH)/config/config.mak>
+
+MODULE = np4xscr
+
+XPIDLSRCS = 				      \
+	.\nsI4xScrPlugin.idl    \
+	$(NULL)
+
+MAKE_OBJ_TYPE	= DLL
+DLLNAME = np4xscr
+RESFILE = np4xscr.res
+DEFFILE = np4xscr.def
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+OBJS =                     \
+	.\$(OBJDIR)\np_entry.obj \
+	.\$(OBJDIR)\npn_gate.obj \
+	.\$(OBJDIR)\npp_gate.obj \
+	.\$(OBJDIR)\plugin.obj   \
+	.\$(OBJDIR)\nsScriptablePeer.obj \
+	$(NULL)
+
+WIN_LIBS = version.lib
+
+include <$(DEPTH)/config/rules.mak>
+
+#MAKE_INSTALL=echo $(MAKE_INSTALL)
+
+install:: $(DLL)
+#	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\plugins
+
+clobber::
+	rm -f *.sbr $(DIST)\bin\plugins\$(DLLNAME).dll $(DIST)\bin\components\$(DLLNAME).xpt
