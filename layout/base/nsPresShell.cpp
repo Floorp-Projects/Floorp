@@ -271,7 +271,7 @@ protected:
   
 #ifdef NS_DEBUG
   nsresult CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult);
-  void VerifyIncrementalReflow();
+  PRBool VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
 #endif
 
@@ -320,40 +320,46 @@ private:
  * means that you cannot perform logging before then.
  */
 static PRLogModuleInfo* gLogModule;
+
+static PRUint32 gVerifyReflowFlags;
+
+#define VERIFY_REFLOW_ON    0x1
+#define VERIFY_REFLOW_NOISY 0x2
+#define VERIFY_REFLOW_ALL   0x4
 #endif
 
-static PRBool gVerifyReflow = PRBool(0x55);
-#ifdef NS_DEBUG
-static PRBool gVerifyReflowAll;
-#endif
+static PRBool gVerifyReflowEnabled;
 
 NS_LAYOUT PRBool
 nsIPresShell::GetVerifyReflowEnable()
 {
 #ifdef NS_DEBUG
-  if (gVerifyReflow == PRBool(0x55)) {
+  static PRBool firstTime = PR_TRUE;
+  if (firstTime) {
+    firstTime = PR_FALSE;
     gLogModule = PR_NewLogModule("verifyreflow");
-    gVerifyReflow = 0 != gLogModule->level;
-    if (gLogModule->level > 1) {
-      gVerifyReflowAll = PR_TRUE;
+    gVerifyReflowFlags = gLogModule->level;
+    if (VERIFY_REFLOW_ON & gVerifyReflowFlags) {
+      gVerifyReflowEnabled = PR_TRUE;
     }
     printf("Note: verifyreflow is %sabled",
-           gVerifyReflow ? "en" : "dis");
-    if (gVerifyReflowAll) {
-      printf(" (diff all enabled)\n");
+           gVerifyReflowEnabled ? "en" : "dis");
+    if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+      printf(" (noisy)");
     }
-    else {
-      printf("\n");
+    if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+      printf(" (all)");
     }
+    printf("\n");
   }
 #endif
-  return gVerifyReflow;
+  return gVerifyReflowEnabled;
 }
 
 NS_LAYOUT void
 nsIPresShell::SetVerifyReflowEnable(PRBool aEnabled)
 {
-  gVerifyReflow = aEnabled;
+  gVerifyReflowEnabled = aEnabled;
 }
 
 //----------------------------------------------------------------------
@@ -1244,23 +1250,21 @@ PresShell::ProcessReflowCommands()
     if (GetVerifyReflowEnable()) {
       // First synchronously render what we have so far so that we can
       // see it.
-//      if (gVerifyReflowAll) {
-//        printf("Before verify-reflow\n");
-        nsIView* rootView;
-        mViewManager->GetRootView(rootView);
-        mViewManager->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
-//        PR_Sleep(PR_SecondsToInterval(3));
-//      }
+      nsIView* rootView;
+      mViewManager->GetRootView(rootView);
+      mViewManager->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
 
       mInVerifyReflow = PR_TRUE;
-      VerifyIncrementalReflow();
+      PRBool ok = VerifyIncrementalReflow();
       mInVerifyReflow = PR_FALSE;
-      if (gVerifyReflowAll) {
-        printf("After verify-reflow\n");
+      if (!ok) {
+        if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+          printf("verifyreflow: finished\n");
+        }
       }
 
       if (0 != mReflowCommands.Count()) {
-        printf("XXX yikes!\n");
+        printf("XXX yikes! reflow commands queued during verify-reflow\n");
       }
     }
 #endif
@@ -2095,13 +2099,13 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
   nsAutoString name;
   k1->GetFrameName(name);
   fputs(name, stdout);
-  stdout << r1;
+  printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
 
   printf(" != ");
 
   k2->GetFrameName(name);
   fputs(name, stdout);
-  stdout << r2;
+  printf("{%d, %d, %d, %d}", r2.x, r2.y, r2.width, r2.height);
 
   printf(" %s\n", aMsg);
 }
@@ -2110,7 +2114,6 @@ static PRBool
 CompareTrees(nsIFrame* aA, nsIFrame* aB)
 {
   PRBool ok = PR_TRUE;
-  PRBool whoops = PR_FALSE;
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
   do {
@@ -2123,7 +2126,7 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
       ok = PR_FALSE;
       LogVerifyMessage(k1, k2, "child counts don't match: ");
       printf("%d != %d\n", l1, l2);
-      if (!gVerifyReflowAll) {
+      if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
         break;
       }
     }
@@ -2136,7 +2139,6 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
           ((nsnull != k1) && (nsnull == k2))) {
         ok = PR_FALSE;
         LogVerifyMessage(k1, k2, "child lists are different\n");
-        whoops = PR_TRUE;
         break;
       }
       else if (nsnull != k1) {
@@ -2146,7 +2148,6 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
         if (r1 != r2) {
           ok = PR_FALSE;
           LogVerifyMessage(k1, k2, "(frame rects)", r1, r2);
-          whoops = PR_TRUE;
         }
 
         // Make sure either both have views or neither have views; if they
@@ -2159,15 +2160,12 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
             ((nsnull != v1) && (nsnull == v2))) {
           ok = PR_FALSE;
           LogVerifyMessage(k1, k2, "child views are not matched\n");
-          whoops = PR_TRUE;
         }
         else if (nsnull != v1) {
           v1->GetBounds(r1);
           v2->GetBounds(r2);
           if (r1 != r2) {
-//            ok = PR_FALSE;
             LogVerifyMessage(k1, k2, "(view rects)", r1, r2);
-//            whoops = PR_TRUE;
           }
 
           v1->GetWidget(w1);
@@ -2176,27 +2174,23 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
               ((nsnull != w1) && (nsnull == w2))) {
             ok = PR_FALSE;
             LogVerifyMessage(k1, k2, "child widgets are not matched\n");
-            whoops = PR_TRUE;
           }
           else if (nsnull != w1) {
             w1->GetBounds(r1);
             w2->GetBounds(r2);
             if (r1 != r2) {
-//              ok = PR_FALSE;
               LogVerifyMessage(k1, k2, "(widget rects)", r1, r2);
-//              whoops = PR_TRUE;
             }
           }
         }
-        if (whoops && !gVerifyReflowAll) {
+        if (!ok && (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags))) {
           break;
         }
 
         // Compare the sub-trees too
         if (!CompareTrees(k1, k2)) {
-          if (!gVerifyReflowAll) {
-            ok = PR_FALSE;
-            whoops = PR_TRUE;
+          ok = PR_FALSE;
+          if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
             break;
           }
         }
@@ -2209,7 +2203,7 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
         break;
       }
     }
-    if (whoops && !gVerifyReflowAll) {
+    if (!ok && (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags))) {
       break;
     }
     NS_IF_RELEASE(listName);
@@ -2220,7 +2214,9 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
     aB->GetAdditionalChildListName(listIndex, &listName2);
     listIndex++;
     if (listName1 != listName2) {
-      ok = PR_FALSE;
+      if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
+        ok = PR_FALSE;
+      }
       LogVerifyMessage(k1, k2, "child list names are not matched: ");
       nsAutoString tmp;
       if (nsnull != listName1) {
@@ -2326,7 +2322,7 @@ PresShell::CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult)
 
 // After an incremental reflow, we verify the correctness by doing a
 // full reflow into a fresh frame tree.
-void
+PRBool
 PresShell::VerifyIncrementalReflow()
 {
   // All the stuff we are creating that needs releasing
@@ -2439,7 +2435,8 @@ PresShell::VerifyIncrementalReflow()
   root1 = FindTopFrame(root1);
   root2 = FindTopFrame(root2);
 #endif
-  if (!CompareTrees(root1, root2)) {
+  PRBool ok = CompareTrees(root1, root2);
+  if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
     printf("Verify reflow failed, primary tree:\n");
     root1->List(stdout, 0);
     printf("Verification tree:\n");
@@ -2455,5 +2452,7 @@ PresShell::VerifyIncrementalReflow()
   sh->EndObservingDocument();
   NS_RELEASE(sh);
   NS_RELEASE(vm);
+
+  return ok;
 }
 #endif
