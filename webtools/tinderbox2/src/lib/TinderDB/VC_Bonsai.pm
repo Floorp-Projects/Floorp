@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.53 $ 
-# $Date: 2002/05/07 01:50:48 $ 
+# $Revision: 1.54 $ 
+# $Date: 2002/05/07 02:34:58 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.53 $ )[1];
+$VERSION = ( qw $Revision: 1.54 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -345,7 +345,7 @@ sub status_table_header {
 # the oldest treestate found in this cell.
 
 sub cell_data {
-    my ($db_index, $last_time) = @_;
+    my ($tree, $db_index, $last_time) = @_;
 
     my (%authors) = ();
     my $last_treestate;
@@ -355,7 +355,10 @@ sub cell_data {
         
         # find the DB entries which are needed for this cell
         ($time < $last_time) && last;
-        
+ 
+        ($db_index >= $#DB_TIMES) && last;
+
+       
         $db_index++;
         
         if (defined($DATABASE{$tree}{$time}{'treestate'})) {
@@ -368,7 +371,7 @@ sub cell_data {
         
         my $recs = $DATABASE{$tree}{$time}{'author'};
         foreach $author (keys %{ $recs }) {
-            foreach $file (keys %{ $recs->{'author'}{$author} }) {
+            foreach $file (keys %{ $recs->{$author} }) {
                 my ($log) = $recs->{$author}{$file};
                 $authors{$author}{$time}{$file} = $log;
             }
@@ -383,7 +386,7 @@ sub cell_data {
 # produce the HTML which goes with this data.
 
 sub render_authors {
-    my ($last_treestate, $authors, $mindate, $maxdate,) = @_;
+    my ($tree, $last_treestate, $authors, $mindate, $maxdate,) = @_;
 
     # Now invert the data structure.
     my %authors = %{$authors};
@@ -663,7 +666,7 @@ sub status_table_row {
   # find the tree state for this cell.
 
   my ($db_index, $last_treestate, $authors) =
-      cell_data( $NEXT_DB{$tree}, $row_times->[$row_index]);
+      cell_data($tree, $NEXT_DB{$tree}, $row_times->[$row_index]);
   
   if (%{$authors}) {
 
@@ -680,6 +683,7 @@ sub status_table_row {
       }
 
       my @html = render_authors(
+                                $tree,
                                 $LAST_TREESTATE{$tree}, 
                                 $authors, 
                                 $mindate, 
@@ -688,12 +692,13 @@ sub status_table_row {
       return @html;
   } else {
 
-      # create a multi-row dummy cell for missing data?
-      # cell stops if there is author data in the following cell or the
+      # Create a multi-row dummy cell for missing data.
+      # Cell stops if there is author data in the following cell or the
       # treestate changes.
       
-      my  $rowspan = 1;
+      my $rowspan = 0;
       my ($next_db_index, $next_treestate, $next_authors);
+      $next_db_index = $db_index;
 
       while (
              !(%{$next_authors}) &&
@@ -703,11 +708,12 @@ sub status_table_row {
               )
              ) {
 
-          ($next_db_index, $next_treestate, $next_authors) =
-              cell_data( $db_index, $row_times->[$row_index+$rowspan]);
-          
           $db_index = $next_db_index;
           $rowspan++ ;
+
+          ($next_db_index, $next_treestate, $next_authors) =
+              cell_data($tree, $db_index, $row_times->[$row_index+$rowspan]);
+          
       }
 
       $NEXT_ROW{$tree} = $row_index + $rowspan;
