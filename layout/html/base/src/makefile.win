@@ -141,7 +141,16 @@ libs:: $(LIBRARY)
 
 install::
 	$(MAKE_INSTALL) broken-image.gif $(DIST)\bin\res\html
-  $(MAKE_INSTALL) empty_doc.html $(DIST)\bin\res\html
+	$(MAKE_INSTALL) empty_doc.html $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-audio.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-binary.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-find.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-image.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-menu.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-movie.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-telnet.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-text.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-unknown.gif $(DIST)\bin\res\html
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
