@@ -115,6 +115,8 @@ PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
 {
   PRUint32 newcolor = 0;
 
+  InstallColormap();
+
   /*
     For now, we assume anything in 12 planes or more is a TrueColor visual. 
     If it is not (like older IRIS GL graphics boards, we'll look stupid for now.
