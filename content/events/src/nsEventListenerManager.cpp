@@ -1127,7 +1127,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
 void
 nsCxPusher::Push(nsISupports *aCurrentTarget)
 {
-  if (mCx || mPreviousCx) {
+  if (mScx) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
 
     return;
@@ -1153,37 +1153,52 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
     sgo = do_QueryInterface(aCurrentTarget);
   }
 
-  nsCOMPtr<nsIScriptContext> scx;
+  JSContext *cx = nsnull;
 
   if (sgo) {
-    sgo->GetContext(getter_AddRefs(scx));
+    sgo->GetContext(getter_AddRefs(mScx));
 
-    if (scx) {
-      mCx = (JSContext *)scx->GetNativeContext();
+    if (mScx) {
+      cx = (JSContext *)mScx->GetNativeContext();
     }
   }
 
-  nsCOMPtr<nsIJSContextStack> stack;
-
-  if (mCx) {
+  if (cx) {
     if (!mStack) {
       mStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
     }
 
     if (mStack) {
-      mStack->Peek(&mPreviousCx);
+      JSContext *current = nsnull;
+      mStack->Peek(&current);
 
-      mStack->Push(mCx);
+      if (current) {
+        // If there's a context on the stack, that means that a script
+        // is running at the moment.
+
+        mScriptIsRunning = PR_TRUE;
+      }
+
+      mStack->Push(cx);
     }
+  } else {
+    // If there's no native context in the script context it must be
+    // in the process or being torn down. We don't want to notify the
+    // script context about scripts having been evaluated in such a
+    // case, so null out mScx.
+
+    mScx = nsnull;
   }
 }
 
 void
 nsCxPusher::Pop()
 {
-  if (!mCx || !mStack) {
-    mCx = nsnull;
-    mPreviousCx = nsnull;
+  if (!mScx || !mStack) {
+    mScx = nsnull;
+
+    NS_ASSERTION(!mScriptIsRunning, "Huh, this can't be happening, "
+                 "mScriptIsRunning can't be set here!");
 
     return;
   }
@@ -1191,18 +1206,15 @@ nsCxPusher::Pop()
   JSContext *unused;
   mStack->Pop(&unused);
 
-  if (!mPreviousCx) {
+  if (!mScriptIsRunning) {
     // No JS is running, but executing the event handler might have
     // caused some JS to run. Tell the script context that it's done.
 
-    nsIScriptContext *scx = NS_STATIC_CAST(nsIScriptContext *,
-                                           ::JS_GetContextPrivate(mCx));
-
-    scx->ScriptEvaluated(PR_TRUE);
+    mScx->ScriptEvaluated(PR_TRUE);
   }
 
-  mCx = nsnull;
-  mPreviousCx = nsnull;
+  mScx = nsnull;
+  mScriptIsRunning = PR_FALSE;
 }
 
 nsresult
