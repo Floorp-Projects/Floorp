@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jungshik Shin <jshin@mailaps.org>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -52,22 +52,29 @@ static const PRUint16 gJohabHangulShiftTable[] =  {
   0, uJohabHangulCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
+static const PRUint16 gJohabHangulCompatJamoShiftTable[] =  {
+  0, u2BytesCharset,
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
 
-static const PRUint16 *g_JohabMappingTable[2] = {
+static const PRUint16 *g_JohabMappingTable[3] = {
   g_HangulNullMapping,
+  g_ufJohabJamoMapping,
   g_ufKSC5601Mapping
 };
 
-static const PRUint16 *g_JohabShiftTable[2] =  {
+static const PRUint16 *g_JohabShiftTable[3] =  {
   gJohabHangulShiftTable,
+  gJohabHangulCompatJamoShiftTable,
   gJohabSymbolShiftTable
 };
+
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToJohabNoAscii [implementation]
 
 nsUnicodeToJohabNoAscii::nsUnicodeToJohabNoAscii() 
-: nsMultiTableEncoderSupport(2,
+: nsMultiTableEncoderSupport(sizeof(g_JohabShiftTable) / sizeof(g_JohabShiftTable[0]),
                         (uShiftTable**) g_JohabShiftTable, 
                         (uMappingTable**) g_JohabMappingTable)
 {

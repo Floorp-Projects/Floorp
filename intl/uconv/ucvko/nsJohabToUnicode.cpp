@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jungshik Shin <jshin@mailaps.org>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -51,6 +51,10 @@ static const PRUint16 g_JOHABHangulShiftTable[] =  {
   0, uJohabHangulCharset,
   ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
 };
+static const PRUint16 g_JOHABHangulCompatJamoShiftTable[] =  {
+  0, u2BytesCharset,
+  ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
+};
 
 static const PRUint16 g_JOHABSymbolShiftTable[] =  {
   0, uJohabSymbolCharset,
@@ -60,14 +64,19 @@ static const PRUint16 g_JOHABSymbolShiftTable[] =  {
 static const uRange g_JOHABRanges[] = {
   { 0x00, 0x7E },
   { 0x84, 0xD3 },
+  { 0x84, 0xD3 },
   { 0xD8, 0xDE },
   { 0xE0, 0xF9 }
 };
 
+static const PRUint16 g_utJohabJamoMapping[] ={   
+#include "johabjamo.ut"
+};
 
 static const PRUint16 *g_JOHABShiftTableSet [] = {
   g_ASCIIShiftTable,
   g_JOHABHangulShiftTable,
+  g_JOHABHangulCompatJamoShiftTable,
   g_JOHABSymbolShiftTable,
   g_JOHABSymbolShiftTable
 };
@@ -75,6 +84,7 @@ static const PRUint16 *g_JOHABShiftTableSet [] = {
 static const PRUint16 *g_JOHABMappingTableSet [] ={
   g_AsciiMapping,
   g_HangulNullMapping,
+  g_utJohabJamoMapping,
   g_utKSC5601Mapping,
   g_utKSC5601Mapping
 };
@@ -84,7 +94,7 @@ static const PRUint16 *g_JOHABMappingTableSet [] ={
 // Class nsJohabToUnicode [implementation]
 
 nsJohabToUnicode::nsJohabToUnicode() 
-: nsMultiTableDecoderSupport(4,
+: nsMultiTableDecoderSupport(sizeof(g_JOHABRanges) / sizeof(g_JOHABRanges[0]),
                         (uRange*) &g_JOHABRanges,
                         (uShiftTable**) &g_JOHABShiftTableSet, 
                         (uMappingTable**) &g_JOHABMappingTableSet)
