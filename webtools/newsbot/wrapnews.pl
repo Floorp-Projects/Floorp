@@ -27,5 +27,5 @@ use strict;
 require "/e/stage-docs/mozilla-org/tools/wrap.pl";
 
 dowrap("/e/stage-docs/mozilla-org/html/template.html", 
-       "../newsbot.html", 
-       "../wrapped.html");
+       "../newsbot/newsbot.html", 
+       "../newsbot/wrapped.html");
