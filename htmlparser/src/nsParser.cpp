@@ -756,7 +756,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
  *  @param   
  *  @return  
  */
-PRBool nsParser::IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,nsHTMLTag aTag,const nsString& aContentType){
+PRBool nsParser::IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
   PRBool result=PR_FALSE;
   return result;
 }
@@ -767,10 +767,11 @@ PRBool nsParser::IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,nsHT
  *  @param   
  *  @return  
  */
-PRBool nsParser::ParseFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,nsHTMLTag aTag,const nsString& aContentType){
+nsresult nsParser::InsertFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
   PRBool result=PR_FALSE;
   return result;
 }
+
  
 /**
  *  This routine is called to cause the parser to continue
