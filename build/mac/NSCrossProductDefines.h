@@ -28,7 +28,6 @@
 #define OTUNIXERRORS 1		/* We want OpenTransport error codes */
 
 #define OJI 1
-#define MOCHA 1
 
 /*
 	This compiles in heap dumping utilities and other good stuff
