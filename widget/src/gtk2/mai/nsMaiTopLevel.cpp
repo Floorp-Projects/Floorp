@@ -65,7 +65,8 @@ MaiTopLevel::~MaiTopLevel()
 }
 
 NS_IMETHODIMP
-MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible)
+MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
+                         AccessibleEventData * aEventData)
 {
     MaiObject *maiObject;
 
