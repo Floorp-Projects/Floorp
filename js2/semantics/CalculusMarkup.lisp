@@ -93,7 +93,7 @@
   (seen-nonterminals nil :type (or null hash-table))             ;Hash table (nonterminal -> t) of nonterminals already depicted
   (seen-grammar-arguments nil :type (or null hash-table))        ;Hash table (grammar-argument -> t) of grammar-arguments already depicted
   (mode nil :type (member nil :syntax :semantics))               ;Current heading (:syntax or :semantics) or nil if none
-  (pending-actions-reverse nil :type list))                      ;Reverse-order list of closures of actions pending for a %print-actions
+  (pending-actions-reverse nil :type list))                      ;Reverse-order list of (action-name . closure) of actions pending for a %print-actions
 
 
 (defun checked-depict-env-grammar-info (depict-env)
@@ -123,6 +123,18 @@
                       (depict markup-stream "Semantics")))
         ((nil)))))
   (quiet-depict-mode depict-env mode))
+
+
+; Set the mode to :semantics, always emitting a heading with the given group-name string.
+; Return true if the contents should be visible, nil if not.
+(defun depict-semantic-group (markup-stream depict-env group-name)
+  (cond
+   ((depict-env-visible-semantics depict-env)
+    (depict-paragraph (markup-stream :grammar-header)
+      (depict markup-stream group-name))
+    (setf (depict-env-mode depict-env) :semantics)
+    t)
+   (t nil)))
 
 
 ; Emit markup paragraphs for a command.
@@ -1315,12 +1327,28 @@
         (setf (gethash nonterminal (depict-env-seen-nonterminals depict-env)) t)))))
 
 
-; (%print-actions)
-(defun depict-%print-actions (markup-stream world depict-env)
+; (%print-actions (<string> <action-name> ... <action-name>) ... (<string> <action-name> ... <action-name>))
+(defun depict-%print-actions (markup-stream world depict-env &rest action-groups)
   (declare (ignore world))
-  (dolist (pending-action (nreverse (depict-env-pending-actions-reverse depict-env)))
-    (funcall pending-action markup-stream depict-env))
-  (setf (depict-env-pending-actions-reverse depict-env) nil))
+  (let ((pending-actions (nreverse (depict-env-pending-actions-reverse depict-env))))
+    (setf (depict-env-pending-actions-reverse depict-env) nil)
+    (dolist (action-group action-groups)
+      (assert-type action-group (cons string (list identifier)))
+      (let ((group-name (car action-group))
+            (action-names (cdr action-group)))
+        (when (some #'(lambda (pending-action) (member (car pending-action) action-names)) pending-actions)
+          (when (depict-semantic-group markup-stream depict-env group-name)
+            (setq pending-actions
+                  (mapcan #'(lambda (pending-action)
+                              (if (member (car pending-action) action-names)
+                                (progn
+                                  (funcall (cdr pending-action) markup-stream depict-env)
+                                  nil)
+                                (list pending-action)))
+                          pending-actions))))))
+    (dolist (pending-action pending-actions)
+      (funcall (cdr pending-action) markup-stream depict-env))
+    (assert-true (null (depict-env-pending-actions-reverse depict-env)))))
 
 
 ; (deftag <name>)
@@ -1464,11 +1492,12 @@
       (setf (depict-env-seen-grammar-arguments depict-env) nil))))
 
 
-(defmacro depict-delayed-action ((markup-stream depict-env) &body depictor)
+(defmacro depict-delayed-action ((markup-stream depict-env action-name) &body depictor)
   (let ((saved-division-style (gensym "SAVED-DIVISION-STYLE")))
     `(let ((,saved-division-style (save-division-style ,markup-stream)))
-       (push #'(lambda (,markup-stream ,depict-env)
-                 (with-saved-division-style (,markup-stream ,saved-division-style t) ,@depictor))
+       (push (cons ,action-name
+                   #'(lambda (,markup-stream ,depict-env)
+                       (with-saved-division-style (,markup-stream ,saved-division-style t) ,@depictor)))
              (depict-env-pending-actions-reverse ,depict-env)))))
 
 
@@ -1490,7 +1519,7 @@
     (unless (or (and (general-nonterminal? general-grammar-symbol) (hidden-nonterminal? general-grammar-symbol))
                 (grammar-info-charclass-or-partition grammar-info general-grammar-symbol)
                 (= n-productions 1))
-      (depict-delayed-action (markup-stream depict-env)
+      (depict-delayed-action (markup-stream depict-env action-name)
         (depict-semantics (markup-stream depict-env :algorithm-stmt-narrow)
           (depict-logical-block (markup-stream 4)
             (depict-declare-action-contents markup-stream world action-name general-grammar-symbol type-expr)
@@ -1500,7 +1529,7 @@
 ; Declare and define the lexer-action on the charclass given by nonterminal.
 (defun depict-charclass-action (markup-stream world depict-env action-name lexer-action nonterminal)
   (unless (default-action? action-name)
-    (depict-delayed-action (markup-stream depict-env)
+    (depict-delayed-action (markup-stream depict-env action-name)
       (depict-semantics (markup-stream depict-env)
         (depict-logical-block (markup-stream 4)
           (depict-declare-action-contents markup-stream world action-name
@@ -1538,7 +1567,7 @@
          (show-type (= n-productions 1)))
     (unless (or (grammar-info-charclass grammar-info lhs)
                 (hidden-nonterminal? lhs))
-      (depict-delayed-action (markup-stream depict-env)
+      (depict-delayed-action (markup-stream depict-env action-name)
         (let* ((initial-env (general-production-action-env grammar general-production))
                (type (scan-type world type-expr))
                (value-annotated-expr (nth-value 1 (scan-typed-value-or-begin world initial-env value-expr type)))
