@@ -26,7 +26,11 @@
 #include "nsIEnumerator.h"
 #include "nsIFrame.h"
 
-enum nsTraversalType{LEAF, EXTENSIVE, FASTEST}; 
+enum nsTraversalType{LEAF, EXTENSIVE, FASTEST
+#ifdef IBMBIDI // Simon
+   , VISUAL
+#endif
+}; 
 
 // {1691E1F3-EE41-11d4-9885-00C04FA0CF4B}
 #define NS_IFRAMETRAVERSAL_IID \

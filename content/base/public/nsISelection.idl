@@ -128,6 +128,13 @@ interface nsISelection : nsISupports
     void deleteFromDocument();
 
     /**
+     * Modifies the cursor Bidi level after a change in keyboard direction
+     *  @param langRTL is PR_TRUE if the new language is right-to-left or
+     *                 PR_FALSE if the new language is left-to-right
+     */
+    void selectionLanguageChange(in boolean langRTL);
+
+    /**
      * Returns the whole selection into a plain text string.
      */
     wstring toString();

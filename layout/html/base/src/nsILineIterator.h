@@ -109,6 +109,10 @@ public:
   // appropriately.
   NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
                          nscoord aX,
+#ifdef IBMBIDI
+                         //This parameter determines whether to traverse the frames in logical or visual order
+                         PRBool aCouldBeReordered,
+#endif
                          nsIFrame** aFrameFound,
                          PRBool* aXIsBeforeFirstFrame,
                          PRBool* aXIsAfterLastFrame) = 0;
@@ -116,6 +120,15 @@ public:
   // Give the line iterator implementor a chance todo something more complicated than
   // nsIFrame::GetNextSibling()
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber) = 0;
+
+#ifdef IBMBIDI
+  // Check whether visual and logical order of frames within a line are identical.
+  //  If not, return the first and last visual frames
+  NS_IMETHOD CheckLineOrder(PRInt32                  aLine,
+                            PRBool                   *aIsReordered,
+                            nsIFrame                 **aFirstVisual,
+                            nsIFrame                 **aLastVisual) = 0;
+#endif
 };
 
 //special line iterator for keyboard navigation

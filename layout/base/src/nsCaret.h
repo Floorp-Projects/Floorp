@@ -28,6 +28,9 @@
 #include "nsITimer.h"
 #include "nsICaret.h"
 #include "nsWeakPtr.h"
+#ifdef IBMBIDI
+#include "nsIBidiKeyboard.h"
+#endif
 
 class nsIView;
 
@@ -105,5 +108,12 @@ protected:
     nsIFrame*             mLastCaretFrame;    // store the frame the caret was last drawn in.
     nsIView*              mLastCaretView;     // last view that we used for drawing. Cached so we can tell when we need to make a new RC
     PRInt32               mLastContentOffset;
+#ifdef IBMBIDI
+//---------------------------------------IBMBIDI----------------------------------------------
+    nsRect                mHookRect;          // directional hook on the caret
+    nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;  // Bidi keyboard object to set and query keyboard language
+    PRPackedBool          mKeyboardRTL;       // is the keyboard language right-to-left
+//-------------------------------------END OF IBM BIDI----------------------------------------
+#endif
 };
 

@@ -94,6 +94,22 @@ private :
   PRBool mExtensive;
 };
 
+#ifdef IBMBIDI // Simon
+
+class nsVisualIterator: public nsFrameIterator
+{
+  public:
+    nsVisualIterator(nsIPresContext* aPresContext, nsIFrame *start);
+  private :
+
+    NS_IMETHOD Next();
+
+    NS_IMETHOD Prev();
+
+    nsIPresContext* mPresContext;
+};
+
+#endif
 /************IMPLEMENTATIONS**************/
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult)
@@ -139,6 +155,16 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
     trav->SetExtensive(PR_TRUE);
              }
     break;
+#ifdef IBMBIDI
+  case VISUAL:{
+    nsVisualIterator *trav = new nsVisualIterator(aPresContext, aStart);
+    if (!trav)
+      return NS_ERROR_OUT_OF_MEMORY;
+    *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
+    NS_ADDREF(trav);
+              }
+    break;
+#endif
 #if 0
   case FASTEST:{
     nsFastestTraversal *trav = new nsFastestTraversal(aStart);
@@ -356,3 +382,117 @@ nsLeafIterator::Prev()
     setOffEdge(-1);
   return NS_OK;
 }
+
+#ifdef IBMBIDI
+
+/*********VISUALITERATOR**********/
+
+nsVisualIterator::nsVisualIterator(nsIPresContext* aPresContext, nsIFrame *aStart)
+: mPresContext(aPresContext)
+{
+  setStart(aStart);
+  setCurrent(aStart);
+  setLast(aStart);
+}
+
+NS_IMETHODIMP
+   nsVisualIterator::Next()
+{
+  //recursive-oid method to get next frame
+  nsIFrame *result = nsnull;
+  nsIFrame *parent = getCurrent();
+  if (!parent)
+    parent = getLast();
+  while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
+  {
+    parent = result;
+  }
+  if (parent != getCurrent())
+  {
+    result = parent;
+  }
+  else {
+    while(parent && !IsRootFrame(parent)) {
+      nsIFrame *grandParent;
+      if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent &&
+          NS_SUCCEEDED(grandParent->FirstChild(mPresContext, nsnull,&result))){
+        nsFrameList list(result);
+        result = list.GetNextVisualFor(parent);
+        if (result){
+          parent = result;
+          while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result) {
+            parent = result;
+          }
+          result = parent;
+          break;
+        }
+        else if (NS_FAILED(parent->GetParent(&result)) || !result || IsRootFrame(result)){
+          result = nsnull;
+          break;
+        }
+        else 
+        {
+          parent = result;
+        }
+      } 
+      else{
+        setLast(parent);
+        result = nsnull;
+        break;
+      }
+    }
+  }
+
+  setCurrent(result);
+  if (!result)
+    setOffEdge(-1);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+   nsVisualIterator::Prev()
+{
+  //recursive-oid method to get prev frame
+  nsIFrame *result;
+  nsIFrame *parent = getCurrent();
+  if (!parent)
+    parent = getLast();
+  while(parent){
+    nsIFrame *grandParent;
+    if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent &&
+        NS_SUCCEEDED(grandParent->FirstChild(mPresContext, nsnull,&result))){
+      nsFrameList list(result);
+      result = list.GetPrevVisualFor(parent);
+      if (result){
+        parent = result;
+        while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result){
+          parent = result;
+          while(NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
+            parent = result;
+          }
+        }
+        result = parent;
+        break;
+      }
+      else if (NS_FAILED(parent->GetParent(&result)) || !result){
+        result = nsnull;
+        break;
+      }
+      else 
+      {
+        parent = result;
+      }
+    }
+    else{
+      setLast(parent);
+      result = nsnull;
+      break;
+    }
+  }
+
+  setCurrent(result);
+  if (!result)
+    setOffEdge(-1);
+  return NS_OK;
+}
+#endif
