@@ -69,6 +69,9 @@ IMAGE_SIZE=$(($FOLDER_SIZE * 103/100))
 # minimum size for an HFS+ partition is 4Mb
 [ $IMAGE_SIZE -lt 8300 ] && IMAGE_SIZE=8300
 
+# Make sure NEXT_ROOT is not set (if we're building with an SDK)
+unset NEXT_ROOT
+
 echo FOLDER_SIZE=$FOLDER_SIZE
 echo IMAGE_SIZE=$IMAGE_SIZE
 
