@@ -1145,10 +1145,44 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt)
     return js_NewRegExp(cx, str, flags);
 }
 
+static void freeRENtree(JSContext *cx, RENode *ren,  RENode *stop)
+{
+    while (ren && (ren != stop)) {
+        RENode *n;
+        switch (ren->op) {
+            case REOP_ALT: {
+                        RENode *altStop = (RENode *)(ren->next);
+                        while (altStop && (altStop->op == REOP_ALT))
+                            altStop = altStop->next;
+                        freeRENtree(cx, (RENode *)(ren->kid), altStop);
+                    }
+                    break;
+            case REOP_QUANT:
+            case REOP_PLUS:
+            case REOP_STAR:
+            case REOP_OPT:
+            case REOP_LPAREN:
+            case REOP_LPARENNON:
+            case REOP_ASSERT:
+            case REOP_ASSERT_NOT:
+                freeRENtree(cx, (RENode *)(ren->kid), (RENode *)(ren->next));
+                break;
+            case REOP_CCLASS:
+                if (ren->u.ucclass.bitmap)
+                    JS_free(cx, ren->u.ucclass.bitmap);
+                break;
+        }
+        n = ren->next;
+        JS_free(cx, ren);
+        ren = n;
+    }
+}
+
 void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
     js_UnlockGCThing(cx, re->source);
+    freeRENtree(cx, re->ren, NULL);
     JS_free(cx, re);
 }
 
