@@ -420,7 +420,7 @@ nsLocalFile::nsLocalFile()
  :  mFollowSymlinks(PR_FALSE)
 {
     MakeDirty();
-    memset(&mFileInfo64,0,sizeof mFileInfo64);
+    memset(&mFileInfo64, 0, sizeof(mFileInfo64));
 }
 
 NS_METHOD
