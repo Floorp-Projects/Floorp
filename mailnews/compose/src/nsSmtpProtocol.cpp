@@ -359,7 +359,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
         ClearFlag(SMTP_PAUSE_FOR_READ);
 
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, m_responseText));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, (const char*)m_responseText));
 		status = MK_SMTP_SERVER_ERROR;
         return(MK_SMTP_SERVER_ERROR);
     }
@@ -830,7 +830,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
     if(m_responseCode != 250)
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND, m_responseText));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND, (const char*)m_responseText));
 		return(MK_ERROR_SENDING_FROM_COMMAND);  
 	}
 
@@ -889,7 +889,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 	if(m_responseCode != 250 && m_responseCode != 251)
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND, m_responseText));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND, (const char*)m_responseText));
         return(MK_ERROR_SENDING_RCPT_COMMAND);
 	}
 
@@ -923,7 +923,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
 		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_DATA_COMMAND, 
-			m_responseText));
+			(const char*)m_responseText));
         return(MK_ERROR_SENDING_DATA_COMMAND);
 	}
 #ifdef UNREADY_CODE
@@ -1175,7 +1175,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
     if(m_responseCode != 250)
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE, m_responseText));
+		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE, (const char*)m_responseText));
         return(MK_ERROR_SENDING_MESSAGE);
 	}
 

@@ -1016,7 +1016,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	}
 
 	// OK, now actually write the structure we've carefully built up.
-  // Pass in TRUE if this is a multipart message WITH Attachments, 
+  // Pass in PR_TRUE if this is a multipart message WITH Attachments, 
   // false if not
 	status = toppart->Write(multiPartRelatedWithAttachments,
                           attachmentSeparator,
