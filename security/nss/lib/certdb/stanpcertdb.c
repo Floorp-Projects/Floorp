@@ -245,7 +245,7 @@ CERT_FindCertByIssuerAndSN(CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndS
 	return STAN_GetCERTCertificate(c);
     }
     cert = PK11_FindCertByIssuerAndSN(&slot,issuerAndSN,NULL);
-    if (slot) {
+    if (cert && slot) {
         PK11_FreeSlot(slot);
     }
 
