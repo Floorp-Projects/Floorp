@@ -560,8 +560,8 @@
  <!-- NOTE: this should really extend menu, but doing this causes the menupopup to be ignored (bug) -->
   <binding id="colorpickerButton" extends="xul:box">
     <content>
-      <xul:menu class="colorpicker-button-menu" allowevents="true">
-        <xul:box class="colorpicker-button-colorbox"/>
+      <xul:menu class="colorpicker-button-menu" allowevents="true" flex="1">
+        <xul:box class="colorpicker-button-colorbox" flex="1"/>
         <xul:menupopup class="colorpicker-button-menupopup"
           oncreate="this.parentNode.parentNode.setAttribute('menuactive', 'true')"
           ondestroy="this.parentNode.parentNode.setAttribute('menuactive', 'false')">
