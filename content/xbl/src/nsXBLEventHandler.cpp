@@ -37,13 +37,14 @@
 #include "nsIDOMDocument.h"
 #include "nsIJSEventListener.h"
 #include "nsIController.h"
-#include "nsIControllers.h" // XXX Will go away
+#include "nsIControllers.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMText.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventListener.h"
 #include "nsXBLBinding.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMWindowInternal.h"
@@ -52,7 +53,13 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMMenuListener.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMDragListener.h"
+#include "nsIDOMScrollListener.h"
+#include "nsIDOMFormListener.h"
 
 PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
@@ -65,31 +72,6 @@ nsIAtom* nsXBLEventHandler::kButtonAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kBindingAttachedAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kBindingDetachedAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kModifiersAtom = nsnull;
-
-nsIAtom* nsXBLEventHandler::kKeyDownAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kKeyUpAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kKeyPressAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kMouseDownAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kMouseUpAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kMouseClickAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kMouseDblClickAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kMouseOverAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kMouseOutAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kFocusAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kBlurAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kCreateAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kCloseAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kCommandUpdateAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kBroadcastAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kDestroyAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kOverflowAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kUnderflowAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kOverflowChangedAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kSubmitAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kResetAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kInputAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kSelectAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kChangeAtom = nsnull;
 
 nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandler,
                                      nsIAtom* aEventName)
@@ -111,32 +93,6 @@ nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBL
     kButtonAtom = NS_NewAtom("button");
     kBindingAttachedAtom = NS_NewAtom("bindingattached");
     kBindingDetachedAtom = NS_NewAtom("bindingdetached");
-
-    kKeyUpAtom = NS_NewAtom("keyup");
-    kKeyDownAtom = NS_NewAtom("keydown");
-    kKeyPressAtom = NS_NewAtom("keypress");
-    kMouseDownAtom = NS_NewAtom("mousedown");
-    kMouseUpAtom = NS_NewAtom("mouseup");
-    kMouseClickAtom = NS_NewAtom("click");
-    kMouseDblClickAtom = NS_NewAtom("dblclick");
-    kMouseOverAtom = NS_NewAtom("mouseover");
-    kMouseOutAtom = NS_NewAtom("mouseout");
-
-    kFocusAtom = NS_NewAtom("focus");
-    kBlurAtom = NS_NewAtom("blur");
-    kCreateAtom = NS_NewAtom("create");
-    kCloseAtom = NS_NewAtom("close");
-    kDestroyAtom = NS_NewAtom("destroy");
-    kCommandUpdateAtom = NS_NewAtom("commandupdate");
-    kBroadcastAtom = NS_NewAtom("broadcast");
-    kOverflowAtom = NS_NewAtom("overflow");
-    kUnderflowAtom = NS_NewAtom("underflow");
-    kOverflowChangedAtom = NS_NewAtom("overflowchanged");
-    kInputAtom = NS_NewAtom("input");
-    kSelectAtom = NS_NewAtom("select");
-    kChangeAtom = NS_NewAtom("change");
-    kSubmitAtom = NS_NewAtom("submit");
-    kResetAtom = NS_NewAtom("reset");
   }
 }
 
@@ -154,37 +110,10 @@ nsXBLEventHandler::~nsXBLEventHandler()
     NS_RELEASE(kClickCountAtom);
     NS_RELEASE(kBindingAttachedAtom);
     NS_RELEASE(kBindingDetachedAtom);
-
-    NS_RELEASE(kKeyUpAtom);
-    NS_RELEASE(kKeyDownAtom);
-    NS_RELEASE(kKeyPressAtom);
-    NS_RELEASE(kMouseUpAtom);
-    NS_RELEASE(kMouseDownAtom);
-    NS_RELEASE(kMouseClickAtom);
-    NS_RELEASE(kMouseDblClickAtom);
-    NS_RELEASE(kMouseOverAtom);
-    NS_RELEASE(kMouseOutAtom);
-
-    NS_RELEASE(kFocusAtom);
-    NS_RELEASE(kBlurAtom);
-    NS_RELEASE(kCloseAtom);
-    NS_RELEASE(kCommandUpdateAtom);
-    NS_RELEASE(kBroadcastAtom);
-    NS_RELEASE(kCreateAtom);
-    NS_RELEASE(kDestroyAtom);
-    NS_RELEASE(kOverflowAtom);
-    NS_RELEASE(kUnderflowAtom);
-    NS_RELEASE(kOverflowChangedAtom);
-    NS_RELEASE(kInputAtom);
-    NS_RELEASE(kSubmitAtom);
-    NS_RELEASE(kResetAtom);
-    NS_RELEASE(kSelectAtom);
-    NS_RELEASE(kChangeAtom);
   }
 }
 
-NS_IMPL_ISUPPORTS6(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener, 
-                                      nsIDOMFocusListener, nsIDOMScrollListener, nsIDOMFormListener)
+NS_IMPL_ISUPPORTS1(nsXBLEventHandler, nsISupports)
 
 NS_IMETHODIMP
 nsXBLEventHandler::BindingAttached()
@@ -271,307 +200,10 @@ nsXBLEventHandler::BindingDetached()
   }
 
   if (mNextHandler)
-    return mNextHandler->BindingAttached();
+    return mNextHandler->BindingDetached();
   
   return NS_OK;
 }
-
-nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
-{
-  // Nothing to do.
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
-{
-  if (mEventName.get() != kKeyUpAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-    mProtoHandler->KeyEventMatched(key, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aKeyEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
-{
-  if (mEventName.get() != kKeyDownAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-    mProtoHandler->KeyEventMatched(key, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aKeyEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
-{
-  if (mEventName.get() != kKeyPressAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-    mProtoHandler->KeyEventMatched(key, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aKeyEvent);
-  return NS_OK;
-}
-   
-nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
-{
-  if (mEventName.get() != kMouseDownAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
-{
-  if (mEventName.get() != kMouseUpAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-  if (mEventName.get() != kMouseClickAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
-{
-  if (mEventName.get() != kMouseDblClickAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
-{
-  if (mEventName.get() != kMouseOverAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
-{
-  if (mEventName.get() != kMouseOutAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Focus(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kFocusAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-
-nsresult nsXBLEventHandler::Blur(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kBlurAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-
-nsresult nsXBLEventHandler::Action(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kCommandAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Create(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kCreateAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Close(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kCloseAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Broadcast(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kBroadcastAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::CommandUpdate(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kCommandUpdateAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Overflow(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kOverflowAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Underflow(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kUnderflowAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::OverflowChanged(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kOverflowChangedAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kDestroyAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Submit(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kSubmitAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Reset(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kResetAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Select(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kSelectAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Change(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kChangeAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLEventHandler::Input(nsIDOMEvent* aEvent)
-{
-  if (mEventName.get() != kInputAtom)
-    return NS_OK;
-
-  ExecuteHandler(mEventName, aEvent);
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsXBLEventHandler::ExecuteHandler(nsIAtom* aEventName, nsIDOMEvent* aEvent)
@@ -767,20 +399,10 @@ nsXBLEventHandler::RemoveEventHandlers()
   nsIID iid;
   nsXBLBinding::GetEventHandlerIID(mEventName, &iid, &found);
 
-  if (found) {
-    if (iid.Equals(NS_GET_IID(nsIDOMMouseListener)))
-      mEventReceiver->AddEventListener(type, (nsIDOMMouseListener*)this, useCapture);
-    else if(iid.Equals(NS_GET_IID(nsIDOMKeyListener)))
-      mEventReceiver->AddEventListener(type, (nsIDOMKeyListener*)this, useCapture);
-    else if(iid.Equals(NS_GET_IID(nsIDOMFocusListener)))
-      mEventReceiver->AddEventListener(type, (nsIDOMFocusListener*)this, useCapture);
-    else if (iid.Equals(NS_GET_IID(nsIDOMMenuListener)))
-      mEventReceiver->AddEventListener(type, (nsIDOMMenuListener*)this, useCapture);
-    else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener)))
-      mEventReceiver->AddEventListener(type, (nsIDOMScrollListener*)this, useCapture);
-    else if (iid.Equals(NS_GET_IID(nsIDOMFormListener)))
-      mEventReceiver->AddEventListener(type, (nsIDOMFormListener*)this, useCapture);
-  }
+  nsCOMPtr<nsIDOMEventListener> listener(do_QueryInterface(this));
+
+  if (found && listener)
+    mEventReceiver->RemoveEventListener(type, listener, useCapture);
 }
 
 /// Helpers that are relegated to the end of the file /////////////////////////////

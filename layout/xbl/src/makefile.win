@@ -30,6 +30,15 @@ CPPSRCS=					\
   nsXBLBinding.cpp \
   nsXBLService.cpp \
   nsXBLEventHandler.cpp \
+  nsXBLKeyHandler.cpp \
+  nsXBLMouseHandler.cpp \
+  nsXBLMouseMotionHandler.cpp \
+  nsXBLDragHandler.cpp \
+  nsXBLFocusHandler.cpp \
+  nsXBLXULHandler.cpp \
+  nsXBLScrollHandler.cpp \
+  nsXBLFormHandler.cpp \
+  nsXBLLoadHandler.cpp \
   nsXBLPrototypeHandler.cpp \
   nsBindingManager.cpp \
 	$(NULL)
@@ -37,6 +46,15 @@ CPPSRCS=					\
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
   .\$(OBJDIR)\nsXBLEventHandler.obj \
+  .\$(OBJDIR)\nsXBLKeyHandler.obj \
+  .\$(OBJDIR)\nsXBLMouseHandler.obj \
+  .\$(OBJDIR)\nsXBLMouseMotionHandler.obj \
+  .\$(OBJDIR)\nsXBLDragHandler.obj \
+  .\$(OBJDIR)\nsXBLFocusHandler.obj \
+  .\$(OBJDIR)\nsXBLXULHandler.obj \
+  .\$(OBJDIR)\nsXBLScrollHandler.obj \
+  .\$(OBJDIR)\nsXBLFormHandler.obj \
+  .\$(OBJDIR)\nsXBLLoadHandler.obj \
   .\$(OBJDIR)\nsXBLPrototypeHandler.obj \
   .\$(OBJDIR)\nsXBLService.obj \
   .\$(OBJDIR)\nsBindingManager.obj \
