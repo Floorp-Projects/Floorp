@@ -27,11 +27,7 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#include "nsIIOService.h"
-#include "nsIURL.h"
 #include "nsIServiceManager.h"
-#include "nsNetUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsICSSStyleRuleProcessor.h"
@@ -41,7 +37,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
-#include "nsILinkHandler.h"
 #include "nsIEventStateManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
@@ -67,10 +62,10 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsINameSpace.h"
 #include "nsITextContent.h"
 #include "prlog.h"
-#include "nsIXMLContent.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
+#include "nsStyleUtil.h"
 
 //#define DEBUG_RULES
 //#define EVENT_DEBUG
@@ -82,9 +77,6 @@ static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-
-static PRBool IsValidLink(nsIContent *aContent,nsString &aHREF);
-static PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF);
 
 // ----------------------
 // Rule hash key
@@ -458,9 +450,6 @@ public:
   nsINameSpace*         mNameSpace;
   PRInt32               mDefaultNameSpaceID;
   nsHashtable           mRelevantAttributes;
-
-  static nsIIOService*  gIOService;
-  static nsrefcnt       gRefcnt;
 };
 
 
@@ -1090,9 +1079,6 @@ static PRBool SetStyleSheetReference(nsISupports* aElement, void* aSheet)
   return PR_TRUE;
 }
 
-nsIIOService* CSSStyleSheetInner::gIOService = nsnull;
-nsrefcnt CSSStyleSheetInner::gRefcnt = 0;
-
 CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mURL(nsnull),
@@ -1102,13 +1088,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
     mRelevantAttributes()
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
-  if (gRefcnt++ == 0) {
-    nsresult rv;
-    rv = nsServiceManager::GetService(kIOServiceCID,
-                                      NS_GET_IID(nsIIOService),
-                                      (nsISupports**)&gIOService);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "can't get nsIOService");
-  }
   mSheets.AppendElement(aParentSheet);
 }
 
@@ -1146,13 +1125,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
     mRelevantAttributes()
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
-  if (gRefcnt++ == 0) {
-    nsresult rv;
-    rv = nsServiceManager::GetService(kIOServiceCID,
-                                      NS_GET_IID(nsIIOService),
-                                      (nsISupports**)&gIOService);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "can't get nsIOService");
-  }
   mSheets.AppendElement(aParentSheet);
   NS_IF_ADDREF(mURL);
   if (aCopy.mOrderedRules) {
@@ -1179,12 +1151,6 @@ CSSStyleSheetInner::~CSSStyleSheetInner(void)
     NS_RELEASE(mOrderedRules);
   }
   NS_IF_RELEASE(mNameSpace);
-  if (--gRefcnt == 0) {
-    nsresult rv;
-    rv = nsServiceManager::ReleaseService(kIOServiceCID, gIOService);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "can't release nsIOService");
-    gIOService = nsnull;
-  }
 }
 
 CSSStyleSheetInner* 
@@ -2831,8 +2797,6 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                               PRBool aTestState)
 {
   PRBool  result = PR_FALSE;
-  PRBool  tagset = PR_FALSE;
-  nsIAtom*  contentTag = NULL;  // Make sure this is NULL for NS_IF_RELEASE
 
   // Bail out early if we can
   if(kNameSpaceID_Unknown != aSelector->mNameSpace) {
@@ -2843,10 +2807,11 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
     }
   }
 
+  nsCOMPtr<nsIAtom> contentTag;
+
   if (((nsnull == aSelector->mTag) || (
-      aContent->GetTag(contentTag),
-      tagset=PR_TRUE,
-      aSelector->mTag == contentTag))) {
+      aContent->GetTag(*getter_AddRefs(contentTag)),
+      aSelector->mTag == contentTag.get()))) {
 
     result = PR_TRUE;
     // namespace/tag match
@@ -2916,7 +2881,6 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
       nsAtomList* pseudoClass = aSelector->mPseudoClassList;
       PRInt32 eventState = NS_EVENT_STATE_UNSPECIFIED;
       nsLinkState linkState = nsLinkState(-1);  // not a link
-      nsILinkHandler* linkHandler = nsnull;
       nsIEventStateManager* eventStateManager = nsnull;
 
       while ((PR_TRUE == result) && (nsnull != pseudoClass)) {
@@ -3008,9 +2972,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
         else if (IsEventPseudo(pseudoClass->mAtom)) {
           // check if the element is event-sensitive
           if (!contentTag) {
-            if (aContent) {
-              aContent->GetTag(contentTag);
-            }
+            aContent->GetTag(*getter_AddRefs(contentTag));
           }
 
 #ifdef EVENT_DEBUG
@@ -3041,7 +3003,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
               nsAutoString strPseudo, strTag;
               pseudoClass->mAtom->ToString(strPseudo);
               if (!contentTag) {
-                if (aContent) aContent->GetTag(contentTag);
+                aContent->GetTag(*getter_AddRefs(contentTag));
               }
               if (contentTag) {
                 contentTag->ToString(strTag);
@@ -3065,26 +3027,10 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           } 
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {
-	        if(!tagset) {
-	          tagset=PR_TRUE;
-	          aContent->GetTag(contentTag);
-	        }
-
-          nsAutoString href;
-          if (IsValidLink(aContent,href)) {
-            // Now 'href' will contain a canonical URI that we can
-            // look up in global history.
+          if (!contentTag) aContent->GetTag(*getter_AddRefs(contentTag));
+          if (nsStyleUtil::IsHTMLLink(aContent, contentTag, aPresContext, &linkState) ||
+		      nsStyleUtil::IsSimpleXlink(aContent, aPresContext, &linkState)) {
             if ((PR_FALSE != result) && (aTestState)) {
-              if (! linkHandler) {
-                aPresContext->GetLinkHandler(&linkHandler);
-                if (linkHandler) {
-                  linkHandler->GetLinkState(href, linkState);
-                }
-                else {
-                  // no link handler?  then all links are unvisited
-                  linkState = eLinkState_Unvisited;
-                }
-              }
               if (nsCSSAtoms::linkPseudo == pseudoClass->mAtom) {
                 result = PRBool(eLinkState_Unvisited == linkState);
               }
@@ -3106,11 +3052,9 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
         pseudoClass = pseudoClass->mNext;
       }
 
-      NS_IF_RELEASE(linkHandler);
       NS_IF_RELEASE(eventStateManager);
     }
   }
-  NS_IF_RELEASE(contentTag);
   return result;
 }
 
@@ -3768,106 +3712,4 @@ CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
     }
   }
   return cascade;
-}
-
-/*static*/
-PRBool IsValidLink(nsIContent *aContent,nsString &aHREF)
-{
-  NS_ASSERTION(aContent, "null arg in IsValidLink");
-
-  // check for:
-  //  - HTML ANCHOR with valid HREF
-  //  - HTML LINK with valid HREF
-  //  - HTML AREA with valid HREF
-  //  - Simple XLink
-
-  // if the content is a valid link, set the href to the canonicalized form and return TRUE
-
-  PRBool result = PR_FALSE;
-  PRBool bIsXLink = PR_FALSE;
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor;
-  nsCOMPtr<nsIDOMHTMLAreaElement> area;
-  nsCOMPtr<nsIDOMHTMLLinkElement> link;
-
-  if ((anchor = do_QueryInterface(aContent)) ||
-      (area = do_QueryInterface(aContent)) ||
-      (link = do_QueryInterface(aContent))) {
-    // if it is an anchor, area or link then check the href attribute
-    nsresult attrState = 0;
-    // make sure this anchor has a link even if we are not testing state
-    // if there is no link, then this anchor is not really a linkpseudo.
-    // bug=23209
-    attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, aHREF);
-    if (NS_CONTENT_ATTR_HAS_VALUE != attrState) {
-      result = PR_FALSE;
-    } 
-    else {
-      if (anchor) {
-        anchor->GetHref(aHREF);
-        result = PR_TRUE;
-      } 
-      else if (area) {
-        area->GetHref(aHREF);
-        result = PR_TRUE;
-      }
-      else if (link) {
-        link->GetHref(aHREF);
-        result = PR_TRUE;
-      }
-    }
-  } // if anchor, area, link 
-
-  else if ((bIsXLink = IsSimpleXlink(aContent,aHREF))) {
-    // It's an XLink. Resolve it relative to its document.
-    nsCOMPtr<nsIURI> baseURI = nsnull;
-    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
-    if (htmlContent) {
-      // XXX why do this? will nsIHTMLContent's
-      // GetBaseURL() may return something different
-      // than the URL of the document it lives in?
-      htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
-    }
-    else {
-      nsCOMPtr<nsIDocument> doc;
-      aContent->GetDocument(*getter_AddRefs(doc));
-      if (doc) {
-        doc->GetBaseURL(*getter_AddRefs(baseURI));
-      }
-    }
-
-    nsAutoString linkURI;
-    (void) NS_MakeAbsoluteURI(linkURI, aHREF, baseURI, CSSStyleSheetInner::gIOService);
-    aHREF = linkURI;
-    result = PR_TRUE;
-  } // if xlink
-
-  return result;
-}
-
-/*static*/ 
-PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF)
-{
-  NS_ASSERTION(aContent, "invalid call to IsXlink with null content");
-
-  PRBool rv = PR_FALSE;
-
-  // set the out-param to default / empty
-  aHREF.Truncate(0);
-
-  if (aContent) {
-    // first see if we have an XML element
-    nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
-    if (xml) {
-      // see if it is type=simple (we don't deal with other types)
-      nsAutoString val;
-      aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
-      if (val == NS_LITERAL_STRING("simple")) {
-        // see if there is an xlink namespace'd href attribute: 
-        // - get it if there is, if not no big deal, it is not required for xlinks
-        aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::href, aHREF);
-        rv = PR_TRUE;
-      }
-    }
-  }
-  return rv;
 }

@@ -855,17 +855,14 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsWebShell::GetLinkState(const nsString& aLinkURI, nsLinkState& aState)
+nsWebShell::GetLinkState(const char* aLinkURI, nsLinkState& aState)
 {
   aState = eLinkState_Unvisited;
 
    if(mGlobalHistory)
       {
-      nsCAutoString url;
-      url.AssignWithConversion(aLinkURI.GetUnicode());
-
       PRInt64 lastVisitDate;
-      NS_ENSURE_SUCCESS(mGlobalHistory->GetLastVisitDate(url.GetBuffer(),
+      NS_ENSURE_SUCCESS(mGlobalHistory->GetLastVisitDate(aLinkURI,
          &lastVisitDate), NS_ERROR_FAILURE);
 
       // a last-visit-date of zero means we've never seen it before; so

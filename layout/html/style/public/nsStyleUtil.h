@@ -25,6 +25,7 @@
 #include "nslayout.h"
 #include "nsCoord.h"
 #include "nsIPresContext.h"
+#include "nsILinkHandler.h" // for nsLinkState
 
 class nsIStyleContext;
 struct nsStyleColor;
@@ -57,6 +58,10 @@ public:
 
   static const nsStyleColor* FindNonTransparentBackground(nsIStyleContext* aContext,
                                                           PRBool aStartAtParent = PR_FALSE);
+
+  static PRBool IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresContext *aPresContext, nsLinkState *aState);
+  static PRBool IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresContext, nsLinkState *aState);
+
 };
 
 
