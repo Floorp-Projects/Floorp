@@ -1115,7 +1115,7 @@ Rights Reserved.
   </menu>
 
   <menu id="menu_Edit" oncommand="CommandUpdate_UndoRedo();">
-    <menupopup onpopupshowing="InitEditMessagesMenu()">
+    <menupopup id="menu_Edit_Popup" onpopupshowing="InitEditMessagesMenu()">
       <menuitem id="menu_undo" label="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" observes="cmd_undo" oncommand="Undo()"/>
       <menuitem id="menu_redo" label="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" observes="cmd_redo" oncommand="Redo()"/>
       <menuseparator/>
