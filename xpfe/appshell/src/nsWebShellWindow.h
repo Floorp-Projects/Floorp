@@ -121,7 +121,7 @@ public:
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
   // nsWebShellWindow methods...
   nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
-                      nsIStreamObserver* anObserver,
+                      PRBool aCreatedVisible, nsIStreamObserver* anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                       nsWidgetInitData& widgetInitData);
@@ -283,6 +283,7 @@ protected:
   PRBool                  mLockedUntilChromeLoad;
   PRBool                  mChromeInitialized;
   PRUint32                mChromeMask;
+  PRBool                  mCreatedVisible;
 
   nsVoidArray mMenuDelegates;
 

@@ -28,7 +28,7 @@ Contributor(s): ______________________________________. -->
 [
 <!ENTITY mainWindow.title "Mozilla"> 
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
-<!ENTITY mainWindow.titlemodifierseperator " - ">
+<!ENTITY mainWindow.titlemodifierseparator " - ">
 <!ENTITY throbber.url "http://www.mozilla.org"> 
 <!ENTITY fileMenu.label "File">
 <!ENTITY browserCmd.label "New Browser Window">
@@ -297,7 +297,7 @@ Contributor(s): ______________________________________. -->
         onload="Startup()"
         onunload="Shutdown()"
         title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
-        titleseperator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:browser"
+        titleseparator ="&mainWindow.titlemodifierseparator;"  windowtype="navigator:browser"
 		align="vertical" width="640" height="480"> 
 
   <html:script language="javascript" src="navigator.js">
@@ -358,6 +358,12 @@ Contributor(s): ______________________________________. -->
   <broadcaster id="dialog.start" ready="false"/>
   <observes element="dialog.start" attribute="ready" onchange="onLoadWithArgs()"/>
     
+  <!-- HELLO!! IS ANYONE READING THIS?  In case you are reading this,
+       note that this menubar is copied verbatim in hiddenWindow.xul.
+       Please do be so kind as to reflect any changes made into that
+       file as well, in anticipation of the happy day when the parser
+       will let us use included files. -->
+
   <menubar chromeclass="menubar">
       <menu name="&fileMenu.label;">
       <menuitem name="&browserCmd.label;" onclick="BrowserNewWindow();"/>

@@ -53,14 +53,14 @@ interface nsIAppShellService : nsISupports
 
   void CreateTopLevelWindow(in nsIWebShellWindow aParent,
                             in nsIURI aUrl, 
-								            in boolean showWindow, 
+                            in boolean showWindow, 
                             out nsIWebShellWindow aResult, 
                             in nsIStreamObserver anObserver,
                             in nsIXULWindowCallbacks aCallbacks,
                             in long aInitialWidth, in long aInitialHeight);
   void CreateDialogWindow(  in nsIWebShellWindow aParent,
                             in nsIURI aUrl, 
-													  in boolean showWindow,
+                            in boolean showWindow,
                             out nsIWebShellWindow aResult, 
                             in nsIStreamObserver anObserver,
                             in nsIXULWindowCallbacks aCallbacks,
@@ -72,6 +72,7 @@ interface nsIAppShellService : nsISupports
                             in nsIXULWindowCallbacks aCallbacks,
                             in long aInitialWidth, in long aInitialHeight);
   void CloseTopLevelWindow(in nsIWebShellWindow aWindow);
+  void GetHiddenWindow(out nsIWebShellWindow aResult);
   void RegisterTopLevelWindow(in nsIWebShellWindow aWindow);
   void UnregisterTopLevelWindow(in nsIWebShellWindow aWindow);
 };

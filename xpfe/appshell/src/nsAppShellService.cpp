@@ -116,6 +116,7 @@ public:
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow);
+  NS_IMETHOD GetHiddenWindow(nsIWebShellWindow **aWindow);
   NS_IMETHOD RegisterTopLevelWindow(nsIWebShellWindow* aWindow);
   NS_IMETHOD UnregisterTopLevelWindow(nsIWebShellWindow* aWindow);
 
@@ -123,6 +124,14 @@ public:
 protected:
   virtual ~nsAppShellService();
 
+  NS_IMETHOD JustCreateTopWindow(nsIWebShellWindow * aParent,
+                                 nsIURI* aUrl, 
+                                 PRBool showWindow,
+                                 nsIWebShellWindow** aResult,
+                                 nsIStreamObserver* anObserver,
+                                 nsIXULWindowCallbacks *aCallbacks,
+                                 PRInt32 aInitialWidth, PRInt32 aInitialHeight);
+  void CreateHiddenWindow();
   void InitializeComponent( const nsCID &aComponentCID );
   void ShutdownComponent( const nsCID &aComponentCID );
   typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
@@ -132,8 +141,8 @@ protected:
   nsISupportsArray* mWindowList;
   nsICmdLineService* mCmdLineService;
   nsIWindowMediator* mWindowMediator;
+  nsCOMPtr<nsIWebShellWindow> mHiddenWindow;
 };
-
 
 nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
 {
@@ -149,8 +158,10 @@ nsAppShellService::~nsAppShellService()
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mWindowList);
   NS_IF_RELEASE(mCmdLineService);
-  if ( mWindowMediator )
-		nsServiceManager::ReleaseService(kWindowMediatorCID, mWindowMediator);
+  if (mHiddenWindow)
+    mHiddenWindow->Close(); // merely releasing the ref isn't enough!
+  if (mWindowMediator)
+    nsServiceManager::ReleaseService(kWindowMediatorCID, mWindowMediator);
 }
 
 
@@ -259,8 +270,34 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 // enable window mediation
 	rv = nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID,
                                    (nsISupports**) &mWindowMediator);
+
+  CreateHiddenWindow();
+
 done:
   return rv;
+}
+
+void nsAppShellService::CreateHiddenWindow()
+{
+  nsresult rv;
+  nsIURI* url = nsnull;
+
+#ifndef NECKO
+  rv = NS_NewURL(&url, "chrome://navigator/content/hiddenWindow.xul");
+#else
+  rv = NS_NewURI(&url, "chrome://navigator/content/hiddenWindow.xul");
+#endif
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIWebShellWindow> newWindow;
+    rv = JustCreateTopWindow(nsnull, url, PR_FALSE, getter_AddRefs(newWindow),
+                       nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+    if (NS_SUCCEEDED(rv)) {
+      mHiddenWindow = newWindow;
+      // Mac will want to register now, like CreateTopLevelWindow
+    }
+    NS_RELEASE(url);
+  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "HiddenWindow not created");
 }
 
 // Apply function (Initialize/Shutdown) to each app shell component.
@@ -484,9 +521,34 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
                                         PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
+
+  rv = JustCreateTopWindow(aParent, aUrl, showWindow, aResult, anObserver,
+                           aCallbacks, aInitialWidth, aInitialHeight);
+
+  if (NS_SUCCEEDED(rv))
+    // the addref resulting from this is the owning addref for this window
+    RegisterTopLevelWindow(*aResult);
+
+  return rv;
+}
+
+
+/*
+ * Just do the window-making part of CreateTopLevelWindow
+ */
+NS_IMETHODIMP
+nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
+                                       nsIURI* aUrl, PRBool showWindow,
+                                       nsIWebShellWindow** aResult, nsIStreamObserver* anObserver,
+                                       nsIXULWindowCallbacks *aCallbacks,
+                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
+{
+  nsresult rv;
   nsWebShellWindow* window;
+  PRBool intrinsicallySized;
 
   *aResult = nsnull;
+  intrinsicallySized = PR_FALSE;
   window = new nsWebShellWindow();
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -500,23 +562,23 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
         aInitialHeight == NS_SIZETOCONTENT) {
       aInitialWidth = 1;
       aInitialHeight = 1;
-      showWindow = PR_FALSE; // Don't show until we have the intrinsic size figured out.
+      intrinsicallySized = PR_TRUE;
       window->SetIntrinsicallySized(PR_TRUE);
     }
 
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
-                            anObserver, aCallbacks,
+                            showWindow, anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight, widgetInitData);
       
-    if (NS_SUCCEEDED(rv))
-    {
+    if (NS_SUCCEEDED(rv)) {
+
       // this does the AddRef of the return value
       rv = window->QueryInterface(kIWebShellWindowIID, (void **) aResult);
-      
-      // the addref resulting from this is the owning addref for this window
-      RegisterTopLevelWindow(window);
-      if (showWindow)
-				window->Show(PR_TRUE);
+
+      // if intrinsically sized, don't show until we have the size figured out
+      if (showWindow && !intrinsicallySized)
+        window->Show(PR_TRUE);
+
     }
   }
 
@@ -528,6 +590,18 @@ NS_IMETHODIMP
 nsAppShellService::CloseTopLevelWindow(nsIWebShellWindow* aWindow)
 {
   return aWindow->Close();
+}
+
+NS_IMETHODIMP
+nsAppShellService::GetHiddenWindow(nsIWebShellWindow **aWindow)
+{
+  nsIWebShellWindow *rv;
+
+  NS_ASSERTION(aWindow, "null param to GetHiddenWindow");
+  rv = mHiddenWindow;
+  NS_IF_ADDREF(rv);
+  *aWindow = rv;
+  return rv ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /*
@@ -545,8 +619,10 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
 {
   nsresult rv;
   nsWebShellWindow* window;
+  PRBool intrinsicallySized;
 
   *aResult = nsnull;
+  intrinsicallySized = PR_FALSE;
   window = new nsWebShellWindow();
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -560,18 +636,20 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
         aInitialHeight == NS_SIZETOCONTENT) {
       aInitialWidth = 1;
       aInitialHeight = 1;
-      showWindow = PR_FALSE; // Don't show until we have the intrinsic size figured out.
+      intrinsicallySized = PR_TRUE;
       window->SetIntrinsicallySized(PR_TRUE);
     }
 
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
-                            anObserver, aCallbacks,
+                            showWindow, anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight, widgetInitData);
     if (NS_SUCCEEDED(rv)) {
       rv = window->QueryInterface(kIWebShellWindowIID, (void **) aResult);
       RegisterTopLevelWindow(window);
-      if (showWindow)
-				window->Show(PR_TRUE);
+
+      // if intrinsically sized, don't show until we have the size figured out
+      if (showWindow && !intrinsicallySized)
+        window->Show(PR_TRUE);
     }
   }
 

@@ -20,13 +20,25 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
+<!-- hiddenwindow is a "minimal" XUL window intended for creating the,
+     er, hidden window.  This window is never shown, but on platforms
+     which leave the app running after the last (visible) window is shut
+     down, this window does hold a browser menubar.
+       Though this window looks a lot like navigator.xul, that xul
+     is unsuitable because it's subject to the whims of its associated
+     appcore, which among other things causes it to load content documents
+     undesirable for this window.
+       Arguably a simpler menu structure could be substituted, but
+     the full one was included for now in anticipation of the whole thing
+     becoming an included file someday. -->
 
-<?xml-stylesheet href="chrome:/global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
-
+<!-- First, a bunch of string definitions lifted from navigator.xul,
+     just for the menus.  What are the odds they'll stay in synch?
+     Hoping for the day when included files work. The one new string
+     in here is the first, the hidden window's title. -->
 <!DOCTYPE window
 [
-<!ENTITY mainWindow.title "Mozilla"> 
+<!ENTITY hiddenWindow.title "hidden"> 
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
 <!ENTITY mainWindow.titlemodifierseparator " - ">
 <!ENTITY throbber.url "http://www.mozilla.org"> 
@@ -257,112 +269,23 @@ Contributor(s): ______________________________________. -->
 <!ENTITY QATempCmd.label "Bug Template">
 <!ENTITY QASmokeCmd.label "Smoke Tests">
 <!ENTITY QAKnownBugCmd.label "Known Bugs">
-
-
-<!-- Toolbar items --> 
-<!ENTITY backButton.label "Back">
-<!ENTITY forwardButton.label "Forward">
-<!ENTITY reloadButton.label "Reload">
-<!ENTITY stopButton.label "Stop">
-<!ENTITY printButton.label "Print">
-
-<!-- Toolbar items --> 
-<!ENTITY  homeButton.label "Home">
-<!ENTITY  netscapeButton.label "Netscape">
-<!ENTITY  bugzillaButton.label "Bugzilla">
-<!ENTITY  tinderboxButton.label "Tinderbox">
-
-<!-- Statusbar -->
-<!ENTITY  notifCom.label "[Notification Component]">
-<!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999070614">
-<!ENTITY  security-button.label "Secure Conn">
-
-<!-- taskbar -->
-<!ENTITY  webButton.label "Web">
-<!ENTITY  mailButton.label "Mail">
-<!ENTITY  dayplannerButton.label "DayPlanner">
-<!ENTITY  shoppingButton.label "Shopping">
-<!ENTITY  myDeskButton.label "My Desk">
-<!ENTITY  openWinButton.label "Open Windows">
-
-
-
-
 ]> 
 
-<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
-	    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Startup()"
-        onunload="Shutdown()"
-        title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
-        titleseparator ="&mainWindow.titlemodifierseparator;"  windowtype="navigator:browser"
-		align="vertical" width="640" height="480"> 
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  title="&hiddenWindow.title;"
+  titlemodifier="&mainWindow.titlemodifier;" 
+  titleseparator="&mainWindow.titlemodifierseparator;">
 
-  <html:script language="javascript" src="navigator.js">
-  </html:script>
+  <!-- JS from navigator.xul, to handle the menu commands -->
+  <html:script language="javascript" src="navigator.js"/>
   
-  <html:script language="javascript" src="tooltip.js">
-  </html:script>
-
-<popup id="translationlist">
-	<menu>
-		<menuitem name="&translateEngtoFrenCmd.label;" onclick="Translate('en', 'fr', 'SSI');" />
-		<menuitem name="&translateEngtoGermCmd.label;" onclick="Translate('en', 'de', 'SSI');"/>
-		<menuitem name="&translateEngtoItalianCmd.label;" onclick="Translate('en', 'it', 'SSI');"/>
-		<menuitem name="&translateEngtoJapaneseCmd.label;" onclick="Translate('en', 'ja', 'Neocortech');"/>
-		<menuitem name="&translateEngtoPortCmd.label;" onclick="Translate('en', 'po', 'SSI');"/>
-		<menuitem name="&translateEngtoSpanCmd.label;" onclick="Translate('en', 'es', 'SSI');"/>
-		<separator />
-		<menuitem name="&translateFrentoEngCmd.label;" onclick="Translate('fr', 'en', 'SSI')"/>
-		<menuitem name="&translateFrentoGermCmd.label;" onclick="Translate('fr', 'de', 'SSI')"/>
-		<menuitem name="&translateFrentoSpanCmd.label;" onclick="Translate('fr', 'es', 'SSI')"/>
-		<separator />
-		<menuitem name="&translateGermtoEngCmd.label;" onclick="Translate('de', 'en', 'SSI')"/>
-		<menuitem name="&translateGermtoFrenCmd.label;" onclick="Translate('de', 'fr', 'SSI')"/>
-		<menuitem name="&translateGermtoSpanCmd.label;" onclick="Translate('de', 'es', 'SSI')"/>
-		<separator />
-		<menuitem name="&translateItaliantoEngCmd.label;" onclick="Translate('it', 'en', 'SSI');"/>
-		<separator />
-		<menuitem name="&tanslateJapanesetoEngCmd.label;" onclick="Translate('ja', 'en', 'SSI');"/>
-		<separator />
-		<menuitem name="&translatePorttoEngCmd.label;" onclick="Translate('po', 'en', 'SSI');"/>
-		<separator />
-		<menuitem name="&tanslateSpantoEngCmd.label;" onclick="Translate('es', 'en', 'SSI')"/>
-		<menuitem name="&translateSpantoFrenCmd.label;" onclick="Translate('es', 'fr', 'SSI')"/>
-		<menuitem name="&translateSpantoGermCmd.label;" onclick="Translate('es', 'de', 'SSI')"/>
-	</menu>
-</popup>
-
-<!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
-<popup id="aTooltip" oncreate="return FillInTooltip(document.tooltipElement);">
- <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   width="200" height="20" style="border: thin solid black"> 
-  	<titledbutton id = "replaceMe" align="left" class="borderless paneltitle" value="" />
- </window>
-</popup>
-
-  <broadcaster id="canGoBack" disabled="true"/>
-  <broadcaster id="canGoForward" disabled="true"/>
-  <broadcaster id="canReload"/>
-  <broadcaster id="canStop"/>
-  <broadcaster id="canPrint"/>
-  <broadcaster id="Browser:LoadingProgress"/>
-  <broadcaster id="Browser:Status"/>
-  <broadcaster id="Browser:Security" secure="false"/>
-  <broadcaster id="Browser:Throbber" busy="false"/>
-  <broadcaster id="args" value=""/>
-
-  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
-  <broadcaster id="dialog.start" ready="false"/>
-  <observes element="dialog.start" attribute="ready" onchange="onLoadWithArgs()"/>
-    
-  <!-- HELLO!! IS ANYONE READING THIS?  In case you are reading this,
-       note that this menubar is copied verbatim in hiddenWindow.xul.
-       Please do be so kind as to reflect any changes made into that
-       file as well, in anticipation of the happy day when the parser
-       will let us use included files. -->
+  <!-- it's the whole navigator.xul menubar! hidden windows need to
+       have a menubar for situations where they're the only window remaining
+       on a platform that wants to leave the app running, like the Mac.
+       This really really wants to be an included file, but for now,
+       it's every bit a copy. -->
 
   <menubar chromeclass="menubar">
       <menu name="&fileMenu.label;">
@@ -577,7 +500,7 @@ Contributor(s): ______________________________________. -->
 		<separator/>
 	</menu>
 	 <menu name="&tasksMenu.label;" onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" id="NC:WindowMediatorRoot" open="true" >
-      <menuitem name="&navigatorCmd.label;" onclick="CycleWindow('navigator:browser', 'chrome://navigator/content/');"/>
+      <menuitem name="&navigatorCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
       <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />
       <menuitem name="&textEditorCmd.label;"    onclick="BrowserNewTextEditorWindow();" />
@@ -681,133 +604,5 @@ Contributor(s): ______________________________________. -->
         <menuitem name="&QAKnownBugCmd.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
 		</menu>
   </menubar>
-  
-   <toolbox>
-    <toolbar class="main-bar" chromeclass="toolbar">
-		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()">	
-				  <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>			
-	      </titledbutton>
 
-	      <titledbutton id="forward-button" align="bottom" value="&forwardButton.label;"
-				onclick="BrowserForward()">
-				  <observes element="canGoForward" attribute="disabled" onChange="BrowserSetForward()"/>
-	      </titledbutton>
-
-       <!-- Right now only regular reload is supported. 
-         When the functionality is available, look for 
-        'Shift' key pressed state and pass on appropriate
-         reload type. (The shift functionality is available. There's a shiftDown field
-		 in the event object.) -->
-	      <titledbutton id="reload-button" align="bottom" value="&reloadButton.label;" 
-				  onclick="BrowserReallyReload(0)">
-				  <observes element="canReload" attribute="disabled" onChange="BrowserSetReload()" />
-	      </titledbutton>
-
-	      <titledbutton id="stop-button" align="bottom" value="&stopButton.label;" 
-				onclick="BrowserStop()">
-	        <observes element="canStop" attribute="disabled" onchange="BrowserCanStop()"/>
-	      </titledbutton>
-	  
-	      <box align="vertical" flex="100%">
-		    <spring flex="100%"/>
-	  		<html:input id="urlbar" type="text" chromeclass="location" style="min-width: 100px; min-height: 25px; height: 20px"
-			  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
-			<spring flex="100%"/>
-	      </box>
-
-		<titledbutton id="translate-button" popup="translationlist" popupanchor="bottomleft" value="&translateButton.label;" align="bottom">
-		</titledbutton>
-
-	      <titledbutton id="print-button" align="bottom" value="&printButton.label;"  
-				onclick="BrowserPrint()">
-	        <observes element="canPrint" attribute="disabled"/>
-	      </titledbutton>
-
-          <titledbutton id="Throbber" onclick="window.content.location.href='&throbber.url;'">
-             <observes element="Browser:Throbber" attribute="busy"/>
-          </titledbutton>
-	</toolbar>
-
-    <toolbar class="main-bar" chromeclass="toolbar" datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder">
-	<template>
-		<rule iscontainer="true">
-			<titledbutton uri="..." src="resource:/res/rdf/folder-closed.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
-		</rule>
-		
-		<rule>
-			<titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" onclick="OpenBookmarkURL(event.target)" />
-		</rule>
-	</template>
-
-        	<titledbutton id="home-button" align="right" value="&homeButton.label;" 
-			onclick="BrowserHome()"/>
-		<titledbutton id="netscape-button" align="right" value="&netscapeButton.label;" 
-			onclick="window.content.location.href='http://home.netscape.com'"/>
-		<spring flex="100%"/>
-	</toolbar>
-  </toolbox>
-
-  
-  <html:iframe id="content-frame" src="contentframe.xul" flex="100%" />
-
- 
-
-
-  <box align="horizontal" id="status-bar">
- 
-    <titledbutton value="&notifCom.label;" onclick="doTests()"/>
-
-	<box id="security-box" class="insecure" align="horizontal" flex="100%">
-		<box align="vertical" style="width:100px">
-			<spring flex="100%"/>
-			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
-				<observes element="Browser:LoadingProgress" attribute="mode"/>
-				<observes element="Browser:Throbber" attribute="busy" onchange="onProgress()"/>
-			</progressmeter>
-			<spring flex="100%"/>
-		</box>
-
-		<titledbutton id="statusText" align="right" flex="100%" value="&statusText.label;" style="font-family:sans-serif;font-size:2.5mm">
-					   <observes element="Browser:Status" attribute="value" onchange="onStatus()"/>			
-		</titledbutton>
-		
-		<spring flex="100%"/>
-
-		<titledbutton align="right" value="&buildId.label;" style="font-family:sans-serif;font-size:2.5mm;"/>
-				
-		<titledbutton id="security-button" class="insecure" value="&security-button.label;" align="right" onclick="securityOff();"/>
-     </box>
-  </box>
-
-  <toolbox>
-	  <toolbar id="taskbar" chromeclass="status">
-		  <popup id="samplePopup">
-		    <menu><menuitem name="Sample Item One"/><menuitem name="Sample Item Two"/></menu>
-		  </popup>
-	  	  <box align="horizontal">
-  	 	     <titledbutton align="left" class="button"
-			   popupanchor="topleft" popupalign="bottomleft" value="&webButton.label;" />
-  	 	     <titledbutton align="left" class="button"  
-			   popupanchor="topleft" popupalign="bottomleft" value="&mailButton.label;" />
-		  </box>
-		  <spring flex="100%"/>
-	 	  <box align="horizontal">
-  	 		<titledbutton align="left"  class="popup" popup="samplePopup" tooltip="aTooltip" tooltiptext="This is a toolbar"
-			   popupanchor="topleft" popupalign="bottomleft" value="&dayplannerButton.label;" />
-  	 		<titledbutton align="left"  class="popup" popup="samplePopup"
-			   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
-  	 		<titledbutton align="left"  class="popup" popup="samplePopup" 
-			   popupanchor="topleft" popupalign="bottomleft" 
-			   value="&myDeskButton.label;" />
-          </box>
-		  <spring flex="100%"/>
-	   	  <box align="horizontal">
-  			<titledbutton align="left" class="popup" value="&openWinButton.label;" />
-  	 		<titledbutton align="left" id="mini-nav" value="" />
-  	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
-  	 		<titledbutton align="left" id="mini-addr" value="" onclick="OpenAddressbook()"/>
-  	 		<titledbutton align="left" id="mini-comp" value="" />
-	      </box>
-	  </toolbar>
-	</toolbox>
 </window>
