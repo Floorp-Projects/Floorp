@@ -160,36 +160,30 @@
     prevX += [button frame].size.width + 2;
 
     if ([self bounds].size.width < prevX) {
-      // The previous button didn't fit.  We need to make a new row.
+      // The previous button didn't fit.  We need to make a new row. There's no need to adjust the
+      // view's frame yet, we'll do that below.
       currY += 18;
       computedHeight += 18;
-      if (computedHeight > oldHeight) {
-        [self setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y+(oldHeight-computedHeight),
-                                   [self frame].size.width, computedHeight)];
-        [self setNeedsDisplay: YES];
-      }
       
       prevX = 2;
       [button setFrame: NSMakeRect(prevX, currY, width, height)];
       prevX += [button frame].size.width + 2;
     }
-    
+ 
     [button setNeedsDisplay: YES];
   }
-
-  float currentHeight = [self frame].size.height;
-  if (computedHeight != currentHeight) {
-    [self setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + (currentHeight - computedHeight),
+  
+  // our size has changed, readjust our view's frame and the content area
+  if (computedHeight != oldHeight) {
+    [self setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
                                [self frame].size.width, computedHeight)];
     [self setNeedsDisplay: YES];
-  }
-  
-  float sizeChange = computedHeight - oldHeight;
-  if (sizeChange != 0) {
-    // We need to adjust the content area.
+    
+    // adjust the content area.
+    float sizeChange = computedHeight - oldHeight;
     NSView* view = [[[self window] windowController] getTabBrowser];
     [view setFrame: NSMakeRect([view frame].origin.x, [view frame].origin.y,
-                               [view frame].size.width, [view frame].size.height - sizeChange)];
+                               [view frame].size.width, [view frame].size.height - sizeChange)];  
   }
 }
 
