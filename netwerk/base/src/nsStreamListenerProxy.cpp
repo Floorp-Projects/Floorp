@@ -176,6 +176,12 @@ nsOnDataAvailableEvent::HandleEvent()
             rv = NS_ERROR_NOT_IMPLEMENTED;
         }
 
+        // Cancel the request on unexpected errors
+        if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_CLOSED)) {
+            LOG(("OnDataAvailable failed [rv=%x] canceling request!\n"));
+            mRequest->Cancel(rv);
+        }
+
         //
         // Update the listener status
         //
