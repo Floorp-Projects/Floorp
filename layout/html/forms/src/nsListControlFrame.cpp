@@ -2778,6 +2778,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
   // only allow selection with the left button
   if (!IsLeftButton(aMouseEvent)) {
+    // IsLeftButton Prevents all propragation of the event
     return NS_ERROR_FAILURE; // means consume event
   }
 
@@ -2823,13 +2824,6 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 #endif
   }
 
-  if (IsInDropDownMode() == PR_TRUE) {
-    aMouseEvent->PreventDefault();
-    aMouseEvent->PreventCapture();
-    aMouseEvent->PreventBubble();
-    REFLOW_DEBUG_MSG(">>>>>> Returning and preventing bubbling");
-    return NS_ERROR_FAILURE; //consumes event
-  }
   return NS_OK;
 }
 
@@ -2924,9 +2918,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   // only allow selection with the left button
   if (!IsLeftButton(aMouseEvent)) {
-    aMouseEvent->PreventDefault();
-    aMouseEvent->PreventCapture();
-    aMouseEvent->PreventBubble();
+    // IsLeftButton Prevents all propragation of the event
     return NS_ERROR_FAILURE; // means consume event
   }
 
@@ -3022,12 +3014,6 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  if (IsInDropDownMode() == PR_TRUE) {
-    aMouseEvent->PreventDefault();
-    aMouseEvent->PreventCapture();
-    aMouseEvent->PreventBubble();
-    return NS_ERROR_FAILURE; //consumes event
-  }
   return NS_OK;
 }
 

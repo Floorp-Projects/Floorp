@@ -2939,6 +2939,7 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
   // only allow selection with the left button
   if (!IsLeftButton(aMouseEvent)) {
+    // IsLeftButton Prevents all propragation of the event
     return NS_ERROR_FAILURE; // means consume event
   }
 
@@ -2978,12 +2979,6 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  if (IsInDropDownMode() == PR_TRUE) {
-    aMouseEvent->PreventDefault();
-    aMouseEvent->PreventCapture();
-    aMouseEvent->PreventBubble();
-    return NS_ERROR_FAILURE; //consumes event
-  }
   return NS_OK;
 }
 
@@ -3084,6 +3079,7 @@ nsGfxListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   // only allow selection with the left button
   if (!IsLeftButton(aMouseEvent)) {
+    // IsLeftButton Prevents all propragation of the event
     return NS_ERROR_FAILURE; // means consume event
   }
 
@@ -3197,12 +3193,6 @@ nsGfxListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  if (IsInDropDownMode() == PR_TRUE) {
-    aMouseEvent->PreventDefault();
-    aMouseEvent->PreventCapture();
-    aMouseEvent->PreventBubble();
-    return NS_ERROR_FAILURE; //consumes event
-  }
   return NS_OK;
 }
 
