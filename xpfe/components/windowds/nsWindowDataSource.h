@@ -41,6 +41,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIWindowMediatorListener.h"
 #include "nsIWindowDataSource.h"
+#include "nsIObserver.h"
 
 #include "nsIRDFService.h"
 #include "nsIRDFContainer.h"
@@ -53,6 +54,7 @@
 
 
 class nsWindowDataSource : public nsIRDFDataSource,
+                           public nsIObserver,
                            public nsIWindowMediatorListener,
                            public nsIWindowDataSource
 {
@@ -63,6 +65,7 @@ class nsWindowDataSource : public nsIRDFDataSource,
     nsresult Init();
     
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
     NS_DECL_NSIWINDOWMEDIATORLISTENER
     NS_DECL_NSIWINDOWDATASOURCE
     NS_DECL_NSIRDFDATASOURCE
@@ -75,8 +78,8 @@ class nsWindowDataSource : public nsIRDFDataSource,
     static PRUint32 windowCount;
     static PRUint32 gRefCnt;
     
-    static nsIRDFDataSource* mInner;
-    static nsIRDFContainer* mContainer;
+    nsCOMPtr<nsIRDFDataSource> mInner;
+    nsCOMPtr<nsIRDFContainer> mContainer;
 
     static nsIRDFResource* kNC_Name;
     static nsIRDFResource* kNC_KeyIndex;
