@@ -86,15 +86,19 @@ public:
 
   nsresult GetStyleContext(nsICSSPseudoComparator* aComparator, nsIPresContext* aPresContext, 
                            nsIContent* aContent, 
-                           nsIStyleContext* aContext, nsISupportsArray* aInputWord,
+                           nsIStyleContext* aContext, nsIAtom* aPseudoElement,
+                           nsISupportsArray* aInputWord,
                            nsIStyleContext** aResult);
 
 protected:
   // A transition table for a deterministic finite automaton.  The DFA
-  // takes as its input an ordered set of pseudoelements.  It transitions
-  // from state to state by looking up entries in the transition table (which is
+  // takes as its input a single pseudoelement and an ordered set of properties.  
+  // It transitions on an input word that is the concatenation of the pseudoelement supplied
+  // with the properties in the array.
+  // 
+  // It transitions from state to state by looking up entries in the transition table (which is
   // a mapping from (S,i)->S', where S is the current state, i is the next
-  // pseudoelement in the input word, and S' is the state to transition to.
+  // property in the input word, and S' is the state to transition to.
   //
   // If S' is not found, it is constructed and entered into the hashtable
   // under the key (S,i).
@@ -104,7 +108,7 @@ protected:
   nsHashtable* mTransitionTable;
 
   // The cache of all active style contexts.  This is a hash from 
-  // a final state in the DFA, Sf, to the resultant style context.  
+  // a final state in the DFA, Sf, to the resultant style context.
   nsSupportsHashtable* mCache;
 
   // An integer counter that is used when we need to make new states in the
@@ -121,15 +125,19 @@ class nsOutlinerColumn {
   PRUint32 mCropStyle;
   PRUint32 mTextAlignment;
   
+  PRBool mIsPrimaryCol;
+  PRBool mIsCyclerCol;
+
   nsIFrame* mColFrame;
+  nsIContent* mColElement;
 
 public:
-  nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame) {};
-  virtual ~nsOutlinerColumn() {};
+  nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame);
+  virtual ~nsOutlinerColumn() { delete mNext; };
 
   void SetNext(nsOutlinerColumn* aNext) { mNext = aNext; };
 
-  PRUint32 GetColumnWidth() { return 0; };
+  nscoord GetColumnWidth();
 };
 
 // The actual frame that paints the cells and rows.
@@ -151,7 +159,7 @@ public:
                    nsFramePaintLayer    aWhichLayer);
 
   // This method paints a single row in the outliner.
-  NS_IMETHOD PaintRow(int aRowIndex, 
+  NS_IMETHOD PaintRow(int aRowIndex, const nsRect& aRowRect,
                       nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect,
@@ -164,6 +172,12 @@ public:
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer);
+
+  // This method is called with a specific style context and rect to
+  // paint the background rect as if it were a full-blown frame.
+  NS_IMETHOD PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext, 
+                                  nsIRenderingContext& aRenderingContext, 
+                                  const nsRect& aRect, const nsRect& aDirtyRect);
 
   friend nsresult NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame);
@@ -180,7 +194,7 @@ protected:
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
-  nsresult GetPseudoStyleContext(nsIPresContext* aPresContext, nsIStyleContext** aResult);
+  nsresult GetPseudoStyleContext(nsIPresContext* aPresContext, nsIAtom* aPseudoElement, nsIStyleContext** aResult);
 
   // Builds our cache of column info.
   void EnsureColumns(nsIPresContext* aContext);
