@@ -395,7 +395,7 @@ nsHTMLTagContent::AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValu
 
         if (nsnull != mGlobal && NS_OK == mGlobal->QueryInterface(kIDOMEventReceiverIID, (void**)&mReceiver)) {
           nsIEventListenerManager *mManager;
-          if (NS_OK == GetListenerManager(&mManager)) {
+          if (NS_OK == mReceiver->GetListenerManager(&mManager)) {
             nsIScriptObjectOwner *mObjectOwner;
             if (NS_OK == mGlobal->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
               nsString mValue;
