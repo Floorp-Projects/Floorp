@@ -32,12 +32,18 @@ CPPSRCS		= \
 		TestRect.cpp \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= nggfx
+else
+EXTRA_DSO_LIBS	= raptorgfx
+endif
 
 LIBS		= \
-		-lraptorgfx \
+		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(NSPR_LIBS) \

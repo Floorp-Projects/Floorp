@@ -48,7 +48,7 @@ CPPSRCS		= \
 		TestThreads.cpp \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 
@@ -70,7 +70,7 @@ endif
 
 LIBS		+= \
 		$(MOZ_TIMER_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(TK_LIBS) \
 		$(LOST_SYM_LIBS) \

@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= TestStreamConv
-PROGRAM		= TestStreamConv
+PROGRAM		= TestStreamConv$(BIN_SUFFIX)
 
 REQUIRES	= libreg xpcom
 

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= TestCookie
+PROGRAM		= TestCookie$(BIN_SUFFIX)
 CPPSRCS		= TestCookie.cpp
 
 REQUIRES	= js cookie pref xpcom include

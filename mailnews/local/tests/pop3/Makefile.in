@@ -26,11 +26,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= pop3Test
+PROGRAM		= pop3Test$(BIN_SUFFIX)
 CPPSRCS		= pop3Test.cpp
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= msgbutil
+else
+EXTRA_DSO_LIBS	= msgbaseutil
+endif
+
 LIBS		= \
-		-lmsgbaseutil \
+		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \

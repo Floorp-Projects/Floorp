@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= geturl
+PROGRAM		= geturl$(BIN_SUFFIX)
 
 CPPSRCS		= \
 		geturl.cpp \
@@ -36,7 +36,7 @@ CPPSRCS		= \
 LIBS = \
 		$(MOZ_TIMER_LIBS) \
 		$(XPCOM_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

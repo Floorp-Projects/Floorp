@@ -26,17 +26,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= msgcomposetest2
+PROGRAM		= msgcomposetest2$(BIN_SUFFIX)
 
 CPPSRCS		= test2.cpp
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= nggfx msgbutil
+else
+EXTRA_DSO_LIBS	= raptorgfx msgbaseutil
+endif
 
 LIBS		= \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS)	\
 		$(XPCOM_LIBS) \
-		-lmozjs \
-		-lraptorgfx \
-		-lmsgbaseutil \
+		$(MOZ_JS_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(NULL)
 
 # The Timer libs for Photon/Neutrino require the Toolkit libs to also be linked

@@ -27,14 +27,20 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgimaptest
-PROGRAM		= testimap
+PROGRAM		= testimap$(BIN_SUFFIX)
 
 CPPSRCS		= imapProtocolTest.cpp
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= msgbutil
+else
+EXTRA_DSO_LIBS	= msgbaseutil
+endif
 
 LIBS =	\
 		-L$(DIST)/bin \
 		$(XPCOM_LIBS) \
-		-lmsgbaseutil \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

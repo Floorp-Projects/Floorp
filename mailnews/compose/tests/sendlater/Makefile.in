@@ -26,16 +26,21 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= sendlatertest
+PROGRAM		= sendlatertest$(BIN_SUFFIX)
 
 CPPSRCS		= test.cpp
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= nggfx msgbutil
+else
+EXTRA_DSO_LIBS	= raptorgfx msgbaseutil
+endif
+
 LIBS		= \
 		$(MOZ_TIMER_LIBS) \
-		-lraptorgfx \
+		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
-		-lmozjs \
-		-lmsgbaseutil \
+		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

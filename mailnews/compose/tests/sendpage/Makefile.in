@@ -26,15 +26,21 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= sendpage
+PROGRAM		= sendpage$(BIN_SUFFIX)
 
 CPPSRCS		= Test.cpp
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= msgbutil
+else
+EXTRA_DSO_LIBS	= msgbaseutil
+endif
+
 LIBS		= \
 		$(MOZ_TIMER_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
-		-lmozjs \
-		-lmsgbaseutil \
+		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

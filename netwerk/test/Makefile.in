@@ -40,7 +40,7 @@ CPPSRCS		= \
 		TestCallbacks.cpp \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 
@@ -53,6 +53,7 @@ LOST_SYM_LIBS	= -lxpcomds_s -lxpcomio_s -lxptinfo -lmozreg_s
 endif
 
 LIBS		= \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \

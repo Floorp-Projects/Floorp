@@ -26,12 +26,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= rdfcat
+PROGRAM		= rdfcat$(BIN_SUFFIX)
 CPPSRCS		= rdfcat.cpp
 
 LIBS		= \
 		$(MOZ_TIMER_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

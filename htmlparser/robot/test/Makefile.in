@@ -39,7 +39,7 @@ EXTRA_DSO_LIBS = DebugRobot
 endif
 
 LIBS		= \
-		-lDebugRobot \
+		$(EXTRA_DSO_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
