@@ -130,12 +130,7 @@ function serverPageInit() {
   }
 
   gPrefsBundle = document.getElementById("bundle_prefs");
-  var smtpTextBox = document.getElementById("smtphostname");
-
   var smtpServer = parent.smtpService.defaultServer;
-  if (smtpTextBox && smtpTextBox.value == "" &&
-      smtpServer.hostname)
-    smtpTextBox.value = smtpServer.hostname;
 
   // modify the value in the smtp display if we already have a 
   // smtp server so that the single string displays the 
@@ -162,9 +157,13 @@ function hideShowSmtpSettings(smtpServer) {
   var boxToHide;
   var boxToShow;
   
-  if (smtpServer && smtpServer.hostname &&
-      smtpServer.hostname != "") {
-    // we have a hostname, so show the static text
+  if (smtpServer && smtpServer.hostname && smtpServer.redirectorType == null 
+      && smtpServer.hostname != "") {
+    // we have a hostname, so show the static text and 
+    // store the value of the default smtp server in the textbox.
+    var smtpTextBox = document.getElementById("smtphostname");
+    if (smtpTextBox && smtpTextBox.value == "")
+      smtpTextBox.value = smtpServer.hostname;
     boxToShow = haveSmtpBox;
     boxToHide = noSmtpBox;
   } else {

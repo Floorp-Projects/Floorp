@@ -184,11 +184,10 @@ function FinishAccount() {
     
     if (!accountData)
     {
-        accountData = new Object;
-
-        // Time to set the smtpRequiresUsername attribute
-        if (!serverIsNntp(pageData))
-            SetSmtpRequiresUsernameAttribute(accountData);
+      accountData = new Object;
+      // Time to set the smtpRequiresUsername attribute
+      if (!serverIsNntp(pageData))
+        accountData.smtpRequiresUsername = true;
     }
     
     PageDataToAccountData(pageData, accountData);
@@ -446,12 +445,16 @@ function finishAccount(account, accountData) {
          * default server is returned which is also set to create a new smtp server
          * (via GetDefaultServer()) if no default server is found.
          */
-        if (accountData.smtpCreateNewServer)
-            smtpServer = smtpService.createSmtpServer();
+        if (accountData.smtp.hostname != null)
+          smtpServer = smtpService.createSmtpServer();
         else
-            smtpServer = smtpService.defaultServer;
+          smtpServer = smtpService.defaultServer;
 
         dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
+        //set the smtp server to be the default only if it is not a redirectorType
+        if (accountData.smtp.redirectorType == null)
+          smtpService.defaultServer = smtpServer;
+
         copyObjectToInterface(smtpServer, accountData.smtp);
 
         // some identities have 'preferred' 
