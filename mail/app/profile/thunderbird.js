@@ -195,11 +195,9 @@ pref("network.hosts.pop_server",            "mail");
 
 pref("general.config.obscure_value", 0); // for MCD .cfg files
 
+pref("xpinstall.dialog.progress", "chrome://communicator/content/xpinstall/xpistatus.xul");
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
-pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?type=themes");
-pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?type=extensions");
-pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes"); 
-pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
+pref("xpinstall.dialog.progress.type", "");
 
 /////////////////////////////////////////////////////////////////
 // End seamonkey suite all.js pref overrides
