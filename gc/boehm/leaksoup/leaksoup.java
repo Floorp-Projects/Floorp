@@ -378,13 +378,16 @@ public class leaksoup {
 			if (value.startsWith("0x")) {
 				try {
 					int hexValue = Integer.parseInt(value.substring(2), 16);
-					StringBuffer buffer = new StringBuffer(value);
-					buffer.append('\t');
-					appendChar(buffer, ((hexValue >>> 24) & 0x00FF));
-					appendChar(buffer, ((hexValue >>> 16) & 0x00FF));
-					appendChar(buffer, ((hexValue >>>  8) & 0x00FF));
-					appendChar(buffer, (hexValue & 0x00FF));
-					value = buffer.toString();
+					// don't interpret some common values, to save some space.
+					if (hexValue != 0 && hexValue != -1) {
+						StringBuffer buffer = new StringBuffer(value);
+						buffer.append('\t');
+						appendChar(buffer, ((hexValue >>> 24) & 0x00FF));
+						appendChar(buffer, ((hexValue >>> 16) & 0x00FF));
+						appendChar(buffer, ((hexValue >>>  8) & 0x00FF));
+						appendChar(buffer, (hexValue & 0x00FF));
+						value = buffer.toString();
+					}
 				} catch (NumberFormatException nfe) {
 				}
 			}
