@@ -89,7 +89,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 #undef KeyPress
 #endif
 
-#define NATIVE_ERROR 05
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
@@ -2684,7 +2683,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 #ifdef XP_MAC
     if (mWidget != NULL) {  // check for null mWidget
         EventRecord* event = (EventRecord*)anEvent.nativeMsg;
-        if ((event == NULL) || (event->what == nullEvent) || ((int)event < NATIVE_ERROR)) {
+        if ((event == NULL) || (event->what == nullEvent) || 
+           (anEvent.message == NS_FOCUS_EVENT_START)      || 
+           (anEvent.message == NS_GOTFOCUS)               || 
+           (anEvent.message == NS_LOSTFOCUS)              || 
+           (anEvent.message == NS_MOUSE_MOVE)             ||
+           (anEvent.message == NS_MOUSE_ENTER))
+        {
             EventRecord macEvent;
             GUItoMacEvent(anEvent, macEvent);
             event = &macEvent;
