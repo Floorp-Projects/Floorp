@@ -24,6 +24,9 @@
 #include "nscore.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLStyleSheet.h"
+#include "nsIPresContext.h"
+#include "nsIDocument.h"
+#include "nsINodeInfo.h"
 #include "nsIStyleRule.h"
 #include "nsString.h"
 #include "nsISupportsArray.h"
@@ -968,10 +971,36 @@ NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, NS_GET_IID(nsIHTMLAttributes));
 
 const PRUnichar kNullCh = PRUnichar('\0');
 
-static void ParseClasses(const nsAReadableString& aClassString, nsClassList& aClassList)
+static void ParseClasses(const nsAReadableString& aClassString, nsClassList& aClassList, nsIHTMLContent* aContent)
 {
   nsAutoString  classStr(aClassString);  // copy to work buffer
   classStr.Append(kNullCh);  // put an extra null at the end
+
+  // Find out if we're in quirks mode by walking from aContent
+  // to the presContext (null-checking all the way)
+  nsCOMPtr<nsINodeInfo> ni;
+  aContent->GetNodeInfo(*getter_AddRefs(ni));
+  if (ni) {
+    nsCOMPtr<nsIDocument> doc;
+    ni->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIPresShell> shell;
+      doc->GetShellAt(0, getter_AddRefs(shell));
+      if (shell) {
+        nsCOMPtr<nsIPresContext> presContext;
+        shell->GetPresContext(getter_AddRefs(presContext));
+        if (presContext) {
+          nsCompatibility mode;
+          presContext->GetCompatibilityMode(&mode);
+          if (mode == eCompatibility_NavQuirks) {
+            // in quirks mode, we uppercase the class attribute and classes in CSS.
+            // (see also nsCSSParser.cpp)
+            classStr.ToUpperCase();
+          }
+        }
+      }
+    }
+  }
 
   PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr.get();
   PRUnichar* end   = start;
@@ -1137,7 +1166,7 @@ HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName, const nsAReadableString&
   }
   else if (nsHTMLAtoms::kClass == aAttrName) {
     mFirstClass.Reset();
-    ParseClasses(aValue, mFirstClass);
+    ParseClasses(aValue, mFirstClass, aContent);
   }
 
   PRBool  haveAttr;
@@ -1200,7 +1229,7 @@ HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName,
     if (eHTMLUnit_String == aValue.GetUnit()) {
       nsAutoString  buffer;
       aValue.GetStringValue(buffer);
-      ParseClasses(buffer, mFirstClass);
+      ParseClasses(buffer, mFirstClass, aContent);
     }
   }
 
