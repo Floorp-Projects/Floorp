@@ -157,14 +157,24 @@ void CNetscapeEditView::OnInsertTarget()
 void CNetscapeEditView::OnTargetProperties()
 {
     char * pName = NULL;
-    if( ED_ELEMENT_TARGET == EDT_GetCurrentElementType(GET_MWCONTEXT) ) {
-        pName = EDT_GetTargetData(GET_MWCONTEXT);
+    MWContext * pMWContext = GET_MWCONTEXT;
+    if( !pMWContext )
+        return;
+
+    if( ED_ELEMENT_TARGET == EDT_GetCurrentElementType(pMWContext) ) {
+        pName = EDT_GetTargetData(pMWContext);
     }
 
-    CTargetDlg dlg(this, GET_MWCONTEXT, pName);
+    CTargetDlg dlg(this, pMWContext, pName);
     dlg.DoModal();
 
     if(pName) XP_FREE(pName);
+	// If we automatically caused a selection, then clear it now
+	//  so user doesn't accidentally delete our selected object.
+	if( m_bAutoSelectObject && EDT_IsSelected(pMWContext) ){
+		EDT_ClearSelection(pMWContext);
+        m_bAutoSelectObject = FALSE;
+    }
 }
 
 void CNetscapeEditView::OnUpdateTargetProperties(CCmdUI* pCmdUI)
@@ -1650,15 +1660,6 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     cmPopup.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, cpPoint.x, cpPoint.y, 
                            GetParentFrame(), NULL);
 
-	// If we automatically caused a selection, then clear it now
-	//  so user doesn't accidentally delete our selected object.
-    // Also avoids selected object at same time as selected table or cell
-	if( m_bAutoSelectObject && EDT_IsSelected(pMWContext) ){
-		EDT_ClearSelection(pMWContext);
-        // Don't clear flag yet - done during 
-        m_bAutoSelectObject = FALSE;
-    }
-
     GetContext()->m_bInPopupMenu = FALSE;
 
     if( hSelectMenu) ::DestroyMenu(hSelectMenu);
@@ -1934,15 +1935,25 @@ void CNetscapeEditView::OnInsertHRule()
 #endif
 }
 
-// This will insert a new HRule if current element is not an image
+// This will insert a new HRule if current element is not a HRule
 void CNetscapeEditView::OnHRuleProperties()
 {
+    MWContext * pMWContext = GET_MWCONTEXT;
+    if( !pMWContext )
+        return;
     EDT_HorizRuleData* pData = NULL;
-    if (EDT_GetCurrentElementType(GET_MWCONTEXT) == ED_ELEMENT_HRULE){
-        pData = EDT_GetHorizRuleData(GET_MWCONTEXT);
+    if (EDT_GetCurrentElementType(pMWContext) == ED_ELEMENT_HRULE){
+        pData = EDT_GetHorizRuleData(pMWContext);
     }
-    CHRuleDlg dlg(GET_DLG_PARENT(this), GET_MWCONTEXT, pData);
+    CHRuleDlg dlg(GET_DLG_PARENT(this), pMWContext, pData);
     dlg.DoModal();
+
+	// If we automatically caused a selection, then clear it now
+	//  so user doesn't accidentally delete our selected object.
+	if( m_bAutoSelectObject && EDT_IsSelected(pMWContext) ){
+		EDT_ClearSelection(pMWContext);
+        m_bAutoSelectObject = FALSE;
+    }
 }
 
 void CNetscapeEditView::OnUpdateHRuleProperties(CCmdUI* pCmdUI)
@@ -2040,24 +2051,27 @@ void CNetscapeEditView::OnLocalProperties()
 
     // Check for last table hit area
     ED_HitType iHit =  EDT_GetTableHitRegion(pMWContext, -1, -1, NULL, FALSE);
-    int iStartPage = -1;
-    switch( iHit )
+    if( iHit != ED_HIT_NONE )
     {
-        case ED_HIT_SEL_TABLE:
-        case ED_HIT_ADD_ROWS:
-        case ED_HIT_ADD_COLS:
-        case ED_HIT_SIZE_TABLE_WIDTH:
-            // Allow any of 4 corners to select table properties
-            iStartPage = 0;
-            break;
-        default:
-            iStartPage = 1;   // The Cell Properties page
-            break;
-    }
-    if( iStartPage >= 0 )
-    {
-        OnTableProperties(iStartPage);
-        return;
+        int iStartPage = -1;
+        switch( iHit )
+        {
+            case ED_HIT_SEL_TABLE:
+            case ED_HIT_ADD_ROWS:
+            case ED_HIT_ADD_COLS:
+            case ED_HIT_SIZE_TABLE_WIDTH:
+                // Allow any of 4 corners to select table properties
+                iStartPage = 0;
+                break;
+            default:
+                iStartPage = 1;   // The Cell Properties page
+                break;
+        }
+        if( iStartPage >= 0 )
+        {
+            OnTableProperties(iStartPage);
+            return;
+        }
     }
 
     ED_ElementType type = EDT_GetCurrentElementType(pMWContext);
@@ -2956,18 +2970,30 @@ void CNetscapeEditView::OnInsertObjectPopup()
 void CNetscapeEditView::OnInsertTable()
 {
     MWContext * pMWContext = GET_MWCONTEXT;
-    if( pMWContext ){
+    if( pMWContext )
+    {
+        EDT_BeginBatchChanges(pMWContext);
+
         // Unselect so we insert after after the object
         if( NonLinkObjectIsSelected(pMWContext) )
             EDT_ClearSelection(pMWContext);
+    
         // Insert a default table
         EDT_TableData *pTableData = EDT_NewTableData();
         if( pTableData )
         {
+            // Insert a 1x1 default table
             EDT_InsertTable(pMWContext, pTableData);
             EDT_FreeTableData(pTableData);
-            OnTableProperties(0);
+
+            // Let user set number of rows, columns, etc,
+            //  and remove table if they cancel immediately
+            if( OnTableProperties(0) == IDCANCEL )
+            {
+                EDT_DeleteTable(pMWContext);
+            }
         }
+        EDT_EndBatchChanges(pMWContext);
     }
 }
 
@@ -3288,16 +3314,18 @@ void CNetscapeEditView::OnPropsTableCell()
     OnTableProperties(1);
 }
 
-void CNetscapeEditView::OnTableProperties(int iStartPage)
+int CNetscapeEditView::OnTableProperties(int iStartPage)
 {
+    int iResult = IDOK;
+
     MWContext * pMWContext = GET_MWCONTEXT;
     if (pMWContext == NULL || !EDT_IS_EDITOR(pMWContext)) {
-        return;
+        return IDOK;
     }
     int iPageMax = 0;
     EDT_TableData * pTableData = EDT_GetTableData(pMWContext);
     if( !pTableData )
-        return;
+        return IDOK;
 
     // Get the cell data. This will be NULL if caret is 
     //  in a table caption. If it is, then do not add the Cell page
@@ -3344,7 +3372,7 @@ void CNetscapeEditView::OnTableProperties(int iStartPage)
 
 	int32 iPage = max( iPageMax, iStartPage );
     PropsDlg.SetCurrentPage(min(CASTINT(iStartPage), iPageMax));
-
+    
     if( pCellData )
     {
         // Note: We used to do  EDT_BeginBatchChanges/EDT_EndBatchChanges around this
@@ -3355,7 +3383,7 @@ void CNetscapeEditView::OnTableProperties(int iStartPage)
         //  so user can tell the focus cell (= current) from
         //  other selected cells
         EDT_StartSpecialCellSelection(pMWContext, pCellData);
-        PropsDlg.DoModal();
+        iResult = PropsDlg.DoModal();
         EDT_ClearSpecialCellSelection(pMWContext);
     }
 
@@ -3366,6 +3394,8 @@ void CNetscapeEditView::OnTableProperties(int iStartPage)
     
     if( pCellPage ) delete pCellPage;
     delete pTablePage;
+
+    return iResult;
 }
 
 void CNetscapeEditView::OnUpdateEditFindincurrent(CCmdUI* pCmdUI)

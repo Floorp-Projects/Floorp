@@ -617,7 +617,6 @@ void CTablePage::OnOK()
     SetColorHelper(m_bUseColor, m_crColor, &m_pTableData->pColorBackground);
 
     EDT_SetTableData(m_pMWContext, m_pTableData);
-    // Note: Caller must free m_pTableData
 
     // OK, we need to insert or remove a caption, as nescessary.
     SetTableCaption(m_pMWContext, m_iCaption);
@@ -1389,7 +1388,7 @@ void CTableCellPage::OnChangeSelectionType()
 
 void CTableCellPage::ChangeSelection(ED_MoveSelType iMoveType)
 {
-    if( iMoveType != ED_MOVE_NONE && IS_APPLY_ENABLED(this) &&
+    if( iMoveType != ED_MOVE_NONE && m_bModified &&
         IDYES == MessageBox(szLoadString(IDS_APPLY_CELL_MSG), szLoadString(IDS_CHANGE_SEL_CAPTION),
                             MB_YESNO | MB_ICONQUESTION) )
     {

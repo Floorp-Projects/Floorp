@@ -223,7 +223,7 @@ public:
 
     void OnImagePropDlg();
 
-    void OnTableProperties(int iStartPage);
+    int OnTableProperties(int iStartPage);
 
     // Asynchronous file save result is placed here when done.
     void SetFileSaveStatus(ED_FileError status) { m_FileSaveStatus = status; }
