@@ -31,6 +31,7 @@
 #include "nsCWebBrowser.h"
 #include "nsIWebBrowser.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIDocShellTreeItem.h"
 
 #include "prprf.h" // for PR_snprintf
 #include "nsFileSpec.h" // for nsAutoCString
@@ -351,9 +352,10 @@ CBrowserContainer::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 NS_IMETHODIMP
 CBrowserContainer::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 {
-	NS_ERROR("Haven't Implemented this yet");
-	*aShell = nsnull;
-	return NS_ERROR_FAILURE;
+	nsCOMPtr<nsIDocShell> docShell = do_GetInterface(m_pOwner);
+	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+	*aShell = (nsIDocShellTreeItem *) docShellAsItem;
+	return NS_OK;
 }
 
 
