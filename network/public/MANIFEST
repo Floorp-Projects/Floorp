@@ -8,5 +8,6 @@ nsIPostToServer.h
 nsIStreamListener.h
 nsIStreamObserver.h
 nsIURL.h
+nsITransport.h
 
 
