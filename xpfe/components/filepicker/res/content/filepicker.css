@@ -1,0 +1,10 @@
+
+/* This file is for non skin-specific rules for the filepicker dialog */
+
+.tree-cell-twisty { display: none; }
+
+treeitem[container="true"] > treerow > treecell {
+  list-style-image: url("chrome://global/skin/dir-closed.gif");
+}
+
+

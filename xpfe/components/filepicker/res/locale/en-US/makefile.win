@@ -27,6 +27,7 @@ CHROME_L10N_DIR = global\locale
 
 CHROME_L10N = \
 	.\filepicker.properties \
+	.\filepicker.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
