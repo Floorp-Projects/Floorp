@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:23:38 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/30 02:20:13 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -409,7 +409,6 @@ sub change_tree_state {
 sub change_ignore_builds {
   my (@results) = ();
   my (@out);
-  my ($file) = FileStructure::get_filename($TREE, 'ignore_builds');
 
   ("@NEW_IGNORE_BUILDS" eq "@CURRENT_IGNORE_BUILDS") &&
     return ;
