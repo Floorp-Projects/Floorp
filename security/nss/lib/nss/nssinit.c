@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.40 2002/02/28 21:28:47 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.41 2002/03/03 02:29:31 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -261,6 +261,8 @@ static const char *dllname =
 	"nssckbi.dll";
 #elif defined(HPUX)
 	"libnssckbi.sl";
+#elif defined(DARWIN)
+	"libnssckbi.dylib";
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 	"libnssckbi.so";
 #elif defined(XP_MAC)
