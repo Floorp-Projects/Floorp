@@ -114,8 +114,7 @@ GetScreenOrigin(nsIDOMElement* aElement)
   nsSize size;
  
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = content->GetDocument();
 
   if (doc) {
     // Get Presentation shell 0
