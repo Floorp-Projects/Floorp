@@ -374,7 +374,7 @@ BookmarksUIElement.prototype = {
       }
       break;
     case "bm_newfolder":
-      var nfseln = this.getBestItem();
+      var nfseln = document.popupNode;
       this.commands.createBookmarkItem("folder", nfseln);
       break;
     case "bm_newbookmark":
