@@ -214,8 +214,8 @@ sub SendSQL {
     if (!$::currentquery->execute) {
         my $errstr = $::db->errstr;
         # Cut down the error string to a reasonable.size
-        $errstr = substr($errstr, 0, 100) . ' ... ' . substr($errstr, -100)
-                if length($errstr) > 200;
+        $errstr = substr($errstr, 0, 2000) . ' ... ' . substr($errstr, -2000)
+                if length($errstr) > 4000;
         die "$str: " . $errstr;
     }
     SqlLog("Done");
