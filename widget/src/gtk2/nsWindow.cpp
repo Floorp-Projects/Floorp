@@ -1508,7 +1508,8 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
                 event.charCode >= GDK_A &&
                 event.charCode <= GDK_Z )
             event.charCode = gdk_keyval_to_lower(event.charCode);
-        }
+        } else        
+            event.isShift = PR_FALSE;
     }
 
     // send the key press event

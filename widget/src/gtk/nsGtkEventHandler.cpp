@@ -430,7 +430,8 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
               anEvent.charCode >= GDK_A &&
               anEvent.charCode <= GDK_Z )
            anEvent.charCode = gdk_keyval_to_lower(anEvent.charCode);
-      }
+      } else
+        anEvent.isShift = PR_FALSE;
     } else {
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
     }
