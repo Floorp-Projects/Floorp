@@ -209,8 +209,8 @@ function SignonSelected() {
 
 function DeleteSignon() {
   DeleteSelectedItemFromTree(signonsTree, signonsTreeView,
-                                 signons, deletedSignons,
-                                 "removeSignon", "removeAllSignons");
+                             signons, deletedSignons,
+                             "removeSignon", "removeAllSignons");
   FinalizeSignonDeletions();
 }
 
@@ -367,11 +367,14 @@ function DeleteAllFromTree
   table.length = 0;
 
   // clear out selections
-  tree.treeBoxObject.view.selection.select(-1); 
+  view.selection.select(-1); 
 
-  // redisplay
+  // update the tree view and notify the tree
   view.rowCount = 0;
-  tree.treeBoxObject.invalidate();
+
+  var box = tree.treeBoxObject;
+  box.rowCountChanged(0, -deletedTable.length);
+  box.invalidate();
 
 
   // disable buttons
@@ -382,52 +385,61 @@ function DeleteAllFromTree
 function DeleteSelectedItemFromTree
     (tree, view, table, deletedTable, removeButton, removeAllButton) {
 
-  // remove selected items from list (by setting them to null) and place in deleted list
-  var selections = GetTreeSelections(tree);
-  for (var s=selections.length-1; s>= 0; s--) {
-    var i = selections[s];
-    deletedTable[deletedTable.length] = table[i];
-    table[i] = null;
+  var box = tree.treeBoxObject;
+
+  // Remove selected items from list (by setting them to null) and place in
+  // deleted list.  At the same time, notify the tree of the row count changes.
+
+  var selection = box.selection;
+  var oldSelectStart = table.length;
+  box.beginUpdateBatch();
+
+  var selCount = selection.getRangeCount();
+  var min = new Object();
+  var max = new Object();
+
+  for (var s = 0; s < selCount; ++s) {
+    selection.getRangeAt(s, min, max);
+    var minVal = min.value;
+    var maxVal = max.value;
+
+    oldSelectStart = minVal < oldSelectStart ? minVal : oldSelectStart;
+
+    var rowCount = maxVal - minVal + 1;
+    view.rowCount -= rowCount;
+    box.rowCountChanged(minVal, -rowCount);
+
+    for (var i = minVal; i <= maxVal; ++i) {
+      deletedTable[deletedTable.length] = table[i];
+      table[i] = null;
+    }
   }
 
   // collapse list by removing all the null entries
-  for (var j=0; j<table.length; j++) {
-    if (table[j] == null) {
+  for (var j = 0; j < table.length; ++j) {
+    if (!table[j]) {
       var k = j;
-      while ((k < table.length) && (table[k] == null)) {
+      while (k < table.length && !table[k])
         k++;
-      }
+
       table.splice(j, k-j);
     }
   }
 
-  // redisplay
-  var box = tree.treeBoxObject;
-  var firstRow = box.getFirstVisibleRow();
-  if (firstRow > (table.length-1) ) {
-    firstRow = table.length-1;
-  }
-  view.rowCount = table.length;
-  box.rowCountChanged(0, table.length);
-  box.scrollToRow(firstRow)
+  box.endUpdateBatch();
 
   // update selection and/or buttons
+  var removeButton = document.getElementById(removeButton);
+  var removeAllButton = document.getElementById(removeAllButton);
+
   if (table.length) {
+    removeButton.removeAttribute("disabled");
+    removeAllButton.removeAttribute("disabled");
 
-    // update selection
-    // note: we need to deselect before reselecting in order to trigger ...Selected method
-    var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
-    tree.treeBoxObject.view.selection.select(-1); 
-    tree.treeBoxObject.view.selection.select(nextSelection);
-
+    selection.select(oldSelectStart < table.length ? oldSelectStart : table.length - 1);
   } else {
-
-    // disable buttons
-    document.getElementById(removeButton).setAttribute("disabled", "true")
-    document.getElementById(removeAllButton).setAttribute("disabled","true");
-
-    // clear out selections
-    tree.treeBoxObject.view.selection.select(-1); 
+    removeButton.setAttribute("disabled", "true");
+    removeAllButton.setAttribute("disabled", "true");
   }
 }
 
