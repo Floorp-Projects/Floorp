@@ -4990,8 +4990,24 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsString& aOutputString)
   res = SetSelectionAroundHeadChildren(selection, mDocWeak);
   if (NS_FAILED(res)) return res;
 
-  return OutputToString(aOutputString, NS_ConvertASCIItoUCS2("text/html"),
-                        nsIDocumentEncoder::OutputSelectionOnly);
+  res = OutputToString(aOutputString, NS_ConvertASCIItoUCS2("text/html"),
+                       nsIDocumentEncoder::OutputSelectionOnly);
+  if (NS_SUCCEEDED(res))
+  {
+    // Selection always includes <body></body>,
+    //  so terminate there
+    PRInt32 offset = aOutputString.Find(NS_ConvertASCIItoUCS2("<body"), PR_TRUE);
+    if (offset > 0)
+    {
+      // Ensure the string ends in a newline
+      PRUnichar newline ('\n');
+      if (aOutputString.CharAt(offset-1) != newline)
+        aOutputString.SetCharAt(newline, offset++);
+
+      aOutputString.Truncate(offset);
+    }
+  }
+  return res;
 }
 
 NS_IMETHODIMP
