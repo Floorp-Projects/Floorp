@@ -3851,7 +3851,7 @@ DLL_SUFFIX=so
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
 TARGET_MD_ARCH=unix
-DIRENT_INO='d_ino'
+DIRENT_INO=d_ino
 
 OS_TARGET=`uname -s`
 OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -4252,7 +4252,7 @@ EOF
     ;;
 
 *-qnx*) 
-    DIRENT_INO='d_stat.st_ino'
+    DIRENT_INO=d_stat.st_ino
         cat >> confdefs.h <<\EOF
 #define NSCAP_DISABLE_TEST_DONTQUERY_CASES 1
 EOF
@@ -4360,7 +4360,7 @@ EOF
 esac
 
 cat >> confdefs.h <<EOF
-#define D_INO "$DIRENT_INO"
+#define D_INO $DIRENT_INO
 EOF
 
 
