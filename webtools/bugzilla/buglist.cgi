@@ -735,7 +735,9 @@ if ($serverpush) {
     $template->process("list/server-push.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
-    print $cgi->multipart_end();
+    # Don't do multipart_end() until we're ready to display the replacement
+    # page, otherwise any errors that happen before then (like SQL errors)
+    # will result in a blank page being shown to the user instead of the error.
 }
 
 # Connect to the shadow database if this installation is using one to improve
@@ -964,6 +966,8 @@ if ($format->{'extension'} eq "csv") {
 }
 
 if ($serverpush) {
+    # close the "please wait" page, then open the buglist page
+    print $cgi->multipart_end();
     print $cgi->multipart_start(-type=>$contenttype);
 } else {
     # Suggest a name for the bug list if the user wants to save it as a file.
