@@ -367,6 +367,7 @@ public:
 protected:
   PRUint32 mLineNumber;
   PRPackedBool mIsEvaluated;
+  PRPackedBool mEvaluating;
 
   // Pointer to the script handler helper object (OWNING reference)
   nsHTMLScriptEventHandler *mScriptEventHandler;
@@ -418,6 +419,7 @@ nsHTMLScriptElement::nsHTMLScriptElement()
 {
   mLineNumber = 0;
   mIsEvaluated = PR_FALSE;
+  mEvaluating = PR_FALSE;
   mScriptEventHandler = nsnull;
 }
 
@@ -607,7 +609,6 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
                                      PRInt32 aLineNo,
                                      const nsAString& aScript)
 {
-  nsresult rv = NS_OK;
   if (!aIsInline && NS_FAILED(aResult)) {
     nsCOMPtr<nsIPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext)); 
@@ -630,7 +631,7 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
 
     event.fileName = fileName.get();
 
-    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
+    HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
                         &status);
   }
 
@@ -682,7 +683,7 @@ nsHTMLScriptElement::GetLineNumber(PRUint32* aLineNumber)
 void
 nsHTMLScriptElement::MaybeProcessScript()
 {
-  if (mIsEvaluated || !mDocument || !mParent) {
+  if (mIsEvaluated || mEvaluating || !mDocument || !mParent) {
     return;
   }
 
@@ -691,7 +692,9 @@ nsHTMLScriptElement::MaybeProcessScript()
   nsCOMPtr<nsIScriptLoader> loader;
   mDocument->GetScriptLoader(getter_AddRefs(loader));
   if (loader) {
+    mEvaluating = PR_TRUE;
     loader->ProcessScriptElement(this, this);
+    mEvaluating = PR_FALSE;
   }
 
   // But we'll only set mIsEvaluated if we did really load or evaluate
