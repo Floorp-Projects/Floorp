@@ -37,6 +37,8 @@ class nsFileSpecWithUIImpl
 
 	NS_IMETHOD chooseOutputFile(const char *windowTitle, const char *suggestedLeafName);
 
+	NS_IMETHOD chooseFile(const char *title, char **_retval);
+
 	NS_IMETHOD chooseInputFile(
 		const char *title,
 		nsIFileSpecWithUI::StandardFilterMask standardFilterMask,
