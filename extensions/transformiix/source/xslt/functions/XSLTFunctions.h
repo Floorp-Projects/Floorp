@@ -182,26 +182,65 @@ private:
 /**
  * The definition for the XSLT format-number() function
 **/
-class FormatNumberFunctionCall : public FunctionCall {
+class txFormatNumberFunctionCall : public FunctionCall {
 
 public:
 
     /**
      * Creates a new format-number() function call
     **/
-    FormatNumberFunctionCall();
+    txFormatNumberFunctionCall(ProcessorState* aPs);
 
     /**
      * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param cs the ContextState containing the stack information needed
+     * @param aContext the context node for evaluation of this Expr
+     * @param aCs the ContextState containing the stack information needed
      * for evaluation
      * @return the result of the evaluation
      * @see FunctionCall.h
     **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+    virtual ExprResult* evaluate(Node* aContext, ContextState* aCs);
 
 private:
+    static const UNICODE_CHAR FORMAT_QUOTE;
+
+    enum FormatParseState {
+        Prefix,
+        IntDigit,
+        IntZero,
+        FracZero,
+        FracDigit,
+        Suffix,
+        Finished
+    };
+    
+    ProcessorState* mPs;
+};
+
+/**
+ * DecimalFormat
+ * A representation of the XSLT element <xsl:decimal-format>
+ */
+class txDecimalFormat : public TxObject {
+
+public:
+    /*
+     * Creates a new decimal format and initilizes all properties with
+     * default values
+     */
+    txDecimalFormat();
+    MBool isEqual(txDecimalFormat* other);
+    
+    UNICODE_CHAR    mDecimalSeparator;
+    UNICODE_CHAR    mGroupingSeparator;
+    String          mInfinity;
+    UNICODE_CHAR    mMinusSign;
+    String          mNaN;
+    UNICODE_CHAR    mPercent;
+    UNICODE_CHAR    mPerMille;
+    UNICODE_CHAR    mZeroDigit;
+    UNICODE_CHAR    mDigit;
+    UNICODE_CHAR    mPatternSeparator;
 };
 
 /**

@@ -124,8 +124,9 @@ CPP_OBJS=							\
 	..\source\xslt\functions\$(OBJDIR)\ElementAvailableFnCall.obj \
 	..\source\xslt\functions\$(OBJDIR)\FunctionAvailableFnCall.obj \
 	..\source\xslt\functions\$(OBJDIR)\GenerateIdFunctionCall.obj \
-	..\source\xslt\functions\$(OBJDIR)\txKeyFunctionCall.obj \
 	..\source\xslt\functions\$(OBJDIR)\SystemPropertyFunctionCall.obj \
+	..\source\xslt\functions\$(OBJDIR)\txFormatNumberFunctionCall.obj \
+	..\source\xslt\functions\$(OBJDIR)\txKeyFunctionCall.obj \
 	..\source\xslt\util\$(OBJDIR)\NodeStack.obj \
 	..\source\xslt\util\$(OBJDIR)\txNodeSorter.obj \
 	..\source\xslt\util\$(OBJDIR)\txXPathResultComparator.obj \

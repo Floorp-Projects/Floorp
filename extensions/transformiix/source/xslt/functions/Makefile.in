@@ -42,8 +42,9 @@ CPPSRCS = CurrentFunctionCall.cpp      \
           ElementAvailableFnCall.cpp   \
           FunctionAvailableFnCall.cpp  \
           GenerateIdFunctionCall.cpp   \
-          txKeyFunctionCall.cpp        \
-          SystemPropertyFunctionCall.cpp
+          SystemPropertyFunctionCall.cpp \
+          txFormatNumberFunctionCall.cpp \
+          txKeyFunctionCall.cpp
 
 include $(topsrcdir)/config/rules.mk
 

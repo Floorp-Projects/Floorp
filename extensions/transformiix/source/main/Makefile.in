@@ -116,8 +116,9 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xslt/functions/ElementAvailableFnCall.$(OBJ_SUFFIX) \
   ../xslt/functions/FunctionAvailableFnCall.$(OBJ_SUFFIX) \
   ../xslt/functions/GenerateIdFunctionCall.$(OBJ_SUFFIX) \
-  ../xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/functions/SystemPropertyFunctionCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/txFormatNumberFunctionCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/util/NodeStack.$(OBJ_SUFFIX) \
   ../xslt/util/txNodeSorter.$(OBJ_SUFFIX) \
   ../xslt/util/txXPathResultComparator.$(OBJ_SUFFIX) \

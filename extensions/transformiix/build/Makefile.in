@@ -133,8 +133,9 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xslt/functions/ElementAvailableFnCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/FunctionAvailableFnCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/GenerateIdFunctionCall.$(OBJ_SUFFIX) \
-  ../source/xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/SystemPropertyFunctionCall.$(OBJ_SUFFIX) \
+  ../source/xslt/functions/txFormatNumberFunctionCall.$(OBJ_SUFFIX) \
+  ../source/xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/util/NodeStack.$(OBJ_SUFFIX) \
   ../source/xslt/util/txNodeSorter.$(OBJ_SUFFIX) \
   ../source/xslt/util/txXPathResultComparator.$(OBJ_SUFFIX) \
