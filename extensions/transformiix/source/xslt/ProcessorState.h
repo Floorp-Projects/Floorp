@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.1 2000/04/06 07:46:46 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.h,v 1.2 2000/04/19 10:41:13 kvisco%ziplink.net Exp $
  */
 
 
@@ -45,11 +45,12 @@
 #include "Tokenizer.h"
 #include "VariableBinding.h"
 #include "OutputFormat.h"
+#include "XSLTFunctions.h"
 
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:46:46 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/19 10:41:13 $
 **/
 class ProcessorState : public ContextState
 {
@@ -106,6 +107,12 @@ public:
      * Copies the node using the rules defined in the XSL specification
     **/
     Node* copyNode(Node* node);
+
+    /**
+     * Generates a unique ID for the given node and places the result in
+     * dest
+    **/
+    void generateId(Node* node, String& dest);
 
     /**
      * Returns the AttributeSet associated with the given name
@@ -245,6 +252,13 @@ public:
      *  Notifies this Error observer of a new error using the given error level
     **/
     virtual void recieveError(String& errorMessage, ErrorLevel level);
+
+    /**
+     * Returns a call to the function that has the given name.
+     * This method is used for XPath Extension Functions.
+     * @return the FunctionCall for the function with the given name.
+    **/
+    virtual FunctionCall* resolveFunctionCall(const String& name);
 
     /**
      * Sorts the given NodeSet by DocumentOrder. 

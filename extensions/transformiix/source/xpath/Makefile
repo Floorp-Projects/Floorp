@@ -39,15 +39,16 @@ XPATH_OBJS = AdditiveExpr.o \
              RootExpr.o \
              StringExpr.o \
              StringResult.o \
-	     TextExpr.o \
+	         TextExpr.o \
              UnionExpr.o \
              VariableRefExpr.o \
-	     WildCardExpr.o \
+	         WildCardExpr.o \
              XPathNames.o
 
 FUNCTION_CALL_OBJS = \
             BooleanFunctionCall.o \
             ErrorFunctionCall.o \
+            ExtensionFunctionCall.o \
             FunctionCall.o \
             NodeSetFunctionCall.o \
             NumberFunctionCall.o \
@@ -144,6 +145,9 @@ XPathNames.o: FunctionLib.h XPathNames.cpp
 	$(CC) $(INCLUDE_PATHS) -c XPathNames.cpp
 
 
+FunctionCall.o: Expr.h FunctionCall.cpp
+	$(CC) $(INCLUDE_PATHS) -c FunctionCall.cpp
+
 ########################
 ## FunctionCall package
 ########################
@@ -155,8 +159,8 @@ BooleanFunctionCall.o: FunctionLib.h BooleanFunctionCall.cpp
 ErrorFunctionCall.o: FunctionLib.h ErrorFunctionCall.cpp
 	$(CC) $(INCLUDE_PATHS) -c ErrorFunctionCall.cpp
 
-FunctionCall.o: FunctionLib.h FunctionCall.cpp
-	$(CC) $(INCLUDE_PATHS) -c FunctionCall.cpp
+ExtensionFunctionCall.o: FunctionLib.h ExtensionFunctionCall.cpp
+	$(CC) $(INCLUDE_PATHS) -c ExtensionFunctionCall.cpp
 
 NodeSetFunctionCall.o: FunctionLib.h NodeSetFunctionCall.cpp
 	$(CC) $(INCLUDE_PATHS) -c NodeSetFunctionCall.cpp
@@ -166,3 +170,7 @@ NumberFunctionCall.o: FunctionLib.h NumberFunctionCall.cpp
 
 StringFunctionCall.o: FunctionLib.h StringFunctionCall.cpp
 	$(CC) $(INCLUDE_PATHS) -c StringFunctionCall.cpp
+
+
+
+

@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.cpp,v 1.1 2000/04/06 07:46:41 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.cpp,v 1.2 2000/04/19 10:41:13 kvisco%ziplink.net Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * This code was ported from XSL:P
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:46:41 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/19 10:41:13 $
 **/
 
 #include "ProcessorState.h"
@@ -290,6 +290,15 @@ Element* ProcessorState::findTemplate(Node* node, Node* context, String* mode) {
 
     return matchTemplate;
 } //-- findTemplate
+
+/**
+ * Generates a unique ID for the given node and places the result in
+ * dest
+**/
+void ProcessorState::generateId(Node* node, String& dest) {
+    domHelper.generateId(node, dest);
+} //-- generateId
+
 
 /**
  * Returns the AttributeSet associated with the given name
@@ -567,6 +576,24 @@ void ProcessorState::recieveError(String& errorMessage, ErrorLevel level) {
     }
     delete iter;
 } //-- recieveError
+
+/**
+ * Returns a call to the function that has the given name.
+ * This method is used for XPath Extension Functions.
+ * @return the FunctionCall for the function with the given name.
+**/
+FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
+
+   if (GENERATE_ID_FN.isEqual(name)) {
+       return new GenerateIdFunctionCall(&domHelper);
+   }
+
+   String err("invalid function call: ");
+   err.append(name);
+
+   return new ErrorFunctionCall(err);
+
+} //-- resolveFunctionCall
 
 
 /**
