@@ -53,5 +53,11 @@ interface nsIProxyInfo : nsISupports
     [noscript, notxpcom] constCharPtr Host();
     [noscript, notxpcom] PRInt32 Port();
     [noscript, notxpcom] constCharPtr Type();
+
+    /**
+     * proxy info objects may be chained if several proxies could be treated
+     * equivalently.  this is used to support proxy failover.
+     */
+    readonly attribute nsIProxyInfo next;
 };
 

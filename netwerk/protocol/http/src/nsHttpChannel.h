@@ -109,8 +109,6 @@ private:
 
     nsresult Connect(PRBool firstTime = PR_TRUE);
     nsresult AsyncAbort(nsresult status);
-    void     HandleAsyncRedirect();
-    void     HandleAsyncNotModified();
     nsresult SetupTransaction();
     void     ApplyContentConversions();
     nsresult CallOnStartRequest();
@@ -120,7 +118,13 @@ private:
     nsresult ProcessRedirection(PRUint32 httpStatus);
     nsresult ProcessAuthentication(PRUint32 httpStatus);
     nsresult GetCallback(const nsIID &aIID, void **aResult);
+
+    // redirection specific methods
+    void     HandleAsyncRedirect();
+    void     HandleAsyncNotModified();
     nsresult PromptTempRedirect();
+    nsresult ProxyFailover();
+    nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, PRBool preserveMethod);
 
     // cache specific methods
     nsresult OpenCacheEntry(PRBool offline, PRBool *delayed);

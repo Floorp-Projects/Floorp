@@ -666,7 +666,8 @@ nsSocketTransport::Init(const char **types, PRUint32 typeCount,
         mProxyHost = proxyInfo->Host();
         // grab proxy type (looking for "socks" for example)
         proxyType = proxyInfo->Type();
-        if (proxyType && strcmp(proxyType, "http") == 0)
+        if (proxyType && (strcmp(proxyType, "http") == 0 ||
+                          strcmp(proxyType, "direct") == 0))
             proxyType = nsnull;
     }
 

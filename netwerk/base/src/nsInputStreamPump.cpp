@@ -347,7 +347,19 @@ nsInputStreamPump::OnStateStart()
 {
     LOG(("  OnStateStart [this=%x]\n", this));
 
-    nsresult rv = mListener->OnStartRequest(this, mListenerContext);
+    nsresult rv;
+
+    // need to check the reason why the stream is ready.  this is required
+    // so our listener can check our status from OnStartRequest.
+    // XXX async streams should have a GetStatus method!
+    if (NS_SUCCEEDED(mStatus)) {
+        PRUint32 avail;
+        rv = mAsyncStream->Available(&avail);
+        if (NS_FAILED(rv) && rv != NS_BASE_STREAM_CLOSED)
+            mStatus = rv;
+    }
+
+    rv = mListener->OnStartRequest(this, mListenerContext);
 
     // an error returned from OnStartRequest should cause us to abort; however,
     // we must not stomp on mStatus if already canceled.
@@ -441,6 +453,7 @@ nsInputStreamPump::OnStateTransfer()
             // if stream is now closed, advance to STATE_STOP right away.
             // Available may return 0 bytes available at the moment; that
             // would not mean that we are done.
+            // XXX async streams should have a GetStatus method!
             rv = mAsyncStream->Available(&avail);
             if (NS_SUCCEEDED(rv))
                 return STATE_TRANSFER;

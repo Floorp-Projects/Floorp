@@ -42,7 +42,7 @@
        - Gagan Saksena 04/24/00 
 */
 
-const kPAC_CONTRACTID = "@mozilla.org/network/proxy_autoconfig;1";
+const kPAC_CONTRACTID = "@mozilla.org/network/proxy-auto-config;1";
 const kIOSERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const kDNS_CONTRACTID = "@mozilla.org/network/dns-service;1";
 const kPAC_CID = Components.ID("{63ac8c66-1dd2-11b2-b070-84d00d3eaece}");
@@ -67,59 +67,19 @@ nsProxyAutoConfig.prototype = {
     sis: null,
     done: false,
 
-    ProxyForURL: function(url, host, port, type) {
-        /* If we're not done loading the pac yet, wait (ideally). For
-           now, just return DIRECT to avoid loops. A simple mutex
-           between ProxyForURL and LoadPACFromURL locks-up the
-           browser. */
-        if (!this.done) {
-            host.value = null;
-            type.value = "direct";
-            return;
-        }
+    getProxyForURI: function(uri) {
+        // If we're not done loading the pac yet, wait (ideally). For
+        // now, just return DIRECT to avoid loops. A simple mutex
+        // between getProxyForURI and loadPACFromURI locks-up the
+        // browser.
+        if (!this.done)
+            return null;
 
-        var uri = url.QueryInterface(Components.interfaces.nsIURI);
         // Call the original function-
-        var proxy = LocalFindProxyForURL(uri.spec, uri.host);
-        if(proxy == null) {
-            return;
-        }
-
-        /* we ignore everything else past the first proxy.
-           we could theoretically check isResolvable now and continue
-           parsing (see bug 84798). but for now... */
-        proxy = proxy.split(";")[0];
-
-        // direct connection (no proxy)
-        if ( proxy.search(/^\s*DIRECT\s*$/i) != -1 ) {
-            host.value = null;
-            type.value = "direct";
-        }
-        else {
-            // split proxy string to find proxy type, proxy host and port number
-            var typehostport = /^\s*(\w+)\s+([^:]+)(:\d+)?/(proxy);
-            if(typehostport != null) {
-                host.value = typehostport[2];
-                typehostport[1] = typehostport[1].toUpperCase();
-
-                switch(typehostport[1]) {
-                    case "PROXY": // http PROXY              
-                        // assume port 80 if port number not specified (see bug 91630)
-                        port.value = (typehostport[3] != null)? typehostport[3].substr(1): 80;
-                        type.value = "http";
-                        break;
-                    case "SOCKS": // SOCKS v4
-                        // assume port 1080 like NN4 if port number not specified
-                        port.value = (typehostport[3] != null)? typehostport[3].substr(1): 1080;
-                        type.value = "socks4";
-                        break;
-                    // Currently only SOCKS v4 is supported (see bug 78176)                      
-                }
-            }
-        }
+        return LocalFindProxyForURL(uri.spec, uri.host);
     },
 
-    LoadPACFromURL: function(uri, ioService) {
+    loadPACFromURI: function(uri, ioService) {
         this.done = false;
         var channel = ioService.newChannelFromURI(uri);
         // don't cache the PAC content
@@ -152,7 +112,7 @@ nsProxyAutoConfig.prototype = {
                                'init');
     },
 
-    onStopRequest: function(request, ctxt, status, errorMsg) {
+    onStopRequest: function(request, ctxt, status) {
         if(!ProxySandBox) {
            ProxySandBox = new Sandbox();
         }
@@ -205,7 +165,7 @@ pacModule.registerSelf =
     function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
         compMgr.registerFactoryLocation(kPAC_CID,
-                                        "Proxy Auto Config",
+                                        "nsProxyAutoConfig",
                                         kPAC_CONTRACTID,
                                         fileSpec, 
                                         location, 

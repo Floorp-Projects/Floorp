@@ -799,6 +799,36 @@ nsHttpChannel::PromptTempRedirect()
     return rv;
 }
 
+nsresult
+nsHttpChannel::ProxyFailover()
+{
+    LOG(("nsHttpChannel::ProxyFailover [this=%x]\n", this));
+
+    NS_ASSERTION(mConnectionInfo->ProxyInfo(), "no proxy info");
+
+    nsCOMPtr<nsIProxyInfo> pi;
+    mConnectionInfo->ProxyInfo()->GetNext(getter_AddRefs(pi));
+    // if null result, then bail...
+    if (!pi)
+        return NS_ERROR_FAILURE;
+
+    nsresult rv;
+    nsCOMPtr<nsIChannel> newChannel;
+    rv = gHttpHandler->NewProxiedChannel(mURI, pi, getter_AddRefs(newChannel));
+    if (NS_SUCCEEDED(rv)) {
+        SetupReplacementChannel(mURI, newChannel, PR_TRUE);
+
+        // open new channel
+        rv = newChannel->AsyncOpen(mListener, mListenerContext);
+        if (NS_SUCCEEDED(rv)) {
+            mStatus = NS_BINDING_REDIRECTED;
+            mListener = nsnull;
+            mListenerContext = nsnull;
+        }
+    }
+    return rv;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel <byte-range>
 //-----------------------------------------------------------------------------
@@ -1520,6 +1550,82 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
 //-----------------------------------------------------------------------------
 
 nsresult
+nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI, 
+                                       nsIChannel   *newChannel,
+                                       PRBool        preserveMethod)
+{
+    PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
+    // if the original channel was using SSL and this channel is not using
+    // SSL, then no need to inhibit persistent caching.  however, if the
+    // original channel was not using SSL and has INHIBIT_PERSISTENT_CACHING
+    // set, then allow the flag to apply to the redirected channel as well.
+    // since we force set INHIBIT_PERSISTENT_CACHING on all HTTPS channels,
+    // we only need to check if the original channel was using SSL.
+    if (mConnectionInfo->UsingSSL())
+        newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
+
+    newChannel->SetOriginalURI(mOriginalURI);
+    newChannel->SetLoadGroup(mLoadGroup); 
+    newChannel->SetNotificationCallbacks(mCallbacks);
+    newChannel->SetLoadFlags(newLoadFlags);
+
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
+    if (!httpChannel)
+        return NS_OK; // no other options to set
+
+    if (preserveMethod) {
+        nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(httpChannel);
+        if (mUploadStream && uploadChannel) {
+            // rewind upload stream
+            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
+            if (seekable)
+                seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+
+            // replicate original call to SetUploadStream...
+            if (mUploadStreamHasHeaders)
+                uploadChannel->SetUploadStream(mUploadStream, NS_LITERAL_CSTRING(""), -1);
+            else {
+                const char *ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
+                const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
+                if (ctype && clen)
+                    uploadChannel->SetUploadStream(mUploadStream,
+                                                   nsDependentCString(ctype),
+                                                   atoi(clen));
+            }
+        }
+        // must happen after setting upload stream since SetUploadStream
+        // may change the request method.
+        httpChannel->SetRequestMethod(nsDependentCString(mRequestHead.Method()));
+    }
+    // convey the referrer if one was used for this channel to the next one
+    if (mReferrer)
+        httpChannel->SetReferrer(mReferrer);
+    // convey the mAllowPipelining flag
+    httpChannel->SetAllowPipelining(mAllowPipelining);
+    // convey the new redirection limit
+    httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
+
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
+    if (httpInternal) {
+        // update the DocumentURI indicator since we are being redirected.
+        // if this was a top-level document channel, then the new channel
+        // should have its mDocumentURI point to newURI; otherwise, we
+        // just need to pass along our mDocumentURI to the new channel.
+        if (newURI && (mURI == mDocumentURI))
+            httpInternal->SetDocumentURI(newURI);
+        else
+            httpInternal->SetDocumentURI(mDocumentURI);
+    } 
+    
+    // convey the mApplyConversion flag (bug 91862)
+    nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(httpChannel);
+    if (encodedChannel)
+        encodedChannel->SetApplyConversion(mApplyConversion);
+
+    return NS_OK;
+}
+
+nsresult
 nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 {
     LOG(("nsHttpChannel::ProcessRedirection [this=%x type=%u]\n",
@@ -1555,6 +1661,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     // as a base...
     nsCOMPtr<nsIIOService> ioService;
     rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
+    if (NS_FAILED(rv)) return rv;
 
     // the new uri should inherit the origin charset of the current uri
     nsCAutoString originCharset;
@@ -1599,78 +1706,18 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         }
     }
 
-    PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
-    // if the original channel was using SSL and this channel is not using
-    // SSL, then no need to inhibit persistent caching.  however, if the
-    // original channel was not using SSL and has INHIBIT_PERSISTENT_CACHING
-    // set, then allow the flag to apply to the redirected channel as well.
-    // since we force set INHIBIT_PERSISTENT_CACHING on all HTTPS channels,
-    // we only need to check if the original channel was using SSL.
-    if (mConnectionInfo->UsingSSL())
-        newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
-
-    // build the new channel
-    rv = NS_NewChannel(getter_AddRefs(newChannel), newURI, ioService, mLoadGroup,
-                       mCallbacks, newLoadFlags);
-    if (NS_FAILED(rv)) return rv;
-
-    // convey the original uri
-    rv = newChannel->SetOriginalURI(mOriginalURI);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
-    if (httpChannel) {
-        if (redirectType == 307 && mUploadStream) {
-            //307 is Temporary Redirect response. Redirect the postdata to the new URI.
-            rv = PromptTempRedirect();
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream, &rv);
-            if (NS_FAILED(rv)) return rv;
-            rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(httpChannel, &rv);
-            if (NS_FAILED(rv)) return rv;
-                
-            if (mUploadStreamHasHeaders)
-                uploadChannel->SetUploadStream(mUploadStream, NS_LITERAL_CSTRING(""), -1);
-            else {
-                const char *ctype;
-                ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
-                const char *clength;
-                clength = mRequestHead.PeekHeader(nsHttp::Content_Length);
-                uploadChannel->SetUploadStream(mUploadStream, nsDependentCString(ctype), atoi(clength));
-            }
-
-            httpChannel->SetRequestMethod(nsDependentCString(mRequestHead.Method()));
-        }
-
-        nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
-        NS_ENSURE_TRUE(httpInternal, NS_ERROR_UNEXPECTED);
-
-        // update the DocumentURI indicator since we are being redirected.
-        // if this was a top-level document channel, then the new channel
-        // should have its mDocumentURI point to newURI; otherwise, we
-        // just need to pass along our mDocumentURI to the new channel.
-        if (newURI && (mURI == mDocumentURI))
-            httpInternal->SetDocumentURI(newURI);
-        else
-            httpInternal->SetDocumentURI(mDocumentURI);
-        // convey the referrer if one was used for this channel to the next one
-        if (mReferrer)
-            httpChannel->SetReferrer(mReferrer);
-        
-        // convey the mApplyConversion flag (bug 91862)
-        nsCOMPtr<nsIEncodedChannel> encodedChannel(do_QueryInterface(httpChannel));
-        NS_ENSURE_TRUE(encodedChannel, NS_ERROR_UNEXPECTED);
-        encodedChannel->SetApplyConversion(mApplyConversion);
-        
-        // convey the mAllowPipelining flag
-        httpChannel->SetAllowPipelining(mAllowPipelining);
-        // convey the new redirection limit
-        httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
+    // if we need to re-send POST data then be sure to ask the user first.
+    PRBool preserveMethod = (redirectType == 307);
+    if (preserveMethod && mUploadStream) {
+        rv = PromptTempRedirect();
+        if (NS_FAILED(rv)) return rv;
     }
+
+    rv = ioService->NewChannelFromURI(newURI, getter_AddRefs(newChannel));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetupReplacementChannel(newURI, newChannel, preserveMethod);
+    if (NS_FAILED(rv)) return rv;
 
     // call out to the event sink to notify it of this redirection.
     if (mHttpEventSink) {
@@ -2987,6 +3034,13 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         return NS_OK;
     }
 
+    // on proxy errors, try to failover
+    if (mStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
+        mStatus == NS_ERROR_UNKNOWN_PROXY_HOST) {
+        if (NS_SUCCEEDED(ProxyFailover()))
+            return NS_OK;
+    }
+
     return CallOnStartRequest();
 }
 
@@ -2997,7 +3051,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         this, request, status));
 
     // honor the cancelation status even if the underlying transaction completed.
-    if (mCanceled)
+    if (mCanceled || NS_FAILED(mStatus))
         status = mStatus;
 
     if (mCachedContentIsPartial && NS_SUCCEEDED(status)) {

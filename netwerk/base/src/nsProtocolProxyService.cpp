@@ -121,9 +121,9 @@ nsProtocolProxyService::~nsProtocolProxyService()
 
 // nsProtocolProxyService methods
 nsresult
-nsProtocolProxyService::Init() {
-    nsresult rv = NS_OK;
-
+nsProtocolProxyService::Init()
+{
+    nsresult rv;
     mPrefs = do_GetService(kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -264,7 +264,7 @@ nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
     }
 
     // create pac js component
-    pps->mPAC = do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);
+    pps->mPAC = do_CreateInstance(NS_PROXYAUTOCONFIG_CONTRACTID, &rv);
     if (!pps->mPAC || NS_FAILED(rv)) {
         NS_ERROR("Cannot load PAC js component");
         return NULL;
@@ -281,14 +281,14 @@ nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
         return NULL;
     }
 
-    nsCOMPtr<nsIURI> pURL;
-    rv = pIOService->NewURI(pps->mPACURL, nsnull, nsnull, getter_AddRefs(pURL));
+    nsCOMPtr<nsIURI> pURI;
+    rv = pIOService->NewURI(pps->mPACURL, nsnull, nsnull, getter_AddRefs(pURI));
     if (NS_FAILED(rv)) {
         NS_ERROR("New URI failed");
         return NULL;
     }
      
-    rv = pps->mPAC->LoadPACFromURL(pURL, pIOService);
+    rv = pps->mPAC->LoadPACFromURI(pURI, pIOService);
     if (NS_FAILED(rv)) {
         NS_ERROR("Load PAC failed");
         return NULL;
@@ -381,9 +381,88 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort)
     return PR_TRUE;
 }
 
+static const char kProxyType_HTTP[]   = "http";
+static const char kProxyType_PROXY[]  = "proxy";
+static const char kProxyType_SOCKS[]  = "socks";
+static const char kProxyType_SOCKS4[] = "socks4";
+static const char kProxyType_SOCKS5[] = "socks5";
+static const char kProxyType_DIRECT[] = "direct";
+
+const char *
+nsProtocolProxyService::ExtractProxyInfo(const char *start, PRBool permitHttp, nsProxyInfo **result)
+{
+    // see BNF in nsIProxyAutoConfig.idl
+
+    *result = nsnull;
+
+    // find end of proxy info delimiter
+    const char *end = start;
+    while (*end && *end != ';') ++end;
+
+    // find end of proxy type delimiter
+    const char *sp = start;
+    while (sp < end && *sp != ' ' && *sp != '\t') ++sp;
+
+    PRUint32 len = sp - start;
+    const char *type = nsnull;
+    switch (len) {
+    case 5:
+        if (PL_strncasecmp(start, kProxyType_PROXY, 5) == 0)
+            type = kProxyType_HTTP;
+        else if (PL_strncasecmp(start, kProxyType_SOCKS, 5) == 0)
+            type = kProxyType_SOCKS4; // assume v4 for 4x compat
+        break;
+    case 6:
+        if (PL_strncasecmp(start, kProxyType_DIRECT, 6) == 0)
+            type = kProxyType_DIRECT;
+        else if (PL_strncasecmp(start, kProxyType_SOCKS4, 6) == 0)
+            type = kProxyType_SOCKS4;
+        else if (PL_strncasecmp(start, kProxyType_SOCKS5, 6) == 0)
+            type = kProxyType_SOCKS5;
+        break;
+    }
+    if (type) {
+        const char *host = nsnull, *hostEnd;
+        PRInt32 port = -1;
+        // extract host:port
+        start = sp;
+        while ((*start == ' ' || *start == '\t') && start < end)
+            start++;
+        if (start < end) {
+            host = start;
+            hostEnd = strchr(host, ':');
+            if (!hostEnd || hostEnd > end) {
+                hostEnd = end;
+                // no port, so assume default
+                if (type == kProxyType_HTTP)
+                    port = 80;
+                else
+                    port = 1080;
+            }
+            else
+                port = atoi(hostEnd + 1);
+        }
+        nsProxyInfo *pi = new nsProxyInfo;
+        if (pi) {
+            pi->mType = type;
+            // YES, it is ok to specify a null proxy host.
+            if (host) {
+                pi->mHost = PL_strndup(host, hostEnd - host);
+                pi->mPort = port;
+            }
+            NS_ADDREF(*result = pi);
+        }
+    }
+
+    while (*end == ';' || *end == ' ' || *end == '\t')
+        ++end;
+    return end;
+}
+
 // nsIProtocolProxyService
 NS_IMETHODIMP
-nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
+nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo **aResult)
+{
     nsresult rv = NS_OK;
     
     NS_ASSERTION(aURI, "need a uri folks.");
@@ -419,33 +498,26 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
             return NS_OK; // assume DIRECT connection for now
         }
 
-        nsXPIDLCString rawType; // XXX an enum might make better sense here
-
-        rv = mPAC->ProxyForURL(aURI, &host, &port, getter_Copies(rawType));
-        if (NS_SUCCEEDED(rv) && rawType && host) {
-            //
-            // Accept only known values for the proxy type
-            //
-            if (PL_strcasecmp(rawType, "http") == 0) {
-                if (flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP)
-                    type = "http";
+        nsCAutoString proxyStr;
+        rv = mPAC->GetProxyForURI(aURI, proxyStr);
+        if (NS_SUCCEEDED(rv)) {
+            PRBool permitHttp = (flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP);
+            nsProxyInfo *pi, *last = nsnull;
+            const char *p = proxyStr.get();
+            while (*p) {
+                p = ExtractProxyInfo(p, permitHttp, &pi);
+                if (pi) {
+                    if (last)
+                        last->mNext = pi;
+                    else
+                        NS_ADDREF(*aResult = pi);
+                    last = pi;
+                }
             }
-            else if (PL_strcasecmp(rawType, "socks") == 0)
-                type = "socks";
-            else if (PL_strcasecmp(rawType, "socks4") == 0)
-                type = "socks4";
+            // if only DIRECT was specified then return no proxy info.
+            if (last && *aResult == last && last->mType == kProxyType_DIRECT)
+                NS_RELEASE(*aResult);
         }
-
-        if (type) {
-            if (port <= 0)
-                port = -1;
-            return NewProxyInfo_Internal(type, host, port, aResult);
-        }
-
-        // assume errors mean direct - its better than just failing, and
-        // the js conosle will have the specific error
-        if (host)
-            nsMemory::Free(host);
         return NS_OK;
     }
 
