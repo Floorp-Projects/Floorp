@@ -10,13 +10,18 @@ require Exporter;
 use strict;
 use Exporter;
 
+use Cwd;
 use MozPrefs;
 
 use vars qw(@ISA @EXPORT);
 
 @ISA      = qw(Exporter);
-@EXPORT   = qw(SetupBuildParams);
+@EXPORT   = qw(SetupBuildParams
+               WriteBuildProgress
+               ClearBuildProgress
+               ReadBuildProgress);
 
+my($script_dir) = cwd();
 
 #-------------------------------------------------------------------------------
 # These 3 arrays are the 'master lists' to control what gets built.
@@ -29,15 +34,13 @@ use vars qw(@ISA @EXPORT);
 
 my(@pull_flags) =
 (
-  ["moz",           1],    # pull everything needed for mozilla
-  ["runtime",       0]     # used to just build runtime libs, up to NSPR
+  ["all",           1],    # pull everything needed for mozilla
 );
 
 my(@build_flags) =
 (
   ["all",           1],   # 'all' must come first!
   ["dist",          0],
-  ["dist_runtime",  0],
   ["xpidl",         0],
   ["idl",           0],
   ["stubs",         0],
@@ -180,6 +183,98 @@ sub PropagateAllFlags($)
   }
 }
 
+
+#//--------------------------------------------------------------------------------------------------
+#// _getBuildProgressFile
+#//--------------------------------------------------------------------------------------------------
+sub _getBuildProgressFile()
+{
+  my($progress_file) = $script_dir.":¥Build Progress";
+  return $progress_file;
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// setBuildProgressStart
+#//--------------------------------------------------------------------------------------------------
+sub setBuildProgressStart($$)
+{
+  my($build_array, $name) = @_;
+
+  my($setting) = 0;
+  my($index);
+  foreach $index (@$build_array)
+  {
+    $index->[1] = $setting;    
+
+    if ($index->[0] eq $name) {
+      $setting = 1;
+    }    
+  }
+
+  if ($setting == 1) {
+    print "Building from module after $name, as specified by build progress\n";
+  } else {
+    printf "Failed to find buildfrom setting '$name'\n";
+  }
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// WriteBuildProgress
+#//--------------------------------------------------------------------------------------------------
+sub WriteBuildProgress($)
+{
+  my($module_built) = @_;
+
+  my($progress_file) = _getBuildProgressFile();
+  
+  open(PROGRESS_FILE, ">>$progress_file") || die "Failed to open $progress_file\n";
+  print(PROGRESS_FILE "$module_built\n");
+  close(PROGRESS_FILE);
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// ClearBuildProgress
+#//--------------------------------------------------------------------------------------------------
+sub ClearBuildProgress()
+{
+  my($progress_file) = _getBuildProgressFile();
+  unlink $progress_file;
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// ReadBuildProgress
+#//--------------------------------------------------------------------------------------------------
+sub ReadBuildProgress($)
+{
+  my($build_array) = @_;
+  my($progress_file) = _getBuildProgressFile();
+
+  my($last_module);
+  
+  if (open(PROGRESS_FILE, "< $progress_file"))
+  {
+    print "Getting build progress from $progress_file\n";
+    
+    while (<PROGRESS_FILE>)
+    {
+      my($line) = $_;
+      chomp($line);
+      $last_module = $line;
+    }
+    
+    close(PROGRESS_FILE);
+  }
+  
+  if ($last_module)
+  {
+    setBuildProgressStart($build_array, $last_module);
+  }
+}
+
+
 #-------------------------------------------------------------------------------
 # SetupBuildParams
 #-------------------------------------------------------------------------------
@@ -190,6 +285,8 @@ sub SetupBuildParams($$$$$)
   # read the user pref file, that can change values in the array
   ReadMozUserPrefs($prefs_file, \@pull_flags, \@build_flags, \@options_flags);
 
+  ReadBuildProgress(\@build_flags);
+  
   PropagateAllFlags(\@build_flags);
   
   SetPullFlags($pull);
@@ -197,7 +294,7 @@ sub SetupBuildParams($$$$$)
   SetBuildOptions($options);
   SetOptionDefines($optiondefines);
   
-  #printHash($build);
+  # printHash($build);
 }
 
 
