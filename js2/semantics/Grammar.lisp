@@ -570,7 +570,7 @@
   (dot nil :type integer :read-only t)           ;List of grammar symbols to which that nonterminal expands
   (unseen nil :type list :read-only t)           ;Portion of production's rhs to the right of the dot
   (number nil :type integer :read-only t)        ;Unique number (i.e. different from any other item's number)
-  (next nil :type item :read-only t))            ;The item with the same production but dot shifted one to the right; nil if unseen is nil
+  (next nil :type (or null item) :read-only t))  ;The item with the same production but dot shifted one to the right; nil if unseen is nil
 
 
 ; Return the first grammar symbol to the right of the item's dot or nil if
