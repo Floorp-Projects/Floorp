@@ -103,7 +103,11 @@ nsStorageStream::GetOutputStream(PRInt32 aStartingOffset,
     // smaller in the Close() method.)
     if (mLastSegmentNum >= 0)
         mSegmentedBuffer->ReallocLastSegment(mSegmentSize);
-    
+
+    // Need to re-Seek, since realloc might have changed segment base pointer
+    rv = Seek(aStartingOffset);
+    if (NS_FAILED(rv)) return rv;
+
     NS_ADDREF(this);
     *aOutputStream = NS_STATIC_CAST(nsIOutputStream*, this);
     mWriteInProgress = PR_TRUE;
