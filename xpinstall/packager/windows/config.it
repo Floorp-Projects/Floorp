@@ -965,7 +965,7 @@ Restricted Access=ONLY_RESTRICTED
 
 [Strings]
 ;*** LOCALIZE ME BABY ***
-Message Unfinished Download Restart=Setup has detected that a previous session of this Setup did not finish its download of all the necessary archives.  Would you like to keep the archives currently downloaded, so as to not redownload them again during this session?
+Message Unfinished Download Restart=A previous session of Setup did not finish downloading all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
 ;*** LOCALIZE ME BABY ***
 Error Corrupted Archives Detected=Setup has detected that the following archives within this Setup are corrupted:%sYou will need to obtain another copy of the $ProductName$ Setup in order for installation to proceed.
 ;*** LOCALIZE ME BABY ***
