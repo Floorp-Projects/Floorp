@@ -99,11 +99,6 @@ public class Main {
                     cx.setOptimizationLevel(optLevel);
                     continue;
                 }
-                if (false && arg.equals("-debuglevel") && ++i < args.length) {
-                    int debugLevel = Integer.parseInt(args[i]);
-                    cx.setDebugLevel(debugLevel);
-                    continue;
-                }
             }
             catch (NumberFormatException e) {
                 cx.reportError( ToolErrorReporter.getMessage("msg.jsc.usage",

@@ -276,7 +276,8 @@ public class Node implements Cloneable {
 
         BASE_LINENO_PROP  = 28,
         END_LINENO_PROP   = 29,
-        SPECIALCALL_PROP  = 30;
+        SPECIALCALL_PROP  = 30,
+        DEBUGSOURCE_PROP  = 31;
 
     public static final int    // this value of the ISNUMBER_PROP specifies
         BOTH = 0,               // which of the children are Number types

@@ -54,6 +54,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.text.MessageFormat;
 import java.lang.reflect.*;
+import org.mozilla.javascript.debug.*;
 
 /**
  * This class represents the runtime context of an executing script.
@@ -95,7 +96,6 @@ public final class Context {
      */
     public Context() {
         setLanguageVersion(VERSION_DEFAULT);
-        this.generatingDebug = true;
         optimizationLevel = codegenClass != null ? 0 : -1;
     }
     
@@ -324,9 +324,6 @@ public final class Context {
      * @see org.mozilla.javascript.ErrorReporter
      */
     public ErrorReporter getErrorReporter() {
-        if (debug_errorReporterHook != null) {
-            return debug_errorReporterHook;
-        }
         if (errorReporter == null) {
             errorReporter = new DefaultErrorReporter();
         }
@@ -340,8 +337,6 @@ public final class Context {
      * @see org.mozilla.javascript.ErrorReporter
      */
     public ErrorReporter setErrorReporter(ErrorReporter reporter) {
-        if (null != debug_errorReporterHook)
-            return debug_errorReporterHook.setErrorReporter(reporter);
         ErrorReporter result = errorReporter;
         if (listeners != null && errorReporter != reporter) {
             firePropertyChange(errorReporterProperty, errorReporter, 
@@ -769,7 +764,6 @@ public final class Context {
 
         // Temporarily set error reporter to always be the exception-throwing
         // DefaultErrorReporter.  (This is why the method is synchronized...)
-        DeepErrorReporterHook hook = setErrorReporterHook(null);
         ErrorReporter currentReporter = 
             setErrorReporter(new DefaultErrorReporter());
 
@@ -785,7 +779,6 @@ public final class Context {
         } finally {
             // Restore the old error reporter.
             setErrorReporter(currentReporter);
-            setErrorReporterHook(hook);
         }
         // Return false only if an error occurred as a result of reading past
         // the end of the file, i.e. if the source could be fixed by
@@ -1463,278 +1456,44 @@ public final class Context {
         return wrapHandler;
     }
 
-    /**** debugger oriented portion of API: CURRENTLY UNSUPPORTED ****/
-
-    /**
-     * Get the current source text hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     * @return the current hook
-     * @see org.mozilla.javascript.SourceTextManager
-     * @see org.mozilla.javascript.Context#setSourceTextManager
-     * @deprecated
-     */
-    public SourceTextManager getSourceTextManager() {
-        return debug_stm;
+    /**** debugger oriented portion of API ****/
+    
+    public void setBreakNextLine(boolean inLineStepMode) {
+        this.inLineStepMode = inLineStepMode;
     }
-
-    /**
-     * Set the current source text hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     * <p>
-     * When using the org.mozilla.javascript.debug system to debug within the
-     * context of a particular embedding if the Context has this hook set
-     * then all parsed JavaScript source will be passed to the hook. In
-     * some embeddings of JavaScript it may be  better to not use this
-     * low level hook and instead have the embedding itself feed the
-     * source text to the SourceTextManager.
-     *
-     * @param debug_stm new hook
-     * @return the previous hook
-     * @see org.mozilla.javascript.SourceTextManager
-     */
-    public SourceTextManager setSourceTextManager(SourceTextManager debug_stm) {
-        SourceTextManager result = this.debug_stm;
-        this.debug_stm = debug_stm;
-        return result;
+    
+    public boolean getBreakNextLine() {
+        return inLineStepMode;
     }
-
-    /**
-     * Get the current script hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     *
-     * @return the current hook
-     * @see org.mozilla.javascript.DeepScriptHook
-     * @see org.mozilla.javascript.Context#setScriptHook
-     */
-    public DeepScriptHook getScriptHook() {
-        return debug_scriptHook;
+    
+    public void setDebugger(Debugger debugger) {
+        this.debugger = debugger;
     }
-
-    /**
-     * Set the current script hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     * <p>
-     * At debugLevel >= 3 the script hook is called when
-     * compiled scripts (and functions) are loaded and unloaded.
-     *
-     * @param hook new hook
-     * @return the previous hook
-     * @see org.mozilla.javascript.DeepScriptHook
-     */
-    public DeepScriptHook setScriptHook(DeepScriptHook hook) {
-        DeepScriptHook result = debug_scriptHook;
-        debug_scriptHook = hook;
-        return result;
+    
+    public Debugger getDebugger() {
+        return debugger;
     }
-
-    /**
-     * Get the current call hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     *
-     * @return the current hook
-     * @see org.mozilla.javascript.DeepCallHook
-     * @see org.mozilla.javascript.Context#setCallHook
-     */
-    public DeepCallHook getCallHook() {
-        return debug_callHook;
+    
+    public Frame getFrame(int frameNumber) {
+        return (Frame) frameStack.elementAt(frameStack.size() - frameNumber - 1);
     }
-
-    /**
-     * Set the current call hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     * <p>
-     * At debugLevel >= 3 the call hook is called when
-     * compiled scripts and functions make function calls.
-     *
-     * @param hook new hook
-     * @return the previous hook
-     * @see org.mozilla.javascript.DeepCallHook
-     */
-    public DeepCallHook setCallHook(DeepCallHook hook) {
-        DeepCallHook result = debug_callHook;
-        debug_callHook = hook;
-        return result;
+    
+    public int getFrameCount() {
+        return frameStack == null ? 0 : frameStack.size();
     }
-
-    /**
-     * Get the current execute hook (for debugging).
-      * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-    *
-     * @return the current hook
-     * @see org.mozilla.javascript.DeepExecuteHook
-     * @see org.mozilla.javascript.Context#setExecuteHook
-     */
-    public DeepExecuteHook getExecuteHook() {
-        return debug_executeHook;
+    
+    void pushFrame(Frame frame) {
+        if (frameStack == null)
+            frameStack = new java.util.Stack();
+        frameStack.push(frame);
     }
-
-    /**
-     * Set the current execute hook (for debugging).
-     * <p>
-     * At debugLevel >= 3 the execute hook is called when
-     * top level compiled scripts (non-functions) are executed.
-     *
-     * @param hook new hook
-     * @return the previous hook
-     * @see org.mozilla.javascript.DeepExecuteHook
-     */
-    public DeepExecuteHook setExecuteHook(DeepExecuteHook hook) {
-        DeepExecuteHook result = debug_executeHook;
-        debug_executeHook = hook;
-        return result;
+    
+    void popFrame() {
+        frameStack.pop();
     }
-
-    /**
-     * Get the current new object hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     *
-     * @return the current hook
-     * @see org.mozilla.javascript.DeepNewObjectHook
-     * @see org.mozilla.javascript.Context#setNewObjectHook
-     */
-    public DeepNewObjectHook getNewObjectHook() {
-        return debug_newObjectHook;
-    }
-
-    /**
-     * Set the current new object hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     * <p>
-     * At debugLevel >= 3 the new object hook is called when
-     * JavaScript objects are created by compiled scripts
-     * and functions; i.e. when constructor functions run.
-     *
-     * @param hook new hook
-     * @return the previous hook
-     * @see org.mozilla.javascript.DeepNewObjectHook
-     */
-    public DeepNewObjectHook setNewObjectHook(DeepNewObjectHook hook) {
-        DeepNewObjectHook result = debug_newObjectHook;
-        debug_newObjectHook = hook;
-        return result;
-    }
-
-    /**
-     * Get the current byte code hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     *
-     * @return the current hook
-     * @see org.mozilla.javascript.DeepBytecodeHook
-     * @see org.mozilla.javascript.Context#setBytecodeHook
-     */
-    public DeepBytecodeHook getBytecodeHook() {
-        return debug_bytecodeHook;
-    }
-
-    /**
-     * Set the current byte code hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     * <p>
-     * At debugLevel >= 6 generated scripts and functions
-     * support setting traps and interrupts on a per statement
-     * basis. If a trap or interrupt is encountered while
-     * running in this Context, then this hook is called to
-     * handle it.
-     *
-     * @param hook new hook
-     * @return the previous hook
-     * @see org.mozilla.javascript.DeepBytecodeHook
-     */
-    public DeepBytecodeHook setBytecodeHook(DeepBytecodeHook hook) {
-        DeepBytecodeHook result = debug_bytecodeHook;
-        debug_bytecodeHook = hook;
-        return result;
-    }
-
-    /**
-     * Get the current error reporter hook (for debugging).
-      * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-    *
-     * @return the current hook
-     * @see org.mozilla.javascript.DeepErrorReporterHook
-     * @see org.mozilla.javascript.Context#setErrorReporter
-     */
-    public DeepErrorReporterHook getErrorReporterHook() {
-        return debug_errorReporterHook;
-    }
-
-    /**
-     * Set the current error reporter hook (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     * <p>
-     * This hook allows a debugger to trap error reports before
-     * there are sent to the error reporter. This is not meant to
-     * be used in place of the normal error reporting system.
-     *
-     * @param hook new hook
-     * @return the previous hook
-     * @see org.mozilla.javascript.DeepErrorReporterHook
-     * @see org.mozilla.javascript.ErrorReporter
-     * @see org.mozilla.javascript.Context#setErrorReporter
-     */
-    public DeepErrorReporterHook setErrorReporterHook(DeepErrorReporterHook hook) {
-        DeepErrorReporterHook result = debug_errorReporterHook;
-        debug_errorReporterHook = hook;
-        return result;
-    }
-
-    /**
-     * Get the current debug level (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     *
-     * @return the current debug level
-     * @see org.mozilla.javascript.Context#setDebugLevel
-     */
-    public int getDebugLevel() {
-        return debugLevel;
-    }
-
-    /**
-     * Set the current debug level (for debugging).
-     * <p>
-     * <b>CURRRENTLY UNSUPPORTED.</b>
-     * <p>
-     * Set the debug level. Note that a non-zero debug level will
-     * force the optimization level to 0.
-     * <p>
-     * Currently supported debug levels:
-     * <pre>
-     *  debugLevel == 0 - all debug support off (except error reporter hooks)
-     *  debugLevel >= 1 - name of source file stored in NativeFunction
-     *  debugLevel >= 3 - load/unload hooks called
-     *                  - base/end lineno info stored in NativeFunction
-     *                  - call, new object, and execute hooks called
-     *  debugLevel >= 6 - interrupts and traps supported
-     *
-     * </pre>
-     *
-     * @param debugLevel new debugLevel
-     * @return the previous debug level
-     */
-    public int setDebugLevel(int debugLevel) {
-        int result = this.debugLevel;
-        if (debugLevel < 0)
-            debugLevel = 0;
-        else if (debugLevel > 9)
-            debugLevel = 9;
-        if (debugLevel > 0)
-            setOptimizationLevel(0);
-        return result;
-    }
+    
+    private java.util.Stack frameStack;
+    
     
     /********** end of API **********/
 
@@ -1814,8 +1573,11 @@ public final class Context {
                            boolean returnFunction)
         throws IOException
     {
+        if (debugger != null && in != null) {
+            in = new DebugReader(in);
+        }
         TokenStream ts = new TokenStream(in, scope, sourceName, lineno);
-        return compile(scope, ts, securityDomain, returnFunction);
+        return compile(scope, ts, securityDomain, in, returnFunction);
     }
 
     private static Class codegenClass;
@@ -1857,7 +1619,8 @@ public final class Context {
     }
     
     private Object compile(Scriptable scope, TokenStream ts, 
-                           Object securityDomain, boolean returnFunction)
+                           Object securityDomain, Reader in,
+                           boolean returnFunction)
         throws IOException
     {
         Interpreter compiler = optimizationLevel == -1 
@@ -1883,6 +1646,11 @@ public final class Context {
             tree = (Node) first.getProp(Node.FUNCTION_PROP);
             if (tree == null)
                 return null;
+        }
+        
+        if (in instanceof DebugReader) {
+            DebugReader dr = (DebugReader) in;
+            tree.putProp(Node.DEBUGSOURCE_PROP, dr.getSaved());
         }
 
         Object result = compiler.compile(this, scope, tree, securityDomain,
@@ -2048,16 +1816,8 @@ public final class Context {
     private boolean compileFunctionsWithDynamicScopeFlag;
     private int optimizationLevel;
     WrapHandler wrapHandler;
-    private SourceTextManager debug_stm;
-    private DeepScriptHook debug_scriptHook;
-    private DeepCallHook debug_callHook;
-    private DeepExecuteHook debug_executeHook;
-    private DeepNewObjectHook debug_newObjectHook;
-    private DeepBytecodeHook debug_bytecodeHook;
-    private DeepErrorReporterHook debug_errorReporterHook;
-    // debugging is currently unsupported, leave the code in for now
-    // in case we get a chance to revive it
-    private static final byte debugLevel = 0;
+    Debugger debugger;
+    boolean inLineStepMode;
     private int enterCount;
     private ListenerCollection listeners;
     private Hashtable hashtable;

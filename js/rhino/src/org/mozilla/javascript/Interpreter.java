@@ -41,6 +41,8 @@ import java.io.*;
 import java.util.Vector;
 import java.util.Enumeration;
 
+import org.mozilla.javascript.debug.*;
+
 public class Interpreter extends LabelTable {
     
     public static final boolean printICode = false;
@@ -115,6 +117,7 @@ public class Interpreter extends LabelTable {
     {        
         itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
         itsFunctionList = (Vector) tree.getProp(Node.FUNCTION_PROP);        
+        debugSource = (StringBuffer) tree.getProp(Node.DEBUGSOURCE_PROP);
         if (itsFunctionList != null)
             generateNestedFunctions(scope, cx, securityDomain);
         Object[] regExpLiterals = null;
@@ -128,7 +131,11 @@ public class Interpreter extends LabelTable {
         itsData.itsRegExpLiterals = regExpLiterals;
         if (printICode) dumpICode(itsData);
                                                                
-        return new InterpretedScript(itsData, cx);
+        InterpretedScript result = new InterpretedScript(itsData, cx);
+        if (cx.debugger != null) {
+            cx.debugger.handleCompilationDone(cx, result, debugSource);
+        }
+        return result;
     }
     
     private void generateNestedFunctions(Scriptable scope,
@@ -144,6 +151,7 @@ public class Interpreter extends LabelTable {
                             cx.hasCompileFunctionsWithDynamicScope());
             jsi.itsData.itsFunctionType = def.getFunctionType();
             jsi.itsInFunctionFlag = true;
+            jsi.debugSource = debugSource;
             itsNestedFunctions[i] = jsi.generateFunctionICode(cx, scope, def, 
                                                               securityDomain);
             def.putProp(Node.FUNCTION_PROP, new Short(i));
@@ -163,17 +171,25 @@ public class Interpreter extends LabelTable {
             regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
 
         VariableTable varTable = theFunction.getVariableTable();
+        boolean needsActivation = theFunction.requiresActivation() ||
+                                  cx.isGeneratingDebug();
         generateICodeFromTree(theFunction.getLastChild(), 
-                               varTable, theFunction.requiresActivation(),
+                               varTable, needsActivation,
                                securityDomain);
             
         itsData.itsName = theFunction.getFunctionName();
+        itsData.itsSourceFile = (String) theFunction.getProp(
+                                    Node.SOURCENAME_PROP);
         itsData.itsSource = (String)theFunction.getProp(Node.SOURCE_PROP);
         itsData.itsNestedFunctions = itsNestedFunctions;
         itsData.itsRegExpLiterals = regExpLiterals;
         if (printICode) dumpICode(itsData);            
             
-        return new InterpretedFunction(itsData, cx);
+        InterpretedFunction result = new InterpretedFunction(itsData, cx);
+        if (cx.debugger != null) {
+            cx.debugger.handleCompilationDone(cx, result, debugSource);
+        }
+        return result;
     }
     
     boolean itsInFunctionFlag;
@@ -195,9 +211,19 @@ public class Interpreter extends LabelTable {
         short lineNumber = ((Number) datum).shortValue(); 
         if (lineNumber != itsLineNumber) {
             itsLineNumber = lineNumber;
+            if (itsData.itsLineNumberTable == null && 
+                Context.getCurrentContext().isGeneratingDebug())
+            {
+                itsData.itsLineNumberTable = new java.util.Hashtable();
+            }
+            if (itsData.itsLineNumberTable != null) {
+                itsData.itsLineNumberTable.put(new Integer(lineNumber), 
+                                               new Integer(iCodeTop));
+            }
             iCodeTop = addByte((byte) TokenStream.LINE, iCodeTop);
             iCodeTop = addByte((byte)(lineNumber >> 8), iCodeTop);
-            iCodeTop = addByte((byte)(lineNumber & 0xff), iCodeTop);                    
+            iCodeTop = addByte((byte)(lineNumber & 0xff), iCodeTop);
+            
         }
         
         return iCodeTop;
@@ -1307,6 +1333,7 @@ public class Interpreter extends LabelTable {
     
     public static Object interpret(Context cx, Scriptable scope, 
                                    Scriptable thisObj, Object[] args, 
+                                   Scriptable fnOrScript,
                                    InterpreterData theData)
         throws JavaScriptException
     {
@@ -1359,7 +1386,13 @@ public class Interpreter extends LabelTable {
         int[] finallyStack = null;
         Scriptable[] scopeStack = null;
         int tryStackTop = 0;
+        InterpreterFrame frame = null;
         
+        if (cx.debugger != null) {
+            frame = new InterpreterFrame(scope, theData, fnOrScript);
+            cx.pushFrame(frame);
+        }
+            
         if (theData.itsMaxTryDepth > 0) {
             catchStack = new int[theData.itsMaxTryDepth];
             finallyStack = new int[theData.itsMaxTryDepth];
@@ -1846,13 +1879,21 @@ public class Interpreter extends LabelTable {
                         stack[++stackTop] = theData.itsRegExpLiterals[i];
                         pc += 2;
                         break;
-                    case TokenStream.LINE :    
-                        i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);                    
-                        cx.interpreterLine = i;
-                        pc += 2;
-                        break;
                     case TokenStream.SOURCEFILE :    
                         cx.interpreterSourceFile = theData.itsSourceFile;
+                        break;
+                    case TokenStream.LINE :    
+                    case TokenStream.BREAKPOINT :
+                        i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);                    
+                        cx.interpreterLine = i;
+                        if (frame != null)
+                            frame.setLineNumber(i);
+                        if ((iCode[pc] & 0xff) == TokenStream.BREAKPOINT ||
+                            cx.inLineStepMode) 
+                        {
+                            cx.getDebugger().handleBreakpointHit(cx);
+                        }
+                        pc += 2;
                         break;
                     default :
                         dumpICode(theData);
@@ -1862,6 +1903,8 @@ public class Interpreter extends LabelTable {
                 pc++;
             }
             catch (EcmaError ee) {
+                if (cx.debugger != null)
+                    cx.debugger.handleExceptionThrown(cx, ee.getErrorObject());
                 // an offical ECMA error object, 
                 // handle as if it were a JavaScriptException
                 stackTop = 0;
@@ -1871,20 +1914,27 @@ public class Interpreter extends LabelTable {
                     scope = scopeStack[tryStackTop];
                     if (pc == 0) {
                         pc = finallyStack[tryStackTop];
-                        if (pc == 0) 
+                        if (pc == 0) {
+                            if (frame != null)
+                                cx.popFrame();
                             throw ee;
-                        stack[0] = ee.getErrorObject();
+                        }
                     }
-                    else
-                        stack[0] = ee.getErrorObject();
-                }
-                else
+                    stack[0] = ee.getErrorObject();
+                } else {
+                    if (frame != null)
+                        cx.popFrame();
                     throw ee;
+                }
                 // We caught an exception; restore this function's 
                 // security domain.
                 cx.interpreterSecurityDomain = theData.securityDomain;
             }
             catch (JavaScriptException jsx) {
+                if (cx.debugger != null) {
+                    cx.debugger.handleExceptionThrown(cx, 
+                        ScriptRuntime.unwrapJavaScriptException(jsx));
+                }
                 stackTop = 0;
                 cx.interpreterSecurityDomain = null;
                 if (tryStackTop > 0) {
@@ -1892,38 +1942,55 @@ public class Interpreter extends LabelTable {
                     scope = scopeStack[tryStackTop];
                     if (pc == 0) {
                         pc = finallyStack[tryStackTop];
-                        if (pc == 0) 
+                        if (pc == 0) {
+                            if (frame != null)
+                                cx.popFrame();
                             throw jsx;
+                        }
                         stack[0] = jsx;
-                    }
-                    else
+                    } else {
                         stack[0] = ScriptRuntime.unwrapJavaScriptException(jsx);
-                }
-                else
+                    }
+                } else {
+                    if (frame != null)
+                        cx.popFrame();
                     throw jsx;
+                }
                 // We caught an exception; restore this function's 
                 // security domain.
                 cx.interpreterSecurityDomain = theData.securityDomain;
             }
             catch (RuntimeException jx) {
+                if (cx.debugger != null)
+                    cx.debugger.handleExceptionThrown(cx, jx);
                 cx.interpreterSecurityDomain = null;
                 if (tryStackTop > 0) {
                     stackTop = 0;
                     stack[0] = jx;
                     pc = finallyStack[--tryStackTop];
                     scope = scopeStack[tryStackTop];
-                    if (pc == 0) throw jx;
-                }
-                else
+                    if (pc == 0) {
+                        if (frame != null)
+                            cx.popFrame();
+                        throw jx;
+                    }
+                } else {
+                    if (frame != null)
+                        cx.popFrame();
                     throw jx;
+                }
                 // We caught an exception; restore this function's 
                 // security domain.
                 cx.interpreterSecurityDomain = theData.securityDomain;
             }
         }
         cx.interpreterSecurityDomain = savedSecurityDomain;
+        if (frame != null)
+            cx.popFrame();
         return result;    
     }
     
     private int version;
+    private boolean inLineStepMode;
+    private StringBuffer debugSource;
 }

@@ -283,12 +283,10 @@ public class Global extends ImporterTopLevel {
         return thread;
     }
     
-    boolean debug = false;
     boolean processStdin = true;    
     boolean quitting;
     int exitCode = 0;
     NativeArray history;
-    boolean showDebuggerUI = false;
 }
 
 

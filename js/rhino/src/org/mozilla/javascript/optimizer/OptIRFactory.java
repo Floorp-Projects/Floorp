@@ -59,9 +59,6 @@ public class OptIRFactory extends IRFactory {
         OptFunctionNode result =  new OptFunctionNode(name, (Node) args, 
                                                       (Node) statements, 
                                                       nameHelper);
-        Context cx = Context.getCurrentContext();
-        if (cx != null && cx.getDebugLevel() > 0)
-            result.setRequiresActivation(true);
         return result;
     }
 

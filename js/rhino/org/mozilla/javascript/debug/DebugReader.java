@@ -32,45 +32,70 @@
  * file under either the NPL or the GPL.
  */
 
-// DEBUG API class
-
 package org.mozilla.javascript.debug;
 
-/**
- * This interface represents a source location of a point in the code.
- * <p>
- * This interface is implemented by the debug system. Consumers of the debug
- * system should never need to create their own ISourceLocation objects. The 
- * debug system would certainly not recognize such objects.
- *
- * @author John Bandhauer
- * @see org.mozilla.javascript.debug.IPC
- */
+import java.io.*;
 
-public interface ISourceLocation
-{
-    /**
-    * Get the source line number for this point in the code.
-    * <p>
-    * (immutable while underlying script is valid)
-    * @return the line number
-    */
-    public int getLine();
+public class DebugReader extends Reader {
 
-    /**
-    * Get the URL or filename from which the script was compiled.
-    * <p>
-    * (immutable while underlying script is valid)
-    * @return the name
-    */
-    public String getURL();
+    public DebugReader(Reader reader) {
+        this.reader = new BufferedReader(reader);  
+        this.saved = new StringBuffer();
+    }
+    
+    public StringBuffer getSaved() {
+        return saved;
+    }
 
-    /**
-    * Get the IPC object that this source location is associated with.
-    * <p>
-    * (immutable while underlying script is valid)
-    * @return the pc object
-    * @see org.mozilla.javascript.debug.IPC
-    */
-    public IPC getPC();
-}    
+    public int read() throws IOException {
+        int c = reader.read();
+        if (c != -1)
+            saved.append((char)c);
+        return c;
+    }
+
+    public int read(char cbuf[]) throws IOException {
+        int i = reader.read(cbuf);
+        if (i != -1) 
+            saved.append(cbuf, 0, i);
+        return i;
+    }
+
+    public int read(char cbuf[], int off, int len) throws IOException {
+        int i = reader.read(cbuf, off, len);
+        if (i > 0) 
+            saved.append(cbuf, off, i);
+        return i;
+    }
+
+    public long skip(long n) throws IOException {
+        return reader.skip(n);
+    }
+
+    public boolean ready() throws IOException {
+        return reader.ready();
+    }
+
+    public boolean markSupported() {
+        return reader.markSupported();
+    }
+
+    public void mark(int readAheadLimit) throws IOException {
+        reader.mark(readAheadLimit);
+    }
+
+    public void reset() throws IOException {
+        reader.reset();
+    }
+
+    public void close() throws IOException {
+        reader.close();
+    }
+
+    protected void finalize() throws Throwable {
+        reader = null;    
+    }
+    
+    private BufferedReader reader;
+    private StringBuffer saved;
+}

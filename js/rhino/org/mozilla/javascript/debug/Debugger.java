@@ -40,7 +40,12 @@ package org.mozilla.javascript.debug;
 import org.mozilla.javascript.Context;
 
 public interface Debugger {
+    
+    void handleCompilationDone(Context cx, DebuggableScript fnOrScript, 
+                               StringBuffer source);
 
     void handleBreakpointHit(Context cx);
+    
+    void handleExceptionThrown(Context cx, Object exception);
     
 }

@@ -67,6 +67,39 @@ class InterpreterData {
         this.securityDomain = securityDomain;
     }
     
+    public boolean placeBreakpoint(int line) { // XXX throw exn?
+        int offset = getOffset(line);
+        if (offset != -1 && (itsICode[offset] == (byte)TokenStream.LINE ||
+                             itsICode[offset] == (byte)TokenStream.BREAKPOINT))
+        {
+            itsICode[offset] = (byte) TokenStream.BREAKPOINT;
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean removeBreakpoint(int line) {
+        int offset = getOffset(line);
+        if (offset != -1 && itsICode[offset] == TokenStream.BREAKPOINT)
+        {
+            itsICode[offset] = (byte) TokenStream.LINE;
+            return true;
+        }
+        return false;
+    }
+    
+    private int getOffset(int line) {
+        Object offset = itsLineNumberTable.get(new Integer(line));
+        if (offset != null && offset instanceof Integer) {
+            int i = ((Integer)offset).intValue();
+            if (i >= 0 && i < itsICode.length)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }    
+    
     VariableTable itsVariableTable;
     
     String itsName;
@@ -94,6 +127,8 @@ class InterpreterData {
     int itsMaxArgs;
     int itsMaxStack;
     int itsMaxTryDepth;
+    
+    java.util.Hashtable itsLineNumberTable;
 
     Object securityDomain;
 }

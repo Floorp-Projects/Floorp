@@ -63,7 +63,8 @@ public class NodeTransformer {
     }
 
     public Node transform(Node tree, Node enclosing, TokenStream ts,
-                                                    Scriptable scope) {
+                          Scriptable scope) 
+    {
         loops = new Stack();
         loopEnds = new Stack();
         inFunction = tree.getType() == TokenStream.FUNCTION;

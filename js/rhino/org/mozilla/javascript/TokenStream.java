@@ -251,7 +251,11 @@ public class TokenStream {
          * For the interpreted mode indicating a line number change in icodes.
          */
         LINE        = 146,
-        SOURCEFILE  = 147;
+        SOURCEFILE  = 147,
+        
+        // For debugger
+        
+        BREAKPOINT  = 148;
     // end enum
 
 

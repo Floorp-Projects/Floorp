@@ -44,13 +44,7 @@ import java.lang.reflect.*;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.tools.ToolErrorReporter;
 
-/*
-TODO: integrate debugger; make DebugProxy class so that debugger is
-      not required to run the shell.
-import org.mozilla.javascript.debug.ILaunchableDebugger;
-import org.mozilla.javascript.debug.DebugManager;
-import org.mozilla.javascript.debug.SourceTextManagerImpl;
-*/
+import org.mozilla.javascript.tools.debugger.*;
 
 /**
  * The shell program.
@@ -111,36 +105,6 @@ public class Main {
         global.history = (NativeArray) cx.newArray(global, 0);
         global.defineProperty("history", global.history,
                               ScriptableObject.DONTENUM);
-        
-        /*
-        TODO: enable debugger
-        if (global.debug) {
-
-            global.debug_dm = new DebugManager();
-            global.debug_stm = new SourceTextManagerImpl();
-            global.debug_dm.setSourceTextManager(global.debug_stm);
-            cx.setSourceTextManager(global.debug_stm);
-            global.debug_dm.createdContext(cx);
-
-            if (global.showDebuggerUI) {
-                out.println("Launching JSDebugger...");
-
-                try {
-                    Class clazz = Class.forName(
-                        "org.mozilla.jsdebugging.ifcui.launcher.rhino.LaunchNetscapeJavaScriptDebugger");
-                    ILaunchableDebugger debugger =
-                        (ILaunchableDebugger) clazz.newInstance();
-                    debugger.launch(global.debug_dm, global.debug_stm, false);
-
-                } catch (Exception e) {
-                    // eat it...
-                    out.println(e);
-                    out.println("Failed to launch the JSDebugger");
-                }
-            }
-            out.println("Debug level set to "+cx.getDebugLevel());
-        }
-        */
 
         if (global.processStdin)
             processSource(cx, args.length == 0 ? null : args[0]);
@@ -201,25 +165,11 @@ public class Main {
                 processSource(cx, args[i]);
                 continue;
             }
-            if (false && arg.startsWith("-debug")) {
-
-                int level = 9;
-                if (i+1 < args.length) {
-                    double d = cx.toNumber(args[i+1]);
-                    if (d == d) {
-                        level = (int)d;
-                        i++;
-                    }
-                }
-                if (arg.equals("-debug"))
-                    global.showDebuggerUI = true;
-                else if (arg.equals("-debugQ"))
-                    global.showDebuggerUI = false;
-                else
-                    usage(arg);
-
-                cx.setDebugLevel(level);
-                global.debug = true;
+            if (arg.equals("-debug")) {
+                // XXX check for bad combinations with -opt
+                cx.setOptimizationLevel(-1);
+                cx.setGeneratingDebug(true);
+                invokeDebugger(cx, global);
                 continue;
             }
             usage(arg);
@@ -243,15 +193,12 @@ public class Main {
      *                 for interactive mode.
      */
     public static void processSource(Context cx, String filename) {
-        SourceTextManager stm = cx.getSourceTextManager();
         if (filename == null || filename.equals("-")) {
             // Use the interpreter for interactive input
             cx.setOptimizationLevel(-1);
             
             BufferedReader in = new BufferedReader
                 (new InputStreamReader(Main.getIn()));
-            if(null != stm)
-                in = new DebugReader(in, stm, "<stdin>");           
             int lineno = 1;
             boolean hitEOF = false;
             while (!hitEOF && !global.quitting) {
@@ -273,6 +220,15 @@ public class Main {
                     }
                     if (newline == null) {
                         hitEOF = true;
+                        break;
+                    }
+                    if (newline.equals("#")) {
+                        if (cx.getDebugger() == null) {
+                            getErr().println(
+                                "Can't invoke debugger: -debug not specified.");
+                        } else {
+                            invokeDebugger(cx, global);
+                        }
                         break;
                     }
                     source = source + newline + "\n";
@@ -317,8 +273,6 @@ public class Main {
                     in.close();
                     in = new FileReader(filename);
                 }
-                if (null != stm)
-                    in = new DebugReader(in, stm, filename);           
             }
             catch (FileNotFoundException ex) {
                 Context.reportError(ToolErrorReporter.getMessage(
@@ -338,9 +292,9 @@ public class Main {
         System.gc();
     }
     
-    private static Object evaluateReader(Context cx, Scriptable scope, 
-                                         Reader in, String sourceName, 
-                                         int lineno)
+    public static Object evaluateReader(Context cx, Scriptable scope, 
+                                        Reader in, String sourceName, 
+                                        int lineno)
     {
         Object result = cx.getUndefinedValue();
         try {
@@ -419,6 +373,12 @@ public class Main {
         errStream = _err;
     }
     
+    private static void invokeDebugger(Context cx, Scriptable scope) {
+        if (debugShell == null)
+            debugShell = new DebugShell(cx);
+        debugShell.enterShell(cx, scope);
+    }
+    
     static protected ToolErrorReporter errorReporter;
     static protected Global global;
     static public InputStream inStream;
@@ -426,7 +386,5 @@ public class Main {
     static public PrintStream errStream;
     static private final int EXITCODE_RUNTIME_ERROR = 3;
     static private final int EXITCODE_FILE_NOT_FOUND = 4;
-    
-    SourceTextManager debug_stm;
-    //DebugManager debug_dm; // TODO: enable debugger
+    static private DebugShell debugShell;
 }

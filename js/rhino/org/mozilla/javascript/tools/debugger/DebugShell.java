@@ -49,11 +49,53 @@ public class DebugShell implements Debugger {
     public DebugShell(Context cx) {
         cx.setDebugger(this);
     }
+    
+    public class SourceEntry {
+        SourceEntry(StringBuffer source, DebuggableScript fnOrScript) {
+            this.source = source;
+            this.fnOrScript = fnOrScript;
+        }
+        StringBuffer source;
+        DebuggableScript fnOrScript;
+    };
+    
+    public void handleCompilationDone(Context cx, DebuggableScript fnOrScript, 
+                                      StringBuffer source)
+    {
+        String sourceName = fnOrScript.getSourceName();
+        if (sourceName != null) {
+            Vector v = (Vector) sourceNames.get(sourceName);
+            if (v == null) {
+                v = new Vector();
+                sourceNames.put(sourceName, v);
+            }
+            v.addElement(new SourceEntry(source, fnOrScript));
+        }
+    }
 
     public void handleBreakpointHit(Context cx) {
-        Frame frame = cx.getFrame(0);
-        Main.getOut().println("Hit breakpoint at \"" + frame.getSourceName() +
-                              "\", line " + frame.getLineNumber());
+        if (stopAtFrameDepth != -1) {
+            if (cx.getFrameCount() > stopAtFrameDepth)
+                return;
+        }
+        stopAtFrameDepth = -1;
+        Frame frame = cx.getFrame(0);  
+        if (!lastCommand.equals("n") && !lastCommand.equals("s")) {
+            Main.getErr().print("Hit breakpoint at ");
+            printFrame(frame);
+        } else if (!printSourceLine(frame.getSourceName(), 
+                                    frame.getLineNumber()))
+        {
+            printFrame(frame);
+        }
+        enterShell(cx, frame.getVariableObject());
+    }
+    
+    public void handleExceptionThrown(Context cx, Object e) {
+        Main.getErr().print("Encountered exception " + e + " in ");
+        Frame frame = cx.getFrame(0);  
+        printFrame(frame);
+        Main.getErr().println();
         enterShell(cx, frame.getVariableObject());
     }
     
@@ -71,8 +113,13 @@ public class DebugShell implements Debugger {
                 Main.getErr().println(ioe.toString());
                 break;
             }
-            if (line == null || line.length() == 0 || line.equals("#"))
-                return;
+            if (line == null || line.length() == 0 || line.equals("#")) {
+                if (lastCommand != null)
+                    line = lastCommand;
+                else
+                    continue;
+            }
+            lastCommand = line;
             String command = line;
             String args = null;
             int space = line.indexOf(" ");
@@ -81,39 +128,156 @@ public class DebugShell implements Debugger {
                 args = line.substring(space+1);
             }
             if (command.equals("b")) {
-                Object o = scope.get(args, scope);  // XXX: b obj.f
-                if (o == Scriptable.NOT_FOUND) {
-                    Main.getErr().println("function " + args + " was not found");
-                    continue;
-                }
-                if (!(o instanceof DebuggableScript)) {
-                    Main.getErr().println("function " + args + " is not debuggable");
-                    continue;
-                }
-                Enumeration e = ((DebuggableScript)o).getLineNumbers();
-                Object n;
-                int min = Integer.MAX_VALUE;
-                while (e.hasMoreElements()) {
-                    n = e.nextElement();
-                    int i = ((Integer) n).intValue();
-                    if (i < min)
-                        min = i;
-                }
-                if (((DebuggableScript)o).placeBreakpoint(min))
-                    Main.getErr().println("Breakpoint placed at line " + min); /// xx source
-                else
-                    Main.getErr().println("Cannot place breakpoint for " + args);
-            }
-            if (command.equals("p")) {
+                breakpointCommand(scope, args);
+            } else if (command.equals("c")) {
+                return;
+            } else if (command.equals("p")) {
                 Reader reader = new StringReader(args);
                 Object result = Main.evaluateReader(cx, scope, reader, 
                                                     "<p command>", 1);
                 Main.getErr().println(cx.toString(result));
-            }
-            if (command.equals("s")) {
+            } else if (command.equals("s")) {
                 cx.setBreakNextLine(true);
                 break;
+            } else if (command.equals("n")) {
+                cx.setBreakNextLine(true);
+                stopAtFrameDepth = cx.getFrameCount();
+                if (stopAtFrameDepth == 0)
+                    stopAtFrameDepth = -1; // XXX: print error
+                break;
+            } else if (command.equals("finish")) {
+                cx.setBreakNextLine(true);
+                stopAtFrameDepth = cx.getFrameCount() - 1;
+                break;
+            } else if (command.equals("where")) {
+                for (int i=0; i < cx.getFrameCount(); i++) {
+                    Frame f = cx.getFrame(i);
+                    printFrame(f);
+                }
+            } else {
+                Main.getErr().println("command \"" + command + "\" not recognized.");
+                lastCommand = null;
             }
         }
     }
+    
+    void printFrame(Frame f) {
+        DebuggableScript ds = f.getScript();
+        if (ds != null) {
+            Scriptable obj = ds.getScriptable();
+            if (obj instanceof Script) {
+                Main.getErr().print("script");
+            } else {
+                Main.getErr().print("function ");
+                Object v = ScriptableObject.getProperty(obj, "name");
+                if (v instanceof String)
+                    Main.getErr().print((String) v);
+            }
+        }
+        String sourceName = f.getSourceName();
+        if (sourceName == null)
+            sourceName = "<stdin>";
+        Main.getErr().println(" (\"" + sourceName + "\"; line " + 
+                              f.getLineNumber() + ")");
+        
+        printSourceLine(sourceName, f.getLineNumber());          
+    }
+    
+    boolean printSourceLine(String sourceName, int lineNumber) {
+        Vector v = (Vector) sourceNames.get(sourceName);
+        if (v != null) {
+            String source = ((SourceEntry)v.elementAt(0)).source.toString();
+            // TODO: OK, OK. So this is really inefficient. Also need a way to
+            // just read from a file in some sort of source path.
+            int len = source.length();
+            int line = 1;
+            int start = -1;
+            for (int i = 0; i < len; i++) {
+                char c = source.charAt(i);
+                if (c == '\n') {
+                    if (++line == lineNumber) {
+                        start = i;
+                    } else if (start != -1) {
+                        Main.getOut().print(lineNumber);
+                        Main.getOut().print(": ");
+                        //if (source.charAt(i-1) == '\r')
+                        //    i--;
+                        Main.getErr().println(source.substring(start+1, i-1));
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    void breakpointCommand(Scriptable scope, String args) {
+        // First look for args that are of form "sourceName:lineNo"
+        int colon = args.indexOf(":");
+        if (colon != -1) {
+            String sourceName = args.substring(0, colon);
+            Vector v = (Vector) sourceNames.get(sourceName);
+            if (v == null) {
+                Main.getErr().println("Can't find source named \"" + 
+                                      sourceName + "\".");
+                return;
+            }
+            String lineString = args.substring(colon+1);
+            int lineNumber;
+            try {
+                lineNumber = Integer.parseInt(lineString);
+            } catch (NumberFormatException e) {
+                Main.getErr().println("Expected a line number "+
+                                      "following ':', had " + 
+                                      lineString + " instead.");
+                return;
+            }
+            int i=0;
+            for (; i < v.size(); i++) {
+                SourceEntry se = (SourceEntry) v.elementAt(i);
+                if (se.fnOrScript.placeBreakpoint(lineNumber))
+                    break;
+            }
+            if (i == v.size()) {
+                Main.getErr().println("Can't place breakpoint at line " +
+                                      lineNumber + ".");
+            }
+            return;
+        }                    
+                
+        // Now look for a function name
+        Object o = scope.get(args, scope);  // XXX: b obj.f
+        if (o == Scriptable.NOT_FOUND) {
+            Main.getErr().println("function " + args + " was not found");
+            return;
+        }
+        if (!(o instanceof DebuggableScript)) {
+            Main.getErr().println("function " + args + " is not debuggable");
+            return;
+        }
+        DebuggableScript ds = (DebuggableScript) o;
+        int min = getMinLineNumber(ds);
+        if (ds.placeBreakpoint(min)) {
+            Main.getErr().println("Breakpoint placed at line " + min);
+            printSourceLine(ds.getSourceName(), min);
+        } else {
+            Main.getErr().println("Cannot place breakpoint for " + args);
+        }
+    }
+    
+    int getMinLineNumber(DebuggableScript ds) {
+        Enumeration e = ds.getLineNumbers();
+        int min = Integer.MAX_VALUE;
+        while (e.hasMoreElements()) {
+            Object n = e.nextElement();
+            int i = ((Integer) n).intValue();
+            if (i < min)
+                min = i;
+        }
+        return min;
+    }
+    
+    private int stopAtFrameDepth = -1;
+    private String lastCommand = null;
+    private Hashtable sourceNames = new Hashtable();
 }

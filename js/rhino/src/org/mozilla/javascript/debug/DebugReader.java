@@ -32,40 +32,70 @@
  * file under either the NPL or the GPL.
  */
 
-// DEBUG API class
-
 package org.mozilla.javascript.debug;
 
-/**
- * This interface supports hooking script loading and unloading.
- * <p>
- * This interface can be implemented and used to detect script
- * loading and unloading. Script unloading is a 'lazy' activity
- * and does not necessarily happen immediately after the script becomes
- * 'not in use'. Also, There is no guarantee that the script object will
- * not become active again. If the same underlying script becomes 
- * active again after the call to aboutToUnloadScript, then a new call to
- * justLoadedScript will be made. It is guaranteed that aboutToUnloadScript
- * will not be called for a script if any code has begun running in that 
- * since the DebugManager was initialized for the given context.
- * 
- * @see org.mozilla.javascript.debug.IDebugManager#setScriptHook
- * @author John Bandhauer
- */
+import java.io.*;
 
-public interface IScriptHook
-{
-    /**
-    * Script was loaded (or re-loaded) and code may begin running through it.
-    *
-    * @param script the script
-    */
-    public void justLoadedScript(IScript script);
+public class DebugReader extends Reader {
 
-    /**
-    * Script about to be unloaded and no code will be running through it.
-    *
-    * @param script the script
-    */
-    public void aboutToUnloadScript(IScript script);
-}    
+    public DebugReader(Reader reader) {
+        this.reader = new BufferedReader(reader);  
+        this.saved = new StringBuffer();
+    }
+    
+    public StringBuffer getSaved() {
+        return saved;
+    }
+
+    public int read() throws IOException {
+        int c = reader.read();
+        if (c != -1)
+            saved.append((char)c);
+        return c;
+    }
+
+    public int read(char cbuf[]) throws IOException {
+        int i = reader.read(cbuf);
+        if (i != -1) 
+            saved.append(cbuf, 0, i);
+        return i;
+    }
+
+    public int read(char cbuf[], int off, int len) throws IOException {
+        int i = reader.read(cbuf, off, len);
+        if (i > 0) 
+            saved.append(cbuf, off, i);
+        return i;
+    }
+
+    public long skip(long n) throws IOException {
+        return reader.skip(n);
+    }
+
+    public boolean ready() throws IOException {
+        return reader.ready();
+    }
+
+    public boolean markSupported() {
+        return reader.markSupported();
+    }
+
+    public void mark(int readAheadLimit) throws IOException {
+        reader.mark(readAheadLimit);
+    }
+
+    public void reset() throws IOException {
+        reader.reset();
+    }
+
+    public void close() throws IOException {
+        reader.close();
+    }
+
+    protected void finalize() throws Throwable {
+        reader = null;    
+    }
+    
+    private BufferedReader reader;
+    private StringBuffer saved;
+}

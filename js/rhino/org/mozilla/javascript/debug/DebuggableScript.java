@@ -37,9 +37,13 @@
 
 package org.mozilla.javascript.debug;
 
+import org.mozilla.javascript.*;
+
 import java.util.Enumeration;
 
 public interface DebuggableScript {
+    
+    public Scriptable getScriptable();
 
     public String getSourceName();
     
@@ -48,5 +52,4 @@ public interface DebuggableScript {
     public boolean placeBreakpoint(int line);
     
     public boolean removeBreakpoint(int line);
-    
 }

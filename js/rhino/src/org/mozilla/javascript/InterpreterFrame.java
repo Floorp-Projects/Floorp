@@ -41,9 +41,11 @@ import org.mozilla.javascript.debug.*;
 
 class InterpreterFrame implements Frame {
     
-    InterpreterFrame(Scriptable scope, InterpreterData data) {
+    InterpreterFrame(Scriptable scope, InterpreterData data, Scriptable obj) {
         this.scope = scope;
         this.data = data;
+        this.lineNumber = -1;
+        this.obj = obj;
     }
 
     public Scriptable getVariableObject() {
@@ -54,14 +56,22 @@ class InterpreterFrame implements Frame {
         return data.itsSourceFile;
     }
     
+    public void setLineNumber(int lineNumber) {
+        this.lineNumber = lineNumber;
+    }
+    
     public int getLineNumber() {
-        return Context.getCurrentContext().interpreterLine;
+        return lineNumber;
     }
     
     public DebuggableScript getScript() {
-        return null; // XXX
+        if (obj instanceof DebuggableScript)
+            return (DebuggableScript) obj;
+        return null;
     }
     
     private Scriptable scope;
     private InterpreterData data;
+    private Scriptable obj;
+    private int lineNumber;
 }

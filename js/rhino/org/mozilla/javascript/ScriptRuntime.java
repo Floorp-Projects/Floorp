@@ -1894,11 +1894,6 @@ public class ScriptRuntime {
             }
         }
 
-        if (cx.getDebugLevel() > 0) {
-            // need an activation to store debug information.
-            new NativeCall(cx, scope, funObj, thisObj);
-        }
-
         return scope;
     }
 
