@@ -121,7 +121,7 @@ interface nsIGenericWindow : nsISupports
 	native window was handed in for the parent during initialization.  If this
 	is returned, it should refer to the same object as parentNativeWindow.
 	*/
-	attribute nsIWidget parentNativeWidget;
+	attribute nsIWidget parentWidget;
 
 	/*
 	This is the native window parent of the control.
@@ -133,7 +133,7 @@ interface nsIGenericWindow : nsISupports
 	Setting this attribute to false will hide the control.  Setting it to 
 	true will show it.
 	*/
-	attribute boolean visible;
+	attribute boolean visibility;
 
 	/*
 	Allows you to find out what the widget is of a given object.  Depending
