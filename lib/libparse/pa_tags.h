@@ -247,8 +247,10 @@
 #define P_NOLAYER       104
 #ifdef SHACK
 #define P_BUILTIN	105
-#endif
 #define P_MAX		106
+#else
+#define P_MAX		105
+#endif
 
 /*****************
  * These define all the strings that match
