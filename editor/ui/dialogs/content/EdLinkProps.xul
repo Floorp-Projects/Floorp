@@ -1,41 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
-<!-- Eventually we'll move to this...
-<!DOCTYPE window SYSTEM "chrome://editor/en-US/EditorLinkProperties.dtd">
--->
-
-<!DOCTYPE window
-[
-
-<!-- These entity declarations will go into a separate, locale file at some point -->
-
-<!-- These strings are generic to all or most of the editor's dialogs. -->
-<!-- They should be moved into a "common" file -->
-
-<!ENTITY OKButton.label "OK">
-<!ENTITY CancelButton.label "Cancel">
-<!ENTITY AdvancedEditButton.label "Advanced Edit...">
-
-<!-- This button is for the progressive disclosure of additional editing functionality -->
-<!ENTITY AdditionalEditingButton.label "Advanced">
-
-<!-- These strings are for use specifically in the editor's link dialog. -->
-<!-- Window title -->
-<!ENTITY windowTitle.label "Link Properties">
-
-<!-- These are in the link source fieldset.
-     This text will change dynamically 
-     (other strings are in editor.properties string bundle file) -->
-<!ENTITY LinkTextCaption.label "Link text:">
-<!-- These controls are in the Dimensions Fieldset of the advanced area -->
-<!ENTITY LinkURLFieldset.label "Link To">
-<!ENTITY LinkURLEditField.label "Enter a web page location or local file:">
-<!ENTITY LinkChooseFileButton.label "Choose File...">
-<!ENTITY RemoveLinkButton.label "Remove Link">
-
-]>
-
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorLinkProperties.dtd">
 
 <xul:window title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -51,7 +17,7 @@
   <xul:broadcaster id="args" value=""/>
 
   <xul:box align="vertical" style="min-width: 20em">
-  	<label id="linkTextCaption" for="linkTextMessage"> &LinkTextCaption.label; </label>
+  	<label id="linkTextCaption" for="linkTextMessage"> &LinkText.label; </label>
   	<div id="linkTextMessage" style="margin-left: 3em">[replace this]</div>
 	  <input type="text" size="25" length="25" id="linkTextInput"/>
     <xul:spring class="bigspacer"/>
