@@ -155,7 +155,7 @@ nsStreamXferOp::Start( void ) {
     if ( mInputChannel ) {
         if ( !mOutputChannel ) {
             // First, get file transport service.
-            NS_DEFINE_IID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+            NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
             NS_WITH_SERVICE( nsIFileTransportService, fts, kFileTransportServiceCID, &rv );
     
             if ( NS_SUCCEEDED( rv ) ) {

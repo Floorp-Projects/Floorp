@@ -26,12 +26,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMXPConnectFactory.h"
 
-// Declare IIDs...
-static NS_DEFINE_IID(kIDOMXPConnectFactoryIID,  NS_IDOMXPCONNECTFACTORY_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID,    NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
-
-
 class XPConnectFactoryImpl : public nsIDOMXPConnectFactory,
                              public nsIScriptObjectOwner
 {
@@ -72,38 +66,7 @@ XPConnectFactoryImpl::~XPConnectFactoryImpl()
 
 NS_IMPL_ADDREF(XPConnectFactoryImpl)
 NS_IMPL_RELEASE(XPConnectFactoryImpl)
-
-NS_IMETHODIMP 
-XPConnectFactoryImpl::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if ( aIID.Equals(kIDOMXPConnectFactoryIID) ) {
-    nsIDOMXPConnectFactory* tmp = this;
-    *aInstancePtr = tmp;
-    AddRef();
-    return NS_OK;
-  }
-  else if ( aIID.Equals(kIScriptObjectOwnerIID)) {   
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = tmp;
-    AddRef();
-    return NS_OK;
-  }
-  else if ( aIID.Equals(kISupportsIID) ) {
-    nsISupports* tmp = (nsIDOMXPConnectFactory*)this;
-    *aInstancePtr = tmp;
-    AddRef();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE2(XPConnectFactoryImpl, nsIDOMXPConnectFactory, nsIScriptObjectOwner)
 
 // -----
 // Implementation of nsIXPConnectFactory interface methods...
@@ -127,7 +90,7 @@ XPConnectFactoryImpl::CreateInstance(const nsString &progID, nsISupports**_retva
   if (progIdStr) {
     rv = nsRepository::CreateInstance(progIdStr, 
                                       nsnull,           // No Aggregration
-                                      kISupportsIID, 
+                                      NS_GET_IID(nsISupports), 
                                       (void**)_retval);
     delete [] progIdStr;
   } else {

@@ -114,10 +114,9 @@ NS_IMETHODIMP nsDialogParamBlock::SetString(PRInt32 inIndex, const PRUnichar *in
 	return rv;
 }
 
-static NS_DEFINE_IID(kIDialogParamBlock, NS_GET_IID(nsIDialogParamBlock) );
 NS_IMPL_ADDREF(nsDialogParamBlock);
 NS_IMPL_RELEASE(nsDialogParamBlock);
-NS_IMPL_QUERY_INTERFACE(nsDialogParamBlock, kIDialogParamBlock);
+NS_IMPL_QUERY_INTERFACE1(nsDialogParamBlock, nsIDialogParamBlock)
 
 // Entry point to create nsAppShellService factory instances...
 NS_DEF_FACTORY(DialogParamBlock, nsDialogParamBlock)

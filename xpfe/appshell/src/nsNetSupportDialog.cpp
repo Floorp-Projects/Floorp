@@ -32,16 +32,7 @@
 #include "nsXPComFactory.h"
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-
-
-/* Define Interface IDs */
-static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
-
-
-static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
-static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
-
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID( kCommonDialogsCID,          NS_CommonDialog_CID);
 
 

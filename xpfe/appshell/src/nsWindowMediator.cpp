@@ -44,17 +44,12 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-static NS_DEFINE_IID(kIRDFDataSourceIID,        NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
-static NS_DEFINE_IID(kISimpleEnumberatorIID, NS_ISIMPLEENUMERATOR_IID);
 static NS_DEFINE_CID(kRDFContainerCID,                    NS_RDFCONTAINER_CID);
-static NS_DEFINE_IID( kISimpleEnumerator, NS_ISIMPLEENUMERATOR_IID );
 static const char kURINC_WindowMediatorRoot[] = "NC:WindowMediatorRoot";
 
 
@@ -462,7 +457,7 @@ NS_METHOD nsWindowMediator::GetEnumerator( const PRUnichar* inType, nsISimpleEnu
 		nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this, PR_FALSE );
 		if (enumerator )
 		{
-			return enumerator->QueryInterface( kISimpleEnumerator , (void**)outEnumerator );
+			return enumerator->QueryInterface( NS_GET_IID(nsISimpleEnumerator) , (void**)outEnumerator );
 		}
 		return NS_ERROR_OUT_OF_MEMORY;
 }
@@ -475,7 +470,7 @@ NS_METHOD nsWindowMediator::GetXULWindowEnumerator( const PRUnichar* inType, nsI
 		nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this, PR_TRUE );
 		if (enumerator )
 		{
-			return enumerator->QueryInterface( kISimpleEnumerator , (void**)outEnumerator );
+			return enumerator->QueryInterface( NS_GET_IID(nsISimpleEnumerator) , (void**)outEnumerator );
 		}
 		return NS_ERROR_OUT_OF_MEMORY;
 }	
@@ -643,23 +638,7 @@ NS_IMETHODIMP nsWindowMediator::ConvertISupportsToDOMWindow( nsISupports* inInte
 // COM
 NS_IMPL_ADDREF( nsWindowMediator );
 NS_IMPL_RELEASE( nsWindowMediator );
-
-NS_IMETHODIMP nsWindowMediator::QueryInterface(REFNSIID iid, void **result)
-{
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-	if (iid.Equals(kIRDFDataSourceIID) ||
-		iid.Equals(kIWindowMediatorIID)	||
-		 iid.Equals(NS_GET_IID(nsISupports)) )
-	{
-		*result = NS_STATIC_CAST(nsIWindowMediator *, this);
-		AddRef();
-		return NS_OK;
-	}
-	return(NS_NOINTERFACE);
-}
+NS_IMPL_QUERY_INTERFACE2(nsWindowMediator, nsIWindowMediator, nsIRDFDataSource)
 
 // RDF
 nsresult
@@ -669,7 +648,7 @@ nsWindowMediator::Init()
 
 	 if (gRefCnt++ == 0)
 	 {
-      rv = nsServiceManager::GetService( kRDFServiceCID, kIRDFServiceIID, (nsISupports**) &gRDFService );
+      rv = nsServiceManager::GetService( kRDFServiceCID, NS_GET_IID(nsIRDFService), (nsISupports**) &gRDFService );
       if (NS_FAILED(rv)) return rv;
 
 			gRDFService->GetResource( kURINC_WindowMediatorRoot,   &kNC_WindowMediatorRoot );
@@ -679,7 +658,7 @@ nsWindowMediator::Init()
 
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
 	                                                nsnull,
-	                                                kIRDFDataSourceIID,
+	                                                NS_GET_IID(nsIRDFDataSource),
 	                                                (void**) &mInner)))
 	{
 		return rv;
@@ -925,5 +904,5 @@ void nsWindowEnumerator::WindowRemoved( PRInt32 inIndex)
  */
 NS_IMPL_ADDREF(nsWindowEnumerator);
 NS_IMPL_RELEASE(nsWindowEnumerator);
-NS_IMPL_QUERY_INTERFACE(nsWindowEnumerator, kISimpleEnumberatorIID);
+NS_IMPL_QUERY_INTERFACE1(nsWindowEnumerator, nsISimpleEnumerator);
 

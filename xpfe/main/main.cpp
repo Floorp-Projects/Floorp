@@ -26,7 +26,7 @@
 #include "nsIAppRunner.h" // For nsIAppRunner.
 
 // Define Class IDs.
-static NS_DEFINE_IID(kAppRunnerCID, NS_APPRUNNER_CID);
+static NS_DEFINE_CID(kAppRunnerCID, NS_APPRUNNER_CID);
 
 // Define Interface IDs.
 static NS_DEFINE_IID(kIAppRunnerIID, NS_IAPPRUNNER_IID);
