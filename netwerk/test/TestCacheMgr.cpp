@@ -219,7 +219,7 @@ public:
     }
 
     NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports* context,
-                             nsresult aStatus, const PRUnichar* aStatusArg) {
+                             nsresult aStatus) {
         PRIntervalTime endTime;
         PRIntervalTime duration;
         
