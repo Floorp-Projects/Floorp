@@ -46,6 +46,12 @@
 #include "nsIRDFContainer.h"
 #include "nsHashtable.h"
 
+// {C744CA3D-840B-460a-8D70-7CE63C51C958}
+#define NS_WINDOWDATASOURCE_CID \
+{ 0xc744ca3d, 0x840b, 0x460a, \
+ { 0x8d, 0x70, 0x7c, 0xe6, 0x3c, 0x51, 0xc9, 0x58 } }
+
+
 class nsWindowDataSource : public nsIRDFDataSource,
                            public nsIWindowMediatorListener,
                            public nsIWindowDataSource
