@@ -277,8 +277,6 @@ PRBool nsRegionPh :: ContainsRect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt
 	tile->rect.lr.y = (aY+aHeight-1);
 	tile->next = NULL;
 
-	/* if( tile->rect.lr.x == -1 ) printf( "nsRegionPh::ContainsRect problem 5\n" ); */
-
 	PhTile_t *test;
 	test = PhIntersectTilings( tile, mRegion, NULL );
 

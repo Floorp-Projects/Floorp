@@ -166,7 +166,6 @@ NS_IMETHODIMP nsPrinterEnumeratorPh::InitPrintSettingsFromPrinter(const PRUnicha
 // Display the AdvancedDocumentProperties for the selected Printer
 NS_IMETHODIMP nsPrinterEnumeratorPh::DisplayPropertiesDlg(const PRUnichar *aPrinterName, nsIPrintSettings* aPrintSettings)
 {
-	printf("nsPrinterEnumeratorPh::DisplayPropertiesDlg\n");
 	nsresult rv = NS_ERROR_FAILURE;
 	return rv;
 }
@@ -184,7 +183,7 @@ static void CleanupArray(PRUnichar**& aArray, PRInt32& aCount)
 
 
 nsresult
-nsPrinterEnumeratorPh::DoEnumeratePrinters(PRUint32* aCount,
+nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount,
                                            PRUnichar*** aResult)
 {
   	NS_ENSURE_ARG(aCount);
