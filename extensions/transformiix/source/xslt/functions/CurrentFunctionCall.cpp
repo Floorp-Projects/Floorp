@@ -7,9 +7,10 @@
 /**
  * Creates a new current function call
 **/
-CurrentFunctionCall::CurrentFunctionCall() :
+CurrentFunctionCall::CurrentFunctionCall(ProcessorState* ps) :
         FunctionCall(CURRENT_FN)
 {
+    this->processorState = ps;
 }
 
 /**
@@ -23,7 +24,7 @@ CurrentFunctionCall::CurrentFunctionCall() :
 ExprResult* CurrentFunctionCall::evaluate(Node* context, ContextState* cs) {
 
     NodeSet* result = new NodeSet(1);
-    result->add(context);
+    result->add(processorState->getCurrentNode());
     return result;
 } //-- evaluate
 

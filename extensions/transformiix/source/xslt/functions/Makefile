@@ -18,16 +18,16 @@ ALL_OBJS = \
     SystemPropertyFunctionCall.o
 
 INCLUDE_PATH = -I.           \
-			   -I$(BASE)       \
-			   -I$(NET)        \
-			   -I$(XPATH)      \
-			   -I$(XML)        \
-			   -I$(XML)/parser \
-			   -I$(XML_UTIL)   \
-			   -I$(DOM)        \
-			   -I$(XSLT)       \
-		         -I$(XSLT)/util  \
-	   		   -I$(EXPAT_PARSER_PATH) 
+   -I$(BASE)       \
+   -I$(NET)        \
+   -I$(XPATH)      \
+   -I$(XML)        \
+   -I$(XML)/parser \
+   -I$(XML_UTIL)   \
+   -I$(DOM)        \
+   -I$(XSLT)       \
+   -I$(XSLT)/util  \
+   -I$(EXPAT_PARSER_PATH) 
 
 target: $(ALL_OBJS)
 

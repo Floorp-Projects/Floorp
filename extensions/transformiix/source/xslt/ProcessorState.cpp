@@ -25,16 +25,17 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.17 2001/01/24 14:44:02 axel%pike.org Exp $
+ * $Id: ProcessorState.cpp,v 1.18 2001/01/27 15:05:39 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.17 $ $Date: 2001/01/24 14:44:02 $
+ * @version $Revision: 1.18 $ $Date: 2001/01/27 15:05:39 $
 **/
 
 #include "ProcessorState.h"
+#include "XSLTFunctions.h"
 
   //-------------/
  //- Constants -/
@@ -72,7 +73,7 @@ ProcessorState::~ProcessorState() {
       delete dfWildCardTemplate;
   if (dfTextTemplate)
       delete dfTextTemplate;
-  delete nodeStack;
+  delete resultNodeStack;
 
   while ( ! variableSets.empty() ) {
       delete (NamedMap*) variableSets.pop();
@@ -190,7 +191,7 @@ void ProcessorState::addTemplate(Element* xslTemplate) {
 **/
 MBool ProcessorState::addToResultTree(Node* node) {
 
-    Node* current = nodeStack->peek();
+    Node* current = resultNodeStack->peek();
 #ifdef MOZ_XSL
     String nameSpaceURI, name, localName;
 #endif
@@ -225,7 +226,7 @@ MBool ProcessorState::addToResultTree(Node* node) {
                 if ( docElement ) {
                     String nodeName(wrapperName);
                     Element* wrapper = resultDocument->createElement(nodeName);
-                    nodeStack->push(wrapper);
+                    resultNodeStack->push(wrapper);
                     current->appendChild(wrapper);
                     current = wrapper;
                 }
@@ -250,7 +251,7 @@ MBool ProcessorState::addToResultTree(Node* node) {
             if ( current == resultDocument ) {
                 String nodeName(wrapperName);
                 Element* wrapper = resultDocument->createElement(nodeName);
-                nodeStack->push(wrapper);
+                resultNodeStack->push(wrapper);
                 current->appendChild(wrapper);
                 current = wrapper;
             }
@@ -362,6 +363,13 @@ void ProcessorState::generateId(Node* node, String& dest) {
 NodeSet* ProcessorState::getAttributeSet(const String& name) {
     return (NodeSet*)namedAttributeSets.get(name);
 } //-- getAttributeSet
+
+/**
+ * Returns the source node currently being processed
+**/
+Node* ProcessorState::getCurrentNode() {
+    return currentNodeStack.peek();
+} //-- setCurrentNode
 
 /**
  * Gets the default Namespace URI stack.
@@ -483,7 +491,7 @@ void ProcessorState::getNameSpaceURIFromPrefix(const String& prefix, String& nam
  * result tree
 **/
 NodeStack* ProcessorState::getNodeStack() {
-    return nodeStack;
+    return resultNodeStack;
 } //-- getNodeStack
 
 /**
@@ -570,20 +578,12 @@ Node* ProcessorState::popAction() {
 } //-- popAction
 
 /**
- * Adds the given XSLT action to the top of the action stack
+ * Removes and returns the current source node being processed, from the stack
+ * @return the current source node
 **/
-void ProcessorState::pushAction(Node* xsltAction) {
-   if (currentAction) {
-       XSLTAction* newAction = new XSLTAction;
-       newAction->prev = currentAction;
-       currentAction = newAction;
-   }
-   else {
-       currentAction = new XSLTAction;
-       currentAction->prev = 0;
-   }
-   currentAction->node = xsltAction;
-} //-- pushAction
+Node* ProcessorState::popCurrentNode() {
+   return currentNodeStack.pop();
+} //-- popCurrentNode
 
 /**
  * Adds the set of names to the Whitespace preserving element set
@@ -600,6 +600,30 @@ void ProcessorState::preserveSpace(String& names) {
     }
 
 } //-- preserveSpace
+
+/**
+ * Adds the given XSLT action to the top of the action stack
+**/
+void ProcessorState::pushAction(Node* xsltAction) {
+   if (currentAction) {
+       XSLTAction* newAction = new XSLTAction;
+       newAction->prev = currentAction;
+       currentAction = newAction;
+   }
+   else {
+       currentAction = new XSLTAction;
+       currentAction->prev = 0;
+   }
+   currentAction->node = xsltAction;
+} //-- pushAction
+
+/**
+ * Sets the source node currently being processed
+ * @param node the source node to set as the "current" node
+**/
+void ProcessorState::pushCurrentNode(Node* node) {
+    currentNodeStack.push(node);
+} //-- setCurrentNode
 
 /**
  * Sets a new default Namespace URI.
@@ -777,7 +801,7 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
        err.append(name);
    }
    else if (CURRENT_FN.isEqual(name)) {
-       return new CurrentFunctionCall();
+       return new CurrentFunctionCall(this);
    }
    else if (UNPARSED_ENTITY_URI_FN.isEqual(name)) {
        err = "function not yet implemented: ";
@@ -903,8 +927,8 @@ void ProcessorState::initialize() {
     //-- handles the cleanup
 
     //-- create NodeStack
-    nodeStack = new NodeStack();
-    nodeStack->push(this->resultDocument);
+    resultNodeStack = new NodeStack();
+    resultNodeStack->push(this->resultDocument);
 
     setDefaultNameSpaceURIForResult("");
 
