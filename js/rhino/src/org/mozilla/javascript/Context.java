@@ -2249,6 +2249,19 @@ public class Context
         }
         int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
         if (syntaxErrorCount == 0) {
+            if (returnFunction) {
+                if (!(tree.getFunctionCount() == 1
+                      && tree.getFirstChild() != null
+                      && tree.getFirstChild().getType() == Token.FUNCTION))
+                {
+                    // XXX: the check just look for the first child
+                    // and allows for more nodes after it for compatibility
+                    // with sources like function() {};;;
+                    throw new IllegalArgumentException(
+                        "compileFunction only accepts source with single JS function: "+sourceString);
+                }
+            }
+
             Interpreter compiler = createCompiler();
 
             String encodedSource = p.getEncodedSource();
