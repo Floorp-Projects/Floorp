@@ -541,9 +541,6 @@
 			<menuitem value="EditorContent Sheet"    
              accesskey="&sseditorcontent.accesskey;"
 				     oncommand="EditorApplyStyleSheet('chrome://editor/content/EditorContent.css')"/>
-			<menuitem value="EditorContent Sheet"    
-             accesskey="&sseditorcontentua.accesskey;"
-				     oncommand="EditorApplyStyleSheet('resource:/res/ua.css')"/>
 			<menuseparator />
 			<menuitem value="&stylesheetEditorOneCmd.label;"    
              accesskey="&sseditor1.accesskey;"
