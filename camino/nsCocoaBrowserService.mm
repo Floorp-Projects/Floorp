@@ -41,22 +41,13 @@
 
 #include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIEmbeddingSiteWindow.h"
-#include "nsIProfile.h"
-#include "nsIPrefService.h"
 #include "nsCRT.h"
 #include "nsString.h"
-#include "nsIPrompt.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIExternalHelperAppService.h"
-#include "nsIDownload.h"
-
-#include "nsINSSDialogs.h"
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
-
-#import "SecurityDialogs.h"
+#include "nsEmbedAPI.h"
+#include "nsIDownload.h"
+#include "nsIExternalHelperAppService.h"
 
 nsAlertController* nsCocoaBrowserService::sController = nsnull;
 nsCocoaBrowserService* nsCocoaBrowserService::sSingleton = nsnull;
@@ -65,7 +56,7 @@ PRBool nsCocoaBrowserService::sCanTerminate = PR_FALSE;
 
 // This method should return a nsModuleComponentInfo array of
 // application-provided XPCOM components to register.  The implementation
-// is in AppComponents.cpp.
+// is in AppComponents.mm.
 extern const nsModuleComponentInfo* GetAppModuleComponentInfo(int* outNumComponents);
 
 // nsCocoaBrowserService implementation
@@ -78,9 +69,8 @@ nsCocoaBrowserService::~nsCocoaBrowserService()
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsCocoaBrowserService,
+NS_IMPL_ISUPPORTS3(nsCocoaBrowserService,
                    nsIWindowCreator,
-                   nsIPromptService,
                    nsIFactory, 
                    nsIHelperAppLauncherDialog)
 
@@ -103,15 +93,6 @@ nsCocoaBrowserService::InitEmbedding()
   if ( !cr )
     return NS_ERROR_FAILURE;
 
-  // Register as the prompt service
-  #define NS_PROMPTSERVICE_CID \
-     {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
-  static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
-  nsresult rv = cr->RegisterFactory(kPromptServiceCID, "Prompt Service", "@mozilla.org/embedcomp/prompt-service;1",
-                                    sSingleton);
-  if (NS_FAILED(rv))
-    return rv;
-
   // Register as the window creator
   nsCOMPtr<nsIWindowWatcher> watcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (!watcher) 
@@ -122,6 +103,7 @@ nsCocoaBrowserService::InitEmbedding()
 
   int numComponents;
   const nsModuleComponentInfo* componentInfo = GetAppModuleComponentInfo(&numComponents);
+  nsresult rv;
   for (int i = 0; i < numComponents; ++i) {
     nsCOMPtr<nsIGenericFactory> componentFactory;
     rv = NS_NewGenericFactory(getter_AddRefs(componentFactory), &(componentInfo[i]));
@@ -235,396 +217,6 @@ nsCocoaBrowserService::LockFactory(PRBool lock)
   return NS_OK;
 }
 
-// nsIPromptService implementation
-static NSWindow*
-GetNSWindowForDOMWindow(nsIDOMWindow* window)
-{
-  nsCOMPtr<nsIWindowWatcher> watcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  if (!watcher) {
-    return nsnull;
-  }
-  
-  nsCOMPtr<nsIWebBrowserChrome> chrome;
-  watcher->GetChromeForWindow(window, getter_AddRefs(chrome));
-  if (!chrome) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_QueryInterface(chrome));
-  if (!siteWindow) {
-    return nsnull;
-  }
-
-  NSWindow* nswin;
-  nsresult rv = siteWindow->GetSiteWindow((void**)&nswin);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  return nswin;
-}
-
-// Implementation of nsIPromptService
-NS_IMETHODIMP 
-nsCocoaBrowserService::Alert(nsIDOMWindow *parent, 
-                             const PRUnichar *dialogTitle, 
-                             const PRUnichar *text)
-{
-  nsAlertController* controller = GetAlertController();
-  if (!controller) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-  if (!window)
-    return NS_ERROR_FAILURE;
-
-  [controller alert:window title:titleStr text:textStr];
-
-  return NS_OK;
-}
-
-/* void alertCheck (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, in wstring checkMsg, inout boolean checkValue); */
-NS_IMETHODIMP 
-nsCocoaBrowserService::AlertCheck(nsIDOMWindow *parent, 
-                                  const PRUnichar *dialogTitle, 
-                                  const PRUnichar *text, 
-                                  const PRUnichar *checkMsg, 
-                                  PRBool *checkValue)
-{
-  nsAlertController* controller = GetAlertController();
-  if (!controller) {
-    return NS_ERROR_FAILURE;
-  }
- 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-
-  if (checkValue) {
-    BOOL valueBool = *checkValue ? YES : NO;
-    
-    [controller alertCheck:window title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
-    
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
-  }
-  else {
-    [controller alert:window title:titleStr text:textStr];    
-  }
-  
-  return NS_OK;
-}
-
-/* boolean confirm (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text); */
-NS_IMETHODIMP 
-nsCocoaBrowserService::Confirm(nsIDOMWindow *parent, 
-                               const PRUnichar *dialogTitle, 
-                               const PRUnichar *text, 
-                               PRBool *_retval)
-{
-  nsAlertController* controller = GetAlertController();
-  if (!controller) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-
-  *_retval = (PRBool)[controller confirm:window title:titleStr text:textStr];
-  
-  return NS_OK;
-}
-
-/* boolean confirmCheck (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, in wstring checkMsg, inout boolean checkValue); */
-NS_IMETHODIMP 
-nsCocoaBrowserService::ConfirmCheck(nsIDOMWindow *parent, 
-                                    const PRUnichar *dialogTitle, 
-                                    const PRUnichar *text, 
-                                    const PRUnichar *checkMsg, 
-                                    PRBool *checkValue, PRBool *_retval)
-{
-  nsAlertController* controller = GetAlertController();
-  if (!controller) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-
-  if (checkValue) {
-    BOOL valueBool = *checkValue ? YES : NO;
-    
-    *_retval = (PRBool)[controller confirmCheck:window title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
-    
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
-  }
-  else {
-    *_retval = (PRBool)[controller confirm:window title:titleStr text:textStr];
-  }
-  
-  return NS_OK;
-}
-
-NSString *
-nsCocoaBrowserService::GetCommonDialogLocaleString(const char *key)
-{
-  NSString *returnValue = @"";
-
-  nsresult rv;
-  if (!mCommonDialogStringBundle) {
-    #define kCommonDialogsStrings "chrome://global/locale/commonDialogs.properties"
-    nsCOMPtr<nsIStringBundleService> service = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    if ( service )
-      rv = service->CreateBundle(kCommonDialogsStrings, getter_AddRefs(mCommonDialogStringBundle));
-    else
-      rv = NS_ERROR_FAILURE;
-    if (NS_FAILED(rv)) return returnValue;
-  }
-
-  nsXPIDLString string;
-  rv = mCommonDialogStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(key).get(), getter_Copies(string));
-  if (NS_FAILED(rv)) return returnValue;
-
-  returnValue = [NSString stringWithCharacters:string length:(string ? nsCRT::strlen(string) : 0)];
-  return returnValue;
-}
-
-NSString *
-nsCocoaBrowserService::GetButtonStringFromFlags(PRUint32 btnFlags,
-                                                PRUint32 btnIDAndShift,
-                                                const PRUnichar *btnTitle)
-{
-  NSString *btnStr = nsnull;
-  switch ((btnFlags >> btnIDAndShift) & 0xff) {
-    case BUTTON_TITLE_OK:
-      btnStr = GetCommonDialogLocaleString("OK");
-      break;
-    case BUTTON_TITLE_CANCEL:
-      btnStr = GetCommonDialogLocaleString("Cancel");
-      break;
-    case BUTTON_TITLE_YES:
-      btnStr = GetCommonDialogLocaleString("Yes");
-      break;
-    case BUTTON_TITLE_NO:
-      btnStr = GetCommonDialogLocaleString("No");
-      break;
-    case BUTTON_TITLE_SAVE:
-      btnStr = GetCommonDialogLocaleString("Save");
-      break;
-    case BUTTON_TITLE_DONT_SAVE:
-      btnStr = GetCommonDialogLocaleString("DontSave");
-      break;
-    case BUTTON_TITLE_REVERT:
-      btnStr = GetCommonDialogLocaleString("Revert");
-      break;
-    case BUTTON_TITLE_IS_STRING:
-      btnStr = [NSString stringWithCharacters:btnTitle length:(btnTitle ? nsCRT::strlen(btnTitle) : 0)];
-  }
-
-  return btnStr;
-}
-
-// these constants are used for identifying the buttons and are intentionally overloaded to
-// correspond to the number of bits needed for shifting to obtain the flags for a particular
-// button (should be defined in nsIPrompt*.idl instead of here)
-const PRUint32 kButton0 = 0;
-const PRUint32 kButton1 = 8;
-const PRUint32 kButton2 = 16;
-
-/* void confirmEx (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, in unsigned long buttonFlags, in wstring button0Title, in wstring button1Title, in wstring button2Title, in wstring checkMsg, inout boolean checkValue, out PRInt32 buttonPressed); */
-NS_IMETHODIMP 
-nsCocoaBrowserService::ConfirmEx(nsIDOMWindow *parent, 
-                                 const PRUnichar *dialogTitle, 
-                                 const PRUnichar *text, 
-                                 PRUint32 buttonFlags, 
-                                 const PRUnichar *button0Title, 
-                                 const PRUnichar *button1Title, 
-                                 const PRUnichar *button2Title, 
-                                 const PRUnichar *checkMsg, 
-                                 PRBool *checkValue, PRInt32 *buttonPressed)
-{
-  nsAlertController* controller = GetAlertController();
-  if (!controller) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-
-  NSString* btn1Str = GetButtonStringFromFlags(buttonFlags, kButton0, button0Title);
-  NSString* btn2Str = GetButtonStringFromFlags(buttonFlags, kButton1, button1Title);
-  NSString* btn3Str = GetButtonStringFromFlags(buttonFlags, kButton2, button2Title);
-  
-  if (checkValue) {
-    BOOL valueBool = *checkValue ? YES : NO;
-    
-    *buttonPressed = [controller confirmCheckEx:window title:titleStr text:textStr 
-                               button1: btn1Str button2: btn2Str button3: btn3Str
-                               checkMsg:msgStr checkValue:&valueBool];
-    
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
-  }
-  else {
-    *buttonPressed = [controller confirmEx:window title:titleStr text:textStr
-                               button1: btn1Str button2: btn2Str button3: btn3Str];
-  }
-
-  return NS_OK;
-
-}
-
-/* boolean prompt (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, inout wstring value, in wstring checkMsg, inout boolean checkValue); */
-NS_IMETHODIMP 
-nsCocoaBrowserService::Prompt(nsIDOMWindow *parent, 
-                              const PRUnichar *dialogTitle, 
-                              const PRUnichar *text, 
-                              PRUnichar **value, 
-                              const PRUnichar *checkMsg, 
-                              PRBool *checkValue, 
-                              PRBool *_retval)
-{
-  nsAlertController* controller = GetAlertController();
-  if (!controller) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSMutableString* valueStr = [NSMutableString stringWithCharacters:*value length:(*value ? nsCRT::strlen(*value) : 0)];
-    
-  BOOL valueBool;
-  if (checkValue) {
-    valueBool = *checkValue ? YES : NO;
-  }
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-
-  *_retval = (PRBool)[controller prompt:window title:titleStr text:textStr promptText:valueStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
-
-  if (checkValue) {
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
-  }
-  PRUint32 length = [valueStr length];
-  PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-  [valueStr getCharacters:retStr];
-  retStr[length] = PRUnichar(0);
-  *value = retStr;
-
-  return NS_OK;
-}
-
-/* boolean promptUsernameAndPassword (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, inout wstring username, inout wstring password, in wstring checkMsg, inout boolean checkValue); */
-NS_IMETHODIMP 
-nsCocoaBrowserService::PromptUsernameAndPassword(nsIDOMWindow *parent, 
-                                                 const PRUnichar *dialogTitle, 
-                                                 const PRUnichar *text, 
-                                                 PRUnichar **username, 
-                                                 PRUnichar **password, 
-                                                 const PRUnichar *checkMsg, 
-                                                 PRBool *checkValue, 
-                                                 PRBool *_retval)
-{
-  nsAlertController* controller = GetAlertController();
-  if (!controller) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSMutableString* userNameStr = [NSMutableString stringWithCharacters:*username length:(*username ? nsCRT::strlen(*username) : 0)];
-  NSMutableString* passwordStr = [NSMutableString stringWithCharacters:*password length:(*password ? nsCRT::strlen(*password) : 0)];
-    
-  BOOL valueBool;
-  if (checkValue) {
-    valueBool = *checkValue ? YES : NO;
-  }
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-
-  *_retval = (PRBool)[controller promptUserNameAndPassword:window title:titleStr text:textStr userNameText:userNameStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
-  
-  if (checkValue) {
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
-  }
-
-  PRUint32 length = [userNameStr length];
-  PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-  [userNameStr getCharacters:retStr];
-  retStr[length] = PRUnichar(0);
-  *username = retStr;
-
-  length = [passwordStr length];
-  retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-  [passwordStr getCharacters:retStr];
-  retStr[length] = PRUnichar(0);
-  *password = retStr;
-
-  return NS_OK;
-}
-
-/* boolean promptPassword (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, inout wstring password, in wstring checkMsg, inout boolean checkValue); */
-NS_IMETHODIMP 
-nsCocoaBrowserService::PromptPassword(nsIDOMWindow *parent, 
-                                      const PRUnichar *dialogTitle, 
-                                      const PRUnichar *text, 
-                                      PRUnichar **password, 
-                                      const PRUnichar *checkMsg, 
-                                      PRBool *checkValue, 
-                                      PRBool *_retval)
-{
-  nsAlertController* controller = GetAlertController();
-  if (!controller) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSMutableString* passwordStr = [NSMutableString stringWithCharacters:*password length:(*password ? nsCRT::strlen(*password) : 0)];
-    
-  BOOL valueBool;
-  if (checkValue) {
-    valueBool = *checkValue ? YES : NO;
-  }
-  NSWindow* window = GetNSWindowForDOMWindow(parent);
-
-  *_retval = (PRBool)[controller promptPassword:window title:titleStr text:textStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
-
-  if (checkValue) {
-    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
-  }
-
-  PRUint32 length = [passwordStr length];
-  PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
-  [passwordStr getCharacters:retStr];
-  retStr[length] = PRUnichar(0);
-  *password = retStr;
-
-  return NS_OK;
-}
-
-/* boolean select (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, in PRUint32 count, [array, size_is (count)] in wstring selectList, out long outSelection); */
-NS_IMETHODIMP 
-nsCocoaBrowserService::Select(nsIDOMWindow *parent, 
-                              const PRUnichar *dialogTitle, 
-                              const PRUnichar *text, 
-                              PRUint32 count, 
-                              const PRUnichar **selectList, 
-                              PRInt32 *outSelection, 
-                              PRBool *_retval)
-{
-#if DEBUG
-  NSLog(@"Uh-oh. Select has not been implemented.");
-#endif
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 // Implementation of nsIWindowCreator
 /* nsIWebBrowserChrome createChromeWindow (in nsIWebBrowserChrome parent, in PRUint32 chromeFlags); */

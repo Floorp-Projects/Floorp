@@ -36,27 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "SecurityDialogs.h"
-#include "nsIGenericFactory.h"
+#ifndef __CocoaPromptService_h__
+#define __CocoaPromptService_h__
 
-// {0ffd3880-7a1a-11d6-a384-975d1d5f86fc}
-#define NS_BADCERTHANDLER_CID \
-  {0x0ffd3880, 0x7a1a, 0x11d6,{0xa3, 0x84, 0x97, 0x5d, 0x1d, 0x5f, 0x86, 0xfc}}
+#include "nsIStringBundle.h"
+#include "nsIPromptService.h"
+#import <Cocoa/Cocoa.h>
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(SecurityDialogs);
+class CocoaPromptService : public nsIPromptService
+{
+public:
+  CocoaPromptService();
+  virtual ~CocoaPromptService();
 
-static const nsModuleComponentInfo components[] = {
-  {
-    "Bad Cert Handler",
-    NS_BADCERTHANDLER_CID,
-    NS_NSSDIALOGS_CONTRACTID,
-    SecurityDialogsConstructor
-  }
+  NS_DECL_ISUPPORTS;
+  NS_DECL_NSIPROMPTSERVICE;
+
+private:
+  NSWindow *GetNSWindowForDOMWindow(nsIDOMWindow* window);
+  NSString *GetCommonDialogLocaleString(const char *s);
+  NSString *GetButtonStringFromFlags(PRUint32 btnFlags, PRUint32 btnIDAndShift,
+                                     const PRUnichar *btnTitle);
+
+  nsCOMPtr<nsIStringBundle> mCommonDialogStringBundle;
 };
 
-const nsModuleComponentInfo* GetAppModuleComponentInfo(int* outNumComponents)
-{
-  *outNumComponents = sizeof(components) / sizeof(components[0]);
-  return components;
-}
-
+#endif

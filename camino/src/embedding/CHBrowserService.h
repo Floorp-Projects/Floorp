@@ -39,15 +39,12 @@
 #define __nsCocoaBrowserService_h__
 
 #import "nsAlertController.h"
-#include "nsEmbedAPI.h"
 #include "nsCOMPtr.h"
 #include "nsIWindowCreator.h"
-#include "nsIPromptService.h"
-#include "nsIStringBundle.h"
 #include "nsIHelperAppLauncherDialog.h"
+#include "nsIFactory.h"
 
 class nsCocoaBrowserService :  public nsIWindowCreator,
-                               public nsIPromptService,
                                public nsIFactory, 
                                public nsIHelperAppLauncherDialog
 {
@@ -57,7 +54,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWCREATOR
-  NS_DECL_NSIPROMPTSERVICE
   NS_DECL_NSIFACTORY
   NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
   
@@ -72,12 +68,6 @@ public:
   static PRUint32 sNumBrowsers;
 
 private:
-  NSString *GetCommonDialogLocaleString(const char *s);
-  NSString *GetButtonStringFromFlags(PRUint32 btnFlags, PRUint32 btnIDAndShift,
-                                     const PRUnichar *btnTitle);
-
-  nsCOMPtr<nsIStringBundle> mCommonDialogStringBundle;
-  
   static nsCocoaBrowserService* sSingleton;
   static nsAlertController* sController;
   static PRBool sCanTerminate;

@@ -45,7 +45,8 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
- 
+#include "nsIServiceManagerUtils.h"
+
 SecurityDialogs::SecurityDialogs()
 {
   NS_INIT_ISUPPORTS();

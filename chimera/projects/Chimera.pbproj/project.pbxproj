@@ -477,6 +477,7 @@
 				F50D9DF302EE194001BB4219,
 				F50D9DF702EE2B9B01BB4219,
 				F5D33CBF02EF61AA01A967F3,
+				F566BD1402EFA9AD01A967F3,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -597,6 +598,7 @@
 				F50D9DF802EE2B9B01BB4219,
 				F5D33CC002EF61AA01A967F3,
 				F5D33CC102EF61AA01A967F3,
+				F566BD1502EFA9AD01A967F3,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -1298,6 +1300,7 @@
 				F5DE10E90209DC0601A967DF,
 				F528E21A020FD9620168DE43,
 				F5D33CBE02EF61A901A967F3,
+				F566BD1302EFA9AD01A967F3,
 			);
 			isa = PBXGroup;
 			name = Dialogs;
@@ -1501,6 +1504,7 @@
 				F50D9DE202ECC2C601BB4219,
 				F55C4DD302D2864D0130B065,
 				F5D33CBC02EF61A901A967F3,
+				F566BD1202EFA9AD01A967F3,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -3084,6 +3088,40 @@
 		};
 		F564873C023C3857010001CA = {
 			fileRef = F564873A023C3857010001CA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F566BD1202EFA9AD01A967F3 = {
+			isa = PBXFileReference;
+			path = CocoaPromptService.h;
+			refType = 2;
+		};
+		F566BD1302EFA9AD01A967F3 = {
+			isa = PBXFileReference;
+			path = CocoaPromptService.mm;
+			refType = 2;
+		};
+		F566BD1402EFA9AD01A967F3 = {
+			fileRef = F566BD1202EFA9AD01A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F566BD1502EFA9AD01A967F3 = {
+			fileRef = F566BD1302EFA9AD01A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F566BD1602EFA9AD01A967F3 = {
+			fileRef = F566BD1202EFA9AD01A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F566BD1702EFA9AD01A967F3 = {
+			fileRef = F566BD1302EFA9AD01A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5139,6 +5177,7 @@
 				F5E37B0E02EE95E201A967F3,
 				F5E37B0F02EE95E201A967F3,
 				F5D33CC202EF61AA01A967F3,
+				F566BD1602EFA9AD01A967F3,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -5260,6 +5299,7 @@
 				F5E37B1202EE95E201A967F3,
 				F5D33CC302EF61AA01A967F3,
 				F5D33CC402EF61AA01A967F3,
+				F566BD1702EFA9AD01A967F3,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -7070,7 +7110,7 @@
 		};
 		F5D33CBD02EF61A901A967F3 = {
 			isa = PBXFileReference;
-			path = AppComponents.cpp;
+			path = AppComponents.mm;
 			refType = 2;
 		};
 		F5D33CBE02EF61A901A967F3 = {
