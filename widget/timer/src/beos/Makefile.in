@@ -26,20 +26,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= timer
-LIBRARY_NAME	= timer_beos
+LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
 
 
-CPPSRCS		= nsTimer.cpp
+CPPSRCS		= nsTimerBeOS.cpp
+
+TIMER_SUFFIX	= beos
+IS_COMPONENT	= 1
+CPPSRCS		+= nsTimerBeOSFactory.cpp
+EXTRA_DSO_LDOPTS = $(MOZ_TK_LDFLAGS) $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_TIMER
-CXXFLAGS	+= $(TK_CFLAGS)
-INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..
+INCLUDES	+= $(MOZ_TK_CFLAGS) -I$(srcdir)/..
 
-EXTRA_DSO_LDOPTS += \
-	$(XPCOM_LIBS) \
-	$(TK_LIBS) \
-	$(NSPR_LIBS)
+# Since we are changing the library to a component,
+# make sure that the old copy in $(DIST) does not exist
+export::
+	$(RM) -f $(DIST)/bin/libtimer_$(TIMER_SUFFIX).so $(DIST)/lib/libtimer_$(TIMER_SUFFIX).so $(DIST)/bin/libtimer_$(TIMER_SUFFIX).so.stub 
 

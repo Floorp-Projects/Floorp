@@ -59,7 +59,6 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS = \
-		-ltimer_beos \
 		$(TOOLKIT_DSO_LDOPTS) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
@@ -72,3 +71,8 @@ DEFINES		+= -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir)
 
 CXXFLAGS	+= $(TK_CFLAGS)
 
+INCLUDES += \
+		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir) \
+		-I$(srcdir)/../../timer/src/beos \
+		$(NULL)
