@@ -54,11 +54,11 @@ enum {
 };
 
 struct XPIDLSettings {
-	short	version;			/* version # of settings data	*/
-	short	mode;				/* one of kXPIDLModeHeader, ...	*/
-	Boolean warnings;			/* generate warnings.			*/
-	Boolean verbose;			/* verbose mode					*/
-	Str32	output;				/* name of the output file		*/
+	short		version;			/* version # of settings data	*/
+	short		mode;				/* one of kXPIDLModeHeader, ...	*/
+	Boolean		warnings;			/* generate warnings.			*/
+	Boolean		verbose;			/* verbose mode					*/
+	Str32Field	output;				/* name of the output file		*/
 };
 
 typedef struct XPIDLSettings XPIDLSettings, **XPIDLSettingsHandle;
