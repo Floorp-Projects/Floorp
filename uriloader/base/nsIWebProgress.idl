@@ -71,15 +71,11 @@ interface nsIWebProgress : nsISupports
 	@param listener - The listener interface to be called when a progress event
 			occurs.
 
-	@param cookie - This is an optional parameter to receieve a cookie to use
-			to unregister rather than the original interface pointer.  This may
-			be nsnull.
-
 	@return	NS_OK - Listener was registered successfully.
 				NS_INVALID_ARG - The listener passed in was either nsnull, 
 						or was already registered with this progress interface.
 	 */
-	void addProgressListener(in nsIWebProgressListener listener, out long cookie);
+	void addProgressListener(in nsIWebProgressListener listener);
 
 	/* 
 	Removes a previously registered listener of Progress Events
@@ -87,15 +83,11 @@ interface nsIWebProgress : nsISupports
 	@param listener - The listener interface previously registered with 
 			AddListener() this may be nsnull if a valid cookie is provided.
 
-	@param cookie - A cookie that was returned from a previously called
-		AddListener() call.  This may be nsnull if a valid listener interface
-		is passed in.
-
 	@return	NS_OK - Listener was successfully unregistered.
 				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
 					to a previously registered listener.
 	*/
-	void removeProgressListener(in nsIWebProgressListener listener, in long cookie);
+	void removeProgressListener(in nsIWebProgressListener listener);
 
 	/*
 	Current progress Status of the browser.  This will be a combination of the 
