@@ -511,7 +511,7 @@ nsRDFContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, n
     return NS_OK;
 }
 
-
+PRBool
 nsRDFContentUtils::IsContainedBy(nsIContent* aElement, nsIContent* aContainer)
 {
     nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );

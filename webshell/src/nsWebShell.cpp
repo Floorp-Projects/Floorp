@@ -2898,7 +2898,7 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
   char buf[256];
   char* url = buf;
 
-  if (urlStr.Length() >= sizeof(buf)) {
+  if (urlStr.Length() >= PRInt32(sizeof buf)) {
     url = new char[urlStr.Length() + 1];
   }
 
