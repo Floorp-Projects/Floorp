@@ -32,7 +32,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-/*#include "mozilla.h"*/
 #include "nsXtManageWidget.h"
 #include "nsXtManageWidgetP.h"
 
@@ -160,4 +159,3 @@ ChangeManaged(Widget w)
 {
 	return;
 }
-

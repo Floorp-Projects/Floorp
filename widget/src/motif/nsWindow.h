@@ -24,18 +24,6 @@
 
 #include <Xm/Xm.h>
 
-
-// #include "nsIWidget.h"
-// #include "nsIEnumerator.h"
-// #include "nsIAppShell.h"
-
-// #include "nsIMouseListener.h"
-// #include "nsIEventListener.h"
-// #include "nsString.h"
-
-
-// #include "nsXtManageWidget.h"
-
 class nsFont;
 
 #define NSRGB_2_COLOREF(color) \
@@ -59,11 +47,7 @@ public:
     NS_DECL_ISUPPORTS
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
- 
 
-
-    NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK; }
-    // nsIWidget interface
     NS_IMETHOD            Create(nsIWidget *aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,

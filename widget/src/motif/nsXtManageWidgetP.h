@@ -15,13 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 /* 
    nsXtManageWidgetP.h --- defines a subclass of XmScrolledWindow
  */
 
 
-#ifndef _nsXtManageWidth_H_
-#define _nsXtManageWidth_H_
+#ifndef _nsXtManageWidth_h_
+#define _nsXtManageWidth_h_
 
 #include "nsXtManageWidget.h"
 #include <Xm/ManagerP.h>
@@ -57,6 +58,4 @@ typedef struct _NewManageRec
     NewManagePart		newManage;
 } NewManageRec;
 
-#endif 
-
-
+#endif /* _nsXtManageWidth_h_ */

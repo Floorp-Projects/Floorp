@@ -34,7 +34,6 @@
 #include <Xm/CascadeBG.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/RowColumn.h>
-#include <Xm/PushB.h>
 
 static NS_DEFINE_CID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
@@ -100,8 +99,8 @@ nsMenu::~nsMenu()
   NS_IF_RELEASE(mListener);
   // Free our menu items
   RemoveAll();
-//  gtk_widget_destroy(mMenu);
-//  mMenu = nsnull;
+  XtDestroyWidget(mMenu);
+  mMenu = nsnull;
 }
 
 //-------------------------------------------------------------------------

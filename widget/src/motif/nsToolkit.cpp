@@ -17,16 +17,11 @@
  */
 
 #include "nsToolkit.h"
-#include "nsWindow.h"
-#include "nsGUIEvent.h"
-
-void RunPump(void* arg)
-{
-}
+#include <stdio.h>
 
 //-------------------------------------------------------------------------
 //
-// constructor
+// Error handler
 //
 //-------------------------------------------------------------------------
 int nsToolkitErrorHandler (Display * mydisplay, XErrorEvent * myerr) 

@@ -16,14 +16,10 @@
  * Reserved.
  */
 
-#include "nsTextAreaWidget.h"
-#include "nsToolkit.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
-#include "nsString.h"
-#include "nsXtEventHandler.h"
-
 #include <Xm/Text.h>
+
+#include "nsTextAreaWidget.h"
+#include "nsString.h"
 
 #define DBG 0
 
@@ -136,21 +132,4 @@ nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr
   }
 
   return nsWindow::QueryInterface(aIID, aInstancePtr);
-}
-
-//-------------------------------------------------------------------------
-//
-// paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsTextAreaWidget::OnPaint(nsPaintEvent & aEvent)
-{
-  return PR_FALSE;
-}
-
-
-//--------------------------------------------------------------
-PRBool nsTextAreaWidget::OnResize(nsSizeEvent &aEvent)
-{
-  return PR_FALSE;
 }

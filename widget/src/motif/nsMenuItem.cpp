@@ -172,8 +172,7 @@ NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetLabel(nsString &aText)
 {
-   mLabel = aText;
-  
+  mLabel = aText;
   return NS_OK;
 }
 
@@ -221,6 +220,7 @@ nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+  printf("nsMenuItem::MenuSelected called\n");
   if(mXULCommandListener)
     return mXULCommandListener->MenuSelected(aMenuEvent);
 
@@ -229,6 +229,7 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
+  printf("nsMenuItem::MenuDeselected called\n");
   return nsEventStatus_eIgnore;
 }
 
@@ -237,11 +238,13 @@ nsEventStatus nsMenuItem::MenuConstruct(const nsMenuEvent &aMenuEvent,
                                         void *menuNode,
                                         void *aWebShell)
 {
+  printf("nsMenuItem::MenuConstruct called\n");
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
+  printf("nsMenuItem::MenuDestruct called\n");
   return nsEventStatus_eIgnore;
 }
 

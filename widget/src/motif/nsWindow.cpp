@@ -16,7 +16,18 @@
  * Reserved.
  */
 
+#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
+#include <X11/cursorfont.h>
+#include <Xm/Xm.h>
+#include <Xm/MainW.h>
+#include <Xm/Frame.h>
+#include <Xm/XmStrDefs.h>
+#include <Xm/DrawingA.h>
+#include <Xm/DialogS.h>
+
 #include "nsWindow.h"
+#include "nsWidgetsCID.h"
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
 #include "nsGUIEvent.h"
@@ -25,28 +36,11 @@
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
-
 #include "nsXtEventHandler.h"
+#include "nsXtManageWidget.h"
 #include "nsAppShell.h"
 
-#include "X11/Xlib.h"
-#include "Xm/Xm.h"
-#include "Xm/MainW.h"
-#include "Xm/Frame.h"
-#include "Xm/XmStrDefs.h"
-#include "Xm/DrawingA.h"
-
-#include "X11/Intrinsic.h"
-#include "X11/cursorfont.h"
-
 #include "stdio.h"
-
-#include "Xm/DialogS.h"
-#include "Xm/RowColumn.h"
-#include "Xm/Form.h"
-#include "nsIEnumerator.h"
-
-#include "nsXtManageWidget.h"
 
 #define DBG 0
 
@@ -1033,10 +1027,9 @@ NS_IMETHODIMP nsWindow::Update()
 // Return some native data according to aDataType
 //
 //-------------------------------------------------------------------------
-void* nsWindow::GetNativeData(PRUint32 aDataType)
+void *nsWindow::GetNativeData(PRUint32 aDataType)
 {
   switch(aDataType) {
-
     case NS_NATIVE_WINDOW:
       return (void*)XtWindow(mWidget);
     case NS_NATIVE_DISPLAY:

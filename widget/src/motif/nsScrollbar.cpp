@@ -16,11 +16,10 @@
  * Reserved.
  */
 
-#include "nsScrollbar.h"
-#include "nsToolkit.h"
-#include "nsGUIEvent.h"
-#include "nsUnitConversion.h"
 #include <Xm/ScrollBar.h>
+
+#include "nsScrollbar.h"
+#include "nsGUIEvent.h"
 
 #include "nsXtEventHandler.h"
 
@@ -59,7 +58,7 @@ NS_METHOD nsScrollbar::Create(nsNativeWidget aParent,
 
   int procDir = mOrientation == XmVERTICAL? XmMAX_ON_BOTTOM:XmMAX_ON_RIGHT;
 
-  mWidget = ::XtVaCreateManagedWidget("scrollbar",
+  mWidget = ::XtVaCreateManagedWidget("nsScrollbar",
                                     xmScrollBarWidgetClass,
                                     parentWidget,
                                     XmNorientation, mOrientation,
@@ -451,4 +450,3 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     }
     return result;
 }
-
