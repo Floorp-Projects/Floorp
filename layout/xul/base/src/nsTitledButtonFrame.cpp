@@ -296,20 +296,22 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
 // the following block is to append the accesskey to to mTitle if there is an accesskey 
 // but the mTitle doesn't have the character 
 
-    mAccesskeyIndex = -1;
-    nsAutoString accesskey;
-    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
-                           accesskey);
-    if (accesskey != "") {    
-	    mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
-	    if (mAccesskeyIndex == -1) {
-		nsString tmpstring = "(" ;
-		accesskey.ToUpperCase();
-		tmpstring += accesskey;
-		tmpstring += ")";
-		mTitle += tmpstring;
-	     }
-     }
+  mAccesskeyIndex = -1;
+#ifndef XP_UNIX
+  nsAutoString accesskey;
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
+                         accesskey);
+  if (accesskey != "") {    
+	  mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
+	  if (mAccesskeyIndex == -1) {
+		  nsString tmpstring = "(" ;
+		  accesskey.ToUpperCase();
+		  tmpstring += accesskey;
+		  tmpstring += ")";
+		  mTitle += tmpstring;
+	  }
+  }
+#endif
 
   return rv;
 }
@@ -796,7 +798,7 @@ void
 nsTitledButtonFrame::UpdateAccessUnderline()
 {
     mAccesskeyIndex = -1;
-
+#ifndef XP_UNIX
     nsAutoString accesskey;
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                            accesskey);
@@ -805,6 +807,7 @@ nsTitledButtonFrame::UpdateAccessUnderline()
     
     mAccesskeyIndex = mCroppedTitle.Find(accesskey, PR_TRUE);
     mNeedsAccessUpdate = PR_TRUE;
+#endif
 }
 
 NS_IMETHODIMP

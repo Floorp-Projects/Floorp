@@ -381,26 +381,20 @@ nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
 
   mSlatedForReflow = PR_FALSE;
   
-  if (!mSuppressReflow) {
-    nsRect rect;
-    GetRect(rect);
-    if (rect.width != aReflowState.mComputedWidth && aReflowState.reason == eReflowReason_Resize) {
-      // We're doing a resize and changing the width of the table. All rows must
-      // reflow. Reset our generation.
-      SetUseGeneration(PR_FALSE);
-    }
+  nsRect rect;
+  GetRect(rect);
+  if (rect.width != aReflowState.mComputedWidth && aReflowState.reason == eReflowReason_Resize) {
+    // We're doing a resize and changing the width of the table. All rows must
+    // reflow. Reset our generation.
+    SetUseGeneration(PR_FALSE);
+  }
+
+  if (UseGeneration()) {
+    ++mGeneration;
+  }
+
+  rv = nsTableFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   
-    if (UseGeneration()) {
-      ++mGeneration;
-    }
-
-    rv = nsTableFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  }
-  else
-  {
-    aStatus = NS_FRAME_COMPLETE;
-  }
-
   if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) 
     aDesiredSize.width = aReflowState.mComputedWidth + 
         aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;

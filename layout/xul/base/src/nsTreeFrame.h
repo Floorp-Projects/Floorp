@@ -85,9 +85,6 @@ public:
 
   PRBool ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex, nsTableColFrame** aResult);
 
-  void SuppressReflow() { mSuppressReflow = PR_TRUE; };
-  void UnsuppressReflow() { mSuppressReflow = PR_FALSE; };
-
   PRInt32 GetInsertionIndex(nsIFrame *aFrame);
 
   // nsISelfScrollingFrame interface
@@ -112,7 +109,6 @@ protected: // Data Members
   nsTreeTwistyListener* mTwistyListener;
   PRInt32 mGeneration;
   PRBool mUseGeneration;
-  PRBool mSuppressReflow;
   PRInt32 mFixedRows;
   PRBool mReflowStopped;
 }; // class nsTreeFrame

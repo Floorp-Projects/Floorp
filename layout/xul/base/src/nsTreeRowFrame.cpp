@@ -290,7 +290,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
   nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
   
   // Until we finish all of our batched operations, suppress all reflow.
-  treeFrame->SuppressReflow();
+  // XXX How to suppress?
 
   PRInt32 columnCount = treeFrame->GetColCount();
   PRInt32* colWidths = new PRInt32[columnCount];
@@ -406,8 +406,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
   mFlexingCol->GetContent(getter_AddRefs(flexContent));
   if (flexContent) {
     treeFrame->SetUseGeneration(PR_FALSE); // Cached rows have to reflow.
-    treeFrame->UnsuppressReflow();
-
+    
     colWidth = flexWidth - delta;
     sprintf(ch,"%d*", colWidth);
     nsAutoString propColWidth(ch);
