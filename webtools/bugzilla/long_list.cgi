@@ -63,6 +63,7 @@ from bugs,profiles assign,profiles report
 where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
 bugs.groupset & $::usergroupset = bugs.groupset and";
 
+$::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
     SendSQL("$generic_query bugs.bug_id = $bug");
 
