@@ -73,7 +73,7 @@ XPC_PP_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     XPCDispParamPropJSClass* paramProp = GetParamProp(cx, obj);
     JSObject* originalObj = paramProp->GetWrapper()->GetFlatJSObject();
     XPCCallContext ccx(JS_CALLER, cx, originalObj, nsnull, id, 
-                       paramProp->GetParams().GetParamCount(), nsnull, vp);
+                       paramProp->GetParams()->GetParamCount(), nsnull, vp);
     return paramProp->Invoke(ccx, XPCDispObject::CALL_GETTER, vp);
 }
 
@@ -94,15 +94,15 @@ XPC_PP_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     XPCDispParamPropJSClass* paramProp = GetParamProp(cx, obj);
     JSObject* originalObj = paramProp->GetWrapper()->GetFlatJSObject();
     XPCCallContext ccx(JS_CALLER, cx, originalObj, nsnull, id, 
-                       paramProp->GetParams().GetParamCount(), nsnull, vp);
+                       paramProp->GetParams()->GetParamCount(), nsnull, vp);
     _variant_t var;
     uintN err;
     if(!XPCDispConvert::JSToCOM(ccx, *vp, var, err))
         return JS_FALSE;
-    XPCDispParams& params = paramProp->GetParams();
-    params.SetNamedPropID();
+    XPCDispParams* params = paramProp->GetParams();
+    params->SetNamedPropID();
     // params will own var
-    params.InsertParam(var);
+    params->InsertParam(var);
     return paramProp->Invoke(ccx, XPCDispObject::CALL_SETTER, vp);
 }
 
@@ -173,10 +173,10 @@ static JSClass ParamPropClass = {
 };
 
 // static
-JSBool XPCDispParamPropJSClass::GetNewOrUsed(XPCCallContext& ccx,
+JSBool XPCDispParamPropJSClass::NewInstance(XPCCallContext& ccx,
                                              XPCWrappedNative* wrapper, 
                                              PRUint32 dispID, 
-                                             XPCDispParams& dispParams, 
+                                             XPCDispParams* dispParams, 
                                              jsval* paramPropObj)
 {
     XPCDispParamPropJSClass* pDispParam =
@@ -196,22 +196,22 @@ JSBool XPCDispParamPropJSClass::GetNewOrUsed(XPCCallContext& ccx,
 XPCDispParamPropJSClass::XPCDispParamPropJSClass(XPCWrappedNative* wrapper, 
                                                  nsISupports * dispObj, 
                                                  PRUint32 dispID,
-                                                 XPCDispParams& dispParams) :
+                                                 XPCDispParams* dispParams) :
     mWrapper(wrapper),
     mDispID(dispID),
-    mDispParams(dispParams)
+    mDispParams(dispParams),
+    mDispObj(nsnull)
 {
     NS_ADDREF(mWrapper);
-    nsresult result = dispObj->QueryInterface(NSID_IDISPATCH, 
+    dispObj->QueryInterface(NSID_IDISPATCH, 
                                               NS_REINTERPRET_CAST(void**,
                                               &mDispObj));
-    if(NS_FAILED(result))
-        mDispObj = nsnull;   
 }
 
 XPCDispParamPropJSClass::~XPCDispParamPropJSClass()
 {
+    delete mDispParams;
     // release our members
-    NS_RELEASE(mWrapper);
-    NS_RELEASE(mDispObj);
+    NS_IF_RELEASE(mWrapper);
+    NS_IF_RELEASE(mDispObj);
 }

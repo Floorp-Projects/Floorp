@@ -1070,6 +1070,47 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 }
 
 /***************************************************************************/
+// static
+JSBool XPCConvert::GetNativeInterfaceFromJSObject(XPCCallContext& ccx,
+                                                  void** dest, JSObject* src,
+                                                  const nsID* iid, 
+                                                  nsresult* pErr)
+{
+    nsISupports* identity;
+    // Note that if we have a non-null aOuter then it means that we are
+    // forcing the creation of a wrapper even if the object *is* a 
+    // wrappedNative or other wise has 'nsISupportness'. 
+    // This allows wrapJSAggregatedToNative to work.
+
+    // Is this really a native xpcom object with a wrapper?
+    XPCWrappedNative* wrappedNative =
+                XPCWrappedNative::GetWrappedNativeOfJSObject(ccx, src);
+    if(wrappedNative)
+    {
+        identity = wrappedNative->GetIdentityObject();
+        // is the underlying object the right interface?
+        if(wrappedNative->GetIID().Equals(*iid))
+        {
+            NS_ADDREF(identity);
+            *dest = identity;
+            return JS_TRUE;
+        }
+        else
+            return NS_SUCCEEDED(identity->QueryInterface(*iid, dest));
+    }
+    // else...
+    
+    // Does the JSObject have 'nsISupportness'?
+    // XXX hmm, I wonder if this matters anymore with no 
+    // oldstyle DOM objects around.
+    if(GetISupportsFromJSObject(ccx, src, &identity) && identity)
+    {
+        return NS_SUCCEEDED(identity->QueryInterface(*iid, dest));
+    }
+    return JS_FALSE;
+}
+
+/***************************************************************************/
 
 // static
 JSBool
@@ -1089,46 +1130,14 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
      if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    nsISupports* iface;
-
     if(!aOuter)
     {
-        // Note that if we have a non-null aOuter then it means that we are
-        // forcing the creation of a wrapper even if the object *is* a 
-        // wrappedNative or other wise has 'nsISupportness'. 
-        // This allows wrapJSAggregatedToNative to work.
-
-        // Is this really a native xpcom object with a wrapper?
-        XPCWrappedNative* wrappedNative =
-                    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, src);
-        if(wrappedNative)
-        {
-            iface = wrappedNative->GetIdentityObject();
-            // is the underlying object the right interface?
-            if(wrappedNative->GetIID().Equals(*iid))
-            {
-                NS_ADDREF(iface);
-                *dest = iface;
-                return JS_TRUE;
-            }
-            else
-                return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
-        }
-        // else...
-        
-        // Does the JSObject have 'nsISupportness'?
-        // XXX hmm, I wonder if this matters anymore with no 
-        // oldstyle DOM objects around.
-        if(GetISupportsFromJSObject(cx, src, &iface))
-        {
-            if(iface)
-                return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
-            return JS_FALSE;
-        
-        }
+        // See if this is really an wrapped XPCOM object
+        if(GetNativeInterfaceFromJSObject(ccx, dest, src, iid, pErr))
+            return JS_TRUE;
     }
 
-    // else...
+    // else create a new wrapper
 
     nsXPCWrappedJS* wrapper;
     nsresult rv = nsXPCWrappedJS::GetNewOrUsed(ccx, src, *iid, aOuter, &wrapper);

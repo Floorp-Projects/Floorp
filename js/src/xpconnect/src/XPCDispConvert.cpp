@@ -44,42 +44,45 @@
 
 VARTYPE XPCDispConvert::JSTypeToCOMType(XPCCallContext& ccx, jsval val)
 {
-    if(JSVAL_IS_STRING(val))
+    if(JSVAL_IS_PRIMITIVE(val))
     {
-        return VT_BSTR;
+        if(JSVAL_IS_STRING(val))
+        {
+            return VT_BSTR;
+        }
+        if(JSVAL_IS_INT(val))
+        {
+            return VT_I4;
+        }
+        if(JSVAL_IS_DOUBLE(val))
+        {
+            return VT_R8;
+        }
+        if(JSVAL_IS_BOOLEAN(val))
+        {
+            return VT_BOOL;
+        }
+        if(JSVAL_IS_VOID(val))
+        {
+            return VT_EMPTY;
+        }
+        if(JSVAL_IS_NULL(val))
+        {
+            return VT_NULL;
+        }
     }
-    if(JSVAL_IS_INT(val))
-    {
-        return VT_I4;
-    }
-    if(JSVAL_IS_DOUBLE(val))
-    {
-        return VT_R8;
-    }
-    if(JSVAL_IS_OBJECT(val))
+    else
     {
         if(JS_IsArrayObject(ccx, JSVAL_TO_OBJECT(val)))
             return VT_ARRAY | VT_VARIANT;
         return VT_DISPATCH;
-    }
-    if(JSVAL_IS_BOOLEAN(val))
-    {
-        return VT_BOOL;
-    }
-    if(JSVAL_IS_VOID(val))
-    {
-        return VT_EMPTY;
-    }
-    if(JSVAL_IS_NULL(val))
-    {
-        return VT_NULL;
     }
     NS_ERROR("XPCDispConvert::JSTypeToCOMType was unable to identify the type of the jsval");
     return VT_EMPTY;
 }
 
 JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj, 
-                                        VARIANT & var, nsresult& err)
+                                         VARIANT & var, nsresult& err)
 {
     err = NS_OK;
     jsuint len;
@@ -89,115 +92,264 @@ JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj,
         err = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
         return PR_FALSE;
     }
-    // Create the safe array and populate it
-    SAFEARRAY * array = SafeArrayCreateVector(VT_VARIANT, 0, len);
-    for(long index = 0; index < len; ++index)
+    // Create the safe array of variants and populate it
+    SAFEARRAY * array = nsnull;
+    VARIANT* varArray = 0;
+    for(jsuint index = 0; index < len; ++index)
     {
-        _variant_t arrayVar;
         jsval val;
-        if(JS_GetElement(ccx, obj, index, &val) &&
-           JSToCOM(ccx, val, arrayVar, err))
+        if(JS_GetElement(ccx, obj, index, &val))
         {
-            SafeArrayPutElement(array, &index, &arrayVar);
-        }
-        else
-        {
-            if(err == NS_OK)
-                err = NS_ERROR_FAILURE;
-            // This cleans up the elements as well
-            SafeArrayDestroyData(array);
-            return JS_FALSE;
+            if (!JSVAL_IS_VOID(val))
+            {
+                if (!array)
+                {
+                    // Create an array that starts at index, and has len 
+                    // elements
+                    array = SafeArrayCreateVector(VT_VARIANT, index, len - index);
+                    if (!array)
+                    {
+                        err = NS_ERROR_OUT_OF_MEMORY;
+                        return JS_FALSE;
+                    }
+                    if (FAILED(SafeArrayAccessData(array, NS_REINTERPRET_CAST(void**,&varArray))))
+                    {
+                        err = NS_ERROR_FAILURE;
+                        return JS_FALSE;
+                    }
+                }
+                if (!JSToCOM(ccx, val, *varArray, err))
+                {
+                    SafeArrayUnaccessData(array);
+                    err = NS_ERROR_FAILURE;
+                    // This cleans up the elements as well
+                    SafeArrayDestroyData(array);
+                    return JS_FALSE;
+                }
+            }
+            if (varArray)
+                ++varArray;
         }
     }
+    SafeArrayUnaccessData(array);
     var.vt = VT_ARRAY | VT_VARIANT;
     var.parray = array;
     return JS_TRUE;
 }
 
+#define XPC_ASSIGN(src, dest, data) *dest.p##data = src.data
+
+/**
+ * Copies a variant to a by ref variant
+ * NOTE: This does not perform any reference counting. It simply does
+ * a copy of the values, it's up to the caller to manage any ownership issues
+ * @param src the variant to be copied
+ * @param dest the destination for the copy
+ * @return JS_TRUE if the copy was performed JS_FALSE if it failed
+ */
+inline
+JSBool xpc_CopyVariantByRef(VARIANT & src, VARIANT & dest)
+{
+    VARIANT temp;
+    VARTYPE vt = dest.vt & ~(VT_BYREF);
+    if(vt != src.vt)
+    {
+        // TODO: This fails more than I had hoped, we may want to
+        // add some logic to handle more conversions
+        if(FAILED(VariantChangeType(&temp, &src, VARIANT_ALPHABOOL, vt)))
+        {
+            return JS_FALSE;
+        }
+    }
+    else
+        temp = src;
+    switch (vt)
+    {
+        case VT_I2:
+        {
+            XPC_ASSIGN(temp, dest, iVal);
+        }
+        break;
+	    case VT_I4:
+        {
+            XPC_ASSIGN(temp, dest, lVal);
+        }
+        break;
+	    case VT_R4:
+        {
+            XPC_ASSIGN(temp, dest, fltVal);
+        }
+        break;
+	    case VT_R8:
+        {
+            XPC_ASSIGN(temp, dest, dblVal);
+        }
+        break;
+	    case VT_CY:
+        {
+            XPC_ASSIGN(temp, dest, cyVal);
+        }
+        break;
+	    case VT_DATE:
+        {
+            XPC_ASSIGN(temp, dest, date);
+        }
+        break;
+	    case VT_BSTR:
+        {
+            XPC_ASSIGN(temp, dest, bstrVal);
+        }
+        break;
+	    case VT_DISPATCH:
+        {
+            XPC_ASSIGN(temp, dest, pdispVal);
+        }
+        break;
+	    case VT_ERROR:
+        {
+            XPC_ASSIGN(temp, dest, scode);
+        }
+        break;
+	    case VT_BOOL:
+        {
+            XPC_ASSIGN(temp, dest, boolVal);
+        }
+        break;
+	    case VT_VARIANT:
+        {
+            // Not Supported right now
+            return JS_FALSE;
+        }
+        break;
+	    case VT_I1:
+        {
+            XPC_ASSIGN(temp, dest, cVal);
+        }
+        break;
+	    case VT_UI1:
+        {
+            XPC_ASSIGN(temp, dest, bVal);
+        }
+        break;
+	    case VT_UI2:
+        {
+            XPC_ASSIGN(temp, dest, iVal);
+        }
+        break;
+	    case VT_UI4:
+        {
+            XPC_ASSIGN(temp, dest, uiVal);
+        }
+        break;
+	    case VT_INT:
+        {
+            XPC_ASSIGN(temp, dest, intVal);
+        }
+        break;
+	    case VT_UINT:
+        {
+            XPC_ASSIGN(temp, dest, uintVal);
+        }
+        break;
+        default:
+        {
+            return JS_FALSE;
+        }
+    }
+    return JS_TRUE;
+}
+
 JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
-                              jsval src,
-                              VARIANT & dest,
-                              nsresult& err)
+                               jsval src,
+                               VARIANT & dest,
+                               nsresult& err,
+                               JSBool isByRef)
 {
     err = NS_OK;
-    if(JSVAL_IS_STRING(src))
+    VARIANT byRefVariant;
+    VARIANT * varDest = isByRef ? &byRefVariant : &dest;
+    varDest->vt = JSTypeToCOMType(ccx, src);
+    switch (varDest->vt)
     {
-        JSString* str = JSVAL_TO_STRING(src);
-        if(!str)
+        case VT_BSTR:
         {
+            JSString* str = JSVAL_TO_STRING(src);
+            jschar * chars = JS_GetStringChars(str);
+            if(!chars)
+            {
+                err = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
+                // Avoid cleaning up garabage
+                varDest->vt = VT_EMPTY;
+                return JS_FALSE;
+            }
+
+            CComBSTR val(JS_GetStringLength(str), chars);
+            varDest->bstrVal = val.Detach();
+        }
+        break;
+        case VT_I4:
+        {
+            varDest->vt = VT_I4;
+            varDest->lVal = JSVAL_TO_INT(src);
+        }
+        break;
+        case VT_R8:
+        {
+            varDest->vt = VT_R8;
+            varDest->dblVal = *JSVAL_TO_DOUBLE(src);
+        }
+        break;
+        case VT_EMPTY:
+        case VT_NULL:
+        break;
+        case VT_ARRAY | VT_VARIANT:
+        {
+            JSObject * obj = JSVAL_TO_OBJECT(src);
+            return JSArrayToCOMArray(ccx, obj, *varDest, err);
+        }
+        break;
+        case VT_DISPATCH:
+        {
+            JSObject * obj = JSVAL_TO_OBJECT(src);
+            // We only handle JS Objects that are IDispatch objects
+            if(!XPCConvert::GetNativeInterfaceFromJSObject(
+                ccx, (void**)&varDest->pdispVal, obj, &NSID_IDISPATCH,&err))
+            {
+                // Avoid cleaning up garabage
+                varDest->vt = VT_EMPTY;
+                return JS_FALSE;
+            }
+        }
+        break;
+        case VT_BOOL:
+        {
+            varDest->boolVal = JSVAL_TO_BOOLEAN(src) ? VARIANT_TRUE : VARIANT_FALSE;
+        }
+        break;
+        default:
+        {
+            NS_ERROR("This is out of synce with XPCDispConvert::JSTypeToCOMType");
             err = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
+            // Avoid cleaning up garabage
+            varDest->vt = VT_EMPTY;
             return JS_FALSE;
         }
-
-        jschar * chars = JS_GetStringChars(str);
-        if(!chars)
+        break;
+    }
+    if(isByRef)
+    {
+        if (!xpc_CopyVariantByRef(byRefVariant, dest))
         {
-            err = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
-            return JS_FALSE;
+            // Avoid cleaning up garabage
+            dest.vt = VT_EMPTY;
         }
-
-        CComBSTR val(chars);
-        dest.vt = VT_BSTR;
-        dest.bstrVal = val.Detach();
-    }
-    else if(JSVAL_IS_INT(src))
-    {
-        dest.vt = VT_I4;
-        dest.lVal = JSVAL_TO_INT(src);
-    }
-    else if(JSVAL_IS_DOUBLE(src))
-    {
-        dest.vt = VT_R8;
-        dest.dblVal = *JSVAL_TO_DOUBLE(src);
-    }
-    else if(JSVAL_IS_VOID(src))
-    {
-        dest.vt = VT_EMPTY;
-    }
-    else if(JSVAL_IS_NULL(src))
-    {
-        dest.vt = VT_EMPTY;
-    }
-    else if(JSVAL_IS_OBJECT(src))
-    {
-        JSObject * obj = JSVAL_TO_OBJECT(src);
-        if(JS_IsArrayObject(ccx, obj))
-        {
-            return JSArrayToCOMArray(ccx, obj, dest, err);
-        }
-        else
-        {
-            // only wrap JSObjects
-            IUnknown * pUnknown;
-            XPCConvert::JSObject2NativeInterface(
-                ccx, 
-                (void**)&pUnknown, 
-                obj, 
-                &NSID_IDISPATCH,
-                nsnull, 
-                &err);
-            dest.vt = VT_DISPATCH;
-            pUnknown->QueryInterface(IID_IDispatch, 
-                                     NS_REINTERPRET_CAST(void**,
-                                                         &dest.pdispVal));
-        }
-    }
-    else if(JSVAL_IS_BOOLEAN(src))
-    {
-        dest.vt = VT_BOOL;
-        dest.boolVal = JSVAL_TO_BOOLEAN(src);
-    }
-    else  // Unknown type
-    {
-        err = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
-        return JS_FALSE;
     }
     return JS_TRUE;
 }
 
 JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
-                                        const _variant_t & src,
-                                        jsval & dest, nsresult& err)
+                                         const VARIANT & src,
+                                         jsval & dest, nsresult& err)
 {
     err = NS_OK;
     // We only support one dimensional arrays for now
@@ -206,33 +358,45 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
         err = NS_ERROR_FAILURE;
         return JS_FALSE;
     }
-    long size;
-    HRESULT hr = SafeArrayGetUBound(src.parray, 1, &size);
-    if(FAILED(hr))
+    // Get the upper bound;
+    long ubound;
+    if(FAILED(SafeArrayGetUBound(src.parray, 1, &ubound)))
     {
         err = NS_ERROR_FAILURE;
         return JS_FALSE;
     }
-    JSObject * array = JS_NewArrayObject(ccx, size, nsnull);
+    // Get the lower bound
+    long lbound;
+    if(FAILED(SafeArrayGetLBound(src.parray, 1, &lbound)))
+    {
+        err = NS_ERROR_FAILURE;
+        return JS_FALSE;
+    }
+    // Create the JS Array
+    JSObject * array = JS_NewArrayObject(ccx, ubound - lbound + 1, nsnull);
     if(!array)
     {
         err = NS_ERROR_OUT_OF_MEMORY;
+        return JS_FALSE;
     }
     // Devine the type of our array
-    _variant_t var;
+    VARTYPE vartype;
     if((src.vt & VT_ARRAY) != 0)
     {
-        var.vt = src.vt & ~VT_ARRAY;
+        vartype = src.vt & ~VT_ARRAY;
     }
     else // This was maybe a VT_SAFEARRAY
     {
-        SafeArrayGetVartype(src.parray, &var.vt);
+        if(FAILED(SafeArrayGetVartype(src.parray, &vartype)))
+            return JS_FALSE;
     }
     jsval val;
-    for(long index = 0; index <= size; ++index)
+    for(long index = lbound; index <= ubound; ++index)
     {
-        hr = SafeArrayGetElement(src.parray, &index, &var.byref);
-        if(FAILED(hr))
+        // Devine the type of our array
+        _variant_t var;
+        var.vt = vartype;
+        if(FAILED(SafeArrayGetElement(src.parray, &index, &var.byref)))
         {
             err = NS_ERROR_FAILURE;
             return JS_FALSE;
@@ -246,110 +410,101 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
 }
 
 /**
- * Converts an integer number to a jsval
- * @param cx a JS context
- * @param value the integer to be converted
- * @return the converted jsval
+ * Converts a string to a jsval
+ * @param cx the JSContext
+ * @param str the unicode string to be converted
+ * @param len the length of the string being converted
+ * @return the jsval representing the string
  */
 inline
-jsval NumberToJSVal(JSContext* cx, int value)
+jsval StringToJSVal(JSContext* cx, const PRUnichar * str, PRUint32 len)
 {
-    jsval val;
-    if(INT_FITS_IN_JSVAL(value))
-        val = INT_TO_JSVAL(value);
-    else
-    {
-        if(!JS_NewDoubleValue(cx, NS_STATIC_CAST(jsdouble,value), &val))
-            val = JSVAL_ZERO;
-    }
-    return val;
-}
-
-/**
- * Converts an floating point number to a jsval
- * @param cx a JS context
- * @param value the floating point number to be converted
- * @return the converted jsval
- */
-inline
-jsval NumberToJSVal(JSContext* cx, double value)
-{
-    jsval val;
-    if(JS_NewDoubleValue(cx, NS_STATIC_CAST(jsdouble, value), &val))
-        return val;
-    else
-        return JSVAL_ZERO;
-}
-
-inline
-jsval StringToJSVal(JSContext* cx, const PRUnichar * str)
-{
-    JSString * s = JS_NewUCStringCopyZ(cx, str);
-    if (s)
+    JSString * s = JS_NewUCStringCopyN(cx, str, len);
+    if(s)
         return STRING_TO_JSVAL(s);
     else
         return JSVAL_NULL;
 }
 
-JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const _variant_t & src,
-                              jsval& dest, nsresult& err)
+
+#define VALUE(val) (isPtr ? *src.p##val : src.val)
+JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const VARIANT& src,
+                               jsval& dest, nsresult& err)
 {
     err = NS_OK;
     if(src.vt & VT_ARRAY || src.vt == VT_SAFEARRAY)
     {
         return COMArrayToJSArray(ccx, src, dest, err);
     }
+    PRBool isPtr = src.vt & VT_BYREF;
     switch (src.vt & ~(VT_BYREF))
     {
-        case VT_BSTR:
+        case VT_UINT:
         {
-            if(src.vt & VT_BYREF)
-                dest = StringToJSVal(ccx, *src.pbstrVal);
-            else
-                dest = StringToJSVal(ccx, src.bstrVal);
+            return JS_NewNumberValue(ccx, VALUE(uintVal), &dest);
+        }
+        break;
+        case VT_UI4:
+        {
+            return JS_NewNumberValue(ccx, VALUE(ulVal), &dest);
+        }
+        break;
+        case VT_INT:
+        {
+            return JS_NewNumberValue(ccx, VALUE(intVal), &dest);
         }
         break;
         case VT_I4:
         {
-            dest = NumberToJSVal(ccx, src.lVal);
+            return JS_NewNumberValue(ccx, VALUE(lVal), &dest);
         }
         break;
         case VT_UI1:
         {
-            dest = INT_TO_JSVAL(src.bVal);
+            dest = INT_TO_JSVAL(VALUE(bVal));
+        }
+        break;
+        case VT_I1:
+        {
+            dest = INT_TO_JSVAL(VALUE(cVal));
+        }
+        break;
+        case VT_UI2:
+        {
+            dest = INT_TO_JSVAL(VALUE(uiVal));
         }
         break;
         case VT_I2:
         {
-            dest = INT_TO_JSVAL(src.iVal);
+            dest = INT_TO_JSVAL(VALUE(iVal));
         }
         break;
         case VT_R4:
         {
-            dest = NumberToJSVal(ccx, src.fltVal);
+            return JS_NewNumberValue(ccx, VALUE(fltVal), &dest);
         }
         break;
         case VT_R8:
         {
-            dest = NumberToJSVal(ccx, src.dblVal);
+            return JS_NewNumberValue(ccx, VALUE(dblVal), &dest);
         }
         break;
         case VT_BOOL:
         {
-            dest = BOOLEAN_TO_JSVAL(src.boolVal);
+            dest = BOOLEAN_TO_JSVAL(VALUE(boolVal) != VARIANT_FALSE ? JS_TRUE : JS_FALSE);
         }
         break;
         case VT_DISPATCH:
         {
-            XPCDispObject::WrapIDispatch(src.pdispVal, ccx,
+            XPCDispObject::WrapIDispatch(VALUE(pdispVal), ccx,
                                          JS_GetGlobalObject(ccx), &dest);
         }
         break;
         case VT_DATE:
         {
-            _variant_t var(src);
-            _bstr_t bstr(var);
-            dest = StringToJSVal(ccx, NS_STATIC_CAST(const PRUnichar*, bstr));
+            // Convert date to string and frees it when we're done
+            _bstr_t str(src);
+            dest = StringToJSVal(ccx, str, str.length());
         }
         break;
         case VT_EMPTY:
@@ -357,22 +512,41 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const _variant_t & src,
             dest = JSVAL_NULL;
         }
         break;
+        case VT_ERROR:
+        {
+            return JS_NewNumberValue(ccx, VALUE(scode), &dest);
+        }
+        break;
+        case VT_CY:
+        {
+            return JS_NewNumberValue(
+                ccx, 
+                NS_STATIC_CAST(double,
+                               isPtr ? src.pcyVal->int64 : 
+                                       src.cyVal.int64) / 100.0,
+                &dest);
+        }
+        break;
         /**
          * Currently unsupported conversion types
          */
-        case VT_ERROR:
-        case VT_CY:
         case VT_UNKNOWN:
-        case VT_I1:
-        case VT_UI2:
-        case VT_UI4:
-        case VT_INT:
-        case VT_UINT:
         default:
         {
-            err = NS_ERROR_XPC_BAD_CONVERT_JS;
-            return JS_FALSE;
+            // Last ditch effort to convert to string
+            if(FAILED(VariantChangeType(NS_CONST_CAST(VARIANT*,&src), 
+                                         NS_CONST_CAST(VARIANT*,&src), 
+                                         VARIANT_ALPHABOOL, VT_BSTR)))
+            {
+                err = NS_ERROR_XPC_BAD_CONVERT_JS;
+                return JS_FALSE;
+            }
+        } // Fall through on success
+        case VT_BSTR:
+        {
+            dest = StringToJSVal(ccx, VALUE(bstrVal), SysStringLen(VALUE(bstrVal)));
         }
+        break;
     }
     return JS_TRUE;
 }

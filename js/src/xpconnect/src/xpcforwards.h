@@ -96,6 +96,7 @@ struct IDispatch;
 class XPCDispParams;
 class XPCDispJSPropertyInfo;
 class nsIXPConnectWrappedJS;
+class XPCIDispatchExtension;
 #endif
 
 

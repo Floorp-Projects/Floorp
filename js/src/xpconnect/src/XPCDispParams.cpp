@@ -43,52 +43,32 @@
 #include "xpcprivate.h"
 
 XPCDispParams::XPCDispParams(PRUint32 args) : 
-    mVarBuffer(args <= DEFAULT_ARG_ARRAY_SIZE ? 
-        mVarStackBuffer : new char[XPC_VARIANT_BUFFER_SIZE(args)]),
+    mRefBuffer(mStackRefBuffer + sizeof(VARIANT)),
+    mDispParamsAllocated(nsnull),
+    mRefBufferAllocated(nsnull),
     mPropID(DISPID_PROPERTYPUT)
+#ifdef DEBUG
+    ,mInserted(PR_FALSE)
+#endif
 {
-    memset(mVarBuffer, 0, XPC_VARIANT_BUFFER_SIZE(args));
+    if(args >= DEFAULT_ARG_ARRAY_SIZE)
+    {
+        mRefBufferAllocated = new char[RefBufferSize(args)];
+        mRefBuffer = mRefBufferAllocated + sizeof(VARIANT);
+    }
+    // Initialize the full buffer that was allocated
+    memset(mRefBuffer - sizeof(VARIANT), 0, RefBufferSize(args));
     // Initialize the IDispatch parameters
     mDispParams.cArgs = args;
-    mDispParams.rgvarg = args <= DEFAULT_ARG_ARRAY_SIZE ? mStackArgs : new VARIANT[args];
-    mDispParams.rgdispidNamedArgs = nsnull;
-    mDispParams.cNamedArgs = 0;
-}
-
-XPCDispParams::XPCDispParams(XPCDispParams & other) :
-    mPropID(DISPID_PROPERTYPUT)
-{
-    // copy the simple values
-    mDispParams.rgdispidNamedArgs = nsnull;
-    mDispParams.cNamedArgs = 0;
-    mDispParams.cArgs = other.mDispParams.cArgs;
-    // move the variant buffer, used for reference types
-    if(other.mVarBuffer == other.mVarStackBuffer)
-    {
-        mVarBuffer = mVarStackBuffer;
-        memcpy(mVarBuffer, other.mVarBuffer, 
-               XPC_VARIANT_BUFFER_SIZE(other.mDispParams.cArgs));
-    }
+    if(args <= DEFAULT_ARG_ARRAY_SIZE)
+        mDispParams.rgvarg = mStackArgs + 1;
     else
     {
-        mVarBuffer = other.mVarBuffer;
-        other.mVarBuffer = nsnull;
+        mDispParamsAllocated = new VARIANT[args + 1];
+        mDispParams.rgvarg =  mDispParamsAllocated + 1;
     }
-    // move the variants
-    if(other.mDispParams.rgvarg == other.mStackArgs)
-    {
-        mDispParams.rgvarg = mStackArgs;
-        memcpy(mDispParams.rgvarg, other.mStackArgs, 
-               sizeof(VARIANT) * other.mDispParams.cArgs);
-        other.mDispParams.cArgs;
-    }
-    else
-    {
-        mDispParams.rgvarg = other.mDispParams.rgvarg;
-        other.mDispParams.rgvarg = 0;
-    }
-    // The source no longer has arguments
-    other.mDispParams.cArgs = 0;
+    mDispParams.rgdispidNamedArgs = nsnull;
+    mDispParams.cNamedArgs = 0;
 }
 
 
@@ -97,31 +77,25 @@ XPCDispParams::~XPCDispParams()
     // Cleanup the variants
     for(PRUint32 index = 0; index < mDispParams.cArgs; ++index)
         VariantClear(mDispParams.rgvarg + index);
-    // Cleanup if we allocated the variant array
-    if(mDispParams.rgvarg != mStackArgs)
-        delete [] mDispParams.rgvarg;
-    if(mVarBuffer != mVarStackBuffer)
-        delete [] mVarBuffer;
+    // Cleanup if we allocated the variant array. Remember that
+    // our buffer may point one element into the allocate buffer
+    delete [] mRefBufferAllocated;
+    delete [] mDispParamsAllocated;
 }
 
 void XPCDispParams::InsertParam(_variant_t & var)
 {
-    // Save off the existing pointers
-    VARIANT* oldArgs =  mDispParams.rgvarg;
-    char * oldVarBuffer = mVarBuffer;
-    // If this will exceed our internal static buffers we need to create
-    // dynamic ones
-    if(mDispParams.cNamedArgs >= DEFAULT_ARG_ARRAY_SIZE)
-    {
-        if(mDispParams.rgvarg == mStackArgs)
-            mDispParams.rgvarg = new VARIANT[mDispParams.cArgs + 1];
-        if(mVarBuffer == mVarStackBuffer)
-            mVarBuffer = new char [XPC_VARIANT_BUFFER_SIZE(mDispParams.cArgs + 1)];
-    }
-    // Move the data up, using position safe copy
-    memmove(mDispParams.rgvarg + 1, oldArgs, sizeof(VARIANT) * mDispParams.cArgs);
-    memmove(mVarBuffer + VARIANT_UNION_SIZE,oldVarBuffer, XPC_VARIANT_BUFFER_SIZE(mDispParams.cArgs));
-    mDispParams.rgvarg[0] = var.Detach();
-    memset(mVarBuffer, 0, VARIANT_UNION_SIZE);
+#ifdef DEBUG
+    NS_ASSERTION(!mInserted, 
+                 "XPCDispParams::InsertParam cannot be called more than once");
+    mInserted = PR_TRUE;
+#endif
+    // Bump the pointer back and increment the arg count
+    --mDispParams.rgvarg;
+    mRefBuffer -= sizeof(VARIANT);
     ++mDispParams.cArgs;
+    // Assign the value
+    mDispParams.rgvarg[0] = var.Detach();
+    // initialize the ref buffer
+    memset(mRefBuffer, 0, sizeof(VARIANT));
 }

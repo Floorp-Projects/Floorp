@@ -41,7 +41,6 @@
  */
 
 #include "xpcprivate.h"
-#include <MBSTRING.H>
 
 /**
  * Is this function reflectable
@@ -82,19 +81,16 @@ PRUint32 GetReflectableCount(ITypeInfo * pTypeInfo, PRUint32 members)
 
 XPCDispInterface* XPCDispInterface::NewInstance(JSContext* cx, nsISupports * pIface)
 {
-    IDispatch * pDispatch;
-    HRESULT hr = NS_REINTERPRET_CAST(IUnknown*,pIface)->QueryInterface(IID_IDispatch, (PVOID*)&pDispatch);
+    CComQIPtr<IDispatch> pDispatch(NS_REINTERPRET_CAST(IUnknown*,pIface));
 
-    if(SUCCEEDED(hr) && pDispatch)
+    if(pDispatch)
     {
         unsigned int count;
-        hr = pDispatch->GetTypeInfoCount(&count);
+        HRESULT hr = pDispatch->GetTypeInfoCount(&count);
         if(SUCCEEDED(hr) && count > 0)
         {
-            ITypeInfo* pPtr;
-            hr = pDispatch->GetTypeInfo(0,LOCALE_SYSTEM_DEFAULT, &pPtr);
             CComPtr<ITypeInfo> pTypeInfo;
-            pTypeInfo.Attach(pPtr);
+            hr = pDispatch->GetTypeInfo(0,LOCALE_SYSTEM_DEFAULT, &pTypeInfo);
             if(SUCCEEDED(hr))
             {
                 TYPEATTR * attr;
@@ -144,7 +140,7 @@ void ConvertInvokeKind(INVOKEKIND invokeKind, XPCDispInterface::Member & member)
     }
 }
 
-void XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, PRUint32 members)
+PRBool XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, PRUint32 members)
 {
     HRESULT hResult;
     DISPID lastDispID = 0;
@@ -154,8 +150,8 @@ void XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, P
     for(PRUint32 index = 0; index < members; index++ )
     {
         FUNCDESC* pFuncDesc;
-        hResult = pTypeInfo->GetFuncDesc( index, &pFuncDesc );
-        if(SUCCEEDED( hResult ))
+        hResult = pTypeInfo->GetFuncDesc(index, &pFuncDesc );
+        if(SUCCEEDED(hResult))
         {
             PRBool release = PR_TRUE;
             if(IsReflectable(pFuncDesc))
@@ -171,10 +167,14 @@ void XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, P
                         1,
                         &nameCount)))
                     {
-                        JSString* str = JS_InternUCString(cx, name);
+                        JSString* str = JS_InternUCStringN(cx, name, ::SysStringLen(name));
                         ::SysFreeString(name);
+                        if(!str)
+                            return PR_FALSE;
                         // Initialize
                         pInfo = new (pInfo) Member;
+                        if(!pInfo)
+                            return PR_FALSE;
                         pInfo->SetName(STRING_TO_JSVAL(str));
                         lastDispID = pFuncDesc->memid;
                         pInfo->ResetType();
@@ -198,6 +198,7 @@ void XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, P
             }
         }
     }
+    return PR_TRUE;
 }
 
 /**
@@ -211,11 +212,13 @@ void XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, P
 inline
 PRBool CaseInsensitiveCompare(XPCCallContext& ccx, const PRUnichar* lhs, size_t lhsLength, jsval rhs)
 {
+    if(lhsLength == 0)
+        return PR_FALSE;
     size_t rhsLength;
     PRUnichar* rhsString = xpc_JSString2PRUnichar(ccx, rhs, &rhsLength);
     return rhsString && 
         lhsLength == rhsLength &&
-        _wcsnicmp(lhs, rhsString, lhsLength * sizeof(PRUnichar)) == 0;
+        _wcsnicmp(lhs, rhsString, lhsLength) == 0;
 }
 
 const XPCDispInterface::Member* XPCDispInterface::FindMemberCI(XPCCallContext& ccx, jsval name) const

@@ -125,6 +125,7 @@
 #define NS_ERROR_XPC_COM_ERROR                         GENERATE_XPC_FAILURE(55)
 #define NS_ERROR_XPC_COM_INVALID_CLASS_ID              GENERATE_XPC_FAILURE(56)
 #define NS_ERROR_XPC_COM_CREATE_FAILED                 GENERATE_XPC_FAILURE(57)
+#define NS_ERROR_XPC_IDISPATCH_NOT_ENABLED             GENERATE_XPC_FAILURE(58)
 #endif
 // any new errors here should have an associated entry added in xpc.msg
 /***************************************************************************/

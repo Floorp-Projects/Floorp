@@ -114,19 +114,13 @@
 #endif
 
 #ifdef XPC_IDISPATCH_SUPPORT
+// This goop was added because of EXCEPINFO in ThrowCOMError
+// This include is here, because it needs to occur before the undefines below
 #include <atlbase.h>
-#include <comdef.h>
-
-extern CComModule _Module;
-
-#include <atlcom.h>
-#include <atlctl.h>
-// MS clutters the global namespace with so many macro names :-(
-// I tried to keep these includes in the CPP's but it became too
-// convoluted
+#include "oaidl.h"
+// Nasty MS defines
 #undef GetClassInfo
 #undef GetClassName
-#undef interface
 #undef GetMessage
 #endif
 
@@ -380,10 +374,6 @@ private:
     }
     static void operator delete(void* /*memory*/) {}
 };
-
-#ifdef XPC_IDISPATCH_SUPPORT
-class XPCIDispatchExtension;
-#endif
 
 /***************************************************************************
 ****************************************************************************
@@ -1704,7 +1694,6 @@ public:
         JSOBJECT_MASK = 3
     };
     void                SetIDispatch(JSContext* cx);
-    JSObject*           Get() const;
     JSBool              IsIDispatch() const;
     XPCDispInterface*   GetIDispatchInfo() const;
 #endif
@@ -2265,13 +2254,10 @@ public:
                                            const nsID* iid,
                                            JSObject* scope, nsresult* pErr);
 
-#ifdef XPC_IDISPATCH_SUPPORT
-    static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
-                                           nsIXPConnectJSObjectHolder** dest,
-                                           IDispatch* src,
-                                           JSObject* scope, nsresult* pErr);
-#endif
-
+    static JSBool GetNativeInterfaceFromJSObject(XPCCallContext& ccx,
+                                                 void** dest, JSObject* src,
+                                                 const nsID* iid, 
+                                                 nsresult* pErr);
     static JSBool JSObject2NativeInterface(XPCCallContext& ccx,
                                            void** dest, JSObject* src,
                                            const nsID* iid,
@@ -2462,7 +2448,9 @@ public:
     static void ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx);
     static void ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx);
 #ifdef XPC_IDISPATCH_SUPPORT
-    static void ThrowCOMError(JSContext* cx, HRESULT COMErrorCode, nsresult rv = NS_ERROR_XPC_COM_ERROR);
+    static void ThrowCOMError(JSContext* cx, unsigned long COMErrorCode, 
+                              nsresult rv = NS_ERROR_XPC_COM_ERROR,
+                              const EXCEPINFO * exception = nsnull);
 #endif
     static JSBool SetVerbosity(JSBool state)
         {JSBool old = sVerbose; sVerbose = state; return old;}
@@ -3115,12 +3103,14 @@ class XPCMarkableJSVal
 public:
     XPCMarkableJSVal(jsval val) : mVal(val), mValPtr(&mVal) {}
     XPCMarkableJSVal(jsval *pval) : mVal(0), mValPtr(pval) {}
+    ~XPCMarkableJSVal() {}
     void Mark() {}
     void MarkBeforeJSFinalize(JSContext* cx)
         {if(JSVAL_IS_GCTHING(*mValPtr))
             JS_MarkGCThing(cx, JSVAL_TO_GCTHING(*mValPtr), 
                            "XPCMarkableJSVal", nsnull);}
 private:
+    XPCMarkableJSVal(); // not implemented    
     jsval  mVal;
     jsval* mValPtr;
 }; 

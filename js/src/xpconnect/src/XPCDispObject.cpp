@@ -45,17 +45,11 @@
 /**
  * This is COM's IDispatch IID, but in XPCOM's nsID type
  */
-nsID NSID_IDISPATCH = { 0x00020400, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
-
-/**
- * Need this for ATL stuff
- * We should look into the possiblity of removing this. It would be nice to
- * break the ties to ATL all together at some point
- */
-CComModule _Module;
+const nsID NSID_IDISPATCH = { 0x00020400, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
 
 PRBool
-XPCDispObject::WrapIDispatch(IDispatch *pDispatch, JSContext *cx, JSObject *obj, jsval *rval)
+XPCDispObject::WrapIDispatch(IDispatch *pDispatch, XPCCallContext &ccx,
+                             JSObject *obj, jsval *rval)
 {
     if(!pDispatch)
     {
@@ -64,10 +58,10 @@ XPCDispObject::WrapIDispatch(IDispatch *pDispatch, JSContext *cx, JSObject *obj,
 
     // Wrap the desired COM object
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    nsresult rv = nsXPConnect::GetXPConnect()->WrapNative(cx, obj, 
-                                  NS_REINTERPRET_CAST(nsISupports*, pDispatch),
-                                  NSID_IDISPATCH, getter_AddRefs(holder));
-    if(FAILED(rv) || !holder)
+    nsresult rv = ccx.GetXPConnect()->WrapNative(
+        ccx, obj, NS_REINTERPRET_CAST(nsISupports*, pDispatch), NSID_IDISPATCH,
+        getter_AddRefs(holder));
+    if(NS_FAILED(rv) || !holder)
     {
         return PR_FALSE;
     }
@@ -84,14 +78,14 @@ XPCDispObject::WrapIDispatch(IDispatch *pDispatch, JSContext *cx, JSObject *obj,
  * @param the class ID of the COM object to be created
  * @return true if it has the category
  */
-static PRBool HasSafeScriptingCategory(const GUID & classID)
+static PRBool HasSafeScriptingCategory(const CLSID & classID)
 {
     // TODO: probably should look into caching this if this becomes
     // a performance issue
     CComPtr<ICatInformation> catInfo;
     HRESULT hr = catInfo.CoCreateInstance(CLSID_StdComponentCategoriesMgr);
     // Must fail if we can't open the category manager
-    if(catInfo == NULL)
+    if(!catInfo)
         return PR_FALSE;
      
     // See what categories the class implements
@@ -101,6 +95,7 @@ static PRBool HasSafeScriptingCategory(const GUID & classID)
  
     // Search for matching categories
     CATID catidNext = GUID_NULL;
+    // Get the next category, and no, I don't know what the 1 is
     while(enumCATID->Next(1, &catidNext, NULL) == S_OK)
     {
         if(::IsEqualCATID(CATID_SafeForScripting, catidNext))
@@ -122,22 +117,17 @@ PRBool ScriptOK(DWORD value)
         INTERFACESAFE_FOR_UNTRUSTED_DATA);
 }
 
-HRESULT XPCDispObject::COMCreateInstance(const char * className, PRBool testScriptability, IDispatch ** result)
+HRESULT XPCDispObject::COMCreateInstance(BSTR className, PRBool testScriptability, IDispatch ** result)
 {
-    _bstr_t bstrName(className);
     CLSID classID;
     HRESULT hr;
     // If this looks like a class ID
-    if(className[0] == '{' && className[strlen(className) -1] == '}')
+    if(FAILED(CLSIDFromString(className, &classID)))
     {
-        hr = CLSIDFromString(bstrName, &classID);
+        hr = CLSIDFromProgID(className, &classID);
+        if(FAILED(hr))
+            return hr;
     }
-    else // it's probably a prog ID
-    {
-        hr = CLSIDFromProgID(bstrName, &classID);
-    }
-    if(FAILED(hr))
-        return hr;
     PRBool scriptableOK = PR_TRUE;
     if(testScriptability)
         scriptableOK = HasSafeScriptingCategory(classID);
@@ -154,7 +144,7 @@ HRESULT XPCDispObject::COMCreateInstance(const char * className, PRBool testScri
     {
         CComQIPtr<IObjectSafety> objSafety(disp);
         // Didn't have IObjectSafety so we'll bail
-        if(objSafety == 0)
+        if(!objSafety)
             return E_FAIL;
         DWORD supported;
         DWORD state;
@@ -172,18 +162,15 @@ HRESULT XPCDispObject::COMCreateInstance(const char * className, PRBool testScri
 // static
 JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
                                DISPID dispID, CallMode mode, 
-                               XPCDispParams & params,
+                               XPCDispParams * params,
                                jsval* retval,
                                XPCDispInterface::Member * member,
                                XPCJSRuntime* rt)
 {
-    // avoid deadlock in case the native method blocks somehow
-    AutoJSSuspendRequest req(ccx);  // scoped suspend of request
-
     _variant_t dispResult;
     jsval val;
     uintN err;
-    uintN argc = params.GetParamCount();
+    uintN argc = params->GetParamCount();
     // Figure out what we're doing (getter/setter/method)
     WORD dispFlags;
     if(mode == CALL_SETTER)
@@ -198,16 +185,23 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
     {
         dispFlags = DISPATCH_METHOD;
     }
-    // call IDispatch's invoke
-    HRESULT invokeResult= disp->Invoke(
-        dispID,    // IDispatch ID
-        IID_NULL,               // Reserved must be IID_NULL
-        LOCALE_SYSTEM_DEFAULT,  // The locale context, use the system's
-        dispFlags,              // Type of Invoke call
-        params.GetDispParams(), // Parameters
-        &dispResult,            // Where the result is stored
-        nsnull,                 // Exception information
-        0);                     // Index of an argument error
+    HRESULT invokeResult;
+    EXCEPINFO exception;
+    // Scope the lock
+    {
+        // avoid deadlock in case the native method blocks somehow
+        AutoJSSuspendRequest req(ccx);  // scoped suspend of request
+        // call IDispatch's invoke
+        invokeResult= disp->Invoke(
+            dispID,                  // IDispatch ID
+            IID_NULL,                // Reserved must be IID_NULL
+            LOCALE_SYSTEM_DEFAULT,   // The locale context, use the system's
+            dispFlags,               // Type of Invoke call
+            params->GetDispParams(), // Parameters
+            &dispResult,             // Where the result is stored
+            &exception,              // Exception information
+            0);                      // Index of an argument error
+    }
     if(SUCCEEDED(invokeResult))
     {
         if(mode == CALL_METHOD)
@@ -218,7 +212,7 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
                 const XPCDispInterface::Member::ParamInfo & paramInfo = member->GetParamInfo(index);
                 if(paramInfo.IsOut())
                 {
-                    if(!XPCDispConvert::COMToJS(ccx, params.GetParamRef(index), val, err))
+                    if(!XPCDispConvert::COMToJS(ccx, params->GetParamRef(index), val, err))
                         return ThrowBadParam(err, index, ccx);
 
                     if(paramInfo.IsRetVal())
@@ -227,10 +221,11 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
                     }
                     else
                     {
-                        // we actually assured this before doing the invoke
-                        NS_ASSERTION(JSVAL_IS_OBJECT(val), "out var is not an object");
-                        if(!OBJ_SET_PROPERTY(ccx, JSVAL_TO_OBJECT(val),
-                                    rt->GetStringID(XPCJSRuntime::IDX_VALUE), &val))
+                        jsval * argv = ccx.GetArgv();
+                        // Out, in/out parameters must be objects
+                        if(!JSVAL_IS_OBJECT(argv[index]) ||
+                            !OBJ_SET_PROPERTY(ccx, JSVAL_TO_OBJECT(argv[index]),
+                                rt->GetStringID(XPCJSRuntime::IDX_VALUE), &val))
                             return ThrowBadParam(NS_ERROR_XPC_CANT_SET_OUT_VAL, index, ccx);
                     }
                 }
@@ -250,7 +245,9 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
 
     if(NS_FAILED(invokeResult))
     {
-        XPCThrower::ThrowCOMError(ccx, invokeResult);
+        XPCThrower::ThrowCOMError(ccx, invokeResult, NS_ERROR_XPC_COM_ERROR, 
+                                  invokeResult == DISP_E_EXCEPTION ? 
+                                      &exception : nsnull);
         return JS_FALSE;
     }
     return JS_TRUE;
@@ -308,18 +305,19 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
     jsval name = member->GetName();
 
     nsIXPCSecurityManager* sm = xpcc->GetAppropriateSecurityManager(secFlag);
+    XPCWrappedNative* wrapper = ccx.GetWrapper();
     if(sm && NS_FAILED(sm->CanAccess(secAction, &ccx, ccx,
                                      ccx.GetFlattenedJSObject(),
-                                     ccx.GetWrapper()->GetIdentityObject(),
-                                     ccx.GetWrapper()->GetClassInfo(), name,
-                                     ccx.GetWrapper()->GetSecurityInfoAddr())))
+                                     wrapper->GetIdentityObject(),
+                                     wrapper->GetClassInfo(), name,
+                                     wrapper->GetSecurityInfoAddr())))
     {
         // the security manager vetoed. It should have set an exception.
         return JS_FALSE;
     }
 
-    XPCWrappedNative* wrapper = ccx.GetWrapper();
-    nsISupports * pObj = ccx.GetTearOff()->GetNative();
+    IDispatch * pObj = NS_REINTERPRET_CAST(IDispatch*,
+                                            ccx.GetTearOff()->GetNative());
     PRUint32 args = member->GetParamCount();
     uintN err;
     // Make sure setter has one argument
@@ -329,14 +327,17 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
     // are not enough parameters
     if(argc < args)
         args = argc;
-    XPCDispParams params(args);
+    XPCDispParams * params = new XPCDispParams(args);
     jsval val;
     // If this is a setter, we just need to convert the first parameter
     if(mode == CALL_SETTER)
     {
-        params.SetNamedPropID();
-        if(!XPCDispConvert::JSToCOM(ccx, argv[0],params.GetParamRef(0), err))
+        params->SetNamedPropID();
+        if(!XPCDispConvert::JSToCOM(ccx, argv[0], params->GetParamRef(0), err))
+        {
+            delete params;
             return ThrowBadParam(err, 0, ccx);
+        }
     }
     else if(mode != CALL_GETTER)    // This is a function
     {
@@ -354,17 +355,20 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
                                           rt->GetStringID(XPCJSRuntime::IDX_VALUE),
                                           &val))
                     {
-                        ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, index, ccx);
+                        delete params;
+                        return ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, index, ccx);
                     }
+                    paramInfo.InitializeOutputParam(params->GetOutputBuffer(index), params->GetParamRef(index));
                 }
-                if(!XPCDispConvert::JSToCOM(ccx, val,params.GetParamRef(index), err))
+                if(!XPCDispConvert::JSToCOM(ccx, val, params->GetParamRef(index), err, paramInfo.IsOut()))
                 {
-                    ThrowBadParam(err, index, ccx);
+                    delete params;
+                    return ThrowBadParam(err, index, ccx);
                 }
             }
             else
             {
-                paramInfo.InitializeOutputParam(params.GetOutputBuffer(index), params.GetParamRef(index));
+                paramInfo.InitializeOutputParam(params->GetOutputBuffer(index), params->GetParamRef(index));
             }
         }
     }
@@ -372,35 +376,37 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
     if(member->IsParameterizedProperty())
     {
         // We need to get a parameterized property object to return to JS
-        if(XPCDispParamPropJSClass::GetNewOrUsed(ccx, wrapper,
-                                                  member->GetDispID(),
-                                                  params, &val))
+        // NewInstance takes ownership of params
+        if(XPCDispParamPropJSClass::NewInstance(ccx, wrapper,
+                                                member->GetDispID(),
+                                                params, &val))
         {
             ccx.SetRetVal(val);
             if(!JS_IdToValue(ccx, 1, &val))
+            {
+                // This shouldn't fail
+                NS_ERROR("JS_IdToValue failed in XPCDispParamPropJSClass::NewInstance");
                 return JS_FALSE;
+            }
             JS_SetCallReturnValue2(ccx, val);
             return JS_TRUE;
         }
+        // NewInstance would only fail if there was an out of memory problem
+        JS_ReportOutOfMemory(ccx);
+        delete params;
         return JS_FALSE;
     }
-    IDispatch * pDisp;
-    // TODO: I'm not sure this QI is really needed
-    nsresult result = pObj->QueryInterface(NSID_IDISPATCH, (void**)&pDisp);
-    if(NS_SUCCEEDED(result))
+    JSBool retval = Dispatch(ccx, pObj, member->GetDispID(), mode, params, &val, member, rt);
+    if(retval && mode == CALL_SETTER)
     {
-        JSBool retval = Dispatch(ccx, pDisp, member->GetDispID(), mode, params, &val, member, rt);
-        if(retval && mode == CALL_SETTER)
-        {
-            ccx.SetRetVal(argv[0]);
-        }
-        else
-        {
-            ccx.SetRetVal(val);
-        }
-        return retval;
+        ccx.SetRetVal(argv[0]);
     }
-    return JS_FALSE;
+    else
+    {
+        ccx.SetRetVal(val);
+    }
+    delete params;
+    return retval;
 }
 
 static
@@ -466,13 +472,14 @@ XPC_IDispatch_CallMethod(JSContext* cx, JSObject* obj, uintN argc,
 
     XPCDispInterface::Member* member;
     XPCNativeInterface* iface;
-    if(GetMember(ccx, funobj, iface, member))
-    {
-        ccx.SetIDispatchInfo(iface, member);
+#ifdef DEBUG
+    PRBool ok =
+#endif
+    GetMember(ccx, funobj, iface, member);
+    NS_ASSERTION(ok, "GetMember faild in XPC_IDispatch_CallMethod");
+    ccx.SetIDispatchInfo(iface, member);
 
-        return XPCDispObject::Invoke(ccx, XPCDispObject::CALL_METHOD);
-    }
-    return JS_FALSE;
+    return XPCDispObject::Invoke(ccx, XPCDispObject::CALL_METHOD);
 }
 
 /**
@@ -500,10 +507,12 @@ XPC_IDispatch_GetterSetter(JSContext *cx, JSObject *obj, uintN argc,
     ccx.SetArgsAndResultPtr(argc, argv, vp);
     XPCDispInterface::Member* member;
     XPCNativeInterface* iface;
-    if(GetMember(ccx, funobj, iface, member))
-    {
-        ccx.SetIDispatchInfo(iface, member);
-        return XPCDispObject::Invoke(ccx, argc != 0 ? XPCDispObject::CALL_SETTER : XPCDispObject::CALL_GETTER);
-    }
-    return JS_FALSE;
+#ifdef DEBUG
+    PRBool ok =
+#endif
+    GetMember(ccx, funobj, iface, member);
+    NS_ASSERTION(ok, "GetMember faild in XPC_IDispatch_CallMethod");
+
+    ccx.SetIDispatchInfo(iface, member);
+    return XPCDispObject::Invoke(ccx, argc != 0 ? XPCDispObject::CALL_SETTER : XPCDispObject::CALL_GETTER);
 }

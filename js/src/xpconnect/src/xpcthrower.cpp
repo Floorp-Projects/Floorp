@@ -155,11 +155,37 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
 
     if(ccx.HasInterfaceAndMember())
     {
-        XPCNativeInterface* interface = ccx.GetInterface();
+        XPCNativeInterface* iface = ccx.GetInterface();
+#ifdef XPC_IDISPATCH_SUPPORT
+        NS_ASSERTION(ccx.GetIDispatchMember() == nsnull || 
+                        ccx.GetMember() == nsnull,
+                     "Both IDispatch member and regular XPCOM member "
+                     "were set in XPCCallContext");
+        char const * name;
+        if(ccx.GetIDispatchMember())
+        {
+            XPCDispInterface::Member * member = 
+                NS_REINTERPRET_CAST(XPCDispInterface::Member*, 
+                                    ccx.GetIDispatchMember());
+            if(member && JSVAL_IS_STRING(member->GetName()))
+            {
+                name = JS_GetStringBytes(JSVAL_TO_STRING(member->GetName()));
+            }
+            else
+                name = "Unknown";
+        }
+        else
+            name = iface->GetMemberName(ccx, ccx.GetMember());
         sz = JS_smprintf("%s [%s.%s]",
                          *psz,
-                         interface->GetNameString(),
-                         interface->GetMemberName(ccx, ccx.GetMember()));
+                         iface->GetNameString(),
+                         name);
+#else
+        sz = JS_smprintf("%s [%s.%s]",
+                         *psz,
+                         iface->GetNameString(),
+                         iface->GetMemberName(ccx, ccx.GetMember()));
+#endif
     }
 
     if(sz)
@@ -246,47 +272,57 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
 #ifdef XPC_IDISPATCH_SUPPORT
 // static
 void
-XPCThrower::ThrowCOMError(JSContext* cx, HRESULT COMErrorCode, nsresult rv)
+XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
+                          nsresult rv, const EXCEPINFO * exception)
 {
     nsCAutoString msg;
     IErrorInfo * pError;
-    // Get the current COM error object
-    HRESULT result = GetErrorInfo(0, &pError);
-    if(SUCCEEDED(result) && pError)
-    {
-        // Build an error message from the COM error object
-        BSTR bstrDesc = nsnull;
-        BSTR bstrSource = nsnull;
-        if(SUCCEEDED(pError->GetSource(&bstrSource)) && bstrSource)
-        {
-            msg = NS_STATIC_CAST(const char *,_bstr_t(bstrSource, FALSE));
-            msg += " : ";
-        }
-        char buffer[9];
-        sprintf(buffer, "%0X", COMErrorCode);
-        msg += buffer;
-        if(SUCCEEDED(pError->GetDescription(&bstrDesc)) && bstrDesc)
-        {
-            msg += " - ";
-            msg += NS_STATIC_CAST(const char *,_bstr_t(bstrDesc, FALSE));
-        }
-    }
-    else
-    {
-        // No error object, so just report the result
-        const char* format;
-        if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
-        format = "";
-        char buffer[48];
-        sprintf(buffer, "COM Error Result = %0X", COMErrorCode);
-        msg = buffer;
-    }
     const char * format;
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";
-    char * finalMsg = JS_smprintf("%s - %s", format, PromiseFlatCString(msg).get());
-    XPCThrower::BuildAndThrowException(cx, rv, finalMsg);
-    JS_smprintf_free(finalMsg);
+    msg = format;
+    if(exception)
+    {
+        msg += NS_STATIC_CAST(const char *,
+                              _bstr_t(exception->bstrSource, false));
+        msg += " : ";
+        msg.AppendInt(COMErrorCode);
+        msg += " - ";
+        msg += NS_STATIC_CAST(const char *,
+                              _bstr_t(exception->bstrDescription, false));
+    }
+    else
+    {
+        // Get the current COM error object
+        unsigned long result = GetErrorInfo(0, &pError);
+        if(SUCCEEDED(result) && pError)
+        {
+            // Build an error message from the COM error object
+            BSTR bstrSource = NULL;
+            if(SUCCEEDED(pError->GetSource(&bstrSource)) && bstrSource)
+            {
+                _bstr_t src(bstrSource, false);
+                msg += NS_STATIC_CAST(const char *,src);
+                msg += " : ";
+            }
+            msg.AppendInt(COMErrorCode, 16);
+            BSTR bstrDesc = NULL;
+            if(SUCCEEDED(pError->GetDescription(&bstrDesc)) && bstrDesc)
+            {
+                msg += " - ";
+                _bstr_t desc(bstrDesc, false);
+                msg += NS_STATIC_CAST(const char *,desc);
+            }
+        }
+        else
+        {
+            // No error object, so just report the result
+            msg += "COM Error Result = ";
+            msg.AppendInt(COMErrorCode, 16);
+        }
+    }
+    
+    XPCThrower::BuildAndThrowException(cx, rv, msg.get());
 }
 
 #endif
