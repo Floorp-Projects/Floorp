@@ -29,6 +29,7 @@
 #include "nsGfxTextControlFrame.h"
 #else
 #include "nsGfxTextControlFrame2.h"
+#include "nsFormControlHelper.h"
 #endif
 
 #include "nsIContent.h"
@@ -183,9 +184,11 @@ nsFileControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 void 
 nsFileControlFrame::Reset(nsIPresContext* aPresContext)
 {
+#ifndef DEBUG_NEWFRAME
   if (mTextFrame) {
     mTextFrame->Reset(aPresContext);
   }
+#endif
 }
 
 NS_IMETHODIMP 
@@ -217,9 +220,11 @@ nsFileControlFrame::GetWindowTemp(nsIView *aView)
 void 
 nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
+#ifndef DEBUG_NEWFRAME
   if (mTextFrame) {
     mTextFrame->SetFocus(aOn, aRepaint);
   }
+#endif
 }
 
 void
@@ -240,6 +245,7 @@ nsFileControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 nsresult 
 nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
+#ifndef DEBUG_NEWFRAME
   nsIView* textView;
   mTextFrame->GetView(mPresContext, &textView);
   if (nsnull == textView) {
@@ -274,7 +280,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     NS_RELEASE(fileWidget);
   }
   NS_RELEASE(parentWidget);
-
+#endif
   return NS_OK;
 }
 
@@ -460,12 +466,13 @@ nsFileControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   // use our name and the text widgets value 
   aNames[0] = name;
   nsresult status = PR_FALSE;
+#ifndef DEBUG_NEWFRAME
 
   if (NS_SUCCEEDED(mTextFrame->GetProperty(nsHTMLAtoms::value, aValues[0]))) {
     aNumValues = 1;
     status = PR_TRUE;
   }
-
+#endif
   return status;
 }
 
@@ -502,6 +509,7 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
 {
+#ifndef DEBUG_NEWFRAME
   if ( nsFormFrame::GetDisabled(this) && mRect.Contains(aPoint) ) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -512,6 +520,7 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   } else {
     return nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
+#endif
   return NS_OK;
 }
 
