@@ -599,7 +599,7 @@ nsInstallDlg::PerformInstall()
     }
     else if (err == E_CRC_FAILED)
     {
-        ShowCRCFailedDlg();
+        ErrorHandler(err);
         goto BAIL;
     }
     else if (err == E_DL_PAUSE || err == E_DL_CANCEL)
@@ -1201,46 +1201,6 @@ nsInstallDlg::ShowCRCDlg()
 }
 
 int
-nsInstallDlg::ShowCRCFailedDlg()
-{
-    GtkWidget *crcFailedDlg, *label, *okButton, *packer;
-
-    // throw up dialog informing user to press resume
-    // or to cancel out
-    if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT) {
-       ErrorHandler(E_CRC_FAILED);
-       return OK;
-    }
-
-    crcFailedDlg = gtk_dialog_new();
-    label = gtk_label_new(gCtx->Res("CRC_FAILED"));
-    okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
-    packer = gtk_packer_new();
-
-    if (crcFailedDlg && label && okButton && packer)
-    {
-        gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
-        gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
-                                GTK_ANCHOR_CENTER, GTK_FILL_X);
-        gtk_window_set_modal(GTK_WINDOW(crcFailedDlg), TRUE);
-        gtk_window_set_title(GTK_WINDOW(crcFailedDlg), gCtx->opt->mTitle);
-        gtk_window_set_position(GTK_WINDOW(crcFailedDlg), GTK_WIN_POS_CENTER);
-        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(crcFailedDlg)->vbox), 
-                          packer);
-        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(crcFailedDlg)->action_area),
-                          okButton);
-        gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
-                           GTK_SIGNAL_FUNC(CRCFailedOK), crcFailedDlg);
-        GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
-        gtk_widget_grab_default(okButton);
-        gtk_widget_show_all(crcFailedDlg);
-    }
-    XI_GTK_UPDATE_UI();
-
-    return OK;
-}
-
-int
 nsInstallDlg::ShowCxnDroppedDlg()
 {
     GtkWidget *cxnDroppedDlg, *label, *okButton, *packer;
@@ -1279,13 +1239,6 @@ nsInstallDlg::ShowCxnDroppedDlg()
     XI_GTK_UPDATE_UI();
 
     return OK;
-}
-
-void
-nsInstallDlg::CRCFailedOK(GtkWidget *aWidget, gpointer aData)
-{
-  gtk_main_quit();
-  return;
 }
 
 void

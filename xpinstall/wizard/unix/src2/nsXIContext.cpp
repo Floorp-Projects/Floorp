@@ -202,7 +202,6 @@ nsXIContext::LoadResources()
         "TO",
         "STATUS",
         "DL_STATUS_STR",
-        "CRC_FAILED",
         "CRC_CHECK",
         "USAGE_MSG",
         "UNKNOWN",

@@ -111,9 +111,7 @@ private:
     static void     DLPause(GtkWidget *aWidget, gpointer aData);
     static void     DLResume(GtkWidget *aWidget, gpointer aData);
     static void     DLCancel(GtkWidget *aWidget, gpointer aData);
-    static int      ShowCRCFailedDlg();
     static int      ShowCxnDroppedDlg();
-    static void     CRCFailedOK(GtkWidget *aWidget, gpointer aData);
     static void     CxnDroppedOK(GtkWidget *aWidget, gpointer aData);
     static void     CRCOKCb(GtkWidget *aWidget, gpointer aData);
     static void     HideNavButtons();
