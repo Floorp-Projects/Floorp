@@ -52,4 +52,3 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug19061-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug19356.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug19526.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug19599.html
-file:///s|/mozilla/layout/html/tests/table/bugs/bug19599.html
