@@ -463,7 +463,9 @@ input[type="image"] {
   vertical-align:baseline;
   behavior: none;
   background-color: inherit;
-	cursor: default;
+  cursor: default;
+  font-family: sans-serif;
+  font-size: small;
 }
 
 input[type="image"]:hover {
