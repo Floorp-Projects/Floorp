@@ -34,8 +34,6 @@ TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
 TOOLKIT_BASE_LIB    = -lgmbase$(MOZ_TOOLKIT)
 
-TK_LIBS = $(TK_MOTIF_LIBS) $(TK_GTK_LIBS)
-
 EXPORT_TOOLBAR = \
 	DialogAddrIcon.gif \
 	DialogAddrIcon_mo.gif \

@@ -599,15 +599,15 @@ fi
     	LDFLAGS="$XLDFLAGS $LDFLAGS"
 	if [ test "$MOTIF_REQUIRES_XPM" = "True" ]; then
 	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
-		TK_MOTIF_LIBS="-lXpm $TK_MOTIF_LIBS", 
+		TK_LIBS="-lXpm $TK_LIBS", 
 		[MISSING_MOTIF="-lXpm $MISSING_MOTIF"], $XLIBS)
 	fi
 	if [ test "$MOTIF_VERSION" = "2.1" ]; then
 	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
-		TK_MOTIF_LIBS="-lXp $TK_MOTIF_LIBS",
+		TK_LIBS="-lXp $TK_LIBS",
 		[MISSING_MOTIF="-lXp $MISSING_MOTIF"], $XLIBS)
 	fi
-	TK_MOTIF_LIBS="$XLDFLAGS $TK_MOTIF_LIBS"
+	TK_LIBS="$XLDFLAGS $TK_LIBS"
 	LDFLAGS="$_SAVE_LDFLAGS"
     fi
 
@@ -640,18 +640,18 @@ fi
 	_SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
     	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    TK_MOTIF_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $TK_MOTIF_LIBS",
+	    TK_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $TK_LIBS",
 	    [MISSING_MOTIF="$MOTIF_DYNAMIC_FLAGS $MISSING_MOTIF"], 
-	    $MOTIF_DYNAMIC_PATHS $TK_MOTIF_LIBS $XLIBS)
+	    $MOTIF_DYNAMIC_PATHS $TK_LIBS $XLIBS)
 	LDFLAGS="$_SAVE_LDFLAGS"
     else
     	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    TK_MOTIF_LIBS="$MOTIF_STATIC_FLAGS $TK_MOTIF_LIBS",
+	    TK_LIBS="$MOTIF_STATIC_FLAGS $TK_LIBS",
 	    [MISSING_MOTIF="$MOTIF_STATIC_FLAGS $MISSING_MOTIF"], 
-	    $TK_MOTIF_LIBS $XLIBS)
+	    $TK_LIBS $XLIBS)
     fi
 
-    TK_MOTIF_CFLAGS="$MOTIF_INCLUDES"
+    TK_CFLAGS="$MOTIF_INCLUDES"
 fi
 
 res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
@@ -664,7 +664,7 @@ if [ test $res != 0 ]; then
 	sysstaticgtk=$withval)
 
     if [ test "$sysstaticgtk" != "yes" ]; then
-       TK_GTK_LIBS=$GTK_LIBS
+       TK_LIBS=$GTK_LIBS
     else
        changequote(,)
 
@@ -685,22 +685,20 @@ if [ test $res != 0 ]; then
 
        changequote([,])
 
-       TK_GTK_LIBS="$GTK_STATIC_LOC/lib${GTK_STATIC}.a"
-       TK_GTK_LIBS="$TK_GTK_LIBS $GTK_STATIC_LOC/lib${GDK_STATIC}.a"
-       TK_GTK_LIBS="$TK_GTK_LIBS $GLIB_STATIC_LOC/lib${GMODULE_STATIC}.a"
-       TK_GTK_LIBS="$TK_GTK_LIBS $GLIB_STATIC_LOC/lib${GLIB_STATIC}.a"
-       TK_GTK_LIBS="$TK_GTK_LIBS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
+       TK_LIBS="$GTK_STATIC_LOC/lib${GTK_STATIC}.a"
+       TK_LIBS="$TK_LIBS $GTK_STATIC_LOC/lib${GDK_STATIC}.a"
+       TK_LIBS="$TK_LIBS $GLIB_STATIC_LOC/lib${GMODULE_STATIC}.a"
+       TK_LIBS="$TK_LIBS $GLIB_STATIC_LOC/lib${GLIB_STATIC}.a"
+       TK_LIBS="$TK_LIBS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
     fi
-    TK_GTK_CFLAGS=$GTK_CFLAGS
+    TK_CFLAGS=$GTK_CFLAGS
 fi
 
 fi # $no_x
 
 AC_SUBST(GTK_CONFIG)
-AC_SUBST(TK_GTK_CFLAGS)
-AC_SUBST(TK_GTK_LIBS)
-AC_SUBST(TK_MOTIF_CFLAGS)
-AC_SUBST(TK_MOTIF_LIBS)
+AC_SUBST(TK_CFLAGS)
+AC_SUBST(TK_LIBS)
 
 XCFLAGS="$X_CFLAGS"
 
@@ -1264,7 +1262,11 @@ dnl xpfe/xpviewer/public/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
-xpfe/bootstrap/Makefile"
+xpfe/bootstrap/Makefile
+xpfe/browser/Makefile
+xpfe/browser/src/Makefile
+dnl xpfe/browser/public/Makefile
+"
 
 EDITOR_MAKEFILES="
 editor/base/Makefile
