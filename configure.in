@@ -1148,6 +1148,28 @@ fi # $no_x
 
 dnl ========================================================
 dnl =
+dnl = If NSPR was not detected in the system, 
+dnl = use the one in the source tree (mozilla/nsprpub)
+dnl =
+dnl ========================================================
+
+AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
+
+if test -z "$MOZ_NATIVE_NSPR"; then
+    AC_MSG_WARN(nspr-config not found. building local copy of NSPR)
+    NSPR_CFLAGS='`$(DIST)/bin/nspr-config --prefix=$(DIST) --cflags`'
+    case "$target" in
+    *-*-os2_vacpp)
+        NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
+        ;;
+    *)
+        NSPR_LIBS='`$(DIST)/bin/nspr-config --prefix=$(DIST) --libs`'
+        ;;
+    esac
+fi
+
+dnl ========================================================
+dnl =
 dnl = --enable-xinerama
 dnl =
 dnl = This turns on xinerama support.  We just can't use the
@@ -2260,126 +2282,6 @@ then
 		_PTHREAD_LDFLAGS=
 	esac
 fi
-
-dnl
-dnl Add the pthread flags to the nspr libs
-dnl ========================================================
-NSPR_LIBS="$NSPR_LIBS $_PTHREAD_LDFLAGS"
-
-dnl Check for NSPR.
-dnl ========================================================
-dnl 
-dnl We always use the system NSPR from now on...this option
-dnl tells where to find NSPR rather than whether to use it.
-dnl ========================================================
-AC_ARG_WITH(nspr,
-[  --with-nspr=PFX         Prefix where NSPR is installed],
-	NSPR_DIR=$withval)
-
-AC_ARG_WITH(nsprlib,
-[  --with-nsprlib=DIR      Directory where NSPR libraries are installed],
-	NSPR_LIBDIR=$withval)
-
-dnl Skip this if cross-compiling, since the checks will fail.
-if test "$_OPENVMS_CROSS_COMPILE"x = x; then
-
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LDFLAGS=$LDFLAGS
-_SAVE_LIBS=$LIBS
-CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
-if test "$NSPR_LIBDIR"x = x; then
-   LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib $NSPR_LIBS"
-else
-   LDFLAGS="$LDFLAGS -L${NSPR_LIBDIR} $NSPR_LIBS"
-fi
-
-AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr$NSPR_VERSION")
-LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS $LIBS"
-AC_TRY_RUN(
-	#include <stdio.h>
-	#include <nspr.h>
-	int main () {
-	    PRThread *dummy = PR_GetCurrentThread();
-	    exit(0);
-	}
-	, [NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"],
-	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
-	[NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"] )
-rm -f core
-AC_MSG_RESULT("$result")
-
-dnl XXX - Is this really the best way to do this check? - cls
-if test "$_NSPR_NEEDS_THREAD_LIB" = 1; then
-
-LIBS=$_SAVE_LIBS
-AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr$NSPR_VERSION with thread lib")
-    LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS $LIBS"
-    AC_TRY_RUN(
-	#include <stdio.h>
-	#include <nspr.h>
-	int main () {
-	    PRThread *dummy = PR_GetCurrentThread();
-	    exit(0);
-	}
-	, [NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"],
-	[MISSING_NSPR="$MISSING_NSPR -lnspr$NSPR_VERSION" result="no"], 
-	[NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"] )
-    rm -f core
-AC_MSG_RESULT("$result")
-fi
-
-AC_CHECK_LIB(plc$NSPR_VERSION, PL_CreateOptState, NSPR_LIBS="-lplc$NSPR_VERSION $NSPR_LIBS",
-	[MISSING_NSPR="$MISSING_NSPR -lplc$NSPR_VERSION"], $NSPR_LIBS)
-AC_CHECK_LIB(plds$NSPR_VERSION, PL_NewHashTable, NSPR_LIBS="-lplds$NSPR_VERSION $NSPR_LIBS",
-	[MISSING_NSPR="$MISSING_NSPR -lplds$NSPR_VERSION"], $NSPR_LIBS)
-
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
-LIBS=$_SAVE_LIBS
-
-fi # ! CROSS_COMPILE
-
-if test "${NSPR_DIR}" -a -d "${NSPR_DIR}"; then
-    NSPR_INCLUDE_DIR="${NSPR_DIR}/include"
-    NSPR_CFLAGS="-I${NSPR_INCLUDE_DIR}"
-    if test "$NSPR_LIBDIR"x != x; then
-        NSPR_LIBS="-L${NSPR_LIBDIR} ${NSPR_LIBS}"
-    else
-        NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
-    fi
-fi
-
-dnl
-dnl If NSPR was not detected in the system, use the one in the source
-dnl tree (mozilla/nsprpub)
-dnl
-dnl NSPR_INCLUDE_DIR and NSPR_CFLAGS are blank because NSPR built as
-dnl part of the mozilla build, will install its headers and libs in
-dnl the same place as mozilla.
-dnl
-AC_MSG_CHECKING(whether have system NSPR)
-if test "$MISSING_NSPR"; then
-   AC_MSG_RESULT(no (will build it from source))
-   NSPR_INCLUDE_DIR=
-   NSPR_CFLAGS=
-   case "$target" in
-   *-*-os2_vacpp)
-      NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
-      ;;
-   *)
-      NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION $_PTHREAD_LDFLAGS"
-      ;;
-   esac
-dnl
-dnl Otherwise, we are using an NSPR installed in the system.
-dnl
-dnl We need to set MOZ_NATIVE_NSPR so that mozilla/nsprpub is not built.
-dnl
-else
-   AC_MSG_RESULT(yes)
-   MOZ_NATIVE_NSPR=1
-fi
-
 
 dnl
 dnl Indicate that platform requires special thread safe 
@@ -4386,7 +4288,6 @@ AC_SUBST(MOZ_PNG_LIBS)
 AC_SUBST(MOZ_MNG_CFLAGS)
 AC_SUBST(MOZ_MNG_LIBS)
 
-AC_SUBST(NSPR_INCLUDE_DIR)
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 AC_SUBST(MOZ_NATIVE_NSPR)
@@ -4590,9 +4491,19 @@ DLLTOOL=
 unset MAKEFILES
 unset CONFIG_FILES
 
+if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist"
+    AC_OUTPUT_SUBDIRS(nsprpub)
+fi
+
 if test -z "$MOZ_NATIVE_NSPR"; then
-  ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist"
-  AC_OUTPUT_SUBDIRS(nsprpub)
+    # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
+    NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
+    NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --libs`
+    AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
+    $PERL -pi.bak -e "s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $NSPR_LIBS }" config/autoconf.mk
+    $PERL -pi.bak -e "s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $NSPR_CFLAGS }" config/autoconf.mk
+    rm -f config/autoconf.mk.bak
 fi
 
 # if we're building the LDAP XPCOM component, we need to build 
@@ -4613,3 +4524,4 @@ if test "$MOZ_LDAP_XPCOM"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
   AC_OUTPUT_SUBDIRS(directory/c-sdk/ldap)
 fi
+
