@@ -78,7 +78,10 @@
                onkeypress="onProfilesKey(event);">
       </listbox>
 
+      <!-- Bug 257777 -->
+#ifndef MOZ_PHOENIX
       <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
+#endif
 
       <checkbox id="autoSelectLastProfile" label="&autoSelect.label;"
                 accesskey="&autoSelect.accesskey;"/> 
