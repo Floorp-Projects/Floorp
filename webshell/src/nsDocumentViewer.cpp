@@ -531,6 +531,11 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
     //set frame rate to 25 fps
     mViewManager->SetFrameRate(25);
 
+    // This SetFocus is necessary so the Arrow Key and Page Key events
+    // go to the scrolled view as soon as the Window is created instead of going to
+    // the browser window (this enables keyboard scrolling of the document)
+    mWindow->SetFocus();
+
     return rv;
 }
 
