@@ -385,9 +385,13 @@ const nsString& nsMsgI18NFileSystemCharset()
 // MIME encoder, output string should be freed by PR_FREE
 char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime) 
 {
-  // No MIME, just duplicate the string.
+  // No MIME, convert to the outgoing mail charset.
   if (PR_FALSE == bUseMime) {
-    return PL_strdup(header);
+    char *convertedStr;
+    if (NS_SUCCEEDED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(charset), NS_ConvertUTF8toUCS2(header), &convertedStr)))
+      return (convertedStr);
+    else
+      return PL_strdup(header);
   }
 
   char *encodedString = nsnull;
