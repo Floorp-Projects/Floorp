@@ -314,10 +314,9 @@ inCSSValueSearch::SearchStyleRule(nsIStyleRule* aStyleRule)
 
   nsCOMPtr<nsICSSStyleRule> cssRule = do_QueryInterface(aStyleRule);
   if (cssRule) {
-    nsCSSDeclaration* aDec = cssRule->GetDeclaration();
     for (PRUint32 i = 0; i < mPropertyCount; i++) {
       nsCSSProperty prop = mProperties[i];
-      SearchStyleValue(aDec, prop);
+      SearchStyleValue(cssRule, prop);
     }
   }
 
@@ -327,12 +326,12 @@ inCSSValueSearch::SearchStyleRule(nsIStyleRule* aStyleRule)
 }
 
 nsresult
-inCSSValueSearch::SearchStyleValue(nsCSSDeclaration* aDec, nsCSSProperty aProp)
+inCSSValueSearch::SearchStyleValue(nsICSSStyleRule* aRule, nsCSSProperty aProp)
 {
   const nsAFlatCString& cstring = nsCSSProps::GetStringValue(aProp);
 
   nsCSSValue value;
-  aDec->GetValue(aProp, value);
+  aRule->GetValue(aProp, value);
 
   if (value.GetUnit() == eCSSUnit_URL) {
     nsAutoString* result = new nsAutoString();
