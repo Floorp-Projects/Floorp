@@ -1778,6 +1778,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         if (!view || !mContext)
           break;
 
+        *aStatus = nsEventStatus_eConsumeNoDefault;
+
         // The rect is in device units, and it's in the coordinate space of its
         // associated window.
         nsCOMPtr<nsIRegion> region = ((nsPaintEvent*)aEvent)->region;
