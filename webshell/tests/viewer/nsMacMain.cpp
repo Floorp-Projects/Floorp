@@ -456,7 +456,8 @@ int main(int argc, char **argv)
 
     // Install an a Quit AppleEvent handler.
     OSErr err = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
-                                    NewAEEventHandlerUPP(handleQuitApplication), 0, false);
+                                      NewAEEventHandlerUPP(AEEventHandlerProcPtr(handleQuitApplication)),
+                                      0, false);
     NS_ASSERTION((err==noErr), "AEInstallEventHandler failed");
 
 #ifdef XP_MACOSX
