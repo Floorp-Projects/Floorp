@@ -1,7 +1,7 @@
 function Startup()
 {
   var bundle = document.getElementById("bundle_profileManager");
-  doSetOKCancel( onDontDeleteFiles, onCancel, onDeleteFiles, null );
+  doSetOKCancel(onDontDeleteFiles, onCancel, onDeleteFiles, null);
   var okButton = document.getElementById("ok");
   var Button2 = document.getElementById("Button2");
   var cancelButton = document.getElementById("cancel");
@@ -16,13 +16,13 @@ function Startup()
 
 function onDeleteFiles()
 {
-  opener.DeleteProfile( true );
+  opener.DeleteProfile(true);
   window.close();
 }
 
 function onDontDeleteFiles()
 {
-  opener.DeleteProfile( false );
+  opener.DeleteProfile(false);
   window.close();
 }
 
