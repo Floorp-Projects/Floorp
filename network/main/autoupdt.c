@@ -32,18 +32,32 @@ extern char * FE_GetProgramDirectory(char *buffer, int length);
 extern void fe_GetProgramDirectory( char *, int );
 #endif
 
-static int32 autoupdt_getCurrentSize(char *file);
-static void  autoupdt_free(AutoUpdateConnnection autoupdt);
-static void  autoupdate_execute(AutoUpdateConnnection autoupdt);
-static void  autoupdate_flush(AutoUpdateConnnection autoupdt);
-static void  autoupdate_loadurl(AutoUpdateConnnection autoupdt);
+PR_STATIC_CALLBACK(unsigned int)
+autoupdate_WriteReadyNetStream(NET_StreamClass *stream);
+PR_STATIC_CALLBACK(int)
+autoupdate_WriteNetStream(NET_StreamClass *stream, const char *str, int32 len);
+PR_STATIC_CALLBACK(void)
+autoupdate_AbortNetStream(NET_StreamClass *stream, int status);
+PR_STATIC_CALLBACK(void)
+autoupdate_CompleteNetStream(NET_StreamClass *stream);
+PR_STATIC_CALLBACK(void)
+autoupdate_GetUrlExitFunc(URL_Struct *urls, int status, MWContext *cx);
+
+static int32 autoupdate_GetCurrentSize(char *file);
+static void  autoupdate_Free(AutoUpdateConnnection autoupdt);
+static void  autoupdate_Flush(AutoUpdateConnnection autoupdt);
+static void  autoupdate_LoadURL(AutoUpdateConnnection autoupdt);
+static PRBool autoupdate_IsInQueue(AutoUpdateConnnection autoupdt);
 static void  autoupdate_TimerCallback(void* data);
 static char* autoupdate_AssureDir(char* path);
+static void  autoupdate_LoadScript(MWContext* context, char* script);
+static void  autoupdate_InvokeJSTimerCallback(void* data);
 
 AutoUpdateConnnection gAutoUpdateConnnection;
+char* gMainScript = NULL;
 
 static int32
-autoupdt_getCurrentSize(char *file)
+autoupdate_GetCurrentSize(char *file)
 {
   struct stat in_stat;
   int stat_result = -1;
@@ -56,36 +70,35 @@ autoupdt_getCurrentSize(char *file)
 
 
 static void
-autoupdt_free(AutoUpdateConnnection autoupdt)
+autoupdate_Free(AutoUpdateConnnection autoupdt)
 {
   if (autoupdt == NULL) {
     return;
   }
+
+  /* XXX: We should remove the downloaded file.
+   * We may have to introduce locks while modifying 
+   * this data strcuture, because we may be doing 
+   * a background transfer. Then we can free all
+   * the memory.
+   */
+
+  PR_FREEIF(autoupdt->id);
   PR_FREEIF(autoupdt->url);
   PR_FREEIF(autoupdt->outFile);
   /* Don't free the autoupdt memory because Timer may still have 
    * a pointer to it.
    */
   memset(autoupdt, '\0', sizeof(AutoUpdateConnnectionStruct));
+
+  /* XXX: Remove the object from the global list */
+  gAutoUpdateConnnection = NULL;
 }
 
 
-static void
-autoupdate_execute(AutoUpdateConnnection autoupdt)
-{
-#ifdef TEST_AUTOUPDATE
-  PRBool ok = PR_TRUE;
-  ok = FE_Confirm(autoupdt->mwcontext,
-                  "A new browser has been downloaded. Should we install it?");
-  if (ok) {
-    autoupdate_ExecuteFile(autoupdt->outFile);
-  }
-#endif /* TEST_AUTOUPDATE */
-}
-
 
 static void
-autoupdate_flush(AutoUpdateConnnection autoupdt) 
+autoupdate_Flush(AutoUpdateConnnection autoupdt) 
 {
   if (autoupdt == NULL) {
     return;
@@ -98,6 +111,7 @@ autoupdate_flush(AutoUpdateConnnection autoupdt)
       fclose(fp);
     }
 
+    /* Setup start and end bytes for the next round of download */
     autoupdt->start_byte = autoupdt->start_byte + autoupdt->cur_len;
     autoupdt->end_byte = autoupdt->start_byte + autoupdt->range;
   }
@@ -108,11 +122,12 @@ autoupdate_flush(AutoUpdateConnnection autoupdt)
   autoupdt->outputBuffer = NULL;
   autoupdt->cur_len = 0;
   autoupdt->urls = NULL;
+  autoupdt->status = 0;
 }
 
 
-unsigned int
-autoupdate_write_ready(NET_StreamClass *stream)
+PR_STATIC_CALLBACK(unsigned int)
+autoupdate_WriteReadyNetStream(NET_StreamClass *stream)
 {
   /* tell it how many bytes you are willing to take */
   AutoUpdateConnnection autoupdt = (AutoUpdateConnnection)stream->data_object;
@@ -120,8 +135,8 @@ autoupdate_write_ready(NET_StreamClass *stream)
 }
 
 
-int 
-autoupdate_write(NET_StreamClass *stream, const char* blob, int32 size) 
+PR_STATIC_CALLBACK(int)
+autoupdate_WriteNetStream(NET_StreamClass *stream, const char* blob, int32 size) 
 {
   /*  stream->data_object holds your connection data.
    *  return 0 or greater to get more bytes
@@ -138,7 +153,7 @@ autoupdate_write(NET_StreamClass *stream, const char* blob, int32 size)
                                         autoupdt->cur_len+size);
     if (!autoupdt->outputBuffer) {
       autoupdt->cur_len = 0;
-      TRACEMSG(("Out of memory in autoupdate_write\n"));
+      TRACEMSG(("Out of memory in autoupdate_WriteNetStream\n"));
       return -1;
     }
   }
@@ -153,53 +168,54 @@ autoupdate_write(NET_StreamClass *stream, const char* blob, int32 size)
 }
 
 
-void
-autoupdate_abort(NET_StreamClass *stream, int status)
+PR_STATIC_CALLBACK(void)
+autoupdate_AbortNetStream(NET_StreamClass *stream, int status)
 {
   /* something bad happened */
   AutoUpdateConnnection autoupdt = (AutoUpdateConnnection)stream->data_object;
-  autoupdate_flush(autoupdt);
+  autoupdate_Flush(autoupdt);
 }
 
 
-void
-autoupdate_complete(NET_StreamClass *stream)
+PR_STATIC_CALLBACK(void)
+autoupdate_CompleteNetStream(NET_StreamClass *stream)
 {
   /* the complete function which gets called when the last packet comes in */
   AutoUpdateConnnection autoupdt = (AutoUpdateConnnection)stream->data_object;
-  autoupdate_flush(autoupdt);
+  autoupdate_Flush(autoupdt);
 }
 
 
-#ifdef	XP_MAC
-PR_PUBLIC_API(NET_StreamClass *)
-#else
-PUBLIC NET_StreamClass *
-#endif
-autoupdate_Converter(FO_Present_Types format_out, void *data_object, 
+PR_IMPLEMENT(NET_StreamClass *)
+Autoupdate_Converter(FO_Present_Types format_out, void *data_object, 
                      URL_Struct *URL_s, MWContext *cx)
 {
-    AutoUpdateConnnection autoupdt = (AutoUpdateConnnection) URL_s->fe_data;
-    if ((autoupdt == NULL) || (autoupdt->url == NULL)) {
-      return NULL;
-    }
-    if (!URL_s->server_can_do_byteranges) {
-      /* Server doesn't support byte ranges. Stop the autoupdate */
-      autoupdt_free(autoupdt);
-      return NULL;
-    }
-    TRACEMSG(("Setting up Autoupdate stream. Have URL: %s %s\n", 
-              autoupdt->url, URL_s->address));
+  AutoUpdateConnnection autoupdt = (AutoUpdateConnnection) URL_s->fe_data;
+
+  if ((autoupdt == NULL) || (autoupdt->url == NULL)) {
+    return NULL;
+  }
+
+  if (!URL_s->server_can_do_byteranges) {
+    autoupdt->state = BACKGROUND_ERROR;
+    autoupdt->errorMsg = "Server doesn't support byte ranges.";
+    autoupdate_LoadScript(autoupdt->mwcontext, autoupdt->script);
+    return NULL;
+  }
+
+  TRACEMSG(("Setting up Autoupdate stream. Have URL: %s %s\n", 
+            autoupdt->url, URL_s->address));
     
-    return NET_NewStream("AUTOUPDATE", (MKStreamWriteFunc)autoupdate_write, 
-                         (MKStreamCompleteFunc)autoupdate_complete,
-                         (MKStreamAbortFunc)autoupdate_abort, 
-                         (MKStreamWriteReadyFunc)autoupdate_write_ready, 
-                         URL_s->fe_data, cx);
+  autoupdt->status = 1;
+  return NET_NewStream("AUTOUPDATE", (MKStreamWriteFunc)autoupdate_WriteNetStream, 
+                       (MKStreamCompleteFunc)autoupdate_CompleteNetStream,
+                       (MKStreamAbortFunc)autoupdate_AbortNetStream, 
+                       (MKStreamWriteReadyFunc)autoupdate_WriteReadyNetStream, 
+                       URL_s->fe_data, cx);
 }
 
 
-void
+PR_STATIC_CALLBACK(void)
 autoupdate_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx)
 {
   NET_FreeURLStruct (urls);
@@ -207,32 +223,54 @@ autoupdate_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx)
 
 
 static void
-autoupdate_loadurl(AutoUpdateConnnection autoupdt)
+autoupdate_LoadURL(AutoUpdateConnnection autoupdt)
 {
   URL_Struct *urls;
   char *range=NULL;
-  if (autoupdt->url == NULL) {
-    return;
-  }
+
   if (NET_AreThereActiveConnections()) {
+    /* libnet is busy. Try later */
     return;
   }
+
+  /* If we haven't got all the bytes from the previous request
+   * don't start a new one again, until we get all the bytes.
+   *
+   * This check prevents if NET_AreThereActiveConnections 
+   * return FALSE, but we haven't cleared autoupdt's buffers yet.
+   */
+  if (autoupdt->status == 1) {
+    return;
+  }
+
   urls = NET_CreateURLStruct(autoupdt->url, NET_DONT_RELOAD);
   if (urls == NULL) {
+    autoupdt->state = BACKGROUND_ERROR;
+    autoupdt->errorMsg = "Couldn't set up download. Out of memory";
+    autoupdate_LoadScript(autoupdt->mwcontext, autoupdt->script);
     return;
   }
+
   urls->fe_data = autoupdt;
   urls->range_header = PR_sprintf_append(range, "bytes=%ld-%ld", 
                                          autoupdt->start_byte, 
                                          autoupdt->end_byte);
-  autoupdt->urls = urls;
 
   autoupdt->outputBuffer = PR_Malloc(autoupdt->range);
   memset(autoupdt->outputBuffer, '\0', autoupdt->range);
   autoupdt->cur_len = 0;
 
-  autoupdt->status = 1;
+  autoupdt->status = 0;
   NET_GetURL(urls, FO_AUTOUPDATE, autoupdt->mwcontext, autoupdate_GetUrlExitFunc);
+  autoupdt->urls = urls;
+}
+
+static PRBool
+autoupdate_IsInQueue(AutoUpdateConnnection autoupdt)
+{
+  if (gAutoUpdateConnnection == autoupdt)
+    return PR_TRUE;
+  return PR_FALSE;
 }
 
 
@@ -240,34 +278,115 @@ static void
 autoupdate_TimerCallback(void* data)
 {
   AutoUpdateConnnection autoupdt = (AutoUpdateConnnection)data;
-  if ((autoupdt == NULL) || (autoupdt->url == NULL)) {
-    autoupdt_free(autoupdt);
-    /* We are not setting timer callbacks, thus we can free autoupdt */
-    PR_FREEIF(autoupdt);
+
+  /* if there is no autoupdate, or the given object is not in our 
+   * list of things to do, then stop the timer callback.
+   */
+  if ((autoupdt == NULL) || (!autoupdate_IsInQueue(autoupdt))) {
     return;
   }
 
-  if (autoupdt->file_size > autoupdt->start_byte) {
+  if (autoupdt->url == NULL) {
+    autoupdt->state = BACKGROUND_ERROR;
+    autoupdt->errorMsg = "No URL to download";
+    autoupdate_LoadScript(autoupdt->mwcontext, autoupdt->script);
+    return;
+  }
+
+  if ((autoupdt->start_byte == 0) ||
+      (autoupdt->file_size > autoupdt->start_byte)) {
+
+    /* We will download bytes if the state is in DOWN_LOADING state.
+     * The Script needs to call resume to set the state into DOWN_LOADING
+     * and to clear the ERROR or move it from SUSPEND/NEW states.
+     * If the state is either COMPLETE or DONE, we don't 
+     * need to do anything.
+     *
+     * We won't enable the timer callbacks, until the script does the 
+     * resume
+     */
+    if (autoupdt->state != BACKGROUND_DOWN_LOADING) {
+      return;
+    }
     autoupdt->timeout = FE_SetTimeout(autoupdate_TimerCallback, 
                                       (void*)autoupdt, autoupdt->interval);
-    autoupdate_loadurl(autoupdt);
+    autoupdate_LoadURL(autoupdt);
   } else {
-    autoupdate_execute(autoupdt);
+    autoupdt->state = BACKGROUND_COMPLETE;
+    autoupdate_LoadScript(autoupdt->mwcontext, autoupdt->script);
   }
 }
 
 
-void
-autoupdate_suspend()
+PR_IMPLEMENT(void)
+Autoupdate_Suspend(AutoUpdateConnnection autoupdt)
 {
+  if (autoupdt == NULL) {
+    return;
+  }
+
+  autoupdt->state = BACKGROUND_SUSPEND;
+  /* We need to stop everything right away. They way it is now, 
+   * it will stop next time around.
+   */
 }
 
-void
-autoupdate_resume()
+PR_IMPLEMENT(void)
+Autoupdate_Resume(AutoUpdateConnnection autoupdt)
 {
-  if (!NET_AreThereActiveConnections())
-      autoupdate_TimerCallback((void *)gAutoUpdateConnnection);
+  if (autoupdt == NULL) {
+    return;
+  }
+
+  autoupdt->state = BACKGROUND_DOWN_LOADING;
+  autoupdate_TimerCallback((void *)autoupdt);
 }
+
+
+PR_IMPLEMENT(void)
+Autoupdate_Done(AutoUpdateConnnection autoupdt)
+{
+  if (autoupdt == NULL) {
+    return;
+  }
+
+  autoupdate_Free(autoupdt);
+}
+
+
+PR_IMPLEMENT(void)
+Autoupdate_DownloadNow(AutoUpdateConnnection autoupdt)
+{
+  if (autoupdt == NULL) {
+    return;
+  }
+
+  autoupdt->state = BACKGROUND_DOWN_LOADING_NOW;
+  /* We should initiate a new command to donwload all bytes.
+   * May be we should directly all bytes into the file, instead of 
+   * trying to store data into a buffer.
+   *
+   * Changing the state to BACKGROUND_DOWN_LOADING_NOW, will stop
+   * the background download.
+   *
+   */
+}
+
+
+PR_IMPLEMENT(void)
+Autoupdate_Abort(AutoUpdateConnnection autoupdt)
+{
+  if (autoupdt == NULL) {
+    return;
+  }
+
+  /* XXX: We should remove the downloaded file.
+   * We should free up the memory.
+   * We should disable TimerCallbacks for this object.
+   */
+  autoupdate_Free(autoupdt);
+}
+
 
 static char*
 autoupdate_AssureDir(char* path)
@@ -282,12 +401,10 @@ autoupdate_AssureDir(char* path)
   return autoupdt_dir;
 }
 
-#ifdef	XP_MAC
-PR_PUBLIC_API(void)
-#else
-PUBLIC void
-#endif
-checkForAutoUpdate(void *cx, char* url, int32 file_size)
+
+PR_IMPLEMENT(AutoUpdateConnnection)
+AutoUpdate_Setup(MWContext* cx, char* id, char* url, int32 file_size, 
+                 char* script)
 {
   int32 bytes_range; 
   int32 interval;
@@ -304,9 +421,10 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size)
   XP_Bool enabled;
   char *autoupdt_dir;
 
+  
   PREF_GetBoolPref( "autoupdate.background_download_enabled", &enabled);
   if (!enabled)
-    return;
+    return NULL;
   
   if (PREF_OK != PREF_CopyCharPref("autoupdate.background_download_directory",
                                    &directory)) {
@@ -327,12 +445,19 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size)
     interval = 10000;
   }
 
+  /* TODO: XXX Support downloading of multiple downloads */
+  if (gAutoUpdateConnnection)
+    return gAutoUpdateConnnection;
+
   autoupdt = PR_Malloc(sizeof(AutoUpdateConnnectionStruct));
   memset(autoupdt, '\0', sizeof(AutoUpdateConnnectionStruct));
 
-  autoupdt->url = copyString(url);
+  autoupdt->id = PL_strdup(id);
+  autoupdt->url = PL_strdup(url);
   autoupdt->file_size = file_size;
   autoupdt->interval = interval;
+  autoupdt->range = bytes_range;
+  autoupdt->script = PL_strdup(script);
 
   slash = PL_strrchr(url, '/');
   if (slash != NULL) {
@@ -387,37 +512,141 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size)
   autoupdt->outFile = NULL;
 #endif
 
-  if (autoupdt->outFile == NULL) {
-    autoupdt_free(autoupdt);
-    PR_FREEIF(autoupdt);
-    return;
-  }
-
-  cur_size = autoupdt_getCurrentSize(autoupdt->outFile);
-
-  if (cur_size >= autoupdt->file_size) {
-    /* XXX: We have all the data. We need not do anything more.
-     * Should we nag him with do you want to run install 
-     * (if he didn't run it already)?
-     */
-    autoupdt_free(autoupdt);
-    PR_FREEIF(autoupdt);
-    return;
-  }
-
-  autoupdt->start_byte = cur_size;
-  autoupdt->end_byte = cur_size + bytes_range;
-  autoupdt->range = bytes_range;
   autoupdt->outputBuffer = NULL;
   autoupdt->cur_len = 0;
-  
-  autoupdt->mwcontext = (MWContext*)cx;  
-  gAutoUpdateConnnection = autoupdt;
+  autoupdt->mwcontext = cx;  
+  autoupdt->start_byte = 0;
+  autoupdt->end_byte = 0;
 
-  autoupdt->timeout = FE_SetTimeout(autoupdate_TimerCallback, 
-                                    (void*)autoupdt, autoupdt->interval);
+  if (autoupdt->outFile == NULL) {
+    autoupdt->state = BACKGROUND_ERROR;
+    autoupdt->errorMsg = "Couldn't access destination directory to save file";
+    return autoupdt;
+  }
+
+  cur_size = autoupdate_GetCurrentSize(autoupdt->outFile);
+  autoupdt->start_byte = cur_size;
+  if (autoupdt->start_byte == 0) {
+    autoupdt->state = BACKGROUND_NEW;
+    autoupdt->end_byte = cur_size + bytes_range;
+  } else if (cur_size >= autoupdt->file_size) {
+    autoupdt->end_byte = cur_size;
+    autoupdt->state = BACKGROUND_COMPLETE;
+  } else {
+    autoupdt->end_byte = cur_size + bytes_range;
+    autoupdt->state = BACKGROUND_SUSPEND;
+  }
+
+  /* TODO: XXX Push the object into the link list */
+  gAutoUpdateConnnection = autoupdt;
+  return autoupdt;
+}
+
+static void 
+autoupdate_LoadScript(MWContext* context, char* script)
+{
+  MWContext* new_context;
+  Chrome chrome;
+  URL_Struct* urls;  
+
+  /* if there is no JS to run, then exit.
+   */
+  if ((script == NULL) || (context == NULL)) {
+    return;
+  }
+  
+  XP_BZERO(&chrome, sizeof(Chrome));
+  chrome.location_is_chrome = TRUE;
+  chrome.type = MWContextDialog;
+  chrome.l_hint = -3000;
+  chrome.t_hint = -3000;
+  urls = NET_CreateURLStruct(script, NET_DONT_RELOAD);
+  if (urls == NULL) {
+    return;
+  }
+  new_context = FE_MakeNewWindow(context, NULL, NULL, &chrome);
+  if (new_context == NULL)
+    return;
+  (void)FE_GetURL(new_context, urls);
 }
 
 
+static void 
+autoupdate_InvokeJSTimerCallback(void* data)
+{
+  autoupdate_LoadScript((MWContext*)data, gMainScript);
+}
+
+PR_IMPLEMENT(void)
+AutoUpdate_LoadMainScript(MWContext * context, char* url)
+{
+  gMainScript = PL_strdup(url);
+  /* May be we should download the script */
+  FE_SetTimeout(autoupdate_InvokeJSTimerCallback, 
+                (void*)context, 3000);
+}
+
+PR_IMPLEMENT(const char*)
+AutoUpdate_GetID(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->id;
+}
 
 
+PR_IMPLEMENT(const char*)
+AutoUpdate_GetURL(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->url;
+}
+
+PR_IMPLEMENT(BackgroundState)
+AutoUpdate_GetState(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->state;
+}
+
+PR_IMPLEMENT(int32)
+AutoUpdate_GetFileSize(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->file_size;
+}
+
+PR_IMPLEMENT(int32)
+AutoUpdate_GetCurrentFileSize(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->start_byte;
+}
+
+PR_IMPLEMENT(const char*)
+AutoUpdate_GetDestFile(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->outFile;
+}
+
+PR_IMPLEMENT(int32)
+AutoUpdate_GetBytesRange(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->range;
+}
+
+PR_IMPLEMENT(uint32)
+AutoUpdate_GetInterval(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->interval;
+}
+
+PR_IMPLEMENT(const char*)
+AutoUpdate_GetErrorMessage(AutoUpdateConnnection autoupdt)
+{
+  return autoupdt->errorMsg;
+}
+
+
+PR_IMPLEMENT(AutoUpdateConnnection)
+AutoUpdate_GetPending(char* id)
+{
+  /* XXX: We should look up in a hash table and return the object.
+   * Because we have only one download going on, just return the global object
+   */
+  return gAutoUpdateConnnection;
+}

@@ -36,39 +36,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define getMem(x) PR_Calloc(1,(x))
-#define freeMem(x) PR_Free((x))
+typedef enum _backgroundState {
+    BACKGROUND_NEW, 
+    BACKGROUND_ERROR, 
+    BACKGROUND_COMPLETE, 
+    BACKGROUND_SUSPEND, 
+    BACKGROUND_DOWN_LOADING,
+    BACKGROUND_DOWN_LOADING_NOW,
+    BACKGROUND_DONE
+} BackgroundState;
 
-#ifndef copyString
-#define copyString(source) PL_strdup(source)
-#endif
-
-#ifndef stringEquals
-#define stringEquals(x, y) (strcasecomp(x, y) ==0)
-#endif
-
-
-
-#ifndef true
-#define true PR_TRUE
-#endif
-#ifndef false
-#define false PR_FALSE
-#endif
-#define null NULL
-#define nullp(x) (((void*)x) == ((void*)0))
 
 typedef struct _AutoUpdateConnnectionStruct {
+  /* The following data indicates what we are trying to transfer */
+  char*   id;
   char*   url;
   int32   file_size;
+  int32   range;
+  uint32  interval;
+  char*   script;
+
+  /* The following data indicates the current state of the transfer */
+  BackgroundState state;
+  char*   errorMsg;
   int32   start_byte;
   int32   end_byte;
-  int32   range;
   char*   outFile;
-  uint32  interval;
   void*   timeout;
   MWContext*   mwcontext;
 
+  /* The following data is used while dealing with NET_... routines */
   int32   status;
   void*   stream;
   void*   urls;
@@ -84,25 +81,63 @@ typedef AutoUpdateConnnectionStruct* AutoUpdateConnnection;
 
 PR_BEGIN_EXTERN_C
 
-unsigned int autoupdate_write_ready(NET_StreamClass *stream);
-int	 autoupdate_write(NET_StreamClass *stream, const char *str, int32 len);
-void autoupdate_abort(NET_StreamClass *stream, int status);
-void autoupdate_complete(NET_StreamClass *stream);
+PR_IMPLEMENT(NET_StreamClass *)
+Autoupdate_Converter(FO_Present_Types format_out, void *data_object, 
+                     URL_Struct *URL_s, MWContext *window_id);
 
-PUBLIC NET_StreamClass * autoupdate_Converter(FO_Present_Types format_out, 
-                                              void *data_object, 
-                                              URL_Struct *URL_s, 
-                                              MWContext *window_id);
+PR_IMPLEMENT(void)
+Autoupdate_Suspend(AutoUpdateConnnection autoupdt);
 
-void autoupdate_GetUrlExitFunc(URL_Struct *urls, int status, MWContext *cx);
-int  autoupdate_ExecuteFile( const char * cmdline );
+PR_IMPLEMENT(void)
+Autoupdate_Resume(AutoUpdateConnnection autoupdt);
 
-#ifdef	XP_MAC
-PR_PUBLIC_API(void)
-#else
-PUBLIC void
-#endif
-checkForAutoUpdate(void *cx, char* url, int32 file_size);
+PR_IMPLEMENT(void)
+Autoupdate_Done(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(void)
+Autoupdate_DownloadNow(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(void)
+Autoupdate_Abort(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(AutoUpdateConnnection)
+AutoUpdate_Setup(MWContext *cx, char* id, char* url, int32 file_size, 
+                 char* script);
+
+PR_IMPLEMENT(void)
+AutoUpdate_LoadMainScript(MWContext *cx, char* url);
+
+/* The following are the accessors for the internal data */
+PR_IMPLEMENT(const char*)
+AutoUpdate_GetID(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(const char*)
+AutoUpdate_GetURL(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(BackgroundState)
+AutoUpdate_GetState(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(int32)
+AutoUpdate_GetFileSize(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(int32)
+AutoUpdate_GetCurrentFileSize(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(const char*)
+AutoUpdate_GetDestFile(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(int32)
+AutoUpdate_GetBytesRange(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(uint32)
+AutoUpdate_GetInterval(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(const char*)
+AutoUpdate_GetErrorMessage(AutoUpdateConnnection autoupdt);
+
+PR_IMPLEMENT(AutoUpdateConnnection)
+AutoUpdate_GetPending(char* id);
+
 
 PR_END_EXTERN_C
 
