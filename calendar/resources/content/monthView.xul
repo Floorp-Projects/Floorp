@@ -79,25 +79,25 @@
 	    <vbox id="month-title-container" flex="1">
 		<hbox id="month-title-box" flex="1">
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="-2-month-title" onclick="gCalendarWindow.goToPrevious( 2 )"/>
+			<label id="m-2-month-title" onclick="gCalendarWindow.goToPrevious( 2 )"/>
 		    </vbox>
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="-1-month-title" onclick="gCalendarWindow.goToPrevious( 1 )"/>
+			<label id="m-1-month-title" onclick="gCalendarWindow.goToPrevious( 1 )"/>
 		    </vbox>
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="0-month-title" />
+			<label id="m0-month-title" />
 		    </vbox>
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="1-month-title" onclick="gCalendarWindow.goToNext( 1 )"/>
+			<label id="m1-month-title" onclick="gCalendarWindow.goToNext( 1 )"/>
 		    </vbox>
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="2-month-title" onclick="gCalendarWindow.goToNext( 2 )"/>
+			<label id="m2-month-title" onclick="gCalendarWindow.goToNext( 2 )"/>
 		    </vbox>
 	        </hbox>
 <!-- Eric modification : the year is now included in the 0-month-title by the JS file
 		<hbox id="year-title-box" flex="1">
 		    <vbox class="month-title-label-box" flex="1">
-   			<label id="0-year-title"/>
+   			<label id="m0-year-title"/>
 		    </vbox>
 		</hbox>
 -->

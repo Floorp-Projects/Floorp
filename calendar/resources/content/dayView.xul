@@ -73,24 +73,24 @@
          <vbox id="day-title-container" flex="1">
             <hbox id="day-title-box" flex="1">
                <vbox class="day-title-label-box" flex="1">
-                  <label id="-2-day-title" onclick="gCalendarWindow.goToPrevious( 2 )" value="" />
+                  <label id="d-2-day-title" onclick="gCalendarWindow.goToPrevious( 2 )" value="" />
                </vbox>
                <vbox class="day-title-label-box" flex="1">
-                  <label id="-1-day-title" onclick="gCalendarWindow.goToPrevious( 1 )" value="" />
+                  <label id="d-1-day-title" onclick="gCalendarWindow.goToPrevious( 1 )" value="" />
                </vbox>
                <vbox class="day-title-label-box" flex="1">
-                  <label id="0-day-title"  value="" />
+                  <label id="d0-day-title"  value="" />
                </vbox>
                <vbox class="day-title-label-box" flex="1">
-                  <label id="1-day-title" onclick="gCalendarWindow.goToNext( 1 )" value="" />
+                  <label id="d1-day-title" onclick="gCalendarWindow.goToNext( 1 )" value="" />
                </vbox>
                <vbox class="day-title-label-box" flex="1">
-                  <label id="2-day-title" onclick="gCalendarWindow.goToNext( 2 )" value="" />
+                  <label id="d2-day-title" onclick="gCalendarWindow.goToNext( 2 )" value="" />
                </vbox>
             </hbox>
             <hbox id="day-specific-title-box" flex="1">
                <vbox class="day-title-label-box" flex="1">
-                  <label id="0-day-specific-title" value="" />
+                  <label id="d0-day-specific-title" value="" />
                </vbox>
             </hbox>
          </vbox>

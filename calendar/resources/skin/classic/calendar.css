@@ -483,7 +483,7 @@
     margin: 0px 15px 0px 15px;
 }
 
-#2-month-title, #-2-month-title
+#m2-month-title, #m-2-month-title
 {
     font-size:1.2em;
     color: #9FBEC8;
@@ -491,14 +491,14 @@
     padding:0px;
     cursor:pointer;
 }
-#1-month-title, #-1-month-title
+#m1-month-title, #m-1-month-title
 {
     font-size:1.5em;
     color: #9FBEC8;
     cursor:pointer;
 }
 
-#0-month-title, #0-year-title
+#m0-month-title, #m0-year-title
 {
     font-size:2.0em;
     color: #3f7d91;
@@ -809,7 +809,7 @@
     margin: 0px 15px 0px 15px;
 }
 
-#2-day-title, #-2-day-title, #1-day-specific-title, #-1-day-specific-title
+#d2-day-title, #d-2-day-title, #d1-day-specific-title, #d-1-day-specific-title
 {
     font-size:1.2em;
     color: #9FBEC8;
@@ -818,20 +818,20 @@
     cursor:pointer;
 }
 
-#1-day-title, #-1-day-title
+#d1-day-title, #d-1-day-title
 {
     font-size:1.5em;
     color: #9FBEC8;
     cursor:pointer;
 }
 
-#0-day-specific-title
+#d0-day-specific-title
 {
     font-size:1.2em;
     color: #3f7d91;
 }
 
-#0-day-title
+#d0-day-title
 {
     font-size:2.0em;
     color: #3f7d91;

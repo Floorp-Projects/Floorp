@@ -532,12 +532,12 @@ DayView.prototype.refreshDisplay = function dayview_refreshDisplay( )
 
    var dateString = weekViewStringBundle.GetStringFromName( "Week" )+" "+weekNumber+ ": " + this.calendarWindow.dateFormater.getFormatedDate( this.calendarWindow.getSelectedDate() ) ;
    
-   var dayTextItemPrev2 = document.getElementById( "-2-day-title" );
-   var dayTextItemPrev1 = document.getElementById( "-1-day-title" );
-   var dayTextItem = document.getElementById( "0-day-title" );
-   var dayTextItemNext1 = document.getElementById( "1-day-title" );
-   var dayTextItemNext2 = document.getElementById( "2-day-title" );
-	var daySpecificTextItem = document.getElementById( "0-day-specific-title" );
+   var dayTextItemPrev2 = document.getElementById( "d-2-day-title" );
+   var dayTextItemPrev1 = document.getElementById( "d-1-day-title" );
+   var dayTextItem = document.getElementById( "d0-day-title" );
+   var dayTextItemNext1 = document.getElementById( "d1-day-title" );
+   var dayTextItemNext2 = document.getElementById( "d2-day-title" );
+	var daySpecificTextItem = document.getElementById( "d0-day-specific-title" );
    dayTextItemPrev2.setAttribute( "value" , dayNamePrev2 );
    dayTextItemPrev1.setAttribute( "value" , dayNamePrev1 );
    dayTextItem.setAttribute( "value" , dayName );

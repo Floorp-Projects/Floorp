@@ -453,11 +453,11 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
       titleMonthArray[i] = newMonth + i;
       titleMonthArray[i] = (titleMonthArray[i] >= 0)? titleMonthArray[i] % 12 : titleMonthArray[i] + 12;
       titleMonthArray[i] = this.calendarWindow.dateFormater.getMonthName( titleMonthArray[i] );
-      var idName = i + "-month-title";
+      var idName = "m"+ i + "-month-title";
       document.getElementById( idName ).setAttribute( "value" , titleMonthArray[i] );
    }
    
-   document.getElementById( "0-month-title" ).setAttribute( "value" , titleMonthArray[0] + " " + newYear );
+   document.getElementById( "m0-month-title" ).setAttribute( "value" , titleMonthArray[0] + " " + newYear );
    
    var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
    var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
