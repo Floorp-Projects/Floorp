@@ -1347,7 +1347,17 @@ PLHashAllocOps fontmap_HashAllocOps = {
   fontmap_AllocEntry, fontmap_FreeEntry
 };
 
-#define SHOULD_BE_SPACE_CHAR(ch)  ((ch)==0x0020 || (ch)==0x00A0 || ((ch)>=0x2000 && ((ch)<=0x200B || (ch)==0x3000)))
+// See bug 167136. Characters included in the list (see one of included
+// files for the list) is the union of the set included in
+// SHOULD_BE_SPACE macro replaced by this list and the set compiled by
+// Keith Packard to use in fonts.conf of fontconfig package.
+// Some of this may not have to be here because they're filtered out before
+// reaching here. Needs further investigation. 
+static const PRUint16 gCharsWithBlankGlyphCCMap[] = {
+#include "blank_glyph.ccmap"
+};
+
+#define SHOULD_BE_SPACE_CHAR(ch)  (CCMAP_HAS_CHAR(gCharsWithBlankGlyphCCMap,ch))
 
 enum {
   eTTPlatformIDUnicode = 0,
