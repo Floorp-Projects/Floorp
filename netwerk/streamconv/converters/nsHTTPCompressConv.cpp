@@ -63,8 +63,8 @@ nsHTTPCompressConv::AsyncConvertData (
 							nsIStreamListener *aListener, 
 							nsISupports *aCtxt)
 {
-	nsString2 from (aFromType);
-	nsString2 to   ( aToType );
+	nsString from (aFromType);
+	nsString to   ( aToType );
 
 	char * fromStr = from.ToNewCString ();
 	char *   toStr =   to.ToNewCString ();

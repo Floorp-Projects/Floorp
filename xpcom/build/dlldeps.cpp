@@ -39,7 +39,7 @@
 #include "nsIEnumerator.h"
 #include "nsEnumeratorUtils.h"
 #include "nsQuickSort.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsSupportsArray.h"
 #include "nsProxyEventPrivate.h"
 #include "xpt_xdr.h"
