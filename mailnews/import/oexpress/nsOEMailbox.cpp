@@ -400,7 +400,7 @@ PRBool CMbxScanner::CopyMbxFileBytes( PRUint32 numBytes)
 		}
 		
 		inIdx = 0;
-		// Handle the beginning line, don't duplicate an existing From seperator
+		// Handle the beginning line, don't duplicate an existing From separator
 		if (first) {
 			// check the first buffer to see if it already starts with a From line
 			// If it does, throw it away and use our own
@@ -412,14 +412,14 @@ PRBool CMbxScanner::CopyMbxFileBytes( PRUint32 numBytes)
 					inIdx++;
 				if (inIdx >= cnt) {
 					// This should not occurr - it means the message starts
-					// with a From seperator line that is longer than our
+					// with a From separator line that is longer than our
 					// file buffer!  In this bizarre case, just skip this message
 					// since it is probably bogus anyway.
 					return( PR_TRUE);
 				}
 
 			}
-			// Begin every message with a From seperator
+			// Begin every message with a From separator
 			rv = m_dstFile->Write( m_pFromLine, fromLen, &cntRead);
 			if (NS_FAILED( rv) || (cntRead != fromLen)) {
 				ReportWriteError( m_dstFile);
@@ -479,7 +479,7 @@ PRBool CMbxScanner::CopyMbxFileBytes( PRUint32 numBytes)
 
 	// I used to check for an eol before writing one but
 	// it turns out that adding a proper EOL before the next
-	// seperator never really hurts so better to be safe
+	// separator never really hurts so better to be safe
 	// and always do it.
 //	if ((last[0] != 0x0D) || (last[1] != 0x0A)) {
 		rv = m_dstFile->Write( "\x0D\x0A", 2, &cntRead);

@@ -42,7 +42,7 @@ $(JAVAXPIDLSRCS) :
 	copy $(DEPTH)\dist\idl\$(@F) .
 
 #we have to exclude some files from here
-#xpidl compiler does not suport typedefs, yet.
+#xpidl compiler does not support typedefs, yet.
 #we do not have typedefs in java
 #what is the best solution?
 #idk@eng.sun.com (04/02/2001)

@@ -376,7 +376,7 @@ void MyFinishProc( Display        *pdpy,
 {
   MyPrintFileData *mpfd = (MyPrintFileData *)client_data;
 
-  /* remove the file if not successfull */
+  /* remove the file if unsuccessful */
   if( status != XPGetDocFinished )
   {
     XPU_DEBUG_ONLY(printf("MyFinishProc: error %d\n", (int)status));

@@ -408,7 +408,7 @@ public class DebugControllerCorba implements DebugController
         catch(Exception e)
         {
             e.printStackTrace();
-            System.out.println("exeception while calling remote controler to do exec");
+            System.out.println("exeception while calling remote controller to do exec");
             return null;
         }
     }

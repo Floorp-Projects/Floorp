@@ -239,7 +239,7 @@ commandConnectLabel.setText("Commandkey");
   
 commandConnectField.setEditable(false);
   commandConnectField.setColumns(15);
-  commandConnectField.setText("yada yadaComandKey");
+  commandConnectField.setText("yada yadaCommandKey");
   gridBagConstraints2 = new java.awt.GridBagConstraints();
   gridBagConstraints2.gridx = 1;
   gridBagConstraints2.gridy = 3;

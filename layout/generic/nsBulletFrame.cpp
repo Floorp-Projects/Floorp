@@ -751,11 +751,11 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
     PRInt32 n3 = ordinal % 1000;
     if(outputSep)
 #ifdef IBMBIDI
-      buf[idx++] = HEBREW_THROSAND_SEP; // output thousand seperator
+      buf[idx++] = HEBREW_THROSAND_SEP; // output thousand separator
 #else
-      buf[--idx] = HEBREW_THROSAND_SEP; // output thousand seperator
+      buf[--idx] = HEBREW_THROSAND_SEP; // output thousand separator
 #endif // IBMBIDI
-    outputSep = ( n3 > 0); // request to output thousand seperator next time.
+    outputSep = ( n3 > 0); // request to output thousand separator next time.
 
     PRInt32 d = 0; // we need to keep track of digit got output per 3 digits,
     // so we can handle Gershayim and Gersh correctly

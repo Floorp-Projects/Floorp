@@ -3536,7 +3536,7 @@ nsXULDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsINodeInfo> ni;
-    // XXX This whole method is depricated!
+    // XXX This whole method is deprecated!
     mNodeInfoManager->GetNodeInfo(name, prefix, nameSpaceID,
                                   *getter_AddRefs(ni));
 

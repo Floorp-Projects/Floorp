@@ -245,12 +245,12 @@ public class ServerSink extends IMAP4Sink
     /**
     * Subscribed or active mailboxes that matched the search criteria
     * @param in_attribute The attributes of the mailbox
-    * @param in_delimeter The hierarchy delimeter
+    * @param in_delimiter The hierarchy delimiter
     * @param in_name The name of the mailbox
     */
-    public void lsub(StringBuffer in_attribute, StringBuffer in_delimeter, StringBuffer in_name)
+    public void lsub(StringBuffer in_attribute, StringBuffer in_delimiter, StringBuffer in_name)
     {
-        System.out.println("LSub attribute: " + in_attribute + " delimeter: " + in_delimeter + " name: " + in_name);
+        System.out.println("LSub attribute: " + in_attribute + " delimiter: " + in_delimiter + " name: " + in_name);
     }
 
     //List Response
@@ -259,12 +259,12 @@ public class ServerSink extends IMAP4Sink
     /**
     * Mailboxes that matched the search criteria
     * @param in_attribute The attributes of the mailbox
-    * @param in_delimeter The hierarchy delimeter
+    * @param in_delimiter The hierarchy delimiter
     * @param in_name The name of the mailbox
     */
-    public void list(StringBuffer in_attribute, StringBuffer in_delimeter, StringBuffer in_name)
+    public void list(StringBuffer in_attribute, StringBuffer in_delimiter, StringBuffer in_name)
     {
-        System.out.println("List attribute: " + in_attribute + " delimeter: " + in_delimeter + " name: " + in_name);
+        System.out.println("List attribute: " + in_attribute + " delimiter: " + in_delimiter + " name: " + in_name);
     }
 
     //Search Response

@@ -125,9 +125,9 @@ static void sink_fetchHeader(imap4SinkPtr_t in_pimap4Sink,
 					  const char* in_field, const char* in_value);
 static void sink_fetchUid(imap4SinkPtr_t in_pimap4Sink, int in_uid);
 static void sink_lsub(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, 
-			   const char* in_delimeter, const char* in_name);
+			   const char* in_delimiter, const char* in_name);
 static void sink_list(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, 
-			   const char* in_delimeter, const char* in_name);
+			   const char* in_delimiter, const char* in_name);
 static void sink_searchStart(imap4SinkPtr_t in_pimap4Sink);
 static void sink_search(imap4SinkPtr_t in_pimap4Sink, int in_message);
 static void sink_searchEnd(imap4SinkPtr_t in_pimap4Sink);

@@ -722,7 +722,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
       if (aFrame != mFrames.FirstChild()) {
         // Change break-before status into break-after since we have
         // already placed at least one child frame. This preserves the
-        // break-type so that it can be propogated upward.
+        // break-type so that it can be propagated upward.
         aStatus = NS_FRAME_NOT_COMPLETE |
           NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
           (aStatus & NS_INLINE_BREAK_TYPE_MASK);
@@ -730,7 +730,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
       }
       else {
         // Preserve reflow status when breaking-before our first child
-        // and propogate it upward without modification.
+        // and propagate it upward without modification.
         // Note: if we're lazily setting the frame pointer for our child 
         // frames, then we need to set it now. Don't return and leave the
         // remaining child frames in our child list with the wrong parent

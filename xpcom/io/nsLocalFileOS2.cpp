@@ -525,7 +525,7 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
         }
     }
 
-    // kill any trailing seperator
+    // kill any trailing separator
     char* temp = filePath;
     int len = strlen(temp) - 1;
     if(temp[len] == '\\')
@@ -672,7 +672,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     if (nativeFilePath == nsnull)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    // kill any trailing seperator
+    // kill any trailing separator
     char* temp = nativeFilePath;
     int len = strlen(temp) - 1;
     // Is '\' second charactor of DBCS?

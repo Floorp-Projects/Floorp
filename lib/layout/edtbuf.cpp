@@ -5596,7 +5596,7 @@ char *CEditBuffer::GetTabDelimitedTextFromSelectedCells()
                         pText = edt_AppendEndOfLine( pText);
                         iPrevCounter = iRowCounter;
                     } else {
-                        // Next cell is in same row, so add TAB delimeter
+                        // Next cell is in same row, so add TAB delimiter
                         pText = PR_sprintf_append( pText, "\t" );
                     }
 

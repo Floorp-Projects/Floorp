@@ -173,7 +173,7 @@ int ap_seek_part_start(
 		
 		if (!PL_strncasecmp(newline, "--", 2))
 		{
-			/* we meet the start seperator, copy it and it will be our boundary */
+			/* we meet the start separator, copy it and it will be our boundary */
       p_ap_decode_obj->boundary0 = nsCRT::strdup(newline+2);
 			return errDone;
 		}

@@ -156,19 +156,19 @@ void fetchUid(imap4SinkPtr_t in_pimap4Sink, int in_uid)
 
 
 /*Lsub Response*/
-void lsub(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimeter, const char* in_name)
+void lsub(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimiter, const char* in_name)
 {
 	printf("lsub attribute: %s\n", in_attribute);
-	printf("lsub delimeter: %s\n", in_delimeter);
+	printf("lsub delimiter: %s\n", in_delimiter);
 	printf("lsub name: %s\n", in_name);
 }
 
 
 /*List Response*/
-void list(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimeter, const char* in_name)
+void list(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimiter, const char* in_name)
 {
 	printf("list attribute: %s\n", in_attribute);
-	printf("list delimeter: %s\n", in_delimeter);
+	printf("list delimiter: %s\n", in_delimiter);
 	printf("list name: %s\n", in_name);
 }
 

@@ -8348,7 +8348,7 @@ mng_retcode cleanup_rowproc (mng_datap pData)
   if (pData->pRGBArow)                 /* cleanup buffer for intermediate row */
     MNG_FREE (pData, pData->pRGBArow, (pData->iDatawidth << 3))
 
-  pData->pWorkrow = 0;                 /* propogate uninitialized buffers */
+  pData->pWorkrow = 0;                 /* propagate uninitialized buffers */
   pData->pPrevrow = 0;
   pData->pRGBArow = 0;
 

@@ -39,13 +39,13 @@ public class Utilities extends Object {
     // called "VectorUtilities", must like the already-existing "HashtableUtilities".
     /**
      * Take the given string and chop it up into a series
-     * of strings on "delimeter" boundries.  This is useful
+     * of strings on "delimiter" boundries.  This is useful
      * for trying to get an array of strings out of the
      * resource file.
      */
-    static public Vector vectorFromString(String input, String delimeter) {
+    static public Vector vectorFromString(String input, String delimiter) {
 	Vector aVector = new Vector();
-	StringTokenizer aTokenizer = new StringTokenizer(input, delimeter);
+	StringTokenizer aTokenizer = new StringTokenizer(input, delimiter);
 
 	while (aTokenizer.hasMoreTokens())
 	    aVector.addElement(aTokenizer.nextToken());
@@ -54,23 +54,23 @@ public class Utilities extends Object {
     
     /**
     * Creates a String by combining the elements of aVector.
-    * after each element it will insert the String "delimeter".
-    * If no "delimeter" is desired, the "delimeter" parameter should be ""
+    * after each element it will insert the String "delimiter".
+    * If no "delimiter" is desired, the "delimiter" parameter should be ""
     */
-    static public String stringFromVector(Vector aVector, String delimeter) {
+    static public String stringFromVector(Vector aVector, String delimiter) {
 	String returnString = null;
 
 	if (aVector != null) {
 	    Enumeration vectorEnumerator = aVector.elements();
 	    
-	    if (delimeter == null) {
-		delimeter = ""; // Might as well be nice to sloppy caller!
+	    if (delimiter == null) {
+		delimiter = ""; // Might as well be nice to sloppy caller!
 	    }
 	    while (vectorEnumerator.hasMoreElements()) {
 		if (returnString == null) {
 		    returnString = "";
 		} else {
-		    returnString += delimeter;
+		    returnString += delimiter;
 		}
 		returnString += vectorEnumerator.nextElement();
 	    }

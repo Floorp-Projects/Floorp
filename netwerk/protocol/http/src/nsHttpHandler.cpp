@@ -1523,7 +1523,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
     char *p, *p2, *token, *q_Accept, *o_Accept;
     const char *acceptable, *comma;
     PRBool add_utf = PR_FALSE;
-    PRBool add_asterick = PR_FALSE;
+    PRBool add_asterisk = PR_FALSE;
 
     if (!i_AcceptCharset)
         acceptable = "";
@@ -1546,7 +1546,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
     }
     if (PL_strstr(acceptable, "*") == NULL) {
         n++;
-        add_asterick = PR_TRUE;
+        add_asterisk = PR_TRUE;
     }
 
     available = size + ++n * 11 + 1;
@@ -1590,7 +1590,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
         available -= wrote;
         NS_ASSERTION(available > 0, "allocated string not long enough");
     }
-    if (add_asterick) {
+    if (add_asterisk) {
         comma = n++ != 0 ? ", " : ""; // delimiter if not first item
 
         // keep q of "*" equal to the lowest q value

@@ -476,13 +476,13 @@ public:
     }
 
 
-    static void PrintTargets(const char *pMacroName, const char *pDelimeter){
+    static void PrintTargets(const char *pMacroName, const char *pDelimiter){
         CFileRecord *pRec;
         BOOL bFound;
         POSITION next;
         CString name;
 
-        BOOL bNeedDelimeter = FALSE;
+        BOOL bNeedDelimiter = FALSE;
 		fprintf(pAltFile, "%s = ", pMacroName);        
 
 		// use orderedFileNames to preserve target order
@@ -499,13 +499,13 @@ public:
 
                 _splitpath( csOutput, NULL, NULL, fname, NULL );
 
-                if(bNeedDelimeter)  {
-                    fprintf(pAltFile, "%s\n", pDelimeter);
-                    bNeedDelimeter = FALSE;
+                if(bNeedDelimiter)  {
+                    fprintf(pAltFile, "%s\n", pDelimiter);
+                    bNeedDelimiter = FALSE;
                 }
 
 				fprintf(pAltFile, "     $(OUTDIR)\\%s.obj   ", fname );
-                bNeedDelimeter = TRUE;
+                bNeedDelimiter = TRUE;
             }
         }
 		fprintf(pAltFile, "\n\n\n");        

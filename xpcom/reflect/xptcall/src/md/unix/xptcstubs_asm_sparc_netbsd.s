@@ -54,7 +54,7 @@ SharedStub:
         mov     %i2, %o2
         call    PrepareAndDispatch
         nop
-        mov     %o0,%i0             ! propogate return value
+        mov     %o0,%i0             ! propagate return value
         b .LL1
         nop
 .LL1:

@@ -28,7 +28,7 @@ static void _InsertMenuItem(HMENU hmenu, int nPos, int nID, const TCHAR *szItemT
 	InsertMenuItem(hmenu, nPos, TRUE, &mii);
 }
 
-static void _InsertMenuSeperator(HMENU hmenu, int nPos)
+static void _InsertMenuSeparator(HMENU hmenu, int nPos)
 {
 	MENUITEMINFO mii;
 	memset(&mii, 0, sizeof(mii));
@@ -49,7 +49,7 @@ HRESULT STDMETHODCALLTYPE CBrowserCtlSite::ShowContextMenu(/* [in] */ DWORD dwID
 		tstring szMenuText(_T("Unknown context"));
 		HMENU hmenu = CreatePopupMenu();
 		_InsertMenuItem(hmenu, 0, 1, _T("CBrowse context popup"));
-		_InsertMenuSeperator(hmenu, 1);
+		_InsertMenuSeparator(hmenu, 1);
 		switch (dwID)
 		{
 		case CONTEXT_MENU_DEFAULT:

@@ -73,7 +73,7 @@ public class LDAPFilter implements Cloneable {
     private boolean m_bIsExact;
 
     private String m_strMatchPattern;       // token 1 from filter configuration file
-    private String m_strDelimeter;      // token 2 from filter configuration file
+    private String m_strDelimiter;      // token 2 from filter configuration file
     private String m_strFilterTemplate;     // token 3 from filter configuration file
 
     private int m_nLine;
@@ -102,13 +102,13 @@ public class LDAPFilter implements Cloneable {
      * <CODE>illegalArgumentException</CODE>.
      */
     public LDAPFilter ( String strMatchPattern,
-            String strDelimeter,
+            String strDelimiter,
             String strFilterTemplate,
             String strDescription,
                 int nScope ) throws IllegalArgumentException{
 
         m_strMatchPattern = convertMatchPattern ( strMatchPattern );
-        m_strDelimeter = strDelimeter;
+        m_strDelimiter = strDelimiter;
         m_strFilterTemplate = strFilterTemplate;
         m_strDescription = strDescription;
         m_nScope = nScope;
@@ -137,7 +137,7 @@ public class LDAPFilter implements Cloneable {
      * <CODE>illegalArgumentException</CODE>.
      */
     public LDAPFilter ( String strMatchPattern,
-            String strDelimeter,
+            String strDelimiter,
             String strFilterTemplate,
             String strDescription,
                 String strScope )
@@ -153,7 +153,7 @@ public class LDAPFilter implements Cloneable {
         }
 
         m_strMatchPattern = strMatchPattern;
-        m_strDelimeter = strDelimeter;
+        m_strDelimiter = strDelimiter;
         m_strFilterTemplate = strFilterTemplate;
         m_strDescription = strDescription;
     }
@@ -184,7 +184,7 @@ public class LDAPFilter implements Cloneable {
     public String toString() {
         StringBuffer strBuf = new StringBuffer ( 300 );
         strBuf.append ( "      matchPtn: \"" + m_strMatchPattern+"\"\n" );
-        strBuf.append ( "      delim:    \"" + m_strDelimeter+"\"\n" );
+        strBuf.append ( "      delim:    \"" + m_strDelimiter+"\"\n" );
         strBuf.append ( "      filttmpl: \"" + m_strFilterTemplate+"\"\n" );
         strBuf.append ( "      descript: \"" + m_strDescription+"\"\n" );
         switch ( m_nScope ) {
@@ -268,7 +268,7 @@ public class LDAPFilter implements Cloneable {
     void createFilterString ( String strValue, String strPrefix,
                  String strSuffix ) {
         StringTokenizer strTok =
-            new StringTokenizer ( strValue, m_strDelimeter );
+            new StringTokenizer ( strValue, m_strDelimiter );
 
         // Initialize an array of broken up values so that we
         // can reference  them directly.
@@ -470,12 +470,12 @@ public class LDAPFilter implements Cloneable {
     }
 
     /**
-     * Return this filter's delimeter.  The delmimeter is
+     * Return this filter's delimiter.  The delmimeter is
      * found as the second token in a filter configuration line in the
      * ldapfilter.conf file.
      */
-    public String getDelimeter() {
-        return m_strDelimeter;
+    public String getDelimiter() {
+        return m_strDelimiter;
     }
 
     /**

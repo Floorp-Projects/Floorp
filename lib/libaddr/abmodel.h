@@ -1364,7 +1364,7 @@ private: // copying is not allowed
 typedef enum ab_File_eFormat { /* duplicate of AB_File_eFormat type */
 	ab_File_kUnknownFormat = 0x3F3F3F3F,       /* '????' */
 	ab_File_kLdifFormat = 0x6C646966,    /* 'ldif' */
-	ab_File_kHtmlFormat = 0x68746D6C,    /* 'hmtl' */
+	ab_File_kHtmlFormat = 0x68746D6C,    /* 'html' */
 	ab_File_kXmlFormat = 0x61786D6C,     /* 'axml' */
 	ab_File_kVCardFormat = 0x76637264,   /* 'vcrd' */
 	ab_File_kBinaryFormat = 0x626E7279,  /* 'bnry' */

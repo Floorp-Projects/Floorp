@@ -40,7 +40,7 @@ Rights Reserved.
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         title="&messengerWindow.title;"
         titlemodifier="&titleModifier.label;"
-        titlemenuseparator="&titleSeperator.label;"
+        titlemenuseparator="&titleSeparator.label;"
         onload="OnLoadMessageWindow()"
         onunload="OnUnloadMessageWindow()"
         width="750"

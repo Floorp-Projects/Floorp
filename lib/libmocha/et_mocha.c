@@ -2059,7 +2059,7 @@ et_streamcomplete_destructor(StreamEvent * e)
 }
 
 /*
- * A mocha stream from netlib has compeleted, eveluate the contents
+ * A mocha stream from netlib has compeleted, evaluate the contents
  *   and pass them up our stream.  We will take ownership of the 
  *   buf argument and are responsible for freeing it
  */

@@ -47,7 +47,7 @@
 // I (mscott) am placing it here for now....
 //-----------------------------------------------------------------------------
 
-/* CBoolExpresion --> encapsulates one or more search terms by internally
+/* CBoolExpression --> encapsulates one or more search terms by internally
    representing the search terms and their boolean operators as a binary
    expression tree. Each node in the tree consists of either
      (1) a boolean operator and two nsMsgSearchBoolExpressions or 

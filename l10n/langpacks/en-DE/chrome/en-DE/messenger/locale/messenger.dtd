@@ -20,7 +20,7 @@ Rights Reserved.
 
 <!ENTITY messengerWindow.title "Mail">
 <!ENTITY titleModifier.label "Mozilla">
-<!ENTITY titleSeperator.label " - ">
+<!ENTITY titleSeparator.label " - ">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 

@@ -4,6 +4,6 @@
 <!ENTITY mainWindow.title "Mozilla"> 
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
-<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseperator) : DONT_TRANSLATE -->
-<!ENTITY mainWindow.titlemodifierseperator " - ">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseparator) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifierseparator " - ">
 <!ENTITY mainWindow.preface "Source of: ">

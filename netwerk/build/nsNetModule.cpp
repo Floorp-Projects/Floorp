@@ -683,7 +683,7 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       nsURICheckerConstructor
     },
 
-    // The register functions for the build in 
+    // The register functions for the built-in 
     // parsers just need to be called once.
     { NS_STDURLPARSER_CLASSNAME,
       NS_STDURLPARSER_CID,
@@ -720,9 +720,9 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
 
     // from netwerk/streamconv:
 
-    // this converter is "always" part of a build.
+    // this converter is "always" built.
     // HACK-ALERT, register *all* converters
-    // in this converters component manager 
+    // in this converter's component manager 
     // registration. just piggy backing here until
     // you can add registration functions to
     // the generic module macro.

@@ -38,7 +38,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   titlemodifier="&mainWindow.titlemodifier;" 
   titlepreface="&mainWindow.preface;"
-  titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
+  titlemenuseparator ="&mainWindow.titlemodifierseparator;"  
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
   width="400" height="450"

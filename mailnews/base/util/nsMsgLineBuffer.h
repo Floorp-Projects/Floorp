@@ -103,7 +103,7 @@ class NS_MSG_BASE nsMsgLineStreamBuffer
 {
 public:
 	// aBufferSize -- size of the buffer you want us to use for buffering stream data
-	// aEndOfLinetoken -- The delimeter string to be used for determining the end of line. This 
+	// aEndOfLinetoken -- The delimiter string to be used for determining the end of line. This 
 	//				      allows us to parse platform specific end of line endings by making it
 	//					  a parameter.
 	// aAllocateNewLines -- PR_TRUE if you want calls to ReadNextLine to allocate new memory for the line. 
@@ -115,7 +115,7 @@ public:
 	virtual ~nsMsgLineStreamBuffer();
 
 	// Caller must free the line returned using PR_Free
-	// aEndOfLinetoken -- delimeter used to denote the end of a line.
+	// aEndOfLinetoken -- delimiter used to denote the end of a line.
 	// aNumBytesInLine -- The number of bytes in the line returned
 	// aPauseForMoreData -- There is not enough data in the stream to make a line at this time...
 	char * ReadNextLine(nsIInputStream * aInputStream, PRUint32 &anumBytesInLine, PRBool &aPauseForMoreData);

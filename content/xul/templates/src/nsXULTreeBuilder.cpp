@@ -674,7 +674,7 @@ nsXULOutlinerBuilder::SetOutliner(nsIOutlinerBoxObject* outliner)
 
             // since we are trusted, use the user specified datasource
             // if non specified, use localstore, which gives us
-            // persistance across sessions
+            // persistence across sessions
             if (datasourceStr.Length()) {
                 gRDFService->GetDataSource(NS_ConvertUCS2toUTF8(datasourceStr).get(),
                                            getter_AddRefs(mPersistStateStore));
@@ -696,7 +696,7 @@ nsXULOutlinerBuilder::SetOutliner(nsIOutlinerBoxObject* outliner)
                 do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource");
         }
 
-        NS_ASSERTION(mPersistStateStore, "failed to get a persistant state store");
+        NS_ASSERTION(mPersistStateStore, "failed to get a persistent state store");
         if (! mPersistStateStore)
             return NS_ERROR_FAILURE;
 
@@ -1318,7 +1318,7 @@ nsXULOutlinerBuilder::CompileOutlinerRowCondition(nsTemplateRule* aRule,
     // Right now, exactly one <row> condition is required per rule. It
     // creates an nsOutlinerRowTestNode, binding the test's variable
     // to the global row variable that's used during match
-    // propogation. The ``uri'' attribute must be set.
+    // propagation. The ``uri'' attribute must be set.
 
     nsAutoString uri;
     aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::uri, uri);

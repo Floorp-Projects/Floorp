@@ -4,8 +4,8 @@ Test name: PlugletPeer_newStream
 
 Synopsis: newStream method of class PlugletPeer 
 
-Pre-Conditions: Build mozilla, setup enviroment as for running mozilla
-and see api tests README for setup enviroment for run tests. 
+Pre-Conditions: Build mozilla, setup environment as for running mozilla
+and see api tests README for setup environment for run tests. 
 
 Description: This test call the newStream method of the PlugletPeer object 
 at runstages, specified at TestProperties file. With parameters,

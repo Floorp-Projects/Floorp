@@ -7,8 +7,8 @@ Synopsis: getURL method of class PlugletManager
 Goals: this test case test possible URL types.
 <ftp_root_dir>, <html_root> and  <html_root_dir> should be specified.
 
-Pre-Conditions: Build mozilla, setup enviroment as for running mozilla
-and see api tests README for setup enviroment for run tests. 
+Pre-Conditions: Build mozilla, setup environment as for running mozilla
+and see api tests README for setup environment for run tests. 
 
 Description: This test call the getURL method of the PlugletManager object 
 at runstages, specified at TestProperties file. With parameters,

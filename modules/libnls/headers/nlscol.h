@@ -91,7 +91,7 @@ enum _NLS_CollationStrength {
       used to access the data.
     */
 #ifndef NLS_CPLUSPLUS
-typedef struct _Collator Collator;          /* depricated names */
+typedef struct _Collator Collator;          /* deprecated names */
 typedef struct _CollationKey CollationKey;
 typedef struct _Collation Collation;
 typedef struct _SortKey SortKey;

@@ -2237,7 +2237,7 @@ static BOOL createPhoneBookEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& l
 	// Negotiate TCP/IP
 	rasEntry.dwfNetProtocols = RASNP_Ip;
 
-	// Point-to-Point protocal (PPP)
+	// Point-to-Point protocol (PPP)
 	rasEntry.dwFramingProtocol = RASFP_Ppp;
 
 	// modem's information

@@ -71,7 +71,7 @@ function InputSepCharacter()
   if (str.length > 1)
     str = str.slice(0,1);
 
-  // We can never allow tag or entity delimeters for separator character
+  // We can never allow tag or entity delimiters for separator character
   if (str == "<" || str == ">" || str == "&" || str == ";" || str == " ")
     str = "";
 

@@ -1412,7 +1412,7 @@ AB_API int AB_CopyDefaultAttributeValue(AB_AttribID attrib, AB_AttributeValue * 
 }
 
 /* caller must free array of values returned */
-/* This function is used to generate a set of atributes which can be committed into the database for a naked address */
+/* This function is used to generate a set of attributes which can be committed into the database for a naked address */
 AB_API int AB_CreateAttributeValuesForNakedAddress(char * nakedAddress, AB_AttributeValue ** valueArray, uint16 * numItems)
 {
 	uint16 numAttributes = 4; // right now we store: entryType, full name, display name, email address

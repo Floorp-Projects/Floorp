@@ -1715,7 +1715,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 					msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
 					msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
 
-#if DOING_MDN	// leave it to the user aciton
+#if DOING_MDN	// leave it to the user action
 					if (actionType == nsMsgFilterActionDelete)
 					{
 						MSG_ProcessMdnNeededState processMdnNeeded

@@ -191,7 +191,7 @@ public:
 /*END EditorObserver*/
 
   /** nsIDOMFocusListener interfaces 
-    * used to propogate focus, blur, and change notifications
+    * used to propagate focus, blur, and change notifications
     * @see nsIDOMFocusListener
     */
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
@@ -3219,7 +3219,7 @@ nsGfxTextControlFrame2::SubmitAttempt()
   }
 }
 
-// this is where we propogate a content changed event
+// this is where we propagate a content changed event
 NS_IMETHODIMP
 nsGfxTextControlFrame2::InternalContentChanged()
 {
@@ -3239,7 +3239,7 @@ nsGfxTextControlFrame2::InternalContentChanged()
   event.message = NS_FORM_INPUT;
   event.flags = NS_EVENT_FLAG_INIT;
 
-  // Have the content handle the event, propogating it according to normal DOM rules.
+  // Have the content handle the event, propagating it according to normal DOM rules.
   nsWeakPtr &shell = mTextSelImpl->GetPresShell();
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
   if (!presShell) 

@@ -58,7 +58,7 @@ public:
 
     ~nsInstantiationNode();
 
-    // "downward" propogations
+    // "downward" propagations
     virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
 
 protected:

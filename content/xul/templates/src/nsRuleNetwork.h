@@ -991,10 +991,10 @@ protected:
 class RootNode : public InnerNode
 {
 public:
-    // "downward" propogations
+    // "downward" propagations
     virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
 
-    // "upward" propogations
+    // "upward" propagations
     virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
@@ -1020,10 +1020,10 @@ public:
              PRInt32 aRightVariable,
              Operator aOperator);
 
-    // "downward" propogations
+    // "downward" propagations
     virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
 
-    // "upward" propogations
+    // "upward" propagations
     virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;

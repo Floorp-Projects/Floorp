@@ -706,7 +706,7 @@ RelatedLinksHandlerImpl::SetURL(const char* aURL)
 	if (! mRelatedLinksURL)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	// Flush the old links. This'll force notifications to propogate, too.
+	// Flush the old links. This'll force notifications to propagate, too.
 	nsCOMPtr<nsIRDFPurgeableDataSource> purgeable = do_QueryInterface(mInner);
 	NS_ASSERTION(purgeable, "uh oh, this datasource isn't purgeable!");
 	if (! purgeable)

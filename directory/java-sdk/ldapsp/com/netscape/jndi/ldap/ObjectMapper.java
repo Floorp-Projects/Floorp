@@ -43,7 +43,7 @@ public class ObjectMapper {
     static final String OC_SERIALOBJ  = "javaSerializedObject";//aux oc
     static final String OC_MARSHALOBJ = "javaMarshalledObject";//aux oc   
     static final String OC_REFERENCE  = "javaNamingReference"; //aux oc
-    //static final String OC_REMOTEOBJ  = "javaRemoteObject";    //aux oc, depricated
+    //static final String OC_REMOTEOBJ  = "javaRemoteObject";    //aux oc, deprecated
     static final String OC_CONTAINER  = "javaContainer";  //structural oc
 
     /**
@@ -57,7 +57,7 @@ public class ObjectMapper {
     static final String AT_SERIALDATA  = "javaSerializedData";   //required
     static final String AT_REFADDR     = "javaReferenceAddress"; //optional
     static final String AT_OBJFACTORY  = "javaFactory";          //optional 
-    //static final String AT_REMOTELOC   = "javaRemoteLocation";   //required, depricated
+    //static final String AT_REMOTELOC   = "javaRemoteLocation";   //required, deprecated
     
     //Default Object class for NameClassPair
     static final String DEFAULT_OBJCLASS = "javax.naming.directory.DirContext";

@@ -93,8 +93,8 @@
 
 #define PRS_MAX_RESOURCE_NAME_LENGTH	132
 
-#define PRS_RESOURCE_DELIMETER			UnicodeString("=")
-#define PRS_RESOURCE_DELIMETER_CHAR		'='
+#define PRS_RESOURCE_DELIMITER			UnicodeString("=")
+#define PRS_RESOURCE_DELIMITER_CHAR		'='
 #define PRS_ID_UNKNOWN					0x0000
 #define PRS_ID_STRING					0x0101			// Any text not within a tag. Delimeted by tags on either side. 
 #define PRS_ID_TAG			       		0x0102			// An HTML Tag. Delimited by < >.
@@ -116,7 +116,7 @@ typedef PRS_ErrorPair *PRS_ErrorCode;
 #define isNewline(x) (((x) == 13) || ((x) == 10))
 #define isTagStart(x) ((x) == '<')
 #define isTagEnd(x) ((x) == '>')
-#define isResourceDelimeter(x) ((x) == PRS_RESOURCE_DELIMETER_CHAR)
+#define isResourceDelimiter(x) ((x) == PRS_RESOURCE_DELIMITER_CHAR)
 
 extern PRS_ErrorCode PRS_SUCCESS;
 extern PRS_ErrorCode PRS_RESERVED;

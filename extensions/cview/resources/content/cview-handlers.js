@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Robert Ginda, rginda@nestcape.com, original author
+ *   Robert Ginda, rginda@netscape.com, original author
  */
 
 /*

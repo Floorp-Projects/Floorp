@@ -1826,7 +1826,7 @@ public:
     ED_TextFormat PrintFormatClose( CPrintState *ps );
 
     XP_Bool SameAttributes(CEditTextElement *pCompare);
-    // Stronger than SameAtributes - must match all text styles
+    // Stronger than SameAttributes - must match all text styles
     XP_Bool SameFormat(CEditTextElement *pCompare);
     void ComputeDifference(CEditTextElement *pFirst,
         ED_TextFormat mask, ED_TextFormat& bitsCommon, ED_TextFormat& bitsDifferent);
@@ -4027,7 +4027,7 @@ public:
     XP_Bool FindNextMisspelledWord( XP_Bool bFirst, XP_Bool bSelect,
             CEditLeafElement **ppWordStart );
 
-    // Iterate over mispelled words, replace or ignore them.
+    // Iterate over misspelled words, replace or ignore them.
     enum EMSW_FUNC { EMSW_IGNORE, EMSW_REPLACE };
     void IterateMisspelledWords( EMSW_FUNC eFunc, char* pOldWord, char* 
             pNewWord, XP_Bool bAll );

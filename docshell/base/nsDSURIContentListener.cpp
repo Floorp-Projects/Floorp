@@ -172,7 +172,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
                                        getter_Copies(value));
 
         // If the category manager can't find what we're looking for
-        // it returns NS_ERROR_NOT_AVAILABLE, we don't wanto propagate
+        // it returns NS_ERROR_NOT_AVAILABLE, we don't want to propagate
         // that to the caller since it's really not a failure
 
         if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)

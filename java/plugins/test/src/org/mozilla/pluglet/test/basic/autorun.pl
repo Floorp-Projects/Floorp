@@ -388,7 +388,7 @@ sub runTestCaseUx {
 	die "Can't fork: $!";
     } elsif ($pid == 0) { #Child process
 	$pluglet = getTestParam($testcase, "PLUGLET");
-	if ($pluglet) { #prepare enviroment
+	if ($pluglet) { #prepare environment
 	    $saved_classpath = $ENV{"CLASSPATH"};
 	    $ENV{"CLASSPATH"} = $ENV{"CLASSPATH"}.$path_separator.$pluglet;
 	    $pluglet =~ s/$file_separator[^$file_separator]*$//;

@@ -52,7 +52,7 @@ BCTestLoaderImpl::BCTestLoaderImpl()
     printf("DEbug:avm:BCTestLoaderImpl::BCTestLoaderImpl()\n");
     testLocation = getenv(BC_TEST_LOCATION_VAR_NAME);
     if(!testLocation) {
-        fprintf(stderr, "ERROR: %s enviroment variable isn't set !\n",BC_TEST_LOCATION_VAR_NAME);
+        fprintf(stderr, "ERROR: %s environment variable isn't set !\n",BC_TEST_LOCATION_VAR_NAME);
         return;
     }
     char** testCase = LoadTestList();

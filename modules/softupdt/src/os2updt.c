@@ -1614,7 +1614,7 @@ VOID BuildAssignment(
 /* º        'COMMAND='value                                               º */
 /* º      where value is whatever currently trails the '=' (including     º */
 /* º      white space).  SET statements are formatted as                  º */
-/* º         'SET 'enviroment variable'='value                            º */
+/* º         'SET 'environment variable'='value                            º */
 /* º      where environment variable is whatever is currently between     º */
 /* º      the first non-white space after 'SET ' and '=' (including       º */
 /* º      white space).                                                   º */

@@ -32,7 +32,7 @@ import com.netscape.jndi.ldap.common.*;
 
 /**
  * Event Service monitors changes on the server
- * Implemented with the persistant search control. Uses ldapjdk asynchronous
+ * Implemented with the persistent search control. Uses ldapjdk asynchronous
  * interfaces so that multiple search requests can be processed by a single
  * thread
  *
@@ -151,7 +151,7 @@ class EventService implements Runnable{
             if (ee.removeListener(listener)) {
                 removed = true;
 
-                // If no listeners left abandon persistant search and
+                // If no listeners left abandon persistent search and
                 // delete entry
                 if (ee.isEmpty()) {
                     abandonRequest(ee.id);
@@ -537,7 +537,7 @@ class EventService implements Runnable{
                 }
             }    
 
-            // Check if persistant search is for the same change type
+            // Check if persistent search is for the same change type
             LDAPPersistSearchControl
                 psearch1 = (LDAPPersistSearchControl)this.cons.getServerControls()[0],
                 psearch2 = (LDAPPersistSearchControl)cons.getServerControls()[0];

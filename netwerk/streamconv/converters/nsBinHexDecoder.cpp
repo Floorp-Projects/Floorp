@@ -220,7 +220,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
         // be sure to skip the first byte of mName which is the size of the file name
         
         SetContentType(aRequest, &mName[1]);
-        // now propogate the on start request
+        // now propagate the on start request
         mNextListener->OnStartRequest(aRequest, aContext);
 
 				mState = BINHEX_STATE_HEADER;
@@ -261,7 +261,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
           if (numBytesWritten != mPosOutputBuff) 
             status = NS_ERROR_FAILURE;
 
-          // now propogate the data we just wrote
+          // now propagate the data we just wrote
           mNextListener->OnDataAvailable(aRequest, aContext, mInputStream, 0, numBytesWritten);
 				}
 				else
@@ -499,7 +499,7 @@ nsBinHexDecoder::OnStartRequest(nsIRequest* request, nsISupports *aCtxt)
                   NS_STREAM_CONVERTER_BUFFER_SIZE,
                   PR_TRUE, PR_TRUE);
 
-  // don't propogate the on start request to mNextListener until we have determined the content type.
+  // don't propagate the on start request to mNextListener until we have determined the content type.
   return rv;
 }
 

@@ -2557,7 +2557,7 @@ AB_Thumb_ExportProgress(AB_Thumb* self, AB_Env* ev, ab_row_count* outTotalRows);
 typedef enum AB_File_eFormat {
 	AB_File_kUnknownFormat = 0x3F3F3F3F,   /* '????' */
 	AB_File_kLdifFormat = 0x6C646966,      /* 'ldif' */
-	AB_File_kHtmlFormat = 0x68746D6C,      /* 'hmtl' */
+	AB_File_kHtmlFormat = 0x68746D6C,      /* 'html' */
 	AB_File_kXmlFormat = 0x61786D6C,       /* 'axml' */
 	AB_File_kVCardFormat = 0x76637264,     /* 'vcrd' */
 	AB_File_kBinaryFormat = 0x626E7279,    /* 'bnry' */

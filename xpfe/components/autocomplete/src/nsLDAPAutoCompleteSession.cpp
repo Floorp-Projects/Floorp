@@ -151,7 +151,7 @@ nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString,
         if ( prevSearchStr.get() && prevSearchStr.get()[0]) {
 
             PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
-                   ("nsLDAPAutoCompleteSesion::OnStartLookup(): starting "
+                   ("nsLDAPAutoCompleteSession::OnStartLookup(): starting "
                     "narrowing search\n"));
 
             // XXXdmose for performance, we should really do a local, 

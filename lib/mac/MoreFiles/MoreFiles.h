@@ -48,7 +48,7 @@ pascal	OSErr	HGetVolParms(ConstStr255Param volName,
 	vRefNum			input:	Volume specification.
 	volParmsInfo	input:	Pointer to GetVolParmsInfoBuffer where the
 							volume attributes information is returned.
-					output:	Atributes information.
+					output:	Attributes information.
 	infoSize		input:	Size of buffer pointed to by volParmsInfo.
 					output: Size of data actually returned.
 	

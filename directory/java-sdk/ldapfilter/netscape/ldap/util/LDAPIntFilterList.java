@@ -65,7 +65,7 @@ public class LDAPIntFilterList {
     /**
      * Add a "relative" filter to an existing filter list.  We do this
      * becuse the ldapfilter file defines that we can have multiple
-     * filters per match pattern (and delimeter).  This method is
+     * filters per match pattern (and delimiter).  This method is
      * called by the parent LDAPIntFilterSet because the file specified
      * a "relative" filter (a filter in the ldapfilter.conf file that
      * only has 2 or 3 tokens).

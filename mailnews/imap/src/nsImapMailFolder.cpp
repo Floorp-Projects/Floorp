@@ -2807,7 +2807,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
             !isRead)
           {
 
-#if DOING_MDN // leave it to the user aciton
+#if DOING_MDN // leave it to the user action
             struct message_header to;
             struct message_header cc;
             GetAggregateHeader (m_toList, &to);

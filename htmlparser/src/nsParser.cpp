@@ -1416,7 +1416,7 @@ CParserContext* nsParser::PopContext() {
   CParserContext* oldContext=mParserContext;
   if(oldContext) {
     mParserContext=oldContext->mPrevContext;
-    // If the old context was blocked, propogate the blocked state
+    // If the old context was blocked, propagate the blocked state
     // back to the new one. Also, propagate the stream listener state
     // but don't override onStop state to guarantee the call to DidBuildModel().
     if (mParserContext) {

@@ -75,10 +75,10 @@ typedef struct imap4Sink
     void (*fetchUid)(imap4SinkPtr_t in_pimap4Sink, int in_uid);
 
     /*Lsub Response*/
-    void (*lsub)(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimeter, const char* in_name);
+    void (*lsub)(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimiter, const char* in_name);
 
     /*List Response*/
-    void (*list)(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimeter, const char* in_name);
+    void (*list)(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimiter, const char* in_name);
 
     /*Search Response*/
 	void (*searchStart)(imap4SinkPtr_t in_pimap4Sink);

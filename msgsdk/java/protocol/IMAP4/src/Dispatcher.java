@@ -1927,7 +1927,7 @@ class Dispatcher
     * Extracts the mailbox info
     * @param in_data The data to parse
     * @param out_buffer1 Storage for the attributes
-    * @param out_buffer2 Storage for the delimeter
+    * @param out_buffer2 Storage for the delimiter
     * @param out_buffer3 Storage for the name
     */
     public void extractMailboxInfo(  StringBuffer in_data, StringBuffer out_buffer1,
@@ -1962,7 +1962,7 @@ class Dispatcher
         l_end++;
         l_begin = l_end;
 
-        //Extract the delimeter
+        //Extract the delimiter
         l_end = indexOf(in_data, '"', l_begin);
         if(l_end == -1)
         {

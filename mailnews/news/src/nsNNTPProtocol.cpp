@@ -3313,7 +3313,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 		}
     }
     
-	 /* find whitespace seperator if it exits */
+	 /* find whitespace separator if it exits */
     for(i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
         ;  /* null body */
 
@@ -4655,7 +4655,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 		if (line[0] != '.')
 		{
 			int i;
-			/* find whitespace seperator if it exits */
+			/* find whitespace separator if it exits */
 			for (i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
 				;  /* null body */
 

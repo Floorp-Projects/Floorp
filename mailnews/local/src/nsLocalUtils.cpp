@@ -230,7 +230,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     while ((*curPos)=='/') curPos++;
     while (*curPos && (*curPos)!='/') curPos++;
 
-    // get the seperator
+    // get the separator
     nsAutoString sbdSep;
     rv = nsGetMailFolderSeparator(sbdSep);
     

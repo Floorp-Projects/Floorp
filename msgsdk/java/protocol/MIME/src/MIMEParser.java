@@ -2233,7 +2233,7 @@ private byte[] getBytecontType (int nMessageType, int basicPartcontType)
 
 
     /**
-    * Set current mesage
+    * Set current message
     *
     * @author Carson Lee
     * @version %I%, %G%

@@ -148,7 +148,7 @@ class nsEditorShell :   public nsIEditorShell,
     nsresult        TransferDocumentStateListeners();
     nsresult        RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     nsresult        DoFind(PRBool aFindNext);
-    // To allow executing JavaScript commands from C++ via nsIEditorControler interface
+    // To allow executing JavaScript commands from C++ via nsIEditorController interface
     nsresult        DoControllerCommand(const nsAReadableString& aCommand);
 
     void            Alert(const nsString& aTitle, const nsString& aMsg);

@@ -470,7 +470,7 @@ static void myPLstrncpy(Str255 dst, const char* src, int inMax)
 
 // Aaargh!!!!  Gotta roll my own equivalents of PR_OpenDir, PR_ReadDir and PR_CloseDir
 // I can't use the NSPR versions as they expect a unix path and I can't easily adapt
-// the directory iterator fucntion from MoreFIles as it wants to iterate things itself
+// the directory iterator function from MoreFIles as it wants to iterate things itself
 // and use a callback function to operate on the iterated entries
 
 typedef struct
@@ -1429,7 +1429,7 @@ nsLocalFile::AppendRelativePath(const char *node)
 
 	// Yee Hah!	 We only get a single node at a time so just append it
 	// to either the mWorkingPath or mAppendedPath, after adding the ':'
-	// directory delimeter, depending on how we were initialized
+	// directory delimiter, depending on how we were initialized
 	switch (mInitType)
 	{
 		case eInitWithPath:
@@ -1468,7 +1468,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 
 			const char* leaf = strrchr(temp, ':');
 			
-			// if the working path is just a node without any directory delimeters.
+			// if the working path is just a node without any directory delimiters.
 			if (leaf == nsnull)
 				leaf = temp;
 			else
@@ -1489,7 +1489,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 
 				const char* leaf = strrchr(temp, ':');
 				
-				// if the working path is just a node without any directory delimeters.
+				// if the working path is just a node without any directory delimiters.
 				if (leaf == nsnull)
 					leaf = temp;
 				else

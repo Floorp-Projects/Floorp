@@ -1387,7 +1387,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpszArgs,in
 
         if(!gUserPath[0]) { //dont override something they provide at the 
           if(cp){
-            cp=strchr(cp,'['); //seek to the seperator for the pathname (optional)
+            cp=strchr(cp,'['); //seek to the separator for the pathname (optional)
             if(cp && *cp) {
               char *endcp=strchr(cp,']'); //now grab the (optional) user defined path...
               if(endcp) {

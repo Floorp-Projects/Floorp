@@ -105,7 +105,7 @@ my $wasshutdown = "";
 if ($shutdown) {
     Verbose ("Shutting down bugzilla and waiting for connections to clear");
     # Record the old shutdownhtml so it can be restored at the end (this will
-    # only be an issue if we are called using the -force comand line param)
+    # only be an issue if we are called using the -force command line param)
     $wasshutdown = Param("shutdownhtml");
     $::param{'shutdownhtml'} = $shutdown_msg;
     WriteParams();

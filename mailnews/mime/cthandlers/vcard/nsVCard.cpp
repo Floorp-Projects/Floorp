@@ -758,7 +758,7 @@ static char* lexLookaheadWord() {
 
 #ifdef _SUPPORT_LINE_FOLDING
 static void handleMoreRFC822LineBreak(int c) {
-    /* suport RFC 822 line break in cases like
+    /* support RFC 822 line break in cases like
      *	ADR: foo;
      *    morefoo;
      *    more foo;

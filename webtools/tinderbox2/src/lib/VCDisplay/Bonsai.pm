@@ -4,9 +4,9 @@
 # installed bonsai and are using cvsblame cvsguess and cvsquery to let
 # your webserver render html pages of your CVS repository.
 
-# $Revision: 1.7 $ 
-# $Date: 2001/07/20 19:05:22 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/12/23 23:23:26 $ 
+# $Author: timeless%mac.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Bonsai.pm,v $ 
 # $Name:  $ 
 
@@ -73,7 +73,7 @@ $VERSION = '#tinder_version#';
 
 # this is how we create a URL to the various CGI programs.
 
-# If you your using VCDisplay:Bonsai we need to know how to make HMTL
+# If you your using VCDisplay:Bonsai we need to know how to make HTML
 # to point o the bonsai CGI programs.
 
 $BONSAI_URL = ( $TinderConfig::BONSAI_URL || 

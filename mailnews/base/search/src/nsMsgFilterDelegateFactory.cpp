@@ -143,10 +143,10 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
     rv = aOuter->GetValue(getter_Copies(uri));
     if (NS_FAILED(rv)) return rv;
     
-    PRInt32 seperatorPosition = 0;
+    PRInt32 separatorPosition = 0;
     const char *filterTag = uri;
     while (filterTag && *filterTag != ';') {
-        seperatorPosition++;
+        separatorPosition++;
         filterTag++;
     }
     
@@ -158,7 +158,7 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
     const char *filterName = getFilterName(filterTag);
 
     nsCOMPtr<nsIMsgFilterList> filterList;
-    rv = getFilterList(uri, seperatorPosition, getter_AddRefs(filterList));
+    rv = getFilterList(uri, separatorPosition, getter_AddRefs(filterList));
 
         // now that we have the filter list and index, retrieve the filter.
 

@@ -101,7 +101,7 @@ protected:
 	int32 CreateThirdPart();
 	void DoSendMdn();
 
-	// helper fucntion
+	// helper function
 	void InitAndProcess();
 	int32 OutputAllHeaders();
 	int32 WriteString(const char *str);

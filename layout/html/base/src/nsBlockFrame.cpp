@@ -3713,7 +3713,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     // past the floater.
   }
   else {
-    // If we are propogating out a break-before status then there is
+    // If we are propagating out a break-before status then there is
     // no point in placing the line.
     if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
       rv = PlaceLine(aState, aLineLayout, aLine, aKeepReflowGoing, aUpdateMaximumWidth);

@@ -1045,7 +1045,7 @@ nsWSDLLoadRequest::ProcessAbstractOperation(nsIDOMElement* aElement,
         operationInst->AddParameter(paramName);
       }
 
-      // If we did find a delimeter, advance past it
+      // If we did find a delimiter, advance past it
       if (found) {
         start = delimiter;
         ++start;
@@ -1219,7 +1219,7 @@ nsWSDLLoadRequest::ProcessMessageBinding(nsIDOMElement* aElement,
             }
           }
 
-          // If we did find a delimeter, advance past it
+          // If we did find a delimiter, advance past it
           if (found) {
             start = delimiter;
             ++start;

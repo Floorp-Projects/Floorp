@@ -38,7 +38,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozillaImpl.java,v 1.1 2001/05/23 22:26:53 edburns%acm.org Exp $
+ * @version $Id: EmbeddedMozillaImpl.java,v 1.2 2001/12/23 23:22:21 timeless%mac.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -68,7 +68,7 @@ public void CreateEMWindow()
 {
   System.out.println("Creating new EmbeddedMozillaImpl window");
   EMWindow aEMWindow ;
-  aEMWindow = new EMWindow("EmbeddedMozila#" + (int)(count+1),
+  aEMWindow = new EMWindow("EmbeddedMozilla#" + (int)(count+1),
                                  binDir, url, count, this);
   count++;
 }

@@ -3900,7 +3900,7 @@ nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
 
 
 ////////////////////////////////////////////////////////////////////////
-// check comma delimetered extensions
+// check comma delimitered extensions
 static int CompareExtensions(const char *aExtensionList, const char *aExtension)
 {
   if((aExtensionList == nsnull) || (aExtension == nsnull))

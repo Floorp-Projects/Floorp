@@ -1,4 +1,4 @@
-This is the TripleDB, a way of persistantly remembering "triples" of data.
+This is the TripleDB, a way of persistently remembering "triples" of data.
 
 Each entry is kind of a "subject-verb-object" set. For example, some
 entries might be:

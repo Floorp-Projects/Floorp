@@ -4,8 +4,8 @@ Test name: PlugletTagInfo2_getTagText
 
 Synopsis: getTagText  method of class PlugletTagInfo2
 
-Pre-Conditions: Build mozilla, setup enviroment as for running mozilla
-and see api tests README for setup enviroment for run tests. 
+Pre-Conditions: Build mozilla, setup environment as for running mozilla
+and see api tests README for setup environment for run tests. 
 
 Description: This test call the getTagText method of the PlugletTagInfo2 object 
 at runstages, specified at TestProperties file. 

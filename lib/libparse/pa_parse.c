@@ -1268,7 +1268,7 @@ PA_ParseBlock(NET_StreamClass *stream, const char *block, int block_len)
                 int32 skip_len = 0;
 
                 /* pa_isolate_javascript_expression() stores a null
-                   character after the JS expresion. */
+                   character after the JS expression. */
                 while (*buf) {
                     buf++;
                     skip_len++;

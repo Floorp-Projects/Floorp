@@ -62,6 +62,6 @@ XPTC_InvokeByIndex:
 ! always have a 'this', from the incoming 'that'
 	mov	%i0,%o0
         
-	mov     %o0,%i0             ! propogate return value
+	mov     %o0,%i0             ! propagate return value
         ret
         restore

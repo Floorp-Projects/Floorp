@@ -112,7 +112,7 @@ sub readcp936()
         if($unicodetocp936{$u1} == "") {
           $unicodetocp936{$u1} = $gb1;
         } else {
-          "WARNNING: Unicode " . $u1 . " already map to CP936 " . 
+          "WARNING: Unicode " . $u1 . " already map to CP936 " . 
             $unicodetocp936{$u1} . " when we try to map to " . $gb1 . "\n";
         }
 
@@ -132,7 +132,7 @@ sub readgb18030()
         if( $unicodetogb18030{$u} == "" ) {
           $unicodetogb18030{$u} = $gb;
         } else {
-          "WARNNING: Unicode " . $u1 . " already map to CP936 " . 
+          "WARNING: Unicode " . $u1 . " already map to CP936 " . 
             $unicodetocp936{$u1} . " when we try to map to " . $gb1 . "\n";
         }
     }

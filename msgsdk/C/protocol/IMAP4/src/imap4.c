@@ -44,7 +44,7 @@ typedef void (*oknobad)(imap4SinkPtr_t in_pimap4Sink, const char* in_responseCod
 int parseOkNoBad(imap4Client_t* in_pimap4, char* in_data, oknobad in_sinkMethod);
 int parseNoBad(imap4Client_t* in_pimap4, const char* in_response);
 char* matchBrackets(char* in_data, char** out_ppValue);
-typedef void (*parseMbox)(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimeter, const char* in_name);
+typedef void (*parseMbox)(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, const char* in_delimiter, const char* in_name);
 int parseMailboxInfo(imap4Client_t* in_pimap4, char* in_data, parseMbox in_sinkMethod);
 typedef void (*messageNumber)(imap4SinkPtr_t in_pimap4Sink, int in_messages);
 int getNumber(imap4Client_t* in_pimap4, char* in_data, messageNumber in_sinkMethod);
@@ -2592,7 +2592,7 @@ static int parseMailboxInfo(imap4Client_t* in_pimap4, char* in_data, parseMbox i
 	char* l_szBegin = NULL;
 	char* l_szEnd = NULL;
 	char* l_attributes = NULL;
-	char* l_delimeter = NULL;
+	char* l_delimiter = NULL;
 	char* l_name = NULL;
 	int l_nLength = 0;
 	imap4Sink_t* l_sink = in_pimap4->pimap4Sink;
@@ -2621,7 +2621,7 @@ static int parseMailboxInfo(imap4Client_t* in_pimap4, char* in_data, parseMbox i
 		return NSMAIL_ERR_PARSE;
 	}
 
-	/*Extract the delimeter*/
+	/*Extract the delimiter*/
 	l_szBegin = l_szEnd;
 	l_szEnd = strchr(l_szBegin, '"');
 	if(l_szEnd == NULL)
@@ -2636,13 +2636,13 @@ static int parseMailboxInfo(imap4Client_t* in_pimap4, char* in_data, parseMbox i
 		return NSMAIL_ERR_PARSE;
 	}
 	l_nLength = l_szEnd - l_szBegin;
-	l_delimeter = (char*)malloc((l_nLength + 1)*sizeof(char));
-	if(l_delimeter == NULL)
+	l_delimiter = (char*)malloc((l_nLength + 1)*sizeof(char));
+	if(l_delimiter == NULL)
 	{
 		return NSMAIL_ERR_OUTOFMEMORY;
 	}
-	memset(l_delimeter, 0, (l_nLength + 1)*sizeof(char));
-	memcpy(l_delimeter, l_szBegin, l_nLength);
+	memset(l_delimiter, 0, (l_nLength + 1)*sizeof(char));
+	memcpy(l_delimiter, l_szBegin, l_nLength);
 	l_szBegin = l_szEnd;
 
 	/*Extract the name*/
@@ -2671,10 +2671,10 @@ static int parseMailboxInfo(imap4Client_t* in_pimap4, char* in_data, parseMbox i
 	memcpy(l_name, l_szBegin, l_nLength);
 
 	/*Dispatch the parsed data*/
-	in_sinkMethod(l_sink, l_attributes, l_delimeter, l_name);
+	in_sinkMethod(l_sink, l_attributes, l_delimiter, l_name);
 
 	myFree(l_attributes);
-	myFree(l_delimeter);
+	myFree(l_delimiter);
 	myFree(l_name);
 
 	return NSMAIL_OK;
@@ -4506,21 +4506,21 @@ static void sink_fetchUid(imap4SinkPtr_t in_pimap4Sink, int in_uid)
 
 /*Lsub Response*/
 static void sink_lsub(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, 
-			   const char* in_delimeter, const char* in_name)
+			   const char* in_delimiter, const char* in_name)
 {
 	if(in_pimap4Sink->lsub != NULL)
 	{
-		in_pimap4Sink->lsub(in_pimap4Sink, in_attribute, in_delimeter, in_name);
+		in_pimap4Sink->lsub(in_pimap4Sink, in_attribute, in_delimiter, in_name);
 	}
 }
 
 /*List Response*/
 static void sink_list(imap4SinkPtr_t in_pimap4Sink, const char* in_attribute, 
-			   const char* in_delimeter, const char* in_name)
+			   const char* in_delimiter, const char* in_name)
 {
 	if(in_pimap4Sink->list != NULL)
 	{
-		in_pimap4Sink->list(in_pimap4Sink, in_attribute, in_delimeter, in_name);
+		in_pimap4Sink->list(in_pimap4Sink, in_attribute, in_delimiter, in_name);
 	}
 }
 

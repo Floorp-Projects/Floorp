@@ -44,7 +44,7 @@
 #   MOZ_CVS_FLAGS        - Flags to pass cvs (default: -q -z3)
 #   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
-#   MOZ_CO_BRANCH        - Branch tag (Depricated. Use MOZ_CO_TAG below.)
+#   MOZ_CO_BRANCH        - Branch tag (Deprecated. Use MOZ_CO_TAG below.)
 #
 
 #######################################################################
@@ -159,7 +159,7 @@ else
   CVS_FLAGS := $(MOZ_CVS_FLAGS)
 endif
 
-# This option is depricated. The best way to have client.mk pull a tag
+# This option is deprecated. The best way to have client.mk pull a tag
 # is to set MOZ_CO_TAG (see above) and commit that change on the tag.
 ifdef MOZ_CO_BRANCH
   $(warning Use MOZ_CO_TAG instead of MOZ_CO_BRANCH)

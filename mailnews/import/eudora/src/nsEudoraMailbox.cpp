@@ -633,9 +633,9 @@ PRInt32 nsEudoraMailbox::IsEndHeaders( SimpleBufferTonyRCopiedOnce& data)
 	return( -1);
 }
 
-	// Determine if this line meets Eudora standards for a seperator line
+	// Determine if this line meets Eudora standards for a separator line
 	// This logic is based on Eudora 1.3.1's strict requirements for what
-	// makes a valid seperator line.  This may need to be relaxed for newer
+	// makes a valid separator line.  This may need to be relaxed for newer
 	// versions of Eudora.
 	// A sample from line: 
 	// From john@uxc.cso.uiuc.edu Wed Jan 14 12:36:18 1989

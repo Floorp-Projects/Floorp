@@ -304,12 +304,12 @@ public interface IIMAP4Sink
     /**
     * Lists subscribed or active mailboxes that match the search criteria.
     * @param in_attribute Attributes of the mailbox.
-    * @param in_delimeter Hierarchy delimiter.
+    * @param in_delimiter Hierarchy delimiter.
     * @param in_name Name of the mailbox.
     * @see #list
     * @see IMAP4Client#lsub
     */
-    public void lsub(StringBuffer in_attribute, StringBuffer in_delimeter, StringBuffer in_name);
+    public void lsub(StringBuffer in_attribute, StringBuffer in_delimiter, StringBuffer in_name);
 
     //List Response
     //////////////////////////////////////////////////////////////////////
@@ -317,12 +317,12 @@ public interface IIMAP4Sink
     /**
     * Lists mailboxes that match the search criteria.
     * @param in_attribute Attributes of the mailbox.
-    * @param in_delimeter Hierarchy delimiter.
+    * @param in_delimiter Hierarchy delimiter.
     * @param in_name Name of the mailbox.
     * @see #lsub
     * @see IMAP4Client#list
     */
-    public void list(StringBuffer in_attribute, StringBuffer in_delimeter, StringBuffer in_name);
+    public void list(StringBuffer in_attribute, StringBuffer in_delimiter, StringBuffer in_name);
 
     //Search Response
     //////////////////////////////////////////////////////////////////////

@@ -66,7 +66,7 @@ interface nsINNTPNewsgroupList : nsISupports {
      next (used for selecting the first unread message in a group after
      listing that group.)
 
-     depricated:
+     deprecated:
      The "out" arguments are (if non-NULL) a file descriptor to write the XOVER
      line to, followed by a "\n".  This is used by the XOVER-caching code.
   */

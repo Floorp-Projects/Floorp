@@ -277,7 +277,7 @@ Version 2.0b10 08Sep99
  - Implemented the interface detection ioctl calls for OpenTransport TCP/IP.
  - getsockname would not work on sockets returned fropm accept under 
  	OpenTransport.
- - recvfrom would not correctly return the sorce socket address under 
+ - recvfrom would not correctly return the source socket address under 
  	OpenTransport except for a connected datagram socket [Philippe Lang].
  - Nonblocking reads on OpenTransport stream sockets did in fact block.
  - Nonblocking reads on OpenTransport datagram sockets leaked memory.

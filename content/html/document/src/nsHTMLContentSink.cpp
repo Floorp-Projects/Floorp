@@ -4450,7 +4450,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
         result = NS_NewURI(&url, aHref, mDocumentBaseURL);
       }
       if (NS_OK != result) {
-        return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
+        return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
       }
 
       if (-1 == linkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) {

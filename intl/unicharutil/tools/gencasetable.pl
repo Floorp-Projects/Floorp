@@ -243,7 +243,7 @@ for ($i = 0; $i <= $#ucv; $i++)
                 ($ucv[$i-1] - $ufrom), $every, $ud[$i-1];
 
          if((($ucv[$i-1] - $ufrom) > 255) || ($every > 255)) {
-             print "WARNNING!!! cannot handle block > 255 chars (Upper)\n\n";
+             print "WARNING!!! cannot handle block > 255 chars (Upper)\n\n";
              printf "0x%04X, 0x%04x,  0x%04x), 0x%04x \n",
                 $ufrom, $ucv[$i-1], $every, $ud[$i-1];
          }
@@ -309,7 +309,7 @@ for ($i = 0; $i <= $#lcv; $i++)
                 ($lcv[$i-1] - $lfrom) , $every, $ld[$i-1];
 
          if((($lcv[$i-1] - $lfrom) > 255) || ($every > 255)) {
-             print "WARNNING!!! cannot handle block > 255 chars (Lower)\n\n";
+             print "WARNING!!! cannot handle block > 255 chars (Lower)\n\n";
              printf "0x%04X, 0x%04x,  0x%04x, 0x%04x \n",
                 $lfrom, $lcv[$i-1], $every, $ld[$i-1];
          }

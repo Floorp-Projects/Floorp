@@ -300,7 +300,7 @@ typedef PRUint32 nsresult;
 #define NS_PTR_TO_INT32(x) ((char *)(x) - (char *)0)
 #define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
 
-/* Include depricated APIs... */
+/* Include deprecated APIs... */
 
 #ifndef nsComObsolete_h__
 #include "nsComObsolete.h"

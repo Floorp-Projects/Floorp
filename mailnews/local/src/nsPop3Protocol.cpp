@@ -1808,7 +1808,7 @@ nsPop3Protocol::GetMsg()
                     /*and old one too */ 
                 }
                 if ((c != KEEP) && (c != DELETE_CHAR) && (c != TOO_BIG)) 
-                {	/* mesage left on server */
+                {	/* message left on server */
                     /*if (m_pop3ConData->msg_info[i].size > m_pop3ConData->size_limit)
                       m_totalDownloadSize +=
                       m_pop3ConData->size_limit;	*/	

@@ -3595,7 +3595,7 @@ static BOOLEAN checkForEmptyMessages( mimeParser_t *p, void *pMessage, int type 
 
 
 /**
-* Set current mesage
+* Set current message
 *
 * @author Carson Lee
 * @version %I%, %G%

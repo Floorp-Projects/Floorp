@@ -2562,7 +2562,7 @@ lo_SetupStateForList(MWContext *context,
     state->left_margin;
   /*
    * Set right margin to be last list's right,
-   * irregardless of current margin stack.
+   * regardless of current margin stack.
    */
   state->list_stack->old_right_margin =
     old_right_margin;

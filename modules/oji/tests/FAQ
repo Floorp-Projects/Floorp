@@ -119,7 +119,7 @@ NOTE: These API tests are build using Gnu Compiler gcc.
 11) On execution of autorun.pl I get message
         MOZILLA_FIVE_HOME is not set. Please set it and rerun this script....
 
-   The enviroment variable MOZILLA_FIVE_HOME is not set
+   The environment variable MOZILLA_FIVE_HOME is not set
    It should point to absolute dir. where mozilla-bin is located
    Set MOZILLA_FIVE_HOME <mozilla dir>/dist/bin
 

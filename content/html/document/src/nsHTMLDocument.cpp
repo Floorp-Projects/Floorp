@@ -512,7 +512,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         cacheDescriptor = do_QueryInterface(cacheToken);
     }
 
-    // Don't propogate the result code beyond here, since it
+    // Don't propagate the result code beyond here, since it
     // could just be that the response header wasn't found.
     rv = NS_OK;
   }
@@ -2073,7 +2073,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   if (mParser)
     return NS_OK;
 
-  // Stop current loads targetted at the window this document is in.
+  // Stop current loads targeted at the window this document is in.
   if (mScriptGlobalObject) {
     mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
 
