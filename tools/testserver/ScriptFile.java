@@ -222,24 +222,26 @@ class ScriptFile {
     }
 
 	protected void WriteSpecialResponse(String specialcase) throws IOException {
-		WriteOutFile("docs/generic.res");
+        out.println("HTTP/1.1 200 OK");
+        out.println("Server: HTTP Test Server/1.1");
+        out.println("Content-Type: text/plain");
+
 		StringTokenizer st = new StringTokenizer(specialcase, " &");
 		while (st.hasMoreTokens()) {
 		    String pair = st.nextToken();
-    		if (pair.startsWith("Length="))
+    		if (pair.startsWith("Length=") || pair.startsWith("length="))
     		{
 
-                int len = Integer.valueOf(pair.substring(pair.indexOf('=')+1), 10).intValue();
+                int len = Integer.valueOf(pair.substring(
+                            pair.indexOf('=')+1), 10).intValue();
 
     			out.println("Date: " + (new Date()).toString());
     			out.println("Content-Length: " + len);
     			out.println("\n");
-    			for (int i = 0; i<len ; i++)
-    			{
-    			    if ((i % 80) == 0)
+    			for (int i = 0; i<len; i++) {
+                    out.print ((char)i%10);
+                    if ((i>0) && ((i+1)%80) == 0)
     			        out.print('\n');
-    			    else
-    			        out.print('#');
     			    out.flush();
     			}
     			return;
