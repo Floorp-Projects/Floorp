@@ -34,3 +34,9 @@ XPIDLSRCS = .\nsIXPInstallProgress.idl
 
 include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
+
+libs::
+    $(MAKE_INSTALL) .\xpinstall.js $(DIST)\bin\components\
+
+
+
