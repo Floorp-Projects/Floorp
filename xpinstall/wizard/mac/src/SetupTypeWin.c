@@ -543,7 +543,6 @@ DrawDiskSpaceMsgs(short vRefNum)
 {
 	XVolumeParam	pb;
 	OSErr			err, reserr;
-	UnsignedWide	freeSpace;
 	short			msglen = 0;
 	TEHandle		dsAvailH, dsNeededH;
 	Rect			instDescBox, viewRect;
@@ -551,8 +550,6 @@ DrawDiskSpaceMsgs(short vRefNum)
 	Str255			msg;
 	Str15			kb;
 	char 			*cstr, *cmsg, *ckb, *cfreeSpace, *cSpaceNeeded;
-	double			dFree;
-	long 			lFree;
 	
 	pb.ioCompletion = NULL;
 	pb.ioVolIndex = 0;
@@ -560,10 +557,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	pb.ioVRefNum = vRefNum;
 	
 	ERR_CHECK( PBXGetVolInfoSync(&pb) );
-	freeSpace = UInt64ToUnsignedWide(pb.ioVFreeBytes);
-	dFree = (freeSpace.hi * 4294967296) + freeSpace.lo; // 2^32 = 4294967296
-	lFree = (long) (dFree/1024);
-    sDSAvailK = lFree;
+	sDSAvailK = U32SetU(U64Divide(pb.ioVFreeBytes, U64SetU(1024L), nil));
     
 	instDescRectH = NULL;
 	instDescRectH = Get1Resource('RECT', rCompListBox);
@@ -603,7 +597,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	cmsg[msglen] = '\0';
 	
 	/* tack on the actual disk space in KB */
-	cfreeSpace = ltoa(lFree);
+	cfreeSpace = ltoa(sDSAvailK);
 	msglen += strlen(cfreeSpace);
 	strcat( cmsg, cfreeSpace );
 	cmsg[msglen] = '\0';
