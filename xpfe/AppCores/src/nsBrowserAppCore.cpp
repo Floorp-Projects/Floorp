@@ -110,6 +110,9 @@ static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
 
 #define FILE_PROTOCOL "file://"
 
+static nsresult
+FindNamedXULElement(nsIWebShell * aShell, const char *aId, nsCOMPtr<nsIDOMElement> * aResult );
+
 /////////////////////////////////////////////////////////////////////////
 // nsBrowserAppCore
 /////////////////////////////////////////////////////////////////////////
@@ -487,6 +490,55 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
 }
 
 NS_IMETHODIMP    
+nsBrowserAppCore::LoadInitialPage(void)
+{
+  char * urlstr = nsnull;
+  nsresult rv;
+  nsICmdLineService * cmdLineArgs;
+
+  rv = nsServiceManager::GetService(kCmdLineServiceCID,
+                                    kICmdLineServiceIID,
+                                    (nsISupports **)&cmdLineArgs);
+  if (NS_FAILED(rv)) {
+    if (APP_DEBUG) fprintf(stderr, "Could not obtain CmdLine processing service\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Get the URL to load
+  rv = cmdLineArgs->GetURLToLoad(&urlstr);
+  if (urlstr != nsnull) {
+  // A url was provided. Load it
+     if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
+     rv = LoadUrl(nsString(urlstr));
+     return rv;
+  }
+  // No URL was provided in the command line. Load the default provided
+  // in the navigator.xul;
+
+  nsCOMPtr<nsIDOMElement>    argsElement;
+
+  rv = FindNamedXULElement(mWebShell, "args", &argsElement);
+  if (rv != NS_OK) {
+  // Couldn't get the "args" element from the xul file. Load a blank page
+     if (APP_DEBUG) printf("Couldn't find args element\n");
+     nsString * url = new nsString("about:blank"); 
+     rv = LoadUrl(nsString(urlstr));
+     return rv;
+  }
+
+  // Load the default page mentioned in the xul file.
+    nsString value;
+    argsElement->GetAttribute(nsString("value"), value);
+    if ((value.ToNewCString()) != "") {
+        if (APP_DEBUG) printf("Got args value from xul file to be %s\n", value.ToNewCString());
+    rv = LoadUrl(value);
+    return rv;
+    }
+    if (APP_DEBUG) printf("Quitting LoadInitialPage\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsBrowserAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
@@ -545,9 +597,11 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   if (! aWin)
     return NS_ERROR_NULL_POINTER;
 
+#if 0
   if (!mContentWindow) {
     return NS_ERROR_FAILURE;
   }
+#endif  /* 0 */
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) {
     return NS_ERROR_FAILURE;
@@ -683,20 +737,10 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
      // Check with the content area webshell if back and forward
      // buttons can be enabled
     nsresult rv = mContentAreaWebShell->CanForward();
-    if (rv != NS_OK)
-	setAttribute(mWebShell, "forward-button", "disable", "true");
-    else
-    {
-	setAttribute(mWebShell, "forward-button", "disable", "");
-    }
+    setAttribute(mWebShell, "canGoForward", "disabled", (rv == NS_OK) ? "" : "true");
 
     rv = mContentAreaWebShell->CanBack();
-    if (rv != NS_OK)
-	setAttribute(mWebShell, "back-button", "disable", "true");
-    else
-    {
-        setAttribute(mWebShell, "back-button", "disable", "");
-    }
+    setAttribute(mWebShell, "canGoBack", "disabled", (rv == NS_OK) ? "" : "true");
 
     printf("Document %s loaded successfully\n", spec);
    return NS_OK;
@@ -1553,6 +1597,53 @@ nsBrowserAppCore::PromptPassword(const nsString &aText,
   PRBool bResult = PR_FALSE;
   if (APP_DEBUG) printf("PromptPassword\n");
   return bResult;
+}
+
+
+static nsresult
+FindNamedXULElement(nsIWebShell * aShell,
+                              const char *aId,
+                              nsCOMPtr<nsIDOMElement> * aResult ) {
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIContentViewer> cv;
+    rv = aShell ? aShell->GetContentViewer(getter_AddRefs(cv))
+               : NS_ERROR_NULL_POINTER;
+    if ( cv ) {
+        // Up-cast.
+        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+        if ( docv ) {
+            // Get the document from the doc viewer.
+            nsCOMPtr<nsIDocument> doc;
+            rv = docv->GetDocument(*getter_AddRefs(doc));
+            if ( doc ) {
+                // Up-cast.
+
+                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
+                  if ( xulDoc ) {
+                    // Find specified element.
+                    nsCOMPtr<nsIDOMElement> elem;
+
+                    rv = xulDoc->GetElementById( aId, getter_AddRefs(elem) );
+                    if ( elem ) {
+			*aResult =  elem;
+                    } else {
+                       if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
+                    }
+                } else {
+                  if (APP_DEBUG)   printf("Upcast to nsIDOMXULDocument failed\n");
+                }
+
+            } else {
+               if (APP_DEBUG)  printf("GetDocument failed, rv=0x%X\n",(int)rv);
+            }
+        } else {
+             if (APP_DEBUG)  printf("Upcast to nsIDocumentViewer failed\n");
+        }
+    } else {
+       if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+    }
+    return rv;
 }
 
 
