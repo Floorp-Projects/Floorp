@@ -346,14 +346,6 @@ nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
         return NS_ERROR_IN_PROGRESS; // too late...
     } 
 
-    // Ensure that AsyncWrite is only called for POST or PUT requests...
-    if ((mRequest->GetMethod() != HM_POST) && 
-        (mRequest->GetMethod() != HM_PUT))
-    {
-        NS_ASSERTION(0, "You have to setMethod to PUT or POST for AsyncWrite!");
-        return NS_ERROR_FAILURE; // ? TODO
-    }
-
     mResponseContext = ctxt;
     mRequestStream = fromStream;
     mWriteObserver = observer;
@@ -722,9 +714,9 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetRequestMethod(PRUint32/*HTTPMethod*/ i_Method)
+nsHTTPChannel::SetRequestMethod(nsIAtom * i_Atom)
 {
-    return mRequest->SetMethod((HTTPMethod)i_Method);
+    return mRequest->SetMethod(i_Atom);
 }
 
 NS_IMETHODIMP
@@ -826,9 +818,9 @@ nsHTTPChannel::CheckCache()
     static PRBool warnedCacheIsMissing = PR_FALSE;
 
     // For now, we handle only GET and HEAD requests
-    HTTPMethod httpMethod;
+    nsCOMPtr<nsIAtom> httpMethod;
     httpMethod = mRequest->GetMethod();
-    if ((httpMethod != HM_GET) && (httpMethod != HM_HEAD))
+    if ((httpMethod != nsHTTPAtoms::Get) && (httpMethod != nsHTTPAtoms::Head))
         return NS_OK;
 
     // If this is the first time we've been called for this channel,

@@ -70,7 +70,7 @@ class nsHTTPRequest : public nsIRequest
 public:
 
     // Constructor
-    nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize, HTTPMethod i_Method=HM_GET);
+    nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
@@ -99,8 +99,8 @@ public:
     nsresult            SetHTTPVersion (PRUint32   i_Version);
     nsresult            GetHTTPVersion (PRUint32 * o_Version);
 
-    nsresult            SetMethod(HTTPMethod i_Method);
-    HTTPMethod          GetMethod(void) const;
+    nsresult            SetMethod(nsIAtom * i_Method);
+    nsIAtom *           GetMethod(void) const;
                         
     nsresult            SetPriority(); // TODO 
     nsresult            GetPriority(); //TODO
@@ -156,7 +156,7 @@ protected:
         return methods[i_Method];
     }
 
-    HTTPMethod                  mMethod;
+    nsCOMPtr<nsIAtom>           mMethod;
     PRUint32                    mVersion;
     PRUint32                    mKeepAliveTimeout;
 

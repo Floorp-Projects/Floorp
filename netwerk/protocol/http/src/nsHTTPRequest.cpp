@@ -52,12 +52,11 @@ static NS_DEFINE_CID(kHTTPHandlerCID,   NS_IHTTPHANDLER_CID);
 
 extern nsresult DupString(char* *o_Dest, const char* i_Src);
 
-nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize, HTTPMethod i_Method)
+nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
     :
     mBufferSegmentSize(bufferSegmentSize),
     mBufferMaxSize(bufferMaxSize),
     mPipelinedRequest (nsnull),
-    mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
     mKeepAliveTimeout (0),
     mRequestSpec(0),
@@ -69,6 +68,8 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 b
 
     NS_ASSERTION(i_URL, "No URL for the request!!");
     mURI = do_QueryInterface(i_URL);
+
+    mMethod = nsHTTPAtoms::Get;
 
 #if defined(PR_LOGGING)
   nsXPIDLCString urlCString; 
@@ -157,14 +158,17 @@ nsresult nsHTTPRequest::Clone(const nsHTTPRequest* *o_Request) const
     return NS_ERROR_FAILURE;
 }
                         
-nsresult nsHTTPRequest::SetMethod(HTTPMethod i_Method)
+nsresult nsHTTPRequest::SetMethod(nsIAtom * i_Method)
 {
     mMethod = i_Method;
     return NS_OK;
 }
 
-HTTPMethod nsHTTPRequest::GetMethod(void) const
+nsIAtom * nsHTTPRequest::GetMethod(void) const
 {
+    nsIAtom * ap = mMethod;
+    NS_ADDREF (ap);
+
     return mMethod;
 }
                         
@@ -371,7 +375,15 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
     nsXPIDLCString autoBuffer;
     nsresult rv;
 
-    requestBuffer->Append(MethodToString(mMethod));
+    
+    nsString methodString;
+    nsCString cp;
+
+    mMethod -> ToString     (methodString);
+    cp.AssignWithConversion (methodString);
+
+    requestBuffer->Append ( cp);
+    requestBuffer->Append (" ");
 
     // Request spec gets set for proxied cases-
     if (!mRequestSpec)
