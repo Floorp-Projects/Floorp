@@ -23,6 +23,7 @@ CSRCS = \
 	ybsec.c \
 	ybstr.c \
 	ybtime.c \
+	ybmisc.c \
 	$(NULL)
 
 
@@ -36,6 +37,9 @@ REQUIRES  = \
 	layer \
 	xp \
 	util \
+	java \
+	plugimpl \
+	security \
 	$(NULL)
 
 
