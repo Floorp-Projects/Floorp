@@ -635,7 +635,7 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
       }
 
       if (extString) {
-        aFilePicker.appendFilter(mimeInfo.Description, extString);
+        aFilePicker.appendFilter(mimeInfo.description, extString);
       } else {
         aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
       }        
@@ -839,7 +839,7 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   
   var mimeInfo = getMIMEInfoForType(aContentType, ext);
 
-  if (ext && mimeInfo && mimeInfo.ExtensionExists(ext)) {
+  if (ext && mimeInfo && mimeInfo.extensionExists(ext)) {
     return ext;
   }
   
@@ -851,7 +851,7 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   } catch (e) {
   }
 
-  if (urlext && mimeInfo && mimeInfo.ExtensionExists(urlext)) {
+  if (urlext && mimeInfo && mimeInfo.extensionExists(urlext)) {
     return urlext;
   }
   else {
