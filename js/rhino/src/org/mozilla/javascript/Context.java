@@ -1549,23 +1549,7 @@ public class Context
      */
     public final Object[] getElements(Scriptable object)
     {
-        long longLen = NativeArray.getLengthProperty(object);
-        if (longLen > Integer.MAX_VALUE) {
-            // arrays beyond  MAX_INT is not in Java in any case
-            throw new IllegalArgumentException();
-        }
-        int len = (int) longLen;
-        if (len == 0) {
-            return ScriptRuntime.emptyArgs;
-        } else {
-            Object[] result = new Object[len];
-            for (int i=0; i < len; i++) {
-                Object elem = ScriptableObject.getProperty(object, i);
-                result[i] = (elem == Scriptable.NOT_FOUND) ? Undefined.instance
-                                                           : elem;
-            }
-            return result;
-        }
+        return ScriptRuntime.getArrayElements(object);
     }
 
     /**
