@@ -11,7 +11,7 @@
     <content>
 
 	    <xul:vbox class="cal-mainbox"  flex="1">
-		  <xul:hbox class="cal-month-box" flex="1">
+		  <xul:hbox class="cal-month-box">
 			<xul:image class="cal-navbtn" dir="-1"/>
 			<xul:spacer flex="1"/>
 			<xul:text id="month-name" class="cal-month-name" value="Month"/>
@@ -207,9 +207,9 @@
         //-------- Update the calendar
         var calbox = document.getAnonymousNodes(this)[0].childNodes[1];
 
-        var daytime = 86400000; // milliseconds in a day
         var firstWeekday = (7 + aDate.getDay() - this.weekStart) % 7;
-        var date = new Date((aDate.getTime() - (firstWeekday*daytime)));
+	var date = new Date(aDate.getTime());
+	date.setDate(date.getDate()-firstWeekday);
 
         for (var k = 1; k < calbox.childNodes.length; k++) {
           var row = calbox.childNodes[k];
@@ -238,7 +238,8 @@
 	         day.date = date;
 	         day.calendar = this;
 	         day.setAttribute("value", date.getDate());
-	         date = new Date(date.getTime()+daytime);
+	    date = new Date(date.getTime());
+	    date.setDate(date.getDate() + 1);
           }
         }
 			]]></body>
@@ -272,9 +273,11 @@
         //-------- Update the calendar
         var calbox = document.getAnonymousNodes(this)[0].childNodes[1];
         
-        var daytime = 86400000; // milliseconds in a day
-        var firstWeekday = aDate.getDay();
-        var date = new Date((aDate.getTime() - (firstWeekday*daytime)));
+        // Modified because does not look correct (not verified)
+	//var firstWeekday = aDate.getDay();
+	var firstWeekday = (7 + aDate.getDay() - this.weekStart) % 7;
+	var date = new Date(aDate.getTime());
+	date.setDate(date.getDate()-firstWeekday);
         
         for (var k = 1; k < calbox.childNodes.length; k++) {
           var row = calbox.childNodes[k];
@@ -287,8 +290,8 @@
             } else {
               day.removeAttribute("busy");
             }
-            
-            date = new Date(date.getTime()+daytime);
+            //I don't think we need a new date 
+	    date.setDate(date.getDate+1);
           }
         }
 			]]></body>
