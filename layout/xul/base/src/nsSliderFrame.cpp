@@ -17,7 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * AUTHOR: Eric Vaughan
+ *
  * Contributor(s): 
+ * Tomi Leppikangas 
+ * Davor Cubranic
  */
 
 //
