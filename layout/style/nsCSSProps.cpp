@@ -127,7 +127,8 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
 }
 
 nsCSSProperty 
-nsCSSProps::LookupProperty(const nsAString& aProperty) {
+nsCSSProps::LookupProperty(const nsAString& aProperty)
+{
   // This is faster than converting and calling
   // LookupProperty(nsACString&).  The table will do its own
   // converting and avoid a PromiseFlatCString() call.
