@@ -35,7 +35,7 @@ XPTC_InvokeByIndex:
         sll     %i2,3,%l0           ! assume the worst case
                                     ! paramCount * 2 * 4 bytes
         cmp     %l0, 0              ! are there any args? If not,
-        be      invoke               ! no need to copy args to stack
+        be      .invoke             ! no need to copy args to stack
 
         sub     %sp,%l0,%sp         ! create the additional stack space
         add     %sp,72,%o0          ! step past the register window, the
