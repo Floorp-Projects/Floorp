@@ -2190,7 +2190,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     }
   }
 
-  DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
+  res = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
   if (NS_SUCCEEDED(res))
   {
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
