@@ -313,7 +313,7 @@ js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
     JS_ASSERT(cx->runtime->gcDisabled);
 
     fp = cx->fp;
-    if (!fp || fp->varobj != chain || fp->scopeChain != chain) {
+    if (!fp || fp->scopeChain != chain) {
         memset(&frame, 0, sizeof frame);
         frame.varobj = frame.scopeChain = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
@@ -358,7 +358,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 #endif
 
     fp = cx->fp;
-    if (!fp || fp->varobj != chain || fp->scopeChain != chain) {
+    if (!fp || fp->scopeChain != chain) {
         memset(&frame, 0, sizeof frame);
         frame.varobj = frame.scopeChain = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
@@ -556,6 +556,8 @@ JSBool
 js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
 {
     JSCodeGenerator funcg;
+    JSStackFrame *fp, frame;
+    JSObject *funobj;
     JSParseNode *pn;
     JSBool ok;
 
@@ -567,6 +569,17 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     /* Prevent GC activation while compiling. */
     JS_DISABLE_GC(cx->runtime);
 
+    /* Push a JSStackFrame for use by FunctionBody and js_EmitFunctionBody. */
+    fp = cx->fp;
+    funobj = fun->object;
+    JS_ASSERT(!fp || fp->fun != fun || fp->varobj != funobj ||
+              fp->scopeChain != funobj);
+    memset(&frame, 0, sizeof frame);
+    frame.fun = fun;
+    frame.varobj = frame.scopeChain = funobj;
+    frame.down = fp;
+    cx->fp = &frame;
+
     /* Ensure that the body looks like a block statement to js_EmitTree. */
     CURRENT_TOKEN(ts).type = TOK_LC;
     pn = FunctionBody(cx, ts, fun, &funcg.treeContext);
@@ -577,6 +590,8 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
              js_EmitFunctionBody(cx, &funcg, pn, fun);
     }
 
+    /* Restore saved state and release code generation arenas. */
+    cx->fp = fp;
     JS_ENABLE_GC(cx->runtime);
     js_FinishCodeGenerator(cx, &funcg);
     return ok;
@@ -744,15 +759,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * a function declaration).
          */
         op = fun->atom ? JSOP_NAMEDFUNOBJ : JSOP_ANONFUNOBJ;
-    } else if (tc->topStmt || cx->fp->scopeChain != parent) {
+    } else if (tc->topStmt) {
         /*
          * ECMA ed. 3 extension: a function expression statement not at the
          * top level, e.g., in a compound statement such as the "then" part
          * of an "if" statement, binds a closure only if control reaches that
          * sub-statement.
-         *
-         * The scopeChain != parent test handles eval called from inside a
-         * with statement body.
          */
         op = JSOP_CLOSURE;
     } else
@@ -1800,8 +1812,6 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     PN_INIT_LIST(pn);
 
     fp = cx->fp;
-    while (fp->special && fp->down)     /* skip eval and debugger frames */
-        fp = fp->down;
     obj = fp->varobj;
     fun = fp->fun;
     clasp = OBJ_GET_CLASS(cx, obj);

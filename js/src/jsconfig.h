@@ -336,7 +336,7 @@
 #define JS_BUG_EVAL_THIS_SCOPE  0       /* Math.eval('sin(x)') vs. local x */
 #define JS_BUG_FALLIBLE_EQOPS   0       /* fallible/intransitive equality ops */
 #define JS_BUG_FALLIBLE_TONUM   0       /* fallible ValueToNumber primitive */
-#define JS_BUG_WITH_CLOSURE     1       /* with(o)function f(){} sets o.f */
+#define JS_BUG_WITH_CLOSURE     0       /* with(o)function f(){} sets o.f */
 #define JS_BUG_SET_ENUMERATE    0       /* o.p=q flags o.p JSPROP_ENUMERATE */
 
 #define JS_HAS_PROP_DELETE      1       /* delete o.p removes p from o */
