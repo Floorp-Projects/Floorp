@@ -17,8 +17,8 @@
 
 DEPTH		= ..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -27,57 +27,68 @@ LIBRARY_NAME	= jpeg
 
 REQUIRES	= java
 
-EXPORTS		= jconfig.h jerror.h jinclude.h jmorecfg.h jpeglib.h jpegint.h jwinfig.h jos2fig.h
+CSRCS		= \
+		jdapimin.c \
+		jdapistd.c \
+		jdatasrc.c \
+		jdatadst.c \
+		jdmaster.c \
+		jdinput.c \
+		jdmarker.c \
+		jdhuff.c \
+		jdphuff.c \
+		jdmainct.c \
+		jdcoefct.c \
+		jdpostct.c \
+		jddctmgr.c \
+		jidctfst.c \
+		jidctflt.c \
+		jidctint.c \
+		jdsample.c \
+		jdcolor.c \
+		jquant1.c \
+		jquant2.c \
+		jdmerge.c \
+		jcomapi.c \
+		jutils.c \
+		jerror.c \
+		jmemmgr.c \
+		jmemnobs.c \
+		jfdctflt.c \
+		jfdctfst.c \
+		jfdctint.c \
+		$(NULL)
 
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS		= \
+		jconfig.h \
+		jerror.h \
+		jinclude.h \
+		jmorecfg.h \
+		jpeglib.h \
+		jpegint.h \
+		jwinfig.h \
+		jos2fig.h \
+		$(NULL)
 
-CSRCS		= jdapimin.c \
-		  jdapistd.c \
-		  jdatasrc.c \
-		  jdatadst.c \
-		  jdmaster.c \
-		  jdinput.c  \
-		  jdmarker.c \
-		  jdhuff.c \
-		  jdphuff.c \
-		  jdmainct.c \
-		  jdcoefct.c \
-		  jdpostct.c \
-		  jddctmgr.c \
-		  jidctfst.c \
-		  jidctflt.c \
-		  jidctint.c \
-		  jdsample.c \
-		  jdcolor.c \
-		  jquant1.c \
-		  jquant2.c \
-		  jdmerge.c \
-		  jcomapi.c \
-		  jutils.c \
-		  jerror.c \
-		  jmemmgr.c \
-		  jmemnobs.c \
-		  jfdctflt.c \
-		  jfdctfst.c \
-		  jfdctint.c \
-		  $(NULL)
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)
-CSRCS		+= jcapimin.c \
-		   jcparam.c \
-		   jcapistd.c \
-		   jcmarker.c \
-		   jcinit.c \
-		   jcmainct.c \
-		   jchuff.c \
-		   jcsample.c \
-		   jcmaster.c \
-		   jccoefct.c \
-		   jccolor.c \
-		   jcphuff.c \
-		   jcdctmgr.c \
-		   jcprepct.c \
-		   $(NULL)
+CSRCS		+= \
+		jcapimin.c \
+		jcparam.c \
+		jcapistd.c \
+		jcmarker.c \
+		jcinit.c \
+		jcmainct.c \
+		jchuff.c \
+		jcsample.c \
+		jcmaster.c \
+		jccoefct.c \
+		jccolor.c \
+		jcphuff.c \
+		jcdctmgr.c \
+		jcprepct.c \
+		$(NULL)
 
 OS2_IMPLIB	= 1
 LIBRARY		= $(LIBRARY_NAME)$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
