@@ -302,16 +302,16 @@ protected:
 	CIEHtmlDocumentInstance * m_pDocument;
 
 	// Mozilla interfaces
-	nsCOMPtr<nsIWebBrowser> mWebBrowser;
-	nsIWidget * mWindow;
-	nsIDocShell * mDocShell;
-
-    
-	nsIWebShell			*	m_pIWebShell;
+	nsCOMPtr<nsIWebBrowser>	m_pIWebBrowser;
+	nsIWidget			*	m_pIWindow;
+	nsIDocShell			*	m_pIDocShell;
 	nsIBaseWindow		*	m_pIWebShellWin;
+    
 	nsIPref             *   m_pIPref;
 	nsIEditor			*	m_pEditor;
     nsIServiceManager   *   m_pIServiceManager;
+
+	nsIWebShell			*	m_pIWebShell;
 
 	// System registry key for various control settings
 	CRegKey                 m_SystemKey;

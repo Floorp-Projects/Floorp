@@ -30,6 +30,7 @@ class CWebShellContainer :
 		public nsIWebBrowserChrome,
 		public nsIWebShellContainer,
 		public nsIStreamObserver,
+		public nsIURIContentListener,
 		public nsIDocumentLoaderObserver,
 		public nsIDocShellTreeOwner
 {
@@ -53,6 +54,7 @@ public:
 	NS_DECL_NSIBASEWINDOW
 	NS_DECL_NSIWEBBROWSERCHROME
 	NS_DECL_NSIDOCSHELLTREEOWNER
+	NS_DECL_NSIURICONTENTLISTENER
 
 	// nsIWebShellContainer
 	NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);

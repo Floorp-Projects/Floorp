@@ -40,9 +40,7 @@
 CComModule _Module;
 
 BEGIN_OBJECT_MAP(ObjectMap)
-#ifdef USE_CONTROL
 	OBJECT_ENTRY(CLSID_MozillaBrowser, CMozillaBrowser)
-#endif
 END_OBJECT_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
