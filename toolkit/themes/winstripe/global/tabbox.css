@@ -106,7 +106,8 @@ tab:focus > .tab-middle {
   -moz-outline: 1px dotted invert;
 }
 
-tab[beforeselected="true"] {
+tab[beforeselected="true"],
+tab[afterselected="true"][chromedir="rtl"] {
   -moz-appearance: tab-left-edge;
   border-right: none;
   -moz-border-radius-topright: 0;

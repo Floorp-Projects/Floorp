@@ -187,7 +187,7 @@
 
   <binding id="tabs" display="xul:box"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <content chromedir="&locale.dir;">
+    <content>
       <xul:spacer class="tabs-left"/>
       <children/>
       <xul:spacer class="tabs-right" flex="1"/>
@@ -466,7 +466,7 @@
 
   <binding id="tab" display="xul:button"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <content>
+    <content chromedir="&locale.dir;">
       <xul:hbox class="tab-middle box-inherit" xbl:inherits="align,dir,pack,orient,selected" flex="1">
         <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
         <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
