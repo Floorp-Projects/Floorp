@@ -761,6 +761,29 @@ protected:
   nsresult GetContentsAsText(nsAString& aText);
 
   /**
+   * Helpermethod for NS_IMPL_STRING_ATTR macro.
+   * Gets the value of an attribute, returns empty string if
+   * attribute isn't set. Only works for attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aDefault default-value to return if attribute isn't set.
+   * @param aResult  result value [out]
+   * @result always NS_OK
+   */
+  NS_HIDDEN_(nsresult) GetAttrHelper(nsIAtom* aAttr, nsAString& aValue);
+
+  /**
+   * Helpermethod for NS_IMPL_STRING_ATTR macro.
+   * Sets the value of an attribute, returns specified default value if the
+   * attribute isn't set. Only works for attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aDefault default-value to return if attribute isn't set.
+   * @param aResult  result value [out]
+   */
+  NS_HIDDEN_(nsresult) SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue);
+
+  /**
    * Helpermethod for NS_IMPL_STRING_ATTR_DEFAULT_VALUE macro.
    * Gets the value of an attribute, returns specified default value if the
    * attribute isn't set. Only works for attributes in null namespace.
@@ -769,9 +792,19 @@ protected:
    * @param aDefault default-value to return if attribute isn't set.
    * @param aResult  result value [out]
    */
-  void GetStringAttrWithDefault(nsIAtom* aAttr,
-                                const nsAString& aDefault,
-                                nsAString& aResult);
+  NS_HIDDEN_(nsresult) GetStringAttrWithDefault(nsIAtom* aAttr,
+                                                const char* aDefault,
+                                                nsAString& aResult);
+
+  /**
+   * Helpermethod for NS_IMPL_BOOL_ATTR macro.
+   * Gets value of boolean attribute. Only works for attributes in null
+   * namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aValue   Boolean value of attribute.
+   */
+  NS_HIDDEN_(nsresult) GetBoolAttr(nsIAtom* aAttr, PRBool* aValue);
 
   /**
    * Helpermethod for NS_IMPL_BOOL_ATTR macro.
@@ -781,7 +814,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Boolean value of attribute.
    */
-  nsresult SetBoolAttr(nsIAtom* aAttr, PRBool aValue);
+  NS_HIDDEN_(nsresult) SetBoolAttr(nsIAtom* aAttr, PRBool aValue);
 
   /**
    * Helpermethod for NS_IMPL_INT_ATTR macro.
@@ -793,7 +826,7 @@ protected:
    * @param aDefault default-value to return if attribute isn't set.
    * @param aResult  result value [out]
    */
-  void GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aValue);
+  NS_HIDDEN_(nsresult) GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aValue);
 
   /**
    * Helpermethod for NS_IMPL_INT_ATTR macro.
@@ -803,7 +836,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Integer value of attribute.
    */
-  nsresult SetIntAttr(nsIAtom* aAttr, PRInt32 aValue);
+  NS_HIDDEN_(nsresult) SetIntAttr(nsIAtom* aAttr, PRInt32 aValue);
 
   /**
    * Helpermethod for NS_IMPL_URI_ATTR macro.
@@ -815,7 +848,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aResult  result value [out]
    */
-  void GetURIAttr(nsIAtom* aAttr, nsAString& aResult);
+  NS_HIDDEN_(nsresult) GetURIAttr(nsIAtom* aAttr, nsAString& aResult);
 };
 
 
@@ -986,15 +1019,12 @@ nsHTML##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn) \
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAString& aValue)                            \
   {                                                                  \
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue);          \
-                                                                     \
-    return NS_OK;                                                    \
+    return GetAttrHelper(nsHTMLAtoms::_atom, aValue);                \
   }                                                                  \
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsAString& aValue)                      \
   {                                                                  \
-    return SetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue,    \
-                   PR_TRUE);                                         \
+    return SetAttrHelper(nsHTMLAtoms::_atom, aValue);                \
   }
 
 /**
@@ -1006,17 +1036,12 @@ nsHTML##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn) \
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAString& aValue)                            \
   {                                                                  \
-    GetStringAttrWithDefault(nsHTMLAtoms::_atom,                     \
-                             NS_LITERAL_STRING(_default),            \
-                             aValue);                                \
-                                                                     \
-    return NS_OK;                                                    \
+    return GetStringAttrWithDefault(nsHTMLAtoms::_atom, _default, aValue);\
   }                                                                  \
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsAString& aValue)                      \
   {                                                                  \
-    return SetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue,    \
-                   PR_TRUE);                                         \
+    return SetAttrHelper(nsHTMLAtoms::_atom, aValue);                \
   }
 
 /**
@@ -1028,9 +1053,7 @@ nsHTML##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn) \
   NS_IMETHODIMP                                                       \
   _class::Get##_method(PRBool* aValue)                                \
   {                                                                   \
-    *aValue = HasAttr(kNameSpaceID_None, nsHTMLAtoms::_atom);         \
-                                                                      \
-    return NS_OK;                                                     \
+    return GetBoolAttr(nsHTMLAtoms::_atom, aValue);                   \
   }                                                                   \
   NS_IMETHODIMP                                                       \
   _class::Set##_method(PRBool aValue)                                 \
@@ -1050,9 +1073,7 @@ nsHTML##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn) \
   NS_IMETHODIMP                                                           \
   _class::Get##_method(PRInt32* aValue)                                   \
   {                                                                       \
-    GetIntAttr(nsHTMLAtoms::_atom, _default, aValue);                     \
-                                                                          \
-    return NS_OK;                                                         \
+    return GetIntAttr(nsHTMLAtoms::_atom, _default, aValue);              \
   }                                                                       \
   NS_IMETHODIMP                                                           \
   _class::Set##_method(PRInt32 aValue)                                    \
@@ -1071,15 +1092,12 @@ nsHTML##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn) \
   NS_IMETHODIMP                                                     \
   _class::Get##_method(nsAString& aValue)                           \
   {                                                                 \
-    GetURIAttr(nsHTMLAtoms::_atom, aValue);                         \
-                                                                    \
-    return NS_OK;                                                   \
+    return GetURIAttr(nsHTMLAtoms::_atom, aValue);                  \
   }                                                                 \
   NS_IMETHODIMP                                                     \
   _class::Set##_method(const nsAString& aValue)                     \
   {                                                                 \
-    return SetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue,   \
-                   PR_TRUE);                                        \
+    return SetAttrHelper(nsHTMLAtoms::_atom, aValue);               \
   }
 
 /**

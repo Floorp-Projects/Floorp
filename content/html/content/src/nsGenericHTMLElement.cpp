@@ -3075,15 +3075,29 @@ nsGenericHTMLElement::GetContentsAsText(nsAString& aText)
   return NS_OK;
 }
 
-void
+nsresult
+nsGenericHTMLElement::GetAttrHelper(nsIAtom* aAttr, nsAString& aValue)
+{
+  GetAttr(kNameSpaceID_None, aAttr, aValue);
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue)
+{
+  return SetAttr(kNameSpaceID_None, aAttr, aValue, PR_TRUE);
+}
+
+nsresult
 nsGenericHTMLElement::GetStringAttrWithDefault(nsIAtom* aAttr,
-                                               const nsAString& aDefault,
+                                               const char* aDefault,
                                                nsAString& aResult)
 {
   nsresult rv = GetAttr(kNameSpaceID_None, aAttr, aResult);
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    aResult = aDefault;
+    CopyASCIItoUTF16(aDefault, aResult);
   }
+  return NS_OK;
 }
 
 nsresult
@@ -3096,7 +3110,14 @@ nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, PRBool aValue)
   return UnsetAttr(kNameSpaceID_None, aAttr, PR_TRUE);
 }
 
-void
+nsresult
+nsGenericHTMLElement::GetBoolAttr(nsIAtom* aAttr, PRBool* aValue)
+{
+  *aValue = HasAttr(kNameSpaceID_None, aAttr);
+  return NS_OK;
+}
+
+nsresult
 nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aResult)
 {
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
@@ -3106,6 +3127,7 @@ nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aRes
   else {
     *aResult = aDefault;
   }
+  return NS_OK;
 }
 
 nsresult
@@ -3117,7 +3139,7 @@ nsGenericHTMLElement::SetIntAttr(nsIAtom* aAttr, PRInt32 aValue)
   return SetAttr(kNameSpaceID_None, aAttr, value, PR_TRUE);
 }
 
-void
+nsresult
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
 {
   nsAutoString attrValue;
@@ -3125,7 +3147,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
   if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
     aResult.Truncate();
 
-    return;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
@@ -3137,7 +3159,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
     // Just use the attr value as the result...
     aResult = attrValue;
 
-    return;
+    return NS_OK;
   }
 
   NS_ASSERTION(attrURI,
@@ -3146,6 +3168,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
   nsCAutoString spec;
   attrURI->GetSpec(spec);
   CopyUTF8toUTF16(spec, aResult);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
