@@ -27,7 +27,7 @@
 #include "nsIRunnable.h"
 #include "nsIRequest.h"
 #include "nsISocketTransportService.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
@@ -138,7 +138,7 @@ public:
                   nsIProtocolHandler* aHandler,
                   nsIChannel* channel,
                   nsISupports* ctxt,
-                  nsICapabilities* notificationCallbacks);
+                  nsIInterfaceRequestor* notificationCallbacks);
     nsresult Process();
 
     // user level setup
@@ -251,12 +251,12 @@ private:
     nsCOMPtr<nsISupports>           mContext;
     nsCOMPtr<nsIConnectionCache>    mConnCache;         // the nsISupports proxy ptr to the FTP proto handler
     nsConnectionCacheObj* mConn;            // The cached connection.
-    PRBool              mKeepRunning;       // thread event loop boolean
+    PRBool                          mKeepRunning;       // thread event loop boolean
 
-    nsString2           mContentType;       // the content type of the data we're dealing w/.
-    nsXPIDLCString      mURLSpec;
-    nsCOMPtr<nsICapabilities> mCallbacks;
-    nsCOMPtr<nsIFTPChannel>   mFTPChannel;
+    nsString2                       mContentType;       // the content type of the data we're dealing w/.
+    nsXPIDLCString                  mURLSpec;
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsIFTPChannel>         mFTPChannel;
 
     nsCOMPtr<nsIBufferInputStream>  mBufInStream;
     nsCOMPtr<nsIBufferOutputStream> mBufOutStream;

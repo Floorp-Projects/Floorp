@@ -29,7 +29,7 @@
 #include "nsIURI.h"
 #include "nsHTTPHandler.h"
 #include "nsIEventQueue.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIHttpEventSink.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
@@ -87,37 +87,37 @@ public:
     nsresult            SetUsingProxy(PRBool i_UsingProxy);
 
 protected:
-    nsCOMPtr<nsIURI>            mOriginalURI;
-    nsCOMPtr<nsIURI>            mURI;
-    PRBool                      mConnected; 
-    nsHTTPHandler*              mHandler;
-    HTTPState                   mState;
+    nsCOMPtr<nsIURI>                    mOriginalURI;
+    nsCOMPtr<nsIURI>                    mURI;
+    PRBool                              mConnected; 
+    nsHTTPHandler*                      mHandler;
+    HTTPState                           mState;
 
-    nsCString                   mVerb;
-    nsCOMPtr<nsIHTTPEventSink>  mEventSink;
-    nsCOMPtr<nsICapabilities>   mCallbacks;
+    nsCString                           mVerb;
+    nsCOMPtr<nsIHTTPEventSink>          mEventSink;
+    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 
-    nsHTTPRequest*              mRequest;
-    nsHTTPResponse*             mResponse;
-    nsIStreamListener*          mResponseDataListener;
+    nsHTTPRequest*                      mRequest;
+    nsHTTPResponse*                     mResponse;
+    nsIStreamListener*                  mResponseDataListener;
 
-    PRUint32                    mLoadAttributes;
+    PRUint32                            mLoadAttributes;
 
-    nsCOMPtr<nsISupports>       mResponseContext;
-    nsCOMPtr<nsILoadGroup>      mLoadGroup;
+    nsCOMPtr<nsISupports>               mResponseContext;
+    nsCOMPtr<nsILoadGroup>              mLoadGroup;
 
-    PRInt32                     mContentLength;
-    nsCString                   mContentType;
-    nsCString                   mCharset;
-    nsCOMPtr<nsISupports>       mOwner;
-	// Auth related stuff-
-	/* 
-		If this is true then we have already tried 
-		prehost as a response to the server challenge. 
-		And so we need to throw a dialog box!
-	*/
-	PRBool 						mAuthTriedWithPrehost;
-    PRBool                      mUsingProxy;
+    PRInt32                             mContentLength;
+    nsCString                           mContentType;
+    nsCString                           mCharset;
+    nsCOMPtr<nsISupports>               mOwner;
+    // Auth related stuff-
+    /* 
+       If this is true then we have already tried 
+       prehost as a response to the server challenge. 
+       And so we need to throw a dialog box!
+    */
+    PRBool                              mAuthTriedWithPrehost;
+    PRBool                              mUsingProxy;
 };
 
 #endif /* _nsHTTPChannel_h_ */

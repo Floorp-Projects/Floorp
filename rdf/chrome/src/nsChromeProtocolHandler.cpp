@@ -126,7 +126,7 @@ nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                     nsILoadGroup* aLoadGroup,
-                                    nsICapabilities* notificationCallbacks,
+                                    nsIInterfaceRequestor* notificationCallbacks,
                                     nsLoadFlags loadAttributes,
                                     nsIURI* originalURI,
                                     nsIChannel* *result)

@@ -170,7 +170,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICAPABILITIES
 
   NS_DECL_NSIURICONTENTLISTENER
 
@@ -802,14 +801,7 @@ NS_IMPL_QUERY_HEAD(nsWebShell)
    NS_IMPL_QUERY_BODY(nsIClipboardCommands)
    NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
    NS_IMPL_QUERY_BODY(nsIURIContentListener)
-   NS_IMPL_QUERY_BODY(nsICapabilities)
 NS_IMPL_QUERY_TAIL(nsIWebShell)
-
-NS_IMETHODIMP
-nsWebShell::QueryCapability(const nsIID &aIID, void** aInstancePtr)
-{
-  return GetInterface(aIID, aInstancePtr);
-}
 
 NS_IMETHODIMP
 nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)

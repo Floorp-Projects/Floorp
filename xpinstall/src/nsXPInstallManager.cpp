@@ -107,8 +107,8 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIXULWindowCallbacks*,this);
   else if (aIID.Equals(nsIProgressEventSink::GetIID()))
     *aInstancePtr = NS_STATIC_CAST(nsIProgressEventSink*,this);
-  else if (aIID.Equals(nsICapabilities::GetIID()))
-    *aInstancePtr = NS_STATIC_CAST(nsICapabilities*,this);
+  else if (aIID.Equals(nsIInterfaceRequestor::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIInterfaceRequestor*,this);
   else if (aIID.Equals(kISupportsIID))
     *aInstancePtr = NS_STATIC_CAST( nsISupports*, NS_STATIC_CAST(nsIXPINotifier*,this));
   else
@@ -474,9 +474,9 @@ nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUni
     return mProxy->SetActionText(aMsg);
 }
 
-// nsICapabilities method
+// nsIInterfaceRequestor method
 NS_IMETHODIMP 
-nsXPInstallManager::QueryCapability(const nsIID & eventSinkIID, void* *_retval)
+nsXPInstallManager::GetInterface(const nsIID & eventSinkIID, void* *_retval)
 {
     return QueryInterface(eventSinkIID, (void**)_retval);
 }

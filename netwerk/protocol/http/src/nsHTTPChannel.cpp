@@ -27,7 +27,7 @@
 #include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
@@ -391,7 +391,7 @@ nsHTTPChannel::SetOwner(nsISupports * aOwner)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+nsHTTPChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
     *aNotificationCallbacks = mCallbacks.get();
     NS_IF_ADDREF(*aNotificationCallbacks);
@@ -399,7 +399,7 @@ nsHTTPChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     nsresult rv = NS_OK;
     mCallbacks = aNotificationCallbacks;
@@ -408,8 +408,8 @@ nsHTTPChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
     if (mCallbacks) {
         // we don't care if this fails -- we don't need an nsIHTTPEventSink
         // to proceed
-        (void)mCallbacks->QueryCapability(NS_GET_IID(nsIHTTPEventSink),
-                                          getter_AddRefs(mEventSink));
+        (void)mCallbacks->GetInterface(NS_GET_IID(nsIHTTPEventSink),
+                                       getter_AddRefs(mEventSink));
     }
     return rv;
 }

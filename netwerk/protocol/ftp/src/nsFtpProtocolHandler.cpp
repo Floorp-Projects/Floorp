@@ -26,7 +26,7 @@
 #include "nsIURL.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 #include "nsConnectionCacheObj.h"
 
@@ -177,7 +177,7 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
                                  nsILoadGroup* aLoadGroup,
-                                 nsICapabilities* notificationCallbacks,
+                                 nsIInterfaceRequestor* notificationCallbacks,
                                  nsLoadFlags loadAttributes,
                                  nsIURI* originalURI,
                                  nsIChannel* *result)

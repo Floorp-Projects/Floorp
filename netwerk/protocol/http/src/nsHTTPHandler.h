@@ -83,7 +83,7 @@ public:
 
     NS_IMETHOD               NewChannel(const char* verb, nsIURI* url,
                                         nsILoadGroup* aLoadGroup,
-                                        nsICapabilities* notificationCallbacks,
+                                        nsIInterfaceRequestor* notificationCallbacks,
                                         nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
                                         nsIChannel **_retval);

@@ -25,7 +25,7 @@
 
 #include "nsIFileChannel.h"
 #include "nsIFileProtocolHandler.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
@@ -67,7 +67,7 @@ public:
                   const char* command, 
                   nsIURI* uri,
                   nsILoadGroup* aLoadGroup, 
-                  nsICapabilities* notificationCallbacks, 
+                  nsIInterfaceRequestor* notificationCallbacks, 
                   nsLoadFlags loadAttributes,
                   nsIURI* originalURI);
 
@@ -78,7 +78,7 @@ protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIFileProtocolHandler>    mHandler;
-    nsCOMPtr<nsICapabilities>           mCallbacks;
+    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     char*                               mCommand;
     nsFileSpec                          mSpec;
     nsCOMPtr<nsIChannel>                mFileTransport;

@@ -35,7 +35,7 @@
 #include "nsHashtable.h"
 #include "nsIProtocolHandler.h"
 #include "nsIProgressEventSink.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIThreadPool.h"
 #include "nsIRequest.h"
 
@@ -63,7 +63,7 @@ public:
     nsresult Init(const char* verb, 
                   nsIURI* uri, 
                   nsILoadGroup* aLoadGroup,
-                  nsICapabilities* notificationCallbacks, 
+                  nsIInterfaceRequestor* notificationCallbacks, 
                   nsLoadFlags loadAttributes, 
                   nsIURI* originalURI,
                   nsIProtocolHandler* aHandler, 
@@ -74,7 +74,7 @@ protected:
     nsCOMPtr<nsIURI>                mURL;
     nsCOMPtr<nsIEventQueue>         mEventQueue;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
-    nsCOMPtr<nsICapabilities>       mCallbacks;
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     PRBool                          mConnected;
     nsCOMPtr<nsIStreamListener>     mListener;

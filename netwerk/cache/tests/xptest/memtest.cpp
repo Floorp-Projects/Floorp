@@ -46,7 +46,7 @@
 #include "nsIURL.h"
 #include "nsIHTTPChannel.h"
 #include "nsIHttpEventSink.h" 
-#include "nsICapabilities.h" 
+#include "nsIInterfaceRequestor.h" 
 #include "nsIDNSService.h" 
 
 #include "nsISimpleEnumerator.h"
@@ -557,7 +557,7 @@ InputTestConsumer::OnStopRequest(nsIChannel* channel,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsNotificationCallbacks : public nsICapabilities {
+class nsNotificationCallbacks : public nsIInterfaceRequestor {
 public:
     NS_DECL_ISUPPORTS
 
@@ -565,7 +565,7 @@ public:
         NS_INIT_REFCNT();
     }
 
-    NS_IMETHOD QueryCapability(const nsIID& eventSinkIID, nsISupports* *result) {
+    NS_IMETHOD GetInterface(const nsIID& eventSinkIID, nsISupports* *result) {
         nsresult rv = NS_ERROR_FAILURE;
 
         if (eventSinkIID.Equals(NS_GET_IID(nsIHTTPEventSink))) {
@@ -582,7 +582,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(nsNotificationCallbacks, nsICapabilities)
+NS_IMPL_ISUPPORTS1(nsNotificationCallbacks, nsIInterfaceRequestor)
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -321,7 +321,7 @@ nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
 
 // As an event sink getter, we get ourself.
 NS_IMETHODIMP
-nsStreamXferOp::QueryCapability(const nsIID &anIID, void **aResult ) {
+nsStreamXferOp::GetInterface(const nsIID &anIID, void **aResult ) {
     return this->QueryInterface( anIID, (void**)aResult );
 }
 
@@ -510,8 +510,8 @@ nsStreamXferOp::QueryInterface( REFNSIID aIID, void** aInstancePtr ) {
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsICapabilities>::GetIID())) {
-        *aInstancePtr = (void*) ((nsICapabilities*)this);
+    if (aIID.Equals(nsCOMTypeInfo<nsIInterfaceRequestor>::GetIID())) {
+        *aInstancePtr = (void*) ((nsIInterfaceRequestor*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }

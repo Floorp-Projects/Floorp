@@ -26,7 +26,7 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 #include "nsIThread.h"
 #include "nsIThreadPool.h"
@@ -129,7 +129,7 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
                                   nsILoadGroup* aLoadGroup,
-                                  nsICapabilities* notificationCallbacks,
+                                  nsIInterfaceRequestor* notificationCallbacks,
                                   nsLoadFlags loadAttributes,
                                   nsIURI* originalURI,
                                   nsIChannel* *result)

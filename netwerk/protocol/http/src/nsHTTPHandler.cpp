@@ -31,7 +31,7 @@
 #include "nsIChannel.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIHttpEventSink.h"
 #include "nsIFileStream.h" 
 #include "nsIStringStream.h" 
@@ -188,7 +188,7 @@ nsHTTPHandler::~nsHTTPHandler()
 NS_METHOD
 nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                           nsILoadGroup* aLoadGroup,
-                          nsICapabilities* notificationCallbacks,
+                          nsIInterfaceRequestor* notificationCallbacks,
                           nsLoadFlags loadAttributes,
                           nsIURI* originalURI,
                           nsIChannel **o_Instance)

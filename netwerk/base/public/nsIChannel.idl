@@ -28,7 +28,7 @@ interface nsIOutputStream;
 interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsILoadGroup;
-interface nsICapabilities;
+interface nsIInterfaceRequestor;
 
 typedef unsigned long nsLoadFlags;
 
@@ -159,7 +159,7 @@ interface nsIChannel : nsIRequest
      * who wish to provide a means to receive progress, status and protocol-specific 
      * notifications.
      */
-    attribute nsICapabilities notificationCallbacks;
+    attribute nsIInterfaceRequestor notificationCallbacks;
 
 };
 
@@ -178,7 +178,7 @@ interface nsIInputStreamChannel : nsIChannel
               in long contentLength,
               in nsIInputStream inStr,
               in nsILoadGroup aLoadGroup,
-              in nsICapabilities notificationCallbacks,
+              in nsIInterfaceRequestor notificationCallbacks,
               in nsLoadFlags loadAttributes,
               in nsIURI originalURI);
 };

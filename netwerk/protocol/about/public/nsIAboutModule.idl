@@ -25,7 +25,7 @@
 
 interface nsIURI;
 interface nsILoadGroup;
-interface nsICapabilities;
+interface nsIInterfaceRequestor;
 interface nsIEventQueue;
 
 [scriptable, uuid(692303c0-2f83-11d3-8cd0-0060b0fc14a3)]
@@ -34,7 +34,7 @@ interface nsIAboutModule : nsISupports
     nsIChannel NewChannel(in string verb,
                           in nsIURI aURI,
                           in nsILoadGroup aLoadGroup,
-                          in nsICapabilities notificationCallbacks,
+                          in nsIInterfaceRequestor notificationCallbacks,
                           in nsLoadFlags loadAttributes,
                           in nsIURI originalURI);
 };

@@ -46,14 +46,14 @@
 #include "nsIWebShellWindow.h"
 #include "nsIXULWindowCallbacks.h"    
 #include "nsIProgressEventSink.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 
 
 
 class nsXPInstallManager : public nsIXPINotifier, 
                            public nsIStreamListener,
                            public nsIProgressEventSink,
-                           public nsICapabilities,
+                           public nsIInterfaceRequestor,
                            public nsIXULWindowCallbacks
 {
     public:
@@ -76,8 +76,8 @@ class nsXPInstallManager : public nsIXPINotifier,
         // nsIProgressEventSink
         NS_DECL_NSIPROGRESSEVENTSINK
 
-        // nsICapabilities
-        NS_DECL_NSICAPABILITIES
+        // nsIInterfaceRequestor
+        NS_DECL_NSIINTERFACEREQUESTOR
 
         // IXULWindowCallbacks methods
         NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);

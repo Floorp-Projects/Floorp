@@ -40,7 +40,7 @@
 #include "nsProxyObjectManager.h"
 #include "nsIWebShell.h"
 #include "nsDOMError.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIEvaluateStringProxy.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -193,7 +193,7 @@ NS_IMETHODIMP
 nsJSProtocolHandler::NewChannel(const char* verb, 
                                 nsIURI* uri,
                                 nsILoadGroup* aLoadGroup,
-                                nsICapabilities* notificationCallbacks,
+                                nsIInterfaceRequestor* notificationCallbacks,
                                 nsLoadFlags loadAttributes,
                                 nsIURI* originalURI,
                                 nsIChannel* *result)
@@ -204,8 +204,8 @@ nsJSProtocolHandler::NewChannel(const char* verb,
 
     // The event sink must be a script context owner or we fail.
     nsCOMPtr<nsIScriptContextOwner> owner;
-    rv = notificationCallbacks->QueryCapability(NS_GET_IID(nsIScriptContextOwner),
-                                                getter_AddRefs(owner));
+    rv = notificationCallbacks->GetInterface(NS_GET_IID(nsIScriptContextOwner),
+                                             getter_AddRefs(owner));
     if (NS_FAILED(rv))
         return rv;
     if (!owner)

@@ -284,7 +284,7 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
 NS_IMETHODIMP
 nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                       nsILoadGroup* aLoadGroup,
-                                      nsICapabilities* notificationCallbacks,
+                                      nsIInterfaceRequestor* notificationCallbacks,
                                       nsLoadFlags loadAttributes,
                                       nsIURI* originalURI,
                                       nsIChannel* *result)

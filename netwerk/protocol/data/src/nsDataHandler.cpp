@@ -27,7 +27,7 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsICapabilities.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
@@ -98,7 +98,7 @@ nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsDataHandler::NewChannel(const char* verb, nsIURI* url,
                           nsILoadGroup* aLoadGroup,
-                          nsICapabilities* notificationCallbacks,
+                          nsIInterfaceRequestor* notificationCallbacks,
                           nsLoadFlags loadAttributes,
                           nsIURI* originalURI,
                           nsIChannel* *result)
