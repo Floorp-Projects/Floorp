@@ -243,6 +243,14 @@ nsUpdateService.prototype = {
                       .getService(Components.interfaces.nsIObserverService);
     os.notifyObservers(null, "Update:App:Ended", "");
   },
+  
+  datasourceError: function ()
+  {
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                      .getService(Components.interfaces.nsIObserverService);
+    os.notifyObservers(null, "Update:App:Error", "");
+    os.notifyObservers(null, "Update:App:Ended", "");
+  },
 
   get updateCount()
   {
@@ -347,6 +355,10 @@ nsUpdateObserver.prototype = {
   observe: function (aSubject, aTopic, aData)
   {
     switch (aTopic) {
+    case "Update:Extension:Started":
+      // Reset the count
+      this._pref.setIntPref(PREF_UPDATE_EXTENSIONS_COUNT, 0);
+      break;
     case "Update:Extension:Item-Ended":
       this._pref.setIntPref(PREF_UPDATE_EXTENSIONS_COUNT, 
                             this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_COUNT) + 1);
@@ -363,15 +375,58 @@ nsUpdateObserver.prototype = {
       // The Inline Browser Update UI uses this notification to refresh its update 
       // UI if necessary.
       var os = Components.classes["@mozilla.org/observer-service;1"]
-                        .getService(Components.interfaces.nsIObserverService);
+                         .getService(Components.interfaces.nsIObserverService);
       os.notifyObservers(null, "Update:Ended", this._sourceEvent.toString());
+
+      // Show update notification UI if:
+      // We were updating any types and any item was found
+      // We were updating extensions and an extension update was found.
+      // We were updating app and an app update was found. 
+      var updatesAvailable = (((this._updateTypes == nsIUpdateItem.TYPE_EXTENSION) || 
+                               (this._updateTypes == nsIUpdateItem.TYPE_ANY)) && 
+                              this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_COUNT) != 0);
+      if (!updatesAvailable) {
+        updatesAvailable = ((this._updateTypes == nsIUpdateItem.TYPE_APP) || 
+                            (this._updateTypes == nsIUpdateItem.TYPE_ANY)) && 
+                           this._pref.getBoolPref(PREF_UPDATE_APP_UPDATESAVAILABLE);
+      }
       
+      if (updatesAvailable && this._sourceEvent == nsIUpdateService.SOURCE_EVENT_BACKGROUND) {
+        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                            .getService(Components.interfaces.nsIStringBundleService);
+        var bundle = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
+
+        var alertTitle = bundle.GetStringFromName("updatesAvailableTitle");
+        var alertText = bundle.GetStringFromName("updatesAvailableText");
+        
+        var alerts = Components.classes["@mozilla.org/alerts-service;1"]
+                              .getService(Components.interfaces.nsIAlertsService);
+        alerts.showAlertNotification("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png",
+                                     alertTitle, alertText, true, "", this);
+      }
+
       os.removeObserver(this, "Update:Extension:Item-Ended");
       os.removeObserver(this, "Update:Extension:Ended");
       os.removeObserver(this, "Update:App:Ended");
       
       this._service.updating = false;
     }
+  },
+  
+  ////////////////////////////////////////////////////////////////////////////
+  // nsIObserver
+  
+  onAlertFinished: function ()
+  {
+  },
+  
+  onAlertClickCallback: function (aCookie)
+  {
+    var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                            .getService(Components.interfaces.nsIUpdateService);
+    updates.checkForUpdates([], 0, Components.interfaces.nsIUpdateItem.TYPE_ANY, 
+                            Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
+                            null);
   }
 };
 
@@ -407,6 +462,8 @@ nsAppUpdateXMLRDFDSObserver.prototype =
   onError: function(aSink, aStatus, aErrorMsg)
   {
     aSink.removeXMLSinkObserver(this);
+    
+    this._updateService.datasourceError();
   }
 }
 
@@ -499,6 +556,24 @@ nsVersionChecker.prototype = {
     if (isNaN(integer))
       return 0;
     return integer;
+  },
+  
+  isValidVersion: function (aVersion)
+  {
+    var parts = aVersion.split(".");
+    if (parts.length == 0)
+      return false;
+    for (var i = 0; i < parts.length; ++i) {
+      var part = parts[i];
+      if (i == parts.length - 1) {
+        if (part.lastIndexOf("+") != -1) 
+          parts[i] = part.substr(0, part.length - 1);
+      }
+      var integer = parseInt(part);
+      if (isNaN(integer))
+        return false;
+    }
+    return true;
   },
 
   /////////////////////////////////////////////////////////////////////////////

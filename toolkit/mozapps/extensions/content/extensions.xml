@@ -69,11 +69,7 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:image class="extension-button" anonid="options-button" 
-#ifdef XP_WIN
                      tooltiptext="&options.tooltip;" 
-#else
-                     tooltiptext="&optionsUnix.tooltip;" 
-#endif
                      onclick="gExtensionsViewController.doCommand('cmd_options');"/>
           <xul:image class="extension-button" anonid="about-button" 
                      tooltiptext="&about.tooltip;" 

@@ -72,7 +72,7 @@
          oncommand="gExtensionsViewController.doCommand('cmd_close');"/>
     <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about" 
          oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
-    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"
+    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options" 
          oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
   </keyset>
   
@@ -85,9 +85,6 @@
     <command id="cmd_options"/>
     <command id="cmd_about"/>
     <command id="cmd_homepage"/>
-#ifdef MOZ_THUNDERBIRD
-    <command id="cmd_install"/>
-#endif
     <command id="cmd_uninstall"/>
     <command id="cmd_update"/>
     <command id="cmd_enable"/>
@@ -102,11 +99,7 @@
     <menuitem id="menuitem_useTheme" default="true" command="cmd_useTheme"
               label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;"/>
     <menuitem id="menuitem_options" default="true" command="cmd_options"
-#ifdef XP_WIN
               label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"/>
-#else
-              label="&cmd.optionsUnix.label;" accesskey="&cmd.optionsUnix.accesskey;"/>
-#endif
     <menuitem id="menuitem_homepage" command="cmd_homepage"
               label="&cmd.homepage.label;" accesskey="&cmd.homepage.accesskey;"/>
     <menuitem id="menuitem_about" command="cmd_about"
@@ -249,11 +242,6 @@
   <hbox>
     <hbox id="commandBar" flex="1" align="center">
       <hbox>
-#ifdef MOZ_THUNDERBIRD
-        <button id="installButton"
-                label="&cmd.install.label;" accesskey="&cmd.install.accesskey;" tooltiptext="&cmd.install.tooltip;" 
-                command="cmd_install"/>
-#endif
         <button id="uninstallButton" 
                 label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;" tooltiptext="&cmd.uninstall.tooltip;" 
                 command="cmd_uninstall"/>

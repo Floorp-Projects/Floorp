@@ -150,6 +150,37 @@ var gUpdateWizard = {
     this._setUpButton("back", aBackButton, aBackButtonIsDisabled);
     this._setUpButton("next", aNextButton, aNextButtonIsDisabled);
     this._setUpButton("cancel", aCancelButton, aCancelButtonIsDisabled);
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // Update Errors
+  errorItems: [],
+  errorOnApp: false,
+
+  showErrors: function (aState, aErrors)
+  {
+    openDialog("chrome://mozapps/content/update/errors.xul", "", 
+               "modal", { state: aState, errors: aErrors });
+  },
+  
+  showUpdateCheckErrors: function ()
+  {
+    var errors = [];
+    for (var i = 0; i < this.errorItems.length; ++i)
+      errors.push({ name: this.errorItems[i].name, error: true });
+
+    if (this.errorOnApp) {
+      var brandShortName = document.getElementById("brandStrings").getString("brandShortName");
+      errors.push({ name: brandShortName, error: true });    
+    }
+    
+    this.showErrors("checking", errors);
+  },
+
+  checkForErrors: function (aElementIDToShow)
+  {
+    if (this.errorOnGeneric || this.errorItems.length > 0 || this.errorOnApp)
+      document.getElementById(aElementIDToShow).hidden = false;
   }
 };
 
@@ -198,6 +229,8 @@ var gUpdatePage = {
     for (var i = 0; i < this._messages.length; ++i)
       os.addObserver(this, this._messages[i], false);
 
+    gUpdateWizard.errorItems = [];
+
     var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                             .getService(Components.interfaces.nsIUpdateService);
     updates.checkForUpdatesInternal(gUpdateWizard.items, gUpdateWizard.items.length, 
@@ -232,6 +265,18 @@ var gUpdatePage = {
       progress.value = Math.ceil(this._completeCount / gUpdateWizard.itemsToUpdate.length) * 100;
       
       break;
+    case "Update:Extension:Item-Error":
+      if (aSubject) {
+        var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
+        gUpdateWizard.errorItems.push(item);
+      }
+      else {
+        for (var i = 0; i < gUpdateWizard.items.length; ++i) {
+          if (!gUpdateWizard.items[i].updateRDF)
+            gUpdateWizard.errorItems.push(gUpdateWizard.items[i]);
+        }
+      }
+      break;
     case "Update:Extension:Ended":
       // If we were passed a set of extensions/themes/other to update, this
       // means we're not checking for app updates, so don't wait for the app
@@ -244,6 +289,9 @@ var gUpdatePage = {
       // were passed in for us to check for updates to), this notification means both
       // extension and app updates have completed.
       canFinish = true;
+      break;
+    case "Update:App:Error":
+      gUpdateWizard.errorOnApp = true;
       break;
     case "Update:App:Ended":
       // The "Updates Found" page of the update wizard needs to know if it there are app 
@@ -317,6 +365,8 @@ var gFoundPage = {
       if (item.iconURL != "")
         updateitem.icon = item.iconURL;
     }
+
+    gUpdateWizard.checkForErrors("updateCheckErrorNotFound");
   },
   
   onCommand: function (aEvent)
@@ -436,8 +486,7 @@ var gErrorsPage = {
   
   onShowErrors: function ()
   {
-    openDialog("chrome://mozapps/content/update/errors.xul", "", 
-               "modal", gInstallingPage._objs);
+    gUpdateWizard.showErrors("install", gInstallingPage._objs);
   }  
 };
 
@@ -462,7 +511,7 @@ var gFinishedPage = {
       iR2.hidden = true;
       fEC.hidden = true;
     }
-
+    
     if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
       document.getElementById("finishedMismatch").hidden = false;
       document.getElementById("incompatibleAlert").hidden = false;
@@ -486,6 +535,8 @@ var gNoUpdatesPage = {
         document.getElementById("mismatchFinishedEnableChecking").hidden = false;
       }
     }
+
+    gUpdateWizard.checkForErrors("updateCheckErrorNotFound");
   }
 };
 

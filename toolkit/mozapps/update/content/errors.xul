@@ -44,14 +44,19 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&errors.title;"
         onload="init()"
-        style="width: 25em;"
+        style="width: 28em;"
         buttons="cancel">
 
   <script type="application/x-javascript">
   <![CDATA[
     function init()
     {
-      var items = window.arguments[0];
+      var state = window.arguments[0].state;
+      var brandShortName = document.getElementById("brandStrings").getString("brandShortName");
+      var str = document.getElementById("updateStrings").getFormattedString(state + "ErrorDescription", [brandShortName]);
+      document.getElementById("intro").appendChild(document.createTextNode(str));
+      
+      var items = window.arguments[0].errors;
       var listbox = document.getElementById("extensions");
       for (var i = 0; i < items.length; ++i) {
         if (items[i].error) {
@@ -69,10 +74,11 @@
   </script>
   
   <stringbundleset id="updateSet">
+    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/update.properties"/>
   </stringbundleset>
 
-  <label>&errors.intro.title;</label>
+  <description id="intro"/>
   <separator/>
   <listbox id="extensions" rows="7"/>
   <separator/>

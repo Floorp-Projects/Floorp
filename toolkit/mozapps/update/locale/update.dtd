@@ -59,3 +59,8 @@
 <!ENTITY  errors.details.label            "Details">
 <!ENTITY  errors.details.accesskey        "D">
 
+<!ENTITY  updateCheckError.description    "&brandShortName; encountered problems when trying to find
+                                           updates for some items.">
+<!ENTITY  updateCheckError.label          "Details">
+<!ENTITY  updateCheckError.accesskey      "D">
+

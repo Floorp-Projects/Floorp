@@ -102,5 +102,7 @@ interface nsIVersionChecker : nsISupports
   // equal    if A == B
   // +ve      if A is newer
   long compare(in string aVersionA, in string aVersionB);
+
+  boolean isValidVersion(in string aVersion);
 };
 

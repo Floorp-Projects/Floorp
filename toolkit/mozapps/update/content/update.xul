@@ -115,6 +115,13 @@
                   oncommand="gUpdateWizard.shouldAutoCheck = this.checked;"/>
       </vbox>
     </vbox>
+    <hbox id="updateCheckErrorNotFound" hidden="true" align="center">
+      <description flex="1">
+        &updateCheckError.description;
+      </description>
+      <button label="&updateCheckError.label;" accesskey="&updateCheckError.accesskey;"
+              oncommand="gUpdateWizard.showUpdateCheckErrors();"/>
+    </hbox>
 
   </wizardpage>
 
@@ -128,7 +135,14 @@
           oncommand="gFoundPage.onCommand(event);"/>
 
     <label>&found.instructions.label;</label>
-    
+
+    <hbox id="updateCheckErrorFound" hidden="true" align="center">
+      <description flex="1">
+        &updateCheckError.description;
+      </description>
+      <button label="&updateCheckError.label;" accesskey="&updateCheckError.accesskey;"
+              oncommand="gUpdateWizard.showUpdateCheckErrors();"/>
+    </hbox>
   </wizardpage>
 
   <wizardpage id="appupdate" pageid="appupdate"
