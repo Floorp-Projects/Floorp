@@ -1634,6 +1634,12 @@ nsBrowserWindow::GetContentWebShell(nsIWebShell **aResult)
 }
 
 //----------------------------------------
+NS_IMETHODIMP
+nsBrowserWindow::IsIntrinsicallySized(PRBool& aResult)
+{
+  aResult = PR_FALSE;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
