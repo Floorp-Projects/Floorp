@@ -1045,6 +1045,7 @@ PRBool nsWidget::DispatchDestroyEvent(void) {
   PRBool result = PR_FALSE;
   if (nsnull != mEventCallback) {
     nsGUIEvent event;
+    event.nativeMsg = nsnull;
     event.eventStructType = NS_GUI_EVENT;
     event.message = NS_DESTROY;
     event.widget = this;
