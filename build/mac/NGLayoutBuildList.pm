@@ -1262,7 +1262,8 @@ sub BuildRuntimeProjects()
 	}
 	else
 	{
-	    if (0 /* $main::UNIVERSAL_HEADERS_VERSION >= 0x0330 */) {
+	    #//if (0 /* $main::UNIVERSAL_HEADERS_VERSION >= 0x0330 */) {
+	    if (0) {
     		_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"MacOS Interfaces (3.3)");
 	    } else {
     		_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"MacOS Interfaces");
