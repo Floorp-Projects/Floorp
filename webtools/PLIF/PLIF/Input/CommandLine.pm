@@ -100,10 +100,9 @@ sub createArgument {
         } else {
             $self->app->output->request(@_);
             # get input from user
-            my $term = Term::ReadLine->new($self->app->name);
+            my $term = $self->term();
             my $value = $term->readline(''); # (the parameter passed is the prompt, if any)
-            # if we cached the input device:
-            # $term->addhistory($value);
+            $term->addhistory($value);
             if (defined($value)) {
                 if ($value eq '') {
                     # use default
@@ -118,6 +117,15 @@ sub createArgument {
             }
         }
     }
+}
+
+# internal method: returns a Term::ReadLine interface
+sub term {
+    my $self = shift;
+    if (not defined($self->{'term'})) {
+        $self->{'term'} = Term::ReadLine->new($self->app->name);
+    }
+    return $self->{'term'};
 }
 
 
