@@ -66,49 +66,28 @@ LINCS=  -I$(PUBLIC)\rdf                 \
 
 include <$(DEPTH)\config\rules.mak>
 
+XPTYPELIBS=\
+        nsIRDFCompositeDataSource.xpt   \
+        nsIRDFContainer.xpt             \
+        nsIRDFContainerUtils.xpt        \
+        nsIRDFDataSource.xpt            \
+        nsIRDFLiteral.xpt               \
+        nsIRDFNode.xpt                  \
+        nsIRDFObserver.xpt              \
+        nsIRDFPurgeableDataSource.xpt   \
+        nsIRDFResource.xpt              \
+        nsIRDFService.xpt               \
+        nsIRDFXMLDataSource.xpt         \
+        nsIRDFXMLSource.xpt             \
+        nsISimpleEnumerator.xpt         \
+        $(NULL)
+
+
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-	$(MAKE_INSTALL) ..\resources\sidebar.xul $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\sidebar.css $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\sidebarcontainer.xul $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\bm-props.xul $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\bookmarks.xul $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\bookmarks.css $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\history.xul $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\history.css $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\bookmarks.html $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\bookmark-item.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\bookmark-folder-closed.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\bookmark-folder-open.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\personal-folder-closed.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\personal-folder-open.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\folder-open.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\folder-closed.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\document.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\iefavorite.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\History\h1.hst $(DIST)\bin\res\rdf\History
-        $(MAKE_INSTALL) ..\resources\dom-test-1.xul $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\dom-test-2.xul $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\dom-test-3.xul $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\dom-test-4.xul $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\dom-test-5.xul $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\dom-test-1.css $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\dom-test-4.css $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\xpidl-test-1.xul $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\flash-registry.rdf $(DIST)\bin
-        $(MAKE_INSTALL) ..\resources\flash.xul $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\flash.css $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\flash.js  $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\remote-flash-1.rdf $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\remote-flash-2.rdf $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\remote-flash-3.rdf $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\stock.gif  $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\unread.gif $(DIST)\bin\res\rdf
-        $(MAKE_INSTALL) ..\resources\online.gif $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\nsISupports.xpt   $(DIST)\bin\components
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpccomponents.xpt $(DIST)\bin\components
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpcjsid.xpt       $(DIST)\bin\components
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpctest.xpt       $(DIST)\bin\components
-        $(MAKE_INSTALL) nsRDFInterfaces.xpt                                 $(DIST)\bin\components
-        $(MAKE_INSTALL) nsISimpleEnumerator.xpt                             $(DIST)\bin\components
+        -for %i in ($(XPTYPELIBS)) do $(MAKE_INSTALL) %i $(DIST)\bin\components
