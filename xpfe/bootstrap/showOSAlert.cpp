@@ -166,7 +166,7 @@ printf("\n****Inside ShowOSAlert ***\n");
 #endif 
 
 #if defined (XP_WIN)
-    MessageBox(NULL, aMessage, NULL, MB_OK);
+    MessageBox(NULL, aMessage, NULL, MB_OK | MB_ICONERROR | MB_SETFOREGROUND );
 #elif (XP_MAC)
     short buttonClicked;
     StandardAlert(kAlertStopAlert, c2pstr(aMessage), nil, nil, &buttonClicked);
