@@ -25,6 +25,14 @@
 #include "nsString.h"
 class nsIUnicharInputStream;
 
+// for testing
+//#define CSS_REPORT_PARSE_ERRORS
+
+#ifdef CSS_REPORT_PARSE_ERRORS
+#include "nsXPIDLString.h"
+class nsIURI;
+#endif
+
 // Token types
 enum nsCSSTokenType {
   // A css identifier (e.g. foo)
@@ -97,6 +105,11 @@ class nsCSSScanner {
   // Init the scanner.
   void Init(nsIUnicharInputStream* aInput);
 
+#ifdef CSS_REPORT_PARSE_ERRORS
+  void InitErrorReporting(nsIURI* aURI);
+  void ReportError(const PRUnichar* aError);
+#endif
+
   // Get the next token. Return nsfalse on EOF or ERROR. aTokenResult
   // is filled in with the data for the token.
   PRBool Next(PRInt32& aErrorCode, nsCSSToken& aTokenResult);
@@ -139,6 +152,13 @@ protected:
   PRInt32 mPushbackSize;
   PRInt32 mLastRead;
   PRUnichar mLocalPushback[4];
+
+#ifdef CSS_REPORT_PARSE_ERRORS
+  nsXPIDLCString mFileName;
+  PRUint32 mLineNumber;
+  PRUint32 mColNumber;
+#endif
+
 };
 
 #endif /* nsCSSScanner_h___ */
