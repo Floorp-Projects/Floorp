@@ -360,6 +360,10 @@ sub BuildDist()
     
     #BRPROF
     InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
+    
+    #CHROME
+    InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:chrome:");
+    
 
 	#EDITOR
    InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
@@ -556,7 +560,8 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",							"wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
 	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"brprof$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 0);
-
+    BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "chrome$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 0);
+    
 #// XXX moved this TEMPORARILY to layout while we sort out a dependency
 #	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 0);
 }
