@@ -674,7 +674,7 @@
         <xul:menupopup class="search-value-popup">
           <xul:menuitem value="2" stringTag="replied" class="search-value-menuitem"/>
           <xul:menuitem value="1" stringTag="read" class="search-value-menuitem"/>
-          <xul:menuitem value="1048576" stringTag="new" class="search-value-menuitem"/>
+          <xul:menuitem value="65536" stringTag="new" class="search-value-menuitem"/>
           <xul:menuitem value="4096" stringTag="forwarded" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>

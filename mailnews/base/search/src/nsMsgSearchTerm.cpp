@@ -302,15 +302,15 @@ void NS_MsgGetUntranslatedStatusName (uint32 s, nsCString *outName)
 
 PRInt32 NS_MsgGetStatusValueFromName(char *name)
 {
-	if (PL_strcmp("read", name))
+	if (!strcmp("read", name))
 		return MSG_FLAG_READ;
-	if (PL_strcmp("replied", name))
+	if (!strcmp("replied", name))
 		return MSG_FLAG_REPLIED;
-	if (PL_strcmp("forwarded", name))
+	if (!strcmp("forwarded", name))
 		return MSG_FLAG_FORWARDED;
-	if (PL_strcmp("replied and forwarded", name))
+	if (!strcmp("replied and forwarded", name))
 		return MSG_FLAG_FORWARDED|MSG_FLAG_REPLIED;
-	if (PL_strcmp("new", name))
+	if (!strcmp("new", name))
 		return MSG_FLAG_NEW;
 	return 0;
 }
@@ -917,7 +917,7 @@ nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
 	  res = MatchString(stringToMatch ? stringToMatch : rfc2047string,
                       nsnull, pResult);
 
-    PR_FREEIF(stringToMatch);
+    PR_Free(stringToMatch);
 
 	return res;
 }
@@ -1089,8 +1089,8 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 			addressPos += walkAddresses.Length() + 1;
 		}
 
-		PR_FREEIF(names);
-		PR_FREEIF(addresses);
+		PR_Free(names);
+		PR_Free(addresses);
 	}
 	*pResult = result;
 	return err;
