@@ -35,7 +35,7 @@
 
 typedef struct BufioFileStruct BufioFile;
 
-BufioFile*  bufio_Open(const char* name, PRIntn flags, PRIntn mode);
+BufioFile*  bufio_Open(const char* name, const char* mode);
 int         bufio_Close(BufioFile* file);
 int         bufio_Seek(BufioFile* file, PRInt32 offset, int whence);
 PRUint32    bufio_Read(BufioFile* file, char* dest, PRUint32 count);

@@ -155,8 +155,7 @@ typedef MmioFile* XP_File;
   /* home-grown XP buffering                       */
   /* writes are buffered too so use flush!         */
   /*-----------------------------------------------*/
-#define USE_NSPR_MODES
-
+#define USE_STDIO_MODES
 
 #include "nr_bufio.h"
 #define XP_FileSeek(file,offset,whence) bufio_Seek((file),(offset),(whence))
@@ -164,8 +163,7 @@ typedef MmioFile* XP_File;
 #define XP_FileWrite(src,count,file)    bufio_Write((file), (src), (count))
 #define XP_FileTell(file)               bufio_Tell(file)
 #define XP_FileClose(file)              bufio_Close(file)
-#define XP_FileOpen(path, mode)         bufio_Open((path), mode)
-
+#define XP_FileOpen(path, mode)         bufio_Open((path), (mode))
 #define XP_FileFlush(file)              bufio_Flush(file)
 #define XP_FileSetBufferSize(file,bufsize) bufio_SetBufferSize(file,bufsize)
 
@@ -247,7 +245,7 @@ typedef PRFileDesc* XP_File;
 #define XP_FILE_WRITE_BIN        PR_WRONLY, 0644
 #define XP_FILE_UPDATE           (PR_RDWR|PR_CREATE_FILE), 0644
 #define XP_FILE_TRUNCATE         (PR_RDWR | PR_TRUNCATE), 0644
-#define XP_FILE_UPDATE_BIN       (PR_RDWR|PR_CREATE_FILE), 0644
+#define XP_FILE_UPDATE_BIN       PR_RDWR|PR_CREATE_FILE, 0644
 #define XP_FILE_TRUNCATE_BIN     (PR_RDWR | PR_TRUNCATE), 0644
 
 #ifdef SEEK_SET
