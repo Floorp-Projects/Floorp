@@ -22,8 +22,12 @@
 
     <!-- button bar -->
     <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
-      <toolbar class="toolbar-primary" id="helpToolbar" grippytooltip="aTooltip" grippytooltiptext="The Help Toolbar"
-               tbautostretch="always" persist="collapsed">
+      <toolbar class="toolbar-primary" 
+	id="helpToolbar" 
+	grippytooltip="aTooltip" 
+	grippytooltiptext="The Help Toolbar"
+        tbautostretch="always" 
+	persist="collapsed">
 
         <button id="helpBackButton"
                 class="button-toolbar-1 top"
@@ -59,7 +63,8 @@
       <box id="helpsidebar-box" orient="vertical">
 
         <box orient="vertical" id="help-subset">
-          <text value="&t1.label;"/>
+          <!-- these we will want to clean up or style better -->
+	  <text value="&t1.label;"/>
           <text value="&t2.label;"/>
           <text value="&t3.label;"/>
         </box>
@@ -120,7 +125,8 @@
 
             <box id="help-index">
               <!-- right now this makes the toc as wide as the content area -->
-              <!-- iframe flex="1" src="chrome://help/locale/ref_index.html" /-->
+              <iframe flex="1" style="min-width: 0px; width: 0px;" 
+		src="chrome://help/locale/help_index.html" />
             </box>
 
           </tabpanel>
@@ -128,7 +134,7 @@
       </box>
 
       <splitter id="helpsidebar-splitter"
-v                collapse="before"
+                collapse="before"
                 persist="state hidden"
                 autostretch="never"
                 orient="vertical"

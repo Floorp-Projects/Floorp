@@ -4,10 +4,10 @@ var gBrowser;
 var key = {
  "?mail": "chrome://help/locale/mail_help.html",
  "?nav":  "chrome://help/locale/nav_help.html",
- "?im:    "chrome://help/locale/im_help.html",
- "?sec:   "chrome://help/locale/security_help.html",
- "?cust:  "chrome://help/locale/customize_help.html",
- "?comp:  "chrome://help/locale/composer_help.html",
+ "?im":    "chrome://help/locale/im_help.html",
+ "?sec":   "chrome://help/locale/security_help.html",
+ "?cust":  "chrome://help/locale/customize_help.html",
+ "?comp":  "chrome://help/locale/composer_help.html"
 }
 
 
@@ -34,8 +34,9 @@ function init()
   //}
 
   if (window.location.search) {
-      browser.loadURI(key[window.location.search]);
+      loadURI(key[window.location.search]);
       selectTOC(key[window.location.search]);
+
   } else {
       goHome();
 }
@@ -45,7 +46,7 @@ function selectTOC(link_attr) {
   if (items.length >= 1) {
 	var parentRow = items[0].parentNode;
   	var selectableNode = parentRow.parentNode; 	// helplink is an attribute
-  								// on a treecell, which cannot be selected
+  							// on a treecell, which cannot be selected
   	var tree = document.getElementById("help-toc-tree");
   	tree.selectItem(selectableNode);
   } 
