@@ -19,10 +19,13 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH = ..\..\..\..
+
+DIRS = samples
+
 include <$(DEPTH)\config\rules.mak>
 
-libs::
+export::
   if not exist "bin" mkdir "bin"
   if not exist "idl" mkdir "idl"
   if not exist "include" mkdir "include"
@@ -74,3 +77,6 @@ libs::
   $(MAKE_INSTALL) $(DIST)\bin\regxpcom.exe .\bin
   $(MAKE_INSTALL) $(DIST)\bin\xpidl.exe .\bin
   $(MAKE_INSTALL) $(DIST)\bin\xpt_dump.exe .\bin
+
+clobber::
+  $(RM_R) bin idl include
