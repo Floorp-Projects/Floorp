@@ -41,12 +41,24 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  /* The PreHandleEvent method is called before event dispatch to either
+   * the DOM or frames.  Any processing which must not be prevented or
+   * cancelled should occur here.  Any processing which is intended to
+   * be conditional based on either DOM or frame processing should occur in
+   * PostHandleEvent.  Any centralized event processing which must occur before
+   * DOM or frame event handling should occur here as well.
+   */
   NS_IMETHOD PreHandleEvent(nsIPresContext* aPresContext,
                          nsGUIEvent *aEvent,
                          nsIFrame* aTargetFrame,
                          nsEventStatus* aStatus,
                          nsIView* aView);
 
+  /* The PostHandleEvent method should contain all system processing which
+   * should occur conditionally based on DOM or frame processing.  It should
+   * also contain any centralized event processing which must occur after
+   * DOM and frame processing.
+   */
   NS_IMETHOD PostHandleEvent(nsIPresContext* aPresContext,
                          nsGUIEvent *aEvent,
                          nsIFrame* aTargetFrame,
@@ -84,6 +96,7 @@ protected:
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
   nsISelfScrollingFrame* GetNearestSelfScrollingFrame(nsIFrame* aFrame);
+  PRBool CheckDisabled(nsIContent* aContent);
 
   nsIFrame* GetDocumentFrame(nsIPresContext* aPresContext);
 

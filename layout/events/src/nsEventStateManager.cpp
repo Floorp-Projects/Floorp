@@ -98,7 +98,6 @@ nsEventStateManager::nsEventStateManager()
   mPresContext = nsnull;
   mCurrentTabIndex = 0;
   mLastWindowToHaveFocus = nsnull;
-  mConsumeFocusEvents = PR_FALSE;
   NS_INIT_REFCNT();
   
   ++mInstanceCount;
@@ -142,12 +141,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aStatus);
   NS_ENSURE_ARG(aPresContext);
-  // This is an experiement and may be temporary
-  // this consumes the very next focus event
-  if (mConsumeFocusEvents && aEvent->message == NS_GOTFOCUS) {
-    //mConsumeFocusEvents = PR_FALSE;
-    return NS_ERROR_FAILURE; // this should consume the event
-  }
 
   mCurrentTarget = aTargetFrame;
   NS_IF_RELEASE(mCurrentTargetContent);
@@ -932,14 +925,49 @@ nsEventStateManager::GetNearestSelfScrollingFrame(nsIFrame* aFrame)
   return nsnull;
 }
 
+PRBool
+nsEventStateManager::CheckDisabled(nsIContent* aContent)
+{
+  nsIAtom* tag;
+  PRBool disabled = PR_FALSE;
+
+  aContent->GetTag(tag);
+
+  if (nsHTMLAtoms::input == tag ||
+      nsHTMLAtoms::select == tag ||
+      nsHTMLAtoms::textarea == tag ||
+      nsHTMLAtoms::button == tag) {
+    nsAutoString empty;
+    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, 
+                                                           nsHTMLAtoms::disabled,
+                                                           empty)) {
+      disabled = PR_TRUE;
+    }
+  }
+  
+  return disabled;
+}
+
 void
 nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, 
                                   nsEventStatus* aStatus)
 {
   PRInt32 cursor;
   nsCursor c;
+  nsCOMPtr<nsIContent> targetContent;
 
-  aTargetFrame->GetCursor(aPresContext, aPoint, cursor);
+  if (mCurrentTarget) {
+    mCurrentTarget->GetContent(getter_AddRefs(targetContent));
+  }
+
+  //Check if the current target is disabled.  If so use the default pointer.
+  if (targetContent && CheckDisabled(targetContent)) {
+    cursor = NS_STYLE_CURSOR_DEFAULT;
+  }
+  //If not disabled, check for the right cursor.
+  else {
+    aTargetFrame->GetCursor(aPresContext, aPoint, cursor);
+  }
 
   switch (cursor) {
   default:

@@ -415,6 +415,14 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG_POINTER(aEventStatus);
+
+  // Do not process any DOM events if the element is disabled
+  PRBool disabled;
+  nsresult rv = GetDisabled(&disabled);
+  if (NS_FAILED(rv) || disabled) {
+    return rv;
+  }
+
   // Try script event handlers first
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                        aFlags, aEventStatus);
