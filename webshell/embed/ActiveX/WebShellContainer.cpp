@@ -23,6 +23,7 @@
 
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 /* static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID); */
 
 
@@ -50,41 +51,36 @@ NS_IMPL_RELEASE(CWebShellContainer)
 
 nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstancePtrResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+	NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+	if (nsnull == aInstancePtrResult)
+	{
+		return NS_ERROR_NULL_POINTER;
+	}
 
-  *aInstancePtrResult = NULL;
-/*
-  if (aIID.Equals(kIBrowserWindowIID)) {
-    *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-    AddRef();
-    return NS_OK;
-  } */
-  if (aIID.Equals(kIStreamObserverIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-    AddRef();
-    return NS_OK;
-  }
+	*aInstancePtrResult = NULL;
 
-  if (aIID.Equals(kIWebShellContainerIID)) {
-    *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
-    AddRef();
-    return NS_OK;
-  }
-/*  if (aIID.Equals(kINetSupportIID)) {
-    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
-    AddRef();
-    return NS_OK;
-  }
-  */
-  return NS_NOINTERFACE;
+	if (aIID.Equals(kIStreamObserverIID))
+	{
+		*aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
+		AddRef();
+		return NS_OK;
+	}
+
+	if (aIID.Equals(kIWebShellContainerIID))
+	{
+		*aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
+		AddRef();
+		return NS_OK;
+	}
+
+	if (aIID.Equals(kISupportsIID))
+	{
+		*aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
+		AddRef();
+		return NS_OK;
+	}
+
+	return NS_NOINTERFACE;
 }
 
 
@@ -148,6 +144,7 @@ NS_IMETHODIMP
 CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
 	ATLTRACE(_T("CWebShellContainer::ProgressLoadURL()\n"));
+	
 	m_pEvents1->Fire_ProgressChange(aProgress, aProgressMax);
 	m_pEvents2->Fire_ProgressChange(aProgress, aProgressMax);
 	return NS_OK;
