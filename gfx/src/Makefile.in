@@ -38,7 +38,8 @@ CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
     nsImageGroup.cpp nsImageManager.cpp nsImageNetContextAsync.cpp \
     nsImageRenderer.cpp nsImageRequest.cpp nsImageSystemServices.cpp \
     nsImageURL.cpp nsRect.cpp nsTransform2D.cpp \
-	nsDeviceContext.cpp nsImageNetContextSync.cpp \
-	nsJSRenderingContext.cpp
+    nsDeviceContext.cpp nsBlender.cpp \
+    nsImageNetContextSync.cpp \
+    nsJSRenderingContext.cpp
 
 include $(topsrcdir)/config/rules.mk
