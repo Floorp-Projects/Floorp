@@ -35,9 +35,12 @@ DIRS=   typelib        \
         appshell       \
         tools          \
         sample         \
+!if !defined(DISABLE_TESTS)
         tests          \
         reflect\xptinfo\tests \
         reflect\xptcall\tests \
-        proxy\tests
+        proxy\tests \
+!endif
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

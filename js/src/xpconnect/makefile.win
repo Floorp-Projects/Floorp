@@ -33,6 +33,10 @@
 DEPTH=..\..\..
 
 
-DIRS=public idl src tests shell loader
+DIRS=public idl src \
+!if !defined(DISABLE_TESTS)
+     tests \
+!endif
+     shell loader
 
 include <$(DEPTH)\config\rules.mak>

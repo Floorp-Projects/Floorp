@@ -22,7 +22,12 @@
 DEPTH=..
 
 
-DIRS = src robot robot\test tests
-
+DIRS = src \
+!if !defined(DISABLE_TESTS)
+    robot \
+    robot\test \
+    tests \
+!endif
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
