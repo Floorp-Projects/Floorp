@@ -61,34 +61,32 @@ BOOL CSumDlg::OnInitDialog()
 {
 	CString tmp1,tmp2,str1,str2;
 	CDialog::OnInitDialog();
-	for (int i = 0; i <= GlobalArrayIndex; i++)
+
+	for(int i=0; i< GlobalArrayIndex; i++)
 	{
-		if (GlobalWidgetArray[i].type == "EditBox") {
+		if (GlobalWidgetArray[i].type != "RadioButton" 
+			&& GlobalWidgetArray[i].type != "Text" 
+			&& GlobalWidgetArray[i].type != "BoldText" 
+			&& GlobalWidgetArray[i].type != "Button" 
+			&& GlobalWidgetArray[i].type != "GroupBox" )
+		{
+			if (GlobalWidgetArray[i].name != "")
+			{
 			tmp1=GlobalWidgetArray[i].name;
 			tmp2=GlobalWidgetArray[i].value;
 			str1 += "\t" + tmp1;
 			str1 += "\t=";
 			str1 += tmp2;
 			str1 += "\r\n";
-
-//			tmp2=GlobalWidgetArray[i].value;
-//			str2 += tmp2;
-//			str2 += "\r\n";
-
-//			CWnd Mywnd;
-//			Mywnd.MessageBox("hi","hello",MB_OK);
-
+			}
 		}
 	}
 
 	
-	
 	CEdit *ebptr1 =(CEdit *) GetDlgItem(IDC_EDIT1);
 	ebptr1->SetWindowText(str1);
 		 
-//	CEdit *ebptr2 =(CEdit *) GetDlgItem(IDC_EDIT3);
-//	ebptr2->SetWindowText(str2);
-	
+
 	// TODO: Add extra initialization here
 	
 	return TRUE;  // return TRUE unless you set the focus to a control
