@@ -354,7 +354,8 @@ void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt)
 nsActivePlugin::nsActivePlugin(nsPluginTag* aPluginTag,
                                nsIPluginInstance* aInstance, 
                                const char * url,
-                               PRBool aDefaultPlugin)
+                               PRBool aDefaultPlugin,
+                               nsIPluginInstancePeer* peer)
 {
   mNext = nsnull;
   mPeer = nsnull;
@@ -362,9 +363,10 @@ nsActivePlugin::nsActivePlugin(nsPluginTag* aPluginTag,
 
   mURL = PL_strdup(url);
   mInstance = aInstance;
-  if(aInstance != nsnull)
+  if(aInstance && peer)
   {
-    aInstance->GetPeer(&mPeer);
+    mPeer = peer;
+    NS_ADDREF(mPeer);
     NS_ADDREF(aInstance);
   }
   mXPConnected = PR_FALSE;
@@ -3691,7 +3693,8 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
 void nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
                                                nsIPluginInstance* aInstance,
                                                nsIURI* aURL,
-                                               PRBool aDefaultPlugin)
+                                               PRBool aDefaultPlugin,
+                                               nsIPluginInstancePeer* peer)
 
 {
   nsCAutoString url;
@@ -3724,7 +3727,7 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
     */
   }
 
-  nsActivePlugin * plugin = new nsActivePlugin(pluginTag, aInstance, url.get(), aDefaultPlugin);
+  nsActivePlugin * plugin = new nsActivePlugin(pluginTag, aInstance, url.get(), aDefaultPlugin, peer);
 
   if(plugin == nsnull)
     return;
@@ -3988,20 +3991,19 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     // set up the peer for the instance
     peer->Initialize(aOwner, mimetype);   
 
-    nsIPluginInstancePeer *pi;
-
-    result = peer->QueryInterface(kIPluginInstancePeerIID, (void **)&pi);
-
-    if(result != NS_OK)
-      return result;
-
-    // tell the plugin instance to initialize itself and pass in the peer.
-    instance->Initialize(pi);  // this will not add a ref to the instance (or owner). MMP
-
-    NS_RELEASE(pi);
+    nsCOMPtr<nsIPluginInstancePeer> pIpeer;
+    peer->QueryInterface(kIPluginInstancePeerIID, getter_AddRefs(pIpeer));
+    if (!pIpeer) {
+      delete peer;
+      return NS_ERROR_NO_INTERFACE;
+    }
+    
+    result = instance->Initialize(pIpeer);  // this should addref the peer but not the instance or owner
+    if (NS_FAILED(result))                 // except in some cases not Java, see bug 140931
+      return result;       // our COM pointer will free the peer
 
     // we should addref here
-    AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE);
+    AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE, pIpeer);
 
     //release what was addreffed in Create(Plugin)Instance
     NS_RELEASE(instance);
@@ -4085,20 +4087,19 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   // set up the peer for the instance
   peer->Initialize(aOwner, mimetype);   
 
-  nsIPluginInstancePeer *pi;
+  nsCOMPtr<nsIPluginInstancePeer> pIpeer;
+  peer->QueryInterface(kIPluginInstancePeerIID, getter_AddRefs(pIpeer));
+  if (!pIpeer) {
+    delete peer;
+    return NS_ERROR_NO_INTERFACE;
+  }
 
-  result = peer->QueryInterface(kIPluginInstancePeerIID, (void **)&pi);
-
-  if(result != NS_OK)
-    return result;
-
-  // tell the plugin instance to initialize itself and pass in the peer.
-  instance->Initialize(pi);  // this will not add a ref to the instance (or owner). MMP
-
-  NS_RELEASE(pi);
+  result = instance->Initialize(pIpeer);  // this should addref the peer but not the instance or owner
+  if (NS_FAILED(result))                 // except in some cases not Java, see bug 140931
+    return result;       // our COM pointer will free the peer
 
   // we should addref here
-  AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE);
+  AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE, pIpeer);
 
   //release what was addreffed in Create(Plugin)Instance
   NS_RELEASE(instance);

@@ -725,9 +725,8 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
 {
   NS_ENSURE_ARG_POINTER(peer);
-  mPeer = peer;
  
-  nsCOMPtr<nsIPluginTagInfo2> taginfo = do_QueryInterface(mPeer);
+  nsCOMPtr<nsIPluginTagInfo2> taginfo = do_QueryInterface(peer);
   NS_ENSURE_TRUE(taginfo, NS_ERROR_NO_INTERFACE);
   
   PRUint16 count = 0;
@@ -766,8 +765,8 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   nsMIMEType    mimetype;
   NPError       error;
 
-  mPeer->GetMode(&mode);
-  mPeer->GetMIMEType(&mimetype);
+  peer->GetMode(&mode);
+  peer->GetMIMEType(&mimetype);
 
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewProc(fCallbacks->newp,
                                           (char *)mimetype,
@@ -783,11 +782,14 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   this, &fNPP, mimetype, mode, count, error));
 
   if(error != NPERR_NO_ERROR)
-    rv = NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
+  
+  // assign  mPeer only if there was no error
+  mPeer = peer;
   
   mStarted = PR_TRUE;
   
-  return rv;
+  return NS_OK;
 }
 
 
