@@ -43,8 +43,6 @@
 #include "nsMenuItem.h"
 #include "nsContextMenu.h"
 #include "nsPopUpMenu.h"
-#include "nsImageButton.h"
-#include "nsMenuButton.h"
 #include "nsAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsFontRetrieverService.h"
@@ -79,9 +77,7 @@ static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCContextMenu,   NS_CONTEXTMENU_CID);
-static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
-static NS_DEFINE_IID(kCMenuButton,    NS_MENUBUTTON_CID);
 static NS_DEFINE_IID(kCFontRetrieverService, NS_FONTRETRIEVERSERVICE_CID);
 
 // Drag & Drop, Clipboard
@@ -236,12 +232,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCContextMenu)) {
         inst = (nsISupports*)(nsIContextMenu*)new nsContextMenu();
-    }
-    else if (mClassID.Equals(kCImageButton)) {
-        inst = (nsISupports*)(nsWindow*)new nsImageButton();
-    }
-    else if (mClassID.Equals(kCMenuButton)) {
-        inst = (nsISupports*)(nsWindow*)new nsMenuButton();
     }
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
