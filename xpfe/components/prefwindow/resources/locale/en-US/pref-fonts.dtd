@@ -72,7 +72,7 @@
 <!ENTITY  defaultScaling                          "96">
 <!ENTITY  fontScalingExample                      "dpi. (e.g. 96dpi)">
 <!ENTITY  resolution.label                        "Screen resolution:">
-<!ENTITY  resolution.accesskey                    "d">
+<!ENTITY  resolution.accesskey                    "e">
 
 <!ENTITY  fixedFonts.label                        "Fixed-width fonts:">
 <!ENTITY  variableFonts.label                     "Variable-width fonts:">
