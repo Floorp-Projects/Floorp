@@ -44,7 +44,7 @@
   </script>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <keyset id="keyset"/>
+  <xul:keyset id="keyset"/>
 
   <table width="100%">
     <tr>
