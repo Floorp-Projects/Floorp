@@ -135,6 +135,12 @@ function ViewCookieSelected(node)
   if(cookie.getAttribute("id").indexOf("tree_") == -1)
     return false;
   var idx = parseInt(cookie.getAttribute("id").substring(5,cookie.getAttribute("id").length));
+  for (x=0; x<cookies.length; x++) {
+    if (cookies[x].number == idx) {
+      idx = x;
+      break;
+    }
+  }
   var props = [cookies[idx].number, cookies[idx].name, cookies[idx].value, 
                cookies[idx].domaintype, cookies[idx].domain, cookies[idx].path,
                cookies[idx].secure, cookies[idx].expire];
