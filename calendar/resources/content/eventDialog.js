@@ -363,8 +363,8 @@ function onOKCommand()
 
     // get values from the form and put them into the event
     // calIEvent properties
-    //event.startDate.jsDate = gStartDate;
-    //event.endDate.jsDate   = gEndDate;
+    event.startDate.jsDate = gStartDate;
+    event.endDate.jsDate   = gEndDate;
     event.isAllDay = getFieldValue( "all-day-event-checkbox", "checked" );
 
 
