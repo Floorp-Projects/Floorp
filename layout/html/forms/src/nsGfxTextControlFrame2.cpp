@@ -43,7 +43,7 @@
 #include "nsIControllers.h"
 #include "nsIEditorController.h"
 #include "nsIElementFactory.h"
-
+#include "nsIHTMLContent.h"
 
 
 #include "nsIContent.h"
@@ -658,3 +658,39 @@ nsGfxTextControlFrame2::GetSelectionController(nsIPresContext *aPresContext, nsI
 }
 
 
+nsresult 
+nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
+                                         nsIAtom *     aColSizeAttr,
+                                         nsHTMLValue & aColSize,
+                                         nsresult &    aColStatus,
+                                         nsIAtom *     aRowSizeAttr,
+                                         nsHTMLValue & aRowSize,
+                                         nsresult &    aRowStatus)
+{
+  nsIContent* iContent = nsnull;
+  aFrame->GetFormContent((nsIContent*&) iContent);
+  if (!iContent) {
+    return NS_ERROR_FAILURE;
+  }
+  nsIHTMLContent* hContent = nsnull;
+  nsresult result = iContent->QueryInterface(kIHTMLContentIID, (void**)&hContent);
+  if ((NS_OK != result) || !hContent) {
+    NS_RELEASE(iContent);
+    return NS_ERROR_FAILURE;
+  }
+
+  aColStatus = NS_CONTENT_ATTR_NOT_THERE;
+  if (nsnull != aColSizeAttr) {
+    aColStatus = hContent->GetHTMLAttribute(aColSizeAttr, aColSize);
+  }
+
+  aRowStatus= NS_CONTENT_ATTR_NOT_THERE;
+  if (nsnull != aRowSizeAttr) {
+    aRowStatus = hContent->GetHTMLAttribute(aRowSizeAttr, aRowSize);
+  }
+
+  NS_RELEASE(hContent);
+  NS_RELEASE(iContent);
+  
+  return NS_OK;
+}
