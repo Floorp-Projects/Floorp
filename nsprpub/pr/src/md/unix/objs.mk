@@ -112,7 +112,7 @@ endif
 ifeq ($(OS_ARCH),FreeBSD)
 CSRCS += $(FREEBSD_CSRCS)
 endif
-ifeq ($(OS_ARCH),BSD_386)
+ifeq ($(OS_ARCH),BSD_OS)
 CSRCS += $(BSDI_CSRCS)
 endif
 ifeq ($(OS_ARCH),HP-UX)
@@ -167,7 +167,7 @@ ifeq ($(OS_ARCH), ReliantUNIX)
     ASFILES   = os_$(OS_ARCH).s
 endif
 
-ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_3862.1)
+ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_OS2.1)
     ASFILES = os_BSD_386_2.s
 endif
 	
