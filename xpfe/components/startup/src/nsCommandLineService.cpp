@@ -41,6 +41,7 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "plstr.h"
+#include "nsNetUtil.h"
 
 nsCmdLineService::nsCmdLineService()
 	:  mArgCount(0), mArgc(0), mArgv(0)
@@ -52,6 +53,38 @@ nsCmdLineService::nsCmdLineService()
  * Implement the nsISupports methods...
  */
 NS_IMPL_ISUPPORTS1(nsCmdLineService, nsICmdLineService);
+
+static void* ProcessURLArg(char* str)
+{
+  // Problem: since the arg parsing code doesn't know which flags
+  // take arguments, it always calls this method for the last
+  // non-flag argument. But sometimes that argument is actually
+  // the arg for the last switch, e.g. -width 500 or -Profile default.
+  // nsLocalFile will only work on absolute pathnames, so return
+  // if str doesn't start with '/' or '\'.
+  if (str && (*str == '\\' || *str == '/'))
+  {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), str);
+    if (NS_FAILED(rv))
+    {
+      nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+      if (file)
+      {
+        rv = file->InitWithPath(str);
+        if (NS_SUCCEEDED(rv))
+        {
+          nsXPIDLCString fileurl;
+          rv = file->GetURL(getter_Copies(fileurl));
+          if (NS_SUCCEEDED(rv) && fileurl.get())
+            return NS_REINTERPRET_CAST(void*, nsCRT::strdup(fileurl.get()));
+        }
+      }
+    }
+  }
+
+  return NS_REINTERPRET_CAST(void*, nsCRT::strdup(str));
+}
 
 NS_IMETHODIMP
 nsCmdLineService::Initialize(int aArgc, char ** aArgv)
@@ -75,8 +108,12 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 
   for(i=1; i<aArgc; i++) {
 
-    if ((aArgv[i][0] == '-') || (aArgv[i][0] == '/')) {
-       /* An option that starts with -. May or many not
+    if ((aArgv[i][0] == '-')
+#if defined(XP_WIN) || defined(XP_OS2)
+        || (aArgv[i][0] == '/')
+#endif
+      ) {
+       /* An option that starts with -. May or may not
 	    * have a value after it. 
 	    */
 	   mArgList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[i])));
@@ -94,7 +131,11 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	     mArgCount++;
 	     break;
 	   }
-     if ((aArgv[i][0] == '-') || (aArgv[i][0] == '/')) {
+     if ((aArgv[i][0] == '-')
+#if defined(XP_WIN) || defined(XP_OS2)
+         || (aArgv[i][0] == '/')
+#endif
+       ) {
         /* An other option. The previous one didn't have a value.
          * So, store the previous one's value as PR_TRUE in the
 	     * mArgValue array and retract the index so that this option 
@@ -118,7 +159,7 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 
  		       // Append the url to the arrays
            //mArgList.AppendElement((void *)PL_strdup("-url"));
-		       mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[i])));
+		       mArgValueList.AppendElement(ProcessURLArg(aArgv[i]));
 	 	       mArgCount++;
            continue;
         }
@@ -137,7 +178,7 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	       * Append the url to the arrays
            */
            mArgList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup("-url")));
-	         mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[i])));
+	         mArgValueList.AppendElement(ProcessURLArg(aArgv[i]));
 	         mArgCount++;
 	     }
 	     else {
@@ -289,7 +330,7 @@ nsCmdLineService::GetHandlerForParam(const char *aParam,
   }
 
   PRUint32 i;
-  for (i=0; i< paramList->Count(); i++) {
+  for (i=0; i < (PRUint32)paramList->Count(); i++) {
     const char *param = (const char*)paramList->ElementAt(i);
     
     // skip past leading / and -
