@@ -421,7 +421,12 @@ ConvertAndWrite(const nsAString& aString,
 
     convert_rv = aEncoder->Convert(unicodeBuf, &unicodeLength, charXferBuf, &charLength);
     NS_ENSURE_SUCCESS(convert_rv, convert_rv);
-    
+
+    // Make sure charXferBuf is null-terminated before we call
+    // Write().
+
+    charXferBuf[charLength] = '\0';
+
     PRUint32 written;
     rv = aStream->Write(charXferBuf, charLength, &written);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -431,10 +436,16 @@ ConvertAndWrite(const nsAString& aString,
     if (convert_rv == NS_ERROR_UENC_NOMAPPING) {
       // Finishes the conversion. 
       // The converter has the possibility to write some extra data and flush its final state.
-      char finish_buf[32];
-      charLength = 32;
+      char finish_buf[33];
+      charLength = sizeof(finish_buf) - 1;
       rv = aEncoder->Finish(finish_buf, &charLength);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // Make sure finish_buf is null-terminated before we call
+      // Write().
+
+      finish_buf[charLength] = '\0';
+
       rv = aStream->Write(finish_buf, charLength, &written);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -448,6 +459,10 @@ ConvertAndWrite(const nsAString& aString,
       else
         entString.AppendInt(unicodeBuf[unicodeLength - 1]);
       entString.Append(';');
+
+      // Since entString is an nsCAutoString we know entString.get()
+      // returns a null-terminated string, so no need for extra
+      // null-termination before calling Write() here.
 
       rv = aStream->Write(entString.get(), entString.Length(), &written);
       NS_ENSURE_SUCCESS(rv, rv);
