@@ -142,7 +142,7 @@
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="Browser:Find" oncommand="BrowserFind();"/>
-    <command id="Browser:FindAgain" oncommand="BrowserFindAgain();"/>
+    <command id="Browser:FindAgain" oncommand="BrowserFindAgain(false);"/>
     <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
@@ -200,6 +200,8 @@
          key="&pasteCmd.key;"
          modifiers="accel"/>
     <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
+    <key keycode="&findAgainCmd.commandkey2;" command="Browser:FindAgain"/>
+    <key keycode="&findPrevCmd.commandkey2;"  oncommand="BrowserFindAgain(true);" modifiers="shift"/>
 
 #ifdef XP_WIN
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
