@@ -114,6 +114,7 @@ public:
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
   NS_IMETHOD           HideWindowChrome(PRBool aShouldHide);
+  NS_IMETHOD           MakeFullScreen(PRBool aFullScreen);
   NS_IMETHOD           SetIcon(const nsAString& aIcon);
   GdkCursor           *GtkCreateCursor(nsCursor aCursorType);
   virtual void         LoseFocus(void);

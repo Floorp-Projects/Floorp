@@ -297,10 +297,6 @@ protected:
   nsString                      mStatus;
   nsString                      mDefaultStatus;
 
-  // state preservation for full screen mode
-  nsPoint*                     mOriginalPos;
-  nsSize*                      mOriginalSize;
-
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsIDocShell*                  mDocShell;  // Weak Reference
   PRUint32                      mMutationBits;

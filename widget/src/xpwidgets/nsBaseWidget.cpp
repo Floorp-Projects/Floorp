@@ -42,6 +42,8 @@
 #include "nsIEnumerator.h"
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
+#include "nsIFullScreen.h"
+#include "nsIServiceManagerUtils.h"
 
 #ifdef DEBUG
 #include "nsIServiceManager.h"
@@ -69,23 +71,24 @@ NS_IMPL_ISUPPORTS2(nsBaseWidget::Enumerator, nsIBidirectionalEnumerator, nsIEnum
 //-------------------------------------------------------------------------
 
 nsBaseWidget::nsBaseWidget()
-:	mClientData(nsnull)
-,	mEventCallback(nsnull)
-,	mContext(nsnull)
-,	mToolkit(nsnull)
-,	mMouseListener(nsnull)
-,	mEventListener(nsnull)
-,	mMenuListener(nsnull)
-,	mCursor(eCursor_standard)
-,	mBorderStyle(eBorderStyle_none)
-,	mIsShiftDown(PR_FALSE)
-,	mIsControlDown(PR_FALSE)
-,	mIsAltDown(PR_FALSE)
-,	mIsDestroying(PR_FALSE)
-,	mOnDestroyCalled(PR_FALSE)
-,	mBounds(0,0,0,0)
-,	mZIndex(0)
-,	mSizeMode(nsSizeMode_Normal)
+: mClientData(nsnull)
+, mEventCallback(nsnull)
+, mContext(nsnull)
+, mToolkit(nsnull)
+, mMouseListener(nsnull)
+, mEventListener(nsnull)
+, mMenuListener(nsnull)
+, mCursor(eCursor_standard)
+, mBorderStyle(eBorderStyle_none)
+, mIsShiftDown(PR_FALSE)
+, mIsControlDown(PR_FALSE)
+, mIsAltDown(PR_FALSE)
+, mIsDestroying(PR_FALSE)
+, mOnDestroyCalled(PR_FALSE)
+, mBounds(0,0,0,0)
+, mOriginalBounds(nsnull)
+, mZIndex(0)
+, mSizeMode(nsSizeMode_Normal)
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -117,6 +120,8 @@ nsBaseWidget::~nsBaseWidget()
 	NS_IF_RELEASE(mMenuListener);
 	NS_IF_RELEASE(mToolkit);
 	NS_IF_RELEASE(mContext);
+  if (mOriginalBounds)
+    delete mOriginalBounds;
 }
 
 
@@ -486,6 +491,46 @@ NS_IMETHODIMP nsBaseWidget::SetWindowType(nsWindowType aWindowType)
 NS_IMETHODIMP nsBaseWidget::HideWindowChrome(PRBool aShouldHide)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-------------------------------------------------------------------------
+//
+// Put the window into full-screen mode
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseWidget::MakeFullScreen(PRBool aFullScreen)
+{
+  HideWindowChrome(aFullScreen);
+  nsCOMPtr<nsIFullScreen> fullScreen = do_GetService("@mozilla.org/browser/fullscreen;1");
+
+  if (aFullScreen) {
+    if (!mOriginalBounds)
+      mOriginalBounds = new nsRect();
+    GetScreenBounds(*mOriginalBounds);
+    PRInt32 screenWidth, screenHeight;
+    mContext->GetDeviceSurfaceDimensions(screenWidth, screenHeight);
+    float t2p;
+    mContext->GetAppUnitsToDevUnits(t2p);
+    screenWidth = NSToIntRound(screenWidth * t2p);
+    screenHeight = NSToIntRound(screenHeight * t2p);
+
+    // Move to (0,0) and size to the screen dimensions
+    SetSizeMode(nsSizeMode_Normal);
+    Resize(0, 0, screenWidth, screenHeight, PR_TRUE);
+
+    // Hide all of the OS chrome
+    if (fullScreen)
+      fullScreen->HideAllOSChrome();
+  } else if (mOriginalBounds) {
+    Resize(mOriginalBounds->x, mOriginalBounds->y, mOriginalBounds->width,
+           mOriginalBounds->height, PR_TRUE);
+
+    // Show all of the OS chrome
+    if (fullScreen)
+      fullScreen->ShowAllOSChrome();
+  }
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

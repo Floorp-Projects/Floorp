@@ -100,6 +100,7 @@ public:
   NS_IMETHOD              GetWindowType(nsWindowType& aWindowType);
   NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
+  NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   virtual nsIRenderingContext* GetRenderingContext();
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIAppShell *   GetAppShell();
@@ -167,6 +168,7 @@ protected:
   PRPackedBool      mIsDestroying;
   PRPackedBool      mOnDestroyCalled;
   nsRect            mBounds;
+  nsRect*           mOriginalBounds;
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;
 

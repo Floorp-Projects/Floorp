@@ -4218,6 +4218,49 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
   return NS_OK;
 }
 
+static void
+gdk_wmspec_change_state (gboolean   add,
+                         GdkWindow *window,
+                         GdkAtom    state1,
+                         GdkAtom    state2)
+{
+  XEvent xev;
+
+#define _NET_WM_STATE_REMOVE        0    /* remove/unset property */
+#define _NET_WM_STATE_ADD           1    /* add/set property */
+#define _NET_WM_STATE_TOGGLE        2    /* toggle property  */
+
+  xev.xclient.type = ClientMessage;
+  xev.xclient.serial = 0;
+  xev.xclient.send_event = True;
+  xev.xclient.window = GDK_WINDOW_XWINDOW(window);
+  xev.xclient.message_type = gdk_atom_intern("_NET_WM_STATE", FALSE);
+  xev.xclient.format = 32;
+  xev.xclient.data.l[0] = add ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
+  xev.xclient.data.l[1] = state1;
+  xev.xclient.data.l[2] = state2;
+
+  XSendEvent(gdk_display, GDK_ROOT_WINDOW(), False,
+             SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+}
+
+NS_IMETHODIMP
+nsWindow::MakeFullScreen(PRBool aFullScreen)
+{
+  if (!mShell) {
+    // Pass the request to the toplevel window.
+    GtkWidget *top_mozarea = GetOwningWidget();
+    void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
+    nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
+    return mozAreaWindow->MakeFullScreen(aFullScreen);
+  }
+
+  gdk_wmspec_change_state(aFullScreen, mShell->window,
+                          gdk_atom_intern("_NET_WM_STATE_FULLSCREEN", False),
+                          GDK_NONE);
+  return NS_OK;
+}
+
 PRBool PR_CALLBACK
 nsWindow::IconEntryMatches(PLDHashTable* aTable,
                            const PLDHashEntryHdr* aHdr,
