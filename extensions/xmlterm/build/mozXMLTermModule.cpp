@@ -71,4 +71,4 @@ static nsModuleComponentInfo components[] =
 };
 
 // Module entry point
-NS_IMPL_NSGETMODULE("mozXMLTermModule", components)
+NS_IMPL_NSGETMODULE(mozXMLTermModule, components)
