@@ -149,7 +149,8 @@ nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress,  nsIRequest *aRe
                                     PRUint32 aStatus)
 {
   // when the entire download finishes, stop the progress timer and clean up
-  // the window and controller
+  // the window and controller. We will get this even in the event of a cancel,
+  // so this is the only place in the listener where we should kill the download.
   if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK)) {
     [mController killDownloadTimer];
     [mController setDownloadProgress:nil];
@@ -429,7 +430,14 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
   if ([fileManager isDeletableFileAtPath:thePath])
     // if we delete it, fantastic.  if not, oh well.  better to move to trash instead?
     [fileManager removeFileAtPath:thePath handler:nil];
-  mDownloadIsComplete = YES;	// don't have to do this again.
+  
+  // we can _not_ set the |mIsDownloadComplete| flag here because the download really
+  // isn't done yet. We'll probably continue to process more PLEvents that are already
+  // in the queue until we get a STATE_STOP state change. As a result, we just keep
+  // going until that comes in (and it will, because we called CancelDownload() above).
+  // Ensure that the window goes away when we get there by flipping the 'stay alive'
+  // flag. (bug 154913)
+  mSaveFileDialogShouldStayOpen = NO;
 }
 
 -(void)pauseAndResumeDownload
@@ -638,12 +646,13 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
     [mTimeLeftLabel setStringValue:[self formatFuzzyTime:secToGo]];
   }
   else if (!downloadTimer) {  // download done.  Set remaining time to 0, fix progress bar & cancel button
-    mDownloadIsComplete = YES;	// all done.
+    mDownloadIsComplete = YES;						// all done. we got a STATE_STOP
     [mTimeLeftLabel setStringValue:@""];
     [self setProgressBar:aCurrentProgress maxProg:aCurrentProgress];
     if (!mSaveFileDialogShouldStayOpen)
-      [[self window] performClose:self];	//close window
-    [[self window] update];	//redraw window
+      [[self window] performClose:self];	// close window
+    else
+      [[self window] update];							// redraw window
   }
   else //maxBytes is undetermined.  Set remaining time to question marks.
       [mTimeLeftLabel setStringValue:@"???"];
