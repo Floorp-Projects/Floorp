@@ -90,6 +90,8 @@
 #include "nsIPref.h"
 #include "nsIStreamConverterService.h"
 #include "nsIDirectoryListing.h"
+#include "nsICategoryManager.h"
+#include "nsXPCOMCID.h"
 
 //----------------------------------------------------------------------
 //
@@ -1388,12 +1390,16 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     // load in its place.
     
     // Create a dummy loader that will load a stub XUL document.
-    nsCOMPtr<nsIDocumentLoaderFactory> factory;
+    nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    nsXPIDLCString contractID;
+    rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", "application/vnd.mozilla.xul+xml",
+                                  getter_Copies(contractID));
+    if (NS_FAILED(rv))
+      return rv;
 
-    rv = nsComponentManager::CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/vnd.mozilla.xul+xml",
-                                            nsnull,
-                                            NS_GET_IID(nsIDocumentLoaderFactory),
-                                            getter_AddRefs(factory));
+    nsCOMPtr<nsIDocumentLoaderFactory> factory(do_GetService(contractID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIURI> uri;
@@ -1438,20 +1444,16 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   }
   
   // Otherwise, lets use the html listing
-  nsCOMPtr<nsIDocumentLoaderFactory> factory;
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  nsXPIDLCString contractID;
+  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", "text/html",
+                                getter_Copies(contractID));
+  if (NS_FAILED(rv))
+    return rv;
 
-  if (viewSource) {
-    rv = nsComponentManager::CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=text/html; x-view-type=view-source",
-                                            nsnull,
-                                            NS_GET_IID(nsIDocumentLoaderFactory),
-                                            getter_AddRefs(factory));
-  } else {
-    rv = nsComponentManager::CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=text/html",
-                                            nsnull,
-                                            NS_GET_IID(nsIDocumentLoaderFactory),
-                                            getter_AddRefs(factory));
-  }
-  
+  nsCOMPtr<nsIDocumentLoaderFactory> factory(do_GetService(contractID, &rv));
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIStreamListener> listener;

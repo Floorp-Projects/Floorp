@@ -21,6 +21,9 @@
 
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
+#include "nsICategoryManager.h"
+#include "nsXPCOMCID.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsMNGDecoder.h"
 #include "imgContainerMNG.h"
 
@@ -29,12 +32,49 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMNGDecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainerMNG)
 
+static NS_METHOD MngRegisterProc(nsIComponentManager *aCompMgr,
+                                 nsIFile *aPath,
+                                 const char *registryLocation,
+                                 const char *componentType,
+                                 const nsModuleComponentInfo *info) {
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  catMan->AddCategoryEntry("Gecko-Content-Viewers", "video/x-mng",
+                           "@mozilla.org/content/document-loader-factory;1",
+                           PR_TRUE, PR_TRUE, nsnull);
+  catMan->AddCategoryEntry("Gecko-Content-Viewers", "image/x-jng",
+                           "@mozilla.org/content/document-loader-factory;1",
+                           PR_TRUE, PR_TRUE, nsnull);
+  catMan->AddCategoryEntry("Gecko-Content-Viewers", "image/x-mng",
+                           "@mozilla.org/content/document-loader-factory;1",
+                           PR_TRUE, PR_TRUE, nsnull);
+  return NS_OK;
+}
+
+static NS_METHOD MngUnregisterProc(nsIComponentManager *aCompMgr,
+                                   nsIFile *aPath,
+                                   const char *registryLocation,
+                                   const nsModuleComponentInfo *info) {
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  catMan->DeleteCategoryEntry("Gecko-Content-Viewers", "video/x-mng", PR_TRUE);
+  catMan->DeleteCategoryEntry("Gecko-Content-Viewers", "image/x-jng", PR_TRUE);
+  catMan->DeleteCategoryEntry("Gecko-Content-Viewers", "image/x-mng", PR_TRUE);
+  return NS_OK;
+}
+
 static const nsModuleComponentInfo components[] =
 {
   { "MNG decoder",
     NS_MNGDECODER_CID,
     "@mozilla.org/image/decoder;2?type=video/x-mng",
-    nsMNGDecoderConstructor, },
+    nsMNGDecoderConstructor,
+    MngRegisterProc,
+    MngUnregisterProc },
   { "JNG decoder",
     NS_MNGDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/x-jng",

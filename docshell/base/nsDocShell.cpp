@@ -57,6 +57,8 @@
 #include "nsICanvasFrame.h"
 #include "nsIPluginViewer.h"
 #include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
+#include "nsICategoryManager.h"
+#include "nsXPCOMCID.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -4388,7 +4390,12 @@ nsDocShell::CreateAboutBlankContentViewer()
   mCreatingDocument = PR_TRUE;
 
   // one helper factory, please
-  nsCOMPtr<nsIDocumentLoaderFactory> docFactory(do_CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=text/html"));
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+  if (!catMan)
+    return NS_ERROR_FAILURE;
+  nsXPIDLCString contractId;
+  catMan->GetCategoryEntry("Gecko-Content-Viewers", "text/html", getter_Copies(contractId));
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory(do_GetService(contractId));
   if (docFactory) {
 
     nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
@@ -4522,19 +4529,16 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
     nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(kPluginManagerCID));
     nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
-    //XXX This should probably be some category thing....
-    nsCAutoString contractId(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX
-                             "view"
-                             ";1?type=");
-    contractId += aContentType;
-
-    // Note that we're always passing in "view" for the contractid above
-    // and to the docLoaderFactory->CreateInstance() at the end of this method. 
-    // nsLayoutDLF makes the determination if it should be a "view-source"
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    nsXPIDLCString contractId;
+    catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType, getter_Copies(contractId));
 
     // Create an instance of the document-loader-factory
     nsCOMPtr<nsIDocumentLoaderFactory>
-        docLoaderFactory(do_CreateInstance(contractId.get()));
+        docLoaderFactory(do_GetService(contractId.get()));
     if (!docLoaderFactory) {
         // try again after loading plugins
         nsCOMPtr<nsIPluginManager> pluginManager = do_QueryInterface(pluginHost);
@@ -4547,13 +4551,16 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
         if (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == pluginManager->ReloadPlugins(PR_FALSE))
             return NS_ERROR_FAILURE;
 
-        docLoaderFactory = do_CreateInstance(contractId.get());
+        catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType,
+                                 getter_Copies(contractId));
+        docLoaderFactory = do_GetService(contractId.get());
 
         if (!docLoaderFactory)
             return NS_ERROR_FAILURE;
     }
 
     // Now create an instance of the content viewer
+    // nsLayoutDLF makes the determination if it should be a "view-source" instead of "view"
     NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance("view",
                                                        aOpenedChannel,
                                                        aLoadGroup, aContentType,

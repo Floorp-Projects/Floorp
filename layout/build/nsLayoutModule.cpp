@@ -1088,7 +1088,7 @@ static const nsModuleComponentInfo gComponents[] = {
 
   { "Document Loader Factory",
     NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID,
-    "@mozilla.org:/content/document-loader-factory;1",
+    "@mozilla.org/content/document-loader-factory;1",
     CreateContentDLF,
     nsContentDLF::RegisterDocumentFactories,
     nsContentDLF::UnregisterDocumentFactories },

@@ -32,6 +32,9 @@
 
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
+#include "nsICategoryManager.h"
+#include "nsXPCOMCID.h"
+#include "nsIServiceManagerUtils.h"
 
 #include "imgCache.h"
 #include "imgContainer.h"
@@ -110,6 +113,66 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXBMDecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPPMDecoder)
 #endif
 
+static const char* gImageMimeTypes[] = {
+#ifdef IMG_BUILD_gif
+  "image/gif",
+#endif
+#ifdef IMG_BUILD_jpeg
+  "image/jpeg",
+  "image/pjpeg",
+  "image/jpg",
+#endif
+#ifdef IMG_BUILD_bmp
+  "image/x-icon",
+  "image/bmp",
+#endif
+#ifdef IMB_BUILD_png
+  "image/png",
+  "image/x-png",
+#endif
+#ifdef IMG_BUILD_xbm
+  "image/x-xbitmap",
+  "image/x-xbm",
+  "image/xbm",
+#endif
+#ifdef IMG_BUILD_ppm
+  "image/x-portable-bitmap",
+  "image/x-portable-graymap",
+  "image/x-portable-pixmap"
+#endif
+};
+
+static NS_METHOD ImageRegisterProc(nsIComponentManager *aCompMgr,
+                                   nsIFile *aPath,
+                                   const char *registryLocation,
+                                   const char *componentType,
+                                   const nsModuleComponentInfo *info) {
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  for (int i = 0; i < sizeof(gImageMimeTypes)/sizeof(*gImageMimeTypes); i++) {
+    catMan->AddCategoryEntry("Gecko-Content-Viewers", gImageMimeTypes[i],
+                             "@mozilla.org/content/document-loader-factory;1",
+                             PR_TRUE, PR_TRUE, nsnull);
+  }
+  return NS_OK;
+}
+
+static NS_METHOD ImageUnregisterProc(nsIComponentManager *aCompMgr,
+                                     nsIFile *aPath,
+                                     const char *registryLocation,
+                                     const nsModuleComponentInfo *info) {
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  for (int i = 0; i < sizeof(gImageMimeTypes)/sizeof(*gImageMimeTypes); i++)
+    catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gImageMimeTypes[i], PR_TRUE);
+
+  return NS_OK;
+}
+
 static const nsModuleComponentInfo components[] =
 {
   { "image cache",
@@ -123,7 +186,9 @@ static const nsModuleComponentInfo components[] =
   { "image loader",
     NS_IMGLOADER_CID,
     "@mozilla.org/image/loader;1",
-    imgLoaderConstructor, },
+    imgLoaderConstructor,
+    ImageRegisterProc, /* register the decoder mime types here */
+    ImageUnregisterProc, },
   { "image request proxy",
     NS_IMGREQUESTPROXY_CID,
     "@mozilla.org/image/request;1",

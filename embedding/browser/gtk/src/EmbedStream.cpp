@@ -27,6 +27,9 @@
 #include <nsNetUtil.h>
 #include <prmem.h>
 
+#include "nsXPCOMCID.h"
+#include "nsICategoryManager.h"
+
 #include "nsIContentViewer.h"
 
 #include "EmbedStream.h"
@@ -126,16 +129,19 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
   if (NS_FAILED(rv))
     return rv;
 
-  // find a document loader for this command plus content type
-  // combination
+  // find a document loader for this content type
 
-  nsCAutoString docLoaderContractID;
-  docLoaderContractID  = NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX;
-  docLoaderContractID += "view;1?type=";
-  docLoaderContractID += aContentType;
+  nsXPIDLCString docLoaderContractID;
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType,
+                                getter_Copies(docLoaderContractID));
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory;  
-  docLoaderFactory = do_CreateInstance(docLoaderContractID.get(), &rv);
+  docLoaderFactory = do_GetService(docLoaderContractID.get(), &rv);
   if (NS_FAILED(rv))
     return rv;
 
