@@ -154,6 +154,7 @@ typedef enum {
     nssILockRWLock = 15,
     nssILockOther = 16,
     nssILockSelfServ = 17,
+    nssILockKeyDB = 18,
     nssILockLast  /* don't use this one! */
 } nssILockType;
 
