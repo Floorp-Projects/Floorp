@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.32 $';
+$Version = '$Revision: 1.33 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -16,12 +16,12 @@ sub InitVars {
     $BuildDepend = 1;		# Depend or Clobber
     $BuildNSCommercial = 0;	# Build Netscape commercial client (internal only)
     $BuildOnce = 0;		# Build once, don't send results to server
-    $ReportStatus = 1;		# Send results to server, or not
+    $ReportStatus = 1;	# Send results to server, or not
     $RunTest = 1;		# Run the smoke test on successful build, or not
-    $UseFullCircle = 0;		# Enable FullCircle Talkback debugging, or not
+    $UseFullCircle = 0;	# Enable FullCircle Talkback debugging, or not
     $UseMotif = 0;		# Build using Motif instead of GTK+, or not
     $UseObjDir = 1;		# Use a separate object dir, or build in the source tree
-    $UseTimeStamp = 0;		# Use the CVS 'pull-by-timestamp' option, or not
+    $UseTimeStamp = 0;	# Use the CVS 'pull-by-timestamp' option, or not
 
     # Set these to what makes sense for your system
     $cpus = 1;
