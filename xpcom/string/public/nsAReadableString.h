@@ -17,14 +17,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author:
+ *   Scott Collins <scc@mozilla.org>
+ *
  * Contributor(s):
- *   Scott Collins <scc@netscape.com>
  */
 
 #ifndef _nsAReadableString_h__
 #define _nsAReadableString_h__
-
-  // WORK IN PROGRESS
 
 #ifndef nscore_h___
 #include "nscore.h"
@@ -1026,7 +1026,11 @@ copy_string( InputIterator first, InputIterator last, OutputIterator result )
     typedef nsCharSinkTraits<OutputIterator>  sink_traits;
 
     while ( first != last )
-      first += PRInt32(sink_traits::write(result, source_traits::read(first), source_traits::readable_size(first, last)));
+      {
+        PRInt32 count_copied = PRInt32(sink_traits::write(result, source_traits::read(first), source_traits::readable_size(first, last)));
+        NS_ASSERTION(count_copied > 0, "|copy_string| will never terminate");
+        first += count_copied;
+      }
 
     return result;
   }
