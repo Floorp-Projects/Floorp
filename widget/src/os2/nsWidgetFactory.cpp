@@ -56,7 +56,6 @@
 #include "nsScrollbar.h"
 #include "nsSound.h"
 #include "nsToolkit.h"
-#include "nsModule.h"
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
