@@ -994,26 +994,36 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 	{
 		if (m_compFields)
 			rv = m_compFields->Copy(compFields);
-		return rv;
 	}
 	
 	if (m_identity)
 	{
 	    /* Setup reply-to field */
+      nsString replyToStr;
 	    nsXPIDLCString replyTo;
-	    m_identity->GetReplyTo(getter_Copies(replyTo));
-	    m_compFields->SetReplyTo(replyTo);
+      replyToStr.AssignWithConversion(m_compFields->GetReplyTo());
+
+	    m_identity->GetReplyTo(getter_Copies(replyTo));                                      
+      if ((replyToStr.Length() > 0) && replyTo && *replyTo) {
+        replyToStr.AppendWithConversion(',');
+        replyToStr.AppendWithConversion(replyTo);
+      }
+      
+	    m_compFields->SetReplyTo(replyToStr.GetUnicode());
 	    
 	    /* Setup bcc field */
 	    PRBool  aBool;
 	    nsString bccStr;
+      bccStr.AssignWithConversion(m_compFields->GetBcc());
 	    
 	    m_identity->GetBccSelf(&aBool);
 	    if (aBool)
 	    {
 	        nsXPIDLCString email;
 	        m_identity->GetEmail(getter_Copies(email));
-	        bccStr.AssignWithConversion(email);
+	        if (bccStr.Length() > 0)
+            bccStr.AppendWithConversion(',');
+          bccStr.AppendWithConversion(email);
 	    }
 	    
 	    m_identity->GetBccOthers(&aBool);
@@ -1028,6 +1038,9 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 	    m_compFields->SetBcc(bccStr.GetUnicode());
 	}
 
+  // If we were passed in fields, we can return now, otherwise, more work to do
+  if (compFields) return rv;
+  
     /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
     /* we need to extract only the first URI*/
     nsAutoString  firstURI(originalMsgURI);
