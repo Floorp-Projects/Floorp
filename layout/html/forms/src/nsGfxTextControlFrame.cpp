@@ -1330,10 +1330,10 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext*           aPresContext,
                            heightExplicit, ignore, aBorder, aPadding);
   }
   if (widthExplicit) {
-    desiredSize.width  += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+    desiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
   }
   if (heightExplicit) {
-    desiredSize.height += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+    desiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
   }
 
   aDesiredSize.width   = desiredSize.width;
