@@ -321,7 +321,7 @@ _pr_QueryNetIfs(void)
 }
 
 #elif (defined(DARWIN) && defined(HAVE_GETIFADDRS)) || defined(FREEBSD) \
-    || defined(NETBSD)
+    || defined(NETBSD) || defined(OPENBSD)
 
 /*
  * Use the BSD getifaddrs function.
