@@ -3654,10 +3654,10 @@ HTMLContentSink::StartLayout()
     if (mFrameset) {
       scrollableContainer->
         SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                       NS_STYLE_OVERFLOW_HIDDEN);
+                                       nsIScrollable::Scrollbar_Never);
       scrollableContainer->
         SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                       NS_STYLE_OVERFLOW_HIDDEN);
+                                       nsIScrollable::Scrollbar_Never);
     } else {
       scrollableContainer->ResetScrollbarPreferences();
     }
