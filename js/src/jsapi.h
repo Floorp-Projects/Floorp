@@ -83,11 +83,11 @@ JS_BEGIN_EXTERN_C
 
 /* Lock and unlock the GC thing held by a jsval. */
 #define JSVAL_LOCK(cx,v)        (JSVAL_IS_GCTHING(v)                          \
-				 ? JS_LockGCThing(cx, JSVAL_TO_GCTHING(v))    \
-				 : JS_TRUE)
+                                 ? JS_LockGCThing(cx, JSVAL_TO_GCTHING(v))    \
+                                 : JS_TRUE)
 #define JSVAL_UNLOCK(cx,v)      (JSVAL_IS_GCTHING(v)                          \
-				 ? JS_UnlockGCThing(cx, JSVAL_TO_GCTHING(v))  \
-				 : JS_TRUE)
+                                 ? JS_UnlockGCThing(cx, JSVAL_TO_GCTHING(v))  \
+                                 : JS_TRUE)
 
 /* Domain limits for the jsval int type. */
 #define JSVAL_INT_POW2(n)       ((jsval)1 << (n))
@@ -100,7 +100,7 @@ JS_BEGIN_EXTERN_C
 /* Convert between boolean and jsval. */
 #define JSVAL_TO_BOOLEAN(v)     ((JSBool)((v) >> JSVAL_TAGBITS))
 #define BOOLEAN_TO_JSVAL(b)     JSVAL_SETTAG((jsval)(b) << JSVAL_TAGBITS,     \
-					     JSVAL_BOOLEAN)
+                                             JSVAL_BOOLEAN)
 
 /* A private data pointer (2-byte-aligned) can be stored as an int jsval. */
 #define JSVAL_TO_PRIVATE(v)     ((void *)((v) & ~JSVAL_INT))
@@ -182,12 +182,12 @@ JS_GetEmptyStringValue(JSContext *cx);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
-		    ...);
+                    ...);
 
 #ifdef va_start
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
-		      const char *format, va_list ap);
+                      const char *format, va_list ap);
 #endif
 
 /*
@@ -254,7 +254,7 @@ JS_PopArguments(JSContext *cx, void *mark);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_AddArgumentFormatter(JSContext *cx, const char *format,
-			JSArgumentFormatter formatter);
+                        JSArgumentFormatter formatter);
 
 extern JS_PUBLIC_API(void)
 JS_RemoveArgumentFormatter(JSContext *cx, const char *format);
@@ -513,8 +513,8 @@ JS_AddNamedRoot(JSContext *cx, void *rp, const char *name);
 #ifdef DEBUG
 extern JS_PUBLIC_API(void)
 JS_DumpNamedRoots(JSRuntime *rt,
-		  void (*dump)(const char *name, void *rp, void *data),
-		  void *data);
+                  void (*dump)(const char *name, void *rp, void *data),
+                  void *data);
 #endif
 
 extern JS_PUBLIC_API(JSBool)
@@ -734,9 +734,9 @@ struct JSFunctionSpec {
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-	     JSClass *clasp, JSNative constructor, uintN nargs,
-	     JSPropertySpec *ps, JSFunctionSpec *fs,
-	     JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+             JSClass *clasp, JSNative constructor, uintN nargs,
+             JSPropertySpec *ps, JSFunctionSpec *fs,
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
 #ifdef JS_THREADSAFE
 extern JS_PUBLIC_API(JSClass *)
@@ -761,7 +761,7 @@ JS_SetPrivate(JSContext *cx, JSObject *obj, void *data);
 
 extern JS_PUBLIC_API(void *)
 JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
-		      jsval *argv);
+                      jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetPrototype(JSContext *cx, JSObject *obj);
@@ -783,11 +783,11 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-		   JSObject *parent);
+                   JSObject *parent);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
-		JSObject *proto, uintN attrs);
+                JSObject *proto, uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds);
@@ -797,7 +797,7 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
-		  JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
 /*
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
@@ -807,7 +807,7 @@ JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
  */
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-			 uintN *attrsp, JSBool *foundp);
+                         uintN *attrsp, JSBool *foundp);
 
 /*
  * Set the attributes of a property on a given object.
@@ -817,17 +817,17 @@ JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
  */
 extern JS_PUBLIC_API(JSBool)
 JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-			 uintN attrs, JSBool *foundp);
+                         uintN attrs, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
-			    int8 tinyid, jsval value,
-			    JSPropertyOp getter, JSPropertyOp setter,
-			    uintN attrs);
+                            int8 tinyid, jsval value,
+                            JSPropertyOp getter, JSPropertyOp setter,
+                            uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
-		 const char *alias);
+                 const char *alias);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
@@ -843,13 +843,13 @@ JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name,
-		   jsval *rval);
+                   jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj,
-		    const jschar *name, size_t namelen, jsval value,
-		    JSPropertyOp getter, JSPropertyOp setter,
-		    uintN attrs);
+                    const jschar *name, size_t namelen, jsval value,
+                    JSPropertyOp getter, JSPropertyOp setter,
+                    uintN attrs);
 
 /*
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
@@ -859,8 +859,8 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
  */
 extern JS_PUBLIC_API(JSBool)
 JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
-			   const jschar *name, size_t namelen,
-			   uintN *attrsp, JSBool *foundp);
+                           const jschar *name, size_t namelen,
+                           uintN *attrsp, JSBool *foundp);
 
 /*
  * Set the attributes of a property on a given object.
@@ -870,36 +870,36 @@ JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
  */
 extern JS_PUBLIC_API(JSBool)
 JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
-			   const jschar *name, size_t namelen,
-			   uintN attrs, JSBool *foundp);
+                           const jschar *name, size_t namelen,
+                           uintN attrs, JSBool *foundp);
 
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
-			      const jschar *name, size_t namelen,
-			      int8 tinyid, jsval value,
-			      JSPropertyOp getter, JSPropertyOp setter,
-			      uintN attrs);
+                              const jschar *name, size_t namelen,
+                              int8 tinyid, jsval value,
+                              JSPropertyOp getter, JSPropertyOp setter,
+                              uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupUCProperty(JSContext *cx, JSObject *obj,
-		    const jschar *name, size_t namelen,
-		    jsval *vp);
+                    const jschar *name, size_t namelen,
+                    jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetUCProperty(JSContext *cx, JSObject *obj,
-		 const jschar *name, size_t namelen,
-		 jsval *vp);
+                 const jschar *name, size_t namelen,
+                 jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetUCProperty(JSContext *cx, JSObject *obj,
-		 const jschar *name, size_t namelen,
-		 jsval *vp);
+                 const jschar *name, size_t namelen,
+                 jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,
-		     const jschar *name, size_t namelen,
-		     jsval *rval);
+                     const jschar *name, size_t namelen,
+                     jsval *rval);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector);
@@ -918,7 +918,7 @@ JS_HasArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
-		 JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+                 JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias);
@@ -946,7 +946,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-	       jsval *vp, uintN *attrsp);
+               jsval *vp, uintN *attrsp);
 
 /************************************************************************/
 
@@ -967,8 +967,8 @@ typedef struct JSPrincipals {
     ((principals)->refcount++)
 #define JSPRINCIPALS_DROP(cx, principals)               \
     ((--((principals)->refcount) == 0)                  \
-	? (*(principals)->destroy)((cx), (principals))  \
-	: (void) 0)
+        ? (*(principals)->destroy)((cx), (principals))  \
+        : (void) 0)
 
 /************************************************************************/
 
@@ -977,7 +977,7 @@ typedef struct JSPrincipals {
  */
 extern JS_PUBLIC_API(JSFunction *)
 JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
-	       JSObject *parent, const char *name);
+               JSObject *parent, const char *name);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun);
@@ -990,7 +990,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
-		  uintN nargs, uintN attrs);
+                  uintN nargs, uintN attrs);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
@@ -1015,25 +1015,25 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
  */
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileScript(JSContext *cx, JSObject *obj,
-		 const char *bytes, size_t length,
-		 const char *filename, uintN lineno);
+                 const char *bytes, size_t length,
+                 const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
-			      JSPrincipals *principals,
-			      const char *bytes, size_t length,
-			      const char *filename, uintN lineno);
+                              JSPrincipals *principals,
+                              const char *bytes, size_t length,
+                              const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj,
-		   const jschar *chars, size_t length,
-		   const char *filename, uintN lineno);
+                   const jschar *chars, size_t length,
+                   const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
-				JSPrincipals *principals,
-				const jschar *chars, size_t length,
-				const char *filename, uintN lineno);
+                                JSPrincipals *principals,
+                                const jschar *chars, size_t length,
+                                const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename);
@@ -1071,33 +1071,33 @@ JS_DestroyScript(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
-		   uintN nargs, const char **argnames,
-		   const char *bytes, size_t length,
-		   const char *filename, uintN lineno);
+                   uintN nargs, const char **argnames,
+                   const char *bytes, size_t length,
+                   const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
-				JSPrincipals *principals, const char *name,
-				uintN nargs, const char **argnames,
-				const char *bytes, size_t length,
-				const char *filename, uintN lineno);
+                                JSPrincipals *principals, const char *name,
+                                uintN nargs, const char **argnames,
+                                const char *bytes, size_t length,
+                                const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
-		     uintN nargs, const char **argnames,
-		     const jschar *chars, size_t length,
-		     const char *filename, uintN lineno);
+                     uintN nargs, const char **argnames,
+                     const jschar *chars, size_t length,
+                     const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
-				  JSPrincipals *principals, const char *name,
-				  uintN nargs, const char **argnames,
-				  const jschar *chars, size_t length,
-				  const char *filename, uintN lineno);
+                                  JSPrincipals *principals, const char *name,
+                                  uintN nargs, const char **argnames,
+                                  const jschar *chars, size_t length,
+                                  const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
-		   uintN indent);
+                   uintN indent);
 
 /*
  * API extension: OR this into indent to avoid pretty-printing the decompiled
@@ -1126,41 +1126,41 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateScript(JSContext *cx, JSObject *obj,
-		  const char *bytes, uintN length,
-		  const char *filename, uintN lineno,
-		  jsval *rval);
+                  const char *bytes, uintN length,
+                  const char *filename, uintN lineno,
+                  jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj,
-			       JSPrincipals *principals,
-			       const char *bytes, uintN length,
-			       const char *filename, uintN lineno,
-			       jsval *rval);
+                               JSPrincipals *principals,
+                               const char *bytes, uintN length,
+                               const char *filename, uintN lineno,
+                               jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
-		    const jschar *chars, uintN length,
-		    const char *filename, uintN lineno,
-		    jsval *rval);
+                    const jschar *chars, uintN length,
+                    const char *filename, uintN lineno,
+                    jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
-				 JSPrincipals *principals,
-				 const jschar *chars, uintN length,
-				 const char *filename, uintN lineno,
-				 jsval *rval);
+                                 JSPrincipals *principals,
+                                 const jschar *chars, uintN length,
+                                 const char *filename, uintN lineno,
+                                 jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
-		jsval *argv, jsval *rval);
+                jsval *argv, jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
-		    jsval *argv, jsval *rval);
+                    jsval *argv, jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
-		     jsval *argv, jsval *rval);
+                     jsval *argv, jsval *rval);
 
 extern JS_PUBLIC_API(JSBranchCallback)
 JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb);
@@ -1245,23 +1245,23 @@ JS_CompareStrings(JSString *str1, JSString *str2);
 /*
  * Locale specific string conversion callback.
  */
-
 struct JSLocaleCallbacks {
     JSLocaleToUpperCase     localeToUpperCase;
     JSLocaleToLowerCase     localeToLowerCase;
     JSLocaleCompare         localeCompare;
 };
 
-
-
 /*
- * Establish locale callbacks. The pointer must persist as long as the JSContext.
- * Setting to NULL resorts to default behaviour.
+ * Establish locale callbacks. The pointer must persist as long as the
+ * JSContext.  Passing NULL restores the default behaviour.
  */
 extern JS_PUBLIC_API(void)
 JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks);
 
-/* Return the address of the current locale callbacks struct. May be NULL. */
+/*
+ * Return the address of the current locale callbacks struct, which may
+ * be NULL.
+ */
 extern JS_PUBLIC_API(JSLocaleCallbacks *)
 JS_GetLocaleCallbacks(JSContext *cx);
 
@@ -1285,14 +1285,14 @@ JS_ReportError(JSContext *cx, const char *format, ...);
  */
 extern JS_PUBLIC_API(void)
 JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
-		     void *userRef, const uintN errorNumber, ...);
+                     void *userRef, const uintN errorNumber, ...);
 
 /*
  * Use an errorNumber to retrieve the format string, args are jschar *
  */
 extern JS_PUBLIC_API(void)
 JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
-		     void *userRef, const uintN errorNumber, ...);
+                     void *userRef, const uintN errorNumber, ...);
 
 /*
  * As above, but report a warning instead (JSREPORT_IS_WARNING(report.flags)).
@@ -1326,7 +1326,7 @@ struct JSErrorReport {
     const char      *tokenptr;      /* pointer to error token in linebuf */
     const jschar    *uclinebuf;     /* unicode (original) line buffer */
     const jschar    *uctokenptr;    /* unicode (original) token pointer */
-    uintN	    flags;          /* error/warning, etc. */
+    uintN           flags;          /* error/warning, etc. */
     uintN           errorNumber;    /* the error number, e.g. see js.msg */
     const jschar    *ucmessage;     /* the (default) error message */
     const jschar    **messageArgs;  /* arguments for the error message */
@@ -1424,6 +1424,7 @@ extern JS_PUBLIC_API(JSErrorReport *)
 JS_ErrorFromException(JSContext *cx, jsval v);
 
 #ifdef JS_THREADSAFE
+
 /*
  * Associate the current thread with the given context.  This is done
  * implicitly by JS_NewContext.
@@ -1442,11 +1443,11 @@ JS_SetContextThread(JSContext *cx);
 
 extern JS_PUBLIC_API(intN)
 JS_ClearContextThread(JSContext *cx);
-#endif
+
+#endif /* JS_THREADSAFE */
 
 /************************************************************************/
 
 JS_END_EXTERN_C
 
 #endif /* jsapi_h___ */
-
