@@ -46,6 +46,7 @@ static const PRBool gsDebug = PR_FALSE;
 
 //used for debugging new compositor
 //#define SHOW_RECTS
+//#define SHOW_DISPLAYLIST
 
 //number of entries per view in display list
 #define DISPLAYLIST_INC  3
@@ -360,7 +361,7 @@ NS_IMETHODIMP nsViewManager :: SetWindowDimensions(nscoord width, nscoord height
 NS_IMETHODIMP nsViewManager :: ResetScrolling(void)
 {
   if (nsnull != mRootScrollable)
-    mRootScrollable->ComputeContainerSize();
+    mRootScrollable->ComputeScrollOffsets(PR_TRUE);
 
   return NS_OK;
 }
@@ -605,7 +606,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
   mContext->GetAppUnitsToDevUnits(t2p);
   mContext->GetDevUnitsToAppUnits(p2t);
 
-#if 0
+#ifdef SHOW_DISPLAYLIST
 {
   char      nest[400];
   PRUint32  newnestcnt, nestcnt = 0;

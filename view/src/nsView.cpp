@@ -1269,15 +1269,25 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   fprintf(out, "%p ", this);
   if (nsnull != mWindow) {
     nsRect windowBounds;
+    nsRect nonclientBounds;
+    float p2t;
+    nsIDeviceContext *dx;
+    mViewManager->GetDeviceContext(dx);
+    dx->GetDevUnitsToAppUnits(p2t);
+    NS_RELEASE(dx);
     mWindow->GetClientBounds(windowBounds);
+    windowBounds *= p2t;
+    mWindow->GetBounds(nonclientBounds);
+    nonclientBounds *= p2t;
     fprintf(out, "(widget=%p pos={%d,%d,%d,%d}) ",
             mWindow,
-            windowBounds.x, windowBounds.y,
+            nonclientBounds.x, nonclientBounds.y,
             windowBounds.width, windowBounds.height);
   }
   nsRect brect;
   GetBounds(brect);
-  out << brect;
+  fprintf(out, "{%d,%d,%d,%d}",
+          brect.x, brect.y, brect.width, brect.height);
   PRBool  hasTransparency;
   HasTransparency(hasTransparency);
   fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n", mZindex, mVis, mOpacity, hasTransparency, mClientData);
