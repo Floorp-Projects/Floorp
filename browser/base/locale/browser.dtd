@@ -20,14 +20,6 @@
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY openFileCmd.accesskey "o">
 <!ENTITY openFileCmd.commandkey "o">
-<!ENTITY editPageCmd.label "Edit Page">
-<!ENTITY editPageCmd.accesskey "E">
-<!ENTITY editPageCmd.commandkey "e">
-<!ENTITY editFrameCmd.label "Edit Frame">
-<!ENTITY editFrameCmd.accesskey "m">
-<!ENTITY editFrameSetCmd.label "Edit Frameset">
-<!ENTITY editFrameSetCmd.accesskey "t">
-
 <!ENTITY printSetupCmd.label "Page Setup...">
 <!ENTITY printSetupCmd.accesskey "u">
 <!ENTITY printPreviewCmd.label "Print Preview">
@@ -44,8 +36,6 @@
 <!ENTITY tabbarCmd.accesskey "T">
 <!ENTITY taskbarCmd.label "Status Bar">
 <!ENTITY taskbarCmd.accesskey "S">
-<!ENTITY componentbarCmd.label "Component Bar">
-<!ENTITY componentbarCmd.accesskey "C">
 
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">
@@ -62,8 +52,6 @@
 <!ENTITY closeWindow.label "Close Window">
 
 
-<!ENTITY webContentMenu.label "Languages and Web Content">
-<!ENTITY webContentMenu.accesskey "l">
 <!ENTITY downloadMore.label "Download More">
 <!ENTITY downloadMore.accesskey "D">
 <!ENTITY applyTheme.label "Apply Theme"> 
@@ -81,8 +69,6 @@
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
 
-<!ENTITY goMenu.label "Go">
-<!ENTITY goMenu.accesskey "g">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY goHomeCmd.accesskey "h">
 
@@ -91,8 +77,6 @@
 <!ENTITY addCurPageAsCmd.label "Add to Bookmarks...">
 <!ENTITY addCurPageAsCmd.accesskey "A">
 <!ENTITY addCurPageAsCmd.commandkey "d">
-<!ENTITY addCurTabsAsCmd.label "Bookmark This Group of Tabs...">
-<!ENTITY addCurTabsAsCmd.accesskey "G">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "M">
 <!ENTITY manBookmarksCmd.commandkey "b">
@@ -101,13 +85,6 @@
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpMenuCmd.accesskey "h">
 <!ENTITY helpContentsCmd.label "Help Contents">
-
-<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; test case --> 
-<!ENTITY languages.label "Languages">
-<!ENTITY en-US.label "English (en-US)">
-<!ENTITY da-DK-file.label "Danish (da-DK; file)">
-<!ENTITY da-DK-http.label "Danish (da-DK; http)">
-<!-- LOCALIZATION NOTE END   : DO not localize the entities above; test case --> 
 
 <!-- Toolbar items --> 
 <!ENTITY backButton.label             "Back">
@@ -165,7 +142,7 @@
 <!ENTITY  offlineGoOfflineCmd.accesskey             "w">
 
 <!ENTITY fileMenu.label         "File"> 
-<!ENTITY fileMenu.accesskey       "f">
+<!ENTITY fileMenu.accesskey       "F">
 <!ENTITY newMenu.label            "New">
 <!ENTITY newMenu.accesskey          "N">
 <!ENTITY newNavigatorCmd.label        "New Navigator Window">
@@ -173,13 +150,13 @@
 <!ENTITY newNavigatorCmd.accesskey      "N">
 
 <!ENTITY editMenu.label         "Edit"> 
-<!ENTITY editMenu.accesskey       "e"> 
+<!ENTITY editMenu.accesskey       "E"> 
 <!ENTITY undoCmd.label            "Undo">  
 <!ENTITY undoCmd.key            "Z">  
-<!ENTITY undoCmd.accesskey          "u"> 
+<!ENTITY undoCmd.accesskey          "U"> 
 <!ENTITY redoCmd.label            "Redo">  
 <!ENTITY redoCmd.key            "Y">  
-<!ENTITY redoCmd.accesskey          "r"> 
+<!ENTITY redoCmd.accesskey          "R"> 
 <!ENTITY cutCmd.label           "Cut">  
 <!ENTITY cutCmd.key             "X">  
 <!ENTITY cutCmd.accesskey         "t"> 
@@ -188,13 +165,13 @@
 <!ENTITY copyCmd.accesskey          "c"> 
 <!ENTITY pasteCmd.label           "Paste">  
 <!ENTITY pasteCmd.key           "V">  
-<!ENTITY pasteCmd.accesskey         "p"> 
+<!ENTITY pasteCmd.accesskey         "P"> 
 <!ENTITY deleteCmd.label          "Delete">  
 <!ENTITY deleteCmd.key            "D">  
-<!ENTITY deleteCmd.accesskey        "d"> 
+<!ENTITY deleteCmd.accesskey        "D"> 
 <!ENTITY selectAllCmd.label         "Select All">  
 <!ENTITY selectAllCmd.key         "A">  
-<!ENTITY selectAllCmd.accesskey       "a"> 
+<!ENTITY selectAllCmd.accesskey       "A"> 
 <!ENTITY preferencesCmd.label       "Preferences...">
 <!ENTITY preferencesCmd.key         "E">  
 <!ENTITY preferencesCmd.accesskey     "e"> 
