@@ -684,27 +684,6 @@ nsTreeContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
   return NS_OK;
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsTreeContentView)
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsTreeContentView)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsTreeContentView)
-
-void
-nsTreeContentView::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
-{
-}
-
-void
-nsTreeContentView::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
-{
-}
-
-void
-nsTreeContentView::ContentChanged(nsIDocument *aDocument,
-                                     nsIContent* aContent,
-                                     nsISupports* aSubContent)
-{
-}
-
 void
 nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent1,

@@ -53,7 +53,7 @@
 #include "nsIDOMDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMStyleSheetList.h"
@@ -144,7 +144,7 @@ protected:
 
 
 class nsDOMStyleSheetList : public nsIDOMStyleSheetList,
-                            public nsIDocumentObserver
+                            public nsStubDocumentObserver
 {
 public:
   nsDOMStyleSheetList(nsIDocument *aDocument);
@@ -154,7 +154,12 @@ public:
 
   NS_DECL_NSIDOMSTYLESHEETLIST
 
-  NS_DECL_NSIDOCUMENTOBSERVER
+  // nsIDocumentObserver
+  virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
+  virtual void StyleSheetAdded(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet);
+  virtual void StyleSheetRemoved(nsIDocument *aDocument,
+                                 nsIStyleSheet* aStyleSheet);
 
 protected:
   PRInt32       mLength;

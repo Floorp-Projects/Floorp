@@ -90,7 +90,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 #include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLMapElement.h"
@@ -207,7 +207,7 @@ class HTMLContentSink : public nsContentSink,
 #ifdef DEBUG
                         public nsIDebugDumpContent,
 #endif
-                        public nsIDocumentObserver
+                        public nsStubDocumentObserver
 {
 public:
   friend class SinkContext;
@@ -268,7 +268,8 @@ public:
   NS_DECL_NSITIMERCALLBACK
   
   // nsIDocumentObserver
-  NS_DECL_NSIDOCUMENTOBSERVER
+  virtual void BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
+  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
 
 #ifdef DEBUG
   // nsIDebugDumpContent
@@ -4200,12 +4201,6 @@ HTMLContentSink::UpdateAllContexts()
   mCurrentContext->UpdateChildCounts();
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(HTMLContentSink)
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(HTMLContentSink)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(HTMLContentSink)
-NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(HTMLContentSink)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(HTMLContentSink)
-
 void
 HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
@@ -4225,7 +4220,6 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 void
 HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
-
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
   // notification to occur. Update our notion of how much
@@ -4234,11 +4228,6 @@ HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   if (!--mInNotification) {
     UpdateAllContexts();
   }
-}
-
-void
-HTMLContentSink::DocumentWillBeDestroyed(nsIDocument *aDocument)
-{
 }
 
 void

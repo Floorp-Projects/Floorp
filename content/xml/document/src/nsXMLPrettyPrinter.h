@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,18 +39,37 @@
 #ifndef nsXMLPrettyPrinter_h__
 #define nsXMLPrettyPrinter_h__
 
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 #include "nsIDocument.h"
 #include "nsCOMPtr.h"
 
-class nsXMLPrettyPrinter : public nsIDocumentObserver
+class nsXMLPrettyPrinter : public nsStubDocumentObserver
 {
 public:
     nsXMLPrettyPrinter();
     virtual ~nsXMLPrettyPrinter();
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOCUMENTOBSERVER
+
+    // nsIDocumentObserver
+    virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
+    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
+    virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
+                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                  PRInt32 aModType);
+    virtual void ContentAppended(nsIDocument* aDocument,
+                                 nsIContent* aContainer,
+                                 PRInt32 aNewIndexInContainer);
+    virtual void ContentInserted(nsIDocument* aDocument,
+                                 nsIContent* aContainer, nsIContent* aChild,
+                                 PRInt32 aIndexInContainer);
+    virtual void ContentReplaced(nsIDocument* aDocument,
+                                 nsIContent* aContainer,
+                                 nsIContent* aOldChild, nsIContent* aNewChild,
+                                 PRInt32 aIndexInContainer);
+    virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
+                                nsIContent* aChild, PRInt32 aIndexInContainer);
+    virtual void DocumentWillBeDestroyed(nsIDocument* aDocument);
     
     /**
      * This will prettyprint the document if the document is loaded in a

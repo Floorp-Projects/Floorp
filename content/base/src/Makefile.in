@@ -60,7 +60,10 @@ REQUIRES	= xpcom \
 		  prefetch \
 		  $(NULL)
 
-EXPORTS		= nsStyleSet.h
+EXPORTS		= \
+		nsStubDocumentObserver.h \
+		nsStyleSet.h \
+		$(NULL)
 
 CPPSRCS		= \
 		nsAttrAndChildArray.cpp \
@@ -95,6 +98,7 @@ CPPSRCS		= \
 		nsRange.cpp \
 		nsRuleNode.cpp \
 		nsSelection.cpp \
+		nsStubDocumentObserver.cpp \
 		nsStyleContext.cpp \
 		nsStyleSet.cpp \
 		nsSyncLoadService.cpp \

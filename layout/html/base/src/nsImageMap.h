@@ -40,7 +40,7 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsVoidArray.h"
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIFrame.h"
 #include "nsIImageMap.h"
@@ -54,7 +54,7 @@ class nsIURI;
 class nsString;
 class nsIDOMEvent;
 
-class nsImageMap : public nsIDocumentObserver, public nsIDOMFocusListener,
+class nsImageMap : public nsStubDocumentObserver, public nsIDOMFocusListener,
                    public nsIImageMap
 {
 public:
@@ -94,7 +94,20 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDocumentObserver
-  NS_DECL_NSIDOCUMENTOBSERVER
+  virtual void ContentChanged(nsIDocument* aDocument, nsIContent* aContent,
+                              nsISupports* aSubContent);
+  virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
+                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                PRInt32 aModType);
+  virtual void ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer);
+  virtual void ContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
+                               nsIContent* aChild, PRInt32 aIndexInContainer);
+  virtual void ContentReplaced(nsIDocument* aDocument, nsIContent* aContainer,
+                               nsIContent* aOldChild, nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
+                              nsIContent* aChild, PRInt32 aIndexInContainer);
 
   //nsIDOMFocusListener
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);

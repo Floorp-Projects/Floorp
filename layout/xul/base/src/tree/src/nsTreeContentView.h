@@ -45,7 +45,7 @@
 #include "nsVoidArray.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 #include "nsITreeView.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
@@ -57,8 +57,8 @@ class Property;
 nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
 
 class nsTreeContentView : public nsITreeView,
-                              public nsITreeContentView,
-                              public nsIDocumentObserver
+                          public nsITreeContentView,
+                          public nsStubDocumentObserver
 {
   public:
     nsTreeContentView(void);
@@ -74,7 +74,27 @@ class nsTreeContentView : public nsITreeView,
     NS_DECL_NSITREECONTENTVIEW
 
     // nsIDocumentObserver
-    NS_DECL_NSIDOCUMENTOBSERVER
+    virtual void ContentStatesChanged(nsIDocument* aDocument,
+                                      nsIContent* aContent1,
+                                      nsIContent* aContent2,
+                                      PRInt32 aStateMask);
+    virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                  PRInt32 aModType);
+    virtual void ContentAppended(nsIDocument *aDocument,
+                                 nsIContent* aContainer,
+                                 PRInt32 aNewIndexInContainer);
+    virtual void ContentInserted(nsIDocument *aDocument,
+                                 nsIContent* aContainer,
+                                 nsIContent* aChild,
+                                 PRInt32 aIndexInContainer);
+    virtual void ContentReplaced(nsIDocument *aDocument,
+                                 nsIContent* aContainer,
+                                 nsIContent* aOldChild, nsIContent* aNewChild,
+                                 PRInt32 aIndexInContainer);
+    virtual void ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
+                                nsIContent* aChild, PRInt32 aIndexInContainer);
+    virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 
   protected:
     // Recursive methods which deal with serializing of nested content.
