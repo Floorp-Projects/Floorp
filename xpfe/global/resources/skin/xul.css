@@ -983,12 +983,23 @@ box splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
 
-titledbutton.twisty
-{
-  visibility: hidden;
+treeitem > treerow > treecell > titledbutton.twisty {
+ vertical-align: bottom;
+ height: 16px;
+ width: 16px;
+ list-style-image: url("chrome:/global/skin/closedtwisty.gif");
+ visibility: visible;
 }
 
-treeitem [open="true"][container="true"]> treerow > treecell > titledbutton.twisty {
+treeitem [empty="true"]> treerow > treecell > titledbutton.twisty {
+ visibility: hidden;
+}
+
+treeitem [empty="true"][open="true"]> treerow > treecell > titledbutton.twisty {
+ visibility: hidden;
+}
+
+treeitem [open="true"]> treerow > treecell > titledbutton.twisty {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
@@ -996,11 +1007,5 @@ treeitem [open="true"][container="true"]> treerow > treecell > titledbutton.twis
  visibility: visible;
 }
 
-treeitem [container="true"] > treerow > treecell > titledbutton.twisty {
- vertical-align: bottom;
- height: 16px;
- width: 16px;
- list-style-image: url("chrome:/global/skin/closedtwisty.gif");
- visibility: visible;
-}
+
 
