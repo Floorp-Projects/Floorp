@@ -65,7 +65,11 @@ function initializeDialog(hdrs)
 {
   if (hdrs)
   {
-    gArrayHdrs = hdrs.split(": ");
+    hdrs = hdrs.replace(/\s+/g,'');  //remove white spaces before splitting
+    gArrayHdrs = hdrs.split(":");
+    for (var i = 0; i< gArrayHdrs.length; i++) 
+      if (!gArrayHdrs[i])
+        gArrayHdrs.splice(i,1);  //remove any null elements
     initializeRows();
   }
 }
@@ -101,7 +105,11 @@ function onOk()
 {  
   if (gArrayHdrs.length)
   {
-    var hdrs = gArrayHdrs.join(": ");
+    var hdrs;
+    if (gArrayHdrs.length == 1)
+      hdrs = gArrayHdrs;
+    else
+      hdrs = gArrayHdrs.join(": ");
     gPrefs.setCharPref("mailnews.customHeaders", hdrs);
     // flush prefs to disk, in case we crash, to avoid dataloss and problems with filters that use the custom headers
     var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);

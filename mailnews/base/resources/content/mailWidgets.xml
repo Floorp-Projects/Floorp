@@ -422,7 +422,13 @@
             }
             var hdrsArray = new Array;
             if (hdrs)
-              hdrsArray = hdrs.split(": ");
+            {
+              hdrs = hdrs.replace(/\s+/g,'');  //remove white spaces before splitting 
+              hdrsArray = hdrs.split(":");
+              for (var i = 0; i< hdrsArray.length; i++) 
+                if (!hdrsArray[i])
+                   hdrsArray.splice(i,1);  //remove any null elements
+            }
             var bundle = this.stringBundle;
             var j=0;
             for (var i=0; i<ids.length; i++)

@@ -1112,19 +1112,27 @@ nsMsgSearchValidityManager::SetOtherHeadersInTable (nsIMsgSearchValidityTable *a
 {
   PRUint32 customHeadersLength = strlen(customHeaders);
   PRUint32 numHeaders=0;
-  PRUint32 i=0;
   if (customHeadersLength)
   {
-    for (i=0;i <customHeadersLength; i++)
-      if (customHeaders[i] == ':')
-        numHeaders++;
-    numHeaders++;
+    char *headersString = nsCRT::strdup(customHeaders);
+
+    nsCAutoString hdrStr;
+    hdrStr.Adopt(headersString);
+    hdrStr.StripWhitespace();  //remove whitespace before parsing
+
+    char *newStr=nsnull;
+    char *token = nsCRT::strtok(headersString,":", &newStr);
+    while(token)
+    {
+      numHeaders++;
+      token = nsCRT::strtok(newStr,":", &newStr);
+    }
   }
 
   NS_ASSERTION(nsMsgSearchAttrib::OtherHeader + numHeaders < nsMsgSearchAttrib::kNumMsgSearchAttributes, "more headers than the table can hold");
 
   PRUint32 maxHdrs= PR_MIN(nsMsgSearchAttrib::OtherHeader + numHeaders+1, nsMsgSearchAttrib::kNumMsgSearchAttributes);
-  for (i=nsMsgSearchAttrib::OtherHeader+1;i< maxHdrs;i++)
+  for (PRUint32 i=nsMsgSearchAttrib::OtherHeader+1;i< maxHdrs;i++)
   {
     aTable->SetAvailable (i, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
     aTable->SetEnabled   (i, nsMsgSearchOp::Contains, 1); 

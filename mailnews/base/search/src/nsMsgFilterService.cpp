@@ -111,6 +111,8 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsg
     }
     else if(ret == NS_MSG_CUSTOM_HEADERS_OVERFLOW && aMsgWindow)
       ThrowAlertMsg("filterCustomHeaderOverflow", aMsgWindow);
+    else if(ret == NS_MSG_INVALID_CUSTOM_HEADER && aMsgWindow)
+      ThrowAlertMsg("invalidCustomHeader", aMsgWindow);
   }
 	return ret;
 }

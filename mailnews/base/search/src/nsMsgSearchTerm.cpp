@@ -108,6 +108,10 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
 	if (!found)
   {
     nsresult rv;
+    PRBool goodHdr;
+    IsRFC822HeaderFieldName(string, &goodHdr);
+    if (!goodHdr)
+      return NS_MSG_INVALID_CUSTOM_HEADER;
     //49 is for showing customize... in ui, headers start from 50 onwards up until 99.
     *attrib = nsMsgSearchAttrib::OtherHeader+1;
 
@@ -124,32 +128,33 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
     if (!headers.IsEmpty())
     {
       char *headersString = ToNewCString(headers);
+
+      nsCAutoString hdrStr;
+      hdrStr.Adopt(headersString);
+      hdrStr.StripWhitespace();  //remove whitespace before parsing
+
       char *newStr=nsnull;
-      char *token = nsCRT::strtok(headersString,": ", &newStr);
+      char *token = nsCRT::strtok(headersString,":", &newStr);
       PRUint32 i=0;
       while (token)
       {
         if (nsCRT::strcasecmp(token, string) == 0)
         {
-          *attrib += i; 
-          nsMemory::Free(headersString); //we found custom header in the pref
+          *attrib += i; //we found custom header in the pref
           return NS_OK;
         }
-        token = nsCRT::strtok(newStr,": ", &newStr);
+        token = nsCRT::strtok(newStr,":", &newStr);
         i++;
 
         //we know we can have a max of 50 custom headers
         if ( nsMsgSearchAttrib::OtherHeader + i >= nsMsgSearchAttrib::kNumMsgSearchAttributes -1)
         {
-           nsMemory::Free(headersString);
            NS_ASSERTION(0, "pref has more headers than the table can hold");
            return NS_MSG_CUSTOM_HEADERS_OVERFLOW;
         }
       }
 
       *attrib += i; //this is *attrib for the new custom header 
-
-      nsMemory::Free(headersString);
       headers.Append(": "); //Adding additonal header to the pref so append the separator
     }
 
