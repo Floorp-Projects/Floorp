@@ -26,6 +26,7 @@ PROG4 = .\$(OBJDIR)\FilesTest.exe
 PROG5 = .\$(OBJDIR)\PropertiesTest.exe
 PROG6 = .\$(OBJDIR)\TestAutoLock.exe
 PROG7 = .\$(OBJDIR)\TestThreads.exe
+PROG8 = .\$(OBJDIR)\TestObserverService.exe
 RESFILE = timer.res
 PROGRAMS = $(PROG0) $(PROG1) \
 !ifdef MODULAR_NETLIB
@@ -36,6 +37,7 @@ PROGRAMS = $(PROG0) $(PROG1) \
 	$(PROG4) \
         $(PROG6) \
         $(PROG7) \
+		$(PROG8) \
 	$(NULL)
 
 LINCS=-I..\src -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\raptor
@@ -67,6 +69,7 @@ install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG4) $(DIST)\bin
         $(MAKE_INSTALL) $(PROG6) $(DIST)\bin
         $(MAKE_INSTALL) $(PROG7) $(DIST)\bin
+		$(MAKE_INSTALL) $(PROG8) $(DIST)\bin
 
 clobber::
 	rm -f $(DIST)\bin\TimerTest.exe
@@ -79,6 +82,7 @@ clobber::
 !endif
 	rm -f $(DIST)\bin\FilesTest.exe
         rm -f $(DIST)\bin\TestAutoLock.exe
+		rm -f $(DIST)\bin\TestObserverService.exe
 
 # Move this into config/obj.inc when it's allowed
 .cpp{.\$(OBJDIR)\}.exe:
@@ -113,5 +117,8 @@ $(PROG5): $(OBJDIR) PropertiesTest.cpp
 $(PROG6): $(OBJDIR) TestAutoLock.cpp
 
 $(PROG7): $(OBJDIR) TestThreads.cpp
+
+$(PROG8): $(OBJDIR) TestObserverService.cpp
+
 
 
