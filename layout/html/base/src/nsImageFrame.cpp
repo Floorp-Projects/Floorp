@@ -389,7 +389,8 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
     // Setup url before starting the image load
     nsAutoString src, base;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) {
+    if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) &&
+        (src.Length() > 0)) {
       mImageLoader.SetURL(src);
       if (NS_CONTENT_ATTR_HAS_VALUE ==
           mContent->GetAttribute(NS_HTML_BASE_HREF, base)) {
