@@ -39,14 +39,24 @@
 #include "nsXULAppAPI.h"
 #ifdef XP_WIN
 #include <windows.h>
+#include <stdlib.h>
 #endif
+#include "nsBuildID.h"
 
 const int TMP_ARG_MAX=21;
+static const nsXREAppData kAppData = {
+  "Mozilla",
+  "Sunbird",
+  APP_VERSION,
+  BUILD_ID,
+  "Copyright (c) 2004 mozilla.org",
+  PR_FALSE
+};
+  
 
 int main(int argc, char* argv[])
 {
   char* temparg[TMP_ARG_MAX+1];
-  nsXREAppData appData;
   temparg[0] = argv[0];
   temparg[1] = "-calendar";
   int i;
@@ -55,16 +65,8 @@ int main(int argc, char* argv[])
   }
   //we still might lose some args. a check would be handy with big neon letters yelling at the user.
   temparg[i+1]=nsnull;
-  appData.SetSplashEnabled(PR_FALSE);
-  appData.SetProductName(NS_LITERAL_CSTRING("Sunbird"));
-  appData.SetUseStartupPrefs(PR_FALSE);
-
-  return xre_main(argc+1, temparg, appData);
+  return xre_main(argc+1, temparg, &kAppData);
 }
-
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
-char* splash_xpm[] = {0};
-#endif
 
 #if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)
 // We need WinMain in order to not be a console app.  This function is
