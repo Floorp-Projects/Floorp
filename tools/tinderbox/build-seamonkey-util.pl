@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.135 $ ';
+$::UtilsVersion = '$Revision: 1.136 $ ';
 
 package TinderUtils;
 
@@ -571,25 +571,26 @@ sub BuildIt {
 
     my $binary_basename = "$Settings::BinaryName";
     my $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist/bin";
+    my $dist_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist";
     my $full_binary_name = "$binary_dir/$binary_basename";
 
-	my $embed_binary_basename = "$Settings::EmbedBinaryName";
-	my $embed_binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/${Settings::EmbedDistDir}";
+    my $embed_binary_basename = "$Settings::EmbedBinaryName";
+    my $embed_binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/${Settings::EmbedDistDir}";
     my $full_embed_binary_name = "$embed_binary_dir/$embed_binary_basename";
 
     my $exit_early = 0;
     my $start_time = 0;
 
-	my $status = 0;
+    my $status = 0;
 
-	my $build_failure_count = 0;  # Keep count of build failures.
+    my $build_failure_count = 0;  # Keep count of build failures.
 
     # Bypass profile manager at startup.
     $ENV{MOZ_BYPASS_PROFILE_AT_STARTUP} = 1;
     
-	# Set up tag stuff.
+    # Set up tag stuff.
     # Only one tag per file, so -r will override any -D settings.
-	$Settings::CVSCO .= " -r $Settings::BuildTag"
+    $Settings::CVSCO .= " -r $Settings::BuildTag"
       unless not defined($Settings::BuildTag) or $Settings::BuildTag eq '';
 
     print "Starting dir is : $build_dir\n";
@@ -635,109 +636,125 @@ sub BuildIt {
         print_log "current dir is -- " . ($ENV{HOST}||$ENV{HOSTNAME}) . ":$build_dir\n";
         print_log "Build Administrator is $Settings::BuildAdministrator\n";
         
-		# Print user comment if there is one.
-		if ($Settings::UserComment) {
-		  print_log "$Settings::UserComment\n";
-		}
-
-		# System id
-		print_log "uname -a = " . `uname -a`;
-
-		# Print out redhat version if we have it.
-		if (-e "/etc/redhat-release") {
-		  print_log `cat /etc/redhat-release`;
-		}
-
-        PrintEnv();
-
-		# Print out failure count
-		if($build_failure_count > 0) {
-		  print_log "Previous consecutive build failures: $build_failure_count\n";
-		}
-        
-		# Make sure we have client.mk
-        unless (-e "$TreeSpecific::name/client.mk") {
-		  
-		  # Set CVSROOT here.  We should only need to checkout a new
-		  # version of client.mk once; we might have more than one
-		  # cvs tree so set CVSROOT here to avoid confusion.
-		  $ENV{CVSROOT} = $Settings::moz_cvsroot;
-		  
-		  run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/client.mk");
+        # Print user comment if there is one.
+        if ($Settings::UserComment) {
+          print_log "$Settings::UserComment\n";
         }
         
-		# Create toplevel source directory.
+        # System id
+        print_log "uname -a = " . `uname -a`;
+        
+        # Print out redhat version if we have it.
+        if (-e "/etc/redhat-release") {
+          print_log `cat /etc/redhat-release`;
+        }
+        
+        PrintEnv();
+        
+        # Print out failure count
+        if($build_failure_count > 0) {
+          print_log "Previous consecutive build failures: $build_failure_count\n";
+        }
+        
+        # Make sure we have client.mk
+        unless (-e "$TreeSpecific::name/client.mk") {
+          
+          # Set CVSROOT here.  We should only need to checkout a new
+          # version of client.mk once; we might have more than one
+          # cvs tree so set CVSROOT here to avoid confusion.
+          $ENV{CVSROOT} = $Settings::moz_cvsroot;
+          
+          run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/client.mk");
+        }
+        
+        # Create toplevel source directory.
         chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
 
         # Build it
         my $build_status = 'none';
         unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
-            DeleteBinary($full_binary_name);
 
-			if($Settings::EmbedTest or $Settings::BuildEmbed) {
-			  DeleteBinary($full_embed_binary_name);
-			}
-
-            my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
-			if ($Settings::FastUpdate) {
-				$make = "$Settings::Make -f client.mk fast-update && $Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs' build";
-			}
-            my $targets = $TreeSpecific::checkout_target;
-            $targets = $TreeSpecific::checkout_clobber_target unless $Settings::BuildDepend;
-			# Make sure we have an ObjDir if we need one.
-			mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
-
-            $status = run_shell_command "$make $targets";
+          # Delete binary so we can test for it to determine success after building.
+          DeleteBinary($full_binary_name);          
+          if($Settings::EmbedTest or $Settings::BuildEmbed) {
+            DeleteBinary($full_embed_binary_name);
+          }
+          
+          # Delete dist directory to avoid accumulating cruft there, some commercial
+          # build processes also need to do this.
+          if (-e $dist_dir) {
+            print_log "Deleting $dist_dir\n";
+            $status = run_shell_command "\\rm -rf $dist_dir";
             if ($status != 0) {
-              $build_status = 'busted';
-            } elsif (not BinaryExists($full_binary_name)) {
-              print_log "Error: binary not found: $binary_basename\n";
+              print_log "Error: \\rm -rf $dist_dir failed.\n";
+            }
+          }
+          
+          # Build up initial make command.
+          my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
+          if ($Settings::FastUpdate) {
+            $make = "$Settings::Make -f client.mk fast-update && $Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs' build";
+          }
+
+          # Build up target string.
+          my $targets = $TreeSpecific::checkout_target;
+          $targets = $TreeSpecific::checkout_clobber_target unless $Settings::BuildDepend;
+
+          # Make sure we have an ObjDir if we need one.
+          mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
+          
+          # Run the make command.
+          $status = run_shell_command "$make $targets";
+          if ($status != 0) {
+            $build_status = 'busted';
+          } elsif (not BinaryExists($full_binary_name)) {
+            print_log "Error: binary not found: $binary_basename\n";
+            $build_status = 'busted';
+          } else {
+            $build_status = 'success';
+          }
+
+          # TestGtkEmbed is only built by default on certain platforms.
+          if ($build_status ne 'busted' and ($Settings::EmbedTest or $Settings::BuildEmbed)) {
+            if (not BinaryExists($full_embed_binary_name)) {
+              print_log "Error: binary not found: $Settings::EmbedBinaryName\n";
               $build_status = 'busted';
             } else {
               $build_status = 'success';
             }
-
-			# TestGtkEmbed is only built by default on certain platforms.
-			if ($build_status ne 'busted' and ($Settings::EmbedTest or $Settings::BuildEmbed)) {
-			  if (not BinaryExists($full_embed_binary_name)) {
-				print_log "Error: binary not found: $Settings::EmbedBinaryName\n";
-				$build_status = 'busted';
-			  } else {
-				$build_status = 'success';
-			  }
-			}
+          }
         }
 
         if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
-            print_log "$binary_basename binary exists, build successful.\n";
-            if ($Settings::RunTest) {
-                $build_status = run_all_tests($full_binary_name, 
-											  $full_embed_binary_name,
-											  $build_dir);
-            } else {
-                print_log "Skipping tests.\n";
-                $build_status = 'success';
-            }
+          print_log "$binary_basename binary exists, build successful.\n";
+          if ($Settings::RunTest) {
+            $build_status = run_all_tests($full_binary_name, 
+                                          $full_embed_binary_name,
+                                          $build_dir);
+          } else {
+            print_log "Skipping tests.\n";
+            $build_status = 'success';
+          }
         }
 
-		#
-		#  Run (optional) external, post-mozilla build here.
-		#
-		my $external_build = "$Settings::BaseDir/post-mozilla.pl";
-		if (-e $external_build and $build_status eq 'success') {
-		  $build_status = PostMozilla::main($build_dir);
-		}
-
-		# Increment failure count if we failed.
-		if ($build_status eq 'busted') {
-		  $build_failure_count++;
+        #
+        #  Run (optional) external, post-mozilla build here.
+        #
+        my $external_build = "$Settings::BaseDir/post-mozilla.pl";
+        if (-e $external_build and $build_status eq 'success') {
+          $build_status = PostMozilla::main($build_dir);
+        }
+        
+        # Increment failure count if we failed.
+        if ($build_status eq 'busted') {
+          $build_failure_count++;
 		} else {
-		  $build_failure_count = 0;
-		}
+          $build_failure_count = 0;
+        }
 
         close LOG;
         chdir $build_dir;
-		
+
         mail_build_finished_message($start_time, $build_status, $logfile)
           if $Settings::ReportStatus;
 
