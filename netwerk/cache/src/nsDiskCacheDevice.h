@@ -25,13 +25,12 @@
 #define _nsDiskCacheDevice_h_
 
 #include "nsCacheDevice.h"
-
+#include "nsILocalFile.h"
+#include "nsCacheEntry.h"
 
 class nsDiskCacheDevice : public nsCacheDevice
 {
 public:
-    enum { kDiskCacheID = 0x4469736B };  // 'Disk'
-
     nsDiskCacheDevice();
     virtual ~nsDiskCacheDevice();
 
@@ -40,18 +39,24 @@ public:
     static nsresult  Create(nsCacheDevice **result);
 
     virtual const char *   GetDeviceID(void);
-    virtual nsCacheEntry * FindEntry( nsCString * key );
-    virtual nsresult       DeactivateEntry( nsCacheEntry * entry );
-    virtual nsresult       BindEntry( nsCacheEntry * entry );
+    virtual nsCacheEntry * FindEntry(nsCString * key);
+    virtual nsresult       DeactivateEntry(nsCacheEntry * entry);
+    virtual nsresult       BindEntry(nsCacheEntry * entry);
     virtual nsresult       DoomEntry( nsCacheEntry * entry );
 
-    virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
-                                           nsITransport **transport );
+    virtual nsresult GetTransportForEntry(nsCacheEntry * entry,
+                                          nsITransport ** result);
 
-    virtual nsresult OnDataSizeChanged( nsCacheEntry * entry );
+    virtual nsresult OnDataSizeChanged(nsCacheEntry * entry);
+
+    void setCacheDirectory(nsILocalFile* directory);
 
 private:
+    nsresult getFileForEntry(nsCacheEntry * entry, nsIFile**);
 
+private:
+    nsCOMPtr<nsILocalFile>      mCacheDirectory;
+    nsCacheEntryHashTable       mInactiveEntries;
 };
 
 
