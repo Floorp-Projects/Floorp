@@ -632,14 +632,17 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     }
 
         
-    SendSQL("SELECT userid, groupset " .
+    SendSQL("SELECT userid, (refreshed_when > " . SqlQuote($::last_changed) . ") " .
             "FROM profiles WHERE login_name = " . SqlQuote($person));
-    my ($userid, $groupset) =  (FetchSQLData());
+    my ($userid, $current) = (FetchSQLData());
 
     $seen{$person} = 1;
 
     detaint_natural($userid);
-    detaint_natural($groupset);
+
+    if (!$current) {
+        DeriveGroup($userid);
+    }
 
     # if this person doesn't have permission to see info on this bug, 
     # return.
@@ -649,19 +652,13 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     # see the action of restricting the bug itself; the bug will just 
     # quietly disappear from their radar.
     #
-    return unless CanSeeBug($id, $userid, $groupset);
+    return unless CanSeeBug($id, $userid);
+    
 
     #  Drop any non-insiders if the comment is private
-     if (Param("insidergroup") && ($anyprivate != 0)) {
-        ConnectToDatabase();
-        PushGlobalSQLState();
-        SendSQL("select (bit & $groupset ) != 0 from groups where name = " . SqlQuote(Param("insidergroup")));
-        my $bit = FetchOneColumn();
-        PopGlobalSQLState();
-        if (!$bit) {
-            return;
-        }
-     }
+     return if (Param("insidergroup") && 
+               ($anyprivate != 0) && 
+               (!UserInGroup(Param("insidergroup"), $userid)));
 
     # We shouldn't send changedmail if this is a dependency mail, and any of 
     # the depending bugs is not visible to the user.
@@ -669,7 +666,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
         my $save_id = $dep_id;
         detaint_natural($dep_id) || warn("Unexpected Error: \@depbugs contains a non-numeric value: '$save_id'")
                                  && return;
-        return unless CanSeeBug($dep_id, $userid, $groupset);
+        return unless CanSeeBug($dep_id, $userid);
     }
 
     my %mailhead = %defmailhead;
@@ -780,6 +777,14 @@ if (open(FID, "<data/nomail")) {
     }
     close FID;
 }
+
+# Since any email recipients must be rederived if the user has not
+# been rederived since the most recent group change, figure out when that
+# is once and determine the need to rederive users using the same DB access
+# that gets the user's email address each time a person is processed.
+#
+SendSQL("SELECT MAX(last_changed) FROM groups");
+($::last_changed) = FetchSQLData();
 
 if ($#ARGV >= 0 && $ARGV[0] eq "regenerate") {
     print "Regenerating is no longer required or supported\n";

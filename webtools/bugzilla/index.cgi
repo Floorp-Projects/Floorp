@@ -45,7 +45,6 @@ use vars qw(
 ConnectToDatabase();
 
 # Check whether or not the user is logged in and, if so, set the $::userid 
-# and $::usergroupset variables.
 quietly_check_login();
 
 ###############################################################################

@@ -35,10 +35,7 @@ ConnectToDatabase();
 # Begin Data/Security Validation
 ###############################################################################
 
-# Check whether or not the user is currently logged in. This function 
-# sets the value of $::usergroupset, the binary number that records
-# the set of groups to which the user belongs and which we can use
-# to determine whether or not the user is authorized to access this bug.
+# Check whether or not the user is currently logged in. 
 quietly_check_login();
 
 # Make sure the bug ID is a positive integer representing an existing

@@ -28,7 +28,6 @@ use lib ".";
 
 require "CGI.pl";
 
-use vars qw($usergroupset);
 
 # Use global template variables
 use vars qw($template $vars);
@@ -188,7 +187,7 @@ sub show_user {
             # and they can see there are votes 'missing', but not on what bug
             # they are. This seems a reasonable compromise; the alternative is
             # to lie in the totals.
-            next if !CanSeeBug($id, $who, $usergroupset);            
+            next if !CanSeeBug($id, $who);            
             
             push (@bugs, { id => $id, 
                            summary => $summary,

@@ -39,7 +39,6 @@ quietly_check_login();
 
 # More warning suppression silliness.
 $::userid = $::userid;
-$::usergroupset = $::usergroupset;
 
 ################################################################################
 # Data/Security Validation                                                     #
@@ -144,7 +143,9 @@ sub GetBug {
     # and returns it to the calling code.
     my ($id) = @_;
     
-    SendSQL(SelectVisible("SELECT 1, 
+    my $bug = {};
+    if (CanSeeBug($id, $::userid)) {
+        SendSQL("SELECT 1, 
                                   bug_status, 
                                   short_desc, 
                                   $milestone_column, 
@@ -152,18 +153,16 @@ sub GetBug {
                                   assignee.login_name
                              FROM bugs, profiles AS assignee
                             WHERE bugs.bug_id = $id
-                              AND bugs.assigned_to = assignee.userid", 
-                          $::userid, 
-                          $::usergroupset));
+                              AND bugs.assigned_to = assignee.userid");
     
-    my $bug = {};
     
-    ($bug->{'exists'}, 
-     $bug->{'status'}, 
-     $bug->{'summary'}, 
-     $bug->{'milestone'}, 
-     $bug->{'assignee_id'}, 
-     $bug->{'assignee_email'}) = FetchSQLData();
+        ($bug->{'exists'}, 
+         $bug->{'status'}, 
+         $bug->{'summary'}, 
+         $bug->{'milestone'}, 
+         $bug->{'assignee_id'}, 
+         $bug->{'assignee_email'}) = FetchSQLData();
+     }
     
     $bug->{'open'} = IsOpenedState($bug->{'status'});
     $bug->{'dependencies'} = [];

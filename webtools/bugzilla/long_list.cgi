@@ -26,7 +26,7 @@ use lib qw(.);
 
 require "CGI.pl";
 
-use vars qw($userid $usergroupset @legal_keywords %FORM);
+use vars qw($userid @legal_keywords %FORM);
 
 # Use global template variables.
 use vars qw($template $vars);
@@ -69,8 +69,8 @@ my @bugs;
 
 foreach my $bug_id (split(/[:,]/, $buglist)) {
     detaint_natural($bug_id) || next;
-    SendSQL(SelectVisible("$generic_query AND bugs.bug_id = $bug_id",
-                          $::userid, $::usergroupset));
+    CanSeeBug($bug_id, $::userid) || next;
+    SendSQL("$generic_query AND bugs.bug_id = $bug_id");
 
     my %bug;
     my @row = FetchSQLData();

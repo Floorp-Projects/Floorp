@@ -82,7 +82,7 @@ sub show_bug {
         bug_file_loc, short_desc, target_milestone, 
         qa_contact, status_whiteboard, 
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        groupset, delta_ts, sum(votes.count), delta_ts calc_disp_date
+        delta_ts, sum(votes.count), delta_ts calc_disp_date
     FROM bugs LEFT JOIN votes USING(bug_id), products, components
     WHERE bugs.bug_id = $id
         AND bugs.product_id = products.id
@@ -106,7 +106,7 @@ sub show_bug {
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts", "votes","calc_disp_date") 
+                       "delta_ts", "votes", "calc_disp_date") 
     {
         $value = shift(@row);
         if ($field eq "calc_disp_date") {
@@ -221,58 +221,68 @@ sub show_bug {
 
     # Groups
     my @groups;
-    if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {      
-        my $bug_groupset = $bug{'groupset'};
 
-        SendSQL("SELECT bit, name, description, (bit & $bug_groupset != 0),
-                 (bit & $::usergroupset != 0) FROM groups 
-                 WHERE isbuggroup != 0 " .
-                 # Include active groups as well as inactive groups to which
-                 # the bug already belongs.  This way the bug can be removed
-                 # from an inactive group but can only be added to active ones.
-                "AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
-                 (bit & $bug_groupset != 0))");
+    # For every group, we need to know if there is ANY bug_group_map
+    # record putting the current bug in that group and if there is ANY
+    # user_group_map record putting the user in that group.
+    # The LEFT JOINs are checking for record existence.
+    #
+    SendSQL("SELECT DISTINCT groups.id, name, description," .
+             " bug_group_map.group_id IS NOT NULL," .
+             " user_group_map.group_id IS NOT NULL," .
+             " isactive" .
+             " FROM groups" . 
+             " LEFT JOIN bug_group_map" .
+             " ON bug_group_map.group_id = groups.id" .
+             " AND bug_id = $bug{'bug_id'}" .
+             " LEFT JOIN user_group_map" .
+             " ON user_group_map.group_id = groups.id" .
+             " AND user_id = $::userid" .
+             " AND NOT isbless" .
+             " WHERE isbuggroup");
 
-        $user{'inallgroups'} = 1;
+    $user{'inallgroups'} = 1;
 
-        while (MoreSQLData()) {
-            my ($bit, $name, $description, $ison, $ingroup) = FetchSQLData();
-            # For product groups, we only want to display the checkbox if either
-            # (1) The bit is already set, or
-            # (2) The user is in the group, but either:
-            #     (a) The group is a product group for the current product, or
-            #     (b) The group name isn't a product name
-            # This means that all product groups will be skipped, but 
-            # non-product bug groups will still be displayed.
-            if($ison || 
-               ($ingroup && (($name eq $bug{'product'}) ||
-                             (!defined $::proddesc{$name}))))
-            {
-                $user{'inallgroups'} &= $ingroup;
+    while (MoreSQLData()) {
+        my ($groupid, $name, $description, $ison, $ingroup, $isactive) 
+            = FetchSQLData();
 
-                push (@groups, { "bit" => $bit,
-                                 "ison" => $ison,
-                                 "ingroup" => $ingroup,
-                                 "description" => $description });            
-            }
+        $bug{'inagroup'} = 1 if ($ison);
+
+        # For product groups, we only want to display the checkbox if either
+        # (1) The bit is already set, or
+        # (2) The user is in the group, but either:
+        #     (a) The group is a product group for the current product, or
+        #     (b) The group name isn't a product name
+        # This means that all product groups will be skipped, but 
+        # non-product bug groups will still be displayed.
+        if($ison || 
+           ($isactive && ($ingroup && (!Param("usebuggroups") || ($name eq $bug{'product'}) ||
+                         (!defined $::proddesc{$name})))))
+        {
+            $user{'inallgroups'} &= $ingroup;
+
+            push (@groups, { "bit" => $groupid,
+                             "ison" => $ison,
+                             "ingroup" => $ingroup,
+                             "description" => $description });            
         }
+    }
 
-        # If the bug is restricted to a group, display checkboxes that allow
-        # the user to set whether or not the reporter 
-        # and cc list can see the bug even if they are not members of all 
-        # groups to which the bug is restricted.
-        if ($bug{'groupset'} != 0) {
-            $bug{'inagroup'} = 1;
+    # If the bug is restricted to a group, get flags that allow
+    # the user to set whether or not the reporter 
+    # and cc list can see the bug even if they are not members of all 
+    # groups to which the bug is restricted.
+    if ($bug{'inagroup'}) {
 
-            # Determine whether or not the bug is always accessible by the
-            # reporter, QA contact, and/or users on the cc: list.
-            SendSQL("SELECT reporter_accessible, cclist_accessible
-                     FROM   bugs
-                     WHERE  bug_id = $id
-                    ");
-            ($bug{'reporter_accessible'}, 
-             $bug{'cclist_accessible'}) = FetchSQLData();        
-        }
+        # Determine whether or not the bug is always accessible by the
+        # reporter, QA contact, and/or users on the cc: list.
+        SendSQL("SELECT reporter_accessible, cclist_accessible
+                 FROM   bugs
+                 WHERE  bug_id = $id
+                ");
+        ($bug{'reporter_accessible'}, 
+         $bug{'cclist_accessible'}) = FetchSQLData();        
     }
     $vars->{'groups'} = \@groups;
 

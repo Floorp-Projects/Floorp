@@ -36,11 +36,11 @@ quietly_check_login();
 $vars->{'username'} = $::COOKIE{'Bugzilla_login'} || '';
 
 if (defined $::COOKIE{'Bugzilla_login'}) {
-    SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
+    SendSQL("SELECT mybugslink, userid FROM profiles " .
             "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
-    my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
+    my ($mybugslink, $userid) = (FetchSQLData());
     $vars->{'userid'} = $userid;
-    $vars->{'blessgroupset'} = $blessgroupset;
+    $vars->{'canblessanything'} = UserCanBlessAnything();
     if ($mybugslink) {
         my $mybugstemplate = Param("mybugstemplate");
         my %substs = ( 'userid' => url_quote($::COOKIE{'Bugzilla_login'}) );

@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.13 2002/08/26 06:17:21 bbaetz%student.usyd.edu.au Exp $
+# $Id: bug_email.pl,v 1.14 2002/09/22 17:15:03 bugreport%peshkin.net Exp $
 ###############################################################
 
 # 02/12/2000 (SML)

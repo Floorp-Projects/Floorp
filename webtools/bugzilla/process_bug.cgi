@@ -47,7 +47,6 @@ use vars qw(%versions
           %settable_resolution
           %target_milestone
           %legal_severity
-          %superusergroupset
           $next_bug);
 
 ConnectToDatabase();
@@ -143,7 +142,7 @@ if ( Param("usetargetmilestone") ) {
 #
 # This function checks if there is a comment required for a specific
 # function and tests, if the comment was given.
-# If comments are required for functions  is defined by params.
+# If comments are required for functions is defined by params.
 #
 sub CheckonComment( $ ) {
     my ($function) = (@_);
@@ -410,10 +409,8 @@ sub DuplicateUserConfirm {
     
     SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($dupe));
     my $reporter = FetchOneColumn();
-    SendSQL("SELECT profiles.groupset FROM profiles WHERE profiles.userid =".SqlQuote($reporter));
-    my $reportergroupset = FetchOneColumn();
 
-    if (CanSeeBug($original, $reporter, $reportergroupset)) {
+    if (CanSeeBug($original, $reporter)) {
         $::FORM{'confirm_add_duplicate'} = "1";
         return;
     }
@@ -460,9 +457,9 @@ if (defined $::FORM{'id'}) {
     CheckFormFieldDefined(\%::FORM, 'longdesclength');
 }
 
-my $action  = '';
+my $action = '';
 if (defined $::FORM{action}) {
-  $action  = trim($::FORM{action});
+  $action = trim($::FORM{action});
 }
 if (Param("move-enabled") && $action eq Param("move-button-text")) {
   $::FORM{'buglist'} = join (":", @idlist);
@@ -564,32 +561,26 @@ sub ChangeResolution {
 # operations
 # If the form element isn't present, or the user isn't in the group, leave
 # it as-is
-if($::usergroupset ne '0') {
-    my $groupAdd = "0";
-    my $groupDel = "0";
+my @groupAdd = ();
+my @groupDel = ();
 
-    SendSQL("SELECT bit, isactive FROM groups WHERE " .
-            "isbuggroup != 0 AND bit & $::usergroupset != 0 ORDER BY bit");
-    while (my ($b, $isactive) = FetchSQLData()) {
-        # The multiple change page may not show all groups a bug is in
-        # (eg product groups when listing more than one product)
-        # Only consider groups which were present on the form. We can't do this
-        # for single bug changes because non-checked checkboxes aren't present.
-        # All the checkboxes should be shown in that case, though, so its not
-        # an issue there
-        if ($::FORM{'id'} || exists $::FORM{"bit-$b"}) {
-            if (!$::FORM{"bit-$b"}) {
-                $groupDel .= "+$b";
-            } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
-                $groupAdd .= "+$b";
-            }
+SendSQL("SELECT groups.id, isactive FROM groups, user_group_map WHERE " .
+        "groups.id = user_group_map.group_id AND " .
+        "user_group_map.user_id = $::userid AND " .
+        "isbless = 0 AND isbuggroup = 1");
+while (my ($b, $isactive) = FetchSQLData()) {
+    # The multiple change page may not show all groups a bug is in
+    # (eg product groups when listing more than one product)
+    # Only consider groups which were present on the form. We can't do this
+    # for single bug changes because non-checked checkboxes aren't present.
+    # All the checkboxes should be shown in that case, though, so its not
+    # an issue there
+    if ($::FORM{'id'} || exists $::FORM{"bit-$b"}) {
+        if (!$::FORM{"bit-$b"}) {
+            push(@groupDel, $b);
+        } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
+            push(@groupAdd, $b);
         }
-    }
-    if ($groupAdd ne "0" || $groupDel ne "0") {
-        DoComma();
-        # mysql < 3.23.5 doesn't support the ~ operator, even though
-        # the docs say that it does
-        $::query .= "groupset = ((groupset & ($::superusergroupset - ($groupDel))) | ($groupAdd))";
     }
 }
 
@@ -708,9 +699,9 @@ if (defined $::FORM{'qa_contact'}) {
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
 if ( $::FORM{'id'} ) {
-    SendSQL("SELECT groupset FROM bugs WHERE bug_id = $::FORM{'id'}");
-    my ($groupset) = FetchSQLData();
-    if ( $groupset ) {
+    SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = $::FORM{'id'}");
+    my ($havegroup) = FetchSQLData();
+    if ( $havegroup ) {
         DoComma();
         $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
         $::query .= "reporter_accessible = $::FORM{'reporter_accessible'}";
@@ -1047,6 +1038,8 @@ foreach my $id (@idlist) {
             "profiles $write, dependencies $write, votes $write, " .
             "products READ, components READ, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
+            "bug_group_map $write, " .
+            "user_group_map READ, " .
             "keyworddefs READ, groups READ, attachments READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
@@ -1206,9 +1199,29 @@ foreach my $id (@idlist) {
     if ($::comma ne "") {
         SendSQL($query);
     }
+    my @groupAddNames = ();
+    foreach my $grouptoadd (@groupAdd) {
+        if (!BugInGroupId($id, $grouptoadd)) {
+            push(@groupAddNames, GroupIdToName($grouptoadd));
+            SendSQL("INSERT INTO bug_group_map (bug_id, group_id) 
+                     VALUES ($id, $grouptoadd)");
+        }
+    }
+    my @groupDelNames = ();
+    foreach my $grouptodel (@groupDel) {
+        if (BugInGroupId($id, $grouptodel)) {
+            push(@groupDelNames, GroupIdToName($grouptodel));
+        }
+        SendSQL("DELETE FROM bug_group_map 
+                 WHERE bug_id = $id AND group_id = $grouptodel");
+    }
     SendSQL("select now()");
     $timestamp = FetchOneColumn();
-    
+
+    my $groupDelNames = join(',', @groupDelNames);
+    my $groupAddNames = join(',', @groupAddNames);
+
+    LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames); 
     if (defined $::FORM{'comment'}) {
         AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
             $::FORM{'commentprivacy'});
@@ -1322,7 +1335,7 @@ foreach my $id (@idlist) {
           # the user wants to add the bug to the new product's group;
           ($::FORM{'addtonewgroup'} eq 'yes' 
             || ($::FORM{'addtonewgroup'} eq 'yesifinold' 
-                  && GroupNameToBit($oldhash{'product'}) & $oldhash{'groupset'})) 
+                  && BugInGroup($id, $oldhash{'product'})))  
 
           # the new product is associated with a group;
           && GroupExists($::FORM{'product'})
@@ -1344,14 +1357,16 @@ foreach my $id (@idlist) {
           && (UserInGroup($::FORM{'product'}) || !Param('usebuggroupsentry'))
 
           # the associated group is active, indicating it can accept new bugs;
-          && GroupIsActive(GroupNameToBit($::FORM{'product'}))
+          && GroupIsActive(GroupNameToId($::FORM{'product'}))
         ) { 
             # Add the bug to the group associated with its new product.
-            my $groupbit = GroupNameToBit($::FORM{'product'});
-            SendSQL("UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id");
+            my $groupid = GroupNameToId($::FORM{'product'});
+            if (!BugInGroupId($id, $groupid)) {
+                SendSQL("INSERT INTO bug_group_map (bug_id, group_id) VALUES ($id, $groupid)");
+            }
         }
 
-        if ( 
+        if (
           # the old product is associated with a group;
           GroupExists($oldhash{'product'})
 
@@ -1359,8 +1374,8 @@ foreach my $id (@idlist) {
           && BugInGroup($id, $oldhash{'product'}) 
         ) { 
             # Remove the bug from the group associated with its old product.
-            my $groupbit = GroupNameToBit($oldhash{'product'});
-            SendSQL("UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id");
+            my $groupid = GroupNameToId($oldhash{'product'});
+            SendSQL("DELETE FROM bug_group_map WHERE bug_id = $id AND group_id = $groupid");
         }
 
     }
@@ -1523,7 +1538,7 @@ if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
     my $cur = lsearch(\@bugs, $::FORM{"id"});
     if ($cur >= 0 && $cur < $#bugs) {
         my $next_bug = $bugs[$cur + 1];
-        if (detaint_natural($next_bug) && CanSeeBug($next_bug)) {
+        if (detaint_natural($next_bug) && CanSeeBug($next_bug, $::userid)) {
             $::FORM{'id'} = $next_bug;
             
             $vars->{'next_id'} = $next_bug;

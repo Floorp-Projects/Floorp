@@ -207,23 +207,24 @@ sub GetQuip {
     return $quip;
 }
 
-sub GetGroupsByGroupSet {
-    my ($groupset) = @_;
+sub GetGroupsByUserId {
+    my ($userid) = @_;
 
-    return if !$groupset;
+    return if !$userid;
 
     SendSQL("
-        SELECT  bit, name, description, isactive
-          FROM  groups
-         WHERE  (bit & $groupset) != 0
-           AND  isbuggroup != 0
+        SELECT  groups.id, name, description, isactive
+          FROM  groups, user_group_map
+         WHERE  user_id = $userid AND NOT isbless
+           AND  user_group_map.group_id = groups.id
+           AND  isbuggroup
       ORDER BY  description ");
 
     my @groups;
 
     while (MoreSQLData()) {
         my $group = {};
-        ($group->{'bit'}, $group->{'name'},
+        ($group->{'id'}, $group->{'name'},
          $group->{'description'}, $group->{'isactive'}) = FetchSQLData();
         push(@groups, $group);
     }
@@ -379,7 +380,6 @@ sub DefineColumn {
 
 # Column:     ID                    Name                           Title
 DefineColumn("id"                , "bugs.bug_id"                , "ID"               );
-DefineColumn("groupset"          , "bugs.groupset"              , "Groupset"         );
 DefineColumn("opendate"          , "bugs.creation_ts"           , "Opened"           );
 DefineColumn("changeddate"       , "bugs.delta_ts"              , "Changed"          );
 DefineColumn("severity"          , "bugs.bug_severity"          , "Severity"         );
@@ -437,9 +437,6 @@ else {
 # and are hard-coded into the display templates.
 @displaycolumns = grep($_ ne 'id', @displaycolumns);
 
-# IMPORTANT! Never allow the groupset column to be displayed!
-@displaycolumns = grep($_ ne 'groupset', @displaycolumns);
-
 # Add the votes column to the list of columns to be displayed
 # in the bug list if the user is searching for bugs with a certain
 # number of votes and the votes column is not already on the list.
@@ -458,10 +455,8 @@ if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
 
 # Generate the list of columns that will be selected in the SQL query.
 
-# The bug ID and groupset are always selected because bug IDs are always
-# displayed and we need the groupset to determine whether or not the bug
-# is visible to the user.
-my @selectcolumns = ("id", "groupset");
+# The bug ID is always selected because bug IDs are always displayed 
+my @selectcolumns = ("id");
 
 # Display columns are selected because otherwise we could not display them.
 push (@selectcolumns, @displaycolumns);
@@ -721,7 +716,7 @@ if ($dotweak) {
     $vars->{'bugstatuses'} = [ keys %$bugstatuses ];
 
     # The groups to which the user belongs.
-    $vars->{'groups'} = GetGroupsByGroupSet($::usergroupset) if $::usergroupset ne '0';
+    $vars->{'groups'} = GetGroupsByUserId($::userid);
 
     # If all bugs being changed are in the same product, the user can change
     # their version and component, so generate a list of products, a list of

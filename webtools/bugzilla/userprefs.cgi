@@ -33,7 +33,6 @@ use RelationSet;
 sub sillyness {
     my $zz;
     $zz = $::defaultqueryname;
-    $zz = $::usergroupset;
 }
 
 # Use global template variables.
@@ -331,21 +330,22 @@ sub SaveFooter {
 sub DoPermissions {
     my (@has_bits, @set_bits);
     
-    SendSQL("SELECT description FROM groups " .
-            "WHERE bit & $::usergroupset != 0 " .
-            "ORDER BY bit");
+    SendSQL("SELECT DISTINCT name, description FROM groups, user_group_map " .
+            "WHERE user_group_map.group_id = groups.id " .
+            "AND user_id = $::userid " .
+            "AND isbless = 0 " .
+            "ORDER BY name");
     while (MoreSQLData()) {
-        push(@has_bits, FetchSQLData());
+        my ($nam, $desc) = FetchSQLData();
+        push(@has_bits, {"desc" => $desc, "name" => $nam});
     }
-    
-    SendSQL("SELECT blessgroupset FROM profiles WHERE userid = $userid");
-    my $blessgroupset = FetchOneColumn();
-    if ($blessgroupset) {
-        SendSQL("SELECT description FROM groups " .
-                "WHERE bit & $blessgroupset != 0 " .
-                "ORDER BY bit");
-        while (MoreSQLData()) {
-            push(@set_bits, FetchSQLData());
+    my @set_ids = ();
+    SendSQL("SELECT DISTINCT name, description FROM groups " .
+            "ORDER BY name");
+    while (MoreSQLData()) {
+        my ($nam, $desc) = FetchSQLData();
+        if (UserCanBlessGroup($nam)) {
+            push(@set_bits, {"desc" => $desc, "name" => $nam});
         }
     }
     

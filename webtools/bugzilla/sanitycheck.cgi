@@ -109,6 +109,17 @@ sub CrossCheck {
     }
 }
 
+sub DateCheck {
+    my $table = shift @_;
+    my $field = shift @_;
+    Status("Checking dates in $table.$field");
+    SendSQL("SELECT COUNT( $field ) FROM $table WHERE $field > NOW()");
+    my $c = FetchOneColumn();
+    if ($c) {
+        Alert("Found $c dates in future");
+    }
+}
+
     
 my @badbugs;
 
@@ -137,6 +148,57 @@ if (exists $::FORM{'rebuildvotecache'}) {
     }
     SendSQL("unlock tables");
     Status("Vote cache has been rebuilt.");
+}
+
+if (exists $::FORM{'rederivegroups'}) {
+    Status("OK, All users' inherited permissions will be rechecked when " .
+           "they next access Bugzilla.");
+    SendSQL("UPDATE groups SET last_changed = NOW() LIMIT 1");
+}
+
+# rederivegroupsnow is REALLY only for testing.
+if (exists $::FORM{'rederivegroupsnow'}) {
+    Status("OK, now rederiving groups.");
+    SendSQL("SELECT userid FROM profiles");
+    while ((my $id) = FetchSQLData()) {
+        DeriveGroup($id);
+        Status("Group $id");
+    }
+}
+
+if (exists $::FORM{'cleangroupsnow'}) {
+    Status("OK, now cleaning stale groups.");
+    # Only users that were out of date already long ago should be cleaned
+    # and the cleaning is done with tables locked.  This is require in order
+    # to keep another session from proceeding with permission checks
+    # after the groups have been cleaned unless it first had an opportunity
+    # to get the groups up to date.
+    # If any page starts taking longer than one hour to load, this interval
+    # should be revised.
+    SendSQL("SELECT MAX(last_changed) FROM groups WHERE last_changed < NOW() - INTERVAL 1 HOUR");
+    (my $cutoff) = FetchSQLData();
+    Status("Cutoff is $cutoff");
+    SendSQL("SELECT COUNT(*) FROM user_group_map");
+    (my $before) = FetchSQLData();
+    SendSQL("LOCK TABLES user_group_map WRITE, profiles WRITE");
+    SendSQL("SELECT userid FROM profiles " .
+            "WHERE refreshed_when > 0 " .
+            "AND refreshed_when < " . SqlQuote($cutoff) .
+            " LIMIT 1000");
+    my $count = 0;
+    while ((my $id) = FetchSQLData()) {
+        $count++;
+        PushGlobalSQLState();
+        SendSQL("DELETE FROM user_group_map WHERE " .
+            "user_id = $id AND isderived = 1 AND isbless = 0");
+        SendSQL("UPDATE profiles SET refreshed_when = 0 WHERE userid = $id");
+        PopGlobalSQLState();
+    }
+    SendSQL("UNLOCK TABLES");
+    SendSQL("SELECT COUNT(*) FROM user_group_map");
+    (my $after) = FetchSQLData();
+    Status("Cleaned table for $count users " .
+           "- reduced from $before records to $after records");
 }
 
 print "OK, now running sanity checks.<p>\n";
@@ -178,6 +240,7 @@ CrossCheck("attachstatusdefs", "id",
 
 CrossCheck("bugs", "bug_id",
            ["bugs_activity", "bug_id"],
+           ["bug_group_map", "bug_id"],
            ["attachments", "bug_id"],
            ["cc", "bug_id"],
            ["longdescs", "bug_id"],
@@ -187,6 +250,12 @@ CrossCheck("bugs", "bug_id",
            ["keywords", "bug_id"],
            ["duplicates", "dupe_of", "dupe"],
            ["duplicates", "dupe", "dupe_of"]);
+
+CrossCheck("groups", "id",
+           ["bug_group_map", "group_id"],
+           ["group_group_map", "grantor_id"],
+           ["group_group_map", "member_id"],
+           ["user_group_map", "group_id"]);
 
 CrossCheck("profiles", "userid",
            ["bugs", "reporter", "bug_id"],
@@ -203,6 +272,7 @@ CrossCheck("profiles", "userid",
            ["watch", "watched"],
            ["tokens", "userid"],
            ["components", "initialowner", "name"],
+           ["user_group_map", "user_id"],
            ["components", "initialqacontact", "name", ["0"]]);
 
 CrossCheck("products", "id",
@@ -212,25 +282,9 @@ CrossCheck("products", "id",
            ["versions", "product_id", "value"],
            ["attachstatusdefs", "product_id", "name"]);
 
-###########################################################################
-# Perform group checks
-###########################################################################
+DateCheck("groups", "last_changed");
+DateCheck("profiles", "refreshed_when");
 
-Status("Checking groups");
-SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
-while (my $bit = FetchOneColumn()) {
-    Alert("Illegal bit number found in group table: $bit");
-}
-    
-SendSQL("select sum(bit) from groups where isbuggroup != 0");
-my $buggroupset = FetchOneColumn();
-if (!defined $buggroupset || $buggroupset eq "") {
-    $buggroupset = 0;
-}
-SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
-while (@row = FetchSQLData()) {
-    Alert("Bad groupset $row[1] found in bug " . BugLink($row[0]));
-}
 
 ###########################################################################
 # Perform product specific field checks

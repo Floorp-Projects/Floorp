@@ -212,33 +212,11 @@
       you for this username and password.</para>
 
       <tip>
-        <para>If you wish to add more administrative users, you must use the
-        MySQL interface. Run "mysql" from the command line, and use these
-        commands: 
-        <simplelist>
-          <member>
-            <prompt>mysql&gt;</prompt>
-            <command>use bugs;</command>
-          </member>
-
-          <member>
-            <prompt>mysql&gt;</prompt>
-
-            <command>
-              update profiles set groupset=0x7ffffffffffffff where login_name =
-              "(user's login name)";
-            </command>
-          </member>
-        </simplelist>
+        <para>If you wish to add more administrative users, add them to 
+        the "admin" group and, optionally, add edit the tweakparams, editusers,
+        creategroups, editcomponents, and editkeywords groups to add the
+        entire admin group to those groups.
         </para>
-
-        <para>Yes, that is 
-        <emphasis>fourteen</emphasis>
-
-        <quote>f</quote>
-
-        's. A whole lot of f-ing going on if you want to create a new
-        administator.</para>
       </tip>
     </section>
 
@@ -698,10 +676,22 @@
       </listitem>
 
       <listitem>
-        <para>Fill out the "New Name", "New Description", and 
-        "New User RegExp" fields. "New User RegExp" allows you to automatically
+        <para>Fill out the "Group", "Description", and 
+        "User RegExp" fields. "New User RegExp" allows you to automatically
          place all users who fulfill the Regular Expression into the new group. 
          When you have finished, click "Add".</para>
+         <warning>
+           <para>The User Regexp is a perl regexp and, if not anchored, will match 
+           any part of an address.  So, if you do not want to grant access
+           into 'mycompany.com' to 'badperson@mycompany.com.hacker.net', use 
+           '@mycompany\.com$' as the regexp.</para>
+         </warning>
+      </listitem>
+      <listitem>
+        <para>After you add your new group, edit the new group.  On the
+        edit page, you can specify other groups that should be included
+        in this group and which groups should be permitted to add and delete
+        users from this group.</para>
       </listitem>
     </orderedlist>
 
@@ -712,17 +702,6 @@
         <para>Turn on "usebuggroups" and "usebuggroupsentry" in the "Edit
         Parameters" screen.</para>
 
-        <warning>
-          <para>XXX is this still true?
-          "usebuggroupsentry" has the capacity to prevent the
-          administrative user from directly altering bugs because of
-          conflicting group permissions. If you plan on using
-          "usebuggroupsentry", you should plan on restricting
-          administrative account usage to administrative duties only. In
-          other words, manage bugs with an unpriveleged user account, and
-          manage users, groups, Products, etc. with the administrative
-          account.</para>
-        </warning>
       </listitem>
 
       <listitem>
@@ -733,13 +712,6 @@
         same name as the Product.</para>
       </listitem>
     </orderedlist>
-
-    <warning>
-      <para>Bugzilla currently has a limit of 64 groups per installation. If
-      you have more than about 50 products, you should consider
-      running multiple Bugzillas. Ask in the newsgroup for other
-      suggestions for working around this restriction.</para>
-    </warning>
 
     <para>
       Note that group permissions are such that you need to be a member

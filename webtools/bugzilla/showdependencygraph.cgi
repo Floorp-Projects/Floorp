@@ -31,7 +31,7 @@ ConnectToDatabase();
 
 quietly_check_login();
 
-use vars qw($template $vars $userid $usergroupset);
+use vars qw($template $vars $userid);
 
 my %seen;
 my %edgesdone;
@@ -128,13 +128,13 @@ foreach my $k (keys(%seen)) {
     my $summary = "";
     my $stat;
     if ($::FORM{'showsummary'}) {
-        SendSQL(SelectVisible("SELECT bug_status, short_desc FROM bugs " .
-                              "WHERE bugs.bug_id = $k",
-                              $::userid,
-                              $::usergroupset));
-        ($stat, $summary) = FetchSQLData();
-        $stat = "NEW" if !defined $stat;
-        $summary = "" if !defined $summary;
+        if (CanSeeBug($k, $::userid)) {
+            SendSQL("SELECT bug_status, short_desc FROM bugs " .
+                                  "WHERE bugs.bug_id = $k");
+            ($stat, $summary) = FetchSQLData();
+            $stat = "NEW" if !defined $stat;
+            $summary = "" if !defined $summary;
+        }
     } else {
         SendSQL("SELECT bug_status FROM bugs WHERE bug_id = $k");
         $stat = FetchOneColumn();

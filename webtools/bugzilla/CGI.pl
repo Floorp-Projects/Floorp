@@ -289,11 +289,6 @@ sub ValidateBugID {
     # converted-from-alias ID.
     $_[0] = $id;
     
-    # Get the values of the usergroupset and userid global variables
-    # and write them to local variables for use within this function,
-    # setting those local variables to the default value of zero if
-    # the global variables are undefined.
-
     # First check that the bug exists
     SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
 
@@ -303,7 +298,7 @@ sub ValidateBugID {
 
     return if $skip_authorization;
     
-    return if CanSeeBug($id, $::userid, $::usergroupset);
+    return if CanSeeBug($id, $::userid);
 
     # The user did not pass any of the authorization tests, which means they
     # are not authorized to see the bug.  Display an error and stop execution.
@@ -438,30 +433,25 @@ sub PasswordForLogin {
 }
 
 sub quietly_check_login() {
-    $::usergroupset = '0';
-    my $loginok = 0;
     $::disabledreason = '';
-    $::userid = 0;
+    my $userid = 0;
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
-        SendSQL("SELECT profiles.userid, profiles.groupset, " .
-                "profiles.login_name, " .
-                "profiles.login_name = " .
-                SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND logincookies.ipaddr = " .
-                SqlQuote($ENV{"REMOTE_ADDR"}) .
-                ", profiles.disabledtext " .
+        SendSQL("SELECT profiles.userid," .
+                " profiles.login_name, " .
+                " profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
                 SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
-                " AND profiles.userid = logincookies.userid");
+                " AND profiles.userid = logincookies.userid AND" .
+                " profiles.login_name = " .
+                SqlQuote($::COOKIE{"Bugzilla_login"}) .
+                " AND logincookies.ipaddr = " .
+                SqlQuote($ENV{"REMOTE_ADDR"}));
         my @row;
-        if (@row = FetchSQLData()) {
-            my ($userid, $groupset, $loginname, $ok, $disabledtext) = (@row);
-            if ($ok) {
+        if (MoreSQLData()) {
+            ($userid, my $loginname, my $disabledtext) = FetchSQLData();
+            if ($userid > 0) {
                 if ($disabledtext eq '') {
-                    $loginok = 1;
-                    $::userid = $userid;
-                    $::usergroupset = $groupset;
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
                                                               # canonical form.
@@ -469,6 +459,7 @@ sub quietly_check_login() {
                     detaint_natural($::COOKIE{"Bugzilla_logincookie"});
                 } else {
                     $::disabledreason = $disabledtext;
+                    $userid = 0;
                 }
             }
         }
@@ -478,13 +469,14 @@ sub quietly_check_login() {
         my $whoid = DBname_to_id($::FORM{'who'});
         delete $::FORM{'who'} unless $whoid;
     }
-    if (!$loginok) {
+    if (!$userid) {
         delete $::COOKIE{"Bugzilla_login"};
     }
                     
+    $::userid = $userid;
+    ConfirmGroup($userid);
     $vars->{'user'} = GetUserInfo($::userid);
-    
-    return $loginok;
+    return $userid;
 }
 
 # Populate a hash with information about this user. 
@@ -500,10 +492,9 @@ sub GetUserInfo {
     $user{'login'} = $::COOKIE{"Bugzilla_login"};
     $user{'userid'} = $userid;
     
-    SendSQL("SELECT mybugslink, realname, groupset, blessgroupset " . 
+    SendSQL("SELECT mybugslink, realname " . 
             "FROM profiles WHERE userid = $userid");
-    ($user{'showmybugslink'}, $user{'realname'}, $user{'groupset'},
-                                       $user{'blessgroupset'}) = FetchSQLData();
+    ($user{'showmybugslink'}, $user{'realname'}) = FetchSQLData();
 
     SendSQL("SELECT name, query, linkinfooter FROM namedqueries " .
             "WHERE userid = $userid");
@@ -516,10 +507,15 @@ sub GetUserInfo {
 
     $user{'queries'} = \@queries;
 
-    SendSQL("select name, (bit & $user{'groupset'}) != 0 from groups");
+    $user{'canblessany'} = UserCanBlessAnything();
+
+    SendSQL("SELECT name FROM groups, user_group_map " .
+            "WHERE groups.id = user_group_map.group_id " .
+            "AND user_id = $userid " .
+            "AND NOT isbless");
     while (MoreSQLData()) {
-        my ($name, $bit) = FetchSQLData();    
-        $groups{$name} = $bit;
+        my ($name) = FetchSQLData();    
+        $groups{$name} = 1;
     }
 
     $user{'groups'} = \%groups;
@@ -561,6 +557,7 @@ sub confirm_login {
     # to a later section.  -Joe Robins, 8/3/00
     my $enteredlogin = "";
     my $realcryptpwd = "";
+    my $userid;
 
     # If the form contains Bugzilla login and password fields, use Bugzilla's 
     # built-in authentication to authenticate the user (otherwise use LDAP below).
@@ -570,7 +567,6 @@ sub confirm_login {
         CheckEmailSyntax($enteredlogin);
 
         # Retrieve the user's ID and crypted password from the database.
-        my $userid;
         SendSQL("SELECT userid, cryptpassword FROM profiles 
                  WHERE login_name = " . SqlQuote($enteredlogin));
         ($userid, $realcryptpwd) = FetchSQLData();
@@ -765,9 +761,9 @@ sub confirm_login {
        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
 
-    my $loginok = quietly_check_login();
+    $userid = quietly_check_login();
 
-    if ($loginok != 1) {
+    if (!$userid) {
         if ($::disabledreason) {
             my $cookiepath = Param("cookiepath");
             print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
@@ -810,7 +806,8 @@ Content-type: text/html
         SendSQL("UPDATE logincookies SET lastused = null " .
                 "WHERE cookie = $::COOKIE{'Bugzilla_logincookie'}");
     }
-    return $::userid;
+    ConfirmGroup($userid);
+    return $userid;
 }
 
 sub PutHeader {

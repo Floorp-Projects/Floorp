@@ -34,7 +34,6 @@ require "bug_form.pl";
 sub sillyness {
     my $zz;
     $zz = $::buffer;
-    $zz = $::usergroupset;
     $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
@@ -242,7 +241,7 @@ if ($::FORM{'keywords'} && UserInGroup("editbugs")) {
 
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
-  "(" . join(",", @used_fields) . ", reporter, creation_ts, groupset) " . 
+  "(" . join(",", @used_fields) . ", reporter, creation_ts) " . 
   "VALUES (";
 
 foreach my $field (@used_fields) {
@@ -255,14 +254,15 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= "$::userid, now(), (0";
+$sql .= "$::userid, now() )";
 
 # Groups
+my @groupstoadd = ();
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
         my $v = substr($b, 4);
         $v =~ /^(\d+)$/
-          || ThrowCodeError("group_bit_invalid", "abort");
+          || ThrowCodeError("group_id_invalid", "abort");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
             # Should only happen if there is a bug in Bugzilla or the user
@@ -271,18 +271,22 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
             $vars->{'bit'} = $v;
             ThrowCodeError("inactive_group", "abort");
         }
-        $sql .= " + $v";    # Carefully written so that the math is
-                            # done by MySQL, which can handle 64-bit math,
-                            # and not by Perl, which I *think* can not.
+        SendSQL("SELECT user_id FROM user_group_map 
+                 WHERE user_id = $::userid
+                 AND group_id = $v
+                 AND isbless = 0");
+        my ($member) = FetchSQLData();
+        if ($member) {
+            push(@groupstoadd, $v)
+        }
     }
 }
 
-$sql .= ") & $::usergroupset)\n";
 
 # Lock tables before inserting records for the new bug into the database
 # if we are using a shadow database to prevent shadow database corruption
 # when two bugs get created at the same time.
-SendSQL("LOCK TABLES bugs WRITE, longdescs WRITE, cc WRITE, profiles READ") if Param("shadowdb");
+SendSQL("LOCK TABLES bugs WRITE, bug_group_map WRITE, longdescs WRITE, cc WRITE, profiles READ") if Param("shadowdb");
 
 # Add the bug report to the DB.
 SendSQL($sql);
@@ -290,6 +294,12 @@ SendSQL($sql);
 # Get the bug ID back.
 SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
+
+# Add the group restrictions
+foreach my $grouptoadd (@groupstoadd) {
+    SendSQL("INSERT INTO bug_group_map (bug_id, group_id)
+             VALUES ($id, $grouptoadd)");
+}
 
 # Add the comment
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) 

@@ -73,7 +73,7 @@ function normal_keypress_handler( aEvent ) {
   [%- IF UserInGroup('tweakparams') %]
       <text class="text-link" onclick="load_relative_url('editparams.cgi')" value="edit params"/>
   [%- END %]
-  [%- IF UserInGroup('editusers') || blessgroupset %]
+  [%- IF UserInGroup('editusers') || canblessany %]
       <text class="text-link" onclick="load_relative_url('editusers.cgi')" value="edit users"/>
   [%- END %]
   [%- IF UserInGroup('editcomponents') %]

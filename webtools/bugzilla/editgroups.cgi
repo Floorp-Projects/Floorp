@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Dave Miller <justdave@syndicomm.com>
+#                 Joel Peshkin <bugreport@peshkin.net>
 #                 Jacob Steenhagen <jake@bugzilla.org>
 
 # Code derived from editowners.cgi and editusers.cgi
@@ -99,36 +100,36 @@ sub PutTrailer (@)
 unless ($action) {
     PutHeader("Edit Groups","Edit Groups","This lets you edit the groups available to put users in.");
 
-    print "<form method=post action=editgroups.cgi>\n";
     print "<table border=1>\n";
     print "<tr>";
-    print "<th>Bit</th>";
     print "<th>Name</th>";
     print "<th>Description</th>";
     print "<th>User RegExp</th>";
-    print "<th>Active</th>";
+    print "<th>Use For Bugs</th>";
+    print "<th>Type</th>";
     print "<th>Action</th>";
     print "</tr>\n";
 
-    SendSQL("SELECT bit,name,description,userregexp,isactive " .
+    SendSQL("SELECT id,name,description,userregexp,isactive,isbuggroup " .
             "FROM groups " .
-            "WHERE isbuggroup != 0 " .
-            "ORDER BY bit");
+            "ORDER BY isbuggroup, name");
 
     while (MoreSQLData()) {
-        my ($bit, $name, $desc, $regexp, $isactive) = FetchSQLData();
+        my ($groupid, $name, $desc, $regexp, $isactive, $isbuggroup) = FetchSQLData();
         print "<tr>\n";
-        print "<td valign=middle>$bit</td>\n";
-        print "<td><input size=20 name=\"name-$bit\" value=\"$name\">\n";
-        print "<input type=hidden name=\"oldname-$bit\" value=\"$name\"></td>\n";
-        print "<td><input size=40 name=\"desc-$bit\" value=\"$desc\">\n";
-        print "<input type=hidden name=\"olddesc-$bit\" value=\"$desc\"></td>\n";
-        print "<td><input size=30 name=\"regexp-$bit\" value=\"$regexp\">\n";
-        print "<input type=hidden name=\"oldregexp-$bit\" value=\"$regexp\"></td>\n";
-        print "<td><input type=\"checkbox\" name=\"isactive-$bit\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
-        print "<input type=hidden name=\"oldisactive-$bit\" value=\"$isactive\"></td>\n";
-        print "<td align=center valign=middle><a href=\"editgroups.cgi?action=del&group=$bit\">Delete</a></td>\n";
-        print "</tr>\n";
+        print "<td>$name</td>\n";
+        print "<td>$desc</td>\n";
+        print "<td>$regexp&nbsp</td>\n";
+        print "<td align=center>";
+        print "X" if $isactive;
+        print "&nbsp</td>\n";
+        print "<td> &nbsp ";
+        print (($isbuggroup == 0 ) ? "system" : "user"); 
+        print "&nbsp</td>\n";
+        print "<td align=center valign=middle>
+               <a href=\"editgroups.cgi?action=changeform&group=$groupid\">Edit</a>";
+        print " | <a href=\"editgroups.cgi?action=del&group=$groupid\">Delete</a>" if ($isbuggroup != 0);
+        print "</td></tr>\n";
     }
 
     print "<tr>\n";
@@ -136,62 +137,135 @@ unless ($action) {
     print "<td><a href=\"editgroups.cgi?action=add\">Add Group</a></td>\n";
     print "</tr>\n";
     print "</table>\n";
-    print "<input type=hidden name=\"action\" value=\"update\">";
-    print "<input type=submit value=\"Submit changes\">\n";
-
     print "<p>";
     print "<b>Name</b> is what is used with the UserInGroup() function in any
 customized cgi files you write that use a given group.  It can also be used by
-people submitting bugs by email to limit a bug to a certain groupset. <p>";
+people submitting bugs by email to limit a bug to a certain set of groups. <p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
 grant membership to this group to anyone creating a new account with an
-email address that matches this regular expression.<p>";
-    print "The <b>Active</b> flag determines whether or not the group is active.
-If you deactivate a group it will no longer be possible for users to add bugs
-to that group, although bugs already in the group will remain in the group.
-Deactivating a group is a much less drastic way to stop a group from growing
-than deleting the group would be.<p>";
-    print "In addition, the following groups that determine user privileges
-exist.  You can only edit the User rexexp on these groups.  You should also take
-care not to duplicate the Names of any of them in your user groups.<p>";
-    print "Also please note that both of the Submit Changes buttons on this page
-will submit the changes in both tables.  There are two buttons simply for the
-sake of convience.<p>";
-
-    print "<table border=1>\n";
-    print "<tr>";
-    print "<th>Bit</th>";
-    print "<th>Name</th>";
-    print "<th>Description</th>";
-    print "<th>User RegExp</th>";
-    print "</tr>\n";
-
-    SendSQL("SELECT bit,name,description,userregexp " .
-            "FROM groups " .
-            "WHERE isbuggroup = 0 " .
-            "ORDER BY bit");
-
-    while (MoreSQLData()) {
-        my ($bit, $name, $desc, $regexp) = FetchSQLData();
-        print "<tr>\n";
-        print "<td>$bit</td>\n";
-        print "<td>$name</td>\n";
-        print "<input type=hidden name=\"name-$bit\" value=\"$name\">\n";
-        print "<input type=hidden name=\"oldname-$bit\" value=\"$name\">\n";
-        print "<td>$desc</td>\n";
-        print "<td><input type=text size=30 name=\"regexp-$bit\" value=\"$regexp\"></td>\n";
-        print "<input type=hidden name=\"oldregexp-$bit\" value=\"$regexp\">\n";
-        print "</tr>\n";
-    }
-
-    print "</table><p>\n";
-    print "<input type=submit value=\"Submit changes\">\n";
-    print "</form>\n";
+email address that matches this perl regular expression. Do not forget the trailing \'\$\'.  Example \'\@mycompany\\.com\$\'<p>";
+    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligible to be used for bugs.
+If you remove this flag, it will no longer be possible for users to add bugs
+to this group, although bugs already in the group will remain in the group.
+Doing so is a much less drastic way to stop a group from growing
+than deleting the group as well as a way to maintain lists of users without cluttering the lists of groups used for bug restrictions.<p>";
+    print "The <b>Type</b> field identifies system groups.<p>";  
 
     PutFooter();
+    exit;
+}
+
+#
+#
+# action='changeform' -> present form for altering an existing group
+#
+# (next action will be 'postchanges')
+#
+
+if ($action eq 'changeform') {
+    PutHeader("Change Group");
+
+    my $gid = trim($::FORM{group} || '');
+    unless ($gid) {
+        ShowError("No group specified.<BR>" .
+                  "Click the <b>Back</b> button and try again.");
+        PutFooter();
+        exit;
+    }
+
+    SendSQL("SELECT id, name, description, userregexp, isactive, isbuggroup
+             FROM groups WHERE id=" . SqlQuote($gid));
+    my ($group_id, $name, $description, $rexp, $isactive, $isbuggroup) 
+        = FetchSQLData();
+
+    print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
+    print "<TABLE BORDER=1 CELLPADDING=4>";
+    print "<TR><TH>Group:</TH><TD>";
+    if ($isbuggroup == 0) {
+        print "$name";
+    } else {
+        print "<INPUT TYPE=HIDDEN NAME=\"oldname\" VALUE=$name>
+        <INPUT SIZE=60 NAME=\"name\" VALUE=\"$name\">";
+    }
+    print "</TD></TR><TR><TH>Description:</TH><TD>";
+    if ($isbuggroup == 0) {
+        print "$description";
+    } else {
+        print "<INPUT TYPE=HIDDEN NAME=\"olddesc\" VALUE=\"$description\">
+        <INPUT SIZE=70 NAME=\"desc\" VALUE=\"$description\">";
+    }
+    print "</TD></TR><TR>
+           <TH>User Regexp:</TH><TD>";
+    print "<INPUT TYPE=HIDDEN NAME=\"oldrexp\" VALUE=\"$rexp\">
+           <INPUT SIZE=40 NAME=\"rexp\" VALUE=\"$rexp\"></TD></TR>";
+    if ($isbuggroup == 1) {
+        print "<TR><TH>Use For Bugs:</TH><TD>
+        <INPUT TYPE=checkbox NAME =\"isactive\" VALUE=1 " . (($isactive == 1) ? "CHECKED" : "") . ">
+        <INPUT TYPE=HIDDEN NAME=\"oldisactive\" VALUE=$isactive>
+        </TD>
+        </TR>";
+    }
+    print "</TABLE>
+           <BR>
+           Users become members of this group in one of three ways:
+           <BR>
+           - by being explicity included when the user is edited
+           <BR>
+           - by matching the user regexp above
+           <BR>
+           - by being a member of one of the groups included in this group
+           by checking the boxes  
+           below. <P>\n";
+
+    print "<TABLE>";
+    print "<TR><TD COLSPAN=4>Members of these groups can grant membership to this group</TD></TR>";
+    print "<TR><TD ALIGN=CENTER>|</TD><TD COLSPAN=3>Members of these groups are included in this group</TD></TR>";
+    print "<TR><TD ALIGN=CENTER>|</TD><TD ALIGN=CENTER>|</TD><TD COLSPAN=2></TD><TR>";
+
+    # For each group, we use left joins to establish the existance of
+    # a record making that group a member of this group
+    # and the existance of a record permitting that group to bless
+    # this one
+    SendSQL("SELECT groups.id, groups.name, groups.description," .
+             " group_group_map.member_id IS NOT NULL," .
+             " B.member_id IS NOT NULL" .
+             " FROM groups" .
+             " LEFT JOIN group_group_map" .
+             " ON group_group_map.member_id = groups.id" .
+             " AND group_group_map.grantor_id = $group_id" .
+             " AND group_group_map.isbless = 0" .
+             " LEFT JOIN group_group_map as B" .
+             " ON B.member_id = groups.id" .
+             " AND B.grantor_id = $group_id" .
+             " AND B.isbless" .
+             " WHERE groups.id != $group_id ORDER by name");
+
+    while (MoreSQLData()) {
+        my ($grpid, $grpnam, $grpdesc, $grpmember, $blessmember) = FetchSQLData();
+        my $grpchecked = $grpmember ? "CHECKED" : "";
+        my $blesschecked = $blessmember ? "CHECKED" : "";
+        print "<TR>";
+        print "<TD><INPUT TYPE=checkbox NAME=\"bless-$grpid\" $blesschecked VALUE=1>";
+        print "<INPUT TYPE=HIDDEN NAME=\"oldbless-$grpid\" VALUE=$blessmember></TD>";
+        print "<TD><INPUT TYPE=checkbox NAME=\"grp-$grpid\" $grpchecked VALUE=1>";
+        print "<INPUT TYPE=HIDDEN NAME=\"oldgrp-$grpid\" VALUE=$grpmember></TD>";
+        print "<TD><B>$grpnam</B></TD>";
+        print "<TD>$grpdesc</TD>";
+        print "</TR>\n";
+    }
+
+    print "</TABLE><BR>";
+    print "<INPUT TYPE=SUBMIT VALUE=\"Submit\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"postchanges\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=$gid>\n";
+    print "</FORM>";
+
+
+
+    PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
     exit;
 }
 
@@ -209,7 +283,7 @@ if ($action eq 'add') {
     print "<th>New Name</th>";
     print "<th>New Description</th>";
     print "<th>New User RegExp</th>";
-    print "<th>Active</th>";
+    print "<th>Use For Bugs</th>";
     print "</tr><tr>";
     print "<td><input size=20 name=\"name\"></td>\n";
     print "<td><input size=40 name=\"desc\"></td>\n";
@@ -223,17 +297,17 @@ if ($action eq 'add') {
     print "<p>";
     print "<b>Name</b> is what is used with the UserInGroup() function in any
 customized cgi files you write that use a given group.  It can also be used by
-people submitting bugs by email to limit a bug to a certain groupset.  It
+people submitting bugs by email to limit a bug to a certain set of groups.  It
 may not contain any spaces.<p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
-    print "The <b>Active</b> flag determines whether or not the group is active.
-If you deactivate a group it will no longer be possible for users to add bugs
-to that group, although bugs already in the group will remain in the group.
-Deactivating a group is a much less drastic way to stop a group from growing
+    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligible to be used for bugs.
+If you clear this, it will no longer be possible for users to add bugs
+to this group, although bugs already in the group will remain in the group.
+Doing so is a much less drastic way to stop a group from growing
 than deleting the group would be.  <b>Note: If you are creating a group, you
-probably want it to be active, in which case you should leave this checked.</b><p>";
+probably want it to be usable for bugs, in which case you should leave this checked.</b><p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
 grant membership to this group to anyone creating a new account with an
 email address that matches this regular expression.<p>";
@@ -287,62 +361,30 @@ if ($action eq 'new') {
         exit;
     }
 
-    # Major hack for bit values...  perl can't handle 64-bit ints, so I can't
-    # just do the math to get the next available bit number, gotta handle
-    # them as strings...  also, we're actually only going to allow 63 bits
-    # because that's all that opblessgroupset masks for (the high bit is off
-    # to avoid signing issues).
-
-    my @bitvals = ('1','2','4','8','16','32','64','128','256','512','1024',
-                   '2048','4096','8192','16384','32768',
-
-                   '65536','131072','262144','524288','1048576','2097152',
-                   '4194304','8388608','16777216','33554432','67108864',
-                   '134217728','268435456','536870912','1073741824',
-                   '2147483648',
-
-                   '4294967296','8589934592','17179869184','34359738368',
-                   '68719476736','137438953472','274877906944',
-                   '549755813888','1099511627776','2199023255552',
-                   '4398046511104','8796093022208','17592186044416',
-                   '35184372088832','70368744177664','140737488355328',
-
-                   '281474976710656','562949953421312','1125899906842624',
-                   '2251799813685248','4503599627370496','9007199254740992',
-                   '18014398509481984','36028797018963968','72057594037927936',
-                   '144115188075855872','288230376151711744',
-                   '576460752303423488','1152921504606846976',
-                   '2305843009213693952','4611686018427387904');
-
-    # First the next available bit
-    my $bit = "";
-    foreach (@bitvals) {
-        if ($bit eq "") {
-            SendSQL("SELECT bit FROM groups WHERE bit=" . SqlQuote($_));
-            if (!FetchOneColumn()) { $bit = $_; }
-        }
-    }
-    if ($bit eq "") {
-        ShowError("Sorry, you already have the maximum number of groups " .
-                  "defined.<BR><BR>You must delete a group first before you " .
-                  "can add any more.</B>");
-        PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
+    if (!eval {qr/$regexp/}) {
+        ShowError("The regular expression you entered is invalid. " .
+                  "Please click the <b>Back</b> button and try again.");
+        PutFooter();
         exit;
     }
 
     # Add the new group
     SendSQL("INSERT INTO groups ( " .
-            "bit, name, description, isbuggroup, userregexp, isactive" .
+            "name, description, isbuggroup, userregexp, isactive, last_changed " .
             " ) VALUES ( " .
-            $bit . "," .
-            SqlQuote($name) . "," .
-            SqlQuote($desc) . "," .
+            SqlQuote($name) . ", " .
+            SqlQuote($desc) . ", " .
             "1," .
-            SqlQuote($regexp) . "," . 
-            $isactive . ")" );
-
+            SqlQuote($regexp) . ", " . 
+            $isactive . ", NOW())" );
+    SendSQL("SELECT last_insert_id()");
+    my $gid = FetchOneColumn();
+    my $admin = GroupNameToId('admin');
+    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
+             VALUES ($admin, $gid, 0)");
+    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
+             VALUES ($admin, $gid, 1)");
     print "OK, done.<p>\n";
-    print "Your new group was assigned bit #$bit.<p>";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");
     exit;
@@ -356,14 +398,14 @@ if ($action eq 'new') {
 
 if ($action eq 'del') {
     PutHeader("Delete group");
-    my $bit = trim($::FORM{group} || '');
-    unless ($bit) {
+    my $gid = trim($::FORM{group} || '');
+    unless ($gid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
         PutFooter();
         exit;
     }
-    SendSQL("SELECT bit FROM groups WHERE bit=" . SqlQuote($bit));
+    SendSQL("SELECT id FROM groups WHERE id=" . SqlQuote($gid));
     if (!FetchOneColumn()) {
         ShowError("That group doesn't exist.<BR>" .
                   "Click the <b>Back</b> button and try again.");
@@ -372,17 +414,17 @@ if ($action eq 'del') {
     }
     SendSQL("SELECT name,description " .
             "FROM groups " .
-            "WHERE bit = " . SqlQuote($bit));
+            "WHERE id = " . SqlQuote($gid));
 
     my ($name, $desc) = FetchSQLData();
     print "<table border=1>\n";
     print "<tr>";
-    print "<th>Bit</th>";
+    print "<th>Id</th>";
     print "<th>Name</th>";
     print "<th>Description</th>";
     print "</tr>\n";
     print "<tr>\n";
-    print "<td>$bit</td>\n";
+    print "<td>$gid</td>\n";
     print "<td>$name</td>\n";
     print "<td>$desc</td>\n";
     print "</tr>\n";
@@ -390,26 +432,26 @@ if ($action eq 'del') {
 
     print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
     my $cantdelete = 0;
-    SendSQL("SELECT login_name FROM profiles WHERE " .
-            "(groupset & $bit) OR (blessgroupset & $bit)");
+    SendSQL("SELECT user_id FROM user_group_map 
+             WHERE group_id = $gid AND isbless = 0");
     if (!FetchOneColumn()) {} else {
        $cantdelete = 1;
        print "
 <B>One or more users belong to this group. You cannot delete this group while
 there are users in it.</B><BR>
-<A HREF=\"editusers.cgi?action=list&query=" .
-url_quote("(groupset & $bit) OR (blessgroupset & $bit)") . "\">Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
+<A HREF=\"editusers.cgi?action=list&group=$gid\">Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
 this group for me<P>
 ";
     }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
+    SendSQL("SELECT bug_id FROM bug_group_map WHERE group_id = $gid");
+    my $buglist="";
     if (MoreSQLData()) {
-       $cantdelete = 1;
-       my $buglist = "0";
-       while (MoreSQLData()) {
-         my ($bug) = FetchSQLData();
-         $buglist .= "," . $bug;
-       }
+        $cantdelete = 1;
+        my $buglist = "0";
+        while (MoreSQLData()) {
+            my ($bug) = FetchSQLData();
+            $buglist .= "," . $bug;
+        }
        print "
 <B>One or more bug reports are visible only to this group.
 You cannot delete this group while any bugs are using it.</B><BR>
@@ -440,7 +482,7 @@ You cannot delete this group while it is tied to a product.</B><BR>
     }
     print "<P><INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=\"$bit\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=\"$gid\">\n";
     print "</FORM>";
 
     PutTrailer("<a href=editgroups.cgi>No, go back to the group list</a>");
@@ -453,8 +495,8 @@ You cannot delete this group while it is tied to a product.</B><BR>
 
 if ($action eq 'delete') {
     PutHeader("Deleting group");
-    my $bit = trim($::FORM{group} || '');
-    unless ($bit) {
+    my $gid = trim($::FORM{group} || '');
+    unless ($gid) {
         ShowError("No group specified.<BR>" .
                   "Click the <b>Back</b> button and try again.");
         PutFooter();
@@ -462,27 +504,19 @@ if ($action eq 'delete') {
     }
     SendSQL("SELECT name " .
             "FROM groups " .
-            "WHERE bit = " . SqlQuote($bit));
+            "WHERE group_id = " . SqlQuote($gid));
     my ($name) = FetchSQLData();
 
     my $cantdelete = 0;
-    my $opblessgroupset = '9223372036854775807'; # This is all 64 bits.
 
-    SendSQL("SELECT userid FROM profiles " .
-            "WHERE (groupset & $opblessgroupset)=$opblessgroupset");
-    my @opusers = ();
-    while (MoreSQLData()) {
-      my ($userid) = FetchSQLData();
-      push @opusers, $userid; # cache a list of the users with admin powers
-    }
-    SendSQL("SELECT login_name FROM profiles WHERE " .
-            "(groupset & $bit)=$bit OR (blessgroupset & $bit)=$bit");
+    SendSQL("SELECT user_id FROM user_group_map 
+             WHERE group_id = $gid AND isbless = 0");
     if (FetchOneColumn()) {
       if (!defined $::FORM{'removeusers'}) {
         $cantdelete = 1;
       }
     }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)=$bit");
+    SendSQL("SELECT bug_id FROM bug_group_map WHERE group_id = $gid");
     if (FetchOneColumn()) {
       if (!defined $::FORM{'removebugs'}) {
         $cantdelete = 1;
@@ -496,140 +530,122 @@ if ($action eq 'delete') {
     }
 
     if ($cantdelete == 1) {
-      ShowError("This group cannot be deleted because there are child " .
-          "records in the database which refer to it.  All child records " .
+      ShowError("This group cannot be deleted because there are " .
+          "records in the database which refer to it.  All such records " .
           "must be removed or altered to remove the reference to this " .
           "group before the group can be deleted.");
-      print "<A HREF=\"editgroups.cgi?action=del&group=$bit\">" .
+      print "<A HREF=\"editgroups.cgi?action=del&group=$gid\">" .
             "View the list of which records are affected</A><BR>";
       PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
       exit;
     }
 
-    SendSQL("SELECT login_name,groupset,blessgroupset FROM profiles WHERE " .
-            "(groupset & $bit) OR (blessgroupset & $bit)");
-    if (FetchOneColumn()) {
-      SendSQL("UPDATE profiles SET groupset=(groupset-$bit) " .
-              "WHERE (groupset & $bit)");
-      print "All users have been removed from group $bit.<BR>";
-      SendSQL("UPDATE profiles SET blessgroupset=(blessgroupset-$bit) " .
-              "WHERE (blessgroupset & $bit)");
-      print "All users with authority to add users to group $bit have " .
-            "had that authority removed.<BR>";
-    }
-    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
-    if (FetchOneColumn()) {
-      SendSQL("UPDATE bugs SET groupset=(groupset-$bit), delta_ts=delta_ts " .
-              "WHERE (groupset & $bit)");
-      print "All bugs have had group bit $bit cleared.  Any of these " .
-            "bugs that were not also in another group are now " .
-            "publicly visible.<BR>";
-    }
-    SendSQL("DELETE FROM groups WHERE bit=$bit");
-    print "<B>Group $bit has been deleted.</B><BR>";
+    SendSQL("DELETE FROM user_group_map WHERE group_id = $gid");
+    SendSQL("DELETE FROM group_group_map WHERE grantor_id = $gid");
+    SendSQL("DELETE FROM bug_group_map WHERE group_id = $gid");
+    SendSQL("DELETE FROM groups WHERE id = $gid");
+    print "<B>Group $gid has been deleted.</B><BR>";
 
-    foreach my $userid (@opusers) {
-      SendSQL("UPDATE profiles SET groupset=$opblessgroupset " .
-              "WHERE userid=$userid");
-      print "Group bits restored for " . DBID_to_name($userid) .
-            " (maintainer)<BR>\n";
-    }
 
     PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
     exit;
 }
 
 #
-# action='update' -> update the groups
+# action='postchanges' -> update the groups
 #
 
-if ($action eq 'update') {
-    PutHeader("Updating groups");
-
+if ($action eq 'postchanges') {
+    PutHeader("Updating group hierarchy");
+    my $gid = trim($::FORM{group} || '');
+    unless ($gid) {
+        ShowError("No group specified.<BR>" .
+                  "Click the <b>Back</b> button and try again.");
+        PutFooter();
+        exit;
+    }
+    SendSQL("SELECT isbuggroup FROM groups WHERE id = $gid");
+    my ($isbuggroup) = FetchSQLData();
     my $chgs = 0;
-
-    foreach my $b (grep(/^name-\d*$/, keys %::FORM)) {
-        if ($::FORM{$b}) {
-            my $v = substr($b, 5);
-
-# print "Old: '" . $::FORM{"oldname-$v"} . "', '" . $::FORM{"olddesc-$v"} .
-#      "', '" . $::FORM{"oldregexp-$v"} . "'<br>";
-# print "New: '" . $::FORM{"name-$v"} . "', '" . $::FORM{"desc-$v"} .
-#      "', '" . $::FORM{"regexp-$v"} . "'<br>";
-
-            if ($::FORM{"oldname-$v"} ne $::FORM{"name-$v"}) {
+    if (($isbuggroup == 1) && ($::FORM{"oldname"} ne $::FORM{"name"})) {
+        $chgs = 1;
+        SendSQL("UPDATE groups SET name = " . 
+            SqlQuote($::FORM{"name"}) . " WHERE id = $gid");
+    }
+    if (($isbuggroup == 1) && ($::FORM{"olddesc"} ne $::FORM{"desc"})) {
+        $chgs = 1;
+        SendSQL("UPDATE groups SET description = " . 
+            SqlQuote($::FORM{"desc"}) . " WHERE id = $gid");
+    }
+    if ($::FORM{"oldrexp"} ne $::FORM{"rexp"}) {
+        $chgs = 1;
+        if (!eval {qr/$::FORM{"rexp"}/}) {
+            ShowError("The regular expression you entered is invalid. " .
+                      "Please click the <b>Back</b> button and try again.");
+            PutFooter();
+            exit;
+        }
+        SendSQL("UPDATE groups SET userregexp = " . 
+            SqlQuote($::FORM{"rexp"}) . " WHERE id = $gid");
+    }
+    if (($isbuggroup == 1) && ($::FORM{"oldisactive"} ne $::FORM{"isactive"})) {
+        $chgs = 1;
+        SendSQL("UPDATE groups SET isactive = " . 
+            SqlQuote($::FORM{"isactive"}) . " WHERE id = $gid");
+    }
+    
+    print "Checking....";
+    foreach my $b (grep(/^oldgrp-\d*$/, keys %::FORM)) {
+        if (defined($::FORM{$b})) {
+            my $v = substr($b, 7);
+            my $grp = $::FORM{"grp-$v"} || 0;
+            if ($::FORM{"oldgrp-$v"} != $grp) {
                 $chgs = 1;
-                SendSQL("SELECT name FROM groups WHERE name=" .
-                         SqlQuote($::FORM{"name-$v"}));
-                if (!FetchOneColumn()) {
-                    SendSQL("SELECT name FROM groups WHERE name=" .
-                             SqlQuote($::FORM{"oldname-$v"}) .
-                             " && isbuggroup = 0");
-                    if (FetchOneColumn()) {
-                        ShowError("You cannot update the name of a " .
-                                  "system group. Skipping $v");
-                    } else {
-                        SendSQL("UPDATE groups SET name=" .
-                                SqlQuote($::FORM{"name-$v"}) .
-                                " WHERE bit=" . SqlQuote($v));
-                        print "Group $v name updated.<br>\n";
-                    }
+                print "changed";
+                if ($grp != 0) {
+                    print " set ";
+                    SendSQL("INSERT INTO group_group_map 
+                             (member_id, grantor_id, isbless)
+                             VALUES ($v, $gid, 0)");
                 } else {
-                    ShowError("Duplicate name '" . $::FORM{"name-$v"} .
-                              "' specified for group $v.<BR>" .
-                              "Update of group $v name skipped.");
+                    print " cleared ";
+                    SendSQL("DELETE FROM group_group_map
+                             WHERE member_id = $v AND grantor_id = $gid
+                             AND isbless = 0");
                 }
             }
-            if ($::FORM{"olddesc-$v"} ne $::FORM{"desc-$v"}) {
+
+            my $bless = $::FORM{"bless-$v"} || 0;
+            if ($::FORM{"oldbless-$v"} != $bless) {
                 $chgs = 1;
-                SendSQL("SELECT description FROM groups WHERE description=" .
-                         SqlQuote($::FORM{"desc-$v"}));
-                if (!FetchOneColumn()) {
-                    SendSQL("UPDATE groups SET description=" .
-                            SqlQuote($::FORM{"desc-$v"}) .
-                            " WHERE bit=" . SqlQuote($v));
-                    print "Group $v description updated.<br>\n";
+                print "changed";
+                if ($bless != 0) {
+                    print " set ";
+                    SendSQL("INSERT INTO group_group_map 
+                             (member_id, grantor_id, isbless)
+                             VALUES ($v, $gid, 1)");
                 } else {
-                    ShowError("Duplicate description '" . $::FORM{"desc-$v"} .
-                              "' specified for group $v.<BR>" .
-                              "Update of group $v description skipped.");
+                    print " cleared ";
+                    SendSQL("DELETE FROM group_group_map
+                             WHERE member_id = $v AND grantor_id = $gid
+                             AND isbless = 1");
                 }
             }
-            if ($::FORM{"oldregexp-$v"} ne $::FORM{"regexp-$v"}) {
-                $chgs = 1;
-                SendSQL("UPDATE groups SET userregexp=" .
-                        SqlQuote($::FORM{"regexp-$v"}) .
-                        " WHERE bit=" . SqlQuote($v));
-                print "Group $v user regexp updated.<br>\n";
-            }
-            # convert an undefined value in the inactive field to zero
-            # (this occurs when the inactive checkbox is not checked 
-            # and the browser does not send the field to the server)
-            my $isactive = $::FORM{"isactive-$v"} || 0;
-            if ($::FORM{"oldisactive-$v"} != $isactive) {
-                $chgs = 1;
-                if ($isactive == 0 || $isactive == 1) {
-                    SendSQL("UPDATE groups SET isactive=$isactive" .
-                            " WHERE bit=" . SqlQuote($v));
-                    print "Group $v active flag updated.<br>\n";
-                } else {
-                    ShowError("The value '" . $isactive .
-                              "' is not a valid value for the active flag.<BR>" .
-                              "There may be a problem with Bugzilla or a bug in your browser.<br>" . 
-                              "Update of active flag for group $v skipped.");
-                }
-            }
+
         }
     }
     if (!$chgs) {
         print "You didn't change anything!<BR>\n";
         print "If you really meant it, hit the <B>Back</B> button and try again.<p>\n";
     } else {
+        SendSQL("UPDATE groups SET last_changed = NOW() WHERE id = $gid");
         print "Done.<p>\n";
     }
     PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
     exit;
 }
+
+
 
 #
 # No valid action found

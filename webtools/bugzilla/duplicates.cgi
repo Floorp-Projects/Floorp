@@ -40,7 +40,7 @@ GetVersionTable();
 
 quietly_check_login();
 
-use vars qw (%FORM $userid $usergroupset @legal_product);
+use vars qw (%FORM $userid @legal_product);
 
 my %dbmcount;
 my %count;
@@ -160,9 +160,7 @@ if (scalar(%count)) {
     # Limit to a single product if requested
     $query .= (" AND bugs.product_id = " . $product_id) if $product_id;
 
-    SendSQL(SelectVisible($query, 
-                          $userid, 
-                          $usergroupset));
+    SendSQL($query);
 
     while (MoreSQLData()) {
         # Note: maximum row count is dealt with in the template.
@@ -170,6 +168,7 @@ if (scalar(%count)) {
         my ($id, $component, $bug_severity, $op_sys, $target_milestone, 
             $short_desc, $bug_status, $resolution) = FetchSQLData();
 
+        next if (!CanSeeBug($id, $::userid));
         # Limit to open bugs only if requested
         next if $openonly && ($resolution ne "");
 

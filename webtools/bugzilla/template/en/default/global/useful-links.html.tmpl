@@ -65,7 +65,7 @@
         [% ', <a href="editparams.cgi">parameters</a>' 
                                                    IF user.groups.tweakparams %]
         [% ', <a href="editusers.cgi">users</a>'     IF user.groups.editusers 
-                                                  || (user.blessgroupset > 0) %]
+                                                  || user.canblessany %]
         [% ', <a href="editproducts.cgi">products</a>' 
                                                 IF user.groups.editcomponents %]
         [% ', <a href="editattachstatuses.cgi"> attachment&nbsp;statuses</a>'

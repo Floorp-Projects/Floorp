@@ -265,6 +265,7 @@ sub changeEmail {
     SendSQL("DELETE FROM tokens WHERE userid = $userid 
                                   AND tokentype = 'emailnew'");
     SendSQL("UNLOCK TABLES");
+    DeriveGroup($userid);
 
     # Return HTTP response headers.
     print "Content-Type: text/html\n\n";
@@ -300,6 +301,7 @@ sub cancelChangeEmail {
                  SET      login_name = $quotedoldemail
                  WHERE    userid = $userid");
             SendSQL("UNLOCK TABLES");
+            DeriveGroup($userid);
             $vars->{'message'} .= 
                 "  Your old account settings have been reinstated.";
         } 
