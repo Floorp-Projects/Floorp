@@ -126,6 +126,7 @@ public:
                               nsIAtom*& aPrefix) const;
   nsresult GetAttributeCount(PRInt32& aResult) const;
   nsresult List(FILE* out, PRInt32 aIndent) const;
+  nsresult DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
   nsresult SetParentForFormControls(nsIContent* aParent,
                                     nsIFormControl* aControl,
                                     nsIForm* aForm);

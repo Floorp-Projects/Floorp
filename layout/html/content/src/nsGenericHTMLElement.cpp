@@ -1850,6 +1850,51 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
 }
 
 nsresult
+nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
+   NS_PRECONDITION(nsnull != mDocument, "bad content");
+
+  PRInt32 index;
+  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsIAtom* tag;
+  nsAutoString buf;
+  GetTag(tag);
+  if (tag != nsnull) {
+    tag->ToString(buf);
+    fputs("<",out);
+    fputs(buf, out);
+    
+    if(aDumpAll) ListAttributes(out);
+    
+    fputs(">",out);
+    NS_RELEASE(tag);
+  }
+
+  PRBool canHaveKids;
+  mContent->CanContainChildren(canHaveKids);
+  if (canHaveKids) {
+    if(aIndent) fputs("\n", out);
+    PRInt32 kids;
+    mContent->ChildCount(kids);
+    for (index = 0; index < kids; index++) {
+      nsIContent* kid;
+      mContent->ChildAt(index, kid);
+      PRInt32 indent=(aIndent)? aIndent+1:0;
+      kid->DumpContent(out,indent,aDumpAll);
+      NS_RELEASE(kid);
+    }
+    for (index = aIndent; --index >= 0; ) fputs("  ", out);
+    fputs("</",out);
+    fputs(buf, out);
+    fputs(">",out);
+    
+    if(aIndent) fputs("\n", out);
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsGenericHTMLElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                              size_t aInstanceSize) const
 {
