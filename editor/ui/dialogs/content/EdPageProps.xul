@@ -76,7 +76,7 @@
   </box>
   <box id="MoreSection" orient="vertical" flex="1">
     <!-- html used for labels that need to wrap -->
-    <html class="wrap" flex="1">"&headSection.label;</html>
+    <html class="wrap" flex="1">&headSection.label;</html>
     <box orient="vertical" flex="1" style="width: 10em; height: 10em;">
       <textfield id="HeadSrcInput" multiline="true" style="width: 1em" rows="1" flex="1"/>
     </box>
