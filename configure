@@ -14133,18 +14133,17 @@ if test -n "$MOZ_SVG"; then
 #define MOZ_SVG 1
 EOF
 
-fi
 
-case "$target_os" in
-msvc*|mks*|cygwin*|mingw*)
-  SVG_DEFAULT_RENDERER=gdiplus
-  ;;
-*)
-  SVG_DEFAULT_RENDERER=cairo
-  ;;
-esac
+    case "$target_os" in
+  msvc*|mks*|cygwin*|mingw*)
+    SVG_DEFAULT_RENDERER=gdiplus
+    ;;
+  *)
+    SVG_DEFAULT_RENDERER=cairo
+    ;;
+  esac
 
-# Check whether --enable-svg-renderer or --disable-svg-renderer was given.
+  # Check whether --enable-svg-renderer or --disable-svg-renderer was given.
 if test "${enable_svg_renderer+set}" = set; then
   enableval="$enable_svg_renderer"
    SVG_RENDERER=$enableval 
@@ -14153,30 +14152,30 @@ else
 fi
 
 
-case "$SVG_RENDERER" in
-gdiplus)
-  MOZ_SVG_RENDERER_GDIPLUS=1
-            echo $ac_n "checking for Gdiplus.h""... $ac_c" 1>&6
-echo "configure:14161: checking for Gdiplus.h" >&5
-  
-  ac_ext=C
+  case "$SVG_RENDERER" in
+  gdiplus)
+    MOZ_SVG_RENDERER_GDIPLUS=1
+                        echo $ac_n "checking for Gdiplus.h""... $ac_c" 1>&6
+echo "configure:14160: checking for Gdiplus.h" >&5
+    
+    ac_ext=C
 # CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
 ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
 cross_compiling=$ac_cv_prog_cxx_cross
 
-  cat > conftest.$ac_ext <<EOF
-#line 14171 "configure"
+    cat > conftest.$ac_ext <<EOF
+#line 14170 "configure"
 #include "confdefs.h"
 #include <windows.h>
-                  #include <unknwn.h>
-                  #include <Gdiplus.h>
+                    #include <unknwn.h>
+                    #include <Gdiplus.h>
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:14180: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:14179: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -14186,39 +14185,40 @@ else
   { echo "configure: error: Building the SVG GDI+ renderer requires an appropriate Microsoft SDK." 1>&2; exit 1; }
 fi
 rm -f conftest*
-  ac_ext=c
+    ac_ext=c
 # CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
 ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
 cross_compiling=$ac_cv_prog_cc_cross
 
-  cat >> confdefs.h <<\EOF
+    cat >> confdefs.h <<\EOF
 #define MOZ_SVG_RENDERER_GDIPLUS 1
 EOF
 
-  ;;
+    ;;
 
-libart)
-  MOZ_SVG_RENDERER_LIBART=1
-  cat >> confdefs.h <<\EOF
+  libart)
+    MOZ_SVG_RENDERER_LIBART=1
+    cat >> confdefs.h <<\EOF
 #define MOZ_SVG_RENDERER_LIBART 1
 EOF
 
-  ;;
+    ;;
 
-cairo)
-  MOZ_SVG_RENDERER_CAIRO=1
-  cat >> confdefs.h <<\EOF
+  cairo)
+    MOZ_SVG_RENDERER_CAIRO=1
+    cat >> confdefs.h <<\EOF
 #define MOZ_SVG_RENDERER_CAIRO 1
 EOF
 
-  ;;
+    ;;
 
-*)
-  { echo "configure: error: unknown svg renderer $SVG_RENDERER" 1>&2; exit 1; }
-  ;;
-esac
+  *)
+    { echo "configure: error: unknown svg renderer $SVG_RENDERER" 1>&2; exit 1; }
+    ;;
+  esac
+fi
 
 
 if test "$TX_EXE"; then
