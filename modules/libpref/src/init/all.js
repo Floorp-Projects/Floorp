@@ -102,10 +102,6 @@ pref("browser.display.use_document_colors", true);
 pref("browser.ldapfile_location",       "");
 pref("browser.print_background",            false);
 pref("browser.prefs_window.modeless",       false);
-pref("browser.prefs_window_rect",           "-1,-1,-1,-1");
-pref("browser.find_window_rect",            "-1,-1,-1,-1");
-pref("browser.bookmark_window_rect",        "-1,-1,-1,-1");
-pref("browser.download_window_rect",        "-1,-1,-1,-1");
 pref("browser.wfe.ignore_def_check",false);
 pref("browser.display.wfe.use_windows_colors",true);
 pref("browser.startup_mode",1);
@@ -150,9 +146,6 @@ pref("browser.url_history.URL_15", "");
 
 pref("browser.uriloader", true); // turn new uri loading on by default
 
-pref("browser.personal_toolbar_button.min_chars", 15);
-pref("browser.personal_toolbar_button.max_chars", 30);
-
 pref("browser.PICS.ratings_enabled", false);
 pref("browser.PICS.pages_must_be_rated", false);
 pref("browser.PICS.disable_for_this_session", false);
@@ -180,14 +173,6 @@ pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
 pref("browser.related.detailsProvider", "http://cgi.netscape.com/cgi-bin/rlcgi.cgi?URL=");
 pref("browser.related.disabledForDomains", "");
 pref("browser.goBrowsing.enabled", true);
-
-
-// The NavCenter preferences
-localDefPref("browser.navcenter.dockstyle", 1); // 1 = left, 2 = right, 3 = top, 4 = bottom
-localDefPref("browser.navcenter.docked.tree.visible", false);
-localDefPref("browser.navcenter.docked.selector.visible", true);
-localDefPref("browser.navcenter.docked.tree.width", 250); // Percent of parent window consumed by docked nav center
-localDefPref("browser.navcenter.floating.rect", "20, 20, 400, 600"); // Window dimensions when floating
 
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
@@ -230,24 +215,6 @@ pref("capability.policy.mailnews.windowinternal.location", "noAccess");
 
 // window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
 pref("capability.policy.default.windowinternal.opendialog", "noAccess");
-
-localDefPref("ghist.expires.pos",          4);
-localDefPref("ghist.expires.width",        1400);
-localDefPref("ghist.firstvisit.pos",       2);
-localDefPref("ghist.firstvisit.width",     1400);
-localDefPref("ghist.lastvisit.pos",        3);
-localDefPref("ghist.lastvisit.width",      1400);
-localDefPref("ghist.location.pos",         1);
-localDefPref("ghist.location.width",       2400);
-pref("ghist.show_value",           0);
-pref("ghist.sort_descending",      false);
-pref("ghist.sortby",               3);  // eGH_LastDateSort
-localDefPref("ghist.title.pos",            0);
-localDefPref("ghist.title.width",          2400);
-localDefPref("ghist.visiblecolumns",       6);
-localDefPref("ghist.visitcount.pos",       5);
-localDefPref("ghist.visitcount.width",     1000);
-localDefPref("ghist.window_rect",          "0,0,0,0");
 
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
@@ -367,7 +334,6 @@ pref("wallet.version",                      "1");
 pref("wallet.enabled",                      true);
 pref("wallet.crypto",                       false);
 pref("imageblocker.enabled",                true);
-pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
 pref("intl.collationKeyAsCodePoint",        false);
@@ -439,7 +405,6 @@ localDefPref("mail.directory",                  "");
 localDefPref("mail.cc_file",                    "");
 localDefPref("news.cc_file",                    "");
 
-pref("news.fancy_listing",      true);      // obsolete
 pref("browser.wfe.show_value", 1);
 pref("browser.blink_allowed", true);
 pref("images.dither", "auto");
@@ -457,7 +422,6 @@ pref("silentdownload.enabled",    true);
 pref("silentdownload.directory",  "");
 pref("silentdownload.range",      3000);
 pref("silentdownload.interval",  10000);
-
 
 pref("imap.io.mac.logging", false);
 
@@ -488,7 +452,7 @@ pref("middlemouse.scrollbarPosition", false);
 // Clipboard behavior
 pref("clipboard.autocopy", false);
 
-/* 0=lines, 1=pages, 2=history , 3=text size */
+// 0=lines, 1=pages, 2=history , 3=text size
 pref("mousewheel.withnokey.action",0);
 pref("mousewheel.withnokey.numlines",1);	
 pref("mousewheel.withnokey.sysnumlines",true);
