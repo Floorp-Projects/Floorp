@@ -105,7 +105,7 @@ nsresult
 nsSelectionState::RestoreSelection(nsISelection *aSel)
 {
   if (!aSel) return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
+  nsresult res;
   PRInt32 i, arrayCount = mArray.Count();
   nsRangeStore *item;
 
@@ -214,7 +214,6 @@ nsRangeUpdater::RegisterRangeItem(nsRangeStore *aRangeItem)
     return;  // don't register it again.  It would get doubly adjusted.
   }
   mArray.AppendElement(aRangeItem);
-  return;
 }
 
 void 
@@ -222,7 +221,6 @@ nsRangeUpdater::DropRangeItem(nsRangeStore *aRangeItem)
 {
   if (!aRangeItem) return;
   mArray.RemoveElement(aRangeItem);
-  return;
 }
 
 nsresult 

@@ -38,50 +38,37 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsEditorEventListeners.h"
 #include "nsEditor.h"
-#include "nsVoidArray.h"
-#include "nsString.h"
 
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIDOMElement.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
-#include "nsIDOMCharacterData.h"
-#include "nsISupportsArray.h"
-#include "nsIStringStream.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateCompositionEvent.h"
 #include "nsIEditorMailSupport.h"
-#include "nsIDocumentEncoder.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresContext.h"
-#include "nsGUIEvent.h"
-#include "nsICaret.h"
+#ifdef USE_HACK_REPAINT
 // for repainting hack only
 #include "nsIView.h"
 #include "nsIViewManager.h"
 // end repainting hack only
+#endif
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
-#include "nsITransferable.h"
-#include "nsIFormatConverter.h"
-#include "nsIContentIterator.h"
 #include "nsIContent.h"
-#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMNSRange.h"
 #include "nsEditorUtils.h"
@@ -134,17 +121,9 @@ nsTextEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
-  keyEvent = do_QueryInterface(aKeyEvent);
-  if (!keyEvent) 
-  {
-    //non-key event passed to keydown.  bad things.
-    return NS_OK;
-  }
-  
   // DOM event handling happens in two passes, the client pass and the system
   // pass.  We do all of our processing in the system pass, to allow client
-  // handlers the opporunity to cancel events and prevent typing in the editor.
+  // handlers the opportunity to cancel events and prevent typing in the editor.
   // If the client pass cancelled the event, defaultPrevented will be true
   // below.
 
@@ -157,15 +136,22 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent) 
+  {
+    //non-key event passed to keypress.  bad things.
+    return NS_OK;
+  }
+
   // we should check a flag here to see if we should be using built-in key bindings
   // mEditor->GetFlags(&flags);
   // if (flags & ...)
 
   PRUint32 keyCode;
-  PRUint32 flags;
   keyEvent->GetKeyCode(&keyCode);
 
   // if we are readonly or disabled, then do nothing.
+  PRUint32 flags;
   if (NS_SUCCEEDED(mEditor->GetFlags(&flags)))
   {
     if (flags & nsIPlaintextEditor::eEditorReadonlyMask || 
@@ -266,14 +252,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 }
 
 
-nsresult
-nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed)
-{
-  aProcessed=PR_FALSE;
-  return NS_OK;
-}
-
-
 /*
  * nsTextEditorMouseListener implementation
  */
@@ -303,23 +281,20 @@ nsTextEditorMouseListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  if (!aMouseEvent)
-    return NS_OK;   // NS_OK means "we didn't process the event".  Go figure.
-
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
 
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) { return NS_OK; }
+
   // If we got a mouse down inside the editing area, we should force the 
   // IME to commit before we change the cursor position
   nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
-  if(imeEditor)
-  	imeEditor->ForceCompositionEnd();
-
-   nsCOMPtr<nsIEditor> editor (do_QueryInterface(mEditor));
-  if (!editor) { return NS_OK; }
+  if (imeEditor)
+    imeEditor->ForceCompositionEnd();
 
   PRUint16 button = (PRUint16)-1;
   mouseEvent->GetButton(&button);
@@ -337,7 +312,6 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
       {
         // Set the selection to the point under the mouse cursor:
         nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
-
         if (!nsuiEvent)
           return NS_ERROR_NULL_POINTER;
         nsCOMPtr<nsIDOMNode> parent;
@@ -353,10 +327,10 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
         // If the ctrl key is pressed, we'll do paste as quotation.
         // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
-        nsCOMPtr<nsIEditorMailSupport> mailEditor;
-        mouseEvent = do_QueryInterface(aMouseEvent);
         PRBool ctrlKey = PR_FALSE;
         mouseEvent->GetCtrlKey(&ctrlKey);
+
+        nsCOMPtr<nsIEditorMailSupport> mailEditor;
         if (ctrlKey)
           mailEditor = do_QueryInterface(mEditor);
 
@@ -387,8 +361,8 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         return NS_OK;
       }
     }
-   }
-   return NS_OK;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -462,17 +436,16 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 #ifdef DEBUG_IME
    printf("nsTextEditorTextListener::HandleText\n");
 #endif
-   nsAutoString            composedText;
-   nsresult            result = NS_OK;
-   nsCOMPtr<nsIPrivateTextEvent> textEvent;
-   nsIPrivateTextRangeList      *textRangeList;
-   nsTextEventReply         *textEventReply;
-
-   textEvent = do_QueryInterface(aTextEvent);
+   nsCOMPtr<nsIPrivateTextEvent> textEvent = do_QueryInterface(aTextEvent);
    if (!textEvent) {
       //non-ui event passed in.  bad things.
       return NS_OK;
    }
+
+   nsAutoString            composedText;
+   nsresult                result;
+   nsIPrivateTextRangeList *textRangeList;
+   nsTextEventReply        *textEventReply;
 
    textEvent->GetText(composedText);
    textEvent->GetInputRange(&textRangeList);
@@ -523,11 +496,11 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 {
-  PRBool canDrag = PR_FALSE;
   if ( !mEditor )
     return NS_ERROR_NULL_POINTER;
   
   // ...figure out if a drag should be started...
+  PRBool canDrag;
   nsresult rv = mEditor->CanDrag(aDragEvent, &canDrag);
   if ( NS_SUCCEEDED(rv) && canDrag )
     rv = mEditor->DoDrag(aDragEvent);
@@ -627,10 +600,9 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
 {
-  if (mCaret)
+  if (mCaret && mCaretDrawn)
   {
-    if (mCaretDrawn)
-      mCaret->EraseCaret();
+    mCaret->EraseCaret();
     mCaretDrawn = PR_FALSE;
   }
 
@@ -645,8 +617,10 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   if (mCaret)
   {
     if (mCaretDrawn)
+    {
       mCaret->EraseCaret();
-    mCaretDrawn = PR_FALSE;
+      mCaretDrawn = PR_FALSE;
+    }
     mCaret->SetCaretVisible(PR_FALSE);    // hide it, so that it turns off its timer
     mCaret = nsnull;      // release it
   }
@@ -665,9 +639,9 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
             (flags & nsIPlaintextEditor::eEditorReadonlyMask)) )
     {
       // it was decided to "eat" the event as this is the "least surprise"
-                                      // since someone else handling it might be unintentional and the 
-                                      // user could probably re-drag to be not over the disabled/readonly 
-                                      // editfields if that is what is desired.
+      // since someone else handling it might be unintentional and the 
+      // user could probably re-drag to be not over the disabled/readonly 
+      // editfields if that is what is desired.
       return aMouseEvent->StopPropagation();
     }
     return NS_OK;
@@ -686,9 +660,9 @@ PRBool
 nsTextEditorDragListener::CanDrop(nsIDOMEvent* aEvent)
 {
   // if the target doc is read-only, we can't drop
-  PRUint32 flags = 0;
-  nsresult rv = mEditor->GetFlags(&flags);
-  if (NS_FAILED(rv)) return PR_FALSE;
+  PRUint32 flags;
+  if (NS_FAILED(mEditor->GetFlags(&flags)))
+    return PR_FALSE;
 
   if ((flags & nsIPlaintextEditor::eEditorDisabledMask) || 
       (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
@@ -696,12 +670,13 @@ nsTextEditorDragListener::CanDrop(nsIDOMEvent* aEvent)
   }
 
   // XXX cache this between drag events?
+  nsresult rv;
   nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
-  if (!dragService) return PR_FALSE;
 
   // does the drag have flavors we can accept?
   nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (dragService)
+    dragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (!dragSession) return PR_FALSE;
 
   PRBool flavorSupported = PR_FALSE;
@@ -723,11 +698,6 @@ nsTextEditorDragListener::CanDrop(nsIDOMEvent* aEvent)
   if (!flavorSupported)
     return PR_FALSE;     
 
-  nsCOMPtr<nsISelection> selection;
-  rv = mEditor->GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv) || !selection)
-    return PR_FALSE;
-    
   nsCOMPtr<nsIDOMDocument> domdoc;
   rv = mEditor->GetDocument(getter_AddRefs(domdoc));
   if (NS_FAILED(rv)) return PR_FALSE;
@@ -737,6 +707,11 @@ nsTextEditorDragListener::CanDrop(nsIDOMEvent* aEvent)
   if (NS_FAILED(rv)) return PR_FALSE;
   if (domdoc == sourceDoc)      // source and dest are the same document; disallow drops within the selection
   {
+    nsCOMPtr<nsISelection> selection;
+    rv = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(rv) || !selection)
+      return PR_FALSE;
+    
     PRBool isCollapsed;
     rv = selection->GetIsCollapsed(&isCollapsed);
     if (NS_FAILED(rv)) return PR_FALSE;
@@ -763,12 +738,9 @@ nsTextEditorDragListener::CanDrop(nsIDOMEvent* aEvent)
       {
         nsCOMPtr<nsIDOMRange> range;
         rv = selection->GetRangeAt(i, getter_AddRefs(range));
-        if (NS_FAILED(rv) || !range) 
-        continue; //dont bail yet, iterate through them all
-
         nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
         if (NS_FAILED(rv) || !nsrange) 
-        continue; //dont bail yet, iterate through them all
+          continue; //don't bail yet, iterate through them all
 
         PRBool inRange = PR_TRUE;
         (void)nsrange->IsPointInRange(parent, offset, &inRange);
@@ -817,10 +789,9 @@ nsTextEditorCompositionListener::HandleStartComposition(nsIDOMEvent* aCompositio
    printf("nsTextEditorCompositionListener::HandleStartComposition\n");
 #endif
   nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aCompositionEvent);
-  nsTextEventReply* eventReply;
-
   if (!pCompositionEvent) return NS_ERROR_FAILURE;
   
+  nsTextEventReply* eventReply;
   nsresult rv = pCompositionEvent->GetCompositionReply(&eventReply);
   if (NS_FAILED(rv)) return rv;
 
@@ -833,10 +804,9 @@ nsTextEditorCompositionListener::HandleQueryComposition(nsIDOMEvent* aCompositio
    printf("nsTextEditorCompositionListener::HandleQueryComposition\n");
 #endif
   nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aCompositionEvent);
-  nsTextEventReply* eventReply;
-
   if (!pCompositionEvent) return NS_ERROR_FAILURE;
   
+  nsTextEventReply* eventReply;
   nsresult rv = pCompositionEvent->GetCompositionReply(&eventReply);
   if (NS_FAILED(rv)) return rv;
 
@@ -860,11 +830,10 @@ nsTextEditorCompositionListener::HandleQueryReconversion(nsIDOMEvent* aReconvers
   printf("nsTextEditorCompositionListener::HandleQueryReconversion\n");
 #endif
   nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aReconversionEvent);
-  nsReconversionEventReply* eventReply;
-
   if (!pCompositionEvent)
     return NS_ERROR_FAILURE;
 
+  nsReconversionEventReply* eventReply;
   nsresult rv = pCompositionEvent->GetReconversionReply(&eventReply);
   if (NS_FAILED(rv))
     return rv;
@@ -959,7 +928,7 @@ NS_NewEditorFocusListener(nsIDOMEventListener ** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetEditor(aEditor);
-   return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void **) aInstancePtrResult);
 }
 
 
@@ -1043,14 +1012,12 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
   // turn on selection and caret
   if (mEditor)
   {
-    PRUint32 flags;
-
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
-
     if (nsevent) {
       nsevent->PreventBubble();
     }
 
+    PRUint32 flags;
     mEditor->GetFlags(&flags);
     if (! (flags & nsIPlaintextEditor::eEditorDisabledMask))
     { // only enable caret and selection if the editor is not disabled
@@ -1063,24 +1030,24 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         {
           if (! (flags & nsIPlaintextEditor::eEditorReadonlyMask))
           { // only enable caret if the editor is not readonly
-            PRInt32 pixelWidth;
             nsresult result;
 
             nsCOMPtr<nsILookAndFeel> look = 
                      do_GetService("@mozilla.org/widget/lookandfeel;1", &result);
-
             if (NS_SUCCEEDED(result) && look)
             {
+              PRInt32 pixelWidth;
+
               if(flags & nsIPlaintextEditor::eEditorSingleLineMask)
                 look->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, pixelWidth);
               else
                 look->GetMetric(nsILookAndFeel::eMetric_MultiLineCaretWidth, pixelWidth);
+              selCon->SetCaretWidth(pixelWidth);
             }
 
-            selCon->SetCaretWidth(pixelWidth);
             selCon->SetCaretEnabled(PR_TRUE);
-
           }
+
           selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 #ifdef USE_HACK_REPAINT
   // begin hack repaint
@@ -1110,16 +1077,10 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
   // turn off selection and caret
   if (mEditor)
   {
-    PRUint32 flags;
-
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
-
     if (nsevent) {
       nsevent->PreventBubble();
     }
-
-    mEditor->GetFlags(&flags);
-    nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
 
     // when imeEditor exists, call ForceCompositionEnd() to tell
     // the input focus is leaving first
@@ -1127,6 +1088,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
     if (imeEditor)
       imeEditor->ForceCompositionEnd();
 
+    nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
     if (editor)
     {
       nsCOMPtr<nsISelectionController>selCon;
@@ -1134,6 +1096,9 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
       if (selCon)
       {
         selCon->SetCaretEnabled(PR_FALSE);
+
+        PRUint32 flags;
+        mEditor->GetFlags(&flags);
         if((flags & nsIPlaintextEditor::eEditorWidgetMask)  ||
           (flags & nsIPlaintextEditor::eEditorPasswordMask) ||
           (flags & nsIPlaintextEditor::eEditorReadonlyMask) ||

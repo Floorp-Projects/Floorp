@@ -75,7 +75,7 @@ public:
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-/*BEGIN interfaces in to the keylister base interface. must be supplied to handle pure virtual interfaces
+/*BEGIN interfaces in to the keylistener base interface. must be supplied to handle pure virtual interfaces
   see the nsIDOMKeyListener interface implementation for details
   */
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -83,9 +83,6 @@ public:
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 /*END interfaces from nsIDOMKeyListener*/
-
-protected:
-  virtual nsresult ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed);
 
 protected:
   nsIEditor*     mEditor;		// weak reference

@@ -232,9 +232,9 @@ nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *a
 PRBool
 nsEditorUtils::IsLeafNode(nsIDOMNode *aNode)
 {
-  if (!aNode) return PR_FALSE;
   PRBool hasChildren = PR_FALSE;
-  aNode->HasChildNodes(&hasChildren);
+  if (aNode)
+    aNode->HasChildNodes(&hasChildren);
   return !hasChildren;
 }
 
