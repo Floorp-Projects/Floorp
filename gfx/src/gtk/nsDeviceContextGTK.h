@@ -91,6 +91,8 @@ private:
   float         mHeightFloat;
   PRInt32       mWidth;
   PRInt32       mHeight;
+
+  nsresult GetSystemFontInfo(GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont) const;
 };
 
 #endif /* nsDeviceContextGTK_h___ */
