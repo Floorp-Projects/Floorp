@@ -49,6 +49,7 @@ struct nsMutationEvent : public nsEvent
     : nsEvent(msg, structType),
       mAttrChange(0)
   {
+    flags |= NS_EVENT_FLAG_CANT_CANCEL;
   }
 
   nsMutationEvent(PRUint32 msg,
@@ -58,6 +59,7 @@ struct nsMutationEvent : public nsEvent
       mTarget(target),
       mAttrChange(0)
   {
+    flags |= NS_EVENT_FLAG_CANT_CANCEL;
   }
 
   nsMutationEvent(PRUint32 msg,
@@ -67,6 +69,7 @@ struct nsMutationEvent : public nsEvent
       mTarget(do_QueryInterface(target)),
       mAttrChange(0)
   {
+    flags |= NS_EVENT_FLAG_CANT_CANCEL;
   }
 
   nsCOMPtr<nsIDOMNode> mRelatedNode;
