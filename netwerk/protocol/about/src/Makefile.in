@@ -32,6 +32,7 @@ CPPSRCS		= \
 		nsAboutProtocolHandler.cpp \
 		nsAboutProtocolModule.cpp \
 		nsAboutBlank.cpp \
+		nsAboutBloat.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
