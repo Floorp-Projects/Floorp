@@ -308,9 +308,6 @@ typedef int startFn(PRFileDesc *a, PRFileDesc *b, int c);
 
 PZLock    * threadLock;
 PZCondVar * threadQ;
-
-PZLock    * stopLock;
-PZCondVar * stopQ;
 static int threadCount = 0;
 
 typedef enum { rs_idle = 0, rs_running = 1, rs_zombie = 2 } runState;
@@ -885,9 +882,6 @@ server_main(
     /* create the thread management serialization structs */
     threadLock = PZ_NewLock(nssILockSelfServ);
     threadQ   = PZ_NewCondVar(threadLock);
-    stopLock = PZ_NewLock(nssILockSelfServ);
-    stopQ = PZ_NewCondVar(stopLock);
-
 
     addr.inet.family = PR_AF_INET;
     addr.inet.ip     = PR_INADDR_ANY;
@@ -1011,11 +1005,11 @@ server_main(
     	PR_Close(listen_sock);
     } else {
         VLOG(("selfserv: server_thead: waiting on stopping"));
-        PZ_Lock( stopLock );
+        PZ_Lock( threadLock );
         while ( !stopping && threadCount > 0 ) {
-            PZ_WaitCondVar(stopQ, PR_INTERVAL_NO_TIMEOUT);
+            PZ_WaitCondVar(threadQ, PR_INTERVAL_NO_TIMEOUT);
         }
-        PZ_Unlock( stopLock );
+        PZ_Unlock( threadLock );
 	destroy_thread_data();
         VLOG(("selfserv: server_thread: exiting"));
     }
