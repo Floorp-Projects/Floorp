@@ -510,10 +510,13 @@ public class NodeTransformer {
             if (nodeType == TokenStream.FUNCTION) {
                 // In a function with both "var x" and "function x",
                 // disregard the var statement, independent of order.
-                vars.removeLocal(node.getString());
+                String functionName = node.getString();
+                if (functionName == null)
+                    continue;
+                vars.removeLocal(functionName);
                 if (ht == null)
                     ht = new Hashtable();
-                ht.put(node.getString(), Boolean.TRUE);
+                ht.put(functionName, Boolean.TRUE);
             }
             if (nodeType != TokenStream.VAR)
                 continue;
