@@ -38,7 +38,6 @@ interface nsIMessenger : nsISupports {
     void GetNewMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);
 	void Open3PaneWindow();
     void SetWindow(in nsIDOMWindow ptr, in nsIMsgStatusFeedback statusFeedback);
-    void OpenURL(in string str);
     void DoPrint();
     void DoPrintPreview();
     void DeleteMessages(in nsIDOMXULElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
@@ -47,6 +46,7 @@ interface nsIMessenger : nsISupports {
 					  in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages,
 					  in boolean isMove);
     nsISupports GetRDFResourceForMessage(in nsIDOMXULElement tree, in nsIDOMNodeList node);
+    void OpenURL(in string url);
 	void Exit();
     void Close();
     void OnUnload();
@@ -75,5 +75,6 @@ interface nsIMessenger : nsISupports {
 	void LoadFirstDraft();
 	void SetDocumentCharset(in wstring characterSet);
     void saveAs(in string url, in boolean asFile);
+    void openAttachment(in string url);
 };
 
