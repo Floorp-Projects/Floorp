@@ -73,6 +73,7 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
+#include "nsIScrollableViewProvider.h"
 #include "nsRange.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -1006,6 +1007,15 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   CallQueryInterface(frame, &scrollFrame);
 
   if (!scrollFrame) {
+    nsIScrollableViewProvider *scrollProvider = nsnull;
+    CallQueryInterface(frame, &scrollProvider);
+    if (scrollProvider) {
+      scrollProvider->GetScrollableView(presContext, aScrollableView);
+      if (*aScrollableView) {
+        return NS_OK;
+      }
+    }
+
     if (mNodeInfo->Equals(nsHTMLAtoms::body)) {
       // The scroll info for the body element should map to the scroll
       // info for the nearest scrollable frame above the body element
