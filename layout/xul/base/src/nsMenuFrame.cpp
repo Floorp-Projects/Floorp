@@ -18,7 +18,7 @@
 
 #include "nsXULAtoms.h"
 #include "nsMenuFrame.h"
-#include "nsBlockFrame.h"
+#include "nsBoxFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -69,7 +69,7 @@ nsMenuFrame::FirstChild(nsIAtom*   aListName,
   if (nsLayoutAtoms::popupList == aListName) {
     *aFirstChild = mPopupFrames.FirstChild();
   } else {
-    nsBlockFrame::FirstChild(aListName, aFirstChild);
+    nsBoxFrame::FirstChild(aListName, aFirstChild);
   }
   return NS_OK;
 }
@@ -98,12 +98,12 @@ nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
         // Remove this frame from the list and place it in the other list.
         frames.RemoveFrame(frame);
         mPopupFrames.AppendFrame(this, frame);
-        rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+        rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
         return rv;
       }
       frame->GetNextSibling(&frame);
     }
-    rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+    rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
   return rv;
 }
@@ -124,7 +124,7 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
     NS_ADDREF(*aListName);
     return NS_OK;
   }*/
-  return nsBlockFrame::GetAdditionalChildListName(aIndex, aListName);
+  return nsBoxFrame::GetAdditionalChildListName(aIndex, aListName);
 }
 
 NS_IMETHODIMP
@@ -132,7 +132,7 @@ nsMenuFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
    // Cleanup frames in popup child list
   mPopupFrames.DeleteFrames(aPresContext);
-  return nsBlockFrame::DeleteFrame(aPresContext);
+  return nsBoxFrame::DeleteFrame(aPresContext);
 }
 
 // Called to prevent events from going to anything inside the menu.
@@ -197,7 +197,7 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
 {
-  nsresult rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   nsIFrame* frame = mPopupFrames.FirstChild();
     
   if (rv == NS_OK && frame) {
