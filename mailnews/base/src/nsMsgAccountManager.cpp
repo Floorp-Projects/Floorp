@@ -1697,8 +1697,7 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
   // if the "mail.directory" pref is set, use that.
   // if they used -installer, this pref will point to where their files got copied
   if (identity) {
-    nsCOMPtr <nsIFileSpec> mail_dir;
-    rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mail_dir));
+    rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mailDir));
   }
   else {
     rv = NS_ERROR_FAILURE;
@@ -2180,6 +2179,7 @@ nsresult
 nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 {
 	nsresult rv;
+    nsCOMPtr <nsIFileSpec> news_dir;
     nsFileSpec newsrcDir; // the directory that holds the newsrc files (and the fat file, if we are using one)
     nsFileSpec newsHostsDir; // the directory that holds the host directory, and the summary files.
     nsFileSpec profileDir;
@@ -2196,8 +2196,10 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
     // the newsrc files lived.  we don't want that for the newsHostsDir.
 #ifdef USE_NEWSRC_MAP_FILE
     // if they used -installer, this pref will point to where their files got copied
-    nsCOMPtr <nsIFileSpec> news_dir;
     rv = m_prefs->GetFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(news_dir));
+    if (NS_SUCCEEDED(rv)) {
+    	rv = news_dir->GetFileSpec(&newsHostsDir);
+    }
 #else
     rv = NS_ERROR_FAILURE;
 #endif /* USE_NEWSRC_MAP_FILE */
@@ -2328,7 +2330,6 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 	
 	inputStream.close();
 #else /* USE_NEWSRC_MAP_FILE */
-    nsCOMPtr <nsIFileSpec> news_dir;
     rv = m_prefs->GetFilePref(PREF_PREMIGRATION_NEWS_DIRECTORY, getter_AddRefs(news_dir));
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_ACCOUNTMANAGER
