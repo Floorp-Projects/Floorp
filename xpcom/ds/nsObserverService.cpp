@@ -136,7 +136,7 @@ nsresult nsObserverService::GetObserverList(const PRUnichar* aTopic, nsIObserver
 	return NS_OK;
 }
 
-nsresult nsObserverService::AddObserver(nsIObserver* anObserver, const PRUnichar* aTopic)
+NS_IMETHODIMP nsObserverService::AddObserver(nsIObserver* anObserver, const PRUnichar* aTopic)
 {
 	nsIObserverList* anObserverList;
 	nsresult rv;
@@ -161,7 +161,7 @@ nsresult nsObserverService::AddObserver(nsIObserver* anObserver, const PRUnichar
 	return NS_ERROR_FAILURE;
 }
 
-nsresult nsObserverService::RemoveObserver(nsIObserver* anObserver, const PRUnichar* aTopic)
+NS_IMETHODIMP nsObserverService::RemoveObserver(nsIObserver* anObserver, const PRUnichar* aTopic)
 {
 	nsIObserverList* anObserverList;
 	nsresult rv;
@@ -186,7 +186,7 @@ nsresult nsObserverService::RemoveObserver(nsIObserver* anObserver, const PRUnic
 	return NS_ERROR_FAILURE;
 }
 
-nsresult nsObserverService::EnumerateObserverList(const PRUnichar* aTopic, nsIEnumerator** anEnumerator)
+NS_IMETHODIMP nsObserverService::EnumerateObserverList(const PRUnichar* aTopic, nsIEnumerator** anEnumerator)
 {
 	nsIObserverList* anObserverList;
 	nsresult rv;
@@ -212,7 +212,7 @@ nsresult nsObserverService::EnumerateObserverList(const PRUnichar* aTopic, nsIEn
 }
 
 // Enumerate observers of aTopic and call Observe on each.
-nsresult nsObserverService::Notify( nsISupports *aSubject,
+NS_IMETHODIMP nsObserverService::Notify( nsISupports *aSubject,
                                     const PRUnichar *aTopic,
                                     const PRUnichar *someData ) {
     nsresult rv = NS_OK;
