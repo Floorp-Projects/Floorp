@@ -898,7 +898,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       if (isReordered) {
         nsRect tempRect;
         nsIFrame* tempFrame;
-        PRInt64 minX, limX;
+        nscoord minX, limX;
         PRInt32 testLine;
 
         minX = 0x7fffffff;
