@@ -499,8 +499,10 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetNextSibling(nsIAccessible **aNext
     currentNode->GetParentNode(getter_AddRefs(parent));
  
     next = nsnull;
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mParent));
+    NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
     nsCOMPtr<nsIDOMNode> selectNode;
-    mParent->GetDOMNode(getter_AddRefs(selectNode));
+    accessNode->GetDOMNode(getter_AddRefs(selectNode));
     if (parent && parent != selectNode) { // End search for options at subtree's start
       parent->GetNextSibling(getter_AddRefs(next));
       if (next) {
@@ -582,7 +584,9 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetPreviousSibling(nsIAccessible **_
       *_retval = nsnull;
       return NS_ERROR_FAILURE;
     }
-    nextSiblingAcc->GetDOMNode(getter_AddRefs(siblingDOMNode));
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(nextSiblingAcc));
+    NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
+    accessNode->GetDOMNode(getter_AddRefs(siblingDOMNode));
     if (siblingDOMNode == mDOMNode) {
       break;  // we found ourselves!
     }
@@ -663,7 +667,9 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
       return NS_ERROR_FAILURE;
     // Clear old selection
     nsCOMPtr<nsIDOMNode> oldHTMLOptionNode, selectNode;
-    mParent->GetDOMNode(getter_AddRefs(selectNode));
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mParent));
+    NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
+    accessNode->GetDOMNode(getter_AddRefs(selectNode));
     GetFocusedOptionNode(selectNode, getter_AddRefs(oldHTMLOptionNode));
     nsCOMPtr<nsIDOMHTMLOptionElement> oldHTMLOption(do_QueryInterface(oldHTMLOptionNode));
     if (oldHTMLOption)

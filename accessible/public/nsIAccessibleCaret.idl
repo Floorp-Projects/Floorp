@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIAccessible.idl"
+#include "nsIDOMNode.idl"
          
 [scriptable, uuid(9124c666-6133-4be6-b3ed-dd0ec35f1e64)]
 interface nsIAccessibleCaret : nsISupports

@@ -317,8 +317,9 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetState(PRUint32 *_retval)
     nsCOMPtr<nsIAccessible> parentAccessible;
     nsCOMPtr<nsIDOMNode> parentNode;
     GetParent(getter_AddRefs(parentAccessible));
-    if (parentAccessible)
-      parentAccessible->GetDOMNode(getter_AddRefs(parentNode));
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(parentAccessible));
+    if (accessNode) 
+      accessNode->GetDOMNode(getter_AddRefs(parentNode));
     element = do_QueryInterface(parentNode);
     if (element)
       element->HasAttribute(NS_LITERAL_STRING("open"), &isActive);

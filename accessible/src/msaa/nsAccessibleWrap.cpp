@@ -576,8 +576,10 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
     } else { // its not create an Accessible for it.
       pvarChild->vt = VT_DISPATCH;
       pvarChild->pdispVal = NativeAccessible(xpAccessible);
+      nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(xpAccessible));
+      NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
       nsCOMPtr<nsIDOMNode> domNode;
-      xpAccessible->GetDOMNode(getter_AddRefs(domNode));
+      accessNode->GetDOMNode(getter_AddRefs(domNode));
       if (!domNode) {
         // Has already been shut down
         pvarChild->vt = VT_EMPTY;
@@ -785,8 +787,6 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
       return retval;
     }
   }
-
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aXPAccessible));
 
   IAccessible *msaaAccessible;
   aXPAccessible->GetNativeInterface((void**)&msaaAccessible);

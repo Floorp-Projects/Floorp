@@ -39,8 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIDOMNode.idl"
-#include "domstubs.idl"
 
 /**
  * A cross-platform interface that supports platform-specific 
@@ -54,7 +52,7 @@
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(A84FCE8C-B127-4528-84F1-A022F5B040DA)]
+[scriptable, uuid(EF7E14F3-64D2-4389-8F8B-DD899C544374)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -229,11 +227,6 @@ interface nsIAccessible : nsISupports
    * Action number 0 is the default action
    */
   void doAction(in PRUint8 index);   
-
-  /**
-   * Get the DOM node described by this accessible node
-   */
-  nsIDOMNode getDOMNode();
 
   /**
    * Get a pointer to accessibility interface for this node, which is specific 

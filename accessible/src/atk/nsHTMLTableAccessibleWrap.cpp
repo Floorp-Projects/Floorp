@@ -112,8 +112,10 @@ nsHTMLTableAccessibleWrap::SetCaption(nsIAccessible *aCaption)
   nsCOMPtr<nsIDOMHTMLTableElement> table(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aCaption));
+  NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
   nsCOMPtr<nsIDOMNode> domNode;
-  rv = aCaption->GetDOMNode(getter_AddRefs(domNode));
+  rv = accessNode->GetDOMNode(getter_AddRefs(domNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> newDOMNode;
