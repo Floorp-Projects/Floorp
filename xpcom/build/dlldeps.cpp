@@ -72,7 +72,6 @@
 #include "nsStreamUtils.h"
 #include "nsCWeakReference.h"
 #include "nsWeakReference.h"
-#include "nsISizeOfHandler.h"
 #include "nsTextFormatter.h"
 #include "nsStatistics.h"
 #include "nsIStorageStream.h"
@@ -159,7 +158,6 @@ void XXXNeverCalled()
 #ifdef DEBUG
     TestSegmentedBuffer();
 #endif
-    NS_NewSizeOfHandler(0);
     NS_NewStorageStream(0,0, nsnull);
     nsString foo;
     nsPrintfCString bar("");
