@@ -144,7 +144,19 @@ interface nsIDownloadManager : nsISupports {
   * third party managers to let us know when they've closed.
   */
 
-  void onClose(); 
+  void onClose();
+  
+  /**
+  * Indicate that a batch update (e.g. mass removal) is about to start.
+  */
+
+  void startBatchUpdate();
+  
+  /**
+  * Indicate that a batch update is ending.
+  */
+  
+  void endBatchUpdate();
 };
 
 

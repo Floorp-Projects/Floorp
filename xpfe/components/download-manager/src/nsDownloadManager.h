@@ -93,6 +93,7 @@ private:
   nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsCOMPtr<nsIStringBundle> mBundle;
+  PRInt32 mBatches;
   nsHashtable* mCurrDownloads;
 
   friend class nsDownload;
