@@ -156,6 +156,7 @@ nsBrowserAppCore::nsBrowserAppCore()
 
 nsBrowserAppCore::~nsBrowserAppCore()
 {
+
   // We own none of these things, so no need to release
   //NS_IF_RELEASE(mToolbarWindow)
   //NS_IF_RELEASE(mToolbarScriptContext);
@@ -164,6 +165,12 @@ nsBrowserAppCore::~nsBrowserAppCore()
   //NS_IF_RELEASE(mWebShellWin);
   //NS_IF_RELEASE(mWebShell);
   //NS_IF_RELEASE(mContentAreaWebShell);
+
+  if (nsnull != mGHistory) {
+    nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
+  }
+ 
+  NS_IF_RELEASE(mSHistory);
 
   DecInstanceCount();  
 }
@@ -288,9 +295,6 @@ nsBrowserAppCore::Init(const nsString& aId)
                                           nsnull,
                                           kISessionHistoryIID,
                                           (void **) &mSHistory);
-
-  if (!mSHistory)
-     printf("********** Couldn't initialize Session History *********\n");
 
   BeginObserving();
 
@@ -1383,6 +1387,23 @@ nsBrowserAppCore::getCurrentIndex(PRInt32 & aResult)
    aResult = result;
    return NS_OK;
 
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::GetURLForIndex(PRInt32 aIndex, const PRUnichar** aURL)
+{
+
+   if (mSHistory)
+      mSHistory->GetURLForIndex(aIndex, aURL);
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::SetURLForIndex(PRInt32 aIndex, const PRUnichar* aURL)
+{
+   if (mSHistory)
+      mSHistory->SetURLForIndex(aIndex, aURL);
+   return NS_OK;
 }
 
 /*

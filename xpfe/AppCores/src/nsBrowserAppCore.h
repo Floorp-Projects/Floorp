@@ -157,6 +157,10 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD SetLoadingHistoryEntry(nsHistoryEntry * aHistoryEntry);
 
+    NS_IMETHOD GetURLForIndex(PRInt32 aIndex, const PRUnichar ** aURL);
+
+
+    NS_IMETHOD SetURLForIndex(PRInt32 aIndex, const PRUnichar * aURL);
 
   protected:
     NS_IMETHOD DoDialog();
