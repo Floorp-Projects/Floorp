@@ -1256,23 +1256,6 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
                  do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-            if (aListener)
-            {
-                rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
-                                                    aListener, nsnull);
-            }
-            else
-            {
-                nsCOMPtr<nsIUrlListener> urlListener = 
-                    do_QueryInterface(trashFolder);
-                rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
-                                                    urlListener, nsnull);
-            }
-            // return an error if this failed. We want the empty trash on exit code
-            // to know if this fails so that it doesn't block waiting for empty trash to finish.
-            if (NS_FAILED(rv))
-              return rv;
-        }
         PRBool hasSubfolders = PR_FALSE;
         rv = trashFolder->GetHasSubFolders(&hasSubfolders);
         if (hasSubfolders)
@@ -1302,7 +1285,6 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
    	      parentWindow = do_QueryInterface(docShell);
               rv = IMAPGetStringBundle(getter_AddRefs(bundle));
               NS_ENSURE_SUCCESS(rv, rv);
-            }
             rv = aEnumerator->First();
             while(NS_SUCCEEDED(rv))
             {
@@ -1322,20 +1304,51 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
                                                     getter_Copies(confirmText));
                   // Got the text, now show dialog.
                   rv = promptService->ConfirmEx(parentWindow, nsnull, confirmText,
-                                                (nsIPromptService::BUTTON_TITLE_YES * nsIPromptService::BUTTON_POS_0) +
-                                                (nsIPromptService::BUTTON_TITLE_NO * nsIPromptService::BUTTON_POS_1) +
-                                                (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_2), 
+                                              (nsIPromptService::BUTTON_TITLE_OK * nsIPromptService::BUTTON_POS_0) +
+                                              (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_1), 
                                                 nsnull, nsnull, nsnull, nsnull, nsnull, &dlgResult);
                 }
               if ( NS_SUCCEEDED( rv ) ) 
               {
                   if (dlgResult == 1)
-                    confirmed = PR_FALSE;
-                  else if (dlgResult == 2)
-                    rv = NS_BINDING_ABORTED;
+                  return NS_BINDING_ABORTED;
+                rv = aEnumerator->Next();
+              }
+            }
+          }
+          if (aListener)
+          {
+              rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
+                                                  aListener, nsnull);
+          }
+          else
+          {
+              nsCOMPtr<nsIUrlListener> urlListener = 
+                  do_QueryInterface(trashFolder);
+              rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
+                                                  urlListener, nsnull);
+          }
+          // return an error if this failed. We want the empty trash on exit code
+          // to know if this fails so that it doesn't block waiting for empty trash to finish.
                   if (NS_FAILED(rv))
-                    break;
-                  if (confirmed)
+            return rv;
+        }
+        if (hasSubfolders)
+        {
+            nsCOMPtr<nsIEnumerator> aEnumerator;
+            nsCOMPtr<nsISupports> aSupport;
+            nsCOMPtr<nsIMsgFolder> aFolder;
+            nsCOMPtr<nsISupportsArray> aSupportsArray;
+            rv = NS_NewISupportsArray(getter_AddRefs(aSupportsArray));
+            if (NS_FAILED(rv)) return rv;
+            rv = trashFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+
+            rv = aEnumerator->First();
+            while(NS_SUCCEEDED(rv))
+            {
+                PRBool confirmed = PR_TRUE;
+                PRInt32 dlgResult  = -1;
+                rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
                       aSupportsArray->AppendElement(aSupport);
                   rv = aEnumerator->Next();
               }
