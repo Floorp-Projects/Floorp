@@ -11,10 +11,10 @@
 
 <!-- Password Manager -->
 <!ENTITY signonHeader.label            "Saved Passwords">
-<!ENTITY signonDescription.label       "Manage stored mail server passwords:">
+<!ENTITY signonDescription.label       "Manage stored mail server passwords.">
 <!ENTITY viewSignons.label             "View Saved Passwords...">
 <!ENTITY viewSignons.accesskey         "e">
-<!ENTITY masterPasswordDesc.label      "Manage master password settings:">
+<!ENTITY masterPasswordDesc.label      "Manage master password settings.">
 <!ENTITY masterPassword.label          "Master Password...">
 <!ENTITY masterPassword.accesskey      "m">
 

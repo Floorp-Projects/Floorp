@@ -23,9 +23,14 @@
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
     <RDF:li resource="chrome://messenger/content/mailWindowOverlay.xul"/>
+    <RDF:li resource="chrome://messenger/content/pref-advanced.xul"/>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
+    <RDF:li>chrome://messenger-offline/content/msgOfflineOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/pref-advanced.xul">
     <RDF:li>chrome://messenger-offline/content/msgOfflineOverlay.xul</RDF:li>
   </RDF:Seq>
 

@@ -75,4 +75,12 @@
     <menuseparator insertafter="offlineMenuItem"/>
   </menupopup>
 
+  <expander id="connections" label="&prefOfflineConnection.label;">
+    <hbox insertbefore="proxyConnectionSettings" align="center" pack="end">
+        <label class="expanderDescription" value="&prefOfflineDesc.label;" flex="1"/>
+        <button label="&prefOfflineButton.label;" accesskey="&prefOfflineButton.accesskey;" 
+         oncommand="window.openDialog('chrome://messenger-offline/content/pref-offline.xul', '', 'chrome,dialog,modal,resizable');"/>
+    </hbox>
+  </expander>
+
 </overlay>
