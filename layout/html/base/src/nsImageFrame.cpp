@@ -749,8 +749,14 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
       nsCOMPtr<imgIContainer> con;
       mLoads[0].mRequest->GetImage(getter_AddRefs(con));
       if (con) {
-        con->GetWidth(&mLoads[0].mIntrinsicSize.width);
-        con->GetHeight(&mLoads[0].mIntrinsicSize.height);
+        float p2t;
+        nscoord width, height;
+
+        aPresContext->GetPixelsToTwips(&p2t);
+        con->GetWidth(&width);
+        con->GetHeight(&height);
+        mLoads[0].mIntrinsicSize.width = NSIntPixelsToTwips(width, p2t);
+        mLoads[0].mIntrinsicSize.height = NSIntPixelsToTwips(height, p2t);
       }
     }
   }
