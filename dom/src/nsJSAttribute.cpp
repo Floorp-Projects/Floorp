@@ -124,16 +124,17 @@ PR_STATIC_CALLBACK(void)
 FinalizeAttribute(JSContext *cx, JSObject *obj)
 {
   nsIDOMAttribute *attribute = (nsIDOMAttribute*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != attribute, "null pointer");
+  
+  if (nsnull != attribute) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == attribute->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+      owner->ResetScriptObject();
+      NS_RELEASE(owner);
+    }
 
-  // get the js object
-  nsIScriptObjectOwner *owner = nsnull;
-  if (NS_OK == attribute->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-    owner->ResetScriptObject();
-    NS_RELEASE(owner);
+    attribute->Release();
   }
-
-  attribute->Release();
 }
 
 /***********************************************************************/
@@ -197,8 +198,8 @@ static JSPropertySpec attributeProperties[] =
 // Attribute class methods
 //
 static JSFunctionSpec attributeMethods[] = {
-  {"GetName",         GetName,          0},
-  {"ToString",        ToString,         0},
+  {"getName",         GetName,          0},
+  {"toString",        ToString,         0},
   {0}
 };
 

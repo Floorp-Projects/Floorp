@@ -22,37 +22,37 @@
 //
 function traverse(node, indent)
 {
-    Dump("\n")
+    dump("\n")
     indent += "  "
-    var type = node.GetNodeType()
+    var type = node.getNodeType()
 
     // if it's an element dump the tag and recurse the children
     if (type == Node.ELEMENT) {
 
-        Dump(indent + node.GetTagName())
+        dump(indent + node.getTagName())
 
         // go through the children
-        if (node.HasChildNodes()) {
-            var children = node.GetChildNodes()
-            var length = children.GetLength()
-            var child = children.GetNextNode()
+        if (node.hasChildNodes()) {
+            var children = node.getChildNodes()
+            var length = children.getLength()
+            var child = children.getNextNode()
             var count = 0;
             while(count < length) {
                 traverse(child, indent)
-                child = children.GetNextNode()
+                child = children.getNextNode()
                 count++
             }
         }
     }
     // it's just text, no tag, dump "Text"
     else if (type == Node.TEXT) {
-        Dump(indent + "Text")
+        dump(indent + "Text")
     }
 }
 
 var node = document.documentElement
 
 traverse(node, "")
-Dump("\n")
+dump("\n")
 
   

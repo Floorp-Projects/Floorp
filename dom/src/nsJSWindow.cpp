@@ -120,13 +120,14 @@ PR_STATIC_CALLBACK(void)
 FinalizeWindow(JSContext *cx, JSObject *obj)
 {
   nsIWebWidget *window = (nsIWebWidget*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != window, "null pointer");
 
-  // get the js object
-  nsIScriptObjectOwner *owner = nsnull;
-  if (NS_OK == window->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-    owner->ResetScriptObject();
-    NS_RELEASE(owner);
+  if (nsnull != window) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == window->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+      owner->ResetScriptObject();
+      NS_RELEASE(owner);
+    }
   }
 }
 
@@ -181,7 +182,7 @@ static JSPropertySpec windowProperties[] =
 // Window class methods
 //
 static JSFunctionSpec windowMethods[] = {
-  {"Dump",          Dump,         1},
+  {"dump",          Dump,         1},
   {0}
 };
 

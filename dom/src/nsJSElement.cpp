@@ -82,16 +82,17 @@ PR_STATIC_CALLBACK(void)
 FinalizeElement(JSContext *cx, JSObject *obj)
 {
   nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
+  
+  if (nsnull != element) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == element->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+      owner->ResetScriptObject();
+      NS_RELEASE(owner);
+    }
 
-  // get the js object
-  nsIScriptObjectOwner *owner = nsnull;
-  if (NS_OK == element->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-    owner->ResetScriptObject();
-    NS_RELEASE(owner);
+    element->Release();
   }
-
-  element->Release();
 }
 
 /***********************************************************************/
@@ -373,16 +374,16 @@ JSClass element = {
 // Element class methods
 //
 static JSFunctionSpec elementMethods[] = {
-  {"GetTagName",              GetTagName,             0},
-  {"GetAttributes",           GetAttributes,          0},
-  {"GetAttribute",            GetAttribute,           1},
-  {"SetAttribute",            SetAttribute,           2},
-  {"RemoveAttribute",         RemoveAttribute,        1},
-  {"GetAttributeNode",        GetAttributeNode,       1},
-  {"SetAttributeNode",        SetAttributeNode,       1},
-  {"RemoveAttributeNode",     RemoveAttributeNode,    1},
-  {"GetElementsByTagName",    GetElementsByTagName,   1},
-  {"Normalize",               Normalize,              0},
+  {"getTagName",              GetTagName,             0},
+  {"getAttributes",           GetAttributes,          0},
+  {"getAttribute",            GetAttribute,           1},
+  {"setAttribute",            SetAttribute,           2},
+  {"removeAttribute",         RemoveAttribute,        1},
+  {"getAttributeNode",        GetAttributeNode,       1},
+  {"setAttributeNode",        SetAttributeNode,       1},
+  {"removeAttributeNode",     RemoveAttributeNode,    1},
+  {"getElementsByTagName",    GetElementsByTagName,   1},
+  {"normalize",               Normalize,              0},
   {0}
 };
 

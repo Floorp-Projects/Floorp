@@ -18,39 +18,39 @@
 
 var node = document.documentElement
 
-node.GetNodeType()
+node.getNodeType()
 
-node.GetTagName()
+node.getTagName()
 
-var attrList = node.GetAttributes()
+var attrList = node.getAttributes()
 
-attrList.GetLength()
+attrList.getLength()
 
-var attr = attrList.Item(0)
+var attr = attrList.item(0)
 
-attr.GetName()
+attr.getName()
 
 attr.value
 
-attr.ToString()
+attr.toString()
 
-node.HasChildNodes()
+node.hasChildNodes()
 
-var children = node.GetChildNodes()
+var children = node.getChildNodes()
 
-children.GetLength()
+children.getLength()
 
-node = children.GetNextNode()
-node.GetNodeType()
+node = children.getNextNode()
+node.getNodeType()
 
-node.GetTagName()
+node.getTagName()
 
-children.ToFirst()
+children.toFirst()
 
-node = node.GetFirstChild()
+node = node.getFirstChild()
 
-node = node.GetNextSiblings()
+node = node.getNextSiblings()
 
-node = node.GetParentNode()
+node = node.getParentNode()
 
  

@@ -80,16 +80,17 @@ PR_STATIC_CALLBACK(void)
 FinalizeNodeIterator(JSContext *cx, JSObject *obj)
 {
   nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
+  
+  if (nsnull != nodeIterator) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == nodeIterator->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+      owner->ResetScriptObject();
+      NS_RELEASE(owner);
+    }
 
-  // get the js object
-  nsIScriptObjectOwner *owner = nsnull;
-  if (NS_OK == nodeIterator->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-    owner->ResetScriptObject();
-    NS_RELEASE(owner);
+    nodeIterator->Release();
   }
-
-  nodeIterator->Release();
 }
 
 /***********************************************************************/
@@ -315,14 +316,14 @@ JSClass nodeIterator = {
 // NodeIterator class methods
 //
 static JSFunctionSpec nodeIteratorMethods[] = {
-  {"SetFilter",         SetFilter,          2},
-  {"GetLength",         GetLength,          0},
-  {"GetCurrentNode",    GetCurrentNode,     0},
-  {"GetNextNode",       GetNextNode,        0},
-  {"GetPreviousNode",   GetPreviousNode,    0},
-  {"ToFirst",           ToFirst,            0},
-  {"ToLast",            ToLast,             0},
-  {"MoveTo",            MoveTo,             1},
+  {"setFilter",         SetFilter,          2},
+  {"getLength",         GetLength,          0},
+  {"getCurrentNode",    GetCurrentNode,     0},
+  {"getNextNode",       GetNextNode,        0},
+  {"getPreviousNode",   GetPreviousNode,    0},
+  {"toFirst",           ToFirst,            0},
+  {"toLast",            ToLast,             0},
+  {"moveTo",            MoveTo,             1},
   {0}
 };
 

@@ -108,16 +108,17 @@ PR_STATIC_CALLBACK(void)
 FinalizeText(JSContext *cx, JSObject *obj)
 {
   nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != text, "null pointer");
   
-  // get the js object
-  nsIScriptObjectOwner *owner = nsnull;
-  if (NS_OK == text->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-    owner->ResetScriptObject();
-    NS_RELEASE(owner);
-  }
+  if (nsnull != text) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == text->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+      owner->ResetScriptObject();
+      NS_RELEASE(owner);
+    }
 
-  text->Release();
+    text->Release();
+  }
 }
 
 /***********************************************************************/
@@ -215,11 +216,11 @@ static JSPropertySpec textProperties[] =
 // Text class methods
 //
 static JSFunctionSpec textMethods[] = {
-  {"Append",          Append,     1},
-  {"Insert",          Insert,     2},
-  {"Delete",          Delete,     2},
-  {"Replace",         Replace,    3},
-  {"Splice",          Splice,     3},
+  {"append",          Append,     1},
+  {"insert",          Insert,     2},
+  {"delete",          Delete,     2},
+  {"replace",         Replace,    3},
+  {"splice",          Splice,     3},
   {0}
 };
 
