@@ -23,11 +23,9 @@
 #include "nsIPresContext.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
@@ -875,8 +873,6 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
       NS_MakeAbsoluteURL(aDocURL, area->mBase, area->mHREF, aAbsURL);
 #else
       nsresult rv;
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-      if (NS_FAILED(rv)) return PR_FALSE;
       // Set the image loader's source URL and base URL
       nsIURI* baseUri = nsnull;
       nsIHTMLContent* htmlContent;
