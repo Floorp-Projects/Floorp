@@ -977,48 +977,77 @@ function FillLinkMenulist(linkMenulist, headingsArray)
   var menupopup = linkMenulist.firstChild;
   var editor = GetCurrentEditor();
   try {
-    var NamedAnchorNodeList = editor.document.anchors;
-    var NamedAnchorCount = NamedAnchorNodeList.length;
-    if (NamedAnchorCount > 0)
+    var treeWalker = editor.document.createTreeWalker(editor.document, 1, null, true);
+    var headingList = [];
+    var anchorList = []; // for sorting
+    var anchorMap  = {}; // for weeding out duplicates and making heading anchors unique
+    var anchor;
+    var i;
+    for (var element = treeWalker.nextNode(); element; element = treeWalker.nextNode())
     {
-      for (var i = 0; i < NamedAnchorCount; i++)
-        createMenuItem(menupopup, "#" + NamedAnchorNodeList.item(i).name);
-    } 
-    for (var j = 1; j <= 6; j++)
-    {
-      var headingList = editor.document.getElementsByTagName("h" + j);
-      for (var k = 0; k < headingList.length; k++)
+      // grab headings
+      // Skip headings that already have a named anchor as their first child
+      //  (this may miss nearby anchors, but at least we don't insert another
+      //   under the same heading)
+      if (element instanceof HTMLHeadingElement && element.textContent &&
+          !(element.firstChild instanceof HTMLAnchorElement && element.firstChild.name))
+        headingList.push(element);
+
+      // grab named anchors
+      if (element instanceof HTMLAnchorElement && element.name)
       {
-        var heading = headingList.item(k);
-
-        // Skip headings that already have a named anchor as their first child
-        //  (this may miss nearby anchors, but at least we don't insert another
-        //   under the same heading)
-        var child = heading.firstChild;
-        if (child && child.nodeName == "A" && child.name && (child.name.length>0))
-          continue;
-
-        var range = editor.document.createRange();
-        range.setStart(heading,0);
-        var lastChildIndex = heading.childNodes.length;
-        range.setEnd(heading,lastChildIndex);
-        var text = range.toString();
-        if (text)
+        anchor = '#' + element.name;
+        if (!(anchor in anchorMap))
         {
-          // Use just first 40 characters, don't add "...",
-          //  and replace whitespace with "_" and strip non-word characters
-          text = "#" + ConvertToCDATAString(TruncateStringAtWordEnd(text, 40, false));
-          // Append "_" to any name already in the list
-          while (linkMenulist.getElementsByAttribute("label", text).length)
-            text += "_";
-          createMenuItem(menupopup, text);
-
-          // Save nodes in an array so we can create anchor node under it later
-          headingsArray[text] = heading;
+          anchorList.push({anchor: anchor, sortkey: anchor.toLowerCase()});
+          anchorMap[anchor] = true;
+        }
+      }
+      
+      // grab IDs
+      if (element.id)
+      {
+        anchor = '#' + element.id;
+        if (!(anchor in anchorMap))
+        {
+          anchorList.push({anchor: anchor, sortkey: anchor.toLowerCase()});
+          anchorMap[anchor] = true;
         }
       }
     }
-    if (!menupopup.hasChildNodes()) 
+    // add anchor for headings
+    for (i = 0; i < headingList.length; i++)
+    {
+      var heading = headingList[i];
+
+      // Use just first 40 characters, don't add "...",
+      //  and replace whitespace with "_" and strip non-word characters
+      anchor = '#' + ConvertToCDATAString(TruncateStringAtWordEnd(heading.textContent, 40, false));
+
+      // Append "_" to any name already in the list
+      while (anchor in anchorMap)
+        anchor += "_";
+      anchorList.push({anchor: anchor, sortkey: anchor.toLowerCase()});
+      anchorMap[anchor] = true;
+
+      // Save nodes in an array so we can create anchor node under it later
+      headingsArray[anchor] = heading;
+    }
+    if (anchorList.length)
+    {
+      // case insensitive sort
+      function compare(a, b)
+      {
+        if(a.sortkey < b.sortkey) return -1;
+        if(a.sortkey > b.sortkey) return 1;
+        return 0;
+      }
+      anchorList.sort(compare);
+
+      for (i = 0; i < anchorList.length; i++)
+        createMenuItem(menupopup,anchorList[i].anchor);
+    }
+    else
     {
       var item = createMenuItem(menupopup, GetString("NoNamedAnchorsOrHeadings"));
       item.setAttribute("disabled", "true");
