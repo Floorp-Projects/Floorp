@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.57 $ 
-# $Date: 2003/04/13 14:18:09 $ 
+# $Revision: 1.58 $ 
+# $Date: 2003/04/13 20:45:45 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -176,9 +176,10 @@ $NUM_OF_AVERAGE = 10;
  
 $NOTICE= TinderDB::Notice->new();
 
+$DEBUG=1;
+
 # Find the name of each build and the proper order to display them.
 # No part of the code should peek at keys %{ $DATABASE{$tree} } directly.
-
 
 sub build_names {
   my ($tree) = (@_);
@@ -1005,7 +1006,10 @@ sub apply_db_updates {
           # have this new start time.  Instead we fix the end time
           # of the last build.
           
-          if ($record->{'starttime'} < $previous_rec->{'endtime'}) {
+          if ( 
+               ($previous_rec->{'endtime'}) &&
+               ($record->{'starttime'} < $previous_rec->{'endtime'}) 
+               ) {
               $previous_rec->{'endtime'} = $record->{'starttime'};
           }
        } 
@@ -1166,8 +1170,171 @@ sub status_table_start {
 }
 
 
+# create the popup window links for this cell.
+sub buildcell_links {
+    my  ($current_rec, $tree, $buildname) = @_;
 
 
+    # the list of links with popup windows we are creating
+    my ($links) = '';
+
+    # a copy of the list of links which will appear inside the
+    # popupwindow
+    my ($index_links) = '';
+
+    my ($title) = "Build Info Buildname: $buildname";
+
+    # Build Log Link
+
+    # We wish to encourage people to use the brief log.  If they need
+    # the full log they can get there from the brief log page.
+
+    if ($current_rec->{'brieflog'}) {
+      $index_links.= "\t\t\t".
+          HTMLPopUp::Link(
+                          "linktxt"=>"View Summary Log", 
+                          # the mail processor tells us the URL to
+                          # retreive the log files.
+                          "href"=>$current_rec->{'brieflog'},
+                          )."<br>\n";
+    }
+    
+    if ($current_rec->{'fulllog'}) {
+      $index_links.= "\t\t\t".
+        HTMLPopUp::Link(
+                        "linktxt"=>"View Full Log", 
+                        # the mail processor tells us the URL to
+                        # retreive the log files.
+                        "href"=>$current_rec->{'fulllog'},
+                       )."<br>\n";
+  }
+    
+    # Binary file Link
+    
+    if ($current_rec->{'binaryname'}) {
+          $index_links.= "\t\t\t".HTMLPopup::Link(
+                                              "linktxt"=>"Get Binary File",
+                                              "href"=>$current_rec->{'binaryname'},
+                                              )."<br>\n";
+    }
+    
+    if ( $current_rec->{'previousbuildtime'} ) {
+
+      # If the current build is broken, show what to see what has
+      # changed in VC during the last build.
+
+      my ($maxdate) = $current_rec->{'starttime'};
+      my ($mindate) = $current_rec->{'previousbuildtime'};
+
+      $index_links .= (
+                 "\t\t\t". 
+                 VCDisplay::query(
+                                   'linktxt'=> "Changes since last build",
+                                   'tree' => $tree,
+                                   'mindate' => $mindate,
+                                   'maxdate' => $maxdate,
+                                  ).
+                       "<br>\n"
+                       );
+  }
+    # Build Log Link
+
+    # We wish to encourage people to use the brief log.  If they need
+    # the full log they can get there from the brief log page.
+
+    if ($current_rec->{'brieflog'}) {
+      $links.= "\t\t\t".
+        HTMLPopUp::Link(
+                        "linktxt"=>"l", 
+                        # the mail processor tells us the URL to
+                        # retreive the log files.
+                        "href"=>$current_rec->{'brieflog'},
+                        "windowtxt"=>$current_rec->{'info'}.$index_links, 
+                        "windowtitle" =>$title,
+                       )."\n";
+    }
+    
+    if ($current_rec->{'fulllog'}) {
+      $links.= "\t\t\t".
+        HTMLPopUp::Link(
+                        "linktxt"=>"L", 
+                        # the mail processor tells us the URL to
+                        # retreive the log files.
+                        "href"=>$current_rec->{'fulllog'},
+                        "windowtxt"=>$current_rec->{'info'}.$index_links, 
+                        "windowtitle" =>$title,
+                       )."\n";
+  }
+    
+    # Binary file Link
+    
+    if ($current_rec->{'binaryname'}) {
+      $links.= "\t\t\t".HTMLPopup::Link(
+                                 "linktxt"=>"B",
+                                 "href"=>$current_rec->{'binaryname'},
+                                 "windowtxt"=>$current_rec->{'info'}.$index_links, 
+                                 "windowtitle" =>$title,
+                                )."\n";
+    }
+    
+    # Bloat Data Link
+
+    if ($current_rec->{'bloatdata'}) {
+      $links.= "\t\t\t".
+        HTMLPopUp::Link(
+                        "windowtxt"=>$current_rec->{'info'}, 
+                        "windowtitle" =>$title,
+                        "linktxt"=>$current_rec->{'bloat_data'}.$index_links,
+                        "href"=>(
+                                 "$FileStructure::URLS{'gunzip'}?".
+                                 "tree=$tree&".
+                                 "brief-log=$current_rec->{'brieflog'}"
+                                ),
+                       )."\n";
+    }
+    
+    # What Changed Link
+    if ( $current_rec->{'previousbuildtime'} ) {
+
+      # If the current build is broken, show what to see what has
+      # changed in VC during the last build.
+
+      my ($maxdate) = $current_rec->{'starttime'};
+      my ($mindate) = $current_rec->{'previousbuildtime'};
+
+      $links .= (
+                 "\t\t\t". 
+                 VCDisplay::query(
+                                   'linktxt'=> "C",
+                                   'tree' => $tree,
+                                   'mindate' => $mindate,
+                                   'maxdate' => $maxdate,
+                                   "windowtxt"=>$current_rec->{'info'}.$index_links, 
+                                   "windowtitle" =>$title,
+                                  ).
+                 "\n"
+                );
+    }
+
+    # Error count (not a link, but hey)
+
+    if ( ($DISPLAY_BUILD_ERRORS) && ($current_rec->{'errors'}) ) {
+        $links .= (
+                   "\t\t\t<br>errs: ". 
+                   $current_rec->{'errors'}."\n".
+                   "");
+    }
+
+    if ($current_rec->{'print'}) {
+        $links .= (
+                   "\t\t\t". 
+                   $current_rec->{'print'}.
+                   "\n".
+                   "");
+    }
+
+    return $links;
+}
 
 sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
@@ -1187,14 +1354,16 @@ sub status_table_row {
     # skip this column?
 
     if ( $NEXT_ROW{$tree}{$buildname} !=  $row_index ) {
-      
-      push @outrow, ("\t<!-- skipping: Build: ".
-                     "tree: $tree, ".
-                     "build: $buildname, ".
-                     "additional_skips: ".
-                     ($NEXT_ROW{$tree}{$buildname} -  $row_index).", ".
-                     "previous_end: ".localtime($current_rec->{'timenow'}).", ".
-                     " -->\n");
+        
+        if ($DEBUG) {
+            push @outrow, ("\t<!-- skipping: Build: ".
+                           "tree: $tree, ".
+                           "build: $buildname, ".
+                           "additional_skips: ".
+                           ($NEXT_ROW{$tree}{$buildname} -  $row_index).", ".
+                           "previous_end: ".localtime($current_rec->{'timenow'}).", ".
+                           " -->\n");
+        }
       next;
     }
     
@@ -1234,13 +1403,15 @@ sub status_table_row {
           $cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
       }
 
-      push @outrow, ("\t<!-- not_running: Build:".
-                     "tree: $tree, ".
-                     "build: $buildname, ".
-                     "previous_end: $lc_time, ".
-                     "-->\n".
-                     
-                     "\t\t<td align=center $cell_options>".
+      if ($DEBUG) {
+          push @outrow, ("\t<!-- not_running: Build:".
+                         "tree: $tree, ".
+                         "build: $buildname, ".
+                         "previous_end: $lc_time, ".
+                         "-->\n");
+      }
+      
+      push @outrow, ("\t\t<td align=center $cell_options>".
                      "$cell_contents</td>\n");
 
       next;
@@ -1268,109 +1439,13 @@ sub status_table_row {
     my ($char) = BuildStatus::status2hdml_chars($status);
     my $text_browser_color_string = 
       HTMLPopUp::text_browser_color_string($cell_color, $char);
-    
-    my ($links) = '';
-    my ($title) = "Build Info Buildname: $buildname";
 
+    my $links;
     if ($text_browser_color_string) {
         $links.=  "\t\t\t".$text_browser_color_string."\n";
     }
 
-    # Build Log Link
-
-    # We wish to encourage people to use the brief log.  If they need
-    # the full log they can get there from the brief log page.
-
-    if ($current_rec->{'brieflog'}) {
-      $links.= "\t\t\t".
-        HTMLPopUp::Link(
-                        "linktxt"=>"l", 
-                        # the mail processor tells us the URL to
-                        # retreive the log files.
-                        "href"=>$current_rec->{'brieflog'},
-                        "windowtxt"=>$current_rec->{'info'}, 
-                        "windowtitle" =>$title,
-                       )."\n";
-    }
-    
-    if ($current_rec->{'fulllog'}) {
-      $links.= "\t\t\t".
-        HTMLPopUp::Link(
-                        "linktxt"=>"L", 
-                        # the mail processor tells us the URL to
-                        # retreive the log files.
-                        "href"=>$current_rec->{'fulllog'},
-                        "windowtxt"=>$current_rec->{'info'}, 
-                        "windowtitle" =>$title,
-                       )."\n";
-    }
-    
-    # Binary file Link
-    
-    if ($current_rec->{'binaryname'}) {
-      $links.= "\t\t\t".HTMLPopup::Link(
-                                 "linktxt"=>"B",
-                                 "href"=>$current_rec->{'binaryname'},
-                                 "windowtxt"=>$current_rec->{'info'}, 
-                                 "windowtitle" =>$title,
-                                )."\n";
-    }
-    
-    # Bloat Data Link
-
-    if ($current_rec->{'bloatdata'}) {
-      $links.= "\t\t\t".
-        HTMLPopUp::Link(
-                        "windowtxt"=>$current_rec->{'info'}, 
-                        "windowtitle" =>$title,
-                        "linktxt"=>$current_rec->{'bloat_data'},
-                        "href"=>(
-                                 "$FileStructure::URLS{'gunzip'}?".
-                                 "tree=$tree&".
-                                 "brief-log=$current_rec->{'brieflog'}"
-                                ),
-                       )."\n";
-    }
-    
-    # What Changed Link
-    if ( $current_rec->{'previousbuildtime'} ) {
-
-      # If the current build is broken, show what to see what has
-      # changed in VC during the last build.
-
-      my ($maxdate) = $current_rec->{'starttime'};
-      my ($mindate) = $current_rec->{'previousbuildtime'};
-
-      $links .= (
-                 "\t\t\t". 
-                 VCDisplay::query(
-                                   'linktxt'=> "C",
-                                   'tree' => $tree,
-                                   'mindate' => $mindate,
-                                   'maxdate' => $maxdate,
-                                   "windowtxt"=>$current_rec->{'info'}, 
-                                   "windowtitle" =>$title,
-                                  ).
-                 "\n"
-                );
-    }
-
-    # Error count (not a link, but hey)
-
-    if ( ($DISPLAY_BUILD_ERRORS) && ($current_rec->{'errors'}) ) {
-        $links .= (
-                   "\t\t\t<br>errs: ". 
-                   $current_rec->{'errors'}."\n".
-                   "");
-    }
-
-    if ($current_rec->{'print'}) {
-        $links .= (
-                   "\t\t\t". 
-                   $current_rec->{'print'}.
-                   "\n".
-                   "");
-    }
+    $links .= buildcell_links($current_rec, $tree, $buildname);
 
     # put link to view Notices
     my $notice = $NOTICE->Notice_Link(
