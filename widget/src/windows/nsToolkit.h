@@ -156,44 +156,38 @@ class  nsWindow;
  */ 
 
 #ifndef WINCE
-class MouseTrailer {
-
+class MouseTrailer 
+{
 public:
-    static  MouseTrailer * GetMouseTrailer(DWORD aThreadID);
-    static  nsWindow     * GetMouseTrailerWindow();
-    static  nsWindow     * GetCaptureWindow() { return mCaptureWindow; }
+    static MouseTrailer  &GetSingleton() { return mSingleton; }
+    
+    nsWindow             *GetMouseTrailerWindow() { return mHoldMouseWindow; }
+    nsWindow             *GetCaptureWindow() { return mCaptureWindow; }
 
-    static  void           SetMouseTrailerWindow(nsWindow * aNSWin);
-    static  void           SetCaptureWindow(nsWindow * aNSWin);
-    static  void           IgnoreNextCycle() { gIgnoreNextCycle = PR_TRUE; } 
-
-    static  void           TimerProc(nsITimer* aTimer, void* aClosure);
-
-private:
-      /// Global nsToolkit Instance
-    static MouseTrailer* theMouseTrailer;
-
-public:
-                            ~MouseTrailer();
-
-            nsresult        CreateTimer();
-            void            DestroyTimer();
+    void                  SetMouseTrailerWindow(nsWindow * aNSWin);
+    void                  SetCaptureWindow(nsWindow * aNSWin);
+    void                  IgnoreNextCycle() { mIgnoreNextCycle = PR_TRUE; } 
+    void                  DestroyTimer();
 
 private:
-                            MouseTrailer();
+                          MouseTrailer();
+                          ~MouseTrailer();
 
-private:
-    /* global information for mouse enter/exit events
-     */
-    //@{
-      /// last window
-    static nsWindow* mHoldMouse;
-    static nsWindow* mCaptureWindow;
-    static PRBool    mIsInCaptureMode;
-    /// timer
-    nsCOMPtr<nsITimer> mTimer;
-    static PRBool gIgnoreNextCycle;
-    //@}
+    nsresult              CreateTimer();
+
+    static void           TimerProc(nsITimer* aTimer, void* aClosure);
+
+    // Global nsToolkit Instance
+    static MouseTrailer   mSingleton;
+
+    // information for mouse enter/exit events
+    // last window
+    nsWindow             *mHoldMouseWindow;
+    nsWindow             *mCaptureWindow;
+    PRBool                mIsInCaptureMode;
+    PRBool                mIgnoreNextCycle;
+    // timer
+    nsCOMPtr<nsITimer>    mTimer;
 
 };
 #endif // WINCE
