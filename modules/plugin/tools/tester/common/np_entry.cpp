@@ -51,6 +51,10 @@ NPNetscapeFuncs NPNFuncs;
 
 NPError OSCALL NP_Shutdown()
 {
+  if (pLogger) {
+    delete pLogger;
+    pLogger = NULL;
+  }
   return NPERR_NO_ERROR;
 }
 
