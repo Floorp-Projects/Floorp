@@ -144,6 +144,13 @@ public class DynamicScopes {
                 // We can share the scope.
                 Scriptable threadScope = cx.newObject(scope);
                 threadScope.setPrototype(scope);
+                
+                // We want "threadScope" to be a new top-level 
+                // scope, so set its parent scope to null. This 
+                // means that any variables created by assignments
+                // will be properties of "threadScope".
+                threadScope.setParentScope(null);
+                
                 // Create a JavaScript property of the thread scope named
                 // 'x' and save a value for it.
                 threadScope.put("x", threadScope, x);
