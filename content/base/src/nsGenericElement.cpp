@@ -1294,13 +1294,13 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
   return ret;
 }
 
-static char kNameSpaceSeparator[] = ":";
+static char kNameSpaceSeparator = ':';
 
 nsIAtom*  
 nsGenericElement::CutNameSpacePrefix(nsString& aString)
 {
   nsAutoString  prefix;
-  PRInt32 nsoffset = aString.Find(kNameSpaceSeparator);
+  PRInt32 nsoffset = aString.FindChar(kNameSpaceSeparator);
   if (-1 != nsoffset) {
     aString.Left(prefix, nsoffset);
     aString.Cut(0, nsoffset+1);
