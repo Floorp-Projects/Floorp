@@ -424,7 +424,9 @@ PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::src, value))) {
       if (eHTMLUnit_String == value.GetUnit()) {
         value.GetStringValue(aResult);
-        result = PR_TRUE;
+        if (aResult.Length() > 0) {
+          result = PR_TRUE;
+        }
       }
     }
     NS_RELEASE(content);
@@ -737,21 +739,26 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
     GetParentContent(content);
 
     nsAutoString url;
-    GetURL(content, url);
+    PRBool hasURL = GetURL(content, url);
     nsSize size;
- 
-    if (nsnull == mWebShell) {
-      rv = CreateWebShell(aPresContext, aReflowState.maxSize);
-    }
 
-    if (nsnull != mWebShell) {
-      mCreatingViewer=PR_TRUE;
+    // if the size is not 0 and there is a src, create the web shell
+    if ((aReflowState.maxSize.width >= 0) && (aReflowState.maxSize.height >= 0) && hasURL) {
+      if (nsnull == mWebShell) {
+        rv = CreateWebShell(aPresContext, aReflowState.maxSize);
+      }
 
-      // load the document
-      nsString absURL;
-      TempMakeAbsURL(content, url, absURL);
+      if (nsnull != mWebShell) {
+        mCreatingViewer=PR_TRUE;
 
-      rv = mWebShell->LoadURL(absURL);  // URL string with a default nsnull value for post Data
+        // load the document
+        nsString absURL;
+        TempMakeAbsURL(content, url, absURL);
+
+        rv = mWebShell->LoadURL(absURL);  // URL string with a default nsnull value for post Data
+      }
+    } else {
+      mCreatingViewer = PR_TRUE;
     }
     NS_RELEASE(content);
   }
@@ -762,21 +769,24 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.descent = 0;
 
   // resize the sub document
-  float t2p = aPresContext.GetTwipsToPixels();
-  nsRect subBounds;
+  if (mWebShell) {
+    float t2p = aPresContext.GetTwipsToPixels();
+    nsRect subBounds;
 
-  mWebShell->GetBounds(subBounds.x, subBounds.y,
+    mWebShell->GetBounds(subBounds.x, subBounds.y,
                        subBounds.width, subBounds.height);
-  subBounds.width  = NSToCoordRound(aDesiredSize.width * t2p);
-  subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
-  mWebShell->SetBounds(subBounds.x, subBounds.y,
+    subBounds.width  = NSToCoordRound(aDesiredSize.width * t2p);
+    subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
+    mWebShell->SetBounds(subBounds.x, subBounds.y,
                        subBounds.width, subBounds.height);
-  mWebShell->Repaint(PR_TRUE); 
-  aStatus = NS_FRAME_COMPLETE;
+    mWebShell->Repaint(PR_TRUE); 
+    aStatus = NS_FRAME_COMPLETE;
 
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
+    NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+      ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
       aDesiredSize.width, aDesiredSize.height, aStatus));
+  }
+    
   return rv;
 }
 
@@ -791,14 +801,19 @@ nsHTMLFrameInnerFrame::ReloadURL()
     nsAutoString url;
     GetURL(content, url);
 
-    if (nsnull != mWebShell) {
-      mCreatingViewer=PR_TRUE;
+    // load a new url if the size is not 0
+    if ((mRect.width > 0) && (mRect.height > 0)) {
+      if (nsnull != mWebShell) {
+        mCreatingViewer=PR_TRUE;
 
-      // load the document
-      nsString absURL;
-      TempMakeAbsURL(content, url, absURL);
+        // load the document
+        nsString absURL;
+        TempMakeAbsURL(content, url, absURL);
 
-      rv = mWebShell->LoadURL(absURL);  // URL string with a default nsnull value for post Data
+        rv = mWebShell->LoadURL(absURL);  // URL string with a default nsnull value for post Data
+      }
+    } else {
+      mCreatingViewer = PR_TRUE;
     }
     NS_RELEASE(content);
   }
