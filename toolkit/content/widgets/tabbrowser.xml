@@ -51,7 +51,7 @@
 
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
-      <xul:tabbox flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
+      <xul:tabbox flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown" eventnode="document"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
@@ -542,7 +542,11 @@
             if (this.mCurrentBrowser) {
               this.mCurrentBrowser.focusedWindow = document.commandDispatcher.focusedWindow;
               this.mCurrentBrowser.focusedElement = document.commandDispatcher.focusedElement;
-               this.mCurrentBrowser.setAttribute("type", "content");
+              if (this.mCurrentBrowser.focusedElement) {
+                // Clear focus outline before we draw on top of it
+                this.mCurrentBrowser.focusedElement.blur();
+              }
+              this.mCurrentBrowser.setAttribute("type", "content");
             }
             
             var updatePageReport = false;
@@ -617,24 +621,34 @@
               }
             }
 
-            function setFocus(element) {
-              Components.lookupMethod(element, "focus").call(element);
+            if (document.commandDispatcher.focusedElement &&
+                document.commandDispatcher.focusedElement.parentNode ==
+                this.mCurrentTab.parentNode) {
+              // The focus is on a tab in the same tab panel
+              return;  // If focus was on a tab, switching tabs focuses the new tab
             }
 
+            var whatToFocus = window.content;
+
             // Focus the previously focused element or window
-            document.commandDispatcher.suppressFocusScroll = true;
             if (newBrowser.focusedElement) {
-              try {
-                setFocus(newBrowser.focusedElement);
-              } catch (e) {
-                setFocus(newBrowser.focusedWindow);
+              if (newBrowser.focusedElement.parentNode !=
+                  this.mCurrentTab.parentNode) {
+                // Focus the remembered element unless it's in the current tab panel
+                whatToFocus = newBrowser.focusedElement;
               }
             }
-            else if (newBrowser.focusedWindow)
-              setFocus(newBrowser.focusedWindow);
-            else // new tab, focus our new content area
-              setTimeout(setFocus, 0, window.content);
-            document.commandDispatcher.suppressFocusScroll = false;    
+            else if (newBrowser.focusedWindow) {
+              whatToFocus = newBrowser.focusedWindow;
+            }
+
+            function setFocus(element) {
+              document.commandDispatcher.suppressFocusScroll = true;
+              Components.lookupMethod(element, "focus").call(element);
+              document.commandDispatcher.suppressFocusScroll = false;    
+            }
+
+            setTimeout(setFocus, 0, window.content);
           ]]>
         </body>
       </method>
@@ -1594,6 +1608,7 @@
         <![CDATA[
           this.mCurrentBrowser = this.getBrowserAtIndex(0);
           this.mCurrentTab = this.mTabContainer.firstChild;
+          this.mTabBox.handleCtrlTab = !/Mac/.test(navigator.platform);
           document.addEventListener("keypress", this._keyEventHandler, false);
         ]]>
       </constructor>
