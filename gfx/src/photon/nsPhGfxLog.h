@@ -24,20 +24,3 @@
 #include <signal.h>
 
 extern PRLogModuleInfo *PhGfxLog;
-extern unsigned char PhGfxLogState;
-#undef PR_LOG
-
-#define PR_LOG(_module,_level,_args) \
-PR_BEGIN_MACRO \
-  if (_module == nsnull) { \
-    printf("nsPhGfxLog: defining PhGfxLog\n"); \
-    PhGfxLog = PR_NewLogModule("PhGfxLog");   \
-    PR_SetLogFile("logfile.txt"); \
-  } \
-  if ((_module)->level >= (_level)) \
-    PR_LogPrint _args ;\
-  else if (PhGfxLogState) \
-    PR_LogPrint _args ;\
-PR_END_MACRO
-
-
