@@ -1096,6 +1096,22 @@ void nsCString::AppendWithConversion(float aFloat){
   Append(buf);
 }
 
+/**
+ * append given string to this string; 
+ * @update  gess 01/04/99
+ * @param   aString : string to be appended to this
+ * @return  this
+ */
+void nsCString::AppendWithConversion(const nsString& aString,PRInt32 aCount) {
+
+  if(aCount<0)
+    aCount=aString.mLength;
+  else aCount=MinInt(aCount,aString.mLength);
+
+  if(0<aCount)
+    StrAppend(*this,aString,0,aCount);
+}
+
 
 /*
  *  Copies n characters from this left of this string to given string,

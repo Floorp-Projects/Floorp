@@ -452,6 +452,7 @@ public:
    *  @return  number of chars copied
    */
 
+  void AppendWithConversion(const nsString&, PRInt32=-1);
   void AppendWithConversion(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
   void AppendWithConversion(float aFloat);
   void AppendWithConversion(PRUnichar aChar);
