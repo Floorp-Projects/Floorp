@@ -28,7 +28,7 @@ treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > t
 }
 
 treeitem[id="NC:SiteMapRoot"] > treerow > treecell > titledbutton {
-    list-style-image: url("resource:/res/samples/sitemap.gif");
+    list-style-image: url("chrome://related/skin/sitemap.gif");
 }
 
 treeitem[container="true"][open="true"] > treerow > treecell > titledbutton {
