@@ -332,12 +332,12 @@ function SwitchPanel(panel)
   if (gCurrentPanel != panel)
   {
     // Set index for starting panel on the <tabpanels> element
-    gDialog.TabPanels.setAttribute("selectedIndex", panel);
+    gDialog.TabPanels.selectedIndex = panel;
     if (panel == gSettingsPanel)
     {
       // Trigger setting of style for the tab widgets
-      gDialog.SettingsTab.setAttribute("selected", "true");
-      gDialog.PublishTab.removeAttribute("selected");
+      gDialog.SettingsTab.selected = "true";
+      gDialog.PublishTab.selected = null;
 
       // We collapse part of the Settings panel so the Publish Panel can be more compact
       if (gDialog.ServerSettingsBox.getAttribute("collapsed"))
@@ -346,8 +346,8 @@ function SwitchPanel(panel)
         window.sizeToContent();
       }
     } else {
-      gDialog.PublishTab.setAttribute("selected", "true");
-      gDialog.SettingsTab.removeAttribute("selected");
+      gDialog.PublishTab.selected = "true";
+      gDialog.SettingsTab.selected = null;
       
       if (!SeeMore)
       {
