@@ -608,7 +608,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 	  	event.eventStructType = NS_MOUSE_EVENT;
 	  	event.message = NS_MENU_ACTION;
 
-	  	nsCOMPtr<nsIContent> contentNode = do_QueryInterface(mDOMNode);
+	  	nsCOMPtr<nsIContent> contentNode = do_QueryInterface(domElement);
 	  	if (!contentNode) {
 	      	NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
 	      	return nsEventStatus_eConsumeNoDefault;
