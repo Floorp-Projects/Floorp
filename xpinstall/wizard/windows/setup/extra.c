@@ -1906,7 +1906,6 @@ HRESULT LaunchApps()
   BOOL      bArchiveFound;
   siC       *siCObject = NULL;
   char      szArchive[MAX_BUF];
-  char      szBuf[MAX_BUF];
   char      szMsg[MAX_BUF];
 
   LogISLaunchApps(W_START);
@@ -1944,13 +1943,39 @@ HRESULT LaunchApps()
       if(bArchiveFound)
       {
         char szParameterBuf[MAX_BUF];
+        char szSpawnFile[MAX_BUF];
+        char szMessageString[MAX_BUF];
+        DWORD dwErr = FO_SUCCESS;
+
+        wsprintf(szMessageString, szMsg, siCObject->szDescriptionShort);
+        ShowMessage(szMessageString, TRUE);
+        DecryptString(szParameterBuf, siCObject->szParameter);
+
+        lstrcpy(szSpawnFile, szArchive);
+        if(siCObject->dwAttributes & SIC_UNCOMPRESS)
+        {
+          if((dwErr = FileUncompress(szArchive, szTempDir)) == FO_SUCCESS)
+          {
+            lstrcpy(szSpawnFile, szTempDir);
+            AppendBackSlash(szSpawnFile, sizeof(szSpawnFile));
+            lstrcat(szSpawnFile, siCObject->szArchiveNameUncompressed);
+          }
+
+          LogISLaunchAppsComponentUncompress(siCObject->szDescriptionShort, dwErr);
+          if(dwErr != FO_SUCCESS)
+          {
+            ShowMessage(szMessageString, FALSE);
+            continue;
+          }
+        }
 
         LogISLaunchAppsComponent(siCObject->szDescriptionShort);
-        wsprintf(szBuf, szMsg, siCObject->szDescriptionShort);
-        ShowMessage(szBuf, TRUE);
-        DecryptString(szParameterBuf, siCObject->szParameter);
-        WinSpawn(szArchive, szParameterBuf, szTempDir, SW_SHOWNORMAL, TRUE);
-        ShowMessage(szBuf, FALSE);
+        WinSpawn(szSpawnFile, szParameterBuf, szTempDir, SW_SHOWNORMAL, TRUE);
+
+        if(siCObject->dwAttributes & SIC_UNCOMPRESS)
+          FileDelete(szSpawnFile);
+
+        ShowMessage(szMessageString, FALSE);
       }
     }
     ++dwIndex0;
@@ -2577,6 +2602,8 @@ siC *CreateSiCNode()
 
   if((siCNode->szArchiveName = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
+  if((siCNode->szArchiveNameUncompressed = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
   if((siCNode->szArchivePath = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
   if((siCNode->szDestinationPath = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -2633,6 +2660,7 @@ void SiCNodeDelete(siC *siCTemp)
     FreeMemory(&(siCTemp->szDestinationPath));
     FreeMemory(&(siCTemp->szArchivePath));
     FreeMemory(&(siCTemp->szArchiveName));
+    FreeMemory(&(siCTemp->szArchiveNameUncompressed));
     FreeMemory(&(siCTemp->szParameter));
     FreeMemory(&(siCTemp->szReferenceName));
     FreeMemory(&(siCTemp->szDescriptionLong));
@@ -3822,6 +3850,8 @@ HRESULT ParseComponentAttributes(char *szAttribute)
     dwAttributes |= SIC_IGNORE_DOWNLOAD_ERROR;
   if(strstr(szBuf, "IGNORE_XPINSTALL_ERROR"))
     dwAttributes |= SIC_IGNORE_XPINSTALL_ERROR;
+  if(strstr(szBuf, "UNCOMPRESS"))
+    dwAttributes |= SIC_UNCOMPRESS;
 
   return(dwAttributes);
 }
@@ -3946,6 +3976,14 @@ void InitSiComponents(char *szFileIni)
 
         /* store name of archive for component */
         lstrcpy(siCTemp->szArchiveName, szBuf);
+
+        /* store name of the uncompressed archive for the component */
+        GetPrivateProfileString(szComponentSection,
+                                "Archive Uncompressed",
+                                "",
+                                siCTemp->szArchiveNameUncompressed,
+                                sizeof(szBuf),
+                                szFileIni);
         
         /* get short description of component */
         GetPrivateProfileString(szComponentSection, "Description Short", "", szBuf, sizeof(szBuf), szFileIni);

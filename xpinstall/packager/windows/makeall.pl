@@ -26,6 +26,8 @@
 # This perl script builds the xpi, config.ini, and js files.
 #
 
+use Cwd;
+
 # Make sure MOZ_SRC is set.
 if($ENV{MOZ_SRC} eq "")
 {
@@ -64,15 +66,17 @@ $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
 $seiFileNameSpecificStub  = "mozilla-win32-stub-installer.exe";
 $seuFileNameSpecific  = "MozillaUninstall.exe";
+$seuzFileNameSpecific = "mozillauninstall.zip";
 
 # set environment vars for use by other .pl scripts called from this script.
-$ENV{WIZ_userAgent}            = "0.9.2 (en)"; # ie: "0.9 (en)"
-$ENV{WIZ_userAgentShort}       = "0.9.2";      # ie: "0.9"
-$ENV{WIZ_xpinstallVersion}     = "0.9.2";      # ie: "0.9.0"
+$ENV{WIZ_userAgent}            = "0.9.4 (en)"; # ie: "0.9 (en)"
+$ENV{WIZ_userAgentShort}       = "0.9.4";      # ie: "0.9"
+$ENV{WIZ_xpinstallVersion}     = "0.9.4";      # ie: "0.9.0"
 $ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "Mozilla";
 $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
+$ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
 
 # Set the location of the local tmp stage directory
 $gLocalTmpStage = $inStagePath;
@@ -292,6 +296,21 @@ if((!(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcrt.dll")) ||
 # end of script
 exit(0);
 
+sub MakeExeZip
+{
+  my($aSrcDir, $aExeFile, $aZipFile) = @_;
+  my($saveCwdir);
+
+  $saveCwdir = cwd();
+  chdir($aSrcDir);
+  if(system("$ENV{MOZ_TOOLS}\\bin\\zip $inDistPath\\xpi\\$aZipFile $aExeFile"))
+  {
+    chdir($saveCwdir);
+    die "\n Error: $ENV{MOZ_TOOLS}\\bin\\zip $inDistPath\\xpi\\$aZipFile $aExeFile";
+  }
+  chdir($saveCwdir);
+}
+
 sub PrintUsage
 {
   die "usage: $0 <default version> <staging path> <dist install path> [options]
@@ -401,11 +420,9 @@ sub MakeUninstall
     print "\n Error: $inDistPath\\nsztool.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*\n";
     return(1);
   }
-  if(system("copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi"))
-  {
-    print "\n Error: copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi\n";
-    return(1);
-  }
+
+  MakeExeZip($inDistPath, $seuFileNameSpecific, $seuzFileNameSpecific);
+  unlink <$inDistPath\\$seuFileNameSpecific>;
   return(0);
 }
 
