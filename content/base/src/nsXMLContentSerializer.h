@@ -110,6 +110,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                      const nsAString& aValue,
                      nsAString& aStr,
                      PRBool aDoEscapeEntities);
+  PRBool IsShorthandAttr(const nsIAtom* aAttrName,
+                         const nsIAtom* aElementName);
 
   PRInt32 mPrefixIndex;
   nsVoidArray mNameSpaceStack;
