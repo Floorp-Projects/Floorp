@@ -273,8 +273,6 @@ MRESULT EXPENTRY fndpDirPicker( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
          // prep window
          CenterWindow( hwnd, WinQueryWindow( hwnd, QW_OWNER));
 
-         // XXX make dynamic, save fontnamesize
-         WinSetPresParam( hwnd, PP_FONTNAMESIZE, 11, (PVOID)"9.WarpSans");
          // XXX colour for container bg?
          // XXX Do help later
          WinEnableControl( hwnd, IDD_HELPBUTTON, FALSE);

@@ -83,10 +83,6 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
    //                 Both combobox and (atm) nsBrowserWindow depend on this.
    lHtEntryfield = 26;
 
-   rc = WinLoadString( 0/*hab*/, hModResources, ID_STR_FONT, 256, buffer);
-   if( !rc) strcpy( buffer, "8.Helv");
-   pszFontNameSize = strdup( buffer);
-
    hptrSelect = hptrFrameIcon = 0;
    idSelect = 0;
 
@@ -133,7 +129,6 @@ nsWidgetModuleData::~nsWidgetModuleData()
       WinDestroyPointer( hptrFrameIcon);
    if( hModResources)
       DosFreeModule( hModResources);
-   free( pszFontNameSize);
 #if 0
    delete mWindows;
 #endif

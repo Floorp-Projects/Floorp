@@ -131,7 +131,6 @@ class nsWidgetModuleData
    SIZEL   szScreen;        // size of screen in pixels
    BOOL    bMouseSwitched;  // true if MB1 is the RH mouse button
    LONG    lHtEntryfield;   // ideal height of an entryfield
-   char   *pszFontNameSize; // fns for default widget font
    BOOL    bIsDBCS;         // true if system is dbcs
 
    // xptoolkit services we look after, & the primaeval appshell too.
