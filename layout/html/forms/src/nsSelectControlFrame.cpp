@@ -731,6 +731,7 @@ nsSelectControlFrame::Reset()
   // if none were selected, select 1st one if we are a combo box
   if (mIsComboBox && (numOptions > 0) && (selectedIndex < 0)) {
     listWidget->SelectItem(0);
+    SetOptionSelected(0, PR_TRUE);
   }
   NS_RELEASE(listWidget);
   NS_RELEASE(options);
