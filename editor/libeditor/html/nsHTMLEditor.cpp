@@ -1631,14 +1631,14 @@ nsHTMLEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver)
 
   if (content) 
   { 
-    nsCOMPtr<nsIContent> parent; 
-    if (NS_SUCCEEDED(content->GetParent(getter_AddRefs(parent))) && parent)
+    nsIContent* parent = content->GetParent();
+    if (parent)
     { 
       PRInt32 index; 
       if (NS_FAILED(parent->IndexOf(content, index)) || index < 0 ) 
       { 
         rootElement = do_QueryInterface(parent); //this will put listener on the form element basically 
-        result = rootElement->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void **)aEventReceiver); 
+        result = CallQueryInterface(rootElement, aEventReceiver); 
       } 
       else 
         rootElement = 0; // Let the event receiver work on the document instead of the root element 

@@ -325,8 +325,7 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
   if (!window || !actionURL || !formNode)
     return NS_OK;
   
-  nsCOMPtr<nsIDocument> document;
-  formNode->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDocument> document = formNode->GetDocument();
   if (!document) return NS_OK;
 
   nsCOMPtr<nsIURI> formURL;

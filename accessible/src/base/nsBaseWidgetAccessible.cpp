@@ -295,22 +295,18 @@ PRBool nsLinkableAccessible::IsALink()
   if (mIsALinkCached)  // Cached answer?
     return mLinkContent? PR_TRUE: PR_FALSE;
 
-  nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
-  if (walkUpContent) {
-    nsCOMPtr<nsIContent> tempContent = walkUpContent;
-    while (walkUpContent) {
-      nsCOMPtr<nsILink> link(do_QueryInterface(walkUpContent));
-      if (link) {
-        mLinkContent = tempContent;
-        mIsALinkCached = PR_TRUE;
-        nsLinkState linkState;
-        link->GetLinkState(linkState);
-        if (linkState == eLinkState_Visited)
-          mIsLinkVisited = PR_TRUE;
-        return PR_TRUE;
-      }
-      walkUpContent->GetParent(getter_AddRefs(tempContent));
-      walkUpContent = tempContent;
+  for (nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
+       walkUpContent;
+       walkUpContent = walkUpContent->GetParent()) {
+    nsCOMPtr<nsILink> link(do_QueryInterface(walkUpContent));
+    if (link) {
+      mLinkContent = walkUpContent;
+      mIsALinkCached = PR_TRUE;
+      nsLinkState linkState;
+      link->GetLinkState(linkState);
+      if (linkState == eLinkState_Visited)
+        mIsLinkVisited = PR_TRUE;
+      return PR_TRUE;
     }
   }
   mIsALinkCached = PR_TRUE;  // Cached that there is no link

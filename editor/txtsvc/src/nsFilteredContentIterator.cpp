@@ -214,13 +214,12 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent, PRInt32 *aOffs
   if (!aContent)
     return;
 
-  nsCOMPtr<nsIContent> parent;
-  nsresult rv = aContent->GetParent(getter_AddRefs(parent));
+  nsIContent* parent = aContent->GetParent();
 
-  if (NS_FAILED(rv) || !parent)
+  if (!parent)
     return;
 
-  rv = parent->IndexOf(aContent, *aOffset);
+  nsresult rv = parent->IndexOf(aContent, *aOffset);
 
   if (NS_FAILED(rv))
     return;

@@ -156,8 +156,8 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
     NS_ASSERTION(content, "no content available");
     if (content) {
       // XXXbz GetOwnerDocument
-      rv = content->GetDocument(getter_AddRefs(doc));
-      if (NS_FAILED(rv) || !doc) {
+      doc = content->GetDocument();
+      if (!doc) {
         rv = content->GetNodeInfo(getter_AddRefs(nodeinfo));
         if (NS_FAILED(rv) || !nodeinfo) return rv;
 

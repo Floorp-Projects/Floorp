@@ -877,11 +877,8 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
 
     // Try to find the key node. Get the document so we can do |GetElementByID|
-    nsCOMPtr<nsIDocument> document;
-    inMenuItemContent->GetDocument(getter_AddRefs(document));
-    if ( !document ) 
-      return;
-    nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+    nsCOMPtr<nsIDOMDocument> domDocument =
+      do_QueryInterface(inMenuItemContent->GetDocument());
     if ( !domDocument )
       return;
 
@@ -1026,9 +1023,7 @@ nsMenuX::OnCreate()
   // a command attribute. If so, several apptributes must potentially
   // be updated.
   if (popupContent) {
-    nsCOMPtr<nsIDocument> doc;
-    popupContent->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(popupContent->GetDocument()));
 
     PRInt32 count;
     popupContent->ChildCount(count);

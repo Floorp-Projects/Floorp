@@ -174,8 +174,7 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
   nsRect* rect = new nsRect(0,0,0,0);
  
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = content->GetDocument();
 
   if (doc) {
     // Get Presentation shell 0
@@ -260,8 +259,7 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content) {
-    nsCOMPtr<nsIDocument> doc;
-    content->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = content->GetDocument();
     if (doc) {
       nsCOMPtr<nsIDocument> sub_doc;
       doc->GetSubDocumentFor(content, getter_AddRefs(sub_doc));

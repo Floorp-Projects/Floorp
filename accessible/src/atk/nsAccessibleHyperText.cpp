@@ -59,8 +59,7 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
   mIndex = -1;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aDomNode));
   if (content) {
-    nsCOMPtr<nsIContent> parentContent;
-    content->GetParent(getter_AddRefs(parentContent));
+    nsCOMPtr<nsIContent> parentContent = content->GetParent();
     if (parentContent)
       parentContent->IndexOf(content, mIndex);
   }

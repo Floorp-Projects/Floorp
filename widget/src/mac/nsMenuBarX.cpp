@@ -628,8 +628,7 @@ nsMenuBarX :: CreateAppleMenu ( nsIMenu* inMenu )
     nsCOMPtr<nsIContent> menu;
     inMenu->GetMenuContent(getter_AddRefs(menu));
     if (menu) {
-      nsCOMPtr<nsIDocument> doc;
-      menu->GetDocument(getter_AddRefs(doc));
+      nsCOMPtr<nsIDocument> doc = menu->GetDocument();
       if (doc) {
         nsCOMPtr<nsIDOMDocument> domdoc ( do_QueryInterface(doc) );
         if ( domdoc ) {
@@ -769,8 +768,7 @@ nsMenuBarX::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
     if ( obs )
       obs->ContentInserted ( aDocument, aContainer, aNewIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )
@@ -823,8 +821,7 @@ nsMenuBarX::ContentRemoved( nsIDocument * aDocument, nsIContent * aContainer,
     if ( obs )
       obs->ContentRemoved ( aDocument, aChild, aIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )
@@ -849,8 +846,7 @@ nsMenuBarX::ContentInserted( nsIDocument * aDocument, nsIContent * aContainer,
     if ( obs )
       obs->ContentInserted ( aDocument, aChild, aIndexInContainer );
     else {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if(parent) {
         Lookup ( parent, getter_AddRefs(obs) );
         if ( obs )
@@ -1013,9 +1009,7 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aWebShellWeakRef,
   nsAutoString command;
   aTargetContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
   if (!command.IsEmpty()) {
-    nsCOMPtr<nsIDocument> doc;
-    aTargetContent->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aTargetContent->GetDocument()));
     nsCOMPtr<nsIDOMElement> commandElt;
     domDoc->GetElementById(command, getter_AddRefs(commandElt));
     nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));

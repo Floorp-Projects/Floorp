@@ -258,10 +258,9 @@ nsBaseDragService :: GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
   if ( !inNode || !outContext )
     return;
 
-  nsCOMPtr<nsIDocument>	doc;
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(inNode);
   if (contentNode) {
-    contentNode->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = contentNode->GetDocument();
     if (doc) {
       nsCOMPtr<nsIPresShell> presShell;
       doc->GetShellAt(0, getter_AddRefs(presShell));

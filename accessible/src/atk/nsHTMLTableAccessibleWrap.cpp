@@ -507,21 +507,16 @@ nsHTMLTableAccessibleWrap::GetTableLayout(nsITableLayout **aLayoutObject)
   nsCOMPtr<nsIContent> content(do_QueryInterface(tableNode));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> document;
-  rv = content->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIPresShell> presShell;
-  rv = document->GetShellAt(0, getter_AddRefs(presShell));
+  rv = content->GetDocument()->GetShellAt(0, getter_AddRefs(presShell));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsISupports *layoutObject = nsnull;
-  rv = presShell->GetLayoutObjectFor(content, &layoutObject);
+  nsCOMPtr<nsISupports> layoutObject;
+  rv = presShell->GetLayoutObjectFor(content, getter_AddRefs(layoutObject));
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aLayoutObject = nsnull;
-  return layoutObject->QueryInterface(NS_GET_IID(nsITableLayout),
-                                      (void **)aLayoutObject);
+  return CallQueryInterface(layoutObject, aLayoutObject);
 }
 
 nsresult
