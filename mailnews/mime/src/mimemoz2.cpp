@@ -706,6 +706,7 @@ mime_get_main_object(MimeObject* obj)
     if (cobj->nchildren != 1) return obj;
     obj = cobj->children[0];
   }
+  return NULL;
 }
 
 int
