@@ -43,7 +43,8 @@ $log_line = 0;
 #############################################################
 # CGI inputs
 
-if (defined($args = $form{exerpt})) {
+if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
+
   ($full_logfile, $linenum) = split /:/,  $args;
   ($tree, $logfile)        = split /\//, $full_logfile;
 
@@ -74,7 +75,6 @@ $|=1;
 if ($linenum) {
 
   &print_fragment;
-  
 
   exit;
 }
