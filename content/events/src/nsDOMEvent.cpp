@@ -962,10 +962,10 @@ NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)
 {
   nsresult ret = NS_OK;
   PRInt32 scrollX = 0;
-  nsCOMPtr<nsIScrollableView> view;
+  nsIScrollableView* view = nsnull;
   float p2t, t2p;
 
-  GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
+  GetScrollInfo(&view, &p2t, &t2p);
   if(view) {
     nscoord xPos, yPos;
     ret = view->GetScrollPosition(xPos, yPos);
@@ -987,10 +987,10 @@ NS_METHOD nsDOMEvent::GetPageY(PRInt32* aPageY)
 {
   nsresult ret = NS_OK;
   PRInt32 scrollY = 0;
-  nsCOMPtr<nsIScrollableView> view;
+  nsIScrollableView* view = nsnull;
   float p2t, t2p;
 
-  GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
+  GetScrollInfo(&view, &p2t, &t2p);
   if(view) {
     nscoord xPos, yPos;
     ret = view->GetScrollPosition(xPos, yPos);
