@@ -1030,6 +1030,12 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
     nsCOMPtr<nsIContent> content;
     nsAutoString firstValue, theValue;
     iter->CurrentNode(getter_AddRefs(content));
+    nsCOMPtr<nsIDOMNode> endNode;
+    PRInt32 endOffset;
+    result = range->GetEndContainer(getter_AddRefs(endNode));
+    if (NS_FAILED(result)) return result;
+    result = range->GetEndOffset(&endOffset);
+    if (NS_FAILED(result)) return result;
     while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
       nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
@@ -1062,6 +1068,10 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
             //if (gNoisy) { printf("  skipping node %p\n", content.get()); }
             skipNode = PR_TRUE;
           }
+        }
+        else if (node == endNode && !endOffset)
+        {
+          skipNode = PR_TRUE;
         }
       }
       else
