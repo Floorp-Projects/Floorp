@@ -2405,7 +2405,7 @@ void
 nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
                                         nsGUIEvent* aEvent, PRUint32 aMessage,
                                         nsIContent* aTargetContent,
-                                        nsIFrame* aTargetFrame,
+                                        nsIFrame*& aTargetFrame,
                                         nsIContent* aRelatedContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -2426,7 +2426,6 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
   mCurrentRelatedContent = aRelatedContent;
 
   BeforeDispatchEvent();
-  nsIFrame* targetFrame = aTargetFrame;
   if (aTargetContent) {
     aTargetContent->HandleDOMEvent(aPresContext, &event, nsnull,
                                    NS_EVENT_FLAG_INIT, &status); 
@@ -2435,14 +2434,14 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
       if (shell) {
-        shell->GetPrimaryFrameFor(aTargetContent, &targetFrame);
+        shell->GetPrimaryFrameFor(aTargetContent, &aTargetFrame);
       } else {
-        targetFrame = nsnull;
+        aTargetFrame = nsnull;
       }
     }
   }
-  if (targetFrame) {
-    targetFrame->HandleEvent(aPresContext, &event, &status);   
+  if (aTargetFrame) {
+    aTargetFrame->HandleEvent(aPresContext, &event, &status);   
   }
   AfterDispatchEvent();
 

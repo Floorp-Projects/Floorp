@@ -156,9 +156,14 @@ protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
-   * content and frame.
+   * content and frame.  This will fix the frame if it goes away during the
+   * event, as well.
    */
-  void DispatchMouseEvent(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage, nsIContent* aTargetContent, nsIFrame* aTargetFrame, nsIContent* aRelatedContent);
+  void DispatchMouseEvent(nsIPresContext* aPresContext,
+                          nsGUIEvent* aEvent, PRUint32 aMessage,
+                          nsIContent* aTargetContent,
+                          nsIFrame*& aTargetFrame,
+                          nsIContent* aRelatedContent);
   void MaybeDispatchMouseEventToIframe(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
