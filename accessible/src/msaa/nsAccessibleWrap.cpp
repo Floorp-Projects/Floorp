@@ -172,20 +172,22 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
   nsIFrame *frame = GetFrame();
   nsCOMPtr<nsIAccessible> xpParentAccessible;
   GetParent(getter_AddRefs(xpParentAccessible));
-  nsCOMPtr<nsPIAccessNode> parentAccessNode(do_QueryInterface(xpParentAccessible));
-  nsIFrame *parentFrame;
-  if (!frame || !parentAccessNode ||
-    ((parentFrame = parentAccessNode->GetFrame()) != nsnull) && (frame->GetWindow() != parentFrame->GetWindow())) {
-    // This code is essentially our implementation of WindowFromAccessibleObject,
-    // because MSAA iterates get_accParent() until it sees an object of ROLE_WINDOW
-    // to know where the window for a given accessible is. We must expose the native 
-    // window accessible that MSAA creates for us. This must be done for the document
-    // object as well as any layout that creates its own window (e.g. via overflow: scroll)
-    HWND hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
-    NS_ASSERTION(hWnd, "No window handle for window");
-    if (SUCCEEDED(AccessibleObjectFromWindow(hWnd, OBJID_WINDOW, IID_IAccessible,
-                                            (void**)ppdispParent))) {
-      return S_OK;
+  if (frame) {
+    nsCOMPtr<nsPIAccessNode> parentAccessNode(do_QueryInterface(xpParentAccessible));
+    nsIFrame *parentFrame;
+    if (!parentAccessNode ||
+      ((parentFrame = parentAccessNode->GetFrame()) != nsnull) && (frame->GetWindow() != parentFrame->GetWindow())) {
+      // This code is essentially our implementation of WindowFromAccessibleObject,
+      // because MSAA iterates get_accParent() until it sees an object of ROLE_WINDOW
+      // to know where the window for a given accessible is. We must expose the native 
+      // window accessible that MSAA creates for us. This must be done for the document
+      // object as well as any layout that creates its own window (e.g. via overflow: scroll)
+      HWND hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+      NS_ASSERTION(hWnd, "No window handle for window");
+      if (SUCCEEDED(AccessibleObjectFromWindow(hWnd, OBJID_WINDOW, IID_IAccessible,
+                                              (void**)ppdispParent))) {
+        return S_OK;
+      }
     }
   }
 
