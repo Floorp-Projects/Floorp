@@ -4430,7 +4430,7 @@ nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex st
       // ### TODO - how about hasChildren flag?
       m_flags.InsertAt(viewIndex, msgFlags & ~MSG_VIEW_FLAGS);
       // ### TODO this is going to be tricky - might use enumerators
-      PRInt32 level = FindLevelInThread(msgHdr, startOfThreadViewIndex);
+      PRInt32 level = FindLevelInThread(msgHdr, startOfThreadViewIndex, viewIndex);
       m_levels.InsertAt(viewIndex, level); 
       // turn off thread or elided bit if they got turned on (maybe from new only view?)
       if (i > 0)	
@@ -4442,7 +4442,7 @@ nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex st
   return NS_OK;
 }
 
-PRInt32 nsMsgDBView::GetLevelInUnreadView(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex)
+PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex)
 {
   nsCOMPtr <nsIMsgDBHdr> curMsgHdr = msgHdr;
 
@@ -4506,7 +4506,7 @@ nsresult nsMsgDBView::ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIn
         {
           m_keys.InsertAt(viewIndex, msgKey);
           m_flags.InsertAt(viewIndex, msgFlags);
-          levelToAdd = GetLevelInUnreadView(msgHdr, startOfThreadViewIndex, viewIndex);
+          levelToAdd = FindLevelInThread(msgHdr, startOfThreadViewIndex, viewIndex);
           m_levels.InsertAt(viewIndex, levelToAdd);
           viewIndex++;
           (*pNumListed)++;
