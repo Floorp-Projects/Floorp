@@ -1,9 +1,16 @@
 messenger.jar:
-*+  content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)
-*+  content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
-*+  content/messenger/messengercompose/addressingWidgetOverlay.xul (content/addressingWidgetOverlay.xul)
-*+  content/messenger/messengercompose/addressingWidgetOverlay.js  (content/addressingWidgetOverlay.js)
-+   content/editor/images/tag-anchor.gif                           (content/icons/tag-anchor.gif)
+*   content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)
+*   content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
+*   content/messenger/messengercompose/addressingWidgetOverlay.xul (content/addressingWidgetOverlay.xul)
+*   content/messenger/messengercompose/addressingWidgetOverlay.js  (content/addressingWidgetOverlay.js)
+    content/editor/images/tag-anchor.gif                           (content/icons/tag-anchor.gif)
+    content/messenger/messengercompose/askSendFormat.js            (/mailnews/compose/resources/content/askSendFormat.js)
+    content/messenger/messengercompose/askSendFormat.xul           (/mailnews/compose/resources/content/askSendFormat.xul)
+    content/messenger/messengercompose/sendProgress.xul            (/mailnews/compose/resources/content/sendProgress.xul)
+    content/messenger/messengercompose/sendProgress.js             (/mailnews/compose/resources/content/sendProgress.js)
+    content/messenger/messengercompose/mailComposeBindings.xml     (/mailnews/compose/resources/content/mailComposeBindings.xml)
+    content/messenger/messengercompose/MsgAttachPage.xul           (/mailnews/compose/resources/content/MsgAttachPage.xul)
+    content/messenger/messengercompose/MsgAttachPage.js            (/mailnews/compose/resources/content/MsgAttachPage.js)
 
 comm.jar:
 +   content/editor/EdSpellCheck.js                                 (content/EdSpellCheck.js) 

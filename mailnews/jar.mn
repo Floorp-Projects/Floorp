@@ -1,3 +1,4 @@
+#ifndef MOZ_XUL_APP
 messenger.jar:
 *   content/messenger/contents.rdf                                             (base/resources/content/contents.rdf)
 *   content/messenger-region/contents.rdf                                      (base/resources/content/contents-region.rdf)
@@ -189,7 +190,6 @@ messenger.jar:
     content/messenger/start.xhtml                                              (base/resources/content/start.xhtml)
 
 en-US.jar:
-#ifndef MOZ_XUL_APP
 *   locale/en-US/messenger/contents.rdf                                (base/resources/locale/en-US/contents.rdf)
     locale/en-US/messenger/addressbook/abAddressBookNameDialog.dtd     (addrbook/resources/locale/en-US/abAddressBookNameDialog.dtd)
     locale/en-US/messenger/addressbook/abCardOverlay.dtd               (addrbook/resources/locale/en-US/abCardOverlay.dtd)
