@@ -1056,19 +1056,6 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     widgetInit.mWindowType = eWindowType_child;
   }
 
-  // Set the language portion of the user agent. :)
-  NS_WITH_SERVICE(nsILocaleService, localeServ, kLocaleServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  PRUnichar *UALang;
-  rv = localeServ->GetLocaleComponentForUserAgent(&UALang);
-  if (NS_FAILED(rv)) return rv;
-
-  NS_WITH_SERVICE(nsIIOService, ioServ, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = ioServ->SetLanguage(UALang);
-  nsAllocator::Free(UALang);
   return rv;
 }
 
