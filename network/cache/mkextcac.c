@@ -779,6 +779,12 @@ CACHE_GetCache(ExtCacheDBInfo *db)
 
 PUBLIC XP_Bool
 CACHE_Put(char *filename, URL_Struct *url_s)
+#ifdef NU_CACHE
+{
+    PR_ASSERT(0); /* Should not be getting called */
+    return FALSE;
+}
+#else
 {
     net_CacheObject *cacheObject = PR_NEW(net_CacheObject);
 	memset(cacheObject, 0, sizeof(net_CacheObject));
@@ -792,6 +798,7 @@ CACHE_Put(char *filename, URL_Struct *url_s)
 
     return NET_CacheStore(cacheObject, url_s, FALSE);
 }
+#endif /* NU_CACHE */
 
 PUBLIC char *
 CACHE_GetCachePath(char * name)

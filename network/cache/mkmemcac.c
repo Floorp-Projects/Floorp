@@ -2136,7 +2136,6 @@ net_NuCacheLoad (ActiveEntry * cur_entry)
         {
             cur_entry->status = 0;
         }
-        NET_ClearCallNetlibAllTheTime(cur_entry->window_id, "nucache");
     }
     return cur_entry->status;
 }
@@ -2147,10 +2146,15 @@ net_NuCacheLoad (ActiveEntry * cur_entry)
 PRIVATE int32
 net_ProcessNuCache (ActiveEntry * cur_entry)
 {
-    if (cur_entry && cur_entry->URL_s)
+    if (cur_entry)
     {
-        NuCacheConData* con_data = PR_NEW(NuCacheConData);
+        PRUint32  amountRead;
+        PRUint32  buffer_size;
+
+        NuCacheConData* con_data = (NuCacheConData*) cur_entry->con_data;
         void* pObject = cur_entry->URL_s->cache_object;
+
+        NET_SetCallNetlibAllTheTime(cur_entry->window_id, "nucache");
 
         if (!pObject)
         {
@@ -2161,19 +2165,87 @@ net_ProcessNuCache (ActiveEntry * cur_entry)
         /* Wait for the object to complete */
         if (!CacheObject_GetIsCompleted(pObject))
             return 0;
+#if 0
+         /* If the object has been aborted or expired */
+        if ((CACHEOBJECT_ABORTED == CacheObject_GetState(pObject)) ||
+            (CACHEOBJECT_EXPIRED == CacheObject_GetState(pObject)))
+        {
+            (*con_data->stream->complete)(con_data->stream);
+            PR_Free(con_data->stream);
+            /* CacheObject->UnsetReadLock(pObject); */
+            PR_Free(con_data);
 
-        (*con_data->stream->complete)(con_data->stream);
-        PR_Free(con_data->stream);
+            cur_entry->status = MK_DATA_LOADED;
+            NET_ClearCallNetlibAllTheTime(cur_entry->window_id, "nucache");
+            if (!cur_entry->URL_s->load_background)
+                FE_GraphProgressDestroy(
+                    cur_entry->window_id,
+                    cur_entry->URL_s,
+                    cur_entry->URL_s->content_length,
+                    cur_entry->bytes_received);
+            return -1;
+        }
+#endif
+        /* Get the buffer size that the stream is ready to receive */
+        buffer_size = (*con_data->stream->is_write_ready)(con_data->stream);
+        /* Use the minimum from these factors. 
+         * Not sure why we are doing this part. Will look into this later- Gagan
+         */
+        buffer_size = MIN(buffer_size, (unsigned int) NET_Socket_Buffer_Size);
+        buffer_size = MIN(buffer_size, NET_MEM_CACHE_OUTPUT_SIZE); 
 
-        cur_entry->status = MK_DATA_LOADED;
-        NET_ClearCallNetlibAllTheTime(cur_entry->window_id, "nucache");
-        if (!cur_entry->URL_s->load_background)
-            FE_GraphProgressDestroy(CE_WINDOW_ID,
-                                    cur_entry->URL_s,
-                                    cur_entry->URL_s->content_length,
-                                    CE_BYTES_RECEIVED);
-        return cur_entry->status;
+        amountRead = CacheObject_Read(pObject, NET_Socket_Buffer, buffer_size);
+        if (amountRead > 0)
+        {
+            cur_entry->status = (*con_data->stream->put_block)(con_data->stream, NET_Socket_Buffer, amountRead);
+            
+            /* Update the progress control */
+            if (!cur_entry->URL_s->load_background)
+                FE_GraphProgress(
+                    cur_entry->window_id, 
+                    cur_entry->URL_s, 
+                    cur_entry->bytes_received,
+                    amountRead, 
+                    cur_entry->URL_s->content_length);
 
+            if(cur_entry->status < 0)
+            {
+                NET_ClearCallNetlibAllTheTime(cur_entry->window_id, "nucache");
+
+                if (!cur_entry->URL_s->load_background)
+                {
+                    FE_GraphProgressDestroy(cur_entry->window_id,
+                        cur_entry->URL_s,
+                        cur_entry->URL_s->content_length,
+                        cur_entry->bytes_received);
+                }
+                PR_Free(con_data);
+                return (cur_entry->status);
+            }
+
+            cur_entry->bytes_received += amountRead;
+        }
+        else  /* we didn't read anything, must be the end. */
+        {
+            (*con_data->stream->complete)(con_data->stream);
+            PR_Free(con_data->stream);
+            /* Reset read locks, reset streams, etc. */
+            CacheObject_Reset(pObject);
+
+            PR_Free(con_data);
+
+            cur_entry->status = MK_DATA_LOADED;
+            NET_ClearCallNetlibAllTheTime(cur_entry->window_id, "nucache");
+            if (!cur_entry->URL_s->load_background)
+                FE_GraphProgressDestroy(
+                    cur_entry->window_id,
+                    cur_entry->URL_s,
+                    cur_entry->URL_s->content_length,
+                    cur_entry->bytes_received);
+            return -1;
+        }
+   
+        return cur_entry->status; 
     }
     return -1;
 }
@@ -2184,11 +2256,26 @@ net_ProcessNuCache (ActiveEntry * cur_entry)
 PRIVATE int32
 net_InterruptNuCache (ActiveEntry * cur_entry)
 {
-    PR_ASSERT(0); /* Not complete as yet */
-    NET_SetCallNetlibAllTheTime(cur_entry->window_id, "nucache");
-    
-    NET_ClearCallNetlibAllTheTime(cur_entry->window_id, "nucache");
+    if (cur_entry)
+    {
+        NuCacheConData* con_data = (NuCacheConData*) cur_entry->con_data;
+        void* pObject = cur_entry->URL_s->cache_object;
+
+        (*con_data->stream->abort)(con_data->stream, MK_INTERRUPTED);
+        PR_Free(con_data->stream);
+        /* Reset read locks, reset streams, etc. */
+        CacheObject_Reset(pObject);
+
+        PR_Free(con_data);
+
+        NET_ClearCallNetlibAllTheTime(cur_entry->window_id, "nucache");
+
+        cur_entry->status = MK_INTERRUPTED;
+
+        return cur_entry->status;
+    }
     return -1;
+ 
 }
 
 
