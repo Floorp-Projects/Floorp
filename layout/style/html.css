@@ -50,8 +50,12 @@ iframe {
 }
 
 /* focusable content */
-a, area, button, input, select, textarea {
+a, area, button, input, object, select, textarea {
   user-focus: normal;
+}
+
+option {
+  user-focus: none;
 }
 
 /* blocks */
