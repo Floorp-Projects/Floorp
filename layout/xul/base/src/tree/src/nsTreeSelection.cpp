@@ -289,6 +289,18 @@ NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject * aTree)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTreeSelection::GetSingle(PRBool* aSingle)
+{
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
+  nsCOMPtr<nsIDOMElement> element;
+  boxObject->GetElement(getter_AddRefs(element));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+  nsAutoString seltype;
+  content->GetAttr(kNameSpaceID_None, nsXULAtoms::seltype, seltype);
+  *aSingle = seltype.Equals(NS_LITERAL_STRING("single"));
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsTreeSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
 {
   if (mFirstRange)
@@ -386,7 +398,9 @@ NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
     Select(aIndex);
   else {
     if (!mFirstRange->Contains(aIndex)) {
-      if (! SingleSelection())
+      PRBool single;
+      GetSingle(&single);
+      if (!single)
         mFirstRange->Add(aIndex);
     }
     else
@@ -402,7 +416,9 @@ NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
 
 NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aAugment)
 {
-  if ((mFirstRange || (aStartIndex != aEndIndex)) && SingleSelection())
+  PRBool single;
+  GetSingle(&single);
+  if ((mFirstRange || (aStartIndex != aEndIndex)) && single)
     return NS_OK;
 
   if (!aAugment) {
@@ -488,7 +504,9 @@ NS_IMETHODIMP nsTreeSelection::SelectAll()
 
   PRInt32 rowCount;
   view->GetRowCount(&rowCount);
-  if (rowCount == 0 || (rowCount > 1 && SingleSelection()))
+  PRBool single;
+  GetSingle(&single);
+  if (rowCount == 0 || (rowCount > 1 && single))
     return NS_OK;
 
   mShiftSelectPivot = -1;
@@ -743,19 +761,6 @@ nsTreeSelection::FireOnSelectHandler()
   }
 
   return NS_OK;
-}
-
-PRBool nsTreeSelection::SingleSelection()
-{
-  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
-  nsCOMPtr<nsIDOMElement> element;
-  boxObject->GetElement(getter_AddRefs(element));
-  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-  nsAutoString seltype;
-  content->GetAttr(kNameSpaceID_None, nsXULAtoms::seltype, seltype);
-  if (seltype.Equals(NS_LITERAL_STRING("single")))
-    return PR_TRUE;
-  return PR_FALSE;
 }
 
 

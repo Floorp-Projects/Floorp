@@ -60,10 +60,6 @@
       <field name="selectionTail">
         -1
       </field>
-      <property name="singleSelection"
-                onget="return this.getAttribute('seltype') == 'single'"
-                readonly="true"/>
-
       <property name="enableColumnDrag"
                 onget="return this.hasAttribute('enableColumnDrag');"
                 onset="if (val) this.setAttribute('enableColumnDrag', 'true');
@@ -280,7 +276,7 @@
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          if (c == -1 || c == 0)
@@ -305,7 +301,7 @@
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          try { if (c+1 == this.treeBoxObject.view.rowCount)
@@ -399,7 +395,7 @@
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          if (c == 0)
@@ -438,7 +434,7 @@
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          var l = this.treeBoxObject.view.rowCount - 1;
@@ -538,7 +534,7 @@
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          if (c == 0)
@@ -554,7 +550,7 @@
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="shift">
         <![CDATA[
-         if (this.singleSelection)
+         if (this.treeBoxObject.selection.single)
            return;
          var c = this.currentIndex;
          var l = this.treeBoxObject.view.rowCount - 1;
@@ -700,7 +696,7 @@
       <handler event="mousedown">
       <![CDATA[
          if ((!event.ctrlKey && !event.shiftKey && !event.metaKey) ||
-             this.parentNode.singleSelection) {
+             this.parentNode.treeBoxObject.selection.single) {
            var row = {};
            var col = {};
            var obj = {};
@@ -756,7 +752,7 @@
           return;
         }
 
-        if (! this.parentNode.singleSelection) {
+        if (! this.parentNode.treeBoxObject.selection.single) {
           var augment = event.ctrlKey || event.metaKey;
           if (event.shiftKey) {
             b.selection.rangedSelect(-1, row.value, augment);
