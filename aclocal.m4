@@ -5,7 +5,6 @@ dnl
 
 builtin(include, build/autoconf/glib.m4)dnl
 builtin(include, build/autoconf/gtk.m4)dnl
-builtin(include, build/autoconf/gdk-pixbuf.m4)dnl
 builtin(include, build/autoconf/libIDL.m4)dnl
 builtin(include, build/autoconf/nspr.m4)dnl
 dnl
