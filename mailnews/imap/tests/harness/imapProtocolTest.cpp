@@ -39,6 +39,7 @@
 #include "nsIPref.h"
 #include "nsIImapUrl.h"
 #include "nsIImapProtocol.h"
+#include "nsIImapLog.h"
 #include "nsIMsgIdentity.h"
 #include "nsIMsgMailSession.h"
 
@@ -64,8 +65,8 @@
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -78,7 +79,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #define DEFAULT_PORT		IMAP_PORT
 #define DEFAULT_URL_TYPE	"imap://"	/* do NOT change this value until netlib re-write is done...*/
 
-class nsIMAP4TestDriver  : public nsIUrlListener
+class nsIMAP4TestDriver  : public nsIUrlListener, public nsIImapLog
 {
 public:
 	NS_DECL_ISUPPORTS;
@@ -86,6 +87,9 @@ public:
 	// nsIUrlListener support
 	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
 	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
+
+	// nsIImapLog support
+	NS_IMETHOD HandleImapLogData (const char * aLogData);
 
 	nsIMAP4TestDriver(PLEventQueue *queue);
 	virtual ~nsIMAP4TestDriver();
@@ -149,7 +153,29 @@ nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
 	strcat(m_urlSpec, "/");
 }
 
-NS_IMPL_ISUPPORTS(nsIMAP4TestDriver, nsIUrlListener::GetIID())
+NS_IMPL_ADDREF(nsIMAP4TestDriver);
+NS_IMPL_RELEASE(nsIMAP4TestDriver);
+
+NS_IMETHODIMP nsIMAP4TestDriver::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+ 
+    if (aIID.Equals(nsIStreamListener::GetIID()) || aIID.Equals(kISupportsIID)) 
+	{
+        *aInstancePtr = (void*) ((nsIStreamListener*)this);
+        AddRef();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsIImapLog::GetIID())) 
+	{
+        *aInstancePtr = (void*) ((nsIImapLog*)this);
+        AddRef();
+        return NS_OK;
+    }
+ 
+    return NS_NOINTERFACE;
+}
 
 nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 {
@@ -278,6 +304,18 @@ nsresult nsIMAP4TestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
 			mailUrl->UnRegisterListener(this);
 			NS_RELEASE(mailUrl);
 		}
+	}
+
+	return NS_OK;
+}
+
+nsresult nsIMAP4TestDriver::HandleImapLogData (const char * aLogData)
+{
+	// for now, play dumb and just spit out what we were given...
+	if (aLogData)
+	{
+		printf(aLogData);
+		printf("\n");
 	}
 
 	return NS_OK;
