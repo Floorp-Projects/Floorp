@@ -514,10 +514,12 @@ nsHTMLLabelElement::GetForContent()
     if (domDoc) {
       nsCOMPtr<nsIDOMElement> domElement;
       domDoc->GetElementById(elementId, getter_AddRefs(domElement));
-      nsIContent *result;
-      CallQueryInterface(domElement, &result);
-      if (result && !result->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
-        NS_RELEASE(result); // assigns null
+      nsIContent *result = nsnull;
+      if (domElement) {
+        CallQueryInterface(domElement, &result);
+        if (result && !result->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+          NS_RELEASE(result); // assigns null
+        }
       }
       return result;
     }
