@@ -51,9 +51,9 @@ typedef struct JSHashTable JSHashTable;
 #define JS_HASH_BITS 32
 #define JS_GOLDEN_RATIO 0x9E3779B9U
 
-typedef JSHashNumber (*JSHashFunction)(const void *key);
-typedef intN (*JSHashComparator)(const void *v1, const void *v2);
-typedef intN (*JSHashEnumerator)(JSHashEntry *he, intN i, void *arg);
+typedef JSHashNumber (* JS_DLL_CALLBACK JSHashFunction)(const void *key);
+typedef intN (* JS_DLL_CALLBACK JSHashComparator)(const void *v1, const void *v2);
+typedef intN (* JS_DLL_CALLBACK JSHashEnumerator)(JSHashEntry *he, intN i, void *arg);
 
 /* Flag bits in JSHashEnumerator's return value */
 #define HT_ENUMERATE_NEXT       0       /* continue enumerating entries */
