@@ -68,7 +68,7 @@ public:
     MOZ_COUNT_DTOR(nsRuleList);
     mRuleNode->Destroy();
     if (mNext)
-      mNext->Destroy(mRuleNode->mPresContext);
+      mNext->Destroy(mNext->mRuleNode->mPresContext);
   }
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
