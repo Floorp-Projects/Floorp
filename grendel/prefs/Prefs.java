@@ -40,28 +40,40 @@ import grendel.ui.StoreFactory;
 public class Prefs {
   static Preferences   fPrefs = PreferencesFactory.Get();
 
-  static final String kUserName = "mail.identity-0.username";
-  static final String kOrganization = "mail.identity-0.organization";
-  static final String kEmailAddress = "mail.identity-0.email";
-  static final String kSignatureFile = "mail.identity-0.signature";
-  //static final String kPopHost = "pop.host";
-  //static final String kPopUser = "pop.user";
-  //static final String kPopPassword = "pop.password";
+  static final String kUserNamePre = "mail.identity.username.";
+  static final String kOrganization = "mail.identity.organization.";
+  static final String kEmailAddress = "mail.identity.email.";
+  static final String kSignatureFile = "mail.identity.signature.0";
   static final String kPopLeaveOnServer = "pop.leaveMailOnServer";
   static final String kMailDirectory = "mail.directory";
   static final String kSMTPHost = "mail.identity-0.smtphost";
   static final String kStoreList = "mail.storelist";
+  static final String kUserName = "mail.identity.username.0";
 
   static final String kLocalProtocol = "berkeley";
+  static final String kUserPrefsCount = "mail.identities";
+  
+  public int getUserPrefsCount() {
+    return Integer.parseInt(fPrefs.getString(kUserPrefsCount, "0"));
+  }
+  
 
   public UserPrefs getUserPrefs() {
-    UserPrefs res = new UserPrefs();
-    res.setUserName(fPrefs.getString(kUserName, "John Doe"));
-    res.setUserEmailAddress(fPrefs.getString(kEmailAddress, "john@doe.com"));
-    res.setUserOrganization(fPrefs.getString(kOrganization, ""));
-
-    return res;
+    return getUserPrefs(0);
   }
+
+  public UserPrefs getUserPrefs(int count) {
+    UserPrefs res = new UserPrefs();
+    res.setUserName(fPrefs.getString(kUserName + count, 
+				     "John Doe"));
+    res.setUserName(fPrefs.getString(kEmailAddress + count, 
+				     "john@doe.com"));
+    res.setUserName(fPrefs.getString(kOrganization + count, 
+				     ""));
+
+    return res;    
+  }
+  
 
   public void setUserPrefs(UserPrefs aPrefs) {
     fPrefs.putString(kUserName, aPrefs.getUserName());
