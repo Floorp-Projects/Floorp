@@ -217,6 +217,9 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
         rv = m_pConsumer->OnStopRequest(m_pConnection, m_ResponseContext, i_Status, i_pMsg);
     }
 
+    // Notify the HTTPChannel that the response has completed...
+    m_pConnection->ResponseCompleted(channel);
+
     // The Consumer is no longer needed...
     NS_IF_RELEASE(m_pConsumer);
 

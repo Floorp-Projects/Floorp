@@ -23,13 +23,6 @@ interface nsIInputStream;
 [scriptable, uuid(ad1d53ae-3e25-11d3-8cd3-0060b0fc14a3)]
 interface nsIHTTPProtocolHandler : nsIProtocolHandler
 {
-    nsIChannel GetTransport(in string host, 
-                            in unsigned long port);
-
-    void ReleaseTransport(in string host,
-                          in unsigned long port, 
-                          in nsIChannel transport);
-
     const unsigned long ENCODE_NORMAL      = 0;
     const unsigned long ENCODE_ADD_CRLF    = (1 << 0);
     const unsigned long ENCODE_QUOTE_LINES = (1 << 1);
@@ -58,7 +51,9 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
 %{C++
 
 //Possible errors
-#define NS_ERROR_BAD_REQUEST    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 200);
+#define NS_ERROR_BAD_REQUEST    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 200)
+#define NS_ERROR_BUSY           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 201)
+
 
 // Create (or get) HTTP Handler
 extern NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler);
