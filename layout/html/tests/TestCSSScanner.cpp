@@ -80,7 +80,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  css->Init(uin);
+  css->Init(uin, url);
   
 
   // Scan the file and dump out the tokens

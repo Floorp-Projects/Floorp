@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   L. David Baron <dbaron@fas.harvard.edu>
  *   Daniel Glazman <glazman@netscape.com>
  */
 #include "nsCSSScanner.h"
@@ -30,7 +31,7 @@
 static char* kNullPointer = "null pointer";
 #endif
 
-#ifdef CSS_REPORT_PARSE_ERRORS
+// for #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
@@ -38,7 +39,6 @@ static char* kNullPointer = "null pointer";
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsComponentManagerUtils.h"  // put this higher and gcc barfs...
-#endif
 
 // Don't bother collecting whitespace characters in token's mIdent buffer
 #undef COLLECT_WHITESPACE
@@ -192,55 +192,77 @@ nsCSSScanner::~nsCSSScanner()
   }
 }
 
-void nsCSSScanner::Init(nsIUnicharInputStream* aInput)
+void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI)
 {
   NS_PRECONDITION(nsnull != aInput, kNullPointer);
   Close();
   mInput = aInput;
   NS_IF_ADDREF(aInput);
-}
 
 #ifdef CSS_REPORT_PARSE_ERRORS
-
-void nsCSSScanner::InitErrorReporting(nsIURI* aURI)
-{
   if (aURI) {
     aURI->GetSpec(getter_Copies(mFileName));
   } else {
     mFileName = "from DOM";
   }
   mColNumber = 0;
+#endif // CSS_REPORT_PARSE_ERRORS
+
 }
 
-void nsCSSScanner::ReportError(const nsAReadableString& aError)
+#ifdef CSS_REPORT_PARSE_ERRORS
+
+void nsCSSScanner::AddToError(const nsAReadableString& aErrorText)
 {
-  printf("CSS Error (%s :%u.%u): %s.\n",
+  if (!mError.Length()) {
+    mErrorLineNumber = mLineNumber;
+    mErrorColNumber = mColNumber;
+    mError = aErrorText;
+  } else {
+    //mError.Append(NS_LITERAL_STRING("  ") + aErrorText);
+    mError.AppendWithConversion("  ");
+    mError.Append(aErrorText);
+  }
+}
+
+void nsCSSScanner::ClearError()
+{
+  mError.Truncate();
+}
+
+void nsCSSScanner::OutputError()
+{
+  if (!mError.Length()) return;
+ 
+#ifdef DEBUG
+  printf("CSS Error (%s :%u.%u): %s\n",
          mFileName.get(),
-         mLineNumber,
-         mColNumber,
-         NS_ConvertUCS2toUTF8(aError).get());
+         mErrorLineNumber,
+         mErrorColNumber,
+         NS_ConvertUCS2toUTF8(mError).get());
+#endif
 
   // Log it to the JavaScript console
   nsCOMPtr<nsIConsoleService> consoleService
-    (do_GetService("@mozilla.org/consoleservice;1"));
+    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   nsCOMPtr<nsIScriptError> errorObject
-    (do_CreateInstance("@mozilla.org/scripterror;1"));
+    (do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
 
   if (consoleService && errorObject) {
     nsresult rv;
-    PRUnichar *error = ToNewUnicode(aError);
+    PRUnichar *error = ToNewUnicode(mError);
     rv = errorObject->Init(error,
                            NS_ConvertASCIItoUCS2(mFileName.get()).GetUnicode(),
                            NS_LITERAL_STRING(""),
-                           mLineNumber,
-                           mColNumber,
+                           mErrorLineNumber,
+                           mErrorColNumber,
                            0,
                            "CSS Parser");
     nsMemory::Free(error);
     if (NS_SUCCEEDED(rv))
       consoleService->LogMessage(errorObject);
   }
-
+  ClearError();
 }
 
 #endif // CSS_REPORT_PARSE_ERRORS
