@@ -262,6 +262,12 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
   // save the event callback function
   mEventCallback = aHandleEventFunction;
   
+  if (0==aNativeParent) {
+    parentWidget = (Widget) aInitData ;
+  }
+  else
+    parentWidget = (Widget)aNativeParent;
+  
   // keep a reference to the toolkit object
   if (aContext) {
     mContext = aContext;
@@ -279,15 +285,9 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
 				       kDeviceContextIID, 
 				       (void **)&mContext);
     if (NS_OK == res) {
-      mContext->Init(nsnull);
+      mContext->Init(parentWidget);
     }
   }
-  
-  if (0==aNativeParent) {
-    parentWidget = (Widget) aInitData ;
-  }
-  else
-    parentWidget = (Widget)aNativeParent;
   
   Widget frameParent = 0;
   if (!aNativeParent) {
