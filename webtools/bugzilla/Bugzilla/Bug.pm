@@ -113,7 +113,7 @@ sub initBug  {
   my $old_bug_id = $bug_id;
 
   # If the bug ID isn't numeric, it might be an alias, so try to convert it.
-  $bug_id = &::BugAliasToID($bug_id) if $bug_id !~ /^[1-9][0-9]*$/;
+  $bug_id = &::BugAliasToID($bug_id) if $bug_id !~ /^0*[1-9][0-9]*$/;
 
   if ((! defined $bug_id) || (!$bug_id) || (!detaint_natural($bug_id))) {
       # no bug number given or the alias didn't match a bug
