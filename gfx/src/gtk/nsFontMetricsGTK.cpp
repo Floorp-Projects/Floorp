@@ -3397,8 +3397,23 @@ nsFontMetricsGTK::TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar 
 nsFontGTK*
 nsFontMetricsGTK::TryFamily(nsCString* aName, PRUnichar aChar)
 {
+  //
+  // check the patterh "*-familyname-registry-encoding" for language
+  //
   nsFontFamily* family = FindFamily(aName);
   if (family) {
+    // try family name of language group first
+    nsCAutoString FFREName("*-");
+    FFREName.Append(*aName);
+    FFREName.Append("-*-*");
+    FIND_FONT_PRINTF(("        TryFamily %s with lang group = %s", (*aName).get(),
+                                                         atomToName(mLangGroup)));
+    nsFontGTK* font = TryLangGroup(mLangGroup, &FFREName, aChar);
+    if(font) {
+      return font;
+    }
+
+    // then try family name regardless of language group
     nsFontNodeArray* nodes = &family->mNodes;
     PRInt32 n = nodes->Count();
     for (PRInt32 i = 0; i < n; i++) {
