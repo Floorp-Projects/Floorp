@@ -35,15 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function onButtonClick() {
-  var textbox = document.getElementById("textbox");
+#include <stdio.h>
+#include "nsISimpleTest.h"
+#include "nsIGenericFactory.h"
 
-  var contractid = (textbox.value % 2 == 0) ?
-      "@test.mozilla.org/simple-test;1?impl=js" :
-      "@test.mozilla.org/simple-test;1?impl=c++";
+class SimpleTest : public nsISimpleTest
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISIMPLETEST
+};
 
-  var test = Components.classes[contractid].
-      createInstance(Components.interfaces.nsISimpleTest);
+NS_IMPL_ISUPPORTS1(SimpleTest, nsISimpleTest)
 
-  textbox.value = test.add(textbox.value, 1);
+NS_IMETHODIMP
+SimpleTest::Add(PRInt32 a, PRInt32 b, PRInt32 *r)
+{
+  printf("add(%d,%d) from C++\n", a, b);
+
+  *r = a + b;
+  return NS_OK;
 }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(SimpleTest)
+
+// 5e14b432-37b6-4377-923b-c987418d8429
+#define SIMPLETEST_CID \
+  { 0x5e14b432, 0x37b6, 0x4377, \
+    { 0x92, 0x3b, 0xc9, 0x87, 0x41, 0x8d, 0x84, 0x29 } }
+
+static const nsModuleComponentInfo components[] =
+{
+  { "SimpleTest in C++",
+    SIMPLETEST_CID,
+    "@test.mozilla.org/simple-test;1?impl=c++",
+    SimpleTestConstructor
+  }
+};
+
+NS_IMPL_NSGETMODULE(SimpleTestModule, components)

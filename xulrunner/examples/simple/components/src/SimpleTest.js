@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const SIMPLETEST_CONTRACTID  = "@test.mozilla.org/simple-test;1";
+const SIMPLETEST_CONTRACTID  = "@test.mozilla.org/simple-test;1?impl=js";
 const SIMPLETEST_CLASSID     = Components.ID("{4177e257-a0dc-49b9-a774-522a000a49fa}");
 
 function SimpleTest() {
@@ -50,6 +50,7 @@ SimpleTest.prototype = {
   },
 
   add: function(a, b) {
+    dump("add(" + a + ", " + b + ") from JS\n");
     return a + b;
   }
 };
