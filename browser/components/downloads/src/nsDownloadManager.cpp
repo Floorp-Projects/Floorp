@@ -513,6 +513,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   }
 
   mCurrDownloads.Put(&key, *aDownload);
+  gObserverService->NotifyObservers(*aDownload, "dl-start", nsnull);
   return rv;
 }
 
@@ -1011,10 +1012,8 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
                           nsIRequest* aRequest, PRUint32 aStateFlags,
                           nsresult aStatus)
 {
-  if (aStateFlags & STATE_START) {
-    gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-start", nsnull);
-    mStartTime = PR_Now();
-  }
+  if (aStateFlags & STATE_START)    
+    mStartTime = PR_Now();  
 
   if (mListener)
     mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
