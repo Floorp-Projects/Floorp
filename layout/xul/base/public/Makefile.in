@@ -32,6 +32,7 @@ XPIDL_MODULE	= layout_xul
 EXPORTS		= \
 		nsPIBoxObject.h \
 		nsIMenuFrame.h \
+		nsIMenuParent.h \
 		nsIPopupSetFrame.h \
 		nsITreeFrame.h \
 		$(NULL)

@@ -177,8 +177,7 @@
       </xul:hbox>
     </content>
     
-    <implementation implements="nsIDOMXULMenuBarElement, nsIAccessibleProvider">
-      <field name="activeMenu"/>
+    <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
         <getter>
           <![CDATA[

@@ -95,8 +95,8 @@
 #include "nsQuickSort.h"
 #ifdef MOZ_XUL
 #include "nsIXULContent.h"
-#include "nsIDOMXULPopupElement.h"
-#include "nsIDOMXULMenuBarElement.h"
+#include "nsIMenuParent.h"
+#include "nsIMenuFrame.h"
 #include "nsXULAtoms.h"
 #endif
 
@@ -3327,20 +3327,22 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
         (mContent->IsContentOfType(nsIContent::eXUL) &&
          (mContentTag == nsXULAtoms::menuitem || mContentTag == nsXULAtoms::menu))) {
       
-      nsCOMPtr<nsIDOMElement> currentItem;
-      nsCOMPtr<nsIDOMXULPopupElement> popupEl = do_QueryInterface(mParentContent);
-      if (popupEl)
-        popupEl->GetActiveItem(getter_AddRefs(currentItem));
-      else {
-        nsCOMPtr<nsIDOMXULMenuBarElement> menubar = do_QueryInterface(mParentContent);
-        if (menubar)
-          menubar->GetActiveMenu(getter_AddRefs(currentItem));
-      }
-
-      if (currentItem) {
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent);
-        if (currentItem == element)
-          mIsMenuActive = PR_TRUE;
+      nsCOMPtr<nsIPresShell> shell;
+      mPresContext->GetShell(getter_AddRefs(shell));
+      if (shell) {
+        nsIFrame* optionFrame = nsnull;
+        nsIMenuFrame* itemFrame = nsnull;
+        shell->GetPrimaryFrameFor(mContent, &optionFrame);
+        if (optionFrame &&
+            NS_SUCCEEDED(CallQueryInterface(optionFrame, &itemFrame))) {
+          nsIMenuParent* menuParent;
+          itemFrame->GetMenuParent(&menuParent);
+          nsIMenuFrame* currentItemFrame = nsnull;
+          if (menuParent &&
+              NS_SUCCEEDED(menuParent->GetCurrentMenuItem(&currentItemFrame)) &&
+              currentItemFrame == itemFrame)
+            mIsMenuActive = PR_TRUE;
+        }
       }
     }
   }
