@@ -53,11 +53,13 @@ protected:
 
   virtual ~AbsoluteFrame();
 
-  nsIView*  CreateView(nsIFrame*     aContainingBlock,
+  nsIView*  CreateView(nsIView*      aContainingView,
                        const nsRect& aRect,
                        PRInt32       aZIndex);
   nsIFrame* GetContainingBlock();
-  void      ComputeViewsRect(nsIFrame* aContainingBlock, nsRect& aRect);
+  void      ComputeViewBounds(const nsRect&    aContainingInnerRect,
+                              nsStylePosition* aPosition,
+                              nsRect&          aRect);
 };
 
 #endif /* nsAbsoluteFrame_h___ */

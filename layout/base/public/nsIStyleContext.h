@@ -116,6 +116,7 @@ struct nsStyleList : public nsStyleStruct {
 
 struct nsStylePosition : public nsStyleStruct {
   PRUint8 mPosition;                    // see nsStyleConsts.h
+  PRUint8 mOverflow;                    // see nsStyleConsts.h
 
   PRUint8 mLeftOffsetFlags;             // see nsStyleConsts.h
   nscoord mLeftOffset;
