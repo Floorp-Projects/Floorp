@@ -196,13 +196,6 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
     return JS_TRUE;
 }
 
-JS_PUBLIC_API(void)
-JS_DHashTableFinish(JSDHashTable *table)
-{
-    table->ops->finalize(table);
-    table->ops->freeTable(table, table->entryStore);
-}
-
 /*
  * Double hashing needs the second hash code to be relatively prime to table
  * size, so we simply make hash2 odd.
@@ -219,6 +212,31 @@ JS_DHashTableFinish(JSDHashTable *table)
 /* Compute the address of the indexed entry in table. */
 #define ADDRESS_ENTRY(table, index) \
     ((JSDHashEntryHdr *)((table)->entryStore + (index) * (table)->entrySize))
+
+JS_PUBLIC_API(void)
+JS_DHashTableFinish(JSDHashTable *table)
+{
+    char *entryAddr, *entryLimit;
+    uint32 entrySize;
+
+    table->ops->finalize(table);
+
+    /* Clear any remaining live entries. */
+    entryAddr = table->entryStore;
+    entrySize = table->entrySize;
+    entryLimit = entryAddr + JS_BIT(table->sizeLog2) * entrySize;
+    while (entryAddr < entryLimit) {
+        JSDHashEntryHdr *entry = (JSDHashEntryHdr *)entryAddr;
+        if (ENTRY_IS_LIVE(entry)) {
+            METER(table->stats.removeEnums++);
+            table->ops->clearEntry(table, entry);
+        }
+
+        entryAddr += entrySize;
+    }
+
+    table->ops->freeTable(table, table->entryStore);
+}
 
 static JSDHashEntryHdr *
 SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
@@ -424,18 +442,20 @@ JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry)
 JS_PUBLIC_API(uint32)
 JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
 {
-    char *entryAddr;
-    uint32 i, j, capacity, entrySize;
+    char *entryAddr, *entryLimit;
+    uint32 i, capacity, entrySize;
     JSDHashEntryHdr *entry;
     JSDHashOperator op;
 
     entryAddr = table->entryStore;
     entrySize = table->entrySize;
     capacity = JS_BIT(table->sizeLog2);
-    for (i = j = 0; i < capacity; i++) {
+    entryLimit = entryAddr + capacity * entrySize;
+    i = 0;
+    while (entryAddr < entryLimit) {
         entry = (JSDHashEntryHdr *)entryAddr;
         if (ENTRY_IS_LIVE(entry)) {
-            op = etor(table, entry, j++, arg);
+            op = etor(table, entry, i++, arg);
             if (op & JS_DHASH_REMOVE) {
                 METER(table->stats.removeEnums++);
                 JS_DHashTableRawRemove(table, entry);
@@ -457,7 +477,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
                            JS_CeilingLog2(capacity) - table->sizeLog2,
                            NULL);
     }
-    return j;
+    return i;
 }
 
 #ifdef JS_DHASHMETER
