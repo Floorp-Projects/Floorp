@@ -41,6 +41,7 @@
 #include "nsFileSpec.h"
 #include "nsString.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsMsgKeyArray.h"
 
 class nsImapFlagAndUidState;
 
@@ -65,5 +66,6 @@ extern nsresult
 nsCreateImapBaseMessageURI(const char *baseURI, char **baseMessageURI);
 
 void AllocateImapUidString(PRUint32 *msgUids, PRUint32 &msgCount, nsImapFlagAndUidState *flagState, nsCString &returnString);
+void ParseUidString(const char *uidString, nsMsgKeyArray &keys);
 
 #endif //NS_IMAPUTILS_H

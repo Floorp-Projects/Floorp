@@ -4292,34 +4292,6 @@ nsresult nsImapMailFolder::GetTrashFolder(nsIMsgFolder **pTrashFolder)
   return rv;
 }
 
-void nsImapMailFolder::ParseUidString(char *uidString, nsMsgKeyArray &keys)
-{
-  // This is in the form <id>,<id>, or <id1>:<id2>
-  char curChar = *uidString;
-  PRBool isRange = PR_FALSE;
-  int32 curToken;
-  int32 saveStartToken=0;
-
-  for (char *curCharPtr = uidString; curChar && *curCharPtr;)
-  {
-    char *currentKeyToken = curCharPtr;
-    curChar = *curCharPtr;
-    while (curChar != ':' && curChar != ',' && curChar != '\0')
-      curChar = *curCharPtr++;
-    *(curCharPtr - 1) = '\0';
-    curToken = atoi(currentKeyToken);
-    if (isRange)
-    {
-      while (saveStartToken < curToken)
-        keys.Add(saveStartToken++);
-    }
-    keys.Add(curToken);
-    isRange = (curChar == ':');
-    if (isRange)
-      saveStartToken = curToken + 1;
-  }
-}
-
 
 // store MSG_FLAG_IMAP_DELETED in the specified mailhdr records
 void nsImapMailFolder::SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted)

@@ -4622,8 +4622,26 @@ void
 nsImapProtocol::Store(const char * messageList, const char * messageData,
                       PRBool idsAreUid)
 {
-  IncrementCommandTagNumber();
     
+  // turn messageList back into key array and then back into a message id list,
+  // but use the flag state to handle ranges correctly.
+  nsCString messageIdList;
+  nsMsgKeyArray msgKeys;
+  ParseUidString(messageList, msgKeys);
+
+  PRInt32 msgCountLeft = msgKeys.GetSize();
+  PRUint32 msgsHandled = 0;
+  do 
+  {
+    nsCString idString;
+
+    PRUint32 msgsToHandle = msgCountLeft;
+    AllocateImapUidString(msgKeys.GetArray() + msgsHandled, msgsToHandle, m_flagState, idString);  // 20 * 200
+
+    msgsHandled += msgsToHandle;
+    msgCountLeft -= msgsToHandle;
+
+    IncrementCommandTagNumber();
   const char *formatString;
   if (idsAreUid)
       formatString = "%s uid store %s %s\015\012";
@@ -4646,7 +4664,7 @@ nsImapProtocol::Store(const char * messageList, const char * messageData,
                   protocolStringSize, // max size
                   formatString, // format string
                   commandTag, // command tag
-                  messageList,
+                    idString.get(),
                   messageData);
       
     nsresult rv = SendData(protocolString);
@@ -4661,6 +4679,9 @@ nsImapProtocol::Store(const char * messageList, const char * messageData,
   }
   else
     HandleMemoryFailure();
+  }
+  while (msgCountLeft > 0 && !DeathSignalReceived());
+    
 }
 
 void

@@ -373,7 +373,6 @@ protected:
   void SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted);
   virtual PRBool ShowDeletedMessages();
   virtual PRBool DeleteIsMoveToTrash();
-  void ParseUidString(char *uidString, nsMsgKeyArray &keys);
   nsresult GetFolder(const char *name, nsIMsgFolder **pFolder);
   nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
   PRBool TrashOrDescendentOfTrash(nsIMsgFolder* folder);
