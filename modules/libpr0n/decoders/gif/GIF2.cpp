@@ -542,39 +542,6 @@ PRBool GIFInit(
   return PR_TRUE;
 }
 
-/******************************************************************************/
-static int gif_init_transparency(gif_struct* gs, int index)
-{
-  GIF_IRGB *src_trans_pixel = gs->transparent_pixel;
-  GIF_IRGB *img_trans_pixel;
-
-  if (!src_trans_pixel) {
-    src_trans_pixel = PR_NEWZAP(GIF_IRGB);
-    if (!src_trans_pixel)
-      return PR_FALSE;
-    gs->transparent_pixel = src_trans_pixel;
-
-    /* Set the source image's transparent pixel color to be the preferred
-       transparency color of the destination image. */
-    img_trans_pixel = gs->transparent_pixel;
-    src_trans_pixel->red = img_trans_pixel->red;
-    src_trans_pixel->green = img_trans_pixel->green;
-    src_trans_pixel->blue = img_trans_pixel->blue;
-  }
-
-  return PR_TRUE;
-}
-
-//******************************************************************************
-static void gif_destroy_transparency(gif_struct* gs)
-{
-  if (gs->transparent_pixel) {
-    /* Destroy the source image's transparent pixel. */
-    PR_Free(gs->transparent_pixel);
-    gs->transparent_pixel = nsnull;
-  }
-}
-
 /* Maximum # of bytes to read ahead while waiting for delay_time to expire.
    We no longer limit this number to remain within WIN16 malloc limitations
    of 0xffff */
@@ -835,12 +802,6 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
     {
       if (*q & 0x1) {
         gs->tpixel = q[3];
-
-        if (!gif_init_transparency(gs, gs->tpixel)) {
-          gs->state = gif_oom;
-          break;
-        }
-
         gs->is_transparent = PR_TRUE;
       } else {
         gs->is_transparent = PR_FALSE;
@@ -1201,8 +1162,6 @@ void gif_destroy(gif_struct *gs)
   /* Clear any pending timeouts */
   if (gs->delay_time)
     gs->delay_time = 0;
-
-  gif_destroy_transparency(gs);
 
   PR_FREEIF(gs->rowbuf);
   gif_free(gs->prefix);

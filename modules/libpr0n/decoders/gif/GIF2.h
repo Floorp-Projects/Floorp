@@ -196,7 +196,6 @@ typedef struct gif_struct {
     PRUintn last_height, last_width;
     int interlaced;             /* TRUE, if scanlines arrive interlaced order */
     int tpixel;                 /* Index of transparent pixel */
-    GIF_IRGB* transparent_pixel;
     int is_transparent;         /* TRUE, if tpixel is valid */
     int control_extension;      /* TRUE, if image control extension present */
     int is_local_colormap_defined;
