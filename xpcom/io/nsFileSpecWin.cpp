@@ -473,7 +473,7 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 
 //----------------------------------------------------------------------------------------
 nsresult
-nsFileSpec::Truncate(const PRInt32 aNewFileLength) const
+nsFileSpec::Truncate(PRInt32 aNewFileLength) const
 //----------------------------------------------------------------------------------------
 {
     DWORD status;
