@@ -1046,7 +1046,6 @@ if test -d $(@D); then \
 fi
 endef
 endif # WINNT
-
 endif # !COMPILER_DEPEND
 
 endif # MOZ_AUTO_DEPS
@@ -1494,9 +1493,9 @@ endif
 libs chrome:: $(CHROME_DEPS)
 ifndef NO_DIST_INSTALL
 ifdef MOZ_PHOENIX
-	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) -p $(MOZILLA_DIR)/config/preprocessor.pl -- "$(DEFINES) $(ACDEFINES)" < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl -- "$(DEFINES) $(ACDEFINES)" < $(JAR_MANIFEST); fi
 else
-	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) -z $(ZIP) < $(JAR_MANIFEST); fi
 endif
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DIST)/bin/chrome $(JAR_MANIFEST) $(_NO_FLOCK); fi
 endif
@@ -1504,9 +1503,9 @@ endif
 install:: $(CHROME_DEPS)
 ifndef NO_INSTALL
 ifdef MOZ_PHOENIX
-	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DESTDIR)$(mozappdir)/chrome -s $(srcdir) -p $(MOZILLA_DIR)/config/preprocessor.pl -- "$(DEFINES) $(ACDEFINES)" < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DESTDIR)$(mozappdir)/chrome -s $(srcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl -- "$(DEFINES) $(ACDEFINES)" < $(JAR_MANIFEST); fi
 else
-	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DESTDIR)$(mozappdir)/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DESTDIR)$(mozappdir)/chrome -s $(srcdir) -z $(ZIP) < $(JAR_MANIFEST); fi
 endif
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DESTDIR)$(mozappdir)/chrome $(JAR_MANIFEST) $(_NO_FLOCK); fi
 endif

@@ -1,6 +1,6 @@
 #!/perl
 
-# make-jars [-f] [-v] [-l] [-d <chromeDir>] [-s <srcdir>] < <jar.mn>
+# make-jars [-f] [-v] [-l] [-x] [-d <chromeDir>] [-s <srcdir>] [-z zipprog] < <jar.mn>
 
 my $cygwin_mountprefix = "";
 if ($^O eq "cygwin") {
@@ -31,7 +31,7 @@ import mozLock;
 
 my $objdir = getcwd;
 
-getopts("d:s:f:avlD:p:x");
+getopts("d:s:f:avlD:p:xz:");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -90,6 +90,16 @@ if (defined($::opt_x)) {
     $force_x11 = 1;
 }
 
+my $zipprog = $ENV{ZIP};
+if (defined($::opt_z)) {
+    $zipprog = $::opt_z;
+}
+
+if ($zipprog eq "") {
+    print "A valid zip program must be given via the -z option or the ZIP environment variable. Exiting.\n";
+    exit(1);
+}
+
 my $defines = "";
 while (@ARGV) {
     $defines = "$defines ".shift(@ARGV);
@@ -98,6 +108,7 @@ while (@ARGV) {
 if ($verbose) {
     print "make-jars "
         . "-v -d $chromeDir "
+	. "-z $zipprog "
         . ($fileformat ? "-f $fileformat " : "")
         . ($nofilelocks ? "-l " : "")
         . ($baseFilesDir ? "-s $baseFilesDir " : "")
@@ -164,7 +175,7 @@ sub JarIt
 	my $cwd = getcwd;
 	my $err = 0; 
 
-        #print "zip $zipmoveopt -u ../$jarfile.jar $args\n";
+        #print "$zipprog $zipmoveopt -u ../$jarfile.jar $args\n";
 
 	# Handle posix cmdline limits
 	while (length($args) > $maxCmdline) {
@@ -174,15 +185,15 @@ sub JarIt
 	    $subargs = substr($args, 0, $pos);
 	    $args = substr($args, $pos);
 	    
-	    #print "zip $zipmoveopt -u ../$jarfile.jar $subargs\n";	    
+	    #print "$zipprog $zipmoveopt -u ../$jarfile.jar $subargs\n";
 	    #print "Length of subargs: " . length($subargs) . "\n";
-	    system("zip $zipmoveopt -u ../$jarfile.jar $subargs") == 0 or
+	    system("$zipprog $zipmoveopt -u ../$jarfile.jar $subargs") == 0 or
 		$err = $? >> 8;
 	    zipErrorCheck($err,$lockfile);
 	}
 	#print "Length of args: " . length($args) . "\n";
-        #print "zip $zipmoveopt -u ../$jarfile.jar $args\n";
-        system("zip $zipmoveopt -u ../$jarfile.jar $args") == 0 or
+        #print "$zipprog $zipmoveopt -u ../$jarfile.jar $args\n";
+        system("$zipprog $zipmoveopt -u ../$jarfile.jar $args") == 0 or
 	    $err = $? >> 8;
 	zipErrorCheck($err,$lockfile);
     }
@@ -198,15 +209,15 @@ sub JarIt
 	    $subargs = substr($overrides, 0, $pos);
 	    $overrides = substr($overrides, $pos);
 	    
-	    #print "zip $zipmoveopt ../$jarfile.jar $subargs\n";	    
+	    #print "$zipprog $zipmoveopt ../$jarfile.jar $subargs\n";	    
 	    #print "Length of subargs: " . length($subargs) . "\n";
-	    system("zip $zipmoveopt ../$jarfile.jar $subargs") == 0 or
+	    system("$zipprog $zipmoveopt ../$jarfile.jar $subargs") == 0 or
 		$err = $? >> 8;
 	    zipErrorCheck($err,$lockfile);
 	}
 	#print "Length of args: " . length($overrides) . "\n";
-        #print "zip $zipmoveopt ../$jarfile.jar $overrides\n";
-        system("zip $zipmoveopt ../$jarfile.jar $overrides\n") == 0 or 
+        #print "$zipprog $zipmoveopt ../$jarfile.jar $overrides\n";
+        system("$zipprog $zipmoveopt ../$jarfile.jar $overrides\n") == 0 or 
 	    $err = $? >> 8;
 	zipErrorCheck($err,$lockfile);
     }
