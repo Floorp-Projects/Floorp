@@ -43,6 +43,10 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS += $(LIBIDL_CFLAGS)
 
+ifdef HOST_NSPR_MDCPUCFG
+CFLAGS += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
+endif
+
 # Tell the $(PROGRAM) target that we need to be recompiled when libxpt changes.
 EXTRA_DEPS = $(wildcard $(DIST)/lib/libxpt.*)
 
