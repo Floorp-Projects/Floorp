@@ -23,6 +23,7 @@
 #include "nsMsgFolder.h" 
 #include "nsIDBFolderInfo.h"
 #include "nsIMsgDatabase.h"
+#include "nsIMessage.h"
 #include "nsCOMPtr.h"
 #include "nsIDBChangeListener.h"
 
