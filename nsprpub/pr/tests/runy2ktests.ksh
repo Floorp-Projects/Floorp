@@ -34,7 +34,7 @@
 
 SYSTEM_INFO=`uname -a`
 OS_ARCH=`uname -s`
-if [ $OS_ARCH = "Windows_NT" ]
+if [ $OS_ARCH = "Windows_NT" ] || [ $OS_ARCH = "Windows_95" ]
 then
 	NULL_DEVICE=nul
 else
@@ -104,6 +104,9 @@ save_date()
 	Windows_NT)
 		SAVED_DATE=`date "+%m%d%H%M%y.%S"`
 	;;
+	Windows_95)
+		SAVED_DATE=`date "+%m%d%H%M%y.%S"`
+	;;
 	*)
 		SAVED_DATE=`date "+%m%d%H%M%Y.%S"`
 	;;
@@ -148,6 +151,9 @@ savedate()
 	Windows_NT)
 		SAVED_DATE=`date "+%m%d%H%M%y.%S"`
 	;;
+	Windows_95)
+		SAVED_DATE=`date "+%m%d%H%M%y.%S"`
+	;;
 	*)
 		SAVED_DATE=`date "+%m%d%H%M%Y.%S"`
 	;;
@@ -167,6 +173,9 @@ set_y2k_test_parameters()
 		DATES=$Y2KDATES_HPUX
 	;;
 	Windows_NT)
+		DATES=$Y2KDATES_MKS
+	;;
+	Windows_95)
 		DATES=$Y2KDATES_MKS
 	;;
 	*)
