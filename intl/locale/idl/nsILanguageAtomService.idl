@@ -35,6 +35,8 @@ interface nsILanguageAtomService : nsISupports
 {
   nsILanguageAtom LookupLanguage(in wstring aLanguage);
   nsILanguageAtom LookupCharSet(in wstring aCharSet);
+
+  nsIAtom GetLocaleLanguageGroup();
 };
 
 %{C++
