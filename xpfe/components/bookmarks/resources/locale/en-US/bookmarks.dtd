@@ -14,8 +14,7 @@
 <!ENTITY menuitem.paste.label         "Paste">
 <!ENTITY menuitem.delete.label        "Delete">
 <!ENTITY menuitem.selectAll.label     "Select All">
-<!ENTITY menuitem.find.label          "Find in Bookmarks...">
-<!ENTITY menuitem.findAgain.label     "Find Again">
+<!ENTITY menuitem.find.label          "Search in Bookmarks...">
 <!ENTITY menuitem.properties.label    "Bookmark Properties...">
 <!ENTITY tree.header.name.label           "Name">
 <!ENTITY tree.header.url.label            "URL">

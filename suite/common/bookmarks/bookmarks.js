@@ -40,6 +40,11 @@ function BookmarkProperties()
   }
 }
 
+function OpenSearch(tabName)
+{
+	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "chrome,resizable", tabName);
+}
+
 function OpenURL(event, node)
 {
     // clear any single-click/edit timeouts
