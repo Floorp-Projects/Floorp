@@ -280,7 +280,7 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::MoveToFolder,
                    NS_ERROR_ILLEGAL_VALUE);
-    if (m_action.m_folderUri)
+    if (m_action.m_folderUri.get())
       *aResult = ToNewCString(m_action.m_folderUri);
     return NS_OK;
 }
@@ -434,7 +434,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
       nsCOMPtr <nsIFolder> destIFolder;
       if (rootFolder)
       {
-        rootFolder->FindSubFolder (m_action.m_originalServerPath, getter_AddRefs(destIFolder));
+        rootFolder->FindSubFolder (m_action.m_originalServerPath.get(), getter_AddRefs(destIFolder));
         if (destIFolder)
         {
           nsCOMPtr <nsIMsgFolder> msgFolder;
@@ -501,7 +501,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
             moveValue.Assign(escapedName.get());
         }
         destFolderUri.Append(moveValue);
-        localMailRootMsgFolder->GetChildWithURI (destFolderUri, PR_TRUE, PR_FALSE /*caseInsensitive*/, getter_AddRefs(destIMsgFolder));
+        localMailRootMsgFolder->GetChildWithURI (destFolderUri.get(), PR_TRUE, PR_FALSE /*caseInsensitive*/, getter_AddRefs(destIMsgFolder));
 
         if (destIMsgFolder)
         {
@@ -513,7 +513,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
     }
   }
   else
-    SetActionTargetFolderUri(moveValue);
+    SetActionTargetFolderUri(moveValue.get());
     
 	return NS_OK;
 	// set m_action.m_value.m_folderUri
@@ -523,10 +523,10 @@ nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *aStream)
 {
   nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.get(), aStream);
   err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled, aStream);
-  err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description, aStream);
+  err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description.get(), aStream);
   err = m_filterList->WriteIntAttr(nsIMsgFilterList::attribType, m_type, aStream);
   if (IsScript())
-    err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribScriptFile, m_scriptFileName, aStream);
+    err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribScriptFile, m_scriptFileName.get(), aStream);
   else
     err = SaveRule(aStream);
   return err;
@@ -541,7 +541,7 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
   
   GetActionFilingStr(m_action.m_type, actionFilingStr);
   
-  err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr, aStream);
+  err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr.get(), aStream);
   NS_ENSURE_SUCCESS(err, err);
   
   switch(m_action.m_type)
@@ -549,7 +549,7 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
   case nsMsgFilterAction::MoveToFolder:
     {
       nsCAutoString imapTargetString(m_action.m_folderUri);
-      err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString, aStream);
+      err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString.get(), aStream);
     }
     break;
   case nsMsgFilterAction::ChangePriority:
@@ -558,7 +558,7 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
       NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
       nsCAutoString cStr;
       cStr.AssignWithConversion(priority);
-      err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr, aStream);
+      err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr.get(), aStream);
     }
     break;
   case nsMsgFilterAction::Label:
@@ -604,7 +604,7 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
     condition += ')';
   }
   if (NS_SUCCEEDED(err))
-    err = filterList->WriteStrAttr(nsIMsgFilterList::attribCondition, condition, aStream);
+    err = filterList->WriteStrAttr(nsIMsgFilterList::attribCondition, condition.get(), aStream);
   return err;
 }
 

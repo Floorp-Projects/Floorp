@@ -779,7 +779,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 					char startChar = (char) compare.CharAt(0);
 					if (startChar != nsCRT::CR && startChar != nsCRT::LF)
 					{
-						err = MatchString (compare, folderCharset, &result);
+						err = MatchString (compare.get(), folderCharset, &result);
 						lines++; 
 					}
 				}
@@ -857,12 +857,12 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 	{
 	case nsMsgSearchOp::Contains:
 		if ((nsnull != utf8) && ((n_str.get())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
-			PL_strcasestr(utf8, n_str))
+			PL_strcasestr(utf8, n_str.get()))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::DoesntContain:
 		if ((nsnull != utf8) && ((n_str.get())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
-			!PL_strcasestr(utf8, n_str))
+			!PL_strcasestr(utf8, n_str.get()))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
@@ -899,7 +899,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 			result = PR_TRUE;
 #else
 		// ### DMB - not the  most efficient way to do this.
-		if (PL_strncmp(utf8, n_str, PL_strlen(n_str)) == 0)
+		if (PL_strncmp(utf8, n_str.get(), n_str.Length()) == 0)
 			result = PR_TRUE;
 #endif
 		break;
@@ -909,7 +909,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
       if (n_str.Length() <= searchStrLen)
       {
         PRInt32 sourceStrOffset = searchStrLen - n_str.Length();
-        if (PL_strcmp(utf8 + sourceStrOffset, n_str) == 0)
+        if (PL_strcmp(utf8 + sourceStrOffset, n_str.get()) == 0)
           result = PR_TRUE;
       }
     }
@@ -983,9 +983,9 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		{
 			walkNames = names + namePos;
 			walkAddresses = addresses + addressPos;;
-			err = MatchRfc2047String (walkNames, charset, charsetOverride, &result);
+			err = MatchRfc2047String (walkNames.get(), charset, charsetOverride, &result);
 			if (boolContinueLoop == result)
-				err = MatchRfc2047String (walkAddresses, charset, charsetOverride, &result);
+				err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
 
 			namePos += walkNames.Length() + 1;
 			addressPos += walkAddresses.Length() + 1;

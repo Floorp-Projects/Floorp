@@ -120,7 +120,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   {
 	  nsUnescape(unescapedUserName);
 	  rv = accountManager->FindServer(unescapedUserName,
-									  hostname,
+									  hostname.get(),
 									  "imap",
 									  getter_AddRefs(server));
 	  PR_FREEIF(unescapedUserName);
@@ -159,14 +159,14 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
           parentName.Truncate(dirEnd);
           NS_MsgHashIfNecessary(parentName);
           parentName.AppendWithConversion(sbdSep);
-          pathResult += (const char *) parentName;
+          pathResult += parentName.get();
 		  // this fixes a strange purify warning.
-          parentName = (const char *) leafName;
+          parentName = leafName.get();
           dirEnd = parentName.FindChar('/');
       }
       if (!leafName.IsEmpty()) {
         NS_MsgHashIfNecessary(leafName);
-        pathResult += (const char *) leafName;
+        pathResult += leafName.get();
       }
   }
 

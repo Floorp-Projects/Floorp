@@ -2043,7 +2043,7 @@ NS_IMETHODIMP nsMsgFolder::SetNumNewMessages(PRInt32 aNumNewMessages)
     oldNumMessagesStr.AppendInt(oldNumMessages);
 		nsCAutoString newNumMessagesStr;
     newNumMessagesStr.AppendInt(aNumNewMessages);
-		NotifyPropertyChanged(kNumNewBiffMessagesAtom, oldNumMessagesStr, newNumMessagesStr);
+		NotifyPropertyChanged(kNumNewBiffMessagesAtom, oldNumMessagesStr.get(), newNumMessagesStr.get());
 	}
 
 	return NS_OK;

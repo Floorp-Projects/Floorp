@@ -290,7 +290,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 
 
 	nsCOMPtr<nsIRDFResource> notificationResource;
-	rv = rdfService->GetResource((const char *) newMailURI, getter_AddRefs(notificationResource));
+	rv = rdfService->GetResource(newMailURI.get(), getter_AddRefs(notificationResource));
 	if(NS_FAILED(rv))
 		return rv;
 
@@ -378,7 +378,7 @@ nsresult nsMsgNotificationManager::RemoveNewMailNotification(nsIMsgFolder *folde
 		return rv;
 
 	nsCOMPtr<nsIRDFResource> notificationResource;
-	rv = rdfService->GetResource(newMailURI, getter_AddRefs(notificationResource));
+	rv = rdfService->GetResource(newMailURI.get(), getter_AddRefs(notificationResource));
 	if(NS_FAILED(rv))
 		return rv;
 	RemoveOldValues(notificationResource);

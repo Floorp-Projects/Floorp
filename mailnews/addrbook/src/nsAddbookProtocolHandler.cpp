@@ -391,7 +391,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
     prefId.Append(charAb);
     prefId.Append(".filename");
 
-    rv = pPref->CopyCharPref(prefId, &abFileName);
+    rv = pPref->CopyCharPref(prefId.get(), &abFileName);
 	  if (NS_FAILED(rv))
       abFileName = nsnull;
   }

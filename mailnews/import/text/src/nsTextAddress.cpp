@@ -504,7 +504,7 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
 						}
 					}
 					if (newRow) {
-						ConvertToUnicode( fieldVal, uVal);
+						ConvertToUnicode( fieldVal.get(), uVal);
 						rv = m_fieldMap->SetFieldValue( m_database, newRow, fieldNum, uVal.get());
 					}
 				}
@@ -1005,25 +1005,25 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	{
 	case 'b':
 	  if ( -1 != colType.Find("birthyear") )
-		m_database->AddBirthYear(newRow, column);
+		m_database->AddBirthYear(newRow, column.get());
 	  break; // 'b'
 
 	case 'c':
 	  if ( -1 != colType.Find("cn") || -1 != colType.Find("commonname") )
 	  {
 		if (bIsList)
-		  m_database->AddListName(newRow, column);
+		  m_database->AddListName(newRow, column.get());
 		else
-		  m_database->AddDisplayName(newRow, column);
+		  m_database->AddDisplayName(newRow, column.get());
 	  }
 	  else if ( -1 != colType.Find("countryname") )
-		m_database->AddWorkCountry(newRow, column);
+		m_database->AddWorkCountry(newRow, column.get());
 
 	  // else if ( -1 != colType.Find("charset") )
 	  //   ioRow->AddColumn(ev, this->ColCharset(), yarn);
 
 	  else if ( -1 != colType.Find("cellphone") )
-		m_database->AddCellularNumber(newRow, column);
+		m_database->AddCellularNumber(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("calendar") )
 //			ioRow->AddColumn(ev, this->ColCalendar(), yarn);
@@ -1032,41 +1032,41 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 //			ioRow->AddColumn(ev, this->ColCar(), yarn);
 
 	  else if ( -1 != colType.Find("carphone") )
-		m_database->AddCellularNumber(newRow, column);
+		m_database->AddCellularNumber(newRow, column.get());
 //			ioRow->AddColumn(ev, this->ColCarPhone(), yarn);
 
 //		  else if ( -1 != colType.Find("carlicense") )
 //			ioRow->AddColumn(ev, this->ColCarLicense(), yarn);
         
 	  else if ( -1 != colType.Find("custom1") )
-		m_database->AddCustom1(newRow, column);
+		m_database->AddCustom1(newRow, column.get());
         
 	  else if ( -1 != colType.Find("custom2") )
-		m_database->AddCustom2(newRow, column);
+		m_database->AddCustom2(newRow, column.get());
         
 	  else if ( -1 != colType.Find("custom3") )
-		m_database->AddCustom3(newRow, column);
+		m_database->AddCustom3(newRow, column.get());
         
 	  else if ( -1 != colType.Find("custom4") )
-		m_database->AddCustom4(newRow, column);
+		m_database->AddCustom4(newRow, column.get());
         
 	  else if ( -1 != colType.Find("company") )
-		m_database->AddCompany(newRow, column);
+		m_database->AddCompany(newRow, column.get());
 	  break; // 'c'
 
 	case 'd':
 	  if ( -1 != colType.Find("description") )
 	  {
 		if (bIsList)
-		  m_database->AddListDescription(newRow, column);
+		  m_database->AddListDescription(newRow, column.get());
 		else
-		  m_database->AddNotes(newRow, column);
+		  m_database->AddNotes(newRow, column.get());
 	  }
 //		  else if ( -1 != colType.Find("dn") ) // distinuished name
 //			ioRow->AddColumn(ev, this->ColDistName(), yarn);
 
 	  else if ( -1 != colType.Find("department") )
-		m_database->AddDepartment(newRow, column);
+		m_database->AddDepartment(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("departmentnumber") )
 //			ioRow->AddColumn(ev, this->ColDepartmentNumber(), yarn);
@@ -1088,12 +1088,12 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	  if ( -1 != colType.Find("fax") ||
 		-1 != colType.Find("facsimiletelephonenumber") )
-		m_database->AddFaxNumber(newRow, column);
+		m_database->AddFaxNumber(newRow, column.get());
 	  break; // 'f'
 
 	case 'g':
 	  if ( -1 != colType.Find("givenname") )
-		m_database->AddFirstName(newRow, column);
+		m_database->AddFirstName(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("gif") )
 //			ioRow->AddColumn(ev, this->ColGif(), yarn);
@@ -1105,10 +1105,10 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'h':
 	  if ( -1 != colType.Find("homephone") )
-		m_database->AddHomePhone(newRow, column);
+		m_database->AddHomePhone(newRow, column.get());
 
 	  else if ( -1 != colType.Find("homeurl") )
-		m_database->AddWebPage1(newRow, column);
+		m_database->AddWebPage1(newRow, column.get());
 	  break; // 'h'
 
 	case 'i':
@@ -1133,7 +1133,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'l':
 	  if ( -1 != colType.Find("l") || -1 != colType.Find("locality") )
-		m_database->AddWorkCity(newRow, column);
+		m_database->AddWorkCity(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("language") )
 //			ioRow->AddColumn(ev, this->ColLanguage(), yarn);
@@ -1148,10 +1148,10 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'm':
 	  if ( -1 != colType.Find("mail") )
-		m_database->AddPrimaryEmail(newRow, column);
+		m_database->AddPrimaryEmail(newRow, column.get());
 
 	  else if ( -1 != colType.Find("member") && bIsList )
-		m_database->AddLdifListMember(newRow, column);
+		m_database->AddLdifListMember(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("manager") )
 //			ioRow->AddColumn(ev, this->ColManager(), yarn);
@@ -1169,7 +1169,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 //			ioRow->AddColumn(ev, this->ColNote(), yarn);
 
 	  if ( -1 != colType.Find("notes") )
-		m_database->AddNotes(newRow, column);
+		m_database->AddNotes(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("n") )
 //			ioRow->AddColumn(ev, this->ColN(), yarn);
@@ -1184,23 +1184,23 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 		break;
 
 	  else if ( -1 != colType.Find("ou") || -1 != colType.Find("orgunit") )
-		m_database->AddDepartment(newRow, column);
+		m_database->AddDepartment(newRow, column.get());
 
 	  else if ( -1 != colType.Find("o") ) // organization
-		m_database->AddCompany(newRow, column);
+		m_database->AddCompany(newRow, column.get());
 
 	  break; // 'o'
 
 	case 'p':
 	  if ( -1 != colType.Find("postalcode") )
-		m_database->AddWorkZipCode(newRow, column);
+		m_database->AddWorkZipCode(newRow, column.get());
 
 	  else if ( -1 != colType.Find("postOfficeBox") )
-		m_database->AddWorkAddress(newRow, column);
+		m_database->AddWorkAddress(newRow, column.get());
 
 	  else if ( -1 != colType.Find("pager") ||
 		-1 != colType.Find("pagerphone") )
-		m_database->AddPagerNumber(newRow, column);
+		m_database->AddPagerNumber(newRow, column.get());
                     
 //		  else if ( -1 != colType.Find("photo") )
 //			ioRow->AddColumn(ev, this->ColPhoto(), yarn);
@@ -1221,7 +1221,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'r':
 	  if ( -1 != colType.Find("region") )
-		m_database->AddWorkState(newRow, column);
+		m_database->AddWorkState(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("rfc822mailbox") )
 //			ioRow->AddColumn(ev, this->ColPrimaryEmail(), yarn);
@@ -1235,13 +1235,13 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 's':
 	  if ( -1 != colType.Find("sn") || -1 != colType.Find("surname") )
-		m_database->AddLastName(newRow, column);
+		m_database->AddLastName(newRow, column.get());
 
 	  else if ( -1 != colType.Find("streetaddress") )
-		m_database->AddWorkAddress(newRow, column);
+		m_database->AddWorkAddress(newRow, column.get());
 
 	  else if ( -1 != colType.Find("st") )
-		m_database->AddWorkState(newRow, column);
+		m_database->AddWorkState(newRow, column.get());
 
 
 //		  else if ( -1 != colType.Find("secretary") )
@@ -1257,10 +1257,10 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 't':
 	  if ( -1 != colType.Find("title") )
-		m_database->AddJobTitle(newRow, column);
+		m_database->AddJobTitle(newRow, column.get());
 
 	  else if ( -1 != colType.Find("telephonenumber") )
-		m_database->AddWorkPhone(newRow, column);
+		m_database->AddWorkPhone(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("tiff") )
 //			ioRow->AddColumn(ev, this->ColTiff(), yarn);
@@ -1272,7 +1272,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	case 'u':
 
 		if ( -1 != colType.Find("uniquemember") && bIsList )
-			m_database->AddLdifListMember(newRow, column);
+			m_database->AddLdifListMember(newRow, column.get());
 
 //		  else if ( -1 != colType.Find("uid") )
 //			ioRow->AddColumn(ev, this->ColUid(), yarn);
@@ -1290,7 +1290,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'w':
 	  if ( -1 != colType.Find("workurl") )
-		m_database->AddWebPage2(newRow, column);
+		m_database->AddWebPage2(newRow, column.get());
 
 	  break; // 'w'
 
@@ -1298,9 +1298,9 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	  if ( -1 != colType.Find("xmozillanickname") )
 	  {
 		if (bIsList)
-		  m_database->AddListNickName(newRow, column);
+		  m_database->AddListNickName(newRow, column.get());
 		else
-		  m_database->AddNickName(newRow, column);
+		  m_database->AddNickName(newRow, column.get());
 	  }
 	  else if ( -1 != colType.Find("xmozillausehtmlmail") )
 	  {
@@ -1315,7 +1315,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'z':
 	  if ( -1 != colType.Find("zip") ) // alias for postalcode
-		m_database->AddWorkZipCode(newRow, column);
+		m_database->AddWorkZipCode(newRow, column.get());
 
 	  break; // 'z'
 

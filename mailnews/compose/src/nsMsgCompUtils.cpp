@@ -1680,7 +1680,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   		newSpec.AppendWithConversion(aSpec);
       nsCAutoString newspecC;
       newspecC.AssignWithConversion(newSpec);
-		rv = pNetService->NewURI(newspecC, nsnull, aInstancePtrResult);
+		rv = pNetService->NewURI(newspecC.get(), nsnull, aInstancePtrResult);
   	}
   	else
 		rv = pNetService->NewURI(aSpec, nsnull, aInstancePtrResult);

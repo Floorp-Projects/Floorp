@@ -1325,7 +1325,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	  if ( -1 != colType.Find("postalcode") )
 	  {
       if (mStoreLocAsHome )
-          mDatabase->AddHomeZipCode(newRow, column);
+          mDatabase->AddHomeZipCode(newRow, column.get());
       else
 	      mDatabase->AddWorkZipCode(newRow, column.get());
       }

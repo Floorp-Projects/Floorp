@@ -38,6 +38,7 @@
 
 #include "nsNewsDownloadDialogArgs.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 nsNewsDownloadDialogArgs::nsNewsDownloadDialogArgs()
 {
@@ -60,7 +61,7 @@ NS_IMETHODIMP nsNewsDownloadDialogArgs::GetGroupName(char * *aGroupName)
 {
     NS_ENSURE_ARG_POINTER(aGroupName);
 
-    *aGroupName = nsCRT::strdup((const char *)mGroupName);
+    *aGroupName = ToNewCString(mGroupName);
 
     return NS_OK;
 }
@@ -90,7 +91,7 @@ NS_IMETHODIMP nsNewsDownloadDialogArgs::GetServerKey(char * *aServerKey)
 {
     NS_ENSURE_ARG_POINTER(aServerKey);
     
-    *aServerKey = nsCRT::strdup((const char *)mServerKey);
+    *aServerKey = ToNewCString(mServerKey);
     return NS_OK;
 }
 NS_IMETHODIMP nsNewsDownloadDialogArgs::SetServerKey(const char * aServerKey)

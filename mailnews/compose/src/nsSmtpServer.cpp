@@ -88,7 +88,7 @@ nsSmtpServer::GetHostname(char * *aHostname)
     nsCAutoString pref;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     getPrefString("hostname", pref);
-    rv = prefs->CopyCharPref(pref, aHostname);
+    rv = prefs->CopyCharPref(pref.get(), aHostname);
     if (NS_FAILED(rv)) *aHostname=nsnull;
     return NS_OK;
 }
@@ -101,9 +101,9 @@ nsSmtpServer::SetHostname(const char * aHostname)
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     getPrefString("hostname", pref);
     if (aHostname)
-        return prefs->SetCharPref(pref, aHostname);
+        return prefs->SetCharPref(pref.get(), aHostname);
     else
-        prefs->ClearUserPref(pref);
+        prefs->ClearUserPref(pref.get());
     return NS_OK;
 }
 
@@ -117,7 +117,7 @@ nsSmtpServer::GetTrySSL(PRInt32 *trySSL)
     if (NS_FAILED(rv)) return rv;
     *trySSL= 0;
     getPrefString("try_ssl", pref);
-    rv = prefs->GetIntPref(pref, trySSL);
+    rv = prefs->GetIntPref(pref.get(), trySSL);
     if (NS_FAILED(rv))
 		rv = getDefaultIntPref(prefs, 0, "try_ssl", trySSL);
     return NS_OK;
@@ -131,7 +131,7 @@ nsSmtpServer::SetTrySSL(PRInt32 trySSL)
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     getPrefString("try_ssl", pref);
-    return prefs->SetIntPref(pref, trySSL);
+    return prefs->SetIntPref(pref.get(), trySSL);
 }
 
 NS_IMETHODIMP
@@ -144,7 +144,7 @@ nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
     if (NS_FAILED(rv)) return rv;
     *authMethod = 1;
     getPrefString("auth_method", pref);
-    rv = prefs->GetIntPref(pref, authMethod);
+    rv = prefs->GetIntPref(pref.get(), authMethod);
     if (NS_FAILED(rv))
 		rv = getDefaultIntPref(prefs, 1, "auth_method", authMethod);
     return rv;
@@ -160,7 +160,7 @@ nsSmtpServer::getDefaultIntPref(nsIPref *prefs,
   nsCAutoString fullPrefName;
   fullPrefName = "mail.smtpserver.default.";
   fullPrefName.Append(prefName);
-  nsresult rv = prefs->GetIntPref(fullPrefName, val);
+  nsresult rv = prefs->GetIntPref(fullPrefName.get(), val);
 
   if (NS_FAILED(rv))
   { // last resort
@@ -178,7 +178,7 @@ nsSmtpServer::SetAuthMethod(PRInt32 authMethod)
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     getPrefString("auth_method", pref);
-    return prefs->SetIntPref(pref, authMethod);
+    return prefs->SetIntPref(pref.get(), authMethod);
 }
 
 NS_IMETHODIMP
@@ -188,7 +188,7 @@ nsSmtpServer::GetUsername(char * *aUsername)
     nsCAutoString pref;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     getPrefString("username", pref);
-    rv = prefs->CopyCharPref(pref, aUsername);
+    rv = prefs->CopyCharPref(pref.get(), aUsername);
     if (NS_FAILED(rv)) *aUsername = nsnull;
     return NS_OK;
 }
@@ -201,9 +201,9 @@ nsSmtpServer::SetUsername(const char * aUsername)
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     getPrefString("username", pref);
     if (aUsername)
-        return prefs->SetCharPref(pref, aUsername);
+        return prefs->SetCharPref(pref.get(), aUsername);
     else
-        prefs->ClearUserPref(pref);
+        prefs->ClearUserPref(pref.get());
     return NS_OK;
 }
 
@@ -257,7 +257,7 @@ nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			// we got a password back...so remember it
 			nsCString aCStr; aCStr.AssignWithConversion(uniPassword); 
 
-			rv = SetPassword((const char *) aCStr);
+			rv = SetPassword(aCStr.get());
             if (NS_FAILED(rv)) return rv;
 		} // if we got a prompt dialog
 	} // if the password is empty
@@ -306,11 +306,11 @@ nsSmtpServer::GetUsernamePasswordWithUI(const PRUnichar * aPromptMessage, const
             nsCString aCStr; 
 
             aCStr.AssignWithConversion(uniUsername); 
-            rv = SetUsername((const char *) aCStr);
+            rv = SetUsername(aCStr.get());
             if (NS_FAILED(rv)) return rv;
 
             aCStr.AssignWithConversion(uniPassword); 
-            rv = SetPassword((const char *) aCStr);
+            rv = SetPassword(aCStr.get());
             if (NS_FAILED(rv)) return rv;
         } // if we got a prompt dialog
     } // if the password is empty
@@ -399,9 +399,9 @@ nsSmtpServer::SetRedirectorType(const char *aRedirectorType)
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     getPrefString("redirector_type", pref);
     if (aRedirectorType)
-        return prefs->SetCharPref(pref, aRedirectorType);
+        return prefs->SetCharPref(pref.get(), aRedirectorType);
     else
-        prefs->ClearUserPref(pref);
+        prefs->ClearUserPref(pref.get());
     return NS_OK;
 }
 
@@ -412,7 +412,7 @@ nsSmtpServer::GetRedirectorType(char **aResult)
     nsCAutoString pref;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     getPrefString("redirector_type", pref);
-    rv = prefs->CopyCharPref(pref, aResult);
+    rv = prefs->CopyCharPref(pref.get(), aResult);
     if (NS_FAILED(rv)) *aResult=nsnull;
 
     // Check if we need to change 'aol' to 'netscape' per #4696
@@ -424,8 +424,8 @@ nsSmtpServer::GetRedirectorType(char **aResult)
       {
         PL_strfree(*aResult);
         pref = "netscape";
-        rv = SetRedirectorType(pref);
-        *aResult = PL_strdup(pref);
+        rv = SetRedirectorType(pref.get());
+        *aResult = ToNewCString(pref);
       }
     }
 
@@ -442,7 +442,7 @@ nsSmtpServer::ClearAllValues()
     nsCAutoString rootPref("mail.smtpserver.");
     rootPref += mKey;
 
-    rv = prefs->EnumerateChildren(rootPref, clearPrefEnum, (void *)prefs.get());
+    rv = prefs->EnumerateChildren(rootPref.get(), clearPrefEnum, (void *)prefs.get());
 
     return rv;
 }

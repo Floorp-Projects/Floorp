@@ -682,7 +682,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
         categoryName = contractID;
     }
 
-    rv = nsComponentManager::CreateInstance(categoryName, nsnull, NS_GET_IID(nsIMimeEmitter), (void **) getter_AddRefs(mEmitter));
+    mEmitter = do_CreateInstance(categoryName.get(), &rv);
 
     if ((NS_FAILED(rv)) || (!mEmitter))
     {

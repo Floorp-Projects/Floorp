@@ -467,7 +467,7 @@ nsFolderCompactState::CompactNextFolder()
 nsresult
 nsFolderCompactState::GetMessage(nsIMsgDBHdr **message)
 {
-  return GetMsgDBHdrFromURI(m_messageUri, message);
+  return GetMsgDBHdrFromURI(m_messageUri.get(), message);
 }
 
 
@@ -610,7 +610,7 @@ nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt
     rv = BuildMessageURI(m_baseMessageUri, m_keyArray[m_curIndex],
                                 m_messageUri);
     if (NS_FAILED(rv)) goto done;
-    rv = m_messageService->CopyMessage(m_messageUri, this, PR_FALSE, nsnull,
+    rv = m_messageService->CopyMessage(m_messageUri.get(), this, PR_FALSE, nsnull,
                                        /* ### should get msg window! */ nsnull, nsnull);
    if (!NS_SUCCEEDED(rv))
    {
@@ -749,7 +749,7 @@ NS_IMETHODIMP nsOfflineStoreCompactState::StartCompacting()
                                 m_messageUri);
     if (NS_SUCCEEDED(rv))
       rv = m_messageService->CopyMessage(
-        m_messageUri, this, PR_FALSE, nsnull, m_window, nsnull);
+        m_messageUri.get(), this, PR_FALSE, nsnull, m_window, nsnull);
 
   }
   else

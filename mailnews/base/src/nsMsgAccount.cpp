@@ -134,7 +134,7 @@ nsMsgAccount::createIncomingServer()
   serverKeyPref += m_accountKey;
   serverKeyPref += ".server";
   nsXPIDLCString serverKey;
-  rv = m_prefs->CopyCharPref(serverKeyPref, getter_Copies(serverKey));
+  rv = m_prefs->CopyCharPref(serverKeyPref.get(), getter_Copies(serverKey));
   if (NS_FAILED(rv)) return rv;
     
 #ifdef DEBUG_alecf
@@ -148,7 +148,7 @@ nsMsgAccount::createIncomingServer()
   serverTypePref += ".type";
   
   nsXPIDLCString serverType;
-  rv = m_prefs->CopyCharPref(serverTypePref, getter_Copies(serverType));
+  rv = m_prefs->CopyCharPref(serverTypePref.get(), getter_Copies(serverType));
 
   // the server type doesn't exist, use "generic"
   if (NS_FAILED(rv)) {
@@ -196,7 +196,7 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
     nsCAutoString serverPrefName("mail.account.");
     serverPrefName.Append(m_accountKey);
     serverPrefName.Append(".server");
-    m_prefs->SetCharPref(serverPrefName, key);
+    m_prefs->SetCharPref(serverPrefName.get(), key);
   }
 
   m_incomingServer = dont_QueryInterface(aIncomingServer);
@@ -249,7 +249,7 @@ nsMsgAccount::createIdentities()
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
   
-  rv = m_prefs->CopyCharPref(identitiesKeyPref, getter_Copies(identityKey));
+  rv = m_prefs->CopyCharPref(identitiesKeyPref.get(), getter_Copies(identityKey));
 
   if (NS_FAILED(rv)) return rv;
   
@@ -331,7 +331,7 @@ nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
     identitiesKeyPref.Append(m_accountKey);
     identitiesKeyPref.Append(".identities");
     
-    m_prefs->SetCharPref(identitiesKeyPref, key);
+    m_prefs->SetCharPref(identitiesKeyPref.get(), key);
   }
   
   NS_ASSERTION(m_identities,"you never called Init()");
@@ -387,7 +387,7 @@ nsMsgAccount::ClearAllValues()
     nsCAutoString rootPref("mail.account.");
     rootPref += m_accountKey;
 
-    rv = m_prefs->EnumerateChildren(rootPref, clearPrefEnum, (void *)m_prefs);
+    rv = m_prefs->EnumerateChildren(rootPref.get(), clearPrefEnum, (void *)m_prefs);
 
     return rv;
 }

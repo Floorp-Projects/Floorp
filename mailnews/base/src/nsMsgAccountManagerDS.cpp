@@ -866,7 +866,7 @@ nsMsgAccountManagerDataSource::canGetMessages(nsIMsgIncomingServer *aServer)
       contractid.Append(type);
 
       nsCOMPtr<nsIMsgProtocolInfo> protocolInfo =
-           do_GetService(contractid, &rv);
+           do_GetService(contractid.get(), &rv);
       NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
       PRBool canGetMessages = PR_FALSE;

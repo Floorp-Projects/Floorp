@@ -724,7 +724,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* urlLi
       nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &status));
       if (NS_FAILED(status)) return status;
       nsCOMPtr<nsIRDFResource> resource;
-      status = rdf->GetResource(parentName, getter_AddRefs(resource));
+      status = rdf->GetResource(parentName.get(), getter_AddRefs(resource));
       if (NS_FAILED(status)) return status;
 
       msgParent = do_QueryInterface(resource, &status);

@@ -573,10 +573,10 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
   // remember, some file systems (like mac) can't handle long file names
   nsCAutoString hashedName = newsgroupname;
   rv = NS_MsgHashIfNecessary(hashedName);
-  path += (const char *) hashedName;
+  path += hashedName.get();
   
   //Now let's create the actual new folder
-  rv = AddNewsgroup(newsgroupname, "", getter_AddRefs(child));
+  rv = AddNewsgroup(newsgroupname.get(), "", getter_AddRefs(child));
   
   if (NS_SUCCEEDED(rv))
     SetNewsrcHasChanged(PR_TRUE); // subscribe UI does this - but maybe we got here through auto-subscribe
@@ -1364,8 +1364,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       }
 
       // we got a password back...so remember it
-      nsCAutoString aCStr; aCStr.AssignWithConversion(uniGroupPassword);
-      rv = SetGroupPassword((const char *) aCStr);
+      rv = SetGroupPassword(NS_LossyConvertUCS2toASCII(uniGroupPassword).get());
       if (NS_FAILED(rv)) return rv;
 
     } // if we got a prompt dialog
@@ -1420,7 +1419,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
       rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
       if (NS_FAILED(rv)) return rv;
       
-      rv = dialog->Prompt(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, signonURL)).get(), 
+      rv = dialog->Prompt(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUCS2(signonURL).get(), 
         nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
         getter_Copies(uniGroupUsername), &okayValue);
       if (NS_FAILED(rv)) return rv;
@@ -1432,8 +1431,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
       }
       
       // we got a username back, remember it
-      nsCAutoString aCStr; aCStr.AssignWithConversion(uniGroupUsername);
-      rv = SetGroupUsername((const char *) aCStr);
+      rv = SetGroupUsername(NS_LossyConvertUCS2toASCII(uniGroupUsername).get());
       if (NS_FAILED(rv)) return rv;
       
     } // if we got a prompt dialog
@@ -1476,7 +1474,7 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
     }
   }
   
-  *newsrcLine = nsCRT::strdup((const char *)newsrcLineStr);
+  *newsrcLine = ToNewCString(newsrcLineStr);
   
   if (!*newsrcLine) return NS_ERROR_OUT_OF_MEMORY;
   
@@ -1502,8 +1500,8 @@ nsMsgNewsFolder::GetUnsubscribedNewsgroupLines(char **aUnsubscribedNewsgroupLine
 {
     if (!aUnsubscribedNewsgroupLines) return NS_ERROR_NULL_POINTER;
 
-    if (PL_strlen((const char *)mUnsubscribedNewsgroupLines)) {
-        *aUnsubscribedNewsgroupLines= nsCRT::strdup((const char *)mUnsubscribedNewsgroupLines);
+    if (!mUnsubscribedNewsgroupLines.IsEmpty()) {
+        *aUnsubscribedNewsgroupLines= ToNewCString(mUnsubscribedNewsgroupLines);
     }
     
     return NS_OK;
@@ -1514,8 +1512,8 @@ nsMsgNewsFolder::GetOptionLines(char **optionLines)
 {
     if (!optionLines) return NS_ERROR_NULL_POINTER;
 
-    if (PL_strlen((const char *)mOptionLines)) {
-        *optionLines = nsCRT::strdup((const char *)mOptionLines);
+    if (!mOptionLines.IsEmpty()) {
+        *optionLines = ToNewCString(mOptionLines);
     }
     
     return NS_OK;

@@ -2762,7 +2762,7 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
             m_dbFolderInfo->GetCharPtrCharacterSet(&charset);
             m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
 
-            err = m_mimeConverter->DecodeMimeHeader(nakedString, resultStr, charset, characterSetOverride);
+            err = m_mimeConverter->DecodeMimeHeader(nakedString.get(), resultStr, charset, characterSetOverride);
             PR_FREEIF(charset);
         }
     }

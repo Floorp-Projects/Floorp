@@ -241,7 +241,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
       }
       nsCAutoString knownartstringC;
       knownartstringC.AssignWithConversion(knownArtsString);
-      m_knownArts.set = nsMsgKeySet::Create(knownartstringC);
+      m_knownArts.set = nsMsgKeySet::Create(knownartstringC.get());
     }
     else
     {	

@@ -381,8 +381,8 @@ nsImapIncomingServer::SetDeleteModel(PRInt32 ivalue)
     nsCOMPtr<nsIImapHostSessionList> hostSession = 
         do_GetService(kCImapHostSessionList, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
-    hostSession->SetDeleteIsMoveToTrashForHost(m_serverKey, ivalue == nsMsgImapDeleteModels::MoveToTrash); 
-    hostSession->SetShowDeletedMessagesForHost(m_serverKey, ivalue == nsMsgImapDeleteModels::IMAPDelete);
+    hostSession->SetDeleteIsMoveToTrashForHost(m_serverKey.get(), ivalue == nsMsgImapDeleteModels::MoveToTrash); 
+    hostSession->SetShowDeletedMessagesForHost(m_serverKey.get(), ivalue == nsMsgImapDeleteModels::IMAPDelete);
   }
   return rv;
 }
@@ -978,14 +978,14 @@ NS_IMETHODIMP nsImapIncomingServer::GetPFC(PRBool createIfMissing, nsIMsgFolder 
     folderUri.Append("/");
     folderUri.Append(GetPFCName());
 
-    rootMsgFolder->GetChildWithURI(folderUri, PR_FALSE, PR_FALSE /*caseInsensitive */, pfcFolder);
+    rootMsgFolder->GetChildWithURI(folderUri.get(), PR_FALSE, PR_FALSE /*caseInsensitive */, pfcFolder);
     if (!*pfcFolder && createIfMissing)
     {
 			// get the URI from the incoming server
 	    nsCOMPtr<nsIRDFResource> res;
       nsCOMPtr<nsIFileSpec> pfcFileSpec;
 	    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-	    rv = rdf->GetResource((const char *)folderUri, getter_AddRefs(res));
+	    rv = rdf->GetResource(folderUri.get(), getter_AddRefs(res));
 	    NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1030,13 +1030,13 @@ nsresult nsImapIncomingServer::GetPFCForStringId(PRBool createIfMissing, PRInt32
 //  pfcMailUri.Append(".sbd");
   pfcMailUri.Append("/");
   pfcMailUri.AppendWithConversion(pfcName.get());
-  pfcParent->GetChildWithURI(pfcMailUri, PR_FALSE, PR_FALSE /* caseInsensitive*/, aFolder);
+  pfcParent->GetChildWithURI(pfcMailUri.get(), PR_FALSE, PR_FALSE /* caseInsensitive*/, aFolder);
   if (!*aFolder && createIfMissing)
   {
 		// get the URI from the incoming server
 	  nsCOMPtr<nsIRDFResource> res;
 	  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-	  rv = rdf->GetResource((const char *)pfcMailUri, getter_AddRefs(res));
+	  rv = rdf->GetResource(pfcMailUri.get(), getter_AddRefs(res));
 	  NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1182,8 +1182,8 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 	uri.Append(dupFolderPath);
 
 
-    PRBool caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath) == 0);
-    a_nsIFolder->GetChildWithURI(uri, PR_TRUE, caseInsensitive, getter_AddRefs(child));
+    PRBool caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath.get()) == 0);
+    a_nsIFolder->GetChildWithURI(uri.get(), PR_TRUE, caseInsensitive, getter_AddRefs(child));
 	if (child)
 		found = PR_TRUE;
     if (!found)
@@ -1192,19 +1192,19 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		if (haveParent)
 		{	
             nsCOMPtr <nsIMsgFolder> parent;
-            caseInsensitive = (nsCRT::strcasecmp("INBOX", parentName) == 0);
-            a_nsIFolder->GetChildWithURI(parentUri, PR_TRUE, caseInsensitive, getter_AddRefs(parent));
+            caseInsensitive = (nsCRT::strcasecmp("INBOX", parentName.get()) == 0);
+            a_nsIFolder->GetChildWithURI(parentUri.get(), PR_TRUE, caseInsensitive, getter_AddRefs(parent));
 			if (!parent /* || parentFolder->GetFolderNeedsAdded()*/)
             {
-				PossibleImapMailbox(parentName, hierarchyDelimiter, kNoselect |		// be defensive
-											((boxFlags  &	 //only inherit certain flags from the child
+				PossibleImapMailbox(parentName.get(), hierarchyDelimiter, kNoselect |	// be defensive
+											((boxFlags  &	//only inherit certain flags from the child
 											(kPublicMailbox | kOtherUsersMailbox | kPersonalMailbox)))); 
 			}
 		}
 
-        hostFolder->CreateClientSubfolderInfo(dupFolderPath, hierarchyDelimiter,boxFlags);
-        caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath)== 0);
-		a_nsIFolder->GetChildWithURI(uri, PR_TRUE, caseInsensitive , getter_AddRefs(child));
+        hostFolder->CreateClientSubfolderInfo(dupFolderPath.get(), hierarchyDelimiter,boxFlags);
+        caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath.get())== 0);
+		a_nsIFolder->GetChildWithURI(uri.get(), PR_TRUE, caseInsensitive , getter_AddRefs(child));
     }
 	if (child)
 	{
@@ -1243,11 +1243,11 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
         nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, dupFolderPath.get()));
 
       if (! (onlineName.get()) || nsCRT::strlen(onlineName.get()) == 0
-				|| nsCRT::strcmp(onlineName.get(), dupFolderPath))
-				imapFolder->SetOnlineName(dupFolderPath);
+				|| nsCRT::strcmp(onlineName.get(), dupFolderPath.get()))
+				imapFolder->SetOnlineName(dupFolderPath.get());
       if (hierarchyDelimiter != '/')
         nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, folderName.get()));
-			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName, getter_Copies(unicodeName))))
+			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName.get(), getter_Copies(unicodeName))))
 				child->SetName(unicodeName);
       // Call ConvertFolderName() and HideFolderName() to do special folder name
       // mapping and hiding, if configured to do so. For example, need to hide AOL's
@@ -1374,7 +1374,7 @@ NS_IMETHODIMP nsImapIncomingServer::ConvertFolderName(const char *originalName, 
 
   nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) 
-    rv = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
+    rv = sBundleService->CreateBundle(propertyURL.get(), getter_AddRefs(stringBundle));
   if (NS_SUCCEEDED(rv))
     rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(originalName).get(), convertedName);
 
@@ -1428,7 +1428,7 @@ nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolde
           nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
           if (NS_FAILED(rv)) return rv;
           nsCOMPtr<nsIRDFResource> res;
-          rv = rdf->GetResource(uriString, getter_AddRefs(res));
+          rv = rdf->GetResource(uriString.get(), getter_AddRefs(res));
           if (NS_SUCCEEDED(rv))
           {
               nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));

@@ -450,7 +450,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
     if (NS_FAILED(ret))
         return ret;
 
-	ret = SetRecipients(allRecipients);
+	ret = SetRecipients(allRecipients.get());
     SetRecipientsIsNewsgroup(PR_TRUE);
 	return ret;
 }
@@ -470,7 +470,7 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
     if (NS_FAILED(ret))
         return ret;
 
-	ret = SetCcList(allRecipients);
+	ret = SetCcList(allRecipients.get());
 	return ret;
 }
 

@@ -215,8 +215,8 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
           else
             group = originalMsgURI;
 
-          pMsgCompFields->SetNewsgroups(group);
-          pMsgCompFields->SetNewshost(host);
+          pMsgCompFields->SetNewsgroups(group.get());
+          pMsgCompFields->SetNewshost(host.get());
   		}
   		else
         pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);

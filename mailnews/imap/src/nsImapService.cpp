@@ -581,8 +581,8 @@ NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType,
 	nsCAutoString	folderURI;
 	nsMsgKey key;
 
-  rv = DecomposeImapURI(uri, getter_AddRefs(folder), getter_Copies(msgKey));
-	rv = nsParseImapMessageURI(uri, folderURI, &key, getter_Copies(uriMimePart));
+  rv = DecomposeImapURI(uri.get(), getter_AddRefs(folder), getter_Copies(msgKey));
+	rv = nsParseImapMessageURI(uri.get(), folderURI, &key, getter_Copies(uriMimePart));
 	if (NS_SUCCEEDED(rv))
 	{
     nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
@@ -591,7 +591,7 @@ NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType,
       nsCOMPtr<nsIImapUrl> imapUrl;
       nsCAutoString urlSpec;
       PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
-      rv = CreateStartOfImapUrl(uri, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
+      rv = CreateStartOfImapUrl(uri.get(), getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
       if (NS_FAILED(rv)) 
         return rv;
       if (uriMimePart)
@@ -1060,7 +1060,7 @@ nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder 
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr<nsIRDFResource> res;
-    rv = rdf->GetResource(folderURI, getter_AddRefs(res));
+    rv = rdf->GetResource(folderURI.get(), getter_AddRefs(res));
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);

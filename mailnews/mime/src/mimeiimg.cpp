@@ -143,7 +143,7 @@ MimeInlineImage_parse_begin (MimeObject *obj)
     MimeObject_write_separator(obj);
 
 	  img->image_data =
-		obj->options->image_begin(url_with_filename, ct, obj->options->stream_closure);
+		obj->options->image_begin(url_with_filename.get(), ct, obj->options->stream_closure);
 	  PR_Free(image_url);
 
 	  if (!img->image_data) return MIME_OUT_OF_MEMORY;

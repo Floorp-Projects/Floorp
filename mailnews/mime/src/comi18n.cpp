@@ -1660,7 +1660,7 @@ MIME_detect_charset(const char *aBuf, PRInt32 aLength, const char** aCharset)
   }
 
   if (detector_contractid.Length() > sizeof(NS_STRCDETECTOR_CONTRACTID_BASE)) {
-    detector = do_CreateInstance(detector_contractid, &res);
+    detector = do_CreateInstance(detector_contractid.get(), &res);
     if (NS_SUCCEEDED(res)) {
       nsDetectionConfident oConfident;
       res = detector->DoIt(aBuf, aLength, aCharset, oConfident);

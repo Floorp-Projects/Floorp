@@ -404,17 +404,17 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorShell *aEditorShell)
 
   // first, convert the rdf orinigal msg uri into a url that represents the message...
   nsIMsgMessageService * msgService = nsnull;
-  rv = GetMessageServiceFromURI(mQuoteURI, &msgService);
+  rv = GetMessageServiceFromURI(mQuoteURI.get(), &msgService);
   if (NS_SUCCEEDED(rv))
   {
-    rv = msgService->GetUrlForUri(mQuoteURI, getter_AddRefs(originalUrl), nsnull);
+    rv = msgService->GetUrlForUri(mQuoteURI.get(), getter_AddRefs(originalUrl), nsnull);
     if (NS_SUCCEEDED(rv) && originalUrl)
     {
       originalUrl->GetScheme(getter_Copies(originalScheme));
       originalUrl->GetHost(getter_Copies(originalHost));
       originalUrl->GetPath(getter_Copies(originalPath));
     }
-    ReleaseMessageServiceFromURI(mQuoteURI, msgService);
+    ReleaseMessageServiceFromURI(mQuoteURI.get(), msgService);
   }
 
   // Then compare the url of each embedded objects with the original message.
@@ -903,7 +903,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
       {
         nsCAutoString msgbodyC;
         msgbodyC.AssignWithConversion(msgBody);
-		    m_compFields->SetBody(msgbodyC);
+		    m_compFields->SetBody(msgbodyC.get());
       }
     }
   }
@@ -1208,7 +1208,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
     mOriginalMsgURI = firstURI;
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
-    rv = GetMsgDBHdrFromURI(firstURI, getter_AddRefs(msgHdr));
+    rv = GetMsgDBHdrFromURI(firstURI.get(), getter_AddRefs(msgHdr));
     NS_ENSURE_SUCCESS(rv,rv);
 
     if (msgHdr)
@@ -1261,7 +1261,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           if (NS_SUCCEEDED(rv)) {
             m_compFields->SetSubject(decodedString);
           } else {
-            m_compFields->SetSubject(subjectStr);
+            m_compFields->SetSubject(subjectStr.get());
           }
 
           nsXPIDLCString author;
@@ -1310,7 +1310,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           if (NS_SUCCEEDED(rv)) {
             m_compFields->SetSubject(decodedString);
           } else {
-            m_compFields->SetSubject(subjectStr); 
+            m_compFields->SetSubject(subjectStr.get()); 
           }
         
           // Setup quoting callbacks for later...
@@ -1406,7 +1406,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
           if (NS_SUCCEEDED(nsStdEscape(unencodedURL.get(),
                    esc_FileBaseName | esc_Forced, encodedURL )))
           {
-            mCiteReference.AssignWithConversion(encodedURL);
+            mCiteReference.AssignWithConversion(encodedURL.get());
             mCiteReference.Insert(NS_LITERAL_STRING("mid:"), 0);
           }
           else
@@ -1492,7 +1492,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
           utf8Author = NS_ConvertUCS2toUTF8(author);
           nsAutoString authorStr; authorStr.Assign(author);
 
-          rv = parser->ExtractHeaderAddressName("UTF-8", utf8Author,
+          rv = parser->ExtractHeaderAddressName("UTF-8", utf8Author.get(),
                                                 &authorName);
           if (NS_SUCCEEDED(rv))
             authorStr = NS_ConvertUTF8toUCS2(authorName);
@@ -1923,7 +1923,7 @@ nsresult nsMsgCompose::ProcessReplyFlags()
     if (!mOriginalMsgURI.IsEmpty())
     {
       nsCOMPtr <nsIMsgDBHdr> msgHdr;
-      rv = GetMsgDBHdrFromURI(mOriginalMsgURI, getter_AddRefs(msgHdr));
+      rv = GetMsgDBHdrFromURI(mOriginalMsgURI.get(), getter_AddRefs(msgHdr));
       NS_ENSURE_SUCCESS(rv,rv);
       if (msgHdr)
       {
@@ -2633,7 +2633,7 @@ nsMsgCompose::BuildQuotedMessageAndSignature(void)
 
   // We will fire off the quote operation and wait for it to
   // finish before we actually do anything with Ender...
-  return QuoteOriginalMessage(mQuoteURI, mWhatHolder);
+  return QuoteOriginalMessage(mQuoteURI.get(), mWhatHolder);
 }
 
 //
@@ -2928,7 +2928,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval
 		return NS_OK;
 	}
 	
-	if (PL_strncasestr(unescapeURL, "file:", 5))
+	if (PL_strncasestr(unescapeURL.get(), "file:", 5))
 	{
 		nsFileURL fileUrl(url);
 		nsFileSpec fileSpec(fileUrl);
@@ -2945,7 +2945,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval
 		}
 	}
 
-	if (PL_strncasestr(unescapeURL, "http:", 5))
+	if (PL_strncasestr(unescapeURL.get(), "http:", 5))
 		unescapeURL.Cut(0, 7);
 
 	*_retval = ToNewUnicode(unescapeURL);
@@ -3360,7 +3360,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
 
             /* Then if we have a card for this email address */
             nsCAutoString emailStr; emailStr.AssignWithConversion(recipient->mEmail);
-   			    rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
+   			    rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr.get(), getter_AddRefs(existingCard));
     			  if (NS_SUCCEEDED(rv) && existingCard)
             {
               recipient->mPreferFormat = nsIAbPreferMailFormat::unknown;

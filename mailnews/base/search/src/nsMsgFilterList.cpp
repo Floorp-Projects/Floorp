@@ -699,8 +699,7 @@ nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttribValue attrib,
 
 nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttribValue attrib, PRBool boolVal, nsIOFileStream *aStream)
 {
-	nsCString strToWrite((boolVal) ? "yes" : "no");
-	return WriteStrAttr(attrib, strToWrite, aStream);
+	return WriteStrAttr(attrib, (boolVal) ? "yes" : "no", aStream);
 }
 
 nsresult
@@ -1009,7 +1008,7 @@ NS_IMETHODIMP nsMsgFilterList::GetShouldDownloadArbitraryHeaders(PRBool *aResult
           {
             if (m_arbitraryHeaders.Length() == 0)
               m_arbitraryHeaders.Assign(arbitraryHeader);
-            else if (PL_strncasecmp(m_arbitraryHeaders, arbitraryHeader, arbitraryHeader.Length()))
+            else if (PL_strncasecmp(m_arbitraryHeaders.get(), arbitraryHeader, arbitraryHeader.Length()))
             {
               m_arbitraryHeaders.Append(" ");
               m_arbitraryHeaders.Append(arbitraryHeader);

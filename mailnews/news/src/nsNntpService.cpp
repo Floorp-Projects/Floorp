@@ -416,7 +416,7 @@ NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType,
   newsUrl += "&filename=";
   newsUrl += aFileName;
 
-  NewURI(newsUrl, nsnull, getter_AddRefs(url));
+  NewURI(newsUrl.get(), nsnull, getter_AddRefs(url));
 
   if (NS_SUCCEEDED(rv) && url)
   {
@@ -510,7 +510,7 @@ nsNntpService::DecomposeNewsMessageURI(const char * aMessageURI, nsIMsgFolder **
     rv = nsParseNewsMessageURI(aMessageURI, folderURI, aMsgKey);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = GetFolderFromUri(folderURI, aFolder);
+    rv = GetFolderFromUri(folderURI.get(), aFolder);
     NS_ENSURE_SUCCESS(rv,rv);
 
     return NS_OK;
@@ -612,7 +612,7 @@ nsNntpService::FindServerWithNewsgroup(nsCString &host, nsCString &groupName)
 
 	findNewsServerEntry serverInfo;
 	serverInfo.server = nsnull;
-  	serverInfo.newsgroup = (const char *)groupName;
+  	serverInfo.newsgroup = groupName.get();
 
 #ifdef DEBUG_seth
     printf("XXX this only looks at the list of subscribed newsgroups.  fix to use the hostinfo.dat information\n");
@@ -747,7 +747,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
         nsXPIDLCString newsHostName;
         rv = server->GetRealHostName(getter_Copies(newsHostName));
         if (NS_SUCCEEDED(rv)) {
-            host = (const char *)newsHostName;
+            host = newsHostName;
         }
     }
   }
@@ -757,7 +757,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
     host = "news";
   }
 
-  *newsUrlSpec = PR_smprintf("%s/%s",kNewsRootURI,(const char *)host);
+  *newsUrlSpec = PR_smprintf("%s/%s",kNewsRootURI,host.get());
   if (!*newsUrlSpec) return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -1540,7 +1540,7 @@ nsNntpService::GetListOfGroupsOnServer(nsINntpIncomingServer *aNntpServer, nsIMs
 	if (!listener) return NS_ERROR_FAILURE;
 
 	nsCOMPtr<nsIURI> url;
-    rv = ConstructNntpUrl((const char *)uriStr, listener, aMsgWindow, nsnull, nsINntpUrl::ActionListGroups, getter_AddRefs(url));
+    rv = ConstructNntpUrl(uriStr.get(), listener, aMsgWindow, nsnull, nsINntpUrl::ActionListGroups, getter_AddRefs(url));
 	if (NS_FAILED(rv)) return rv;
 
 	// now run the url to add the rest of the groups

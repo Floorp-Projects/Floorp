@@ -1331,13 +1331,13 @@ NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
   if (!mLastDisplayURI.IsEmpty())
   {
     nsIMsgMessageService * messageService = nsnull;
-    nsresult rv = GetMessageServiceFromURI(mLastDisplayURI, &messageService);
+    nsresult rv = GetMessageServiceFromURI(mLastDisplayURI.get(), &messageService);
     
     if (NS_SUCCEEDED(rv) && messageService)
     {
       nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-      messageService->DisplayMessage(mLastDisplayURI, webShell, mMsgWindow, nsnull, characterSet, nsnull);
-      ReleaseMessageServiceFromURI(mLastDisplayURI, messageService);
+      messageService->DisplayMessage(mLastDisplayURI.get(), webShell, mMsgWindow, nsnull, characterSet, nsnull);
+      ReleaseMessageServiceFromURI(mLastDisplayURI.get(), messageService);
     }
   }
   

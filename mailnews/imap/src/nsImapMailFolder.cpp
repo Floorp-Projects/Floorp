@@ -474,7 +474,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
     {
       // leaf name is the db name w/o .msf (nsShouldIgnoreFile strips it off)
       // so this trims the .msf off the file spec.
-      msfFileSpec->SetLeafName(leafName);
+      msfFileSpec->SetLeafName(leafName.get());
     }
     // use the utf7 name as the uri for the folder.
     AddSubfolderWithPath(&utf7LeafName, msfFileSpec, getter_AddRefs(child));
@@ -757,21 +757,21 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         nsCAutoString safeParentName;
         safeParentName.AssignWithConversion(parentName);
         NS_MsgHashIfNecessary(safeParentName);
-        path += safeParentName;
+        path += safeParentName.get();
 
         rv = CreateDirectoryForFolder(path);
         if (NS_FAILED(rv)) return rv;
         uri.Append('/');
         uri.AppendWithConversion(parentName);
         
-        rv = rdf->GetResource(uri,
+        rv = rdf->GetResource(uri.get(),
                               getter_AddRefs(res));
         if (NS_FAILED(rv)) return rv;
         parentFolder = do_QueryInterface(res, &rv);
         if (NS_FAILED(rv)) return rv;
         nsCAutoString leafnameC;
         leafnameC.AssignWithConversion(leafName);
-		return parentFolder->CreateClientSubfolderInfo(leafnameC, hierarchyDelimiter,flags);
+		return parentFolder->CreateClientSubfolderInfo(leafnameC.get(), hierarchyDelimiter,flags);
     }
     
   // if we get here, it's really a leaf, and "this" is the parent.
@@ -827,7 +827,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         // to restore the online name when blowing away an imap db.
         if (folderInfo)
         {
-          nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName);
+          nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName.get());
           folderInfo->SetMailboxName(&unicodeOnlineName);
         }
       }
@@ -904,7 +904,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListen
       nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &status));
       if (NS_FAILED(status)) return status;
       nsCOMPtr<nsIRDFResource> resource;
-      status = rdf->GetResource(parentName, getter_AddRefs(resource));
+      status = rdf->GetResource(parentName.get(), getter_AddRefs(resource));
       if (NS_FAILED(status)) return status;
 
       msgParent = do_QueryInterface(resource, &status);
@@ -1351,7 +1351,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
        NS_MsgHashIfNecessary(newNameStr);
        newNameStr += ".sbd";
 	   char *leafName = dirSpec.GetLeafName();
-	   if (nsCRT::strcmp(leafName, newNameStr) != 0 )
+	   if (nsCRT::strcmp(leafName, newNameStr.get()) != 0 )
 	   {
            dirSpec.Rename(newNameStr.get());      // in case of rename operation leaf names will differ
 		   nsCRT::free(leafName);
@@ -1359,7 +1359,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
 	   }
 	   nsCRT::free(leafName);
                                                
-	   parentPath += newNameStr;    //only for move we need to progress further in case the parent differs
+	   parentPath += newNameStr.get();    //only for move we need to progress further in case the parent differs
 
 	   if (!parentPath.IsDirectory())
 		   parentPath.CreateDirectory();
@@ -1743,7 +1743,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
             if (m_hierarchyDelimiter != '/')
               onlineCName.ReplaceChar('/', m_hierarchyDelimiter);
             m_onlineFolderName.Assign(onlineCName); 
-            autoOnlineName.AssignWithConversion(onlineCName);
+            autoOnlineName.AssignWithConversion(onlineCName.get());
           }
           rv = (*folderInfo)->SetProperty("onlineName", &autoOnlineName);
         }
@@ -2909,7 +2909,7 @@ NS_IMETHODIMP nsImapMailFolder::ReplayOfflineMoveCopy(nsMsgKey *msgKeys, PRInt32
     AllocateUidStringFromKeys(msgKeys, numKeys, uids);
     rv = imapService->OnlineMessageCopy(m_eventQueue, 
                          this,
-                         uids,
+                         uids.get(),
                          aDstFolder,
                          PR_TRUE,
                          isMove,
@@ -2943,12 +2943,12 @@ NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, n
       if (addFlags)
       {
         imapService->AddMessageFlags(m_eventQueue, this, this,
-                                     nsnull, msgIds, flags, PR_TRUE);
+                                     nsnull, msgIds.get(), flags, PR_TRUE);
       }
       else
       {
         imapService->SubtractMessageFlags(m_eventQueue, this, this,
-                                          nsnull, msgIds, flags,
+                                          nsnull, msgIds.get(), flags,
                                           PR_TRUE);
       }
     }
@@ -3324,7 +3324,7 @@ NS_IMETHODIMP nsImapMailFolder::DownloadMessagesForOffline(nsISupportsArray *mes
   if (NS_FAILED(rv)) return rv;
 
   SetNotifyDownloadedLines(PR_TRUE); // ### TODO need to clear this when we've finished
-  rv = imapService->DownloadMessagesForOffline(messageIds, this, nsnull, window);
+  rv = imapService->DownloadMessagesForOffline(messageIds.get(), this, nsnull, window);
   return rv;
 }
 
@@ -5678,7 +5678,7 @@ NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)
                  do_GetService(kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
             rv = imapService->DiscoverChildren(m_eventQueue, this, this,
-                                               m_onlineFolderName,
+                                               m_onlineFolderName.get(),
                                                nsnull);
     }
     return rv;
@@ -5750,7 +5750,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         rv = AddSubfolderWithPath(&folderNameStr, dbFileSpec, getter_AddRefs(child));
         if (!child || NS_FAILED(rv)) return rv;
         nsXPIDLString unicodeName;
-        rv = CreateUnicodeStringFromUtf7(proposedDBName, getter_Copies(unicodeName));
+        rv = CreateUnicodeStringFromUtf7(proposedDBName.get(), getter_Copies(unicodeName));
         if (NS_SUCCEEDED(rv) && unicodeName)
           child->SetName(unicodeName);
 
@@ -5772,7 +5772,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         // to restore the online name when blowing away an imap db.
            if (folderInfo)
            {
-             nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName);
+             nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName.get());
              folderInfo->SetMailboxName(&unicodeOnlineName);
            }
            PRBool changed = PR_FALSE;

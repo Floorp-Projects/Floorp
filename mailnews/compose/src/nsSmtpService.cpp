@@ -206,10 +206,10 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 		urlSpec += ':';
 		urlSpec.AppendInt(SMTP_PORT);
 
-		if ((const char *)urlSpec)
+		if (urlSpec.get())
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
-			url->SetSpec((const char *)urlSpec);
+			url->SetSpec(urlSpec.get());
             smtpUrl->SetRecipients(aRecipients);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetSenderIdentity(aSenderIdentity);
@@ -584,7 +584,7 @@ nsSmtpService::saveKeyList()
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
-    return prefs->SetCharPref("mail.smtpservers", mServerKeyList);
+    return prefs->SetCharPref("mail.smtpservers", mServerKeyList.get());
 }
 
 nsresult
@@ -757,7 +757,7 @@ nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
         key = "smtp";
         key.AppendInt(++i);
         
-        entry.key = key;
+        entry.key = key.get();
         entry.server = nsnull;
 
         mSmtpServers->EnumerateForwards(findServerByKey, (void *)&entry);
@@ -765,7 +765,7 @@ nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
         
     } while (!unique);
 
-    rv = createKeyedServer(key, aResult);
+    rv = createKeyedServer(key.get(), aResult);
     saveKeyList();
     return rv;
 }

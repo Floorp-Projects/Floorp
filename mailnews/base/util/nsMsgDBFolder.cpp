@@ -629,7 +629,7 @@ nsresult nsMsgDBFolder::CreateFileSpecForDB(const char *userLeafName, nsFileSpec
   }
   // now, take the ".msf" off
   proposedDBName.Truncate(proposedDBName.Length() - SUMMARY_SUFFIX_LEN);
-  path.SetLeafName(proposedDBName);
+  path.SetLeafName(proposedDBName.get());
 
   NS_NewFileSpecWithSpec(path, dbFileSpec);
   return NS_OK;
@@ -1085,7 +1085,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 
   nsCAutoString mcharsetC;
   mcharsetC.AssignWithConversion(mCharset);
-	element->SetStringProperty("charset", (const char *) mcharsetC);
+	element->SetStringProperty("charset", mcharsetC.get());
 
 #ifdef DEBUG_bienvenu1
 	char *uri;

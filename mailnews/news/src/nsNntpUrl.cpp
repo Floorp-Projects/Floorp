@@ -252,7 +252,7 @@ NS_IMETHODIMP
 nsNntpUrl::GetOriginalSpec(char **aSpec)
 {
     NS_ENSURE_ARG_POINTER(aSpec);
-    *aSpec = nsCRT::strdup((const char *)mOriginalSpec);
+    *aSpec = ToNewCString(mOriginalSpec);
     if (!*aSpec) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }

@@ -3067,9 +3067,9 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
           // if this string started with a '-', then this is an undo of a delete
           // if its a '+' its a redo
           if (firstChar == '-')
-          Store(undoIds, "-FLAGS (\\Deleted)", PR_TRUE);  // most servers will fail silently on a failure, deal with it?
+          Store(undoIds.get(), "-FLAGS (\\Deleted)", PR_TRUE);  // most servers will fail silently on a failure, deal with it?
           else  if (firstChar == '+')
-          Store(undoIds, "+FLAGS (\\Deleted)", PR_TRUE);  // most servers will fail silently on a failure, deal with it?
+          Store(undoIds.get(), "+FLAGS (\\Deleted)", PR_TRUE);  // most servers will fail silently on a failure, deal with it?
         else 
           NS_ASSERTION(PR_FALSE, "bogus undo Id's");
       }
@@ -3085,7 +3085,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     if (!added || (added == deleted))
     {
       nsCString idsToFetch("1:*");
-      FetchMessage(idsToFetch, kFlags, PR_TRUE);  // id string shows uids
+      FetchMessage(idsToFetch.get(), kFlags, PR_TRUE);  // id string shows uids
       // lets see if we should expunge during a full sync of flags.
       if (!DeathSignalReceived()) // only expunge if not reading messages manually and before fetching new
       {
@@ -3101,7 +3101,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       fetchStr.Append(":*");
 
       // sprintf(fetchStr, "%ld:*", GetServerStateParser().HighestRecordedUID() + 1);
-      FetchMessage(fetchStr, kFlags, PR_TRUE);      // only new messages please
+      FetchMessage(fetchStr.get(), kFlags, PR_TRUE);      // only new messages please
     }
     }
     else if (!DeathSignalReceived())
@@ -3291,7 +3291,7 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
       AllocateImapUidString(msgUids + msgsDownloaded, msgsToDownload, idString);  // 20 * 200
 
     // except I don't think this works ### DB
-    FetchMessage(idString,  fields, PR_TRUE);                  // msg ids are uids                 
+    FetchMessage(idString.get(),  fields, PR_TRUE);                  // msg ids are uids                 
 
     msgsDownloaded += msgsToDownload;
     msgCountLeft -= msgsToDownload;
@@ -3341,7 +3341,7 @@ void nsImapProtocol::PeriodicBiff()
       //sprintf(fetchStr, "%ld:%ld", id, id + GetServerStateParser().NumberOfMessages() - fFlagState->GetNumberOfMessages());
       fetchStr.AppendInt(id, 10);
       fetchStr.Append(":*"); 
-      FetchMessage(fetchStr, kFlags, PR_TRUE);
+      FetchMessage(fetchStr.get(), kFlags, PR_TRUE);
 
       if (((PRUint32) m_flagState->GetHighestNonDeletedUID() >= id) && m_flagState->IsLastMessageUnseen())
         m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NewMail;
@@ -3956,7 +3956,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
 
                 if (m_imapServerSink)
                 {
-                    m_imapServerSink->PossibleImapMailbox(boxNameCopy, 
+                    m_imapServerSink->PossibleImapMailbox(boxNameCopy.get(), 
 									adoptedBoxSpec->hierarchySeparator,
                                     adoptedBoxSpec->box_flags);
                 
@@ -4424,14 +4424,14 @@ void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
   nsCAutoString escapedUserName;
   command.Append(" login \"");
   EscapeUserNamePasswordString(userName, &escapedUserName);
-  command.Append((const char *) escapedUserName);
+  command.Append(escapedUserName);
   command.Append("\" \"");
 
   // if the password contains a \, login will fail
   // turn foo\bar into foo\\bar
   nsCAutoString correctedPassword;
   EscapeUserNamePasswordString(password, &correctedPassword);
-  command.Append((const char *)correctedPassword);
+  command.Append(correctedPassword);
   command.Append("\""CRLF);
 
   nsresult rv = SendData(command.get(), PR_TRUE /* suppress logging */);
@@ -4807,7 +4807,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             // Clean up result sequence before issuing the cmd.
             GetServerStateParser().ResetSearchResultSequence();
             
-            Search(command, PR_TRUE, PR_FALSE);
+            Search(command.get(), PR_TRUE, PR_FALSE);
             if (GetServerStateParser().LastCommandSuccessful())
             {
               nsMsgKey newkey = nsMsgKey_None;
@@ -5302,9 +5302,9 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
                                                           isUsingSubscription);
 
             if (isUsingSubscription)
-                Lsub(pattern, PR_FALSE);
+                Lsub(pattern.get(), PR_FALSE);
             else
-                List(pattern, PR_FALSE);
+                List(pattern.get(), PR_FALSE);
     }
     m_hierarchyNameState = kNoOperationInProgress;
     
@@ -5541,7 +5541,7 @@ void nsImapProtocol::OnMoveFolderHierarchy(const char * sourceMailbox)
         PRBool  renamed = RenameHierarchyByHand(sourceMailbox,
                                                 newBoxName.get());
         if (renamed)
-            FolderRenamed(sourceMailbox, newBoxName);
+            FolderRenamed(sourceMailbox, newBoxName.get());
     }
     else
       HandleMemoryFailure();
@@ -5672,17 +5672,17 @@ void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
 				if (allPattern.Length())
 				{
 					imapServer->SetDoingLsub(PR_TRUE);
-					Lsub(allPattern, PR_TRUE);	// LSUB all the subscribed
+					Lsub(allPattern.get(), PR_TRUE);	// LSUB all the subscribed
 				}
 				if (topLevelPattern.Length())
 				{
 					imapServer->SetDoingLsub(PR_FALSE);
-					List(topLevelPattern, PR_TRUE);	// LIST the top level
+					List(topLevelPattern.get(), PR_TRUE);	// LIST the top level
 				}
 				if (secondLevelPattern.Length())
 				{
 					imapServer->SetDoingLsub(PR_FALSE);
-					List(secondLevelPattern, PR_TRUE);	// LIST the second level
+					List(secondLevelPattern.get(), PR_TRUE);	// LIST the second level
 				}
 			}
 		}
@@ -6546,7 +6546,7 @@ PRBool nsImapProtocol::TryToLogon()
     // we are in the imap thread so *NEVER* try to extract the password with UI
 	// if logon redirection has changed the password, use the cookie as the password
 	if (m_overRideUrlConnectionInfo)
-		password = nsCRT::strdup(m_logonCookie);
+		password = ToNewCString(m_logonCookie);
 	else
 		rv = server->GetPassword(&password);
     rv = server->GetRealUsername(&userName);

@@ -150,7 +150,7 @@ nsresult nsMsgCompFields::CleanUpTempFiles()
       nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
       if (NS_SUCCEEDED(rv))
 	  {
-      rv = urlFile->SetURL(url);
+      rv = urlFile->SetURL(url.get());
         if (NS_SUCCEEDED(rv))
 	  {
           PRBool bExists = PR_FALSE;
@@ -596,8 +596,7 @@ NS_IMETHODIMP nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBo
 
 			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), nsAutoString(recipients), &recipientsStr)))
 			  {
-			    nsCAutoString temp; temp.AssignWithConversion(recipients);
-				  recipientsStr = PL_strdup(temp);
+				  recipientsStr = ToNewCString(nsDependentString(recipients));
 				}
 			
 			if (! recipientsStr)
@@ -691,8 +690,7 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
 
 			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), nsAutoString(recipients), &recipientsStr)))
 			{
-			  nsCAutoString temp; temp.AssignWithConversion(recipients);
-				recipientsStr = PL_strdup(temp);
+				recipientsStr = ToNewCString(nsDependentString(recipients));
 			}
 			
 			if (! recipientsStr)

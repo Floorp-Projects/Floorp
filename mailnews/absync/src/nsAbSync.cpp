@@ -652,7 +652,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindowInternal *aDOMWindow, PRInt32 
     prefId.Append(mAbSyncAddressBook);
     prefId.Append(".filename");
 
-    prefs->CopyCharPref(prefId, &mAbSyncAddressBookFileName);
+    prefs->CopyCharPref(prefId.get(), &mAbSyncAddressBookFileName);
   }
 
   mTransactionID++;

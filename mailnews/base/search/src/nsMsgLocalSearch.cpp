@@ -625,11 +625,11 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
           break;
         case nsMsgSearchAttrib::To:
           msgToMatch->GetRecipients(getter_Copies(recipients));
-          err = pTerm->MatchRfc822String(nsCAutoString(recipients), charset, charsetOverride, &result);
+          err = pTerm->MatchRfc822String(recipients, charset, charsetOverride, &result);
           break;
         case nsMsgSearchAttrib::CC:
           msgToMatch->GetCcList(getter_Copies(ccList));
-          err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, charsetOverride, &result);
+          err = pTerm->MatchRfc822String (ccList, charset, charsetOverride, &result);
           break;
         case nsMsgSearchAttrib::AgeInDays:
           {

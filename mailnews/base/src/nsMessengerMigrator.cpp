@@ -513,7 +513,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // create the server
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
-                                            (const char *)mLocalFoldersHostname,
+                                            mLocalFoldersHostname.get(),
                             "none", getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -580,7 +580,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 	// the 4.x "Local Mail" (when using imap) got copied.
 	// it would be great to use the server key, but we don't know it
 	// when we are copying of the mail.
-	rv = mailDirSpec->AppendRelativeUnixPath((const char *)mLocalFoldersHostname);
+	rv = mailDirSpec->AppendRelativeUnixPath(mLocalFoldersHostname.get());
 	if (NS_FAILED(rv)) return rv; 
 	rv = server->SetLocalPath(mailDirSpec);
 	if (NS_FAILED(rv)) return rv;
@@ -798,9 +798,9 @@ nsMessengerMigrator::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
   }
 
   if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, (const char *)mLocalFoldersHostname, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder,DEFAULT_FCC_FOLDER_PREF_NAME)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, (const char *)mLocalFoldersHostname, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder,DEFAULT_STATIONERY_FOLDER_PREF_NAME)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, (const char *)mLocalFoldersHostname, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder,DEFAULT_DRAFT_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname.get(), DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder,DEFAULT_FCC_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname.get(), DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder,DEFAULT_STATIONERY_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname.get(), DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder,DEFAULT_DRAFT_FOLDER_PREF_NAME)
   }
   else if (m_oldMailType == POP_4X_MAIL_TYPE) {
     nsXPIDLCString pop_username;
@@ -812,9 +812,9 @@ nsMessengerMigrator::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
     rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, getter_Copies(pop_hostname));
     if (NS_FAILED(rv)) return rv;
 
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder,DEFAULT_FCC_FOLDER_PREF_NAME)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder,DEFAULT_STATIONERY_FOLDER_PREF_NAME)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder,DEFAULT_DRAFT_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username.get(), pop_hostname.get(), DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder,DEFAULT_FCC_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username.get(), pop_hostname.get(), DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder,DEFAULT_STATIONERY_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username.get(), pop_hostname.get(), DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder,DEFAULT_DRAFT_FOLDER_PREF_NAME)
   }
 #ifdef HAVE_MOVEMAIL
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
@@ -823,9 +823,9 @@ nsMessengerMigrator::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
 	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(pop_username));
     if (NS_FAILED(rv)) return rv;
 
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder,DEFAULT_FCC_FOLDER_PREF_NAME)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder,DEFAULT_STATIONERY_FOLDER_PREF_NAME)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder,DEFAULT_DRAFT_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username.get(), MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder,DEFAULT_FCC_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username.get(), MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder,DEFAULT_STATIONERY_FOLDER_PREF_NAME)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username.get(), MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder,DEFAULT_DRAFT_FOLDER_PREF_NAME)
   }
 #endif /* HAVE_MOVEMAIL */
   else {
@@ -1008,7 +1008,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     usernameAtHostname = PR_smprintf("%s@%s",(const char *)escaped_pop_username, (const char *)pop_hostname);
   }
   else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
-    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,(const char *)mLocalFoldersHostname);
+    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,mLocalFoldersHostname.get());
   }
 #ifdef HAVE_MOVEMAIL
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
@@ -1095,7 +1095,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // "none" is the type we use for migrating 4.x "Local Mail"
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
-                            (const char *)mLocalFoldersHostname,
+                            mLocalFoldersHostname.get(),
                             "none", getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -1157,7 +1157,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // the 4.x "Local Mail" (when using imap) got copied.
   // it would be great to use the server key, but we don't know it
   // when we are copying of the mail.
-  rv = mailDirSpec->AppendRelativeUnixPath((const char *)mLocalFoldersHostname);
+  rv = mailDirSpec->AppendRelativeUnixPath(mLocalFoldersHostname.get());
   if (NS_FAILED(rv)) return rv; 
   rv = server->SetLocalPath(mailDirSpec);
   if (NS_FAILED(rv)) return rv;
@@ -1352,7 +1352,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   //
   // create the server
   //
-  rv = accountManager->CreateIncomingServer(username, hostname, "pop3",
+  rv = accountManager->CreateIncomingServer(username.get(), hostname.get(), "pop3",
                             getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -1369,7 +1369,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
 #ifdef DEBUG_MIGRATOR
   PRInt32 portValue;
   rv = server->GetPort(&portValue);
-  printf("HOSTNAME = %s\n", (const char *)hostname);
+  printf("HOSTNAME = %s\n", hostname.get());
   printf("PORT = %d\n", portValue);
 #endif /* DEBUG_MIGRATOR */
 
@@ -1422,7 +1422,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
 
   // we want .../Mail/<hostname>, not .../Mail
   // Only host name is required 
-  rv = mailDirSpec->AppendRelativeUnixPath(hostname);
+  rv = mailDirSpec->AppendRelativeUnixPath(hostname.get());
   if (NS_FAILED(rv)) return rv;
   
   // set the local path for this "pop3" server
@@ -1464,7 +1464,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   rv = copied_identity->Copy(identity);
   if (NS_FAILED(rv)) return rv;
 
-  rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, (const char *)hostname);
+  rv = SetMailCopiesAndFolders(copied_identity, username.get(), hostname.get());
   if (NS_FAILED(rv)) return rv;
   
   return rv;
@@ -1556,7 +1556,7 @@ nsMessengerMigrator::MigrateImapAccounts(nsIMsgIdentity *identity)
     
     if (!str.IsEmpty()) {
       // str is the hostname
-      rv = MigrateImapAccount(identity,str,isDefaultAccount);
+      rv = MigrateImapAccount(identity,str.get(),isDefaultAccount);
       if  (NS_FAILED(rv)) {
         // failed to migrate.  bail.
         return rv;
@@ -1621,7 +1621,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   // create the server
   //
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = accountManager->CreateIncomingServer(username, hostname, "imap",
+  rv = accountManager->CreateIncomingServer(username.get(), hostname.get(), "imap",
                             getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -1716,7 +1716,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   }
   
   // we want .../ImapMail/<hostname>, not .../ImapMail
-  rv = imapMailDirSpec->AppendRelativeUnixPath((const char *)hostname);
+  rv = imapMailDirSpec->AppendRelativeUnixPath(hostname.get());
   if (NS_FAILED(rv)) return rv;
 
   // set the local path for this "imap" server
@@ -1746,7 +1746,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = copied_identity->Copy(identity);
   if (NS_FAILED(rv)) return rv;
   
-  rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, (const char *)hostname);
+  rv = SetMailCopiesAndFolders(copied_identity, username.get(), hostname.get());
   if (NS_FAILED(rv)) return rv;  
   
  
@@ -1929,7 +1929,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   csidPrefName += abName; 
   csidPrefName += ADDRESSBOOK_PREF_CSID_SUFFIX;
   nsXPIDLCString csidPrefValue;
-  rv = prefs->CopyCharPref((const char *)csidPrefName,getter_Copies(csidPrefValue));
+  rv = prefs->CopyCharPref(csidPrefName.get(),getter_Copies(csidPrefValue));
   if (NS_FAILED(rv)) { 
 	// if we fail to get the pref value, set it to "", which will
 	// later cause us to use the system charset
@@ -1944,14 +1944,14 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   if (NS_FAILED(rv)) return;
 
 // HACK:  I need to rename pab.ldif -> abook.ldif, because a bunch of places are hacked to point to abook.mab, and when I import abook.ldif it will create abook.mab. this is a temporary hack and will go away soon.
-  if (!PL_strcmp((const char *)abName,"pab")) {
+  if (!PL_strcmp(abName.get(),"pab")) {
 	abName = "abook";
   }
 
   nsCAutoString ldifFileName;
-  ldifFileName = (const char *)abName;
+  ldifFileName = abName;
   ldifFileName += TEMP_LDIF_FILE_SUFFIX;
-  rv = tmpLDIFFileSpec->AppendRelativeUnixPath((const char *)ldifFileName);
+  rv = tmpLDIFFileSpec->AppendRelativeUnixPath(ldifFileName.get());
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to append filename");
   if (NS_FAILED(rv)) return;
      
@@ -1974,9 +1974,9 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
 #endif /* DEBUG_AB_MIGRATION */
   
   nsCAutoString newPrefValue;
-  newPrefValue = (const char *)abName;
+  newPrefValue = abName;
   newPrefValue += ADDRESSBOOK_PREF_VALUE_5x_SUFFIX;
-  rv = prefs->SetCharPref((const char *)aPref,(const char *)newPrefValue);
+  rv = prefs->SetCharPref(aPref,newPrefValue.get());
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to set pref");
   if (NS_FAILED(rv)) return;
  
@@ -2264,7 +2264,7 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 
     // create the server
 	nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = accountManager->CreateIncomingServer(nsnull, hostname, "nntp",
+    rv = accountManager->CreateIncomingServer(nsnull, hostname.get(), "nntp",
                               getter_AddRefs(server));
     NS_ENSURE_SUCCESS(rv,rv);
  
@@ -2345,7 +2345,7 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 
 	alteredHost += hostAndPort;
 	NS_MsgHashIfNecessary(alteredHost);	
-	thisNewsHostsDir += (const char *) alteredHost;
+	thisNewsHostsDir += alteredHost.get();
 
     nsCOMPtr <nsIFileSpec> newsDir;
     PRBool dirExists;

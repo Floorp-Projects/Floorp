@@ -163,7 +163,7 @@ nsresult nsMsgProtocol::GetFileFromURL(nsIURI * aURL, nsIFile **aResult)
 
 // dougt - there should be an easier way!
   nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), urlSpec)))
+  if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), urlSpec.get())))
       return rv;
 
   nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(uri);

@@ -647,9 +647,9 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 				str.AppendWithConversion( "\n");
 			SanitizeSampleData( field);
 			if (impSvc)
-				impSvc->SystemStringToUnicode( field, uField);
+				impSvc->SystemStringToUnicode( field.get(), uField);
 			else
-				uField.AssignWithConversion( field);
+				uField.AssignWithConversion( field.get());
 
 			str.Append( uField);
 			fNum++;
@@ -792,7 +792,7 @@ void ImportAddressImpl::SaveFieldMap( nsIImportFieldMap *pMap)
 				done = PR_TRUE;
 		}
 		if (!done) {
-			rv = prefs->SetCharPref( "mailnews.import.text.fieldmap", str);
+			rv = prefs->SetCharPref( "mailnews.import.text.fieldmap", str.get());
 		}
 	}
 }

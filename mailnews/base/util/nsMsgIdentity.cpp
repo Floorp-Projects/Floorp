@@ -405,7 +405,7 @@ nsMsgIdentity::ClearAllValues()
     nsCAutoString rootPref("mail.identity.");
     rootPref += m_identityKey;
 
-    rv = m_prefs->EnumerateChildren(rootPref, clearPrefEnum, (void *)m_prefs);
+    rv = m_prefs->EnumerateChildren(rootPref.get(), clearPrefEnum, (void *)m_prefs);
 
     return rv;
 }

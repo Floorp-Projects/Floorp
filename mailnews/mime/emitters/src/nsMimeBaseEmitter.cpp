@@ -681,7 +681,7 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
   newTagName.ToUpperCase();
 
-  char *l10nTagName = LocalizeHeaderName((const char *) newTagName, field);
+  char *l10nTagName = LocalizeHeaderName(newTagName.get(), field);
   if ( (!l10nTagName) || (!*l10nTagName) )
     mHTMLHeaders.Append(field);
   else
@@ -752,7 +752,7 @@ nsMimeBaseEmitter::WriteHTMLHeaders()
   if ( (!mDocHeader) && (mFormat == nsMimeOutput::nsMimeMessageXULDisplay) )
     mBody.Append(mHTMLHeaders);
   else
-    UtilityWriteCRLF(mHTMLHeaders);
+    UtilityWriteCRLF(mHTMLHeaders.get());
 
   mHTMLHeaders = "";
 

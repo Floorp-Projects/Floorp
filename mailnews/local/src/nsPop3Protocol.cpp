@@ -806,7 +806,7 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
 		{
 			if(!PL_strncasecmp(line, "+OK", 3))
  				m_commandResponse = line + 4;
-			else if(PL_strncasecmp(m_commandResponse, "Invalid login", 13))
+			else if(PL_strncasecmp(m_commandResponse.get(), "Invalid login", 13))
 				m_commandResponse = "+";
 		}
 	
@@ -853,13 +853,11 @@ nsPop3Protocol::Error(PRInt32 err_code)
                 dialog->Alert(nsnull, alertString.get()); 
               else
               {
-                nsAutoString message(alertString.get());
                 nsXPIDLString serverSaidPrefix;
                 mStringService->GetStringByID(POP3_SERVER_SAID,getter_Copies(serverSaidPrefix));
-                message.Append(NS_LITERAL_STRING(" ").get());
-                message.Append(serverSaidPrefix);
-                message.Append(NS_LITERAL_STRING(" ").get());
-                message.AppendWithConversion(m_commandResponse);
+                nsAutoString message(alertString + NS_LITERAL_STRING(" ") +
+                                     serverSaidPrefix + NS_LITERAL_STRING(" ") +
+                                     NS_ConvertASCIItoUCS2(m_commandResponse));
                 dialog->Alert(nsnull,message.get()); 
               }
             }
@@ -905,7 +903,7 @@ PRInt32 nsPop3Protocol::SendAuth()
 	nsCAutoString command("AUTH"CRLF);
 
   m_pop3ConData->next_state_after_response = POP3_AUTH_RESPONSE;
-	return SendData(m_url, command);
+	return SendData(m_url, command.get());
 }
 
 PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream, 
@@ -977,7 +975,7 @@ PRInt32 nsPop3Protocol::AuthLogin()
     
     nsCAutoString command("AUTH LOGIN" CRLF);
     m_pop3ConData->next_state_after_response = POP3_AUTH_LOGIN_RESPONSE;
-    return SendData(m_url, command);
+    return SendData(m_url, command.get());
 }
 
 PRInt32 nsPop3Protocol::AuthLoginResponse()
@@ -1015,7 +1013,7 @@ PRInt32 nsPop3Protocol::SendUsername()
     if (POP3_HAS_AUTH_LOGIN & m_pop3ConData->capability_flags) 
 	{
         char * str =
-            PL_Base64Encode(m_username, PL_strlen(m_username), nsnull);
+            PL_Base64Encode(m_username.get(), m_username.Length(), nsnull);
         cmd = str;
         PR_FREEIF(str);
     }
@@ -1028,7 +1026,7 @@ PRInt32 nsPop3Protocol::SendUsername()
 
     m_pop3ConData->next_state_after_response = POP3_SEND_PASSWORD;
 
-    return SendData(m_url, cmd);
+    return SendData(m_url, cmd.get());
 }
 
 PRInt32 nsPop3Protocol::SendPassword()
@@ -1070,7 +1068,7 @@ PRInt32 nsPop3Protocol::SendPassword()
     else
         m_pop3ConData->next_state_after_response = POP3_SEND_STAT;
 
-    return SendData(m_url, cmd, PR_TRUE);
+    return SendData(m_url, cmd.get(), PR_TRUE);
 }
 
 PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
@@ -1120,7 +1118,7 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
 		cmd = "GURL" CRLF;
         m_pop3ConData->next_state_after_response = POP3_GURL_RESPONSE;
     }
-    return SendData(m_url, cmd);
+    return SendData(m_url, cmd.get());
 }
 
 
@@ -1148,7 +1146,7 @@ nsPop3Protocol::GetStat()
      *
      *  grab the first and second arg of stat response
      */
-	oldStr = PL_strdup(m_commandResponse);
+	oldStr = ToNewCString(m_commandResponse);
     num = nsCRT::strtok(oldStr, " ", &newStr);
 
     m_pop3ConData->number_of_messages = atol(num);
@@ -2165,7 +2163,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         }
         else
 		{
-			char * oldStr = PL_strdup(m_commandResponse);
+			char * oldStr = ToNewCString(m_commandResponse);
 	        m_pop3ConData->cur_msg_size =
                 atol(nsCRT::strtok(oldStr, " ", &newStr));
           m_commandResponse = newStr;
@@ -2415,7 +2413,7 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
             char ch = line[line_length-1];
             line[line_length-1] = 0;
             m_pop3ConData->seenFromHeader = PR_TRUE;
-            if (PL_strstr(line, m_senderInfo) == NULL)
+            if (PL_strstr(line, m_senderInfo.get()) == NULL)
                 m_nsIPop3Sink->SetSenderAuthedFlag(m_pop3ConData->msg_closure,
                                                      PR_FALSE);
             line[line_length-1] = ch;

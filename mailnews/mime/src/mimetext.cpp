@@ -354,7 +354,7 @@ MimeInlineText_convert_and_parse_line(char *line, PRInt32 length, MimeObject *ob
   if (text->utf8Encoder == nsnull)
     MIME_get_unicode_encoder("UTF-8", getter_AddRefs(text->utf8Encoder));
 
-  PRBool useInputCharsetConverter = obj->options->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(text->charset, obj->options->charsetForCachedInputDecoder);
+  PRBool useInputCharsetConverter = obj->options->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(text->charset, obj->options->charsetForCachedInputDecoder.get());
 
   if (useInputCharsetConverter)
     status = obj->options->charset_conversion_fn(/*input_autodetect*/PR_FALSE, line, length,

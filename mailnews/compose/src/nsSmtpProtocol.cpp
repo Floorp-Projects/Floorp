@@ -470,7 +470,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 			m_responseText += line+4;
   }
 
-  if (m_responseCode == 220 && nsCRT::strlen(m_responseText) && !m_tlsInitiated)
+  if (m_responseCode == 220 && m_responseText.Length() && !m_tlsInitiated)
   { 
         m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
   }
@@ -505,7 +505,7 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 	buffer += CRLF;
 	
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-  status = SendData(url, buffer);
+  status = SendData(url, buffer.get());
 
   m_nextState = SMTP_RESPONSE;
   m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
@@ -530,7 +530,7 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 	buffer += CRLF;
 
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-  status = SendData(url, buffer);
+  status = SendData(url, buffer.get());
 
   m_nextState = SMTP_RESPONSE;
   m_nextStateAfterResponse = SMTP_SEND_EHLO_RESPONSE;
@@ -624,7 +624,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	  }
 
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer);
+    status = SendData(url, buffer.get());
 
     m_nextState = SMTP_RESPONSE;
 
@@ -658,7 +658,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
         buffer += GetUserDomainName();
         buffer += CRLF;
         
-        status = SendData(url, buffer);
+        status = SendData(url, buffer.get());
         
         m_nextState = SMTP_RESPONSE;
         m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
@@ -669,20 +669,20 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
     {
         char *ptr = NULL;
         
-        ptr = PL_strcasestr(m_responseText, "DSN");
+        ptr = PL_strcasestr(m_responseText.get(), "DSN");
         if (ptr && nsCRT::ToUpper(*(ptr-1)) != 'X')
             SetFlag(SMTP_EHLO_DSN_ENABLED);
         
-        if (PL_strcasestr(m_responseText, " PLAIN") != 0)
+        if (PL_strcasestr(m_responseText.get(), " PLAIN") != 0)
             SetFlag(SMTP_AUTH_PLAIN_ENABLED);
 
-        if (PL_strcasestr(m_responseText, "AUTH=LOGIN") != 0)
+        if (PL_strcasestr(m_responseText.get(), "AUTH=LOGIN") != 0)
             SetFlag(SMTP_AUTH_LOGIN_ENABLED);	/* old style */
 
-        if (PL_strcasestr(m_responseText, "STARTTLS") != 0)
+        if (PL_strcasestr(m_responseText.get(), "STARTTLS") != 0)
             SetFlag(SMTP_EHLO_STARTTLS_ENABLED);
 
-        if (PL_strcasestr(m_responseText, "EXTERNAL") != 0)
+        if (PL_strcasestr(m_responseText.get(), "EXTERNAL") != 0)
             SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
     }
     m_nextState = SMTP_AUTH_PROCESS_STATE;
@@ -743,7 +743,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
                 buffer = "STARTTLS";
                 buffer += CRLF;
 
-                status = SendData(url, buffer);
+                status = SendData(url, buffer.get());
 
                 m_flags = 0; // resetting the flags
                 m_tlsInitiated = PR_TRUE;
@@ -777,7 +777,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
         {
             buffer = "AUTH EXTERNAL =";
             buffer += CRLF;
-            SendData(url, buffer);
+            SendData(url, buffer.get());
             m_nextState = SMTP_RESPONSE;
             m_nextStateAfterResponse = SMTP_AUTH_EXTERNAL_RESPONSE;
             SetFlag(SMTP_PAUSE_FOR_READ);
@@ -877,8 +877,8 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 	  PR_snprintf(&plain_string[1], 510, "%s", (const char*)username);
 	  len += PL_strlen(username);
 	  len++; /* second <NUL> char */
-	  PR_snprintf(&plain_string[len], 511-len, "%s", (const char*)password);
-	  len += PL_strlen(password);
+	  PR_snprintf(&plain_string[len], 511-len, "%s", password.get());
+	  len += password.Length();
 
 	  base64Str = PL_Base64Encode(plain_string, len, nsnull);
   }
@@ -934,7 +934,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
 
   if (!password.IsEmpty()) 
   {
-    char *base64Str = PL_Base64Encode((const char *)password, nsCRT::strlen(password), nsnull);
+    char *base64Str = PL_Base64Encode(password.get(), password.Length(), nsnull);
 
     char buffer[512];
     PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
@@ -973,7 +973,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 
   if(m_responseCode != 250 || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_11))
 	{
-		nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_FROM_COMMAND, (const char*)m_responseText);
+		nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_FROM_COMMAND, m_responseText.get());
 		NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
 		m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1018,7 +1018,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 	m_addresses += PL_strlen (m_addresses) + 1;
 	m_addressesLeft--;
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer);
+    status = SendData(url, buffer.get());
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_RCPT_RESPONSE;
@@ -1034,7 +1034,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 
 	if(m_responseCode != 250 && m_responseCode != 251)
 	{
-    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_RCPT_COMMAND, (const char*)m_responseText);
+    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_RCPT_COMMAND, m_responseText.get());
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1053,7 +1053,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 	buffer = "DATA";
 	buffer += CRLF;
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);  
-    status = SendData(url, buffer);   
+    status = SendData(url, buffer.get());
 
     m_nextState = SMTP_RESPONSE;  
     m_nextStateAfterResponse = SMTP_SEND_DATA_RESPONSE; 
@@ -1082,7 +1082,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
   char * command=0;   
 
   if((m_responseCode != 354) && (m_responseCode != 250)) {
-    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_DATA_COMMAND, (const char*)m_responseText);
+    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_DATA_COMMAND, m_responseText.get());
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1224,7 +1224,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 {
 
   if(((m_responseCode != 354) && (m_responseCode != 250)) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_12)) {
-    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_MESSAGE, (const char*)m_responseText);
+    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_MESSAGE, m_responseText.get());
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1774,12 +1774,12 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   // open up the channel...
   // pass in "ssl" for the last arg if you want this to be over SSL
   nsCAutoString hostCStr; hostCStr.AssignWithConversion(aHost);
-  PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s on port %d.", (const char *) hostCStr, aPort));
+  PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s on port %d.", hostCStr.get(), aPort));
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(m_runningURL));
   if (smtpUrl)
       smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  rv = OpenNetworkSocketWithInfo(hostCStr, aPort, nsnull, callbacks);
+  rv = OpenNetworkSocketWithInfo(hostCStr.get(), aPort, nsnull, callbacks);
 
   // we are no longer waiting for a logon redirection reply
   ClearFlag(SMTP_WAIT_FOR_REDIRECTION);

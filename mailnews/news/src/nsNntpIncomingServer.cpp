@@ -185,7 +185,7 @@ nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
   nsCAutoString newsrcFileName(NEWSRC_FILE_PREFIX);
   newsrcFileName.Append(hostname);
   newsrcFileName.Append(NEWSRC_FILE_SUFFIX);
-  rv = mNewsrcFilePath->MakeUniqueWithSuggestedName((const char *)newsrcFileName);
+  rv = mNewsrcFilePath->MakeUniqueWithSuggestedName(newsrcFileName.get());
   if (NS_FAILED(rv)) return rv;
 
   rv = SetNewsrcFilePath(mNewsrcFilePath);
@@ -748,7 +748,7 @@ nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 PRBool
 checkIfSubscribedFunction(nsCString &aElement, void *aData)
 {
-	if (nsCRT::strcmp((const char *)aData, (const char *)aElement) == 0) {
+	if (nsCRT::strcmp((const char *)aData, aElement.get()) == 0) {
 		return PR_FALSE;
 	}
 	else {
@@ -1110,7 +1110,7 @@ setAsSubscribedFunction(nsCString &aElement, void *aData)
         return PR_FALSE;
     }
  
-    rv = server->SetAsSubscribed((const char *)aElement);
+    rv = server->SetAsSubscribed(aElement.get());
     NS_ASSERTION(NS_SUCCEEDED(rv),"SetAsSubscribed failed");
     return PR_TRUE;
 }
@@ -1193,9 +1193,7 @@ nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 NS_IMETHODIMP
 nsNntpIncomingServer::Subscribe(const PRUnichar *aUnicharName)
 {
-	nsCAutoString name;
-	name.AssignWithConversion(aUnicharName);
-	return SubscribeToNewsgroup((const char *)name);
+	return SubscribeToNewsgroup(NS_LossyConvertUCS2toASCII(aUnicharName).get());
 }
 
 NS_IMETHODIMP
@@ -1215,7 +1213,7 @@ nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
 	if (!serverFolder) return NS_ERROR_FAILURE;
 
 	nsCOMPtr <nsIFolder> subFolder;
-	rv = serverFolder->FindSubFolder(name, getter_AddRefs(subFolder));
+	rv = serverFolder->FindSubFolder(name.get(), getter_AddRefs(subFolder));
     if (NS_FAILED(rv)) return rv;	
 
     nsCOMPtr <nsIMsgFolder> newsgroupFolder = do_QueryInterface(subFolder, &rv);

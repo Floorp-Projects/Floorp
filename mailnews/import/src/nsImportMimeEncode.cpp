@@ -105,7 +105,7 @@ PRBool nsImportMimeEncode::SetUpEncode( void)
 	}
 #endif
 	
-	if (!InitEncodeScan( m_appleSingle, m_pMimeFile, m_fileName, m_pInputBuf, kEncodeBufferSz)) {
+	if (!InitEncodeScan( m_appleSingle, m_pMimeFile, m_fileName.get(), m_pInputBuf, kEncodeBufferSz)) {
 		return( PR_FALSE);
 	}
 		
@@ -116,7 +116,7 @@ PRBool nsImportMimeEncode::SetUpEncode( void)
 	PRBool bResult = PR_TRUE;
 	bResult = m_pOut->WriteStr( "Content-type: ");
 	if (bResult)
-		bResult = m_pOut->WriteStr( m_mimeType);
+		bResult = m_pOut->WriteStr( m_mimeType.get());
 
 #ifdef _MAC_IMPORT_CODE
 	// include the type an creator here
@@ -275,7 +275,7 @@ PRBool nsImportMimeEncode::ScanBuffer( PRBool *pDone)
 
 PRBool nsImportMimeEncode::TranslateFileName( nsCString& inFile, nsCString& outFile)
 {
-	const PRUint8 * pIn = (const PRUint8 *) (const char *)inFile;
+	const PRUint8 * pIn = (const PRUint8 *) inFile.get();
 	int	  len = inFile.Length();
 	
 	while (len) {
@@ -325,13 +325,13 @@ PRBool nsImportMimeEncode::WriteFileName( nsCString& fName, PRBool wasTrans, con
 		numStr = "*";
 		numStr.AppendInt( tagNum);
 		if (result)
-			result = m_pOut->WriteStr( (const char *)numStr);
+			result = m_pOut->WriteStr( numStr.get());
 		if (wasTrans && result)
 			result = m_pOut->WriteStr( "*=");
 		else if (result)
 			result = m_pOut->WriteStr( "=\"");
 		if (result)
-			result = m_pOut->WriteData( ((const PRUint8 *)(const char *)fName) + idx, len);
+			result = m_pOut->WriteData( ((const PRUint8 *)fName.get()) + idx, len);
 		if (wasTrans && result)
 			result = m_pOut->WriteStr( "\x0D\x0A");
 		else if (result)
@@ -349,13 +349,13 @@ PRBool nsImportMimeEncode::WriteFileName( nsCString& fName, PRBool wasTrans, con
 			numStr = "*";
 			numStr.AppendInt( tagNum);
 			if (result)
-				result = m_pOut->WriteStr( (const char *)numStr);
+				result = m_pOut->WriteStr( numStr.get());
 			if (wasTrans && result)
 				result = m_pOut->WriteStr( "*=");
 			else if (result)
 				result = m_pOut->WriteStr( "=\"");
 			if (result)
-				result = m_pOut->WriteData( ((const PRUint8 *)(const char *)fName) + idx, fName.Length() - idx);
+				result = m_pOut->WriteData( ((const PRUint8 *)fName.get()) + idx, fName.Length() - idx);
 			if (wasTrans && result)
 				result = m_pOut->WriteStr( "\x0D\x0A");
 			else if (result)
@@ -372,7 +372,7 @@ PRBool nsImportMimeEncode::WriteFileName( nsCString& fName, PRBool wasTrans, con
 		else if (result)
 			result = m_pOut->WriteStr( "=\"");
 		if (result)
-			result = m_pOut->WriteStr( (const char *)fName);
+			result = m_pOut->WriteStr( fName.get());
 		if (wasTrans && result)
 			result = m_pOut->WriteStr( "\x0D\x0A");
 		else if (result)

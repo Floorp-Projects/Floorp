@@ -239,17 +239,17 @@ nsresult nsAddbookUrl::ParseUrl()
 
   mOperationPart.ToLowerCase();
   // Now, figure out what we are supposed to be doing?
-  if (!nsCRT::strcmp(mOperationPart, "printone"))
+  if (!nsCRT::strcmp(mOperationPart.get(), "printone"))
   {
     mOperationType = nsIAddbookUrlOperation::PrintIndividual;
     rv = CrackPrintURL(searchPart.get(), mOperationType); 
   }
-  else if (!nsCRT::strcmp(mOperationPart, "printall"))
+  else if (!nsCRT::strcmp(mOperationPart.get(), "printall"))
   {
     mOperationType = nsIAddbookUrlOperation::PrintAddressBook;
     rv = CrackPrintURL(searchPart.get(), mOperationType); 
   }
-  else if (!nsCRT::strcmp(mOperationPart, "add"))
+  else if (!nsCRT::strcmp(mOperationPart.get(), "add"))
   {
     mOperationType = nsIAddbookUrlOperation::AddToAddressBook;
     rv = CrackAddURL(searchPart.get()); 

@@ -87,7 +87,7 @@ PRBool ImportTranslate::ConvertString( const nsCString& inStr, nsCString& outStr
 
 	pTrans = new CMHTranslator;
 	pBuf = new PRUint8[pTrans->GetMaxBufferSize( outStr.Length())];
-	pTrans->ConvertBuffer( (const PRUint8 *)((const char *)outStr), outStr.Length(), pBuf);
+	pTrans->ConvertBuffer( (const PRUint8 *)(outStr.get()), outStr.Length(), pBuf);
 	delete pTrans;
 	outStr.Truncate();
 	if (mimeHeader) {

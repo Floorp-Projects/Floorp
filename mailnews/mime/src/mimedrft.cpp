@@ -233,9 +233,9 @@ mime_dump_attachments ( attachmentList );
 	  }
 	if (attachments.Length())
 	{
-	  compFields->SetAttachments(attachments);
+	  compFields->SetAttachments(attachments.get());
 	  // remember the temp files to delete
-	  compFields->SetTemporaryFiles(attachments);
+	  compFields->SetTemporaryFiles(attachments.get());
 	}
   }
 
@@ -1774,7 +1774,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsCOMPtr<nsIMIMEInfo> mimeInfo = nsnull;
-      rv = mimeFinder->GetFromMIMEType(contentType, getter_AddRefs(mimeInfo));
+      rv = mimeFinder->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeInfo));
       if (NS_SUCCEEDED(rv) && mimeInfo) 
       {
         nsXPIDLCString fileExtension;

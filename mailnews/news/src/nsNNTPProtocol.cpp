@@ -1876,10 +1876,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
                 NS_ENSURE_SUCCESS(rv,rv);
             }
 
-		    PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) current group = %s, desired group = %s", this, (const char *)m_currentGroup, (const char *)newsgroupName));
+		    PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) current group = %s, desired group = %s", this, m_currentGroup.get(), newsgroupName.get()));
             // if the current group is the desired group, we can just issue the ARTICLE command
             // if not, we have to do a GROUP first
-			if (!PL_strcmp((const char *)m_currentGroup, (const char *)newsgroupName))
+			if (!PL_strcmp(m_currentGroup.get(), newsgroupName.get()))
 			  m_nextState = NNTP_SEND_ARTICLE_NUMBER;
 			else
 			  m_nextState = NNTP_SEND_GROUP_FOR_ARTICLE;
@@ -4373,7 +4373,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
     if (status < 0) {
 		nsCAutoString errorText;
 		errorText.AppendInt(status);
-		AlertError(MK_TCP_WRITE_ERROR, errorText);
+		AlertError(MK_TCP_WRITE_ERROR, errorText.get());
                 failure = PR_TRUE;
 		goto FAIL;
 	}

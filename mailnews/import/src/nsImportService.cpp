@@ -115,7 +115,7 @@ public:
 	nsCID			GetCID( void) { return( m_cid);}
 	const PRUnichar *GetName( void) { return( m_name.get());}
 	const PRUnichar *GetDescription( void) { return( m_description.get());}
-	const char *	GetSupports( void) { return( (const char *)m_supports);}
+	const char *	GetSupports( void) { return( m_supports.get());}
 	
 	nsIImportModule *	GetModule( PRBool keepLoaded = PR_FALSE); // Adds ref
 	void				ReleaseModule( void);
@@ -792,6 +792,6 @@ void nsImportModuleList::AddModule( const nsCID& cid, const char *pSupports, con
 #ifdef IMPORT_DEBUG
 	nsCString 	name; name.AssignWithConversion( pName);
 	nsCString	desc; desc.AssignWithConversion( pDesc);
-	IMPORT_LOG3( "* nsImportService registered import module: %s, %s, %s\n", (const char *)name, (const char *)desc, pSupports);
+	IMPORT_LOG3( "* nsImportService registered import module: %s, %s, %s\n", name.get(), desc.get(), pSupports);
 #endif
 }

@@ -395,8 +395,8 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
           Recycle(u);
           rv = nsMsgI18NConvertFromUnicode(mailCharsetStr, ustr, cstr);
           if (NS_SUCCEEDED(rv))
-            lineResult.AssignWithConversion(cstr);   // create nsString which contains NON unicode 
-                                                     // as the following code expecting it
+            lineResult.AssignWithConversion(cstr.get());   // create nsString which contains NON unicode 
+                                                           // as the following code expecting it
         }
       }
       if (NS_FAILED(rv))

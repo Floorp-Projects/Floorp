@@ -103,7 +103,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
   // Resolve charset alias
   nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    nsAutoString aAlias; aAlias.AssignWithConversion(aCharset);
+    nsAutoString aAlias; aAlias.AssignWithConversion(aCharset.get());
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, convCharset);
     }
@@ -161,7 +161,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
   else if (aCharset.IsEmpty() ||
       aCharset.EqualsIgnoreCase("us-ascii") ||
       aCharset.EqualsIgnoreCase("ISO-8859-1")) {
-    outString.AssignWithConversion(inString);
+    outString.AssignWithConversion(inString.get());
     return NS_OK;
   }
 
@@ -171,7 +171,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
   // Resolve charset alias
   nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    nsAutoString aAlias; aAlias.AssignWithConversion(aCharset);
+    nsAutoString aAlias; aAlias.AssignWithConversion(aCharset.get());
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, convCharset);
     }

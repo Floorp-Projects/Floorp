@@ -1641,7 +1641,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
         return NS_ERROR_FAILURE;
       nsCAutoString turlC;
       turlC.AssignWithConversion(tUrl);
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC)))
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC.get())))
       {
         // Well, the first time failed...which means we probably didn't get
         // the full path name...
@@ -1675,7 +1675,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
           workURL.Append(tUrl);
           nsCAutoString workurlC;
           workurlC.AssignWithConversion(workURL);
-          if (NS_FAILED(nsMsgNewURL(&attachment.url, workurlC)))
+          if (NS_FAILED(nsMsgNewURL(&attachment.url, workurlC.get())))
           {
             // rhp - just try to continue and send it without this image.
             continue;
@@ -1703,7 +1703,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
         return NS_ERROR_FAILURE;
       nsCAutoString turlC;
       turlC.AssignWithConversion(tUrl);
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC)))
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC.get())))
         return NS_ERROR_OUT_OF_MEMORY;
       
       NS_IF_ADDREF(attachment.url);
@@ -1718,7 +1718,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
         return NS_ERROR_FAILURE;
       nsCAutoString turlC;
       turlC.AssignWithConversion(tUrl);
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC)))
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC.get())))
         return NS_ERROR_OUT_OF_MEMORY;
       
       NS_IF_ADDREF(attachment.url);
@@ -1964,7 +1964,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
       // Check to see if this is a file URL, if so, don't retrieve
       // like a remote URL...
       //
-      if (nsMsgIsLocalFile((const char *)str))
+      if (nsMsgIsLocalFile(str.get()))
       {
         mCompFieldLocalAttachments++;
 #ifdef NS_DEBUG
@@ -2023,7 +2023,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
     if (!str.IsEmpty()) 
     {
       // Just look for local file:// attachments and do the right thing.
-      if (nsMsgIsLocalFile((const char *)str))
+      if (nsMsgIsLocalFile(str.get()))
       {
 #ifdef NS_DEBUG
         printf("Adding LOCAL attachment %d: %s\n", newLoc, str.get());
@@ -2036,11 +2036,11 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
 
         if (m_attachments[newLoc].mURL)
           NS_RELEASE(m_attachments[newLoc].mURL);
-        nsMsgNewURL(&(m_attachments[newLoc].mURL), str);
+        nsMsgNewURL(&(m_attachments[newLoc].mURL), str.get());
 
         if (m_attachments[newLoc].mFileSpec)
           delete (m_attachments[newLoc].mFileSpec);
-        m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL((const char *) str) );
+        m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL(str.get()) );
 
         if (m_attachments[newLoc].mURL)
           msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
@@ -2137,7 +2137,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
       // Just look for files that are NOT local file attachments and do 
       // the right thing.
       //
-      if (! nsMsgIsLocalFile((const char *)str))
+      if (! nsMsgIsLocalFile(str.get()))
       {
 #ifdef NS_DEBUG
         printf("Adding REMOTE attachment %d: %s\n", newLoc, str.get());
@@ -2150,7 +2150,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
         if (m_attachments[newLoc].mURL)
           NS_RELEASE(m_attachments[newLoc].mURL);
 
-        nsMsgNewURL(&(m_attachments[newLoc].mURL), str);
+        nsMsgNewURL(&(m_attachments[newLoc].mURL), str.get());
 
         PR_FREEIF(m_attachments[newLoc].m_charset);
         m_attachments[newLoc].m_charset = PL_strdup(mCompFields->GetCharacterSet());
@@ -4234,7 +4234,7 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
     mListener->OnGetDraftFolderURI(m_folderName.get());
 
   rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
-                                    this, m_folderName, mMsgToReplace);
+                                    this, m_folderName.get(), mMsgToReplace);
   return rv;
 }
 

@@ -137,13 +137,13 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
     if (NS_FAILED(rv))
         return PR_FALSE;
     // Create nsFileSpec and nsILocalFile for the spool.mozlock file
-    nsFileSpec tmplocspec(mozlockstr);
+    nsFileSpec tmplocspec(mozlockstr.get());
     nsCOMPtr<nsILocalFile> tmplocfile;
     rv = NS_FileSpecToIFile(&tmplocspec, getter_AddRefs(tmplocfile));
     if (NS_FAILED(rv))
         return PR_FALSE;
     // Create nsFileSpec and nsILocalFile for the spool.lock file
-    nsFileSpec locklocspec(lockstr);
+    nsFileSpec locklocspec(lockstr.get());
     nsCOMPtr<nsILocalFile> locklocfile;
     rv = NS_FileSpecToIFile(&locklocspec, getter_AddRefs(locklocfile));
     if (NS_FAILED(rv))
@@ -234,7 +234,7 @@ PRBool YieldSpoolLock(const char *spoolnameStr)
     nsresult rv;
 
     // Create nsFileSpec and nsILocalFile for the spool.lock file
-    nsFileSpec locklocspec(lockstr);
+    nsFileSpec locklocspec(lockstr.get());
     nsCOMPtr<nsILocalFile> locklocfile;
     rv = NS_FileSpecToIFile(&locklocspec, getter_AddRefs(locklocfile));
     if (NS_FAILED(rv))
@@ -342,27 +342,27 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
 
                     wholeboxname = "/var/spool/mail/";
                     wholeboxname += boxfilename;
-                    spoolfile = Probe_SpoolFilePath((const char *)wholeboxname,
+                    spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
                                                     &found_spool_but_it_is_locked);
                     
                     if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
                         wholeboxname = "/usr/spool/mail/";
                         wholeboxname += boxfilename;
-                        spoolfile = Probe_SpoolFilePath((const char *)wholeboxname,
+                        spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
                                                         &found_spool_but_it_is_locked);
                     }
 
                     if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
                         wholeboxname = "/var/mail/";
                         wholeboxname += boxfilename;
-                        spoolfile = Probe_SpoolFilePath((const char *)wholeboxname,
+                        spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
                                                         &found_spool_but_it_is_locked);
                     }
 
                     if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
                         wholeboxname = "/usr/mail/";
                         wholeboxname += boxfilename;
-                        spoolfile = Probe_SpoolFilePath((const char *)wholeboxname,
+                        spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
                                                         &found_spool_but_it_is_locked);
                     }
                 }
@@ -513,7 +513,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
 
                     // truncate the spool file here.
                     nsFileSpec * filespecForTrunc =
-                        new nsFileSpec((const char *)wholeboxname);
+                        new nsFileSpec(wholeboxname.get());
                     if (filespecForTrunc) {
                         filespecForTrunc->Truncate(0);
                         delete filespecForTrunc;

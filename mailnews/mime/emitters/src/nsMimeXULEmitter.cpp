@@ -210,7 +210,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
       newInfo->obj = GetStatusObjForContractID(actualContractID);
       if (newInfo->obj)
       {
-        newInfo->contractID.AssignWithConversion(actualContractID);
+        newInfo->contractID.AssignWithConversion(actualContractID.get());
         mMiscStatusArray->AppendElement(newInfo);
       }
     }
@@ -233,7 +233,7 @@ nsMimeXULEmitter::GetStatusObjForContractID(nsCString aContractID)
     return nsnull;
   
   nsCID         cid;
-  rv = comMgr->ContractIDToClassID(aContractID, &cid);
+  rv = comMgr->ContractIDToClassID(aContractID.get(), &cid);
   if (NS_FAILED(rv))
     return nsnull;
 
@@ -507,7 +507,7 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
   UtilityWrite("onclick=\"AddToAddressBook('");
   UtilityWrite(email);
   UtilityWrite("', '");
-  UtilityWrite((const char *) newName);
+  UtilityWrite(newName.get());
   UtilityWriteCRLF("');\"/>");
 
   UtilityWriteCRLF("</box>");
@@ -524,7 +524,7 @@ nsMimeXULEmitter::DumpBody()
   //
   UtilityWrite("<html:iframe id=\"mail-body-frame\" type=\"content-primary\" src=\"");
   UtilityWrite("data:text/html;base64,");
-  char *encoded = PL_Base64Encode(mBody, 0, nsnull);
+  char *encoded = PL_Base64Encode(mBody.get(), 0, nsnull);
   if (!encoded)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -695,7 +695,7 @@ nsMimeXULEmitter::WriteXULTagPrefix(const char *tagName, const char *value)
   newTagName.ToUpperCase();
 
   UtilityWrite("<header field=\"");
-  UtilityWrite(newTagName);
+  UtilityWrite(newTagName.get());
   UtilityWrite("\">");
 
   // Here is where we are going to try to L10N the tagName so we will always
@@ -707,7 +707,7 @@ nsMimeXULEmitter::WriteXULTagPrefix(const char *tagName, const char *value)
   UtilityWriteCRLF("<html:td>");
 
   UtilityWrite("<headerdisplayname>");
-  char *l10nTagName = LocalizeHeaderName((const char *) newTagName, tagName);
+  char *l10nTagName = LocalizeHeaderName(newTagName.get(), tagName);
   if ( (!l10nTagName) || (!*l10nTagName) )
     UtilityWrite(tagName);
   else
@@ -755,7 +755,7 @@ nsMimeXULEmitter::WriteEmailAddrXULTag(const char *tagName, const char *value)
   // do interesting things with the contents.
   //
   UtilityWriteCRLF("<html:td>"); 
-  OutputEmailAddresses((const char *) newTagName, value);
+  OutputEmailAddresses(newTagName.get(), value);
   UtilityWriteCRLF("</html:td>");
 
   WriteXULTagPostfix(tagName, value);
@@ -950,7 +950,7 @@ nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, 
   nsCAutoString  workString(curName); 
 
   workName.Trim("\"");   
-  char * htmlString = nsEscapeHTML(workName);
+  char * htmlString = nsEscapeHTML(workName.get());
   if (htmlString)
   {
     workName = htmlString;
@@ -962,7 +962,7 @@ nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, 
 
   // tLink = PR_smprintf("addbook:add?vcard=begin%%3Avcard%%0Afn%%3A%s%%0Aemail%%3Binternet%%3A%s%%0Aend%%3Avcard%%0A", 
   //                    (workName ? workName : workAddr), workAddr);
-  tLink = PR_smprintf("mailto:%s", (const char *) workAddr); 
+  tLink = PR_smprintf("mailto:%s", workAddr.get()); 
   if (tLink)
     link = nsEscapeHTML(tLink);
   if (link)
@@ -973,7 +973,7 @@ nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, 
   }
 
   if (!workName.IsEmpty())
-    UtilityWrite((const char *) workName);
+    UtilityWrite(workName.get());
   else
     UtilityWrite(curName);
 
@@ -998,7 +998,7 @@ nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, 
       miscStatusType *statusInfo = (miscStatusType *)mMiscStatusArray->ElementAt(i);
       if (statusInfo->obj)
       {
-        if (NS_SUCCEEDED(statusInfo->obj->GetIndividualXUL(curHeader, workName, workAddr, &xul)))
+        if (NS_SUCCEEDED(statusInfo->obj->GetIndividualXUL(curHeader, workName.get(), workAddr.get(), &xul)))
         {
           if ( (xul) && (*xul) )
             UtilityWriteCRLF(xul);

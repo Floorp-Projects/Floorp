@@ -1225,7 +1225,7 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
 
     PR_FREEIF(hostName);
     char * baseMessageURI;
-    nsCreateImapBaseMessageURI(fullFolderPath, &baseMessageURI);
+    nsCreateImapBaseMessageURI(fullFolderPath.get(), &baseMessageURI);
     nsCAutoString uriStr;
     rv = nsBuildImapMessageURI(baseMessageURI, key, uriStr);
     nsCRT::free(baseMessageURI);
@@ -1250,7 +1250,7 @@ NS_IMETHODIMP nsImapUrl::SetMsgLoadingFromCache(PRBool loadingFromCache)
 
      nsresult rv = NS_OK;
     nsCAutoString folderURI;
-    rv = nsParseImapMessageURI(mURI, folderURI, &key, nsnull);
+    rv = nsParseImapMessageURI(mURI.get(), folderURI, &key, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetMsgFolder(getter_AddRefs(folder));
@@ -1267,7 +1267,7 @@ NS_IMETHODIMP nsImapUrl::SetMsgLoadingFromCache(PRBool loadingFromCache)
         if (NS_FAILED(rv)) 
           return rv;
         nsCOMPtr<nsIMsgDBHdr> message;
-        GetMsgDBHdrFromURI(mURI, getter_AddRefs(message));
+        GetMsgDBHdrFromURI(mURI.get(), getter_AddRefs(message));
         nsCOMPtr<nsISupports> msgSupport(do_QueryInterface(message, &rv));
         if (msgSupport)
         {

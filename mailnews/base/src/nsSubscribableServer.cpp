@@ -42,6 +42,7 @@
 
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIFolder.h"
 #include "prmem.h"
 
@@ -260,9 +261,9 @@ nsSubscribableServer::NotifyAssert(SubscribeTreeNode *subjectNode, nsIRDFResourc
     rv = EnsureRDFService();
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource((const char *)subjectUri, getter_AddRefs(subject));
+    rv = mRDFService->GetResource(subjectUri.get(), getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mRDFService->GetResource((const char *)objectUri, getter_AddRefs(object));
+    rv = mRDFService->GetResource(objectUri.get(), getter_AddRefs(object));
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = Notify(subject, property, object, PR_TRUE, PR_FALSE);
@@ -306,7 +307,7 @@ nsSubscribableServer::NotifyChange(SubscribeTreeNode *subjectNode, nsIRDFResourc
     rv = EnsureRDFService();
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource((const char *)subjectUri, getter_AddRefs(subject));
+    rv = mRDFService->GetResource(subjectUri.get(), getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv,rv);
 
     if (value) {
@@ -751,7 +752,7 @@ nsSubscribableServer::GetFirstChildURI(const char * path, char **aResult)
     nsCAutoString uri;
     BuildURIFromNode(node->firstChild, uri);
 
-    *aResult = nsCRT::strdup((const char *)uri);
+    *aResult = ToNewCString(uri);
     if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
@@ -798,7 +799,7 @@ nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
         NS_ENSURE_SUCCESS(rv,rv);
 
         // todo, is this creating nsMsgFolders?
-        mRDFService->GetResource((const char *)uri, getter_AddRefs(res));
+        mRDFService->GetResource(uri.get(), getter_AddRefs(res));
         array->AppendElement(res);
     
         current = current->prevSibling;

@@ -110,7 +110,7 @@ PRBool C2047Translator::ConvertToFileQ( const PRUint8 * pIn, PRUint32 inLen, Imp
 		if (startLine) {
 			if (!pOutFile->WriteStr( " =?"))
 				return( PR_FALSE);
-			if (!pOutFile->WriteStr( m_charset))
+			if (!pOutFile->WriteStr( m_charset.get()))
 				return( PR_FALSE);
 			if (!pOutFile->WriteStr( "?q?"))
 				return( PR_FALSE);
@@ -179,7 +179,7 @@ PRBool C2047Translator::ConvertToFile( const PRUint8 * pIn, PRUint32 inLen, Impo
 				delete [] pEncoded;
 				return( PR_FALSE);
 			}
-			if (!pOutFile->WriteStr( m_charset)) {
+			if (!pOutFile->WriteStr( m_charset.get())) {
 				delete [] pEncoded;
 				return( PR_FALSE);
 			}

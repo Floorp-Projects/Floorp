@@ -265,7 +265,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsIMIMEInfo *mimeInfo = nsnull;
-      rv = mimeFinder->GetFromMIMEType(contentType, &mimeInfo);
+      rv = mimeFinder->GetFromMIMEType(contentType.get(), &mimeInfo);
       if (NS_SUCCEEDED(rv) && mimeInfo) 
       {
         char *aFileExtension = nsnull;
@@ -1973,7 +1973,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
         
       // get a language, e.g. x-western, ja
       nsAutoString u;
-      u.AssignWithConversion(aCharset);
+      u.AssignWithConversion(aCharset.get());
       rv = aCharSets->GetCharsetLangGroup(&u, getter_AddRefs(aLangGroup));
       if (NS_FAILED(rv))
         return rv;
@@ -1986,7 +1986,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
 
       // get a font name from pref, could be non ascii (need charset conversion)
       // this is not necessary if we insert this tag after the message is converted to UTF-8
-      rv = aPrefs->CopyUnicharPref(aPrefStr, &unicode);
+      rv = aPrefs->CopyUnicharPref(aPrefStr.get(), &unicode);
       if (NS_FAILED(rv))
         return rv;
 
@@ -2010,13 +2010,13 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       // get a font size from pref
       aPrefStr.Assign(!styleFixed ? "font.size.variable." : "font.size.fixed.");
       aPrefStr.AppendWithConversion(langGroup);
-      rv = aPrefs->GetIntPref(aPrefStr, fontPixelSize);
+      rv = aPrefs->GetIntPref(aPrefStr.get(), fontPixelSize);
       if (NS_FAILED(rv))
         return rv;
 
       // get original font size
       PRInt32 originalSize;
-      rv = aPrefs->GetDefaultIntPref(aPrefStr, &originalSize);
+      rv = aPrefs->GetDefaultIntPref(aPrefStr.get(), &originalSize);
       if (NS_FAILED(rv))
         return rv;
 

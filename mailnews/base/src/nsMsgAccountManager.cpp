@@ -340,7 +340,7 @@ nsMsgAccountManager::CreateIdentity(nsIMsgIdentity **_retval)
   nsCAutoString key;
   getUniqueKey(ID_PREFIX, &m_identities, key);
 
-  rv = createKeyedIdentity(key, _retval);
+  rv = createKeyedIdentity(key.get(), _retval);
 
   return rv;
 }
@@ -419,7 +419,7 @@ nsMsgAccountManager::CreateIncomingServer(const char* username,
 
   nsCAutoString key;
   getUniqueKey(SERVER_PREFIX, &m_incomingServers, key);
-  rv = createKeyedServer(key, username, hostname, type, _retval);
+  rv = createKeyedServer(key.get(), username, hostname, type, _retval);
 
   return rv;
 }
@@ -460,7 +460,7 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   serverPref = serverPrefPrefix;
   serverPref += ".type";
   nsXPIDLCString serverType;
-  rv = m_prefs->CopyCharPref(serverPref, getter_Copies(serverType));
+  rv = m_prefs->CopyCharPref(serverPref.get(), getter_Copies(serverType));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
   
   //
@@ -468,13 +468,13 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   serverPref = serverPrefPrefix;
   serverPref += ".userName";
   nsXPIDLCString username;
-  rv = m_prefs->CopyCharPref(serverPref, getter_Copies(username));
+  rv = m_prefs->CopyCharPref(serverPref.get(), getter_Copies(username));
 
   // .hostname
   serverPref = serverPrefPrefix;
   serverPref += ".hostname";
   nsXPIDLCString hostname;
-  rv = m_prefs->CopyCharPref(serverPref, getter_Copies(hostname));
+  rv = m_prefs->CopyCharPref(serverPref.get(), getter_Copies(hostname));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
   
     // the server type doesn't exist. That's bad.
@@ -497,19 +497,16 @@ nsMsgAccountManager::createKeyedServer(const char* key,
 {
   nsresult rv;
 
-  nsCOMPtr<nsIMsgIncomingServer> server;
   //construct the contractid
   nsCAutoString serverContractID(NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX);
   serverContractID += type;
   
   // finally, create the server
 #ifdef DEBUG_ACCOUNTMANAGER
-  printf("serverContractID = %s\n", (const char *)serverContractID);
+  printf("serverContractID = %s\n", serverContractID.get());
 #endif
-  rv = nsComponentManager::CreateInstance(serverContractID,
-                                          nsnull,
-                                          NS_GET_IID(nsIMsgIncomingServer),
-                                          getter_AddRefs(server));
+  nsCOMPtr<nsIMsgIncomingServer> server =
+           do_CreateInstance(serverContractID.get(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
   server->SetKey(key);
@@ -1527,7 +1524,7 @@ nsMsgAccountManager::CreateAccount(nsIMsgAccount **_retval)
     nsCAutoString key;
     getUniqueAccountKey(ACCOUNT_PREFIX, m_accounts, key);
 
-    return createKeyedAccount(key, _retval);
+    return createKeyedAccount(key.get(), _retval);
 }
 
 nsresult
@@ -1708,9 +1705,9 @@ nsMsgAccountManager::InternalFindServer(const char* username,
   // to make sure there's no duplicate including those whose host and/or
   // user names have been changed.
   if (!useRealSetting &&
-      (!nsCRT::strcmp((hostname?hostname:""),(const char *)m_lastFindServerHostName)) &&
-      (!nsCRT::strcmp((username?username:""),(const char *)m_lastFindServerUserName)) &&
-      (!nsCRT::strcmp((type?type:""),(const char *)m_lastFindServerType)) &&
+      (!nsCRT::strcmp((hostname?hostname:""),m_lastFindServerHostName.get())) &&
+      (!nsCRT::strcmp((username?username:""),m_lastFindServerUserName.get())) &&
+      (!nsCRT::strcmp((type?type:""),m_lastFindServerType.get())) &&
       m_lastFindServerResult) {
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("HIT:   FindServer() cache\n");

@@ -212,7 +212,7 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   else
       modifiedUrlSpec += "?header=quotebody";
 
-  aURL->SetSpec((const char *) modifiedUrlSpec);
+  aURL->SetSpec(modifiedUrlSpec.get());
 
   // if we were given a non empty charset, then use it
   if (aMsgCharSet && *aMsgCharSet)
