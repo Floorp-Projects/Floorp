@@ -1079,7 +1079,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
 
         /*
          * Aliases share another property's slot, passed in the |slot| param.
-         * Shared properties have no slot; unshared properties that do not
+         * Shared properties have no slot.  Unshared properties that do not
          * alias another property's slot get one here, but may lose it due to
          * a JS_ClearScope call.
          */
