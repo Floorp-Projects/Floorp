@@ -79,6 +79,7 @@ var maxRows    = 1000; // This is the value gecko code uses for maximum rowspan,
 var maxColumns = 1000;
 var selection;
 var CellDataChanged = false;
+var canDelete = false;
 
 // dialog initialization code
 function Startup()
@@ -90,10 +91,8 @@ function Startup()
 
   dialog = new Object;
   if (!dialog)
-  {
-    dump("Failed to create dialog object!!!\n");
     window.close();
-  }
+
   // Get dialog widgets - Table Panel
   dialog.TableRowsInput = document.getElementById("TableRowsInput");
   dialog.TableColumnsInput = document.getElementById("TableColumnsInput");
@@ -304,7 +303,6 @@ function InitCellPanel()
     // This assumes order of items is Cell, Row, Column
     dialog.SelectionList.selectedIndex = SelectedCellsType-1;
 
-dump("*****globalCellElement="+globalCellElement+", CellElement="+CellElement+"\n");
     dialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits");
     dialog.CellWidthInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "width", "CellWidthUnits");
 
@@ -376,32 +374,29 @@ function GetCellData(rowIndex, colIndex)
   if (!cellData)
     cellData = new Object;
 
-dump("Get cell data: cellData="+cellData+"\n");
-
   try {
     cellData.cell = 
       editorShell.GetCellDataAt(TableElement, rowIndex, colIndex, 
                                 startRowIndexObj, startColIndexObj,
                                 rowSpanObj, colSpanObj, 
                                 actualRowSpanObj, actualColSpanObj, isSelectedObj);
+    // We didn't find a cell
+    if (!cellData.cell) return false;
   }
   catch(ex) {
-    return false
+    return false;
   }
-dump("Get cell data: cell="+cellData.cell+"\n");
 
   cellData.startRowIndex = startRowIndexObj.value;  
   cellData.startColIndex = startColIndexObj.value;  
-  cellData.startRowIndex = rowSpanObj.value;  
-  cellData.colSpan = colSpanObj.value;  
   cellData.rowSpan = rowSpanObj.value;  
+  cellData.colSpan = colSpanObj.value;  
   cellData.actualRowSpan = actualRowSpanObj.value;  
   cellData.actualColSpan = actualColSpanObj.value;  
   cellData.isSelected = isSelectedObj.value;  
   return true;
 }
 
-//TODO: Should we validate the panel before leaving it?
 function SelectTableTab()
 {
   globalElement = globalTableElement;
@@ -467,6 +462,8 @@ function SetColor(ColorWellID, color)
       dialog.TableInheritColor.removeAttribute("collapsed");
     }
   }    
+  CellDataChanged = true;
+
   setColorWell(ColorWellID, color); 
 }
 
@@ -483,12 +480,11 @@ function ChangeSelectionToFirstCell()
 
   curRowIndex = 0;
   curColIndex = 0;
-  ChangeSeletion(RESET_SELECTION);
+  ChangeSelection(RESET_SELECTION);
 }
 
 function ChangeSelection(newType)
 {
-dump("ChangeSelection: newType="+newType+"\n");
   newType = Number(newType);
 
   if (SelectedCellsType == newType)
@@ -635,6 +631,7 @@ function MoveSelection(forward)
 
   if (CellDataChanged && dialog.ApplyBeforeMove.checked)
   {
+dump("Moving selection -- apply attributes...\n");
     if (!ValidateCellData())
       return;
 
@@ -649,6 +646,7 @@ function MoveSelection(forward)
   // Reinitialize using new cell only if checkbox is not checked
   if (!dialog.KeepCurrentData.checked)
   {
+dump("InitCellPanel should be called...\n");
     InitCellPanel();
     // Uncheck all the checkboxes used from last selection?
   }
@@ -682,7 +680,6 @@ function SetSelectionButtons()
 {
   if (SelectedCellsType == SELECT_ROW)
   {
-dump("SetSelectionButtons to ROW\n");
     // Trigger CSS to set images of up and down arrows
     dialog.PreviousButton.setAttribute("type","row");
     dialog.NextButton.setAttribute("type","row");
@@ -713,6 +710,8 @@ function ChooseTableImage()
 
     SetCheckbox("TableImageCheckbox");
   }
+  CellDataChanged = true;
+
   // Put focus into the input field
   dialog.TableImageInput.focus();
 }
@@ -725,6 +724,8 @@ function ChooseCellImage()
     dialog.CellImageInput.setAttribute("value",fileName);
     SetCheckbox("CellImageCheckbox");
   }
+  CellDataChanged = true;
+
   // Put focus into the input field
   dialog.CellImageInput.focus();
 }
@@ -794,7 +795,6 @@ function ValidateNumber(inputWidgetID, listWidget, minVal, maxVal, element, attN
 function SetAlign(listID, defaultValue, element, attName)
 {
   var value = document.getElementById(listID).selectedItem.data;
-dump("SetAlign value = "+value+"\n");
   if (value == defaultValue)
     element.removeAttribute(attName);
   else
@@ -1004,8 +1004,6 @@ function ValidateData()
 //   so the checkbox is automatically set
 function SetCheckbox(checkboxID)
 {
-dump("SetCheckbox: id="+checkboxID+"\n");
-
   // Set associated checkbox
   document.getElementById(checkboxID).checked = true;
 
@@ -1075,7 +1073,6 @@ function ApplyTableAttributes()
     } 
     else if (newAlign != "")
     {
-dump("Insert a table caption...\n");
       // Create and insert a caption:
       TableCaptionElement = editorShell.CreateElementWithDefaults("caption");
       if (TableCaptionElement)
@@ -1083,55 +1080,73 @@ dump("Insert a table caption...\n");
         if (newAlign != "top")
           TableCaptionElement.setAttribute("align", newAlign);
         
+dump("Insert a table caption...\n");
         // Insert it into the table - caption is always inserted as first child
-        editorShell.InsertElement(TableCaptionElement, TableElement, 0);
+        //  but check if we are inserting inside a <tbody>
+        var parent;
+        if (TableElement.firstChild.nodeName.toLowerCase == "tbody")
+          parent = TableElement.firstChild;
+        else
+           parent = TableElement;
+
+        editorShell.InsertElement(TableCaptionElement, parent, 0);
+
+        // Put selecton back where it was
+        ChangeSelection(RESET_SELECTION);
       }
     }
   }
 
   var countDelta;
+
+  // If user is deleting any cells and get confirmation
+  // (This is a global to the dialog and we ask only once per dialog session)
+  if ( !canDelete &&
+       (dialog.RowsCheckbox.checked && newRowCount < rowCount ||
+        dialog.ColumnsCheckbox.checked && newColCount < colCount) &&
+       ConfirmDeleteCells() )
+  {
+    canDelete = true;
+  }
+
   if (dialog.RowsCheckbox.checked && newRowCount != rowCount)
   {
     countDelta = newRowCount - rowCount;
     if (newRowCount > rowCount)
     {
-dump("New Row count="+newRowCount+", New Col Count="+newColCount+"\n");
-
       // Append new rows
       // Find first cell in last row
       if(GetCellData(lastRowIndex, 0))
       {
-dump("New Row count="+newRowCount+", New Col Count="+newColCount+"\n");
         try {
           // Move selection to the last cell
           selection.collapse(cellData.cell,0);
           // Insert new rows after it
           editorShell.InsertTableRow(countDelta, true);
+          rowCount = newRowCount;
+          lastRowIndex = rowCount - 1;
+          // Put selecton back where it was
+          ChangeSelection(RESET_SELECTION);
         }
         catch(ex) {
           dump("FAILED TO FIND FIRST CELL IN LAST ROW\n");
-          countDelta = 0;
         }
       }
     }
     else
     {
       // Delete rows
-      // First, ask user if they really want to do this!
-      if (ConfirmDeleteCells())
+      if (canDelete)
       {
-        // Find first cell starting in new last row
-        var newLastRow = lastRowIndex + countDelta;
+        // Find first cell starting in first row we delete
+        var firstDeleteRow = rowCount + countDelta;
         var foundCell = false;
         for (var i = 0; i <= lastColIndex; i++)
         {
-          if (!GetCellData(newLastRow, i))
-          {
-            // We failed!
-            countDelta = 0;
-            break;
-          }
-          if (cellData.startRowIndex == newLastRow)
+          if (!GetCellData(firstDeleteRow, i))
+            break; // We failed to find a cell
+
+          if (cellData.startRowIndex == firstDeleteRow)
           {
             foundCell = true;
             break;
@@ -1143,28 +1158,21 @@ dump("New Row count="+newRowCount+", New Col Count="+newColCount+"\n");
             // Move selection to the cell we found
             selection.collapse(cellData.cell, 0);
             editorShell.DeleteTableRow(-countDelta);
+            rowCount = newRowCount;
+            lastRowIndex = rowCount - 1;
+            if (curRowIndex > lastRowIndex)
+              // We are deleting our selection
+              // move it to start of table
+              ChangeSelectionToFirstCell()
+            else
+              // Put selecton back where it was
+              ChangeSelection(RESET_SELECTION);
           }
           catch(ex) {
             dump("FAILED TO FIND FIRST CELL IN LAST ROW\n");
-            countDelta = 0;
           }
         }
       }
-      else
-        countDelta != 0; // User didn't want to delete anything
-    }
-    if (countDelta != 0)
-    {
-      rowCount = newRowCount;
-      lastRowIndex = rowCount - 1;
-
-      if (curRowIndex > cellData.startRowIndex)
-        // We are deleting our selection
-        // move it to start of table
-        ChangeSelectionToFirstCell()
-      else
-        // Put selecton back where it was
-        ChangeSelection(RESET_SELECTION);
     }
   }
 
@@ -1182,31 +1190,30 @@ dump("New Row count="+newRowCount+", New Col Count="+newColCount+"\n");
           // Move selection to the last cell
           selection.collapse(cellData.cell,0);
           editorShell.InsertTableColumn(countDelta, true);
+          colCount = newColCount;
+          lastColIndex = colCount-1;
+          // Restore selection
+          ChangeSelection(RESET_SELECTION);
         }
         catch(ex) {
           dump("FAILED TO FIND FIRST CELL IN LAST COLUMN\n");
-          countDelta = 0;
         }
       }
     }
     else
     {
       // Delete columns
-      // First, ask user if they really want to do this!
-      if (ConfirmDeleteCells())
+      if (canDelete)
       {
-        var newLastCol = lastColIndex + countDelta;
+        var firstDeleteCol = colCount + countDelta;
         var foundCell = false;
         for (var i = 0; i <= lastRowIndex; i++)
         {
-          // Find first cell starting in new last column
-          if (!GetCellData(i, newLastCol))
-          {
-            // We failed!
-            countDelta = 0;
-            break;
-          }
-          if (cellData.startColIndex == newLastCol)
+          // Find first cell starting in first column we delete
+          if (!GetCellData(i, firstDeleteCol))
+            break; // We failed to find a cell
+
+          if (cellData.startColIndex == firstDeleteCol)
           {
             foundCell = true;
             break;
@@ -1218,24 +1225,18 @@ dump("New Row count="+newRowCount+", New Col Count="+newColCount+"\n");
             // Move selection to the cell we found
             selection.collapse(cellData.cell, 0);
             editorShell.DeleteTableColumn(-countDelta);
+            colCount = newColCount;
+            lastColIndex = colCount-1;
+            if (curColIndex > lastColIndex)
+              ChangeSelectionToFirstCell()
+            else
+              ChangeSelection(RESET_SELECTION);
           }
           catch(ex) {
             dump("FAILED TO FIND FIRST CELL IN LAST ROW\n");
-            countDelta = 0;
           }
         }
       }
-      else
-        countDelta != 0; // User didn't want to delete anything
-    }
-    if (countDelta != 0)
-    {
-      colCount = newColCount;
-      lastColIndex = newColCount - 1;
-      if (curColIndex > lastColIndex)
-        ChangeSelectionToFirstCell()
-      else
-        ChangeSelection(RESET_SELECTION);
     }
   }
 

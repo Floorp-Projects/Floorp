@@ -249,6 +249,7 @@ GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
 nsEditorShell::nsEditorShell()
 :  mMailCompose(0)
 ,  mDisplayMode(eDisplayModeNormal)
+,  mHTMLSourceMode(PR_FALSE)
 ,  mWebShellWindow(nsnull)
 ,  mContentWindow(nsnull)
 ,  mParserObserver(nsnull)
@@ -1260,10 +1261,15 @@ nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 NS_IMETHODIMP 
 nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
 {
-  // Ignore DisplayModeSource -- we don't do any style sheet changes
-  // The HTML Source display mode is handled in editor.js
   if (aDisplayMode == eDisplayModeSource)
-      return NS_OK;
+  {
+    // We track only display modes that involve style sheet changes
+    //   with mDisplayMode, so use a separate bool for source mode
+    mHTMLSourceMode = PR_TRUE;
+    // The HTML Source display mode is handled in editor.js
+    return NS_OK;
+  }
+  mHTMLSourceMode = PR_FALSE;
 
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (!styleSheets) return NS_NOINTERFACE;
@@ -1356,6 +1362,36 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
   if (NS_SUCCEEDED(res)) mDisplayMode = aDisplayMode;
   return res;
 }
+
+NS_IMETHODIMP 
+nsEditorShell::GetEditMode(PRInt32 *_retval)
+{
+  if (mHTMLSourceMode)
+    *_retval = eDisplayModeSource;
+  else
+    *_retval = mDisplayMode;
+
+  return NS_OK;
+}
+  
+NS_IMETHODIMP 
+nsEditorShell::IsHTMLSourceMode(PRBool *_retval)
+{
+  *_retval = mHTMLSourceMode;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsEditorShell::FinishHTMLSource(void)
+{
+  if (mHTMLSourceMode)
+    // Call the JS command to convert and switch to previous edit mode
+    return DoControllerCommand(NS_LITERAL_STRING("cmd_FinishHTMLSource"));
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP 
 nsEditorShell::DisplayParagraphMarks(PRBool aShowMarks)
@@ -1604,9 +1640,16 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
           *_retval = PR_FALSE;
         } else if (result == eYes)
         {
+          FinishHTMLSource();
+
           // Either save to existing file or prompt for name (as for SaveAs)
           // We don't continue if we failed to save file (_retval is set to FALSE)
           rv = SaveDocument(PR_FALSE, PR_FALSE, _retval);
+        }
+        else if (mHTMLSourceMode) // result == eNo
+        {
+           // User doesn't want to save document, so we just cancel source mode
+          rv = DoControllerCommand(NS_LITERAL_STRING("cmd_CancelHTMLSource"));
         }
       }
     }
@@ -3775,7 +3818,17 @@ nsEditorShell::InsertTableCell(PRInt32 aNumber, PRBool bAfter)
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
+        {
+          BeginBatchChanges();
           result = tableEditor->InsertTableCell(aNumber, bAfter);
+          if (NS_SUCCEEDED(result))
+          {
+            // Fix disturbances in table layout because of inserted cells
+            result = CheckPrefAndNormalizeTable();
+          }
+          EndBatchChanges();
+          return result;
+        }
       }
       break;
 
@@ -3821,10 +3874,15 @@ nsEditorShell::DeleteTableCell(PRInt32 aNumber)
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
         {
+          BeginBatchChanges();
           result = tableEditor->DeleteTableCell(aNumber);
-          // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
-          //  to JavaScript
-          if(NS_SUCCEEDED(result)) return NS_OK;
+          if(NS_SUCCEEDED(result))
+          {
+            // Fix disturbances in table layout because of deleted cells
+            result = CheckPrefAndNormalizeTable();
+          }
+          EndBatchChanges();
+          return result;
         }
       }
       break;
@@ -4258,16 +4316,19 @@ nsEditorShell::GetCellDataAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRIn
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
-        if (tableEditor)
-          result = tableEditor->GetCellDataAt(tableElement, rowIndex, colIndex, *_retval,
-                                              *aStartRowIndex, *aStartColIndex, 
-                                              *aRowSpan, *aColSpan, 
-                                              *aActualRowSpan, *aActualColSpan,
-                                              *aIsSelected);
-      }
-      break;
+    {
+      nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+      if (tableEditor)
+        result = tableEditor->GetCellDataAt(tableElement, rowIndex, colIndex, *_retval,
+                                            *aStartRowIndex, *aStartColIndex, 
+                                            *aRowSpan, *aColSpan, 
+                                            *aActualRowSpan, *aActualColSpan,
+                                            *aIsSelected);
+      // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+      //  to JavaScript
+      if(NS_SUCCEEDED(result)) return NS_OK;
+    }
+    break;
     default:
       result = NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -5078,6 +5139,27 @@ nsEditorShell::DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot)
   outIsRoot = (rootItem.get() == docShellAsTreeItem.get());
   return NS_OK;
 }
+
+nsresult
+nsEditorShell::CheckPrefAndNormalizeTable()
+{
+  nsresult  res = NS_NOINTERFACE;
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+
+  if (htmlEditor)
+  {
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
+    if (NS_FAILED(res)) return NS_OK;
+
+    PRBool normalizeTable = PR_FALSE;
+    if (NS_SUCCEEDED(prefs->GetBoolPref("editor.table.maintain_structure", &normalizeTable)) && normalizeTable)
+      return NormalizeTable(nsnull);
+
+    return NS_OK;
+  }
+  return res;
+}
+
 
 NS_IMETHODIMP
 nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClickCount,

@@ -155,7 +155,12 @@ class nsEditorShell :   public nsIEditorShell,
     nsresult        DocumentContainsFrames(nsIDocumentLoader* aLoader, PRBool& outHasFrames);
     // is the document being loaded the root of a frameset, or a non-frameset doc?
     nsresult        DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot);
-    
+
+    // Check a preference and call NormalizeTable if pref is true
+    // Use after deleting or inserting table cells to automatically 
+    //  fix rowspan, colspan, and missing cells problems
+    nsresult CheckPrefAndNormalizeTable();
+
     nsCOMPtr<nsIHTMLEditor>	 	    mEditor;         // this can be either an HTML or plain text (or other?) editor
     nsCOMPtr<nsISupports>         mSearchContext;  // context used for search and replace. Owned by the appshell.
     nsCOMPtr<nsISpellChecker>     mSpellChecker;
@@ -188,6 +193,9 @@ class nsEditorShell :   public nsIEditorShell,
     // Saves the current display mode to reload style sheets
     //   after loading a url
     PRInt32 mDisplayMode;
+    // We don't store the HTMLSource mode in mDisplayMode,
+    //  so we need to track it separately
+    PRBool  mHTMLSourceMode;
     
     nsIDOMWindow            *mWebShellWindow;				// weak reference
     //nsIDOMWindow            *mContentWindow;				// weak reference
