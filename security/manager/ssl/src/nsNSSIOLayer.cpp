@@ -668,9 +668,14 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
                                             getter_Copies(formattedString));
 	  break;
 
+  case SEC_ERROR_BAD_SIGNATURE:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("PeersCertBadSignature").get(), 
+                                                params, 1, 
+                                                getter_Copies(formattedString));
+
   //A generic error handler for peer cert
   case SEC_ERROR_UNKNOWN_CERT:
-  case SEC_ERROR_BAD_SIGNATURE:
   case SEC_ERROR_BAD_KEY:
   case SEC_ERROR_CERT_USAGES_INVALID:
   case SEC_ERROR_INADEQUATE_KEY_USAGE:
