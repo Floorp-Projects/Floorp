@@ -265,7 +265,7 @@ if ($mode=="update") {
  $sql = "SELECT  `Name`, `Homepage`, `Description` FROM  `t_main` WHERE `ID` = '$item_id' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $row = mysql_fetch_array($sql_result);
-    $name = $row["Name"];
+    if (!$name) { $name=$row["Name"]; }
     $homepage = $row["Homepage"];
     $description = $row["Description"];
 
@@ -335,7 +335,11 @@ if (!$authors) {$authors="$_SESSION[email]"; }
 ?>
 <TR><TD><SPAN class="global">Author(s):*</SPAN></TD><TD><INPUT NAME="authors" TYPE="TEXT" VALUE="<?php echo"$authors"; ?>" SIZE=45></TD></TR>
 <?php
+if ($version) {
+    echo"<TR><TD><SPAN class=\"file\">Version:*</SPAN></TD><TD>$version<INPUT NAME=\"version\" TYPE=\"HIDDEN\" VALUE=\"$version\"></TD></TR>\n";
+} else {
     echo"<TR><TD><SPAN class=\"file\">Version:*</SPAN></TD><TD><INPUT NAME=\"version\" TYPE=\"TEXT\" VALUE=\"$version\"></TD></TR>\n";
+}
     echo"<TR><TD><SPAN class=\"file\">OS*</SPAN></TD><TD><SELECT NAME=\"osid\">";
  $sql = "SELECT * FROM `t_os` ORDER BY `OSName` ASC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -732,6 +736,7 @@ if ($a != $count) {echo", "; } else {echo"<br>\n";}
 echo"</font></DIV></TD></TR>\n";
 $authors = $_POST["authors"];
 ?>
+
 <TR><TD><SPAN class="global">Author(s):*</SPAN></TD><TD><INPUT NAME="authors" TYPE="TEXT" VALUE="<?php echo"$authors"; ?>" SIZE=70><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Next &#187;"></TD></TR>
 </FORM></TABLE>
 <?php
