@@ -95,54 +95,50 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 	nsIURI * urlToRun = nsnull;
 	nsresult rv = NS_OK;
 
-	NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv); 
-	if (NS_SUCCEEDED(rv) && smtpService)
+  nsCOMPtr<nsISmtpServer> smtpServer;
+
+  // first try the identity's preferred server
+  if (aSenderIdentity) {
+      nsXPIDLCString smtpServerKey;
+      rv = aSenderIdentity->GetSmtpServerKey(getter_Copies(smtpServerKey));
+      if (NS_SUCCEEDED(rv) && (const char *)smtpServerKey)
+          rv = GetServerByKey(smtpServerKey,
+                                           getter_AddRefs(smtpServer));
+  }
+
+  // fallback to the default
+  if (NS_FAILED(rv) || !smtpServer)
+      rv = GetDefaultServer(getter_AddRefs(smtpServer));
+
+	if (NS_SUCCEEDED(rv) && smtpServer)
 	{
-    nsCOMPtr<nsISmtpServer> smtpServer;
+    nsXPIDLCString smtpHostName;
+    nsXPIDLCString smtpUserName;
 
-    // first try the identity's preferred server
-    if (aSenderIdentity) {
-        nsXPIDLCString smtpServerKey;
-        rv = aSenderIdentity->GetSmtpServerKey(getter_Copies(smtpServerKey));
-        if (NS_SUCCEEDED(rv) && (const char *)smtpServerKey)
-            rv = smtpService->GetServerByKey(smtpServerKey,
-                                             getter_AddRefs(smtpServer));
-    }
+		smtpServer->GetHostname(getter_Copies(smtpHostName));
+		smtpServer->GetUsername(getter_Copies(smtpUserName));
 
-    // fallback to the default
-    if (NS_FAILED(rv) || !smtpServer)
-        rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
-
-		if (NS_SUCCEEDED(rv) && smtpServer)
+    if ((const char*)smtpHostName && (const char*)smtpHostName[0] != 0) 
 		{
-      nsXPIDLCString smtpHostName;
-      nsXPIDLCString smtpUserName;
-
-			smtpServer->GetHostname(getter_Copies(smtpHostName));
-			smtpServer->GetUsername(getter_Copies(smtpUserName));
-
-      if ((const char*)smtpHostName && (const char*)smtpHostName[0] != 0) 
-			{
-        rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,
-                                aRecipients, aSenderIdentity, aUrlListener,
-                                aNetPrompt, &urlToRun); // this ref counts urlToRun
-        if (NS_SUCCEEDED(rv) && urlToRun)	
-        {
-          nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(urlToRun, &rv);
-          if (NS_SUCCEEDED(rv))
-              smtpUrl->SetSmtpServer(smtpServer);
-          rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull);
-        }
-
-        if (aURL) // does the caller want a handle on the url?
-          *aURL = urlToRun; // transfer our ref count to the caller....
-        else
-          NS_IF_RELEASE(urlToRun);
+      rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,
+                              aRecipients, aSenderIdentity, aUrlListener,
+                              aNetPrompt, &urlToRun); // this ref counts urlToRun
+      if (NS_SUCCEEDED(rv) && urlToRun)	
+      {
+        nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(urlToRun, &rv);
+        if (NS_SUCCEEDED(rv))
+            smtpUrl->SetSmtpServer(smtpServer);
+        rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull);
       }
+
+      if (aURL) // does the caller want a handle on the url?
+        *aURL = urlToRun; // transfer our ref count to the caller....
       else
-        rv = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
-		}
-	} // if we had a mail session
+        NS_IF_RELEASE(urlToRun);
+    }
+    else
+      rv = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+	}
 
 	return rv;
 }
@@ -683,7 +679,7 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
       rv = pref->CopyCharPref("mail.smtp.defaultserver",
                              getter_Copies(defaultServerKey));
       if (NS_SUCCEEDED(rv) &&
-          nsCRT::strcmp(defaultServerKey, "")==0) {
+          nsCRT::strlen(defaultServerKey) > 0) {
 
           nsCOMPtr<nsISmtpServer> server;
           rv = GetServerByKey(defaultServerKey,
