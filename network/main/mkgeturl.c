@@ -1045,6 +1045,11 @@ net_CallExitRoutine(Net_GetUrlExitFunc *exit_routine,
 	}
 
 	if ( exit_routine != NULL ) {
+#if defined(SingleSignon)
+		if (status<0 && URL_s->error_msg != NULL) {
+		    SI_RemoveUser(URL_s->address, NULL, TRUE);
+		}
+#endif
 		(*exit_routine) (URL_s, status, window_id);
 	}
 }
@@ -1676,6 +1681,9 @@ NET_ShutdownNetLib(void)
 
 #ifdef MOZILLA_CLIENT
 	NET_SaveCookies("");
+#if defined(SingleSignon)
+        SI_SaveSignonData("");
+#endif
 	GH_SaveGlobalHistory();
 #endif /* MOZILLA_CLIENT */
 
@@ -4721,6 +4729,11 @@ NET_DestroyEvidence()
 	/* Handle cookies */
 	NET_RemoveAllCookies();
 
+#if defined(SingleSingon)
+	/* Handle single signons */
+	SI_RemoveAllSignonData();
+#endif
+
 	/* Handle disk cache */
 	oldSize = NET_GetDiskCacheSize();
 	NET_SetDiskCacheSize(0); /* zero it out */
@@ -5026,4 +5039,3 @@ NET_InitMailtoProtocol(void)
 #ifdef PROFILE
 #pragma profile off
 #endif
-

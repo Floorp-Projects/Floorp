@@ -2506,6 +2506,9 @@ net_ProcessPop3 (ActiveEntry *ce)
                                  (host ? PL_strlen(host) : 0) + 300) 
 								 * sizeof(char);
 					char *prompt = (char *) PR_Malloc (len);
+#if defined(SingleSignon)                                        
+					char *usernameAndHost=0;
+#endif
 					if (!prompt) {
 						FREEIF(host);
 						return MK_OUT_OF_MEMORY;
@@ -2518,10 +2521,25 @@ net_ProcessPop3 (ActiveEntry *ce)
 									? cd->command_response
 									: XP_GetString(XP_NO_ANSWER)),
 								   net_pop3_username, host);
+#if defined(SingleSignons)                                        
+					StrAllocCopy(usernameAndHost, net_pop3_username);
+					StrAllocCat(usernameAndHost, "@");
+					StrAllocCat(usernameAndHost, host);
 					FREEIF (host);
 
+					password = SI_PromptPassword
+					    (ce->window_id,
+					    prompt, usernameAndHost,
+					    FALSE, !cd->password_failed);
 					cd->password_failed = FALSE;
-					password = FE_PromptPassword(ce->window_id, prompt);
+					XP_FREE(usernameAndHost);
+
+#else
+					FREEIF (host);
+					cd->password_failed = FALSE;
+					password = FE_PromptPassword
+					    (ce->window_id, prompt);
+#endif
 					PR_Free(prompt);
 
 					if (password == NULL)
