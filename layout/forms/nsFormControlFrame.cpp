@@ -158,10 +158,10 @@ nsFormControlFrame::Paint(nsIPresContext& aPresContext,
 }
 
 void 
-nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsFormControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
                                    const nsHTMLReflowState& aReflowState,
-                                   nsHTMLReflowMetrics& aDesiredLayoutSize,
-                                   nsSize& aDesiredWidgetSize)
+                                   nsHTMLReflowMetrics&     aDesiredLayoutSize,
+                                   nsSize&                  aDesiredWidgetSize)
 {
   // get the css size and let the frame use or override it
   nsSize styleSize;
@@ -172,6 +172,10 @@ nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredLayoutSize.height = (styleSize.height > CSS_NOTSET) ? styleSize.height : 144;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
+  if (aDesiredLayoutSize.maxElementSize) {
+    aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
+    aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
+  }
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
 }
@@ -214,10 +218,10 @@ nsFormControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_METHOD
-nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
-                           nsHTMLReflowMetrics& aDesiredSize,
+nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
+                           nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
-                           nsReflowStatus&      aStatus)
+                           nsReflowStatus&          aStatus)
 {
   nsresult result = NS_OK;
 
@@ -311,8 +315,7 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
         viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
       }
 
-    }
-    else {
+    } else {
       PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
       mDidInit = PR_TRUE;
     }
