@@ -40,6 +40,7 @@ EXPORTS=	nsNNTPProtocol.h				\
 			nsNewsUtils.h					\
 			nsNNTPHost.h					\
 			nsNNTPCategoryContainer.h		\
+            nsNewsDownloadDialogArgs.h      \
             $(NULL)
 
 ################################################################################
@@ -59,6 +60,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNewsFolder.obj				\
 			.\$(OBJDIR)\nsNntpIncomingServer.obj			\
 			.\$(OBJDIR)\nsNewsUtils.obj					\
+            .\$(OBJDIR)\nsNewsDownloadDialogArgs.obj    \
 			$(NULL)
 
 

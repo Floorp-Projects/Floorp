@@ -44,6 +44,7 @@
 #include "nsNNTPNewsgroupList.h"
 #include "nsNNTPArticleList.h"
 #include "nsNNTPHost.h"
+#include "nsNewsDownloadDialogArgs.h"
 #include "nsIContentHandler.h"
 #include "nsCURILoader.h"
 
@@ -56,6 +57,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroup)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroupPost)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroupList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgNewsFolder)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNewsDownloadDialogArgs)
 
 static nsModuleComponentInfo components[] =
 {
@@ -124,7 +126,11 @@ static nsModuleComponentInfo components[] =
   { "NNTP Host",
     NS_NNTPHOST_CID,
     NS_NNTPHOST_CONTRACTID,
-    nsNNTPHostConstructor }
+    nsNNTPHostConstructor },
+  { "News download dialog args",
+    NS_NEWSDOWNLOADDIALOGARGS_CID,
+    NS_NEWSDOWNLOADDIALOGARGS_CONTRACTID,
+    nsNewsDownloadDialogArgsConstructor }
 };
 
 NS_IMPL_NSGETMODULE("nsMsgNewsModule", components)

@@ -36,6 +36,7 @@ XPIDLSRCS= \
 		.\nsINntpService.idl			\
 		.\nsINntpUrl.idl			\
         .\nsIMsgNewsFolder.idl      \
+        .\nsINewsDownloadDialogArgs.idl \
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

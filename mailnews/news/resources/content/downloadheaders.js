@@ -42,39 +42,29 @@ function OnLoad()
 	doSetOKCancel(OkButtonCallback, CancelButtonCallback);
 
 	if (window.arguments && window.arguments[0]) {
-        //dump ("param = " + window.arguments[0] + "\n");
-        param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock );
-        //dump ("after QI param = " + window.arguments[0] + "\n");
+        args = window.arguments[0].QueryInterface( Components.interfaces.nsINewsDownloadDialogArgs);
     
-		newmessages = param.GetInt(2);
-		newsgroupname = param.GetString(0);
-		serverid = param.GetString(1);
-
-        param.SetInt(0, 0); /* by default, act like the user hit cancel */
-        param.SetInt(1, 0); /* by default, act like the user did not select download all */
-
-		//dump("new message count = " + newmessages + "\n");
-		//dump("newsgroup name = " + newsgroupname + "\n");
-		//dump("serverid = " + serverid + "\n");
+        args.hitOK = false; /* by default, act like the user hit cancel */
+        args.downloadAll = false; /* by default, act like the user did not select download all */
 
 		var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
-		server = accountManager.getIncomingServer(serverid);
+		server = accountManager.getIncomingServer(args.serverKey);
 		nntpServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
 
 		var downloadHeadersTitlePrefix = Bundle.GetStringFromName("downloadHeadersTitlePrefix");
 		var downloadHeadersInfoText1 = Bundle.GetStringFromName("downloadHeadersInfoText1");
 		var downloadHeadersInfoText2 = Bundle.GetStringFromName("downloadHeadersInfoText2");
-    var okButtonText = Bundle.GetStringFromName("okButtonText");
+        var okButtonText = Bundle.GetStringFromName("okButtonText");
 
-		// doesn't JS have a printf?
 		window.title = downloadHeadersTitlePrefix;
-		var infotext = downloadHeadersInfoText1 + " " + newmessages + " " + downloadHeadersInfoText2;
-		setText('info',infotext); 
-    var okbutton = document.getElementById("ok");
-    okbutton.setAttribute("value", okButtonText);
-    setText("newsgroupLabel", newsgroupname);
-	}
 
+        // this is not i18n friendly, fix this
+		var infotext = downloadHeadersInfoText1 + " " + args.articleCount + " " + downloadHeadersInfoText2;
+		setText('info',infotext); 
+        var okbutton = document.getElementById("ok");
+        okbutton.setAttribute("value", okButtonText);
+        setText("newsgroupLabel", args.groupName);
+	}
 
 	numberElement = document.getElementById("number");
 	numberElement.value = nntpServer.maxArticles;
@@ -88,7 +78,7 @@ function OnLoad()
 function setText(id, value) {
     var element = document.getElementById(id);
     if (!element) return;
- 	  if (element.hasChildNodes())  
+ 	if (element.hasChildNodes())  
       element.removeChild(element.firstChild);
     var textNode = document.createTextNode(value);
     element.appendChild(textNode);
@@ -101,22 +91,15 @@ function OkButtonCallback() {
 
     var radio = document.getElementById("all");
     if (radio) {
-        //dump("all radio value " + radio.checked + "\n");
-        if (radio.checked) {
-            param.SetInt(1, 1); /* the user selected download all */
-        }
-        else {
-            param.SetInt(1, 0); /* the user did not select download all */
-        }
+        args.downloadAll = radio.checked;
     }
 
-    param.SetInt(0, 1); /* user hit OK */
-
+    args.hitOK = true;
 	return true;
 }
 
 function CancelButtonCallback() {
-    param.SetInt(0, 0); /* user hit Cancel */
+    args.hitOK = false;
 	return true;
 }
 

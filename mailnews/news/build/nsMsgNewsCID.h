@@ -139,4 +139,14 @@
   0x196b4b30, 0xe18c, 0x11d2,							\
     { 0x80, 0x6e, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
+//
+// nsNewsDownloadDialogArgs 
+//
+#define NS_NEWSDOWNLOADDIALOGARGS_CONTRACTID \
+   "@mozilla.org/messenger/newsdownloaddialogargs;1"
+#define NS_NEWSDOWNLOADDIALOGARGS_CID   \
+{ /* 1540689e-1dd2-11b2-933d-f0d1e460ef4a */    \
+  0x1540689e, 0x1dd2, 0x11b2,   \
+    { 0x93, 0x3d, 0xf0, 0xd1, 0xe4, 0x60, 0xef, 0x4a} }
+
 #endif // nsMsgNewsCID_h__

@@ -75,7 +75,7 @@
 #include "nsMsgDBCID.h"
 
 #include "nsIPref.h"
-#include "nsIDialogParamBlock.h"
+#include "nsINewsDownloadDialogArgs.h"
 
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIMsgWindow.h"
@@ -85,16 +85,6 @@
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
-
-#define DOWNLOAD_HEADERS_URL "chrome://messenger/content/downloadheaders.xul"
-
-#define USER_HIT_OK_INT_ARG 0
-#define DOWNLOAD_ALL_INT_ARG 1
-#define ARTICLE_COUNT_INT_ARG 2
-
-#define GROUPNAME_STRING_ARG 0
-#define SERVERKEY_STRING_ARG 1
 
 extern PRInt32 net_NewsChunkSize;
 
@@ -224,7 +214,7 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
 }
 
 static nsresult 
-openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsIDialogParamBlock *ioParamBlock) 
+openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsINewsDownloadDialogArgs *param) 
 {
     nsresult rv;
 
@@ -257,8 +247,8 @@ openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsIDialogParamBlock 
                                     chromeURL,
                                     "_blank",
                                     "chrome,modal,titlebar",
-                                    (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)), 
-                                    (nsISupports*)ioParamBlock);
+                                    (const nsIID*)(&NS_GET_IID(nsINewsDownloadDialogArgs)), 
+                                    (nsISupports*)param);
 
     if (!argv) {
         return NS_ERROR_FAILURE;
@@ -456,60 +446,36 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 		{
 			if (!m_getOldMessages && !m_promptedAlready && notifyMaxExceededOn)
 			{
-                PRBool download = PR_TRUE;  
 				m_downloadAll = PR_FALSE;   
 			
-				// todo list:
-                // use nsINewsDownloadHeadersDialogArgs instead of nsIDialogParamBlock
-                // don't use prefs for dialog values, use the arg block
-				// m_promptedAlready may not be saved
-#ifdef DEBUG_NEWS
-				printf("Download Header Dialog:  %d\n",*last - *first + 1);
-				printf("download = %d\n", download);
-				printf("download all = %d\n", m_downloadAll);
-#endif /* DEBUG_NEWS */
-                
-                nsCOMPtr<nsIDialogParamBlock> ioParamBlock = do_CreateInstance(kDialogParamBlockCID, &rv);
+                nsCOMPtr<nsINewsDownloadDialogArgs> args = do_CreateInstance("@mozilla.org/messenger/newsdownloaddialogargs;1", &rv);
                 if (NS_FAILED(rv)) return rv;
+                NS_ENSURE_SUCCESS(rv,rv);
 
-                rv = ioParamBlock->SetInt(ARTICLE_COUNT_INT_ARG, *last - *first + 1);
-                if (NS_FAILED(rv)) return rv;
+                rv = args->SetArticleCount(*last - *first + 1);
+                NS_ENSURE_SUCCESS(rv,rv);
         
-                rv = ioParamBlock->SetString(GROUPNAME_STRING_ARG, NS_ConvertASCIItoUCS2(m_groupName).GetUnicode());
-                if (NS_FAILED(rv)) return rv;
+                rv = args->SetGroupName((const char *)m_groupName);
+                NS_ENSURE_SUCCESS(rv,rv);
 
 				// get the server key
 				nsXPIDLCString serverKey;
 				rv = server->GetKey(getter_Copies(serverKey));
-				if (NS_FAILED(rv)) return rv;
+                NS_ENSURE_SUCCESS(rv,rv);
 
-                rv = ioParamBlock->SetString(SERVERKEY_STRING_ARG, NS_ConvertASCIItoUCS2((const char *)serverKey).GetUnicode());
-                if (NS_FAILED(rv)) return rv;
+                rv = args->SetServerKey((const char *)serverKey);
+                NS_ENSURE_SUCCESS(rv,rv);
 
-				rv = openWindow(aMsgWindow, DOWNLOAD_HEADERS_URL, ioParamBlock); 
-				NS_ASSERTION(NS_SUCCEEDED(rv), "failed to open download headers dialog");
-                if (NS_FAILED(rv)) return rv;
-            
-                PRInt32 buttonPressed = 0;
-                rv = ioParamBlock->GetInt(USER_HIT_OK_INT_ARG,&buttonPressed);
-                if (NS_FAILED(rv)) return rv;
-                if (buttonPressed) {
-                    download = PR_TRUE;
-                }   
-                else {
-                    download = PR_FALSE;
-                }
+				rv = openWindow(aMsgWindow, DOWNLOAD_HEADERS_URL, args);
+                NS_ENSURE_SUCCESS(rv,rv);
+
+                PRBool download = PR_TRUE;  
+                rv = args->GetHitOK(&download);
+                NS_ENSURE_SUCCESS(rv,rv);
 
 				if (download) {
-                    rv = ioParamBlock->GetInt(DOWNLOAD_ALL_INT_ARG,&buttonPressed);
-                    if (NS_FAILED(rv)) return rv;
-                    
-                    if (buttonPressed) {
-                        m_downloadAll = PR_TRUE;
-                    }
-                    else {
-                        m_downloadAll = PR_FALSE;
-                    }
+                    rv = args->GetDownloadAll(&m_downloadAll);
+                    NS_ENSURE_SUCCESS(rv,rv);
 
 					m_maxArticles = 0;
 
@@ -540,9 +506,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 				*first = *last - maxextra + 1;
 		}
 	}
-#ifdef DEBUG_NEWS
-	printf("GetRangeOfArtsToDownload(first possible = %d, last possible = %d, first = %d, last = %d maxextra = %d\n",first_possible, last_possible, *first, *last, maxextra);
-#endif /* DEBUG_NEWS */
+
 	m_firstMsgToDownload = *first;
 	m_lastMsgToDownload = *last;
     if (status) *status=0;

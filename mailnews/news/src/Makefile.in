@@ -43,6 +43,7 @@ CPPSRCS		= \
 		nsNntpIncomingServer.cpp \
 		nsNewsMessage.cpp \
 		nsNewsUtils.cpp \
+        nsNewsDownloadDialogArgs.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -60,6 +61,7 @@ EXPORTS		= \
 		nsNewsUtils.h \
 		nsNNTPHost.h \
 		nsNNTPCategoryContainer.h \
+        nsNewsDownloadDialogArgs.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
