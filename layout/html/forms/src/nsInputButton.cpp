@@ -43,6 +43,7 @@
 #include "nsIImage.h"
 #include "nsHTMLForms.h"
 #include "nsHTMLImage.h"
+#include "nsStyleUtil.h"
 
 enum nsButtonTagType {
   kButtonTag_Button,
@@ -544,18 +545,40 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
+  nsInputButton* content;
+  GetContent((nsIContent*&) content);
+
   nsIButton* button;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&button)) {
-    nsFont font("foo", 0, 0, 0, 0, 0);
-    GetFont(aPresContext, font);
-    button->SetFont(font);
+    if (kButton_Browse != content->GetButtonType()) {  // browse button always uses default
+      const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+      if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
+          (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
+        nsFont  widgetFont(styleFont->mFixedFont);
+        widgetFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
+        widgetFont.size = styleFont->mFont.size;    // normal font size
+        if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
+          widgetFont.name = "Arial";  // XXX windows specific font
+        }
+        button->SetFont(widgetFont);
+      }
+      else {
+        // use arial, scaled down one HTML size
+        // italics, decoration & variant(?) get used
+        nsFont  widgetFont(styleFont->mFont);
+        widgetFont.name = "Arail";  // XXX windows specific font
+        widgetFont.weight = NS_FONT_WEIGHT_NORMAL; 
+        const nsFont& normal = aPresContext->GetDefaultFont();
+        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(widgetFont.size, (PRInt32)normal.size);
+        widgetFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size);
+        button->SetFont(widgetFont);
+      }
+    }
   } 
   else {
     NS_ASSERTION(0, "no widget in button control");
   }
 
-  nsInputButton* content;
-  GetContent((nsIContent*&) content);
   nsString value;
   nsContentAttr status = content->GetAttribute(nsHTMLAtoms::value, value);
   if (eContentAttr_HasValue == status) {  

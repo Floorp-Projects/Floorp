@@ -31,6 +31,7 @@
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"
+#include "nsStyleUtil.h"
 
 class nsInputCheckboxFrame : public nsInputFrame {
 public:
@@ -109,6 +110,17 @@ nsInputCheckboxFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aV
   nsICheckButton* checkbox;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&checkbox)) {
 	  checkbox->SetState(checked);
+
+    const nsStyleColor* color = 
+      nsStyleUtil::FindNonTransparentBackground(mStyleContext);
+
+    if (nsnull != color) {
+      checkbox->SetBackgroundColor(color->mBackgroundColor);
+    }
+    else {
+      checkbox->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+    }
+
     NS_RELEASE(checkbox);
   }
 }

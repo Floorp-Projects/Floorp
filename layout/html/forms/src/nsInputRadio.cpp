@@ -33,6 +33,7 @@
 #include "nsIFormManager.h"
 #include "nsIView.h"
 #include "nsIStyleContext.h"
+#include "nsStyleUtil.h"
 
 class nsInputRadioFrame : public nsInputFrame {
 public:
@@ -104,6 +105,17 @@ nsInputRadioFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView
   nsIRadioButton* radio;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&radio)) {
 	  radio->SetState(content->mForcedChecked);
+
+    const nsStyleColor* color = 
+      nsStyleUtil::FindNonTransparentBackground(mStyleContext);
+
+    if (nsnull != color) {
+      radio->SetBackgroundColor(color->mBackgroundColor);
+    }
+    else {
+      radio->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+    }
+
     NS_RELEASE(radio);
   }
 }
