@@ -97,7 +97,7 @@ public abstract class IdScriptable extends ScriptableObject
             int id = mapNameToId_cached(name);
             if (id != 0) {
                 int attr = getAttributes(id);
-                if ((attr & READONLY) == 0) {
+                if ((attr & READONLY) == 0 && !isSealed()) {
                     if (start == this) {
                         setIdValue(id, value);
                     }
@@ -160,11 +160,6 @@ public abstract class IdScriptable extends ScriptableObject
             }
         }
         super.setAttributes(name, start, attributes);
-    }
-
-    synchronized void addPropertyAttribute(int attribute) {
-        extraIdAttributes |= (byte)attribute;
-        super.addPropertyAttribute(attribute);
     }
 
     /**
@@ -374,15 +369,6 @@ public abstract class IdScriptable extends ScriptableObject
         this.maxId = maxId;
     }
 
-    /** Sets whether newly constructed function objects should be sealed */
-    protected void setSealFunctionsFlag(boolean sealed) {
-        setSetupFlag(SEAL_FUNCTIONS_FLAG, sealed);
-    }
-
-    private void setSetupFlag(int flag, boolean value) {
-        setupFlags = (byte)(value ? setupFlags | flag : setupFlags & ~flag);
-    }
-
     /**
      * Prepare this object to serve as the prototype property of constructor
      * object with name <code>getClassName()<code> defined in
@@ -398,8 +384,6 @@ public abstract class IdScriptable extends ScriptableObject
     {
         setMaxId(maxId);
 
-        setSealFunctionsFlag(sealed);
-
         int constructorId = mapNameToId("constructor");
         if (constructorId == 0) {
             // It is a bug to call this function without id for constructor
@@ -411,7 +395,6 @@ public abstract class IdScriptable extends ScriptableObject
         fillConstructorProperties(cx, ctor, sealed);
         if (sealed) {
             ctor.sealObject();
-            ctor.addPropertyAttribute(READONLY);
         }
 
         setParentScope(ctor);
@@ -470,7 +453,7 @@ public abstract class IdScriptable extends ScriptableObject
 
     protected IdFunction newIdFunction(String name, int id) {
         IdFunction f = new IdFunction(this, name, id);
-        if (0 != (setupFlags & SEAL_FUNCTIONS_FLAG)) { f.sealObject(); }
+        if (isSealed()) { f.sealObject(); }
         return f;
     }
 
@@ -515,7 +498,7 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     private int getAttributes(int id) {
-        int attributes = getIdDefaultAttributes(id) | extraIdAttributes;
+        int attributes = getIdDefaultAttributes(id);
         byte[] array = attributesArray;
         if (array != null) {
             attributes |= 0xFF & array[id - 1];
@@ -554,8 +537,5 @@ public abstract class IdScriptable extends ScriptableObject
     private int lastIdCache;
 
     private static final int SEAL_FUNCTIONS_FLAG    = 1 << 1;
-
-    private byte setupFlags;
-    private byte extraIdAttributes;
 }
 

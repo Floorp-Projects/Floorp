@@ -249,7 +249,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             // Note: cache is not updated in put
         }
 
-        if ((slot.attributes & ScriptableObject.READONLY) != 0) {
+        if ((slot.attributes & ScriptableObject.READONLY) != 0 || isSealed()) {
             return;
         }
         if ((slot.flags & Slot.HAS_SETTER) != 0) {
@@ -332,7 +332,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
             slot = getSlotToSet(null, index);
         }
-        if ((slot.attributes & ScriptableObject.READONLY) != 0)
+        if ((slot.attributes & ScriptableObject.READONLY) != 0 || isSealed())
             return;
         if (this == start) {
             slot.value = value;
@@ -936,7 +936,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             defineProperty(dest, name, f, DONTENUM);
             if (sealed) {
                 f.sealObject();
-                f.addPropertyAttribute(READONLY);
             }
         }
 
@@ -948,10 +947,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
         if (sealed) {
             ctor.sealObject();
-            ctor.addPropertyAttribute(READONLY);
             if (proto instanceof ScriptableObject) {
                 ((ScriptableObject) proto).sealObject();
-                ((ScriptableObject) proto).addPropertyAttribute(READONLY);
             }
         }
     }
@@ -1269,7 +1266,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return true if sealed, false otherwise.
      * @since 1.4R3
      */
-    public boolean isSealed() {
+    public final boolean isSealed() {
         return count < 0;
     }
 
@@ -1493,20 +1490,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return obj;
     }
 
-    /**
-     * Adds a property attribute to all properties.
-     */
-    synchronized void addPropertyAttribute(int attribute) {
-        if (slots == null)
-            return;
-        for (int i = 0; i < slots.length; i++) {
-            Slot slot = slots[i];
-            if (slot == null || slot == REMOVED)
-                continue;
-            slot.attributes |= attribute;
-        }
-    }
-
     private Slot getSlot(String id, int index) {
         Slot[] slots = this.slots; // Get local copy
         int i = getSlotPosition(slots, id, index);
@@ -1577,7 +1560,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * caused the table to grow while this thread was searching.
      */
     private synchronized Slot addSlot(String id, int index, Slot newSlot) {
-        if (count < 0)
+        if (isSealed())
             throw Context.reportRuntimeError0("msg.add.sealed");
 
         if (slots == null) { slots = new Slot[5]; }
@@ -1625,7 +1608,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * deletes are not common.
      */
     private synchronized void removeSlot(String name, int index) {
-        if (count < 0)
+        if (isSealed())
             throw Context.reportRuntimeError0("msg.remove.sealed");
 
         int i = getSlotPosition(slots, name, index);

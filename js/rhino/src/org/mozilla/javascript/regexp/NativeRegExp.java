@@ -132,7 +132,6 @@ public class NativeRegExp extends IdScriptable implements Function {
         NativeRegExp proto = new NativeRegExp();
         proto.prototypeFlag = true;
         proto.setMaxId(MAX_PROTOTYPE_ID);
-        proto.setSealFunctionsFlag(sealed);
         proto.setParentScope(scope);
         proto.setPrototype(getObjectPrototype(scope));
 
