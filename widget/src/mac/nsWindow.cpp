@@ -1807,7 +1807,9 @@ void  nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 	aY += offY;
 }
 
-NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
+NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, 
+                                            PRBool aDoCapture, 
+                                            PRBool aConsumeRollupEvent)
 {
   if (aDoCapture) {
     NS_IF_RELEASE(gRollupListener);

@@ -1134,7 +1134,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture)
+NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
   return NS_OK;
 }

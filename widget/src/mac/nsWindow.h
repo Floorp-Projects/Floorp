@@ -154,7 +154,7 @@ public:
     
     NS_IMETHOD  			SetCursor(nsCursor aCursor);
     
-    NS_IMETHOD         CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture);
+    NS_IMETHOD         CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD        SetTitle(const nsString& title);
   
     // Mac specific methods

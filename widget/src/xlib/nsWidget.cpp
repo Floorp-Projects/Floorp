@@ -1187,7 +1187,7 @@ nsWidget::SetTitle(const nsString& title)
 }
 
 NS_IMETHODIMP
-nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
+nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
 
 
