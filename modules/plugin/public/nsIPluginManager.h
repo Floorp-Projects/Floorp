@@ -39,6 +39,23 @@
 
 class nsIPluginStreamListener;
 
+#define NS_IPLUGINMANAGER_IID                        \
+{ /* da58ad80-4eb6-11d2-8164-006008119d7a */         \
+    0xda58ad80,                                      \
+    0x4eb6,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
+// CLSID for the browser's global plugin manager object.
+#define NS_PLUGINMANAGER_CID                         \
+{ /* ce768990-5a4e-11d2-8164-006008119d7a */         \
+    0xce768990,                                      \
+    0x5a4e,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 /**
  * The nsIPluginManager interface defines the minimum set of functionality that
  * the browser will support if it allows plugins. Plugins can call QueryInterface
@@ -47,7 +64,8 @@ class nsIPluginStreamListener;
  */
 class nsIPluginManager : public nsISupports {
 public:
-
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINMANAGER_IID)
+	
     /**
      * Returns the value of a variable associated with the plugin manager.
      *
@@ -175,23 +193,6 @@ public:
 #endif // !NEW_PLUGIN_STREAM_API
 
 };
-
-#define NS_IPLUGINMANAGER_IID                        \
-{ /* da58ad80-4eb6-11d2-8164-006008119d7a */         \
-    0xda58ad80,                                      \
-    0x4eb6,                                          \
-    0x11d2,                                          \
-    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
-
-// CLSID for the browser's global plugin manager object.
-#define NS_PLUGINMANAGER_CID                         \
-{ /* ce768990-5a4e-11d2-8164-006008119d7a */         \
-    0xce768990,                                      \
-    0x5a4e,                                          \
-    0x11d2,                                          \
-    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

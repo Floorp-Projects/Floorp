@@ -37,6 +37,14 @@
 #include "nsplugindefs.h"
 #include "nsISupports.h"
 
+#define NS_IPLUGINTAGINFO_IID                        \
+{ /* 5f1ec1d0-019b-11d2-815b-006008119d7a */         \
+    0x5f1ec1d0,                                      \
+    0x019b,                                          \
+    0x11d2,                                          \
+    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Tag Info Interface
 // This interface provides information about the HTML tag on the page.
@@ -44,7 +52,8 @@
 
 class nsIPluginTagInfo : public nsISupports {
 public:
-
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINTAGINFO_IID)
+	
     // QueryInterface on nsIPluginInstancePeer to get this.
 
     // (Corresponds to NPP_New's argc, argn, and argv arguments.)
@@ -68,14 +77,6 @@ public:
     GetAttribute(const char* name, const char* *result) = 0;
 
 };
-
-#define NS_IPLUGINTAGINFO_IID                        \
-{ /* 5f1ec1d0-019b-11d2-815b-006008119d7a */         \
-    0x5f1ec1d0,                                      \
-    0x019b,                                          \
-    0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

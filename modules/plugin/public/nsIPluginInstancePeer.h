@@ -39,6 +39,14 @@
 
 class nsIOutputStream;
 
+#define NS_IPLUGININSTANCEPEER_IID                   \
+{ /* 4b7cea20-019b-11d2-815b-006008119d7a */         \
+    0x4b7cea20,                                      \
+    0x019b,                                          \
+    0x11d2,                                          \
+    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Instance Peer Interface
 
@@ -53,7 +61,8 @@ class nsIOutputStream;
  */
 class nsIPluginInstancePeer : public nsISupports {
 public:
-
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGININSTANCEPEER_IID)
+	
     /**
      * Returns the value of a variable associated with the plugin manager.
      *
@@ -128,14 +137,6 @@ public:
     SetWindowSize(PRUint32 width, PRUint32 height) = 0;
 
 };
-
-#define NS_IPLUGININSTANCEPEER_IID                   \
-{ /* 4b7cea20-019b-11d2-815b-006008119d7a */         \
-    0x4b7cea20,                                      \
-    0x019b,                                          \
-    0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
