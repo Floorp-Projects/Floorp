@@ -60,7 +60,8 @@ class nsIContent;
 class nsIViewManager;
 
 class nsContentSink : public nsICSSLoaderObserver,
-                      public nsIScriptLoaderObserver
+                      public nsIScriptLoaderObserver,
+                      public nsSupportsWeakReference
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTLOADEROBSERVER
