@@ -56,7 +56,7 @@ txWrapperHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     txWrapperHashEntry *e =
         NS_STATIC_CAST(txWrapperHashEntry *, entry);
-    return e->mWrapper->mMozObject;
+    return e->mWrapper->getNSObj();
 }
 
 PR_STATIC_CALLBACK(void)
@@ -78,7 +78,7 @@ txWrapperHashMatchEntry(PLDHashTable *table,
 {
     const txWrapperHashEntry *e =
         NS_STATIC_CAST(const txWrapperHashEntry *, entry);
-    return e->mWrapper->mMozObject == key;
+    return e->mWrapper->getNSObj() == key;
 }
 
 struct txAttributeHashEntry : public PLDHashEntryHdr
@@ -676,7 +676,7 @@ void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
 }
 
 #ifdef DEBUG
-inline PRBool MozillaObjectWrapper::inHashTableDeletion()
+PRBool MozillaObjectWrapper::inHashTableDeletion()
 {
     return mOwnerDocument->mInHashTableDeletion;
 }
