@@ -770,7 +770,14 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
         nsCOMPtr<nsIFile> parentDir; 
 
         PRBool exists = PR_FALSE;
-#ifdef XP_PC
+#ifdef XP_OS2
+        rv = NS_GetSpecialDirectory(NS_OS2_DIR, getter_AddRefs(parentDir)); 
+      
+        if (NS_SUCCEEDED(rv))
+          rv = parentDir->Exists(&exists);
+        if (NS_FAILED(rv) || !exists)
+          return rv;
+#elif defined(XP_PC)
         rv = NS_GetSpecialDirectory(NS_WIN_APPDATA_DIR, getter_AddRefs(parentDir)); 
         if (NS_SUCCEEDED(rv))
           rv = parentDir->Exists(&exists);
