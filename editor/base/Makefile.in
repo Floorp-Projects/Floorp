@@ -22,8 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES += -DNOT_PRODUCTION_CODE -DUSE_EXPERIMENTAL_SMART_POINTERS 
-
 LIBRARY_NAME = ender
 
 CPPSRCS =                       \

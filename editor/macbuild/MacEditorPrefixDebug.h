@@ -17,7 +17,5 @@
  */
 
 
-#define NOT_PRODUCTION_CODE 1
-#define USE_EXPERIMENTAL_SMART_POINTERS 1
 
 #include "MacPrefix_debug.h"
