@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *
  *   Adam Lock <adamlock@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -2484,23 +2485,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT 
     {
         RETURN_E_INVALIDARG();
     }
-    PropertyList::iterator i;
-    for (i = mPropertyList.begin(); i != mPropertyList.end(); i++)
-    {
-        // Is the property already in the list?
-        if (wcscmp((*i).szName, szProperty) == 0)
-        {
-            // Copy the new value
-            (*i).vValue = CComVariant(vtValue);
-            return S_OK;
-        }
-    }
 
-    Property p;
-    p.szName = CComBSTR(szProperty);
-    p.vValue = vtValue;
+    mPropertyList.AddOrReplaceNamedProperty(szProperty, vtValue);
 
-    mPropertyList.push_back(p);
     return S_OK;
 }
 
@@ -2524,14 +2511,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __
     }
     
     VariantInit(pvtValue);
-    PropertyList::iterator i;
-    for (i = mPropertyList.begin(); i != mPropertyList.end(); i++)
+    for (unsigned long i = 0; i < mPropertyList.GetSize(); i++)
     {
-        // Is the property already in the list?
-        if (wcscmp((*i).szName, Property) == 0)
+        if (wcsicmp(mPropertyList.GetNameOf(i), Property) == 0)
         {
             // Copy the new value
-            VariantCopy(pvtValue, &(*i).vValue);
+            VariantCopy(pvtValue, const_cast<VARIANT *>(mPropertyList.GetValueOf(i)));
             return S_OK;
         }
     }

@@ -67,14 +67,12 @@ HRESULT STDMETHODCALLTYPE CPropertyBag::Read(/* [in] */ LPCOLESTR pszPropName, /
     }
 
     VariantInit(pVar);
-    PropertyList::iterator i;
-    for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
+    for (unsigned long i = 0; i < m_PropertyList.GetSize(); i++)
     {
-        // Is the property already in the list?
-        if (wcsicmp((*i).szName, pszPropName) == 0)
+        if (wcsicmp(m_PropertyList.GetNameOf(i), pszPropName) == 0)
         {
             // Copy the new value
-            VariantCopy(pVar, &(*i).vValue);
+            VariantCopy(pVar, const_cast<VARIANT *>(m_PropertyList.GetValueOf(i)));
             return S_OK;
         }
     }
@@ -94,23 +92,9 @@ HRESULT STDMETHODCALLTYPE CPropertyBag::Write(/* [in] */ LPCOLESTR pszPropName, 
         return E_INVALIDARG;
     }
 
-    PropertyList::iterator i;
-    for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
-    {
-        // Is the property already in the list?
-        if (wcsicmp((*i).szName, pszPropName) == 0)
-        {
-            // Copy the new value
-            (*i).vValue = CComVariant(*pVar);
-            return S_OK;
-        }
-    }
+    CComBSTR bstrName(pszPropName);
+    m_PropertyList.AddOrReplaceNamedProperty(bstrName, *pVar);
 
-    Property p;
-    p.szName = CComBSTR(pszPropName);
-    p.vValue = *pVar;
-
-    m_PropertyList.push_back(p);
     return S_OK;
 }
 
