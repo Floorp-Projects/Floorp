@@ -57,7 +57,7 @@
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
           <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem label="&newTab.label;" accesskey="&newTab.accesskey;"
-                          oncommand="this.parentNode.parentNode.parentNode.parentNode.newTab();"/>
+                          xbl:inherits="oncommand=onnewtab"/>
             <xul:menuseparator/>
             <xul:menuitem label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
@@ -86,10 +86,7 @@
                                 event.stopPropagation();"
                     ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode);
                                 event.stopPropagation();"
-                    onnewtab="var node = this.parentNode;
-                              while (node.localName != 'tabbrowser')
-                                node = node.parentNode;
-                              node.newTab();"
+                    xbl:inherits="onnewtab"
                     onclosetab="var node = this.parentNode;
                                 while (node.localName != 'tabbrowser')
                                   node = node.parentNode;
@@ -584,14 +581,6 @@
             var listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
             this.webProgress.addProgressListener(listener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[0] = listener;
-          ]]>
-        </body>
-      </method>
-
-      <method name="newTab">
-        <body>
-          <![CDATA[
-            this.selectedTab = this.addTab('about:blank');
           ]]>
         </body>
       </method>
