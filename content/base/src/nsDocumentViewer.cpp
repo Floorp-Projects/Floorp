@@ -460,7 +460,7 @@ public:
   PRBool   DonePrintingPages(PrintObject* aPO);
   
   // helper method
-  static void GetWebShellTitleAndURL(nsIWebShell * aWebShell, PRUnichar** aTitle, PRUnichar** aURLStr);
+  static void GetWebShellTitleAndURL(nsIWebShell * aWebShell, nsIPrintSettings* aPrintSettings, PRUnichar** aTitle, PRUnichar** aURLStr);
 
 protected:
   virtual ~DocumentViewerImpl();
@@ -564,7 +564,7 @@ private:
   void PrepareToStartLoad(void);
   
   // Misc
-  void ShowPrintErrorDialog(nsresult printerror, PRBool aIsPrinting = PR_TRUE);
+  static void ShowPrintErrorDialog(nsresult printerror, PRBool aIsPrinting = PR_TRUE);
 
 protected:
   // IMPORTANT: The ownership implicit in the following member
@@ -787,7 +787,10 @@ PrintData::~PrintData()
 #ifdef DEBUG_PRINTING
     fprintf(mDebugFD, "****************** End Document ************************\n");
 #endif
-    mPrintDC->EndDocument();
+    nsresult rv = mPrintDC->EndDocument();
+    if (NS_FAILED(rv)) {
+      DocumentViewerImpl::ShowPrintErrorDialog(rv, PR_TRUE);
+    }
   }
 
   delete mPrintObject;
@@ -1896,7 +1899,7 @@ static void GetDocTitleAndURL(PrintObject* aPO, char *& aDocStr, char *& aURLStr
   PRUnichar * docURLStr;
   nsAutoString strDocTitle;
   nsAutoString strURL;
-  DocumentViewerImpl::GetWebShellTitleAndURL(aPO->mWebShell, &docTitleStr, &docURLStr); 
+  DocumentViewerImpl::GetWebShellTitleAndURL(aPO->mWebShell, nsnull, &docTitleStr, &docURLStr); 
 
   if (!docTitleStr) {
     if (docURLStr) {
@@ -2293,6 +2296,7 @@ DocumentViewerImpl::IsWebShellAFrameSet(nsIWebShell * aWebShell)
 //-------------------------------------------------------
 void
 DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell, 
+                                           nsIPrintSettings* aPrintSettings,
                                            PRUnichar**   aTitle, 
                                            PRUnichar**   aURLStr)
 {
@@ -2303,6 +2307,29 @@ DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell,
   *aTitle  = nsnull;
   *aURLStr = nsnull;
 
+  // First check to see if the PrintSettings has defined an alternate title
+  // and use that if it did
+  PRUnichar * docTitleStrPS = nsnull;
+  PRUnichar * docURLStrPS   = nsnull;
+  if (aPrintSettings != nsnull) {
+    aPrintSettings->GetTitle(&docTitleStrPS);
+    aPrintSettings->GetDocURL(&docURLStrPS);
+
+    if (docTitleStrPS != nsnull && nsCRT::strlen(docTitleStrPS) > 0) {
+      *aTitle  = docTitleStrPS;
+    }
+
+    if (docURLStrPS != nsnull && nsCRT::strlen(docURLStrPS) > 0) {
+      *aURLStr  = docURLStrPS;
+    }
+
+    // short circut
+    if (docTitleStrPS != nsnull && docURLStrPS != nsnull) {
+      return;
+    }
+  }
+
+  // now get the actual values if the PrintSettings didn't have any
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
   if (docShell) {
     nsCOMPtr<nsIPresShell> presShell;
@@ -2311,21 +2338,24 @@ DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell,
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        const nsString* docTitle = doc->GetDocumentTitle();
-        if (docTitle && !docTitle->IsEmpty()) {
-          *aTitle = ToNewUnicode(*docTitle);
-        }
-
-        nsCOMPtr<nsIURI> url;
-        doc->GetDocumentURL(getter_AddRefs(url));
-        if (url) {
-          nsXPIDLCString urlCStr;
-          url->GetSpec(getter_Copies(urlCStr));
-          if (urlCStr.get()) {
-            *aURLStr = ToNewUnicode(urlCStr);
+        if (docTitleStrPS == nsnull) {
+          const nsString* docTitle = doc->GetDocumentTitle();
+          if (docTitle && !docTitle->IsEmpty()) {
+            *aTitle = ToNewUnicode(*docTitle);
           }
         }
 
+        if (docURLStrPS == nsnull) {
+          nsCOMPtr<nsIURI> url;
+          doc->GetDocumentURL(getter_AddRefs(url));
+          if (url) {
+            nsXPIDLCString urlCStr;
+            url->GetSpec(getter_Copies(urlCStr));
+            if (urlCStr.get()) {
+              *aURLStr = ToNewUnicode(urlCStr);
+            }
+          }
+        }
       }
     }
   }
@@ -2477,7 +2507,9 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
   // if a print job was cancelled externally, an EndPage or BeginPage may
   // fail and the failure is passed back here.
   // Returning PR_TRUE means we are done printing.
-  if (NS_FAILED(mPageSeqFrame->PrintNextPage(aPresContext))) {
+  nsresult rv = mPageSeqFrame->PrintNextPage(aPresContext);
+  if (NS_FAILED(rv)) {
+    ShowPrintErrorDialog(rv, PR_TRUE);
     return PR_TRUE;
   }                
 
@@ -3534,7 +3566,7 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
   nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
   PRUnichar * docTitleStr;
   PRUnichar * docURLStr;
-  GetWebShellTitleAndURL(webContainer, &docTitleStr, &docURLStr); 
+  GetWebShellTitleAndURL(webContainer, mPrt->mPrintSettings, &docTitleStr, &docURLStr); 
 
   if (!docTitleStr) {
     if (docURLStr) {
@@ -3736,7 +3768,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
         if (!skipSetTitle) {
           PRUnichar * docTitleStr;
           PRUnichar * docURLStr;
-          GetWebShellTitleAndURL(webShell, &docTitleStr, &docURLStr); 
+          GetWebShellTitleAndURL(webShell, mPrt->mPrintSettings, &docTitleStr, &docURLStr); 
 
           if (!docTitleStr) {
             docTitleStr = ToNewUnicode(NS_LITERAL_STRING(""));
@@ -5024,7 +5056,7 @@ DocumentViewerImpl::SetDocAndURLIntoProgress(nsIWebShell* aWebShell,
   }
   PRUnichar * docTitleStr;
   PRUnichar * docURLStr;
-  GetWebShellTitleAndURL(aWebShell, &docTitleStr, &docURLStr); 
+  GetWebShellTitleAndURL(aWebShell, mPrt->mPrintSettings, &docTitleStr, &docURLStr); 
   mPrt->mPrintProgressParams->SetDocTitle((const PRUnichar*) docTitleStr);
   mPrt->mPrintProgressParams->SetDocURL((const PRUnichar*) docURLStr);
   if (docTitleStr != nsnull) nsMemory::Free(docTitleStr);
@@ -5468,6 +5500,10 @@ DocumentViewerImpl::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrintin
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_NOT_IMPLEMENTED)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_NOT_AVAILABLE)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_ABORT)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_STARTDOC)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_ENDDOC)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_STARTPAGE)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_ENDPAGE)
     default:
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)
 #undef NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG      
