@@ -218,7 +218,7 @@ PRMJ_LocalGMTDifference()
 
 /* Convert from base time to extended time */
 static JSInt64
-PRMJ_ToExtendedTime(JSInt32 time)
+PRMJ_ToExtendedTime(JSInt32 base_time)
 {
     JSInt64 exttime;
     JSInt64 g1970GMTMicroSeconds;
@@ -242,7 +242,7 @@ PRMJ_ToExtendedTime(JSInt32 time)
 #endif
     JSLL_ADD(g1970GMTMicroSeconds,g1970GMTMicroSeconds,low);
 
-    JSLL_I2L(exttime,time);
+    JSLL_I2L(exttime,base_time);
     JSLL_ADD(exttime,exttime,g1970GMTMicroSeconds);
     JSLL_SUB(exttime,exttime,tmp);
     return exttime;
@@ -314,7 +314,7 @@ PRMJ_Now(void)
 
 /* Get the DST timezone offset for the time passed in */
 JSInt64
-PRMJ_DSTOffset(JSInt64 time)
+PRMJ_DSTOffset(JSInt64 local_time)
 {
     JSInt64 us2s;
 #ifdef XP_MAC
@@ -348,19 +348,19 @@ PRMJ_DSTOffset(JSInt64 time)
 
 
     JSLL_UI2L(us2s, PRMJ_USEC_PER_SEC);
-    JSLL_DIV(time, time, us2s);
+    JSLL_DIV(local_time, local_time, us2s);
 
     /* get the maximum of time_t value */
     JSLL_UI2L(maxtimet,PRMJ_MAX_UNIX_TIMET);
 
-    if(JSLL_CMP(time,>,maxtimet)){
-      JSLL_UI2L(time,PRMJ_MAX_UNIX_TIMET);
-    } else if(!JSLL_GE_ZERO(time)){
+    if(JSLL_CMP(local_time,>,maxtimet)){
+      JSLL_UI2L(local_time,PRMJ_MAX_UNIX_TIMET);
+    } else if(!JSLL_GE_ZERO(local_time)){
       /*go ahead a day to make localtime work (does not work with 0) */
-      JSLL_UI2L(time,PRMJ_DAY_SECONDS);
+      JSLL_UI2L(local_time,PRMJ_DAY_SECONDS);
     }
-    JSLL_L2UI(local,time);
-    PRMJ_basetime(time,&prtm);
+    JSLL_L2UI(local,local_time);
+    PRMJ_basetime(local_time,&prtm);
 #if ( defined( USE_AUTOCONF ) && !defined( HAVE_LOCALTIME_R) ) || ( !defined ( USE_AUTOCONF ) && ( defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD ) || defined( RHAPSODY ) ) )
     ptm = localtime(&local);
     if(!ptm){
@@ -378,11 +378,11 @@ PRMJ_DSTOffset(JSInt64 time)
 	diff += PRMJ_DAY_SECONDS;
     }
 
-    JSLL_UI2L(time,diff);
+    JSLL_UI2L(local_time,diff);
 
-    JSLL_MUL(time,time,us2s);
+    JSLL_MUL(local_time,local_time,us2s);
 
-    return(time);
+    return(local_time);
 #endif
 }
 

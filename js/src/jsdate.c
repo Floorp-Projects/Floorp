@@ -22,7 +22,6 @@
 #include "jsstddef.h"
 #include <math.h>
 #include <stdlib.h>
-#include <string.h>
 #include "jstypes.h"
 #include "jsprf.h"
 #include "prmjtime.h"
@@ -481,12 +480,12 @@ date_msecFromDate(jsdouble year, jsdouble mon, jsdouble mday, jsdouble hour,
 		  jsdouble min, jsdouble sec, jsdouble msec)
 {
     jsdouble day;
-    jsdouble time;
+    jsdouble msec_time;
     jsdouble result;
 
     day = MakeDay(year, mon, mday);
-    time = MakeTime(hour, min, sec, msec);
-    result = MakeDate(day, time);
+    msec_time = MakeTime(hour, min, sec, msec);
+    result = MakeDate(day, msec_time);
     return result;
 }
 
@@ -702,10 +701,10 @@ date_parseString(const jschar *s, jsdouble *result)
     if (hour < 0)
 	hour = 0;
     if (tzoffset == -1) { /* no time zone specified, have to use local */
-	jsdouble time;
-	time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
+	jsdouble msec_time;
+	msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
 
-	*result = UTC(time);
+	*result = UTC(msec_time);
 	return JS_TRUE;
     }
 
@@ -1085,7 +1084,7 @@ date_makeTime(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsdouble hour, min, sec, msec;
     jsdouble lorutime; /* Local or UTC version of *date */
 
-    jsdouble time;
+    jsdouble msec_time;
     jsdouble result;
 
     jsdouble *date = date_getProlog(cx, obj, argv);
@@ -1148,8 +1147,8 @@ date_makeTime(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     else
 	msec = msFromTime(lorutime);
 
-    time = MakeTime(hour, min, sec, msec);
-    result = MakeDate(Day(lorutime), time);
+    msec_time = MakeTime(hour, min, sec, msec);
+    result = MakeDate(Day(lorutime), msec_time);
 
 /*     fprintf(stderr, "%f\n", result); */
 
@@ -1722,7 +1721,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     /* Date called as function */
     if (!cx->fp->constructing) {
 	int64 us, ms, us2ms;
-	jsdouble time;
+	jsdouble msec_time;
 
 	/* NSPR 2.0 docs say 'We do not support PRMJ_NowMS and PRMJ_NowS',
 	 * so compute ms from PRMJ_Now.
@@ -1730,15 +1729,15 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	us = PRMJ_Now();
 	JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
 	JSLL_DIV(ms, us, us2ms);
-	JSLL_L2D(time, ms);
+	JSLL_L2D(msec_time, ms);
 
-	return date_format(cx, time, rval);
+	return date_format(cx, msec_time, rval);
     }
 
     /* Date called as constructor */
     if (argc == 0) {
 	int64 us, ms, us2ms;
-	jsdouble time;
+	jsdouble msec_time;
 
 	date = date_constructor(cx, obj);
 	if (!date)
@@ -1747,9 +1746,9 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	us = PRMJ_Now();
 	JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
 	JSLL_DIV(ms, us, us2ms);
-	JSLL_L2D(time, ms);
+	JSLL_L2D(msec_time, ms);
 
-	*date = time;
+	*date = msec_time;
     } else if (argc == 1) {
 	if (!JSVAL_IS_STRING(argv[0])) {
 	    /* the argument is a millisecond number */
@@ -1776,24 +1775,24 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
 	jsdouble array[MAXARGS];
 	uintN loop;
-	jsdouble d;
+	jsdouble double_arg;
 	jsdouble day;
-	jsdouble time;
+	jsdouble msec_time;
 
 	for (loop = 0; loop < MAXARGS; loop++) {
 	    if (loop < argc) {
-		if (!js_ValueToNumber(cx, argv[loop], &d))
+		if (!js_ValueToNumber(cx, argv[loop], &double_arg))
 		    return JS_FALSE;
 		/* if any arg is NaN, make a NaN date object
 		   and return */
-		if (!JSDOUBLE_IS_FINITE(d)) {
+		if (!JSDOUBLE_IS_FINITE(double_arg)) {
 		    date = date_constructor(cx, obj);
 		    if (!date)
 			return JS_FALSE;
 		    *date = *(cx->runtime->jsNaN);
 		    return JS_TRUE;
 		}
-		array[loop] = js_DoubleToInteger(d);
+		array[loop] = js_DoubleToInteger(double_arg);
 	    } else {
                 if (loop == 2) {
                     array[loop] = 1; /* Default the date argument to 1. */
@@ -1812,10 +1811,10 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    array[0] += 1900;
 
 	day = MakeDay(array[0], array[1], array[2]);
-	time = MakeTime(array[3], array[4], array[5], array[6]);
-	time = MakeDate(day, time);
-	time = UTC(time);
-	*date = TIMECLIP(time);
+	msec_time = MakeTime(array[3], array[4], array[5], array[6]);
+	msec_time = MakeDate(day, msec_time);
+	msec_time = UTC(msec_time);
+	*date = TIMECLIP(msec_time);
     }
     return JS_TRUE;
 }
@@ -1848,7 +1847,7 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
 {
     JSObject *obj;
     jsdouble *date;
-    jsdouble time;
+    jsdouble msec_time;
 
     obj = js_NewObject(cx, &date_class, NULL, NULL);
     if (!obj)
@@ -1860,8 +1859,8 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
     if (!date)
 	return NULL;
 
-    time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
-    *date = UTC(time);
+    msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
+    *date = UTC(msec_time);
     return obj;
 }
 
