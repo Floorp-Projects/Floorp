@@ -27,7 +27,7 @@
 #include "nsString.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsTextHelperLog, 0)
+NS_IMPL_LOG(nsTextHelperLog)
 #define PRINTF NS_LOG_PRINTF(nsTextHelperLog)
 #define FLUSH  NS_LOG_FLUSH(nsTextHelperLog)
 

@@ -35,7 +35,7 @@
 #include "nsWindow.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsGtkIMEHelperLog, 0)
+NS_IMPL_LOG(nsGtkIMEHelperLog)
 #define PRINTF NS_LOG_PRINTF(nsGtkIMEHelperLog)
 #define FLUSH  NS_LOG_FLUSH(nsGtkIMEHelperLog)
 
