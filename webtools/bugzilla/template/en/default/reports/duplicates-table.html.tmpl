@@ -39,7 +39,7 @@
   # maxrows: integer. Max number of rows to display.
   # changedsince: integer. The number of days ago for the changedsince column.
   # openonly: boolean. True if we are only showing open bugs.
-  # product: string. Restrict to this product only.
+  # query_products: list of strings. Restrict to these products only.
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -78,7 +78,7 @@
                 [% "&amp;maxrows=$maxrows" IF maxrows %]
                 [% "&amp;changedsince=$changedsince" IF changedsince %]
                 [% "&amp;openonly=1" IF openonly %]
-                [% IF product %]&amp;product=[% product FILTER html %][% END %]
+                [% FOREACH p = query_products %]&amp;product=[% p FILTER html %][% END %]
                 [% IF format %]&amp;format=[% format FILTER html %][% END %]
                 [% "&amp;bug_id=$bug_ids_string&amp;sortvisible=1" 
                                                             IF sortvisible %]">

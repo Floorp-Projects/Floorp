@@ -78,16 +78,16 @@ my $changedsince = formvalue("changedsince", 7);
 my $maxrows = formvalue("maxrows", 100);
 my $openonly = formvalue("openonly");
 my $reverse = formvalue("reverse") ? 1 : 0;
-my $product = formvalue("product");
+my @query_products = $cgi->param('product');
 my $sortvisible = formvalue("sortvisible");
 my @buglist = (split(/[:,]/, formvalue("bug_id")));
 
 my $product_id;
-if ($product) {
-    $product_id = get_product_id($product);
+foreach my $p (@query_products) {
+    $product_id = get_product_id($p);
     if (!$product_id) {
         ThrowUserError("invalid_product_name",
-                       { product => $product });
+                       { product => $p });
     }
 }
 
@@ -209,7 +209,7 @@ if (scalar(%count)) {
 
     # Restrict to product if requested
     if ($::FORM{'product'}) {
-        $params->param('product', $::FORM{'product'});
+        $params->param('product', join(',', @query_products));
     }
 
     my $query = new Bugzilla::Search('fields' => [qw(bugs.bug_id
@@ -258,7 +258,7 @@ $vars->{'maxrows'} = $maxrows;
 $vars->{'openonly'} = $openonly;
 $vars->{'reverse'} = $reverse;
 $vars->{'format'} = $::FORM{'format'};
-$vars->{'product'} = $product;
+$vars->{'query_products'} = \@query_products;
 $vars->{'products'} = \@::legal_product;
 
 

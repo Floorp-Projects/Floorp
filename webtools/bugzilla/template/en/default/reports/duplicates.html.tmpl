@@ -27,7 +27,7 @@
   # maxrows: integer. Max number of rows to display.
   # changedsince: integer. The number of days ago for the changedsince column.
   # openonly: boolean. True if we are only showing open bugs.
-  # product: string. Restrict to this product only.
+  # query_products: list of strings. The set of products we check for dups.
   #
   # Additionally, you need to fulfill the interface to
   # duplicates-table.html.tmpl.
@@ -35,8 +35,8 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% IF product %]
-  [% title = "Most Frequently Reported $terms.Bugs for $product" %]
+[% IF query_products.size %]
+  [% title = "Most Frequently Reported $terms.Bugs for ${query_products.join(', ')}" %]
 [% ELSE %]
   [% title = "Most Frequently Reported $terms.Bugs" %]
 [% END%]
@@ -85,7 +85,8 @@
         <select name="product" size="5" multiple="multiple">
           [% FOREACH p = products %]
             <option name="[% p FILTER html %]"
-            [% " selected" IF product == p %]>[% p FILTER html %]</option>
+            [% " selected" IF lsearch(query_products, p) != -1 %]
+            >[% p FILTER html %]</option>
           [% END %]
         </select>
       </td>
