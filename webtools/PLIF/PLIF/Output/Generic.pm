@@ -191,11 +191,8 @@ sub getString {
 sub expandString {
     my $self = shift;
     my($app, $session, $protocol, $name, $type, $string, $data) = @_;
-    my $expander = $app->getService("string.expander.named.$name"); # XXX when would anyone override the expander based on the name??
-    if (not defined($expander)) {
-        $expander = $app->getService("string.expander.$type");
-        $self->assert($expander, 1, "Could not find a string expander for string '$name' of type '$type'");
-    }
+    my $expander = $app->getService("string.expander.$type");
+    $self->assert($expander, 1, "Could not find a string expander for string '$name' of type '$type'");
     return $expander->expand($app, $self, $session, $protocol, $string, $data, $type);
 }
 
