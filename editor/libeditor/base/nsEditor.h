@@ -595,7 +595,7 @@ protected:
   
   nsWeakPtr       mPresShellWeak;   // weak reference to the nsIPresShell
   nsIViewManager *mViewManager;
-  PRUint32        mUpdateCount;
+  PRInt32         mUpdateCount;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   nsCOMPtr<nsIEditProperty>  mEditProperty;
   nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
