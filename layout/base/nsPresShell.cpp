@@ -314,8 +314,21 @@ private:
   Stopwatch mReflowWatch;  // Used for measuring time spent in reflow
   Stopwatch mFrameCreationWatch;  // Used for measuring time spent in frame creation
 #endif
-
 };
+
+#ifdef NS_DEBUG
+static void
+VerifyStyleTree(nsIFrameManager* aFrameManager, nsIFrame* aFrame)
+{
+  if (aFrameManager && aFrame && nsIFrame::GetVerifyStyleTreeEnable()) {
+    aFrameManager->DebugVerifyStyleTree(aFrame);
+  }
+}
+#define VERIFY_STYLE_TREE VerifyStyleTree(mFrameManager, mRootFrame)
+#else
+#define VERIFY_STYLE_TREE
+#endif
+
 
 #ifdef NS_DEBUG
 /**
@@ -841,6 +854,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     // content object down
     mStyleSet->ContentInserted(mPresContext, nsnull, root, 0);
     NS_RELEASE(root);
+    VERIFY_STYLE_TREE;
     NS_STOP_STOPWATCH(mFrameCreationWatch)
   }
 
@@ -880,6 +894,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
         mRootFrame->VerifyTree();
       }
 #endif
+      VERIFY_STYLE_TREE;
     }
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
@@ -937,6 +952,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
         mRootFrame->VerifyTree();
       }
 #endif
+      VERIFY_STYLE_TREE;
     }
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
@@ -1077,6 +1093,7 @@ PresShell::StyleChangeReflow()
         mRootFrame->VerifyTree();
       }
 #endif
+      VERIFY_STYLE_TREE;
     }
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::StyleChangeReflow"));
@@ -1279,6 +1296,7 @@ PresShell::ProcessReflowCommands()
       mRootFrame->GetSize(maxSize);
       rc->Dispatch(*mPresContext, desiredSize, maxSize, *rcx);
       NS_RELEASE(rc);
+      VERIFY_STYLE_TREE;
     }
     NS_IF_RELEASE(rcx);
 
@@ -1653,6 +1671,7 @@ PresShell::ContentChanged(nsIDocument *aDocument,
 
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
 
   return rv;
@@ -1667,6 +1686,7 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
 
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
 
   return rv;
@@ -1683,6 +1703,7 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
 
   EnterReflowLock();
   nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aAttribute, aHint);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
   return rv;
 }
@@ -1695,6 +1716,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   EnterReflowLock();
   NS_START_STOPWATCH(mFrameCreationWatch)
   nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
+  VERIFY_STYLE_TREE;
 
   if (NS_SUCCEEDED(rv) && nsnull != mHistoryState) {
     // If history state has been set by session history, ask the frame manager 
@@ -1719,6 +1741,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
 {
   EnterReflowLock();
   nsresult  rv = mStyleSet->ContentInserted(mPresContext, aContainer, aChild, aIndexInContainer);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
   return rv;
 }
@@ -1733,6 +1756,7 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->ContentReplaced(mPresContext, aContainer, aOldChild,
                                             aNewChild, aIndexInContainer);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
   return rv;
 }
@@ -1746,6 +1770,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->ContentRemoved(mPresContext, aContainer,
                                            aChild, aIndexInContainer);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
   return rv;
 }
@@ -1757,6 +1782,7 @@ PresShell::ReconstructFrames(void)
           
   EnterReflowLock();
   rv = mStyleSet->ReconstructDocElementHierarchy(mPresContext);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
 
   return rv;
@@ -1793,6 +1819,7 @@ PresShell::StyleRuleChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->StyleRuleChanged(mPresContext, aStyleSheet,
                                              aStyleRule, aHint);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
   return rv;
 }
@@ -1805,6 +1832,7 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->StyleRuleAdded(mPresContext, aStyleSheet,
                                           aStyleRule);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
   if (NS_FAILED(rv)) {
     return rv;
@@ -1821,6 +1849,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->StyleRuleRemoved(mPresContext, aStyleSheet,
                                              aStyleRule);
+  VERIFY_STYLE_TREE;
   ExitReflowLock();
   if (NS_FAILED(rv)) {
     return rv;
