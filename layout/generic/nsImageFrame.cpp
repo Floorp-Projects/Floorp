@@ -178,7 +178,8 @@ nsImageFrame::GetImageLoad(imgIRequest *aRequest)
 nsImageFrame::nsImageFrame() :
   mIntrinsicSize(0, 0),
   mGotInitialReflow(PR_FALSE),
-  mFailureReplace(PR_TRUE)
+  mFailureReplace(PR_TRUE),
+  mImageBlocked(PR_FALSE)
 {
   // Size is constrained if we have a width and height. 
   // - Set in reflow in case the attributes are changed
@@ -671,7 +672,8 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
         // wrap it all up
         useSizedBox = !prefForceInlineAltText &&
                       HaveFixedSize(*stylePosition) && 
-                      mode == eCompatibility_NavQuirks;
+                      mode == eCompatibility_NavQuirks &&
+                      !mImageBlocked;
 
         if (!useSizedBox) {
           // let the presShell handle converting this into the inline alt text frame
@@ -1258,9 +1260,10 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
 
     if (loadStatus & imgIRequest::STATUS_ERROR || !imgCon) {
       // No image yet, or image load failed. Draw the alt-text and an icon
-      // indicating the status
+      // indicating the status (unless image is blocked, in which case we show nothing)
 #ifndef SUPPRESS_LOADING_ICON
-      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
+          !mImageBlocked) {
 #else
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
           mInitialLoadCompleted) {
@@ -1989,19 +1992,6 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
 
   PRBool shouldLoad = PR_TRUE; // default permit
 
-#if 0
-  nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-
-  if (securityManager) {
-    nsCOMPtr<nsIURI> baseURI;
-    GetBaseURI(getter_AddRefs(baseURI));
-
-    nsresult proceed = securityManager->CheckLoadURI(baseURI, aURI, nsIScriptSecurityManager::STANDARD);
-    if (NS_FAILED(proceed))
-      return PR_FALSE;
-  }
-#endif
-
   // Check with the content-policy things to make sure this load is permitted.
   nsresult rv;
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mContent));
@@ -2025,8 +2015,11 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
 
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
                                  aURI, element, domWin, &shouldLoad);
-    if (NS_SUCCEEDED(rv) && !shouldLoad)
-        return shouldLoad;
+    if (NS_SUCCEEDED(rv) && !shouldLoad) {
+      // this image has been blocked, so flag it
+      mImageBlocked = PR_TRUE;
+      return shouldLoad;
+    }
   }
    
   /* ... additional checks ? */
