@@ -63,7 +63,6 @@ XPIDLSRCS	= \
 		nsISocketProviderService.idl \
 		nsISOCKSSocketInfo.idl \
 		nsITransportSecurityInfo.idl \
-		nsISSLSocketProvider.idl \
 		nsISSLSocketControl.idl \
 		$(NULL)
 
