@@ -60,7 +60,7 @@ sub _initialize {
 
         LONGBLOB =>     'bytea',
 
-        DATETIME =>     'timestamp',
+        DATETIME =>     'timestamp(0) without time zone',
 
     };
 
