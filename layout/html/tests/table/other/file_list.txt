@@ -7,7 +7,7 @@ file:///s|/mozilla/layout/html/tests/table/other/slashlogo.html
 file:///s|/mozilla/layout/html/tests/table/other/wa_table_thtd_rowspan.html
 file:///s|/mozilla/layout/html/tests/table/other/wa_table_tr_align.html
 file:///s|/mozilla/layout/html/tests/table/other/ms.html
-file:///s|/mozilla/layout/html/tests/table/other/XXXwf_table_index.html
+file:///s|/mozilla/layout/html/tests/table/other/wf_table_index.html
 file:///s|/mozilla/layout/html/tests/table/other/move_row.html
 file:///s|/mozilla/layout/html/tests/table/other/move_row.html
 file:///s|/mozilla/layout/html/tests/table/other/nested2.html
