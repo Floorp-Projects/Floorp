@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.17 2000/10/02 17:39:37 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.18 2000/10/31 16:52:31 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -77,12 +77,14 @@ rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key)
     CHECK_MPI_OK( mp_sub_d(q, 1, &qsub1) );
     CHECK_MPI_OK( mp_mul(&psub1, &qsub1, &phi) );
     /* 3.  Compute d = e**-1 mod(phi) using extended Euclidean algorithm */
-    CHECK_MPI_OK( mp_xgcd(e, &phi, &tmp, &d, NULL) );
-    CHECK_MPI_OK( mp_mod(&d, &phi, &d) );
+    err = mp_invmod(e, &phi, &d);
     /*     Verify that phi(n) and e have no common divisors */
-    if (mp_cmp_d(&tmp, 1) != 0) { 
-	PORT_SetError(SEC_ERROR_NEED_RANDOM);
-	rv = SECFailure;
+    if (err != MP_OKAY) {
+	if (err == MP_UNDEF) {
+	    PORT_SetError(SEC_ERROR_NEED_RANDOM);
+	    err = MP_OKAY; /* to keep PORT_SetError from being called again */
+	    rv = SECFailure;
+	}
 	goto cleanup;
     }
     MPINT_TO_SECITEM(&n, &key->modulus, key->arena);
@@ -170,14 +172,16 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     do {
 	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(pb, primeLen) );
 	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(qb, primeLen) );
-	pb[0]          |= 0x80; /* set high-order bit */
-	pb[primeLen-1] |= 0x01; /* set low-order bit  */
-	qb[0]          |= 0x80; /* set high-order bit */
-	qb[primeLen-1] |= 0x01; /* set low-order bit  */
+	pb[0]          |= 0xC0; /* set two high-order bits */
+	pb[primeLen-1] |= 0x01; /* set low-order bit       */
+	qb[0]          |= 0xC0; /* set two high-order bits */
+	qb[primeLen-1] |= 0x01; /* set low-order bit       */
 	CHECK_MPI_OK( mp_read_unsigned_octets(&p, pb, primeLen) );
 	CHECK_MPI_OK( mp_read_unsigned_octets(&q, qb, primeLen) );
 	CHECK_MPI_OK( mpp_make_prime(&p, primeLen * 8, PR_FALSE, &counter) );
 	CHECK_MPI_OK( mpp_make_prime(&q, primeLen * 8, PR_FALSE, &counter) );
+	if (mp_cmp(&p, &q) < 0)
+	    mp_exch(&p, &q);
 	rv = rsa_keygen_from_primes(&p, &q, &e, key);
 	if (rv == SECSuccess)
 	    break; /* generated two good primes */
@@ -199,6 +203,7 @@ cleanup:
     }
     if (rv && arena) {
 	PORT_FreeArena(arena, PR_TRUE);
+	key = NULL;
     }
     return key;
 }
