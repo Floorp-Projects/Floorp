@@ -650,18 +650,18 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 NS_IMETHODIMP  
 nsLocalFile::Clone(nsIFile **file)
 {
-    nsresult rv;
+    NS_ENSURE_ARG(file);
+    *file = nsnull;
     
-    nsCOMPtr<nsILocalFile> localFile;
+    // Just copy-construct ourselves
+    nsCOMPtr<nsILocalFile> localFile = new nsLocalFile(*this);
+    if (localFile == NULL)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = NS_NewLocalFile(mWorkingPath.get(), mFollowSymlinks, getter_AddRefs(localFile));
-    
-    if (NS_SUCCEEDED(rv) && localFile)
-    {
-        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)file);
-    }
-            
-    return rv;
+    *file = localFile;
+    NS_ADDREF(*file);
+        
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
@@ -716,6 +716,27 @@ nsLocalFile::InitWithPath(const char *filePath)
 NS_IMETHODIMP  
 nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 {
+    if (mDirty)
+    {  
+        // we will optimize here.  If we are opening a file and we are still
+        // dirty, assume that the working path is vaild and try to open it.
+        // If it does work, get the stat info via the file descriptor 
+        mResolvedPath.Assign(mWorkingPath);
+        *_retval = PR_Open(mResolvedPath.get(), flags, mode);
+        if (*_retval)
+         {
+             PRStatus status = PR_GetOpenFileInfo64(*_retval, &mFileInfo64);
+             NS_ASSERTION( status == PR_SUCCESS, "FileInfo64 invalid while PR_Open succeeded.");
+
+             if (status == PR_SUCCESS)
+             {
+                 mDirty = PR_FALSE;
+                 mLastResolution = PR_TRUE;
+             }
+             return NS_OK;
+         }
+    }
+    
     nsresult rv = ResolveAndStat(PR_TRUE);
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
         return rv; 
