@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Steve Dagley <sdagley@netscape.com>
  */
 
 #include "nsCOMPtr.h"
@@ -64,6 +65,8 @@ nsFilePicker::nsFilePicker()
   // Zero out the type lists
   for (int i = 0; i < kMaxTypeListCount; i++)
   	mTypeLists[i] = 0L;
+  
+  mSelectedType = 0;
 
   if (sCurrentProcessSignature == 0)
   {
@@ -183,31 +186,61 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 }
 
 
+//
+// HandleShowPopupMenuSelect
+//
+// Figure out which menu item was selected and set mSelectedType accordingly
+// We do this by the rather easy/skanky method of using the menuType field of the
+// NavMenuItemSpec as the index into the menu items we've added
+// And oh so strangely enough Nav Services 3.0 uses the menuType field the same way - as an
+// index into CFArray of popupExtension strings so we don't have to special case this
+// based on TARGET_CARBON
+void nsFilePicker :: HandleShowPopupMenuSelect(NavCBRecPtr callBackParms)
+{
+  if (callBackParms)
+  {
+    NavMenuItemSpec menuItemSpec = *(NavMenuItemSpec*)callBackParms->eventData.eventDataParms.param;
+    mSelectedType = menuItemSpec.menuType;
+  }
+}
+
 
 //
 // FileDialogEventHandlerProc
 //
 // An event filter proc for NavServices so the dialogs will be movable-modals.
 //
-static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
+pascal void nsFilePicker :: FileDialogEventHandlerProc(NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData callbackUD)
 {
-	switch ( msg ) {
-	case kNavCBEvent:
-		switch ( cbRec->eventData.eventDataParms.event->what ) {
-		case updateEvt:
-      WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
-      nsCOMPtr<nsIEventSink> sink;
-      nsToolkit::GetWindowEventSink ( window, getter_AddRefs(sink) );
-      if ( sink ) {
-        ::BeginUpdate(window);
-        PRBool handled = PR_FALSE;
-        sink->DispatchEvent(cbRec->eventData.eventDataParms.event, &handled);
-        ::EndUpdate(window);	        
-      }        
-			break;
-		}
-		break;
-	}
+  nsFilePicker* self = NS_REINTERPRET_CAST(nsFilePicker*, callbackUD);
+  switch (msg)
+  {
+    case kNavCBEvent:
+      switch (cbRec->eventData.eventDataParms.event->what)
+      {
+        case updateEvt:
+        {
+          WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
+          nsCOMPtr<nsIEventSink> sink;
+          nsToolkit::GetWindowEventSink (window, getter_AddRefs(sink));
+          if (sink)
+          {
+            ::BeginUpdate(window);
+            PRBool handled = PR_FALSE;
+            sink->DispatchEvent(cbRec->eventData.eventDataParms.event, &handled);
+            ::EndUpdate(window);	        
+          }        
+        }
+        break;
+      }
+      break;
+    
+    case kNavCBPopupMenuSelect:
+      // Format menu boinked - see what's happening
+      if (self)
+        self->HandleShowPopupMenuSelect(cbRec);
+      break;
+  }
 }
 
 
@@ -378,7 +411,10 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, /* filter list here later *
     }
     ::NavDialogDispose(dialog);
   }
-  ::CFRelease(titleRef);
+  
+  // Free the CF objects from the dialogCreateOptions struct
+  if (dialogCreateOptions.windowTitle)
+    CFRelease(dialogCreateOptions.windowTitle);
 
   if (filterProc)
     ::DisposeNavObjectFilterUPP(filterProc);
@@ -454,7 +490,10 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
     }
     ::NavDialogDispose(dialog);
   }
-  ::CFRelease(titleRef);
+  
+  // Free the CF objects from the dialogCreateOptions struct
+  if (dialogCreateOptions.windowTitle)
+    CFRelease(dialogCreateOptions.windowTitle);
 	
   if (eventProc)
     ::DisposeNavEventUPP(eventProc);
@@ -477,9 +516,18 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
   if (anErr != noErr)
     return retVal;
 
-
-  // Set the options for how the get file dialog will appear
-  dialogCreateOptions.optionFlags |= kNavNoTypePopup;
+  // Set the options for how the put file dialog will appear
+  if (mTitles.Count() == 0)
+  { // If we have no filter titles then suppress the save type popup
+    dialogCreateOptions.optionFlags |= kNavNoTypePopup;
+  }
+  else
+  {
+    dialogCreateOptions.optionFlags &= ~kNavAllowStationery;  // remove Stationery option
+    creatorToSave = kNavGenericSignature;   // This supresses the default format menu items
+    SetupFormatMenuItems(&dialogCreateOptions);
+  }
+  
   dialogCreateOptions.optionFlags |= kNavDontAutoTranslate;
   dialogCreateOptions.optionFlags |= kNavDontAddTranslateItems;
   dialogCreateOptions.optionFlags ^= kNavAllowMultipleFiles;
@@ -498,7 +546,7 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
                                    typeToSave,
                                    creatorToSave,
                                    eventProc,
-                                   NULL, // inClientData
+                                   this, // inClientData
                                    &dialog);
 
   if (anErr == noErr) {
@@ -559,9 +607,15 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
       }
     }
     ::NavDialogDispose(dialog);
-  }
-  ::CFRelease(titleRef);
-  ::CFRelease(defaultFileNameRef);
+  }  
+  
+  // Free the CF objects from the dialogCreateOptions struct
+  if (dialogCreateOptions.windowTitle)
+    CFRelease(dialogCreateOptions.windowTitle);
+  if (dialogCreateOptions.saveFileName)
+    CFRelease(dialogCreateOptions.saveFileName);
+  if (dialogCreateOptions.popupExtension)
+    CFRelease(dialogCreateOptions.popupExtension);
 	
   if (eventProc)
     ::DisposeNavEventUPP(eventProc);
@@ -725,10 +779,21 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
 	OSType				typeToSave = 'TEXT';
 	OSType				creatorToSave = 'MOZZ';
 
-	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
-	if (anErr == noErr)	{	
-		// Set the options for how the get file dialog will appear
-		dialogOptions.dialogOptionFlags |= kNavNoTypePopup;
+  OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
+  if (anErr == noErr)
+  {	
+    // Set the options for how the put file dialog will appear
+    if (mTitles.Count() == 0)
+    { // If we have no filter titles then suppress the save type popup
+      dialogOptions.dialogOptionFlags |= kNavNoTypePopup;
+    }
+    else
+    {
+      dialogOptions.dialogOptionFlags &= ~kNavAllowStationery;  // remove Stationery option
+      creatorToSave = kNavGenericSignature;   // This supresses the default format menu items
+      SetupFormatMenuItems(&dialogOptions);
+    }
+
 		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
 		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
 		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
@@ -747,7 +812,7 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
 					eventProc,
 					typeToSave,
 					creatorToSave,
-					NULL); // callbackUD	
+					this); // callbackUD	
     nsWatchTask::GetTask().Resume();  
 	
 		// See if the user has selected save
@@ -780,6 +845,9 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
 	
 	if ( eventProc )
 		::DisposeNavEventUPP(eventProc);
+	
+  if ( dialogOptions.popupExtension )
+    DisposeHandle( (Handle)dialogOptions.popupExtension );
 	
 	return retVal;	
 }
@@ -894,6 +962,66 @@ nsFilePicker :: MapFilterToFileTypes ( )
 } // MapFilterToFileTypes
 
 
+#if TARGET_CARBON
+//-------------------------------------------------------------------------
+// Util func to take the array of mTitles and make it into something
+// Nav Services can use.
+// This is the TARGET_CARBON version for Nav Services 3.0
+//-------------------------------------------------------------------------
+void nsFilePicker::SetupFormatMenuItems (NavDialogCreationOptions* dialogCreateOptions)
+{
+  PRInt32   numMenuItems = mTitles.Count();
+  PRInt32   index;
+  CFStringRef      itemStr = NULL;
+  CFArrayCallBacks callBacks = kCFTypeArrayCallBacks;
+  
+  // Under NavServices 3.0 the popupExtension is actually a CFArray of CFStrings
+  dialogCreateOptions->popupExtension = CFArrayCreateMutable(kCFAllocatorDefault, numMenuItems, &callBacks);
+  
+  if (dialogCreateOptions->popupExtension)
+  {
+    for (index = 0; index < numMenuItems; ++index)
+    {
+      const nsString& titleWide = *mTitles[index];
+      itemStr = CFStringCreateWithCharacters(NULL, (const unsigned short *)titleWide.get(), titleWide.Length());
+      CFArrayInsertValueAtIndex((CFMutableArrayRef)dialogCreateOptions->popupExtension, index, (void*)itemStr);
+      CFRelease(itemStr);
+    }
+  }
+}
+#else
+//-------------------------------------------------------------------------
+// Util func to take the array of mTitles and make it into something
+// Nav Services can use.
+// This is the non-TARGET_CARBON version for Nav Services prior to 3.0
+//-------------------------------------------------------------------------
+void nsFilePicker::SetupFormatMenuItems (NavDialogOptions* dialogOptions)
+{
+  PRInt32   numMenuItems = mTitles.Count();
+  PRInt32   index;
+
+  // The "old" popupExtension is a handle to a plain array of NavMenuItemSpec
+  dialogOptions->popupExtension =
+    (NavMenuItemSpecArrayHandle)NewHandleClear(sizeof(NavMenuItemSpec) * numMenuItems);
+  
+  if (dialogOptions->popupExtension)
+  {
+    for (index = 0; index < numMenuItems; ++index)
+    {
+      const nsString& titleWide = *mTitles[index];
+      Str255 title;
+
+      nsMacControl::StringToStr255(titleWide, title);
+      ::BlockMoveData(title, (*dialogOptions->popupExtension)[index].menuItemName, *title + 1);
+
+      (*dialogOptions->popupExtension)[index].menuCreator = OSType(index);
+      (*dialogOptions->popupExtension)[index].menuType = OSType(index);
+    }
+  }
+}
+#endif
+
+//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
@@ -972,12 +1100,37 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 }
 
 
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
 {
   mFilters.AppendString(nsDependentString(aFilter));
   mTitles.AppendString(nsDependentString(aTitle));
   
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Get the filter index
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
+{
+  *aFilterIndex = mSelectedType;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Set the filter index - currently not used but here to balance GetFilterIndex
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
+{
+  mSelectedType = aFilterIndex;
   return NS_OK;
 }
 
