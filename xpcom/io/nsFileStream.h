@@ -92,6 +92,8 @@
 #define NS_NAMESPACE namespace
 #define NS_NAMESPACE_END
 #define BASIC_STREAMBUF basic_streambuf
+#define IOS_BASE ios_base
+
 #include <istream>
 	using std::ios_base;
 	using std::basic_streambuf;
@@ -103,13 +105,18 @@
 	using std::basic_ostream;
 	using std::basic_iostream;
 	using std::char_traits;
+	
 #else
-#include <istream.h>
+
 #define NS_NAMESPACE_PROTOTYPE static
 #define NS_NAMESPACE struct
 #define NS_NAMESPACE_END ;
 #define BASIC_STREAMBUF streambuf
-#endif
+#define IOS_BASE ios
+
+#include <istream.h>
+
+#endif // NS_USING_NAMESPACE
 
 #ifdef __MWERKS__
 
@@ -128,7 +135,8 @@
 #define NS_READ_LOCK(mut)
 #define NS_WRITE_LOCK(mut)
 
-#endif //==================== End Compiler-specific macros ===============================
+#endif // __MWERKS__
+//=========================== End Compiler-specific macros ===============================
 
 //========================================================================================
 NS_NAMESPACE nsFileStreamHelpers
@@ -138,7 +146,7 @@ NS_NAMESPACE nsFileStreamHelpers
 {
 	NS_NAMESPACE_PROTOTYPE PRFileDesc* open(
 		const nsFilePath& inFile,
-	    ios::openmode mode,
+	    IOS_BASE::openmode mode,
 	    PRIntn accessMode);
 } NS_NAMESPACE_END // nsFileStreamHelpers
 
@@ -172,7 +180,7 @@ public:
     bool                               is_open() const;
     filebuf_type*                      open(
                                            const nsFilePath& inFile,
-                                           ios::openmode mode,
+                                           IOS_BASE::openmode mode,
                                            PRIntn accessMode);
     filebuf_type*                      close();
  
@@ -181,10 +189,10 @@ protected:
     virtual                            int_type pbackfail(int_type c=traits::eof());
     virtual                            int_type underflow();
     virtual                            pos_type seekoff(
-                                            off_type off, ios::seekdir way, 
-                                          ios::openmode which=ios::in|ios::out);
+                                           off_type off, IOS_BASE::seekdir way, 
+                                           IOS_BASE::openmode which=IOS_BASE::in|IOS_BASE::out);
     virtual                            pos_type seekpos(pos_type sp,
-                                            ios::openmode which=ios::in|ios::out);
+                                           IOS_BASE::openmode which=IOS_BASE::in|IOS_BASE::out);
     virtual                            BASIC_STREAMBUF<charT, traits>* setbuf(char_type* s, streamsize n);
     virtual                            int sync();
     virtual                            int_type uflow();
@@ -195,7 +203,7 @@ protected:
  
 private:
     PRFileDesc*                        mFileDesc;    
-    ios::openmode                      mode_;
+    IOS_BASE::openmode                      mode_;
 }; // class nsFileBufferT
 
 //========================================================================================
@@ -216,7 +224,7 @@ public:
                                       nsInputFileStreamT();
                                       explicit nsInputFileStreamT(
                                           const nsFilePath& inFile,
-                                          ios::openmode mode=ios::in,
+                                          IOS_BASE::openmode mode=IOS_BASE::in,
                                           PRIntn accessMode = 0x00400);
 
     virtual                           ~nsInputFileStreamT();
@@ -225,7 +233,7 @@ public:
     inline bool                       is_open();
     inline void                       open(
                                            const nsFilePath& inFile,
-                                           ios::openmode mode=ios::in,
+                                           IOS_BASE::openmode mode=IOS_BASE::in,
                                            PRIntn accessMode = 0x00400);
     inline void                       close();
 
@@ -251,7 +259,7 @@ public:
                                       nsOutputFileStreamT();
                                       explicit nsOutputFileStreamT(
                                            const nsFilePath& inFile,
-                                           ios::openmode mode = ios::out|ios::trunc,
+                                           IOS_BASE::openmode mode = IOS_BASE::out|IOS_BASE::trunc,
                                            PRIntn accessMode = 0x00200);
  
     virtual                           ~nsOutputFileStreamT();
@@ -260,7 +268,7 @@ public:
     inline bool                       is_open();
     inline void                       open(
                                           const nsFilePath& inFile,
-                                          ios::openmode mode = ios::out|ios::trunc,
+                                          IOS_BASE::openmode mode = IOS_BASE::out|IOS_BASE::trunc,
                                           PRIntn accessMode = 0x00200);
     inline void                       close();
 
@@ -310,7 +318,7 @@ nsFileBufferT<charT, traits>::is_open() const
 template<class charT, class traits> 
 nsFileBufferT<charT, traits>* nsFileBufferT<charT, traits>::open(
     const nsFilePath& inFile,
-    ios::openmode mode,
+    IOS_BASE::openmode mode,
     PRIntn accessMode) 
 //----------------------------------------------------------------------------------------
 {
@@ -501,18 +509,18 @@ nsFileBufferT<charT, traits>::showmanyc()
 template<class charT, class traits> 
 nsFileBufferT<charT, traits>::pos_type nsFileBufferT<charT, traits>::seekoff(
     off_type  off, 
-    ios::seekdir way,
-    ios::openmode /* which */)
+    IOS_BASE::seekdir way,
+    IOS_BASE::openmode /* which */)
 //----------------------------------------------------------------------------------------
 {
-    if (!mFileDesc || ((way&ios::beg) && off<0) || ((way&ios::end) && off > 0))
+    if (!mFileDesc || ((way&IOS_BASE::beg) && off<0) || ((way&IOS_BASE::end) && off > 0))
         return pos_type(-1);
     PRSeekWhence  poseek = PR_SEEK_CUR;
     switch (way)
     {
-        case ios::beg : poseek= PR_SEEK_SET; 
+        case IOS_BASE::beg : poseek= PR_SEEK_SET; 
                         break;
-        case ios::end : poseek= PR_SEEK_END; 
+        case IOS_BASE::end : poseek= PR_SEEK_END; 
                         break;
     }
     PRInt32 position = PR_Seek(mFileDesc, off, poseek);
@@ -524,7 +532,7 @@ nsFileBufferT<charT, traits>::pos_type nsFileBufferT<charT, traits>::seekoff(
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
 nsFileBufferT<charT, traits>::pos_type
-nsFileBufferT<charT, traits>::seekpos(pos_type sp, ios::openmode)
+nsFileBufferT<charT, traits>::seekpos(pos_type sp, IOS_BASE::openmode)
 //----------------------------------------------------------------------------------------
 {
     if (!mFileDesc || sp==pos_type(-1))
@@ -552,7 +560,7 @@ inline nsInputFileStreamT<charT, traits>::nsInputFileStreamT()
 template<class charT, class traits> 
 inline nsInputFileStreamT<charT, traits>::nsInputFileStreamT(
     const nsFilePath& inFile, 
-    ios::openmode mode,
+    IOS_BASE::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
     : basic_istream<charT, traits>(&mBuffer)
@@ -592,7 +600,7 @@ template<class charT, class traits>
 inline void 
 nsInputFileStreamT<charT, traits>::open(
     const nsFilePath& inFile,
-    ios::openmode mode,
+    IOS_BASE::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 {
@@ -626,7 +634,7 @@ inline nsOutputFileStreamT<charT, traits>::nsOutputFileStreamT()
 template<class charT, class traits> 
 nsOutputFileStreamT<charT, traits>::nsOutputFileStreamT(
     const nsFilePath& inFile, 
-    ios::openmode mode,
+    IOS_BASE::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 :   basic_ostream<charT, traits>(&mBuffer)
@@ -664,7 +672,7 @@ inline bool nsOutputFileStreamT<charT, traits>:: is_open()
 template<class charT, class traits> 
 inline void nsOutputFileStreamT<charT, traits>::open(
     const nsFilePath& inFile,
-    ios::openmode mode,
+    IOS_BASE::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 {
@@ -698,7 +706,7 @@ public:
                                         nsIOFileStreamT();
                                         explicit nsIOFileStreamT(
                                             const nsFilePath& inFile, 
-                                            ios::openmode mode = ios::in|ios::out,
+                                            IOS_BASE::openmode mode = IOS_BASE::in|IOS_BASE::out,
                                             PRIntn accessMode = 0x00600);
 
     virtual                             ~nsIOFileStreamT();
@@ -707,7 +715,7 @@ public:
     inline bool                         is_open();
     inline void                         open(
                                             const nsFilePath& inFile,
-                                            ios::openmode mode = ios::in|ios::out,
+                                            IOS_BASE::openmode mode = IOS_BASE::in|IOS_BASE::out,
                                             PRIntn accessMode = 0x00600);
     inline void                         close();
 
@@ -732,7 +740,7 @@ inline nsIOFileStreamT<charT, traits>::nsIOFileStreamT()
 template<class charT, class traits> 
 inline nsIOFileStreamT<charT, traits>::nsIOFileStreamT(
     const nsFilePath& inFile, 
-    ios::openmode mode,
+    IOS_BASE::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
     : mBuffer(), basic_iostream<charT, traits>(&mBuffer)
@@ -770,7 +778,7 @@ template<class charT, class traits>
 inline void 
 nsIOFileStreamT<charT, traits>::open(
     const nsFilePath& inFile,
-    ios::openmode mode,
+    IOS_BASE::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 {
