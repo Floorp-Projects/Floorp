@@ -45,7 +45,7 @@ struct nsPoint;
 struct nsRect;
 struct nsStyleStruct;
 class  nsIDOMRange;
-
+class  nsICaret;
 struct PRLogModuleInfo;
 
 // IID for the nsIFrame interface 
@@ -416,13 +416,11 @@ public:
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus) = 0;
 
-  NS_IMETHOD GetPosition(nsIPresContext&       aPresContext,
-                         nsGUIEvent*           aEvent,
-                         nsIFrame *            aNewFrame,
-                         nsIContent **         aNewContent,
-                         PRUint32&             aAcutalContentOffset,
-                         PRInt32&              aOffset,
-                         PRInt32&              aOffsetEnd) = 0;
+  NS_IMETHOD GetPosition(nsIPresContext& aCX,
+                         nscoord         aXCoord,
+                         nsIContent **   aNewContent,
+                         PRInt32&        aContentOffset,
+                         PRInt32&        aContentOffsetEnd) = 0;
 
 
   /**
@@ -605,6 +603,7 @@ public:
    *  nsIFrame and the frame offset.  THIS DOES NOT CHANGE SELECTION STATE
    *  uses frame's begin selection state to start. if no selection on this frame will 
    *  return NS_ERROR_FAILURE
+   *  @param aCaret is the caret interface to get geometry of the current selection
    *  @param aAmount eWord, eCharacter, eLine
    *  @param aDirection enum defined in this file to be eForward or eBackward
    *  @param aStartOffset start offset to start the peek. 0 == beginning -1 = end
@@ -612,7 +611,7 @@ public:
    *  @param aResultOffset offset for result content
    *  @param aEatingWS boolean to tell us the state of our search for Next/Prev
    */
-  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
+  NS_IMETHOD  PeekOffset(nsICaret *aCaret, nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
                          nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) = 0;
 
   /**

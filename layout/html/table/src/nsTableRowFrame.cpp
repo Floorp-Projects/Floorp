@@ -358,7 +358,7 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  return NS_OK;
 
 }
 

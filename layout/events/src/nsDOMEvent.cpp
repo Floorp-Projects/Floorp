@@ -384,10 +384,8 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
     PRInt32 offset, endOffset;
 
     if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
-                                              (nsGUIEvent*)mEvent,
-                                              targetFrame,
+                                              mEvent->point.x,
                                               &parent,
-                                              actualOffset,
                                               offset,
                                               endOffset))) {
       if (parent && NS_SUCCEEDED(parent->QueryInterface(kIDOMNodeIID, (void**)aRangeParent))) {
@@ -416,10 +414,8 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
     PRInt32 endOffset;
 
     if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
-                                              (nsGUIEvent*)mEvent,
-                                              targetFrame,
+                                              mEvent->point.x,
                                               &parent,
-                                              actualOffset,
                                               *aRangeOffset,
                                               endOffset))) {
       *aRangeOffset += actualOffset;

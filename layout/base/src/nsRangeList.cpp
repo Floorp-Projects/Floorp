@@ -43,7 +43,7 @@
 
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
-
+#include "nsICaret.h"
 
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
@@ -905,7 +905,7 @@ nsRangeList::HandleTextEvent(nsGUIEvent *aGUIEvent)
 NS_IMETHODIMP
 nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
 {
-if (!aGuiEvent)
+  if (!aGuiEvent)
     return NS_ERROR_NULL_POINTER;
   STATUS_CHECK_RETURN_MACRO();
   nsresult result = NS_OK;
@@ -916,6 +916,10 @@ if (!aGuiEvent)
     nsSelectionAmount amount = eSelectCharacter;
     if (keyEvent->isControl)
       amount = eSelectWord;
+    nsCOMPtr<nsICaret> caret;
+    result = mTracker->GetCaret(getter_AddRefs(caret));
+    if (NS_FAILED(result))
+      return result;
     switch (keyEvent->keyCode){
       case nsIDOMUIEvent::VK_LEFT  : 
         //we need to look for the previous PAINTED location to move the cursor to.
@@ -935,7 +939,7 @@ if (!aGuiEvent)
           nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
           if (content){
             result = mTracker->GetPrimaryFrameFor(content, &frame);
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(caret, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
               result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
             }
             result = ScrollIntoView();
@@ -960,7 +964,7 @@ if (!aGuiEvent)
           nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
           if (content){
             result = mTracker->GetPrimaryFrameFor(content, &frame);
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(caret, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
               result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
             }
             result = ScrollIntoView();
@@ -969,30 +973,30 @@ if (!aGuiEvent)
        break;
       case nsIDOMUIEvent::VK_UP : 
         {
-#if 0        //we need to look for the previous PAINTED location to move the cursor to.
-          amount = eSelectLine;
+  //we need to look for the previous PAINTED location to move the cursor to.
+            amount = eSelectLine;
 #ifdef DEBUG_NAVIGATION
-        printf("debug vk left\n");
+          printf("debug vk left\n");
 #endif
-        if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
-          offsetused = FetchFocusOffset();
-          weakNodeUsed = FetchFocusNode();
-        }
-        else {
-          offsetused = FetchAnchorOffset();
-          weakNodeUsed = FetchAnchorNode();
-        }
-        if (weakNodeUsed && offsetused >=0){
-          nsIFrame *frame;
-          nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
-          if (content){
-            result = mTracker->GetPrimaryFrameFor(content, &frame);
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
-              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
-            }
-            result = ScrollIntoView();
+          if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
+            offsetused = FetchFocusOffset();
+            weakNodeUsed = FetchFocusNode();
           }
-#endif //0
+          else {
+            offsetused = FetchAnchorOffset();
+            weakNodeUsed = FetchAnchorNode();
+          }
+          if (weakNodeUsed && offsetused >=0){
+            nsIFrame *frame;
+            nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
+            if (content){
+              result = mTracker->GetPrimaryFrameFor(content, &frame);
+              if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(caret, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+                result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
+              }
+              result = ScrollIntoView();
+            }
+          }
         }
         break;
       case nsIDOMUIEvent::VK_DOWN : 
@@ -1070,9 +1074,14 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
     content = do_QueryInterface(FetchStartParent(aRange), &result);
     if (NS_FAILED(result))
       return result;
-    result = mTracker->GetPrimaryFrameFor(content, &frame);
-    if (NS_SUCCEEDED(result) && frame)
-       frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+    PRBool canContainChildren = PR_FALSE;
+    result = content->CanContainChildren(canContainChildren);
+    if (NS_SUCCEEDED(result) && !canContainChildren)
+    {
+      result = mTracker->GetPrimaryFrameFor(content, &frame);
+      if (NS_SUCCEEDED(result) && frame)
+        frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+    }
 //end start content
     result = iter->First();
     if (NS_SUCCEEDED(result))
@@ -1096,9 +1105,14 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
       content = do_QueryInterface(FetchEndParent(aRange), &result);
       if (NS_FAILED(result))
         return result;
-      result = mTracker->GetPrimaryFrameFor(content, &frame);
-      if (NS_SUCCEEDED(result) && frame)
-         frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+      canContainChildren = PR_FALSE;
+      result = content->CanContainChildren(canContainChildren);
+      if (NS_SUCCEEDED(result) && !canContainChildren)
+      {
+        result = mTracker->GetPrimaryFrameFor(content, &frame);
+        if (NS_SUCCEEDED(result) && frame)
+           frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+      }
     }
 //end end parent
   }
@@ -1307,6 +1321,22 @@ nsRangeList::ScrollIntoView()
   nsIFrame *frame;
   nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(FetchFocusNode());
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  PRBool canContainChildren = PR_FALSE;
+  result = content->CanContainChildren(canContainChildren);
+  if (NS_SUCCEEDED(result) && canContainChildren)
+  {
+    PRInt32 offset = FetchFocusOffset();
+    if (GetDirection() == eDirNext)
+      offset--;
+    if (offset >0)
+    {
+      nsCOMPtr<nsIContent> child;
+      result = content->ChildAt(offset, *getter_AddRefs(child));
+      if (NS_FAILED(result) || !child) //out of bounds?
+        return result;
+      content = child;//releases the focusnode
+    }
+  }
   result = mTracker->GetPrimaryFrameFor(content,&frame);
   if (NS_FAILED(result))
     return result;

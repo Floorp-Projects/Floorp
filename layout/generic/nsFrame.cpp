@@ -884,8 +884,8 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
     PRUint32 contentOffset = 0;
     PRInt32 contentOffsetEnd = 0;
     nsCOMPtr<nsIContent> newContent;
-    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent, this, getter_AddRefs(newContent), 
-                                 contentOffset, startPos, contentOffsetEnd))){
+    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x, getter_AddRefs(newContent), 
+                                 startPos, contentOffsetEnd))){
       nsCOMPtr<nsIDOMSelection> selection;
       if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
         nsCOMPtr<nsIFrameSelection> frameselection;
@@ -893,7 +893,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
         if (frameselection) {
           if (NS_SUCCEEDED( rv )){
             frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-            frameselection->TakeFocus(newContent, startPos + contentOffset, contentOffsetEnd + contentOffset, inputEvent->isShift);
+            frameselection->TakeFocus(newContent, startPos , contentOffsetEnd , inputEvent->isShift);
           }
         }
       }
@@ -927,17 +927,16 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
     PRInt32 startPos = 0;
-    PRUint32 contentOffset = 0;
     PRInt32 contentOffsetEnd = 0;
     nsCOMPtr<nsIContent> newContent;
-    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent, this, getter_AddRefs(newContent), 
-                                 contentOffset, startPos, contentOffsetEnd))){
+    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x, getter_AddRefs(newContent), 
+                                 startPos, contentOffsetEnd))){
       nsIDOMSelection *selection = nsnull;
       if (NS_SUCCEEDED(shell->GetSelection(&selection))){
         nsIFrameSelection* frameselection;
         if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
           if (NS_SUCCEEDED( rv )){
-            frameselection->TakeFocus(newContent, startPos + contentOffset, contentOffsetEnd + contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
+            frameselection->TakeFocus(newContent, startPos, contentOffsetEnd , PR_TRUE); //TRUE IS THE DIFFERENCE
           }
           NS_RELEASE(frameselection);
         }
@@ -959,13 +958,11 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext,
 //--------------------------------------------------------------------------
 //-- GetPosition
 //--------------------------------------------------------------------------
-NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext&        aPresContext,
-                                   nsGUIEvent *           aEvent,
-                                   nsIFrame *             aNewFrame,
-                                   nsIContent **          aNewContent,
-                                   PRUint32&              aAcutalContentOffset,
-                                   PRInt32&               aOffset,
-                                   PRInt32&               aOffsetEnd)
+NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
+                         nscoord         aXCoord,
+                         nsIContent **   aNewContent,
+                         PRInt32&        aContentOffset,
+                         PRInt32&        aContentOffsetEnd)
 {
   //default getposition will return parent as newcontent
   //also aActualContentOffset will be 0
@@ -978,12 +975,12 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext&        aPresContext,
 
   if (*aNewContent){
     PRInt32 index = 0;
-    nsresult result = (*aNewContent)->IndexOf(mContent, aOffset);
+    nsresult result = (*aNewContent)->IndexOf(mContent, aContentOffset);
     if (NS_FAILED(result)) 
     {
       return result;
     }
-    aOffsetEnd = aOffset +1;
+    aContentOffsetEnd = aContentOffset +1;
   }
   return NS_OK;
 }
@@ -1634,7 +1631,8 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFram
 }
 
 NS_IMETHODIMP
-nsFrame::PeekOffset(nsSelectionAmount aAmount,
+nsFrame::PeekOffset(nsICaret *aCaret,
+                        nsSelectionAmount aAmount,
                         nsDirection aDirection,
                         PRInt32 aStartOffset,
                         nsIContent **aResultContent, 
@@ -1664,10 +1662,10 @@ nsFrame::PeekOffset(nsSelectionAmount aAmount,
   //for speed reasons
   nsIFrame *newFrame = (nsIFrame *)isupports;
   if (aDirection == eDirNext)
-    return newFrame->PeekOffset(aAmount, aDirection, 0, aResultContent,
+    return newFrame->PeekOffset(aCaret, aAmount, aDirection, 0, aResultContent,
                             aContentOffset, aEatingWS);
   else
-    return newFrame->PeekOffset(aAmount, aDirection, -1, aResultContent,
+    return newFrame->PeekOffset(aCaret, aAmount, aDirection, -1, aResultContent,
                             aContentOffset, aEatingWS);
                           
   return NS_OK;

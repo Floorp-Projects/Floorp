@@ -83,6 +83,7 @@
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
 
+
 //----------------------------------------------------------------------
 
 /**
@@ -210,7 +211,8 @@ public:
   NS_IMETHOD  VerifyTree() const;
   NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
-  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount,
+  NS_IMETHOD  PeekOffset(nsICaret *aCaret,
+                        nsSelectionAmount aAmount,
                         nsDirection aDirection,
                         PRInt32 aStartOffset,
                         nsIContent **aResultContent, 
@@ -256,13 +258,11 @@ public:
                            nsGUIEvent *    aEvent,
                            nsEventStatus&  aEventStatus);
 
-  NS_IMETHOD GetPosition(nsIPresContext&       aPresContext,
-                         nsGUIEvent*           aEvent,
-                         nsIFrame *            aNewFrame,
-                         nsIContent **         aNewContent,
-                         PRUint32&             aAcutalContentOffset,
-                         PRInt32&              aOffset,
-                         PRInt32&              aOffsetEnd);
+  NS_IMETHOD GetPosition(nsIPresContext& aCX,
+                         nscoord         aXCoord,
+                         nsIContent **   aNewContent,
+                         PRInt32&        aContentOffset,
+                         PRInt32&        aContentOffsetEnd);
 
   //--------------------------------------------------
   // Additional methods
