@@ -85,6 +85,8 @@ nsIAtom* nsHTMLAtoms::encoding;
 nsIAtom* nsHTMLAtoms::enctype;
 nsIAtom* nsHTMLAtoms::face;
 nsIAtom* nsHTMLAtoms::fieldset;
+nsIAtom* nsHTMLAtoms::firstLetterPseudo;
+nsIAtom* nsHTMLAtoms::firstLinePseudo;
 nsIAtom* nsHTMLAtoms::font;
 nsIAtom* nsHTMLAtoms::fontWeight;
 nsIAtom* nsHTMLAtoms::_for;
@@ -303,6 +305,8 @@ void nsHTMLAtoms::AddrefAtoms()
     enctype = NS_NewAtom("ENCTYPE");
     face = NS_NewAtom("FACE");
     fieldset = NS_NewAtom("FIELDSET");
+    firstLetterPseudo = NS_NewAtom(":FIRST-LETTER");
+    firstLinePseudo = NS_NewAtom(":FIRST-LINE");
     font = NS_NewAtom("FONT");
     fontWeight = NS_NewAtom("FONT-WEIGHT");
     _for = NS_NewAtom("FOR");
@@ -517,6 +521,8 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(encoding);
     NS_RELEASE(face);
     NS_RELEASE(fieldset);
+    NS_RELEASE(firstLetterPseudo);
+    NS_RELEASE(firstLinePseudo);
     NS_RELEASE(font);
     NS_RELEASE(fontWeight);
     NS_RELEASE(_for);

@@ -109,6 +109,8 @@ public:
 
   static nsIAtom* face;
   static nsIAtom* fieldset;
+  static nsIAtom* firstLetterPseudo;
+  static nsIAtom* firstLinePseudo;
   static nsIAtom* font;
   static nsIAtom* fontWeight;
   static nsIAtom* _for;
