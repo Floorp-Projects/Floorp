@@ -517,6 +517,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 		GrafPtr savePort;
 		::GetPort(&savePort);
 		::SetPort(mWindowPtr);
+		::SetOrigin(0, 0);
 		::InvalRect(&macRect);
 		::SetPort(savePort);
 	}
