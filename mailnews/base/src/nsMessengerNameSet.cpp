@@ -57,7 +57,6 @@ nsMessengerNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
   nsresult rv = NS_OK;
   JSContext *cx = (JSContext*)aScriptContext->GetNativeContext();
   
-  printf("nsMessengerNameSet::InitializeClasses() Initializing base classes\n");
 
   /* initialize the AppCore */
   NS_InitMsgAppCoreClass(aScriptContext, nsnull);
@@ -78,12 +77,10 @@ nsMessengerNameSet::AddNameSet(nsIScriptContext *aScriptContext)
   nsresult rv = NS_OK;
   nsIScriptNameSpaceManager *manager;
 
-  printf("nsMessengerNameSet::AddNameSet() Registering Messenger in the JS namespace\n");
   rv = aScriptContext->GetNameSpaceManager(&manager);
   
   if (NS_SUCCEEDED(rv))
     rv = manager->RegisterGlobalName("Messenger",
-                                     // put the CID here, not IID
                                      kCMessengerCID,
                                      PR_TRUE);
 

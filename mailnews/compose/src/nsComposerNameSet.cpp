@@ -57,8 +57,6 @@ nsComposerNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
   nsresult rv = NS_OK;
   JSContext *cx = (JSContext*)aScriptContext->GetNativeContext();
   
-  printf("nsComposerNameSet::InitializeClasses() Initializing base classes\n");
-
   /* initialize the AppCore */
   NS_InitComposeAppCoreClass(aScriptContext, nsnull);
 
@@ -78,12 +76,10 @@ nsComposerNameSet::AddNameSet(nsIScriptContext *aScriptContext)
   nsresult rv = NS_OK;
   nsIScriptNameSpaceManager *manager;
 
-  printf("nsComposerNameSet::AddNameSet() Registering Composer in the JS namespace\n");
   rv = aScriptContext->GetNameSpaceManager(&manager);
   
   if (NS_SUCCEEDED(rv))
     rv = manager->RegisterGlobalName("Composer",
-                                     // put the CID here, not IID
                                      kCComposerCID,
                                      PR_TRUE);
 
