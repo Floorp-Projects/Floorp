@@ -117,7 +117,6 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
 
   nsCOMPtr<nsIDOMEventReceiver> displayReciever(do_QueryInterface(mDisplayContent));
   displayReciever->RemoveEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-  //selectReciever->RemoveEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
 
   mFormFrame = nsnull;
   NS_IF_RELEASE(mPresContext);
@@ -144,10 +143,6 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
     NS_ADDREF_THIS();
     return NS_OK;                                                        
-  } else if (aIID.Equals(nsCOMTypeInfo<nsIDOMFocusListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMFocusListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
   } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
     return NS_OK;   
@@ -301,8 +296,9 @@ nsComboboxControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 
 //--------------------------------------------------------------
 nscoord 
-nsComboboxControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                               nscoord aInnerHeight) const
+nsComboboxControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                                 float aPixToTwip, 
+                                                 nscoord aInnerHeight) const
 {
    return 0;
 }
@@ -544,6 +540,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
     if (NS_SUCCEEDED(rv) && ((aAbsolutePixelRect.y + aAbsolutePixelRect.height + absoluteDropDownHeight) > screenHeightInPixels)) {
       // move the dropdown list up
       dropdownYOffset = - (dropdownRect.height);
+      dropdownYOffset = PR_MAX(dropdownYOffset, 0);
     }
   } 
  
@@ -724,31 +721,22 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
     // match the width of the longest item in the drop-down list. The dropdown
     // list has already been reflowed and sized to shrink around its contents above.
 
-     // Reflow the dropdown shrink-wrapped.
-    nsHTMLReflowMetrics  dropdownDesiredSize(aDesiredSize);
+    // Reflow the dropdown shrink-wrapped.
+    PRBool saveMES = aDesiredSize.maxElementSize != nsnull;
+    nsSize * maxElementSize = nsnull;
+    if (saveMES) {
+      maxElementSize = new nsSize(*aDesiredSize.maxElementSize);
+    }
+    nsHTMLReflowMetrics  dropdownDesiredSize(maxElementSize);
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);  
+
     nsSize size;
     PRInt32 length = 0;
     mListControlFrame->GetNumberOfOptions(&length);
-    /*if (0 == length) {
-      nsCOMPtr<nsIPresShell> presShell;
-      rv = mPresContext->GetShell(getter_AddRefs(presShell));
-      if (NS_SUCCEEDED(rv) && presShell) {
-        nsCOMPtr<nsIRenderingContext> renderContext;
-        rv = presShell->CreateRenderingContext(this, getter_AddRefs(renderContext));
-        if (NS_SUCCEEDED(rv) && renderContext) {
-          rv = presShell->CreateRenderingContext(this, getter_AddRefs(renderContext));
-          nsFormControlHelper::GetTextSize(*mPresContext, this, nsAutoString("XX"), size, renderContext);
-          dropdownRect.width  = size.width + dropdownDesiredSize.width;
-          dropdownRect.height = size.height + dropdownDesiredSize.height;
-        }
-      }
+    dropdownFrame->GetRect(dropdownRect);
 
-    } else {*/
-      dropdownFrame->GetRect(dropdownRect);
-      // Get maximum size and height of a option in the dropdown
-      mListControlFrame->GetMaximumSize(size);
-    //}
+    // Get maximum size and height of a option in the dropdown
+    mListControlFrame->GetMaximumSize(size);
 
      // Set width of display to match width of the drop down 
     SetChildFrameSize(displayFrame, dropdownRect.width, size.height);
@@ -760,12 +748,17 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
     nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
     displayFrame->GetRect(displayRect);
     buttonFrame->GetRect(buttonRect);
+    buttonRect.y = displayRect.y;
+    buttonRect.height = displayRect.height;
+    buttonFrame->SetRect(buttonRect);
 
     // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
     dropdownFrame->GetRect(dropdownRect);  
     
-
+    if (maxElementSize) {
+      delete maxElementSize;
+    }
   } else {
     // A width has been specified for the select.
     // Make the display frame's width + button frame width = the width specified.
@@ -800,6 +793,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
   GetAbsoluteFramePosition(aPresContext, this,  absoluteTwips, absolutePixels);
   PositionDropdown(aPresContext, aDesiredSize.height, absoluteTwips, absolutePixels);
 
+  aStatus = NS_FRAME_COMPLETE;
   return rv;
 
 }
@@ -1032,9 +1026,10 @@ NS_IMETHODIMP
 nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
 {
   if (nsnull != mDisplayContent) {
-    mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, mTextStr, PR_TRUE);
+    nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mDisplayContent));
+    htmlContent->SetHTMLAttribute(nsHTMLAtoms::value, mTextStr, PR_TRUE);
+
     nsIFrame* displayFrame = GetDisplayFrame(*mPresContext);
-    nsFormControlHelper::ForceDrawFrame(displayFrame);
 
     // Send reflow command because the new text maybe larger
     nsIReflowCommand* cmd;
@@ -1238,11 +1233,12 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   aChildList.AppendElement(mDisplayContent);
 
   // create button which drops the list down
-  tag = NS_NewAtom("input");
   NS_NewHTMLInputElement(&mButtonContent, tag);
   //NS_ADDREF(mButtonContent);
   mButtonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
   aChildList.AppendElement(mButtonContent);
+
+  NS_RELEASE(tag);
 
   // get the reciever interface from the browser button's content node
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mButtonContent));
@@ -1251,7 +1247,6 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   // our frame goes away all these content node go away as well
   // because our frame is the only one who references them.
   reciever->AddEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-  //reciever->AddEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
 
   // get the reciever interface from the browser button's content node
   nsCOMPtr<nsIDOMEventReceiver> displayReciever(do_QueryInterface(mDisplayContent));
@@ -1260,15 +1255,6 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   // our frame goes away all these content node go away as well
   // because our frame is the only one who references them.
   displayReciever->AddEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
-  //displayReciever->AddEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
-
-  // get the reciever interface from the select's content
-  //nsCOMPtr<nsIDOMEventReceiver> selectReciever(do_QueryInterface(mContent));
-
-  // we shouldn't have to unregister this listener because when
-  // our frame goes away all these content node go away as well
-  // because our frame is the only one who references them.
-  //selectReciever->AddEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
 
   return NS_OK;
 }
@@ -1345,70 +1331,6 @@ nsComboboxControlFrame::GetSkipSides() const
   return 0;
 }
 
-
-//----------------------------------------------------------------------
-// nsIDOMFocusListener
-//----------------------------------------------------------------------
-nsresult
-nsComboboxControlFrame::Focus(nsIDOMEvent* aEvent)
-{
-#if 0
-  printf("nsComboboxControlFrame::Focus ");
-
-  nsCOMPtr<nsIDOMNode> node;
-  aEvent->GetTarget(getter_AddRefs(node));
-  nsCOMPtr<nsIDOMNode> curNode;
-  aEvent->GetCurrentNode(getter_AddRefs(curNode));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-
-  if (content == mContent) {
-    printf("Combobox\n");
-  } else if (content == mDisplayContent) {
-    printf("Display\n");
-    return NS_OK;
-  } else if (content == mButtonContent) {
-    printf("Button\n");
-  }
-
-  if (mIgnoreFocus) {
-    printf(" mIgnoreFocus is TRUE\n");
-    return NS_OK;
-  }
-
-  nsIEventStateManager *stateManager;
-  if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
-    printf("Before ------------------------\n");
-    mIgnoreFocus = PR_TRUE;
-    //stateManager->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-    stateManager->SetContentState(mDisplayContent, NS_EVENT_STATE_FOCUS);
-    //stateManager->SetContentState(mDisplayContent, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
-    mIgnoreFocus = PR_FALSE;
-    printf("After ------------------------\n");
-    NS_RELEASE(stateManager);
-  }
-#endif
-  return NS_OK;
-}
-
-nsresult
-nsComboboxControlFrame::Blur(nsIDOMEvent* aEvent)
-{
-#if 0
-  printf("nsComboboxControlFrame::Blur ");
-  nsCOMPtr<nsIDOMNode> node;
-  aEvent->GetTarget(getter_AddRefs(node));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-
-  if (content == mContent) {
-    printf("Combobox\n");
-  } else if (content == mDisplayContent) {
-    printf("Display\n");
-  } else if (content == mButtonContent) {
-    printf("Button\n");
-  }
-#endif
-  return NS_OK;
-}
 
 /*nsresult
 nsComboboxControlFrame::HandleEvent(nsIDOMEvent* aEvent)        
