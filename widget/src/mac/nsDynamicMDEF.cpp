@@ -114,10 +114,6 @@ void nsPostBuild(
 bool nsIsHierChild(
   MenuHandle theMenu);
 
-void nsPreviousMenuStackUnwind(
-  nsIMenu * aMenuJustBuilt, 
-  MenuHandle aMenuHandleJustBuilt);
-  
 void nsCheckDestroy(
   MenuHandle theMenu, 
   short * whichItem);
