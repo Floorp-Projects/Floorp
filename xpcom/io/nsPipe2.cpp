@@ -399,15 +399,18 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
                 mon.Exit();     // XXXbe avoid deadlock better
                 rv = pipe->mObserver->OnEmpty(pipe);
                 mon.Enter();
+                mon.Notify();   // wake up writer
                 if (NS_FAILED(rv))
                     goto done;
             }
         }
     }
   done:
+
     if (mBlocking && rv == NS_BASE_STREAM_WOULD_BLOCK && *readCount > 0) {
         mon.Notify();   // wake up writer
     }
+
     if (rv == NS_BASE_STREAM_CLOSED)    // EOF
         rv = NS_OK;
     return *readCount == 0 ? rv : NS_OK;
@@ -611,7 +614,9 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             if (NS_FAILED(rv))
                 goto done;
             if (writeBufLen == 0) {
-                if (pipe->mObserver && *writeCount == 0) {
+                if (*writeCount > 0)
+                    goto done;
+                if (pipe->mObserver/* && *writeCount == 0*/) {
                     mon.Exit();     // XXXbe avoid deadlock better
                     rv = pipe->mObserver->OnFull(pipe);
                     mon.Enter();
@@ -660,9 +665,12 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             }
         }
       done:
+
         if (mBlocking && rv == NS_BASE_STREAM_WOULD_BLOCK && *writeCount > 0) {
             mon.Notify();       // wake up reader
         }
+
+        ;
     }   // exit monitor
 
     if (pipe->mObserver && *writeCount > 0) {
