@@ -64,7 +64,7 @@ class nsHTTPRequest : public nsIStreamObserver,
 public:
 
     // Constructor
-    nsHTTPRequest(nsIURI* i_URL=0, HTTPMethod i_Method=HM_GET, nsIChannel* i_Tranport = nsnull);
+    nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method=HM_GET);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMOBSERVER
@@ -104,9 +104,11 @@ public:
         
     nsresult            SetConnection(nsHTTPChannel* i_Connection);
 
+    nsresult            SetTransport(nsIChannel *aTransport);
+    nsresult            ReleaseTransport(nsIChannel *aTransport);
+
     // Build the actual request string based on the settings. 
-    nsresult            WriteRequest(nsIChannel *aChannel, 
-                                     PRBool aIsProxied = PR_FALSE);
+    nsresult            WriteRequest(PRBool aIsProxied = PR_FALSE);
 
     nsresult            GetPostDataStream(nsIInputStream* *aResult);
     nsresult            SetPostDataStream(nsIInputStream* aStream);
@@ -145,7 +147,6 @@ protected:
     nsHTTPChannel*              mConnection;
 
     nsHTTPHeaderArray           mHeaders;
-    PRBool                      mUsingProxy;
 
     nsCString                       mRequestBuffer;
     nsCOMPtr<nsIInputStream>        mPostDataStream;

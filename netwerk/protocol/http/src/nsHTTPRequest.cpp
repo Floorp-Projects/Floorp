@@ -50,23 +50,25 @@ static NS_DEFINE_CID(kHTTPHandlerCID,   NS_IHTTPHANDLER_CID);
 
 extern nsresult DupString(char* *o_Dest, const char* i_Src);
 
-nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method, 
-    nsIChannel* i_Transport):
+nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method):
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
-    mUsingProxy(PR_FALSE),
     mRequestSpec(0)
 {
     NS_INIT_REFCNT();
 
+    NS_ASSERTION(i_URL, "No URL for the request!!");
     mURI = do_QueryInterface(i_URL);
 
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Creating nsHTTPRequest [this=%x].\n", this));
+#if defined(PR_LOGGING)
+  nsXPIDLCString urlCString; 
+  mURI->GetSpec(getter_Copies(urlCString));
+  
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("Creating nsHTTPRequest [this=%x] for URI: %s.\n", 
+           this, (const char *)urlCString));
+#endif
 
-    mTransport = i_Transport;
-
-    NS_ASSERTION(mURI, "No URI for the request!!");
     
     nsXPIDLCString host;
     mURI->GetHost(getter_Copies(host));
@@ -143,7 +145,7 @@ nsHTTPRequest::~nsHTTPRequest()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPRequest [this=%x].\n", this));
 
-    mTransport = null_nsCOMPtr();
+    mTransport = 0;
     CRTFREEIF(mRequestSpec);
 }
 
@@ -230,7 +232,7 @@ nsHTTPRequest::Resume(void)
 
 // Finally our own methods...
 
-nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
+nsresult nsHTTPRequest::WriteRequest(PRBool aIsProxied)
 {
     nsresult rv;
     if (!mURI) {
@@ -238,10 +240,7 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
         return NS_ERROR_NULL_POINTER;
     }
 
-    NS_ASSERTION(!mTransport, "Transport being overwritten!");
-    mTransport = aTransport;
-
-    mUsingProxy = aIsProxied;
+    NS_ASSERTION(mTransport, "No transport has been set on this request.");
 
     PRUint32 loadAttributes;
     mConnection->GetLoadAttributes(&loadAttributes);
@@ -287,7 +286,7 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
         mRequestBuffer.Append(mRequestSpec);
     else
     {
-        if (mUsingProxy) {
+        if (aIsProxied) {
             rv = mURI->GetSpec(getter_Copies(autoBuffer));
         } else {
             rv = mURI->GetPath(getter_Copies(autoBuffer));
@@ -372,7 +371,7 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
     //
     // Write the request to the server.  
     //
-    rv = aTransport->AsyncWrite(stream, 0, mRequestBuffer.Length(), 
+    rv = mTransport->AsyncWrite(stream, 0, mRequestBuffer.Length(), 
                                 (nsISupports*)(nsIRequest*)mConnection, this);
     return rv;
 }
@@ -492,7 +491,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
                 "\tStatus: %x\n", 
                 this, iStatus));
 
-        nsHTTPResponseListener* pListener = new nsHTTPResponseListener(mConnection);
+        nsHTTPResponseListener* pListener = new nsHTTPServerListener(mConnection);
         if (pListener) {
           NS_ADDREF(pListener);
           rv = mTransport->AsyncRead(0, -1, i_Context, pListener);
@@ -511,16 +510,24 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
                 "\tStatus: %x\n", 
                 this, iStatus));
 
+        rv = iStatus;
+    }
+
+    //
+    // An error occurred...  Finish the transaction and notify the consumer
+    // of the failure...
+    //
+    if (NS_FAILED(rv)) {
         // Notify the HTTPChannel that the request has finished
         nsCOMPtr<nsIStreamListener> consumer;
 
         mConnection->GetResponseDataListener(getter_AddRefs(consumer));
 
-        mConnection->ResponseCompleted(mTransport, consumer, iStatus, i_Msg);
+        mConnection->ResponseCompleted(consumer, rv, i_Msg);
+        mConnection->ReleaseTransport(mTransport);
 
-        mTransport = null_nsCOMPtr();
-
-        rv = iStatus;
+        NS_ASSERTION(!mTransport, "nsHTTRequest::ReleaseTransport() "
+                                  "was not called!");
     }
  
     //
@@ -539,6 +546,19 @@ nsresult nsHTTPRequest::SetConnection(nsHTTPChannel* i_Connection)
     return NS_OK;
 }
 
+nsresult nsHTTPRequest::SetTransport(nsIChannel *aTransport)
+{
+    mTransport = aTransport;
+    return NS_OK;
+}
+
+nsresult nsHTTPRequest::ReleaseTransport(nsIChannel *aTransport)
+{
+    if (aTransport == mTransport) {
+        mTransport = 0;
+    }
+    return NS_OK;
+}
 
 nsresult nsHTTPRequest::GetHeaderEnumerator(nsISimpleEnumerator** aResult)
 {

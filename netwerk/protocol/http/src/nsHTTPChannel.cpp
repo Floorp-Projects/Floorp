@@ -91,7 +91,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
                              PRUint32 bufferMaxSize): 
     mResponse(nsnull),
     mHandler(dont_QueryInterface(i_Handler)),
-    mRawResponseListener(nsnull),
+    mHTTPServerListener(nsnull),
     mResponseContext(nsnull),
     mOriginalURI(dont_QueryInterface(originalURI ? originalURI : i_URL)),
     mURI(dont_QueryInterface(i_URL)),
@@ -112,8 +112,14 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
 {
     NS_INIT_REFCNT();
 
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Creating nsHTTPChannel [this=%x].\n", this));
+#if defined(PR_LOGGING)
+  nsXPIDLCString urlCString; 
+  mURI->GetSpec(getter_Copies(urlCString));
+  
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("Creating nsHTTPChannel [this=%x] for URI: %s.\n", 
+           this, (const char *)urlCString));
+#endif
 
     mVerb = i_Verb;
 }
@@ -280,8 +286,12 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         ReadFromCache(startPosition, readCount);
     } else if (mOpenObserver) {
         // we were AsyncOpen()'d
-        NS_ASSERTION(mRawResponseListener, "our pointer to the response was never set");
-        return mRawResponseListener->FireSingleOnData(listener, aContext);
+        NS_ASSERTION(mHTTPServerListener, "ResponseListener was not set!.");
+        if (mHTTPServerListener) {
+            rv = mHTTPServerListener->FireSingleOnData(listener, aContext);
+        } else {
+            rv = NS_ERROR_NULL_POINTER;
+        }
     }
 
     return rv;
@@ -873,47 +883,6 @@ nsHTTPChannel::CheckCache()
     return NS_OK;
 }
 
-class nsCachedHTTPListener : public nsIStreamListener {
-public:
-    nsCachedHTTPListener(nsIStreamListener *aListener, nsHTTPChannel* aChannel):
-        mListener(aListener), mChannel(aChannel) {
-        NS_INIT_REFCNT();
-        NS_IF_ADDREF(mChannel);
-    }
-
-
-    virtual ~nsCachedHTTPListener() { NS_IF_RELEASE(mChannel); }
-
-private:
-
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD
-    OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
-                    nsIInputStream *aStream, PRUint32 aSourceOffset, 
-                    PRUint32 aCount) 
-    {
-        return mListener->OnDataAvailable(mChannel, aContext, 
-                                          aStream, aSourceOffset, aCount);
-    }
-
-    NS_IMETHOD
-    OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
-        return mListener->OnStartRequest(mChannel, aContext);
-    }
-
-    NS_IMETHOD
-    OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
-                  nsresult aStatus, const PRUnichar *aErrorMsg) {
-        return mChannel->ResponseCompleted(nsnull, mListener, aStatus, aErrorMsg);
-    }
-
-protected:
-    nsCOMPtr<nsIStreamListener>  mListener;
-    nsHTTPChannel*               mChannel;
-};
-
-NS_IMPL_ISUPPORTS2(nsCachedHTTPListener, nsIStreamListener, nsIStreamObserver)
 
 // If the data in the cache hasn't expired, then there's no need to
 // talk with the server, not even to do an if-modified-since.  This
@@ -934,48 +903,52 @@ nsHTTPChannel::ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount)
     if (!mResponseDataListener)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIChannel> cacheChannel;
-    rv = mCacheEntry->NewChannel(mLoadGroup, this, getter_AddRefs(cacheChannel));
+#if defined(PR_LOGGING)
+  nsresult log_rv;
+  char *URLSpec;
+
+  log_rv = mURI->GetSpec(&URLSpec);
+  if (NS_FAILED(log_rv)) {
+  	URLSpec = nsCRT::strdup("?");
+  }
+
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+         ("nsHTTPChannel::ReadFromCache [this=%x].\t"
+          "Using cache copy for: %s\n",
+          this, URLSpec));
+  nsAllocator::Free(URLSpec);
+#endif /* PR_LOGGING */
+
+    // Create a cache transport to read the cached response...
+    nsCOMPtr<nsIChannel> cacheTransport;
+    rv = mCacheEntry->NewChannel(mLoadGroup, this, getter_AddRefs(cacheTransport));
     if (NS_FAILED(rv)) return rv;
 
+    mRequest->SetTransport(cacheTransport);
+
     // Fake it so that HTTP headers come from cached versions
-    NS_IF_RELEASE(mResponse);
-    mResponse = mCachedResponse;
-    NS_ADDREF(mResponse);
+    SetResponse(mCachedResponse);
     
-    nsCOMPtr<nsIStreamListener> loadGroupListener = mResponseDataListener;
-    if (mLoadGroup) {
-        nsCOMPtr<nsILoadGroupListenerFactory> factory;
-
-        //
-        // Create a load group "proxy" listener...
-        //
-        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-        if (NS_SUCCEEDED(rv) && factory) {
-            factory->CreateLoadGroupListener(mResponseDataListener, 
-                                             getter_AddRefs(loadGroupListener));
-        }
-    }
-
     // Create a listener that intercepts cache reads and fires off the appropriate
     // events such as OnHeadersAvailable
-    nsCachedHTTPListener* listener;
-    listener = new nsCachedHTTPListener(loadGroupListener, this);
+    nsHTTPResponseListener* listener;
+    listener = new nsHTTPCacheListener(this);
     if (!listener)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(listener);
-    
+
+    listener->SetListener(mResponseDataListener);
     mConnected = PR_TRUE;
 
     // Fire all the normal events for header arrival
     FinishedResponseHeaders();
 
     // Pump the cache data downstream
-    rv = cacheChannel->AsyncRead(aStartPosition, aReadCount,
+    rv = cacheTransport->AsyncRead(aStartPosition, aReadCount,
                                  mResponseContext, listener);
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
-        ResponseCompleted(0, nsnull, rv, 0);
+        ResponseCompleted(nsnull, rv, 0);
     }
     return rv;
 }
@@ -1161,7 +1134,7 @@ nsHTTPChannel::Open(void)
     }
     if (NS_FAILED(rv)) {
       // Unable to create a transport...  End the request...
-      (void) ResponseCompleted(nsnull, mResponseDataListener, rv, nsnull);
+      (void) ResponseCompleted(mResponseDataListener, rv, nsnull);
       return rv;
     }
 
@@ -1169,7 +1142,8 @@ nsHTTPChannel::Open(void)
     rv = transport->SetNotificationCallbacks(this);
     if (NS_FAILED(rv)) {
       // Unable to create a transport...  End the request...
-      (void) ResponseCompleted(nsnull, mResponseDataListener, rv, nsnull);
+      (void) ResponseCompleted(mResponseDataListener, rv, nsnull);
+      (void) ReleaseTransport(transport);
       return rv;
     }
 
@@ -1207,7 +1181,9 @@ nsHTTPChannel::Open(void)
         rv = pModules->GetNext(getter_AddRefs(supEntry)); // go around again
     }
 
-    rv = mRequest->WriteRequest(transport, (mProxy && *mProxy));
+    mRequest->SetTransport(transport);
+
+    rv = mRequest->WriteRequest((mProxy && *mProxy));
     if (NS_FAILED(rv)) return rv;
     
     mState = HS_WAITING_FOR_RESPONSE;
@@ -1324,8 +1300,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
 }
 
 
-nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport, 
-                                          nsIStreamListener *aListener,
+nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg)
 {
@@ -1344,11 +1319,6 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
               "\tOnStopRequest to consumer failed! Status:%x\n",
               this, rv));
     }
-  }
-
-  // Release the transport...
-  if (aTransport) {
-    (void)mHandler->ReleaseTransport(aTransport);
   }
 
   //
@@ -1378,6 +1348,17 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
   return rv;
 }
 
+nsresult nsHTTPChannel::ReleaseTransport(nsIChannel *aTransport)
+{
+  nsresult rv = NS_OK;
+  if (aTransport) {
+    (void) mRequest->ReleaseTransport(aTransport);
+    rv = mHandler->ReleaseTransport(aTransport);
+  }
+  
+  return rv;
+}
+
 nsresult nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
 { 
   NS_IF_RELEASE(mResponse);
@@ -1404,8 +1385,8 @@ nsresult nsHTTPChannel::Abort()
   // Disconnect the consumer from this response listener...  
   // This allows the entity that follows to be discarded 
   // without notifying the consumer...
-  if (mRawResponseListener) {
-    mRawResponseListener->Abort();
+  if (mHTTPServerListener) {
+    mHTTPServerListener->Abort();
   }
 
   // Null out pointers that are no longer needed...
@@ -1687,21 +1668,8 @@ nsHTTPChannel::ProcessStatusCode(void)
     }
 
     nsCOMPtr<nsIStreamListener> listener = mResponseDataListener;
-    if (mLoadGroup) {
-        nsCOMPtr<nsILoadGroupListenerFactory> factory;
-
-        //
-        // Create a load group "proxy" listener...
-        //
-        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-        if (NS_SUCCEEDED(rv) && factory) {
-            factory->CreateLoadGroupListener(mResponseDataListener, 
-                                             getter_AddRefs(listener));
-        }
-    }
 
     statusClass = statusCode / 100;
-
     switch (statusClass) {
         //
         // Informational: 1xx
@@ -1744,10 +1712,11 @@ nsHTTPChannel::ProcessStatusCode(void)
         if (statusCode == 304) {
             rv = ProcessNotModifiedResponse(listener);
             if (NS_FAILED(rv)) return rv;
+            break;
         }
 
         // 300 (Multiple choices) or 301 (Redirect) results can be cached
-        else if ((statusCode == 300) || (statusCode == 301)) {
+        if ((statusCode == 300) || (statusCode == 301)) {
             nsCOMPtr<nsIStreamListener> listener2;
             CacheReceivedResponse(listener, getter_AddRefs(listener2));
             if (listener2) {
@@ -1792,8 +1761,8 @@ nsHTTPChannel::ProcessStatusCode(void)
     // If mResponseDataListener is null this means that the response has been
     // aborted...  So, do not update the response listener because this
     // is being discarded...
-    if (mResponseDataListener && mRawResponseListener) {
-        mRawResponseListener->SetResponseDataListener(listener);
+    if (mResponseDataListener && mHTTPServerListener) {
+        mHTTPServerListener->SetListener(listener);
     }
     return rv;
 }
@@ -1804,21 +1773,75 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
     nsresult rv;
     NS_ASSERTION(!mCachedContentIsValid, "We should never have cached a 304 response");
 
-    // Abort the current response...  This will disconnect the consumer from
-    // the response listener...  Thus allowing the entity that follows to
-    // be discarded without notifying the consumer...
-    Abort();
+#if defined(PR_LOGGING)
+  nsresult log_rv;
+  char *URLSpec;
+
+  log_rv = mURI->GetSpec(&URLSpec);
+  if (NS_FAILED(log_rv)) {
+  	URLSpec = nsCRT::strdup("?");
+  }
+
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+         ("nsHTTPChannel::ProcessNotModifiedResponse [this=%x].\t"
+          "Using cache copy for: %s\n",
+          this, URLSpec));
+  nsAllocator::Free(URLSpec);
+#endif /* PR_LOGGING */
+
+    // Orphan the current nsHTTPServerListener instance...  It will be
+    // replaced with a nsHTTPCacheListener instance.
+    NS_ASSERTION(mHTTPServerListener, "No nsHTTPServerResponse available!");
+    if (mHTTPServerListener) {
+      mHTTPServerListener->Abort();
+    }
+
+    // Update the cached headers with any more recent ones from the
+    // server - see RFC2616 [13.5.3]
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = mResponse->GetHeaderEnumerator(getter_AddRefs(enumerator));
+    if (NS_FAILED(rv)) return rv;
+
+    mCachedResponse->UpdateHeaders(enumerator);
+
+    // Store the updated HTTP headers in the cache
+    // XXX: Should the Expires value be recaluclated too?
+    nsCString allHeaders;
+    rv = mCachedResponse->EmitHeaders(allHeaders);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mCacheEntry->SetAnnotation("HTTP headers", allHeaders.Length()+1, 
+                                     allHeaders.GetBuffer());
+    if (NS_FAILED(rv)) return rv;
 
     // Fake it so that HTTP headers come from cached versions
     SetResponse(mCachedResponse);
 
-    // We don't set a load group for the cache channel because the HTTP
-    // channel is handling the load group interactions
-    nsCOMPtr<nsIChannel> cacheChannel;
-    rv = mCacheEntry->NewChannel(mLoadGroup, this, getter_AddRefs(cacheChannel));
+    // Create a cache transport to read the cached response...
+    nsCOMPtr<nsIChannel> cacheTransport;
+    rv = mCacheEntry->NewChannel(mLoadGroup, this, getter_AddRefs(cacheTransport));
     if (NS_FAILED(rv)) return rv;
 
-    return cacheChannel->AsyncRead(0, -1, mResponseContext, aListener);
+    mRequest->SetTransport(cacheTransport);
+
+    // Create a new HTTPCacheListener...
+    nsHTTPResponseListener *cacheListener;
+    cacheListener = new nsHTTPCacheListener(this);
+    if (!cacheListener) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(cacheListener);
+
+    cacheListener->SetListener(aListener);
+    mResponseDataListener = aListener;
+
+    rv = cacheTransport->AsyncRead(0, -1, mResponseContext, cacheListener);
+    if (NS_FAILED(rv)) {
+      ResponseCompleted(cacheListener, rv, nsnull);
+    }
+    NS_RELEASE(cacheListener);
+
+    return rv;
 }
 
 nsresult

@@ -76,7 +76,9 @@ public:
     nsresult            ParseHeaders(nsCString& aAllHeaders);
     nsresult            ProcessHeader(nsIAtom* aHeader, nsCString& aValue);
     nsresult            EmitHeaders(nsCString& aResult);
-     
+
+    nsresult            UpdateHeaders(nsISimpleEnumerator *aEnumerator);
+         
     PRBool              IsStale(PRBool aUseHeuristicExpiration);
     nsresult            ParseDateHeader(nsIAtom *aAtom, PRTime *aResultTime, PRBool *aHeaderIsPresent);
  

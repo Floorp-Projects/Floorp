@@ -715,6 +715,8 @@ nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
             headerAtomRaw == nsHTTPAtoms::Trailer             ||
             headerAtomRaw == nsHTTPAtoms::Transfer_Encoding   ||
             headerAtomRaw == nsHTTPAtoms::Upgrade             ||
+            // XXX: This seems wrong.  See RFC 2109 [4.3.2]
+            //      Should depend on Cache-control: no-cache="set-cookie"
             headerAtomRaw == nsHTTPAtoms::Set_Cookie)
             continue;
                     
@@ -752,4 +754,103 @@ nsresult nsHTTPResponse::ParseHeaders(nsCString& aAllHeaders)
         if (NS_FAILED(rv)) return rv;
         beginLineOffset = endLineOffset + 2; // Skip past CRLF
     }
+}
+
+//
+// This routine is used to update the Response Headers after a 304
+// Response has been received.
+//
+//   + The nsISimpleEnumerator contains the response headers from the
+//     304 response.
+//   + These headers replace the cached headers.  See RFC 2616 [13.5.3]
+//   + Wacky headers which are send by certain servers are also ignored.
+//
+nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
+{
+  nsresult rv;
+
+  PRBool bMoreHeaders = PR_FALSE;
+  nsCOMPtr<nsISupports>   item;
+  nsCOMPtr<nsIHTTPHeader> header;
+  nsCOMPtr<nsIAtom>       headerAtom;
+  nsXPIDLCString          headerValue;
+
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+        ("nsHTTPResponse::UpdateHeaders [this=%x].\n", this));
+
+  rv = aEnumerator->HasMoreElements(&bMoreHeaders);
+
+  while (NS_SUCCEEDED(rv) && bMoreHeaders) {
+    rv = aEnumerator->GetNext(getter_AddRefs(item));
+    if (NS_FAILED(rv)) return rv;
+
+    header = do_QueryInterface(item, &rv);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Bad HTTP header.");
+    if (NS_SUCCEEDED(rv)) {
+      rv = header->GetField(getter_AddRefs(headerAtom));
+      if (NS_FAILED(rv)) return rv;
+
+      nsIAtom *atom = headerAtom;
+      // Ignore any hop-by-hop headers...
+      if (atom == nsHTTPAtoms::Connection           ||
+          atom == nsHTTPAtoms::Keep_Alive           ||
+          atom == nsHTTPAtoms::Proxy_Authenticate   ||
+          atom == nsHTTPAtoms::Proxy_Authorization  ||
+          atom == nsHTTPAtoms::TE                   ||
+          atom == nsHTTPAtoms::Trailer              ||
+          atom == nsHTTPAtoms::Transfer_Encoding    ||
+          atom == nsHTTPAtoms::Upgrade              ||
+      // Ignore any non-modifiable headers
+          atom == nsHTTPAtoms::Content_Location     ||
+          atom == nsHTTPAtoms::Content_MD5          ||
+          atom == nsHTTPAtoms::ETag                 ||
+          atom == nsHTTPAtoms::Last_Modified        ||
+      // Assume Cache-Control: "no-transform"
+          atom == nsHTTPAtoms::Content_Encoding     ||
+          atom == nsHTTPAtoms::Content_Range        ||
+          atom == nsHTTPAtoms::Content_Type         ||
+      // Ignore wacky headers too...
+          // This one is for MS Servers that send a Content-Length:0
+          // on 304 responses...
+          atom == nsHTTPAtoms::Content_Length) {
+#if defined(PR_LOGGING)
+        nsCAutoString nameBuffer;
+        const PRUnichar *name = nsnull;
+
+        // Convert the atom name from unicode to ascii...
+        atom->GetUnicode(&name);
+        nameBuffer.Assign(name);
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+              ("\tUpdateHeaders [this=%x]."
+               "\tIgnoring response header: \'%s\'\n",
+              this, nameBuffer.GetBuffer()));
+#endif /* PR_LOGGING */
+      } else {
+      // Delete the current header value (if any)...
+        mHeaders.SetHeader(headerAtom, nsnull);
+
+        // Copy the new header value...
+        rv = header->GetValue(getter_Copies(headerValue));
+        if (NS_SUCCEEDED(rv)) {
+          rv = mHeaders.SetHeader(headerAtom, headerValue);
+        }
+        if (NS_FAILED(rv)) return rv;
+
+#if defined(PR_LOGGING)
+        nsCAutoString nameBuffer;
+        const PRUnichar *name = nsnull;
+
+        atom->GetUnicode(&name);
+        nameBuffer.Assign(name);
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+              ("\tUpdateHeaders [this=%x].\tNew response header: \'%s: %s\'\n",
+              this, nameBuffer.GetBuffer(), (const char*)headerValue));
+#endif /* PR_LOGGING */
+      }
+    }
+    rv = aEnumerator->HasMoreElements(&bMoreHeaders);
+  }
+
+  return rv;
 }
