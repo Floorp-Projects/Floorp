@@ -135,7 +135,7 @@ select {
   color: -moz-FieldText;
   font: -moz-list;
   line-height: normal !important;
-  white-space: nowrap;
+  white-space: nowrap !important;
   text-align: start; 
   cursor: default;
   -moz-box-sizing: border-box;
