@@ -561,7 +561,7 @@ if ($action eq 'del') {
 
     SendSQL("SELECT products.name, components.name " .
             "FROM products, components " .
-            "WHERE products.id = components.id " .
+            "WHERE products.id = components.product_id " .
             " AND initialqacontact=" . DBname_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
