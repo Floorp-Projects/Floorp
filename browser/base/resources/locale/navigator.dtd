@@ -84,12 +84,6 @@
 <!ENTITY doccharactersetBidiCmd.label "Use the document specified character set">
 <!ENTITY defaultcharactersetBidiCmd.label "Use my default character set, overriding the document-specified character set">
 
-<!ENTITY applyTheme.label	"Apply Theme"> 
-<!ENTITY applyTheme.accesskey	"A"> 
-<!ENTITY themePreferencesCmd.label "Theme Preferences..."> 
-<!ENTITY themePreferencesCmd.accesskey "T"> 
-<!ENTITY getNewThemesCmd.label "Get New Themes">
-<!ENTITY getNewThemesCmd.accesskey "G">
 <!ENTITY findOnCmd.label "Find in This Page...">
 <!ENTITY findOnCmd.accesskey "f">
 <!ENTITY findOnCmd.commandkey "f">
