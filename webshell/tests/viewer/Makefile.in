@@ -114,12 +114,7 @@ XP_NS_UNDERBAR_CRAP	= \
 			$(MOZ_WIDGET_SUPPORT_LIBS) \
 			$(NULL)
 
-XP_LIBS			= \
-			$(XP_NS_UNDERBAR_CRAP) \
-			$(XP_DIST_LIBS) \
-			$(LOST_SYM_LIBS) \
-			$(NSPR_LIBS) \
-			$(NULL)
+XP_LIBS			=
 
 ifdef MOZ_FULLCIRCLE
 XP_LIBS			+= $(FULLCIRCLE_LIBS)
@@ -130,6 +125,13 @@ XP_LIBS			+= -llibxpfelocation_s
 else
 XP_LIBS			+= -lxpfelocation_s
 endif
+
+XP_LIBS			+= \
+			$(XP_NS_UNDERBAR_CRAP) \
+			$(XP_DIST_LIBS) \
+			$(LOST_SYM_LIBS) \
+			$(NSPR_LIBS) \
+			$(NULL)
 
 LIBS			= \
 			$(UNIX_VIEWER_TK_LIBS) \
