@@ -30,11 +30,11 @@
 /* ::::: subscribed icons  :::::: */
 
 .subscribedcol {
-  list-style-image: url("chrome://messenger/skin/icons/dot.gif");
+  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
 .subscribedcol[Subscribed="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/check.gif");
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
 /* ::::: folder icons :::::: */
@@ -76,17 +76,17 @@ statusbarpanel,
   border: none !important;
 }
 
-/* for search */
+/* for search in subscribe */
 
 outlinerbody:-moz-outliner-image(nameCol, nntp) {
  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
 }
 
 outlinerbody:-moz-outliner-image(subscribedCol) {
-  list-style-image: url("chrome://messenger/skin/icons/dot.gif");
+  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
 outlinerbody:-moz-outliner-image(subscribedCol, subscribed) {
-  list-style-image: url("chrome://messenger/skin/icons/check.gif");
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 

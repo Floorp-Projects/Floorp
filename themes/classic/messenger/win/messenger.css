@@ -393,12 +393,12 @@ menu.push[disabled="true"]:hover:active {
 
 .enabledcol 
   {
-    list-style-image      : url("chrome://messenger/skin/readmail.gif");
+   list-style-image: url("chrome://messenger/skin/dot.gif");
   }
 
 .enabledcol[Enabled="true"] 
   {
-    list-style-image      : url("chrome://messenger/skin/unreadmail.gif");
+   list-style-image: url("chrome://messenger/skin/check.gif");
   }
 
 .usesMailWidgets 
