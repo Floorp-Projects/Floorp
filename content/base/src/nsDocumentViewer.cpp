@@ -3207,9 +3207,8 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
     } // while
     mPageSeqFrame = curPageSeq;
 
-    if ((aPO->mParent == nsnull ||
-         (aPO->mParent != nsnull && !aPO->mParent->mPrintAsIs && aPO->mPrintAsIs)) &&
-         !isDoingPrintRange) {
+    if (aPO->mParent == nsnull ||
+        (aPO->mParent != nsnull && !aPO->mParent->mPrintAsIs && aPO->mPrintAsIs)) {
       mPageSeqFrame->DoPageEnd(aPresContext);
     }
 
