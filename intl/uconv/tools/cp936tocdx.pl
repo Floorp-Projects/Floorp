@@ -42,7 +42,7 @@ sub cp936tonum()
 @map = {};
 sub readtable()
 {
-open(CP936, "<CP936.TXT") || die "cannot open CP936.TXT";
+open(CP936, "<gbkcommon.txt") || die "cannot open gbkcommon.txt";
 while(<CP936>)
 {
    if(! /^#/) {
@@ -58,86 +58,10 @@ while(<CP936>)
 }
 
 
-#
-# According to 
-# HKEY_LOCAL_MACHINE:SYSTEM:CurrentControlSet:Control:Nls:CodePage:EUDCCodeRange
-# 936=AAA1-AFFE,F8A1-FEFE,A140-A7A0
-#
-sub addeudc()
-{
-  print "/* \n";
-  print "   The following range are User Defined Characters \n";
-  print "       [CP936]              [Unicode] \n";
-  my($l,$h,$hl,$us);
-  $u = 0xE000;
-  $us = sprintf "0x%04X", $u;
-  # For AAA1-AFFE
-  print "     0xAAA1-0xAFFE Map to " . $us , "-" ;
-  for($h=0xAA; $h <=0xAF;$h++)
-  {
-    for($l=0xA1; $l <=0xFE;$l++,$u++)
-    {
-        $us = sprintf "0x%04X", $u;
-        $hl = sprintf "0x%02X%02X", $h, $l;
-        if($map{&cp936tonum($hl)} == "") 
-        {
-           $map{&cp936tonum($hl)}= $us ;
-        }
-    }
-  }
-  print $us . "\n";
-
-  # For F8A1-FEFE
-  $us = sprintf "0x%04X", $u;
-  print "     0xF8A1-0xFEFE Map to " . $us , "-" ;
-  for($h=0xF8; $h <=0xFE;$h++)
-  {
-    for($l=0xA1; $l <=0xFE;$l++,$u++)
-    {
-        $us = sprintf "0x%04X", $u;
-        $hl = sprintf "0x%02X%02X", $h, $l;
-        if($map{&cp936tonum($hl)} == "") 
-        {
-           $map{&cp936tonum($hl)}= $us ;
-        }
-    }
-  }
-  print $us . "\n";
-
-  # For A140-A7A0
-  $us = sprintf "0x%04X", $u;
-  print "     0xA140-0xA7A0 Map to " . $us , "-" ;
-  for($h=0xA1; $h <=0xA7;$h++)
-  {
-    for($l=0x40; $l <=0x7E;$l++,$u++)
-    {
-        $us = sprintf "0x%04X", $u;
-        $hl = sprintf "0x%02X%02X", $h, $l;
-        if($map{&cp936tonum($hl)} == "") 
-        {
-           $map{&cp936tonum($hl)}= $us ;
-        }
-    }
-    # We need to skip 7F
-    for($l=0x80; $l <=0xA0;$l++,$u++)
-    {
-        $us = sprintf "0x%04X", $u;
-        $hl = sprintf "0x%02X%02X", $h, $l;
-        if($map{&cp936tonum($hl)} == "") 
-        {
-           $map{&cp936tonum($hl)}= $us ;
-        }
-    }
-  }
-  print $us . "\n";
-  print "\n";
-  print " */\n";
-}
-
 sub printtable()
 {
-for($i=0;$i<126;$i++)
-{
+  for($i=0;$i<126;$i++)
+  {
      printf ( "/* 0x%2XXX */\n", ( $i + 0x81));
      for($j=0;$j<(0x7f-0x40);$j++)
      {
@@ -155,7 +79,7 @@ for($i=0;$i<126;$i++)
          }
      }
      
-	 print "0xFFFF,";	#let 0xXX7F map to 0xFFFF
+	 print "0xFFFD,";
 
      printf "/* 0x%2X%1X%1X*/\n", $i+0x81, 4+($j/16),(7==($j%16))?0:8;
      for($j=0;$j < (0xff-0x80);$j++)
@@ -190,7 +114,7 @@ for($i=0;$i<126;$i++)
          }
      }
      printf "       /* 0x%2X%1X%1X*/\n", $i+0x81, 8+($j/16),(7==($j%16))?0:8;
-}
+  }
 }
 sub printnpl()
 {
@@ -238,6 +162,5 @@ print $dont_modify;
 &readtable();
 &printnpl();
 &printdontmodify();
-&addeudc();
 &printtable();
 
