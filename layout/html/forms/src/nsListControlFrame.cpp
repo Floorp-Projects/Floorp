@@ -616,29 +616,16 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
   //nscoord scrollbarHeight = NSToCoordRound(sbHeight);
 
-  // Subtract out the borders
-  nsMargin border;
-  if (!aReflowState.mStyleSpacing->GetBorder(border)) {
-    NS_NOTYETIMPLEMENTED("percentage border");
-    border.SizeTo(0, 0, 0, 0);
-  }
-
-  nsMargin padding;
-  if (!aReflowState.mStyleSpacing->GetPadding(padding)) {
-    NS_NOTYETIMPLEMENTED("percentage padding");
-    padding.SizeTo(0, 0, 0, 0);
-  }
-
-  mMaxWidth  -= (border.left + border.right + padding.left + padding.right);
-  mMaxHeight -= (border.top + border.bottom + padding.top + padding.bottom);
+  mMaxWidth  -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  mMaxHeight -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
   // wide and high enough to enclose their contents
 
   PRBool isInDropDownMode = IsInDropDownMode();
 
-  scrolledAreaWidth  -= (border.left + border.right + padding.left + padding.right);
-  scrolledAreaHeight -= (border.top + border.bottom + padding.top + padding.bottom);
+  scrolledAreaWidth  -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  scrolledAreaHeight -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   nscoord visibleWidth = 0;
   if (isInDropDownMode) {
@@ -646,16 +633,13 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       visibleWidth = scrolledAreaWidth;
     } else {
       visibleWidth = aReflowState.mComputedWidth;
-      visibleWidth -= (border.left + border.right + padding.left + padding.right);
-      //scrolledAreaHeight -= (border.top + border.bottom + padding.top + padding.bottom);
+      visibleWidth -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
     }
   } else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
     } else {
       visibleWidth = aReflowState.mComputedWidth;// - scrollbarWidth;
-      // XXX rods - this hould not be subtracted in
-      //visibleWidth  -= (border.left + border.right + padding.left + padding.right);
     }
   }
 
@@ -671,7 +655,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
    // of option elements. The reason is that their may be option groups in addition to
    //  option elements. Either of which may be visible or invisible.
   PRInt32 heightOfARow = scrolledAreaDesiredSize.maxElementSize->height;
-  heightOfARow -= (border.top + border.bottom + padding.top + padding.bottom);
+  heightOfARow -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   // Check to see if we have zero items 
   PRInt32 length = 0;
@@ -741,9 +725,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
           nscoord screenHeight = NSIntPixelsToTwips(screenHeightInPixels, p2t);
 
           nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size
-          availDropHgt -= (border.top + border.bottom + padding.top + padding.bottom);
+          availDropHgt -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
-          nscoord hgt = visibleHeight + border.top + border.bottom + padding.top + padding.bottom;
+          nscoord hgt = visibleHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
           if (heightOfARow > 0) {
             if (hgt > availDropHgt) {
               visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
@@ -762,7 +746,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       // Calculate the visible height of the listbox
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
       visibleHeight = aReflowState.mComputedHeight;
-      visibleHeight -= (border.top + border.bottom + padding.top + padding.bottom);
     } else {
       mNumDisplayRows = 1;
       GetSizeAttribute(&mNumDisplayRows);
@@ -816,7 +799,29 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
-    visibleWidth += (border.left + border.right + padding.left + padding.right);
+    visibleWidth += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  }
+
+  // When in dropdown mode make sure we obey min/max-width and min/max-height
+  if (!isInDropDownMode) {
+    nscoord fullWidth = visibleWidth + aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+    if (fullWidth > aReflowState.mComputedMaxWidth) {
+      visibleWidth = aReflowState.mComputedMaxWidth - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right;
+    }
+    if (fullWidth < aReflowState.mComputedMinWidth) {
+      visibleWidth = aReflowState.mComputedMinWidth - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right;
+    }
+
+    // calculate full height for comparison
+    // must add in Border & Padding twice because the scrolled area also inherits Border & Padding
+    nscoord fullHeight = visibleHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+                                         // + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+    if (fullHeight > aReflowState.mComputedMaxHeight) {
+      visibleHeight = aReflowState.mComputedMaxHeight - aReflowState.mComputedBorderPadding.top - aReflowState.mComputedBorderPadding.bottom;
+    }
+    if (fullHeight < aReflowState.mComputedMinHeight) {
+      visibleHeight = aReflowState.mComputedMinHeight - aReflowState.mComputedBorderPadding.top - aReflowState.mComputedBorderPadding.bottom;
+    }
   }
 
    // Do a second reflow with the adjusted width and height settings
@@ -853,11 +858,11 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 #endif
 
   if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
-    mCachedAvailableSize.width  = aDesiredSize.width - (border.left + border.right + padding.left + padding.right);
+    mCachedAvailableSize.width  = aDesiredSize.width - (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
     REFLOW_DEBUG_MSG2("** nsLCF Caching AW: %d\n", PX(mCachedAvailableSize.width));
   }
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-    mCachedAvailableSize.height = aDesiredSize.height - (border.top + border.bottom + padding.top + padding.bottom);
+    mCachedAvailableSize.height = aDesiredSize.height - (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
     REFLOW_DEBUG_MSG2("** nsLCF Caching AH: %d\n", PX(mCachedAvailableSize.height));
   }
 
@@ -1152,8 +1157,17 @@ nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
         // Shift is held down
       SetContentSelected(mSelectedIndex, PR_TRUE);
       if (mEndExtendedIndex == kNothingSelected) {
-        mEndExtendedIndex = mSelectedIndex;
-        ExtendedSelection(mStartExtendedIndex, mEndExtendedIndex, PR_FALSE, PR_TRUE);
+        if (mOldSelectedIndex == kNothingSelected) {
+          mStartExtendedIndex = mSelectedIndex;
+          mEndExtendedIndex   = kNothingSelected;
+        } else {
+          if (mSelectedIndex == mOldSelectedIndex) {
+            mEndExtendedIndex = kNothingSelected;
+          } else {
+            mEndExtendedIndex = mSelectedIndex;
+          }
+          ExtendedSelection(mStartExtendedIndex, mEndExtendedIndex, PR_FALSE, PR_TRUE);
+        }
       } else {
         if (mStartExtendedIndex < mEndExtendedIndex) {
           if (mSelectedIndex < mStartExtendedIndex) {
@@ -1164,7 +1178,11 @@ nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
             mEndExtendedIndex = mSelectedIndex;
           } else if (mSelectedIndex < mEndExtendedIndex) {
             ExtendedSelection(mSelectedIndex+1, mEndExtendedIndex, PR_FALSE, PR_FALSE);
-            mEndExtendedIndex = mSelectedIndex;
+            if (mSelectedIndex == mStartExtendedIndex) {
+              mEndExtendedIndex = kNothingSelected;
+            } else {
+              mEndExtendedIndex = mSelectedIndex;
+            }
           }
         } else if (mStartExtendedIndex > mEndExtendedIndex) {
           if (mSelectedIndex > mStartExtendedIndex) {
@@ -1175,7 +1193,11 @@ nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
             mEndExtendedIndex = mSelectedIndex;
           } else if (mSelectedIndex > mEndExtendedIndex) {
             ExtendedSelection(mEndExtendedIndex, mSelectedIndex-1, PR_FALSE, PR_FALSE);
-            mEndExtendedIndex = mSelectedIndex;
+            if (mSelectedIndex == mStartExtendedIndex) {
+              mEndExtendedIndex = kNothingSelected;
+            } else {
+              mEndExtendedIndex = mSelectedIndex;
+            }
           }
         }
       }
@@ -1195,7 +1217,12 @@ nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
       ClearSelection();
     }
   }
-
+#ifdef DEBUG_rods
+  printf("mSelectedIndex:      %d\n", mSelectedIndex);
+  printf("mOldSelectedIndex:   %d\n", mOldSelectedIndex);
+  printf("mStartExtendedIndex: %d\n", mStartExtendedIndex);
+  printf("mEndExtendedIndex:   %d\n", mEndExtendedIndex);
+#endif
 }
 
 //---------------------------------------------------------
@@ -1716,19 +1743,21 @@ nsListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
   if (content != nsnull) {
     nsCOMPtr<nsIPresShell> presShell;
     mPresContext->GetShell(getter_AddRefs(presShell));
-    nsIFrame * childframe;
-    nsresult result = presShell->GetPrimaryFrameFor(content, &childframe);
-    if (NS_SUCCEEDED(result) && childframe != nsnull) {
-      if (aSelected) {
-        DisplaySelected(content);
-        // Now that it is selected scroll to it
-        ScrollToFrame(content);
+    if (presShell) {
+      nsIFrame * childframe;
+      nsresult result = presShell->GetPrimaryFrameFor(content, &childframe);
+      if (NS_SUCCEEDED(result) && childframe != nsnull) {
+        if (aSelected) {
+          DisplaySelected(content);
+          // Now that it is selected scroll to it
+          ScrollToFrame(content);
+        } else {
+          DisplayDeselected(content);
+        }
       } else {
-        DisplayDeselected(content);
+        mDelayedIndexSetting = aIndex;
+        mDelayedValueSetting = aSelected;
       }
-    } else {
-      mDelayedIndexSetting = aIndex;
-      mDelayedValueSetting = aSelected;
     }
     NS_RELEASE(content);
   }
@@ -1867,13 +1896,21 @@ nsListControlFrame::Reset(nsIPresContext* aPresContext)
       mSelectionCacheLength++;
 
       if (selected) {
-        mSelectedIndex = i;
-        SetContentSelected(i, PR_TRUE);
-        if (multiple) {
-          mStartExtendedIndex = i;
-          if (mEndExtendedIndex == kNothingSelected) {
-            mEndExtendedIndex = i;
+        if (mSelectedIndex == kNothingSelected ||
+            (mSelectedIndex != kNothingSelected && multiple)) {
+          mSelectedIndex = i;
+          SetContentSelected(i, PR_TRUE);
+          if (multiple) {
+            mStartExtendedIndex = i;
+            if (mEndExtendedIndex == kNothingSelected) {
+              mEndExtendedIndex = i;
+            }
           }
+        } else {
+          SetContentSelected(mSelectedIndex, PR_FALSE);
+          mSelectionCache->ReplaceElementAt((void*)PR_FALSE, mSelectedIndex);
+          mSelectedIndex = i;
+          SetContentSelected(i, PR_TRUE);
         }
       }
     }
@@ -2330,6 +2367,119 @@ nsListControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex)
   return NS_OK;
 }
 
+#ifdef FIX_FOR_BUG_50376
+//-------------------------------------------------------------------
+nsresult nsListControlFrame::GetPresStateAndValueArray(nsISupportsArray ** aSuppArray)
+{
+  // Basically we need to check for and/or create
+  // both the PresState and the Supports Array
+  // There may already be a no PresState and no Supports Array
+  // or there may be PresState and no Supports Array
+  // or there may be both
+
+  // So assume we need to create the supports array and 
+  //flip it off if we don't
+  PRBool createSupportsArray = PR_TRUE;
+
+  nsresult res = NS_ERROR_FAILURE;
+  if (mPresState) {
+    nsCOMPtr<nsISupports> supp;
+    mPresState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), getter_AddRefs(supp));
+    if (supp) {
+      res = supp->QueryInterface(NS_GET_IID(nsISupportsArray), (void**)aSuppArray);
+      if (NS_FAILED(res)) {
+        return res;
+      }
+      createSupportsArray = PR_FALSE;
+    }
+  } else {
+    NS_NewPresState(getter_AddRefs(mPresState));
+  }
+
+  if (createSupportsArray) {
+    res = NS_NewISupportsArray(aSuppArray);
+    if (NS_SUCCEEDED(res)) {
+      res = mPresState->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), *aSuppArray);
+    }
+  }
+  return res;
+}
+
+//-------------------------------------------------------------------
+nsresult nsListControlFrame::SetSelectionInPresState(PRInt32 aIndex, PRBool aValue)
+{
+  // if there is no PresState and we ned to remove it
+  // from the PresState, then there is nothing to do
+  if (!mPresState && !aValue) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupportsArray> suppArray;
+  nsresult res = GetPresStateAndValueArray(getter_AddRefs(suppArray));
+
+  if (NS_FAILED(res) || !suppArray)
+    return res;
+
+  if (aValue) {
+    PRUint32 count;
+    suppArray->Count(&count);
+    return SetOptionIntoPresState(suppArray, aIndex, count);
+  } else {
+    return RemoveOptionFromPresState(suppArray, aIndex);
+  }
+
+}
+
+//-------------------------------------------------------------------
+nsresult nsListControlFrame::RemoveOptionFromPresState(nsISupportsArray * aSuppArray, 
+                                                       PRInt32            aIndex)
+{
+  NS_ENSURE_ARG_POINTER(aSuppArray);
+  nsresult res = NS_ERROR_FAILURE;
+  PRUint32 count;
+  aSuppArray->Count(&count);
+  nsCOMPtr<nsISupportsPRInt32> thisVal;
+  for (PRUint32 i=0; i<count; i++) {
+    nsCOMPtr<nsISupports> suppval = getter_AddRefs(aSuppArray->ElementAt(i));
+    thisVal = do_QueryInterface(suppval);
+    if (thisVal) {
+      PRInt32 optIndex;
+      res = thisVal->GetData(&optIndex);
+      if (NS_SUCCEEDED(res)) {
+        if (optIndex == aIndex) {
+          aSuppArray->RemoveElementAt(i);
+          return NS_OK;
+        }
+      }
+    } else {
+      res = NS_ERROR_UNEXPECTED;
+    }
+    if (NS_FAILED(res)) break;
+  }
+  return res;
+}
+
+//-------------------------------------------------------------------
+nsresult nsListControlFrame::SetOptionIntoPresState(nsISupportsArray * aSuppArray, 
+                                                    PRInt32            aIndex, 
+                                                    PRInt32            anItemNum)
+{
+  NS_ENSURE_ARG_POINTER(aSuppArray);
+  nsCOMPtr<nsISupportsPRInt32> thisVal;
+  nsresult res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+	                 nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
+  if (NS_SUCCEEDED(res) && thisVal) {
+    res = thisVal->SetData(aIndex);
+	  if (NS_SUCCEEDED(res)) {
+      PRBool okay = aSuppArray->InsertElementAt((nsISupports *)thisVal, anItemNum);
+	    if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
+    }
+	}
+  return res;
+}
+
+#endif // FIX_FOR_BUG_50376
+
 //---------------------------------------------------------
 // Select the specified item in the listbox using control logic.
 // If it a single selection listbox the previous selection will be
@@ -2337,6 +2487,12 @@ nsListControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 NS_IMETHODIMP
 nsListControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
 {
+#ifdef FIX_FOR_BUG_50376
+  if (!mIsAllFramesHere && !mHasBeenInitialized) {
+    return SetSelectionInPresState(aIndex, aValue);
+  }
+#endif // FIX_FOR_BUG_50376
+
   PRBool multiple;
   nsresult rv = GetMultiple(&multiple);
   if (NS_SUCCEEDED(rv)) {
@@ -2688,10 +2844,12 @@ nsListControlFrame::AboutToDropDown()
 
 //---------------------------------------------------------
 // We are about to be rolledup from the outside (ComboboxFrame)
-// this is a "cancelled" action not a selected action
 NS_IMETHODIMP 
 nsListControlFrame::AboutToRollup()
 {
+  // XXX By uncommenting this line below the "act" of rolling up
+  // will reset the the contents of the combobox to it's original contents
+  // (i.e. the contents before it was dropped down
   ResetSelectedItem();
   return NS_OK;
 }
@@ -2824,6 +2982,9 @@ void nsListControlFrame::ResetSelectedItem()
 {  
   if (mIsAllFramesHere) {
     ToggleSelected(mSelectedIndexWhenPoppedDown);  
+    if (IsInDropDownMode() == PR_TRUE) {
+      mComboboxFrame->ListWasSelected(mPresContext, PR_TRUE); 
+    }
   }
 }
 
@@ -2862,7 +3023,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   // if a right button click is on the combobox itself
   // or on the select when in listbox mode, then let the click through
   if (!IsLeftButton(aMouseEvent)) {
-    if (IsInDropDownMode()) {
+    if (IsInDropDownMode() == PR_TRUE) {
       if (!IsClickingInCombobox(aMouseEvent)) {
         aMouseEvent->PreventDefault();
         aMouseEvent->PreventCapture();
@@ -2887,14 +3048,15 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   PRBool optionIsDisabled;
   if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
     if (optionIsDisabled) {
-      if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+      if (IsInDropDownMode() == PR_TRUE) {
         ResetSelectedItem();
-        mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE); 
-      } 
+      } else {
+        SetContentSelected(mSelectedIndex, PR_FALSE);
+        mSelectedIndex = kNothingSelected;
+      }
       REFLOW_DEBUG_MSG(">>>>>> Option is disabled");
       mButtonDown = PR_FALSE;
       CaptureMouseEvents(mPresContext, PR_FALSE);
-      SetContentSelected(mSelectedIndex, PR_FALSE);
       return NS_OK;
     }
   }
@@ -3165,7 +3327,7 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
   NS_ASSERTION(aMouseEvent != nsnull, "aMouseEvent is null.");
   //REFLOW_DEBUG_MSG("MouseMove\n");
 
-  if (mComboboxFrame) { // Synonym for IsInDropDownMode()
+  if (IsInDropDownMode() == PR_TRUE) { 
     PRBool isDroppedDown = PR_FALSE;
     mComboboxFrame->IsDroppedDown(&isDroppedDown);
     if (isDroppedDown) {
@@ -3198,7 +3360,7 @@ nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
   NS_ASSERTION(aMouseEvent != nsnull, "aMouseEvent is null.");
   //REFLOW_DEBUG_MSG("DragMove\n");
 
-  if (!mComboboxFrame) { // Synonym for IsInDropDownMode()
+  if (IsInDropDownMode() == PR_FALSE) { 
     // check to make sure we are a mulitple select list
     PRBool multipleSelections = PR_FALSE;
     GetMultiple(&multipleSelections);
@@ -3477,9 +3639,26 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     PRBool isAlt     = PR_FALSE;
     PRBool isMeta    = PR_FALSE;
     keyEvent->GetCtrlKey(&isControl);
-    keyEvent->GetAltKey(&isAlt);
     keyEvent->GetMetaKey(&isMeta);
-    if (isControl || isAlt || isMeta) {
+    if (isControl || isMeta) {
+      return NS_OK;
+    }
+
+    keyEvent->GetAltKey(&isAlt);
+    // Fix for Bug 62425
+    if (isAlt) {
+#ifdef FIX_FOR_BUG_62425
+      if (code == nsIDOMKeyEvent::DOM_VK_UP || code == nsIDOMKeyEvent::DOM_VK_DOWN) {
+        if (IsInDropDownMode() == PR_TRUE) {
+          PRBool isDroppedDown;
+          mComboboxFrame->IsDroppedDown(&isDroppedDown);
+          mComboboxFrame->ShowDropDown(!isDroppedDown);
+          aKeyEvent->PreventDefault();
+          aKeyEvent->PreventCapture();
+          aKeyEvent->PreventBubble();
+        }
+      }
+#endif
       return NS_OK;
     }
 
@@ -3543,9 +3722,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
     case nsIDOMKeyEvent::DOM_VK_RETURN: {
       if (mComboboxFrame != nsnull) {
-        PRBool isDroppedDown;
-        mComboboxFrame->IsDroppedDown(&isDroppedDown);
-        if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+        if (IsInDropDownMode() == PR_TRUE) {
+          PRBool isDroppedDown;
+          mComboboxFrame->IsDroppedDown(&isDroppedDown);
           mComboboxFrame->ListWasSelected(mPresContext, isDroppedDown);
         } else {
 	        UpdateSelection(PR_TRUE, PR_FALSE, mContent);
@@ -3554,9 +3733,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_ESCAPE: {
-      if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+      if (IsInDropDownMode() == PR_TRUE) {
         ResetSelectedItem();
-        mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE); 
       } 
       } break;
 
@@ -3600,6 +3778,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
+      code = (PRUint32)nsCRT::ToLower((PRUnichar)code);
       PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1) % numOptions;
       PRInt32 startedAtIndex    = selectedIndex;
       PRBool  loopedAround  = PR_FALSE;
@@ -3665,7 +3844,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     // XXX - Are we cover up a problem here???
     // Why aren't they getting flushed each time?
     // because this isn't needed for Gfx
-    if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+    if (IsInDropDownMode() == PR_TRUE) {
       nsCOMPtr<nsIPresShell> presShell;
       mPresContext->GetShell(getter_AddRefs(presShell));
       presShell->FlushPendingNotifications();
@@ -3704,6 +3883,9 @@ nsListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresState
       PRBool selected = PR_FALSE;
       res = GetOptionSelected(i, &selected);
       if (NS_SUCCEEDED(res) && selected) {
+#ifdef FIX_FOR_BUG_50376 
+        res = SetOptionIntoPresState(value, i, j++);
+#else
         nsCOMPtr<nsISupportsPRInt32> thisVal;
         res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
 	                       nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
@@ -3714,6 +3896,7 @@ nsListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresState
 	          if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
           }
 	      }
+#endif
       }
       if (!NS_SUCCEEDED(res)) break;
     }
