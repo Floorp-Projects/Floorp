@@ -2683,7 +2683,6 @@ nsMsgComposeAndSend::DeliverMessage()
         {
           Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, printfString);
           PR_FREEIF(printfString);
-          NotifyListenersOnStopCopy(NS_ERROR_FAILURE);
           return NS_ERROR_FAILURE;
         }
         else
@@ -3067,20 +3066,6 @@ nsMsgComposeAndSend::DoFcc()
     // If we hit here, the copy operation FAILED and we should at least tell the
     // user that it did fail but the send operation has already succeeded.
     //
-    PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
-
-    nsXPIDLString eMsg; 
-    mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
-
-    Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
-
-    if (mGUINotificationEnabled)
-    {
-      nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
-      if (!oopsGiveMeBackTheComposeWindow)
-    	  rv = NS_OK;
-    }
-
     NotifyListenersOnStopCopy(rv);
   }
 
@@ -3346,6 +3331,25 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
       }
       else
         return NS_OK;
+    }
+  }
+  else if (NS_FAILED(aStatus))
+  {
+    //
+    // If we hit here, the ASYNC copy operation FAILED and we should at least tell the
+    // user that it did fail but the send operation has already succeeded.
+    //
+    PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
+
+    nsXPIDLString eMsg; 
+    mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
+    Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
+
+    if (mGUINotificationEnabled)
+    {
+      nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
+      if (!oopsGiveMeBackTheComposeWindow)
+    	  aStatus = NS_OK;
     }
   }
 
