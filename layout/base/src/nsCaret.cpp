@@ -589,14 +589,14 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 
 		// Avoid view redraw problems by making sure the
 		// caret doesn't hang outside the right edge of
-		// the frame. This insures that the caret gets
+		// the frame. This ensures that the caret gets
 		// erased properly if the frame's right edge gets
 		// invalidated.
 
 		nscoord cX = caretRect.x + caretRect.width;
 		nscoord fX = frameRect.x + frameRect.width;
 
-		if (cX > fX)
+		if (caretRect.x <= fX && cX > fX)
 		{
 			caretRect.x -= cX - fX;
 

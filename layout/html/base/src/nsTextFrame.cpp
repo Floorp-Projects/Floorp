@@ -2159,6 +2159,18 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   GetWidth(*inRendContext, ts,
            paintBuffer.mBuffer, ip[inOffset]-mContentOffset,
            &width);
+
+  if (inOffset > textLength && (TEXT_TRIMMED_WS & mState)){
+    //
+    // Offset must be after a space that has
+    // been trimmed off the end of the frame.
+    // Add the width of the trimmed space back
+    // to the total width, so the caret appears
+    // in the proper place!
+    //
+    width += ts.mSpaceWidth;
+  }
+
   outPoint->x = width;
   outPoint->y = 0;
 
