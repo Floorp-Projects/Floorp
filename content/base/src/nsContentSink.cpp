@@ -238,9 +238,14 @@ nsContentSink::ScriptAvailable(nsresult aResult,
     mScriptElements.RemoveObjectAt(count - 1);
 
     if (mParser && aWasPending && aResult != NS_BINDING_ABORTED) {
-      // Loading external script failed!. So, resume
-      // parsing since the parser got blocked when loading
-      // external script. - Ref. Bug: 94903
+      // Loading external script failed!. So, resume parsing since the parser
+      // got blocked when loading external script. See
+      // http://bugzilla.mozilla.org/show_bug.cgi?id=94903.
+      //
+      // XXX We don't resume parsing if we get NS_BINDING_ABORTED from the
+      //     script load, assuming that that error code means that the user
+      //     stopped the load through some action (like clicking a link). See
+      //     http://bugzilla.mozilla.org/show_bug.cgi?id=243392.
       mParser->ContinueParsing();
     }
   }
