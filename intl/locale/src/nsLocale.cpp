@@ -42,6 +42,7 @@ nsLocale::nsLocale(nsString** catagoryList,nsString** valueList, PRUint32 count)
 	PRUint32	i;
 	nsString*	key, *value;
 
+  NS_INIT_REFCNT();
 
 	fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
 		&nsLocale::Hash_CompareNSString,&nsLocale::Hash_CompareNSString,NULL,NULL);
