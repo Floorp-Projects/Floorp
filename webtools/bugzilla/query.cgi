@@ -288,7 +288,7 @@ if (Param('usetargetmilestone')) {
     $vars->{'target_milestone'} = \@milestones;
 }
 
-$vars->{'have_keywords'} = scalar(%::legal_keywords);
+$vars->{'have_keywords'} = scalar(@::legal_keywords);
 
 push @::legal_resolution, "---"; # Oy, what a hack.
 shift @::legal_resolution; 
