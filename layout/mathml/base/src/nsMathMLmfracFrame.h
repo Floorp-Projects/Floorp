@@ -72,11 +72,32 @@ public:
   friend nsresult NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
+  SetAdditionalStyleContext(PRInt32          aIndex, 
+                            nsIStyleContext* aStyleContext);
+  NS_IMETHOD
+  GetAdditionalStyleContext(PRInt32           aIndex, 
+                            nsIStyleContext** aStyleContext) const;
+
+  NS_IMETHOD
+  AttributeChanged(nsIPresContext* aPresContext,
+                   nsIContent*     aChild,
+                   PRInt32         aNameSpaceID,
+                   nsIAtom*        aAttribute,
+                   PRInt32         aModType, 
+                   PRInt32         aHint);
+
+  NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD
+  Reflow(nsIPresContext*          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus);
 
   NS_IMETHOD
   Place(nsIPresContext*      aPresContext,
@@ -113,6 +134,12 @@ public:
        NS_MATHML_COMPRESSED);
     // check whether or not this is an embellished operator
     EmbellishOperator();
+    // even when embellished, we need to record that <mfrac> won't fire
+    // Stretch() on its embellished child
+    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+    // break the embellished hierarchy to stop propagating the stretching
+    // process, but keep access to mEmbellishData.core for convenience
+    mEmbellishData.firstChild = nsnull;
     return rv;
   }
 
@@ -129,8 +156,23 @@ protected:
   virtual ~nsMathMLmfracFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
-  
+
+  PRBool
+  IsBevelled()
+  {
+    nsAutoString value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == 
+        GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::bevelled_, value)) {
+      if (value.Equals(NS_LITERAL_STRING("true"))) {
+        return PR_TRUE;
+      }
+    }
+    return PR_FALSE;
+  }
+
   nsRect  mLineRect;
+  nsMathMLChar* mSlashChar;
 };
 
 #endif /* nsMathMLmfracFrame_h___ */

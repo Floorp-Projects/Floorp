@@ -303,7 +303,7 @@ struct nsEmbellishData {
   nsIFrame* firstChild; // handy pointer on our embellished child 
   nsIFrame* core; // pointer on the mo frame at the core of the embellished hierarchy
   nsStretchDirection direction;
-  float leftSpace, rightSpace;
+  nscoord leftSpace, rightSpace;
 
   nsEmbellishData()
   {
@@ -311,7 +311,7 @@ struct nsEmbellishData {
     firstChild = nsnull;
     core = nsnull;
     direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    leftSpace = rightSpace = 0.0f;
+    leftSpace = rightSpace = 0;
   }
 };
 

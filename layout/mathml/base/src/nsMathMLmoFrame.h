@@ -95,8 +95,6 @@ protected:
   nsMathMLChar     mMathMLChar; // Here is the MathMLChar that will deal with the operator.
 
   nsOperatorFlags  mFlags;
-  float            mLeftSpace;
-  float            mRightSpace;
   float            mMinSize;
   float            mMaxSize;
 };
