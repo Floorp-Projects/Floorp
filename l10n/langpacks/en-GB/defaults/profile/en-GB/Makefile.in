@@ -31,6 +31,7 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 EXPORT_RESOURCE = \
 		$(srcdir)/bookmarks.html \
 		$(srcdir)/panels.rdf \
+		$(srcdir)/localstore.rdf \
 		$(srcdir)/search.rdf \
 		$(NULL)
 

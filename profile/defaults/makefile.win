@@ -27,6 +27,7 @@ include <$(DEPTH)\config\rules.mak>
 FILES=\
         bookmarks.html			\
         panels.rdf                      \
+        localstore.rdf                      \
         search.rdf			\
 		mimeTypes.rdf		\
         $(NULL)
