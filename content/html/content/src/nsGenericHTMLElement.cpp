@@ -1102,7 +1102,6 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
               NS_RELEASE(stateManager);
             }
             NS_RELEASE(handler);
-            *aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
         }
         break;

@@ -53,6 +53,7 @@
 #include "nsIFrameSelection.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
+#include "nsHTMLAtoms.h"
 
 #include "nsFrameTraversal.h"
 #include "nsCOMPtr.h"
@@ -1007,15 +1008,44 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
-  // check whether style allows selection
-  // if not, don't tell selection the mouse event even occured.
+
   nsresult rv;
-  
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  if (!shell)
+    return NS_ERROR_FAILURE;
+
+  // if we are in Navigator and the click is in a link, we don't want to start
+  // selection because we don't want to interfere with a potential drag of said
+  // link and steal all its glory.
+  PRBool isEditor = PR_FALSE;
+  shell->GetDisplayNonTextSelection ( &isEditor );
+  if ( !isEditor ) {
+    nsCOMPtr<nsIContent> content;
+    GetContent ( getter_AddRefs(content) );
+    if ( content ) {
+      do {
+        // are we an anchor? If so, bail out now!
+        nsCOMPtr<nsIAtom> tag;
+        content->GetTag(*getter_AddRefs(tag));
+        if ( tag == nsHTMLAtoms::a )
+          return NS_OK;
+        
+        // now try the parent
+        nsIContent* parent;
+        content->GetParent(parent);
+        content = dont_AddRef(parent);
+      } while ( content );   
+    }
+  } // if browser, not editor
+
+  // check whether style allows selection
+  // if not, don't tell selection the mouse event even occured.  
   PRBool  selectable;
   PRUint8 selectStyle;
   rv = IsSelectable(&selectable, &selectStyle);
   if (NS_FAILED(rv)) return rv;
-
+  
   // check for select: none
   if (!selectable)
     return NS_OK;
@@ -1039,15 +1069,6 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   }
 
   //get the frame selection from sel controller
-
-  nsCOMPtr<nsIPresShell> shell;
-  rv = aPresContext->GetShell(getter_AddRefs(shell));
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (!shell)
-    return NS_ERROR_FAILURE;
 
   // nsFrameState  state;
   // GetFrameState(&state);
