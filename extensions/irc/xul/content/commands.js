@@ -62,6 +62,7 @@ function addCommands(commandObject)
     add ("kick", "onInputKick");
     add ("leave", "onInputLeave");
     add ("list", "onInputList");
+    add ("log", "onInputLog");
     add ("me", "onInputMe");
     add ("msg", "onInputMsg");
     add ("name", "onInputName");

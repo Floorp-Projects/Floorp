@@ -55,6 +55,7 @@
     <script src="chrome://chatzilla/content/lib/js/command-manager.js"/>
     <script src="chrome://chatzilla/content/lib/js/irc.js"/>
     <script src="chrome://chatzilla/content/lib/js/irc-debug.js"/>
+    <script src="chrome://chatzilla/content/lib/js/file-utils.js"/>
     <script src="chrome://chatzilla/content/lib/xul/munger.js"/>
 
     <script src="chrome://chatzilla/content/commands.js"/>

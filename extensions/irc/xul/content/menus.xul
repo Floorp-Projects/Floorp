@@ -55,7 +55,7 @@
       <command id="cmd_prev_view" oncommand="cycleView(-1);"/>
 
       <!-- File commands -->
-      <command id="cmd_close" oncommand="window.close();"/>
+      <command id="cmd_closewin" oncommand="window.close();"/>
       <command id="cmd_quit"/>
 
       <!-- File:Options commands -->
@@ -105,9 +105,11 @@
       <key id="key_prev_view" observes="cmd_prev_view"
         modifiers="control" keycode="VK_PAGE_UP"/>
 
-      <!-- File:Options keys -->
+      <!-- File keys -->
       <key id="key_debug" observes="cmd_debug"
         modifiers="accel shift" key="D"/>
+      <key id="key_closewin" observes="cmd_closewin"
+        modifiers="accel shift" key="W"/>
 
       <!-- Edit Keys -->
       <key id="key_undo"/>
@@ -179,7 +181,12 @@
             </menu>
   
             <menuseparator/>
-            <menuitem id="menu_close"/>
+            <menuitem label="&DeleteViewCmd.label;"
+              accesskey="&DeleteViewCmd.aKey;"
+              observes="cmd_deleteview" key="key_deleteview"/>
+            <menuitem label="&CloseCmd.label;"
+              accesskey="&CloseCmd.aKey;"
+              observes="cmd_closewin" key="key_closewin"/>
           </menupopup>
         </menu>
 

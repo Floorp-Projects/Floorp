@@ -88,6 +88,10 @@
 <!ENTITY global.nickCompleteStr.label "Nickname completion string:">
 <!ENTITY global.nickCompleteStr.accesskey "k">
 <!ENTITY global.nickCompleteStr.desc "This is appended to a nickname when tab-completed as the first word.">
+<!ENTITY global.Charset.grouplabel         "Character Coding">
+<!ENTITY global.DefaultCharset.label       "Default Character Coding:">
+<!ENTITY global.DefaultCharset.accesskey   "d">
+<!-- LOCALIZATION NOTE  Charset Coding Preferences Dialog: Do NOT localize the terms "en-bz, ar-jo"  -->
 <!ENTITY interface.window.title "Interface">
 
 <!ENTITY tabs.title "Tab Options">
@@ -134,6 +138,9 @@
 
 <!ENTITY stalkWords.title "Stalk Words">
 <!ENTITY stalkWords.accesskey "S">
+<!ENTITY stalkWholeWords.label "Stalk whole words only">
+<!ENTITY stalkWholeWords.tooltip "Do not match stalk words as substrings of larger words">
+<!ENTITY stalkWholeWords.accesskey "w">
 
 <!ENTITY stalkWords.label1 "When ChatZilla sees an 'important' message, it will highlight the line and the channel's tab. If you have 'aggressive notify' enabled, ChatZilla will also use an OS-dependent method to grab your attention.">
 <!ENTITY stalkWords.label2 "Your nickname is always considered 'important', but you can add more words; just add them to the list below.">

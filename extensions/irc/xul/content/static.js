@@ -24,9 +24,19 @@
  */
 
 if (DEBUG)
-    dd = function (m) { dump ("-*- chatzilla: " + m + "\n"); }
+{
+    dd = function (m) {
+             dump ("-*- chatzilla: " + m + "\n");
+             // messages that start with ** are warnings, so we'll
+             // show a stack trace here too.
+             if (m.search(/^\*\*/) == 0)
+                 dump(getStackTrace() + "\n");
+         };
+}
 else
+{
     dd = function (){};
+}
 
 var client = new Object();
 
@@ -36,7 +46,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg("defaultNick");
 
-client.version = "0.8.31";
+client.version = "0.8.34";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -297,7 +307,7 @@ function initStatic()
 
     client.statusElement = document.getElementById ("status-text");
     client.defaultStatus = getMsg ("defaultStatus");
-    
+
     client.display (getMsg("welcome"), "HELLO");
     setCurrentObject (client);
 
@@ -306,6 +316,8 @@ function initStatic()
      
     setInterval ("onNotifyTimeout()", client.NOTIFY_TIMEOUT);
     
+    if (getBoolPref("logging", false, client.localPrefs))
+       client.startLogging(client);
 }
 
 function processStartupURLs()
@@ -482,6 +494,9 @@ function initHost(obj)
     obj.rdf.initTree("user-list");
     obj.rdf.setTreeRoot("user-list", obj.rdf.resNullChan);
 
+    obj.localPrefs =
+        client.prefService.getBranch(obj.prefBranch.root +
+                                     "viewList.client.");
 }
 
 function insertLink (matchText, containerTag)
@@ -806,15 +821,34 @@ function insertHyphenatedWord (longWord, containerTag)
     }
 }
 
-function msgIsImportant (msg, sourceNick, myNick)
-{    
-    var sv = "(" + myNick + ")";
-    if (client.stalkingVictims.length > 0)
-        sv += "|(" + client.stalkingVictims.join(")|(") + ")";
+function updateStalkExpression(network)
+{
+    function escapeChar(ch)
+    {
+        return "\\" + ch;
+    };
     
-    var str = "(^|[\\W\\s])" + sv + "([\\W\\s]|$)";
-    var re = new RegExp(str, "i");
-    if (msg.search(re) != -1 || sourceNick && sourceNick.search(re) != -1)
+    list = client.stalkingVictims;
+    ary = new Array();
+
+    ary.push(network.primServ.me.nick.replace(/[^\w\d]/g, escapeChar));
+    
+    for (var i = 0; i < list.length; ++i)
+        ary.push(list[i].replace(/[^\w\d]/g, escapeChar));
+
+    var re;
+    if (client.STALK_WHOLE_WORDS)
+        re = "(^|[\\W\\s])((" + ary.join(")|(") + "))([\\W\\s]|$)";
+    else
+        re = "(" + ary.join(")|(") + ")";
+
+    network.stalkExpression = new RegExp(re, "i");
+}
+        
+function msgIsImportant (msg, sourceNick, network)
+{
+    re = network.stalkExpression;
+    if (msg.search(re) != -1 || sourceNick && sourceNick.search(re) == 0)
         return true;
 
     return false;    
@@ -869,7 +903,12 @@ function playSound (file)
         var uri = Components.classes["@mozilla.org/network/standard-url;1"];
         uri = uri.createInstance(Components.interfaces.nsIURI);
         uri.spec = file;
-        client.sound.play (uri);
+        try
+        {
+            client.sound.play (uri);
+        } catch (ex) {
+            // ignore exceptions from this pile of code.
+        }
     }
 }
 
@@ -949,7 +988,7 @@ function getMsg (msgName)
 
 function openQueryTab (server, nick)
 {    
-    var usr = server.addUser(nick.toLowerCase());
+    var usr = server.addUser(nick);
     if (!("messages" in usr))
         usr.displayHere (getMsg("cli_imsgMsg3", usr.properNick), "INFO");
     server.sendData ("WHO " + nick + "\n");
@@ -1190,8 +1229,9 @@ function joinChannel(e, namelist, key, charset)
 
         if (!("messages" in e.channel))
         {
-            this.display (getMsg("cli_ijoinMsg3", e.channel.unicodeName),
-                          "INFO");
+            e.channel.displayHere (getMsg("cli_ijoinMsg3",
+                                          e.channel.unicodeName),
+                                   "INFO");
         }
         setCurrentObject(e.channel);
     }
@@ -1971,6 +2011,52 @@ function notifyAttention (source)
     
 }
 
+function updateUserList()
+{
+    var node;
+    var sortDirection;
+
+    var colArray = ["usercol-op", "usercol-voice", "usercol-nick"];
+
+    for (var i = 0; i < colArray.length; i++)
+    {
+        node = document.getElementById(colArray[i]);
+	    if (!node)
+		    return false;
+        sortDirection = node.getAttribute("sortDirection");
+        if (sortDirection != "")
+            break;
+    }
+
+    sortUserList(node, sortDirection);
+}
+
+function sortUserList(node, sortDirection)
+{
+    const nsIXULSortService = Components.interfaces.nsIXULSortService;
+    const isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
+
+    var xulSortService =
+        Components.classes[isupports_uri].getService(nsIXULSortService);
+    if (!xulSortService)
+        return false;
+
+    var sortResource = node.getAttribute("resource");
+    try
+    {
+        if ("sort" in xulSortService)
+            xulSortService.sort(node, sortResource, sortDirection);
+        else
+            xulSortService.Sort(node, sortResource, sortDirection);
+        document.persist("user-list", "sortResource");
+        document.persist("user-list", "sortDirection");
+    }
+    catch(ex)
+    {
+        //dd("Exception calling xulSortService.sort()");
+    }
+}
+
 function getFrameForDOMWindow(window)
 {
     var frame;
@@ -2108,7 +2194,7 @@ function getTabForObject (source, create)
     {
         case "IRCChanUser":
         case "IRCUser":
-            name = source.nick;
+            name = source.properNick;
             break;
             
         case "IRCNetwork":
@@ -2303,6 +2389,9 @@ function cli_connet (netname, pass)
     
     var netobj = client.networks[netname];
 
+    if (getBoolPref("logging", false, netobj.localPrefs))
+       client.startLogging(netobj);
+
     if (!("messages" in netobj))
         netobj.displayHere (getMsg("cli_attachOpened", netname), "INFO");
     setCurrentObject(netobj);
@@ -2435,6 +2524,7 @@ function __display(message, msgtype, sourceObj, destObj)
 {            
     var canMergeData = false;
     var canCollapseRow = false;
+    var logText = "";
 
     function setAttribs (obj, c, attrs)
     {
@@ -2464,7 +2554,7 @@ function __display(message, msgtype, sourceObj, destObj)
     {
         me = o.server.me;    /* get the object representing the user          */
     }
-    if (sourceObj == "ME!") sourceObj = me;   /* if the caller to passes "ME!"*/
+    if (sourceObj == "ME!") sourceObj = me;   /* if the caller passes "ME!"   */
     if (destObj == "ME!") destObj = me;       /* substitute the actual object */
 
     var fromType = (sourceObj && sourceObj.TYPE) ? sourceObj.TYPE : "unk";
@@ -2500,6 +2590,10 @@ function __display(message, msgtype, sourceObj, destObj)
         mins = "0" + mins;
     var statusString;
     
+    var timeStamp = getMsg("cli_dateString", [d.getMonth() + 1, d.getDate(),
+                                              d.getHours(), mins]);
+    logText = "[" + timeStamp + "] ";
+
     if (fromUser)
     {
         statusString =
@@ -2546,12 +2640,23 @@ function __display(message, msgtype, sourceObj, destObj)
             {
                 getAttention = true;
                 this.defaultCompletion = "/msg " + nick + " ";
+                if (msgtype == "ACTION")
+                {
+                    logText += "*" + nick + " ";
+                }
+                else
+                {
+                    if (this.TYPE == "IRCUser")
+                        logText += "<" + nick + "> ";
+                    else
+                        logText += "*" + nick + "* ";
+                }
             }
             else /* msg from user to channel */
             {
                 if (typeof (message == "string") && me)
                 {
-                    isImportant = msgIsImportant (message, nick, me.nick);
+                    isImportant = msgIsImportant (message, nick, o.network);
                     if (isImportant)
                     {
                         this.defaultCompletion = nick +
@@ -2560,18 +2665,35 @@ function __display(message, msgtype, sourceObj, destObj)
                             playSounds(client.STALK_BEEP);
                     }                        
                 }
+                if (msgtype == "ACTION")
+                    logText += "*" + nick + " ";
+                else
+                    logText += "<" + nick + "> ";
             }
         }
         else if (toType == "IRCUser") /* msg from me to user */
         {
             if (this.TYPE == "IRCUser")
+            {
                 nick    = sourceObj.properNick;
+                if (msgtype == "ACTION")
+                    logText += "*" + nick + " ";
+                else
+                    logText += "<" + nick + "> ";
+            }
             else
+            {
                 nick    = destObj.properNick;
+                logText += ">" + nick + "< ";
+            }
         }
         else /* msg from me to channel */
         {
             nick = sourceObj.properNick;
+            if (msgtype == "ACTION")
+                logText += "*" + nick + " ";
+            else
+                logText += "<" + nick + "> ";
         }
         
         if (!("mark" in this))
@@ -2608,7 +2730,6 @@ function __display(message, msgtype, sourceObj, destObj)
         msgRow.appendChild (msgSource);
         canMergeData = client.COLLAPSE_MSGS;
         canCollapseRow = client.COLLAPSE_ROWS;
-
     }
     else
     {
@@ -2632,6 +2753,7 @@ function __display(message, msgtype, sourceObj, destObj)
 
         msgType.appendChild (newInlineText (code));
         msgRow.appendChild (msgType);
+        logText += code + " ";
     }
              
     if (message)
@@ -2639,7 +2761,8 @@ function __display(message, msgtype, sourceObj, destObj)
         var msgData = document.createElementNS("http://www.w3.org/1999/xhtml",
                                                "html:td");
         setAttribs (msgData, "msg-data", {statusText: statusString, 
-                                          colspan: client.INITIAL_COLSPAN});
+                                          colspan: client.INITIAL_COLSPAN,
+                                          timeStamp: timeStamp});
         if (isImportant)
             msgData.setAttribute ("important", "true");
 
@@ -2649,9 +2772,13 @@ function __display(message, msgtype, sourceObj, destObj)
         if (typeof message == "string")
         {
             msgData.appendChild (stringToMsg (message, this));
+            logText += message;
         }
         else
+        {
             msgData.appendChild (message);
+            logText += message.innerHTML.replace(/<[^<]*>/g, "");
+        }
 
         msgRow.appendChild (msgData);
     }
@@ -2708,6 +2835,22 @@ function __display(message, msgtype, sourceObj, destObj)
         if ("network" in o && o.network != this)
             o.network.displayHere("{" + this.name + "} " + message, msgtype,
                                   sourceObj, destObj);
+    }
+
+    if (("logging" in this) && this.logging)
+    {
+        try
+        {
+            this.logFile.write(logText + "\n");
+        }
+        catch (ex)
+        {
+            this.logging = false;
+            this.localPrefs.clearUserPref("logging");
+            this.displayHere(getMsg("cli_ilogMsg7", this.logFile.path),
+                             "ERROR");
+            this.logFile.close();
+        }
     }
 }
 

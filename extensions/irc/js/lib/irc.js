@@ -90,6 +90,8 @@ function CIRCNetwork (name, serverList, eventPump)
     this.serverList = serverList;
     this.eventPump = eventPump;
     this.servers = new Object();
+    if ("onInit" in this)
+        this.onInit();
 
 }
 
@@ -120,7 +122,7 @@ function net_geturl ()
 }
 
 CIRCNetwork.prototype.connect =
-function net_conenct()
+function net_connect()
 {
     if ("primServ" in this && this.primServ.connection.isConnected)
         return;
@@ -234,7 +236,7 @@ function net_doconnect(e)
  * What to do when the client connects to it's primary server
  */
 CIRCNetwork.prototype.onConnect = 
-function net_connect (e)
+function net_onconnect (e)
 {
     this.primServ = e.server;
     this.primServ.login (this.INITIAL_NICK, this.INITIAL_NAME,
@@ -285,6 +287,8 @@ function CIRCServer (parent, connection, password)
                                                 "onPoll"));
 
     parent.servers[serverName] = s;
+    if ("onInit" in s)
+        s.onInit();
     return s;
     
 }
@@ -801,7 +805,7 @@ function serv_topic (e)
 {
 
     e.channel = new CIRCChannel (this, e.params[1]);
-    e.channel.topicBy = e.user.nick;
+    e.channel.topicBy = e.user.properNick;
     e.channel.topicDate = new Date();
     e.channel.topic = toUnicode(e.params[2], e.channel.charset);
     e.destObject = e.channel;
@@ -1697,6 +1701,8 @@ function CIRCChannel (parent, name, charset)
     this.usersStable = true;
     
     parent.channels[name] = this;
+    if ("onInit" in this)
+        this.onInit();
 
     return this;
     
@@ -2063,6 +2069,8 @@ function CIRCUser (parent, nick, name, host)
     this.name = name;
     this.host = host;
     parent.users[nick] = this;
+    if ("onInit" in this)
+        this.onInit();
 
     return this;
 

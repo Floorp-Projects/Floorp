@@ -78,8 +78,8 @@ function onInputFocus ()
 function onLoad()
 {
     
-    initHost(client);
     initPrefs();
+    initHost(client);
     readPrefs();
     setClientOutput();
     initStatic();
@@ -573,7 +573,9 @@ function onDeleteView(view)
         }
         
     }
-    
+
+    if (view.TYPE == "IRCChannel" && view.active)
+        view.part();
 }
 
 function onClearCurrentView()
@@ -590,9 +592,6 @@ function onClearCurrentView()
 
 function onSortCol(sortColName)
 {
-    const nsIXULSortService = Components.interfaces.nsIXULSortService;
-    const isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
-    
     var node = document.getElementById(sortColName);
     if (!node)
         return false;
@@ -603,28 +602,10 @@ function onSortCol(sortColName)
     
     if (sortDirection == "ascending")
         sortDirection = "descending";
-    else if (sortDirection == "descending")
-        sortDirection = "natural";
     else
         sortDirection = "ascending";
     
-    var xulSortService =
-        Components.classes[isupports_uri].getService(nsIXULSortService);
-    if (!xulSortService)
-        return false;
-    try
-    {
-        if ("sort" in xulSortService)
-            xulSortService.sort(node, sortResource, sortDirection);
-        else
-            xulSortService.Sort(node, sortResource, sortDirection);
-        document.persist("user-list", "sortResource");
-        document.persist("user-list", "sortDirection");
-    }
-    catch(ex)
-    {
-            //dd("Exception calling xulSortService.sort()");
-    }
+    sortUserList(node, sortDirection);
     
     return false;
 }
@@ -735,7 +716,11 @@ function onInputKeyPress (e)
     switch (e.keyCode)
     {        
         case 9:  /* tab */
-            onTabCompleteRequest(e);
+    		if (e.ctrlKey || e.metaKey)
+                cycleView(e.shiftKey ? -1: 1);
+            else
+                onTabCompleteRequest(e);
+
             e.preventDefault();
             break;
 
@@ -904,7 +889,9 @@ function onWindowKeyPress (e)
     var code = Number (e.keyCode);
     var w;
     var newOfs;
-    
+    var userList = document.getElementById("user-list");
+    var elemFocused = document.commandDispatcher.focusedElement;
+
     switch (code)
     {
         case 112: /* F1 */
@@ -923,8 +910,11 @@ function onWindowKeyPress (e)
             break;
 
         case 33: /* pgup */
+            if (elemFocused == userList)
+                break;
+
             w = client.currentFrame;
-            newOfs = w.pageYOffset - (w.innerHeight / 2);
+            newOfs = w.pageYOffset - (w.innerHeight * 0.9);
             if (newOfs > 0)
                 w.scrollTo (w.pageXOffset, newOfs);
             else
@@ -933,8 +923,11 @@ function onWindowKeyPress (e)
             break;
             
         case 34: /* pgdn */
+            if (elemFocused == userList)
+                break;
+
             w = client.currentFrame;
-            newOfs = w.pageYOffset + (w.innerHeight / 2);
+            newOfs = w.pageYOffset + (w.innerHeight * 0.9);
             if (newOfs < (w.innerHeight + w.pageYOffset))
                 w.scrollTo (w.pageXOffset, newOfs);
             else
@@ -1835,10 +1828,10 @@ function cli_imsg (e)
     if (ary == null)
         return false;
 
-    var usr = e.network.primServ.addUser(ary[1].toLowerCase());
+    var usr = e.network.primServ.addUser(ary[1]);
 
     var msg = filterOutput(ary[2], "PRIVMSG", "ME!");
-    client.currentObject.display (msg, "PRIVMSG", "ME!", usr);
+    usr.display (msg, "PRIVMSG", "ME!", usr);
     usr.say (fromUnicode(ary[2], client.currentObject.charset));
 
     return true;
@@ -2571,6 +2564,12 @@ function cli_istalk (e)
     }
 
     client.stalkingVictims[client.stalkingVictims.length] = e.inputData;
+    for (var name in client.networks)
+    {
+        if ("stalkExpression" in client.networks[name])
+            updateStalkExpression(client.networks[name]);
+    }
+            
     client.currentObject.display(getMsg("cli_istalkMsg3",e.inputData), "STALK");
     return true;
 }
@@ -2592,8 +2591,108 @@ function cli_iunstalk ( e )
         }
     }
 
+    for (var name in client.networks)
+    {
+        if ("stalkExpression" in client.networks[name])
+            updateStalkExpression(client.networks[name]);
+    }
+
     client.currentObject.display(getMsg("cli_iunstalkMsg2", e.inputData),
                                  "UNSTALK");
+    return true;
+}
+
+client.startLogging =
+function cli_startlog (view)
+{
+    var dir = getSpecialDirectory("ProfD");
+    switch (view.TYPE)
+    {
+        case "IRCNetwork":
+            view.logFile = view.name.replace(/:/, ".") + ".log";
+            break;
+        case "IRCChannel":
+        case "IRCUser":
+            view.logFile = view.parent.parent.name.replace(/:/, ".") +
+                           "," + view.name + ".log";
+            break;
+        case "IRCClient":
+            view.logFile = "client.log";
+            break;
+        default:
+            view.displayHere(getMsg("cli_ilogMsg4"), "ERROR");
+            return;
+    }
+
+    view.logFile = view.logFile.replace(/[^\w\d.,#-_]/g, encodeChar);
+    dir.append(view.logFile);
+    view.logFile = dir.path;
+
+    try
+    {
+        view.logFile = fopen(view.logFile, ">>");
+    }
+    catch (ex)
+    {
+        view.displayHere(getMsg("cli_ilogMsg5", view.logFile), "ERROR");
+        return;
+    }
+
+    view.displayHere(getMsg("cli_ilogMsg6", view.logFile.path), "INFO");
+    try
+    {
+        view.logFile.write("Logging started at " + new Date() + "\n");
+    }
+    catch (ex)
+    {
+        view.displayHere(getMsg("cli_ilogMsg7", view.logFile.path),
+                         "ERROR");
+        view.logFile.close();
+        return;
+    }
+
+    view.logging = true;
+    view.localPrefs.setBoolPref("logging", true);
+}
+
+client.stopLogging =
+function cli_stoplog (view)
+{
+    if (view.logging)
+    {
+        view.localPrefs.clearUserPref("logging");
+        view.logFile.close();
+        view.logging = false;
+    }
+    view.displayHere(getMsg("cli_ilogMsg3"), "INFO");
+}
+
+client.onInputLog =
+function cli_ilog (e)
+{
+    var view = client.currentObject;
+
+    if (!e.inputData)
+    {
+        if (!view.logging)
+          view.displayHere(getMsg("cli_ilogMsg"), "INFO");
+        else
+          view.displayHere(getMsg("cli_ilogMsg2", view.logFile.path), "INFO");
+        return true;
+    }
+
+    if (e.inputData == "off")
+    {
+        client.stopLogging(view);
+    }
+    else if (e.inputData == "on")
+    {
+        client.startLogging(view);
+    }
+    else
+    {
+        return false;
+    }
     return true;
 }
 
@@ -2617,6 +2716,15 @@ function my_remfgraph (user)
     client.rdf.Unassert (this.getGraphResource(), client.rdf.resChanUser,
                          user.getGraphResource());
     
+}
+
+CIRCNetwork.prototype.onInit =
+function net_oninit ()
+{
+    var myBranch = this.name.replace(/[^\w\d]/g, encodeChar);
+    this.localPrefs =
+        client.prefService.getBranch(client.prefBranch.root + "viewList." +
+                                     myBranch + ".");
 }
 
 CIRCNetwork.prototype.onInfo =
@@ -2672,6 +2780,7 @@ function my_showtonet (e)
         case "001":
             updateTitle(this);
             updateNetwork (this);
+            updateStalkExpression(this);
             if (client.currentObject == this)
             {
                 var status = document.getElementById("offline-status");
@@ -2879,7 +2988,7 @@ function my_323 (e)
 CIRCNetwork.prototype.on322 = /* LIST reply */
 function my_listrply (e)
 {
-    if (!("list" in this))
+    if (!("list" in this) || !("done" in this.list))
         this.listInit();
     ++this.list.count;
     e.params[2] = toUnicode(e.params[2]);
@@ -3134,26 +3243,25 @@ function my_replyping (e)
 CIRCNetwork.prototype.onNick =
 function my_cnick (e)
 {
-
     if (userIsMe (e.user))
     {
         if (client.currentObject == this)
             this.displayHere (getMsg("my_cnickMsg", e.user.properNick),
                               "NICK", "ME!", e.user, this);
         updateNetwork();
+        updateStalkExpression(this);
     }
     else
+    {
         this.display (getMsg("my_cnickMsg2", [e.oldNick, e.user.properNick]),
                       "NICK", e.user, this);
-
+    }
 }
 
 CIRCNetwork.prototype.onPing =
 function my_netping (e)
 {
-
     updateNetwork (this);
-    
 }
 
 CIRCNetwork.prototype.onPong =
@@ -3162,6 +3270,19 @@ function my_netpong (e)
 
     updateNetwork (this);
     
+}
+
+CIRCChannel.prototype.onInit =
+function chan_oninit ()
+{
+    var myBranch = this.parent.parent.name + "," + this.name;
+    myBranch = myBranch.replace(/[^\w\d,]/g, encodeChar);
+    this.localPrefs =
+        client.prefService.getBranch(client.prefBranch.root + "viewList." +
+                                     myBranch + ".");
+
+    if (getBoolPref("logging", false, this.localPrefs))
+       client.startLogging(this);
 }
 
 CIRCChannel.prototype.onPrivmsg =
@@ -3318,7 +3439,7 @@ function my_cjoin (e)
     }
 
     this._addUserToGraph (e.user);
-    
+    updateUserList()
     updateChannel (e.channel);
     
 }
@@ -3433,7 +3554,7 @@ function my_cnick (e)
     */
 
     e.user.updateGraphResource();
-    
+    updateUserList();
 }
 
 CIRCChannel.prototype.onQuit =
@@ -3452,6 +3573,19 @@ function my_cquit (e)
 
     updateChannel (e.channel);
     
+}
+
+CIRCUser.prototype.onInit =
+function user_oninit ()
+{
+    var myBranch = this.parent.parent.name + "," + this.name;
+    myBranch = myBranch.replace(/[^\w\d,]/g, encodeChar);
+    this.localPrefs =
+        client.prefService.getBranch(client.prefBranch.root + "viewList." +
+                                     myBranch + ".");
+
+    if (getBoolPref("logging", false, this.localPrefs))
+       client.startLogging(this);
 }
 
 CIRCUser.prototype.onPrivmsg =

@@ -72,11 +72,11 @@
 <!ENTITY ClearViewCmd.label     "Clear View">
 <!ENTITY ClearViewCmd.aKey      "e">
 <!ENTITY DeleteViewCmd.label    "Close View">
-<!ENTITY DeleteViewCmd.aKey     "o">
+<!ENTITY DeleteViewCmd.aKey     "V">
 <!ENTITY StatusCmd.label        "Connection Status">
 <!ENTITY StatusCmd.aKey         "C">
 
-<!ENTITY CloseCmd.label "Close">
+<!ENTITY CloseCmd.label "Close Window">
 <!ENTITY CloseCmd.aKey  "C">
 
 <!ENTITY PopupQueryCmd.label         "Private Chat ``$nick''">

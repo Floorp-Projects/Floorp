@@ -43,31 +43,39 @@
   <script src="chrome://chatzilla/content/prefpanel/stalk.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["czStalkWords"];
+    var _elementIDs = ["czStalkWords", "czStalkWholeWords"];
   ]]>
   </script>
   
-  <groupbox flex="1">
-    <caption><label value="&stalkWords.title;" control="czStalkWords" 
-        accesskey="&stalkWords.accesskey;"/></caption>
+  <vbox flex="1">
+    <groupbox flex="1">
+      <caption><label value="&stalkWords.title;" control="czStalkWords" 
+          accesskey="&stalkWords.accesskey;"/></caption>
     
-    <label>&stalkWords.label1;</label>
-    <label>&stalkWords.label2;</label>
+      <label>&stalkWords.label1;</label>
+      <label>&stalkWords.label2;</label>
     
-    <hbox flex="1">
-      <listbox id="czStalkWords" flex="1" 
+      <hbox flex="1">
+        <listbox id="czStalkWords" flex="1" 
           style="width: 0px; height: 0px;" crop="center"
           prefstring="extensions.irc.stalkWords" preftype="string"
           prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
           onselect="listUpdateButtons('StalkWords');"/>
-    </hbox>
-    <hbox>
-      <button id="czAddStalkWords" label="&list.add.label;" 
-          accesskey="&list.add.stalk.accesskey;"
-          oncommand="listAdd('StalkWords');"/>
-      <button id="czDelStalkWords" label="&list.del.label;" 
-          accesskey="&list.del.stalk.accesskey;"
-          oncommand="listDelete('StalkWords');"/>
-    </hbox>
-  </groupbox>
+      </hbox>
+      <hbox>
+        <button id="czAddStalkWords" label="&list.add.label;" 
+            accesskey="&list.add.stalk.accesskey;"
+            oncommand="listAdd('StalkWords');"/>
+        <button id="czDelStalkWords" label="&list.del.label;" 
+            accesskey="&list.del.stalk.accesskey;"
+            oncommand="listDelete('StalkWords');"/>
+      </hbox>
+    </groupbox>
+
+    <checkbox id="czStalkWholeWords" label="&stalkWholeWords.label;" 
+      tooltiptext="&stalkWholeWords.tooltip;" 
+      accesskey="&stalkWholeWords.accesskey;" prefdefval="true" 
+      prefstring="extensions.irc.stalkWholeWords"/>
+
+  </vbox>
 </page>

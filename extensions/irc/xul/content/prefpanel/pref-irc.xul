@@ -42,7 +42,14 @@
   <![CDATA[
     var _elementIDs = ["czNickname", "czUsername", "czDesc", 
         "czNotify", "czDisplayCollapse", "czDisplayCopyMsgs",
-        "czReconnect", "czColorCodes", "czNickCompleteStr"];
+        "czReconnect", "czColorCodes", "czNickCompleteStr", "czCharset"];
+
+    const OSBS_CTRID = "@mozilla.org/observer-service;1";
+    const Components.interfaces.nsIObserverService = nsIObserverService;
+    var observerService =
+       Components.classes[OBS_CTRID].getService(nsIObserverService);
+    observerService.notifyObservers(null, "charsetmenu-selected", "other");
+
   ]]>
   </script>
   
@@ -110,5 +117,20 @@
           prefstring="extensions.irc.nickCompleteStr"/>
     </hbox>
     <label>&global.nickCompleteStr.desc;</label>
+  </groupbox>
+  <groupbox align="start">
+    <caption label="&global.Charset.grouplabel;"/>
+    <hbox align="center">
+      <label value="&global.DefaultCharset.label;" accesskey="&global.DefaultCharset.accesskey;" control="DefaultCharsetList"/>
+      <menulist id="czCharset" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+          prefstring="extensions.irc.charset" preftype="localizedstring"
+          wsm_attributes="value">
+          <template>
+            <menupopup>
+              <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+            </menupopup>
+          </template>
+      </menulist> 
+    </hbox>
   </groupbox>
 </page>

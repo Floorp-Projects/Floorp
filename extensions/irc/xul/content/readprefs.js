@@ -32,7 +32,7 @@
  *   +- multiline (Boolean) multiline input mode
  *   +- colorcodes (Boolean) enable color code escape characters
  *   +- bugURL   (String) url to use for "bug 12345" links.  Use %s to place
- *                        the bug number.
+ *   |                    the bug number.
  *   +- initialURLs (String) irc:// urls to connect to on startup, semicolon
  *   |                       separated
  *   +- initialScripts (String) urls for scripts to run at startup,
@@ -53,6 +53,8 @@
  *   |                           at the beginning of sentences
  *   +- stalkWords (String) List of words to add to the stalk victims list
  *   |                      semicolon separated (see the /stalk command)
+ *   +- stalkWholeWords (Boolean) True if stalk words should not match against
+ *   |                            parts of words.
  *   +- deleteOnPart (Boolean) Delete channel window automatically after a /part
  *   |
  *   |  The following beep prefs can be set to the text "beep" to use the
@@ -82,46 +84,55 @@
  *   |  +- chanuser
  *   |     +- maxlines  (Number) max lines to keep in /msg views
  *   +- debug
- *      +- tracer (Boolean) enable/disable debug message tracing
+ *   |  +- tracer (Boolean) enable/disable debug message tracing
+ *   +- viewList
+ *      +- client
+ *      |  +- logging (Boolean) enable/disable logging in the client view
+ *      +- <escaped network name>
+ *      |  +- logging (Boolean) enable/disable logging in the <network> view
+ *      +- <escaped network,channel>
+ *         +- logging (Boolean) enable/disable logging in the <channel> view on
+ *                              <network>
  */
 
 function initPrefs()
 {
     client.prefSpecs = {
-        "nickname": ["CIRCNetwork.prototype.INITIAL_NICK",          "IRCMonkey"],
-        "username": ["CIRCNetwork.prototype.INITIAL_NAME",          "chatzilla"],
-        "desc":     ["CIRCNetwork.prototype.INITIAL_DESC",   "New Now Know How"],
-        "reconnect": ["CIRCNetwork.prototype.stayingPower",                true],
-        "multiline":         ["client.MULTILINE",                         false],
-        "colorCodes":        ["client.COLORCODES",                        false],
-        "defaultNet":        ["client.DEFAULT_NETWORK",                "moznet"],
-        "charset":           ["client.CHARSET",                              ""],
-        "initialURLs":       ["client.INITIAL_URLS",                   "irc://"],
-        "initialScripts":    ["client.INITIAL_SCRIPTS",                      ""],
-        "newTabLimit":       ["client.NEW_TAB_LIMIT",                        15],
-        "raiseNewTab":       ["client.RAISE_NEW_TAB",                     false],
-        "nickCompleteStr":   ["client.ADDRESSED_NICK_SEP",                 ", "],
-        "stalkWords":        ["client.stalkingVictims",                      []],
-        "deleteOnPart":      ["client.DELETE_ON_PART",                     true],
-        "stalkBeep":         ["client.STALK_BEEP",                       "beep"],
-        "msgBeep":           ["client.MSG_BEEP",                    "beep beep"],
-        "queryBeep":         ["client.QUERY_BEEP",                       "beep"],
-        "munger":            ["client.munger.enabled",                     true],
-        "munger.colorCodes": ["client.enableColors",                       true],
-        "munger.smileyText": ["client.smileyText",                        false],
+        "nickname": ["CIRCNetwork.prototype.INITIAL_NICK",         "IRCMonkey"],
+        "username": ["CIRCNetwork.prototype.INITIAL_NAME",         "chatzilla"],
+        "desc":     ["CIRCNetwork.prototype.INITIAL_DESC",  "New Now Know How"],
+        "reconnect": ["CIRCNetwork.prototype.stayingPower",               true],
+        "multiline":         ["client.MULTILINE",                        false],
+        "colorCodes":        ["client.COLORCODES",                       false],
+        "defaultNet":        ["client.DEFAULT_NETWORK",               "moznet"],
+        "charset":           ["client.CHARSET",                             ""],
+        "initialURLs":       ["client.INITIAL_URLS",                  "irc://"],
+        "initialScripts":    ["client.INITIAL_SCRIPTS",                     ""],
+        "newTabLimit":       ["client.NEW_TAB_LIMIT",                       15],
+        "raiseNewTab":       ["client.RAISE_NEW_TAB",                    false],
+        "nickCompleteStr":   ["client.ADDRESSED_NICK_SEP",                ", "],
+        "stalkWords":        ["client.stalkingVictims",                     []],
+        "stalkWholeWords":   ["client.STALK_WHOLE_WORDS",                 true],
+        "deleteOnPart":      ["client.DELETE_ON_PART",                    true],
+        "stalkBeep":         ["client.STALK_BEEP",                      "beep"],
+        "msgBeep":           ["client.MSG_BEEP",                   "beep beep"],
+        "queryBeep":         ["client.QUERY_BEEP",                      "beep"],
+        "munger":            ["client.munger.enabled",                    true],
+        "munger.colorCodes": ["client.enableColors",                      true],
+        "munger.smileyText": ["client.smileyText",                       false],
         "bugURL":            ["client.BUG_URL",
-                               "http://bugzilla.mozilla.org/show_bug.cgi?id=%s"],
-        "notify.aggressive": ["client.FLASH_WINDOW",                       true],
-        "settings.autoSave": ["client.SAVE_SETTINGS",                      true],
-        "debug.tracer"     : ["client.debugHook.enabled",                 false],
+                              "http://bugzilla.mozilla.org/show_bug.cgi?id=%s"],
+        "notify.aggressive": ["client.FLASH_WINDOW",                      true],
+        "settings.autoSave": ["client.SAVE_SETTINGS",                     true],
+        "debug.tracer"     : ["client.debugHook.enabled",                false],
         "style.default":     ["client.DEFAULT_STYLE",
-                                   "chrome://chatzilla/skin/output-default.css"],
-        "views.collapseMsgs":      ["client.COLLAPSE_MSGS",               false],
-        "views.copyMessages":      ["client.COPY_MESSAGES",                true],
-        "views.client.maxlines":   ["client.MAX_MESSAGES",                  200],
-        "views.network.maxlines":  ["CIRCNetwork.prototype.MAX_MESSAGES",   100],
-        "views.channel.maxlines":  ["CIRCChannel.prototype.MAX_MESSAGES",   300],
-        "views.chanuser.maxlines": ["CIRCChanUser.prototype.MAX_MESSAGES",  200]
+                                  "chrome://chatzilla/skin/output-default.css"],
+        "views.collapseMsgs":      ["client.COLLAPSE_MSGS",              false],
+        "views.copyMessages":      ["client.COPY_MESSAGES",               true],
+        "views.client.maxlines":   ["client.MAX_MESSAGES",                 200],
+        "views.network.maxlines":  ["CIRCNetwork.prototype.MAX_MESSAGES",  100],
+        "views.channel.maxlines":  ["CIRCChannel.prototype.MAX_MESSAGES",  300],
+        "views.chanuser.maxlines": ["CIRCChanUser.prototype.MAX_MESSAGES", 200]
     };
 
     const PREF_CTRID = "@mozilla.org/preferences-service;1";
@@ -135,8 +146,6 @@ function initPrefs()
 
     var internal = client.prefBranch.QueryInterface(nsIPrefBranchInternal);
     internal.addObserver("", client.prefObserver, false);
-
-    readPrefs();
 }
 
 function destroyPrefs()
@@ -191,7 +200,7 @@ function readPref(prefName)
             eval (varName + " = " + prefValue.quote());
         }
     }
-    else if ((ary = prefName.match(/munger.(.*)/)) &&
+    else if ((ary = prefName.match(/munger\.(.*)/)) &&
               ary[1] in client.munger.entries)
     {
         client.munger.entries[ary[1]].enabled =
@@ -200,7 +209,8 @@ function readPref(prefName)
     }
     else
     {
-        dd ("readPref: UNKNOWN PREF ``" + prefName + "''");
+        if (!(prefName.match(/viewList\..*/)))
+            dd ("readPref: UNKNOWN PREF ``" + prefName + "''");
     }
 }
 
@@ -225,8 +235,18 @@ function readPrefs()
 
 function writePref(prefName)
 {
-    //if (prefName.indexOf("extensions.irc." == 0))
-    //    prefName = prefName.substr(15);
+    function clearPref(prefName)
+    {
+        try
+        {
+            client.prefBranch.clearUserPref (prefName);
+        }
+        catch (ex)
+        {
+            // ignore missing pref exception
+        }
+    };
+
     var ary;
 
     if (prefName in client.prefSpecs)
@@ -235,20 +255,30 @@ function writePref(prefName)
         var defaultValue = client.prefSpecs[prefName][1];
         var prefValue = eval(varName);
         
-        if (typeof defaultValue == "boolean")
-            client.prefBranch.setBoolPref(prefName, prefValue);
-        else if (typeof defaultValue == "number")
-            client.prefBranch.setIntPref(prefName, prefValue);
-        else if (defaultValue instanceof Array)
-            client.prefBranch.setCharPref(prefName, prefValue.join("; "));
+        if (prefValue != defaultValue)
+        {
+            if (typeof defaultValue == "boolean")
+                client.prefBranch.setBoolPref(prefName, prefValue);
+            else if (typeof defaultValue == "number")
+                client.prefBranch.setIntPref(prefName, prefValue);
+            else if (defaultValue instanceof Array)
+                client.prefBranch.setCharPref(prefName, prefValue.join("; "));
+            else
+                client.prefBranch.setCharPref(prefName, prefValue);
+        }
         else
-            client.prefBranch.setCharPref(prefName, prefValue);
+        {
+            clearPref(prefName);
+        }
     }
     else if ((ary = prefName.match(/munger\.(.*)/)) &&
               ary[1] in client.munger.entries)
     {
-        client.prefBranch.setBoolPref (prefName,
-                                       client.munger.entries[ary[1]].enabled);
+        entry = client.munger.entries[ary[1]];
+        if (entry.enabled != entry.enabledDefault)
+            client.prefBranch.setBoolPref(prefName, entry.enabled);
+        else
+            clearPref (prefName);
     }
     else
     {
@@ -281,7 +311,7 @@ function writePrefs (rootNode)
 
 function getCharPref (prefName, defaultValue)
 {
-    var e, rv;
+    var rv;
     
     try
     {
@@ -299,7 +329,6 @@ function getCharPref (prefName, defaultValue)
 
 function getIntPref (prefName, defaultValue)
 {
-    var e;
 
     try
     {
@@ -312,12 +341,13 @@ function getIntPref (prefName, defaultValue)
     
 }
 
-function getBoolPref (prefName, defaultValue)
+function getBoolPref (prefName, defaultValue, branch)
 {
-    var e;
 
     try
     {
+        if (branch)
+            return branch.getBoolPref (prefName);
         return client.prefBranch.getBoolPref (prefName);
     }
     catch (e)

@@ -26,6 +26,8 @@
  * 1999-08-15 rginda@ndcico.com           v1.0
  */
 
+var utils = new Object();
+
 var DEBUG = true;
 
 var dumpln;
@@ -35,7 +37,7 @@ if (typeof document == "undefined") /* in xpcshell */
     dumpln = print;
 else
     if (typeof dump == "function")
-        dumpln = function (str) {dump (str + "\n");}
+        dumpln = function (str) {dump (str + "\n"); }
     else if (jsenv.HAS_RHINO)
         dumpln = function (str) {var out = java.lang.System.out;
                                  out.println(str); out.flush(); }
@@ -636,3 +638,21 @@ function map(func, ary) {
 
 }
 
+function getSpecialDirectory(name)
+{
+    if (!("directoryService" in utils))
+    {
+        const DS_CTR = "@mozilla.org/file/directory_service;1";
+        const nsIProperties = Components.interfaces.nsIProperties;
+
+        utils.directoryService =
+            Components.classes[DS_CTR].getService(nsIProperties);
+    }
+
+    return utils.directoryService.get(name, Components.interfaces.nsIFile);
+}
+
+function encodeChar(ch)
+{
+   return "%" + ch.charCodeAt(0).toString(16);
+}

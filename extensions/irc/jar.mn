@@ -8,6 +8,7 @@ chatzilla.jar:
 	content/chatzilla/lib/js/command-manager.js  (js/lib/command-manager.js)
 	content/chatzilla/lib/js/irc.js              (js/lib/irc.js) 
 	content/chatzilla/lib/js/irc-debug.js        (js/lib/irc-debug.js)
+	content/chatzilla/lib/js/file-utils.js       (js/lib/file-utils.js)
 	content/chatzilla/lib/xul/munger.js          (xul/lib/munger.js) 
 	content/chatzilla/chatzilla.xul              (xul/content/chatzilla.xul) 
 	content/chatzilla/scripts.xul                (xul/content/scripts.xul) 
