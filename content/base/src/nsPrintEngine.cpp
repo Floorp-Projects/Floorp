@@ -67,6 +67,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 // Printing Events
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
+#include "nsEventQueueUtils.h"
 #include "nsPrintPreviewListener.h"
 
 // Printing
@@ -2545,6 +2546,46 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
   return NS_OK;
 }
 
+PR_STATIC_CALLBACK(void *)
+HandleBarrierEvent(PLEvent *aEvent)
+{
+  PRBool *b = NS_STATIC_CAST(PRBool *, PL_GetEventOwner(aEvent));
+  *b = PR_TRUE;
+  return nsnull;
+}
+
+PR_STATIC_CALLBACK(void)
+DestroyBarrierEvent(PLEvent *aEvent)
+{
+}
+
+static void
+FlushEventQueue()
+{
+  PRBool hitBarrier = PR_FALSE;
+  nsCOMPtr<nsIEventQueue> eventQ;
+  nsresult rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
+  if (NS_FAILED(rv))
+    return;
+
+  PLEvent evt;
+
+  PL_InitEvent(&evt, &hitBarrier, HandleBarrierEvent, DestroyBarrierEvent);
+
+  if (NS_FAILED(eventQ->PostEvent(&evt)))
+    return;
+
+  while (!hitBarrier) {
+    PLEvent *next;
+    eventQ->GetEvent(&next);
+    if (!next) {
+      NS_ERROR("barrier event not found!");
+      return;
+    }
+    eventQ->HandleEvent(next);
+  }
+}
+
 //-------------------------------------------------------
 // Reflow a nsPrintObject
 nsresult
@@ -2756,6 +2797,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
   aPO->mPresContext->SetPageDim(adjRect);
   rv = aPO->mPresShell->InitialReflow(width, height);
+  FlushEventQueue();
   if (NS_SUCCEEDED(rv)) {
     // Transfer Selection Ranges to the new Print PresShell
     nsCOMPtr<nsISelection> selection;
