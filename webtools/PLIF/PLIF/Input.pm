@@ -94,13 +94,13 @@ sub escapeString {
     # escape for the separator and doubling for the escape character,
     # e.g. '\;' and '\\', then you get all kinds of confusion when the
     # string contains lots of '\' and ';' characters.
-    $substring =~ s/  \#  /  \#h  /gosx;
-    $substring =~ s/  \|  /  \#b  /gosx;
-    $substring =~ s/  \;  /  \#s  /gosx;
-    $substring =~ s/  \   /  \#w  /gosx;
-    $substring =~ s/  \n  /  \#n  /gosx;
-    $substring =~ s/  \r  /  \#r  /gosx;
-    $substring =~ s/  \t  /  \#t  /gosx;
+    $substring =~ s/\#/\#h/gos;
+    $substring =~ s/\|/\#b/gos;
+    $substring =~ s/\;/\#s/gos;
+    $substring =~ s/\ /\#w/gos;
+    $substring =~ s/\n/\#n/gos;
+    $substring =~ s/\r/\#r/gos;
+    $substring =~ s/\t/\#t/gos;
     return $substring;
 }
 
@@ -108,13 +108,13 @@ sub escapeString {
 sub unescapeString {
     my $self = shift;
     my($substring) = @_;
-    $substring =~ s/  \#b  /  \|  /gosx;
-    $substring =~ s/  \#s  /  \;  /gosx;
-    $substring =~ s/  \#w  /  \   /gosx;
-    $substring =~ s/  \#n  /  \n  /gosx;
-    $substring =~ s/  \#r  /  \r  /gosx;
-    $substring =~ s/  \#t  /  \t  /gosx;
-    $substring =~ s/  \#h  /  \#  /gosx;
+    $substring =~ s/\#b/\|/gos;
+    $substring =~ s/\#s/\;/gos;
+    $substring =~ s/\#w/\ /gos;
+    $substring =~ s/\#n/\n/gos;
+    $substring =~ s/\#r/\r/gos;
+    $substring =~ s/\#t/\t/gos;
+    $substring =~ s/\#h/\#/gos;
     return $substring;
 }
 
@@ -123,19 +123,19 @@ sub getArgumentsAsString {
     my $self = shift;
     my $hash = $self->getArguments();
     my $string = '';
-    foreach my $key (keys %$hash) {
-        $key = $self->escapeString($key);
+    foreach my $key (keys(%$hash)) {
+        $string .= $self->escapeString($key);
         if (ref($hash->{$key}) eq 'ARRAY') {
-            $string .= "$key;";
+            $string .= ';';
             foreach my $substring (@{$hash->{$key}}) {
-                $substring = $self->escapeString($substring);
-                $string .= "$substring|";
+                $string .= $self->escapeString($substring);
+                $string .= '|';
             }
             chop $string;
-            $string .= ";";
         } else {
-            $string .= "$key;".($hash->{$key}).';';
+            $string .= $self->escapeString($hash->{$key});
         }
+        $string .= ';';
     }
     chop $string;
     return $string;
