@@ -77,6 +77,8 @@ interface nsIEcho : nsISupports {
     void ReturnCode_NS_ERROR_NULL_POINTER();
     void ReturnCode_NS_ERROR_UNEXPECTED();
     void ReturnCode_NS_ERROR_OUT_OF_MEMORY();
+
+    nsISupports ReturnInterface(in nsISupports obj);
 };
 
 /***************************************************************************/

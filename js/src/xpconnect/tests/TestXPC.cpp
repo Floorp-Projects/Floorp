@@ -43,7 +43,7 @@ static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 #ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
+#define XPCOM_DLL  "xpcom.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL  "XPCOM_DLL"
@@ -308,7 +308,8 @@ public:
     /* void ReturnCode_NS_ERROR_OUT_OF_MEMORY (); */
     NS_IMETHOD ReturnCode_NS_ERROR_OUT_OF_MEMORY();
 
-
+    /* nsISupports ReturnInterface (in nsISupports obj); */
+    NS_IMETHOD ReturnInterface(nsISupports *obj, nsISupports **_retval);
 
     MyEcho();
 private:
@@ -486,6 +487,17 @@ MyEcho::ReturnCode_NS_ERROR_UNEXPECTED()
 NS_IMETHODIMP
 MyEcho::ReturnCode_NS_ERROR_OUT_OF_MEMORY()
 {return NS_ERROR_OUT_OF_MEMORY;}
+
+NS_IMETHODIMP
+MyEcho::ReturnInterface(nsISupports *obj, nsISupports **_retval)
+{
+    if(!_retval)
+        return NS_ERROR_NULL_POINTER;
+    if(obj)
+        NS_ADDREF(obj);
+    *_retval = obj;
+    return NS_OK;
+}        
 
 /***************************************************************************/
 // security manager test class
