@@ -309,11 +309,11 @@ exe_param=
 Class Name=MozillaWindowClass
 Window Name=
 ;*** LOCALIZE ME BABY ***
-Message=Setup has detected that an instance of $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
+Message=Setup has detected that $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
 
 ;[Check Instance1]
 ;Process Name=psm.exe
-;Message=Setup has detected that an instance of Personal Security Manager is currently running.  Personal Security Manager will quit by itself when there are no other applications running that require it.  A reboot may be necessary.  Setup will then be able to continue.  Click Retry to perform the check again, or Cancel to exit Setup.
+;Message=Setup has detected that Personal Security Manager (PSM) is currently running.  When no applications need PSM it will quit.  You should try closing applications that might use PSM.  Setup can continue if PSM quits.  Click Retry to perform the check again, or Cancel to exit Setup.  If this dialog persists you should try logging off or rebooting.
 
 ; These are the components to be offered to the user (shown in the Select
 ; Components dialog) for installation.
