@@ -3,14 +3,15 @@
 
 <!DOCTYPE window> 
 
-<window style="width: 100%; height: 100%" xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onConstruction="Startup()"> 
+<window 
+	style="width: 100%; height: 100%" 
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onConstruction="Startup()"> 
 
 <box align="vertical">
 
 <html:h1>Toolbar Test 1</html:h1>
-
 
 <html:h3>
 You should see a two toolbars with buttons that don't do anything. This test is useful for checking layout
@@ -18,16 +19,14 @@ and look/feel of rollover and clicks. Note that the last toolbar is empty, and s
 normal size because of min-height.
 </html:h3>
 
-<!-- this crashes boxes for some reason.... -EDV
+<!-- <hr> crashes boxes for some reason.... -EDV -->
+<!-- <hr> works on linux, trying again..? -mcafee -->
 <html:hr/>
--->
 
 <toolbox>  
    <toolbar>
-          <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back"/>	
-
-
-          <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward"/>
+      <titledbutton id="back-button" align="bottom" value="Back"/>	
+      <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward"/>
 	  <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload"/>
 	  <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop"/>
 	  <titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home"/>
@@ -39,8 +38,7 @@ normal size because of min-height.
 	    <spring flex="100%"/>
           </box>
 
-
-          <titledbutton src="resource:/res/throbber/anims00.gif" align="right"/>        
+          <titledbutton src="resource:/res/throbber/anims00.gif" align="right"/>
     
     </toolbar>
 
@@ -51,7 +49,8 @@ normal size because of min-height.
     
     <toolbar>
     </toolbar>
-
   </toolbox>
+
 </box>
+
 </window>
