@@ -172,6 +172,11 @@ pref("javascript.allow.mailnews",           true);
 pref("javascript.allow.signing",            true);
 pref("javascript.reflect_preferences",      false);     // for PE
 
+pref("offline.startup_state",            0);
+pref("offline.send.unsent_messages",            0);
+pref("offline.prompt_synch_on_exit",            true);
+
+
 pref("network.dnsAttempt",              0);
 pref("network.tcptimeout",                  0);         // use default
 pref("network.tcpbufsize",                  0);         //
