@@ -49,7 +49,8 @@ class nsIPrompt;
 class nsIHttpChannel;
 
 extern nsresult COOKIE_Read();
-extern nsresult COOKIE_Write(PRBool notify);
+extern nsresult COOKIE_Write();
+extern nsresult COOKIE_Notify();
 //XXX these should operate on |const char*|
 extern char * COOKIE_GetCookie(nsIURI * address);
 extern char * COOKIE_GetCookieFromHttp(nsIURI * address, nsIURI * firstAddress);
