@@ -53,6 +53,9 @@
 
  ******/
 
+#ifdef WINCE
+#undef small
+#endif
 
 EDITOR_ATOM(b, "b")       
 EDITOR_ATOM(big, "big")   
