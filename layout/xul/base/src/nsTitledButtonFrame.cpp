@@ -464,16 +464,27 @@ nsTitledButtonFrame::Paint(nsIPresContext* aPresContext,
 
 	mRenderer->PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
 
+        
+#if 0
+    // Removing this code because it seriously impacts performance of
+    // titled buttons without providing any visible benefit. Please
+    // talk to hyatt or waterson if you think this code should be put
+    // back in. Ideally, we could pessimistically create a clip rect
+    // only if LayoutTitleAndImage() determines that the drawing would
+    // spill outside of the available rect.
     aRenderingContext.PushState();
     PRBool clipState;
     aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);    
+#endif
 
     LayoutTitleAndImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);  
    
     PaintTitle(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);   
     PaintImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
+#if 0
     aRenderingContext.PopState(clipState);
+#endif
 
    /*
    aRenderingContext.SetColor(NS_RGB(0,128,0));
