@@ -28,7 +28,7 @@
 
 #include "nspr.h"
 
-#define IsFlagSet(a,b) (a & b)
+#define IsFlagSet(a,b) ((a) & (b))
 
 // this is just a little bit faster than the GDK code
 #define USE_XLIB_ALPHA_MASKING
@@ -331,6 +331,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     aHeight = mHeight;
   }
 
+
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::Draw(this=%p,x=%d,y=%d,width=%d,height=%d)\n",
          this,
@@ -477,6 +478,31 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
   }
 
+
+  PRInt32 validX, validY, validWidth, validHeight;
+
+  validX = 0;
+  validY = 0;
+  validWidth = aWidth;
+  validHeight = aHeight;
+
+  // limit the image rectangle to the size of the image data which
+  // has been validated.
+  if ((mDecodedY2 < aHeight)) {
+    validHeight = mDecodedY2 - mDecodedY1;
+  }
+  if ((mDecodedX2 < aWidth)) {
+    validWidth = mDecodedX2 - mDecodedX1;
+  }
+  if ((mDecodedY1 > 0)) {
+    validHeight -= mDecodedY1;
+    validY = mDecodedY1;
+  }
+  if ((mDecodedX1 > 0)) {
+    validWidth -= mDecodedX1;
+    validX = mDecodedX1;
+  }
+
   if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
 
     if (!sXbitGC) {
@@ -491,7 +517,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     // Render the image bits into an off screen pixmap
     gdk_draw_rgb_image (mImagePixmap,
                         sXbitGC,
-                        0, 0, aWidth, aHeight,
+                        validX, validY, validWidth, validHeight,
                         GDK_RGB_DITHER_MAX,
                         mImageBits, mRowBytes);
   }
@@ -517,22 +543,24 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::Draw(this=%p) gdk_draw_pixmap(x=%d,y=%d,width=%d,height=%d)\n",
          this,
-         aX,
-         aY,
-         aWidth,
-         aHeight);
+         validX+aX,
+         validY+aY,
+         validWidth,                  
+         validHeight);
 #endif
+
+  
 
   // copy our off screen pixmap onto the window.
   gdk_window_copy_area(drawing->GetDrawable(),      // dest window
                        copyGC,                      // gc
-                       aX,                          // xsrc
-                       aY,                          // ysrc
+                       validX+aX,                   // xsrc
+                       validY+aY,                   // ysrc
                        mImagePixmap,                // source window
-                       0,                           // xdest
-                       0,                           // ydest
-                       aWidth,                      // width
-                       aHeight);                    // height
+                       validX,                      // xdest
+                       validY,                      // ydest
+                       validWidth,                  // width
+                       validHeight);                // height
 
 
   gdk_gc_unref(copyGC);
