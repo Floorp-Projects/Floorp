@@ -41,6 +41,7 @@ class nsFirstLineFrame;
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x80000000
 #define NS_BLOCK_IS_HTML_PARAGRAPH        0x40000000
 #define NS_BLOCK_HAS_FIRST_LINE_STYLE     0x20000000
+#define NS_BLOCK_HAS_FIRST_LETTER_STYLE   0x10000000
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
@@ -142,6 +143,8 @@ protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
 
+  nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext);
+
   nsIStyleContext* GetFirstLineStyle(nsIPresContext* aPresContext);
 
   void SetFlags(PRUint32 aFlags) {
@@ -190,6 +193,8 @@ protected:
   nsresult RemoveFirstLineFrame(nsIPresContext* aPresContext,
                                 nsFirstLineFrame* aLineFrame,
                                 nsIFrame* aDeletedFrame);
+
+  nsresult WrapFrameInFirstLetterFrame(nsIPresContext* aPresContext);
 
   nsresult WrapFramesInFirstLineFrame(nsIPresContext* aPresContext);
 
