@@ -287,6 +287,7 @@ void
 nsAppShell::DispatchEvent(XEvent *event)
 {
   nsWidget *widget;
+  XEvent    config_event;
   widget = nsWidget::GetWidgetForWindow(event->xany.window);
   // switch on the type of event
   switch (event->type) {
@@ -296,7 +297,21 @@ nsAppShell::DispatchEvent(XEvent *event)
   case ConfigureNotify:
     // we need to make sure that this is the LAST of the
     // config events.
-    while (XCheckWindowEvent(mDisplay, event->xany.window, StructureNotifyMask, event) == True);
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("DispatchEvent: ConfigureNotify event for window 0x%lx %d %d %d %d\n",
+                                         event->xconfigure.window,
+                                         event->xconfigure.x, event->xconfigure.y,
+                                         event->xconfigure.width, event->xconfigure.height));
+    while (XCheckWindowEvent(mDisplay, event->xany.window, StructureNotifyMask, &config_event) == True) {
+      // make sure that we don't get other types of events.  StructureNotifyMask
+      // includes other kinds of events, too.
+      if (config_event.type == ConfigureNotify) {
+        *event = config_event;
+        PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("DispatchEvent: Extra ConfigureNotify event for window 0x%lx %d %d %d %d\n",
+                                             event->xconfigure.window,
+                                             event->xconfigure.x, event->xconfigure.y,
+                                             event->xconfigure.width, event->xconfigure.height));
+      }
+    }
     HandleConfigureNotifyEvent(event, widget);
     break;
   case ButtonPress:
