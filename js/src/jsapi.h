@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -550,6 +550,45 @@ JS_SetGCCallback(JSContext *cx, JSGCCallback cb);
 
 extern JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
+
+/*
+ * Add an external string finalizer, one that understands struct JSString
+ * (from jsstr.h) and knows how to free or release the memory pointed at by
+ * its chars member.
+ *
+ * Return a nonnegative type index if there is room for finalizer in the
+ * global GC finalizers table, else return -1.  If the engine is compiled
+ * JS_THREADSAFE and used in a multi-threaded environment, this function must
+ * be invoked on the primordial thread only, at startup -- or else the entire
+ * program must single-thread itself while loading a module that calls this
+ * function.
+ */
+extern JS_PUBLIC_API(intN)
+JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer);
+
+/*
+ * Remove finalizer from the global GC finalizers table, returning its type
+ * code if found, -1 if not found.
+ *
+ * As with JS_AddExternalStringFinalizer, there is a threading restriction
+ * if you compile the engine JS_THREADSAFE: this function may be called for a
+ * given finalizer pointer on only one thread; different threads may call to
+ * remove distinct finalizers safely.
+ *
+ * You must ensure that all strings with finalizer's type have been collected
+ * before calling this function.  Otherwise, string data will be leaked by the
+ * GC, for want of a finalizer to call.
+ */
+extern JS_PUBLIC_API(intN)
+JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer);
+
+/*
+ * Create a new JSString whose chars member refers to external memory, i.e.,
+ * memory requiring special, type-specific finalization.  The type code must
+ * be a nonnegative return value from JS_AddExternalStringFinalizer.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type);
 
 /************************************************************************/
 
@@ -1223,7 +1262,7 @@ extern JS_PUBLIC_API(void)
 JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks);
 
 /* Return the address of the current locale callbacks struct. May be NULL. */
-extern JS_PUBLIC_API(JSLocaleCallbacks *) 
+extern JS_PUBLIC_API(JSLocaleCallbacks *)
 JS_GetLocaleCallbacks(JSContext *cx);
 
 /************************************************************************/

@@ -1547,6 +1547,34 @@ JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb)
     return oldcb;
 }
 
+JS_PUBLIC_API(intN)
+JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
+{
+    return js_ChangeExternalStringFinalizer(NULL, finalizer);
+}
+
+JS_PUBLIC_API(intN)
+JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer)
+{
+    return js_ChangeExternalStringFinalizer(finalizer, NULL);
+}
+
+JS_PUBLIC_API(JSString *)
+JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
+{
+    JSString *str;
+
+    CHECK_REQUEST(cx);
+    JS_ASSERT(GCX_EXTERNAL_STRING <= type && type < (intN) GCX_NTYPES);
+
+    str = (JSString *) js_AllocGCThing(cx, (uintN) type);
+    if (!str)
+        return NULL;
+    str->length = length;
+    str->chars = chars;
+    return str;
+}
+
 /************************************************************************/
 
 JS_PUBLIC_API(void)
