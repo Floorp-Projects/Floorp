@@ -43,9 +43,9 @@
 #include "nsISupports.h"
 
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-#define IMPLEMENT_MozAxPlugin
+#include "_gen/java_lang_String.h"
+#include "_gen/netscape_plugin_Plugin.h"
 #include "_gen/MozAxPlugin.h"
-//#include "_gen/netscape_plugin_Plugin.h"
 #endif
 
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
@@ -97,8 +97,9 @@ void NPP_Shutdown(void)
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
     JRIEnv* env = NPN_GetJavaEnv();
 	if (env) {
-		// unuse_MozAxPlugin(env);
-        unregister_MozAxPlugin(env);
+        unuse_MozAxPlugin(env);
+        unuse_netscape_plugin_Plugin(env);
+//        unuse_java_lang_String(env);
 	}
 #endif
 
@@ -116,8 +117,10 @@ jref NPP_GetJavaClass(void)
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
     JRIEnv* env = NPN_GetJavaEnv();
     if (env) {
-	    return (jref) register_MozAxPlugin(env);
-        // return (jref) use_MozAxPlugin(env);
+//        use_java_lang_String(env);
+        use_netscape_plugin_Plugin(env);
+        jref myClass = (jref) use_MozAxPlugin(env);
+	    return myClass;
     }
 #endif
     return NULL;
@@ -1103,7 +1106,7 @@ _GetIDispatchFromJRI(JRIEnv *env, struct MozAxPlugin* self, IDispatch **pdisp)
 	}
 
     IDispatchPtr disp = unk;
-    if (!disp.GetInterfacePtr() == NULL)
+    if (disp.GetInterfacePtr() == NULL)
     { 
         return E_FAIL; 
     }
@@ -1168,25 +1171,31 @@ _InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *f
  * These are the native methods which we are implementing.
  ******************************************************************************/
 
-//*** native Invoke (Ljava/lang/String;)Ljava/lang/Object; ***
-JRI_PUBLIC_API(struct java_lang_Object *)
-native_MozAxPlugin_invoke(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a)
+extern "C" JRI_PUBLIC_API(void)
+native_MozAxPlugin_x(JRIEnv* env, struct MozAxPlugin* self, jint a)
+{
+    ::MessageBox(NULL, "x() called", "Result", MB_OK);
+}
+
+/*** private native xinvoke (Ljava/lang/String;)Ljava/lang/Object; ***/
+extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_xinvoke(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a)
 {
     return _InvokeFromJRI(env, self, a, 0, NULL);
 }
 
-//*** native Invoke (Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object; ***
-JRI_PUBLIC_API(struct java_lang_Object *)
-native_MozAxPlugin_invoke_1(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b)
+/*** private native xinvoke1 (Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object; ***/
+extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_xinvoke1(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b)
 {
     java_lang_Object *args[1];
     args[0] = b;
     return _InvokeFromJRI(env, self, a, sizeof(args) / sizeof(args[0]), args);
 }
 
-//*** native Invoke (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***
-JRI_PUBLIC_API(struct java_lang_Object *)
-native_MozAxPlugin_invoke_2(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c)
+/*** private native xinvoke2 (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***/
+extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_xinvoke2(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c)
 {
     java_lang_Object *args[2];
     args[0] = b;
@@ -1194,9 +1203,9 @@ native_MozAxPlugin_invoke_2(JRIEnv* env, struct MozAxPlugin* self, struct java_l
     return _InvokeFromJRI(env, self, a, sizeof(args) / sizeof(args[0]), args);
 }
 
-//*** native Invoke (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***
-JRI_PUBLIC_API(struct java_lang_Object *)
-native_MozAxPlugin_invoke_3(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c, struct java_lang_Object *d)
+/*** private native xinvoke3 (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***/
+extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_xinvoke3(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c, struct java_lang_Object *d)
 {
     java_lang_Object *args[3];
     args[0] = b;
@@ -1205,9 +1214,9 @@ native_MozAxPlugin_invoke_3(JRIEnv* env, struct MozAxPlugin* self, struct java_l
     return _InvokeFromJRI(env, self, a, sizeof(args) / sizeof(args[0]), args);
 }
 
-//*** native Invoke (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***
-JRI_PUBLIC_API(struct java_lang_Object *)
-native_MozAxPlugin_invoke_4(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c, struct java_lang_Object *d, struct java_lang_Object *e)
+/*** private native xinvoke4 (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***/
+extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_xinvoke4(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c, struct java_lang_Object *d, struct java_lang_Object *e)
 {
     java_lang_Object *args[4];
     args[0] = b;
@@ -1217,10 +1226,17 @@ native_MozAxPlugin_invoke_4(JRIEnv* env, struct MozAxPlugin* self, struct java_l
     return _InvokeFromJRI(env, self, a, sizeof(args) / sizeof(args[0]), args);
 }
 
+/*** private native xinvokeX (Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object; ***/
+extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_xinvokeX(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, jobjectArray b)
+{
+    // TODO
+    return NULL;
+}
 
-//*** native GetProperty (Ljava/lang/String;)Ljava/lang/Object; ***
-JRI_PUBLIC_API(struct java_lang_Object *)
-native_MozAxPlugin_getProperty(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a)
+/*** private native xgetProperty (Ljava/lang/String;)Ljava/lang/Object; ***/
+extern "C" JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_xgetProperty(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a)
 {
     HRESULT hr;
     DISPID dispid;
@@ -1270,17 +1286,17 @@ native_MozAxPlugin_getProperty(JRIEnv* env, struct MozAxPlugin* self, struct jav
 	return NULL;
 }
 
-/*** native setProperty (Ljava/lang/String;Ljava/lang/Object;)V ***/
-JRI_PUBLIC_API(void)
-native_MozAxPlugin_setProperty(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b)
+/*** private native xsetProperty2 (Ljava/lang/String;Ljava/lang/Object;)V ***/
+extern "C" JRI_PUBLIC_API(void)
+native_MozAxPlugin_xsetProperty2(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b)
 
 {
     // TODO
 }
 
-//*** public native SetProperty (Ljava/lang/String;Ljava/lang/String;)V ***
-JRI_PUBLIC_API(void)
-native_MozAxPlugin_setProperty_1(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_String *b)
+/*** private native xsetProperty1 (Ljava/lang/String;Ljava/lang/String;)V ***/
+extern "C" JRI_PUBLIC_API(void)
+native_MozAxPlugin_xsetProperty1(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_String *b)
 {
     HRESULT hr;
     DISPID dispid;
@@ -1327,12 +1343,5 @@ native_MozAxPlugin_setProperty_1(JRIEnv* env, struct MozAxPlugin* self, struct j
         return;
     }
 }
-
-
-#define NO_JDK
-#include "_stubs/MozAxPlugin.c"
-
-#define UNUSED_use_netscape_plugin_Plugin
-#include "_stubs/netscape_plugin_Plugin.c"
 
 #endif
