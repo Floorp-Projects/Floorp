@@ -1600,9 +1600,9 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
    // enhancement since invalidating a native widget
    // can be expensive.
    // This also checks for silly request like damagedRect.width = 0 or damagedRect.height = 0
-  PRBool isVisible;
-  IsRectVisible(view, damagedRect, 0, &isVisible);
-  if (!isVisible) {
+  nsRectVisibility rectVisibility;
+  GetRectVisibility(view, damagedRect, 0, &rectVisibility);
+  if (rectVisibility != nsRectVisibility_kVisible) {
     return NS_OK;
   }
 
@@ -3845,14 +3845,17 @@ nsresult nsViewManager::GetAbsoluteRect(nsView *aView, const nsRect &aRect,
 }
 
 
-NS_IMETHODIMP nsViewManager::IsRectVisible(nsIView *aView, const nsRect &aRect, PRUint16 aMinTwips, PRBool *aIsVisible)
+NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView, 
+                                               const nsRect &aRect,
+                                               PRUint16 aMinTwips, 
+                                               nsRectVisibility *aRectVisibility)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
   // The parameter aMinTwips determines how many rows/cols of pixels must be visible on each side of the element,
   // in order to be counted as visible
 
-  *aIsVisible = PR_FALSE;
+  *aRectVisibility = nsRectVisibility_kZeroAreaRect;
   if (aRect.width == 0 || aRect.height == 0) {
     return NS_OK;
   }
@@ -3867,7 +3870,7 @@ NS_IMETHODIMP nsViewManager::IsRectVisible(nsIView *aView, const nsRect &aRect, 
   // Calculate the absolute coordinates for the visible rectangle   
   nsRect visibleRect;
   if (GetVisibleRect(visibleRect) == NS_ERROR_FAILURE) {
-    *aIsVisible = PR_TRUE;
+    *aRectVisibility = nsRectVisibility_kVisible;
     return NS_OK;
   }
 
@@ -3875,22 +3878,33 @@ NS_IMETHODIMP nsViewManager::IsRectVisible(nsIView *aView, const nsRect &aRect, 
   // aRects values are relative to aView
   nsRect absRect;
   if ((GetAbsoluteRect(view, aRect, absRect)) == NS_ERROR_FAILURE) {
-    *aIsVisible = PR_TRUE;
+    *aRectVisibility = nsRectVisibility_kVisible;
     return NS_OK;
   }
  
   /*
    * If aMinTwips > 0, ensure at least aMinTwips of space around object is visible
-   * The object is visible if:
-   * ((objectTop     >= windowTop    || objectBottom >= windowTop) &&
-   *  (objectLeft   >= windowLeft   || objectRight  >= windowLeft) &&
-   *  (objectBottom <= windowBottom || objectTop    <= windowBottom) &&
-   *  (objectRight  <= windowRight  || objectLeft   <= windowRight))
+   * The object is not visible if:
+   * ((objectTop     < windowTop    && objectBottom < windowTop) ||
+   *  (objectBottom  > windowBottom && objectTop    > windowBottom) ||
+   *  (objectLeft    < windowLeft   && objectRight  < windowLeft) ||
+   *  (objectRight   > windowRight  && objectLeft   > windowRight))
    */
-  *aIsVisible = ((absRect.y >= visibleRect.y  ||  absRect.y + absRect.height >= visibleRect.y + aMinTwips) &&
-                 (absRect.x >= visibleRect.x  ||  absRect.x + absRect.width  >=  visibleRect.x + aMinTwips) &&
-                 (absRect.y + absRect.height <= visibleRect.y  + visibleRect.height  ||  absRect.y <= visibleRect.y + visibleRect.height - aMinTwips) &&
-                 (absRect.x + absRect.width <= visibleRect.x  + visibleRect.width    ||  absRect.x <= visibleRect.x + visibleRect.width - aMinTwips));
+
+  if (absRect.y < visibleRect.y  && 
+      absRect.y + absRect.height < visibleRect.y + aMinTwips)
+    *aRectVisibility = nsRectVisibility_kAboveViewport;
+  else if (absRect.y + absRect.height > visibleRect.y + visibleRect.height &&
+           absRect.y > visibleRect.y + visibleRect.height - aMinTwips)
+    *aRectVisibility = nsRectVisibility_kBelowViewport;
+  else if (absRect.x < visibleRect.x && 
+           absRect.x + absRect.width < visibleRect.x + aMinTwips)
+    *aRectVisibility = nsRectVisibility_kLeftOfViewport;
+  else if (absRect.x + absRect.width > visibleRect.x  + visibleRect.width &&
+           absRect.x > visibleRect.x + visibleRect.width - aMinTwips)
+    *aRectVisibility = nsRectVisibility_kRightOfViewport;
+  else
+    *aRectVisibility = nsRectVisibility_kVisible;
 
   return NS_OK;
 }
