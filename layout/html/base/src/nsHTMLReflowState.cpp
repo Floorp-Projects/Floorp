@@ -692,7 +692,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // Compute margins from the specified margin style information. These
     // become the default computed values, and may be adjusted below
 
-    // XXX fix to provide 0,0 for the top&bottom marings for
+    // XXX fix to provide 0,0 for the top&bottom margins for
     // inline-non-replaced elements
 
     // XXX Make into non-static methods?
@@ -713,6 +713,13 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // by the content edge
     nscoord containingBlockWidth = cbrs->computedWidth;
     nscoord containingBlockHeight = cbrs->computedHeight;
+    if (NS_FRAME_GET_TYPE(frameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
+      // Containing block is formed by the padding edge and not the padding edge
+      containingBlockWidth += cbrs->mComputedPadding.left +
+                              cbrs->mComputedPadding.right;
+      containingBlockHeight += cbrs->mComputedPadding.top +
+                               cbrs->mComputedPadding.bottom;
+    }
 #if 0
     nsFrame::ListTag(stdout, frame); printf(": cb=");
     nsFrame::ListTag(stdout, cbrs->frame); printf(" size=%d,%d\n", containingBlockWidth, containingBlockHeight);
@@ -897,12 +904,12 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
     }
   } else {
     if (eStyleUnit_Inherit == aWidthUnit) {
-      // Use parent elements width (note that if its width was
-      // inherit then it already did this so we don't need to
-      // recurse upwards).
+      // Use parent elements width. Note that if its width was
+      // 'inherit', then it already did this so we don't need to
+      // recurse upwards.
       //
       // We use the containing blocks width here for the "parent"
-      // elements width because we want to skip over any interveening
+      // elements width, because we want to skip over any intervening
       // inline elements (since width doesn't apply to them).
       if (NS_UNCONSTRAINEDSIZE != aContainingBlockWidth) {
         computedWidth = aContainingBlockWidth;
@@ -965,10 +972,9 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* cbrs,
   // compute against...
   if ((NS_UNCONSTRAINEDSIZE != aComputedWidth) && 
       (NS_UNCONSTRAINEDSIZE != cbrs->computedWidth)) {
-    PRBool isAutoLeftMargin =
-      eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit();
-    PRBool isAutoRightMargin =
-      eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
+
+    PRBool isAutoLeftMargin = eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit();
+    PRBool isAutoRightMargin = eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
 
     // Calculate how much space is available for margins
     nscoord availMarginSpace = cbrs->computedWidth - aComputedWidth -
