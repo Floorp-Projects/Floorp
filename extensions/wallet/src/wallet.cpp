@@ -3379,15 +3379,23 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindow* win, PRUint32* status) 
       }
     }
   }
+
+  PRUnichar * message;
+
   if (gEncryptionFailure) {
-    *status = -1; /* UnableToCapture */
+    message = Wallet_Localize("UnableToCapture");
+    *status = -1;
   } else if (captureCount) {
     /* give caveat if this is the first time data is being captured */
     Wallet_GiveCaveat(win, nsnull);
-    *status = 0; /* Captured */
+    message = Wallet_Localize("Captured");
+    *status = 0;
   } else {
-    *status = +1; /* NotCaptured */
+    message = Wallet_Localize("NotCaptured");
+    *status = +1;
   }
+  wallet_Alert(message, win);
+  Recycle(message);
 }
 
 /* should move this to an include file */

@@ -37,22 +37,11 @@ your Form Manager Information here</font></font></font></h3></center>
 <script>
 
   function Save() {
-   appCore = Components
+    appCore = Components
                 .classes["component://netscape/appshell/component/browser/instance"]
                 .createInstance(Components.interfaces.nsIBrowserInstance);
-   if (appCore) {
+    if (appCore) {
       status = appCore.walletRequestToCapture(window._content);
-
-      /* need to localize the following strings */
-      if (status == -1) { /* UnableToCapture */
-        alert("UnableToCapture");
-      } else if (status == 0) { /* Captured */
-        alert("Your interview information has been saved");
-      } else if (status == +1) { /* NotCaptured */
-        alert("There is no information to save.");
-      }
-    } else {
-      alert("Error occured when trying to save data");
     }
   }
 
