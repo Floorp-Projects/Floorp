@@ -67,8 +67,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   
   // The new mapping function.
@@ -94,20 +92,6 @@ CSSFirstLineRule::~CSSFirstLineRule()
 }
 
 NS_IMPL_ISUPPORTS1(CSSFirstLineRule, nsIStyleRule)
-
-NS_IMETHODIMP
-CSSFirstLineRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
-{
-  aResult = PRBool(this == aRule);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSFirstLineRule::HashValue(PRUint32& aValue) const
-{
-  aValue = (PRUint32)7;         // XXX got a better suggestion?
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 CSSFirstLineRule::GetStyleSheet(nsIStyleSheet*& aSheet) const

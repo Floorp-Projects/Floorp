@@ -71,8 +71,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
   // The new mapping function.
@@ -120,20 +118,6 @@ HTMLColorRule::~HTMLColorRule()
 }
 
 NS_IMPL_ISUPPORTS1(HTMLColorRule, nsIStyleRule)
-
-NS_IMETHODIMP
-HTMLColorRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
-{
-  aResult = PRBool(this == aRule);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLColorRule::HashValue(PRUint32& aValue) const
-{
-  aValue = (PRUint32)(mColor);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 HTMLColorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
@@ -294,8 +278,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
   // The new mapping function.
@@ -325,20 +307,6 @@ GenericTableRule::~GenericTableRule()
 }
 
 NS_IMPL_ISUPPORTS1(GenericTableRule, nsIStyleRule)
-
-NS_IMETHODIMP
-GenericTableRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
-{
-  aResult = PRBool(this == aRule);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GenericTableRule::HashValue(PRUint32& aValue) const
-{
-  aValue = 0;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 GenericTableRule::GetStyleSheet(nsIStyleSheet*& aSheet) const

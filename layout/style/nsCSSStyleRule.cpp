@@ -945,9 +945,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-//  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
-//  NS_IMETHOD HashValue(PRUint32& aValue) const;
-
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
   // The new mapping function.
@@ -981,22 +978,6 @@ CSSImportantRule::~CSSImportantRule(void)
 }
 
 NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
-
-#if 0
-NS_IMETHODIMP
-CSSImportantRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
-{
-  aResult = PRBool(aRule == this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSImportantRule::HashValue(PRUint32& aValue) const
-{
-  aValue = PRUint32(mDeclaration);
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP
 CSSImportantRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
@@ -1418,9 +1399,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-//  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
-//  NS_IMETHOD HashValue(PRUint32& aValue) const;
-
   virtual nsCSSSelector* FirstSelector(void);
   virtual void AddSelector(const nsCSSSelector& aSelector);
   virtual void DeleteSelector(nsCSSSelector* aSelector);
@@ -1571,52 +1549,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF_INHERITED(CSSStyleRuleImpl, nsCSSRule);
 NS_IMPL_RELEASE_INHERITED(CSSStyleRuleImpl, nsCSSRule);
 
-
-#if 0
-NS_IMETHODIMP CSSStyleRuleImpl::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
-{
-  nsICSSStyleRule* iCSSRule;
-
-  if (this == aRule) {
-    aResult = PR_TRUE;
-  }
-  else {
-    aResult = PR_FALSE;
-    if ((nsnull != aRule) && 
-        (NS_OK == ((nsIStyleRule*)aRule)->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**) &iCSSRule))) {
-
-      CSSStyleRuleImpl* rule = (CSSStyleRuleImpl*)iCSSRule;
-      const nsCSSSelector* local = &mSelector;
-      const nsCSSSelector* other = &(rule->mSelector);
-      aResult = PR_TRUE;
-
-      if ((rule->mDeclaration != mDeclaration) || 
-          (rule->mWeight != mWeight)) {
-        aResult = PR_FALSE;
-      }
-      while ((PR_TRUE == aResult) && (nsnull != local) && (nsnull != other)) {
-        if (! local->Equals(other)) {
-          aResult = PR_FALSE;
-        }
-        local = local->mNext;
-        other = other->mNext;
-      }
-      if ((nsnull != local) || (nsnull != other)) { // more were left
-        aResult = PR_FALSE;
-      }
-      NS_RELEASE(iCSSRule);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSStyleRuleImpl::HashValue(PRUint32& aValue) const
-{
-  aValue = (PRUint32)this;
-  return NS_OK;
-}
-#endif
 
 nsCSSSelector* CSSStyleRuleImpl::FirstSelector(void)
 {
