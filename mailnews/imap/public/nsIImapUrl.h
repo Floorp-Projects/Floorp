@@ -34,6 +34,8 @@
 #include "nsIImapMiscellaneousSink.h"
 #include "nsIImapServerSink.h"
 
+class nsIImapMockChannel;
+
 /* 21A89610-DC0D-11d2-806C-006008128C4E */
 
 #define NS_IIMAPURL_IID                     \
@@ -179,6 +181,8 @@ public:
     NS_IMETHOD SetMsgFileSpec(nsIFileSpec* aFileSpec) = 0;
     NS_IMETHOD GetMsgFileSpec(nsIFileSpec** aFileSpec) = 0;
 
+    NS_IMETHOD GetMockChannel(nsIImapMockChannel ** aChannel) = 0;
+    NS_IMETHOD SetMockChannel(nsIImapMockChannel * aChannel) = 0;
 };
 
 #endif /* nsIImapUrl_h___ */
