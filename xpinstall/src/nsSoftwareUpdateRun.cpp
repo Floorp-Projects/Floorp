@@ -133,7 +133,8 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
 
-    rv = hZip->Init(nsFileSpec(jarFile));
+    nsFileSpec fs(jarFile);
+    rv = hZip->Init(fs);
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
 
