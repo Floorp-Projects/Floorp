@@ -17,6 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Chris Waterson <waterson@netscape.com>
+ *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
@@ -1757,14 +1760,12 @@ nsXULDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aS
 NS_IMETHODIMP
 nsXULDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
-    NS_ASSERTION(0,"CreateXIF");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-    NS_ASSERTION(0,"ToXIF");
     return NS_OK;
 }
 
