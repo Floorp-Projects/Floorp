@@ -182,7 +182,10 @@ function historyAddBookmarks()
     return;
   
   var currentIndex = gHistoryTree.currentIndex;
-  var url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
+  var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  var url = builder.getResourceAtIndex(currentIndex).Value;
+  
+  //XXXBlake don't use getCellText
   var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
   BookmarksUtils.addBookmark(url, title, undefined);
 }
