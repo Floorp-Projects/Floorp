@@ -79,13 +79,16 @@ nsresult nsLWBrkFactory::CreateInstance(nsISupports *aDelegate,
   return res;
 }
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory)
 {
   if (aFactory == NULL) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aCID.Equals(kLWBrkCID)) {
+  if (aClass.Equals(kLWBrkCID)) {
     nsLWBrkFactory *factory = new nsLWBrkFactory();
     nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
     if (NS_FAILED(res)) {
@@ -97,17 +100,17 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
   return NS_NOINTERFACE;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload() {
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
   return nsRepository::RegisterFactory(kLWBrkCID, path,
                                        PR_TRUE, PR_TRUE);
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
   return nsRepository::UnregisterFactory(kLWBrkCID, path);
 }

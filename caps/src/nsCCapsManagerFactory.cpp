@@ -40,7 +40,11 @@ nsIFactory  *nsCCapsManagerFactory::m_pNSIFactory = NULL;
  +++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
+NSGetFactory(nsISupports* servMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
     
     if (!aClass.Equals(kCCapsManagerCID)) {
@@ -55,7 +59,7 @@ NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
 }
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(void)
+NSCanUnload(nsISupports* serviceMgr)
 {
     return PR_FALSE;
 }
@@ -134,8 +138,8 @@ nsCCapsManagerFactory::nsCCapsManagerFactory(void)
       if ( (err == NS_OK) && (m_pNSIFactory != NULL) )
       {
          NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
-         nsRepository::RegisterFactory(kCCapsManagerCID, m_pNSIFactory,
-                                     PR_FALSE);
+         nsRepository::RegisterFactory(kCCapsManagerCID, 0, 0,
+                                       m_pNSIFactory, PR_FALSE);
       }
 }
 

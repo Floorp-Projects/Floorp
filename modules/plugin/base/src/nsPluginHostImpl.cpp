@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -1770,7 +1770,7 @@ NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType,
           nsFactoryProc  fact = (nsFactoryProc)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
 
           if (nsnull != fact)
-			(fact)(kIPluginIID, mServiceMgr, (nsIFactory**)&plugins->mEntryPoint);
+			(fact)(mServiceMgr, kIPluginIID, 0, 0, (nsIFactory**)&plugins->mEntryPoint);
 
 		  // we only need to call this for 5x style plugins - CreatePlugin() handles this for
 		  // 4x style plugins
@@ -1837,7 +1837,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 					// need to get the plugin factory from this plugin.
 					nsFactoryProc nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
 					if (nsGetFactory != NULL) {
-						res = nsGetFactory(kIPluginIID, mServiceMgr, (nsIFactory**)&pluginTag->mEntryPoint);
+                        res = nsGetFactory(mServiceMgr, kIPluginIID, nsnull, nsnull,    // XXX fix ClassName/ProgID
+                                           (nsIFactory**)&pluginTag->mEntryPoint);
 						plugin = pluginTag->mEntryPoint;
 						if (plugin != NULL)
 							plugin->Initialize();

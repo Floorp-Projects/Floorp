@@ -44,12 +44,14 @@ class nsIServiceManager;
 //       sudu / stanley
 //
 //***********************************************************
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
-                                           nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory);
-extern "C" NS_EXPORT PRBool   NSCanUnload();
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *fullpath);
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *fullpath);
+extern "C" NS_EXPORT PRBool   NSCanUnload(nsISupports* serviceMgr);
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *fullpath);
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *fullpath);
 
 /* Quick Registration
  *
@@ -90,12 +92,14 @@ typedef NSQuickRegisterClassData* NSQuickRegisterData;
  * Dynamic library export function types
  */
 
-typedef nsresult (*nsFactoryProc)(const nsCID &aCLass,
-                                  nsISupports* serviceMgr,
+typedef nsresult (*nsFactoryProc)(nsISupports* serviceMgr,
+                                  const nsCID &aClass,
+                                  const char *aClassName,
+                                  const char *aProgID,
                                   nsIFactory **aFactory);
-typedef PRBool (*nsCanUnloadProc)(void);
-typedef nsresult (*nsRegisterProc)(const char *path);
-typedef nsresult (*nsUnregisterProc)(const char *path);
+typedef PRBool (*nsCanUnloadProc)(nsISupports* serviceMgr);
+typedef nsresult (*nsRegisterProc)(nsISupports* serviceMgr, const char *path);
+typedef nsresult (*nsUnregisterProc)(nsISupports* serviceMgr, const char *path);
 
 /*
  * Support types
@@ -148,10 +152,22 @@ public:
 
   // Finds a class ID for a specific Program ID
   static nsresult ProgIDToCLSID(const char *aProgID,
-                              nsCID *aClass);
-
+                                nsCID *aClass);
+  
+  // Finds a Program ID for a specific class ID
+  // caller frees the result with delete[]
+  static nsresult CLSIDToProgID(nsCID *aClass,
+                                char* *aClassName,
+                                char* *aProgID);
+  
   // Creates a class instance for a specific class ID
   static nsresult CreateInstance(const nsCID &aClass, 
+                                 nsISupports *aDelegate,
+                                 const nsIID &aIID,
+                                 void **aResult);
+
+  // Convenience routine, creates a class instance for a specific ProgID
+  static nsresult CreateInstance(const char *aProgID,
                                  nsISupports *aDelegate,
                                  const nsIID &aIID,
                                  void **aResult);
@@ -185,11 +201,11 @@ public:
 
   // Manually register a dynamically loaded component.
   static nsresult RegisterComponent(const nsCID &aClass,
-                                  const char *aClassName,
-                                  const char *aProgID,
-                                  const char *aLibrary,
-                                  PRBool aReplace,
-                                  PRBool aPersist);
+                                    const char *aClassName,
+                                    const char *aProgID,
+                                    const char *aLibrary,
+                                    PRBool aReplace,
+                                    PRBool aPersist);
 
   // Manually unregister a factory for a class
   static nsresult UnregisterFactory(const nsCID &aClass,
@@ -201,14 +217,14 @@ public:
 
   // Manually unregister a dynamically loaded component
   static nsresult UnregisterComponent(const nsCID &aClass,
-                                    const char *aLibrary);
+                                      const char *aLibrary);
 
   // Unload dynamically loaded factories that are not in use
   static nsresult FreeLibraries(void);
 
   // DLL registration support
   static nsresult AutoRegister(NSRegistrationInstant when,
-									const char* pathlist);
+                               const char* pathlist);
   // Pathlist is a semicolon separated list of pathnames
   static nsresult AddToDefaultPathList(const char *pathlist);
   static nsresult SyncComponentsInPathList(const char *pathlist);

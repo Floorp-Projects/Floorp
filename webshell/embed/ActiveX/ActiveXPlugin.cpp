@@ -23,7 +23,12 @@ static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 
 static CActiveXPlugin *gpFactory = NULL;
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory)
+extern "C" NS_EXPORT nsresult 
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
     if (aClass.Equals(kIPluginIID))
 	{
@@ -48,7 +53,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsISupports* ser
 	return NS_ERROR_FAILURE;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(void)
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
 {
     return (_Module.GetLockCount() == 0);
 }

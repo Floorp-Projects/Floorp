@@ -27,7 +27,7 @@ PRInt32 gLockCount = 0;
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(const char* path)
+NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult ret;
 
@@ -41,7 +41,7 @@ NSRegisterSelf(const char* path)
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(const char* path)
+NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult ret;
 
@@ -54,7 +54,11 @@ NSUnregisterSelf(const char* path)
 }
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID& aClass, nsISupports* aServMgr, nsIFactory** aFactory)
+NSGetFactory(nsISupports* aServMgr, 
+             const nsCID& aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory** aFactory)
 {
   nsresult  res;
 
@@ -77,4 +81,10 @@ NSGetFactory(const nsCID& aClass, nsISupports* aServMgr, nsIFactory** aFactory)
   }
 
   return NS_NOINTERFACE;
+}
+
+extern "C" NS_EXPORT PRBool
+NSCanUnload(nsISupports* serviceMgr)
+{
+  return PR_FALSE;      // XXX can we unload this?
 }

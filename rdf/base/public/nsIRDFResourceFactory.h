@@ -27,6 +27,8 @@
 #ifndef nsIRDFResourceFactory_h__
 #define nsIRDFResourceFactory_h__
 
+#if 0   // obsolete
+
 #include "nsISupports.h"
 class nsIRDFResource;
 
@@ -69,6 +71,7 @@ public:
     NS_IMETHOD CreateResource(const char* aURI, nsIRDFResource** aResult) = 0;
 };
 
+#endif
 
 #endif // nsIRDFResourceFactory_h__
 

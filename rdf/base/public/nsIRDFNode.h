@@ -58,6 +58,12 @@ public:
     static const nsIID& IID() { static nsIID iid = NS_IRDFNODE_IID; return iid; }
 
     /**
+     * Called by nsIRDFService after constructing a resource object to
+     * initialize it's URI.
+     */
+    NS_IMETHOD Init(const char* uri) = 0;
+
+    /**
      * Determine if two nodes are identical
      */
     NS_IMETHOD EqualsNode(nsIRDFNode* that, PRBool* result) const = 0;

@@ -251,19 +251,24 @@ nsresult nsWidgetFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-extern "C" NS_WIDGET nsresult NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
+extern "C" NS_WIDGET nsresult 
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
-    if (nsnull == aFactory) {
-        return NS_ERROR_NULL_POINTER;
-    }
+  if (nsnull == aFactory) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-    *aFactory = new nsWidgetFactory(aClass);
+  *aFactory = new nsWidgetFactory(aClass);
 
-    if (nsnull == aFactory) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (nsnull == aFactory) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
 
 

@@ -32,6 +32,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode methods:
+    NS_IMETHOD Init(const char* uri);
     NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
 
     // nsIRDFResource methods:
@@ -40,7 +41,7 @@ public:
     NS_IMETHOD EqualsString(const char* uri, PRBool* result) const;
 
     // nsRDFResource methods:
-    nsRDFResource(const char* uri);
+    nsRDFResource(void);
     virtual ~nsRDFResource(void);
 
 protected:

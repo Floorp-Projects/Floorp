@@ -62,7 +62,6 @@ static NS_DEFINE_IID(kIRDFCursorIID,               NS_IRDFCURSOR_IID);
 static NS_DEFINE_IID(kIRDFArcsOutCursorIID,        NS_IRDFARCSOUTCURSOR_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,             NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFResourceFactoryIID,      NS_IRDFRESOURCEFACTORY_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,                 NS_IRDFNODE_IID);
 
 

@@ -131,8 +131,10 @@ PRMonitor *getEditorMonitor() //if more than one person asks for the monitor at 
 we must be good providers of factories ect. this is where to put ALL editor exports
 */
 //BEGIN EXPORTS
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID & aClass, 
-                                           nsISupports * aServiceMgr, 
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServiceMgr, 
+                                           const nsCID & aClass, 
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory ** aFactory)
 {
   if (nsnull == aFactory) {
@@ -153,7 +155,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID & aClass,
 
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(void)
+NSCanUnload(nsISupports* serviceMgr)
 {
   return nsEditor::gInstanceCount; //I have no idea. I am copying code here
 }
@@ -161,14 +163,14 @@ NSCanUnload(void)
 
 
 extern "C" NS_EXPORT nsresult 
-NSRegisterSelf(const char *path)
+NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
   return nsRepository::RegisterFactory(kIEditFactoryIID, path, 
                                        PR_TRUE, PR_TRUE); //this will register the factory with the xpcom dll.
 }
 
 extern "C" NS_EXPORT nsresult 
-NSUnregisterSelf(const char *path)
+NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
   return nsRepository::UnregisterFactory(kIEditFactoryIID, path);//this will unregister the factory with the xpcom dll.
 }

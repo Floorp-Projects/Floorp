@@ -178,7 +178,11 @@ nsresult nsGfxFactoryGTK::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-extern "C" NS_GFXNONXP nsresult NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
+extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
+                                             const nsCID &aClass,
+                                             const char *aClassName,
+                                             const char *aProgID,
+                                             nsIFactory **aFactory)
 {
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;

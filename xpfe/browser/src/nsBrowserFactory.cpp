@@ -30,9 +30,19 @@
 
 
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_EXPORT nsresult NSGetFactory_WEB_DLL(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
+extern "C" NS_EXPORT nsresult 
+NSGetFactory_WEB_DLL(nsISupports* serviceMgr,
+                     const nsCID &aClass,
+                     const char *aClassName,
+                     const char *aProgID,
+                     nsIFactory **aFactory)
 #else
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
+extern "C" NS_EXPORT nsresult
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 #endif
 {
   nsresult rv = NS_OK;

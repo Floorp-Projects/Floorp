@@ -129,13 +129,15 @@ public:
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-extern "C" NS_EXPORT PRBool NSCanUnload()
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
 {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, 
-                                           nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory)
 {
   if (aFactory == NULL) return NS_ERROR_NULL_POINTER;
@@ -146,7 +148,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID,
 
   for (PRInt32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     data = &(g_FactoryData[i]);
-    if (aCID.Equals(*(data->mCID))) {
+    if (aClass.Equals(*(data->mCID))) {
       fac = new nsConverterFactory(data);
       res = fac->QueryInterface(kIFactoryIID, (void **) aFactory);
       if (NS_FAILED(res)) {
@@ -161,7 +163,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID,
   return NS_NOINTERFACE;
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char * path)
 {
   nsresult res;
 
@@ -174,7 +176,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
   return res;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char * path)
 {
   nsresult res;
 

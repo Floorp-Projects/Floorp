@@ -41,9 +41,6 @@ class nsIRDFDataBase;
 class nsIRDFDataSource;
 class nsIRDFLiteral;
 class nsIRDFResource;
-class nsIRDFResourceFactory;
-
-typedef nsresult (*NSDataSourceConstructorCallback)(nsIRDFDataSource** aResult);
 
 // {BFD05261-834C-11d2-8EAC-00805F29F370}
 #define NS_IRDFSERVICE_IID \
@@ -77,6 +74,11 @@ public:
     NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal) = 0;
 
     /**
+     * Registers a resource with the RDF system, making it unique w.r.t. GetResource.
+     */
+    NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE) = 0;
+
+    /**
      * Called to notify the resource manager that a resource is no
      * longer in use. This method should only be called from the
      * destructor of a "custom" resource implementation to notify the
@@ -89,20 +91,7 @@ public:
      * reason, you must always un-cache the resource <b>before</b>
      * releasing the storage for the <tt>const char*</tt> URI.
      */
-    NS_IMETHOD UnCacheResource(nsIRDFResource* resource) = 0;
-
-    /**
-     * Registers the specified resource factory as the producer for resources that
-     * have the specified <i>URI prefix</i>.
-     */
-    NS_IMETHOD RegisterResourceFactory(const char* aURIPrefix, nsIRDFResourceFactory* aFactory) = 0;
-
-    /**
-     * Unregsters the specified resource factory from producing resources that have
-     * the specified <i>URI prefix</i>.
-     */
-    NS_IMETHOD UnRegisterResourceFactory(const char* aURIPrefix) = 0;
-
+    NS_IMETHOD UnregisterResource(nsIRDFResource* aResource) = 0;
 
     // Data source management routines
 
@@ -117,7 +106,8 @@ public:
      * and unregisters when the last reference to the data source is
      * released.
      */
-    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource) = 0;
+    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource,
+                                  PRBool replace = PR_FALSE) = 0;
 
     /**
      * Unregister a <i>named data source</i>. The RDF service will call
@@ -125,18 +115,6 @@ public:
      * data source was registered.
      */
     NS_IMETHOD UnregisterDataSource(nsIRDFDataSource* dataSource) = 0;
-
-    /**
-     * Register a constructor function that will create a named data source.
-     * The RDF service will call this function to attempt to create a
-     * named data source.
-     */
-    NS_IMETHOD RegisterDataSourceConstructor(const char* aURI, NSDataSourceConstructorCallback aFn) = 0;
-
-    /**
-     * Unregister the constructor function for a named data source.
-     */
-    NS_IMETHOD UnregisterDataSourceConstructor(const char* aURI) = 0;
 
     /**
      * Get the <i>named data source</i> corresponding to the URI. If a data

@@ -97,8 +97,10 @@
  * by calling nsIPlugin::CreateInstance.
  */
 // (Declared in nsRepository.h)
-//extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
-//                                           nsISupports* serviceMgr, 
+//extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+//                                           const nsCID &aClass,
+//                                           const char *aClassName,
+//                                           const char *aProgID,
 //                                           nsIFactory **aFactory);
 
 /**                                                               

@@ -208,7 +208,7 @@ nsStringBundleServiceFactory::LockFactory(PRBool aLock)
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(const char* path)
+NSRegisterSelf(nsISupports* serviceMgr, const char* path)
 {
   nsresult ret;
 
@@ -222,7 +222,7 @@ NSRegisterSelf(const char* path)
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(const char* path)
+NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
 {
   nsresult ret;
 
@@ -235,7 +235,11 @@ NSUnregisterSelf(const char* path)
 }
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID& aClass, nsISupports* aServMgr, nsIFactory** aFactory)
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
   nsresult  res;
 

@@ -50,7 +50,10 @@ NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory)
 {
 	nsIFactory*	factoryInstance;
@@ -61,7 +64,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 	//
 	// first check for the nsILocaleFactory interfaces
 	//  
-	if (aCID.Equals(kLocaleFactoryCID))
+	if (aClass.Equals(kLocaleFactoryCID))
 	{
 		factoryInstance = new nsLocaleFactory();
 		res = factoryInstance->QueryInterface(kILocaleFactoryIID, (void **) aFactory);
@@ -78,7 +81,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 	//
 	// okay about bout nsIWin32LocaleManager
 	//
-	if (aCID.Equals(kWin32LocaleFactoryCID))
+	if (aClass.Equals(kWin32LocaleFactoryCID))
 	{
 		factoryInstance = new nsIWin32LocaleFactory();
 		res = factoryInstance->QueryInterface(kIFactoryIID,(void**)aFactory);
@@ -93,7 +96,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 	//
 	// let the nsLocaleFactoryWin logic take over from here
 	//
-	factoryInstance = new nsLocaleWinFactory(aCID);
+	factoryInstance = new nsLocaleWinFactory(aClass);
 
 	if(NULL == factoryInstance) 
 	{
@@ -110,7 +113,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 	return res;
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char * path)
 {
 	nsresult	res;
 
@@ -152,7 +155,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
 	return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char * path)
 {
 	nsresult res;
 

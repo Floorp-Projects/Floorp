@@ -64,7 +64,7 @@ private:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
 
 
-  friend PRBool NSCanUnload(void);
+  friend PRBool NSCanUnload(nsISupports* serviceMgr);
   static PRInt32 gInstanceCount;
 
 public:

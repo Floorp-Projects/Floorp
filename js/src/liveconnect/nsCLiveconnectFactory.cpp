@@ -47,7 +47,11 @@ nsCLiveconnect  *nsCLiveconnectFactory::m_pNSCLiveconnect = NULL;
  +++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
     
     if (!aClass.Equals(kCLiveconnectCID)) {
@@ -62,7 +66,7 @@ NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
 }
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(void)
+NSCanUnload(nsISupports* serviceMgr)
 {
     return PR_FALSE;
 }
@@ -149,8 +153,8 @@ nsCLiveconnectFactory::nsCLiveconnectFactory(void)
       if ( (err == NS_OK) && (m_pNSIFactory != NULL) )
       {
          NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-         nsRepository::RegisterFactory(kCLiveconnectCID, m_pNSIFactory,
-                                     PR_FALSE);
+         nsRepository::RegisterFactory(kCLiveconnectCID, NULL, NULL,
+                                       m_pNSIFactory, PR_FALSE);
       }
 }
 
