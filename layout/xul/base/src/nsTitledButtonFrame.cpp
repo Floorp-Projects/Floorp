@@ -1048,7 +1048,7 @@ nsTitledButtonFrame::ImageMayHaveChanged(nsIPresContext* aPresContext)
 
    // get the new image src
    nsString src = "";
-   mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::src, src);
+   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src);
 
    // if the new image is empty
    if (src.Equals("")) {
