@@ -342,7 +342,7 @@ static void reginfo2Length( const REGINFO &in, PRUint32 &out ) {
 | This code generates the implementation of the nsISupports member functions   |
 | for each class implemented in this file.                                     |
 ------------------------------------------------------------------------------*/
-NS_IMPL_ISUPPORTS1( nsRegistry,             nsIRegistry      )
+NS_IMPL_THREADSAFE_ISUPPORTS1( nsRegistry,  nsIRegistry      )
 NS_IMPL_ISUPPORTS2( nsRegSubtreeEnumerator, nsIEnumerator,
                     nsIRegistryEnumerator)
 NS_IMPL_ISUPPORTS1( nsRegistryNode,         nsIRegistryNode  )

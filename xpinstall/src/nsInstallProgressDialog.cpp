@@ -56,8 +56,8 @@ nsInstallProgressDialog::~nsInstallProgressDialog()
 }
 
 
-NS_IMPL_ADDREF( nsInstallProgressDialog );
-NS_IMPL_RELEASE( nsInstallProgressDialog );
+NS_IMPL_THREADSAFE_ADDREF( nsInstallProgressDialog );
+NS_IMPL_THREADSAFE_RELEASE( nsInstallProgressDialog );
 
 NS_IMETHODIMP 
 nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
