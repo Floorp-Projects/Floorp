@@ -21,7 +21,7 @@
 #ifndef _EDTRCCLN_H
 
 #define _EDTRCCLN_H
-#include "edtrcdll\edtdlgs.h"
+#include "edtrcdll\public\edtdlgs.h"
 
 //typedefs of placeholders for exported functions
 typedef IImageConversionDialog *(*IMAGEDIALOGCONSTRUCTOR)(HWND);
