@@ -220,16 +220,6 @@ nsCString::SetCapacity( PRUint32 aNewCapacity )
  *********************************************************************/
 
 /**
- * Retrieves internal (1-byte) buffer ptr;
- * @update  gess1/4/99
- * @return  ptr to internal buffer
- */
-const char* nsCString::GetBuffer(void) const {
-  return mStr;
-}
-
-
-/**
  * set a char inside this string at given index
  * @param aChar is the char you want to write into this string
  * @param anIndex is the ofs where you want to write the given char
