@@ -182,7 +182,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
 {
-  PRInt32 numChildren = LengthOf(mFirstChild);
+  PRInt32 numChildren = mFrames.GetLength();
   
   nsIFrame* childFrame;
   if (0 == numChildren) {
@@ -199,7 +199,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     NS_NewTextControlFrame(childFrame);
     childFrame->Init(aPresContext, text, this, mStyleContext);
     mTextFrame = (nsTextControlFrame*)childFrame;
-    mFirstChild = childFrame;
+    mFrames.SetFrames(childFrame);
 
     nsIHTMLContent* browse = nsnull;
     tag = NS_NewAtom("browse");
@@ -213,7 +213,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     mBrowseFrame = (nsButtonControlFrame*)childFrame;
     childFrame->Init(aPresContext, browse, this, mStyleContext);
 
-    mFirstChild->SetNextSibling(childFrame);
+    mFrames.FirstChild()->SetNextSibling(childFrame);
 
     NS_RELEASE(text);
     NS_RELEASE(browse);
@@ -223,7 +223,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
   nsHTMLReflowMetrics desiredSize = aDesiredSize;
   aDesiredSize.width = CONTROL_SPACING; 
   aDesiredSize.height = 0;
-  childFrame = mFirstChild;
+  childFrame = mFrames.FirstChild();
   nsPoint offset(0,0);
   while (nsnull != childFrame) {  // reflow, place, size the children
     nsHTMLReflowState   reflowState(aPresContext, childFrame, aReflowState,

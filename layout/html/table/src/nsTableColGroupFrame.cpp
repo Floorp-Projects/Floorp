@@ -106,20 +106,9 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
           prevColFrame->SetNextSibling(colFrame);
         prevColFrame = colFrame;
       }
+
       // hook new columns into col group child list
-      if (nsnull==mFirstChild)
-        mFirstChild = firstImplicitColFrame;
-      else
-      {
-        nsIFrame *lastChild = mFirstChild;
-        nsIFrame *nextChild = lastChild;
-        while (nsnull!=nextChild)
-        {
-          lastChild = nextChild;
-          nextChild->GetNextSibling(nextChild);
-        }
-        lastChild->SetNextSibling(firstImplicitColFrame);
-      }
+      mFrames.AppendFrames(nsnull, firstImplicitColFrame);
     }
     SetStyleContextForFirstPass(aPresContext);
   }
@@ -129,15 +118,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 NS_IMETHODIMP
 nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-
-  // Append the new frames to the child list
-  if (nsnull == lastChild) {
-    mFirstChild = aChildList;
-  } else {
-    lastChild->SetNextSibling(aChildList);
-  }
-
+  mFrames.AppendFrames(nsnull, aChildList);
   return NS_OK;
 }
 
@@ -190,7 +171,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
     rv = IncrementalReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 
-  for (kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+  for (kidFrame = mFrames.FirstChild(); nsnull != kidFrame;
+       kidFrame->GetNextSibling(kidFrame)) {
     // Give the child frame a chance to reflow, even though we know it'll have 0 size
     nsHTMLReflowMetrics kidSize(nsnull);
     // XXX Use a valid reason...
@@ -413,10 +395,12 @@ NS_METHOD nsTableColGroupFrame::IR_ColRemoved(nsIPresContext&          aPresCont
 {
   nsresult rv=NS_OK;
   PRInt32 startingColIndex=mStartColIndex;
-  nsIFrame *childFrame=mFirstChild;
+  nsIFrame *childFrame=mFrames.FirstChild();
   nsIFrame *prevSib=nsnull;
   while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
   {
+    // XXX change to use mFrames.DeleteFrame; and why does it keep
+    // looping after finding it?
     if (childFrame==aDeletedFrame)
     {
       nsIFrame *deleteFrameNextSib=nsnull;
@@ -424,7 +408,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColRemoved(nsIPresContext&          aPresCont
       if (nsnull!=prevSib)
         prevSib->SetNextSibling(deleteFrameNextSib);
       else
-        mFirstChild = deleteFrameNextSib;
+        mFrames.SetFrames(deleteFrameNextSib);
       startingColIndex += GetColumnCount(); // resets all column indexes
     }
     const nsStyleDisplay *display;
@@ -522,13 +506,13 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
       // set numCols to the number of columns effected by the COLS attribute
       PRInt32 numCols=0;
       if (NS_STYLE_TABLE_COLS_ALL == tableStyle->mCols)
-        numCols = LengthOf(mFirstChild);
+        numCols = mFrames.GetLength();
       else 
         numCols = tableStyle->mCols;
 
       // for every column effected, set its width style
       PRInt32 colIndex=0;
-      nsIFrame *colFrame=mFirstChild;
+      nsIFrame *colFrame=mFrames.FirstChild();
       while (nsnull!=colFrame)
       {
         const nsStyleDisplay * colDisplay=nsnull;
@@ -561,7 +545,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
       if (eStyleUnit_Null!=position->mWidth.GetUnit())
       {
         // now for every column that doesn't have it's own width, set the width style
-        nsIFrame *colFrame=mFirstChild;
+        nsIFrame *colFrame=mFrames.FirstChild();
         while (nsnull!=colFrame)
         {
           const nsStyleDisplay * colDisplay=nsnull;
@@ -598,7 +582,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
 int nsTableColGroupFrame::GetColumnCount ()
 {
   mColCount=0;
-  nsIFrame *childFrame = mFirstChild;
+  nsIFrame *childFrame = mFrames.FirstChild();
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
@@ -630,7 +614,7 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
   nsTableColFrame *result = nsnull;
   nsIFrame *childFrame = aChildFrame;
   if (nsnull==childFrame)
-    childFrame = mFirstChild;
+    childFrame = mFrames.FirstChild();
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
@@ -650,7 +634,7 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
 {
   nsTableColFrame *result = nsnull;
   PRInt32 count=0;
-  nsIFrame *childFrame = mFirstChild;
+  nsIFrame *childFrame = mFrames.FirstChild();
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
@@ -754,14 +738,15 @@ NS_METHOD nsTableColGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *
     fputs("\n", out);
   }
   // Output the children
-  if (nsnull != mFirstChild) {
+  if (mFrames.NotEmpty()) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
+    for (nsIFrame* child = mFrames.FirstChild(); child;
+         child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {

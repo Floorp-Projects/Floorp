@@ -97,7 +97,7 @@ nsTableRowFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aChildList)
 {
-  mFirstChild = aChildList;
+  mFrames.SetFrames(aChildList);
   return NS_OK;
 }
 
@@ -125,7 +125,7 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
       SetRowIndex(rowIndex);
       if (gsDebug) printf("Row InitChildren: set row index to %d\n", rowIndex);
       PRInt32   colIndex = 0;
-      for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
+      for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
       {
         const nsStyleDisplay *kidDisplay;
         kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
@@ -157,7 +157,7 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
           if (gsDebug) printf("%p : set cell frame %p to col index = %d\n", this, kidFrame, colIndex);
           // add the cell frame to the table's cell map
           if (gsDebug) printf("Row InitChildren: calling AddCellToTable...\n");
-          table->AddCellToTable(this, (nsTableCellFrame *)kidFrame, kidFrame == mFirstChild);
+          table->AddCellToTable(this, (nsTableCellFrame *)kidFrame, kidFrame == mFrames.FirstChild());
         }
       }
     }
@@ -178,7 +178,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
   // Resize and re-align the cell frames based on our row height
   nscoord cellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
   if (gsDebug) printf("Row DidReflow: cellHeight=%d\n", cellHeight);
-  nsIFrame *cellFrame = mFirstChild;
+  nsIFrame *cellFrame = mFrames.FirstChild();
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
   const nsStyleTable* tableStyle;
@@ -302,7 +302,7 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
                                     const nsRect&        aDirtyRect,
                                     nsFramePaintLayer aWhichLayer)
 {
-  nsIFrame* kid = mFirstChild;
+  nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {
     nsIView *pView;
      
@@ -353,7 +353,7 @@ nscoord nsTableRowFrame::GetChildMaxBottomMargin() const
 PRInt32 nsTableRowFrame::GetMaxColumns() const
 {
   int sum = 0;
-  nsIFrame *cell=mFirstChild;
+  nsIFrame *cell=mFrames.FirstChild();
   while (nsnull!=cell) 
   {
     const nsStyleDisplay *kidDisplay;
@@ -373,7 +373,7 @@ PRInt32 nsTableRowFrame::GetMaxColumns() const
 void nsTableRowFrame::GetMinRowSpan(nsTableFrame *aTableFrame)
 {
   PRInt32 minRowSpan=-1;
-  nsIFrame *frame=mFirstChild;
+  nsIFrame *frame=mFrames.FirstChild();
   while (nsnull!=frame)
   {
     const nsStyleDisplay *kidDisplay;
@@ -393,7 +393,7 @@ void nsTableRowFrame::GetMinRowSpan(nsTableFrame *aTableFrame)
 
 void nsTableRowFrame::FixMinCellHeight(nsTableFrame *aTableFrame)
 {
-  nsIFrame *frame=mFirstChild;
+  nsIFrame *frame=mFrames.FirstChild();
   while (nsnull!=frame)
   {
     const nsStyleDisplay *kidDisplay;
@@ -481,7 +481,7 @@ nsIFrame * nsTableRowFrame::GetNextChildForDirection(PRUint8 aDir, nsIFrame *aCu
 nsIFrame * nsTableRowFrame::GetFirstChildForDirection(PRUint8 aDir)
 {
   nsIFrame *result=nsnull;
-  result = mFirstChild;
+  result = mFrames.FirstChild();
   return result;
 }
 
@@ -495,7 +495,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
                                         nsReflowStatus&      aStatus)
 {
   aStatus = NS_FRAME_COMPLETE;
-  if (nsnull == mFirstChild)
+  if (nsnull == mFrames.FirstChild())
     return NS_OK;
 
   nsresult rv=NS_OK;
@@ -744,7 +744,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
 
   nsIFrame* kidFrame;
   if (nsnull==aStartFrame)
-    kidFrame = mFirstChild;
+    kidFrame = mFrames.FirstChild();
   else
     kidFrame = aStartFrame;
 
@@ -860,7 +860,7 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
   // Walk the list of children looking for aKidFrame. While we're at
   // it get the maxCellHeight and maxVertCellSpace for all the
   // frames except aKidFrame
-  for (nsIFrame* frame = mFirstChild; nsnull != frame;) 
+  for (nsIFrame* frame = mFrames.FirstChild(); nsnull != frame;) 
   {
     const nsStyleDisplay *kidDisplay;
     frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
@@ -1134,7 +1134,7 @@ NS_METHOD nsTableRowFrame::IR_CellAppended(nsIPresContext&      aPresContext,
 #if 0
   nsresult rv=NS_OK;
   // hook aAppendedFrame into the child list
-  nsIFrame *lastChild = mFirstChild;
+  nsIFrame *lastChild = mFrames.FirstChild();
   nsIFrame *nextChild = lastChild;
   nsIFrame *lastRow = nsnull;
   while (nsnull!=nextChild)
@@ -1454,7 +1454,7 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
 
   // Create a continuing frame for each table cell frame
   nsIFrame* newChildList;
-  for (nsIFrame* kidFrame = mFirstChild;
+  for (nsIFrame* kidFrame = mFrames.FirstChild();
        nsnull != kidFrame;
        kidFrame->GetNextSibling(kidFrame)) {
 
@@ -1470,8 +1470,8 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
       NS_RELEASE(kidSC);
       
       // Link it into the list of child frames
-      if (nsnull == cf->mFirstChild) {
-        cf->mFirstChild = contCellFrame;
+      if (nsnull == cf->mFrames.FirstChild()) {
+        cf->mFrames.SetFrames(contCellFrame);
       } else {
         newChildList->SetNextSibling(contCellFrame);
       }
@@ -1560,14 +1560,15 @@ NS_METHOD nsTableRowFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilt
     fputs("\n", out);
   }
   // Output the children
-  if (nsnull != mFirstChild) {
+  if (mFrames.NotEmpty()) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
+    for (nsIFrame* child = mFrames.FirstChild(); child;
+         child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {

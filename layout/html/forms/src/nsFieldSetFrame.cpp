@@ -124,19 +124,22 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
   PRUint8 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
-  NS_NewAreaFrame(mFirstChild, flags);
-  mContentFrame = mFirstChild;
+  NS_NewAreaFrame(mContentFrame, flags);
+  mFrames.SetFrames(mContentFrame);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext = aPresContext.ResolvePseudoStyleContextFor(mContent, 
                                                                             nsHTMLAtoms::fieldsetContentPseudo,
                                                                             mStyleContext);
-  mFirstChild->Init(aPresContext, mContent, this, styleContext);
+  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   nsIFrame* newChildList = aChildList;
 
-  mFirstChild->SetNextSibling(nsnull);
+  // XXX this just tosses any extra frames passed in onto the floor;
+  // this is a memory leak!!!
+  mFrames.FirstChild()->SetNextSibling(nsnull);
+
   // Set the geometric and content parent for each of the child frames. 
   // The legend is handled differently and removed from aChildList
   nsIFrame* lastFrame = nsnull;
@@ -152,19 +155,19 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
         newChildList = nextFrame;
       }
       frame->SetParent(this);
-      mFirstChild->SetNextSibling(frame);
+      mFrames.FirstChild()->SetNextSibling(frame);
       mLegendFrame = frame;
       mLegendFrame->SetNextSibling(nsnull);
       frame = nextFrame;
      } else {
-      frame->SetParent(mFirstChild);
+      frame->SetParent(mFrames.FirstChild());
       frame->GetNextSibling(frame);
     }
     lastFrame = frame;
   }
 
   // Queue up the frames for the content frame
-  return mFirstChild->SetInitialChildList(aPresContext, nsnull, newChildList);
+  return mFrames.FirstChild()->SetInitialChildList(aPresContext, nsnull, newChildList);
 }
 
 // this is identical to nsHTMLContainerFrame::Paint except for the background and border. 

@@ -95,7 +95,7 @@ NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
   aCount=0;
 
   // loop through children, adding one to aCount for every legit row
-  nsIFrame *childFrame = mFirstChild;
+  nsIFrame *childFrame = mFrames.FirstChild();
   while (PR_TRUE)
   {
     if (nsnull==childFrame)
@@ -112,7 +112,7 @@ NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
 PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
 {
   PRInt32 result = -1;
-  nsIFrame *childFrame = mFirstChild;
+  nsIFrame *childFrame = mFrames.FirstChild();
   while (PR_TRUE)
   {
     if (nsnull==childFrame)
@@ -133,7 +133,7 @@ NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns) const
 {
   aMaxColumns=0;
   // loop through children, remembering the max of the columns in each row
-  nsIFrame *childFrame = mFirstChild;
+  nsIFrame *childFrame = mFrames.FirstChild();
   while (PR_TRUE)
   {
     if (nsnull==childFrame)
@@ -156,7 +156,7 @@ nsTableRowGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
-  mFirstChild = aChildList;
+  mFrames.SetFrames(aChildList);
   return NS_OK;
 }
 
@@ -201,7 +201,7 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
                                          const nsRect&        aDirtyRect,
                                          nsFramePaintLayer    aWhichLayer)
 {
-  nsIFrame* kid = mFirstChild;
+  nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {
     nsIView *pView;
      
@@ -320,7 +320,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
   nsresult  rv = NS_OK;
   nsIFrame*  kidFrame;
   if (nsnull==aStartFrame)
-    kidFrame = mFirstChild;
+    kidFrame = mFrames.FirstChild();
   else
     kidFrame = aStartFrame;
 
@@ -343,7 +343,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
 #endif
     nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState.reflowState,
                                      kidAvailSize, aReason);
-    if (kidFrame != mFirstChild) {
+    if (kidFrame != mFrames.FirstChild()) {
       // If this isn't the first row frame, then we can't be at the top of
       // the page anymore...
       kidReflowState.isTopOfPage = PR_FALSE;
@@ -358,7 +358,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
 
 #if 0
     // Did the child fit?
-    if ((kidFrame != mFirstChild) &&
+    if ((kidFrame != mFrames.FirstChild()) &&
         ((kidAvailSize.height <= 0) ||
          (desiredSize.height > kidAvailSize.height)))
     {
@@ -490,7 +490,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
   nsTableRowGroupFrame* nextInFlow = (nsTableRowGroupFrame*)mNextInFlow;
   nsSize         kidMaxElementSize;
   nsSize*        pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
-  nsIFrame*      prevKidFrame = LastFrame(mFirstChild);
+  nsIFrame*      prevKidFrame = mFrames.LastChild();
   nsresult       rv = NS_OK;
 
   aStatus = NS_FRAME_COMPLETE;
@@ -499,16 +499,16 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
     kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
 
     // Get the next child
-    nsIFrame* kidFrame = nextInFlow->mFirstChild;
+    nsIFrame* kidFrame = nextInFlow->mFrames.FirstChild();
 
     // Any more row frames?
     if (nsnull == kidFrame) {
       // No. Any frames on its overflow list?
-      if (nsnull != nextInFlow->mOverflowList) {
+      if (nextInFlow->mOverflowFrames.NotEmpty()) {
         // Move the overflow list to become the child list
-        nextInFlow->AppendChildren(nextInFlow->mOverflowList);
-        nextInFlow->mOverflowList = nsnull;
-        kidFrame = nextInFlow->mFirstChild;
+        nextInFlow->AppendChildren(nextInFlow->mOverflowFrames.FirstChild(), PR_TRUE);
+        nextInFlow->mOverflowFrames.SetFrames(nsnull);
+        kidFrame = nextInFlow->mFrames.FirstChild();
       } else {
         // We've pulled up all the children, so move to the next-in-flow.
         nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
@@ -548,13 +548,13 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
     // Remove the frame from its current parent
     // XXX We need to do this BEFORE we reflow the child; otherwise we're reflowing
     // it without its geometric parent set properly...
-    kidFrame->GetNextSibling(nextInFlow->mFirstChild);
+    nextInFlow->mFrames.RemoveFirstChild();
 
     // Link the frame into our list of children
     kidFrame->SetParent(this);
 
     if (nsnull == prevKidFrame) {
-      mFirstChild = kidFrame;
+      mFrames.SetFrames(kidFrame);
     } else {
       prevKidFrame->SetNextSibling(kidFrame);
     }
@@ -620,7 +620,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   /* Step 1:  get the height of the tallest cell in the row and save it for
    *          pass 2
    */
-  nsIFrame* rowFrame = mFirstChild;
+  nsIFrame* rowFrame = mFrames.FirstChild();
   PRInt32 rowIndex = 0;
   while (nsnull != rowFrame)
   {
@@ -670,7 +670,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   for (PRInt32 counter=0; counter<2; counter++)
   {
     rowGroupHeight = 0;
-    rowFrame = mFirstChild;
+    rowFrame = mFrames.FirstChild();
     rowIndex = 0;
     while (nsnull != rowFrame)
     {
@@ -778,7 +778,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   }
 
   /* step 3: finally, notify the rows of their new heights */
-  rowFrame = mFirstChild;
+  rowFrame = mFrames.FirstChild();
   while (nsnull != rowFrame)
   {
     const nsStyleDisplay *childDisplay;
@@ -832,7 +832,7 @@ nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aP
 
   } else {
     // Get the last frame
-    lastKidFrame = LastFrame(mFirstChild);
+    lastKidFrame = mFrames.LastChild();
   }
 
   // XXX Deal with cells that have rowspans.
@@ -856,7 +856,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
 
   // Walk each of the row frames looking for the first row frame that
   // doesn't fit in the available space
-  for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+  for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
     nsRect  bounds;
 
     kidFrame->GetRect(bounds);
@@ -955,7 +955,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     MoveOverflowToChildList();
   
     // Reflow the existing frames
-    if (nsnull != mFirstChild) {
+    if (nsnull != mFrames.FirstChild()) {
       rv = ReflowMappedChildren(aPresContext, aDesiredSize, state, aStatus,
                                 nsnull, aReflowState.reason, PR_TRUE);
     }
@@ -1384,14 +1384,15 @@ NS_METHOD nsTableRowGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *
   }
 
   // Output the children
-  if (nsnull != mFirstChild) {
+  if (mFrames.NotEmpty()) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
+    for (nsIFrame* child = mFrames.FirstChild(); child;
+         child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {
