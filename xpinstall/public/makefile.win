@@ -36,6 +36,7 @@ XPIDLSRCS =                               \
             .\nsIXPIProgressDlg.idl       \
             .\nsPIXPIStubHook.idl         \
             .\nsPIXPIManagerCallbacks.idl \
+            .\nsPIXPIProxy.idl            \
 #            .\nsIUpdateNotification.idl   \
             $(NULL) 
 
