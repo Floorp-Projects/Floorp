@@ -516,8 +516,8 @@ fe_CharSetInfo fe_CharSetInfoArray[] =
     { CS_CNS11643_14  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_CNS11643_15  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_CNS11643_16  , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
-    { CS_VISCII       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
-    { CS_VIQR         , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_VIET_VISCII  , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_VIET_VIQR    , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_KOI8_U       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_ISO_IR_111   , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_8859_6_I     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
@@ -526,6 +526,9 @@ fe_CharSetInfo fe_CharSetInfoArray[] =
     { CS_8859_8_E     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_JOHAB        , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
     { CS_JOHABFONT    , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     }, /* put this as NONE untill we have real johab font support */
+    { CS_VIET_VPS     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_VIET_TCVN    , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_VIET_VNI     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
 };
 
 static unsigned char *fe_LocaleCharSets = NULL;
