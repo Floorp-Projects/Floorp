@@ -380,7 +380,7 @@ ifdef BROWSER_CO_TAG
   BROWSER_CO_FLAGS := $(BROWSER_CO_FLAGS) -r $(BROWSER_CO_TAG)
 endif
 
-BROWSER_CO_DIRS := mozilla/browser mozilla/other-licenses/branding/firefox
+BROWSER_CO_DIRS := mozilla/browser mozilla/other-licenses/branding/firefox mozilla/other-licenses/7zstub/firefox
 
 CVSCO_PHOENIX := $(CVS) $(CVS_FLAGS) co $(BROWSER_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(BROWSER_CO_DIRS)
 
@@ -405,7 +405,7 @@ ifdef MAIL_CO_TAG
   MAIL_CO_FLAGS := $(MAIL_CO_FLAGS) -r $(MAIL_CO_TAG)
 endif
 
-MAIL_CO_DIRS := mozilla/mail mozilla/other-licenses/branding/thunderbird
+MAIL_CO_DIRS := mozilla/mail mozilla/other-licenses/branding/thunderbird mozilla/other-licenses/7zstub/thunderbird
 
 CVSCO_THUNDERBIRD := $(CVS) $(CVS_FLAGS) co $(MAIL_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(MAIL_CO_DIRS)
 ifdef MOZ_THUNDERBIRD
