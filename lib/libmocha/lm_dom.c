@@ -671,3 +671,29 @@ DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
     return closing;
 }
 
+JSBool
+LM_SetNodeFlags(DOM_Node *node, uint32 flags)
+{
+    DOM_HTMLElementPrivate *priv;
+    if (!(node->type == NODE_TYPE_ELEMENT ||
+          node->type == NODE_TYPE_TEXT))
+        return JS_FALSE;
+    priv = ELEMENT_PRIV(node);
+    if (!priv)
+        return JS_FALSE;
+    priv->flags |= flags;
+    return JS_TRUE;
+}
+
+JSBool
+LM_ClearNodeFlags(DOM_Node *node, uint32 flags)
+{
+    DOM_HTMLElementPrivate *priv = ELEMENT_PRIV(node);
+    if (!(node->type == NODE_TYPE_ELEMENT ||
+          node->type == NODE_TYPE_TEXT) ||
+        !priv)
+        return JS_FALSE;
+        return JS_FALSE;
+    priv->flags &= ~flags;
+    return JS_TRUE;
+}
