@@ -36,13 +36,13 @@
 function initProfiler ()
 {
     console.addPref ("profile.template.xml",
-                     "chrome://venkman/content/profile.xml.tpl");
+                     "chrome://venkman/locale/profile.xml.tpl");
     console.addPref ("profile.template.html",
-                     "chrome://venkman/content/profile.html.tpl");
+                     "chrome://venkman/locale/profile.html.tpl");
     console.addPref ("profile.template.csv",
-                     "chrome://venkman/content/profile.csv.tpl");
+                     "chrome://venkman/locale/profile.csv.tpl");
     console.addPref ("profile.template.txt",
-                     "chrome://venkman/content/profile.txt.tpl");
+                     "chrome://venkman/locale/profile.txt.tpl");
     console.addPref ("profile.ranges.default",
                      "1000000, 5000, 2500, 1000, 750, 500, 250, 100, 75, 50, " +
                      "25, 10, 7.5, 5, 2.5, 1, 0.75, 0.5, 0.25");
@@ -254,7 +254,7 @@ function pro_rptinst (profileReport, scriptInstance, sectionData)
             "\\$item-number-prev": i - 1,
             "\\$item-number"     : i,
             "\\$item-name"       : summary.url,
-            "\\$item-summary"    : summary.str,
+            "\\$item-summary"    : fromUnicode(summary.str, MSG_REPORT_CHARSET),
             "\\$item-min-pct"    : scale(K, summary.min),
             "\\$item-below-pct"  : scale(K, summary.avg - summary.min),
             "\\$item-above-pct"  : scale(K, summary.max - summary.avg),
@@ -264,7 +264,7 @@ function pro_rptinst (profileReport, scriptInstance, sectionData)
             "\\$total-time"      : summary.total,
             "\\$call-count"      : summary.ccount,
             "\\$recurse-depth"   : summary.recurse,
-            "\\$function-name"   : summary.fun,
+            "\\$function-name"   : fromUnicode(summary.fun, MSG_REPORT_CHARSET),
             "\\$start-line"      : summary.base,
             "\\$end-line"        : summary.end,
             "__proto__"          : rangeData
@@ -341,10 +341,11 @@ function pro_rptall (profileReport)
     };
     
     var reportData = {
-        "\\$full-date"    : String(Date()),
-        "\\$user-agent"   : navigator.userAgent,
-        "\\$venkman-agent": console.userAgent,
-        "\\$sort-key"     : profileReport.key
+        "\\$report-charset": MSG_REPORT_CHARSET,
+        "\\$full-date"     : String(Date()),
+        "\\$user-agent"    : navigator.userAgent,
+        "\\$venkman-agent" : console.userAgent,
+        "\\$sort-key"      : profileReport.key
     };
 
     var reportTemplate = profileReport.reportTemplate;

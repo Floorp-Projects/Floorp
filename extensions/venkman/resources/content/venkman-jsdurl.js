@@ -299,6 +299,7 @@ function svc_help (response, parsedURL)
                     return "<tt>" + p1 + "</tt>";
                 };
                     
+                
                 var htmlUsage = command.usage.replace(/<([^\s>]+)>/g,
                                                       replaceParam);
                 var htmlDesc = command.help.replace(/<([^\s>]+)>/g,
@@ -308,11 +309,13 @@ function svc_help (response, parsedURL)
 
                 vars = {
                     "\\$command-name": command.name,
-                    "\\$ui-label-safe": escape(command.labelstr),
-                    "\\$ui-label": command.labelstr,
-                    "\\$params": htmlUsage,
+                    "\\$ui-label-safe": escape(fromUnicode(command.labelstr,
+                                                           MSG_REPORT_CHARSET)),
+                    "\\$ui-label": fromUnicode(command.labelstr,
+                                               MSG_REPORT_CHARSET),
+                    "\\$params": fromUnicode(htmlUsage, MSG_REPORT_CHARSET),
                     "\\$key": command.keystr,
-                    "\\$desc": htmlDesc
+                    "\\$desc": fromUnicode(htmlDesc, MSG_REPORT_CHARSET)
                 };
                 
                 command.htmlHelp = replaceStrings (section, vars);
@@ -416,15 +419,15 @@ function svc_help (response, parsedURL)
 
     commandList.sort(compare);
     
-    dd ("building response with " + commandList.length + " commands");
-
     response.start();
 
     var vars = {
         "\\$css": console.prefs["services.help.css"],
         "\\$match-count": commandList.length,
-        "\\$has-searched": hasSearched
-    };            
+        "\\$has-searched": hasSearched,
+        "\\$report-charset": MSG_REPORT_CHARSET,
+    };
+            
     response.append(replaceStrings(tpl["header"], vars));
 
     if (commandList.length == 0)
@@ -748,9 +751,18 @@ function con_respondsourcetext (response, sourceText)
         
         for (var i = start; i < stop; ++i)
         {
-            var padding = 
-                tenSpaces.substr(0, maxDigits -
-                                 Math.floor(Math.log(i + 1) / Math.LN10));
+            var padding;
+            if (i != 999)
+            {
+                padding =
+                    tenSpaces.substr(0, maxDigits -
+                                     Math.floor(Math.log(i + 1) / Math.LN10));
+            }
+            else
+            {
+                /* at exactly 1000, a rounding error gets us. */
+                padding = tenSpaces.substr(0, maxDigits - 3);
+            }    
 
             var isExecutable;
             var marginContent;
@@ -780,7 +792,7 @@ function con_respondsourcetext (response, sourceText)
             resultSource += "<line><margin x='" + isExecutable +"'>" +
                 marginContent + "</margin>" +
                 "<num>" + padding + (i + 1) +
-                "</num>" + line + "</line>\n";
+                "</num> " + line + "</line>\n";
                
         }
 
@@ -801,35 +813,40 @@ function con_respondsourcetext (response, sourceText)
         dd ("}");
     };
     
+    if ("charset" in sourceText)
+        response.channel.contentCharset = sourceText.charset;
+    
+    if ("markup" in sourceText)
+    {
+        response.channel.contentType = "text/xml";
+        response.start();
+        response.append(sourceText.markup);
+        response.end();
+    }
+    else
+    {
+        sourceLines = sourceText.lines;
+        maxDigits = Math.floor(Math.log(sourceLines.length) / Math.LN10) + 1;
+        dd ("building response {");
+        response.channel.contentType = "text/xml";
+        resultSource = "<?xml version='1.0'";
+        //        if ("charset" in sourceText)
+        //    resultSource += " encoding=\"" + sourceText.charset + "\"";
+        resultSource += "?>\n" +
+            "<?xml-stylesheet type='text/css' href='" +
+            console.prefs["services.source.css"] + "' ?>\n" +
+            "<source-listing id='source-listing'>\n";
         
-        if ("markup" in sourceText)
-        {
-            response.channel.contentType = "text/xml";
-            response.start();
-            response.append(sourceText.markup);
-            response.end();
-        }
-        else
-        {
-            sourceLines = sourceText.lines;
-            maxDigits = Math.floor(Math.log(sourceLines.length) / Math.LN10);
-            dd ("building response {");
-            response.channel.contentType = "text/xml";
-            resultSource = "<?xml version='1.0'?>\n" +
-                "<?xml-stylesheet type='text/css' href='" +
-                console.prefs["services.source.css"] + "' ?>\n" +
-                "<source-listing id='source-listing'>\n";
-
-            /*
-            resultSource = "<html><head>\n" +
-                "<link rel='stylesheet' type='text/css' href='" +
-                console.prefs["services.source.css"] + "'><body>\n" +
-                "<source-listing id='source-listing'>\n";
-            */
-            response.start();
-
-            processSourceChunk (0);
-        }
+        /*
+          resultSource = "<html><head>\n" +
+          "<link rel='stylesheet' type='text/css' href='" +
+          console.prefs["services.source.css"] + "'><body>\n" +
+          "<source-listing id='source-listing'>\n";
+        */
+        response.start();
+        
+        processSourceChunk (0);
+    }
 }
 
 console.services["pprint"] =
@@ -897,7 +914,8 @@ function svc_source (response, parsedURL)
         var scriptManager = console.scriptManagers[targetURL];
         if ("instance" in parsedURL)
         {
-            var instance = scriptManager.getInstanceBySequence(targetURL);
+            var instance =
+                scriptManager.getInstanceBySequence(parsedURL.instance);
             if (instance)
                 sourceText = instance.sourceText;
         }

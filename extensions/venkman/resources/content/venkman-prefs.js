@@ -63,8 +63,8 @@ function initPrefs()
     console.addPref ("statusDuration", 5 * 1000);
     console.addPref ("menubarInFloaters",
                      navigator.platform.indexOf ("Mac") != -1);
-    console.addPref ("errorMode", EMODE_IGNORE);
-    console.addPref ("throwMode", TMODE_IGNORE);
+    console.addPref ("lastErrorMode", "ignore");
+    console.addPref ("lastThrowMode", "ignore");
     
     var list = console.prefs.prefBranch.getChildList("", {});
     for (var p in list)

@@ -104,7 +104,6 @@
            src="about:blank" context="context:session"/>
          <textbox id="session-sl-input" class="input-widget"
            onkeypress="console.views.session.onSLKeyPress(event);"/>
-
       </vbox>
     </floatingview>
 
@@ -241,6 +240,7 @@
     <floatingview id="windows" title="&Windows.label;" flex="1">
       <vbox id="windows-view-content" flex="1">
         <tree flex="1" id="windows-tree" persist="height"
+          context="context:windows"
           ondblclick="console.views.windows.onDblClick(event);"
           hidecolumnpicker="true">
 

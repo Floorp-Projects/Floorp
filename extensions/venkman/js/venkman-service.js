@@ -125,7 +125,6 @@ function JSDURI (spec, charset)
 JSDURI.prototype.QueryInterface =
 function jsdch_qi (iid)
 {
-
     if (!iid.equals(nsIURI) && !iid.equals(nsIURL) &&
         !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -134,7 +133,6 @@ function jsdch_qi (iid)
 }
 
 JSDURI.prototype.scheme = "x-jsd";
-
 
 JSDURI.prototype.fileBaseName =
 JSDURI.prototype.fileExtension =

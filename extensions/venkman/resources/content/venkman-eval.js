@@ -34,25 +34,32 @@
  */
 
 console.doEval =
-function con_eval(__s)
+function con_eval(__s, __o)
 {
     var __ex;
 
     try
     {
-        return eval(__s);
+        if (__o && "eval" in __o)
+            rv = __o.eval(__s);
+        else
+            rv = eval(__s);
     }
     catch (__ex)
     {
         dd ("doEval caught: " + __ex);
         
-        if (__ex && typeof ex == "object" && "fileName" in __ex &&
+        if (__ex && typeof __ex == "object" && "fileName" in __ex &&
             __ex.fileName.search (/venkman-eval.js$/) != -1)
         {
             __ex.fileName = MSG_VAL_CONSOLE;
-            __ex.lineNumber = 1;
+            __ex.lineNumber = console.evalCount;
         }
+        ++console.evalCount;
         throw __ex;
     }
+
+    ++console.evalCount;
+    return rv;
 }
 

@@ -2,6 +2,7 @@
 
 <html>
   <head>
+    <meta http-equiv="content-type" content="text/html; charset=$report-charset">
     <link rel="stylesheet" href="$css" type="text/css" media="screen">
 
     <title>Venkman Help System</title>
@@ -100,12 +101,17 @@
           for help on the various commands avaialble in Venkman.  To search for a
           particular command, type your search term in the box below and click
           <b>Go</b>, or press <b>Enter</b>.
+        <p>
+          Additional help can be found on the
+          <a href="http://www.mozilla.org/projects/venkman/">Venkman Homepage</a>
+          or the
+          <a href="http://www.hacksrus.com/~ginda/venkman/faq/venkman-faq.html">Venkman FAQ</a>.
       </span>
       <span class="newbie-help">
         The check boxes control which fields the search is performed on...
         <ul>
           <li><b>Command Names</b> matches the command name, as you might enter
-            it in the </b>Session View</b>.
+            it in the </b>Interactive Session</b>.
           <li><b>User Interface Labels</b> matches the label used when the
             command appears in a <b>menu</b> or <b>toolbar button</b>.
           <li><b>Descriptions</b> matches the body of the help text.
@@ -124,7 +130,7 @@
         <input type="checkbox" id="help-text" value="1">
         <label for="help-text">Descriptions</label>
       <p class="quick-searches">
-        [ <a href="x-jsd:help">Session View Commands</a> |
+        [ <a href="x-jsd:help">Interactive Session Commands</a> |
          <a href="x-jsd:help?search="><b>All</b> Commands</a> |
          <a href="x-jsd:help?search=%5E%5Ba-c%5D&within=2">A-C</a> |
          <a href="x-jsd:help?search=%5E%5Bd-f%5D&within=2">D-F</a> |

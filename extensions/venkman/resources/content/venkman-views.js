@@ -36,10 +36,10 @@
 const DEFAULT_VURLS =
 (
  ("x-vloc:/mainwindow?target=container&type=horizontal&id=outer; " +
-  ("x-vloc:/mainwindow/outer?target=container&type=vertical&id=vleft; " +
-   ("x-vloc:/mainwindow/vleft?target=view&id=scripts; " +
-    "x-vloc:/mainwindow/vleft?target=view&id=locals; " +
-    "x-vloc:/mainwindow/vleft?target=view&id=stack; ")) +
+  ("x-vloc:/mainwindow/outer?target=container&type=vertical&id=gutter; " +
+   ("x-vloc:/mainwindow/gutter?target=view&id=scripts; " +
+    "x-vloc:/mainwindow/gutter?target=view&id=locals; " +
+    "x-vloc:/mainwindow/gutter?target=view&id=stack; ")) +
   ("x-vloc:/mainwindow/outer?target=container&type=vertical&id=vright; " +
    ("x-vloc:/mainwindow/vright?target=view&id=source2; " +
     "x-vloc:/mainwindow/vright?target=view&id=session"))
@@ -450,6 +450,13 @@ function lv_init ()
         getContext: this.getContext,
         items:
         [
+         ["set-eval-obj", {type: "checkbox",
+                           checkedif: "has('jsdValue') && " +
+                                      "cx.jsdValue.getWrappedValue() == " +
+                                      "console.currentEvalObject",
+                           enabledif: "has('jsdValue') && " +
+                                      "cx.jsdValue.jsType == TYPE_OBJECT"}],
+         ["-"],
          ["find-creator",
                  {enabledif: "cx.target instanceof ValueRecord && " +
                   "cx.target.jsType == jsdIValue.TYPE_OBJECT  && " +
@@ -485,10 +492,14 @@ function lv_renit (jsdFrame)
     }
     
     this.jsdFrame = jsdFrame;
-    var tag = jsdFrame.script.tag;
     var state;
-    if (tag in this.savedStates)
-        state = this.savedStates[tag];
+
+    if (jsdFrame.script)
+    {
+        var tag = jsdFrame.script.tag;
+        if (tag in this.savedStates)
+            state = this.savedStates[tag];
+    }
     
     if (jsdFrame.scope)
     {
@@ -560,7 +571,10 @@ function sv_save ()
 {
     if (!ASSERT(this.jsdFrame, "no frame"))
         return;
-        
+
+    if (!this.jsdFrame.script)
+        return;
+    
     var tag = this.jsdFrame.script.tag;    
 
     if (!tag in this.savedStates &&
@@ -795,38 +809,41 @@ function scv_hookChromeFilter(e)
 
     for (var m in console.scriptManagers)
     {
-        if (console.scriptManagers[m].url.search(/^chrome:/) == -1)
-            continue;
-        
-        for (var i in console.scriptManagers[m].instances)
+        if (console.scriptManagers[m].url.search(/^chrome:/) == 0 ||
+            ("componentPath" in console &&
+             console.scriptManagers[m].url.indexOf(console.componentPath) == 0))
         {
-            var instance = console.scriptManagers[m].instances[i];
-            if ("scriptInstanceRecord" in instance)
+        
+            for (var i in console.scriptManagers[m].instances)
             {
-                var rec = instance.scriptInstanceRecord;
-                
-                if (e.toggle)
+                var instance = console.scriptManagers[m].instances[i];
+                if ("scriptInstanceRecord" in instance)
                 {
-                    if (!ASSERT("parentRecord" in rec, "Record for " +
-                                console.scriptManagers[m].url + 
-                                " is already removed"))
+                    var rec = instance.scriptInstanceRecord;
+                    
+                    if (e.toggle)
                     {
-                        continue;
+                        if (!ASSERT("parentRecord" in rec, "Record for " +
+                                    console.scriptManagers[m].url + 
+                                    " is already removed"))
+                        {
+                            continue;
+                        }
+                        /* filter is on, remove chrome file from scripts view */
+                        /*
+                          dd ("removing " + console.scriptManagers[m].url + 
+                          " kid at " + rec.childIndex);
+                        */
+                        nodes.removeChildAtIndex(rec.childIndex);
                     }
-                    /* filter is on, remove chrome file from scripts view */
-                    /*
-                    dd ("removing " + console.scriptManagers[m].url + 
-                        " kid at " + rec.childIndex);
-                    */
-                    nodes.removeChildAtIndex(rec.childIndex);
-                }
-                else
-                {
-                    if ("parentRecord" in rec)
-                        continue;
-                    //dd ("cmdChromeFilter: append " +
-                    //    tov_formatRecord(rec, ""));
-                    nodes.appendChild(rec);
+                    else
+                    {
+                        if ("parentRecord" in rec)
+                            continue;
+                        //dd ("cmdChromeFilter: append " +
+                        //    tov_formatRecord(rec, ""));
+                        nodes.appendChild(rec);
+                    }
                 }
             }
         }
@@ -881,7 +898,9 @@ function scv_hookScriptInstanceSealed (e)
     e.scriptInstance.scriptInstanceRecord = scr;
 
     if (console.prefs["enableChromeFilter"] &&
-        e.scriptInstance.url.search(/^chrome:/) == 0)
+        (e.scriptInstance.url.search(/^chrome:/) == 0 ||
+         "componentPath" in console &&
+         e.scriptInstance.url.indexOf(console.componentPath) == 0))
     {
         return;
     }
@@ -1116,8 +1135,9 @@ function ss_init ()
         }
 
         return "console.prefs['sessionView.currentCSS'] == " + css;
-    }
-        
+    };
+    
+    console.addPref ("sessionView.requireSlash", true);
     console.addPref ("sessionView.commandHistory", 20);
     console.addPref ("sessionView.dtabTime", 500);
     console.addPref ("sessionView.maxHistory", 500);
@@ -1241,6 +1261,52 @@ function ss_hookFocus(e)
         sessionView.inputElement.focus();
 }
 
+console.views.session.hooks["set-eval-obj"] =
+function ss_setThisObj (e)
+{
+    var urlFile;
+    var functionName;
+    
+    if (console.currentEvalObject instanceof jsdIStackFrame)
+    {
+        if (console.currentEvalObject.script)
+        {
+            urlFile = getFileFromPath(console.currentEvalObject.script.fileName);
+            var tag = console.currentEvalObject.script.tag;
+            if (tag in console.scriptWrappers)
+                functionName = console.scriptWrappers[tag].functionName;
+            else
+                functionName = MSG_VAL_UNKNOWN;
+        }
+        else
+        {
+            urlFile = "x-jsd:native";
+            functionName = console.currentEvalObject.functionName;
+        }
+    }
+    else
+    {
+        var parent = console.currentEvalObject.__parent__;
+        if (!parent)
+            parent = console.currentEvalObject;
+        if ("location" in parent)
+            urlFile = getFileFromPath(parent.location.href);
+        else
+            urlFile = MSG_VAL_UNKNOWN;
+
+        functionName = String(parent);
+    }
+
+    var sessionView = console.views.session;
+    if (sessionView.currentContent)
+    {
+        sessionView.currentContent.setAttribute ("title",
+                                                 getMsg(MSN_SESSION_TITLE,
+                                                        [urlFile, functionName])
+                                                 );
+    }
+}
+    
 console.views.session.hooks["hook-session-display"] =
 function ss_hookDisplay (e)
 {
@@ -1354,6 +1420,8 @@ function ss_syncframe ()
                 this.outputTable =
                     this.outputDocument.getElementById("session-output-table");
                 this.inputElement = doc.getElementById("session-sl-input");
+                this.inputLabel = doc.getElementById("session-input-label");
+                this.hooks["set-eval-obj"]();
             }
         }
     }
@@ -1423,6 +1491,14 @@ function ss_icline (e)
     
     this.lastHistoryReferenced = -1;
     this.incompleteLine = "";
+
+    if (console.prefs["sessionView.requireSlash"])
+    {
+        if (e.line[0] == "/")
+            e.line = e.line.substr(1);
+        else
+            e.line = "eval " + e.line;
+    }
     
     var ev = {isInteractive: true, initialEvent: e};
     dispatch (e.line, ev, CMD_CONSOLE);
@@ -1523,13 +1599,28 @@ function ss_tabcomplete (e)
 
     var pfx;
     var d;
-    
     if ((selStart <= firstSpace))
     {
         /* The cursor is positioned before the first space, so we're completing
          * a command
          */
-        var partialCommand = v.substring(0, firstSpace).toLowerCase();
+
+        var startPos;
+        var slash;        
+        if (console.prefs["sessionView.requireSlash"])
+        {
+            if (v[0] != "/")
+                return;
+            startPos = 1;
+            slash = "/";
+        }
+        else
+        {
+            startPos = 0;
+            slash = "";
+        }
+            
+        var partialCommand = v.substring(startPos, firstSpace).toLowerCase();
         var cmds = console.commandManager.listNames(partialCommand, CMD_CONSOLE);
 
         if (!cmds)
@@ -1538,7 +1629,7 @@ function ss_tabcomplete (e)
         else if (cmds.length == 1)
         {
             /* partial matched exactly one command */
-            pfx = cmds[0];
+            pfx = slash + cmds[0];
             if (firstSpace == v.length)
                 v =  pfx + " ";
             else
@@ -1557,7 +1648,7 @@ function ss_tabcomplete (e)
             else
                 this.lastTabUp = d;
             
-            pfx = getCommonPfx(cmds);
+            pfx = slash + getCommonPfx(cmds);
             if (firstSpace == v.length)
                 v =  pfx;
             else
@@ -1757,7 +1848,7 @@ console.views.source2.viewId = VIEW_SOURCE2;
 console.views.source2.init =
 function ss_init ()
 {
-    console.addPref ("source2View.maxTabs", 7);
+    console.addPref ("source2View.maxTabs", 5);
 
     this.cmdary =
         [
@@ -1884,7 +1975,7 @@ function cmdSaveTab (e)
         return null;
     }
     
-    var sourceText = source2View.sourceTabList[e.index];
+    var sourceText = source2View.sourceTabList[e.index].sourceText;
     var fileString;
     
     if (!e.targetFile || e.targetFile == "?")
@@ -2200,7 +2291,10 @@ function s2v_marktab (sourceTab, currentFrame)
         //dd ("markStopLine: sourceTab not loaded yet");
         return;
     }
-        
+
+    if (!ASSERT(currentFrame.script, "current frame has no script"))
+        return;
+    
     var tag = currentFrame.script.tag;
     var sourceText = sourceTab.sourceText;
     var line = -1;
@@ -2216,10 +2310,12 @@ function s2v_marktab (sourceTab, currentFrame)
         line = currentFrame.script.pcToLine (currentFrame.pc, PCMAP_PRETTYPRINT);
     }
 
-    if (line != -1)
+    if (line > 0)
     {
         //dd ("marking stop line " + line);
         var stopNode = sourceTab.content.childNodes[line * 2 - 1];
+        if (!ASSERT(stopNode, "no node at line " + line))
+            return;
         //dd ("stopNode: " + stopNode.localName);
         stopNode.setAttribute ("stoppedAt", "true");
         sourceTab.stopNode = stopNode;
@@ -2259,6 +2355,8 @@ function s2v_markhigh ()
     for (var i = this.highlightStart; i <= this.highlightEnd; ++i)
     {
         var node = this.highlightTab.content.childNodes[i * 2 - 1];
+        if (!ASSERT(node, "no node at line " + i))
+            return;
         node.setAttribute ("highlighted", "true");
         this.highlightNodes.push (node);
     }    
@@ -2457,7 +2555,12 @@ function s2v_createframe (sourceTab, index, raiseFlag)
     var tab = document.createElement ("tab");
     tab.setAttribute ("class", "source2-tab");
     tab.setAttribute ("context", "context:source2");
-    tab.setAttribute ("label", sourceTab.sourceText.shortName);
+    var shortName;
+    if (sourceTab.sourceText.shortName.length <= 30)
+        shortName = sourceTab.sourceText.shortName;
+    else
+        shortName = abbreviateWord(sourceTab.sourceText.shortName, 30);
+    tab.setAttribute ("label", shortName);
     if (index < this.tabs.childNodes.length)
         this.tabs.insertBefore (tab, this.tabs.childNodes[index]);
     else
@@ -2801,7 +2904,7 @@ function s2v_hookBreakSet (e)
                 line = jsdScript.pcToLine (e.breakWrapper.pc, PCMAP_PRETTYPRINT);
         }
 
-        if (line != -1)
+        if (line > 0)
             source2View.updateLineMargin (sourceTab, line);
     }
 }
@@ -3462,7 +3565,7 @@ function wv_init()
 {
     this.cmdary =
         [
-         ["watch-expr",     cmdWatchExpr,          CMD_CONSOLE | CMD_NEED_STACK],
+         ["watch-expr",     cmdWatchExpr,          CMD_CONSOLE],
          ["watch-exprd",    cmdWatchExpr,          CMD_CONSOLE],
          ["remove-watch",   cmdUnwatch,            CMD_CONSOLE],
          ["watch-property", cmdWatchProperty,      0],
@@ -3473,6 +3576,12 @@ function wv_init()
         items:
         [
          ["remove-watch"],
+         ["set-eval-obj", {type: "checkbox",
+                           checkedif: "has('jsdValue') && " +
+                                      "cx.jsdValue.getWrappedValue() == " +
+                                      "console.currentEvalObject",
+                           enabledif: "has('jsdValue') && " +
+                                      "cx.jsdValue.jsType == TYPE_OBJECT"}],
          ["-"],
          ["find-creator",
                  {enabledif: "cx.target instanceof ValueRecord && " +
@@ -3633,9 +3742,31 @@ function cmdWatchExpr (e)
     var refresher;
     if (e.command.name == "watch-expr")
     {
-        refresher = function () {
-                        this.value = evalInTargetScope(e.expression, true);
-                    };
+        if (!("currentEvalObject" in console))
+        {
+            display (MSG_ERR_NO_EVAL_OBJECT, MT_ERROR);
+            return;
+        }
+
+        if (console.currentEvalObject instanceof jsdIStackFrame)
+        {
+            refresher = function () {
+                            if ("frames" in console)
+                            {
+                                this.value =
+                                    evalInTargetScope(e.expression, true);
+                            }
+                        };
+        }
+        else
+        {
+            var evalObject = console.currentEvalObject;
+            refresher = function () {
+                            rv = console.doEval.apply(evalObject,
+                                                      [e.expression, parent]);
+                            this.value = console.jsds.wrapValue(rv);
+                        };
+        }
     }
     else
     {
@@ -3680,6 +3811,19 @@ console.views.windows.viewId = VIEW_WINDOWS;
 console.views.windows.init = 
 function winv_init ()
 {
+    console.menuSpecs["context:windows"] = {
+        getContext: this.getContext,
+        items:
+        [
+         ["find-url"],
+         ["set-eval-obj", {type: "checkbox",
+                           checkedif: "has('jsdValue') && " +
+                                      "cx.jsdValue.getWrappedValue() == " +
+                                      "console.currentEvalObject",
+                           enabledif: "has('jsdValue') && " +
+                                       "cx.jsdValue.jsType == TYPE_OBJECT"}]
+        ]
+    };
 }
 
 console.views.windows.hooks = new Object();
@@ -3727,6 +3871,7 @@ console.views.windows.onShow =
 function winv_show ()
 {
     syncTreeView (getChildById(this.currentContent, "windows-tree"), this);
+    initContextMenu(this.currentContent.ownerDocument, "context:windows");
 }
 
 console.views.windows.onHide =
@@ -3769,42 +3914,32 @@ function winv_dblclick ()
 console.views.windows.getContext =
 function winv_getcx(cx)
 {
-    if (!cx)
-        cx = new Object();
+    cx.jsdValueList = new Array();
+    cx.urlList    = new Array();
 
-    var selection = this.tree.selection;
-
-    var rec = this.childData.locateChildByVisualRow(selection.currentIndex);
-    
-    if (!rec)
+    function recordContextGetter (cx, rec, i)
     {
-        //dd ("no current index.");
-        return cx;
-    }
-
-    cx.target = rec;
-    
-    if (rec instanceof WindowRecord || rec instanceof FileRecord)
-        cx.url = cx.fileName = rec.url;
-    
-    var rangeCount = selection.getRangeCount();
-    if (rangeCount > 0)
-        cx.fileList = cx.urlList = new Array();
-    
-    for (var range = 0; range < rangeCount; ++range)
-    {
-        var min = new Object();
-        var max = new Object();
-        selection.getRangeAt(range, min, max);
-        for (var i = min.value; i <= max.value; ++i)
+        if (i == 0)
         {
-            rec = this.childData.locateChildByVisualRow(i);
             if (rec instanceof WindowRecord || rec instanceof FileRecord)
-                cx.fileList.push (rec.url);
+            {
+                if ("window" in rec)
+                    cx.jsdValue = console.jsds.wrapValue(rec.window);
+                cx.url = rec.url;
+            }
         }
-    }
-
-    return cx;
+        else
+        {
+            if (rec instanceof WindowRecord || rec instanceof FileRecord)
+            {
+                if ("window" in rec)
+                    cx.jsdValueList.push(console.jsds.wrapValue(rec.window));
+                cx.urlList.push (rec.url);
+            }
+        }
+    };
+    
+    return getTreeContext (console.views.windows, cx, recordContextGetter);
 }
 
 console.views.windows.locateChildByWindow =

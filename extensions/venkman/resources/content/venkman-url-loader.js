@@ -91,7 +91,7 @@ function (request, data, status)
 StreamListener.prototype.onDataAvailable =
 function (request, data, inStr, sourceOffset, count)
 {
-    /*dd ("onDataAvailable(): " + count);*/
+    //dd ("onDataAvailable(): " + count);
     if (!this._sis)
     {
         this._sis = 

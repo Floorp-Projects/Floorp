@@ -132,6 +132,7 @@ function getMsgFrom (bundle, msgName, params, deflt)
 }
 
 /* message types, don't localize */
+const MT_ATTENTION = "ATTENTION";
 const MT_CONT      = "CONT";
 const MT_ERROR     = "ERROR";
 const MT_HELLO     = "HELLO";

@@ -59,7 +59,9 @@
             <xul:hbox class="view-title-grippy" flex="1"
               tooltiptext="&ViewGrippy.tooltip;">
               <xul:hbox flex="1" class="view-title-margin-left"/>
-              <xul:label id="view-title-text" xbl:inherits="value=title"/>
+              <xul:label id="view-title-text" xbl:inherits="value=title"
+                tooltiptext="&ViewGrippy.tooltip;"
+                xul:crop="end" xul:flex="1"/>
               <xul:hbox flex="1" class="view-title-margin-right"/>
             </xul:hbox>
             <xul:image class="view-title-close"

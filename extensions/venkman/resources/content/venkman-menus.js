@@ -89,7 +89,7 @@ function initMenus()
          ["save-source-tab", { enabledif: "console.views.source2.canSave()" }],
          ["save-profile"],
          ["-"],
-         ["quit"]
+         [navigator.platform.search(/win/i) == -1 ? "quit" : "exit"]
         ]
     };
 

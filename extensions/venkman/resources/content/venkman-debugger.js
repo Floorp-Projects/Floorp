@@ -99,7 +99,7 @@ function initDebugger()
     console.breaks  = new Object();
     console.fbreaks = new Object();
     console.sbreaks = new Object();
-    
+
     /* create the debugger instance */
     if (!(JSD_CTRID in Components.classes))
         throw new BadMojo (ERR_NO_DEBUGGER);
@@ -117,8 +117,10 @@ function initDebugger()
     console.jsds.errorHook      = console.errorHook;
     console.jsds.flags          = jsdIDebuggerService.ENABLE_NATIVE_FRAMES;
 
-    console.throwMode = console.prefs["throwMode"];
-    console.errorMode = console.prefs["errorMode"];
+    console.jsdConsole = console.jsds.wrapValue(console);    
+
+    dispatch ("tmode", {mode: console.prefs["lastThrowMode"]});
+    dispatch ("emode", {mode: console.prefs["lastErrorMode"]});
     
     var enumer = { enumerateScript: console.scriptHook.onScriptCreated };
     console.jsds.scriptHook = console.scriptHook;
@@ -876,6 +878,9 @@ function si_guessnames ()
         var ary = scanText.match (pattern);
         if (ary)
         {
+            if ("charset" in this._sourceText)
+                ary[1] = toUnicode(ary[1], this._sourceText.charset);
+            
             scriptWrapper.functionName = getMsg(MSN_FMT_GUESSEDNAME, ary[1]);
             this.isGuessedName = true;
         }
@@ -1460,6 +1465,7 @@ function setCurrentFrameByIndex (index)
 
     console._currentFrameIndex = index;
     var cf = console.frames[console._currentFrameIndex];
+    dispatch ("set-eval-obj", { jsdValue: cf });
     console.stopFile = (cf.isNative) ? MSG_URL_NATIVE : cf.script.fileName;
     console.stopLine = cf.line;
     delete console._pp_stopLine;
@@ -1471,6 +1477,9 @@ function clearCurrentFrame ()
     if (!console.frames)
         throw new BadMojo (ERR_NO_STACK);
 
+    if (console.currentEvalObject instanceof jsdIStackFrame)
+        dispatch ("set-eval-obj", { jsdValue: console.jsdConsole });
+    
     delete console.stopLine;
     delete console._pp_stopLine;
     delete console.stopFile;
@@ -1687,8 +1696,18 @@ function displaySourceContext (sourceText, line, contextLines)
         {
             if (i > 0 && i < sourceText.lines.length)
             {
-                display (getMsg(MSN_SOURCE_LINE, [zeroPad (i, 3),
-                                                  sourceText.lines[i - 1]]),
+                var line;
+                if ("charset" in sourceText)
+                {
+                    line = toUnicode(sourceText.lines[i - 1],
+                                     sourceText.charset);
+                }
+                else
+                {
+                    line = sourceText.lines[i - 1];
+                }
+                
+                display (getMsg(MSN_SOURCE_LINE, [zeroPad (i, 3), line]),
                          i == line ? MT_STEP : MT_SOURCE);
             }
         }

@@ -33,7 +33,7 @@
  *
  */
 
-const __vnk_version        = "0.9.28";
+const __vnk_version        = "0.9.33";
 const __vnk_requiredLocale = "0.9.x";
 var   __vnk_versionSuffix  = "";
 
@@ -134,9 +134,39 @@ function isURLVenkman (url)
 function isURLFiltered (url)
 {
     return ((console.prefs["enableChromeFilter"] &&
-            url.search(/^chrome:/) == 0) ||
+            (url.search(/^chrome:/) == 0 ||
+             ("componentPath" in console &&
+              url.indexOf(console.componentPath) == 0))) ||
             (url.search (/^chrome:\/\/venkman/) == 0 &&
              url.search (/test/) == -1));
+}
+
+function toUnicode (msg, charset)
+{
+    try
+    {
+        console.ucConverter.charset = charset;
+        return console.ucConverter.ConvertToUnicode(msg);
+    }
+    catch (ex)
+    {
+        dd ("caught " + ex + " converting to unicode");
+        return msg;
+    }
+}
+
+function fromUnicode (msg, charset)
+{
+    try
+    {
+        console.ucConverter.charset = charset;
+        return console.ucConverter.ConvertFromUnicode(msg);
+    }
+    catch (ex)
+    {
+        dd ("caught " + ex + " converting from unicode");
+        return msg;
+    }
 }
 
 function displayUsageError (e, details)
@@ -427,9 +457,16 @@ function init()
     console.windowWatcher =
         Components.classes[WW_CTRID].getService(nsIWindowWatcher);
 
+    const UC_CTRID = "@mozilla.org/intl/scriptableunicodeconverter";
+    const nsIUnicodeConverter = 
+        Components.interfaces.nsIScriptableUnicodeConverter;
+    console.ucConverter =
+        Components.classes[UC_CTRID].getService(nsIUnicodeConverter);
+
     console.baseWindow = getBaseWindowFromWindow(window);
     console.mainWindow = window;
     console.dnd = nsDragAndDrop;
+    console.currentEvalObject = console;
     
     console.files = new Object();
     console.pluginState = new Object();
@@ -501,8 +538,11 @@ function init()
     for (i = 0; i < startupMsgs.length; ++i)
         display (startupMsgs[i][0], startupMsgs[i][1]);
     
-    display (MSG_TIP1_HELP);
+    display (getMsg(MSN_TIP1_HELP, 
+                    console.prefs["sessionView.requireSlash"] ? "/" : ""));
     display (MSG_TIP2_HELP);
+    if (console.prefs["sessionView.requireSlash"])
+        display (MSG_SLASH_REQUIRED, MT_ATTENTION);
     //dispatch ("commands");
     //dispatch ("help");
 
@@ -525,6 +565,9 @@ function destroy ()
 {
     if (console.prefs["saveLayoutOnExit"])
         dispatch ("save-layout default");
+
+    delete console.currentEvalObject;
+    delete console.jsdConsole;
 
     destroyViews();
     destroyHandlers();
@@ -598,6 +641,13 @@ console.hooks = new Object();
 console.hooks["hook-script-instance-sealed"] =
 function hookScriptSealed (e)
 {
+    if (!("componentPath" in console))
+    {
+        var ary = e.scriptInstance.url.match (/(.*)venkman-service\.js$/);
+        if (ary)
+            console.componentPath = ary[1];
+    }
+
     for (var fbp in console.fbreaks)
     {
         if (console.fbreaks[fbp].enabled &&
@@ -726,6 +776,8 @@ function RequiredParam (name)
 console.display = display;
 console.dispatch = dispatch;
 console.dispatchCommand = dispatchCommand;
+
+console.evalCount = 1;
 
 console.metaDirectives = new Object();
 
@@ -951,6 +1003,13 @@ function st_oncomplete (data, url, status)
          * displaying them.
          */
         ary[i] = new String(ary[i].replace(/[\x0-\x8]|[\xA-\x1A]/g, ""));
+        if (!("charset" in this))
+        {
+            var matchResult =
+                ary[i].match(/meta.*http-equiv.*content-type.*charset=([^\;\"]+)/i);
+            if (matchResult)
+                this.charset = matchResult[1];
+        }
     }
 
     this.lines = ary;
@@ -979,6 +1038,7 @@ function st_loadsrc (cb)
     
     function onComplete (data, url, status)
     {
+        //dd ("loaded " + url + " with status " + status + "\n" + data);
         sourceText.onSourceLoaded (data, url, status);
     };
 

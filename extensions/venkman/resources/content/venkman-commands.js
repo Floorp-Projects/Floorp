@@ -64,9 +64,10 @@ function initCommands()
          ["debug-instance", cmdSetScriptFlag,                                 0],
          ["debug-transient", cmdSetTransientFlag,                             0],
          ["emode",          cmdEMode,                               CMD_CONSOLE],
-         ["eval",           cmdEval,               CMD_CONSOLE | CMD_NEED_STACK],
+         ["eval",           cmdEval,                                CMD_CONSOLE],
          ["evald",          cmdEvald,                               CMD_CONSOLE],
          ["fbreak",         cmdFBreak,                              CMD_CONSOLE],
+         ["set-eval-obj",   cmdSetEvalObj,                                    0],
          ["set-fbreak",     cmdFBreak,                                        0],
          ["fclear",         cmdFClear,                              CMD_CONSOLE],
          ["fclear-all",     cmdFClearAll,                           CMD_CONSOLE],
@@ -98,7 +99,7 @@ function initCommands()
          ["profile-instance",     cmdSetScriptFlag,                           0],
          ["profile-instance-on",  cmdSetScriptFlag,                           0],
          ["profile-instance-off", cmdSetScriptFlag,                           0],
-         ["props",          cmdProps,              CMD_CONSOLE | CMD_NEED_STACK],
+         ["props",          cmdProps,                               CMD_CONSOLE],
          ["propsd",         cmdProps,                               CMD_CONSOLE],
          ["quit",           cmdQuit,                                CMD_CONSOLE],
          ["restore-layout", cmdRestoreLayout,                       CMD_CONSOLE],
@@ -108,6 +109,7 @@ function initCommands()
          ["save-profile",   cmdSaveProfile,                         CMD_CONSOLE],
          ["scan-source",    cmdScanSource,                                    0],
          ["scope",          cmdScope,              CMD_CONSOLE | CMD_NEED_STACK],
+         ["this-expr",      cmdThisExpr,                            CMD_CONSOLE],
          ["toggle-float",   cmdToggleFloat,                         CMD_CONSOLE],
          ["toggle-save-layout", cmdToggleSaveLayout,                          0],
          ["toggle-view",    cmdToggleView,                          CMD_CONSOLE],
@@ -118,7 +120,8 @@ function initCommands()
          ["version",        cmdVersion,                             CMD_CONSOLE],
          ["where",          cmdWhere,              CMD_CONSOLE | CMD_NEED_STACK],
          
-         /* aliases */         
+         /* aliases */
+         ["exit",                     "quit",                                 0],
          ["save-default-layout",      "save-layout default",                  0],
          ["profile-tb",               "profile toggle",                       0],
          ["this",                     "props this",                 CMD_CONSOLE],
@@ -169,8 +172,8 @@ function initCommands()
 
     console.commandManager.argTypes.__aliasTypes__ (["index", "breakpointIndex",
                                                      "lineNumber"], "int");
-    console.commandManager.argTypes.__aliasTypes__ (["scriptText", "windowFlags",
-                                                     "expression", "prefValue"],
+    console.commandManager.argTypes.__aliasTypes__ (["windowFlags", "expression",
+                                                     "prefValue"],
                                                      "rest");
 
     console.commandManager.installKeys(console.mainWindow.document,
@@ -597,19 +600,19 @@ function cmdEMode (e)
                 return false;
         }
 
-        console.prefs["errorMode"] = console.errorMode;
+        console.prefs["lastErrorMode"] = e.mode;
     }
     
     switch (console.errorMode)
     {
         case EMODE_IGNORE:
-            display (MSG_EMODE_IGNORE);
+            feedback (e, MSG_EMODE_IGNORE);
             break;
         case EMODE_TRACE:
-            display (MSG_EMODE_TRACE);
+            feedback (e, MSG_EMODE_TRACE);
             break;
         case EMODE_BREAK:
-            display (MSG_EMODE_BREAK);
+            feedback (e, MSG_EMODE_BREAK);
             break;
     }
 
@@ -618,30 +621,67 @@ function cmdEMode (e)
 
 function cmdEval (e)
 {
-    display (e.scriptText, MT_FEVAL_IN);
-    var rv = evalInTargetScope (e.scriptText);
-    if (typeof rv != "undefined")
+    var urlFile;
+    var functionName;
+    var rv;
+    
+    if (!("currentEvalObject" in console))
     {
-        if (rv != null)
-        {
-            var l = $.length;
-            $[l] = rv;
-            
-            display (getMsg(MSN_FMT_TMP_ASSIGN, [l, formatValue (rv)]),
-                     MT_FEVAL_OUT);
-        }
-        else
-            dd ("evalInTargetScope returned null");
+        display (MSG_ERR_NO_EVAL_OBJECT, MT_ERROR);
+        return;
     }
 
+    display(getMsg(MSN_EVAL_IN, [leftPadString(console.evalCount, 3, "0"),
+                                 e.expression]),
+            MT_FEVAL_IN);
+
+    if (console.currentEvalObject instanceof jsdIStackFrame)
+    {
+        rv = evalInTargetScope (e.expression);
+        if (typeof rv != "undefined")
+        {
+            if (rv != null)
+            {
+                var l = $.length;
+                $[l] = rv;
+                
+                display (getMsg(MSN_FMT_TMP_ASSIGN, [l, formatValue (rv)]),
+                         MT_FEVAL_OUT);
+            }
+            else
+                dd ("evalInTargetScope returned null");
+        }
+    }
+    else
+    {
+        var parent = console.currentEvalObject.__parent__;
+        if (!parent)
+            parent = console.currentEvalObject;
+        if ("location" in parent)
+            urlFile = getFileFromPath(parent.location.href);
+        else
+            urlFile = MSG_VAL_UNKNOWN;
+
+        try
+        {
+            rv = console.doEval.apply(console.currentEvalObject,
+                                      [e.expression, parent]);
+            display (String(rv), MT_FEVAL_OUT);
+        }
+        catch (ex)
+        {
+            display (formatException(ex), MT_ERROR);
+        }
+    }    
+    
     dispatch ("hook-eval-done");
     return true;
 }
 
 function cmdEvald (e)
 {
-    display (e.scriptText, MT_EVAL_IN);
-    var rv = evalInDebuggerScope (e.scriptText);
+    display (e.expression, MT_EVAL_IN);
+    var rv = evalInDebuggerScope (e.expression);
     if (typeof rv != "undefined")
         display (String(rv), MT_EVAL_OUT);
 
@@ -944,9 +984,19 @@ function cmdFClearAll (e)
 function cmdFrame (e)
 {
     if (e.frameIndex != null)
+    {
+        if (e.frameIndex < 0 || e.frameIndex >= console.frames.length)
+        {
+            display (getMsg(MSN_ERR_INVALID_PARAM, ["frameIndex", e.frameIndex]),
+                     MT_ERROR);
+            return;
+        }
         setCurrentFrameByIndex(e.frameIndex);
-    else    
+    }
+    else
+    {
         e.frameIndex = getCurrentFrameIndex();
+    }    
 
     dispatch ("find-frame", { frameIndex: e.frameIndex });
     return true;
@@ -1114,7 +1164,23 @@ function cmdPref (e)
                      MT_ERROR);
             return false;
         }
-        
+
+        var type = typeof console.prefs[e.prefName];
+        switch (type)
+        {
+            case "number":
+                e.prefValue = Number(e.prefValue);
+                break;
+            case "boolean":
+                e.prefValue = (e.prefValue.toLowerCase() == "true");
+                break;
+            case "string":
+                break;
+            default:
+                e.prefValue = String(e.prefValue);
+                break;
+        }
+
         console.prefs[e.prefName] = e.prefValue;
         display (getMsg(MSN_FMT_PREFVALUE, [e.prefName, e.prefValue]));
     }
@@ -1152,9 +1218,28 @@ function cmdProps (e)
     var debuggerScope = (e.command.name == "propsd");
 
     if (debuggerScope)
-        v = console.jsds.wrapValue(evalInDebuggerScope (e.scriptText));
+    {
+        v = console.jsds.wrapValue(evalInDebuggerScope (e.expression));
+    }
     else
-        v = evalInTargetScope (e.scriptText);
+    {
+        if (!("currentEvalObject" in console))
+        {
+            display (MSG_ERR_NO_EVAL_OBJECT, MT_ERROR);
+            return;
+        }
+
+        if (console.currentEvalObject instanceof jsdIStackFrame)
+        {
+            v = evalInTargetScope (e.expression);
+        }
+        else
+        {
+            v = console.doEval.apply(console.currentEvalObject,
+                                     [e.expression, parent]);
+            v = console.jsds.wrapValue(v);
+        }
+    }
     
     if (!(v instanceof jsdIValue) || v.jsType != jsdIValue.TYPE_OBJECT)
     {
@@ -1165,7 +1250,7 @@ function cmdProps (e)
     }
     
     display (getMsg(debuggerScope ? MSN_PROPSD_HEADER : MSN_PROPS_HEADER,
-                    e.scriptText));
+                    e.expression));
     displayProperties(v);
     return true;
 }
@@ -1356,6 +1441,36 @@ function cmdScope ()
     return true;
 }
 
+function cmdThisExpr(e)
+{
+    if (e.expression == "debugger")
+    {
+        rv = console.jsdConsole;
+    }
+    else if (console.currentEvalObject instanceof jsdIStackFrame)
+    {
+        rv = evalInTargetScope (e.expression);
+    }
+    else
+    {
+        rv = console.doEval.apply(console.currentEvalObject,
+                                  [e.expression, parent]);
+    }
+
+    if (!(rv instanceof jsdIValue))
+        rv = console.jsds.wrapValue(rv);
+    
+    if (rv.jsType != TYPE_OBJECT)
+    {
+        display (MSG_ERR_THIS_NOT_OBJECT, MT_ERROR);
+        return;
+    }
+    
+    dispatch ("set-eval-obj", { jsdValue: rv });
+    dispatch ("hook-eval-done");
+    return true;
+}    
+
 function cmdToggleSomething (e)
 {
     var ary = e.command.name.match (/(.*)-(on|off|toggle)$/);
@@ -1372,6 +1487,14 @@ function cmdToggleSomething (e)
         newEvent.toggle = "toggle";
 
     dispatch (ary[1], newEvent);
+}
+
+function cmdSetEvalObj (e)
+{
+    if (e.jsdValue instanceof jsdIStackFrame)
+        console.currentEvalObject = e.jsdValue;
+    else
+        console.currentEvalObject = e.jsdValue.getWrappedValue();
 }
 
 function cmdSetScriptFlag (e)
@@ -1548,19 +1671,19 @@ function cmdTMode (e)
                 return false;
         }
 
-        console.prefs["throwMode"] = console.throwMode;
+        console.prefs["lastThrowMode"] = e.mode;
     }
     
     switch (console.throwMode)
     {
         case EMODE_IGNORE:
-            display (MSG_TMODE_IGNORE);
+            feedback (e, MSG_TMODE_IGNORE);
             break;
         case EMODE_TRACE:
-            display (MSG_TMODE_TRACE);
+            feedback (e, MSG_TMODE_TRACE);
             break;
         case EMODE_BREAK:
-            display (MSG_TMODE_BREAK);
+            feedback (e, MSG_TMODE_BREAK);
             break;
     }
 
