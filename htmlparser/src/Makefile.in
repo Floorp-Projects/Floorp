@@ -98,7 +98,7 @@ export:: removecheckedinkludge generate
 removecheckedinkludge:
 	@rm -f $(srcdir)/nsHTMLTags.h $(srcdir)/nsHTMLEntities.cpp
  
-generate: $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLEntities.cpp
+generate: removecheckedinkludge $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLEntities.cpp
 
 $(OBJDIR)/nsHTMLTags.o: $(OBJDIR)/nsHTMLTags.h
 
