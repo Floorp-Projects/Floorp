@@ -734,7 +734,9 @@ nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
                               nsFramePaintLayer    aWhichLayer,
                               PRUint32             aFlags)
 {
-  nsresult rv = NS_OK;
+  if (NS_FRAME_IS_UNFLOWABLE & mState) {
+    return NS_OK;
+  }
 
   // report an error if something wrong was found in this frame
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
@@ -742,8 +744,13 @@ nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
                       aDirtyRect, aWhichLayer);
   }
 
-  rv = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                   aDirtyRect, aWhichLayer);
+  // Paint inline element backgrounds in the foreground layer (bug 36710).
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
+  }
+
+  PaintDecorationsAndChildren(aPresContext, aRenderingContext, aDirtyRect,
+                              aWhichLayer, PR_FALSE, aFlags);
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   // for visual debug
@@ -766,7 +773,7 @@ nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(x,y,w,h);
   }
 #endif
-  return rv;
+  return NS_OK;
 }
 
 // This method is called in a top-down manner, as we descend the frame tree
