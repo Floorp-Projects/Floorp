@@ -101,6 +101,7 @@
 #include "nsRange.h"
 #include "nsXMLContentSerializer.h"
 #include "nsRuleNode.h"
+#include "nsWyciwygProtocolHandler.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -357,6 +358,7 @@ MAKE_CTOR(CreateControllerCommandManager, nsIControllerCommandManager, NS_NewCon
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,                nsIDocumentLoaderFactory,   NS_NewContentDocumentLoaderFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 
 static NS_IMETHODIMP
 CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -808,6 +810,12 @@ static const nsModuleComponentInfo gComponents[] = {
     CreateContentDLF,
     nsContentDLF::RegisterDocumentFactories,
     nsContentDLF::UnregisterDocumentFactories },
+
+  { "Wyciwyg Handler",
+    NS_WYCIWYGPROTOCOLHANDLER_CID,
+    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wyciwyg",
+    nsWyciwygProtocolHandlerConstructor }
+
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsContentModule, gComponents, Initialize, Shutdown)
