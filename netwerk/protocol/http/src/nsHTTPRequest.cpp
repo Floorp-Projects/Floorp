@@ -305,23 +305,24 @@ nsHTTPRequest::Build()
     {
         NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
 
-        PRUint32 length;
-        stream->Available(&length);
+        PRUint32 length = 1024;
+//        stream->Available(&length);  XXX Not implemented.... :)
 
         // TODO Change reading from nsIInputStream to nsIBuffer
-        char* tempBuff = new char[length+1];
+        char* tempBuff = new char[length];
         if (!tempBuff)
             return NS_ERROR_OUT_OF_MEMORY;
-        if (NS_FAILED(stream->Read(tempBuff, length, &length)))
-        {
+	while (0 < length) {
+          if (NS_FAILED(stream->Read(tempBuff, length, &length)))
+          {
             NS_ASSERTION(0, "Failed to read post data!");
             delete[] tempBuff;
             tempBuff = 0;
             return NS_ERROR_FAILURE;
-        }
-        else
-        {
-            tempBuff[length] = '\0';
+          }
+          else
+          {
+            if (!length) break;
             PRUint32 writtenLength;
             out->Write(tempBuff, length, &writtenLength);
 #ifdef DEBUG_gagan    
@@ -329,7 +330,9 @@ nsHTTPRequest::Build()
 #endif
             // ASSERT that you wrote length = stream's length
             NS_ASSERTION(writtenLength == length, "Failed to write post data!");
-        }
+            if (writtenLength != length) break;
+          }
+	}
         delete[] tempBuff;
         tempBuff = 0;
     }
