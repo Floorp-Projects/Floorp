@@ -643,7 +643,7 @@ popup {
 }
 
 menupopup > menu {
-  max-width: 400px;
+  max-width: 250px;
   min-width: 125px;
   margin-left: 0px;
   margin-right: 0px;
@@ -652,7 +652,7 @@ menupopup > menu {
 }
 
 popup > menu {
-  max-width: 400px;
+  max-width: 250px;
   min-width: 125px;
   margin-left: 1px;
   margin-right: 1px;
@@ -661,7 +661,7 @@ popup > menu {
 }
 
 menupopup > menuitem {
-  max-width: 400px;
+  max-width: 250px;
   min-width: 125px;
   margin-left: 0px;
   margin-right: 0px;
@@ -670,7 +670,7 @@ menupopup > menuitem {
 }
 
 popup > menuitem {
-  max-width: 400px;
+  max-width: 250px;
   min-width: 125px;
   margin-left: 1px;
   margin-right: 1px;
