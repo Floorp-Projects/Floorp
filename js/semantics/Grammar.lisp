@@ -178,6 +178,22 @@
     (format stream "-~{ ~:_~W~}" (lookahead-constraint-source lookahead-constraint))))
 
 
+;;; A no-line-break-constraint succeeds only when there is no line break at the current position.
+(defstruct (no-line-break-constraint (:include constraint)
+                                     (:constructor make-no-line-break-constraint (pos))
+                                     (:predicate no-line-break-constraint?)))
+
+
+; Emit markup for a no-line-break-constraint.
+(defun depict-no-line-break-constraint (markup-stream no-line-break-constraint)
+  (declare (ignore no-line-break-constraint))
+  (depict markup-stream :no-line-break))
+
+
+(defmethod print-object ((no-line-break-constraint no-line-break-constraint) stream)
+  (print-unreadable-object (no-line-break-constraint stream)))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; GENERALIZED PRODUCTIONS
 
@@ -219,10 +235,10 @@
 
 ; Return the general-production's lookahead-constraint's terminalset at the given position.
 (defun general-production-lookahead-constraint (general-production pos)
-  (let ((constraint (find pos (general-production-constraints general-production) :key #'constraint-pos :test #'=)))
-    (if constraint
-      (lookahead-constraint-terminalset constraint)
-      *full-terminalset*)))
+  (dolist (constraint (general-production-constraints general-production) *full-terminalset*)
+    (when (and (lookahead-constraint? constraint)
+               (= (constraint-pos constraint) pos))
+      (return (lookahead-constraint-terminalset constraint)))))
 
 
 ; Emit a markup paragraph for the left-hand-side of a general production.
@@ -234,9 +250,12 @@
 
 ; Emit markup for a production right-hand-side component.
 (defun depict-production-rhs-component (markup-stream production-rhs-component &optional subscript)
-  (if (lookahead-constraint? production-rhs-component)
-    (depict-lookahead-constraint markup-stream production-rhs-component)
-    (depict-general-grammar-symbol markup-stream production-rhs-component :reference subscript)))
+  (cond
+   ((lookahead-constraint? production-rhs-component)
+    (depict-lookahead-constraint markup-stream production-rhs-component))
+   ((no-line-break-constraint? production-rhs-component)
+    (depict-no-line-break-constraint markup-stream production-rhs-component))
+   (t (depict-general-grammar-symbol markup-stream production-rhs-component :reference subscript))))
 
 
 ; Emit a markup paragraph for the right-hand-side of a general production.
@@ -1078,8 +1097,9 @@
        (initial-terminals *empty-terminalset*)
        (passthrough-terminals *full-terminalset*))
       ((terminalset-empty? passthrough-terminals) (values initial-terminals *empty-terminalset*))
-    (let ((constraint (find pos constraints :key #'constraint-pos :test #'=)))
-      (when constraint
+    (dolist (constraint constraints)
+      (when (and (lookahead-constraint? constraint)
+                 (= (constraint-pos constraint) pos))
         (terminalset-intersection-f passthrough-terminals (lookahead-constraint-terminalset constraint))))
     (if symbol-string
       (multiple-value-bind (generate passthrough) (symbol-initial-terminals grammar (first symbol-string))
@@ -1088,17 +1108,17 @@
       (return (values initial-terminals passthrough-terminals)))))
 
 
-; Intern attributed or generic nonterminals in the production's lhs and rhs.  Also replace
+; Intern attributed or generic nonterminals in the production's lhs and rhs.  Replace
 ; (:- <terminal> ... <terminal>) or (:-- (<grammar-symbol> ... <grammar-symbol>) <terminal> ... <terminal>)
 ; sublists in the rhs with lookahead-constraints and put these, in order, after the third element of
-; the returned list.
+; the returned list.  Also replace :~ symbols with no-line-break-constraints.
 ; Return the resulting production source.
 (defun intern-production-source (grammar-parametrization production-source)
   (assert-type production-source (tuple (or user-nonterminal cons) (list (or user-grammar-symbol cons)) identifier))
   (let ((production-lhs-source (first production-source))
         (production-rhs-source (second production-source))
         (production-name (third production-source)))
-    (if (or (consp production-lhs-source) (some #'consp production-rhs-source))
+    (if (or (consp production-lhs-source) (some #'consp production-rhs-source) (find ':~ production-rhs-source))
       (multiple-value-bind (lhs-nonterminal lhs-arguments) (grammar-parametrization-intern grammar-parametrization production-lhs-source)
         (let ((rhs nil)
               (constraints nil)
@@ -1115,6 +1135,8 @@
                 (push
                  (make-lookahead-constraint pos (assert-non-null (rest lookaheads)) (assert-non-null (first lookaheads)))
                  constraints)))
+             ((eq component-source ':~)
+              (push (make-no-line-break-constraint pos) constraints))
              (t (push (grammar-parametrization-intern grammar-parametrization component-source lhs-arguments) rhs)))
             (incf pos))
           (list* lhs-nonterminal (nreverse rhs) production-name (nreverse constraints))))
@@ -1138,7 +1160,10 @@
 ; which indicate that the following terminal must not be one of the listed terminals.  The form
 ;   (:-- (<grammar-symbol> ... <grammar-symbol>) <terminal> ... <terminal>)
 ; does the same thing except that it prints the grammar-symbols instead of the terminals when
-; the production is printed.
+; the production is printed.  The form
+;   :~
+; indicates that a line break is not allowed at the current position between terminals (this
+; constraint is currently ignored by the parser but does show up in printed grammars).
 ;
 ; excluded-nonterminals-source is a list of nonterminals not used in the grammar.  Productions,
 ; including productions expanded from generic productions, that have one of these nonterminals
@@ -1224,11 +1249,12 @@
                (unless (gethash grammar-symbol rules)
                  (error "Nonterminal ~S used but not defined" grammar-symbol))))
            (dolist (constraint (production-constraints rule-production))
-             (push constraint lookahead-constraints)
-             (dolist (lookahead-terminal (lookahead-constraint-forbidden-terminals constraint))
-               (unless (gethash lookahead-terminal terminals-hash)
-                 (warn "Lookahead terminal ~S not used in main grammar" lookahead-terminal)
-                 (setf (gethash lookahead-terminal terminals-hash) t)))))
+             (when (lookahead-constraint? constraint)
+               (push constraint lookahead-constraints)
+               (dolist (lookahead-terminal (lookahead-constraint-forbidden-terminals constraint))
+                 (unless (gethash lookahead-terminal terminals-hash)
+                   (warn "Lookahead terminal ~S not used in main grammar" lookahead-terminal)
+                   (setf (gethash lookahead-terminal terminals-hash) t))))))
          (setf (gethash rule-lhs rules)
                (make-rule (nreverse rule-productions))))
      rules)
