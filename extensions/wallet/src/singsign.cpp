@@ -88,7 +88,7 @@ si_SaveSignonDataInKeychain();
  ******************/
 
 char* signonFileName = nsnull;
-static PRBool gLoadedUserData = FALSE;
+static PRBool gLoadedUserData = PR_FALSE;
 
 
 /***************************
