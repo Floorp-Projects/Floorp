@@ -73,7 +73,10 @@ static char* gHTMLTypes[] = {
 static char* gXMLTypes[] = {
   "text/xml",
   "application/xml",
+  "application/xhtml+xml",
   "text/xml; x-view-type=view-source",
+  "application/xml; x-view-type=view-source",
+  "application/xhtml+xml; x-view-type=view-source",
   0
 };
 

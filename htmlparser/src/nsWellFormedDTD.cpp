@@ -180,6 +180,8 @@ eAutoDetectResult CWellFormedDTD::CanParse(CParserContext& aParserContext,nsStri
 
   if(eViewSource!=aParserContext.mParserCommand) {
     if(aParserContext.mMimeType.EqualsWithConversion(kXMLTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kXMLApplicationContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kXHTMLApplicationContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {
       result=ePrimaryDetect;

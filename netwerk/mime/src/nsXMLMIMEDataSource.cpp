@@ -447,6 +447,12 @@ nsXMLMIMEDataSource::InitFromHack() {
     rv = AddMapping(TEXT_XML, "xml", "Extensible Markup Language", nsnull, 'TEXT','ttxt');
     if (NS_FAILED(rv)) return rv;
 
+    rv = AppendExtension(TEXT_XML, "xhtml"); // Extensible HyperText Markup Language
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = AppendExtension(TEXT_XML, "xht");   // Extensible HyperText Markup Language
+    if (NS_FAILED(rv)) return rv;
+
     rv = AppendExtension(TEXT_XML, "xsl");
     if (NS_FAILED(rv)) return rv;
 

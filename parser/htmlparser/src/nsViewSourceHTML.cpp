@@ -396,6 +396,8 @@ eAutoDetectResult CViewSourceHTML::CanParse(CParserContext& aParserContext,nsStr
   }
   else if(eViewSource==aParserContext.mParserCommand) {
     if(aParserContext.mMimeType.EqualsWithConversion(kXMLTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kXMLApplicationContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kXHTMLApplicationContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {

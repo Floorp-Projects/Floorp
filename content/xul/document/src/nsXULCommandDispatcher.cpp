@@ -304,7 +304,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAReadableString& aEventName)
   nsCOMPtr<nsIDOMElement> element;
   mFocusController->GetFocusedElement(getter_AddRefs(element));
   if (element) {
-    rv = element->GetAttribute(NS_ConvertASCIItoUCS2("id"), id);
+    rv = element->GetAttribute(NS_LITERAL_STRING("id"), id);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's id");
     if (NS_FAILED(rv)) return rv;
   }

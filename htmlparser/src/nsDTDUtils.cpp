@@ -1591,6 +1591,11 @@ CObserverService::CObserverService() : mTopics(0) {
   nsAutoString theXMLTopic; theXMLTopic.AssignWithConversion(kXMLTextContentType);  //use the mimetype for the topic
   RegisterObservers(theXMLTopic);
 
+  theXMLTopic.AssignWithConversion(kXMLApplicationContentType);
+  RegisterObservers(theXMLTopic);
+
+  theXMLTopic.AssignWithConversion(kXHTMLApplicationContentType);
+  RegisterObservers(theXMLTopic);
 }
 
 

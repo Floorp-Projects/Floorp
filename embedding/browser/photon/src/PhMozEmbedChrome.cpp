@@ -503,6 +503,8 @@ NS_IMETHODIMP PhMozEmbedChrome::IsPreferred(const char *aContentType, nsURILoadC
         || nsCRT::strcasecmp(aContentType, "application/vnd.mozilla.xul+xml") == 0
         || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
         || nsCRT::strcasecmp(aContentType, "text/xml") == 0
+        || nsCRT::strcasecmp(aContentType, "application/xml") == 0
+        || nsCRT::strcasecmp(aContentType, "application/xhtml+xml") == 0
         || nsCRT::strcasecmp(aContentType, "text/css") == 0
         || nsCRT::strcasecmp(aContentType, "image/gif") == 0
         || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0

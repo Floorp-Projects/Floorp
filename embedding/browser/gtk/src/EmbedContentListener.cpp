@@ -99,6 +99,8 @@ EmbedContentListener::IsPreferred(const char        *aContentType,
        !strcasecmp(aContentType, "application/vnd.mozilla.xul+xml")    ||
        !strcasecmp(aContentType, "text/rdf")    ||
        !strcasecmp(aContentType, "text/xml")    ||
+       !strcasecmp(aContentType, "application/xml")    ||
+       !strcasecmp(aContentType, "application/xhtml+xml")    ||
        !strcasecmp(aContentType, "text/css")    ||
        !strcasecmp(aContentType, "image/gif")   ||
        !strcasecmp(aContentType, "image/jpeg")  ||
