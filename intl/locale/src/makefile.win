@@ -78,4 +78,5 @@ clobber::
 	rm -f $(DIST)\bin\components\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f $(DIST)\bin\res\langGroups.properties
+  rm -f $(DIST)\bin\res\language.properties
 	
