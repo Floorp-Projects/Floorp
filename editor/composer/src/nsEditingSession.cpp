@@ -95,6 +95,7 @@ nsEditingSession::nsEditingSession()
 : mDoneSetup(PR_FALSE)
 , mCanCreateEditor(PR_FALSE)
 , mScriptsEnabled(PR_TRUE)
+, mProgressListenerRegistered(PR_FALSE)
 , mImageAnimationMode(0)
 , mEditorFlags(0)
 , mEditorStatus(eEditorOK)
@@ -186,7 +187,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   // set the flag on the docShell to say that it's editable
   rv = editorDocShell->MakeEditable(aDoAfterUriLoad);
   if (NS_FAILED(rv)) return rv;  
-  
+
   // Setup commands common to plaintext and html editors,
   //  including the document creation observers
   // the first is an editor controller
@@ -511,6 +512,8 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
     nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
     if (webProgress) {
       webProgress->RemoveProgressListener(this);
+
+      mProgressListenerRegistered = PR_FALSE;
     }
   }
 
@@ -1215,7 +1218,7 @@ nsEditingSession::GetEditorDocShellFromWindow(nsIDOMWindow *aWindow,
 nsresult
 nsEditingSession::PrepareForEditing(nsIDOMWindow *aWindow)
 {
-  if (mDoneSetup)
+  if (mDoneSetup || mProgressListenerRegistered)
     return NS_OK;
     
   mDoneSetup = PR_TRUE;
@@ -1226,10 +1229,15 @@ nsEditingSession::PrepareForEditing(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
   if (!webProgress) return NS_ERROR_FAILURE;
 
-  return webProgress->AddProgressListener(this,
-                            (nsIWebProgress::NOTIFY_STATE_NETWORK  | 
-                             nsIWebProgress::NOTIFY_STATE_DOCUMENT |
-                             nsIWebProgress::NOTIFY_LOCATION));
+  nsresult rv =
+    webProgress->AddProgressListener(this,
+                                     (nsIWebProgress::NOTIFY_STATE_NETWORK  | 
+                                      nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                                      nsIWebProgress::NOTIFY_LOCATION));
+
+  mProgressListenerRegistered = NS_SUCCEEDED(rv);
+
+  return rv;
 }
 
 /*---------------------------------------------------------------------------
