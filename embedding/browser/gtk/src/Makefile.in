@@ -37,7 +37,8 @@ CPPSRCS		= \
 		EmbedProgress.cpp \
 		EmbedContentListener.cpp \
 		EmbedEventListener.cpp \
-		EmbedWindowCreator.cpp
+		EmbedWindowCreator.cpp \
+		EmbedPrompter.cpp
 else
 
 CPPSRCS         = \
