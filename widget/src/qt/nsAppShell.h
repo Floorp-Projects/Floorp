@@ -58,7 +58,6 @@ private:
     nsCOMPtr<nsIEventQueue> mEventQueue;
     nsQApplication          *mApplication;
     PRInt32                 mID;
-    static PRBool           mRunning;
 };
 
 #endif // nsAppShell_h__

@@ -57,18 +57,15 @@ PRInt32 gAppShellID = 0;
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
-PRBool nsAppShell::mRunning = PR_FALSE;
-
 //-------------------------------------------------------------------------
 //
 // nsAppShell constructor
 //
 //-------------------------------------------------------------------------
-nsAppShell::nsAppShell()
+nsAppShell::nsAppShell() :
+  mDispatchListener(0),
+  mApplication(nsnull)
 {
-  mDispatchListener = 0;
-  mEventQueue = nsnull;
-  mApplication = nsnull;
 #ifdef DBG_JCG
   gAppShellCount++;
   mID = gAppShellID++;
@@ -213,9 +210,7 @@ NS_METHOD nsAppShell::Run()
   if (!mEventQueue) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  mRunning = PR_TRUE;
   mApplication->exec();
-  mRunning = PR_FALSE;
 
   Spindown();
   return NS_OK;
@@ -232,8 +227,7 @@ NS_METHOD nsAppShell::Exit()
   if (mApplication == nsnull)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (mRunning)
-    mApplication->exit(0);
+  mApplication->exit(0);
   return NS_OK;
 }
 
@@ -247,9 +241,6 @@ NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
   if (mApplication == nsnull)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (!mRunning)
     return NS_ERROR_NOT_INITIALIZED;
 
   mApplication->processEvents(1);
