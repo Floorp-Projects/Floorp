@@ -942,14 +942,24 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 
   // remove duplicates
   if ((notifyContent[4] == notifyContent[3]) || (notifyContent[4] == notifyContent[2]) || (notifyContent[4] == notifyContent[1])) {
-    notifyContent[4] = nsnull;
+    NS_IF_RELEASE(notifyContent[4]);
   }
   // remove duplicates
   if ((notifyContent[3] == notifyContent[2]) || (notifyContent[3] == notifyContent[1])) {
-    notifyContent[3] = nsnull;
+    NS_IF_RELEASE(notifyContent[3]);
   }
   if (notifyContent[2] == notifyContent[1]) {
-    notifyContent[2] = nsnull;
+    NS_IF_RELEASE(notifyContent[2]);
+  }
+
+  // remove notifications for content not in document.
+  // we may decide this is possible later but right now it has problems.
+  nsIDocument* doc = nsnull;
+  for  (int i = 0; i < maxNotify; i++) {
+    if (notifyContent[i] && NS_SUCCEEDED(notifyContent[i]->GetDocument(doc)) && !doc) {
+      NS_RELEASE(notifyContent[i]);
+    }
+    NS_IF_RELEASE(doc);
   }
 
   // compress the notify array to group notifications tighter
