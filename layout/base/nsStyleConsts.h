@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -249,6 +250,7 @@
 #define NS_STYLE_BORDER_STYLE_BG_INSET          10
 #define NS_STYLE_BORDER_STYLE_BG_OUTSET         11
 #define NS_STYLE_BORDER_STYLE_BG_SOLID          12
+#define NS_STYLE_BORDER_STYLE_AUTO              13 // for outline-style only
 // a bit ORed onto the style for table border collapsing indicating that the style was 
 // derived from a table with its rules attribute set
 #define NS_STYLE_BORDER_STYLE_RULES_MARKER      0x10  

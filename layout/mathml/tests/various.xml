@@ -50,7 +50,7 @@ maction {
   background-color: yellow;
 }
 maction:hover  {
-  -moz-outline: 1px dotted black;
+  outline: 1px dotted black;
 /*  border: 1px solid black; */
 }
 maction[actiontype="restyle#background"] {

@@ -120,7 +120,7 @@
 }
 
 *|*:-moz-any-link:focus {
-  -moz-outline: 1px dotted invert;
+  outline: 1px dotted invert;
 }
 
 /* Miscellaneous */

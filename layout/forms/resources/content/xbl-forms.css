@@ -274,7 +274,7 @@ input[type="image"][disabled] {
 }
 
 input[type="image"]:focus {
-  -moz-outline: 1px dotted -moz-FieldText;
+  outline: 1px dotted -moz-FieldText;
 }
 
 /* file selector */

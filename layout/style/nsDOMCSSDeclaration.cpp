@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -404,6 +405,11 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 // Aliases
 CSS_PROP(X, opacity, MozOpacity, X, X, X, X)
+CSS_PROP(X, outline, MozOutline, X, X, X, X)
+CSS_PROP(X, outline_color, MozOutlineColor, X, X, X, X)
+CSS_PROP(X, outline_style, MozOutlineStyle, X, X, X, X)
+CSS_PROP(X, outline_width, MozOutlineWidth, X, X, X, X)
+CSS_PROP(X, outline_offset, MozOutlineOffset, X, X, X, X)
 
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_NOTIMPLEMENTED

@@ -23,6 +23,7 @@
  *   Daniel Glazman <glazman@netscape.com>
  *   Boris Zbarsky <bzbarsky@mit.edu>
  *   Christopher A. Aillon <christopher@aillon.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -567,7 +568,7 @@ nsComputedDOMStyle::GetColumnWidth(nsIFrame *aFrame,
         val->SetIdent(nsLayoutAtoms::autoAtom);
         break;
       default:
-        NS_WARNING("Bad column width unit");
+        NS_ERROR("Unexpected column width unit");
         val->SetTwips(0);
         break;
     }
@@ -599,7 +600,7 @@ nsComputedDOMStyle::GetColumnGap(nsIFrame *aFrame,
         }
         break;
       default:
-        NS_WARNING("Bad column width unit");
+        NS_ERROR("Unexpected column gap unit");
         val->SetTwips(0);
         break;
     }
@@ -1301,7 +1302,7 @@ nsComputedDOMStyle::GetMarkerOffset(nsIFrame *aFrame,
         val->SetIdent(nsLayoutAtoms::none);
         break;
       default:
-        NS_WARNING("Double check the unit");
+        NS_ERROR("Unexpected marker offset unit");
         val->SetTwips(0);
         break;
     }
@@ -1331,23 +1332,31 @@ nsComputedDOMStyle::GetOutlineWidth(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline, aFrame);
 
   if (outline) {
-    switch (outline->mOutlineWidth.GetUnit()) {
+    nsStyleCoord coord;
+    PRUint8 outlineStyle = outline->GetOutlineStyle();
+    if (outlineStyle == NS_STYLE_BORDER_STYLE_NONE) {
+      coord.SetCoordValue(0);
+    } else {
+      coord = outline->mOutlineWidth;
+    }
+    switch (coord.GetUnit()) {
       case eStyleUnit_Coord:
-        val->SetTwips(outline->mOutlineWidth.GetCoordValue());
+        val->SetTwips(coord.GetCoordValue());
         break;
-      case eStyleUnit_Integer:
-      case eStyleUnit_Proportional:
       case eStyleUnit_Enumerated:
-      case eStyleUnit_Chars:
         {
-          const nsAFlatCString& width=
-            nsCSSProps::ValueToKeyword(outline->mOutlineWidth.GetIntValue(),
+          const nsAFlatCString& width =
+            nsCSSProps::ValueToKeyword(coord.GetIntValue(),
                                        nsCSSProps::kBorderWidthKTable);
           val->SetIdent(width);
           break;
         }
+      case eStyleUnit_Chars:
+        // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
+        val->SetTwips(0);
+        break;
       default:
-        NS_WARNING("Double check the unit");
+        NS_ERROR("Unexpected outline width unit");
         val->SetTwips(0);
         break;
     }
@@ -1368,13 +1377,18 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
 
   if (outline) {
     PRUint8 outlineStyle = outline->GetOutlineStyle();
-    if (outlineStyle == NS_STYLE_BORDER_STYLE_NONE) {
-      val->SetIdent(nsLayoutAtoms::none);
-    } else {
-      const nsAFlatCString& style=
-        nsCSSProps::ValueToKeyword(outlineStyle,
-                                   nsCSSProps::kBorderStyleKTable);
-      val->SetIdent(style);
+    switch (outlineStyle) {
+      case NS_STYLE_BORDER_STYLE_NONE:
+        val->SetIdent(nsLayoutAtoms::none);
+        break;
+      case NS_STYLE_BORDER_STYLE_AUTO:
+        val->SetIdent(nsLayoutAtoms::autoAtom);
+        break;
+      default:
+        const nsAFlatCString& style =
+          nsCSSProps::ValueToKeyword(outlineStyle,
+                                     nsCSSProps::kOutlineStyleKTable);
+        val->SetIdent(style);
     }
   }
 
@@ -1396,19 +1410,12 @@ nsComputedDOMStyle::GetOutlineOffset(nsIFrame *aFrame,
       case eStyleUnit_Coord:
         val->SetTwips(outline->mOutlineOffset.GetCoordValue());
         break;
-      case eStyleUnit_Integer:
-      case eStyleUnit_Proportional:
-      case eStyleUnit_Enumerated:
       case eStyleUnit_Chars:
-        {
-          const nsAFlatCString& width=
-            nsCSSProps::ValueToKeyword(outline->mOutlineOffset.GetIntValue(),
-                                       nsCSSProps::kBorderWidthKTable);
-          val->SetIdent(width);
-          break;
-        }
+        // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
+        val->SetTwips(0);
+        break;
       default:
-        NS_WARNING("Double check the unit");
+        NS_ERROR("Unexpected outline offset unit");
         val->SetTwips(0);
         break;
     }
@@ -1499,9 +1506,7 @@ nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
         }
         break;
       default:
-#ifdef DEBUG_ComputedDOMStyle
-        NS_WARNING("double check the outline radius");
-#endif
+        NS_ERROR("Unexpected outline radius unit");
         break;
     }
   } else {
@@ -1527,7 +1532,7 @@ nsComputedDOMStyle::GetZIndex(nsIFrame *aFrame,
         val->SetNumber(position->mZIndex.GetIntValue());
         break;
       default:
-        NS_WARNING("Double Check the Unit!");
+        NS_ERROR("Unexpected z-index unit");
         // fall through
       case eStyleUnit_Auto:
         val->SetIdent(nsLayoutAtoms::autoAtom);
@@ -1687,9 +1692,7 @@ nsComputedDOMStyle::GetLineHeight(nsIFrame *aFrame,
         val->SetNumber(text->mLineHeight.GetFactorValue());
         break;
       default:
-#ifdef DEBUG_ComputedDOMStyle
-        NS_WARNING("double check the line-height");
-#endif
+        NS_ERROR("Unexpected line-height unit");
         val->SetIdent(nsLayoutAtoms::normal);
         break;
     }
@@ -2635,7 +2638,7 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
           val->SetIdent(nsLayoutAtoms::autoAtom);
           break;
         default:
-          NS_WARNING("Double check the unit");
+          NS_ERROR("Unexpected height unit");
           val->SetTwips(0);
           break;
       }
@@ -2703,7 +2706,7 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
           val->SetIdent(nsLayoutAtoms::autoAtom);
           break;
         default:
-          NS_WARNING("Double check the unit");
+          NS_ERROR("Unexpected width unit");
           val->SetTwips(0);
           break;
       }
@@ -2972,7 +2975,7 @@ nsComputedDOMStyle::GetOffsetWidthFor(PRUint8 aSide, nsIFrame* aFrame,
         rv = GetAbsoluteOffset(aSide, aFrame, aValue);
         break;
       default:
-        NS_WARNING("double check the position");
+        NS_ERROR("Invalid position");
         break;
     }
   }
@@ -3031,8 +3034,7 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
 
         break;
       default:
-        NS_WARNING("double check the side");
-
+        NS_ERROR("Invalid side");
         break;
     }
     val->SetTwips(offset);
@@ -3098,7 +3100,7 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
         }
         break;
       default:
-        NS_WARNING("double check the unit");
+        NS_ERROR("Unexpected left/right/top/bottom unit");
         val->SetTwips(0);
         break;
     }
@@ -3135,7 +3137,7 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
 
         break;
       default:
-        NS_WARNING("double check the unit");
+        NS_ERROR("Unexpected left/right/top/bottom unit");
         val->SetTwips(0);
 
         break;
@@ -3217,7 +3219,7 @@ nsComputedDOMStyle::GetPaddingWidthCoordFor(PRUint8 aSide, nsIFrame* aFrame)
       case NS_SIDE_RIGHT  :
         return padding.right;
       default:
-        NS_WARNING("double check the side");
+        NS_ERROR("Invalid side");
         break;
     }
   }
@@ -3247,7 +3249,7 @@ nsComputedDOMStyle::GetBorderWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame)
       case NS_SIDE_RIGHT  :
         return border.right;
       default:
-        NS_WARNING("double check the side");
+        NS_ERROR("Invalid side");
         break;
     }
   }
@@ -3375,9 +3377,7 @@ nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
         }
         break;
       default:
-#ifdef DEBUG_ComputedDOMStyle
-        NS_WARNING("double check the border radius");
-#endif
+        NS_ERROR("Unexpected border radius unit");
         break;
     }
   } else {
@@ -3404,15 +3404,13 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
       coord.SetCoordValue(0);
     } else {
       border->mBorder.Get(aSide, coord);
-   }
+    }
 
-    switch(coord.GetUnit()) {
+    switch (coord.GetUnit()) {
       case eStyleUnit_Coord:
-        val->SetTwips(coord.GetCoordValue());  break;
-      case eStyleUnit_Integer:
-      case eStyleUnit_Proportional:
+        val->SetTwips(coord.GetCoordValue());
+        break;
       case eStyleUnit_Enumerated:
-      case eStyleUnit_Chars:
         {
           const nsAFlatCString& width=
             nsCSSProps::ValueToKeyword(coord.GetIntValue(),
@@ -3420,8 +3418,12 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
           val->SetIdent(width);
           break;
         }
+      case eStyleUnit_Chars:
+        // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
+        val->SetTwips(0);
+        break;
       default:
-        NS_WARNING("double check the unit");
+        NS_ERROR("Unexpected border width unit");
         break;
     }
   }
@@ -3501,7 +3503,7 @@ nsComputedDOMStyle::GetMarginWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame)
       case NS_SIDE_RIGHT  :
         return margin.right;
       default:
-        NS_WARNING("double check the side");
+        NS_ERROR("Invalid side");
         break;
     }
   }
@@ -3637,9 +3639,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(min_width,                     MinWidth),
     // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
     //// COMPUTED_STYLE_MAP_ENTRY(outline,                  Outline),
-    // COMPUTED_STYLE_MAP_ENTRY(outline_color,              OutlineColor),
-    // COMPUTED_STYLE_MAP_ENTRY(outline_style,              OutlineStyle),
-    // COMPUTED_STYLE_MAP_ENTRY(outline_width,              OutlineWidth),
+    COMPUTED_STYLE_MAP_ENTRY(outline_color,                 OutlineColor),
+    COMPUTED_STYLE_MAP_ENTRY(outline_style,                 OutlineStyle),
+    COMPUTED_STYLE_MAP_ENTRY(outline_width,                 OutlineWidth),
+    COMPUTED_STYLE_MAP_ENTRY(outline_offset,                OutlineOffset),
     COMPUTED_STYLE_MAP_ENTRY(overflow,                      Overflow),
     COMPUTED_STYLE_MAP_ENTRY(overflow_x,                    OverflowX),
     COMPUTED_STYLE_MAP_ENTRY(overflow_y,                    OverflowY),
@@ -3716,11 +3719,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
-    //// COMPUTED_STYLE_MAP_ENTRY(_moz_outline,             MozOutline),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_color,            OutlineColor),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_style,            OutlineStyle),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_width,            OutlineWidth),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_offset,           OutlineOffset),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),

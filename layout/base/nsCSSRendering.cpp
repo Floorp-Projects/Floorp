@@ -551,6 +551,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     }
     break;
 
+  case NS_STYLE_BORDER_STYLE_AUTO:
   case NS_STYLE_BORDER_STYLE_SOLID:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_FULL, 1.0f, twipsPerPixel);
@@ -3621,6 +3622,7 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
         // dotted and dashed render in solid until this style is supported.  This code should
         // be moved when it is supported so that the above outset and inset will fall into the 
         // solid code below....
+      case NS_STYLE_BORDER_STYLE_AUTO:
       case NS_STYLE_BORDER_STYLE_SOLID:
         polypath[0].x = NSToCoordRound(aPoints[0].x);
         polypath[0].y = NSToCoordRound(aPoints[0].y);
@@ -4366,6 +4368,9 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
   case NS_STYLE_BORDER_STYLE_OUTSET:
   case NS_STYLE_BORDER_STYLE_INSET:
     NS_ASSERTION(PR_FALSE, "inset, outset should have been converted to groove, ridge");
+    break;
+  case NS_STYLE_BORDER_STYLE_AUTO:
+    NS_ASSERTION(PR_FALSE, "Unexpected 'auto' table border");
     break;
   }
 }

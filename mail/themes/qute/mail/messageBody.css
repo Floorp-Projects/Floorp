@@ -167,6 +167,6 @@ span.moz-txt-formfeed {
 } 
 
 .moz-vcard-badge:focus {
-  -moz-outline: none;
+  outline: none;
 }
 

@@ -246,7 +246,7 @@
   .text-link:focus
     {
       color                 : red;
-      -moz-outline: 1px dotted invert;
+      outline: 1px dotted invert;
     }
 
   .text-link:hover

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   David Hyatt (hyatt@netscape.com)
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -303,6 +304,10 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
         }
       }
       break;
+    case eStyleUnit_Chars:
+      // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
+      NS_NOTYETIMPLEMENTED("CalcCoord: eStyleUnit_Chars");
+      return 0;
     default:
       NS_ERROR("bad unit type");
       break;
@@ -442,7 +447,7 @@ nsStylePadding::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
 {
   // spacing values not inherited
-  nsStyleCoord  medium(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
+  const nsStyleCoord  medium(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
   mBorder.SetLeft(medium);
   mBorder.SetTop(medium);
   mBorder.SetRight(medium);
@@ -622,10 +627,9 @@ nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
   // spacing values not inherited
   mOutlineRadius.Reset();
-  mOutlineOffset.Reset();
+  mOutlineOffset.SetCoordValue(0);
 
-  nsStyleCoord  medium(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
-  mOutlineWidth = medium;
+  mOutlineWidth = nsStyleCoord(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
   mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;
   mOutlineColor = NS_RGB(0, 0, 0);
 
@@ -639,14 +643,11 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc) {
 void 
 nsStyleOutline::RecalcData(nsPresContext* aContext)
 {
-  if ((NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) || 
-     IsFixedUnit(mOutlineWidth.GetUnit(), PR_TRUE)) {
-    const nscoord* borderWidths = aContext->GetBorderWidthTable();
-    if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle())
-      mCachedOutlineWidth = 0;
-    else
-      mCachedOutlineWidth = CalcCoord(mOutlineWidth, borderWidths, 3);
-    mCachedOutlineOffset = CalcCoord(mOutlineOffset, borderWidths, 3);
+  if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) {
+    mCachedOutlineWidth = 0;
+    mHasCachedOutline = PR_TRUE;
+  } else if (IsFixedUnit(mOutlineWidth.GetUnit(), PR_TRUE)) {
+    mCachedOutlineWidth = CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3);
     mHasCachedOutline = PR_TRUE;
   }
   else

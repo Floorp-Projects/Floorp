@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -154,6 +155,7 @@ public:
   static const PRInt32 kKeyEquivalentKTable[];
   static const PRInt32 kListStylePositionKTable[];
   static const PRInt32 kListStyleKTable[];
+  static const PRInt32 kOutlineStyleKTable[];
   static const PRInt32 kOutlineColorKTable[];
   static const PRInt32 kOverflowKTable[];
   static const PRInt32 kOverflowSubKTable[];

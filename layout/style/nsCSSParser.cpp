@@ -24,6 +24,7 @@
  *   Daniel Glazman <glazman@netscape.com>
  *   L. David Baron <dbaron@dbaron.org>
  *   Boris Zbarsky <bzbarsky@mit.edu>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -76,10 +77,6 @@
 
 #include "prprf.h"
 #include "math.h"
-
-#define ENABLE_OUTLINE   // un-comment this to enable the outline properties (bug 9816)
-                         // XXX un-commenting for temporary fix for nsbeta3+ Bug 48973
-                         // so we can use "mozoutline
 
 //#define ENABLE_COUNTERS  // un-comment this to enable counters (bug 15174)
 
@@ -265,9 +262,7 @@ protected:
   PRBool ParseBorderStyle(nsresult& aErrorCode);
   PRBool ParseBorderWidth(nsresult& aErrorCode);
   PRBool ParseBorderRadius(nsresult& aErrorCode);
-#ifdef ENABLE_OUTLINE
   PRBool ParseOutlineRadius(nsresult& aErrorCode);
-#endif
   // for 'clip' and '-moz-image-region'
   PRBool ParseRect(nsCSSRect& aRect, nsresult& aErrorCode,
                    nsCSSProperty aPropID);
@@ -288,9 +283,7 @@ protected:
   PRBool ParseListStyle(nsresult& aErrorCode);
   PRBool ParseMargin(nsresult& aErrorCode);
   PRBool ParseMarks(nsresult& aErrorCode, nsCSSValue& aValue);
-#ifdef ENABLE_OUTLINE
   PRBool ParseOutline(nsresult& aErrorCode);
-#endif
   PRBool ParseOverflow(nsresult& aErrorCode);
   PRBool ParsePadding(nsresult& aErrorCode);
   PRBool ParsePause(nsresult& aErrorCode);
@@ -3930,10 +3923,8 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     return ParseBorderWidth(aErrorCode);
   case eCSSProperty__moz_border_radius:
     return ParseBorderRadius(aErrorCode);
-#ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline_radius:
     return ParseOutlineRadius(aErrorCode);
-#endif
   case eCSSProperty_clip:
     return ParseRect(mTempData.mDisplay.mClip, aErrorCode,
                      eCSSProperty_clip);
@@ -3970,10 +3961,8 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   case eCSSProperty_margin_start:
     return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_margin_start,
                                        NS_BOXPROP_SOURCE_LOGICAL);
-#ifdef ENABLE_OUTLINE
-  case eCSSProperty__moz_outline:
+  case eCSSProperty_outline:
     return ParseOutline(aErrorCode);
-#endif
   case eCSSProperty_overflow:
     return ParseOverflow(aErrorCode);
   case eCSSProperty_padding:
@@ -4104,10 +4093,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_margin_left:
   case eCSSProperty_margin_right:
   case eCSSProperty_margin_start:
-#ifdef ENABLE_OUTLINE
-  case eCSSProperty__moz_outline:
+  case eCSSProperty_outline:
   case eCSSProperty__moz_outline_radius:
-#endif
   case eCSSProperty_overflow:
   case eCSSProperty_padding:
   case eCSSProperty_padding_end:
@@ -4200,13 +4187,11 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_AHL, nsnull);
   case eCSSProperty__moz_column_gap:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
-#ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline_radius_topLeft:
   case eCSSProperty__moz_outline_radius_topRight:
   case eCSSProperty__moz_outline_radius_bottomRight:
   case eCSSProperty__moz_outline_radius_bottomLeft:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
-#endif
   case eCSSProperty_bottom:
   case eCSSProperty_top:
   case eCSSProperty_left:
@@ -4390,18 +4375,17 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_orphans:
   case eCSSProperty_widows:
     return ParseVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
-#ifdef ENABLE_OUTLINE
-  case eCSSProperty__moz_outline_color:
+  case eCSSProperty_outline_color:
     return ParseVariant(aErrorCode, aValue, VARIANT_HCK, 
                         nsCSSProps::kOutlineColorKTable);
-  case eCSSProperty__moz_outline_style:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HOK, 
-                        nsCSSProps::kBorderStyleKTable);
-  case eCSSProperty__moz_outline_width:
-  case eCSSProperty__moz_outline_offset:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HKL,
-                        nsCSSProps::kBorderWidthKTable);
-#endif
+  case eCSSProperty_outline_style:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOK | VARIANT_AUTO, 
+                        nsCSSProps::kOutlineStyleKTable);
+  case eCSSProperty_outline_width:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKL,
+                                nsCSSProps::kBorderWidthKTable);
+  case eCSSProperty_outline_offset:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HL, nsnull);
   case eCSSProperty_overflow_x:
   case eCSSProperty_overflow_y:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
@@ -4903,13 +4887,11 @@ PRBool CSSParserImpl::ParseBorderRadius(nsresult& aErrorCode)
                             kBorderRadiusIDs);
 }
 
-#ifdef ENABLE_OUTLINE
 PRBool CSSParserImpl::ParseOutlineRadius(nsresult& aErrorCode)
 {
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mOutlineRadius,
                             kOutlineRadiusIDs);
 }
-#endif
 
 PRBool CSSParserImpl::ParseBorderColors(nsresult& aErrorCode,
                                         nsCSSValueList** aResult,
@@ -5482,14 +5464,13 @@ PRBool CSSParserImpl::ParseMarks(nsresult& aErrorCode, nsCSSValue& aValue)
   return PR_FALSE;
 }
 
-#ifdef ENABLE_OUTLINE
 PRBool CSSParserImpl::ParseOutline(nsresult& aErrorCode)
 {
   const PRInt32 numProps = 3;
   static const nsCSSProperty kOutlineIDs[] = {
-    eCSSProperty__moz_outline_color,
-    eCSSProperty__moz_outline_style,
-    eCSSProperty__moz_outline_width
+    eCSSProperty_outline_color,
+    eCSSProperty_outline_style,
+    eCSSProperty_outline_width
   };
 
   nsCSSValue  values[numProps];
@@ -5515,7 +5496,6 @@ PRBool CSSParserImpl::ParseOutline(nsresult& aErrorCode)
   }
   return PR_TRUE;
 }
-#endif
 
 PRBool CSSParserImpl::ParseOverflow(nsresult& aErrorCode)
 {

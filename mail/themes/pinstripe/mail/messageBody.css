@@ -293,7 +293,7 @@ span.moz-smiley-s16 {
 } 
 
 .moz-vcard-badge:focus {
-  -moz-outline: none;
+  outline: none;
 }
 
 

@@ -97,7 +97,7 @@
 }
 
 #getMore:focus {
-  -moz-outline: 1px dotted invert ! important;
+  outline: 1px dotted invert ! important;
 }
 
 /* Extension Buttons (Iconic buttons in each extension item) */

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -638,10 +639,10 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
  
   nsAutoString  buffer;
-  mOutlineWidth.AppendToString(buffer, eCSSProperty__moz_outline_width);
-  mOutlineColor.AppendToString(buffer, eCSSProperty__moz_outline_color);
-  mOutlineOffset.AppendToString(buffer, eCSSProperty__moz_outline_offset);
-  mOutlineStyle.AppendToString(buffer, eCSSProperty__moz_outline_style);
+  mOutlineWidth.AppendToString(buffer, eCSSProperty_outline_width);
+  mOutlineColor.AppendToString(buffer, eCSSProperty_outline_color);
+  mOutlineOffset.AppendToString(buffer, eCSSProperty_outline_offset);
+  mOutlineStyle.AppendToString(buffer, eCSSProperty_outline_style);
   {
     static const nsCSSProperty trbl[] = {
       eCSSProperty__moz_outline_radius_topLeft,
