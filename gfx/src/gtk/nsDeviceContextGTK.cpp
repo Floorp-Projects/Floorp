@@ -865,7 +865,7 @@ nsSystemFontsGTK::GetSystemFontInfo(GdkFont* iFont, nsFont* aFont, float aPixels
     NS_ASSERTION(theFont->type == GDK_FONT_FONTSET,
                  "theFont->type can only have two values");
 
-    XFontSet fontSet = NS_STATIC_CAST(XFontSet, GDK_FONT_XFONT(theFont));
+    XFontSet fontSet = NS_REINTERPRET_CAST(XFontSet, GDK_FONT_XFONT(theFont));
     XFontStruct **fontStructs;
     char **fontNames;
     int numFonts = ::XFontsOfFontSet(fontSet, &fontStructs, &fontNames);
