@@ -591,7 +591,12 @@ XFE_TaskBar::getUndockButton()
 	return m_undockButton;
 }
 //////////////////////////////////////////////////////////////////////////
-
+Widget
+XFE_TaskBar::getToolBar()
+{
+	return m_toolBar;
+}
+//////////////////////////////////////////////////////////////////////////
 XFE_CALLBACK_DEFN(XFE_TaskBar,updateIconAppearance)
 	(XFE_NotificationCenter *	/*obj*/, 
 	 void *						/*clientData*/, 

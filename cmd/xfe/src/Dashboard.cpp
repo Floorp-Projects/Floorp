@@ -489,7 +489,6 @@ XFE_Dashboard::createDockedTaskBar()
 	m_dockedTaskBar = new XFE_TaskBar(m_widget,m_parentFrame,False);
 
 	// Add action cb to dashboard
-//	XtAddCallback(m_dockedTaskBar->getBaseWidget(),
 	XtAddCallback(m_dockedTaskBar->getUndockButton(),
 				  XmNactivateCallback,
 				  XFE_Dashboard::floatingActionCB,
@@ -746,7 +745,7 @@ XFE_Dashboard::startFloatingTaskBar(XFE_Frame * parentFrame)
 
 	// Add popup menu post event handler to floating task bar items
 	XfeChildrenAddEventHandler(
-		XFE_Dashboard::m_floatingTaskBar->getBaseWidget(),
+		XFE_Dashboard::m_floatingTaskBar->getToolBar(),
 		ButtonPressMask,
 		True,
 		&XFE_Dashboard::floatingButtonEH,
@@ -838,7 +837,7 @@ XFE_Dashboard::setFloatingTaskBarHorizontal(XP_Bool horizontal)
 	fe_globalPrefs.task_bar_horizontal = horizontal;
 
 	// Update the floating task bar's orientation
-	XtVaSetValues(m_floatingTaskBar->getBaseWidget(),
+	XtVaSetValues(m_floatingTaskBar->getToolBar(),
 				  XmNorientation,horizontal ? XmHORIZONTAL : XmVERTICAL,
 				  NULL);
 }
@@ -1093,6 +1092,8 @@ XFE_Dashboard::floatingActionCB(Widget		/* w */,
 	{
 		return;
 	}
+
+	XFE_Dashboard::unDockTaskBar();
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ void

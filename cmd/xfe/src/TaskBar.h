@@ -62,6 +62,7 @@ public:
 	Cardinal	numEnabledButtons			();
 	
 	Widget		getUndockButton				();
+	Widget		getToolBar					();
 
 private:
   
