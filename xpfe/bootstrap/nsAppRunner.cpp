@@ -270,8 +270,11 @@ int main(int argc, char* argv[])
   rv = nsServiceManager::GetService(kCookieServiceCID,
                                     nsCOMTypeInfo<nsICookieService>::GetIID(),
                                     (nsISupports **)&cookieService);
+#ifndef XP_MAC
+// Until the cookie manager actually exists on the Mac we don't want to bail here
   if (NS_FAILED(rv))
       goto done;
+#endif // XP_MAC
 #endif // NECKO
 
   /*
