@@ -17,6 +17,8 @@
 
 DEPTH=..\..\..\..
 
+DIRS= locale
+
 CHROME_DIR          = bookmarks
 CHROME_CONTENT_DIR  = content/default
 CHROME_SKIN_DIR     = skin/default
