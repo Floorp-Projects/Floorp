@@ -155,7 +155,7 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
 
       //XXXTelemac TODO Use an nsIWebServiceErrorHandler instead of nsnull
       if (element)
-        rv = mLoader->ProcessSchemaElement(nsnull, element, getter_AddRefs(schema));
+        rv = mLoader->ProcessSchemaElement(element, nsnull, getter_AddRefs(schema));
       else
         rv = NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT;
     }
@@ -708,7 +708,8 @@ nsSchemaLoader::Load(const nsAString& schemaURI,
   nsCOMPtr<nsIDOMElement> element;
   document->GetDocumentElement(getter_AddRefs(element));
   if (element) {
-    rv = ProcessSchemaElement(nsnull, element, _retval); //XXXTelemac TODO Have an error handler there instead or nsnull
+    //XXXTelemac TODO Have an error handler there instead or nsnull
+    rv = ProcessSchemaElement(element, nsnull, _retval);
   }
   else {
     rv = NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT;
@@ -784,10 +785,10 @@ static const char* kSchemaNamespaces[] = {NS_SCHEMA_1999_NAMESPACE,
                                           NS_SCHEMA_2001_NAMESPACE};
 static PRUint32 kSchemaNamespacesLength = sizeof(kSchemaNamespaces) / sizeof(const char*);
 
-/* nsISchema processSchemaElement (in nsIWebServiceErrorHandler aErrorHandler, in nsIDOMElement element); */
+/* nsISchema processSchemaElement (in nsIDOMElement element, in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP 
-nsSchemaLoader::ProcessSchemaElement(nsIWebServiceErrorHandler* aErrorHandler,
-                                     nsIDOMElement* aElement, 
+nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
+                                     nsIWebServiceErrorHandler* aErrorHandler,
                                      nsISchema **_retval)
 {
   NS_ENSURE_ARG(aElement);

@@ -310,7 +310,7 @@ nsXFormsModelElement::DoneAddingChildren()
             nsCOMPtr<nsISchema> schema;
             // no need to observe errors via the callback.  instead, rely on
             // this method returning a failure code when it encounters errors.
-            rv = mSchemas->ProcessSchemaElement(nsnull, el,
+            rv = mSchemas->ProcessSchemaElement(el, nsnull,
                                                 getter_AddRefs(schema));
             if (NS_SUCCEEDED(rv))
               mSchemaCount++;
@@ -535,7 +535,7 @@ nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
         nsCOMPtr<nsISchema> schema;
         // no need to observe errors via the callback.  instead, rely on
         // this method returning a failure code when it encounters errors.
-        rv = mSchemas->ProcessSchemaElement(nsnull, el,
+        rv = mSchemas->ProcessSchemaElement(el, nsnull,
                                             getter_AddRefs(schema));
         if (NS_SUCCEEDED(rv))
           mSchemaCount++;

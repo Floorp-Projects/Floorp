@@ -378,7 +378,7 @@ nsWSDLLoadRequest::LoadDefinition(const nsAString& aURI)
                IsElementOfNamespace(element,
                              NS_LITERAL_STRING(SCHEMA_1999_NAMESPACE))) {
         nsCOMPtr<nsISchema> schema;
-        rv = mSchemaLoader->ProcessSchemaElement(mErrorHandler, element,
+        rv = mSchemaLoader->ProcessSchemaElement(element, mErrorHandler,
                                                  getter_AddRefs(schema));
         if (NS_FAILED(rv)) {
           return NS_ERROR_WSDL_SCHEMA_PROCESSING_ERROR;
@@ -511,7 +511,7 @@ nsWSDLLoadRequest::HandleEvent(nsIDOMEvent *event)
                  IsElementOfNamespace(element,
                                 NS_LITERAL_STRING(SCHEMA_1999_NAMESPACE))) {
           nsCOMPtr<nsISchema> schema;
-          rv = mSchemaLoader->ProcessSchemaElement(mErrorHandler, element,
+          rv = mSchemaLoader->ProcessSchemaElement(element, mErrorHandler,
                                                    getter_AddRefs(schema));
           if (NS_FAILED(rv)) {
             return NS_ERROR_WSDL_SCHEMA_PROCESSING_ERROR;
@@ -994,7 +994,7 @@ nsWSDLLoadRequest::ProcessTypesElement(nsIDOMElement* aElement)
     // XXX : We need to deal with xs:import elements too.
     if (tagName == nsWSDLAtoms::sSchema_atom) {
       nsCOMPtr<nsISchema> schema;
-      rv = mSchemaLoader->ProcessSchemaElement(mErrorHandler, childElement,
+      rv = mSchemaLoader->ProcessSchemaElement(childElement, mErrorHandler,
                                                getter_AddRefs(schema));
       if (NS_FAILED(rv)) {
         return NS_ERROR_WSDL_SCHEMA_PROCESSING_ERROR;

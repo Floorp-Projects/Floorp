@@ -44,13 +44,13 @@ interface nsISchemaType;
 interface nsIDOMElement;
 interface nsISchemaLoadListener;
 
-[scriptable, uuid(77061d1d-e191-11d8-a3cc-000393b6661a)]
+[scriptable, uuid(9B2F0B4A-8F00-4a78-961A-7E84ED49B0B6)]
 interface nsISchemaLoader : nsISupports {
   nsISchema load(in AString schemaURI);
   void loadAsync(in AString schemaURI, 
                  in nsISchemaLoadListener listener);
-  nsISchema processSchemaElement(in nsIWebServiceErrorHandler aErrorHandler, 
-                                 in nsIDOMElement element);
+  nsISchema processSchemaElement(in nsIDOMElement element,
+                                 in nsIWebServiceErrorHandler aErrorHandler);
 };
 
 [scriptable, function, uuid(8d9aa9ce-e191-11d8-9f31-000393b6661a)]
