@@ -701,9 +701,14 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 {
   nsScrollbar *widget = (nsScrollbar*) p;
   nsScrollbarEvent sevent;
+
   sevent.message = NS_SCROLLBAR_POS;
   sevent.widget  = (nsWidget *) p;
   sevent.eventStructType = NS_SCROLLBAR_EVENT;
+
+  GdkWindow *win = (GdkWindow *)widget->GetNativeData(NS_NATIVE_WINDOW);
+  gdk_window_get_pointer(win, &sevent.point.x, &sevent.point.y, nsnull);
+
   widget->OnScroll(sevent, adj->value);
 
 /* FIXME we need to set point.* from the event stuff. */
