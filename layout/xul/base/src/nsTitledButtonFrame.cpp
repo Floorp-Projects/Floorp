@@ -1512,7 +1512,7 @@ nsTitledButtonFrame::CacheSizes(nsBoxLayoutState& aBoxLayoutState)
       break;
    }
 
-   nscoord oldHeight = mPrefSize.height;
+   //nscoord oldHeight = mPrefSize.height;
 
    nsMargin focusBorder = mRenderer->GetAddedButtonBorderAndPadding();
 

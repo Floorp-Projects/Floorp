@@ -580,7 +580,6 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
   if (mNeedsRecalc) 
   {
     nsSize size;
-    nscoord ascent = 0;
     nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
     nsIRenderingContext* rendContext = aBoxLayoutState.GetReflowState()->rendContext;
     if (rendContext) {

@@ -55,6 +55,7 @@ public:
   nsBoxLayoutState(nsIPresContext* aPresContext);
   nsBoxLayoutState(nsIPresShell* aShell);
   nsBoxLayoutState(const nsBoxLayoutState& aState);
+  virtual ~nsBoxLayoutState() {}
 
   virtual void HandleReflow(nsIBox* aRootBox);
 

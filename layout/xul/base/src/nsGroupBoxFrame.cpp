@@ -84,7 +84,13 @@ public:
   }
 #endif
 
- virtual PRBool GetInitialOrientation(PRBool& aHorizontal) { aHorizontal = PR_FALSE; return PR_TRUE; }
+  // make sure we our kids get our orient, align, and autostretch instead of us.
+  // our child box has no content node so it will search for a parent with one.
+  // that will be us.
+  virtual PRBool GetInitialOrientation(PRBool& aHorizontal) { aHorizontal = PR_FALSE; return PR_TRUE; }
+  virtual PRBool GetInitialHAlignment(Halignment& aHalign)  { aHalign = hAlign_Left; return PR_TRUE; } 
+  virtual PRBool GetInitialVAlignment(Valignment& aValign)  { aValign = vAlign_Top; return PR_TRUE; } 
+  virtual PRBool GetInitialAutoStretch(PRBool& aStretch)    { aStretch = PR_TRUE; return PR_TRUE; } 
 
   nsIFrame* GetTitleFrame(nsIPresContext* aPresContext, nsRect& aRect);
   nsIFrame* GetContentFrame(nsIPresContext* aPresContext);

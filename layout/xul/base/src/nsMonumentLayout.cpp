@@ -78,12 +78,11 @@ nsBoxSizeListNodeImpl::Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild)
 
 nsBoxSizeListNodeImpl::nsBoxSizeListNodeImpl(nsIBox* aBox):mNext(nsnull), 
                                                            mParent(nsnull), 
-                                                           mRefCount(0),
                                                            mBox(aBox),
+                                                           mRefCount(0),
                                                            mIsSet(PR_FALSE)
 {
 }
-
 
 nsBoxSizeList* 
 nsBoxSizeListNodeImpl::GetAt(PRInt32 aIndex)
@@ -119,7 +118,12 @@ nsBoxSizeListNodeImpl::Get(nsIBox* aBox)
 
 //------ nsInfoListImpl2 ----
 
-nsBoxSizeListImpl::nsBoxSizeListImpl(nsIBox* aBox):nsBoxSizeListNodeImpl(aBox),mListenerBox(nsnull), mListener(nsnull), mFirst(nsnull),mLast(nsnull),mCount(0)
+nsBoxSizeListImpl::nsBoxSizeListImpl(nsIBox* aBox):nsBoxSizeListNodeImpl(aBox),
+                                                   mFirst(nsnull),
+                                                   mLast(nsnull),
+                                                   mCount(0),
+                                                   mListener(nsnull), 
+                                                   mListenerBox(nsnull)
 {
 }
 

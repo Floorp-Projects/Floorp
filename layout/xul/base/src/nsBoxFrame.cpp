@@ -1471,7 +1471,6 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       {
         // if the kid had a child before see if this child has mouse
         // though. 
-        nsresult rv = NS_OK;
         PRBool isAdaptor = PR_FALSE;
         nsCOMPtr<nsIBox> box = mInner->GetBoxForFrame(hit, isAdaptor);
         if (box) {
@@ -1480,27 +1479,6 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
           // if the child says it can never mouse though ignore it.
           if (!mouseThrough)
               *aFrame = hit;
-          else {
-            /*
-            // otherwise see if it has an opaque parent.
-            nsIFrame* child = hit;
-            while(child) {
-               if (child == this)
-                  break;
-
-               const nsStyleColor* color = nsnull;
-               child->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)color);
-               PRBool transparentBG = (!color || NS_STYLE_BG_COLOR_TRANSPARENT ==
-                                     (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
-
-               if (!transparentBG) {
-                  *aFrame = hit;
-                  break;
-               }
-               child->GetParent(&child);
-            }
-            */
-          }
         }
       }
     }
