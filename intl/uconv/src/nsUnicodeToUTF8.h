@@ -58,24 +58,37 @@
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToUTF8 : public nsTableEncoderSupport
+class nsUnicodeToUTF8 : public nsIUnicodeEncoder
 {
+  NS_DECL_ISUPPORTS
+
 public:
 
   /**
    * Class constructor.
    */
-  nsUnicodeToUTF8();
+  nsUnicodeToUTF8() {NS_INIT_REFCNT(); mHighSurrogate = 0;};
 
   NS_IMETHOD FillInfo(PRUint32* aInfo);
 
-protected:
+  NS_IMETHOD Convert(const PRUnichar * aSrc, 
+                     PRInt32 * aSrcLength, 
+                     char * aDest, 
+                     PRInt32 * aDestLength);
 
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
+  NS_IMETHOD Finish(char * aDest, PRInt32 * aDestLength);
 
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
+
+  NS_IMETHOD Reset() {mHighSurrogate = 0; return NS_OK;}
+
+  NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
+    nsIUnicharEncoder * aEncoder, PRUnichar aChar) {return NS_OK;};
+
+protected:
+  PRUnichar mHighSurrogate;
+
 };
 
 #endif /* nsUnicodeToUTF8_h___ */

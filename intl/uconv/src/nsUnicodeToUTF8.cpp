@@ -42,41 +42,138 @@
 #include "nsUnicodeToUTF8.h"
 #include <string.h>
 
-static const PRUint16 g_UTF8MappingTable[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0xFFFF, 0x0000
-};
-
-static const PRInt16 g_UTF8ShiftTable[] =  {
-  3, uMultibytesCharset, 
-  ShiftCell(u1ByteChar,       1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F), 
-  ShiftCell(u2BytesUTF8,      2, 0xC0, 0xDF, 0x00, 0x00, 0x07, 0xFF), 
-  ShiftCell(u3BytesUTF8,      3, 0xE0, 0xEF, 0x08, 0x00, 0xFF, 0xFF) 
-};
+NS_IMPL_ISUPPORTS1(nsUnicodeToUTF8, nsIUnicodeEncoder)
 
 //----------------------------------------------------------------------
-// Class nsUnicodeToUTF8 [implementation]
-
-nsUnicodeToUTF8::nsUnicodeToUTF8() 
-: nsTableEncoderSupport((uShiftTable*) &g_UTF8ShiftTable, 
-                        (uMappingTable*) &g_UTF8MappingTable)
-{
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
+// nsUnicodeToUTF8 class [implementation]
 
 NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc, 
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  // in theory it should be 6, but since we do not handle 
-  // UCS4 and UTF-16 here. It is 3. We should change it to 6 when we
-  // support UCS4 or UTF-16
-  *aDestLength = 3*aSrcLength;
+  // aSrc is interpreted as UTF16, 3 is normally enough.
+  // But when previous buffer only contains part of the surrogate pair, we 
+  // need to complete it here. If the first word in following buffer is not
+  // in valid surrogate rang, we need to convert the remaining of last buffer 
+  // to 3 bytes.
+  *aDestLength = 3*aSrcLength + 3;
   return NS_OK;
 }
+
 NS_IMETHODIMP nsUnicodeToUTF8::FillInfo(PRUint32 *aInfo)
 {
   memset(aInfo, 0xFF, (0x10000L >> 3));
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc, 
+                                PRInt32 * aSrcLength, 
+                                char * aDest, 
+                                PRInt32 * aDestLength)
+{
+  const PRUnichar * src = aSrc;
+  const PRUnichar * srcEnd = aSrc + *aSrcLength;
+  char * dest = aDest;
+  PRInt32 destLen = *aDestLength;
+  PRUint32 n;
+
+  //complete remaining of last conversion
+  if (mHighSurrogate) {
+    if (src < srcEnd) {
+      *aDestLength = 0;
+      return NS_OK_UENC_MOREINPUT;
+    }
+    if (*aDestLength < 4) {
+      *aSrcLength = 0;
+      *aDestLength = 0;
+      return NS_OK_UENC_MOREOUTPUT;
+    }
+    if (*src < (PRUnichar)0xdc00 || *src > (PRUnichar)0xdfff) { //not a pair
+      *dest++ = (char)0xe0 | (mHighSurrogate >> 12);
+      *dest++ = (char)0x80 | ((mHighSurrogate >> 6) & 0x003f);
+      *dest++ = (char)0x80 | (mHighSurrogate & 0x003f);
+    } else { 
+      n = ((mHighSurrogate - (PRUnichar)0xd800) << 10) + 
+              (*src - (PRUnichar)0xdc00) + 0x10000;
+      *dest++ = (char)0xf0 | (n >> 18);
+      *dest++ = (char)0x80 | ((n >> 12) & 0x3f);
+      *dest++ = (char)0x80 | ((n >> 6) & 0x3f);
+      *dest++ = (char)0x80 | (n & 0x3f);
+      ++src;
+    }
+    mHighSurrogate = 0;
+  }
+
+  while (src < srcEnd) {
+    if ( *src < 0x007f) {
+      if (destLen < 1)
+        goto error_more_output;
+      *dest++ = (char)*src;
+      --destLen;
+    } else if (*src < 0x07ff) {
+      if (destLen < 2)
+        goto error_more_output;
+      *dest++ = (char)0xc0 | (*src >> 6);
+      *dest++ = (char)0x80 | (*src & 0x003f);
+    } else if (*src >= (PRUnichar)0xD800 && *src < (PRUnichar)0xDA00) {
+      if ((src+1) >= srcEnd) {
+        //we need another surrogate to complete this unicode char
+        mHighSurrogate = *src;
+        *aDestLength = dest - aDest;
+        return NS_OK_UENC_MOREINPUT;
+      }
+      //handle surrogate
+      if (destLen < 4)
+        goto error_more_output;
+      if (*(src+1) < (PRUnichar)0xdc00 || *(src+1) > 0xdfff) { //not a pair
+        *dest++ = (char)0xe0 | (*src >> 12);
+        *dest++ = (char)0x80 | ((*src >> 6) & 0x003f);
+        *dest++ = (char)0x80 | (*src & 0x003f);
+      } else {
+        n = ((*src - (PRUnichar)0xd800) << 10) + (*(src+1) - (PRUnichar)0xdc00) + (PRUnichar)0x10000;
+        *dest++ = (char)0xf0 | (n >> 18);
+        *dest++ = (char)0x80 | ((n >> 12) & 0x3f);
+        *dest++ = (char)0x80 | ((n >> 6) & 0x3f);
+        *dest++ = (char)0x80 | (n & 0x3f);
+        ++src;
+      }
+    } else { 
+      if (destLen < 3)
+        goto error_more_output;
+      //treat rest of the character as BMP
+      *dest++ = (char)0xe0 | (*src >> 12);
+      *dest++ = (char)0x80 | ((*src >> 6) & 0x003f);
+      *dest++ = (char)0x80 | (*src & 0x003f);
+    }
+    ++src;
+  }
+
+  *aDestLength = dest - aDest;
+  return NS_OK;
+
+error_more_output:
+  *aSrcLength = src - aSrc;
+  *aDestLength = dest - aDest;
+  return NS_OK_UENC_MOREOUTPUT;
+}
+
+NS_IMETHODIMP nsUnicodeToUTF8::Finish(char * aDest, PRInt32 * aDestLength)
+{
+  char * dest = aDest;
+
+  if (mHighSurrogate) {
+    if (*aDestLength < 3) {
+      *aDestLength = 0;
+      return NS_OK_UENC_MOREOUTPUT;
+    }
+    *dest++ = (char)0xe0 | (mHighSurrogate >> 12);
+    *dest++ = (char)0x80 | ((mHighSurrogate >> 6) & 0x003f);
+    *dest++ = (char)0x80 | (mHighSurrogate & 0x003f);
+    mHighSurrogate = 0;
+    *aDestLength = 3;
+    return NS_OK;
+  } 
+
+  *aDestLength  = 0;
   return NS_OK;
 }
