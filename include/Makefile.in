@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 EXPORTS         = \
                 platform.h \
+                xp_core.h \
                 $(NULL)
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
