@@ -4,7 +4,7 @@ package			BuildList;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildMozilla DistMozilla);
+@EXPORT			= qw(BuildMozilla DistMozilla SetBuildNumber);
 
 =head1 NAME
 
@@ -48,7 +48,7 @@ sub BuildMozilla()
 				$D = "";
 				$dist_dir = ":mozilla:dist:client:";
 			}
-		
+
 			#
 			# Build the appropriate target of each project
 			#
@@ -340,6 +340,24 @@ sub DistMozilla()
 		InstallFromManifest(":mozilla:base:public:MANIFEST",							":mozilla:dist:base:");
 		InstallFromManifest(":mozilla:base:src:MANIFEST",								":mozilla:dist:base:");
 	}
+
+ sub SetBuildNumber
+ {
+
+   open (OUTPUT, ">:mozilla:config:build_number") || die "could not open buildnumber";
+
+   open (BDATE, "perl :mozilla:config:bdate.pl|");
+   
+   while (<BDATE>) {
+     print OUTPUT $_;
+   }
+
+   close (BDATE);
+   close (OUTPUT);
+
+   system ("perl :mozilla:config:aboutime.pl :mozilla:l10n:us:xp:about-all.html :mozilla:config:build_number");
+
+ }
 
 1;
 

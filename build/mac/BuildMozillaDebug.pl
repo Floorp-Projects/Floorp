@@ -36,5 +36,7 @@ chdir("::::");
 # Make and popuplate the dist directory
 DistMozilla();
 
+SetBuildNumber();
+
 # Now build the projects
 BuildMozilla();
