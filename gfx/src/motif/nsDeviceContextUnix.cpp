@@ -22,6 +22,7 @@
 
 #include "math.h"
 #include "nspr.h"
+#include "il_util.h"
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
