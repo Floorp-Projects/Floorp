@@ -224,7 +224,7 @@ void nsClipboard::Init(void)
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData( PRInt32 aWhichClipboard )
 {
   mIgnoreEmptyNotification = PR_TRUE;
 
@@ -507,7 +507,8 @@ PRBool nsClipboard::DoConvert(gint format)
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
+nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, 
+                                      PRInt32 aWhichClipboard)
 {
 
 #ifdef DEBUG_CLIPBOARD
@@ -729,7 +730,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
  *
  * @result NS_OK if successful.
  */
-NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
+NS_IMETHODIMP nsClipboard::ForceDataToClipboard( PRInt32 aWhichClipboard )
 {
 #ifdef DEBUG_CLIPBOARD
   printf("  nsClipboard::ForceDataToClipboard()\n");
@@ -744,7 +745,9 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 }
 
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult)
+nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, 
+                                    PRInt32 aWhichClipboard, 
+                                    PRBool * outResult)
 {
   // XXX this doesn't work right.  need to fix it.
   
@@ -932,7 +935,8 @@ void nsClipboard::SelectionClearCB(GtkWidget *aWidget,
   nsClipboard *cb = (nsClipboard *)gtk_object_get_data(GTK_OBJECT(aWidget),
                                                        "cb");
 
-  cb->EmptyClipboard();
+  //XXX which clipboard do we empty here?!
+  cb->EmptyClipboard(kGlobalClipboard);
 }
 
 

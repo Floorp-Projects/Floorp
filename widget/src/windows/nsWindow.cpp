@@ -2662,7 +2662,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                                    NS_GET_IID(nsIClipboard),
                                                    (nsISupports **)&clipboard);
-        clipboard->EmptyClipboard();
+        clipboard->EmptyClipboard(nsIClipboard::kGlobalClipboard);
         nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
       } break;
 

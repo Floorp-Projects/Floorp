@@ -175,8 +175,11 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData ( PRInt32 aWhichClipboard )
 {
+  if ( aWhichClipboard != kGlobalClipboard )
+    return NS_ERROR_FAILURE;
+
   mIgnoreEmptyNotification = PR_TRUE;
 
   // make sure we have a good transferable
@@ -623,10 +626,10 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
+NS_IMETHODIMP nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard )
 {
   // make sure we have a good transferable
-  if (nsnull == aTransferable) {
+  if ( !aTransferable || aWhichClipboard != kGlobalClipboard ) {
     return NS_ERROR_FAILURE;
   }
 
@@ -676,10 +679,10 @@ static void PlaceDataOnClipboard(PRUint32 aFormat, char * aData, int aLength)
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
+NS_IMETHODIMP nsClipboard::ForceDataToClipboard ( PRInt32 aWhichClipboard )
 {
   // make sure we have a good transferable
-  if (nsnull == mTransferable) {
+  if ( !mTransferable || aWhichClipboard != kGlobalClipboard ) {
     return NS_ERROR_FAILURE;
   }
 
@@ -732,11 +735,13 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
+NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard,
                                                   PRBool           *_retval)
 {
   *_retval = PR_FALSE;
-  
+  if ( aWhichClipboard != kGlobalClipboard )
+    return NS_OK;
+
   PRUint32 cnt;
   aFlavorList->Count(&cnt);
   for (PRUint32 i = 0;i < cnt; i++) {
