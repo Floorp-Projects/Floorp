@@ -294,9 +294,12 @@ nsAsyncStreamObserver::OnStopBinding(nsISupports* context,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg)
 {
-    nsresult rv = GetStatus();
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv;
 
+    //
+    // The OnStopBindiong event should always be fired, so do not 
+    // check the status...
+    //
     nsOnStopBindingEvent* event = 
         new nsOnStopBindingEvent(this, context);
     if (event == nsnull)
