@@ -54,10 +54,6 @@ else
 PROGRAM = phoenix-bin$(BIN_SUFFIX)
 endif
 
-ifeq ($(OS_ARCH),OS2)
-RESFILE=splashos2.res
-endif
-
 REQUIRES = \
 	appshell \
 	string \
@@ -98,7 +94,7 @@ EXTRA_DEPS	+= \
 	$(NULL)
 DEFINES		+= $(STATIC_DEFINES)
 CPPSRCS		+= $(STATIC_CPPSRCS)
-ifneq ($(OS_ARCH), WINNT)
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 EXTRA_DSO_LDOPTS+= -L$(DEPTH)/dist/lib/components
 endif
 EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
@@ -112,6 +108,18 @@ RCINCLUDE = splash.rc
 RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
 endif
 
+ifeq ($(OS_ARCH),OS2)
+RESFILE=splashos2.res
+ifdef BUILD_STATIC_LIBS
+EXE_DEF_FILE = browser.def
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_LIBS += libuls.lib libconv.lib
+else
+OS_LIBS += -llibuni -luconv
+endif
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef BUILD_STATIC_LIBS
@@ -119,6 +127,20 @@ include $(topsrcdir)/config/static-rules.mk
 endif
 
 $(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+
+ifeq ($(OS_ARCH),OS2)
+ifdef BUILD_STATIC_LIBS
+$(EXE_DEF_FILE):
+	rm -f $@
+	@echo NAME mozilla >$(EXE_DEF_FILE)
+	@echo IMPORTS >>$(EXE_DEF_FILE)
+	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
+	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
+	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
+	
+LDFLAGS += /NOE
+endif
+endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 phoenix:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
