@@ -1885,12 +1885,6 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       mStyleContext->GetStyleData(eStyleStruct_Text);
 
     if (NS_STYLE_TEXT_ALIGN_LEFT == mStyleText->mTextAlign) {
-      // If it's preformatted text, then we don't need to mark any lines
-      // as dirty
-      if (aState.mNoWrap) {
-        return NS_OK;
-      }
-
       tryAndSkipLines = PR_TRUE;
     }
   }
@@ -1902,15 +1896,15 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
                             aState.mReflowState.mComputedWidth;
     
     while (nsnull != line) {
-      // We don't have to mark the line dirty if:
+      // We don't have to mark the line dirty if all of the following are true:
       // - the line fits within the new available space
       // - it's inline (not a block)
-      // - it's either the last line in the block -or- it ended with a
-      //   break after
+      // - we're not wrapping text -or- it's the last line in the block -or- the
+      //   line ended with a break after
       // - there are no floaters associated with the line (reflowing the
       //   placeholder frame causes the floater to be reflowed)
       if (line->IsBlock() ||
-          (line->mNext && (line->mBreakType == NS_STYLE_CLEAR_NONE)) ||
+          (!aState.mNoWrap && line->mNext && (line->mBreakType == NS_STYLE_CLEAR_NONE)) ||
           line->mFloaters.NotEmpty() ||
           (line->mBounds.XMost() > newAvailWidth)) {
 
