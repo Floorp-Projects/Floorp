@@ -116,6 +116,8 @@ void CTests::OnTestsChangeUrl()
 		strcpy(theUrl, myDialog.m_urlfield);
 		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY);
+		// LOAD_FLAGS_NONE
+		// LOAD_FLAGS_BYPASS_HISTORY
 	    CQaUtils::RvTestResult(rv, "rv LoadURI() test", 1);
 		CQaUtils::FormatAndPrintOutput("The url = ", theUrl, 2); 
 
@@ -558,7 +560,7 @@ void CTests::OnInterfacesNsishistory()
 		// get theHistoryEntry object
 	theSessionHistory->GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
 	if (!theHistoryEntry)
-		CQaUtils::QAOutput("We didn't get the History Entry object.", 1);
+		CQaUtils::QAOutput("We didn't get the History Entry object. No hist entry tests performed.", 1);
 	else 
 	{
 		CQaUtils::QAOutput("We have the History Entry object!", 1);	
@@ -591,7 +593,7 @@ void CTests::OnInterfacesNsishistory()
 //	GetSHEnumTest(theSessionHistory, theSimpleEnum);
 
 	rv = theSessionHistory->GetSHistoryEnumerator(getter_AddRefs(theSimpleEnum));
-	if (!theSimpleEnum)
+	if (!theSimpleEnum) 
   	   CQaUtils::QAOutput("theSimpleEnum for GetSHistoryEnumerator() invalid. Test failed.", 1);
 	else
 	   CQaUtils::RvTestResult(rv, "GetSHistoryEnumerator() (SHistoryEnumerator attribute) test", 2);
@@ -609,8 +611,8 @@ void CTests::OnInterfacesNsishistory()
 void CTests::GetCountTest(nsISHistory *theSessionHistory, PRInt32 *numEntries)
 {
     rv = theSessionHistory->GetCount(numEntries);
-	if (!(*numEntries))
-		CQaUtils::QAOutput("numEntries for GetCount() invalid. Test failed.", 1);
+	if (*numEntries < 0)
+		CQaUtils::QAOutput("numEntries for GetCount() is <= zero. Test failed.", 1);
 	else {
 		CQaUtils::FormatAndPrintOutput("number of entries = ", *numEntries, 2);
 		CQaUtils::RvTestResult(rv, "GetCount() (count attribute) test", 2);
@@ -620,8 +622,8 @@ void CTests::GetCountTest(nsISHistory *theSessionHistory, PRInt32 *numEntries)
 void CTests::GetIndexTest(nsISHistory *theSessionHistory, PRInt32 *theIndex)
 {
 	rv = theSessionHistory->GetIndex(theIndex);
-	if (!(*theIndex))
-		CQaUtils::QAOutput("theIndex for GetIndex() invalid. Test failed.", 1);
+	if (*theIndex < 0 )
+		CQaUtils::QAOutput("theIndex for GetIndex() is < zero. Test failed.", 1);
 	else
 		CQaUtils::RvTestResult(rv, "GetIndex() (index attribute) test", 2);
 }
@@ -635,8 +637,8 @@ void CTests::SetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 theMaxLeng
 void CTests::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theMaxLength)
 {
 	rv = theSessionHistory->GetMaxLength(theMaxLength);
-	if (!(*theMaxLength))
-		CQaUtils::QAOutput("theMaxLength for GetMaxLength() invalid. Test failed.", 1);
+	if (*theMaxLength < 0)
+		CQaUtils::QAOutput("theMaxLength for GetMaxLength() < 0. Test failed.", 1);
 	else {
 		CQaUtils::FormatAndPrintOutput("theMaxLength = ", *theMaxLength, 2); 
 		CQaUtils::RvTestResult(rv, "GetMaxLength() (MaxLength attribute) test", 2);
@@ -674,8 +676,10 @@ void CTests::GetTitleHistTest(nsIHistoryEntry* theHistoryEntry)
    const char *  titleCString;
 
 	rv = theHistoryEntry->GetTitle(getter_Copies(theTitle));
-	if (!theTitle)
-		CQaUtils::QAOutput("theTitle for GetTitle() invalid. Test failed.", 1);
+	if (!theTitle) {
+		CQaUtils::QAOutput("theTitle for GetTitle() is blank. Test failed.", 1);
+		return;
+	}
 	else
 		CQaUtils::RvTestResult(rv, "GetTitle() (title attribute) test", 1);
 	titleCString = NS_ConvertUCS2toUTF8(theTitle).get();
@@ -688,10 +692,7 @@ void CTests::GetIsSubFrameTest(nsIHistoryEntry* theHistoryEntry)
 	PRBool isSubFrame;
 
 	rv = theHistoryEntry->GetIsSubFrame(&isSubFrame);
-	if (!isSubFrame)
-		CQaUtils::QAOutput("isSubFrame for GetIsSubFrame() invalid. Test failed.", 1);
-	else
-		CQaUtils::RvTestResult(rv, "GetIsSubFrame() (isSubFrame attribute) test", 1);
+	CQaUtils::RvTestResult(rv, "GetIsSubFrame() (isSubFrame attribute) test", 1);
 	CQaUtils::FormatAndPrintOutput("The subFrame boolean value = ", isSubFrame, 2);
 }
 
@@ -825,10 +826,7 @@ void CTests::CanGoBackTest()
 {
    PRBool canGoBack = PR_FALSE;
    rv = qaWebNav->GetCanGoBack(&canGoBack);
-   if (!canGoBack)
-	  CQaUtils::QAOutput("canGoBack for GetCanGoBack() invalid. Test failed.", 1);
-   else
-      CQaUtils::RvTestResult(rv, "GetCanGoBack() attribute test", 2);
+   CQaUtils::RvTestResult(rv, "GetCanGoBack() attribute test", 2);
    CQaUtils::FormatAndPrintOutput("canGoBack value = ", canGoBack, 2);
 }
 
@@ -842,9 +840,6 @@ void CTests::CanGoForwardTest()
 {
    PRBool canGoForward = PR_FALSE;
    rv = qaWebNav->GetCanGoForward(&canGoForward);
-   if (!canGoForward)
-	  CQaUtils::QAOutput("canGoForward for GetCanGoForward() invalid. Test failed.", 1);
-   else
    CQaUtils::RvTestResult(rv, "GetCanGoForward() attribute test", 2);
    CQaUtils::FormatAndPrintOutput("canGoForward value = ", canGoForward, 2); 
 }
@@ -969,7 +964,10 @@ void CTests::GetDocumentTest()
    
    rv = qaWebNav->GetDocument(getter_AddRefs(theDocument));
    if (!theDocument)
+   {
 	  CQaUtils::QAOutput("We didn't get the document. Test failed.", 2);
+	  return;
+   }
    else
 	  CQaUtils::RvTestResult(rv, "GetDocument() test", 2);
 
@@ -983,7 +981,10 @@ void CTests::GetCurrentURITest()
 
    rv = qaWebNav->GetCurrentURI(getter_AddRefs(theUri));
    if (!theUri)
+   {
       CQaUtils::QAOutput("We didn't get the URI. Test failed.", 2);
+	  return;
+   }
    else
 	  CQaUtils::RvTestResult(rv, "GetCurrentURI() test", 2);
 
@@ -1001,7 +1002,10 @@ void CTests::GetSHTest()
    nsCOMPtr<nsISHistory> theSessionHistory;
    rv = qaWebNav->GetSessionHistory(getter_AddRefs(theSessionHistory));
    if (!theSessionHistory)
+   {
       CQaUtils::QAOutput("We didn't get the session history. Test failed.", 2);
+	  return;
+   }
    else
 	  CQaUtils::RvTestResult(rv, "GetSessionHistory() test", 2);
 

@@ -150,6 +150,10 @@ SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\TestCallbacks.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\TestEmbed.cpp
 # End Source File
 # Begin Source File
