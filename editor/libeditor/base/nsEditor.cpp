@@ -1439,7 +1439,7 @@ nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
   nsresult rv;
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPresShell> presShell;
-  nsAutoString character_set = characterSet;
+  nsAutoString character_set(characterSet);
 
   if (characterSet==nsnull) return NS_ERROR_NULL_POINTER;
 
@@ -3866,7 +3866,7 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
     element->GetTagName(tag);
     const PRUnichar *unicodeString;
     aTag->GetUnicode(&unicodeString);
-    if (tag.EqualsIgnoreCase(unicodeString))
+    if (tag.EqualsIgnoreCase(nsAutoString(unicodeString)))
     {
       return PR_TRUE;
     }

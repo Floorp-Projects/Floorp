@@ -790,7 +790,7 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
   if (mEditor)
     return NS_ERROR_ALREADY_INITIALIZED;
     
-  nsAutoString  theType = editorType;
+  nsAutoString  theType(editorType);
   theType.ToLowerCase();
 
   PRBool textMail = theType.EqualsWithConversion("textmail");
@@ -1331,7 +1331,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
       {
     
         //Load the editmode style sheet
-        res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorContent.css"),
+        res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
                                                    getter_AddRefs(mEditModeStyleSheet));
       }
       if (NS_FAILED(res)) return res;
@@ -1355,7 +1355,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
     else
     {
       // else load it
-      res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorAllTags.css"),
+      res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorAllTags.css"),
                                                  getter_AddRefs(mAllTagsModeStyleSheet));
     }     
     if (NS_FAILED(res)) return res;
@@ -1370,7 +1370,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
       }
       else
       {
-        res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorContent.css"),
+        res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
                                                    getter_AddRefs(mEditModeStyleSheet));
       }
     }
@@ -1431,7 +1431,7 @@ nsEditorShell::DisplayParagraphMarks(PRBool aShowMarks)
     }
     //First time used -- load the style sheet
     nsCOMPtr<nsICSSStyleSheet> styleSheet;
-    res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorParagraphMarks.css"),
+    res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorParagraphMarks.css"),
                                                 getter_AddRefs(mParagraphMarksStyleSheet));
   }
   else if (mParagraphMarksStyleSheet)
@@ -1586,7 +1586,8 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
 
   // get an nsFileSpec from the URL
   // This assumes inFileURL is "file://" format
-  nsFileURL    fileURL(inFileURL);
+  nsAutoString fileURLString(inFileURL);
+  nsFileURL    fileURL(fileURLString);
   nsFileSpec   fileSpec(fileURL);
 
   nsCOMPtr<nsIDOMWindow> contentWindow;
@@ -2175,7 +2176,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
           {
             // Didn't find one above: Create a new one
             nsCOMPtr<nsIDOMElement>titleElement;
-            res = domDoc->CreateElement(NS_LITERAL_STRING("title"), getter_AddRefs(titleElement));
+            res = domDoc->CreateElement(NS_ConvertASCIItoUCS2("title"), getter_AddRefs(titleElement));
             if (NS_SUCCEEDED(res) && titleElement)
             {
               titleNode = do_QueryInterface(titleElement);
