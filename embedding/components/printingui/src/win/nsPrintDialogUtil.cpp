@@ -106,9 +106,9 @@ static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 #endif
 
 // Default labels for the radio buttons
-const char* kAsLaidOutOnScreenStr = "As &laid out on the screen";
-const char* kTheSelectedFrameStr  = "The selected &frame";
-const char* kEachFrameSeparately  = "&Each frame separately";
+static const char* kAsLaidOutOnScreenStr = "As &laid out on the screen";
+static const char* kTheSelectedFrameStr  = "The selected &frame";
+static const char* kEachFrameSeparately  = "&Each frame separately";
 
 
 //-----------------------------------------------
