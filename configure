@@ -5415,15 +5415,15 @@ EOF
        AS='/usr/ccs/bin/as'
        ASFLAGS="$ASFLAGS -K PIC -L -P -D_ASM -D__STDC__=0"
        AS_DASH_C_FLAG=''
-        CC_VERSION=`$CC -V 2>&1 | grep ^cc: 2>/dev/null | $AWK -F\: '{ print $2 }'`
-        CXX_VERSION=`$CXX -V 2>&1 | grep ^CC: 2>/dev/null | $AWK -F\: '{ print $2 }'`
+        CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
+        CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
         _MAJOR_VERSION_NUMBER=`echo $CC_VERSION | $AWK '{ print $3 }'`
         _BAD_COMPILER=
         if test $_MAJOR_VERSION_NUMBER -lt 6; then
             _BAD_COMPILER=1
         elif test $_MAJOR_VERSION_NUMBER -eq 6; then
             _TMP1=`echo $CC_VERSION | sed 's|^Sun WorkShop||' | $AWK '{ print $2 }'`
-            _TMP2=`echo $CC_VERSION | sed 's|^Sun WorkShop||' | $AWK '{ print $2 }'`
+            _TMP2=`echo $CC_VERSION | sed 's|^Sun WorkShop||' | $AWK '{ print $3 }'`
             if test "`echo $_TMP1 | grep -i -c update 2>/dev/null`"; then
                 if test $_TMP2 -lt 2; then
                     _BAD_COMPILER=1
