@@ -698,17 +698,18 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
     [toolbarItem setImage: [throbberImages objectAtIndex: mThrobberFrame]];
 }
 
+#define QUICKTIME_THROBBER 0
+
 - (void)startThrobber
 {
-#if 0
+#if QUICKTIME_THROBBER
     // Use Quicktime to draw the frames from a single Animated GIF. This works fine for the animation, but
     // when the frames stop, the poster frame disappears.
-    NSToolbarItem* throbber = mThrobber;
-    if (throbber != nil && [throbber view] == nil) {
-        NSLog(@"Original view: %@", [throbber view]);
-        NSSize minSize = [throbber minSize];
+    NSToolbarItem* throbberItem = [self throbberItem];
+    if (throbberItem != nil && [throbberItem view] == nil) {
+        NSSize minSize = [throbberItem minSize];
         NSLog(@"Origin minSize = %f X %f", minSize.width, minSize.height);
-        NSSize maxSize = [throbber maxSize];
+        NSSize maxSize = [throbberItem maxSize];
         NSLog(@"Origin maxSize = %f X %f", maxSize.width, maxSize.height);
         
         NSURL* throbberURL = [NSURL fileURLWithPath: [[NSBundle mainBundle] pathForResource:@"throbber" ofType:@"gif"]];
@@ -721,10 +722,10 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
             [throbberView setMovie: throbberMovie];
             [throbberView showController: NO adjustingSize: NO];
             [throbberView setLoopMode: NSQTMovieLoopingPlayback];
-            [throbber setView: throbberView];
+            [throbberItem setView: throbberView];
             NSSize size = NSMakeSize(32, 32);
-            [throbber setMinSize: size];
-            [throbber setMaxSize: size];
+            [throbberItem setMinSize: size];
+            [throbberItem setMaxSize: size];
             [throbberView gotoPosterFrame: self];
             [throbberView start: self];
     
@@ -749,11 +750,11 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
 
 - (void)stopThrobber
 {
-#if 0
+#if QUICKTIME_THROBBER
     // Stop the quicktime animation.
-    NSToolbarItem* throbber = mThrobber;
-    if (throbber != nil) {
-        NSMovieView* throbberView = [throbber view];
+    NSToolbarItem* throbberItem = [self throbberItem];
+    if (throbberItem != nil) {
+        NSMovieView* throbberView = [throbberItem view];
         if ([throbberView isPlaying]) {
             [throbberView stop: self];
             [throbberView gotoPosterFrame: self];
