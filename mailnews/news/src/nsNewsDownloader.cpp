@@ -466,6 +466,7 @@ nsresult DownloadMatchingNewsArticlesToNewsDB::RunSearch(nsIMsgFolder *folder, n
 {
   m_folder = folder;
   m_newsDB = newsDB;
+  m_searchSession = searchSession;
 
   m_keysToDownload.RemoveAll();
   nsresult rv;

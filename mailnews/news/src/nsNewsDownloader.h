@@ -30,6 +30,7 @@
 #include "nsIMsgHdr.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgSearchNotify.h"
+#include "nsIMsgSearchSession.h"
 
 // base class for downloading articles in a single newsgroup. Keys to download are passed in
 // to DownloadArticles method.
@@ -69,6 +70,7 @@ protected:
 	nsMsgKey    m_keyToDownload;
 	nsCOMPtr <nsIMsgWindow>		m_window;
   nsCOMPtr <nsIMsgStatusFeedback> m_statusFeedback;
+  nsCOMPtr <nsIMsgSearchSession> m_searchSession;
 	nsresult				m_status;
 	PRBool			m_abort;
 };
