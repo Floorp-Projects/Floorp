@@ -43,7 +43,6 @@ MYLIBS=							\
  $(DIST)\lib\nntp.lib    		\
  $(DIST)\lib\msgcore.lib		\
  $(DIST)\lib\xplib.lib			\
- $(DIST)\lib\mime.lib			\
  $(NULL)
 
 LLIBS= $(MYLIBS)				\
