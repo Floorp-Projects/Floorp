@@ -360,13 +360,8 @@ static PRThread* _PR_CreateThread(
 #ifdef _MD_MINIMUM_STACK_SIZE
     if (stackSize < _MD_MINIMUM_STACK_SIZE) stackSize = _MD_MINIMUM_STACK_SIZE;
 #endif
-    /*
-     * Linux doesn't have pthread_attr_setstacksize.
-     */
-#ifndef LINUX
     rv = pthread_attr_setstacksize(&tattr, stackSize);
     PR_ASSERT(0 == rv);
-#endif
 
     thred = PR_NEWZAP(PRThread);
     if (NULL == thred)
