@@ -36,8 +36,6 @@ EXPORTS = \
 	nsIDOMNodeList.h					\
 	nsIDOMProcessingInstruction.h \
 	nsIDOMText.h							\
-	nsIDOMSelection.h					\
-	nsIDOMSelectionListener.h	\
 	nsIDOMStyleSheet.h				\
 	nsIDOMStyleSheetCollection.h \
 	nsIDOMNSDocument.h				\
