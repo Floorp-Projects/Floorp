@@ -73,7 +73,7 @@ myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimerImpl, nsITimer)
 
 
-static PRStatus InitThread()
+PR_STATIC_CALLBACK(PRStatus) InitThread(void)
 {
   gThread = new TimerThread();
   if (!gThread) return PR_FAILURE;
