@@ -71,8 +71,9 @@ outlinerchildren:-moz-outliner-cell-text(selected, focus) {
   color: HighlightText;
 }
 
-outlinerbody:-moz-outliner-cell-text(primary) {
-  border: 2px solid transparent;
+outlinerchildren:-moz-outliner-cell-text(primary) {
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
 }
 
 outlinerchildren:-moz-outliner-cell-text(primary, drop) {
@@ -81,19 +82,19 @@ outlinerchildren:-moz-outliner-cell-text(primary, drop) {
 }
 
 outlinerchildren:-moz-outliner-cell-text(primary, dropBefore) {
-  border-top: 2px solid Highlight;
+  border-top: 1px solid Highlight;
 }
 
 outlinerchildren:-moz-outliner-cell-text(selected, primary, dropBefore) {
-  border-top: 2px solid HighlightText;
+  border-top: 1px solid HighlightText;
 }
 
 outlinerchildren:-moz-outliner-cell-text(primary, dropAfter) {
-  border-bottom: 2px solid Highlight;
+  border-bottom: 1px solid Highlight;
 }
 
 outlinerchildren:-moz-outliner-cell-text(selected, primary, dropAfter) {
-  border-bottom: 2px solid HighlightText;
+  border-bottom: 1px solid HighlightText;
 }
 
 

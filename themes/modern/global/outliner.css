@@ -96,8 +96,9 @@ outlinerchildren:-moz-outliner-cell-text(selected, focus) {
   color: #FFFFFF;
 }
 
-outlinerbody:-moz-outliner-cell-text(primary) {
-  border: 2px solid transparent;
+outlinerchildren:-moz-outliner-cell-text(primary) {
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
 }
 
 outlinerchildren:-moz-outliner-cell-text(primary, drop) {
@@ -106,19 +107,19 @@ outlinerchildren:-moz-outliner-cell-text(primary, drop) {
 }
 
 outlinerchildren:-moz-outliner-cell-text(primary, dropBefore) {
-  border-top: 2px solid #424F63;
+  border-top: 1px solid #424F63;
 }
 
 outlinerchildren:-moz-outliner-cell-text(selected, primary, dropBefore) {
-  border-top: 2px solid #FFFFFF;
+  border-top: 1px solid #FFFFFF;
 }
 
 outlinerchildren:-moz-outliner-cell-text(primary, dropAfter) {
-  border-bottom: 2px solid #424F63;
+  border-bottom: 1px solid #424F63;
 }
 
 outlinerchildren:-moz-outliner-cell-text(selected, primary, dropAfter) {
-  border-bottom: 2px solid #FFFFFF;
+  border-bottom: 1px solid #FFFFFF;
 }
 
 
