@@ -159,6 +159,14 @@ public:
   NS_IMETHOD DisplayIcon(void* aDisplayContext, 
 			   PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber)=0;
 
+
+  /**
+   * Sets image's natural dimensions in nsImage for use by editor and FE.
+   */
+  NS_IMETHOD SetImageNaturalDimensions(IL_Pixmap* aImage, 
+                 PRInt32 naturalwidth, PRInt32 naturalheight)=0;
+
+
   /**
    *  <bold>(Probably temporary and subject to change).</bold>
    *  This method should fill in the targets of the width and
