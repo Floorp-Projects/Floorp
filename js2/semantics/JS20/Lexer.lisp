@@ -157,8 +157,8 @@
            (lex (lex :input-element)))
          (production (:next-input-element unit) ((:- #\_) :identifier-name) next-input-element-unit-name
            (lex (tag string (lex-name :identifier-name))))
-         (production (:next-input-element unit) (#\_ :identifier-name) next-input-element-unit-underscore-name
-           (lex (tag string (lex-name :identifier-name)))))
+         #|(production (:next-input-element unit) (#\_ :identifier-name) next-input-element-unit-underscore-name
+           (lex (tag string (lex-name :identifier-name))))|#)
        
        (%print-actions)
        
