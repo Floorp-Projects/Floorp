@@ -861,7 +861,7 @@ nsDragService :: SetDragAction ( PRUint32 anAction )
   
   // don't do the work if it's the same.
   if ( anAction == mDragAction )
-    return;
+    return NS_OK;
     
   CursHandle newCursor = nsnull;  
   if ( anAction == DRAGDROP_ACTION_COPY )
