@@ -882,19 +882,24 @@ AddFDef("short_desc", "Summary", 1);
 AddFDef("product", "Product", 1);
 AddFDef("version", "Version", 1);
 AddFDef("rep_platform", "Platform", 1);
+AddFDef("bug_file_loc", "URL", 1);
 AddFDef("op_sys", "OS/Version", 1);
 AddFDef("bug_status", "Status", 1);
+AddFDef("status_whiteboard", "Status Whiteboard", 1);
+AddFDef("keywords", "Keywords", 1);
 AddFDef("resolution", "Resolution", 1);
 AddFDef("bug_severity", "Severity", 1);
 AddFDef("priority", "Priority", 1);
 AddFDef("component", "Component", 1);
 AddFDef("assigned_to", "AssignedTo", 1);
 AddFDef("reporter", "ReportedBy", 1);
+AddFDef("votes", "Votes", 0);
 AddFDef("qa_contact", "QAContact", 0);
 AddFDef("cc", "CC", 0);
 AddFDef("dependson", "BugsThisDependsOn", 0);
 AddFDef("blocked", "OtherBugsDependingOnThis", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
+AddFDef("longdesc", "Comment", 0);
     
     
 

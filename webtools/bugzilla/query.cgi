@@ -468,7 +468,7 @@ print "
 
 </td>
 <td align=left valign=top>
-@{[make_selection_widget(\"platform\",\@::legal_platform,$default{'platform'}, $type{'platform'}, 1)]}
+@{[make_selection_widget(\"rep_platform\",\@::legal_platform,$default{'platform'}, $type{'platform'}, 1)]}
 
 </td>
 <td align=left valign=top>
@@ -662,6 +662,104 @@ print "
 </table>
 <p>
 ";
+
+
+my @fields;
+push(@fields, ["noop", "---"]);
+SendSQL("SELECT name, description FROM fielddefs ORDER BY sortkey");
+while (MoreSQLData()) {
+    my ($name, $description) = (FetchSQLData());
+    push(@fields, [$name, $description]);
+}
+
+my @types = (
+	     ["noop", "---"],
+	     ["equals", "equal to"],
+	     ["notequals", "not equal to"],
+	     ["casesubstring", "contains (case-sensitive) substring"],
+	     ["substring", "contains (case-insensitive) substring"],
+	     ["notsubstring", "does not contain (case-insensitive) substring"],
+	     ["regexp", "contains regexp"],
+	     ["notregexp", "does not contain regexp"],
+	     ["lessthan", "less than"],
+	     ["greaterthan", "greater than"],
+	     ["anywords", "any words"],
+	     ["allwords", "all words"],
+	     ["nowords", "none of the words"],
+	     ["changedbefore", "changed before"],
+	     ["changedafter", "changed after"],
+	     ["changedto", "changed to"],
+	     ["changedby", "changed by"],
+	     );
+
+
+foreach my $cmd (grep(/^cmd-/, keys(%::FORM))) {
+    if ($cmd =~ /^cmd-add(\d+)-(\d+)-(\d+)$/) {
+	$::FORM{"field$1-$2-$3"} = "xyzzy";
+    }
+}
+	
+#  foreach my $i (sort(keys(%::FORM))) {
+#      print "$i : " . value_quote($::FORM{$i}) . "<BR>\n";
+#  }
+
+
+if (!exists $::FORM{'field0-0-0'}) {
+    $::FORM{'field0-0-0'} = "xyzzy";
+}
+
+print qq{<A NAME="chart"> </A>\n};
+
+my $chart;
+for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
+    my @rows;
+    my $row;
+    for ($row = 0 ; exists $::FORM{"field$chart-$row-0"} ; $row++) {
+	my @cols;
+	my $col;
+	for ($col = 0 ; exists $::FORM{"field$chart-$row-$col"} ; $col++) {
+	    my $key = "$chart-$row-$col";
+	    my $deffield = $::FORM{"field$key"} || "";
+	    my $deftype = $::FORM{"type$key"} || "";
+	    my $defvalue = value_quote($::FORM{"value$key"} || "");
+	    my $line = "";
+	    $line .= "<TD>";
+	    $line .= BuildPulldown("field$key", \@fields, $deffield);
+	    $line .= BuildPulldown("type$key", \@types, $deftype);
+	    $line .= qq{<INPUT NAME="value$key" VALUE="$defvalue">};
+	    $line .= "</TD>\n";
+	    push(@cols, $line);
+	}
+	push(@rows, "<TR>" . join(qq{<TD ALIGN="center"> or </TD>\n}, @cols) .
+	     qq{<TD><INPUT TYPE="submit" VALUE="Or" NAME="cmd-add$chart-$row-$col"></TD></TR>});
+    }
+    print qq{
+<HR>
+<TABLE>
+};
+    print join('<TR><TD>And</TD></TR>', @rows);
+    print qq{
+<TR><TD><INPUT TYPE="submit" VALUE="And" NAME="cmd-add$chart-$row-0">
+};
+    my $n = $chart + 1;
+    if (!exists $::FORM{"field$n-0-0"}) {
+        print qq{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<INPUT TYPE="submit" VALUE="Add another boolean chart" NAME="cmd-add$n-0-0">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<NOBR><A HREF="booleanchart.html">What is this stuff?</A></NOBR>
+};
+    }
+    print qq{
+</TD>
+</TR>
+</TABLE>
+    };
+}
+print qq{<HR>};
+
+
+
 
 if (!$userid) {
     print qq{<INPUT TYPE="hidden" NAME="cmdtype" VALUE="doit">};

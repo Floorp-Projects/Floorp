@@ -78,10 +78,10 @@ sub url_quote {
 }
 
 
-sub ProcessFormFields {
-    my ($buffer) = (@_);
-    undef %::FORM;
-    undef %::MFORM;
+sub ParseUrlString {
+    my ($buffer, $f, $m) = (@_);
+    undef %$f;
+    undef %$m;
 
     my %isnull;
     my $remaining = $buffer;
@@ -105,13 +105,13 @@ sub ProcessFormFields {
 	    $value = "";
 	}
 	if ($value ne "") {
-	    if (defined $::FORM{$name}) {
-		$::FORM{$name} .= $value;
-		my $ref = $::MFORM{$name};
+	    if (defined $f->{$name}) {
+		$f->{$name} .= $value;
+		my $ref = $m->{$name};
 		push @$ref, $value;
 	    } else {
-		$::FORM{$name} = $value;
-		$::MFORM{$name} = [$value];
+		$f->{$name} = $value;
+		$m->{$name} = [$value];
 	    }
         } else {
             $isnull{$name} = 1;
@@ -119,12 +119,18 @@ sub ProcessFormFields {
     }
     if (defined %isnull) {
         foreach my $name (keys(%isnull)) {
-            if (!defined $::FORM{$name}) {
-                $::FORM{$name} = "";
-                $::MFORM{$name} = [];
+            if (!defined $f->{$name}) {
+                $f->{$name} = "";
+                $m->{$name} = [];
             }
         }
     }
+}
+
+
+sub ProcessFormFields {
+    my ($buffer) = (@_);
+    return ParseUrlString($buffer, \%::FORM, \%::MFORM);
 }
 
 
