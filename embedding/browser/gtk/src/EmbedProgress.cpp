@@ -24,6 +24,8 @@
 #include <nsXPIDLString.h>
 #include <nsIChannel.h>
 
+#include "nsIURI.h"
+
 EmbedProgress::EmbedProgress(void)
 {
   NS_INIT_REFCNT();
