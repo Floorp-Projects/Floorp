@@ -25,7 +25,7 @@ use diagnostics;
 use strict;
 use RelationSet;
 use XML::Dumper;
-#use vars %::COOKIE;
+use vars %::COOKIE;
 require "CGI.pl";
 
 #$::lockcount = 0;
@@ -277,12 +277,17 @@ sub Unlock {
 }
 
 my $xml;
+my $urlbase = Param("urlbase");
 $xml = "<?xml version=\"1.0\" standalone=\"no\"?>\n";
-$xml .= "<!DOCTYPE bugzilla SYSTEM \"" . Param("urlbase") . "\">\n";
+$xml .= "<!DOCTYPE bugzilla SYSTEM \"$urlbase";
+if (! ($urlbase =~ /.+\/$/)) {
+  $xml .= "/";
+}
+$xml .= "bugzilla.dtd\">\n";
 $xml .= "<bugzilla";
 $xml .= " exporter=\"$exporter\"";
 $xml .= " version=\"$::param{'version'}\"";
-$xml .= " urlbase=\"" . Param("urlbase") . "\"";
+$xml .= " urlbase=\"$urlbase\"";
 $xml .= " maintainer=\"" . Param("maintainer") ."\">\n";
 $xml .= "<bug>\n";
 
