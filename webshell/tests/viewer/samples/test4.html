@@ -1,42 +1,142 @@
-<html>
-<TITLE>Example 4</TITLE>
-<style>
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.09 [en] (WinNT; U) [Netscape]">
+   <TITLE>test4</TITLE>
+<STYLE>
 BODY { font-size: 12pt; }
-</style>
-<body>
+</STYLE>
+</HEAD>
+<BODY>
 
-<H1>Example 4: Some simple tables.</H4>
+<H1>
+Example 4: Some simple tables.</H1>
 
-<table border=1>
-<TR><TD background=bg.jpg>Color</TD><TD background=bg.jpg>Meaning</TD></TR>
-<TR><TD bgcolor=lightgreen>lightgreen</TD><TD>Light green is used on cells that have a colspan</TD></TR>
-<TR><TD bgcolor=Khaki>khaki</TD><TD>Khaki is used on cells that have a rowspan</TD></TR>
-<TR><TD bgcolor="LightGrey">lightgrey</TD><TD>Light grey is used on cells that have a rowspan <B>and</B> a colspan</TD></TR>
-</table>
+<TABLE BORDER >
+<TR>
+<TH BACKGROUND="bg.jpg">Color&nbsp;</TH>
 
-<THREED>Column span table:</THREED>
-<table border=1>
-<CAPTION>top caption</CAPTION>
-<TR><TD COLSPAN=2 bgcolor=lightgreen>Cell</TD><TD> Stuff to test out table cell layout. This should be long enough.</TD></TR>
-<TR><TD>Cell</TD><TD COLSPAN=2 bgcolor=lightgreen> Stuff to test out table cell layout. This should be long enough.</TD></TR>
-<TR><TD>Cell</TD><TD> Stuff to test out table cell layout. This should be long enough.</TD><TD>Cell</TD></TR>
-</table>
-<br>
-<THREED>Row span table, no caption:</THREED>
-<table border=1>
-<CAPTION align=bottom>bottom caption</CAPTION>
-<TR><TD>Cell</TD><TD ROWSPAN=2 bgcolor=khaki> Stuff to test out table cell layout. This should be long enough.</TD><TD>Cell</TD></TR>
-<TR><TD>Cell</TD><TD>Cell</TD></TR>
-<TR><TD>Cell</TD><TD> Stuff to test out table cell layout. This should be long  enough.</TD><TD>Cell</TD></TR>
-</table>
-<br>
-<THREED>Row and col span table:</THREED>
-<table border=1>
-<caption><P>Caption Text</P></caption>
-<TR><TD>Cell</TD><TD COLSPAN=2 ROWSPAN=2 bgcolor=lightgrey> Stuff to test out table cell layout. This should be long enough.</TD></TR>
-<TR><TD>Cell</TD></TR>
-<TR><TD>Cell</TD><TD> Stuff to test out table cell layout. This should be long enough.</TD><TD><THREED>Cell</THREED></TD></TR>
-</table>
-</body>
-</html>
+<TH BACKGROUND="bg.jpg">Meaning&nbsp;</TH>
+</TR>
 
+<TR>
+<TD BGCOLOR="#90EE90">lightgreen</TD>
+
+<TD>Light green is used on cells that have a colspan</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="#F0E68C">khaki</TD>
+
+<TD>Khaki is used on cells that have a rowspan</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="#D3D3D3">lightgrey</TD>
+
+<TD>Light grey is used on cells that have a rowspan <B>and</B> a colspan</TD>
+</TR>
+</TABLE>
+&nbsp;
+<TABLE BORDER WIDTH="100%" >
+<CAPTION>Table 1 has a caption at the top.&nbsp; It is defined to be 100%
+of it's parent's width.</CAPTION>
+
+<TR>
+<TD COLSPAN="2" BGCOLOR="#90EE90">Cell</TD>
+
+<TD>Stuff to test out table cell layout. This should be long enough.</TD>
+</TR>
+
+<TR>
+<TD>Cell</TD>
+
+<TD COLSPAN="2" BGCOLOR="#90EE90">Stuff to test out table cell layout.
+This should be long enough.</TD>
+</TR>
+
+<TR>
+<TD>Cell</TD>
+
+<TD>Stuff to test out table cell layout. This should be long enough.</TD>
+
+<TD>Cell</TD>
+</TR>
+</TABLE>
+&nbsp;
+<TABLE BORDER WIDTH="500" >
+<TR>
+<TD>Cell</TD>
+
+<TD ROWSPAN="2" BGCOLOR="#F0E68C">Stuff to test out table cell layout.
+This should be long enough.</TD>
+
+<TD>Cell</TD>
+</TR>
+
+<TR>
+<TD>Cell</TD>
+
+<TD>Cell</TD>
+</TR>
+
+<TR>
+<TD>Cell</TD>
+
+<TD>Stuff to test out table cell layout. This should be long enough.</TD>
+
+<TD>Cell</TD>
+</TR>
+
+<CAPTION ALIGN=BOTTOM>Table 2 has a bottom caption.&nbsp; It's width is
+500 pixels.</CAPTION>
+</TABLE>
+&nbsp;
+<TABLE BORDER >
+<CAPTION>Table 3 has auto-width (no width param specified.)</CAPTION>
+
+<TR>
+<TD>Cell</TD>
+
+<TD COLSPAN="2" ROWSPAN="2" BGCOLOR="#D3D3D3">Stuff to test out table cell
+layout. This should be long enough.</TD>
+</TR>
+
+<TR>
+<TD>Cell</TD>
+</TR>
+
+<TR>
+<TD>Cell</TD>
+
+<TD>Stuff to test out table cell layout. This should be long enough.</TD>
+
+<TD><THREED>3-D Text</THREED></TD>
+</TR>
+</TABLE>
+&nbsp;
+<TABLE BORDER COLS=3 >
+<CAPTION>Table 4 is the same as Table 3, but with equal column widths.&nbsp;</CAPTION>
+
+<TR>
+<TD>Cell</TD>
+
+<TD COLSPAN="2" ROWSPAN="2" BGCOLOR="#D3D3D3">Stuff to test out table cell
+layout. This should be long enough.</TD>
+</TR>
+
+<TR>
+<TD>Cell</TD>
+</TR>
+
+<TR>
+<TD>Cell</TD>
+
+<TD>Stuff to test out table cell layout. This should be long enough.</TD>
+
+<TD><THREED>3-D Text</THREED></TD>
+</TR>
+</TABLE>
+&nbsp;
+</BODY>
+</HTML>
