@@ -39,10 +39,13 @@ CSRCS =          \
 	unix.c    \
 	unix_errors.c    \
 	uxproces.c \
-	uxwrap.c \
-	uxpoll.c \
 	uxshm.c \
+	uxwrap.c \
 	$(NULL)
+
+ifneq ($(USE_PTHREADS),1)
+CSRCS += uxpoll.c
+endif
 
 PTH_USER_CSRCS =          \
 	pthreads_user.c \
@@ -322,6 +325,9 @@ ifeq ($(USE_64),1)
 else
 	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $<
 endif
+
+clean::
+	rm -rf $(ULTRASPARC_ASOBJS)
 endif
 endif
 endif
