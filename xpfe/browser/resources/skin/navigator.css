@@ -89,7 +89,6 @@ box#searchbutton {
 	padding: 0px;
 	margin-bottom: 10px;
 	font: inherit;
-	//background-color: white;
 }
 
 #sessionhist-popup { 
@@ -101,15 +100,27 @@ box#searchbutton {
 } 
 
 #search-button { 
-	margin: 0px 2px 2px 0px;
-	background-color: #99CCCC;
-  padding: 3px;
-	-moz-border-radius: 4px;
+  background-color: #99CCCC;
+  padding: 2px;
+  border: 1px outset #99CCCC;
+  -moz-border-radius: 4px;
 } 
 
 #search-button:active {
-	margin: 1px 1px 1px 1px;
+  padding: 3px 1px 1px 3px;
+  border: 1px inset #CCFFFF;
 }
+
+#search-button:hover { 
+  background-color: #CCFFFF; 
+  border: 1px outset #CCFFFF;
+}
+
+#search-button:hover:active { 
+  background-color: #CCFFFF; 
+  border: 1px inset #CCFFFF;
+}
+
 
 #action-popup { 
 	list-style-image:url("chrome://global/skin/scroll-down.gif"); 
