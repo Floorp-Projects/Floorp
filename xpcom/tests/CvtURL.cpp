@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include <stdio.h>
 #include "nscore.h"
-#include "nsIUnicharInputStream.h"
+#include "nsIConverterInputStream.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
@@ -52,7 +52,7 @@ static nsString* ConvertCharacterSetName(const char* aName)
 int main(int argc, char** argv)
 {
   if (3 != argc) {
-    printf("usage: CvtURL url character-set-name\n");
+    printf("usage: CvtURL url utf8\n");
     return -1;
   }
 
@@ -82,9 +82,12 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  // Translate the input using the argument character set id into unicode
-  nsIUnicharInputStream* uin;
-  rv = NS_NewConverterStream(&uin, nsnull, in, 0, cset);
+  // Translate the input using the argument character set id into
+  // unicode
+  nsCOMPtr<nsIConverterInputStream> uin =
+    do_CreateInstance("@mozilla.org/intl/converter-input-stream;1", &rv);
+  if (NS_SUCCEEDED(rv))
+    uin->Init(in, cset->get(), nsnull);
   if (NS_OK != rv) {
     printf("can't create converter input stream: %d\n", rv);
     return -1;
@@ -117,7 +120,6 @@ int main(int argc, char** argv)
 
   // Release the objects
   in->Release();
-  uin->Release();
   url->Release();
 
   return 0;

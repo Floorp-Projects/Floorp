@@ -51,7 +51,7 @@
 #include "prlog.h"
 
 #include "prmem.h"
-#include "nsIUnicharInputStream.h"
+#include "nsIConverterInputStream.h"
 #include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -822,9 +822,9 @@ IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
       res = dtdURL->GetFileName(getter_Copies(fileName));
       if (NS_SUCCEEDED(res) && fileName) {
         nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-        nsString path; path.AssignWithConversion(kDTDDirectory);        
-        path.AppendWithConversion(fileName.get());
-        dtdPath += path;
+        nsCAutoString path(kDTDDirectory);        
+        path.Append(fileName);
+        dtdPath += path.get();
         if (dtdPath.Exists()) {
           // The DTD was found in the local DTD directory.
           // Set aDTD to a file: url pointing to the local DTD
@@ -878,14 +878,10 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
   // read it
   PRUint32               aCount = 1024,
                          bufsize = aCount*sizeof(PRUnichar);  
-  nsIUnicharInputStream *uniIn = nsnull;
-  nsAutoString utf8; utf8.AssignWithConversion("UTF-8");
+  nsCOMPtr<nsIUnicharInputStream> uniIn;
 
-  nsresult res = NS_NewConverterStream(&uniIn,
-                                       nsnull,
-                                       in,
-                                       aCount,
-                                       &utf8);
+  nsresult res = NS_NewUTF8ConverterStream(getter_AddRefs(uniIn),
+                                           in, aCount);
   if (NS_FAILED(res)) return res;
 
   PRUint32 aReadCount = 0;
@@ -909,7 +905,6 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
   uniBuf = (PRUnichar *) PR_Malloc(retLen*sizeof(PRUnichar));
   nsCRT::memcpy(uniBuf, aBuf, sizeof(PRUnichar) * retLen);
   PR_FREEIF(aBuf);      
-  NS_RELEASE(uniIn);
 
   return res;
 }
