@@ -141,6 +141,7 @@ searchTermContainer.prototype = {
 
     save: function () {
         var searchTerm = this.searchTerm;
+
         searchTerm.attrib = this.searchattribute.value;
         var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
         if (this.searchattribute.value > nsMsgSearchAttrib.OtherHeader && this.searchattribute.value < nsMsgSearchAttrib.kNumMsgSearchAttributes) 
@@ -322,7 +323,15 @@ function initializeTermFromIndex(index)
     // we'll initialize the .booleanAnd from the existing setting in
     // the UI
     else
-        searchTermObj.booleanAnd = getBooleanAnd();
+    {
+      searchTermObj.booleanAnd = getBooleanAnd();
+      if (index)
+      {
+        // if we weren't pre-initialized with a searchTerm then steal the search attribute from the 
+        // previous row.
+        searchTermObj.searchattribute.value =  gSearchTerms[index - 1].obj.searchattribute.value;
+      }
+    }
 
     gSearchTerms[index].initialized = true;
 }
