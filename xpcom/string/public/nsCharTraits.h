@@ -200,6 +200,28 @@ struct nsCharTraits<PRUnichar>
         return 0;
       }
 
+    // this version assumes that s2 is null-terminated and s1 has length n.
+    // if s1 is shorter than s2 then we return -1; if s1 is longer than s2,
+    // we return 1.
+    static
+    int
+    compareASCIINullTerminated( const char_type* s1, size_t n, const char* s2 )
+      {
+        for ( ; n--; ++s1, ++s2 )
+          {
+            if ( !*s2 )
+              return 1;
+            NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
+            if ( !eq_int_type(to_int_type(*s1), to_int_type(*s2)) )
+              return to_int_type(*s1) - to_int_type(*s2);
+          }
+
+        if ( *s2 )
+          return -1;
+
+        return 0;
+      }
+
     static
     size_t
     length( const char_type* s )
@@ -362,6 +384,30 @@ struct nsCharTraits<char>
           }
 #endif
         return compare(s1, s2, n);
+      }
+
+    // this version assumes that s2 is null-terminated and s1 has length n.
+    // if s1 is shorter than s2 then we return -1; if s1 is longer than s2,
+    // we return 1.
+    static
+    int
+    compareASCIINullTerminated( const char_type* s1, size_t n, const char* s2 )
+      {
+        // can't use strcmp here because we don't want to stop when s1
+        // contains a null
+        for ( ; n--; ++s1, ++s2 )
+          {
+            if ( !*s2 )
+              return 1;
+            NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
+            if ( *s1 != *s2 )
+              return to_int_type(*s1) - to_int_type(*s2);
+          }
+
+        if ( *s2 )
+          return -1;
+
+        return 0;
       }
 
     static

@@ -115,6 +115,15 @@ nsTAString_CharT::EqualsASCII( const char* data, size_type len ) const
   }
 
 PRBool
+nsTAString_CharT::EqualsASCII( const char* data ) const
+  {
+    if (mVTable == obsolete_string_type::sCanonicalVTable)
+      return AsSubstring()->EqualsASCII(data);
+
+    return ToSubstring().EqualsASCII(data);
+  }
+
+PRBool
 nsTAString_CharT::IsVoid() const
   {
     if (mVTable == obsolete_string_type::sCanonicalVTable)

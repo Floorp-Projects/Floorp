@@ -215,7 +215,19 @@ class nsTSubstring_CharT : public nsTAString_CharT
       NS_COM PRBool Equals( const char_type* data ) const;
       NS_COM PRBool Equals( const char_type* data, const comparator_type& comp ) const;
 
+        /**
+         * An efficient comparison with ASCII that can be used even
+         * for wide strings. Call this version when you know the
+         * length of 'data'.
+         */
       NS_COM PRBool EqualsASCII( const char* data, size_type len ) const;
+        /**
+         * An efficient comparison with ASCII that can be used even
+         * for wide strings. Call this version when 'data' is
+         * null-terminated.
+         */
+      NS_COM PRBool EqualsASCII( const char* data ) const;
+
     // EqualsLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
     // array variable.
@@ -224,7 +236,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
       inline PRBool EqualsLiteral( const char* str ) const
         {
-          return EqualsASCII(str, strlen(str));
+          return EqualsASCII(str);
         }
 #else
       template<int N>
