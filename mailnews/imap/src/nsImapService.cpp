@@ -2675,7 +2675,7 @@ nsresult nsImapService::GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingSer
       rv = url->SetSpec(turl);
       if (NS_FAILED(rv)) return rv;
 
-      url->SetUserPass(NS_LITERAL_CSTRING(""));
+      url->SetUserPass(EmptyCString());
       rv = accountManager->FindServerByURI(url, PR_FALSE, aServer);
       if (*aServer)
         aImapUrl->SetExternalLinkUrl(PR_TRUE);

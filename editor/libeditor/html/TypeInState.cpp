@@ -223,7 +223,7 @@ nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
   if (IsPropCleared(aProp,aAttr)) return NS_OK;
   
   // make a new propitem
-  PropItem *item = new PropItem(aProp,aAttr,nsAutoString());
+  PropItem *item = new PropItem(aProp,aAttr,EmptyString());
   if (!item) return NS_ERROR_OUT_OF_MEMORY;
   
   // remove it from the list of set properties, if we have a match
@@ -413,7 +413,7 @@ PRBool TypeInState::IsPropCleared(nsIAtom *aProp,
 {
   if (FindPropInList(aProp, aAttr, nsnull, mClearedArray, outIndex))
     return PR_TRUE;
-  if (FindPropInList(0, nsAutoString(), nsnull, mClearedArray, outIndex))
+  if (FindPropInList(0, EmptyString(), nsnull, mClearedArray, outIndex))
   {
     // special case for all props cleared
     outIndex = -1;

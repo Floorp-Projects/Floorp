@@ -119,7 +119,7 @@ void nsSeamonkeyProfileMigrator::CopyNextFolder()
     fileTransactionEntry* fileTransaction = (fileTransactionEntry*) mFileCopyTransactions->SafeElementAt(mFileCopyTransactionIndex++);
     if (fileTransaction) // copy the file
     {
-      fileTransaction->srcFile->CopyTo(fileTransaction->destFile, nsString());
+      fileTransaction->srcFile->CopyTo(fileTransaction->destFile, EmptyString());
 
       // add to our current progress
       PRInt64 fileSize;

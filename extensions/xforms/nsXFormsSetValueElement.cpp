@@ -81,7 +81,7 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
     // XXXfixme when xpath extensions are implemented (instance())
 
     nsCOMPtr<nsIDOMDocument> instanceDoc;
-    model->GetInstanceDocument(NS_LITERAL_STRING(""),
+    model->GetInstanceDocument(EmptyString(),
                                getter_AddRefs(instanceDoc));
     if (!instanceDoc)
       return NS_OK;

@@ -662,7 +662,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   // This Bounds are based on Tree's coord
-  mTree->GetCoordsForCellItem(mRow, mColumn, NS_LITERAL_CSTRING(""), x, y, width, height);
+  mTree->GetCoordsForCellItem(mRow, mColumn, EmptyCString(), x, y, width, height);
 
   // Get treechildren's BoxObject to adjust the Bounds' upper left corner
   // XXXvarga consider using mTree->GetTreeBody()

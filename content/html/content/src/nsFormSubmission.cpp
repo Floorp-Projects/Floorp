@@ -1109,7 +1109,7 @@ SendJSWarning(nsIHTMLContent* aContent,
                                          aWarningName,
                                          aWarningArgs, aWarningArgsLen,
                                          documentURI,
-                                         NS_LITERAL_STRING(""), 0, 0,
+                                         EmptyString(), 0, 0,
                                          nsIScriptError::warningFlag,
                                          "HTML");
 }

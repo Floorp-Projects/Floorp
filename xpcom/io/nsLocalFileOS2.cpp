@@ -732,11 +732,11 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool mov
 
             if (move)
             {
-                rv = file->MoveToNative(target, nsCString());
+                rv = file->MoveToNative(target, EmptyCString());
             }
             else
             {   
-                rv = file->CopyToNative(target, nsCString());
+                rv = file->CopyToNative(target, EmptyCString());
             }
                     
             iterator->HasMoreElements(&more);
@@ -1582,7 +1582,7 @@ NS_IMETHODIMP
 nsLocalFile::InitWithPath(const nsAString &filePath)
 {
     if (filePath.IsEmpty())
-        return InitWithNativePath(nsCString());
+        return InitWithNativePath(EmptyCString());
 
     nsCAutoString tmp;
     nsresult rv = NS_CopyUnicodeToNative(filePath, tmp);
@@ -1639,7 +1639,7 @@ NS_IMETHODIMP
 nsLocalFile::SetLeafName(const nsAString &aLeafName)
 {
     if (aLeafName.IsEmpty())
-        return SetNativeLeafName(nsCString());
+        return SetNativeLeafName(EmptyCString());
 
     nsCAutoString tmp;
     nsresult rv = NS_CopyUnicodeToNative(aLeafName, tmp);
@@ -1660,7 +1660,7 @@ NS_IMETHODIMP
 nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return CopyToNative(newParentDir, nsCString());
+        return CopyToNative(newParentDir, EmptyCString());
 
     nsCAutoString tmp;
     nsresult rv = NS_CopyUnicodeToNative(newName, tmp);
@@ -1675,7 +1675,7 @@ NS_IMETHODIMP
 nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return CopyToFollowingLinksNative(newParentDir, nsCString());
+        return CopyToFollowingLinksNative(newParentDir, EmptyCString());
 
     nsCAutoString tmp;
     nsresult rv = NS_CopyUnicodeToNative(newName, tmp);
@@ -1690,7 +1690,7 @@ NS_IMETHODIMP
 nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return MoveToNative(newParentDir, nsCString());
+        return MoveToNative(newParentDir, EmptyCString());
 
     nsCAutoString tmp;
     nsresult rv = NS_CopyUnicodeToNative(newName, tmp);

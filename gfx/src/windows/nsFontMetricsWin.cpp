@@ -2738,7 +2738,7 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
 
   // We are running out of resources if we reach here... Try a stock font
   NS_ASSERTION(::GetMapMode(aDC) == MM_TEXT, "mapping mode needs to be MM_TEXT");
-  nsFontWin* font = LoadSubstituteFont(aDC, nsString());
+  nsFontWin* font = LoadSubstituteFont(aDC, EmptyString());
   if (font) {
     ((nsFontWinSubstitute*)font)->SetRepresentable(c);
     mSubstituteFont = font;

@@ -1705,7 +1705,7 @@ NS_IMETHODIMP
 nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return CopyToNative(newParentDir, nsCString());
+        return CopyToNative(newParentDir, EmptyCString());
         
     nsresult rv;
     nsCAutoString fsStr;
@@ -1724,7 +1724,7 @@ NS_IMETHODIMP
 nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return CopyToFollowingLinksNative(newParentDir, nsCString());
+        return CopyToFollowingLinksNative(newParentDir, EmptyCString());
 
     nsresult rv;
     nsCAutoString fsStr;
@@ -1743,7 +1743,7 @@ NS_IMETHODIMP
 nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return MoveToNative(newParentDir, nsCString());
+        return MoveToNative(newParentDir, EmptyCString());
         
     nsresult rv;
     nsCAutoString fsStr;

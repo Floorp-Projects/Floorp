@@ -125,7 +125,7 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
 
     nsCOMPtr<nsILocalFile> dir;
 #ifdef XP_MACOSX
-    rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(dir));
+    rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(dir));
     if (NS_FAILED(rv)) return rv;
     dir->SetPersistentDescriptor(NS_LossyConvertUCS2toASCII(directory));
 #else

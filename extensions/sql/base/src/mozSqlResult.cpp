@@ -92,7 +92,7 @@ mozSqlResult::Init()
 
     rv = gRDFService->GetLiteral(NS_LITERAL_STRING("null").get(), &kNullLiteral);
     if (NS_FAILED(rv)) return rv;
-    rv = gRDFService->GetLiteral(NS_LITERAL_STRING("").get(), &kEmptyLiteral);
+    rv = gRDFService->GetLiteral(EmptyString().get(), &kEmptyLiteral);
     if (NS_FAILED(rv)) return rv;
     rv = gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &kTrueLiteral);
     if (NS_FAILED(rv)) return rv;

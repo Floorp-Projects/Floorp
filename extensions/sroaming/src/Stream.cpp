@@ -255,7 +255,7 @@ nsresult Stream::DownUpLoad(PRBool download)
   ioParamBlock->SetString(2, NS_ConvertUTF8toUTF16(mRemoteBaseUrl).get());
   ioParamBlock->SetString(3, mSavePassword
                           ? mPassword.get()
-                          : NS_LITERAL_STRING("").get());
+                          : EmptyString().get());
 
   // filenames
   for (PRInt32 i = files->Count() - 1; i >= 0; i--)

@@ -619,7 +619,7 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 rv = GetCurrentURL(currentURL);
                 ThrowIfError_(rv);
                 currentURL.Insert("view-source:", 0);
-                PostOpenURLEvent(currentURL, nsCString());
+                PostOpenURLEvent(currentURL, EmptyCString());
             }
             break;
 
@@ -661,7 +661,7 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 rv = imgURI->GetSpec(temp);
                 ThrowIfError_(rv);
                 if (inCommand == cmd_ViewImage)
-                    PostOpenURLEvent(temp, nsCString());
+                    PostOpenURLEvent(temp, EmptyCString());
                 else
                     UScrap::SetData(kScrapFlavorTypeText, temp.get(), temp.Length());
             }
@@ -676,7 +676,7 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 nsCAutoString temp;
                 rv = uri->GetSpec(temp);
                 ThrowIfError_(rv);
-                PostOpenURLEvent(temp, nsCString());                
+                PostOpenURLEvent(temp, EmptyCString());
             }
             break;
         

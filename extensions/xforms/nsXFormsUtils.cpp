@@ -351,7 +351,7 @@ nsXFormsUtils::FindBindContext(nsIDOMElement         *aElement,
   if (parentNode == modelNode) {
     // This is the outermost bind.
     nsCOMPtr<nsIDOMDocument> instanceDoc;
-    aModel->GetInstanceDocument(NS_LITERAL_STRING(""),
+    aModel->GetInstanceDocument(EmptyString(),
                                 getter_AddRefs(instanceDoc));
     if (!instanceDoc)
       return nsnull;
@@ -471,7 +471,7 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
       return nsnull;
     }
     
-    model->GetInstanceDocument(NS_LITERAL_STRING(""),
+    model->GetInstanceDocument(EmptyString(),
                                getter_AddRefs(instanceDoc));
     
     if (!instanceDoc)

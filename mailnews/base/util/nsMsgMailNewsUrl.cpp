@@ -203,7 +203,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
           // other users folder urls will work. We could override this method
           // for imap urls, or we could make caching of servers work and
           // just set the server in the imap code for this case.
-          url->SetUserPass(NS_LITERAL_CSTRING(""));
+          url->SetUserPass(EmptyCString());
           rv = accountManager->FindServerByURI(url, PR_FALSE,
                                           aIncomingServer);
         }

@@ -1250,15 +1250,15 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
                     if (followSymlinks)
                         return NS_ERROR_FAILURE;
 
-                    rv = file->MoveToNative(target, nsCString());
+                    rv = file->MoveToNative(target, EmptyCString());
                     NS_ENSURE_SUCCESS(rv,rv);
                 }
                 else
                 {
                     if (followSymlinks)
-                        rv = file->CopyToFollowingLinksNative(target, nsCString());
+                        rv = file->CopyToFollowingLinksNative(target, EmptyCString());
                     else
-                        rv = file->CopyToNative(target, nsCString());
+                        rv = file->CopyToNative(target, EmptyCString());
                     NS_ENSURE_SUCCESS(rv,rv);
                 }
             }
@@ -2310,7 +2310,7 @@ nsresult
 nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return CopyToNative(newParentDir, nsCString());
+        return CopyToNative(newParentDir, EmptyCString());
 
     nsCAutoString tmp;
     nsresult rv = NS_CopyUnicodeToNative(newName, tmp);
@@ -2324,7 +2324,7 @@ nsresult
 nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return CopyToFollowingLinksNative(newParentDir, nsCString());
+        return CopyToFollowingLinksNative(newParentDir, EmptyCString());
 
     nsCAutoString tmp;
     nsresult rv = NS_CopyUnicodeToNative(newName, tmp);
@@ -2338,7 +2338,7 @@ nsresult
 nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
     if (newName.IsEmpty())
-        return MoveToNative(newParentDir, nsCString());
+        return MoveToNative(newParentDir, EmptyCString());
 
     nsCAutoString tmp;
     nsresult rv = NS_CopyUnicodeToNative(newName, tmp);

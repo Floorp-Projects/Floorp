@@ -539,7 +539,7 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
   // (since we could be writing a new image on top of an existing
   // Firefox_wallpaper.png and nautilus doesn't monitor the file for changes)
   gconf->SetString(NS_LITERAL_CSTRING(kDesktopImageKey),
-                   NS_LITERAL_CSTRING(""));
+                   EmptyCString());
 
   gconf->SetString(NS_LITERAL_CSTRING(kDesktopImageKey), filePath);
   gconf->SetBool(NS_LITERAL_CSTRING(kDesktopDrawBGKey), PR_TRUE);
