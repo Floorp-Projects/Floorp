@@ -1,20 +1,16 @@
 themes/Makefile
 themes/blue/Makefile
 themes/modern/Makefile
-themes/classic/communicator/unix/Makefile
 themes/classic/communicator/win/Makefile
 themes/classic/communicator/sidebar/Makefile
-themes/classic/communicator/sidebar/unix/Makefile
 themes/classic/communicator/sidebar/win/Makefile
 themes/classic/communicator/search/win/Makefile
 themes/classic/Makefile
 themes/classic/editor/win/Makefile
-themes/classic/global/unix/Makefile
 themes/classic/global/win/Makefile
 themes/classic/global/Makefile
 themes/classic/messenger/addressbook/win/Makefile
 themes/classic/messenger/win/Makefile
-themes/classic/navigator/unix/Makefile
 themes/classic/navigator/win/Makefile
 themes/classic/preview/win/Makefile
 
