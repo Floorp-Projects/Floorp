@@ -302,8 +302,11 @@ void CBrowserView::OnNewUrlEnteredInUrlBar()
 	CString strUrl;
 	mpBrowserFrame->m_wndUrlBar.GetEnteredURL(strUrl);
 
-	// Navigate to that URL
-	OpenURL(strUrl.GetBuffer(0));	
+    if(IsViewSourceUrl(strUrl))
+        OpenViewSourceWindow(strUrl.GetBuffer(0));
+    else
+	    // Navigate to that URL
+	    OpenURL(strUrl.GetBuffer(0));	
 
 	// Add what was just entered into the UrlBar
 	mpBrowserFrame->m_wndUrlBar.AddURLToList(strUrl);
@@ -317,32 +320,20 @@ void CBrowserView::OnUrlSelectedInUrlBar()
 	
 	mpBrowserFrame->m_wndUrlBar.GetSelectedURL(strUrl);
 
-	OpenURL(strUrl.GetBuffer(0));
+    if(IsViewSourceUrl(strUrl))
+        OpenViewSourceWindow(strUrl.GetBuffer(0));
+    else
+    	OpenURL(strUrl.GetBuffer(0));
 }
 
-void CBrowserView::OnViewSource() 
+BOOL CBrowserView::IsViewSourceUrl(CString& strUrl)
 {
-	if(! mWebNav)
-		return;
+    return (strUrl.Find("view-source:", 0) != -1) ? TRUE : FALSE;
+}
 
-	nsCOMPtr<nsIDocShell> curDocShell( do_GetInterface(mWebBrowser) );
-	if(!curDocShell)
-		return;
-
-	nsresult rv = NS_OK;
-
-	// Get the ViewMode of the current docshell
-	PRInt32 viewMode;
-	rv = curDocShell->GetViewMode(&viewMode);
-	if(NS_FAILED(rv))
-		return;
-
-	// Are we already in ViewSource Mode?
-	if (viewMode == nsIDocShell::viewSource)
-		return;
-
-	// We're not in ViewSource mode. So, create a new browser frame
-	// in which we'll show the document source
+BOOL CBrowserView::OpenViewSourceWindow(const char* pUrl)
+{
+	// Create a new browser frame in which we'll show the document source
 	// Note that we're getting rid of the toolbars etc. by specifying
 	// the appropriate chromeFlags
 	PRUint32 chromeFlags =  nsIWebBrowserChrome::CHROME_WINDOW_BORDERS |
@@ -350,16 +341,23 @@ void CBrowserView::OnViewSource()
 							nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
 	CBrowserFrame* pFrm = CreateNewBrowserFrame(chromeFlags);
 	if(!pFrm)
-		return;
-	
-	// Get the docshell associated with the newly created frame (actually
-	// that of the embedded browser) and set it's viewmode to "viewSource"
-	nsCOMPtr<nsIDocShell> newFramesDocShell(do_GetInterface(pFrm->m_wndBrowserView.mWebBrowser) );
-	if(!newFramesDocShell)
-		return;
-	newFramesDocShell->SetViewMode(nsIDocShell::viewSource);
+		return FALSE;
 
-	// Now get the URI whose source we want to view.
+	// Finally, load this URI into the newly created frame
+	pFrm->m_wndBrowserView.OpenURL(pUrl);
+
+    pFrm->BringWindowToTop();
+
+    return TRUE;
+}
+
+void CBrowserView::OnViewSource() 
+{
+	if(! mWebNav)
+		return;
+
+	// Get the URI object whose source we want to view.
+    nsresult rv = NS_OK;
 	nsCOMPtr<nsIURI> currentURI;
 	rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));
 	if(NS_FAILED(rv) || !currentURI)
@@ -371,10 +369,12 @@ void CBrowserView::OnViewSource()
 	if(NS_FAILED(rv))
 		return;
 
-	// Finally, load this URI into the newly created frame
-	//(who's mode was set to "ViewSource" earlier
-	
-	pFrm->m_wndBrowserView.OpenURL(uriString.get());
+    // Build the view-source: url
+    nsCAutoString viewSrcUrl;
+    viewSrcUrl.Append("view-source:");
+    viewSrcUrl.Append(uriString);
+
+    OpenViewSourceWindow(viewSrcUrl.get());
 }
 
 void CBrowserView::OnViewInfo() 
@@ -659,14 +659,14 @@ void CBrowserView::OnFileSaveAs()
 
 void CBrowserView::OpenURL(const char* pUrl)
 {
-	if(mWebNav)
-		mWebNav->LoadURI(NS_ConvertASCIItoUCS2(pUrl).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    if(mWebNav)
+        mWebNav->LoadURI(NS_ConvertASCIItoUCS2(pUrl).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 void CBrowserView::OpenURL(const PRUnichar* pUrl)
 {
-	if(mWebNav)
-		mWebNav->LoadURI(pUrl, nsIWebNavigation::LOAD_FLAGS_NONE);
+    if(mWebNav)
+        mWebNav->LoadURI(pUrl, nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 CBrowserFrame* CBrowserView::CreateNewBrowserFrame(PRUint32 chromeMask, 
