@@ -324,7 +324,7 @@ public:
      *  @return number of bytes read or -1 if error
      */   
     NS_IMETHOD
-    Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount); 
+    Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aWriteCount); 
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginStream:
@@ -840,11 +840,12 @@ SimplePluginStream::Close(void)
  +++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 NS_METHOD
-SimplePluginStream::Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount)
+SimplePluginStream::Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aWriteCount)
 {
     PR_ASSERT(aOffset == 0);    // XXX need to handle the non-sequential write case
     fInst->DisplayJavaMessage((char*)aBuf, aCount); 
-    return aCount;		/* The number of bytes accepted */
+    *aWriteCount = aCount;		/* The number of bytes accepted */
+    return NS_OK;
 }
 
 /*******************************************************************************/
