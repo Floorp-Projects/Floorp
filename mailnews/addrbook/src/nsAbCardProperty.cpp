@@ -133,6 +133,35 @@ NS_IMPL_ISUPPORTS1(nsAbCardProperty, nsIAbCard)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+nsresult nsAbCardProperty::GetCardTypeFromString(const char *aCardTypeStr, PRBool aEmptyIsTrue, PRBool *aValue)
+{
+  NS_ENSURE_ARG_POINTER(aCardTypeStr);
+  NS_ENSURE_ARG_POINTER(aValue);
+
+  *aValue = PR_FALSE;
+  nsXPIDLString cardType;
+  nsresult rv = GetCardType(getter_Copies(cardType));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  *aValue = ((aEmptyIsTrue && cardType.IsEmpty()) || cardType.Equals(NS_ConvertASCIItoUCS2(aCardTypeStr)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetIsANormalCard(PRBool *aIsNormal)
+{
+  return GetCardTypeFromString(AB_CARD_IS_NORMAL_CARD, PR_TRUE, aIsNormal);
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetIsASpecialGroup(PRBool *aIsSpecailGroup)
+{
+  return GetCardTypeFromString(AB_CARD_IS_AOL_GROUPS, PR_FALSE, aIsSpecailGroup);
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetIsAnEmailAddress(PRBool *aIsEmailAddress)
+{
+  return GetCardTypeFromString(AB_CARD_IS_AOL_ADDITIONAL_EMAIL, PR_FALSE, aIsEmailAddress);
+}
+
 nsresult nsAbCardProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
 	if (aName)

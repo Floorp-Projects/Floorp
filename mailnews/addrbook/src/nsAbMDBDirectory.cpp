@@ -742,6 +742,12 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* aCard, PRBool needToCopyCard
 
   nsresult rv = NS_OK;
 
+  // Don't add the card if it's not a normal one (ie, they can't be added as members).
+  PRBool isNormal;
+  rv = aCard->GetIsANormalCard(&isNormal);
+  if (!isNormal)
+    return NS_OK;
+
   if (mURI && mIsMailingList == -1)
   {
     /* directory URIs are of the form

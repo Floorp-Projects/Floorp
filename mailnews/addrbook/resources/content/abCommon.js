@@ -367,6 +367,10 @@ function AbEditCard(card)
   if (!card)
     return;
 
+  // Not allowing AOL special groups to be edited.
+  if (card.isASpecialGroup)
+    return;
+
   if (card.isMailList) {
     goEditListDialog(GetSelectedDirectory(), card, card.mailListURI, UpdateCardView);
   }

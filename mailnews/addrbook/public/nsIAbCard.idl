@@ -46,7 +46,7 @@
 
 // Constants used for card types.
 // "" or "0": normal, "1": AOL groups, "2": AOL additional email address
-#define AB_CARD_IS_NORMAL_CRAD            "0"
+#define AB_CARD_IS_NORMAL_CARD            "0"
 #define AB_CARD_IS_AOL_GROUPS             "1"
 #define AB_CARD_IS_AOL_ADDITIONAL_EMAIL   "2"
 
@@ -131,6 +131,13 @@ interface nsIAbCard : nsISupports {
 	 * mail list
 	 */
 	attribute string mailListURI;
+
+  /**
+   * Card type helper attributes
+   */
+  readonly attribute boolean isANormalCard;
+  readonly attribute boolean isASpecialGroup;
+  readonly attribute boolean isAnEmailAddress;
 
 	wstring getCardValue(in string name);
 
