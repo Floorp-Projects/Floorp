@@ -1,0 +1,67 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIDOMWindowUtils is intended for giving privileged script access to
+ * additional properties and methods of nsIDOMWindow unavailable to
+ * content script. Access this interface by calling getInterface on a DOMWindow.
+ */
+
+[scriptable, uuid(7e1ec6ff-2e67-4b26-aa39-a3eb2a3b8a4e)]
+interface nsIDOMWindowUtils : nsISupports {
+
+  /**
+   * Image animation mode of the window. When this attribute's value
+   * is changed, the implementation should set all images in the window
+   * to the given value. That is, when set to kDontAnimMode, all images
+   * will stop animating. The attribute's value must be one of the
+   * animationMode values from imgIContainer.
+   * @note Images may individually override the window's setting after
+   *       the window's mode is set. Therefore images given different modes
+   *       since the last setting of the window's mode may behave
+   *       out of line with the window's overall mode.
+   * @note The attribute's value is the window's overall mode. It may
+   *       for example continue to report kDontAnimMode after all images
+   *       have subsequently been individually animated.
+   * @note Only images immediately in this window are affected;
+   *       this is not recursive to subwindows.
+   * @see imgIContainer
+   */
+           attribute unsigned short imageAnimationMode;
+};
