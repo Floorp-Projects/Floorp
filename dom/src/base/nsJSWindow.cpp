@@ -886,6 +886,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeWindow(JSContext *cx, JSObject *obj)
 {
+  nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
@@ -2706,6 +2707,7 @@ extern "C" NS_DOM nsresult NS_NewScriptWindow(nsIScriptContext *aContext, nsISup
 
     // assign "this" to the js object, don't AddRef
     ::JS_SetPrivate(jscontext, global, aSupports);
+    NS_ADDREF(aSupports);
 
     JS_DefineProperties(jscontext, global, WindowProperties);
     JS_DefineFunctions(jscontext, global, WindowMethods);

@@ -130,12 +130,7 @@ GlobalWindowImpl::GlobalWindowImpl()
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
-{
-  if (nsnull != mScriptObject) {
-    mContext->RemoveReference(&mScriptObject, mScriptObject);
-    mScriptObject = nsnull;
-  }
-  
+{  
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mNavigator);
@@ -257,19 +252,23 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
     NS_IF_ADDREF(mDocument);
     return;
   }
-
+  
   ClearAllTimeouts();
-
-  if (nsnull != mScriptObject && nsnull != mContext) {
+  
+  if ((nsnull != mScriptObject) && 
+      (nsnull != mContext) &&
+      (nsnull != aDocument)) {
     JS_ClearScope((JSContext *)mContext->GetNativeContext(),
                   (JSObject *)mScriptObject);
   }
-    
-  if (nsnull != mDocument)
+  
+  if (nsnull != mDocument) {
     NS_RELEASE(mDocument);
+  }
     
-  if (nsnull != mContext)
+  if (nsnull != mContext) {
     mContext->GC();
+  }
 
   mDocument = aDocument;
   
@@ -286,6 +285,17 @@ NS_IMETHODIMP_(void)
 GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
 {
   //mWebShell isn't refcnt'd here.  WebShell calls SetWebShell(nsnull) when deleted.
+
+  // When SetWebShell(nsnull) is called, drop our references to the
+  // script object (held via a named JS root) and the script context
+  // itself.
+  if ((nsnull == aWebShell) && (nsnull != mContext)) {
+    if (nsnull != mScriptObject) {
+      mContext->RemoveReference(&mScriptObject, mScriptObject);
+      mScriptObject = nsnull;
+    }
+    NS_IF_RELEASE(mContext);
+  }
   mWebShell = aWebShell;
   if (nsnull != mLocation) {
     mLocation->SetWebShell(aWebShell);
@@ -392,11 +402,11 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 NS_IMETHODIMP
 GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
 {
-  if (nsnull == mScreen) {
+  if ((nsnull == mScreen) && (nsnull != mWebShell)) {
     mScreen = new ScreenImpl( mWebShell );
     NS_IF_ADDREF(mScreen);
   }
-
+    
   *aScreen = mScreen;
   NS_IF_ADDREF(mScreen);
 
@@ -406,14 +416,14 @@ GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
 NS_IMETHODIMP
 GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
 {
-  if (nsnull == mHistory) {
+  if ((nsnull == mHistory) && (nsnull != mWebShell)) {
     mHistory = new HistoryImpl();
     if (nsnull != mHistory) {
       NS_ADDREF(mHistory);
       mHistory->SetWebShell(mWebShell);
     }
   }
-
+  
   *aHistory = mHistory;
   NS_IF_ADDREF(mHistory);
 
@@ -429,7 +439,7 @@ GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
     mMenubar = new MenubarPropImpl();
     if (nsnull != mMenubar) {
       NS_ADDREF(mMenubar);
-      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+      if ((nsnull != mWebShell) && NS_OK == GetBrowserWindowInterface(browser))
         mMenubar->SetBrowserWindow(browser);
     }
   }
@@ -448,7 +458,7 @@ GlobalWindowImpl::GetToolbar(nsIDOMBarProp** aToolbar)
     mToolbar = new ToolbarPropImpl();
     if (nsnull != mToolbar) {
       NS_ADDREF(mToolbar);
-      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+      if ((nsnull != mWebShell) && NS_OK == GetBrowserWindowInterface(browser))
         mToolbar->SetBrowserWindow(browser);
     }
   }
@@ -467,7 +477,7 @@ GlobalWindowImpl::GetLocationbar(nsIDOMBarProp** aLocationbar)
     mLocationbar = new LocationbarPropImpl();
     if (nsnull != mLocationbar) {
       NS_ADDREF(mLocationbar);
-      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+      if ((nsnull != mWebShell) && NS_OK == GetBrowserWindowInterface(browser))
         mLocationbar->SetBrowserWindow(browser);
     }
   }
@@ -486,7 +496,7 @@ GlobalWindowImpl::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
     mPersonalbar = new PersonalbarPropImpl();
     if (nsnull != mPersonalbar) {
       NS_ADDREF(mPersonalbar);
-      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+      if ((nsnull != mWebShell) && NS_OK == GetBrowserWindowInterface(browser))
         mPersonalbar->SetBrowserWindow(browser);
     }
   }
@@ -505,7 +515,7 @@ GlobalWindowImpl::GetStatusbar(nsIDOMBarProp** aStatusbar)
     mStatusbar = new StatusbarPropImpl();
     if (nsnull != mStatusbar) {
       NS_ADDREF(mStatusbar);
-      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+      if ((nsnull != mWebShell) && NS_OK == GetBrowserWindowInterface(browser))
         mStatusbar->SetBrowserWindow(browser);
     }
   }
@@ -524,7 +534,7 @@ GlobalWindowImpl::GetScrollbars(nsIDOMBarProp** aScrollbars)
     mScrollbars = new ScrollbarsPropImpl();
     if (nsnull != mScrollbars) {
       NS_ADDREF(mScrollbars);
-      if (nsnull != mWebShell && NS_OK == GetBrowserWindowInterface(browser))
+      if ((nsnull != mWebShell) && NS_OK == GetBrowserWindowInterface(browser))
         mScrollbars->SetBrowserWindow(browser);
     }
   }
@@ -562,26 +572,28 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
 {
   nsresult ret = NS_OK;
-  nsIWebShell *mParentWebShell;
-  mWebShell->GetParent(mParentWebShell);
-
-  *aParent = nsnull;
   
-  if (nsnull != mParentWebShell) {
-    nsIScriptContextOwner *mParentContextOwner;
-    if (NS_OK == mParentWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mParentContextOwner)) {
-      nsIScriptGlobalObject *mParentGlobalObject;
-      if (NS_OK == mParentContextOwner->GetScriptGlobalObject(&mParentGlobalObject)) {
-        ret = mParentGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aParent);
-        NS_RELEASE(mParentGlobalObject);
+  *aParent = nsnull;
+  if (nsnull != mWebShell) {
+    nsIWebShell *mParentWebShell;
+    mWebShell->GetParent(mParentWebShell);
+    
+    if (nsnull != mParentWebShell) {
+      nsIScriptContextOwner *mParentContextOwner;
+      if (NS_OK == mParentWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mParentContextOwner)) {
+        nsIScriptGlobalObject *mParentGlobalObject;
+        if (NS_OK == mParentContextOwner->GetScriptGlobalObject(&mParentGlobalObject)) {
+          ret = mParentGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aParent);
+          NS_RELEASE(mParentGlobalObject);
+        }
+        NS_RELEASE(mParentContextOwner);
       }
-      NS_RELEASE(mParentContextOwner);
-    }
     NS_RELEASE(mParentWebShell);
-  } 
-  else {
-    *aParent = this;
-    NS_ADDREF(this);
+    } 
+    else {
+      *aParent = this;
+      NS_ADDREF(this);
+    }
   }
 
   return ret;
@@ -590,7 +602,7 @@ GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
 NS_IMETHODIMP    
 GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
 {
-  if (nsnull == mLocation) {
+  if ((nsnull == mLocation) && (nsnull != mWebShell)) {
     mLocation = new LocationImpl(mWebShell);
     NS_IF_ADDREF(mLocation);
   }
@@ -605,23 +617,27 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
 {
   nsresult ret = NS_OK;
-  nsIWebShell *mRootWebShell;
-  mWebShell->GetRootWebShell(mRootWebShell);
 
   *aTop = nsnull;
-
-  if (nsnull != mRootWebShell) {
-    nsIScriptContextOwner *mRootContextOwner;
-    if (NS_OK == mRootWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mRootContextOwner)) {
-      nsIScriptGlobalObject *mRootGlobalObject;
-      if (NS_OK == mRootContextOwner->GetScriptGlobalObject(&mRootGlobalObject)) {
-        ret = mRootGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aTop);
-        NS_RELEASE(mRootGlobalObject);
+  if (nsnull != mWebShell) {
+    nsIWebShell *mRootWebShell;
+    mWebShell->GetRootWebShell(mRootWebShell);
+    
+    
+    if (nsnull != mRootWebShell) {
+      nsIScriptContextOwner *mRootContextOwner;
+      if (NS_OK == mRootWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mRootContextOwner)) {
+        nsIScriptGlobalObject *mRootGlobalObject;
+        if (NS_OK == mRootContextOwner->GetScriptGlobalObject(&mRootGlobalObject)) {
+          ret = mRootGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aTop);
+          NS_RELEASE(mRootGlobalObject);
+        }
+        NS_RELEASE(mRootContextOwner);
       }
-      NS_RELEASE(mRootContextOwner);
+      NS_RELEASE(mRootWebShell);
     }
-    NS_RELEASE(mRootWebShell);
   }
+
   return ret;
 }
 
@@ -640,7 +656,7 @@ GlobalWindowImpl::GetClosed(PRBool* aClosed)
 NS_IMETHODIMP
 GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
 {
-  if (nsnull == mFrames) {
+  if ((nsnull == mFrames) && (nsnull != mWebShell)) {
     mFrames = new nsDOMWindowList(mWebShell);
     if (nsnull == mFrames) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -649,7 +665,7 @@ GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
   }
 
   *aFrames = (nsIDOMWindowCollection *)mFrames;
-  NS_ADDREF(mFrames);
+  NS_IF_ADDREF(mFrames);
 
   return NS_OK;
 }
@@ -693,8 +709,10 @@ GlobalWindowImpl::SetDefaultStatus(const nsString& aDefaultStatus)
 NS_IMETHODIMP
 GlobalWindowImpl::GetName(nsString& aName)
 {
-  const PRUnichar *name;
-  mWebShell->GetName(&name);
+  const PRUnichar *name = nsnull;
+  if (nsnull != mWebShell) {
+    mWebShell->GetName(&name);
+  }
   aName = name;
   return NS_OK;
 }
@@ -702,8 +720,11 @@ GlobalWindowImpl::GetName(nsString& aName)
 NS_IMETHODIMP
 GlobalWindowImpl::SetName(const nsString& aName)
 {
-  mWebShell->SetName(aName.GetUnicode());
-  return NS_OK;
+  nsresult result = NS_OK;
+  if (nsnull != mWebShell) {
+    result = mWebShell->SetName(aName.GetUnicode());
+  }
+  return result;
 }
 
 NS_IMETHODIMP
@@ -946,30 +967,32 @@ GlobalWindowImpl::Dump(const nsString& aStr)
 NS_IMETHODIMP
 GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  nsresult ret;
+  nsresult ret = NS_OK;
   nsAutoString str;
 
-  if (argc > 0) {
-    nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
-  }
-  else {
-    str.SetString("undefined");
-  }
-  
-  nsIWebShell *rootWebShell;
-  ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
-  if (nsnull != rootWebShell) {
-    nsIWebShellContainer *rootContainer;
-    ret = rootWebShell->GetContainer(rootContainer);
-    if (nsnull != rootContainer) {
-      nsINetSupport *support;
+  if (nsnull != mWebShell) {
+    if (argc > 0) {
+      nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
+    }
+    else {
+      str.SetString("undefined");
+    }
+    
+    nsIWebShell *rootWebShell;
+    ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
+    if (nsnull != rootWebShell) {
+      nsIWebShellContainer *rootContainer;
+      ret = rootWebShell->GetContainer(rootContainer);
+      if (nsnull != rootContainer) {
+        nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
           support->Alert(str);
           NS_RELEASE(support);
         }
-      NS_RELEASE(rootContainer);
+        NS_RELEASE(rootContainer);
+      }
+      NS_RELEASE(rootWebShell);
     }
-    NS_RELEASE(rootWebShell);
   }
   return ret;
 }
@@ -977,30 +1000,33 @@ GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
 NS_IMETHODIMP    
 GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn)
 {
-  nsresult ret;
+  nsresult ret = NS_OK;
   nsAutoString str;
 
-  if (argc > 0) {
-    nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
-  }
-  else {
-    str.SetString("undefined");
-  }
-
-  nsIWebShell *rootWebShell;
-  ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
-  if (nsnull != rootWebShell) {
-    nsIWebShellContainer *rootContainer;
-    ret = rootWebShell->GetContainer(rootContainer);
-    if (nsnull != rootContainer) {
-      nsINetSupport *support;
+  *aReturn = PR_FALSE;
+  if (nsnull != mWebShell) {
+    if (argc > 0) {
+      nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
+    }
+    else {
+      str.SetString("undefined");
+    }
+    
+    nsIWebShell *rootWebShell;
+    ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
+    if (nsnull != rootWebShell) {
+      nsIWebShellContainer *rootContainer;
+      ret = rootWebShell->GetContainer(rootContainer);
+      if (nsnull != rootContainer) {
+        nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
           *aReturn = support->Confirm(str);
           NS_RELEASE(support);
         }
-      NS_RELEASE(rootContainer);
+        NS_RELEASE(rootContainer);
+      }
+      NS_RELEASE(rootWebShell);
     }
-    NS_RELEASE(rootWebShell);
   }
   return ret;
 }
@@ -1008,27 +1034,29 @@ GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aRe
 NS_IMETHODIMP    
 GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn)
 {
-  nsresult ret;
+  nsresult ret = NS_OK;
   nsAutoString str, initial;
 
-  if (argc > 0) {
-    nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
-
-    if (argc > 1) {
-      nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
+  aReturn.Truncate();
+  if (nsnull != mWebShell) {
+    if (argc > 0) {
+      nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
+      
+      if (argc > 1) {
+        nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
+      }
+      else {
+        initial.SetString("undefined");
+      }
     }
-    else {
-      initial.SetString("undefined");
-    }
-  }
     
-  nsIWebShell *rootWebShell;
-  ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
-  if (nsnull != rootWebShell) {
-    nsIWebShellContainer *rootContainer;
-    ret = rootWebShell->GetContainer(rootContainer);
-    if (nsnull != rootContainer) {
-      nsINetSupport *support;
+    nsIWebShell *rootWebShell;
+    ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
+    if (nsnull != rootWebShell) {
+      nsIWebShellContainer *rootContainer;
+      ret = rootWebShell->GetContainer(rootContainer);
+      if (nsnull != rootContainer) {
+        nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
           if (!support->Prompt(str, initial, aReturn)) {
             // XXX Need to check return value and return null if the
@@ -1038,9 +1066,10 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
           }
           NS_RELEASE(support);
         }
-      NS_RELEASE(rootContainer);
+        NS_RELEASE(rootContainer);
+      }
+      NS_RELEASE(rootWebShell);
     }
-    NS_RELEASE(rootWebShell);
   }
   return ret;
 }
@@ -1048,15 +1077,21 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
 NS_IMETHODIMP
 GlobalWindowImpl::Focus()
 {
-  mWebShell->SetFocus();
-  return NS_OK;
+  nsresult result = NS_OK;
+  if (nsnull != mWebShell) {
+    result = mWebShell->SetFocus();
+  }
+  return result;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::Blur()
 {
-  mWebShell->RemoveFocus();
-  return NS_OK;
+  nsresult result = NS_OK;
+  if (nsnull != mWebShell) {
+    result = mWebShell->RemoveFocus();
+  }
+  return result;
 }
 
 NS_IMETHODIMP
@@ -1077,31 +1112,33 @@ GlobalWindowImpl::Close()
 NS_IMETHODIMP
 GlobalWindowImpl::Forward()
 {
+  nsresult result = NS_OK;
   nsIBrowserWindow *mBrowser;
 
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
     //XXX tbi
     //mBrowser->Forward();
     NS_RELEASE(mBrowser);
-  } else {
-    mWebShell->Forward(); // I added this - rods
+  } else if (nsnull != mWebShell) {
+    result = mWebShell->Forward(); // I added this - rods
   }
-  return NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::Back()
 {
+  nsresult result = NS_OK;
   nsIBrowserWindow *mBrowser;
 
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
     //XXX tbi
     //mBrowser->Back();
     NS_RELEASE(mBrowser);
-  }  else {
-    mWebShell->Back();// I added this - rods
+  }  else if (nsnull != mWebShell) {
+    result = mWebShell->Back();// I added this - rods
   }
-  return NS_OK;  
+  return result;  
 }
 
 NS_IMETHODIMP
@@ -1110,6 +1147,10 @@ GlobalWindowImpl::Home()
   char *url = nsnull;
   nsresult rv = NS_OK;
   nsString homeURL;
+
+  if (nsnull == mWebShell) {
+    return rv;
+  }
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
   if (NS_FAILED(rv) || (!prefs)) {
@@ -1127,31 +1168,37 @@ GlobalWindowImpl::Home()
   }
   PR_FREEIF(url);
   PRUnichar* urlToLoad = homeURL.ToNewUnicode();
-  mWebShell->LoadURL(urlToLoad);
+  rv = mWebShell->LoadURL(urlToLoad);
   delete[] urlToLoad;
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::Stop()
 {
-  mWebShell->Stop();
-  return NS_OK;
+  nsresult result = NS_OK;
+  if (nsnull != mWebShell) {
+    result = mWebShell->Stop();
+  }
+  return result;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::Print()
 {
-  nsIContentViewer *viewer = nsnull;
-
-  mWebShell->GetContentViewer(&viewer);
-
-  if (nsnull != viewer)
-  {
-    viewer->Print();
-    NS_RELEASE(viewer);
+  nsresult result = NS_OK;
+  if (nsnull != mWebShell) {
+    nsIContentViewer *viewer = nsnull;
+    
+    mWebShell->GetContentViewer(&viewer);
+    
+    if (nsnull != viewer) {
+      result = viewer->Print();
+      NS_RELEASE(viewer);
+    }
   }
-  return NS_OK;
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -1763,7 +1810,9 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
 
   /* XXX check for existing window of same name.  If exists, set url and 
    * update chrome */
-  if (NS_OK == mWebShell->GetContainer(webShellContainer) && nsnull != webShellContainer) {
+  if ((nsnull != mWebShell) && 
+      (NS_OK == mWebShell->GetContainer(webShellContainer)) && 
+      (nsnull != webShellContainer)) {
     // Check for existing window of same name.
     webShellContainer->FindWebShellWithName(name.GetUnicode(), newOuterShell);
     if (nsnull == newOuterShell) {
@@ -1962,11 +2011,13 @@ GlobalWindowImpl::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
                               const nsString& aPopupType, 
                               const nsString& anAnchorAlignment, const nsString& aPopupAlignment)
 {
-  // Pass this off to the parent.
-  nsCOMPtr<nsIWebShellContainer> webShellContainer = do_QueryInterface(mWebShell);
-  if (webShellContainer) {
-    webShellContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType,
-                                   anAnchorAlignment, aPopupAlignment, this);
+  if (nsnull != mWebShell) {
+    // Pass this off to the parent.
+    nsCOMPtr<nsIWebShellContainer> webShellContainer = do_QueryInterface(mWebShell);
+    if (webShellContainer) {
+      webShellContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType,
+                                     anAnchorAlignment, aPopupAlignment, this);
+    }
   }
   return NS_OK;
 }
@@ -2020,18 +2071,20 @@ GlobalWindowImpl::WinHasOption(char *options, char *name)
 nsresult 
 GlobalWindowImpl::GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser)
 {
-  nsresult ret;
+  nsresult ret = NS_ERROR_FAILURE;
   
-  nsIWebShell *mRootWebShell;
-  mWebShell->GetRootWebShellEvenIfChrome(mRootWebShell);
-  if (nsnull != mRootWebShell) {
-    nsIWebShellContainer *mRootContainer;
-    mRootWebShell->GetContainer(mRootContainer);
-    if (nsnull != mRootContainer) {
-      ret = mRootContainer->QueryInterface(kIBrowserWindowIID, (void**)&aBrowser);
-      NS_RELEASE(mRootContainer);
+  if (nsnull != mWebShell) {
+    nsIWebShell *mRootWebShell;
+    mWebShell->GetRootWebShellEvenIfChrome(mRootWebShell);
+    if (nsnull != mRootWebShell) {
+      nsIWebShellContainer *mRootContainer;
+      mRootWebShell->GetContainer(mRootContainer);
+      if (nsnull != mRootContainer) {
+        ret = mRootContainer->QueryInterface(kIBrowserWindowIID, (void**)&aBrowser);
+        NS_RELEASE(mRootContainer);
+      }
+      NS_RELEASE(mRootWebShell);
     }
-    NS_RELEASE(mRootWebShell);
   }
   return ret;
 }
@@ -2219,7 +2272,7 @@ GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
       ::JS_DefineProperty(aContext, (JSObject *)mScriptObject, "location",
                           JSVAL_NULL, nsnull, nsnull, 0);
     }
-    else {
+    else if (nsnull != mWebShell) {
       PRInt32 count;
       if (NS_SUCCEEDED(mWebShell->GetChildCount(count)) && count) {
         nsIWebShell *child = nsnull;

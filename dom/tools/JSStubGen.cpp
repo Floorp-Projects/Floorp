@@ -870,15 +870,6 @@ static const char *kFinalizeStr =
 "  nsJSUtils::nsGenericFinalize(cx, obj);\n"
 "}\n";
 
-static const char *kGlobalFinalizeStr = 
-"\n\n//\n"
-"// %s finalizer\n"
-"//\n"
-"PR_STATIC_CALLBACK(void)\n"
-"Finalize%s(JSContext *cx, JSObject *obj)\n"
-"{\n"
-"}\n";
-
 void     
 JSStubGen::GenerateFinalize(IdlSpecification &aSpec)
 {
@@ -886,12 +877,7 @@ JSStubGen::GenerateFinalize(IdlSpecification &aSpec)
   ofstream *file = GetFile();
   IdlInterface *iface = aSpec.GetInterfaceAt(0);
 
-  if (mIsGlobal) {
-    sprintf(buf, kGlobalFinalizeStr, iface->GetName(), iface->GetName());
-  }
-  else {
-    sprintf(buf, kFinalizeStr, iface->GetName(), iface->GetName());
-  }
+  sprintf(buf, kFinalizeStr, iface->GetName(), iface->GetName());
   *file << buf;
 }
 
@@ -1748,8 +1734,9 @@ static const char *kNewGlobalJSObjectStr =
 "    // is called, so part of the global object initialization has to be moved \n"
 "    // after JS_InitStandardClasses\n"
 "\n"
-"    // assign \"this\" to the js object, don't AddRef\n"
+"    // assign \"this\" to the js object\n"
 "    ::JS_SetPrivate(jscontext, global, aSupports);\n"
+"    NS_ADDREF(aSupports);\n"
 "\n"
 "    JS_DefineProperties(jscontext, global, %sProperties);\n"
 "    JS_DefineFunctions(jscontext, global, %sMethods);\n"
