@@ -1442,6 +1442,15 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
       if (tableFrame->RowIsSpannedInto(rowIndex)) {
         tableFrame->SetNeedStrategyInit(PR_TRUE);
       }
+      else if (!tableFrame->IsAutoHeight()) {
+        // The table isn't auto height, so any previously reflowed rows
+        // it contains were already adjusted so that they take up all of
+        // the table's height. We need to trigger a strategy balance to
+        // ensure that all rows are resized properly during the dirty reflow we
+        // generated above.
+
+        tableFrame->SetNeedStrategyBalance(PR_TRUE);
+      }
     }
   }
 
@@ -1493,6 +1502,15 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
     if (tableFrame->RowIsSpannedInto(rowIndex) || 
         tableFrame->RowHasSpanningCells(rowIndex + numRows - 1)) {
       tableFrame->SetNeedStrategyInit(PR_TRUE);
+    }
+    else if (!tableFrame->IsAutoHeight()) {
+      // The table isn't auto height, so any previously reflowed rows
+      // it contains were already adjusted so that they take up all of
+      // the table's height. We need to trigger a strategy balance to
+      // ensure that all rows are resized properly during the dirty reflow we
+      // generated above.
+
+      tableFrame->SetNeedStrategyBalance(PR_TRUE);
     }
   }
   return NS_OK;
