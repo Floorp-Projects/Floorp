@@ -224,16 +224,18 @@ static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (!aAttributes || !aData || !aData->mListData)
+  if (!aAttributes || !aData)
     return;
 
-  if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
-    nsHTMLValue value;
+  if (aData->mListData) {
+    if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
+      nsHTMLValue value;
     
-    // type: enum
-    aAttributes->GetAttribute(nsHTMLAtoms::type, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated)
-      aData->mListData->mType.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      // type: enum
+      aAttributes->GetAttribute(nsHTMLAtoms::type, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aData->mListData->mType.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+    }
   }
 
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
