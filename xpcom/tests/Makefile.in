@@ -45,8 +45,6 @@ CPPSRCS		= \
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
-EXPORT_RESOURCE	= $(srcdir)/test.properties
-
 ifdef NO_LD_ARCHIVE_FLAGS
 LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo
 endif
@@ -82,5 +80,5 @@ DEFINES		+= -DUSE_NSREG
 INCLUDES	+= -I$(srcdir)/../public
 
 install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
 

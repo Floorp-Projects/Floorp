@@ -41,3 +41,4 @@ LIBS		+= \
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG
+

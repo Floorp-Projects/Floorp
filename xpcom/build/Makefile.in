@@ -22,12 +22,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= xpcom
 MODULE		= xpcom
-
-CPPSRCS		= nsXPComInit.cpp
+LIBRARY_NAME	= xpcom
 
 REQUIRES	= xpcom
+
+CPPSRCS		= nsXPComInit.cpp
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libxpcomds_s.a \
@@ -61,7 +61,7 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 ifdef MOZ_DEMANGLE_SYMBOLS
-  EXTRA_DSO_LDOPTS += -liberty
+EXTRA_DSO_LDOPTS += -liberty
 endif
 
 include $(topsrcdir)/config/rules.mk

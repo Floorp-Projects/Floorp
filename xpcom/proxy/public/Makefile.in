@@ -1,4 +1,4 @@
-#!gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -13,31 +13,27 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH       = ../../..
-topsrcdir   = @top_srcdir@
-srcdir      = @srcdir@
-VPATH       = @srcdir@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE      = xpcom
+MODULE		= xpcom
+XPIDL_MODULE	= proxyObjInst
 
-XPIDL_MODULE = proxyObjInst
+EXPORTS		= \
+		nsProxyEvent.h \
+		nsProxyObjectManager.h \
+		nsProxiedService.h \
+		$(NULL)
 
-XPIDLSRCS =                        \
-        nsIProxyCreateInstance.idl \
-        $(NULL)
+XPIDLSRCS	= nsIProxyCreateInstance.idl
 
-EXPORTS     =	\
-	nsProxyEvent.h        	\
-	nsProxyObjectManager.h	\
-	nsProxiedService.h	\
-	$(NULL)
-
-EXPORTS     := $(addprefix $(srcdir)/, $(EXPORTS))
-
-include $(topsrcdir)/config/config.mk
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 

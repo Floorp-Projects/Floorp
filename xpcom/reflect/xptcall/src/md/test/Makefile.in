@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,21 +15,16 @@
 # Reserved.
 #
 
-DEPTH=../../../../../..
-
+DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+SIMPLE_PROGRAMS	= invoke_test
 
-
-SIMPLE_PROGRAMS = invoke_test
-
-CPPSRCS = \
-        invoke_test.cpp \
-        $(NULL)
+CPPSRCS		= invoke_test.cpp
 
 include $(topsrcdir)/config/rules.mk
+

@@ -35,13 +35,6 @@ CPPSRCS		= \
 		xcDll.cpp \
 		$(NULL)
 
-XPIDLSRCS	= \
-		nsIComponentLoader.idl	\
-		nsIComponentManager.idl \
-		nsIFactory.idl	\
-		nsIModule.idl	\
-		$(NULL)
-
 EXPORTS		= \
 		nsComponentManagerUtils.h \
 		nsIGenericFactory.h \
@@ -52,7 +45,16 @@ EXPORTS		= \
 		nsXPComFactory.h \
 		$(NULL)
 
+XPIDLSRCS	= \
+		nsIComponentLoader.idl \
+		nsIComponentManager.idl \
+		nsIFactory.idl \
+		nsIModule.idl \
+		$(NULL)
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
+LOCAL_INCLUDES	= -I$(srcdir)/../base -I$(srcdir)/../thread
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
@@ -60,10 +62,5 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DUSE_NSREG -D_IMPL_NS_COM -D_IMPL_NS_BASE
-
-LOCAL_INCLUDES	+= \
-		-I$(srcdir)/../base \
-		-I$(srcdir)/../thread \
-		$(NULL)
+DEFINES		+= -DUSE_NSREG -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
