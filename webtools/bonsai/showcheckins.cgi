@@ -102,12 +102,14 @@ my @fields = split(/,/, $::FORM{'sort'});
 sub Compare {
      my $rval = 0;
      my $key;
+     my $aref = eval("\\\%$a");
+     my $bref = eval("\\\%$b");
 
      foreach $key (@fields) {
          if ($key eq 'date') {
-             $rval = $$b{$key} cmp $$a{$key};
+             $rval = $$bref{$key} cmp $$aref{$key};
          } else {
-             $rval = $$a{$key} cmp $$b{$key};
+             $rval = $$aref{$key} cmp $$bref{$key};
          }
          return $rval unless ($rval == 0);
      }
