@@ -355,7 +355,9 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
     if(result==NS_OK) {
       result = aSink->WillBuildModel();
 
+#ifdef DEBUG
       mBodyContext->ResetCounters();
+#endif
 
       MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::WillBuildModel(), this=%p\n", this));
       START_TIMER();
@@ -574,6 +576,7 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
       }
       break;
 
+#ifdef DEBUG
     case eHTMLTag_meta:
       {
           //we should only enable user-defined entities in debug builds...
@@ -602,6 +605,7 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         }
       }
       break; 
+#endif
 
     default:
       break;
@@ -840,19 +844,23 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
 
   if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
 
+#ifdef DEBUG
     //before we just toss this away as a bogus entity, let's check...
     CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
     if(theEntity) {
       theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theEntity->mValue);
     }
     else {
+#endif
       //if you're here we have a bogus entity.
       //convert it into a text token.
       nsAutoString entityName;
       entityName.Assign(NS_LITERAL_STRING("&"));
       entityName.Append(theStr); //should append the entity name; fix bug 51161.
       theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
+#ifdef DEBUG
     }
+#endif
     result=HandleStartToken(theToken);
   }
   else {

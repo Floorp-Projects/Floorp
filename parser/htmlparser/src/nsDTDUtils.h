@@ -230,7 +230,7 @@ public:
   CTableState *mPrevious;
 };
 
-
+#ifdef DEBUG
 //used for named entities and counters (XXX debug only)
 class CNamedEntity {
 public:
@@ -257,7 +257,7 @@ public:
   nsString mValue;  
   PRInt32  mOrdinal;
 };
-
+#endif
 /************************************************************************
   nsTokenAllocator class implementation.
   This class is used to recycle tokens. 
@@ -354,13 +354,6 @@ public:
 
   static  void    ReleaseGlobalObjects(void);
 
-  CNamedEntity*   RegisterEntity(const nsString& aName,const nsString& aValue);
-  CNamedEntity*   GetEntity(const nsString& aName)const;
-
-  void            ResetCounters(void);
-  void            AllocateCounters(void);
-  PRInt32         IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsString& aResult);
-
   void            SetTokenAllocator(nsTokenAllocator* aTokenAllocator) { mTokenAllocator=aTokenAllocator; }
   void            SetNodeAllocator(nsNodeAllocator* aNodeAllocator) { mNodeAllocator=aNodeAllocator; }
 
@@ -385,12 +378,19 @@ public:
   nsTokenAllocator  *mTokenAllocator;
   nsNodeAllocator   *mNodeAllocator;
   CTableState       *mTableStates;
-  PRInt32           *mCounters;
   nsDeque           mEntities;
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };
   eHTMLTags       mXTags[eMaxTags];
+  PRInt32           *mCounters;
+    
+  void            ResetCounters(void);
+  void            AllocateCounters(void);
+  PRInt32         IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsString& aResult);
+    
+  CNamedEntity*   RegisterEntity(const nsString& aName,const nsString& aValue);
+  CNamedEntity*   GetEntity(const nsString& aName)const;
 #endif
 };
 
