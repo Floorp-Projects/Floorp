@@ -862,6 +862,10 @@
     [% title = "No Search Name Specified" %]
     You must enter a name for your search.
 
+  [% ELSIF error == "query_name_too_long" %]
+    [% title = "Query Name Too Long" %]
+    The name of the query must be less than 64 characters long.
+
   [% ELSIF error == "quips_disabled" %]
     [% title = "Quips Disabled" %]
     Quips are disabled.

@@ -239,6 +239,7 @@ sub InsertNamedQuery ($$$;$) {
     # Validate the query name.
     $query_name || ThrowUserError("query_name_missing");
     $query_name !~ /[<>&]/ || ThrowUserError("illegal_query_name");
+    (length($query_name) <= 64) || ThrowUserError("query_name_too_long");
     trick_taint($query_name);
 
     detaint_natural($userid);
