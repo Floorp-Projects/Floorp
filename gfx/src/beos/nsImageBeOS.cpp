@@ -153,26 +153,29 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	
 	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
 	BView *view;
-	beosdrawing->AcquireView(&view);
 	
 	if (!mImageCurrent || (nsnull == mImage)) BuildImage(aSurface);
 	if (nsnull == mImage) return PR_FALSE;
-	
-	if (view && view->LockLooper()) {
-		// Only use B_OP_ALPHA when there is an alpha channel present, as it is much slower
-		if (0 != mAlphaDepth) {
-			view->SetDrawingMode(B_OP_ALPHA);
-			view->DrawBitmapAsync(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
-				BRect(aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1));
-			view->SetDrawingMode(B_OP_COPY);
-		} else {
-			view->DrawBitmapAsync(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
-				BRect(aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1));
+	//LockAndUpdateView() sets proper clipping region here and elsewhere in nsImageBeOS.
+	if(((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) {	
+		beosdrawing->AcquireView(&view);
+		if (view) {
+			// Only use B_OP_ALPHA when there is an alpha channel present, as it is much slower
+			if (0 != mAlphaDepth) {
+				view->SetDrawingMode(B_OP_ALPHA);
+				view->DrawBitmapAsync(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
+					BRect(aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1));
+				view->SetDrawingMode(B_OP_COPY);
+			} else {
+				view->DrawBitmapAsync(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
+					BRect(aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1));
+			}
+			view->Sync();
+			//view was locked by LockAndUpdateView() before it was aquired. So unlock.
+			view->UnlockLooper();
 		}
-		view->Sync();
-		view->UnlockLooper();
+		beosdrawing->ReleaseView();
 	}
-	beosdrawing->ReleaseView();
 	
 	mFlags = 0;
 	return NS_OK;
@@ -189,26 +192,27 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	
 	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
 	BView *view;
-	beosdrawing->AcquireView(&view);
 
 	if (!mImageCurrent || (nsnull == mImage)) BuildImage(aSurface);
 	if (nsnull == mImage) return PR_FALSE;
-	
-	if (view && view->LockLooper()) {
-		// Only use B_OP_ALPHA when there is an alpha channel present, as it is much slower
-		if (0 != mAlphaDepth) {
-			view->SetDrawingMode(B_OP_ALPHA);
-			view->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
-				BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
-			view->SetDrawingMode(B_OP_COPY);
-		} else {
-			view->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
-				BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
+	if(((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) {
+		beosdrawing->AcquireView(&view);
+		if (view && view->LockLooper()) {
+			// Only use B_OP_ALPHA when there is an alpha channel present, as it is much slower
+			if (0 != mAlphaDepth) {
+				view->SetDrawingMode(B_OP_ALPHA);
+				view->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
+					BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
+				view->SetDrawingMode(B_OP_COPY);
+			} else {
+				view->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
+					BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
+			}
+			view->Sync();
+			view->UnlockLooper();
 		}
-		view->Sync();
-		view->UnlockLooper();
+		beosdrawing->ReleaseView();
 	}
-	beosdrawing->ReleaseView();
 	
 	mFlags = 0;
 	return NS_OK;
@@ -257,23 +261,23 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 	
 	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
 	BView *view;
-	beosdrawing->AcquireView(&view);
 	
 	if (!mImageCurrent || (nsnull == mImage)) BuildImage(aSurface);
 	if (nsnull == mImage) return PR_FALSE;
-	
-	if (view && view->LockLooper()) {
-		for (PRInt32 y = aY0; y < aY1; y += aSrcRect.height) {
-			for (PRInt32 x = aX0; x < aX1; x += aSrcRect.width) {
-				DrawNoLock(view, x, y, PR_MIN(aSrcRect.width, aX1 - x),
-					PR_MIN(aSrcRect.height, aY1 - y));
+	if(((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) {
+		beosdrawing->AcquireView(&view);
+		if (view) {
+			for (PRInt32 y = aY0; y < aY1; y += aSrcRect.height) {
+				for (PRInt32 x = aX0; x < aX1; x += aSrcRect.width) {
+					DrawNoLock(view, x, y, PR_MIN(aSrcRect.width, aX1 - x),
+						PR_MIN(aSrcRect.height, aY1 - y));
+				}
 			}
+			view->Sync();
+			view->UnlockLooper();
 		}
-		view->Sync();
-		view->UnlockLooper();
+		beosdrawing->ReleaseView();
 	}
-
-	beosdrawing->ReleaseView();
 	return NS_OK;
 }
 
@@ -305,31 +309,26 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 	PRInt32 aY0 = aTileRect.y - aSYOffset, aX0 = aTileRect.x - aSXOffset,
 		aY1 = aTileRect.y + aTileRect.height, aX1 = aTileRect.x + aTileRect.width;
 	
-	// Set up clipping and call Draw().
-	PRBool clipState;
-	aContext.PushState();
-	aContext.SetClipRect(aTileRect, nsClipCombine_kIntersect, clipState);
-
 	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
 	BView *view;
-	beosdrawing->AcquireView(&view);
 	
 	if (!mImageCurrent || (nsnull == mImage)) BuildImage(aSurface);
 	if (nsnull == mImage) return PR_FALSE;
-	
-	if (view && view->LockLooper()) {
-		for (PRInt32 y = aY0; y < aY1; y += validHeight) {
-			for (PRInt32 x = aX0; x < aX1; x += validWidth) {
-				DrawNoLock(view, x, y, PR_MIN(validWidth, aX1 - x),
-					PR_MIN(validHeight, aY1-y));
+	if(((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) {
+		beosdrawing->AcquireView(&view);
+		if (view) {
+			for (PRInt32 y = aY0; y < aY1; y += validHeight) {
+				for (PRInt32 x = aX0; x < aX1; x += validWidth) {
+					DrawNoLock(view, x, y, PR_MIN(validWidth, aX1 - x),
+						PR_MIN(validHeight, aY1-y));
+				}
 			}
+			view->Sync();
+			view->UnlockLooper();
 		}
-		view->Sync();
-		view->UnlockLooper();
+		beosdrawing->ReleaseView();
 	}
 	
-	aContext.PopState(clipState);
-	beosdrawing->ReleaseView();
 	return NS_OK;
 }
 
