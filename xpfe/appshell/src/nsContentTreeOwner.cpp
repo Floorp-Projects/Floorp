@@ -34,6 +34,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULElement.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
@@ -76,7 +77,7 @@ nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull),
 {
   NS_INIT_REFCNT();
 
-  // note if this fails, QI on nsIEmbeddingSiteWindow2 will simply fail
+  // note if this fails, QI on nsIEmbeddingSiteWindow(2) will simply fail
   mSiteWindow2 = new nsSiteWindow2(this);
 }
 
@@ -98,6 +99,7 @@ NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow, mSiteWindow2)
    NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow2, mSiteWindow2)
 NS_INTERFACE_MAP_END
 
@@ -710,6 +712,7 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(nsSiteWindow2, mAggregator);
 
 NS_INTERFACE_MAP_BEGIN(nsSiteWindow2)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow2)
 NS_INTERFACE_MAP_END_AGGREGATED(mAggregator)
 
@@ -732,6 +735,13 @@ nsSiteWindow2::GetDimensions(PRUint32 aFlags,
 NS_IMETHODIMP
 nsSiteWindow2::SetFocus(void)
 {
+#if 0
+  /* This implementation focuses the main document and could make sense.
+     However this method is actually being used from within
+     nsGlobalWindow::Focus (providing a hook for MDI embedding apps)
+     and it's better for our purposes to not pick a document and
+     focus it, but allow nsGlobalWindow to carry on unhindered.
+  */
   nsXULWindow *window = mAggregator->XULWindow();
   if (window) {
     nsCOMPtr<nsIDocShell> docshell;
@@ -740,6 +750,7 @@ nsSiteWindow2::SetFocus(void)
     if (domWindow)
       domWindow->Focus();
   }
+#endif
   return NS_OK;
 }
 
