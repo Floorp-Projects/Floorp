@@ -352,6 +352,9 @@ NS_IMETHODIMP
 nsSocketTransportService::Run(void)
 {
   PRIntervalTime pollTimeout;
+#if defined(USE_POLLABLE_EVENT) && defined(XP_BEOS)
+  PRBool hadThreadEvent = mThreadEvent ? PR_TRUE : PR_FALSE;
+#endif
 
   if (mThreadEvent)
   {
@@ -384,10 +387,46 @@ nsSocketTransportService::Run(void)
     nsSocketTransport* transport;
     int i;
 
+#if defined(USE_POLLABLE_EVENT) && defined(XP_BEOS)
+
+    // If we lose the pollable event while running,
+    // attempt to get it back
+
+    if (hadThreadEvent && !mThreadEvent) {
+      mThreadEvent = PR_NewPollableEvent();
+      mSelectFDSet[0].fd = mThreadEvent;
+
+      if (!mThreadEvent) {
+        NS_WARNING("Failed to recreate mThreadEvent. Falling back to non-pollable events.");
+        mSelectFDSet[0].in_flags = 0;
+        pollTimeout = PR_MillisecondsToInterval(5);
+      } else {
+        NS_WARNING("Finally recreated pollable event.");
+        mSelectFDSet[0].in_flags = PR_POLL_READ;
+        pollTimeout = PR_MillisecondsToInterval (DEFAULT_POLL_TIMEOUT_IN_MS);
+      }
+    }
+#endif
+
     count = PR_Poll(mSelectFDSet, mSelectFDSetCount, pollTimeout);
 
     if (-1 == count) {
       // XXX: PR_Poll failed...  What should happen?
+#if defined(USE_POLLABLE_EVENT) && defined(XP_BEOS)
+      // If PR_Poll() failed, chances are that something catastrophic 
+      // happened to the ip stack.....like net_server was restarted ;-P
+      // Delete the sockets and start over
+
+      NS_WARNING("PR_Poll() failed.");
+      if (mThreadEvent) {
+        PRStatus status = PR_DestroyPollableEvent(mThreadEvent);
+#ifdef DEBUG
+        fprintf(stderr, "PR_DestroyPollableEvent(%p) = %d\n", mThreadEvent, status);
+#endif
+      }
+      mThreadEvent = 0;
+      continue;
+#endif
     }
 
     intervalNow = PR_IntervalNow();
