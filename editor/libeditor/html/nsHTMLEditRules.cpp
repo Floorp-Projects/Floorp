@@ -287,7 +287,8 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   if (mLockRulesSniffing) return NS_OK;
   
   nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
-  
+  mDidExplicitlySetInterline = PR_FALSE;
+
   if (!mActionNesting)
   {
     // clear our flag about if just deleted a range
@@ -497,7 +498,11 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
   
   // adjust selection HINT if needed
   if (NS_FAILED(res)) return res;
-  res = CheckInterlinePosition(selection);
+  
+  if (!mDidExplicitlySetInterline)
+  {
+    res = CheckInterlinePosition(selection);
+  }
   return res;
 }
 
@@ -1901,6 +1906,82 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         return WillDeleteSelection(aSelection, aAction, aCancel, aHandled);
       }
       
+      // special handling for backspace when positioned after <hr>
+      if (aAction == nsIEditor::ePrevious && nsHTMLEditUtils::IsHR(visNode))
+      {
+        /*
+          Only if the caret is positioned at the end-of-hr-line position,
+          we want to delete the <hr>.
+          
+          In other words, we only want to delete, if
+          our selection position (indicated by startNode and startOffset)
+          is the position directly after the <hr>,
+          on the same line as the <hr>.
+
+          To detect this case we check:
+          startNode == parentOfVisNode
+          and
+          startOffset -1 == visNodeOffsetToVisNodeParent
+          and
+          interline position is false (left)
+
+          In any other case we set the position to 
+          startnode -1 and interlineposition to false,
+          only moving the caret to the end-of-hr-line position.
+        */
+
+        PRBool moveOnly = PR_TRUE;
+
+        res = nsEditor::GetNodeLocation(visNode, address_of(selNode), &selOffset);
+        if (NS_FAILED(res)) return res;
+
+        PRBool interLineIsRight;
+        nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
+        res = selPriv->GetInterlinePosition(&interLineIsRight);
+        if (NS_FAILED(res)) return res;
+
+        if (startNode == selNode &&
+            startOffset -1 == selOffset &&
+            !interLineIsRight)
+        {
+          moveOnly = PR_FALSE;
+        }
+        
+        if (moveOnly)
+        {
+          // Go to the position after the <hr>, but to the end of the <hr> line
+          // by setting the interline position to left.
+          ++selOffset;
+          res = aSelection->Collapse(selNode, selOffset);
+          selPriv->SetInterlinePosition(PR_FALSE);
+          mDidExplicitlySetInterline = PR_TRUE;
+          *aHandled = PR_TRUE;
+
+          // There is one exception to the move only case.
+          // If the <hr> is followed by a <br> we want to delete the <br>.
+
+          PRInt16 otherWSType;
+          nsCOMPtr<nsIDOMNode> otherNode;
+          PRInt32 otherOffset;
+
+          res = wsObj.NextVisibleNode(startNode, startOffset, address_of(otherNode), &otherOffset, &otherWSType);
+          if (NS_FAILED(res)) return res;
+
+          if (otherWSType == nsWSRunObject::eBreak)
+          {
+            // Delete the <br>
+
+            res = nsWSRunObject::PrepareToDeleteNode(mHTMLEditor, otherNode);
+            if (NS_FAILED(res)) return res;
+            res = mHTMLEditor->DeleteNode(otherNode);
+            if (NS_FAILED(res)) return res;
+          }
+
+          return NS_OK;
+        }
+        // else continue with normal delete code
+      }
+
       // found break or image, or hr.  
       res = nsWSRunObject::PrepareToDeleteNode(mHTMLEditor, visNode);
       if (NS_FAILED(res)) return res;
