@@ -53,6 +53,27 @@
   (assert-non-null (digit-char-p char 36)))
 
 
+; Call map on each element of the list l.  If map returns true, call filter on that element.  Gather the results
+; of the calls to filter into a new list and return that list.
+(defun filter-map-list (filter map l)
+  (let ((results nil))
+    (dolist (e l)
+      (when (funcall filter e)
+        (push (funcall map e) results)))
+    (nreverse results)))
+
+; Call map on each element of the sequence s.  If map returns true, call filter on that element.  Gather the results
+; of the calls to filter into a new sequence of type result-type and return that sequence.
+(defun filter-map (result-type filter map s)
+  (let ((results nil))
+    (map nil
+         #'(lambda (e)
+             (when (funcall filter e)
+               (push (funcall map e) results)))
+         s)
+    (coerce result-type (nreverse results))))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DOUBLE-PRECISION FLOATING-POINT NUMBERS
 
@@ -263,14 +284,15 @@
 
 ; Return `(funcall ,function-value ,@arg-values), optimizing where possible.
 (defun gen-apply (function-value &rest arg-values)
-  (if (and (consp function-value)
-           (eq (first function-value) 'function)
-           (consp (rest function-value))
-           (second function-value)
-           (null (cddr function-value)))
+  (cond
+   ((and (consp function-value)
+         (eq (first function-value) 'function)
+         (consp (rest function-value))
+         (second function-value)
+         (null (cddr function-value)))
     (let ((stripped-function-value (second function-value)))
       (if (and (consp stripped-function-value)
-               (eq (first stripped-function-value) 'function)
+               (eq (first stripped-function-value) 'lambda)
                (listp (second stripped-function-value))
                (cddr stripped-function-value)
                (every #'(lambda (arg)
@@ -285,8 +307,16 @@
                    (mapcar #'list function-args arg-values)
                    function-body)
             (apply #'gen-progn function-body)))
-        (cons stripped-function-value arg-values)))
-    (list* 'funcall function-value arg-values)))
+        (cons stripped-function-value arg-values))))
+   ((and (consp function-value)
+         (eq (first function-value) 'symbol-function)
+         (null (cddr function-value))
+         (consp (cadr function-value))
+         (eq (caadr function-value) 'quote)
+         (identifier? (cadadr function-value))
+         (null (cddadr function-value)))
+    (cons (cadadr function-value) arg-values))
+   (t (list* 'funcall function-value arg-values))))
 
 
 ; Return `#'(lambda ,args (declare (ignore-if-unused ,@args)) ,body-code), optimizing
@@ -327,6 +357,53 @@
   (if (zerop n)
     rest
     (intern-n-vars-with-prefix prefix (1- n) (cons (intern (format nil "~A~D" prefix n)) rest))))
+
+
+; Make a new function with the given name.  The function takes n-args arguments and applies them to the
+; function whose source code is in expr.  Return the source code for the function.
+(defun gen-defun (expr name n-args)
+  (when (special-form-p name)
+    (error "Can't call make-defun on ~S" name))
+  (if (and (consp expr)
+           (eq (first expr) 'function)
+           (consp (rest expr))
+           (second expr)
+           (null (cddr expr))
+           (let ((stripped-expr (second expr)))
+             (and (consp stripped-expr)
+                  (eq (first stripped-expr) 'lambda)
+                  (listp (second stripped-expr))
+                  (cddr stripped-expr)
+                  (every #'(lambda (arg)
+                             (and (identifier? arg)
+                                  (not (eql (first-symbol-char arg) #\&))))
+                         (second stripped-expr)))))
+    (let* ((stripped-expr (second expr))
+           (function-args (second stripped-expr))
+           (function-body (cddr stripped-expr)))
+      (assert-true (= (length function-args) n-args))
+      (list* 'defun name function-args function-body))
+    (let ((args (intern-n-vars-with-prefix "_" n-args nil)))
+      (list 'defun name args (apply #'gen-apply expr args)))))
+
+
+; Strip the (function ...) covering from expr, leaving only a plain lambda expression.
+(defun strip-function (expr name n-args)
+  (when (special-form-p name)
+    (error "Can't call make-defun on ~S" name))
+  (if (and (consp expr)
+           (eq (first expr) 'function)
+           (consp (rest expr))
+           (second expr)
+           (null (cddr expr))
+           (let ((stripped-expr (second expr)))
+             (and (consp stripped-expr)
+                  (eq (first stripped-expr) 'lambda)
+                  (listp (second stripped-expr))
+                  (cddr stripped-expr))))
+    (second expr)
+    (let ((args (intern-n-vars-with-prefix "_" n-args nil)))
+      (list 'lambda args (apply #'gen-apply expr args)))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -509,6 +586,11 @@
   (intern (string s) (world-package world)))
 
 
+; Same as world-intern except that return nil if s is not already interned.
+(defun world-find-symbol (world s)
+  (find-symbol (string s) (world-package world)))
+
+
 ; Export symbol in its package, which must belong to some world.
 (defun export-symbol (symbol)
   (assert-true (symbol-in-any-world symbol))
@@ -627,8 +709,9 @@
 ;;;                  identifier is a type constructor like '->, 'vector, 'set, 'tuple, 'oneof, or 'address
 ;;;   :deftype       type if this identifier is a type; nil if this identifier is a forward-referenced type
 ;;;
-;;;   <value>        value of this identifier if it is a variable
-;;;   :value-code    lisp code that was evaluated to produce <value>
+;;;   <value>        value of this identifier if it is a variable of type other than ->
+;;;   <function>     value of this identifier if it is a variable of type ->
+;;;   :code          lisp code that was evaluated to produce <value>
 ;;;   :value-expr    unparsed expression defining the value of this identifier if it is a variable
 ;;;   :type          type of this identifier if it is a variable
 ;;;   :type-expr     unparsed expression defining the type of this identifier if it is a variable
@@ -1627,7 +1710,11 @@
                (values (primitive-value-code primitive) (primitive-type primitive) (list 'expr-annotation:primitive symbol))
                (let ((type (symbol-type symbol)))
                  (if type
-                   (values (list 'fetch-value symbol) type (list 'expr-annotation:global symbol))
+                   (values (if (eq (type-kind type) :->)
+                             (list 'symbol-function (list 'quote symbol))
+                             (list 'fetch-value symbol))
+                           type
+                           (list 'expr-annotation:global symbol))
                    (syntax-error))))))))
      
      ;Scan a call or macro expansion
@@ -1698,36 +1785,75 @@
     (values value type annotated-expr)))
 
 
+; Return the code for computing value-expr, which will be assigned to the symbol.  Check that the
+; value has the given type.
+(defun scan-global-value (symbol value-expr type)
+  (multiple-value-bind (value-code value-type) (scan-value (symbol-world symbol) *null-type-env* value-expr)
+    (unless (type<= value-type type)
+      (error "~A evaluates to type ~A, but is defined with type ~A"
+             symbol
+             (print-type-to-string value-type)
+             (print-type-to-string type)))
+    value-code))
+
+
+#|
+(defun compute-variable-function (symbol value-expr type)
+  (handler-bind (((or error warning)
+                  #'(lambda (condition)
+                      (declare (ignore condition))
+                      (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%"
+                              symbol value-expr))))
+    (assert-true (not (or (boundp symbol) (fboundp symbol))))
+    (let ((code (gen-defun (scan-global-value symbol value-expr type) symbol (length (->-argument-types type)))))
+      (when *trace-variables*
+        (format *trace-output* "~&~S ::= ~:W~%" symbol code))
+      (setf (symbol-code symbol) code)
+      code)))
+|#
+; Generate the defun code for the world's variable named by symbol.
+; The variable's type must be ->.
+(defun compute-variable-function (symbol value-expr type)
+  (handler-bind (((or error warning)
+                  #'(lambda (condition)
+                      (declare (ignore condition))
+                      (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%"
+                              symbol value-expr))))
+    (assert-true (not (or (boundp symbol) (fboundp symbol))))
+    (let ((code (strip-function (scan-global-value symbol value-expr type) symbol (length (->-argument-types type)))))
+      (when *trace-variables*
+        (format *trace-output* "~&~S ::= ~:W~%" symbol code))
+      (setf (symbol-code symbol) code)
+      (let (#+mcl (ccl::*suppress-compiler-warnings* t))
+        (compile symbol code)))))
+
+
 (defvar *busy-variables* nil)
 
-; Compute the value of a world's variable named by symbol.  Return two values:
-;   The variable's value
-;   The variable's type
-; If the variable already has a computed value, return it unchanged.
+
+; Compute the value of a world's variable named by symbol.  Return the variable's value.
+; If the variable already has a computed value, return it unchanged.  The variable's type must not be ->.
 ; If computing the value requires the values of other variables, compute them as well.
 ; Use the *busy-variables* list to prevent infinite recursion while computing variable values.
 (defun compute-variable-value (symbol)
   (cond
    ((member symbol *busy-variables*) (error "Definition of ~A refers to itself" symbol))
-   ((boundp symbol) (values (symbol-value symbol) (symbol-type symbol)))
+   ((boundp symbol) (symbol-value symbol))
+   ((fboundp symbol) (error "compute-variable-value should be called only once on a function"))
    (t (let* ((*busy-variables* (cons symbol *busy-variables*))
-             (value-expr (get symbol :value-expr)))
+             (value-expr (get symbol :value-expr))
+             (type (symbol-type symbol)))
         (handler-bind (((or error warning)
                         #'(lambda (condition)
                             (declare (ignore condition))
                             (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%"
                                     symbol value-expr))))
-          (multiple-value-bind (value-code type) (scan-value (symbol-world symbol) *null-type-env* value-expr)
-            (unless (type<= type (symbol-type symbol))
-              (error "~A evaluates to type ~A, but is defined with type ~A"
-                     symbol
-                     (print-type-to-string type)
-                     (print-type-to-string (symbol-type symbol))))
-            (let ((named-value-code (name-lambda value-code symbol)))
-              (setf (symbol-code symbol) named-value-code)
-              (when *trace-variables*
-                (format *trace-output* "~&~S := ~:W~%" symbol named-value-code))
-              (values (set symbol (eval named-value-code)) type))))))))
+          (assert-true (not (eq (type-kind type) :->)))
+          (let ((named-value-code (name-lambda (scan-global-value symbol value-expr type) symbol)))
+            (setf (symbol-code symbol) named-value-code)
+            (when *trace-variables*
+              (format *trace-output* "~&~S := ~:W~%" symbol named-value-code))
+            (set symbol (eval named-value-code))))))))
 
 
 ; Compute the initial type-env to use for the given general-production's action code.
@@ -2049,6 +2175,42 @@
                                 (cons ,value-code (cdr ,l)))))))))
          vector-type
          (list 'expr-annotation:special-form special-form vector-annotated-expr n-annotated-expr value-annotated-expr))))))
+
+
+; (map <vector-expr> <var> <value-expr> [<condition-expr>])
+(defun scan-map (world type-env special-form vector-expr var-source value-expr &optional (condition-expr 'true))
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+    (let* ((var (scan-name world var-source))
+           (element-type (vector-element-type vector-type))
+           (local-type-env (type-env-add-bindings type-env (list (cons var element-type)))))
+      (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world local-type-env value-expr)
+        (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
+          (let* ((result-type (make-vector-type world value-type))
+                 (source-is-string (eq element-type (world-character-type world)))
+                 (destination-is-string (eq value-type (world-character-type world)))
+                 (destination-sequence-type (if destination-is-string 'string 'list))
+                 (result-annotated-expr (list 'expr-annotation:special-form special-form vector-annotated-expr var value-annotated-expr condition-annotated-expr)))
+            (cond
+             ((eq condition-code 't)
+              (values
+               (if (or source-is-string destination-is-string)
+                 `(map ',destination-sequence-type #'(lambda (,var) ,value-code) ,vector-code)
+                 `(mapcar #'(lambda (,var) ,value-code) ,vector-code))
+               result-type
+               (nbutlast result-annotated-expr)))
+             ((eq value-expr var-source)
+              (assert-true (eq value-type element-type))
+              (values
+               `(remove-if-not #'(lambda (,var) ,condition-code) ,vector-code)
+               result-type
+               result-annotated-expr))
+             (t 
+              (values
+               (if (or source-is-string destination-is-string)
+                 `(filter-map ',destination-sequence-type #'(lambda (,var) ,condition-code) #'(lambda (,var) ,value-code) ,vector-code)
+                 `(filter-map-list #'(lambda (,var) ,condition-code) #'(lambda (,var) ,value-code) ,vector-code))
+               result-type
+               result-annotated-expr)))))))))
 
 
 ;;; Sets
@@ -2491,6 +2653,7 @@
     (:special-form
      ;;Control structures
      (bottom scan-bottom depict-bottom)
+     (todo scan-bottom depict-bottom)
      (function scan-function depict-function)
      (if scan-if depict-if)
      (throw scan-throw depict-throw)
@@ -2505,6 +2668,7 @@
      (subseq scan-subseq depict-subseq)
      (append scan-append depict-append)
      (set-nth scan-set-nth depict-set-nth)
+     (map scan-map depict-map)
      
      ;;Sets
      (set-of-ranges scan-set-of-ranges depict-set-of-ranges)
@@ -2847,12 +3011,17 @@
        (setf (get symbol :type) (scan-type world type-expr))))
   
   ;Then compute the variables' values.
-  (each-world-external-symbol-with-property
-   world
-   :value-expr
-   #'(lambda (symbol value-expr)
-       (declare (ignore value-expr))
-       (compute-variable-value symbol))))
+  (let ((vars nil))
+    (with-compilation-unit ()
+      (each-world-external-symbol-with-property
+       world
+       :value-expr
+       #'(lambda (symbol value-expr)
+           (let ((type (symbol-type symbol)))
+             (if (eq (type-kind type) :->)
+               (compute-variable-function symbol value-expr type)
+               (push symbol vars))))))
+    (mapc #'compute-variable-value vars)))
 
 
 ; Compute the types of all grammar declarations accumulated by scan-declare-action.
