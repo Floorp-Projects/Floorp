@@ -1711,9 +1711,7 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 							? PR_TRUE : PR_FALSE);
     /* on some platforms Active Card incorrectly sets the 
      * CKF_PROTECTED_AUTHENTICATION_PATH bit when it doesn't mean to. */
-#define ACTIVE_CARD "ActivCard SA"
-    if (PORT_Strncmp(tokenInfo.manufacturerID,ACTIVE_CARD,
-						sizeof(ACTIVE_CARD)-1) == 0) {
+    if (slot->isActiveCard) {
 	slot->protectedAuthPath = PR_FALSE;
     }
     tmp = PK11_MakeString(NULL,slot->token_name,
@@ -1889,6 +1887,9 @@ PK11_InitSlot(SECMODModule *mod,CK_SLOT_ID slotID,PK11SlotInfo *slot)
     tmp = PK11_MakeString(NULL,slot->slot_name,
 	 (char *)slotInfo.slotDescription, sizeof(slotInfo.slotDescription));
     slot->isHW = (PRBool)((slotInfo.flags & CKF_HW_SLOT) == CKF_HW_SLOT);
+#define ACTIVE_CARD "ActivCard SA"
+    slot->isActiveCard = (PRBool)(PORT_Strncmp(slotInfo.manufacturerID,
+				ACTIVE_CARD, sizeof(ACTIVE_CARD)-1) == 0);
     if ((slotInfo.flags & CKF_REMOVABLE_DEVICE) == 0) {
 	slot->isPerm = PR_TRUE;
 	/* permanment slots must have the token present always */
