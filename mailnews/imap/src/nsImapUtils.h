@@ -46,4 +46,8 @@ nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char **uri);
 
 void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &returnString);
 
+char*
+CreateUtf7ConvertedString(const char * aSourceString, 
+                      PRBool aConvertToUtf7Imap);
+
 #endif //NS_IMAPUTILS_H

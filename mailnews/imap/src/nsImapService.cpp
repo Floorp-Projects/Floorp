@@ -103,6 +103,10 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString onlineName;
     rv = aFolder->GetOnlineName(getter_Copies(onlineName));
+
+    char *convertedName = CreateUtf7ConvertedString(onlineName, PR_FALSE);
+    onlineName = convertedName;
+
     if (NS_FAILED(rv)) return rv;
 	if ((const char *)onlineName == nsnull || nsCRT::strlen((const char *) onlineName) == 0)
 	{

@@ -35,6 +35,9 @@
 #include "nsImapCore.h"
 #include "nsMsgUtils.h"
 #include "nsIImapFlagAndUidState.h"
+#include "nsICharsetConverterManager.h"
+
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
@@ -358,3 +361,86 @@ void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &retu
     }
   }
 }
+
+// convert back and forth between imap utf7 and unicode.
+char*
+CreateUtf7ConvertedString(const char * aSourceString, 
+                      PRBool aConvertToUtf7Imap)
+{
+  nsresult res;
+  char *dstPtr = nsnull;
+  PRInt32 dstLength = 0;
+  char *convertedString = NULL;
+  
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+
+  if(NS_SUCCEEDED(res) && (nsnull != ccm))
+  {
+    nsString aCharset("x-imap4-modified-utf7");
+    PRUnichar *unichars = nsnull;
+    PRInt32 unicharLength;
+
+    if (!aConvertToUtf7Imap)
+    {
+      // convert utf7 to unicode
+      nsIUnicodeDecoder* decoder = nsnull;
+
+      res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+      if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
+      {
+        PRInt32 srcLen = PL_strlen(aSourceString);
+        res = decoder->GetMaxLength(aSourceString, srcLen, &unicharLength);
+        // temporary buffer to hold unicode string
+        unichars = new PRUnichar[unicharLength + 1];
+        if (unichars == nsnull) 
+        {
+          res = NS_ERROR_OUT_OF_MEMORY;
+        }
+        else 
+        {
+          res = decoder->Convert(aSourceString, &srcLen, unichars, &unicharLength);
+          unichars[unicharLength] = 0;
+        }
+        NS_IF_RELEASE(decoder);
+        // convert the unicode to 8 bit ascii.
+        nsString unicodeStr(unichars);
+        convertedString = (char *) PR_Malloc(unicharLength + 1);
+        if (convertedString)
+          unicodeStr.ToCString(convertedString, unicharLength + 1, 0);
+      }
+    }
+    else
+    {
+      // convert from 8 bit ascii string to modified utf7
+      nsString unicodeStr(aSourceString);
+      nsIUnicodeEncoder* encoder = nsnull;
+      aCharset.SetString("x-imap4-modified-utf7");
+      res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+      if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
+      {
+        res = encoder->GetMaxLength(unicodeStr.GetUnicode(), unicodeStr.Length(), &dstLength);
+        // allocale an output buffer
+        dstPtr = (char *) PR_CALLOC(dstLength + 1);
+        unicharLength = unicodeStr.Length();
+        if (dstPtr == nsnull) 
+        {
+          res = NS_ERROR_OUT_OF_MEMORY;
+        }
+        else 
+        {
+          res = encoder->Convert(unicodeStr.GetUnicode(), &unicharLength, dstPtr, &dstLength);
+          dstPtr[dstLength] = 0;
+        }
+      }
+      NS_IF_RELEASE(encoder);
+      nsString unicodeStr2(dstPtr);
+      convertedString = (char *) PR_Malloc(dstLength + 1);
+      if (convertedString)
+        unicodeStr2.ToCString(convertedString, dstLength + 1, 0);
+        }
+        delete [] unichars;
+      }
+    PR_FREEIF(dstPtr);
+    return convertedString;
+}
+

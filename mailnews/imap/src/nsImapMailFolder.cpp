@@ -283,7 +283,8 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
-	nsAutoString currentFolderNameStr;
+	nsAutoString currentFolderNameStr;		// online name
+	nsAutoString currentFolderDBNameStr;	// possibly munged name
 	nsCOMPtr<nsIMsgFolder> child;
 	char *folderName;
 	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) 
@@ -298,11 +299,40 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 			continue;
 		}
 
+		// OK, here we need to get the online name from the folder cache if we can.
+		// If we can, use that to create the sub-folder
+
+		nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+		nsCOMPtr <nsIFileSpec> curFolder;
+
+		// strip off the .msf in currentFolderPath.
+		currentFolderPath.SetLeafName(currentFolderNameStr);
+		rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(curFolder));
+
+		currentFolderDBNameStr = currentFolderNameStr;
+		if (NS_SUCCEEDED(rv) && curFolder)
+		{
+			rv = GetFolderCacheElemFromFileSpec(curFolder, getter_AddRefs(cacheElement));
+
+			if (NS_SUCCEEDED(rv) && cacheElement)
+			{
+				nsXPIDLCString onlineName;
+				rv = cacheElement->GetStringProperty("onlineName", getter_Copies(onlineName));
+				if (NS_SUCCEEDED(rv) && (const char *) onlineName && nsCRT::strlen((const char *) onlineName))
+				{
+					currentFolderNameStr = onlineName;
+					PRInt32 leafPos = currentFolderNameStr.RFindChar('/');
+					if (leafPos > 0)
+						currentFolderNameStr.Cut(0, leafPos + 1);
+
+				}
+			}
+		}
 		AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
 		// make the imap folder remember the file spec it was created with.
 		if (child)
 		{
-			nsCAutoString leafName (currentFolderNameStr);
+			nsCAutoString leafName (currentFolderDBNameStr);
 			nsCOMPtr <nsIFileSpec> msfFileSpec;
 			rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
 			if (NS_SUCCEEDED(rv) && msfFileSpec)
@@ -1135,6 +1165,7 @@ NS_IMETHODIMP nsImapMailFolder::GetOnlineName(char ** aOnlineFolderName)
 {
 	if (!aOnlineFolderName)
 		return NS_ERROR_NULL_POINTER;
+	ReadDBFolderInfo(PR_FALSE);	// update cache first.
 	*aOnlineFolderName = m_onlineFolderName.ToNewCString();
 	return (*aOnlineFolderName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 

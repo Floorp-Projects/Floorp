@@ -33,6 +33,8 @@
 #include "nsImapFlagAndUidState.h"
 #include "nsIMAPNamespace.h"
 #include "nsImapStringBundle.h"
+#include "nsImapUtils.h"
+
 ////////////////// nsImapServerResponseParser /////////////////////////
 
 extern PRLogModuleInfo* IMAP;
@@ -2284,7 +2286,7 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
 			else
 				returnSpec->hierarchySeparator = '/';	// a guess?
 
-			char *convertedName = fServerConnection.CreateUtf7ConvertedString(mailboxNameToConvert, PR_FALSE);
+			char *convertedName = CreateUtf7ConvertedString(mailboxNameToConvert, PR_FALSE);
 			if (convertedName)
 	    	{
 	    		fServerConnection.GetCurrentUrl()->AllocateCanonicalPath(convertedName, returnSpec->hierarchySeparator, &convertedMailboxName);

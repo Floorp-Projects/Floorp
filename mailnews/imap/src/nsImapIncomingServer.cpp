@@ -570,19 +570,13 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
     nsCOMPtr<nsIMsgFolder> aFolder;
  
-    nsAutoString folderName = folderPath;
+    nsCAutoString folderName = folderPath;
     nsCAutoString uri;
-    uri.Append(kImapRootURI);
-    uri.Append('/');
+	nsXPIDLCString serverUri;
 
-    nsXPIDLCString userName;
-    GetUsername(getter_Copies(userName));
-	uri.Append(userName);
-	uri.Append('@');
+	GetServerURI(getter_Copies(serverUri));
 
-	nsXPIDLCString hostName;
-	GetHostName(getter_Copies(hostName));
-	uri.Append(hostName);
+    uri = serverUri;
 
     PRInt32 leafPos = folderName.RFindChar('/');
 
@@ -597,6 +591,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		haveParent = PR_TRUE;
 		parentUri.Append('/');
 		parentUri.Append(parentName);
+		folderName.Cut(0, leafPos + 1);	// get rid of the parent name
 	}
 
 	nsCOMPtr<nsIFolder> rootFolder;
@@ -656,7 +651,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
 				|| nsCRT::strcmp((const char *) onlineName, folderPath))
 				imapFolder->SetOnlineName(folderPath);
-			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderPath, getter_Copies(unicodeName))))
+			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName, getter_Copies(unicodeName))))
 				child->SetName(unicodeName);
 
 		}

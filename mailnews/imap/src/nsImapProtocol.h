@@ -218,8 +218,6 @@ public:
 	void ShowProgress();
 
 	// utility function calls made by the server
-	char * CreateUtf7ConvertedString(const char * aSourceString, PRBool
-                                     aConvertToUtf7Imap);
 
 	PRUnichar * CreatePRUnicharStringFromUTF7(const char * aSourceString);
 
