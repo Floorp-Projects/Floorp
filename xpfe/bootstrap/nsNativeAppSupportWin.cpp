@@ -910,8 +910,9 @@ struct MessageWindow {
          // already open).  That's done in HandleRequest.
          (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
      }
+     return TRUE;
   }
-  return TRUE;
+  return DefWindowProc( msgWindow, msg, wp, lp );
 }
 
 private:
