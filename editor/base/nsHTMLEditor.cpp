@@ -4313,6 +4313,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation()
 NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 {
   nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
 
   // get selection
   nsCOMPtr<nsIDOMSelection> selection;
