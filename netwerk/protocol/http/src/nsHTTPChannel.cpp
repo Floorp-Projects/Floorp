@@ -42,7 +42,12 @@
 
 // Once other kinds of auth are up change TODO
 #include "nsBasicAuth.h" 
-
+// This will go away once the dialog box starts popping off the window that triggered the load. 
+#include "nsINetSupportDialogService.h" // TODO remove later
+#include "nsIPrompt.h"
+#include "nsProxiedService.h"
+// Remove TODO
+static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -805,9 +810,6 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
         
 		if (NS_SUCCEEDED(rv = mURI->GetPreHost(getter_Copies(prehost))))
 		{
-			// If no prehost then continue with the dialog box...
-			// TODO
-
 			if (!(newUserPass = nsCRT::strdup(prehost)))
 				return NS_ERROR_OUT_OF_MEMORY;
 		}
@@ -820,11 +822,31 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
             Throw a modal dialog box asking for 
             username, password. Prefill (!?!)
         */
-        // Fill that information in newUserPass
-        // TODO ... 
-		// this will just continue and show 
-		// the 401 response for now
-        return NS_ERROR_NOT_IMPLEMENTED; 
+		/* 
+			Currently this is being thrown from here itself. 
+			The correct way to do this is to push this on the 
+			HTTPEventSink and let that notify the window that
+			triggered this load to throw the userpass dialog
+		*/
+        NS_WITH_PROXIED_SERVICE(nsIPrompt, authdialog, kNetSupportDialogCID, nsnull, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        PRUnichar *user, *passwd;
+        PRBool retval;
+        static nsAutoString message = "Enter username for "; //TODO localize it!
+		message += iChallenge; // later on change to only show realm and then host's info. 
+		PRUnichar* msg = message.ToNewUnicode();
+		rv = authdialog->PromptUsernameAndPassword(
+            msg, &user, &passwd, &retval);
+		CRTFREEIF(msg);
+        if (retval)
+        {
+            nsAutoString temp(user);
+            temp += ':';
+            temp += passwd;
+			CRTFREEIF(newUserPass);
+            newUserPass = temp.ToNewCString();
+        }
 	}
 
 	// Construct the auth string request header based on info provided. 
