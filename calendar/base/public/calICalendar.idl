@@ -61,6 +61,12 @@ interface calICalendar : nsISupports
    */
   attribute nsIURI uri;
 
+  /**
+   * Is this calendar read-only?  Used by the UI to decide whether or not 
+   * widgetry should allow editing.
+   */
+  attribute boolean readOnly;
+
   /** 
    * In combination with the other parameters to getItems(), these
    * constants provide for a very basic filtering mechanisms for use
