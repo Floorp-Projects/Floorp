@@ -1435,13 +1435,13 @@ principalsCanAccessTarget(JSContext *cx, JSTarget target)
                  * fixed deny the privileged operations from Java to JS.
                  */ 
                 /* XXX: raman: We need to fix this with LiveConnect integration.
-                 *  javaPrincipals = nsCapsGetClassPrincipalsFromStack(0);
+                 *  javaPrincipals = nsCapsGetClassPrincipalsFromStack(cx, 0);
                  */
                 if (!canExtendTrust(cx, javaPrincipals, principalArray)) {
                     return JS_FALSE;
                 }
             }
-            return (JSBool)nsCapsIsPrivilegeEnabled(capsTarget, 0);
+            return (JSBool)nsCapsIsPrivilegeEnabled(cx, capsTarget, 0);
         } 
 #endif /* JAVA */
         /* No annotation in stack */
@@ -1512,7 +1512,7 @@ LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, int callerDepth)
 
     setupJSCapsCallbacks();
 
-    principalsArray = nsCapsGetClassPrincipalsFromStack(callerDepth);
+    principalsArray = nsCapsGetClassPrincipalsFromStack(cx, callerDepth);
 
     if (principalsArray == NULL)
         return NULL;
@@ -1860,9 +1860,9 @@ typedef struct JSFrameIterator {
 } JSFrameIterator;
 
 static JSFrameIterator *
-lm_NewJSFrameIterator() 
+lm_NewJSFrameIterator(void *context) 
 {
-    JSContext *cx = NULL;
+    JSContext *cx = (JSContext *)context;
     char *errorString;
     JSFrameIterator *result;
     void *array;
@@ -1873,11 +1873,6 @@ lm_NewJSFrameIterator()
         return NULL;
     }
 
-	/* XXX: raman: Is this correct? How do we get the Context?? */
-#ifdef JAVA    
-    env = JRI_GetCurrentEnv();
-    cx = JSJ_CurrentContext(env, &errorString);
-#endif /* JAVA */
     if (cx == NULL) {
         return NULL;
     }
@@ -1951,7 +1946,7 @@ typedef struct NSJSJavaFrameWrapper {
 } NSJSJavaFrameWrapper;
 
 struct NSJSJavaFrameWrapper *
-lm_NewNSJSJavaFrameWrapperCB(void) 
+lm_NewNSJSJavaFrameWrapperCB(void *context) 
 {
     struct NSJSJavaFrameWrapper *result;
     JRIEnv *env;
@@ -1961,7 +1956,7 @@ lm_NewNSJSJavaFrameWrapperCB(void)
         return NULL;
     }
 
-    result->iterator = lm_NewJSFrameIterator();
+    result->iterator = lm_NewJSFrameIterator(context);
     return result;
 }
 

@@ -50,38 +50,38 @@ nsCapsRegisterPrincipal(struct nsPrincipal *principal)
 }
 
 PR_IMPLEMENT(PRBool) 
-nsCapsEnablePrivilege(struct nsTarget *target, PRInt32 callerDepth)
+nsCapsEnablePrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth)
 {
   nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
-  return nsPrivManager->enablePrivilege(target, callerDepth);
+  return nsPrivManager->enablePrivilege(context, target, callerDepth);
 }
 
 PR_IMPLEMENT(PRBool) 
-nsCapsIsPrivilegeEnabled(struct nsTarget *target, PRInt32 callerDepth)
+nsCapsIsPrivilegeEnabled(void* context, struct nsTarget *target, PRInt32 callerDepth)
 {
   nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
-  return nsPrivManager->isPrivilegeEnabled(target, callerDepth);
+  return nsPrivManager->isPrivilegeEnabled(context, target, callerDepth);
 }
 
 PR_IMPLEMENT(PRBool) 
-nsCapsRevertPrivilege(struct nsTarget *target, PRInt32 callerDepth)
+nsCapsRevertPrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth)
 {
   nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
-  return nsPrivManager->revertPrivilege(target, callerDepth);
+  return nsPrivManager->revertPrivilege(context, target, callerDepth);
 }
 
 PR_IMPLEMENT(PRBool) 
-nsCapsDisablePrivilege(struct nsTarget *target, PRInt32 callerDepth)
+nsCapsDisablePrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth)
 {
   nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
-  return nsPrivManager->disablePrivilege(target, callerDepth);
+  return nsPrivManager->disablePrivilege(context, target, callerDepth);
 }
 
 PR_IMPLEMENT(void*) 
-nsCapsGetClassPrincipalsFromStack(PRInt32 callerDepth)
+nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth)
 {
   nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
-  return (void *)nsPrivManager->getClassPrincipalsFromStack(callerDepth);
+  return (void *)nsPrivManager->getClassPrincipalsFromStack(context, callerDepth);
 }
 
 PR_IMPLEMENT(nsSetComparisonType) 
@@ -205,9 +205,9 @@ nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsTarget *target)
 
 
 /* Methods for stack walking */
-struct NSJSJavaFrameWrapper * (*nsCapsNewNSJSJavaFrameWrapperCallback)(void) = NULL;
+struct NSJSJavaFrameWrapper * (*nsCapsNewNSJSJavaFrameWrapperCallback)(void *) = NULL;
 PR_IMPLEMENT(void)
-setNewNSJSJavaFrameWrapperCallback(struct NSJSJavaFrameWrapper * (*fp)(void))
+setNewNSJSJavaFrameWrapperCallback(struct NSJSJavaFrameWrapper * (*fp)(void *))
 {
     nsCapsNewNSJSJavaFrameWrapperCallback = fp;
 }

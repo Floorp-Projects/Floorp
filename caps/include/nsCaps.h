@@ -36,19 +36,19 @@ PR_EXTERN(PRBool)
 nsCapsRegisterPrincipal(struct nsPrincipal *principal); 
 
 PR_EXTERN(PRBool) 
-nsCapsEnablePrivilege(struct nsTarget *target, PRInt32 callerDepth);
+nsCapsEnablePrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsIsPrivilegeEnabled(struct nsTarget *target, PRInt32 callerDepth);
+nsCapsIsPrivilegeEnabled(void* context, struct nsTarget *target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsRevertPrivilege(struct nsTarget *target, PRInt32 callerDepth);
+nsCapsRevertPrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsDisablePrivilege(struct nsTarget *target, PRInt32 callerDepth);
+nsCapsDisablePrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth);
 
 PR_EXTERN(void*) 
-nsCapsGetClassPrincipalsFromStack(PRInt32 callerDepth);
+nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth);
 
 PR_EXTERN(nsSetComparisonType) 
 nsCapsComparePrincipalArray(void* prin1Array, void* prin2Array);
@@ -106,9 +106,9 @@ nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsTarget *target)
 
 /* Methods for stack walking */
 
-extern struct NSJSJavaFrameWrapper * (*nsCapsNewNSJSJavaFrameWrapperCallback)(void);
+extern struct NSJSJavaFrameWrapper * (*nsCapsNewNSJSJavaFrameWrapperCallback)(void *);
 PR_EXTERN(void)
-setNewNSJSJavaFrameWrapperCallback(struct NSJSJavaFrameWrapper * (*fp)(void));
+setNewNSJSJavaFrameWrapperCallback(struct NSJSJavaFrameWrapper * (*fp)(void *));
 
 extern void (*nsCapsFreeNSJSJavaFrameWrapperCallback)(struct NSJSJavaFrameWrapper *);
 PR_EXTERN(void)

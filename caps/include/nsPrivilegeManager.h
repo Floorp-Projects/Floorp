@@ -58,17 +58,31 @@ public:
 
 	PRBool isPrivilegeEnabled(nsTarget *target, PRInt32 callerDepth);
 
+	PRBool isPrivilegeEnabled(void* context, nsTarget *target, PRInt32 callerDepth);
+
 	PRBool enablePrivilege(nsTarget *target, PRInt32 callerDepth);
+
+	PRBool enablePrivilege(void* context, nsTarget *target, PRInt32 callerDepth);
 
 	PRBool enablePrivilege(nsTarget *target, nsPrincipal *preferredPrincipal, PRInt32 callerDepth);
 
+	PRBool enablePrivilege(void* context, nsTarget *target, nsPrincipal *preferredPrincipal, PRInt32 callerDepth);
+
 	PRBool revertPrivilege(nsTarget *target, PRInt32 callerDepth);
+
+	PRBool revertPrivilege(void* context, nsTarget *target, PRInt32 callerDepth);
 
 	PRBool disablePrivilege(nsTarget *target, PRInt32 callerDepth);
 
+	PRBool disablePrivilege(void* context, nsTarget *target, PRInt32 callerDepth);
+
 	PRBool enablePrincipalPrivilegeHelper(nsTarget *target, PRInt32 callerDepth, nsPrincipal *preferredPrin, void * data, nsTarget *impersonator);
 
+	PRBool enablePrincipalPrivilegeHelper(void* context, nsTarget *target, PRInt32 callerDepth, nsPrincipal *preferredPrin, void * data, nsTarget *impersonator);
+
 	nsPrivilegeTable *enableScopePrivilegeHelper(nsTarget *target, PRInt32 callerDepth, void *data, PRBool helpingSetScopePrivilege, nsPrincipal *prefPrin);
+
+	nsPrivilegeTable *enableScopePrivilegeHelper(void* context, nsTarget *target, PRInt32 callerDepth, void *data, PRBool helpingSetScopePrivilege, nsPrincipal *prefPrin);
 
 	void registerPrincipalAndSetPrivileges(nsPrincipal *principal, nsTarget *target, nsPrivilege *newPrivilege);
 
@@ -78,16 +92,22 @@ public:
 
 	PRBool checkPrivilegeGranted(nsTarget *target, PRInt32 callerDepth);
 
+	PRBool checkPrivilegeGranted(void* context, nsTarget *target, PRInt32 callerDepth);
+
 	PRBool checkPrivilegeGranted(nsTarget *target, nsPrincipal *principal, void *data);
 
-	PRBool checkPrivilegeGranted(nsTarget *target, PRInt32 callerDepth,
-                                                         void *data);
+	PRBool checkPrivilegeGranted(nsTarget *target, PRInt32 callerDepth, void *data);
+
+	PRBool checkPrivilegeGranted(void* context, nsTarget *target, PRInt32 callerDepth,
+                                 void *data);
 
 	nsPrivilege *getPrincipalPrivilege(nsTarget *target, nsPrincipal *prin, void *data);
 
 	static nsPrivilegeManager * getPrivilegeManager(void);
 
 	static nsPrincipalArray* getMyPrincipals(PRInt32 callerDepth);
+
+	static nsPrincipalArray* getMyPrincipals(void* context, PRInt32 callerDepth);
 
 	static nsPrincipal * getSystemPrincipal(void);
 
@@ -108,6 +128,8 @@ public:
 
 	PRBool checkMatchPrincipal(nsPrincipal *principal, PRInt32 callerDepth);
 
+	PRBool checkMatchPrincipal(void* context, nsPrincipal *principal, PRInt32 callerDepth);
+
     /* Helper functions for ADMIN UI */
 	const char * getAllPrincipalsString(void);
 
@@ -126,9 +148,17 @@ public:
 	char * checkPrivilegeEnabled(nsTargetArray* targetArray, 
                                  PRInt32 callerDepth, void *data);
 
+	char * checkPrivilegeEnabled(void* context, nsTargetArray* targetArray, 
+                                 PRInt32 callerDepth, void *data);
+
 	nsPrincipalArray* getClassPrincipalsFromStack(PRInt32 callerDepth);
 
+	nsPrincipalArray* getClassPrincipalsFromStack(void* context, PRInt32 callerDepth);
+
 	nsPrivilegeTable * getPrivilegeTableFromStack(PRInt32 callerDepth, 
+                                                  PRBool createIfNull);
+
+	nsPrivilegeTable * getPrivilegeTableFromStack(void* context, PRInt32 callerDepth, 
                                                   PRBool createIfNull);
 
 	/* End of native methods */
@@ -151,7 +181,7 @@ private:
 
 	void addToPrinNameToPrincipalTable(nsPrincipal *prin);
 
-	PRBool enablePrivilegePrivate(nsTarget *target, 
+	PRBool enablePrivilegePrivate(void* context, nsTarget *target, 
                                   nsPrincipal *preferredPrincipal, 
                                   PRInt32 callerDepth);
 

@@ -1152,7 +1152,12 @@ nsTarget::~nsTarget(void)
     delete []itsExpandedTargetArray;
 }
 
-nsTarget * nsTarget::registerTarget(void)
+nsTarget * nsTarget::registerTarget()
+{
+  return registerTarget(NULL);
+}
+
+nsTarget * nsTarget::registerTarget(void *context)
 {
   nsTarget *targ;
 
@@ -1185,7 +1190,8 @@ nsTarget * nsTarget::registerTarget(void)
   }
 
   nsPrivilegeManager *mgr = nsPrivilegeManager::getPrivilegeManager();
-  if ((mgr != NULL) && (!mgr->checkMatchPrincipal(itsPrincipal, 1))) {
+  if ((mgr != NULL) && (context != NULL) && 
+      (!mgr->checkMatchPrincipal(context, itsPrincipal, 1))) {
     nsCaps_unlock();
     return NULL;
   }
