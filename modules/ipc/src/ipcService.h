@@ -112,7 +112,6 @@ public:
 private:
     nsresult ErrorAccordingToIPCM(PRUint32 err);
     void     HandleQueryResult(const ipcMessage *, PRBool succeeded); 
-    nsresult GetSocketPath(nsACString &);
 
     // ipcTransportObserver:
     void OnConnectionEstablished(PRUint32 clientID);
