@@ -12,10 +12,10 @@ interface EditorAppCore : BaseAppCore
 	void EditorAppCore();
 	
 	void setEditorType(in wstring editorType);
-	void setTextProperty(in wstring attr);
-	void removeTextProperty(in wstring attr);
+	void setTextProperty(in wstring prop, in DOMString attr, in DOMString value);
+	void removeTextProperty(in wstring prop, in DOMString attr);
 	
-	void getTextProperty(in wstring attr, out boolean firstHas, out boolean anyHas, out boolean allHas);
+	void getTextProperty(in wstring prop, in DOMString attr, in DOMString value, out boolean firstHas, out boolean anyHas, out boolean allHas);
 	
 	void undo();
 	void redo();
