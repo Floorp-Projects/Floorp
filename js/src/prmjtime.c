@@ -56,12 +56,12 @@ extern int gettimeofday(struct timeval *tv);
 #endif /* XP_UNIX */
 
 #ifdef XP_MAC
-static UnsignedWide		dstLocalBaseMicroseconds;
+static uint64			dstLocalBaseMicroseconds;
 static unsigned long	gJanuaryFirst1970Seconds;
 
 static void MacintoshInitializeTime(void)
 {
-	UnsignedWide			upTime;
+	uint64					upTime;
 	unsigned long			currentLocalTimeSeconds,
 							startupTimeSeconds;
 	uint64					startupTimeMicroSeconds;
@@ -74,12 +74,12 @@ static void MacintoshInitializeTime(void)
 	//	upTime to figure out the current local time
 	//	as well as GMT.
 
-	Microseconds(&upTime);
+	Microseconds((UnsignedWide*)&upTime);
 
 	GetDateTime(&currentLocalTimeSeconds);
 
 	JSLL_I2L(microSecondsToSeconds, PRMJ_USEC_PER_SEC);
-	JSLL_DIV(upTimeSecondsLong,  *((uint64 *)&upTime), microSecondsToSeconds);
+	JSLL_DIV(upTimeSecondsLong, upTime, microSecondsToSeconds);
 	JSLL_L2I(upTimeSeconds, upTimeSecondsLong);
 
 	startupTimeSeconds = currentLocalTimeSeconds - upTimeSeconds;
@@ -179,12 +179,10 @@ PRMJ_LocalGMTDifference()
     /* Mask off top eight bits of gmtDelta, sign extend lower three. */
 
     if ((machineLocation.u.gmtDelta & 0x00800000) != 0) {
-	gmtOffsetSeconds.lo = (machineLocation.u.gmtDelta & 0x00FFFFFF) | 0xFF000000;
-	gmtOffsetSeconds.hi = 0xFFFFFFFF;
+	gmtOffsetSeconds = (machineLocation.u.gmtDelta & 0x00FFFFFF) | 0xFFFFFFFFFF000000LL;
 	JSLL_UI2L(gmtDelta,0);
     } else {
-	gmtOffsetSeconds.lo = (machineLocation.u.gmtDelta & 0x00FFFFFF);
-	gmtOffsetSeconds.hi = 0;
+	gmtOffsetSeconds = (machineLocation.u.gmtDelta & 0x00FFFFFFUL);
 	JSLL_UI2L(gmtDelta,PRMJ_DAY_SECONDS);
     }
 
@@ -260,7 +258,7 @@ PRMJ_Now(void)
     JSInt64 s, us, s2us;
 #endif /* XP_UNIX */
 #ifdef XP_MAC
-    UnsignedWide upTime;
+    JSUint64 upTime;
     JSInt64	 localTime;
     JSInt64       gmtOffset;
     JSInt64    dstOffset;
@@ -303,10 +301,10 @@ PRMJ_Now(void)
     dstOffset = PRMJ_DSTOffset(dstOffset);
     JSLL_SUB(gmtOffset,gmtOffset,dstOffset);
     /* don't adjust for DST since it sets ctime and gmtime off on the MAC */
-    Microseconds(&upTime);
+    Microseconds((UnsignedWide*)&upTime);
     JSLL_ADD(localTime,localTime,gmtOffset);
-    JSLL_ADD(localTime,localTime, *((JSUint64 *)&dstLocalBaseMicroseconds));
-    JSLL_ADD(localTime,localTime, *((JSUint64 *)&upTime));
+    JSLL_ADD(localTime,localTime, dstLocalBaseMicroseconds);
+    JSLL_ADD(localTime,localTime, upTime);
 
     return *((JSUint64 *)&localTime);
 #endif /* XP_MAC */
