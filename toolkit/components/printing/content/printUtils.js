@@ -201,6 +201,8 @@ var PrintUtils = {
     printPreviewTB = document.createElementNS(XUL_NS, "toolbar");
     printPreviewTB.setAttribute("printpreview", true);
     printPreviewTB.setAttribute("id", "print-preview-toolbar");
+
+#ifdef MOZ_PHOENIX
     getBrowser().parentNode.insertBefore(printPreviewTB, getBrowser());
 
     // Tab browser...
@@ -208,6 +210,7 @@ var PrintUtils = {
       this._chromeState.hadTabStrip = getBrowser().getStripVisibility();
       getBrowser().setStripVisibilityTo(false);
     }
+#endif
 
     // copy the window close handler
     if (document.documentElement.hasAttribute("onclose"))
@@ -232,12 +235,18 @@ var PrintUtils = {
   {
     window.removeEventListener("keypress", this.onKeyPressPP, true);
 
+#ifdef MOZ_THUNDERBIRD
+    BrowserExitPrintPreview(); // make the traditional call..don't do any of the inline toolbar browser stuff
+    return;
+#endif
+
     // restore the old close handler
     document.documentElement.setAttribute("onclose", this._closeHandlerPP);
     this._closeHandlerPP = null;
 
     if ("getStripVisibility" in getBrowser())
       getBrowser().setStripVisibilityTo(this._chromeState.hadTabStrip);
+
     var webBrowserPrint = this.getWebBrowserPrint();
     webBrowserPrint.exitPrintPreview(); 
 
