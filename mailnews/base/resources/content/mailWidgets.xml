@@ -11,7 +11,7 @@
     <content>
       	<xul:box inherits="orient" autostretch="never" flex="1">
           <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value,crop"/>
-          <xul:image class="emailDisplayImage"/>
+          <xul:image class="emailDisplayImage" context="emailAddressPopup" inherits="value,crop"/>
         </xul:box>
     </content>
     
@@ -30,7 +30,9 @@
         <parameter name="attributeName"/>
         <parameter name="attributeValue"/>
         <body>
-          <![CDATA[            
+          <![CDATA[   
+			var IconNode = document.getAnonymousNodes(this)[0].childNodes[1];
+            IconNode.setAttribute(attributeName, attributeValue);          
             var textNode = document.getAnonymousNodes(this)[0].firstChild;
             textNode.setAttribute(attributeName, attributeValue);
           ]]>
@@ -41,9 +43,19 @@
         <parameter name="attributeName"/>
         <parameter name="attributeValue"/>
         <body>
-          <![CDATA[            
+          <![CDATA[   
+			   
             var textNode = document.getAnonymousNodes(this)[0].firstChild;
             return textNode.getAttribute(attributeName, attributeValue);
+          ]]>
+        </body>
+      </method>
+
+	  <method name="GetIconNode">
+        <body>
+          <![CDATA[            
+            var ImageNode = document.getAnonymousNodes(this)[0].childNodes[1];
+			return ImageNode;
           ]]>
         </body>
       </method>
