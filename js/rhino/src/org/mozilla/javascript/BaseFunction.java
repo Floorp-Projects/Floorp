@@ -364,7 +364,6 @@ public class BaseFunction extends IdScriptable implements Function {
         }
         finally { cx.setOptimizationLevel(oldOptLevel); }
 
-        fn.functionName = "anonymous";
         fn.fromFunctionConstructor = true;
         ScriptRuntime.initFunction(global, fn);
 

@@ -82,9 +82,7 @@ public class NativeFunction extends BaseFunction {
 
     public String getFunctionName() {
         if (fromFunctionConstructor) {
-            if (version == Context.VERSION_1_2) {
-                return "";
-            }
+            return (version == Context.VERSION_1_2) ? "" : "anonymous";
         }
         return super.getFunctionName();
     }
@@ -108,11 +106,11 @@ public class NativeFunction extends BaseFunction {
         // The following is used only by optimizer, but is here to avoid
         // introduction of 2 additional classes there
         Class cl = getClass();
-        try { 
-            Method m = cl.getDeclaredMethod("getSourcesTreeImpl", 
+        try {
+            Method m = cl.getDeclaredMethod("getSourcesTreeImpl",
                                             new Class[0]);
             return m.invoke(null, ScriptRuntime.emptyArgs);
-        } catch (NoSuchMethodException ex) { 
+        } catch (NoSuchMethodException ex) {
             // No source implementation
             return null;
         } catch (Exception ex) {
