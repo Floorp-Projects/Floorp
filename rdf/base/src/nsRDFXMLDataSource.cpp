@@ -621,11 +621,14 @@ RDFXMLDataSourceImpl::Assert(nsIRDFResource* source,
                              nsIRDFNode* target,
                              PRBool tv)
 {
+    // We don't accept assertions unless we're writable (except in the
+    // case that we're actually _reading_ the datasource in).
     if (!mIsLoading && !mIsWritable)
-        return NS_ERROR_FAILURE; // XXX right error code?
+        return NS_RDF_ASSERTION_REJECTED;
 
-    nsresult rv;
-    if (NS_SUCCEEDED(rv = mInner->Assert(source, property, target, tv))) {
+    nsresult rv = mInner->Assert(source, property, target, tv);
+
+    if (rv == NS_RDF_ASSERTION_ACCEPTED) {
         if (!mIsLoading)
             mIsDirty = PR_TRUE;
     }
@@ -639,8 +642,10 @@ RDFXMLDataSourceImpl::Unassert(nsIRDFResource* source,
                                nsIRDFResource* property, 
                                nsIRDFNode* target)
 {
+    // We don't accept assertions unless we're writable (except in the
+    // case that we're actually _reading_ the datasource in).
     if (!mIsLoading && !mIsWritable)
-        return NS_ERROR_FAILURE; // XXX right error code?
+        return NS_RDF_ASSERTION_REJECTED;
 
     nsresult rv;
     if (NS_SUCCEEDED(rv = mInner->Unassert(source, property, target))) {

@@ -666,9 +666,10 @@ rdf_ContainerSetNextValue(nsIRDFDataSource* aDataSource,
         return rv;
     }
 
-    if (NS_FAILED(rv = aDataSource->Assert(aContainer, kRDF_nextVal, nextVal, PR_TRUE))) {
+    rv = aDataSource->Assert(aContainer, kRDF_nextVal, nextVal, PR_TRUE);
+    if (rv != NS_RDF_ASSERTION_ACCEPTED) {
         NS_ERROR("unable to update nextVal");
-        return rv;
+        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
@@ -882,9 +883,10 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
                 return rv;
             }
 
-            if (NS_FAILED(rv = aDataSource->Assert(aContainer, ordinal, element, PR_TRUE))) {
+            rv = aDataSource->Assert(aContainer, ordinal, element, PR_TRUE);
+            if (rv != NS_RDF_ASSERTION_ACCEPTED) {
                 NS_ERROR("unable to add element to the container");
-                return rv;
+                return NS_ERROR_FAILURE;
             }
 
             ++index;
@@ -1027,9 +1029,10 @@ rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
                 return rv;
             }
 
-            if (NS_FAILED(rv = aDataSource->Assert(aContainer, ordinal, element, PR_TRUE))) {
+            rv = aDataSource->Assert(aContainer, ordinal, element, PR_TRUE);
+            if (rv != NS_RDF_ASSERTION_ACCEPTED) {
                 NS_ERROR("unable to add element to container");
-                return rv;
+                return NS_ERROR_FAILURE;
             }
 
             rv = elements->Advance();

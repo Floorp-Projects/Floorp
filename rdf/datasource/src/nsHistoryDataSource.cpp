@@ -194,7 +194,8 @@ public:
     }
 
     NS_IMETHOD GetTarget(nsIRDFResource* source,
-                         nsIRDFResource* property,  PRBool tv,
+                         nsIRDFResource* property,
+                         PRBool tv,
                          nsIRDFNode** target)
 	{
 		if (tv && property == mResourceURL)
@@ -222,20 +223,25 @@ public:
 	}
 
     NS_IMETHOD GetTargets(nsIRDFResource* source,
-                          nsIRDFResource* property,  PRBool tv,
+                          nsIRDFResource* property,
+                          PRBool tv,
                           nsIRDFAssertionCursor** targets) {
         return mInner->GetTargets(source, property, tv, targets);
     }
 
     NS_IMETHOD Assert(nsIRDFResource* source, 
                       nsIRDFResource* property, 
-                      nsIRDFNode* target, PRBool tv) {
-        return mInner->Assert(source, property, target, tv);
+                      nsIRDFNode* target,
+                      PRBool tv) {
+        // History cannot be modified
+        return NS_RDF_ASSERTION_REJECTED;
     }
 
     NS_IMETHOD Unassert(nsIRDFResource* source,
-                        nsIRDFResource* property, nsIRDFNode* target) {
-        return mInner->Unassert(source, property, target);
+                        nsIRDFResource* property,
+                        nsIRDFNode* target) {
+        // History cannot be modified
+        return NS_RDF_ASSERTION_REJECTED;
     }
 
     NS_IMETHOD HasAssertion(nsIRDFResource* source,
