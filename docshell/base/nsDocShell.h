@@ -41,7 +41,7 @@
 #include "nsIDocumentLoaderObserver.h"
 
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIInterfaceRequestor.h"
 
 #include "nsDSURIContentListener.h"
@@ -60,13 +60,13 @@ public:
 };
 
 class nsDocShell : public nsIDocShell, 
-                   public nsIDocShellContainer,
+                   public nsIDocShellTreeNode,
                    public nsIBaseWindow, 
                    public nsIScrollable, 
                    public nsITextScroll, 
                    public nsIContentViewerContainer,
                    public nsIInterfaceRequestor,
-                   public nsIScriptContextOwner
+                   public nsIScriptGlobalObjectOwner
 {
 friend class nsDSURIContentListener;
 
@@ -74,12 +74,12 @@ public:
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIDOCSHELL
-   NS_DECL_NSIDOCSHELLCONTAINER
+   NS_DECL_NSIDOCSHELLTREENODE
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
    NS_DECL_NSIINTERFACEREQUESTOR
-   NS_DECL_NSISCRIPTCONTEXTOWNER
+   NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
 
    // XXX: move to a macro
    // nsIContentViewerContainer

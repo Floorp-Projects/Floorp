@@ -24,6 +24,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptGlobalObjectData.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMNode.h"
@@ -70,28 +71,32 @@ NS_ScriptErrorReporter(JSContext *cx,
                        JSErrorReport *report)
 {
   nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(context->GetGlobalObject());
 
-  if (context) {
-    nsCOMPtr<nsIScriptContextOwner> owner;
-    nsresult rv = context->GetOwner(getter_AddRefs(owner));
-    if (NS_SUCCEEDED(rv) && owner) {
-      const char* error;
-      if (message) {
-        error = message;
-      }
-      else {
-        error = "<unknown>";
-      }
+  if (globalObject) {
+    nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
+    if(NS_FAILED(globalObject->GetGlobalObjectOwner(getter_AddRefs(owner))) ||
+       !owner) {
+      NS_WARN_IF_FALSE(PR_FALSE, "Failed to get a global Object Owner");
+      return;
+    }
+    
+    const char* error;
+    if (message) {
+      error = message;
+    }
+    else {
+      error = "<unknown>";
+    }
 
-      if (report) {
+    if(report) {
         owner->ReportScriptError(error,
                                  report->filename,
                                  report->lineno,
                                  report->linebuf);
-      }
-      else {
+    }
+    else {
         owner->ReportScriptError(error, nsnull, 0, nsnull);
-      }
     }
   }
 

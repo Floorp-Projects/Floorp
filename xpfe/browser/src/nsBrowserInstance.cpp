@@ -35,7 +35,6 @@
 #include "nsIFileSpecWithUI.h"
 
 #include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
@@ -1177,21 +1176,12 @@ nsIScriptContext *
 GetScriptContext(nsIDOMWindow * aWin) {
   nsIScriptContext * scriptContext = nsnull;
   if (nsnull != aWin) {
-    nsIDOMDocument * domDoc;
-    aWin->GetDocument(&domDoc);
-    if (nsnull != domDoc) {
-      nsIDocument * doc;
-      if (NS_OK == domDoc->QueryInterface(kIDocumentIID,(void**)&doc)) {
-        nsIScriptContextOwner * owner = doc->GetScriptContextOwner();
-        if (nsnull != owner) {
-          owner->GetScriptContext(&scriptContext);
-          NS_RELEASE(owner);
-        }
-        NS_RELEASE(doc);
-      }
-      NS_RELEASE(domDoc);
+    nsCOMPtr<nsIScriptGlobalObject> global(do_QueryInterface(aWin));
+    if (!NS_WARN_IF_FALSE(global, "This should succeed")) {
+      global->GetContext(&scriptContext);
     }
   }
+
   return scriptContext;
 }
 

@@ -34,7 +34,6 @@
 #include "nsRange.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsISizeOfHandler.h"
@@ -672,15 +671,14 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   // script object can be freed (or collected).
   if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
       (nsnull != mDOMSlots->mScriptObject)) {
-    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      nsIScriptContext *context;
-      if (NS_OK == owner->GetScriptContext(&context)) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      nsCOMPtr<nsIScriptContext> context;
+      if (NS_OK == globalObject->GetContext(getter_AddRefs(context))) {
         context->RemoveReference((void *)&mDOMSlots->mScriptObject,
                                 mDOMSlots->mScriptObject);
-        NS_RELEASE(context);
       }
-      NS_RELEASE(owner);
     }
   }
 
@@ -692,10 +690,11 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   // won't be freed (or collected) out from under us.
   if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
       (nsnull != mDOMSlots->mScriptObject)) {
-    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      nsIScriptContext *context;
-      if (NS_OK == owner->GetScriptContext(&context)) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      nsCOMPtr<nsIScriptContext> context;
+      if (NS_OK == globalObject->GetContext(getter_AddRefs(context))) {
         nsAutoString tag;
         char tagBuf[50];
         
@@ -704,9 +703,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
         context->AddNamedReference((void *)&mDOMSlots->mScriptObject,
                                    mDOMSlots->mScriptObject,
                                    tagBuf);
-        NS_RELEASE(context);
       }
-      NS_RELEASE(owner);
     }
   }
 
@@ -1292,15 +1289,14 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 {
   nsresult ret = NS_OK;
   nsIScriptContext* context;
-  nsIScriptContextOwner* owner;
 
   if (nsnull != mDocument) {
-    owner = mDocument->GetScriptContextOwner();
-    if (owner) {
-      if (NS_OK == owner->GetScriptContext(&context)) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+    if (global) {
+      if (NS_OK == global->GetContext(&context)) {
         if (nsHTMLAtoms::body == mTag || nsHTMLAtoms::frameset == mTag) {
           nsIDOMEventReceiver *receiver;
-          nsIScriptGlobalObject *global = context->GetGlobalObject();
 
           if (nsnull != global && NS_OK == global->QueryInterface(kIDOMEventReceiverIID, (void**)&receiver)) {
             nsIEventListenerManager *manager;
@@ -1314,7 +1310,6 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
             }
             NS_RELEASE(receiver);
           }
-          NS_IF_RELEASE(global);
         }
         else {
           nsIEventListenerManager *manager;
@@ -1331,7 +1326,6 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
         }
         NS_RELEASE(context);
       }
-      NS_RELEASE(owner);
     }
   }
   return ret;

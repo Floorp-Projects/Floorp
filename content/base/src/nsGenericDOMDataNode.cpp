@@ -41,7 +41,7 @@
 #include "nsDOMEvent.h"
 #include "nsIDOMText.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "prprf.h"
 #include "nsCOMPtr.h"
 
@@ -714,15 +714,14 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   // script context reference to our script object so that our
   // script object can be freed (or collected).
   if ((nsnull != mDocument) && (nsnull != mScriptObject)) {
-    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      nsIScriptContext *context;
-      if (NS_OK == owner->GetScriptContext(&context)) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      nsCOMPtr<nsIScriptContext> context;
+      if (NS_OK == globalObject->GetContext(getter_AddRefs(context))) {
         context->RemoveReference((void *)&mScriptObject,
                                  mScriptObject);
-        NS_RELEASE(context);
       }
-      NS_RELEASE(owner);
     }
   }
 
@@ -733,16 +732,15 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   // reference to our script object. This will ensure that it
   // won't be freed (or collected) out from under us.
   if ((nsnull != mDocument) && (nsnull != mScriptObject)) {
-    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      nsIScriptContext *context;
-      if (NS_OK == owner->GetScriptContext(&context)) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      nsCOMPtr<nsIScriptContext> context;
+      if (NS_OK == globalObject->GetContext(getter_AddRefs(context))) {
         context->AddNamedReference((void *)&mScriptObject,
                                    mScriptObject,
                                    "Text");
-        NS_RELEASE(context);
       }
-      NS_RELEASE(owner);
     }
   }
 

@@ -33,7 +33,6 @@
 #include "nsINSEvent.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIXULKeyListener.h"
 #include "nsRDFCID.h"

@@ -35,7 +35,7 @@
 #include "nsIDNSService.h"
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIProgressEventSink.h"
 #include "nsDOMEvent.h"
@@ -160,7 +160,6 @@ class nsWebShell : public nsIWebShell,
                    public nsIWebShellContainer,
                    public nsIWebShellServices,
                    public nsILinkHandler,
-                   public nsIScriptContextOwner,
                    public nsIDocumentLoaderObserver,
                    public nsIProgressEventSink, // should go away (nsIDocLoaderObs)
                    public nsIPrompt,
@@ -170,7 +169,8 @@ class nsWebShell : public nsIWebShell,
                    public nsIInterfaceRequestor,
                    public nsIBaseWindow,
                    public nsIDocShell, 
-                   public nsIDocShellContainer
+                   public nsIDocShellContainer,
+                   public nsIScriptGlobalObjectOwner
 {
 public:
   nsWebShell();
@@ -313,8 +313,8 @@ public:
                         const PRUnichar* aTargetSpec);
   NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState);
 
-  // nsIScriptContextOwner
-  NS_DECL_NSISCRIPTCONTEXTOWNER
+  // nsIScriptGlobalObjectOwner
+  NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
 
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader,
@@ -536,7 +536,6 @@ static NS_DEFINE_IID(kIProgressEventSinkIID,  NS_IPROGRESSEVENTSINK_IID);
 static NS_DEFINE_IID(kIDeviceContextIID,      NS_IDEVICE_CONTEXT_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kRefreshURIIID,          NS_IREFRESHURI_IID);
 
@@ -763,7 +762,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
    NS_INTERFACE_MAP_ENTRY(nsIContentViewerContainer)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptContextOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
@@ -786,21 +785,28 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
    if(aIID.Equals(NS_GET_IID(nsILinkHandler)))
       {
       *aInstancePtr = NS_STATIC_CAST(nsILinkHandler*, this);
-      NS_ADDREF_THIS();
+      NS_ADDREF((nsISupports*)*aInstancePtr);
       return NS_OK;
       }
-   else if(aIID.Equals(NS_GET_IID(nsIScriptContextOwner)))
+   else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObjectOwner)))
       {
-      *aInstancePtr = NS_STATIC_CAST(nsIScriptContextOwner*, this);
-      NS_ADDREF_THIS();
+      *aInstancePtr = NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this);
+      NS_ADDREF((nsISupports*)*aInstancePtr);
       return NS_OK;
       }
    else if (aIID.Equals(NS_GET_IID(nsIURIContentListener)))
    {
       *aInstancePtr = NS_STATIC_CAST(nsIURIContentListener*, this);
-      NS_ADDREF_THIS();
+      NS_ADDREF((nsISupports*)*aInstancePtr);
       return NS_OK;
    }
+   else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)))
+      {
+      NS_ENSURE_SUCCESS(CreateScriptEnvironment(), NS_ERROR_FAILURE);
+      *aInstancePtr = mScriptGlobal;
+      NS_ADDREF((nsISupports*)*aInstancePtr);
+      return NS_OK;
+      }
    else if(mPluginManager) //XXX this seems a little wrong. MMP
       return mPluginManager->QueryInterface(aIID, aInstancePtr);
 
@@ -2888,101 +2894,15 @@ nsWebShell::CreateScriptEnvironment()
       return res;
     }
     mScriptGlobal->SetWebShell(this);
+    mScriptGlobal->SetGlobalObjectOwner(
+      NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this));
   }
 
   if (nsnull == mScriptContext) {
     res = NS_CreateScriptContext(mScriptGlobal, &mScriptContext);
-    if (NS_SUCCEEDED(res)) {
-      mScriptContext->SetOwner(this);
-    }
   }
 
   return res;
-}
-
-nsresult
-nsWebShell::GetScriptContext(nsIScriptContext** aContext)
-{
-  NS_PRECONDITION(nsnull != aContext, "null arg");
-  nsresult res = NS_OK;
-
-  res = CreateScriptEnvironment();
-
-  if (NS_SUCCEEDED(res)) {
-    *aContext = mScriptContext;
-    NS_ADDREF(mScriptContext);
-  }
-
-  return res;
-}
-
-nsresult
-nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
-{
-  NS_PRECONDITION(nsnull != aGlobal, "null arg");
-  nsresult res = NS_OK;
-
-  res = CreateScriptEnvironment();
-
-  if (NS_SUCCEEDED(res)) {
-    *aGlobal = mScriptGlobal;
-    NS_IF_ADDREF(mScriptGlobal);
-  }
-
-  return res;
-}
-
-nsresult
-nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
-{
-  // XXX Is this right? Why are we passing in a context?
-  NS_IF_RELEASE(aContext);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsWebShell::ReportScriptError(const char* aErrorString,
-                              const char* aFileName,
-                              PRInt32     aLineNo,
-                              const char* aLineBuf)
-{
-  // XXX To be implemented by scc. The following implementation
-  // is temporary.
-
-  nsAutoString error;
-  error.SetString("JavaScript Error: ");
-  error.Append(aErrorString);
-  error += "\n";
-
-  if (aFileName) {
-    error += "URL: ";
-    error += aFileName;
-    error += "\n";
-  }
-
-  if(aLineNo) {
-    error += "LineNo: ";
-    error.Append(aLineNo, 10);
-    error += "\n";
-  }
-
-  if(aLineBuf) {
-    error += "Line text: '";
-    error += aLineBuf;
-    error += "'\n";
-  }
-
-  // XXX Ughhh...allocation
-  char* errorStr = error.ToNewCString();
-  if (errorStr) {
-    printf("%s\n", errorStr);
-    Recycle(errorStr);
-  }
-  
-  // XXX Turn it off for now...there should be an Error method too
-  //Alert(error.GetUnicode());
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4600,7 +4520,7 @@ NS_IMETHODIMP nsWebShell::GetChildAt(PRInt32 aIndex, nsIDocShell** aDocShell)
 /* depth-first search for a child shell with aName */
 NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, nsIDocShell **_retval)
 {
-  NS_ENSURE_ARG_POINTER(aName);
+  NS_ENSURE_ARG(aName);
   NS_ENSURE_ARG_POINTER(_retval);
   
   *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
@@ -4624,11 +4544,76 @@ NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, nsIDocShell 
       {
         NS_ENSURE_SUCCESS(childAsContainer->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
       }
-      if (_retval) {  // found it
+      if (*_retval) {  // found it
         break;
       }
     }
   }
+  return NS_OK;
+}
+
+//*****************************************************************************
+// nsWebShell::nsIScriptGlobalObjectOwner
+//*****************************************************************************   
+
+NS_IMETHODIMP
+nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
+{
+  NS_PRECONDITION(nsnull != aGlobal, "null arg");
+  nsresult res = NS_OK;
+
+  res = CreateScriptEnvironment();
+
+  if (NS_SUCCEEDED(res)) {
+    *aGlobal = mScriptGlobal;
+    NS_IF_ADDREF(mScriptGlobal);
+  }
+
+  return res;
+}
+
+NS_IMETHODIMP 
+nsWebShell::ReportScriptError(const char* aErrorString,
+                              const char* aFileName,
+                              PRInt32     aLineNo,
+                              const char* aLineBuf)
+{
+  // XXX To be implemented by scc. The following implementation
+  // is temporary.
+
+  nsAutoString error;
+  error.SetString("JavaScript Error: ");
+  error.Append(aErrorString);
+  error += "\n";
+
+  if (aFileName) {
+    error += "URL: ";
+    error += aFileName;
+    error += "\n";
+  }
+
+  if(aLineNo) {
+    error += "LineNo: ";
+    error.Append(aLineNo, 10);
+    error += "\n";
+  }
+
+  if(aLineBuf) {
+    error += "Line text: '";
+    error += aLineBuf;
+    error += "'\n";
+  }
+
+  // XXX Ughhh...allocation
+  char* errorStr = error.ToNewCString();
+  if (errorStr) {
+    printf("%s\n", errorStr);
+    Recycle(errorStr);
+  }
+  
+  // XXX Turn it off for now...there should be an Error method too
+  //Alert(error.GetUnicode());
+
   return NS_OK;
 }
 

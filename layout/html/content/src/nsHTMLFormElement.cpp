@@ -27,7 +27,6 @@
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -41,6 +40,7 @@
 #include "nsIPresShell.h"   
 #include "nsIFrame.h"
 #include "nsISizeOfHandler.h"
+#include "nsIScriptGlobalObject.h"
 
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -566,11 +566,10 @@ nsHTMLFormElement::Resolve(JSContext *aContext, jsval aID)
       nsCOMPtr<nsIScriptContext> scriptContext;
       
       if (nsnull != mInner.mDocument) {
-        nsCOMPtr<nsIScriptContextOwner> contextOwner;
-
-        contextOwner = getter_AddRefs(mInner.mDocument->GetScriptContextOwner());
-        if (contextOwner) {
-          result = contextOwner->GetScriptContext(getter_AddRefs(scriptContext));
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        mInner.mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        if (globalObject) {
+          result = globalObject->GetContext(getter_AddRefs(scriptContext));
         }
       }
       else {

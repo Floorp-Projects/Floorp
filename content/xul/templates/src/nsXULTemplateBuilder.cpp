@@ -58,8 +58,8 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsITextContent.h"
@@ -2956,18 +2956,13 @@ RDFGenericBuilderImpl::AddDatabasePropertyToHTMLElement(nsIContent* aElement, ns
     if (! doc)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIScriptContextOwner> contextowner = dont_QueryInterface(doc->GetScriptContextOwner());
-    NS_ASSERTION(contextowner != nsnull, "no script context owner");
-    if (! contextowner)
-        return NS_ERROR_UNEXPECTED;
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    doc->GetScriptGlobalObject(getter_AddRefs(global));
+    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIScriptContext> context;
-    rv = contextowner->GetScriptContext(getter_AddRefs(context));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "no script context");
-    if (NS_FAILED(rv)) return rv;
-
-    if (! context)
-        return NS_ERROR_UNEXPECTED;
+    global->GetContext(getter_AddRefs(context));
+    NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
 
     JSContext* jscontext = NS_STATIC_CAST(JSContext*, context->GetNativeContext());
     NS_ASSERTION(context != nsnull, "no jscontext");

@@ -36,7 +36,6 @@
 #include "nsMenuFrame.h"
 #include "nsIPopupSetFrame.h"
 #include "nsIDOMWindow.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIDOMScreen.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPresShell.h"
@@ -283,9 +282,8 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDocument> document;
   presShell->GetDocument(getter_AddRefs(document));
   
-  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner = getter_AddRefs(document->GetScriptContextOwner());
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  scriptContextOwner->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
   
   nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
   nsCOMPtr<nsIDOMScreen> screen;

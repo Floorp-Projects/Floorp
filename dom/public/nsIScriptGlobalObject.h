@@ -33,6 +33,7 @@ class nsIDOMEvent;
 class nsIPresContext;
 class nsIWebShell;
 class nsIDOMWindow;
+class nsIScriptGlobalObjectOwner;
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
 { 0x2b16fc80, 0xfa41, 0x11d1,  \
@@ -47,12 +48,29 @@ class nsIScriptGlobalObject : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECT_IID)
 
-  NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext)=0;
-  NS_IMETHOD_(void)       GetContext(nsIScriptContext **aContext)=0;
-  NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument)=0;
-  NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell)=0;
-  NS_IMETHOD_(void)       GetWebShell(nsIWebShell **aWebShell)=0;
-  NS_IMETHOD_(void)       SetOpenerWindow(nsIDOMWindow *aOpener)=0;
+  NS_IMETHOD       SetContext(nsIScriptContext *aContext)=0;
+  NS_IMETHOD       GetContext(nsIScriptContext **aContext)=0;
+  NS_IMETHOD       SetNewDocument(nsIDOMDocument *aDocument)=0;
+  NS_IMETHOD       SetWebShell(nsIWebShell *aWebShell)=0;
+  NS_IMETHOD       GetWebShell(nsIWebShell **aWebShell)=0;
+  NS_IMETHOD       SetOpenerWindow(nsIDOMWindow *aOpener)=0;
+
+    /**
+   * Let the script global object know who its owner is.
+   * The script global object should not addref the owner. It
+   * will be told when the owner goes away.
+   * @return NS_OK if the method is successful
+   */
+  NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner) = 0;
+
+  /**
+   * Get the owner of the script global object. The method
+   * addrefs the returned reference according to regular
+   * XPCOM rules, even though the internal reference itself
+   * is a "weak" reference.
+   */
+  NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner) = 0;
+
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 

@@ -68,11 +68,11 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIRefreshURI.h"
 #include "nsVoidArray.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsHTMLIIDs.h"
 #include "nsTextFragment.h"
+#include "nsIScriptGlobalObject.h"
 
 #include "nsIParserService.h"
 #include "nsParserCIID.h"
@@ -189,11 +189,9 @@ public:
   void ReduceEntities(nsString& aString);
   void GetAttributeValueAt(const nsIParserNode& aNode,
                            PRInt32 aIndex,
-                           nsString& aResult,
-                           nsIScriptContextOwner* aScriptContextOwner);
+                           nsString& aResult);
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIHTMLContent* aContent,
-                         nsIScriptContextOwner* aScriptContextOwner,
                          PRBool aNotify = PR_FALSE);
   nsresult CreateContentObject(const nsIParserNode& aNode,
                                nsHTMLTag aNodeType,
@@ -509,8 +507,7 @@ HTMLContentSink::ReduceEntities(nsString& aString)
 void
 HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
                                      PRInt32 aIndex,
-                                     nsString& aResult,
-                                     nsIScriptContextOwner* aScriptContextOwner)
+                                     nsString& aResult)
 {
   // Copy value
   const nsString& value = aNode.GetValueAt(aIndex);
@@ -536,7 +533,6 @@ HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
 nsresult
 HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
                                nsIHTMLContent* aContent,
-                               nsIScriptContextOwner* aScriptContextOwner,
                                PRBool aNotify)
 {
   // Add tag attributes to the content attributes
@@ -555,7 +551,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
     if (NS_CONTENT_ATTR_NOT_THERE == 
         aContent->GetHTMLAttribute(keyAtom, value)) {
       // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, v, aScriptContextOwner);
+      GetAttributeValueAt(aNode, i, v);
 
       // Add attribute to content
       aContent->SetAttribute(kNameSpaceID_HTML, keyAtom, v,aNotify);
@@ -1151,9 +1147,9 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mInsertionPoint = -1;
   content->SetDocument(mSink->mDocument, PR_FALSE);
   
-  nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
-  rv = mSink->AddAttributes(aNode, content, sco);
-  NS_IF_RELEASE(sco);
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+  mSink->mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  rv = mSink->AddAttributes(aNode, content);
 
   if (mPreAppend) {
     NS_ASSERTION(mStackPos > 0, "container w/o parent");
@@ -1456,9 +1452,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       // Set the content's document
       content->SetDocument(mSink->mDocument, PR_FALSE);
 
-      nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
-      rv = mSink->AddAttributes(aNode, content, sco);
-      NS_IF_RELEASE(sco);
+      rv = mSink->AddAttributes(aNode, content);
       if (NS_OK != rv) {
         NS_RELEASE(content);
         return rv;
@@ -2293,9 +2287,7 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   mCurrentContext = mHeadContext;
 
   if (nsnull != mHead) {
-    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-    rv = AddAttributes(aNode, mHead, sco);
-    NS_IF_RELEASE(sco);
+    rv = AddAttributes(aNode, mHead);
   }
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
@@ -2331,9 +2323,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
                   mCurrentContext->mStackPos, this);
   // Add attributes, if any, to the current BODY node
   if(mBody != nsnull){
-    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-    AddAttributes(aNode,mBody,sco,PR_TRUE);
-    NS_IF_RELEASE(sco);
+    AddAttributes(aNode,mBody,PR_TRUE);
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
     MOZ_TIMER_STOP(mWatch);
     return NS_OK;
@@ -2887,10 +2877,8 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     area->SetContentID(mContentIDCounter++);
 
     // Set the content's document and attributes
-    area->SetDocument(mDocument, PR_FALSE);    
-    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-    rv = AddAttributes(aNode, area, sco);
-    NS_IF_RELEASE(sco);
+    area->SetDocument(mDocument, PR_FALSE);
+    rv = AddAttributes(aNode, area);
     if (NS_FAILED(rv)) {
       NS_RELEASE(area);
       return rv;
@@ -2949,7 +2937,6 @@ nsresult
 HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
 
   // Create content object
   nsAutoString tag("BASE");
@@ -2961,7 +2948,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     // Add in the attributes and add the style content object to the
     // head container.
     element->SetDocument(mDocument, PR_FALSE);
-    result = AddAttributes(aNode, element, sco);
+    result = AddAttributes(aNode, element);
     if (NS_SUCCEEDED(result)) {
       mHead->AppendChildTo(element, PR_FALSE);
 
@@ -2975,7 +2962,6 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     }
   }
   
-  NS_IF_RELEASE(sco);
   return result;
 }
 
@@ -3250,27 +3236,26 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   nsAutoString type; 
   nsAutoString media; 
 
-  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
   for (i = 0; i < count; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("href")) {
-      GetAttributeValueAt(aNode, i, href, sco);
+      GetAttributeValueAt(aNode, i, href);
       href.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("rel")) {
-      GetAttributeValueAt(aNode, i, rel, sco);
+      GetAttributeValueAt(aNode, i, rel);
       rel.CompressWhitespace();
     }
     else if (key.EqualsIgnoreCase("title")) {
-      GetAttributeValueAt(aNode, i, title, sco);
+      GetAttributeValueAt(aNode, i, title);
       title.CompressWhitespace();
     }
     else if (key.EqualsIgnoreCase("type")) {
-      GetAttributeValueAt(aNode, i, type, sco);
+      GetAttributeValueAt(aNode, i, type);
       type.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("media")) {
-      GetAttributeValueAt(aNode, i, media, sco);
+      GetAttributeValueAt(aNode, i, media);
       media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
     }
   }
@@ -3285,7 +3270,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     // Add in the attributes and add the style content object to the
     // head container.    
     element->SetDocument(mDocument, PR_FALSE);
-    result = AddAttributes(aNode, element, sco);
+    result = AddAttributes(aNode, element);
     if (NS_FAILED(result)) {
       NS_RELEASE(element);
       return result;
@@ -3293,10 +3278,8 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     mHead->AppendChildTo(element, PR_FALSE);
   }
   else {
-    NS_IF_RELEASE(sco);
     return result;
   }
-  NS_IF_RELEASE(sco);
 
   result = ProcessStyleLink(element, href, rel, title, type, media);
 
@@ -3357,10 +3340,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
     if (NS_OK == rv) {
       // Add in the attributes and add the meta content object to the
       // head container.
-      nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
       it->SetDocument(mDocument, PR_FALSE);
-      rv = AddAttributes(aNode, it, sco);
-      NS_IF_RELEASE(sco);
+      rv = AddAttributes(aNode, it);
       if (NS_OK != rv) {
         NS_RELEASE(it);
         return rv;
@@ -3594,40 +3575,33 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
   nsresult rv = NS_OK;
 
   if (aScript.Length() > 0) {
-    nsIScriptContextOwner *owner;
-    nsIScriptContext *context;
-    owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      
-      rv = owner->GetScriptContext(&context);
-      if (rv != NS_OK) {
-        NS_RELEASE(owner);
-        return rv;
-      }
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIPrincipal> principal;
-      principal = getter_AddRefs(mDocument->GetDocumentPrincipal());
-      NS_ASSERTION(principal, "principal expected for document");
-      
-      nsAutoString ret;
-      nsIURI* docURL = mDocument->GetDocumentURL();
-      char* url = nsnull;
+    nsCOMPtr<nsIScriptContext> context;
+    NS_ENSURE_SUCCESS(globalObject->GetContext(getter_AddRefs(context)),
+      NS_ERROR_FAILURE);
 
-      if (docURL) {
-        (void)docURL->GetSpec(&url);
-      }
+    nsCOMPtr<nsIPrincipal> principal;
+    principal = getter_AddRefs(mDocument->GetDocumentPrincipal());
+    NS_ASSERTION(principal, "principal expected for document");
+    
+    nsAutoString ret;
+    nsIURI* docURL = mDocument->GetDocumentURL();
+    char* url = nsnull;
+
+    if (docURL) {
+      (void)docURL->GetSpec(&url);
+    }
   
-      PRBool isUndefined;
-      context->EvaluateString(aScript, nsnull, principal, url, 
-                              aLineNo, aVersion, ret, &isUndefined);
-      
-      if (docURL) {
-        NS_RELEASE(docURL);
-        nsCRT::free(url);
-      }
-      
-      NS_RELEASE(context);
-      NS_RELEASE(owner);
+    PRBool isUndefined;
+    context->EvaluateString(aScript, nsnull, principal, url, 
+                            aLineNo, aVersion, ret, &isUndefined);
+    
+    if (docURL) {
+      NS_RELEASE(docURL);
+      nsCRT::free(url);
     }
   }
   
@@ -3675,12 +3649,12 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   for (i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
-      GetAttributeValueAt(aNode, i, src, nsnull);
+      GetAttributeValueAt(aNode, i, src);
     }
     else if (key.EqualsIgnoreCase("type")) {
       nsAutoString  type;
 
-      GetAttributeValueAt(aNode, i, type, nsnull);
+      GetAttributeValueAt(aNode, i, type);
 
       nsAutoString  mimeType;
       nsAutoString  params;
@@ -3709,7 +3683,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     else if (key.EqualsIgnoreCase("language")) {
       nsAutoString  lang;
        
-      GetAttributeValueAt(aNode, i, lang, nsnull);
+      GetAttributeValueAt(aNode, i, lang);
       isJavaScript = IsJavaScriptLanguage(lang, &jsVersionString);
     }
   }
@@ -3717,7 +3691,6 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // Create content object
   NS_ASSERTION(mCurrentContext->mStackPos > 0, "leaf w/o container");
   nsIHTMLContent* parent = mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
-  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
   nsAutoString tag("SCRIPT");
   nsIHTMLContent* element = nsnull;
   rv = NS_CreateHTMLElement(&element, tag);
@@ -3727,7 +3700,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     // Add in the attributes and add the style content object to the
     // head container.
     element->SetDocument(mDocument, PR_FALSE);
-    rv = AddAttributes(aNode, element, sco);
+    rv = AddAttributes(aNode, element);
     if (NS_FAILED(rv)) {
       NS_RELEASE(element);
       return rv;
@@ -3742,10 +3715,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     }
   }
   else {
-    NS_IF_RELEASE(sco);
     return rv;
   }
-  NS_IF_RELEASE(sco);
   
   // Create a text node holding the content
   // First, get the text content of the script tag
@@ -3845,23 +3816,22 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   nsAutoString type; 
   nsAutoString media; 
 
-  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
   for (i = 0; i < count; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
-      GetAttributeValueAt(aNode, i, src, sco);
+      GetAttributeValueAt(aNode, i, src);
       src.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("title")) {
-      GetAttributeValueAt(aNode, i, title, sco);
+      GetAttributeValueAt(aNode, i, title);
       title.CompressWhitespace();
     }
     else if (key.EqualsIgnoreCase("type")) {
-      GetAttributeValueAt(aNode, i, type, sco);
+      GetAttributeValueAt(aNode, i, type);
       type.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("media")) {
-      GetAttributeValueAt(aNode, i, media, sco);
+      GetAttributeValueAt(aNode, i, media);
       media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
     }
   }
@@ -3876,7 +3846,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     // Add in the attributes and add the style content object to the
     // head container.
     element->SetDocument(mDocument, PR_FALSE);
-    rv = AddAttributes(aNode, element, sco);
+    rv = AddAttributes(aNode, element);
     if (NS_FAILED(rv)) {
       NS_RELEASE(element);
       return rv;
@@ -3884,10 +3854,8 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     mHead->AppendChildTo(element, PR_FALSE);
   }
   else {
-    NS_IF_RELEASE(sco);
     return rv;
   }
-  NS_IF_RELEASE(sco);
 
   nsAutoString  mimeType;
   nsAutoString  params;

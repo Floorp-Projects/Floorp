@@ -45,7 +45,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsIXPConnect.h"
@@ -321,62 +321,55 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
-  if (requestor) {
-    // We need to undo the AddRef() on the nsHTTPIndex object that
-    // happened in nsDirectoryViewerFactory::CreateInstance(). We'll
-    // stuff it into an nsCOMPtr (because we _know_ it'll get release
-    // if any errors occur)...
-    nsCOMPtr<nsIHTTPIndex> httpindex = do_QueryInterface(mHTTPIndex);
+  // We need to undo the AddRef() on the nsHTTPIndex object that
+  // happened in nsDirectoryViewerFactory::CreateInstance(). We'll
+  // stuff it into an nsCOMPtr (because we _know_ it'll get release
+  // if any errors occur)...
+  nsCOMPtr<nsIHTTPIndex> httpindex = do_QueryInterface(mHTTPIndex);
 
-    // ...and then _force_ a release here
-    mHTTPIndex->Release();
+  // ...and then _force_ a release here
+  mHTTPIndex->Release();
 
-    // Now get the content viewer container's script object.
-    nsCOMPtr<nsIScriptContextOwner> contextowner;
-    rv = requestor->GetInterface(NS_GET_IID(nsIScriptContextOwner),
-                                     getter_AddRefs(contextowner));
+  // Now get the content viewer container's script object.
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(mContainer));
+  NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_FAILURE);
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get script context owner from document");
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIScriptContext> context;
+  rv = scriptGlobal->GetContext(getter_AddRefs(context));
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIScriptContext> context;
-    rv = contextowner->GetScriptContext(getter_AddRefs(context));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get script context");
-    if (NS_FAILED(rv)) return rv;
+  JSContext* jscontext = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
 
-    JSContext* jscontext = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
+  // Using XPConnect, wrap the HTTP index object...
+  static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
+  NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-    // Using XPConnect, wrap the HTTP index object...
-    static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
-    NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  rv = xpc->WrapNative(jscontext,                       
+                       httpindex,
+                       nsCOMTypeInfo<nsIHTTPIndex>::GetIID(),
+                       getter_AddRefs(wrapper));
 
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-    rv = xpc->WrapNative(jscontext,                       
-                         httpindex,
-                         nsCOMTypeInfo<nsIHTTPIndex>::GetIID(),
-                         getter_AddRefs(wrapper));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to xpconnect-wrap http-index");
+  if (NS_FAILED(rv)) return rv;
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to xpconnect-wrap http-index");
-    if (NS_FAILED(rv)) return rv;
+  JSObject* jsobj;
+  rv = wrapper->GetJSObject(&jsobj);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get jsobj from xpconnect wrapper");
+  if (NS_FAILED(rv)) return rv;
 
-    JSObject* jsobj;
-    rv = wrapper->GetJSObject(&jsobj);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get jsobj from xpconnect wrapper");
-    if (NS_FAILED(rv)) return rv;
+  jsval jslistener = OBJECT_TO_JSVAL(jsobj);
 
-    jsval jslistener = OBJECT_TO_JSVAL(jsobj);
+  // ...and stuff it into the global context
+  PRBool ok;
+  JSObject* global = JS_GetGlobalObject(jscontext);
+  ok = JS_SetProperty(jscontext, global, "HTTPIndex", &jslistener);
 
-    // ...and stuff it into the global context
-    PRBool ok;
-    JSObject* global = JS_GetGlobalObject(jscontext);
-    ok = JS_SetProperty(jscontext, global, "HTTPIndex", &jslistener);
-
-    NS_ASSERTION(ok, "unable to set Listener property");
-    if (! ok)
-      return NS_ERROR_FAILURE;
-  }
+  NS_ASSERTION(ok, "unable to set Listener property");
+  if (! ok)
+    return NS_ERROR_FAILURE;
+  
 
   // Save off some information about the stream we're about to parse.
   rv = aChannel->GetURI(getter_AddRefs(mDirectoryURI));

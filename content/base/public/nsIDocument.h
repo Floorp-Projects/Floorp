@@ -44,7 +44,7 @@ class nsIURI;
 class nsILoadGroup;
 class nsIViewManager;
 class nsString;
-class nsIScriptContextOwner;
+class nsIScriptGlobalObject;
 class nsIDOMEvent;
 class nsIDeviceContext;
 class nsIParser;
@@ -213,8 +213,8 @@ public:
    * This is the context within which all scripts (during document 
    * creation and during event handling) will run.
    */
-  virtual nsIScriptContextOwner *GetScriptContextOwner() = 0;
-  virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner) = 0;
+  NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject** aGlobalObject) = 0;
+  NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
 
   /**
    * Get the name space manager for this document

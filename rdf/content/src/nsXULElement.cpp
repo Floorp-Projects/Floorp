@@ -74,7 +74,6 @@
 #include "nsIStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
 #include "nsIStyleContext.h"
 #include "nsIMutableStyleContext.h"
@@ -1304,24 +1303,19 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REF
 
     nsresult rv;
     nsCOMPtr<nsIScriptContext> context;
-
+    nsCOMPtr<nsIScriptGlobalObject> global;
     {
-        nsCOMPtr<nsIScriptContextOwner> owner =
-            dont_AddRef( mDocument->GetScriptContextOwner() );
+        mDocument->GetScriptGlobalObject(getter_AddRefs(global));
 
         // This can happen normally as part of teardown code.
-        if (! owner)
+        if (! global)
             return NS_OK;
 
-        rv = owner->GetScriptContext(getter_AddRefs(context));
+        rv = global->GetContext(getter_AddRefs(context));
         if (NS_FAILED(rv)) return rv;
     }
 
     if (Tag() == kWindowAtom) {
-        nsCOMPtr<nsIScriptGlobalObject> global = context->GetGlobalObject();
-        if (! global)
-            return NS_ERROR_UNEXPECTED;
-
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
         if (! receiver)
             return NS_ERROR_UNEXPECTED;
@@ -1631,11 +1625,11 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
         // Release the named reference to the script object so it can
         // be garbage collected.
         if (mScriptObject) {
-            nsCOMPtr<nsIScriptContextOwner> owner =
-                dont_AddRef( mDocument->GetScriptContextOwner() );
-            if (owner) {
+            nsCOMPtr<nsIScriptGlobalObject> global;
+            mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+            if (global) {
                 nsCOMPtr<nsIScriptContext> context;
-                if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
+                if (NS_OK == global->GetContext(getter_AddRefs(context))) {
                     context->RemoveReference((void*) &mScriptObject, mScriptObject);
 
                 }
@@ -1648,11 +1642,11 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     if (mDocument) {
         // Add a named reference to the script object.
         if (mScriptObject) {
-            nsCOMPtr<nsIScriptContextOwner> owner =
-                dont_AddRef( mDocument->GetScriptContextOwner() );
-            if (owner) {
+            nsCOMPtr<nsIScriptGlobalObject> global;
+            mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+            if (global) {
                 nsCOMPtr<nsIScriptContext> context;
-                if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
+                if (NS_OK == global->GetContext(getter_AddRefs(context))) {
                     nsAutoString tag;
                     Tag()->ToString(tag);
                     context->AddNamedReference((void*) &mScriptObject, mScriptObject, nsCAutoString(tag));
@@ -3674,16 +3668,13 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
 {
     nsresult rv;
 
-    nsCOMPtr<nsIScriptContextOwner> owner =
-        dont_AddRef( aDocument->GetScriptContextOwner() );
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    aDocument->GetScriptGlobalObject(getter_AddRefs(global));
 
-    NS_ASSERTION(owner != nsnull, "document has no script context owner");
-    if (!owner) {
-        return NS_ERROR_UNEXPECTED;
-    }
+    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIScriptContext> context;
-    rv = owner->GetScriptContext(getter_AddRefs(context));
+    rv = global->GetContext(getter_AddRefs(context));
     if (NS_FAILED(rv)) return rv;
 
     if (!mScriptRuntime) {

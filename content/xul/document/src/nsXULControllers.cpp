@@ -37,7 +37,6 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"

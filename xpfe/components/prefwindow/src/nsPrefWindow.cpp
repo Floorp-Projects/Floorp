@@ -43,7 +43,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIScriptGlobalObject.h"
 
 #include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"

@@ -38,7 +38,7 @@
 #include "nsIStyleSheet.h"
 #include "nsIFrame.h"
 
-#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
@@ -201,7 +201,6 @@ static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
 static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
 // Interface IDs
-static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,      NS_IDOMDOCUMENT_IID);
@@ -304,19 +303,13 @@ DocumentViewerImpl::~DocumentViewerImpl()
   if (mDocument) {
     // Break global object circular reference on the document created
     // in the DocViewer Init
-    nsIScriptContextOwner *mOwner = mDocument->GetScriptContextOwner();
-    if (nsnull != mOwner) {
-      nsIScriptGlobalObject *mGlobal;
-      mOwner->GetScriptGlobalObject(&mGlobal);
-      if (nsnull != mGlobal) {
-        mGlobal->SetNewDocument(nsnull);
-        NS_RELEASE(mGlobal);
-      }
-      NS_RELEASE(mOwner);
-
-      // out of band cleanup of webshell
-      mDocument->SetScriptContextOwner(nsnull);
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+    if (global) {
+      global->SetNewDocument(nsnull);
     }
+    // out of band cleanup of webshell
+    mDocument->SetScriptGlobalObject(nsnull);
   }
 
   if (mDeviceContext)
@@ -404,14 +397,14 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
     mPresContext->SetLinkHandler(linkHandler);
 
     // Set script-context-owner in the document
-    nsCOMPtr<nsIScriptContextOwner> owner;
-    requestor->GetInterface(NS_GET_IID(nsIScriptContextOwner),
+    nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
+    requestor->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
        getter_AddRefs(owner));
     if (nsnull != owner) {
-      mDocument->SetScriptContextOwner(owner);
       nsCOMPtr<nsIScriptGlobalObject> global;
       rv = owner->GetScriptGlobalObject(getter_AddRefs(global));
       if (NS_SUCCEEDED(rv) && (nsnull != global)) {
+        mDocument->SetScriptGlobalObject(global);
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
         if (nsnull != domdoc) {
           global->SetNewDocument(domdoc);
