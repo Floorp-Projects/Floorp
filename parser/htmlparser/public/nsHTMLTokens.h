@@ -283,7 +283,7 @@ class CTextToken: public CHTMLToken {
                         CTextToken(const nsAString& aString);
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
             nsresult    ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
-                                     nsString& aEndTagName,PRInt32 aMode,PRBool& aFlushTokens);
+                                     nsString& aEndTagName,PRInt32 aFlag,PRBool& aFlushTokens);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
     virtual PRInt32     GetTextLength(void);
