@@ -65,6 +65,7 @@
 #include <Traps.h>
 #include <Resources.h>
 #include <Appearance.h>
+#include <Gestalt.h>
 #include "nsMacResources.h"
 
 #include "nsGUIEvent.h"
@@ -77,7 +78,8 @@ static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
 NS_IMPL_ISUPPORTS5(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIDocumentObserver, nsIChangeManager, nsISupportsWeakReference)
 
-MenuRef nsMenuBarX::sAppleMenu;
+MenuRef nsMenuBarX::sAppleMenu = nsnull;
+EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 
 
 //
@@ -93,6 +95,10 @@ nsMenuBarX::nsMenuBarX()
 
   OSStatus status = ::CreateNewMenu(0, 0, &mRootMenu);
   NS_ASSERTION(status == noErr, "nsMenuBarX::nsMenuBarX:  creation of root menu failed.");
+  
+  // create our global carbon event command handler shared by all windows
+  if ( !sCommandEventHandler )
+    sCommandEventHandler = ::NewEventHandlerUPP(CommandEventHandler);
 }
 
 //
@@ -240,6 +246,173 @@ nsMenuBarX :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
 } // RegisterAsDocumentObesrver
 
 
+#if TARGET_CARBON
+
+//
+// AquifyMenuBar
+//
+// Do what's necessary to conform to the Aqua guidelines for menus. Initially, this
+// means removing 'Quit' from the file menu and 'Preferences' from the edit menu, along
+// with their various separators (if present).
+//
+void
+nsMenuBarX :: AquifyMenuBar ( )
+{
+  nsCOMPtr<nsIDocument> containingDoc;
+  mMenuBarContent->GetDocument ( *getter_AddRefs(containingDoc) );
+  nsCOMPtr<nsIDOMDocument> domDoc ( do_QueryInterface(containingDoc) );
+  if ( domDoc ) {
+    // remove quit item and its separator
+    HideItem ( domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull );
+    HideItem ( domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent) );
+  
+    // remove prefs item and its separator, but save off the pref content node
+    // so we can invoke its command later.
+    HideItem ( domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nsnull );
+    HideItem ( domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent) );
+  }
+  
+  // Install the command handler to deal with prefs/quit. We have to install it on the window because the
+  // menubar isn't in the event chain for a menu command event. Don't enable the prefs item
+  // just yet, wait until we actually find a pref node in the DOM.
+  WindowRef myWindow = NS_REINTERPRET_CAST(WindowRef, mParent->GetNativeData(NS_NATIVE_DISPLAY));
+  NS_ASSERTION ( myWindow, "Can't get WindowRef to install command handler!" );
+  if ( myWindow && sCommandEventHandler ) {
+    EventTypeSpec commandEventList[] = { {kEventClassCommand, kEventCommandProcess},
+                                          {kEventClassCommand, kEventCommandUpdateStatus} };
+    OSStatus err = ::InstallWindowEventHandler ( myWindow, sCommandEventHandler, 2, commandEventList, this, NULL );
+    NS_ASSERTION ( err == noErr, "Uh oh, command handler not installed" );
+  }
+    
+} // AquifyMenuBar
+
+
+//
+// CommandEventHandler
+//
+// Processes Command carbon events from enabling/selecting of items in the menu.
+//
+// NOTE: eventually, all menu dispatching will go through this routine, for now, we only
+//       dispatch prefs and quit this way
+//
+pascal OSStatus
+nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
+{
+  OSStatus handled = eventNotHandledErr;
+
+  HICommand command;
+  OSErr err1 = ::GetEventParameter ( inEvent, kEventParamDirectObject, typeHICommand,
+                                        NULL, sizeof(HICommand), NULL, &command );	
+  if ( err1 )
+    return handled;
+    
+  nsMenuBarX* self = NS_REINTERPRET_CAST(nsMenuBarX*, userData);
+  switch ( ::GetEventKind(inEvent) ) {
+    // user selected a menu item. See if it's one we handle.
+    case kEventCommandProcess:
+    {
+      switch ( command.commandID ) {
+        case kHICommandPreferences:
+        {
+          nsEventStatus status = self->ExecuteCommand(self->mPrefItemContent);
+          if ( status == nsEventStatus_eConsumeNoDefault )    // event handled, no other processing
+            handled = noErr;
+          break;
+        }
+        
+        case kHICommandQuit:
+        {
+          nsEventStatus status = self->ExecuteCommand(self->mQuitItemContent);
+          if ( status == nsEventStatus_eConsumeNoDefault )    // event handled, no other processing
+            handled = noErr;
+          break;
+        }
+          
+#if NOT_YET
+        case kHICommandAbout:
+          handled = noErr;
+          break;
+#endif    
+      } // switch on commandID
+      break;
+    }
+    
+    // enable/disable menu id's
+    case kEventCommandUpdateStatus:
+    {
+      // only enable the preferences item in the app menu if we found a pref
+      // item DOM node in this menubar.
+      if ( command.commandID == kHICommandPreferences ) {
+        if ( self->mPrefItemContent )
+          ::EnableMenuCommand ( nsnull, kHICommandPreferences );
+        else
+          ::DisableMenuCommand ( nsnull, kHICommandPreferences );
+        handled = noErr;
+      }
+      break;
+    }
+  } // switch on event type
+  
+  return handled;
+  
+} // CommandEventHandler
+
+
+//
+// ExecuteCommand
+//
+// Execute the menu item by sending a command message to the 
+// DOM node specified in |inDispatchTo|.
+//
+nsEventStatus
+nsMenuBarX :: ExecuteCommand ( nsIContent* inDispatchTo )
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  if ( inDispatchTo ) {
+    nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
+    if (!webShell)
+      return nsEventStatus_eConsumeNoDefault;
+    nsCOMPtr<nsIPresContext> presContext;
+    MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
+
+    nsMouseEvent event;
+    event.eventStructType = NS_MOUSE_EVENT;
+    event.message = NS_XUL_COMMAND;
+
+    inDispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+	}
+	
+	return status;
+} // ExecuteCommand
+
+
+//
+// HideItem
+//
+// Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
+// the caller can hang onto it if they so choose. It is acceptable to pass nsull
+// for |outHiddenNode| if the caller doesn't care about the hidden node.
+//
+void
+nsMenuBarX :: HideItem ( nsIDOMDocument* inDoc, nsAReadableString & inID, nsIContent** outHiddenNode )
+{
+  nsCOMPtr<nsIDOMElement> menuItem;
+  inDoc->GetElementById(inID, getter_AddRefs(menuItem));  
+  nsCOMPtr<nsIContent> menuContent ( do_QueryInterface(menuItem) );
+  if ( menuContent ) {
+    menuContent->SetAttr ( kNameSpaceID_None, nsWidgetAtoms::hidden, NS_LITERAL_STRING("true"), PR_FALSE );
+    if ( outHiddenNode ) {
+      *outHiddenNode = menuContent.get();
+      NS_IF_ADDREF(*outHiddenNode);
+    }
+  }
+
+} // HideItem
+
+
+#endif
+
+
 nsEventStatus
 nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                             void * menubarNode, void * aWebShell )
@@ -252,6 +425,15 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
     return nsEventStatus_eIgnore;
     
   Create(aParentWindow);
+  
+#if TARGET_CARBON
+  // if we're on X (using aqua UI guidelines for menus), remove quit and prefs
+  // from our menubar.
+  SInt32 result = 0L;
+  OSStatus err = ::Gestalt ( gestaltMenuMgrAttr, &result );
+  if ( !err && (result & gestaltMenuMgrAquaLayoutMask) )
+    AquifyMenuBar();
+#endif
 
   nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
   if (webShell) RegisterAsDocumentObserver(webShell);
