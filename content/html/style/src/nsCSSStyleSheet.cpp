@@ -420,38 +420,40 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
               if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
                   (nsnull != linkHandler)) {
                 nsAutoString base, href;  // XXX base??
-                htmlContent->GetAttribute("href", href);
+                nsContentAttr attrState = htmlContent->GetAttribute("href", href);
 
-                nsIURL* docURL = nsnull;
-                nsIDocument* doc = nsnull;
-                aContent->GetDocument(doc);
-                if (nsnull != doc) {
-                  docURL = doc->GetDocumentURL();
-                  NS_RELEASE(doc);
-                }
+                if (eContentAttr_HasValue == attrState) {
+                  nsIURL* docURL = nsnull;
+                  nsIDocument* doc = nsnull;
+                  aContent->GetDocument(doc);
+                  if (nsnull != doc) {
+                    docURL = doc->GetDocumentURL();
+                    NS_RELEASE(doc);
+                  }
 
-                nsAutoString absURLSpec;
-                nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-                NS_IF_RELEASE(docURL);
+                  nsAutoString absURLSpec;
+                  nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+                  NS_IF_RELEASE(docURL);
 
-                nsLinkState  state;
-                if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
-                  switch (state) {
-                    case eLinkState_Unvisited:
-                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::link);
-                      break;
-                    case eLinkState_Visited:
-                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::visited);
-                      break;
-                    case eLinkState_OutOfDate:
-                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::outOfDate);
-                      break;
-                    case eLinkState_Active:
-                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::active);
-                      break;
-                    case eLinkState_Hover:
-                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::hover);
-                      break;
+                  nsLinkState  state;
+                  if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
+                    switch (state) {
+                      case eLinkState_Unvisited:
+                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::link);
+                        break;
+                      case eLinkState_Visited:
+                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::visited);
+                        break;
+                      case eLinkState_OutOfDate:
+                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::outOfDate);
+                        break;
+                      case eLinkState_Active:
+                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::active);
+                        break;
+                      case eLinkState_Hover:
+                        result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::hover);
+                        break;
+                    }
                   }
                 }
                 NS_RELEASE(linkHandler);
