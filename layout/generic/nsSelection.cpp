@@ -135,6 +135,13 @@ static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 
 //PROTOTYPES
+class nsSelectionIterator;
+class nsSelection;
+class nsAutoScrollTimer;
+
+PRBool  IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent);
+PRBool  IsValidSelectionPoint(nsSelection *aFrameSel, nsIDOMNode *aDomNode);
+
 static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
 static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset);
 static nsIDOMNode *GetCellParent(nsIDOMNode *aDomNode);
@@ -155,9 +162,7 @@ static void printRange(nsIDOMRange *aDomRange);
 
 //#define DEBUG_TABLE_SELECTION 1
 
-class nsSelectionIterator;
-class nsSelection;
-class nsAutoScrollTimer;
+
 
 class nsTypedSelection : public nsISelection,
                          public nsISelectionPrivate,
@@ -273,7 +278,6 @@ public:
 private:
   friend class nsSelectionIterator;
 
-  
 
   void         setAnchorFocusRange(PRInt32 aIndex); //pass in index into FrameSelection
   NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, nsIPresShell *aPresShell, PRBool aFlags);
@@ -736,6 +740,54 @@ GetSelectionTypeFromIndex(PRInt8 aIndex)
   return 0;
 }
 
+//utility methods to check the content vs the limiter that will hold selection to a piece of the dom
+PRBool       
+IsValidSelectionPoint(nsSelection *aFrameSel, nsIDOMNode *aDomNode)
+{
+    nsCOMPtr<nsIContent> passedContent;
+    passedContent = do_QueryInterface(aDomNode);
+    if (!passedContent)
+      return PR_FALSE;
+    return IsValidSelectionPoint(aFrameSel,passedContent);
+}
+
+/*
+The limiter is used specifically for the text areas and textfields
+In that case it is the DIV tag that is anonymously created for the text
+areas/fields.  Text nodes and BR nodes fall beneath it.  In the case of a 
+BR node the limiter will be the parent and the offset will point before or
+after the BR node.  In the case of the text node the parent content is 
+the text node itself and the offset will be the exact character position.
+The offset is not important to check for validity.  Simply look at the 
+passed in content.  If it equals the limiter then the selection point is valid.
+If its parent it the limiter then the point is also valid.  In the case of 
+NO limiter all points are valid since you are in a topmost iframe. (browser
+or composer)
+*/
+PRBool       
+IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent)
+{
+  if (!aFrameSel || !aContent)
+    return PR_FALSE;
+  if (aFrameSel)
+  {
+    nsresult result;
+    nsCOMPtr<nsIContent> tLimiter;
+    result = aFrameSel->GetLimiter(getter_AddRefs(tLimiter));
+    if (NS_FAILED(result))
+      return PR_FALSE;
+    if (tLimiter && tLimiter != aContent)
+    {
+      nsCOMPtr<nsIContent> parent;
+      result = aContent->GetParent(*getter_AddRefs(parent));
+      if (NS_FAILED(result))
+        return PR_FALSE;
+      if (tLimiter != parent) //if newfocus == the limiter. thats ok. but if not there and not parent bad
+        return PR_FALSE; //not in the right content. tLimiter said so
+    }
+  }
+  return PR_TRUE;
+}
 
 ///////////BEGIN nsSelectionIterator methods
 
@@ -2667,15 +2719,8 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
 
   STATUS_CHECK_RETURN_MACRO();
 
-  if (mLimiter )
-  {
-    nsCOMPtr<nsIContent> parent;
-    nsresult rv = aNewFocus->GetParent(*getter_AddRefs(parent));
-    if (NS_FAILED(rv))
-      return rv;
-    if (mLimiter != parent.get() && mLimiter != aNewFocus) //if newfocus == the limiter. thats ok.
-      return NS_ERROR_FAILURE; //not in the right content. mLimiter said so
-  }
+  if (!IsValidSelectionPoint(this,aNewFocus))
+    return NS_ERROR_FAILURE;
 
   // Clear all table selection data
   mSelectingTableCellMode = 0;
@@ -5832,6 +5877,7 @@ nsTypedSelection::RemoveRange(nsIDOMRange* aRange)
 }
 
 
+
 /*
  * Collapse sets the whole selection to be one point.
  */
@@ -5840,7 +5886,8 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 {
   if (!aParentNode)
     return NS_ERROR_INVALID_ARG;
-
+  if (!IsValidSelectionPoint(mFrameSelection, aParentNode))
+    return NS_ERROR_FAILURE;
   nsresult result;
   // Delete all of the current ranges
   if (NS_FAILED(SetOriginalAnchorPoint(aParentNode,aOffset)))
@@ -6397,9 +6444,13 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   // First, find the range containing the old focus point:
   if (!mRangeArray || !mAnchorFocusRange)
     return NS_ERROR_NOT_INITIALIZED;
+
+  nsresult res;
+  if (!IsValidSelectionPoint(mFrameSelection, aParentNode))
+    return NS_ERROR_FAILURE;
+
   //mFrameSelection->InvalidateDesiredX();
   nsCOMPtr<nsIDOMRange> difRange;
-  nsresult res;
   NS_NewRange(getter_AddRefs(difRange));
   nsCOMPtr<nsIDOMRange> range;
 
