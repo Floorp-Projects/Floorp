@@ -543,6 +543,9 @@ static nsFontCharSetMap gCharSetMap[] =
   { "johabs-1",           &FLG_KO,      &X11Johab      },
   { "johabsh-1",          &FLG_KO,      &X11Johab      },
   { "ksc5601.1987-0",     &FLG_KO,      &KSC5601       },
+  // we can handle GR fonts with GL encoders (KSC5601 and GB2312)
+  // See |DoubleByteConvert|.
+  { "ksc5601.1987-1",     &FLG_KO,      &KSC5601       },
   { "ksc5601.1992-3",     &FLG_KO,      &JohabNoAscii  },
   { "koreanjamo-0",       &FLG_KO,      &JamoTTF       },
   { "microsoft-cp1251",   &FLG_RUSSIAN, &CP1251        },
@@ -2133,6 +2136,8 @@ DoubleByteConvert(nsFontCharSetInfo* aSelf, XFontStruct* aFont,
           aDestBuf[i] &= 0x7F;
         }
       }
+      // We're using a GL encoder (KSC5601 or GB2312) but the font is a GR font.
+      // (ksc5601.1987-1 or gb2312.1980-1)
       else if ((!(aDestBuf[0] & 0x80)) && (aFont->min_byte1 & 0x80)) {
         for (PRInt32 i = 0; i < aDestLen; i++) {
           aDestBuf[i] |= 0x80;
