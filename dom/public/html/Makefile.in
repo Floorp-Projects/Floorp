@@ -73,6 +73,7 @@ EXPORTS		= \
 		nsIDOMHTMLObjectElement.h \
 		nsIDOMHTMLOptGroupElement.h \
 		nsIDOMHTMLOptionElement.h \
+		nsIDOMNSHTMLOptionCollection.h \
 		nsIDOMHTMLParagraphElement.h \
 		nsIDOMHTMLParamElement.h \
 		nsIDOMHTMLPreElement.h \

@@ -66,6 +66,7 @@ IDLSRCS =  \
 	HTMLOListElement.idl \
 	HTMLObjectElement.idl \
 	HTMLOptGroupElement.idl \
+	HTMLOptionCollection.idl \
 	HTMLOptionElement.idl \
 	HTMLParagraphElement.idl \
 	HTMLParamElement.idl \
