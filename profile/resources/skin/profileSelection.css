@@ -21,32 +21,32 @@
  *   Ben Goodger (28/10/99)
  */
 
-/* note that I'm defining most of my styles here because I have not figured out
- * a reigime under the new skin. I hope to update this soon.
- *  
- * I am respecting user's choice of system colours by using them rather than 
- * defining my own, with the exception of the header text
- */ 
- 
-window {
+/* Notes:
+ * as this is a highly styled dialog, it is hard to leech much from the skin
+ * files in global.  
+ */
+
+window.profile {
   padding                   : 7px;
   background                : url('chrome://profile/skin/header.gif');
   background-repeat         : no-repeat;
   background-position       : 0px -10px;
   background-color          : threedface;
 }
-
+ 
 div.label {
   margin-left               : 10px;
   margin-right              : 7px;
   margin-bottom             : 10px;
 }
 
-div.rule {
-  border-bottom             : 2px threedface groove;
-  margin-left               : -10px;
-  width                     : 100%;
+box#prattle {
+  background-color          : threedface;
+  border-top                : 1px outset threedface;
+  margin-left               : -7px;
+  padding-top               : 7px;
 }
+
 
 /* these two will probably break on Mac, as they did in profile wizard. */
 /* can we find a font? a nice font? */
@@ -67,16 +67,8 @@ div#mozilla {
   margin-left               : 25px;
 }
 
-hr {
-  height                    : 2px;
-  border                    : none;
-  background-color          : black;
-}
-
 tree#profiles {
-  border                    : 1px inset threedface;
-/*  outline                   : 1px inset #CCCCDD;*/
-  background-color          : transparent;
+  background-color          : transparent ! important;
 }
 
 treecell {
@@ -86,7 +78,7 @@ treecell {
 }
 
 tree > treechildren {
-  background-color          : window;
+  background-color          : window ! important;
 }
 
 tree#profiles > treehead > treerow > treecell {
@@ -95,7 +87,7 @@ tree#profiles > treehead > treerow > treecell {
   border-top                : none;
   border-right              : none;
   border-bottom             : 1px solid #61400A;
-  background-color          : transparent;
+  background-color          : transparent ! important;
   color                     : windowtext;
 }
 
@@ -107,28 +99,21 @@ treeitem#roamingitem {
   margin-top                : 5px;
 }
 
-treeitem[selected="true"] treecell {
+treeitem[selected="true"] > treerow > treecell {
   background-color          : highlight;
   color                     : highlighttext;
 }
 
-treeitem[selected="true"] titledbutton.displaybutton {
+treeitem[selected="true"] > treechildren > treeitem > treerow > treecell > titledbutton.displaybutton {
   border                    : none;
   padding                   : 0px;
   list-style-image          : url('chrome://profile/skin/profileicon-selected.gif');
 }
 
-treeitem titledbutton.displaybutton {
+treeitem > treerow > treecell > titledbutton.displaybutton {
   border                    : none;
   padding                   : 0px;
   list-style-image          : url('chrome://profile/skin/profileicon.gif');
-}
-
-box#prattle {
-  background-color          : threedface;
-  border-top                : 1px outset threedface;
-  margin-left               : -7px;
-  padding-top               : 7px;
 }
 
 box.selection > titledbutton  {
@@ -141,30 +126,9 @@ box.selection > titledbutton:active  {
   -moz-border-radius        : 2px;
 }
 
-titledbutton.padded {
-  padding-left              : 20px;
-  padding-right             : 20px;
-}
-
 spring#makeup {
   border-top                : 1px outset threedface;
   background-color          : threedface;
-}
-
-input[type="checkbox"] {
-  background-color          : threedface;
-  border                    : 1px outset threedface;
-/*  outline                   : 1px solid threeddarkshadow;*/
-  -moz-border-radius        : 2px;
-}
-
-input[type="checkbox"]:hover {
-  outline                   : 1px solid threeddarkshadow;
-}
-
-input[type="checkbox"]:active {
-  background-color          : threedface;
-  border                    : 1px inset threedface;
-/*  outline                   : 1px solid threeddarkshadow;*/
-  -moz-border-radius        : 2px;
+  width                     : 15px; 
+  height                    : 100px;
 }
