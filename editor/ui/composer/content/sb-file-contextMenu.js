@@ -36,7 +36,7 @@ function fillContextMenu(name,node)
     popupNode.removeChild(menuNode);
 
     // create a new menu node
-    menuNode = document.createElement("menu");
+    menuNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menu");
     popupNode.appendChild(menuNode);
 
     switch(ext) {
@@ -99,7 +99,7 @@ function GetFileURL(node)
 function isImageFile(parent,url)
 {
     // note: deleted all the doContextCmd stuff from bookmarks.
-    var menuItem = document.createElement("menuitem");
+    var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     menuItem.setAttribute("value","Insert Image");
     // menuItem.setAttribute("onaction","AutoInsertImage(\'" + url + "\')");
     parent.appendChild(menuItem);
