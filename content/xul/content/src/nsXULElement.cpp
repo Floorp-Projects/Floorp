@@ -129,7 +129,7 @@
 #include "nsIListBoxObject.h"
 #include "nsContentUtils.h"
 #include "nsGenericElement.h"
-
+#include "nsContentList.h"
 #include "nsMutationEvent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
@@ -1392,25 +1392,18 @@ nsXULElement::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 
 
 NS_IMETHODIMP
-nsXULElement::GetElementsByTagName(const nsAString& aName,
+nsXULElement::GetElementsByTagName(const nsAString& aTagname,
                                    nsIDOMNodeList** aReturn)
 {
-    nsresult rv;
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
+    NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    nsRDFDOMNodeList* elements;
-    rv = nsRDFDOMNodeList::Create(&elements);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create node list");
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIContentList> list;
+    NS_GetContentList(mDocument, nameAtom, kNameSpaceID_Unknown, this,
+                      getter_AddRefs(list));
+    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsIDOMNode> domElement;
-    rv = QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(domElement));
-    if (NS_SUCCEEDED(rv)) {
-        GetElementsByTagName(domElement, aName, elements);
-    }
-
-    // transfer ownership to caller
-    *aReturn = elements;
-    return NS_OK;
+    return CallQueryInterface(list, aReturn);
 }
 
 NS_IMETHODIMP
@@ -1504,40 +1497,32 @@ nsXULElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                      const nsAString& aLocalName,
                                      nsIDOMNodeList** aReturn)
 {
-    NS_ENSURE_ARG_POINTER(aReturn);
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
+    NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
     PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
-    nsRDFDOMNodeList* elements;
-    nsresult rv = nsRDFDOMNodeList::Create(&elements);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMNodeList> kungFuGrip;
-    kungFuGrip = dont_AddRef(NS_STATIC_CAST(nsIDOMNodeList *, elements));
+    nsCOMPtr<nsIContentList> list;
 
     if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
         nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
                                                               nameSpaceId);
-
+        
         if (nameSpaceId == kNameSpaceID_Unknown) {
-            // Unkonwn namespace means no matches, we return an empty list...
-
-            *aReturn = elements;
-            NS_ADDREF(*aReturn);
-
-            return NS_OK;
+            // Unknown namespace means no matches, we create an empty list...
+            NS_GetContentList(mDocument, nsnull, kNameSpaceID_None, nsnull,
+                              getter_AddRefs(list));
+            NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
         }
     }
 
-    rv = nsXULDocument::GetElementsByTagName(NS_STATIC_CAST(nsIStyledContent *,
-                                                            this), aLocalName,
-                                             nameSpaceId, elements);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!list) {
+        NS_GetContentList(mDocument, nameAtom, nameSpaceId, this,
+                          getter_AddRefs(list));
+        NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+    }
 
-    *aReturn = elements;
-    NS_ADDREF(*aReturn);
-
-    return NS_OK;
+    return CallQueryInterface(list, aReturn);
 }
 
 NS_IMETHODIMP
@@ -1586,6 +1571,9 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                                      const nsAString& aValue,
                                      nsIDOMNodeList** aReturn)
 {
+    // XXX This should use nsContentList, but that does not support
+    // _two_ strings being passed to the match func.  Ah, the ability
+    // to create real closures, where art thou?
     nsresult rv;
     nsRDFDOMNodeList* elements;
     rv = nsRDFDOMNodeList::Create(&elements);
@@ -3563,72 +3551,6 @@ nsXULElement::EnsureContentsGenerated(void) const
 
         NS_ERROR("lazy state set with no XUL content builder in ancestor chain");
         return NS_ERROR_UNEXPECTED;
-    }
-
-    return NS_OK;
-}
-
-nsresult
-nsXULElement::GetElementsByTagName(nsIDOMNode* aNode,
-                                   const nsAString& aTagName,
-                                   nsRDFDOMNodeList* aElements)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIDOMNodeList> children;
-    if (NS_FAILED(rv = aNode->GetChildNodes( getter_AddRefs(children) ))) {
-        NS_ERROR("unable to get node's children");
-        return rv;
-    }
-
-    // no kids: terminate the recursion
-    if (! children)
-        return NS_OK;
-
-    PRUint32 length;
-    if (NS_FAILED(children->GetLength(&length))) {
-        NS_ERROR("unable to get node list's length");
-        return rv;
-    }
-
-    for (PRUint32 i = 0; i < length; ++i) {
-        nsCOMPtr<nsIDOMNode> child;
-        if (NS_FAILED(rv = children->Item(i, getter_AddRefs(child) ))) {
-            NS_ERROR("unable to get child from list");
-            return rv;
-        }
-
-        nsCOMPtr<nsIDOMElement> element;
-        element = do_QueryInterface(child);
-        if (!element)
-          continue;
-
-        if (aTagName.Equals(NS_LITERAL_STRING("*"))) {
-            if (NS_FAILED(rv = aElements->AppendNode(child))) {
-                NS_ERROR("unable to append element to node list");
-                return rv;
-            }
-        }
-        else {
-            nsAutoString name;
-            if (NS_FAILED(rv = child->GetNodeName(name))) {
-                NS_ERROR("unable to get node name");
-                return rv;
-            }
-
-            if (aTagName.Equals(name)) {
-                if (NS_FAILED(rv = aElements->AppendNode(child))) {
-                    NS_ERROR("unable to append element to node list");
-                    return rv;
-                }
-            }
-        }
-
-        // Now recursively look for children
-        if (NS_FAILED(rv = GetElementsByTagName(child, aTagName, aElements))) {
-            NS_ERROR("unable to recursively get elements by tag name");
-            return rv;
-        }
     }
 
     return NS_OK;
