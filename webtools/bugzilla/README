@@ -275,6 +275,13 @@ If you are using a newer version of Apache, both of the above lines will be
 (or will need to be) in the httpd.conf file, rather than srm.conf or
 access.conf.
 
+There are two critical directories and a file that should not be a served by
+the HTTP server. These are the 'data' and 'shadow' directories and the
+'localconfig' file. You should configure your HTTP server to not serve
+content from these files.  Failure to do so will expose critical passwords
+and other data. Please see your HTTP server configuration manual on how
+to do this. 
+
 2. Installing the Bugzilla Files
 
    You should untar the Bugzilla files into a directory that you're
