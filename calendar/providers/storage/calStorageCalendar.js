@@ -293,7 +293,7 @@ calStorageCalendar.prototype = {
                                            newItem);
 
         // notify observers
-        this.observeModifyItem(modifiedItem, newItem);
+        this.observeModifyItem(newItem, olditem);
     },
 
     // void deleteItem( in string id, in calIOperationListener aListener );
@@ -393,8 +393,8 @@ calStorageCalendar.prototype = {
             return;
         }
 
+        this.mSelectItemsByRange.reset();
         var stmt = this.mSelectItemsByRange;
-        stmt.reset();
         var sp = stmt.params;
         sp.cal_id = this.mCalId;
         sp.event_start = startTime;
@@ -658,6 +658,7 @@ calStorageCalendar.prototype = {
                 var attendee = this.mNewAttendeeFromRow(this.mSelectAttendeesForItem.row);
                 item.addAttendee(attendee);
             }
+            this.mSelectAttendeesForItem.reset();
         }
 
         if (item.flags & CAL_ITEM_FLAG_HAS_PROPERTIES) {
@@ -698,6 +699,8 @@ calStorageCalendar.prototype = {
         }
 
         var item = this.getItemFromRow(this.mSelectItem.row);
+        this.mSelectItem.reset();
+
         this.getAdditionalDataForItem(item);
 
         item.makeImmutable();
