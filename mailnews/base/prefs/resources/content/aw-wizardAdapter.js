@@ -54,9 +54,10 @@ function GetFields()
         var obj = new Object;
         obj.id = field.id;
 
-        if (field.tagName == "radio" ||
-            field.tagName == "checkbox")
+        if (field.tagName == "checkbox")
             obj.value = field.checked;
+        else if (field.tagName == "radio")
+            obj.value = field.selected;
         else if (field.tagName == "menulist")
             obj.value = field.selectedItem.value;
         else
@@ -90,9 +91,10 @@ function SetFields(id, value)
     }
 
     dump("    SetFields(<" + field.tagName + ">);\n");
-    if (field.tagName == "radio" ||
-        field.tagName == "checkbox")
+    if (field.tagName == "checkbox")
         field.checked = value;
+    else if (field.tagName == "radio" && value)
+        field.radioGroup.selectedItem = field;
     else if (field.tagName == "menulist") {
         var menuitems = field.getElementsByAttribute("value", value);
         if (menuitems && menuitems.length)

@@ -44,7 +44,7 @@ function onInit() {
     var elements = rg.getElementsByTagName("radio");
     var topItem = elements[0];
     for (var i=0; i < elements.length; i++)
-        if (elements[i].checked) topItem = elements[i];
+        if (elements[i].selected) topItem = elements[i];
 
     rg.selectedItem = topItem;
 }
@@ -61,7 +61,7 @@ function onUnload() {
 
 function initializeIspData()
 {
-    if (!document.getElementById("mailaccount").checked) {
+    if (!document.getElementById("mailaccount").selected) {
         parent.SetCurrentAccountData(null);
     }
     

@@ -26,7 +26,8 @@ Rights Reserved.
 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accname.dtd" >
-<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<page id="accnamepage" 
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.wizardManager.onPageLoad('accname');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>

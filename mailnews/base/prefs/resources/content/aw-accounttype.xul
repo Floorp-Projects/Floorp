@@ -59,7 +59,7 @@ Rights Reserved.
           </rule>
        </template>
       </vbox>
-      <radio descriptionid="newsaccount" value="newsaccount"
+      <radio id="newsaccount" value="newsaccount"
              wsm_persist="true"
              label="&accountTypeNews.label;"/>
     </radiogroup>
