@@ -283,7 +283,7 @@ void printHelp()
 "                        not specifed, the compreg.dat file will be in its      \n"
 "                        default location.                                      \n"
 "         -d path        Specifies the location of the xpti.dat file.  If not   \n"
-"                        specifed, the compreg.dat file will be in its default  \n"
+"                        specifed, the xpti.dat file will be in its default     \n"
 "                        location.                                              \n"
 "         -a             Option to register all files in the default component  \n"
 "                        directories.  This is the default behavoir if regxpcom \n"
