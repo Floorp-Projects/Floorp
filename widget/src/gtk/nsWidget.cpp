@@ -44,7 +44,6 @@ nsWidget::nsWidget()
   if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackground);
   }
-  mGC = nsnull;
   mWidget = nsnull;
   mParent = nsnull;
   mPreferredWidth  = 0;
@@ -99,10 +98,6 @@ NS_IMETHODIMP nsWidget::Destroy(void)
     mWidget = nsnull;
     if (PR_FALSE == mOnDestroyCalled)
       OnDestroy();
-  }
-  if (mGC) {
-    ::gdk_gc_destroy(mGC);
-    mGC = nsnull;
   }
   return NS_OK;
 }
@@ -183,6 +178,10 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+  if ((mBounds.width == aWidth) && (mBounds.height == aHeight))
+  {
+    return NS_OK;
+  }
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
@@ -417,9 +416,7 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
       case NS_NATIVE_WIDGET:
 	return (void *)mWidget;
       case NS_NATIVE_GRAPHIC:
-        if (mGC)
-	  return (void *)mGC;
-	break;
+	return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
       default:
         g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
 	break;
@@ -509,8 +506,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   if (parentWidget)
     gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
 
-  CreateGC();
-
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
@@ -565,24 +560,6 @@ NS_METHOD nsWidget::Create(nsNativeWidget aParent,
 void nsWidget::InitCallbacks(char *aName)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::InitCallbacks");
-}
-
-/* this is only used for nsWindow's */
-void nsWidget::CreateGC()
-{
-  if (mWidget && !mGC)
-  {
-    if (GTK_IS_LAYOUT(mWidget))
-    {
-      if (!GTK_LAYOUT(mWidget)->bin_window)
-      {
-        gtk_widget_realize(mWidget);
-        mGC = ::gdk_gc_new(GTK_LAYOUT(mWidget)->bin_window);
-      }
-      else
-        mGC = ::gdk_gc_new(GTK_LAYOUT(mWidget)->bin_window);
-    }
-  }
 }
 
 void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)

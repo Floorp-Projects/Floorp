@@ -113,7 +113,6 @@ class nsWidget : public nsBaseWidget
  protected:
     virtual void InitCallbacks(char * aName = nsnull);
     virtual void OnDestroy();
-    void CreateGC();
 
     NS_IMETHOD CreateNative(GtkWidget *parentWindow) { return NS_OK; }
 
@@ -131,8 +130,6 @@ class nsWidget : public nsBaseWidget
 
     GtkWidget *mWidget;
     nsWidget *mParent;
-
-    GdkGC *mGC;
 
     PRBool mShown;
 

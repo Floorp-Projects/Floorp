@@ -40,9 +40,13 @@ public:
   
   NS_DECL_ISUPPORTS
   NS_IMETHOD            Init(PRThread *aThread);
+
+  void			CreateSharedGC(void);
+  GdkGC			*GetSharedGC(void);
   
 private:
   PLEventQueue		*mPLEventQueue;
+  GdkGC			*mSharedGC;
 };
 
 

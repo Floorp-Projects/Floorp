@@ -248,7 +248,7 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
       case NS_NATIVE_WIDGET:
 	return (void *)mWidget;
       case NS_NATIVE_GRAPHIC:
-	if (mGC) return (void *)mGC;
+        return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
       default:
 	break;
     }
