@@ -328,8 +328,11 @@ CertDownloader::~CertDownloader()
 NS_IMPL_ISUPPORTS1(CertDownloader, nsIStreamListener);
 
 NS_IMETHODIMP
-CertDownloader::OnStartRequest(nsIChannel* channel, nsISupports* context)
+CertDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
 {
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+  if (!channel) return NS_ERROR_FAILURE;
+
   channel->GetContentLength(&mContentLength);
   if (mContentLength == -1)
     return NS_ERROR_FAILURE;
@@ -344,7 +347,7 @@ CertDownloader::OnStartRequest(nsIChannel* channel, nsISupports* context)
 
 
 NS_IMETHODIMP
-CertDownloader::OnDataAvailable(nsIChannel* channel,
+CertDownloader::OnDataAvailable(nsIRequest* request,
                                 nsISupports* context,
                                 nsIInputStream *aIStream,
                                 PRUint32 aSourceOffset,
@@ -372,7 +375,7 @@ CertDownloader::OnDataAvailable(nsIChannel* channel,
 
 
 NS_IMETHODIMP
-CertDownloader::OnStopRequest(nsIChannel* channel,
+CertDownloader::OnStopRequest(nsIRequest* request,
                               nsISupports* context,
                               nsresult aStatus,
                               const PRUnichar* aMsg)
@@ -396,13 +399,13 @@ nsNSSComponent::HandleContent(const char * aContentType,
                               const char * aCommand,
                               const char * aWindowTarget,
                               nsISupports* aWindowContext,
-                              nsIChannel * aChannel)
+                              nsIRequest * aRequest)
 {
   // We were called via CI.  We better protect ourselves and addref.
   NS_ADDREF_THIS();
   
   nsresult rv = NS_OK;
-  if (!aChannel) return NS_ERROR_NULL_POINTER;
+  if (!aRequest) return NS_ERROR_NULL_POINTER;
   
   PRUint32 type = (PRUint32) -1;
   
@@ -416,8 +419,10 @@ nsNSSComponent::HandleContent(const char * aContentType,
     type =  4; //Someone else's email cert
   
   if (type != (PRUint32) -1) {
-    // I can't directly open the passed channel cause it fails :-(
-    
+    nsCOMPtr<nsIChannel> aChannel(do_QueryInterface(aRequest));    
+    if (!aChannel)
+      return NS_ERROR_FAILURE;
+
     nsCOMPtr<nsIURI> uri;
     rv = aChannel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
@@ -426,11 +431,11 @@ nsNSSComponent::HandleContent(const char * aContentType,
     rv = NS_OpenURI(getter_AddRefs(channel), uri);
     if (NS_FAILED(rv)) return rv;
     
-    return channel->AsyncRead(new CertDownloader(type),
+    return channel->AsyncOpen(new CertDownloader(type),
                               NS_STATIC_CAST(nsISecurityManagerComponent*,this));
   }
   
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_FAILURE;
 }
 
 
