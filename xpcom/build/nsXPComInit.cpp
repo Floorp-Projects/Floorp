@@ -85,6 +85,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppFileLocationProvider.h"
 #include "nsICategoryManager.h"
+#include "nsStringStream.h"
 
 #include "nsFastLoadService.h"
 
@@ -249,6 +250,8 @@ static nsModuleComponentInfo components[] = {
     COMPONENT(PROCESS, nsProcessConstructor),
     COMPONENT(FILESPEC, nsFileSpecImpl::Create),
     COMPONENT(DIRECTORYITERATOR, nsDirectoryIteratorImpl::Create),
+
+    COMPONENT(STRINGINPUTSTREAM, nsStringInputStreamConstructor),
 
     COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create),
     COMPONENT(VARIANT, nsVariantConstructor)
