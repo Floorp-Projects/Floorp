@@ -123,7 +123,7 @@ nsresult nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
                                               const nsHTMLReflowState& aReflowState,
                                               nsReflowStatus& aStatus)
 {
-
+#if 0
   if (aReflowState.reason == eReflowReason_Resize) {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth &&
         NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
@@ -156,7 +156,7 @@ nsresult nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
       }
     }
   }
-
+#endif 
   return NS_ERROR_FAILURE;
 
 }
