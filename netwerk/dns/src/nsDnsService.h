@@ -61,28 +61,32 @@ public:
 
 protected:
     friend class nsDNSLookup;
-    nsIThread *         mThread;
-    nsresult            mState;
+    nsIThread *           mThread;
+    PRLock *              mThreadLock;
+    nsresult              mState;
 
     // nsDNSLookup cache? - list of nsDNSLookups, hash table (nsHashTable, nsStringKey)
     // list of nsDNSLookups in order of expiration (PRCList?)
 
 #if defined(XP_MAC)
-    friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
-    PRBool              mThreadRunning;
-    InetSvcRef          mServiceRef;
-    QHdr		            mCompletionQueue;
+    friend pascal void    nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+    PRBool                mThreadRunning;
+    InetSvcRef            mServiceRef;
+    QHdr                  mCompletionQueue;
 #if TARGET_CARBON
-    OTClientContextPtr  mClientContext;
-    OTNotifyUPP         nsDnsServiceNotifierRoutineUPP;
+    OTClientContextPtr    mClientContext;
+    OTNotifyUPP           nsDnsServiceNotifierRoutineUPP;
 #endif /* TARGET_CARBON */
 #endif /* XP_MAC */
 
 #if defined(XP_PC)
+    PRUint32   AllocMsgID(void);
+    void       FreeMsgID(PRUint32 msgID);
+
     friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HWND                mDNSWindow;
-    UINT                mMsgFoundDNS;
     nsVoidArray         mCompletionQueue;
+    PRUint32            mMsgIDBitVector[4];
 #endif /* XP_PC */
 };
 
