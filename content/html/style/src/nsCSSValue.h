@@ -135,7 +135,11 @@ public:
   nsCSSValue(nscolor aValue);
   nsCSSValue(URL* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
-  ~nsCSSValue();
+  ~nsCSSValue(void)
+  {
+    Reset();
+  }
+
 
   nsCSSValue&  operator=(const nsCSSValue& aCopy);
   PRBool      operator==(const nsCSSValue& aOther) const;
@@ -145,34 +149,34 @@ public:
     return !(*this == aOther);
   }
 
-  nsCSSUnit GetUnit() const { return mUnit; };
-  PRBool    IsLengthUnit() const
+  nsCSSUnit GetUnit(void) const { return mUnit; };
+  PRBool    IsLengthUnit(void) const
     { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Proportional)); }
-  PRBool    IsFixedLengthUnit() const  
+  PRBool    IsFixedLengthUnit(void) const  
     { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Cicero)); }
-  PRBool    IsRelativeLengthUnit() const  
+  PRBool    IsRelativeLengthUnit(void) const  
     { return PRBool((eCSSUnit_EM <= mUnit) && (mUnit <= eCSSUnit_Proportional)); }
-  PRBool    IsAngularUnit() const  
+  PRBool    IsAngularUnit(void) const  
     { return PRBool((eCSSUnit_Degree <= mUnit) && (mUnit <= eCSSUnit_Radian)); }
-  PRBool    IsFrequencyUnit() const  
+  PRBool    IsFrequencyUnit(void) const  
     { return PRBool((eCSSUnit_Hertz <= mUnit) && (mUnit <= eCSSUnit_Kilohertz)); }
-  PRBool    IsTimeUnit() const  
+  PRBool    IsTimeUnit(void) const  
     { return PRBool((eCSSUnit_Seconds <= mUnit) && (mUnit <= eCSSUnit_Milliseconds)); }
 
-  PRInt32 GetIntValue() const
+  PRInt32 GetIntValue(void) const
   {
     NS_ASSERTION(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated,
                  "not an int value");
     return mValue.mInt;
   }
 
-  float GetPercentValue() const
+  float GetPercentValue(void) const
   {
     NS_ASSERTION(mUnit == eCSSUnit_Percent, "not a percent value");
     return mValue.mFloat;
   }
 
-  float GetFloatValue() const
+  float GetFloatValue(void) const
   {
     NS_ASSERTION(eCSSUnit_Number <= mUnit, "not a float value");
     return mValue.mFloat;
@@ -196,27 +200,64 @@ public:
     return mValue.mString;
   }
 
-  nscolor GetColorValue() const
+  nscolor GetColorValue(void) const
   {
     NS_ASSERTION((mUnit == eCSSUnit_Color), "not a color value");
     return mValue.mColor;
   }
 
-  nsIURI* GetURLValue() const
+  nsIURI* GetURLValue(void) const
   {
     NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
     return mValue.mURL->mURI;
   }
 
-  const PRUnichar* GetOriginalURLValue() const
+  const PRUnichar* GetOriginalURLValue(void) const
   {
     NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
     return mValue.mURL->mString;
   }
 
-  nscoord   GetLengthTwips() const;
 
-  void  Reset()  // sets to null
+  nscoord   GetLengthTwips(void) const
+  {
+    NS_ASSERTION(IsFixedLengthUnit(), "not a fixed length unit");
+
+    if (IsFixedLengthUnit()) {
+      switch (mUnit) {
+      case eCSSUnit_Inch:        
+        return NS_INCHES_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Foot:        
+        return NS_FEET_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Mile:        
+        return NS_MILES_TO_TWIPS(mValue.mFloat);
+
+      case eCSSUnit_Millimeter:
+        return NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Centimeter:
+        return NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Meter:
+        return NS_METERS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Kilometer:
+        return NS_KILOMETERS_TO_TWIPS(mValue.mFloat);
+
+      case eCSSUnit_Point:
+        return NSFloatPointsToTwips(mValue.mFloat);
+      case eCSSUnit_Pica:
+        return NS_PICAS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Didot:
+        return NS_DIDOTS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Cicero:
+        return NS_CICEROS_TO_TWIPS(mValue.mFloat);
+      default:
+        NS_ERROR("should never get here");
+        break;
+      }
+    }
+    return 0;
+  }
+
+  void  Reset(void)  // sets to null
   {
     if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters) &&
         (nsnull != mValue.mString)) {
@@ -229,16 +270,31 @@ public:
   }
 
   void  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
-  void  SetPercentValue(float aValue);
-  void  SetFloatValue(float aValue, nsCSSUnit aUnit);
+  void  SetPercentValue(float aValue)
+  {
+    Reset();
+    mUnit = eCSSUnit_Percent;
+    mValue.mFloat = aValue;
+  }
+
+  void  SetFloatValue(float aValue, nsCSSUnit aUnit)
+  {
+    NS_ASSERTION(eCSSUnit_Number <= aUnit, "not a float value");
+    Reset();
+    if (eCSSUnit_Number <= aUnit) {
+      mUnit = aUnit;
+      mValue.mFloat = aValue;
+    }
+  }
+
   void  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
   void  SetColorValue(nscolor aValue);
   void  SetURLValue(nsCSSValue::URL* aURI);
-  void  SetAutoValue();
-  void  SetInheritValue();
-  void  SetInitialValue();
-  void  SetNoneValue();
-  void  SetNormalValue();
+  void  SetAutoValue(void);
+  void  SetInheritValue(void);
+  void  SetInitialValue(void);
+  void  SetNoneValue(void);
+  void  SetNormalValue(void);
 
   // debugging methods only
   // XXXldb Not anymore!
