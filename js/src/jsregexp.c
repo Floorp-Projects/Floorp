@@ -1176,11 +1176,11 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     state.parenCount = 0;
     state.progLength = 0;
 
-    if (flat) {
-        len = str->length;
+    len = str->length;
+    if (len > 0 && flat) {
         cp = str->chars;
         ren = NULL;
-        while (len > 0) {
+        do {
 	    ren2 = NewRENode(&state, 
                         (len == 1) ? REOP_FLAT1 : REOP_FLAT, (void *)cp);
 	    if (!ren2)
@@ -1207,7 +1207,7 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
             }
             else
                 ren = ren2;
-        }
+        } while (len > 0);
     }
     else
         ren = ParseRegExp(&state);
