@@ -33,6 +33,8 @@
 nsHashtable *NSRepository::factories = NULL;
 PRMonitor *NSRepository::monitor = NULL;
 
+static PRLogModuleInfo *logmodule = NULL;
+
 static NS_DEFINE_IID(kFactory2IID, NS_IFACTORY2_IID);
 
 class FactoryEntry {
@@ -211,8 +213,8 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 
 #endif // USE_NSREG
 
-static nsresult loadFactory(FactoryEntry *aEntry,
-                            nsIFactory **aFactory)
+nsresult NSRepository::loadFactory(FactoryEntry *aEntry,
+                                   nsIFactory **aFactory)
 {
   if (aFactory == NULL) {
     return NS_ERROR_NULL_POINTER;
@@ -220,6 +222,8 @@ static nsresult loadFactory(FactoryEntry *aEntry,
   *aFactory = NULL;
 
   if (aEntry->instance == NULL) {
+    PR_LOG(logmodule, PR_LOG_ALWAYS, 
+           ("NSRepository: + Loading \"%s\".", aEntry->library));
     aEntry->instance = PR_LoadLibrary(aEntry->library);
   }
   if (aEntry->instance != NULL) {
@@ -229,8 +233,12 @@ static nsresult loadFactory(FactoryEntry *aEntry,
       nsresult res = proc(aEntry->cid, aFactory);
       return res;
     }
+    PR_LOG(logmodule, PR_LOG_ERROR, 
+           ("NSRepository: NSGetFactory entrypoint not found."));
   }
 
+  PR_LOG(logmodule, PR_LOG_ERROR,
+         ("NSRepository: Library load unsuccessful."));
   return NS_ERROR_FACTORY_NOT_LOADED;
 }
 
@@ -238,8 +246,16 @@ nsresult NSRepository::FindFactory(const nsCID &aClass,
                                    nsIFactory **aFactory) 
 {
   checkInitialized();
+  if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS)) {
+    char *buf = aClass.ToString();
+    PR_LogPrint("NSRepository:   Finding Factory.");
+    PR_LogPrint("NSRepository:   + %s", 
+                buf);
+    delete [] buf;
+  }
 
   if (aFactory == NULL) {
+    PR_LOG(logmodule, PR_LOG_ERROR, ("NSRepository:   !! NULL pointer."));
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -272,6 +288,10 @@ nsresult NSRepository::FindFactory(const nsCID &aClass,
     }
   }
 
+  PR_LOG(logmodule, PR_LOG_WARNING,
+         ("NSRepository:   ! Find Factory %s",
+          res == NS_OK ? "succeeded" : "failed"));
+
   return res;
 }
 
@@ -292,7 +312,12 @@ nsresult NSRepository::Initialize()
   if (monitor == NULL) {
     monitor = PR_NewMonitor();
   }
+  if (logmodule == NULL) {
+    logmodule = PR_NewLogModule("NSRepository");
+  }
 
+  PR_LOG(logmodule, PR_LOG_ALWAYS, 
+         ("NSRepository: Initialized."));
 #ifdef USE_NSREG
   NR_StartupRegistry();
 #endif
@@ -304,6 +329,14 @@ nsresult NSRepository::CreateInstance(const nsCID &aClass,
                                       const nsIID &aIID,
                                       void **aResult)
 {
+  checkInitialized();
+  if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS)) {
+    char *buf = aClass.ToString();
+    PR_LogPrint("NSRepository: Creating Instance.");
+    PR_LogPrint("NSRepository: + %s", 
+                buf);
+    delete [] buf;
+  }
   if (aResult == NULL) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -327,6 +360,15 @@ nsresult NSRepository::CreateInstance2(const nsCID &aClass,
                                        void *aSignature,
                                        void **aResult)
 {
+  if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS)) {
+    char *buf = aClass.ToString();
+    PR_LogPrint("NSRepository: Creating Instance.");
+    PR_LogPrint("NSRepository: + %s.", 
+                buf);
+    PR_LogPrint("NSRepository: + Signature = %p.",
+                aSignature);
+    delete [] buf;
+  }
   if (aResult == NULL) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -359,6 +401,15 @@ nsresult NSRepository::RegisterFactory(const nsCID &aClass,
                                        PRBool aReplace)
 {
   checkInitialized();
+  if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS)) {
+    char *buf = aClass.ToString();
+    PR_LogPrint("NSRepository: Registering Factory.");
+    PR_LogPrint("NSRepository: + %s", 
+                buf);
+    PR_LogPrint("NSRepository: + Replace = %d.",
+                (int) aReplace);
+    delete [] buf;
+  }
 
   nsIFactory *old = NULL;
   FindFactory(aClass, &old);
@@ -366,6 +417,8 @@ nsresult NSRepository::RegisterFactory(const nsCID &aClass,
   if (old != NULL) {
     old->Release();
     if (!aReplace) {
+      PR_LOG(logmodule, PR_LOG_WARNING,
+             ("NSRepository: ! Factory already registered."));
       return NS_ERROR_FACTORY_EXISTS;
     }
   }
@@ -377,6 +430,9 @@ nsresult NSRepository::RegisterFactory(const nsCID &aClass,
 
   PR_ExitMonitor(monitor);
 
+  PR_LOG(logmodule, PR_LOG_WARNING,
+         ("NSRepository: ! Factory register succeeded."));
+
   return NS_OK;
 }
 
@@ -386,13 +442,23 @@ nsresult NSRepository::RegisterFactory(const nsCID &aClass,
                                        PRBool aPersist)
 {
   checkInitialized();
-
+  if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS)) {
+    char *buf = aClass.ToString();
+    PR_LogPrint("NSRepository: Registering Factory.");
+    PR_LogPrint("NSRepository: + %s in \"%s\".",
+                buf, aLibrary);
+    PR_LogPrint("NSRepository: + Replace = %d, Persist = %d.",
+                (int) aReplace, (int) aPersist);
+    delete [] buf;
+  }
   nsIFactory *old = NULL;
   FindFactory(aClass, &old);
   
   if (old != NULL) {
     old->Release();
     if (!aReplace) {
+      PR_LOG(logmodule, PR_LOG_WARNING,
+             ("NSRepository: ! Factory already registered."));
       return NS_ERROR_FACTORY_EXISTS;
     }
   }
@@ -412,6 +478,9 @@ nsresult NSRepository::RegisterFactory(const nsCID &aClass,
 
   PR_ExitMonitor(monitor);
 
+  PR_LOG(logmodule, PR_LOG_WARNING,
+         ("NSRepository: ! Factory register succeeded."));
+
   return NS_OK;
 }
 
@@ -419,6 +488,12 @@ nsresult NSRepository::UnregisterFactory(const nsCID &aClass,
                                          nsIFactory *aFactory)
 {
   checkInitialized();
+  if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS)) {
+    char *buf = aClass.ToString();
+    PR_LogPrint("NSRepository: Unregistering Factory.");
+    PR_LogPrint("NSRepository: + %s.", buf);
+    delete [] buf;
+  }
 
   nsIFactory *old = NULL;
   FindFactory(aClass, &old);
@@ -439,6 +514,10 @@ nsresult NSRepository::UnregisterFactory(const nsCID &aClass,
     old->Release();
   }
 
+  PR_LOG(logmodule, PR_LOG_WARNING,
+         ("NSRepository: ! Factory unregister %s.", 
+          res == NS_OK ? "succeeded" : "failed"));
+
   return res;
 }
 
@@ -446,6 +525,13 @@ nsresult NSRepository::UnregisterFactory(const nsCID &aClass,
                                          const char *aLibrary)
 {
   checkInitialized();
+  if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS)) {
+    char *buf = aClass.ToString();
+    PR_LogPrint("NSRepository: Unregistering Factory.");
+    PR_LogPrint("NSRepository: + %s in \"%s\".", buf, 
+                aLibrary);
+    delete [] buf;
+  }
 
   IDKey key(aClass);
   FactoryEntry *old = (FactoryEntry *) factories->Get(&key);
@@ -472,6 +558,10 @@ nsresult NSRepository::UnregisterFactory(const nsCID &aClass,
 
   PR_ExitMonitor(monitor);
 
+  PR_LOG(logmodule, PR_LOG_WARNING,
+         ("NSRepository: ! Factory unregister %s.", 
+          res == NS_OK ? "succeeded" : "failed"));
+
   return res;
 }
 
@@ -485,6 +575,8 @@ static PRBool freeLibraryEnum(nsHashKey *aKey, void *aData)
     if (proc != NULL) {
       PRBool res = proc();
       if (res) {
+        PR_LOG(logmodule, PR_LOG_ALWAYS, 
+               ("NSRepository: + Unloading \"%s\".", entry->library));
         PR_UnloadLibrary(entry->instance);
         entry->instance = NULL;
       }
@@ -498,6 +590,8 @@ nsresult NSRepository::FreeLibraries()
 {
   PR_EnterMonitor(monitor);
 
+  PR_LOG(logmodule, PR_LOG_ALWAYS, 
+         ("NSRepository: Freeing Libraries."));
   factories->Enumerate(freeLibraryEnum);
 
   PR_ExitMonitor(monitor);
