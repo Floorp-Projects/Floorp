@@ -195,6 +195,9 @@ NS_METHOD nsFrame::GetStyleContext(nsIPresContext*   aPresContext,
 {
   if ((nsnull == mStyleContext) && (nsnull != aPresContext)) {
     mStyleContext = aPresContext->ResolveStyleContextFor(mContent, mGeometricParent); // XXX should be content parent???
+    if (nsnull != mStyleContext) {
+      DidSetStyleContext();
+    }
   }
   NS_IF_ADDREF(mStyleContext);
   aStyleContext = mStyleContext;
@@ -209,9 +212,16 @@ NS_METHOD nsFrame::SetStyleContext(nsIStyleContext* aContext)
     if (nsnull != aContext) {
       mStyleContext = aContext;
       NS_ADDREF(aContext);
+      DidSetStyleContext();
     }
   }
 
+  return NS_OK;
+}
+
+// Subclass hook for style post processing
+NS_METHOD nsFrame::DidSetStyleContext(void)
+{
   return NS_OK;
 }
 
