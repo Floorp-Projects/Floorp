@@ -412,9 +412,9 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY formatlistMenu.label "List">
 <!ENTITY formatlistmenu.accesskey "l">
 <!ENTITY listBulletCmd.label "Bulleted">
-<!ENTITY listbullet.accesskey "t">
+<!ENTITY listbullet.accesskey "b">
 <!ENTITY listNumberedCmd.label "Numbered">
-<!ENTITY listnumbered.accesskey "n">
+<!ENTITY listnumbered.accesskey "m">
 <!ENTITY listTermCmd.label "Term">
 <!ENTITY listterm.accesskey "t">
 <!ENTITY listDefinitionCmd.label "Definition">
@@ -422,10 +422,13 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY listProps.label "List Properties...">
 <!ENTITY listprops.accesskey "l">
 
-<!-- Shared by Heading and Paragraph menu, and in toolbar menulist -->
+<!-- Shared among Heading, Paragraph, and List submenus, and in toolbar menulist -->
 <!ENTITY ParagraphSelect.tooltip "Choose a paragraph format from the drop-down list">
 <!ENTITY normalCmd.label "Normal">
 <!ENTITY normal.accesskey "n">
+<!ENTITY noneCmd.label "None">
+<!ENTITY none.accesskey "n">
+<!-- isn't used in menu now, but may be added in future -->
 <!ENTITY advancedPropertiesCmd.label "Advanced Properties...">
 <!ENTITY advancedproperties.accesskey "v">
 

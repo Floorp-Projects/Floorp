@@ -200,7 +200,7 @@ function EditorSharedStartup()
   gIsUNIX = (navigator.appVersion.indexOf("X11") || 
              navigator.appVersion.indexOf("nux")) != -1;
   gIsMac = !gIsWin && !gIsUNIX;
-  dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
+  //dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
 
   // hide UI that we don't have components for
   HideInapplicableUIElements();
@@ -480,6 +480,16 @@ function EditorSetParagraphFormat(commandID, paraFormat)
   goDoCommand(commandID);
 }
 
+function onChangeColor(colorWell, commandID)
+{
+  // Get the color from the command node state
+  var commandNode = document.getElementById(commandID);
+  var color = commandNode.getAttribute("state");
+  //dump("onChangeColor -- Color is: "+color+"\n");
+
+  // Use setAttribute so colorwell can be a XUL element, such as titledbutton
+  colorWell.setAttribute("style", "background-color: " + color); 
+}
 
 function onFontFaceChange(fontFaceMenuList, commandID)
 {
@@ -517,27 +527,6 @@ function EditorSetFontFace(commandID, fontFace)
   commandNode.setAttribute("state", fontFace);
   window.content.focus();   // needed for command dispatch to work
   goDoCommand(commandID);
-/*
-  if (fontFace == "tt")
-  {
-    // The old "teletype" attribute
-    editorShell.SetTextProperty("tt", "", "");  
-    // Clear existing font face
-    editorShell.RemoveTextProperty("font", "face");
-  }
-  else
-  {
-    // Remove any existing TT nodes
-    editorShell.RemoveTextProperty("tt", "", "");  
-
-    if( fontFace == "" || fontFace == "normal") {
-      editorShell.RemoveTextProperty("font", "face");
-    } else {
-      editorShell.SetTextProperty("font", "face", fontFace);
-    }
-  }        
-  window.content.focus();
-*/
 }
 
 function EditorSelectFontSize()
@@ -584,7 +573,6 @@ function EditorSetFontSize(size)
       size == "medium" )
   {
     editorShell.RemoveTextProperty("font", "size");
-    dump("Removing font size\n");
   } else {
     dump("Setting font size\n");
     // Temp: convert from new CSS size strings to old HTML size strings
@@ -609,26 +597,13 @@ function EditorSetFontSize(size)
     }
     editorShell.SetTextProperty("font", "size", size);
   }
-/*
-  BIG BUG! Setting <span> tag is totally horked -- stick with <font size> for beta1
-  {
-    // XXX-THIS IS DEFINITELY WRONG! 
-    // We need to parse the style tag to set/remove only the "font-size"
-    // TODO: We need a general SetInlineStyle(), RemoveInlineStyle() interface
-    editorShell.RemoveTextProperty("span", "style");
-    dump("Removing font size\n");
-  } else {
-    dump("Setting font size to: "+size+"\n");
-    editorShell.SetTextProperty("span", "style", "font-size:"+size);
-  }
-*/
   gContentWindow.focus();
 }
 
 function EditorSelectTextColor(ColorPickerID, ColorWellID)
 {
   var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
-// dump("EditorSelectTextColor: "+color+"\n");
+  //dump("EditorSelectTextColor: "+color+"\n");
 
   // Close appropriate menupopup  
   var menupopup;
@@ -659,7 +634,7 @@ function EditorRemoveTextColor(ColorWellID)
 function EditorSelectBackColor(ColorPickerID, ColorWellID)
 {
   var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
-dump("EditorSelectBackColor: "+color+"\n");
+  //dump("EditorSelectBackColor: "+color+"\n");
 
   // Close appropriate menupopup  
   var menupopup;
@@ -1052,22 +1027,61 @@ function InitBackColorPopup()
   SetBackColorString("BackColorCaption"); 
 }
 
-function InitListMenu()
+function InitParagraphMenu()
 {
-  SetMenuItemCheckedFromState("menu_ul", "cmd_ul");
-  SetMenuItemCheckedFromState("menu_ol", "cmd_ol");
-  SetMenuItemCheckedFromState("menu_dt", "cmd_dt");
-  SetMenuItemCheckedFromState("menu_dd", "cmd_dd");
+  var mixedObj = new Object();
+  var state = editorShell.GetParagraphState(mixedObj);
+  //dump("InitParagraphMenu: state="+state+"\n");
+  var IDSuffix = "normal";
+
+  // PROBLEM: When we get blockquote, it masks other styles contained by it
+  // We need a separate method to get blockquote state  
+  if (state.length > 0)
+  {
+    if (state.charAt(0) == "h")
+    {
+      // We have a heading style - remove any checkmark in this submenu
+      //  by first setting the first item, then removing the check
+      document.getElementById("menu_normal").setAttribute("checked", "true");
+      document.getElementById("menu_normal").removeAttribute("checked");
+      return;
+    }
+    IDSuffix = state;
+  }
+
+  document.getElementById("menu_"+IDSuffix).setAttribute("checked", "true");
 }
 
-function SetMenuItemCheckedFromState(menuItemID, commandID)
+function InitHeadingMenu()
 {
-  var menuItem = document.getElementById(menuItemID);
-  var commandNode = document.getElementById(commandID);
-  if (menuItem && commandNode)
+  var mixedObj = new Object();
+  var state = editorShell.GetParagraphState(mixedObj);
+  //dump("InitHeadingMenu: state="+state+"\n");
+  var IDSuffix = "noHeading";
+
+  if (state.length > 0 && state.charAt(0) == "h")
+    IDSuffix = state;
+
+  document.getElementById("menu_"+IDSuffix).setAttribute("checked", "true");
+}
+
+function InitListMenu()
+{
+  var mixedObj = new Object();
+  var state = editorShell.GetListState(mixedObj);
+  //dump("InitListMenu: state="+state+"\n");
+  var IDSuffix = "noList";
+  
+  if (state.length > 0)
   {
-    menuItem.setAttribute("checked", commandNode.getAttribute("state"));
+    if (state == "dl")
+      state = editorShell.GetListItemState(mixedObj);
+
+    if (state.length > 0)
+      IDSuffix = state;
   }
+
+  document.getElementById("menu_"+IDSuffix).setAttribute("checked", "true");
 }
 
 function EditorInitToolbars()

@@ -179,8 +179,6 @@
 
     <command id="cmd_ul"            state="false"     oncommand="goDoCommand('cmd_ul')"/>
     <command id="cmd_ol"            state="false"     oncommand="goDoCommand('cmd_ol')"/>
-    <command id="cmd_dt"            state="false"     oncommand="goDoCommand('cmd_dt')"/>
-    <command id="cmd_dd"            state="false"     oncommand="goDoCommand('cmd_dd')"/>
 
     <command id="cmd_indent"                          oncommand="goDoCommand('cmd_indent')"/>
     <command id="cmd_outdent"                         oncommand="goDoCommand('cmd_outdent')"/>
@@ -199,8 +197,15 @@
     <command id="cmd_removeStyles"                    oncommand="goDoCommand('cmd_removeStyles')"/>
   </commandset>
 
-  <!-- commands updated when the table menu gets created -->
+  <!-- commands updated only when the menu gets created -->
+  <commandset id="composerListMenuItems"  oncommandupdate="goUpdateComposerMenuItems(this)">
+    <!-- List menu  -->
+    <command id="cmd_dt"                  oncommand="goDoCommand('cmd_dt')"/>
+    <command id="cmd_dd"                  oncommand="goDoCommand('cmd_dd')"/>
+    <command id="cmd_removeList"      oncommand="goDoCommand('cmd_removeList')"/>
+  </commandset>
   <commandset id="composerTableMenuItems" oncommandupdate="goUpdateTableMenuItems(this)">
+    <!-- Table menu -->
     <command id="cmd_SelectTable"         oncommand="goDoCommand('cmd_SelectTable')"/>
     <command id="cmd_SelectRow"           oncommand="goDoCommand('cmd_SelectRow')"/>
     <command id="cmd_SelectColumn"        oncommand="goDoCommand('cmd_SelectColumn')"/>
@@ -223,7 +228,6 @@
     <command id="cmd_tableSplitCell"      oncommand="goDoCommand('cmd_tableSplitCell')"/>
     <command id="cmd_editTable"           oncommand="goDoCommand('cmd_editTable')"/>
   </commandset>
-
 
   <broadcasterset id="broadcasterset">
     <!-- Broadcasters/commands with no other home -->
@@ -471,31 +475,36 @@
                 oncommand="EditorRemoveLinks()" position="8"/>
     <menuseparator position="9"/>
 
-    <!-- Heading submenu -->
+    <!-- Note: the 'Init' menu methods for Heading, Paragraph, and List 
+         assume that the id = 'menu_'+tagName (the 'data' value),
+         except for the first ('none') item
+     -->
+    <!-- Heading Style submenu -->
     <menu id="headingMenu" value="&headingMenu.label;"
           accesskey="&formatheadingmenu.accesskey;"
-          position="10">
+          position="10" oncreate="InitHeadingMenu()">
       <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
-        <menuitem type="checkbox" value="&normalCmd.label;"   accesskey="&normal.accesskey;"   data=""/>
-        <menuitem type="checkbox" value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="H1"/>
-        <menuitem type="checkbox" value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="H2"/>
-        <menuitem type="checkbox" value="&heading3Cmd.label;" accesskey="&heading3.accesskey;" data="H3"/>
-        <menuitem type="checkbox" value="&heading4Cmd.label;" accesskey="&heading4.accesskey;" data="H4"/>
-        <menuitem type="checkbox" value="&heading5Cmd.label;" accesskey="&heading5.accesskey;" data="H5"/>
-        <menuitem type="checkbox" value="&heading6Cmd.label;" accesskey="&heading6.accesskey;" data="H6"/>
+        <menuitem id="menu_noHeading" type="radio" value="&noneCmd.label;"     accesskey="&none.accesskey;"     data=""/>
+        <menuitem id="menu_h1"        type="radio" value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="h1"/>
+        <menuitem id="menu_h2"        type="radio" value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="h2"/>
+        <menuitem id="menu_h3"        type="radio" value="&heading3Cmd.label;" accesskey="&heading3.accesskey;" data="h3"/>
+        <menuitem id="menu_h4"        type="radio" value="&heading4Cmd.label;" accesskey="&heading4.accesskey;" data="h4"/>
+        <menuitem id="menu_h5"        type="radio" value="&heading5Cmd.label;" accesskey="&heading5.accesskey;" data="h5"/>
+        <menuitem id="menu_h6"        type="radio" value="&heading6Cmd.label;" accesskey="&heading6.accesskey;" data="h6"/>
       </menupopup>
     </menu>
 
     <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" value="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
-          position="11">
+          position="11" oncreate="InitParagraphMenu()">
       <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
-        <menuitem type="checkbox" value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
-        <menuitem type="checkbox" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="P"/>
-        <menuitem type="checkbox" value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="BLOCKQUOTE"/>
-        <menuitem type="checkbox" value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="ADDRESS"/>   
-        <menuitem type="checkbox" value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="PRE"/>       
+        <menuitem id="menu_normal"  type="radio" value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
+        <menuitem id="menu_p"       type="radio" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="p"/>
+        <menuitem id="menu_address" type="radio" value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="address"/>   
+        <menuitem id="menu_pre"     type="radio" value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="pre"/>       
+        <menuseparator/>
+        <menuitem id="menu_blockquote" type="checkbox" value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="blockquote"/>
       </menupopup>
     </menu>
 
@@ -504,18 +513,17 @@
           accesskey="&formatlistmenu.accesskey;"
           position="12" oncreate="InitListMenu()">
       <menupopup>
-        <menuitem id="menu_ul" type="checkbox" value="&listBulletCmd.label;"      accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
-        <menuitem id="menu_ol" type="checkbox" value="&listNumberedCmd.label;"    accesskey="&listnumbered.accesskey;"   observes="cmd_ol"/>
+        <menuitem id="menu_noList" type="radio" value="&noneCmd.label;"           accesskey="&none.accesskey;"           observes="cmd_removeList"/>
+        <menuitem id="menu_ul"     type="radio" value="&listBulletCmd.label;"     accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
+        <menuitem id="menu_ol"     type="radio" value="&listNumberedCmd.label;"   accesskey="&listnumbered.accesskey;"   observes="cmd_ol"/>
+        <menuitem id="menu_dt"     type="radio" value="&listTermCmd.label;"       accesskey="&listterm.accesskey;"       observes="cmd_dt"/>
+        <menuitem id="menu_dd"     type="radio" value="&listDefinitionCmd.label;" accesskey="&listdefinition.accesskey;" observes="cmd_dd"/>
         <menuseparator/>
-        <menuitem id="menu_dt" type="checkbox" value="&listTermCmd.label;"        accesskey="&listterm.accesskey;"       observes="cmd_dt"/>
-        <menuitem id="menu_dd" type="checkbox" value="&listDefinitionCmd.label;"  accesskey="&listdefinition.accesskey;" observes="cmd_dd"/>
-        <menuseparator/>
-        <menuitem id="listProps" value="&listProps.label;"        accesskey="&listprops.accesskey;"      observes="cmd_listProperties"/>
+        <menuitem id="listProps" value="&listProps.label;" accesskey="&listprops.accesskey;" observes="cmd_listProperties"/>
       </menupopup>
     </menu>
 
-
-    <menu id="alignMenu" value="&alignMenu.label;"      accesskey="&formatalignmenu.accesskey;"
+    <menu id="alignMenu" value="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;"
         position="13">
       <!-- Align submenu -->
       <menupopup oncommand="EditorAlign('cmd_align', event.target.getAttribute('data'))">
@@ -718,9 +726,10 @@
       <menuitem value="&heading4Cmd.label;"            data="h4"/>
       <menuitem value="&heading5Cmd.label;"            data="h5"/>
       <menuitem value="&heading6Cmd.label;"            data="h6"/>
-      <menuitem value="&paragraphBlockquoteCmd.label;" data="blockquote"/>
       <menuitem value="&paragraphAddressCmd.label;"    data="address"/>
       <menuitem value="&paragraphPreformatCmd.label;"  data="pre"/>
+      <menuseparator/>
+      <menuitem value="&paragraphBlockquoteCmd.label;" data="blockquote"/>
     </menupopup>
   </menulist>
 
