@@ -49,6 +49,7 @@ public:
   NS_IMETHOD GetRects(nsRegionRectSet **aRects);
   NS_IMETHOD FreeRects(nsRegionRectSet *aRects);
   NS_IMETHOD GetNativeRegion(void *&aRegion) const;
+  virtual nsresult SetNativeRegion(void *aRegion);
   NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
 
 private:

@@ -366,6 +366,21 @@ NS_IMETHODIMP nsRegionMac :: GetNativeRegion(void *&aRegion) const
   return NS_OK;
 }
 
+
+nsresult nsRegionMac :: SetNativeRegion(void *aRegion)
+{
+  if (aRegion)
+  {
+    mRegion = (RgnHandle)aRegion;
+    SetRegionType();
+  }
+  else
+  {
+  	Init();
+  }
+  return NS_OK;
+}
+
 //---------------------------------------------------------------------
 
 NS_IMETHODIMP nsRegionMac :: GetRegionComplexity(nsRegionComplexity &aComplexity) const
@@ -382,7 +397,10 @@ void nsRegionMac :: SetRegionType()
   if (::EmptyRgn(mRegion) == PR_TRUE)
     mRegionType = eRegionComplexity_empty;
   else
-    mRegionType = eRegionComplexity_rect;
+    if ((*mRegion)->rgnSize == 10)
+      mRegionType = eRegionComplexity_rect;
+    else
+      mRegionType = eRegionComplexity_complex;
 }
 
 
@@ -392,6 +410,7 @@ void nsRegionMac :: SetRegionType()
 void nsRegionMac :: SetRegionEmpty()
 {
   ::SetEmptyRgn(mRegion);
+  SetRegionType();
 }
 
 //---------------------------------------------------------------------
