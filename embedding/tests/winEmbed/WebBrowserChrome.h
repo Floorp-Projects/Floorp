@@ -31,7 +31,7 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
 #include "nsIBaseWindow.h"
-#include "nsIWebBrowserSiteWindow.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
@@ -63,7 +63,7 @@ public:
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
-                           public nsIWebBrowserSiteWindow,
+                           public nsIEmbeddingSiteWindow,
                            public nsIPrompt,
                            public nsIInterfaceRequestor,
                            public nsISHistoryListener,
@@ -78,7 +78,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBPROGRESSLISTENER
-    NS_DECL_NSIWEBBROWSERSITEWINDOW
+    NS_DECL_NSIEMBEDDINGSITEWINDOW
     NS_DECL_NSIPROMPT
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSISHISTORYLISTENER

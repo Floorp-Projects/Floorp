@@ -57,7 +57,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
-    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
+    NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
     NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
@@ -530,55 +530,21 @@ CWebBrowserContainer::GetPersistence(PRBool* aPersistPosition,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIWebBrowserSiteWindow
+// nsIEmbeddingSiteWindow
 
 NS_IMETHODIMP 
-CWebBrowserContainer::Destroy(void)
+CWebBrowserContainer::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
 	return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP 
-CWebBrowserContainer::SetPosition(PRInt32 x, PRInt32 y)
+CWebBrowserContainer::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
 	return NS_ERROR_FAILURE;
 }
 
-
-NS_IMETHODIMP 
-CWebBrowserContainer::GetPosition(PRInt32 *x, PRInt32 *y)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::GetSize(PRInt32 *cx, PRInt32 *cy)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
-{
-	return NS_ERROR_FAILURE;
-}
 
 NS_IMETHODIMP 
 CWebBrowserContainer::GetSiteWindow(void **aParentNativeWindow)
@@ -607,6 +573,19 @@ CWebBrowserContainer::SetTitle(const PRUnichar * aTitle)
 	return NS_ERROR_FAILURE;
 }
 
+
+NS_IMETHODIMP 
+CWebBrowserContainer::GetVisibility(PRBool *aVisibility)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CWebBrowserContainer::SetVisibility(PRBool aVisibility)
+{
+	return NS_ERROR_FAILURE;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebBrowserChrome implementation
@@ -655,6 +634,13 @@ NS_IMETHODIMP
 CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
 {
 	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+CWebBrowserContainer::DestroyBrowserWindow(void)
+{
+    return NS_ERROR_FAILURE;
 }
 
 
