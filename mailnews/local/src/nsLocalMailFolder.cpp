@@ -242,7 +242,22 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 
     rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
     if (child)
-      child->SetPrettyName(currentFolderNameStr.get());
+    {
+      nsCOMPtr<nsIDBFolderInfo> folderInfo;
+      nsCOMPtr<nsIMsgDatabase> db; 
+      child->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+      if (folderInfo)
+      {
+        nsAutoString mailboxName;
+        folderInfo->GetMailboxName(&mailboxName);
+        if (!mailboxName.IsEmpty())
+          child->SetPrettyName(mailboxName.get());
+        else
+          child->SetPrettyName(currentFolderNameStr.get());
+      }
+      else
+        child->SetPrettyName(currentFolderNameStr.get());
+    }
   }
 	return rv;
 }
@@ -803,8 +818,11 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
     nsXPIDLCString nativeFolderName;
     ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(folderName),
                        getter_Copies(nativeFolderName));
-    
-	path += nativeFolderName.get();
+  
+  nsCAutoString safeFolderName;
+  safeFolderName.Assign(nativeFolderName.get());
+  NS_MsgHashIfNecessary(safeFolderName);
+	path += safeFolderName.get();
 		
 	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
     if (outputStream.is_open())
@@ -1863,8 +1881,6 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder* srcFolder, nsIMsgWind
  	
   nsresult rv;
   mInitialized = PR_TRUE;
-  nsCOMPtr<nsIFolder> newFolder;
-  nsCOMPtr<nsIMsgFolder> newMsgFolder;
     
   nsXPIDLString folderName;
   srcFolder->GetName(getter_Copies(folderName));
@@ -1872,8 +1888,16 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder* srcFolder, nsIMsgWind
   rv = CreateSubfolder(folderName,msgWindow);
   if (NS_FAILED(rv)) return rv;
 
-  FindSubFolder(NS_ConvertUCS2toUTF8(folderName.get()).get(), getter_AddRefs(newFolder));
+  nsXPIDLCString escapedFolderName;
+  rv = NS_MsgEscapeEncodeURLPath(folderName.get(), getter_Copies(escapedFolderName));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIFolder> newFolder;
+  nsCOMPtr<nsIMsgFolder> newMsgFolder;
+
+  FindSubFolder(escapedFolderName.get(), getter_AddRefs(newFolder));
   newMsgFolder = do_QueryInterface(newFolder,&rv);
+  NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsISimpleEnumerator> messages;
   rv = srcFolder->GetMessages(msgWindow, getter_AddRefs(messages));
