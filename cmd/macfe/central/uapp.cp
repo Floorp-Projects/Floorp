@@ -2615,10 +2615,10 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 			break;
 			
 		case cmd_HistoryWindow:
-		{
-		
+		{		
 			CNavCenterWindow* navCenter = dynamic_cast<CNavCenterWindow*>(URobustCreateWindow::CreateWindow(CNavCenterWindow::res_ID, this));
-			navCenter->BringPaneToFront ( HT_VIEW_HISTORY );
+			RDF_Resource top = RDF_GetResource(NULL, "NC:History", false);
+			navCenter->BuildHTPane ( top );
 			navCenter->Show();
 		}
 			break;
@@ -2626,11 +2626,23 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 		case cmd_BookmarksWindow:
 		{
 			CNavCenterWindow* navCenter = dynamic_cast<CNavCenterWindow*>(URobustCreateWindow::CreateWindow(CNavCenterWindow::res_ID, this));
-			navCenter->BringPaneToFront ( HT_VIEW_BOOKMARK );
+			RDF_Resource top = RDF_GetResource(NULL, "NC:Bookmarks", false);
+			navCenter->BuildHTPane ( top );
 			navCenter->Show();
 		}
 			break;
-			
+		
+		case cmd_NCOpenNewWindow:
+		{
+			HT_Resource node = reinterpret_cast<HT_Resource>(ioParam);
+			if ( node ) {
+				CNavCenterWindow* navCenter = dynamic_cast<CNavCenterWindow*>(URobustCreateWindow::CreateWindow(CNavCenterWindow::res_ID, this));
+				navCenter->BuildHTPane ( node );
+				navCenter->Show();
+			}
+		}
+			break;
+				
 #if defined(MOZ_MAIL_COMPOSE) || defined(MOZ_MAIL_NEWS)
 		case cmd_NewMailMessage:
 			MSG_MailDocument(NULL);
