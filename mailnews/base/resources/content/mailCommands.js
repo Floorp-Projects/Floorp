@@ -178,18 +178,18 @@ function ComposeMessage(type, format, folder, messageArray)
 	if (messageArray && messageArray.length > 0)
 	{
 		uri = "";
-		for (var i = 0; i < messageArray.length && i < 8; i ++)
+		for (var i = 0; i < messageArray.length; i ++)
 		{	
 			var messageUri = messageArray[i];
-      //dump("XXX messageUri in ComposeMessage = " + messageUri + "\n");
-			//dump('i = '+ i);
-			//dump('\n');				
 			if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
 				type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
 				type == msgComposeType.ReplyToSenderAndGroup ||
 				type == msgComposeType.Template || type == msgComposeType.Draft)
 			{
 				msgComposeService.OpenComposeWindow(null, messageUri, type, format, identity, msgWindow);
+        //limit the number of new compose windows to 8. Why 8? I like that number :-)
+        if (i == 7)
+          break;
 			}
 			else
 			{
@@ -199,9 +199,7 @@ function ComposeMessage(type, format, folder, messageArray)
 			}
 		}
 		if (type == msgComposeType.ForwardAsAttachment)
-		{
 			msgComposeService.OpenComposeWindow(null, uri, type, format, identity, msgWindow);
-		}
 	}
 	else
 		dump("### nodeList is invalid\n");
