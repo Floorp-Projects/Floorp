@@ -1594,6 +1594,11 @@ nsBookmarksService::~nsBookmarksService()
 		mTimer->Cancel();
 		mTimer = nsnull;
 	}
+
+	// Unregister ourselves from the RDF service
+	if (gRDF)
+	    gRDF->UnregisterDataSource(this);
+
 	// Note: can't flush in the DTOR, as the RDF service
 	// has probably already been destroyed
 	// Flush();
