@@ -2,4 +2,8 @@
 # This is a list of local files which get copied to the mozilla:dist:widget directory
 #
 
+nsAppShellCIDs.h
+nsIAppShellService.h
+nsICmdLineService.h
 nsIWebShellWindow.h
+nsIWidgetController.h
