@@ -38,6 +38,7 @@ viewer:Mozilla Profile Wizard
 viewer:Mozilla Select Profile
 ; viewer:NSPR Logging
 viewer:Plugins:*
+viewer:Search Plugins:*
 
 viewer:Essential Files:gfx.shlb 
 viewer:Essential Files:libimg.shlb 
@@ -203,7 +204,6 @@ viewer:res:html.css
 viewer:res:maccharset.properties 
 viewer:res:rdf:article.gif
 viewer:res:rdf:collapser.gif
-viewer:res:rdf:datasets:*
 viewer:res:rdf:document.gif
 viewer:res:rdf:dom-test-1.xul
 viewer:res:rdf:dom-test-2.xul
