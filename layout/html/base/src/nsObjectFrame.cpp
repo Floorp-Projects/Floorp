@@ -128,6 +128,11 @@
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
 
+// accessibility support
+#ifdef ACCESSIBILITY
+#include "nsIAccessibilityService.h"
+#endif
+
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kRangeCID,     NS_RANGE_CID);
 
@@ -401,6 +406,29 @@ NS_IMETHODIMP_(nsrefcnt) nsObjectFrame::Release(void)
   NS_WARNING("not supported for frames");
   return 1;
 }
+
+#ifdef ACCESSIBILITY
+NS_IMETHODIMP nsObjectFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+    return accService->CreateIFrameAccessible(node, aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+#ifdef XP_WIN
+NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
+{
+  *aPort = (HWND) mInstanceOwner->GetPluginPort();
+  return NS_OK;
+}
+#endif
+#endif
+
 
 static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);

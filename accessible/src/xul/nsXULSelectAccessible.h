@@ -109,14 +109,12 @@ public:
 /*
  * A class the represents the XUL Listbox widget.
  */
-class nsXULListboxAccessible : public nsListboxAccessible,
-                               public nsIAccessibleSelectable  
+class nsXULListboxAccessible : public nsListboxAccessible
 {
 public:
 
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESELECTABLE
-  
+
   nsXULListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULListboxAccessible() {}
 

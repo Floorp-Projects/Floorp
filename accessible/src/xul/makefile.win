@@ -24,11 +24,13 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_xul_s
 REQUIRES = \
   content \
+  docshell \
   dom \
   gfx \
   intl \
   layout \
   necko \
+  plugin \
   pref \
   string \
   widget \
@@ -50,11 +52,7 @@ EXPORTS = \
 LINCS = \
   -I..\base \
   -I..\html \
-  -I..\..\..\layout\html\forms\public \
-  -I..\..\..\layout\html\forms\src \
-  -I..\..\..\layout\html\base\src \
   $(NULL)
-
 
 include <$(DEPTH)\config\rules.mak>
 

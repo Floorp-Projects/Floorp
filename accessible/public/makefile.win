@@ -31,14 +31,15 @@ XPIDLSRCS =               \
   .\nsIAccessibleEditableText.idl \
   .\nsIAccessibleEventReceiver.idl \
   .\nsIAccessibleEventListener.idl \
-  .\nsIAccessibleSelectable.idl \
-  .\nsIAccessibleSelection.idl \
   .\nsIAccessibleHyperLink.idl \
   .\nsIAccessibleHyperText.idl \
+  .\nsIAccessibleProvider.idl \
+  .\nsIAccessibleSelectable.idl \
+  .\nsIAccessibleSelection.idl \
   .\nsIAccessibleTable.idl \
   .\nsIAccessibleText.idl \
   .\nsIAccessibleValue.idl \
-  .\nsIAccessibleProvider.idl \
+  .\nsIAccessibleWin32Object.idl \
   $(NULL)
 
 EXPORTS = \

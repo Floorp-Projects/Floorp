@@ -89,6 +89,9 @@ class nsHTMLIFrameRootAccessible : public nsRootAccessible
   protected:
     void Init();
 
+  public:
+    void Init(nsIAccessible *aOuterAccessible);
+
     // In these variable names, "outer" relates to the nsHTMLIFrameAccessible, as opposed to the 
     // nsHTMLIFrameRootAccessible which is "inner".
     // The outer node is a <browser> or <iframe> tag, whereas the inner node corresponds to the inner document root.

@@ -46,7 +46,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsHTMLImageAccessible.h"
 #include "nsHTMLLinkAccessible.h"
-//#include "nsHTMLObjectAccessible.h" -- this comes with a later checkin DOH! - jgaunt
+#include "nsHTMLPluginAccessible.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsHTMLTextAccessible.h"
@@ -57,6 +57,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLLegendElement.h"
@@ -65,10 +66,13 @@
 #include "nsIFrame.h"
 #include "nsILink.h"
 #include "nsINameSpaceManager.h"
+#include "nsIObjectFrame.h"
+#include "nsIPluginInstance.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsITextContent.h"
 #include "nsLayoutAtoms.h"
+#include "nsObjectFrame.h"
 #include "nsRootAccessible.h"
 #include "nsString.h"
 #include "nsTextFragment.h"
@@ -79,6 +83,11 @@
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
 #include "nsIAccessible.h"
+
+// For native window support for object/embed/applet tags
+#ifdef XP_WIN
+#include "nsHTMLWin32ObjectAccessible.h"
+#endif
 
 // IFrame
 #include "nsIDocShell.h"
@@ -278,20 +287,24 @@ nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessib
         nsCOMPtr<nsIWeakReference> innerWeakShell =
           do_GetWeakReference(innerPresShell);
 
-        nsCOMPtr<nsIAccessible> innerRootAccessible =
+        nsHTMLIFrameRootAccessible *innerRootAccessible =
           new nsHTMLIFrameRootAccessible(aDOMNode, innerWeakShell);
 
         if (innerRootAccessible) {
-          nsHTMLIFrameAccessible* outerRootAccessible =
+          nsHTMLIFrameAccessible *outerRootAccessible =
             new nsHTMLIFrameAccessible(aDOMNode, innerRootAccessible,
                                        outerWeakShell, sub_doc);
 
           if (outerRootAccessible) {
+            innerRootAccessible->Init(outerRootAccessible);
             *_retval = outerRootAccessible;
-            NS_ADDREF(*_retval);
-
-            return NS_OK;
+            if (*_retval) {
+              NS_ADDREF(*_retval);
+              return NS_OK;
+            }
           }
+          else // don't leak the innerRoot
+            delete innerRootAccessible;
         }
       }
     }
@@ -520,25 +533,35 @@ nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISup
   return NS_OK;
 }
 
-/* -- coming in a later patch
 NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLObjectAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLPluginAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+                                                   nsIAccessible **_retval)
 {
-  nsIFrame* frame;
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> weakShell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
-  if (NS_FAILED(rv))
-    return rv;
+  *_retval = new nsHTMLPluginAccessible(aDOMNode, aShell);
 
-  *_retval = new nsHTMLObjectAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
   return NS_OK;
 }
-*/
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLNativeWindowAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+                                                         PRInt32 aHwnd, nsIAccessible **_retval)
+{
+#ifdef XP_WIN
+  *_retval = new nsHTMLWin32ObjectAccessible(aDOMNode, aShell, aHwnd);
+
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsISupports *aFrame, nsIAccessible **_retval)
@@ -1145,6 +1168,54 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTabsAccessible(nsIDOMNode *aNode,
   return NS_OK;
 }
 
+/**
+  * We can have several cases here. 
+  *  1) a text or html embedded document where the contentDocument
+  *     variable in the object element holds the content
+  *  2) web content that uses a plugin, which means we will
+  *     have to go to the plugin to get the accessible content
+  *  3) An image or imagemap, where the image frame points back to 
+  *     the object element DOMNode
+  */
+nsresult
+nsAccessibilityService::GetHTMLObjectAccessibleFor(nsIDOMNode *aNode, 
+                                                   nsIPresShell *aShell,
+                                                   nsObjectFrame *aFrame,
+                                                   nsIAccessible **_retval)
+{
+  // 1) for object elements containing either HTML or TXT documents
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsCOMPtr<nsIDOMHTMLObjectElement> obj(do_QueryInterface(aNode));
+  if (obj)
+    obj->GetContentDocument(getter_AddRefs(domDoc));
+  else
+    domDoc = do_QueryInterface(aNode);
+  if (domDoc)
+    return CreateIFrameAccessible(aNode, _retval);
+
+  // 2) for plugins
+  nsCOMPtr<nsIPluginInstance> pluginInstance ;
+  aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance));
+  if (pluginInstance) {
+    nsCOMPtr<nsIWeakReference> weakShell (do_GetWeakReference(aShell));
+    CreateHTMLPluginAccessible(aNode, weakShell, _retval);
+    return NS_OK;
+  }
+
+  // 3) for images and imagemaps
+  nsCOMPtr<nsIPresContext> context;
+  aShell->GetPresContext(getter_AddRefs(context));
+  if (!context)
+    return NS_ERROR_FAILURE;
+  // we have the object frame, get the image frame
+  nsIFrame *frame;
+  aFrame->FirstChild(context, nsnull, &frame);
+  CreateHTMLImageAccessible(frame, _retval);
+  if (*_retval)
+    return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
 
 /**
   * GetAccessibleFor - get an nsIAccessible from a DOM node
@@ -1242,6 +1313,14 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   shell->GetPrimaryFrameFor(content, &frame);
   if (!frame)
     return NS_ERROR_FAILURE;
+
+  // ---- object/embed/applet tags all use nsObjectFrames ----
+  nsCOMPtr<nsIAtom> frameType;
+  frame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType.get() == nsLayoutAtoms::objectFrame) {
+    nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, frame);
+    return GetHTMLObjectAccessibleFor(aNode, shell, objectFrame, _retval);
+  }
 
   frame->GetAccessible(getter_AddRefs(newAcc));
 

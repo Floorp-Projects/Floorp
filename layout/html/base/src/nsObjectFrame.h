@@ -45,6 +45,10 @@
 #include "nsplugin.h"
 #include "nsIObjectFrame.h"
 
+#ifdef ACCESSIBILITY
+class nsIAccessible;
+#endif
+
 class nsPluginInstanceOwner;
 
 #define nsObjectFrameSuper nsHTMLContainerFrame
@@ -100,6 +104,14 @@ public:
   nsresult MakeAbsoluteURL(nsIURI* *aFullURI, 
                           nsString aSrc,
                           nsIURI* aBaseURI);
+  // accessibility support
+#ifdef ACCESSIBILITY
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#ifdef XP_WIN
+  NS_IMETHOD GetPluginPort(HWND *aPort);
+#endif
+#endif
+
   //local methods
   nsresult CreateWidget(nsIPresContext* aPresContext,
                         nscoord aWidth,

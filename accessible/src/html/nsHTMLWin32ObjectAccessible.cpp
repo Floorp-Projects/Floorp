@@ -19,8 +19,9 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- * Contributor(s):  John Gaunt (jgaunt@netscape.com)
+ * Contributor(s):
+ *       John Gaunt (jgaunt@netscape.com) (original author)
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,36 +37,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsAccessibilityService_h__
-#define __nsAccessibilityService_h__
+#include "nsHTMLWin32ObjectAccessible.h"
+#include "Accessible.h"
 
-#include "nsIAccessibilityService.h"
-#include "nsIContent.h"
-#include "nsIPresShell.h"
-#include "nsIDocShell.h"
-#include "nsObjectFrame.h"
-
-class nsIFrame;
-class nsIWeakReference;
-class nsIDOMNode;
-
-class nsAccessibilityService : public nsIAccessibilityService
+nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, PRInt32 aHwnd):
+nsAccessible(aNode, aShell)
 {
-public:
-  nsAccessibilityService();
-  virtual ~nsAccessibilityService();
+  if (aHwnd) {
+    // XXX - when we get accessible plugins we may have to check here
+    //       for the proper window handle using Win32 APIs so we check
+    //       the proper IAccessible for the information we need.
+    mHwnd = aHwnd;
+  }
+}
 
-  NS_DECL_ISUPPORTS
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLWin32ObjectAccessible, nsAccessible, nsIAccessibleWin32Object)
 
-  // nsIAccessibilityService methods:
-  NS_DECL_NSIACCESSIBILITYSERVICE
+NS_IMETHODIMP
+nsHTMLWin32ObjectAccessible::GetHwnd(PRInt32 *aHwnd) {
+  *aHwnd = mHwnd;
+  return NS_OK;
+}
 
-private:
-  nsresult GetHTMLObjectAccessibleFor(nsIDOMNode *aNode, nsIPresShell *aShell, nsObjectFrame *aFrame, nsIAccessible **_retval);
-  nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
-  nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
-  void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
-  nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
-};
-
-#endif /* __nsIAccessibilityService_h__ */

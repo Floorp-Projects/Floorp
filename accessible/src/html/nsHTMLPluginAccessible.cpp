@@ -19,8 +19,9 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- * Contributor(s):  John Gaunt (jgaunt@netscape.com)
+ * Contributor(s):
+ *          John Gaunt (jgaunt@netscape.com)
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,36 +37,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsAccessibilityService_h__
-#define __nsAccessibilityService_h__
-
-#include "nsIAccessibilityService.h"
+#include "nsHTMLPluginAccessible.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
-#include "nsIDocShell.h"
 #include "nsObjectFrame.h"
+#include "nsplugindefs.h"
+#include "nsAccessibilityService.h"
 
-class nsIFrame;
-class nsIWeakReference;
-class nsIDOMNode;
-
-class nsAccessibilityService : public nsIAccessibilityService
+nsHTMLPluginAccessible::nsHTMLPluginAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsAccessible(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
 {
-public:
-  nsAccessibilityService();
-  virtual ~nsAccessibilityService();
+}
 
-  NS_DECL_ISUPPORTS
+NS_IMETHODIMP
+nsHTMLPluginAccessible::GetAccFirstChild(nsIAccessible **_retval)
+{
+  *_retval = nsnull;
+  nsIFrame* frame = nsnull;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  shell->GetPrimaryFrameFor(content, &frame);
+  if (!frame)
+    return NS_ERROR_FAILURE;
 
-  // nsIAccessibilityService methods:
-  NS_DECL_NSIACCESSIBILITYSERVICE
+  nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, frame);
+#ifdef XP_WIN
+  HWND pluginPort = nsnull;
+  objectFrame->GetPluginPort(&pluginPort);
+  if (pluginPort) {
+    if (mAccService)
+      mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, (PRInt32)pluginPort, _retval);
+  }
+#else
+  *_retval = nsnull;
+#endif
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
 
-private:
-  nsresult GetHTMLObjectAccessibleFor(nsIDOMNode *aNode, nsIPresShell *aShell, nsObjectFrame *aFrame, nsIAccessible **_retval);
-  nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
-  nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
-  void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
-  nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
-};
+NS_IMETHODIMP
+nsHTMLPluginAccessible::GetAccLastChild(nsIAccessible **_retval)
+{
+  return GetAccFirstChild(_retval);
+}
 
-#endif /* __nsIAccessibilityService_h__ */
+NS_IMETHODIMP
+nsHTMLPluginAccessible::GetAccChildCount(PRInt32 *_retval)
+{
+  *_retval = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLPluginAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_WINDOW;
+  return NS_OK;
+}
+

@@ -32,6 +32,7 @@ REQUIRES = \
   layout \
   locale \
   necko \
+  plugin \
   pref \
   string \
   uriloader \
@@ -40,7 +41,6 @@ REQUIRES = \
   widget \
   xpcom \
   $(NULL)
-
 
 CPP_OBJS = \
   .\$(OBJDIR)\nsAccessibilityService.obj \
@@ -62,6 +62,7 @@ LINCS = \
   -I..\..\..\layout\html\forms\public \
   -I..\..\..\layout\html\forms\src \
   -I..\..\..\layout\html\base\src \
+  -I..\..\..\widget\src\windows \
   $(NULL)
 
 

@@ -209,6 +209,8 @@ nsAccessible(aDOMNode, aShell)
 {
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(nsListboxAccessible, nsAccessible, nsIAccessibleSelectable)
+
 /** We are a window, as far as MSAA is concerned */
 NS_IMETHODIMP nsListboxAccessible::GetAccRole(PRUint32 *_retval)
 {
@@ -238,6 +240,15 @@ NS_IMETHODIMP nsListboxAccessible::GetAccState(PRUint32 *_retval)
 
   *_retval |= STATE_READONLY | STATE_FOCUSABLE;
 
+  return NS_OK;
+}
+
+/**
+  * No-op method body. subclasses MUST override this method
+  */
+NS_IMETHODIMP nsListboxAccessible::GetSelectedChildren(nsISupportsArray **_retval)
+{
+  *_retval = nsnull;
   return NS_OK;
 }
 

@@ -151,9 +151,6 @@ nsListboxAccessible(aDOMNode, aShell)
 {
 }
 
-/** Inherit the ISupports impl from nsAccessible, we handle nsIAccessibleSelectable */
-NS_IMPL_ISUPPORTS_INHERITED1(nsXULListboxAccessible, nsListboxAccessible, nsIAccessibleSelectable)
-
 /**
   * Let Accessible count them up
   */

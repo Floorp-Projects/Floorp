@@ -166,40 +166,51 @@ nsHTMLIFrameRootAccessible::~nsHTMLIFrameRootAccessible()
 
 void nsHTMLIFrameRootAccessible::Init()
 {
-  if (!mOuterAccessible) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mOuterNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-    if (doc) {
-      nsCOMPtr<nsIPresShell> parentShell;
-      doc->GetShellAt(0, getter_AddRefs(parentShell));
-      if (parentShell) {
-        nsCOMPtr<nsIContent> content(do_QueryInterface(mOuterNode));
-        nsIFrame* frame = nsnull;
-        parentShell->GetPrimaryFrameFor(content, &frame);
-        NS_ASSERTION(frame, "No outer frame.");
-        frame->GetAccessible(getter_AddRefs(mOuterAccessible));
-        NS_ASSERTION(mOuterAccessible, "Something's wrong - there's no accessible for the outer parent of this frame.");
-      }
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mOuterNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (doc) {
+    nsCOMPtr<nsIPresShell> parentShell;
+    doc->GetShellAt(0, getter_AddRefs(parentShell));
+    if (parentShell) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(mOuterNode));
+      nsIFrame* frame = nsnull;
+      parentShell->GetPrimaryFrameFor(content, &frame);
+      NS_ASSERTION(frame, "No outer frame.");
+      if (!frame)
+        return;
+      frame->GetAccessible(getter_AddRefs(mOuterAccessible));
+      NS_ASSERTION(mOuterAccessible, "Something's wrong - there's no accessible for the outer parent of this frame.");
     }
   }
 }
+
+void nsHTMLIFrameRootAccessible::Init(nsIAccessible *aOuterAccessible)
+{
+  if (aOuterAccessible) {
+    mOuterAccessible = aOuterAccessible;
+  }
+}
+
   /* readonly attribute nsIAccessible accParent; */
-NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccParent(nsIAccessible * *_retval) 
+NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccParent(nsIAccessible **_retval) 
 { 
-  Init();
+  if (!mOuterAccessible)
+    Init();
   return mOuterAccessible->GetAccParent(_retval);
 }
 
   /* nsIAccessible getAccNextSibling (); */
 NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccNextSibling(nsIAccessible **_retval) 
 {
-  Init();
+  if (!mOuterAccessible)
+    Init();
   return mOuterAccessible->GetAccNextSibling(_retval);
 }
 
 NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccPreviousSibling(nsIAccessible **_retval) 
 {
-  Init();
+  if (!mOuterAccessible)
+    Init();
   return mOuterAccessible->GetAccPreviousSibling(_retval);
 }

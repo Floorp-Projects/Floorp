@@ -47,8 +47,7 @@
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
-  *  widgets, some of which are shared between the two. This file contains 
-  *  all of the widgets for both of the Selects, for HTML only. Some of them
+  *  widgets, some of which are shared between the two. This file contains   *  all of the widgets for both of the Selects, for HTML only. Some of them
   *  extend classes from nsSelectAccessible.cpp, which contains base classes 
   *  that are also extended by the XUL Select Accessibility support.
   *
@@ -98,12 +97,12 @@ public:
   virtual ~nsHTMLSelectOptionAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
   static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
 
 };
@@ -133,14 +132,12 @@ public:
 /*
  * A class the represents the HTML Listbox widget.
  */
-class nsHTMLListboxAccessible : public nsListboxAccessible,
-                                public nsIAccessibleSelectable  
+class nsHTMLListboxAccessible : public nsListboxAccessible
 {
 public:
 
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESELECTABLE
-  
+
   nsHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsHTMLListboxAccessible() {}
 

@@ -34,22 +34,23 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "Accessible.h"
+#include "nsCOMPtr.h"
+#include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
-#include "nsIAccessibleSelectable.h"
-#include "nsIAccessibilityService.h"
-#include "Accessible.h"
-#include "nsIWidget.h"
-#include "nsWindow.h"
-#include "nsCOMPtr.h"
 #include "nsIAccessibleEventReceiver.h"
-#include "nsReadableUtils.h"
-#include "nsITextContent.h"
+#include "nsIAccessibleSelectable.h"
+#include "nsIAccessibleWin32Object.h"
 #include "nsIDocument.h"
-#include "nsIXULDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsINameSpaceManager.h"
+#include "nsITextContent.h"
+#include "nsIWidget.h"
+#include "nsIXULDocument.h"
+#include "nsReadableUtils.h"
+#include "nsWindow.h"
 #include "String.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
@@ -747,6 +748,15 @@ IAccessible *Accessible::NewAccessible(nsIAccessible *aNSAcc, nsIDOMNode *aNode,
 {
   IAccessible *retval = nsnull;
   if (aNSAcc) {
+    nsCOMPtr<nsIAccessibleWin32Object> accObject(do_QueryInterface(aNSAcc));
+    if (accObject) {
+      PRInt32 iHwnd;
+      accObject->GetHwnd(&iHwnd);
+      if (iHwnd) {
+        AccessibleObjectFromWindow(NS_REINTERPRET_CAST(HWND, iHwnd), OBJID_CLIENT, IID_IAccessible, (void **) &retval);
+        return retval;
+      }
+    }
     nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(aNSAcc));
     if (accDoc) {
       nsCOMPtr<nsIDocument> doc;
