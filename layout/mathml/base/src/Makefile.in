@@ -78,8 +78,11 @@ include $(topsrcdir)/config/rules.mk
 
 install::
 	$(INSTALL) $(srcdir)/mathfont.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfontPUA.properties $(DIST)/bin/res/fonts
 	$(INSTALL) $(srcdir)/mathfontCMSY10.properties $(DIST)/bin/res/fonts
 	$(INSTALL) $(srcdir)/mathfontCMEX10.properties $(DIST)/bin/res/fonts
 	$(INSTALL) $(srcdir)/mathfontMTExtra.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfontMath1.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfontMath2.properties $(DIST)/bin/res/fonts
 	$(INSTALL) $(srcdir)/mathfontMath4.properties $(DIST)/bin/res/fonts
 	$(INSTALL) $(srcdir)/mathfontSymbol.properties $(DIST)/bin/res/fonts
