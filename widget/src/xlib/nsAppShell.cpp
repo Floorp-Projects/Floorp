@@ -271,6 +271,11 @@ nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
 
 nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
+  if (aEvent == 0) {
+    return NS_ERROR_FAILURE;
+  }
+  XEvent *event = (XEvent *)aEvent;
+  DispatchXEvent(event);
   return NS_OK;
 }
 
@@ -292,7 +297,6 @@ void
 nsAppShell::DispatchXEvent(XEvent *event)
 {
   nsWidget *widget;
-  XEvent    config_event;
   widget = nsWidget::GetWidgetForWindow(event->xany.window);
 
   // switch on the type of event
@@ -311,26 +315,6 @@ nsAppShell::DispatchXEvent(XEvent *event)
                                          event->xconfigure.y,
                                          event->xconfigure.width, 
                                          event->xconfigure.height));
-
-    while (XCheckWindowEvent(mDisplay, 
-                             event->xany.window, 
-                             StructureNotifyMask, 
-                             &config_event) == True) 
-    {
-        // make sure that we don't get other types of events.  
-        // StructureNotifyMask includes other kinds of events, too.
-        if (config_event.type == ConfigureNotify) 
-        {
-            *event = config_event;
-
-            PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("DispatchEvent: Extra ConfigureNotify event for window 0x%lx %d %d %d %d\n",
-                                                 event->xconfigure.window,
-                                                 event->xconfigure.x, 
-                                                 event->xconfigure.y,
-                                                 event->xconfigure.width, 
-                                                 event->xconfigure.height));
-        }
-    }
 
     HandleConfigureNotifyEvent(event, widget);
 
@@ -471,9 +455,29 @@ void
 nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("ConfigureNotify event for window 0x%lx %d %d %d %d\n",
-         event->xconfigure.window,
-         event->xconfigure.x, event->xconfigure.y,
+                                       event->xconfigure.window,
+                                       event->xconfigure.x, event->xconfigure.y,
                                        event->xconfigure.width, event->xconfigure.height));
+  XEvent    config_event;
+  while (XCheckWindowEvent(event->xany.display, 
+                           event->xany.window, 
+                           StructureNotifyMask, 
+                           &config_event) == True) {
+    // make sure that we don't get other types of events.  
+    // StructureNotifyMask includes other kinds of events, too.
+    if (config_event.type == ConfigureNotify) 
+      {
+        *event = config_event;
+        
+        PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("DispatchEvent: Extra ConfigureNotify event for window 0x%lx %d %d %d %d\n",
+                                             event->xconfigure.window,
+                                             event->xconfigure.x, 
+                                             event->xconfigure.y,
+                                             event->xconfigure.width, 
+                                             event->xconfigure.height));
+      }
+  }
+
   nsSizeEvent sevent;
   sevent.message = NS_SIZE;
   sevent.widget = aWidget;

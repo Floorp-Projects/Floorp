@@ -17,6 +17,7 @@
  */
 
 #include <X11/cursorfont.h>
+#include "nsIXlibWindowService.h"
 
 #include "nsWidget.h"
 #include "nsGfxCIID.h"
@@ -31,6 +32,11 @@ nsHashtable *nsWidget::window_list = nsnull;
 
 // this is a class for generating keys for
 // the list of windows managed by mozilla.
+
+// this is possibly the class impl that will be
+// called whenever a new window is created/destroyed
+
+nsXlibWindowCallback *nsWidget::mWindowCallback = nsnull;
 
 class nsWindowKey : public nsHashKey {
 protected:
@@ -639,6 +645,11 @@ nsWidget::AddWindowCallback(Window aWindow, nsWidget *aWidget)
   window_list->Put(window_key, aWidget);
   // add a new ref to this widget
   NS_ADDREF(aWidget);
+  // make sure that if someone is listening that we inform
+  // them of the new window
+  if (mWindowCallback) {
+    mWindowCallback->WindowCreated(aWindow);
+  }
   delete window_key;
 }
 
@@ -649,6 +660,9 @@ nsWidget::DeleteWindowCallback(Window aWindow)
   nsWidget *widget = (nsWidget *)window_list->Get(window_key);
   NS_RELEASE(widget);
   window_list->Remove(window_key);
+  if (mWindowCallback) {
+    mWindowCallback->WindowDestroyed(aWindow);
+  }
   delete window_key;
 }
 
@@ -958,4 +972,32 @@ void nsWidget::SetVisibility(int aState)
 void nsWidget::SetMapStatus(PRBool aState)
 {
   mIsMapped = aState;
+}
+
+nsresult
+nsWidget::SetXlibWindowCallback(nsXlibWindowCallback *aCallback)
+{
+  if (aCallback == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+  else {
+    mWindowCallback = aCallback;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsWidget::XWindowCreated(Window aWindow) {
+  if (mWindowCallback) {
+    mWindowCallback->WindowCreated(aWindow);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsWidget::XWindowDestroyed(Window aWindow) {
+  if (mWindowCallback) {
+    mWindowCallback->WindowDestroyed(aWindow);
+  }
+  return NS_OK;
 }

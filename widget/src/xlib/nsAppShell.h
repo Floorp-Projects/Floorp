@@ -44,10 +44,9 @@ class nsAppShell : public nsIAppShell
   NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
   NS_IMETHOD            Exit();
   virtual void *        GetNativeData(PRUint32 aDataType);
-  
+  static void           DispatchXEvent(XEvent *event);
  private:
   nsDispatchListener*     mDispatchListener;
-  void DispatchXEvent(XEvent *event);
   static void HandleButtonEvent(XEvent *event, nsWidget *aWidget);
   static void HandleMotionNotifyEvent(XEvent *event, nsWidget *aWidget);
   static void HandleExposeEvent(XEvent *event, nsWidget *aWidget);
