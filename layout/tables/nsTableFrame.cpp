@@ -1292,7 +1292,7 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
   }
   else if (nsLayoutAtoms::scrollFrame == frameType) {
     nsIScrollableFrame* scrollable = nsnull;
-    nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **)&scrollable);
+    nsresult rv = CallQueryInterface(aFrame, &scrollable);
     if (NS_SUCCEEDED(rv) && (scrollable)) {
       nsIFrame* scrolledFrame;
       scrollable->GetScrolledFrame(nsnull, scrolledFrame);
@@ -1462,7 +1462,7 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis && vis->IsVisibleOrCollapsed()) {
+    if (vis && vis->IsVisible()) {
       const nsStyleBorder* border =
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStylePadding* padding =
@@ -2217,7 +2217,7 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
       aDoCollapse = PR_TRUE;
       SetResizeReflow(PR_TRUE);
     }
-  }
+  }  
   return rv;
 }
 
@@ -4608,13 +4608,12 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
   // do this last, because it addrefs, 
   // and we don't want the caller leaking it on error
   nsCOMPtr<nsIContent>content;
-  result = cellFrame->GetContent(getter_AddRefs(content));  
-  if (NS_SUCCEEDED(result) && content)
-  {
-    content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)(&aCell));
-  }   
-                                        
-  return result;
+  result = cellFrame->GetContent(getter_AddRefs(content));
+  if (NS_FAILED(result)) return result; 
+  if (!content) return NS_ERROR_FAILURE;   
+  
+  return CallQueryInterface(content, &aCell);                                      
+  
 }
 
 NS_IMETHODIMP nsTableFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)

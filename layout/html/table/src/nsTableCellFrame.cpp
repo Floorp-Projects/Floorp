@@ -460,7 +460,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     const nsStyleTableBorder* cellTableStyle = nsnull;
     const nsStyleVisibility* vis = 
        (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisibleOrCollapsed()) {
+    if (vis->IsVisible()) {
       myBorder = (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
       NS_ENSURE_TRUE(myBorder, NS_ERROR_NULL_POINTER);
       myPadding = (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Border);
@@ -477,7 +477,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     PaintUnderlay(*aPresContext, aRenderingContext, aDirtyRect, aFlags, *cellTableStyle,
                   *myBorder, *myPadding, paintBackground, paintChildren);
 
-    if (vis->IsVisibleOrCollapsed()) {
+    if (vis->IsVisible()) {
       const nsStyleBackground* myColor = 
         (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background); NS_ENSURE_TRUE(myColor, NS_ERROR_NULL_POINTER);
       DecorateForSelection(aPresContext, aRenderingContext,myColor); //ignore return value
