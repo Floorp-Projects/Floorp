@@ -141,6 +141,9 @@ interface nsIPref : nsISupports {
   void CopyPrefsTree(in string srcRoot, in string destRoot);
   void DeleteBranch(in string branchName);
   
+  string CreateChildList(in string parent_node);
+  string NextChild(in string child_list, out short index);
+
 };
 
   
