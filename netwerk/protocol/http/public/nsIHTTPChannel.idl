@@ -28,6 +28,7 @@ interface nsISimpleEnumerator;
 interface nsIAtom;
 interface nsIInputStream;
 interface nsIURI;
+interface nsIPrompt;
 
 [scriptable, uuid(35c00430-1938-11d3-933a-000064657374)]
 interface nsIHTTPChannel : nsIChannel
@@ -83,11 +84,13 @@ interface nsIHTTPChannel : nsIChannel
     
     readonly attribute nsIStreamListener ResponseDataListener;
 	
-	readonly attribute string Charset;
+    readonly attribute string Charset;
 
-	attribute PRBool AuthTriedWithPrehost;
+    attribute PRBool AuthTriedWithPrehost;
 
     readonly attribute PRBool UsingProxy;
+
+    readonly attribute nsIPrompt prompter;
 
     /*
        This string if set is used for forming the final request. So if you 

@@ -2328,6 +2328,15 @@ nsHTTPChannel::GetUsingProxy(PRBool *aUsingProxy)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTTPChannel::GetPrompter(nsIPrompt **aPrompter) {
+
+  if (!aPrompter)
+    return NS_ERROR_NULL_POINTER;
+  *aPrompter = mPrompter;
+  NS_IF_ADDREF(*aPrompter);
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsHTTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
