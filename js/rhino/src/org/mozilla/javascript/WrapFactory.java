@@ -39,7 +39,8 @@ package org.mozilla.javascript;
 
 /**
  * Embeddings that wish to provide their own custom wrappings for Java
- * objects may extend this class and call Context.setWrapFactory.
+ * objects may extend this class and call
+ * {@link Context#setWrapFactory(WrapFactory)}
  * Once an instance of this class or an extension of this class is enabled
  * for a given context (by calling setWrapFactory on that context), Rhino
  * will call the methods of this class whenever it needs to wrap a value
@@ -125,14 +126,14 @@ public class WrapFactory {
      * scripts can access any Java method available in these objects.
      * Use {@link #setJavaPrimitiveWrap(boolean)} to change this.
      */
-    public boolean isJavaPrimitiveWrap() {
+    public final boolean isJavaPrimitiveWrap() {
         return javaPrimitiveWrap;
     }
 
     /**
      * @see #isJavaPrimitiveWrap()
      */
-    public void setJavaPrimitiveWrap(boolean value) {
+    public final void setJavaPrimitiveWrap(boolean value) {
         javaPrimitiveWrap = value;
     }
 
