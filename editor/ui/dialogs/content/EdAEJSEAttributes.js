@@ -29,17 +29,17 @@ function IsEventHandler( which )
 }
 
 // add an attribute to the tree widget
-function onAddJSEAttribute( which )
+function onAddJSEAttribute()
 {
-  if( !which ) 
-    return;
-  if( which.getAttribute ( "disabled" ) )
+  var which = document.getElementById("AddJSAttribute");
+  if(!which || which.getAttribute ( "disabled" ) )
     return;
 
   var name = dialog.AddJSEAttributeNameInput.value;
   var value = TrimString(dialog.AddJSEAttributeValueInput.value);
-  if(name == "")
+  if( !name )
     return;
+
   if ( name.substring(0,2).toLowerCase() != "on" )
     name = "on" + name;   // user has entered event without "on" prefix, add it
 
@@ -48,15 +48,12 @@ function onAddJSEAttribute( which )
     dialog.AddJSEAttributeValueInput.value = "";
   }
   dialog.AddJSEAttributeNameInput.focus();
+  doJSEEnabling();
 }
 
 // does enabling based on any user input.
-function doJSEEnabling( keycode )
+function doJSEEnabling()
 {
-  if(keycode == 13) {
-    onAddJSEAttribute( document.getElementById ( "AddJSEAttribute" ) );
-    return;
-  }
   var name = TrimString(dialog.AddJSEAttributeNameInput.value).toLowerCase();
 
   if ( name.substring(0,2) != "on" )
@@ -73,14 +70,6 @@ function UpdateJSEAttributes()
   dump("===============[ Setting and Updating JSE ]===============\n");
   var JSEAList = document.getElementById("JSEAList");
   var i;
-  for( i = 0; i < JSEAList.childNodes.length; i++)
-  {
-    var item = JSEAList.childNodes[i];
-    name = TrimString(item.firstChild.firstChild.getAttribute("value"));
-    value = TrimString(item.firstChild.lastChild.firstChild.value);
-    // set the event handler
-    element.setAttribute(name,value);
-  }
   // remove removed attributes
   for( i = 0; i < JSERAttrs.length; i++ )
   {
@@ -88,5 +77,15 @@ function UpdateJSEAttributes()
     if(element.getAttribute(name))
       element.removeAttribute(name);
     else continue; // doesn't exist, so don't bother removing it.
+  }
+  
+  // Add events
+  for( i = 0; i < JSEAList.childNodes.length; i++)
+  {
+    var item = JSEAList.childNodes[i];
+    name = TrimString(item.firstChild.firstChild.getAttribute("value"));
+    value = TrimString(item.firstChild.lastChild.firstChild.value);
+    // set the event handler
+    element.setAttribute(name,value);
   }
 }

@@ -37,6 +37,10 @@ var HTMLAttrs   = [];   // html attributes
 var CSSAttrs    = [];   // css attributes
 var JSEAttrs    = [];   // js events 
 
+var HTMLRAttrs  = [];   // removed html attributes                              
+//var CSSRAttrs   = [];   // removed css attributes                               
+var JSERAttrs   = [];   // removed js events                                    
+                                                                                                                                                   
 var gSelecting = false; // To prevent recursive selection
 var dialog;
 
@@ -171,29 +175,34 @@ function RemoveAttribute( treeId )
   
   var kids = tree.lastChild;  // treechildren element of tree
   var newIndex = tree.selectedIndex;
+
   // We only allow 1 selected item
   if (tree.selectedItems.length)
   {
     var item = tree.selectedItems[0];
     // Name is the value of the treecell
-    var name = item.firstChild.firstChild.getAttribute("value");
+    var attr = TrimString(item.firstChild.firstChild.getAttribute("value"));
 
     // remove the item from the attribute arrary
     switch ( tree.id ) {
       case "HTMLATree":
+        HTMLRAttrs[HTMLRAttrs.length] = attr;
         if (newIndex >= (HTMLAttrs.length-1))
           newIndex--;
-        RemoveNameFromAttArray(HTMLAttrs, name);
+        RemoveNameFromAttArray(HTMLAttrs, attr);
         break;
       case "CSSATree":   
+        // We write a completely new "style" string, so we don't need "remove" array
+        //CSSRAttrs[CSSRAttrs.length] = attr;
         if (newIndex >= (CSSAttrs.length-1))
           newIndex--;
-        RemoveNameFromAttArray(CSSAttrs, name);
+        RemoveNameFromAttArray(CSSAttrs, attr);
         break;
       case "JSEATree":
+        JSERAttrs[JSERAttrs.length] = attr;
         if (newIndex >= (JSEAttrs.length-1))
           newIndex--;
-        RemoveNameFromAttArray(JSEAttrs, name);
+        RemoveNameFromAttArray(JSEAttrs, attr);
         break;      
       default: break;
     }
