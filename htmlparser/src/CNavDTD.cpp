@@ -1280,7 +1280,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             result=mSink->AddLeaf(*theNode);
           break;
 
-        case eHTMLTag_comment:
         case eHTMLTag_userdefined:
           break; //drop them on the floor for now...
 
@@ -1596,23 +1595,7 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
     WriteTokenToLog(aToken);
   #endif
 
-  // You may find this hard to beleive, but this has to be here
-  // so that the TBODY doesnt die when it sees a comment.
-  // This case occurs on WWW.CREAF.COM
-  eHTMLTags theTag=mBodyContext->mStack.Last();
-  nsresult result=NS_OK;
-
-  switch(theTag) {
-    case eHTMLTag_table:
-    case eHTMLTag_tr:
-    case eHTMLTag_tbody:
-    case eHTMLTag_td:
-      break;
-    default:
-      if(mHasOpenBody){
-        result=(mSink) ? mSink->AddComment(aNode) : NS_OK; 
-      }
-  }
+  nsresult result=(mSink) ? mSink->AddComment(aNode) : NS_OK;  
   return result;
 }
 
