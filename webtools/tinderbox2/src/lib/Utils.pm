@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.22 $ 
-# $Date: 2001/10/05 22:11:48 $ 
+# $Revision: 1.23 $ 
+# $Date: 2001/10/10 15:08:24 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -189,7 +189,29 @@ sub get_env {
 
   $HOSTNAME = Sys::Hostname::hostname();
 
-  # check  effective uid of the process to see if we have
+  open (LOG , ">>$ERROR_LOG") ||
+    die("Could not open logfile: $ERROR_LOG\n");
+
+
+  # pick a unique id to append to file names. We do not want to worry
+  # about locks when writing files, and multiple instances of this
+  # program can be active at the same time
+
+  $UID = join('.', $TIME, $$);
+
+  $SIG{'__DIE__'} = \&fatal_error;
+  $SIG{'__WARN__'} = \&log_warning;
+
+  return 1;
+}
+
+
+sub chk_security {
+
+    # look at several potential security problems and die if they
+    # could cause us problems.
+
+  # Check  effective uid of the process to see if we have
   # been configured to run with too much privileges.
 
   # Ideally we do not want the tinderbox application running with the
@@ -233,21 +255,8 @@ sub get_env {
     security_check_data_dir($dir);
 
   }
-  
-  open (LOG , ">>$ERROR_LOG") ||
-    die("Could not open logfile: $ERROR_LOG\n");
 
-
-  # pick a unique id to append to file names. We do not want to worry
-  # about locks when writing files, and multiple instances of this
-  # program can be active at the same time
-
-  $UID = join('.', $TIME, $$);
-
-  $SIG{'__DIE__'} = \&fatal_error;
-  $SIG{'__WARN__'} = \&log_warning;
-
-  return 1;
+  return ;  
 }
 
 

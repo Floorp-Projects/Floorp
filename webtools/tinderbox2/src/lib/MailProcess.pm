@@ -4,8 +4,8 @@
 # mailprocessing program.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2001/10/05 22:11:48 $ 
+# $Revision: 1.10 $ 
+# $Date: 2001/10/10 15:08:24 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
@@ -73,7 +73,7 @@ sub parse_mailprocess_args {
   }
   
   if ($help) {
-    usage();
+    main::usage();
   }
 
   # For security purposes we may wish to disable web access to the mail
