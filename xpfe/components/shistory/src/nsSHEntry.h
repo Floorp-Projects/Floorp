@@ -55,7 +55,7 @@ protected:
 private:
    
 	 
-   nsCOMPtr<nsIURI>                mURI;
+  nsCOMPtr<nsIURI>                mURI;
 	nsCOMPtr<nsIDOMDocument>        mDocument;
 	nsString                        mTitle;
 	nsCOMPtr<nsIInputStream>        mPostData;
@@ -63,8 +63,9 @@ private:
 	nsVoidArray                     mChildren;
 	PRUint32                        mLoadType;  
 	PRUint32                        mID;
-   PRBool                          mIsFrameNavigation;
-	nsISHEntry *                    mParent;  // weak reference
+  PRBool                          mIsFrameNavigation;
+  nsCOMPtr<nsISupports>           mCacheKey;
+  nsISHEntry *                    mParent;  // weak reference
 };
 
 
