@@ -72,7 +72,7 @@ nsEditorBoxObject::SetDocument(nsIDocument* aDocument)
   if (mEditorShell)
   {
     rv = mEditorShell->Shutdown();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Error from editorShell->Shutdown");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Error from editor->Shutdown");
   }
   
   // this should only be called with a null document, which indicates
@@ -100,11 +100,20 @@ NS_IMETHODIMP nsEditorBoxObject::Init(nsIContent* aContent, nsIPresShell* aPresS
   if (NS_FAILED(rv)) return rv;
   
   NS_ASSERTION(!mEditorShell, "Double init of nsEditorBoxObject");
-  
+
+  // When editorshell goes away, this is what we should be doing:
+  //mEditor = do_CreateInstance("@mozilla.org/editor/htmleditor;1");
+  // but we need an editorshell for the transitional period, so:
   mEditorShell = do_CreateInstance("@mozilla.org/editor/editorshell;1");
   if (!mEditorShell) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsEditorBoxObject::GetEditor(nsIEditor** aResult)
+{
+  NS_ASSERTION(mEditorShell, "Editor box object not initted");
+  return mEditorShell->GetEditor(aResult);
 }
 
 NS_IMETHODIMP nsEditorBoxObject::GetEditorShell(nsIEditorShell** aResult)
