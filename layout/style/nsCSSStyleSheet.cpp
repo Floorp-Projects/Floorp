@@ -2575,12 +2575,12 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
 
     if (start < end) {
       if (aCaseSensitive) {
-        if (nsCRT::strcmp(value, start)) {
+        if (!nsCRT::strcmp(value, start)) {
           return PR_TRUE;
         }
       }
       else {
-        if (nsCRT::strcasecmp(value, start)) {
+        if (!nsCRT::strcasecmp(value, start)) {
           return PR_TRUE;
         }
       }
@@ -2616,12 +2616,12 @@ static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue,
 
     if (start < end) {
       if (aCaseSensitive) {
-        if (nsCRT::strcmp(value, start)) {
+        if (!nsCRT::strcmp(value, start)) {
           return PR_TRUE;
         }
       }
       else {
-        if (nsCRT::strcasecmp(value, start)) {
+        if (!nsCRT::strcasecmp(value, start)) {
           return PR_TRUE;
         }
       }
