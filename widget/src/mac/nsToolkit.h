@@ -53,6 +53,8 @@ class nsIEventQueue;
  * event queue per nsToolkit.
  */
 
+#include "MacTypes.h"
+
 class nsToolkit : public nsIToolkit
 {
 
