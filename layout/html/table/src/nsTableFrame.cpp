@@ -2087,7 +2087,9 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
 
   // If we're here that means we had to reflow all the rows, e.g., the column widths 
   // changed. We need to make sure that any damaged areas are repainted
-  Invalidate(aPresContext, mRect);
+  if (!mRect.IsEmpty()) {
+    Invalidate(aPresContext, mRect);
+  }
 
   if (eReflowReason_Resize == aReflowState.reason) {
     if (!DidResizeReflow()) {

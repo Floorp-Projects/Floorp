@@ -370,7 +370,7 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
   r.x += mBorderPadding.left;
   r.y += mBorderPadding.top;
 
-  if (whichLoad == 0)
+  if (whichLoad == 0 && !r.IsEmpty())
     Invalidate(aPresContext, r, PR_FALSE);
 
   return NS_OK;

@@ -5231,7 +5231,10 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
 
     maxFrameWidth  = PR_MAX(maxFrameWidth,  mRect.width) + onePixel; 
     maxFrameHeight = PR_MAX(maxFrameHeight, mRect.height);
-    Invalidate(aPresContext, nsRect(0,0,maxFrameWidth,maxFrameHeight));
+    nsRect damage(0,0,maxFrameWidth,maxFrameHeight);
+    if (!damage.IsEmpty()) {
+      Invalidate(aPresContext, damage);
+    }
   /*}*/
 
 
