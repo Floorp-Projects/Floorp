@@ -56,7 +56,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLIIDs.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
@@ -964,45 +963,51 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
     if (area->IsInside(aX, aY)) {
       if (area->GetHasURL()) {
         // Set the image loader's source URL and base URL
-        nsIURI* baseUri = nsnull;
+        nsCOMPtr<nsIURI> baseUri;
+
         if (mMap) {
-          nsIHTMLContent* htmlContent;
-          if (NS_SUCCEEDED( mMap->QueryInterface(kIHTMLContentIID, (void**)&htmlContent) )) {
-            htmlContent->GetBaseURL(baseUri);
-            NS_RELEASE(htmlContent);
+          nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mMap));
+          if (htmlContent) {
+            htmlContent->GetBaseURL(*getter_AddRefs(baseUri));
           }
           else {
-            nsIDocument* doc;
-            if (NS_SUCCEEDED( mMap->GetDocument(doc) ) && doc) {
-              doc->GetBaseURL(baseUri); // Could just use mDocument here...
-              NS_RELEASE(doc);
+            nsCOMPtr<nsIDocument> doc;
+            mMap->GetDocument(*getter_AddRefs(doc));
+
+            if (doc) {
+              // Could just use mDocument here...
+              doc->GetBaseURL(*getter_AddRefs(baseUri));
             }
           }
         }
-        if (!baseUri) return PR_FALSE;
-        
+
+        if (!baseUri) {
+          return PR_FALSE;
+        }
+
         nsAutoString href;
         area->GetHREF(href);
         NS_MakeAbsoluteURI(aAbsURL, href, baseUri);
-
-        NS_RELEASE(baseUri);
       }
 
       area->GetTarget(aTarget);
       if (mMap && (aTarget.Length() == 0)) {
-        nsIHTMLContent* content = nsnull;
-        nsresult result = mMap->QueryInterface(kIHTMLContentIID, (void**)&content);
-        if ((NS_OK == result) && content) {
+        nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mMap));
+
+        if (content) {
           content->GetBaseTarget(aTarget);
-          NS_RELEASE(content);
         }
       }
+
       area->GetAltText(aAltText);
       *aSuppress = area->mSuppressFeedback;
+
       area->GetArea(aContent);
+
       return PR_TRUE;
     }
   }
+
   return PR_FALSE;
 }
 

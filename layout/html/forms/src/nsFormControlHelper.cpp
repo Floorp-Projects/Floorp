@@ -44,7 +44,6 @@
 #include "nsIStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
-#include "nsHTMLIIDs.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsCoord.h"
@@ -174,15 +173,14 @@ nsFormControlHelper::GetWrapProperty(nsIContent * aContent, nsString &aOutValue)
 {
   aOutValue.SetLength(0);
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
-  nsIHTMLContent* content = nsnull;
-  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(aContent));
+
+  if (content) {
     nsHTMLValue value;
     result = content->GetHTMLAttribute(nsHTMLAtoms::wrap, value);
     if (eHTMLUnit_String == value.GetUnit()) { 
       value.GetStringValue(aOutValue);
     }
-    NS_RELEASE(content);
   }
   return result;
 }
@@ -404,17 +402,15 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   aDesiredSize.width  = CSS_NOTSET;
   aDesiredSize.height = CSS_NOTSET;
 
-  nsIContent* iContent = nsnull;
-  aFrame->GetFormContent((nsIContent*&) iContent);
-  if (!iContent) {
+  nsCOMPtr<nsIContent> iContent;
+  aFrame->GetFormContent(*getter_AddRefs(iContent));
+
+  nsCOMPtr<nsIHTMLContent> hContent(do_QueryInterface(iContent));
+
+  if (!hContent) {
     return 0;
   }
-  nsIHTMLContent* hContent = nsnull;
-  nsresult result = iContent->QueryInterface(kIHTMLContentIID, (void**)&hContent);
-  if ((NS_OK != result) || !hContent) {
-    NS_RELEASE(iContent);
-    return 0;
-  }
+
   nsAutoString valAttr;
   nsresult valStatus = NS_CONTENT_ATTR_NOT_THERE;
   if (nsnull != aSpec.mColValueAttr) {
@@ -510,12 +506,9 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
     }
   }
 
-  NS_RELEASE(hContent);
   if (ATTR_NOTSET == numRows) {
     numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
   }
-
-  NS_RELEASE(iContent);
 
   return numRows;
 }
@@ -704,10 +697,10 @@ nsresult
 nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
-  if (nsnull != aContent) {
-    nsIHTMLContent* formControl = nsnull;
-    result = aContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
+  if (aContent) {
+    nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(aContent));
+
+    if (formControl) {
       nsHTMLValue value;
       result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
       if (NS_CONTENT_ATTR_HAS_VALUE == result) {
@@ -715,7 +708,6 @@ nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
           value.GetStringValue(*aResult);
         }
       }
-      NS_RELEASE(formControl);
     }
   }
   return result;
@@ -726,18 +718,16 @@ nsresult
 nsFormControlHelper::GetValue(nsIContent* aContent, nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
-  if (nsnull != aContent) {
-    nsIHTMLContent* formControl = nsnull;
-    result = aContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      nsHTMLValue value;
-      result = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(*aResult);
-        }
+
+  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(aContent));
+
+  if (formControl) {
+    nsHTMLValue value;
+    result = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        value.GetStringValue(*aResult);
       }
-      NS_RELEASE(formControl);
     }
   }
   return result;

@@ -41,7 +41,6 @@
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"

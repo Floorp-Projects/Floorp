@@ -43,7 +43,6 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsVoidArray.h"
-#include "nsHTMLIIDs.h"
 
 #ifdef DEBUG_TABLE_STRATEGY
 static PRInt32 gsDebugCount = 0;

@@ -47,7 +47,6 @@
 #include "nsIStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
-#include "nsHTMLIIDs.h"
 #include "nsIViewManager.h"
 #include "nsISupports.h"
 #include "nsHTMLAtoms.h"

@@ -44,7 +44,6 @@
 #include "nsInlineFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsHTMLIIDs.h"
 #include "nsSpaceManager.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"

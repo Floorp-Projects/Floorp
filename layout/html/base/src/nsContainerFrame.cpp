@@ -49,7 +49,6 @@
 #include "nsVoidArray.h"
 #include "nsISizeOfHandler.h"
 #include "nsHTMLReflowCommand.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFrameManager.h"
 #include "nsIPresShell.h"

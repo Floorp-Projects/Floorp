@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -27,7 +26,6 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsHTMLIIDs.h"
 #include "nsIComponentManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
@@ -408,13 +406,13 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
       continue;
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(*getter_AddRefs(tag));
-    if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
+    if (tag == nsHTMLAtoms::frameset || tag == nsHTMLAtoms::frame) {
       nsCOMPtr<nsIStyleContext> kidSC;
-      nsresult         result;
+      nsresult result;
 
       aPresContext->ResolveStyleContextFor(child, mStyleContext,
                                            getter_AddRefs(kidSC));
-      if (nsHTMLAtoms::frameset == tag) {
+      if (tag == nsHTMLAtoms::frameset) {
         result = NS_NewHTMLFramesetFrame(shell, &frame);
 
         mChildTypes[mChildCount] = FRAMESET;
@@ -645,9 +643,9 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
   nsHTMLValue htmlVal;
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
-  if (nsnull != content) {
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
+  if (content) {
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::border, htmlVal))) {
       nsHTMLUnit unit = htmlVal.GetUnit();
       PRInt32 intVal = 0;
@@ -659,13 +657,12 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext,
       if (intVal < 0) {
         intVal = 0;
       }
-      NS_RELEASE(content);
+
       if (forcing && intVal == 0) {
         intVal = DEFAULT_BORDER_WIDTH_PX;
       }
       return NSIntPixelsToTwips(intVal, p2t);
     }
-    NS_RELEASE(content);
   }
 
   if (mParentBorderWidth > 0 ||
@@ -709,26 +706,24 @@ nsHTMLFramesetFrame::GetDesiredSize(nsIPresContext*          aPresContext,
 nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
 {
   nsHTMLFramesetFrame* parent = nsnull;
-  nsIContent* content = nsnull;
-  aChild->GetContent(&content);
-  if (nsnull != content) { 
-    nsIContent* contentParent = nsnull;
-    content->GetParent(contentParent);
-    if (nsnull != contentParent) {
-      nsIHTMLContent* contentParent2 = nsnull;
-      contentParent->QueryInterface(kIHTMLContentIID, (void**)&contentParent2);
-      if (nsnull != contentParent2) {
-        nsIAtom* tag;
-        contentParent2->GetTag(tag);
-        if (nsHTMLAtoms::frameset == tag) {
-          aChild->GetParent((nsIFrame**)&parent);
-        }
-        NS_IF_RELEASE(tag);
-        NS_RELEASE(contentParent2);
+  nsCOMPtr<nsIContent> content;
+  aChild->GetContent(getter_AddRefs(content));
+
+  if (content) { 
+    nsCOMPtr<nsIContent> contentParent;
+    content->GetParent(*getter_AddRefs(contentParent));
+
+    nsCOMPtr<nsIHTMLContent> contentParent2 =
+      do_QueryInterface(contentParent);
+
+    if (contentParent2) {
+      nsCOMPtr<nsIAtom> tag;
+      contentParent2->GetTag(*getter_AddRefs(tag));
+
+      if (tag == nsHTMLAtoms::frameset) {
+        aChild->GetParent((nsIFrame**)&parent);
       }
-      NS_RELEASE(contentParent);
     }
-    NS_RELEASE(content);
   }
 
   return parent;
@@ -862,9 +857,10 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIPresContext* aPresContext, nsIAtom* aAt
 {
   nsHTMLValue value;
   nsAutoString rowsCols;
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
-  if (nsnull != content) {
+
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
+  if (content) {
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetHTMLAttribute(aAttrType, value)) {
       if (eHTMLUnit_String == value.GetUnit()) {
         value.GetStringValue(rowsCols);
@@ -875,11 +871,9 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIPresContext* aPresContext, nsIAtom* aAt
           (*aSpecs)[i] = specs[i];
         }
         delete [] specs;
-        NS_RELEASE(content);
         return;
       }
     }
-    NS_RELEASE(content);
   }
   aNumSpecs = 1; 
   *aSpecs = new nsFramesetSpec[1];
@@ -1054,11 +1048,10 @@ nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent)
 nsFrameborder nsHTMLFramesetFrame::GetFrameBorder() 
 {
   nsFrameborder result = eFrameborder_Notset;
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
   if (content) {
     result = GetFrameBorderHelper(content);
-    NS_RELEASE(content);
   }
   if (eFrameborder_Notset == result) {
     return mParentFrameborder;
@@ -1069,11 +1062,11 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder()
 nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 {
   nsFrameborder result = eFrameborder_Notset;
-  nsIHTMLContent* content = nsnull;
-  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
+
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
+  if (content) {
     result = GetFrameBorderHelper(content);
-    NS_RELEASE(content);
   }
   if (eFrameborder_Notset == result) {
     return GetFrameBorder();
@@ -1084,9 +1077,10 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 nscolor nsHTMLFramesetFrame::GetBorderColor() 
 {
   nscolor result = NO_COLOR;
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
-  if (nsnull != content) {
+
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+
+  if (content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
       if ((eHTMLUnit_Color == value.GetUnit()) ||
@@ -1094,7 +1088,6 @@ nscolor nsHTMLFramesetFrame::GetBorderColor()
         result = value.GetColorValue();
       }
     }
-    NS_RELEASE(content);
   }
   if (NO_COLOR == result) {
     return mParentBorderColor;
@@ -1105,9 +1098,10 @@ nscolor nsHTMLFramesetFrame::GetBorderColor()
 nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent) 
 {
   nscolor result = NO_COLOR;
-  nsIHTMLContent* content = nsnull;
-  aContent->QueryInterface(kIHTMLContentIID, (void**)&content);
-  if (nsnull != content) {
+
+  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(aContent));
+
+  if (content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
       if ((eHTMLUnit_Color == value.GetUnit()) ||
@@ -1115,7 +1109,6 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
         result = value.GetColorValue();
       }
     }
-    NS_RELEASE(content);
   }
   if (NO_COLOR == result) {
     return GetBorderColor();
@@ -1454,19 +1447,16 @@ PRBool
 nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame) 
 {
   PRBool result = PR_FALSE;
-  nsIContent* content = nsnull;
-  aChildFrame->GetContent(&content);
-  if (nsnull != content) {
-    nsIHTMLContent* htmlContent = nsnull;
-    content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-    if (nsnull != htmlContent) {
-      nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::noresize, value)) {
-        result = PR_TRUE;
-      }
-      NS_RELEASE(htmlContent);
+  nsCOMPtr<nsIContent> content;
+  aChildFrame->GetContent(getter_AddRefs(content));
+
+  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(content));
+
+  if (htmlContent) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::noresize, value)) {
+      result = PR_TRUE;
     }
-    NS_RELEASE(content);
   }
   return result;
 }
@@ -1507,9 +1497,9 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
     if (child) {
       nsCOMPtr<nsIAtom> tag;
       child->GetTag(*getter_AddRefs(tag));
-      if (nsHTMLAtoms::frameset == tag) {
+      if (tag == nsHTMLAtoms::frameset) {
         childTypes[frameOrFramesetChildIndex++] = FRAMESET;
-      } else if (nsHTMLAtoms::frame == tag) {
+      } else if (tag == nsHTMLAtoms::frame) {
         childTypes[frameOrFramesetChildIndex++] = FRAME;
       }
       // Don't overflow childTypes array

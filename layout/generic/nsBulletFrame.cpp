@@ -37,7 +37,6 @@
 #include "nsCOMPtr.h"
 #include "nsBulletFrame.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLContainerFrame.h"

@@ -48,7 +48,6 @@
 #include "nsIPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
-#include "nsHTMLIIDs.h"
 #include "nsICSSFrameConstructor.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nsHTMLParts.h"

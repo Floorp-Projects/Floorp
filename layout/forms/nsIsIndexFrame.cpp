@@ -42,7 +42,6 @@
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresState.h"
 #include "nsWidgetsCID.h"

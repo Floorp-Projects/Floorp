@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsBlockReflowContext.h"
 #include "nsLineLayout.h"
-#include "nsHTMLIIDs.h"
 #include "nsSpaceManager.h"
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"

@@ -41,7 +41,6 @@
 #include "nsIStyleContext.h"
 #include "nsIRenderingContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"

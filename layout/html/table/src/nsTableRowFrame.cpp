@@ -49,7 +49,6 @@
 #include "nsIView.h"
 #include "nsReflowPath.h"
 #include "nsCSSRendering.h"
-#include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsTableColGroupFrame.h"

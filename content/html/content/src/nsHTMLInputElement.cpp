@@ -54,7 +54,6 @@
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -1142,8 +1141,10 @@ nsHTMLInputElement::Click()
       for (PRInt32 i=0; i<numShells; i++) {
         nsCOMPtr<nsIPresShell> shell;
         doc->GetShellAt(i, getter_AddRefs(shell));
+
         if (shell) {
-          rv = shell->GetPresContext(getter_AddRefs(context));
+          shell->GetPresContext(getter_AddRefs(context));
+
           if (context) {
             nsEventStatus status = nsEventStatus_eIgnore;
             nsMouseEvent event;

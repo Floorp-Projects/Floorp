@@ -52,7 +52,6 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsHTMLIIDs.h"
 #include "nsIComponentManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"

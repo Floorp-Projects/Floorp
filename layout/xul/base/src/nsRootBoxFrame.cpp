@@ -44,7 +44,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
-#include "nsHTMLIIDs.h"
 #include "nsPageFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"

@@ -43,7 +43,6 @@
 #include "nsColor.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
-#include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIFontMetrics.h"
 #include "nsStyleConsts.h"

@@ -37,7 +37,6 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
 #include "nsLineLayout.h"
 #include "nsStyleConsts.h"
