@@ -691,8 +691,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   nsIViewManager* viewMan = presShell->GetViewManager();  
   NS_RELEASE(presShell);
-  rv = view->Init(viewMan, viewBounds,
-                  parView, &kCChildCID);
+  rv = view->Init(viewMan, viewBounds, parView, &kCChildCID);
   viewMan->InsertChild(parView, view, 0);
   NS_RELEASE(viewMan);
   SetView(view);

@@ -498,8 +498,8 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
                                       (void **)&mView);
     static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
     if ((NS_OK != rv) || (NS_OK != mView->Init(mViewManager, 
-                                               tbounds, 
-                                               nsnull,
+                                               tbounds,
+                                               nsnull, 
                                                &kWidgetCID,
                                                nsnull,
                                                aNativeParent))) {

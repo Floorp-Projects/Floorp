@@ -166,7 +166,7 @@ nsScrollFrame::CreateScrollingView()
 
     // Initialize the scrolling view
     view->Init(viewManager, mRect, parentView, nsnull, nsnull, nsnull,
-               zIndex, nsnull, color->mOpacity);
+               nsnull, color->mOpacity);
 
     // Insert the view into the view hierarchy
     viewManager->InsertChild(parentView, view, zIndex);
@@ -198,7 +198,7 @@ nsScrollFrame::CreateScrollingView()
   
       // Initialize the view
       scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView, nsnull,
-                         nsnull, nsnull, 0, nsnull, color->mOpacity);
+                         nsnull, nsnull, nsnull, color->mOpacity);
   
       // If the background is transparent then inform the view manager
       if (isTransparent) {
