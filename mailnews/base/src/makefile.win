@@ -37,7 +37,6 @@ EXPORTS=						\
 	nsMsgFolderDataSource.h		\
 	nsMsgFolderCache.h \
 	nsMsgMessageDataSource.h	\
-	nsMessageViewDataSource.h	\
     nsMsgAccount.h				\
     nsMsgAccountManager.h		\
 	nsMsgRDFDataSource.h		\
@@ -72,7 +71,6 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsUrlListenerManager.obj	\
 	.\$(OBJDIR)\nsMsgMailSession.obj		\
 	.\$(OBJDIR)\nsCopyMessageStreamListener.obj	\
-	.\$(OBJDIR)\nsMessageViewDataSource.obj \
 	.\$(OBJDIR)\nsMsgAccountManager.obj		\
 	.\$(OBJDIR)\nsMsgAccount.obj			\
 	.\$(OBJDIR)\nsMsgFolderDataSource.obj	\

@@ -50,11 +50,13 @@ public:
 	virtual ~nsMsgDBFolder(void);
   NS_DECL_NSIDBCHANGELISTENER
   
-	NS_IMETHOD  StartFolderLoading(void);
-	NS_IMETHOD  EndFolderLoading(void);
-	NS_IMETHOD GetThreads(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator** threadEnumerator);
+	NS_IMETHOD StartFolderLoading(void);
+	NS_IMETHOD EndFolderLoading(void);
+	NS_IMETHOD GetThreadsOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, nsISimpleEnumerator** threadEnumerator);
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
+    NS_IMETHOD HasThreads(nsIMsgWindow *aMsgWindow, PRBool *hasThreads);
+    NS_IMETHOD HasMessagesOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, PRBool *hasMessages);
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
 	NS_IMETHOD SetCharset(const PRUnichar * aCharset);
 	//NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);

@@ -24,6 +24,9 @@
 #define _nsMessageView_h
 
 #include "nsIMessageView.h"
+#include "nsIEnumerator.h"
+#include "nsIMsgFolder.h"
+#include "nsIMessage.h"
 
 class nsMessageView : public nsIMessageView {
 
@@ -42,6 +45,55 @@ protected:
 
 };
 
+class nsMessageViewMessageEnumerator: public nsISimpleEnumerator
+{
 
+public:
+
+	NS_DECL_ISUPPORTS
+
+	nsMessageViewMessageEnumerator(nsISimpleEnumerator *srcEnumerator, PRUint32 viewType);
+	virtual ~nsMessageViewMessageEnumerator();
+
+  NS_DECL_NSISIMPLEENUMERATOR
+
+protected:
+	nsresult SetAtNextItem();
+	nsresult MeetsCriteria(nsIMessage *message, PRBool *meetsCriteria);
+
+protected:
+
+	nsCOMPtr<nsISimpleEnumerator> mSrcEnumerator;
+	nsCOMPtr<nsISupports> mCurMsg;
+	nsCOMPtr<nsISupports> mCurThread;
+	PRUint32 mViewType;
+
+};
+
+class nsMessageViewThreadEnumerator: public nsISimpleEnumerator
+{
+
+public:
+
+	NS_DECL_ISUPPORTS
+
+	nsMessageViewThreadEnumerator(nsISimpleEnumerator *srcEnumerator, nsIMsgFolder *srcFolder);
+	virtual ~nsMessageViewThreadEnumerator();
+
+  NS_DECL_NSISIMPLEENUMERATOR
+
+protected:
+	nsresult GetMessagesForCurrentThread();
+	nsresult Prefetch();
+
+protected:
+
+	nsCOMPtr<nsISimpleEnumerator> mThreads;
+	nsCOMPtr<nsISimpleEnumerator> mMessages;
+	nsCOMPtr<nsISupports> mCurThread;
+	nsCOMPtr<nsIMsgFolder> mFolder;
+	PRBool					mNeedToPrefetch;
+
+};
 
 #endif

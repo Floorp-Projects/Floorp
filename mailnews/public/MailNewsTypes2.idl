@@ -37,3 +37,12 @@ interface nsMsgPriority {
     const nsMsgPriorityValue highest = 6;
 };
 
+typedef long nsMsgViewTypeValue;
+
+[scriptable, uuid(dac950b0-1dd1-11b2-be06-d4c2003a6927)]
+interface nsMsgViewType {
+    const nsMsgViewTypeValue eShowAll = 0;
+    const nsMsgViewTypeValue eShowRead = 1;
+    const nsMsgViewTypeValue eShowUnread = 2;
+    const nsMsgViewTypeValue eShowWatched = 3;
+};

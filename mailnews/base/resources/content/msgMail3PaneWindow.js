@@ -36,6 +36,7 @@ var gCurrentFolderToReroot;
 var gCurrentLoadingFolderIsThreaded = false;
 var gCurrentLoadingFolderSortID ="";
 var gCurrentLoadingFolderSortDirection = null;
+var gCurrentLoadingFolderViewType = "";
 
 var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
@@ -110,10 +111,11 @@ var folderListener = {
 					if(msgFolder)
 					{
 						msgFolder.endFolderLoading();
-						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID, gCurrentLoadingFolderSortDirection);
+						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID, gCurrentLoadingFolderSortDirection, gCurrentLoadingFolderViewType);
 						gCurrentLoadingFolderIsThreaded = false;
 						gCurrentLoadingFolderSortID = "";
 						gCurrentLoadingFolderSortDirection = null;
+                        gCurrentLoadingFolderViewType = "";
 
                         if (gNextMessageAfterLoad) {
                             gNextMessageAfterLoad = false;

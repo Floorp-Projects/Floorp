@@ -98,7 +98,7 @@ function ChangeFolderByDOMNode(folderNode)
   dump(uri + "\n");
 
   var isThreaded = folderNode.getAttribute('threaded');
-
+  
   if ((isThreaded == "") && isNewsURI(uri)) {
     isThreaded = "true";
   }
@@ -109,8 +109,10 @@ function ChangeFolderByDOMNode(folderNode)
 
   var sortDirection = folderNode.getAttribute('sortDirection');
 
+  var viewType = folderNode.getAttribute('viewType');
+
   if (uri)
-	  ChangeFolderByURI(uri, isThreaded == "true", sortResource, sortDirection);
+	  ChangeFolderByURI(uri, isThreaded == "true", sortResource, sortDirection, viewType);
 }
 
 function setTitleFromFolder(msgfolder, subject)
@@ -159,7 +161,7 @@ function setTitleFromFolder(msgfolder, subject)
     window.title = title;
 }
 
-function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
+function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection, viewType)
 {
   dump('In ChangeFolderByURI uri = ' + uri + "\n");
   if (uri == gCurrentLoadingFolderURI)
@@ -195,6 +197,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
 		gCurrentLoadingFolderIsThreaded = isThreaded;
 		gCurrentLoadingFolderSortID = sortID;
 		gCurrentLoadingFolderSortDirection = sortDirection;
+        gCurrentLoadingFolderViewType = viewType;
 		msgfolder.startFolderLoading();
 		msgfolder.updateFolder(msgWindow);
 	}
@@ -209,7 +212,8 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
 	gCurrentFolderToReroot = "";
 	gCurrentLoadingFolderIsThreaded = false;
 	gCurrentLoadingFolderSortID = "";
-	RerootFolder(uri, msgfolder, isThreaded, sortID, sortDirection);
+    gCurrentLoadingFolderViewType = "";
+	RerootFolder(uri, msgfolder, isThreaded, sortID, sortDirection, viewType);
 
 	//Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
 	//notification before folder has actually changed.
@@ -227,7 +231,7 @@ function isNewsURI(uri)
     }
 }
 
-function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
+function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection, viewType)
 {
   dump('In reroot folder\n');
 	
@@ -242,7 +246,9 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 
   //Set threaded state
   ShowThreads(isThreaded);
-  
+
+  //Set the view type
+  SetViewType(viewType);
 
   //Clear the new messages of the old folder
   var oldFolderURI = folder.getAttribute("ref");
@@ -854,9 +860,22 @@ function IsSpecialFolder(msgFolder, specialFolderNames)
 }
 
 
+function SetViewType(viewType)
+{
+    //dump("in SetViewType with " + viewType + "\n");
+    if (!viewType || (viewType == "")) {
+        viewType = nsMsgViewType.eShowAll;
+    }
+
+    if(messageView)
+    {
+        messageView.viewType = viewType;
+    }
+}
+
 function ShowThreads(showThreads)
 {
-	dump('in showthreads\n');
+	//dump('in showthreads\n');
 	if(messageView)
 	{
 		messageView.showThreads = showThreads;

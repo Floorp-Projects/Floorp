@@ -288,12 +288,9 @@ var DefaultController =
 			case "cmd_previousFlaggedMsg":
 				return IsViewNavigationItemEnabled();
 			case "cmd_viewAllMsgs":
-				return true;
 			case "cmd_sortByThread":
-				return (messageView.viewType != viewShowUnread);
-				break;
   			case "cmd_viewUnreadMsgs":
-  				return (messageView.showThreads == false);
+                return true;
   				break;
             case "cmd_undo":
             case "cmd_redo":
@@ -816,10 +813,7 @@ function MsgPreviousFlaggedMessage()
 	GoPreviousMessage(navigateFlagged, true);
 }
 
-var viewShowAll =0;
-var viewShowRead = 1;
-var viewShowUnread =2;
-var viewShowWatched = 3;
+var nsMsgViewType = Components.interfaces.nsMsgViewType;
 
 function MsgViewAllMsgs() 
 {
@@ -827,8 +821,12 @@ function MsgViewAllMsgs()
 
 	if(messageView)
 	{
-		messageView.viewType = viewShowAll;
-		messageView.showThreads = false;
+		messageView.viewType = nsMsgViewType.eShowAll;
+
+        var folder = GetSelectedFolder();
+        if(folder) {
+            folder.setAttribute("viewType", messageView.viewType);
+        }
 	}
 	RefreshThreadTreeView();
 }
@@ -839,8 +837,12 @@ function MsgViewUnreadMsg()
 
 	if(messageView)
 	{
-		messageView.viewType = viewShowUnread;
-		messageView.showThreads = false;
+		messageView.viewType = nsMsgViewType.eShowUnread;
+
+        var folder = GetSelectedFolder();
+        if(folder) {
+            folder.setAttribute("viewType", messageView.viewType);
+        }
 	}
 
 	RefreshThreadTreeView();

@@ -68,10 +68,12 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   void ReplaceElement(in nsISupports element, in nsISupports newElement);
   
   nsISimpleEnumerator getMessages(in nsIMsgWindow aMsgWindow);
-	nsISimpleEnumerator getThreads(in nsIMsgWindow aMsgWindow);
+  nsISimpleEnumerator getThreadsOfType(in nsIMsgWindow aMsgWindow, in unsigned long viewType);
+  boolean hasThreads(in nsIMsgWindow aMsgWindow);
+  boolean hasMessagesOfType(in nsIMsgWindow aMsgWindow, in unsigned long viewType);
   
-	void startFolderLoading();
-	void endFolderLoading();
+  void startFolderLoading();
+  void endFolderLoading();
   
 	/* get new headers for db */
 	void updateFolder(in nsIMsgWindow aWindow);

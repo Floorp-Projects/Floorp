@@ -84,18 +84,6 @@ enum nsMsgSortType {
   nsMsgSortType_Recipient
 };
 
-enum nsMsgViewType {
-  nsMsgViewType_Any = 0,		// this view type matches any other view type, 
-                                // for the purpose of matching cached views.
-                                // Else, it's equivalent to ViewAllThreads
-  nsMsgViewType_AllThreads = 1,		// default view, no killed threads
-  nsMsgViewType_OnlyThreadsWithNew = 2,
-  nsMsgViewType_OnlyNewHeaders = 4,		
-  nsMsgViewType_WatchedThreadsWithNew = 5,
-  nsMsgViewType_Cacheless		// this would be for cacheless imap
-};
-
-
 /* Flags about a single message.  These values are used in the MSG_MessageLine
    struct and in a folder's mozilla-status line. The summary file database
    should use the same set of flags..

@@ -32,11 +32,9 @@ interface nsIMsgWindow;
 
 interface nsIMessageView :  nsISupports
 {
-%{C++
-  enum {  eShowAll =0, eShowRead =1, eShowUnread =2 , eShowWatched =3};
-%}
 	attribute unsigned long viewType;
 	attribute boolean showThreads;
 
 	void GetMessages(in nsIRDFResource parentResource, in nsIMsgWindow msgWindow, out nsISimpleEnumerator messages);
+    boolean hasMessages(in nsIRDFResource parentResource, in nsIMsgWindow msgWindow);
 };

@@ -166,12 +166,34 @@ NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetThreads(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator** threadEnumerator)
+NS_IMETHODIMP nsMsgDBFolder::HasThreads(nsIMsgWindow *aMsgWindow, PRBool *hasThreads)
+{
+	nsresult rv = GetDatabase(aMsgWindow);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mDatabase->HasThreads(hasThreads);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::HasMessagesOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, PRBool *hasMessages)
+{
+  nsresult rv = NS_OK;
+  rv = GetDatabase(aMsgWindow);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = mDatabase->HasMessagesOfType(viewType, hasMessages);
+  NS_ENSURE_SUCCESS(rv,rv);
+ 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::GetThreadsOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, nsISimpleEnumerator** threadEnumerator)
 {
 	nsresult rv = GetDatabase(aMsgWindow);
 	
 	if(NS_SUCCEEDED(rv))
-		return mDatabase->EnumerateThreads(threadEnumerator);
+		return mDatabase->EnumerateThreads(viewType, threadEnumerator);
 	else
 		return rv;
 }

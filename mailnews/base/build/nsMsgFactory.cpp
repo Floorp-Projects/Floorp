@@ -51,7 +51,6 @@
 #include "nsMessengerMigrator.h"
 #include "nsMsgIdentity.h"
 #include "nsMsgIncomingServer.h"
-#include "nsMessageViewDataSource.h"
 #include "nsMsgFolderDataSource.h"
 #include "nsMsgMessageDataSource.h"
 

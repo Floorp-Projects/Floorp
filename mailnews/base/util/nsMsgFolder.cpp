@@ -436,6 +436,12 @@ NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **aParent)
 }
 
 NS_IMETHODIMP
+nsMsgFolder::HasMessagesOfType(nsIMsgWindow *aMsgWindow, PRUint32 type, PRBool *hasMessages)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsMsgFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
   // XXX should this return an empty enumeration?
@@ -458,8 +464,14 @@ nsMsgFolder::UpdateFolder(nsIMsgWindow *)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsMsgFolder::HasThreads(nsIMsgWindow *aMsgWindow, PRBool *hasThreads)
+{
+	return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
-nsMsgFolder::GetThreads(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator ** threadEnumerator)
+nsMsgFolder::GetThreadsOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, nsISimpleEnumerator ** threadEnumerator)
 {
   // XXX should this return an empty enumeration?
 	return NS_ERROR_FAILURE;

@@ -106,7 +106,9 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   [noscript] void ListAllKeys(in nsMsgKeyArrayRef outputKeys);
 
   nsISimpleEnumerator EnumerateMessages();
-  nsISimpleEnumerator EnumerateThreads();
+  boolean hasMessagesOfType(in unsigned long viewType);
+  nsISimpleEnumerator EnumerateThreads(in unsigned long viewType);
+  boolean hasThreads();
 
   nsIMsgThread GetThreadContainingMsgHdr(in nsIMsgDBHdr msgHdr) ;
 

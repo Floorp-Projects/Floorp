@@ -67,8 +67,11 @@ public:
   // begin NS_DECL_NSIMSGFOLDER
   NS_IMETHOD AddUnique(nsISupports *element);
   NS_IMETHOD ReplaceElement(nsISupports *element, nsISupports *newElement);
+  NS_IMETHOD HasMessagesOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, PRBool *
+hasMessages);
   NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator **_retval);
-  NS_IMETHOD GetThreads(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator **_retval);
+  NS_IMETHOD GetThreadsOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, nsISimpleEnumerator **_retval);
+  NS_IMETHOD HasThreads(nsIMsgWindow *aMsgWindow, PRBool *hasThreads);
   NS_IMETHOD StartFolderLoading(void);
   NS_IMETHOD EndFolderLoading(void);
   NS_IMETHOD UpdateFolder(nsIMsgWindow *window);

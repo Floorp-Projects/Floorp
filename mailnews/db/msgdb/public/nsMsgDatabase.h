@@ -60,6 +60,8 @@ public:
   virtual nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr **result);
   virtual nsresult GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
   virtual nsresult EnumerateUnreadMessages(nsISimpleEnumerator* *result);
+  virtual nsresult EnumerateReadMessages(nsISimpleEnumerator* *result);
+
   // this might just be for debugging - we'll see.
   nsresult ListAllThreads(nsMsgKeyArray *threadIds);
   //////////////////////////////////////////////////////////////////////////////

@@ -25,6 +25,7 @@
 #include "nsMsgThread.h"
 #include "nsMsgDatabase.h"
 #include "nsCOMPtr.h"
+#include "MailNewsTypes2.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgThread, nsMsgThread)
 
@@ -602,9 +603,9 @@ protected:
 	PRInt32						mChildIndex;
     PRBool                      mDone;
 	PRBool						mNeedToPrefetch;
-  PRBool            mFoundChildren;
     nsMsgThreadEnumeratorFilter     mFilter;
     void*                       mClosure;
+    PRBool            mFoundChildren;
 };
 
 nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey startKey,
@@ -767,6 +768,11 @@ nsresult nsMsgThreadEnumerator::Prefetch()
 				nsMsgKey parentKey;
 				nsMsgKey curKey;
 
+                if (mFilter && mFilter(mResultHdr, mClosure) != NS_OK) {
+				    mResultHdr = nsnull;
+                    continue;
+                }
+
 				mResultHdr->GetThreadParent(&parentKey);
 				mResultHdr->GetMessageKey(&curKey);
 				// if the parent is the same as the msg we're enumerating over,
@@ -819,6 +825,90 @@ NS_IMETHODIMP nsMsgThreadEnumerator::HasMoreElements(PRBool *aResult)
     return NS_OK;
 }
 
+#if 0
+// this performance optimization isn't working quite right yet.
+NS_IMETHODIMP nsMsgThread::HasMessagesOfType(nsMsgKey parentKey, PRUint32 viewType, PRBool *hasMessages)
+{
+    nsresult rv;
+    PRUint32 numChildren = 0;
+    PRUint32 numUnreadChildren = 0;
+
+    rv = GetNumChildren(&numChildren);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    switch (viewType) {
+        case nsMsgViewType::eShowAll:
+            // don't return true on messages without children
+            *hasMessages = (numChildren > 1);
+            break;
+        case nsMsgViewType::eShowUnread:
+            rv = GetNumUnreadChildren(&numUnreadChildren);
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            // don't return true on messages without children
+            *hasMessages = ((numChildren > 1) && (numUnreadChildren > 1));
+            break;
+        case nsMsgViewType::eShowRead:
+        case nsMsgViewType::eShowWatched:
+        default:
+            NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
+            break;
+    }
+
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
+#else
+NS_IMETHODIMP nsMsgThread::HasMessagesOfType(nsMsgKey parentKey, PRUint32 viewType, PRBool *hasMessages)
+{
+    nsresult rv;
+    nsCOMPtr <nsISimpleEnumerator> messages;
+
+    switch (viewType) {
+        case nsMsgViewType::eShowAll:
+            rv = EnumerateMessages(parentKey, getter_AddRefs(messages));
+            NS_ENSURE_SUCCESS(rv,rv);
+            break;
+        case nsMsgViewType::eShowUnread:
+            rv = EnumerateUnreadMessages(parentKey, getter_AddRefs(messages));
+            NS_ENSURE_SUCCESS(rv,rv);
+            break;
+        case nsMsgViewType::eShowRead:
+        case nsMsgViewType::eShowWatched:
+        default:
+            NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
+            break;
+    }
+
+    rv = messages->HasMoreElements(hasMessages);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
+#endif
+
+static nsresult
+nsMsgThreadUnreadFilter(nsIMsgDBHdr* msg, void* closure)
+{
+    nsMsgDatabase* db = (nsMsgDatabase*)closure;
+    PRBool wasRead = PR_TRUE;
+    nsresult rv = db->IsHeaderRead(msg, &wasRead);
+    if (NS_FAILED(rv))
+        return rv;
+    return !wasRead ? NS_OK : NS_COMFALSE;
+}
+
+NS_IMETHODIMP nsMsgThread::EnumerateUnreadMessages(nsMsgKey parentKey, nsISimpleEnumerator* *result)
+{
+    nsresult ret = NS_OK;
+    nsMsgThreadEnumerator* e = new nsMsgThreadEnumerator(this, parentKey, nsMsgThreadUnreadFilter, m_mdbDB);
+    if (e == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(e);
+    *result = e;
+    return NS_OK;
+
+    return ret;
+}
 
 NS_IMETHODIMP nsMsgThread::EnumerateMessages(nsMsgKey parentKey, nsISimpleEnumerator* *result)
 {

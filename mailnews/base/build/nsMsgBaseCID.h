@@ -55,19 +55,6 @@
     {0x8a, 0x5d, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2} \
 }
 
-
-//
-// nsMessageViewDataSource
-//
-#define NS_MESSAGEVIEWDATASOURCE_CONTRACTID \
-  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "mail-messageview"
-
-#define NS_MESSAGEVIEWDATASOURCE_CID				\
-{ /* 14495573-E945-11d2-8A52-0060B0FC04D2 */		\
-0x14495573, 0xe945, 0x11d2,							\
-{0x8a, 0x52, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
-
-
 //
 // nsMsgAccountManager
 // 

@@ -39,7 +39,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMessageView.h"
 #include "nsMsgUtils.h"
-#include "nsMessageViewDataSource.h"
 #include "nsTextFormatter.h"
 
 
@@ -1825,8 +1824,6 @@ nsresult
 nsMsgMessageDataSource::createMessageMessageChildNode(nsIMessage *message,
                                                  nsIRDFNode **target)
 {
-  // this is slow, but for now, call GetTargets and then create
-  // a node out of the first message, if any
   nsCOMPtr<nsIRDFResource> messageResource(do_QueryInterface(message));
   return createMessageChildNode(messageResource, target);
 }
@@ -1843,15 +1840,18 @@ nsresult
 nsMsgMessageDataSource::createMessageChildNode(nsIRDFResource *resource, nsIRDFNode** target)
 {
   nsresult rv;
-  nsCOMPtr<nsISimpleEnumerator> messages;
-  rv = GetTargets(resource, kNC_MessageChild, PR_TRUE,
-                  getter_AddRefs(messages));
+  nsCOMPtr<nsIMessageView> messageView;
 
-  PRBool hasMessages;
-  messages->HasMoreElements(&hasMessages);
+  rv = GetMessageView(getter_AddRefs(messageView));
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  if (hasMessages)
+  PRBool hasMessages = PR_FALSE;
+  rv = messageView->HasMessages(resource, mWindow, &hasMessages);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (hasMessages) {
     return createNode("has messages", target, getRDFService());
+  }
 
   return NS_RDF_NO_VALUE;
 

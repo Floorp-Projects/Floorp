@@ -567,8 +567,7 @@ NS_IMETHODIMP nsMsgHdr::GetMessageOffset(PRUint32 *result)
 
 NS_IMETHODIMP nsMsgHdr::SetMessageOffset(PRUint32 offset)
 {
-
-	nsresult rv = SetUInt32Column(offset, m_mdb->m_offlineMsgOffsetColumnToken);
+  SetUInt32Column(offset, m_mdb->m_offlineMsgOffsetColumnToken);
   return NS_OK;
 }
 

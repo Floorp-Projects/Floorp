@@ -208,11 +208,6 @@ function ChangeThreadView()
 		}
 		else if(currentView == 'unthreaded')
 		{
-  			//if we're in unread messages view, don't allow to go into threaded mode because
-  			//we don't support it.
-  			if(messageView.viewType == viewShowUnread)
-  				return;
- 
 			ShowThreads(true);
 			if(folder)
 				folder.setAttribute('threaded', "true");

@@ -46,6 +46,8 @@
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
+#include "MailNewsTypes2.h"
+
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 
 #if defined(XP_MAC) && defined(CompareString)
@@ -623,8 +625,8 @@ nsMsgDatabase::nsMsgDatabase()
     m_offlineMsgOffsetColumnToken(0),
     m_offlineMessageSizeColumnToken(0),
 	  m_HeaderParser(nsnull),
-	  m_cachedHeaders(nsnull),
 	  m_headersInUse(nsnull),
+	  m_cachedHeaders(nsnull),
 	  m_bCacheHeaders(PR_FALSE)
 
 {
@@ -2247,6 +2249,14 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 	return err;
 }
 
+static nsresult
+nsMsgDBThreadUnreadFilter(nsIMsgThread *thread)
+{
+    PRUint32 numUnreadChildren = 0;
+    nsresult rv = thread->GetNumUnreadChildren(&numUnreadChildren);
+    if (NS_FAILED(rv)) return rv;
+    return (numUnreadChildren > 0) ? NS_OK : NS_COMFALSE;
+}
 
 class nsMsgDBThreadEnumerator : public nsISimpleEnumerator
 {
@@ -2257,10 +2267,10 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 
     // nsMsgDBEnumerator methods:
-    typedef nsresult (*nsMsgDBThreadEnumeratorFilter)(nsIMsgThread* hdr, void* closure);
+    typedef nsresult (*nsMsgDBThreadEnumeratorFilter)(nsIMsgThread* thread);
 
     nsMsgDBThreadEnumerator(nsMsgDatabase* db, 
-                      nsMsgDBThreadEnumeratorFilter filter, void* closure);
+                      nsMsgDBThreadEnumeratorFilter filter);
     virtual ~nsMsgDBThreadEnumerator();
 
 protected:
@@ -2272,13 +2282,12 @@ protected:
     PRBool                      mDone;
 	PRBool						mNextPrefetched;
     nsMsgDBThreadEnumeratorFilter     mFilter;
-    void*                       mClosure;
 };
 
 nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
-                                     nsMsgDBThreadEnumeratorFilter filter, void* closure)
+                                     nsMsgDBThreadEnumeratorFilter filter)
     : mDB(db), mTableCursor(nsnull), mResultThread(nsnull), mDone(PR_FALSE),
-      mFilter(filter), mClosure(closure)
+      mFilter(filter)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(mDB);
@@ -2370,7 +2379,7 @@ nsresult nsMsgDBThreadEnumerator::PrefetchNext()
 			if (numChildren == 0)
 				continue;
 		}
-		if (mFilter && mFilter(mResultThread, mClosure) != NS_OK)
+		if (mFilter && mFilter(mResultThread) != NS_OK)
 			continue;
 		else
 			break;
@@ -2394,9 +2403,27 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::HasMoreElements(PRBool *aResult)
 }
 
 NS_IMETHODIMP 
-nsMsgDatabase::EnumerateThreads(nsISimpleEnumerator* *result)
+nsMsgDatabase::EnumerateThreads(PRUint32 viewType, nsISimpleEnumerator* *result)
 {
-    nsMsgDBThreadEnumerator* e = new nsMsgDBThreadEnumerator(this, nsnull, nsnull);
+    nsresult rv = NS_OK;
+    nsMsgDBThreadEnumerator* e = nsnull;
+    switch (viewType) {
+        case nsMsgViewType::eShowAll:
+            e = new nsMsgDBThreadEnumerator(this, nsnull);
+            NS_ENSURE_SUCCESS(rv,rv);
+            break;
+        case nsMsgViewType::eShowUnread:
+            e = new nsMsgDBThreadEnumerator(this, nsMsgDBThreadUnreadFilter);
+            NS_ENSURE_SUCCESS(rv,rv);
+            break;
+        case nsMsgViewType::eShowRead:
+        case nsMsgViewType::eShowWatched:
+        default:
+            NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
+            break;
+    }
+
+
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(e);
@@ -2457,6 +2484,28 @@ nsresult
 nsMsgDatabase::EnumerateUnreadMessages(nsISimpleEnumerator* *result)
 {
     nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgUnreadFilter, this);
+    if (e == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(e);
+    *result = e;
+    return NS_OK;
+}
+
+static nsresult
+nsMsgReadFilter(nsIMsgDBHdr* msg, void* closure)
+{
+    nsMsgDatabase* db = (nsMsgDatabase*)closure;
+    PRBool wasRead = PR_TRUE;
+    nsresult rv = db->IsHeaderRead(msg, &wasRead);
+    if (NS_FAILED(rv))
+        return rv;
+    return wasRead ? NS_OK : NS_COMFALSE;
+}
+
+NS_IMETHODIMP
+nsMsgDatabase::EnumerateReadMessages(nsISimpleEnumerator* *result)
+{
+    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgReadFilter, this);
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(e);
@@ -3239,21 +3288,17 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 	nsresult		rv;
 	nsMsgThread		*pThread;
 
-    nsISimpleEnumerator* threads;
-    rv = EnumerateThreads(&threads);
-    if (NS_FAILED(rv)) 
-		return rv;
+    nsCOMPtr <nsISimpleEnumerator> threads;
+    rv = EnumerateThreads(nsMsgViewType::eShowAll, getter_AddRefs(threads));
+    if (NS_FAILED(rv)) return rv;
 	PRBool hasMore = PR_FALSE;
 
 	while (NS_SUCCEEDED(rv = threads->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
 	{
         rv = threads->GetNext((nsISupports**)&pThread);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
-        if (NS_FAILED(rv)) 
-			break;
+        NS_ENSURE_SUCCESS(rv,rv);
 
-		if (threadIds)
-		{
+		if (threadIds) {
             nsMsgKey key;
             (void)pThread->GetThreadKey(&key);
 			threadIds->Add(key);
@@ -3261,7 +3306,6 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 //		NS_RELEASE(pThread);
 		pThread = nsnull;
 	}
-	NS_RELEASE(threads);
 	return rv;
 }
 
@@ -3292,6 +3336,47 @@ NS_IMETHODIMP nsMsgDatabase::GetLowWaterArticleNum(nsMsgKey *key)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsMsgDatabase::HasMessagesOfType(PRUint32 viewType, PRBool *hasMessages)
+{
+    nsresult rv;
+    nsCOMPtr <nsISimpleEnumerator> messages;
+
+    switch (viewType) {
+        case nsMsgViewType::eShowAll:
+            rv = EnumerateMessages(getter_AddRefs(messages));
+            NS_ENSURE_SUCCESS(rv,rv);
+            break;
+        case nsMsgViewType::eShowRead:
+            rv = EnumerateReadMessages(getter_AddRefs(messages));
+            NS_ENSURE_SUCCESS(rv,rv);
+            break;
+        case nsMsgViewType::eShowUnread:
+            rv = EnumerateUnreadMessages(getter_AddRefs(messages));
+            NS_ENSURE_SUCCESS(rv,rv);
+            break;
+        case nsMsgViewType::eShowWatched:
+        default:
+            NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
+            break;
+    }
+
+    rv = messages->HasMoreElements(hasMessages);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::HasThreads(PRBool *hasThreads)
+{
+    nsresult rv;
+
+    nsCOMPtr <nsISimpleEnumerator> threads;
+    rv = EnumerateThreads(nsMsgViewType::eShowAll, getter_AddRefs(threads));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = threads->HasMoreElements(hasThreads);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
 
 #ifdef DEBUG
 nsresult nsMsgDatabase::DumpContents()

@@ -58,7 +58,7 @@
 			  CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
 			  CanFileMessages="rdf:http://home.netscape.com/NC-rdf#CanFileMessages"
 			  NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect"
-			  persist="threaded open sortResource sortDirection">
+			  persist="threaded open sortResource sortDirection viewType">
 		  	  <treerow class="tree-folder-row" 
                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 			             HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"

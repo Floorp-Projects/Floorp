@@ -28,7 +28,6 @@ nsMsgMailSession.h
 nsMsgFolderCache.h
 nsMsgFolderDataSource.h
 nsMsgMessageDataSource.h
-nsMessageViewDataSource.h
 nsMsgAccount.h
 nsMsgAccountManager.h
 nsMsgRDFDataSource.h

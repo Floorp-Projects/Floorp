@@ -45,8 +45,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsIInputStream.h"
 
-#include "nsMessageViewDataSource.h"
-
 #include "nsTraceRefcnt.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 

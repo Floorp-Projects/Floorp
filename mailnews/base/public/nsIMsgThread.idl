@@ -48,5 +48,7 @@ interface nsIMsgThread : nsISupports {
   void MarkChildRead(in boolean bRead);
 
   nsISimpleEnumerator EnumerateMessages(in nsMsgKey parent);
-  
+  nsISimpleEnumerator EnumerateUnreadMessages(in nsMsgKey parent);
+
+  boolean hasMessagesOfType(in nsMsgKey parent, in unsigned long viewType);
 };
