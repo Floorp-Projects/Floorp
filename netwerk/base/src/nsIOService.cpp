@@ -540,6 +540,9 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     nsresult rv;
     nsXPIDLCString scheme;
 
+    if (urlPart)
+        *urlPart = nsnull;
+
     ExtractScheme(urlString, startPos, endPos, getter_Copies(scheme));
 
     if (flag == url_Scheme) {
@@ -568,6 +571,9 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
         PRUint32 usernamePos, passwordPos, hostnamePos;
         PRInt32 usernameLen, passwordLen, hostnameLen;
         PRInt32 port;
+
+        if (authLen < 0)
+            return NS_OK;
 
         rv = parser->ParseAuthority(urlString + authPos, authLen,
                                     &usernamePos, &usernameLen,
@@ -616,6 +622,9 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     else {
         PRUint32 filepathPos, paramPos, queryPos, refPos;
         PRInt32 filepathLen, paramLen, queryLen, refLen;
+
+        if (pathLen < 0)
+            return NS_OK;
 
         rv = parser->ParsePath(urlString + pathPos, pathLen,
                                &filepathPos, &filepathLen,
