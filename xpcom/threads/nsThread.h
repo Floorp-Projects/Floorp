@@ -37,7 +37,7 @@
 #include "nsIThread.h"
 #include "nsIThreadPool.h"
 #include "nsISupportsArray.h"
-#include "prcmon.h"
+#include "prcvar.h"
 #include "nsCOMPtr.h"
 
 class nsThread : public nsIThread 
@@ -86,6 +86,9 @@ public:
 
     nsIRunnable* GetRequest(nsIThread* currentThread);
     nsresult AddThread();
+    nsresult RemoveThread(nsIThread* currentThread);
+    static PRBool InterruptThreads(nsISupports* aElement, 
+                                   void *aData);
 
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
@@ -93,7 +96,12 @@ public:
 protected:
     nsCOMPtr<nsISupportsArray>  mThreads;
     nsCOMPtr<nsISupportsArray>  mRequests;
-    PRMonitor*                  mRequestMonitor;
+    
+    PRLock*                     mLock;
+    PRCondVar*                  mThreadExit;
+    PRCondVar*                  mRequestAdded;
+    PRCondVar*                  mRequestsAtZero;
+
     
     PRUint32                    mStackSize;
     PRThreadPriority            mPriority;
