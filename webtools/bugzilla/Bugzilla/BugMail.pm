@@ -363,7 +363,9 @@ sub ProcessOneBug($$) {
             # You can't stop being the reporter, and mail isn't sent if you
             # remove your vote.
             if ($what eq "CC") {
-                push(@{$recipients{DBNameToIdAndCheck($old)}}, REL_CC);
+                foreach my $cc_user (split(/[\s,]+/, $old)) {
+                    push(@{$recipients{DBNameToIdAndCheck($cc_user)}}, REL_CC);
+                }
             }
             elsif ($what eq "QAContact") {
                 push(@{$recipients{DBNameToIdAndCheck($old)}}, REL_QA);
