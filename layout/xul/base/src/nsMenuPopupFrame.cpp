@@ -156,9 +156,6 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell)
     mMenuCanOverlapOSBar(PR_FALSE), mShouldAutoPosition(PR_TRUE), mShouldRollup(PR_TRUE)
 {
   SetIsContextMenu(PR_FALSE);   // we're not a context menu by default
-  // Don't allow container frames to automatically position
-  // the popup because they will put it in the wrong position.
-  RemoveStateBits(NS_FRAME_SYNC_FRAME_AND_VIEW);
 } // ctor
 
 

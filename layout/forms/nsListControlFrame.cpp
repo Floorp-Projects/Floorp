@@ -2328,9 +2328,7 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
   if (IsInDropDownMode()) 
   {
     //SyncViewWithFrame();
-    mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
     rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
-    mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
     SyncViewWithFrame();
   } else {
     rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);

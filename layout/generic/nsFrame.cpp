@@ -484,8 +484,7 @@ nsFrame::nsFrame()
 {
   MOZ_COUNT_CTOR(nsFrame);
 
-  mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW |
-    NS_FRAME_IS_DIRTY;
+  mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY;
 }
 
 nsFrame::~nsFrame()
@@ -555,9 +554,6 @@ nsFrame::Init(nsPresContext*  aPresContext,
   if (aPrevInFlow) {
     // Make sure the general flags bits are the same
     nsFrameState state = aPrevInFlow->GetStateBits();
-
-    // Make bits that are currently on (see constructor) the same:
-    mState &= state | ~(NS_FRAME_SYNC_FRAME_AND_VIEW);
 
     // Make bits that are currently off (see constructor) the same:
     mState |= state & (NS_FRAME_REPLACED_ELEMENT |
