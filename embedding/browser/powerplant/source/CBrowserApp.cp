@@ -321,12 +321,6 @@ CBrowserApp::OverrideComponents()
                                               dlFactory,
                                               PR_TRUE); // replace existing
 
-    static NS_DEFINE_CID(kDownloadCID, NS_DOWNLOAD_CONTRACTID);
-    rv = nsComponentManager::RegisterFactory(kDownloadCID, 
-                                              "Download", 
-                                              NS_DOWNLOAD_CONTRACTID,
-                                              downloadFactory,
-                                              PR_TRUE); // replace existing
     return rv;
 }
 
