@@ -26,6 +26,11 @@
 
 #include <strstream.h>
 
+#ifdef NS_USING_NAMESPACE
+	using std::ends;
+	using std::ostrstream;
+#endif
+
 //========================================================================================
 NS_NAMESPACE nsFileSpecHelpers
 //========================================================================================
@@ -33,39 +38,94 @@ NS_NAMESPACE nsFileSpecHelpers
 	enum
 	{	kMaxFilenameLength = 31				// should work on Macintosh, Unix, and Win32.
 	,	kMaxAltDigitLength	= 5
-	,	kMaxAltNameLength	= (kMaxFilenameLength - (kMaxAltDigitLength + 1))
+	,	kMaxCoreLeafNameLength	= (kMaxFilenameLength - (kMaxAltDigitLength + 1))
 	};
 	NS_NAMESPACE_PROTOTYPE void LeafReplace(
-		string& ioPath,
+		char*& ioPath,
 		char inSeparator,
-		const string& inLeafName);
-	NS_NAMESPACE_PROTOTYPE string GetLeaf(const string& inPath, char inSeparator);
+		const char* inLeafName);
+	NS_NAMESPACE_PROTOTYPE const char* GetLeaf(const char* inPath, char inSeparator);
+	NS_NAMESPACE_PROTOTYPE char* StringDup(const char* inString, int allocLength = 0);
+	NS_NAMESPACE_PROTOTYPE char* AllocCat(const char* inString1, const char* inString2);
+	NS_NAMESPACE_PROTOTYPE char* StringAssign(char*& ioString, const char* inOther);
 } NS_NAMESPACE_END
 
 //----------------------------------------------------------------------------------------
+char* nsFileSpecHelpers::StringDup(
+	const char* inString,
+	int allocLength)
+//----------------------------------------------------------------------------------------
+{
+	if (!allocLength)
+		allocLength = strlen(inString);
+	char* newPath = new char[allocLength + 1];
+	if (!newPath)
+		return NULL;
+	strcpy(newPath, inString);
+	return newPath;
+} // nsFileSpecHelpers::StringDup
+
+//----------------------------------------------------------------------------------------
+char* nsFileSpecHelpers::AllocCat(
+	const char* inString1,
+	const char* inString2)
+//----------------------------------------------------------------------------------------
+{
+	char* outString = StringDup(inString1, strlen(inString1) + strlen(inString2));
+	if (outString)
+		strcat(outString, inString2);
+	return outString;
+} // nsFileSpecHelpers::StringDup
+
+//----------------------------------------------------------------------------------------
+char* nsFileSpecHelpers::StringAssign(
+	char*& ioString,
+	const char* inString2)
+//----------------------------------------------------------------------------------------
+{
+	if (strlen(inString2) > strlen(ioString))
+	{
+		delete [] ioString;
+		ioString = StringDup(inString2);
+	}
+	else
+		strcpy(ioString, inString2);
+	return ioString;
+} // nsFileSpecHelpers::StringAssign
+
+//----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::LeafReplace(
-	string& ioPath,
+	char*& ioPath,
 	char inSeparator,
-	const string& inLeafName)
+	const char* inLeafName)
 //----------------------------------------------------------------------------------------
 {
 	// Find the existing leaf name
-	string::size_type lastSeparator = ioPath.rfind(inSeparator);
-	string::size_type myLength = ioPath.length();
-	if (lastSeparator < myLength)
-		ioPath = ioPath.substr(0, lastSeparator + 1) + inLeafName;
+	if (!ioPath)
+		return;
+	char* lastSeparator = strrchr(ioPath, inSeparator);
+	int oldLength = strlen(ioPath);
+	*(++lastSeparator) = '\0'; // strip the current leaf name
+	int newLength = lastSeparator - ioPath + strlen(inLeafName);
+	if (newLength > oldLength)
+	{
+		char* newPath = StringDup(ioPath, newLength + 1);
+		delete [] ioPath;
+		ioPath = newPath;
+	}
+	strcat(ioPath, inLeafName);
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
-string nsFileSpecHelpers::GetLeaf(const string& inPath, char inSeparator)
+const char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
+// Returns a pointer to an allocated string representing the leaf.
 //----------------------------------------------------------------------------------------
 {
-	string::size_type lastSeparator = inPath.rfind(inSeparator);
-	string::size_type myLength = inPath.length();
-	if (lastSeparator < myLength)
-		return inPath.substr(1 + lastSeparator, myLength - lastSeparator - 1);
-	return inPath;
-} // nsNativeFileSpec::GetLeafName
+	char* lastSeparator = strrchr(inPath, inSeparator);
+	if (lastSeparator)
+		return StringDup(lastSeparator);
+	return StringDup(inPath);
+} // nsNativeFileSpec::GetLeaf
 
 
 #ifdef XP_MAC
@@ -81,84 +141,101 @@ string nsFileSpecHelpers::GetLeaf(const string& inPath, char inSeparator)
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsFileURL::nsFileURL(const string& inString)
+nsFileURL::nsFileURL(const char* inString)
 //----------------------------------------------------------------------------------------
-:	mURL(inString)
+:	mURL(nsFileSpecHelpers::StringDup(inString))
 #ifdef XP_MAC
-,	mNativeFileSpec(inString.substr(kFileURLPrefixLength, inString.length() - kFileURLPrefixLength))
+,	mNativeFileSpec(inString + kFileURLPrefixLength)
 #endif
 {
-	NS_ASSERTION(mURL.substr(0, kFileURLPrefixLength) == kFileURLPrefix, "Not a URL!");
-}
-
-//----------------------------------------------------------------------------------------
-void nsFileURL::operator = (const string& inString)
-//----------------------------------------------------------------------------------------
-{
-	mURL = inString;
-	NS_ASSERTION(mURL.substr(0, kFileURLPrefixLength) == kFileURLPrefix, "Not a URL!");
-#ifdef XP_MAC
-	mNativeFileSpec = 
-		inString.substr(kFileURLPrefixLength, inString.length() - kFileURLPrefixLength);
-#endif
-}
+	NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
+} // nsFileURL::nsFileURL
 
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
-:	mURL(inOther.mURL)
+:	mURL(nsFileSpecHelpers::StringDup(inOther.mURL))
 #ifdef XP_MAC
 ,	mNativeFileSpec(inOther.GetNativeSpec())
 #endif
 {
+} // nsFileURL::nsFileURL
+
+//----------------------------------------------------------------------------------------
+nsFileURL::nsFileURL(const nsFilePath& inOther)
+//----------------------------------------------------------------------------------------
+:	mURL(nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)inOther))
+#ifdef XP_MAC
+,	mNativeFileSpec(inOther.GetNativeSpec())
+#endif
+{
+} // nsFileURL::nsFileURL
+
+//----------------------------------------------------------------------------------------
+nsFileURL::nsFileURL(const nsNativeFileSpec& inOther)
+:	mURL(nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)nsFilePath(inOther)))
+#ifdef XP_MAC
+,	mNativeFileSpec(inOther)
+#endif
+//----------------------------------------------------------------------------------------
+{
+} // nsFileURL::nsFileURL
+
+//----------------------------------------------------------------------------------------
+nsFileURL::~nsFileURL()
+//----------------------------------------------------------------------------------------
+{
+	delete [] mURL;
 }
+
+//----------------------------------------------------------------------------------------
+void nsFileURL::operator = (const char* inString)
+//----------------------------------------------------------------------------------------
+{
+	nsFileSpecHelpers::StringAssign(mURL, inString);
+	NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
+#ifdef XP_MAC
+	mNativeFileSpec = inString + kFileURLPrefixLength;
+#endif
+} // nsFileURL::operator =
 
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = inOther.mURL;
+	mURL = nsFileSpecHelpers::StringAssign(mURL, inOther.mURL);
 #ifdef XP_MAC
 	mNativeFileSpec = inOther.GetNativeSpec();
 #endif
-}
+} // nsFileURL::operator =
 
-//----------------------------------------------------------------------------------------
-nsFileURL::nsFileURL(const nsFilePath& inOther)
-//----------------------------------------------------------------------------------------
-{
-	mURL = kFileURLPrefix + ((std::string&)inOther);
-#ifdef XP_MAC
-	mNativeFileSpec  = inOther.GetNativeSpec();
-#endif
-}
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = kFileURLPrefix + ((std::string&)inOther);
+	delete [] mURL;
+	mURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)inOther);
 #ifdef XP_MAC
 	mNativeFileSpec  = inOther.GetNativeSpec();
 #endif
-}
+} // nsFileURL::operator =
 
-//----------------------------------------------------------------------------------------
-nsFileURL::nsFileURL(const nsNativeFileSpec& inOther)
-//----------------------------------------------------------------------------------------
-{
-	mURL = kFileURLPrefix + (string&)nsFilePath(inOther);
-#ifdef XP_MAC
-	mNativeFileSpec  = inOther;
-#endif
-}
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsNativeFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = kFileURLPrefix +  (string&)nsFilePath(inOther);
+	delete [] mURL;
+	mURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)nsFilePath(inOther));
 #ifdef XP_MAC
 	mNativeFileSpec  = inOther;
 #endif
+} // nsFileURL::operator =
+
+//----------------------------------------------------------------------------------------
+ostream& operator << (ostream& s, const nsFileURL& url)
+//----------------------------------------------------------------------------------------
+{
+    return (s << url.mURL);
 }
 
 //========================================================================================
@@ -166,44 +243,67 @@ void nsFileURL::operator = (const nsNativeFileSpec& inOther)
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsFilePath::nsFilePath(const string& inString)
+nsFilePath::nsFilePath(const char* inString)
 //----------------------------------------------------------------------------------------
-:	mPath(inString)
+:	mPath(nsFileSpecHelpers::StringDup(inString))
 #ifdef XP_MAC
 ,	mNativeFileSpec(inString)
 #endif
 {
-	NS_ASSERTION(mPath.substr(0, kFileURLPrefixLength) != kFileURLPrefix, "URL passed as path");
+	NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
 }
 
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
-:	mPath(((std::string&)inOther).substr(
-			kFileURLPrefixLength, ((std::string&)inOther).length() - kFileURLPrefixLength))
+:	mPath(nsFileSpecHelpers::StringDup(inOther.mURL + kFileURLPrefixLength))
 #ifdef XP_MAC
 ,	mNativeFileSpec(inOther.GetNativeSpec())
 #endif
 {
 }
 
+#ifdef XP_UNIX
 //----------------------------------------------------------------------------------------
-void nsFilePath::operator = (const string& inString)
+nsFilePath::nsFilePath(const nsNativeFileSpec& inOther)
+//----------------------------------------------------------------------------------------
+:    mPath(nsFileSpecHelpers::StringDup(inOther.mPath))
+{
+}
+#endif // XP_UNIX
+
+//----------------------------------------------------------------------------------------
+nsFilePath::~nsFilePath()
 //----------------------------------------------------------------------------------------
 {
-	mPath = inString;
+	delete [] mPath;
+}
+
+#ifdef XP_UNIX
+//----------------------------------------------------------------------------------------
+void nsFilePath::operator = (const nsNativeFileSpec& inOther)
+//----------------------------------------------------------------------------------------
+{
+    mPath = nsFileSpecHelpers::StringAssign(mPath, inOther.mPath);
+}
+#endif // XP_UNIX
+
+//----------------------------------------------------------------------------------------
+void nsFilePath::operator = (const char* inString)
+//----------------------------------------------------------------------------------------
+{
+	NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
+	nsFileSpecHelpers::StringAssign(mPath, inString);
 #ifdef XP_MAC
 	mNativeFileSpec = inString;
 #endif
-	NS_ASSERTION(mPath.substr(0, kFileURLPrefixLength) != kFileURLPrefix, "URL passed as path");
 }
 
 //----------------------------------------------------------------------------------------
 void nsFilePath::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mPath = ((std::string&)inOther).substr(
-				kFileURLPrefixLength, ((std::string&)inOther).length() - kFileURLPrefixLength);
+	nsFileSpecHelpers::StringAssign(mPath, (const char*)nsFilePath(inOther));
 #ifdef XP_MAC
 	mNativeFileSpec = inOther.GetNativeSpec();
 #endif
@@ -217,15 +317,26 @@ void nsFilePath::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 nsNativeFileSpec::nsNativeFileSpec()
 //----------------------------------------------------------------------------------------
+:	mPath(NULL)
 {
 }
 #endif
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::MakeUnique(const string& inSuggestedLeafName)
+nsNativeFileSpec::nsNativeFileSpec(const nsFileURL& inURL)
+//----------------------------------------------------------------------------------------
+#ifndef XP_MAC
+:	mPath(NULL)
+#endif
+{
+    *this = nsFilePath(inURL); // convert to unix path first
+}
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::MakeUnique(const char* inSuggestedLeafName)
 //----------------------------------------------------------------------------------------
 {
-	if (inSuggestedLeafName.length() > 0)
+	if (inSuggestedLeafName && *inSuggestedLeafName)
 		SetLeafName(inSuggestedLeafName);
 
 	MakeUnique();
@@ -238,27 +349,115 @@ void nsNativeFileSpec::MakeUnique()
 	if (!Exists())
 		return;
 
-	short index = 0;
-	string altName = GetLeafName();
-	string::size_type lastDot = altName.rfind('.');
-	string suffix;
-	if (lastDot < altName.length())
+	char* leafName = GetLeafName();
+	if (!leafName)
+		return;
+
+	char* lastDot = strrchr(leafName, '.');
+	char* suffix = "";
+	if (lastDot)
 	{
-		suffix = altName.substr(lastDot, altName.length() - lastDot); // include '.'
-		altName = altName.substr(0, lastDot);
+		suffix = nsFileSpecHelpers::StringDup(lastDot); // include '.'
+		*lastDot = '\0'; // strip suffix and dot.
 	}
-	const string::size_type kMaxRootLength
-		= nsFileSpecHelpers::kMaxAltNameLength - suffix.length() - 1;
-	if (altName.length() > kMaxRootLength)
-		altName = altName.substr(0, kMaxRootLength);
-	while (Exists())
+	const int kMaxRootLength
+		= nsFileSpecHelpers::kMaxCoreLeafNameLength - strlen(suffix) - 1;
+	if (strlen(leafName) > kMaxRootLength)
+		leafName[kMaxRootLength] = '\0';
+	for (short index = 1; index < 1000 && Exists(); index++)
 	{
-		// start with "Picture-2.jpg" after "Picture.jpg" exists
-		if ( ++index > 999 )		// something's very wrong
-			return;
+		// start with "Picture-1.jpg" after "Picture.jpg" exists
 		char buf[nsFileSpecHelpers::kMaxFilenameLength + 1];
-		std::ostrstream newName(buf, nsFileSpecHelpers::kMaxFilenameLength);
-		newName << altName.c_str() << "-" << index << suffix.c_str() << std::ends;
+		ostrstream newName(buf, nsFileSpecHelpers::kMaxFilenameLength);
+		newName << leafName << "-" << index << suffix << ends;
 		SetLeafName(newName.str()); // or: SetLeafName(buf)
 	}
+	if (*suffix)
+		delete [] suffix;
+	delete [] leafName;
 } // nsNativeFileSpec::MakeUnique
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::operator = (const nsFileURL& inURL)
+//----------------------------------------------------------------------------------------
+{
+    *this = nsFilePath(inURL); // convert to unix path first
+}
+
+//========================================================================================
+//                                UNIX & WIN nsNativeFileSpec implementation
+//========================================================================================
+
+#ifdef XP_UNIX
+//----------------------------------------------------------------------------------------
+nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
+//----------------------------------------------------------------------------------------
+:    mPath(nsFileSpecHelpers::StringDup((char*)inPath))
+{
+}
+#endif // XP_UNIX
+
+#ifdef XP_UNIX
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::operator = (const nsFilePath& inPath)
+//----------------------------------------------------------------------------------------
+{
+    nsFileSpecHelpers::StringAssign(mPath, (const char*)inPath);
+}
+#endif //XP_UNIX
+
+#if defined(XP_UNIX) || defined(XP_PC)
+//----------------------------------------------------------------------------------------
+nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
+//----------------------------------------------------------------------------------------
+:    mPath(nsFileSpecHelpers::StringDup((char*)inSpec))
+{
+}
+#endif //XP_UNIX
+
+#if defined(XP_UNIX) || defined(XP_PC)
+//----------------------------------------------------------------------------------------
+nsNativeFileSpec::nsNativeFileSpec(const char* inString)
+//----------------------------------------------------------------------------------------
+:    mPath(nsFileSpecHelpers::StringDup(inString))
+{
+}
+#endif //XP_UNIX,PC
+
+//----------------------------------------------------------------------------------------
+nsNativeFileSpec::~nsNativeFileSpec()
+//----------------------------------------------------------------------------------------
+{
+#ifndef XP_MAC
+	delete [] mPath;
+#endif
+}
+
+#if defined(XP_UNIX) || defined(XP_PC)
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::operator = (const nsNativeFileSpec& inSpec)
+//----------------------------------------------------------------------------------------
+{
+    mPath = nsFileSpecHelpers::StringAssign(mPath, inSpec.mPath);
+}
+#endif //XP_UNIX
+
+
+#if defined(XP_UNIX) || defined(XP_PC)
+//----------------------------------------------------------------------------------------
+nsNativeFileSpec::operator = (const char* inString)
+//----------------------------------------------------------------------------------------
+{
+    mPath = nsFileSpecHelpers::StringAssign(mPath, inString);
+}
+#endif //XP_UNIX
+
+#if (defined(XP_UNIX) || defined(XP_PC))
+//----------------------------------------------------------------------------------------
+ostream& operator << (ostream& s, const nsNativeFileSpec& spec)
+//----------------------------------------------------------------------------------------
+{
+    return (s << (const char*)spec.mPath);
+}
+#endif // DEBUG && XP_UNIX
+
