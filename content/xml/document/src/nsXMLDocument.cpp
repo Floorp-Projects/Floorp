@@ -85,6 +85,7 @@
 #include "nsMimeTypes.h"
 #include "nsIEventListenerManager.h"
 #include "nsContentUtils.h"
+#include "nsJSUtils.h"
 #include "nsIElementFactory.h"
 #include "nsCRT.h"
 #include "nsIWindowWatcher.h"
@@ -368,7 +369,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   if (stack) {
     JSContext *cx;
     if (NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
-      callingContext = nsContentUtils::GetDynamicScriptContext(cx);
+      callingContext = nsJSUtils::GetDynamicScriptContext(cx);
     }
   }
 
