@@ -19,21 +19,6 @@
 #include "msgcore.h"
 #include "nsMsgLineBuffer.h"
 
-#ifdef XP_MAC
-#  define LINEBREAK             "\015"
-#  define LINEBREAK_LEN 1
-#else
-#  ifdef XP_WIN
-#    define LINEBREAK           "\015\012"
-#    define LINEBREAK_LEN       2
-#  else
-#    ifdef XP_UNIX
-#      define LINEBREAK         "\012"
-#      define LINEBREAK_LEN     1
-#    endif /* XP_UNIX */
-#  endif /* XP_WIN */
-#endif /* XP_MAC */
-
 nsByteArray::nsByteArray()
 {
 	m_buffer = NULL;
