@@ -16,7 +16,7 @@
 
 	<keyset id="keyset"/>
 
-	<box align="horizontal" flex="90%" style="padding: 10px">
+	<box align="horizontal" flex="100%" style="padding: 10px">
 		<box align="vertical" flex="25%">
 <html:div style="border-style:inset" flex="100%">
 	<tree rdf:datasources="rdf:msgaccountmanager"
@@ -99,5 +99,6 @@
            </tabcontrol>
         </box>
 	</box>
+    <html:hr/>
     <box id="okCancelButtons"/>
 </window>
