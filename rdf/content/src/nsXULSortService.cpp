@@ -51,7 +51,7 @@
 #include "rdfutil.h"
 
 #include "nsVoidArray.h"
-#include "rdf_qsort.h"
+#include "nsQuickSort.h"
 #include "nsIAtom.h"
 #include "nsIXULSortService.h"
 #include "nsString.h"
@@ -70,7 +70,6 @@
 #include "nsTextFragment.h"
 
 #include "nsVoidArray.h"
-#include "rdf_qsort.h"
 
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -860,7 +859,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 				flatArray[loop] = (nsIContent *)childArray->ElementAt(loop);
 			}
 
-			rdf_qsort((void *)flatArray, numElements, sizeof(nsIContent *),
+			nsQuickSort((void *)flatArray, numElements, sizeof(nsIContent *),
 				inplaceSortCallback, (void *)sortInfo);
 
 			RemoveAllChildren(container);
@@ -951,7 +950,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 			sortInfo.descendingSort = PR_TRUE;
 		else
 			sortInfo.descendingSort = PR_FALSE;
-		rdf_qsort((void *)flatArray, numElements, elementSize, openSortCallback, (void *)&sortInfo);
+        nsQuickSort((void *)flatArray, numElements, elementSize, openSortCallback, (void *)&sortInfo);
 	}
 	return(NS_OK);
 }

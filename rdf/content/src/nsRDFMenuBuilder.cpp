@@ -49,7 +49,6 @@
 #include "rdfutil.h"
 #include "nsITimer.h"
 #include "nsVoidArray.h"
-#include "rdf_qsort.h"
 
 #include "nsRDFGenericBuilder.h"
 

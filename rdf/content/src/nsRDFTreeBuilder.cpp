@@ -65,12 +65,10 @@
 #include "rdfutil.h"
 #include "nsITimer.h"
 #include "nsVoidArray.h"
-#include "rdf_qsort.h"
+#include "nsQuickSort.h"
 #include "nsRDFGenericBuilder.h"
 #include "prtime.h"
 #include "prlog.h"
-
-#include "rdf_qsort.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -523,7 +521,7 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 		        {
 				flatArray[loop] = (nsIRDFResource *)childArray.ElementAt(loop);
 			}
-//			rdf_qsort((void *)flatArray, numElements, sizeof(nsIRDFNode *),
+//			nsQuickSort((void *)flatArray, numElements, sizeof(nsIRDFNode *),
 //				openSortCallback, (void *)sortInfo);
 
 			// first, remove any nodes that are stale
