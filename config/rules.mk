@@ -891,7 +891,7 @@ ifneq ($(XPIDLSRCS),)
 ifeq ($(MODULE),) # we need $(MODULE) to make $(MODULE).xpt
 export:: FORCE
 	@echo
-	@echo "Error processing XPIDLSRCS:"
+	@echo "*** Error processing XPIDLSRCS:"
 	@echo "Please define MODULE when defining XPIDLSRCS,"
 	@echo "so we have a module name to use when creating MODULE.xpt."
 	@echo; sleep 2; false
@@ -927,6 +927,8 @@ $(XPIDL_GEN_DIR)/$(MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLS
 
 install:: $(XPIDL_GEN_DIR)/$(MODULE).xpt
 	$(INSTALL) -m 444 $(XPIDL_GEN_DIR)/$(MODULE).xpt $(DIST)/bin/components
+
+GARBAGE += $(XPIDL_GEN_DIR) # add $(XPIDL_GEN_DIR) to clobber candidates
 endif
 endif
 
