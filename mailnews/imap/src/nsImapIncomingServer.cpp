@@ -669,7 +669,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   if (ConnectionTimeOut(freeConnection))
     freeConnection = null_nsCOMPtr();
   
-  if (redirectLogon && (!connection || !canRunUrlImmediately))
+  if (!canRunButBusy && redirectLogon && (!connection || !canRunUrlImmediately))
   {
     // here's where we'd start the asynchronous process of requesting a connection to the 
     // AOL Imap server and getting back an ip address, port #, and cookie.
