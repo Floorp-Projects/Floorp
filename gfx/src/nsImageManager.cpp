@@ -113,22 +113,8 @@ ImageManagerImpl::GetImageType(const char *buf, PRInt32 length)
 }
 
 // The singleton image manager
+// XXX make this a service
 static ImageManagerImpl*   gImageManager;
-
-// Class to manage construction and destruction of the singleton
-// image manager
-struct ImageManagerInit {
-  ImageManagerInit() {
-    gImageManager = new ImageManagerImpl();
-    NS_ADDREF(gImageManager);
-  }
-
-  ~ImageManagerInit() {
-    NS_RELEASE(gImageManager);
-  }
-};
-
-static ImageManagerInit imageManagerInit;
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageManager(nsIImageManager **aInstancePtrResult)
@@ -137,7 +123,12 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  NS_ASSERTION(nsnull != gImageManager, "no image manager");
-  return gImageManager->QueryInterface(kIImageManagerIID, (void **)aInstancePtrResult);
+  if (nsnull == gImageManager) {
+    gImageManager = new ImageManagerImpl();
+  }
+  if (nsnull == gImageManager) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return gImageManager->QueryInterface(kIImageManagerIID,
+                                       (void **)aInstancePtrResult);
 }
