@@ -68,10 +68,50 @@ public class NativeJavaPackage extends ScriptableObject {
         "java.applet",
     };
 
+    public static class TopLevelPackage extends NativeJavaPackage 
+                                        implements Function
+    {
+        public TopLevelPackage() {
+            super("");
+        }
+
+        public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                           Object[] args)
+            throws JavaScriptException
+        {
+            return construct(cx, scope, args);
+        }
+
+        public Scriptable construct(Context cx, Scriptable scope, Object[] args)
+            throws JavaScriptException
+        {
+            ClassLoader loader = getClassLoaderFromArgs(args);
+            if (loader == null) {
+                Context.reportRuntimeError0("msg.not.classloader");
+                return null;
+            }
+            return new NativeJavaPackage("", loader);
+        }
+
+        private ClassLoader getClassLoaderFromArgs(Object[] args) {
+            if (args.length < 1) {
+                return null;
+            }
+            Object arg = args[0];
+            if (arg instanceof Wrapper) {
+                arg = ((Wrapper)arg).unwrap();
+            }
+            if (!(arg instanceof ClassLoader)) {
+                return null;
+            }
+            return (ClassLoader) arg;
+        }
+
+    }
     public static Scriptable init(Scriptable scope)
         throws PropertyException
     {
-        NativeJavaPackage packages = new NativeJavaPackage("");
+        NativeJavaPackage packages = new NativeJavaPackage.TopLevelPackage();
         packages.setPrototype(getObjectPrototype(scope));
         packages.setParentScope(scope);
 
@@ -119,7 +159,7 @@ public class NativeJavaPackage extends ScriptableObject {
             String newPackage = packageName.length() == 0
                                 ? id
                                 : packageName + "." + id;
-            pkg = new NativeJavaPackage(newPackage);
+            pkg = new NativeJavaPackage(newPackage, classLoader);
             pkg.setParentScope(this);
             pkg.setPrototype(this.prototype);
             super.put(id, this, pkg);
@@ -130,6 +170,11 @@ public class NativeJavaPackage extends ScriptableObject {
 
     public NativeJavaPackage(String packageName) {
         this.packageName = packageName;
+    }
+
+    public NativeJavaPackage(String packageName, ClassLoader classLoader) {
+        this.packageName = packageName;
+        this.classLoader = classLoader;
     }
 
     public String getClassName() {
@@ -172,13 +217,16 @@ public class NativeJavaPackage extends ScriptableObject {
         try {
             if (ss != null && !ss.visibleToScripts(newPackage))
                 throw new ClassNotFoundException();
-            Class newClass = ScriptRuntime.loadClassName(newPackage);
+            Class newClass = classLoader != null
+                ? classLoader.loadClass(newPackage)
+                : ScriptRuntime.loadClassName(newPackage);
             newValue =  NativeJavaClass.wrap(getTopLevelScope(this), newClass);
             newValue.setParentScope(this);
             newValue.setPrototype(this.prototype);
         } catch (ClassNotFoundException ex) {
             if (createPkg) {
-                NativeJavaPackage pkg = new NativeJavaPackage(newPackage);
+                NativeJavaPackage pkg = new NativeJavaPackage(newPackage,
+                                                              classLoader);
                 pkg.setParentScope(this);
                 pkg.setPrototype(this.prototype);
                 newValue = pkg;
@@ -233,4 +281,5 @@ public class NativeJavaPackage extends ScriptableObject {
     }
 
     private String packageName;
+    private ClassLoader classLoader;
 }
