@@ -1460,7 +1460,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
      * happening if we decide to execute
      */
     nsCOMPtr<nsIFile> prefApp;
-    mMimeInfo->GetPreferredApplication(getter_AddRefs(prefApp));
+    mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(prefApp));
     if (action != nsIMIMEInfo::useHelperApp || !prefApp) {
       nsCOMPtr<nsIFile> fileToTest;
       GetTargetFile(getter_AddRefs(fileToTest));
