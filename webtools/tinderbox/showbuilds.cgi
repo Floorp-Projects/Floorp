@@ -1022,7 +1022,7 @@ sub do_vxml {
   foreach my $buildname (sort keys %build) {
     if ($state_symbols{$build{buildname}} == 'red') {
       $flames = 1;
-    } elsif ($state_symbols{$build{buildname}} == 'testfailed') {
+    } elsif ($state_symbols{$build{buildname}} == 'test failed') {
       $testFailed = 1;
     }
   }
@@ -1040,9 +1040,20 @@ sub do_vxml {
       foreach my $buildname (sort keys %build) {
         print "<pause>500</pause>";
         print "\n";
+        if ($state_symbols{$build{$buildname}} == 'red' ||
+            $state_symbols{$build{$buildname}} == 'test failed') {
+            print '<audio src="http://www.boulderdesign.com/sounds/getfixed.wav">bustage</audio>';
+            print "\n";
+        }
+            
+        print "<pause>500</pause>";
+        print "\n";
         print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>";
         print "\n";
       }
+  } else {
+      print '<audio>All clear, move along</audio>';
+      print "\n";
   }
 
   print '<pause>1000</pause><audio src="http://www.boulderdesign.com/sounds/goodbye.wav">goodbye</audio>';
