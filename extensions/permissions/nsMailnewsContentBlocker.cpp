@@ -54,7 +54,7 @@
  * remote is http, https, ftp.
  */
 
-static const char kBlockRemotePrefName[] = "permissions.mailnews.block_remote";
+static const char kBlockRemotePrefName[] = "mailnews.message_display.disable_remote_image";
 static const PRBool kBlockRemotePrefDefault = PR_FALSE;
 
 
