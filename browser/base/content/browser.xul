@@ -295,6 +295,9 @@
             </hbox>
             <toolbarbutton class="bookmark-item bookmarks-toolbar-customize" mousethrough="never"
                            label="&bookmarksToolbarItem.label;"/>
+            <hbox id="insertion-feedback" hidden="true">
+              <button id="insertion-feedback-button" style="margin:0px !important;"/>
+            </hbox>
           </stack>
         </toolbaritem>
 
@@ -439,6 +442,6 @@
     </statusbarpanel>
     <statusbarpanel id="statusbar-updates"/>
   </statusbar>
-    
+
 </window>
   

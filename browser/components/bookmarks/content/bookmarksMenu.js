@@ -35,9 +35,10 @@
 # the terms of any one of the NPL, the GPL or the LGPL.
 
 var BookmarksMenu = {
+
   _selection:null,
   _target:null,
-  _orientation:null,
+  _db:null,
 
   /////////////////////////////////////////////////////////////////////////////
   // prepare the bookmarks menu for display
@@ -173,12 +174,18 @@ var BookmarksMenu = {
     var bt = document.getElementById("bookmarks-ptf");
     bt.focus(); // buttons in the bt have -moz-user-focus: ignore
 
-    this._selection   = this.getBTSelection(target);
-    this._orientation = this.getBTOrientation(aEvent, target);
-    this._target      = this.getBTTarget(target, this._orientation);
-    BookmarksCommand.createContextMenu(aEvent, this._selection);
+    this._selection = this.getBTSelection(target);
+    this._target    = this.getBTTarget(target, "after");
+  
+    // walk up the tree until we find a database node
+    var p = target;
+    while (p && !p.database)
+      p = p.parentNode;
+
+    this._db = p? p.database : null;
+  
+    BookmarksCommand.createContextMenu(aEvent, this._selection, this._db);
     this.onCommandUpdate();
-    aEvent.target.addEventListener("mousemove", BookmarksMenuController.onMouseMove, false);
     return true;
   },
 
@@ -196,9 +203,8 @@ var BookmarksMenu = {
     BookmarksMenuDNDObserver.onDragCloseTarget();
 
 #   if the user types escape, we need to remove the feedback
-    BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
+    BookmarksMenuDNDObserver.onDragRemoveFeedBack();
 
-    aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -229,6 +235,18 @@ var BookmarksMenu = {
     return selection;
   },
 
+  getBTOrientation: function (aTarget, aEvent)
+  {
+    switch (aTarget.id) {
+    case "bookmarks-ptf":
+    case "bookmarks-menu":
+    case "bookmarks-chevron":
+      return "on";
+    default: 
+      return BookmarksInsertion.getOrientation(aTarget, aEvent);
+    }
+  },
+
   /////////////////////////////////////////////////////////////////////////
   // returns the insertion target from aNode
   getBTTarget: function (aNode, aOrientation)
@@ -246,7 +264,7 @@ var BookmarksMenu = {
       parent = BMSVC.getBookmarksToolbarFolder().Value;
       break;
     default:
-      if (aOrientation == BookmarksUtils.DROP_ON)
+      if (aOrientation == "on")
         parent = aNode.id
       else {
         parent = this.getBTContainer(aNode);
@@ -255,13 +273,13 @@ var BookmarksMenu = {
     }
 
     parent = RDF.GetResource(parent);
-    if (aOrientation == BookmarksUtils.DROP_ON)
+    if (aOrientation == "on")
       return BookmarksUtils.getTargetFromFolder(parent);
 
     item = RDF.GetResource(item.id);
     RDFC.Init(BMDS, parent);
     index = RDFC.IndexOf(item);
-    if (aOrientation == BookmarksUtils.DROP_AFTER)
+    if (aOrientation == "after")
       ++index;
 
     return { parent: parent, index: index };
@@ -307,77 +325,6 @@ var BookmarksMenu = {
   },
 
   /////////////////////////////////////////////////////////////////////////
-  // returns true if the node is a container. -->
-  isBTContainer: function (aTarget)
-  {
-    return  aTarget.localName == "menu" || (aTarget.localName == "toolbarbutton" &&
-           (aTarget.getAttribute("container") == "true"));
-  },
-
-  /////////////////////////////////////////////////////////////////////////
-  // returns BookmarksUtils.DROP_BEFORE, DROP_ON or DROP_AFTER accordingly
-  // to the event coordinates. Skin authors could break us, we'll cross that 
-  // bridge when they turn us 90degrees.  -->
-  getBTOrientation: function (aEvent, aTarget)
-  {
-    var target
-    if (!aTarget)
-      target = aEvent.target;
-    else
-      target = aTarget;
-    if (target.localName == "menu"                 &&
-        target.parentNode.localName != "menupopup" ||
-        target.id == "bookmarks-chevron")
-      return BookmarksUtils.DROP_ON;
-    if (target.id == "bookmarks-ptf") {
-      return target.hasChildNodes()?
-             BookmarksUtils.DROP_AFTER:BookmarksUtils.DROP_ON;
-    }
-
-    var overButtonBoxObject = target.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
-    var overParentBoxObject = target.parentNode.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
-
-    var size, border;
-    var coordValue, clientCoordValue;
-    switch (target.localName) {
-      case "toolbarseparator":
-      case "toolbarbutton":
-        size = overButtonBoxObject.width;
-        coordValue = overButtonBoxObject.x;
-        clientCoordValue = aEvent.clientX;
-        break;
-      case "menuseparator": 
-      case "menu":
-      case "menuitem":
-        size = overButtonBoxObject.height;
-        coordValue = overButtonBoxObject.screenY;
-        clientCoordValue = aEvent.screenY;
-        break;
-      default: return BookmarksUtils.DROP_ON;
-    }
-    if (this.isBTContainer(target))
-      if (target.localName == "toolbarbutton") {
-        // the DROP_BEFORE area excludes the label
-        var iconNode = document.getAnonymousElementByAttribute(target, "class", "toolbarbutton-icon");
-        border = parseInt(document.defaultView.getComputedStyle(target,"").getPropertyValue("padding-left")) +
-                 parseInt(document.defaultView.getComputedStyle(iconNode     ,"").getPropertyValue("width"));
-        border = Math.min(size/5,Math.max(border,4));
-      } else
-        border = size/5;
-    else
-      border = size/2;
-
-    // in the first region?
-    if (clientCoordValue-coordValue < border)
-      return BookmarksUtils.DROP_BEFORE;
-    // in the last region?
-    else if (clientCoordValue-coordValue >= size-border)
-      return BookmarksUtils.DROP_AFTER;
-    else // must be in the middle somewhere
-      return BookmarksUtils.DROP_ON;
-  },
-
-  /////////////////////////////////////////////////////////////////////////
   // expand the folder targeted by the context menu.
   expandBTFolder: function ()
   {
@@ -410,7 +357,7 @@ var BookmarksMenu = {
     if (aTarget.getAttribute("class") == "openintabs-menuitem")
       aTarget = aTarget.parentNode.parentNode;
       
-    // Check for invalid bookmarks (most likely a static menu item like "Manage Bookmarks")
+    // Check for invalid bookmarks (ex: a static menu item like "Manage Bookmarks")
     if (!this.isBTBookmark(aTarget.id))
       return;
     var rSource   = RDF.GetResource(aTarget.id);
@@ -454,13 +401,23 @@ var BookmarksMenuController = {
 #   automatically after dismissing the dialog
     if (content)
       content.focus();
-    BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
 
 #   if a dialog opens, the "open" attribute of a menuitem-container
 #   rclicked on won''t be removed. We do it manually.
     var element = document.popupNode.firstChild;
     if (element && element.localName == "menupopup")
       element.hidePopup();
+
+    // hide the 'open in tab' menuseparator because bookmarks
+    // can be inserted after it if they are dropped after the last bookmark
+    // a more comprehensive fix would be in the menupopup template builder
+    var menuSeparator = null;
+    var menuTarget = document.popupNode.parentNode;
+    if (menuTarget.hasChildNodes() &&
+        menuTarget.lastChild.getAttribute("class") == "openintabs-menuitem") {
+      menuSeparator = menuTarget.lastChild.previousSibling;
+      menuTarget.removeChild(menuSeparator);
+    }
 
     var selection = BookmarksMenu._selection;
     var target    = BookmarksMenu._target;
@@ -471,17 +428,10 @@ var BookmarksMenuController = {
     default:
       BookmarksController.doCommand(aCommand, selection, target);
     }
-  },
 
-  onMouseMove: function (aEvent)
-  {
-    var command = aEvent.target.getAttribute("command");
-    var isDisabled = aEvent.target.getAttribute("disabled")
-    if (isDisabled != "true" && (command == "cmd_bm_newfolder" || command == "cmd_paste")) {
-      BookmarksMenuDNDObserver.onDragSetFeedBack(document.popupNode, BookmarksMenu._orientation);
-    } else {
-      BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
-    }
+    // show again the menuseparator
+    if (menuSeparator)
+      menuTarget.insertBefore(menuSeparator, menuTarget.lastChild);
   }
 }
 
@@ -509,7 +459,7 @@ var BookmarksMenuDNDObserver = {
 
     // bail if dragging from the empty area of the bookmarks toolbar
     if (target.id == "bookmarks-ptf")
-      return
+      return;
 
     // a drag start is fired when leaving an open toolbarbutton(type=menu) 
     // (see bug 143031)
@@ -527,12 +477,13 @@ var BookmarksMenuDNDObserver = {
 
   onDragOver: function(aEvent, aFlavour, aDragSession) 
   {
-    var orientation = BookmarksMenu.getBTOrientation(aEvent)
+    var orientation = BookmarksMenu.getBTOrientation(aEvent.target, aEvent);
     if (aDragSession.canDrop)
-      this.onDragSetFeedBack(aEvent.target, orientation);
+      this.onDragSetFeedBack(aEvent.target, aEvent);
     if (orientation != this.mCurrentDropPosition) {
       // emulating onDragExit and onDragEnter events since the drop region
-      // has changed on the target.
+      // has changed on the target (Ex: orientation change in a toolbarbutton
+      // container).
       this.onDragExit(aEvent, aDragSession);
       this.onDragEnter(aEvent, aDragSession);
     }
@@ -546,13 +497,14 @@ var BookmarksMenuDNDObserver = {
   onDragEnter: function (aEvent, aDragSession)
   {
     var target = aEvent.target;
-    var orientation = BookmarksMenu.getBTOrientation(aEvent);
+    var orientation = BookmarksMenu.getBTOrientation(aEvent.target, aEvent);
     if (target.localName == "menupopup" || target.id == "bookmarks-ptf")
       target = target.parentNode;
     if (aDragSession.canDrop) {
-      this.onDragSetFeedBack(target, orientation);
+      this.onDragSetFeedBack(target, aEvent);
       this.onDragEnterSetTimer(target, aDragSession);
     }
+
     this.mCurrentDragOverTarget = target;
     this.mCurrentDropPosition   = orientation;
   },
@@ -562,7 +514,7 @@ var BookmarksMenuDNDObserver = {
     var target = aEvent.target;
     if (target.localName == "menupopup" || target.id == "bookmarks-ptf")
       target = target.parentNode;
-    this.onDragRemoveFeedBack(target);
+    this.onDragRemoveFeedBack();
     this.onDragExitSetTimer(target, aDragSession);
     this.mCurrentDragOverTarget = null;
     this.mCurrentDropPosition = null;
@@ -571,21 +523,10 @@ var BookmarksMenuDNDObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
   {
     var target = aEvent.target;
-    this.onDragRemoveFeedBack(target);
+    this.onDragRemoveFeedBack();
 
     var selection = BookmarksUtils.getSelectionFromXferData(aDragSession);
-
-    var orientation = BookmarksMenu.getBTOrientation(aEvent);
-
-    // For RTL PersonalBar bookmarks buttons, orientation should be inverted (only in drop case)
-    var PBStyle = window.getComputedStyle(document.getElementById("PersonalToolbar"),'');
-    var isHorizontal = (target.localName == "toolbarbutton");
-    if ((PBStyle.direction == 'rtl') && isHorizontal) {
-      if (orientation == BookmarksUtils.DROP_AFTER)
-        orientation = BookmarksUtils.DROP_BEFORE;
-      else if (orientation == BookmarksUtils.DROP_BEFORE)
-        orientation = BookmarksUtils.DROP_AFTER;
-    }
+    var orientation = BookmarksMenu.getBTOrientation(target, aEvent);
 
     var selTarget   = BookmarksMenu.getBTTarget(target, orientation);
 
@@ -598,7 +539,7 @@ var BookmarksMenuDNDObserver = {
     var menuSeparator = null;
     var menuTarget = (target.localName == "toolbarbutton" ||
                       target.localName == "menu")         && 
-                     orientation == BookmarksUtils.DROP_ON?
+                     orientation == "on"?
                      target.lastChild:target.parentNode;
     if (menuTarget.hasChildNodes() &&
         menuTarget.lastChild.getAttribute("class") == "openintabs-menuitem") {
@@ -694,7 +635,7 @@ var BookmarksMenuDNDObserver = {
       if (this.isContainer(children[i]) && 
           children[i].getAttribute("open") == "true") {
         this.onDragCloseMenu(children[i].lastChild);
-        if (children[i] != this.mCurrentDragOverTarget || this.mCurrentDropPosition != BookmarksUtils.DROP_ON)
+        if (children[i] != this.mCurrentDragOverTarget || this.mCurrentDropPosition != "on")
           children[i].lastChild.hidePopup();
       }
     } 
@@ -719,7 +660,7 @@ var BookmarksMenuDNDObserver = {
     if (!this.mCurrentDragOverTarget)
       return;
     // Load the current menu
-    if (this.mCurrentDropPosition == BookmarksUtils.DROP_ON && 
+    if (this.mCurrentDropPosition == "on" && 
         this.isContainer(aTarget))
       aTarget.lastChild.showPopup(aTarget);
   },
@@ -777,75 +718,39 @@ var BookmarksMenuDNDObserver = {
       // The if statement in the function has been introduced to deal with rare but reproducible
       // missing Exit events.
       if (aDragSession.sourceNode.localName != "menuitem" && aDragSession.sourceNode.localName != "menu")
-        setTimeout(function () { if (This.mCurrentDragOverTarget) {This.onDragRemoveFeedBack(This.mCurrentDragOverTarget); This.mCurrentDragOverTarget=null} This.loadTimer=null; This.onDragCloseTarget() }, 0);
+        setTimeout(function () { if (This.mCurrentDragOverTarget) {This.onDragRemoveFeedBack(); This.mCurrentDragOverTarget=null} This.loadTimer=null; This.onDragCloseTarget() }, 0);
     }
   },
 
-  onDragSetFeedBack: function (aTarget, aOrientation)
+  onDragSetFeedBack: function (aTarget, aEvent)
   {
-   switch (aTarget.localName) {
+
+    switch (aTarget.localName) {
       case "toolbarseparator":
       case "toolbarbutton":
-        switch (aOrientation) {
-          case BookmarksUtils.DROP_BEFORE: 
-            aTarget.setAttribute("dragover-left", "true");
-            break;
-          case BookmarksUtils.DROP_AFTER:
-            aTarget.setAttribute("dragover-right", "true");
-            break;
-          case BookmarksUtils.DROP_ON:
-            aTarget.setAttribute("dragover-top"   , "true");
-            aTarget.setAttribute("dragover-bottom", "true");
-            aTarget.setAttribute("dragover-left"  , "true");
-            aTarget.setAttribute("dragover-right" , "true");
-            break;
-        }
-        break;
       case "menuseparator": 
       case "menu":
       case "menuitem":
-        switch (aOrientation) {
-          case BookmarksUtils.DROP_BEFORE: 
-            aTarget.setAttribute("dragover-top", "true");
-            break;
-          case BookmarksUtils.DROP_AFTER:
-            aTarget.setAttribute("dragover-bottom", "true");
-            break;
-          case BookmarksUtils.DROP_ON:
-            break;
-        }
+        var orientation = BookmarksMenu.getBTOrientation(aTarget, aEvent);
+        BookmarksInsertion.showWithOrientation(aTarget, orientation);
         break;
-      case "hbox"     : 
+      case "hbox": 
         // hit between the last visible bookmark and the chevron
-        var newTarget = BookmarksToolbar.getLastVisibleBookmark();
-        if (newTarget)
-          newTarget.setAttribute("dragover-right", "true");
+        var target = BookmarksToolbar.getLastVisibleBookmark();
+        if (target)
+          BookmarksInsertion.showAfter(target);
         break;
       case "stack"    :
-      case "menupopup": break; 
-     default: dump("No feedback for: "+aTarget.localName+"\n");
+      case "menupopup":
+        BookmarksInsertion.hide()
+        break; 
+      default: dump("No feedback for: "+aTarget.localName+"\n");
     }
   },
 
-  onDragRemoveFeedBack: function (aTarget)
+  onDragRemoveFeedBack: function ()
   { 
-    var newTarget;
-    var bt;
-    if (aTarget.id == "bookmarks-ptf") { 
-      // hit when dropping in the bt or between the last visible bookmark 
-      // and the chevron
-      newTarget = BookmarksToolbar.getLastVisibleBookmark();
-      if (newTarget)
-        newTarget.removeAttribute("dragover-right");
-    } else if (aTarget.id == "bookmarks-stack") {
-      newTarget = BookmarksToolbar.getLastVisibleBookmark();
-      newTarget.removeAttribute("dragover-right");
-    } else {
-      aTarget.removeAttribute("dragover-left");
-      aTarget.removeAttribute("dragover-right");
-      aTarget.removeAttribute("dragover-top");
-      aTarget.removeAttribute("dragover-bottom");
-    }
+    BookmarksInsertion.hide();
   },
 
   onDropSetFeedBack: function (aTarget)
@@ -864,7 +769,7 @@ var BookmarksMenuDNDObserver = {
 var BookmarksToolbar = 
 {
   /////////////////////////////////////////////////////////////////////////////
-  // make bookmarks toolbar act like menus
+  // make bookmarks toolbar act like menubar
   openedMenuButton:null,
   autoOpenMenu: function (aEvent)
   {
@@ -893,7 +798,7 @@ var BookmarksToolbar =
   },
 
   /////////////////////////////////////////////////////////////////////////////
-  // returns the node of the last visible bookmark on the toolbar -->
+  // returns the node of the last visible bookmark on the toolbar
   getLastVisibleBookmark: function ()
   {
     var buttons = document.getElementById("bookmarks-ptf");
@@ -940,9 +845,9 @@ var BookmarksToolbar =
     chevron.collapsed = true;
     var overflowed = false;
 
-    var isLTR=window.getComputedStyle(document.getElementById("PersonalToolbar"),'').direction=='ltr';
+    var isLTR=window.getComputedStyle(document.getElementById("PersonalToolbar"),"").direction=="ltr";
 
-    for (var i=0; i<buttons.childNodes.length; i++) {
+    for (i=0; i<buttons.childNodes.length; i++) {
       var button = buttons.childNodes[i];
       button.collapsed = overflowed;
       
@@ -1035,4 +940,243 @@ var BookmarksToolbarRDFObserver =
     this._overflowTimerInEffect = true;
     setTimeout(BookmarksToolbar.resizeFunc, 0);
   }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// this should be an XBL widget when we have xul element absolute positioning
+/////////////////////////////////////////////////////////////////////////////
+
+var BookmarksInsertion = 
+{
+
+  mDefaultSize: 9,
+  mTarget: null,
+  mOrientation: null,
+
+  /////////////////////////////////////////////////////////////////////////
+  // returns true if the node is a container.
+  isContainer: function (aTarget)
+  {
+    return aTarget.localName == "menu"          || 
+           aTarget.localName == "toolbarbutton" &&
+           aTarget.getAttribute("type") == "menu";
+  },
+
+  //////////////////////////////////////////////////////////////////////////
+  // returns "before", "on" or "after" accordingly to the mouse position
+  // relative to the target.
+  // the orientation refers to the DOM (and is rtl-direction aware)
+  getOrientation: function (aTarget, aEvent)
+  {
+
+    var size, delta;
+    var boxOrientation = document.defaultView
+                                 .getComputedStyle(aTarget.parentNode,"")
+                                 .getPropertyValue("-moz-box-orient");
+    if (boxOrientation == "horizontal") {
+      size  = aTarget.boxObject.width;
+      delta = aTarget.boxObject.x+size/2-aEvent.clientX;
+      var LTR = document.defaultView
+                        .getComputedStyle(aTarget.parentNode,"").direction;
+      if (LTR != "ltr")
+        delta = -delta;
+    } else {
+      size  = aTarget.boxObject.height;
+      delta = aTarget.boxObject.screenY+size/2-aEvent.screenY;
+    }
+
+    if (this.isContainer(aTarget)) {
+      if (Math.abs(delta) < size*0.3)
+        return "on";
+    }
+    
+    return delta<0? "after" : "before";
+
+  },
+
+  showWithOrientation: function (aTarget, aOrientation)
+  {
+    
+    if (aTarget == this.mTarget && aOrientation == this.mOrientation)
+      return;
+
+    this.hide();
+
+    // special case for the menu items...
+    if (aTarget.localName == "menuitem" || aTarget.localName == "menu") {
+      this.showMenuitem(aTarget, aOrientation);
+      return;
+    }
+
+    this.mTarget = aTarget;
+    this.mOrientation = aOrientation;
+
+    var insertion = document.getElementById("insertion-feedback");
+
+    if (aOrientation == "on") {
+      insertion.hidden = true;
+      return;      
+    }
+
+    var boxOrient = document.defaultView.getComputedStyle(aTarget.parentNode,"")
+                            .getPropertyValue("-moz-box-orient")
+    var insertionWidth, insertionHeight, insertionLeft, insertionTop;
+    var targetWidth  = aTarget.boxObject.width;
+    var targetHeight = aTarget.boxObject.height;
+
+    if (boxOrient == "horizontal") {
+      insertionWidth  = this.mDefaultSize;
+      insertionHeight = targetHeight;
+      insertionLeft = aTarget.boxObject.x - aTarget.parentNode.boxObject.x - 
+                      this.mDefaultSize/2
+      var ltr = document.defaultView
+                        .getComputedStyle(aTarget.parentNode,"").direction;
+      if ((ltr == "rtl") ^ (aOrientation == "after"))
+        insertionLeft += targetWidth;
+      insertionTop = 0;
+    } else {
+      // not tested...
+      insertionWidth  = targetWidth;
+      insertionHeight = this.mDefaultSize;
+      insertionLeft = 0;
+      insertionTop  = aTarget.boxObject.y - aTarget.parentNode.boxObject.y - 
+                      this.mDefaultSize/2
+      if (aOrientation == "after")
+        insertionTop += targetHeight;
+    }
+    insertion.hidden = false;
+    insertion.style.left   = insertionLeft+"px";
+    insertion.style.top    = insertionTop+"px";
+    insertion.style.width  = insertionWidth+"px";
+    insertion.style.height = insertionHeight+"px";
+  },
+
+  showBefore: function (aTarget) 
+  {
+    this.showWithOrientation(aTarget, "before");
+  },
+
+  showAfter: function (aTarget) 
+  {
+    this.showWithOrientation(aTarget, "after");
+  },
+
+  show: function(aTarget, aEvent)
+  {
+    var orientation = this.getOrientation(aTarget, aEvent);
+    this.showWithOrientation(aTarget, orientation);
+  },
+
+  hide: function () 
+  {
+    if (!this.mTarget)
+      return;
+
+    // special case for the menu items...
+    if (this.mTarget.localName == "menuitem" ||
+        this.mTarget.localName == "menu") {
+      this.hideMenuitem();
+      return;
+    }
+
+    var insertion = document.getElementById("insertion-feedback");
+    insertion.hidden = true;
+    this.mTarget = null;
+    this.mOrientation = null;
+  },
+
+  //XXX To be removed when we have xul element absolute positioning
+  showMenuitem: function(aTarget, aOrientation)
+  {
+
+    this.mTarget = aTarget;
+    this.mOrientation = aOrientation;
+    
+    if (aOrientation == "before") {
+      var previous = aTarget;
+      do {
+        previous = previous.previousSibling;
+      } while (previous && previous.collapsed)
+ 
+      if (previous) {
+        aTarget = previous;
+        aOrientation = "after";
+      }
+    }
+
+    // menulist appearance is only implemented for gtk2
+    // so don't bother for the others.
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+
+    // for menuitems, we will toggle -moz-appearance between 'menuitem' and 
+    // 'none' and will set the border color in the latter case to indicate
+    // the DND feedback.
+    // however, doing so may change the menuitem border width and we'll
+    // have to correct for that. Unfortunately, getComputedStyle doesn't
+    // return the actual border width of a "native" widget... (bug 256261)
+    // big fat ugly hack will follow.
+
+    // cache the menuitem border width. Beware: this is not the actual width of
+    // a menuitem with '-moz-appearance:menuitem', but instead this is the 
+    // width it would have if it would be styled with '-moz-appearance:none'...
+    var borderLeft = document.defaultView.getComputedStyle(aTarget,"")
+                             .getPropertyValue("border-left-width");
+    var borderTop  = document.defaultView.getComputedStyle(aTarget,"")
+                             .getPropertyValue("border-top-width");
+
+    var oldWidth  = aTarget.boxObject.width;
+    var oldHeight = aTarget.boxObject.height;
+    var labelNode = document.getAnonymousElementByAttribute(aTarget, "class", "menu-iconic-text");
+    var oldWidthL = labelNode.boxObject.width;
+
+#endif
+#endif
+
+    switch (aOrientation) {
+      case "before":
+        aTarget.setAttribute("dragover-top", "true");
+        break;
+      case "after":
+        aTarget.setAttribute("dragover-bottom", "true");
+        break;
+      case "on":
+        break;
+    }
+    
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+    var width  = aTarget.boxObject.width;
+    var height = aTarget.boxObject.height;
+    var widthL = labelNode.boxObject.width;
+    borderTop  = parseInt(borderTop)  + (oldHeight-height)/2 + "px";
+    borderLeft = parseInt(borderLeft) + (oldWidth -width + widthL-oldWidthL) /2 + "px";
+
+    aTarget.style.setProperty("border-left-width"  , borderLeft, "important");
+    aTarget.style.setProperty("border-right-width" , borderLeft, "important");
+    aTarget.style.setProperty("border-bottom-width", borderTop,  "important");
+    aTarget.style.setProperty("border-top-width"   , borderTop,  "important");
+#endif
+#endif
+
+  },
+
+  //XXX To be removed when we have xul element absolute positioning
+  hideMenuitem: function()
+  {
+    var target = this.mTarget
+    
+    target.removeAttribute("dragover-top");
+    target.removeAttribute("dragover-bottom");
+    target = target.previousSibling
+    // brute force. anyways this code should go away.
+    if (target) {
+      target.removeAttribute("dragover-top");
+      target.removeAttribute("dragover-bottom");
+    }
+    this.mTarget = null;
+    this.mOrientation = null;
+  }
+
 }

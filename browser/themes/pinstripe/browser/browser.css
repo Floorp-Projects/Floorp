@@ -42,10 +42,14 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #main-window {
-	-moz-appearance: none;
+  -moz-appearance: none;
 }
 	
 /* ::::: bookmark buttons ::::: */
+
+#insertion-feedback-button {
+  max-width: 10px;
+}
 
 toolbarbutton.bookmark-item[type=menu] {
   padding-left: 7px;
@@ -153,16 +157,12 @@ toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
 
 /* ..... drag and drop styles ..... */
 
-.bookmark-item[dragover-left="true"] {
-  -moz-border-left-colors: #000000;
-}
-.bookmark-item[dragover-right="true"] {
-  -moz-border-right-colors: #000000;
-}
 .bookmark-item[dragover-top="true"] {
+  -moz-appearance:none!important;
   -moz-border-top-colors: #000000;
 }
 .bookmark-item[dragover-bottom="true"] {
+  -moz-appearance:none!important;
   -moz-border-bottom-colors: #000000;
 }
 /* ::::: primary toolbar buttons ::::: */
