@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  xmlextras \
                   find \
                   appshell \
+		  intl \
 		  $(NULL)
 
 CPPSRCS =			\
