@@ -45,6 +45,7 @@
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 #include "nsXPComCIID.h"
 #include "nsIPref.h"
 #include "nsIFileLocator.h"
@@ -76,6 +77,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -433,6 +435,7 @@ int main()
 
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
