@@ -407,16 +407,18 @@ nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
 {
-  // trim leading whitespace. -- why?
-  static char whitespace[] = " \r\n\t";
-  nsString defaultValue(aDefaultValue);
-  defaultValue.Trim(whitespace, PR_TRUE, PR_FALSE);
+  nsAutoString defaultValue(aDefaultValue);
 
   // normalize line breaks. Need this e.g. when the value is
   // coming from a URL, which used platform line breaks.
   nsLinebreakConverter::ConvertStringLineBreaks(defaultValue,
        nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
-  
+
+  // Strip only one leading LF if there is one (bug 40394)
+  if (0 == defaultValue.Find("\n", PR_FALSE, 0, 1)) {
+    defaultValue.Cut(0,1);
+  }
+
   mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue, defaultValue, PR_TRUE);
   mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, defaultValue, PR_TRUE);
   return NS_OK;
