@@ -1175,10 +1175,14 @@ int interpret(char *cmd)
 			DWORD e = GetLastError();
 		if (strcmp(key, "Program Folder Name") == 0)
 		{
+			CString browserName = GetGlobal("BrowserName");
 			if (strcmp(newvalue, "") == 0)
-				strcpy(temp, "Netscape 6");
+				strcpy(temp, browserName);
 			else
-				strcpy(temp, "Netscape 6 by ");
+			{
+				browserName = browserName + " by ";
+				strcpy(temp, browserName);
+			}
 			strcat(temp, newvalue);
 			newvalue = temp;
 		}
