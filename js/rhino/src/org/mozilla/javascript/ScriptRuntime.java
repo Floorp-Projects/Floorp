@@ -838,12 +838,17 @@ public class ScriptRuntime {
         return toObject(Context.getContext(), scope, val);
     }
 
-    public static Scriptable toObject(Context cx, Object val)
+    public static Scriptable toObjectOrNull(Context cx, Object obj)
     {
-        if (val instanceof Scriptable && val != Undefined.instance) {
-            return (Scriptable)val;
+        if (obj instanceof Scriptable) {
+            Scriptable sobj = (Scriptable)obj;
+            if (sobj != Undefined.instance) {
+                return sobj;
+            }
+        } else if (obj != null) {
+            return toObject(cx, getTopCallScope(cx), obj);
         }
-        return toObject(cx, getTopCallScope(cx), val);
+        return null;
     }
 
     /**
@@ -901,6 +906,9 @@ public class ScriptRuntime {
         return toObject(cx, scope, val);
     }
 
+    /**
+     * @deprecated The method is only present for compatibility.
+     */
     public static Object call(Context cx, Object fun, Object thisArg,
                               Object[] args, Scriptable scope)
     {
@@ -908,11 +916,9 @@ public class ScriptRuntime {
             throw notFunctionError(toString(fun));
         }
         Function function = (Function)fun;
-        Scriptable thisObj;
-        if (thisArg instanceof Scriptable || thisArg == null) {
-            thisObj = (Scriptable) thisArg;
-        } else {
-            thisObj = ScriptRuntime.toObject(cx, scope, thisArg);
+        Scriptable thisObj = toObjectOrNull(cx, thisArg);
+        if (thisObj == null) {
+            throw undefCallError(thisObj, "function");
         }
         return function.call(cx, scope, thisObj, args);
     }
@@ -1281,10 +1287,10 @@ public class ScriptRuntime {
      */
     public static Object getObjectElem(Object obj, Object elem, Context cx)
     {
-        if (obj == null || obj == Undefined.instance) {
+        Scriptable sobj = toObjectOrNull(cx, obj);
+        if (sobj == null) {
             throw undefReadError(obj, elem);
         }
-        Scriptable sobj = toObject(cx, obj);
         return getObjectElem(sobj, elem, cx);
     }
 
@@ -1319,10 +1325,10 @@ public class ScriptRuntime {
     public static Object getObjectProp(Object obj, String property,
                                        Context cx)
     {
-        if (obj == null || obj == Undefined.instance) {
+        Scriptable sobj = toObjectOrNull(cx, obj);
+        if (sobj == null) {
             throw undefReadError(obj, property);
         }
-        Scriptable sobj = toObject(cx, obj);
         return getObjectProp(sobj, property, cx);
     }
 
@@ -1349,10 +1355,10 @@ public class ScriptRuntime {
     public static Object getObjectIndex(Object obj, double dblIndex,
                                         Context cx)
     {
-        if (obj == null || obj == Undefined.instance) {
+        Scriptable sobj = toObjectOrNull(cx, obj);
+        if (sobj == null) {
             throw undefReadError(obj, toString(dblIndex));
         }
-        Scriptable sobj = toObject(cx, obj);
 
         int index = (int)dblIndex;
         if ((double)index == dblIndex) {
@@ -1385,10 +1391,10 @@ public class ScriptRuntime {
     public static Object setObjectElem(Object obj, Object elem, Object value,
                                        Context cx)
     {
-        if (obj == null || obj == Undefined.instance) {
+        Scriptable sobj = toObjectOrNull(cx, obj);
+        if (sobj == null) {
             throw undefWriteError(obj, elem, value);
         }
-        Scriptable sobj = toObject(cx, obj);
         return setObjectElem(sobj, elem, value, cx);
     }
 
@@ -1418,10 +1424,10 @@ public class ScriptRuntime {
     public static Object setObjectProp(Object obj, String property,
                                        Object value, Context cx)
     {
-        if (obj == null || obj == Undefined.instance) {
+        Scriptable sobj = toObjectOrNull(cx, obj);
+        if (sobj == null) {
             throw undefWriteError(obj, property, value);
         }
-        Scriptable sobj = toObject(cx, obj);
         return setObjectProp(sobj, property, value, cx);
     }
 
@@ -1444,10 +1450,10 @@ public class ScriptRuntime {
     public static Object setObjectIndex(Object obj, double dblIndex,
                                         Object value, Context cx)
     {
-        if (obj == null || obj == Undefined.instance) {
+        Scriptable sobj = toObjectOrNull(cx, obj);
+        if (sobj == null) {
             throw undefWriteError(obj, String.valueOf(dblIndex), value);
         }
-        Scriptable sobj = toObject(cx, obj);
 
         int index = (int)dblIndex;
         if ((double)index == dblIndex) {
@@ -1549,7 +1555,11 @@ public class ScriptRuntime {
      */
     public static Object delete(Object obj, Object id, Context cx)
     {
-        Scriptable sobj = toObject(cx, obj);
+        Scriptable sobj = toObjectOrNull(cx, obj);
+        if (sobj == null) {
+            String idStr = (id == null) ? "null" : id.toString();
+            throw typeError2("msg.undef.prop.delete", toString(obj), idStr);
+        }
         boolean result = deleteObjectElem(sobj, id, cx);
         return wrapBoolean(result);
     }
@@ -1781,8 +1791,10 @@ public class ScriptRuntime {
     public static Object enumInit(Object value, Context cx, boolean enumValues)
     {
         IdEnumeration x = new IdEnumeration();
-        if (!(value == null || value == Undefined.instance)) {
-            x.obj = toObject(cx, value);
+        x.obj = toObjectOrNull(cx, value);
+        if (x.obj != null) {
+            // null or undefined do not cause errors but rather lead to empty
+            // "for in" loop
             x.enumValues = enumValues;
             // enumInit should read all initial ids before returning
             // or "for (a.i in a)" would wrongly enumerate i in a as well
@@ -1917,10 +1929,10 @@ public class ScriptRuntime {
         }
         int index = lastIndexResult(cx);
 
-        if (obj == null || obj == Undefined.instance) {
-            throw undefReadError(obj, String.valueOf(index));
+        Scriptable thisObj = toObjectOrNull(cx, obj);
+        if (thisObj == null) {
+            throw undefCallError(obj, String.valueOf(index));
         }
-        Scriptable thisObj = toObject(cx, obj);
 
         Object value;
         for (;;) {
@@ -1958,10 +1970,10 @@ public class ScriptRuntime {
                                                   String property,
                                                   Context cx)
     {
-        if (obj == null || obj == Undefined.instance) {
-            throw undefReadError(obj, property);
+        Scriptable thisObj = toObjectOrNull(cx, obj);
+        if (thisObj == null) {
+            throw undefCallError(obj, property);
         }
-        Scriptable thisObj = toObject(cx, obj);
 
         Object value;
         for (;;) {
@@ -2119,11 +2131,13 @@ public class ScriptRuntime {
             function = (Function)value;
         }
 
-        Scriptable callThis;
-        if (L == 0 || args[0] == null || args[0] == Undefined.instance) {
-            callThis = ScriptableObject.getTopLevelScope(scope);
-        } else {
-            callThis = toObject(cx, args[0]);
+        Scriptable callThis = null;
+        if (L != 0) {
+            callThis = toObjectOrNull(cx, args[0]);
+        }
+        if (callThis == null) {
+            // This covers the case of args[0] == (null|undefined) as well.
+            callThis = getTopCallScope(cx);
         }
 
         Object[] callArgs;
@@ -2317,7 +2331,11 @@ public class ScriptRuntime {
     public static Object propIncrDecr(Object obj, String id,
                                       Context cx, int incrDecrMask)
     {
-        Scriptable start = toObject(cx, obj);
+        Scriptable start = toObjectOrNull(cx, obj);
+        if (start == null) {
+            throw undefReadError(obj, id);
+        }
+
         Scriptable target = start;
         Object value;
       search: {
@@ -2959,14 +2977,18 @@ public class ScriptRuntime {
         return catchScopeObject;
     }
 
-    public static Scriptable enterWith(Object value, Context cx,
+    public static Scriptable enterWith(Object obj, Context cx,
                                        Scriptable scope)
     {
-        if (value instanceof XMLObject) {
-            XMLObject object = (XMLObject)value;
-            return object.enterWith(scope);
+        Scriptable sobj = toObjectOrNull(cx, obj);
+        if (sobj == null) {
+            throw typeError1("msg.undef.with", toString(obj));
         }
-        return new NativeWith(scope, toObject(cx, value));
+        if (sobj instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)sobj;
+            return xmlObject.enterWith(scope);
+        }
+        return new NativeWith(scope, sobj);
     }
 
     public static Scriptable leaveWith(Scriptable scope)
@@ -3251,25 +3273,34 @@ public class ScriptRuntime {
         return typeError(msg);
     }
 
+    public static EcmaError typeError3(String messageId, String arg1,
+                                       String arg2, String arg3)
+    {
+        String msg = getMessage3(messageId, arg1, arg2, arg3);
+        return typeError(msg);
+    }
+
     public static RuntimeException undefReadError(Object object, Object id)
     {
-        String messageId = (object == null) ? "msg.null.prop.read"
-                                            : "msg.undef.prop.read";
         String idStr = (id == null) ? "null" : id.toString();
-        return typeError1(messageId, idStr);
+        return typeError2("msg.undef.prop.read", toString(object), idStr);
+    }
+
+    public static RuntimeException undefCallError(Object object, Object id)
+    {
+        String idStr = (id == null) ? "null" : id.toString();
+        return typeError2("msg.undef.method.call", toString(object), idStr);
     }
 
     public static RuntimeException undefWriteError(Object object,
                                                    Object id,
                                                    Object value)
     {
-        String messageId = (object == null) ? "msg.null.prop.write"
-                                            : "msg.undef.prop.write";
+        String idStr = (id == null) ? "null" : id.toString();
         String valueStr = (value instanceof Scriptable)
                           ? value.toString() : toString(value);
-        String idStr = (id == null) ? "null" : id.toString();
-        String msg = getMessage2(messageId, idStr, valueStr);
-        return typeError2(messageId, valueStr, msg);
+        return typeError3("msg.undef.prop.write", toString(object), idStr,
+                          valueStr);
     }
 
     public static RuntimeException notFoundError(Scriptable object,

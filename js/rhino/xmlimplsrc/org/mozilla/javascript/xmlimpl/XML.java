@@ -3057,7 +3057,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
     {
         if (hasSimpleContent()) {
             String src = toString();
-            return ScriptRuntime.toObject(cx, src);
+            return ScriptRuntime.toObjectOrNull(cx, src);
         }
         return null;
     }

@@ -54,7 +54,10 @@ class SpecialRef extends Reference
 
     static Reference createSpecial(Context cx, Object object, String name)
     {
-        Scriptable target = ScriptRuntime.toObject(cx, object);
+        Scriptable target = ScriptRuntime.toObjectOrNull(cx, object);
+        if (target == null) {
+            throw ScriptRuntime.undefReadError(object, name);
+        }
 
         int type;
         if (name.equals("__proto__")) {
@@ -95,11 +98,8 @@ class SpecialRef extends Reference
           case SPECIAL_PROTO:
           case SPECIAL_PARENT:
             {
-                Scriptable obj;
-                if (value == null) {
-                    obj = null;
-                } else {
-                    obj = ScriptRuntime.toObject(cx, value);
+                Scriptable obj = ScriptRuntime.toObjectOrNull(cx, value);
+                if (obj != null) {
                     // Check that obj does not contain on its prototype/scope
                     // chain to prevent cycles
                     Scriptable search = obj;
