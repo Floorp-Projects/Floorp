@@ -708,7 +708,6 @@ fi
 if [ `echo "$MOZ_EXTENSIONS" | grep -c irc` != 0 ]; then
   add_makefiles <<END_EXTENSIONS_IRC_MAKEFILES
   extensions/irc/Makefile
-  extensions/irc/libbs/Makefile
 END_EXTENSIONS_IRC_MAKEFILES
 fi
 
