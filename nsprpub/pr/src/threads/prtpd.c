@@ -16,10 +16,6 @@
  * Reserved.
  */
 
-#include "primpl.h"
-
-#include <string.h>
-
 /*
 ** Thread Private Data
 **
@@ -41,6 +37,19 @@
 ** don't even exist for that thread) get a NULL return. If the key is
 ** beyond the high water mark, an error will be returned.
 */
+
+/*
+** As of this time, BeOS has its own TPD implementation.  Integrating
+** this standard one is a TODO for anyone with a bit of spare time on
+** their hand.  For now, we just #ifdef out this whole file and use
+** the routines in pr/src/btthreads/
+*/
+
+#ifndef XP_BEOS
+
+#include "primpl.h"
+
+#include <string.h>
 
 #define _PR_TPD_MODULO 8                /* vectors are extended by this much */
 #define _PR_TPD_LIMIT 128               /* arbitary limit on the TPD slots */
@@ -282,3 +291,5 @@ PR_IMPLEMENT(PRThreadExit) PR_GetThreadExit(PRUintn index, void **argp)
 }
 
 #endif
+
+#endif /* !XP_BEOS */

@@ -16,6 +16,15 @@
  * Reserved.
  */
 
+#ifdef XP_BEOS
+#include <stdio.h>
+int main()
+{
+    printf( "BeOS does not support IPv6\n" );
+    return 0;
+}
+#else
+
 #include "prio.h"
 #include "prenv.h"
 #include "prmem.h"
@@ -240,3 +249,5 @@ PRIntn main(PRIntn argc, char **argv)
 
     return (failed) ? 1 : 0;
 }
+
+#endif /* XP_BEOS */

@@ -20,6 +20,5 @@ BTCSRCS = \
 	btcvar.c \
 	btmon.c \
 	btsem.c \
-	btcmon.c \
 	btmisc.c \
 	$(NULL)

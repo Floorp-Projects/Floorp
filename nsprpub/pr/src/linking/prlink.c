@@ -291,8 +291,8 @@ PR_GetLibraryPath()
     }
 #endif
 
-#ifdef XP_UNIX
-#if defined USE_DLFCN || defined USE_MACH_DYLD
+#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(USE_DLFCN) || defined(USE_MACH_DYLD) || defined(XP_BEOS)
     {
     char *home;
     char *local;
@@ -300,10 +300,17 @@ PR_GetLibraryPath()
     char * mozilla_home=NULL;
     int len;
 
+#ifdef XP_BEOS
+    ev = getenv("LIBRARY_PATH");
+    if (!ev) {
+	ev = "%A/lib:/boot/home/config/lib:/boot/beos/system/lib";
+    }
+#else
     ev = getenv("LD_LIBRARY_PATH");
     if (!ev) {
         ev = "/usr/lib:/lib";
     }
+#endif
     home = getenv("HOME");
 
     /*
@@ -320,7 +327,11 @@ PR_GetLibraryPath()
       len += strlen(mozilla_home) + 5 ;  /* +5 for initial : and trailing "/lib" */
     }
 
+#ifdef XP_BEOS
+    local = ":~/config/netscape/lib" PR_LINKER_ARCH;
+#else
     local = ":/usr/local/netscape/lib/" PR_LINKER_ARCH;
+#endif
     len += strlen(local);        /* already got the : */
     p = (char*) PR_MALLOC(len+50);
     if (p) {

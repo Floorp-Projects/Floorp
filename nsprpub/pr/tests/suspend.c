@@ -16,6 +16,15 @@
  * Reserved.
  */
 
+#ifdef XP_BEOS
+#include <stdio.h>
+int main()
+{
+    printf( "This test is not ported to the BeOS\n" );
+    return 0;
+}
+#else
+
 #include "nspr.h"
 #include "prpriv.h"
 #include "prinrval.h"
@@ -199,3 +208,5 @@ main(int argc, char **argv)
     CreateThreadsKU();
     PR_Cleanup();
 }
+
+#endif /* XP_BEOS */

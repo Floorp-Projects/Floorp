@@ -13,11 +13,6 @@
 
 #include "primpl.h"
 
-void
-_PR_InitSegs (void)
-{
-}
-
 PR_IMPLEMENT(void)
     _MD_init_segs (void)
 {
