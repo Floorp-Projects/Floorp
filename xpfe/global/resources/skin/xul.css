@@ -290,6 +290,7 @@ radiogroup
   }
 
 button, button.left {
+  user-focus: normal;
   behavior: url(resource:/chrome/xulBindings.xml#buttonleft);
 }
 
@@ -369,15 +370,27 @@ colorpicker {
       behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-single-right");
     }
     
-  menubutton.menubutton-dual
+  menubutton.menubutton-dual.left
     {
-      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-dual");
+      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-dual-left");
+    }
+      
+  menubutton.menubutton-dual.top
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-dual-top");
+    }
+      
+  menubutton.menubutton-dual.right
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-dual-right");
+    }
+      
+  menubutton.menubutton-dual.bottom
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-dual-bottom");
     }
       
   menubutton.menubutton-icon 
     {
       behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-icon");
     } 
-   
- 
- 
