@@ -174,7 +174,7 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
                                 void **aResult)
 {
   nsresult res;
-  PRBool refCounted = PR_TRUE;
+  PRBool refCounted = PR_TRUE; // XXX What is it with this? It is always PR_TRUE???
 
   if (aResult == NULL) {
     return NS_ERROR_NULL_POINTER;
@@ -389,15 +389,16 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  if (!refCounted) {
+    NS_ADDREF(inst);
+  }
+
   res = inst->QueryInterface(aIID, aResult);
 
-  if (refCounted) {
-    NS_RELEASE(inst);
-  }
-  else if (res != NS_OK) {
+  NS_RELEASE(inst);
+  if (res != NS_OK) {
     // We didn't get the right interface, so clean up
     LOG_NEW_FAILURE("final QueryInterface", res);
-    delete inst;
   }
 
   return res;
