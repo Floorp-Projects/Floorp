@@ -186,6 +186,9 @@ CFLAGS_RELEASE=/DNDEBUG \
 !if defined(MOZ_FULLCIRCLE)
 	/DMOZ_FULLCIRCLE \
 !endif
+!if defined(MOZ_PROF)
+    /Z7 \
+!endif
 !IF "$(MOZ_BITS)"=="32"
     /MD /O1
 !ELSE
@@ -262,6 +265,9 @@ CFLAGS_DEBUG=$(CFLAGS_RELEASE)
 RCFLAGS_DEBUG=/DNODEBUG
 LINKFLAGS_DEBUG= \
 !if "$(MOZ_BITS)"=="32"
+!if defined(MOZ_PROF)
+    /debug /debugtype:both \
+!endif
     comctl32.lib msvcrt.lib winmm.lib
 !else
     /STACK:$(MOZ_STACK) /ALIGN:128 /PACKC:61440 /SEG:1024 /NOD /PACKD /NOI /ONERROR:NOEXE
@@ -554,8 +560,11 @@ LINK_FLAGS= \
 !endif
     /subsystem:windows \
     /pdb:"$(OUTDIR)/mozilla.pdb" /machine:I386 \
-!if !defined(MOZ_DEBUG)
+!if !defined(MOZ_DEBUG) && !defined(MOZ_PROF)
     /fixed \
+!endif
+!if defined(MOZ_PROF)
+    /fixed:no \
 !endif
     /nodefaultlib /out:"$(OUTDIR)/mozilla.exe"
 !else
