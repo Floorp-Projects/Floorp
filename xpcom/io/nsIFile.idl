@@ -34,26 +34,6 @@ interface nsIFile : nsISupports
 {
 
     /**
-     *   Path Types - Different path types that nsIFile can parse.
-     *
-     *   NATIVE_PATH is a **native** path.  For example, on windows 
-     *   this would be "c:\\foo\\bar" and on the mac it would be 
-     *   "Macintosh HD:foo:bar"
-     *
-     *   UNIX_PATH is a unix style path.  If you are running on unix 
-     *   this is the same as InitWithNativePath.  This strings look like
-     *   "/Development/MPW/SysErrs.err"
-     *
-     *   NSPR_PATH is a NSPR style path.  NSPR expects a UNIX path on unix 
-     *   and Macintosh, but a native path on windows.  If you want to create 
-     *   a nsIFile form a string that comes back from NSPR, use this call
-     */
-
-    const unsigned long NATIVE_PATH = 0;
-    const unsigned long UNIX_PATH   = 1;
-    const unsigned long NSPR_PATH   = 2;
-
-    /**
      *   Create Types
      *
      *   NORMAL_FILE_TYPE - A normal file.  
@@ -109,19 +89,14 @@ interface nsIFile : nsISupports
       *         as pathes.  If you do use this function, be very
       *         aware of this problem as bugs.
       *
-      *   @param pathType
-      *          A pathType defined above.  If the pathType is not
-      *          recongnized, NS_ERROR_FILE_UNKNOWN_TYPE will
-      *          be returned.
-      *
       *   @param filePath       
       *          A string which specifies a full file path to a 
       *          location.  Relative paths will be treated as an
-      *          error (NS_ERROR_FILE_UNRECONGNIZED_PATH).
-      *
+      *          error (NS_ERROR_FILE_UNRECONGNIZED_PATH).  This
+      *          path must in native.
       */
       
-       void initWithPath(in unsigned long pathType, [const] in string filePath );
+       void initWithPath([const] in string filePath );
 
     
     /**
@@ -173,28 +148,8 @@ interface nsIFile : nsISupports
     /**
      *   Accessor to the leaf name of the file itself. 
      */
-    readonly attribute string leafName;
+      readonly attribute string leafName;
     
-    /**
-     *  getPath
-     *
-     *  Accessor to the full file path.  The use of the path is 
-     *  strongly discouraged.  Bugs will be writen up against
-     *  any use other than displaying a pathname to the user. 
-     *
-     *  The problem affects platforms in which a path does not 
-     *  fully specify a file, because two volumes can have the 
-     *  same name.  This is solved by holding a "private" native 
-     *  data.  This data is lost when you convert to a string.
-     *
-     *  @param type
-     *         This specifies the type of file path to be 
-     *         returned. The file types are defined above.
-     */
-
-      string getPath(in unsigned long pathType);
-    
-  
     /**
      *  copyTo
      *
@@ -203,7 +158,7 @@ interface nsIFile : nsISupports
      *  If 'this' is not created we will return an error 
      *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
      *
-	 *  copyTo will NOT resolve aliases/shortcuts during the copy.
+     *  copyTo will NOT resolve aliases/shortcuts during the copy.
      *
      *   @param newParentDir
      *          This param is the destination directory. If the 
@@ -216,7 +171,7 @@ interface nsIFile : nsISupports
      *          This param allows you to specify a new name
      *          for the file to be copied.  This can be nsnull.
      *
-	 */
+     */
 
       void copyTo(in nsIFile newParentDir, [const] in string newName);
      
@@ -237,7 +192,7 @@ interface nsIFile : nsISupports
      *  If 'this' is not created we will return an error 
      *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
      *
-	 *  moveTo will NOT resolve aliases/shortcuts during the copy.
+     *  moveTo will NOT resolve aliases/shortcuts during the copy.
      *  moveTo will do the right thing and allow copies across
      *  volumes.
      *
@@ -252,8 +207,8 @@ interface nsIFile : nsISupports
      *          This param allows you to specify a new name
      *          for the file to be moved.  This can be nsnull.
      *
-	 */
-      void moveTo(in nsIFile newParentDir, [const] in string newName);
+     */
+       void moveTo(in nsIFile newParentDir, [const] in string newName);
 
     /**
      *  moveToFollowingLinks
@@ -262,14 +217,14 @@ interface nsIFile : nsISupports
      *  the name implies, follows symbolic links.
      */
       
-      void moveToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
+       void moveToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     
     /**
      *  This will try to execute this file.  It will not block for
      *  execution.  'args' will be passed through on the command line
      *  if the OS supports that.
      */
-    void execute([const] in string args);
+       void spawn([const] in string args);
     
     /**
      *  This will try to delete this file.  The 'recursive' flag
@@ -277,60 +232,81 @@ interface nsIFile : nsISupports
      *
      *  This will not resolve any symlinks.
      */
-    void delete(in boolean recursive);
+       void delete(in boolean recursive);
 
     /**
      * Truncate the file to the given length.
      */
-    void truncate(in unsigned long length);
+       void truncate(in unsigned long length);
 
     /**
      *  Attributes of nsIFile.
      */
-    attribute unsigned long lastModificationDate;
-    attribute unsigned long permissions;
-    readonly attribute unsigned long fileSize;
-
-    attribute unsigned long lastModificationDateOfLink;
-    attribute unsigned long permissionsOfLink;
-    /* should we make this writable and have it map to truncate? */
-    readonly attribute unsigned long fileSizeOfLink;
+    
+       attribute unsigned long permissions;
+       attribute unsigned long permissionsOfLink;
+    
+       attribute PRInt64 lastModificationDate;
+       attribute PRInt64 lastModificationDateOfLink;
+    
+       attribute PRInt64 fileSize;
+       readonly attribute PRInt64 fileSizeOfLink;
+    
     /**
-     * Find out what the symlink points at.  Will give error
-     * (NS_ERROR_FILE_INVALID_PATH) if not a symlink.
+     *  target & path
+     *
+     *  Accessor to the string path.  These strings are
+     *  not guaranteed to be a usable path to pass to NSPR 
+     *  or the C stdlib.  There are problem which affects 
+     *  platforms in which a path does not fully specify a 
+     *  file, because two volumes can have the same name.  
+     *  This is solved by holding a "private" native data.  
+     *  This data is lost when you convert to a string. 
+     *
+     *      DO NOT PASS TO USE WITH NSPR OR STDLIB.
+     *
+     *  target:
+     *      Find out what the symlink points at.  Will give error
+     *      (NS_ERROR_FILE_INVALID_PATH) if not a symlink.
+     *
+     *  path:
+     *      Find out what the nsIFile points at.
      */
-    readonly attribute string target;
 
-    readonly attribute long long diskSpaceAvailable;  // maybe we should put this somewhere else.
+       readonly attribute string target;
+       readonly attribute string path;
+    
+
+       readonly attribute PRInt64 diskSpaceAvailable;  // maybe we should put this somewhere else.
 
     /**
      * Parent will be nsnull when this is at the top of the volume.
      */
-    readonly attribute nsIFile parent;
+       readonly attribute nsIFile parent;
     
-    boolean exists();
-    boolean isWritable();
-    boolean isReadable();
-    boolean isExecutable();
-    boolean isHidden();
-    boolean isDirectory();
-    boolean isFile();
-    boolean isSymlink();
+       boolean exists();
+       boolean isWritable();
+       boolean isReadable();
+       boolean isExecutable();
+       boolean isHidden();
+       boolean isDirectory();
+       boolean isFile();
+       boolean isSymlink();
     /**
      * Not a regular file, not a directory, not a symlink.
      */
-    boolean isSpecial(); 
+       boolean isSpecial(); 
     
     /**
      *  Will determine if the inFile equals this.
      */
-    boolean equals(in nsIFile inFile);
+       boolean equals(in nsIFile inFile);
     
     /**
      * Will determine the file is a descendant of the parameter inFile.
      * If |recur| is true, it will descend subdirectories looking for 
      */
-    boolean isContainedIn(in nsIFile inFile, in boolean recur);
+       boolean isContainedIn(in nsIFile inFile, in boolean recur);
 };
 
 %{C++
