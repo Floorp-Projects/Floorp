@@ -24,16 +24,19 @@
 #include "layout.h"
 #include "shist.h"
 #include "jvmmgr.h"
+#include "plstr.h"
 
 JVMInstancePeer::JVMInstancePeer(nsISupports* outer,
                                  MWContext* cx, LO_CommonPluginStruct* lo)
-    : fContext(cx), fLayoutElement(lo), fUniqueID(0)
+    : fContext(cx), fLayoutElement(lo), fUniqueID(0), fSimulatedCodebase(NULL)
 {
     NS_INIT_AGGREGATED(outer);
 }
 
 JVMInstancePeer::~JVMInstancePeer(void)
 {
+    if (fSimulatedCodebase)
+        PL_strfree(fSimulatedCodebase);
 }
 
 NS_IMPL_AGGREGATED(JVMInstancePeer);
@@ -273,7 +276,29 @@ JVMInstancePeer::GetCode(void)
 NS_METHOD_(const char *) 
 JVMInstancePeer::GetCodeBase()
 {
-    return fPluginInstancePeer->GetAttribute("codebase");
+    // If we've already cached and computed the value, use it...
+    if (fSimulatedCodebase)
+        return fSimulatedCodebase;
+
+    // See if it's supplied as an attribute...
+    const char* codebase = fPluginInstancePeer->GetAttribute("codebase");
+    if (codebase != NULL)
+        return codebase;
+
+    // Okay, we'll need to simulate it from the layout tag's base URL.
+    PA_LOCK(codebase, const char*, fLayoutElement->base_url);
+
+    if ((fSimulatedCodebase = PL_strdup(codebase)) != NULL) {
+        char* lastSlash = PL_strrchr(codebase, '/');
+
+        // chop of the filename from the original document base URL to
+        // generate the codebase.
+        if (lastSlash != NULL)
+            *(lastSlash + 1) = '\0';
+    }
+    
+    PA_UNLOCK(fLayoutElement->base_url);
+    return fSimulatedCodebase;
 }
 
 NS_METHOD_(const char *) 

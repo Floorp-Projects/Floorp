@@ -338,7 +338,7 @@ protected:
     MWContext*                  fContext;
     LO_CommonPluginStruct*      fLayoutElement;
     PRUint32                    fUniqueID;
-
+    char*                       fSimulatedCodebase;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
