@@ -336,41 +336,39 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
   if (NS_SUCCEEDED(rv)) {
     rv = NS_ERROR_FAILURE;
 
-    nsINodeInfoManager *nim = blankDoc->GetNodeInfoManager();
+    nsNodeInfoManager *nim = blankDoc->NodeInfoManager();
 
-    if (nim) {
-      nsCOMPtr<nsINodeInfo> htmlNodeInfo;
+    nsCOMPtr<nsINodeInfo> htmlNodeInfo;
 
-      // generate an html html element
-      nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
-                      getter_AddRefs(htmlNodeInfo));
-      nsCOMPtr<nsIHTMLContent> htmlElement
-        = NS_NewHTMLHtmlElement(htmlNodeInfo);
+    // generate an html html element
+    nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
+                     getter_AddRefs(htmlNodeInfo));
+    nsCOMPtr<nsIHTMLContent> htmlElement =
+      NS_NewHTMLHtmlElement(htmlNodeInfo);
 
-      // generate an html head element
-      nim->GetNodeInfo(nsHTMLAtoms::head, 0, kNameSpaceID_None,
-                      getter_AddRefs(htmlNodeInfo));
-      nsCOMPtr<nsIHTMLContent> headElement
-        = NS_NewHTMLHeadElement(htmlNodeInfo);
+    // generate an html head element
+    nim->GetNodeInfo(nsHTMLAtoms::head, 0, kNameSpaceID_None,
+                     getter_AddRefs(htmlNodeInfo));
+    nsCOMPtr<nsIHTMLContent> headElement =
+      NS_NewHTMLHeadElement(htmlNodeInfo);
 
-      // generate an html body element
-      nim->GetNodeInfo(nsHTMLAtoms::body, 0, kNameSpaceID_None,
-                      getter_AddRefs(htmlNodeInfo));
-      nsCOMPtr<nsIHTMLContent> bodyElement
-        = NS_NewHTMLBodyElement(htmlNodeInfo);
+    // generate an html body element
+    nim->GetNodeInfo(nsHTMLAtoms::body, 0, kNameSpaceID_None,
+                     getter_AddRefs(htmlNodeInfo));
+    nsCOMPtr<nsIHTMLContent> bodyElement =
+      NS_NewHTMLBodyElement(htmlNodeInfo);
 
-      // blat in the structure
-      if (htmlElement && headElement && bodyElement) {
-        htmlElement->SetDocument(blankDoc, PR_FALSE, PR_TRUE);
-        blankDoc->SetRootContent(htmlElement);
+    // blat in the structure
+    if (htmlElement && headElement && bodyElement) {
+      htmlElement->SetDocument(blankDoc, PR_FALSE, PR_TRUE);
+      blankDoc->SetRootContent(htmlElement);
 
-        htmlElement->AppendChildTo(headElement, PR_FALSE, PR_FALSE);
+      htmlElement->AppendChildTo(headElement, PR_FALSE, PR_FALSE);
 
-        bodyElement->SetContentID(blankDoc->GetAndIncrementContentID());
-        htmlElement->AppendChildTo(bodyElement, PR_FALSE, PR_FALSE);
+      bodyElement->SetContentID(blankDoc->GetAndIncrementContentID());
+      htmlElement->AppendChildTo(bodyElement, PR_FALSE, PR_FALSE);
 
-        rv = NS_OK;
-      }
+      rv = NS_OK;
     }
   }
 

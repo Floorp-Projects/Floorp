@@ -78,17 +78,6 @@ NS_NewFrameContentIterator(nsIPresContext*      aPresContext,
                            nsIFrame*            aFrame,
                            nsIContentIterator** aIterator);
 
-/**
- * Create a new content object for the given tag.
- * Returns NS_ERROR_NOT_AVAILABLE for an unknown/unhandled tag.
- * Returns some other error on error.
- * Returns NS_OK on success
- */
-PR_EXTERN(nsresult)
-NS_CreateHTMLElement(nsIHTMLContent** aResult,
-                     nsINodeInfo *aNodeInfo,
-                     PRBool aCaseSensitive);
-
 // Factory methods for creating html layout objects
 
 // These are variations on AreaFrame with slightly different layout

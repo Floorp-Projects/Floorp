@@ -76,20 +76,4 @@ public:
   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell) = 0;
 };
 
-nsresult
-NS_NewXMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
-
-// XXX These belongs elsewhere
-nsresult
-NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
-                               const nsAString& aTarget,
-                               const nsAString& aData);
-
-nsresult
-NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
-                                         const nsAString& aData);
-
-nsresult
-NS_NewXMLCDATASection(nsIContent** aInstancePtrResult);
-
 #endif // nsIXMLContent_h___

@@ -43,7 +43,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIElementFactory.h"
 #include "nsINodeInfo.h"
 #include "nsIPrincipal.h"
 #include "nsIServiceManager.h"
@@ -69,6 +68,8 @@
 #include "nsXULElement.h"
 #include "nsXULTemplateBuilder.h"
 #include "nsSupportsArray.h"
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 
 #include "jsapi.h"
@@ -77,9 +78,7 @@
 
 //----------------------------------------------------------------------0
 
-static NS_DEFINE_CID(kHTMLElementFactoryCID,     NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
-static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 
 PRBool
@@ -216,9 +215,6 @@ protected:
     PRBool
     IsLazyWidgetItem(nsIContent* aElement);
 
-    static void
-    GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
-
     nsresult
     GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements);
 
@@ -292,15 +288,11 @@ protected:
 
     // pseudo-constants
     static PRInt32 gRefCnt;
-    static nsIElementFactory* gHTMLElementFactory;
-    static nsIElementFactory* gXMLElementFactory;
     static nsIXULSortService* gXULSortService;
 };
 
 PRInt32             nsXULContentBuilder::gRefCnt;
 nsIXULSortService*  nsXULContentBuilder::gXULSortService;
-nsIElementFactory*  nsXULContentBuilder::gHTMLElementFactory;
-nsIElementFactory*  nsXULContentBuilder::gXMLElementFactory;
 
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -333,8 +325,6 @@ nsXULContentBuilder::~nsXULContentBuilder()
 {
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(gXULSortService);
-        NS_IF_RELEASE(gHTMLElementFactory);
-        NS_IF_RELEASE(gXMLElementFactory);
     }
 }
 
@@ -343,14 +333,6 @@ nsXULContentBuilder::Init()
 {
     if (gRefCnt++ == 0) {
         nsresult rv = CallGetService(kXULSortServiceCID, &gXULSortService);
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = CallGetService(kHTMLElementFactoryCID, &gHTMLElementFactory);
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = CallGetService(kXMLElementFactoryCID, &gXMLElementFactory);
         if (NS_FAILED(rv))
             return rv;
     }
@@ -1472,8 +1454,8 @@ nsXULContentBuilder::GetElementsForResource(nsIRDFResource* aResource,
 
 nsresult
 nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
-                                    nsIAtom* aTag,
-                                    nsIContent** aResult)
+                                   nsIAtom* aTag,
+                                   nsIContent** aResult)
 {
     nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
     NS_ASSERTION(doc != nsnull, "not initialized");
@@ -1483,35 +1465,12 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
     nsresult rv;
     nsCOMPtr<nsIContent> result;
 
-    nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
-    NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_NOT_INITIALIZED);
-
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfoManager->GetNodeInfo(aTag, nsnull, aNameSpaceID,
-                                 getter_AddRefs(nodeInfo));
+    doc->NodeInfoManager()->GetNodeInfo(aTag, nsnull, aNameSpaceID,
+                                        getter_AddRefs(nodeInfo));
 
-    if (aNameSpaceID == kNameSpaceID_XUL) {
-        rv = nsXULElement::Create(nodeInfo, getter_AddRefs(result));
-        if (NS_FAILED(rv)) return rv;
-    }
-    else if (aNameSpaceID == kNameSpaceID_XHTML) {
-        rv = gHTMLElementFactory->CreateInstanceByTag(nodeInfo,
-                                                      getter_AddRefs(result));
-        if (NS_FAILED(rv)) return rv;
-
-        if (! result)
-            return NS_ERROR_UNEXPECTED;
-    }
-    else {
-        nsCOMPtr<nsIElementFactory> elementFactory;
-        GetElementFactory(aNameSpaceID, getter_AddRefs(elementFactory));
-        rv = elementFactory->CreateInstanceByTag(nodeInfo,
-                                                 getter_AddRefs(result));
-        if (NS_FAILED(rv)) return rv;
-
-        if (! result)
-            return NS_ERROR_UNEXPECTED;
-    }
+    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo);
+    if (NS_FAILED(rv)) return rv;
 
     result->SetDocument(doc, PR_FALSE, PR_TRUE);
 
@@ -1563,18 +1522,6 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
     return NS_OK;
 }
 
-
-void 
-nsXULContentBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)
-{
-    nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(aNameSpaceID,
-                                                             aResult);
-
-    if (!*aResult) {
-        *aResult = gXMLElementFactory; // Nothing found. Use generic XML element.
-        NS_IF_ADDREF(*aResult);
-    }
-}
 
 //----------------------------------------------------------------------
 //

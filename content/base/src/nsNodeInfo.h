@@ -39,11 +39,10 @@
 #define nsNodeInfo_h___
 
 #include "nsINodeInfo.h"
+#include "nsNodeInfoManager.h"
 #include "plhash.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-
-class nsNodeInfoManager;
 
 class nsNodeInfo : public nsINodeInfo
 {
@@ -62,6 +61,16 @@ public:
                         PRInt32 aNamespaceID) const;
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const;
   virtual PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const;
+
+  nsIDocument* GetDocument() const
+  {
+    return mOwnerManager->GetDocument();
+  }
+
+  nsIPrincipal *GetDocumentPrincipal() const
+  {
+    return mOwnerManager->GetDocumentPrincipal();
+  }
 
   // nsNodeInfo
   // Create objects with Create

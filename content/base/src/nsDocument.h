@@ -490,6 +490,11 @@ public:
 
   virtual nsresult Init();
 
+  virtual nsresult CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
+                              PRInt32 aNamespaceID,
+                              PRBool aDocumentDefaultType,
+                              nsIContent **aResult);
+
 protected:
   // subclass hooks for sheet ordering
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet,
@@ -513,7 +518,11 @@ protected:
   nsresult ResetStylesheetsToURI(nsIURI* aURI);
   virtual nsStyleSet::sheetType GetAttrSheetType();
 
-  nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
+  nsresult CreateElement(nsIAtom *aName, nsIAtom *aPrefix,
+                         PRInt32 aNamespaceID, PRInt32 aElementType,
+                         nsIContent** aResult);
+  nsresult CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
+                         nsIContent** aResult);
 
   virtual PRInt32 GetDefaultNamespaceID() const
   {
@@ -559,6 +568,8 @@ protected:
   PRPackedBool mInDestructor;
 
   PRUint8 mXMLDeclarationBits;
+
+  PRUint8 mDefaultElementType;
 
   nsSupportsHashtable* mBoxObjectTable;
 

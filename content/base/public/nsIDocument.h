@@ -46,7 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsIBindingManager.h"
-#include "nsINodeInfo.h"
 #include "nsWeakPtr.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsILoadGroup.h"
@@ -83,14 +82,15 @@ class nsISupportsArray;
 class nsIScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;
+class nsNodeInfoManager;
 class nsICSSLoader;
 class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xa492d7cf, 0x1777, 0x4c7a, \
-  {0xaa, 0x8f, 0x94, 0x08, 0x28, 0x05, 0x55, 0xc9} }
+{ 0xf2a6e105, 0xb3c9, 0x11d8, \
+  { 0xb2, 0x67, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -114,9 +114,13 @@ public:
 
   nsIDocument()
     : mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
-      mNextContentID(NS_CONTENT_ID_COUNTER_BASE) { }
+      mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
+      mNodeInfoManager(nsnull)
+  {
+  }
 
-  virtual ~nsIDocument() { }
+  // Defined in nsDocument.cpp (it needs to clean up mNodeInfoManager).
+  virtual ~nsIDocument();
 
   virtual nsresult StartDocumentLoad(const char* aCommand,
                                      nsIChannel* aChannel,
@@ -527,7 +531,11 @@ public:
     return mBindingManager;
   }
 
-  nsINodeInfoManager* GetNodeInfoManager() const
+  /**
+   * Only to be used inside Gecko, you can't really do anything with the
+   * pointer outside Gecko anyway.
+   */
+  nsNodeInfoManager* NodeInfoManager() const
   {
     return mNodeInfoManager;
   }
@@ -581,6 +589,17 @@ public:
 
   virtual PRBool IsScriptEnabled() = 0;
 
+  /**
+   * Create an element with the specified name, prefix and namespace ID.
+   * If aDocumentDefaultType is true we create an element of the default type
+   * for that document (currently XHTML in HTML documents and XUL in XUL
+   * documents), otherwise we use the type specified by the namespace ID.
+   */
+  virtual nsresult CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
+                              PRInt32 aNamespaceID,
+                              PRBool aDocumentDefaultType,
+                              nsIContent** aResult) = 0;
+
 protected:
   nsString mDocumentTitle;
   nsCOMPtr<nsIURI> mDocumentURI;
@@ -605,7 +624,7 @@ protected:
   PRInt32 mNextContentID;
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
-  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
+  nsNodeInfoManager* mNodeInfoManager; // [STRONG]
 
   // True if BIDI is enabled.
   PRBool mBidiEnabled;

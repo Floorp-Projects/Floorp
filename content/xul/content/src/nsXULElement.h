@@ -429,9 +429,6 @@ public:
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument,
            PRBool aIsScriptable, nsIContent** aResult);
 
-    static nsresult
-    Create(nsINodeInfo* aNodeInfo, nsIContent** aResult);
-
     // nsISupports
     NS_DECL_ISUPPORTS
 
@@ -651,6 +648,9 @@ protected:
     nsIControllers  *Controllers() const { return mSlots ? mSlots->mControllers.get() : nsnull; }
 
     void UnregisterAccessKey(const nsAString& aOldValue);
+
+    friend nsresult
+    NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
 };
 
 

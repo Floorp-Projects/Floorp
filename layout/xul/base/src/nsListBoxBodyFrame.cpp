@@ -70,6 +70,7 @@
 #include "nsStyleSet.h"
 #include "nsIDOMNSDocument.h"
 #include "nsPIBoxObject.h"
+#include "nsINodeInfo.h"
 
 /////////////// nsListScrollSmoother //////////////////
 

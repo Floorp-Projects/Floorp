@@ -1051,7 +1051,8 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     // This violates the W3C DOM but we do this for backwards compatibility
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
-    mNodeInfo->NameChanged(nsHTMLAtoms::option, getter_AddRefs(nodeInfo));
+    nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::option,
+                                getter_AddRefs(nodeInfo));
 
     nsCOMPtr<nsIHTMLContent> element = NS_NewHTMLOptionElement(nodeInfo);
     if (!element) {

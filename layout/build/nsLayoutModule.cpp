@@ -74,7 +74,6 @@
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDocumentViewer.h"
-#include "nsIElementFactory.h"
 #include "nsIEventListenerManager.h"
 #include "nsIFactory.h"
 #include "nsIFrameSelection.h"
@@ -118,7 +117,6 @@
 #include "nsStackLayout.h"
 #include "nsBox.h"
 #include "nsSpaceManager.h"
-#include "nsTextControlFrame.h"
 #include "nsTextTransformer.h"
 #include "nsIFrameTraversal.h"
 #include "nsISelectionImageService.h"
@@ -137,6 +135,8 @@
 #include "nsView.h"
 #include "nsScrollPortView.h"
 #include "nsViewManager.h"
+#include "nsContentCreatorFunctions.h"
+#include "nsFrame.h"
 
 // DOM includes
 #include "nsDOMException.h"
@@ -401,7 +401,6 @@ Shutdown()
   nsCSSFrameConstructor::ReleaseGlobals();
   nsTextTransformer::Shutdown();
   nsSpaceManager::Shutdown();
-  nsTextControlFrame::ReleaseGlobals();
   nsImageFrame::ReleaseGlobals();
 
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
@@ -433,7 +432,6 @@ nsresult NS_NewPopupBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
-nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 #endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
@@ -452,23 +450,16 @@ nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
 nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
-nsresult NS_NewHTMLElementFactory(nsIElementFactory** aResult);
-nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
 nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewXBLService(nsIXBLService** aResult);
 nsresult NS_NewBindingManager(nsIBindingManager** aResult);
-nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewFrameLoader(nsIFrameLoader** aResult);
 nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-#ifdef MOZ_MATHML
-nsresult NS_NewMathMLElementFactory(nsIElementFactory** aResult);
-#endif
 
 #ifdef MOZ_SVG
 #ifdef MOZ_SVG_RENDERER_GDIPLUS
@@ -480,8 +471,6 @@ nsresult NS_NewSVGRendererLibart(nsISVGRenderer** aResult);
 #ifdef MOZ_SVG_RENDERER_CAIRO
 nsresult NS_NewSVGRendererCairo(nsISVGRenderer** aResult);
 #endif // MOZ_SVG_RENDERER_CAIRO
-
-nsresult NS_NewSVGElementFactory(nsIElementFactory** aResult);
 #endif
 
 #define MAKE_CTOR(ctor_, iface_, func_)                   \
@@ -553,11 +542,7 @@ MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVG
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
 MAKE_CTOR(CreateCSSParser,                nsICSSParser,                NS_NewCSSParser)
 MAKE_CTOR(CreateCSSLoader,                nsICSSLoader,                NS_NewCSSLoader)
-MAKE_CTOR(CreateHTMLElementFactory,       nsIElementFactory,           NS_NewHTMLElementFactory)
 MAKE_CTOR(CreateTextNode,                 nsITextContent,              NS_NewTextNode)
-//MAKE_CTOR(CreateAnonymousElement,         nsIContent,                  NS_NewAnonymousElement)
-MAKE_CTOR(CreateXMLElementFactory,        nsIElementFactory,           NS_NewXMLElementFactory)
-//MAKE_CTOR(CreateSelection,                nsISelection,                NS_NewSelection)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
 MAKE_CTOR(CreateSelection,                nsIFrameSelection,           NS_NewSelection)
 MAKE_CTOR(CreateRange,                    nsIDOMRange,                 NS_NewRange)
@@ -581,7 +566,6 @@ MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBL
 MAKE_CTOR(CreateBindingManager,           nsIBindingManager,           NS_NewBindingManager)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
 MAKE_CTOR(CreateFrameLoader,              nsIFrameLoader,              NS_NewFrameLoader)
-MAKE_CTOR(CreateNodeInfoManager,          nsINodeInfoManager,          NS_NewNodeInfoManager)
 MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewComputedDOMStyle)
 #ifdef MOZ_XUL
 MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXULSortService)
@@ -591,13 +575,8 @@ MAKE_CTOR(CreateXULDocument,              nsIXULDocument,              NS_NewXUL
 MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXULPopupListener)
 // NS_NewXULControllers
 // NS_NewXULPrototypeCache
-MAKE_CTOR(CreateXULElementFactory,        nsIElementFactory,           NS_NewXULElementFactory)
-#endif
-#ifdef MOZ_MATHML
-MAKE_CTOR(CreateMathMLElementFactory,     nsIElementFactory,           NS_NewMathMLElementFactory)
 #endif
 #ifdef MOZ_SVG
-MAKE_CTOR(CreateSVGElementFactory,        nsIElementFactory,           NS_NewSVGElementFactory)
 MAKE_CTOR(CreateSVGRect,                  nsIDOMSVGRect,               NS_NewSVGRect)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
@@ -986,34 +965,10 @@ static const nsModuleComponentInfo gComponents[] = {
     nsnull,
     CreateCSSLoader },
 
-  { "HTML element factory",
-    NS_HTML_ELEMENT_FACTORY_CID,
-    NS_HTML_ELEMENT_FACTORY_CONTRACTID,
-    CreateHTMLElementFactory },
-
   { "Text element",
     NS_TEXTNODE_CID,
     nsnull,
     CreateTextNode },
-
-#if 0 // XXX apparently there is no such thing?
-  { "Anonymous Content",
-    NS_ANONYMOUSCONTENT_CID,
-    nsnull,
-    CreateAnonymousElement },
-#endif
-
-  { "XML element factory",
-    NS_XML_ELEMENT_FACTORY_CID,
-    NS_XML_ELEMENT_FACTORY_CONTRACTID,
-    CreateXMLElementFactory },
-
-#if 0 // XXX apparently there is no such thing?
-  { "Selection",
-    NS_SELECTION_CID,
-    nsnull,
-    CreateSelection },
-#endif
 
   { "Dom selection",
     NS_DOMSELECTION_CID,
@@ -1199,11 +1154,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_FRAMELOADER_CONTRACTID,
     CreateFrameLoader },
 
-  { "NodeInfoManager",
-    NS_NODEINFOMANAGER_CID,
-    NS_NODEINFOMANAGER_CONTRACTID,
-    CreateNodeInfoManager },
-
   { "DOM CSS Computed Style Declaration",
     NS_COMPUTEDDOMSTYLE_CID,
     "@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1",
@@ -1249,31 +1199,9 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XULPROTOTYPEDOCUMENT_CID,
     nsnull,
     NS_NewXULPrototypeDocument },
-
-  { "XUL Element Factory",
-    NS_XULELEMENTFACTORY_CID,
-    NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-    CreateXULElementFactory },
-#else
-  { "XML Element Factory",
-	NS_XULELEMENTFACTORY_CID,
-    NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-    CreateXMLElementFactory },
-#endif
-
-#ifdef MOZ_MATHML
-  { "MathML Element Factory",
-    NS_MATHMLELEMENTFACTORY_CID,
-    NS_MATHML_ELEMENT_FACTORY_CONTRACTID,
-    CreateMathMLElementFactory },
 #endif
 
 #ifdef MOZ_SVG
-  { "SVG element factory",
-    NS_SVGELEMENTFACTORY_CID,
-    NS_SVG_ELEMENT_FACTORY_CONTRACTID,
-    CreateSVGElementFactory },
-  
   { "SVG Rect",
     NS_SVGRECT_CID,
     NS_SVGRECT_CONTRACTID,

@@ -56,7 +56,6 @@ nsIDocument.h \
 nsIDocumentEncoder.h \
 nsIDocumentObserver.h \
 nsIDocumentViewer.h \
-nsIElementFactory.h \
 nsINameSpace.h \
 nsINameSpaceManager.h \
 nsINodeInfo.h \
@@ -78,6 +77,7 @@ nsIFrameLoader.h \
 nsLayoutStylesheetCache.h \
 nsContentCID.h \
 nsCopySupport.h \
+nsContentCreatorFunctions.h \
 $(NULL)
 
 SDK_XPIDLSRCS   = \

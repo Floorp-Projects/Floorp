@@ -561,7 +561,7 @@ nsImageLoadingContent::GetOurDocument()
     // XXXbz GetOwnerDocument
     nsINodeInfo *nodeInfo = thisContent->GetNodeInfo();
     if (nodeInfo) {
-      doc = nodeInfo->GetDocument();
+      doc = nsContentUtils::GetDocument(nodeInfo);
     }
   }
 

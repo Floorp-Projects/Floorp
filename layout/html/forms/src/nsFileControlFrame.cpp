@@ -38,7 +38,6 @@
 #include "nsFileControlFrame.h"
 
 
-#include "nsIElementFactory.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -72,9 +71,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsILocalFile.h"
 #include "nsITextControlElement.h"
-
-#include "nsContentCID.h"
-static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -164,34 +162,33 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 {
   // Get the NodeInfoManager and tag necessary to create input elements
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
-  nsINodeInfoManager *nimgr = doc->GetNodeInfoManager();
-  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
-                     getter_AddRefs(nodeInfo));
-
-  nsresult rv;
-  nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::input, nsnull,
+                                      kNameSpaceID_None,
+                                      getter_AddRefs(nodeInfo));
 
   // Create the text content
-  rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(mTextContent));
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMHTMLInputElement> fileContent(do_QueryInterface(mContent, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRInt32 tabIndex = -1;
+  content.swap(mTextContent);
+
+  nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
+
   if (mTextContent) {
     mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
     nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
-    if (textControl) {
+    if (fileContent && textControl) {
       // Initialize value when we create the content in case the value was set
       // before we got here
       nsAutoString value;
       nsAutoString accessKey;
       fileContent->GetValue(value);
       textControl->SetValue(value);
+
+      PRInt32 tabIndex;
       fileContent->GetTabIndex(&tabIndex);
       textControl->SetTabIndex(tabIndex);
       fileContent->GetAccessKey(accessKey);
@@ -201,13 +198,15 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   }
 
   // Create the browse button
-  rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(mBrowse));
+  rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mBrowse = do_QueryInterface(content);
   if (mBrowse) {
     mBrowse->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
     nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
-    if (browseControl) {
+    if (fileContent && browseControl) {
+      PRInt32 tabIndex;
       fileContent->GetTabIndex(&tabIndex);
       browseControl->SetTabIndex(tabIndex);
     }

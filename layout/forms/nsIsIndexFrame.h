@@ -137,7 +137,7 @@ public:
 
 protected:
   nsIHTMLContent*     mTextContent;
-  nsIHTMLContent*     mInputContent;
+  nsIContent*         mInputContent;
 
   // XXX Hack: pres context needed by function KeyPress() and SetFocus()
   nsIPresContext*     mPresContext;  // weak reference

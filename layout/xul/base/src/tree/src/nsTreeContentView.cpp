@@ -46,6 +46,7 @@
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIEventStateManager.h"
+#include "nsINodeInfo.h"
 
 // A content model view implementation for the tree.
 

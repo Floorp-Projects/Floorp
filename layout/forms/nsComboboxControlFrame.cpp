@@ -75,7 +75,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
 #include "nsListControlFrame.h"
-#include "nsIElementFactory.h"
 #include "nsContentCID.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -85,9 +84,10 @@
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
-static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
@@ -2031,9 +2031,9 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   //nsIAtom* tag = NS_NewAtom("mozcombodisplay");
 
   // Add a child text content node for the label
-  nsresult result;
-  nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID,&result));
-  if (NS_SUCCEEDED(result) && labelContent) {
+  nsresult rv;
+  nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID, &rv));
+  if (NS_SUCCEEDED(rv) && labelContent) {
     // set the value of the text node
     mDisplayContent = do_QueryInterface(labelContent);
     mDisplayContent->SetText(NS_LITERAL_STRING("X"), PR_TRUE);
@@ -2041,36 +2041,29 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
     // mContent->AppendChildTo(labelContent, PR_FALSE, PR_FALSE);
 
-    nsINodeInfoManager *nimgr = doc->GetNodeInfoManager();
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
-                       getter_AddRefs(nodeInfo));
+    doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::input, nsnull,
+                                        kNameSpaceID_None,
+                                        getter_AddRefs(nodeInfo));
 
     aChildList.AppendElement(labelContent);
 
     // create button which drops the list down
-    nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID));
-    if (ef) {
-      nsCOMPtr<nsIContent> content;
-      result = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));
-      if (NS_SUCCEEDED(result)) {
-        nsCOMPtr<nsIHTMLContent> btnContent(do_QueryInterface(content));
-        if (btnContent) {
-          // make someone to listen to the button. If its pressed by someone like Accessibility
-          // then open or close the combo box.
-          nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(content));
-          if (eventReceiver) {
-             mButtonListener = new nsComboButtonListener(this);
-             eventReceiver->AddEventListenerByIID(mButtonListener, NS_GET_IID(nsIDOMMouseListener));
-          }
+    nsCOMPtr<nsIContent> btnContent;
+    rv = NS_NewHTMLElement(getter_AddRefs(btnContent), nodeInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-          btnContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
-          aChildList.AppendElement(btnContent);
-        }
-      }      
+    // make someone to listen to the button. If its pressed by someone like Accessibility
+    // then open or close the combo box.
+    nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(btnContent));
+    if (eventReceiver) {
+       mButtonListener = new nsComboButtonListener(this);
+       eventReceiver->AddEventListenerByIID(mButtonListener, NS_GET_IID(nsIDOMMouseListener));
     }
+
+    btnContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
+
+    aChildList.AppendElement(btnContent);
   }
 
   return NS_OK;

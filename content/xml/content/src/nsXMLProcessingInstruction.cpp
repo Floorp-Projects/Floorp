@@ -40,6 +40,7 @@
 #include "nsUnicharUtils.h"
 #include "nsXMLProcessingInstruction.h"
 #include "nsParserUtils.h"
+#include "nsContentCreatorFunctions.h"
 
 nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,

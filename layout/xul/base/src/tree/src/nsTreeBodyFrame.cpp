@@ -94,6 +94,7 @@
 #include "imgIContainer.h"
 #include "imgIContainerObserver.h"
 #include "imgILoader.h"
+#include "nsINodeInfo.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"

@@ -108,7 +108,6 @@
 #include "nsISelectElement.h"
 #include "nsIFrameSelection.h"
 #include "nsISelectionPrivate.h"//for toStringwithformat code
-#include "nsIElementFactory.h"
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
@@ -130,6 +129,7 @@
 #include "nsBidiUtils.h"
 
 #include "nsIEditingSession.h"
+#include "nsNodeInfoManager.h"
 
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
@@ -294,6 +294,8 @@ nsHTMLDocument::nsHTMLDocument()
   {
     CallGetService(kRDFServiceCID, &gRDF);
   }
+
+  mDefaultElementType = kNameSpaceID_XHTML;
 }
 
 nsHTMLDocument::~nsHTMLDocument()
@@ -1353,22 +1355,16 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
   }  
 
   nsAutoString tmp(aTagName);
-
   if (!IsXHTML()) {
     ToLowerCase(tmp);
   }
 
   nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(name, nsnull, mDefaultNamespaceID,
-                                     getter_AddRefs(nodeInfo));
+  nsCOMPtr<nsIContent> content;
+  rv = nsDocument::CreateElement(name, nsnull, GetDefaultNamespaceID(),
+                                 mDefaultElementType, getter_AddRefs(content));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHTMLContent> content;
-  rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo, IsXHTML());
-  NS_ENSURE_SUCCESS(rv, rv);
-  content->SetContentID(mNextContentID++);
 
   return CallQueryInterface(content, aReturn);
 }
@@ -1706,7 +1702,7 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 
     nsresult rv;
     if (IsXHTML()) {
-      rv = GetElementsByTagNameNS(NS_LITERAL_STRING(NS_HTML_NAMESPACE),
+      rv = GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
                                   NS_LITERAL_STRING("frameset"),
                                   getter_AddRefs(nodeList));
     } else {
@@ -4186,3 +4182,19 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
 
   return rv;
 }
+
+#ifdef DEBUG
+nsresult
+nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
+                           PRInt32 aNamespaceID, PRBool aDocumentDefaultType,
+                           nsIContent** aResult)
+{
+  NS_ASSERTION(!aDocumentDefaultType || IsXHTML() ||
+               aNamespaceID == kNameSpaceID_None,
+               "HTML elements in an HTML document should have "
+               "kNamespaceID_None as their namespace ID.");
+
+  return nsDocument::CreateElement(aName, aPrefix, aNamespaceID,
+                                   aDocumentDefaultType, aResult);
+}
+#endif

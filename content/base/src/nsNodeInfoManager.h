@@ -38,40 +38,73 @@
 #ifndef nsNodeInfoManager_h___
 #define nsNodeInfoManager_h___
 
-#include "nsINodeInfo.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "plhash.h"
 
+class nsIAtom;
+class nsIDocument;
+class nsINodeInfo;
 class nsNodeInfo;
 class nsIPrincipal;
 class nsIURI;
 
-
-class nsNodeInfoManager : public nsINodeInfoManager
+class nsNodeInfoManager
 {
 public:
-  NS_DECL_ISUPPORTS
-
-  // nsINodeInfoManager
-  virtual nsresult Init(nsIDocument *aDocument);
-  virtual void DropDocumentReference();
-  virtual nsresult GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
-                               PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
-  virtual nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
-                               PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
-  virtual nsresult GetNodeInfo(const nsAString& aQualifiedName,
-                               const nsAString& aNamespaceURI,
-                               nsINodeInfo** aNodeInfo);
-  virtual nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
-                               const nsAString& aNamespaceURI,
-                               nsINodeInfo** aNodeInfo);
-
-  virtual nsresult GetDocumentPrincipal(nsIPrincipal** aPrincipal);
-  virtual nsresult SetDocumentPrincipal(nsIPrincipal* aPrincipal);
-
-  // nsNodeInfoManager
   nsNodeInfoManager();
-  virtual ~nsNodeInfoManager();
+  ~nsNodeInfoManager();
+
+  nsrefcnt AddRef(void);
+  nsrefcnt Release(void);
+
+  /**
+   * Initialize the nodeinfo manager with a document.
+   */
+  nsresult Init(nsIDocument *aDocument);
+
+  /**
+   * Release the reference to the document, this will be called when
+   * the document is going away.
+   */
+  void DropDocumentReference();
+
+  /**
+   * Methods for creating nodeinfo's from atoms and/or strings.
+   */
+  nsresult GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
+                       PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
+  nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
+                       PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
+  nsresult GetNodeInfo(const nsAString& aQualifiedName,
+                       const nsAString& aNamespaceURI,
+                       nsINodeInfo** aNodeInfo);
+
+  /**
+   * Retrieve a pointer to the document that owns this node info
+   * manager.
+   */
+  nsIDocument* GetDocument() const
+  {
+    return mDocument;
+  }
+
+  /**
+   * Gets the principal of the document associated with this.
+   */
+  nsIPrincipal *GetDocumentPrincipal();
+
+  /**
+   * Sets the principal of the nodeinfo manager. This should only be called
+   * when this nodeinfo manager isn't connected to an nsIDocument.
+   */
+  void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
+
+  /**
+   * Populate the given nsCOMArray with all of the nsINodeInfos
+   * managed by this manager.
+   */
+  nsresult GetNodeInfos(nsCOMArray<nsINodeInfo> *aArray);
 
   void RemoveNodeInfo(nsNodeInfo *aNodeInfo);
 
@@ -80,7 +113,11 @@ private:
                                                     const void *key2);
   static PLHashNumber PR_CALLBACK GetNodeInfoInnerHashValue(const void *key);
 
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+
   PLHashTable *mNodeInfoHash;
+  nsIDocument *mDocument; // WEAK
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   static PRUint32 gNodeManagerCount;

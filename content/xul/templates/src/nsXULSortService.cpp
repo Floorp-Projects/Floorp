@@ -89,6 +89,7 @@
 #include "nsILocaleService.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsXULAtoms.h"
+#include "nsINodeInfo.h"
 
 
 ////////////////////////////////////////////////////////////////////////

@@ -60,10 +60,11 @@
 #include "nsStackLayout.h"
 #include "nsIRootBox.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIElementFactory.h"
 #include "nsINodeInfo.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 // Interface IDs
 
@@ -117,28 +118,23 @@ NS_IMETHODIMP
 nsDocElementBoxFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                        nsISupportsArray& aAnonymousItems)
 {
-  nsresult rv;
-  nsCOMPtr<nsIElementFactory> elementFactory = 
-           do_GetService(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", &rv);
-  if (!elementFactory)
-    return NS_ERROR_FAILURE;
-
   nsIDocument* doc = mContent->GetDocument();
   if (!doc)
     // The page is currently being torn down.  Why bother.
     return NS_ERROR_FAILURE;
-  nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
-  NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
+  nsNodeInfoManager *nodeInfoManager = doc->NodeInfoManager();
 
   // create the top-secret popupgroup node. shhhhh!
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = nodeInfoManager->GetNodeInfo(nsXULAtoms::popupgroup,
-                                    nsnull, kNameSpaceID_XUL,
-                                    getter_AddRefs(nodeInfo));
+  nsresult rv = nodeInfoManager->GetNodeInfo(nsXULAtoms::popupgroup,
+                                             nsnull, kNameSpaceID_XUL,
+                                             getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content;
-  elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+  rv = NS_NewXULElement(getter_AddRefs(content), nodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   aAnonymousItems.AppendElement(content);
 
   // create the top-secret default tooltip node. shhhhh!
@@ -146,7 +142,9 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                     kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+  rv = NS_NewXULElement(getter_AddRefs(content), nodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   content->SetAttr(nsnull, nsXULAtoms::defaultz, NS_LITERAL_STRING("true"), PR_FALSE);
   aAnonymousItems.AppendElement(content);
   

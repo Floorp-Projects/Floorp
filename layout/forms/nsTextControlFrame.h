@@ -54,7 +54,6 @@
 
 class nsIPresState;
 class nsISupportsArray;
-class nsIHTMLContent;
 class nsIEditor;
 class nsISelectionController;
 class nsTextInputSelectionImpl;
@@ -76,8 +75,6 @@ class nsTextControlFrame : public nsStackFrame,
 public:
   nsTextControlFrame(nsIPresShell* aShell);
   virtual ~nsTextControlFrame();
-
-  static void ReleaseGlobals();
 
   virtual void RemovedAsPrimaryFrame(nsIPresContext* aPresContext); 
 

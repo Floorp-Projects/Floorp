@@ -54,10 +54,6 @@
 #define NS_LAYOUT_DEBUGGER_CID \
  { 0xa6cf90f9, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
-/* a6cf90fc-15b3-11d2-932e-00805f8add32 */
-#define NS_HTML_ELEMENT_FACTORY_CID \
- { 0xa6cf90fc, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
 #define NS_HTMLDOCUMENT_CID                       \
 { /* 5d0fcdd0-4daa-11d2-b328-00805f8a3859 */      \
  0x5d0fcdd0, 0x4daa, 0x11d2,                      \
@@ -67,11 +63,6 @@
 { /* a6cf9063-15b3-11d2-932e-00805f8add32 */      \
  0xa6cf9063, 0x15b3, 0x11d2,                      \
  {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-#define NS_XML_ELEMENT_FACTORY_CID                \
-{ /* CF170391-79CC-11d3-BE44-0020A6361667 */      \
- 0xcf170391, 0x79cc, 0x11d3,                      \
- {0xbe, 0x44, 0x0, 0x20, 0xa6, 0x36, 0x16, 0x67}}
 
 #define NS_IMAGEDOCUMENT_CID                      \
 { /* e11a6080-4daa-11d2-b328-00805f8a3859 */      \

@@ -42,6 +42,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
+#include "nsNodeInfoManager.h"
 
 //----------------------------------------------------------------------
 

@@ -99,6 +99,7 @@
 #include "jsapi.h"
 
 #include "nsIDOMXPathEvaluator.h"
+#include "nsNodeInfoManager.h"
 
 #ifdef DEBUG_waterson
 
@@ -1108,14 +1109,14 @@ nsGenericElement::SetPrefix(const nsAString& aPrefix)
 
   nsCOMPtr<nsIAtom> prefix;
 
-  if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix)) {
+  if (!aPrefix.IsEmpty()) {
     prefix = do_GetAtom(aPrefix);
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
 
   nsCOMPtr<nsINodeInfo> newNodeInfo;
-  nsresult rv = mNodeInfo->PrefixChanged(prefix,
-                                         getter_AddRefs(newNodeInfo));
+  nsresult rv = nsContentUtils::PrefixChanged(mNodeInfo, prefix,
+                                              getter_AddRefs(newNodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mNodeInfo = newNodeInfo;
@@ -1721,18 +1722,16 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
     // check the document on the nodeinfo to see whether we need a
     // new nodeinfo
-    if (aDocument && aDocument != mNodeInfo->GetDocument()) {
+    if (aDocument && aDocument != nsContentUtils::GetDocument(mNodeInfo)) {
       // get a new nodeinfo
-      nsINodeInfoManager* nodeInfoManager = aDocument->GetNodeInfoManager();
-      if (nodeInfoManager) {
-        nsCOMPtr<nsINodeInfo> newNodeInfo;
-        nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                     mNodeInfo->GetPrefixAtom(),
-                                     mNodeInfo->NamespaceID(),
-                                     getter_AddRefs(newNodeInfo));
-        if (newNodeInfo) {
-          mNodeInfo.swap(newNodeInfo);
-        }
+      nsNodeInfoManager* nodeInfoManager = aDocument->NodeInfoManager();
+      nsCOMPtr<nsINodeInfo> newNodeInfo;
+      nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
+                                   mNodeInfo->GetPrefixAtom(),
+                                   mNodeInfo->NamespaceID(),
+                                   getter_AddRefs(newNodeInfo));
+      if (newNodeInfo) {
+        mNodeInfo.swap(newNodeInfo);
       }
     }
 

@@ -162,6 +162,7 @@
 #include "nsReadableUtils.h"
 #include "nsITimelineService.h"
 #include "nsIFrame.h"
+#include "nsNodeInfoManager.h"
 
 class nsIDocShell;
 
@@ -516,7 +517,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 }
 
 nsresult
-nsXULElement::Create(nsINodeInfo *aNodeInfo, nsIContent** aResult)
+NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 {
     NS_PRECONDITION(aNodeInfo, "need nodeinfo for non-proto Create");
 
@@ -768,7 +769,7 @@ nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
     if (mDocument) {
         return CallQueryInterface(mDocument, aOwnerDocument);
     }
-    nsIDocument* doc = NodeInfo()->GetDocument();
+    nsIDocument* doc = nsContentUtils::GetDocument(NodeInfo());
     if (doc) {
         return CallQueryInterface(doc, aOwnerDocument);
     }
@@ -800,7 +801,7 @@ nsXULElement::SetPrefix(const nsAString& aPrefix)
     nsCOMPtr<nsINodeInfo> newNodeInfo;
     nsCOMPtr<nsIAtom> prefix;
 
-    if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix)) {
+    if (!aPrefix.IsEmpty()) {
         prefix = do_GetAtom(aPrefix);
         NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
     }
@@ -808,8 +809,8 @@ nsXULElement::SetPrefix(const nsAString& aPrefix)
     nsresult rv = EnsureSlots();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSlots->mNodeInfo->PrefixChanged(prefix,
-                                          getter_AddRefs(newNodeInfo));
+    rv = nsContentUtils::PrefixChanged(mSlots->mNodeInfo, prefix,
+                                       getter_AddRefs(newNodeInfo));
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ASSERTION(newNodeInfo, "trying to assign null nodeinfo!");
@@ -892,12 +893,12 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
         NS_ASSERTION(mSlots, "no prototype and no slots!");
         NS_ENSURE_TRUE(mSlots, NS_ERROR_UNEXPECTED);
 
-        rv = nsXULElement::Create(mSlots->mNodeInfo, getter_AddRefs(result));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // XXX setting document on nodes not in a document so XBL will bind
-        // and chrome won't break. Make XBL bind to document-less nodes!
-        result->SetDocument(mDocument, PR_TRUE, PR_TRUE);
+        rv = NS_NewXULElement(getter_AddRefs(result), mSlots->mNodeInfo);
+        if (NS_SUCCEEDED(rv)) {
+            // XXX setting document on nodes not in a document so XBL will bind
+            // and chrome won't break. Make XBL bind to document-less nodes!
+            result->SetDocument(mDocument, PR_TRUE, PR_TRUE);
+        }
     }
 
     // Copy attributes

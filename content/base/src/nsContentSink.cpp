@@ -76,6 +76,7 @@
 #include "nsEscape.h"
 #include "nsWeakReference.h"
 #include "nsUnicharUtils.h"
+#include "nsNodeInfoManager.h"
 
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
@@ -188,8 +189,8 @@ nsContentSink::Init(nsIDocument* aDoc,
   // XXX if it isn't we need to set it here...
   ProcessHTTPHeaders(aChannel);
 
-  mNodeInfoManager = aDoc->GetNodeInfoManager();
-  return mNodeInfoManager ? NS_OK : NS_ERROR_NOT_INITIALIZED;
+  mNodeInfoManager = aDoc->NodeInfoManager();
+  return NS_OK;
 
 }
 

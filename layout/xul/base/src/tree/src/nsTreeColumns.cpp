@@ -48,6 +48,7 @@
 #include "nsTreeUtils.h"
 #include "nsStyleContext.h"
 #include "nsIDOMClassInfo.h"
+#include "nsINodeInfo.h"
 
 // Column class that caches all the info about our column.
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, nsIFrame* aFrame)

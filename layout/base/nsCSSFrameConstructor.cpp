@@ -96,7 +96,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
-#include "nsIElementFactory.h"
 #include "nsITheme.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
@@ -117,7 +116,6 @@
 #include "nsBoxFrame.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
-static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
 #include "nsIDOMWindowInternal.h"
 #include "nsIMenuFrame.h"
@@ -191,6 +189,8 @@ NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aN
 #include "nsINodeInfo.h"
 #include "prenv.h"
 #include "nsWidgetsCID.h"
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 // Global object maintenance
 nsIXBLService * nsCSSFrameConstructor::gXBLService = nsnull;
@@ -1372,19 +1372,13 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     // Create an HTML image content object, and set the SRC.
     // XXX Check if it's an image type we can handle...
 
-    nsINodeInfoManager *nimgr = aDocument->GetNodeInfoManager();
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nimgr->GetNodeInfo(nsHTMLAtoms::img, nsnull, kNameSpaceID_None,
-                       getter_AddRefs(nodeInfo));
-
-    nsresult rv;
-    nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aDocument->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::img, nsnull,
+                                              kNameSpaceID_None,
+                                              getter_AddRefs(nodeInfo));
 
     nsCOMPtr<nsIContent> content;
-    rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));
+    nsresult rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString spec;

@@ -1848,7 +1848,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
     // XXXbz GetOwnerDocument
     nsINodeInfo *nodeInfo = targetContent->GetNodeInfo();
     if (nodeInfo) {
-      document = nodeInfo->GetDocument();
+      document = nsContentUtils::GetDocument(nodeInfo);
     }
   }
 

@@ -44,7 +44,6 @@
 class nsIAtom;
 class nsString;
 class nsINameSpace;
-class nsIElementFactory;
 
 #define kNameSpaceID_Unknown -1
 #define kNameSpaceID_None     0
@@ -62,8 +61,8 @@ class nsIElementFactory;
 #define NS_NAMESPACEMANAGER_CONTRACTID "@mozilla.org/content/namespacemanager;1"
 
 #define NS_INAMESPACEMANAGER_IID \
-  { 0xa6cf90d5, 0x15b3, 0x11d2, \
-    {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+  { 0x409cd4de, 0xb3ca, 0x11d8, \
+    { 0xb2, 0x67, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
 
 /**
  * The Name Space Manager tracks the associtation between a NameSpace
@@ -97,14 +96,7 @@ public:
   NS_IMETHOD GetNameSpaceID(const nsAString& aURI,
                             PRInt32* aNameSpaceID) = 0;
 
-  NS_IMETHOD GetElementFactory(PRInt32 aNameSpaceID,
-                               nsIElementFactory **aElementFactory) = 0;
-
-  NS_IMETHOD HasRegisteredFactory(PRInt32 aNameSpaceID,
-                                  PRBool* aHasFactory) = 0;
-
-  NS_IMETHOD HasNameSpaceURI(PRInt32 aNameSpaceID,
-                             PRBool* aHasNameSpaceURI) = 0;
+  virtual PRBool HasElementCreator(PRInt32 aNameSpaceID) = 0;
 };
  
 nsresult NS_GetNameSpaceManager(nsINameSpaceManager** aInstancePtrResult);

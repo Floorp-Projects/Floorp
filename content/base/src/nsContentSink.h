@@ -46,18 +46,19 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
+#include "nsAutoPtr.h"
 
 class nsIDocument;
 class nsIURI;
 class nsIChannel;
 class nsIDocShell;
 class nsICSSLoader;
-class nsINodeInfoManager;
 class nsIParser;
 class nsIAtom;
 class nsIChannel;
 class nsIContent;
 class nsIViewManager;
+class nsNodeInfoManager;
 
 class nsContentSink : public nsICSSLoaderObserver,
                       public nsIScriptLoaderObserver,
@@ -110,7 +111,7 @@ protected:
   nsCOMPtr<nsIURI>              mDocumentBaseURI;
   nsCOMPtr<nsIDocShell>         mDocShell;
   nsCOMPtr<nsICSSLoader>        mCSSLoader;
-  nsCOMPtr<nsINodeInfoManager>  mNodeInfoManager;
+  nsRefPtr<nsNodeInfoManager>   mNodeInfoManager;
 
   nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
 

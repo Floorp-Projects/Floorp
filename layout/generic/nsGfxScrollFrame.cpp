@@ -58,17 +58,17 @@
 #include "nsIFontMetrics.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocument.h"
-#include "nsIElementFactory.h"
 #include "nsBoxLayoutState.h"
 #include "nsINodeInfo.h"
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsITextControlFrame.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-
+#include "nsNodeInfoManager.h"
 #include "nsIPrintPreviewContext.h"
 #include "nsIURI.h"
 #include "nsGUIEvent.h"
+#include "nsContentCreatorFunctions.h"
 //----------------------------------------------------------------------
 
 //----------nsHTMLScrollFrame-------------------------------------------
@@ -1330,23 +1330,18 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
     }
   }
 
-  // create horzontal scrollbar
-  nsresult rv;
-  nsCOMPtr<nsIElementFactory> elementFactory = 
-           do_GetService(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", &rv);
-  if (!elementFactory)
-    return;
-
-  nsINodeInfoManager *nodeInfoManager = nsnull;
-  if (document)
-    nodeInfoManager = document->GetNodeInfoManager();
-  if (!nodeInfoManager) {
+  // create horizontal scrollbar
+  if (!document) {
     return;
   }
+
+  nsNodeInfoManager *nodeInfoManager = document->NodeInfoManager();
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollbar, nsnull,
                                kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+
+  nsCOMPtr<nsIContent> content;
 
   nsCOMPtr<nsIScrollableFrame> scrollable =
     do_QueryInterface(NS_STATIC_CAST(nsIFrame*, mOuter));
@@ -1354,8 +1349,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   PRBool canHaveHorizontal = styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO
     || styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL;
   if (canHaveHorizontal) {
-    nsCOMPtr<nsIContent> content;
-    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+    NS_NewXULElement(getter_AddRefs(content), nodeInfo);
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                      NS_LITERAL_STRING("horizontal"), PR_FALSE);
     aAnonymousChildren.AppendElement(content);
@@ -1364,8 +1358,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   PRBool canHaveVertical = styles.mVertical == NS_STYLE_OVERFLOW_AUTO
     || styles.mVertical == NS_STYLE_OVERFLOW_SCROLL;
   if (canHaveVertical) {
-    nsCOMPtr<nsIContent> content;
-    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+    NS_NewXULElement(getter_AddRefs(content), nodeInfo);
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                      NS_LITERAL_STRING("vertical"), PR_FALSE);
     aAnonymousChildren.AppendElement(content);
@@ -1374,8 +1367,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   if (canHaveHorizontal && canHaveVertical) {
     nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollcorner, nsnull,
                                  kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-    nsCOMPtr<nsIContent> content;
-    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+    NS_NewXULElement(getter_AddRefs(content), nodeInfo);
     aAnonymousChildren.AppendElement(content);
   }
 }

@@ -98,13 +98,10 @@
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
 
-// included for nsEditor::CreateHTMLContent
-#include "nsIElementFactory.h"
-#include "nsINodeInfo.h"
-
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 #include "nsISelectionDisplay.h"
+#include "nsINameSpaceManager.h"
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -5063,43 +5060,20 @@ nsresult nsEditor::ClearSelection()
 nsresult
 nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIElementFactory> elementFactory = 
-           do_GetService(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX"http://www.w3.org/1999/xhtml", &rv);
-  if (!elementFactory)
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMDocument> tempDoc;
-
-  rv = GetDocument(getter_AddRefs(tempDoc));
-  if (NS_FAILED(rv))
-    return rv;
-  if (!tempDoc)
-    return NS_ERROR_FAILURE;
+  GetDocument(getter_AddRefs(tempDoc));
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(tempDoc);
-
-  nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
-  NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = nodeInfoManager->GetNodeInfo(aTag, nsnull, kNameSpaceID_None,
-                                    getter_AddRefs(nodeInfo));
-
-  if (NS_FAILED(rv))
-    return rv;
-  if (!nodeInfo)
+  if (!doc)
     return NS_ERROR_FAILURE;
 
-  rv = elementFactory->CreateInstanceByTag(nodeInfo, aContent);
+  nsCOMPtr<nsIAtom> tag = do_GetAtom(aTag);
+  if (!tag)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  if (NS_FAILED(rv))
-    return rv;
-  if (!aContent)
-    return NS_ERROR_FAILURE;
-  
-  return NS_OK;
+  // XXX If editor starts supporting XHTML documents, the kNameSpaceID_None
+  //     should be kNameSpaceID_XHTML for those documents.
+  return doc->CreateElem(tag, nsnull, kNameSpaceID_None, PR_TRUE, aContent);
 }
 
 nsresult

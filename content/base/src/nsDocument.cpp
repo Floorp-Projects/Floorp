@@ -116,13 +116,21 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsScriptEventManager.h"
 #include "nsIXPathEvaluatorInternal.h"
-#include "nsIElementFactory.h"
 #include "nsIParserService.h"
+#include "nsContentCreatorFunctions.h"
 
 #include "nsIScriptContext.h"
 
 #include "nsICharsetAlias.h"
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
+
+nsIDocument::~nsIDocument()
+{
+  if (mNodeInfoManager) {
+    mNodeInfoManager->DropDocumentReference();
+    NS_RELEASE(mNodeInfoManager);
+  }
+}
 
 // Helper structs for the content->subdoc map
 
@@ -587,10 +595,6 @@ nsDocument::~nsDocument()
     mCSSLoader->DropDocumentReference();
   }
 
-  if (mNodeInfoManager) {
-    mNodeInfoManager->DropDocumentReference();
-  }
-
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
   }
@@ -667,6 +671,8 @@ nsDocument::Init()
 
   mNodeInfoManager = new nsNodeInfoManager();
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(mNodeInfoManager);
 
   return mNodeInfoManager->Init(this);
 }
@@ -2167,12 +2173,12 @@ nsDocument::CreateElement(const nsAString& aTagName,
 
   nsCOMPtr<nsIAtom> name = do_GetAtom(aTagName);
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(name, nsnull, GetDefaultNamespaceID(),
-                                     getter_AddRefs(nodeInfo));
+  nsCOMPtr<nsIContent> content;
+  rv = CreateElement(name, nsnull, GetDefaultNamespaceID(),
+                     mDefaultElementType, getter_AddRefs(content));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CreateElement(nodeInfo, aReturn);
+  return CallQueryInterface(content, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2189,7 +2195,12 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CreateElement(nodeInfo, aReturn);
+  nsCOMPtr<nsIContent> content;
+  rv = CreateElement(nodeInfo, nodeInfo->NamespaceID(),
+                     getter_AddRefs(content));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(content, aReturn);
 }
 
 NS_IMETHODIMP
@@ -4241,27 +4252,42 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 }
 
 nsresult
-nsDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult)
+nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+                       PRBool aDocumentDefaultType, nsIContent **aResult)
 {
   *aResult = nsnull;
   
-  PRInt32 namespaceID = aNodeInfo->NamespaceID();
+  PRInt32 elementType = aDocumentDefaultType ? mDefaultElementType :
+                                               aNamespaceID;
 
-  nsCOMPtr<nsIElementFactory> elementFactory;
-  nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,
-                                                           getter_AddRefs(elementFactory));
+  return CreateElement(aName, aPrefix, aNamespaceID, elementType, aResult);
+}
 
-  nsresult rv;
+nsresult
+nsDocument::CreateElement(nsIAtom *aName, nsIAtom *aPrefix,
+                          PRInt32 aNamespaceID, PRInt32 aElementType,
+                          nsIContent** aResult)
+{
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
+                                              getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CreateElement(nodeInfo, aElementType, aResult);
+}
+
+nsresult
+nsDocument::CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
+                          nsIContent** aResult)
+{
   nsCOMPtr<nsIContent> content;
-  if (elementFactory) {
-    rv = elementFactory->CreateInstanceByTag(aNodeInfo,
-                                             getter_AddRefs(content));
-  } else {
-    rv = NS_NewXMLElement(getter_AddRefs(content), aNodeInfo);
-  }
+  nsresult rv = NS_NewElement(getter_AddRefs(content), aElementType,
+                              aNodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   content->SetContentID(mNextContentID++);
 
-  return CallQueryInterface(content, aResult);
+  content.swap(*aResult);
+
+  return NS_OK;
 }

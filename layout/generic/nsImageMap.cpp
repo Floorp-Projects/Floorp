@@ -65,7 +65,7 @@
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
 #include "nsIDocument.h"
-#include "nsINodeInfo.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -419,7 +419,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
     nsINodeInfo *nodeInfo = mArea->GetNodeInfo();
     NS_ASSERTION(nodeInfo, "Element with no nodeinfo");
 
-    nsIDocument* doc = nodeInfo->GetDocument();
+    nsIDocument* doc = nsContentUtils::GetDocument(nodeInfo);
     nsCAutoString urlSpec;
     if (doc) {
       nsIURI *uri = doc->GetDocumentURI();
