@@ -20,8 +20,6 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-include <$(DEPTH)/config/config.mak>
-
 
 EXPORTS =	\
         nsPluginsCID.h          \
@@ -31,6 +29,7 @@ EXPORTS =	\
 MODULE		= gkplugin
 LIBRARY_NAME	= gkplugin
 MODULE_NAME	= nsPluginModule
+REQUIRES	= xpcom string java pref necko gtkxtbin webshell caps intl dom content layout widget cookie mimetype oji exthandler docshell webBrowser_core timer windowwatcher plugin raptor gfx
 
 DEFINES =-D_IMPL_NS_PLUGIN -DWIN32_LEAN_AND_MEAN
 

@@ -20,7 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=appcomps
+MODULE=bookmarks
+REQUIRES	= xpcom string rdf appshell widget necko uconv docshell pref timer dom intl webshell windowwatcher raptor
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsBookmarksService.obj     \

@@ -25,6 +25,7 @@ MODULE=chrome
 MODULE		= chrome
 LIBRARY_NAME	= chrome
 MODULE_NAME	= nsChromeModule
+REQUIRES	= xpcom string rdf necko layout raptor content
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsChromeFactory.obj    \

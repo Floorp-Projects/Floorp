@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..
 MODULE=jsurl
+REQUIRES	= xpcom string js dom necko caps widget appshell rdf xpconnect jsconsole raptor
 include <$(DEPTH)/config/config.mak>
 
 MODULE=jsurl
@@ -53,7 +54,7 @@ LLIBS=  \
 OBJS=   \
 	.\$(OBJDIR)\nsJSProtocolHandler.obj	\
 	$(NULL)
-	
+
 CPPSRCS = \
 	nsJSProtocolHandler.cpp	\
 	$(NULL)

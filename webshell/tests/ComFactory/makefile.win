@@ -19,23 +19,9 @@
 
 IGNORE_MANIFEST = 1
 
-#//------------------------------------------------------------------------
-#//
-# New build system where zip dll is build indepenant of java stubs.
-#//
-#//------------------------------------------------------------------------
-MODULE =testcomfactory
-#EXPORTS =               \
-#        $(NULL)
-
-
-#//------------------------------------------------------------------------
-#//
-#// Specify the depth of the current directory relative to the
-#// root of NS
-#//
-#//------------------------------------------------------------------------
 DEPTH= ..\..\..
+REQUIRES=xpcom raptor
+
 
 MAKE_OBJ_TYPE=EXE
 #//------------------------------------------------------------------------
@@ -74,11 +60,6 @@ PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
 LCFLAGS=-DNETSCAPE
 LLIBS= $(DIST)\lib\xpcom.lib
 WIN_LIBS=ole32.lib
-
-LINCS=$(LINCS)  -I. \
-                -I$(PUBLIC)\raptor   \
-                -I$(PUBLIC)\xpcom    \
-                -I$(PUBLIC)\netlib
 
 # clobber and clobber_all will remove the following garbage:
 GARBAGE	= $(GARBAGE) _gen

@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 
-
+REQUIRES=xpcom string raptor htmlparser
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\htmlrobot.exe
 

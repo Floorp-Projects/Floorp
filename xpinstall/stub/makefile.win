@@ -23,6 +23,7 @@
 
 DEPTH=..\..
 
+REQUIRES=string dom appcomps
 MAKE_OBJ_TYPE   = DLL
 LIBRARY_NAME=xpistub
 DLL = .\$(OBJDIR)\xpistub.dll

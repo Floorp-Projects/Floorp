@@ -20,7 +20,9 @@
 #   Travis Bogard <travis@netscape.com>
 
 DEPTH=..\..
-MODULE=docshell_base
+MODULE=docshell
+XPIDL_MODULE=docshell_base
+REQUIRES	= xpcom string caps necko layout dom js uriloader exthandler htmlparser view pref locale webBrowser_core xpconnect timer widget shistory intl plugin gkplugin webshell chardet uconv appcomps xuldoc find nkcache content raptor gfx history
 
 LIBRARY_NAME=basedocshell_s
 

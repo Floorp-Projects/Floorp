@@ -22,7 +22,8 @@
 DEPTH=..\..\..\..
 
 
-MODULE=dom_base
+MODULE=dom
+XPIDL_MODULE=dom_base
 
 XPIDLSRCS =					\
 	.\domstubs.idl				\

@@ -21,8 +21,9 @@
 
 
 DEPTH	= ..\..\..
-include <$(DEPTH)/config/config.mak>
+REQUIRES	= xpcom string rdf necko widget view dom uriloader layout gfx
 MODULE=rdfcat
+include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE=EXE
 

@@ -20,6 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..\..
+MODULE=npnul32
+REQUIRES=java
 include <$(DEPTH)/config/config.mak>
 
 
@@ -29,7 +31,6 @@ RESFILE = npnul32.res
 DEFFILE = npnul32.def
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-MODULE=npnul32 
 
 DEFINES =-D_IMPL_NS_PLUGIN -DWIN32_LEAN_AND_MEAN
 

@@ -21,6 +21,7 @@
 DEPTH=..\..\..\..
 
 MODULE=embedcomponents
+REQUIRES	= string xpcom find txtsvc dom docshell layout widget content gfx
 LIBRARY_NAME=find_s
 
 CPP_OBJS= \

@@ -20,6 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+MODULE=dom
+REQUIRES	= xpcom string js xpconnect widget layout caps timer webBrowser_core xuldoc docshell sidebar plugin gkplugin necko gfx content raptor
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_DOM
@@ -32,7 +34,6 @@ CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
 	   .\$(OBJDIR)\nsScriptNameSpaceManager.obj 
 
 
-MODULE=dom
 LIBRARY_NAME=jsdom
 MODULE_NAME=DOM_components
 

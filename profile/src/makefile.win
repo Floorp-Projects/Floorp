@@ -30,6 +30,8 @@
 #//
 #//------------------------------------------------------------------------
 DEPTH = ..\..
+MODULE		= profile
+REQUIRES = xpcom string raptor uriloader pref necko nsprefm prefmigr dom windowwatcher bookmarks cookie chrome intl docshell webBrowser_core widget rdf uconv
 include <$(DEPTH)\config\config.mak>
 #//------------------------------------------------------------------------
 #//
@@ -37,22 +39,8 @@ include <$(DEPTH)\config\config.mak>
 #//
 #//------------------------------------------------------------------------
 
-MODULE		= profile
 LIBRARY_NAME	= profile
 MODULE_NAME	= nsProfileModule
-
-LINCS = -I$(PUBLIC)/js \
-    -I$(PUBLIC)/profile \
-    -I$(PUBLIC)/pref \
-    -I$(PUBLIC)/prefm \
-    -I$(PUBLIC)/java \
-    -I$(PUBLIC)/ldap \
-    -I$(PUBLIC)/dbm \
-    -I$(PUBLIC)/security \
-    -I$(PUBLIC)/raptor \
-    -I$(PUBLIC)/xpcom \
-        -I$(DEPTH)\include \
-    -I$(PUBLIC)/libreg \
 
 LCFLAGS = -DMOZILLA_CLIENT -DNECKO
 

@@ -27,6 +27,7 @@ LIBRARY_NAME=jsdombase_s
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 LINCS= -I..\build
+REQUIRES	= xpcom string webBrowser_core js widget gfx layout layout_xul content raptor caps docshell xpconnect pref oji necko java locale uriloader sidebar xuldoc timer webshell view uconv shistory plugin gkplugin windowwatcher htmlparser chardet transformiix xmlextras xsl_doc
 
 CPPSRCS =			\
 	nsBarProps.cpp          \

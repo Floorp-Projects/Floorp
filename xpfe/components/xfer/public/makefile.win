@@ -21,7 +21,7 @@
 
 
 
-MODULE=xpfe\components
+MODULE=appcomps
 
 DEPTH=..\..\..\..
 

@@ -29,10 +29,11 @@
 !undef MOZ_STATIC_COMPONENT_LIBS
 
 DEPTH=..\..
+MODULE		= xpinstall
+REQUIRES	= xpcom string jar chrome necko intl locale mozreg js pref appshell widget layout uriloader xpconnect docshell dom appcomps windowwatcher zlib content raptor
 
 include <$(DEPTH)/config/config.mak>
 
-MODULE		= xpinstall
 LIBRARY_NAME	= xpinstal
 MODULE_NAME	= nsSoftwareUpdate
 

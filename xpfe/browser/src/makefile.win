@@ -26,6 +26,7 @@ IGNORE_MANIFEST=1
 MODULE		= mozbrwsr
 LIBRARY_NAME	= mozbrwsr
 MODULE_NAME	= nsBrowserModule
+REQUIRES	= xpcom string webshell necko shistory widget layout docshell appshell dom timer uriloader pref editor appcomps rdf webBrowser_core uconv chardet windowwatcher raptor urlbarhistory content gfx history
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 

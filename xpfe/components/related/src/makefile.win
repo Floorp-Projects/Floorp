@@ -20,7 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=appcomps
+MODULE=related
+REQUIRES	= xpcom string rdf necko uconv pref
 include <$(DEPTH)/config/config.mak>
 
 CPP_OBJS=                               \

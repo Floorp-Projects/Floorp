@@ -20,6 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..
+MODULE		= apprunner
+REQUIRES	= xpcom string webBrowser_core widget dom necko pref appshell layout chrome rdf xpinstall xpicleanup uriloader editor view windowwatcher embed_base embedcomponents mpfilelocprovider mozbrwsr appcomps docshell xremoteservice raptor gfx intl profile xpconnect
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
@@ -54,30 +56,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsStaticComponents.obj     \
 !endif
  $(NULL)
-
-LINCS=-I$(PUBLIC)\raptor                \
-      -I$(PUBLIC)\xpcom                 \
-      -I$(PUBLIC)\base                  \
-      -I$(PUBLIC)\necko                 \
-      -I$(PUBLIC)\pref                  \
-      -I$(PUBLIC)\js                    \
-      -I$(PUBLIC)\dom                   \
-      -I$(PUBLIC)\pref                  \
-      -I$(PUBLIC)\profile               \
-      -I$(PUBLIC)\rdf                   \
-      -I$(PUBLIC)\editor                \
-      -I$(PUBLIC)\caps                  \
-      -I$(PUBLIC)\plugin                \
-      -I$(PUBLIC)\java                  \
-      -I$(PUBLIC)\uconv                 \
-      -I$(PUBLIC)\strres                \
-      -I$(PUBLIC)\locale                \
-      -I$(PUBLIC)\lwbrk                 \
-      -I$(PUBLIC)\unicharutil           \
-      -I$(PUBLIC)\intl                  \
-      -I$(PUBLIC)\xpfe\components       \
-      -I$(PUBLIC)\oji                   \
-      $(NULL)
 
 MAKE_OBJ_TYPE = EXE
 PROGRAM = .\$(OBJDIR)\mozilla.exe

@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 MODULE=exthandler
-
+REQUIRES=xpcom string uriloader helperAppDlg dom mimetype necko rdf
 LIBRARY_NAME=exthandlerwin_s
 
 CPP_OBJS=\

@@ -25,6 +25,7 @@ LCFLAGS=-DUSE_XPIDL_INTERFACES -D_IMPL_NS_RDF
 
 MODULE=rdfutil
 LIBRARY_NAME=rdfutil_s
+REQUIRES	= xpcom string rdf
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsRDFResource.obj             \

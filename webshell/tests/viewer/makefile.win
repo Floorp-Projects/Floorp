@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+REQUIRES		= xpcom string webshell widget layout dom webBrowser_core docshell util uriloader locale necko htmlparser view timer pref intl editor cookie xpconnect gfx content
 
 include <$(DEPTH)/config/config.mak>
 

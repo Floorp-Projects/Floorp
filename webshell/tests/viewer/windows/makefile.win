@@ -20,11 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\.. 
-
+REQUIRES=xpcom string dom accessibility widget gfx
 LIBRARY_NAME=raptornativewidgets_s 
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=raptor 
 
 CPPSRCS= \
 	nsButton.cpp         \
@@ -43,13 +42,9 @@ OBJS =                                      \
 	$(NULL)
 
 
-LINCS= -I$(PUBLIC)\xpcom  \
-       -I$(PUBLIC)\raptor \
-       -I$(PUBLIC)\widget	    \
-       -I..\..\..\..\widget\src\windows	    \
+LINCS=       -I..\..\..\..\widget\src\windows	    \
        -I..\..\..\..\widget\src\xpwidgets	    \
-       -I$(PUBLIC)\uconv
-
+		$(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \

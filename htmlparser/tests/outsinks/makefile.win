@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..
 
+REQUIRES	= xpcom string htmlparser necko layout dom content
 
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\TestOutput.exe

@@ -21,10 +21,10 @@
 
 DEPTH=..\..
 
+MODULE=dom 
 include <$(DEPTH)\config\config.mak>
 
 DIRS=idl coreEvents base
-MODULE=dom 
 
 XPIDLSRCS = \
 	.\nsIScriptContextOwner.idl \

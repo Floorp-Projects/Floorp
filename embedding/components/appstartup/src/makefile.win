@@ -21,6 +21,7 @@
 DEPTH=..\..\..\..
 
 MODULE=embedcomponents
+REQUIRES	= xpcom string
 LIBRARY_NAME=appstartupnotifier_s
 
 EXPORTS = \
