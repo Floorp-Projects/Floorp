@@ -3,8 +3,8 @@
 # HTMLPopUp::None.pm - the implementation of the header and link
 # command which will be used if no popup menus are desired.
 
-# $Revision: 1.7 $ 
-# $Date: 2002/05/02 23:15:48 $ 
+# $Revision: 1.8 $ 
+# $Date: 2003/01/19 17:20:08 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/None.pm,v $ 
 # $Name:  $ 
@@ -59,6 +59,8 @@ sub page_header {
   my $self = shift @_;
   my (%args) = @_;
 
+  my $title = $args{'title'} || '';
+
   my ($html_time) = $main::LOCALTIME;
   $html_time =~ s/:[^:]+$//;
 
@@ -75,7 +77,7 @@ $header .=<<EOF;
         <!-- at $main::LOCALTIME -->
 <HEAD>
 	$refresh
-        <TITLE>$args{'title'}</TITLE>
+        <TITLE>$title</TITLE>
         </HEAD>
         <BODY TEXT="#000000" BGCOLOR="#ffffff">
 
@@ -84,7 +86,7 @@ $header .=<<EOF;
 <TR><TD>
    <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2>
       <TR><TD VALIGN=TOP ALIGN=CENTER NOWRAP>
-           <FONT SIZE=\"+3\"><B><NOBR>$args{'title'}</NOBR></B></FONT>
+           <FONT SIZE=\"+3\"><B><NOBR>$title</NOBR></B></FONT>
       </TD></TR>
       <TR><TD VALIGN=TOP ALIGN=CENTER>
            <B>Created at: $html_time</B>
