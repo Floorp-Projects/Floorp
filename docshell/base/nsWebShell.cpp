@@ -23,6 +23,7 @@
 
 #include "nsDocShell.h"
 #include "nsIWebShell.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
@@ -2715,14 +2716,11 @@ nsWebShell::OnOverLink(nsIContent* aContent,
     mOverURL = aURLSpec;
     mOverTarget = aTargetSpec;
 
-    // Get the browser window and setStatus
-    nsIBrowserWindow *browserWindow;
 
-    browserWindow = GetBrowserWindow();
-    if (nsnull != browserWindow) {
-      browserWindow->SetStatus(aURLSpec);
-      NS_RELEASE(browserWindow);
-    }
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
+
+    if (browserChrome)
+      browserChrome->SetJSStatus(aURLSpec);
   }
   return NS_OK;
 }
