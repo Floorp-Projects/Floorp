@@ -403,7 +403,7 @@ function loadCalendarEventDialog()
     // handle attendees
     var attendeeList = event.getAttendees({});
     for (var i = 0; i < attendeeList.length; i++) {
-        attendee = attendeeList[i];
+        var attendee = attendeeList[i];
         addAttendee(attendee.id);
     }
 
@@ -1831,9 +1831,9 @@ function onInviteeAdd()
 
 function addAttendee(email)
 {
-    treeItem = document.createElement("treeitem");
-    treeRow = document.createElement("treerow");
-    treeCell = document.createElement("treecell");
+    var treeItem = document.createElement("treeitem");
+    var treeRow = document.createElement("treerow");
+    var treeCell = document.createElement("treecell");
     treeCell.setAttribute("label", email);
     treeItem.appendChild(treeRow);
     treeRow.appendChild(treeCell);
