@@ -22,6 +22,7 @@
 #include "mkselect.h"
 #include "mktcp.h"
 #include "mkgeturl.h"
+#include <signal.h>
 
 #ifdef MOZILLA_CLIENT
 
