@@ -37,8 +37,8 @@ function objRecurse()
    * Causes a stack overflow crash in debug builds of both the browser
    * and the shell. In the release builds this is safely caught by the
    * "too much recursion" mechanism. If I remove the 'new' from the code below
-   * this is safely caught in both debug and release builds. The 'new' causes
-   * a lookup for the Constructor name and seems to (at least) double the number
+   * this is safely caught in both debug and release builds. The 'new' causes a
+   * lookup for the Constructor name and seems to (at least) double the number
    * of items on the C stack for the given interpLevel depth.
    */
   return new objRecurse();
