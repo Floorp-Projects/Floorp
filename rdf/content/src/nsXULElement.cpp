@@ -2815,7 +2815,8 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
         GetTagName(tagName);
         if (aEvent->message == NS_MENU_ACTION || aEvent->message == NS_MENU_CREATE ||
             aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
-            aEvent->message == NS_FORM_CHANGE || 
+            aEvent->message == NS_FORM_CHANGE || aEvent->message == NS_DRAGDROP_ENTER ||
+            aEvent->message == NS_DRAGDROP_EXIT ||
             tagName == "menu" || tagName == "menuitem" ||
             tagName == "menubar" || tagName == "key" || tagName == "keyset") {
             nsCOMPtr<nsIEventListenerManager> listenerManager;
