@@ -1858,6 +1858,8 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
 
     nsresult rv;
     nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+    if (NS_FAILED(rv))
+      return rv;
 
     // Get the documment URI for the referrer.
     nsCOMPtr<nsIURI> documentURI;
