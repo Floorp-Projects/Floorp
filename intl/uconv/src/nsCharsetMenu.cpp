@@ -115,7 +115,7 @@ public:
   {
     if (!uri) return NS_ERROR_NULL_POINTER;
 
-    *uri = nsXPIDLCString::Copy("rdf:window-mediator");
+    *uri = nsXPIDLCString::Copy("rdf:charset-menu");
     if (!(*uri)) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
@@ -376,7 +376,7 @@ void nsCharsetMenu::InitInfoArray(void)
 void nsCharsetMenu::DeleteInfoArray(void)
 {
   for (int i = 0; i < mInfoSize; i++) delete mInfoArray[i];
-  if (mInfoArray != NULL) delete mInfoArray;
+  if (mInfoArray != NULL) delete [] mInfoArray;
 }
 
 void nsCharsetMenu::AddToInfoArray(CharsetInfo *** aArray, 
@@ -398,6 +398,7 @@ void nsCharsetMenu::AddToInfoArray(CharsetInfo *** aArray,
     *aCapacity *= 2;
     CharsetInfo ** newArray = new CharsetInfo * [*aCapacity];
     for (i = 0; i < *aSize; i++) newArray[i] = (*aArray)[i];
+    delete [] *aArray;
     *aArray = newArray;
   }
 
