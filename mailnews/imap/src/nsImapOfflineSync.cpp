@@ -929,8 +929,7 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
             return inbox->GetNewMessages(m_window, this);
         }
       }
-      else
-        return ProcessNextOperation(); // recurse and do next server.
+      return ProcessNextOperation(); // recurse and do next server.
     }
     else
     {
