@@ -27,7 +27,7 @@ sub Help {
     return {
             '' => 'A karma tracker. If you have authenticated (using the \'auth\' command) then it will also keep track of your own setting of people\'s karma, as well as the total of everyone\'s settings.',
             '++' => 'Increase someone\'s karma. Syntax: victim++',
-            '--' => 'Decrease someone\'s karma. Syntax: victim++',
+            '--' => 'Decrease someone\'s karma. Syntax: victim--',
             'rank' => 'Find someone\'s karma level. Omit the victim\'s name to get a complete listing of everyone\'s karma (long). Syntax: \'rank victim\' or just \'rank\'',
     };
 }
