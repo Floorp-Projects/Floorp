@@ -80,6 +80,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
+#include "nsIBrowserWindow.h"
 
 #ifdef VIEWER_PLUGINS
 #include "nsPluginsCID.h"
@@ -115,6 +116,7 @@ static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
+static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 
 #ifdef VIEWER_PLUGINS
@@ -123,6 +125,7 @@ static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 
 // IID's
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
+static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
@@ -1269,43 +1272,13 @@ static void DumpRLValues(void* pdata, RL_Window win)
    }
 }
 
+extern "C" void NS_SetupRegistry();
+
 nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **argv)
 {
-#ifdef XP_PC
-  PL_InitializeEventsLib("");
-#endif
-
+  NS_SetupRegistry();
+  
   gWindows = new nsVoidArray();
-
-  NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCHScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCCheckButtonIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCChildIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCViewManagerCID, VIEW_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kWebShellCID, WEB_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
-
-#ifdef VIEWER_PLUGINS
-  NSRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
-#endif
 
   nsresult res;
   res=NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
@@ -1352,7 +1325,20 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     return(nsnull);
   }
 #endif
+
+  // Create a browser window and have it load the default url
+  nsIBrowserWindow* bw = nsnull;
+  res = NSRepository::CreateInstance(kBrowserWindowCID, nsnull,
+                                     kIBrowserWindowIID,
+                                     (void**) &bw);
+  bw->Init(gAppShell, nsRect(0, 0, 620, 400), ~0);
+  bw->Show();
+  {
+    char* start = startURL ? startURL : GetDefaultStartURL();
+    bw->LoadURL(start);
+  }
   
+#if 0
     // Create a top level window for the WebWidget
   WindowData* wd = CreateTopLevel("Raptor HTML Viewer", 620, 400);
   *aMainWindow = wd->windowWidget;
@@ -1472,8 +1458,9 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
       exit(0);
     }
   }
+#endif
 
-  return(dl);
+  return(nsnull);
 }
 
 void nsViewer::AfterDispatch()
