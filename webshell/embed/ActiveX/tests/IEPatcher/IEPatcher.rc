@@ -26,25 +26,34 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_IEPATCHER_DIALOG DIALOGEX 0, 0, 277, 202
+IDD_IEPATCHER_DIALOG DIALOGEX 0, 0, 323, 202
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "IE to Mozilla Patcher"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Source filename:",IDC_STATIC,16,7,54,8
-    EDITTEXT        IDC_FILENAME,16,18,230,15,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_PICKSOURCE,250,18,15,15
-    GROUPBOX        "",IDC_STATIC,7,40,263,51
-    CONTROL         "&Patch file",IDC_PATCHFILE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,15,40,47,10
-    LTEXT           "Destination filename:",IDC_STATIC,16,54,119,8
-    EDITTEXT        IDC_DESTINATION_FILENAME,16,65,230,15,ES_AUTOHSCROLL | 
-                    WS_DISABLED
-    PUSHBUTTON      "...",IDC_PICKDESTINATION,250,65,15,15,WS_DISABLED
-    PUSHBUTTON      "&Scan",IDC_SCAN,7,98,50,14
-    LISTBOX         IDC_PROGRESS,7,119,263,76,LBS_NOINTEGRALHEIGHT | 
-                    LBS_NOSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Scan...",IDC_SCAN,266,6,50,14
+    CONTROL         "List1",IDC_FILELIST,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,7,59,309,136
+    PUSHBUTTON      "&Patch",IDC_PATCH,266,26,50,14
+    LTEXT           "Add files to the source list by selecting ""Scan"". Files containing references to Internet Explorer or Mozilla will be highlighted.",
+                    IDC_STATIC,7,6,257,18
+    LTEXT           "Choose ""Patch"" to apply the Mozilla patch to any selected files. The patching process does not overwrite the original file but creates a new file prepended with ""moz_"" which you may test at your leisure.",
+                    IDC_STATIC,7,30,257,26
+END
+
+IDD_SCANFORFILES DIALOG DISCARDABLE  0, 0, 227, 46
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Scan for files"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Type a wildcard pattern or filename.",IDC_STATIC,7,7,
+                    155,12
+    EDITTEXT        IDC_FILEPATTERN,7,20,145,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_SELECTFILE,150,20,12,13
+    DEFPUSHBUTTON   "OK",IDOK,170,5,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,25,50,14
 END
 
 
@@ -102,13 +111,33 @@ BEGIN
     IDD_IEPATCHER_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 270
-        TOPMARGIN, 7
+        RIGHTMARGIN, 316
+        TOPMARGIN, 6
         BOTTOMMARGIN, 195
+    END
+
+    IDD_SCANFORFILES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 220
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 39
     END
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_CONTAINSIE          ICON    DISCARDABLE     "res\\containsie.ico"
+IDI_DOESNTCONTAINIE     ICON    DISCARDABLE     "res\\doesntcontainie.ico"
+IDI_CONTAINSMOZILLA     ICON    DISCARDABLE     "res\\containsmozilla.ico"
+IDI_UNKNOWNSTATUS       ICON    DISCARDABLE     "res\\unknownstatus.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -14,6 +14,8 @@
 
 #include "resource.h"		// main symbols
 
+#include "IEPatcherDlg.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CIEPatcherApp:
 // See IEPatcher.cpp for the implementation of this class
@@ -23,6 +25,8 @@ class CIEPatcherApp : public CWinApp
 {
 public:
 	CIEPatcherApp();
+
+	CIEPatcherDlg *m_pIEPatcherDlg;
 
 // Overrides
 	// ClassWizard generated virtual function overrides

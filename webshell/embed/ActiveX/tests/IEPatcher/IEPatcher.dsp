@@ -102,10 +102,29 @@ SOURCE=.\IEPatcher.odl
 # Begin Source File
 
 SOURCE=.\IEPatcher.rc
+
+!IF  "$(CFG)" == "IEPatcher - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "IEPatcher - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=.\IEPatcherDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScanForFilesDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScannerThread.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScannerWnd.cpp
 # End Source File
 # Begin Source File
 
@@ -134,6 +153,18 @@ SOURCE=.\Resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ScanForFilesDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScannerThread.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScannerWnd.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.h
 # End Source File
 # End Group
@@ -142,11 +173,27 @@ SOURCE=.\StdAfx.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\res\containsie.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\containsmozilla.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\doesntcontainie.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\IEPatcher.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\res\IEPatcher.rc2
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\unknownstatus.ico
 # End Source File
 # End Group
 # Begin Source File
