@@ -234,6 +234,8 @@ bin/components/nsXmlRpcClient.js
 bin/components/libxremote_client.so
 bin/components/libxremoteservice.so
 bin/components/xremoteservice.xpt
+bin/components/libremoteservice.so
+bin/components/toolkitremote.xpt
 bin/components/embed_base.xpt
 bin/components/commandhandler.xpt
 bin/components/webbrowserpersist.xpt
