@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/11/29 20:53:56 $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/11/29 21:11:40 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -36,6 +36,20 @@
 
 
 package TinderConfig;
+
+
+
+# How do we run the unzip command?
+
+@GZIP = ("/usr/local/bin/gzip",);
+
+@GUNZIP = ("/usr/local/bin/gzip", "--uncompress", "--to-stdout",);
+
+
+# The GNU UUDECODE will use these arugments, Solaris uudecode is
+# different. 
+
+@UUDECODE = ("/usr/local/bin/uudecode", "-o",);
 
 
 # The url to the tinderbox server binary directory

@@ -219,7 +219,7 @@ pwd=`/bin/pwd`
 
 /bin/echo "  # Hard code various executable paths into the source for security reasons." >> $config_script
 
-for cmd in perl gzip uudecode
+for cmd in perl
 do
 	full_cmd=`which $cmd 2> /dev/null `
 	if [ $? -ne 0 ]; then
