@@ -651,7 +651,7 @@ static int
 ldaptls_setup( LDAP *ld )
 {
 
-    int				rc = LDAP_LOCAL_ERROR;;
+    int				rc = LDAP_LOCAL_ERROR;
     LDAPSSLSessionInfo		*ssip;
     PRLDAPSessionInfo		sei;
     
