@@ -30,7 +30,6 @@ MODULE		= appcomps
 LIBRARY_NAME	= bookmarks_s
 
 REQUIRES	= xpcom \
-	          xpcom_obsolete \
 		  string \
 		  rdf \
 		  appshell \
