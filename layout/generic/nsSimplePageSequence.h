@@ -59,5 +59,9 @@ protected:
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
 };
 
+/* prototypes */
+nsresult
+NS_NewSimplePageSequenceFrame(nsIFrame*& aResult);
+
 #endif /* nsSimplePageSequence_h___ */
 
