@@ -2,6 +2,8 @@
 var srDest;
 var err;
 var communicatorFolder;
+var fileComponentRegStr;
+var fileComponentReg;
 
 srDest = $SpaceRequired$:bin;
 err    = startInstall("Mozilla Seamonkey", "", "$Version$"); 
@@ -23,8 +25,9 @@ if(verifyDiskSpace(communicatorFolder, srDest) == true)
   // check return value
   if(!checkError(err))
   {
-    var fileComponentReg = communicatorFolder + "component.reg";
-    err = fileDelete(fileComponentReg);
+    fileComponentRegStr = communicatorFolder + "\\component.reg";
+    fileComponentReg    = getFolder("file:///", fileComponentRegStr);
+    err                 = fileDelete(fileComponentReg);
     logComment("fileDelete() returned: " + err);
 
     err = finalizeInstall(); 
