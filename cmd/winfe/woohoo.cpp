@@ -1162,7 +1162,7 @@ void WFE_LJ_StartupJava(void)
         jvmMgr->StartupJVM();
         jvmMgr->Release();
     }
-#else
+#elif defined(JAVA)
     LJ_StartupJava();
 #endif
 }
@@ -1185,7 +1185,7 @@ void WFE_LJ_StartDebugger(void)
         }
         jvmMgr->Release();
     }
-#else
+#elif defined(JAVA)
     LJ_StartDebugger(LJDebugPort_SharedMemory);
 #endif
 }
