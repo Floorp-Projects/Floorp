@@ -43,9 +43,6 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 
-/* Turn this on to disable Resize queueing */
-//#define DRAW_EVERYTHING
-
 PRBool            nsWindow::mResizeQueueInited = PR_FALSE;
 DamageQueueEntry  *nsWindow::mResizeQueue = nsnull;
 PtWorkProcId_t    *nsWindow::mResizeProcID = nsnull;
@@ -231,7 +228,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
   dim.w = mBounds.width;
   dim.h = mBounds.height;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative - bounds = (%lu,%lu,%lu,%lu)\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative - bounds = (%d,%d,%d,%d)\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height ));
 
 #ifdef DEBUG
   switch( mWindowType )
@@ -329,6 +326,11 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     PtSetArg( &arg[arg_count++], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
     PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, 0xFFFFFFFF );
 
+    if( mWindowType == eWindowType_popup )
+    {
+      PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DISJOINT, (Pt_HIGHLIGHTED | Pt_DISJOINT | Pt_GETS_FOCUS));
+    }
+
     if( parentWidget )
 	{
       mWidget = PtCreateWidget( PtWindow, parentWidget, arg_count, arg );
@@ -356,7 +358,8 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
       if( mWindowType == eWindowType_popup )
 	  {
         PtSetArg( &arg[arg_count++], RDC_DRAW_FUNC, RawDrawFunc, 0 );
-        PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DISJOINT, (Pt_HIGHLIGHTED | Pt_DISJOINT));
+        PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DISJOINT, (Pt_HIGHLIGHTED | Pt_DISJOINT | Pt_GETS_FOCUS));
+        PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_MANAGED_FLAGS, Ph_WM_FFRONT, Ph_WM_FFRONT );
         mClientWidget = PtCreateWidget( PtRawDrawContainer, mWidget, arg_count, arg );
 	  }
 	  else
@@ -386,16 +389,14 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     if( mClientWidget )
       SetInstance( mClientWidget, this );
  
-    if  ( (mWindowType == eWindowType_popup) ||
-	      (mWindowType == eWindowType_child) )
- 
     if (mWindowType == eWindowType_child)
     {
       PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       PtAddEventHandler( mWidget,
         Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
         Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY
-//		| Ph_EV_WM | Ph_EV_EXPOSE
+//		| Ph_EV_WM
+//      | Ph_EV_EXPOSE
         , RawEventHandler, this );
 
       PtArg_t arg;
@@ -412,7 +413,8 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
       PtAddEventHandler( mClientWidget,
         Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
         Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY
-//		| Ph_EV_WM | Ph_EV_EXPOSE
+//		| Ph_EV_WM
+//      | Ph_EV_EXPOSE
         , RawEventHandler, this );
 
       PtArg_t arg;
@@ -427,7 +429,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
       PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       PtAddCallback(mWidget, Pt_CB_WINDOW_CLOSING, WindowCloseHandler, this );	
 	}
-    else 
+    else if ( !parentWidget )
     {
       PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       PtAddCallback(mWidget, Pt_CB_WINDOW_CLOSING, WindowCloseHandler, this ); 
@@ -652,7 +654,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
   nsresult res = NS_ERROR_FAILURE;
   const char * title = nsAutoCString(aTitle);
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetTitle to <%s>\n", title));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetTitle to <%s> mWidget=<%p>\n", title, mWidget));
 
   if( mWidget )
   {
@@ -660,7 +662,9 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 
     PtSetArg( &arg, Pt_ARG_WINDOW_TITLE, title, 0 );
     if( PtSetResources( mWidget, 1, &arg ) == 0 )
+    {
       res = NS_OK;
+    }
   }
   else
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetTitle - mWidget is NULL!\n"));
@@ -736,13 +740,14 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   PtArg_t  arg;
   PhDim_t  dim = { aWidth, aHeight };
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize this=<%p> w/h=(%i,%i) Repaint=<%i)\n", this, aWidth, aHeight, aRepaint ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize this=<%p> w/h=(%i,%i) Repaint=<%i> mWindowType=<%d>\n", this, aWidth, aHeight, aRepaint, mWindowType ));
 
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
 
   if( mWidget )
   {
+    /* This breaks the dialog size for Viewer */
     if (mWindowType == eWindowType_dialog)
     {
       dim.w -= mFrameLeft + mFrameRight;
@@ -812,11 +817,21 @@ NS_METHOD nsWindow::SetMenuBar( nsIMenuBar * aMenuBar )
 
 int nsWindow::WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 {
-	PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::WindowCloseHandler (%p)\n", data));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::WindowCloseHandler this=(%p)\n", data));
 
-  if( data )
-    ((nsWindow *) data)->Destroy();
+  nsWindow * pWin = (nsWindow*) data;
 
+#if 1
+  /* I had to add this check for to not do this for pop-up but I wonder */
+  /* is this is valid at all!   I really don't think so from looking some more... */  
+  /* 11/15/99 */
+  if ( pWin->mWindowType != eWindowType_popup )
+  {
+    if ( pWin )
+      pWin->Destroy();
+  }
+#endif
+  
   return Pt_CONTINUE;
 }
 
@@ -896,7 +911,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   nsWindow * pWin = (nsWindow*) GetInstance( pWidget );
   nsresult   result;
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for mWidget=<%p> this=<%p>\n", pWidget,pWin ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for mWidget=<%p> this=<%p> this->mContext=<%p>\n", pWidget, pWin, pWin->mContext));
   //printf("nsWindow::RawDrawFunc for %p mWidget=<%p>\n", pWidget,pWin);
   
   if ( !pWin )
@@ -905,17 +920,15 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     return;
   }
 
-#ifndef DRAW_EVERYTHING
-// This prevents redraws while any window is resizing, ie there are
-//   windows in the resize queue
-
-  if ( /*pWin->mCreateHold || pWin->mHold ||*/ pWin->mIsResizing )
+#if 1
+  // This prevents redraws while any window is resizing, ie there are
+  //   windows in the resize queue
+  if ( pWin->mIsResizing )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted due to hold-off!\n"));
     //printf("nsWindow::RawDrawFunc aborted due to Resize holdoff\n");
     return;
   }
-
 #endif
 
   if ( pWin->mEventCallback )
@@ -936,21 +949,25 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset=<%d,%d>\n", offset
     offset.y += area.pos.y;  
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area+offset=<%d,%d,%d,%d>\n", area.pos.x, area.pos.y, area.size.w, area.size.h));
 
-    // Convert damage rect to widget's coordinates...
 #if 1
 {
+  /* Print out the Photon Damage tiles */
   PhTile_t *top = damage;
+  int index=0;
   do {
     PhRect_t   rect = top->rect;    
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect=<%d,%d,%d,%d> next=<%p>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, top->next));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc photon damage %d rect=<%d,%d,%d,%d> next=<%p>\n", index++,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, top->next));
     top=top->next;
   } while (top);
 }
 #endif
 
+
 #if 0
+    /* Use the first photon damage tile which is supposed to be a bounding box */
     rect = damage->rect;
 #else
+    /* Create our own bounding box of all the photon damage */
     PhTile_t *top = damage->next;
     rect = top->rect;	
     top=top->next;
@@ -965,10 +982,12 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area+offset=<%d,%d,%d,%d>
 	}
 #endif
 
+    // Convert damage rect to widget's coordinates...
     rect.ul.x -= offset.x;
     rect.ul.y -= offset.y;
     rect.lr.x -= offset.x;
     rect.lr.y -= offset.y;
+
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect + offset <%d,%d,%d,%d> next=<%p>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y, damage->next));
 
     // If the damage tile is not within our bounds, do nothing
@@ -1011,18 +1030,24 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect + offset <%d,
 	pWin->mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
 
     pev.rect = new nsRect(nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
-
+	
     // call the event callback
     if (pWin->mEventCallback) 
     {
+      PRBool aClipState;
       pev.renderingContext = nsnull;
       pev.renderingContext = pWin->GetRenderingContext();
+
       if (pev.renderingContext)
       {
+        pev.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *(pWin->mUpdateArea)),
+                                            nsClipCombine_kReplace, aClipState);
+
 #if 1
+/* Not doing this causes many extra rips */
         if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
         {
-          PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "nsWindow::RawDrawFunc Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
           result = pWin->DispatchWindowEvent(&pev);
         }
  	    else
@@ -1035,7 +1060,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect + offset <%d,
 		  nsDmg.y+nsDmg.height-1};
 		  
         PgSetClipping( 1, &r );
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
         result = pWin->DispatchWindowEvent(&pev);
 #endif	  
 	    NS_RELEASE(pev.renderingContext);
@@ -1044,10 +1069,10 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect + offset <%d,
   }
   else
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  aborted due to no event callback!\n"));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted due to no event callback!\n"));
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  End of RawDrawFunc\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  End of RawDrawFunc\n"));
 }
 
 
@@ -1348,10 +1373,8 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
     rect.width = extents->lr.x - rect.x + 1;
     rect.height = extents->lr.y - rect.y + 1;
 
-#ifndef DRAW_EVERYTHING
     /* This enables the resize holdoff */
     someWindow->ResizeHoldOff();  /* commenting this out sometimes makes pref. dlg draw */
-#endif
 
   	someWindow->OnResize( rect );
   }
@@ -1554,8 +1577,6 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-#if 1
-
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move (%p) to (%ld,%ld) mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n", this, aX, aY, mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
   //printf ("kedl: nsWindow::Move (%p) to (%ld,%ld) mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n", this, aX, aY, mClipChildren, mClipSiblings, mBorderStyle, mWindowType);
 
@@ -1593,28 +1614,11 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
        (mWindowType == eWindowType_popup) ||
 	   (mWindowType == eWindowType_toplevel) )
   {
-    printf("HACK HACK: forcing bounds to 0,0 for toplevel window\n");
-    mBounds.x = mBounds.y = 0;
-  }
-
-  return res;
-#else
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move (%p) to (%ld,%ld) mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n", this, aX, aY, mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
-
-  /* Call my base class */
-  nsresult res = nsWidget::Move(aX, aY);
-
-  /* If I am a top-level window my origin shoudl always be 0,0 */
-  if ( (mWindowType == eWindowType_dialog) ||
-       (mWindowType == eWindowType_popup) ||
-	   (mWindowType == eWindowType_toplevel) )
-  {
     //printf("HACK HACK: forcing bounds to 0,0 for toplevel window\n");
     mBounds.x = mBounds.y = 0;
   }
 
   return res;
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -1675,4 +1679,3 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
   return NS_OK;
 #endif
 }
-

@@ -77,5 +77,5 @@ PhDrawContext_t *nsToolkit::GetDefaultPhotonDrawContext()
     abort();  
   }
 
-  return mDefaultPhotonDrawContext;
+  return nsToolkit::mDefaultPhotonDrawContext;
 }

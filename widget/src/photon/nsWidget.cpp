@@ -721,12 +721,6 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   if (!PtWidgetIsRealized(mWidget))
   {
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 - mWidget is not realized\n"));
-//    return NS_ERROR_FAILURE;
-#if 0
-/* HACK! */
-      mUpdateArea->SetTo(mBounds.x, mBounds.y, mBounds.width, mBounds.height );
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 - mWidget is not realized setting mUpdateArea=<%d,%d,%d,%d>\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height));
-#endif
       return NS_OK;
   }
 
@@ -734,12 +728,15 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   PtWidget_t *aWidget = GetNativeData(NS_NATIVE_WIDGET);
   long widgetFlags = PtWidgetFlags(aWidget);
 
-  if (Pt_DISJOINT && widgetFlags)
+//  if (Pt_DISJOINT && widgetFlags)
   {
      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 - This is a disjoint widget so ignore parent clipping\n"));
 
-     if (PtWidgetIsRealized(mWidget))
+     //if (PtWidgetIsRealized(mWidget))
      {
+         /* Damage has to be relative Widget coords */
+         mUpdateArea->SetTo( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
+
         if (aIsSynchronous)
         {
           UpdateWidgetDamage();
@@ -750,6 +747,8 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
         }
      }
   }    
+/* HACK! */
+#if 0
   else if ( GetParentClippedArea(rect) == PR_TRUE)
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Clipped rect=(%i,%i,%i,%i)\n", rect.x, rect.y, rect.width, rect.height  ));
@@ -779,6 +778,7 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   {
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Skipping because GetParentClippedArea(rect returned empty rect\n"));
   }
+#endif
 
   return NS_OK;
 }
@@ -1905,6 +1905,7 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 	    PhWindowEvent_t* wmev = (PhWindowEvent_t*) PhGetData( event );
    	    printf("nsWidget::HandleEvent Ph_EV_WM  this=<%p> subtype=<%d> vent_f=<%d>\n",
 		  this, event->subtype, wmev->event_f);
+/*
         switch( wmev->event_f )
         {
           case Ph_WM_FOCUS:
@@ -1914,11 +1915,23 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
               result = DispatchStandardEvent(NS_LOSTFOCUS);
             break;
         }
+*/
        }
 	    break;
 
       case Ph_EV_EXPOSE:
-   	    printf("nsWidget::HandleEvent Ph_EV_EXPOSE this=<%p> subtype=<%d>\n", this, event->subtype );
+   	    printf("nsWidget::HandleEvent Ph_EV_EXPOSE this=<%p> subtype=<%d> flags=<%d> num_rects=<%d>\n", 
+		  this, event->subtype, event->flags, event->num_rects );
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::HandleEvent Ph_EV_EXPOSE this=<%p> subtype=<%d> flags=<%d> num_rects=<%d>\n", 
+		  this, event->subtype, event->flags, event->num_rects ));
+		PhRect_t *rects = PhGetRects(event);
+		unsigned short rect_count = event->num_rects;
+		while(rect_count--)
+		{
+			printf("\t rect %d (%d,%d) ->  (%d,%d)\n", rect_count,
+			  rects->ul.x, rects->ul.y, rects->lr.x, rects->lr.y);
+			rects++;
+		}
         result = PR_TRUE;
       	break;
     }
@@ -2044,12 +2057,14 @@ void nsWidget::UpdateWidgetDamage()
 	
     RemoveDamagedWidget( mWidget );
 
+
     if (mUpdateArea->IsEmpty())
     {
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged skipping update because mUpdateArea IsEmpty() this=<%p>\n", this));
       return;
     }
-	
+
+
   PhRect_t         extent;
   PhArea_t         area;
   nsRegionRectSet *regionRectSet = nsnull;
@@ -2303,13 +2318,14 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
 
   if ( PtIsFocused(widget) != 2)
   {
+     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget)));
      printf("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
      return Pt_CONTINUE;
   }
   
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::LostFocusCallback pWidget=<%p>\n", pWidget));
 
-  pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
+//  pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
 
   return Pt_CONTINUE;
 }
