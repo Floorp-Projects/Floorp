@@ -96,6 +96,8 @@
 #define NS_APP_USER_MIMETYPES_50_FILE           "UMimTyp"
 
 #define NS_APP_BOOKMARKS_50_FILE                "BMarks"
+
+#define NS_APP_DOWNLOADS_50_FILE                "DLoads"
          
 #define NS_APP_SEARCH_50_FILE                   "SrchF"
          
