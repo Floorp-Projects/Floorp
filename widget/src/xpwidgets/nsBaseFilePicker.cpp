@@ -73,7 +73,6 @@ nsBaseFilePicker::~nsBaseFilePicker()
 
 }
 
-/* XXX aaaarrrrrrgh! */
 nsIWidget *nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw)
 {
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(dw);

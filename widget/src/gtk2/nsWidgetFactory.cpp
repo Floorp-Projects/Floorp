@@ -48,6 +48,7 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsClipboard.h"
 #include "nsDragService.h"
+#include "nsFilePicker.h"
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
 
@@ -62,6 +63,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 
 static const nsModuleComponentInfo components[] =
@@ -82,6 +84,10 @@ static const nsModuleComponentInfo components[] =
       NS_LOOKANDFEEL_CID,
       "@mozilla.org/widget/lookandfeel;1",
       nsLookAndFeelConstructor },
+    { "Gtk2 File Picker",
+      NS_FILEPICKER_CID,
+      "@mozilla.org/filepicker;1",
+      nsFilePickerConstructor },
     { "Gtk2 Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",

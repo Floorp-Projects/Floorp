@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,16 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
+ * The Original Code is the Mozilla GTK2 File Chooser.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * The Initial Developer of the Original Code is Red Hat, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@netscape.com>
- *   Mike Pinkerton   <pinkerton@netscape.com>
+ *   Christopher Aillon <caillon@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,34 +35,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsBaseFilePicker_h__
-#define nsBaseFilePicker_h__
+#ifndef nsFilePicker_h__
+#define nsFilePicker_h__
 
-#include "nsIFilePicker.h"
-#include "nsIWidget.h"
-#include "nsISimpleEnumerator.h"
+#include <gtk/gtkwidget.h>
 
-class nsBaseFilePicker : public nsIFilePicker
+#include "nsBaseFilePicker.h"
+#include "nsString.h"
+#include "nsVoidArray.h"
+
+class nsIWidget;
+class nsILocalFile;
+class nsISupportsArray;
+
+class nsFilePicker : public nsBaseFilePicker
 {
 public:
-  nsBaseFilePicker(); 
-  virtual ~nsBaseFilePicker();
+  nsFilePicker();
+  virtual ~nsFilePicker();
 
-  NS_IMETHOD Init(nsIDOMWindow *aParent,
-                  const nsAString& aTitle,
-                  PRInt16 aMode);
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD AppendFilters(PRInt32 filterMask);
-  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
-  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
-  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
+  NS_DECL_NSIFILEPICKER
+
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle, PRInt16 aMode);
 
 protected:
 
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                          PRInt16 aMode) = 0;
+  void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 
-  nsIWidget *DOMWindowToWidget(nsIDOMWindow *dw);
+  nsCOMPtr<nsIWidget>    mParentWidget;
+  nsCOMPtr<nsILocalFile> mDisplayDirectory;
+  nsCOMPtr<nsISupportsArray> mFiles;
+
+  PRInt16   mMode;
+  PRInt16   mSelectedType;
+  nsCString mFile;
+  nsString  mTitle;
+  nsString  mDefault;
+  nsString  mDefaultExtension;
+
+  nsCStringArray mFilters;
+  nsCStringArray mFilterNames;
+
+  /* If we don't have GTK2.4, we need to proxy calls on to a XUL filepicker */
+  nsCOMPtr<nsIFilePicker> mXULPicker;
+
+  static nsString mLastUsedUnicodeDirectory;
 };
 
-#endif // nsBaseFilePicker_h__
+#endif
