@@ -102,5 +102,6 @@ function charsetLoadListener (event)
     // weird assertion!
 }
 
-contentArea = window.document.getElementById("appcontent")
-contentArea.addEventListener("load", charsetLoadListener, true);
+contentArea = window.document.getElementById("appcontent");
+if (contentArea)
+  contentArea.addEventListener("load", charsetLoadListener, true);
