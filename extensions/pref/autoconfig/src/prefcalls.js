@@ -208,10 +208,10 @@ function displayError(funcname, message) {
 }
 
 function getenv(name) {
-	
     try {
-        var currentProcess=Components.classes["@mozilla.org/process/util;1"].createInstance(Components.interfaces.nsIProcess);
-        return currentProcess.getEnvironment(name);
+        var environment = Components.classes["@mozilla.org/process/environment;1"].
+            getService(Components.interfaces.nsIEnvironment);
+        return environment.get(name);
     }
     catch(e) {
         displayError("getEnvironment", e);
