@@ -127,6 +127,7 @@ static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsEventQueueServiceImpl, Init);
 
 #include "nsXPCOM.h"
 // ds/nsISupportsPrimitives
@@ -303,7 +304,7 @@ static const nsModuleComponentInfo components[] = {
 #endif
     COMPONENT(OBSERVERSERVICE, nsObserverService::Create),
     COMPONENT(GENERICFACTORY, nsGenericFactory::Create),
-    COMPONENT(EVENTQUEUESERVICE, nsEventQueueServiceImpl::Create),
+    COMPONENT(EVENTQUEUESERVICE, nsEventQueueServiceImplConstructor),
     COMPONENT(EVENTQUEUE, nsEventQueueImpl::Create),
     COMPONENT(THREAD, nsThread::Create),
     COMPONENT(THREADPOOL, nsThreadPool::Create),
@@ -562,12 +563,6 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
         printf("No Persistent Registry Found.\n");        
     }
 #endif
-
-    nsCOMPtr<nsIEventQueueService> eventQService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
-    if ( NS_FAILED(rv) ) return rv;
-
-    rv = eventQService->CreateThreadEventQueue();
-    if ( NS_FAILED(rv) ) return rv;
 
     if ( NS_FAILED(rv) || CheckAndRemoveUpdateFile()) {
         // if we find no persistent registry, we will try to autoregister
