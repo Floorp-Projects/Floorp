@@ -68,6 +68,9 @@ nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
   MOZ_COUNT_DTOR(nsDOMCSSAttributeDeclaration);
 }
 
+NS_IMPL_ADDREF(nsDOMCSSAttributeDeclaration)
+NS_IMPL_RELEASE(nsDOMCSSAttributeDeclaration)
+
 void
 nsDOMCSSAttributeDeclaration::DropReference()
 {

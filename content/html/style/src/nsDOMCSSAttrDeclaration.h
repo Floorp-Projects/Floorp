@@ -55,6 +55,10 @@ public:
   nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent);
   ~nsDOMCSSAttributeDeclaration();
 
+  // impl AddRef/Release; QI is implemented by our parent class
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
   virtual void DropReference();
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.
@@ -68,6 +72,9 @@ public:
 protected:
   virtual nsresult DeclarationChanged();
   
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+
   nsIHTMLContent *mContent;
 };
 
