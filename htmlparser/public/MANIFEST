@@ -10,7 +10,6 @@ nsIParserNode.h
 nsIParserFilter.h
 nsIParser.h
 nsIDTD.h
-nsIExpatTokenizer.h
 nsIElementObserver.h
 nsIParserService.h
 nsHTMLTags.h
