@@ -45,15 +45,6 @@ nsImapMessage::~nsImapMessage(void)
 
 NS_IMPL_ISUPPORTS_INHERITED(nsImapMessage, nsMessage, nsIDBMessage)
 
-NS_IMETHODIMP nsImapMessage::GetMsgFolder(nsIMsgFolder **folder)
-{
-	nsresult rv;
-  rv = nsMessage::GetMsgFolder(folder);
-  if (NS_FAILED(rv))
-		rv = GetFolderFromURI(folder);
-	return rv;
-}
-
 NS_IMETHODIMP nsImapMessage::GetMessageType(PRUint32 *aMessageType)
 {
 	if(!aMessageType)
@@ -61,42 +52,4 @@ NS_IMETHODIMP nsImapMessage::GetMessageType(PRUint32 *aMessageType)
 
 	*aMessageType = nsIMessage::MailMessage;
 	return NS_OK;
-}
-
-nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
-{
-	nsresult rv;
-	nsXPIDLCString uri;
-	nsIRDFResource *resource;
-	if(NS_SUCCEEDED( rv = QueryInterface(NS_GET_IID(nsIRDFResource), (void**)&resource)))
-	{
-		resource->GetValue( getter_Copies(uri) );
-		nsCAutoString messageFolderURIStr;
-		nsMsgKey key;
-		nsParseImapMessageURI(uri, messageFolderURIStr, &key, nsnull);
-		nsCAutoString folderOnly, folderURIStr;
-
-		if (messageFolderURIStr.Find(kImapRootURI) != ((PRInt32)-1))
-		{
-			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kImapRootURI));
-			folderURIStr = kImapRootURI;
-			folderURIStr+= folderOnly;
-			nsIRDFResource *folderResource;
-			const char *folderURI = folderURIStr.GetBuffer();
-
-			NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-			if (NS_SUCCEEDED(rv))   // always check this before proceeding 
-			{
-				rv = rdfService->GetResource(folderURI, &folderResource);
-				if(NS_SUCCEEDED(rv))
-				{
-					rv = NS_SUCCEEDED(folderResource->QueryInterface(NS_GET_IID(nsIMsgFolder), (void**)folder));
-					NS_RELEASE(folderResource);
-				}
-			}
-		}
-
-		NS_RELEASE(resource);
-	}
-	return rv;
 }
