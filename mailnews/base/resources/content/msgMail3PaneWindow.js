@@ -35,6 +35,8 @@ var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
 
 var gFolderTree;
 var gThreadTree;
+var gThreadAndMessagePaneSplitter = null;
+
 var gCurrentLoadingFolderURI;
 var gCurrentLoadingFolderIsThreaded = false;
 var gCurrentLoadingFolderSortID ="";
@@ -355,6 +357,26 @@ function GetThreadTreeFolder()
 {
   var tree = GetThreadTree();
   return tree;
+}
+
+function GetThreadAndMessagePaneSplitter()
+{
+	if(gThreadAndMessagePaneSplitter) return gThreadAndMessagePaneSplitter;
+	var splitter = document.getElementById('gray_horizontal_splitter');
+	gThreadAndMessagePaneSplitter = splitter;
+	return splitter;
+}
+
+function IsThreadAndMessagePaneSplitterCollapsed()
+{
+	var splitter = GetThreadAndMessagePaneSplitter();
+	if(splitter)
+	{
+		var state  = splitter.getAttribute('state');
+		return (state == "collapsed");
+	}
+	else
+		return false;
 }
 
 function FindMessenger()

@@ -347,18 +347,36 @@ function ToggleMessageFlagged(treeItem)
 	messenger.MarkMessageFlagged(tree.database, treeItem, !flagged);
 }
 
-function ThreadPaneSelectionChange(selectedElement)
+//Called when the splitter in between the thread and message panes is clicked.
+function OnClickThreadAndMessagePaneSplitter()
+{
+	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
+	//collapsed is the previous state so we know we are opening.
+	if(collapsed)
+		LoadSelectionIntoMessagePane();	
+}
+
+//Called when selection changes in the thread pane.
+function ThreadPaneSelectionChange()
+{
+	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
+
+	if(!collapsed)
+	{
+		LoadSelectionIntoMessagePane();
+	}
+}
+
+//takes the selection from the thread pane and loads it into the message pane
+function LoadSelectionIntoMessagePane()
 {
 	var tree = GetThreadTree();
 	
 	var selArray = tree.selectedItems;
-	dump('In ThreadPaneSelectionChange().  Num Selected Items = ' + selArray.length);
-	dump('\n');
 	if ( selArray && (selArray.length == 1) )
 		LoadMessage(selArray[0]);
 	else
 		ClearMessagePane();
-
 }
 
 function FolderPaneSelectionChange()

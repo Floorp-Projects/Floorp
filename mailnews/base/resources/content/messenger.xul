@@ -541,7 +541,9 @@ Rights Reserved.
 		  <tree id="threadTree"/>
 		 </html:div>
 
-	    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"/>
+		<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() -->
+	    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"
+							 onclick="OnClickThreadAndMessagePaneSplitter()"/>
 			
     	<!-- message view -->
 		  <html:iframe flex="3" style="height:0px" name="messagepane" src="about:blank"/>
