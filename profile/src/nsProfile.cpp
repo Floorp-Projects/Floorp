@@ -44,7 +44,7 @@
 #include "nsIWebShellWindow.h"
 #include "prprf.h"
 
-#ifndef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_MAC)
 #define AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE 1
 #endif
 
@@ -502,7 +502,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
         {		
             if (cmdResult) {
-#if defined(XP_PC) || defined(XP_UNIX)
                 rv = MigrateProfileInfo();
                 //if (NS_FAILED(rv)) return rv;
 
