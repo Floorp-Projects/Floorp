@@ -79,7 +79,6 @@ components/libmozbrwsr.so
 components/libwebbrwsr.so  ; wtf!  it is needed?!
 components/mozbrwsr.xpt                 
 components/webBrowser_core.xpt
-components/webBrowser_setup.xpt
 
 ; find functionality
 components/libtxtsvc.so
@@ -95,11 +94,13 @@ components/libjar50.so
 components/jar.xpt
 
 ; layout
+components/libgkcontent.so
 components/libgklayout.so                   
 components/libhtmlpars.so                 
 components/libgkview.so                   
 components/layout_base.xpt              
 components/layout_xul.xpt               
+components/content_base.xpt
 
 ; netwerk
 
@@ -120,6 +121,7 @@ components/necko_strconv.xpt
 ; imagelib
 components/libnsgif.so                    
 components/libnsjpg.so                    
+components/libnspng.so
 
 ; prefs
 components/pref.xpt                     
@@ -161,7 +163,7 @@ res/charsetData.properties
 res/charsetalias.properties
 res/acceptlanguage.properties
 res/unixcharset.properties
-res/strres.properties 
+; res/strres.properties 
 
 ; required i18n libs
 components/libstrres.so
