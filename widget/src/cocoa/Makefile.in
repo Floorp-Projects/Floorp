@@ -30,7 +30,7 @@ MODULE_NAME	= nsWidgetMacModule
 XPIDL_MODULE	= widget_cocoa
 GRE_MODULE	= 1
 
-REQUIRES	= xpcom \
+REQUIRES = xpcom \
 		  gfx \
 		  string \
 		  uconv \
@@ -43,13 +43,13 @@ REQUIRES	= xpcom \
 		  view \
 		  xul \
 		  necko \
-          nkcache \
+		  nkcache \
 		  locale \
-          pref \
-          exthandler \
-          intl \
-          mimetype \
+		  pref \
+		  intl \
+		  mimetype \
 		  unicharutil \
+		  exthandler \
 		  $(NULL)
 
 EXPORTS = \
@@ -60,55 +60,64 @@ GFX_LCPPSRCS = \
 		nsWatchTask.cpp \
 		$(NULL)
 
-
-CPPSRCS         =  \
+MAC_LCPPSRCS = \
 		nsBidiKeyboard.cpp \
 		nsClipboard.cpp \
-		nsDeleteObserver.cpp \
 		nsDragService.cpp \
 		nsDragHelperService.cpp \
 		nsLookAndFeel.cpp \
+		nsMacNativeUnicodeConverter.cpp \
 		nsMacResources.cpp \
+		nsMimeMapper.cpp \
+		nsSound.cpp \
+		nsStylClipboardUtils.cpp \
+		nsTSMStrategy.cpp \
+		$(NULL)
+
+
+CPPSRCS =  \
 		nsMenuX.cpp \
 		nsMenuBarX.cpp \
 		nsMenuItemX.cpp \
-		nsMimeMapper.cpp \
-		nsSound.cpp \
-		nsTSMStrategy.cpp \
+		$(MAC_LCPPSRCS) \
 		$(GFX_LCPPSRCS) \
 		$(NULL)
 
 CMMSRCS = \
-    nsFilePicker.mm \
-    nsScrollbar.mm \
-    nsToolkit.mm \
-    nsAppShellCocoa.mm \
-    nsCocoaWindow.mm \
-    nsChildView.mm \
-    nsWidgetFactory.mm \
-    nsNativeScrollbar.mm \
-    $(NULL)
-    
+		nsFilePicker.mm \
+		nsScrollbar.mm \
+		nsToolkit.mm \
+		nsAppShellCocoa.mm \
+		nsCocoaWindow.mm \
+		nsChildView.mm \
+		nsWidgetFactory.mm \
+		nsNativeScrollbar.mm \
+		$(NULL)
+	
 XPIDLSRCS	+= \
 		nsIChangeManager.idl \
 		nsIMenuCommandDispatcher.idl \
 		nsIDragHelperService.idl \
 		$(NULL)
 
+GFX_CPPSRCS     := $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
+MAC_CPP_CSRCS   := $(addprefix $(srcdir)/../mac/,$(MAC_LCPPSRCS))
+
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS) \
-                $(TK_LIBS) \
-                $(MOZ_COMPONENT_LIBS) \
-                -lgkgfx \
-                $(NULL)
+		$(TK_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		-lgkgfx \
+		$(NULL)
 
-GARBAGE		+= $(GFX_LCPPSRCS)
+GARBAGE		+= $(GFX_LCPPSRCS) $(MAC_LCPPSRCS)
 
 include $(topsrcdir)/config/rules.mk
 
-export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
+
+export:: $(GFX_CPPSRCS) $(MAC_CPP_CSRCS) 
 	$(INSTALL) $^ .
 
 # nsMacWidget.rsrc is an AppleSingle encoded resource file.
@@ -130,6 +139,7 @@ LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(topsrcdir)/gfx/src/mac \
 	-I$(srcdir)/../xpwidgets \
+	-I$(srcdir)/../mac \
 	-I/System/Library/Frameworks/Carbon.Framework/Headers \
 	-I/System/Library/Frameworks/Cocoa.Framework/Headers \
 	$(NULL)

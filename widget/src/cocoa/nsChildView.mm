@@ -247,7 +247,7 @@ static void fillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString
 // nsChildView constructor
 //
 //-------------------------------------------------------------------------
-nsChildView::nsChildView() : nsBaseWidget() , nsDeleteObserved(this)
+nsChildView::nsChildView() : nsBaseWidget()
 , mView(nsnull)
 , mParentView(nsnull)
 , mParentWidget(nsnull)

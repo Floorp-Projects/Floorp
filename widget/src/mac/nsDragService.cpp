@@ -44,6 +44,8 @@
 //
 
 
+#include <Gestalt.h>
+
 #include "nsDragService.h"
 
 #include "nsITransferable.h"
@@ -60,8 +62,6 @@
 #include "nsWatchTask.h"
 #include "nsLinebreakConverter.h"
 
-// rjc
-#include <Gestalt.h>
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
@@ -227,6 +227,15 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
 NS_IMETHODIMP
 nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTransferableArray, nsIScriptableRegion * aDragRgn, PRUint32 aActionType)
 {
+#ifdef MOZ_WIDGET_COCOA
+  nsGraphicsUtils::SetPortToKnownGoodPort();
+  GrafPtr port;
+  GDHandle handle;
+  ::GetGWorld(&port, &handle);
+  if (!IsValidPort(port))
+  return NS_ERROR_FAILURE;
+#endif
+
   ::InitCursor();
   nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferableArray, aDragRgn, aActionType );
   
@@ -236,7 +245,7 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTran
     return NS_ERROR_FAILURE;
   mDragRef = theDragRef;
 #if DEBUG_DD
-printf("**** created drag ref %ld\n", theDragRef);
+  printf("**** created drag ref %ld\n", theDragRef);
 #endif
   
   Rect frameRect = { 0, 0, 0, 0 };
@@ -266,7 +275,7 @@ printf("**** created drag ref %ld\n", theDragRef);
   EventRecord theEvent;
   theEvent.what = mouseDown;
   theEvent.message = 0L;
-  theEvent.when = 0L;
+  theEvent.when = TickCount();
   theEvent.modifiers = 0L;
 
   // since we don't have the original mouseDown location, just assume the drag
@@ -293,7 +302,7 @@ printf("**** created drag ref %ld\n", theDragRef);
   ::DisposeRgn ( theDragRgn );
   result = ::DisposeDrag ( theDragRef );
 #if DEBUG_DD
-printf("**** disposing drag ref %ld\n", theDragRef);
+  printf("**** disposing drag ref %ld\n", theDragRef);
 #endif
   NS_ASSERTION ( result == noErr, "Error disposing drag" );
   mDragRef = 0L;
@@ -321,6 +330,15 @@ nsDragService::BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNo
   if ( inRegion )
     inRegion->GetRegion(getter_AddRefs(geckoRegion));
     
+#ifdef MOZ_WIDGET_COCOA
+  nsGraphicsUtils::SetPortToKnownGoodPort();
+  GrafPtr port;
+  GDHandle handle;
+  ::GetGWorld(&port, &handle);
+  if (!IsValidPort(port))
+  return NS_ERROR_FAILURE;
+#endif
+
   // create the drag region. Pull out the native mac region from the nsIRegion we're
   // given, copy it, inset it one pixel, and subtract them so we're left with just an
   // outline. Too bad we can't do this with gfx api's.
@@ -333,11 +351,25 @@ nsDragService::BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNo
       ::CopyRgn ( dragRegion, ioDragRgn );
       ::InsetRgn ( ioDragRgn, 1, 1 );
       ::DiffRgn ( dragRegion, ioDragRgn, ioDragRgn ); 
-
+      
       // now shift the region into global coordinates.
       Point offsetFromLocalToGlobal = { 0, 0 };
       ::LocalToGlobal ( &offsetFromLocalToGlobal );
       ::OffsetRgn ( ioDragRgn, offsetFromLocalToGlobal.h, offsetFromLocalToGlobal.v );
+
+#ifdef MOZ_WIDGET_COCOA
+      // for cocoa, we have to transform this region into cocoa screen 
+      // coordinates. Only the main screen is important in this caculation
+      // as that's where the 2 coord systems differ.
+      Rect regionBounds;
+      GetRegionBounds(ioDragRgn, &regionBounds);
+      
+      GDHandle  screenDevice = ::GetMainDevice();
+      Rect      screenRect   = (**screenDevice).gdRect;
+      // offset the rect
+      short screenHeight = screenRect.bottom - screenRect.top;
+      ::OffsetRgn(ioDragRgn, 0, screenRect.top + (screenHeight - regionBounds.top) - regionBounds.top);
+#endif
     }
   }
   else {
@@ -352,6 +384,17 @@ nsDragService::BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNo
       useRectFromFrame = ComputeGlobalRectFromFrame ( inNode, frameRect );
     else
       NS_WARNING ( "Can't find anything to get a drag rect from. I'm dyin' out here!" );
+
+#ifdef MOZ_WIDGET_COCOA
+    // for cocoa, we have to transform this region into cocoa screen 
+    // coordinates. Only the main screen is important in this caculation
+    // as that's where the 2 coord systems differ.
+    GDHandle  screenDevice = ::GetMainDevice();
+    Rect      screenRect   = (**screenDevice).gdRect;
+    // offset the rect
+    short screenHeight = screenRect.bottom - screenRect.top;
+    ::OffsetRect(&frameRect, 0, screenRect.top + (screenHeight - frameRect.top) - frameRect.top);
+#endif
 
     if ( ioDragRgn ) {
       RgnHandle frameRgn = ::NewRgn();
@@ -452,10 +495,10 @@ nsDragService::RegisterDragItemsAndFlavors(nsISupportsArray* inArray, RgnHandle 
     if ( mapping && mappingLen ) {
       ::AddDragItemFlavor ( mDragRef, itemIndex, nsMimeMapperMac::MappingFlavor(), 
                                mapping, mappingLen, flags );
-	  nsCRT::free ( mapping );
+	    nsCRT::free ( mapping );
     
       ::SetDragItemBounds(mDragRef, itemIndex, &dragRgnBounds);
-	}
+	  }
     
   } // foreach drag item 
 
@@ -510,7 +553,7 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
       currentFlavor->GetData(flavorStr);
       FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr.get(), PR_FALSE);
 #if DEBUG_DD
-printf("looking for data in type %s, mac flavor %ld\n", flavorStr.get(), macOSFlavor);
+      printf("looking for data in type %s, mac flavor %ld\n", flavorStr.get(), macOSFlavor);
 #endif
 
       // check if it is present in the current drag item.
