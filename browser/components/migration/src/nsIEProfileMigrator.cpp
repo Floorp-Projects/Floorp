@@ -86,9 +86,11 @@
 #include "nsIStringBundle.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
+#include "nsToolkitCompsCID.h"
 #include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 #define TRIDENTPROFILE_BUNDLE       "chrome://browser/locale/migration/migration.properties"
 
 #define LARGE_BUFFER 1024
@@ -495,7 +497,7 @@ nsIEProfileMigrator::~nsIEProfileMigrator() {
 nsresult
 nsIEProfileMigrator::CopyHistory(PRBool aReplace) 
 {
-  nsCOMPtr<nsIBrowserHistory> hist(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
+  nsCOMPtr<nsIBrowserHistory> hist(do_GetService(kGlobalHistoryCID));
 
   // First, Migrate standard IE History entries...
   ::CoInitialize(NULL);
@@ -557,8 +559,14 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
           }
           
           // 4 - Now add the page
-          if (validScheme) 
-            hist->AddPageWithDetails((char*)url, tempTitle, lastVisited);
+          if (validScheme) {
+            if (tempTitle) 
+              hist->AddPageWithDetails((char*)url, tempTitle, lastVisited);
+            else {
+              nsAutoString urlTitle; urlTitle.AssignWithConversion(url);
+              hist->AddPageWithDetails((char*)url, urlTitle.get(), lastVisited);
+            }
+          }
         }
       }
       nsCOMPtr<nsIRDFRemoteDataSource> ds(do_QueryInterface(hist));

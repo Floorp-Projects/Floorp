@@ -1,4 +1,5 @@
 const kIMig = Components.interfaces.nsIBrowserProfileMigrator;
+const kProfileMigratorContractIDPrefix = "@mozilla.org/profile/migrator;1?app=browser&type=";
 
 var MigrationWizard = {
   _source: "",                  // Source Profile Migrator ContractID suffix
@@ -20,7 +21,7 @@ var MigrationWizard = {
 
     if ("arguments" in window) {
       this._source = window.arguments[0];
-      this._migrator = window.arguments[1].QueryInterface(nsIBPM);
+      this._migrator = window.arguments[1].QueryInterface(kIMig);
       this._autoMigrate = true;
       
       // Advance past the first page
@@ -46,10 +47,10 @@ var MigrationWizard = {
     var group = document.getElementById("importSourceGroup");
     for (var i = 0; i < group.childNodes.length; ++i) {
       var suffix = group.childNodes[i].id;
-      var contractID = "@mozilla.org/profile/migrator;1?app=browser&type=" + suffix;
-      var migrator = Components.classes[contractID].createInstance(nsIBPM);
+      var contractID = kProfileMigratorContractIDPrefix + suffix;
+      var migrator = Components.classes[contractID].createInstance(kIMig);
       if (!migrator.sourceExists)
-        group.childNodes[i].setAttribute("hidden", "true");
+        group.childNodes[i].setAttribute("disabled", "true");
     }
 
     group.selectedItem = this._source == "" ? group.firstChild : document.getElementById(this._source);
@@ -57,16 +58,19 @@ var MigrationWizard = {
   
   onImportSourcePageAdvanced: function ()
   {
-    if (!this._autoMigrate)
-      this._source = document.getElementById("importSourceGroup").selectedItem.id;
-
-    // Create the migrator for the selected source.
-    if (!this._migrator) {
-      var contractID = "@mozilla.org/profile/migrator;1?app=browser&type=" + this._source;
-      dump("*** contractID = " + contractID + "\n");
-      this._migrator = Components.classes[contractID].createInstance(nsIBPM);
-    }
+    var newSource = document.getElementById("importSourceGroup").selectedItem.id;
     
+    if (!this._migrator || newSource != this._source) {
+      // Create the migrator for the selected source.
+      var contractID = kProfileMigratorContractIDPrefix + newSource;
+      this._migrator = Components.classes[contractID].createInstance(kIMig);
+
+      this._itemsFlags = kIMig.ALL;
+      this._selectedProfile = null;
+    }
+    if (!this._autoMigrate)
+      this._source = newSource;
+
     // check for more than one source profile
     this._wiz.currentPage.next = this._migrator.sourceHasMultipleProfiles ? "selectProfile" : "importItems";
   },
@@ -121,13 +125,15 @@ var MigrationWizard = {
     
     var items = this._migrator.getMigrateData(this._selectedProfile);
     for (var i = 0; i < 32; ++i) {
-      var itemID = Math.pow(2, (items >> i) & 0x1);
-      var checkbox = document.createElement("checkbox");
-      checkbox.id = itemID;
-      checkbox.setAttribute("label", bundle.getString(itemID + "_" + this._source));
-      dataSources.appendChild(checkbox);
-      if (!this._itemsFlags || this._itemsFlags & itemID)
-        checkbox.checked = true;
+      var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
+      if (itemID > 0) {
+        var checkbox = document.createElement("checkbox");
+        checkbox.id = itemID;
+        checkbox.setAttribute("label", bundle.getString(itemID + "_" + this._source));
+        dataSources.appendChild(checkbox);
+        if (!this._itemsFlags || this._itemsFlags & itemID)
+          checkbox.checked = true;
+      }
     }
   },
 
@@ -177,12 +183,15 @@ var MigrationWizard = {
       items.removeChild(items.firstChild);
     
     var bundle = document.getElementById("bundle");
+    var itemID;
     for (var i = 0; i < 32; ++i) {
-      var itemID = Math.pow(2, (this._itemsFlags >> i) & 0x1);
-      var label = document.createElement("label");
-      label.id = itemID + "_migrated";
-      label.setAttribute("value", bundle.getString(itemID + "_" + this._source));
-      items.appendChild(label);
+      var itemID = (this._itemsFlags >> i) & 0x1 ? Math.pow(2, i) : 0;
+      if (itemID > 0) {
+        var label = document.createElement("label");
+        label.id = itemID + "_migrated";
+        label.setAttribute("value", bundle.getString(itemID + "_" + this._source));
+        items.appendChild(label);
+      }
     }
   },
   

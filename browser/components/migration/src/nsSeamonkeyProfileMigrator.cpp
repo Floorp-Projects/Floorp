@@ -119,12 +119,12 @@ nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* 
     GetSourceProfile(aProfile);
 
   PRBool exists;
-  const nsAString fileNames[] = { FILE_NAME_PREFS, 
-                                  FILE_NAME_COOKIES,
-                                  FILE_NAME_HISTORY,
-                                  FILE_NAME_BOOKMARKS,
-                                  FILE_NAME_DOWNLOADS,
-                                  FILE_NAME_MIMETYPES };
+  const PRUnichar* fileNames[] = { FILE_NAME_PREFS.get(), 
+                                   FILE_NAME_COOKIES.get(),
+                                   FILE_NAME_HISTORY.get(),
+                                   FILE_NAME_BOOKMARKS.get(),
+                                   FILE_NAME_DOWNLOADS.get(),
+                                   FILE_NAME_MIMETYPES.get() };
   const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
                                    nsIBrowserProfileMigrator::COOKIES,
                                    nsIBrowserProfileMigrator::HISTORY,
@@ -134,7 +134,7 @@ nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* 
   nsCOMPtr<nsIFile> sourceFile; 
   for (PRInt32 i = 0; i < 6; ++i) {
     mSourceProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(fileNames[i]);
+    sourceFile->Append(nsDependentString(fileNames[i]));
     sourceFile->Exists(&exists);
     if (exists)
       *aResult |= sourceFlags[i];
