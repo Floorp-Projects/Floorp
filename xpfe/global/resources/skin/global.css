@@ -1680,8 +1680,26 @@ html|input[type=radio][disabled] {
 
 /********** checkbox **********/
 
-checkbox {
+checkbox, foopy {
   list-style-image: url(chrome://global/skin/scroll-up.gif);
+}
+
+checkbox > .internal-box > text,
+radio > .internal-box > text {
+  border: 1px solid red;
+}
+
+radio:focus > .internal-box > text,
+checkbox:focus > .internal-box > text {
+  border: 1px dotted black;
+}
+
+checkbox > .internal-box > image {
+  border: 1px outset #CCCCCC;
+}
+
+checkbox:hover > .internal-box > image {
+  border: 1px solid black;
 }
 
 checkbox[checked="true"] {
@@ -1692,12 +1710,18 @@ radio {
   list-style-image: url(chrome://global/skin/scroll-up.gif);
 }
 
-radio[checked="true"] {
-  list-style-image: url(chrome://global/skin/scroll-down.gif);
+
+radio > .internal-box > image {
+  border: 1px outset #CCCCCC;
+  -moz-border-radius: 6px;
 }
 
-radiogroup {
+radio:hover > .internal-box > image {
   border: 1px solid black;
+}
+
+radio[checked="true"] {
+  list-style-image: url(chrome://global/skin/scroll-down.gif);
 }
 
 html|input[type=checkbox] {
@@ -2013,4 +2037,55 @@ toolbarseparator.line {
   width: 30px;
   border : 1px solid red;
   background-color: #99CCCC;
+}
+
+/* push button */
+button {
+  border: 1px solid #CCCCCC;
+  margin: 2px;
+  background-color: inherit;
+  background-image: inherit;
+}
+
+button > .internal-box > image, 
+button.left > .internal-box > image, 
+button.right > .internal-box > text {
+  padding-right: 5px;
+}
+
+button.top > .internal-box > image,
+button.bottom > .internal-box > text {
+  padding-bottom: 3px;
+}
+
+
+button:hover {
+  border: 1px solid #000000;
+  color: #003366;
+  text-decoration: underline;
+}
+ 
+button:active {
+  border: 1px solid #000000;
+  text-decoration: none;
+}
+
+button > .internal-box {
+  vertical-align: middle;
+  border: 1px outset #CCCCCC;
+  padding: 2px;
+}
+
+button:hover > .internal-box {
+  padding: 2px;
+}
+
+button:hover:active > .internal-box {
+  border: 1px inset #CCCCCC;
+  padding: 3px 1px 1px 3px;
+}
+
+button:active > .internal-box {
+  border: 1px inset #CCCCCC;
+  padding: 3px 1px 1px 3px;
 }
