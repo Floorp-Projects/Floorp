@@ -48,16 +48,23 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = pipnss
 GRE_MODULE	= 1
 
-XPIDLSRCS = \
-    nsIFormSigningDialog.idl \
+SDK_XPIDLSRCS = \
+    nsIASN1Object.idl \
+    nsIASN1Sequence.idl \
     nsIBadCertListener.idl \
-    nsICertSelect.idl \
+    nsICertificateDialogs.idl \
+    nsICRLInfo.idl \
     nsIX509Cert.idl \
     nsIX509CertDB.idl \
+    nsIX509CertValidity.idl \
+    $(NULL)
+
+XPIDLSRCS = \
+    nsIFormSigningDialog.idl \
+    nsICertSelect.idl \
     nsIX509CertDB2.idl \
     nsIPKCS11Slot.idl \
     nsIPK11TokenDB.idl \
-    nsICertificateDialogs.idl \
     nsICertPickDialogs.idl \
     nsIClientAuthDialogs.idl \
     nsIDOMCryptoDialogs.idl \
@@ -68,21 +75,17 @@ XPIDLSRCS = \
     nsIKeygenThread.idl \
     nsICMSSecureMessage.idl \
     nsIUserCertPicker.idl \
-    nsIASN1Object.idl \
     nsIASN1PrintableItem.idl \
-    nsIASN1Sequence.idl \
     nsICMSDecoder.idl \
     nsICMSEncoder.idl \
     nsICMSMessageErrors.idl \
     nsICMSMessage.idl \
-    nsICRLInfo.idl \
     nsIHash.idl \
     nsINSSCertCache.idl \
     nsIOCSPResponder.idl \
     nsIPK11Token.idl \
     nsIPKCS11ModuleDB.idl \
     nsIPKCS11Module.idl \
-    nsIX509CertValidity.idl \
     nsICRLManager.idl \
     nsISMimeCert.idl \
     nsICipherInfo.idl \
