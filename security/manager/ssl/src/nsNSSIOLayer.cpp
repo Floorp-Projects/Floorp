@@ -1142,9 +1142,11 @@ done:
  *       We currently use ASK mode for UI apps and AUTO mode for UI-less
  *       apps without really asking for preferences.
  */
-SSM_UserCertChoice nsGetUserCertChoice()
+nsresult nsGetUserCertChoice(SSM_UserCertChoice* certChoice)
 {
-	return AUTO;
+  NS_ENSURE_ARG_POINTER(certChoice);
+  *certChoice = AUTO;
+  return NS_OK;
 }
 
 /*
@@ -1218,7 +1220,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     }
 
     /* get the preference */
-	if (certChoice = nsGetUserCertChoice()) {
+	if (NS_FAILED(nsGetUserCertChoice(&certChoice))) {
 		goto loser;
 	}
 
