@@ -106,7 +106,7 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
   char buffer[256];
   PR_snprintf(buffer,
               sizeof(buffer),
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_OS2)
 	       modal ? "menubar=no,height=%d,width=%d,dependent,modal"
 #else
               (modal && win) ? "menubar=no,height=%d,width=%d,dependent"
@@ -119,7 +119,7 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
   if (argv) {
     // open the window
     nsIDOMWindowInternal *newWindow;
-#ifdef WIN32 
+#if defined(WIN32) || defined(XP_OS2)
     if (modal && win) {
       parentWindow->OpenDialog(jsContext, argv, 3, &newWindow);
     } else {
