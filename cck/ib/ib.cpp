@@ -468,8 +468,10 @@ void AddThirdParty()
 					 LPCTSTR(compArchive + Archive2),LPCTSTR(compISize + tpCompSize2),
 					 LPCTSTR(compAttrib)};
 */
+	
+	CString firstSix = tpCompPath1.Left(6);
 
-	if (!tpCompPath1.IsEmpty())
+	if ((firstSix.CompareNoCase("Please") != 0) && !(tpCompPath1.IsEmpty()))
 	{
 		componentName.Format("Component%d", (numComponents));
 		cName.Format("C%d", componentOrder);
@@ -483,7 +485,9 @@ void AddThirdParty()
 		DWORD e1 = GetLastError();
 
 	}
-	if (!tpCompPath2.IsEmpty())
+
+	firstSix = tpCompPath2.Left(6);
+	if ((firstSix.CompareNoCase("Please") != 0) && !(tpCompPath2.IsEmpty()))
 	{
 		componentName.Format("Component%d", (numComponents));
 		cName.Format("C%d", componentOrder);
