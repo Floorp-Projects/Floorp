@@ -217,8 +217,12 @@ NS_IMETHODIMP nsRenderingContextGTK::GetDeviceContext(nsIDeviceContext *&aContex
 
 NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 {
-  nsGraphicsState *state = new nsGraphicsState();
-
+  //  Get a new GS
+#ifdef USE_GS_POOL
+  nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
+#else
+  nsGraphicsState *state = new nsGraphicsState;
+#endif
   // Push into this state object, add to vector
   state->mMatrix = mTMatrix;
 
@@ -282,7 +286,11 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
       SetLineStyle(state->mLineStyle);
 
     // Delete this graphics state object
+#ifdef USE_GS_POOL
+    nsGraphicsStatePool::ReleaseGS(state);
+#else
     delete state;
+#endif
   }
 
   if (mClipRegion)
