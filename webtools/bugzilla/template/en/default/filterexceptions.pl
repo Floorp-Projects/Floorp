@@ -95,9 +95,10 @@
 ],
 
 'reports/duplicates-table.html.tmpl' => [
-  '"&maxrows=$maxrows" IF maxrows',
-  '"&changedsince=$changedsince" IF changedsince',
-  '"&bug_id=$bug_ids_string&sortvisible=1" IF sortvisible',
+  '"&amp;maxrows=$maxrows" IF maxrows',
+  '"&amp;changedsince=$changedsince" IF changedsince',
+  '"&amp;bug_id=$bug_ids_string&amp;sortvisible=1" 
+                                                            IF sortvisible',
   'column.name', 
   'column.description',
   'vis_bug_ids.push(bug.id)', 
@@ -218,6 +219,7 @@
 'list/table.html.tmpl' => [
   'tableheader',
   'bug.bug_id', 
+  'abbrev.$id.title || field_descs.$id || column.title',
 ],
 
 'list/list.csv.tmpl' => [
