@@ -38,7 +38,6 @@
 /* Data shared between prefapi.c and nsPref.cpp */
 
 extern JSContext *			gMochaContext;
-extern JSObject *			gMochaPrefObject;
 extern PRBool				gErrorOpeningUserPrefs;
 extern PLDHashTable			gHashTable;
 PLDHashOperator pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUint32, void *arg);
