@@ -59,6 +59,8 @@ class nsAppShell : public nsIAppShell
   static void HandleVisibilityNotifyEvent(XEvent *event, nsWidget *aWidget);
   static void HandleMapNotifyEvent(XEvent *event, nsWidget *aWidget);
   static void HandleUnmapNotifyEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleEnterEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleLeaveEvent(XEvent *event, nsWidget *aWidget);
 
 protected:
   nsIEventQueueService * mEventQueueService;

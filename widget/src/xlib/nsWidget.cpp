@@ -734,17 +734,6 @@ PRBool nsWidget::DispatchKeyEvent(nsKeyEvent & aKeyEvent)
   return PR_FALSE;
 }
 
-
-PRBool nsWidget::DispatchFocusEvent(nsGUIEvent & aEvent)
-{
-  if (mEventCallback) 
-  {
-    return DispatchWindowEvent(aEvent);
-  }
-
-  return PR_FALSE;
-}
-
 //////////////////////////////////////////////////////////////////
 //
 // Turning TRACE_EVENTS on will cause printfs for all
