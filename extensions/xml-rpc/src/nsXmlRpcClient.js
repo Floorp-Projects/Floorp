@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.27 $
+ *  Version: $Revision: 1.28 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.27 2002/08/06 00:52:09 alecf%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.28 2002/12/04 07:22:50 samuel%sieb.net Exp $
  */
 
 /*
@@ -361,7 +361,7 @@ nsXmlRpcClient.prototype = {
 
             case this.STRING:
                 uuid.value = Components.interfaces.nsISupportsCString
-                return createInstance(SUPPORTSID + 'string;1',
+                return createInstance(SUPPORTSID + 'cstring;1',
                     'nsISupportsCString');
 
             case this.DOUBLE:
