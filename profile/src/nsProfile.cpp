@@ -105,6 +105,7 @@
 // to help track down profile manager problems
 // when we ship, we'll turn this off
 #define DEBUG_profile 1
+#undef DEBUG_profile_verbose
 
 // ProfileAccess varaible (gProfileDataAccess) to access registry operations
 // gDataAccessInstCount is used to keep track of instance count to activate
@@ -169,7 +170,7 @@ nsProfile::nsProfile()
 
 nsProfile::~nsProfile() 
 {
-#if defined(DEBUG_profile)
+#if defined(DEBUG_profile_verbose)
     printf("~nsProfile \n");
 #endif
 
@@ -225,7 +226,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
     PRBool profileDirSet = PR_FALSE;
     nsCString profileURLStr("");
 
-#ifdef DEBUG_profile
+#ifdef DEBUG_profile_verbose
     printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
 #endif
 
@@ -238,7 +239,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
         if (NS_FAILED(rv)) return rv;
     }
 
-#ifdef DEBUG_profile
+#ifdef DEBUG_profile_verbose
     printf("Profile Manager : Profile Wizard and Manager activites : End\n");
 #endif
 
@@ -424,7 +425,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     char* cmdResult = nsnull;
     nsFileSpec currProfileDirSpec;
 
-#ifdef DEBUG_profile
+#ifdef DEBUG_profile_verbose
     printf("Profile Manager : Command Line Options : Begin\n");
 #endif
  
@@ -517,7 +518,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 
                 rv = locator->ForgetProfileDir();
             }
-#ifdef DEBUG_profile
+#ifdef DEBUG_profile_verbose
             printf("profileName & profileDir are: %s\n", cmdResult);
 #endif /* DEBUG_profile */
 
@@ -613,7 +614,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
         }
     }
 
-#ifdef DEBUG_profile
+#ifdef DEBUG_profile_verbose
     printf("Profile Manager : Command Line Options : End\n");
 #endif
 
@@ -634,7 +635,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
 
     nsresult rv = NS_OK;
 
-#if defined(DEBUG_profile)
+#if defined(DEBUG_profile_verbose)
     printf("ProfileManager : GetProfileDir\n");
 #endif
 
@@ -894,7 +895,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
             dirSpec.MakeUnique();
     }
 
-#if defined(DEBUG_profile)
+#if defined(DEBUG_profile_verbose)
     printf("before SetProfileDir\n");
 #endif
 
@@ -908,7 +909,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     // Creates required user directories.
     rv = SetProfileDir(profileName, dirSpec);
 
-#if defined(DEBUG_profile)
+#if defined(DEBUG_profile_verbose)
     printf("after SetProfileDir\n");
 #endif
 
@@ -945,7 +946,7 @@ nsresult nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
 {
     nsresult rv = NS_OK;
 
-#if defined(DEBUG_profile)
+#if defined(DEBUG_profile_verbose)
     printf("ProfileManager : CreateUserDirectories\n");
 #endif
 
@@ -985,7 +986,7 @@ nsresult nsProfile::DeleteUserDirectories(const nsFileSpec& profileDir)
 {
     nsresult rv = NS_OK;
 
-#if defined(DEBUG_profile)
+#if defined(DEBUG_profile_verbose)
     printf("ProfileManager : DeleteUserDirectories\n");
 #endif
 
@@ -1202,7 +1203,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 
 #if defined(XP_PC) || defined(XP_MAC)
 
-#if defined(DEBUG_profile)
+#if defined(DEBUG_profile_verbose)
     printf("Entered MigrateProfileInfo.\n");
 #endif
 
@@ -1477,7 +1478,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
     }
 
 
-#if defined(DEBUG_profile)
+#if defined(DEBUG_profile_verbose)
     {
       if (NS_SUCCEEDED(rv))
       printf("ProfileManager : Cloned CurrentProfile\n");
