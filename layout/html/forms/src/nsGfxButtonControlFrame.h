@@ -61,6 +61,11 @@ public:
 protected:
   NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                                    const nsHTMLReflowState& aSuggestedReflowState);
+  NS_IMETHOD DoNavQuirksReflow(nsIPresContext&          aPresContext, 
+                               nsHTMLReflowMetrics&     aDesiredSize,
+                               const nsHTMLReflowState& aReflowState, 
+                               nsReflowStatus&          aStatus);
+
   virtual PRBool IsReset(PRInt32 type);
   virtual PRBool IsSubmit(PRInt32 type);
 private:
