@@ -399,8 +399,9 @@ if (@badbugs) {
 Status("Checking duplicates table");
 
 SendSQL("SELECT bugs.bug_id " .
-        "FROM bugs INNER JOIN duplicates ON bugs.bug_id = duplicates.dupe " .
+        "FROM bugs, duplicates " .
         "WHERE bugs.resolution != 'DUPLICATE' " .
+        "  AND bugs.bug_id = duplicates.dupe " .
         "ORDER BY bugs.bug_id");
 
 @badbugs = ();
