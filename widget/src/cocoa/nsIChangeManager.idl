@@ -1,0 +1,73 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corp.  Portions created by Netscape are Copyright (C) 1999 Netscape 
+ * Communications Corp.  All Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Mike Pinkerton
+ */
+
+#include "nsISupports.idl"
+#include "nsIAtom.idl"
+
+
+interface nsIContent;
+interface nsIDocument;
+
+
+//
+// nsIChangeObserver
+//
+// Something that wants to be alerted to changes in attributes or changes in
+// its corresponding content object.
+// (NOTE: If we need more things, we can add them later)
+//
+[scriptable, uuid(d8cf3bd0-1dd1-11b2-a837-fec5f865b071)]
+interface nsIChangeObserver : nsISupports
+{
+  void AttributeChanged ( in nsIDocument aDocument,
+                           in long aNameSpaceID, in nsIAtom aAttribute, in long aHint) ;
+
+  void ContentRemoved ( in nsIDocument aDocument, in nsIContent aChild, 
+                          in long aIndexInContainer ) ;
+                          
+  void ContentInserted ( in nsIDocument aDocument, in nsIContent aChild, 
+                          in long aIndexInContainer ) ;
+  
+}; // nsIChangeObserver
+
+
+//
+// nsIChangeManager
+//
+// A central manager for registering and unregistering objects that want
+// to be notified when content objects change or children added/removed, etc.
+//
+// We use a central manager to redirect for performance reasons, to avoid
+// every meny/item from getting a call when any change to the document happens.
+//
+
+[scriptable, uuid(fb31c7e0-1dd1-11b2-8a61-f4697ef53c88)]
+interface nsIChangeManager : nsISupports
+{
+  void Register ( in nsIContent aContent, in nsIChangeObserver aMenuObject ) ;
+  void Unregister ( in nsIContent aContent ) ;
+  
+  nsIChangeObserver Lookup ( in nsIContent aContent ) ;
+  
+}; // nsPIChangeManager
+
+

@@ -1,0 +1,123 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.1 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= widget
+LIBRARY_NAME	= widget_mac
+EXPORT_LIBRARY = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsWidgetMacModule
+XPIDL_MODULE	= widget
+REQUIRES	= xpcom \
+		  gfx \
+		  string \
+		  uconv \
+		  dom \
+		  webshell \
+		  docshell \
+		  plugin \
+		  content \
+		  layout \
+		  view \
+		  xul \
+		  necko \
+          nkcache \
+		  locale \
+          pref \
+          appshell \
+          intl \
+          timer \
+          mimetype \
+		  $(NULL)
+
+GFX_LCPPSRCS = \
+		nsRegionMac.cpp \
+		nsWatchTask.cpp \
+		$(NULL)
+
+
+CPPSRCS         =  \
+		nsBidiKeyboard.cpp \
+		nsClipboard.cpp \
+		nsDeleteObserver.cpp \
+		nsDragService.cpp \
+		nsFilePicker.cpp \
+		nsLookAndFeel.cpp \
+		nsMacResources.cpp \
+		nsMenuX.cpp \
+		nsMenuBarX.cpp \
+		nsMenuItemX.cpp \
+		nsMimeMapper.cpp \
+		nsSound.cpp \
+		nsTSMStrategy.cpp \
+		nsToolkit.cpp \
+		$(GFX_LCPPSRCS) \
+		$(NULL)
+
+CMMSRCS = \
+    nsAppShellCocoa.mm \
+    nsCocoaWindow.mm \
+    nsChildView.mm \
+    nsWidgetFactory.mm \
+    $(NULL)
+    
+XPIDLSRCS	+= \
+		nsIChangeManager.idl \
+		nsIMenuCommandDispatcher.idl \
+		$(NULL)
+
+GARBAGE		+= $(GFX_LCPPSRCS)
+
+include $(topsrcdir)/config/rules.mk
+
+export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
+	$(INSTALL) $^ .
+
+EXTRA_DSO_LDOPTS += \
+                $(DIST)/lib/libxpwidgets_s.a \
+                $(TK_LIBS) \
+                $(MOZ_COMPONENT_LIBS) \
+                -lgkgfx \
+                -ltimer_mac \
+                $(NULL)
+
+LOCAL_INCLUDES	= \
+	$(TK_CFLAGS) \
+	-I$(topsrcdir)/gfx/src/mac \
+	-I$(srcdir)/../xpwidgets \
+	-I$(topsrcdir)/widget/timer/src/mac \
+	-I/System/Library/Frameworks/Carbon.Framework/Headers \
+	-I/System/Library/Frameworks/Cocoa.Framework/Headers \
+	$(NULL)
+
+# for "EnterMovies" in nsSound.cpp
+LDFLAGS	+= \
+	-framework QuickTime \
+	-framework Cocoa \
+	$(NULL)
+
+CXXFLAGS += \
+  -DUSE_COCOA \
+  $(NULL)
+
+  
