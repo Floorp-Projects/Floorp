@@ -69,7 +69,6 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
   : mPresContext(aPresContext),
     mOuterReflowState(aParentRS),
     mMetrics(aComputeMaxElementWidth),
-    mIsTable(PR_FALSE),
     mComputeMaximumWidth(aComputeMaximumWidth)
 {
   mStyleBorder = nsnull;
@@ -384,7 +383,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   if (!aIsAdjacentWithTop) {
     aFrameRS.mFlags.mIsTopOfPage = PR_FALSE;  // make sure this is cleared
   }
-  mIsTable = NS_STYLE_DISPLAY_TABLE == aFrameRS.mStyleDisplay->mDisplay;
   mComputedWidth = aFrameRS.mComputedWidth;
 
   if (aApplyTopMargin) {
@@ -445,7 +443,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
 
   // If it's an auto-width table, then it doesn't behave like other blocks
   // XXX why not for a floating table too?
-  if (mIsTable && !aFrameRS.mStyleDisplay->IsFloating()) {
+  if (aFrameRS.mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE &&
+      !aFrameRS.mStyleDisplay->IsFloating()) {
     // If this isn't the table's initial reflow, then use its existing
     // width to determine where it will be placed horizontally
     if (aFrameRS.reason != eReflowReason_Initial) {
