@@ -3610,7 +3610,6 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     return NS_OK;//do not continue no selection for this frame.
 
   PRBool found = PR_FALSE;
-  PRBool wholeContentFound = PR_FALSE;//if the entire content we look at is selected.
   if (aRange) {
     //lets see if the range contains us, if so we must redraw!
     nsCOMPtr<nsIDOMNode> endNode;
@@ -3645,7 +3644,6 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
       else
       {
         found = PR_FALSE;
-        wholeContentFound = PR_TRUE;
       }
     }
     else
@@ -3654,9 +3652,8 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     }
   }
   else {
-    if (aSelected != ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) != 0)) {
-      found = PR_TRUE;
-    }
+    // null range means the whole thing
+    found = PR_TRUE;
   }
 
   if ( aSelected )
