@@ -1470,7 +1470,8 @@ if ($^O !~ /MSWin32/i) {
 
 # It's safe to use Bugzilla::Auth here because parameters have now been
 # defined.
-use Bugzilla::Auth;
+require Bugzilla::Auth;
+import Bugzilla::Auth 'bz_crypt';
 
 # globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
 # Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
