@@ -346,12 +346,6 @@ NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const PRUnichar *aString,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const nsString& aString,
-                                            nscoord &aWidth)
-{
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
-}
-
 NS_IMETHODIMP nsFontMetricsUnix :: GetHeight(nscoord &aHeight)
 {
   aHeight = mHeight;
