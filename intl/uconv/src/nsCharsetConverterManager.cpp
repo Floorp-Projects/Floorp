@@ -140,8 +140,7 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
 
   key.AssignWithConversion(aName);
   ToLowerCase(key); // we lowercase the main comparison key
-  if (!aProp.IsEmpty())  // yes, this param may be NULL
-    key.Append(aProp);
+  key.Append(aProp);
 
   return aBundle->GetStringFromName(key.get(), aResult);
 }
