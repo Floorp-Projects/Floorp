@@ -680,7 +680,7 @@
 
 
 ; Make a lexer and grammar from the given source.
-; kind should be either :lalr-1 or :lr-1.
+; kind should be :lalr-1, :lr-1, or :canonical-lr-1.
 ; charclasses-source is a list of character classes, and
 ; lexer-actions-source is a list of lexer-action bindings; see make-lexer.
 ; start-symbol is the grammar's start symbol, and grammar-source is its source.
