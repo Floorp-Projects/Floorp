@@ -11,8 +11,8 @@
 
   <script type="application/x-javascript">
     <![CDATA[
-      var _elementIDs = ["moveSystemCaret", "loadInBackground",
-                         "useSmoothScrolling",
+      var _elementIDs = ["moveSystemCaret", "hideTabBar",
+                         "loadInBackground", "useSmoothScrolling",
                          "enableAutoImageResizing", "useSSL2",
                          "useSSL3", "useTLS1"];
     ]]>
@@ -24,6 +24,8 @@
                 prefstring="accessibility.browsewithcaret"/>
     </expander>
     <expander id="browsing" label="&browsing.label;" open="true" persist="open" clearhidden="true">
+      <checkbox id="hideTabBar" label="&hideTabBar.label;"
+                prefstring="browser.tabs.autoHide"/>
       <checkbox id="loadInBackground" label="&loadInBackground.label;"
                 prefstring="browser.tabs.loadInBackground"/>
       <checkbox id="useSmoothScrolling" label="&useSmoothScrolling.label;"
