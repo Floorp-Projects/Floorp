@@ -1,10 +1,10 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# General purpose utility functions.  Every project needs a kludge
-# bucket for common access.
+# Utils.pm - General purpose utility functions.  Every project needs a
+# kludge bucket for common access.
 
-# $Revision: 1.8 $ 
-# $Date: 2000/11/29 21:11:50 $ 
+# $Revision: 1.9 $ 
+# $Date: 2001/01/04 00:31:20 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -50,6 +50,33 @@ use Time::Local;
 
 # Tinderbox libraries
 
+
+
+# check that the data directories exists and meet the security policy.
+
+sub security_check_data_dir {
+  my ($dir) = (@_);
+
+  ( -l $dir ) &&
+    die("Security Error. dir: $dir is a symbolic link\n");
+  
+  mkdir_R($dir);
+  
+  ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+   $atime,$mtime,$ctime,$blksize,$blocks) =
+     stat ($dir);
+
+  my $tinderbox_uid = $<;
+
+#  ( $uid == $tinderbox_uid ) ||
+#    die("Security Error. dir: $dir is not owned by ".
+#        "the tinderbox id: $tinderbox_uid\n");
+  
+#  ( $mode & 02) &&
+#    die("Security Error. dir: $dir is writable by other\n");
+  
+  return 1;
+}
 
 
 sub set_static_vars {
@@ -151,17 +178,29 @@ sub get_env {
   # check both real and effective uid of the process to see if we have
   # been configured to run with too much privileges.
 
-  ( $< == 0 ) &&
+  ( $< >= 100 ) ||
     die("Security Error. Must not run this program as root\n");
 
-  ( $> == 0 ) &&
+  ( $> >= 100 ) ||
     die("Security Error. Must not run this program as root\n");
+
+  # check both real and effective gid of the process to see if we have
+  # been configured to run with too much privileges.
+
+  ( $( >= 10 ) ||
+    die("Security Error. Must not run this program as group root\n");
+
+  ( $) >= 10 ) ||
+    die("Security Error. Must not run this program as group root\n");
+
 
   my ($logdir) = File::Basename::dirname($ERROR_LOG);
   mkdir_R($logdir);
+  security_check_data_dir($logdir);
 
   my ($lockdir) = File::Basename::dirname($LOCK_FILE);
   mkdir_R($lockdir);
+  security_check_data_dir($lockdir);
 
   my (@trees) = TreeData::get_all_trees();
   foreach $tree (@trees) {
@@ -169,10 +208,10 @@ sub get_env {
     my ($dir);
 
     $dir = FileStructure::get_filename($tree, 'TinderDB_Dir');
-    mkdir_R($dir, 0777);
-    
+    security_check_data_dir($dir);
+
     $dir = FileStructure::get_filename($tree, 'TinderHeader_Dir');
-    mkdir_R($dir, 0777);
+    security_check_data_dir($dir);
 
   }
   
@@ -238,17 +277,19 @@ sub mkdir_R {
 
   (-d $dir) && return ;
 
-  $mode = $mode || 0755;
+  my ($default_new_dir_mode) = 0755;
+
+  $mode = $mode || $default_new_dir_mode;
 
   my @dir = split('/', $dir);
 
   foreach $i (0..$#dir) {
-    my ($dir) = join('/', @dir[0..$i]);
-    ($dir) || next;
+    my ($dir_prefix) = join('/', @dir[0..$i]);
+    ($dir_prefix) || next;
 
-      (-d $dir) ||
-	mkdir ($dir, $mode) ||
-	  die("Could not mkdir: $dir, for writing: $!\n");
+      (-d $dir_prefix) ||
+	mkdir ($dir_prefix, $mode) ||
+	  die("Could not mkdir: $dir_prefix, for writing: $!\n");
   }
   
   return 1;
