@@ -152,9 +152,9 @@ export::  INSTALL_FILES
 
 export:: jsj10.jar
         $(MAKE_INSTALL) jsj10.jar $(JAVA_DESTPATH)
-	cd $(JAVA_DESTPATH)
-	unzip -o jsj10.jar
-	cd ..\..\js\src\liveconnect
+#	cd $(JAVA_DESTPATH)
+#	unzip -o jsj10.jar
+#	cd ..\..\js\src\liveconnect
 
 !endif
 
