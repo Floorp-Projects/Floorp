@@ -48,7 +48,7 @@ function renderMachineReadable()
   policyuri.ref = "";
 
   try {
-    var docshell  = getSummaryBrowser().docShell.QueryInterface(nsIDocShell);
+    var docshell  = getBrowser().docShell.QueryInterface(nsIDocShell);
     
     // For browser security do not allow javascript on the transformed document.
     docshell.allowJavascript = false; 
@@ -126,7 +126,7 @@ function transferToDocument(aResult, aResultDocument)
     }
 }
 
-function getSummaryBrowser()
+function getBrowser()
 {
   if (!gBrowser)
     gBrowser = document.getElementById("content");
@@ -136,7 +136,7 @@ function getSummaryBrowser()
 function getDocument()
 {
   if (!gDocument)
-    gDocument = getSummaryBrowser().contentDocument;
+    gDocument = getBrowser().contentDocument;
   return gDocument;
 }
 
