@@ -673,7 +673,7 @@ lm_SetExternalCapture(JSContext *cx, JSPrincipals *principals,
                       JSBool b);
 
 extern JSBool
-lm_AddSetParentSecurityCheck(JSContext *cx, JSObject *obj);
+lm_CheckSetParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 extern JSBool
 lm_SetDocumentDomain(JSContext *cx, JSPrincipals *principals, 

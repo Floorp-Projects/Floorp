@@ -739,10 +739,20 @@ win_finalize(JSContext *cx, JSObject *obj)
     DROP_BACK_COUNT(decoder);
 }
 
+JSBool win_check_access(JSContext *cx, JSObject *obj, jsval id,
+                        JSAccessMode mode, jsval *vp)
+{
+    if(mode == JSACC_PARENT)  {
+        return lm_CheckSetParentSlot(cx, obj, id, vp);
+    }
+    return JS_TRUE;
+}
+
 JSClass lm_window_class = {
     "Window", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, win_getProperty, win_setProperty,
-    win_list_properties, win_resolve_name, JS_ConvertStub, win_finalize
+    win_list_properties, win_resolve_name, JS_ConvertStub, win_finalize,
+    NULL, win_check_access
 };
 
 /*
@@ -3277,9 +3287,6 @@ lm_InitWindowContent(MochaDecoder *decoder)
     cx = decoder->js_context;
     obj = decoder->window_object;
     if (!JS_InitStandardClasses(cx, obj))
-        return JS_FALSE;
-
-    if (!lm_AddSetParentSecurityCheck(cx, obj))
         return JS_FALSE;
 
 #ifdef JAVA

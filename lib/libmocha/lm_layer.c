@@ -1033,10 +1033,20 @@ layer_finalize(JSContext *cx, JSObject *obj)
     JS_free(cx, js_layer);
 }
 
+JSBool layer_check_access(JSContext *cx, JSObject *obj, jsval id,
+                          JSAccessMode mode, jsval *vp)
+{
+    if(mode == JSACC_PARENT)  {
+        return lm_CheckSetParentSlot(cx, obj, id, vp);
+    }
+    return JS_TRUE;
+}
+
 JSClass lm_layer_class = {
     "Layer", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, layer_getProperty, layer_setProperty,
-    JS_EnumerateStub, layer_resolve_name, JS_ConvertStub, layer_finalize
+    JS_EnumerateStub, layer_resolve_name, JS_ConvertStub, layer_finalize,
+    NULL, layer_check_access
 };
 
 /* JS native method:

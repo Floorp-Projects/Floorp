@@ -916,10 +916,7 @@ lm_GetInnermostPrincipals(JSContext *cx, JSObject *container,
     return (JSPrincipals *) &unknownPrincipals;
 }
 
-static JSPropertyOp oldParentSlotSetter = NULL;
-
-PR_STATIC_CALLBACK(JSBool)
-setParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+JSBool lm_CheckSetParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSObject *newParent;
 
@@ -945,43 +942,8 @@ setParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             lm_SetContainerPrincipals(cx, obj, principals);
         }
     }
-    return (*oldParentSlotSetter)(cx, obj, id, vp);
-}
-
-JSBool
-lm_AddSetParentSecurityCheck(JSContext *cx, JSObject *obj) 
-{
-    JSAtom *atom;
-    JSObject *proto;
-    static char parentName[] = "__parent__";
-    JSProperty *prop;
-    JSBool ok;
-
-    /*
-     * Set up to intercept attempts to set __parent__. We need to check
-     * that an evil script is not changing the parent links so that it
-     * gains access to restricted information.
-     */
-    proto = obj;
-    for(;;) {
-        JSObject *next = JS_GetPrototype(cx, proto);
-        if (next == NULL)
-            break;
-        proto = next;
-    }
-    atom = js_Atomize(cx, parentName, sizeof(parentName)-1, 0); 
-    if (atom == NULL) 
-        return JS_FALSE;
-    ok = js_LookupProperty(cx, proto, (jsval)atom, NULL, &prop);
-    js_DropAtom(cx, atom);
-    if (!ok || prop == NULL)
-        return JS_FALSE;
-    if (oldParentSlotSetter == NULL)
-        oldParentSlotSetter = prop->setter;
-    prop->setter = setParentSlot;
     return JS_TRUE;
 }
-
 
 static JSBool
 canExtendTrust(JSContext *cx, void *from, void *to)
@@ -1022,9 +984,12 @@ lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
     JSPrincipalsList *list;
     const char *fn;
 
-    principals = decoder->principals
-                 ? lm_GetInnermostPrincipals(decoder->js_context, obj, NULL)
-                 : NULL;
+    if(decoder->principals)  {
+        principals = lm_GetInnermostPrincipals(decoder->js_context, obj, NULL);
+    }  else  {
+	principals = NULL;
+    }
+
     if (principals == NULL) {
         /*
          * Attempt to access container before container has any scripts.
