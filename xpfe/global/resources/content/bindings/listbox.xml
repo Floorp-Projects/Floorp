@@ -764,7 +764,7 @@
             this.removeAttribute("selected");
 
           var event = document.createEvent("Events");
-          event.initEvent("ListitemStateChange", true, true);
+          event.initEvent("DOMMenuItemActive", true, true);
           this.dispatchEvent(event);
 
           return val;

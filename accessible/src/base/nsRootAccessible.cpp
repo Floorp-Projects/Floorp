@@ -158,9 +158,6 @@ NS_IMETHODIMP nsRootAccessible::AddEventListeners()
     rv = target->AddEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
-    rv = target->AddEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-
     rv = target->AddEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
@@ -192,15 +189,11 @@ NS_IMETHODIMP nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
   }
 
   RemoveContentDocListeners();
@@ -351,10 +344,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else
       FireAccessibleFocusEvent(accessible, targetNode);
   }
-  else if (eventType.EqualsIgnoreCase("ListitemStateChange")) {
-    accessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_STATE_CHANGE, accessible, nsnull);
-    FireAccessibleFocusEvent(accessible, optionTargetNode);
-  }
   else if (eventType.EqualsIgnoreCase("CheckboxStateChange")) { 
     accessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_STATE_CHANGE, accessible, nsnull);
   }
@@ -419,8 +408,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
       treeItemAccessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_FOCUS, treeItemAccessible, nsnull);
   }
-  else if (eventType.EqualsIgnoreCase("ListitemStateChange")) // it's a XUL <listbox>
-    accessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_FOCUS, accessible, nsnull);
   else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || // it's a XUL <checkbox>
            eventType.EqualsIgnoreCase("RadioStateChange")) { // it's a XUL <radio>
     accessible->GetAccState(&stateData.state);
