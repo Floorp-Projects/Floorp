@@ -66,13 +66,26 @@ public:
 protected:
   nsScrollFrame();
   virtual PRIntn GetSkipSides() const;
+
    // Creation of the widget for the scrolling view is factored into a virtual method so
    // that sub-classes may control widget creation.
   virtual nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
    // Getting the view for scollframe may be overriden to provide a parent view for te scroll frame
   virtual nsresult GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView);
+
 private:
   nsresult CreateScrollingView(nsIPresContext& aPresContext);
+
+  nsresult CalculateScrollAreaSize(nsIPresContext&          aPresContext,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsMargin&                aMargin,
+                                   nscoord                  aSBWidth,
+                                   nscoord                  aSBHeight,
+                                   nsSize*                  aScrollAreaSize,
+                                   PRBool*                  aRoomForVerticalScrollbar);
+
+  nsresult CalculateChildTotalSize(nsIFrame*            aKidFrame,
+                                   nsHTMLReflowMetrics& aKidReflowMetrics);
 };
 
 #endif /* nsScrollFrame_h___ */
