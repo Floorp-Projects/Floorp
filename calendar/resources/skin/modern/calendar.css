@@ -657,19 +657,19 @@
 .all-day-event-class,
 .month-allday-busy-ind-class[busy="true"]
 {
-   list-style-image     :url("chrome://calendar/skin/all_day_event.gif");
+   list-style-image     :url("chrome://calendar/skin/all_day_event.png");
 }  
 
 .all-day-event-class:hover,
 .month-allday-busy-ind-class[busy="true"]:hover
 {
-   list-style-image     :url("chrome://calendar/skin/all_day_event_hover.gif");
+   list-style-image     :url("chrome://calendar/skin/all_day_event_hover.png");
 }  
 
 .all-day-event-class:hover:active,
 .month-allday-busy-ind-class[busy="true"]:hover:active
 {
-   list-style-image     :url("chrome://calendar/skin/all_day_event_down.gif");
+   list-style-image     :url("chrome://calendar/skin/all_day_event_down.png");
 }  
 
 .month-view-event-dot-class
