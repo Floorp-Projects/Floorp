@@ -146,9 +146,10 @@ NS_IMPL_ISUPPORTS4(nsSecureBrowserUIImpl,
 
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
+nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button, nsIDOMElement *certauth)
 {
     mSecurityButton = button;
+    mCertificateAuthorityDisplay = certauth;
     mWindow         = window;
 
     nsresult rv = nsServiceManager::GetService( kPrefCID, 
@@ -342,6 +343,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                 if (NS_SUCCEEDED(res)) {
                     PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
                     res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("high") );
+                    // Do we really need to look at res here? What happens if there's an error?
+                    // We should still set the certificate authority display.
+                    res = mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2("<CA Info goes here>") );
                     return res;
                 }
             }
@@ -350,6 +354,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to broken\n", this));
         mIsDocumentBroken = PR_TRUE;
         res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken"));
+        // Do we really need to look at res here? What happens if there's an error?
+        // We should still set the certificate authority display.
+        res = mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2("") );
         return res;
     }
     
@@ -388,6 +395,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange - Icon set to broken\n", this));
         mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
+        mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2("") );
         mIsDocumentBroken = PR_TRUE;
     }    
 
@@ -466,7 +474,8 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
     if ( !isNewSchemeSecure && isOldSchemeSecure)
     {
         mSecurityButton->RemoveAttribute( NS_ConvertASCIItoUCS2("level") );
-    
+        mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2("") );
+        
         if ((mPref->GetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
             boolpref = PR_TRUE;
         
@@ -552,6 +561,7 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
     {
         mIsDocumentBroken = PR_TRUE;
         mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
+        mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2("") );
 
         if (!mPref) return NS_ERROR_NULL_POINTER;
 
