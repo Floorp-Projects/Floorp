@@ -103,7 +103,6 @@
 #include "nsNetCID.h"
 #include "nsNetError.h"
 #include "nsMsgUtils.h"
-#include "nsIRDFService.h"
 #include "nsIMsgMdnGenerator.h"
 #include "nsISmtpServer.h"
 #include "nsIMsgCompose.h"
@@ -2319,6 +2318,9 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
                 if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty()) {
                   nsCAutoString type;
                   mimeFinder->GetTypeFromExtension(fileExt, type);
+#if !defined(XP_MAC) && !defined(XP_MACOSX)
+                  if (!type.Equals("multipart/appledouble"))  // can't do apple double on non-macs
+#endif
                   m_attachments[newLoc].m_type = ToNewCString(type);
                 }
               }
@@ -2333,6 +2335,9 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
                   if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty()) {
                     nsCAutoString type;
                     mimeFinder->GetTypeFromExtension(fileExt, type);
+#if !defined(XP_MAC) && !defined(XP_MACOSX)
+                  if (!type.Equals("multipart/appledouble"))  // can't do apple double on non-macs
+#endif
                     m_attachments[newLoc].m_type = ToNewCString(type);
                   }
                 }

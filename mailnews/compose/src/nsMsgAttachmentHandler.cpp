@@ -465,6 +465,9 @@ FetcherURLDoneCallback(nsresult aStatus,
 #if defined(XP_MAC) || defined(XP_MACOSX)
       //Do not change the type if we are dealing with an apple double file
       if (!ma->mAppleFileSpec)
+#else
+        // can't send appledouble on non-macs
+        if (strcmp(aContentType, "multipart/appledouble")) 
 #endif
       {
         PR_FREEIF(ma->m_type);
