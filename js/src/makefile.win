@@ -67,9 +67,9 @@ DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 MAKE_OBJ_TYPE	= DLL
 
 !if "$(MOZ_BITS)" != "16"
-LINCS = -I$(PUBLIC)\layout \
+LINCS = \
         -I$(DEPTH)\include \
-        -I$(PUBLIC)\liblayer 
+        $(NULL)
 !endif
 
 !if "$(MOZ_BITS)" == "16"
@@ -131,12 +131,7 @@ OBJS =					\
 #// install headers
 #//
 #//------------------------------------------------------------------------
-!ifdef MOZ_TRACK_MODULE_DEPS
-INSTALL_DIR=$(XPDIST)\include\$(MODULE)
-!else
-INSTALL_DIR=$(XPDIST)\include
-!endif
-INSTALL_FILE_LIST=	\
+EXPORTS = \
 	js.msg		\
 	jsapi.h		\
 	jsarray.h	\
@@ -203,7 +198,7 @@ $(FDLIBM_LIBRARY):
     @cd $(MAKEDIR) 
 !endif
 
-export:: INSTALL_FILES $(DLL)
+export:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 

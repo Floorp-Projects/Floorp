@@ -111,12 +111,7 @@ OBJS=                                       \
 #// install headers
 #//
 #//------------------------------------------------------------------------
-!ifdef MOZ_TRACK_MODULE_DEPS
-INSTALL_DIR=$(XPDIST)\include\$(MODULE)
-!else
-INSTALL_DIR=$(XPDIST)\include
-!endif
-INSTALL_FILE_LIST=	\
+EXPORTS =	\
 	jsjava.h \
 !ifdef MOZ_OJI
  nsILiveconnect.h \
@@ -139,7 +134,7 @@ JNI_GEN=                            \
 
 !endif
 
-EXPORTS =				       \
+EXPORTS =	$(EXPORTS)			       \
 	$(JNI_GEN_DIR)\netscape_javascript_JSObject.h    \
 	$(NULL)
 
@@ -152,11 +147,6 @@ EXPORTS =				       \
 #//------------------------------------------------------------------------
 
 LINCS=$(LINCS) -I$(JNI_GEN_DIR) \
-               -I$(PUBLIC)\js \
-               -I$(PUBLIC)\java \
-!ifdef MOZ_OJI
-               -I$(PUBLIC)\xpcom \
-!endif
 	$(NULL)
 
 
@@ -170,8 +160,6 @@ LINCS=$(LINCS) -I$(JNI_GEN_DIR) \
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
-
-export::  INSTALL_FILES
 
 ####
 # this bit of extreme scariness came from the js/src makefile
