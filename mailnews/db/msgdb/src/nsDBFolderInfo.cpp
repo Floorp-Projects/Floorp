@@ -186,6 +186,7 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 			if (ret == NS_OK)
 			{
 				nsIMdbTableRowCursor *rowCursor;
+				rowPos = -1;
 				ret= m_mdbTable->GetTableRowCursor(m_mdb->GetEnv(), rowPos, &rowCursor);
 				if (ret == NS_OK)
 				{
