@@ -34,9 +34,12 @@ FILES = \
 	bookmarks.html			\
 	bookmarks.js			\
 	bookmarks.xul			\
+	iefavorite.gif			\
+	personal-folder-closed.gif	\
+	personal-folder-open.gif	\
 	$(NULL)
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
 
 install::
-	$(INSTALL) $(FILES) $(DIST)/bin/res/rdf
+	$(INSTALL) $(FILES) $(DIST)/bin/res/samples
