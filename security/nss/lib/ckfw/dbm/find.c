@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.1 $ $Date: 2000/05/15 20:39:56 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.2 $ $Date: 2000/05/15 20:58:19 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "ckdbm.h"
@@ -53,7 +53,7 @@ nss_dbm_mdFindObjects_Final
   nss_dbm_find_t *find = (nss_dbm_find_t *)mdFindObjects->etc;
 
   /* Locks might have system resources associated */
-  (void)nssCKFWMutex_Destroy(find->list_lock);
+  (void)NSSCKFWMutex_Destroy(find->list_lock);
   (void)NSSArena_Destroy(find->arena);
 }
 
@@ -81,7 +81,7 @@ nss_dbm_mdFindObjects_Next
   while(1) {
     /* Lock */
     {
-      *pError = nssCKFWMutex_Lock(find->list_lock);
+      *pError = NSSCKFWMutex_Lock(find->list_lock);
       if( CKR_OK != *pError ) {
         return (NSSCKMDObject *)NULL;
       }
@@ -91,7 +91,7 @@ nss_dbm_mdFindObjects_Next
         find->found = node->next;
       }
       
-      *pError = nssCKFWMutex_Unlock(find->list_lock);
+      *pError = NSSCKFWMutex_Unlock(find->list_lock);
       if( CKR_OK != *pError ) {
         /* screwed now */
         return (NSSCKMDObject *)NULL;
