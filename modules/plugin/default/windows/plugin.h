@@ -74,6 +74,7 @@ public:
   void shut();
   HWND getWindow();
   void showGetPluginDialog();
+  void getPlugin();
   BOOL readyToRefresh();
 
   // NP API handlers

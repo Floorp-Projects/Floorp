@@ -36,13 +36,16 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
   switch (id)
   {
     case IDC_GET_PLUGIN:
-      EndDialog(hWnd, IDC_GET_PLUGIN);
+      DestroyWindow(hWnd);
       if(pPlugin !=NULL)
+      {
         pPlugin->m_hWndDialog = NULL;
+        pPlugin->getPlugin();
+      }
       break;
     case IDCANCEL:
     case IDC_BUTTON_CANCEL:
-      EndDialog(hWnd, IDCANCEL);
+      DestroyWindow(hWnd);
       if(pPlugin !=NULL)
         pPlugin->m_hWndDialog = NULL;
       break;
@@ -149,10 +152,7 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
 
 static void onClose(HWND hWnd)
 {
-  EndDialog(hWnd, IDCANCEL);
-  CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
-  if(pPlugin !=NULL)
-    pPlugin->m_hWndDialog = NULL;
+  DestroyWindow(hWnd);
 }
 
 static void onDestroy(HWND hWnd)

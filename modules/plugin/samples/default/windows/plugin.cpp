@@ -235,7 +235,7 @@ void CPlugin::shut()
 
   if(m_hWndDialog != NULL)
   {
-    EndDialog(m_hWndDialog, IDCANCEL);
+    DestroyWindow(m_hWndDialog);
     m_hWndDialog = NULL;
   }
 
@@ -428,12 +428,13 @@ void CPlugin::showGetPluginDialog()
 
   if((m_szPageURL != NULL) || (m_szFileURL != NULL) || !m_bJavaScript)
   {
-    int iRet = DialogBoxParam(m_hInst, MAKEINTRESOURCE(IDD_PLUGIN_DOWNLOAD), m_hWnd,
-                              (DLGPROC)GetPluginDialogProc, (LPARAM)this);
-    if(iRet != IDC_GET_PLUGIN)
-      return;
+    CreateDialogParam(m_hInst, MAKEINTRESOURCE(IDD_PLUGIN_DOWNLOAD), m_hWnd,
+                      (DLGPROC)GetPluginDialogProc, (LPARAM)this);
   }
+}
 
+void CPlugin::getPlugin()
+{
   if(m_szCommandMessage != NULL)
   {
     delete [] m_szCommandMessage;
