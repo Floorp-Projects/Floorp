@@ -28,6 +28,18 @@ class nsIMsgCompose : public nsISupports {
     return iid;
   }
 
+  /* void CreateAndInitialize (in long a_context, in long old_context, in long prefs, in nsIMsgCompFields initfields, in long master); */
+  NS_IMETHOD CreateAndInitialize(PRInt32 a_context, PRInt32 old_context, PRInt32 prefs, nsIMsgCompFields *initfields, PRInt32 master) = 0;
+
+  /* void Create (in long a_context, in long prefs, in long master); */
+  NS_IMETHOD Create(PRInt32 a_context, PRInt32 prefs, PRInt32 master) = 0;
+
+  /* void Initialize (in long old_context, in nsIMsgCompFields initfields); */
+  NS_IMETHOD Initialize(PRInt32 old_context, nsIMsgCompFields *initfields) = 0;
+
+  /* void Dispose (); */
+  NS_IMETHOD Dispose() = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgCompose *priv);
