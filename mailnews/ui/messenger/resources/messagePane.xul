@@ -1,5 +1,4 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
 
 <!DOCTYPE window>
 
@@ -7,6 +6,14 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:style>
+
+window { 
+  overflow: auto;
+} 
+
+</html:style>
 
 <html:iframe src="message.html" name="browser.webwindow" width="100%" height="325px" > </html:iframe>
 
