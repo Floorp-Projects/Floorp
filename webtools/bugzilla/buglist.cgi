@@ -612,7 +612,9 @@ while (my @row = FetchSQLData()) {
     my $bug = {}; # a record
 
     # Slurp the row of data into the record.
-    foreach my $column (@selectcolumns) {
+    # The second from last column in the record is the number of groups
+    # to which the bug is restricted.
+    foreach my $column (@selectcolumns, 'dummy', 'groupset', 'dummy' ) {
         $bug->{$column} = shift @row;
     }
 
