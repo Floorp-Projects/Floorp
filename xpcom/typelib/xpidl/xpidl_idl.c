@@ -146,8 +146,7 @@ struct input_callback_stack {
     IncludePathEntry *include_path;
 };
 
-/* XXX pass in input_callback_data so we can get line number for error */
-static FILE *
+ static FILE *
 fopen_from_includes(const char *filename, const char *mode,
                     IncludePathEntry *include_path)
 {
@@ -184,8 +183,7 @@ fopen_from_includes(const char *filename, const char *mode,
         if (file)
             return file;
     }
-    fprintf(stderr, "can't open %s for reading\n", filename);
-    return NULL;
+     return NULL;
 }
 
 #ifdef XP_MAC
@@ -281,6 +279,26 @@ NextIsComment(struct input_callback_data *data, char **startp, int *lenp)
     end = strstr(data->point, "*/");
     *lenp = 0;
     if (end) {
+	int skippedLines;
+
+	/* get current lineno */
+	IDL_file_get(NULL,&data->lineno);
+
+	*startp = data->point;
+
+	/* get line count */
+	for(skippedLines = 0;;)
+	    {
+		*startp = strstr(*startp,"\n");
+		if (!*startp || *startp >= end)
+		    break;
+		
+		*startp += 1;
+		skippedLines++;
+	    }
+	data->lineno += skippedLines;
+	IDL_file_set(data->filename, (int)data->lineno);
+
         *startp = end + 2;
         data->f_comment = 0;
     } else {
@@ -328,10 +346,14 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
         /* make sure we have accurate line info */
         IDL_file_get(&scratch, &data->lineno);
         fprintf(stderr,
-                "didn't find end of quoted include name %*s at %s:%d\n",
-                end - start, start, scratch, data->lineno);
+                "%s:%d: didn't find end of quoted include name %*s\n",
+                scratch, data->lineno, end - start, start);
         return -1;
     }
+
+    if (*end == '\r' || *end == '\n')
+	IDL_file_set(NULL,++(int)data->lineno);
+
     *end = '\0';
     *startp = end + 1;
     end = strrchr(filename, '.');
@@ -353,6 +375,17 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
         g_hash_table_insert(stack->includes, filename, file_basename);
         new_data = new_input_callback_data(filename, stack->include_path);
         if (!new_data) {
+	    IDL_file_get(&scratch, &data->lineno);
+#ifdef XP_MAC
+	    static char warning_message[1024];
+	    sprintf(warning_message, "%s:%d: can't open included file %s for reading\n", scratch,
+		    data->lineno, filename);
+	    mac_warning(warning_message);
+#else
+
+	    fprintf(stderr, "%s:%d: can't open included file %s for reading\n", scratch,
+		    data->lineno, filename);
+#endif
             return -1;
         }
 
@@ -479,7 +512,8 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
             /* shaver: what about freeing the input structure? */
             free(data);
             data = stack->top;
-            IDL_file_set(data->filename, (int)++data->lineno);
+
+            IDL_file_set(data->filename, (int)data->lineno);
             IDL_inhibit_pop();
             data->f_include = INPUT_IN_NONE;
         }
@@ -704,3 +738,4 @@ xpidl_write_comment(TreeState *state, int indent)
                     IDLF_OUTPUT_PROPERTIES);
     fputs(" */\n", state->file);
 }
+
