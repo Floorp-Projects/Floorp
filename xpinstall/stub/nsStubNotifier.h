@@ -34,16 +34,14 @@ class nsStubNotifier : public nsIXPINotifier
 {
     public:
 
-        nsStubNotifier( pfnXPIStart, pfnXPIProgress, pfnXPIFinal );
+        nsStubNotifier( pfnXPIProgress );
         virtual ~nsStubNotifier();
 
         NS_DECL_ISUPPORTS
         NS_DECL_NSIXPINOTIFIER
 
     private:
-        pfnXPIStart     m_start;
         pfnXPIProgress  m_progress;
-        pfnXPIFinal     m_final;
 };
 
 #endif
