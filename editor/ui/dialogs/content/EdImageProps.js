@@ -48,6 +48,7 @@ function Startup()
   dialog.MoreFewerButton   = document.getElementById( "MoreFewerButton" );
   dialog.MoreSection       = document.getElementById( "MoreSection" );
   dialog.customsizeRadio   = document.getElementById( "customsizeRadio" );
+  dialog.originalsizeRadio = document.getElementById( "originalsizeRadio" );
   dialog.constrainCheckbox = document.getElementById( "constrainCheckbox" );
   dialog.widthInput        = document.getElementById( "widthInput" );
   dialog.heightInput       = document.getElementById( "heightInput" );
@@ -125,9 +126,10 @@ function InitDialog()
   // TODO: We need to get the actual image dimensions.
   //       If different from attribute dimensions, then "custom" is checked.
   // For now, always check custom, so we don't trash existing values
-  dialog.customsizeRadio.checked = true;
-  
-  dump(dialog.customsizeRadio.checked+" dialog.customsizeRadio.checked\n");
+  if ( dialog.widthInput.value.length && dialog.heightInput.value.length )
+    dialog.customsizeRadio.checked = true;
+  else
+    dialog.originalsizeRadio.checked = true;
 
   // set spacing editfields
   dialog.imagelrInput.value = globalElement.getAttribute("hspace");
@@ -402,12 +404,20 @@ function ValidateData()
       height = height + "%";
   }
 
-  dump("Image width,heigth: "+width+","+height+"\n");
+  if ( dialog.originalsizeRadio.checked )
+  {
+  // for now (until we can get the actual image dimensions), clear the height/width attributes if not set
+    globalElement.removeAttribute( "width" );
+    globalElement.removeAttribute( "height" );
+  }
+  else
+  {
   if (width.length > 0)
     globalElement.setAttribute("width", width);
   if (height.length > 0)
-    globalElement.setAttribute("width", width);
-  
+    globalElement.setAttribute("height", height);
+  }
+
   // spacing attributes
   // All of these should use ValidateNumberString() to 
   //  ensure value is within acceptable range
