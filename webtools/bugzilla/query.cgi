@@ -356,6 +356,11 @@ function selectProduct(f) {
     var cnt = 0;
     var i;
     var j;
+
+    if (!f) {
+        return;
+    }
+
     for (i=0 ; i<f.product.length ; i++) {
         if (f.product[i].selected) {
             cnt++;
