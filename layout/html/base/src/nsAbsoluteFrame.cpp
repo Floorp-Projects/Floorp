@@ -133,7 +133,8 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
   }
 
   if (nsnull == result) {
-    // Walk back down the tree until we find a frame that supports nsIAnchoredItems
+    // Walk back down the tree until we find a frame that supports
+    // nsIAbsoluteItems
     // XXX This is pretty yucky, but there isn't currently a better way to do
     // this...
     lastFrame->FirstChild(result);
