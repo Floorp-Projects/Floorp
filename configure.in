@@ -3010,13 +3010,6 @@ fi # $no_x
 
 dnl Set various defines and substitutions
 dnl ========================================================
-# netlib stuff
-MODULAR_NETLIB=1
-AC_DEFINE(MODULAR_NETLIB)
-AC_SUBST(MODULAR_NETLIB)
-if test !"$MODULAR_NETLIB"; then
-  AC_DEFINE(CookieManagement)
-fi
 
 if test "$OS_TARGET" = "OS2"; then
   AC_DEFINE(XP_PC)

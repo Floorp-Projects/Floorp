@@ -55,7 +55,6 @@ ENABLE_TESTS	= @ENABLE_TESTS@
 ENABLE_PICS     = @ENABLE_PICS@
 NO_UNIX_LDAP	= @NO_UNIX_LDAP@
 BUILD_IDLC = @BUILD_IDLC@
-MODULAR_NETLIB  = @MODULAR_NETLIB@
 
 ClientWallet=@ClientWallet@
 CookieManagement=@CookieManagement@
