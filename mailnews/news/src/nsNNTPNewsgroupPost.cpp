@@ -104,8 +104,8 @@ public:
 
     // the message can be stored in a file....allow accessors for getting and setting
 	// the file name to post...
-	NS_IMETHOD SetPostMessageFile(const nsFilePath& aFileName);
-	NS_IMETHOD GetPostMessageFile(const nsFilePath ** aFileName);
+	NS_IMETHOD SetPostMessageFile(nsFilePath& aFileName);
+	NS_IMETHOD GetPostMessageFile(nsFilePath ** aFileName);
     
     // helper routines
     static char *appendAndAlloc(char *string, const char *newSubstring,
@@ -308,26 +308,30 @@ nsNNTPNewsgroupPost::GetMessageID(char **messageID)
 // the message can be stored in a file....allow accessors for getting and setting
 // the file name to post...
 nsresult
-nsNNTPNewsgroupPost::SetPostMessageFile(const nsFilePath& aFileName)
+nsNNTPNewsgroupPost::SetPostMessageFile(nsFilePath& aFileName)
 {
-#ifdef DEBUG_sspitzer
-    printf("SetPostMessageFile(%s)\n",(const char *)aFileName);
+    if (aFileName) {
+#ifdef DEBUG_NEWS
+	printf("SetPostMessageFile(%s)\n",(const char *)aFileName);
 #endif
-	nsresult rv = NS_OK;
-	if (aFileName)
-		m_fileName = aFileName;
-
-	return rv;
+	m_fileName = aFileName;
+	return NS_OK;
+    }
+    else {
+	return NS_ERROR_FAILURE;
+    }
 }
 
 nsresult 
-nsNNTPNewsgroupPost::GetPostMessageFile(const nsFilePath ** aFileName)
+nsNNTPNewsgroupPost::GetPostMessageFile(nsFilePath ** aFileName)
 {
-	nsresult rv = NS_OK;
-	if (aFileName)
+	if (aFileName) {
 		*aFileName = &m_fileName;
-	
-	return rv;
+		return NS_OK;
+	}
+	else {
+		return NS_ERROR_NULL_POINTER;
+	}
 }
 
 NS_BEGIN_EXTERN_C

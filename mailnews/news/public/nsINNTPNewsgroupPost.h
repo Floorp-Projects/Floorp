@@ -112,8 +112,8 @@ class nsINNTPNewsgroupPost : public nsISupports {
   NS_IMETHOD GetFullMessage(char **_retval) = 0;
 
   /* attribute nsFilePath aFileName */
-  NS_IMETHOD SetPostMessageFile(const nsFilePath& aFileName) = 0;
-  NS_IMETHOD GetPostMessageFile(const nsFilePath ** aFileName) = 0;
+  NS_IMETHOD SetPostMessageFile(nsFilePath& aFileName) = 0;
+  NS_IMETHOD GetPostMessageFile(nsFilePath ** aFileName) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
