@@ -1322,7 +1322,7 @@ Edit <a href="userprefs.cgi">prefs</a>
             $html .= ", <a href=\"editusers.cgi\">users</a>\n";
         }
         if (UserInGroup("editcomponents")) {
-            $html .= ", <a href=\"editproducts.cgi\">components</a>\n";
+            $html .= ", <a href=\"editproducts.cgi\">products</a>\n";
             $html .= ", <a href=\"editattachstatuses.cgi\">
               attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
         }
