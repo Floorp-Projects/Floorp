@@ -37,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.11 2003/10/17 13:45:33 ian.mcgreer%sun.com Exp $
+ * $Id: blapit.h,v 1.12 2003/11/07 03:36:33 relyea%netscape.com Exp $
  */
 
 #ifndef _BLAPIT_H_
@@ -104,6 +104,16 @@
 #define AES_BLOCK_SIZE          16  /* bytes */
 
 #define NSS_FREEBL_DEFAULT_CHUNKSIZE 2048
+
+/*
+ * these values come from the intial key size limits from the PKCS #11
+ * module. They may be aribitarily adjusted to any value freebl supports
+ * RSA_MAX_MODULUS_BITS is not defined since there is only memory constraints
+ * on the largest RSA Modulus that PKCS #11 or freebl may support.
+ */
+#define RSA_MIN_MODULUS_BITS   128
+#define DH_MIN_P_BITS	       128
+#define DH_MAX_P_BITS         1024
 
 /*
  * The FIPS 186 algorithm for generating primes P and Q allows only 9
