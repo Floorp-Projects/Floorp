@@ -456,7 +456,7 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
 {
   nsresult res = NS_OK;
 
-  nsAutoString key(*aName);
+  nsString key(*aName);
   if (aProp != NULL) key.Append(*aProp); // yes, this parameter may be NULL
 
   PRUnichar * value = NULL;
@@ -475,7 +475,7 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
 {
   nsresult res = NS_OK;
 
-  nsAutoString key(*aName);
+  nsString key(*aName);
   if (aProp != NULL) key.Append(*aProp); // yes, this parameter may be NULL
 
   PRUnichar * value = NULL;

@@ -120,7 +120,8 @@ NS_IMPL_ISUPPORTS(EndListener, NS_GET_IID(nsIStreamListener));
 
 
 nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIChannel* aChannel) {
-    nsString data = aData;
+    nsString data;
+    data.AssignWithConversion(aData);
     nsCOMPtr<nsIInputStream> dataStream;
     nsCOMPtr<nsISupports> sup;
     nsresult rv = NS_NewStringInputStream(getter_AddRefs(sup), data);
@@ -257,8 +258,11 @@ main(int argc, char* argv[])
     NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsString fromStr("multipart/x-mixed-replace");
-    nsString toStr  ("text/html");
+    nsString fromStr;
+    fromStr.AssignWithConversion("multipart/x-mixed-replace");
+    nsString toStr;
+    toStr.AssignWithConversion("text/html");
+    
 
 #ifdef ASYNC_TEST
     // ASYNCRONOUS conversion

@@ -371,7 +371,7 @@ static void TestEntityConversion(PRUint32 version)
   nsresult res;
 
 
-  inString.Assign("\xA0\xA1\xA2\xA3");
+  inString.AssignWithConversion("\xA0\xA1\xA2\xA3");
   uChar = (PRUnichar) 8364; //euro
   inString.Append(&uChar, 1);
   uChar = (PRUnichar) 9830; //
@@ -417,7 +417,8 @@ static void TestSaveAsCharset()
 
   nsresult res;
 
-  nsString inString("\x61\x62\x80\xA0\x63");
+  nsString inString;
+  inString.AssignWithConversion("\x61\x62\x80\xA0\x63");
   char *outString;
   
   // first, dump input string

@@ -250,7 +250,7 @@ nsLocaleService::nsLocaleService(void)
             posixConverter->Release();
         } else {
             if (lang==nsnull) {
-                xpLocale = "en-US";
+                xpLocale.AssignWithConversion("en-US");
                 PRUnichar* loc = xpLocale.ToNewUnicode();
                 result = NewLocale(loc, &mSystemLocale);
                 nsCRT::free(loc);
@@ -265,9 +265,9 @@ nsLocaleService::nsLocaleService(void)
 				        if (resultLocale==NULL) { posixConverter->Release(); return; }
                 for(i=0;i<LocaleListLength;i++) {
                     char* lc_temp = setlocale(posix_locale_category[i],"");
-                    category = LocaleList[i];
-                    if (lc_temp==nsnull) xpLocale = "en-US";
-                    else xpLocale = lc_temp;
+                    category.AssignWithConversion(LocaleList[i]);
+                    if (lc_temp==nsnull) xpLocale.AssignWithConversion("en-US");
+                    else xpLocale.AssignWithConversion(lc_temp);
                     PRUnichar* loc = xpLocale.ToNewUnicode();
                     PRUnichar* cat = category.ToNewUnicode();
                     resultLocale->AddCategory(cat, loc);
@@ -302,7 +302,7 @@ nsLocaleService::nsLocaleService(void)
             os2Converter->Release();
         } else {
             if (lang==nsnull) {
-                xpLocale = "en-US";
+                xpLocale.AssignWithConversion("en-US");
                 PRUnichar* loc = xpLocale.ToNewUnicode();
                 result = NewLocale(loc, &mSystemLocale);
                 nsCRT::free(loc);
@@ -318,7 +318,7 @@ nsLocaleService::nsLocaleService(void)
                 for(i=0;i<LocaleListLength;i++) {
                     char* lc_temp = setlocale(os2_locale_category[i],"");
                     category = LocaleList[i];
-                    if (lc_temp==nsnull) xpLocale = "en-US";
+                    if (lc_temp==nsnull) xpLocale.AssignWithConversion("en-US");
                     else xpLocale = lc_temp;
                     PRUnichar* loc = xpLocale.ToNewUnicode();
                     PRUnichar* cat = category.ToNewUnicode();

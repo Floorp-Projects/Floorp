@@ -878,7 +878,8 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
             return nsnull;
         }
 
-        nsCAutoString theDate(lDate);
+        nsCAutoString theDate;
+	theDate.AssignWithConversion(lDate);
         char *escapedDate = nsEscape(theDate.GetBuffer(), url_Path);
 
         aString.Append(escapedDate);

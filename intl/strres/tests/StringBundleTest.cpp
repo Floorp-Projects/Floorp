@@ -105,7 +105,8 @@ get_applocale(void)
 	//
 	locale->AddRef();
 
-	category = new nsString("NSILOCALE_MESSAGES");
+	category = new nsString();
+	category->AssignWithConversion("NSILOCALE_MESSAGES");
 	value = new nsString();
 
 	result = locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
@@ -189,7 +190,8 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  nsAutoString v("");
+  nsAutoString v;
+  v.AssignWithConversion("");
   PRUnichar *ptrv = nsnull;
   char *value = nsnull;
 
@@ -204,7 +206,8 @@ main(int argc, char *argv[])
   cout << "123=\"" << value << "\"" << endl;
 
   // file
-  nsString strfile("file");
+  nsString strfile;
+  strfile.AssignWithConversion("file");
   const PRUnichar *ptrFile = strfile.GetUnicode();
   ret = bundle->GetStringFromName(ptrFile, &ptrv);
   if (NS_FAILED(ret)) {

@@ -34,7 +34,8 @@ TestConverter::Convert(nsIInputStream *aFromStream,
     for (PRUint32 i = 0; i < read; i++) 
         buf[i] = toChar;
 
-    nsString convDataStr(buf);
+    nsString convDataStr;
+    convDataStr.AssignWithConversion(buf);
     nsIInputStream *inputData = nsnull;
     nsISupports *inputDataSup = nsnull;
 

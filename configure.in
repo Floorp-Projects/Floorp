@@ -2538,6 +2538,10 @@ dnl make sure that we compile in multi-processor support
 NS_MT_SUPPORTED=1
 AC_DEFINE(NS_MT_SUPPORTED)
 
+MOZ_ARG_ENABLE_BOOL(new-strings,
+[  --enable-new-strings         blah blah blah],
+  AC_DEFINE(NEW_STRING_APIS))
+
 dnl build the tests by default
 ENABLE_TESTS=1
 MOZ_ARG_DISABLE_BOOL(tests,
