@@ -2945,7 +2945,7 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
 SECStatus
 PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
 {
-    PK11SlotInfo *slot = PK11_ReferenceSlot(key->pkcs11Slot);
+    PK11SlotInfo *slot = key->pkcs11Slot;
     CK_OBJECT_HANDLE id = key->pkcs11ID;
     CK_MECHANISM mech = {0, NULL, 0 };
     PRBool owner = PR_TRUE;
@@ -2963,6 +2963,8 @@ PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
 	}
 	id = PK11_ImportPublicKey(slot,key,PR_FALSE);
             
+    } else {
+	PK11_ReferenceSlot(slot);
     }
 
     session = pk11_GetNewSession(slot,&owner);
