@@ -150,28 +150,6 @@ CookieViewerImpl::GetPermissionValue(char** aValue)
   return res;
 }
 
-static void DOMWindowToWebShellWindow(
-              nsIDOMWindow *DOMWindow,
-              nsCOMPtr<nsIWebShellWindow> *webWindow)
-{
-  if (!DOMWindow) {
-    return; // with webWindow unchanged -- its constructor gives it a null ptr
-  }
-  nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
-  nsCOMPtr<nsIWebShell> webshell, rootWebshell;
-  if (globalScript) {
-    globalScript->GetWebShell(getter_AddRefs(webshell));
-  }
-  if (webshell) {
-    webshell->GetRootWebShellEvenIfChrome(*getter_AddRefs(rootWebshell));
-  }
-  if (rootWebshell) {
-    nsCOMPtr<nsIWebShellContainer> webshellContainer;
-    rootWebshell->GetContainer(*getter_AddRefs(webshellContainer));
-    *webWindow = do_QueryInterface(webshellContainer);
-  }
-}
-
 NS_IMETHODIMP
 CookieViewerImpl::SetValue(const char* aValue, nsIDOMWindow* win)
 {

@@ -545,13 +545,17 @@ SI_SetCharPref(const char * prefname, const char * prefvalue);
 extern void
 SI_GetCharPref(const char * prefname, char** aPrefvalue);
 
+#ifdef AutoCapture
 static const char *pref_captureForms = "wallet.captureForms";
+#endif
 static const char *pref_WalletNotified = "wallet.Notified";
 static const char *pref_WalletKeyFileName = "wallet.KeyFileName";
 static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
 static const char *pref_WalletServer = "wallet.Server";
 
+#ifdef AutoCapture
 PRIVATE PRBool wallet_captureForms = PR_FALSE;
+#endif
 PRIVATE PRBool wallet_Notified = PR_FALSE;
 PRIVATE char * wallet_Server = nsnull;
 
