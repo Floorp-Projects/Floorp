@@ -38,6 +38,7 @@
 #include "nsISupports.h"
 
 class nsIOutputStream;
+struct JSObject;
 
 #define NS_IPLUGININSTANCEPEER_IID                   \
 { /* 4b7cea20-019b-11d2-815b-006008119d7a */         \
@@ -136,6 +137,14 @@ public:
     NS_IMETHOD
     SetWindowSize(PRUint32 width, PRUint32 height) = 0;
 
+    /**
+     * Get the JavaScript window object corresponding to this plugin instance.
+     *
+     * @param outJSWindow - the resulting JavaScript window object
+     * @result - NS_OK if this operation was successful
+     */
+	NS_IMETHOD
+	GetJSWindow(JSObject* *outJSWindow) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
