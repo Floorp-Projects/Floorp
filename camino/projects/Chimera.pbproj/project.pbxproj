@@ -216,7 +216,7 @@
 				F50BC9A40239FA8D010001CA,
 				F538DFAE023B36A7010001CA,
 				F564872E023B954E010001CA,
-				F5960E4502BA4E4901000103,
+				F50EA33D02BAAAB701000103,
 				089C165CFE840E0CC02AAC07,
 				F51B70B4026EC8A601A80166,
 			);
@@ -484,12 +484,13 @@
 				F540BD1D029ED17901026D5D,
 				F5007D3B02A3DA4801010220,
 				F53E013002AEE9BD01A967F3,
-				F5960E7102BA4E4901000103,
-				F5960E7202BA4E4901000103,
-				F5960E7302BA4E4901000103,
-				F5960E7402BA4E4901000103,
-				F5960E7502BA4E4901000103,
-				F5960E7602BA4E4901000103,
+				F50EA34502BAAAB701000103,
+				F50EA34602BAAAB701000103,
+				F50EA34702BAAAB701000103,
+				F50EA34802BAAAB701000103,
+				F50EA34902BAAAB701000103,
+				F50EA34A02BAAAB701000103,
+				F50EA34B02BAAAB701000103,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -937,6 +938,97 @@
 			name = nsRuleNode.cpp;
 			path = ../content/base/src/nsRuleNode.cpp;
 			refType = 2;
+		};
+		F50EA33D02BAAAB701000103 = {
+			children = (
+				F50EA33E02BAAAB701000103,
+				F50EA33F02BAAAB701000103,
+				F50EA34002BAAAB701000103,
+				F50EA34102BAAAB701000103,
+				F50EA34202BAAAB701000103,
+				F50EA34302BAAAB701000103,
+				F50EA34402BAAAB701000103,
+			);
+			isa = PBXGroup;
+			path = throbber;
+			refType = 4;
+		};
+		F50EA33E02BAAAB701000103 = {
+			isa = PBXFileReference;
+			path = "throbber-01.gif";
+			refType = 4;
+		};
+		F50EA33F02BAAAB701000103 = {
+			isa = PBXFileReference;
+			path = "throbber-02.gif";
+			refType = 4;
+		};
+		F50EA34002BAAAB701000103 = {
+			isa = PBXFileReference;
+			path = "throbber-03.gif";
+			refType = 4;
+		};
+		F50EA34102BAAAB701000103 = {
+			isa = PBXFileReference;
+			path = "throbber-04.gif";
+			refType = 4;
+		};
+		F50EA34202BAAAB701000103 = {
+			isa = PBXFileReference;
+			path = "throbber-05.gif";
+			refType = 4;
+		};
+		F50EA34302BAAAB701000103 = {
+			isa = PBXFileReference;
+			path = "throbber-06.gif";
+			refType = 4;
+		};
+		F50EA34402BAAAB701000103 = {
+			isa = PBXFileReference;
+			path = throbber.gif;
+			refType = 4;
+		};
+		F50EA34502BAAAB701000103 = {
+			fileRef = F50EA33E02BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34602BAAAB701000103 = {
+			fileRef = F50EA33F02BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34702BAAAB701000103 = {
+			fileRef = F50EA34002BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34802BAAAB701000103 = {
+			fileRef = F50EA34102BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34902BAAAB701000103 = {
+			fileRef = F50EA34202BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34A02BAAAB701000103 = {
+			fileRef = F50EA34302BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34B02BAAAB701000103 = {
+			fileRef = F50EA34402BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F5125A110202064D01FAFD9F = {
 			isa = PBXFileReference;
@@ -3858,85 +3950,6 @@
 			name = nsComponentManager.cpp;
 			path = ../xpcom/components/nsComponentManager.cpp;
 			refType = 2;
-		};
-		F5960E4502BA4E4901000103 = {
-			children = (
-				F5960E4602BA4E4901000103,
-				F5960E4702BA4E4901000103,
-				F5960E4802BA4E4901000103,
-				F5960E4902BA4E4901000103,
-				F5960E4A02BA4E4901000103,
-				F5960E4B02BA4E4901000103,
-			);
-			isa = PBXGroup;
-			path = throbber;
-			refType = 4;
-		};
-		F5960E4602BA4E4901000103 = {
-			isa = PBXFileReference;
-			path = "throbber-01.tif";
-			refType = 4;
-		};
-		F5960E4702BA4E4901000103 = {
-			isa = PBXFileReference;
-			path = "throbber-02.tif";
-			refType = 4;
-		};
-		F5960E4802BA4E4901000103 = {
-			isa = PBXFileReference;
-			path = "throbber-03.tif";
-			refType = 4;
-		};
-		F5960E4902BA4E4901000103 = {
-			isa = PBXFileReference;
-			path = "throbber-04.tif";
-			refType = 4;
-		};
-		F5960E4A02BA4E4901000103 = {
-			isa = PBXFileReference;
-			path = "throbber-05.tif";
-			refType = 4;
-		};
-		F5960E4B02BA4E4901000103 = {
-			isa = PBXFileReference;
-			path = "throbber-06.tif";
-			refType = 4;
-		};
-		F5960E7102BA4E4901000103 = {
-			fileRef = F5960E4602BA4E4901000103;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5960E7202BA4E4901000103 = {
-			fileRef = F5960E4702BA4E4901000103;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5960E7302BA4E4901000103 = {
-			fileRef = F5960E4802BA4E4901000103;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5960E7402BA4E4901000103 = {
-			fileRef = F5960E4902BA4E4901000103;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5960E7502BA4E4901000103 = {
-			fileRef = F5960E4A02BA4E4901000103;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5960E7602BA4E4901000103 = {
-			fileRef = F5960E4B02BA4E4901000103;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5960E9C02BA686001000103 = {
 			fileRef = F5FEDBCB02AD8DD101A967F3;
