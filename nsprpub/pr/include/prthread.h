@@ -159,7 +159,9 @@ NSPR_API(PRStatus) PR_JoinThread(PRThread *thread);
 ** Never returns NULL.
 */
 NSPR_API(PRThread*) PR_GetCurrentThread(void);
+#ifndef NO_NSPR_10_SUPPORT
 #define PR_CurrentThread() PR_GetCurrentThread() /* for nspr1.0 compat. */
+#endif /* NO_NSPR_10_SUPPORT */
 
 /*
 ** Get the priority of "thread".
