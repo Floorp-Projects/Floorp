@@ -59,7 +59,11 @@ class nsIThread : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHREAD_IID);
 
+    // returns the nsIThread for the current thread:
     static NS_BASE nsresult GetCurrent(nsIThread* *result);
+
+    // returns the nsIThread for an arbitrary PRThread:
+    static NS_BASE nsresult GetIThread(PRThread* prthread, nsIThread* *result);
 
     NS_IMETHOD Join() = 0;
 
