@@ -21,79 +21,6 @@
  */
 
 #define NS_IMPL_IDS
-#include "nsIAppShellService.h"
-#include "nsICmdLineService.h"
-#include "nsAppShellCIDs.h"
-#include "nsIEditor.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-
-#include "nsFileSpec.h"
-#include "nsIFileSpec.h"
-
-#include "rdf.h"
-#include "nsIWindowMediator.h"
-// #include "nsAbout.h"
-#include "nsIAboutModule.h"
-
-#ifdef XP_OS2
-
-#define WIDGET_DLL      "WDGTOS2"
-#define GFXWIN_DLL      "GFX_OS2"
-#define VIEW_DLL        "NGVIEW"
-#define WEB_DLL         "WEBSHELL"
-#define PREF_DLL        "PREF"
-#define PARSER_DLL      "HTMLPARS"
-#define LAYOUT_DLL      "NGLAYOUT"
-#define NETLIB_DLL      "NECKO"
-#define EDITOR_DLL      "ENDER"
-#define APPSHELL_DLL    "APPSHELL"
-#define APPCORES_DLL    "APPCORES"
-#define CAPS_DLL        "CAPS"
-#define LIVECONNECT_DLL "JSJ"
-#define OJI_DLL         "OJI"
-
-#else
-
-#ifdef XP_PC
-
-#define BROWSER_DLL  "nsbrowser.dll"
-#define EDITOR_DLL "ender.dll"
-
-#else
-
-#ifdef XP_MAC
-
-#define EDITOR_DLL	"ENDER_DLL"
-
-#else
-
-// XP_UNIX || XP_BEOS
-#define EDITOR_DLL	"libender"MOZ_DLL_SUFFIX
-
-#endif // XP_MAC
-
-#endif // XP_PC
-
-#endif // XP_OS2
-
-// Class IDs
-static NS_DEFINE_CID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_CID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
-static NS_DEFINE_CID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
-#define NS_ABOUT_CID                    \
-{ /* {1f1ce501-663a-11d3-b7a0-be426e4e69bc} */         \
-0x1f1ce501, 0x663a, 0x11d3, { 0xb7, 0xa0, 0xbe, 0x42, 0x6e, 0x4e, 0x69, 0xbc } \
-}
-static NS_DEFINE_CID( kAboutModuleCID,      NS_ABOUT_CID);
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                                 NULL /* default */);
-  return rv;
-}
-
 /*
  * This evil file will go away when the XPCOM registry can be 
  * externally initialized!
@@ -110,16 +37,14 @@ extern "C" void
 NS_SetupRegistry_1( PRBool needAutoreg )
 {
   if ( needAutoreg )
-    NS_AutoregisterComponents();
+    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+                                     NULL /* default */);
 
   /*
    * Call the standard NS_SetupRegistry() implemented in 
    * webshell/tests/viewer/nsSetupregistry.cpp
    */
   NS_SetupRegistry();
-
-  //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
-
 }
 
 
