@@ -211,6 +211,14 @@ public int read(byte[] b, int off, int len) throws IOException
                 numRead = max;
                 available -= max;
             }
+            try {
+                synchronized(this) {
+                    this.notify();
+                }
+            }
+            catch (Exception e) {
+                throw new IOException("RandomHTMLInputStream: Can't notify listeners");
+            }
         }
         else {
             
@@ -254,6 +262,14 @@ public void close() throws IOException
         throw new IOException("It's time for an IOException!");
     }
     isClosed = true;
+    try {
+        synchronized(this) {
+            this.notify();
+        }
+    }
+    catch (Exception e) {
+        throw new IOException("RandomHTMLInputStream: Can't notify listeners");
+    }
 }
 
 private boolean shouldThrowException()

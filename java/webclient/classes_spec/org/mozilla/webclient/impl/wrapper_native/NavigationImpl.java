@@ -134,6 +134,34 @@ public void loadURL(String absoluteURL)
 		}
 	    });
     }
+
+    public void loadFromStreamBlocking(InputStream stream, String uri,
+				       String contentType, int contentLength,
+				       Properties loadInfo) {
+	ParameterCheck.nonNull(stream);
+	ParameterCheck.nonNull(uri);
+	ParameterCheck.nonNull(contentType);
+	if (contentLength < -1 || contentLength == 0) {
+	    throw new RangeException("contentLength value " + contentLength +
+				     " is out of range.  It is should be either -1 or greater than 0.");
+	}
+	
+	final InputStream finalStream = stream;
+	final String finalUri = uri;
+	final String finalContentType = contentType;
+	final int finalContentLength = contentLength;
+	final Properties finalLoadInfo = loadInfo;
+	
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    nativeLoadFromStream(NavigationImpl.this.getNativeBrowserControl(), 
+					 finalStream, finalUri, 
+					 finalContentType, 
+					 finalContentLength, finalLoadInfo);
+		    return null;
+		}
+	    });
+    }
     
 public void refresh(long loadFlags)
 {
@@ -247,7 +275,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.7 2004/04/28 16:40:15 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.8 2004/06/02 14:31:23 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

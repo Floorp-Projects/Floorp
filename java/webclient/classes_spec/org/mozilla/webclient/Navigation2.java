@@ -29,6 +29,9 @@
 
 package org.mozilla.webclient;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 public interface Navigation2 extends Navigation
 {
 
@@ -51,6 +54,11 @@ public void post(String  absoluteUrl,
                  String  postHeaders);
 
 public void loadURLBlocking(String absoluteURL);
+
+public void loadFromStreamBlocking(InputStream stream, String uri,
+                                   String contentType, int contentLength,
+                                   Properties loadInfo);
+
 
 } 
 // end of interface Navigation2
