@@ -78,10 +78,6 @@ protected:
 
   //nsStackFrame(nsIPresShell* aPresShell);
 
-private:
-
-  static nsCOMPtr<nsIBoxLayout> gLayout;
-
 }; // class nsStackFrame
 
 

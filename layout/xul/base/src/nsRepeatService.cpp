@@ -37,7 +37,7 @@
 #define REPEAT_DELAY        50
 #endif
 
-nsCOMPtr<nsITimerCallback> nsRepeatService::gInstance = new nsRepeatService();
+nsRepeatService* nsRepeatService::gInstance = nsnull;
 
 nsRepeatService::nsRepeatService()
 {
@@ -52,7 +52,17 @@ nsRepeatService::~nsRepeatService()
 nsRepeatService* 
 nsRepeatService::GetInstance()
 {
-  return (nsRepeatService*)gInstance.get();
+  if (!gInstance) {
+    gInstance = new nsRepeatService();
+    NS_IF_ADDREF(gInstance);
+  }
+  return gInstance;
+}
+
+/*static*/ void
+nsRepeatService::Shutdown()
+{
+  NS_IF_RELEASE(gInstance);
 }
 
 void nsRepeatService::Start(nsITimerCallback* aCallback)

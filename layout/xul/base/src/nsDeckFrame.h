@@ -107,7 +107,6 @@ protected:
 
 private:
 
-  static nsCOMPtr<nsIBoxLayout> gLayout;
   PRInt32 mIndex;
 
 }; // class nsDeckFrame

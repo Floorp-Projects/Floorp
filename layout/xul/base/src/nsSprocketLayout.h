@@ -95,6 +95,7 @@ class nsSprocketLayout : public nsBoxLayout {
 public:
 
   friend nsresult NS_NewSprocketLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
+  static void Shutdown();
 
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
 
@@ -161,7 +162,7 @@ private:
 
   // because the sprocket layout manager has no instance variables. We 
   // can make a static on and reuse it everywhere.
-  static nsCOMPtr<nsIBoxLayout> gInstance;
+  static nsIBoxLayout* gInstance;
 
 };
 

@@ -44,7 +44,7 @@
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
 
-nsCOMPtr<nsIBoxLayout> nsSprocketLayout::gInstance = new nsSprocketLayout();
+nsIBoxLayout* nsSprocketLayout::gInstance = nsnull;
 
 //#define DEBUG_GROW
 
@@ -56,10 +56,20 @@ nsCOMPtr<nsIBoxLayout> nsSprocketLayout::gInstance = new nsSprocketLayout();
 nsresult
 NS_NewSprocketLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
 {
+  if (!nsSprocketLayout::gInstance) {
+    nsSprocketLayout::gInstance = new nsSprocketLayout();
+    NS_IF_ADDREF(nsSprocketLayout::gInstance);
+  }
   // we have not instance variables so just return our static one.
   aNewLayout = nsSprocketLayout::gInstance;
   return NS_OK;
 } 
+
+/*static*/ void
+nsSprocketLayout::Shutdown()
+{
+  NS_IF_RELEASE(gInstance);
+}
 
 nsSprocketLayout::nsSprocketLayout()
 {

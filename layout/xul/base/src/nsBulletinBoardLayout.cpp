@@ -37,20 +37,29 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 
-nsCOMPtr<nsIBoxLayout> nsBulletinBoardLayout::gInstance = new nsBulletinBoardLayout();
+nsIBoxLayout* nsBulletinBoardLayout::gInstance = nsnull;
 
 nsresult
 NS_NewBulletinBoardLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
 {
+  if (!nsBulletinBoardLayout::gInstance) {
+    nsBulletinBoardLayout::gInstance = new nsBulletinBoardLayout();
+    NS_IF_ADDREF(nsBulletinBoardLayout::gInstance);
+  }
   // we have not instance variables so just return our static one.
   aNewLayout = nsBulletinBoardLayout::gInstance;
   return NS_OK;
 } 
 
+/*static*/ void
+nsBulletinBoardLayout::Shutdown()
+{
+  NS_IF_RELEASE(gInstance);
+}
+
 nsBulletinBoardLayout::nsBulletinBoardLayout()
 {
 }
-
 
 NS_IMETHODIMP
 nsBulletinBoardLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
