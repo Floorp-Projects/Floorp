@@ -169,7 +169,6 @@ public:
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
                            PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected);
 
-
 // Selection and navigation
   /* obsolete
   NS_IMETHOD MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection);
@@ -273,12 +272,13 @@ protected:
 
   // Table utilities
 
+  NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan, PRBool aAfter);
   NS_IMETHOD DeleteTable(nsCOMPtr<nsIDOMElement> &table, nsCOMPtr<nsIDOMSelection> &selection);
   // Helper used to get nsITableLayout interface for methods implemented in nsTableFrame
   NS_IMETHOD GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject);
-  // Helpers to do appropriate deleting when last cell or row is about to be deleted
-  PRBool IsOnlyCellInRow(nsCOMPtr<nsIDOMElement> &aCell, nsIDOMElement** aParentRow);
-  PRBool IsOnlyRowInTable(nsCOMPtr<nsIDOMElement> &aRow, nsCOMPtr<nsIDOMElement> &aTable);
+  // Needed to do appropriate deleting when last cell or row is about to be deleted
+  // This doesn't count cells that don't start in the given row (are spanning from row above)
+  PRInt32 GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex);
   
   // Most insert methods need to get the same basic context data
   NS_IMETHOD GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
