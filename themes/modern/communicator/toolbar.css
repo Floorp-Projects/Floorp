@@ -81,22 +81,22 @@ toolbar[collapsed="true"] > toolbargrippy
   
 .toolbar-primary-image-left
   {
-    list-style-image      : url("chrome://global/skin/navbar-bg-leftcap.gif");
+	background            : url("chrome://global/skin/navbar-bg-leftcap.gif") no-repeat;
     width				  : 24px;
-    height				  : 43px;
+    height				  : 46px;
   }
 
 .toolbar-primary-image-middle
   {
-    list-style-image          : url("chrome://global/skin/navbar-bg.gif");
-    height			  	  : 43px;
+	background            : url("chrome://global/skin/navbar-bg.gif") repeat-x;
+    height			  	  : 46px;
   }
 
 .toolbar-primary-image-right
   {
-  	list-style-image	  : url("chrome://global/skin/navbar-bg-rightcap.gif");
+	background            : url("chrome://global/skin/navbar-bg-rightcap.gif") no-repeat;
   	width				  : 24px;
-  	height				  : 43px;
+  	height				  : 46px;
   }
 
 .toolbary-primary-grippy

@@ -140,7 +140,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
     list-style-image	  : url("chrome://global/skin/print.gif");
-	margin				  : 6px 6px 6px 6px;
+	margin                : 6px 6px 10px 6px;
   }
 
 #print-button[disabled="true"],
@@ -179,51 +179,23 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 /*all the urlbar stuff*/
 
+#nav-bar > .toolbar-primary-image-left, #nav-bar > .toolbar-primary-image-middle, #nav-bar > .toolbar-primary-image-right
+{
+	max-height	: 43px;
+}
+
 #nav-bar-inner
   {
   	-moz-binding		  : url("chrome://global/skin/globalBindings.xml#nav-bar-inner");
-	margin				  : 6px 0px 6px 6px;
+	margin				  : 6px 0px 9px 6px;
     min-width			  : 0px;
   }
 
-.navbar-inner-groove-image-left-top
-  {
-  	background			  : url("chrome://navigator/skin/navbar-groove-left-top.gif") no-repeat;
-  	height				  : 15px;
-  	width				  : 6px; 
-  }
-
-.navbar-inner-groove-image-left-middle
-  {
-  	background			  : url("chrome://navigator/skin/navbar-groove-left-middle.gif") repeat-y;
-  	width				  : 6px;
-  }
-
-.navbar-inner-groove-image-left-bottom
-  {
-  	background			  : url("chrome://navigator/skin/navbar-groove-left-bottom.gif") no-repeat;
-  	height				  : 15px;
-  	width				  : 6px; 
-  }
-
-.navbar-inner-groove-image-right-top
-  {
-  	background			  : url("chrome://navigator/skin/navbar-groove-right-top.gif") no-repeat;
-  	height				  : 15px;
-  	width				  : 6px; 
-  }
-
-.navbar-inner-groove-image-right-middle
-  {
-  	background			  : url("chrome://navigator/skin/navbar-groove-right-middle.gif") repeat-y;
-  	width				  : 6px;
-  }
-
-.navbar-inner-groove-image-right-bottom
-  {
-  	background			  : url("chrome://navigator/skin/navbar-groove-right-bottom.gif") no-repeat;
-  	height				  : 15px;
-  	width				  : 6px; 
+.navbar-inner-groove-image-left                                                 
+  {                                                                             
+	list-style-image          : url("chrome://navigator/skin/navbar-inner-groove-left.gif");
+	width                             : 6px;                                
+	height                            : 31px;
   }
 
 /* 3px border on top and bottom of navbar-inner */
@@ -246,50 +218,25 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   	border-bottom		  : 1px solid #556D8B;
   }
 
+.navbar-inner-groove-image-right                                                
+  {                                                                             
+	list-style-image          : url("chrome://navigator/skin/navbar-inner-groove-right.gif");
+	width                     : 6px;                                
+	height                    : 31px;                               
+  }
+
+
 #urlbar-group
   {
   	-moz-binding		  : url("chrome://global/skin/globalBindings.xml#urlbar-group");
   	margin				  : 3px 8px 4px 2px;
   }
 
-.urlbar-image-left-top
+.urlbar-image-left
   {
-  	background			  : url("chrome://navigator/skin/urlbar-left-top.gif") no-repeat;
-  	width				  : 3px;
-  	height				  : 4px;
-  }
-
-.urlbar-image-left-middle
-  {
-  	background			  : url("chrome://navigator/skin/urlbar-left-middle.gif") repeat-y;
-  	width				  : 3px;
-  }
-
-.urlbar-image-left-bottom
-  {
-  	background			  : url("chrome://navigator/skin/urlbar-left-bottom.gif") no-repeat;
-  	width				  : 3px;
-  	height				  : 4px;
-  }
-
-.urlbar-image-right-top
-  {
-  	background			  : url("chrome://navigator/skin/urlbar-right-top.gif") no-repeat;
-  	width				  : 4px;
-  	height				  : 8px;
-  }
-
-.urlbar-image-right-middle
-  {
-  	background			  : url("chrome://navigator/skin/urlbar-right-middle.gif") repeat-y;
-  	width				  : 4px;
-  }
-
-.urlbar-image-right-bottom
-  {
-  	background			  : url("chrome://navigator/skin/urlbar-right-bottom.gif") no-repeat;
-  	width				  : 4px;
-  	height				  : 9px;
+  	list-style-image          : url("chrome://navigator/skin/urlbar-left.gif");
+  	width                     : 3px;
+  	height                    : 18px;
   }
 
 .urlbar-border-outer
@@ -301,7 +248,15 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
   	border-top			  : 1px solid #A3A3A3;
   }
-  
+
+.urlbar-image-right                                                             
+  {                                                                             
+	list-style-image          : url("chrome://navigator/skin/urlbar-right.gif");
+	width                             : 4px;                                
+	height                            : 18px;                               
+  }
+
+
 #page-proxy-button 
   {
   	margin-left			  : 0px;
@@ -320,7 +275,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #ubhist-keyword-popup
   {
-    margin                : 2px 4px 9px 3px;
+    margin                : 3px 4px 8px 3px;
     width                 : 10px; 
     list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup.gif");
     background-color	  : transparent;
@@ -334,7 +289,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #ubhist-keyword-popup:hover:active
   {
-    margin                : 2px 4px 9px 3px;
+    margin                : 3px 4px 8px 3px;
     width                 : 10px; 
     list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup-active.gif"); 
   } 
