@@ -2278,7 +2278,7 @@ public class Interpreter
             valBln = ScriptRuntime.cmp_LE(rhs, lhs);
         }
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.LE : {
         --stackTop;
@@ -2293,7 +2293,7 @@ public class Interpreter
             valBln = ScriptRuntime.cmp_LE(lhs, rhs);
         }
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.GT : {
         --stackTop;
@@ -2308,7 +2308,7 @@ public class Interpreter
             valBln = ScriptRuntime.cmp_LT(rhs, lhs);
         }
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.LT : {
         --stackTop;
@@ -2323,7 +2323,7 @@ public class Interpreter
             valBln = ScriptRuntime.cmp_LT(lhs, rhs);
         }
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.IN : {
         Object rhs = stack[stackTop];
@@ -2333,7 +2333,7 @@ public class Interpreter
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         boolean valBln = ScriptRuntime.in(lhs, rhs, scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.INSTANCEOF : {
         Object rhs = stack[stackTop];
@@ -2343,31 +2343,31 @@ public class Interpreter
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.EQ : {
         --stackTop;
         boolean valBln = do_eq(stack, sDbl, stackTop);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.NE : {
         --stackTop;
         boolean valBln = !do_eq(stack, sDbl, stackTop);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.SHEQ : {
         --stackTop;
         boolean valBln = do_sheq(stack, sDbl, stackTop);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.SHNE : {
         --stackTop;
         boolean valBln = !do_sheq(stack, sDbl, stackTop);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        break;
+        continue Loop;
     }
     case Token.IFNE : {
         boolean valBln = stack_boolean(stack, sDbl, stackTop);
@@ -2384,7 +2384,7 @@ public class Interpreter
             continue Loop;
         }
         pc += 2;
-        break;
+        continue Loop;
     }
     case Token.IFEQ : {
         boolean valBln = stack_boolean(stack, sDbl, stackTop);
@@ -2401,7 +2401,7 @@ public class Interpreter
             continue Loop;
         }
         pc += 2;
-        break;
+        continue Loop;
     }
     case Icode_IFEQ_POP : {
         boolean valBln = stack_boolean(stack, sDbl, stackTop);
@@ -2419,7 +2419,7 @@ public class Interpreter
             continue Loop;
         }
         pc += 2;
-        break;
+        continue Loop;
     }
     case Token.GOTO :
         if (instructionThreshold != 0) {
@@ -2470,17 +2470,17 @@ public class Interpreter
     case Token.POP :
         stack[stackTop] = null;
         stackTop--;
-        break;
+        continue Loop;
     case Icode_DUP :
         stack[stackTop + 1] = stack[stackTop];
         sDbl[stackTop + 1] = sDbl[stackTop];
         stackTop++;
-        break;
+        continue Loop;
     case Icode_DUPSECOND : {
         stack[stackTop + 1] = stack[stackTop - 1];
         sDbl[stackTop + 1] = sDbl[stackTop - 1];
         stackTop++;
-        break;
+        continue Loop;
     }
     case Icode_SWAP : {
         Object o = stack[stackTop];
@@ -2489,14 +2489,14 @@ public class Interpreter
         double d = sDbl[stackTop];
         sDbl[stackTop] = sDbl[stackTop - 1];
         sDbl[stackTop - 1] = d;
-        break;
+        continue Loop;
     }
     case Token.POPV :
         result = stack[stackTop];
         if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = null;
         --stackTop;
-        break;
+        continue Loop;
     case Token.RETURN :
         result = stack[stackTop];
         if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
@@ -2511,7 +2511,7 @@ public class Interpreter
         int rIntValue = stack_int32(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = ~rIntValue;
-        break;
+        continue Loop;
     }
     case Token.BITAND : {
         int rIntValue = stack_int32(stack, sDbl, stackTop);
@@ -2519,7 +2519,7 @@ public class Interpreter
         int lIntValue = stack_int32(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue & rIntValue;
-        break;
+        continue Loop;
     }
     case Token.BITOR : {
         int rIntValue = stack_int32(stack, sDbl, stackTop);
@@ -2527,7 +2527,7 @@ public class Interpreter
         int lIntValue = stack_int32(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue | rIntValue;
-        break;
+        continue Loop;
     }
     case Token.BITXOR : {
         int rIntValue = stack_int32(stack, sDbl, stackTop);
@@ -2535,7 +2535,7 @@ public class Interpreter
         int lIntValue = stack_int32(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue ^ rIntValue;
-        break;
+        continue Loop;
     }
     case Token.LSH : {
         int rIntValue = stack_int32(stack, sDbl, stackTop);
@@ -2543,7 +2543,7 @@ public class Interpreter
         int lIntValue = stack_int32(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue << rIntValue;
-        break;
+        continue Loop;
     }
     case Token.RSH : {
         int rIntValue = stack_int32(stack, sDbl, stackTop);
@@ -2551,7 +2551,7 @@ public class Interpreter
         int lIntValue = stack_int32(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue >> rIntValue;
-        break;
+        continue Loop;
     }
     case Token.URSH : {
         int rIntValue = stack_int32(stack, sDbl, stackTop) & 0x1F;
@@ -2559,31 +2559,31 @@ public class Interpreter
         double lDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = ScriptRuntime.toUint32(lDbl) >>> rIntValue;
-        break;
+        continue Loop;
     }
     case Token.ADD :
         --stackTop;
         do_add(stack, sDbl, stackTop);
-        break;
+        continue Loop;
     case Token.SUB : {
         double rDbl = stack_double(stack, sDbl, stackTop);
         --stackTop;
         double lDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl - rDbl;
-        break;
+        continue Loop;
     }
     case Token.NEG : {
         double rDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = -rDbl;
-        break;
+        continue Loop;
     }
     case Token.POS : {
         double rDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = rDbl;
-        break;
+        continue Loop;
     }
     case Token.MUL : {
         double rDbl = stack_double(stack, sDbl, stackTop);
@@ -2591,7 +2591,7 @@ public class Interpreter
         double lDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl * rDbl;
-        break;
+        continue Loop;
     }
     case Token.DIV : {
         double rDbl = stack_double(stack, sDbl, stackTop);
@@ -2600,7 +2600,7 @@ public class Interpreter
         stack[stackTop] = DBL_MRK;
         // Detect the divide by zero or let Java do it ?
         sDbl[stackTop] = lDbl / rDbl;
-        break;
+        continue Loop;
     }
     case Token.MOD : {
         double rDbl = stack_double(stack, sDbl, stackTop);
@@ -2608,18 +2608,18 @@ public class Interpreter
         double lDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl % rDbl;
-        break;
+        continue Loop;
     }
     case Token.NOT : {
         stack[stackTop] = stack_boolean(stack, sDbl, stackTop)
                           ? Boolean.FALSE : Boolean.TRUE;
-        break;
+        continue Loop;
     }
     case Token.BINDNAME : {
         String name = strings[getIndex(iCode, pc)];
         stack[++stackTop] = ScriptRuntime.bind(scope, name);
         pc += 2;
-        break;
+        continue Loop;
     }
     case Token.SETNAME : {
         String name = strings[getIndex(iCode, pc)];
@@ -2629,7 +2629,7 @@ public class Interpreter
         Scriptable lhs = (Scriptable)stack[stackTop];
         stack[stackTop] = ScriptRuntime.setName(lhs, rhs, scope, name);
         pc += 2;
-        break;
+        continue Loop;
     }
     case Token.DELPROP : {
         Object rhs = stack[stackTop];
@@ -2638,7 +2638,7 @@ public class Interpreter
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.delete(cx, scope, lhs, rhs);
-        break;
+        continue Loop;
     }
     case Token.GETPROP : {
         String name = (String)stack[stackTop];
@@ -2646,7 +2646,7 @@ public class Interpreter
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getProp(lhs, name, scope);
-        break;
+        continue Loop;
     }
     case Token.SETPROP : {
         Object rhs = stack[stackTop];
@@ -2657,16 +2657,16 @@ public class Interpreter
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.setProp(lhs, name, rhs, scope);
-        break;
+        continue Loop;
     }
     case Token.GETELEM :
         do_getElem(cx, stack, sDbl, stackTop, scope);
         --stackTop;
-        break;
+        continue Loop;
     case Token.SETELEM :
         do_setElem(cx, stack, sDbl, stackTop, scope);
         stackTop -= 2;
-        break;
+        continue Loop;
     case Icode_PROPINC :
     case Icode_PROPDEC : {
         String name = (String)stack[stackTop];
@@ -2674,7 +2674,7 @@ public class Interpreter
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, name, scope, op == Icode_PROPINC);
-        break;
+        continue Loop;
     }
     case Icode_ELEMINC :
     case Icode_ELEMDEC : {
@@ -2684,7 +2684,7 @@ public class Interpreter
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope, op == Icode_ELEMINC);
-        break;
+        continue Loop;
     }
     case Token.LOCAL_SAVE : {
         int slot = (iCode[pc] & 0xFF);
@@ -2692,7 +2692,7 @@ public class Interpreter
         sDbl[LOCAL_SHFT + slot] = sDbl[stackTop];
         --stackTop;
         ++pc;
-        break;
+        continue Loop;
     }
     case Token.LOCAL_LOAD : {
         int slot = (iCode[pc] & 0xFF);
@@ -2700,7 +2700,7 @@ public class Interpreter
         stack[stackTop] = stack[LOCAL_SHFT + slot];
         sDbl[stackTop] = sDbl[LOCAL_SHFT + slot];
         ++pc;
-        break;
+        continue Loop;
     }
     case Icode_CALLSPECIAL : {
         if (instructionThreshold != 0) {
@@ -2732,7 +2732,7 @@ public class Interpreter
                               idata.itsSourceFile, sourceLine);
         instructionCount = cx.instructionCount;
         pc += 6;
-        break;
+        continue Loop;
     }
     case Token.CALL : {
         if (instructionThreshold != 0) {
@@ -2784,7 +2784,7 @@ public class Interpreter
 
         instructionCount = cx.instructionCount;
         pc += 4;
-        break;
+        continue Loop;
     }
     case Token.NEW : {
         if (instructionThreshold != 0) {
@@ -2827,61 +2827,62 @@ public class Interpreter
 
         }
         instructionCount = cx.instructionCount;
-        pc += 4;                                                                         break;
+        pc += 4;
+        continue Loop;
     }
     case Token.TYPEOF : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.typeof(lhs);
-        break;
+        continue Loop;
     }
     case Icode_TYPEOFNAME : {
         String name = strings[getIndex(iCode, pc)];
         stack[++stackTop] = ScriptRuntime.typeofName(scope, name);
         pc += 2;
-        break;
+        continue Loop;
     }
     case Icode_NAME_AND_THIS : {
         String name = strings[getIndex(iCode, pc)];
         boolean skipGetThis = (0 != iCode[pc + 2]);
         stackTop = do_nameAndThis(stack, stackTop, scope, name, skipGetThis);
         pc += 3;
-        break;
+        continue Loop;
     }
     case Token.STRING :
         stack[++stackTop] = strings[getIndex(iCode, pc)];
         pc += 2;
-        break;
+        continue Loop;
     case Icode_SHORTNUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = getShort(iCode, pc);
         pc += 2;
-        break;
+        continue Loop;
     case Icode_INTNUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = getInt(iCode, pc);
         pc += 4;
-        break;
+        continue Loop;
     case Token.NUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = idata.itsDoubleTable[getIndex(iCode, pc)];
         pc += 2;
-        break;
+        continue Loop;
     case Token.NAME : {
         String name = strings[getIndex(iCode, pc)];
         stack[++stackTop] = ScriptRuntime.name(scope, name);
         pc += 2;
-        break;
+        continue Loop;
     }
     case Icode_NAMEINC :
     case Icode_NAMEDEC : {
         String name = strings[getIndex(iCode, pc)];
         stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, name, op == Icode_NAMEINC);
         pc += 2;
-        break;
+        continue Loop;
     }
     case Token.SETVAR : {
         int slot = (iCode[pc] & 0xFF);
@@ -2894,7 +2895,7 @@ public class Interpreter
             activationPut(fnOrScript, scope, slot, val);
         }
         ++pc;
-        break;
+        continue Loop;
     }
     case Token.GETVAR : {
         int slot = (iCode[pc] & 0xFF);
@@ -2906,7 +2907,7 @@ public class Interpreter
             stack[stackTop] = activationGet(fnOrScript, scope, slot);
         }
         ++pc;
-        break;
+        continue Loop;
     }
     case Icode_VARINC :
     case Icode_VARDEC : {
@@ -2932,53 +2933,53 @@ public class Interpreter
             activationPut(fnOrScript, scope, slot, val);
         }
         ++pc;
-        break;
+        continue Loop;
     }
     case Token.ZERO :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = 0;
-        break;
+        continue Loop;
     case Token.ONE :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = 1;
-        break;
+        continue Loop;
     case Token.NULL :
         stack[++stackTop] = null;
-        break;
+        continue Loop;
     case Token.THIS :
         stack[++stackTop] = thisObj;
-        break;
+        continue Loop;
     case Token.THISFN :
         stack[++stackTop] = fnOrScript;
-        break;
+        continue Loop;
     case Token.FALSE :
         stack[++stackTop] = Boolean.FALSE;
-        break;
+        continue Loop;
     case Token.TRUE :
         stack[++stackTop] = Boolean.TRUE;
-        break;
+        continue Loop;
     case Token.UNDEFINED :
         stack[++stackTop] = Undefined.instance;
-        break;
+        continue Loop;
     case Token.ENTERWITH : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         scope = ScriptRuntime.enterWith(lhs, scope);
         ++withDepth;
-        break;
+        continue Loop;
     }
     case Token.LEAVEWITH :
         scope = ScriptRuntime.leaveWith(scope);
         --withDepth;
-        break;
+        continue Loop;
     case Token.CATCH_SCOPE : {
         String name = strings[getIndex(iCode, pc)];
         stack[stackTop] = ScriptRuntime.newCatchScope(name, stack[stackTop]);
         pc += 2;
-        break;
+        continue Loop;
     }
     case Token.ENUM_INIT : {
         int slot = (iCode[pc] & 0xFF);
@@ -2987,7 +2988,7 @@ public class Interpreter
         --stackTop;
         stack[LOCAL_SHFT + slot] = ScriptRuntime.enumInit(lhs, scope);
         ++pc;
-        break;
+        continue Loop;
     }
     case Token.ENUM_NEXT :
     case Token.ENUM_ID : {
@@ -2998,13 +2999,13 @@ public class Interpreter
                           ? (Object)ScriptRuntime.enumNext(val)
                           : (Object)ScriptRuntime.enumId(val);
         ++pc;
-        break;
+        continue Loop;
     }
     case Icode_PUSH_PARENT : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[++stackTop] = ScriptRuntime.getParent(lhs);
-        break;
+        continue Loop;
     }
     case Icode_GETPROTO :
     case Icode_GETSCOPEPARENT : {
@@ -3017,7 +3018,7 @@ public class Interpreter
             val = ScriptRuntime.getParent(lhs, scope);
         }
         stack[stackTop] = val;
-        break;
+        continue Loop;
     }
     case Icode_SETPROTO :
     case Icode_SETPARENT : {
@@ -3033,18 +3034,18 @@ public class Interpreter
             val = ScriptRuntime.setParent(lhs, rhs, scope);
         }
         stack[stackTop] = val;
-        break;
+        continue Loop;
     }
     case Icode_SCOPE :
         stack[++stackTop] = scope;
-        break;
+        continue Loop;
     case Icode_CLOSURE : {
         int i = getIndex(iCode, pc);
         InterpreterData closureData = idata.itsNestedFunctions[i];
         stack[++stackTop] = createFunction(cx, scope, closureData,
                                            idata.itsFromEvalCode);
         pc += 2;
-        break;
+        continue Loop;
     }
     case Token.REGEXP : {
         int i = getIndex(iCode, pc);
@@ -3059,7 +3060,7 @@ public class Interpreter
         }
         stack[++stackTop] = regexp;
         pc += 2;
-        break;
+        continue Loop;
     }
     case Icode_LITERAL_NEW : {
         int i = getInt(iCode, pc);
@@ -3067,7 +3068,7 @@ public class Interpreter
         stack[stackTop] = new Object[i];
         sDbl[stackTop] = 0;
         pc += 4;
-        break;
+        continue Loop;
     }
     case Icode_LITERAL_SET : {
         Object value = stack[stackTop];
@@ -3076,7 +3077,7 @@ public class Interpreter
         int i = (int)sDbl[stackTop];
         ((Object[])stack[stackTop])[i] = value;
         sDbl[stackTop] = i + 1;
-        break;
+        continue Loop;
     }
     case Token.ARRAYLIT :
     case Token.OBJECTLIT : {
@@ -3095,7 +3096,7 @@ public class Interpreter
         }
         stack[stackTop] = val;
         pc += 4;
-        break;
+        continue Loop;
     }
     case Icode_LINE : {
         cx.interpreterLineIndex = pc;
@@ -3104,15 +3105,14 @@ public class Interpreter
             debuggerFrame.onLineChange(cx, line);
         }
         pc += 2;
-        break;
+        continue Loop;
     }
     default : {
         dumpICode(idata);
         throw new RuntimeException("Unknown icode : "+op+" @ pc : "+(pc-1));
     }
-    // end of interpreter switch
-                }
-            }
+                }  // end of interpreter switch
+            }  // end of interpreter try
             catch (Throwable ex) {
                 if (instructionThreshold != 0) {
                     if (instructionCount < 0) {
@@ -3130,7 +3130,7 @@ public class Interpreter
                 pc = getJavaCatchPC(iCode);
                 continue Loop;
             }
-        }
+        } // end of interpreter loop
 
         cx.interpreterData = savedData;
 
