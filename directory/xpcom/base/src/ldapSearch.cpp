@@ -33,7 +33,6 @@
 
 #include <errno.h>
 #include <unistd.h>
-#include <stdio.h>
 #include "nspr.h"
 #include "ldap.h"
 #include "nsCOMPtr.h"
@@ -75,15 +74,19 @@ lds(class nsLDAPChannel *chan, const char *url)
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef NO_URL_SEARCH
-  fprintf(stderr, "starting bind\n");
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR, "starting bind\n");
+#endif
   
   if ( !myOperation->SimpleBind(NULL, NULL) ) {
     (void)myConnection->GetErrorString(&errString);
-    fprintf(stderr, "ldap_simple_bind: %s\n", errString);
+    PR_fprintf(PR_STDERR, "ldap_simple_bind: %s\n", errString);
     return NS_ERROR_FAILURE;
   }
 
-  fprintf(stderr, "waiting for bind to complete");
+#ifdef DEBUG_dmose
+  PR_fprintf(PR_STDERR, "waiting for bind to complete");
+#endif
 
   myMessage = new nsLDAPMessage(myOperation);
   returnCode = myOperation->Result(0, &nullTimeval, myMessage);
@@ -92,7 +95,9 @@ lds(class nsLDAPChannel *chan, const char *url)
     returnCode =   
       myOperation->Result(0, &nullTimeval, myMessage);
     usleep(20);
-    fputc('.',stderr);
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR,".");
+#endif
   }
 
   switch (returnCode) {
@@ -101,19 +106,21 @@ lds(class nsLDAPChannel *chan, const char *url)
     break;
   case -1:
     (void)myConnection->GetErrorString(&errString);
-    fprintf(stderr, 
-	    "myOperation->Result() [myOperation->SimpleBind]: %s: errno=%d\n",
-	    errString, errno);
+    PR_fprintf(PR_STDERR,
+	     "myOperation->Result() [myOperation->SimpleBind]: %s: errno=%d\n",
+	     errString, errno);
     ldap_memfree(errString); 
     return NS_ERROR_FAILURE;
     break;
   default:
-    fprintf(stderr, "\nmyOperation->Result() returned unexpected value: %d", 
-	    returnCode);
+    PR_fprintf(PR_STDERR, 
+	       "\nmyOperation->Result() returned unexpected value: %d", 
+	       returnCode);
     return NS_ERROR_FAILURE;
   }
-
-  fprintf(stderr, "bound\n");
+#ifdef DEBUG_dmose
+  PR_fprintf(PR_STDERR, "bound\n");
+#endif
 
 #endif 
 
@@ -135,14 +142,16 @@ lds(class nsLDAPChannel *chan, const char *url)
 
     // poll for results
     //
-    fprintf(stderr, "polling search operation");
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR, "polling search operation");
+#endif
     returnCode = LDAP_SUCCESS;
     while ( returnCode != LDAP_RES_SEARCH_RESULT ) {
 
 	char *dn, *attr;
 	int rc2;
 
-	fputc('.', stderr);
+	PR_fprintf(PR_STDERR,".");
 
 	// XXX is 0 the right value?
 	//
@@ -152,7 +161,7 @@ lds(class nsLDAPChannel *chan, const char *url)
 	switch (returnCode) {
 	case -1: // something went wrong
 	    (void)myConnection->GetErrorString(&errString);
-	    fprintf(stderr, 
+	    PR_fprintf(PR_STDERR,
 		    "\nmyOperation->Result() [URLSearch]: %s: errno=%d\n",
 		    errString, errno);
 	    ldap_memfree(errString); 
@@ -161,7 +170,9 @@ lds(class nsLDAPChannel *chan, const char *url)
 	    break; 	
 
 	case LDAP_RES_SEARCH_ENTRY:
-	    fprintf(stderr, "\nentry returned!\n");
+#ifdef DEBUG_dmose
+	    PR_fprintf(PR_STDERR, "\nentry returned!\n");
+#endif
 
 	    // get the DN
 	    // XXX better err handling
@@ -217,8 +228,9 @@ lds(class nsLDAPChannel *chan, const char *url)
 	    if ( lden != LDAP_SUCCESS ) {
 
 		(void)myConnection->GetErrorString(&errString);
-		fprintf(stderr, "myMessage: error getting attribute: %s\n", 
-			errString);
+		PR_fprintf(PR_STDERR, 
+			   "myMessage: error getting attribute: %s\n", 
+			   errString);
 		return NS_ERROR_FAILURE;
 	    }
 
@@ -232,13 +244,15 @@ lds(class nsLDAPChannel *chan, const char *url)
 	    break;
 
 	case LDAP_RES_SEARCH_REFERENCE: // referral
-	    fprintf(stderr, 
+	    PR_fprintf(PR_STDERR, 
 		    "LDAP_RES_SEARCH_REFERENCE returned; not implemented!");
 	    return NS_ERROR_FAILURE;
 	    break;
 
 	case LDAP_RES_SEARCH_RESULT: // all done (the while condition sees this)
-	    fprintf(stderr, "\nresult returned: \n");
+#ifdef DEBUG_dmose
+	    PR_fprintf(PR_STDERR, "\nresult returned: \n");
+#endif
 
 	    // XXX should use GetErrorString here?
 	    //
@@ -257,7 +271,7 @@ lds(class nsLDAPChannel *chan, const char *url)
 	}
 	myMessage = 0;
 
-	usleep(200);
+	PR_Sleep(200);
     }
 
 #ifdef DEBUG_dmose

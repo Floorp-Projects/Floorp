@@ -35,6 +35,8 @@
 #define nsLDAPChannel_h__
 
 #include "nsCOMPtr.h"
+#include "nsIRunnable.h"
+#include "nsIThread.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
@@ -44,12 +46,13 @@
 #include "nsIBufferOutputStream.h"
 
 /* Header file */
-class nsLDAPChannel : public nsIChannel
+class nsLDAPChannel : public nsIChannel, public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
+  NS_DECL_NSIRUNNABLE
 
   nsLDAPChannel();
   virtual ~nsLDAPChannel();
@@ -78,11 +81,15 @@ protected:
 
   // various other instance vars
   //
+  nsCOMPtr<nsIStreamListener> mAsyncListener; // since we can't call mListener
+                                             // directly from the worker thread
+  nsCOMPtr<nsIThread> mThread; // worker thread for this channer
   nsCOMPtr<nsIStreamListener> mListener; // whoever is listening to us
   nsCOMPtr<nsISupports> mResponseContext; 
   nsCOMPtr<nsIBufferInputStream> mReadPipeIn; // this end given to the listener
   nsCOMPtr<nsIBufferOutputStream> mReadPipeOut; // for writes from the channel
   PRUint32 mReadPipeOffset; // how many bytes written so far?
+
 };
 
 #endif // nsLDAPChannel_h__

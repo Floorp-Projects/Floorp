@@ -17,6 +17,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ *		   Warren Harris <warren@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -36,10 +37,14 @@
 #include "nsMimeTypes.h"
 #include "nsIPipe.h"
 #include "nsXPIDLString.h"
-#include "nsLDAPService.h"
-#include "nsIServiceManager.h"
 
-static NS_DEFINE_CID(kLDAPServiceCID, NS_LDAPSERVICE_CID);
+// for NS_NewAsyncStreamListener
+//
+#include "nsNetUtil.h"
+
+// for defintion of NS_UI_THREAD_EVENTQ for use with NS_NewAsyncStreamListener
+//
+#include "nsIEventQueueService.h"
 
 #ifdef DEBUG
 #include "nspr.h"
@@ -47,17 +52,16 @@ static NS_DEFINE_CID(kLDAPServiceCID, NS_LDAPSERVICE_CID);
 
 NS_METHOD lds(class nsLDAPChannel *chan, const char *);
 
-NS_IMPL_ISUPPORTS2(nsLDAPChannel, nsIChannel, nsIRequest);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
+			      nsIRunnable);
 
 nsLDAPChannel::nsLDAPChannel()
 {
   NS_INIT_ISUPPORTS();
-  /* member initializers and constructor code */
 }
 
 nsLDAPChannel::~nsLDAPChannel()
 {
-  /* destructor code */
 }
 
 nsresult
@@ -100,8 +104,7 @@ nsLDAPChannel::IsPending(PRBool *result)
 NS_IMETHODIMP
 nsLDAPChannel::GetStatus(nsresult *status)
 {
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetStatus");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -249,10 +252,7 @@ nsLDAPChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 NS_IMETHODIMP
 nsLDAPChannel::GetContentType(char* *aContentType)
 {
-  // XXX check for null pointers in setters / in params?
-  //
-  if (!aContentType) 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aContentType);
 
   *aContentType = nsCRT::strdup(TEXT_PLAIN);
   if (!*aContentType) {
@@ -517,7 +517,6 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 			 nsISupports* aCtxt)
 {
   nsresult rv;
-  nsXPIDLCString spec;
 
   // deal with the input args
   //
@@ -525,53 +524,17 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
   mResponseContext = aCtxt;
 
   // add ourselves to the appropriate loadgroup
-  // XXX - what happens on the second call to AsyncRead()?
   //
   if (mLoadGroup) {
     mLoadGroup->AddChannel(this, nsnull);
   }
 
-  // since the LDAP SDK does all the socket management, we don't have
-  // an underlying transport channel to create an nsIInputStream to hand
-  // back to the nsIStreamListener.  So (only on the first call to AsyncRead)
-  // we do it ourselves:
+  // kick off a thread to do the work
   //
-  if (!mReadPipeIn) {
-    
-    // get a new pipe, propagating any error upwards
-    //
-    rv = NS_NewPipe(getter_AddRefs(mReadPipeIn), getter_AddRefs(mReadPipeOut));
-    NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(!mThread, "nsLDAPChannel thread already exists!");
 
-    NS_ENSURE_SUCCESS(mReadPipeIn->SetNonBlocking(PR_TRUE), 
-		      NS_ERROR_UNEXPECTED);
-
-    // XXX - bogus: this makes it synchronous!
-    //
-    NS_ENSURE_SUCCESS(mReadPipeOut->SetNonBlocking(PR_FALSE),
-		      NS_ERROR_UNEXPECTED);
-  }
-
-  // get the transport service
-  //
-#if 0
-  NS_WITH_SERVICE(nsLDAPService, ldapService, 
-		  kLDAPServiceCID, &rv);
+  rv = NS_NewThread(getter_AddRefs(mThread), this, 0, PR_JOINABLE_THREAD);
   NS_ENSURE_SUCCESS(rv, rv);
-#endif
-
-  // XXX should this happen earlier?
-  //
-  mListener->OnStartRequest(this, mResponseContext);
-
-  // XXX do the search; this should go away
-  //
-  NS_ENSURE_SUCCESS(mURI->GetSpec(getter_Copies(spec)), NS_ERROR_UNEXPECTED);
-  lds(this, spec);
-
-  // all done
-  //
-  mListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
 
   return NS_OK;
 }
@@ -596,6 +559,70 @@ nsLDAPChannel::AsyncWrite(nsIInputStream* fromStream,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// for nsIRunnable.  this is the actual LDAP server interaction code for 
+// AsyncRead().  it gets executed on a worker thread so we don't block 
+// the main UI thread.
+//
+NS_IMETHODIMP
+nsLDAPChannel::Run(void)
+{
+  nsresult rv;
+  nsXPIDLCString spec;
+
+#ifdef DEBUG_dmose  
+  PR_fprintf(PR_STDERR, "nsLDAPService::Run() entered!\n");
+#endif
+
+  // XXX how does this get destroyed?
+  //
+  rv = NS_NewAsyncStreamListener(getter_AddRefs(mAsyncListener), mListener, 
+				 NS_UI_THREAD_EVENTQ);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // we already know the content type, so might as well fire this now
+  //
+  mAsyncListener->OnStartRequest(this, mResponseContext);
+
+  // since the LDAP SDK does all the socket management, we don't have
+  // an underlying transport channel to create an nsIInputStream to hand
+  // back to the nsIStreamListener.  So (only on the first call to AsyncRead)
+  // we do it ourselves:
+  //
+  if (!mReadPipeIn) {
+    
+    // get a new pipe, propagating any error upwards
+    //
+    rv = NS_NewPipe(getter_AddRefs(mReadPipeIn), getter_AddRefs(mReadPipeOut));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // the side of the pipe used on the main UI thread cannot block
+    //
+    NS_ENSURE_SUCCESS(mReadPipeIn->SetNonBlocking(PR_TRUE), 
+		      NS_ERROR_UNEXPECTED);
+
+    // but the side of the pipe used by the worker thread can block
+    //
+    NS_ENSURE_SUCCESS(mReadPipeOut->SetNonBlocking(PR_FALSE),
+		      NS_ERROR_UNEXPECTED);
+  }
+
+  // get the URI spec
+  //
+  rv = mURI->GetSpec(getter_Copies(spec));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // do the search
+  //
+  rv = lds(this, spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // all done
+  //
+  mAsyncListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
+
+  return NS_OK;
+}
+
 // XXX this function should go away
 //
 nsresult
@@ -607,8 +634,9 @@ nsLDAPChannel::pipeWrite(char *str)
   rv = mReadPipeOut->Write(str, strlen(str), &bytesWritten);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mListener->OnDataAvailable(this, mResponseContext, mReadPipeIn, 
-			     mReadPipeOffset, strlen(str));
+  mAsyncListener->OnDataAvailable(this, mResponseContext, mReadPipeIn, 
+				  mReadPipeOffset, strlen(str));
   mReadPipeOffset += bytesWritten;
   return NS_OK;
 }
+
