@@ -404,7 +404,8 @@ function onLoad() {
         
         if (!filesFolder.exists())
           filesFolder.create(lfIID.DIRECTORY_TYPE, 0755);
-        webBrowserPersist.saveDocument(persistArgs.source, targetFile, filesFolder);
+
+        webBrowserPersist.saveDocument(persistArgs.source, targetFile, filesFolder, null, 0, 0);
       }
     }
     

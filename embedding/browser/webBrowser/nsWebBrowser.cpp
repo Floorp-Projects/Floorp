@@ -871,8 +871,8 @@ NS_IMETHODIMP nsWebBrowser::SetProgressListener(nsIWebProgressListener * aProgre
     return NS_OK;
 }
 
-/* void saveURI (in nsIURI aURI, in nsILocalFile aFile); */
-NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, nsILocalFile *aFile)
+/* void saveURI (in nsIURI aURI, in nsISupports aFile); */
+NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, nsISupports *aFile)
 {
     if (mPersist)
     {
@@ -918,8 +918,10 @@ NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, nsI
     return rv;
 }
 
-/* void saveDocument (in nsIDOMDocument document, in nsILocalFile aFile, in nsILocalFile aDataPath); */
-NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, nsILocalFile *aFile, nsILocalFile *aDataPath)
+/* void saveDocument (in nsIDOMDocument document, in nsISupports aFile, in nsISupports aDataPath); */
+NS_IMETHODIMP nsWebBrowser::SaveDocument(
+    nsIDOMDocument *aDocument, nsISupports *aFile, nsISupports *aDataPath,
+    const char *aOutputContentType, PRUint32 aEncodingFlags, PRUint32 aWrapColumn)
 {
     if (mPersist)
     {
@@ -960,7 +962,7 @@ NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, nsILocalFile
     mPersist->SetProgressListener(this);
     mPersist->SetPersistFlags(mPersistFlags);
     mPersist->GetCurrentState(&mPersistCurrentState);
-    rv = mPersist->SaveDocument(doc, aFile, aDataPath);
+    rv = mPersist->SaveDocument(doc, aFile, aDataPath, aOutputContentType, aEncodingFlags, aWrapColumn);
     if (NS_FAILED(rv))
     {
         mPersist = nsnull;
