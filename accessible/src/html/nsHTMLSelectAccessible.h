@@ -101,7 +101,9 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
-
+  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
   static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
 
 };
@@ -118,6 +120,9 @@ public:
 
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD AccDoAction(PRUint8 index);  
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
 
 };
 
@@ -198,7 +203,6 @@ public:
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
-
 };
 
 /*

@@ -67,7 +67,7 @@ class nsAccessible : public nsGenericAccessible
 {
 public:
   // to eliminate the confusion of "magic numbers" -- if ( 0 ){ foo; }
-  enum { eAction_Switch=0, eAction_Jump=0, eAction_Click=0 };
+  enum { eAction_Switch=0, eAction_Jump=0, eAction_Click=0, eAction_Select=0 };
   // how many actions
   enum { eNo_Action=0, eSingle_Action=1 };
 

@@ -41,7 +41,8 @@
 #include "nsAccessible.h"
 #include "nsIAccessible.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULPopupElement.h"
+#include "nsIDOMXULElement.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
 
 // ------------------------ Menu Item -----------------------------
 
@@ -153,6 +154,56 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
   return NS_OK;  
 }
 
+NS_IMETHODIMP nsXULMenuitemAccessible::AccDoAction(PRUint8 index)
+{
+  if (index == eAction_Select) {   // default action
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> selectItem(do_QueryInterface(mDOMNode));
+    if (selectItem)
+      selectItem->DoCommand();
+    else {
+      nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(mDOMNode));
+      if (xulElement) {
+        xulElement->Click();
+      }
+    }
+
+    nsCOMPtr<nsIAccessible> parentAccessible;
+    GetAccParent(getter_AddRefs(parentAccessible));
+    if (parentAccessible) {
+      PRUint32 role;
+      parentAccessible->GetAccRole(&role);
+      if (role == ROLE_LIST) {
+        nsCOMPtr<nsIAccessible> buttonAccessible;
+        parentAccessible->GetAccPreviousSibling(getter_AddRefs(buttonAccessible));
+        PRUint32 state;
+        buttonAccessible->GetAccState(&state);
+        if (state & STATE_PRESSED)
+          buttonAccessible->AccDoAction(eAction_Click);
+      }
+    }
+    return NS_OK;
+  }
+
+  return NS_ERROR_INVALID_ARG;
+}
+
+/** select us! close combo box if necessary*/
+NS_IMETHODIMP nsXULMenuitemAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+{
+  if (index == eAction_Select) {
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP nsXULMenuitemAccessible::GetAccNumActions(PRUint8 *_retval)
+{
+  *_retval = eSingle_Action;
+  return NS_OK;
+}
+
+
 // ------------------------ Menu Separator ----------------------------
 
 nsXULMenuSeparatorAccessible::nsXULMenuSeparatorAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): 
@@ -181,6 +232,20 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::AccDoAction(PRUint8 index)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetAccNumActions(PRUint8 *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 // ------------------------ Menu Popup -----------------------------
 
 nsXULMenupopupAccessible::nsXULMenupopupAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell): nsAccessible(aDOMNode, aShell)

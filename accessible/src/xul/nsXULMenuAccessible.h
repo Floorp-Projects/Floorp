@@ -55,6 +55,9 @@ public:
   NS_IMETHOD GetAccFirstChild(nsIAccessible **aAccFirstChild);
   NS_IMETHOD GetAccLastChild(nsIAccessible **aAccLastChild);
   NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount);
+  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
 };
 
 class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible
@@ -64,6 +67,9 @@ public:
   NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
 };
 
 class nsXULMenupopupAccessible : public nsAccessible
