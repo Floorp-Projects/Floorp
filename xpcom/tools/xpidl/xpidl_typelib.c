@@ -454,7 +454,7 @@ pass_1(TreeState *state)
         fprintf(stderr, "writing typelib was %ssuccessful\n",
                 ok ? "" : "not ");
 #else
-        ;   // msvc would like a statement here
+        ;   /* msvc would like a statement here */
 #endif
     }
 
