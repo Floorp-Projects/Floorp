@@ -38,12 +38,14 @@ ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME  = mozuconv
 endif
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
+                  mozreg \
+                  xpcom_obsolete \
 		  string \
 		  intl \
 		  locale \
 		  unicharutil \
 		  chardet \
+		  ucnative \
 		  $(NULL)
 
 CSRCS		= \
@@ -54,12 +56,18 @@ CSRCS		= \
 
 CPPSRCS		= \
 		nsUConvModule.cpp \
-		nsCharsetConverterManager.cpp \
+		nsCharsetAliasImp.cpp \
+		nsConverterInputStream.cpp \
 		nsTextToSubURI.cpp \
+		nsURLProperties.cpp \
+		$(NULL)
+
+ifndef MOZ_USE_NATIVE_UCONV
+CPPSRCS         += \
+		nsCharsetConverterManager.cpp \
+		nsScriptableUConv.cpp \
 		nsUnicodeDecodeHelper.cpp \
 		nsUnicodeEncodeHelper.cpp \
-		nsCharsetAliasImp.cpp \
-		nsURLProperties.cpp \
 		nsMappingCache.cpp \
 		nsISO88591ToUnicode.cpp \
 		nsCP1252ToUnicode.cpp \
@@ -69,9 +77,8 @@ CPPSRCS		= \
 		nsUnicodeToCP1252.cpp \
 		nsUnicodeToMacRoman.cpp \
 		nsUnicodeToUTF8.cpp \
-		nsScriptableUConv.cpp \
-		nsConverterInputStream.cpp \
 		$(NULL)
+endif
 
 EXPORT_RESOURCE	= \
 		charsetalias.properties \
@@ -125,17 +132,22 @@ EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 
 LOCAL_INCLUDES	= -I$(srcdir)/../util \
-				-I$(srcdir)/../ucvlatin \
-				-I$(srcdir)/../ucvibm \
-				-I$(srcdir)/../ucvja \
-				-I$(srcdir)/../ucvtw2 \
-				-I$(srcdir)/../ucvtw \
-				-I$(srcdir)/../ucvko \
-				-I$(srcdir)/../ucvcn \
-				$(NULL)
+		  -I$(srcdir)/../ucvlatin \
+		  -I$(srcdir)/../ucvibm \
+		  -I$(srcdir)/../ucvja \
+		  -I$(srcdir)/../ucvtw2 \
+		  -I$(srcdir)/../ucvtw \
+		  -I$(srcdir)/../ucvko \
+		  -I$(srcdir)/../ucvcn \
+		  -I$(srcdir)/../native \
+		  $(NULL)
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifndef MOZ_USE_NATIVE_UCONV
+SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)ucvlatin_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvibm_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvja_s.$(LIB_SUFFIX) \
@@ -144,6 +156,11 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)ucvko_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvcn_s.$(LIB_SUFFIX) \
 	$(NULL)
+else
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)ucnative_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -60,6 +60,7 @@
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsCharsetConverterManager.h"
+#include "nsNativeUConvService.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
@@ -77,8 +78,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsCharsetConverterManager,
                               nsICharsetConverterManager2);
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
-:mDataBundle(NULL), mTitleBundle(NULL)
+  :mDataBundle(NULL), mTitleBundle(NULL)
 {
+#ifdef MOZ_USE_NATIVE_UCONV
+  mNativeUC = do_GetService(NS_NATIVE_UCONV_SERVICE_CONTRACT_ID);
+#endif
 }
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 
@@ -170,14 +174,28 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
                                          const nsString * aDest, 
                                          nsIUnicodeEncoder ** aResult)
 {
+
   *aResult= nsnull;
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+
+#ifdef MOZ_USE_NATIVE_UCONV
+  if (mNativeUC) {
+    mNativeUC->GetNativeConverter("UCS-2", 
+                                  NS_LossyConvertUCS2toASCII(*aDest).get(),
+                                  getter_AddRefs(encoder));
+
+    if (encoder) {
+      NS_ADDREF(*aResult = encoder);
+      return NS_OK;
+    }
+  }
+#endif  
   nsresult res = NS_OK;
 
   nsCAutoString contractid(
                     NS_LITERAL_CSTRING(NS_UNICODEENCODER_CONTRACTID_BASE) +
                     NS_LossyConvertUCS2toASCII(*aDest));
 
-  nsCOMPtr<nsIUnicodeEncoder> encoder;
   // Always create an instance since encoders hold state.
   encoder = do_CreateInstance(contractid.get(), &res);
 
@@ -196,6 +214,20 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
                                          nsIUnicodeDecoder ** aResult)
 {
   *aResult= nsnull;
+  nsCOMPtr<nsIUnicodeDecoder> decoder;
+
+#ifdef MOZ_USE_NATIVE_UCONV
+  if (mNativeUC) {
+    mNativeUC->GetNativeConverter(NS_LossyConvertUCS2toASCII(*aSrc).get(),
+                                  "UCS-2", 
+                                  getter_AddRefs(decoder));
+
+    if (decoder) {
+      NS_ADDREF(*aResult = decoder);
+      return NS_OK;
+    }
+  }
+#endif
   nsresult res = NS_OK;;
 
   NS_NAMED_LITERAL_CSTRING(kUnicodeDecoderContractIDBase,
@@ -204,7 +236,6 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
   nsCAutoString contractid(kUnicodeDecoderContractIDBase +
                            NS_LossyConvertUCS2toASCII(*aSrc));
 
-  nsCOMPtr<nsIUnicodeDecoder> decoder;
   if (!strncmp(contractid.get()+kUnicodeDecoderContractIDBase.Length(),
                NS_1BYTE_CODER_PATTERN,
                NS_1BYTE_CODER_PATTERN_LEN))
