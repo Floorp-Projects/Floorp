@@ -276,8 +276,9 @@ sub ValidateBugID {
     $id = trim($id);
     
     # If the ID isn't a number, it might be an alias, so try to convert it.
-    if ($id !~ /^[1-9][0-9]*$/) {
-        $id = BugAliasToID($id);
+    my $alias = $id;
+    if (!detaint_natural($id)) {
+        $id = BugAliasToID($alias);
         if (!$id) {
             my $html_id = html_quote($_[0]);
             my $alias_specific_message = Param("usebugaliases") ? 
