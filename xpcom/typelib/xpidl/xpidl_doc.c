@@ -26,9 +26,10 @@
  * Generates documentation from javadoc-style comments in XPIDL files.
  */
 
-nodeHandler *
+backend *
 xpidl_doc_dispatch(void)
 {
+    static backend result;
     static nodeHandler table[IDLN_LAST];
     static gboolean initialized = FALSE;
 
@@ -37,5 +38,6 @@ xpidl_doc_dispatch(void)
         initialized = TRUE;
     }
   
-    return table;  
+    result.dispatch_table = table;
+    return &result;
 }

@@ -37,32 +37,47 @@ write_indent(FILE *outfile) {
     fputs("  ", outfile);
 }
 
-static void
-write_header(gpointer key, gpointer value, gpointer user_data)
+static gboolean
+header_prolog(TreeState *state)
 {
-    const char *ident = (const char *)value;
-    TreeState *state = (TreeState *)user_data;
-    fprintf(state->file, "#include \"%s.h\"\n",
-            ident);
+    const char *define = g_basename(state->basename);
+    fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
+            " %s.idl\n */\n", state->basename);
+    fprintf(state->file,
+            "\n#ifndef __gen_%s_h__\n"
+            "#define __gen_%s_h__\n",
+            define, define);
+    if (state->base_includes != NULL) {
+        guint len = g_slist_length(state->base_includes);
+        guint i;
+
+        fputc('\n', state->file);
+        for (i = 0; i < len; i++) {
+            char *ident, *dot;
+            
+            ident = (char *)g_slist_nth_data(state->base_includes, i);
+            
+            /* suppress any trailing .extension */
+            
+            /* XXX use g_basename instead ? ? */
+            
+            dot = strrchr(ident, '.');
+            if (dot != NULL)
+                *dot = '\0';
+            
+            fprintf(state->file, "#include \"%s.h\"\n",
+                    (char *)g_slist_nth_data(state->base_includes, i));
+        }
+    }
+    
+    return TRUE;
 }
 
 static gboolean
-pass_1(TreeState *state)
+header_epilog(TreeState *state)
 {
     const char *define = g_basename(state->basename);
-    if (state->tree) {
-        fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
-                " %s.idl\n */\n", state->basename);
-        fprintf(state->file, "\n#ifndef __gen_%s_h__\n"
-                "#define __gen_%s_h__\n",
-                define, define);
-        if (g_hash_table_size(state->includes)) {
-            fputc('\n', state->file);
-            g_hash_table_foreach(state->includes, write_header, state);
-        }
-    } else {
-        fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", define);
-    }
+    fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", define);
     return TRUE;
 }
 
@@ -501,7 +516,7 @@ do_const_dcl(TreeState *state)
 {
     struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
     const char *name = IDL_IDENT(dcl->ident).str;
-    gboolean success;
+    gboolean success, is_signed, is_long;
 
     /* const -> list -> interface */
     if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
@@ -517,16 +532,24 @@ do_const_dcl(TreeState *state)
     if(success) {
         switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
         case IDL_INTEGER_TYPE_SHORT:
+            is_long = FALSE;
+            break;
         case IDL_INTEGER_TYPE_LONG:
+            is_long = TRUE;
             break;
         default:
             success = FALSE;
         }
+        is_signed = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
     }
 
     if(success) {
-        fprintf(state->file, "\n  enum { %s = %d };\n",
-                             name, (int) IDL_INTEGER(dcl->const_exp).value);
+        const char *const_format =
+            is_long ? (is_signed ? "%ld" : "%lu")
+                    : (is_signed ? "%d" : "%u");
+        fprintf(state->file, "\n  enum { %s = ", name);
+        fprintf(state->file, const_format, IDL_INTEGER(dcl->const_exp).value);
+        fprintf(state->file, " };\n");
     } else {
         IDL_tree_error(state->tree,
                        "const declaration \'%s\' must be of type short or long",
@@ -770,14 +793,17 @@ codefrag(TreeState *state)
     return TRUE;
 }
 
-nodeHandler *
+backend *
 xpidl_header_dispatch(void)
 {
+    static backend result;
     static nodeHandler table[IDLN_LAST];
     static gboolean initialized = FALSE;
+    
+    result.emit_prolog = header_prolog;
+    result.emit_epilog = header_epilog;
 
     if (!initialized) {
-        table[IDLN_NONE] = pass_1;
         table[IDLN_LIST] = list;
         table[IDLN_ATTR_DCL] = attr_dcl;
         table[IDLN_OP_DCL] = op_dcl;
@@ -791,5 +817,6 @@ xpidl_header_dispatch(void)
         initialized = TRUE;
     }
 
-    return table;
+    result.dispatch_table = table;
+    return &result;
 }

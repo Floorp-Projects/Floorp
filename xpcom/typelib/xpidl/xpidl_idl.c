@@ -26,27 +26,6 @@
 
 #include "xpidl.h"
 
-/*
- * Pass 1 generates #includes for headers and the like.
- */
-static gboolean
-process_tree_pass1(TreeState *state)
-{
-    nodeHandler handler;
-
-    if ((handler = state->dispatch[0]))
-        return handler(state);
-    return TRUE;
-}
-
-gboolean
-node_is_error(TreeState *state)
-{
-    fprintf(stderr, "ERROR: Unexpected node type %d\n",
-            IDL_NODE_TYPE(state->tree));
-    return FALSE;
-}
-
 void
 xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 {
@@ -82,24 +61,6 @@ xpidl_process_node(TreeState *state)
     return TRUE;
 }
 
-/*
- * Call the IDLN_NONE handler for pre-generation, then process the tree,
- * then call the IDLN_NONE handler again with state->tree == NULL for
- * post-generation.
- */
-static gboolean
-process_tree(TreeState *state)
-{
-    IDL_tree top = state->tree;
-    if (!process_tree_pass1(state))
-        return FALSE;
-    state->tree = top;          /* pass1 might mutate state */
-    if (!xpidl_process_node(state))
-        return FALSE;
-    state->tree = NULL;
-    return process_tree_pass1(state);
-}
-
 #ifdef XP_MAC
 extern void mac_warning(const char* warning_message);
 #endif
@@ -126,21 +87,21 @@ msg_callback(int level, int num, int line, const char *file,
 
 #define INPUT_BUF_CHUNK         8192
 
-struct input_callback_data {
+typedef struct input_data {
     FILE *input;                /* stream for getting data */
     char *filename;             /* where did I come from? */
-    unsigned int lineno;       /* last lineno processed */
+    unsigned int lineno;        /* last lineno processed */
     char *buf;                  /* buffer for data */
     char *point;                /* next char to feed to libIDL */
     int start;                  /* are we at the start of the file? */
     unsigned int len;           /* amount of data read into the buffer */
     unsigned int max;           /* size of the buffer */
-    struct input_callback_data *next; /* file from which we were included */
+    struct input_data *next;    /* file from which we were included */
     int  f_raw : 2,             /* in a raw block when starting next block */
          f_comment : 2,         /* in a comment when starting next block */
          f_include : 2;         /* in an #include when starting next block */
     char last_read[2];          /* last 1/2 chars read, for spanning blocks */
-};
+} input_data;
 
 /* values for f_{raw,comment,include} */
 #define INPUT_IN_NONE   0x0
@@ -149,32 +110,36 @@ struct input_callback_data {
 #define INPUT_IN_MAYBE  0x3     /* we might be about to start one (check
                                    last_read to be sure) */
 
-struct input_callback_stack {
-    struct input_callback_data *top;
-    GHashTable *includes;
+typedef struct input_callback_state {
+    struct input_data *input_stack; /* linked list of input_data */   
+    GHashTable *already_included;   /* to prevent redundant includes */
     IncludePathEntry *include_path;
-};
+    GSList *base_includes;          /* to accumulate #includes in *first* file;
+                                     * for passing thru TreeState to
+                                     * xpidl_header backend. */
+} input_callback_state;
 
- static FILE *
+static FILE *
 fopen_from_includes(const char *filename, const char *mode,
                     IncludePathEntry *include_path)
 {
+    IncludePathEntry *current_path = include_path;
     char *pathname;
     FILE *file;
     if (!strcmp(filename, "-"))
         return stdin;
 
     if (filename[0] != '/') {
-        while (include_path) {
+        while (current_path) {
 #ifdef XP_MAC
-				if (!*include_path->directory)
+				if (!*current_path->directory)
 		        pathname = g_strdup_printf("%s", filename);
 				else
 		        pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
-	                             include_path->directory, filename);
+	                             current_path->directory, filename);
 #else
         pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
-                                   include_path->directory, filename);
+                                   current_path->directory, filename);
 #endif
             if (!pathname)
                 return NULL;
@@ -185,7 +150,7 @@ fopen_from_includes(const char *filename, const char *mode,
             free(pathname);
             if (file)
                 return file;
-            include_path = include_path->next;
+            current_path = current_path->next;
         }
     } else {
         file = fopen(filename, mode);
@@ -199,10 +164,10 @@ fopen_from_includes(const char *filename, const char *mode,
 extern FILE* mac_fopen(const char* filename, const char *mode);
 #endif
 
-static struct input_callback_data *
-new_input_callback_data(const char *filename, IncludePathEntry *include_path)
+static input_data *
+new_input_data(const char *filename, IncludePathEntry *include_path)
 {
-    struct input_callback_data *new_data = xpidl_malloc(sizeof *new_data);
+    input_data *new_data = xpidl_malloc(sizeof *new_data);
     memset(new_data, 0, sizeof *new_data);
 #ifdef XP_MAC
     // if file is a full path name, just use fopen, otherwise search access paths.
@@ -231,9 +196,10 @@ new_input_callback_data(const char *filename, IncludePathEntry *include_path)
 }
 
 static int
-NextIsRaw(struct input_callback_data *data, char **startp, int *lenp)
+NextIsRaw(input_data *data, char **startp, int *lenp)
 {
-    char *end, *start, *data_end = data->buf + data->len;
+    char *end, *start;
+    char *data_end = data->buf + data->len;
 
 #ifdef DEBUG_shaver_input
     fputs("[R]", stderr);
@@ -265,7 +231,7 @@ NextIsRaw(struct input_callback_data *data, char **startp, int *lenp)
 }
 
 static int
-NextIsComment(struct input_callback_data *data, char **startp, int *lenp)
+NextIsComment(input_data *data, char **startp, int *lenp)
 {
     char *end;
     /* process pending comment, or rest of current one */
@@ -321,9 +287,11 @@ NextIsComment(struct input_callback_data *data, char **startp, int *lenp)
 }
 
 static int
-NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
+NextIsInclude(input_callback_state *callback_state, char **startp,
+              int *lenp)
 {
-    struct input_callback_data *data = stack->top, *new_data;
+    input_data *data = callback_state->input_stack;
+    input_data *new_data;
     char *filename, *start, *end;
     const char *scratch;
 
@@ -367,45 +335,55 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
 
     *end = '\0';
     *startp = end + 1;
-    end = strrchr(filename, '.');
 
 #ifdef DEBUG_shaver_inc
     fprintf(stderr, "found #include %s\n", filename);
 #endif
 
+    if (data->next == NULL) {
+        /*
+         * If we're in the initial file, add this filename to the list
+         * of filenames to be turned into #include "filename.h"
+         * directives in xpidl_header.c.  We do it here rather than in the
+         * block below so it still gets added to the list even if it's
+         * already been included from some included file.
+         */
+        char *filename_cp = xpidl_strdup(filename);
+        
+        /* note that g_slist_append accepts and likes null as list-start. */
+        callback_state->base_includes =
+            g_slist_append(callback_state->base_includes, filename_cp);
+    }
+
     /* store offset for when we pop, or if we skip this one */
     data->point = *startp;
 
-    assert(stack->includes);
-    if (!g_hash_table_lookup(stack->includes, filename)) {
-        char *file_basename = filename;
+    assert(callback_state->already_included);
+    if (!g_hash_table_lookup(callback_state->already_included, filename)) {
         filename = xpidl_strdup(filename);
-        if (end)
-            *end = '\0';
-        file_basename = xpidl_strdup(file_basename);
-        g_hash_table_insert(stack->includes, filename, file_basename);
-        new_data = new_input_callback_data(filename, stack->include_path);
+        g_hash_table_insert(callback_state->already_included,
+                            filename, (void *)TRUE);
+        new_data = new_input_data(filename,
+                                  callback_state->include_path);
         if (!new_data) {
-#ifdef XP_MAC
-	    static char warning_message[1024];
-	    IDL_file_get(&scratch, (int *)&data->lineno);
-	    sprintf(warning_message, "%s:%d: can't open included file %s for reading\n", scratch,
-		    data->lineno, filename);
-	    mac_warning(warning_message);
-#else
-	    IDL_file_get(&scratch, (int *)&data->lineno);
-	    fprintf(stderr, "%s:%d: can't open included file %s for reading\n", scratch,
-		    data->lineno, filename);
-#endif
+            char *error_message;
+            IDL_file_get(&scratch, (int *)&data->lineno);
+            error_message =
+                g_strdup_printf("can't open included file %s for reading\n",
+                                filename);
+            msg_callback(IDL_ERROR, 0 /* unused */,
+                         data->lineno, scratch, error_message);
+            free(error_message);
             return -1;
         }
 
         new_data->next = data;
         IDL_inhibit_push();
         IDL_file_get(&scratch, (int *)&data->lineno);
-        data = stack->top = new_data;
+        data = callback_state->input_stack = new_data;
         IDL_file_set(data->filename, (int)data->lineno);
     }
+
     *lenp = 0;               /* this is magic, see the comment below */
 #ifdef DEBUG_shaver_input
     fputs("1]", stderr);
@@ -414,8 +392,10 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
 }    
 
 static void
-FindSpecial(struct input_callback_data *data, char **startp, int *lenp) {
-    char *point = data->point, *end = data->buf + data->len;
+FindSpecial(input_data *data, char **startp, int *lenp)
+{
+    char *point = data->point;
+    char *end = data->buf + data->len;
 
     /* magic sequences are:
      * "%{"               raw block
@@ -450,6 +430,16 @@ FindSpecial(struct input_callback_data *data, char **startp, int *lenp) {
 #endif
 }
 
+#ifdef XP_MAC
+static void cr2lf(char* str)
+{
+    int ch;
+    while ((ch = *str++) != '\0') {
+        if (ch == '\r') str[-1] = '\n';
+    }
+}
+#endif
+
 /* set this with a debugger to see exactly what libIDL sees */
 static FILE *tracefile;
 
@@ -457,9 +447,11 @@ static int
 input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                gpointer user_data)
 {
- struct input_callback_stack *stack = user_data;
-    struct input_callback_data *data = stack->top, *new_data = NULL;
-    unsigned int len, copy, avail, rv;
+    input_callback_state *callback_state = user_data;
+    input_data *data = callback_state->input_stack;
+    input_data *new_data = NULL;
+    unsigned int len, copy, avail;
+    int rv;
     char *start;
 
     switch(reason) {
@@ -472,21 +464,21 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
              */
             IncludePathEntry first_entry;
 
-            first_entry.directory = stack->include_path->directory;
+            first_entry.directory = callback_state->include_path->directory;
             first_entry.next = NULL;
 
-            new_data = new_input_callback_data(cb_data->init.filename,
+            new_data = new_input_data(cb_data->init.filename,
                                                &first_entry);
         } else {
-            new_data = new_input_callback_data(cb_data->init.filename,
-                                               stack->include_path);
+            new_data = new_input_data(cb_data->init.filename,
+                                               callback_state->include_path);
         }
 
         if (!new_data)
             return -1;
 
         IDL_file_set(new_data->filename, (int)new_data->lineno);
-        stack->top = new_data;
+        callback_state->input_stack = new_data;
         return 0;
 
       case IDL_INPUT_REASON_FILL:
@@ -519,10 +511,10 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
             fprintf(stderr, "leaving %s, returning to %s\n",
                     data->filename, data->next->filename);
 #endif
-            stack->top = data->next;
+            callback_state->input_stack = data->next;
             /* shaver: what about freeing the input structure? */
             free(data);
-            data = stack->top;
+            data = callback_state->input_stack;
 
             IDL_file_set(data->filename, (int)data->lineno);
             IDL_inhibit_pop();
@@ -530,6 +522,11 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         }
 
         /* force NUL-termination on the buffer */
+
+#ifdef XP_MAC
+        /* always make sure lines end with '\n' */
+        cr2lf(data->buf);
+#endif
         data->buf[data->len] = 0;
         
         /*
@@ -587,7 +584,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
             if (rv == -1) return -1;
             if (!rv) {
                 /* includes might need to push a new file */
-                rv = NextIsInclude(stack, &start, (int *)&len);
+                rv = NextIsInclude(callback_state, &start, (int *)&len);
                 if (rv == -1) return -1;
                 if (!rv)
                     /* FindSpecial can't fail? */
@@ -596,7 +593,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         }
 
         assert(start);
-        copy = MIN(len, (int) cb_data->fill.max_size);
+        copy = MIN(len, (unsigned int) cb_data->fill.max_size);
 
         if (copy) {
             memcpy(cb_data->fill.buffer, start, copy);
@@ -630,28 +627,53 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
     }
 }
 
+static void
+free_ghash_key(gpointer key, gpointer value, gpointer user_data)
+{
+    /* We're only storing TRUE in the value... */
+    free(key);
+}
+
+static void
+free_gslist_data(gpointer data, gpointer user_data)
+{
+    free(data);
+}
+
+/* Pick up unlink. */
+#ifdef XP_UNIX
+#include <unistd.h>
+#elif XP_WIN
+/* We get it from stdio.h. */
+#endif
+
 int
 xpidl_process_idl(char *filename, IncludePathEntry *include_path,
                   char *file_basename, ModeData *mode)
 {
-    char *tmp, *outname, *mode_outname;
+    char *tmp, *outname, *mode_outname = NULL;
     IDL_tree top;
     TreeState state;
     int rv;
-    struct input_callback_stack stack;
+    input_callback_state callback_state;
     gboolean ok;
     char *fopen_mode;
+    backend *emitter;
 
-    /* Initialize so that stack->top, etc. doesn't come up as garbage. */
-    memset(&stack, 0, sizeof(struct input_callback_stack));
+    /*
+     * Initialize so that callback_state->top, etc. doesn't come up as garbage.
+     */
+    memset(&callback_state, 0, sizeof(struct input_callback_state));
 
-    stack.includes = g_hash_table_new(g_str_hash, g_str_equal);
-    if (!stack.includes) {
+    callback_state.already_included = g_hash_table_new(g_str_hash, g_str_equal);
+    if (!callback_state.already_included) {
         fprintf(stderr, "failed to create hashtable (EOM?)\n");
         return 0;
     }
 
     state.basename = xpidl_strdup(filename);
+
+    /* if basename has an .extension, truncate it. */
     tmp = strrchr(state.basename, '.');
     if (tmp)
         *tmp = '\0';
@@ -673,11 +695,12 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
 #endif
 
     /* so we don't include it again! */
-    g_hash_table_insert(stack.includes, filename, state.basename);
+    g_hash_table_insert(callback_state.already_included,
+                        xpidl_strdup(filename), (void *)TRUE);
 
-    stack.include_path = include_path;
+    callback_state.include_path = include_path;
 
-    rv = IDL_parse_filename_with_input(filename, input_callback, &stack,
+    rv = IDL_parse_filename_with_input(filename, input_callback, &callback_state,
                                        msg_callback, &top,
                                        &state.ns,
                                        IDLF_IGNORE_FORWARDS |
@@ -698,21 +721,18 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     if (tmp)
         *tmp = '\0';
 
-    /* so we don't make a #include for it  */
-    g_hash_table_remove(stack.includes, filename);
+    /* so xpidl_header.c can use it to generate a list of #include directives */
+    state.base_includes = callback_state.base_includes;
 
-    state.includes = stack.includes;
-    state.include_path = include_path;
-    state.dispatch = mode->factory();
-    if (!state.dispatch) {
-        /* XXX error */
-        return 0;
-    }
+    emitter = mode->factory();
+/*      assert(emitter); */
+    state.dispatch = emitter->dispatch_table;
+
     if (strcmp(outname, "-")) {
         mode_outname = g_strdup_printf("%s.%s", outname, mode->suffix);
-        fopen_mode = mode->factory == xpidl_typelib_dispatch ? "wb" : "w";
+        /* Use binary write for typelib mode */
+        fopen_mode = (strcmp(mode->mode, "typelib")) ? "w" : "wb";
         state.file = fopen(mode_outname, fopen_mode);
-        free(mode_outname);
         if (!state.file) {
             perror("error opening output file");
             return 0;
@@ -721,199 +741,39 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         state.file = stdout;
     }
     state.tree = top;
-    ok = process_tree(&state);
+
+    if (emitter->emit_prolog)
+        emitter->emit_prolog(&state);
+    ok = xpidl_process_node(&state);
+    if (emitter->emit_epilog)
+        emitter->emit_epilog(&state);
+
     if (state.file != stdout)
         fclose(state.file);
-    if (!ok)
-        return 0;
     free(state.basename);
     free(outname);
-    /* g_hash_table_foreach(state.includes, free_name, NULL);
-       g_hash_table_destroy(state.includes);
-    */
+    g_hash_table_foreach(callback_state.already_included, free_ghash_key, NULL);
+    g_hash_table_destroy(callback_state.already_included);
+    g_slist_foreach(callback_state.base_includes, free_gslist_data, NULL);
+
     IDL_ns_free(state.ns);
     IDL_tree_free(top);
 
-    return 1;
-}
-
-void
-xpidl_write_comment(TreeState *state, int indent)
-{
-    fprintf(state->file, "\n%*s/* ", indent, "");
-    IDL_tree_to_IDL(state->tree, state->ns, state->file,
-                    IDLF_OUTPUT_NO_NEWLINES |
-                    IDLF_OUTPUT_NO_QUALIFY_IDENTS |
-                    IDLF_OUTPUT_PROPERTIES);
-    fputs(" */\n", state->file);
-}
-
-/*
- * Print an iid to into a supplied buffer; the buffer should be at least
- * UUID_LENGTH bytes.
- */
-gboolean
-xpidl_sprint_iid(struct nsID *id, char iidbuf[])
-{
-    int printed;
-
-    printed = sprintf(iidbuf,
-                       "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-                       (PRUint32) id->m0, (PRUint32) id->m1,(PRUint32) id->m2,
-                       (PRUint32) id->m3[0], (PRUint32) id->m3[1],
-                       (PRUint32) id->m3[2], (PRUint32) id->m3[3],
-                       (PRUint32) id->m3[4], (PRUint32) id->m3[5],
-                       (PRUint32) id->m3[6], (PRUint32) id->m3[7]);
-
-#ifdef SPRINTF_RETURNS_STRING
-    return (printed && strlen((char *)printed) == 36);
-#else
-    return (printed == 36);
+    if (mode_outname != NULL) {
+        /*
+         * Delete partial output file on failure.  Looks like this is tricky
+         * XP, so only enable for unix and win32.  Lacking this won't hurt
+         * compiles of already-working IDL for mac.  (NSPR code too scary
+         * to steal is in macio.c:_MD_Delete(). )
+         */
+#if defined(XP_UNIX) || defined(XP_WIN)
+        if (!ok)
+            unlink(mode_outname);
 #endif
-}
-
-/* We only parse the {}-less format.  (xpidl_header never has, so we're safe.) */
-static const char nsIDFmt2[] =
-  "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
-
-/*
- * Parse a uuid string into an nsID struct.  We cannot link against libxpcom,
- * so we re-implement nsID::Parse here.
- */
-gboolean
-xpidl_parse_iid(struct nsID *id, const char *str)
-{
-    PRInt32 count = 0;
-    PRInt32 n1, n2, n3[8];
-    PRInt32 n0, i;
-
-    assert(str != NULL);
-    
-    if (strlen(str) != 36) {
-        return FALSE;
-    }
-     
-#ifdef DEBUG_shaver_iid
-    fprintf(stderr, "parsing iid   %s\n", str);
-#endif
-
-    count = sscanf(str, nsIDFmt2,
-                   &n0, &n1, &n2,
-                   &n3[0],&n3[1],&n3[2],&n3[3],
-                   &n3[4],&n3[5],&n3[6],&n3[7]);
-
-    id->m0 = (PRInt32) n0;
-    id->m1 = (PRInt16) n1;
-    id->m2 = (PRInt16) n2;
-    for (i = 0; i < 8; i++) {
-      id->m3[i] = (PRInt8) n3[i];
+        free(mode_outname);
     }
 
-#ifdef DEBUG_shaver_iid
-    if (count == 11) {
-        fprintf(stderr, "IID parsed to ");
-        print_IID(id, stderr);
-        fputs("\n", stderr);
-    }
-#endif
-    return (gboolean)(count == 11);
-}
-
-/*
- * Common method verification code, called by *op_dcl in the various backends.
- */
-gboolean
-verify_method_declaration(IDL_tree method_tree)
-{
-    struct _IDL_OP_DCL *op = &IDL_OP_DCL(method_tree);
-    IDL_tree iface;
-    gboolean scriptable_interface;
-
-    if (op->f_varargs) {
-        /* We don't currently support varargs. */
-        IDL_tree_error(method_tree, "varargs are not currently supported\n");
-        return FALSE;
-    }
-
-    /* 
-     * Verify that we've been called on an interface, and decide if the
-     * interface was marked [scriptable].
-     */
-    if (IDL_NODE_UP(method_tree) && IDL_NODE_UP(IDL_NODE_UP(method_tree)) &&
-        IDL_NODE_TYPE(iface = IDL_NODE_UP(IDL_NODE_UP(method_tree))) 
-        == IDLN_INTERFACE)
-    {
-        scriptable_interface =
-            (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable")
-             != NULL);
-    } else {
-        IDL_tree_error(method_tree, "verify_op_dcl called on a non-interface?");
-        return FALSE;
-    }
-
-    /*
-     * Require that any method in an interface marked as [scriptable], that
-     * *isn't* scriptable because it refers to some native type, be marked
-     * [noscript] or [notxpcom].
-     */
-    if (scriptable_interface &&
-        IDL_tree_property_get(op->ident, "notxpcom") == NULL &&
-        IDL_tree_property_get(op->ident, "noscript") == NULL)
-    {
-        IDL_tree iter;
-
-        /* Loop through the parameters and check. */
-        for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-            IDL_tree param_type =
-                IDL_PARAM_DCL(IDL_LIST(iter).data).param_type_spec;
-            IDL_tree simple_decl =
-                IDL_PARAM_DCL(IDL_LIST(iter).data).simple_declarator;
-
-            /*
-             * Reject this method if a parameter is native and isn't marked
-             * with either nsid or iid_is.
-             */
-            if (UP_IS_NATIVE(param_type) &&
-                IDL_tree_property_get(param_type, "nsid") == NULL &&
-                IDL_tree_property_get(simple_decl, "iid_is") == NULL)
-            {
-                IDL_tree_error(method_tree,
-                               "methods in [scriptable] interfaces which are "
-                               "non-scriptable because they refer to native "
-                               "types (parameter \"%s\") must be marked "
-                               "[noscript]\n", IDL_IDENT(simple_decl).str);
-                return FALSE;
-            }
-        }
-        
-        /* How about the return type? */
-        if (op->op_type_spec != NULL && UP_IS_NATIVE(op->op_type_spec)) {
-            IDL_tree_error(method_tree,
-                           "methods in [scriptable] interfaces which are "
-                           "non-scriptable because they return native "
-                           "types must be marked [noscript]\n");
-            return FALSE;
-        }
-    }
-    return TRUE;
-}
-
-/*
- * Verify that a native declaration has an associated C++ expression, i.e. that
- * it's of the form native <idl-name>(<c++-name>)
- */
-gboolean
-check_native(TreeState *state)
-{
-    char *native_name;
-    /* require that native declarations give a native type */
-    if (IDL_NATIVE(state->tree).user_type) 
-        return TRUE;
-    native_name = IDL_IDENT(IDL_NATIVE(state->tree).ident).str;
-    IDL_tree_error(state->tree,
-                   "``native %s;'' needs C++ type: ``native %s(<C++ type>);''",
-                   native_name, native_name);
-    return FALSE;
+    return ok;
 }
 
 /*
