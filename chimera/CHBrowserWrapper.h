@@ -43,29 +43,29 @@
 
 @interface CHBrowserWrapper : NSView <NSBrowserListener, NSBrowserContainer>
 {
-  id urlbar;
-  id status;
-  id progress;
-  id progressSuper;
-  BrowserWindowController* mWindowController;
-  NSTabViewItem* mTab;
-  NSWindow* mWindow;
+  NSTextField*              mUrlbar;
+  NSTextField*              mStatus;
+  NSProgressIndicator*      mProgress;
+  NSView*                   mProgressSuper;
+  BrowserWindowController*  mWindowController;
+  NSTabViewItem*            mTabItem;
+  NSWindow*                 mWindow;
 
-  NSImage*  mSiteIconImage;    // current proxy icon image, which may be a site icon (favicon).
-  NSString* mSiteIconURI;      // uri from  which we loaded the site icon	
+  NSImage*                  mSiteIconImage;    // current proxy icon image, which may be a site icon (favicon).
+  NSString*                 mSiteIconURI;      // uri from  which we loaded the site icon	
   
     // the secure state of this browser. We need to hold it so that we can set
     // the global lock icon whenever we become the primary. Value is one of
     // security enums in nsIWebProgressListener.
-  unsigned long mSecureState;
+  unsigned long             mSecureState;
     // the title associated with this tab's url. We need to hold it so that we
     // can set the window title whenever we become the primary. 
-  NSString* mTitle;
+  NSString*                 mTitle;
 
-  CHBrowserView* mBrowserView;
-  NSString* mDefaultStatusString;
-  NSString* mLoadingStatusString;
-  ToolTip* mToolTip;
+  CHBrowserView*            mBrowserView;
+  NSString*                 mDefaultStatusString;
+  NSString*                 mLoadingStatusString;
+  ToolTip*                  mToolTip;
 
   BOOL mIsPrimary;
   BOOL mIsBusy;
@@ -77,6 +77,8 @@
   BOOL mActivateOnLoad;    // If set, activate the browser view when loading starts.
 }
 
+- (id)initWithTab:(NSTabViewItem*)aTab andWindow:(NSWindow*)aWindow;
+
 - (IBAction)load:(id)sender;
 - (void)awakeFromNib;
 - (void)setFrame:(NSRect)frameRect;
@@ -84,19 +86,17 @@
 - (BOOL)isBusy;
 - (void)windowClosed;
 
--(NSString*)getCurrentURLSpec;
+- (NSString*)getCurrentURLSpec;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate;
--(void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
+- (void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
     progress: (id)aProgress windowController: (BrowserWindowController*)aWindowController;
--(void)disconnectView;
--(void)setTab: (NSTabViewItem*)tab;
+- (void)disconnectView;
+- (void)setTab: (NSTabViewItem*)tab;
 
--(NSWindow*)getNativeWindow;
--(NSMenu*)getContextMenu;
--(void)setIsBookmarksImport:(BOOL)aIsImport;
-
--(id)initWithTab:(id)aTab andWindow:(NSWindow*)aWindow;
+- (NSWindow*)getNativeWindow;
+- (NSMenu*)getContextMenu;
+- (void)setIsBookmarksImport:(BOOL)aIsImport;
 
 // NSBrowserListener messages
 - (void)onLoadingStarted;
