@@ -162,14 +162,18 @@ glob_init()
 	then
 		eval_opts $*			# parse parameters and options - set flags
 	fi
-	if [ $O_CRON = "ON" ]		# if running from cron HOST needs to be
-	then						# known early, so the output file name
+	#if [ $O_CRON = "ON" ]		# if running from cron HOST needs to be
+	#then						# known early, so the output file name
 		set_host				# can be constructed. If running interactive 
-	fi							# it needs to be called by sourcing script
+	#fi							# it needs to be called by sourcing script
 	. $QASCRIPT_DIR/set_environment		#finds out if we are running on Windows
+	Debug "OPerating system: $os_name $os_full"
 	if [ $O_WIN = "ON" ] 
 	then
+		#set_host
 		write_to_tmpfile
+	else
+		Debug "Not a Windows OS"
 	fi
 	umask 0	
 	set_dirs
@@ -913,43 +917,43 @@ tell()
 }
 
 
-set_host()
-{
-	set_host_done=0
-	HOST=`echo $HOST | sed -e "s/.red.iplanet.com//"`
-	DOMSUF=`cat /etc/defaultdomain 2>/dev/null`
-	if [ -z "$DOMSUF" ]
-	then
-		DOMSUF="red.iplanet.com"
-	fi
-	if [ -z "$HOST" ]
-	then
-		HOST=`uname -n | sed -e "s/.red.iplanet.com//"`
-	fi
-	while [ $set_host_done -eq 0 ]
-	do
-		Echo
-		ask "DOMSUF=$DOMSUF, HOST=$HOST - OK", "y" "n" &&
-			set_host_done=1
-		if [ $set_host_done -eq 0 ]
-		then
-			Echo "input DOMSUF: "
-			read D
-			if [ -n "$D" ]
-			then
-				DOMSUF=$D
-			fi
-			Echo "input HOST: "
-			read H
-			if [ -n "$H" ]
-			then
-				HOST=$H
-			fi
-		fi
-	done
-	export HOST DOMSUF
-	Debug "HOST: $HOST, DOMSUF: $DOMSUF"
-}
+#set_host()
+#{
+	#set_host_done=0
+	#HOST=`echo $HOST | sed -e "s/.red.iplanet.com//"`
+	#DOMSUF=`cat /etc/defaultdomain 2>/dev/null`
+	#if [ -z "$DOMSUF" ]
+	#then
+		#DOMSUF="red.iplanet.com"
+	#fi
+	#if [ -z "$HOST" ]
+	#then
+		#HOST=`uname -n | sed -e "s/.red.iplanet.com//"`
+	#fi
+	#while [ $set_host_done -eq 0 ]
+	#do
+		#Echo
+		#ask "DOMSUF=$DOMSUF, HOST=$HOST - OK", "y" "n" &&
+			#set_host_done=1
+		#if [ $set_host_done -eq 0 ]
+		#then
+			#Echo "input DOMSUF: "
+			#read D
+			#if [ -n "$D" ]
+			#then
+				#DOMSUF=$D
+			#fi
+			#Echo "input HOST: "
+			#read H
+			#if [ -n "$H" ]
+			#then
+				#HOST=$H
+			#fi
+		#fi
+	#done
+	#export HOST DOMSUF
+	#Debug "HOST: $HOST, DOMSUF: $DOMSUF"
+#}
 
 if [ $O_INIT = "ON" ]
 then
