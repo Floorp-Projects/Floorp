@@ -49,7 +49,6 @@ use vars qw(
     @log_columns
     %versions
     %components
-    %FORM
     $template
     $vars
 );
@@ -57,7 +56,7 @@ use vars qw(
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
 
-if (defined $::FORM{"GoAheadAndLogIn"}) {
+if ($cgi->param("GoAheadAndLogIn")) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
     Bugzilla->login(LOGIN_REQUIRED);
@@ -106,7 +105,7 @@ if ($userid) {
     }
 }
 
-if ($::FORM{'nukedefaultquery'}) {
+if ($cgi->param('nukedefaultquery')) {
     if ($userid) {
         $dbh->do("DELETE FROM namedqueries" .
                  " WHERE userid = ? AND name = ?", 
@@ -364,32 +363,32 @@ $vars->{'fields'} = \@fields;
 # Creating new charts - if the cmd-add value is there, we define the field
 # value so the code sees it and creates the chart. It will attempt to select
 # "xyzzy" as the default, and fail. This is the correct behaviour.
-foreach my $cmd (grep(/^cmd-/, keys(%::FORM))) {
+foreach my $cmd (grep(/^cmd-/, $cgi->param)) {
     if ($cmd =~ /^cmd-add(\d+)-(\d+)-(\d+)$/) {
-        $::FORM{"field$1-$2-$3"} = "xyzzy";
+        $cgi->param(-name => "field$1-$2-$3", -value => "xyzzy");
     }
 }
 
-if (!exists $::FORM{'field0-0-0'}) {
-    $::FORM{'field0-0-0'} = "xyzzy";
+if (!$cgi->param('field0-0-0')) {
+    $cgi->param(-name => 'field0-0-0', -value => "xyzzy");
 }
 
 # Create data structure of boolean chart info. It's an array of arrays of
 # arrays - with the inner arrays having three members - field, type and
 # value.
 my @charts;
-for (my $chart = 0; $::FORM{"field$chart-0-0"}; $chart++) {
+for (my $chart = 0; $cgi->param("field$chart-0-0"); $chart++) {
     my @rows;
-    for (my $row = 0; $::FORM{"field$chart-$row-0"}; $row++) {
+    for (my $row = 0; $cgi->param("field$chart-$row-0"); $row++) {
         my @cols;
-        for (my $col = 0; $::FORM{"field$chart-$row-$col"}; $col++) {
-            push(@cols, { field => $::FORM{"field$chart-$row-$col"},
-                          type => $::FORM{"type$chart-$row-$col"},
-                          value => $::FORM{"value$chart-$row-$col"} });
+        for (my $col = 0; $cgi->param("field$chart-$row-$col"); $col++) {
+            push(@cols, { field => $cgi->param("field$chart-$row-$col"),
+                          type => $cgi->param("type$chart-$row-$col"),
+                          value => $cgi->param("value$chart-$row-$col") });
         }
         push(@rows, \@cols);
     }
-    push(@charts, {'rows' => \@rows, 'negate' => $::FORM{"negate$chart"}});
+    push(@charts, {'rows' => \@rows, 'negate' => $cgi->param("negate$chart")});
 }
 
 $default{'charts'} = \@charts;
@@ -412,13 +411,14 @@ if ($cgi->cookie('LASTORDER')) {
     unshift(@orders, $deforder);
 }
 
-if ($::FORM{'order'}) { $deforder = $::FORM{'order'} }
+if ($cgi->param('order')) { $deforder = $cgi->param('order') }
 
 $vars->{'userdefaultquery'} = $userdefaultquery;
 $vars->{'orders'} = \@orders;
 $default{'querytype'} = $deforder || 'Importance';
 
-if (($::FORM{'query_format'} || $::FORM{'format'} || "") eq "create-series") {
+if (($cgi->param('query_format') || $cgi->param('format') || "")
+    eq "create-series") {
     require Bugzilla::Chart;
     $vars->{'category'} = Bugzilla::Chart::getVisibleSeries();
 }
@@ -455,7 +455,7 @@ if (defined($vars->{'format'}) && IsValidQueryType($vars->{'format'})) {
 # format.
 my $format = GetFormat("search/search", 
                        $vars->{'query_format'} || $vars->{'format'}, 
-                       $cgi->param('ctype'));
+                       scalar $cgi->param('ctype'));
 
 print $cgi->header($format->{'ctype'});
 
