@@ -59,8 +59,6 @@ class nsMyObserver : public nsICharsetDetectionObserver
      mNotifyByReload = PR_FALSE;
      mWeakRefDocument = nsnull;
      mWeakRefParser = nsnull;
-     mCommand ="";
-     mCharset ="";
    }
    virtual  ~nsMyObserver( void )
    {
@@ -94,13 +92,13 @@ NS_IMETHODIMP nsMyObserver::Notify(
     const char* aCharset, nsDetectionConfident aConf)
 {
     nsresult rv = NS_OK;
-    if(!mCharset.Equals(aCharset)) {
+    if(!mCharset.EqualsWithConversion(aCharset)) {
       if(mNotifyByReload) {
         rv = mWebShellSvc->SetRendering( PR_FALSE);
         rv = mWebShellSvc->StopDocumentLoad();
         rv = mWebShellSvc->ReloadDocument(aCharset, kCharsetFromAutoDetection);
       } else {
-        nsAutoString newcharset(aCharset);
+        nsAutoString newcharset; newcharset.AssignWithConversion(aCharset);
         if(mWeakRefDocument) {
              mWeakRefDocument->SetDocumentCharacterSet(newcharset);
         }

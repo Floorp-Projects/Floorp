@@ -166,9 +166,9 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
       PRBool bGotCurrentCharsetSource = PR_FALSE;
       PRBool bGotEncoding = PR_FALSE;
 
-      nsAutoString currentCharset("unknown");
-      nsAutoString charsetSourceStr("unknown");
-      nsAutoString encoding("unknown");
+      nsAutoString currentCharset;    currentCharset.AssignWithConversion("unknown");
+      nsAutoString charsetSourceStr;  charsetSourceStr.AssignWithConversion("unknown");
+      nsAutoString encoding;          encoding.AssignWithConversion("unknown");
 
       for(i=0; i < numOfAttributes; i++) 
       {
@@ -246,7 +246,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Observe(nsISupports*, const PRUnichar*, con
 NS_IMETHODIMP nsXMLEncodingObserver::Start() 
 {
     nsresult res = NS_OK;
-    nsAutoString xmlTopic("xmlparser");
+    nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
     nsIObserverService* anObserverService = nsnull;
 
     res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
@@ -266,7 +266,7 @@ done:
 NS_IMETHODIMP nsXMLEncodingObserver::End() 
 {
     nsresult res = NS_OK;
-    nsAutoString xmlTopic("xmlparser");
+    nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
     nsIObserverService* anObserverService = nsnull;
 
     res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
