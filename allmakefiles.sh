@@ -1107,6 +1107,7 @@ $MAKEFILES_libjar
 $MAKEFILES_libpref
 $MAKEFILES_libutil
 $MAKEFILES_liveconnect
+$MAKEFILES_macmorefiles
 $MAKEFILES_mailnews
 $MAKEFILES_mpfilelocprovider
 $MAKEFILES_oji
