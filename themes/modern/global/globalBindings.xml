@@ -248,8 +248,8 @@
       <xul:vbox flex="1" class="tab-mid" inherits="selected">
         <xul:spacer class="tab-mid-top" inherits="selected"/>
         <xul:hbox class="tab-mid-mid" align="center" pack="center" flex="1">
-  	      <xul:image class="tab-icon"/>
-          <xul:label flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
+  	      <xul:image class="tab-icon" inherits="validate,src=image"/>
+      	  <xul:label flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
         </xul:hbox>
         <xul:spacer class="tab-mid-btm" inherits="selected"/>
       </xul:vbox>
@@ -266,7 +266,12 @@
       <xul:spacer class="tabs-left-cap"/>
   	  <xul:spacer class="tabs-left"/>
       <children/>
-      <xul:spacer class="tabs-right" flex="1"/>
+      <xul:stack flex="1">
+        <xul:spacer class="tabs-right"/>
+        <xul:hbox class="tabs-misc-dec" align="center">
+          <xul:spacer flex="1"/>
+        </xul:hbox>
+      </xul:stack>
   	  <xul:spacer class="tabs-right-cap"/>
   	</content>
   </binding>

@@ -134,11 +134,25 @@
   
   
 /*all the urlbar stuff*/
+#page-proxy-deck {
+  cursor                : grab;
+  margin                : 0px 2px 0px 0px;
+  width                 : 16px;
+  height                : 16px;
+}
+
 #page-proxy-button 
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif"); 
-	  cursor                : grab;
-    margin                : 0px 2px 0px 0px;
+    width : 16px;
+    height: 16px;
+  } 
+
+#page-proxy-favicon 
+  {
+	  list-style-image: none;
+    width : 16px;
+    height: 16px;
   } 
 
 #page-proxy-button[pageproxystate="valid"]:hover

@@ -98,9 +98,9 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
 
-  virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw);
-  virtual void UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize);
-
+  void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw);
+  void UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize);
+  void UpdateLoadFlags();
 
   NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
@@ -144,6 +144,7 @@ private:
   nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsSize mIntrinsicSize;
+  PRInt32 mLoadFlags;
 
   PRBool mSizeFrozen;
   nsSize mImageSize;

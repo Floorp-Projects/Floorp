@@ -321,10 +321,23 @@
 
 /* ::::: more toolbar buttons ::::: */
 
-#page-proxy-button {
+#page-proxy-deck {
   cursor: grab;
-  margin-left: 0px 4px 0px 0px;
+  margin: 0px 4px 0px 0px;
+  width: 16px;
+  height: 16px;
+}
+
+#page-proxy-button {
+  width: 16px;
+  height: 16px;
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
+} 
+
+#page-proxy-favicon {
+  width: 16px;
+  height: 16px;
+  list-style-image: none;
 } 
 
 #page-proxy-button[pageproxystate="invalid"] {

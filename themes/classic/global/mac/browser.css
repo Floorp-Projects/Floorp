@@ -1,7 +1,15 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-tab[busy] {
+.tab-left {
+  margin-top: 1px;
+  margin-right: 3px;
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
+}
+
+tab[busy] > .tab-image-middle > .tab-left {
   list-style-image: url("chrome://global/skin/loading.gif");
 }
 
@@ -9,4 +17,5 @@ tab[busy] {
   list-style-image: url("chrome://global/skin/closebox.gif");
   margin-bottom: 3px;
   margin-right: 2px;
+  margin-left: 4px;
 }

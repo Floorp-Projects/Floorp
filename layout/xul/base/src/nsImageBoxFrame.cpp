@@ -343,6 +343,8 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
 
   nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+  UpdateLoadFlags();
+
   return rv;
 }
 
@@ -370,9 +372,23 @@ nsImageBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttri
   aResize = PR_FALSE;
   aRedraw = PR_FALSE;
 
-  if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::src) {
+  if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::src)
     UpdateImage(aPresContext, aResize);
-  }
+  else if (aAttribute == nsXULAtoms::validate)
+    UpdateLoadFlags();
+}
+
+void
+nsImageBoxFrame::UpdateLoadFlags()
+{
+  nsAutoString loadPolicy;
+  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::validate, loadPolicy);
+  if (loadPolicy.EqualsIgnoreCase("always"))
+    mLoadFlags = nsIRequest::VALIDATE_ALWAYS;
+  else if (loadPolicy.EqualsIgnoreCase("never"))
+    mLoadFlags = nsIRequest::VALIDATE_NEVER|nsIRequest::LOAD_FROM_CACHE; 
+  else
+    mLoadFlags = nsIRequest::LOAD_NORMAL;
 }
 
 void
@@ -429,7 +445,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
-  il->LoadImage(srcURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
+  il->LoadImage(srcURI, loadGroup, mListener, aPresContext, mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
 
   aResize = PR_TRUE;
 

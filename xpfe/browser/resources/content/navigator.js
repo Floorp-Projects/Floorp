@@ -42,11 +42,14 @@ const XREMOTESERVICE_CONTRACTID = "@mozilla.org/browser/xremoteservice;1";
 
 var gURLBar = null;
 var gProxyButton = null;
+var gProxyFavIcon = null;
+var gProxyDeck = null;
 var gNavigatorBundle;
 var gBrandBundle;
 var gNavigatorRegionBundle;
 var gBrandRegionBundle;
-var gLastValidURL = "";
+var gLastValidURLStr = "";
+var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = -1;
 
@@ -266,7 +269,7 @@ function Startup()
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
   
-  SetPageProxyState("invalid");
+  SetPageProxyState("invalid", null);
 
   var webNavigation;
   try {
@@ -1514,7 +1517,7 @@ function handleURLBarRevert()
     if (url != "about:blank") { 
       gURLBar.value = url;
       gURLBar.select();
-      SetPageProxyState("valid");
+      SetPageProxyState("valid", null); // XXX Build a URI and pass it in here.
     } else { //if about:blank, urlbar becomes ""
       gURLBar.value = "";
     }
@@ -1533,23 +1536,39 @@ function handleURLBarCommand(aUserAction)
 
 function UpdatePageProxyState()
 {
-  if (gURLBar.value != gLastValidURL)
-    SetPageProxyState("invalid");
+  if (gURLBar.value != gLastValidURLStr)
+    SetPageProxyState("invalid", null);
 }
 
-function SetPageProxyState(aState)
+function SetPageProxyState(aState, aURI)
 {
   if (!gProxyButton)
     gProxyButton = document.getElementById("page-proxy-button");
+  if (!gProxyFavIcon)
+    gProxyFavIcon = document.getElementById("page-proxy-favicon");
+  if (!gProxyDeck)
+    gProxyDeck = document.getElementById("page-proxy-deck");
 
   gProxyButton.setAttribute("pageproxystate", aState);
 
   if (aState == "valid") {
-    gLastValidURL = gURLBar.value;
+    gLastValidURLStr = gURLBar.value;
     gURLBar.addEventListener("input", UpdatePageProxyState, false);
-  } else if (aState == "invalid")
+    if (pref.getBoolPref("browser.chrome.site_icons") && aURI && "schemeIs" in aURI && (aURI.schemeIs("http") || aURI.schemeIs("https"))) {
+      var favurl = gBrowser.buildFavIconString(aURI);
+      if (favurl != gProxyFavIcon.src) {
+        gProxyFavIcon.setAttribute("src", favurl);
+        gProxyDeck.selectedIndex = 0;
+      }
+    }
+    else {
+      gProxyDeck.selectedIndex = 0;
+      gProxyFavIcon.removeAttribute("src");
+    }
+  } else if (aState == "invalid") {
     gURLBar.removeEventListener("input", UpdatePageProxyState, false);
-  
+    gProxyDeck.selectedIndex = 0;
+  }
 }
 
 function PageProxyDragGesture(aEvent)

@@ -155,7 +155,7 @@
     <content>
       <xul:spacer class="tab-image-left" inherits="selected"/>
       <xul:hbox flex="1" class="tab-image-middle" align="center" inherits="selected">
-        <xul:image class="tab-left"/>
+        <xul:image class="tab-left" inherits="src=image,validate"/>
         <xul:label flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
       </xul:hbox>
       <xul:spacer class="tab-image-right" inherits="selected"/>
@@ -167,7 +167,12 @@
       <xul:spacer class="tab-border-top-left-cap"/>
       <xul:spacer class="tab-border-top-left"/>
       <children/>
-      <xul:spacer class="tab-border-top-right" flex="1"/>
+      <xul:stack flex="1">
+        <xul:spacer class="tab-border-top-right"/>
+        <xul:hbox class="tabs-misc-dec" align="center">
+          <xul:spacer flex="1"/>
+        </xul:hbox>
+      </xul:stack>
       <xul:spacer class="tab-border-top-right-cap"/>
     </content>
   </binding>
