@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.11 1998/08/13 22:41:10 leif Exp $
+# $Id: Makefile.PL,v 1.12 1998/08/13 23:33:49 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -37,7 +37,7 @@ $ldapsdk_ssl = $ENV{"LDAPSDKSSL"}; # Y to include SSL
 print "\nPerLDAP - Perl 5 Module for LDAP\n";
 print     "================================\n";
 
-if (!$include_ldap)
+if (!$ldapsdk_loc)
 {
    print "Directory containing 'include' and 'lib' directory of the Netscape\n";
    print "LDAP Software Developer Kit (default: /usr): ";
