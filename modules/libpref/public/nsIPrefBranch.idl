@@ -59,7 +59,8 @@ interface nsIPrefBranch : nsISupports
   void    setIntPref(in string aPrefName, in long aValue);
 
   /*
-   * methods for accessing complex preferences (i.e. items beyond the simple bool, char, and int)
+   * methods for accessing complex preferences (i.e. items beyond the simple
+   * bool, char, and int)
    * Interfaces currently supported are:
    *   - nsILocalFile
    *   - nsISupportsWString (UniChar)
@@ -84,11 +85,12 @@ interface nsIPrefBranch : nsISupports
    *
    * These operations can effect multiple preferences.
    *
-   * If the root is set to "mail.identity." and "vcard" is passed in all of the preferences
-   * related to "mail.identity.vcard" such as "mail.identity.vcard.adr" and
-   * "mail.identity.vcard.email.internet" will be manipulated but items such as
-   * "mail.identity.username" will be ignored. If null or "" is passed in all preferences in the
-   * "mail.identity." hierarchy will be manipulated.
+   * If the root is set to "mail.identity." and "vcard" is passed in all of the
+   * preferences related to "mail.identity.vcard" such as
+   * "mail.identity.vcard.adr" and "mail.identity.vcard.email.internet" will be
+   * manipulated but items such as "mail.identity.username" will be ignored. If
+   * null or "" is passed in all preferences in the "mail.identity." hierarchy
+   * will be manipulated.
    */
 
   /*
@@ -102,7 +104,8 @@ interface nsIPrefBranch : nsISupports
   /*
    * getChildList
    *
-   * Returns an array of strings representing the child preferences of the branch root
+   * Returns an array of strings representing the child preferences of the
+   * branch root.
    * 
    * @param startingAt pass in null or "" to enumerate the entire branch
    * @param count Receives the number of elements in the array.
