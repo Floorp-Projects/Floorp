@@ -72,6 +72,7 @@ sRight += sRight;
 sRight += sRight;
 sRight += sRight;
 sRight += sRight;
+sRight += sRight;
 
 var sEval = 'actual = ' + sLeft + '0' + sRight;
 try
