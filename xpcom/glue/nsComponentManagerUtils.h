@@ -161,6 +161,7 @@ public:
   // in the default components directory.
   static nsresult AutoRegister(PRInt32 when, nsIFile* directory);
   static nsresult AutoRegisterComponent(PRInt32 when, nsIFile *component);
+  static nsresult AutoUnregisterComponent(PRInt32 when, nsIFile *component);
 
   // Is the given CID currently registered?
   static nsresult IsRegistered(const nsCID &aClass,

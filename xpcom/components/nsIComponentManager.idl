@@ -86,6 +86,7 @@ interface nsIComponentManager : nsISupports
 
     void       autoRegister(in long when, in nsIFile directory);
     void       autoRegisterComponent(in long when, in nsIFile component);
+    void       autoUnregisterComponent(in long when, in nsIFile component);
 
     boolean    isRegistered(in nsCIDRef aClass);
     nsIEnumerator	enumerateCLSIDs();

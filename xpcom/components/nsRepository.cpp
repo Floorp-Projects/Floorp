@@ -210,6 +210,16 @@ nsComponentManager::AutoRegisterComponent(PRInt32 when,
     return cm->AutoRegisterComponent(when, fullname);
 }
 
+nsresult
+nsComponentManager::AutoUnregisterComponent(PRInt32 when,
+                                          nsIFile *fullname)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->AutoUnregisterComponent(when, fullname);
+}
+
 nsresult 
 nsComponentManager::IsRegistered(const nsCID &aClass,
                                  PRBool *aRegistered)

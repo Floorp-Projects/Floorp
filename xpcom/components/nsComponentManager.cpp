@@ -1770,56 +1770,35 @@ nsresult
 nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
                                                 nsIFile *aLibrarySpec)
 {
-    char *aLibrary;
-    nsresult rv = aLibrarySpec->GetPath(&aLibrary);
-    if (NS_FAILED(rv))
-        return NS_ERROR_INVALID_ARG;
+    nsXPIDLCString registryName;
+    nsresult rv = RegistryLocationForSpec(aLibrarySpec, getter_Copies(registryName));
+    if (NS_FAILED(rv)) return NS_ERROR_INVALID_ARG;
 
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
-    {
-        char *buf = aClass.ToString();
-        PR_LogPrint("nsComponentManager: UnregisterComponentSpec(%s, %s)", buf,
-                    aLibrary);
-        delete [] buf;
-    }
-    	
-    nsIDKey key(aClass);
-    nsFactoryEntry *old = (nsFactoryEntry *) mFactories->Get(&key);
-    	
-    nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
-    	
     PR_EnterMonitor(mMon);
-    	
-    if (old != NULL)
+
+    // Remove any stored factory entries
+    nsIDKey key(aClass);
+    nsFactoryEntry *entry = (nsFactoryEntry *) mFactories->Get(&key);
+    if (entry && entry->location && PL_strcasecmp(entry->location, registryName))
     {
-#if 0 /* use nsFactoryEntry->location */
-        if (old->dll->GetPersistentDescriptorString() != NULL &&
-#if defined(XP_UNIX) || defined(XP_BEOS)
-            PL_strcasecmp(old->dll->GetPersistentDescriptorString(), aLibrary)
-#else
-            PL_strcmp(old->dll->GetPersistentDescriptorString(), aLibrary)
-#endif
-            )
-        {
-            mFactories->RemoveAndDelete(&key);
-            old = NULL;
-            res = NS_OK;
-        }
-#ifdef USE_REGISTRY
-        char *cidString = aClass.ToString();
-        res = PlatformUnregister(cidString, aLibrary);
-        delete [] cidString;
-#endif
-#endif
+        mFactories->RemoveAndDelete(&key);
+        entry = NULL;
     }
+
+#ifdef USE_REGISTRY
+    // Remove registry entries for this cid
+    char *cidString = aClass.ToString();
+    rv = PlatformUnregister(cidString, registryName);
+    delete [] cidString;
+#endif
     	
     PR_ExitMonitor(mMon);
     	
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("nsComponentManager: ! Factory unregister %s.", 
-            NS_SUCCEEDED(res) ? "succeeded" : "failed"));
-    	
-    return res;
+           ("nsComponentManager: Factory unregister(%s) %s.", (const char *)registryName,
+            NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
+
+    return rv;
 }
 
 struct CanUnload_closure {
@@ -2037,10 +2016,25 @@ AutoRegisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
 						    &didRegister);
     
     if (NS_SUCCEEDED(closure->status) && didRegister)
-	return PR_FALSE;
-    if (didRegister)
-	return PR_TRUE;
-    return PR_FALSE;
+	return PR_FALSE; // Stop enumeration as we are done
+    return PR_TRUE;
+}
+
+static PRBool
+AutoUnregisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
+{
+    PRBool didUnregister;
+    nsIComponentLoader *loader = (nsIComponentLoader *)aData;
+    struct AutoReg_closure *closure =
+	(struct AutoReg_closure *)aClosure;
+
+    closure->status = loader->AutoUnregisterComponent(closure->when,
+                                                      closure->spec,
+                                                      &didUnregister);
+    if (NS_SUCCEEDED(closure->status) && didUnregister)
+        return PR_FALSE; // Stop enumeration as we are done
+    return PR_TRUE; // Let enumeration continue
+
 }
 
 nsresult
@@ -2059,6 +2053,24 @@ nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
      * I vote ``no''.
      */
     mLoaders->Enumerate(AutoRegisterComponent_enumerate, &closure);
+    return NS_FAILED(closure.status) 
+	? NS_ERROR_FACTORY_NOT_REGISTERED : NS_OK;
+
+}
+
+nsresult
+nsComponentManagerImpl::AutoUnregisterComponent(PRInt32 when,
+                                                nsIFile *component)
+{
+    struct AutoReg_closure closure;
+
+    /* XXX convert when to nsIComponentLoader::(when) properly */
+    closure.when = (PRInt32)when;
+    closure.spec = component;
+    closure.status = NS_OK;
+
+    mLoaders->Enumerate(AutoUnregisterComponent_enumerate, &closure);
+
     return NS_FAILED(closure.status) 
 	? NS_ERROR_FACTORY_NOT_REGISTERED : NS_OK;
 
