@@ -212,6 +212,10 @@ function Startup()
     if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.languageList" ) ) {
       disableAllFontElements();
     }
+    getColorFromWellAndSetValue("foregroundtextmenu");
+    getColorFromWellAndSetValue("backgroundmenu");
+    getColorFromWellAndSetValue("unvisitedlinkmenu");
+    getColorFromWellAndSetValue("visitedlinkmenu");
   }
 
 function listElement( aListID )
@@ -666,14 +670,4 @@ function setColorWell(aPicker)
     picker.color = color;
     return color;
   }     
-
-  function Startup()
-  {
-    getColorFromWellAndSetValue("foregroundtextmenu");
-    getColorFromWellAndSetValue("backgroundmenu");
-    getColorFromWellAndSetValue("unvisitedlinkmenu");
-    getColorFromWellAndSetValue("visitedlinkmenu");
-
-    return true;
-  }                   
   

@@ -47,11 +47,6 @@
         <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
       </treerow>
     </treeitem>
-    <treeitem>
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-colors.xul" label="&colors.label;"/> 
-      </treerow>
-    </treeitem>
     <treeitem id="themes-panel">
       <treerow>
         <treecell url="chrome://browser/content/pref/pref-themes.xul" label="&themes.label;"/> 
