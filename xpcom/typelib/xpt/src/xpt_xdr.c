@@ -245,7 +245,7 @@ XPT_MakeCursor(XPTState *state, XPTPool pool, PRUint32 len, XPTCursor *cursor)
     cursor->bits = 0;
     cursor->offset = state->next_cursor[pool];
 
-    if (!CHECK_COUNT(cursor, len))        
+    if (!(CHECK_COUNT(cursor, len)))        
         return PR_FALSE;
 
     /* this check should be in CHECK_CURSOR */
