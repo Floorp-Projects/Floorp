@@ -191,9 +191,6 @@ nsresult
 NS_NewProgressMeterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewTitledButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
 NS_NewImageBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
@@ -5691,18 +5688,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       } 
     } // End of RESIZER CONSTRUCTION logic
 
-
-
-
-
-    // TITLED BUTTON CONSTRUCTION
-    else if (aTag == nsXULAtoms::titledbutton) {
-
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewTitledButtonFrame(aPresShell, &newFrame);
-    }
-    // End of TITLED BUTTON CONSTRUCTION logic
     else if (aTag == nsXULAtoms::image) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
@@ -5713,7 +5698,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       isReplaced = PR_TRUE;
       rv = NS_NewSpringFrame(aPresShell, &newFrame);
     }
-    // End of TITLED BUTTON CONSTRUCTION logic
     
     // TEXT CONSTRUCTION
     else if (aTag == nsXULAtoms::text) {
@@ -5963,12 +5947,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       rv = NS_NewTreeIndentationFrame(aPresShell, &newFrame);
     }
     // End of TREE CONSTRUCTION code here (there's more later on in the function)
-
-    else if (aTag == nsXULAtoms::toolbaritem) {
-      processChildren = PR_TRUE;
-      rv = NS_NewToolbarItemFrame(aPresShell, &newFrame);
-    }
-    // End of TOOLBAR CONSTRUCTION logic
 
     // PROGRESS METER CONSTRUCTION
     else if (aTag == nsXULAtoms::progressbar) {
@@ -9562,7 +9540,6 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          nsIAtom* aAttribute)
 {
-
   // Is it a box? If so we can coelesce.
   nsresult rv;
   nsCOMPtr<nsIBox> box = do_QueryInterface(aFrame, &rv);
