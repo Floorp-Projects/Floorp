@@ -223,8 +223,7 @@ static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
 
 
-static NS_DEFINE_IID(kStringBundleCID,            NS_STRINGBUNDLE_CID);
-static NS_DEFINE_IID(kStringBundleFactoryCID,     NS_STRINGBUNDLEFACTORY_CID); // do we need this ???
+static NS_DEFINE_IID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_IID(kUnicharUtilCID,             NS_UNICHARUTIL_CID);
 
@@ -315,8 +314,7 @@ NS_SetupRegistry()
   // nsRepository::RegisterFactory(kEUCJPToUnicodeCID,       UCVJA2_DLL, PR_FALSE, PR_FALSE);
   // nsRepository::RegisterFactory(kISO2022JPToUnicodeCID,   UCVJA2_DLL, PR_FALSE, PR_FALSE);
 
-  nsRepository::RegisterFactory(kStringBundleCID,         STRRES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kStringBundleFactoryCID,  STRRES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kStringBundleServiceCID,  STRRES_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kUnicharUtilCID,          UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
 
