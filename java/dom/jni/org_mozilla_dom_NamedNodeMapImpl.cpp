@@ -83,22 +83,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
     return NULL;
   }
 
-  jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
-  if (!jnode) {
-    JavaDOMGlobals::ThrowException(env,
-      "NamedNodeMap.getNamedItem: failed to allocate object");
-    return NULL;
-  }
-
-  env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
-  if (env->ExceptionOccurred()) {
-    JavaDOMGlobals::ThrowException(env,
-      "NamedNodeMap.getNamedItem: failed to set node ptr");
-    return NULL;
-  }
-
-  node->AddRef();
-  return jnode;
+  return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
 
 /*
@@ -125,22 +110,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_item
     return NULL;
   }
 
-  jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
-  if (!jnode) {
-    JavaDOMGlobals::ThrowException(env,
-      "NodeMap.item: failed to allocate object");
-    return NULL;
-  }
-
-  env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
-  if (env->ExceptionOccurred()) {
-    JavaDOMGlobals::ThrowException(env,
-      "NamedNodeMap.item: failed to set node ptr");
-    return NULL;
-  }
-
-  node->AddRef();
-  return jnode;
+  return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
 
 /*
@@ -182,22 +152,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
     return NULL;
   }
 
-  jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
-  if (!jnode) {
-    JavaDOMGlobals::ThrowException(env,
-      "NamedNodeMap.removeNamedItem: failed to allocate object");
-    return NULL;
-  }
-
-  env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
-  if (env->ExceptionOccurred()) {
-    JavaDOMGlobals::ThrowException(env,
-      "NamedNodeMap.removeNamedItem: failed to set node ptr");
-    return NULL;
-  }
-
-  node->AddRef();
-  return jnode;
+  return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
 
 /*
@@ -239,21 +194,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_setNamedItem
     return NULL;
   }
 
-  jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
-  if (!jnode) {
-    JavaDOMGlobals::ThrowException(env,
-      "NamedNodeMap.setNamedItem: failed to allocate object");
-    return NULL;
-  }
-
-  env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
-  if (env->ExceptionOccurred()) {
-    JavaDOMGlobals::ThrowException(env,
-      "NamedNodeMap.setNamedItem: failed to set node ptr");
-    return NULL;
-  }
-
-  node->AddRef();
-  return jnode;
+  return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
 

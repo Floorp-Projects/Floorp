@@ -176,21 +176,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeListImpl_item
     return NULL;
   }
 
-  jobject jnode = env->AllocObject(JavaDOMGlobals::nodeClass);
-  if (!jnode) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeList.item: failed to allocate object\n"));
-    return NULL;
-  }
-
-  env->SetLongField(jnode, JavaDOMGlobals::nodePtrFID, (jlong) node);
-  if (env->ExceptionOccurred()) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("NodeList.item: failed to set node ptr: %x\n", node));
-    return NULL;
-  }
-
-  node->AddRef();
-  return jnode;
+  return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
 
