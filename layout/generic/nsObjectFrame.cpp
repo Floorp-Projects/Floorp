@@ -263,10 +263,7 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
-static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
-static NS_DEFINE_IID(kCToolbarCID, NS_TOOLBAR_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
@@ -555,19 +552,12 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 			// We are looking at a class ID for an XPCOM object. We need to create the
 			// widget that corresponds to this object.
 			classid.Cut(0, 6); // Strip off the clsid:. What's left is the class ID.
-			static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
-			static NS_DEFINE_IID(kCToolbarCID, NS_TOOLBAR_CID);
 			static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
-			static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 			
 			nsCID aWidgetCID;
 			// These are some builtin types that we know about for now.
 			// (Eventually this will move somewhere else.)
-			if (classid == "treeview")
-				aWidgetCID = kCTreeViewCID;
-			else if (classid == "toolbar")
-				aWidgetCID = kCToolbarCID;
-			else if (classid == "browser")
+            if (classid == "browser")
 				aWidgetCID = kCAppShellCID;
 			else
 			{
@@ -964,17 +954,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
       {
         // These are some builtin types that we know about for now.
         // (Eventually this will move somewhere else.)
-        if (classid == "treeview")
-        {
-          widgetCID = kCTreeViewCID;
-	        rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
-        }
-        else if (classid == "toolbar")
-        {
-          widgetCID = kCToolbarCID;
-	        rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
-        }
-        else if (classid == "browser")
+        if (classid == "browser")
         {
           widgetCID = kCAppShellCID;
 	        rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
@@ -1218,15 +1198,6 @@ nsObjectFrame::InstantiateWidget(nsIPresContext&          aPresContext,
   nsIWidget *parent;
   parentWithView->GetOffsetFromWidget(nsnull, nsnull, parent);
   mWidget->Create(parent, r, nsnull, nsnull);
-
-  // See if the widget implements the CONTENT CONNECTOR interface.  If it
-  // does, we can hand it the content subtree for further processing.
-  nsIContentConnector* cc;
-  if ((rv = mWidget->QueryInterface(kIContentConnectorIID, (void**)&cc)) == NS_OK)
-  {
-    cc->SetContentRoot(mContent);
-    NS_IF_RELEASE(cc); 
-  }
   mWidget->Show(PR_TRUE);
   return rv;
 }
