@@ -48,12 +48,12 @@
 #include "nsIServiceManager.h"
 
 // Drag & Drop, Clipboard
-//#include "DataObj.h"
 #include "nsClipboard.h"
 #include "nsTransferable.h"
 #include "nsXIFFormatConverter.h"
 #include "nsDataFlavor.h"
 #include "nsDragService.h"
+//#include "nsFileListTransferable.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -88,6 +88,7 @@ static NS_DEFINE_IID(kCGenericTransferable,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
+static NS_DEFINE_IID(kCFileListTransferable, NS_FILELISTTRANSFERABLE_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -253,8 +254,11 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
         inst = (nsISupports*)new nsClipboard();
     }
     else if (mClassID.Equals(kCDragService)) {
-        inst = (nsISupports*)new nsDragService();
+        inst = (nsISupports*)(nsIDragService *)new nsDragService();
     }
+    //else if (mClassID.Equals(kCFileListTransferable)) {
+    //    inst = (nsISupports*)(nsITransferable *)new nsFileListTransferable();
+    //}
 	/* */
   
     if (inst == NULL) {  
