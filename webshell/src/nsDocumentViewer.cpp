@@ -493,6 +493,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
 
         NS_RELEASE(devspec);
 
+        newdx->BeginDocument();
         newdx->GetDeviceSurfaceDimensions(width, height);
 
         NS_NewPrintContext(&cx);
@@ -536,7 +537,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         ps->Init(mDocument, cx, vm, ss);
 
         //lay it out...
-        newdx->BeginDocument();
+        //newdx->BeginDocument();
         ps->InitialReflow(width, height);
 
         // Ask the page sequence frame to print all the pages
