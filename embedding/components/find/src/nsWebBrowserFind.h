@@ -36,21 +36,22 @@
 #include "nsWeakReference.h"
 
 #include "nsIFind.h"
+
+#ifdef TEXT_SVCS_TEST
 #include "nsIFindAndReplace.h"
+#endif /* TEXT_SVCS_TEST */
 
 #include "nsString.h"
 
-// {57cf9383-3405-11d5-be5b-aa20fa2cf37c}
+#define NS_WEB_BROWSER_FIND_CONTRACTID "@mozilla.org/embedcomp/find;1"
+
 #define NS_WEB_BROWSER_FIND_CID \
  {0x57cf9383, 0x3405, 0x11d5, {0xbe, 0x5b, 0xaa, 0x20, 0xfa, 0x2c, 0xf3, 0x7c}}
 
-#define NS_WEB_BROWSER_FIND_CONTRACTID \
- "@mozilla.org/embedcomp/find;1"
-
+class nsISelectionController;
 class nsIDOMWindow;
 
 class nsIDocShell;
-class nsIDocShellTreeItem;
 
 #ifdef TEXT_SVCS_TEST
 class nsITextServicesDocument;
@@ -96,6 +97,20 @@ protected:
 #endif /* TEXT_SVCS_TEST */
 
     nsresult    GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** outDocShell);
+
+    void        SetSelectionAndScroll(nsIDOMRange* aRange,
+                                      nsISelectionController* aSelCon);
+    nsresult    GetRootNode(nsIDOMDocument* aDomDoc, nsIDOMNode** aNode);
+    nsresult    GetSearchLimits(nsIDOMRange* aRange,
+                                nsIDOMRange* aStartPt,
+                                nsIDOMRange* aEndPt,
+                                nsIDOMDocument* aDoc,
+                                nsISelectionController* aSelCon,
+                                PRBool aWrap);
+    nsresult    SetRangeAroundDocument(nsIDOMRange* aSearchRange,
+                                       nsIDOMRange* aStartPoint,
+                                       nsIDOMRange* aEndPoint,
+                                       nsIDOMDocument* aDoc);
     
 protected:
 
@@ -108,7 +123,7 @@ protected:
     
     PRPackedBool    mSearchSubFrames;
     PRPackedBool    mSearchParentFrames;
-    
+
     nsWeakPtr       mCurrentSearchFrame;    // who knows if windows can go away during our lifetime, hence weak
     nsWeakPtr       mRootSearchFrame;       // who knows if windows can go away during our lifetime, hence weak
     nsWeakPtr       mLastFocusedWindow;     // who knows if windows can go away during our lifetime, hence weak

@@ -42,6 +42,7 @@
 #include "nsWindowWatcher.h"
 #include "nsAppStartupNotifier.h"
 #include "nsJSConsoleService.h"
+#include "nsFind.h"
 #include "nsWebBrowserFind.h"
 #include "nsWebBrowserPersist.h"
 #include "nsCommandManager.h"
@@ -54,6 +55,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPromptService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowWatcher, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartupNotifier)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSConsoleService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserPersist)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsControllerCommandManager)
@@ -67,7 +69,8 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Prompt Service", NS_PROMPTSERVICE_CID, NS_PROMPTSERVICE_CONTRACTID, nsPromptServiceConstructor },
   { "JS Console Service", NS_JSCONSOLESERVICE_CID, NS_JSCONSOLESERVICE_CONTRACTID, nsJSConsoleServiceConstructor },
   { "Window Watcher", NS_WINDOWWATCHER_CID, NS_WINDOWWATCHER_CONTRACTID, nsWindowWatcherConstructor },
-  { "Find",           NS_WEB_BROWSER_FIND_CID, NS_WEB_BROWSER_FIND_CONTRACTID, nsWebBrowserFindConstructor },
+  { "Find",           NS_FIND_CID, NS_FIND_CONTRACTID, nsFindConstructor },
+  { "WebBrowserFind",           NS_WEB_BROWSER_FIND_CID, NS_WEB_BROWSER_FIND_CONTRACTID, nsWebBrowserFindConstructor },
   { NS_APPSTARTUPNOTIFIER_CLASSNAME, NS_APPSTARTUPNOTIFIER_CID, NS_APPSTARTUPNOTIFIER_CONTRACTID, nsAppStartupNotifierConstructor },
   { "WebBrowserPersist Component", NS_WEBBROWSERPERSIST_CID, NS_WEBBROWSERPERSIST_CONTRACTID, nsWebBrowserPersistConstructor },
   { "Controller Command Manager", NS_CONTROLLERCOMMANDMANAGER_CID, NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, nsControllerCommandManagerConstructor },

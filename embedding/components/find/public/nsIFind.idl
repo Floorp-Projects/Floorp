@@ -39,28 +39,39 @@
  
 #include "nsISupports.idl"
 
-interface nsITextServicesDocument;
-interface nsIDOMDocument;
-interface nsIPresShell;
 interface nsIDOMRange;
+interface nsIWordBreaker;
 
 [scriptable, uuid(75125d55-37ee-4575-b9b5-f33bfa68c2a1)]
 interface nsIFind : nsISupports
 {
   attribute boolean findBackwards;
   attribute boolean caseSensitive;
-  attribute boolean wrapFind;
-  attribute boolean entireWord;
-  readonly attribute boolean replaceEnabled;
 
-  void SetDomDoc(in nsIDOMDocument aDOMDoc, in nsIPresShell aPresShell);
-  void SetRange(in nsIDOMRange aRange);
+  /**
+   * Use "find entire words" mode by setting to a word breaker
+   * or null, to disable "entire words" mode.
+   */
+  attribute nsIWordBreaker wordBreaker;
 
   /**
    * Find some text in the current context. The implementation is
-   * responsible for performing the find and highliting the text.
-   * @param aFindText The text to search for.
-   * @retval Returns true if an instance of aFindText was found.
+   * responsible for performing the find and highlighting the text.
+   *
+   * @param aPatText     The text to search for.
+   * @param aSearchRange A Range specifying domain of search.
+   * @param aStartPoint  A Range specifying search start point.
+   *                     If not collapsed, we'll start from
+   *                     end (forward) or start (backward).
+   *                     May be zero; if so, we'll start at the end
+   *                     (forward) or beginning (back) of aSearchRange.
+   * @param aEndPoint    A Range specifying search start point.
+   *                     If not collapsed, we'll start from
+   *                     end (forward) or start (backward).
+   *                     May be zero; if so, we'll start at the beginning
+   *                     (forward) or end (back) of aSearchRange.
+   * @retval             A range spanning the match that was found (or null).
    */
-  boolean Find(in wstring aPatText);
+  nsIDOMRange Find(in wstring aPatText, in nsIDOMRange aSearchRange,
+                   in nsIDOMRange aStartPoint, in nsIDOMRange aEndPoint);
 };

@@ -19,6 +19,7 @@
  * Contributors:
  *   Conrad Carlen <ccarlen@netscape.com>
  *   Simon Fraser  <sfraser@netscape.com>
+ *   Akkana Peck  <akkana@netscape.com>
  */
 
 #include "nsWebBrowserFind.h"
@@ -45,8 +46,13 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIFocusController.h"
+#include "nsISelectionController.h"
 #include "nsISelection.h"
 #include "nsReadableUtils.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIContent.h"
+#include "nsContentCID.h"
 
 #if DEBUG
 #include "nsIWebNavigation.h"
@@ -63,6 +69,8 @@ PRBool gUseTextServices = PR_FALSE;
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_CID(kPrefServiceCID,       NS_PREF_CID);
 #endif /* TEXT_SVCS_TEST */
+
+static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 //*****************************************************************************
 // nsWebBrowserFind
@@ -289,6 +297,198 @@ NS_IMETHODIMP nsWebBrowserFind::SetMatchCase(PRBool aMatchCase)
     return NS_OK;
 }
 
+void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMRange* aRange,
+                                             nsISelectionController *aSelCon)
+{
+  nsCOMPtr<nsISelection> selection;
+  if (!aSelCon) return;
+
+  aSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                        getter_AddRefs(selection));
+  if (!selection) return;
+  selection->RemoveAllRanges();
+  selection->AddRange(aRange);
+
+  // Scroll if necessary to make the selection visible:
+  aSelCon->ScrollSelectionIntoView
+    (nsISelectionController::SELECTION_NORMAL,
+     nsISelectionController::SELECTION_FOCUS_REGION);
+}
+
+// Adapted from nsTextServicesDocument::GetDocumentContentRootNode
+nsresult nsWebBrowserFind::GetRootNode(nsIDOMDocument* aDomDoc,
+                                       nsIDOMNode **aNode)
+{
+  nsresult rv;
+
+  NS_ENSURE_ARG_POINTER(aNode);
+  *aNode = 0;
+
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDomDoc);
+  if (htmlDoc)
+  {
+    // For HTML documents, the content root node is the body.
+    nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+    rv = htmlDoc->GetBody(getter_AddRefs(bodyElement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_ARG_POINTER(bodyElement);
+    return bodyElement->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                       (void **)aNode);
+  }
+
+  // For non-HTML documents, the content root node will be the doc element.
+  nsCOMPtr<nsIDOMElement> docElement;
+  rv = aDomDoc->GetDocumentElement(getter_AddRefs(docElement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_ARG_POINTER(docElement);
+  return docElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aNode);
+}
+
+nsresult nsWebBrowserFind::SetRangeAroundDocument(nsIDOMRange* aSearchRange,
+                                                  nsIDOMRange* aStartPt,
+                                                  nsIDOMRange* aEndPt,
+                                                  nsIDOMDocument* aDoc)
+{
+    nsCOMPtr<nsIDOMNode> bodyNode;
+    nsresult rv = GetRootNode(aDoc, getter_AddRefs(bodyNode));
+    nsCOMPtr<nsIContent> bodyContent (do_QueryInterface(bodyNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_ARG_POINTER(bodyContent);
+
+    PRInt32 childCount;
+    rv = bodyContent->ChildCount(childCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aSearchRange->SetStart(bodyNode, 0);
+    aSearchRange->SetEnd(bodyNode, childCount);
+
+    if (mFindBackwards)
+    {
+        aStartPt->SetStart(bodyNode, childCount);
+        aStartPt->SetEnd(bodyNode, childCount);
+        aEndPt->SetStart(bodyNode, 0);
+        aEndPt->SetEnd(bodyNode, 0);
+    }
+    else
+    {
+        aStartPt->SetStart(bodyNode, 0);
+        aStartPt->SetEnd(bodyNode, 0);
+        aEndPt->SetStart(bodyNode, childCount);
+        aEndPt->SetEnd(bodyNode, childCount);
+    }
+
+    return NS_OK;
+}
+
+// Set the range to go from the end of the current selection to the
+// end of the document (forward), or beginning to beginning (reverse).
+// or around the whole document if there's no selection.
+nsresult
+nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
+                                  nsIDOMRange* aStartPt,
+                                  nsIDOMRange* aEndPt,
+                                  nsIDOMDocument* aDoc,
+                                  nsISelectionController* aSelCon,
+                                  PRBool aWrap)
+{
+    NS_ENSURE_ARG_POINTER(aSelCon);
+    nsCOMPtr<nsISelection> selection;
+    aSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                          getter_AddRefs(selection));
+    if (!selection) return NS_ERROR_BASE;
+
+    // There is a selection.
+    PRInt32 count = -1;
+    nsresult rv = selection->GetRangeCount(&count);
+    if (count < 1)
+        return SetRangeAroundDocument(aSearchRange, aStartPt, aEndPt, aDoc);
+
+    // Need bodyNode, for the start/end of the document
+    nsCOMPtr<nsIDOMNode> bodyNode;
+    rv = GetRootNode(aDoc, getter_AddRefs(bodyNode));
+    nsCOMPtr<nsIContent> bodyContent (do_QueryInterface(bodyNode));
+    NS_ENSURE_ARG_POINTER(bodyContent);
+
+    PRInt32 childCount;
+    rv = bodyContent->ChildCount(childCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // There are four possible range endpoints we might use:
+    // DocumentStart, SelectionStart, SelectionEnd, DocumentEnd.
+
+    nsCOMPtr<nsIDOMRange> range;
+    nsCOMPtr<nsIDOMNode> node;
+    PRInt32 offset;
+
+    // Forward, not wrapping: SelEnd to DocEnd
+    if (!mFindBackwards && !aWrap)
+    {
+        // This isn't quite right, since the selection's ranges aren't
+        // necessarily in order; but they usually will be.
+        selection->GetRangeAt(count-1, getter_AddRefs(range));
+        if (!range) return NS_ERROR_UNEXPECTED;
+        range->GetEndContainer(getter_AddRefs(node));
+        if (!node) return NS_ERROR_UNEXPECTED;
+        range->GetEndOffset(&offset);
+
+        aSearchRange->SetStart(node, offset);
+        aSearchRange->SetEnd(bodyNode, childCount);
+        aStartPt->SetStart(node, offset);
+        aStartPt->SetEnd(node, offset);
+        aEndPt->SetStart(bodyNode, childCount);
+        aEndPt->SetEnd(bodyNode, childCount);
+    }
+    // Backward, not wrapping: DocStart to SelStart
+    else if (mFindBackwards && !aWrap)
+    {
+        selection->GetRangeAt(0, getter_AddRefs(range));
+        if (!range) return NS_ERROR_UNEXPECTED;
+        range->GetStartContainer(getter_AddRefs(node));
+        if (!node) return NS_ERROR_UNEXPECTED;
+        range->GetStartOffset(&offset);
+
+        aSearchRange->SetStart(bodyNode, 0);
+        aSearchRange->SetEnd(bodyNode, childCount);
+        aStartPt->SetStart(node, offset);
+        aStartPt->SetEnd(node, offset);
+        aEndPt->SetStart(bodyNode, 0);
+        aEndPt->SetEnd(bodyNode, 0);
+    }
+    // Forward, wrapping: DocStart to SelEnd
+    else if (!mFindBackwards && aWrap)
+    {
+        selection->GetRangeAt(count-1, getter_AddRefs(range));
+        if (!range) return NS_ERROR_UNEXPECTED;
+        range->GetEndContainer(getter_AddRefs(node));
+        if (!node) return NS_ERROR_UNEXPECTED;
+        range->GetEndOffset(&offset);
+
+        aSearchRange->SetStart(bodyNode, 0);
+        aSearchRange->SetEnd(bodyNode, childCount);
+        aStartPt->SetStart(bodyNode, 0);
+        aStartPt->SetEnd(bodyNode, 0);
+        aEndPt->SetStart(node, offset);
+        aEndPt->SetEnd(node, offset);
+    }
+    // Backward, wrapping: SelStart to DocEnd
+    else if (mFindBackwards && aWrap)
+    {
+        selection->GetRangeAt(0, getter_AddRefs(range));
+        if (!range) return NS_ERROR_UNEXPECTED;
+        range->GetStartContainer(getter_AddRefs(node));
+        if (!node) return NS_ERROR_UNEXPECTED;
+        range->GetStartOffset(&offset);
+
+        aSearchRange->SetStart(bodyNode, 0);
+        aSearchRange->SetEnd(bodyNode, childCount);
+        aStartPt->SetStart(bodyNode, childCount);
+        aStartPt->SetEnd(bodyNode, childCount);
+        aEndPt->SetStart(node, offset);
+        aEndPt->SetEnd(node, offset);
+    }
+    return NS_OK;
+}
+
 /* attribute boolean searchFrames; */
 NS_IMETHODIMP nsWebBrowserFind::GetSearchFrames(PRBool *aSearchFrames)
 {
@@ -381,8 +581,17 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind
 #endif /* TEXT_SVCS_TEST */
 
     NS_ENSURE_ARG(aWindow);
-    
+    NS_ENSURE_ARG_POINTER(aDidFind);
+
+    *aDidFind = PR_FALSE;
+
     nsresult rv = NS_OK;
+    nsCOMPtr<nsIPresShell> presShell;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;    
+    rv = aWindow->GetDocument(getter_AddRefs(domDoc));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_ARG_POINTER(domDoc);
 
     // if this is a different frame to last time, throw away the mTSFind
     // and make a new one. The nsIFindAndReplace is *not* stateless;
@@ -404,27 +613,21 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind
     else {
 
 #endif /* TEXT_SVCS_TEST */
-    if (mFind && (searchFrame.get() != aWindow))
-        mFind = nsnull;       // throw away old one, if any
+    // Get the selection controller -- we'd better do this every time,
+    // since the doc might have changed since the last time.
+    nsCOMPtr<nsIDocShell> docShell;
+    rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_ARG_POINTER(docShell);
+    docShell->GetPresShell(getter_AddRefs(presShell));
+    NS_ENSURE_ARG_POINTER(presShell);
+
     if (!mFind)
     {
-#ifdef DEBUG
+#ifdef DEBUG_akkana
         printf("Making a new nsFind object\n");
 #endif
-        nsCOMPtr<nsIDOMDocument> domDoc;    
-        rv = aWindow->GetDocument(getter_AddRefs(domDoc));
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_ARG_POINTER(domDoc);
-        nsCOMPtr<nsIDocShell> docShell;
-        rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_ARG_POINTER(docShell);
-        nsCOMPtr<nsIPresShell> presShell;
-        docShell->GetPresShell(getter_AddRefs(presShell));
-        NS_ENSURE_ARG_POINTER(presShell);
-
-        mFind = new nsFind();   // XXX make this a service
-        rv = mFind->SetDomDoc(domDoc, presShell);
+        mFind = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
     }
 
 #ifdef TEXT_SVCS_TEST
@@ -474,10 +677,42 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind
 
     (void) mFind->SetCaseSensitive(mMatchCase);
     (void) mFind->SetFindBackwards(mFindBackwards);
-    (void) mFind->SetWrapFind(mWrapFind);
-    (void) mFind->SetEntireWord(mEntireWord);
 
-    rv =  mFind->Find(mSearchString.get(), aDidFind);
+    // XXX Make and set a line breaker here, once that's implemented.
+    (void) mFind->SetWordBreaker(0);
+
+    nsCOMPtr<nsISelectionController> selCon (do_QueryInterface(presShell));
+    NS_ENSURE_ARG_POINTER(selCon);
+
+    nsCOMPtr<nsIDOMRange> searchRange (do_CreateInstance(kRangeCID));
+    NS_ENSURE_ARG_POINTER(searchRange);
+    nsCOMPtr<nsIDOMRange> startPt (do_CreateInstance(kRangeCID));
+    NS_ENSURE_ARG_POINTER(startPt);
+    nsCOMPtr<nsIDOMRange> endPt (do_CreateInstance(kRangeCID));
+    NS_ENSURE_ARG_POINTER(endPt);
+
+    nsCOMPtr<nsIDOMRange> foundRange;
+
+    rv = GetSearchLimits(searchRange, startPt, endPt, domDoc, selCon,
+                         PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv =  mFind->Find(mSearchString.get(), searchRange, startPt, endPt,
+                      getter_AddRefs(foundRange));
+
+    if (mWrapFind && (NS_FAILED(rv) || !foundRange))
+    {
+        // The selection should still be in the same place.
+        GetSearchLimits(searchRange, startPt, endPt, domDoc, selCon, PR_TRUE);
+        rv =  mFind->Find(mSearchString.get(), searchRange, startPt, endPt,
+                          getter_AddRefs(foundRange));
+    }
+
+    if (NS_SUCCEEDED(rv) && foundRange)
+    {
+        *aDidFind = PR_TRUE;
+        SetSelectionAndScroll(foundRange, selCon);
+    }
 
 #ifdef TEXT_SVCS_TEST
     }
