@@ -192,11 +192,6 @@ public:
   // to enforce 9.5.1 rule [2]
   nscoord mLastFloaterY;
 
-  // For unconstained-width reflow, we keep the right floaters
-  // combined area stored seperately.
-  PRBool mHaveRightFloaters;
-  nsRect mRightFloaterCombinedArea;
-
   nsFloaterCacheFreeList mFloaterCacheFreeList;
 
   // Previous child. This is used when pulling up a frame to update

@@ -106,6 +106,7 @@ MOZ_DECL_CTOR_COUNTER(nsSpaceManager)
 
 nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
   : mFrame(aFrame),
+    mXMost(0),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell)
 {
   MOZ_COUNT_CTOR(nsSpaceManager);
@@ -195,6 +196,12 @@ void nsSpaceManager::Shutdown()
   sCachedSpaceManagerCount = -1;
 }
 
+PRBool
+nsSpaceManager::XMost(nscoord& aXMost) const
+{
+  aXMost = mXMost;
+  return !mBandList.IsEmpty();
+}
 
 PRBool
 nsSpaceManager::YMost(nscoord& aYMost) const
@@ -806,6 +813,10 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
                aUnavailableSpace.width, aUnavailableSpace.height);
 
+  nscoord xmost = rect.XMost();
+  if (xmost > mXMost)
+    mXMost = xmost;
+
   // Create a frame info structure
   frameInfo = CreateFrameInfo(aFrame, rect);
   if (nsnull == frameInfo) {
@@ -1026,6 +1037,7 @@ nsSpaceManager::PushState()
 
   state->mX = mX;
   state->mY = mY;
+  state->mXMost = mXMost;
 
   if (mFrameInfoMap) {
     state->mLastFrame = mFrameInfoMap->mFrame;
@@ -1069,6 +1081,7 @@ nsSpaceManager::PopState()
 
   mX = mSavedStates->mX;
   mY = mSavedStates->mY;
+  mXMost = mSavedStates->mXMost;
 
   // Now that we've restored our state, pop the topmost
   // state and delete it.
