@@ -85,12 +85,12 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 
 	if( printer ) {
 		int res = 111;
-		const char *pname = NS_ConvertUCS2toUTF8(printer).get();
-		if( !strcmp( pname, "<Preview>" ) ) {
+		NS_ConvertUCS2toUTF8 pname(printer);
+		if( !strcmp( pname.get(), "<Preview>" ) ) {
 			char preview = 1;
 			PpSetPC( mPC, Pp_PC_DO_PREVIEW, &preview, 0 );
 			}
-		else res = PpLoadPrinter( mPC, pname );
+		else res = PpLoadPrinter( mPC, pname.get() );
 		}
 	else PpLoadDefaultPrinter( mPC );
 

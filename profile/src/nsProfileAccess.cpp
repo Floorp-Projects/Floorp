@@ -1197,7 +1197,7 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
 
                 profileItem->updateProfileEntry = PR_TRUE;
 
-                profileItem->profileName = NS_ConvertASCIItoUCS2(unixProfileName).get();
+                CopyASCIItoUTF16(unixProfileName, profileItem->profileName);
 
                 nsCOMPtr<nsILocalFile> localFile;
                 rv = NS_NewNativeLocalFile(profileLocation, PR_TRUE, getter_AddRefs(localFile));
