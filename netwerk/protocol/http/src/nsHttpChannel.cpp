@@ -2824,6 +2824,12 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
             return ProcessResponse();
     }
 
+    // avoid crashing if mListener happens to be null...
+    if (!mListener) {
+        NS_NOTREACHED("mListener is null");
+        return NS_OK;
+    }
+
     // there won't be a response head if we've been cancelled
     nsresult rv = mListener->OnStartRequest(this, mListenerContext);
     if (NS_FAILED(rv)) return rv;
