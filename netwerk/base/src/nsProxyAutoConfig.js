@@ -238,7 +238,7 @@ var pacUtils =
 "}\n"+
 
 "function isInNet(ipaddr, pattern, maskstr) {\n"+
-"    var test = /^(\\d{1,4})\\.(\\d{1,4})\\.(\\d{1,4})\\.(\\d{1,4})$/(ipaddr);\n"+
+"    var test = /^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/(ipaddr);\n"+
 "    if (test == null) {\n"+
 "        ipaddr = dnsResolve(ipaddr);\n"+
 "        if (ipaddr == null)\n"+
