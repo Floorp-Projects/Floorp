@@ -509,7 +509,7 @@ nsSHistory::Reload(PRUint32 aReloadFlags)
 }
 
 NS_IMETHODIMP
-nsSHistory::Stop()
+nsSHistory::Stop(PRUint32 aStopFlags)
 {
 	//Not implemented
    return NS_OK;

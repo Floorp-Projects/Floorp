@@ -1853,7 +1853,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
     nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
     if (spIWebNavigation)
     {
-        spIWebNavigation->Stop();
+        spIWebNavigation->Stop(nsIWebNavigation::STOP_ALL);
     }
     
     return S_OK;

@@ -564,7 +564,7 @@ NS_METHOD CBrowserShell::Forward()
 
 NS_METHOD CBrowserShell::Stop()
 {
-   return mWebBrowserAsWebNav->Stop();
+    return mWebBrowserAsWebNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
 //*****************************************************************************

@@ -92,7 +92,9 @@
       <method name="stop">
         <body>
           <![CDATA[
-            this.webNavigation.stop();
+            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const flags = nsIWebNavigation.STOP_ALL;
+            this.webNavigation.stop(flags);
           ]]>
         </body>
       </method>

@@ -19,10 +19,7 @@
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
  */
-
 #include "nsISupports.idl"
-
-interface nsIDOMDocument;
 
 
 /**
@@ -33,103 +30,164 @@ interface nsIDOMDocument;
  *
  * @status UNDER_REVIEW
  */
- 
-interface nsISHistory;				
+
+interface nsIDOMDocument;
+interface nsIInputStream;
+interface nsISHistory;
 interface nsISHEntry;
 interface nsIURI;
 
 [scriptable, uuid(F5D9E7B0-D930-11d3-B057-00A024FFC08C)]
 interface nsIWebNavigation : nsISupports
 {
-	/*
-	Indicates if the object can go back.  If true this indicates that
-	there is back session history available to navigate to.
-	*/
-	readonly attribute boolean canGoBack;
+ /**
+  * Indicates if the object can go back.  If true this indicates that
+  * there is back session history available for navigation.
+  */
+  readonly attribute boolean canGoBack;
 
-	/*
-	Indicates if the object can go forward.  If true this indicates that
-	there is forward session history available to navigate to.
-	*/
-	readonly attribute boolean canGoForward;
+ /**
+  * Indicates if the object can go forward.  If true this indicates that
+  * there is forward session history available for navigation
+  */
+  readonly attribute boolean canGoForward;
 
-	/*
-	Tells the object to navigate to the next Back session history item.
-	@return	NS_OK - Back was successfull
-				NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
-				likely you can't go back right now.
-	*/
-	void goBack();
+ /**
+  * Tells the object to navigate to the previous session history item.  When
+  * a page is loaded from session history, all content is loaded from the
+  * cache (if available) and page state (such as form values, scroll position)
+  * is restored.
+  *
+  * @return NS_OK               - Backward navigation was successful.
+  *         NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
+  *                               likely you can't go back right now.
+  */
+  void goBack();
 
-	/*
-	Tells the object to navigate to the next Forward session history item.
-	@return	NS_OK - Forward was successfull
-				NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
-				likely you can't go forward right now.
-	*/
-	void goForward();
+ /**
+  * Tells the object to navigate to the next Forward session history item.
+  * When a page is loaded from session history, all content is loaded from
+  * the cache (if available) and page state (such as form values, scroll
+  * position) is restored.
+  *
+  * @return NS_OK               - Forward was successful.
+  *         NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
+  *                               likely you can't go forward right now.
+  */
+  void goForward();
 
-	/*
-	Tells the object to navigate to the session history item at index.
-	@return	NS_OK - Gotoindex was successfull
-				NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
-				likely you can't goto that index
-	*/
-	void gotoIndex(in long index);
+ /**
+  * Tells the object to navigate to the session history item at index.
+  *
+  * @return NS_OK -               GotoIndex was successful.
+  *         NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
+  *                               likely you can't goto that index
+  */
+  void gotoIndex(in long index);
 
-	/*
-	Load flags for use with loadURI() and reload()
-	*/
-	const unsigned long LOAD_FLAGS_NONE            = 0x0000;
-	const unsigned long LOAD_FLAGS_MASK            = 0xffff;
+ /**
+  * Load flags for use with loadURI() and reload()
+  */
+  const unsigned long LOAD_FLAGS_MASK            = 0xffff;
 
-    /* loadURI() specific flags */
-	const unsigned long LOAD_FLAGS_IS_REFRESH      = 0x0010; // Refresh timer
-	const unsigned long LOAD_FLAGS_IS_LINK         = 0x0020; // Link click
-	const unsigned long LOAD_FLAGS_BYPASS_HISTORY  = 0x0040; // Bypass the history
-	const unsigned long LOAD_FLAGS_REPLACE_HISTORY = 0x0080; // Replace the history entry
+ /**
+  * loadURI() specific flags
+  */
 
-    /* loadURI() & reload() specific flags */
-	const unsigned long LOAD_FLAGS_BYPASS_CACHE    = 0x0100; // Bypass the cache
-	const unsigned long LOAD_FLAGS_BYPASS_PROXY    = 0x0200; // Bypass the proxy
-    const unsigned long LOAD_FLAGS_CHARSET_CHANGE  = 0x0400; // Reload because of charset change, 
-    /*
-    Loads a given URI.  This will give priority to loading the requested URI
-	in the object implementing	this interface.  If it can't be loaded here
-	however, the URL dispatcher will go through its normal process of content
-	loading.
+ /**
+  * Normal load flag.
+  */
+  const unsigned long LOAD_FLAGS_NONE            = 0x0000;
 
-	@param uri - The URI to load.
-	@param loadFlags - Flags modifying load behaviour. Generally you will pass
-	        LOAD_FLAGS_NONE for this parameter.
-	*/
-	void loadURI(in wstring uri, in unsigned long loadFlags);
+ /**
+  * Meta-refresh flag.  The cache is bypassed.  This type of load is
+  *                     usually the result of a meta-refresh tag, or a HTTP
+  *                     'refresh' header.
+  */
+  const unsigned long LOAD_FLAGS_IS_REFRESH      = 0x0010;
 
-	/*
-	Tells the Object to reload the current location.
-	@param reloadFlags - Flags modifying reload behaviour. Generally you will
-	        pass LOAD_FLAGS_NONE for this parameter.
-	*/
-	void reload(in unsigned long reloadFlags);
+ /**
+  * Link-click flag. 
+  */
+  const unsigned long LOAD_FLAGS_IS_LINK         = 0x0020;
 
-	/*
-	Stops a load of a URI.
-	*/
-	void stop();
+ /**
+  * Bypass history flag.
+  */
+  const unsigned long LOAD_FLAGS_BYPASS_HISTORY  = 0x0040;
 
-	/*
-	Retrieves the current Document for the WebBrowser.  When setting
-	this will simulate the normal load process.
-	*/
-	readonly attribute nsIDOMDocument document;
-	
-	/*
-	The current URI that is loaded.
-	*/
-	readonly attribute nsIURI currentURI;
-	
-	/*
-	The session history object used to store the session history for the session.
-	*/
-	attribute nsISHistory sessionHistory;
+ /**
+  * Replace history entry flag.
+  */
+  const unsigned long LOAD_FLAGS_REPLACE_HISTORY = 0x0080;
+
+  /* loadURI() & reload() specific flags */
+  const unsigned long LOAD_FLAGS_BYPASS_CACHE    = 0x0100; // Bypass the cache
+  const unsigned long LOAD_FLAGS_BYPASS_PROXY    = 0x0200; // Bypass the proxy
+  const unsigned long LOAD_FLAGS_CHARSET_CHANGE  = 0x0400; // Reload because of charset change, 
+
+ /**
+  * Loads a given URI.  This will give priority to loading the requested URI
+  * in the object implementing	this interface.  If it can't be loaded here
+  * however, the URL dispatcher will go through its normal process of content
+  * loading.
+  *
+  * @param uri       - The URI string to load.
+  * @param loadFlags - Flags modifying load behaviour. Generally you will pass
+  *                    LOAD_FLAGS_NONE for this parameter.
+  * @param postData  - nsIInputStream containing POST data for the request.
+  */
+  void loadURI(in wstring uri, in unsigned long loadFlags);
+
+ /**
+  * Tells the Object to reload the current page.
+  *
+  * @param reloadFlags - Flags modifying reload behaviour. Generally you will
+  *                      pass LOAD_FLAGS_NONE for this parameter.
+  */
+  void reload(in unsigned long reloadFlags);
+
+ /**
+  * Stop() flags:
+  */
+
+ /**
+  * Stop all network activity.  This includes both active network loads and
+  * pending meta-refreshes.
+  */
+  const unsigned long STOP_NETWORK = 0x01;
+
+ /**
+  * Stop all content activity.  This includes animated images, plugins and
+  * pending Javascript timeouts.
+  */
+  const unsigned long STOP_CONTENT = 0x02;
+
+ /**
+  * Stop all activity.
+  */
+  const unsigned long STOP_ALL = 0x03;
+
+ /**
+  * Stops a load of a URI.
+  *
+  * @param stopFlags - Flags indicating the stop behavior.
+  */
+  void stop(in unsigned long stopFlags);
+
+ /**
+  * Retrieves the current DOM document for the WebBrowser.
+  */
+  readonly attribute nsIDOMDocument document;
+
+ /**
+  * The current URI that is loaded.
+  */
+  readonly attribute nsIURI currentURI;
+
+ /**
+  * The session history object used to store the session history for the
+  * session.
+  */
+  attribute nsISHistory sessionHistory;
 };

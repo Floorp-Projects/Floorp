@@ -511,7 +511,7 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 
 		case Pt_ARG_MOZ_STOP:
 			if (moz->MyBrowser->WebNavigation)
-				moz->MyBrowser->WebNavigation->Stop();
+        moz->MyBrowser->WebNavigation->Stop(nsIWebNavigation::STOP_ALL);
 			break;
 
 		case Pt_ARG_MOZ_RELOAD:

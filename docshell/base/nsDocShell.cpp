@@ -454,7 +454,6 @@ nsDocShell::LoadURI(nsIURI * aURI,
     nsCOMPtr<nsIInputStream> postStream;
     nsCOMPtr<nsISupports> owner;
     PRBool inheritOwner = PR_FALSE;
-    PRBool stopActiveDoc = PR_FALSE;
     nsCOMPtr<nsISHEntry> shEntry;
     nsXPIDLCString target;
     PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
@@ -502,7 +501,6 @@ nsDocShell::LoadURI(nsIURI * aURI,
 
         aLoadInfo->GetOwner(getter_AddRefs(owner));
         aLoadInfo->GetInheritOwner(&inheritOwner);
-        aLoadInfo->GetStopActiveDocument(&stopActiveDoc);
         aLoadInfo->GetSHEntry(getter_AddRefs(shEntry));
         aLoadInfo->GetTarget(getter_Copies(target));
         aLoadInfo->GetPostDataStream(getter_AddRefs(postStream));
@@ -594,7 +592,6 @@ nsDocShell::LoadURI(nsIURI * aURI,
                           referrer,
                           owner,
                           inheritOwner,
-                          stopActiveDoc,
                           windowTarget.get(),
                           postStream,
                           nsnull,         // No headers stream
@@ -669,9 +666,7 @@ nsDocShell::LoadStream(nsIInputStream * aStream, nsIURI * aURI,
         }
     }
 
-    NS_ENSURE_SUCCESS(StopLoad(), NS_ERROR_FAILURE);
-    // Cancel any timers that were set for this loader.
-    (void) CancelRefreshURITimers();
+    NS_ENSURE_SUCCESS(Stop(nsIWebNavigation::STOP_NETWORK), NS_ERROR_FAILURE);
 
     mLoadType = loadType;
 
@@ -700,32 +695,6 @@ nsDocShell::CreateLoadInfo(nsIDocShellLoadInfo ** aLoadInfo)
 
     *aLoadInfo = localRef;
     NS_ADDREF(*aLoadInfo);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::StopLoad()
-{
-    // Cancel any timers that were set for this loader.
-    CancelRefreshURITimers();
-
-    if (mLoadCookie) {
-        nsCOMPtr<nsIURILoader> uriLoader =
-            do_GetService(NS_URI_LOADER_CONTRACTID);
-        if (uriLoader)
-            uriLoader->Stop(mLoadCookie);
-    }
-
-    PRInt32 n;
-    PRInt32 count = mChildren.Count();
-    for (n = 0; n < count; n++) {
-        nsIDocShellTreeItem *shellItem =
-            (nsIDocShellTreeItem *) mChildren.ElementAt(n);
-        nsCOMPtr<nsIDocShell> shell(do_QueryInterface(shellItem));
-        if (shell)
-            shell->StopLoad();
-    }
-
     return NS_OK;
 }
 
@@ -2286,7 +2255,6 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
                           mReferrerURI,
                           nsnull,         // No owner
                           PR_TRUE,        // Inherit owner from document
-                          PR_FALSE,       // Do not stop active document
                           nsnull,         // No window target
                           nsnull,         // No post data
                           nsnull,         // No headers data
@@ -2296,19 +2264,25 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
 }
 
 NS_IMETHODIMP
-nsDocShell::Stop()
+nsDocShell::Stop(PRUint32 aStopFlags)
 {
-    // Cancel any timers that were set for this loader.
-    CancelRefreshURITimers();
+    if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
+        if (mContentViewer)
+            mContentViewer->Stop();
 
-    if (mContentViewer)
-        mContentViewer->Stop();
+    }
 
-    if (mLoadCookie) {
-        nsCOMPtr<nsIURILoader> uriLoader =
-            do_GetService(NS_URI_LOADER_CONTRACTID);
-        if (uriLoader)
-            uriLoader->Stop(mLoadCookie);
+    if (nsIWebNavigation::STOP_NETWORK & aStopFlags) {
+        // Cancel any timers that were set for this loader.
+        CancelRefreshURITimers();
+
+        if (mLoadCookie) {
+            nsCOMPtr<nsIURILoader> uriLoader;
+
+            uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID);
+            if (uriLoader)
+                uriLoader->Stop(mLoadCookie);
+        }
     }
 
     PRInt32 n;
@@ -2318,7 +2292,7 @@ nsDocShell::Stop()
             (nsIDocShellTreeItem *) mChildren.ElementAt(n);
         nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(shell));
         if (shellAsNav)
-            shellAsNav->Stop();
+            shellAsNav->Stop(aStopFlags);
     }
 
     return NS_OK;
@@ -2442,7 +2416,7 @@ nsDocShell::Destroy()
     mIsBeingDestroyed = PR_TRUE;
 
     // Stop any URLs that are currently being loaded...
-    Stop();
+    Stop(nsIWebNavigation::STOP_ALL);
     if (mDocLoader) {
         mDocLoader->Destroy();
         mDocLoader->SetContainer(nsnull);
@@ -4196,7 +4170,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIURI * aReferrer,
                          nsISupports * aOwner,
                          PRBool aInheritOwner,
-                         PRBool aStopActiveDoc,
                          const PRUnichar *aWindowTarget,
                          nsIInputStream * aPostData,
                          nsIInputStream * aHeadersData,
@@ -4307,7 +4280,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                                               aReferrer,
                                               owner,
                                               aInheritOwner,
-                                              aStopActiveDoc,
                                               nsnull,         // No window target
                                               aPostData,
                                               aHeadersData,
@@ -4400,14 +4372,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             return NS_OK;
         }
     }
-
-    NS_ENSURE_SUCCESS(StopLoad(), NS_ERROR_FAILURE);
-    // Cancel any timers that were set for this loader.
-    CancelRefreshURITimers();
-
-    if (aStopActiveDoc && mContentViewer) {
-        mContentViewer->Stop();
-    }
+    //
+    // Stop any current network activity.  Do not stop the content until
+    // data starts arriving from the new URI...
+    //
+    rv = Stop(nsIWebNavigation::STOP_NETWORK);
+    if (NS_FAILED(rv)) return rv;
 
     mLoadType = aLoadType;
     
@@ -5540,7 +5510,6 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
                       referrerURI,
                       nsnull,       // No owner
                       PR_FALSE,     // Do not inherit owner from document (security-critical!)
-                      PR_FALSE,     // Do not stop active document
                       nsnull,       // No window target
                       postData,     // Post data stream
                       nsnull,       // No headers stream

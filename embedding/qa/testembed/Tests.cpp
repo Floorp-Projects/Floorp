@@ -957,7 +957,7 @@ void CTests::StopUriTest(char *theUrl)
 
    qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						nsIWebNavigation::LOAD_FLAGS_NONE);
-   rv = qaWebNav->Stop();
+   rv = qaWebNav->Stop(nsIWebNavigation::STOP_ALL);
    sprintf(theTotalString, "%s%s%s", "Stop(): ", theUrl, " test");
    CQaUtils::RvTestResult(rv, theTotalString, 2);
 }

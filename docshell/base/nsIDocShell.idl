@@ -118,7 +118,6 @@ interface nsIDocShell : nsISupports
                               in nsIURI aReferrer,
                               in nsISupports aOwner,
                               in boolean aInheritOwner,
-                              in boolean aStopActiveDoc,
                               in wstring aWindowTarget,
                               in nsIInputStream aPostDataStream,
                               in nsIInputStream aHeadersStream,
@@ -130,13 +129,6 @@ interface nsIDocShell : nsISupports
    * to loadURI.
    */
   void createLoadInfo(out nsIDocShellLoadInfo loadInfo);
-
-  /**
-   * Stops a current load.  This simply stops the network portion of the load.
-   * If you wish to do a complete stop, then you should us the
-   * nsIWebNavigation::Stop() method. 
-   */
-  void stopLoad();
 
   /**
    * Reset state to a new content model within the current document and the document

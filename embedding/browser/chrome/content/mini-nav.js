@@ -230,7 +230,7 @@ function BrowserForward()
 
 function BrowserStop()
 {
-  getWebNavigation().stop();
+  getWebNavigation().stop(nsIWebNavigation.STOP_ALL);
 }
 
 function BrowserReload()
