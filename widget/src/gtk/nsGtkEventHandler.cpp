@@ -28,6 +28,7 @@
 #include "nsFileWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIMenuItem.h"
+#include "nsIMenuListener.h"
 
 #include "stdio.h"
 
@@ -566,7 +567,10 @@ gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
 void menu_item_activate_handler(GtkWidget *w, gpointer p)
 {
   g_print("menu selected\n");
-  nsIMenuItem * menuItem = (nsIMenuItem *)p;
+
+  nsIMenuListener *menuListener = nsnull;
+  nsIMenuItem *menuItem = (nsIMenuItem *)p;
+  
   if (menuItem != NULL) {
     nsMenuEvent mevent;
     mevent.message = NS_MENU_SELECTED;
@@ -580,7 +584,14 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
     mevent.time = PR_IntervalNow();
 
     nsEventStatus status;
-    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
+    // FIXME - THIS SHOULD WORK.  FIX EVENTS FOR XP CODE!!!!! (pav)
+//    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
+
+    menuItem->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
+    if(menuListener) {
+      menuListener->MenuSelected(mevent);
+      NS_IF_RELEASE(menuListener);
+    }
   }
 }
 

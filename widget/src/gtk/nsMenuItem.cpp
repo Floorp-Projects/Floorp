@@ -77,6 +77,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
   mTarget      = nsnull;
+  mXULCommandListener = nsnull;
   mIsSeparator = PR_FALSE;
 }
 
@@ -298,6 +299,9 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
+  NS_IF_RELEASE(mXULCommandListener);
+  NS_IF_ADDREF(aMenuListener);
+  mXULCommandListener = aMenuListener;
   return NS_OK;
 }
 
@@ -319,6 +323,9 @@ NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+  if(mXULCommandListener)
+    return mXULCommandListener->MenuSelected(aMenuEvent);
+
   g_print("nsMenuItem::MenuSelected\n");
   return nsEventStatus_eIgnore;
 }

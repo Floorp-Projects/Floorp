@@ -76,6 +76,7 @@ protected:
   nsIWidget    *GetMenuBarParent(nsISupports * aParentSupports);
   GtkWidget    *GetNativeParent();
 
+  nsIMenuListener	*mXULCommandListener;
   nsString     mLabel;
   PRUint32     mCommand;
   nsIMenu      *mMenuParent;

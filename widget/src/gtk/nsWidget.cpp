@@ -324,23 +324,30 @@ nsIFontMetrics *nsWidget::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 {
-
   nsIFontMetrics* mFontMetrics;
   mContext->GetMetricsFor(aFont, mFontMetrics);
 
   if (mFontMetrics) {
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
+    gtk_widget_ensure_style(mWidget);
 
-    GtkStyle* style;
-    style= gtk_widget_get_style(mWidget);
+    GtkStyle *style = gtk_style_copy(mWidget->style);
+    // gtk_style_copy ups the ref count of the font
     gdk_font_unref (style->font);
 
-    style->font = (GdkFont *)fontHandle;
+    GdkFontPrivate *pvt;
+
+    pvt = (GdkFontPrivate*) style->font;
+    g_print("font refcount: %i\n",pvt->ref_count);
+
+    GdkFont *font = (GdkFont *)fontHandle;
+    style->font = font;
     gdk_font_ref(style->font);
 
-
     gtk_widget_set_style(mWidget, style);
+
+    gtk_style_unref(style);
 
   }
   NS_RELEASE(mFontMetrics);
@@ -583,7 +590,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
   gtk_widget_push_visual(gdk_rgb_get_visual());
-  gtk_widget_push_style(gtk_style_new());
 
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
@@ -608,7 +614,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
-  gtk_widget_pop_style ();
 
   DispatchStandardEvent(NS_CREATE);
   InitCallbacks();
