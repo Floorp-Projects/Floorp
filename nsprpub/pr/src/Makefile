@@ -335,6 +335,8 @@ $(TINC):
 	@$(ECHO) '#define _BUILD_STRING "$(SH_DATE)"' > $(TINC)
 	@if test ! -z "$(SH_NOW)"; then \
 	    $(ECHO) '#define _BUILD_TIME $(SH_NOW)$(SUF)' >> $(TINC); \
+	else \
+	    true; \
 	fi
 	@$(ECHO) '#define _PRODUCTION "$(PROD)"' >> $(TINC)
 
