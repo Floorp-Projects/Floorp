@@ -131,7 +131,11 @@
 #define CFRONT_STYLE_THIS_ADJUST
 
 #elif defined(__sun__) || defined(__sun)
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+#define THUNK_BASED_THIS_ADJUST
+#else
 #define CFRONT_STYLE_THIS_ADJUST
+#endif
 
 #elif defined(_WIN32)
 #define THUNK_BASED_THIS_ADJUST
