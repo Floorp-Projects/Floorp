@@ -38,6 +38,15 @@
 class nsISupportsArray;
 struct DisplayListElement2;
 
+//Uncomment the following line to enable generation of viewmanager performance data.
+#ifdef MOZ_PERF_METRICS
+//#define NS_VM_PERF_METRICS 1 
+#endif
+
+#ifdef NS_VM_PERF_METRICS
+#include "nsTimer.h"
+#endif
+
 
 // Dont want to get rid of timer code, because we may want to use it
 // if we go to a implementation where we have invalidates that have been queued
@@ -292,6 +301,10 @@ public:
 protected:
   nscoord           mX;
   nscoord           mY;
+
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document
+#endif
 };
 
 #endif /* nsViewManager2_h___ */

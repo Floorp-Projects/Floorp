@@ -35,6 +35,15 @@
 #include "nsIRegion.h"
 #include "nsIBlender.h"
 
+// Uncomment this line to enable the performance timer for the view manager.
+#ifdef MOZ_PERF_METRICS
+//#define NS_VM_PERF_METRICS 1
+#endif
+
+#ifdef NS_VM_PERF_METRICS
+#include "nsTimer.h"
+#endif
+
 class nsISupportsArray;
 
 // Dont want to get rid of timer code, because we may want to use it
@@ -271,6 +280,10 @@ public:
 protected:
   nscoord           mX;
   nscoord           mY;
+
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document
+#endif
 };
 
 #endif

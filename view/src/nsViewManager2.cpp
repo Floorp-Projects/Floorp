@@ -64,6 +64,9 @@ struct DisplayListElement2 {
 inline nscoord max(nscoord x, nscoord y) { return (x > y ? x : y); }
 inline nscoord min(nscoord x, nscoord y) { return (x < y ? x : y); }
 
+#ifdef NS_VM_PERF_METRICS
+#include "nsITimeRecorder.h"
+#endif
 
 #ifdef NS_VIEWMANAGER_NEEDS_TIMER
 
@@ -427,6 +430,14 @@ void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIR
 	if (PR_FALSE == mRefreshEnabled)
 		return;
 
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DEBUGLOG(("Reset nsViewManager::Refresh(region), this=%p\n", this));
+  MOZ_TIMER_RESET(mWatch);
+
+  MOZ_TIMER_DEBUGLOG(("Start: nsViewManager::Refresh(region)\n"));
+  MOZ_TIMER_START(mWatch);
+#endif
+
 	NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
 
 	mPainting = PR_TRUE;
@@ -519,6 +530,14 @@ void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIR
 			}
 		}
 	}
+
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DEBUGLOG(("Stop: nsViewManager2::Refresh(region), this=%p\n", this));
+  MOZ_TIMER_STOP(mWatch);
+  MOZ_TIMER_LOG(("vm2 Paint time (this=%p): ", this));
+  MOZ_TIMER_PRINT(mWatch);
+#endif
+
 }
 
 void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, const nsRect *rect, PRUint32 aUpdateFlags)
@@ -529,6 +548,14 @@ void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, cons
 
 	if (PR_FALSE == mRefreshEnabled)
 		return;
+
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DEBUGLOG(("Reset nsViewManager::Refresh(region), this=%p\n", this));
+  MOZ_TIMER_RESET(mWatch);
+
+  MOZ_TIMER_DEBUGLOG(("Start: nsViewManager::Refresh(region)\n"));
+  MOZ_TIMER_START(mWatch);
+#endif
 
 	NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
 
@@ -628,6 +655,13 @@ void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, cons
 			}
 		}
 	}
+
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DEBUGLOG(("Stop: nsViewManager2::Refresh(region), this=%p\n", this));
+  MOZ_TIMER_STOP(mWatch);
+  MOZ_TIMER_LOG(("vm2 Paint time (this=%p): ", this));
+  MOZ_TIMER_PRINT(mWatch);
+#endif
 }
 
 void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
