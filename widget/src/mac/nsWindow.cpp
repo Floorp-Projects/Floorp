@@ -55,6 +55,10 @@ nsWindow::nsWindow() : nsBaseWidget()
   mPainting = PR_FALSE;
 	mDestroyCalled = PR_FALSE;
 
+  mMacPortRelativeRegion = nsnull;
+  mMacPortRelativeX = 0;
+  mMacPortRelativeY = 0;
+
 	SetBackgroundColor(NS_RGB(255, 255, 255));
 	SetForegroundColor(NS_RGB(0, 0, 0));
 }
@@ -77,6 +81,12 @@ nsWindow::~nsWindow()
 		mWindowRegion = nsnull;	
 	}
 
+	if (mMacPortRelativeRegion != nsnull)
+	{
+		::DisposeRgn(mMacPortRelativeRegion);
+		mMacPortRelativeRegion = nsnull;	
+	}
+	
 	NS_IF_RELEASE(mTempRenderingContext);
 }
 
@@ -104,6 +114,15 @@ nsresult nsWindow::StandardCreate(nsIWidget *aParent,
 
 	BaseCreate(aParent, aRect, aHandleEventFunction, 
 							aContext, aAppShell, aToolkit, aInitData);
+
+	mMacPortRelativeX = (PRInt32)GetNativeData(NS_NATIVE_OFFSETX);
+	mMacPortRelativeY = (PRInt32)GetNativeData(NS_NATIVE_OFFSETY);
+	mMacPortRelativeRegion = ::NewRgn();
+	::SetRectRgn(mMacPortRelativeRegion, 
+		mMacPortRelativeX, 
+		mMacPortRelativeY, 
+		mMacPortRelativeX + aRect.width, 
+		mMacPortRelativeY + aRect.height );
 
 
 	if (mParent)
@@ -225,12 +244,34 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     	point.MoveTo(mBounds.x, mBounds.y);
     	LocalToWindowCoordinate(point);
     	retVal = (void*)point.x;
+    	
+    	// Can never do it this way because of the design
+    	//if ( point.x != (**mMacPortRelativeRegion).rgnBBox.left) 
+    	//	return (void*)(**mMacPortRelativeRegion).rgnBBox.left;
     	break;
 
     case NS_NATIVE_OFFSETY:
     	point.MoveTo(mBounds.x, mBounds.y);
     	LocalToWindowCoordinate(point);
     	retVal = (void*)point.y;
+    	
+    	// Can never do it this way because of the design
+    	//if ( point.y != (**mMacPortRelativeRegion).rgnBBox.top) 
+    	//	return (void*)(**mMacPortRelativeRegion).rgnBBox.top;
+    	break;
+    	
+    case NS_NATIVE_OFFSETX_IN_PORT:
+    	//return (void*)(**mMacPortRelativeRegion).rgnBBox.left;
+    	retVal = (void*)mMacPortRelativeX;
+    	break;
+    	
+    case NS_NATIVE_OFFSETY_IN_PORT:
+    	//return (void*)(**mMacPortRelativeRegion).rgnBBox.top;
+    	retVal = (void*)mMacPortRelativeY;
+    	break;
+    	
+    case NS_NATIVE_REGION_IN_PORT:
+    	retVal = (void*)mMacPortRelativeRegion;
     	break;
 	}
 
@@ -395,12 +436,29 @@ NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
 //-------------------------------------------------------------------------
 //
 // Move this component
-//
+// aX and aY are in the parent widget coordinate system
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
 	if ((mBounds.x != aX) || (mBounds.y != aY))
 	{
+		// Move mMacPortRelativeRegion
+		// first find the delta for the move, and then adjust the region
+		nsPoint point(aX, aY);
+		LocalToWindowCoordinate(point);
+		
+		::SetRectRgn(
+	  	  mMacPortRelativeRegion,
+	  	  point.x,
+	  	  point.y,
+	  	  point.x + mBounds.width,
+	  	  point.y + mBounds.height
+	  	);	
+	  	
+	  	mMacPortRelativeX = point.x;
+	  	mMacPortRelativeY = point.y;
+	  	
+		// Set mBounds
 		mBounds.x = aX;
 		mBounds.y = aY;
 		ReportMoveEvent();
@@ -417,17 +475,27 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepain
 {
 	if ((mBounds.width != aWidth) || (mBounds.height != aHeight))
 	{
+	  // Set mMacPortRelativeRegion
+	  ::SetRectRgn(
+	  	mMacPortRelativeRegion,
+	  	(**mMacPortRelativeRegion ).rgnBBox.left,
+	  	(**mMacPortRelativeRegion).rgnBBox.top,
+	  	(**mMacPortRelativeRegion ).rgnBBox.left + aWidth,
+	  	(**mMacPortRelativeRegion).rgnBBox.top + aHeight );	
+	  
+	  // Set mBounds
 	  mBounds.width  = aWidth;
 	  mBounds.height = aHeight;
 	 
+	  // Set mWindowRegion
 		if (mWindowRegion)
 			::SetRectRgn(mWindowRegion, mBounds.x, mBounds.y, mBounds.x + aWidth, mBounds.y + aHeight);		 
 	 
-	  if (aRepaint)
-	  	Invalidate(true);
-
 		ReportSizeEvent();
 	}
+	
+	  if (aRepaint)
+	  	Invalidate(true);
 	return NS_OK;
 }
 
@@ -547,15 +615,11 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 
 	// set the origin to the topLeft corner of the widget
 	nsPoint widgetOrigin(mBounds.x, mBounds.y);
+	//nsPoint widgetOrgin( (**mMacPortRelativeRegion).rgnBBox.left, (**mMacPortRelativeRegion).rgnBBox.top );
 	LocalToWindowCoordinate(widgetOrigin);
 	::SetOrigin(-widgetOrigin.x, -widgetOrigin.y);
 
-	// set the clip rgn
-	Rect macRect;
-	nsRect rect = mBounds;		//¥TODO¥: for complex objects, we should clip to the widgetRgn, not to the widget rect
-	rect.x = rect.y = 0;	// the origin is set on the topLeft corner of the widget
-	nsRectToMacRect(rect, macRect);
-	::ClipRect(&macRect);			//¥TODO? shouldn't this be done in the rendering context?
+	//::SetClip(mTempRenderingContext->mCurStatePtr->mOriginRelativeClipRgn);
 		
 	// set the font
 	if (mFontMetrics)
@@ -614,7 +678,8 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 NS_IMETHODIMP	nsWindow::Update()
 {
 	RgnHandle updateRgn = ::NewRgn();
-	::SectRgn(mWindowPtr->visRgn, mWindowRegion, updateRgn);
+	//::SectRgn(mWindowPtr->visRgn, mWindowRegion, updateRgn);
+	::SectRgn(mWindowPtr->visRgn, mMacPortRelativeRegion, updateRgn);
 	if (!::EmptyRgn(updateRgn))
 	{
 		nsIRenderingContext* renderingContext = GetRenderingContext();	// this sets the origin
@@ -877,8 +942,10 @@ nsWindow::RgnIntersects(RgnHandle aTheRegion,RgnHandle	aIntersectRgn)
 {
 PRBool			result = PR_FALSE;
 
-
+	// cps - not sure if this is intended to be in the parent widget's coord
+	// system or not... It would be implied by the use of mWIndowRegion
 	::SectRgn(aTheRegion,this->mWindowRegion,aIntersectRgn);
+	//::SectRgn(aTheRegion, this->mMacPortRelativeRegion, aIntersectRgn);
 	if (!::EmptyRgn(aIntersectRgn))
 		result = TRUE;
 	return(result);
