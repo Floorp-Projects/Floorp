@@ -861,7 +861,7 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 		}
     delete set; // If !mDatabase then we own set, thus we should delete it.
 	}
-	delete [] setStr;
+	nsCRT::free(setStr);
 	setStr = nsnull;
 	return rv;
 }
