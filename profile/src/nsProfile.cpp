@@ -28,10 +28,20 @@
 #include "nsIEnumerator.h"
 #include "plstr.h"
 #include "nsIFileSpec.h"
+#include "nsFileSpec.h"
 #include "nsString.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsEscape.h"
+#include "nsIURL.h"
+
+#ifndef NECKO
+#include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsNeckoUtil.h"
+#endif // NECKO
+
 
 #ifdef XP_PC
 #include <direct.h>
@@ -56,6 +66,13 @@
 
 #define _MAX_LENGTH			256
 #define _MAX_NUM_PROFILES	50
+
+// PREG information
+#define PREG_COOKIE			"NS_REG2_PREG"
+#define PREG_USERNAME		"PREG_USER_NAME"
+#define PREG_DENIAL			"PREG_USER_DENIAL"
+#define PREG_URL			"http://seaspace.mcom.com/"
+
 
 // Globals to hold profile information
 #ifdef XP_PC
@@ -83,6 +100,15 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+#ifndef NECKO
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
+
 
 #ifdef XP_PC
 static NS_DEFINE_IID(kIPrefMigration_IID, NS_IPrefMigration_IID);
@@ -135,6 +161,9 @@ public:
     // Setters
     NS_IMETHOD SetProfileDir(const char *profileName, const nsFileSpec& profileDir);
 
+	// General
+    NS_IMETHOD ProfileExists(const char *profileName);
+
 	// Migrate 4.x profile information
 	NS_IMETHOD MigrateProfileInfo();
 	NS_IMETHOD UpdateMozProfileRegistry();
@@ -147,6 +176,11 @@ public:
 	NS_IMETHOD StartCommunicator(const char* aProfileName);
 	NS_IMETHOD GetCurrProfile(nsString& currProfile);
 	NS_IMETHOD MigrateProfile(const char* aProfileName);
+
+	// Cookie processing
+	NS_IMETHOD GetCookie(nsString& aCookie);
+	NS_IMETHOD ProcessPRegCookie();
+	NS_IMETHOD IsPregCookieSet(char **pregSet);
 };
 
 nsProfile* nsProfile::mInstance = nsnull;
@@ -907,7 +941,6 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
     printf("ProfileManagerData*** : %s\n", charData);
 #endif
 
-
     nsString data(charData);
     
 	// Set the gathered info into an array
@@ -973,12 +1006,6 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 	}
 	delete [] profileName;
 
-#if defined(DEBUG_profile)
-      printf("SMTP  %s\n", GetValue("SMTP"));
-      printf("NNTP  %s\n", GetValue("NNTP"));
-      printf("EMAIL %s\n", GetValue("EMAIL"));
-#endif
-	
     return NS_OK;
 }
 
@@ -1122,6 +1149,16 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 #if defined(DEBUG_profile)
     printf("ProfileManager : Renaming profile %s to %s \n", oldName, newName);
 #endif
+
+	rv = ProfileExists(newName);
+
+	// That profile already exists...
+	if (NS_SUCCEEDED(rv))
+	{
+		printf("ProfileManager : Rename Operation failed : Profile exists. Provide a different new name for profile.\n");
+		return NS_ERROR_FAILURE;
+	}
+
 
 	char *currProfile = nsnull;
 
@@ -1679,7 +1716,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 
 								if (NS_SUCCEEDED(rv)) 
 								{
-									PL_strcpy(gOldProfiles[g_numOldProfiles], profile);
+									PL_strcpy(gOldProfiles[g_numOldProfiles], nsUnescape(profile));
 								}
 
 								char *profLoc = nsnull;
@@ -1970,6 +2007,307 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	return rv;
 }
 
+
+NS_IMETHODIMP nsProfile::GetCookie(nsString& aCookie)
+{
+#ifndef NECKO
+  nsINetService *service;
+  nsIURI	*aURL;
+
+  nsresult rv = NS_NewURL(&aURL, PREG_URL);
+
+  nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
+  if ((NS_OK == res) && (nsnull != service) && (nsnull != aURL)) {
+
+    res = service->GetCookieString(aURL, aCookie);
+
+    NS_RELEASE(service);
+  }
+
+  return res;
+#else
+  // XXX NECKO we need to use the cookie module for this info instead of 
+  // XXX the IOService
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif // NECKO
+}
+
+NS_IMETHODIMP nsProfile::ProcessPRegCookie()
+{
+
+	nsresult rv = NS_OK;
+
+	nsString aCookie;
+	GetCookie(aCookie);
+	char *pregCookie = nsnull;
+	char *profileName = nsnull;
+	char *service_denial = nsnull;
+
+	if ( (aCookie.ToNewCString()) != nsnull )
+	{
+		pregCookie = PL_strstr(aCookie.ToNewCString(), PREG_COOKIE);
+		//In the original scenario you must UnEscape the string
+		//PL_strstr(nsUnescape(uregCookie),PREG_USERNAME);
+		if (pregCookie)
+		{
+			profileName		= PL_strstr(pregCookie, PREG_USERNAME);
+			service_denial	= PL_strstr(pregCookie, PREG_DENIAL);
+		}
+	}
+	else
+	{
+		// cookie information is not available
+		return NS_ERROR_FAILURE;
+	}
+
+	nsAutoString pName;
+	nsAutoString serviceState;
+
+	if (profileName) 
+		pName.SetString(profileName);
+	if (service_denial) 
+		serviceState.SetString(service_denial);
+
+	int profileNameIndex, delimIndex;
+	int serviceIndex;
+
+	nsString userProfileName, userServiceDenial;
+
+	if (pName.Length())
+	{
+		profileNameIndex = pName.Find("=", 0);
+		delimIndex    = pName.Find("[-]", profileNameIndex-1);
+    
+		pName.Mid(userProfileName, profileNameIndex+1,delimIndex-(profileNameIndex+1));
+
+		printf("\nProfiles : PREG Cookie user profile name = %s\n", userProfileName.ToNewCString());
+	}
+
+	if (serviceState.Length())
+	{
+		serviceIndex  = serviceState.Find("=", 0);
+		delimIndex    = serviceState.Find("[-]", serviceIndex-1);
+
+		serviceState.Mid(userServiceDenial, serviceIndex+1,delimIndex-(serviceIndex+1));
+
+		printf("\nProfiles : PREG Cookie netcenter service option = %s\n", userServiceDenial.ToNewCString());
+	}
+
+	// User didn't provide any information.
+	// No Netcenter info is available.
+	// User will hit the Preg info screens on the next run.
+	if ((userProfileName.mLength == 0) && (userServiceDenial.mLength == 0))
+		return NS_ERROR_FAILURE;
+
+	// If user denies registration, ignore the information entered.
+	if (userServiceDenial.mLength > 0)
+		userProfileName.SetString("");
+
+	char *curProfile = nsnull;
+
+	rv = GetCurrentProfile(&curProfile);
+
+	if (NS_SUCCEEDED(rv))
+	{
+		if (userProfileName.mLength > 0)
+			rv = RenameProfile(curProfile, userProfileName.ToNewCString());
+
+		if (NS_SUCCEEDED(rv))
+		{
+		    // Check result.
+			if (m_reg != nsnull)
+			{
+				// Latch onto the registry object.
+				NS_ADDREF(m_reg);
+
+				// Open the registry.
+				rv = m_reg->Open();
+    
+				if (NS_SUCCEEDED(rv))
+				{
+					nsIRegistry::Key key;
+
+					rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
+
+					if (NS_SUCCEEDED(rv))
+					{
+						nsIRegistry::Key newKey;
+		
+						if (userProfileName.mLength > 0)
+						{
+							rv = m_reg->GetSubtree(key, userProfileName.ToNewCString(), &newKey);
+				
+							if (NS_SUCCEEDED(rv))
+							{
+								// Register new info
+								rv = m_reg->SetString(newKey, "NCProfileName", userProfileName.ToNewCString());
+							}
+							else
+							{
+								#if defined(DEBUG_profile)
+									printf("Profiles : Could not set NetCenter properties.\n" );
+								#endif
+							}
+							
+							rv = m_reg->SetString(key, "CurrentProfile", userProfileName.ToNewCString());
+
+							if (NS_FAILED(rv))
+							{
+								#if defined(DEBUG_profile)
+									printf("Couldn't set CurrentProfile name.\n" );
+								#endif
+							}
+						}
+					}
+					else
+					{
+						#if defined(DEBUG_profile)
+							printf("Registry : Couldn't get Profiles subtree.\n");
+						#endif
+					}
+
+					if (userServiceDenial.mLength > 0)
+						rv = m_reg->SetString(key, "NCServiceDenial", userServiceDenial.ToNewCString());
+
+					rv = m_reg->SetString(key, "HavePregInfo", "true");
+
+					if (NS_FAILED(rv))
+					{
+						#if defined(DEBUG_profile)
+							printf("Couldn't set Preg info flag.\n" );
+						#endif
+					}
+
+					m_reg->Close();
+				}
+				else
+				{
+					#if defined(DEBUG_profile)
+						printf("Couldn't open registry.\n");
+					#endif
+				}
+			}
+			else
+			{
+				#if defined(DEBUG_profile)
+					printf("Registry Object is NULL.\n");
+				#endif
+
+				return NS_ERROR_FAILURE;
+			}
+		}
+	}
+
+	return rv;
+}
+
+
+NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
+{
+
+	nsresult rv = NS_OK;
+
+	// Check result.
+	if (m_reg != nsnull)
+	{
+		// Latch onto the registry object.
+		NS_ADDREF(m_reg);
+
+		// Open the registry.
+		rv = m_reg->Open();
+    
+		if (NS_SUCCEEDED(rv))
+		{
+			nsIRegistry::Key key;
+
+			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
+
+			if (NS_SUCCEEDED(rv))
+			{
+				rv = m_reg->GetString(key, "HavePregInfo", pregSet);
+			}
+			else
+			{
+				#if defined(DEBUG_profile)
+					printf("Registry : Couldn't get Profiles subtree.\n");
+				#endif
+			}
+			m_reg->Close();
+		}
+		else
+		{
+			#if defined(DEBUG_profile)
+				printf("Couldn't open registry.\n");
+			#endif
+		}
+	}
+	else
+	{
+		#if defined(DEBUG_profile)
+			printf("Registry Object is NULL.\n");
+		#endif
+
+		return NS_ERROR_FAILURE;
+	}
+
+	return rv;
+}
+
+NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
+{
+
+	nsresult rv = NS_OK;
+
+	// Check result.
+	if (m_reg != nsnull)
+	{
+		// Latch onto the registry object.
+		NS_ADDREF(m_reg);
+
+		// Open the registry.
+		rv = m_reg->Open();
+    
+		if (NS_SUCCEEDED(rv))
+		{
+			nsIRegistry::Key key;
+
+			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
+
+			if (NS_SUCCEEDED(rv))
+			{
+		        nsIRegistry::Key newKey;
+
+				// Get handle to <profileName> passed
+				rv = m_reg->GetSubtree(key, profileName, &newKey);			
+			}
+			else
+			{
+				#if defined(DEBUG_profile)
+					printf("Registry : Couldn't get Profiles subtree.\n");
+				#endif
+			}
+			m_reg->Close();
+		}
+		else
+		{
+			#if defined(DEBUG_profile)
+				printf("Couldn't open registry.\n");
+			#endif
+		}
+	}
+	else
+	{
+		#if defined(DEBUG_profile)
+			printf("Registry Object is NULL.\n");
+		#endif
+
+		return NS_ERROR_FAILURE;
+	}
+
+	return rv;
+}
 
 
 
