@@ -3411,7 +3411,13 @@ nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState)
   if((eReflowReason_Initial==aReflowState.reason) && 
      (PR_TRUE==isNested) && (eStyleUnit_Percent==position->mWidth.GetUnit()))
   {
-    desiredWidth =  mTableLayoutStrategy->GetTableMaxWidth();
+    nsITableLayoutStrategy* tableLayoutStrategy = mTableLayoutStrategy;
+    if (mPrevInFlow) {
+      // Get the table layout strategy from the first-in-flow
+      nsTableFrame* table = (nsTableFrame*)GetFirstInFlow();
+      tableLayoutStrategy = table->mTableLayoutStrategy;
+    }
+    desiredWidth =  tableLayoutStrategy->GetTableMaxWidth();
   }
   return desiredWidth;
 }
