@@ -25,10 +25,31 @@
 var FAILED = "FAILED!: ";
 var STATUS = "STATUS: ";
 var BUGNUMBER = "BUGNUMBER: ";
-
 var VERBOSE = false;
-
+var SECT_PREFIX = 'Section ';
+var SECT_SUFFIX = ' of test -';
 var callStack = new Array();
+
+/*
+ * The test driver searches for such a phrase in the test output.
+ * If such phrase exists, it will set n as the expected exit code.
+ */
+function expectExitCode(n)
+{
+
+    print('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ' + n + ' ---');
+
+}
+
+/*
+ * Statuses current section of a test
+ */
+function inSection(x)
+{
+
+    return SECT_PREFIX + x + SECT_SUFFIX;
+
+}
 
 /*
  * Report a failure in the 'accepted' manner
