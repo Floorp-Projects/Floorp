@@ -49,7 +49,7 @@
 
 #include "imgILoad.h"
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
 #define GFXFORMAT gfxIFormats::BGR_A1
 #else
 #define USE_RGB

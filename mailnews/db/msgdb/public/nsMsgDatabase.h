@@ -175,7 +175,7 @@ protected:
   static int		FindInCache(nsMsgDatabase* pMessageDB);
   PRBool	MatchDbName(nsFileSpec &dbName);	// returns TRUE if they match
   
-#if defined(XP_PC) || defined(XP_MAC)	// this should go away when we can provide our own file stream to MDB/Mork
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)	// this should go away when we can provide our own file stream to MDB/Mork
   static void		UnixToNative(char*& ioPath);
 #endif
   

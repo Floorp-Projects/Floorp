@@ -108,7 +108,7 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 
 	char	*nativeFolderName = nsCRT::strdup((const char *) folderName);
 
-#if defined(XP_PC) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
 	UnixToNative(nativeFolderName);
 #endif
 	stat (nativeFolderName, &st);

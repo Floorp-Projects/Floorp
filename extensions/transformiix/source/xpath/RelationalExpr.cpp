@@ -103,7 +103,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
                             (rtype == ExprResult::NUMBER)) {
                 double lval = left->numberValue();
                 double rval = right->numberValue();
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
                 if (Double::isNaN(lval) || Double::isNaN(rval))
                     result = MB_TRUE;
                 else
@@ -130,7 +130,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
                             (rtype == ExprResult::NUMBER)) {
                 double lval = left->numberValue();
                 double rval = right->numberValue();
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
                 if (Double::isNaN(lval) || Double::isNaN(rval))
                     result = MB_FALSE;
                 else
@@ -153,7 +153,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
             double rightDbl = right->numberValue();
             switch( op ) {
                 case LESS_THAN:
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
                     if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
                         result = MB_FALSE;
                     else
@@ -163,7 +163,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 #endif
                     break;
                 case LESS_OR_EQUAL:
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
                     if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
                         result = MB_FALSE;
                     else
@@ -173,7 +173,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 #endif
                     break;
                 case GREATER_THAN :
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
                     if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
                         result = MB_FALSE;
                     else
@@ -183,7 +183,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 #endif
                     break;
                 case GREATER_OR_EQUAL:
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
                     if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
                         result = MB_FALSE;
                     else

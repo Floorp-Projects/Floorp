@@ -108,7 +108,7 @@ gboolean draw (GtkWidget *widget, GdkEventExpose *event, gpointer data);
  * Windows PlatformInstance
  *----------------------------------------------------------------------------*/
 
-#if defined(XP_PC) && !defined(XP_OS2)          // XXXX OS2TODO
+#if defined(XP_WIN) // XXXX OS2TODO
 typedef struct _PlatformInstance
 {
     HWND		fhWnd;
@@ -288,7 +288,7 @@ public:
     NS_IMETHOD Repaint(void);
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
     static LRESULT CALLBACK 
     PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 #endif
@@ -702,7 +702,7 @@ NS_IMETHODIMP SimplePluginInstance::SetText(const char * aText)
         if(!fText)
             return NS_ERROR_OUT_OF_MEMORY;
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
         if(fPlatform.fhWnd) {
             InvalidateRect( fPlatform.fhWnd, NULL, TRUE );
             UpdateWindow( fPlatform.fhWnd );
@@ -1036,7 +1036,7 @@ gboolean draw (GtkWidget *widget, GdkEventExpose *event, gpointer data)
  * Windows Implementations
  *----------------------------------------------------------------------------*/
 
-#elif defined(XP_PC) && !defined(XP_OS2)
+#elif defined(XP_WIN)
 const char* gInstanceLookupString = "instance->pdata";
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++

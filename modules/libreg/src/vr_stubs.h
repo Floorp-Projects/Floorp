@@ -36,6 +36,7 @@
 #include <string.h>
 #ifdef XP_MAC
 #include "macstdlibextras.h"  /* For strcasecmp and strncasecmp */
+#include <extras.h>
 #endif
 
 #else
@@ -115,13 +116,13 @@
 #define PR_Lock(a)          ((void)0)
 #define PR_Unlock(a)        ((void)0)
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
   #define XP_STRCASECMP(x,y)  stricmp((x),(y))
   #define XP_STRNCASECMP(x,y,n) strnicmp((x),(y),(n))
 #else
   #define XP_STRCASECMP(x,y)  strcasecmp((x),(y))
   #define XP_STRNCASECMP(x,y,n) strncasecmp((x),(y),(n))
-#endif /*XP_PC*/
+#endif /* XP_WIN || XP_OS2 */
 
 typedef FILE          * XP_File;
 
@@ -294,10 +295,6 @@ extern char* vr_findVerRegName();
 #ifdef STANDALONE_REGISTRY /* included from prmon.h otherwise */
 
 extern XP_File vr_fileOpen(const char *name, const char * mode);
-
-#if !defined(XP_PC) && !(defined(__GLIBC__) && __GLIBC__ >= 2)
-extern char * strdup(const char * s);
-#endif
 
 
 #else

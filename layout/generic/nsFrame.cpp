@@ -352,7 +352,7 @@ SelectionImageService::CreateImage(nscolor aImageColor, imgIContainer *aContaine
         PRInt16 i;
         for (i = 0; i < SEL_IMAGE_WIDTH; i++)
         {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
           *data++ = NS_GET_B(aImageColor);
           *data++ = NS_GET_G(aImageColor);
           *data++ = NS_GET_R(aImageColor);

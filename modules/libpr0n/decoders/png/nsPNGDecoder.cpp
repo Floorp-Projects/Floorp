@@ -202,7 +202,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
       png_set_gray_to_rgb(png_ptr);
 
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
   // windows likes BGR
   png_set_bgr(png_ptr);
 #endif
@@ -283,7 +283,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     }
   }
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
   // XXX this works...
   format += 1; // RGB to BGR
 #endif

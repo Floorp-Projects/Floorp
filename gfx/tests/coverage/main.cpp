@@ -39,7 +39,7 @@
 
 extern nsresult CoverageTest(int * argc, char **argv);
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 
 #include <windows.h>
 

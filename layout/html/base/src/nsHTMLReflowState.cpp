@@ -2260,7 +2260,7 @@ nsHTMLReflowState::UseComputedHeight()
 {
   static PRBool useComputedHeight = PR_FALSE;
 
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
   static PRBool firstTime = 1;
   if (firstTime) {
     if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {

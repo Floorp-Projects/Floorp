@@ -110,7 +110,7 @@ nsComm4xProfile::GetMailDir(const PRUnichar *profileName, PRUnichar **_retval)
                 *_retval = ToNewUnicode(prefValue);
 #endif
             }
-#if defined(XP_PC) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
             else {
                 nsCOMPtr <nsIFile> mailLocation;
                 rv =  resolvedLocation->Clone(getter_AddRefs(mailLocation));

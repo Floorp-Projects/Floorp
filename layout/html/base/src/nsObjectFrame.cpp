@@ -1828,7 +1828,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
   // delegate all painting to the plugin instance.
   if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) && mInstanceOwner)
       mInstanceOwner->Paint(aDirtyRect);
-#elif defined (XP_PC)
+#elif defined (XP_WIN) || defined(XP_OS2)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     nsIPluginInstance * inst;
     if (NS_OK == GetPluginInstance(inst)) {

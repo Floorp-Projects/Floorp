@@ -361,7 +361,7 @@ NS_IMETHODIMP nsRenderingContextPS :: IsVisibleRect(const nsRect& aRect, PRBool 
 NS_IMETHODIMP nsRenderingContextPS :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
 nsRect  trect = aRect;
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 PRInt32     cliptype;
 #endif
 
@@ -400,7 +400,7 @@ PRInt32     cliptype;
     NS_ASSERTION(PR_FALSE, "illegal clip combination");
   }
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
   if (cliptype == NULLREGION)
     aClipEmpty = PR_TRUE;
   else

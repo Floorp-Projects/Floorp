@@ -863,7 +863,7 @@ NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 	return gMDBFactory;
 }
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 // this code is stolen from nsFileSpecWin. Since MDB requires a native path, for 
 // the time being, we'll just take the Unix/Canonical form and munge it
 void nsMsgDatabase::UnixToNative(char*& ioPath)
@@ -903,7 +903,7 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
       *cp = *(cp + 1);
   }
 }
-#endif /* XP_PC */
+#endif /* XP_WIN || XP_OS2 */
 
 #ifdef XP_MAC
 // this code is stolen from nsFileSpecMac. Since MDB requires a native path, for 
@@ -980,7 +980,7 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			if (m_mdbEnv)
 				m_mdbEnv->SetAutoClear(PR_TRUE);
 			m_dbName = dbName;
-#if defined(XP_PC) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
 			UnixToNative(nativeFileName);
 #endif
 			if (stat(nativeFileName, &st)) 

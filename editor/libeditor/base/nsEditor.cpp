@@ -113,16 +113,6 @@ static NS_DEFINE_CID(kCDOMRangeCID,         NS_RANGE_CID);
 // transaction manager
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 
-#ifdef XP_PC
-#define TRANSACTION_MANAGER_DLL "txmgr.dll"
-#else
-#ifdef XP_MAC
-#define TRANSACTION_MANAGER_DLL "TRANSACTION_MANAGER_DLL"
-#else // XP_UNIX || XP_BEOS
-#define TRANSACTION_MANAGER_DLL "libtxmgr"MOZ_DLL_SUFFIX
-#endif
-#endif
-
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
 
@@ -2068,7 +2058,7 @@ nsEditor::ForceCompositionEnd()
 // flag for Unix.
 // We should use nsILookAndFeel to resolve this
 
-#if defined(XP_MAC) || defined(XP_PC)
+#if defined(XP_MAC) || defined(XP_WIN) || defined(XP_OS2)
   if(! mInIMEMode)
     return NS_OK;
 #endif

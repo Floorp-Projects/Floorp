@@ -94,7 +94,7 @@ typedef unsigned long uint_t;	/* this is already declared in OpenTransport.h, bu
 #endif
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 typedef long int32_t;
 #endif
 

@@ -47,7 +47,7 @@
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsIMacLocale.h"
 #include <TextEncodingConverter.h>
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 #include "nsIWin32Locale.h"
 #else
 #include "nsIPosixLocale.h"
@@ -63,7 +63,7 @@
 #define UCONV_DLL       "UCONV_DLL"
 #define UCVLATIN_DLL    "UCVLATIN_DLL"
 #define UNICHARUTIL_DLL_NAME "UNICHARUTIL_DLL"
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 #define LOCALE_DLL_NAME "NSLOCALE.DLL"
 #define UCONV_DLL       "uconv.dll"
 #define UCVLATIN_DLL    "ucvlatin.dll"
@@ -92,7 +92,7 @@ static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 #if defined(XP_MAC) || defined(XP_MACOSX)
 static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
 static NS_DEFINE_IID(kIMacLocaleIID, NS_MACLOCALE_CID);
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 static NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 #else
@@ -895,7 +895,7 @@ static void Test_nsLocale()
 
     macLocale->Release();
   }
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
   nsString localeName;
   nsIWin32Locale* win32Locale;
   LCID lcid;

@@ -97,8 +97,8 @@
 #elif defined (XP_MAC)
 #define OLD_REGISTRY_FILE_NAME "Netscape Registry"
 #elif defined (XP_BEOS)
-#else /* assume XP_PC */
-#ifndef XP_OS2
+#elif defined(XP_WIN) || defined(XP_OS2)
+#ifdef XP_WIN
 #include <direct.h>
 #endif
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
@@ -1945,7 +1945,7 @@ nsresult nsProfile::Update4xProfileInfo()
 {
     nsresult rv = NS_OK;
 
-#if defined(XP_PC) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
 
     char * oldRegFile = GetOldRegLocation();
     rv = gProfileDataAccess->Get4xProfileInfo(oldRegFile, PR_TRUE);
@@ -1954,7 +1954,7 @@ nsresult nsProfile::Update4xProfileInfo()
 #else
     /* XP_UNIX */
     rv = gProfileDataAccess->Get4xProfileInfo(nsnull, PR_TRUE);
-#endif /* XP_PC || XP_MAC */
+#endif /* XP_WIN || XP_OS2 || XP_MAC */
     return rv;
 }
 
@@ -2022,7 +2022,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 {
     nsresult rv = NS_OK;
 
-#if defined(XP_PC) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
 
 #if defined(DEBUG_profile_verbose)
     printf("Entered MigrateProfileInfo.\n");
@@ -2036,7 +2036,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 #else
     /* XP_UNIX */
     rv = gProfileDataAccess->Get4xProfileInfo(nsnull, PR_FALSE);
-#endif /* XP_PC || XP_MAC */
+#endif /* XP_WIN || XP_OS2 || XP_MAC */
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);

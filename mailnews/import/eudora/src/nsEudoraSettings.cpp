@@ -30,7 +30,7 @@
 
 #include "EudoraDebugLog.h"
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #include "nsEudoraWin32.h"
 #endif
 #ifdef XP_MAC
@@ -82,7 +82,7 @@ NS_IMETHODIMP nsEudoraSettings::AutoLocate(PRUnichar **description, nsIFileSpec 
 		return( rv);
 	*description = nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_NAME);
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 	*_retval = nsEudoraWin32::FindSettingsFile( *location);
 #endif
 	
@@ -110,7 +110,7 @@ NS_IMETHODIMP nsEudoraSettings::Import(nsIMsgAccount **localMailAccount, PRBool 
 
 	// Get the settings file if it doesn't exist
 	if (!m_pLocation) {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 		if (NS_SUCCEEDED( rv = NS_NewFileSpec( &m_pLocation))) {
 			if (!nsEudoraWin32::FindSettingsFile( m_pLocation)) {
 				NS_IF_RELEASE( m_pLocation);
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsEudoraSettings::Import(nsIMsgAccount **localMailAccount, PRBool 
 	}
 
 	// do the settings import
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 	*_retval = nsEudoraWin32::ImportSettings( m_pLocation, localMailAccount);
 #endif
 #ifdef XP_MAC

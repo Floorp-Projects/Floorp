@@ -59,9 +59,9 @@
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
 
-#if defined(XP_PC) && !defined(XP_OS2)
-#include "windows.h"
-#include "winbase.h"
+#ifdef XP_WIN
+#include <windows.h>
+#include <winbase.h>
 #endif
 
 nsPluginInstancePeerImpl::nsPluginInstancePeerImpl()

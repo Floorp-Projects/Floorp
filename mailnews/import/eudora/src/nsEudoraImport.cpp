@@ -57,7 +57,7 @@
 #include "nsReadableUtils.h"
 
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #include "nsEudoraWin32.h"
 #endif
 #ifdef XP_MAC
@@ -105,7 +105,7 @@ private:
 	static void	ReportSuccess( nsString& name, PRInt32 count, nsString *pStream);
 
 private:
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 	nsEudoraWin32	m_eudora;
 #endif
 #ifdef XP_MAC
@@ -168,7 +168,7 @@ private:
 	static void	ReportSuccess( nsString& name, nsString *pStream);
 
 private:
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 	nsEudoraWin32	m_eudora;
 #endif
 #ifdef XP_MAC

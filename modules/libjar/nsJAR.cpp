@@ -38,7 +38,7 @@
 
 #ifdef XP_UNIX
   #include <sys/stat.h>
-#elif defined (XP_PC)
+#elif defined (XP_WIN) || defined(XP_OS2)
   #include <io.h>
 #endif
 

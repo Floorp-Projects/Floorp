@@ -222,7 +222,7 @@ int FAR PASCAL _export WEP(int nParam)
 }
 #endif /* not WIN32 */
 
-#endif /* XP_PC */
+#endif /* XP_WIN */
 
 
 /* ------------------------------------------------------------------

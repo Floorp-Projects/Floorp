@@ -61,17 +61,6 @@ static nsIEditor *gEditor;
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 
-#ifdef XP_PC
-#define EDITOR_DLL "ender.dll"
-#else
-#ifdef XP_MAC
-#define EDITOR_DLL "ENDER_DLL"
-#else // XP_UNIX || XP_BEOS
-#define EDITOR_DLL "libender"MOZ_DLL_SUFFIX
-#endif
-#endif
-
-
 nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShell)
 {
   nsresult result = NS_OK;

@@ -49,7 +49,7 @@
 #  define NS_LINEBREAK             "\015"
 #  define NS_LINEBREAK_LEN 1
 #else
-#  ifdef XP_PC
+#  if defined(XP_WIN) || defined(XP_OS2)
 #    define NS_LINEBREAK           "\015\012"
 #    define NS_LINEBREAK_LEN       2
 #  else
@@ -57,7 +57,7 @@
 #      define NS_LINEBREAK         "\012"
 #      define NS_LINEBREAK_LEN     1
 #    endif /* XP_UNIX */
-#  endif /* XP_PC */
+#  endif /* XP_WIN || XP_OS2 */
 #endif /* XP_MAC */
 
 extern const PRUnichar kIsoLatin1ToUCS2[256];

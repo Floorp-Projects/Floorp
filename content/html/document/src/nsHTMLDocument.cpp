@@ -797,7 +797,7 @@ nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         // non-y2k with msvc; '%#c' requests that a full year be used in the
         // result string.  Other OSes just use "%c".
         PR_FormatTime(buf, sizeof buf,
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
                       "%#c",
 #else
                       "%c",

@@ -51,7 +51,7 @@
 #define NS_ICODECODER_CID \
 { 0xcb3ede1a, 0xfa5, 0x4e27, { 0xaa, 0xfe, 0xf, 0x78, 0x1, 0xe5, 0xa1, 0xf1 } }
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
 #define GFXFORMATALPHA gfxIFormats::BGR_A1
 #else
 #define USE_RGBA1

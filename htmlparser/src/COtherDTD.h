@@ -111,14 +111,14 @@ class nsNodeAllocator;
   an nsParser.
  ***************************************************************/
 
-#if defined(XP_PC)
+#ifdef _MSC_VER
 #pragma warning( disable : 4275 )
 #endif
 
 class COtherDTD : public nsIDTD
 {
 
-#if defined(XP_PC)
+#ifdef _MSC_VER
 #pragma warning( default : 4275 )
 #endif
 

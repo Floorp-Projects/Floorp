@@ -61,7 +61,7 @@
 
 nsIWidget         *gWindow = NULL;
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #define TEXT_HEIGHT 25
 #endif
 

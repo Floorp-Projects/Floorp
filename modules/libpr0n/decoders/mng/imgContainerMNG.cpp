@@ -305,7 +305,7 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
 
   gfx_format format;
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
   if (mng_get_alphadepth(handle)) {
     format = gfxIFormats::BGR_A8;
     mng_set_canvasstyle(handle, MNG_CANVAS_RGB8_A8);
@@ -395,7 +395,7 @@ il_mng_refresh(mng_handle handle,
   container->mFrame->GetAlphaBytesPerRow(&abpr);
 
 // stupid Mac code that shouldn't be in the image decoders...
-#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
   PRInt32 iwidth;
   container->mFrame->GetWidth(&iwidth);
   PRUint8 *buf = (PRUint8 *)nsMemory::Alloc(bpr);
@@ -417,7 +417,7 @@ il_mng_refresh(mng_handle handle,
       *cptr++ = *row++;
     }
     container->mFrame->SetImageData(buf, bpr, bpr*y);
-#elif defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#elif defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
     PRUint8 *cptr = buf;
     PRUint8 *row = container->image+y*container->mByteWidth;
     for (PRUint32 x=0; x<iwidth; x++) {
@@ -434,7 +434,7 @@ il_mng_refresh(mng_handle handle,
 			 bpr*y);
 #endif
   }
-#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
   nsMemory::Free(buf);
 #endif
 

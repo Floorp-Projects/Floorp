@@ -46,7 +46,7 @@
 #include "nsCRT.h"
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #include <io.h>
 #endif
 #ifdef XP_UNIX

@@ -105,7 +105,7 @@ struct bitFields {
 #define LITTLE_TO_NATIVE32(x) x
 #endif
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
 #define BMP_GFXFORMAT gfxIFormats::BGR
 #define RLE_GFXFORMAT_ALPHA gfxIFormats::BGR_A1
 #else

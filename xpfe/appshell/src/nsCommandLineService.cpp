@@ -242,7 +242,7 @@ PRBool nsCmdLineService::ArgsMatch(const char *lookingFor, const char *userGave)
         if (!PL_strcasecmp(lookingFor+1,userGave+2) && (lookingFor[0] == '-') && (userGave[0] == '-') && (userGave[1] == '-')) return PR_TRUE;
     }
 #endif
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     /* on windows /mail is the same as -mail */
     if (lookingFor && userGave && (lookingFor[0] != '\0') && (userGave[0] != '\0')) {
         if (!PL_strcasecmp(lookingFor+1,userGave+1) && (lookingFor[0] == '-') && (userGave[0] == '/')) return PR_TRUE;

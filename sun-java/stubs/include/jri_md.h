@@ -79,7 +79,7 @@ extern "C" {
 #	  define JRI_PUBLIC_VAR(VarType)        VarType
 #     define JRI_CALLBACK
 #  endif
-#elif defined(XP_PC) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
+#elif defined(XP_WIN) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
 #	include <windows.h>
 #	if defined(_MSC_VER) || defined(__GNUC__)
 #		if defined(WIN32) || defined(_WIN32)
