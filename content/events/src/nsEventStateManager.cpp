@@ -760,6 +760,15 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       }
 
       if (focusController) {
+
+        // Make sure the focus controller is up-to-date, since restoring
+        // focus memory may have caused focus to go elsewhere.
+
+        if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
+          nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(mCurrentFocus);
+          focusController->SetFocusedElement(focusElement);
+        }
+
         PRBool isSuppressed;
         focusController->GetSuppressFocus(&isSuppressed);
         while (isSuppressed) {
