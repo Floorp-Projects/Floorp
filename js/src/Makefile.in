@@ -209,8 +209,8 @@ endif
 
 GARBAGE		+= $(JSMATH_PRELINK) jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
 
-ifneq ($(OS_ARCH),WINNT)
-TARGETS		+= jscpucfg$(BIN_SUFFIX)
+ifneq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
+TARGETS		+= jscpucfg$(HOST_BIN_SUFFIX)
 endif
 
 ifdef JS_SAFE_ARENA
@@ -342,11 +342,11 @@ $(FDLIBM_LIBRARY):
 
 jsopcode.h jsopcode.c: jsopcode.tbl
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 jsautocfg.h:
 	touch $@
 else
-jsautocfg.h: jscpucfg$(BIN_SUFFIX)
+jsautocfg.h: jscpucfg$(HOST_BIN_SUFFIX)
 	@rm -f $@ jsautocfg.tmp
 	./jscpucfg > jsautocfg.tmp
 	mv jsautocfg.tmp $@
@@ -369,7 +369,7 @@ jscpucfg: jscpucfg.o
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) -o $@ $<
 endif
 else
-jscpucfg$(BIN_SUFFIX): jscpucfg.c Makefile.in
+jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.c Makefile.in
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
 endif
 

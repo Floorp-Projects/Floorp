@@ -23,7 +23,7 @@
 #include <windows.h>
 #include <string.h>
 #include <time.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 
 #ifdef __cplusplus
 extern "C"

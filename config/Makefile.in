@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter-out WINNT OS2,$(OS_ARCH)))
-HOST_PROGRAM	= nsinstall$(BIN_SUFFIX)
+ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
+HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= nsinstall.c pathsub.c
 endif
 
@@ -86,11 +86,14 @@ export:: $(TARGETS) $(HEADERS)
 	-rm -f $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 	-rm -f $(DIST)/bin/chrome/chromelist.txt
 	$(NSINSTALL) -t $(IFLAGS1) $(HEADERS) $(DIST)/sdk/
+ifdef HOST_PROGRAM
+	$(INSTALL) $(HOST_PROGRAM) $(DIST)/bin
+endif
 
 
 # Create mini-SDK directory for NSPR
 ifndef MOZ_NATIVE_NSPR
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 _ABS_DIST = $(shell cd $(DIST) && cygpath -w `pwd` | sed -e 's|\\|/|g')
 else
 _ABS_DIST = $(shell cd $(DIST) && pwd)
