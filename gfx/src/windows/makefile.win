@@ -60,6 +60,7 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsScreenWin.obj          \
 	.\$(OBJDIR)\nsScreenManagerWin.obj          \
 	.\$(OBJDIR)\nsPrintOptionsWin.obj     \
+	.\$(OBJDIR)\nsPrintSettingsWin.obj     \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	.\$(OBJDIR)\nsCompressedCharMap.obj          \
 	.\$(OBJDIR)\nsNativeThemeWin.obj \

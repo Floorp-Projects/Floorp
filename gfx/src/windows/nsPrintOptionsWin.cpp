@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsPrintOptionsWin.h"
+#include "nsPrintSettingsWin.h"
 
 
 
@@ -56,3 +57,17 @@ nsPrintOptionsWin::~nsPrintOptionsWin()
 {
 }
 
+/* nsIPrintSettings CreatePrintSettings (); */
+NS_IMETHODIMP nsPrintOptionsWin::CreatePrintSettings(nsIPrintSettings **_retval)
+{
+  nsresult rv = NS_OK;
+  nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(); // does not initially ref count
+  NS_ASSERTION(printSettings, "Can't be NULL!");
+
+  rv = printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  InitPrintSettingsFromPrefs(*_retval, PR_FALSE, 0); // ignore return value
+
+  return rv;
+}
