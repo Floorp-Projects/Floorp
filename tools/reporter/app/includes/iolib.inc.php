@@ -292,5 +292,12 @@ function printheaders(){
 	header('Cache-Control: post-check=0, pre-check=0', false);
 	header('Pragma: no-cache');
 	header('X-Powered-By: A Barrel of Monkey\'s ');
-} 
+}
+
+function strip_all_tags($input){
+	while($input != strip_tags($input)) {
+		$input = strip_tags($input);
+	}
+	return $input; 
+}
 ?>

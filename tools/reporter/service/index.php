@@ -38,6 +38,7 @@
 
 require_once('../config.inc.php');
 require_once('DB.php');
+require_once($config['app_path'].'/includes/iolib.inc.php');
 require_once($config['nusoap_path'].'/nusoap.php');
 
 // Create the server instance
@@ -57,13 +58,13 @@ $server->register(
 
 $server->register(
     'submitReport',                     // method name
-    array('rmoVers' => 'xsd:string',    
-          'url' => 'xsd:string',    
-          'problem_type' => 'xsd:string',    
-          'description' => 'xsd:string',   
-          'behind_login' => 'xsd:string',    
-          'platform' => 'xsd:string',    
-          'oscpu' => 'xsd:string',    
+    array('rmoVers' => 'xsd:string',
+          'url' => 'xsd:string',
+          'problem_type' => 'xsd:string',
+          'description' => 'xsd:string',
+          'behind_login' => 'xsd:string',
+          'platform' => 'xsd:string',
+          'oscpu' => 'xsd:string',
           'gecko' => 'xsd:string',    
           'product' => 'xsd:string',    
           'useragent' => 'xsd:string',    
@@ -78,7 +79,23 @@ $server->register(
     'encoded'                           // use
 );
 function submitReport($rmoVers, $url, $problem_type, $description, $behind_login, $platform, $oscpu, $gecko, $product, $useragent, $buildconfig, $language, $email, $sysid) {
-    global $config; 
+    global $config;
+    
+    // Remove any HTML tags and whitespace
+    $rmoVers = trim(strip_all_tags($rmoVers));
+    $url = trim(strip_all_tags($url));
+    $problem_type = trim(strip_all_tags($problem_type));
+    $description = trim(strip_all_tags($description));
+    $behind_login = trim(strip_all_tags($behind_login));
+    $platform = trim(strip_all_tags($platform));
+    $oscpu = trim(strip_all_tags($oscpu));
+    $gecko = trim(strip_all_tags($gecko));
+    $product = trim(strip_all_tags($product));
+    $useragent = trim(strip_all_tags($useragent));
+    $buildconfig = trim(strip_all_tags($buildconfig));
+    $language = trim(strip_all_tags($language));
+    $email = trim(strip_all_tags($email));
+    $sysid = trim(strip_all_tags($sysid));
 
     // check verison
     if ($rmoVers < $config['min_vers']){
@@ -130,7 +147,6 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     $report_id = 'RMO'.str_replace(".", "", array_sum(explode(' ', microtime())));
 
     // Initialize Database
-    //PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'handleErrorsSOAP');
     $db =& DB::connect($config['db_dsn']);
 
     $sysIDQuery = $db->query("SELECT `sysid_id` FROM `sysid` WHERE `sysid_id` = '".$db->escapeSimple($sysid)."'");
@@ -147,8 +163,8 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
         // We add the URL
         $addURL = $db->query("INSERT INTO `host` (`host_id`, `host_hostname`, `host_date_added`)
                                 VALUES (
-                                    '".$db->escapeSimple($host_id)."', 
-                                    '".$db->escapeSimple($parsedURL['host'])."', 
+                                    '".$db->escapeSimple($host_id)."',
+                                    '".$db->escapeSimple($parsedURL['host'])."',
                                     now()
                                 )
                     ");
@@ -165,13 +181,13 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     }
 
     $addReport = $db->query("INSERT INTO `report` (
-                                                    `report_id`, 
-                                                    `report_url`, 
-                                                    `report_host_id`, 
-                                                    `report_problem_type`, 
-                                                    `report_description`, 
-                                                    `report_behind_login`, 
-                                                    `report_useragent`, 
+                                                    `report_id`,
+                                                    `report_url`,
+                                                    `report_host_id`,
+                                                    `report_problem_type`,
+                                                    `report_description`,
+                                                    `report_behind_login`,
+                                                    `report_useragent`,
                                                     `report_platform`,
                                                     `report_oscpu`,
                                                     `report_language`,
@@ -184,7 +200,7 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
 													`report_sysid` 
                                 )
                                 VALUES (
-                                        '".$db->escapeSimple($report_id)."', 
+                                        '".$db->escapeSimple($report_id)."',
                                         '".$db->escapeSimple($url)."', 
                                         '".$db->escapeSimple($host_id)."', 
                                         '".$db->escapeSimple($problem_type)."', 
