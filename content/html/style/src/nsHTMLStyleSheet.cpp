@@ -864,8 +864,8 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                   nsCOMPtr<nsIURI> baseURI;
                   htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
                
-                  nsCOMPtr<nsIURI> linkURI;
-                  (void) NS_NewURI(getter_AddRefs(linkURI), href, baseURI);
+                  nsAutoString linkURI;
+                  (void) NS_MakeAbsoluteURI(linkURI, href, baseURI);
 
                   nsLinkState  state;
                   if (NS_OK == linkHandler->GetLinkState(linkURI, state)) {
