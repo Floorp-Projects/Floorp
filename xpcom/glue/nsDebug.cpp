@@ -209,7 +209,7 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
 
 #if defined(_WIN32)
    char* assertBehavior = getenv("XPCOM_DEBUG_BREAK");
-   if (assertBehavior && PL_strcmp(assertBehavior, "warn") == 0)
+   if (assertBehavior && strcmp(assertBehavior, "warn") == 0)
      return;
 
    if(!InDebugger())
