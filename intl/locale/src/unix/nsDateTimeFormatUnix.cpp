@@ -41,7 +41,7 @@ static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_I
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 
-NS_IMPL_ISUPPORTS(nsDateTimeFormatUnix, kIDateTimeFormatIID);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsDateTimeFormatUnix, kIDateTimeFormatIID);
 
 // init this interface to a specified locale
 nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
