@@ -146,6 +146,7 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	MessageBox(_T("Control doesn't print yet!"), _T("Control Message"), MB_OK);
 	// TODO print the current page
 	return 0;
 }
@@ -194,7 +195,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	if (NS_OK != rv)
 	{
 		NG_ASSERT(0);
-		m_sErrorMessage = _T("Mozilla Browser - could not create preference object");
+		m_sErrorMessage = _T("Error - could not create preference object");
 		return E_FAIL;
 	}
 	m_pIPref->Startup(c_szPrefsFile);
@@ -207,7 +208,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	if (NS_OK != rv)
 	{
 		NG_ASSERT(0);
-		m_sErrorMessage = _T("Mozilla Browser - could not create web shell");
+		m_sErrorMessage = _T("Error - could not create web shell, check PATH settings");
 		return E_FAIL;
 	}
 
@@ -1566,7 +1567,19 @@ struct OleCommandInfo
 
 static OleCommandInfo s_aSupportedCommands[] =
 {
-	{ OLECMDID_PRINT, ID_PRINT, L"Print", L"Print the page" }
+	{ OLECMDID_PRINT, ID_PRINT, L"Print", L"Print the page" },
+	{ OLECMDID_SAVEAS, 0, L"SaveAs", L"Save the page" },
+	{ OLECMDID_PAGESETUP, 0, L"Page Setup", L"Page Setup" },
+	{ OLECMDID_PROPERTIES, 0, L"Properties", L"Show page properties" },
+	{ OLECMDID_CUT, 0, L"Cut", L"Cut selection" },
+	{ OLECMDID_COPY, 0, L"Copy", L"Copy selection" },
+	{ OLECMDID_PASTE, 0, L"Paste", L"Paste as selection" },
+	{ OLECMDID_UNDO, 0, L"Undo", L"Undo" },
+	{ OLECMDID_REDO, 0, L"Redo", L"Redo" },
+	{ OLECMDID_SELECTALL, 0, L"SelectAll", L"Select all" },
+	{ OLECMDID_REFRESH, 0, L"Refresh", L"Refresh" },
+	{ OLECMDID_STOP, 0, L"Stop", L"Stop" },
+	{ OLECMDID_ONUNLOAD, 0, L"OnUnload", L"OnUnload" }
 };
 
 
@@ -1600,8 +1613,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatus(const GUID __RPC_FAR *pgu
 				continue;
 			}
 
-			// Command is supported so flag it
-			prgCmds[nCmd].cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+			// Command is supported so flag it and possibly enable it
+			prgCmds[nCmd].cmdf = OLECMDF_SUPPORTED;
+			if (s_aSupportedCommands[nSupported].nWindowsCmdID != 0)
+			{
+				prgCmds[nCmd].cmdf |= OLECMDF_ENABLED;
+			}
 
 			// Copy the status/verb text for the first supported command only
 			if (!bTextSet && pCmdText)
@@ -1656,6 +1673,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Exec(const GUID __RPC_FAR *pguidCmdGr
 	for (int nSupported = 0; nSupported < nSupportedCount; nSupported++)
 	{
 		if (s_aSupportedCommands[nSupported].nCmdID != nCmdID)
+		{
+			continue;
+		}
+
+		// Command is supported but not implemented
+		if (s_aSupportedCommands[nSupported].nWindowsCmdID == 0)
 		{
 			continue;
 		}
