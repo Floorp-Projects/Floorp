@@ -50,12 +50,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugNT = PR_FALSE;
 #endif
 
-
-
-NS_IMPL_ADDREF(nsTableCellFrame)
-NS_IMPL_RELEASE(nsTableCellFrame)
-
-
 NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext&  aPresContext,
                        nsIContent*      aContent,
@@ -874,20 +868,7 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-
-NS_METHOD
-nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(nsITableCellLayout::GetIID())) {
-    *aInstancePtr = (void*)(nsISupports*)(nsITableCellLayout*)this;
-    return NS_OK;
-  }
-  return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_IMPL_ISUPPORTS_INHERITED(nsTableCellFrame, nsHTMLContainerFrame, nsITableCellLayout)
 
 /* ----- global methods ----- */
 
