@@ -1885,9 +1885,20 @@ dnl AC_CHECK_LIB(svld, main)
 dnl AC_CHECK_LIB(thread, main)
 dnl AC_CHECK_LIB(vms_jackets, main)
 
-AC_CHECK_FUNC(dlopen,,[
-    AC_CHECK_LIB(dl, dlopen, [OS_LIBS="-ldl $OS_LIBS"])
-])
+
+dnl We don't want anything to link with libdl even if it's present on OS X, 
+dnl since it's not used and not part of the default installation.
+
+case $target in
+*-darwin*)
+    ;;
+*)
+    AC_CHECK_LIB(dl, dlopen,
+        AC_CHECK_HEADER(dlfcn.h,
+            OS_LIBS="-ldl $OS_LIBS"))
+    ;;
+esac
+
 
 dnl ========================================================
 dnl Check for system header files.
