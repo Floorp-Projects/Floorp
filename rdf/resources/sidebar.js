@@ -20,14 +20,14 @@
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
-function Init(sidebardb, sidebar_resource)
+var sidebar = new Object;
+
+function Init(sidebar_db, sidebar_resource)
 {
   // Initialize the Sidebar
+	sidebar.db       = sidebar_db;
+  sidebar.resource = sidebar_resource;
 
-  // Install all the datasources named in the Flash Registry into
-  // the tree control. Datasources are listed as members of the
-  // NC:FlashDataSources sequence, and are loaded in the order that
-  // they appear in that sequence.
   var registry;
   try {
     // First try to construct a new one and load it
@@ -37,7 +37,7 @@ function Init(sidebardb, sidebar_resource)
     registry = registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
 
     var remote = registry.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-    remote.Init(sidebardb); // this will throw if it's already been opened and registered.
+    remote.Init(sidebar.db); // this will throw if it's already been opened and registered.
 
     // read it in synchronously.
     remote.Refresh(true);
@@ -45,16 +45,16 @@ function Init(sidebardb, sidebar_resource)
   catch (ex) {
     // if we get here, then the RDF/XML has been opened and read
     // once. We just need to grab the datasource.
-    registry = RDF.GetDataSource(sidebardb);
+    registry = RDF.GetDataSource(sidebar.db);
   }
 
-  // Create a 'container' wrapper around the sidebar_resources
+  // Create a 'container' wrapper around the sidebar.resources
   // resource so we can use some utility routines that make access a
   // bit easier.
   var sb_datasource = Components.classes['component://netscape/rdf/container'].createInstance();
   sb_datasource = sb_datasource.QueryInterface(Components.interfaces.nsIRDFContainer);
 
-  sb_datasource.Init(registry, RDF.GetResource(sidebar_resource));
+  sb_datasource.Init(registry, RDF.GetResource(sidebar.resource));
   
   var sidebox = document.getElementById('sidebox');
 
@@ -74,7 +74,6 @@ function Init(sidebardb, sidebar_resource)
 
 function createPanel(registry, service) {
   var panel_title     = getAttr(registry, service, 'title');
-  var panel_customize = getAttr(registry, service, 'customize');
   var panel_content   = getAttr(registry, service, 'content');
   var panel_height    = getAttr(registry, service, 'height');
 
@@ -82,12 +81,12 @@ function createPanel(registry, service) {
   var iframe   = document.createElement('html:iframe');
 
   var iframeId = iframe.getAttribute('id');
-  var panelbar = createPanelTitle(panel_title, panel_customize, iframeId);
+  var panelbar = createPanelTitle(panel_title, iframeId);
 
   box.setAttribute('align', 'vertical');
   iframe.setAttribute('src', panel_content);
   if (panel_height)
-    iframe.setAttribute('style', 'height:' + panel_height + 'px');
+    iframe.setAttribute('style', 'height:' + panel_height);
   box.appendChild(panelbar);
   box.appendChild(iframe);
 
@@ -101,41 +100,28 @@ function resize(id) {
   dump ('height='+height+'\n');
 
   if (iframe.getAttribute('display') == 'none') {
-    iframe.setAttribute('style', 'height:' + height + 'px; visibility:visible');
+    iframe.setAttribute('style', 'height:'+ height +'px; visibility:visible');
     iframe.setAttribute('display','block');
   } else {
     iframe.setAttribute('style', 'height:0px; visibility:hidden');
     iframe.setAttribute('display','none');
-    //var parent = iframe.parentNode;
-    //parent.removeChild(iframe);
   }
 }
 
-function createPanelTitle(titletext,customize_url, id)
+function createPanelTitle(titletext, id)
 {
   var panelbar  = document.createElement('box');
   var title     = document.createElement('titledbutton');
-  var customize = document.createElement('titledbutton');
   var spring     = document.createElement('spring');
 
   title.setAttribute('value', titletext);
   title.setAttribute('class', 'borderless paneltitle');
   title.setAttribute('onclick', 'resize("'+id+'")');
   spring.setAttribute('flex', '100%');
-  customize.setAttribute('value', 'Customize');
-  customize.setAttribute('class', 'borderless paneltitle');
-  if (customize_url) {
-    customize.setAttribute('onclick',
-	                   'window.open("'+customize_url+'");');
-  } else {
-    customize.setAttribute('disabled','true');
-  }
   panelbar.setAttribute('class', 'panelbar');
-
 
   panelbar.appendChild(title);
   panelbar.appendChild(spring);
-  panelbar.appendChild(customize);
 
   return panelbar;
 }
@@ -153,7 +139,7 @@ function getAttr(registry,service,attr_name) {
 }
 
 function makeDialog() {
-	var newWin = window.openDialog('resource://res/rdf/dialogFrame.html','New','chrome');
+	var newWin = window.openDialog('resource://res/rdf/dialogSidebar.xul','New','chrome', sidebar.db, sidebar.resource);
 	return newWin;
 }
 
