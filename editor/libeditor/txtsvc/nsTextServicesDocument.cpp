@@ -390,7 +390,7 @@ nsTextServicesDocument::GetCurrentTextBlock(nsString *aStr)
   if (!aStr)
     return NS_ERROR_NULL_POINTER;
 
-  *aStr = "";
+  aStr->SetLength(0);
 
   if (!mIterator)
     return NS_ERROR_FAILURE;
@@ -4152,7 +4152,7 @@ nsTextServicesDocument::CreateOffsetTable(nsString *aStr)
   ClearOffsetTable();
 
   if (aStr)
-    *aStr = "";
+    aStr->SetLength(0);
 
   if (mIteratorStatus == nsTextServicesDocument::eIsDone)
     return NS_OK;
