@@ -122,6 +122,8 @@ protected:
   nsIDOMCharacterData*    mStatusText;
   nsIDOMHTMLInputElement* mURLBarText;
   nsIDOMHTMLImageElement* mThrobber;
+
+  nsVoidArray mMenuDelegates;
 };
 
 

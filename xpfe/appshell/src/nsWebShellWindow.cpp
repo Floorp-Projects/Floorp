@@ -485,9 +485,9 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                       pnsMenuItem->SetLabel(menuitemName);
                       // Make nsMenuItem a child of nsMenu
                       pnsMenu->AddMenuItem(pnsMenuItem); // XXX adds an additional item
-                      /*
-                      ConnectCommandToOneGUINode(menuitemNode);
-
+                      
+                      //ConnectCommandToOneGUINode(menuitemNode);
+#if 1
                       //-----------------------------------------------------------
                       // This block contains temporary menu hookup code.
                       //-----------------------------------------------------------
@@ -496,19 +496,26 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                         if (!domElement)
                           return;
 
-                        nsAutoString cmdAtom("cmd");
+                        nsAutoString cmdAtom("onClick");
                         nsString cmdName;
 
                         domElement->GetAttribute(cmdAtom, cmdName);
-                        nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(cmdName));
-                        if (cmd) {
-                          nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(cmd));
-                          pnsMenuItem->AddMenuListener(listener);
+
+                        nsXULCommand * xulCmd = new nsXULCommand();
+                        xulCmd->SetName(cmdName);
+                        xulCmd->SetCommand(cmdName);
+                        xulCmd->SetWebShell(mWebShell);
+                        xulCmd->SetDOMElement(domElement);
+                        nsIXULCommand * icmd;
+                        if (NS_OK == xulCmd->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
+                          mMenuDelegates.AppendElement(icmd);
                         }
+                        nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(icmd));
+                        pnsMenuItem->AddMenuListener(listener);
 
                       }
                       //-----------------------------------------------------------
-*/
+#endif
                     }
                   } else if (menuitemNodeType.Equals("separator")) {
                     pnsMenu->AddSeparator();
