@@ -87,9 +87,6 @@ public:
     PRBool   MustValidate();
     PRBool   MustValidateIfExpired();
 
-    // returns true if the server appears to support byte range requests.
-    PRBool   IsResumable();
-
     // returns true if the Expires header has a value in the past relative to the
     // value of the Date header.
     PRBool   ExpiresInPast();

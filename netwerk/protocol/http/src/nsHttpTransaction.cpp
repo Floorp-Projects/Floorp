@@ -95,7 +95,6 @@ nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
     , mCapabilities(caps)
     , mHaveStatusLine(PR_FALSE)
     , mHaveAllHeaders(PR_FALSE)
-    , mResponseIsComplete(PR_FALSE)
     , mFiredOnStart(PR_FALSE)
     , mNoContent(PR_FALSE)
     , mPrematureEOF(PR_FALSE)
@@ -618,7 +617,6 @@ nsHttpTransaction::HandleContent(char *buf,
         // OnTransactionComplete is fired only once!
         PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
         if (priorVal == 0) {
-            mResponseIsComplete = PR_TRUE;
             // let the connection know that we are done with it; this should
             // result in OnStopTransaction being fired.
             return mConnection->OnTransactionComplete(this, NS_OK);

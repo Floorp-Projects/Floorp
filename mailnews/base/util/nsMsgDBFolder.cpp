@@ -539,11 +539,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *
       if (NS_FAILED(rv))
         return rv;
       
-      rv = fts->CreateTransport(localStore,
-                                PR_RDWR | PR_CREATE_FILE,
-                                0664,
-                                PR_TRUE,
-                                aFileChannel);
+      rv = fts->CreateTransport(localStore, PR_RDWR | PR_CREATE_FILE, 0664, aFileChannel);
 
       if (NS_SUCCEEDED(rv))
       {

@@ -234,7 +234,7 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, P
   if (NS_FAILED(rv)) return rv;
   //we are always using this file socket to read data from the mailbox.
   rv = fts->CreateTransport(file, PR_RDONLY,
-                            0664, PR_TRUE, getter_AddRefs(m_transport));
+                            0664, getter_AddRefs(m_transport));
   m_socketIsOpen = PR_FALSE;
 
 	return rv;
@@ -880,7 +880,7 @@ nsresult nsMsgFilePostHelper::Init(nsIOutputStream * aOutStream, nsMsgAsyncWrite
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsITransport> transport;
-  rv = fts->CreateTransport(aFileToPost, PR_RDONLY, 0664, PR_TRUE, getter_AddRefs(transport));
+  rv = fts->CreateTransport(aFileToPost, PR_RDONLY, 0664, getter_AddRefs(transport));
   if (transport)
   {
     rv = transport->AsyncRead(this, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mPostFileRequest));

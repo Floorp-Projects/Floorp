@@ -40,12 +40,10 @@
 #include "nsICacheListener.h"
 #include "nsITransport.h"
 #include "nsIUploadChannel.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIInputStream.h"
-#include "nsIOutputStream.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsHttpConnection.h"
+#include "nsISimpleEnumerator.h"
 
 class nsHttpTransaction;
 class nsHttpResponseHead;
@@ -108,13 +106,7 @@ private:
     nsresult InitCacheEntry();
     nsresult StoreAuthorizationMetaData();
     nsresult FinalizeCacheEntry();
-    nsresult InstallCacheListener(PRUint32 offset = 0);
-
-    // byte range request specific methods
-    nsresult SetupByteRangeRequest(PRUint32 partialLen);
-    nsresult ProcessPartialContent();
-    nsresult BufferPartialContent(nsIInputStream *, PRUint32 count);
-    nsresult OnDoneReadingPartialCacheEntry(PRBool *streamDone);
+    nsresult InstallCacheListener();
 
     // auth specific methods
     nsresult GetCredentials(const char *challenges, PRBool proxyAuth, nsAFlatCString &creds);
@@ -157,7 +149,6 @@ private:
 
     PRUint32                          mLoadFlags;
     PRUint32                          mStatus;
-    PRUint32                          mLogicalOffset;
     PRUint8                           mCapabilities;
     PRUint8                           mReferrerType;
 
@@ -169,10 +160,6 @@ private:
     nsCacheAccessMode                 mCacheAccess;
     PRUint32                          mPostID;
     PRUint32                          mRequestTime;
-
-    // byte-range specific data
-    nsCOMPtr<nsIInputStream>          mBufferIn;
-    nsCOMPtr<nsIOutputStream>         mBufferOut;
 
     // auth specific data
     nsXPIDLString                     mUser;
@@ -187,7 +174,6 @@ private:
     PRPackedBool                      mApplyConversion;
     PRPackedBool                      mFromCacheOnly;
     PRPackedBool                      mCachedContentIsValid;
-    PRPackedBool                      mCachedContentIsPartial;
     PRPackedBool                      mResponseHeadersModified;
     PRPackedBool                      mCanceled;
     PRPackedBool                      mUploadStreamHasHeaders;
