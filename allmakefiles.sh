@@ -48,8 +48,6 @@ Makefile
 build/Makefile
 build/unix/Makefile
 build/unix/mozilla-config
-build/unix/nspr_my_config.mk
-build/unix/nspr_my_overrides.mk
 config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile
