@@ -54,11 +54,4 @@ static const nsModuleComponentInfo gComponentInfo[] = {
     nsPluginHostImpl::Create },
 };
 
-PR_STATIC_CALLBACK(void)
-nsPluginModuleDtor(nsIModule *self)
-{
-  ns4xPlugin::ReleaseStatics();
-}
-
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsPluginModule, gComponentInfo,
-                              nsPluginModuleDtor)
+NS_IMPL_NSGETMODULE(nsPluginModule, gComponentInfo)
