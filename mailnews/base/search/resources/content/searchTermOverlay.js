@@ -98,7 +98,7 @@ searchTermContainer.prototype = {
     },
 
     booleanNodes: null,
-    stringBundle: srGetStrBundle("chrome://messenger/locale/search.properties"),
+    stringBundle: document.getElementById("bundle_search"),
     get booleanAnd() { return this.internalBooleanAnd; },
     set booleanAnd(val) {
         // whenever you set this, all nodes in booleanNodes
@@ -115,7 +115,7 @@ searchTermContainer.prototype = {
         for (var i=0; i<booleanNodes.length; i++) {
             try {              
                 var staticString =
-                    stringBundle.GetStringFromName("search" + andString + i);
+                    stringBundle.getString("search" + andString + i);
                 if (staticString && staticString.length>0)
                     booleanNodes[i].setAttribute("value", staticString);
             } catch (ex) { /* no error, means string not found */}
@@ -195,9 +195,7 @@ function onLess(event)
 
 // set scope on all visible searhattribute tags
 function setSearchScope(scope) {
-    dump("Setting search scope to " + scope + "\n");
     gSearchScope = scope;
-    dump("..on " + gSearchTerms.length + " elements.\n");
     for (var i=0; i<gSearchTerms.length; i++) {
         gSearchTerms[i].searchattribute.searchScope = scope;
     }
@@ -213,7 +211,6 @@ function booleanChanged(event) {
         var searchTerm = gSearchTerms[i];
         searchTerm.booleanAnd = newBoolValue;
     }
-    dump("Boolean is now " + event.target.data + "\n");
 }
 
 
@@ -266,15 +263,10 @@ function createSearchRow(index, scope, searchTerm)
     
     gSearchRowContainer.appendChild(searchrow);
 
-    dump("createSearchRow: Setting searchScope = " + scope + "\n");
     searchTermObj.searchScope = scope;
     // the search term will initialize the searchTerm element, including
     // .booleanAnd
     if (searchTerm) {
-        dump("\nHave a searchterm (" +
-             searchTerm.attrib + "/" +
-             searchTerm.op + "/" +
-             searchTerm.value + ")\n");
         searchTermObj.searchTerm = searchTerm;
     }
     
@@ -300,9 +292,6 @@ function constructRow(treeCellChildren)
           treecell.setAttribute("allowevents", "true");
           treeCellChildren[i].setAttribute("flex", "1");
           treecell.appendChild(treeCellChildren[i]);
-          var child = treeCellChildren[i];
-          dump("Appended a " + child.localName + "\n");
-          
       }
       row.appendChild(treecell);
     }
@@ -312,17 +301,14 @@ function constructRow(treeCellChildren)
 
 function removeSearchRow(index)
 {
-    dump("removing search term " + index + "\n");
     var searchTermObj = gSearchTerms[index];
     if (!searchTermObj) {
-        dump("removeSearchRow: couldn't find search term " + index + "\n");
         return;
     }
 
     // need to remove row from tree, so walk upwards from the
     // searchattribute to find the first <treeitem>
     var treeItemRow = searchTermObj.searchattribute;
-    //dump("removeSearchRow: " + treeItemRow + "\n");
     while (treeItemRow) {
         if (treeItemRow.localName == "treeitem") break;
         treeItemRow = treeItemRow.parentNode;
@@ -335,18 +321,15 @@ function removeSearchRow(index)
 
 
     if (searchTermObj.searchTerm) {
-        dump("That was a real row! queuing " + searchTermObj.searchTerm + " for disposal\n");
         gSearchRemovedTerms[gSearchRemovedTerms.length] = searchTermObj.searchTerm;
     } else {
-        dump("That wasn't real. ignoring \n");
+        //dump("That wasn't real. ignoring \n");
     }
     
     treeItemRow.parentNode.removeChild(treeItemRow);
     // remove it from the list of terms - XXX this does it?
-    dump("Removing row " + index + " from " + gSearchTerms.length + " items\n");
     // remove the last element
     gSearchTerms.length--;
-    dump("Now there are " + gSearchTerms.length + " items\n");
 }
 
 function getBooleanAnd()
@@ -368,19 +351,16 @@ function saveSearchTerms(searchTerms, termOwner)
     var i;
     for (i = 0; i<gSearchTerms.length; i++) {
         try {
-            dump("Saving search element " + i + "\n");
             var searchTerm = gSearchTerms[i].searchTerm;
             if (searchTerm)
                 gSearchTerms[i].save();
             else {
                 // need to create a new searchTerm, and somehow save it to that
-                dump("Need to create searchterm " + i + "\n");
                 searchTerm = termOwner.createTerm();
                 gSearchTerms[i].saveTo(searchTerm);
                 termOwner.appendTerm(searchTerm);
             }
         } catch (ex) {
-
             dump("** Error saving element " + i + ": " + ex + "\n");
         }
     }

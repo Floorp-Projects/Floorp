@@ -18,6 +18,8 @@ var subscribeDS = RDF.GetDataSource("rdf:subscribe");
 var lastTreeChildrenValue = null;
 var lastTreeChildren = null;
 
+var gSubscribeBundle;
+
 function goDoCommand()
 {
 }
@@ -30,8 +32,6 @@ function Stop()
     }
 }
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
-
 function SetServerTypeSpecificTextValues()
 {
 	if (!gServerURI) return;
@@ -42,11 +42,11 @@ function SetServerTypeSpecificTextValues()
 
     var element = document.getElementById("foldertextlabel");
 	var stringName = "foldertextfor-" + serverType;
-	var stringval = Bundle.GetStringFromName(stringName);
+	var stringval = gSubscribeBundle.getString(stringName);
 	element.setAttribute('value',stringval);
 
 	stringName = "foldersheaderfor-" + serverType;
-	stringval = Bundle.GetStringFromName(stringName);
+	stringval = gSubscribeBundle.getString(stringName);
     element = document.getElementById("foldersheaderlabel");
 	element.setAttribute('value',stringval);
 
@@ -95,7 +95,7 @@ function SetUpServerMenu()
 var MySubscribeListener = {
 	OnDonePopulating: function() {
 		gStatusFeedback.showProgress(100);
-		gStatusFeedback.showStatusString(Bundle.GetStringFromName("doneString"));
+		gStatusFeedback.showStatusString(gSubscribeBundle.getString("doneString"));
 		gStatusBar.setAttribute("mode","normal");
 
         // only re-root the tree, if it is null.
@@ -138,7 +138,7 @@ function SetUpTree(forceToServer)
 		gSubscribableServer.subscribeListener = MySubscribeListener;
 
 		gStatusFeedback.showProgress(0);
-		gStatusFeedback.showStatusString(Bundle.GetStringFromName("pleaseWaitString"));
+		gStatusFeedback.showStatusString(gSubscribeBundle.getString("pleaseWaitString"));
 		gStatusBar.setAttribute("mode","undetermined");
 
 		gSubscribableServer.startPopulating(msgWindow, forceToServer);
@@ -152,6 +152,7 @@ function SetUpTree(forceToServer)
 function SubscribeOnLoad()
 {
 	//dump("SubscribeOnLoad()\n");
+  gSubscribeBundle = document.getElementById("bundle_subscribe");
 	
     gSubscribeTree = document.getElementById('subscribetree');
 	gNameField = document.getElementById('namefield');
@@ -316,7 +317,7 @@ function SubscribeOnClick(event)
 				//dump("do twisty for " + uri + "\n");
 
 				gStatusFeedback.showProgress(0);
-				gStatusFeedback.showStatusString(Bundle.GetStringFromName("pleaseWaitString"));
+				gStatusFeedback.showStatusString(gSubscribeBundle.getString("pleaseWaitString"));
 				gStatusBar.setAttribute("mode","undetermined");
 
 				gSubscribableServer.startPopulatingWithUri(msgWindow, true /* force to server */, uri);

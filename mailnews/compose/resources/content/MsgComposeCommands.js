@@ -51,7 +51,7 @@ var contentChanged = false;
 var currentIdentity = null;
 var defaultSaveOperation = "draft";
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties"); 
+var gComposeMsgsBundle;
 
 var other_header = "";
 var update_compose_title_as_you_type = true;
@@ -830,7 +830,7 @@ function WizCallback(state)
 
 function ComposeLoad()
 {
-	dump("\nComposeLoad from XUL\n");
+  gComposeMsgsBundle = document.getElementById("bundle_composeMsgs");
 	
   try {
   	SetupCommandUpdateHandlers();
@@ -851,8 +851,8 @@ function ComposeLoad()
   }
   catch (ex) {
     dump("###ERROR WHILE LOADING MESSAGE COMPOSE: " + ex + "\n");
-    var errorTitle = Bundle.GetStringFromName("initErrorDlogTitle");
-    var errorMsg = Bundle.GetStringFromName("initErrorDlogMessage");
+    var errorTitle = gComposeMsgsBundle.getString("initErrorDlogTitle");
+    var errorMsg = gComposeMsgsBundle.getString("initErrorDlogMessage");
     errorMsg = errorMsg.replace(/%1\$s/, ex);
     if (commonDialogsService)
       commonDialogsService.Alert(window, errorTitle, errorMsg);
@@ -1049,9 +1049,9 @@ function GenericSendMessage( msgType )
 						var result = {value:0};
         				if (commonDialogsService.Prompt(
         					window,
-        					Bundle.GetStringFromName("subjectDlogTitle"),
-        					Bundle.GetStringFromName("subjectDlogMessage"),
-        					Bundle.GetStringFromName("defaultSubject"),
+        					gComposeMsgsBundle.getString("subjectDlogTitle"),
+        					gComposeMsgsBundle.getString("subjectDlogMessage"),
+        					gComposeMsgsBundle.getString("defaultSubject"),
         					result
         					))
         				{
@@ -1383,12 +1383,12 @@ function SetComposeWindowTitle(event)
 	/* dump("newTitle = " + newTitle + "\n"); */
 
 	if (newTitle == "" ) {
-		newTitle = Bundle.GetStringFromName("defaultSubject");
+		newTitle = gComposeMsgsBundle.getString("defaultSubject");
 	}
 
 	newTitle += GetCharsetUIString();
 
-	window.title = Bundle.GetStringFromName("windowTitlePrefix") + " " + newTitle;
+	window.title = gComposeMsgsBundle.getString("windowTitlePrefix") + " " + newTitle;
 }
 
 // Check for changes to document and allow saving before closing
@@ -1404,12 +1404,12 @@ function ComposeCanClose()
 			commonDialogsService.UniversalDialog(
 				window,
 				null,
-				Bundle.GetStringFromName("saveDlogTitle"),
-				Bundle.GetStringFromName("saveDlogMessage"),
+				gComposeMsgsBundle.getString("saveDlogTitle"),
+				gComposeMsgsBundle.getString("saveDlogMessage"),
 				null,
-				Bundle.GetStringFromName("saveDlogSaveBtn"),
-				Bundle.GetStringFromName("saveDlogCancelBtn"),
-				Bundle.GetStringFromName("saveDlogDontSaveBtn"),
+				gComposeMsgsBundle.getString("saveDlogSaveBtn"),
+				gComposeMsgsBundle.getString("saveDlogCancelBtn"),
+				gComposeMsgsBundle.getString("saveDlogDontSaveBtn"),
 				null,
 				null,
 				null,
@@ -1459,7 +1459,7 @@ function AttachFile()
 	//Get file using nsIFilePicker and convert to URL
     try {
 			var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-			fp.init(window, Bundle.GetStringFromName("chooseFileToAttach"), nsIFilePicker.modeOpen);
+			fp.init(window, gComposeMsgsBundle.getString("chooseFileToAttach"), nsIFilePicker.modeOpen);
 			fp.appendFilters(nsIFilePicker.filterAll);
 			if (fp.show() == nsIFilePicker.returnOK) {
 			currentAttachment = fp.fileURL.spec;
@@ -1474,8 +1474,8 @@ function AttachFile()
   else 
   {
     dump("###ERROR ADDING DUPLICATE FILE \n");
-    var errorTitle = Bundle.GetStringFromName("DuplicateFileErrorDlogTitle");
-    var errorMsg = Bundle.GetStringFromName("DuplicateFileErrorDlogMessage");
+    var errorTitle = gComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
+    var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
 
     if (commonDialogsService)
       commonDialogsService.Alert(window, errorTitle, errorMsg);
@@ -1516,8 +1516,8 @@ function AttachPage()
         var result = {value:0};
         if (commonDialogsService.Prompt(
         	window,
-        	Bundle.GetStringFromName("attachPageDlogTitle"),
-        	Bundle.GetStringFromName("attachPageDlogMessage"),
+        	gComposeMsgsBundle.getString("attachPageDlogTitle"),
+        	gComposeMsgsBundle.getString("attachPageDlogMessage"),
         	null,
         	result))
         {
@@ -1827,8 +1827,8 @@ var attachmentBucketObserver = {
       if (!(DuplicateFileCheck(rawData)))
         AddAttachment(rawData, prettyName);
       else {
-        var errorTitle = Bundle.GetStringFromName("DuplicateFileErrorDlogTitle");
-        var errorMsg = Bundle.GetStringFromName("DuplicateFileErrorDlogMessage");
+        var errorTitle = gComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
+        var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
 
         if (commonDialogsService)
           commonDialogsService.Alert(window, errorTitle, errorMsg);

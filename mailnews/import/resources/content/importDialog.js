@@ -21,7 +21,7 @@
  */
 
 var importType = null;
-var bundle = 0;
+var gImportMsgsBundle;
 var importService = 0;
 var successStr = null;
 var errorStr = null;
@@ -29,29 +29,9 @@ var progressInfo = null;
 var selectedModuleName = null;
 
 
-
-function GetBundleString( strId)
-{
-	try {
-		return( top.bundle.GetStringFromName( strId));
-	} catch( ex) {
-	}
-	
-	return( "String Bundle Bad");
-}
-
-function GetFormattedBundleString( strId, formatStr)
-{
-	try {
-		return( top.bundle.formatStringFromName( strId, [ formatStr ], 1));
-	} catch( ex) {
-	}
-	return( "String Bundle Bad");
-}
-
 function OnLoadImportDialog()
 {
-	bundle = srGetStrBundle("chrome://messenger/locale/importMsgs.properties");
+	gImportMsgsBundle = document.getElementById("bundle_importMsgs");
 	importService = Components.classes["@mozilla.org/import/import-service;1"].getService();
 	importService = top.importService.QueryInterface(Components.interfaces.nsIImportService);
 	
@@ -166,7 +146,8 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
-							meterText = GetFormattedBundleString('MailProgressMeterText', name);
+							meterText = gImportMsgsBundle.getFormattedString('MailProgressMeterText',
+                                                               [ name ]);
               header.setAttribute("description", meterText);
               
               progressStatusEl.setAttribute("value", "");
@@ -203,7 +184,8 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
-							meterText = GetFormattedBundleString('MailProgressMeterText', name);
+							meterText = gImportMsgsBundle.getFormattedString('MailProgressMeterText',
+                                                               [ name ]);
               header.setAttribute("description", meterText);
               
               progressStatusEl.setAttribute("value", "");
@@ -230,13 +212,13 @@ function ImportDialogOKButton()
 					if (!ImportSettings( module, newAccount, error)) 
 					{
 						if (error.value)
-              ShowImportResultsRaw(GetBundleString( 'ImportSettingsFailed'), null);
+              ShowImportResultsRaw(gImportMsgsBundle.getString('ImportSettingsFailed'), null);
 						// the user canceled the operation, shoud we dismiss
 						// this dialog or not?
 						return false;
 					}
 					else
-            ShowImportResultsRaw(GetFormattedBundleString( 'ImportSettingsSuccess', name), null);
+            ShowImportResultsRaw(gImportMsgsBundle.getFormattedString('ImportSettingsSuccess', [ name ]), null);
 					break;
 			}
 		}
@@ -364,11 +346,11 @@ function ShowImportResults(good, module)
   var modFailed = 'Import' + module + 'Failed';
   var results, title;
 	if (good) {
-    title = GetFormattedBundleString(modSuccess, selectedModuleName ? selectedModuleName : '');
+    title = gImportMsgsBundle.getFormattedString(modSuccess, [ selectedModuleName ? selectedModuleName : '' ]);
     results = successStr.data;    
 	}
 	else if (errorStr.data) { 
-    title = GetFormattedBundleString(modFailed, selectedModuleName ? selectedModuleName : '');
+    title = gImportMsgsBundle.getFormattedString(modFailed, [ selectedModuleName ? selectedModuleName : '' ]);
     results = errorStr.data;
 	}
 	
@@ -415,18 +397,18 @@ function ShowAddressComplete( good)
 	var str = null;
 	if (good == true) {
 		if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
-			str = GetFormattedBundleString( 'ImportAddressSuccess', top.selectedModuleName);
+			str = gImportMsgsBundle.getFormattedString('ImportAddressSuccess', [ top.selectedModuleName ]);
 		else
-			str = GetFormattedBundleString( 'ImportAddressSuccess', "");
+			str = gImportMsgsBundle.getFormattedString('ImportAddressSuccess', [ "" ]);
 		str += "\n";
 		str += "\n" + top.successStr.data;
 	}
 	else {
 		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0)) {
 			if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
-				str = GetFormattedBundleString( 'ImportAddressFailed', top.selectedModuleName);
+				str = gImportMsgsBundle.getFormattedString('ImportAddressFailed', [ top.selectedModuleName ]);
 			else
-				str = GetFormattedBundleString( 'ImportAddressFailed', "");
+				str = gImportMsgsBundle.getFormattedString('ImportAddressFailed', [ "" ]);
 			str += "\n" + top.errorStr.data;
 		}
 	}
@@ -461,7 +443,7 @@ function ImportSettings( module, newAccount, error) {
 	if (setIntf != null)
 		setIntf = setIntf.QueryInterface( Components.interfaces.nsIImportSettings);
 	if (setIntf == null) {
-		error.value = GetBundleString( 'ImportSettingsBadModule');
+		error.value = gImportMsgsBundle.getString('ImportSettingsBadModule');
 		return( false);
 	}
 	
@@ -480,7 +462,7 @@ function ImportSettings( module, newAccount, error) {
 				if (filePicker != null) {
 					var file = null;
 					try {
-						filePicker.init( top.window, GetBundleString( 'ImportSelectSettings'), Components.interfaces.nsIFilePicker.modeOpen);
+						filePicker.init( top.window, gImportMsgsBundle.getString('ImportSelectSettings'), Components.interfaces.nsIFilePicker.modeOpen);
 						filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
 						filePicker.show();
 						if (filePicker.file && (filePicker.file.path.length > 0))
@@ -502,17 +484,17 @@ function ImportSettings( module, newAccount, error) {
 					}					
 				}
 				else {
-					error.value = GetBundleString( 'ImportSettingsNotFound');
+					error.value = gImportMsgsBundle.getString('ImportSettingsNotFound');
 					return( false);
 				}
 			}
 			else {
-				error.value = GetBundleString( 'ImportSettingsNotFound');
+				error.value = gImportMsgsBundle.getString('ImportSettingsNotFound');
 				return( false);
 			}
 		}
 		else {
-			error.value = GetBundleString( 'ImportSettingsNotFound');
+			error.value = gImportMsgsBundle.getString('ImportSettingsNotFound');
 			return( false);
 		}
 	}
@@ -522,7 +504,7 @@ function ImportSettings( module, newAccount, error) {
 	// that's really only useful for "Upgrade"
 	result = setIntf.Import( newAccount);
 	if (result == false) {
-		error.value = GetBundleString( 'ImportSettingsFailed');
+		error.value = gImportMsgsBundle.getString('ImportSettingsFailed');
 	}
 	return( result);
 }
@@ -542,7 +524,7 @@ function CreateNewFileSpec( inFile)
 
 function ImportMail( module, success, error) {
 	if (top.progressInfo.importInterface || top.progressInfo.intervalState) {
-		error.data = GetBundleString( 'ImportAlreadyInProgress');
+		error.data = gImportMsgsBundle.getString('ImportAlreadyInProgress');
 		return( false);
 	}
 	
@@ -552,7 +534,7 @@ function ImportMail( module, success, error) {
 	if (mailInterface != null)
 		mailInterface = mailInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
 	if (mailInterface == null) {
-		error.data = GetBundleString( 'ImportMailBadModule');
+		error.data = gImportMsgsBundle.getString('ImportMailBadModule');
 		return( false);
 	}
 	
@@ -566,7 +548,7 @@ function ImportMail( module, success, error) {
 				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFilePicker);
 				if (filePicker != null) {
 					try {
-						filePicker.init( top.window, GetBundleString( 'ImportSelectMailDir'), Components.interfaces.nsIFilePicker.modeGetFolder);
+						filePicker.init( top.window, gImportMsgsBundle.getString('ImportSelectMailDir'), Components.interfaces.nsIFilePicker.modeGetFolder);
 						filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
 						filePicker.show();
 						if (filePicker.file && (filePicker.file.path.length > 0))
@@ -579,17 +561,17 @@ function ImportMail( module, success, error) {
 					}					
 				}
 				else {
-					error.data = GetBundleString( 'ImportMailNotFound');
+					error.data = gImportMsgsBundle.getString('ImportMailNotFound');
 					return( false);
 				}
 			}
 			else {
-				error.data = GetBundleString( 'ImportMailNotFound');
+				error.data = gImportMsgsBundle.getString('ImportMailNotFound');
 				return( false);
 			}
 		}
 		else {
-			error.data = GetBundleString( 'ImportMailNotFound');
+			error.data = gImportMsgsBundle.getString('ImportMailNotFound');
 			return( false);
 		}
 	}
@@ -612,7 +594,7 @@ function ImportMail( module, success, error) {
 // due to field maps...
 function ImportAddress( module, success, error) {
 	if (top.progressInfo.importInterface || top.progressInfo.intervalState) {
-		error.data = GetBundleString( 'ImportAlreadyInProgress');
+		error.data = gImportMsgsBundle.getString('ImportAlreadyInProgress');
 		return( false);
 	}
 
@@ -622,7 +604,7 @@ function ImportAddress( module, success, error) {
 	if (addInterface != null)
 		addInterface = addInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
 	if (addInterface == null) {
-		error.data = GetBundleString( 'ImportAddressBadModule');
+		error.data = gImportMsgsBundle.getString('ImportAddressBadModule');
 		return( false);
 	}
 	
@@ -644,7 +626,7 @@ function ImportAddress( module, success, error) {
 		// as the user for the location or not?
 		if (addInterface.GetStatus( "canUserSetLocation") == 0) {
 			// an autofind address book that could not be found!
-			error.data = GetBundleString( 'ImportAddressNotFound');
+			error.data = gImportMsgsBundle.getString('ImportAddressNotFound');
 			return( false);
 		}
 
@@ -652,12 +634,12 @@ function ImportAddress( module, success, error) {
 		if (filePicker != null) {
 			filePicker = filePicker.QueryInterface( Components.interfaces.nsIFilePicker);
 			if (filePicker == null) {
-				error.data = GetBundleString( 'ImportAddressNotFound');
+				error.data = gImportMsgsBundle.getString('ImportAddressNotFound');
 				return( false);
 			}
 		}
 		else {
-			error.data = GetBundleString( 'ImportAddressNotFound');
+			error.data = gImportMsgsBundle.getString('ImportAddressNotFound');
 			return( false);
 		}
 
@@ -668,7 +650,7 @@ function ImportAddress( module, success, error) {
 		if (addInterface.GetStatus( "supportsMultiple") != 0) {
 			// ask for dir
 			try {
-				filePicker.init( top.window, GetBundleString( 'ImportSelectAddrDir'), Components.interfaces.nsIFilePicker.modeGetFolder);
+				filePicker.init( top.window, gImportMsgsBundle.getString('ImportSelectAddrDir'), Components.interfaces.nsIFilePicker.modeGetFolder);
 				filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
 				filePicker.show();
 				if (filePicker.file && (filePicker.file.path.length > 0))
@@ -682,7 +664,7 @@ function ImportAddress( module, success, error) {
 		else {
 			// ask for file
 			try {
-				filePicker.init( top.window, GetBundleString( 'ImportSelectAddrFile'), Components.interfaces.nsIFilePicker.modeOpen);
+				filePicker.init( top.window, gImportMsgsBundle.getString('ImportSelectAddrFile'), Components.interfaces.nsIFilePicker.modeOpen);
 				filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
 				filePicker.show();
 				if (filePicker.file && (filePicker.file.path.length > 0))

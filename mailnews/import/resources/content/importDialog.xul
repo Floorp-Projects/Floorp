@@ -36,8 +36,8 @@ Rights Reserved.
         orient="vertical" style="width: 40em;"
         title="&importDialog.windowTitle;">
 
-<script src="chrome://global/content/strres.js"/>
-<script src="chrome://messenger/content/importDialog.js"/>
+  <stringbundle id="bundle_importMsgs" src="chrome://messenger/locale/importMsgs.properties"/>
+  <script type="text/javascript" src="chrome://messenger/content/importDialog.js"/>
 
 	<keyset id="keyset"/>
 	

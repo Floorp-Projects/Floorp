@@ -31,7 +31,7 @@ var gActionElement;
 var gActionTargetElement;
 var gActionValueDeck;
 var gActionPriority;
-var Bundle;
+var gFilterBundle;
 
 var nsIMsgSearchValidityManager = Components.interfaces.nsIMsgSearchValidityManager;
 
@@ -42,7 +42,7 @@ function filterEditorOnLoad()
     initializeSearchWidgets();
     initializeFilterWidgets();
 
-    Bundle = srGetStrBundle("chrome://messenger/locale/filter.properties");
+    gFilterBundle = document.getElementById("bundle_filter");
     
     if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
@@ -61,7 +61,7 @@ function filterEditorOnLoad()
 
     gFilterNameElement.focus();
     doSetOKCancel(onOk, null);
-	moveToAlertPosition();
+    moveToAlertPosition();
 }
 
 function onOk()
@@ -76,8 +76,8 @@ function onOk()
         if (commonDialogsService)
         {
             commonDialogsService.Alert(window,
-                Bundle.GetStringFromName("cannotHaveDuplicateFilterTitle"), 
-                Bundle.GetStringFromName("cannotHaveDuplicateFilterMessage")
+                gFilterBundle.getString("cannotHaveDuplicateFilterTitle"), 
+                gFilterBundle.getString("cannotHaveDuplicateFilterMessage")
             );
         }
 
@@ -111,7 +111,7 @@ function isDuplicateFilterNameExists()
         }
     }
 
-        return false;
+    return false;
 }
 
 function getScopeFromFilterList(filterList)
@@ -119,7 +119,7 @@ function getScopeFromFilterList(filterList)
     if (!filterList) return false;
     var type = filterList.folder.server.type;
     if (type == "nntp") return nsIMsgSearchValidityManager.news;
-	if (type == "pop3") return nsIMsgSearchValidityManager.offlineMail;
+    if (type == "pop3") return nsIMsgSearchValidityManager.offlineMail;
     return nsIMsgSearchValidityManager.onlineMailFilter;
 }
 
@@ -138,7 +138,7 @@ function initializeFilterWidgets()
 
 function initializeDialog(filter)
 {
-		var selectedPriority;
+    var selectedPriority;
     gFilterNameElement.value = filter.filterName;
 
     gActionElement.selectedItem=gActionElement.getElementsByAttribute("data", filter.action)[0];
@@ -154,7 +154,7 @@ function initializeDialog(filter)
             if (target.localName == "menuitem"){
                 gActionTargetElement.selectedItem = target;
                 PickedMsgFolder(gActionTargetElement.selectedItem, gActionTargetElement.id)
-						}
+            }
         }
     } else if (filter.action == nsMsgFilterAction.ChangePriority) {
         // initialize priority
@@ -170,8 +170,8 @@ function initializeDialog(filter)
     var scope = getScope(filter);
     setSearchScope(scope);
     initializeSearchRows(scope, filter.searchTerms);
-	if (filter.searchTerms.Count() > 1)
-		gSearchLessButton.removeAttribute("disabled", "false");
+    if (filter.searchTerms.Count() > 1)
+        gSearchLessButton.removeAttribute("disabled", "false");
 
 }
 
@@ -180,11 +180,11 @@ function initializeDialog(filter)
 
 function saveFilter() {
     var isNewFilter;
-		var str;
+    var str;
 
     var filterName= gFilterNameElement.value;
     if (!filterName || filterName == "") {
-        str = Bundle.GetStringFromName("mustEnterName");
+        str = gFilterBundle.getString("mustEnterName");
         window.alert(str);
         gFilterNameElement.focus();
         return false;
@@ -197,7 +197,7 @@ function saveFilter() {
         if (gActionTargetElement)
             targetUri = gActionTargetElement.selectedItem.getAttribute("data");
         if (!targetUri || targetUri == "") {
-            str = Bundle.GetStringFromName("mustSelectFolder");
+            str = gFilterBundle.getString("mustSelectFolder");
             window.alert(str);
             return false;
         }
@@ -205,7 +205,7 @@ function saveFilter() {
     
     else if (action == nsMsgFilterAction.ChangePriority) {
         if (!gActionPriority.selectedItem) {
-            var str = Bundle.GetStringFromName("mustSelectPriority");
+            str = gFilterBundle.getString("mustSelectPriority");
             window.alert(str);
             return false;
         }

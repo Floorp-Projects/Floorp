@@ -49,20 +49,22 @@
         width="640" height="480"
         persist="screenX screenY width height sizemode"> 
 
-<script language="JavaScript" src="chrome://global/content/strres.js"></script>
-<script language="JavaScript" src="chrome://messenger/content/accountUtils.js"></script>
-<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"></script>
-<script language="JavaScript" src="chrome://editor/content/editor.js"></script>
-<script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"></script>
-<script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"></script>
-<script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"></script>
-
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+</stringbundleset>
+<script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="text/javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="text/javascript" src="chrome://editor/content/editor.js"/>
+<script type="text/javascript" src="chrome://editor/content/ComposerCommands.js"/>
+<script type="text/javascript" src="chrome://editor/content/EditorCommandsDebug.js"/>
+<script type="text/javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 
 <!-- drag and drop -->
-<script language="JavaScript" src="chrome://global/content/nsDragAndDrop.js"></script>
-<script language="JavaScript" src="chrome://global/content/nsJSSupportsUtils.js"></script>
-<script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
-<script language="JavaScript" src="chrome://global/content/nsTransferable.js"></script>
+<script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+<script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+<script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
 
 <commands id="commands">
   <commandset id="msgComposeCommandUpdate"

@@ -39,7 +39,9 @@ Rights Reserved.
         onload="SubscribeOnLoad()"
         onclose="Stop()">
         
-<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>
+<stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+<stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
 <script language="JavaScript" src="chrome://messenger/content/mailCommands.js"/>
 <script language="JavaScript" src="chrome://messenger/content/mailWindow.js"/>
 <script language="JavaScript" src="chrome://messenger/content/subscribe.js"/>

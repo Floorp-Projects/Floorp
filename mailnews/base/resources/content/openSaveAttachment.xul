@@ -9,7 +9,6 @@
 	flex="100%" class="dialog" title="&openSaveAttachment.title;" 
 	align="vertical" onload="onLoad();" onclose="onCancel();" >
 
-	<script language="JavaScript" src="chrome://global/content/strres.js"/>
 	<script src="chrome://messenger/content/openSaveAttachment.js"/>
 
 	<box width="360px">

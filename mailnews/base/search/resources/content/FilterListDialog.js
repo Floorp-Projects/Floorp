@@ -287,7 +287,7 @@ function getServerThatCanHaveFilters()
 
     var defaultAccount = accountManager.defaultAccount;
     var defaultIncomingServer = defaultAccount.incomingServer;
-	
+
     // check to see if default server can have filters
     if (defaultIncomingServer.canHaveFilters) {
         firstItem = defaultIncomingServer.serverURI;

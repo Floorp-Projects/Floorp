@@ -36,7 +36,6 @@ Rights Reserved.
         onload="OnLoadFieldMapExport()"
         align="vertical">
 
-<html:script src="chrome://global/content/strres.js"/>
 <html:script src="chrome://messenger/content/fieldMapExport.js"/>
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 

@@ -32,8 +32,7 @@ Rights Reserved.
         onload="OnLoadProgressDialog()"
         orient="vertical">
 
-<script src="chrome://global/content/strres.js"/>
-<script src="chrome://messenger/content/importProgress.js"/>
+  <script type="text/javascript" src="chrome://messenger/content/importProgress.js"/>
 
 	<keyset id="keyset"/>
 

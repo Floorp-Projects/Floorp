@@ -43,7 +43,11 @@ Rights Reserved.
 
   <keyset id="keyset"/>
   
-  <script src="chrome://global/content/strres.js"/>
+  <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <!-- XXX: only mailWidgets.xml requires strres.js (<script> isn't valid in XBL yet - see hyatt)-->
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/mailWindow.js"/>
   <script src="chrome://messenger/content/threadPane.js"/>
   <script src="chrome://messenger/content/msgMail3PaneWindow.js"/>

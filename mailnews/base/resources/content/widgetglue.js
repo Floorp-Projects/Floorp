@@ -27,7 +27,7 @@
 //The eventual goal is for this file to go away and its contents to be brought into
 //mailWindowOverlay.js.  This is currently being done.
 
-
+//NOTE: gMessengerBundle must be defined and set or this Overlay won't work
 
 function ConvertDOMListToResourceArray(nodeList)
 {
@@ -239,7 +239,7 @@ function MsgFolderProperties()
 	var name = GetFolderNameFromUri(preselectedURI, folderTree);
 
 	dump("preselectedURI = " + preselectedURI + "\n");
-	var windowTitle = Bundle.GetStringFromName("folderProperties");
+	var windowTitle = gMessengerBundle.getString("folderProperties");
 	var dialog = window.openDialog(
                     "chrome://messenger/content/imapFolderProps.xul",
                     "",
@@ -316,7 +316,7 @@ function MsgSetFolderCharset()
   var preselectedURI = GetSelectedFolderURI();
   var folderTree = GetFolderTree();
   var name = GetFolderNameFromUri(preselectedURI, folderTree);
-  var windowTitle = Bundle.GetStringFromName("folderProperties");
+  var windowTitle = gMessengerBundle.getString("folderProperties");
   var dialog = window.openDialog(
                       "chrome://messenger/content/imapFolderProps.xul",
                       "",

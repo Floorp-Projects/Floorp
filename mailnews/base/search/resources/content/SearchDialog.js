@@ -38,7 +38,7 @@ var gStatusBar = null;
 var gStatusFeedback = new nsMsgStatusFeedback;
 var gNumOfSearchHits = 0;
 var RDF;
-var Bundle;
+var gSearchBundle;
 
 // Datasource search listener -- made global as it has to be registered
 // and unregistered in different functions.
@@ -99,16 +99,16 @@ var gSearchNotificationListener =
 
     onSearchDone: function(status) 
     {
-        gButton.setAttribute("value", Bundle.GetStringFromName("labelForSearchButton"));
+        gButton.setAttribute("value", gSearchBundle.getString("labelForSearchButton"));
 
         var statusMsg;
         // if there are no hits, it means no matches were found in the search.
         if (gNumOfSearchHits == 0) {
-            statusMsg = Bundle.GetStringFromName("searchFailureMessage");
+            statusMsg = gSearchBundle.getString("searchFailureMessage");
         }
         else
         {
-            statusMsg = gNumOfSearchHits+" "+Bundle.GetStringFromName("searchSuccessMessage");
+            statusMsg = gNumOfSearchHits + " " + gSearchBundle.getString("searchSuccessMessage");
             gNumOfSearchHits = 0;
         }
 
@@ -119,13 +119,13 @@ var gSearchNotificationListener =
 	
     onNewSearch: function() 
     {
-        gButton.setAttribute("value", Bundle.GetStringFromName("labelForStopButton"));
+        gButton.setAttribute("value", gSearchBundle.getString("labelForStopButton"));
         if (gThreadTree)
             gThreadTree.clearItemSelection();
         ThreadTreeUpdate_Search();
 
         gStatusFeedback.showProgress(0);
-        gStatusFeedback.showStatusString(Bundle.GetStringFromName("searchingMessage"));
+        gStatusFeedback.showStatusString(gSearchBundle.getString("searchingMessage"));
         gStatusBar.setAttribute("mode","undetermined");
     }
 }
@@ -135,7 +135,7 @@ function searchOnLoad()
     initializeSearchWidgets();
     initializeSearchWindowWidgets();
 
-    Bundle = srGetStrBundle("chrome://messenger/locale/search.properties");
+    gSearchBundle = document.getElementById("bundle_search");
     setupDatasource();
     setupSearchListener();
 
@@ -143,7 +143,7 @@ function searchOnLoad()
         selectFolder(window.arguments[0].folder);
     
     onMore(null);
-	moveToAlertPosition();
+    moveToAlertPosition();
 
 }
 
@@ -213,8 +213,6 @@ function selectFolder(folder) {
         // the URI of the folder is in the data attribute of the menuitem
         var folderResource =
             folder.QueryInterface(Components.interfaces.nsIRDFResource);
-        dump("Selecting " + folderResource.Value + "\n");
-
         
         var elements =
             gFolderPicker.getElementsByAttribute("data", folderResource.Value);
@@ -228,7 +226,6 @@ function updateSearchFolderPicker() {
 
     var selectedItem = gFolderPicker.selectedItem;
     if (selectedItem.localName != "menuitem") return;
-    dump("id = " + selectedItem.id + "\n");
     SetFolderPicker(selectedItem.id, gFolderPicker.id);
 
     // use the URI to get the real folder
@@ -246,18 +243,17 @@ function onChooseFolder(event) {
 
 function onSearch(event)
 {
-    dump("setting up search..\n");
     gSearchSession.clearScopes();
     // tell the search session what the new scope is
-	if (!gCurrentFolder.isServer)
-		gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
-                                gCurrentFolder);
+    if (!gCurrentFolder.isServer)
+        gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
+                                    gCurrentFolder);
 
     var searchSubfolders = document.getElementById("checkSearchSubFolders").checked;
-	if (gCurrentFolder && (searchSubfolders || gCurrentFolder.isServer))
-	{
-		AddSubFolders(gCurrentFolder);
-	}
+    if (gCurrentFolder && (searchSubfolders || gCurrentFolder.isServer))
+    {
+        AddSubFolders(gCurrentFolder);
+    }
     // reflect the search widgets back into the search session
     saveSearchTerms(gSearchSession.searchTerms, gSearchSession);
 
@@ -265,7 +261,6 @@ function onSearch(event)
     // refresh the tree after the search starts, because initiating the
     // search will cause the datasource to clear itself
     gThreadTree.setAttribute("ref", gThreadTree.getAttribute("ref"));
-    dump("Kicking it off with " + gThreadTree.getAttribute("ref") + "\n");
 }
 
 function AddSubFolders(folder) {
@@ -310,7 +305,6 @@ function setupDatasource() {
     
     gSearchDatasource = Components.classes[rdfDatasourcePrefix + "msgsearch"].createInstance(Components.interfaces.nsIRDFDataSource);
 
-    dump("The root is " + gSearchDatasource.URI + "\n");
     gThreadTree.setAttribute("ref", gSearchDatasource.URI);
     
     // the thread pane needs to use the search datasource (to get the
@@ -381,7 +375,6 @@ function IsThreadAndMessagePaneSplitterCollapsed()
 
 function setMsgDatasourceWindow(ds, msgwindow)
 {
-    dump("setMsgDatasourceWindow(" + ds + ")\n");
     try {
         var msgDatasource = ds.QueryInterface(nsIMsgRDFDataSource);
         msgDatasource.window = msgwindow;
@@ -393,7 +386,7 @@ function setMsgDatasourceWindow(ds, msgwindow)
 // used to toggle functionality for Search/Stop button.
 function onSearchButton(event)
 {
-    if (event.target.value == Bundle.GetStringFromName("labelForSearchButton"))
+    if (event.target.value == gSearchBundle.getString("labelForSearchButton"))
         onSearch(event);
     else
         onSearchStop(event);

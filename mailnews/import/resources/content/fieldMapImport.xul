@@ -34,8 +34,7 @@ Rights Reserved.
         onload="OnLoadFieldMapImport()"
         align="vertical">
 
-<script src="chrome://global/content/strres.js"/>
-<script src="chrome://messenger/content/fieldMapImport.js"/>
+  <script type="text/javascript" src="chrome://messenger/content/fieldMapImport.js"/>
 
 	<keyset id="keyset"/>
 

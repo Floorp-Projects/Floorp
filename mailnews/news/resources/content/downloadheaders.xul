@@ -34,8 +34,8 @@ Contributor(s):
         orient="vertical"
         onload="OnLoad()">
 
-  <script language="JavaScript" src="chrome://global/content/strres.js" />
-  <script language="JavaScript" src="chrome://messenger/content/downloadheaders.js" />
+  <stringbundle id="bundle_news" src="chrome://messenger/locale/news.properties"/>
+  <script type="text/javascript" src="chrome://messenger/content/downloadheaders.js" />
 
   <keyset id="keyset"/>
   
