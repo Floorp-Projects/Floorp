@@ -43,7 +43,7 @@
 
   <RDF:Description about='urn:clienturl:viewmenu:intlwebcontent'>
     <NC:title>International Languages and Web Content</NC:title>
-    <NC:content>http://www.mozilla.org/projects/intl/xul-how2l10n.html#mlp</NC:content>
+    <NC:content>http://www.mozilla.org/projects/l10n/mlp_status.html#contrib</NC:content>
   </RDF:Description>
 
   <!-- Search Menu -->
