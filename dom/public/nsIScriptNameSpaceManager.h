@@ -66,11 +66,17 @@ public:
    * a factory.
    * 
    * @param aName the name to use as a key for the lookup
+   * @param aIsConstructor PR_TRUE if we're looking for
+   *        a constructor. PR_FALSE if we're looking for 
+   *        a global symbol.
    * @param aCID out parameter that returns the class ID
    *        that corresponds to the name
-   * @result NS_OK if successful
+   * @result NS_OK if the lookup succeeded. NS_COMFALSE
+   *         if the lookup failed.
    */
-  NS_IMETHOD GetClassID(const nsString& aName, nsIID& aCID) = 0;
+  NS_IMETHOD LookupName(const nsString& aName, 
+                        PRBool aIsConstructor,
+                        nsIID& aCID) = 0;
 };
 
 #endif /* nsIScriptNameSpaceManager_h__ */

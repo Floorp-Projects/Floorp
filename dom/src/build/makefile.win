@@ -22,10 +22,15 @@ DEFINES=-D_IMPL_NS_DOM
 MODULE=raptor 
 REQUIRES=xpcom raptor dom
 
-CPPSRCS = nsDOMFactory.cpp      \
-	  nsHTMLTagsEnums.cpp
+CPPSRCS = nsDOMFactory.cpp      	\
+	  nsHTMLTagsEnums.cpp		\
+	  nsScriptNameSetRegistry.cpp	\
+	  nsScriptNameSpaceManager.cpp
 
-CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj .\$(OBJDIR)\nsHTMLTagsEnums.obj
+CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
+	   .\$(OBJDIR)\nsHTMLTagsEnums.obj		\
+	   .\$(OBJDIR)\nsScriptNameSetRegistry.obj 	\
+	   .\$(OBJDIR)\nsScriptNameSpaceManager.obj 
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
 	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base -I$(PUBLIC)\jsurl

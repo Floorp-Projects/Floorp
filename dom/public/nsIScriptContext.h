@@ -25,10 +25,11 @@
 
 class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
+class nsIScriptNameSpaceManager;
 
 #define NS_ISCRIPTCONTEXT_IID \
 { /* 8f6bca7d-ce42-11d1-b724-00600891d8c9 */ \
-0x8f6bca7d, 0xce42, 0x11d1, \
+  0x8f6bca7d, 0xce42, 0x11d1, \
   {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} }
 
 /**
@@ -50,29 +51,29 @@ public:
    * @return true if the script was valid and got executed
    *
    **/
-  virtual PRBool EvaluateString(const nsString& aScript, 
-                                const char *aURL,
-                                PRUint32 aLineNo,
-                                nsString& aRetValue,
-                                PRBool* aIsUndefined) = 0;
+  NS_IMETHOD_(PRBool) EvaluateString(const nsString& aScript, 
+                                     const char *aURL,
+                                     PRUint32 aLineNo,
+                                     nsString& aRetValue,
+                                     PRBool* aIsUndefined) = 0;
 
   /**
    * Return the global object.
    *
    **/
-  virtual nsIScriptGlobalObject* GetGlobalObject() = 0;
+  NS_IMETHOD_(nsIScriptGlobalObject*) GetGlobalObject() = 0;
 
   /**
    * Return the native script context
    *
    **/
-  virtual void* GetNativeContext() = 0;
+  NS_IMETHOD_(void*) GetNativeContext() = 0;
 
   /**
    * Init all DOM classes.
    *
    **/
-  virtual nsresult InitClasses() = 0;
+  NS_IMETHOD InitClasses() = 0;
 
   /**
    * Init this context.
@@ -82,7 +83,7 @@ public:
    * @return NS_OK if context initialization was successful
    *
    **/
-  virtual nsresult InitContext(nsIScriptGlobalObject *aGlobalObject) = 0;
+  NS_IMETHOD InitContext(nsIScriptGlobalObject *aGlobalObject) = 0;
 
   /**
    * Add a reference to a script object. For garbage collected systems
@@ -95,7 +96,7 @@ public:
    *
    * @return NS_OK if the method is successful
    */
-  virtual nsresult AddNamedReference(void *aSlot, void *aScriptObject,
+  NS_IMETHOD AddNamedReference(void *aSlot, void *aScriptObject,
                                      const char *aName) = 0;
 
   /**
@@ -107,7 +108,7 @@ public:
    *
    * @return NS_OK if the method is successful
    */
-  virtual nsresult RemoveReference(void *aSlot, void *aScriptObject) = 0;
+  NS_IMETHOD RemoveReference(void *aSlot, void *aScriptObject) = 0;
 
   /**
    * For garbage collected systems, do a synchronous collection pass.
@@ -115,7 +116,13 @@ public:
    *
    * @return NS_OK if the method is successful
    */
-  virtual nsresult GC() = 0;
+  NS_IMETHOD GC() = 0;
+  
+  /**
+   * Get the name space manager for this context.
+   * @return NS_OK if the method is successful
+   */
+  NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr) = 0;
 
   /**
    * Get the security manager for this context.
