@@ -23,6 +23,7 @@
 
 
 #include "il_util.h"
+#include "xfe.h"
 #include "View.h"
 #include "Frame.h"
 #include "Image.h"
@@ -34,8 +35,16 @@
 #endif
 
 
+extern "C" {
+CL_Compositor * fe_create_compositor(MWContext *context);
+}
+
+
 XFE_Image::XFE_Image(XFE_Component * frame, char * imageURL, fe_colormap * cmap, Widget  baseWidget) 
 {
+
+
+  struct fe_MWContext_cons *cons;
 
   // Initializations 
   m_urlString = strdup(imageURL);
@@ -52,7 +61,26 @@ XFE_Image::XFE_Image(XFE_Component * frame, char * imageURL, fe_colormap * cmap,
 
   // Create new context
   m_imageContext = XP_NewContext();
+
+  cons = XP_NEW_ZAP(struct fe_MWContext_cons);
+  if (cons == NULL)
+  {
+	XP_FREE(m_imageContext);
+    return;
+  }
+
+  cons->context = m_imageContext;
+  cons->next = fe_all_MWContexts;
+  fe_all_MWContexts = cons;
+  XP_AddContextToList (m_imageContext);
+
   fec = XP_NEW_ZAP(fe_ContextData);
+  if (fec == NULL)
+	{
+		XP_FREE(cons);
+		XP_FREE(m_imageContext);
+		return ;
+	}
 
 
   if (m_imageContext && fec) 
@@ -66,19 +94,22 @@ XFE_Image::XFE_Image(XFE_Component * frame, char * imageURL, fe_colormap * cmap,
     CONTEXT_DATA(m_imageContext)->ImageComplete = (ImageCompletePtr)ImageComplete;
 
    
-    /* 
-     * Stolen from Frame.cpp. 
-     */
     CONTEXT_WIDGET (m_imageContext)                 = baseWidget; 
     CONTEXT_DATA   (m_imageContext)->drawing_area   = baseWidget;
     CONTEXT_DATA   (m_imageContext)->colormap       = cmap;
+	if (fec == NULL)
+	{
+		XP_FREE(cons);
+		XP_FREE(m_imageContext);
+		return ;
+	}
+ 	fe_InitRemoteServer (XtDisplay (baseWidget));
 
     m_imageContext->funcs = fe_BuildDisplayFunctionTable();
     m_imageContext->convertPixX = m_imageContext->convertPixY = 1;
     m_imageContext->is_grid_cell = FALSE;
     m_imageContext->grid_parent = NULL;
 
-    XP_AddContextToList(m_imageContext);
     fe_InitIconColors(m_imageContext);
 
     // Use colors from prefs
@@ -138,6 +169,9 @@ XFE_Image::XFE_Image(XFE_Component * frame, char * imageURL, fe_colormap * cmap,
 
     fe_InitColormap (m_imageContext);
     cxtInitSucceeded = True;
+    
+    XtRealizeWidget(baseWidget);
+    m_imageContext->compositor = fe_create_compositor(m_imageContext);
   }
   else
   {
