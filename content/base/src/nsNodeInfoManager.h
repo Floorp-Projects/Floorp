@@ -60,14 +60,13 @@ public:
                          PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
   NS_IMETHOD GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
-                         const nsAString& aNamespaceURI,
-                         nsINodeInfo** aNodeInfo);
   NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
                          const nsAString& aNamespaceURI,
                          nsINodeInfo** aNodeInfo);
+
+  NS_IMETHOD GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
+                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
+
   virtual nsIDocument* GetDocument() const;
   NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal);
   NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);

@@ -41,6 +41,7 @@
 #include "nsReadableUtils.h"
 #include "plhash.h"
 #include "nsString.h"
+#include "nsStaticAtom.h"
 
 // C++ sucks! There's no way to do this with a macro, at least not
 // that I know, if you know how to do this with a macro then please do
@@ -275,19 +276,17 @@ static const PRUnichar* const kTagUnicodeTable[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
-#undef HTML_OTHER
 
+// static array of tag atoms
+static nsIAtom* kTagAtomTable[eHTMLTag_userdefined - 1];
 
-#ifdef DEBUG
-// static array of ASCII tag names for debugging purposes
-#define HTML_TAG(_tag, _classname) #_tag,
-#define HTML_OTHER(_tag, _classname)
-static const char* const kTagASCIIDebugTable[] = {
+// static array of tag StaticAtom structs
+#define HTML_TAG(_tag, _classname) { #_tag, &kTagAtomTable[eHTMLTag_##_tag - 1] },
+static const nsStaticAtom kTagAtoms_info[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
 #undef HTML_OTHER
-#endif
 
 static PRInt32 gTableRefCount;
 static PLHashTable* gTagTable;
@@ -345,12 +344,15 @@ nsHTMLTags::AddRefTable(void)
     NS_ASSERTION(sMaxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH,
                  "NS_HTMLTAG_NAME_MAX_LENGTH not set correctly!");
 
+    // Fill in our static atom pointers
+    NS_RegisterStaticAtoms(kTagAtoms_info, NS_ARRAY_LENGTH(kTagAtoms_info));
+
 #ifdef DEBUG
     {
       // let's verify that all names in the the table are lowercase...
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-        nsCAutoString temp1(kTagASCIIDebugTable[i]);
-        nsCAutoString temp2(kTagASCIIDebugTable[i]);
+        nsCAutoString temp1(kTagAtoms_info[i].mString);
+        nsCAutoString temp2(kTagAtoms_info[i].mString);
         ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
@@ -359,7 +361,7 @@ nsHTMLTags::AddRefTable(void)
       // correct.
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
         nsAutoString temp1(kTagUnicodeTable[i]);
-        nsAutoString temp2; temp2.AssignWithConversion(kTagASCIIDebugTable[i]);
+        nsAutoString temp2; temp2.AssignWithConversion(kTagAtoms_info[i].mString);
         NS_ASSERTION(temp1.Equals(temp2), "Bad unicode tag name!");
       }
     }
@@ -471,6 +473,17 @@ nsHTMLTags::GetStringValue(nsHTMLTag aEnum)
   }
 
   return kTagUnicodeTable[aEnum - 1];
+}
+
+// static
+nsIAtom *
+nsHTMLTags::GetAtom(nsHTMLTag aEnum)
+{
+  if (aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX) {
+    return nsnull;
+  }
+
+  return kTagAtomTable[aEnum - 1];
 }
 
 

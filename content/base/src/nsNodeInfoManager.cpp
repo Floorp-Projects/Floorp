@@ -228,59 +228,8 @@ NS_IMETHODIMP
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
-  NS_ENSURE_ARG(!aName.IsEmpty());
-
-  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
-  NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-
-  return GetNodeInfo(name, aPrefix, aNamespaceID, aNodeInfo);
-}
-
-
-NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
-                               const nsAString& aPrefix, PRInt32 aNamespaceID,
-                               nsINodeInfo** aNodeInfo)
-{
-  NS_ENSURE_ARG(!aName.IsEmpty());
-
-  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
-  NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsIAtom> prefix;
-
-  if (!aPrefix.IsEmpty()) {
-    prefix = do_GetAtom(aPrefix);
-    NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  return GetNodeInfo(name, prefix, aNamespaceID, aNodeInfo);
-}
-
-
-NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
-                               const nsAString& aPrefix,
-                               const nsAString& aNamespaceURI,
-                               nsINodeInfo** aNodeInfo)
-{
-  NS_ENSURE_ARG(!aName.IsEmpty());
-
-  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
-  NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsIAtom> prefix;
-
-  if (!aPrefix.IsEmpty()) {
-    prefix = do_GetAtom(aPrefix);
-    NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  PRInt32 nsid;
-  nsresult rv = nsContentUtils::GetNSManagerWeakRef()->RegisterNameSpace(aNamespaceURI, nsid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return GetNodeInfo(name, prefix, nsid, aNodeInfo);
+  return nsNodeInfoManager::GetNodeInfo(NS_ConvertUTF16toUTF8(aName),
+                                        aPrefix, aNamespaceID, aNodeInfo);
 }
 
 
@@ -322,8 +271,21 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return GetNodeInfo(nameAtom, prefixAtom, nsid, aNodeInfo);
+  return nsNodeInfoManager::GetNodeInfo(nameAtom, prefixAtom, nsid, aNodeInfo);
 }
+
+NS_IMETHODIMP
+nsNodeInfoManager::GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
+                               PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
+{
+  NS_ENSURE_ARG(!aName.IsEmpty());
+
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
+  NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
+
+  return GetNodeInfo(name, aPrefix, aNamespaceID, aNodeInfo);
+}
+
 
 nsIDocument*
 nsNodeInfoManager::GetDocument() const

@@ -2585,6 +2585,17 @@ CNavDTD::IntTagToStringTag(PRInt32 aIntTag) const
   return str_ptr;
 }
 
+NS_IMETHODIMP_(nsIAtom *)
+CNavDTD::IntTagToAtom(PRInt32 aIntTag) const
+{
+  nsIAtom *atom = nsHTMLTags::GetAtom((nsHTMLTag)aIntTag);
+
+  NS_ASSERTION(atom, "Bad tag enum passed to CNavDTD::IntTagToAtom()"
+               "!!");
+
+  return atom;
+}
+
 /**
  *  This method is called to determine whether or not
  *  the given childtag is a block element.
