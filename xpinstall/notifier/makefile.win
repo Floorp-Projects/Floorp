@@ -16,27 +16,42 @@
 # Reserved.
 
 DEPTH=..\..
-IGNORE_MANIFEST=1
+MODULE=xpiflash
+
+CPP_OBJS=\
+        .\$(OBJDIR)\nsXPIFlash.obj  \
+        $(NULL)
+
+MAKE_OBJ_TYPE=DLL
+DLLNAME=xpiflash
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LLIBS =                                \
+        $(DIST)\lib\xpcom.lib          \
+        $(LIBNSPR)                     \
+        $(NULL)
+
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-    $(MAKE_INSTALL) folder-closed.gif           $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) folder-open.gif             $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) package.gif                 $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) SoftwareUpdate.css          $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) SoftwareUpdate.js           $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) SoftwareUpdate.xul          $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) SoftwareUpdates.rdf         $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) SoftwareUpdate-Source-1.rdf $(DIST)\bin\res\xpinstall
+#    $(MAKE_INSTALL) folder-closed.gif           $(DIST)\bin\res\xpinstall
+#    $(MAKE_INSTALL) folder-open.gif             $(DIST)\bin\res\xpinstall
+#    $(MAKE_INSTALL) package.gif                 $(DIST)\bin\res\xpinstall
+#    $(MAKE_INSTALL) SoftwareUpdate.css          $(DIST)\bin\res\xpinstall
+#    $(MAKE_INSTALL) SoftwareUpdate.js           $(DIST)\bin\res\xpinstall
+#    $(MAKE_INSTALL) SoftwareUpdate.xul          $(DIST)\bin\res\xpinstall
+#    $(MAKE_INSTALL) SoftwareUpdates.rdf         $(DIST)\bin\res\xpinstall
+#    $(MAKE_INSTALL) SoftwareUpdate-Source-1.rdf $(DIST)\bin\res\xpinstall
+    $(MAKE_INSTALL) $(DLL)                      $(DIST)\bin\components
 
 clobber::
-    rm -f $(DIST)\res\xpinstall\folder-closed.gif          
-    rm -f $(DIST)\res\xpinstall\folder-open.gif            
-    rm -f $(DIST)\res\xpinstall\package.gif                
-    rm -f $(DIST)\res\xpinstall\SoftwareUpdatePackage.gif  
-    rm -f $(DIST)\res\xpinstall\SoftwareUpdate.css         
-    rm -f $(DIST)\res\xpinstall\SoftwareUpdate.js          
-    rm -f $(DIST)\res\xpinstall\SoftwareUpdate.xul         
-    rm -f $(DIST)\res\xpinstall\SoftwareUpdates.rdf        
-    rm -f $(DIST)\res\xpinstall\SoftwareUpdate-Source-1.rdf
+#    rm -f $(DIST)\res\xpinstall\folder-closed.gif          
+#    rm -f $(DIST)\res\xpinstall\folder-open.gif            
+#    rm -f $(DIST)\res\xpinstall\package.gif                
+#    rm -f $(DIST)\res\xpinstall\SoftwareUpdatePackage.gif  
+#    rm -f $(DIST)\res\xpinstall\SoftwareUpdate.css         
+#    rm -f $(DIST)\res\xpinstall\SoftwareUpdate.js          
+#    rm -f $(DIST)\res\xpinstall\SoftwareUpdate.xul         
+#    rm -f $(DIST)\res\xpinstall\SoftwareUpdates.rdf        
+#    rm -f $(DIST)\res\xpinstall\SoftwareUpdate-Source-1.rdf
