@@ -48,7 +48,10 @@
 #   8) Create a new, empty Bugzilla database.
 #   9) Import the data using the command:
 #      mysql -uroot -p'ROOT_PASSWORD' bugs < gnats2bz_data.sql
-#   10) Verify that the database is ok.  If it is not, goto step 2.
+#   10) Update the shadow directory with the command:
+#       cd $BUGZILLA_DIR; ./processmail regenerate
+#   11) Run a sanity check by visiting the sanitycheck.cgi page.
+#   12) Manually verify that the database is ok.  If it is not, goto step 2.
 #
 # Important notes:
 #   Confidential is not mapped or exported.
@@ -744,7 +747,7 @@ sub write_non_bugs_tables {
     foreach $categories_record (@categories_list) {
         my($component) = SqlQuote($default_component);
         my($product) = SqlQuote(@$categories_record[0]);
-        my($description) = SqlQuote($default_component_description);
+        my($description) = SqlQuote(@$categories_record[1]);
         my($initialowner) = SqlQuote(@$categories_record[2] . $username_suffix);
 
         print DATA "\ninsert into products (\n";
