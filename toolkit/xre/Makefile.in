@@ -113,7 +113,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += nsNativeAppSupportWin.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsNativeAppSupportMac.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -124,7 +124,7 @@ endif
 endif
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CMSRCS = MacLaunchHelper.m
 endif
 
