@@ -4,7 +4,7 @@
 # /u/sonmi/bin/qa_stat - /u/svbld/bin/init/nss/qa_stat
 #
 # this script is supposed to automatically run QA for NSS on all required
-# Unix platforms
+# Unix platforms - warning - will not run on Windows
 #
 # parameters
 # ----------
@@ -33,12 +33,50 @@ EARLY_EXIT=TRUE
 
 DOCDIR=/u/sonmi/doc
 
+# this file is used to deal with hanging rsh - a new shell is started 
+# for each rsh, and a function is called after it is finished - they
+# communicate with this file
+RSH_FILE=$TMP/rsh.$$
+echo >$RSH_FILE
+TMPFILES="$TMPFILES $RSH_FILE"
+RSH_WAIT_TIME=60 #maximum time allowed for the 2 rsh to finish...
+
 Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
 Debug "TESTSCRIPTDIR $TESTSCRIPTDIR"
 Debug "RESULTDIR $RESULTDIR"
 
-############################### find_qa_systems ##########################
+############################### watch_rsh ##############################
+# local shell function, deals with a hanging rsh (kills it...)
+# this function is started as a backgroundprocess before the rsh is started,
+# and writes info to the RSH_FILE, after the rsh is finished it writes finish
+# info to the same file (this time called as a function, forground). 
+# the backgroundprocess stays around for RSH_WAIT_TIME, if then the finish 
+# information is not there attempts to kill the rsh
+#
+# watch_rsh start qa_computername &
+# watch_rsh stop qa_computername 
+#
+########################################################################
+watch_rsh()
+{
+    case $1 in
+        start)
+            echo "$2 started" >>$RSH_FILE
+            sleep $RSH_WAIT_TIME
+	    O_ALWAYS_YES=ON # may modify global flags because this is a 
+			    # forked off bg process - kill_by_name otherwise
+			    # will ask the user if it really should be killed 
+	    grep "$2 finished" $RSH_FILE >/dev/null || kill_by_name "rsh $2"
+	    exit
+            ;;
+        stop)
+            echo "$2 finished" >>$RSH_FILE
+            ;;
+    esac
+}
+
+############################### find_qa_systems ########################
 # local shell function, tries to determine the QA operating system
 ########################################################################
 find_qa_systems()
@@ -61,13 +99,14 @@ do
 
     grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa && NO_RSH=TRUE
 
-    if [ $NO_RSH = "TRUE" ]
+    if [ "$NO_RSH" = "TRUE" ]
     then
         grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa | sed -e "s/ /_/g" \
              -e "s/WINDOWS-OS-LINE:_Windows/${w}/g" >>$TMP_PLATFORMLIST_FILE
         grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa | sed -e "s/ /_/g" \
              -e "s/WINDOWS-OS-LINE:_Windows/${w}/g" 
     else
+        watch_rsh start $w &
         QA_SYS=`rsh $w uname -sr`
         echo $QA_SYS | grep Linux && QA_RHVER=`rsh $w cat /etc/redhat-release`
         if [ -n "$QA_RHVER" ]
@@ -92,6 +131,7 @@ do
                     if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
                     ;;
             esac
+            watch_rsh stop $w 
             QA_OS=`echo "$w $QA_SYS $IS_64"`
         fi
         echo $QA_OS
