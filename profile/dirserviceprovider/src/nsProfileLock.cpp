@@ -187,12 +187,27 @@ void nsProfileLock::FatalSignalHandler(int signo)
         break;
     }
 
-    if (oldact &&
-        oldact->sa_handler &&
-        oldact->sa_handler != SIG_DFL &&
-        oldact->sa_handler != SIG_IGN)
-    {
-        oldact->sa_handler(signo);
+    if (oldact) {
+        if (oldact->sa_handler == SIG_DFL) {
+            // Make sure the default sig handler is executed
+            // We need it to get Mozilla to dump core.
+            sigaction(signo,oldact,NULL);
+
+            // Now that we've restored the default handler, unmask the
+            // signal and invoke it.
+
+            sigset_t unblock_sigs;
+            sigemptyset(&unblock_sigs);
+            sigaddset(&unblock_sigs, signo);
+
+            sigprocmask(SIG_UNBLOCK, &unblock_sigs, NULL);
+
+            raise(signo);
+        }
+        else if (oldact->sa_handler && oldact->sa_handler != SIG_IGN)
+        {
+            oldact->sa_handler(signo);
+        }
     }
 
     // Backstop exit call, just in case.
