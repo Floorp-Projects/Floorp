@@ -1018,7 +1018,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
 
       nsAutoString nameSpace;
 
-      if (prefix.Length() > 0) {
+      if (!prefix.IsEmpty()) {
         nsCOMPtr<nsIAtom> prefixAtom = getter_AddRefs(NS_NewAtom(prefix));
 
         nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(child));

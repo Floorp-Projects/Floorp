@@ -220,7 +220,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         break;
 
       } else if ((value_len = value.Length()) > 0) {        
-        if (base.Length() > 0) {
+        if (!base.IsEmpty()) {
           if (base[0] == '/') {
             // Do nothing, we are waiting for a scheme starting value
           } else {

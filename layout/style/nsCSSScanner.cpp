@@ -229,7 +229,7 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI)
 
 void nsCSSScanner::AddToError(const nsAReadableString& aErrorText)
 {
-  if (!mError.Length()) {
+  if (mError.IsEmpty()) {
     mErrorLineNumber = mLineNumber;
     mErrorColNumber = mColNumber;
     mError = aErrorText;
@@ -245,7 +245,7 @@ void nsCSSScanner::ClearError()
 
 void nsCSSScanner::OutputError()
 {
-  if (!mError.Length()) return;
+  if (mError.IsEmpty()) return;
  
 #ifdef DEBUG
   printf("CSS Error (%s :%u.%u): %s\n",

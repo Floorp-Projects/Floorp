@@ -208,7 +208,7 @@ NS_IMETHODIMP
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo)
 {
-  NS_ENSURE_ARG(aName.Length());
+  NS_ENSURE_ARG(!aName.IsEmpty());
 
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aName)));
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
@@ -222,14 +222,14 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
                                const nsAString& aPrefix, PRInt32 aNamespaceID,
                                nsINodeInfo*& aNodeInfo)
 {
-  NS_ENSURE_ARG(aName.Length());
+  NS_ENSURE_ARG(!aName.IsEmpty());
 
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aName)));
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIAtom> prefix;
 
-  if (aPrefix.Length()) {
+  if (!aPrefix.IsEmpty()) {
     prefix = dont_AddRef(NS_NewAtom(aPrefix));
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
@@ -244,14 +244,14 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
                                const nsAString& aNamespaceURI,
                                nsINodeInfo*& aNodeInfo)
 {
-  NS_ENSURE_ARG(aName.Length());
+  NS_ENSURE_ARG(!aName.IsEmpty());
 
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aName)));
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIAtom> prefix;
 
-  if (aPrefix.Length()) {
+  if (!aPrefix.IsEmpty()) {
     prefix = dont_AddRef(NS_NewAtom(aPrefix));
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
@@ -273,7 +273,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
                                const nsAString& aNamespaceURI,
                                nsINodeInfo*& aNodeInfo)
 {
-  NS_ENSURE_ARG(aQualifiedName.Length());
+  NS_ENSURE_ARG(!aQualifiedName.IsEmpty());
 
   nsAutoString name(aQualifiedName);
   nsAutoString prefix;
@@ -288,14 +288,14 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
 
   nsCOMPtr<nsIAtom> prefixAtom;
 
-  if (prefix.Length()) {
+  if (!prefix.IsEmpty()) {
     prefixAtom = dont_AddRef(NS_NewAtom(prefix));
     NS_ENSURE_TRUE(prefixAtom, NS_ERROR_OUT_OF_MEMORY);
   }
 
   PRInt32 nsid = kNameSpaceID_None;
 
-  if (aNamespaceURI.Length()) {
+  if (!aNamespaceURI.IsEmpty()) {
     NS_ENSURE_TRUE(mNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
     nsresult rv = mNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsid);

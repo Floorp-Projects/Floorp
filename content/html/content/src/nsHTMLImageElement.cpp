@@ -806,7 +806,7 @@ nsHTMLImageElement::GetSrc(nsAWritableString& aSrc)
                                     relURLSpec);
   relURLSpec.Trim(" \t\n\r");
 
-  if (baseURL && relURLSpec.Length() > 0) {
+  if (baseURL && !relURLSpec.IsEmpty()) {
     // Get absolute URL.
     rv = NS_MakeAbsoluteURI(aSrc, relURLSpec, baseURL);
   }

@@ -5697,7 +5697,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
   NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
   NS_ENSURE_STATE(mContainer);
 
-  if (0 == mDefaultCharacterSet.Length()) 
+  if (mDefaultCharacterSet.IsEmpty()) 
   {
     nsXPIDLString defCharset;
 
@@ -5710,7 +5710,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
         prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
     } 
 
-    if (defCharset && defCharset.Length())
+    if (!defCharset.IsEmpty())
       mDefaultCharacterSet.Assign(defCharset.get());
     else
       mDefaultCharacterSet.Assign(NS_LITERAL_STRING("ISO-8859-1"));

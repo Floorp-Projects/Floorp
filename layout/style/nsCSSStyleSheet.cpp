@@ -1140,7 +1140,7 @@ DOMMediaListImpl::SetText(const nsAReadableString& aMediaText)
 
     tmp.CompressWhitespace();
 
-    if (tmp.Length()) {
+    if (!tmp.IsEmpty()) {
       rv = Append(tmp);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1148,7 +1148,7 @@ DOMMediaListImpl::SetText(const nsAReadableString& aMediaText)
     buf.Cut(0, n + 1);
 
     n = buf.FindChar(',');
-  } while (buf.Length());
+  } while (!buf.IsEmpty());
 
   return rv;
 }
@@ -1273,7 +1273,7 @@ DOMMediaListImpl::AppendMedium(const nsAReadableString& aNewMedium)
 nsresult
 DOMMediaListImpl::Delete(const nsAReadableString& aOldMedium)
 {
-  if (!aOldMedium.Length())
+  if (aOldMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   nsCOMPtr<nsIAtom> old(dont_AddRef(NS_NewAtom(aOldMedium)));
@@ -1293,7 +1293,7 @@ DOMMediaListImpl::Delete(const nsAReadableString& aOldMedium)
 nsresult
 DOMMediaListImpl::Append(const nsAReadableString& aNewMedium)
 {
-  if (!aNewMedium.Length())
+  if (aNewMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   nsCOMPtr<nsIAtom> media(dont_AddRef(NS_NewAtom(aNewMedium)));

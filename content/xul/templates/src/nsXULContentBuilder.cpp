@@ -714,7 +714,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             rv = tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
             if (NS_FAILED(rv)) return rv;
 
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.Length() > 0)) {
+            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (!attrValue.IsEmpty())) {
                 nsAutoString value;
                 rv = SubstituteText(*aMatch, attrValue, value);
                 if (NS_FAILED(rv)) return rv;
@@ -890,7 +890,7 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
         return NS_OK;
 
     nsAutoString attribute;
-    while (persist.Length() > 0) {
+    while (!persist.IsEmpty()) {
         attribute.Truncate();
 
         PRInt32 offset = persist.FindCharInSet(" ,");
@@ -905,7 +905,7 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
 
         attribute.Trim(" ");
 
-        if (attribute.Length() == 0)
+        if (attribute.IsEmpty())
             break;
 
         PRInt32 nameSpaceID;
@@ -989,7 +989,7 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             nsAutoString newvalue;
             SubstituteText(aMatch, attribValue, newvalue);
 
-            if (newvalue.Length() > 0) {
+            if (!newvalue.IsEmpty()) {
                 aRealElement->SetAttr(attribNameSpaceID,
                                       attribName,
                                       newvalue,
@@ -2204,7 +2204,7 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
 
     PRInt32 urivar = mRules.LookupSymbol(uri.get());
     if (! urivar) {
-        if (! mContainerSymbol.Length()) {
+        if (mContainerSymbol.IsEmpty()) {
             // If the container symbol was not explictly declared on
             // the <template> tag, or we haven't seen a previous rule
             // whose <content> condition defined it, then we'll
@@ -2224,7 +2224,7 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
     nsAutoString tagstr;
     aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::tag, tagstr);
 
-    if (tagstr.Length()) {
+    if (!tagstr.IsEmpty()) {
         tag = dont_AddRef(NS_NewAtom(tagstr));
     }
 

@@ -811,7 +811,7 @@ nsGenericElement::SetPrefix(const nsAReadableString& aPrefix)
   nsINodeInfo *newNodeInfo = nsnull;
   nsCOMPtr<nsIAtom> prefix;
 
-  if (aPrefix.Length() && !DOMStringIsNull(aPrefix)) {
+  if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix)) {
     prefix = dont_AddRef(NS_NewAtom(aPrefix));
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
@@ -3108,7 +3108,7 @@ nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
           (attr->mNodeInfo->Equals(aName))) {
         attr->mNodeInfo->GetPrefixAtom(aPrefix);
         aResult.Assign(attr->mValue);
-        if (0 < aResult.Length()) {
+        if (!aResult.IsEmpty()) {
           rv = NS_CONTENT_ATTR_HAS_VALUE;
         }
         else {

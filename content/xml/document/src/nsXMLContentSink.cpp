@@ -795,15 +795,15 @@ nsXMLContentSink::ProcessMETATag()
   // set any HTTP-EQUIV data into document's header data as well as url
   nsAutoString header;
   mMetaElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
-  if (header.Length() > 0) {
+  if (!header.IsEmpty()) {
     nsAutoString result;
     mMetaElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
-    if (result.Length() > 0) {
+    if (!result.IsEmpty()) {
       ToLowerCase(header);
       nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
       rv=ProcessHeaderData(fieldAtom,result,mMetaElement); 
-    }//if (result.Length() > 0) 
-  }//if (header.Length() > 0) 
+    }//if (!result.IsEmpty()) 
+  }//if (!header.IsEmpty()) 
 
   return rv;
 }

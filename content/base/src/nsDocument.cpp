@@ -3441,7 +3441,7 @@ nsDocument::SaveFile( nsIURI*           aLocation,
     encoder->SetWrapColumn(aWrapColumn);
 
   nsAutoString charsetStr(aFileCharset);
-  if (charsetStr.Length() == 0)
+  if (charsetStr.IsEmpty())
   {
     rv = GetDocumentCharacterSet(charsetStr);
     if(NS_FAILED(rv)) {

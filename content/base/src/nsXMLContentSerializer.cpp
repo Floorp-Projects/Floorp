@@ -176,7 +176,7 @@ nsXMLContentSerializer::AppendProcessingInstruction(nsIDOMProcessingInstruction*
 
   AppendToString(NS_LITERAL_STRING("<?"), aStr);
   AppendToString(target, aStr);
-  if (data.Length() > 0) {
+  if (!data.IsEmpty()) {
     AppendToString(NS_LITERAL_STRING(" "), aStr);
     AppendToString(data, aStr);
   }
@@ -235,7 +235,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
   AppendToString(NS_LITERAL_STRING("<!DOCTYPE "), aStr);
   AppendToString(name, aStr);
   PRUnichar quote;
-  if (publicId.Length() > 0) {
+  if (!publicId.IsEmpty()) {
     AppendToString(NS_LITERAL_STRING(" PUBLIC "), aStr);
     if (publicId.FindChar(PRUnichar('"')) == -1) {
       quote = PRUnichar('"');
@@ -247,7 +247,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
     AppendToString(publicId, aStr);
     AppendToString(quote, aStr);
 
-    if (systemId.Length()) {
+    if (!systemId.IsEmpty()) {
       AppendToString(PRUnichar(' '), aStr);
       if (systemId.FindChar(PRUnichar('"')) == -1) {
         quote = PRUnichar('"');
@@ -260,7 +260,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
       AppendToString(quote, aStr);
     }
   }
-  else if (systemId.Length() > 0) {
+  else if (!systemId.IsEmpty()) {
     if (systemId.FindChar(PRUnichar('"')) == -1) {
       quote = PRUnichar('"');
     }
@@ -273,7 +273,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
     AppendToString(quote, aStr);
   }
   
-  if (internalSubset.Length() > 0) {
+  if (!internalSubset.IsEmpty()) {
     AppendToString(PRUnichar(' '), aStr);
     AppendToString(internalSubset, aStr);
   }
@@ -329,7 +329,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAWritableString& aPrefix,
   if (aPrefix.Equals(kXMLNS)) {
     return PR_FALSE;
   }
-  if (aURI.Length() == 0) {
+  if (aURI.IsEmpty()) {
     aPrefix.Truncate();
     return PR_FALSE;
   }
@@ -366,7 +366,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAWritableString& aPrefix,
     return PR_FALSE;
   }
   // If we don't have a prefix, create one
-  else if (aPrefix.Length() == 0) {
+  else if (aPrefix.IsEmpty()) {
     aPrefix.Assign(NS_LITERAL_STRING("a"));
     char buf[128];
     PR_snprintf(buf, sizeof(buf), "%d", mPrefixIndex++);
@@ -386,7 +386,7 @@ nsXMLContentSerializer::SerializeAttr(const nsAReadableString& aPrefix,
                                       PRBool aDoEscapeEntities)
 {
   AppendToString(PRUnichar(' '), aStr);
-  if (aPrefix.Length() > 0) {
+  if (!aPrefix.IsEmpty()) {
     AppendToString(aPrefix, aStr);
     AppendToString(NS_LITERAL_STRING(":"), aStr);
   }
@@ -467,7 +467,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI);
   // Serialize the qualified name of the element
   AppendToString(NS_LITERAL_STRING("<"), aStr);
-  if (tagPrefix.Length() > 0 &&
+  if (!tagPrefix.IsEmpty() &&
     !(elementNamespaceID == kNameSpaceID_HTML && tagPrefix.Equals(kXMLNS) /*XXX Hack*/)) {
     AppendToString(tagPrefix, aStr);
     AppendToString(NS_LITERAL_STRING(":"), aStr);
@@ -564,7 +564,7 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   ConfirmPrefix(tagPrefix, tagNamespaceURI);
 
   AppendToString(NS_LITERAL_STRING("</"), aStr);
-  if (tagPrefix.Length() > 0 &&
+  if (!tagPrefix.IsEmpty() &&
     !(namespaceID == kNameSpaceID_HTML && tagPrefix.Equals(kXMLNS) /*XXX Hack*/)) {
     AppendToString(tagPrefix, aStr);
     AppendToString(NS_LITERAL_STRING(":"), aStr);

@@ -1061,7 +1061,7 @@ nsPlainTextSerializer::EnsureVerticalSpace(PRInt32 noOfRows)
   // If we have something in the indent we probably want to output
   // it and it's not included in the count for empty lines so we don't
   // realize that we should start a new line.
-  if(noOfRows >= 0 && mInIndentString.Length() > 0) {
+  if(noOfRows >= 0 && !mInIndentString.IsEmpty()) {
     EndLine(PR_FALSE);
   }
 
@@ -1081,13 +1081,13 @@ nsPlainTextSerializer::EnsureVerticalSpace(PRInt32 noOfRows)
 void
 nsPlainTextSerializer::FlushLine()
 {
-  if(mCurrentLine.Length()>0) {
+  if(!mCurrentLine.IsEmpty()) {
     if(mAtFirstColumn) {
       OutputQuotesAndIndent(); // XXX: Should we always do this? Bug?
     }
 
     Output(mCurrentLine);
-    mAtFirstColumn = mAtFirstColumn && mCurrentLine.Length() == 0;
+    mAtFirstColumn = mAtFirstColumn && mCurrentLine.IsEmpty();
     mCurrentLine.Truncate();
     mCurrentLineWidth = 0;
   }
@@ -1102,7 +1102,7 @@ nsPlainTextSerializer::FlushLine()
 void 
 nsPlainTextSerializer::Output(nsString& aString)
 {
-  if (aString.Length() > 0) {
+  if (!aString.IsEmpty()) {
     mStartedOutput = PR_TRUE;
   }
 
@@ -1266,7 +1266,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
         // Space stuff new line?
         if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
           if(
-              restOfLine.Length() > 0
+              !restOfLine.IsEmpty()
               &&
               (
                 restOfLine[0] == '>' ||
@@ -1345,7 +1345,7 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
   } 
   else {
     // Hard break
-    if(mCurrentLine.Length()>0 || mInIndentString.Length()>0) {
+    if(!mCurrentLine.IsEmpty() || !mInIndentString.IsEmpty()) {
       mEmptyLines=-1;
     }
 
@@ -1356,7 +1356,7 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
     // If we don't have anything "real" to output we have to
     // make sure the indent doesn't end in a space since that
     // would trick a format=flowed-aware receiver.
-    PRBool stripTrailingSpaces = (mCurrentLine.Length() == 0);
+    PRBool stripTrailingSpaces = mCurrentLine.IsEmpty();
     OutputQuotesAndIndent(stripTrailingSpaces);
   }
 
@@ -1385,7 +1385,7 @@ nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_
     for(int i=0; i < mCiteQuoteLevel; i++) {
       quotes.Append(PRUnichar('>'));
     }
-    if (mCurrentLine.Length() > 0) {
+    if (!mCurrentLine.IsEmpty()) {
       /* Better don't output a space here, if the line is empty,
          in case a recieving f=f-aware UA thinks, this were a flowed line,
          which it isn't - it's just empty.
@@ -1400,7 +1400,7 @@ nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_
   // Indent if necessary
   PRInt32 indentwidth = mIndent - mInIndentString.Length();
   if (indentwidth > 0
-      && (mCurrentLine.Length() > 0 || mInIndentString.Length() > 0)
+      && (!mCurrentLine.IsEmpty() || !mInIndentString.IsEmpty())
       // Don't make empty lines look flowed
       ) {
     nsAutoString spaces;
@@ -1410,7 +1410,7 @@ nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_
     mAtFirstColumn = PR_FALSE;
   }
   
-  if(mInIndentString.Length() > 0) {
+  if(!mInIndentString.IsEmpty()) {
     stringToOutput += mInIndentString;
     mAtFirstColumn = PR_FALSE;
     mInIndentString.Truncate();
@@ -1425,7 +1425,7 @@ nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_
     stringToOutput.SetLength(lineLength);
   }
 
-  if(stringToOutput.Length() > 0) {
+  if(!stringToOutput.IsEmpty()) {
     Output(stringToOutput);
   }
     
@@ -1463,9 +1463,9 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
 
     // This mustn't be mixed with intelligent wrapping without clearing
     // the mCurrentLine buffer before!!!
-    NS_WARN_IF_FALSE(mCurrentLine.Length() == 0,
+    NS_WARN_IF_FALSE(mCurrentLine.IsEmpty(),
                  "Mixed wrapping data and nonwrapping data on the same line");
-    if (mCurrentLine.Length() > 0) {
+    if (!mCurrentLine.IsEmpty()) {
       FlushLine();
     }
     
@@ -1497,7 +1497,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
         // No new lines.
         nsAutoString stringpart;
         aString.Right(stringpart, totLen-bol);
-        if(stringpart.Length() > 0) {
+        if(!stringpart.IsEmpty()) {
           PRUnichar lastchar = stringpart[stringpart.Length()-1];
           if((lastchar == '\t') || (lastchar == ' ') ||
              (lastchar == '\r') ||(lastchar == '\n')) {

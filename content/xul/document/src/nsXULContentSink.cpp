@@ -600,7 +600,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
     nsresult rv = NS_OK;
 
     if (aAlternate) { // if alternate, does it have title?
-        if (0 == aTitle.Length()) { // alternates must have title
+        if (aTitle.IsEmpty()) { // alternates must have title
             return NS_OK; //return without error, for now
         }
     }
@@ -609,7 +609,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
     nsAutoString  params;
     SplitMimeType(aType, mimeType, params);
 
-    if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase(kCSSType)) {
+    if ((mimeType.IsEmpty()) || mimeType.EqualsIgnoreCase(kCSSType)) {
         nsCOMPtr<nsIURI> url;
         rv = NS_NewURI(getter_AddRefs(url), aHref, mDocumentURL);
         if (NS_OK != rv) {
@@ -622,8 +622,8 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
         // Nope, we need to load it asynchronously
         PRBool blockParser = PR_FALSE;
         if (! aAlternate) {
-            if (0 < aTitle.Length()) {  // possibly preferred sheet
-                if (0 == mPreferredStyle.Length()) {
+            if (!aTitle.IsEmpty()) {  // possibly preferred sheet
+                if (mPreferredStyle.IsEmpty()) {
                     mPreferredStyle = aTitle;
                     mCSSLoader->SetPreferredSheet(aTitle);
                     nsIAtom* defaultStyle = NS_NewAtom("default-style");
@@ -801,7 +801,7 @@ XULContentSinkImpl::NormalizeAttributeString(const nsAReadableString& aText,
     }
 
     nsCOMPtr<nsIAtom> prefix;
-    if (prefixStr.Length() > 0) {
+    if (!prefixStr.IsEmpty()) {
         prefix = dont_AddRef( NS_NewAtom(prefixStr) );
 
         nsCOMPtr<nsINameSpace> ns;
@@ -1060,7 +1060,7 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 
       // If there was no href, we can't do
       // anything with this PI
-      if (0 == href.Length()) {
+      if (href.IsEmpty()) {
         return NS_OK;
       }
 
@@ -1086,7 +1086,7 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 
         // If there was no href, we can't do
         // anything with this PI
-        if (0 == href.Length())
+        if (href.IsEmpty())
             return NS_OK;
 
         nsAutoString type;
@@ -1217,7 +1217,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
 
       // Get the attribute value (the URI for the namespace)
       // Open a local namespace
-      nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
+      nsIAtom* prefixAtom = ((prefix.IsEmpty()) ? nsnull : NS_NewAtom(prefix));
       nsINameSpace* child = nsnull;
       nameSpace->CreateChildNameSpace(prefixAtom, nsDependentString(aAttributes[1]), child);
       if (nsnull != child) {
@@ -1276,7 +1276,7 @@ XULContentSinkImpl::ParseTag(const PRUnichar* aText,
   }
 
   nsCOMPtr<nsIAtom> prefix;
-  if (prefixStr.Length() > 0) {
+  if (!prefixStr.IsEmpty()) {
       prefix = dont_AddRef( NS_NewAtom(prefixStr) );
   }
 

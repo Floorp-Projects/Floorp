@@ -464,14 +464,14 @@ void nsCSSSelector::SetNameSpace(PRInt32 aNameSpace)
 void nsCSSSelector::SetTag(const nsString& aTag)
 {
   NS_IF_RELEASE(mTag);
-  if (0 < aTag.Length()) {
+  if (!aTag.IsEmpty()) {
     mTag = NS_NewAtom(aTag);
   }
 }
 
 void nsCSSSelector::AddID(const nsString& aID)
 {
-  if (0 < aID.Length()) {
+  if (!aID.IsEmpty()) {
     nsAtomList** list = &mIDList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
@@ -482,7 +482,7 @@ void nsCSSSelector::AddID(const nsString& aID)
 
 void nsCSSSelector::AddClass(const nsString& aClass)
 {
-  if (0 < aClass.Length()) {
+  if (!aClass.IsEmpty()) {
     nsAtomList** list = &mClassList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
@@ -493,7 +493,7 @@ void nsCSSSelector::AddClass(const nsString& aClass)
 
 void nsCSSSelector::AddPseudoClass(const nsString& aPseudoClass)
 {
-  if (0 < aPseudoClass.Length()) {
+  if (!aPseudoClass.IsEmpty()) {
     nsAtomList** list = &mPseudoClassList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
@@ -515,7 +515,7 @@ void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass)
 
 void nsCSSSelector::AddAttribute(PRInt32 aNameSpace, const nsString& aAttr)
 {
-  if (0 < aAttr.Length()) {
+  if (!aAttr.IsEmpty()) {
     nsAttrSelector** list = &mAttrList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
@@ -527,7 +527,7 @@ void nsCSSSelector::AddAttribute(PRInt32 aNameSpace, const nsString& aAttr)
 void nsCSSSelector::AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
                                  const nsString& aValue, PRBool aCaseSensitive)
 {
-  if (0 < aAttr.Length()) {
+  if (!aAttr.IsEmpty()) {
     nsAttrSelector** list = &mAttrList;
     while (nsnull != *list) {
       list = &((*list)->mNext);

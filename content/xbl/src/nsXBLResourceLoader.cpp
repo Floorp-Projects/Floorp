@@ -110,7 +110,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
   nsCOMPtr<nsIURI> url;
 
   for (nsXBLResource* curr = mResourceList; curr; curr = curr->mNext) {
-    if (curr->mSrc.Length() == 0)
+    if (curr->mSrc.IsEmpty())
       continue;
 
     if (NS_FAILED(NS_NewURI(getter_AddRefs(url), curr->mSrc, docURL)))

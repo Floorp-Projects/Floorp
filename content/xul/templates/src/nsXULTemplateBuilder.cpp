@@ -1501,7 +1501,7 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     nsAutoString templateID;
     mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::templateAtom, templateID);
 
-    if (templateID.Length()) {
+    if (!templateID.IsEmpty()) {
         nsCOMPtr<nsIDocument> doc;
         mRoot->GetDocument(*getter_AddRefs(doc));
         NS_ASSERTION(doc != nsnull, "root element has no document");
@@ -1602,12 +1602,12 @@ nsXULTemplateBuilder::CompileRules()
     // specified them.
     mContainerSymbol.Truncate();
     tmpl->GetAttr(kNameSpaceID_None, nsXULAtoms::container, mContainerSymbol);
-    if (mContainerSymbol.Length())
+    if (!mContainerSymbol.IsEmpty())
         mRules.PutSymbol(mContainerSymbol.get(), mContainerVar);
 
     mMemberSymbol.Truncate();
     tmpl->GetAttr(kNameSpaceID_None, nsXULAtoms::member, mMemberSymbol);
-    if (mMemberSymbol.Length())
+    if (!mMemberSymbol.IsEmpty())
         mRules.PutSymbol(mMemberSymbol.get(), mMemberVar);
 
     // Compile the rules beneath the <template>
@@ -1710,7 +1710,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
 
     rule->SetContainerVariable(mContainerVar);
 
-    if (! mMemberSymbol.Length()) {
+    if (mMemberSymbol.IsEmpty()) {
         // If the member variable hasn't already been specified, then
         // grovel over <action> to find it. We'll use the first one
         // that we find in a breadth-first search.
@@ -1749,7 +1749,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
     }
 
     // If we can't find a member symbol, then we're out of luck. Bail.
-    if (! mMemberSymbol.Length()) {
+    if (mMemberSymbol.IsEmpty()) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] could not deduce member variable", this));
 
@@ -1769,7 +1769,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
         return rv;
     }
 
-    if (!mContainerSymbol.Length()) {
+    if (mContainerSymbol.IsEmpty()) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] could not deduce container variable", this));
 
@@ -2074,7 +2074,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
     nsAutoString subject;
     aBinding->GetAttr(kNameSpaceID_None, nsXULAtoms::subject, subject);
 
-    if (! subject.Length()) {
+    if (subject.IsEmpty()) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] <binding> requires `subject'", this));
 
@@ -2095,7 +2095,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
     // predicate
     nsAutoString predicate;
     aBinding->GetAttr(kNameSpaceID_None, nsXULAtoms::predicate, predicate);
-    if (! predicate.Length()) {
+    if (predicate.IsEmpty()) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] <binding> requires `predicate'", this));
 
@@ -2117,7 +2117,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
     nsAutoString object;
     aBinding->GetAttr(kNameSpaceID_None, nsXULAtoms::object, object);
 
-    if (! object.Length()) {
+    if (object.IsEmpty()) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] <binding> requires `object'", this));
 

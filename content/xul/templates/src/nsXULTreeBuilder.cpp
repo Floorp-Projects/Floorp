@@ -441,7 +441,7 @@ nsXULOutlinerBuilder::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aProper
         nsAutoString raw;
         row->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, raw);
 
-        if (raw.Length()) {
+        if (!raw.IsEmpty()) {
             nsAutoString cooked;
             SubstituteText(*(mRows[aIndex]->mMatch), raw, cooked);
 
@@ -465,7 +465,7 @@ nsXULOutlinerBuilder::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, n
         nsAutoString raw;
         cell->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, raw);
 
-        if (raw.Length()) {
+        if (!raw.IsEmpty()) {
             nsAutoString cooked;
             SubstituteText(*(mRows[aRow]->mMatch), raw, cooked);
 
@@ -675,7 +675,7 @@ nsXULOutlinerBuilder::SetOutliner(nsIOutlinerBoxObject* outliner)
             // since we are trusted, use the user specified datasource
             // if non specified, use localstore, which gives us
             // persistence across sessions
-            if (datasourceStr.Length()) {
+            if (!datasourceStr.IsEmpty()) {
                 gRDFService->GetDataSource(NS_ConvertUCS2toUTF8(datasourceStr).get(),
                                            getter_AddRefs(mPersistStateStore));
             }
@@ -773,7 +773,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
     nsAutoString sort;
     header->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
 
-    if (sort.Length()) {
+    if (!sort.IsEmpty()) {
         // Grab the new sort variable
         mSortVariable = mRules.LookupSymbol(sort.get());
 
@@ -1219,7 +1219,7 @@ nsXULOutlinerBuilder::EnsureSortVariables()
             if (sortActive == NS_LITERAL_STRING("true")) {
                 nsAutoString sort;
                 child->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
-                if (sort.Length()) {
+                if (!sort.IsEmpty()) {
                     mSortVariable = mRules.LookupSymbol(sort.get(), PR_TRUE);
 
                     nsAutoString sortDirection;
@@ -1324,7 +1324,7 @@ nsXULOutlinerBuilder::CompileOutlinerRowCondition(nsTemplateRule* aRule,
 
     PRInt32 urivar = mRules.LookupSymbol(uri.get());
     if (! urivar) {
-        if (! mContainerSymbol.Length()) {
+        if (mContainerSymbol.IsEmpty()) {
             // If the container symbol was not explictly declared on
             // the <template> tag, or we haven't seen a previous rule
             // whose <content> condition defined it, then we'll

@@ -581,7 +581,7 @@ XULSortServiceImpl::SetSortHints(nsIContent *tree, const nsString &sortResource,
 		tree->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection, PR_FALSE);
 		tree->SetAttr(kNameSpaceID_None, kResourceAtom, sortResource, PR_FALSE);
 
-		if (sortResource2.Length() > 0)
+		if (!sortResource2.IsEmpty())
 			tree->SetAttr(kNameSpaceID_None, kResource2Atom, sortResource2, PR_FALSE);
 		else	tree->UnsetAttr(kNameSpaceID_None, kResource2Atom, PR_FALSE);
 	}
@@ -1852,7 +1852,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 			if (NS_FAILED(rv))	return(rv);
 			sortState->sortPropertySort = sortInfo.sortPropertySort;
 
-			if (sortResource2.Length() > 0)
+			if (!sortResource2.IsEmpty())
 			{
 				rv = gRDFService->GetUnicodeResource(sortResource2.get(), getter_AddRefs(sortInfo.sortProperty2));
 				if (NS_FAILED(rv))	return(rv);
@@ -1924,11 +1924,11 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				return(rv);
 
 			rv = trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
-			if (id.Length() == 0)
+			if (id.IsEmpty())
 			{
 				rv = trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
 			}
-			if (id.Length() > 0)
+			if (id.IsEmpty())
 			{
 				nsCOMPtr<nsIRDFResource>	containerRes;
 				rv = nsXULContentUtils::MakeElementResource(doc, id, getter_AddRefs(containerRes));
@@ -2201,7 +2201,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort));
 	if (NS_FAILED(rv))	return(rv);
 
-	if (sortResource2.Length() > 0)
+	if (!sortResource2.IsEmpty())
 	{
 		rv = gRDFService->GetUnicodeResource(sortResource2.get(), getter_AddRefs(sortInfo.sortProperty2));
 		if (NS_FAILED(rv))	return(rv);

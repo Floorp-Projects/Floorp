@@ -369,7 +369,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
         href.Append(data);
 
         // Bug 42616: Add named anchor to end after query string
-        if (namedAnchor.Length()) {
+        if (!namedAnchor.IsEmpty()) {
           href.Append(namedAnchor);
         }
       }

@@ -2904,7 +2904,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             nextAnchor->GetTabIndex(&tabIndex);
           nsAutoString href;
           nextAnchor->GetAttribute(NS_LITERAL_STRING("href"), href);
-          if (!href.Length()) {
+          if (href.IsEmpty()) {
             disabled = PR_TRUE; // Don't tab unless href, bug 17605
           } else {
             disabled = PR_FALSE;

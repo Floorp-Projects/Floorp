@@ -1373,7 +1373,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
         nsAutoString text;
         nodeAsText->SubstringData(0, offset, text);
         text.CompressWhitespace();
-        if (text.Length())
+        if (!text.IsEmpty())
           return NS_OK;
         bResetPromotion = PR_TRUE;
       }
@@ -1458,7 +1458,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
         nsAutoString text;
         nodeAsText->SubstringData(offset, len-offset, text);
         text.CompressWhitespace();
-        if (text.Length())
+        if (!text.IsEmpty())
           return NS_OK;
         bResetPromotion = PR_TRUE;
       }

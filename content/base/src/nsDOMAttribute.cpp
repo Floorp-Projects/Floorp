@@ -258,7 +258,7 @@ nsDOMAttribute::HasChildNodes(PRBool* aHasChildNodes)
     nsAutoString value;
 
     GetValue(value);
-    if (0 < value.Length()) {
+    if (!value.IsEmpty()) {
       *aHasChildNodes = PR_TRUE;
     }
   }
@@ -286,7 +286,7 @@ nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
   if (NS_OK != result) {
     return result;
   }
-  if (0 < value.Length()) {
+  if (!value.IsEmpty()) {
     if (!mChild) {      
       nsIContent* content;
 
@@ -433,7 +433,7 @@ nsDOMAttribute::SetPrefix(const nsAReadableString& aPrefix)
   nsCOMPtr<nsIAtom> prefix;
   nsresult rv = NS_OK;
 
-  if (aPrefix.Length() && !DOMStringIsNull(aPrefix))
+  if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix))
     prefix = dont_AddRef(NS_NewAtom(aPrefix));
 
   rv = mNodeInfo->PrefixChanged(prefix, *getter_AddRefs(newNodeInfo));
@@ -534,12 +534,11 @@ nsAttributeChildList::~nsAttributeChildList()
 NS_IMETHODIMP    
 nsAttributeChildList::GetLength(PRUint32* aLength)
 {
-  nsAutoString value;
-  
   *aLength = 0;
   if (mAttribute) {
+    nsAutoString value;
     mAttribute->GetValue(value);
-    if (0 < value.Length()) {
+    if (!value.IsEmpty()) {
       *aLength = 1;
     }
   }

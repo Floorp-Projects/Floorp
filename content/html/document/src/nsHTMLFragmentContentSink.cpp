@@ -472,10 +472,10 @@ void
 nsHTMLFragmentContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 {
   if (aContent) {
-    if (mBaseHREF.Length() > 0) {
+    if (!mBaseHREF.IsEmpty()) {
       aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
     }
-    if (mBaseTarget.Length() > 0) {
+    if (!mBaseTarget.IsEmpty()) {
       aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
     }
   }
@@ -817,7 +817,7 @@ nsHTMLFragmentContentSink::AddTextToContent(nsIHTMLContent* aContent,const nsStr
   nsresult result=NS_OK;
   
   if(aContent) {
-    if (aText.Length() > 0) {
+    if (!aText.IsEmpty()) {
       nsCOMPtr<nsIContent> text;
       result = NS_NewTextNode(getter_AddRefs(text));
       if (NS_SUCCEEDED(result)) {
@@ -877,7 +877,7 @@ nsHTMLFragmentContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
   aResult.Append(value);
 
   // Strip quotes if present
-  if (aResult.Length() > 0) {
+  if (!aResult.IsEmpty()) {
     PRUnichar first = aResult.First();
     if ((first == '\"') || (first == '\'')) {
       if (aResult.Last() == first) {

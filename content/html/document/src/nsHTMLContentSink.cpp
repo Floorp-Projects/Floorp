@@ -1883,7 +1883,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       }
       else {
         // Map carriage returns to newlines
-        if(tmp.Length() > 0) {
+        if(!tmp.IsEmpty()) {
           if(tmp.CharAt(0) == '\r') {
             tmp.Assign((PRUnichar)'\n');
           }
@@ -3538,7 +3538,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
       publicId.Trim(" \t\n\r");
 
       // Strip quotes
-      PRUnichar ch = publicId.Length() ? publicId.First() : '\0';
+      PRUnichar ch = publicId.IsEmpty() ? '\0' : publicId.First();
 
       if (ch == '"' || ch == '\'') {
         publicId.Cut(0, 1);
@@ -3599,7 +3599,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
       systemId.Trim(" \t\n\r");
 
       // Strip quotes
-      PRUnichar ch = systemId.Length() ? systemId.First() : '\0';
+      PRUnichar ch = systemId.IsEmpty() ? '\0' : systemId.First();
 
       if (ch == '"' || ch == '\'') {
         systemId.Cut(0, 1);
@@ -3659,7 +3659,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
     name.Mid(publicId, nameEnd, name.Length() - nameEnd);
     publicId.Trim(" \t\n\r");
 
-    PRUnichar ch = publicId.Length() ? publicId.First() : '\0';
+    PRUnichar ch = publicId.IsEmpty() ? '\0' : publicId.First();
 
     if (ch == '"' || ch == '\'') {
       publicId.Cut(0, 1);
@@ -3689,7 +3689,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
       name.Truncate(nameEnd);
   }
 
-  if (publicId.Length() || systemId.Length() || name.Length()) {
+  if (!publicId.IsEmpty() || !systemId.IsEmpty() || !name.IsEmpty()) {
     nsCOMPtr<nsIDOMDocumentType> oldDocType;
     nsCOMPtr<nsIDOMDocumentType> docType;
 
@@ -3703,7 +3703,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
       return rv;
     }
 
-    if (!name.Length()) {
+    if (name.IsEmpty()) {
       name.Assign(NS_LITERAL_STRING("HTML"));
     }
 
@@ -4058,10 +4058,10 @@ HTMLContentSink::ScrollToRef()
 void
 HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 {
-  if (mBaseHREF.Length() > 0) {
+  if (!mBaseHREF.IsEmpty()) {
     aContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
   }
-  if (mBaseTarget.Length() > 0) {
+  if (!mBaseTarget.IsEmpty()) {
     aContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
   }
 }
@@ -4321,7 +4321,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& 
             }
           }
           else if (attr.EqualsIgnoreCase("media")) {
-            if (0 == media.Length()) {
+            if (media.IsEmpty()) {
               media = value;
               ToLowerCase(media); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
             }
@@ -4587,15 +4587,15 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
           // set any HTTP-EQUIV data into document's header data as well as url
           nsAutoString header;
           it->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
-          if (header.Length() > 0) {
+          if (!header.IsEmpty()) {
             nsAutoString result;
             it->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
-            if (result.Length() > 0) {
+            if (!result.IsEmpty()) {
               ToLowerCase(header);
               nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
               rv=ProcessHeaderData(fieldAtom,result,it); 
-            }//if (result.Length() > 0) 
-          }//if (header.Length() > 0) 
+            }//if (!result.IsEmpty()) 
+          }//if (!header.IsEmpty()) 
         }//if (!mFrameset || !mDocument)
       }//if(!mInsideNoXXXTag)
     }//if (NS_OK == rv) 
@@ -5031,7 +5031,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   nsAutoString script;
   script.Assign(aNode.GetSkippedContent());
 
-  if (script.Length() > 0) {
+  if (!script.IsEmpty()) {
     nsCOMPtr<nsIContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text));
     if (NS_OK == rv) {
