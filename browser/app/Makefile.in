@@ -65,7 +65,12 @@ REQUIRES = \
 
 CPPSRCS = nsBrowserApp.cpp
 
+ifdef BUILD_STATIC_LIBS
+STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
+endif
+
 LIBS = \
+	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
 	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \

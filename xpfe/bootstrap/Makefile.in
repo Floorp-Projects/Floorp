@@ -127,8 +127,14 @@ STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRC
 CPPSRCS		+= nsSigHandlers.cpp nsStackFrameUnix.cpp
 endif
 
-LIBS	= $(EXTRA_DSO_LIBS) \
-	  $(NULL)
+ifdef BUILD_STATIC_LIBS
+STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
+endif
+
+LIBS	= \
+	$(STATIC_COMPONENTS_LINKER_PATH) \
+	$(EXTRA_DSO_LIBS) \
+	$(NULL)
 
 
 ifndef BUILD_STATIC_LIBS
