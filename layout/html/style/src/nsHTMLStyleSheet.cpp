@@ -534,7 +534,7 @@ PRBool MappedDropSheet(nsHashKey *aKey, void *aData, void* closure)
 
 HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
 {
-  NS_RELEASE(mURL);
+  NS_IF_RELEASE(mURL);
   if (nsnull != mLinkRule) {
     mLinkRule->mSheet = nsnull;
     NS_RELEASE(mLinkRule);
