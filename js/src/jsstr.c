@@ -133,7 +133,7 @@ static const uint8 urlCharType[256] =
 
 /* See ECMA-262 15.1.2.4. */
 JSBool
-str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
     size_t i, ni, newlength;
@@ -293,7 +293,7 @@ const char js_encodeURIComponent_str[] = "encodeURIComponent";
 static JSFunctionSpec string_functions[] = {
 #ifndef MOZILLA_CLIENT
     /* These two are predefined in a backward-compatible way by the DOM. */
-    {js_escape_str,             str_escape,                 1,0,0},
+    {js_escape_str,             js_str_escape,              1,0,0},
     {js_unescape_str,           str_unescape,               1,0,0},
 #endif
 #if JS_HAS_UNEVAL
