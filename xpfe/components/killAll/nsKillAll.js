@@ -109,8 +109,8 @@ nsKillAll.prototype = {
         if (("tryToClose" in domWindow) && !domWindow.tryToClose()) {
           // user pressed cancel in response to dialog for closing an unsaved window
           nativeAppSupport.isServerMode = originalServerMode
-          throw Components.results.NS_ERROR_NOT_AVAILABLE;
-          // see comment below for why we throw NS_ERROR_NOT_AVAILABLE
+          // Return NS_ERROR_ABORT to inform caller of the "cancel."
+          throw Components.results.NS_ERROR_ABORT;
         }
         domWindow.close();
       }

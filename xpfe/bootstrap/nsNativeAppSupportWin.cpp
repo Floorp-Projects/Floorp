@@ -927,6 +927,28 @@ struct MessageWindow {
          (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
      }
      return TRUE;
+  } else if ( msg == WM_QUERYENDSESSION ) {
+    // Invoke "-killAll" cmd line handler.  That will close all open windows,
+    // and display dialog asking whether to save/don't save/cancel.  If the
+    // user says cancel, then we pass that indicator along to the system
+    // in order to stop the system shutdown/logoff.
+    nsCOMPtr<nsICmdLineHandler>
+        killAll( do_CreateInstance( "@mozilla.org/commandlinehandler/general-startup;1?type=killAll" ) );
+    if ( killAll ) {
+        nsXPIDLCString unused;
+        // Note: "GetChromeUrlForTask" is a euphemism for
+        //       "ProcessYourCommandLineSwitch".  The interface was written
+        //       presuming a less general-purpose role for command line
+        //       handlers than it ought to have.
+        nsresult rv = killAll->GetChromeUrlForTask( getter_Copies( unused ) );
+        if ( rv == NS_ERROR_ABORT ) {
+            // User cancelled shutdown/logoff.
+            return FALSE;
+        } else {
+            // Shutdown/logoff OK.
+            return TRUE;
+        }
+    }
   }
   return DefWindowProc( msgWindow, msg, wp, lp );
 }
@@ -1635,7 +1657,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 
     // If a window was opened, then we're done.
     // Note that we keep on trying in the unlikely event of an error.
-    if (rv == NS_ERROR_NOT_AVAILABLE || windowOpened) {
+    if (rv == NS_ERROR_NOT_AVAILABLE || rv == NS_ERROR_ABORT || windowOpened) {
       return;
     }
 
