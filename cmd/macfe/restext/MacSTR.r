@@ -182,7 +182,7 @@ include "::rsrc:communicator:Communicator.rsrc";
 	""
 #endif
   , purgeable ) {
-  	"Load has been interrupted because Netscape has run out of memory. You might want to increase its memory partition, or quit other applications to alleviate this problem."
+  	"Load has been interrupted because "PROGRAM_NAME" has run out of memory. You might want to increase its memory partition, or quit other applications to alleviate this problem."
   };
   resource 'STR '	( EXT_PROGRESS_RESID + 0,
 #if USE_RESOURCE_NAMES
@@ -195,12 +195,12 @@ include "::rsrc:communicator:Communicator.rsrc";
   };
   resource 'STR '	( REVERT_PROGRESS_RESID + 0,
 #if USE_RESOURCE_NAMES
-  	"Revert progress to Netscape"
+  	"Revert progress to "PROGRAM_NAME
 #else
 	""
 #endif
   	, purgeable ) {
-  	"Reverting progress to Netscape"
+  	"Reverting progress to "PROGRAM_NAME
   };
   resource 'STR '	( START_LOAD_RESID + 0,
 #if USE_RESOURCE_NAMES
@@ -542,7 +542,7 @@ include "::rsrc:communicator:Communicator.rsrc";
 	""
 #endif
   	, purgeable ) {
-  	"Netscape (internal)"
+  	PROGRAM_NAME" (internal)"
   };
   resource 'STR '	( UNKNOWN_RESID + 0,
 #if USE_RESOURCE_NAMES
@@ -597,7 +597,7 @@ include "::rsrc:communicator:Communicator.rsrc";
 	""
 #endif
   	, purgeable ) {
-  	"\" to Netscape. Next time you start up, please rebuild your desktop."
+  	"\" to "PROGRAM_NAME". Next time you start up, please rebuild your desktop."
   };
   resource 'STR '	( UNTITLED_RESID + 0,
 #if USE_RESOURCE_NAMES
@@ -687,7 +687,7 @@ include "::rsrc:communicator:Communicator.rsrc";
 	""
 #endif
   	, purgeable ) {
-  	"Netscape received AppleEvent error reply: "
+  	PROGRAM_NAME" received AppleEvent error reply: "
   };
   resource 'STR ' ( CHARSET_RESID,
 #if USE_RESOURCE_NAMES
@@ -725,7 +725,7 @@ include "::rsrc:communicator:Communicator.rsrc";
 	""
 #endif
   	, purgeable ) {
-  	"You cannot run two versions of Netscape at once. "
+  	"You cannot run two versions of "PROGRAM_NAME" at once. "
 	"This copy will quit now."
   };
 
@@ -1096,7 +1096,7 @@ resource 'STR ' ( RECIPIENT, "", purgeable ) {
 };
 
 resource 'STR ' ( DELETE_MIMETYPE, "", purgeable ) {
-	"Are you sure you want to delete this type? Netscape will not be able to display information of this type if you proceed."
+	"Are you sure you want to delete this type? "PROGRAM_NAME" will not be able to display information of this type if you proceed."
 };
 
 /* mail attachments are given a content-description string,
@@ -1161,11 +1161,7 @@ resource 'STR ' ( ERROR_LAUNCH_IBM3270, "", purgeable ) {
 };
 
 resource 'STR ' ( ERROR_OPEN_PROFILE_MANAGER, "", purgeable ) {
-#ifdef MOZ_LITE
-	"Please quit Netscape Navigator before opening the Profile Manager.";
-#else
-	"Please quit Netscape Communicator before opening the Profile Manager.";
-#endif
+	"Please quit "PROGRAM_NAME" before opening the Profile Manager.";
 };
 
 resource 'STR ' ( CALENDAR_APP_NAME,
@@ -1178,6 +1174,27 @@ resource 'STR ' ( CALENDAR_APP_NAME,
 	"Netscape Calendar";
 };
 
+resource 'STR ' ( IMPORT_APP_NAME,
+#if USE_RESOURCE_NAMES
+	"Netscape Import"
+#else
+	""
+#endif
+	, purgeable ) {
+	"Netscape Import";
+};
+
+resource 'STR ' ( AIM_APP_NAME,
+#if USE_RESOURCE_NAMES
+	"AOL Instant Messenger"
+#else
+	""
+#endif
+	, purgeable ) {
+	"AOL Instant Messenger";
+};
+
+#if 0
 resource 'STR ' ( CONFERENCE_APP_NAME,
 #if USE_RESOURCE_NAMES
 	"Netscape Conference"
@@ -1187,6 +1204,7 @@ resource 'STR ' ( CONFERENCE_APP_NAME,
 	, purgeable ) {
 	"Netscape Conference";
 };
+#endif
 
 resource 'STR ' ( NETSCAPE_TELNET,
 #if USE_RESOURCE_NAMES
@@ -1265,7 +1283,8 @@ resource 'STR ' ( NO_PRINTER_RESID,
 	""
 #endif
 	, purgeable ) {
-	"Your print request could not be completed because no printer has been selected.  Please use the Chooser to select a printer.";
+	"Your print request could not be completed because no printer has been "
+	"selected.  Please use the Chooser to select a printer.";
 };
 
 resource 'STR ' ( MALLOC_HEAP_LOW_RESID,
@@ -1275,11 +1294,9 @@ resource 'STR ' ( MALLOC_HEAP_LOW_RESID,
 	""
 #endif
 	, purgeable ) {
-#ifdef MOZ_LITE
-	"Navigator is running out of memory.Ê It is recomended that you quit other running applications or close Navigator windows to continue running this program.";
-#else
-	"Communicator is running out of memory.Ê It is recomended that you quit other running applications or close Communicator windows to continue running this program.";
-#endif
+	PROGRAM_NAME" is running out of memory.Ê It is recommended that you quit "
+	"other running applications or close "PROGRAM_NAME" windows to continue running "
+	"this program.";
 };
 
 resource 'STR ' ( JAVA_DISABLED_RESID,
@@ -1289,9 +1306,5 @@ resource 'STR ' ( JAVA_DISABLED_RESID,
 	""
 #endif
 	, purgeable ) {
-#ifdef MOZ_LITE
-	"Java has been disabled as Navigator is low on memory..";
-#else
-	"Java has been disabled as Communicator is low on memory..";
-#endif
+	"Java has been disabled as "PROGRAM_NAME" is low on memory..";
 };

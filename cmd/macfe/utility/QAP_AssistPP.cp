@@ -50,6 +50,7 @@ To use this assistance hook with your PowerPlant application, do the following:
 */
 
 #include "QAP_Assist.h"
+#ifdef QAP_BUILD
 #include <string.h>
 
 #include <LButton.h>
@@ -110,19 +111,31 @@ static short LPaneGetTextInfo (LPane * lpanep, PTEXTINFO textInfop);
 static short LPaneGetCustomItemName (LPane * lpanep, char * cp_buf);
 static short LPaneGetCustomItemValue (LPane * lpanep, long * l_value);
 
-#ifdef QAP_BUILD
-
 // NOTE: assumes that <MacHeaders> is automatically included
 
 //	----------------------------------------------------------------------------
 //	¥	QAP_AssistHook
 //	----------------------------------------------------------------------------
 //		QAP_AssistHook is the actual assistance hook callback.
+//
+//¥NETSCAPE:
+//	- The kQAPGetListInfo and kQAPGetListContents cases were out-commented.
+//	- A5 was set/restored on each individual case and the GrafPort was not saved at all.
+//	  We now do that at the beginning and the end of the function. Saving the GrafPort
+//	  is necessary because of LPaneGetContents() => AddViewItem() => LPane::FocusDraw().
 
 pascal short QAP_AssistHook (short s_selector, long l_handle, void * p_buffer, short s_val, long l_inAppA5)
 {
 	short s_result;
 	long l_saveA5;
+	GrafPtr savePort;
+
+	// Set my A5 and grafport
+	if (l_inAppA5 != nil)
+	{
+		l_saveA5 = SetA5 (l_inAppA5);	// line order...
+		::GetPort(&savePort);			// ...does matter
+	}
 
 	/* Dispatch to the appropiate function and return the result. */
 	
@@ -137,54 +150,48 @@ pascal short QAP_AssistHook (short s_selector, long l_handle, void * p_buffer, s
 		break;
 
 	case kQAPGetWindowContents:
-		l_saveA5 = SetA5 (l_inAppA5);
 		s_result = GetWindowContents ((WindowPtr) l_handle, (PWCINFO) p_buffer, s_val);
-		l_saveA5 = SetA5 (l_saveA5);
 		break;
 
 /*
 	case kQAPGetCustomItemName:
-		l_saveA5 = SetA5 (l_inAppA5);
 		LPaneGetCustomItemName ((LPane *) l_handle, (char *) p_buffer);
-		l_saveA5 = SetA5 (l_saveA5);
 		break;
 */	
 	case kQAPGetCustomItemValue:
-		l_saveA5 = SetA5 (l_inAppA5);
 		LPaneGetCustomItemValue ((LPane *) l_handle, (long *) p_buffer);
-		l_saveA5 = SetA5 (l_saveA5);
 		break;
 		
 	case kQAPGetTextInfo:
-		l_saveA5 = SetA5 (l_inAppA5);
 		s_result = LPaneGetTextInfo ((LPane *) l_handle, (PTEXTINFO) p_buffer);
-		l_saveA5 = SetA5 (l_saveA5);
 		break;
 
 	case kQAPGetListInfo:
 		//	PowerPlant LListBox uses the Mac Toolbox ListManager, so QAP gets
 		//	the information it needs from the ListHandle.  If you use custom 
 		//	ListBoxes, this selector would be called to retrieve information about the ListBox.
-//¥NETSCAPE: the following lines were out-commented
-		l_saveA5 = SetA5 (l_inAppA5);
 		s_result = GetListInfo ((LPane *) l_handle, (PQAPLISTINFO) p_buffer);
-		l_saveA5 = SetA5 (l_saveA5);
 		break;
 
 	case kQAPGetListContents:
 		//	PowerPlant LListBox uses the Mac Toolbox ListManager, so QAP gets
 		//	the information it needs from the ListHandle.  If you use custom 
 		//	ListBoxes, this selector would be called to retrieve the contents the ListBox.
-//¥NETSCAPE: the following lines were out-commented
-		l_saveA5 = SetA5 (l_inAppA5);
 		s_result = GetListContents ((LPane *) l_handle, (Ptr) p_buffer, s_val);
-		l_saveA5 = SetA5 (l_saveA5);
 		break;
 
 	default:
 		s_result = 0;
 		break;
 	}
+
+	// restore A5 and grafport
+	if (l_inAppA5 != nil)
+	{
+		::SetPort(savePort);			// line order...
+		l_saveA5 = SetA5 (l_saveA5);	// ...does matter
+	}
+
 	return s_result;
 }
 
@@ -274,6 +281,9 @@ static short GetWindowContents (WindowPtr winp, PWCINFO wcp, short s_max)
 //	----------------------------------------------------------------------------
 static short GetListInfo (LPane * lpanep, PQAPLISTINFO p_buffer)
 {
+#ifdef QAP_V4_DRIVER_WORKAROUND
+	lpanep = (LPane *)(((long*)lpanep)[4]);
+#endif //QAP_V4_DRIVER_WORKAROUND
 	CQAPartnerTableMixin* qaTable = dynamic_cast <CQAPartnerTableMixin*> (lpanep);
 	if (qaTable != NULL)
 		qaTable->QapGetListInfo(p_buffer);
@@ -805,4 +815,4 @@ short	CQAPartnerTableMixin::QapGetListContents(Ptr pBuf, short index)
 	return count;
 }
 
-#endif /* QAP_BUILD */
+#endif // QAP_BUILD

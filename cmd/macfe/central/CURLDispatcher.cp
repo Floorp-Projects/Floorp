@@ -218,8 +218,6 @@ void CURLDispatcher::ListenToMessage(
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 
-XP_List* gAppleDoubleSpecList = nil; // for the ad decoder (see ad_decode.c)
-
 void CURLDispatcher::DispatchToDisk(CURLDispatchInfo* inDispatchInfo)
 {
 	CBrowserContext* theContext = NULL;
@@ -241,18 +239,6 @@ void CURLDispatcher::DispatchToDisk(CURLDispatchInfo* inDispatchInfo)
 		theProgressWindow->Show();
 		
 		inURL->fe_data = StructCopy(&destSpec, sizeof(FSSpec));
-		if (destSpec.name[0] != '\0')
-		{
-			// Put the spec into our global variable where the ad decoder will find it.
-			if (!gAppleDoubleSpecList)
-			    gAppleDoubleSpecList = XP_ListNew();
-			FSSpec* spec = (FSSpec*)XP_ALLOC(sizeof(FSSpec));
-			FailNIL_(spec);
-			OSErr err = CFileMgr::UniqueFileSpec(destSpec, destSpec.name, *spec);
-			if (err)
-				throw err;
-			XP_ListAddObjectToEnd(gAppleDoubleSpecList, spec);
-		}
 		theProgressWindow->SetWindowContext(theContext);
 		// the window will be shown on the first progress call.
 		
@@ -261,8 +247,6 @@ void CURLDispatcher::DispatchToDisk(CURLDispatchInfo* inDispatchInfo)
 	catch (...)
 		{
 		delete theProgressWindow;		
-		XP_ListDestroy(gAppleDoubleSpecList);
-		gAppleDoubleSpecList = nil;
 		throw;
 		}
 }

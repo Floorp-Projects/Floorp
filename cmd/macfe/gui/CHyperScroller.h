@@ -31,12 +31,11 @@
 
 class CHyperScroller: public CConfigActiveScroller
 {
-#if !defined(__MWERKS__) || (__MWERKS__ >= 0x2000)
-	typedef CConfigActiveScroller inherited;
-#endif
+	typedef CConfigActiveScroller Inherited;
+
 
 public:
-	friend class CHyperView;
+	//friend class CHyperView;		// this class no longer exists
 	
 					enum { class_ID = 'HSCR' };
 					
@@ -55,13 +54,16 @@ public:
 	Boolean			HasVerticalScrollbar() { return !fVerticalBar;}
 	Boolean			HasHorizontalScrollbar() {return !fHorizontalBar; }
 
+	Boolean			ScrolledToMinVerticalExtent();
+	Boolean			ScrolledToMaxVerticalExtent();
+	
 	// Draw  a little gray rectangle next to scrollers if needed
 	void			DrawDummySizeBox();
 	
 	void			AdjustHyperViewBounds(void);
-	virtual void AdjustScrollBars();
-
-	virtual void RefreshSelf();
+	virtual void 	AdjustScrollBars();
+	
+	virtual void 	RefreshSelf();
 
 	// Access to handle grow icon state
 	Boolean			GetHandleGrowIconManually() { return mHandleGrowIconManually; }

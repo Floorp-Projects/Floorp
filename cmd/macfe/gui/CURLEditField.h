@@ -50,6 +50,9 @@ enum {
 
 class CURLEditField : public CTSMEditField, public LBroadcaster, public LListener
 {
+	private:
+		typedef CTSMEditField	Inherited;
+		
 	public:
 		enum { class_ID = 'UEdF' };
 		
@@ -61,11 +64,17 @@ class CURLEditField : public CTSMEditField, public LBroadcaster, public LListene
 		virtual void		ClickSelf(const SMouseDownEvent& inMouseDown);
 		virtual void		ListenToMessage(MessageT inMessage, void* ioParam);
 
+		virtual void 		SetDescriptor(ConstStr255Param inDescriptor);
+		virtual void		GetDescriptor(Str255 outDescriptor);
+
+		virtual void		SetDescriptor(const char *inDescriptor, Int32 inLength);
+		virtual void 		GetDescriptor(char *inDescriptorStorage, Int32 &ioLength);
+		
 		virtual Boolean		ObeyCommand(CommandT inCommand,
 										void *ioParam = nil);
 
 	protected:
-		virtual Boolean		DisplayURL(CStr255& inURL);
+		virtual Boolean		DisplayURL(const char *inURL);
 		virtual void		BeTarget();
 	
 		Boolean				mURLStringInSync;

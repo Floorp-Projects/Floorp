@@ -29,6 +29,7 @@ const MessageT cmd_RenameProfile = 4003;
 const MessageT cmd_QuitProfile = 4004;
 const MessageT cmd_EditDialSettings = 4010;
 const MessageT cmd_LocationPopup = 4011;
+const MessageT cmd_RemoteProfile = 4012;
 
 enum ProfileErr {
 	eUserCancelled = -2,
@@ -210,7 +211,8 @@ private:
 	static OSErr	 	MakeDesktopIcons(const CStr31& profileName,
 							const Boolean wantsNavigator, const Boolean wantsInbox);
 
-	enum			{	kInvalidProfileID = -1 };
+	enum			{	kInvalidProfileID = -1,
+						kTemporaryProfileID = -2 };
 	
 protected:
 						// ¥ÊinPrefsFolder is the FSSpec of the users Preferences

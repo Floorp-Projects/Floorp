@@ -23,6 +23,7 @@
 
 class CMailWindow;
 class LWindow;
+class CAttachmentIcon;
 struct MSG_AttachmentData;
 
 /* CMailAttachment
@@ -30,38 +31,27 @@ struct MSG_AttachmentData;
  * list of these is kept inside a mail window
  * Has to mirror MSG_AttachmentData struct in mime.h
  */
-struct CMailAttachment	{
-	char * fURL;
-	char * fDesiredType;
-	char * fRealType; 	/* The type of the URL if known, otherwise NULL */
-	char * fRealName;	/* Real name of the file */
-	char * fDescription;
-	Boolean fSelected;
-	OSType	fFileType;
-	OSType	fFileCreator;
+struct CMailAttachment
+{
+	char 				*fURL;
+	char 				*fDesiredType;
+	char 				*fRealType; 		/* The type of the URL if known, otherwise NULL */
+	char 				*fRealName;			/* Real name of the file */
+	char 				*fDescription;
+	CAttachmentIcon		*fAttachmentIcon;
+	Boolean 			fSelected;
+	OSType				fFileType;
+	OSType				fFileCreator;
 
-	CMailAttachment(char * url, char * mimeType = NULL, char * realType = NULL, char * realName = NULL)	
-	{
-		memset(this, 0, sizeof(CMailAttachment));
-		fURL = url; 
-		fDesiredType = mimeType;
-		fRealType = realType;
-		fRealName = realName;
-		fSelected = FALSE;
-
-		// еее FIX ME: LAME
-		fFileType = 'TEXT';
-		fFileCreator = '????';
-	}
+	CMailAttachment();
+	CMailAttachment( const CMailAttachment& inOriginal );	//copy constructor
+	CMailAttachment(const char * url, const char * mimeType = NULL, const char * realType = NULL, const char * realName = NULL);
 	CMailAttachment(const FSSpec & spec);
-	CMailAttachment(const MSG_AttachmentData * data);
-	CMailAttachment()	
-	{
-		memset(this, 0, sizeof(CMailAttachment));
-	}
-	void FreeMembers();
-	CStr255& UrlText();
-	void ComposeDescription();
+	CMailAttachment(const MSG_AttachmentData * attachmentData);
+	
+	void 			FreeMembers();
+	CStr255 		UrlText();
+	void 			ComposeDescription();
 };
 
 /**************************************************************************
@@ -77,7 +67,7 @@ public:
 // constructors
 					CAttachmentList();
 	virtual			~CAttachmentList();
-	static CAttachmentList * Clone(CAttachmentList * clone);
+	static CAttachmentList * Clone(CAttachmentList * cloneList);
 
 // LArray overrides
 	virtual void	RemoveItemsAt(Uint32	inCount, Int32	inAtIndex);

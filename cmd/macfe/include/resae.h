@@ -77,16 +77,17 @@ enum	{
 //----------------------------------------------------------------------------------------
 enum	{
 
-	AE_GetWD = kURLSuite_CmdBase,	// Get working directory of app  		MOSS WURL
-	AE_OpenBookmark,				// Open bookmarks						MOSS book
-	AE_ReadHelpFile,				// Read help file						MOSS help
-	AE_Go,							// Go									MOSS gogo
-	AE_OpenProfileManager,			// Launch app with user profile mgr		MOSS prfl
-	AE_GetURL,						// GetURL								GURL GURL
-	AE_OpenAddressBook,				// Open Address Book					MOSS addr
-	AE_OpenComponent,				// Open a component						MOSS cpnt
-	AE_GetActiveProfile,			// Get the name of the active profile	MOSS upro
-	AE_HandleCommand				// Handle a command ae					MOSS ncmd
+	AE_GetWD = kURLSuite_CmdBase	// Get working directory of app  		MOSS WURL
+,	AE_OpenBookmark					// Open bookmarks						MOSS book
+,	AE_ReadHelpFile					// Read help file						MOSS help
+,	AE_Go							// Go									MOSS gogo
+,	AE_OpenProfileManager			// Launch app with user profile mgr		MOSS prfl
+,	AE_GetURL						// GetURL								GURL GURL
+,	AE_OpenAddressBook				// Open Address Book					MOSS addr
+,	AE_OpenComponent				// Open a component						MOSS cpnt
+,	AE_GetActiveProfile				// Get the name of the active profile	MOSS upro
+,	AE_HandleCommand				// Handle a command ae					MOSS ncmd
+,	AE_GetProfileImportData			// Handle a request from import module	MOSS Impt
 };
 
 
@@ -161,6 +162,9 @@ enum	{
 
 //Get active profile
 #define AE_www_getActiveProfile			'upro'
+
+// Handle request from an external import module for relevant data
+#define AE_www_getImportData			'Impt'
 
 // Objects
 #define AE_www_typeWindow				'HWIN'

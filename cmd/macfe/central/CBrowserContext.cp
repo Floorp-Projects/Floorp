@@ -36,6 +36,7 @@
 
 #include "earlmgr.h"
 #include "uprefd.h"
+#include "uapp.h"
 #include "xp.h"
 #include "xp_thrmo.h"
 #include "shist.h"
@@ -1959,6 +1960,9 @@ XP_Bool	CBrowserContext::Confirm(
 	{
 		result = UStdDialogs::AskOkCancel(mesg);
 	}
+	
+	(CFrontApp::GetApplication())->UpdateMenus();
+	
 	return result;
 }
 

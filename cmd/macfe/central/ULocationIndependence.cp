@@ -18,11 +18,59 @@
 
 // ULocationIndependence.cp - MacFE specific location independence code
 
+#ifdef MOZ_LOC_INDEP
+
+#include "CLocationIndependenceMediator.h"
+#include "prefapi.h"
+
+#include <LGACaption.h>
+#include <LGARadioButton.h>
+
+CLocationIndependenceMediator::CLocationIndependenceMediator(LStream*)
+:	CPrefsMediator(class_ID)
+{
+}
+
+CLocationIndependenceMediator::~CLocationIndependenceMediator()
+{	
+}
+
+void CLocationIndependenceMediator::LoadPrefs()
+{
+	LGARadioButton * ldapRadio = (LGARadioButton *)FindPaneByID('ldap');
+	LGARadioButton * httpRadio = (LGARadioButton *)FindPaneByID('http');
+	ThrowIfNil_(ldapRadio);
+	ThrowIfNil_(httpRadio);
+
+#define PREF_STRING_LEN 255
+	int prefStringLen;
+	char prefString[PREF_STRING_LEN];
+	prefStringLen = PREF_STRING_LEN;
+	ldapRadio->SetValue(1);
+	if ( PREF_GetCharPref("li.protocol", prefString, &prefStringLen) == 0 )
+		if (XP_STRCMP(prefString, "http") == 0)
+		httpRadio->SetValue(1);
+}
+
+void CLocationIndependenceMediator::WritePrefs()
+{
+	LGARadioButton * ldapRadio = (LGARadioButton *)FindPaneByID('ldap');
+	if ( ldapRadio->GetValue() > 0 )
+		PREF_SetCharPref("li.protocol", "ldap");
+	else
+		PREF_SetCharPref("li.protocol", "http");
+
+}
+#endif // MOZ_LOC_INDEP
+
+
+#ifdef MOZ_LI	/* MOZ_LI specific code */
+
 #include "uapp.h"
-#include "li_public.h"
-#include "pprthred.h"
+//#include "pprthred.h"
 #include "plevent.h"
 #include <LCommander.h>
+#include "li_public.h"
 
 // CLICommander
 // Location independence commands
@@ -186,3 +234,5 @@ void CFrontApp::InitializeLocationIndependence()
 //	newCommander->GetCriticalFiles();	
 }
 #endif
+
+#endif //MOZ_LI

@@ -41,14 +41,20 @@
 #include <ToolUtils.h>
 #endif
 
-class CPasteActionSnooper : public LTEPasteAction {
+#include "CTSMEditField.h"
+
+//========================================================================================
+class CPasteActionSnooper : public LTEPasteAction
+//========================================================================================
+{
 public:
 					CPasteActionSnooper (
 						TEHandle	inMacTEH,
 						LCommander	*inTextCommander,
 						LPane		*inTextPane,
 						char		*inFind,
-						char		*inReplace);
+						char		*inReplace,
+						UInt32		inMaxChars);
 			
 protected:
 			void	DoReplace(char inFind, char inReplace);
@@ -95,10 +101,19 @@ void CPasteSnooper::ExecuteSelf (MessageT inMessage, void * /* ioParam */)
 	if (!editField)
 		return;
 	
-	// here's where the paste gets done... but our CPasteActionSnooper gets a shot
+	// Because mMaxChars is a protected data member of LEditField, we can only find
+	// out the maximum count if the edit field is a CTSMEditField.
+	CTSMEditField* tsmEdit = dynamic_cast<CTSMEditField *>(editField);
+	UInt32 maxChars = tsmEdit ? tsmEdit->GetMaxChars() : 32000;
+
+	// here's where the paste gets done... but our CPasteSnooperAction gets a shot
 	// at it first to take out all the unwanted characters
 	editField->PostAction(
-		new CPasteActionSnooper(editField->GetMacTEH(), editField, editField, mFind, mReplace)
+		new CPasteActionSnooper(
+				editField->GetMacTEH(),
+				editField, editField,
+				mFind, mReplace,
+				maxChars)
 	);
 }
 
@@ -108,7 +123,8 @@ CPasteActionSnooper::CPasteActionSnooper (
 	LCommander	*inTextCommander,
 	LPane		*inTextPane,
 	char		*inFind,
-	char		*inReplace)
+	char		*inReplace,
+	UInt32		inMaxChars)
 		: LTEPasteAction(inMacTEH, inTextCommander, inTextPane)
 {
 	for (int i = 0; inFind[i] != '\0'; i++)
@@ -121,9 +137,16 @@ CPasteActionSnooper::CPasteActionSnooper (
 				break;
 			case '\a':
 				StripLeading(inFind[i]);
+				break;
 			default:
 				DoReplace(inFind[i], inReplace[i]);
 		}
+	Int32 maxSize = inMaxChars - (**inMacTEH).teLength + ((**inMacTEH).selEnd - (**inMacTEH).selStart);
+	if (mPastedTextH && GetHandleSize(mPastedTextH) > maxSize)
+	{
+		SysBeep(1);
+		SetHandleSize(mPastedTextH, maxSize);
+	}
 }
 
 // removes all instances of inDelete from mPastedTextH

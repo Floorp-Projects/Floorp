@@ -53,12 +53,9 @@ OSType ErrorManager::sAlertApp = emSignature;
 // Converts an OSErr to appropriate string.
 // Just prints the number for now, might do something more
 // useful in the future
-const CStr255 ErrorManager::OSNumToStr(OSErr err)
+void ErrorManager::OSNumToStr(OSErr err, CStr255 &outString)
 {
-	Str255 str;
-	NumToString((long)err, str);
-	CStr255 retStr(str);
-	return retStr;
+	NumToString((long)err, outString);
 }
 
 // PrepareToInteract makes sure that this is the frontmost application.
@@ -318,17 +315,15 @@ void ErrorManager::ErrorNotify(OSErr err, const CStr255& message)
 {
         if (sAlertApp != emSignature)
                 return;
-        CStr255 errNum = OSNumToStr(err);
+        CStr255 errNum;
+        
+        OSNumToStr(err, errNum);
         PlainAlert(message, errNum);
 }
 
-char * XP_GetString( int resID )
-{
-	XP_ASSERT( ( SHRT_MIN < resID ) && ( resID < SHRT_MAX ) );
-	return GetCString( resID + RES_OFFSET);
-}
-
+//----------------------------------------------------------------------------------------
 static void XPStringsNotFoundAlert()
+//----------------------------------------------------------------------------------------
 {
 	Str255 stringsFileName;
 	
@@ -338,8 +333,34 @@ static void XPStringsNotFoundAlert()
 	ExitToShell();
 }
 
+//----------------------------------------------------------------------------------------
+char * XP_GetString( int xpStringID )
+//----------------------------------------------------------------------------------------
+{
+	// Add the offset (the one added by the perl script) but leave it as 32 bits, so
+	// we can check the range.
+	int32 resID = xpStringID + RES_OFFSET;
+	// Check for wraparound.  If this happens, some xp person has started to use some
+	// range of values that we can't handle.  See also my comment at the top of
+	// allxpstr.h - jrm 98/04/01.
+	if (resID < 128 || resID > SHRT_MAX )
+	{
+		XPStringsNotFoundAlert();
+	}
+	// BEWARE! This calls CString::operator char*() const,
+	// which uses a stack of 8 static strings into which the
+	// C string is copied, and you are returned a pointer to
+	// one of these buffers. This result is volatile; 8 more
+	// calls of this operator will overwrite the string pointed
+	// to by the char* returned.
+	// You should call XP_STRDUP or otherwise store the string if you
+	// want it to persist
+	return GetCString(resID);
+}
+
 //-----------------------------------
 static void InitializeStrings()
+//-----------------------------------
 {
 	static Boolean initialized = false;
 	if (initialized)
@@ -428,23 +449,32 @@ void MoveResourceMapBelowApp()
 
 //-----------------------------------
 char* GetCString( short resID )
+//-----------------------------------
 {
 	CStr255 pstring = GetPString(resID);
-	return (char*)pstring;
+	return (char*)pstring;		// BEWARE! This calls CString::operator char*() const,
+								// which uses a stack of 8 static strings into which the
+								// C string is copied, and you are returned a pointer to
+								// one of these buffers. This result is volatile; 8 more
+								// calls of this operator will overwrite the strings pointed
+								// to by the char* returned.
 } // GetCString
 
 //-----------------------------------
 CStr255 GetPString( ResIDT resID )
+//-----------------------------------
 {
 	InitializeStrings();
 	StringHandle sh = GetString( resID );
 	if (sh && *sh)
 	{
-		StHandleLocker aLock((Handle)sh); // probably not necessary
-		return **(CStr255**)sh; // copy to caller's string.
+		//StHandleLocker aLock((Handle)sh); // (probably) not necessary, hence removed
+		CStr255		fullResult(*sh);
+		return fullResult;
 	}
-	CStr255 result; // initialized to empty by constructor.
-	return result; // This copies the string to the caller's string.	
+	
+	CStr255 emptyResult; // initialized to empty by constructor.
+	return emptyResult; // This copies the string to the caller's string.	
 } // GetPString
 
 char * INTL_ResourceCharSet(void)

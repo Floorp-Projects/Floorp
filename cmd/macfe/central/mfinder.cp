@@ -207,7 +207,7 @@ void LFinderView::CaculateFontRect()
 	FontInfo		fontInfo;
 	UInt16			fontHeight;
 	
-	fontInfo = SafeGetFontInfo( fTextTraits );
+	SafeGetFontInfo( fTextTraits, fontInfo);
 	fontHeight = fontInfo.ascent + fontInfo.descent + fontInfo.leading;
 	fCellHeight = fontHeight < 16 ? 16 : fontHeight;
 	fBaseline = fCellHeight - fontInfo.descent + fontInfo.leading;
@@ -1300,7 +1300,7 @@ void LFinderView::TrackSpace( const SMouseDownEvent& where, UInt32 /*cell*/ )
 		
 	start = where.whereLocal;
 	end = start;
-	antsRect = RectFromTwoPoints( start, end );
+	RectFromTwoPoints( start, end, antsRect );
 	
 	tmp = where.macEvent;
 	tmp.modifiers |= shiftKey;
@@ -1324,7 +1324,7 @@ void LFinderView::TrackSpace( const SMouseDownEvent& where, UInt32 /*cell*/ )
 
 			end = current;
 			oldAntsRect = antsRect;
-			antsRect = RectFromTwoPoints( start, end );
+			RectFromTwoPoints( start, end, antsRect);
 
 			this->LocalToImagePoint( topLeft( oldAntsRect ), tmpPt );
 			topCell = this->FetchCellAt( tmpPt );

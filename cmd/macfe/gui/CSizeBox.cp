@@ -70,7 +70,7 @@ void CSizeBox::ClickSelf(const SMouseDownEvent &inMouseDown) {
 
 void CSizeBox::ActivateSelf(void) {
 
-	inherited::ActivateSelf();
+	Inherited::ActivateSelf();
 	
 	if ( FocusExposed() ) {
 		DrawSelf();
@@ -84,7 +84,7 @@ void CSizeBox::ActivateSelf(void) {
 
 void CSizeBox::DeactivateSelf(void) {
 
-	inherited::ActivateSelf();
+	Inherited::ActivateSelf();
 	
 	if ( FocusExposed() ) {
 		DrawSelf();
@@ -104,7 +104,7 @@ void CSizeBox::DrawSelf(void) {
 	ApplyForeAndBackColors();
 
 	if ( IsActive() ) {
-		inherited::DrawSelf();
+		Inherited::DrawSelf();
 	} else {
 		::InsetRect(&frame, 1, 1);
 		::EraseRect(&frame);

@@ -28,9 +28,9 @@ class CIncludeView : public LPane
 // are copied into the newly installed view.
 //======================================
 {
-#if !defined(__MWERKS__) || (__MWERKS__ >= 0x2000)
-	typedef LPane inherited;
-#endif
+
+	typedef LPane Inherited;
+
 
 public:
 	enum { class_ID = 'Incl' };

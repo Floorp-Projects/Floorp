@@ -743,6 +743,8 @@ class CHTMLView :
 		RGBColor				mBackgroundColor;
 		LO_ImageStruct* 		mBackgroundImage;
 		Boolean					mEraseBackground;
+		
+		Point					mOriginalOrigin;
 
 	private:
 		CHTMLView*				mSuperHTMLView;

@@ -83,6 +83,18 @@ void CMediatedWindow::DeactivateSelf(void)
 	(CWindowMediator::GetWindowMediator())->NoteWindowDeactivated(this);
 }	
 		
+void CMediatedWindow::Hide(void)
+{
+	LWindow::Hide();
+	(CWindowMediator::GetWindowMediator())->NoteWindowHidden(this);
+}	
+		
+void CMediatedWindow::Show(void)
+{
+	LWindow::Show();
+	(CWindowMediator::GetWindowMediator())->NoteWindowShown(this);
+}	
+		
 void
 CMediatedWindow::NoteWindowMenubarModeChanged()
 {
@@ -93,10 +105,11 @@ CMediatedWindow::NoteWindowMenubarModeChanged()
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-CWindowIterator::CWindowIterator(DataIDT inWindowType)
+CWindowIterator::CWindowIterator(DataIDT inWindowType, Boolean inCountHidden)
+:	mWindowType(inWindowType)
+,	mIndexWindow(NULL)
+,	mCountHidden(inCountHidden)
 {
-	mWindowType = inWindowType;
-	mIndexWindow = NULL;
 }
 	
 Boolean CWindowIterator::Next(CMediatedWindow*& outWindow)
@@ -105,29 +118,24 @@ Boolean CWindowIterator::Next(CMediatedWindow*& outWindow)
 	if (mIndexWindow == NULL)
 		theStartWindow = (WindowPtr)LMGetWindowList();
 	else
-		{
+	{
 		theStartWindow = mIndexWindow->GetMacPort();
 		theStartWindow = (WindowPtr) ((WindowPeek) theStartWindow)->nextWindow;
-		}
+	}
 		
 	CMediatedWindow *theWindow, *theFoundWindow = NULL;
-	while (theStartWindow != NULL)
-		{
+	for ( ; theStartWindow != NULL; theStartWindow = (WindowPtr)((WindowPeek)theStartWindow)->nextWindow)
+	{
 		theWindow = dynamic_cast<CMediatedWindow*>(LWindow::FetchWindowObject(theStartWindow));
-		if (theWindow == NULL)
-			{
-			theStartWindow = (WindowPtr) ((WindowPeek) theStartWindow)->nextWindow;
+		if (theWindow == NULL || (!mCountHidden && !theWindow->IsVisible()))
 			continue;
-			}
 
-		if ((mWindowType == WindowType_Any) || (theWindow->GetWindowType() == mWindowType))
-			{
+		if ((mWindowType == WindowType_Any || theWindow->GetWindowType() == mWindowType))
+		{
 			theFoundWindow = theWindow;
 			break;
-			}
-
-		theStartWindow = (WindowPtr)((WindowPeek)theStartWindow)->nextWindow;
 		}
+	}
 		
 	outWindow = theFoundWindow;
 	mIndexWindow = theFoundWindow;
@@ -344,6 +352,16 @@ void CWindowMediator::NoteWindowDisposed(CMediatedWindow* inWindow)
 {
 	BroadcastMessage(msg_WindowDisposed, inWindow);
 	mWindowList.Remove(&inWindow);
+}
+
+void CWindowMediator::NoteWindowShown(CMediatedWindow* inWindow)
+{
+	BroadcastMessage(msg_WindowCreated, inWindow);
+}
+
+void CWindowMediator::NoteWindowHidden(CMediatedWindow* inWindow)
+{
+	BroadcastMessage(msg_WindowDisposed, inWindow);
 }
 
 void CWindowMediator::NoteWindowDescriptorChanged(CMediatedWindow* inWindow)

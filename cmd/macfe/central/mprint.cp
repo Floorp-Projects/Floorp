@@ -46,9 +46,15 @@
 #include "libi18n.h"
 #include "xlate.h"
 #include "np.h"
-
+#include <LArray.h>
 #include "mimages.h"
 #include "mplugin.h"
+
+//	***** BEGIN HACK ***** (Bug #83149)
+#if defined (JAVA)
+#include "MJava.h"
+#endif
+//	***** END HACK *****
 
 #pragma mark --- CPrintHTMLView ---
 
@@ -1156,6 +1162,30 @@ CHTMLPrintout* CHTMLPrintout::sHTMLPrintout = nil;
 
 extern void BuildAWindowPalette( MWContext* context, WindowPtr window );
 
+//	***** BEGIN HACK ***** (Bug #83149)
+#if defined (JAVA)
+static Boolean gAllowJavaAWTDrawingCalled_HACK = false;
+static Boolean gCHTMLPrintoutContructed_HACK = false;
+
+//	Do the wrong thing and declare this here instead of in a header file
+extern "C" Boolean FE_AllowJavaAWTDrawing_HACK();
+
+//	Disable all Java AWT drawing while the FE is printing
+//	(This is actually called from LMacGraphics::BeginDrawing
+//	in ns:sun-java:awt:macos:LMacGraphics.cp)
+
+Boolean FE_AllowJavaAWTDrawing_HACK()
+{
+	if (gCHTMLPrintoutContructed_HACK)
+	{
+		gAllowJavaAWTDrawingCalled_HACK = true;
+		return false;
+	}
+	return true;
+}
+#endif //JAVA
+//	***** END HACK *****
+
 //-----------------------------------
 CHTMLPrintout::CHTMLPrintout( LStream* inStream )
 //-----------------------------------
@@ -1165,7 +1195,36 @@ CHTMLPrintout::CHTMLPrintout( LStream* inStream )
 ,	mPrinted(false)
 {
 	sHTMLPrintout = this;
+	
+	//	***** BEGIN HACK ***** (Bug #83149)
+#if defined (JAVA)
+	gCHTMLPrintoutContructed_HACK = true;
+#endif //JAVA
+	//	***** END HACK *****
 }
+
+//	***** BEGIN HACK ***** (Bug #83149)
+#if defined (JAVA)
+static void RefreshJavaSubPanes(LArray& subPanes)
+{
+	LArrayIterator itererator(subPanes, LArrayIterator::from_Start);
+	LPane* pane = NULL;
+	
+	while (itererator.Next(&pane))
+	{
+		if (pane->GetPaneID() == CJavaView::class_ID)
+			pane->Refresh();
+		else
+		{
+			LView *view = dynamic_cast<LView *>(pane);
+			
+			if (view)
+				RefreshJavaSubPanes(view->GetSubPanes());
+		}
+	}
+}
+#endif //JAVA
+//	***** END HACK *****
 
 //-----------------------------------
 CHTMLPrintout::~CHTMLPrintout()
@@ -1178,6 +1237,31 @@ CHTMLPrintout::~CHTMLPrintout()
 	mContext->RemoveListener(this);
 	mContext->RemoveUser(this);
 	sHTMLPrintout = nil;
+	
+	//	***** BEGIN HACK ***** (Bug #83149)
+#if defined (JAVA)
+	gCHTMLPrintoutContructed_HACK = false;
+	
+	if (gAllowJavaAWTDrawingCalled_HACK)
+	{
+		gAllowJavaAWTDrawingCalled_HACK = false;
+		
+		//	Update all the Java panes in all PowerPlant windows
+		for (	WindowPtr macWindow = (WindowPtr)LMGetWindowList();
+				macWindow;
+				macWindow = (WindowPtr)((WindowPeek)macWindow)->nextWindow)
+		{
+			if (((WindowPeek)macWindow)->visible)
+			{
+				LWindow *ppWindow = LWindow::FetchWindowObject(macWindow);
+				
+				if (ppWindow)
+					RefreshJavaSubPanes(ppWindow->GetSubPanes());
+			}
+		}
+	}
+#endif //JAVA
+	//	***** END HACK *****
 }
 
 //-----------------------------------

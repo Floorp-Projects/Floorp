@@ -190,16 +190,26 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
 			*(CStr63*)(outSpec->name) = "\pIMAPmail";
 			
+			FSSpec tempSpec;
+			OSErr getInfoErr = FSMakeFSSpec(
+									outSpec->vRefNum,
+									outSpec->parID,
+									outSpec->name,
+									&tempSpec);
+			if (getInfoErr == fnfErr)
+			{
+				// We have to make the root imap directory ourselves.
+				long ignored;
+				err = FSpDirCreate(outSpec, smSystemScript, &ignored);
+				if (err)
+					break;
+			}
 			CInfoPBRec infoRecord;
 			XP_MEMSET(&infoRecord, 0, sizeof(infoRecord));
-			infoRecord.dirInfo.ioDrDirID = 0;
+			infoRecord.dirInfo.ioDrDirID = outSpec->parID;
 			infoRecord.dirInfo.ioVRefNum = outSpec->vRefNum;
-			infoRecord.dirInfo.ioNamePtr = (unsigned char *) CFileMgr::PathNameFromFSSpec(*outSpec, TRUE); 
-			if (infoRecord.dirInfo.ioNamePtr)
-			{
-				c2pstr((char *) infoRecord.dirInfo.ioNamePtr);
-			
-				OSErr getInfoErr = PBGetCatInfoSync(&infoRecord);
+			infoRecord.dirInfo.ioNamePtr = outSpec->name; 
+			getInfoErr = PBGetCatInfoSync(&infoRecord);
 				if (getInfoErr == noErr)
 				{
 					/* any error here is handled by the caller */
@@ -210,7 +220,7 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 						tempName,
 						outSpec);
 				}
-			}
+			
 			break;
 		case xpBookmarks:
 			_ftype = emTextType;
@@ -269,6 +279,15 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
 			GetIndString(outSpec->name, 300, proxyConfig);
 			break;
+		case xpJSConfig:
+			_ftype = emTextType;
+			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
+			GetIndString(outSpec->name, 300, jsConfig);
+			break;	
+
+
+
+
 		case xpSocksConfig:
 			_ftype = emTextType;
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
@@ -578,6 +597,12 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
 			*(CStr63*)(outSpec->name) = "LIClientdb.dat";
 			break;
+		case xpLIPrefs:
+			_ftype = emTextType;
+			*outSpec = CPrefs::GetFilePrototype(CPrefs::MainFolder);
+			*(CStr63*)(outSpec->name) = "liprefs.js";
+			break;
+			
 		default:
 			XP_ASSERT( false );		// Whoever added the enum, it is time to implement it on the Mac
 			err = bdNamErr;

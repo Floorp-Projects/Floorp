@@ -43,6 +43,7 @@
 	#include <LRadioGroup.h>
 	#include <LTabGroup.h>
 	#include <LTextColumn.h>
+	#include "CTextColumn.h"		// Netscape's own LTextColumn
 	#include <LSubOverlapView.h>
 	
 // еее PowerPlant Grayscale Classes
@@ -208,7 +209,8 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LIconPane);
 	RegisterClass_(LGroupBox);
 	RegisterClass_(LTextColumn);
-	
+	RegisterClass_(CTextColumn);	// Netscape's own LTextColumn
+
 	RegisterClass_(CGAPopupMenu);
 	
 	// еее PowerPlant Grayscale Classes

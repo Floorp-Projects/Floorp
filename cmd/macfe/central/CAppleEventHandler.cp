@@ -61,14 +61,14 @@
 // --- Just plain Misc
 #include "mkutils.h" // only for  FREEIF() macro.  JRM 96/10/17
 
-// --- Natscape NS
+// --- Netscape NS
 #include "CNSContextCallbacks.h"
 
-// --- Natscape Browser
+// --- Netscape Browser
 #include "CBrowserContext.h"
 #include "CBrowserWindow.h"
 
-// --- Natscape MailNews
+// --- Netscape MailNews
 #ifdef MOZ_MAIL_NEWS
 #include "MailNewsSearch.h"
 #include "MailNewsFilters.h"
@@ -255,6 +255,10 @@ void CAppleEventHandler::HandleAppleEvent(
 			HandleGetActiveProfileEvent( inAppleEvent, outAEReply, outResult, inAENumber );
 			break;
 			
+		case AE_GetProfileImportData:
+			HandleGetProfileImportDataEvent( inAppleEvent, outAEReply, outResult, inAENumber );
+			break;
+			
 		// ### ????  2014 looks like it's a core suite thing, but not defined in the aedt
 		// -----------------------------------------------------------
 /*		case 2014:		// Display has changed. Maybe in 2.0, should change the pictures
@@ -331,6 +335,10 @@ void CAppleEventHandler::HandleGetURLEvent(
 		{
 			try
 			{
+				// 97-09-18 pchen -- first check to see if this is a NetHelp URL, and dispatch
+				// it directly
+				// 97/10/24 jrm -- Why can't we always dispatch directly?  CURLDispatcher
+				// already has the logic to decide what's right!  Trying this.
 				MoreExtractFromAEDesc::DispatchURLDirectly(inAppleEvent);
 			}
 			catch (...)
@@ -450,6 +458,10 @@ void CAppleEventHandler::HandleOpenURLEvent(
 		}
 		catch(...)
 		{
+			// 97-09-18 pchen -- first check to see if this is a NetHelp URL, and dispatch
+			// it directly
+			// 97/10/24 jrm -- Why can't we always dispatch directly?  CURLDispatcher
+			// already has the logic to decide what's right!  Trying this.
 			MoreExtractFromAEDesc::DispatchURLDirectly(inAppleEvent);
 			return;
 		}			
@@ -1169,6 +1181,50 @@ void CAppleEventHandler::HandleGetActiveProfileEvent(
 	}
 }
 
+//----------------------------------------------------------------------------------------
+void CAppleEventHandler::HandleGetProfileImportDataEvent( 
+	const AppleEvent	& /*inAppleEvent */,
+	AppleEvent			&outAEReply,
+	AEDesc				& /*outResult */,
+	long				/*inAENumber */)
+//
+//		Returns useful data for the external import module.
+//	
+//	Result:   
+//		'tTXT'  -- (Though binary data - see ProfileImportData struct below)
+//----------------------------------------------------------------------------------------
+{
+#if PRAGMA_ALIGN_SUPPORTED
+#pragma options align=mac68k
+#else
+#error "There'll be a big bug here"
+#endif
+	struct ProfileImportData
+	{
+		Int16		profileVRefNum;
+		long		profileDirID;
+		Int16		mailFolderVRefNum;
+		long		mailFolderDirID;
+		DataIDT		frontWindowKind;
+	} data;
+#if PRAGMA_ALIGN_SUPPORTED
+#pragma options align=reset
+#endif
+	Assert_(16==sizeof(ProfileImportData));
+	FSSpec spec = CPrefs::GetFilePrototype(CPrefs::MainFolder);
+	data.profileVRefNum = spec.vRefNum;
+	data.profileDirID = spec.parID;
+	spec = CPrefs::GetFilePrototype(CPrefs::MailFolder);
+	data.mailFolderVRefNum = spec.vRefNum;
+	data.mailFolderDirID = spec.parID;
+	CWindowIterator iter(WindowType_Any, false);
+	CMediatedWindow* frontWindow = nil;
+	data.frontWindowKind = iter.Next(frontWindow) ? frontWindow->GetWindowType() : 0;
+	/* err =*/ AEPutParamPtr( &outAEReply, 
+		keyDirectObject, 
+		typeChar, 
+		&data, sizeof(data));
+} // CAppleEventHandler::HandleGetProfileImportDataEvent
 
 /*--------------------------------------------------------------------------*/
 /*				----   Apple Event Object Model support   ----				*/
@@ -1725,12 +1781,17 @@ OSErr EudoraSuite::Set_Eudora_Priority(long thePriority)
 	Out: Pointer to a newly created C string returned */
 // --------------------------------------------------------------
 void MoreExtractFromAEDesc::GetCString(const AppleEvent	&inAppleEvent, 
-						AEKeyword keyword, char * & s)
+						AEKeyword keyword, char * & s, Boolean inThrowIfError)
 {
 	StAEDescriptor desc;
 	OSErr err = ::AEGetParamDesc(&inAppleEvent,keyword,typeWildCard,&desc.mDesc);
 	
-	ThrowIfOSErr_(err);
+	if (err) {
+		if (inThrowIfError)
+			ThrowIfOSErr_(err);
+		else
+			return;
+	}
 	TheCString(desc, s);
 }
 

@@ -20,15 +20,11 @@
 #define __H_UMailFolderMenus
 #pragma once
 /*======================================================================================
-	AUTHOR:			Ted Morris <tmorris@netscape.com> - 12 DEC 96
+	AUTHOR:			Ted Morris - 12 DEC 96
 
 	DESCRIPTION:	Mixin classes for displaying a UI menu containing a list of current 
 					mail folders.
 
-	MODIFICATIONS:
-
-	Date			Person			Description
-	----			------			-----------
 ======================================================================================*/
 
 
@@ -51,6 +47,10 @@
 /*====================================================================================*/
 
 const Int16 cMaxMailFolderNameLength = 511;
+
+#pragma mark -
+/*====================================================================================*/
+
 
 #pragma mark -
 /*====================================================================================*/
@@ -105,7 +105,9 @@ public:
 		eWantIMAP =		1 << 1,
 		eWantNews =		1 << 2,
 		eWantHosts =	1 << 3,
-		eWantDividers =	1 << 4
+		eWantDividers =	1 << 4,
+		eWantInbox	= 1<<5,
+		eWantPublicFolder= 1<<6
 	};
 	void				MSetFolderChoices(FolderChoices inChoices) { mDesiredFolderFlags = inChoices; }
 

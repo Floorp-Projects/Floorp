@@ -613,7 +613,7 @@ static Boolean GetElement(StringPtr Result,char *PathNamePtr,short ElementNumber
 }
 
 //-----------------------------------
-OSErr CFileMgr::FSSpecFromPathname(char* inPathNamePtr, FSSpec* outSpec)
+OSErr CFileMgr::FSSpecFromPathname(const char* inPathNamePtr, FSSpec* outSpec)
 // FSSpecFromPathname reverses PathNameFromFSSpec.
 // It returns a FSSpec given a c string which is a mac pathname.
 //-----------------------------------
@@ -748,7 +748,7 @@ OSErr CFileMgr::FindApplication(OSType sig, FSSpec& file)
 }
 
 //-----------------------------------
-inline void  SwapSlashColon(char * s)
+void  SwapSlashColon(char * s)
 // Swaps ':' with '/'
 //-----------------------------------
 {
@@ -891,7 +891,7 @@ OSErr CFileMgr::FSSpecFromLocalUnixPath(
 	if (err == noErr && resolveAlias)	// Added 
 		err = ::ResolveAliasFile(inOutSpec,TRUE,&dummy,&dummy2);
 	XP_FREE(macPath);
-	Assert_(err==noErr||err==fnfErr);
+	Assert_(err==noErr||err==fnfErr||err==dirNFErr||err==nsvErr);
 	return err;
 } // CFileMgr::FSSpecFromLocalUnixPath
 
@@ -945,6 +945,28 @@ void CFileMgr::CopyFSSpec(const FSSpec & srcSpec, FSSpec & destSpec)
 	destSpec.vRefNum = srcSpec.vRefNum;
 	destSpec.parID = srcSpec.parID;
 	*(CStr31*)&destSpec.name = srcSpec.name;
+}
+
+
+// delete any items we may have left in the "Temporary Items" folder.
+void CFileMgr::DeleteCommTemporaryItems()
+{
+	FSSpec 		commFolderSpec = {0};	// prototype filespec *within* the temp items folder
+	long		tempItemsDirID;
+	short		vRefNum;
+	OSErr		err;
+	
+	err = ::FindFolder(kOnSystemDisk, kTemporaryFolderType, kDontCreateFolder,
+										&vRefNum, &tempItemsDirID);
+	if (err != noErr) return;	//no temp items folder; do nothing
+
+	if ( (noErr == ::FSMakeFSSpec(vRefNum, tempItemsDirID, "\pnscomm40", &commFolderSpec) ) && IsFolder(commFolderSpec) )
+	{
+		// blow it away. This is recursive.
+		err = DeleteFolder(commFolderSpec);
+	}
+	
+	Assert_(err == noErr);
 }
 
 OSErr CFileMgr::GetFolderID(FSSpec& folderSpec, long& dirID)

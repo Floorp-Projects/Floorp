@@ -91,18 +91,28 @@ void CWindowMenu::ListenToMessage(MessageT inMessage, void *ioParam)
 void CWindowMenu::AddWindow(const CMediatedWindow* inWindow)
 //-----------------------------------
 {
-	mWindowList.InsertItemsAt(1, LArray::index_Last, &inWindow);
-	LCommander::SetUpdateCommandStatus(true);
-	SetMenuDirty(true);
+	// Check if a window is already there (needed now that we call remove on
+	// both hide/dispose and add on both show/add)
+	ArrayIndexT	index = mWindowList.FetchIndexOf(&inWindow);
+	if (index == LArray::index_Bad)
+	{
+		mWindowList.InsertItemsAt(1, LArray::index_Last, &inWindow);
+		LCommander::SetUpdateCommandStatus(true);
+		SetMenuDirty(true);
+	}
 }
 
 //-----------------------------------
 void CWindowMenu::RemoveWindow(const CMediatedWindow* inWindow)
 //-----------------------------------
 {
-	mWindowList.Remove(&inWindow);
-	LCommander::SetUpdateCommandStatus(true);
-	SetMenuDirty(true);
+	ArrayIndexT	index = mWindowList.FetchIndexOf(&inWindow);
+	if (index != LArray::index_Bad)
+	{
+		mWindowList.Remove(&inWindow);
+		LCommander::SetUpdateCommandStatus(true);
+		SetMenuDirty(true);
+	}
 }
 
 //-----------------------------------
@@ -175,7 +185,7 @@ Boolean CWindowMenu::ObeyWindowCommand(Int16 inMenuID, Int16 inMenuItem)
 	const CMediatedWindow* window = NULL;
 	if (!mWindowList.FetchItemAt(inMenuItem, &window) || !window)
 		return false;
-	AppleEvent theSelectEvent;
+	//AppleEvent theSelectEvent;
 	//LAEStream theEventStream(kAEMiscStandards, kAESelect);
 	//StAEDescriptor windowDesc;
 	//window->MakeSpecifier(windowDesc.mDesc);		

@@ -49,6 +49,9 @@ class CProxyPane
 ,	public LDragAndDrop
 ,	public MPaneEnablerPolicy
 {
+private:
+		typedef LGAIconSuite Inherited;
+		
 public:
 	enum {
 		class_ID = 'Bpxy',
@@ -61,9 +64,7 @@ public:
 		kProxyIconMouseOverID	= 15314
 		
 	};
-
-	typedef LGAIconSuite super;
-							
+						
 							CProxyPane(
 									LStream*		inStream);
 	virtual  				~CProxyPane();
@@ -105,9 +106,9 @@ protected:
 	virtual void			ToggleIcon(
 									ResIDT			inResID);
 
-	CNetscapeWindow*		mWindow;
+	CNetscapeWindow*		mNetscapeWindow;
 	LView*					mProxyView;
-	LCaption*				mIconText;
+	LCaption*				mPageProxyCaption;
 	
 	DragSendDataUPP 		mSendDataUPP;
 	Boolean					mMouseInFrame;

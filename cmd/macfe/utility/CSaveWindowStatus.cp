@@ -363,11 +363,9 @@ void CSaveWindowStatus::WriteWindowStatus(LStream *outStatusData)
 	Store window preferences.
 ======================================================================================*/
 
-void CSaveWindowStatus::SaveStatusInfo() {
-
-	// Try to save the settings if the window is visible
-	
-	if ( !mCanSaveStatus || !mWindowSelf->IsVisible() ) return;
+void CSaveWindowStatus::SaveStatusInfo()
+{
+	if ( !mCanSaveStatus ) return;
 	
 	try
 	{

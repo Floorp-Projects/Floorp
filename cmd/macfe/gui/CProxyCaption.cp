@@ -37,7 +37,7 @@
 CProxyCaption::CProxyCaption(
 	LStream*		inStream)
 	
-	:	super(inStream)
+	:	Inherited(inStream)
 {
 }
 
@@ -48,7 +48,7 @@ CProxyCaption::CProxyCaption(
 void
 CProxyCaption::FinishCreateSelf()
 {
-	super::FinishCreateSelf();
+	Inherited::FinishCreateSelf();
 	
 	CalcLocalFrameRect(mOriginalFrame);
 }
@@ -61,7 +61,7 @@ void
 CProxyCaption::SetDescriptor(
 	ConstStringPtr	inDescriptor)
 {
-	super::SetDescriptor(inDescriptor);
+	Inherited::SetDescriptor(inDescriptor);
 	
 	FocusDraw();
 	

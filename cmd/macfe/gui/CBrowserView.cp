@@ -21,20 +21,20 @@
 	// need these for various routine calls
 #include "CHTMLClickrecord.h"
 #include "msgcom.h"
-#include "proto.h"
+//#include "proto.h"
 #include "RandomFrontEndCrap.h"
 #include "CBrowserContext.h"
-#include "CBookmarksAttachment.h"
+//#include "CBookmarksAttachment.h"
 #include "ufilemgr.h"
 #include "CURLDispatcher.h"
 #include "CEditorWindow.h"	// cmd_EditFrame
-#include "secnav.h"
-#include "ntypes.h"
-#include "shist.h"
+//#include "secnav.h"
+//#include "ntypes.h"
+//#include "shist.h"
 #include "macutil.h"
 #include "CViewUtils.h"
-#include "CApplicationEventAttachment.h"
-#include "uerrmgr.h"	// GetPString prototype
+//#include "CApplicationEventAttachment.h"
+//#include "uerrmgr.h"	// GetPString prototype
 #include "CTargetFramer.h"
 
 extern "C" {
@@ -80,6 +80,18 @@ CBrowserView::MoveBy(
 	}
 }
 
+
+// ---------------------------------------------------------------------------
+//		¥ DrawSelf
+// ---------------------------------------------------------------------------
+
+void
+CBrowserView::DrawSelf(void)
+{
+	Inherited::DrawSelf();
+	ExecuteAttachments(CTargetFramer::msg_DrawSelfDone, this);
+}
+
 /*	BeTarget and DontBeTarget enable and disable the drawing of the selection.
 	This has the effect of not drawing the text as selected when the view is
 	not currently the target.  Using LO_ClearSelection instead would have
@@ -87,6 +99,27 @@ CBrowserView::MoveBy(
 	is given back to the view (as in, when its window is deactivated then
 	reactivated).
 */
+
+
+// ---------------------------------------------------------------------------
+//		¥ ScrollImageBy
+// ---------------------------------------------------------------------------
+
+void
+CBrowserView::ScrollImageBy( Int32 inLeftDelta, Int32 inTopDelta, Boolean inRefresh )
+{
+	Boolean mayAutoScrollLeavingTurds = inRefresh && IsTarget(); //&& mDropRow;
+	
+	if (mayAutoScrollLeavingTurds)
+		ExecuteAttachments(CTargetFramer::msg_ResigningTarget, this);
+	
+	Inherited::ScrollImageBy(inLeftDelta, inTopDelta, inRefresh);
+
+	if (mayAutoScrollLeavingTurds && FocusDraw())
+		ExecuteAttachments(CTargetFramer::msg_BecomingTarget, this);
+}
+
+
 
 // ---------------------------------------------------------------------------
 //		¥ BeTarget

@@ -199,7 +199,6 @@ StdPopup::ExecuteSelf (MessageT message, void *param)
 		break;
 	}
 	case msg_Click: {
-		Rect frame;
 		SMouseDownEvent* event = (SMouseDownEvent*) param;
 		ThrowIfNil_(event);
 		{

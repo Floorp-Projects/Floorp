@@ -211,9 +211,9 @@ void CSwatchBrokerView::AdaptToBrokeredViewResize(
 }
 
 void CSwatchBrokerView::AdaptToBrokeredViewMove(
-	CBrokeredView*		inView,
-	const SPoint32&		inNewLocation,
-	Boolean				inRefresh)
+	CBrokeredView*		/*inView*/,
+	const SPoint32&		/*inNewLocation*/,
+	Boolean				/*inRefresh*/)
 {
 
 }

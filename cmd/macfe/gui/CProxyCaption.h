@@ -29,10 +29,14 @@
 
 class	CProxyCaption : public LCaption
 {
+private:
+	
+	typedef LCaption Inherited;
+	
 public:
 	enum { class_ID = 'Bpxc' };
 
-	typedef LCaption super;
+	
 	
 						CProxyCaption(
 								LStream*		inStream);

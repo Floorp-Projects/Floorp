@@ -26,11 +26,8 @@
  *****************************************************************************/
 
 #pragma once
-
 #include <Types.h>
-
 struct CStr255;
-
 /*----------------------------------------------------------------------------
 	class ErrorManager - Utility class, no instances are created
 	
@@ -53,7 +50,7 @@ struct CStr255;
 // STILL UNDER CONSTRUCTION. FUNCTIONS WILL BE DEFINED AS NEEDED.
 class ErrorManager	{
 public:
-	static const CStr255 OSNumToStr(OSErr err);
+	static void OSNumToStr(OSErr err, CStr255 &outString);
 
 	// Call this before displaying any dialogs. It makes sure that the
 	// application is in the foreground. The routine will not 
@@ -84,6 +81,16 @@ public:
 	static OSType sAlertApp;	// Application that handles our alerts
 };
 
+
+// BEWARE! XP_GetString and GetCString call CString::operator char*() const,
+// which uses a stack of 8 static strings into which the
+// C string is copied, and you are returned a pointer to
+// one of these buffers. This result is volatile; 8 more
+// calls of this operator will overwrite the string pointed
+// to by the char* returned.
+// You should call XP_STRDUP or otherwise store the string if you
+// want it to persist
+	
 extern "C" char * XP_GetString( int resID );
 extern "C" char * GetCString( short resID );
 CStr255 GetPString( ResIDT id );

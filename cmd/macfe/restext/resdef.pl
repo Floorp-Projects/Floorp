@@ -34,7 +34,7 @@ while (<>) {
     /ResDef[ 	]*\([ 	]*([A-Za-z0-9_]+)[ 	]*,[ 	]*([\(\)0-9A-Za-z_x\-+ ]+)[ 	\01]*,[ 	]*(".*")[ 	]*\)/;
 	 if ($name ne "") {
 #   print OUT "resource 'STR ' (($id)+7000, \"$name\", purgeable)\n{\n\t";
-    print OUT "resource 'STR ' (($id)+7000, \"\", purgeable)\n{\n\t";
+    print OUT "resource 'STR ' (($id)+4000, \"\", purgeable)\n{\n\t"; # RES_OFFSET = 4000
 
 	$_ = $string;
 	s/([^.:])\\n/$1 /g;

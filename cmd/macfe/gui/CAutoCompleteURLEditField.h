@@ -30,6 +30,10 @@
 
 class CAutoCompleteURLEditField : public CURLEditField
 {
+private:
+
+	typedef CURLEditField	Inherited;
+	
 public:
 	enum {	class_ID = 'AcUF' };
 	

@@ -40,6 +40,7 @@
 #include "meditdlg.h"	// CTabbedDialog
 #include "meditor.h"	// HandleModalDialog
 #include "CEditView.h"
+#include "ufilemgr.h"
 
 	// Netscape
 #include "net.h"	// NET_cinfo_find_type
@@ -166,6 +167,12 @@ CEditorWindow* CEditorWindow::MakeEditWindow( MWContext* old_context, URL_Struct
 			}
 		}
 		// if we don't have a history entry, we're kind of screwed-->just load a blank page
+		else if ( CPrefs::GetBoolean( CPrefs::LoadHomePage ) )
+		{
+			CStr255 home = CPrefs::GetString( CPrefs::HomePage );
+			if ( home.Length() > 0 )
+				url = NET_CreateURLStruct( home, NET_NORMAL_RELOAD );
+		}
 	}
 
 	// we want to open a new blank edit window
@@ -309,7 +316,6 @@ void CEditorWindow::NoteDocTitleChanged( const char* inNewTitle )
 
 	CNSContext *theContext = GetWindowContext();
 	
-	CStr255 	title( inNewTitle );
 	char *baseName = LO_GetBaseURL( theContext->operator MWContext*() );	// don't free this...
 	// strip out username and password so user doesn't see them in window title
 	char *location = NULL;
@@ -348,13 +354,24 @@ void CEditorWindow::NoteDocTitleChanged( const char* inNewTitle )
 	netscapeTitle += " ";
 	netscapeTitle += subTitle;
 	netscapeTitle += " - [";
-	if ( inNewTitle && *inNewTitle )
+	
+	// set up page title manually; rather than rely on XP string passed in
+	EDT_PageData * pageData = EDT_GetPageData( theContext->operator MWContext*() );
+	if ( pageData && pageData->pTitle && pageData->pTitle[0] )
 	{
-		netscapeTitle += title;
+		netscapeTitle += pageData->pTitle;
 		if (csBaseURL.Length())
 			netscapeTitle += " : ";
 	}
-	netscapeTitle += csBaseURL;
+	
+	if ( pageData )
+		EDT_FreePageData( pageData );
+	
+	// add file path to end
+	if (csBaseURL.Length())
+	{
+		netscapeTitle += csBaseURL;
+	}
 	netscapeTitle += "]";
 
 	SetDescriptor( netscapeTitle );

@@ -90,7 +90,7 @@ CGAStatusBar::~CGAStatusBar(void) {
 
 StringPtr CGAStatusBar::GetDescriptor(Str255 outDescriptor) const {
 
-	return inherited::GetDescriptor(outDescriptor);
+	return Inherited::GetDescriptor(outDescriptor);
 }
 
 
@@ -221,7 +221,7 @@ void CGAStatusBar::DrawColorBorder(const Rect &inBorderRect,
 	
 	if ( mValue == eHiddenValue ) return;
 	
-	inherited::DrawColorBorder(inBorderRect, inBorderStyle);
+	Inherited::DrawColorBorder(inBorderRect, inBorderStyle);
 	
 	DrawProgressBar(inBorderRect, true);
 }

@@ -156,7 +156,7 @@ resource 'STR#' ( 300, "Pref file names", purgeable ) {{
 	"News";									// 16 News folder
 	"Security";								// 17 Security folder
 	".snm";									// 18 Mail index extension
-	":Filter Rules";						// 19 aka Mail sort file
+	"Filter Rules";						// 19 aka Mail sort file
 	"Pop State";							// 20 Mail pop state
 	"Proxy Config";							// 21 Proxy configuration
 	"Key Database";							// 22 Key db
@@ -169,7 +169,7 @@ resource 'STR#' ( 300, "Pref file names", purgeable ) {{
 	"News Host DB";							// 29 News Host DB (really.)
 	CONFIG_FILENAME;						// 30 Local config/lock file
 	"User Profiles";						// 31 User profiles database
-	":Mail Filter Log";						// 32 Mail Filter Log
+	"Mail Filter Log";						// 32 Mail Filter Log
 	"Navigator Registry";						// 33 Netscape registry
 	ESSENTIALS_FOLDER;						// 34 Essential files (where java stuff is, and other required stuff)
 	"archive";								// 35
@@ -191,6 +191,7 @@ resource 'STR#' ( 300, "Pref file names", purgeable ) {{
 	"SignedAppletDB";						// 51 Signed applet file
 	"Cookie Permissions";					// 52 Cookie permission file
 	"Single Signons";						// 53 Single Signon file
+	"failover.jsc";							// 54 jsConfig - Cached failover of .jsc startup file (AutoAdmin)
 }};
 
 resource 'STR#' ( BUTTON_STRINGS_RESID, "Button Names", purgeable ) {{

@@ -25,6 +25,7 @@
 #include "UGraphicGizmos.h"
 #include "UGAAppearance.h"
 #include "CSharedPatternWorld.h"
+#include "CToolbarModeManager.h"
 #include "macutil.h"
 #include "CNSContext.h"	// for the broadcast messages
 #include "uapp.h"
@@ -353,12 +354,12 @@ Boolean CSpinningN::ChangeMode(Int8 inNewMode, SDimension16& outDimensionDeltas)
 
 	switch (inNewMode)
 	{
-		case eMode_IconsOnly:
-		case eMode_TextOnly:
+		case eTOOLBAR_ICONS:
+		case eTOOLBAR_TEXT:
 			GetSmallIconFrameSize(frameSize);
 			break;
 		
-		case eMode_IconsAndText:
+		case eTOOLBAR_TEXT_AND_ICONS:
 			GetLargeIconFrameSize(frameSize);
 			break;
 	}

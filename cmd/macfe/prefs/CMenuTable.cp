@@ -347,7 +347,10 @@ void CMenuTable::HiliteCellActively(const STableCell	&inCell, Boolean /* inHilit
         StColorPenState::Normalize();
 
 		UDrawingUtils::SetHiliteModeOn();
-		cellFrame.left += (mFirstIndent - 1);
+		TableIndexT	woRow = mCollapsableTree->GetWideOpenIndex(inCell.row);
+		Uint32	nestingLevel = mCollapsableTree->GetNestingLevel(woRow);
+		
+		cellFrame.left += (mFirstIndent +nestingLevel*mLevelIndent );
 		::InvertRect(&cellFrame);
 	}
 }
@@ -362,7 +365,10 @@ void CMenuTable::HiliteCellInactively(const STableCell &inCell, Boolean /* inHil
         StColorPenState saveColorPen;   // Preserve color & pen state
         StColorPenState::Normalize();
 
-		cellFrame.left += (mFirstIndent - 1);
+		TableIndexT	woRow = mCollapsableTree->GetWideOpenIndex(inCell.row);
+		Uint32	nestingLevel = mCollapsableTree->GetNestingLevel(woRow);
+		cellFrame.left += (mFirstIndent +nestingLevel*mLevelIndent );
+		
 		UDrawingUtils::SetHiliteModeOn();
 		::PenMode(srcXor);
 		::FrameRect(&cellFrame);

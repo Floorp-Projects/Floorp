@@ -43,6 +43,9 @@ const MessageT	msg_WindowMenuBarModeChanged	=	'wmbr';
 class CMediatedWindow : public LWindow
 {
 	public:
+		enum { class_ID = 'CMDW' };			// for PowerPlant
+		
+							CMediatedWindow(LStream* inStream);
 							CMediatedWindow(
 									LStream* 	inStream,
 									DataIDT		inWindowType);
@@ -59,6 +62,8 @@ class CMediatedWindow : public LWindow
 		// It should overload the DefaultCSIDForNewWindow() function and return non-0 value
 		virtual Int16			DefaultCSIDForNewWindow(void) { return 0; };
 
+		virtual	void		Show(void);
+		virtual void		Hide(void);
 
 	protected:
 
@@ -74,7 +79,7 @@ class CMediatedWindow : public LWindow
 class CWindowIterator
 {
 	public:
-							CWindowIterator(DataIDT inWindowType);
+							CWindowIterator(DataIDT inWindowType, Boolean inCountHidden = true);
 	
 	Boolean					Next(CMediatedWindow*& outWindow);
 	
@@ -82,6 +87,7 @@ class CWindowIterator
 
 		CMediatedWindow*	mIndexWindow;
 		DataIDT				mWindowType;
+		Boolean				mCountHidden;
 };
 
 enum LayerType
@@ -114,6 +120,8 @@ class CWindowMediator : public LBroadcaster
 	
 		void				NoteWindowCreated(CMediatedWindow* inWindow);
 		void				NoteWindowDisposed(CMediatedWindow* inWindow);		
+		void				NoteWindowShown(CMediatedWindow* inWindow);
+		void				NoteWindowHidden(CMediatedWindow* inWindow);		
 		void				NoteWindowDescriptorChanged(CMediatedWindow* inWindow);
 		void				NoteWindowActivated(CMediatedWindow* inWindow);
 		void				NoteWindowDeactivated(CMediatedWindow* inWindow);

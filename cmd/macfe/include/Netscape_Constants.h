@@ -56,7 +56,7 @@ const ResIDT cToolsMenuID =			405;
 const ResIDT cFontMenuID =			13;
 
 // Browser mediated window types
-enum {
+typedef enum {
 	WindowType_Browser			=	'Brwz',
 	WindowType_Download			=	'Down',
 	WindowType_MailNews			=	'MaNw',
@@ -67,7 +67,6 @@ enum {
 	WindowType_Address			=	'Addr',
 	WindowType_Editor			=	'Edit',
 	WindowType_SearchMailNews	=	'Srch',
-	WindowType_SearchAddresses	=	'SAdr',
 	WindowType_Compose			=	'Comp',
 	WindowType_MailFilters		=	'Filt',
 	WindowType_Progress			=	'Prog',
@@ -76,7 +75,7 @@ enum {
 	WindowType_SubscribeNews	=	'Subs',
 	WindowType_NameCompletion	= 	'NmPk',
 	WindowType_OfflinePicker	=	'OfPk'
-};
+} NetscapeWindowT;
 
 // Browser File Menu cmd id's
 const CommandT cmd_OpenURL		=	1032;

@@ -18,6 +18,8 @@
 
 // StSetBroadcasting
 
+#pragma once
+
 class StSetBroadcasting {
 
 public:

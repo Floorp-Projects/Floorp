@@ -26,6 +26,7 @@
 #include <LArray.h>
 #include "AppleEvents.h"
 #include "PascalString.h"
+#include "ICKeys.h" // Needed for fileflags
 
 class LFileBufferStream;
 class CPrefs;
@@ -53,7 +54,7 @@ public:
 		OSType appSignature, OSType fileType );
 	~CMimeMapper();
 
-	static	Boolean	NetscapeCanHandle(CStr255& mimeType);
+	static	Boolean	NetscapeCanHandle( const CStr255& mimeType);
 
 	// •• XP prefs
 	CMimeMapper( const char* basepref );
@@ -78,7 +79,7 @@ public:
 	void SetLoadAction(LoadAction newAction);
 	void SetLatentPlugin();
 	void SetDefaultDescription();
-	
+	void SetFileFlags( Int32 inFlags ) { fFileFlags = inFlags; }
 		// External viewers
 	void SetTemporary(Boolean isTemporary)	{fTemporary = isTemporary;}
 	void RegisterViewer(OSType tempAppSig, OSType tempFileType);
@@ -98,6 +99,9 @@ public:
 	Boolean FromOldPrefs() { return fFromOldPrefs; }
 	Boolean LatentPlugin() { return fLatentPlugin; }
 	char* GetBasePref() { return fBasePref; }
+	Boolean IsLocked()	{ return fIsLocked; }
+	Int32	GetFileFlags(){ return fFileFlags; }
+	Uint8	GetNumChildrenFound() { return fNumChildrenFound; } 
 	
 	// •• operators
 	CMimeMapper & operator = (const CMimeMapper& mapper);
@@ -125,6 +129,9 @@ private:
 	OSType		fAppSig;			// Application signature
 	OSType		fFileType;			// Mac file type
 	LoadAction	fLoadAction;		// What to do after launch
+	
+	UInt8		fNumChildrenFound;	// How much of the mapper information we actually found from children mime prefs - use to throw out useless data
+	
 	// Information about the registered viewers
 	Boolean		fTemporary;			// This is only a temporary mapper
 	Boolean		fRegisteredViewer;	// This is a registered viewer, use all the special codes
@@ -135,6 +142,9 @@ private:
 	Boolean		fFromOldPrefs;		// Was this mapper from pre-plugin prefs?
 	Boolean		fLatentPlugin;		// Was the plug-in disabled only because it’s missing?
 	char*		fBasePref;			// Corresponding XP pref branch name
+	Int32		fFileFlags;			// IC style FileFlags
+	Boolean		fIsLocked;			// If the mimetype pref is locked (for Mission Control functionality)
+	
 };
 
 

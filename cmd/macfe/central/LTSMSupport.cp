@@ -119,7 +119,7 @@ void LTSMSupport::BeginTextServices()
 //		Called by DoQuit()
 //		From TE27 Page 4/14
 // ---------------------------------------------------------------------------
-void LTSMSupport::DoQuit(Int32	inSaveOption)
+void LTSMSupport::DoQuit(Int32	/* inSaveOption */)
 {
 	if (mHasTextServices)
         (void) ::CloseTSMAwareApplication();
@@ -131,9 +131,6 @@ void LTSMSupport::DoQuit(Int32	inSaveOption)
 Boolean
 LTSMSupport::TSMEvent(const EventRecord &inMacEvent)
 {
-        short oldFont;
-        ScriptCode keyboardScript;
-        
         if(mHasTextServices)
         {
 	        // make sure we have a port and it's not the Window Manager port
@@ -203,7 +200,7 @@ void LTSMSupport::StartFontScriptLimit()
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
-void LTSMSupport::StartFontScriptLimit(  ScriptCode scriptcode)
+void LTSMSupport::StartFontScriptLimit(  ScriptCode /* scriptcode */)
 {
 	//	We want to disable all the script except: Roman and the Font script
 	//  1. we have set the system script to the font script

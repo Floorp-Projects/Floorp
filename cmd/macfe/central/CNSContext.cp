@@ -29,10 +29,10 @@
 #include "CURLEditField.h"
 #include "CMochaHacks.h"
 
-#include <LString.h>
+/*  #include <LString.h> */
 
 #include "earlmgr.h"
-#include "uprefd.h"
+/*  #include "uprefd.h" */
 #include "xp.h"
 #include "xp_thrmo.h"
 #include "shist.h"
@@ -70,7 +70,7 @@ UInt32 CNSContext::sNSCWindowID = 1;		// Unique ID, incremented for each context
 
 CNSContext::CNSContext(MWContextType inType)
 :	mLoadRefCount(0)
-
+,	mCurrentCommand(cmd_Nothing)
 {
 	::memset(&mContext, 0, sizeof(MWContext));
 
@@ -510,6 +510,22 @@ void CNSContext::SetStatus(const char* inStatus)
 //
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
+cstring CNSContext::GetURLForReferral(void)
+{
+	cstring theCurrentURL;
+	
+	History_entry* theCurrentHist = SHIST_GetCurrent(&mContext.hist);
+	if (theCurrentHist != NULL)
+	{
+		if (theCurrentHist->origin_url != NULL)
+			theCurrentURL = theCurrentHist->origin_url;
+		else
+			theCurrentURL = theCurrentHist->address;
+	}
+
+	return theCurrentURL;
+}
+
 cstring CNSContext::GetCurrentURL(void)
 {
 	cstring theCurrentURL;
@@ -855,6 +871,16 @@ XP_Bool	CNSContext::Confirm(
 	return UStdDialogs::AskOkCancel(mesg);
 }
 
+PRBool XP_Confirm( MWContext * , const char * msg)
+{
+	CStr255 mesg(msg);
+	mesg = NET_UnEscape(mesg);
+	if ( UStdDialogs::AskOkCancel(mesg))
+		return PR_TRUE;
+	else
+		return PR_FALSE;
+}
+
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -889,6 +915,23 @@ char* CNSContext::PromptWithCaption(
 	return result;	
 }
 
+char * XP_Prompt(MWContext * /* pContext */, const char *inMessage, const char * inDefaultText)
+{
+	char* result = NULL;
+	CStr255 mesg(inMessage), ioString(inDefaultText);
+	mesg = NET_UnEscape(mesg);
+
+	if (UStdDialogs::AskStandardTextPrompt("", mesg, ioString))
+	{
+		if (ioString.Length() > 0)
+		{
+			result = (char*)XP_STRDUP((const char*)ioString);
+		}
+	}
+
+	return result;	
+}
+
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -908,6 +951,21 @@ XP_Bool CNSContext::PromptUsernameAndPassword(
 	return false;
 }
 
+PRBool XP_PromptUsernameAndPassword (MWContext * /* window_id */,
+					  const char *  message,
+					  char **       outUserName,
+					  char **       outPassword)
+{
+	CStr255 mesg(message), username, password;
+	if (UStdDialogs::AskForNameAndPassword(mesg, username, password))
+	{
+		*outUserName = XP_STRDUP((const char*)username);
+		*outPassword = XP_STRDUP((const char*)password);
+		return PR_TRUE;
+	}
+	return PR_FALSE;	
+}
+
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -920,6 +978,15 @@ char* CNSContext::PromptPassword(
 		return XP_STRDUP((const char*)password);
 	return nil;
 }
+
+char *XP_PromptPassword(MWContext */* pContext */, const char *pMessage)
+{
+	CStr255 message(pMessage), password;
+	if (UStdDialogs::AskForPassword(message, password))
+		return XP_STRDUP((const char*)password);
+	return nil;
+}
+
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	

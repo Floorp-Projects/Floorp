@@ -149,7 +149,7 @@ public:
 	virtual Boolean		ObeyCommand( CommandT inCommand, void* ioParam );
 	virtual void 		ClickSelf( const SMouseDownEvent& where );
 	virtual void		ResizeFrameBy( Int16 inWidthDelta, Int16 inHeightDelta, Boolean inRefresh );
-	virtual void		PutOnDuty( LCommander* inNewTarget );
+	virtual void		PutOnDuty(LCommander* inNewTarget);
 	virtual void		TakeOffDuty();
 			
 	// ¥¥Êdrag & drop

@@ -31,7 +31,11 @@ class CStr31;
 #define MAKE_RETURNS_SPACES		"\r\n", "  "
 #define DELETE_RETURNS			"\r\n", "\b\b"
 
-class CPasteSnooper : public LAttachment {
+//========================================================================================
+class CPasteSnooper : public LAttachment
+//	an attachment for filtering characters from a paste command
+//========================================================================================
+{
 public:
 
 					// inFind is a pascal string of characters that you
@@ -48,8 +52,13 @@ public:
 					// of inFind[i] should be stripped
 					CPasteSnooper (char *inFind, char *inReplace);
 			
-	virtual			~CPasteSnooper ();
+	virtual			~CPasteSnooper();
 
+protected:	
+					// this creates a CPasteActionSnooper to really do the paste
+	virtual	void	ExecuteSelf(MessageT inMessage, void *ioParam);
+
+// Data
 protected:
 	// characters that we're not allowing the user to paste
 	char			*mFind;
@@ -57,7 +66,5 @@ protected:
 	// we're supposed to delete a char rather than replace it
 	char			*mReplace;
 	
-protected:	
-					// this creates a CPasteActionSnooper to really do the paste
-	virtual	void	ExecuteSelf (MessageT inMessage, void *ioParam);
-};
+	UInt32			mMaxChars;
+}; // class CPasteSnooper

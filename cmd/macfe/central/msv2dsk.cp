@@ -49,7 +49,7 @@
 	// system
 #include <StandardFile.h>
 #include "merrors.h"
-
+#include "InternetConfig.h"
 
 
 static Boolean	GetMacFileTypesFromMimeHeader(	const URL_Struct	*	fRequest, 
@@ -228,14 +228,22 @@ DownloadFilePipe::~DownloadFilePipe ()
 OSErr DownloadFilePipe::GetSilentFileSpec()
 {
 	OSErr		err;
-	CStr31		defaultName;
-	FSSpec		defaultFolder;
-	
-	if ( fRequest->content_name )
-		defaultName = fRequest->content_name;
+	//CStr31		defaultName = CFileMgr::FileNameFromURL( fRequest->address );
+	CStr31 defaultName;
+	if( fRequest->content_name )
+	{
+		char* fileName = XP_STRDUP ( fRequest->content_name );
+		if ( fileName )
+			 SwapSlashColon( fileName );		 
+		defaultName =  fileName;
+		XP_FREEIF( fileName );
+	}
 	else
 		 defaultName =  CFileMgr::FileNameFromURL( fRequest->address ) ;
-
+	
+	
+	FSSpec		defaultFolder;
+	
 	defaultFolder = CPrefs::GetFilePrototype( CPrefs::DownloadFolder );
 	err = CFileMgr::UniqueFileSpec( defaultFolder, defaultName, fDestination );
 	if ( err )
@@ -249,13 +257,13 @@ OSErr DownloadFilePipe::GetSilentFileSpec()
 OSErr DownloadFilePipe::GetUserFileSpec()
 {
 	OSErr				err;
-	CStr31				defaultName;
-	StandardFileReply 	reply;
-
-	if ( fRequest->content_name )
+	CStr31 defaultName;
+	if( fRequest->content_name )
 		defaultName = fRequest->content_name;
 	else
 		 defaultName =  CFileMgr::FileNameFromURL( fRequest->address ) ;
+	
+	StandardFileReply 	reply;
 
 	(CStr63&)reply.sfFile.name = defaultName;
 	err = GUI_AskForFileSpec( reply );
@@ -412,7 +420,8 @@ OSErr DownloadFilePipe::Open ()
 		// If we find valid mac file type/creator data, or if the content_type
 		// isn't octet-stream, then we attempt content_type -> mime-type mapping
 		//
-		if ( 	(strcmp(fRequest->content_type, APPLICATION_OCTET_STREAM) != 0)	||
+		// MIME content types are case insensitive
+		if ( 	(XP_STRCASECMP(fRequest->content_type, APPLICATION_OCTET_STREAM) != 0)	||
 				!GetMacFileTypesFromMimeHeader(fRequest, &fileCreator, &fileType)	)
 		{		
 			mapper = CPrefs::sMimeTypes.FindMimeType (fRequest->content_type);
@@ -432,16 +441,44 @@ OSErr DownloadFilePipe::Open ()
 			{
 				if (!GetMacFileTypesFromMimeHeader(fRequest, &fileCreator, &fileType))
 				{
-					if (fIntention != FO_SAVE_AS)
+					// TRY IC
+					
+					// Time to call IC to see if it knows anything
+					ICMapEntry ICMapper;
+					
+					ICError  error = 0;
+					CStr255 saveName;
+					if( fRequest->content_name )
 					{
-						mapper = CreateUnknownMimeTypeMapper (fRequest);
-						if (!mapper)
-							return userCanceledErr;
+						char* fileName = XP_STRDUP ( fRequest->content_name );
+						if ( fileName )
+							 SwapSlashColon( fileName );		 
+						saveName =  fileName;
+						XP_FREEIF( fileName );
+					}
+					else
+						 saveName =  CFileMgr::FileNameFromURL( fRequest->address ) ;
+					
+					error = CInternetConfigInterface::MapFileName( saveName ,  &ICMapper );	
+							
+					if( error != icPrefNotFoundErr && StrLength(ICMapper.MIME_type) )
+					{
+						fileCreator = ICMapper.file_creator;
+						fileType = ICMapper.file_type;
 					}
 					else
 					{
-						fileType = 'TEXT';
-						fileCreator = emSignature;
+						if (fIntention != FO_SAVE_AS)
+						{
+							mapper = CreateUnknownMimeTypeMapper (fRequest);
+							if (!mapper)
+								return userCanceledErr;
+						}
+						else
+						{
+							fileType = 'TEXT';
+							fileCreator = emSignature;
+						}
 					}
 				}		
 			}
@@ -461,6 +498,18 @@ OSErr DownloadFilePipe::Open ()
 		fileCreator	= fHandler->GetAppSig();
 		fileType	= fHandler->GetDocType();
 		appName		= fHandler->GetAppName();
+		
+		OSType headerCreator, headerType;
+		
+		// if the file creator is the same as the one suggested by the mime mapper
+		// use the macheader to determine file type. 
+		if( GetMacFileTypesFromMimeHeader(fRequest, &headerCreator, &headerType) )
+		{
+			if( headerCreator == fileCreator )
+			{
+				fileType = headerType;
+			}		
+		}
 	}
 	
 	// Additional little hack to make sure if we've got a text/html type file and we're supposed
@@ -845,7 +894,8 @@ NET_StreamClass * NewFilePipe (
 	if (urlAddress)
 		{
 		// check to see if this is a mail or news messages
-		if (!strncasecomp (urlAddress, "mailbox:", 8) || !strncasecomp (urlAddress, "news:", 5))
+		if (!strncasecomp (urlAddress, "mailbox:", 8) || !strncasecomp (urlAddress, "news:", 5)
+			 || !strncasecomp (urlAddress, "IMAP:", 5) )
 			{
 				{
 				// this is a mail message

@@ -75,7 +75,7 @@ Boolean StBlockingDialogHandler::ExecuteAttachments(
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 void
 StBlockingDialogHandler::FindCommandStatus(
-	CommandT	inCommand,
+	CommandT	/* inCommand */,
 	Boolean		&outEnabled,
 	Boolean&	/* outUsesMark */,
 	Char16&		/* outMark */,

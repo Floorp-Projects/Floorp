@@ -18,6 +18,7 @@
 
 #include "BookmarksFile.h"
 #include "resgui.h"
+#include "fe_proto.h"
 #include <LStream.h>
 
 #include <algorithm>
@@ -27,7 +28,7 @@
 // ReadBookmarksFile
 //
 // Given a file containing a single URL (probably dropped on the Finder), open it and
-// create a bookmark entry for it so we can load it.
+// read the URL so we can load it.
 //
 OSErr 
 ReadBookmarksFile ( vector<char> & oURL, FSSpec & inSpec )
@@ -56,5 +57,52 @@ ReadBookmarksFile ( vector<char> & oURL, FSSpec & inSpec )
 		return inErr;
 	}
 	
+	return noErr;
+}
+
+
+//
+// WriteBookmarksFile
+//
+// Given an URL (probably dropped on the Finder), create a file and store the URL
+//
+OSErr WriteBookmarksFile(char * url, FSSpec & spec)
+{
+	if (!url)
+		return noErr;
+	LFileStream stream(spec);
+	try
+	{
+		stream.CreateNewDataFile(emSignature, emBookmarkFile, 0);
+	}
+	catch (OSErr inErr)
+	{
+		if (inErr != dupFNErr)
+			return inErr;
+	}
+	catch (...)
+	{
+		return memFullErr;
+	}
+
+	try
+	{
+		// Set up the file
+		stream.OpenDataFork(fsRdWrPerm);
+		stream.SetMarker(0, streamFrom_Start);
+
+		char lineEnding = CR;
+		// Write the URL
+		stream.WriteData((void*)url, XP_STRLEN(url) );
+		stream.WriteData(&lineEnding, 1);
+	}
+	catch (OSErr err)
+	{
+		return err;
+	}
+	catch (...)
+	{
+		return memFullErr;
+	}
 	return noErr;
 }

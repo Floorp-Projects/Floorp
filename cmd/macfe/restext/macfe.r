@@ -25,8 +25,6 @@
 #include "mversion.h"						// version numbers, application name, etc
 #include "csid.h"
 
-
-
 // Use the Mercutio MDEF
 #define	nsMenuProc	19999
 
@@ -136,7 +134,7 @@ resource 'STR#' ( STOP_STRING_LIST, "Stop Strings", purgeable ) {{
 
 resource 'STR#' ( WINDOW_TITLES_RESID, "" ) {{
 	"Mail",
-	"Discussion Groups",
+	"Newsgroups",
 	"Composer",
 	"Address Book for ^0",		// filled in with profile name
 	"Bookmarks for ^0",
@@ -189,13 +187,9 @@ resource 'STR#' ( 6010, "" ) {{
 resource 'STR#' ( 7099, "" ) {{
 	// Terms for the first parameter of the thread window name (Mozilla %s %s)
 	"Folder"
-,	"Discussion Group"
+,	"Newsgroup"
 	 // Notification alert
-#ifdef MOZ_COMMUNICATOR_NAME
-,	"Communicator requires your attention at this time."
-#else
-,	"Navigator requires your attention at this time."
-#endif // MOZ_COMMUNICATOR_NAME
+,	PROGRAM_NAME" requires your attention at this time."
 ,	"%2.1fMB" // format string for Megabytes
 ,	"%ldK" // format string for Kilobytes
 ,	"%ld"	// format string for bytes
@@ -348,19 +342,19 @@ resource 'STR ' ( mPREFS_CANNOT_OPEN_SECOND_ALERT, "Cant Open Second Prefs File"
 };
 
 resource 'STR ' ( mPREFS_CANNOT_OPEN_SECOND_ALERT + 1, "-", purgeable ) {
-	"Quit Navigator and launch by double-clicking on the preferences file you wish to use.";
+	"Quit "PROGRAM_NAME" and launch by double-clicking on the preferences file you wish to use.";
 };
 
 resource 'STR ' ( mPREFS_CANNOT_CREATE, "Cant Create Prefs File", purgeable ) {
-	"The preferences file cannot be created.  Navigator will use the defaults.";
+	"The preferences file cannot be created.  "PROGRAM_NAME" will use the defaults.";
 };
 
 resource 'STR ' ( mPREFS_CANNOT_CREATE_PREFS_FOLDER, "Cant Create Prefs Folder", purgeable ) {
-	"The preferences folder could not be created.  Navigator will use the defaults.";
+	"The preferences folder could not be created.  "PROGRAM_NAME" will use the defaults.";
 };
 
 resource 'STR ' ( mPREFS_CANNOT_READ, "Cant Read Preferences", purgeable ) {
-	"The preferences file cannot be read.  Navigator will use the defaults.";
+	"The preferences file cannot be read.  "PROGRAM_NAME" will use the defaults.";
 };
 
 resource 'STR ' ( mPREFS_CANNOT_WRITE, "Cant Write Preferences", purgeable ) {

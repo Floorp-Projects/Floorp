@@ -70,7 +70,8 @@ resource 'aedt' (kURLSuite_aedtResID, "Mozilla & URL suite") {
 		AE_www_suite, AE_www_openAddressBook,	AE_OpenAddressBook,						// MOSS addr
 		AE_www_suite, AE_www_openComponent,		AE_OpenComponent,						// MOSS cpnt
 		AE_www_suite, AE_www_getActiveProfile,	AE_GetActiveProfile,					// MOSS upro
-		AE_www_suite, AE_www_handleCommand,		AE_HandleCommand						// MOSS hcmd
+		AE_www_suite, AE_www_handleCommand,		AE_HandleCommand,						// MOSS hcmd
+		AE_www_suite, AE_www_getImportData,		AE_GetProfileImportData					// MOSS Impt
 	}
 };
 

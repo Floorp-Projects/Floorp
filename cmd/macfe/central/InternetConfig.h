@@ -78,7 +78,8 @@ class CInternetConfigInterface
 														OSType creator,
 														ConstStr255Param filename,
 														ICMapEntry *ent);
-														
+		static	ICError MapFileName( ConstStr255Param filename, ICMapEntry *ent );	
+		static ICError	GetFileSpec( ConstStr255Param icKey , FSSpec & ioSpec );											
 #ifndef MOZ_MAIL_NEWS
 		static	ICError	SendInternetConfigURL(char *address);
 #endif

@@ -59,6 +59,7 @@ class CTSMEditField : public LEditField
 									Int32 pinStart, 
 									Int32 pinEnd, 
 									Int32 inRefCon );
+			Int16				GetMaxChars() const { return mMaxChars; } // Make it public.
 
 		protected:
 

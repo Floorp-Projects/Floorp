@@ -22,7 +22,8 @@
 #include "CEditView.h"
 #include "edt.h"
 #include "pa_tags.h"
-#include "secnav.h"		// SECNAV_MungeString, SECNAV_UnMungeString (password munging calls for publishing)
+#include "secnav.h"
+#include "rosetta.h"
 
 // macfe
 #include "ulaunch.h"	// StartDocInApp
@@ -1010,7 +1011,7 @@ Boolean CPublish::CommitChanges( Boolean /* isAllPanes */ )
 	if (fSavePassword->GetValue())
 	{
 		char *result;
-		result = SECNAV_MungeString(pass);
+		result = HG99875(pass);
 		if ( result && (strcmp( result, pass ) == 0) )
 		{
 			// munging didn't do anything so we'll write out ""
@@ -1143,7 +1144,7 @@ void CPublish::ListenToMessage( MessageT inMessage, void* ioParam )
 
 				if (NET_ParseUploadURL(text, &location, &user, &pass)) {
 					if (pass && *pass) {
-						char *newpass = SECNAV_UnMungeString(pass);
+						char *newpass = HG99876(pass);
 						XP_FREE(pass);
 						pass = newpass;
 					}
@@ -1175,7 +1176,7 @@ void CPublish::ListenToMessage( MessageT inMessage, void* ioParam )
 
 				if (NET_ParseUploadURL(BrowseLoc, &location, &user, &pass)) {
 					if (pass && *pass) {
-						char *newpass = SECNAV_UnMungeString(pass);
+						char *newpass = HG99876(pass);
 						XP_FREE(pass);
 						pass = newpass;
 					}

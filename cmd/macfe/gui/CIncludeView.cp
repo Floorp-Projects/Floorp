@@ -181,7 +181,7 @@ void CIncludeView::InstallPane(LPane* inPane)
 void CIncludeView::FinishCreateSelf()
 //-----------------------------------
 {
-	inherited::FinishCreateSelf();
+	Inherited::FinishCreateSelf();
 
 	if ( mInstalledViewID != 0 ) {
 		delete this; // removes this from superview in ~LPane

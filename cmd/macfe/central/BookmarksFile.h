@@ -24,4 +24,4 @@
 
 OSErr ReadBookmarksFile( vector<char> & oURL, FSSpec & spec);
 //OSErr WriteBookmarksFile(BM_Entry * entry, FSSpec & spec);
-//OSErr WriteBookmarksFile(char * url, FSSpec & spec);
+OSErr WriteBookmarksFile(char * url, FSSpec & spec);

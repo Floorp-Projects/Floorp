@@ -31,6 +31,7 @@
 #include <LGACheckbox.h>
 #include <LGARadioButton.h>
 #include <LGAPopup.h>
+#include <LGACaption.h>
 
 // Note.	We can do java-style 'inline' virtual functions here, because these classes
 //			all have file scope.  If you ever move these declarations to a header, you
@@ -206,6 +207,31 @@ public:
 				}
 			}
 		}
+	virtual int32 GetPrefValue() const
+		{
+			return GetPaneValue();
+		}
+	virtual void InitializeUsing(PrefReadFunc inFunc)
+		{
+			int32 value;
+			int	prefResult = inFunc(GetValidPrefName(), &value);
+			if (prefResult == PREF_NOERROR)
+				SetPaneValue(value);
+		}
+	virtual void ReadSelf()
+		{
+			InitializeUsing(PREF_GetIntPref);
+		}
+	virtual void ReadDefaultSelf()
+		{
+			if (!IsLocked())
+				InitializeUsing(PREF_GetDefaultIntPref);
+		}
+	virtual void WriteSelf()
+		{
+			if (ShouldWrite())
+				PREF_SetIntPref(GetPrefName(), GetPaneValue());
+		}
 
 }; // class CIntPrefPopup
 
@@ -323,7 +349,7 @@ public:
 					{
 						Size iByteCnt = GetHandleSize((Handle)a);
 						HLock((Handle)a);
-						PREF_SetBinaryPref(mName, *a, iByteCnt);
+						PREF_SetBinaryPref(GetPrefName(), *a, iByteCnt);
 						DisposeHandle((Handle)a);
 					}
 				}
@@ -345,7 +371,7 @@ public:
 			AliasHandle alias = nil;
 			int size;
 			void* a;
-			if (inFunc(mName, &a, &size ) == 0)
+			if (inFunc(GetValidPrefName(), &a, &size ) == 0)
 			{
 				PtrToHand(a, &(Handle)alias, size);
 				XP_FREE(a);
@@ -385,52 +411,57 @@ public:
 #include "UNewFolderDialog.h"
 #include "CMessageFolder.h"
 
+#pragma mark ---MSpecialFolderMixin---
 //======================================
-class CSpecialFolderCheckbox
+class MSpecialFolderMixin
 // Like a pref checkbox, but the descriptor is derived from a second, text preference.
 // The second pref name is obtained from the main (boolean) one by replacing the substring
 // "use" by the substring "default", eg
 //		mail.use_fcc -> mail.default_fcc
-// This conversion allows us to share the constructor template.  This guy can just have
+// This conversion allows us to share the constructor resource template.  This guy can just have
 // a different class ID.
 //======================================
-:	public CPrefCheckbox
 {
-private:
-	typedef CPrefCheckbox Inherited;
 public:
-	enum { class_ID = 'FLck' };
-					CSpecialFolderCheckbox(LStream* inStream);
-	virtual			~CSpecialFolderCheckbox();
-	virtual void	FinishCreateSelf();
+					MSpecialFolderMixin(LPane* inPane, const char* inPrefName);
+	virtual			~MSpecialFolderMixin();
+	void			FinishCreateSelf();
 	void			SetTitleUsing(const CStr255& folderName, const CStr255& serverName);
+	const char*		GetCaptionPrefName() const
+					{
+						return mCaptionPrefName;
+					}
+	void			SetCaptionPrefName(const char* inCaptionPrefName)
+					{
+						XP_FREEIF(mCaptionPrefName);
+						mCaptionPrefName = XP_STRDUP(inCaptionPrefName);
+					}
 
 protected:
-	char*	mCaptionPrefName;
-	char*	mFormatString;
-}; // class CSpecialFolderCheckbox
-
-#pragma mark ---CSpecialFolderCheckbox---
+	LPane*			mPane;
+	char*			mCaptionPrefName;
+	char*			mFormatString;
+}; // class MSpecialFolderMixin
 
 //-----------------------------------
-CSpecialFolderCheckbox::CSpecialFolderCheckbox(LStream* inStream)
+MSpecialFolderMixin::MSpecialFolderMixin(LPane* inPane, const char* inPrefName)
 //-----------------------------------
-:	CPrefCheckbox(inStream)
+:	mPane(inPane)
 ,	mCaptionPrefName(nil)
 ,	mFormatString(nil)
 {
-	LStr255 originalName = mName;
+	LStr255 originalName = inPrefName;
 	UInt8 position = originalName.Find(".use_", 1);
 	originalName.Replace(position, strlen(".use_"), ".default_", strlen(".default_"));
-	mCaptionPrefName = XP_STRDUP((const char*)CStr255(ConstStringPtr(originalName)));
+	SetCaptionPrefName((const char*)CStr255(ConstStringPtr(originalName)));
 	// The initial descriptor is the format string.
 	CStr255 text;
-	GetDescriptor(text);
+	mPane->GetDescriptor(text);
 	mFormatString = XP_STRDUP((char*)text);
 }
 
 //-----------------------------------
-CSpecialFolderCheckbox::~CSpecialFolderCheckbox()
+MSpecialFolderMixin::~MSpecialFolderMixin()
 //-----------------------------------
 {
 	XP_FREEIF(mCaptionPrefName);
@@ -438,11 +469,9 @@ CSpecialFolderCheckbox::~CSpecialFolderCheckbox()
 }
 
 //-----------------------------------
-void CSpecialFolderCheckbox::FinishCreateSelf()
+void MSpecialFolderMixin::FinishCreateSelf()
 //-----------------------------------
 {
-	Inherited::FinishCreateSelf();
-	
 	CStr255 folderName;
 	CMessageFolder folder, server;
 	UFolderDialogs::GetFolderAndServerNames(
@@ -451,30 +480,103 @@ void CSpecialFolderCheckbox::FinishCreateSelf()
 					folderName,
 					server);
 	
-	SetTitleUsing(folderName, server.GetPrettyName());
+	SetTitleUsing(folderName, server.GetName());
 }
 
 //-----------------------------------
-void CSpecialFolderCheckbox::SetTitleUsing(
+void MSpecialFolderMixin::SetTitleUsing(
 	const CStr255& folderName,
 	const CStr255& serverName)
 //-----------------------------------
 {
 	CStr255 title(mFormatString);
 	StringParamText(title, folderName, serverName);
-	SetDescriptor(title);
+	mPane->SetDescriptor(title);
+}
+
+#pragma mark ---CSpecialFolderCheckbox---
+//======================================
+class CSpecialFolderCheckbox
+// Like a pref checkbox, but the descriptor is derived from a second, text preference.
+// The second pref name is obtained from the main (boolean) one by replacing the substring
+// "use" by the substring "default", eg
+//		mail.use_fcc -> mail.default_fcc
+// This conversion allows us to share the constructor resource template.  This guy can just have
+// a different class ID.
+//======================================
+:	public CPrefCheckbox
+,	public MSpecialFolderMixin
+{
+private:
+	typedef CPrefCheckbox Inherited;
+public:
+	enum { class_ID = 'FLck' };
+					CSpecialFolderCheckbox(LStream* inStream);
+	virtual void	FinishCreateSelf();
+}; // class CSpecialFolderCheckbox
+
+//-----------------------------------
+CSpecialFolderCheckbox::CSpecialFolderCheckbox(LStream* inStream)
+//-----------------------------------
+:	CPrefCheckbox(inStream)
+,	MSpecialFolderMixin((LPane*)this, GetValidPrefName())
+{
+}
+
+//-----------------------------------
+void CSpecialFolderCheckbox::FinishCreateSelf()
+//-----------------------------------
+{
+	Inherited::FinishCreateSelf();
+	MSpecialFolderMixin::FinishCreateSelf();
+}
+
+#pragma mark ---CSpecialFolderCaption---
+//======================================
+class CSpecialFolderCaption
+// See comments for CSpecialFolderCheckbox.  This differs only in that there is no checkbox
+// there.
+//======================================
+:	public LGACaption
+,	public MPreference<LGACaption,XP_Bool>
+,	public MSpecialFolderMixin
+{
+private:
+	typedef LGACaption Inherited;
+public:
+	enum { class_ID = 'FLcp' };
+					CSpecialFolderCaption(LStream* inStream);
+	virtual void	FinishCreateSelf();
+}; // class CSpecialFolderCaption
+
+//-----------------------------------
+CSpecialFolderCaption::CSpecialFolderCaption(LStream* inStream)
+//-----------------------------------
+:	LGACaption(inStream)
+,	MPreference<LGACaption, XP_Bool>(this, inStream)
+,	MSpecialFolderMixin((LPane*)this, GetValidPrefName())
+{
+}
+
+//-----------------------------------
+void CSpecialFolderCaption::FinishCreateSelf()
+//-----------------------------------
+{
+	Inherited::FinishCreateSelf();
+	MPreferenceBase::FinishCreate();
+	MSpecialFolderMixin::FinishCreateSelf();
 }
 
 //-----------------------------------
 void UPrefControls::NoteSpecialFolderChanged(
-	LControl* inControl,
+	LPane* inDescriptionPane,
 	int inKind,
 	const CMessageFolder& inFolder)
 // The control is a checkbox displaying (e.g.) "Sent Mail on FooServer". This routine updates
 // the title after the choice of folder or server has changed.
 //-----------------------------------
 {
-	CSpecialFolderCheckbox* cb = dynamic_cast<CSpecialFolderCheckbox*>(inControl);
+	MSpecialFolderMixin* cb = dynamic_cast<MSpecialFolderMixin*>(inDescriptionPane);
 	if (cb)
 	{
 		CStr255 folderName;
@@ -484,6 +586,30 @@ void UPrefControls::NoteSpecialFolderChanged(
 						(UFolderDialogs::FolderKind)inKind,
 						folderName,
 						server);
+		cb->SetTitleUsing(folderName, server.GetName());
+	}
+}
+
+//-----------------------------------
+void UPrefControls::NoteSpecialFolderChanged(
+	LPane* inDescriptionPane,
+	const char* inNewCaptionPrefName)
+// The control is a checkbox displaying (e.g.) "Sent Mail on FooServer". This routine updates
+// the title after the choice of folder or server has changed.
+//-----------------------------------
+{
+	MSpecialFolderMixin* cb = dynamic_cast<MSpecialFolderMixin*>(inDescriptionPane);
+	if (cb && XP_STRCMP(cb->GetCaptionPrefName(), inNewCaptionPrefName) != 0)
+	{
+		cb->SetCaptionPrefName(inNewCaptionPrefName);
+		CStr255 folderName;
+		CMessageFolder folder, server;
+		UFolderDialogs::GetFolderAndServerNames(
+						inNewCaptionPrefName,
+						folder,
+						folderName,
+						server);
+		
 		cb->SetTitleUsing(folderName, server.GetName());
 	}
 }
@@ -505,5 +631,6 @@ void UPrefControls::RegisterPrefControlViews()
 	RegisterClass_(CPrefColorButton);
 #ifdef MOZ_MAIL_NEWS
 	RegisterClass_(CSpecialFolderCheckbox);
+	RegisterClass_(CSpecialFolderCaption);
 #endif // MOZ_MAIL_NEWS
 }

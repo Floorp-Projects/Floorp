@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#pragma once
+
 #include <LGAPopup.h>
 
 //======================================

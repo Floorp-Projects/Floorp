@@ -49,12 +49,15 @@
 
 CProxyPane::CProxyPane(
 	LStream*		inStream)
-		:	mProxyView(nil),
+		:	mNetscapeWindow(nil),
+			mProxyView(nil),
+			mPageProxyCaption(nil),
 			mSendDataUPP(nil),
 			mMouseInFrame(false),
+			
 			LDragAndDrop(GetMacPort(), this),
 			
-			super(inStream)
+			Inherited(inStream)
 {
 	SetIconIDs(kProxyIconNormalID, kProxyIconMouseOverID);
 }
@@ -78,14 +81,14 @@ CProxyPane::~CProxyPane()
 void
 CProxyPane::FinishCreateSelf()
 {
-	super::FinishCreateSelf();
+	Inherited::FinishCreateSelf();
 
 	mSendDataUPP = NewDragSendDataProc(LDropArea::HandleDragSendData);
 	ThrowIfNil_(mSendDataUPP);
 	
-	ThrowIfNil_(mWindow			= dynamic_cast<CNetscapeWindow*>(LWindow::FetchWindowObject(GetMacPort())));
-	ThrowIfNil_(mProxyView		= dynamic_cast<LView*>(mWindow->FindPaneByID(kProxyViewID)));
-	ThrowIfNil_(mIconText		= dynamic_cast<LCaption*>(mWindow->FindPaneByID(kProxyTitleCaptionID)));
+	ThrowIfNil_(mNetscapeWindow			= dynamic_cast<CNetscapeWindow*>(LWindow::FetchWindowObject(GetMacPort())));
+	ThrowIfNil_(mProxyView				= dynamic_cast<LView*>(mNetscapeWindow->FindPaneByID(kProxyViewID)));
+	ThrowIfNil_(mPageProxyCaption		= dynamic_cast<LCaption*>(mNetscapeWindow->FindPaneByID(kProxyTitleCaptionID)));
 
 }
 
@@ -98,6 +101,7 @@ CProxyPane::ListenToMessage(
 	MessageT		inMessage,
 	void*			ioParam)
 {
+	const Uint8 kMaxTitleLength = 50;
 	switch (inMessage)
 	{
 		case msg_NSCDocTitleChanged: // browser, mail window and message window case
@@ -113,8 +117,9 @@ CProxyPane::ListenToMessage(
 					else
 					{
 						// We don't have a title: use the URL instead of the title						
-						ThrowIfNil_(mWindow->GetWindowContext());
-						theURL = mWindow->CreateURLForProxyDrag(nil);
+						ThrowIfNil_(mNetscapeWindow->GetWindowContext());
+					
+						theURL = mNetscapeWindow->CreateURLForProxyDrag(nil);
 						if (theURL && theURL->address)
 							tempCaption = theURL->address;
 					}
@@ -122,9 +127,9 @@ CProxyPane::ListenToMessage(
 					// now we at least have something (either title or url). Handle middle
 					// truncation, etc and then set the new title.
 					string finalCaption = CURLDragHelper::MakeIconTextValid( tempCaption );
-					if (theURL)
-						NET_FreeURLStruct( theURL ); // we're done with the address string.
-					mIconText->SetDescriptor(LStr255(finalCaption.c_str()));
+					
+					NET_FreeURLStruct( theURL ); // we're done with the address string.
+					mPageProxyCaption->SetDescriptor(LStr255(finalCaption.c_str()));
 										
 					Boolean enabled = false;
 					Boolean a; Char16 b; Str255 c;
@@ -139,6 +144,7 @@ CProxyPane::ListenToMessage(
 				}
 				else
 					Disable();
+
 			}
 			break;
 	}
@@ -262,9 +268,9 @@ CProxyPane::ClickSelf(
 			CProxyDragTask theTask(
 				*mProxyView,
 				*this,
-				*mIconText,
+				*mPageProxyCaption,
 				inMouseDown.macEvent,
-				mWindow->CreateExtraFlavorAdder());
+				mNetscapeWindow->CreateExtraFlavorAdder());
 												
 			OSErr theErr = ::SetDragSendProc(
 				theTask.GetDragReference(),
@@ -292,8 +298,8 @@ CProxyPane::ClickSelf(
 			
 			// Also put a message in the status window -- mdp
 			Str255 mesg;
-			MWContext* context = *mWindow->GetWindowContext();
-			::GetIndString( mesg, 7099, 20 );
+			MWContext* context = *mNetscapeWindow->GetWindowContext();
+			::GetIndString( mesg, 7099, 20 );	// why are there no constants for these?
 			FE_Progress( context, CStr255(mesg) );
 		}
 	}
@@ -320,8 +326,7 @@ CProxyPane::DeactivateSelf()
 	// Intentionally blank. The inherited version draws icon disabled which
 	// is not what we want.
 }
-
-
+ 
 // ---------------------------------------------------------------------------
 //		¥ DoDragSendData
 // ---------------------------------------------------------------------------
@@ -333,11 +338,10 @@ CProxyPane::DoDragSendData(
 	DragReference	inDragRef)
 {
 	char title[256];
-	URL_Struct* url = mWindow->CreateURLForProxyDrag(title);
+	URL_Struct* url = mNetscapeWindow->CreateURLForProxyDrag(title);
 	CURLDragHelper::DoDragSendData(url->address, title, inFlavor, inItemRef, 
 										inDragRef);
 } // CProxyPane::DoDragSendData
-
 
 //-----------------------------------
 void CProxyPane::HandleEnablingPolicy()
@@ -346,7 +350,7 @@ void CProxyPane::HandleEnablingPolicy()
 	// We may be in background, and we need to allow dragging.  So the idea is to
 	// enable the icon if it WOULD be enabled when the window was active.  So
 	// do nothing (neither enable nor disable) when in the background.
-	if (mWindow->IsOnDuty())
+	if (mNetscapeWindow->IsOnDuty())
 	{
 		LCommander* target = LCommander::GetTarget();
 		if (target)

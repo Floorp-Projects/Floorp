@@ -259,10 +259,10 @@ void StripDoubleCRs( CStr255& msg );
 int ConvertCRtoLF( CStr255& msg );
 
 // ¥ Gets font info in a safe way
-FontInfo SafeGetFontInfo(ResIDT textTraits);
+void SafeGetFontInfo(ResIDT textTraits, FontInfo &outFontInfo);
 
 void DrawAntsRect( Rect&r, short mode );
-Rect RectFromTwoPoints( Point p1, Point p2 );
+void RectFromTwoPoints( Point p1, Point p2, Rect &outRect);
 Boolean RectInRect(const Rect *inCheckRect, const Rect *inEnclosingRect);
 
 void GetDateTimeString( CStr255& dateTime );
@@ -480,6 +480,3 @@ public:
 	StSpinningBeachBallCursor();
 	~StSpinningBeachBallCursor();
 };
-// Routine for making an icon suite for a file given the creator, type and wether you want
-// Large,small/. Note that these are DTIcon Types
-void GetDesktopIconSuiteFor( OSType inFileCreator, OSType inFileType, short inSize, Handle** ioHandle );

@@ -142,6 +142,11 @@ private:
 									AppleEvent			&outAEReply,
 									AEDesc				&outResult,
 									long				inAENumber);		
+
+	void 				HandleGetProfileImportDataEvent(const AppleEvent	&inAppleEvent,
+									AppleEvent			&outAEReply,
+									AEDesc				&outResult,
+									long				inAENumber);		
 };
 
 
@@ -289,7 +294,7 @@ public:
 		Out: Pointer to a newly created C string returned */
 	// --------------------------------------------------------------
 	static void GetCString(const AppleEvent	&inAppleEvent, AEKeyword keyword, 
-			char * & s);
+			char * & s, Boolean inThrowIfError = true);
 
 	// --------------------------------------------------------------
 	/*	Given an AEDesc of type typeChar, return it's string.

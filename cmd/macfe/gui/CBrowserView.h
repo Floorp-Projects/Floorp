@@ -33,7 +33,11 @@ class CBrowserView : public CHTMLView, public CKeyUpReceiver
 		
 								CBrowserView(LStream* inStream);
 		virtual					~CBrowserView();
-				
+	
+		virtual	void			DrawSelf();		// needed for target framer to work properly
+		
+		virtual void			ScrollImageBy( Int32 inLeftDelta, Int32 inTopDelta, Boolean inRefresh );
+		
 		virtual Boolean			DragIsAcceptable(DragReference inDragRef);
 		virtual Boolean			ItemIsAcceptable(DragReference inDragRef,
 													ItemReference inItemRef);

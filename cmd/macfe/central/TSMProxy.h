@@ -60,9 +60,8 @@ class	HTMLInlineTSMProxy //: public VTSMProxy
 			static 
 			pascal OSErr	AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *outReply, Int32 inRefCon );
 
-#if _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
 		protected:
-
+#if _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
 			virtual void	AEUpdate( const LAESubDesc &inAppleEvent );
 																					
 			virtual void	AEPos2Offset( const LAESubDesc	&inAppleEvent, LAEStream &inStream ) const;

@@ -62,9 +62,10 @@
 
 class CGAStatusBar : protected LGABox {
 
-#if !defined(__MWERKS__) || (__MWERKS__ >= 0x2000)
-	typedef LGABox inherited;
-#endif
+private:
+
+	typedef LGABox Inherited;
+
 				  
 public:
 

@@ -950,7 +950,7 @@ Boolean IsFrontWindowModal()
 // ¥ÊFetch a window title resource and fill in the current profile name
 void GetUserWindowTitle(short id, CStr255& title)
 {
-	char profileName[32];
+	char profileName[32] = "";
 	int len = 32;
 	PREF_GetCharPref("profile.name", profileName, &len);
 
@@ -1073,15 +1073,12 @@ int ConvertCRtoLF(CStr255 & msg)
 	return ret;
 }
 
-Rect RectFromTwoPoints( Point p1, Point p2 )
+void RectFromTwoPoints( Point p1, Point p2, Rect &outRect)
 {
-	Rect r;
-	r.top = MIN( p1.v, p2.v );
-	r.bottom = MAX( p1.v, p2.v );
-	r.left = MIN( p1.h, p2.h );
-	r.right = MAX( p1.h, p2.h );
-
-	return r;
+	outRect.top = MIN( p1.v, p2.v );
+	outRect.bottom = MAX( p1.v, p2.v );
+	outRect.left = MIN( p1.h, p2.h );
+	outRect.right = MAX( p1.h, p2.h );
 }
 
 // Return true if inEnclosingRect encloses any portion of inCheckRect
@@ -1107,13 +1104,12 @@ void DrawAntsRect( Rect&r, short mode )
 	::FrameRect( &r );
 }
 
-FontInfo SafeGetFontInfo(ResIDT textTraits)
+void SafeGetFontInfo(ResIDT textTraits, FontInfo &outFontInfo)
 {
 	StTextState textState;
 	UTextTraits::SetPortTextTraits(textTraits);
-	FontInfo fInfo;
-	::GetFontInfo(&fInfo);
-	return fInfo;
+	
+	::GetFontInfo(&outFontInfo);
 }
 
 void FrameButton( const Rect& box, Boolean pushed )
@@ -1176,9 +1172,6 @@ LPane* FindPaneHitBy( const Point& globalMouse )
 				that must be freed by the caller using XP_FREE.
 			Returns NULL on error;
 			
-		Q: Should the path contain / for the root? i.e. should it be
-			file:///MacHD/...
-		or	file://MacHD/..		** this form used now.
 ------------------------------------------------------------------------*/
 char *PathURLFromProcessSignature (OSType sig, OSType type)
 {
@@ -1186,7 +1179,7 @@ char *PathURLFromProcessSignature (OSType sig, OSType type)
 	FSSpec 				targetFileSpec;		// return file spec
 	char				*appPath = NULL;
 	char				*urlPath = NULL;
-	char				prefix[] = "file:/";
+	char				prefix[] = "file://";
 	OSErr 				err;
 	
 	// Get the file spec of our app
@@ -2022,42 +2015,6 @@ OSErr GetHFSFlavorFromPromise
 }
 // End of cut and paste
 
-void GetDesktopIconSuiteFor( OSType inFileCreator, OSType inFileType, short inSize, Handle** ioHandle )
-{
-	Assert_( inSize == kLargeIcon || inSize == kSmallIcon  );
-
-	Handle* h = *ioHandle;
-	
-	if (inFileCreator && inFileType )
-	{
-		Handle handle;
-		OSErr err = ::NewIconSuite(h);
-		short i = 0;
-		if (!err && *h)
-		{
-			for ( i = 0; i< 3; i++ )
-			{
-					err = ::DTGetIcon(nil, 0, inSize , inFileCreator, inFileType, &handle);
-				
-					if (!err)
-						err = ::AddIconToSuite(handle, *h, ::DTIconToResIcon( inSize  ) );
-					inSize++;
-					if( err )
-						break;
-			}
-			if( !err && i == 0 ) // Didn't find at least the B&W icon
-			{
-				::DisposeIconSuite(*h, true);
-				*h = nil;
-			}					
-		}
-	}
-	if (!*h) 
-	{
-		::GetIconSuite(h, 133, 
-			inSize == kLargeIcon ?	kSelectorAllLargeData : kSelectorAllSmallData );
-	}
-}
 
 StSpinningBeachBallCursor::StSpinningBeachBallCursor ()
 {

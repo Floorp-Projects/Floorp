@@ -33,7 +33,7 @@ CSecureAttachment::CSecureAttachment()
 
 
 void CSecureAttachment::ExecuteSelf(
-	MessageT		inMessage,
+	MessageT		/* inMessage */,
 	void			*ioParam)
 {
 	if (mTickCounter < 500)

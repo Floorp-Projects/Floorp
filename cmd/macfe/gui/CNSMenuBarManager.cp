@@ -113,6 +113,7 @@ ResIDT CNSMenuBarManager::MapWindowTypeToMBARResID(Uint32 inWindowType, CMediate
 		case WindowType_Editor:
 			result = cEditorMenubar;
 			break;
+		case WindowType_SearchMailNews:
 		case WindowType_MailNews:
 		case WindowType_MailThread:
 		case WindowType_Message:

@@ -481,7 +481,7 @@ UGraphics::SetWindowColor( GrafPort* window, short field, const RGBColor& color 
 	
 	if ( isDefault || !hasAuxWinRec || !aux )
 	{
-		XP_TRACE(("UGraphics::SetWindowColor (%p) -> nil", window));
+		//XP_TRACE(("UGraphics::SetWindowColor (%p) -> nil", window));
 		return;
 	}
 

@@ -97,7 +97,7 @@ protected:
 	virtual Uint32 FindTitleColumnID ( ) const ;
 
 		// Handle drag and drop
-	virtual void DragSelection(const STableCell& inCell, const SMouseDownEvent &inMouseDown);
+	virtual OSErr DragSelection(const STableCell& inCell, const SMouseDownEvent &inMouseDown);
 	virtual void DoDragSendData ( FlavorType inFlavor, ItemReference inItemRef, DragReference inDragRef) ;
 	virtual Boolean ItemIsAcceptable ( DragReference inDragRef, ItemReference inItemRef ) ;
 	virtual void HandleDropOfHTResource ( HT_Resource node ) ;
@@ -118,7 +118,7 @@ protected:
 
 		// for inline editing
 	virtual void InlineEditorDone ( ) ;
-	virtual bool CanDoInlineEditing ( ) ;
+	virtual Boolean CanDoInlineEditing ( ) ;
 
 		// command stuff
 	virtual void	DeleteSelection ( );

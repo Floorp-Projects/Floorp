@@ -210,10 +210,9 @@ Boolean CDateView::IsValidDate(Int16 inYear, UInt8 inMonth, UInt8 inDay) {
 
 void CDateView::GetDate(Int16 *outYear, UInt8 *outMonth, UInt8 *outDay) {
 
-	*outYear = mYearField->GetValue() + 2000;
+	*outYear = mYearField->GetValue();
 	*outMonth = mMonthField->GetValue();
 	*outDay = mDayField->GetValue();
-	if ( *outYear > cMaxViewYear ) *outYear -= 100;
 }
 
 
@@ -232,7 +231,6 @@ Boolean CDateView::SetDate(Int16 inYear, UInt8 inMonth, UInt8 inDay) {
 	Boolean rtnVal = IsValidDate(inYear, inMonth, inDay);
 
 	if ( rtnVal ) {
-		inYear -= ((inYear > 1999) ? 2000 : 1900);
 		SetDateString(mYearField, inYear, '0');
 		SetDateString(mMonthField, inMonth, mMonthField->GetLeadingChar());
 		SetDateString(mDayField, inDay, mDayField->GetLeadingChar());
@@ -472,8 +470,8 @@ EKeyStatus CDateView::DateFieldFilter(TEHandle inMacTEH, Char16 theKey, Char16& 
 			break;
 
 		default:
-			if ( UKeyFilters::IsPrintingChar(theChar) && UKeyFilters::IsNumberChar(theChar) ) {
-			
+			if ( UKeyFilters::IsPrintingChar(theChar) && UKeyFilters::IsNumberChar(theChar) )
+			{
 				PaneIDT paneID = theDateField->GetPaneID();
 				Str15 currentText;
 				theDateField->GetDescriptor(currentText);
@@ -487,14 +485,16 @@ EKeyStatus CDateView::DateFieldFilter(TEHandle inMacTEH, Char16 theKey, Char16& 
 				
 				// Validate that the current character is OK for the active field
 				
-				Str15 numString = { 2 };
+				Str15 numString;
 				long wouldBeNumber;
-				Assert_(currentText[0] == 2);
-				numString[1] = currentText[2];
-				numString[2] = theChar;
+				theDateField->GetDescriptor(numString);
+				Assert_(numString[0] == 2 || numString[0] == 4);
+				numString[numString[0] - 1] = currentText[currentText[0]];
+				numString[numString[0]] = theChar;
 				::StringToNum(numString, &wouldBeNumber);
 				
-				switch ( paneID ) {
+				switch ( paneID )
+				{
 					case eDayEditFieldID:
 						day = wouldBeNumber;
 						break;
@@ -504,21 +504,34 @@ EKeyStatus CDateView::DateFieldFilter(TEHandle inMacTEH, Char16 theKey, Char16& 
 						break;
 
 					default: // eYearEditFieldID
-						year = wouldBeNumber + 2000;
+						year = wouldBeNumber;
 						if ( year > cMaxViewYear ) year -= 100;
+						if ( year < cMinViewYear ) year += 100;
+						if (year != wouldBeNumber)
+						{
+							Str15 temp;
+							theDateField->GetDescriptor(temp);
+							temp[1] = '0' + year/1000;
+							temp[2] = '0' + (year/100)%10;
+							theDateField->SetDescriptor(temp);
+						}
 						break;
 				}
 				
 				if ( !theDateView->IsValidDate(year, month, day) ||
-					 ((paneID != eYearEditFieldID) && (numString[1] == '0')) ) {
-					if ( theChar == '0' ) {
+					 ((paneID != eYearEditFieldID) && (numString[1] == '0')) )
+				{
+					if ( theChar == '0' )
 						theKeyStatus = keyStatus_Reject;
-					} else {
+					else
+					{
 						currentText[1] = currentText[2] = theDateField->GetLeadingChar();
 						theDateField->SetDescriptor(currentText);
 					}
 				}
-			} else {
+			}
+			else
+			{
 				theKeyStatus = keyStatus_Reject;
 			}
 			break;
@@ -530,7 +543,7 @@ EKeyStatus CDateView::DateFieldFilter(TEHandle inMacTEH, Char16 theKey, Char16& 
 	Set the edit field date.
 ======================================================================================*/
 
-void CDateView::SetDateString(LEditField *inField, UInt8 inValue, UInt8 inLeadingChar) {
+void CDateView::SetDateString(LEditField *inField, UInt16 inValue, UInt8 inLeadingChar) {
 
 	Str15 valueString, tempString;
 
@@ -541,9 +554,7 @@ void CDateView::SetDateString(LEditField *inField, UInt8 inValue, UInt8 inLeadin
 		valueString[0] = 2;
 	}
 	inField->GetDescriptor(tempString);
-	if ( (tempString[0] != 2) || (tempString[1] != valueString[1]) || 
-		 (tempString[2] != valueString[2]) ) {
-		
+	if (! ::EqualString(tempString, valueString, false, false)) {	
 		inField->SetDescriptor(valueString);
 		if ( inField->IsTarget() ) {
 			inField->SelectAll();
@@ -795,10 +806,10 @@ Boolean CDateField::HandleKeyPress(const EventRecord &inKeyEvent) {
 					Str15 numString;
 					GetDescriptor(numString);
 					
-					Assert_(numString[0] == 2);
+					Assert_(numString[0] == 2 || numString[0] == 4);
 					
-					numString[1] = numString[2];
-					numString[2] = theChar;
+					numString[numString[0] - 1] = numString[numString[0]];
+					numString[numString[0]] = theChar;
 					
 					Boolean doDraw = FocusExposed();
 					

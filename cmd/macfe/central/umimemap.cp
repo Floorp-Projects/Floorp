@@ -60,17 +60,22 @@ void CMimeMapper::InitMapper()
 	fLatentPlugin = false;		// Was the plug-in disabled because itÕs missing?
 	fLoadAction = CMimeMapper::Unknown;
 	fBasePref = nil;			// Corresponding XP pref branch name
+	fIsLocked = false;			// was this locked by Mission Control (disables edit and delete)
+	fNumChildrenFound = 0;
+	fFileFlags  = 0;
 }
 
 
 Boolean
-CMimeMapper::NetscapeCanHandle(CStr255& mimeType)
+CMimeMapper::NetscapeCanHandle(const CStr255& mimeType)
 {
 	return ((mimeType == IMAGE_GIF) ||
 			(mimeType == IMAGE_JPG) ||
 			(mimeType == IMAGE_XBM) ||
+			(mimeType == IMAGE_PNG) ||
 			(mimeType == APPLICATION_BINHEX) ||
 			(mimeType == HTML_VIEWER_APPLICATION_MIME_TYPE) ||
+			(mimeType == APPLICATION_PRE_ENCRYPTED) ||
 			(mimeType == TEXT_PLAIN));
 }
 
@@ -99,6 +104,7 @@ static const char* Pref_PluginName = ".mac_plugin_name";
 static const char* Pref_Description = ".description";
 static const char* Pref_LoadAction = ".load_action";
 static const char* Pref_LatentPlugin = ".latent_plug_in";
+static const char* Pref_FileFlags	= ".file_flags";
 
 // CreateMapperFor converts an xp pref name into a mimetype mapper.
 // Finds an existing mapper or creates a new one, and
@@ -115,7 +121,15 @@ CMimeMapper* CMimeMapper::CreateMapperFor( const char* basepref, Boolean newPref
 		mapper = new CMimeMapper(basepref);
 		// FromOldPrefs triggers plug-ins to install themselves as preferred viewers
 		mapper->fFromOldPrefs = !newPrefFormat;
-		return mapper;
+		
+		// Throw out this mime mapper if we didn't find any useful info about it in prefs
+		if (mapper->GetNumChildrenFound() <= 0)
+		{
+			delete mapper;
+			return NULL;
+		}
+		else	
+			return mapper;
 	}
 }
 
@@ -163,9 +177,14 @@ void CMimeMapper::ReadMimePrefs()
 	char value[256];
 
 	fAppSig = 0;
+
+	fNumChildrenFound = 0;	// keep track of how many mapper prefs we successfully read in from prefs file
+
 	err = PREF_GetCharPref( CPrefs::Concat(fBasePref, Pref_AppSig), value, &size );
 	if (PREF_NOERROR == err)
 	{
+		fNumChildrenFound++;
+	
 		// values stored as binary (Base64) will always be longer than 4 bytes
 		// so if the string is 4 bytes long (or shorter), it's a straight character string
 		actualSize = strlen(value);
@@ -184,6 +203,8 @@ void CMimeMapper::ReadMimePrefs()
 	if (PREF_NOERROR == err)
 	{
 		// see notes above for fAppSig
+		fNumChildrenFound++;
+		
 		actualSize = strlen(value);
 		if (actualSize <= sizeof(OSType))
 			::BlockMoveData( value, (Ptr) &fFileType, actualSize );
@@ -197,33 +218,62 @@ void CMimeMapper::ReadMimePrefs()
 	
 	err = PREF_GetCharPref( CPrefs::Concat(fBasePref, Pref_AppName), value, &size );
 	if (PREF_NOERROR == err)
+	{
+		fNumChildrenFound++;
 		fAppName = value;
+	}
 	
 	err = PREF_GetCharPref( CPrefs::Concat(fBasePref, Pref_MimeType), value, &size );
 	if (PREF_NOERROR == err)
+	{
+		fNumChildrenFound++;
+		
 		fMimeType = value;
+
+		if (PREF_PrefIsLocked(CPrefs::Concat(fBasePref,Pref_MimeType)))		//for mission control - this is a convienient place to check this
+			fIsLocked = true;
+	}
 	
 	err = PREF_GetCharPref( CPrefs::Concat(fBasePref, Pref_Extension), value, &size );
 	if (PREF_NOERROR == err)
+	{
+		fNumChildrenFound++;
 		fExtensions = value;
-	
+	}
 	err = PREF_GetCharPref( CPrefs::Concat(fBasePref, Pref_PluginName), value, &size );
 	if (PREF_NOERROR == err)
+	{
+		fNumChildrenFound++;
 		fPluginName = value;
+	}
 	
 	err = PREF_GetCharPref( CPrefs::Concat(fBasePref, Pref_Description), value, &size );
 	if (PREF_NOERROR == err)
+	{
+		fNumChildrenFound++;
 		fDescription = value;
-	
+	}
 	int32 intvalue;
 	err = PREF_GetIntPref( CPrefs::Concat(fBasePref, Pref_LoadAction), &intvalue );
 	if (PREF_NOERROR == err)
+	{
+		fNumChildrenFound++;
 		fLoadAction = (LoadAction) intvalue;
+	}
+	err = PREF_GetIntPref( CPrefs::Concat(fBasePref, Pref_FileFlags), &intvalue );
+	if (PREF_NOERROR == err)
+	{
+		fFileFlags =  intvalue;
+	}
 	
 	XP_Bool boolvalue;
 	err = PREF_GetBoolPref( CPrefs::Concat(fBasePref, Pref_LatentPlugin), &boolvalue );
 	if (PREF_NOERROR == err)
+	{
+		fNumChildrenFound++;
 		fLatentPlugin = (Boolean) boolvalue;
+	}
+
 }
 
 // -- For 3.0 format compatability --
@@ -330,6 +380,9 @@ void CMimeMapper::SetDefaultDescription()
 	if (fMimeType == HTML_VIEWER_APPLICATION_MIME_TYPE)
 		return;
 
+	if (fNumChildrenFound <= 0 && fMimeType == CStr255::sEmptyString)	// this means the pref did not even come with a mime type, so we ignore it. 
+		return;
+
 	CStr255 description;
 	char* mimetype = (char*) fMimeType;
     NET_cdataStruct* cdata = NULL;
@@ -372,8 +425,12 @@ CMimeMapper::CMimeMapper( const CMimeMapper& clone )
 	fFromOldPrefs = clone.fFromOldPrefs;
 	fDescription = clone.fDescription;
 	fLatentPlugin = clone.fLatentPlugin;
-	
+	fFileFlags = clone.fFileFlags;
 	fBasePref = clone.fBasePref ? XP_STRDUP(clone.fBasePref) : nil;
+	
+	fIsLocked = clone.fIsLocked;
+	
+	fNumChildrenFound = clone.fNumChildrenFound;
 }
 
 // Copies values from the mapper to xp user pref tree.
@@ -404,11 +461,16 @@ void CMimeMapper::WriteMimePrefs( Boolean )
 	::BlockMoveData( (Ptr) &fFileType, filetype, sizeof(OSType) );
 	
 	PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_Extension), fExtensions );
+	fNumChildrenFound++;	// since we are creating children prefs, we should keep this record updated
 	if (fDescription.Length() > 0)
+	{
 		PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_Description), fDescription );
+		fNumChildrenFound++;
+	}
 	PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_MimeType), fMimeType );
 	PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_AppName), fAppName );
 	PREF_SetCharPref( CPrefs::Concat(fBasePref, Pref_PluginName), fPluginName );
+	fNumChildrenFound += 3;
 	// store appsig and filetype as 4-byte character strings, if possible.
 	// otherwise, store as binary.
 	if (PrintableChars( &appsig, sizeof(OSType)))
@@ -421,6 +483,8 @@ void CMimeMapper::WriteMimePrefs( Boolean )
 		PREF_SetBinaryPref( CPrefs::Concat(fBasePref, Pref_FileType), filetype, sizeof(OSType));
 	PREF_SetIntPref( CPrefs::Concat(fBasePref, Pref_LoadAction), fLoadAction );
 	PREF_SetBoolPref( CPrefs::Concat(fBasePref, Pref_LatentPlugin), (XP_Bool) fLatentPlugin );
+	PREF_SetIntPref ( CPrefs::Concat(fBasePref, Pref_FileFlags ), fFileFlags );
+	fNumChildrenFound += 4;
 }
 
 CMimeMapper::CMimeMapper(
@@ -464,6 +528,7 @@ CMimeMapper & CMimeMapper::operator= (const CMimeMapper& mapper)
 	fFromOldPrefs = mapper.fFromOldPrefs;
 	fDescription = mapper.fDescription;
 	fLatentPlugin = mapper.fLatentPlugin;
+	fFileFlags  = mapper.fFileFlags;
 	return *this;
 }
 
@@ -803,7 +868,8 @@ CMimeMapper* CMimeList::FindMimeType( char* mimeType )
 	{
 		CMimeMapper* oldMap;
 		FetchItemAt( i, &oldMap );
-		if ( XP_STRCMP(oldMap->GetMimeName(), mimeType) == 0 )
+		// MIME types are defined to be case insensitive
+		if ( XP_STRCASECMP (oldMap->GetMimeName(), mimeType) == 0 )
 		{
 			foundMap = oldMap;
 			break;
@@ -875,7 +941,8 @@ CMimeMapper* CMimeList::FindMimeType(const FSSpec& inFileSpec)
 				return map;
 		}
 		else if ((map->GetAppSig() == fndrInfo.fdCreator) &&
-				 (map->GetDocType() == fndrInfo.fdType))
+				 (map->GetDocType() == fndrInfo.fdType) && 
+				 !(map->GetFileFlags()  &ICmap_not_outgoing_mask) )
 			return map;
 		else 
 		{
@@ -883,7 +950,7 @@ CMimeMapper* CMimeList::FindMimeType(const FSSpec& inFileSpec)
 				if (map->GetAppSig() == fndrInfo.fdCreator)
 					creatorMatch = map;
 			#endif
-			if (map->GetDocType() == fndrInfo.fdType)
+			if (map->GetDocType() == fndrInfo.fdType && !(map->GetFileFlags()  &ICmap_not_outgoing_mask) )
 				fileTypeMatch = map;
 		}
 	}

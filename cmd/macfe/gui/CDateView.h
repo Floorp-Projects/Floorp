@@ -91,7 +91,7 @@ public:
 	
 	// Start public interface ----------------------------------------------------------
 
-	enum { cMinViewYear = 1920, cMaxViewYear = 2019 };
+	enum { cMinViewYear = 1920, cMaxViewYear = (cMinViewYear+99) };
 
 	Boolean				IsValidDate(Int16 inYear, UInt8 inMonth, UInt8 inDay);
 	void				GetDate(Int16 *outYear, UInt8 *outMonth, UInt8 *outDay);
@@ -125,7 +125,7 @@ protected:
 
 	// static EKeyStatus	DateFieldFilter(const EventRecord &inKeyEvent, Int16 inKeyPosition = 0);
 	static EKeyStatus	DateFieldFilter(TEHandle inMacTEH, Char16 inKeyCode, Char16& ioCharCode, SInt16 inModifiers);
-	static void			SetDateString(LEditField *inField, UInt8 inValue, UInt8 inLeadingChar);
+	static void			SetDateString(LEditField *inField, UInt16 inValue, UInt8 inLeadingChar);
 	static void			ShowHideArrow(LPane *inArrow, Boolean inShow);
 
 private:

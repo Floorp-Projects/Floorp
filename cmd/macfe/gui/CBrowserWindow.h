@@ -85,12 +85,8 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 										void* 				ioParam);
 		
 		virtual void			AttemptClose(void);
-								
-		virtual void			DoClose(void)
-								{
-									AttemptCloseWindow();
-									CMediatedWindow::DoClose();
-								}
+		virtual void			DoClose(void);
+		virtual Boolean			AttemptQuitSelf(Int32 inSaveOption);
 								
 									// deeje 1997-01-13
 								// inFirstTime can be specified when setting chrome info on a window for the first time.

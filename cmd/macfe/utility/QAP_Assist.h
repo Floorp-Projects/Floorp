@@ -20,24 +20,11 @@
 #ifndef __QAP_ASSIST_H__
 #define __QAP_ASSIST_H__
 
-#if !defined (WIN32) || defined (_MAC)
-#if defined (WIN32)
-#  include "windows.h"
-#  include "MacStubs.h"
-#  include "types.h"
+#include <LTableView.h>
 
-#  include <macname1.h>
-#  include <controls.h>
-#  include <devices.h>
-#  include <files.h>
-#  include <mixedMode.h>
-#  include <processe.h>
-#  include <textEdit.h>
-#  include <macname2.h>
-#endif
 
 //¥NETSCAPE: added this definition
-#define QAP_BUILD			0
+//#define QAP_BUILD
 
 // The internal name of the QA Partner 4.0 driver
 #define QAP_DRIVER_NAME     "\p.QAP40"
@@ -283,5 +270,4 @@ protected:
 };
 //¥NETSCAPE --- end
 
-#endif // !defined (_VC) || defined (_MAC)
 #endif // __QAP_ASSIST_H__

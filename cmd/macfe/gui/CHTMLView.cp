@@ -28,6 +28,7 @@
 #include <algorithm>
 
 #include "CHTMLClickrecord.h"
+#include "BookmarksFile.h"
 #include "CBrowserContext.h"
 #include "CBrowserWindow.h"
 #include "CURLDispatcher.h"
@@ -258,6 +259,9 @@ CHTMLView::~CHTMLView()
 	if ( mOnscreenDrawable != NULL )
 		mOnscreenDrawable->SetParent ( NULL );
 
+
+	//mScroller = NULL;		// do we need this?
+	
 	SetContext(NULL);	
 	//CL_DestroyCompositor(mCompositor);
 	// brade:  check for NULL in case compositor wasn't created yet
@@ -329,6 +333,8 @@ void CHTMLView::FinishCreateSelf(void)
 	InstallBackgroundColor();
 	// now use installed background color to set window background color
 	SetWindowBackgroundColor();
+	
+	mOriginalOrigin.v = mOriginalOrigin.h = 0;
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -344,14 +350,11 @@ void CHTMLView::SetContext(
 		CL_SetCompositorEnabled(*mCompositor, PR_FALSE);
 	if (mContext != NULL)
 		{
-		// mContext->SetCompositor(NULL);
-				// ^^^^^^^^Do NOT do this.  If you do, layout will not be able
-				// to clean up properly.  This is very bad.
-				// The compositor needs to stick around till the context is deleted.
-				// So the context shares the CSharableCompositor
+		mContext->RemoveListener(this);
+		mContext->SetCompositor(NULL);
 		mContext->RemoveUser(this);
 		// set pointer to this view in MWContext to NULL
-		mContext->ClearMWContextViewPtr();
+		mContext->ClearMWContextViewPtr(); // MUST BE LAST, AFTER POSSIBLE DELETION!
 		}
 		
 	mContext = inNewContext;
@@ -366,7 +369,7 @@ void CHTMLView::SetContext(
 		mContext->AddListener(this);
 		mContext->AddUser(this);
 		}
-	if (inNewContext && mCompositor)
+	if (mCompositor && inNewContext)
 		CL_SetCompositorEnabled(*mCompositor, PR_TRUE);
 }
 
@@ -462,6 +465,7 @@ CHTMLView::BeTarget() {
 			mSubCommanders.FetchItemAt (pos, &newTarget);
 
 			if (newTarget->ProcessCommand(msg_TabSelect)) {
+				SwitchTarget (newTarget);
 				if (newTarget->IsTarget())
 					break;
 			}
@@ -624,7 +628,8 @@ void CHTMLView::SpendTime(const EventRecord& /* inMacEvent */)
 		ClearTimerURL();	// ...frees mTimerURLString, so must do this _after_ |NET_CreateURLStruct|.
 		if (request)
 		{
-			request->referer = XP_STRDUP( mContext->GetCurrentURL() );
+			// Fix bug: call GetURLForReferral() to set referer field in URL_Struct
+			request->referer = XP_STRDUP( mContext->GetURLForReferral() );
 			mContext->SwitchLoadURL( request, FO_CACHE_AND_PRESENT );
 		}
 	}
@@ -700,7 +705,10 @@ void MochaFormSubmitCallback(MWContext* pContext,
 		{
 			History_entry* current = context->GetCurrentHistoryEntry();
 			if (current && current->address)
-				url->referer = XP_STRDUP(current->address);
+			{
+				// Fix bug -- prefer origin_url to referer
+				url->referer = XP_STRDUP(current->origin_url ? current->origin_url : current->address);
+			}
 			NET_AddLOSubmitDataToURLStruct(submit, url);
 			context->SwitchLoadURL(url, FO_CACHE_AND_PRESENT);
 		}
@@ -754,7 +762,8 @@ void MochaImageFormSubmitCallback(MWContext* pContext,
 				
 				if (theContext)
 					{
-					cstring theCurrentURL = theContext->GetCurrentURL();
+					// Fix bug -- call GetURLForReferral() to set referer field in URL_Struct
+					cstring theCurrentURL = theContext->GetURLForReferral();
 					if (theCurrentURL.length() > 0)
 						theURL->referer = XP_STRDUP(theCurrentURL);
 
@@ -1103,6 +1112,13 @@ CGrafPtr CHTMLView::GetCurrentPort(Point& outPortOrigin)
 	}
 	else {
 		outPortOrigin.h = outPortOrigin.v = 0;
+		/*  If a windowless plugin is forcing a redraw, we need to 
+			account for the scroll position in our origin calculation */
+		if(NPL_IsForcingRedraw())
+			{
+			outPortOrigin.h = mPortOrigin.h - mOriginalOrigin.h;
+			outPortOrigin.v = mPortOrigin.v - mOriginalOrigin.v;
+			}
 		return mCurrentDrawable->GetDrawableOffscreen();
 	}
 }
@@ -1315,6 +1331,9 @@ void CHTMLView::DrawSelf(void)
 		DrawFrameFocus();
 	ExecuteAttachments(CTargetFramer::msg_DrawSelfDone, this);
 	
+	/*  Used in CHTMLView::GetCurrentPort() calculate the origin offset due to scrolling */
+	if(mOriginalOrigin.h == 0)
+		mOriginalOrigin = mPortOrigin;
 
 /* this is the old drawing code
 	mCalcDontDraw = false;
@@ -2383,7 +2402,8 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 			// two cases: is this the "Add URL to bookmarks" from context menu or
 			// using "Add Bookmarks" from the bookmark menu. 
 			
-			if ( cr && cr->IsAnchor() ) {
+			if ( cr && cr->IsAnchor() )
+			{
 				// strip off the protocol then truncate the middle
 				char trunkedAddress[HIST_MAX_URL_LEN + 1];
 				string url = cr->GetClickURL();
@@ -2436,6 +2456,14 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 				(void) UStdDialogs::AskSaveAsTextOrSource(reply, fileName, format);
 			if (reply.sfGood)
 			{
+				// Set the type and creator - bug #107708
+				url->x_mac_type = (char*)XP_ALLOC(9);
+				ThrowIfNil_(url->x_mac_type);
+				sprintf(url->x_mac_type, "%X", emTextType);
+				url->x_mac_creator = (char*)XP_ALLOC(9);
+				ThrowIfNil_(url->x_mac_creator);
+				sprintf(url->x_mac_creator, "%X", emSignature);
+
 				short saveType = (format == 2) ? FO_SAVE_AS : FO_SAVE_AS_TEXT;
 				CURLDispatcher::DispatchToStorage(url, reply.sfFile, saveType, isMailAttachment );
 			}
@@ -2787,7 +2815,7 @@ void CHTMLView::ClickSelf(const SMouseDownEvent& inMouseDown)
 // the event, which is then dealt with (in this method) on a per-layer
 // basis.
 
-	if ((mContext != NULL) && FocusDraw())
+	if ((mContext != NULL) && FocusDraw() && SwitchTarget(this))
 		{
 		Int16 clickCount = GetClickCount();
 		SPoint32 theImageClick;
@@ -2837,8 +2865,9 @@ void CHTMLView::ClickSelf(const SMouseDownEvent& inMouseDown)
 // DoExecuteClickInLinkRecord
 // Used as a Mocha callback structure
 // holds all the information needed to call ReallyDoExecuteClickInLink
-struct DoExecuteClickInLinkRecord
+class DoExecuteClickInLinkRecord
 {
+public:
 	SMouseDownEvent mWhere;
 	CHTMLClickRecord mCr;
 	Boolean mMakeNewWindow;
@@ -3378,7 +3407,8 @@ void CHTMLView::PostProcessClickSelfLink(
 			URL_Struct* theURL = NET_CreateURLStruct(inClickRecord.mClickURL, NET_DONT_RELOAD);
 			ThrowIfNULL_(theURL);
 
-			cstring theReferer = mContext->GetCurrentURL();
+			// Fix bug -- call GetURLForReferral() to set referer field in URL_Struct
+			cstring theReferer = mContext->GetURLForReferral();
 			if (theReferer.length() > 0)
 				theURL->referer = XP_STRDUP(theReferer);
 
@@ -3506,7 +3536,8 @@ void CHTMLView::PostProcessClickSelfLink(
 				URL_Struct* theURL = NET_CreateURLStruct(inClickRecord.mClickURL, NET_DONT_RELOAD);
 				ThrowIfNULL_(theURL);
 
-				cstring theReferer = mContext->GetCurrentURL();
+				// Fix bug -- call GetURLForReferral() to set referer field in URL_Struct
+				cstring theReferer = mContext->GetURLForReferral();
 				if (theReferer.length() > 0)
 					theURL->referer = XP_STRDUP(theReferer);
 
@@ -3643,7 +3674,7 @@ void CHTMLView::ClickTrackEdge(
 		limitRect.bottom = inClickRecord.mEdgeUpperBound;
 		limitRect.left = topRgn.h;
 		limitRect.right = bottomRgn.h;
-		slopRect = limitRect;
+		slopRect = limitRect;	
 		axis = vAxisOnly;
 		}
 	
@@ -3927,49 +3958,61 @@ Boolean CHTMLView::HandleKeyPressLayer(const EventRecord&	inKeyEvent,
 		// we may get keyUp events (javascript needs them) but just ignore them - 1997-02-27 mjc
 		if (keyUp == inKeyEvent.what) return TRUE;
 		
-		if ( modifiers == 0 )
+		if ( modifiers == 0 || (modifiers & shiftKey) == shiftKey)
 			switch ( theChar & charCodeMask )
 			{
 				case char_UpArrow:
 					if ( mScroller && mScroller->HasVerticalScrollbar())
 						mScroller->VertScroll( kControlUpButtonPart );
-				return TRUE;
+					return TRUE;
 				case char_DownArrow:
 					if ( mScroller && mScroller->HasVerticalScrollbar() )
 					 	mScroller->VertScroll( kControlDownButtonPart );
-				return TRUE;
+					return TRUE;
 				
 				// Seems only fair to allow scrolling left and right like the other platforms
 				case char_LeftArrow:
 					if ( mScroller && mScroller->HasHorizontalScrollbar())
 						mScroller->HorizScroll( kControlUpButtonPart );
-				return TRUE;
+					return TRUE;
 				case char_RightArrow:
 					if ( mScroller && mScroller->HasHorizontalScrollbar() )
 					 	mScroller->HorizScroll( kControlDownButtonPart );
-				return TRUE;
+					return TRUE;
 
 				case char_PageUp:
 				case char_Backspace:
 					if ( mScroller && mScroller->HasVerticalScrollbar())
 						mScroller->VertScroll( kControlPageUpPart );
-				return TRUE;
+					return TRUE;
 				case char_PageDown:
-				case char_Space:
 					if ( mScroller && mScroller->HasVerticalScrollbar())
 						mScroller->VertScroll( kControlPageDownPart );
-				return TRUE;
+					return TRUE;
+				case char_Space:
+					if ((modifiers & shiftKey) == shiftKey)
+					{
+						if ( mScroller && mScroller->HasVerticalScrollbar())
+							mScroller->VertScroll( kControlPageUpPart );
+					}
+					else 
+					{
+						if ( mScroller && mScroller->HasVerticalScrollbar())
+							mScroller->VertScroll( kControlPageDownPart );
+					}
+					return TRUE;
 				case char_Home:
 					ScrollImageTo( 0, 0, TRUE );
-				return TRUE;
+					return TRUE;
 				case char_End:
 					int32 y;
 					y = mImageSize.height - mFrameSize.height;
 					if ( y < 0)
 						y = 0;
 					ScrollImageTo( 0, y, TRUE );
-				return TRUE;
+					return TRUE;
 			}
+			
 		if ( ( modifiers & cmdKey ) == cmdKey )
 			switch ( theChar & charCodeMask )
 			{
@@ -3983,6 +4026,7 @@ Boolean CHTMLView::HandleKeyPressLayer(const EventRecord&	inKeyEvent,
 						mScroller->VertScroll( kControlPageDownPart );
 				return TRUE;
 			}
+			
 		if ( ( modifiers & (controlKey | optionKey ) ) == ( controlKey | optionKey ) )
 			switch ( theChar & charCodeMask ) 
 			{
@@ -4026,6 +4070,9 @@ Boolean CHTMLView::HandleKeyPressLayer(const EventRecord&	inKeyEvent,
 				// toplevel tab group to get to the location bar. This needs to be fixed, but
 				// not before 3/31. I'm not sure what the right fix is (pinkerton).
 				LCommander *onDutySub = GetTarget();
+				
+				//LCommander	*onDutySub = GetOnDutySub();??
+				
 				if (onDutySub == NULL)
 				{
 					LCommander	*newTarget;
@@ -4059,8 +4106,9 @@ Boolean CHTMLView::HandleKeyPressLayer(const EventRecord&	inKeyEvent,
 // AdjustCursorRecord
 // Used as a Mocha callback structure
 // holds all the information needed to call MochaExecuteClickInLink
-struct AdjustCursorRecord
+class AdjustCursorRecord
 {
+	public:
 	char * mMessage;
 	AdjustCursorRecord(const char * message)
 	{
@@ -4532,10 +4580,22 @@ void CHTMLView::DoDragSendData(FlavorType inFlavor,
 			if (theErr && theErr != fnfErr) // need a unique name, so we want fnfErr!
 				ThrowIfOSErr_(theErr);
 			
-				// Set the flavor data to our emBookmarkFileDrag flavor with an FSSpec to the new file.
+			// Set the flavor data to our emBookmarkFileDrag flavor with an FSSpec to the new file.
 			theErr = ::SetDragItemFlavorData (inDragRef, inItemRef, inFlavor, &locationSpec, sizeof(FSSpec), 0);
 			ThrowIfOSErr_(theErr);
-		
+#ifdef MOZ_MAIL_NEWS
+			// For mailto ULRsNetLIB creates a new compose window but passes a bogus parameter( a FileSpec) 
+			// instead of a mail_action Leads to a lovely crash. Instead we should save a file containing the URL.
+			// It could be argued that  this should be done in Netlib but I am far too scared to attempt this 
+			// for a 4.0x release. 
+			Boolean isMailTo = false;
+			isMailTo =  XP_STRCASESTR( request->address , "mailto:") ? true : false ;
+			if ( isMailTo )
+			{
+				WriteBookmarksFile( request->address, locationSpec );
+				return;
+			}
+#endif
 			
 			XP_MEMSET(&request->savedData, 0, sizeof(SHIST_SavedData));
 			CURLDispatcher::DispatchToStorage(request, locationSpec, FO_SAVE_AS, isMailAttachment);
@@ -5739,6 +5799,7 @@ FE_SaveJavaWindow(MWContext * /* context */, LJAppletData* /* ad */, void* windo
 {
 #if defined (JAVA)
 	CJavaView* javaAppletView = (CJavaView *)window;
+	LWindow*	javaCommanderWindow;
 
 	//	Make sure that we are not targeting this
 	//	java applet.
@@ -5760,8 +5821,17 @@ FE_SaveJavaWindow(MWContext * /* context */, LJAppletData* /* ad */, void* windo
 		currentParentView = currentParentView->GetSuperView();
 		}
 	
-	javaAppletView->PutInside((LWindow *)previousParentView);
-	javaAppletView->SetSuperCommander((LWindow *)previousParentView);
+	// Bug fix -- crash when printing applet window.
+	// This routine is in the call chain from ~LPrintout(), and
+	// the applet being printed was _not_ in a window.  Hence
+	// we need the dynamic cast.  The basic problem is that
+	// LPrintout does not inherit from LCommander, but LWindow
+	// does.
+	
+	javaCommanderWindow = dynamic_cast<LWindow*>(previousParentView);
+	
+	javaAppletView->PutInside(javaCommanderWindow);
+	javaAppletView->SetSuperCommander(javaCommanderWindow);
 	
 	FlushEventHierarchy(javaAppletView);
 #endif /* defined (JAVA) */

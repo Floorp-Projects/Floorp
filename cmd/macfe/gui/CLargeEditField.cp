@@ -39,7 +39,7 @@ char * CLargeEditField::GetLongDescriptor()
 
 
 // takes a c-string
-void CLargeEditField::SetLongDescriptor( char *inDescriptor )
+void CLargeEditField::SetLongDescriptor( const char* inDescriptor )
 {
 	::TESetText(inDescriptor, strlen(inDescriptor), mTextEditH);
 	Refresh();

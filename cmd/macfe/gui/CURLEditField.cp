@@ -64,9 +64,12 @@ Boolean CURLEditField::HandleKeyPress(const EventRecord& inKeyEvent)
 	
 	if ((c == char_Enter) || (c == char_Return))
 	{
-		CStr255	url;
-		GetDescriptor(url);
-		BroadcastMessage(msg_UserSubmittedURL, &url);
+		Int32	blockSize = 1024;				// 1024 is max len of field in PPob
+		char	*urlBlock = (char *)XP_ALLOC(blockSize);
+		ThrowIfNil_(urlBlock);
+		GetDescriptor(urlBlock, blockSize);
+		BroadcastMessage(msg_UserSubmittedURL, urlBlock);
+		XP_FREE(urlBlock);
 		handled = true;
 	}
 	else
@@ -119,6 +122,52 @@ void CURLEditField::ClickSelf(const SMouseDownEvent& inMouseDown)
 	}
 }
 
+
+// need these here to keep the C++ compiler happy with the overloads
+// below.
+void CURLEditField::SetDescriptor(ConstStr255Param inDescriptor)
+{
+	Inherited::SetDescriptor(inDescriptor);
+}
+
+void CURLEditField::GetDescriptor(Str255 outDescriptor)
+{
+	Inherited::GetDescriptor(outDescriptor);
+}
+
+
+// Needed for strings > 255 chars long
+// inDescriptorStorage must have been allocated. It's length is given in ioLength
+void CURLEditField::GetDescriptor(char *inDescriptorStorage, Int32 &ioLength)
+{
+	Int32		curLength;
+	
+	curLength = (**mTextEditH).teLength;
+
+	if (curLength >= ioLength)
+		curLength = ioLength - 1;		// space for terminator
+	
+	Handle		textHandle = ::TEGetText(mTextEditH);		//the handle is owned by the TE
+	
+	::BlockMoveData(*textHandle, inDescriptorStorage, curLength);
+	inDescriptorStorage[curLength] = '\0';
+	ioLength = curLength;	// excludes the terminator, i.e. same as strlen
+}
+
+
+// Needed for strings > 255 chars long
+void CURLEditField::SetDescriptor(const char *inDescriptor, Int32 inLength)
+{
+	Assert_(inLength < mMaxChars);
+
+	if (inLength > mMaxChars)
+		inLength = mMaxChars;
+		
+	::TESetText(inDescriptor, inLength, mTextEditH);
+	Refresh();
+}
+
+
 void CURLEditField::ListenToMessage(MessageT inMessage, void* ioParam)
 {
 	if (ioParam)
@@ -134,10 +183,10 @@ void CURLEditField::ListenToMessage(MessageT inMessage, void* ioParam)
 				// Call LM_StripWysiwygURLPrefix to strip those pesky
 				// "wysiwyg" URL's. According to Brendan, LM_StripWysiwygURLPrefix
 				// doesn't allocate a new string.
-				CStr255 newString(LM_StripWysiwygURLPrefix(theURL->address));
-				if (DisplayURL(newString))
+				const char *urlOffset = LM_StripWysiwygURLPrefix(theURL->address);
+				if (DisplayURL(urlOffset))
 				{
-					SetDescriptor(newString);
+					SetDescriptor(urlOffset, XP_STRLEN(urlOffset));
 					mURLStringInSync = true;
 				}
 		}
@@ -146,7 +195,7 @@ void CURLEditField::ListenToMessage(MessageT inMessage, void* ioParam)
 
 // Filter function to determine whether or not to display URL
 
-Boolean CURLEditField::DisplayURL(CStr255& inURL)
+Boolean CURLEditField::DisplayURL(const char *inURL)
 {
 	// if inURL is in filteredURLs table, return false
 	for(int i = 0; i < numFilteredURLs; i++)
@@ -154,12 +203,12 @@ Boolean CURLEditField::DisplayURL(CStr255& inURL)
 		const urlFilter* filter = filteredURLs[i];
 		if (filter->comparisonLength == cCompareWholeString)
 		{
-			if (XP_STRCMP(filter->string, (char*)inURL) == 0)
+			if (XP_STRCMP(filter->string, inURL) == 0)
 				return false;
 		}
 		else
 		{
-			if (XP_STRNCMP(filter->string, (char*)inURL, filter->comparisonLength) == 0)
+			if (XP_STRNCMP(filter->string, inURL, filter->comparisonLength) == 0)
 				return false;
 		}
 	}

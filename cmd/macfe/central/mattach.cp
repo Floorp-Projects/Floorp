@@ -24,10 +24,13 @@
 // macfe
 #include "ufilemgr.h"
 #include "macutil.h"
+#include "miconutils.h"
 #include "resgui.h"
 #include "uapp.h"
 #include "msgcom.h"
 #include "uerrmgr.h"
+#include "ufilemgr.h"
+#include "uprefd.h"
 #include "CBrowserWindow.h"
 #include "CBrowserContext.h"
 #include "UModalDialogs.h"
@@ -38,35 +41,121 @@
 
 #define msg_SelectionChanged	'sele'
 
+
+CMailAttachment::CMailAttachment()
+:	fDesiredType(nil)
+,	fRealType(nil)
+,	fRealName(nil)
+,	fDescription(nil)
+,	fAttachmentIcon(nil)
+,	fSelected(false)
+,	fFileType('TEXT')
+,	fFileCreator('????')
+{
+	fURL = nil;
+}
+
 CMailAttachment::CMailAttachment(const FSSpec & spec)
 :	fDesiredType(nil)
 ,	fRealType(nil)
 ,	fSelected(false)
 ,	fRealName(nil)
 ,	fDescription(nil)
+,	fAttachmentIcon(nil)		// init in case we throw
+,	fFileType('TEXT')
+,	fFileCreator('????')
 {
-	fURL = CFileMgr::GetURLFromFileSpec(spec);	
-	FInfo fndrInfo;
-	FSpGetFInfo( &spec, &fndrInfo );
-	fFileType = fndrInfo.fdType;
-	fFileCreator = fndrInfo.fdCreator;
+	// aliases have already been resolved by now
+	FInfo		finderInfo;
+	
+	OSErr	err = ::FSpGetFInfo( &spec, &finderInfo);
+	ThrowIfOSErr_(err);
+	
+	fFileType = finderInfo.fdType;
+	fFileCreator = finderInfo.fdCreator;
+	
+	fURL = CFileMgr::GetURLFromFileSpec(spec);
+	
+	fAttachmentIcon = new CAttachmentIcon(fFileCreator, fFileType, CAttachmentIcon::kIconSizeSmall);
+	
 	ComposeDescription();
 }
 
-CMailAttachment::CMailAttachment(const MSG_AttachmentData * data)
+CMailAttachment::CMailAttachment(const char * url, const char * mimeType, const char * realType, const char * realName)
+:	fDescription(nil)
 {
-	memset(this, 0, sizeof(CMailAttachment));
-	fURL = data->url ? XP_STRDUP(data->url) : nil;
-	fDesiredType = data->desired_type ? XP_STRDUP(data->desired_type) : nil;
-	fRealType = data->real_type ? XP_STRDUP(data->real_type) : nil;
-	fRealName = data->real_name ? XP_STRDUP(data->real_name) : nil;
+	fURL = (char *)url; 
+	fDesiredType = (char *)mimeType;
+	fRealType = (char *)realType;
+	fRealName = (char *)realName;
+	fSelected = FALSE;
+	
+	// еее FIX ME: LAME
+	fFileType = 'TEXT';
+	fFileCreator = 'MOSS';
+	
+	// can't we get some data from the url?
 
-	// this designates that we can enable the Source/Text radio buttons
-	// for this item -> we really need more help to make the decision 
-	fFileType = 'TEXT';		
-	fFileCreator = '????';
+	fAttachmentIcon = new CAttachmentIcon(fRealType, CAttachmentIcon::kIconSizeSmall);
+}
 
-	fDescription = data->description ? XP_STRDUP(data->description) : nil;
+CMailAttachment::CMailAttachment(const MSG_AttachmentData * attachmentData)
+{
+	//memset(this, 0, sizeof(CMailAttachment));
+	fURL = attachmentData->url ? XP_STRDUP(attachmentData->url) : nil;
+	fDesiredType = attachmentData->desired_type ? XP_STRDUP(attachmentData->desired_type) : nil;
+	fRealType = attachmentData->real_type ? XP_STRDUP(attachmentData->real_type) : nil;
+	fRealName = attachmentData->real_name ? XP_STRDUP(attachmentData->real_name) : nil;
+
+	fDescription = attachmentData->description ? XP_STRDUP(attachmentData->description) : nil;
+	
+	// let's try really hard to get correct type/creator data
+	if (attachmentData->x_mac_creator && attachmentData->x_mac_type)
+	{
+		// creator and type are 8-byte hex representations...
+		sscanf(attachmentData->x_mac_creator, "%X", &fFileCreator);
+		sscanf(attachmentData->x_mac_type, "%X", &fFileType);
+		
+		fAttachmentIcon = new CAttachmentIcon(fFileCreator, fFileType, CAttachmentIcon::kIconSizeSmall);
+	}
+	else if (fRealType != NULL)
+	{
+		// find a MIME mapper for this
+		CMimeMapper		*thisMapper = CPrefs::sMimeTypes.FindMimeType( fRealType );
+		
+		if (thisMapper)
+		{
+			fFileType = thisMapper->GetDocType();
+			fFileCreator = thisMapper->GetAppSig();
+			
+			fAttachmentIcon = new CAttachmentIcon(fFileCreator, fFileType, CAttachmentIcon::kIconSizeSmall);
+		}
+		else
+		{
+			fFileType = 'TEXT';		
+			fFileCreator = '????';
+		
+			fAttachmentIcon = new CAttachmentIcon(fRealType, CAttachmentIcon::kIconSizeSmall);
+		}
+	}
+	else
+	{
+		fAttachmentIcon = new CAttachmentIcon(fRealType, CAttachmentIcon::kIconSizeSmall);
+	}
+	
+}
+
+
+// copy constructor
+CMailAttachment::CMailAttachment( const CMailAttachment& inOriginal )
+{
+	fURL = inOriginal.fURL ? XP_STRDUP(inOriginal.fURL) : nil;
+	fDesiredType = inOriginal.fDesiredType ? XP_STRDUP(inOriginal.fDesiredType) : nil;
+	fFileType = inOriginal.fFileType;
+	fFileCreator = inOriginal.fFileCreator;
+	
+	// copy the icon with its copy constructor, which duplicates the suite handle
+	fAttachmentIcon = new CAttachmentIcon( *inOriginal.fAttachmentIcon);
 }
 
 
@@ -77,9 +166,12 @@ void CMailAttachment::FreeMembers()
 	if (fRealType)		XP_FREE(fRealType);		fRealType 		= nil;
 	if (fRealName)		XP_FREE(fRealName);		fRealName		= nil;
 	if (fDescription)	XP_FREE(fDescription);	fDescription 	= nil;
+	
+	delete fAttachmentIcon;
+	fAttachmentIcon = NULL;
 }
 
-CStr255 & CMailAttachment::UrlText()
+CStr255 CMailAttachment::UrlText()
 {
 	CStr255 text;
 	if ( fURL && NET_IsLocalFileURL(fURL) )
@@ -108,16 +200,16 @@ CMailAttachment::ComposeDescription()
 	if (fFileCreator == '????' || fDescription != nil)
 		return;
 	
-	OSErr 		err;
-	DTPBRec		pb;
-	Str255		appName;
-	char	*	suffix;
+	OSErr 		err = noErr;
+	Str255		appName = "\pUnknown";
+	char		*suffix;
 	UInt32		suffixLen;
 	UInt32		descriptionLen;
 		
 	Try_
 	{
-		for (short vRefNum = -1; /**/; vRefNum --)
+		/* This code would fail if an intermediate volume (e.g. floppy) had no DT database
+		for (short vRefNum = -1;  ; vRefNum --)
 		{
 			pb.ioVRefNum = vRefNum;
 			pb.ioNamePtr = nil;
@@ -134,7 +226,13 @@ CMailAttachment::ComposeDescription()
 				break;
 		}
 		ThrowIfOSErr_(err);
-
+		*/
+		FSSpec		appSpec = {0};
+		
+		err = CFileMgr::FindApplication(fFileCreator, appSpec);
+		if (err != noErr)
+			*(CStr63 *)&appName = appSpec.name;
+			
 		suffix = (fFileType == 'APPL') ? nil : suffix = GetCString(DOCUMENT_SUFFIX);
 		suffixLen = (suffix != nil) ? strlen(suffix) + 1 : 0;	// + 1 for space and 
 		
@@ -164,6 +262,9 @@ CMailAttachment::ComposeDescription()
 	EndCatch_
 }
 
+
+#pragma mark -
+
 //
 // class CAttachmentList
 //
@@ -181,22 +282,20 @@ CAttachmentList::~CAttachmentList()
 }
 
 // Clones the list, and its elements
-CAttachmentList * CAttachmentList::Clone(CAttachmentList * clone)
+CAttachmentList * CAttachmentList::Clone(CAttachmentList * cloneList)
 {
 	CAttachmentList *  newList = new CAttachmentList;
 	ThrowIfNil_(newList);
-	if (clone)	// Duplicate all the members of a list
+	if (cloneList != NULL)	// Duplicate all the members of a list
 	{
-		LArrayIterator iter(*clone);
+		LArrayIterator iter(*cloneList);
 		
 		CMailAttachment attach;
+		
 		while (iter.Next(&attach))
 		{
-			CMailAttachment newAttach;
-			newAttach.fURL = attach.fURL ? XP_STRDUP(attach.fURL) : nil;
-			newAttach.fDesiredType = attach.fDesiredType ? XP_STRDUP(attach.fDesiredType) : nil;
-			newAttach.fFileType = attach.fFileType;
-			newAttach.fFileCreator = attach.fFileCreator;
+			CMailAttachment newAttach(attach);		// copy constructor
+		
 			newList->InsertItemsAt(1, 10000, &newAttach);
 		}
 	}
@@ -290,6 +389,8 @@ void CAttachmentList::InitializeFromXPAttachmentList(const MSG_AttachmentData* l
 	}
 }
 
+#pragma mark -
+
 // 
 // class CAttachmentView
 //
@@ -304,7 +405,7 @@ CAttachmentView::CAttachmentView( LStream * inStream) :
 	fNumberColumns 		= 1;
 	fHighlightRow 		= false;
 	fColumnIDs[0] 		= HIER_COLUMN;
-	fCellHeight 		= 18;
+	fCellHeight 		= 20;
 }
 
 void CAttachmentView::FinishCreateSelf()
@@ -414,18 +515,25 @@ void CAttachmentView::AddFile(const FSSpec& spec)
 	if (CmdPeriod())	// If we drop the whole HD, allow bailout
 		return;
 	
-	if (CFileMgr::IsFolder(spec))
+	// resolve if alias
+	FSSpec		theFileSpec = spec;
+	Boolean		wasFolder, wasAliased;
+		
+	OSErr	err = ::ResolveAliasFile( &theFileSpec, true, &wasFolder, &wasAliased);
+	ThrowIfOSErr_(err);
+	
+	if (CFileMgr::IsFolder(theFileSpec))
 	{
-		FSSpec newSpec;
+		FSSpec	newSpec;
 		FInfo 	dummy;
 		Boolean dummy2;
-		CFileIter	iter(spec);
+		CFileIter	iter(theFileSpec);
 		while (iter.Next(newSpec, dummy, dummy2))
 			AddFile(newSpec);
 	}
 	else
 	{
-		CMailAttachment attach(spec);
+		CMailAttachment attach(theFileSpec);
 		AddMailAttachment(&attach, false);
 	}
 	Refresh();
@@ -468,8 +576,42 @@ Boolean CAttachmentView::SyncDisplay( UInt32 visCells )
 
 void CAttachmentView::DrawCellColumn( UInt32 cell, UInt16 /*column*/ )
 {
-	DrawHierarchy( cell );
+	CStr255		text;
+	TruncCode	trunc;
+	Style		textStyle;
+	
+	if (mAttachList)
+	{
+		CMailAttachment		thisAttachment;
+		
+		if (mAttachList->FetchItemAt(cell, &thisAttachment))
+		{
+			Rect		theRect;
+			
+			CellText( cell, text );
+						
+			// е plot icon
+			GetIconRect( cell, theRect );
+			::OffsetRect(&theRect, 2, 2);
+			
+			IconTransformType	iconTransform = (IsCellSelected( cell ) && mActive == triState_On) ? kTransformSelected : kTransformNone;
+			thisAttachment.fAttachmentIcon->PlotIcon(theRect, atHorizontalCenter | atVerticalCenter,iconTransform );
+			
+			//DrawIcon( thisAttachment.fAttachmentIcon.GetSuiteHandle(), IsCellSelected( cell ) && ( mActive == triState_On ), theRect );
+			
+			// е plot text
+			textStyle = CellTextStyle( cell );
+			::TextFace( textStyle );
+
+			GetTextRect( cell, theRect );
+			::OffsetRect(&theRect, 2, 2);
+			
+			trunc = ColumnTruncationStyle( 0 );
+			DrawText( CellTextStyle( cell ) , text, theRect, trunc );
+		}
+	}
 }
+
 
 Boolean CAttachmentView::IsCellSelected( Int32 cell )
 {
@@ -670,7 +812,7 @@ void CAttachmentView::ReceiveDragItem(	DragReference 	inDragRef,
 										Rect& 			/*itemBounds*/)
 {
 	OSErr		err;
-	HFSFlavor	itemFile;
+	HFSFlavor	itemFile = {0};
 	Size		itemSize = sizeof(itemFile);
 	
 	ClearSelection();
@@ -679,7 +821,7 @@ void CAttachmentView::ReceiveDragItem(	DragReference 	inDragRef,
 	err = ::GetFlavorData( inDragRef, inItemRef, flavorTypeHFS, &itemFile, &itemSize, 0);
 	if (err == noErr)
 		AddFile(itemFile.fileSpec);	
-	else if(err == badDragFlavorErr )
+	else if (err == badDragFlavorErr )
 	{
 		err = GetHFSFlavorFromPromise (inDragRef, inItemRef, &itemFile, true);
 		if( err == noErr )
@@ -796,7 +938,15 @@ void CAttachmentView::AddWebPageWithUI(unsigned char *defaultText)
 
 void CAttachmentView::HiliteDropArea(DragReference inDragRef)
 {
-	LDragAndDrop::HiliteDropArea(inDragRef);
+	Rect	dropRect;
+	
+	mPane->CalcLocalFrameRect(dropRect);
+	//::InsetRect(&dropRect, -1, -1);
+	
+	RgnHandle	dropRgn = ::NewRgn();
+	::RectRgn(dropRgn, &dropRect);
+	::ShowDragHilite(inDragRef, dropRgn, true);
+	::DisposeRgn(dropRgn);
 }
 
 

@@ -45,6 +45,17 @@ Limitation:
 	you plan to move around with different CPlaceHolderViews is also
 	a Commander, you will have to manually link it where it fits
 	in the Commander chain .
+
+
+еее KNOWN BUG:
+==============
+	In the application described above, we have a crash if the
+	TabSwitcher is hidden after having selected at least one
+	other tab than the original one (ie. if the view displayed
+	by the PlaceHolder view was grabbed by another PlaceHolder
+	in another tab panel). To reproduce, call Hide() in
+	CMailNewsWindow::DoClose()...
+
 */
 
 

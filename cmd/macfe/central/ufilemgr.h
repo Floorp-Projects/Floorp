@@ -40,7 +40,7 @@ typedef AEDesc AEDescList;
 typedef AEDescList AERecord;
 typedef AERecord AppleEvent;
 
-
+void SwapSlashColon(char * s);
 /*****************************************************************************
  * class CFileMgr
  * does general file routines. It provides many file utility functions, (as static)
@@ -109,13 +109,15 @@ public:
 	// PathNameFromFSSpec + hex encoding
 	static char * EncodedPathNameFromFSSpec(const FSSpec& inSpec, Boolean wantLeafName );	
 	// Returns file spec from full pathname
-	static OSErr FSSpecFromPathname(char * PathNamePtr, FSSpec* outSpec);
+	static OSErr FSSpecFromPathname(const char * PathNamePtr, FSSpec* outSpec);
 	// Changes the creator/file 
 	static OSErr SetFileTypeCreator(OSType creator, OSType type, const FSSpec * fileSpec);
 	// Set or clear a finder flag for the file (e.g. custom icon bit)
 	static OSErr SetFileFinderFlag(const FSSpec& fileSpec, Uint16 flagMask, Uint8 value);
 	// Is this FSSpec a folder?
 	static Boolean IsFolder(const FSSpec& spec);
+	// delete any files we left behind in the Temporary Items folder
+	static void		DeleteCommTemporaryItems();
 	// Force the Finder to refresh a window
 	static OSErr   UpdateFinderDisplay(const FSSpec& spec);
 	// Creates an alias file with a given name/location pointing to the specified target

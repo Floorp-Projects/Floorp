@@ -460,9 +460,9 @@ void CMouseDragger::DoneScrollingView(const SPoint32 *inStartMouseImagePt,
 	the drag region or erase it.
 ======================================================================================*/
 
-void CMouseDragger::DrawDragRegion(const SPoint32 *inStartMouseImagePt,
-								   const SPoint32 *inCurrMouseImagePt,
-								   EDrawRegionState inDrawState) {
+void CMouseDragger::DrawDragRegion(const SPoint32 * /* inStartMouseImagePt */,
+								   const SPoint32 * /* inCurrMouseImagePt */,
+								   EDrawRegionState /* inDrawState */) {
 
 }
 

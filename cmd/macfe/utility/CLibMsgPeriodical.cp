@@ -36,7 +36,7 @@ LPeriodical()
 	MSG_InitMsgLib();
 	
 	/* use less memory! */
-	MSG_SetLibNeoCacheSize ( 512 * 1024L );
+	MSG_SetDBCacheSize ( 512 * 1024L );
 }
 
 CLibMsgPeriodical::~CLibMsgPeriodical()

@@ -18,34 +18,33 @@
 
 // RandomFrontEndCrap.cp
 
-
-#include "fe_proto.h"
+/*  #include "fe_proto.h" */
 #include "RandomFrontEndCrap.h"
-#include "CNSContext.h"
+/*  #include "CNSContext.h" */
 #include "CBrowserContext.h"
 #include "nppg.h"
-#include "libimg.h"
+/*  #include "libimg.h" */
 #include "libi18n.h"
-#include "uprefd.h"
-#include "mimages.h"
+/*  #include "uprefd.h" */
+/*  #include "mimages.h" */
 #include "earlmgr.h"
 #include "UStdDialogs.h"
 #include "macutil.h"
-#include "CHTMLView.h"
+/*  #include "CHTMLView.h" */
 #include "CHyperScroller.h" // for FE_QueryChrome
 #include "resgui.h" // for 'neverAgain'
 #include "ufilemgr.h"
 #include "prefwutil.h" // for CFilePicker
 #include "mime.h" // for FE_UsersOrganization proto
-#include "msgcom.h" // for FE_GetTempFileFor proto
+#include "msgcom.h" // for FE_GetTempFileFor proto 
 #include "StBlockingDialogHandler.h"
 
 	// stuff added by deeje for the chromeless window hack
-#include "CWindowMediator.h"
-#include "CURLDispatcher.h"
+/*  #include "CWindowMediator.h" */
+/*  #include "CURLDispatcher.h" */
 #include "CBrowserWindow.h"
 #ifdef MOZ_MAIL_NEWS
-#include "CMessageWindow.h"
+/*  #include "CMessageWindow.h" */
 #include "CThreadWindow.h"
 #endif
 
@@ -59,7 +58,7 @@
 #include "libmocha.h"	/* Netcaster checks if mocha is enabled */
 #include "java.h"	/* Netcaster checks if java is enabled. */
 
-#include "uprefd.h"
+/*  #include "uprefd.h" */
 #include "InternetConfig.h"
 GDHandle DeviceForWindow(LWindow* inWindow);
 

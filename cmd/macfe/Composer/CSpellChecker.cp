@@ -556,7 +556,18 @@ void CMacSpellChecker::GetSelection(int32 &selStart, int32 &selEnd)
 		}
 	}
 	else
-		mTextView->GetSelection( &selStart, &selEnd );
+	{
+		long	localStart, localEnd;
+		
+		mTextView->GetSelection( &localStart, &localEnd );
+		// bug fix
+		// only return the selection if it is not empty.
+		if (localStart != localEnd)
+		{
+			selStart = localStart;
+			selEnd = localEnd;
+		}
+	}
 }
 
 

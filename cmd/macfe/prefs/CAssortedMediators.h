@@ -199,32 +199,8 @@ class CBrowserLanguagesMediator : public CPrefsMediator
 		LTextColumn	*mAddLanguageList;
 };
 
-//======================================
-#pragma mark
-class CBrowserApplicationsMediator : public CPrefsMediator
-//======================================
-{
-	public:
 
-		enum { class_ID = PrefPaneID::eBrowser_Applications };
-		CBrowserApplicationsMediator(LStream*);
-		virtual	~CBrowserApplicationsMediator() {};
-
-		virtual void	ListenToMessage(MessageT inMessage, void *ioParam);
-
-		virtual	void	LoadMainPane();
-		virtual	void	WritePrefs();
-	private:
-		Boolean			mModified;			// Have any MIMEs been modified
-		CMIMEListPane*	mMIMETable;			// Scrolling table of MIME types
-		CMimeList		mDeletedTypes;
-
-				void	EditMimeEntry();
-				void	NewMimeEntry();
-				void	DeleteMimeEntry();
-};
-
-#ifdef EDITOR
+#ifdef EDITOR 
 //======================================
 #pragma mark
 class CEditorMainMediator : public CPrefsMediator

@@ -28,7 +28,6 @@
 #include <LCaption.h>
 #include "CTaskBarListener.h"
 #include "CURLDispatcher.h"
-//#include <QAP_Assist.h>
 
 #include <list.h>
 
@@ -77,15 +76,17 @@ class CLICommander;
 #define FILE_TYPE_NONE		4
 #define FILE_TYPE_PROFILES	5
 #define FILE_TYPE_ASW		6
-#define STARTUP_TYPE_NETPROFILE 7
+#define FILE_TYPE_LDIF		7
+#define STARTUP_TYPE_NETPROFILE 8
 
 char* GetBookmarksPath( FSSpec& spec, Boolean useDefault );
 
 // ----- End stuff required by CAppleEvent.cp
 
 
-// ---------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 class CFrontApp : public LDocApplication, public CTaskBarListener
+//----------------------------------------------------------------------------------------
 {
 public:
 	static CFrontApp*	sApplication;		// One and only instance of the application
@@ -132,9 +133,10 @@ public:
 	
 	// ¥¥ Cached preference values (requires application restart to notice new values)
 	
-	Boolean				HasBookmarksMenu() { return mHasBookmarksMenu; }
-	Boolean				HasFrontierMenuSharing() { return mHasFrontierMenuSharing; }
-	
+	Boolean				HasBookmarksMenu() const { return mHasBookmarksMenu; }
+	Boolean				HasFrontierMenuSharing() const { return mHasFrontierMenuSharing; }
+	Boolean				HasImportModule() const	{ return mImportModuleExists; }
+	Boolean				HasAOLInstantMessenger() const	{ return mAOLMessengerExists; }
 	// ¥¥ÊMenubar management
 
 	static const list<CommandT>&
@@ -171,6 +173,7 @@ public:
 
 	//=== begin: add for TSMSupport
 
+	virtual Boolean		AttemptQuitSelf(Int32 inSaveOption = kAEAsk);	
 	virtual void		DoQuit(Int32 inSaveOption = kAEAsk);	
 	virtual void		DispatchEvent(const EventRecord &inMacEvent);
 
@@ -185,10 +188,8 @@ public:
 	virtual void 		ProcessCommandStatus(CommandT	inCommand,
 											Boolean &outEnabled, Boolean &outUsesMark,
 											Char16		&outMark, Str255		outName);
-//#ifdef QAP_BUILD
-//	virtual void		PutOnDuty();
-//	virtual void		TakeOffDuty();
-//#endif //QAP_BUILD
+
+
 	
 	// ¥¥ AE handling
 	virtual void 		HandleAppleEvent(const AppleEvent	&inAppleEvent,
@@ -273,6 +274,8 @@ protected:
 	LPeriodical*		mLibMsgPeriodical;
 	
 	Boolean				mConferenceApplicationExists;
+	Boolean				mImportModuleExists;
+	Boolean				mAOLMessengerExists;
 	Boolean				mJavaEnabled;
 	
 	Boolean				mHasBookmarksMenu;

@@ -22,6 +22,7 @@
 
 #include <LControl.h>
 #include <LGAPopup.h>
+#include <LGACaption.h>
 
 #include "xp_mcom.h"
 #include "prefapi.h"
@@ -31,10 +32,12 @@
 #include "StSetBroadcasting.h"
 #include "CTooltipAttachment.h"
 
-Boolean MPreferenceBase::sWriteOnDestroy = false; // must be one for all instantiations of the template.
-const char* MPreferenceBase::sReplacementString = nil;
+Boolean MPreferenceBase::sWriteOnDestroy = false; 		// must be one for all instantiations of the template.
+Boolean MPreferenceBase::sUseTempPrefPrefix = false; 	// must be one for all instantiations of the template.
+char* 	MPreferenceBase::sReplacementString = nil;
 
-#pragma mark ---CDebugPrefToolTipAttachment---
+const char *	kTempPrefPrefix = "temp_pref_mac";		// prepended to the prefs string
+
 //========================================================================================
 class CDebugPrefToolTipAttachment : public CToolTipAttachment
 //========================================================================================
@@ -71,14 +74,16 @@ void CDebugPrefToolTipAttachment::CalcTipText(
 	*(CStr255*)outTipText = mPreferenceBase->mName;
 }
 
-#pragma mark ---MPreferenceBase---
+#pragma mark -
 //----------------------------------------------------------------------------------------
 MPreferenceBase::MPreferenceBase(
 	LPane*	inPane
 ,	LStream* inStream)
 //----------------------------------------------------------------------------------------
 :	mName(nil)
+,	mSubstitutedName(nil)
 ,	mLocked(false)
+,	mWritePref(true)
 ,	mPaneSelf(inPane)
 {
 	CStr255 text;
@@ -91,19 +96,33 @@ MPreferenceBase::MPreferenceBase(
 MPreferenceBase::~MPreferenceBase()
 //----------------------------------------------------------------------------------------
 {
+	XP_FREEIF(const_cast<char*>(mSubstitutedName));
+	mSubstitutedName = nil;
 	XP_FREEIF(const_cast<char*>(mName));
+	mName = nil;
 } // MPreferenceBase::~MPreferenceBase
 
 //----------------------------------------------------------------------------------------
 void MPreferenceBase::SetPrefName(const char* inNewName, Boolean inReread)
 //----------------------------------------------------------------------------------------
 {
+	/*
 	const char* oldName = mName; // so that inNewName == mName works
-	CStr255 text(inNewName);
+	CStr255 	text(inNewName);
 	if (sReplacementString && *sReplacementString)
 		::StringParamText(text, sReplacementString);
+	
+	if (sUseTempPrefPrefix)
+	{
+		mName = XP_STRDUP(kTempPrefPrefix);
+		StrAllocCat(mName, text);
+	}
+	else
 	mName = XP_STRDUP((const char*)text);
-	XP_FREEIF(const_cast<char*>(oldName));
+	*/
+	XP_FREEIF(const_cast<char *>(mName));
+	mName = XP_STRDUP(inNewName);
+	
 	if (inReread)
 	{
 		ReadLockState();
@@ -112,7 +131,15 @@ void MPreferenceBase::SetPrefName(const char* inNewName, Boolean inReread)
 } // MPreferenceBase::ReadLockState
 
 //----------------------------------------------------------------------------------------
-void MPreferenceBase::ChangePrefName(LView* inSuperView, PaneIDT inPaneID, const char* inNewName)
+/*static*/ void MPreferenceBase::SetReplacementString(const char* s)
+//----------------------------------------------------------------------------------------
+{
+	XP_FREEIF(sReplacementString);
+	sReplacementString = (s != nil) ? XP_STRDUP(s) : nil;
+}
+
+//----------------------------------------------------------------------------------------
+/*static*/ void MPreferenceBase::ChangePrefName(LView* inSuperView, PaneIDT inPaneID, const char* inNewName)
 //----------------------------------------------------------------------------------------
 {
 	LPane* p = inSuperView->FindPaneByID(inPaneID);
@@ -123,19 +150,98 @@ void MPreferenceBase::ChangePrefName(LView* inSuperView, PaneIDT inPaneID, const
 }
 
 //----------------------------------------------------------------------------------------
-const char* MPreferenceBase::GetPrefName(LView* inSuperView, PaneIDT inPaneID)
+/*static*/ void MPreferenceBase::SetPaneWritePref(LView* inSuperView, PaneIDT inPaneID, Boolean inWritePref)
 //----------------------------------------------------------------------------------------
 {
 	LPane* p = inSuperView->FindPaneByID(inPaneID);
 	MPreferenceBase* pb = dynamic_cast<MPreferenceBase*>(p);
 	SignalIf_(!pb);
 	if (pb)
-		return pb->GetPrefName();
+		pb->SetWritePref(inWritePref);
+}
+
+//----------------------------------------------------------------------------------------
+/*static*/ const char* MPreferenceBase::GetPanePrefName(LView* inSuperView, PaneIDT inPaneID)
+//----------------------------------------------------------------------------------------
+{
+	LPane* p = inSuperView->FindPaneByID(inPaneID);
+	MPreferenceBase* pb = dynamic_cast<MPreferenceBase*>(p);
+	SignalIf_(!pb);
+	if (pb)
+		return XP_STRDUP(pb->GetPrefName());
 	return nil;
 }
 
 //----------------------------------------------------------------------------------------
-const char* MPreferenceBase::GetPrefName() const
+/*static*/ const char* MPreferenceBase::GetPaneUnsubstitutedPrefName(LView* inSuperView, PaneIDT inPaneID)
+//----------------------------------------------------------------------------------------
+{
+	LPane* p = inSuperView->FindPaneByID(inPaneID);
+	MPreferenceBase* pb = dynamic_cast<MPreferenceBase*>(p);
+	SignalIf_(!pb);
+	if (pb)
+		return XP_STRDUP(pb->mName);
+	return nil;
+}
+
+//----------------------------------------------------------------------------------------
+const char* MPreferenceBase::GetPrefName()
+//----------------------------------------------------------------------------------------
+{
+	CStr255 	subName(mName);
+	
+	if (sReplacementString && *sReplacementString)
+		::StringParamText(subName, sReplacementString);
+	
+	XP_FREEIF(const_cast<char *>(mSubstitutedName));
+	
+	if (sUseTempPrefPrefix)
+	{
+		CStr255		newName(kTempPrefPrefix);
+		newName += ".";
+		newName += subName;
+		
+		mSubstitutedName = XP_STRDUP(newName);
+	}
+	else
+		mSubstitutedName = XP_STRDUP(subName);
+	
+	return mSubstitutedName;
+}
+
+//----------------------------------------------------------------------------------------
+const char* MPreferenceBase::GetValidPrefName()
+// Get the pref name, with or without the prefix depending on whether the prefixed
+// preference exists or not.
+//----------------------------------------------------------------------------------------
+{
+	CStr255 	subName(mName);
+	
+	if (sReplacementString && *sReplacementString)
+		::StringParamText(subName, sReplacementString);
+	
+	XP_FREEIF(const_cast<char *>(mSubstitutedName));
+	
+	if (sUseTempPrefPrefix)
+	{
+		CStr255		newName(kTempPrefPrefix);
+		newName += ".";
+		newName += subName;
+				
+		if (PREF_GetPrefType(newName) == PREF_ERROR)
+			mSubstitutedName = XP_STRDUP(subName);	// the prefixed pref does not exist.
+		else
+			mSubstitutedName = XP_STRDUP(newName);
+	}
+	else
+		mSubstitutedName = XP_STRDUP(subName);
+	
+	return mSubstitutedName;
+}
+
+
+//----------------------------------------------------------------------------------------
+const char* MPreferenceBase::GetUnsubstitutedPrefName()
 //----------------------------------------------------------------------------------------
 {
 	return XP_STRDUP(mName);
@@ -145,7 +251,7 @@ const char* MPreferenceBase::GetPrefName() const
 void MPreferenceBase::ReadLockState()
 //----------------------------------------------------------------------------------------
 {
-	mLocked = PREF_PrefIsLocked(mName);
+	mLocked = PREF_PrefIsLocked(GetPrefName());
 	if (mLocked)
 		mPaneSelf->Disable();
 } // MPreferenceBase::ReadLockState
@@ -168,8 +274,10 @@ void MPreferenceBase::FinishCreate()
 Boolean MPreferenceBase::ShouldWrite() const
 //----------------------------------------------------------------------------------------
 {
-	if (!sWriteOnDestroy || mLocked)
+	if (!sWriteOnDestroy || mLocked || !mWritePref)
 		return false;
+
+/*
 	if (strstr(mName, "^0") != nil) // yow! unreplaced strings
 	{
 		// Check if a replacement has become possible
@@ -178,12 +286,35 @@ Boolean MPreferenceBase::ShouldWrite() const
 			return false;
 		const_cast<MPreferenceBase*>(this)->SetPrefName(mName, false); // don't read
 	}
+*/
 	return true;
 		// Note: don't worry about testing Changed(), since preflib does that.
 } // MPreferenceBase::ShouldWrite
 
 
-#pragma mark ---MPreference---
+//----------------------------------------------------------------------------------------
+/*static*/ void MPreferenceBase::InitTempPrefCache()
+//----------------------------------------------------------------------------------------
+{
+	// delete the temp pref tree
+	PREF_DeleteBranch(kTempPrefPrefix);
+}
+
+//----------------------------------------------------------------------------------------
+/*static*/ void MPreferenceBase::CopyCachedPrefsToMainPrefs()
+//----------------------------------------------------------------------------------------
+{
+	int result;
+	
+	result = PREF_CopyPrefsTree(kTempPrefPrefix, "");
+	Assert_(result == PREF_NOERROR);
+	
+	result = PREF_DeleteBranch(kTempPrefPrefix);
+	Assert_(result == PREF_NOERROR);
+}
+
+ 
+#pragma mark -
 //----------------------------------------------------------------------------------------
 template <class TPane, class TData> MPreference<TPane,TData>::MPreference(
 						LPane* inPane,
@@ -234,15 +365,15 @@ void MPreference<LControl,XP_Bool>::InitializeUsing(PrefReadFunc inFunc)
 {
 	XP_Bool value;
 	int	prefResult;
-	if (mOrdinal & 2)
+	if (mOrdinal & kOrdinalIntBit)
 	{
 		int32 intValue;
 		typedef int	(*IntPrefReadFunc)(const char*, int32*);
-		prefResult = ((IntPrefReadFunc)inFunc)(mName, &intValue);
+		prefResult = ((IntPrefReadFunc)inFunc)(GetValidPrefName(), &intValue);
 		value = intValue;
 	}
 	else
-		prefResult = inFunc(mName, &value);
+		prefResult = inFunc(GetValidPrefName(), &value);
 	if (prefResult == PREF_NOERROR)
 		SetPaneValue(value ^ (mOrdinal & kOrdinalXORBit));
 } // MPreference<LControl,XP_Bool>::InitializeUsing
@@ -276,9 +407,9 @@ void MPreference<LControl,XP_Bool>::WriteSelf()
 	if (ShouldWrite())
 	{
 		if (mOrdinal & kOrdinalIntBit) // this bit indicates it's an int conversion
-			PREF_SetIntPref(mName, GetPrefValue());
+			PREF_SetIntPref(GetPrefName(), GetPrefValue());
 		else
-			PREF_SetBoolPref(mName, GetPrefValue());
+			PREF_SetBoolPref(GetPrefName(), GetPrefValue());
 	}
 } // MPreference<LControl,XP_Bool>::WriteSelf
 
@@ -291,6 +422,69 @@ XP_Bool MPreference<LControl,XP_Bool>::GetPrefValue() const
 } // MPreference<LControl,XP_Bool>::GetPrefValue
 
 template class MPreference<LControl,XP_Bool>;
+
+#pragma mark -
+
+// Why the heck would we want a prefcontrol that is just a caption?  Only for the use of the
+// resource template to supply an extra string which initially holds the pref name.
+// CSpecialFolderCaption is derived from this.
+
+//----------------------------------------------------------------------------------------
+XP_Bool MPreference<LGACaption,XP_Bool>::GetPaneValue() const
+//----------------------------------------------------------------------------------------
+{
+	return false;
+} // MPreference<LGACaption,XP_Bool>::GetPaneValue
+
+//----------------------------------------------------------------------------------------
+void MPreference<LGACaption,XP_Bool>::SetPaneValue(XP_Bool)
+//----------------------------------------------------------------------------------------
+{
+} // MPreference<LGACaption,XP_Bool>::SetPaneValue
+
+//----------------------------------------------------------------------------------------
+Boolean MPreference<LGACaption, XP_Bool>::Changed() const
+//----------------------------------------------------------------------------------------
+{
+	return false;
+} // MPreference<LGACaption,XP_Bool>::Changed
+
+//----------------------------------------------------------------------------------------
+void MPreference<LGACaption,XP_Bool>::InitializeUsing(PrefReadFunc)
+//----------------------------------------------------------------------------------------
+{
+} // MPreference<LGACaption,XP_Bool>::InitializeUsing
+
+//----------------------------------------------------------------------------------------
+void MPreference<LGACaption,XP_Bool>::ReadSelf()
+//----------------------------------------------------------------------------------------
+{
+	InitializeUsing(PREF_GetBoolPref);
+	mInitialControlValue = false;
+} // MPreference<LGACaption,XP_Bool>::ReadSelf
+
+//----------------------------------------------------------------------------------------
+void MPreference<LGACaption,XP_Bool>::ReadDefaultSelf()
+//----------------------------------------------------------------------------------------
+{
+	if (!IsLocked())
+		InitializeUsing(PREF_GetDefaultBoolPref);
+} // MPreference<LGACaption,XP_Bool>::ReadDefaultSelf
+
+//----------------------------------------------------------------------------------------
+void MPreference<LGACaption,XP_Bool>::WriteSelf()
+//----------------------------------------------------------------------------------------
+{
+} // MPreference<LGACaption,XP_Bool>::WriteSelf
+
+//----------------------------------------------------------------------------------------
+XP_Bool MPreference<LGACaption,XP_Bool>::GetPrefValue() const
+//----------------------------------------------------------------------------------------
+{
+	return false;
+} // MPreference<LGACaption,XP_Bool>::GetPrefValue
+
+template class MPreference<LGACaption,XP_Bool>;
 
 #pragma mark -
 
@@ -320,7 +514,7 @@ void MPreference<LControl,int32>::InitializeUsing(PrefReadFunc inFunc)
 //----------------------------------------------------------------------------------------
 {
 	int32 value;
-	int	prefResult = inFunc(mName, &value);
+	int	prefResult = inFunc(GetValidPrefName(), &value);
 	if (prefResult == PREF_NOERROR)
 	{
 		if (value == mOrdinal)
@@ -349,7 +543,7 @@ void MPreference<LControl,int32>::WriteSelf()
 //----------------------------------------------------------------------------------------
 {
 	if (ShouldWrite())
-		PREF_SetIntPref(mName, mOrdinal);
+		PREF_SetIntPref(GetPrefName(), mOrdinal);
 } // MPreference<int>::WriteSelf
 
 //----------------------------------------------------------------------------------------
@@ -364,6 +558,7 @@ template class MPreference<LControl,int32>;
 #pragma mark -
 
 //----------------------------------------------------------------------------------------
+#pragma mark
 MPreference<LTextEdit,char*>::~MPreference()
 //----------------------------------------------------------------------------------------
 {
@@ -401,7 +596,7 @@ void MPreference<LTextEdit,char*>::InitializeUsing(PrefReadFunc inFunc)
 //----------------------------------------------------------------------------------------
 {
 	char* value;
-	int	prefResult = inFunc(mName, &value);
+	int	prefResult = inFunc(GetValidPrefName(), &value);
 	if (prefResult == PREF_NOERROR)
 	{
 		SetPaneValue(value);
@@ -430,7 +625,7 @@ void MPreference<LTextEdit,char*>::WriteSelf()
 //----------------------------------------------------------------------------------------
 {
 	if (ShouldWrite())
-		PREF_SetCharPref(mName, GetPaneValue());
+		PREF_SetCharPref(GetPrefName(), GetPaneValue());
 } // MPreference<LTextEdit,char*>::WriteSelf
 
 //----------------------------------------------------------------------------------------
@@ -442,12 +637,13 @@ char* MPreference<LTextEdit,char*>::GetPrefValue() const
 
 template class MPreference<LTextEdit,char*>;
 
-#pragma mark -
-
 // This is used for captions, and for mixing in with another pref control (eg, to
 // control the descriptor of a checkbox).
 
+#pragma mark -
+
 //----------------------------------------------------------------------------------------
+#pragma mark
 MPreference<LPane,char*>::~MPreference()
 //----------------------------------------------------------------------------------------
 {
@@ -485,7 +681,7 @@ void MPreference<LPane,char*>::InitializeUsing(PrefReadFunc inFunc)
 //----------------------------------------------------------------------------------------
 {
 	char* value;
-	int	prefResult = inFunc(mName, &value);
+	int	prefResult = inFunc(GetValidPrefName(), &value);
 	if (prefResult == PREF_NOERROR)
 	{
 		SetPaneValue(value);
@@ -527,6 +723,7 @@ template class MPreference<LPane,char*>;
 #pragma mark -
 
 //----------------------------------------------------------------------------------------
+#pragma mark
 MPreference<LGAPopup,char*>::~MPreference()
 //----------------------------------------------------------------------------------------
 {
@@ -583,7 +780,7 @@ void MPreference<LGAPopup,char*>::InitializeUsing(PrefReadFunc inFunc)
 //----------------------------------------------------------------------------------------
 {
 	char* value;
-	int	prefResult = inFunc(mName, &value);
+	int	prefResult = inFunc(GetValidPrefName(), &value);
 	if (prefResult == PREF_NOERROR)
 	{
 		SetPaneValue(value);
@@ -612,7 +809,7 @@ void MPreference<LGAPopup,char*>::WriteSelf()
 //----------------------------------------------------------------------------------------
 {
 	if (ShouldWrite())
-		PREF_SetCharPref(mName, GetPaneValue());
+		PREF_SetCharPref(GetPrefName(), GetPaneValue());
 } // MPreference<LGAPopup,char*>::WriteSelf
 
 //----------------------------------------------------------------------------------------
@@ -658,7 +855,7 @@ void MPreference<LTextEdit,int32>::InitializeUsing(PrefReadFunc inFunc)
 //----------------------------------------------------------------------------------------
 {
 	int32 value;
-	int	prefResult = inFunc(mName, &value);
+	int	prefResult = inFunc(GetValidPrefName(), &value);
 	if (prefResult == PREF_NOERROR)
 		SetPaneValue(value);
 } // MPreference<LTextEdit,int32>::InitializeUsing
@@ -684,7 +881,7 @@ void MPreference<LTextEdit,int32>::WriteSelf()
 //----------------------------------------------------------------------------------------
 {
 	if (ShouldWrite())
-		PREF_SetIntPref(mName, GetPaneValue());
+		PREF_SetIntPref(GetPrefName(), GetPaneValue());
 } // MPreference<LTextEdit,int32>::WriteSelf
 
 //----------------------------------------------------------------------------------------
@@ -736,7 +933,7 @@ void MPreference<CColorButton,RGBColor>::InitializeUsing(PrefReadFunc inFunc)
 {
 	RGBColor value;
 	uint8 red = 0, green = 0, blue = 0;
-	int	prefResult = ((ColorReadFunc)inFunc)(mName, &red, &green, &blue);
+	int	prefResult = ((ColorReadFunc)inFunc)(GetValidPrefName(), &red, &green, &blue);
 	if (prefResult == PREF_NOERROR)
 	{
 		value.red = red << 8;
@@ -769,7 +966,7 @@ void MPreference<CColorButton,RGBColor>::WriteSelf()
 	if (ShouldWrite())
 	{
 		RGBColor value = GetPaneValue();
-		PREF_SetColorPref(mName, value.red >> 8, value.green >> 8, value.blue >> 8);
+		PREF_SetColorPref(GetPrefName(), value.red >> 8, value.green >> 8, value.blue >> 8);
 	}
 } // MPreference<CColorButton,RGBColor>::WriteSelf
 

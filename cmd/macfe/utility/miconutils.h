@@ -40,3 +40,48 @@ private:
 	static CIconList sIconList;
 	static CIconList sIconSuiteList;
 };
+
+
+
+class CIconUtils
+{
+public:
+
+	static void 	GetDesktopIconSuite( const OSType inFileCreator, const OSType inFileType,
+										const short inIconSize, Handle* outHandle );
+
+private:
+	static Boolean	FindDesktopDatabase(short *ioVolumeRefNum, const OSType inFileCreator);
+	static Boolean	InOneDesktop(short *ioVolumeRefNum, const OSType inFileCreator, short *outDtRefNum);
+};
+
+
+class CAttachmentIcon
+{
+public:
+	enum {
+		kIconSizeSmall = kSmallIcon,
+		kIconSizeLarge = kLargeIcon
+	};
+	
+	CAttachmentIcon();
+	CAttachmentIcon(const OSType inFileCreator, const OSType inFileType, const Int16 inIconSize = kIconSizeLarge);
+	CAttachmentIcon(const ResID inIconResID, const Int16 inIconSize = kIconSizeLarge);
+	CAttachmentIcon(const char* attachmentRealType, const Int16 inIconSize = kIconSizeLarge);
+	CAttachmentIcon( const CAttachmentIcon& inOriginal);		//copy constructor
+	
+	~CAttachmentIcon();
+	
+	Handle GetSuiteHandle()	{ return mIconSuiteHandle; }
+	
+	void PlotIcon(const Rect& inIconFrame, IconAlignmentType inIconAlign = kAlignNone,
+											IconTransformType inIconTransform = kTransformNone);
+	
+	void AddIconOutlineToRegion( RgnHandle inRgnHandle, const Int16 inIconSize = kIconSizeLarge);
+	
+protected:
+
+private:
+	Handle		mIconSuiteHandle;
+
+};

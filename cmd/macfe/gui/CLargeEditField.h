@@ -31,7 +31,7 @@ class CLargeEditField : public LGAEditField
 
 	// c-string members
 		char *	GetLongDescriptor();	// ALLOCATES MEMORY!
-		void	SetLongDescriptor( char *inDescriptor );
+		void	SetLongDescriptor( const char *inDescriptor );
 };
 
 

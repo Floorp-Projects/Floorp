@@ -23,6 +23,11 @@
 #ifndef __RESGUI__
 #define __RESGUI__
 
+#ifdef MOZ_COMMUNICATOR_NAME
+#define PROGRAM_NAME "Communicator"
+#else
+#define PROGRAM_NAME "Navigator"
+#endif // MOZ_COMMUNICATOR_NAME
 
 #define emSignature 		'MOZZ'		// 'MOSS' for Netscape build, 'MOZZ' for free source build
 
@@ -38,6 +43,7 @@
 #define emRegistry			'REGS'
 #define emProfileType		'PRFL'
 #define emNetprofileType	'PRFN'
+#define emLDIFType			'LDIF'
 
 //	Locale Boundle - use  for l10n
 #define emLocaleBndl		'lBDL'
@@ -138,6 +144,8 @@
 
 #define cmd_ToggleTaskBar			1037
 
+#define cmd_NewFolder				1048	// Also mail folder, not just for bookmarks!
+
 #if 0
 /* bookmarks menus */
 #define cmd_OpenBookmarks			1039
@@ -160,6 +168,7 @@
 
 /* address book menus */
 #define cmd_ImportAddressBook		1060
+#define cmd_LaunchImportModule		1063
 
 /* mail composition */
 #define cmd_Send					1054
@@ -472,6 +481,7 @@
 #define cmd_LaunchCalendar			6600
 #define cmd_Launch3270				6601
 #define cmd_LaunchNetcaster			6602
+#define cmd_LaunchAOLInstantMessenger 6603
 
 #define cmd_LaunchConference		6610
 
@@ -506,6 +516,7 @@
 #define curs_Hand			128
 #define curs_VertDrag		129
 #define curs_HoriDrag		130
+#define curs_CopyDrag		132
 
 // ее Text traits
 #define FieldTextTxtr	 	4001
@@ -746,6 +757,8 @@
 
 #define CONFERENCE_APP_NAME		(FE_STRINGS_BASE + 470)
 #define CALENDAR_APP_NAME		(FE_STRINGS_BASE + 471)
+#define IMPORT_APP_NAME			(FE_STRINGS_BASE + 472)
+#define AIM_APP_NAME			(FE_STRINGS_BASE + 473)
 
 #define NO_SRC_EDITOR_PREF_SET	(FE_STRINGS_BASE + 500)
 #define NO_IMG_EDITOR_PREF_SET	(FE_STRINGS_BASE + 504)

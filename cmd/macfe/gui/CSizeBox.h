@@ -59,9 +59,10 @@
 
 class CSizeBox : public LButton {
 
-#if !defined(__MWERKS__) || (__MWERKS__ >= 0x2000)
-	typedef LButton inherited;
-#endif
+private:
+
+	typedef LButton Inherited;
+
 				  
 public:
 

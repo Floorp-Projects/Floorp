@@ -31,6 +31,13 @@
 
 #include "CDragBar.h"
 #include "CDragBarContainer.h"
+
+#ifdef MOZ_OFFLINE
+#include "CPatternProgressBar.h"
+#include "MailNewsgroupWindow_Defines.h"
+#include "LGAIconSuiteControl.h"
+#endif //MOZ_OFFLINE
+
 #include "CNSContext.h"
 #include "net.h"
 #include "client.h"
@@ -47,6 +54,7 @@ CNetscapeWindow::CNetscapeWindow(LStream *inStream, DataIDT inWindowType)
 	// For now, just assume they are all visible
 	for (int i = 0; i < kMaxToolbars; i++)
 		mToolbarShown[i] = true;
+
 	SetAttribute(windAttr_DelaySelect);
 } // CNetscapeWindow::CNetscapeWindow
 									
@@ -56,25 +64,6 @@ CNetscapeWindow::~CNetscapeWindow()
 {
 }
 	
-//-----------------------------------
-Boolean CNetscapeWindow::ObeyCommand(CommandT inCommand, void *ioParam)
-//-----------------------------------
-{
-	Boolean		cmdHandled = true;
-	
-	switch (inCommand)
-	{
-		case cmd_Preferences:
-			DoDefaultPrefs();
-			break;
-		default:
-			cmdHandled = Inherited::ObeyCommand(inCommand, ioParam);
-			break;
-	}
-		
-	return cmdHandled;
-}
-
 //-----------------------------------
 void CNetscapeWindow::ShowOneDragBar(PaneIDT dragBarID, Boolean isShown)
 // shows or hides a single toolbar
@@ -91,6 +80,146 @@ void CNetscapeWindow::ShowOneDragBar(PaneIDT dragBarID, Boolean isShown)
 			container->HideBar(theBar);
 	}
 } // CNetscapeWindow::ShowOneDragBar
+
+//-----------------------------------
+void CNetscapeWindow::AdjustStagger(NetscapeWindowT inType)
+// Moved here from CBrowserWindow
+//-----------------------------------
+{
+	if (HasAttribute(windAttr_Regular) && HasAttribute(windAttr_Resizable))
+	{		
+		Rect structureBounds = UWindows::GetWindowStructureRect(mMacWindowP);
+		
+		GDHandle windowDevice = UWindows::FindDominantDevice(structureBounds);
+		GDHandle mainDevice = ::GetMainDevice();
+		
+		Rect staggerBounds;
+		
+		if (windowDevice && (windowDevice != mainDevice))
+			staggerBounds = (*windowDevice)->gdRect;
+		else
+		{
+			staggerBounds = (*mainDevice)->gdRect;
+			staggerBounds.top += LMGetMBarHeight();
+		}
+		::InsetRect(&staggerBounds, 4, 4);	//	Same as zoom limit
+		
+		Rect contentBounds = UWindows::GetWindowContentRect(mMacWindowP);
+		
+		Rect windowBorder;
+		windowBorder.top = contentBounds.top - structureBounds.top;
+		windowBorder.left = contentBounds.left - structureBounds.left;
+		windowBorder.bottom = structureBounds.bottom - contentBounds.bottom;
+		windowBorder.right = structureBounds.right - contentBounds.right;
+		
+		Point maxTopLeft;
+		maxTopLeft.v = staggerBounds.bottom
+			- (windowBorder.top + mMinMaxSize.top + windowBorder.bottom);
+		maxTopLeft.h = staggerBounds.right
+			- (windowBorder.left + mMinMaxSize.left + windowBorder.right);
+		
+		UInt16 vStaggerOffset = windowBorder.top;
+		
+		if (vStaggerOffset > 12)
+			vStaggerOffset -= 4;	//	Tweak it up
+		
+		const int maxStaggerPositionsCount = 10;
+		Point staggerPositions[maxStaggerPositionsCount];
+		UInt16 usedStaggerPositions[maxStaggerPositionsCount];
+		int staggerPositionsCount;
+		
+		for (	staggerPositionsCount = 0;
+				staggerPositionsCount < maxStaggerPositionsCount;
+				++staggerPositionsCount)
+		{
+			staggerPositions[staggerPositionsCount].v
+				= staggerBounds.top + (vStaggerOffset * staggerPositionsCount);
+			staggerPositions[staggerPositionsCount].h
+				= staggerBounds.left + (4 * staggerPositionsCount);
+			
+			if ((staggerPositions[staggerPositionsCount].v > maxTopLeft.v)
+				|| (staggerPositions[staggerPositionsCount].h > maxTopLeft.h))
+				break;
+			
+			usedStaggerPositions[staggerPositionsCount] = 0;
+		}
+		unsigned int windowCount = 0;
+		CMediatedWindow *foundWindow = NULL;
+		CWindowIterator windowIterator(inType);
+		
+		for (windowIterator.Next(foundWindow); foundWindow; windowIterator.Next(foundWindow))
+		{
+			CNetscapeWindow *netscapeWindow = dynamic_cast<CNetscapeWindow*>(foundWindow);
+			
+			if (netscapeWindow && (netscapeWindow != this)
+				&& netscapeWindow->HasAttribute(windAttr_Regular))
+			{
+				++windowCount;
+				Rect bounds = UWindows::GetWindowStructureRect(netscapeWindow->mMacWindowP);
+				
+				for (int index = 0; index < staggerPositionsCount; ++index)
+				{
+					Boolean matchTop = (bounds.top == staggerPositions[index].v);
+					Boolean matchLeft = (bounds.left == staggerPositions[index].h);
+					
+					if ((matchTop) && (matchLeft))
+						usedStaggerPositions[index] += 1;
+					
+					if ((matchTop) || (matchLeft))
+						break;
+				}
+			}
+		}
+		Point structureSize;
+		structureSize.v = structureBounds.bottom - structureBounds.top;
+		structureSize.h = structureBounds.right - structureBounds.left;
+		
+		if (windowCount)
+		{
+			Boolean foundStaggerPosition = false;
+			
+			for (UInt16 minCount = 0; (minCount < 100) && !foundStaggerPosition; ++minCount)
+			{
+				for (int index = 0; index < staggerPositionsCount; ++index)
+				{
+					if (usedStaggerPositions[index] == minCount)
+					{
+						structureBounds.top = staggerPositions[index].v;
+						structureBounds.left = staggerPositions[index].h;
+						foundStaggerPosition = true;
+						break;
+					}
+				}
+			}
+			if (!foundStaggerPosition)
+			{
+				structureBounds.top = staggerBounds.top;
+				structureBounds.left = staggerBounds.left;
+			}
+			structureBounds.bottom = structureBounds.top + structureSize.v;
+			structureBounds.right = structureBounds.left + structureSize.h;
+		}
+		if ((structureBounds.top > maxTopLeft.v) || (structureBounds.left > maxTopLeft.h))
+		{
+			structureBounds.top = staggerBounds.top;
+			structureBounds.left = staggerBounds.left;
+			structureBounds.bottom = structureBounds.top + structureSize.v;
+			structureBounds.right = structureBounds.left + structureSize.h;
+		}
+		if (structureBounds.bottom > staggerBounds.bottom)
+			structureBounds.bottom = staggerBounds.bottom;
+		
+		if (structureBounds.right > staggerBounds.right)
+			structureBounds.right = staggerBounds.right;
+		
+		contentBounds.top = structureBounds.top + windowBorder.top;
+		contentBounds.left = structureBounds.left + windowBorder.left;
+		contentBounds.bottom = structureBounds.bottom - windowBorder.bottom;
+		contentBounds.right = structureBounds.right - windowBorder.right;
+		
+		DoSetBounds(contentBounds);
+	}
+} // CNetscapeWindow::AdjustStagger()
 
 //-----------------------------------
 void CNetscapeWindow::ToggleDragBar(PaneIDT dragBarID, int whichBar, const char* prefName)
@@ -148,11 +277,102 @@ URL_Struct* CNetscapeWindow::CreateURLForProxyDrag(char* outTitle)
 	while (iter.Next(aWindow))
 	{
 		CNetscapeWindow* nscpWindow = dynamic_cast<CNetscapeWindow*>(aWindow);
-		if (nscpWindow)
+		if (nscpWindow)		// Bug #113623
 		{
-			MWContext* mwContext = *nscpWindow->GetWindowContext();
-			if (mwContext)
-				FE_Progress(mwContext, CStr255(inMessage));
+			CNSContext* cnsContext = nscpWindow->GetWindowContext();
+			if (cnsContext)
+			{
+				MWContext* mwContext = *cnsContext;
+				if (mwContext)
+					FE_Progress(mwContext, CStr255(inMessage));
+			}
+
+#ifdef MOZ_OFFLINE
+			else
+			{
+				// Mail Compose window (for instance?) has no context but has a status bar 
+				CPatternProgressCaption* progressCaption
+					= dynamic_cast<CPatternProgressCaption*>
+						(nscpWindow->FindPaneByID(kMailNewsStatusPaneID));
+				if (progressCaption)
+					progressCaption->SetDescriptor(inMessage);
+			}
+			LGAIconSuiteControl* offlineButton
+				= dynamic_cast<LGAIconSuiteControl*>
+					(nscpWindow->FindPaneByID(kOfflineButtonPaneID));
+			if (offlineButton)
+			{
+				ResIDT iconID = NET_IsOffline() ? 15200 : 15201;
+				offlineButton->SetIconResourceID(iconID);
+				offlineButton->Refresh();
+			}
+
+#endif //MOZ_OFFLINE
 		}
 	}
 } // CNetscapeWindow::DisplayStatusMessageInAllWindows
+
+//----------------------------------------------------------------------------------------
+void CNetscapeWindow::StopAllContexts()
+//----------------------------------------------------------------------------------------
+{
+	CNSContext* context = GetWindowContext();
+	if (context)
+		XP_InterruptContext(*context);
+}
+
+//----------------------------------------------------------------------------------------
+Boolean CNetscapeWindow::IsAnyContextBusy()
+//----------------------------------------------------------------------------------------
+{
+	CNSContext* context = GetWindowContext();
+	if (context)
+		return XP_IsContextBusy(*context);
+	return false;
+}
+
+//-----------------------------------
+Boolean CNetscapeWindow::ObeyCommand(CommandT inCommand, void *ioParam)
+//-----------------------------------
+{
+	Boolean	cmdHandled = false;
+	
+	switch (inCommand)
+	{
+		case cmd_Preferences:
+			DoDefaultPrefs();
+			return true;
+		case cmd_Stop:
+			// The stop bucks here.
+			StopAllContexts();
+			return true;
+		default:
+			cmdHandled = Inherited::ObeyCommand(inCommand, ioParam);
+			break;
+	}
+		
+	return cmdHandled;
+}
+
+//----------------------------------------------------------------------------------------
+void CNetscapeWindow::FindCommandStatus(
+	CommandT			inCommand,
+	Boolean				&outEnabled,
+	Boolean				&outUsesMark,
+	Char16				&outMark,
+	Str255				outName)
+//----------------------------------------------------------------------------------------
+{
+	outUsesMark = false;
+	
+	switch (inCommand)
+	{
+		case cmd_Stop:
+			outEnabled = IsAnyContextBusy();
+			break;
+		
+		default:
+			Inherited::FindCommandStatus(
+				inCommand, outEnabled, outUsesMark, outMark, outName);
+	}
+} // CNetscapeWindow::FindCommandStatus

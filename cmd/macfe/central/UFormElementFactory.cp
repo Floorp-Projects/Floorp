@@ -123,7 +123,7 @@ Boolean HasFormWidget(
 class CWhiteScroller: public CConfigActiveScroller
 {
 public:
-	friend class CHyperView;
+	//friend class CHyperView;		// this class no longer exists
 	
 					enum { class_ID = 'wscr' };
 
@@ -351,6 +351,9 @@ LPane*	UFormElementFactory::MakeTextFormElem(
 		editField->SetMaxChars(textData->max_size);
 		editField->SetVisibleChars(textData->size);
 		editField->SetLayoutForm(formElem);
+		// Should allow undo
+		LUndoer* theUndoer = new LUndoer;
+		editField->AddAttachment(theUndoer);
 
 	// Reset the value
 		ResetFormElement(formElem, FALSE, SetFE_Data(formElem,editField,editField, editField));
@@ -503,13 +506,15 @@ LPane* UFormElementFactory::MakeTextArea(
 		theTextView->InitFormElement(*inNSContext, formElem);
 
 		// Add the undoer for text actions.  This will be on a per-text field basis
-		LUndoer* theUndoer = new LUndoer;
-		theTextView->AddAttachment(theUndoer);
+		//	- Let WASTE handle undo
+		//	LUndoer* theUndoer = new LUndoer;
+		//	theTextView->AddAttachment(theUndoer);
 		
 		// Resize to proper size
 		theTextView->FocusDraw();
 		::GetFontInfo(&fontInfo);
-		short wantedWidth = textAreaData->cols * fontInfo.widMax + 8;
+//		short wantedWidth = textAreaData->cols * fontInfo.widMax + 8;
+		short wantedWidth = textAreaData->cols * ::CharWidth('M') + 8;
 		short wantedHeight = textAreaData->rows * (fontInfo.ascent + fontInfo.descent + fontInfo.leading) + 8;
 		
 		// make the image big so there is something to scroll, if necessary....
@@ -1667,7 +1672,13 @@ static void SetupTextInTextEngine( CWASTEEdit* engine, int16 csid, char* text, i
 		PutUTF8IntoTextEngine( engine, text, len );
 	} else {
 		ChangeTextTraitsForSingleScript(engine, csid );
-		engine->InsertPtr( text, len, NULL, NULL, true );
+		if (text != NULL)
+			engine->InsertPtr( text, len, NULL, NULL, true );
+		else
+		{
+			engine->SelectAll();
+			engine->Delete();
+		}
 	}
 }
 
@@ -1759,7 +1770,11 @@ void UFormElementFactory::ResetFormElementData(
 				ValidateTextByCharset(formElem->text_attr->charset, default_text);
 				Try_
 				{
-					SetupTextInTextEngine(engine, formElem->text_attr->charset, default_text, XP_STRLEN((char*)default_text));
+				
+					// don't want ending linefeed
+					Int32 length = XP_STRLEN((char*)default_text)-1;
+					if( length )
+						SetupTextInTextEngine(engine, formElem->text_attr->charset, default_text,  length);
 				}
 				Catch_( inErr ) 
 				{

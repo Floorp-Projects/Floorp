@@ -818,8 +818,11 @@ OSErr CFolderSpec::SetFolderSpec(FSSpec newSpec, int folderID)
 				break;
 				case CPrefs::NewsFolder:
 				{
-					// OSErr err = AssurePreferencesSubfolder(newsFolderName, newSpec);
+#ifdef MOZ_MAIL_NEWS
+					OSErr err = AssurePreferencesSubfolder(newsFolderName, newSpec);
+#else
 					OSErr err = fnfErr;		// Brutal hard coded err for a world without mail/news
+#endif //MOZ_MAIL_NEWS
 					if ( err != noErr )
 					{
 						fFolder.vRefNum = fFolder.parID = fFilePrototype.vRefNum = fFilePrototype.parID = 0;
@@ -863,8 +866,11 @@ OSErr CFolderSpec::SetFolderSpec(FSSpec newSpec, int folderID)
 				
 				case CPrefs::MailFolder:
 				{
-					// OSErr err = AssurePreferencesSubfolder(mailFolderName, newSpec);
+#ifdef MOZ_MAIL_NEWS
+					OSErr err = AssurePreferencesSubfolder(mailFolderName, newSpec);
+#else
 					OSErr err = fnfErr;		// Brutal hard coded err for a world without mail/news
+#endif //MOZ_MAIL_NEWS
 					if ( err != noErr )
 					{
 							fFolder.vRefNum = fFolder.parID = fFilePrototype.vRefNum = fFilePrototype.parID = 0;
@@ -1108,9 +1114,9 @@ CPrefs::RegisterPrefCallbacks()
 	PREF_RegisterCallback(	"news.directory", FSSpecPrefCallback,
 							(void *)NewsFolder);
 //	PREF_RegisterCallback("", FSSpecPrefCallback, (void *)SecurityFolder);
-	PREF_RegisterCallback(	"mail.cc_file", FSSpecPrefCallback,
+	PREF_RegisterCallback(	"mail.default_fcc", FSSpecPrefCallback,
 							(void *)MailCCFile);
-	PREF_RegisterCallback(	"news.cc_file", FSSpecPrefCallback,
+	PREF_RegisterCallback(	"news.default_fcc", FSSpecPrefCallback,
 							(void *)NewsCCFile);
 	PREF_RegisterCallback(	"editor.html_editor", FSSpecPrefCallback,
 							(void *)HTMLEditor);
@@ -1138,6 +1144,21 @@ CPrefs::PrefErr CPrefs::DoRead( LFile * file, short fileType )
 	}
 	sPrefFile = file;
 	
+	// Read in the netscape.cfg file before displaying the login screen
+	FSSpec lockSpec = CPrefs::GetFilePrototype(CPrefs::RequiredGutsFolder);		
+	GetIndString(lockSpec.name, 300, configFile);
+	if (CFileMgr::FileExists(lockSpec))
+	{
+		char* lockFile = CFileMgr::PathNameFromFSSpec(lockSpec, true);
+	
+		if (lockFile) {
+			int lockErr = PREF_ReadLockFile(lockFile);
+			XP_ASSERT (lockErr == PREF_NOERROR);
+			XP_FREE(lockFile);
+		}
+	}		
+	
+	// Display the profile picker screen
 	CPrefs::PrefErr result = InitPrefsFolder( fileType );
 	if ( result == CPrefs::eAbort )
 		return result;
@@ -1172,7 +1193,7 @@ CPrefs::PrefErr CPrefs::DoRead( LFile * file, short fileType )
 	// Read the lock/config file, looking in both the 
 	// Users folder and the Essential Files folder
 	Boolean lockLoaded = false;
-	FSSpec lockSpec = CPrefs::GetFilePrototype(CPrefs::RequiredGutsFolder);		
+	lockSpec = CPrefs::GetFilePrototype(CPrefs::RequiredGutsFolder);		
 	GetIndString(lockSpec.name, 300, configFile);
 	
 	if (!CFileMgr::FileExists(lockSpec)) {
@@ -1269,7 +1290,7 @@ void CPrefs::DoWrite()
 void CPrefs::ReadAllPreferences()
 {
 	sReading = TRUE;
-	Try_	
+	try	
 	{
 		sDirtyOnRead = FALSE;
 		AssertPrefsFileOpen(fsRdPerm);
@@ -1286,13 +1307,12 @@ void CPrefs::ReadAllPreferences()
 		// Needs to be done after all prefs have been read
 		NET_SelectProxyStyle( (NET_ProxyStyle) GetLong( ProxyConfig) );
 	}
-	Catch_(inErr)
+	catch(...)
 	{		
 		ClosePrefsFile();
 		sReading = FALSE;
-		Throw_(inErr);
+		throw;
 	}
-	EndCatch_
 	sReading = FALSE;
 	ClosePrefsFile();
 }
@@ -2314,7 +2334,24 @@ char* CPrefs::Concat(const char* base, const char* suffix)
 	return buf;
 }
 
+#ifdef MOZ_MAIL_NEWS
+//----------------------------------------------------------------------------------------
+static void HandlePOPPassword()
+// I moved some common code here.  It's static because I don't want to change the header
+// just for this function, which is entirely of local interest.  It's called from two
+// cases in PostInitializePref below. - 98/02/23 jrm
+//----------------------------------------------------------------------------------------
+{
+	if ( CPrefs::GetBoolean( CPrefs::RememberMailPassword ))
+		NET_SetPopPassword( CPrefs::GetCharPtr( CPrefs::MailPassword) );
+	else
+		NET_SetPopPassword(NULL);
+}
+#endif
+
+//----------------------------------------------------------------------------------------
 void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
+//----------------------------------------------------------------------------------------
 {
 	if (changed && !sReading)
 	{
@@ -2376,6 +2413,7 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 			break;
 			
 		case UseDocumentColors:
+			LO_SetUserOverride(!GetBoolean(id));
 			break;
 		case UseSigFile:
 			break;
@@ -2487,11 +2525,7 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 			break;
 		case PopHost:
 #ifdef MOZ_MAIL_NEWS
-			MSG_SetPopHost( GetCharPtr(id) );
-			if ( GetBoolean( RememberMailPassword ) )
-				NET_SetPopPassword( GetCharPtr( MailPassword) );
-			else
-				NET_SetPopPassword(NULL);
+			HandlePOPPassword();
 #endif
 			break;
 			
@@ -2565,14 +2599,6 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 // Print record
 		case PrintRecord:
 			break;
-// Misc. Together, because settings from different categories need to be combined
-		case UseMailFCC:
-		case MailCCFile:
-			break;
-		case UseNewsFCC:
-		case NewsCCFile:
-			break;
-			
 		case LimitMessageSize:
 		case MaxMessageSize:
 			break;
@@ -2606,12 +2632,7 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 			break;
 		case RememberMailPassword:
 #ifdef MOZ_MAIL_NEWS
-		// This depends on the loading order
-		// Should be solved by the accumulator
-			if ( GetBoolean( RememberMailPassword ) )
-				NET_SetPopPassword( GetCharPtr( MailPassword) );
-			else
-				NET_SetPopPassword(NULL);
+			HandlePOPPassword();
 #endif
 			break;
 		default:
@@ -2742,7 +2763,20 @@ CPrefs::UnsubscribeToPrefChanges( LListener *listener )
 		gPrefBroadcaster->RemoveListener(listener);
 }
 
-void FE_RememberPopPassword(MWContext * /* context */, const char * password)
+void FE_RememberPopPassword(MWContext*, const char * password)
 {
+#ifdef MOZ_MAIL_NEWS
+    // if we aren't supposed to remember clear anything in the registry
+	XP_Bool prefBool;
+	XP_Bool passwordProtectLocalCache;
+	PREF_GetBoolPref("mail.remember_password",&prefBool);
+	PREF_GetBoolPref("mail.password_protect_local_cache", &passwordProtectLocalCache);
+
+    if (prefBool || passwordProtectLocalCache)
+		PREF_SetCharPref("mail.pop_password",(char *)password);
+    else
+		PREF_SetCharPref("mail.pop_password","");
+#else
 	CPrefs::SetString( password, CPrefs::MailPassword );
+#endif // MOZ_MAIL_NEWS
 }

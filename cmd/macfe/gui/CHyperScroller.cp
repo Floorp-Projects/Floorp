@@ -190,6 +190,22 @@ void CHyperScroller::AdjustScrollBars()
 			/*inherited*/	CConfigActiveScroller::AdjustScrollBars();
 	}
 
+Boolean CHyperScroller::ScrolledToMaxVerticalExtent()
+{
+	if ( mVerticalBar )
+		return ( mVerticalBar->GetValue() == mVerticalBar->GetMaxValue() );
+	
+	return true;
+}
+
+Boolean CHyperScroller::ScrolledToMinVerticalExtent()
+{
+	if ( mVerticalBar )
+		return ( mVerticalBar->GetValue() == 0 );
+	
+	return true;
+}
+
 void CHyperScroller::RefreshSelf()
 		/*
 			...refresh just the area occupied by me and my scrollers,
@@ -448,7 +464,7 @@ void CHyperScroller::FinishCreateSelf()
 // 97-05-06 pkc -- override ActivateSelf so that we call draw dummy size box in active state.
 void CHyperScroller::ActivateSelf()
 {
-	inherited::ActivateSelf();
+	Inherited::ActivateSelf();
 
 	// 97-06-06 pkc -- also check to see if we're visible
 //	if ((mVisible == triState_On) && mVerticalBar && mHorizontalBar)

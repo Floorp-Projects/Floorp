@@ -645,13 +645,15 @@ void CFormBigText::BeTarget()
 // Show scrollbar inside the hyperview
 // FIX ME!
 //	((CHyperView*)(mSuperView->GetSuperView()))->ShowView(mSuperView);
+#if 0 // Disable auto scrolling. This auto scrolling breaks click selection since the mouse location isn't updated
+	  //  
 	if (GetSuperView())
 	{
 		CHTMLView* theHTMLView = dynamic_cast<CHTMLView*>(GetSuperView()->GetSuperView());
 		if (theHTMLView)
 			theHTMLView->ShowView(*GetSuperView());
 	}
-
+#endif //  0
 	CSimpleTextView::BeTarget();
 	MochaFocus(true);
 //	CSimpleTextView::SetMultiScript(fContext && (GetWinCSID() == CS_UTF8));
@@ -2389,9 +2391,11 @@ void CFormFile::ListenToMessage(MessageT inMessage, void */*ioParam*/)
 			UDesktop::Activate();
 			if (myReply.sfGood)
 			{
-				if (!CFileMgr::FileHasDataFork(myReply.sfFile))
-					ErrorManager::PlainAlert(SUBMIT_FILE_WITH_DATA_FK);
-				else
+// Fortezza and MacBinary form submission uploads need to be able to select a file
+// that just has a resource fork so we can't reject these files any more
+//				if (!CFileMgr::FileHasDataFork(myReply.sfFile))
+//					ErrorManager::PlainAlert(SUBMIT_FILE_WITH_DATA_FK);
+//				else
 					SetFileSpec(myReply.sfFile);	
 			}
 		}
@@ -2480,8 +2484,8 @@ Boolean	CFormFileEditField::HandleKeyPress(const EventRecord&	inKeyEvent)
 		theKeyStatus = keyStatus_PassUp;	//   key is down
 	
 	} else if (mKeyFilter != nil) {
-		theKeyStatus = (*mKeyFilter)(mTextEditH, inKeyEvent.message,
-										inKeyEvent.message & charCodeMask, inKeyEvent.modifiers);
+		Char16		charCode = inKeyEvent.message & charCodeMask;
+		theKeyStatus = (*mKeyFilter)(mTextEditH, inKeyEvent.message, charCode, inKeyEvent.modifiers);
 	}
 	switch(theKeyStatus)
 	{

@@ -34,6 +34,7 @@
 
 #include "uprefd.h"
 #include "prefapi.h"		// ns/modules/libpref
+#include "ufilemgr.h"
 #include "resgui.h"
 
 //
@@ -56,7 +57,8 @@ class CInternetConfig
 														OSType creator, 
 														ConstStr255Param fileName,
 														ICMapEntry *ent);
-
+		static	ICError MapFileName( ConstStr255Param filename, ICMapEntry *ent );
+		static  ICError	GetFileSpec( ConstStr255Param icKey , FSSpec & ioSpec );
 		static	ICError	LaunchInternetConfigApplication(ConstStr255Param key);
 
 #ifndef MOZ_MAIL_NEWS
@@ -88,16 +90,16 @@ class CInternetConfig
 										CPrefs::PrefEnum	firstString,
 										CPrefs::PrefEnum	secondString,
 										Boolean				stripPort = false);
-
+		ICError SyncFileSpec (  ConstStr255Param	icKey, CPrefs::PrefEnum	netscapePref );
 		ICError	GetICString(	ConstStr255Param	icKey,
 								Str255				s,
 								int32				*port = nil);
-
+		ICError	GetFSSpec( ConstStr255Param icKey , FSSpec & ioSpec );
 		ICError GetICFileMapping(	OSType fileType, 
 									OSType creator, 
 									ConstStr255Param fileName,
 									ICMapEntry *ent);
-
+		ICError MapICFileName( ConstStr255Param filename, ICMapEntry *ent );
 		ICError	LaunchICApplication(ConstStr255Param key);
 									
 #ifndef MOZ_MAIL_NEWS
@@ -181,6 +183,11 @@ CInternetConfigInterface::GetInternetConfigFileMapping(	OSType fileType,
 															fileName, ent);
 }
 
+
+ICError CInternetConfigInterface::MapFileName( ConstStr255Param filename, ICMapEntry *ent )
+{
+	return CInternetConfig::MapFileName( filename , ent );
+}
 #ifndef MOZ_MAIL_NEWS
 ICError
 CInternetConfigInterface::SendInternetConfigURL(char *address)
@@ -195,6 +202,10 @@ CInternetConfigInterface::LaunchInternetConfigApplication(ConstStr255Param key)
 	return CInternetConfig::LaunchInternetConfigApplication(key);
 }
 
+ICError	CInternetConfigInterface::GetFileSpec( ConstStr255Param icKey , FSSpec & ioSpec )
+{
+	return  CInternetConfig::GetFileSpec( icKey, ioSpec);
+}
 
 CInternetConfig*
 CInternetConfig::sInternetConfigConnection = nil;
@@ -357,7 +368,7 @@ CInternetConfig::SynchFromIC()
 	SynchStringFromIC(kICWWWHomePage,	CPrefs::HomePage);
 	SynchStringFromIC(kICOrganization, 	CPrefs::Organization);
 	SynchStringFromIC(kICNNTPHost,		CPrefs::NewsHost, true, "news.server_port", 119);
-	
+	SyncFileSpec( kICDownloadFolder, CPrefs::DownloadFolder );
 	::ICEnd(fInstance);
 }
 
@@ -606,4 +617,54 @@ CInternetConfig::LaunchICApplication(ConstStr255Param key)
 		return ::ICEditPreferences(fInstance, key);
 	else
 		return icPrefNotFoundErr;
+}
+ICError
+CInternetConfig::MapFileName(	ConstStr255Param filename, ICMapEntry *ent)
+{
+	Connect();
+	return sInternetConfigConnection->MapICFileName(filename, ent);
+}
+
+ICError CInternetConfig::MapICFileName( ConstStr255Param filename, ICMapEntry *ent )
+{
+	if( CInternetConfig::HaveICInstance() )
+		return ::ICMapFilename(fInstance, filename, ent);
+	else
+		return icPrefNotFoundErr;	
+
+}
+
+ICError	CInternetConfig::GetFileSpec( ConstStr255Param icKey , FSSpec & ioSpec )
+{
+	Connect();
+	return sInternetConfigConnection->GetFSSpec(icKey, ioSpec);
+}
+
+ICError	CInternetConfig::GetFSSpec( ConstStr255Param icKey , FSSpec & ioSpec )
+{
+	ICFileSpec* spec;
+	
+	ICAttr attr;
+	char buffer[512];
+	long size = 512;
+	ICError	result;
+	
+	result = ::ICGetPref(fInstance, icKey, &attr, buffer, &size);
+	if (!result)
+	{
+		spec = (ICFileSpec *) buffer;
+		CFileMgr::CopyFSSpec( spec->fss, ioSpec );
+	}
+	return result;
+}
+
+ICError CInternetConfig::SyncFileSpec (  ConstStr255Param	icKey, CPrefs::PrefEnum	netscapePref )
+{
+	FSSpec icSpec;
+	ICError result = GetFSSpec( icKey, icSpec );
+	if( !result )
+	{
+		 CPrefs::SetFolderSpec( icSpec , netscapePref );
+	}
+	return result;
 }
