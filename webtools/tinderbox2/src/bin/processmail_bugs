@@ -4,23 +4,28 @@
 
 # processmail_bugs - The 'bug tracking' mail processing engine for
 # tinderbox.  The bug tracking server (bugzilla, aim, remedy, etc.)
-# send mail to the tinderbox server, when bug tickets change
+# should send mail to the tinderbox server, when bug tickets change
 # state. This program will parse the most common mail formats and and
-# tell the tinderbox server about the tickets.  This program should be
-# run by the MTA (Sendmail) when ever mail for the tinderboxs
-# bugtracking mail account arrives.  Tinderbox will display summary
-# information about these tickets on the same page as the build and
-# version control information.  The Bug Tracking modules are designed
-# to be very flexible and work with any bug tracking system, they may
+# tell the tinderbox server about the the database column Vs value
+# pairs.  This program should be run by the MTA (Sendmail,Fetchmail)
+# when ever mail for the tinderboxs bugtracking mail account arrives.
+# Tinderbox will display summary information about these tickets on
+# the same page as the build and version control information.  This
+# program should not need any local configuration.  All we assume is
+# that the mail contains the name/value pairs on separate lines and
+# that these are easy to parse out.  All configuration is done in the
+# BTData.pm so that the display module (BT_Generic.pm) can display the
+# information correclty.  The Bug Tracking modules are designed to be
+# very flexible and work with any bug tracking system, they may
 # require technical configurations.  No locks are used by the mail
 # processes, data is passed to the tinderbox server in a maildir like
 # format.
 
 
 
-# $Revision: 1.5 $ 
-# $Date: 2001/01/04 00:25:39 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/02/16 01:43:49 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
 
@@ -76,6 +81,7 @@ use TinderDB::BT_Generic;
 # have not written a parser yet.
 
 # The first example comes from redhat.com the second from bugzilla.org
+# notice they use different diff settings.
 
 
 +Bug#: 1999
@@ -140,7 +146,7 @@ test, ignore
 
 # AIM has blocks like this.  The blocks are not contiguious and the
 # names have spaces.  It is true that the names which are displayed in
-# the mail message are configurable this shows the defaults.
+# the mail message are configurable, this shows the default settings.
 
 
 -----------------------------------------------------
@@ -218,9 +224,9 @@ sub clean_bug_input {
 
 sub parse_bt_vars {
 
-  # Lines will be diffs, and this will cause the variables to appear
+  # Lines will be diffs, and this could cause the variables to appear
   # twice in the data with different vaules.  We keep the LAST
-  # assignment of each variable.  This means that long varaibles can
+  # assignment of each variable.  This means that long variables can
   # not be split up to multiple lines.
 
   # We parse the whole mail message because some formats are hard to
@@ -314,20 +320,20 @@ sub parse_bt_vars {
 sub set_tinderbox_variables {
 
   # set known tinderbox fields based on the bug trackers variables.
+  my ($bug_id) = $TINDERBOX{$BTData::BUGID_FIELD_NAME};
 
   $TINDERBOX{'tinderbox_timenow'} = MailProcess::mailstring2time($MAIL_HEADER{'Date'});
 
   $TINDERBOX{'tinderbox_mailto'} = $MAIL_HEADER{'To'};
   $TINDERBOX{'tinderbox_mailfrom'} = $MAIL_HEADER{'From'};
 
+  # I believe this is sendmail specific so do not rely on it, 
+  # however I hate to lose the data.
+  $TINDERBOX{'tinderbox_maildate'} = $MAIL_HEADER{'Date'};
+
   $TINDERBOX{'tinderbox_status'} = $TINDERBOX{$BTData::STATUS_FIELD_NAME};
 
-  # the validity of this value is tested in BTData::update2tree if need be.
-
-  $TINDERBOX{'tinderbox_tree'} = BTData::update2tree(\%TINDERBOX);
-
-  $TINDERBOX{'tinderbox_bug_id'} = $TINDERBOX{$BTData::BUGID_FIELD_NAME};
-  $TINDERBOX{'tinderbox_bug_url'} = BTData::update2bug_url(\%TINDERBOX);
+  $TINDERBOX{'tinderbox_bug_id'} = $bug_id;
 
   return 1;
 }
@@ -360,36 +366,38 @@ sub check_required_vars {
 
   %MAIL_HEADER = MailProcess::parse_mail_header();
   %TINDERBOX = parse_bt_vars();
-  set_tinderbox_variables();
 
-  # BTData::update2tree says to ignore this record.
+  my (@trees) = BTData::update2tree(\%TINDERBOX);
+  
+  foreach $tree (@trees) {
+    
+    set_tinderbox_variables();
 
-  ($TINDERBOX{'tinderbox_tree'}) ||
-    exit 0;
+    $TINDERBOX{'tinderbox_tree'} = $tree;
+    
+    # when we are testing turn off the checks
+    
+    ($SKIP_CHECK) ||
+      check_required_vars();
+    
+    # Testing is easier if the update files appear at the top of the
+    # status page, even though they are checked out of CVS.
+    
+    if ($FORCE_TIME) {
+      $TINDERBOX{'tinderbox_timenow'} = time() - 10;
+    }
+    
+    my ($uniq_id) = join('.', 
+                         $TINDERBOX{'tinderbox_tree'},
+                         $TINDERBOX{'tinderbox_timenow'},
+                         $TINDERBOX{'tinderbox_bug_id'},
+                         $TINDERBOX{'tinderbox_mailto'},
+                         $TINDERBOX{'tinderbox_mailfrom'},
+                        );
+    
+    MailProcess::write_update_file('BT', $uniq_id, $tree, %TINDERBOX );
 
-  # when we are testing turn off the checks
-
-  ($SKIP_CHECK) ||
-    check_required_vars();
-
-  # Testing is easier if the update files appear at the top of the
-  # status page, even though they are checked out of CVS.
-
-  if ($FORCE_TIME) {
-    $TINDERBOX{'tinderbox_timenow'} = time() - 10;
-  }
-
-  my ($uniq_id) = join('.', 
-                       $TINDERBOX{'tinderbox_tree'},
-                       $TINDERBOX{'tinderbox_timenow'},
-                       $TINDERBOX{'tinderbox_bug_id'},
-                       $TINDERBOX{'tinderbox_mailto'},
-                       $TINDERBOX{'tinderbox_mailfrom'},
-                      );
-
-  MailProcess::write_update_file('BT', $uniq_id, 
-                                 $TINDERBOX{'tinderbox_tree'}, %TINDERBOX );
-
+  } # foreach $tree
 
   exit 0;
 }
