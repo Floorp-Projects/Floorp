@@ -113,4 +113,4 @@ DEFINES		+= -D_BSD_SOURCE
 endif
 
 install:: 
-	cp xpcom.properties $(CHROME_DIST)/$(CHROME_L10N_DIR)
+	$(INSTALL) -m 444 $(srcdir)/xpcom.properties $(CHROME_DIST)/$(CHROME_L10N_DIR)
