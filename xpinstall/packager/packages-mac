@@ -315,6 +315,9 @@ viewer:Components:mozldap.shlb
 viewer:Components:mozldap.xpt
 viewer:Components:ldapAutoComplete.xpt
 viewer:Essential Files:LDAPClient.shlb
+viewer:Components:msgsmime.shlb
+viewer:Components:msgsmime.xpt
+viewer:Components:smime-service.js
 
 [chatzilla]
 viewer:Components:chatzilla-service.js
