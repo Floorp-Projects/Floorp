@@ -763,6 +763,7 @@ alpha*-*-osf*)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     if test "$no_x" = "yes"; then
 	MOZ_WIDGET_TOOLKIT='photon'
+	TK_CFLAGS='-I/usr/nto/include/photon'
 	TK_LIBS='-lphoton -lphrender'
 	AC_DEFINE(NO_X11)
     fi
