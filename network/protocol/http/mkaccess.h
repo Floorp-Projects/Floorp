@@ -83,8 +83,8 @@ typedef struct {
 	short purpose;			/* the purpose range encoded in bits 0-5 */
 	short ID;			/* the id value */
 	short recipients;		/* the Recipients value */
-	Bool  isGeneric;		/* true if this is a generic label i.e. applies to all cookies */
-	Bool  isSigned;			/* true if this label was signed and the signature verified */ 
+	PRBool  isGeneric;		/* true if this is a generic label i.e. applies to all cookies */
+	PRBool  isSigned;			/* true if this label was signed and the signature verified */ 
 	PRTime ExpDate;			/* the expiration date in local time */
 	char  *signatory;		/* who signed the label if it was signed */
 	char  *domainName;		/* the applicable domain for the label */
@@ -106,8 +106,8 @@ void TL_SetURLField( TrustLabel *ALabel, char *URLField );
 
 /* utility function that use TrustLabel */
 void PICS_ExtractTrustLabel( URL_Struct *URL_s, char *value );
-Bool IsTrustLabelsEnabled(void);
-PUBLIC Bool MatchCookieToLabel2(  char *CurURL,  char *CookieName,
+PRBool IsTrustLabelsEnabled(void);
+PUBLIC PRBool MatchCookieToLabel2(  char *CurURL,  char *CookieName,
 	char *CookiePath, char *CookieHost, 
 	TrustLabel **TheLabel );
 
