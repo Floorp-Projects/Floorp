@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
 
@@ -10,24 +11,53 @@
     onload="parent.onPanelLoaded('am-smtp.xul');"
 	align="vertical">
 
-<html:div>&smtpServer.label;</html:div>
+  <box class="header" align="horizontal">
+    <titledbutton class="left-header-text" value="&smtpServer.label;"/>
+    <spring class="header-spring" flex="1"/>
+    <titledbutton class="right-header-text" value=""/>
+  </box>
+
 <html:div>&smtpDesc.label;</html:div>
 
-  <box align="horizontal">
-     <html:div>&smtpHostname.label;</html:div>
-     <html:input type="text" name="smtp.hostname" flex="100%"/>
-  </box>
-  <html:div>
-    <html:input type="checkbox" name="smtp.useUsername"/>
-    &smtpAlwaysUseName.label;
-  </html:div>
-  <box align="horizontal">
-     <html:div>&smtpUsername.label;</html:div>
-     <html:input type="text" name="smtp.username" flex="100%"/>
-  </box>
-  <html:div>
-    <html:input type="checkbox" name="smtp.savePassword"/>
-    &smtpSavePassword.label;
-  </html:div>
+  <html:table width="100%">
+    <html:colgroup>
+      <html:col width="0*"/>
+      <html:col width="1*"/>
+      <html:col width="0*"/>
+    </html:colgroup>
+  <html:tr>
+     <html:td colspan="2"><html:div>&smtpHostname.label;</html:div></html:td>
+     <html:td><html:input type="text" size="30" name="smtp.hostname"/></html:td>
+  </html:tr>
+  <html:tr>
+    <html:td>
+      <html:input type="checkbox" id="smtp.useUsername" name="smtp.useUsername"/>
+    </html:td>
+    <html:td colspan="2">
+      <html:label for="smtp.useUsername">&smtpAlwaysUseName.label;</html:label>
+    </html:td>
+  </html:tr>
+
+  <html:tr>
+    <html:td/>
+    <html:td><html:div>&smtpUsername.label;</html:div></html:td>
+    <html:td><html:input type="text" size="30" name="smtp.username" flex="100%"/></html:td>
+  </html:tr>
+  <html:tr>
+    <html:td/>
+    <html:td colspan="2">
+      <html:input type="checkbox" id="smtp.savePassword" name="smtp.savePassword"/>
+      <html:label for="smtp.savePassword">&smtpSavePassword.label;</html:label>
+    </html:td>
+  </html:tr>
+  <html:tr>
+    <html:td>
+      <html:input id="smtp.isSecure" name="smtp.isSecure" type="checkbox"/>
+    </html:td>
+    <html:td colspan="2">
+      <html:label for="smtp.isSecure">&smtpUseSecure.label;</html:label>
+    </html:td>
+  </html:tr>
+  </html:table>    
 
 </window>

@@ -10,3 +10,4 @@
 <!ENTITY smtpSavePassword.label "Save my password">
 <!ENTITY smtpHostname.label "Server Name:">
 <!ENTITY smtpUsername.label "User Name:">
+<!ENTITY smtpUseSecure.label "Use secure connection (SSL)">
