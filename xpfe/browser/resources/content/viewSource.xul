@@ -78,4 +78,7 @@
 
   </vbox> 
 
+  <statusbar id="status-bar" class="chromeclass-status">
+    <statusbarpanel id="statusbar-line-col" label="" flex="1"/>
+  </statusbar>
 </window>
