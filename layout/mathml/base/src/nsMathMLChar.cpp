@@ -210,7 +210,7 @@ private:
   PRInt32       mType;       // NS_TABLE_TYPE_UNICODE
                              // NS_TABLE_TYPE_GLYPH_INDEX
 
-  nsString      mFontName;   // The name of the font associated to this table.
+  nsCString     mFontName;   // The name of the font associated to this table.
 
   PRInt32       mCharCount;
   nsCharData*   mCharArray;  // All the stretchy chars supported by the font associated to
