@@ -962,9 +962,7 @@ case "$target" in
     AC_DEFINE(NO_X11)
 
     dnl Remove cygwinism from MOZ_BUILD_ROOT
-    if test `echo $MOZ_BUILD_ROOT | grep -c ^/cygdrive/` != 0; then
-        MOZ_BUILD_ROOT=`echo $MOZ_BUILD_ROOT | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
-    fi
+    MOZ_BUILD_ROOT=`cygpath -w $MOZ_BUILD_ROOT | sed -e 's|\\\\|/|g'`
 
     if test "$MOZ_TOOLS"; then
         MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd`
