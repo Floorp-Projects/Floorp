@@ -75,6 +75,9 @@ public:
  static PRBool DashMatchCompare(const nsAString& aAttributeValue,
                                 const nsAString& aSelectorValue,
                                 const nsStringComparator& aComparator);
+                                
+  static void EscapeCSSString(const nsString& aString, nsAString& aReturn);
+
 };
 
 
