@@ -57,6 +57,7 @@ function OnLoadNewCard()
 				if ( menupopup.childNodes[index].getAttribute('data') == editCard.selectedAB )
 				{
 					abPopup.value = menupopup.childNodes[index].getAttribute('value');
+					abPopup.data = menupopup.childNodes[index].getAttribute('data');
 					break;
 				}
 			}
