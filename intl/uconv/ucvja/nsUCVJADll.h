@@ -41,14 +41,14 @@
 
 #include "prtypes.h"
 
-extern PRUint16 g_ut0201Mapping[];
-extern PRUint16 g_ut0208Mapping[];
-extern PRUint16 g_ut0212Mapping[];
+extern const PRUint16 g_ut0201Mapping[];
+extern const PRUint16 g_ut0208Mapping[];
+extern const PRUint16 g_ut0212Mapping[];
 
-extern PRUint16 g_uf0201Mapping[];
-extern PRUint16 g_uf0201GLMapping[];
-extern PRUint16 g_uf0208Mapping[];
-extern PRUint16 g_uf0208extMapping[];
-extern PRUint16 g_uf0212Mapping[];
+extern const PRUint16 g_uf0201Mapping[];
+extern const PRUint16 g_uf0201GLMapping[];
+extern const PRUint16 g_uf0208Mapping[];
+extern const PRUint16 g_uf0208extMapping[];
+extern const PRUint16 g_uf0212Mapping[];
 
 #endif /* nsUCVJADll_h___ */

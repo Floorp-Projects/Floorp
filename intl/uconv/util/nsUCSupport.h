@@ -219,7 +219,7 @@ public:
   /**
    * Class constructor.
    */
-  nsMultiTableDecoderSupport(PRInt32 aTableCount, uRange * aRangeArray, 
+  nsMultiTableDecoderSupport(PRInt32 aTableCount, const uRange * aRangeArray, 
                              uShiftTable ** aShiftTable,
                              uMappingTable ** aMappingTable,
                              PRUint32 aMaxLengthFactor);
@@ -233,7 +233,7 @@ protected:
 
   nsIUnicodeDecodeHelper    * mHelper;      // decoder helper object
   PRInt32                   mTableCount;
-  uRange                    * mRangeArray;
+  const uRange              * mRangeArray;
   uShiftTable               ** mShiftTable;
   uMappingTable             ** mMappingTable;
 

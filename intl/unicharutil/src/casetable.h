@@ -41,16 +41,16 @@
  */
 #include "nscore.h" 
 
-static PRUnichar gUpperToTitle[] = { 
+static const PRUnichar gUpperToTitle[] = { 
    0x01F1,    0x01F2, 
    0x01C4,    0x01C5, 
    0x01C7,    0x01C8, 
    0x01CA,    0x01CB, 
 };
 
-static PRUint32 gUpperToTitleItems = 4;
+static const PRUint32 gUpperToTitleItems = 4;
 
-static PRUint16 gToUpper[] = 
+static const PRUint16 gToUpper[] = 
 { /*   From    To             Every   Diff   */ 
        0x0061, ((0x19 << 8) | 0x01), 0xffe0  ,
        0x00b5, ((0x00 << 8) | 0x3b), 0x02e7  ,
@@ -161,9 +161,9 @@ static PRUint16 gToUpper[] =
        0xff41, ((0x19 << 8) | 0x01), 0xffe0   
 };
 
-static PRUint32 gToUpperItems = 107;
+static const PRUint32 gToUpperItems = 107;
 
-static PRUint16 gToLower[] = 
+static const PRUint16 gToLower[] = 
 { /*   From    To             Every   Diff   */ 
        0x0041, ((0x19 << 8) | 0x01), 0x0020  ,
        0x00c0, ((0x16 << 8) | 0x01), 0x0020  ,
@@ -266,9 +266,9 @@ static PRUint16 gToLower[] =
        0xff21, ((0x19 << 8) | 0x01), 0x0020   
 };
 
-static PRUint32 gToLowerItems = 99;
+static const PRUint32 gToLowerItems = 99;
 
-static PRUint32 gCaseBlocks [8] = {
+static const PRUint32 gCaseBlocks [8] = {
 0xC000003F,
 0x00000012,
 0x00000000,

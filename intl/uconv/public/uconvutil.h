@@ -103,7 +103,10 @@ typedef struct  {
         PRInt16         numOfItem;
         PRInt16         classID; 
         uShiftCell      shiftcell[1];
-} uShiftTable;
+} uShiftTableMutable;
+
+typedef const uShiftTableMutable uShiftTable;
+
 
 /*=====================================*/
 
@@ -114,7 +117,8 @@ typedef struct {
 
 /*=====================================*/
 
-typedef PRUint16* uMappingTable; 
+typedef PRUint16* uMappingTableMutable; 
+typedef const PRUint16* uMappingTable; 
  
 #endif
 

@@ -132,7 +132,7 @@ void genCyrillicClass(const char* name, const char* charset)
       printf("cannot locate %s Decoder\n", charset);
       return;
    }
-   printf("static PRUint8 %sMap [128] = {\n",name);
+   printf("static const PRUint8 %sMap [128] = {\n",name);
    PRUint8 i,j;
    for(i=0x80;i!=0x00;i+=0x10)
    {

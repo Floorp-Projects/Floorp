@@ -195,20 +195,20 @@ while(<UNICODATA>) {
 ######################################################################
 
 $ttotal = 0;
-print OUT "static PRUnichar gUpperToTitle[] = { \n";
+print OUT "static const PRUnichar gUpperToTitle[] = { \n";
 while(($upper, $title) = each(%utot)) {
    print OUT "   0x" . $upper . ",    0x" . $utot{$upper} . ", \n";
    $ttotal++;
 }
 print OUT "};\n\n";
-print OUT "static PRUint32 gUpperToTitleItems = $ttotal;\n\n";
+print OUT "static const PRUint32 gUpperToTitleItems = $ttotal;\n\n";
 
 ######################################################################
 #
 # Print out gToUpper table
 #
 ######################################################################
-print OUT "static PRUint16 gToUpper[] = \n";
+print OUT "static const PRUint16 gToUpper[] = \n";
 print OUT "{ /*   From    To             Every   Diff   */ \n";
 $utotal=0;
 $ufrom = 0;   # remember the start of the output item
@@ -262,7 +262,7 @@ for ($i = 0; $i <= $#ucv; $i++)
      printf OUT "((0x%02x << 8) | 0x%02x), 0x%04x   \n};\n\n",
             ($ucv[$i] - $ufrom), $ulastd[$i], $ud[$i];
      $utotal++;
-     print OUT "static PRUint32 gToUpperItems = $utotal;\n\n";
+     print OUT "static const PRUint32 gToUpperItems = $utotal;\n\n";
   }
   #
   #  printf "%4x - %4x - %4x - %4x\n", $ucv[$i], $uv[$i], $ud[$i], $ulastd[$i];
@@ -274,7 +274,7 @@ for ($i = 0; $i <= $#ucv; $i++)
 # Print out gToLower table
 #
 ######################################################################
-print OUT "static PRUint16 gToLower[] = \n";
+print OUT "static const PRUint16 gToLower[] = \n";
 print OUT "{ /*   From    To             Every   Diff   */ \n";
 $ltotal=0;
 $lfrom = 0;   # remember the start of the output item
@@ -327,14 +327,14 @@ for ($i = 0; $i <= $#lcv; $i++)
      printf OUT "((0x%02x << 8) | 0x%02x), 0x%04x   \n};\n\n",
             ($lcv[$i] - $lfrom), $llastd[$i], $ld[$i];
      $ltotal++;
-     print OUT "static PRUint32 gToLowerItems = $ltotal;\n\n";
+     print OUT "static const PRUint32 gToLowerItems = $ltotal;\n\n";
   }
   #
   #  printf "%4x - %4x - %4x - %4x\n", $lcv[$i], $lv[$i], $ld[$i], $llastd[$i];
   #
 }
 
-print OUT "static PRUint32 gCaseBlocks [8] = {\n";
+print OUT "static const PRUint32 gCaseBlocks [8] = {\n";
 for($idx=0;$idx<8;$idx++)
 {
    printf OUT "0x%08X", $blk[$idx];

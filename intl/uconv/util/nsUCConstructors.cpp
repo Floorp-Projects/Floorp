@@ -53,7 +53,7 @@ inline NS_METHOD StabilizedQueryInterface(T* aNewObject,
 }
 
 NS_METHOD
-CreateMultiTableDecoder(PRInt32 aTableCount, uRange * aRangeArray, 
+CreateMultiTableDecoder(PRInt32 aTableCount, const uRange * aRangeArray, 
                         uShiftTable ** aShiftTable,
                         uMappingTable ** aMappingTable,
                         PRUint32 aMaxLengthFactor,

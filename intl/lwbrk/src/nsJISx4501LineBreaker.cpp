@@ -199,7 +199,7 @@
 
 #define MAX_CLASSES 10
 
-static PRUint16 gPair[MAX_CLASSES] = {
+static const PRUint16 gPair[MAX_CLASSES] = {
   0x01FF, 
   0x0002, 
   0x0006, 
@@ -214,7 +214,7 @@ static PRUint16 gPair[MAX_CLASSES] = {
 
 
 static inline int
-GETCLASSFROMTABLE(PRUint32* t, PRUint16 l)
+GETCLASSFROMTABLE(const PRUint32* t, PRUint16 l)
 {
   return ((((t)[(l>>3)]) >> ((l & 0x0007)<<2)) & 0x000f);
 }

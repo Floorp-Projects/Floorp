@@ -43,7 +43,7 @@
  * if you have any question. Thanks
  */
 #include "nsVerifier.h"
-static PRUint32 UTF8_cls [ 256 / 8 ] = {
+static const PRUint32 UTF8_cls [ 256 / 8 ] = {
 PCK4BITS(1,1,1,1,1,1,1,1),  // 00 - 07 
 PCK4BITS(1,1,1,1,1,1,0,0),  // 08 - 0f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 10 - 17 
@@ -79,7 +79,7 @@ PCK4BITS(12,13,13,13,14,15,0,0)   // f8 - ff
 };
 
 
-static PRUint32 UTF8_st [ 26] = {
+static const PRUint32 UTF8_st [ 26] = {
 PCK4BITS(eError,eStart,eError,eError,eError,eError,     12,     10),//00-07 
 PCK4BITS(     9,     11,     8,     7,     6,     5,     4,     3),//08-0f 
 PCK4BITS(eError,eError,eError,eError,eError,eError,eError,eError),//10-17 

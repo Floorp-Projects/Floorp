@@ -46,7 +46,7 @@ NS_DEFINE_CID(kHankakuToZenkakuCID, NS_HANKAKUTOZENKAKU_CID);
 
 // Basic mapping from Hankaku to Zenkaku
 // Nigori and Maru is take care out side this basic mapping
-static PRUnichar gBasicMapping[0x40] =
+static const PRUnichar gBasicMapping[0x40] =
 {
 // 0xff60
 0xff60,0x3002,0x300c,0x300d,0x3001,0x30fb,0x30f2,0x30a1,        

@@ -41,20 +41,20 @@
 
 #include "prtypes.h"
 
-extern "C" PRUint16 g_ASCIIMappingTable[] ;
-extern "C" PRUint16 g_ufCNS1MappingTable[];
-extern "C" PRUint16 g_ufCNS2MappingTable[];
-extern "C" PRUint16 g_ufCNS3MappingTable[];
-extern "C" PRUint16 g_ufCNS4MappingTable[];
-extern "C" PRUint16 g_ufCNS5MappingTable[];
-extern "C" PRUint16 g_ufCNS6MappingTable[];
-extern "C" PRUint16 g_ufCNS7MappingTable[];
-extern "C" PRUint16 g_utCNS1MappingTable[];
-extern "C" PRUint16 g_utCNS2MappingTable[];
-extern "C" PRUint16 g_utCNS3MappingTable[];
-extern "C" PRUint16 g_utCNS4MappingTable[];
-extern "C" PRUint16 g_utCNS5MappingTable[];
-extern "C" PRUint16 g_utCNS6MappingTable[];
-extern "C" PRUint16 g_utCNS7MappingTable[];
+extern const PRUint16 g_ASCIIMappingTable[] ;
+extern const PRUint16 g_ufCNS1MappingTable[];
+extern const PRUint16 g_ufCNS2MappingTable[];
+extern const PRUint16 g_ufCNS3MappingTable[];
+extern const PRUint16 g_ufCNS4MappingTable[];
+extern const PRUint16 g_ufCNS5MappingTable[];
+extern const PRUint16 g_ufCNS6MappingTable[];
+extern const PRUint16 g_ufCNS7MappingTable[];
+extern const PRUint16 g_utCNS1MappingTable[];
+extern const PRUint16 g_utCNS2MappingTable[];
+extern const PRUint16 g_utCNS3MappingTable[];
+extern const PRUint16 g_utCNS4MappingTable[];
+extern const PRUint16 g_utCNS5MappingTable[];
+extern const PRUint16 g_utCNS6MappingTable[];
+extern const PRUint16 g_utCNS7MappingTable[];
 
 #endif /* nsUCvTW2Dll_h___ */

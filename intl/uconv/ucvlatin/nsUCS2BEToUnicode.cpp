@@ -224,7 +224,7 @@ NS_IMETHODIMP nsUTF16DiffEndianToUnicode::Convert(
   return res;
 }
 
-nsresult UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const char * aSrc, PRInt32 * aSrcLength, PRUnichar * aDest, PRInt32 * aDestLength)
+static nsresult UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const char * aSrc, PRInt32 * aSrcLength, PRUnichar * aDest, PRInt32 * aDestLength)
 {
   const char* src = aSrc;
   const char* srcEnd = aSrc + *aSrcLength;

@@ -46,7 +46,7 @@
 //--------------------------------------------------------------------
 
 static PRBool gInitToGBKTable = PR_FALSE;
-static PRUnichar gGBKToUnicodeTable[MAX_GBK_LENGTH] = {
+static const PRUnichar gGBKToUnicodeTable[MAX_GBK_LENGTH] = {
 #include "cp936map.h"
 };
 static PRUint16 gUnicodeToGBKTable[0xA000-0x4e00];

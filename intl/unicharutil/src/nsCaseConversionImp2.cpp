@@ -71,20 +71,20 @@ enum {
 
 class nsCompressedMap {
 public:
-   nsCompressedMap(PRUnichar *aTable, PRUint32 aSize);
+   nsCompressedMap(const PRUnichar *aTable, PRUint32 aSize);
    ~nsCompressedMap();
    PRUnichar Map(PRUnichar aChar);
 protected:
    PRUnichar Lookup(PRUint32 l, PRUint32 m, PRUint32 r, PRUnichar aChar);
 
 private: 
-   PRUnichar *mTable;
+   const PRUnichar *mTable;
    PRUint32 mSize;
    PRUint32 *mCache;
    PRUint32 mLastBase;
 };
 
-nsCompressedMap::nsCompressedMap(PRUnichar *aTable, PRUint32 aSize)
+nsCompressedMap::nsCompressedMap(const PRUnichar *aTable, PRUint32 aSize)
 {
    MOZ_COUNT_CTOR(nsCompressedMap);
    mTable = aTable;
@@ -467,8 +467,8 @@ nsCaseConversionImp2::CaseInsensitiveCompare(const PRUnichar *aLeft,
 nsCaseConversionImp2::nsCaseConversionImp2()
 {
   if (gInit++ == 0) {
-    gUpperMap = new nsCompressedMap(NS_REINTERPRET_CAST(PRUnichar*, &gToUpper[0]), gToUpperItems);
-    gLowerMap = new nsCompressedMap(NS_REINTERPRET_CAST(PRUnichar*, &gToLower[0]), gToLowerItems);
+    gUpperMap = new nsCompressedMap(NS_REINTERPRET_CAST(const PRUnichar*, &gToUpper[0]), gToUpperItems);
+    gLowerMap = new nsCompressedMap(NS_REINTERPRET_CAST(const PRUnichar*, &gToLower[0]), gToLowerItems);
   }
 }
 

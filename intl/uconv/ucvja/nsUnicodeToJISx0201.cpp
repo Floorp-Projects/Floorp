@@ -41,7 +41,7 @@
 #include "nsUCConstructors.h"
 
 // Shift Table
-static PRInt16 g0201ShiftTable[] =  {
+static const PRInt16 g0201ShiftTable[] =  {
         1, u1ByteCharset,
         ShiftCell(0,0,0,0,0,0,0,0)
 };

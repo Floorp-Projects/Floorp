@@ -276,7 +276,7 @@ PRIVATE PRBool uScanAlways3ByteUTF8(
                                     /*=================================================================================
                                     
 =================================================================================*/
-PRIVATE uScannerFunc m_scanner[uNumOfCharsetType] =
+PRIVATE const uScannerFunc m_scanner[uNumOfCharsetType] =
 {
     uCheckAndScanAlways1Byte,
     uCheckAndScanAlways2Byte,
@@ -305,7 +305,7 @@ PRIVATE uScannerFunc m_scanner[uNumOfCharsetType] =
 
 =================================================================================*/
 
-PRIVATE uSubScannerFunc m_subscanner[uNumOfCharType] =
+PRIVATE const uSubScannerFunc m_subscanner[uNumOfCharType] =
 {
     uScanAlways1Byte,
     uScanAlways2Byte,
@@ -518,7 +518,7 @@ PRIVATE PRBool uCheckAndScanByTable(
                                     )
 {
   PRInt16 i;
-  uShiftCell* cell = &(shift->shiftcell[0]);
+  const uShiftCell* cell = &(shift->shiftcell[0]);
   PRInt16 itemnum = shift->numOfItem;
   for(i=0;i<itemnum;i++)
   {
@@ -805,7 +805,7 @@ PRIVATE PRBool uScanDecomposedHangulCommon(
     return PR_FALSE;
   } 
   else {
-    static PRUint8 lMap[] = {
+    static const PRUint8 lMap[] = {
       /*        A1   A2   A3   A4   A5   A6   A7  */
       0,   1,0xff,   2,0xff,0xff,   3,
         /*   A8   A9   AA   AB   AC   AD   AE   AF  */
@@ -838,7 +838,7 @@ PRIVATE PRBool uScanDecomposedHangulCommon(
     return PR_FALSE;
   } 
   else {
-    static PRUint8 tMap[] = {
+    static const PRUint8 tMap[] = {
       /*        A1   A2   A3   A4   A5   A6   A7  */
       1,   2,   3,   4,   5,   6,   7,
         /*   A8   A9   AA   AB   AC   AD   AE   AF  */
@@ -905,19 +905,19 @@ PRIVATE PRBool uCheckAndScanJohabHangul(
   * See Table 4-45 Johab Encoding's Five-Bit Binary Patterns in page 183
   * of "CJKV Information Processing" for details
     */
-    static PRUint8 lMap[32]={ /* totaly 19  */
+    static const PRUint8 lMap[32]={ /* totaly 19  */
       0xff,0xff,0,   1,   2,   3,   4,   5,    /* 0-7    */
         6,   7,   8,   9,   10,  11,  12,  13,   /* 8-15   */
         14,  15,  16,  17,  18,  0xff,0xff,0xff, /* 16-23  */
         0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff  /* 24-31  */
     };
-    static PRUint8 vMap[32]={ /* totaly 21 */
+    static const PRUint8 vMap[32]={ /* totaly 21 */
       0xff,0xff,0xff,0,   1,   2,   3,   4,    /* 0-7   */
         0xff,0xff,5,   6,   7,   8,   9,   10,   /* 8-15  */
         0xff,0xff,11,  12,  13,  14,  15,  16,   /* 16-23 */
         0xff,0xff,17,  18,  19,  20,  0xff,0xff  /* 24-31 */
     };
-    static PRUint8 tMap[32]={ /* totaly 29 */
+    static const PRUint8 tMap[32]={ /* totaly 29 */
       0xff,0,   1,   2,   3,   4,   5,   6,    /* 0-7   */
         7,   8,   9,   10,  11,  12,  13,  14,   /* 8-15  */
         15,  16,  0xff,17,  18,  19,  20,  21,   /* 16-23 */

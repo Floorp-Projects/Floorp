@@ -67,7 +67,8 @@ NS_METHOD
 nsUnicodeToKSC5601Constructor(nsISupports *aOuter, REFNSIID aIID,
                               void **aResult)
 {
-  return CreateMultiTableEncoder(2, (uShiftTable**) g_ShiftTable, 
+  return CreateMultiTableEncoder(2,
+                                 (uShiftTable**) g_ShiftTable, 
                                  (uMappingTable**) g_MappingTable,
                                  8 /* max length = src * 8 */,
                                  aOuter, aIID, aResult);

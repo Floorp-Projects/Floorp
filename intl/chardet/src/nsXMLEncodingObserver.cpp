@@ -55,7 +55,7 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-static eHTMLTags gTags[] = 
+static const eHTMLTags gTags[] = 
 { eHTMLTag_instruction,
   eHTMLTag_unknown
 };

@@ -43,7 +43,7 @@
  * if you have any question. Thanks
  */
 #include "nsVerifier.h"
-static PRUint32 EUCJP_cls [ 256 / 8 ] = {
+static const PRUint32 EUCJP_cls [ 256 / 8 ] = {
 PCK4BITS(4,4,4,4,4,4,4,4),  // 00 - 07 
 PCK4BITS(4,4,4,4,4,4,5,5),  // 08 - 0f 
 PCK4BITS(4,4,4,4,4,4,4,4),  // 10 - 17 
@@ -79,7 +79,7 @@ PCK4BITS(0,0,0,0,0,0,0,5)   // f8 - ff
 };
 
 
-static PRUint32 EUCJP_st [ 5] = {
+static const PRUint32 EUCJP_st [ 5] = {
 PCK4BITS(     3,     4,     3,     5,eStart,eError,eError,eError),//00-07 
 PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eItsMe,eItsMe),//08-0f 
 PCK4BITS(eItsMe,eItsMe,eStart,eError,eStart,eError,eError,eError),//10-17 

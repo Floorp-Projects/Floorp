@@ -43,7 +43,7 @@
  * if you have any question. Thanks
  */
 #include "nsVerifier.h"
-static PRUint32 ISO2022KR_cls [ 256 / 8 ] = {
+static const PRUint32 ISO2022KR_cls [ 256 / 8 ] = {
 PCK4BITS(2,0,0,0,0,0,0,0),  // 00 - 07 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 08 - 0f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 10 - 17 
@@ -79,7 +79,7 @@ PCK4BITS(2,2,2,2,2,2,2,2)   // f8 - ff
 };
 
 
-static PRUint32 ISO2022KR_st [ 5] = {
+static const PRUint32 ISO2022KR_st [ 5] = {
 PCK4BITS(eStart,     3,eError,eStart,eStart,eStart,eError,eError),//00-07 
 PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eItsMe,eItsMe),//08-0f 
 PCK4BITS(eItsMe,eItsMe,eError,eError,eError,     4,eError,eError),//10-17 

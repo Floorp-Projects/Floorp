@@ -48,7 +48,7 @@
 // all the useful constructors
 NS_METHOD
 CreateMultiTableDecoder(PRInt32 aTableCount,
-                        uRange * aRangeArray, 
+                        const uRange * aRangeArray, 
                         uShiftTable ** aShiftTable,
                         uMappingTable ** aMappingTable,
                         PRUint32 aMaxLengthFactor,
@@ -62,7 +62,6 @@ CreateMultiTableEncoder(PRInt32 aTableCount,
                         uShiftTable ** aShiftTable, 
                         uMappingTable  ** aMappingTable,
                         PRUint32 aMaxLengthFactor,
-                        
                         nsISupports* aOuter,
                         REFNSIID aIID,
                         void** aResult);
@@ -71,7 +70,6 @@ NS_METHOD
 CreateTableEncoder(uShiftTable * aShiftTable, 
                    uMappingTable  * aMappingTable,
                    PRUint32 aMaxLengthFactor,
-                   
                    nsISupports* aOuter,
                    REFNSIID aIID,
                    void** aResult);
@@ -80,7 +78,6 @@ NS_METHOD
 CreateTableDecoder(uShiftTable * aShiftTable, 
                    uMappingTable * aMappingTable,
                    PRUint32 aMaxLengthFactor,
-
                    nsISupports* aOuter,
                    REFNSIID aIID,
                    void** aResult);
@@ -88,7 +85,6 @@ CreateTableDecoder(uShiftTable * aShiftTable,
 NS_METHOD
 CreateOneByteDecoder(uShiftTable * aShiftTable, 
                      uMappingTable * aMappingTable,
-                     
                      nsISupports* aOuter,
                      REFNSIID aIID,
                      void** aResult);

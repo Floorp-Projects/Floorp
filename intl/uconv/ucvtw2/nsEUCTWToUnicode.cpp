@@ -123,7 +123,7 @@ nsEUCTWToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult)
 {
   return CreateMultiTableDecoder(8, 
-                                 (uRange*) &g_EUCTWRanges, 
+                                 (const uRange*) &g_EUCTWRanges, 
                                  (uShiftTable**) &g_EUCTWShiftTableSet, 
                                  (uMappingTable**) &g_EUCTWMappingTableSet,
                                  1, aOuter, aIID, aResult);

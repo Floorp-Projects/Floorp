@@ -111,7 +111,7 @@ nsCP949ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {
   return CreateMultiTableDecoder(sizeof(g_CP949Ranges) / sizeof(g_CP949Ranges[0]),
-                                 (uRange*) &g_CP949Ranges,
+                                 (const uRange*) &g_CP949Ranges,
                                  (uShiftTable**) &g_CP949ShiftTableSet, 
                                  (uMappingTable**) &g_CP949MappingTableSet, 1,
                                  aOuter, aIID, aResult);
