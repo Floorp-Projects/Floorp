@@ -27,6 +27,11 @@
 # This file defines all the parameters that we have a GUI to edit within
 # Bugzilla.
 
+# ATTENTION!!!!   THIS FILE ONLY CONTAINS THE DEFAULTS.
+# You cannot change your live settings by editing this file.
+# Only adding new parameters is done here.  Once the parameter exists, you 
+# must use %baseurl%/editparams.cgi from the web to edit the settings.
+
 use diagnostics;
 use strict;
 
