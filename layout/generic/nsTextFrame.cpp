@@ -407,6 +407,13 @@ public:
               nsIRenderingContext& aRenderingContext,
               nsIStyleContext* sc)
     {
+    mFont = nsnull;
+    mText = nsnull;
+    mColor = nsnull;
+    mNormalFont = nsnull;
+    mSmallFont = nsnull;
+    mLastFont = nsnull;
+
       // Get style data
       mColor = (const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
       mFont = (const nsStyleFont*) sc->GetStyleData(eStyleStruct_Font);
@@ -463,6 +470,14 @@ public:
     ~TextStyle() {
       NS_RELEASE(mNormalFont);
       NS_IF_RELEASE(mSmallFont);
+
+    mFont = nsnull;
+    mText = nsnull;
+    mColor = nsnull;
+    mNormalFont = nsnull;
+    mSmallFont = nsnull;
+    mLastFont = nsnull;
+
     }
   };
 
@@ -1338,7 +1353,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   }
 
-//IF SYLE SAYS TO SELCT TO END OF FRAME HERE...
+//IF STYLE SAYS TO SELCT TO END OF FRAME HERE...
   nsCOMPtr<nsIPref>     prefs;
   PRInt32 prefInt = 0;
   rv = nsServiceManager::GetService(kPrefCID, 
