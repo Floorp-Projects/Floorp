@@ -28,6 +28,7 @@
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 
+#include "nsIWidget.h"
 #include "nsMacMessageSink.h"
 #include "nsMacMessagePump.h"
 #include "nsSelectionMgr.h"
@@ -75,7 +76,10 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
   if (!mSelectionMgr)
       NS_NewSelectionMgr(&mSelectionMgr);
 
-	return NS_OK;
+  mMacSink = new nsMacMessageSink();
+  mMacPump = auto_ptr<nsMacMessagePump>( new nsMacMessagePump(mToolKit.get(), mMacSink) );
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -85,8 +89,10 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 //-------------------------------------------------------------------------
 nsresult nsAppShell::Run()
 {
-	mMacSink = new nsMacMessageSink();
-	mMacPump = auto_ptr<nsMacMessagePump>( new nsMacMessagePump(mToolKit.get(), mMacSink) );
+	if (!mMacPump.get())
+		return NS_ERROR_NOT_INITIALIZED;
+
+	mMacPump->StartRunning();
 	mMacPump->DoMessagePump();
 
   //if (mDispatchListener)
@@ -104,21 +110,47 @@ nsresult nsAppShell::Run()
 
 //-------------------------------------------------------------------------
 //
-// nsAppShell constructor
+// Exit appshell
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::Exit()
 {
 	if (mMacPump.get())
 	{
-		mMacPump->StopRunning();
-
+		Spindown();
 		mExitCalled = PR_TRUE;
 		mRefCnt ++;			// hack: since the applications are likely to delete us
 										// after calling this method (see nsViewerApp::Exit()),
 										// we temporarily bump the refCnt to let the message pump
 										// exit properly. The object will delete itself afterwards.
 	}
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Prepare to process events
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsAppShell::Spinup()
+{
+	if (mMacPump.get())
+	{
+		mMacPump->StartRunning();
+		return NS_OK;
+	}
+	return NS_ERROR_NOT_INITIALIZED;
+}
+
+//-------------------------------------------------------------------------
+//
+// Stop being prepared to process events.
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsAppShell::Spindown()
+{
+	if (mMacPump.get())
+		mMacPump->StopRunning();
 	return NS_OK;
 }
 
@@ -139,6 +171,7 @@ nsAppShell::nsAppShell()
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
   mSelectionMgr = 0;
+  mMacSink = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -165,19 +198,64 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
-
-// XXX temporary code for Dialog investigation
-nsresult nsAppShell::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent)
+NS_METHOD
+nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
-  aIsInWindow   = PR_FALSE;
-  aIsMouseEvent = PR_FALSE;
+	static EventRecord	theEvent;	// icky icky static (can't really do any better)
 
-  return NS_ERROR_FAILURE;
+	if (!mMacPump.get())
+		return NS_ERROR_NOT_INITIALIZED;
+
+	aRealEvent = mMacPump->GetEvent(theEvent);
+	aEvent = &theEvent;
+	return NS_OK;
 }
 
-nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
+//-------------------------------------------------------------------------
+//
+// determine whether the given event is suitable for a modal window
+//
+//-------------------------------------------------------------------------
+NS_METHOD
+nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
+                                  PRBool *aForWindow)
 {
-  return NS_ERROR_FAILURE;
+	*aForWindow = PR_TRUE;
+	return NS_OK;
+
+	*aForWindow = PR_FALSE;
+	EventRecord *theEvent = (EventRecord *) aEvent;
+
+	if (aRealEvent == PR_TRUE) {
+
+		// is it in the given window?
+		WindowPtr window = (WindowPtr) aWidget->GetNativeData(NS_NATIVE_DISPLAY);
+		if (window && window == (WindowPtr) theEvent->message)
+			*aForWindow = PR_TRUE;
+
+		// is it a mouse event?
+		if (theEvent->what == mouseDown || theEvent->what == mouseUp)
+			{ }
+		else if (theEvent->what == osEvt) {
+			unsigned char eventType = (theEvent->message >> 24) & 0x00ff;
+			if (eventType == mouseMovedMessage)
+				{}
+		}
+printf("event %d msg %ld win %d\n", theEvent->what, theEvent->message, *aForWindow);
+	} else
+		*aForWindow = PR_TRUE;
+
+	return NS_OK;
+}
+
+NS_METHOD
+nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
+{
+	if (!mMacPump.get())
+		return NS_ERROR_NOT_INITIALIZED;
+
+	mMacPump->DispatchEvent(aRealEvent, (EventRecord *) aEvent);
+	return NS_OK;
 }
 
 NS_METHOD
@@ -189,4 +267,3 @@ nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
     return NS_ERROR_NOT_INITIALIZED;
   return NS_OK;
 }
-

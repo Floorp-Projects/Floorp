@@ -68,16 +68,28 @@ public:
   virtual nsresult Run() = 0;
 
  /**
-  * After event dispatch execute app specific code
+  * Prepare to process events
   */
   
-  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent) = 0;
+  NS_IMETHOD Spinup() = 0;
+
+ /**
+  * Prepare to stop processing events
+  */
+  
+  NS_IMETHOD Spindown() = 0;
 
  /**
   * After event dispatch execute app specific code
   */
   
-  NS_IMETHOD DispatchNativeEvent(void * aEvent) = 0;
+  NS_IMETHOD GetNativeEvent(PRBool &aRealEvent, void *&aEvent) = 0;
+
+ /**
+  * After event dispatch execute app specific code
+  */
+  
+  NS_IMETHOD DispatchNativeEvent(PRBool aRealEvent, void * aEvent) = 0;
 
  /**
   * After event dispatch execute app specific code
@@ -97,6 +109,12 @@ public:
 
   virtual void* GetNativeData(PRUint32 aDataType) = 0;
 
+  /**
+   * Determines whether a given event should be processed assuming the given
+   * widget is a currently active modal window
+   */
+  NS_IMETHOD EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
+                                  PRBool *aForWindow) = 0;
  /**
   * Get the selection manager.
   */

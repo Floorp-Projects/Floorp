@@ -40,15 +40,17 @@ class nsAppShell : public nsIAppShell
   
     NS_IMETHOD            Create(int* argc, char ** argv);
     virtual nsresult      Run(); 
+    NS_IMETHOD            Spinup() { return NS_OK; }
+    NS_IMETHOD            Spindown() { return NS_OK; }
+    NS_IMETHOD            GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
+    NS_IMETHOD            DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
+    NS_IMETHOD            EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
+                            nsIWidget *aWidget, PRBool *aForWindow);
+
     NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
     NS_IMETHOD            Exit();
-    virtual void* GetNativeData(PRUint32 aDataType);
-    NS_IMETHOD GetSelectionMgr(nsISelectionMgr** aSelectionMgr);
-
-    // XXX temporary for Dialog investigation
-    NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
-    NS_IMETHOD DispatchNativeEvent(void * aEvent);
-
+    virtual void *        GetNativeData(PRUint32 aDataType);
+    NS_IMETHOD            GetSelectionMgr(nsISelectionMgr** aSelectionMgr);
 
   private:
     nsDispatchListener*     mDispatchListener;

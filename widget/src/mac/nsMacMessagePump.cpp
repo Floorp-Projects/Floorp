@@ -116,19 +116,18 @@ nsMacMessagePump::~nsMacMessagePump()
 }
 
 //=================================================================
-/*  Runs the message pump for the macintosh.  Turns them into Raptor events
+/*  Runs the message pump for the macintosh
  *  @update  dc 08/31/98
  *  @param   NONE
- *  @return  A boolean which states how the pump terminated
  */
 void nsMacMessagePump::DoMessagePump()
 {
+#if 0
 	Boolean					haveEvent;
 	EventRecord			theEvent;
 	long						sleep				=	0;
 	unsigned short	eventMask 	= (everyEvent - diskMask);
 
-	mRunning = PR_TRUE;
 	mInBackground = PR_FALSE;
 	
 	// calculate the region to watch
@@ -203,6 +202,107 @@ void nsMacMessagePump::DoMessagePump()
 		if (mRunning)
 			Repeater::DoRepeaters(theEvent);
 	}
+#else
+	PRBool				haveEvent;
+	EventRecord			theEvent;
+
+	mInBackground = PR_FALSE;
+	
+	while (mRunning)
+	{			
+		haveEvent = GetEvent(theEvent);
+		DispatchEvent(haveEvent, &theEvent);
+	}
+#endif
+}
+
+//=================================================================
+/*  Fetch a single event
+ *  @update  dc 08/31/98
+ *  @param   NONE
+ *  @return  A boolean which states whether we have a real event
+ */
+PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
+{
+	PRBool				haveEvent;
+	long				sleep		= 0;
+	unsigned short		eventMask 	= everyEvent - diskMask;
+
+	RgnHandle mouseRgn = ::NewRgn();	// may want to move this into a class variable
+	
+	::LMSetSysEvtMask(eventMask);	// we need keyUp events
+	haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mouseRgn) ? PR_TRUE : PR_FALSE;
+
+	::DisposeRgn(mouseRgn);
+
+	return haveEvent;
+}
+
+//=================================================================
+/*  Dispatch a single event
+ *  @param   theEvent - the event to dispatch
+ */
+void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
+{
+
+	if (aRealEvent == PR_TRUE)
+	{
+
+#if DEBUG
+		if (SIOUXHandleOneEvent(anEvent))
+			return;
+#endif
+
+		switch(anEvent->what)
+		{
+			case keyUp:
+			case keyDown:
+			case autoKey:
+				DoKey(*anEvent);
+				break;
+
+			case mouseDown:
+				DoMouseDown(*anEvent);
+				break;
+
+			case mouseUp:
+				DoMouseUp(*anEvent);
+				break;
+
+			case updateEvt:
+				DoUpdate(*anEvent);
+				break;
+
+			case activateEvt:
+				DoActivate(*anEvent);
+				break;
+
+			case osEvt:
+				unsigned char eventType = ((anEvent->message >> 24) & 0x00ff);
+				switch (eventType)
+				{
+					case suspendResumeMessage:
+						if ((anEvent->message & 1) == resumeFlag)
+							mInBackground = PR_FALSE;		// resume message
+						else
+							mInBackground = PR_TRUE;		// suspend message
+						DoMouseMove(*anEvent);
+						break;
+
+					case mouseMovedMessage:
+						DoMouseMove(*anEvent);
+						break;
+				}
+				break;
+		}
+	} else {
+		DoIdle(*anEvent);
+		if (mRunning)
+			Repeater::DoIdlers(*anEvent);
+	}
+
+	if (mRunning)
+		Repeater::DoRepeaters(*anEvent);
 }
 
 #pragma mark -

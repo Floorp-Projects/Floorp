@@ -723,24 +723,30 @@ nsWebShellWindow::ShowModalInternal()
 
   // spin up a new application shell: event loops live there
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
-  if (NS_SUCCEEDED(rv))
-    subshell->Create(0, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
 
-//  subshell->RunModal(GetWidget());
+  subshell->Create(0, nsnull);
+  subshell->Spinup();
 
   nsIWidget *window = GetWidget();
+  NS_ADDREF(window);
   mContinueModalLoop = PR_TRUE;
   while (NS_SUCCEEDED(rv) && mContinueModalLoop == PR_TRUE) {
     void      *data;
-    PRBool    inWindow,
-              isMouseEvent;
+    PRBool    isRealEvent,
+              processEvent;
 
-    rv = subshell->GetNativeEvent(data, window, inWindow, isMouseEvent);
-    if (NS_SUCCEEDED(rv) && (inWindow || !isMouseEvent))
-      subshell->DispatchNativeEvent(data);
+    rv = subshell->GetNativeEvent(isRealEvent, data);
+    if (NS_SUCCEEDED(rv)) {
+      subshell->EventIsForModalWindow(isRealEvent, data, window, &processEvent);
+      if (processEvent == PR_TRUE)
+        subshell->DispatchNativeEvent(isRealEvent, data);
+    }
   }
-
-  NS_IF_RELEASE(subshell);
+  subshell->Spindown();
+  NS_RELEASE(window);
+  NS_RELEASE(subshell);
 
   return rv;
 }
