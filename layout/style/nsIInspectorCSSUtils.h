@@ -47,11 +47,12 @@ class nsIStyleRule;
 class nsIFrame;
 struct nsRect;
 class nsIContent;
+class nsIDOMElement;
+class nsIArray;
 
-// 0252892b-419a-49f4-981d-4c6716099451
 #define NS_IINSPECTORCSSUTILS_IID \
-  { 0x0252892b, 0x419a, 0x49f4, \
-    {0x98, 0x1d, 0x4c, 0x67, 0x16, 0x09, 0x94, 0x51 } }
+  { 0xdf2072d2, 0x57f0, 0x4c62, \
+    {0xa7, 0x3f, 0xa5, 0x2f, 0xf2, 0xf0, 0x99, 0xa6 } }
 
 // 7ef2f07f-6e34-410b-8336-88acd1cd16b7
 #define NS_INSPECTORCSSUTILS_CID \
@@ -79,6 +80,9 @@ public:
     // Hooks to methods that need nsStyleContext
     NS_IMETHOD GetRuleNodeForContent(nsIContent* aContent,
                                      nsRuleNode** aParent) = 0;
+
+    // Hooks to XBL
+    NS_IMETHOD GetBindingURLs(nsIDOMElement *aElement, nsIArray **aResult) = 0;
 };
 
 #endif /* nsIInspectorCSSUtils_h___ */

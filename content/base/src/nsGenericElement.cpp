@@ -79,7 +79,7 @@
 #include "nsMutationEvent.h"
 
 #include "nsIBindingManager.h"
-#include "nsIXBLBinding.h"
+#include "nsXBLBinding.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
@@ -3429,8 +3429,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   }
 
   if (document) {
-    nsCOMPtr<nsIXBLBinding> binding;
-    document->BindingManager()->GetBinding(this, getter_AddRefs(binding));
+    nsXBLBinding *binding = document->BindingManager()->GetBinding(this);
     if (binding)
       binding->AttributeChanged(aName, aNamespaceID, PR_FALSE, aNotify);
 
@@ -3561,8 +3560,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (document) {
-    nsCOMPtr<nsIXBLBinding> binding;
-    document->BindingManager()->GetBinding(this, getter_AddRefs(binding));
+    nsXBLBinding *binding = document->BindingManager()->GetBinding(this);
     if (binding)
       binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 

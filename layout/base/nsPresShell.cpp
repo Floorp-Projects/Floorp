@@ -181,7 +181,6 @@
 #include "nsIMenuFrame.h"
 #include "nsITreeBoxObject.h"
 #endif
-#include "nsIXBLBinding.h"
 #include "nsPlaceholderFrame.h"
 
 // Dummy layout request

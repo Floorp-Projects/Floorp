@@ -67,7 +67,6 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIStyledContent.h"
 #include "nsIBindingManager.h"
-#include "nsIXBLBinding.h"
 #include "nsIURI.h"
 #include "nsIXMLContent.h"
 #include "nsIXULPrototypeCache.h"

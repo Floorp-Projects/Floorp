@@ -37,99 +37,108 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLBinding.h"
 #include "nsAutoPtr.h"
-#include "nsXBLPrototypeBinding.h"
+#include "nsIDOMNodeList.h"
+#include "nsIStyleRuleProcessor.h"
 
+class nsXBLPrototypeBinding;
 class nsIContent;
 class nsIAtom;
 class nsIDocument;
 class nsIScriptContext;
-class nsISupportsArray;
 class nsObjectHashtable;
-class nsIXBLService;
-class nsFixedSizeAllocator;
-class nsXBLEventHandler;
 struct JSContext;
+struct JSObject;
 
 // *********************************************************************/
 // The XBLBinding class
 
-class nsXBLBinding: public nsIXBLBinding
+class nsXBLBinding
 {
-  NS_DECL_ISUPPORTS
-
-  // nsIXBLBinding
-  NS_IMETHOD GetPrototypeBinding(nsXBLPrototypeBinding** aResult);
-  NS_IMETHOD SetPrototypeBinding(nsXBLPrototypeBinding* aProtoBinding);
-
-  NS_IMETHOD GetBaseBinding(nsIXBLBinding** aResult);
-  NS_IMETHOD SetBaseBinding(nsIXBLBinding* aBinding);
-
-  NS_IMETHOD GetAnonymousContent(nsIContent** aParent);
-  NS_IMETHOD SetAnonymousContent(nsIContent* aParent);
-
-  NS_IMETHOD GetBindingElement(nsIContent** aResult);
-  NS_IMETHOD SetBindingElement(nsIContent* aElement);
-
-  NS_IMETHOD GetBoundElement(nsIContent** aResult);
-  NS_IMETHOD SetBoundElement(nsIContent* aElement);
-
-  NS_IMETHOD GenerateAnonymousContent();
-  NS_IMETHOD InstallEventHandlers();
-  NS_IMETHOD InstallImplementation();
-  
-  NS_IMETHOD HasStyleSheets(PRBool* aResolveStyle);
-  
-  NS_IMETHOD GetFirstBindingWithConstructor(nsIXBLBinding** aResult);
-
-  NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult);
-
-  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
-                              PRBool aRemoveFlag, PRBool aNotify);
-
-  NS_IMETHOD ExecuteAttachedHandler();
-  NS_IMETHOD ExecuteDetachedHandler();
-
-  NS_IMETHOD UnhookEventHandlers();
-  NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
-
-  NS_IMETHOD_(nsIURI*) BindingURI() const;
-  NS_IMETHOD_(nsIURI*) DocURI() const;
-  NS_IMETHOD GetID(nsACString& aResult) const;
-
-  NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsVoidArray** aResult);
-
-  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex, nsIContent** aDefaultContent);
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, 
-                                     PRBool* aMultipleInsertionPoints, nsIContent** aDefaultContent);
-
-  NS_IMETHOD IsStyleBinding(PRBool* aResult) { *aResult = mIsStyleBinding; return NS_OK; };
-  NS_IMETHOD SetIsStyleBinding(PRBool aIsStyle) { mIsStyleBinding = aIsStyle; return NS_OK; };
-
-  NS_IMETHOD GetRootBinding(nsIXBLBinding** aResult);
-  NS_IMETHOD GetFirstStyleBinding(nsIXBLBinding** aResult);
-
-  NS_IMETHOD InheritsStyle(PRBool* aResult);
-  NS_IMETHOD WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData);
-
-  NS_IMETHOD MarkForDeath();
-  NS_IMETHOD MarkedForDeath(PRBool* aResult);
-
-  NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult);
-
-  NS_IMETHOD GetAnonymousNodes(nsIDOMNodeList** aResult);
-
-  NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult);
-
 public:
   nsXBLBinding(nsXBLPrototypeBinding* aProtoBinding);
-  virtual ~nsXBLBinding();
+  ~nsXBLBinding();
 
-  NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue);
+  /**
+   * XBLBindings are refcounted.  They are held onto in 3 ways:
+   * 1. The binding manager's binding table holds onto all bindings that are
+   *    currently attached to a content node.
+   * 2. Bindings hold onto their base binding.  This is important since
+   *    the base binding itself may not be attached to anything.
+   * 3. The binding manager holds an additional reference to bindings
+   *    which are queued to fire their constructors.
+   */
 
-  PRBool AllowScripts();
+  nsrefcnt AddRef()
+  {
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsXBLBinding", sizeof(nsXBLBinding));
+    return mRefCnt;
+  }
+
+  nsrefcnt Release()
+  {
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsXBLBinding");
+    if (mRefCnt == 0) {
+      mRefCnt = 1;
+      delete this;
+      return 0;
+    }
+    return mRefCnt;
+  }
+
+  nsXBLPrototypeBinding* PrototypeBinding() { return mPrototypeBinding; }
+  nsIContent* GetAnonymousContent() { return mContent; }
+
+  nsXBLBinding* GetBaseBinding() { return mNextBinding; }
+  void SetBaseBinding(nsXBLBinding *aBinding);
+
+  nsIContent* GetBoundElement() { return mBoundElement; }
+  void SetBoundElement(nsIContent *aElement);
+
+  PRBool IsStyleBinding() const { return mIsStyleBinding; }
+  void SetIsStyleBinding(PRBool aIsStyle) { mIsStyleBinding = aIsStyle; }
+
+  void MarkForDeath();
+  PRBool MarkedForDeath() const { return mMarkedForDeath; }
+
+  PRBool HasStyleSheets() const;
+  PRBool InheritsStyle() const;
+  PRBool ImplementsInterface(REFNSIID aIID) const;
+  PRBool ShouldBuildChildFrames() const;
+
+  void GenerateAnonymousContent();
   void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
+  void InstallEventHandlers();
+  void InstallImplementation();
+
+  void ExecuteAttachedHandler();
+  void ExecuteDetachedHandler();
+  void UnhookEventHandlers();
+
+  nsIAtom* GetBaseTag(PRInt32* aNameSpaceID);
+  nsXBLBinding* GetFirstBindingWithConstructor();
+  nsXBLBinding* RootBinding();
+  nsXBLBinding* GetFirstStyleBinding();
+
+  // Get the list of insertion points for aParent.  The nsVoidArray is owned
+  // by the binding, you should not delete it.
+  nsresult GetInsertionPointsFor(nsIContent* aParent, nsVoidArray** aResult);
+
+  nsIContent* GetInsertionPoint(nsIContent* aChild, PRUint32* aIndex);
+
+  nsIContent* GetSingleInsertionPoint(PRUint32* aIndex,
+                                      PRBool* aMultipleInsertionPoints);
+
+  void AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
+                        PRBool aRemoveFlag, PRBool aNotify);
+
+  void ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
+
+  void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData);
+
+  already_AddRefed<nsIDOMNodeList> GetAnonymousNodes();
 
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
 
@@ -144,14 +153,14 @@ protected:
                      void** aClassObject);
 
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
-  PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
-
+  PRBool AllowScripts();  // XXX make const
   
 // MEMBER VARIABLES
 protected:
+  nsAutoRefCnt mRefCnt;
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
-  nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
+  nsRefPtr<nsXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
   
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   

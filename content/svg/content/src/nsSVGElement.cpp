@@ -44,7 +44,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
 #include "nsIBindingManager.h"
-#include "nsIXBLBinding.h"
+#include "nsXBLBinding.h"
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
 #include "nsIPresShell.h"
@@ -655,8 +655,7 @@ nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
   }
 
   if (document) {
-    nsCOMPtr<nsIXBLBinding> binding;
-    document->BindingManager()->GetBinding(this, getter_AddRefs(binding));
+    nsXBLBinding *binding = document->BindingManager()->GetBinding(this);
     if (binding) {
       binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
     }

@@ -154,6 +154,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../printing \
 		-I$(srcdir)/../xul/base/src \
 		-I$(srcdir)/../../content/events/src \
+		-I$(srcdir)/../../content/xbl/src \
 		-I$(srcdir)/../../view/src \
 		$(NULL)
 

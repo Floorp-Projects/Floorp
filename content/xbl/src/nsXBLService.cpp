@@ -68,7 +68,7 @@
 #include "nsIObserverService.h"
 #include "nsIDOMNodeList.h"
 #include "nsXBLContentSink.h"
-#include "nsIXBLBinding.h"
+#include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsXBLAtoms.h"
@@ -521,7 +521,7 @@ nsXBLService::~nsXBLService(void)
 // onto the element.
 NS_IMETHODIMP
 nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFlag,
-                           nsIXBLBinding** aBinding, PRBool* aResolveStyle) 
+                           nsXBLBinding** aBinding, PRBool* aResolveStyle) 
 { 
   *aBinding = nsnull;
   *aResolveStyle = PR_FALSE;
@@ -536,21 +536,17 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
 
   nsIBindingManager *bindingManager = document->BindingManager();
   
-  nsCOMPtr<nsIXBLBinding> binding;
-  bindingManager->GetBinding(aContent, getter_AddRefs(binding));
+  nsXBLBinding *binding = bindingManager->GetBinding(aContent);
   if (binding && !aAugmentFlag) {
-    nsCOMPtr<nsIXBLBinding> styleBinding;
-    binding->GetFirstStyleBinding(getter_AddRefs(styleBinding));
+    nsXBLBinding *styleBinding = binding->GetFirstStyleBinding();
     if (styleBinding) {
-      PRBool marked = PR_FALSE;
-      binding->MarkedForDeath(&marked);
-      if (marked) {
+      if (binding->MarkedForDeath()) {
         FlushStyleBindings(aContent);
         binding = nsnull;
       }
       else {
         // See if the URIs match.
-        nsIURI* uri = styleBinding->BindingURI();
+        nsIURI* uri = styleBinding->PrototypeBinding()->BindingURI();
         PRBool equal;
         if (NS_SUCCEEDED(uri->Equals(aURL, &equal)) && equal)
           return NS_OK;
@@ -575,8 +571,11 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
     if (NS_FAILED(rv))
       return rv;
   }
-  nsCOMPtr<nsIXBLBinding> newBinding;
-  if (NS_FAILED(rv = GetBinding(aContent, aURL, getter_AddRefs(newBinding)))) {
+
+  PRBool ready;
+  nsRefPtr<nsXBLBinding> newBinding;
+  if (NS_FAILED(rv = GetBinding(aContent, aURL, PR_FALSE, &ready,
+                                getter_AddRefs(newBinding)))) {
     return rv;
   }
 
@@ -591,11 +590,11 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
   }
 
   if (aAugmentFlag) {
-    nsCOMPtr<nsIXBLBinding> baseBinding;
-    nsCOMPtr<nsIXBLBinding> nextBinding = newBinding;
+    nsXBLBinding *baseBinding;
+    nsXBLBinding *nextBinding = newBinding;
     do {
       baseBinding = nextBinding;
-      baseBinding->GetBaseBinding(getter_AddRefs(nextBinding));
+      nextBinding = baseBinding->GetBaseBinding();
       baseBinding->SetIsStyleBinding(PR_FALSE);
     } while (nextBinding);
 
@@ -609,9 +608,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
     // We loaded a style binding.  It goes on the end.
     if (binding) {
       // Get the last binding that is in the append layer.
-      nsCOMPtr<nsIXBLBinding> rootBinding;
-      binding->GetRootBinding(getter_AddRefs(rootBinding));
-      rootBinding->SetBaseBinding(newBinding);
+      binding->RootBinding()->SetBaseBinding(newBinding);
     }
     else {
       // Install the binding on the content node.
@@ -632,10 +629,11 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
   newBinding->InstallImplementation();
 
   // Figure out if we need to execute a constructor.
-  newBinding->GetFirstBindingWithConstructor(aBinding);
+  *aBinding = newBinding->GetFirstBindingWithConstructor();
+  NS_IF_ADDREF(*aBinding);
 
   // Figure out if we have any scoped sheets.  If so, we do a second resolve.
-  newBinding->HasStyleSheets(aResolveStyle);
+  *aResolveStyle = newBinding->HasStyleSheets();
   
   return NS_OK; 
 }
@@ -651,12 +649,10 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
 
   nsIBindingManager *bindingManager = document->BindingManager();
   
-  nsCOMPtr<nsIXBLBinding> binding;
-  bindingManager->GetBinding(aContent, getter_AddRefs(binding));
+  nsXBLBinding *binding = bindingManager->GetBinding(aContent);
   
   if (binding) {
-    nsCOMPtr<nsIXBLBinding> styleBinding;
-    binding->GetFirstStyleBinding(getter_AddRefs(styleBinding));
+    nsXBLBinding *styleBinding = binding->GetFirstStyleBinding();
 
     if (styleBinding) {
       // Clear out the script references.
@@ -828,26 +824,17 @@ nsXBLService::FlushMemory()
 
 // Internal helper methods ////////////////////////////////////////////////////////////////
 
-nsresult nsXBLService::GetBinding(nsIContent* aBoundElement, 
-                                  nsIURI* aURI, 
-                                  nsIXBLBinding** aResult)
-{
-  PRBool dummy;
-  return GetBindingInternal(aBoundElement, aURI, PR_FALSE, &dummy, aResult);
-}
-
 NS_IMETHODIMP nsXBLService::BindingReady(nsIContent* aBoundElement, 
                                          nsIURI* aURI, 
                                          PRBool* aIsReady)
 {
-  return GetBindingInternal(aBoundElement, aURI, PR_TRUE, aIsReady, nsnull);
+  return GetBinding(aBoundElement, aURI, PR_TRUE, aIsReady, nsnull);
 }
 
-NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement, 
-                                               nsIURI* aURI, 
-                                               PRBool aPeekOnly,
-                                               PRBool* aIsReady, 
-                                               nsIXBLBinding** aResult)
+nsresult
+nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI, 
+                         PRBool aPeekOnly, PRBool* aIsReady, 
+                         nsXBLBinding** aResult)
 {
   if (aResult)
     *aResult = nsnull;
@@ -905,12 +892,12 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   }
 
   // If our prototype already has a base, then don't check for an "extends" attribute.
-  nsCOMPtr<nsIXBLBinding> baseBinding;
+  nsRefPtr<nsXBLBinding> baseBinding;
   PRBool hasBase = protoBinding->HasBasePrototype();
   nsXBLPrototypeBinding* baseProto = protoBinding->GetBasePrototype();
   if (baseProto) {
-    if (NS_FAILED(GetBindingInternal(aBoundElement, baseProto->BindingURI(),
-                                     aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
+    if (NS_FAILED(GetBinding(aBoundElement, baseProto->BindingURI(),
+                             aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
       return NS_ERROR_FAILURE; // We aren't ready yet.
   }
   else if (hasBase) {
@@ -984,12 +971,12 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
                     doc->GetBaseURI());
         NS_ENSURE_SUCCESS(rv, rv);
         
-        if (NS_FAILED(GetBindingInternal(aBoundElement, bindingURI, aPeekOnly,
-                                         aIsReady, getter_AddRefs(baseBinding))))
+        if (NS_FAILED(GetBinding(aBoundElement, bindingURI, aPeekOnly,
+                                 aIsReady, getter_AddRefs(baseBinding))))
           return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
         if (!aPeekOnly) {
           // Make sure to set the base prototype.
-          baseBinding->GetPrototypeBinding(&baseProto);
+          baseProto = baseBinding->PrototypeBinding();
           protoBinding->SetBasePrototype(baseProto);
           child->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::extends, PR_FALSE);
           child->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::display, PR_FALSE);
@@ -1001,9 +988,13 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   *aIsReady = PR_TRUE;
   if (!aPeekOnly) {
     // Make a new binding
-    NS_NewXBLBinding(protoBinding, aResult);
+    nsXBLBinding *newBinding = new nsXBLBinding(protoBinding);
+    NS_ENSURE_TRUE(newBinding, NS_ERROR_OUT_OF_MEMORY);
+
     if (baseBinding)
-      (*aResult)->SetBaseBinding(baseBinding);
+      newBinding->SetBaseBinding(baseBinding);
+
+    NS_ADDREF(*aResult = newBinding);
   }
 
   return NS_OK;

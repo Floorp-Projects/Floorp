@@ -174,10 +174,12 @@ XBLBindings.prototype =
 
     var popup = document.getElementById("mpBindings");
     this.clearChildren(popup);
-    
-    while (urls.hasMoreElements()) {
-      var item = urls.getNext();
-      var url = item.QueryInterface(Components.interfaces.nsIAtom).toString();
+
+    var urlCount = urls.length;
+    var i;
+
+    for (i = 0; i < urlCount; ++i) {
+      var url = urls.queryElementAt(i, Components.interfaces.nsIURI).spec;
       var menu = document.createElement("menuitem");
       menu.setAttribute("value", url);
       menu.setAttribute("label", url);

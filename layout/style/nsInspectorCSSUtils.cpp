@@ -47,6 +47,10 @@
 #include "nsAutoPtr.h"
 #include "nsIFrame.h"
 #include "nsStyleSet.h"
+#include "nsXBLBinding.h"
+#include "nsXBLPrototypeBinding.h"
+#include "nsIDOMElement.h"
+#include "nsArray.h"
 
 nsInspectorCSSUtils::nsInspectorCSSUtils()
 {
@@ -197,4 +201,32 @@ nsInspectorCSSUtils::GetRuleNodeForContent(nsIContent* aContent,
         GetStyleContextForContent(aContent, nsnull, presShell);
     *aRuleNode = sContext->GetRuleNode();
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInspectorCSSUtils::GetBindingURLs(nsIDOMElement *aElement,
+                                    nsIArray **aResult)
+{
+    *aResult = nsnull;
+
+    nsCOMArray<nsIURI> urls;
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+    NS_ASSERTION(content, "elements must implement nsIContent");
+
+    nsIDocument *ownerDoc = content->GetOwnerDoc();
+    if (ownerDoc) {
+        nsXBLBinding *binding =
+            ownerDoc->BindingManager()->GetBinding(content);
+
+        while (binding) {
+            urls.AppendObject(binding->PrototypeBinding()->BindingURI());
+            binding = binding->GetBaseBinding();
+        }
+    }
+
+    nsIMutableArray *mutableResult = nsnull;
+    nsresult rv = NS_NewArray(&mutableResult, urls);
+    *aResult = mutableResult;
+    return rv;
 }

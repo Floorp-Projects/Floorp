@@ -69,7 +69,6 @@
 #include "nsPresState.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
-#include "nsIXBLBinding.h"
 #include "nsIDocument.h"
 #include "nsIBindingManager.h"
 #include "nsIScrollableFrame.h"

@@ -164,6 +164,7 @@
 #include "nsITimelineService.h"
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
+#include "nsXBLBinding.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -1383,8 +1384,7 @@ nsXULElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
 
     if (doc) {
-        nsCOMPtr<nsIXBLBinding> binding;
-        doc->BindingManager()->GetBinding(this, getter_AddRefs(binding));
+        nsXBLBinding *binding = doc->BindingManager()->GetBinding(this);
         if (binding) {
             binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
         }
@@ -1594,8 +1594,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
                                  NS_EVENT_FLAG_INIT, &status);
         }
 
-        nsCOMPtr<nsIXBLBinding> binding;
-        doc->BindingManager()->GetBinding(this, getter_AddRefs(binding));
+        nsXBLBinding *binding = doc->BindingManager()->GetBinding(this);
         if (binding)
             binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 

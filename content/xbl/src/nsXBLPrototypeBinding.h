@@ -60,7 +60,7 @@ class nsSupportsHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;
 class nsXBLProtoImpl;
-class nsIXBLBinding;
+class nsXBLBinding;
 
 // *********************************************************************/
 // The XBLPrototypeBinding class
@@ -87,7 +87,7 @@ public:
   PRBool LoadResources();
   nsresult AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
 
-  PRBool InheritsStyle() { return mInheritStyle; }
+  PRBool InheritsStyle() const { return mInheritStyle; }
 
   nsXBLPrototypeHandler* GetPrototypeHandlers() { return mPrototypeHandler; }
   void SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler) { mPrototypeHandler = aHandler; }
@@ -129,23 +129,22 @@ public:
 
   nsresult FlushSkinSheets();
 
-  void InstantiateInsertionPoints(nsIXBLBinding* aBinding);
+  void InstantiateInsertionPoints(nsXBLBinding* aBinding);
 
-  void GetInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                         nsIContent* aChild, nsIContent** aResult,
-                         PRUint32* aIndex, nsIContent** aDefaultContent);
+  nsIContent* GetInsertionPoint(nsIContent* aBoundElement,
+                                nsIContent* aCopyRoot, nsIContent *aChild,
+                                PRUint32* aIndex);
 
-  void GetSingleInsertionPoint(nsIContent* aBoundElement,
-                               nsIContent* aCopyRoot, nsIContent** aResult,
-                               PRUint32* aIndex, PRBool* aMultiple,
-                               nsIContent** aDefaultContent);
+  nsIContent* GetSingleInsertionPoint(nsIContent* aBoundElement,
+                                      nsIContent* aCopyRoot,
+                                      PRUint32* aIndex, PRBool* aMultiple);
 
-  void GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aTag);
+  nsIAtom* GetBaseTag(PRInt32* aNamespaceID);
   void SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag);
 
-  PRBool ImplementsInterface(REFNSIID aIID);
+  PRBool ImplementsInterface(REFNSIID aIID) const;
 
-  PRBool ShouldBuildChildFrames();
+  PRBool ShouldBuildChildFrames() const;
 
   nsresult AddResourceListener(nsIContent* aBoundElement);
 
@@ -182,10 +181,10 @@ public:
 // Internal member functions
 public:
   already_AddRefed<nsIContent> GetImmediateChild(nsIAtom* aTag);
-  already_AddRefed<nsIContent> LocateInstance(nsIContent* aBoundElt,
-                                              nsIContent* aTemplRoot,
-                                              nsIContent* aCopyRoot,
-                                              nsIContent* aTemplChild);
+  nsIContent* LocateInstance(nsIContent* aBoundElt,
+                             nsIContent* aTemplRoot,
+                             nsIContent* aCopyRoot,
+                             nsIContent* aTemplChild);
 
 protected:  
   void ConstructAttributeTable(nsIContent* aElement);

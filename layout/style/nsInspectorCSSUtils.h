@@ -63,6 +63,8 @@ public:
     NS_IMETHOD AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect);
     NS_IMETHOD GetRuleNodeForContent(nsIContent* aContent,
                                      nsRuleNode** aRuleNode);
+    NS_IMETHOD GetBindingURLs(nsIDOMElement *aElement, nsIArray **aResult);
+
     static already_AddRefed<nsStyleContext>
     GetStyleContextForContent(nsIContent* aContent, nsIAtom* aPseudo,
                               nsIPresShell* aPresShell);

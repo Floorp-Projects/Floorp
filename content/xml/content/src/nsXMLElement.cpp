@@ -65,7 +65,6 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
-#include "nsIXBLBinding.h"
 #include "nsIBindingManager.h"
 
 nsresult
