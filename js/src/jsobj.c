@@ -2564,7 +2564,9 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     if (!prop) {
 	*vp = JSVAL_VOID;
 	*attrsp = 0;
-	return JS_TRUE;
+        clasp = OBJ_GET_CLASS(cx, obj);
+	return !clasp->checkAccess ||
+               clasp->checkAccess(cx, obj, id, mode, vp);
     }
     if (!OBJ_IS_NATIVE(pobj)) {
 	OBJ_DROP_PROPERTY(cx, pobj, prop);

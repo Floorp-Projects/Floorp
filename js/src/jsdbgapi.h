@@ -158,6 +158,9 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
 
+extern JS_PUBLIC_API(JSObject *)
+JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp);
+
 extern JS_PUBLIC_API(JSBool)
 JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp);
 
