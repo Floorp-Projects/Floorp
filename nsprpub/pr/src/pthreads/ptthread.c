@@ -742,7 +742,7 @@ static void _pt_thread_death(void *arg)
     if (NULL != thred->errorString)
         PR_Free(thred->errorString);
     PR_Free(thred->stack);
-    if (NULL != thred->syspoll_list);
+    if (NULL != thred->syspoll_list)
         PR_Free(thred->syspoll_list);
 #if defined(_PR_POLL_WITH_SELECT)
     if (NULL != thred->selectfd_list)
