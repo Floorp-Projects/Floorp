@@ -117,6 +117,8 @@ public:
 
   NS_IMETHOD GetPersistElided(PRBool *aPersistElided);
 
+  NS_IMETHOD Shutdown(PRBool shutdownChildren);
+
   // for nsMsgLineBuffer
   virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
 

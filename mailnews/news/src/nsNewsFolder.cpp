@@ -1811,3 +1811,9 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPersistElided(PRBool *aPersistElided)
 }
 
 
+NS_IMETHODIMP nsMsgNewsFolder::Shutdown(PRBool shutdownChildren)
+{
+  mInitialized = PR_FALSE;
+  return nsMsgDBFolder::Shutdown(shutdownChildren);
+}
+

@@ -2224,6 +2224,10 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
 NS_IMETHODIMP nsImapMailFolder::Shutdown(PRBool shutdownChildren)
 {
   m_filterList = nsnull;
+  m_initialized = PR_FALSE;
+  // m_pathName is used to decide if folder pathname needs to be reconstructed in GetPath().
+  delete m_pathName;
+  m_pathName = nsnull; 
   return nsMsgDBFolder::Shutdown(shutdownChildren);
 }
 

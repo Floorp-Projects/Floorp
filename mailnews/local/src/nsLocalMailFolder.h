@@ -167,6 +167,7 @@ public:
                              nsIMsgCopyServiceListener* listener);
 	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
     NS_IMETHOD NotifyCompactCompleted();
+  NS_IMETHOD Shutdown(PRBool shutdownChildren);
 
 protected:
 	nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
