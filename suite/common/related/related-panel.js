@@ -88,11 +88,14 @@ function OnDblClick(treeitem)
         return;
     }
 
-    // Okay, it's not a container. See if it has a URL, and if so, open it.
-    var URL = treeitem.getAttribute('URL');
-    if (URL) {
-        ContentWindow.location = URL;
+    if (treeitem.getAttribute('type') == 'http://home.netscape.com/NC-rdf#BookmarkSeparator') {
         return;
+    }
+
+    // Okay, it's not a container. See if it has a URL, and if so, open it.
+    var id = treeitem.getAttribute('id');
+    if (id) {
+        ContentWindow.location = id;
     }
 }
 
