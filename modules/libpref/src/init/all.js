@@ -586,3 +586,5 @@ pref("browser.throbber.url","chrome://navigator-region/locale/region.properties"
 pref("layout.word_select.eat_space_to_next_word", false);
 pref("layout.word_select.stop_at_punctuation", true);
 
+// pref to force frames to be resizable
+pref("layout.frames.force_resizability", false);

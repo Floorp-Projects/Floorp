@@ -40,6 +40,8 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsColor.h"
+#include "nsIObserver.h"
+#include "nsWeakPtr.h"
 
 class  nsIContent;
 class  nsIFrame;
@@ -110,15 +112,17 @@ struct nsFramesetDrag {
 /*******************************************************************************
  * nsHTMLFramesetFrame
  ******************************************************************************/
-class nsHTMLFramesetFrame : public nsHTMLContainerFrame {
+class nsHTMLFramesetFrame : public nsHTMLContainerFrame,
+                            public nsIObserver
+{
 
 public:
   nsHTMLFramesetFrame();
 
   virtual ~nsHTMLFramesetFrame();
 
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, 
-                             void**       aInstancePtr);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -282,6 +286,8 @@ protected:
   nsFrameborder*   mChildFrameborder; // the frameborder attr of children 
   nsBorderColor*   mChildBorderColors;
   
+  PRBool mForceFrameResizability;
+  nsWeakPtr mPrefBranchWeakRef;
 };
 
 
