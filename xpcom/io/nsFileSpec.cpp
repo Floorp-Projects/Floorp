@@ -464,7 +464,7 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
     // an unescaped string.
     nsSimpleCharString unescapedPath(inString + kFileURLPrefixLength);
     unescapedPath.Unescape();
-    nsFilePath path(unescapedPath, inCreateDirs);
+    nsFilePath path((char *)unescapedPath, inCreateDirs);
     *this = path;
 } // nsFileURL::nsFileURL
 #endif
@@ -484,7 +484,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
     // an unescaped string.
     nsSimpleCharString unescapedPath(aCString + kFileURLPrefixLength);
     unescapedPath.Unescape();
-    nsFilePath path(unescapedPath, inCreateDirs);
+    nsFilePath path((char *)unescapedPath, inCreateDirs);
     *this = path;
 } // nsFileURL::nsFileURL
 #endif
@@ -645,7 +645,7 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
     if (mPath.IsEmpty())
     	return;
 
-    NS_ASSERTION(strstr((const char*)mPath, kFileURLPrefix) != (const char*)mPath, "URL passed as path");
+    NS_ASSERTION(strstr((char*)mPath, kFileURLPrefix) != (char*)mPath, "URL passed as path");
 #ifdef XP_PC
     nsFileSpecHelpers::UnixToNative(mPath);
 #endif
@@ -812,11 +812,11 @@ void nsFileSpec::MakeUnique()
         = nsFileSpecHelpers::kMaxCoreLeafNameLength - nsCRT::strlen(suffix) - 1;
     if ((int)nsCRT::strlen(leafName) > (int)kMaxRootLength)
         leafName[kMaxRootLength] = '\0';
-    for (short index = 1; index < 1000 && Exists(); index++)
+    for (short indx = 1; indx < 1000 && Exists(); indx++)
     {
         // start with "Picture-1.jpg" after "Picture.jpg" exists
         char newName[nsFileSpecHelpers::kMaxFilenameLength + 1];
-        sprintf(newName, "%s-%d%s", leafName, index, suffix);
+        sprintf(newName, "%s-%d%s", leafName, indx, suffix);
         SetLeafName(newName);
     }
     if (*suffix)
@@ -993,7 +993,7 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
     if(inStr[inLast] == DIR_SEPARATOR)
         inStr[inLast] = '\0';
 
-    if (DIR_STRCMP(str, inStr ) == 0)
+    if (DIR_STRCMP((char *)str, (char *)inStr ) == 0)
            return PR_TRUE;
 #undef DIR_SEPARATOR
 #undef DIR_STRCMP
