@@ -841,12 +841,14 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
 
   // Normally, the outer table's mComputed values are NS_INTRINSICSIZE since they
   // depend on the caption and inner table. Boxes can force a size.
-  if (aOuterRS.mComputedWidth != NS_INTRINSICSIZE) {
+  if ((aOuterRS.mComputedWidth != NS_INTRINSICSIZE) && 
+      (aOuterRS.mComputedWidth != 0)) {
     childRS.mComputedWidth = aOuterRS.mComputedWidth - aMargin.left - childRS.mComputedBorderPadding.left -
                              childRS.mComputedBorderPadding.right - aMargin.right;
     childRS.mComputedWidth = PR_MAX(0, childRS.mComputedWidth);
   }
-  if (aOuterRS.mComputedHeight != NS_INTRINSICSIZE) {
+  if ((aOuterRS.mComputedHeight != NS_INTRINSICSIZE) &&
+      (aOuterRS.mComputedHeight != 0)) {
     childRS.mComputedHeight = aOuterRS.mComputedHeight - aMargin.top - childRS.mComputedBorderPadding.top -
                               childRS.mComputedBorderPadding.bottom - aMargin.bottom;
     childRS.mComputedHeight = PR_MAX(0, childRS.mComputedHeight);

@@ -121,7 +121,6 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
         goodState.reason = eReflowReason_Resize;
         return Reflow(aPresContext, aDesiredSize, goodState, aStatus);
     }
-    
     if (aReflowState.mComputedWidth == NS_UNCONSTRAINEDSIZE) {
         NS_WARNING("Inefficient XUL: Reflowing outer tree frame with unconstrained width, try giving it a width in CSS!");
         nsHTMLReflowState goodState(aReflowState);
@@ -133,7 +132,6 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
         NS_WARNING("Inefficient XUL: Reflowing outer tree frame with unconstrained height, try giving it a height in CSS!");
     }
   //printf("TOF Width: %d, TOF Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-
   nsresult rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   nsITreeFrame* tree = FindTreeFrame(aPresContext);

@@ -835,7 +835,9 @@ nsTreeRowGroupFrame::SetScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* a
 
   nsIFrame* result;
   nsScrollbarButtonFrame::GetChildWithTag(aPresContext, nsXULAtoms::slider, aFrame, result);
-  ((nsSliderFrame*)result)->SetScrollbarListener(this);
+  if (result) {
+    ((nsSliderFrame*)result)->SetScrollbarListener(this);
+  }
 }
 
 PRBool nsTreeRowGroupFrame::RowGroupDesiresExcessSpace() 
