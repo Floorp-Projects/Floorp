@@ -51,7 +51,7 @@ menulist[editable="true"],
 popup, menupopup,
 scrollbar, scrollbarbutton, slider, thumb, autorepeater,
 splitter, statusbar, statusbarpanel,
-toolbox, menubar, toolbar {
+toolbox, menubar, toolbar, spinbuttons {
   -moz-user-focus: ignore;
 }
 
@@ -659,6 +659,12 @@ autorepeatbutton.down {
 
 statusbarpanel {
   -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar-panel");
+}
+
+/********** spinbuttons ***********/
+
+spinbuttons {
+  -moz-binding: url("chrome://global/content/bindings/spinbuttons.xml#spinbuttons");
 }
 
 /********** stringbundle **********/

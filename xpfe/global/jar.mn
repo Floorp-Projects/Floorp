@@ -55,6 +55,7 @@ toolkit.jar:
         content/global/bindings/scrollbar.xml       (resources/content/bindings/scrollbar.xml)
         content/global/bindings/scrollbox.xml       (resources/content/bindings/scrollbox.xml)
         content/global/bindings/splitter.xml        (resources/content/bindings/splitter.xml)
+        content/global/bindings/spinbuttons.xml     (resources/content/bindings/spinbuttons.xml)
         content/global/bindings/stringbundle.xml    (resources/content/bindings/stringbundle.xml)
         content/global/bindings/tabbox.xml          (resources/content/bindings/tabbox.xml)
         content/global/bindings/text.xml            (resources/content/bindings/text.xml)
