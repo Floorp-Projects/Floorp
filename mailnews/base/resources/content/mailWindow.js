@@ -559,7 +559,7 @@ function OpenInboxForServer(server)
 
 function GetSearchSession()
 {
-  if (gSearchSession)
+  if (("gSearchSession" in top) && gSearchSession)
     return gSearchSession;
   else
     return null;
