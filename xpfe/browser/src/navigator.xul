@@ -120,7 +120,16 @@
 
   function BrowserPrintPreview()
   {
+    // Borrowing this method to show how to 
+    // dynamically change icons
     dump("BrowserPrintPreview\n");
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	    dump("Changing Icons\n");
+      appCore.printPreview();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
   }
 
   function BrowserClose()
@@ -132,7 +141,7 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	  dump("Exiting\n");
+	    dump("Exiting\n");
       appCore.exit();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -150,22 +159,23 @@
   
   <xul:menubar>
     <xul:menu name="File">
-      <xul:menuitem name="New Window" cmd="nsCmd:BrowserNewWindow"/>
+      <xul:menuitem name="New Window" onClick="BrowserNewWindow();"/>
+      <xul:menuitem name="Change Icons" onClick="BrowserPrintPreview();"/>
       <xul:separator />
-      <xul:menuitem name="Print Setup" cmd="nsCmd:BrowserPrintSetup"/>
-      <xul:menuitem name="Print Preview" cmd="nsCmd:BrowserPrintPreview"/>
-      <xul:menuitem name="Print" cmd="nsCmd:BrowserPrint"/>
+      <xul:menuitem name="Print Setup" onClick=""/>
+      <xul:menuitem name="Print Preview" onClick="BrowserPrintPreview();"/>
+      <xul:menuitem name="Print" onClick=""/>
       <xul:separator />
-      <xul:menuitem name="Close" cmd="nsCmd:BrowserClose"/>
-      <xul:menuitem name="Exit" cmd="nsCmd:BrowserExit"/>
+      <xul:menuitem name="Close" onClick=""/>
+      <xul:menuitem name="Exit" onClick="BrowserExit();"/>
     </xul:menu>
     <xul:menu name="View">
-      <xul:menuitem name="Reload" cmd="nsCmd:BrowserReload"/>
+      <xul:menuitem name="Reload" onClick="BrowserReload();"/>
     </xul:menu>
     <xul:menu name="Go">
-      <xul:menuitem name="Back" cmd="nsCmd:BrowserBack"/>
-      <xul:menuitem name="Forward" cmd="nsCmd:BrowserForward" />
-      <xul:menuitem name="Home" cmd="nsCmd:BrowserHome"/>
+      <xul:menuitem name="Back" onClick="BrowserBack();"/>
+      <xul:menuitem name="Forward" onClick="BrowserForward();" />
+      <xul:menuitem name="Home" onClick="BrowserHome();"/>
     </xul:menu>
 
   </xul:menubar>
