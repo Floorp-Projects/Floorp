@@ -3147,39 +3147,44 @@ static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
                  const nsRect& r1, const nsRect& r2)
 {
-  printf("verifyreflow: ");
+  printf("VerifyReflow Error:\n");
   nsAutoString name;
   nsIFrameDebug*  frameDebug;
 
   if (NS_SUCCEEDED(k1->QueryInterface(NS_GET_IID(nsIFrameDebug),
                                       (void**)&frameDebug))) {
+    fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
     fputs(name, stdout);
+    fprintf(stdout, " %p ", k1);
   }
   printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
 
-  printf(" != ");
+  printf(" != \n");
 
   if (NS_SUCCEEDED(k2->QueryInterface(NS_GET_IID(nsIFrameDebug),
                                       (void**)&frameDebug))) {
+    fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
     fputs(name, stdout);
+    fprintf(stdout, " %p ", k2);
   }
-  printf("{%d, %d, %d, %d}", r2.x, r2.y, r2.width, r2.height);
+  printf("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
 
-  printf(" %s\n", aMsg);
+  printf("  %s\n", aMsg);
 }
 
 static PRBool
-CompareTrees(nsIPresContext* aPresContext, nsIFrame* aA, nsIFrame* aB)
+CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame, 
+             nsIPresContext* aSecondPresContext, nsIFrame* aSecondFrame)
 {
   PRBool ok = PR_TRUE;
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
   do {
     nsIFrame* k1, *k2;
-    aA->FirstChild(aPresContext, listName, &k1);
-    aB->FirstChild(aPresContext, listName, &k2);
+    aFirstFrame->FirstChild(aFirstPresContext, listName, &k1);
+    aSecondFrame->FirstChild(aSecondPresContext, listName, &k2);
     PRInt32 l1 = nsContainerFrame::LengthOf(k1);
     PRInt32 l2 = nsContainerFrame::LengthOf(k2);
     if (l1 != l2) {
@@ -3214,8 +3219,8 @@ CompareTrees(nsIPresContext* aPresContext, nsIFrame* aA, nsIFrame* aB)
         // do have views, make sure the views are the same size. If the
         // views have widgets, make sure they both do or neither does. If
         // they do, make sure the widgets are the same size.
-        k1->GetView(aPresContext, &v1);
-        k2->GetView(aPresContext, &v2);
+        k1->GetView(aFirstPresContext, &v1);
+        k2->GetView(aSecondPresContext, &v2);
         if (((nsnull == v1) && (nsnull != v2)) ||
             ((nsnull != v1) && (nsnull == v2))) {
           ok = PR_FALSE;
@@ -3248,7 +3253,7 @@ CompareTrees(nsIPresContext* aPresContext, nsIFrame* aA, nsIFrame* aB)
         }
 
         // Compare the sub-trees too
-        if (!CompareTrees(aPresContext, k1, k2)) {
+        if (!CompareTrees(aFirstPresContext, k1, aSecondPresContext, k2)) {
           ok = PR_FALSE;
           if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
             break;
@@ -3270,8 +3275,8 @@ CompareTrees(nsIPresContext* aPresContext, nsIFrame* aA, nsIFrame* aB)
 
     nsIAtom* listName1;
     nsIAtom* listName2;
-    aA->GetAdditionalChildListName(listIndex, &listName1);
-    aB->GetAdditionalChildListName(listIndex, &listName2);
+    aFirstFrame->GetAdditionalChildListName(listIndex, &listName1);
+    aSecondFrame->GetAdditionalChildListName(listIndex, &listName2);
     listIndex++;
     if (listName1 != listName2) {
       if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
@@ -3484,9 +3489,11 @@ PresShell::VerifyIncrementalReflow()
   rv = CloneStyleSet(mStyleSet, getter_AddRefs(newSet));
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clone style set");
   rv = mDocument->CreateShell(cx, vm, newSet, &sh);
+  sh->SetVerifyReflowEnable(PR_FALSE); // turn off verify reflow while we're reflowing the test frame tree
   NS_ASSERTION(NS_OK == rv, "failed to create presentation shell");
   vm->SetViewObserver((nsIViewObserver *)((PresShell*)sh));
   sh->InitialReflow(r.width, r.height);
+  sh->SetVerifyReflowEnable(PR_TRUE);  // turn on verify reflow again now that we're done reflowing the test frame tree
 
   // Now that the document has been reflowed, use its frame tree to
   // compare against our frame tree.
@@ -3494,11 +3501,7 @@ PresShell::VerifyIncrementalReflow()
   GetRootFrame(&root1);
   nsIFrame* root2;
   sh->GetRootFrame(&root2);
-#if 0
-  root1 = FindTopFrame(root1);
-  root2 = FindTopFrame(root2);
-#endif
-  PRBool ok = CompareTrees(mPresContext, root1, root2);
+  PRBool ok = CompareTrees(mPresContext, root1, cx, root2);
   if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
     printf("Verify reflow failed, primary tree:\n");
     nsIFrameDebug*  frameDebug;
