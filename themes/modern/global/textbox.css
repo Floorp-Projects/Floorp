@@ -28,6 +28,7 @@
 @import url("chrome://global/content/autocomplete.css");
   
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 /* ::::: textbox ::::: */
 
@@ -59,8 +60,8 @@ textbox[readonly="true"][focused="true"] > .textarea-internal-box {
   border: 1px solid #5D616E;
 }
     
-.textbox-input, 
-.textbox-textarea {
+html|*.textbox-input, 
+html|*.textbox-textarea {
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;

@@ -26,6 +26,7 @@
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 /* ::::: autocomplete ::::: */
 
@@ -33,7 +34,7 @@ textbox[type="autocomplete"] {
   cursor: default !important;
 }
 
-.textbox-input {
+html|*.textbox-input {
   cursor: text;
   margin: 0px;
   border: none;

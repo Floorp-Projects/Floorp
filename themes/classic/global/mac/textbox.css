@@ -1,5 +1,5 @@
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
-@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for XUL elements */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 /** generic text fields (in dialogs)
  **/
@@ -56,7 +56,7 @@
     }
   
 /* internal text widget */
-  .textbox-input, .textbox-textarea
+  html|*.textbox-input, html|*.textbox-textarea
     {
       border              : none !important;
       margin              : 0px;

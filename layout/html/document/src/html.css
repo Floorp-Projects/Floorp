@@ -130,7 +130,7 @@ plaintext, xmp, pre {
 
 /* tables */
 
-table, :table {
+table, *|*:table {
   display: table;
   border-spacing: 2px; 
   border-collapse: separate;
@@ -148,7 +148,7 @@ table[align="right"] {
   text-align: start;
 }
 
-:table-outer {
+*|*:table-outer {
   display: table;
   margin: 0;
   border: none;
@@ -178,15 +178,15 @@ tr {
   vertical-align: inherit;
 }
 
-:table-row {
+*|*:table-row {
   display: table-row;
 }
 
-col, :table-column {
+col, *|*:table-column {
   display: table-column;
 }
 
-colgroup, :table-column-group {
+colgroup, *|*:table-column-group {
   display: table-column-group;
 }
 
@@ -205,7 +205,7 @@ tfoot {
   vertical-align: middle;
 }
 
-:table-row-group {
+*|*:table-row-group {
   display: table-row-group;
 }
 
@@ -223,7 +223,7 @@ th {
   padding: 1px;
 }
 
-:table-cell {
+*|*:table-cell {
   display: table-cell;
   padding: 1px;
 }
@@ -295,7 +295,7 @@ abbr[title], acronym[title] {
 
 /* lists */
 
-:-moz-list-bullet {
+*|*:-moz-list-bullet {
   display: inline;
   vertical-align: baseline;
   margin-right: 8px;
@@ -364,7 +364,7 @@ hr {
   margin: 0 auto 0 auto;
 }
 
-:-moz-any-link img, img[usemap], object[usemap] {
+*|*:-moz-any-link img, img[usemap], object[usemap] {
   border: 2px solid;
   cursor: pointer;
 }
@@ -401,34 +401,34 @@ noframes {
 /* focusable content */
 
 /* links */
-:-moz-any-link {
+*|*:-moz-any-link {
   cursor: pointer;
   -moz-user-focus: normal;
 }
 
-:-moz-any-link:active {
+*|*:-moz-any-link:active {
   color: red;
 }
 
-:-moz-any-link:focus {
+*|*:-moz-any-link:focus {
   -moz-outline: 1px dotted WindowText;
 }
 
 /* hidden elements */
 area, base, basefont, head, meta, script, style, title,
-noembed, noscript, param, :-moz-comment, :-moz-pi {
+noembed, noscript, param, *|*:-moz-comment, *|*:-moz-pi {
    display: none;
 }
 
 
 /* magic */
 
-:viewport, :viewport-scroll, :canvas {
+*|*:viewport, *|*:viewport-scroll, *|*:canvas {
   display: block;
   background-color: inherit;
 }
 
-:scrolled-content { 
+*|*:scrolled-content { 
   /* e.g., text inputs, select boxes */
   background: inherit;
   padding: inherit;
@@ -436,22 +436,22 @@ noembed, noscript, param, :-moz-comment, :-moz-pi {
   -moz-xul-box-orient: inherit;
 }
 
-:wrapped-frame {
+*|*:wrapped-frame {
   display: inherit;
 }
 
-:placeholder-frame {
+*|*:placeholder-frame {
   display: inline;
   width: 0;
   height: 0;
 }
 
-:-moz-page, :-moz-page-sequence {
+*|*:-moz-page, *|*:-moz-page-sequence {
   display: block;
   background: transparent;
 }
 
-:-moz-anonymous-positioned-block {
+*|*:-moz-anonymous-positioned-block {
   display: block;
   position: relative;
   top: inherit; 
