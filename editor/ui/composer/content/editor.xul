@@ -123,7 +123,7 @@
   </keyset>
 
   <toolbox class="toolbox-top" id="EditorToolbox">
-  <menubar id="main-menubar" class="chromeclass-menubar" persist="collapsed">
+  <menubar id="main-menubar" class="chromeclass-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
@@ -168,7 +168,7 @@
 
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
-  <toolbar class="toolbar-primary" id="EditToolbar" persist="collapsed" tbalign="stretch">
+  <toolbar class="toolbar-primary" id="EditToolbar" persist="collapsed" tbalign="stretch" grippytooltip="aTooltip" grippytooltiptext="&compositionToolbar.tooltip;">
     <toolbarbutton id="newButton"/>
     <toolbarbutton id="openButton"/>
     <toolbarbutton id="saveButton"/>
@@ -188,7 +188,7 @@
       </button>
     </hbox> 
   </toolbar>
-  <toolbar id="FormatToolbar" persist="collapsed" tbalign="center">
+  <toolbar id="FormatToolbar" persist="collapsed" tbalign="center" grippytooltip="aTooltip" grippytooltiptext="&formatToolbar.tooltip;">
     <!-- We need this else menulists get stretched -->
     <hbox autostretch="never">
       <!-- from editorOverlay -->
