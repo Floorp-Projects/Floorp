@@ -83,4 +83,14 @@ interface nsIStringBundleService : nsISupports
    * @return the formatted message
    */
   wstring formatStatusMessage(in nsresult aStatus, in wstring aStatusArg);
+
+  /**
+   * flushes the string bundle cache - useful when the locale changes or
+   * when we need to get some extra memory back
+   * 
+   * at some point, we might want to make this flush all the bundles,
+   * because any bundles that are floating around when the locale changes
+   * will suddenly contain bad data
+   */
+  void flushBundles();
 };
