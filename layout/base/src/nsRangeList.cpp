@@ -69,7 +69,7 @@ static void printRange(nsIDOMRange *aDomRange);
 #define DEBUG_OUT_RANGE(x)  
 #endif //MOZ_DEBUG
 
-//#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
+#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
 //#define DEBUG_NAVIGATION
 
 class nsRangeListIterator;
@@ -851,83 +851,6 @@ nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRBool aC
     mChangesDuringBatching = changes;
   }
   else {
-    //compare anchor to old cursor.
-    nsCOMPtr<nsIDOMNode> anchorNode;
-    nsCOMPtr<nsIDOMNode> focusNode;
-    PRInt32 anchorOffset;
-    PRInt32 focusOffset;
-    nsresult result = NS_OK;
-    result = GetAnchorNode(getter_AddRefs(anchorNode));
-    result |= GetAnchorOffset(&anchorOffset);
-    result |= GetFocusNode(getter_AddRefs(focusNode));
-    result |= GetFocusOffset(&focusOffset);
-
-
-
-
-    if (NS_FAILED(result))
-      return result;
-    PRInt32 result1 = ComparePoints(anchorNode, anchorOffset 
-                                    ,focusNode, focusOffset);
-    //compare old cursor to new cursor
-    PRInt32 result2 = ComparePoints(focusNode, focusOffset,
-                              domNode, aContentOffset );
-    //compare anchor to new cursor
-    PRInt32 result3 = ComparePoints(anchorNode, anchorOffset,
-                              domNode , aContentOffset );
-
-    if (result1 == 0 && result3 < 0){
-      //selectFrames(anchor,anchorFrameOffsetBegin, aFrame, aOffset , eDirNext, nsSelectionStruct::SELON); 
-    }
-    else if (result1 == 0 && result3 > 0){
-      //selectFrames(aFrame, aOffset , anchor,anchorFrameOffsetBegin, eDirPrevious,nsSelectionStruct::SELON);
-    }
-    else if (result1 <= 0 && result2 <= 0) {//a,1,2 or a1,2 or a,12 or a12
-      //continue selection from 1 to 2
-      //selectFrames(frame,PR_MIN(focusFrameOffsetEnd,focusFrameOffsetBegin), aFrame, aOffset, eDirNext, nsSelectionStruct::SELON);
-    }
-    else{
-      nsCOMPtr<nsIDOMRange> range;
-      result = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                         kIDOMRangeIID,
-                                         getter_AddRefs(range));
-      if (NS_FAILED(result))
-        return result;
-      if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
-        //deselect from 2 to 1
-        result = range->SetEnd(focusNode, focusOffset);
-        result |= range->SetStart(domNode, aContentOffset);
-        if (NS_FAILED(result))
-          return result;
-        selectFrames(range, 0);
-      }
-      else if (result1 >= 0 && result3 <= 0) {//1,a,2 or 1a,2 or 1,a2 or 1a2
-        result = range->SetStart(focusNode, focusOffset);
-        result |= range->SetEnd(anchorNode, anchorOffset);
-        if (NS_FAILED(result))
-          return result;
-        //deselect from 1 to a
-        selectFrames(range, 0);
-      }
-      else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
-        //deselect from 1 to 2
-        result = range->SetEnd(domNode, aContentOffset);
-        result |= range->SetStart(focusNode, focusOffset);
-        if (NS_FAILED(result))
-          return result;
-        selectFrames(range, 0);
-      }
-      else if (result3 >= 0 && result1 <= 0) {//2,a,1 or 2a,1 or 2,a1 or 2a1
-        //deselect from a to 1
-        result = range->SetStart(anchorNode, anchorOffset);
-        result |= range->SetEnd(focusNode, focusOffset);
-        if (NS_FAILED(result))
-          return result;
-        selectFrames(range, 0);
-      }
-      else if (result2 >= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
-      }
-    }
     // Now update the range list:
     if (aContinueSelection && domNode)
     {
@@ -1310,7 +1233,15 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMRange> difRange;
+  nsresult res;
+  res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
+                                     kIDOMRangeIID,
+                                     getter_AddRefs(difRange));
+
+
   PRUint32 i;
+  PRBool found = PR_FALSE;
   for (i = 0; i < mRangeArray->Count(); i++)
   {
     nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(i));
@@ -1324,8 +1255,6 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     range->GetEndOffset(&endOffset);
     range->GetStartParent(getter_AddRefs(startNode));
     range->GetStartOffset(&startOffset);
-    nsresult res;
-
     if ((FetchFocusNode() == endNode.get()) && (FetchFocusOffset() == endOffset))
     {
       res = range->SetEnd(aParentNode, aOffset);
@@ -1335,12 +1264,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         if (NS_SUCCEEDED(res))
           res = range->SetStart(aParentNode, aOffset);
       }
-      if (NS_SUCCEEDED(res))
-        setFocus(aParentNode, aOffset);
 
-      if (NS_FAILED(res)) return res;
-
-      res = selectFrames(range , PR_TRUE);
 
       if (NS_FAILED(res)) return res;
 #ifdef DEBUG_SELECTION
@@ -1354,10 +1278,9 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
   delete [] tagCString;
 #endif
-      return NotifySelectionListeners();
+      found = PR_TRUE;
     }
-    
-    if ((FetchFocusNode() == startNode.get()) && (FetchFocusOffset() == startOffset))
+    else if ((FetchFocusNode() == startNode.get()) && (FetchFocusOffset() == startOffset))
     {
       res = range->SetStart(aParentNode, aOffset);
       if (res == NS_ERROR_ILLEGAL_VALUE)
@@ -1366,12 +1289,6 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         if (NS_SUCCEEDED(res))
           res = range->SetEnd(aParentNode, aOffset);
       }
-      if (NS_SUCCEEDED(res))
-        setFocus(aParentNode, aOffset);
-      
-      if (NS_FAILED(res)) return res;
-
-      res = selectFrames(range , PR_TRUE);
 
       if (NS_FAILED(res)) return res;
 #ifdef DEBUG_SELECTION
@@ -1385,8 +1302,122 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
   delete [] tagCString;
 #endif
+      found = PR_TRUE;
+    }
+    if (found){
+      res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
+                                         kIDOMRangeIID,
+                                         getter_AddRefs(difRange));
+
+      if (NS_FAILED(res))
+        return res;
+      //compare anchor to old cursor.
+
+      if (NS_FAILED(res))
+        return res;
+      PRInt32 result1 = ComparePoints(FetchAnchorNode(), FetchAnchorOffset() 
+                                      ,FetchFocusNode(), FetchFocusOffset());
+      //compare old cursor to new cursor
+      PRInt32 result2 = ComparePoints(FetchFocusNode(), FetchFocusOffset(),
+                                aParentNode, aOffset );
+      //compare anchor to new cursor
+      PRInt32 result3 = ComparePoints(FetchAnchorNode(), FetchAnchorOffset(),
+                                aParentNode , aOffset );
+
+      if ((result1 == 0 && result3 < 0) || (result1 <= 0 && result2 <= 0)){
+        if (FetchFocusNode() != aParentNode || FetchFocusOffset() != aOffset ){//if collapsed diff dont do anything
+          //select from 1 to 2
+          res |= difRange->SetEnd(aParentNode, aOffset);
+          res = difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
+          if (NS_FAILED(res))
+            return res;
+          selectFrames(difRange , PR_TRUE);
+        }
+      }
+      else if (result1 == 0 && result3 > 0){//2, a1
+        if (FetchFocusNode() != aParentNode || FetchFocusOffset() != aOffset ){//if collapsed diff dont do anything
+          //select from 2 to 1
+          res |= difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
+          res = difRange->SetStart(aParentNode, aOffset);
+          if (NS_FAILED(res))
+            return res;
+          selectFrames(difRange , PR_TRUE);
+        }
+      }
+      else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
+        //deselect from 2 to 1
+        if (FetchFocusNode() != aParentNode || FetchFocusOffset() != aOffset ){//if collapsed diff dont do anything
+          res = difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
+          res |= difRange->SetStart(aParentNode, aOffset);
+          if (NS_FAILED(res))
+            return res;
+          selectFrames(difRange, 0);
+          difRange->SetEnd(aParentNode,aOffset);
+          selectFrames(difRange, PR_TRUE);//must reselect last node
+        }
+      }
+      else if (result1 >= 0 && result3 <= 0) {//1,a,2 or 1a,2 or 1,a2 or 1a2
+        if (FetchFocusNode() != FetchAnchorNode() || FetchFocusOffset() != FetchAnchorOffset() ){//if collapsed diff dont do anything
+          res = difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
+          res |= difRange->SetEnd(FetchAnchorNode(), FetchAnchorOffset());
+          if (NS_FAILED(res))
+            return res;
+          //deselect from 1 to a
+          selectFrames(difRange , PR_FALSE);
+        }
+        if (FetchFocusNode() != aParentNode || FetchFocusOffset() != aOffset ){//if collapsed diff dont do anything
+          //select from a to 2
+          res |= difRange->SetEnd(aParentNode, aOffset);
+          res = difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
+          if (NS_FAILED(res))
+            return res;
+          selectFrames(difRange , PR_TRUE);
+        }
+      }
+      else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
+        //deselect from 1 to 2
+        if (FetchFocusNode() != aParentNode || FetchFocusOffset() != aOffset ){//if collapsed diff dont do anything
+          res = difRange->SetEnd(aParentNode, aOffset);
+          res |= difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
+          if (NS_FAILED(res))
+            return res;
+          selectFrames(difRange , PR_FALSE);
+          difRange->SetEnd(aParentNode,aOffset);
+          selectFrames(difRange, PR_TRUE);//must reselect last node
+        }
+      }
+      else if (result3 >= 0 && result1 <= 0) {//2,a,1 or 2a,1 or 2,a1 or 2a1
+        //deselect from a to 1
+        if (FetchFocusNode() != FetchAnchorNode() || FetchFocusOffset() != FetchAnchorOffset() ){//if collapsed diff dont do anything
+          res = difRange->SetStart(FetchAnchorNode(), FetchAnchorOffset());
+          res |= difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
+          if (NS_FAILED(res))
+            return res;
+          selectFrames(difRange, 0);
+        }
+        if (FetchAnchorNode() != aParentNode || FetchAnchorOffset() != aOffset ){//if collapsed diff dont do anything
+          //select from a to 2
+          res |= difRange->SetEnd(aParentNode, aOffset);
+          res = difRange->SetStart(FetchAnchorNode(), FetchAnchorOffset());
+          if (NS_FAILED(res))
+            return res;
+          selectFrames(difRange , PR_TRUE);
+        }
+      }
+      else if (result2 >= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
+        //select from 2 to 1
+        if (FetchFocusNode() != aParentNode || FetchFocusOffset() != aOffset ){//if collapsed diff dont do anything
+          res = difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
+          res |= difRange->SetStart(aParentNode, aOffset);
+          if (NS_FAILED(res))
+            return res;
+          selectFrames(difRange, PR_TRUE);
+        }
+      }
+      setFocus(aParentNode, aOffset);
       return NotifySelectionListeners();
     }
+
   }
 
   // If we get here, the focus wasn't contained in any of the ranges.
