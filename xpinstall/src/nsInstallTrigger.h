@@ -24,7 +24,7 @@ class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTrigger
         static const nsIID& IID() { static nsIID iid = NS_SoftwareUpdateInstallTrigger_CID; return iid; }
 
         nsInstallTrigger();
-        ~nsInstallTrigger();
+        virtual ~nsInstallTrigger();
         
         NS_DECL_ISUPPORTS
 
@@ -57,7 +57,7 @@ class nsInstallTriggerFactory : public nsIFactory
     public:
         
         nsInstallTriggerFactory();
-        ~nsInstallTriggerFactory();
+        virtual ~nsInstallTriggerFactory();
         
         NS_DECL_ISUPPORTS
 
