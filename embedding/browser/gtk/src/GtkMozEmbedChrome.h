@@ -28,7 +28,7 @@
 // we will implement these interfaces
 #include "nsIGtkEmbed.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebBrowserSiteWindow.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebProgress.h"
@@ -56,7 +56,7 @@
 
 class GtkMozEmbedChrome : public nsIGtkEmbed,
                           public nsIWebBrowserChrome,
-                          public nsIWebBrowserSiteWindow,
+                          public nsIEmbeddingSiteWindow,
                           public nsIURIContentListener,
                           public nsIDocShellTreeOwner,
                           public nsIInterfaceRequestor,
@@ -93,7 +93,7 @@ public:
 
   NS_DECL_NSIDOCSHELLTREEOWNER
 
-  NS_DECL_NSIWEBBROWSERSITEWINDOW
+  NS_DECL_NSIEMBEDDINGSITEWINDOW
 
   NS_DECL_NSIPROMPT
 
@@ -104,15 +104,20 @@ public:
 			nsIWidget * parentWidget,
 			PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy);
   NS_IMETHOD Create(void);
+  NS_IMETHOD Destroy(void);
   NS_IMETHOD Repaint(PRBool force);
   NS_IMETHOD GetParentWidget(nsIWidget * *aParentWidget);
   NS_IMETHOD SetParentWidget(nsIWidget * aParentWidget);
   NS_IMETHOD GetParentNativeWindow(nativeWindow *aParentNativeWindow);
   NS_IMETHOD SetParentNativeWindow(nativeWindow aParentNativeWindow);
-  NS_IMETHOD GetVisibility(PRBool *aVisibility);
-  NS_IMETHOD SetVisibility(PRBool aVisibility);
   NS_IMETHOD GetMainWidget(nsIWidget * *aMainWidget);
   NS_IMETHOD FocusAvailable(nsIBaseWindow *aCurrentFocus, PRBool *aTookFocus);
+  NS_IMETHOD SetPosition(PRInt32 x, PRInt32 y);
+  NS_IMETHOD GetPosition(PRInt32 *x, PRInt32 *y);
+  NS_IMETHOD GetSize(PRInt32 *cx, PRInt32 *cy);
+  NS_IMETHOD SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint);
+  NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint);
+  NS_IMETHOD GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy);
 
 private:
   GtkWidget                 *mOwningGtkWidget;

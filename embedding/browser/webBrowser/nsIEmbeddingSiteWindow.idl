@@ -30,20 +30,8 @@
  * hide or show it and change/query various other properties.
  */
 [scriptable, uuid(3E5432CD-9568-4bd1-8CBE-D50ABA110743)]
-interface nsIWebBrowserSiteWindow : nsISupports
+interface nsIEmbeddingSiteWindow : nsISupports
 {
-    /**
-     * Tell the window that it should destroy itself.  This call should not be
-     * necessary as it will happen implictly when final release occurs on the
-     * object. If for some reaons you want the window destroyed prior to
-     * release due to cycle or ordering issues, then this call provides that
-     * ability.
-     *
-     * @return <code>NS_OK</code> if everything destroyed is properly.
-     *         <code>NS_ERROR_UNEXPECTED</code> if window could not be destroyed.
-     */
-    void destroy();
-
     /*
      Window dimension flags for controlling what you are getting and setting.
      Note that the inner and outer flags are mutually exclusive and it

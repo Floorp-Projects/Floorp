@@ -98,7 +98,7 @@ NS_IMPL_RELEASE(EmbedWindow)
 NS_INTERFACE_MAP_BEGIN(EmbedWindow)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
@@ -194,6 +194,14 @@ EmbedWindow::CreateBrowserWindow(PRUint32 aChromeFlags,
 }
 
 NS_IMETHODIMP
+EmbedWindow::DestroyBrowserWindow(void)
+{
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+		  moz_embed_signals[DESTROY_BROWSER]);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 EmbedWindow::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
@@ -219,53 +227,42 @@ EmbedWindow::ExitModalEventLoop(nsresult aStatus)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// nsIWebBrowserSiteWindow
+// nsIEmbeddingSiteWindow
 
 NS_IMETHODIMP
-EmbedWindow::Destroy(void)
+EmbedWindow::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY)
 {
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DESTROY_BROWSER]);
-  return NS_OK;
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
+      (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER ||
+       aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)) {
+    return mBaseWindow->SetPositionAndSize(aX, aY, aCX, aCY, PR_TRUE);
+  }
+  else if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
+    return mBaseWindow->SetPosition(aX, aY);
+  }
+  else if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER ||
+	   aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+    return mBaseWindow->SetSize(aCX, aCY, PR_TRUE);
+  }
+  return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
-EmbedWindow::SetPosition(PRInt32 aX, PRInt32 aY)
+EmbedWindow::GetDimensions(PRUint32 aFlags, PRInt32 *aX, PRInt32 *aY, PRInt32 *aCX, PRInt32 *aCY)
 {
-  return mBaseWindow->SetPosition(aX, aY);
-}
-
-NS_IMETHODIMP
-EmbedWindow::GetPosition(PRInt32 *aX, PRInt32 *aY)
-{
-  return mBaseWindow->GetPosition(aX, aY);
-}
-
-NS_IMETHODIMP
-EmbedWindow::SetSize(PRInt32 aX, PRInt32 aY, PRBool aRepaint)
-{
-  return mBaseWindow->SetSize(aX, aY, aRepaint);
-}
-
-NS_IMETHODIMP
-EmbedWindow::GetSize(PRInt32 *aX, PRInt32 *aY)
-{
-  return mBaseWindow->GetSize(aX, aY);
-}
-
-NS_IMETHODIMP
-EmbedWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
-				PRInt32 aWidth, PRInt32 aHeight,
-				PRBool aRepaint)
-{
-  return mBaseWindow->SetPositionAndSize(aX, aY, aWidth, aHeight, aRepaint);
-}
-
-NS_IMETHODIMP
-EmbedWindow::GetPositionAndSize(PRInt32 *aX, PRInt32 *aY,
-				PRInt32 *aWidth, PRInt32 *aHeight)
-{
-  return mBaseWindow->GetPositionAndSize(aX, aY, aWidth, aHeight);
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
+      (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER ||
+       aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)) {
+    return mBaseWindow->GetPositionAndSize(aX, aY, aCX, aCY);
+  }
+  else if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
+    return mBaseWindow->GetPosition(aX, aY);
+  }
+  else if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER ||
+	   aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+    return mBaseWindow->GetSize(aCX, aCY);
+  }
+  return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
@@ -293,6 +290,18 @@ EmbedWindow::SetTitle(const PRUnichar *aTitle)
 
 NS_IMETHODIMP
 EmbedWindow::GetSiteWindow(void **aSiteWindow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+EmbedWindow::GetVisibility(PRBool *aVisibility)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+EmbedWindow::SetVisibility(PRBool aVisibility)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

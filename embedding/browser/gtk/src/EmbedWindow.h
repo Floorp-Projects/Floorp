@@ -23,7 +23,7 @@
 #define __EmbedWindow_h
 
 #include <nsIWebBrowserChrome.h>
-#include <nsIWebBrowserSiteWindow.h>
+#include <nsIEmbeddingSiteWindow.h>
 #include <nsITooltipListener.h>
 #include <nsIPrompt.h>
 #include <nsISupports.h>
@@ -37,7 +37,7 @@
 class EmbedPrivate;
 
 class EmbedWindow : public nsIWebBrowserChrome,
-                    public nsIWebBrowserSiteWindow,
+                    public nsIEmbeddingSiteWindow,
                     public nsITooltipListener,
                     public nsIPrompt,
 		    public nsIInterfaceRequestor
@@ -56,7 +56,7 @@ class EmbedWindow : public nsIWebBrowserChrome,
 
   NS_DECL_NSIWEBBROWSERCHROME
 
-  NS_DECL_NSIWEBBROWSERSITEWINDOW
+  NS_DECL_NSIEMBEDDINGSITEWINDOW
 
   NS_DECL_NSITOOLTIPLISTENER
 

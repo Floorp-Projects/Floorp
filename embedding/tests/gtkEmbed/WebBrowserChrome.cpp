@@ -59,7 +59,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)  //optional
 //   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
@@ -179,6 +179,12 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask,
 }
 
 
+NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -252,48 +258,32 @@ WebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 
 //*****************************************************************************
-// WebBrowserChrome::nsIWebBrowserSiteWindow
+// WebBrowserChrome::nsIEmbeddingSiteWindow
 //*****************************************************************************   
 
-NS_IMETHODIMP WebBrowserChrome::Destroy()
+NS_IMETHODIMP WebBrowserChrome::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_UNEXPECTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP WebBrowserChrome::SetPosition(PRInt32 x, PRInt32 y)
+NS_IMETHODIMP WebBrowserChrome::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
-    return mBaseWindow->SetPosition(x, y);
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetPosition(PRInt32* x, PRInt32* y)
-{
-    return mBaseWindow->GetPosition(x, y);
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-    return mBaseWindow->SetSize(cx, cy, fRepaint);
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetSize(PRInt32* cx, PRInt32* cy)
-{
-    return mBaseWindow->GetSize(cx, cy);
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-    return mBaseWindow->SetPositionAndSize(x, y, cx, cy, fRepaint);
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx, PRInt32* cy)
-{
-    return mBaseWindow->GetPositionAndSize(x, y, cx, cy);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP WebBrowserChrome::SetFocus()
 {
    return mBaseWindow->SetFocus();
+}
+
+NS_IMETHODIMP WebBrowserChrome::GetVisibility(PRBool *aVisibility)
+{
+   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP WebBrowserChrome::SetVisibility(PRBool aVisibility)
+{
+   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar** aTitle)

@@ -94,7 +94,7 @@ NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
-   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
@@ -440,6 +440,14 @@ NS_IMETHODIMP GtkMozEmbedChrome::CreateBrowserWindow(PRUint32 chromeMask,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP GtkMozEmbedChrome::DestroyBrowserWindow(void)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::DestroyBrowserWindow\n"));
+  if (mChromeListener)
+    mChromeListener->Destroy();
+  return NS_OK;
+}
+
 #if 0
 /* Just commenting out for now because it looks like somebody went to
    a lot of work here. This method has been removed from nsIWebBrowserChrome
@@ -725,76 +733,37 @@ GtkMozEmbedChrome::GetPersistence(PRBool* aPersistPosition,
 
 // nsIWebBrowserSiteWindow interface
 
-NS_IMETHODIMP GtkMozEmbedChrome::Destroy(void)
+NS_IMETHODIMP GtkMozEmbedChrome::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::Destory\n"));
-  if (mChromeListener)
-    mChromeListener->Destroy();
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetDimensions\n"));
+  if (aFlags & DIM_FLAGS_POSITION) {
+    mBounds.x = x;
+    mBounds.y = y;
+  }
+  // Treat inner and outer dimensions the same
+  if (aFlags & DIM_FLAGS_SIZE_INNER || aFlags & DIM_FLAGS_SIZE_OUTER) {
+    mBounds.width = cx;
+    mBounds.height = cy;
+  }
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::SetPosition(PRInt32 x, PRInt32 y)
+NS_IMETHODIMP GtkMozEmbedChrome::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetPosition\n"));
-  mBounds.x = x;
-  mBounds.y = y;
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::GetPosition(PRInt32 *x, PRInt32 *y)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetPosition\n"));
-  if (x)
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetDimensions\n"));
+  if (aFlags & DIM_FLAGS_POSITION) {
+    NS_ENSURE_ARG_POINTER(x);
+    NS_ENSURE_ARG_POINTER(y);
     *x = mBounds.x;
-  if (y)
     *y = mBounds.y;
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetSize\n"));
-  mBounds.width = cx;
-  mBounds.height = cy;
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::GetSize(PRInt32 *cx, PRInt32 *cy)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetSize\n"));
-  if (cx)
+  }
+  // Treat inner and outer dimensions the same
+  if (aFlags & DIM_FLAGS_SIZE_INNER | aFlags & DIM_FLAGS_SIZE_OUTER) {
+    NS_ENSURE_ARG_POINTER(cx);
+    NS_ENSURE_ARG_POINTER(cy);
     *cx = mBounds.width;
-  if (cy)
     *cy = mBounds.height;
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::SetPositionAndSize(PRInt32 x, PRInt32 y,
-						    PRInt32 cx, PRInt32 cy,
-						    PRBool fRepaint)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetPositionAndSize %d %d %d %d\n",
-				    x, y, cx, cy));
-  mBounds.x = x;
-  mBounds.y = y;
-  mBounds.width = cx;
-  mBounds.height = cy;
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::GetPositionAndSize(PRInt32 *x, PRInt32 *y,
-						    PRInt32 *cx, PRInt32 *cy)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetPositionAndSize %d %d %d %d\n",
-				    mBounds.x, mBounds.y, mBounds.width, mBounds.height));
-  NS_ENSURE_ARG_POINTER(x);
-  NS_ENSURE_ARG_POINTER(y);
-  NS_ENSURE_ARG_POINTER(cx);
-  NS_ENSURE_ARG_POINTER(cy);
-  *x = mBounds.x;
-  *y = mBounds.y;
-  *cx = mBounds.width;
-  *cy = mBounds.height;
+  }
   return NS_OK;
 }
 
@@ -802,6 +771,23 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetSiteWindow(void * *aParentNativeWindow)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetSiteWindow\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetVisibility(PRBool *aVisibility)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetVisibility\n"));
+  NS_ENSURE_ARG_POINTER(aVisibility);
+  *aVisibility = mVisibility;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetVisibility(PRBool aVisibility)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetVisibility\n"));
+  if (mChromeListener)
+    mChromeListener->Visibility(aVisibility);
+  mVisibility = aVisibility;
+  return NS_OK;
 }
  
 NS_IMETHODIMP GtkMozEmbedChrome::SetFocus(void)
@@ -1142,6 +1128,12 @@ GtkMozEmbedChrome::Create(void)
 }
 
 NS_IMETHODIMP
+GtkMozEmbedChrome::Destroy(void)
+{
+    return DestroyBrowserWindow();
+}
+
+NS_IMETHODIMP
 GtkMozEmbedChrome::Repaint(PRBool force)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1171,22 +1163,6 @@ GtkMozEmbedChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-GtkMozEmbedChrome::GetVisibility(PRBool *aVisibility)
-{
-  NS_ENSURE_ARG_POINTER(aVisibility);
-  *aVisibility = mVisibility;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GtkMozEmbedChrome::SetVisibility(PRBool aVisibility)
-{
-  mVisibility = aVisibility;
-  if (mChromeListener)
-    mChromeListener->Visibility(aVisibility);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 GtkMozEmbedChrome::GetMainWidget(nsIWidget * *aMainWidget)
@@ -1199,3 +1175,46 @@ GtkMozEmbedChrome::FocusAvailable(nsIBaseWindow *aCurrentFocus, PRBool *aTookFoc
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetPosition(PRInt32 *x, PRInt32 *y)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetPosition\n"));
+  return GetDimensions(DIM_FLAGS_POSITION, x, y, nsnull, nsnull);
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetPosition(PRInt32 x, PRInt32 y)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetPosition\n"));
+  return SetDimensions(DIM_FLAGS_POSITION, x, y, 0, 0);
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetSize(PRInt32 *cx, PRInt32 *cy)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetSize\n"));
+  return GetDimensions(DIM_FLAGS_SIZE_INNER, nsnull, nsnull, cx, cy);
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetSize\n"));
+  return SetDimensions(DIM_FLAGS_SIZE_INNER, 0, 0, cx, cy);
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetPositionAndSize(PRInt32 x, PRInt32 y,
+                                                   PRInt32 cx, PRInt32 cy,
+                                                   PRBool fRepaint)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetPositionAndSize %d %d %d %d\n",
+                                   x, y, cx, cy));
+  return SetDimensions(DIM_FLAGS_POSITION | DIM_FLAGS_SIZE_INNER, x, y, cx, cy);
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetPositionAndSize(PRInt32 *x, PRInt32 *y,
+                                                   PRInt32 *cx, PRInt32 *cy)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetPositionAndSize %d %d %d %d\n",
+                                   mBounds.x, mBounds.y, mBounds.width, mBounds.height));
+  return GetDimensions(DIM_FLAGS_POSITION | DIM_FLAGS_SIZE_INNER, x, y, cx, cy);
+}
+
+

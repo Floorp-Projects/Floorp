@@ -378,11 +378,12 @@ GtkMozEmbedPrivate::Resize(GtkWidget *aWidget)
 					   aWidget->allocation.width,
 					   aWidget->allocation.height,
 					   PR_TRUE);
-  nsCOMPtr<nsIWebBrowserSiteWindow> embedSiteWindow = do_QueryInterface(mEmbed);
-  embedSiteWindow->SetPositionAndSize(0, 0,
-				      aWidget->allocation.width, 
-				      aWidget->allocation.height,
-				      PR_TRUE);
+  nsCOMPtr<nsIEmbeddingSiteWindow> embedSiteWindow = do_QueryInterface(mEmbed);
+  embedSiteWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
+				 nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
+				 0, 0,
+				 aWidget->allocation.width, 
+				 aWidget->allocation.height);
   return NS_OK;
 }
 

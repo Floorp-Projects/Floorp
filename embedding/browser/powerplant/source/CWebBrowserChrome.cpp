@@ -48,11 +48,12 @@
 
 // Interfaces needed to be included
 
+// Defines
+#define USE_BALLOONS_FOR_TOOL_TIPS 0 // Using balloons for this is really obnoxious
+
 // Constants
 const PRInt32     kGrowIconSize = 15;
 
-// Static Variables
-vector<CWebBrowserChrome*> CWebBrowserChrome::mgBrowserList;
 
 class CWebBrowserPrompter : public nsIPrompt
 {
@@ -89,15 +90,10 @@ CWebBrowserChrome::CWebBrowserChrome() :
    mBrowserWindow(nsnull), mBrowserShell(nsnull), mPreviousBalloonState(false)
 {
 	NS_INIT_REFCNT();
-	
-	mgBrowserList.push_back(this);
 }
 
 CWebBrowserChrome::~CWebBrowserChrome()
 {
-  vector<CWebBrowserChrome*>::iterator  iter = find(mgBrowserList.begin(), mgBrowserList.end(), this);
-  if (iter != mgBrowserList.end())
-    mgBrowserList.erase(iter);
 }
 
 //*****************************************************************************
@@ -112,7 +108,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
@@ -217,13 +213,6 @@ NS_IMETHODIMP CWebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt3
    {
       // CreateWindow can throw an we're being called from mozilla, so we need to catch
       theWindow = CBrowserWindow::CreateWindow(chromeMask, aCX, aCY);
-
-      // HACK Alert: Because nsIWebBrowserSiteWindow does not have a visibility attribute,
-      // our window will never be told to show itself. If we want it ever to show, we have
-      // to do it here. Once <http://bugzilla.mozilla.org/show_bug.cgi?id=68581> is fixed,
-      // remove this.
-
-      theWindow->SetVisibility(PR_TRUE);
    }
    catch (...)
    {
@@ -235,49 +224,18 @@ NS_IMETHODIMP CWebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt3
    return aBrowserShell->GetWebBrowser(aWebBrowser);    
 }
 
-/* boolean isWindowModal (); */
+NS_IMETHODIMP CWebBrowserChrome::DestroyBrowserWindow()
+{
+    delete mBrowserWindow;
+    return NS_OK;
+}
+
 NS_IMETHODIMP CWebBrowserChrome::IsWindowModal(PRBool *_retval)
 {
     *_retval = PR_FALSE;
     return NS_OK;
 }
 
-
-#if 0
-/* Just commenting out for now because it looks like somebody went to
-   a lot of work here. This method has been removed from nsIWebBrowserChrome
-   per the 5 Feb 01 API review, to be handled one level further down
-   in nsDocShellTreeOwner.
-*/
-NS_IMETHODIMP CWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
-                                                  	  nsIDocShellTreeItem ** aBrowserItem)
-{
-   NS_ENSURE_ARG(aName);
-   NS_ENSURE_ARG_POINTER(aBrowserItem);
-   *aBrowserItem = nsnull;
-
-   vector<CWebBrowserChrome*>::iterator  iter = mgBrowserList.begin();
-   while (iter < mgBrowserList.end())
-   {
-      CWebBrowserChrome* aChrome = *iter++;
-      if (aChrome == this)
-      	continue;	// Our tree has already been searched???
-
-      NS_ENSURE_TRUE(aChrome->BrowserShell(), NS_ERROR_FAILURE);
-      nsCOMPtr<nsIWebBrowser> webBrowser;
-      aChrome->BrowserShell()->GetWebBrowser(getter_AddRefs(webBrowser));
-      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(webBrowser));
-      NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-      docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aBrowserItem);
- 
-      if (*aBrowserItem)
-         break;
-   }
-
-   return NS_OK; // Return OK even if we didn't find it???
-}
-#endif
 
 NS_IMETHODIMP CWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
@@ -371,106 +329,134 @@ CWebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 
 //*****************************************************************************
-// CWebBrowserChrome::nsIWebBrowserSiteWindow
+// CWebBrowserChrome::nsIEmbeddingSiteWindow
 //*****************************************************************************   
 
-NS_IMETHODIMP CWebBrowserChrome::Destroy()
+NS_IMETHODIMP CWebBrowserChrome::SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
-   delete mBrowserWindow;
-   return NS_OK;
+    NS_ENSURE_STATE(mBrowserWindow);
+
+    nsresult rv = NS_OK;
+    CBrowserShell *browserShell;
+        
+    if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION)    // setting position
+    {
+        if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER)
+        {
+            // Don't allow setting the position of the embedded area
+            rv = NS_ERROR_UNEXPECTED;
+        }
+        else // (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
+        {
+            mBrowserWindow->MoveWindowTo(x, y);
+        }
+    }
+    else                                                        // setting size
+    {
+        if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER)
+        {
+            browserShell = mBrowserWindow->GetBrowserShell();
+            NS_ENSURE_TRUE(browserShell, NS_ERROR_NULL_POINTER);
+            SDimension16 curSize;
+            browserShell->GetFrameSize(curSize);
+            mBrowserWindow->ResizeWindowBy(cx - curSize.width, cy - curSize.height);
+        }
+        else // (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
+        {
+            if (mBrowserWindow->HasAttribute(windAttr_Resizable /*windAttr_SizeBox*/))
+                cy += 15;
+            mBrowserWindow->ResizeWindowTo(cx, cy);
+        }
+    }
+    return rv;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::SetPosition(PRInt32 x, PRInt32 y)
+NS_IMETHODIMP CWebBrowserChrome::GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_STATE(mBrowserWindow);
 
-   mBrowserWindow->MoveWindowTo(x, y);
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::GetPosition(PRInt32* x, PRInt32* y)
-{
-   NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   Rect  bounds;
-   mBrowserWindow->GetGlobalBounds(bounds);
-   if (x)
-      *x = bounds.left;
-   if (y)
-      *y = bounds.top;
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   mBrowserWindow->ResizeWindowTo(cx, cy + kGrowIconSize);
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::GetSize(PRInt32* cx, PRInt32* cy)
-{
-   NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   Rect  bounds;
-   mBrowserWindow->GetGlobalBounds(bounds);
-   if (cx)
-       *cx = bounds.right - bounds.left;
-   if (cy)
-       *cy = bounds.bottom - bounds.top - kGrowIconSize;
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   Rect  bounds;
-   bounds.top = y;
-   bounds.left = x;
-   bounds.bottom = y + cy + kGrowIconSize;
-   bounds.right = x + cx;
-
-   mBrowserWindow->DoSetBounds(bounds);
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx, PRInt32* cy)
-{
-   NS_ENSURE_ARG_POINTER(x && y && cx && cy);
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   Rect  bounds;
-   mBrowserWindow->GetGlobalBounds(bounds);
-   *x = bounds.left;
-   *y = bounds.top;
-   *cx = bounds.right - bounds.left;
-   *cy = bounds.bottom - bounds.top - kGrowIconSize;
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::GetSiteWindow(void ** aParentNativeWindow)
-{
-   NS_ENSURE_ARG_POINTER(aParentNativeWindow);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+    nsresult rv = NS_OK;
+    CBrowserShell *browserShell;
+    Rect bounds;
+        
+    if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION)    // getting position
+    {
+        if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER)
+        {
+            browserShell = mBrowserWindow->GetBrowserShell();
+            NS_ENSURE_TRUE(browserShell, NS_ERROR_NULL_POINTER);
+            SPoint32 curPos;
+            browserShell->GetFrameLocation(curPos);
+            if (x)
+                *x = curPos.h;
+            if (y)
+                *y = curPos.v;
+        }
+        else // (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
+        {
+            mBrowserWindow->GetGlobalBounds(bounds);
+            if (x)
+                *x = bounds.left;
+            if (y)
+                *y = bounds.top;
+        }
+    }
+    else                                                        // getting size
+    {
+        if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER)
+        {
+            browserShell = mBrowserWindow->GetBrowserShell();
+            NS_ENSURE_TRUE(browserShell, NS_ERROR_NULL_POINTER);
+            SDimension16 curSize;
+            browserShell->GetFrameSize(curSize);
+            if (cx)
+                *cx = curSize.width;
+            if (cy)
+                *cy = curSize.height;
+        }
+        else // (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
+        {
+            mBrowserWindow->GetGlobalBounds(bounds);
+            if (cx)
+                *cx = bounds.right - bounds.left;
+            if (cy)
+            {
+                *cy = bounds.bottom - bounds.top;
+                if (mBrowserWindow->HasAttribute(windAttr_Resizable /*windAttr_SizeBox*/))
+                    *cy -= 15;
+            }
+        }
+    }
+    return rv;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::SetFocus()
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::GetTitle(PRUnichar** aTitle)
+NS_IMETHODIMP CWebBrowserChrome::GetVisibility(PRBool *aVisibility)
 {
-   NS_ENSURE_ARG_POINTER(aTitle);
+    NS_ENSURE_STATE(mBrowserWindow);
+    NS_ENSURE_ARG_POINTER(aVisibility);
+    
+    *aVisibility = mBrowserWindow->IsVisible();
+    return NS_OK;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::SetVisibility(PRBool aVisibility)
+{
+    NS_ENSURE_STATE(mBrowserWindow);
+    
+    mBrowserWindow->SetVisibility(aVisibility);
+    return NS_OK;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::GetTitle(PRUnichar * *aTitle)
+{
    NS_ENSURE_STATE(mBrowserWindow);
+   NS_ENSURE_ARG_POINTER(aTitle);
 
    Str255         pStr;
    nsAutoString   titleStr;
@@ -482,16 +468,21 @@ NS_IMETHODIMP CWebBrowserChrome::GetTitle(PRUnichar** aTitle)
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
+NS_IMETHODIMP CWebBrowserChrome::SetTitle(const PRUnichar * aTitle)
 {
     NS_ENSURE_STATE(mBrowserWindow);
-
+    NS_ENSURE_ARG(aTitle);
+    
     Str255          pStr;
 	
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(aTitle), pStr);
     mBrowserWindow->SetDescriptor(pStr);
-   
     return NS_OK;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //*****************************************************************************
@@ -1055,10 +1046,14 @@ CBrowserShell*& CWebBrowserChrome::BrowserShell()
 NS_IMETHODIMP
 CWebBrowserChrome::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
 {
-  nsAutoString tipText ( aTipText );
-  const char* printable = tipText.ToNewCString();
-  printf("--------- SHOW TOOLTIP AT %ld %ld, |%s|\n", aXCoords, aYCoords, printable );
-  
+  nsCAutoString printable;
+  CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(aTipText), printable);
+
+#ifdef DEBUG
+  printf("--------- SHOW TOOLTIP AT %ld %ld, |%s|\n", aXCoords, aYCoords, (const char *)printable );
+#endif
+
+#if USE_BALLOONS_FOR_TOOL_TIPS  
   Point where;
   ::GetMouse ( &where );
   ::LocalToGlobal ( &where );
@@ -1071,17 +1066,22 @@ CWebBrowserChrome::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUni
   mPreviousBalloonState = ::HMGetBalloons();
   ::HMSetBalloons ( true );
   OSErr err = ::HMShowBalloon ( &helpRec, where, NULL, NULL, 0, 0, 0 );
-  
-  nsMemory::Free( (void*)printable );
-  
+#endif
+    
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CWebBrowserChrome::OnHideTooltip()
 {
+#ifdef DEBUG
   printf("--------- HIDE TOOLTIP\n");
+#endif
+
+#if USE_BALLOONS_FOR_TOOL_TIPS
   ::HMRemoveBalloon();
   ::HMSetBalloons ( mPreviousBalloonState );
-    return NS_OK;
+#endif
+
+  return NS_OK;
 }
