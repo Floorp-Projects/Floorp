@@ -25,16 +25,16 @@ DEPTH = ..\..\..
 
 REQUIRES = java plug xpcom raptor
 
-OBJS = .\$(OBJDIR)\npsimple.obj \
-       .\$(OBJDIR)\stubs.obj \
-       .\$(OBJDIR)\stubs2.obj
+OBJS = .\$(OBJDIR)\npsimple.obj
+#       .\$(OBJDIR)\stubs.obj \
+#       .\$(OBJDIR)\stubs2.obj
 
 JDIRS = .
 
-xJRI_GEN =		       \
-	Simple		       \
-        java.lang.Object       \
-	netscape.plugin.Plugin \
+#xJRI_GEN =		       \
+#	Simple		       \
+#        java.lang.Object       \
+#	netscape.plugin.Plugin \
 
 MAKE_OBJ_TYPE=DLL
 #//------------------------------------------------------------------------
@@ -84,5 +84,5 @@ LCFLAGS = $(LCFLAGS) -DNEW_PLUGIN_STREAM_API
 
 install:: $(DLL)
 #        $(MAKE_INSTALL) $(XPDIST)\classes11\Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
-        $(MAKE_INSTALL) Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
+#        $(MAKE_INSTALL) Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
         $(MAKE_INSTALL) $(OBJDIR)\npsimple.dll $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple

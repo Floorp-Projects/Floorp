@@ -38,15 +38,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "nsplugin.h"
-#include "nsIJRILiveConnectPlugin.h"
-#include "nsIJRILiveConnectPlugInstPeer.h"
-/*------------------------------------------------------------------------------
- * Define IMPLEMENT_Simple before including Simple.h to state that we're
- * implementing the native methods of this plug-in here, and consequently
- * need to access it's protected and private memebers.
- *----------------------------------------------------------------------------*/
-#define IMPLEMENT_Simple
-#include "Simple.h"
+#include "nsIServiceManager.h"
 /*------------------------------------------------------------------------------
  * Windows Includes
  *----------------------------------------------------------------------------*/
@@ -112,12 +104,6 @@ typedef struct _PlatformInstance
 } PlatformInstance;
 #endif /* macintosh */
 
-/*------------------------------------------------------------------------------
- * We'll keep a global execution environment around to make our life simpler
- *----------------------------------------------------------------------------*/
-
-JRIEnv* env;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Simple Plugin Classes
@@ -128,7 +114,7 @@ JRIEnv* env;
 // instance of this class is kept around for as long as there are
 // plugin instances outstanding.
 
-class SimplePlugin : public nsIJRILiveConnectPlugin {
+class SimplePlugin : public nsIPlugin {
 public:
     
     ////////////////////////////////////////////////////////////////////////////
@@ -147,7 +133,7 @@ public:
     // instances are created. It is passed browserInterfaces on which QueryInterface
     // may be used to obtain an nsIPluginManager, and other interfaces.
     NS_IMETHOD
-    Initialize(nsISupports* browserInterfaces);
+    Initialize(void);
 
     // (Corresponds to NPP_Shutdown.)
     // Called when the browser is done with the plugin factory, or when
@@ -175,25 +161,18 @@ public:
     // (e.g. by going back in the window history) after previously being stopped
     // by the Stop method. 
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIJRILiveConnectPlugin:
-
-    // (Corresponds to NPP_GetJavaClass.)
-    NS_IMETHOD
-    GetJavaClass(jref *result);
-
-    ////////////////////////////////////////////////////////////////////////////
     // SimplePlugin specific methods:
 
-    SimplePlugin(void);
+    SimplePlugin(nsISupports* aManager);
     virtual ~SimplePlugin(void);
 
     NS_DECL_ISUPPORTS
 
-    nsIPluginManager* GetPluginManager(void) { return mgr; }
+    nsIPluginManager* GetPluginManager(void) { return mPluginManager; }
 
 protected:
-    nsIPluginManager* mgr;
+    nsIPluginManager* mPluginManager;
+	nsIServiceManager* mServiceManager;
 
 };
 
@@ -249,7 +228,12 @@ public:
     NS_IMETHOD
     SetWindow(nsPluginWindow* window);
 
-#ifndef NEW_PLUGIN_STREAM_API
+#ifdef NEW_PLUGIN_STREAM_API
+
+    NS_IMETHOD
+    NewStream(nsIPluginStreamListener** listener);
+
+#else
 
     // (Corresponds to NPP_NewStream.)
     NS_IMETHOD
@@ -281,7 +265,6 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    void            DisplayJavaMessage(char* msg, int len);
     void            PlatformNew(void);
     nsresult        PlatformDestroy(void);
     nsresult    	PlatformSetWindow(nsPluginWindow* window);
@@ -328,7 +311,7 @@ public:
      * used to cancel the URL load..
      */
     NS_IMETHOD
-    OnStartBinding(const char* url, const nsPluginStreamInfo* info);
+    OnStartBinding(const char* url, nsIPluginStreamInfo* pluginInfo);
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -341,8 +324,9 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnDataAvailable(const char* url, nsIPluginInputStream* input,
-                    PRUint32 offset, PRUint32 length);
+    OnDataAvailable(const char* url, nsIInputStream* input,
+                    PRUint32 offset, PRUint32 length, 
+					nsIPluginStreamInfo* pluginInfo);
 
     NS_IMETHOD
     OnFileAvailable(const char* url, const char* fileName);
@@ -359,7 +343,13 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnStopBinding(const char* url, nsresult status);
+    OnStopBinding(const char* url, nsresult status, nsIPluginStreamInfo* pluginInfo);
+
+    NS_IMETHOD
+    OnNotify(const char* url, nsresult status);
+
+    NS_IMETHOD
+    GetStreamType(nsPluginStreamType *result);
 
     ////////////////////////////////////////////////////////////////////////////
     // SimplePluginStreamListener specific methods:
@@ -368,7 +358,6 @@ public:
     virtual ~SimplePluginStreamListener(void);
 
 protected:
-    SimplePluginInstance*       fInst;
     const char*                 fMessageName;
 
 };
@@ -396,7 +385,7 @@ public:
      *  @return number of bytes read or -1 if error
      */   
     NS_IMETHOD
-    Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aWriteCount); 
+    Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount); 
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginStream:
@@ -412,26 +401,23 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsSimplePluginStream specific methods:
 
-    SimplePluginStream(nsIPluginStreamPeer* peer, SimplePluginInstance* inst);
+    SimplePluginStream(nsIPluginStreamPeer* peer);
     virtual ~SimplePluginStream(void);
 
     NS_DECL_ISUPPORTS
 
 protected:
     nsIPluginStreamPeer*        fPeer;
-    SimplePluginInstance*       fInst;
-
 };
 
 #endif // !NEW_PLUGIN_STREAM_API
 
 // Interface IDs we'll need:
 static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
-static NS_DEFINE_IID(kIJRILiveConnectPluginIID, NS_IJRILIVECONNECTPLUGIN_IID);
-static NS_DEFINE_IID(kIJRILiveConnectPluginInstancePeerIID, NS_IJRILIVECONNECTPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-static NS_DEFINE_IID(kIJRIEnvIID, NS_IJRIENV_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
+static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
 
 #ifdef NEW_PLUGIN_STREAM_API
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
@@ -455,18 +441,30 @@ static PRBool gPluginLocked = PR_FALSE;
 // SimplePlugin Methods
 ////////////////////////////////////////////////////////////////////////////////
 
-SimplePlugin::SimplePlugin()
-    : mgr(NULL)
+SimplePlugin::SimplePlugin(nsISupports* aService)
 {
     NS_INIT_REFCNT();
-    gPluginObjectCount++;
+
+	nsISupports* result;
+	aService->QueryInterface(kIServiceManagerIID, (void**)&mServiceManager);
+
+	if(mServiceManager->GetService(kCPluginManagerCID, kIPluginManagerIID, &result, NULL) != NS_OK)
+		return;
+
+	result->QueryInterface(kIPluginManagerIID, (void**) &mPluginManager);
+ 
+	gPluginObjectCount++;
 }
 
 SimplePlugin::~SimplePlugin(void)
 {
+	if(mPluginManager)
+		mPluginManager->Release();
+
+	if(mServiceManager)
+		mServiceManager->Release();
+
     gPluginObjectCount--;
-    if (env)
-        Simple::_unuse(env);
 }
 
 // These macros produce simple version of QueryInterface and AddRef.
@@ -477,12 +475,7 @@ SimplePlugin::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER; 
-    } 
-    if (aIID.Equals(kIJRILiveConnectPluginIID)) {
-        *aInstancePtr = (void*) this; 
-        AddRef(); 
-        return NS_OK; 
-    } 
+    }  
     static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID); 
     if (aIID.Equals(kIPluginIID)) {
         *aInstancePtr = (void*) this; 
@@ -515,14 +508,15 @@ NS_IMPL_RELEASE(SimplePlugin);
 SimplePlugin* gPlugin = NULL;
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory)
 {
     if (aClass.Equals(kIPluginIID)) {
         if (gPlugin) {
             *aFactory = gPlugin;
             return NS_OK;
         }
-        SimplePlugin* fact = new SimplePlugin();
+
+        SimplePlugin* fact = new SimplePlugin(serviceMgr);
         if (fact == NULL) 
             return NS_ERROR_OUT_OF_MEMORY;
         fact->AddRef();
@@ -558,20 +552,14 @@ SimplePlugin::LockFactory(PRBool aLock)
 }
 
 NS_METHOD
-SimplePlugin::Initialize(nsISupports* browserInterfaces)
+SimplePlugin::Initialize()
 {
-    if (browserInterfaces->QueryInterface(kIPluginManagerIID, 
-                                          (void**)&mgr) != NS_OK) {
-        return NS_ERROR_FAILURE;
-    }
     return NS_OK;
 }
 
 NS_METHOD
 SimplePlugin::Shutdown(void)
 {
-    mgr->Release();     // QueryInterface in Initialize
-    mgr = NULL;
     return NS_OK;
 }
 
@@ -607,37 +595,6 @@ SimplePlugin::GetValue(nsPluginVariable variable, void *value)
     return err;
 }
 
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * GetJavaClass:
- *
- * GetJavaClass is called during initialization to ask your plugin
- * what its associated Java class is. If you don't have one, just return
- * NULL. Otherwise, use the javah-generated "use_" function to both
- * initialize your class and return it. If you can't find your class, an
- * error will be signalled by "use_" and will cause the Navigator to
- * complain to the user.
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-NS_METHOD
-SimplePlugin::GetJavaClass(jref *result)
-{
-    struct java_lang_Class* myClass;
-    if (mgr->QueryInterface(kIJRIEnvIID, (void**)&env) == NS_NOINTERFACE)
-        return NS_ERROR_FAILURE;    // Java disabled
-
-    myClass = Simple::_use(env);
-
-    if (myClass == NULL) {
-        /*
-        ** If our class doesn't exist (the user hasn't installed it) then
-        ** don't allow any of the Java stuff to happen.
-        */
-        env = NULL;
-    }
-    *result = (jref)myClass;
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // SimplePluginInstance Methods
 ////////////////////////////////////////////////////////////////////////////////
@@ -653,7 +610,6 @@ SimplePluginInstance::~SimplePluginInstance(void)
 {
     gPluginObjectCount--;
     PlatformDestroy(); // Perform platform specific cleanup
-    DisplayJavaMessage("Calling SimplePluginInstance::Release.", -1);
 }
 
 // These macros produce simple version of QueryInterface and AddRef.
@@ -696,26 +652,6 @@ SimplePluginInstance::GetPeer(nsIPluginInstancePeer* *result)
 NS_METHOD
 SimplePluginInstance::Start(void)
 {
-    /* Show off some of that Java functionality: */
-    if (env) {
-        jint v;
-        char factString[60];
-
-        /*
-        ** Call the DisplayJavaMessage utility function to cause Java to
-        ** write to the console and to stdout:
-        */
-        DisplayJavaMessage("Hello world from npsimple!", -1); 
-
-        /*
-        ** Also test out that fancy factorial method. It's a static
-        ** method, so we'll need to use the class object in order to call
-        ** it:
-        */
-        v = Simple::fact(env, Simple::_class(env), 10);
-        sprintf(factString, "my favorite function returned %d\n", v);
-        DisplayJavaMessage(factString, -1);
-    }
 
 #ifdef NEW_PLUGIN_STREAM_API
     // Try getting some streams:
@@ -723,16 +659,13 @@ SimplePluginInstance::Start(void)
                                         new SimplePluginStreamListener(this, "http://warp (Normal)"));
 
     gPlugin->GetPluginManager()->GetURL(this, "http://home.netscape.com", NULL,
-                                        new SimplePluginStreamListener(this, "http://home.netscape.com (AsFile)"),
-                                        nsPluginStreamType_AsFile);
+                                        new SimplePluginStreamListener(this, "http://home.netscape.com (AsFile)"));
 
     gPlugin->GetPluginManager()->GetURL(this, "http://warp/java", NULL,
-                                        new SimplePluginStreamListener(this, "http://warp/java (AsFileOnly)"),
-                                        nsPluginStreamType_AsFileOnly);
+                                        new SimplePluginStreamListener(this, "http://warp/java (AsFileOnly)"));
 
     gPlugin->GetPluginManager()->GetURL(this, "http://warp/java/oji", NULL,
-                                        new SimplePluginStreamListener(this, "http://warp/java/oji (Seek)"),
-                                        nsPluginStreamType_Seek);
+                                        new SimplePluginStreamListener(this, "http://warp/java/oji (Seek)"));
 #endif
 
     return NS_OK;
@@ -768,7 +701,6 @@ NS_METHOD
 SimplePluginInstance::SetWindow(nsPluginWindow* window)
 {
     nsresult result;
-    DisplayJavaMessage("Calling SimplePluginInstance::SetWindow.", -1); 
 
     /*
      * PLUGIN DEVELOPERS:
@@ -782,7 +714,18 @@ SimplePluginInstance::SetWindow(nsPluginWindow* window)
     return result;
 }
 
-#ifndef NEW_PLUGIN_STREAM_API
+#ifdef NEW_PLUGIN_STREAM_API
+
+NS_METHOD
+SimplePluginInstance::NewStream(nsIPluginStreamListener** listener)
+{
+	if(listener != NULL)
+		*listener = new SimplePluginStreamListener(this, "http://warp");
+
+	return NS_OK;
+}
+
+#else
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NewStream:
@@ -796,9 +739,8 @@ SimplePluginInstance::SetWindow(nsPluginWindow* window)
 
 NS_METHOD
 SimplePluginInstance::NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result)
-{
-    DisplayJavaMessage("Calling SimplePluginInstance::NewStream.", -1); 
-    SimplePluginStream* strm = new SimplePluginStream(peer, this);
+{ 
+    SimplePluginStream* strm = new SimplePluginStream(peer);
     if (strm == NULL) 
         return NS_ERROR_OUT_OF_MEMORY;
     strm->AddRef();
@@ -815,7 +757,6 @@ SimplePluginInstance::NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *res
 NS_METHOD
 SimplePluginInstance::Print(nsPluginPrint* printInfo)
 {
-    DisplayJavaMessage("Calling SimplePluginInstance::Print.", -1); 
 
     if (printInfo == NULL)
         return NS_ERROR_FAILURE;
@@ -929,13 +870,12 @@ SimplePluginInstance::GetValue(nsPluginInstanceVariable variable, void *value)
 
 SimplePluginStreamListener::SimplePluginStreamListener(SimplePluginInstance* inst,
                                                        const char* msgName)
-    : fInst(inst), fMessageName(msgName)
+    : fMessageName(msgName)
 {
     gPluginObjectCount++;
     NS_INIT_REFCNT();
     char msg[256];
     sprintf(msg, "### Creating SimplePluginStreamListener for %s\n", fMessageName);
-    fInst->DisplayJavaMessage(msg, -1);
 }
 
 SimplePluginStreamListener::~SimplePluginStreamListener(void)
@@ -943,7 +883,6 @@ SimplePluginStreamListener::~SimplePluginStreamListener(void)
     gPluginObjectCount--;
     char msg[256];
     sprintf(msg, "### Destroying SimplePluginStreamListener for %s\n", fMessageName);
-    fInst->DisplayJavaMessage(msg, -1);
 }
 
 // This macro produces a simple version of QueryInterface, AddRef and Release.
@@ -952,31 +891,32 @@ SimplePluginStreamListener::~SimplePluginStreamListener(void)
 NS_IMPL_ISUPPORTS(SimplePluginStreamListener, kIPluginStreamListenerIID);
 
 NS_METHOD
-SimplePluginStreamListener::OnStartBinding(const char* url, const nsPluginStreamInfo* info)
+SimplePluginStreamListener::OnStartBinding(const char* url, 
+										   nsIPluginStreamInfo* pluginInfo)
 {
     char msg[256];
     sprintf(msg, "### Opening plugin stream for %s\n", fMessageName);
-    fInst->DisplayJavaMessage(msg, -1);
     return NS_OK;
 }
 
 NS_METHOD
-SimplePluginStreamListener::OnDataAvailable(const char* url, nsIPluginInputStream* input,
-                                            PRUint32 offset, PRUint32 length)
+SimplePluginStreamListener::OnDataAvailable(const char* url, nsIInputStream* input,
+                                            PRUint32 offset, PRUint32 length,
+											nsIPluginStreamInfo* pluginInfo)
 {
     if (strcmp(url, "http://warp/java/oji/") == 0 && offset != 0) {
         // Try closing the stream prematurely
         input->Close();
         return NS_OK;
     }
+
     char* buffer = new char[length];
     if (buffer) {
-        PRInt32 amountRead = 0;
+        PRUint32 amountRead = 0;
         nsresult rslt = input->Read(buffer, offset, length, &amountRead);
         if (rslt == NS_OK) {
             char msg[256];
             sprintf(msg, "### Received %d bytes at %d for %s\n", length, offset, fMessageName);
-            fInst->DisplayJavaMessage(msg, -1);
         }
         delete buffer;
     }
@@ -988,17 +928,29 @@ SimplePluginStreamListener::OnFileAvailable(const char* url, const char* fileNam
 {
     char msg[256];
     sprintf(msg, "### File available for %s: %s\n", fMessageName, fileName);
-    fInst->DisplayJavaMessage(msg, -1);
     return NS_OK;
 }
 
 NS_METHOD
-SimplePluginStreamListener::OnStopBinding(const char* url, nsresult status)
+SimplePluginStreamListener::OnStopBinding(const char* url, nsresult status, 
+										  nsIPluginStreamInfo* pluginInfo)
 {
     char msg[256];
     sprintf(msg, "### Closing plugin stream for %s\n", fMessageName);
-    fInst->DisplayJavaMessage(msg, -1);
     return NS_OK;
+}
+
+NS_METHOD
+SimplePluginStreamListener::OnNotify(const char* url, nsresult status)
+{
+	return NS_OK;
+}
+
+NS_METHOD
+SimplePluginStreamListener::GetStreamType(nsPluginStreamType *result)
+{
+	*result = nsPluginStreamType_Normal;
+	return NS_OK;
 }
 
 #else // !NEW_PLUGIN_STREAM_API
@@ -1007,9 +959,8 @@ SimplePluginStreamListener::OnStopBinding(const char* url, nsresult status)
 // SimplePluginStream Methods
 ////////////////////////////////////////////////////////////////////////////////
 
-SimplePluginStream::SimplePluginStream(nsIPluginStreamPeer* peer, 
-                                       SimplePluginInstance* inst)
-    : fPeer(peer), fInst(inst)
+SimplePluginStream::SimplePluginStream(nsIPluginStreamPeer* peer)
+    : fPeer(peer)
 {
     gPluginObjectCount++;
     NS_INIT_REFCNT();
@@ -1018,7 +969,6 @@ SimplePluginStream::SimplePluginStream(nsIPluginStreamPeer* peer,
 SimplePluginStream::~SimplePluginStream(void)
 {
     gPluginObjectCount--;
-    fInst->DisplayJavaMessage("Calling SimplePluginStream::Release.", -1);
 }
 
 // These macros produce simple version of QueryInterface and AddRef.
@@ -1031,7 +981,6 @@ NS_IMPL_RELEASE(SimplePluginStream);
 NS_METHOD
 SimplePluginStream::Close(void)
 {
-    fInst->DisplayJavaMessage("Calling SimplePluginStream::Close.", -1); 
     return NS_OK;
 }
 
@@ -1057,10 +1006,9 @@ SimplePluginStream::Close(void)
  +++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 NS_METHOD
-SimplePluginStream::Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aWriteCount)
+SimplePluginStream::Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
 {
     PR_ASSERT(aOffset == 0);    // XXX need to handle the non-sequential write case
-    fInst->DisplayJavaMessage((char*)aBuf, aCount); 
     *aWriteCount = aCount;		/* The number of bytes accepted */
     return NS_OK;
 }
@@ -1088,8 +1036,7 @@ SimplePluginStream::GetStreamType(nsPluginStreamType *result)
 
 NS_METHOD
 SimplePluginStream::AsFile(const char* fname)
-{
-    fInst->DisplayJavaMessage("Calling SimplePluginStream::AsFile.", -1); 
+{ 
     return NS_OK;
 }
 
@@ -1097,77 +1044,8 @@ SimplePluginStream::AsFile(const char* fname)
 
 
 /*******************************************************************************
- * SECTION 4 - Java Native Method Implementations
- ******************************************************************************/
-
-JRI_PUBLIC_API(void)
-native_Simple_printToStdout(JRIEnv* env, struct Simple* self, 
-                            struct java_lang_String *s)
-{
-    const char* chars = JRI_GetStringUTFChars(env, s);
-    if (chars == NULL) return;
-    printf(chars);		/* cross-platform UI! */
-}
-
-
-
-/*******************************************************************************
  * SECTION 5 - Utility Method Implementations
- ******************************************************************************/
-
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * DisplayJavaMessage
- *
- * This function is a utility routine that calls back into Java to print
- * messages to the Java Console and to stdout (via the native method,
- * native_Simple_printToStdout, defined below).  Sure, it's not a very
- * interesting use of Java, but it gets the point across.
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-void
-SimplePluginInstance::DisplayJavaMessage(char* msg, int len)
-{
-#ifdef XP_PC
-    OutputDebugString(msg);
-#endif
-
-    Simple* javaPeer;   // instance of the java class (there's no package qualifier)
-    java_lang_String* str;
-
-    if (!env) { /* Java failed to initialize, so do nothing. */
-        return;
-    }
-
-    nsILiveConnectPluginInstancePeer* lcPeer;
-    if (fPeer->QueryInterface(kIJRILiveConnectPluginInstancePeerIID,
-                              (void**)&lcPeer) == NS_NOINTERFACE) {
-        return;    // Browser doesn't support LiveConnect
-    }
-
-    if (len == -1) {
-        len = strlen(msg);
-    }
-    /*
-    ** Use the JRI (see jri.h) to create a Java string from the input
-    ** message:
-    */
-    str = JRI_NewStringUTF(env, msg, len);
-
-    /*
-    ** Use the GetJavaPeer operation to get the Java instance that
-    ** corresponds to our plug-in (an instance of the Simple class):
-    */
-    nsresult err = lcPeer->GetJavaPeer((jobject*)&javaPeer);
-    if (err) return;
-	
-    /*
-    ** Finally, call our plug-in's big "feature" -- the 'doit' method,
-    ** passing the execution environment, the object, and the java
-    ** string:
-    */
-    javaPeer->doit(env, str);
-}
-
+ *******************************************************************************
 
 
 /*------------------------------------------------------------------------------
