@@ -660,18 +660,21 @@ date_parseString(const jschar *s, jsdouble *result)
                 if (date_regionMatches(wtb[k], 0, s, st, i-st, 1)) {
                     int action = ttb[k];
                     if (action != 0)
-                        if (action == 1) /* pm */
-                            if (hour > 12 || hour < 0)
+                        if (action == 1) { /* pm */
+                            if (hour > 12 || hour < 0) {
                                 goto syntax;
-                            else
+                            } else {
                                 hour += 12;
-                        else if (action <= 13) /* month! */
-                            if (mon < 0)
+                            }
+                        } else if (action <= 13) { /* month! */
+                            if (mon < 0) {
                                 mon = /*byte*/ (action - 2);
-                            else
+                            } else {
                                 goto syntax;
-                        else
+                            }
+                        } else {
                             tzoffset = action - 10000;
+                        }
                     break;
                 }
             if (k < 0)
