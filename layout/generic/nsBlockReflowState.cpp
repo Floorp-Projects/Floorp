@@ -336,6 +336,10 @@ public:
                    LineData* aLine,
                    nsReflowStatus aReflowStatus);
 
+  PRBool IsLastLine(nsBlockReflowState& aState,
+                    LineData* aLine,
+                    nsReflowStatus aReflowStatus);
+
   void FindFloaters(LineData* aLine);
 
   void PrepareInlineReflow(nsBlockReflowState& aState, nsIFrame* aFrame, PRBool aIsBlock);
@@ -3306,6 +3310,47 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
   }
 }
 
+PRBool
+nsBlockFrame::IsLastLine(nsBlockReflowState& aState,
+                         LineData* aLine,
+                         nsReflowStatus aReflowStatus)
+{
+  // If the frame is not-complete then there must be another line
+  // following...
+  if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
+    // If any subsequent line has a frame on it then this is not the
+    // last line.
+    LineData* next = aLine->mNext;
+    while (nsnull != next) {
+      if (0 != next->mChildCount) {
+        return PR_FALSE;
+      }
+      next = next->mNext;
+    }
+
+    // If there are next-in-flows and they have any non-empty lines
+    // then this is not the last line (because the pullup code will
+    // pullup frames from the next-in-flows after this line is
+    // placed). Even if the pullup code doesn't pullup, we don't want
+    // to signal the last line except in our last-in-flow.
+    nsBlockFrame* nextInFlow = (nsBlockFrame*) mNextInFlow;
+    while (nsnull != mNextInFlow) {
+      LineData* line = nextInFlow->mLines;
+      while (nsnull != line) {
+        if (0 != next->mChildCount) {
+          return PR_FALSE;
+        }
+        line = line->mNext;
+      }
+      nextInFlow = (nsBlockFrame*) nextInFlow->mNextInFlow;
+    }
+
+    // This is the last line
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 // XXX This is identical to the back end of the block reflow code, not
 // counting the continuation of block frames part. Factor this!
 
@@ -3314,12 +3359,19 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
                         LineData* aLine,
                         nsReflowStatus aReflowStatus)
 {
+  PRBool isLastLine = PR_FALSE;
+  if (NS_STYLE_TEXT_ALIGN_JUSTIFY == aState.mStyleText->mTextAlign) {
+    // For justification we need to know if this line is the last
+    // line. If it is, then justification is disabled.
+    isLastLine = IsLastLine(aState, aLine, aReflowStatus);
+  }
+
   // Align the children. This also determines the actual height and
   // width of the line.
   nsInlineReflow& ir = *aState.mInlineReflow;
   nscoord maxAscent, maxDescent;
   ir.VerticalAlignFrames(aLine->mBounds, maxAscent, maxDescent);
-  ir.HorizontalAlignFrames(aLine->mBounds);
+  ir.HorizontalAlignFrames(aLine->mBounds, isLastLine);
   ir.RelativePositionFrames();
 
   // Calculate the bottom margin for the line.
