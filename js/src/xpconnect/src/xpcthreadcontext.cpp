@@ -170,8 +170,9 @@ nsXPCThreadJSContextStackImpl::Peek(JSContext * *_retval)
         return NS_ERROR_FAILURE;
     }
 
-    if(myStack->GetSize() > 0)
-        *_retval = (JSContext*) myStack->Peek();
+    PRInt32 size = myStack->GetSize();
+    if(size > 0)
+        *_retval = (JSContext*) myStack->ObjectAt(size - 1);
     else
         *_retval = nsnull;
     return NS_OK;
