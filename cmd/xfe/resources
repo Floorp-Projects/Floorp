@@ -2047,6 +2047,12 @@ Show or hide the Location toolbar
 *togglePersonalToolbar.documentationString:	\
 Show or hide the Personal toolbar
 
+*hideNavCenterCmdString:		Hide Navigation Center
+*showNavCenterCmdString:		Show Navigation Center
+*menuBar*toggleNavCenter.mnemonic:	C
+*toggleNavCenter.documentationString:	\
+Show or hide Navigation Center
+
 *menuBar*increaseFont.labelString:	Increase Font
 *menuBar*increaseFont.mnemonic:		c
 *menuBar*increaseFont.acceleratorText:	Alt++
