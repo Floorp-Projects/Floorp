@@ -31,9 +31,9 @@
 class nsIController;
 
 typedef enum {
-eCharsetReloadInit,
-eCharsetReloadRequested,
-eCharsetReloadStopOrigional
+    eCharsetReloadInit,
+    eCharsetReloadRequested,
+    eCharsetReloadStopOrigional
 } eCharsetReloadState;
 
 class nsWebShell : public nsDocShell,
@@ -96,7 +96,6 @@ public:
         const PRUnichar* aURLSpec,
         const PRUnichar* aTargetSpec);
     NS_IMETHOD GetLinkState(const char* aLinkURI, nsLinkState& aState);
-
 
     NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase,
         PRBool aSearchDown, PRBool &aIsFound);
