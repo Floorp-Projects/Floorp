@@ -35,16 +35,20 @@ CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS)
 
-CPPSRCS = nsFontMetricsXlib.cpp \
-	nsDeviceContextXlib.cpp \
-	nsDrawingSurfaceXlib.cpp \
-	nsRegionXlib.cpp \
-	nsImageXlib.cpp \
-	nsRenderingContextXlib.cpp \
+CPPSRCS =\
 	nsDeviceContextSpecFactoryX.cpp \
 	nsDeviceContextSpecXlib.cpp \
-	nsTimer.cpp \
-	nsGfxFactoryXlib.cpp
+	nsDeviceContextXlib.cpp \
+	nsDrawingSurfaceXlib.cpp \
+	nsFontMetricsXlib.cpp \
+	nsGfxFactoryXlib.cpp \
+	nsImageXlib.cpp \
+	nsRegionXlib.cpp \
+	nsRenderingContextXlib.cpp \
+	$(NULL)
+
+CPPSRCS +=\
+	nsTimer_$(MOZ_WIDGET_TOOLKIT).cpp
 
 CSRCS = xlibrgb.c
 
