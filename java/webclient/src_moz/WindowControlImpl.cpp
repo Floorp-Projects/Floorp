@@ -32,7 +32,7 @@
 
 #include "NativeBrowserControl.h"
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeRealize
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeRealize
 (JNIEnv *env, jobject obj, jint windowPtr, jint nativeBCPtr, jint x, jint y, 
  jint width, jint height, jobject aBrowserControlImpl)
 {
@@ -53,6 +53,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     nativeBrowserControl->Realize((void *) windowPtr, &alreadyRealized,
                                   width, height);
 }
+
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetBounds

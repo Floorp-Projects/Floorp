@@ -102,17 +102,20 @@ public void createWindow(int nativeWindow, Rectangle rect)
     final int nativeWin = nativeWindow;
     final int nativeBc = getNativeBrowserControl();
     final BrowserControl bc = getBrowserControl();
-    final Rectangle bounds = rect;
+    final int finalX = rect.x;
+    final int finalY = rect.y;
+    final int finalWidth = rect.width;
+    final int finalHeight = rect.height;
+
     NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
 	    public Object run() {
-		nativeRealize(nativeWin, nativeBc, bounds.x, 
-			      bounds.y, bounds.width, 
-			      bounds.height, bc);
+
+		nativeRealize(nativeWin, nativeBc, finalX, 
+			      finalY, finalWidth, 
+			      finalHeight, bc);
 		return null;
 	    }
 	});
-    
-    
 }
 
 public int getNativeWebShell()
@@ -203,7 +206,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.4 2004/04/20 16:17:41 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.5 2004/04/22 06:41:02 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

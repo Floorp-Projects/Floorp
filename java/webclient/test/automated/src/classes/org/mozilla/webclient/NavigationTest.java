@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.2 2004/04/20 16:17:42 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.3 2004/04/22 06:41:02 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -69,6 +69,7 @@ public class NavigationTest extends WebclientTestCase {
 	frame.setBounds(0, 0, 640, 480);
 	frame.add(canvas, BorderLayout.CENTER);
 	frame.setVisible(true);
+	canvas.setVisible(true);
 	
 	Navigation nav = (Navigation) 
 	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
@@ -78,6 +79,10 @@ public class NavigationTest extends WebclientTestCase {
 
 	System.out.println("Loading url: " + testPage.toURL().toString());
 	nav.loadURL(testPage.toURL().toString());
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+	BrowserControlFactory.appTerminate();
+
     }
 
 }
