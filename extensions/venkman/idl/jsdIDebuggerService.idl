@@ -98,7 +98,7 @@ interface jsdIValue : nsISupports
 [scriptable, uuid(ae89a7e2-1dd1-11b2-8c2f-af82086291a5)]
 interface jsdIScriptHook : nsISupports
 {
-    void onScriptHook (in jsdIContext aCx, in jsdIScript aScript,
+    void onScriptLoaded (in jsdIContext aCx, in jsdIScript aScript,
                        in boolean aCreating);
 
 };
@@ -106,16 +106,16 @@ interface jsdIScriptHook : nsISupports
 [scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
 interface jsdIExecutionHook : nsISupports
 {
-    const unsigned long HOOK_RETURN_HOOK_ERROR     = 0;
-    const unsigned long HOOK_RETURN_CONTINUE       = 1;
-    const unsigned long HOOK_RETURN_ABORT          = 2;
-    const unsigned long HOOK_RETURN_RET_WITH_VAL   = 3;
-    const unsigned long HOOK_RETURN_THROW_WITH_VAL = 4;
-    const unsigned long HOOK_RETURN_CONTINUE_THROW = 5;
+    const unsigned long RETURN_HOOK_ERROR     = 0;
+    const unsigned long RETURN_CONTINUE       = 1;
+    const unsigned long RETURN_ABORT          = 2;
+    const unsigned long RETURN_RET_WITH_VAL   = 3;
+    const unsigned long RETURN_THROW_WITH_VAL = 4;
+    const unsigned long RETURN_CONTINUE_THROW = 5;
 
-    unsigned long onExecutionHook (in jsdIContext aCx,
-                                   in jsdIThreadState aThreadState,
-                                   in unsigned long aType, out nsISupports rval);
+    unsigned long onExecute (in jsdIContext aCx,
+                             in jsdIThreadState aThreadState,
+                             in unsigned long aType, out nsISupports rval);
 };
 
 [scriptable, uuid(01be7f9a-1dd2-11b2-9d55-aaf919b27c73)]
@@ -123,8 +123,10 @@ interface jsdIDebuggerService : nsISupports
 {
     void init ();
 
-    attribute jsdIScriptHook scriptHook;
+    attribute jsdIExecutionHook debugBreakHook;
+    attribute jsdIExecutionHook debuggerHook;
     attribute jsdIExecutionHook interruptHook;
-
+    attribute jsdIScriptHook    scriptHook;
+    
 };
 

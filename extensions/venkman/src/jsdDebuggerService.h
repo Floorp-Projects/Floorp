@@ -54,7 +54,8 @@ class jsdService : public jsdIDebuggerService
     NS_DECL_ISUPPORTS
     NS_DECL_JSDIDEBUGGERSERVICE
 
-    jsdService() : mJSrt(0), mJSDcx(0), mScriptHook(0), mInterruptHook(0)
+    jsdService() : mJSrt(0), mJSDcx(0), mDebugBreakHook(0), mDebuggerHook(0),
+                   mInterruptHook(0), mScriptHook(0)
     {
         NS_INIT_ISUPPORTS();
     }
@@ -63,8 +64,10 @@ class jsdService : public jsdIDebuggerService
   private:
     JSRuntime *mJSrt;
     JSDContext *mJSDcx;
-    nsCOMPtr<jsdIScriptHook> mScriptHook;
+    nsCOMPtr<jsdIExecutionHook> mDebugBreakHook;
+    nsCOMPtr<jsdIExecutionHook> mDebuggerHook;
     nsCOMPtr<jsdIExecutionHook> mInterruptHook;
+    nsCOMPtr<jsdIScriptHook> mScriptHook;
 };
 
 #endif /* JSDSERVICE_H___ */
