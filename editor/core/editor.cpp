@@ -35,6 +35,9 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+
 
 nsEditor::~nsEditor()
 {
@@ -158,13 +161,15 @@ nsEditor::MouseClick(int aX,int aY)
 nsresult
 nsEditor::AppendText(nsString *aStr)
 {
-  COM_auto_ptr<nsIDOMNode> mNode;
-  COM_auto_ptr<nsIDOMText> mText;
+  COM_auto_ptr<nsIDOMNode> currentNode;
+  COM_auto_ptr<nsIDOMNode> textNode;
+  COM_auto_ptr<nsIDOMText> text;
   if (!aStr)
     return NS_ERROR_NULL_POINTER;
-  if (NS_SUCCEEDED(GetCurrentNode(func_AddRefs(mNode))) && 
-      NS_SUCCEEDED(mNode->QueryInterface(kIDOMTextIID, func_AddRefs(mText)))) {
-    mText->AppendData(*aStr);
+  if (NS_SUCCEEDED(GetCurrentNode(func_AddRefs(currentNode))) && 
+      NS_SUCCEEDED(GetFirstTextNode(currentNode,func_AddRefs(textNode))) && 
+      NS_SUCCEEDED(textNode->QueryInterface(kIDOMTextIID, func_AddRefs(text)))) {
+    text->AppendData(*aStr);
   }
 
   return NS_OK;
@@ -176,13 +181,11 @@ nsresult
 nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
 {
   /* If no node set, get first text node */
-  COM_auto_ptr<nsIDOMNode> docNode;
+  COM_auto_ptr<nsIDOMElement> docNode;
 
-  if (NS_SUCCEEDED(mDomInterfaceP->GetFirstChild(func_AddRefs(docNode))))
+  if (NS_SUCCEEDED(mDomInterfaceP->GetDocumentElement(func_AddRefs(docNode))))
   {
-    *aNode = docNode;
-    NS_ADDREF(*aNode);
-    return NS_OK;
+    return docNode->QueryInterface(kIDOMNodeIID,(void **) aNode);
   }
   return NS_ERROR_FAILURE;
 }
@@ -206,7 +209,10 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
     {
       COM_auto_ptr<nsIDOMNode> mNode;
 
-      aNode->GetFirstChild(func_AddRefs(mNode));
+      if (!NS_SUCCEEDED(aNode->GetFirstChild(func_AddRefs(mNode))))
+      {
+        assert(0);
+      }
       while(!answer) 
       {
         GetFirstTextNode(mNode, func_AddRefs(answer));
