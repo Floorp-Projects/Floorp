@@ -35,6 +35,7 @@
 #include "nsIURL.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"
+#include "nsIDNSService.h" // for host error code
 
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
@@ -70,12 +71,12 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mPort = 21;
 
     mLock = nsnull;
-	mPasv = 0;
-	mLastModified = LL_ZERO;
-	mAsyncReadEvent = 0;
-	mWriteCount = 0;
-	mBufferSegmentSize = 0;
-	mBufferMaxSize = 0;
+    mPasv = 0;
+    mLastModified = LL_ZERO;
+    mAsyncReadEvent = 0;
+    mWriteCount = 0;
+    mBufferSegmentSize = 0;
+    mBufferMaxSize = 0;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
@@ -171,6 +172,7 @@ nsFtpConnectionThread::Process() {
                     mState = FTP_ERROR;
                     break;
                 }
+                
 
                 if (0 == read) {
                     // EOF
@@ -797,14 +799,12 @@ nsFtpConnectionThread::S_user() {
                         PROXY_SYNC, getter_AddRefs(proxyprompter));
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
-            static nsAutoString message;
+            nsAutoString message;
             nsXPIDLCString host;
             rv = mURL->GetHost(getter_Copies(host));
             if (NS_FAILED(rv)) return rv;
-            if (message.Length() < 1) {
-                message.AssignWithConversion("Enter username and password for "); //TODO localize it!
-                message.AppendWithConversion(host);
-            }
+            message.AssignWithConversion("Enter username and password for "); //TODO localize it!
+            message.AppendWithConversion(host);
 
             rv = proxyprompter->PromptUsernameAndPassword(message.GetUnicode(),
                     &user, &passwd, &retval);
@@ -873,18 +873,17 @@ nsFtpConnectionThread::S_pass() {
                         PROXY_SYNC, getter_AddRefs(proxyprompter));
             PRUnichar *passwd = nsnull;
             PRBool retval;
-            static nsAutoString message;
+            nsAutoString message;
             nsAutoString title; title.AssignWithConversion("Password");
             
-            if (message.Length() < 1) {
-                nsXPIDLCString host;
-                rv = mURL->GetHost(getter_Copies(host));
-                if (NS_FAILED(rv)) return rv;
-                message.AssignWithConversion("Enter password for "); //TODO localize it!
-		        message += mUsername;
-                message.AppendWithConversion(" on ");
-                message.AppendWithConversion(host);
-            }
+            nsXPIDLCString host;
+            rv = mURL->GetHost(getter_Copies(host));
+            if (NS_FAILED(rv)) return rv;
+            message.AssignWithConversion("Enter password for "); //TODO localize it!
+            message += mUsername;
+            message.AppendWithConversion(" on ");
+            message.AppendWithConversion(host);
+
             rv = proxyprompter->PromptPassword(message.GetUnicode(),
                         title.GetUnicode(),
                         &passwd, &retval);
