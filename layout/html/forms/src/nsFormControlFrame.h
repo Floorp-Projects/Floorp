@@ -304,7 +304,7 @@ protected:
   nscoord      mSuggestedWidth;
   nscoord      mSuggestedHeight;
 
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsIPresContext * mPresContext;
 
   // Reflow Optimization
   nsSize       mCacheSize;

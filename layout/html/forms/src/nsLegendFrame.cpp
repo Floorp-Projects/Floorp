@@ -61,6 +61,7 @@ NS_NewLegendFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 nsLegendFrame::nsLegendFrame()
   : nsAreaFrame()
 {
+  mPresContext    = nsnull;
 }
 
 nsLegendFrame::~nsLegendFrame()
