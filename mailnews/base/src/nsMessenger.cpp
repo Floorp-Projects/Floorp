@@ -125,6 +125,7 @@ public:
   NS_IMETHOD Undo();
   NS_IMETHOD Redo();
   NS_IMETHOD SendUnsentMessages();
+  NS_IMETHOD SetDocumentCharset(const PRUnichar *characterSet);
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
@@ -889,5 +890,10 @@ nsMessenger::SendUnsentMessages()
 		printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
 		pMsgSendLater->SendUnsentMessages(nsnull, SendUnsentMessagesCallback, nsnull); 
 	} 
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
+{
 	return NS_OK;
 }
