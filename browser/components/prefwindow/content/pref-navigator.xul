@@ -38,10 +38,8 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <!DOCTYPE window [
-#ifdef HAVE_SHELL_SERVICE
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-#endif
 <!ENTITY % prefNavigatorDTD SYSTEM "chrome://browser/locale/pref/pref-navigator.dtd" >
 %prefNavigatorDTD;
 ]>
@@ -55,7 +53,6 @@
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-navigator.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <!-- homepage specification -->
   <groupbox>
@@ -105,18 +102,16 @@
     </hbox>
   </groupbox>
 
-#ifdef HAVE_SHELL_SERVICE
   <groupbox orient="horizontal" id="defaultBrowserPrefs">
     <caption label="&defaultBrowserGroup.label;"/>
-      <hbox align="center" flex="1">      
-        <checkbox id="checkForDefault" prefstring="browser.shell.checkDefaultBrowser"
-                  label="&checkForDefault.label;" accesskey="&checkForDefault.accesskey;"
-                  flex="1"/>
-        <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
-                oncommand="checkNow()"/>
-      </hbox>
-   </groupbox>
-#endif
+    <hbox align="center" flex="1">      
+      <checkbox id="checkForDefault" prefstring="browser.shell.checkDefaultBrowser"
+                label="&checkForDefault.label;" accesskey="&checkForDefault.accesskey;"
+                flex="1"/>
+      <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+              oncommand="checkNow()"/>
+    </hbox>
+  </groupbox>
 
   <groupbox>
     <caption label="&connectionsInfo.caption;"/>
