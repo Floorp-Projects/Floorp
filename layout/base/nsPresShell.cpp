@@ -18,6 +18,20 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Steve Clark (buster@netscape.com)
+ *
+ *   IBM Corporation
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 05/03/2000   IBM Corp.       Observer events for reflow states
  */ 
   
 #define PL_ARENA_CONST_ALIGN_MASK 3
@@ -79,6 +93,7 @@
 #include "nsWeakPtr.h"
 #include "plarena.h"
 #include "nsCSSAtoms.h"
+#include "nsIObserverService.h" // for reflow observation
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -734,6 +749,11 @@ public:
 protected:
   virtual ~PresShell();
 
+  /** notify all external reflow observers that reflow of type "aData" is about
+    * to begin.
+    */
+  nsresult NotifyReflowObservers(const char *aData);
+
   nsresult ReconstructFrames(void);
   nsresult CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult);
   nsresult WillCauseReflow();
@@ -789,6 +809,7 @@ protected:
   StackArena*                   mStackArena;
   PRInt32                       mAccumulatedReflowTime;  // Time spent in reflow command processing so far  
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
+  nsCOMPtr<nsIObserverService>  mObserverService; // Observer service for reflow events
 
   // subshell map
   nsDST*            mSubShellMap;  // map of content/subshell pairs
@@ -1146,6 +1167,13 @@ PresShell::Init(nsIDocument* aDocument,
     }
   }
 
+  // cache the observation service
+  mObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID,
+                                   &result);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
   return NS_OK;
 }
 
@@ -1477,6 +1505,31 @@ static void CheckForFocus(nsIDocument* aDocument)
 }
 #endif
 
+
+nsresult
+PresShell::NotifyReflowObservers(const char *aData)
+{
+  if (!aData) { return NS_ERROR_NULL_POINTER; }
+
+  nsresult               observerResult = NS_OK;
+  nsCOMPtr<nsISupports>  pDocument;
+  nsAutoString           sTopic,
+                         sData;
+  if (mDocument && mObserverService) {
+    pDocument = do_QueryInterface( mDocument,
+                                  &observerResult );
+    if (NS_SUCCEEDED( observerResult )) {
+      sTopic.AssignWithConversion( NS_PRESSHELL_REFLOW_TOPIC );
+      sData.AssignWithConversion( aData );
+      observerResult = mObserverService->Notify( pDocument,
+                                                 sTopic.GetUnicode( ),
+                                                 sData.GetUnicode( ) );
+      // notice that we don't really care what the observer service returns
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
@@ -1496,6 +1549,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     }
   }
 #endif
+
+  // notice that we ignore the result
+  NotifyReflowObservers(NS_PRESSHELL_INITIAL_REFLOW);
 
   StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
   
@@ -1631,6 +1687,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
+    // notice that we ignore the result
+  NotifyReflowObservers(NS_PRESSHELL_RESIZE_REFLOW);
   mViewManager->CacheWidgetChanges(PR_TRUE);
 
   StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
@@ -1991,6 +2049,11 @@ PresShell::SelectAll()
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
 {
+
+  // notify any presshell observers about the reflow.
+  // notice that we ignore the result
+  NotifyReflowObservers(NS_PRESSHELL_STYLE_CHANGE_REFLOW);
+
   WillCauseReflow();
 
   nsIFrame* rootFrame;
