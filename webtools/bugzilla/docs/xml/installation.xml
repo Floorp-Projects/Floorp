@@ -202,52 +202,6 @@
         vulnerable to an attack.</para>
       </warning>
 
-      <note>
-        <para>Linux-Mandrake 8.0 includes every
-        required and optional library for Bugzilla. The easiest way to
-        install them is by using the 
-        <filename>urpmi</filename>
-
-        utility. If you follow these commands, you should have everything you
-        need for Bugzilla, and 
-        <filename>checksetup.pl</filename>
-
-        should not complain about any missing libraries. You may already have
-        some of these installed.</para>
-
-        <simplelist>
-          <member>
-            <prompt>bash#</prompt>
-
-            <command>urpmi perl-mysql</command>
-          </member>
-
-          <member>
-            <prompt>bash#</prompt>
-
-            <command>urpmi perl-chart</command>
-          </member>
-
-          <member>
-            <prompt>bash#</prompt>
-
-            <command>urpmi perl-gd</command>
-          </member>
-
-          <member>
-          <prompt>bash#</prompt>
-
-          <command>urpmi perl-MailTools</command>
-
-          (for Bugzilla email integration)</member>
-
-          <member>
-            <prompt>bash#</prompt>
-
-            <command>urpmi apache-modules</command>
-          </member>
-        </simplelist>
-      </note>
       </para>
     </section>
 
@@ -1309,6 +1263,32 @@ system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filena
         to get back to CPAN.</member>
       </simplelist>
       </para>
+
+    </section>
+
+    <section id="os-mandrake">
+      <title>Linux-Mandrake 8.0</title>
+
+      <para>Linux-Mandrake 8.0 includes every required and optional library
+      for Bugzilla. The easiest way to install them is by using the
+      <command>urpmi</command>  utility. If you follow these commands, you
+      should have everything you need for Bugzilla, and
+      <command>./checksetup.pl</command>  should not complain about any
+      missing libraries. You may already have some of these installed.
+      </para>
+
+      <screen>
+<prompt>bash#</prompt> <command>urpmi perl-mysql</command>
+<prompt>bash#</prompt> <command>urpmi perl-chart</command>
+<prompt>bash#</prompt> <command>urpmi perl-gd</command>
+<prompt>bash#</prompt> <command>urpmi perl-MailTools</command>    <co id="test-mailtools"/>
+<prompt>bash#</prompt> <command>urpmi apache-modules</command>
+      </screen>
+      <calloutlist>
+        <callout arearefs="test-mailtools">
+          <para>for Bugzilla e-mail integration</para>
+        </callout>
+      </calloutlist>
 
     </section>
 
