@@ -134,10 +134,7 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 
 	if (bCancel == VARIANT_TRUE)
 	{
-		if (aShell)
-		{
-			aShell->Stop();
-		}
+		return NS_ERROR_ABORT;
 	}
 	else
 	{
