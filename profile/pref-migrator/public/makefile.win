@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..
 
-MODULE=include 
+MODULE=pm_progress 
 
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS= nsIPrefMigration.h   \
