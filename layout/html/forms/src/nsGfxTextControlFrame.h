@@ -508,7 +508,8 @@ protected:
   PRBool mNeedsStyleInit;
   PRBool mDummyInitialized; //DUMMY
   nsIPresContext *mFramePresContext; // not ref counted
-  nsString* mCachedState;
+  nsString* mCachedState; // this is used for caching changed between frame creation
+                          // and full initialization
 };
 
 #endif
