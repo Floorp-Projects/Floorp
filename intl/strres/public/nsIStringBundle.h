@@ -19,29 +19,23 @@
 #ifndef nsIStringBundle_h___
 #define nsIStringBundle_h___
 
-#include "nsIFactory.h"
 #include "nsILocale.h"
 #include "nsIURL.h"
 #include "nsString.h"
 
 // {D85A17C0-AA7C-11d2-9B8C-00805F8A16D9}
-#define NS_ISTRINGBUNDLEFACTORY_IID \
+#define NS_ISTRINGBUNDLESERVICE_IID \
 { 0xd85a17c0, 0xaa7c, 0x11d2, \
   { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 
 // {D85A17C1-AA7C-11d2-9B8C-00805F8A16D9}
-#define NS_STRINGBUNDLEFACTORY_CID \
+#define NS_STRINGBUNDLESERVICE_CID \
 { 0xd85a17c1, 0xaa7c, 0x11d2, \
   { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 
 // {D85A17C2-AA7C-11d2-9B8C-00805F8A16D9}
 #define NS_ISTRINGBUNDLE_IID \
 { 0xd85a17c2, 0xaa7c, 0x11d2, \
-  { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
-
-// {D85A17C3-AA7C-11d2-9B8C-00805F8A16D9}
-#define NS_STRINGBUNDLE_CID \
-{ 0xd85a17c3, 0xaa7c, 0x11d2, \
   { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 
 class nsIStringBundle : public nsISupports
@@ -51,7 +45,7 @@ public:
   NS_IMETHOD GetStringFromName(const nsString& aName, nsString& aResult) = 0;
 };
 
-class nsIStringBundleFactory : public nsIFactory
+class nsIStringBundleService : public nsISupports
 {
 public:
   NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
