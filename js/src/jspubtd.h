@@ -196,6 +196,22 @@ typedef JSBool
  * The *objp out parameter, on success, should be null to indicate that id
  * was not resolved; and non-null, referring to obj or one of its prototypes,
  * if id was resolved.
+ *
+ * This hook instead of JSResolveOp is called via the JSClass.resolve member
+ * if JSCLASS_NEW_RESOLVE is set in JSClass.flags.
+ *
+ * Setting JSCLASS_NEW_RESOLVE and JSCLASS_NEW_RESOLVE_GETS_START further
+ * extends this hook by passing in the starting object on the prototype chain
+ * via *objp.  Thus a resolve hook implementation may define the property id
+ * being resolved in the object in which the id was first sought, rather than
+ * in a prototype object whose class led to the resolve hook being called.
+ *
+ * When using JSCLASS_NEW_RESOLVE_GETS_START, the resolve hook must therefore
+ * null *objp to signify "not resolved".  With only JSCLASS_NEW_RESOLVE and no
+ * JSCLASS_NEW_RESOLVE_GETS_START, the hook can assume *objp is null on entry.
+ * This is not good practice, but enough existing hook implementations count
+ * on it that we can't break compatibility by passing the starting object in
+ * *objp without a new JSClass flag.
  */
 typedef JSBool
 (* JS_DLL_CALLBACK JSNewResolveOp)(JSContext *cx, JSObject *obj, jsval id,

@@ -3982,13 +3982,13 @@ JS_ErrorFromException(JSContext *cx, jsval v)
 }
 
 #ifdef JS_THREADSAFE
-JS_PUBLIC_API(intN)
+JS_PUBLIC_API(jsword)
 JS_GetContextThread(JSContext *cx)
 {
     return cx->thread;
 }
 
-JS_PUBLIC_API(intN)
+JS_PUBLIC_API(jsword)
 JS_SetContextThread(JSContext *cx)
 {
     intN old = cx->thread;

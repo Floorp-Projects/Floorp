@@ -721,6 +721,10 @@ struct JSClass {
 #define JSCLASS_NEW_RESOLVE             (1<<2)  /* has JSNewResolveOp hook */
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  /* private is (nsISupports *) */
 #define JSCLASS_SHARE_ALL_PROPERTIES    (1<<4)  /* all properties are SHARED */
+#define JSCLASS_NEW_RESOLVE_GETS_START  (1<<5)  /* JSNewResolveOp gets starting
+                                                   object in prototype chain
+                                                   passed in via *objp in/out
+                                                   parameter */
 
 /*
  * To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or
@@ -1692,11 +1696,10 @@ JS_ErrorFromException(JSContext *cx, jsval v);
  * indicates that ClearContextThread has been called on this context
  * since the last SetContextThread, or non-0, which indicates the opposite.
  */
-
-extern JS_PUBLIC_API(intN)
+extern JS_PUBLIC_API(jsword)
 JS_GetContextThread(JSContext *cx);
 
-extern JS_PUBLIC_API(intN)
+extern JS_PUBLIC_API(jsword)
 JS_SetContextThread(JSContext *cx);
 
 extern JS_PUBLIC_API(intN)

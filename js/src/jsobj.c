@@ -2178,6 +2178,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp)
 #endif
 {
+    JSObject *start, *obj2, *proto;
     JSScope *scope;
     JSScopeProperty *sprop;
     JSClass *clasp;
@@ -2189,7 +2190,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSNewResolveOp newresolve;
     uintN flags;
     uint32 format;
-    JSObject *obj2, *proto;
     JSBool ok;
 
     /*
@@ -2199,6 +2199,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     CHECK_FOR_FUNNY_INDEX(id);
 
     /* Search scopes starting with obj and following the prototype link. */
+    start = obj;
     for (;;) {
         JS_LOCK_OBJ(cx, obj);
         SET_OBJ_INFO(obj, file, line);
@@ -2269,7 +2270,9 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                             flags |= JSRESOLVE_ASSIGNING;
                         }
                     }
-                    obj2 = NULL;
+                    obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START)
+                           ? start
+                           : NULL;
                     JS_UNLOCK_OBJ(cx, obj);
                     ok = newresolve(cx, obj, ID_TO_VALUE(id), flags, &obj2);
                     if (!ok)
