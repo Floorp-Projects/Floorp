@@ -186,7 +186,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
                 
                 // make sure the thing exists.  If it does, try the next one.
                 PRBool exists;
-                rv = file->Exists(&exists);
+                    rv = file->Exists(&exists);
                 if (NS_FAILED(rv) || !exists) 
                 {
                     return HasMoreElements(result); 
@@ -1183,7 +1183,6 @@ nsLocalFile::SetLastModificationDateOfLink(PRInt64 aLastModificationDate)
     return nsLocalFile::SetModDate(aLastModificationDate, PR_FALSE);
 }
 
-static const PRTime filetime_offset = 116444736000000000i64;
 nsresult
 nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
 {
@@ -1192,18 +1191,6 @@ nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
     if (NS_FAILED(rv))
         return rv;
     
-    
-    PRInt64 windowsTime = aLastModificationDate;
-
-    windowsTime = (windowsTime + filetime_offset) * 10i64;
-    
-    PRInt32 hi, lo;
-    myLL_L2II(windowsTime, &hi, &lo );
- 
-    FILETIME time;
-    time.dwHighDateTime  = hi;
-    time.dwLowDateTime   = lo;
-        
     const char *filePath = mResolvedPath.GetBuffer();
     
     HANDLE file = CreateFile(  filePath,          // pointer to name of the file
@@ -1211,25 +1198,28 @@ nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
                                0,                 // share mode
                                NULL,              // pointer to security attributes
                                OPEN_EXISTING,     // how to create
-                               0,                 // file attributes  (??xxx)
+                               0,                 // file attributes 
                                NULL);
     
     MakeDirty();
     
     if (!file)
     {
-        // could not open file for writing.
-        return NS_ERROR_FAILURE; //TODO better error code
+        return ConvertWinError(GetLastError());
     }
 
-    if ( 0 == SetFileTime(file, NULL, &time, &time) )
+    FILETIME time;
+    PRInt64 windowsTime = (aLastModificationDate * 10000000) + 116444736000000000;
+    time.dwLowDateTime  = (DWORD)windowsTime;
+    time.dwHighDateTime = (DWORD)(windowsTime >> 32);
+
+    if ( 0 == SetFileTime(file, NULL, NULL, &time) )
     {
         // could not set time
-        return NS_ERROR_FAILURE;
+        rv = ConvertWinError(GetLastError());
     }
-    
     CloseHandle( file );
-    return NS_OK;
+    return rv;
 
 }
 NS_IMETHODIMP  
