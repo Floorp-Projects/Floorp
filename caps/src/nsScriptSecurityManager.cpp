@@ -590,6 +590,69 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj, 
+                                             void *aTargetObj)
+{
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = GetFunctionObjectPrincipal(aCx, (JSObject *)aFunObj, 
+                                           getter_AddRefs(principal));
+    if (NS_FAILED(rv))
+        return rv;
+
+    // First check if the principal the function was compiled under is
+    // allowed to execute scripts.
+    if (!principal) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    PRBool result;
+    rv = CanExecuteScripts(principal, &result);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
+    if (!result) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    /*
+    ** Get origin of subject and object and compare.
+    */
+    JSObject* obj = (JSObject*)aTargetObj;
+    nsCOMPtr<nsIPrincipal> object;
+    if (NS_FAILED(GetObjectPrincipal(aCx, obj, getter_AddRefs(object))))
+        return NS_ERROR_FAILURE;
+    if (principal == object) {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsICodebasePrincipal> subjectCodebase = do_QueryInterface(principal);
+    if (subjectCodebase) {
+        PRBool isSameOrigin = PR_FALSE;
+        if (NS_FAILED(subjectCodebase->SameOrigin(object, &isSameOrigin)))
+            return NS_ERROR_FAILURE;
+
+        if (isSameOrigin)
+            return NS_OK;
+    }
+
+    // Allow access to about:blank
+    nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(object);
+    if (objectCodebase) {
+        nsXPIDLCString origin;
+        if (NS_FAILED(objectCodebase->GetOrigin(getter_Copies(origin))))
+            return NS_ERROR_FAILURE;
+        if (nsCRT::strcasecmp(origin, "about:blank") == 0) {
+            return NS_OK;
+        }
+    }
+
+    /*
+    ** Access tests failed.  Fail silently without a JS exception.
+    */
+    return NS_ERROR_DOM_SECURITY_ERR;
+}
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **result)
@@ -738,30 +801,6 @@ nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
     }
     *result = mIsJavaScriptEnabled;
     return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanExecuteFunction(void *jsFuncObj,
-                                            PRBool *result)
-{
-    JSContext *cx = GetCurrentContext();
-    if (!cx) {
-        cx = GetSafeContext();
-        if (!cx) {
-            return NS_ERROR_UNEXPECTED;
-        }
-    }
-    nsCOMPtr<nsIPrincipal> principal;
-    nsresult rv = GetFunctionObjectPrincipal(cx, (JSObject *) jsFuncObj, 
-                                             getter_AddRefs(principal));
-    if (NS_FAILED(rv))
-        return rv;
-    if (!principal) {
-        *result = PR_FALSE;
-        return NS_OK;
-    }
-    return CanExecuteScripts(principal, result);
 }
 
 NS_IMETHODIMP

@@ -764,11 +764,6 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  PRBool ok;
-  rv = securityManager->CanExecuteFunction(aHandler, &ok);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
   NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext)))
     return NS_ERROR_FAILURE;
@@ -782,17 +777,20 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   mRef = nsnull;
   mTerminationFunc = nsnull;
 
-  jsval val;
-  if (ok) {
-    jsval funval = OBJECT_TO_JSVAL(aHandler);
-    ok = ::JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
-                                argc, (jsval *)argv, &val);
-  }
-  *aBoolResult = ok
-                 ? !JSVAL_IS_BOOLEAN(val) || (aReverseReturnResult ? !JSVAL_TO_BOOLEAN(val) : JSVAL_TO_BOOLEAN(val))
-                 : JS_TRUE;
+  // check if the event handler can be run on the object in question
+  rv = securityManager->CheckFunctionAccess(mContext, aHandler, aTarget);
 
-  ScriptEvaluated();
+  if (NS_SUCCEEDED(rv)) {
+    jsval val;
+    jsval funval = OBJECT_TO_JSVAL(aHandler);
+    PRBool ok = ::JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
+                                argc, (jsval *)argv, &val);
+    *aBoolResult = ok
+                   ? !JSVAL_IS_BOOLEAN(val) || (aReverseReturnResult ? !JSVAL_TO_BOOLEAN(val) : JSVAL_TO_BOOLEAN(val))
+                   : JS_TRUE;
+
+    ScriptEvaluated();
+  }
 
   if (NS_FAILED(stack->Pop(nsnull)))
     return NS_ERROR_FAILURE;
