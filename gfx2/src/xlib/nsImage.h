@@ -23,6 +23,8 @@
 
 #include "nsIImage.h"
 
+#include "nsSize2.h"
+
 #define NS_IMAGE_CID \
   {0x73c72e6c, 0x1dd2, 0x11b2, \
     { 0x98, 0xb7, 0xae, 0x59, 0x35, 0xee, 0x63, 0xf5 }}
@@ -35,6 +37,11 @@ public:
 
   nsImage();
   virtual ~nsImage();
+
   /* additional members */
+
+private:
+  nsSize2 mSize;
+  gfx_format mFormat;
 };
 
