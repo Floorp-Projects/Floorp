@@ -94,7 +94,7 @@ nsOutlinerStyleCache::GetStyleContext(nsIPresContext* aPresContext, nsIContent* 
 //
 // NS_NewOutlinerFrame
 //
-// Creates a new TreeCell frame
+// Creates a new outliner frame
 //
 nsresult
 NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -116,7 +116,7 @@ NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell),
- mTopRowIndex(0)
+ mTopRowIndex(0), mColumns(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -266,7 +266,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   if (mView)
     mView->GetRowCount(&rowCount);
   
-  // Loop through each line.
+  // Ensure our column info is built.
+  EnsureColumns();
+
+  // Loop through our onscreen rows.
   for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
     nsRect rowRect(0, mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
     nsRect dirtyRect;
@@ -301,6 +304,14 @@ nsresult
 nsOutlinerBodyFrame::GetPseudoStyleContext(nsIPresContext* aPresContext, nsIStyleContext** aResult)
 {
   return mStyleCache.GetStyleContext(aPresContext, mContent, mStyleContext, mScratchArray, aResult);
+}
+
+void
+nsOutlinerBodyFrame::EnsureColumns()
+{
+  if (!mColumns) {
+
+  }
 }
 
 //
