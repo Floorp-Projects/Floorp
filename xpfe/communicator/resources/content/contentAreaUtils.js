@@ -72,14 +72,6 @@
     window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
   }
 
-  function sendPage(pageUrl, pageTitle)
-  {
-    window.openDialog("chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                      "chrome,all,dialog=no", 
-                      "attachment='" + pageUrl + "',body='" + pageUrl +
-                      "',subject='" + pageTitle + "',bodyislink=true");
-  }
-
   function findParentNode(node, parentNode)
   {
     while (node) {
