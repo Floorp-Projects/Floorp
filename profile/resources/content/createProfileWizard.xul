@@ -19,9 +19,11 @@
     </box>
   	<tabcontrol align="vertical"> 
 	  	<tabbox align="horizontal"> 
-  			<tab class="selected">&newprofile.title;</tab> 
-<!--			  <tab class="nonselected" onclick="loadPage('mailnews.xul');">&mailnewssettings.title;</tab>-->
+  			<tab class="selected" onclick="loadPage('newProfile1_1.xul');">&newprofile.title;</tab> 
+		  	<!-- <tab class="nonselected" onclick="loadPage('mailnews.xul');">&mailnews.title;</tab> -->
 	    </tabbox> 
+	    <tabpanel flex="100%"/>
+	    <!-- <tabpanel flex="100%"/> -->
 	  </tabcontrol> 
   </box>
 
