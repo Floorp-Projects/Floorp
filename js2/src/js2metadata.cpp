@@ -164,17 +164,20 @@ namespace MetaData {
                         }
                     }
                     else {
-                        // any non-label statement will do
-                        if ((*si)->getKind() != StmtNode::label) {
-                            if (((*si)->getKind() == StmtNode::While) || ((*si)->getKind() == StmtNode::DoWhile)) {
-                                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                g->tgtID = &w->breakLabelID;
-                            }
-                            else
-                                ASSERT(false);  // XXX for, forin && switch
-                            found = true;
-                            break;
+                        // anything at all will do
+                        if ((*si)->getKind() == StmtNode::label) {
+                            LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                            g->tgtID = &l->labelID;
                         }
+                        else
+                        if (((*si)->getKind() == StmtNode::While) || ((*si)->getKind() == StmtNode::DoWhile)) {
+                            UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                            g->tgtID = &w->breakLabelID;
+                        }
+                        else
+                            ASSERT(false);  // XXX for, forin && switch
+                        found = true;
+                        break;
                     }
                 }
                 if (!found) 
@@ -198,14 +201,14 @@ namespace MetaData {
                         }
                     }
                     else {
-                        // any non-label statement will do
+                        // only some non-label statements will do
                         if ((*si)->getKind() != StmtNode::label) {
                             if (((*si)->getKind() == StmtNode::While) || ((*si)->getKind() == StmtNode::DoWhile)) {
                                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
                                 g->tgtID = &w->continueLabelID;
                             }
                             else
-                                ASSERT(false);  // XXX for, forin && switch
+                                ASSERT(false);  // XXX for, forin ( && not switch )
                             found = true;
                             break;
                         }
@@ -557,6 +560,7 @@ namespace MetaData {
             }
             break;
         case StmtNode::Break:
+        case StmtNode::Continue:
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                 bCon->emitBranch(eBranch, *g->tgtID, p->pos);
