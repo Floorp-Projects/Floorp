@@ -211,3 +211,4 @@ NS_NewMsgMailSession(const nsIID& iid, void **result)
   }
   return mailSession->QueryInterface(iid, result);
 }
+
