@@ -40,7 +40,6 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibleText.h"
 #include "nsContentCID.h"
-#include "nsIAccessibleEventReceiver.h"
 #include "nsIClipboard.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMCharacterData.h"
@@ -137,7 +136,7 @@ nsresult nsAccessibleText::DOMPointToOffset(nsISupports *aClosure, nsIDOMNode* a
 
   *aResult = aNodeOffset;
 
-  nsCOMPtr<nsISupportsArray> domNodeArray(do_QueryInterface(aClosure));
+  nsCOMPtr<nsIArray> domNodeArray(do_QueryInterface(aClosure));
   if (domNodeArray) {
     // Static text, calculate the offset from a given set of (text) node
     PRUint32 textLength, totalLength = 0;
@@ -926,7 +925,7 @@ nsresult nsAccessibleEditableText::FireTextChangeEvent(AtkTextChange *aTextData)
 #ifdef DEBUG
     printf("  [start=%d, length=%d, add=%d]\n", aTextData->start, aTextData->length, aTextData->add);
 #endif
-    privAccessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_ATK_TEXT_CHANGE, accessible, aTextData);
+    privAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CHANGE, accessible, aTextData);
   }
 
   return NS_OK;

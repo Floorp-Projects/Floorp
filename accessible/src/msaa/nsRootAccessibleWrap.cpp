@@ -39,7 +39,6 @@
 #include "nsRootAccessibleWrap.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
-#include "nsIAccessibleEventReceiver.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 

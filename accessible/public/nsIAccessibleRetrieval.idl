@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Original Author: Aaron Leventhal (aaronl@netscape.com)
- * Contributor(s):
+ * Contributor(s): Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,14 +45,75 @@ interface nsIPresShell;
 interface nsIDOMWindow;
 interface nsIAccessNode;
 
+/**
+ * An interface for in-process accessibility clients
+ * wishing to get an nsIAccessible or nsIAccessNode for
+ * a given DOM node.
+ * More documentation at:
+ *   http://www.mozilla.org/projects/ui/accessibility
+ *
+ * @status UNDER_REVIEW
+ */
 [scriptable, uuid(663CA4A8-D219-4000-925D-D8F66406B626)]
 interface nsIAccessibleRetrieval : nsISupports
 {
+  /**
+   * Return an nsIAccessible for a DOM node in pres shell 0.
+   * Create a new accessible of the appropriate type if necessary,
+   * or use one from the accessibility cache if it already exists.
+   * @param aNode The DOM node to get an accessible for.
+   * @return The nsIAccessible for the given DOM node.
+   */
   nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
+
+  /**
+   * Return an nsIAccessible for a DOM node in pres shell for this DOM window.
+   * Create a new accessible of the appropriate type if necessary,
+   * or use one from the accessibility cache if it already exists.
+   * @param aNode   The DOM node to get an accessible for.
+   * @param aDOMWin The DOM window containing the node.
+   * @return The nsIAccessible for the given DOM node.
+   */
   nsIAccessible getAccessibleInWindow(in nsIDOMNode aNode, in nsIDOMWindow aDOMWin);
+
+  /**
+   * Return an nsIAccessible for a DOM node in the given weak shell.
+   * Create a new accessible of the appropriate type if necessary,
+   * or use one from the accessibility cache if it already exists.
+   * @param aNode      The DOM node to get an accessible for.
+   * @param aPresShell The presentation shell which contains layout info for the DOM node.
+   * @return The nsIAccessible for the given DOM node.
+   */
   nsIAccessible getAccessibleInWeakShell(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
+
+  /**
+   * Return an nsIAccessible for a DOM node in the given pres shell.
+   * Create a new accessible of the appropriate type if necessary,
+   * or use one from the accessibility cache if it already exists.
+   * @param aNode      The DOM node to get an accessible for.
+   * @param aPresShell The presentation shell which contains layout info for the DOM node.
+   * @return The nsIAccessible for the given DOM node.
+   */
   nsIAccessible getAccessibleInShell(in nsIDOMNode aNode, in nsIPresShell aPresShell);
+  
+   /**
+    * Return an nsIAccessNode for an already created DOM node in the given weak shell.
+    * Does not create a new one -- only returns cached access nodes.
+    * @param aNode      The DOM node to get an access node for.
+    * @param aPresShell The presentation shell which contains layout info for the DOM node.
+    * @return The nsIAccessNode for the given DOM node or null if
+    *         an access node does not already exist for this DOM node.
+    */
   nsIAccessNode getCachedAccessNode(in nsIDOMNode aNode, in nsIWeakReference aShell);
+
+   /**
+    * Return an nsIAccessible for an already created DOM node in the given weak shell.
+    * Does not create a new one -- only returns cached accessibles.
+    * @param aNode      The DOM node to get an accessible for.
+    * @param aPresShell The presentation shell which contains layout info for the DOM node.
+    * @return The nsIAccessible for the given DOM node or null if
+    *         an accessible does not already exist for this DOM node.
+    */
   nsIAccessible getCachedAccessible(in nsIDOMNode aNode, in nsIWeakReference aShell);
 };
 

@@ -38,7 +38,9 @@
 
 cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
 cpp_quote("//")
-cpp_quote("// ISimpleDOMDocument.h")
+cpp_quote("// ISimpleDOMDocument")
+cpp_quote("//")
+cpp_quote("// @STATUS UNDER_REVIEW")
 cpp_quote("// ---------------------------------------------------------------------------------------------------=")
 cpp_quote("//")
 cpp_quote("// get_URL(out] BSTR *url)")

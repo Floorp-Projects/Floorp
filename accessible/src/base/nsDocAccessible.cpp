@@ -122,7 +122,6 @@ nsDocAccessible::~nsDocAccessible()
 NS_INTERFACE_MAP_BEGIN(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsPIAccessibleDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIAccessibleEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMutationListener)
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
@@ -133,19 +132,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsBlockAccessible)
 
 NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsBlockAccessible)
 NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsBlockAccessible)
-
-NS_IMETHODIMP nsDocAccessible::AddEventListeners()
-{
-  AddContentDocListeners();
-  return NS_OK;
-}
-
-/* void removeAccessibleEventListener (); */
-NS_IMETHODIMP nsDocAccessible::RemoveEventListeners()
-{
-  RemoveContentDocListeners();
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsDocAccessible::GetAccName(nsAString& aAccName) 
 { 
@@ -249,7 +235,7 @@ NS_IMETHODIMP nsDocAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAStr
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetCaretAccessible(nsIAccessibleCaret **aCaretAccessible)
+NS_IMETHODIMP nsDocAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessible)
 {
   // We only have a caret accessible on the root document
   *aCaretAccessible = nsnull;
@@ -369,6 +355,7 @@ NS_IMETHODIMP nsDocAccessible::Init()
       }
     }
   }
+  AddEventListeners();
   return nsBlockAccessible::Init();
 }  
 
@@ -474,7 +461,7 @@ void nsDocAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
 }
 
 
-void nsDocAccessible::AddContentDocListeners()
+nsresult nsDocAccessible::AddEventListeners()
 {
   // 1) Set up scroll position listener
   // 2) Set up web progress listener - we need to know 
@@ -485,15 +472,13 @@ void nsDocAccessible::AddContentDocListeners()
   //    Do this only for top level content documents
 
   nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-  if (!presShell)
-    return;
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISupports> container;
   mDocument->GetContainer(getter_AddRefs(container));
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
-  if (!docShellTreeItem)
-    return;
+  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
 
   // Make sure we're a content docshell
   // We don't want to listen to chrome progress
@@ -521,18 +506,16 @@ void nsDocAccessible::AddContentDocListeners()
     docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(topOfContentTree));
     if (topOfContentTree != docShellTreeItem) {
       mBusy = eBusyStateDone;
-      return;
+      return NS_OK;
     }
   }
   
   nsCOMPtr<nsIPresContext> context; 
   presShell->GetPresContext(getter_AddRefs(context));
-  if (!context)
-    return;
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
   mWebProgress = do_GetInterface(docShellTreeItem);
-  if (!mWebProgress)
-    return;
+  NS_ENSURE_TRUE(mWebProgress, NS_ERROR_FAILURE);
 
   mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION | 
                                     nsIWebProgress::NOTIFY_STATE_DOCUMENT);
@@ -576,9 +559,11 @@ void nsDocAccessible::AddContentDocListeners()
   rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeRemovedFromDocument"), 
     this, PR_TRUE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
+  return rv;
 }
 
-void nsDocAccessible::RemoveContentDocListeners()
+nsresult nsDocAccessible::RemoveEventListeners()
 {
   // Remove listeners associated with content documents
 
@@ -616,8 +601,7 @@ void nsDocAccessible::RemoveContentDocListeners()
   nsCOMPtr<nsISupports> container;
   mDocument->GetContainer(getter_AddRefs(container));
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
-  if (!docShellTreeItem)
-    return;
+  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
 
   PRInt32 itemType;
   docShellTreeItem->GetItemType(&itemType);
@@ -627,6 +611,8 @@ void nsDocAccessible::RemoveContentDocListeners()
       commandManager->RemoveCommandObserver(this, "obs_documentCreated");
     }
   }
+
+  return NS_OK;
 }
 
 void nsDocAccessible::FireDocLoadFinished()
@@ -639,7 +625,7 @@ void nsDocAccessible::FireDocLoadFinished()
 
     if (mBusy != eBusyStateDone) {
 #ifndef MOZ_ACCESSIBILITY_ATK
-      FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_STATE_CHANGE, this, nsnull);
+      FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
 #endif
     }
   }
@@ -669,7 +655,7 @@ void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
     // We only want to fire accessibilty scroll event when scrolling stops or pauses
     // Therefore, we wait for no scroll events to occur between 2 ticks of this timer
     // That indicates a pause in scrolling, so we fire the accessibilty scroll event
-    docAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_SCROLLINGEND, docAcc, nsnull);
+    docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLINGEND, docAcc, nsnull);
     docAcc->mScrollPositionChangedTicks = 0;
     if (docAcc->mScrollWatchTimer) {
       docAcc->mScrollWatchTimer->Cancel();
@@ -766,13 +752,13 @@ NS_IMETHODIMP nsDocAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
     mBusy = eBusyStateLoading; 
     // Fire a "new doc has started to load" event
 #ifndef MOZ_ACCESSIBILITY_ATK
-    FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_STATE_CHANGE, this, nsnull);
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
 #else
     AtkChildrenChange childrenData;
     childrenData.index = -1;
     childrenData.child = 0;
     childrenData.add = PR_FALSE;
-    FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_REORDER , this, &childrenData);
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER , this, &childrenData);
 #endif
   }
 
@@ -838,7 +824,7 @@ void nsDocAccessible::GetEventDocAccessible(nsIDOMNode *aNode,
 // ---------- Mutation event listeners ------------
 NS_IMETHODIMP nsDocAccessible::NodeInserted(nsIDOMEvent* aEvent)
 {
-  HandleMutationEvent(aEvent, nsIAccessibleEventReceiver::EVENT_CREATE);
+  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_CREATE);
 
   return NS_OK;
 }
@@ -847,14 +833,14 @@ NS_IMETHODIMP nsDocAccessible::NodeRemoved(nsIDOMEvent* aEvent)
 {
   // The related node for the event will be the parent of the removed node or subtree
 
-  HandleMutationEvent(aEvent, nsIAccessibleEventReceiver::EVENT_DESTROY);
+  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_DESTROY);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocAccessible::SubtreeModified(nsIDOMEvent* aEvent)
 {
-  HandleMutationEvent(aEvent, nsIAccessibleEventReceiver::EVENT_REORDER);
+  HandleMutationEvent(aEvent, nsIAccessibleEvent::EVENT_REORDER);
  
   return NS_OK;
 }
@@ -1005,7 +991,7 @@ void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessi
   if (!targetNode) {
     targetNode = subTreeToInvalidate;
   }
-  else if (aAccessibleEventType == nsIAccessibleEventReceiver::EVENT_REORDER) {
+  else if (aAccessibleEventType == nsIAccessibleEvent::EVENT_REORDER) {
     subTreeToInvalidate = targetNode; // targetNode is parent for DOMNodeRemoved event
   }
 
@@ -1032,7 +1018,7 @@ void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessi
 
 #ifdef XP_WIN
   // Windows MSAA clients crash if they listen to create or destroy events
-  aAccessibleEventType = nsIAccessibleEventReceiver::EVENT_REORDER;
+  aAccessibleEventType = nsIAccessibleEvent::EVENT_REORDER;
 #endif
   privateAccessible->FireToolkitEvent(aAccessibleEventType, accessible, nsnull);
 }

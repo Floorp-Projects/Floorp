@@ -39,25 +39,97 @@
 #include "nsISupports.idl"
 
 interface nsIAccessible;
-interface nsIAccessibleCaret;
 interface nsIAccessNode;
 interface nsIDOMDocument;
 interface nsIDOMNode;
 interface nsIDOMWindow;
 
+/**
+ * An interface for in-process accessibility clients
+ * that wish to retrieve information about a document.
+ * When accessibility is turned on in Gecko,
+ * there is an nsIAccessibleDocument for each document
+ * whether it is XUL, HTML or whatever.
+ * You can QueryInterface to nsIAccessibleDocument from
+ * the nsIAccessible or nsIAccessNode for the root node
+ * of a document. You can also get one from 
+ * nsIAccessNode::GetAccessibleDocument() or 
+ * nsIAccessibleEvent::GetAccessibleDocument()
+ *
+ * @status UNDER_REVIEW
+ */
 [scriptable, uuid(8781FC88-355F-4439-881F-6504A0A1CEB6)]
 interface nsIAccessibleDocument : nsISupports
 {
+  /**
+   * The URL of the document
+   */
   readonly attribute AString URL;
+
+  /**
+   * The title of the document, as specified in the document.
+   */
   readonly attribute AString title;
+
+  /**
+   * The mime type of the document
+   */
   readonly attribute AString mimeType;
+
+  /**
+   * The doc type of the document, as specified in the document.
+   */
   readonly attribute AString docType;
+
+  /**
+   * True if the document is live in an editor.
+   * False if the document is being displayed but not edited. 
+   * If a <div> is contentEditable, then it has its own document, 
+   * with isEditable == true.
+   */
   readonly attribute boolean isEditable;
+
+  /**
+   * The nsIDOMDocument interface associated with this document.
+   */
   readonly attribute nsIDOMDocument document;
+
+  /**
+   * The nsIDOMWindow that the document resides in.
+   */
   readonly attribute nsIDOMWindow window;
+
+  /*
+   * The accessible for the caret belonging to this window.
+   */
+  readonly attribute nsIAccessible caretAccessible;
+
+  /**
+   * The namespace for each ID that is handed back.
+   */
   AString getNameSpaceURIForID(in short nameSpaceID);
-  readonly attribute nsIAccessibleCaret caretAccessible;
+
+  /**
+   * The window handle for the OS window the document is being displayed in.
+   * For example, in Windows you can static cast it to an HWND.
+   */
   [noscript] readonly attribute voidPtr windowHandle;
+
+  /**
+   * Returns the access node cached by this document
+   * @param aUniqueID The unique ID used to cache the node.
+   *                  This matches up with the uniqueID attribute on
+   *                  nsIAccessNode.
+   * @return The nsIAccessNode cached for this particular unique ID.
+   */
   [noscript] nsIAccessNode getCachedAccessNode(in voidPtr aUniqueID);
-  [noscript] nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode);
+
+  /**
+   * Returns the first accessible parent of a DOM node.
+   * Guaranteed not to return nsnull if the DOM node is in a document.
+   * @param aDOMNode The DOM node we need an accessible for.
+   * @return An first nsIAccessible found by crawling up the DOM node
+   *         to the document root.
+   */
+  nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode);
 };

@@ -38,7 +38,7 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
 #include "nsCaretAccessible.h"
-#include "nsIAccessibleEventReceiver.h"
+#include "nsIAccessibleEvent.h"
 #include "nsICaret.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
@@ -157,8 +157,8 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     caret->GetCaretVisible(&visible);
   if (visible != mVisible) {
     mVisible = visible;
-    mRootAccessible->FireToolkitEvent(mVisible? nsIAccessibleEventReceiver::EVENT_SHOW: 
-                                      nsIAccessibleEventReceiver::EVENT_HIDE, this, nsnull);
+    mRootAccessible->FireToolkitEvent(mVisible? nsIAccessibleEvent::EVENT_SHOW: 
+                                      nsIAccessibleEvent::EVENT_HIDE, this, nsnull);
   }
 
   nsCOMPtr<nsIPresContext> presContext;
@@ -191,7 +191,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
 
 #ifndef MOZ_ACCESSIBILITY_ATK
   if (visible) {
-    mRootAccessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_LOCATION_CHANGE, this, nsnull);
+    mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_LOCATION_CHANGE, this, nsnull);
   }
 #else
   nsCOMPtr<nsIDOMNode> focusNode;
@@ -230,11 +230,11 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     if (isCollapsed) {
       PRInt32 caretOffset;
       domSel->GetFocusOffset(&caretOffset);
-      mRootAccessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
+      mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
     }
     else {
       //Current text interface doesn't support this event yet
-      //mListener->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
+      //mListener->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
     }
   }
 #endif
