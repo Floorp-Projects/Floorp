@@ -59,6 +59,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "prio.h"
 #include "prlog.h"

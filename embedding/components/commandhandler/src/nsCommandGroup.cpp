@@ -40,6 +40,7 @@
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsISimpleEnumerator.h"
+#include "nsXPCOM.h"
 #include "nsSupportsPrimitives.h"
 #include "nsIComponentManager.h"
 

@@ -51,6 +51,7 @@
 #include "nsIComponentManager.h"
 #include "nsComm4xMailImport.h"
 #include "nsIMemory.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIImportService.h"
 #include "nsIImportMailboxDescriptor.h"

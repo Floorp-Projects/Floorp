@@ -86,6 +86,7 @@
 #include "nsIPref.h"
 #include "nsINewsDownloadDialogArgs.h"
 
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"

@@ -94,6 +94,7 @@
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 // netwerk

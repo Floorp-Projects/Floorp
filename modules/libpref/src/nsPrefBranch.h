@@ -44,6 +44,7 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsISecurityPref.h"
 #include "nsISupportsArray.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIRelativeFilePref.h"
 #include "nsILocalFile.h"

@@ -48,6 +48,7 @@
 #include "nsCollationCID.h"
 #include "nsIAddrBookSession.h"
 #include "nsAbBaseCID.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 #include "nsIPrefService.h"

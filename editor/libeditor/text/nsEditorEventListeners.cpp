@@ -78,6 +78,7 @@
 #include "nsIFormatConverter.h"
 #include "nsIContentIterator.h"
 #include "nsIContent.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMNSRange.h"

@@ -53,6 +53,7 @@
 #include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsIPref.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 nsAbLDAPDirectory::nsAbLDAPDirectory() :

@@ -59,6 +59,7 @@
 #include "nsIImportAddressBooks.h"
 #include "nsIImportABDescriptor.h"
 #include "nsIImportFieldMap.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "WabObject.h"
 #include "nsOEAddressIterator.h"

@@ -56,6 +56,7 @@
 #include "nsIModule.h"
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsLocalFile.h"
 #include "nsNativeComponentLoader.h"

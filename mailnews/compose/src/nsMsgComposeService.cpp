@@ -54,6 +54,7 @@
 #include "nsMsgI18N.h"
 #include "nsIMsgDraft.h"
 #include "nsIMsgComposeParams.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"

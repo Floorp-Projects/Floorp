@@ -66,6 +66,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIClipboard.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"

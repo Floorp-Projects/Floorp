@@ -48,6 +48,7 @@
 
 #include "nsIImportMail.h"
 #include "nsIImportGeneric.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIImportMailboxDescriptor.h"
 #include "nsCRT.h"

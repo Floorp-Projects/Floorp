@@ -52,6 +52,7 @@
 #include "nsClipboard.h"
 #include "nsIRegion.h"
 #include "nsVoidArray.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"

@@ -41,6 +41,7 @@
 #include "nsClipboard.h"
 #include "nsIRegion.h"
 #include "nsVoidArray.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsCOMPtr.h"

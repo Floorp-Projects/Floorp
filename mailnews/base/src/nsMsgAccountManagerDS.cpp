@@ -58,6 +58,7 @@
 #include "nsMsgIncomingServer.h"
 
 #include "nsICategoryManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"

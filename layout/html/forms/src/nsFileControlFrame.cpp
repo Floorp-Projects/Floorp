@@ -61,6 +61,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIPresShell.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindowInternal.h"

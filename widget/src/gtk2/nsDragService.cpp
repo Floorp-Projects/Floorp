@@ -28,6 +28,7 @@
 #include "nsDragService.h"
 #include "nsWidgetsCID.h"
 #include "nsIServiceManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "prlog.h"
 #include "nsVoidArray.h"

@@ -56,6 +56,7 @@
 #include "nsImportFieldMap.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsImportStringBundle.h"
 #include "plstr.h"

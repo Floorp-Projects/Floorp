@@ -43,6 +43,7 @@
 #include "nsISupportsArray.h"
 #include "nsSize.h"
 #include "nsIRegion.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"

@@ -41,6 +41,7 @@
 #include "nsIImportABDescriptor.h"
 #include "nsIImportSettings.h"
 #include "nsIImportFieldMap.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIOutputStream.h"
 #include "nsIAddrDatabase.h"

@@ -62,6 +62,7 @@
 #include "nsProxiedService.h"
 #include "nsIPromptService.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);

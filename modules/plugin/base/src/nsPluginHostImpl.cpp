@@ -95,6 +95,7 @@
 
 //#include "nsIRegistry.h"
 #include "nsEnumeratorUtils.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 // for the dialog
 #include "nsIStringBundle.h"

@@ -56,6 +56,7 @@
 #include "nsIScrollable.h"
 #include "nsIStatefulFrame.h"
 #include "nsBoxLayoutState.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
 

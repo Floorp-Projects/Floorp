@@ -41,9 +41,13 @@
 #include "nsISupports.idl"
 
 /**
+ * Primitive base interface.
+ *
  * These first three are pointer types and do data copying
- * using the nsIAllocator. Be careful!
- */ 
+ * using the nsIMemory. Be careful!
+ *
+ * @status FROZEN
+ */
 
 [scriptable, uuid(d0d4b136-1dd1-11b2-9371-f0727ef827c0)]
 interface nsISupportsPrimitive : nsISupports
@@ -71,6 +75,8 @@ interface nsISupportsPrimitive : nsISupports
 
 /**
  * Scriptable storage for nsID structures
+ *
+ * @status FROZEN
  */
 
 [scriptable, uuid(d18290a0-4a1c-11d3-9890-006008962422)]
@@ -83,7 +89,7 @@ interface nsISupportsID : nsISupportsPrimitive
 /**
  * Scriptable storage for ASCII strings
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
@@ -96,7 +102,7 @@ interface nsISupportsCString : nsISupportsPrimitive
 /**
  * Scriptable storage for Unicode strings
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
@@ -113,7 +119,7 @@ interface nsISupportsString : nsISupportsPrimitive
 /**
  * Scriptable storage for booleans
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(ddc3b490-4a1c-11d3-9890-006008962422)]
@@ -126,7 +132,7 @@ interface nsISupportsPRBool : nsISupportsPrimitive
 /**
  * Scriptable storage for 8-bit integers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(dec2e4e0-4a1c-11d3-9890-006008962422)]
@@ -139,7 +145,7 @@ interface nsISupportsPRUint8 : nsISupportsPrimitive
 /**
  * Scriptable storage for unsigned 16-bit integers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(dfacb090-4a1c-11d3-9890-006008962422)]
@@ -152,7 +158,7 @@ interface nsISupportsPRUint16 : nsISupportsPrimitive
 /**
  * Scriptable storage for unsigned 32-bit integers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(e01dc470-4a1c-11d3-9890-006008962422)]
@@ -165,7 +171,7 @@ interface nsISupportsPRUint32 : nsISupportsPrimitive
 /**
  * Scriptable storage for 64-bit integers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(e13567c0-4a1c-11d3-9890-006008962422)]
@@ -178,7 +184,7 @@ interface nsISupportsPRUint64 : nsISupportsPrimitive
 /**
  * Scriptable storage for NSPR date/time values
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(e2563630-4a1c-11d3-9890-006008962422)]
@@ -192,7 +198,7 @@ interface nsISupportsPRTime : nsISupportsPrimitive
  * Scriptable storage for single character values
  * (often used to store an ASCII character)
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(e2b05e40-4a1c-11d3-9890-006008962422)]
@@ -205,7 +211,7 @@ interface nsISupportsChar : nsISupportsPrimitive
 /**
  * Scriptable storage for 16-bit integers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(e30d94b0-4a1c-11d3-9890-006008962422)]
@@ -218,7 +224,7 @@ interface nsISupportsPRInt16 : nsISupportsPrimitive
 /**
  * Scriptable storage for 32-bit integers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(e36c5250-4a1c-11d3-9890-006008962422)]
@@ -231,7 +237,7 @@ interface nsISupportsPRInt32 : nsISupportsPrimitive
 /**
  * Scriptable storage for 64-bit integers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(e3cb0ff0-4a1c-11d3-9890-006008962422)]
@@ -244,7 +250,7 @@ interface nsISupportsPRInt64 : nsISupportsPrimitive
 /**
  * Scriptable storage for floating point numbers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(abeaa390-4ac0-11d3-baea-00805f8a5dd7)]
@@ -257,7 +263,7 @@ interface nsISupportsFloat : nsISupportsPrimitive
 /**
  * Scriptable storage for doubles
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(b32523a0-4ac0-11d3-baea-00805f8a5dd7)]
@@ -270,7 +276,7 @@ interface nsISupportsDouble : nsISupportsPrimitive
 /**
  * Scriptable storage for generic pointers
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(464484f0-568d-11d3-baf8-00805f8a5dd7)]
@@ -283,7 +289,7 @@ interface nsISupportsVoid : nsISupportsPrimitive
 /**
  * Scriptable storage for other XPCOM objects
  * 
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(995ea724-1dd1-11b2-9211-c21bdd3e7ed0)]
@@ -295,129 +301,4 @@ interface nsISupportsInterfacePointer : nsISupportsPrimitive
     string toString();
 };
 
-/////////////////////////////////////////////////////////////////////////
 
-%{C++
-// {ACF8DC40-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_ID_CID \
-{ 0xacf8dc40, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_ID_CONTRACTID "@mozilla.org/supports-id;1"
-#define NS_SUPPORTS_ID_CLASSNAME "Supports ID"
-
-// {ACF8DC41-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_CSTRING_CID \
-{ 0xacf8dc41, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_CSTRING_CONTRACTID "@mozilla.org/supports-cstring;1"
-#define NS_SUPPORTS_CSTRING_CLASSNAME "Supports String"
-
-// {ACF8DC42-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_STRING_CID \
-{ 0xacf8dc42, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_STRING_CONTRACTID "@mozilla.org/supports-string;1"
-#define NS_SUPPORTS_STRING_CLASSNAME "Supports WString"
-
-// {ACF8DC43-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRBOOL_CID \
-{ 0xacf8dc43, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRBOOL_CONTRACTID "@mozilla.org/supports-PRBool;1"
-#define NS_SUPPORTS_PRBOOL_CLASSNAME "Supports PRBool"
-
-// {ACF8DC44-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRUINT8_CID \
-{ 0xacf8dc44, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRUINT8_CONTRACTID "@mozilla.org/supports-PRUint8;1"
-#define NS_SUPPORTS_PRUINT8_CLASSNAME "Supports PRUint8"
-
-// {ACF8DC46-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRUINT16_CID \
-{ 0xacf8dc46, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRUINT16_CONTRACTID "@mozilla.org/supports-PRUint16;1"
-#define NS_SUPPORTS_PRUINT16_CLASSNAME "Supports PRUint16"
-
-// {ACF8DC47-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRUINT32_CID \
-{ 0xacf8dc47, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRUINT32_CONTRACTID "@mozilla.org/supports-PRUint32;1"
-#define NS_SUPPORTS_PRUINT32_CLASSNAME "Supports PRUint32"
-
-// {ACF8DC48-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRUINT64_CID \
-{ 0xacf8dc48, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRUINT64_CONTRACTID "@mozilla.org/supports-PRUint64;1"
-#define NS_SUPPORTS_PRUINT64_CLASSNAME "Supports PRUint64"
-
-// {ACF8DC49-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRTIME_CID \
-{ 0xacf8dc49, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRTIME_CONTRACTID "@mozilla.org/supports-PRTime;1"
-#define NS_SUPPORTS_PRTIME_CLASSNAME "Supports PRTime"
-
-// {ACF8DC4A-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_CHAR_CID \
-{ 0xacf8dc4a, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_CHAR_CONTRACTID "@mozilla.org/supports-char;1"
-#define NS_SUPPORTS_CHAR_CLASSNAME "Supports Char"
-
-// {ACF8DC4B-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRINT16_CID \
-{ 0xacf8dc4b, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRINT16_CONTRACTID "@mozilla.org/supports-PRInt16;1"
-#define NS_SUPPORTS_PRINT16_CLASSNAME "Supports PRInt16"
-
-// {ACF8DC4C-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRINT32_CID \
-{ 0xacf8dc4c, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRINT32_CONTRACTID "@mozilla.org/supports-PRInt32;1"
-#define NS_SUPPORTS_PRINT32_CLASSNAME "Supports PRInt32"
-
-// {ACF8DC4D-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_PRINT64_CID \
-{ 0xacf8dc4d, 0x4a25, 0x11d3, \
-    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRINT64_CONTRACTID "@mozilla.org/supports-PRInt64;1"
-#define NS_SUPPORTS_PRINT64_CLASSNAME "Supports PRInt64"
-
-// {CBF86870-4AC0-11d3-BAEA-00805F8A5DD7}
-#define NS_SUPPORTS_FLOAT_CID \
-{ 0xcbf86870, 0x4ac0, 0x11d3, \
-    { 0xba, 0xea, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-#define NS_SUPPORTS_FLOAT_CONTRACTID "@mozilla.org/supports-float;1"
-#define NS_SUPPORTS_FLOAT_CLASSNAME "Supports float"
-
-// {CBF86871-4AC0-11d3-BAEA-00805F8A5DD7}
-#define NS_SUPPORTS_DOUBLE_CID \
-{ 0xcbf86871, 0x4ac0, 0x11d3, \
-    { 0xba, 0xea, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-#define NS_SUPPORTS_DOUBLE_CONTRACTID "@mozilla.org/supports-double;1"
-#define NS_SUPPORTS_DOUBLE_CLASSNAME "Supports double"
-
-// {AF10F3E0-568D-11d3-BAF8-00805F8A5DD7}
-#define NS_SUPPORTS_VOID_CID \
-{ 0xaf10f3e0, 0x568d, 0x11d3, \
-    { 0xba, 0xf8, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-#define NS_SUPPORTS_VOID_CONTRACTID "@mozilla.org/supports-void;1"
-#define NS_SUPPORTS_VOID_CLASSNAME "Supports void"
-
-// {A99FEBBA-1DD1-11B2-A943-B02334A6D083}
-#define NS_SUPPORTS_INTERFACE_POINTER_CID \
-{ 0xA99FEBBA, 0x1DD1, 0x11B2, \
-    { 0xA9, 0x43, 0xB0, 0x23, 0x34, 0xA6, 0xD0, 0x83 } }
-#define NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID \
-  "@mozilla.org/supports-interface-pointer;1"
-#define NS_SUPPORTS_INTERFACE_POINTER_CLASSNAME "Supports interface pointer"
-
-extern	NS_COM nsresult NS_NewISupportsPRBool (nsISupportsPRBool ** aResult);
-
-%}

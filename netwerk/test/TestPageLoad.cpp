@@ -43,6 +43,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIComponentManager.h"
 #include "prprf.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsTimer.h"
 #include "prlong.h"

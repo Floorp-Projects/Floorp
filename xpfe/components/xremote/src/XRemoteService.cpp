@@ -36,6 +36,7 @@
 #include <nsCRT.h>
 #include <nsIPref.h>
 #include <nsIWindowWatcher.h>
+#include <nsXPCOM.h>
 #include <nsISupportsPrimitives.h>
 #include <nsIInterfaceRequestor.h>
 #include <nsIInterfaceRequestorUtils.h>

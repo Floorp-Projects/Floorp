@@ -126,7 +126,26 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess);
 
+#include "nsXPCOM.h"
 // ds/nsISupportsPrimitives
+#define NS_SUPPORTS_ID_CLASSNAME "Supports ID"
+#define NS_SUPPORTS_CSTRING_CLASSNAME "Supports String"
+#define NS_SUPPORTS_STRING_CLASSNAME "Supports WString"
+#define NS_SUPPORTS_PRBOOL_CLASSNAME "Supports PRBool"
+#define NS_SUPPORTS_PRUINT8_CLASSNAME "Supports PRUint8"
+#define NS_SUPPORTS_PRUINT16_CLASSNAME "Supports PRUint16"
+#define NS_SUPPORTS_PRUINT32_CLASSNAME "Supports PRUint32"
+#define NS_SUPPORTS_PRUINT64_CLASSNAME "Supports PRUint64"
+#define NS_SUPPORTS_PRTIME_CLASSNAME "Supports PRTime"
+#define NS_SUPPORTS_CHAR_CLASSNAME "Supports Char"
+#define NS_SUPPORTS_PRINT16_CLASSNAME "Supports PRInt16"
+#define NS_SUPPORTS_PRINT32_CLASSNAME "Supports PRInt32"
+#define NS_SUPPORTS_PRINT64_CLASSNAME "Supports PRInt64"
+#define NS_SUPPORTS_FLOAT_CLASSNAME "Supports float"
+#define NS_SUPPORTS_DOUBLE_CLASSNAME "Supports double"
+#define NS_SUPPORTS_VOID_CLASSNAME "Supports void"
+#define NS_SUPPORTS_INTERFACE_POINTER_CLASSNAME "Supports interface pointer"
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsIDImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsStringImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsCStringImpl)
@@ -268,6 +287,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(BYTEBUFFER, ByteBufferImpl::Create),
     COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create),
 
+#define NS_PROPERTIES_CLASSNAME  "Properties"
     COMPONENT(PROPERTIES, nsProperties::Create),
 
 #define NS_PERSISTENTPROPERTIES_CID NS_IPERSISTENTPROPERTIES_CID /* sigh */
@@ -318,6 +338,7 @@ static const nsModuleComponentInfo components[] = {
 #undef COMPONENT_SUPPORTS
 
     COMPONENT(LOCAL_FILE, nsLocalFile::nsLocalFileConstructor),
+#define NS_DIRECTORY_SERVICE_CLASSNAME  "nsIFile Directory Service"
     COMPONENT(DIRECTORY_SERVICE, nsDirectoryService::Create),
     COMPONENT(PROCESS, nsProcessConstructor),
     COMPONENT(FILESPEC, nsFileSpecImpl::Create),

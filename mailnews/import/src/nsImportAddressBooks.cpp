@@ -44,6 +44,7 @@
 #include "nsISupportsArray.h"
 #include "nsIImportAddressBooks.h"
 #include "nsIImportGeneric.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIImportABDescriptor.h"
 #include "nsIImportFieldMap.h"

@@ -69,6 +69,7 @@
 // PresState
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
 #include "nsIComponentManager.h"

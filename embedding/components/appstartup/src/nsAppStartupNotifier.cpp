@@ -41,6 +41,7 @@
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsAppStartupNotifier.h"
 

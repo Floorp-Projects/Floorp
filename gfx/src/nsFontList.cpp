@@ -27,6 +27,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsXPCOM.h"
 #include "nsFontList.h"
 #include "nsGfxCIID.h"
 #include "nsDependentString.h"

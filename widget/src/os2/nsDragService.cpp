@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDragService.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"

@@ -59,6 +59,7 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsICategoryManager.h"
 #include "nsIURLParser.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIProxiedProtocolHandler.h"
 #include "nsIProxyInfo.h"

@@ -42,6 +42,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nscore.h"
 #include "nsMemory.h"

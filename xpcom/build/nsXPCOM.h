@@ -39,6 +39,7 @@
 #define nsXPCOM_h__
 
 #include "nscore.h"
+#incldue "nsXPCOMCID.h"
 
 class nsAString;
 class nsACString;
@@ -50,6 +51,8 @@ class nsIFile;
 class nsILocalFile;
 class nsIDirectoryServiceProvider;
 class nsIMemory;
+
+
 /**
  * Initialises XPCOM. You must call this method before proceeding 
  * to use xpcom. The one exception is that you may call 
@@ -174,7 +177,7 @@ NS_GetMemoryManager(nsIMemory* *result);
  *       resolve symbolic links.  By default, this value will be false
  *       on all non unix systems.  On unix, this attribute is effectively
  *       a noop.  
-  * @param result Interface pointer to a new instance of an nsILocalFile 
+ * @param result Interface pointer to a new instance of an nsILocalFile 
  *
  * @return NS_OK for success;
  *         other error codes indicate a failure.

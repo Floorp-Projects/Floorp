@@ -48,6 +48,7 @@
 #include "nsIMsgFolderCache.h"
 #include "nsIPref.h"
 #include "nsIDOMWindow.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsString.h"

@@ -43,6 +43,7 @@
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 

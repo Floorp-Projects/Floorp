@@ -29,6 +29,7 @@
 
 #include "PyXPCOM_std.h"
 #include <nsIInterfaceInfoManager.h>
+#include <nsXPCOM.h>
 #include <nsISupportsPrimitives.h>
 
 

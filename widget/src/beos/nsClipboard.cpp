@@ -43,6 +43,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsString.h"
 

@@ -33,6 +33,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
 #include "nsIDNSService.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsSupportsPrimitives.h"
 #include "nsIEventQueueService.h"

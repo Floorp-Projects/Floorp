@@ -44,6 +44,7 @@
 #include "nsIOutputStream.h"
 #include "nsIStreamConverter.h"
 #include "nsICategoryManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 

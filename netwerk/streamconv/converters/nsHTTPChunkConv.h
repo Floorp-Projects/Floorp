@@ -45,6 +45,7 @@
 #include "nsHashtable.h"
 #include "nsString.h"
 
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 #define NS_HTTPCHUNKCONVERTER_CID					\

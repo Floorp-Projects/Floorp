@@ -1,6 +1,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresState.h"
 #include "nsHashtable.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
