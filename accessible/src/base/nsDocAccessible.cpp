@@ -53,7 +53,6 @@
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMWindow.h"
-#include "nsIEditorDocShell.h"
 #include "nsIEditingSession.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -150,7 +149,25 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
   nsAccessible::GetState(aState);
   *aState |= STATE_FOCUSABLE;
   if (mBusy == eBusyStateLoading)
-    *aState |= STATE_BUSY;
+    *aState |= STATE_BUSY; // If busy, not sure if visible yet or not
+
+  // Is it visible?
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+  nsCOMPtr<nsIWidget> widget;
+  if (shell) {
+    nsIViewManager* vm = shell->GetViewManager();
+    if (vm) {
+      vm->GetWidget(getter_AddRefs(widget));
+    }
+  }
+  PRBool isVisible = (widget != nsnull);
+  while (widget && isVisible) {
+    widget->IsVisible(isVisible);
+    widget = widget->GetParent();
+  }
+  if (!isVisible) {
+    *aState |= STATE_INVISIBLE;
+  }
 
 #ifdef DEBUG
   PRBool isEditable;
@@ -597,6 +614,12 @@ void nsDocAccessible::FireDocLoadFinished()
   if (!mDocument || !mWeakShell)
     return;  // Document has been shut down
 
+  PRUint32 state;
+  GetState(&state);
+  if ((state & STATE_INVISIBLE) != 0) {
+    return; // Don't consider load finished until window unhidden
+  }
+
   if (mIsNewDocument) {
     mIsNewDocument = PR_FALSE;
 
@@ -699,7 +722,13 @@ NS_IMETHODIMP nsDocAccessible::OnStateChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
   if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_STOP)) {
-    FireDocLoadFinished();   // Doc is ready!
+    if (!mDocLoadTimer) {
+      mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
+    }
+    if (mDocLoadTimer) {
+      mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 4,
+                                          nsITimer::TYPE_ONE_SHOT);
+    }
   }
 
   return NS_OK;
