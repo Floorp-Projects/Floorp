@@ -341,8 +341,7 @@ nsPersistentProperties::Set(const char* prop, nsISupports* value)
 }
 
 NS_IMETHODIMP 
-nsPersistentProperties::Has(const char* prop, const nsIID & uuid, 
-                            nsISupports* expectedValue, PRBool *result)
+nsPersistentProperties::Has(const char* prop, PRBool *result)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
