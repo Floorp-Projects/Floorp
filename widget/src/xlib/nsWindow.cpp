@@ -53,7 +53,7 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = NorthWestGravity;
   // make sure that we listen for events
-  attr.event_mask = SubstructureNotifyMask | StructureNotifyMask | ExposureMask;
+  attr.event_mask = StructureNotifyMask | ExposureMask;
   // set the default background color and border to that awful gray
   attr.background_pixel = bg_pixel;
   attr.border_pixel = border_pixel;

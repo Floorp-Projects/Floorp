@@ -119,6 +119,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
             argv[0], XDisplayName(NULL));
     exit(1);
   }
+  _Xdebug = 1;
   gScreenNum = DefaultScreen(gDisplay);
   gScreen = DefaultScreenOfDisplay(gDisplay);
   // init the rgb layer.  this will provide
@@ -304,7 +305,6 @@ nsAppShell::DispatchEvent(XEvent *event)
   // switch on the type of event
   switch (event->type) {
   case Expose:
-    printf("Handling expose event for window %ld\n", event->xany.window);
     HandleExposeEvent(event, widget);
     break;
   default:
@@ -317,6 +317,8 @@ nsAppShell::DispatchEvent(XEvent *event)
 void
 nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
 {
+  printf("Expose event for window %ld %d %d %d %d\n", event->xany.window,
+         event->xexpose.x, event->xexpose.y, event->xexpose.width, event->xexpose.height);
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = aWidget;

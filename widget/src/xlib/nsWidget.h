@@ -116,7 +116,6 @@ protected:
 
   // All widgets have at least these items.
   Window        mBaseWindow;
-  PRUint32      bg_rgb;
   unsigned long bg_pixel;
   PRUint32      border_rgb;
   unsigned long border_pixel;
