@@ -85,10 +85,7 @@ public:
 
   virtual nsresult GetStyleContext(PRInt32 aIndex, nsIStyleContext** aStyleContext) const;
   virtual nsresult SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleContext);
-	virtual void ReResolveStyles(nsIPresContext& aPresContext,
-                               PRInt32 aParentChange,
-                               nsStyleChangeList* aChangeList,
-                               PRInt32* aLocalChange);
+	virtual void ReResolveStyles(nsIPresContext& aPresContext);
 
   virtual void Redraw();
 

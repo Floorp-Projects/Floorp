@@ -30,7 +30,7 @@ void
 nsButtonFrameRenderer::SetFrame(nsFrame* aFrame, nsIPresContext& aPresContext)
 {
 	mFrame = aFrame;
-	ReResolveStyles(aPresContext, 0, nsnull, nsnull);
+	ReResolveStyles(aPresContext);
 }
 
 nsIFrame*
@@ -336,10 +336,7 @@ nsButtonFrameRenderer::GetAddedButtonBorderAndPadding()
  * Call this when styles change
  */
 void 
-nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext,
-                                       PRInt32 aParentChange,
-                                       nsStyleChangeList* aChangeList,
-                                       PRInt32* aLocalChange)
+nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
 {
 
 	// get all the styles
@@ -349,44 +346,23 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext,
 	mFrame->GetStyleContext(getter_AddRefs(context));
 
   // style that draw an outline around the button
-
-  // see if the outline has changed.
-  nsCOMPtr<nsIStyleContext> oldOutline = mOutlineStyle;
-
 	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-outline")) );
 	aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 										  PR_FALSE,
 										  getter_AddRefs(mOutlineStyle));
 
-  if ((mOutlineStyle && oldOutline) && (mOutlineStyle != oldOutline)) {
-    nsFrame::CaptureStyleChangeFor(mFrame, oldOutline, mOutlineStyle, 
-                              aParentChange, aChangeList, aLocalChange);
-  }
-
     // style for the inner such as a dotted line (Windows)
 	atom = getter_AddRefs(NS_NewAtom(":-moz-focus-inner"));
-  nsCOMPtr<nsIStyleContext> oldInnerFocus = mInnerFocusStyle;
 	aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 										  PR_FALSE,
 										  getter_AddRefs(mInnerFocusStyle));
 
-  if ((mInnerFocusStyle && oldInnerFocus) && (mInnerFocusStyle != oldInnerFocus)) {
-    nsFrame::CaptureStyleChangeFor(mFrame, oldInnerFocus, mInnerFocusStyle, 
-                                   aParentChange, aChangeList, aLocalChange);
-  }
-
-
 	// style for outer focus like a ridged border (MAC).
 	atom = getter_AddRefs(NS_NewAtom(":-moz-focus-outer"));
-  nsCOMPtr<nsIStyleContext> oldOuterFocus = mOuterFocusStyle;
 	aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 										  PR_FALSE,
 										  getter_AddRefs(mOuterFocusStyle));
 
-  if ((mOuterFocusStyle && oldOuterFocus) && (mOuterFocusStyle != oldOuterFocus)) {
-    nsFrame::CaptureStyleChangeFor(mFrame, oldOuterFocus, mOuterFocusStyle, 
-                                   aParentChange, aChangeList, aLocalChange);
-  }
 }
 
 nsresult 
