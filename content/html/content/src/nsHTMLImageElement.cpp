@@ -952,8 +952,6 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
           return NS_ERROR_FAILURE;
         }
 
-        nsCOMPtr<nsISupports> sup(do_QueryInterface(context));
-
         nsCOMPtr<nsIDocument> doc;
         nsCOMPtr<nsILoadGroup> loadGroup;
         shell->GetDocument(getter_AddRefs(doc));
@@ -961,7 +959,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
           doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
         }
 
-        il->LoadImage(uri, nsnull, loadGroup, this, sup, nsIRequest::LOAD_NORMAL,
+        il->LoadImage(uri, nsnull, loadGroup, this, context, nsIRequest::LOAD_NORMAL,
                       nsnull, nsnull, getter_AddRefs(mRequest));
       }
     }
