@@ -37,6 +37,7 @@ function wizardPageLoaded(tag) {
 
     currentPageTag = tag;
 	dump("currentPageTag: "+currentPageTag+"\n");
+
 	populatePage();
 }
 
@@ -77,23 +78,31 @@ function loadPage(thePage)
 function onNext()
 {
 	dump("***********onNext\n");
-	saveData();
-    var nextPageTag = testMap[currentPageTag].next;
-	var url = getUrlFromTag(nextPageTag);
-	displayPage(url);
+
+	if (currentPageTag != "tab4") {
+		saveData();
+		var nextPageTag = testMap[currentPageTag].next;
+		var url = getUrlFromTag(nextPageTag);
+		displayPage(url);
+	}
 }
 
 function onBack()
 {
 	dump("***********onBack\n");
-	saveData();
-    previousPageTag = testMap[currentPageTag].previous;
-	var url = getUrlFromTag(previousPageTag);
-	displayPage(url);
+
+	if (currentPageTag != "content1_1") {
+		saveData();
+		previousPageTag = testMap[currentPageTag].previous;
+		var url = getUrlFromTag(previousPageTag);
+		displayPage(url);
+	}
 }
 
 function displayPage(content)
 {
+	dump("********INSIDE DISPLAYPAGE\n\n");
+
 	if (content != "")
 	{
 		var	contentFrame = document.getElementById("content");
@@ -102,7 +111,6 @@ function displayPage(content)
 			contentFrame.setAttribute("src", content);
 		}
 	}
-
 }
 
 
@@ -111,6 +119,7 @@ function populatePage()
     dump("************initializePage\n");
 	var contentWindow = window.frames["content"];
 	var doc = contentWindow.document;
+
     for (var i in wizardHash) {
         var formElement=doc.getElementById(i);
 		dump("formElement: "+formElement+"\n");
