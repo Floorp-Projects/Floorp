@@ -1,0 +1,20 @@
+var srDest = $SpaceRequired$;
+
+var err = initInstall("Mozilla Myspell Spellchecker", "Spellchecker", "$Version$"); 
+logComment("initInstall: " + err);
+
+if (verifyDiskSpace(getFolder("Components"), srDest))
+{
+    addDirectory("Spellchecker",
+            "$Version$",
+            "components",
+            getFolder("Components"),
+            "");
+
+    if (err==SUCCESS)
+        performInstall(); 
+    else
+        cancelInstall(err);
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);
