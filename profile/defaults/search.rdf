@@ -23,10 +23,7 @@
 
 <!DOCTYPE RDF 
 [
-<!ENTITY search.category.music		"Music - Artist">
-<!ENTITY search.category.shareware	"Shareware">
-<!ENTITY search.category.shopping	"Shopping">
-<!ENTITY search.category.technews	"Tech News">
+<!ENTITY search.category.mozilla	"Mozilla">
 <!ENTITY search.category.web		"Web">
 ]
 >
@@ -41,20 +38,8 @@
 
   <RDF:Seq about="NC:SearchCategoryRoot">
   	<RDF:li>
-  		<RDF:Description about="urn:search:category:3">
-			<NC:title>&search.category.music;</NC:title>
-  		</RDF:Description>
-
-  		<RDF:Description about="urn:search:category:4">
-			<NC:title>&search.category.shareware;</NC:title>
-  		</RDF:Description>
-
-  		<RDF:Description about="urn:search:category:6">
-			<NC:title>&search.category.shopping;</NC:title>
-  		</RDF:Description>
-
-  		<RDF:Description about="urn:search:category:5">
-			<NC:title>&search.category.technews;</NC:title>
+  		<RDF:Description about="urn:search:category:2">
+			<NC:title>&search.category.mozilla;</NC:title>
   		</RDF:Description>
 
   		<RDF:Description about="urn:search:category:1">
@@ -68,28 +53,15 @@
 
 
   <RDF:Seq about="NC:SearchCategory?category=urn:search:category:1">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:AOLSearch.src" />
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:CompuServe.src" />
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:ICQ.src" />
-        <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:google.src" />
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:NetscapeSearch.src" />
+    <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:google.src" />
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:dmoz.src" />
   </RDF:Seq>
 
-  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:3">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:Music_Artist.src" />
-  </RDF:Seq>
-
-  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:4">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:Shareware.src" />
-  </RDF:Seq>
-
-  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:5">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:Tech_News.src" />
-  </RDF:Seq>
-
-  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:6">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:ClassifiedPlus.src" />
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:ShopNetscape.src" />
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:2">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:mozilla.src" />
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:bugzilla.src" />
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:lxrmozilla.src" />
   </RDF:Seq>
 
 </RDF:RDF>
