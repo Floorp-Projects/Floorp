@@ -80,7 +80,7 @@ function setWindowName()
   var cert;
 
   var certDetails = bundle.GetStringFromName('certDetails');
-  if (myName != "_blank") {
+  if (myName != "") {
     windowReference.setAttribute("title",certDetails+'"'+myName+'"');
     //  Get the token
     //  XXX ignore this for now.  NSS will find the cert on a token
