@@ -19,9 +19,10 @@
  *
  * Contributor(s): 
  *   Suresh Duddi <dp@netscape.com>
+ *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
-#include <iostream.h>
+#include <stdio.h>
 #include "TestFactory.h"
 #include "nsIGenericFactory.h"
 
@@ -41,7 +42,7 @@ class TestDynamicClassImpl: public ITestClass {
 NS_IMPL_ISUPPORTS1(TestDynamicClassImpl, ITestClass);
 
 void TestDynamicClassImpl::Test() {
-  cout << "hello, dynamic world!\n";
+  printf("hello, dynamic world!\n");
 }
 
 /**
