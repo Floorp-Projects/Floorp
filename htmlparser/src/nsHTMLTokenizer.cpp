@@ -444,7 +444,10 @@ nsresult nsHTMLTokenizer::HandleSkippedContent(nsScanner& aScanner,CToken*& aTok
       nsString& theTagStr=skippedToken->GetStringValueXXX();
       CToken* endtoken=theRecycler->CreateTokenOfType(eToken_end,theTag,theTagStr);
       if(endtoken){
-        endtoken->Reinitialize(theTag,theTagStr);
+        nsAutoString temp;
+        theTagStr.Mid(temp,2,theTagStr.Length()-3);
+        //now strip the leading and trailing delimiters...
+        endtoken->Reinitialize(theTag,temp);
         AddToken(endtoken,result,mTokenDeque);
       }
     } //if
