@@ -187,6 +187,7 @@ nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
     // the list of servers known to do bad things with pipelined requests
     static const char *bad_servers[] = {
         "Microsoft-IIS/4.",
+        "Microsoft-IIS/5.",
         "Netscape-Enterprise/3.",
         nsnull
     };
