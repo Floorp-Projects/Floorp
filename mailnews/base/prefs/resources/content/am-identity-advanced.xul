@@ -30,15 +30,14 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&identityAdvanced.label;"
   align="vertical"
-  onload="onLoad();"
-  width="0em">
+  onload="onLoad();">
 
   <script language="javascript" src="am-identity-advanced.js"/>
   <script language="javascript" src="chrome://global/content/strres.js"/>
   
-  <html>&smtpDesc.label;</html>
+  <html style="width: 20em; ">&smtpDesc.label;</html>
   <box orient="horizontal">
-    <text value="&smtpName.label;"/>
+    <text value="&smtpName.label;" class="label"/>
     <menulist oncommand="onSelected(event)">
       <menupopup id="smtpPopup"/>
     </menulist>

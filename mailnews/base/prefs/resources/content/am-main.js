@@ -23,10 +23,11 @@
 
 function onAdvanced()
 {
+    dump("onAdvanced..\n");
     var oldSmtpServer = null; // where will I get this from?
     var arg = {result: false,
                smtpServer: oldSmtpServer };
-    window.openDialog('am-identity-advanced.xul','advanced',
+    window.openDialog('am-identity-advanced.xul','smtpadvanced',
                       'modal,chrome', arg);
     
     if (arg.result && arg.smtpServer != oldSmtpServer) {

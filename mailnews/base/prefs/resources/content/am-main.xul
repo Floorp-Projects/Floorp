@@ -14,6 +14,7 @@
 
     <script src="chrome://global/content/strres.js"/>
     <script src="chrome://communicator/content/pref/prefutilities.js"/>
+    <script src="chrome://messenger/content/am-main.js"/>
     <box class="box-smallheader" title="&accountTitle.label;"/>
 
 	    <html class="secDesc">&accountSettingsDesc.label;</html>
@@ -87,7 +88,7 @@
 
     <box orient="horizontal">
       <spring flex="100%"/>
-      <button onclick="onAdvanced" value="&advancedButton.label;"/>
+      <button onclick="onAdvanced();" value="&advancedButton.label;"/>
       <text hidden="true" wsm_persist="true" type="hidden" id="identity.smtpServerKey"/>
     </box>
 </window>
