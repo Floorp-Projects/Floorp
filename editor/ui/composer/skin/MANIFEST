@@ -5,7 +5,6 @@ Editor.css
 
 images:ED_Center.gif
 images:ED_Copy.gif
-images:ED_Dedent.gif
 images:ED_HLine.gif
 images:ED_Indent.gif
 images:ED_Left.gif
@@ -24,6 +23,11 @@ images:ED_Outdent.gif
 images:ED_Find.gif
 images:ED_HLine.gif
 images:ED_Image.gif
+images:ED_imgalignbottom.gif
+images:ED_imgalignleft.gif
+images:ED_imgalignmiddle.gif
+images:ED_imgalignright.gif
+images:ED_imgaligntop.gif
 images:ED_Indent.gif
 images:ED_Italic.gif
 images:ED_Left.gif
