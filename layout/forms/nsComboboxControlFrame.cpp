@@ -1610,8 +1610,7 @@ nsComboboxControlFrame::GetName(nsAString* aResult)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                         const nsPoint& aPoint,
+nsComboboxControlFrame::GetFrameForPoint(const nsPoint& aPoint,
                                          nsFramePaintLayer aWhichLayer,
                                          nsIFrame** aFrame)
 {
