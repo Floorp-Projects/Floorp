@@ -712,11 +712,9 @@ nsGenericHTMLElement::nsGenericHTMLElement()
   // Create shared content delegate if this is the first html content
   // object being created.
   if (nsnull == gContentDelegate) {
-    gContentDelegate = new ZContentDelegate();
+    NS_NEWXPCOM(gContentDelegate, ZContentDelegate);
+    NS_ADDREF(gContentDelegate);
   }
-
-  // Add a reference to the shared content delegate object
-  NS_ADDREF(gContentDelegate);
 }
 
 nsGenericHTMLElement::~nsGenericHTMLElement()
@@ -728,15 +726,21 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   NS_IF_RELEASE(mListenerManager);
   // XXX what about mScriptObject? it's now safe to GC it...
 
+#if 0
+  // This code didn't work; and since content delegates are going
+  // away, I'm not going to fix it. So for now, we will leak a content
+  // delegate per address space. whoope doopie. -- kipp
   NS_PRECONDITION(nsnull != gContentDelegate, "null content delegate");
   if (nsnull != gContentDelegate) {
     // Remove our reference to the shared content delegate object.  If
     // the last reference just went away, null out gContentDelegate.
-    nsrefcnt rc = NS_RELEASE(gContentDelegate);
+    nsrefcnt rc;
+    NS_RELEASE2(gContentDelegate, rc);
     if (0 == rc) {
       gContentDelegate = nsnull;
     }
   }
+#endif
 }
 
 void
