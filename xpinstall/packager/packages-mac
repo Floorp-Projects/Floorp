@@ -198,6 +198,7 @@ viewer:res:charsetalias.properties
 viewer:res:acceptlanguage.properties
 viewer:res:charsetData.properties 
 viewer:res:charsetTitles.properties 
+viewer:res:langGroups.properties 
 viewer:res:entityTables:*
 viewer:res:FieldSchema.tbl
 viewer:res:html:*
