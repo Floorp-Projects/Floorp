@@ -54,7 +54,7 @@ blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote blo
   border-left: medium double navy !important;
 }
 
-blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote blockquote blockquote 
+blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote blockquote blockquote {
   border-right: medium double #00eecc !important;
   border-left: medium double #00eecc !important;
 } 
