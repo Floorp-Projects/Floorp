@@ -1297,6 +1297,18 @@ nsFrame::ContentChanged(nsIPresContext* aPresContext,
                         nsIContent*     aChild,
                         nsISupports*    aSubContent)
 {
+  nsIPresShell* shell;
+  shell = aPresContext->GetShell();
+    
+  nsIReflowCommand* reflowCmd;
+  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                        nsIReflowCommand::ContentChanged);
+  if (NS_SUCCEEDED(rv)) {
+    shell->AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+
+  NS_RELEASE(shell);
   return NS_OK;
 }
 
