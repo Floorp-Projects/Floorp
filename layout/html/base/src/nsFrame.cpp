@@ -4039,21 +4039,22 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
 void
 nsFrame::SetDefaultBackgroundColor(nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsStyleColor color;
+  mStyleContext->GetStyle(eStyleStruct_Color, color);
 
-  if (shell) {
-    nsCOMPtr<nsIViewManager> vm;
-    shell->GetViewManager(getter_AddRefs(vm));
+  if ((color.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) != 0) {
+    NS_WARNING("Frame setting default background color but it has transparent background!");
+  } else {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
 
-    if (vm) {
-      nsStyleColor color;
-      mStyleContext->GetStyle(eStyleStruct_Color, color);
+    if (shell) {
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
 
-      vm->SetDefaultBackgroundColor(
-          (color.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) == 0
-             ? color.mBackgroundColor
-             : NS_RGBA(0, 0, 0, 0));
+      if (vm) {
+        vm->SetDefaultBackgroundColor(color.mBackgroundColor);
+      }
     }
   }
 }

@@ -3927,6 +3927,28 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         // Stop any activity that may be happening in the old document before
         // releasing it...
         mContentViewer->Stop();
+
+        // Try to extract the default background color from the old
+        // view manager, so we can use it for the next document.
+        nsCOMPtr<nsIDocumentViewer> docviewer =
+        do_QueryInterface(mContentViewer);
+
+        if (docviewer) {
+            nsCOMPtr<nsIPresShell> shell;
+            docviewer->GetPresShell(*getter_AddRefs(shell));
+
+            if (shell) {
+                nsCOMPtr<nsIViewManager> vm;
+                shell->GetViewManager(getter_AddRefs(vm));
+
+                if (vm) {
+                    vm->GetDefaultBackgroundColor(&bgcolor);
+                    // If the background color is not known, don't propagate it.
+                    bgSet = NS_GET_A(bgcolor) != 0;
+                }
+            }
+        }
+
         mContentViewer->Destroy();
         aNewViewer->SetPreviousViewer(mContentViewer);
         mContentViewer = nsnull;
