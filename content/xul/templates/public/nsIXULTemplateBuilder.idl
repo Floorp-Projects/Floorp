@@ -108,7 +108,7 @@ interface nsIXULOutlinerBuilderObserver : nsISupports
     /** 
      * Called when an item is opened or closed. 
      */
-	void onToggleOpenState (in long index);
+	  void onToggleOpenState (in long index);
 
     /** 
 	 * Called when a header is clicked.
@@ -181,5 +181,10 @@ interface nsIXULOutlinerBuilder : nsISupports
      * Remove an Outliner Builder Observer.
      */
     void removeObserver(in nsIXULOutlinerBuilderObserver aObserver);
+
+    /** 
+     * Sort the contents of the outliner using the specified column.
+     */
+    void sort(in nsIDOMElement aColumnElement);
 };
 

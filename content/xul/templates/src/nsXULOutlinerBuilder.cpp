@@ -402,6 +402,74 @@ nsXULOutlinerBuilder::RemoveObserver(nsIXULOutlinerBuilderObserver* aObserver)
     return mObservers ? mObservers->RemoveElement(aObserver) : NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsXULOutlinerBuilder::Sort(nsIDOMElement* aElement)
+{
+    nsCOMPtr<nsIContent> header = do_QueryInterface(aElement);
+    if (! header)
+        return NS_ERROR_FAILURE;
+
+    nsAutoString sort;
+    header->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
+
+    if (!sort.IsEmpty()) {
+        // Grab the new sort variable
+        mSortVariable = mRules.LookupSymbol(sort.get());
+
+        // Cycle the sort direction
+        nsAutoString dir;
+        header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
+
+        if (dir == NS_LITERAL_STRING("ascending")) {
+            dir = NS_LITERAL_STRING("descending");
+            mSortDirection = eDirection_Descending;
+        }
+        else if (dir == NS_LITERAL_STRING("descending")) {
+            dir = NS_LITERAL_STRING("natural");
+            mSortDirection = eDirection_Natural;
+        }
+        else {
+            dir = NS_LITERAL_STRING("ascending");
+            mSortDirection = eDirection_Ascending;
+        }
+
+        // Sort it
+        SortSubtree(mRows.GetRoot());
+        mRows.InvalidateCachedRow();
+        if (mBoxObject) 
+            mBoxObject->Invalidate();
+
+        header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_TRUE);
+
+        // Unset sort attribute(s) on the other columns
+        nsCOMPtr<nsIContent> parentContent;
+        header->GetParent(*getter_AddRefs(parentContent));
+        if (parentContent) {
+            nsCOMPtr<nsIAtom> parentTag;
+            parentContent->GetTag(*getter_AddRefs(parentTag));
+            if (parentTag == nsXULAtoms::outlinercols) {
+                PRInt32 numChildren;
+                parentContent->ChildCount(numChildren);
+                for (int i = 0; i < numChildren; ++i) {
+                    nsCOMPtr<nsIContent> childContent;
+                    nsCOMPtr<nsIAtom> childTag;
+                    parentContent->ChildAt(i, *getter_AddRefs(childContent));
+                    if (childContent) {
+                        childContent->GetTag(*getter_AddRefs(childTag));
+                        if (childTag == nsXULAtoms::outlinercol && childContent != header) {
+                            childContent->UnsetAttr(kNameSpaceID_None,
+                                                    nsXULAtoms::sortDirection, PR_TRUE);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return NS_OK;
+}
+
+
 //----------------------------------------------------------------------
 //
 // nsIOutlinerView methods
@@ -742,6 +810,8 @@ nsXULOutlinerBuilder::ToggleOpenState(PRInt32 aIndex)
 NS_IMETHODIMP
 nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aElement)
 {
+    nsresult rv;
+    
     if (mObservers) {
         PRUint32 count;
         mObservers->Count(&count);
@@ -753,65 +823,10 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
         }
     }
 
-    nsCOMPtr<nsIContent> header = do_QueryInterface(aElement);
-    if (! header)
-        return NS_ERROR_FAILURE;
+    rv = Sort(aElement);
+    if (NS_FAILED(rv)) 
+        return rv;
 
-    nsAutoString sort;
-    header->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
-
-    if (!sort.IsEmpty()) {
-        // Grab the new sort variable
-        mSortVariable = mRules.LookupSymbol(sort.get());
-
-        // Cycle the sort direction
-        nsAutoString dir;
-        header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
-
-        if (dir == NS_LITERAL_STRING("ascending")) {
-            dir = NS_LITERAL_STRING("descending");
-            mSortDirection = eDirection_Descending;
-        }
-        else if (dir == NS_LITERAL_STRING("descending")) {
-            dir = NS_LITERAL_STRING("natural");
-            mSortDirection = eDirection_Natural;
-        }
-        else {
-            dir = NS_LITERAL_STRING("ascending");
-            mSortDirection = eDirection_Ascending;
-        }
-
-        // Sort it
-        SortSubtree(mRows.GetRoot());
-        mRows.InvalidateCachedRow();
-        mBoxObject->Invalidate();
-
-        header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_TRUE);
-
-        // Unset sort attribute(s) on the other columns
-        nsCOMPtr<nsIContent> parentContent;
-        header->GetParent(*getter_AddRefs(parentContent));
-        if (parentContent) {
-            nsCOMPtr<nsIAtom> parentTag;
-            parentContent->GetTag(*getter_AddRefs(parentTag));
-            if (parentTag == nsXULAtoms::outlinercols) {
-                PRInt32 numChildren;
-                parentContent->ChildCount(numChildren);
-                for (int i = 0; i < numChildren; ++i) {
-                    nsCOMPtr<nsIContent> childContent;
-                    nsCOMPtr<nsIAtom> childTag;
-                    parentContent->ChildAt(i, *getter_AddRefs(childContent));
-                    if (childContent) {
-                        childContent->GetTag(*getter_AddRefs(childTag));
-                        if (childTag == nsXULAtoms::outlinercol && childContent != header) {
-                            childContent->UnsetAttr(kNameSpaceID_None,
-                                                    nsXULAtoms::sortDirection, PR_TRUE);
-                        }
-                    }
-                }
-            }
-        }
-    }
     return NS_OK;
 }
 
