@@ -2346,7 +2346,8 @@ function GetMsgFolderFromUri(uri)
   	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
     var resource = RDF.GetResource(uri);
 		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-		return msgfolder;
+        if (msgfolder && ( msgfolder.parent || msgfolder.isServer))
+		  return msgfolder;
 	}//try
 	catch (ex) { }//catch
 	return null;

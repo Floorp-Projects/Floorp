@@ -55,7 +55,10 @@ function GetMsgFolderFromResource(folderResource)
      return null;
 
   var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-  return msgFolder;
+  if (msgFolder && (msgFolder.parent || msgFolder.isServer))
+    return msgFolder;
+  else
+    return null;
 }
 
 function GetMsgFolderFromURI(folderURI)

@@ -25,7 +25,8 @@ function GetMsgFolderFromUri(uri)
 	try {
 		var resource = GetResourceFromUri(uri);
 		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-		return msgfolder;
+        if (msgfolder && (msgfolder.parent || msgfolder.isServer))
+		  return msgfolder;
 	}
 	catch (ex) {
 		//dump("failed to get the folder resource\n");
