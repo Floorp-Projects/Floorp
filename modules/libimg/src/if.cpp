@@ -64,38 +64,14 @@ public:
   il_container *GetContainer() {return mContainer;};
   il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
 
-  ImgDecoder(il_container *aContainer){mContainer=aContainer;};
-  ~ImgDecoder();
+  ImgDecoder(il_container *aContainer){ NS_INIT_ISUPPORTS(); mContainer=aContainer;};
+  ~ImgDecoder() { }; // XXX Pam needs to fix this
 
 private:
   il_container* mContainer;
 };
 
-NS_IMETHODIMP ImgDecoder::AddRef()
-{
-  NS_INIT_REFCNT();
-  return NS_OK;
-}
-
-NS_IMETHODIMP ImgDecoder::Release()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP ImgDecoder::QueryInterface(const nsIID& aIID, void** aResult)
-{   	
-  if (NULL == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-   
-  if (aIID.Equals(kImgDecoderIID)) {
-	  *aResult = (void*) this;
-    NS_INIT_REFCNT();
-    return NS_OK;
-  }
-  
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS(ImgDecoder, kImgDecoderIID)
 
 /*-----------------------------------------*/
 /*-----------------------------------------*/

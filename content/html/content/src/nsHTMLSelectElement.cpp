@@ -192,11 +192,7 @@ nsHTMLSelectElement::~nsHTMLSelectElement()
 
 // ISupports
 
-NS_IMETHODIMP
-nsHTMLSelectElement::AddRef(void)
-{
-  return ++mRefCnt; 
-}
+NS_IMPL_ADDREF(nsHTMLSelectElement)
 
 nsresult
 nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)

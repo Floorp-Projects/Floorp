@@ -30,7 +30,7 @@ class ImgDCallbk : public nsIImgDCallbk
 {
 public:
   NS_DECL_ISUPPORTS
-  ImgDCallbk(il_container *aContainer){mContainer=aContainer;};
+  ImgDCallbk(il_container *aContainer) { NS_INIT_ISUPPORTS(); mContainer=aContainer; };
   ~ImgDCallbk(){};
 
 

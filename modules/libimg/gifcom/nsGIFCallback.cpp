@@ -29,16 +29,8 @@ NS_DEFINE_CID(kGIFCallbkCID, NS_GIFCALLBK_CID);
 /* callbks: */
 /*-------------class----------*/
 
-NS_IMETHODIMP GIFCallbk::AddRef()
-{
-  NS_INIT_REFCNT();
-  return NS_OK;
-}
-
-NS_IMETHODIMP GIFCallbk::Release()
-{
-  return NS_OK;
-}
+NS_IMPL_ADDREF(GIFCallbk)
+NS_IMPL_RELEASE(GIFCallbk)
 
 NS_IMETHODIMP GIFCallbk::QueryInterface(const nsIID& aIID, void** aResult)
 {   	

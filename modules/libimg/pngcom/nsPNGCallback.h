@@ -47,7 +47,7 @@ public:
   il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
 
   PNGCallbk(il_container *aContainer){mContainer=aContainer;};
-  ~PNGCallbk();
+  ~PNGCallbk() {};	// XXX Pam needs to fix this
 
 private:
   il_container* mContainer;

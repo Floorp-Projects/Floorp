@@ -28,31 +28,7 @@
 /* callbks: */
 /*-------------class----------*/
 
-NS_IMETHODIMP PNGCallbk::AddRef()
-{
-  NS_INIT_REFCNT();
-  return NS_OK;
-}
-
-NS_IMETHODIMP PNGCallbk::Release()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP PNGCallbk::QueryInterface(const nsIID& aIID, void** aResult)
-{   	
-  if (NULL == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-   
-  if (aIID.Equals(kImgDCallbkIID)) {
-	  *aResult = (void*) this;
-    NS_INIT_REFCNT();
-    return NS_OK;
-  }
-  
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS(PNGCallbk, kImgDCallbkIID)
 
 /*-----------------------------*/
 

@@ -151,11 +151,7 @@ nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
   }
 }
 
-NS_IMETHODIMP
-nsHTMLTextAreaElement::AddRef(void)
-{
-  return ++mRefCnt; 
-}
+NS_IMPL_ADDREF(nsHTMLTextAreaElement)
 
 nsresult
 nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)

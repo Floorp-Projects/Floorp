@@ -137,11 +137,7 @@ nsHTMLOptionElement::~nsHTMLOptionElement()
 
 // ISupports
 
-NS_IMETHODIMP
-nsHTMLOptionElement::AddRef(void)
-{
-  return ++mRefCnt; 
-}
+NS_IMPL_ADDREF(nsHTMLOptionElement)
 
 nsresult
 nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)

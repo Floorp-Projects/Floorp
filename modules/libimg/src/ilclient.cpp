@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.5 1999/04/22 22:39:55 pnunn%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.6 1999/05/04 18:36:07 dp%netscape.com Exp $
  */
 
 
@@ -77,22 +77,9 @@ struct il_cache_struct {
 
 struct il_cache_struct il_cache;
 /*---------------------------------------------*/
-/*-------------------------------*/    
-NS_IMETHODIMP
-ImgDCallbk::QueryInterface(const nsIID& aIID, void** aInstPtr)
-{
-  if (NULL == aInstPtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+/*-------------------------------*/
 
-  if (aIID.Equals(kImgDCallbkIID) ||
-      aIID.Equals(kISupportsIID)) {
-          *aInstPtr = (void*) this;
-    NS_INIT_REFCNT();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}                                      
+NS_IMPL_ISUPPORTS(ImgDCallbk, kImgDCallbkIID)
 
 NS_IMETHODIMP
 ImgDCallbk::CreateInstance(const nsCID &aClass,
@@ -116,16 +103,6 @@ ImgDCallbk::CreateInstance(const nsCID &aClass,
   }
   return res;
 }
-NS_IMETHODIMP ImgDCallbk::AddRef()
-{
-  NS_INIT_REFCNT();
-  return NS_OK;
-}
-
-NS_IMETHODIMP ImgDCallbk::Release()
-{
-  return NS_OK;
-}   
    
 /*-------------------------*/
 
