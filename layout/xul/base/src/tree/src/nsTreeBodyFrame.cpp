@@ -405,6 +405,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
       ScrollToRow(lastPageTopRow);
 
     InvalidateScrollbar();
+    SetVisibleScrollbar((rowCount >= mPageCount));
   }
 
   return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
@@ -472,6 +473,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
 
     // The scrollbar will need to be updated.
     InvalidateScrollbar();
+
+    PRInt32 rowCount;
+    mView->GetRowCount(&rowCount);
+    SetVisibleScrollbar((rowCount >= mPageCount));
   }
  
   return NS_OK;
@@ -614,6 +619,27 @@ nsOutlinerBodyFrame::UpdateScrollbar()
   nsAutoString curPos;
   curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+}
+
+nsresult nsOutlinerBodyFrame::SetVisibleScrollbar(PRBool aSetVisible)
+{
+  nsCOMPtr<nsIContent> scrollbarContent;
+  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+
+  nsAutoString isCollapsed;
+  scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
+                                 isCollapsed);
+  
+  if (!isCollapsed.IsEmpty() && aSetVisible)
+    scrollbarContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, 
+                                     PR_TRUE);
+  else if (isCollapsed.IsEmpty() && !aSetVisible)
+    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
+                                   NS_LITERAL_STRING("true"), PR_TRUE);
+
+  Invalidate();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
@@ -1121,6 +1147,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
     return NS_OK; // Nothing to do.
 
   PRInt32 count = aCount > 0 ? aCount : -aCount;
+  PRInt32 rowCount;
+  mView->GetRowCount(&rowCount);
 
   // Adjust our selection.
   nsCOMPtr<nsIOutlinerSelection> sel;
@@ -1136,6 +1164,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   if (mTopRowIndex == 0) {    
     // Just update the scrollbar and return.
     InvalidateScrollbar();
+    SetVisibleScrollbar((rowCount >= mPageCount));
     return NS_OK;
   }
 
@@ -1163,6 +1192,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   }
 
   InvalidateScrollbar();
+  SetVisibleScrollbar((rowCount >= mPageCount));
   return NS_OK;
 }
 

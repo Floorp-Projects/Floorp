@@ -342,6 +342,9 @@ protected:
   // Update the curpos of the scrollbar.
   void UpdateScrollbar();
 
+  // Update the visibility of the scrollbar.
+  nsresult SetVisibleScrollbar(PRBool aSetVisible);
+
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
   void PrefillPropertyArray(PRInt32 aRowIndex, nsOutlinerColumn* aCol);
