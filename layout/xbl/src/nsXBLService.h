@@ -25,7 +25,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 #include "nsIXBLService.h"
-
+#include "nsIMemory.h"
 #include "jsapi.h"              // nsXBLJSClass derives from JSClass
 #include "jsclist.h"            // nsXBLJSClass derives from JSCList
 
@@ -39,7 +39,7 @@ class nsIURI;
 class nsSupportsHashtable;
 class nsHashtable;
 
-class nsXBLService : public nsIXBLService
+class nsXBLService : public nsIXBLService, public nsIMemoryPressureObserver
 {
   NS_DECL_ISUPPORTS
 
@@ -62,6 +62,8 @@ class nsXBLService : public nsIXBLService
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD AllowScripts(nsIContent* aContent, PRBool* aAllowScripts);
+
+  NS_DECL_NSIMEMORYPRESSUREOBSERVER
 
 public:
   nsXBLService();

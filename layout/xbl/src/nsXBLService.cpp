@@ -176,6 +176,10 @@ nsXBLService::nsXBLService(void)
       prefs->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
 
     gClassTable = new nsHashtable();
+
+    // Register the first (and only) nsXBLService as a memory pressure observer
+    // so it can flush the LRU list in low-memory situations.
+    nsMemory::RegisterObserver(this);
   }
 }
 
@@ -194,12 +198,7 @@ nsXBLService::~nsXBLService(void)
     NS_RELEASE(kURIAtom);
 
     // Walk the LRU list removing and deleting the nsXBLJSClasses.
-    while (!JS_CLIST_IS_EMPTY(&gClassLRUList)) {
-      JSCList* lru = gClassLRUList.next;
-      JS_REMOVE_AND_INIT_LINK(lru);
-      nsXBLJSClass* c = NS_STATIC_CAST(nsXBLJSClass*, lru);
-      delete c;
-    }
+    FlushMemory(REASON_HEAP_MINIMIZE, 0);
 
     // Any straggling nsXBLJSClass instances held by unfinalized JS objects
     // created for bindings will be deleted when those objects are finalized
@@ -421,6 +420,26 @@ nsXBLService::AllowScripts(nsIContent* aContent, PRBool* aAllowScripts)
 
   *aAllowScripts = !document;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLService::FlushMemory(PRUint32 reason, size_t requestedAmount)
+{
+  while (!JS_CLIST_IS_EMPTY(&gClassLRUList)) {
+    JSCList* lru = gClassLRUList.next;
+    nsXBLJSClass* c = NS_STATIC_CAST(nsXBLJSClass*, lru);
+
+    JS_REMOVE_AND_INIT_LINK(lru);
+    delete c;
+    gClassLRUListLength--;
+
+    if (reason == REASON_ALLOC_FAILURE) {
+      if (requestedAmount <= sizeof(nsXBLJSClass))
+        break;
+      requestedAmount -= sizeof(nsXBLJSClass);
+    }
+  }
   return NS_OK;
 }
 
