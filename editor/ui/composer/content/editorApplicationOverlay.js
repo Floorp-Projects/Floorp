@@ -52,7 +52,8 @@ function initEditorContextMenuItems(aEvent)
 function initEditorContextMenuListener(aEvent)
 {
   var popup = document.getElementById("contentAreaContextMenu");
-  popup.addEventListener("popupshowing", initEditorContextMenuItems, false);
+  if (popup)
+    popup.addEventListener("popupshowing", initEditorContextMenuItems, false);
 }
 
 addEventListener("load", initEditorContextMenuListener, false);
@@ -114,39 +115,37 @@ function editPage(url, launchWindow, delay)
   var wintype = document.firstChild.getAttribute('windowtype');
   var charsetArg;
 
-  if (launchWindow && (wintype == "navigator:browser"))
+  if (launchWindow && (wintype == "navigator:browser") && launchWindow._content.document)
     charsetArg = "charset=" + launchWindow._content.document.characterSet;
 
-  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-  if (!windowManager) return;
-  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-  if ( !windowManagerInterface ) return;
-  var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
-  if ( !enumerator ) return;
-
-  while ( enumerator.hasMoreElements() )
-  {
-    var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
-    if ( window && window.editorShell)
+  try {
+    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+    var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
+    while ( enumerator.hasMoreElements() )
     {
-      if (window.editorShell.checkOpenWindowForURLMatch(url, window))
+      var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
+      if ( window && window.editorShell)
       {
-        // We found an editor with our url
-        window.focus();
-        return;
+        if (window.editorShell.checkOpenWindowForURLMatch(url, window))
+        {
+          // We found an editor with our url
+          window.focus();
+          return;
+        }
       }
     }
-  }
+    // Create new Composer window
+    if (delay)
+      launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url, charsetArg);
+    else
+      launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url, charsetArg);
 
-  // Create new Composer window
-  if (delay)
-    launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url, charsetArg);
-  else
-    launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url, charsetArg);
+  } catch(e) {}
 }
 
 // This used to be BrowserNewEditorWindow in navigator.js
-function NewEditorWindow(aPageURL)
+function NewEditorWindow()
 {
   // Open editor window with blank page
   // Kludge to leverage openDialog non-modal!
