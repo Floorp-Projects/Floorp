@@ -1,3 +1,40 @@
+/* vim:set ts=2 sw=2 et cindent: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla IPC.
+ *
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@meer.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include "ipcIService.h"
 #include "ipcIDConnectService.h"
 #include "ipcCID.h"
@@ -108,6 +145,31 @@ static nsresult DoTest()
     return NS_ERROR_FAILURE;
   }
   printf("Files are equals? [%d]\n", match);
+
+  // now test passing null for interface pointer
+
+  rv = clone->Exists(&exists);
+  if (NS_FAILED(rv))
+  {
+    printf("*** Exists test failed [rv=%x]\n", rv);
+    return NS_ERROR_FAILURE;
+  }
+  if (!exists)
+  {
+    rv = clone->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
+    if (NS_FAILED(rv))
+    {
+      printf("*** Create test failed [rv=%x]\n", rv);
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  rv = clone->MoveTo(nsnull, NS_LITERAL_STRING("helloworld.txt"));
+  if (NS_FAILED(rv))
+  {
+    printf("*** MoveTo test failed [rv=%x]\n", rv);
+    return NS_ERROR_FAILURE;
+  }
 
   // now test passing local objects to a remote object
 
