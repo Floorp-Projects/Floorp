@@ -77,6 +77,8 @@
 #include "nsITimer.h"
 #include "nsDOMClassInfo.h"
 #include "nsIAtom.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 // For locale aware string methods
 #include "nsUnicharUtils.h"
@@ -130,6 +132,8 @@ static JSGCCallback gOldJSGCCallback;
 static PRBool sDidShutdown;
 
 static PRInt32 sContextCount;
+
+static PRTime sMaxScriptRunTime;
 
 static nsIScriptSecurityManager *sSecurityManager;
 
@@ -394,17 +398,20 @@ NotifyXPCIfExceptionPending(JSContext *cx)
   }
 }
 
-
+// The number of branch callbacks between calls to JS_MaybeGC
 #define MAYBE_GC_BRANCH_COUNT_MASK 0x00000fff // 4095
-#define MAYBE_STOP_BRANCH_COUNT_MASK 0x003fffff
 
+// The number of branch callbacks between elapsed time checks.  This is
+// slightly more than the number of callbacks a slow machine makes in a second
+// when running a script that makes callbacks infrequently.
+#define MAYBE_STOP_BRANCH_COUNT_MASK 0x00007fff // 32767
+
+// This function is called after each JS branch callback
 JSBool JS_DLL_CALLBACK
 nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 {
   // Get the native context
   nsJSContext *ctx = NS_STATIC_CAST(nsJSContext *, ::JS_GetContextPrivate(cx));
-  if (!ctx)
-    return JS_TRUE;
 
   // Filter out most of the calls to this callback
   if (++ctx->mBranchCallbackCount & MAYBE_GC_BRANCH_COUNT_MASK)
@@ -413,8 +420,24 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   // Run the GC if we get this far.
   JS_MaybeGC(cx);
 
-  // Filter out most of the calls to this callback that make it this far
+  // Filter out even more of the calls to this callback
   if (ctx->mBranchCallbackCount & MAYBE_STOP_BRANCH_COUNT_MASK)
+    return JS_TRUE;
+
+  PRTime now = PR_Now();
+
+  // If this is the first time we've made it this far, we start timing how
+  // long the script has run
+  if (LL_IS_ZERO(ctx->mBranchCallbackTime)) {
+    ctx->mBranchCallbackTime = now;
+    return JS_TRUE;
+  }
+
+  PRTime duration;
+  LL_SUB(duration, now, ctx->mBranchCallbackTime);
+
+  // Check the amount of time this script has been running
+  if (LL_CMP(duration, <, sMaxScriptRunTime))
     return JS_TRUE;
 
   // If we get here we're most likely executing an infinite loop in JS,
@@ -444,10 +467,15 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   JSBool ret = JS_TRUE;
 
   // Open the dialog.
-  if (NS_FAILED(prompt->Confirm(title.get(), msg.get(), &ret)))
-    return JS_TRUE;
+  nsresult rv = prompt->Confirm(title.get(), msg.get(), &ret);
+  if (NS_FAILED(rv) || !ret) {
 
-  return !ret;
+    // Allow the script to run this long again
+    ctx->mBranchCallbackTime = PR_Now();
+    return JS_TRUE;
+  }
+
+  return JS_FALSE;
 }
 
 #define JS_OPTIONS_DOT_STR "javascript.options."
@@ -547,6 +575,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mTerminationFunc = nsnull;
   mScriptsEnabled = PR_TRUE;
   mBranchCallbackCount = 0;
+  mBranchCallbackTime = LL_ZERO;
   mProcessingScriptTag=PR_FALSE;
 
   InvalidateContextAndWrapperCache();
@@ -1687,6 +1716,7 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
   }
 
   mBranchCallbackCount = 0;
+  mBranchCallbackTime = LL_ZERO;
 }
 
 void
@@ -1871,6 +1901,24 @@ nsJSEnvironment::Init()
     rv = manager->StartupLiveConnect(sRuntime, started);
   }
 #endif /* OJI */
+
+  // Initialize limit on script run time to 5 seconds
+  PRInt32 maxtime = 5;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRInt32 time;
+    if (NS_SUCCEEDED(prefs->GetIntPref("dom.max_script_run_time", &time))) {
+
+      // Force the default for unreasonable values
+      if (time > 0)
+        maxtime = time;
+    }
+  }
+
+  PRTime usec_per_sec;
+  LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
+  LL_I2L(sMaxScriptRunTime, maxtime);
+  LL_MUL(sMaxScriptRunTime, sMaxScriptRunTime, usec_per_sec);
 
   rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
 

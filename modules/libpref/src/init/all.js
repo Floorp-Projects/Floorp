@@ -797,6 +797,8 @@ pref("config.use_system_prefs.accessibility", false);
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
 
+pref("dom.max_script_run_time", 5);
+
 #ifdef XP_WIN
 pref("font.name.serif.ar", "Times New Roman");
 pref("font.name.sans-serif.ar", "Arial");
