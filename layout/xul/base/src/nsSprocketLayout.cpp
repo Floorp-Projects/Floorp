@@ -514,7 +514,9 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       if (sizeChanged) {
         // Our size is different.  Sanity check against our maximum allowed size to ensure
         // we didn't exceed it.
+        child->GetMinSize(aState, minSize);
         child->GetMaxSize(aState, maxSize);
+        nsBox::BoundsCheckMinMax(minSize, maxSize);
 
         // make sure the size is in our max size.
         if (childRect.width > maxSize.width)
@@ -1037,7 +1039,10 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
             // so we will set the changed index to be us. And signal that we need a new pass.
 
             nsSize max(0,0);
+            nsSize min(0,0);
             aChild->GetMaxSize(aState, max);
+            aChild->GetMinSize(aState, max);
+            nsBox::BoundsCheckMinMax(min, max);
             AddMargin(aChild, max);
 
             if (isHorizontal)
@@ -1072,7 +1077,10 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
       
       if (childActualWidth > childLayoutWidth) {
             nsSize max(0,0);
+            nsSize min(0,0);
+            aChild->GetMinSize(aState, min);
             aChild->GetMaxSize(aState, max);
+            nsBox::BoundsCheckMinMax(min, max);
             AddMargin(aChild, max);
 
             // our width now becomes the new size
@@ -1467,7 +1475,10 @@ nsSprocketLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
       {
         // if completely redefined don't even ask our child for its size.
         nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+        nsSize min(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
         child->GetMaxSize(aState, max);
+        child->GetMinSize(aState, min);
+        nsBox::BoundsCheckMinMax(min, max);
 
         AddMargin(child, max);
         AddSmallestSize(aSize, max, isHorizontal);
