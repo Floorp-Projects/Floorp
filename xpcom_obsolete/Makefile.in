@@ -27,13 +27,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom_obsolete
-LIBRARY_NAME	= xpcom_obsolete
+LIBRARY_NAME	= xpcom_compat
 
-# Do not set EXPORT_LIBRARY as we do not want xpcom in the static libs list
-#EXPORT_LIBRARY = 1
+EXPORT_LIBRARY  = 1
 GRE_MODULE	= 1
 
+DIRS            = component
+
 REQUIRES	= xpcom  \
+		  mozreg \
+		  libreg \
 		  string \
 		  $(NULL)
 
@@ -44,34 +47,45 @@ endif
 
 CPPSRCS         = \
 		nsFileSpec.cpp \
-		nsFileSpecImpl.cpp \
 		nsFileStream.cpp \
 		nsIFileStream.cpp \
+		nsFileSpecImpl.cpp \
 		nsSpecialSystemDirectory.cpp \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS		+= dlldeps.cpp
+endif
 
 EXPORTS		= \
 		nsFileSpec.h    \
 		nsFileStream.h  \
 		nsIFileStream.h \
 		nsSpecialSystemDirectory.h \
+		nsIRegistryUtils.h \
 		$(NULL)
-
-XPIDLSRCS       = nsIFileSpec.idl
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../io \
 		$(NULL)
 
+XPIDLSRCS	= nsIFileSpec.idl \
+		  nsIRegistry.idl \
+		 $(NULL)
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 
 FORCE_SHARED_LIB = 1
 
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= \
-		-D_IMPL_NS_COM
+DEFINES		+= -D_IMPL_NS_COM
+
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 

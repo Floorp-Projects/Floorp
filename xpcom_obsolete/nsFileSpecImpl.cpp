@@ -776,7 +776,7 @@ NS_IMETHODIMP nsDirectoryIteratorImpl::GetCurrentSpec(nsIFileSpec * *aCurrentSpe
 }
 
 //----------------------------------------------------------------------------------------
-NS_METHOD nsDirectoryIteratorImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
+NS_IMETHODIMP nsDirectoryIteratorImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
 //----------------------------------------------------------------------------------------
 {
   if (aIFileSpec == NULL)
@@ -796,7 +796,7 @@ NS_METHOD nsDirectoryIteratorImpl::Create(nsISupports* outer, const nsIID& aIID,
 }
 
 //----------------------------------------------------------------------------------------
-NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
+NS_IMETHODIMP nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
 //----------------------------------------------------------------------------------------
 {
   if (aIFileSpec == NULL)
