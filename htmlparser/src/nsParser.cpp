@@ -2110,6 +2110,12 @@ static const PRInt32 kContentStrLen = sizeof(kContentStr)-1;
 static const char kCharsetStr[] = "charset";
 static const PRInt32 kCharsetStrLen = sizeof(kCharsetStr)-1;
 
+inline const char GetNextChar(nsReadingIterator<char>& aStart,
+                              nsReadingIterator<char>& aEnd)
+{
+  return (aStart != aEnd) ? *(++aStart) : '\0';
+}
+
 PRBool 
 nsParser::DetectMetaTag(const char* aBytes, 
                         PRInt32 aLen, 
@@ -2136,77 +2142,105 @@ nsParser::DetectMetaTag(const char* aBytes,
   str.EndReading(end);
   nsReadingIterator<char> tagStart(begin);
   nsReadingIterator<char> tagEnd(end);
+  nsReadingIterator<char> ltPos;
   
-  do {
-    // Find the string META and make sure it's not right at the beginning
-    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("META"), tagStart, tagEnd) &&
-        (tagStart != begin)) {
-      // Back up one to confirm that this is a tag
-      if (*--tagStart == '<') {
-        const char* attrStart = tagEnd.get();
-        const char* attrEnd;
-        
-        // Find the end of the tag
-        FindCharInReadable('>', tagEnd, end);
-        attrEnd = tagEnd.get();
-        
-        CWordTokenizer<char> tokenizer(attrStart, 0, attrEnd-attrStart);
-        PRInt32 offset;
-        
-        // Start looking at the attributes
-        while ((offset = tokenizer.GetNextWord()) != kNotFound) {
-          // We need to have a HTTP-EQUIV attribute whose value is 
-          // "Content-Type"
-          if ((tokenizer.GetLength() >= kHTTPEquivStrLen) &&
-              (nsCRT::strncasecmp(attrStart+offset, 
-                                 kHTTPEquivStr, kHTTPEquivStrLen) == 0)) {
-            if (((offset = tokenizer.GetNextWord(PR_TRUE)) != kNotFound) &&
-                (tokenizer.GetLength() >= kContentTypeStrLen) &&
-                (nsCRT::strncasecmp(attrStart+offset, 
-                                    kContentTypeStr, kContentTypeStrLen) == 0)) {
-              foundContentType = PR_TRUE;
-            }
-            else {
-              break;
-            }
+  
+  while (tagStart != end) {
+    if (FindCharInReadable('<', tagStart, end)) {
+      ltPos = tagEnd = tagStart;
+      if (GetNextChar(ltPos, end) == '!' && 
+          GetNextChar(ltPos, end) == '-' &&
+          GetNextChar(ltPos, end) == '-') {
+        // Found MDO ( <!-- ). Now search for MDC ( --[*s]> )
+        PRBool foundMDC = PR_FALSE;
+        PRBool foundMatch = PR_FALSE; 
+        while (!foundMDC) {
+          if (GetNextChar(ltPos, end) == '-' && 
+              GetNextChar(ltPos, end) == '-') {
+            foundMatch = !foundMatch; // toggle until we've matching "--"
           }
-          // And a CONTENT attribute
-          else if ((tokenizer.GetLength() >= kContentStrLen) &&
-                   (nsCRT::strncasecmp(attrStart+offset, 
-                                      kContentStr, kContentStrLen) == 0)) {
-            // The next word is the value which itself needs to be parsed
-            if ((offset = tokenizer.GetNextWord(PR_TRUE)) != kNotFound) {
-              const char* contentStart = attrStart+offset;
-              CWordTokenizer<char> contentTokenizer(contentStart, 0, 
-                                                    attrEnd-contentStart);
+          else if (foundMatch && *ltPos == '>') {
+            foundMDC = PR_TRUE; // found comment end delimiter.
+            tagStart = (ltPos != end) ? ++ltPos : ltPos;
+          }
+          else if (ltPos == end) {
+            return PR_FALSE; // Couldn't find --[*s]> in this buffer
+          }
+        }
+        continue; // continue searching for META tag.
+      }
+      else if (!FindCharInReadable('>', tagEnd, end)) {
+        // Can't be sure if this is a real tag since only 
+        // a part of the tag is in this buffer. 
+        return PR_FALSE; 
+      }
+    }
+    else {
+      return PR_FALSE; // META not found in this buffer
+    }
 
-              // Read the content type
-              if (contentTokenizer.GetNextWord() != kNotFound) {
-                // Now see if we have a charset
-                if (((offset = contentTokenizer.GetNextWord()) != kNotFound) &&
-                    (contentTokenizer.GetLength() >= kCharsetStrLen) &&
-                    (nsCRT::strncasecmp(contentStart+offset,
-                                        kCharsetStr, kCharsetStrLen) == 0)) {
-                  // The next word is the charset. PR_TRUE => That we should skip quotes - Bug 88746
-                  if ((offset = contentTokenizer.GetNextWord(PR_TRUE)) != kNotFound) {
-                    aCharset.Assign(NS_ConvertASCIItoUCS2(contentStart+offset, 
-                                                          contentTokenizer.GetLength()));
-                  }
+    // Find the string META and make sure it's not right at the beginning
+    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("META"), tagStart, tagEnd)) {
+      const char* attrStart = tagEnd.get();
+      const char* attrEnd;
+      
+      // Find the end of the tag
+      FindCharInReadable('>', tagEnd, end);
+      attrEnd = tagEnd.get();
+      
+      CWordTokenizer<char> tokenizer(attrStart, 0, attrEnd-attrStart);
+      PRInt32 offset;
+      
+      // Start looking at the attributes
+      while ((offset = tokenizer.GetNextWord()) != kNotFound) {
+        // We need to have a HTTP-EQUIV attribute whose value is 
+        // "Content-Type"
+        if ((tokenizer.GetLength() >= kHTTPEquivStrLen) &&
+            (nsCRT::strncasecmp(attrStart+offset, 
+                               kHTTPEquivStr, kHTTPEquivStrLen) == 0)) {
+          if (((offset = tokenizer.GetNextWord(PR_TRUE)) != kNotFound) &&
+              (tokenizer.GetLength() >= kContentTypeStrLen) &&
+              (nsCRT::strncasecmp(attrStart+offset, 
+                                  kContentTypeStr, kContentTypeStrLen) == 0)) {
+            foundContentType = PR_TRUE;
+          }
+          else {
+            break;
+          }
+        }
+        // And a CONTENT attribute
+        else if ((tokenizer.GetLength() >= kContentStrLen) &&
+                 (nsCRT::strncasecmp(attrStart+offset, 
+                                    kContentStr, kContentStrLen) == 0)) {
+          // The next word is the value which itself needs to be parsed
+          if ((offset = tokenizer.GetNextWord(PR_TRUE)) != kNotFound) {
+            const char* contentStart = attrStart+offset;
+            CWordTokenizer<char> contentTokenizer(contentStart, 0, 
+                                                  attrEnd-contentStart);
+
+            // Read the content type
+            if (contentTokenizer.GetNextWord() != kNotFound) {
+              // Now see if we have a charset
+              if (((offset = contentTokenizer.GetNextWord()) != kNotFound) &&
+                  (contentTokenizer.GetLength() >= kCharsetStrLen) &&
+                  (nsCRT::strncasecmp(contentStart+offset,
+                                      kCharsetStr, kCharsetStrLen) == 0)) {
+                // The next word is the charset. PR_TRUE => That we should skip quotes - Bug 88746
+                if ((offset = contentTokenizer.GetNextWord(PR_TRUE)) != kNotFound) {
+                  aCharset.Assign(NS_ConvertASCIItoUCS2(contentStart+offset, 
+                                                        contentTokenizer.GetLength()));
                 }
               }
             }
           }
         }
-
-        if (foundContentType && (aCharset.Length() > 0)) {
-          return PR_TRUE;
-        }
       }
-    }  
-   
-    tagStart = tagEnd;
-    tagEnd = end;
-  } while (tagStart != end);
+
+      if (foundContentType && (aCharset.Length() > 0)) {
+        return PR_TRUE;
+      }
+    }
+  }
   
   return PR_FALSE;
 }
