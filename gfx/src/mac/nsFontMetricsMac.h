@@ -41,6 +41,9 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  GetXHeight(nscoord& aResult);
+  NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
+  NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetWidth(char aC, nscoord &aWidth);
   NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth);
   NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth);

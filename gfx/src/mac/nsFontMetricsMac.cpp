@@ -236,6 +236,30 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
   mLeading = 0;
 }*/
 
+NS_IMETHODIMP
+nsFontMetricsMac :: GetXHeight(nscoord& aResult)
+{
+//  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = 0;/* XXX */
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsMac :: GetSuperscriptOffset(nscoord& aResult)
+{
+//  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = 0;/* XXX */
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsMac :: GetSubscriptOffset(nscoord& aResult)
+{
+//  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = 0;/* XXX */
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsFontMetricsMac :: GetWidth(char ch, nscoord &aWidth)
 {
   //if (ch < 256)

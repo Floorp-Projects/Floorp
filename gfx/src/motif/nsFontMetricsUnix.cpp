@@ -272,6 +272,27 @@ void nsFontMetricsUnix::RealizeFont()
   mLeading = 0;
 }
 
+NS_IMETHODIMP
+nsFontMetricsUnix :: GetXHeight(nscoord& aResult)
+{
+  aResult = mMaxAscent / 2;     // XXX temporary code!
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsUnix :: GetSuperscriptOffset(nscoord& aResult)
+{
+  aResult = mMaxAscent / 2;     // XXX temporary code!
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsUnix :: GetSubscriptOffset(nscoord& aResult)
+{
+  aResult = mMaxAscent / 2;     // XXX temporary code!
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(char ch, nscoord &aWidth)
 {
   char buf[1];
