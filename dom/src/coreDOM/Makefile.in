@@ -55,4 +55,6 @@ include $(topsrcdir)/config/config.mk
 
 MKSHLIB :=
 
+NO_SHARED_LIB=1
+
 include $(topsrcdir)/config/rules.mk

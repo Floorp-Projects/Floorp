@@ -60,6 +60,8 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/config.mk
 
+NO_STATIC_LIB=1
+
 include $(topsrcdir)/config/rules.mk
 
 $(LIBRARY): \

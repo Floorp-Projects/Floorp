@@ -101,7 +101,6 @@ EX_LIBS = \
 	-lraptorgfx \
 	$(TOOLKIT_GFX_LIB) \
 	-lraptorhtml \
-	$(DIST)/lib/libraptorhtmlforms_s.a \
 	$(TOOLKIT_BASE_LIB) \
 	-lraptorhtmlpars \
 	-lraptorview \
@@ -116,7 +115,7 @@ EX_LIBS = \
 	$(PNG_LIBS) \
 	-ljs \
 	-ljsdom \
-	$(DIST)/lib/libjsdomcore_s.a \
+	-ljsurl \
 	$(JSJ_LIB) \
 	-lmimetype \
 	-lnetcache \

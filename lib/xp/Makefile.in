@@ -73,6 +73,8 @@ ifeq ($(MOZ_MAIL_NEWS),1)
 CSRCS		+= xp_md5.c
 endif
 
+NO_STATIC_LIB=1
+
 include $(topsrcdir)/config/rules.mk
 
 #EMACS		= lemacs
