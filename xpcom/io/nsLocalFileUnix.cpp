@@ -65,34 +65,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsITimelineService.h"
 
-/** 
- *  we need these for statfs()
- */
-#ifdef HAVE_SYS_STATVFS_H
-    #if defined(__osf__) && defined(__DECCXX)
-        extern "C" int statvfs(const char *, struct statvfs *);
-    #endif
-    #include <sys/statvfs.h>
-#endif
-
-#ifdef HAVE_SYS_STATFS_H
-    #include <sys/statfs.h>
-#endif
-
-#ifdef HAVE_STATVFS
-    #define STATFS statvfs
-#else
-    #define STATFS statfs
-#endif
-
-// so we can statfs on freebsd
-#if defined(__FreeBSD__)
-    #define HAVE_SYS_STATFS_H
-    #define STATFS statfs
-    #include <sys/param.h>
-    #include <sys/mount.h>
-#endif
-
 // On some platforms file/directory name comparisons need to
 // be case-blind.
 #if defined(VMS)
@@ -249,6 +221,18 @@ nsLocalFile::nsLocalFileConstructor(nsISupports *outer,
     if (!inst)
         return NS_ERROR_OUT_OF_MEMORY;
     return inst->QueryInterface(aIID, aInstancePtr);
+}
+
+nsresult 
+nsLocalFile::FillStatCache() {
+    if (stat(mPath.get(), &mCachedStat) == -1) {
+        // try lstat it may be a symlink
+        if (lstat(mPath.get(), &mCachedStat) == -1) {
+            return NSRESULT_FOR_ERRNO();
+        }
+    }
+    mHaveCachedStat = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
