@@ -47,7 +47,7 @@
     </box>
     <tabpanel style="display:none;"/>
   </tabcontrol>
-  <deck id="advancedDeck" flex="100%">
+  <deck id="advancedDeck" class="tabpanel" flex="100%">
       <!-- results panel -->
       <box align="vertical" flex="100%">
         <box align="horizontal" class="spaced">
