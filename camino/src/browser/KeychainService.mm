@@ -778,7 +778,7 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
       return NS_OK;
 
     nsCOMPtr<nsIDocument> doc;
-    node->GetDocument(*getter_AddRefs(doc));
+    node->GetDocument(getter_AddRefs(doc));
     if (!doc)
       return NS_OK;
     

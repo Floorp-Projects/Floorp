@@ -93,7 +93,7 @@
   for (PRInt32 i = 0; i < childCount; i++)
   {
     nsCOMPtr<nsIContent> child;
-    content->ChildAt(i, *getter_AddRefs(child));
+    content->ChildAt(i, getter_AddRefs(child));
     [self addBookmark:menu parent:content child:child index:-1];
   }
 }
@@ -150,7 +150,7 @@
   if (content == mRootContent)
     return mMenu;
 
-  content->GetParent(*getter_AddRefs(parent));
+  content->GetParent(getter_AddRefs(parent));
   if (!parent)
     return nil;		// not in our subtree
 
@@ -216,7 +216,7 @@
 
   // XXX fix to not use nsIContent
   nsCOMPtr<nsIContent> parent;
-  bookmark->GetParent(*getter_AddRefs(parent));
+  bookmark->GetParent(getter_AddRefs(parent));
 
   NSMenu* menu = [self locateMenuForContent:parent];
   if (!menu) return;

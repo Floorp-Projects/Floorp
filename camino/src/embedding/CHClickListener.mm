@@ -197,7 +197,7 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
 
     nsCOMPtr<nsIContent> selContent = do_QueryInterface(sel);
     nsCOMPtr<nsIDocument> doc;
-    selContent->GetDocument(*getter_AddRefs(doc));
+    selContent->GetDocument(getter_AddRefs(doc));
 
     // I'm going to assume that if we got a mousedown for a content node,
     // it's actually in a document.

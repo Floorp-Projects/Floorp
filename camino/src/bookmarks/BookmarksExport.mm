@@ -154,7 +154,7 @@ BookmarksExport::WriteItem(nsIDOMElement* inElement, PRInt32 inDepth, PRBool isR
     return false;
   
   nsCOMPtr<nsIAtom> tagName;
-  curContent->GetTag(*getter_AddRefs(tagName));
+  curContent->GetTag(getter_AddRefs(tagName));
 
   PRBool isContainer = isRoot || (tagName == BookmarksService::gFolderAtom);
   

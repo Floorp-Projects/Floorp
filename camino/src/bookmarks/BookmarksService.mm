@@ -118,7 +118,7 @@ static bool ElementIsOrContains(nsIDOMElement* inSearchRoot, nsIDOMElement* inFi
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
     nsCOMPtr<nsIContent> curChild;
-    curContent->ChildAt(i, *getter_AddRefs(curChild));
+    curContent->ChildAt(i, getter_AddRefs(curChild));
     
     nsCOMPtr<nsIDOMElement> curElt = do_QueryInterface(curChild);
     if (ElementIsOrContains(curElt, inFindElt))
@@ -135,7 +135,7 @@ static bool SearchChildrenForMatchingFolder(nsIDOMElement* inCurElt, const nsASt
   
   // sanity check
   nsCOMPtr<nsIAtom> tagName;
-  curContent->GetTag(*getter_AddRefs(tagName));
+  curContent->GetTag(getter_AddRefs(tagName));
   if (tagName == BookmarksService::gFolderAtom)
   {
     nsAutoString attribValue;
@@ -155,7 +155,7 @@ static bool SearchChildrenForMatchingFolder(nsIDOMElement* inCurElt, const nsASt
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
     nsCOMPtr<nsIContent> curChild;
-    curContent->ChildAt(i, *getter_AddRefs(curChild));
+    curContent->ChildAt(i, getter_AddRefs(curChild));
     
     nsCOMPtr<nsIDOMElement> curElt = do_QueryInterface(curChild);
     if (SearchChildrenForMatchingFolder(curElt, inAttribute, inValue, foundElt))
@@ -344,7 +344,7 @@ NotifyDescendents(nsIContent* aChangeParent, nsIContent *aChangeContent, PRBool 
   for (PRInt32 i = 0; i < childCount; i++)
   {
     nsCOMPtr<nsIContent> child;
-    aChangeContent->ChildAt(i, *getter_AddRefs(child));
+    aChangeContent->ChildAt(i, getter_AddRefs(child));
     NotifyDescendents(aChangeContent, child, PR_FALSE, changeFunction);
   }
 }
@@ -493,7 +493,7 @@ CheckXMLDocumentParseSuccessful(nsIDOMDocument* inDOMDoc)
   
   nsCOMPtr<nsIAtom> tagName;
   nsCOMPtr<nsIContent>   docContent = do_QueryInterface(docElement);
-  docContent->GetTag(*getter_AddRefs(tagName));
+  docContent->GetTag(getter_AddRefs(tagName));
 
   nsCOMPtr<nsIAtom>	parserErrorAtom = do_GetAtom("parsererror");
   return (tagName != parserErrorAtom);
@@ -706,7 +706,7 @@ BookmarksService::CreateIconForBookmark(nsIDOMElement* aElement, PRBool useSiteI
   if (content)
   {
     nsCOMPtr<nsIAtom> tagName;
-    content->GetTag(*getter_AddRefs(tagName));
+    content->GetTag(getter_AddRefs(tagName));
   
     nsAutoString group;
     content->GetAttr(kNameSpaceID_None, gGroupAtom, group);
@@ -827,7 +827,7 @@ void BookmarksService::SetDockMenuRoot(nsIContent* inDockRootContent)
   {
     // sanity check
     nsCOMPtr<nsIAtom> tagName;
-    inDockRootContent->GetTag(*getter_AddRefs(tagName));
+    inDockRootContent->GetTag(getter_AddRefs(tagName));
   
     nsAutoString group;
     inDockRootContent->GetAttr(kNameSpaceID_None, gGroupAtom, group);
@@ -854,7 +854,7 @@ void BookmarksService::SetToolbarRoot(nsIContent* inToolbarRootContent)
 
   // sanity check
   nsCOMPtr<nsIAtom> tagName;
-  inToolbarRootContent->GetTag(*getter_AddRefs(tagName));
+  inToolbarRootContent->GetTag(getter_AddRefs(tagName));
 
   nsAutoString group;
   inToolbarRootContent->GetAttr(kNameSpaceID_None, gGroupAtom, group);
@@ -1090,7 +1090,7 @@ AddImportedChimeraXMLBookmarks(nsIDOMDocument* inImportDoc, nsIDOMDocument* inDe
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
     nsCOMPtr<nsIContent> curChild;
-    rootContent->ChildAt(i, *getter_AddRefs(curChild));
+    rootContent->ChildAt(i, getter_AddRefs(curChild));
   
     // clone it, and put it under the importedRoot.
     nsCOMPtr<nsIDOMElement> childElement = do_QueryInterface(curChild);
@@ -1294,7 +1294,7 @@ BookmarksService::DoAncestorsIncludeNode(BookmarkItem* bookmark, BookmarkItem* s
 
     // If a match wasn't found, set up the next node to compare
     nsCOMPtr<nsIContent> oldCurrent = current;
-    oldCurrent->GetParent(*getter_AddRefs(current));
+    oldCurrent->GetParent(getter_AddRefs(current));
   }
   
   return false;
@@ -1384,7 +1384,7 @@ BookmarksService::IsBookmarkDropValid(BookmarkItem* proposedParent, int index, N
     {
       BookmarkItem* draggedItem = [draggedItems objectAtIndex:0];
       nsCOMPtr<nsIContent> parentContent;
-      [draggedItem contentNode]->GetParent(*getter_AddRefs(parentContent));
+      [draggedItem contentNode]->GetParent(getter_AddRefs(parentContent));
       PRInt32 childIndex;
       if (parentContent && NS_SUCCEEDED(parentContent->IndexOf([draggedItem contentNode], childIndex)))
       {
@@ -1449,7 +1449,7 @@ BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, BookmarkItem* before
     //  get the dragged nodes parent
     nsCOMPtr<nsIContent> draggedParent;
     if (draggedNode)
-      draggedNode->GetParent(*getter_AddRefs(draggedParent));
+      draggedNode->GetParent(getter_AddRefs(draggedParent));
 
     //  get the proposed parent
     nsCOMPtr<nsIContent> proposedParent = [parent contentNode];
@@ -1467,7 +1467,7 @@ BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, BookmarkItem* before
     if (draggedNode != proposedParent)		// paranoia. This should never happen
     {
       nsCOMPtr<nsIAtom> tagName;
-      draggedNode->GetTag(*getter_AddRefs(tagName));
+      draggedNode->GetTag(getter_AddRefs(tagName));
       bool srcIsFolder = (tagName == BookmarksService::gFolderAtom);
 
       if (doCopy && !srcIsFolder)
@@ -1670,14 +1670,14 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
 - (BOOL)isFolder
 {
   nsCOMPtr<nsIAtom> tagName;
-  mContentNode->GetTag(*getter_AddRefs(tagName));
+  mContentNode->GetTag(getter_AddRefs(tagName));
   return (tagName == BookmarksService::gFolderAtom);
 }
 
 - (BOOL)isGroup
 {
   nsCOMPtr<nsIAtom> tagName;
-  mContentNode->GetTag(*getter_AddRefs(tagName));
+  mContentNode->GetTag(getter_AddRefs(tagName));
   if (tagName != BookmarksService::gFolderAtom)
     return NO;
 
@@ -1722,7 +1722,7 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
 - (BookmarkItem*)parentItem
 {
   nsCOMPtr<nsIContent> parentContent;
-  mContentNode->GetParent(*getter_AddRefs(parentContent));
+  mContentNode->GetParent(getter_AddRefs(parentContent));
 
   nsCOMPtr<nsIContent> rootContent;
   BookmarksService::GetRootContent(getter_AddRefs(rootContent));
@@ -1749,7 +1749,7 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
     nsCOMPtr<nsIContent> childContent;
-    mContentNode->ChildAt(i, *getter_AddRefs(childContent));
+    mContentNode->ChildAt(i, getter_AddRefs(childContent));
     [array addObject:BookmarksService::GetWrapperFor(childContent)];
   }
   
@@ -2056,7 +2056,7 @@ static BOOL gMadeBMManager;
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
     nsCOMPtr<nsIContent> child;
-    content->ChildAt(i, *getter_AddRefs(child));
+    content->ChildAt(i, getter_AddRefs(child));
 
     nsAutoString href;
     child->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
@@ -2122,7 +2122,7 @@ static BOOL gMadeBMManager;
         for (PRInt32 i = 0; i < numChildren; i ++)
         {
           nsCOMPtr<nsIContent> child;
-          foundContent->ChildAt(i, *getter_AddRefs(child));
+          foundContent->ChildAt(i, getter_AddRefs(child));
       
           nsAutoString href;
           child->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
@@ -2307,7 +2307,7 @@ static BOOL gMadeBMManager;
   for (PRInt32 i = 0; i < childCount; i++)
   {
     nsCOMPtr<nsIContent> child;
-    content->ChildAt(i, *getter_AddRefs(child));
+    content->ChildAt(i, getter_AddRefs(child));
     [self buildFoldersListProcessItem:menu curNode:child depth:depth];
   }
 }
@@ -2317,7 +2317,7 @@ static BOOL gMadeBMManager;
   if (!content) return;
   
   nsCOMPtr<nsIAtom> tagName;
-  content->GetTag(*getter_AddRefs(tagName));
+  content->GetTag(getter_AddRefs(tagName));
 
   nsAutoString group;
   if (tagName == BookmarksService::gFolderAtom)
