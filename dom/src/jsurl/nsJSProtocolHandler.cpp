@@ -101,7 +101,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIStreamIO);
 nsJSThunk::nsJSThunk()
          : mResult(nsnull), mLength(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsJSThunk::~nsJSThunk()
@@ -437,7 +436,6 @@ nsJSChannel::nsJSChannel() :
     mIOThunk(nsnull),
     mIsActive(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsJSChannel::~nsJSChannel()
@@ -711,7 +709,6 @@ nsJSChannel::SetContentLength(PRInt32 aContentLength)
 
 nsJSProtocolHandler::nsJSProtocolHandler()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

@@ -65,7 +65,6 @@ nsLDAPConnection::nsLDAPConnection()
       mDNSRequest(0),
       mDNSFinished(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 // destructor
@@ -538,7 +537,6 @@ nsLDAPConnectionLoop::nsLDAPConnectionLoop()
     : mWeakConn(0),
       mLock(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 // destructor

@@ -64,7 +64,6 @@ nsIAtom* nsXBLWindowKeyHandler::kKeyPressAtom = nsnull;
 nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver)
   : nsXBLWindowHandler(aElement, aReceiver)
 {
-  NS_INIT_ISUPPORTS();
 
   gRefCnt++;
   if (gRefCnt == 1) {

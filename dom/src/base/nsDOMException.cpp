@@ -125,7 +125,6 @@ nsRangeException::GetCode(PRUint16* aCode)
 
 nsBaseDOMException::nsBaseDOMException()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsBaseDOMException::~nsBaseDOMException()

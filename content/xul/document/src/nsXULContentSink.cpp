@@ -336,7 +336,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
       mState(eInProlog),
       mParser(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 
     if (gRefCnt++ == 0) {
         kScriptAtom = NS_NewAtom("script");

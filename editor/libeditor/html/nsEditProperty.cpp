@@ -183,7 +183,6 @@ But what about BODY, TR, TD, TH, CAPTION, COL, COLGROUP, THEAD, TFOOT, LI, DT, D
 */
 nsEditProperty::nsEditProperty()
 {
-  NS_INIT_ISUPPORTS();
   // inline tags
   nsIEditProperty::b          = NS_NewAtom("b");       
   nsIEditProperty::big        = NS_NewAtom("big");   

@@ -53,7 +53,6 @@ nsLDAPMessage::nsLDAPMessage()
       mReferrals(0),
       mServerControls(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 // destructor

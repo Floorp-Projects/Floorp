@@ -54,7 +54,6 @@ nsLDAPURL::nsLDAPURL()
       mOptions(0),
       mAttributes(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsLDAPURL::~nsLDAPURL()

@@ -63,7 +63,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel,
 
 nsLDAPChannel::nsLDAPChannel()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsLDAPChannel::~nsLDAPChannel()

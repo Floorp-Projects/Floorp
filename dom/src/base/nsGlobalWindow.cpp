@@ -216,7 +216,6 @@ GlobalWindowImpl::GlobalWindowImpl()
     mChromeEventHandler(nsnull),
     mFrameElement(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   // We could have failed the first time through trying
   // to create the entropy collector, so we should
   // try to get one until we succeed.
@@ -5519,7 +5518,6 @@ NavigatorImpl::NavigatorImpl(nsIDocShell *aDocShell) :
   mPlugins(nsnull),
   mDocShell(aDocShell)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NavigatorImpl::~NavigatorImpl()
@@ -6089,7 +6087,6 @@ NS_INTERFACE_MAP_END
 
 nsDOMWindowController::nsDOMWindowController(nsIDOMWindowInternal *aWindow)
 {
-  NS_INIT_ISUPPORTS();
   mWindow = aWindow;
 
   // Set mBrowseWithCaret so we don't need to check pref every time

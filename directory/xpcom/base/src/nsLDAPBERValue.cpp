@@ -41,7 +41,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPBERValue, nsILDAPBERValue)
 
 nsLDAPBERValue::nsLDAPBERValue() : mValue(0), mSize(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsLDAPBERValue::~nsLDAPBERValue()

@@ -47,7 +47,6 @@ NS_IMPL_ISUPPORTS1(nsLDAPProtocolHandler, nsIProtocolHandler)
 
 nsLDAPProtocolHandler::nsLDAPProtocolHandler()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsLDAPProtocolHandler::~nsLDAPProtocolHandler()

@@ -450,7 +450,6 @@ nsXULElement::nsXULElement()
       mBindingParent(nsnull),
       mSlots(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
 }
 

@@ -269,7 +269,6 @@ nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
                                          nsIStreamListener* aInner, nsIDocument* aDocument,
                                          nsIDocument* aBindingDocument)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   mXBLService = aXBLService;
   mInner = aInner;
@@ -482,7 +481,6 @@ NS_IMPL_ISUPPORTS3(nsXBLService, nsIXBLService, nsIObserver, nsISupportsWeakRefe
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
 {
-  NS_INIT_ISUPPORTS();
   mPool.Init("XBL Binding Requests", kBucketSizes, kNumBuckets, kInitialSize);
 
   gRefCnt++;

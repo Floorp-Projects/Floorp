@@ -39,7 +39,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPServer, nsILDAPServer)
 
 nsLDAPServer::nsLDAPServer()
 {
-    NS_INIT_ISUPPORTS();
 
     mSizeLimit = 0;
 }

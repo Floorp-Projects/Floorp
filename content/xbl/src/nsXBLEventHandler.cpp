@@ -78,7 +78,6 @@
 
 nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandler)
 {
-  NS_INIT_ISUPPORTS();
   mEventReceiver = aEventReceiver;
   mProtoHandler = aHandler;
   mNextHandler = nsnull;

@@ -1124,7 +1124,6 @@ class nsEventListenerThisTranslator : public nsIXPCFunctionThisTranslator
 public:
   nsEventListenerThisTranslator()
   {
-    NS_INIT_ISUPPORTS();
   }
 
   virtual ~nsEventListenerThisTranslator()

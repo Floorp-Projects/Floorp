@@ -51,7 +51,6 @@ NS_IMPL_RELEASE(EditTxn)
 // note that aEditor is not refcounted
 EditTxn::EditTxn()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 EditTxn::~EditTxn()

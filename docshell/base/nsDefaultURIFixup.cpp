@@ -38,7 +38,6 @@ NS_IMPL_ISUPPORTS1(nsDefaultURIFixup, nsIURIFixup)
 
 nsDefaultURIFixup::nsDefaultURIFixup()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 
   // Try and get the pref service

@@ -57,7 +57,6 @@ PluginArrayImpl::PluginArrayImpl(NavigatorImpl* navigator,
                                  nsIDocShell *aDocShell)
 {
   nsresult rv;
-  NS_INIT_ISUPPORTS();
   mNavigator = navigator; // don't ADDREF here, needed for parent of script object.
   mPluginHost = do_GetService(kPluginManagerCID, &rv);
   mPluginCount = 0;
@@ -290,7 +289,6 @@ PluginArrayImpl::GetPlugins()
 
 PluginElementImpl::PluginElementImpl(nsIDOMPlugin* plugin)
 {
-  NS_INIT_ISUPPORTS();
   mPlugin = plugin;  // don't AddRef, see PluginArrayImpl::Item.
   mMimeTypeCount = 0;
   mMimeTypeArray = nsnull;

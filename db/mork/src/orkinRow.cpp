@@ -113,7 +113,6 @@ orkinRow::orkinRow(morkEnv* ev, // morkUsage is morkUsage_kPool
     morkRowObject* ioObject)  // must not be nil, the object for this handle
 : morkHandle(ev, ioFace, ioObject, morkMagic_kRow)
 {
-  NS_INIT_ISUPPORTS();
   // do not modify mNode_Derived; leave it equal to morkDerived_kHandle
 }
 

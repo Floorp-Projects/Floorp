@@ -402,7 +402,6 @@ NS_DOMCI_EXTENSION_CONSTRUCTOR_IMP(NS_DOMCI_EXTENSION_NAME(_module))      \
                                                                           \
 NS_DOMCI_EXTENSION_NAME(_module)::NS_DOMCI_EXTENSION_NAME(_module)()      \
 {                                                                         \
-  NS_INIT_ISUPPORTS();                                                    \
 };                                                                        \
                                                                           \
 NS_DOMCI_EXTENSION_NAME(_module)::~NS_DOMCI_EXTENSION_NAME(_module)()     \

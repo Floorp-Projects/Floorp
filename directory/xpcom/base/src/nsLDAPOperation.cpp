@@ -43,7 +43,6 @@
 // constructor
 nsLDAPOperation::nsLDAPOperation()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 // destructor

@@ -1024,7 +1024,6 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
 
 nsDOMClassInfo::nsDOMClassInfo(nsDOMClassInfoData* aData) : mData(aData)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDOMClassInfo::~nsDOMClassInfo()

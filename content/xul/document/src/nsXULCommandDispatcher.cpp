@@ -79,7 +79,6 @@ static PRLogModuleInfo* gLog;
 nsXULCommandDispatcher::nsXULCommandDispatcher(nsIDocument* aDocument)
     : mFocusController(nsnull), mDocument(aDocument), mUpdaters(nsnull)
 {
-	NS_INIT_ISUPPORTS();
 
 #ifdef PR_LOGGING
   if (! gLog)

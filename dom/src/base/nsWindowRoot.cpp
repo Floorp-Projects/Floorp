@@ -40,7 +40,6 @@ static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
 
 nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
 {
-  NS_INIT_ISUPPORTS();
   mWindow = aWindow;
 
   // Create and init our focus controller.

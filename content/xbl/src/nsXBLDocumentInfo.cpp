@@ -133,7 +133,6 @@ nsXBLDocGlobalObject::nsXBLDocGlobalObject()
     : mJSObject(nsnull),
       mGlobalObjectOwner(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -357,7 +356,6 @@ NS_IMPL_ISUPPORTS3(nsXBLDocumentInfo, nsIXBLDocumentInfo, nsIScriptGlobalObjectO
 
 nsXBLDocumentInfo::nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   mDocURI = aDocURI;
   mDocument = aDocument;

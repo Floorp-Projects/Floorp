@@ -224,7 +224,6 @@ nsLDAPService::nsLDAPService()
       mServers(0),
       mConnections(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 // destructor

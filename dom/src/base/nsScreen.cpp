@@ -55,7 +55,6 @@
 //
 ScreenImpl::ScreenImpl(nsIDocShell* aDocShell) : mDocShell(aDocShell)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 ScreenImpl::~ScreenImpl()

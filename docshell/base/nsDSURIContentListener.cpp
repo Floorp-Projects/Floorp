@@ -34,7 +34,6 @@
 nsDSURIContentListener::nsDSURIContentListener() : mDocShell(nsnull), 
     mParentContentListener(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsDSURIContentListener::~nsDSURIContentListener()

@@ -113,7 +113,6 @@ public:
 
 nsDOMSOFactory::nsDOMSOFactory()
 {
-  NS_INIT_ISUPPORTS();
 
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService("@mozilla.org/observer-service;1");

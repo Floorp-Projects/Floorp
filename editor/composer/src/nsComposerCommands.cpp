@@ -85,7 +85,6 @@ nsresult SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
 
 nsBaseComposerCommand::nsBaseComposerCommand()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsBaseComposerCommand, nsIControllerCommand)
