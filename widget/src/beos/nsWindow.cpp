@@ -57,6 +57,7 @@
 #include <Region.h>
 #include <Debug.h>
 #include <MenuBar.h>
+#include <ScrollBar.h>
 #include <app/Message.h>
 #include <app/MessageRunner.h>
 #include <support/String.h>
@@ -1250,6 +1251,29 @@ NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
 
 //-------------------------------------------------------------------------
 //
+// Get this component size and position in screen coordinates
+//
+//-------------------------------------------------------------------------    
+NS_IMETHODIMP nsWindow::GetScreenBounds(nsRect &aRect)
+{
+	if(mView && mView->LockLooper() && mView->Window()) 
+	{
+		BRect r = mView->Window()->Frame();
+		aRect.x = nscoord(r.left);
+		aRect.y = nscoord(r.top);
+		aRect.width  = r.IntegerWidth()+1;
+		aRect.height = r.IntegerHeight()+1;
+		mView->UnlockLooper();
+	} 
+	else 
+	{
+		aRect = mBounds;
+	}
+	return NS_OK;
+}  
+
+//-------------------------------------------------------------------------
+//
 // Set the background color
 //
 //-------------------------------------------------------------------------
@@ -1831,7 +1855,15 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			}
 		}
 		break;
-		
+
+	case nsWindow::ONMOVE:
+		NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
+		PRInt32 aX,  aY;
+		aX=(nscoord)info->args[0];
+		aY=(nscoord)info->args[1];
+		OnMove(aX,aY);
+		break;
+
 	default:
 		bRet = FALSE;
 		break;
@@ -2879,6 +2911,27 @@ void nsWindowBeOS::DispatchMessage(BMessage *msg, BHandler *handler)
 		}
 	}
 	BWindow::DispatchMessage(msg, handler);
+}
+
+void nsWindowBeOS::FrameMoved(BPoint origin)
+{	
+	//determine if the window position actually changed
+	if (origin.x == lastpoint.x && origin.x == lastpoint.x) {
+		//it didn't - don't bother
+		return;
+	}
+	lastpoint.x = origin.x;
+	lastpoint.y = origin.y;
+	nsWindow  *w = (nsWindow *)GetMozillaWidget();
+	nsToolkit *t;
+	if(w && (t = w->GetToolkit()) != 0) {
+		uint32 args[2];
+		args[0] = (uint32)origin.x;
+		args[1] = (uint32)origin.y;
+		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONMOVE, 2, args);
+		t->CallMethodAsync(info);
+		NS_RELEASE(t);
+	}
 }
 
 void nsWindowBeOS::FrameResized(float width, float height)
