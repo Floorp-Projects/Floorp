@@ -12,3 +12,4 @@ urltest
 TestFileTransport
 TestOverlappedIO
 TestDBMAccess
+TestMCTransport
