@@ -19,6 +19,7 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dave Miller <dave@intrec.com>
+#                 Joe Robins <jmrobins@tgix.com>
 
 
 ########################################################################
@@ -48,6 +49,15 @@ sub sillyness {
     $zz = @::legal_severity;
 }
 
+# I've moved the call to confirm_login up to here, since if we're using bug
+# groups to restrict bug entry, we need to know who the user is right from
+# the start.  If that parameter is turned off, there's still no harm done in
+# doing it now instead of a bit later.  -JMR, 2/18/00
+# Except that it will cause people without cookies enabled to have to log
+# in an extra time.  Only do it here if we really need to.  -terry, 3/10/00
+if (Param("usebuggroupsentry")) {
+    confirm_login();
+}
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
@@ -58,6 +68,14 @@ if (!defined $::FORM{'product'}) {
             # that disallownew was set for this bug, and so we don't want
             # to allow people to specify that product here.
             next;
+        }
+        if(Param("usebuggroupsentry")
+           && GroupExists($p)
+           && !UserInGroup($p)) {
+          # If we're using bug groups to restrict entry on products, and
+          # this product has a bug group, and the user is not in that
+          # group, we don't want to include that product in this list.
+          next;
         }
         push(@prodlist, $p);
     }
@@ -73,6 +91,14 @@ if (!defined $::FORM{'product'}) {
                 # Special hack.  If we stuffed a "0" into proddesc, that means
                 # that disallownew was set for this bug, and so we don't want
                 # to allow people to specify that product here.
+                next;
+            }
+            if(Param("usebuggroupsentry")
+               && GroupExists($p)
+               && !UserInGroup($p)) {
+                # If we're using bug groups to restrict entry on products, and
+                # this product has a bug group, and the user is not in that
+                # group, we don't want to include that product in this list.
                 next;
             }
             print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\">$p</a>:</th>\n";
@@ -221,6 +247,40 @@ my $component_popup = make_popup('component', $::components{$product},
 
 PutHeader ("Enter Bug","Enter Bug","This page lets you enter a new bug into Bugzilla.");
 
+# Modified, -JMR, 2/24,00
+# If the usebuggroupsentry parameter is set, we need to check and make sure
+# that the user has permission to enter a bug against this product.
+if(Param("usebuggroupsentry")) {
+  if(!UserInGroup($product)) {
+    print "<H1>Permission denied.</H1>\n";
+    print "Sorry; you do not have the permissions necessary to enter\n";
+    print "a bug against this product.\n";
+    print "<P>\n";
+    PutFooter();
+    exit;
+  }
+}
+
+# Modified, -JMR, 2/18/00
+# I'm putting in a select box in order to select whether to restrict this bug to
+# the product's bug group or not, if the usebuggroups parameter is set, and if
+# this product has a bug group.  This box will default to selected, but can be
+# turned off if this bug should be world-viewable for some reason.
+#
+# To do this, I need to (1) get the bit and description for the bug group from
+# the database, (2) insert the select box in the giant print statements below,
+# and (3) update post_bug.cgi to process the additional input field.
+
+# First we get the bit and description for the group.
+my $group_bit=0;
+my $group_desc;
+if(Param("usebuggroups") && GroupExists($product)) {
+    SendSQL("select bit, description from groups ".
+            "where name = ".SqlQuote($product)." ".
+            "and isbuggroup != 0");
+    ($group_bit, $group_desc) = FetchSQLData();
+}
+
 print "
 <FORM METHOD=POST ACTION=\"post_bug.cgi\">
 <INPUT TYPE=HIDDEN NAME=reporter VALUE=\"$::COOKIE{'Bugzilla_login'}\">
@@ -327,7 +387,36 @@ print "
     <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>" .
     value_quote(formvalue('comment')) .
     "</TEXTAREA><BR></td>
-  </tr>
+  </tr>";
+# In between the Description field and the Submit buttons, we'll put in the
+# select box for the bug group, if necessary.
+# Rather than waste time with another Param check and another database access,
+# $group_bit will only have a non-zero value if we're using bug groups and have
+# one for this product, so I'll check on that instead here.  -JMR, 2/18/00
+if($group_bit) {
+  # In addition, we need to handle the possibility that we're coming from
+  # a bookmark template.  We'll simply check if we've got a parameter called
+  # groupset passed with a value other than the current bit.  If so, then we're
+  # coming from a template, and we don't have group_bit set, so turn it off.
+  my $check0 = (formvalue("groupset",$group_bit) == $group_bit) ? "" : " SELECTED";
+  my $check1 = ($check0 eq "") ? " SELECTED" : "";
+  print "
+  <tr>
+    <td align=right><B>Access:</td>
+    <td colspan=5>
+      <select name=\"groupset\">
+        <option value=0$check0>
+          People not in the \"$group_desc\" group can see this bug
+        </option>
+        <option value=$group_bit$check1>
+          Only people in the \"$group_desc\" group can see this bug
+        </option>
+      </select>
+    </td>
+  </tr>"
+}
+
+print "
   <tr>
    <td></td><td colspan=5>
 ";

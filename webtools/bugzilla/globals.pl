@@ -30,7 +30,6 @@ use strict;
 sub globals_pl_sillyness {
     my $zz;
     $zz = @main::chooseone;
-    $zz = @main::db_errstr;
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
     $zz = @main::dontchange;
@@ -498,7 +497,10 @@ sub InsertNewUser {
     my $groupset = "0";
     while (MoreSQLData()) {
         my @row = FetchSQLData();
-        if ($username =~ m/$row[1]/) {
+	# Modified -Joe Robins, 2/17/00
+	# Making this case insensitive, since usernames are email addresses,
+	# and could be any case.
+        if ($username =~ m/$row[1]/i) {
             $groupset .= "+ $row[0]"; # Silly hack to let MySQL do the math,
                                       # not Perl, since we're dealing with 64
                                       # bit ints here, and I don't *think* Perl
@@ -681,6 +683,13 @@ sub UserInGroup {
     return 0;
 }
 
+sub GroupExists {
+    my ($groupname) = (@_);
+    ConnectToDatabase();
+    SendSQL("select count(*) from groups where name=" . SqlQuote($groupname));
+    my $count = FetchOneColumn();
+    return $count;
+}
 
 # Determines if the given bug_status string represents an "Opened" bug.  This
 # routine ought to be paramaterizable somehow, as people tend to introduce

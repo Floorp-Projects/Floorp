@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Joe Robins <jmrobins@tgix.com>
 
 use diagnostics;
 use strict;
@@ -67,6 +68,19 @@ PutHeader("Posting Bug -- Please wait", "Posting Bug", "One moment please...");
 umask 0;
 ConnectToDatabase();
 
+my $product = $::FORM{'product'};
+
+if(Param("usebuggroupsentry") && GroupExists($product)) {
+  if(!UserInGroup($product)) {
+    print "<H1>Permission denied.</H1>\n";
+    print "Sorry; you do not have the permissions necessary to enter\n";
+    print "a bug against this product.\n";
+    print "<P>\n";
+    PutFooter();
+    exit;
+  }
+}
+
 if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {
     PuntTryAgain("You must choose a component that corresponds to this bug. " .
                  "If necessary, just guess.");
@@ -104,7 +118,11 @@ if (Param("useqacontact")) {
     }
 }
 
-
+# If we're using bug groups, we need to include the groupset in the list of
+# fields.  -JMR, 2/18/00
+if(Param("usebuggroups")) {
+  push(@bug_fields, "groupset");
+}
 
 if (exists $::FORM{'bug_status'}) {
     if (!UserInGroup("canedit") && !UserInGroup("canconfirm")) {
@@ -120,7 +138,6 @@ if (!exists $::FORM{'bug_status'}) {
         $::FORM{'bug_status'} = "NEW";
     }
 }
-
 
 if ( Param("strictvaluechecks") ) {
     GetVersionTable();  

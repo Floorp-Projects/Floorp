@@ -21,6 +21,7 @@
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #               Terry Weissman <terry@mozilla.org>
 #               Dawn Endico <endico@mozilla.org>
+#               Joe Robins <jmrobins@tgix.com>
 #
 # Direct any questions on this source code to
 #
@@ -78,9 +79,9 @@ sub CheckProduct ($)
 # Displays the form to edit a products parameters
 #
 
-sub EmitFormElements ($$$$$$$)
+sub EmitFormElements ($$$$$$$$)
 {
-    my ($product, $description, $milestoneurl, $disallownew,
+    my ($product, $description, $milestoneurl, $userregexp, $disallownew,
         $votesperuser, $maxvotesperbug, $votestoconfirm) = @_;
 
     $product = value_quote($product);
@@ -98,6 +99,14 @@ sub EmitFormElements ($$$$$$$)
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Milestone URL:</TH>\n";
         print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"milestoneurl\" VALUE=\"$milestoneurl\"></TD>\n";
+    }
+
+    # Added -JMR, 2/16/00
+    if (Param("usebuggroups")) {
+        $userregexp = value_quote($userregexp);
+        print "</TR><TR>\n";
+        print "  <TH ALIGN=\"right\">User Regexp for Bug Group:</TH>\n";
+        print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"userregexp\" VALUE=\"$userregexp\"></TD>\n";
     }
 
     print "</TR><TR>\n";
@@ -245,7 +254,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0, 0, 10000, 0);
+    EmitFormElements('', '', '', '', 0, 0, 10000, 0);
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
@@ -271,7 +280,7 @@ if ($action eq 'add') {
 if ($action eq 'new') {
     PutHeader("Adding new product");
 
-    # Cleanups and valididy checks
+    # Cleanups and validity checks
 
     unless ($product) {
         print "You must enter a name for the new product. Please press\n";
@@ -297,6 +306,7 @@ if ($action eq 'new') {
 
     my $description  = trim($::FORM{description}  || '');
     my $milestoneurl = trim($::FORM{milestoneurl} || '');
+    my $userregexp = trim($::FORM{userregexp} || '');
     my $disallownew = 0;
     $disallownew = 1 if $::FORM{disallownew};
     my $votesperuser = $::FORM{votesperuser};
@@ -321,6 +331,53 @@ if ($action eq 'new') {
           " ) VALUES ( " .
           SqlQuote($version) . "," .
           SqlQuote($product) . ")" );
+
+    # If we're using bug groups, then we need to create a group for this
+    # product as well.  -JMR, 2/16/00
+    if(Param("usebuggroups")) {
+        # First we need to figure out the bit for this group.  We'll simply
+        # use the next highest bit available.  We'll use a minimum bit of 256,
+        # to leave room for a few more Bugzilla operation groups at the bottom.
+        SendSQL("SELECT MAX(bit) FROM groups");
+        my $bit = FetchOneColumn();
+        if($bit < 256) {
+            $bit = 256;
+        } else {
+            $bit = $bit * 2;
+        }
+        
+        # Next we insert into the groups table
+        SendSQL("INSERT INTO groups " .
+                "(bit, name, description, isbuggroup, userregexp) " .
+                "VALUES (" .
+                $bit . ", " .
+                SqlQuote($product) . ", " .
+                SqlQuote($product . " Bugs Access") . ", " .
+                "1, " .
+                SqlQuote($userregexp) . ")");
+        
+        # And last, we need to add any existing users that match the regexp
+        # to the group.
+        # There may be a better way to do this in MySql, but I need to compare
+        # the login_names to this regexp, and the only way I can think of to
+        # do that is to get the list of login_names, and then update them
+        # one by one if they match.  Furthermore, I need to do it with two
+        # separate loops, since opening a new SQL statement to do the update
+        # seems to clobber the previous one.
+        SendSQL("SELECT login_name FROM profiles");
+        my @login_list = ();
+        my $this_login;
+        while($this_login = FetchOneColumn()) {
+            push @login_list, $this_login;
+        }
+        foreach $this_login (@login_list) {
+            if($this_login =~ /$userregexp/) {
+                SendSQL("UPDATE profiles " .
+                        "SET groupset = groupset | " . $bit . " " .
+                        "WHERE login_name = " . SqlQuote($this_login));
+            }
+        }
+    }
 
     # Make versioncache flush
     unlink "data/versioncache";
@@ -367,6 +424,23 @@ if ($action eq 'del') {
         print "</TR><TR>\n";
         print "  <TD VALIGN=\"top\">Milestone URL:</TD>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"$milestoneurl\">$milestoneurl</A></TD>\n";
+    }
+
+    # Added -JMR, 2/16/00
+    if(Param('usebuggroups')) {
+        # Get the regexp for this product.
+        SendSQL("SELECT userregexp
+                 FROM groups
+                 WHERE name=" . SqlQuote($product));
+        my $userregexp = FetchOneColumn();
+        if(!defined $userregexp) {
+            $userregexp = "<FONT COLOR=\"red\">undefined</FONT>";
+        } elsif ($userregexp eq "") {
+            $userregexp = "<FONT COLOR=\"blue\">blank</FONT>";
+        }
+        print "</TR><TR>\n";
+        print "  <TD VALIGN=\"top\">User Regexp for Bug Group:</TD>\n";
+        print "  <TD VALIGN=\"top\">$userregexp</TD>\n";
     }
 
     print "</TR><TR>\n";
@@ -472,7 +546,9 @@ if ($action eq 'delete') {
                          components WRITE,
                          dependencies WRITE,
                          versions WRITE,
-                         products WRITE");
+                         products WRITE,
+                         groups WRITE,
+                         profiles WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -516,6 +592,32 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM products
              WHERE product=" . SqlQuote($product));
     print "Product '$product' deleted.<BR>\n";
+
+    # Added -JMR, 2/16/00
+    if (Param("usebuggroups")) {
+        # We need to get the bit of the group from the table, then update the
+        # groupsets of members of that group and remove the group.
+        SendSQL("SELECT bit, description FROM groups " . 
+                "WHERE name = " . SqlQuote($product));
+        my ($bit, $group_desc) = FetchSQLData();
+
+        # Make sure there is a group before we try to do any deleting...
+        if($bit) {
+            # I'm kludging a bit so that I don't break superuser access;
+            # I'm merely checking to make sure that the groupset is not
+            # the superuser groupset in doing this update...
+            SendSQL("UPDATE profiles " .
+                    "SET groupset = groupset - $bit " .
+                    "WHERE (groupset & $bit) " .
+                    "AND (groupset != 9223372036854710271)");
+            print "Users dropped from group '$group_desc'.<BR>\n";
+
+            SendSQL("DELETE FROM groups " .
+                    "WHERE bit = $bit");
+            print "Group '$group_desc' deleted.<BR>\n";
+        }
+    }
+
     SendSQL("UNLOCK TABLES");
 
     unlink "data/versioncache";
@@ -544,11 +646,20 @@ if ($action eq 'edit') {
         $votesperuser, $maxvotesperbug, $votestoconfirm) =
         FetchSQLData();
 
+    my $userregexp = '';
+    if(Param("usebuggroups")) {
+        SendSQL("SELECT userregexp
+                 FROM groups
+                 WHERE name=" . SqlQuote($product));
+        $userregexp = FetchOneColumn();
+    }
+
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($product, $description, $milestoneurl, $disallownew,
-                     $votesperuser, $maxvotesperbug, $votestoconfirm);
+    EmitFormElements($product, $description, $milestoneurl, $userregexp,
+                     $disallownew, $votesperuser, $maxvotesperbug,
+                     $votestoconfirm);
     
     print "</TR><TR VALIGN=top>\n";
     print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "\">Edit components:</A></TH>\n";
@@ -609,6 +720,10 @@ if ($action eq 'edit') {
         value_quote($description) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"" .
         value_quote($milestoneurl) . "\">\n";
+    if(Param("usebuggroups")) {
+        print "<INPUT TYPE=HIDDEN NAME=\"userregexpold\" VALUE=\"" .
+            value_quote($userregexp) . "\">\n";
+    }
     print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"votesperuserold\" VALUE=\"$votesperuser\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"maxvotesperbugold\" VALUE=\"$maxvotesperbug\">\n";
@@ -642,6 +757,8 @@ if ($action eq 'update') {
     my $milestoneurlold   = trim($::FORM{milestoneurlold}   || '');
     my $votesperuser      = trim($::FORM{votesperuser}      || 0);
     my $votesperuserold   = trim($::FORM{votesperuserold}   || '');
+    my $userregexp        = trim($::FORM{userregexp}        || '');
+    my $userregexpold     = trim($::FORM{userregexpold}     || '');
     my $maxvotesperbug    = trim($::FORM{maxvotesperbug}    || 0);
     my $maxvotesperbugold = trim($::FORM{maxvotesperbugold} || '');
     my $votestoconfirm    = trim($::FORM{votestoconfirm}    || 0);
@@ -663,7 +780,9 @@ if ($action eq 'update') {
     SendSQL("LOCK TABLES bugs WRITE,
                          components WRITE,
                          products WRITE,
-                         versions WRITE");
+                         versions WRITE,
+                         groups WRITE,
+                         profiles WRITE");
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
@@ -693,11 +812,74 @@ if ($action eq 'update') {
         print "Updated mile stone URL.<BR>\n";
     }
 
+    # Added -JMR, 2/16/00
+    if (Param("usebuggroups") && $userregexp ne $userregexpold) {
+        # This will take a little bit of work here, since there may not be
+        # an existing bug group for this product, and we will also have to
+        # update users groupsets.
+        # First we find out if there's an existing group for this product, and
+        # get its bit if there is.
+        SendSQL("SELECT bit " .
+                "FROM groups " .
+                "WHERE name = " . SqlQuote($productold));
+        my $bit = FetchOneColumn();
+        if($bit) {
+            # Group exists, so we do an update statement.
+            SendSQL("UPDATE groups " .
+                    "SET userregexp = " . SqlQuote($userregexp) . " " .
+                    "WHERE name = " . SqlQuote($productold));
+            print "Updated user regexp for bug group.<BR>\n";
+        } else {
+            # Group doesn't exist.  Let's make it, the same way as we make a
+            # group for a new product above.
+            SendSQL("SELECT MAX(bit) FROM groups");
+            my $tmp_bit = FetchOneColumn();
+            if($tmp_bit < 256) {
+                $bit = 256;
+            } else {
+                $bit = $tmp_bit * 2;
+            }
+            SendSQL("INSERT INTO groups " .
+                    "(bit, name, description, isbuggroup, userregexp) " .
+                    "values (" . $bit . ", " .
+                    SqlQuote($productold) . ", " .
+                    SqlQuote($productold . " Bugs Access") . ", " .
+                    "1, " .
+                    SqlQuote($userregexp) . ")");
+            print "Created bug group.<BR>\n";
+        }
+        
+        # And now we have to update the profiles again to add any users who
+        # match the new regexp to the group.  I'll do this the same way as
+        # when I create a new group above.  Note that I'm not taking out
+        # users who matched the old regexp and not the new one;  that would
+        # be insanely messy.  Use the group administration page for that
+        # instead.
+        SendSQL("SELECT login_name FROM profiles");
+        my @login_list = ();
+        my $this_login;
+        while($this_login = FetchOneColumn()) {
+            push @login_list, $this_login;
+        }
+        my $updated_profiles = 0;
+        foreach $this_login (@login_list) {
+            if($this_login =~ /$userregexp/) {
+                SendSQL("UPDATE profiles " .
+                        "SET groupset = groupset | " . $bit . " " .
+                        "WHERE login_name = " . SqlQuote($this_login));
+                $updated_profiles = 1;
+            }
+        }
+        if($updated_profiles) {
+            print "Added users matching regexp to group.<BR>\n";
+        }
+    }
+
     if ($votesperuser ne $votesperuserold) {
         SendSQL("UPDATE products
                  SET votesperuser=$votesperuser
                  WHERE product=" . SqlQuote($productold));
-        print "Update votes per user.<BR>\n";
+        print "Updated votes per user.<BR>\n";
         $checkvotes = 1;
     }
 
@@ -706,7 +888,7 @@ if ($action eq 'update') {
         SendSQL("UPDATE products
                  SET maxvotesperbug=$maxvotesperbug
                  WHERE product=" . SqlQuote($productold));
-        print "Update max votes per bug.<BR>\n";
+        print "Updated max votes per bug.<BR>\n";
         $checkvotes = 1;
     }
 
@@ -715,7 +897,7 @@ if ($action eq 'update') {
         SendSQL("UPDATE products
                  SET votestoconfirm=$votestoconfirm
                  WHERE product=" . SqlQuote($productold));
-        print "Update votes to confirm.<BR>\n";
+        print "Updated votes to confirm.<BR>\n";
         $checkvotes = 1;
     }
 
@@ -741,7 +923,15 @@ if ($action eq 'update') {
         SendSQL("UPDATE components SET program=$qp WHERE program=$qpold");
         SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
         SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
-
+	# Need to do an update to groups as well.  If there is a corresponding
+	# bug group, whether usebuggroups is currently set or not, we want to
+	# update it so it will match in the future.  If there is no group, this
+	# update statement will do nothing, so no harm done.  -JMR, 3/8/00
+        SendSQL("UPDATE groups " .
+                "SET name=$qp, " .
+                "description=".SqlQuote($product." Bugs Access")." ".
+                "WHERE name=$qpold");
+        
         print "Updated product name.<BR>\n";
     }
     unlink "data/versioncache";
