@@ -1541,20 +1541,20 @@ extern "C" JSBool pref_InitInitialObjects()
 	int numFiles = 0;
 
 	// Parse all the random files that happen to be in the components directory.
-    nsIDirectoryIterator* i = nsnull;
+    nsCOMPtr<nsIDirectoryIterator> dirIterator;
     rv = nsComponentManager::CreateInstance(
         	(const char*)NS_DIRECTORYITERATOR_PROGID,
         	(nsISupports*)nsnull,
         	(const nsID&)NS_GET_IID(nsIDirectoryIterator),
-        	(void**)&i);
+        	getter_AddRefs(dirIterator));
     NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
-    if (!i || NS_FAILED(i->Init(defaultPrefDir, PR_TRUE)))
+    if (!dirIterator || NS_FAILED(dirIterator->Init(defaultPrefDir, PR_TRUE)))
     	return JS_FALSE;
 
 	// Get any old child of the components directory. Warning: aliases get resolved, so
 	// SetLeafName will not work here.
-    nsIFileSpec* specialChild;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, &specialChild);
+    nsCOMPtr<nsIFileSpec> specialChild;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, getter_AddRefs(specialChild));
     if (NS_FAILED(rv))
     	return JS_TRUE;
 	if NS_FAILED(specialChild->AppendRelativeUnixPath((char*)specialFiles[0]))
@@ -1584,55 +1584,53 @@ extern "C" JSBool pref_InitInitialObjects()
 #ifdef DEBUG_prefs
     printf("Parsing default JS files.\n");
 #endif /* DEBUG_prefs */
-	for (; Exists(i); i->Next())
+	for (; Exists(dirIterator); dirIterator->Next())
 	{
-		nsIFileSpec* child;
+		nsCOMPtr<nsIFileSpec> child;
 		PRBool shouldParse = PR_TRUE;
-		if NS_FAILED(i->GetCurrentSpec(&child))
+		if NS_FAILED(dirIterator->GetCurrentSpec(getter_AddRefs(child)))
 			continue;
 		char* leafName;
 		rv = child->GetLeafName(&leafName);
-		if NS_FAILED(rv)
-			goto next_child;
-		// Skip non-js files
-		if (PL_strstr(leafName, ".js") + PL_strlen(".js") != leafName + PL_strlen(leafName))
-			shouldParse = PR_FALSE;
-		// Skip files in the special list.
-		if (shouldParse)
-		{
-			for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char*)); j++)
-				if (PL_strcmp(leafName, specialFiles[j]) == 0)
-					shouldParse = PR_FALSE;
-		}
-		if (shouldParse)
-		{
-#ifdef DEBUG_prefs
-            printf("Adding %s to the list to be sorted\n", leafName);
-#endif /* DEBUG_prefs */
-			rv = NS_NewFileSpec(&(defaultPrefFiles[numFiles]));
-			NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create a file spec");
-			if (NS_SUCCEEDED(rv) && defaultPrefFiles[numFiles]) {
-				rv = defaultPrefFiles[numFiles]->FromFileSpec(child);
-				NS_ASSERTION(NS_SUCCEEDED(rv),"failed to set the spec");
-				if (NS_SUCCEEDED(rv)) {
-					numFiles++;
-				}
-				if (numFiles == maxDefaultPrefFiles) {
-					// double the size of the array
-					nsIFileSpec **newArray;
-					newArray = new nsIFileSpec*[maxDefaultPrefFiles * 2];
-					nsCRT::memcpy(newArray,defaultPrefFiles,maxDefaultPrefFiles*sizeof(nsIFileSpec *));
-					maxDefaultPrefFiles *= 2;
-					delete [] defaultPrefFiles;
-					defaultPrefFiles = newArray; 
-				}
-			}
-		}
-		if (leafName) nsCRT::free((char*)leafName);
-	next_child:
-		NS_IF_RELEASE(child);
-	}
-
+		if (NS_SUCCEEDED(rv))
+        {
+		    // Skip non-js files
+		    if (PL_strstr(leafName, ".js") + PL_strlen(".js") != leafName + PL_strlen(leafName))
+			    shouldParse = PR_FALSE;
+		    // Skip files in the special list.
+		    if (shouldParse)
+		    {
+			    for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char*)); j++)
+				    if (PL_strcmp(leafName, specialFiles[j]) == 0)
+					    shouldParse = PR_FALSE;
+		    }
+		    if (shouldParse)
+		    {
+    #ifdef DEBUG_prefs
+                printf("Adding %s to the list to be sorted\n", leafName);
+    #endif /* DEBUG_prefs */
+			    rv = NS_NewFileSpec(&(defaultPrefFiles[numFiles]));
+			    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create a file spec");
+			    if (NS_SUCCEEDED(rv) && defaultPrefFiles[numFiles]) {
+				    rv = defaultPrefFiles[numFiles]->FromFileSpec(child);
+				    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to set the spec");
+				    if (NS_SUCCEEDED(rv)) {
+					    numFiles++;
+				    }
+				    if (numFiles == maxDefaultPrefFiles) {
+					    // double the size of the array
+					    nsIFileSpec **newArray;
+					    newArray = new nsIFileSpec*[maxDefaultPrefFiles * 2];
+					    nsCRT::memcpy(newArray,defaultPrefFiles,maxDefaultPrefFiles*sizeof(nsIFileSpec *));
+					    maxDefaultPrefFiles *= 2;
+					    delete [] defaultPrefFiles;
+					    defaultPrefFiles = newArray; 
+				    }
+			    }
+		    }
+		    if (leafName) nsCRT::free((char*)leafName);
+	    }
+    }
 #ifdef DEBUG_prefs
 	printf("Sort defaultPrefFiles.  we need them sorted so all-ns.js will override all.js (where override == parsed later)\n");
 #endif /* DEBUG_prefs */
@@ -1670,10 +1668,10 @@ extern "C" JSBool pref_InitInitialObjects()
 	// Finally, parse any other special files (platform-specific ones).
 	for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char*)); k++)
 	{
-        nsIFileSpec* specialChild2;
-        if (NS_FAILED(locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, &specialChild2)))
+        nsCOMPtr<nsIFileSpec> anotherSpecialChild2;
+        if (NS_FAILED(locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, getter_AddRefs(anotherSpecialChild2))))
 	    	continue;
-		if (NS_FAILED(specialChild2->AppendRelativeUnixPath((char*)specialFiles[k])))
+		if (NS_FAILED(anotherSpecialChild2->AppendRelativeUnixPath((char*)specialFiles[k])))
 	    	continue;
 
 
@@ -1681,21 +1679,18 @@ extern "C" JSBool pref_InitInitialObjects()
             printf("Parsing %s\n", specialFiles[k]);
 #endif /* DEBUG_prefs */
 
-        if (NS_FAILED(specialChild2->Exists(&exists)) || !exists)
+        if (NS_FAILED(anotherSpecialChild2->Exists(&exists)) || !exists)
 	    	continue;
 
 	    worked = (JSBool)(pref_OpenFileSpec(
-    		specialChild2,
+    		anotherSpecialChild2,
 	    	PR_FALSE,
 	    	PR_FALSE,
 	    	PR_FALSE,
 	    	PR_FALSE) == PREF_NOERROR);
 		NS_ASSERTION(worked, "<platform>.js was not parsed successfully");
-		NS_RELEASE(specialChild2);
 	}
 done:
-    NS_RELEASE(i);
-	NS_RELEASE(specialChild);
     return JS_TRUE;
 }
 
