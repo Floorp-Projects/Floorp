@@ -23,6 +23,7 @@
 #include  <locale.h>
 #include "prmem.h"
 #include "nsCollationUnix.h"
+#include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
@@ -76,14 +77,10 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
-    nsILocaleService *localeService;
-
-    res = nsComponentManager::CreateInstance(kLocaleServiceCID, NULL, 
-                                             nsILocaleService::GetIID(), (void**)&localeService);
+    NS_WITH_SERVICE(nsILocaleService, localeService, kLocaleServiceCID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
-      localeService->Release();
       if (NS_SUCCEEDED(res)) {
         res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
         appLocale->Release();
@@ -135,6 +132,10 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   if (NULL != (const char *)tmp) {
     printf("nsCollationUnix::Initialize mLocale = %s\n", (const char *)tmp);
   }
+  nsAutoCString tmp2(mCharset);
+  if (NULL != (const char *)tmp2) {
+    printf("nsCollationUnix::Initialize mCharset = %s\n", (const char *)tmp2);
+  }
 #endif
 
   return NS_OK;
@@ -158,13 +159,10 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
 
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
-    char *cstr = mLocale.ToNewCString();
-    char *old_locale =  setlocale(LC_COLLATE, "");
-    (void) setlocale(LC_COLLATE, cstr);
+    DoSetLocale();
     // call strxfrm to calculate a key length 
     int len = strxfrm(NULL, str, 0) + 1;
-    (void) setlocale(LC_COLLATE, old_locale);
-    delete [] cstr;
+    DoRestoreLocale();
     *outLen = (len == -1) ? 0 : (PRUint32)len;
     PR_Free(str);
   }
@@ -186,17 +184,32 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
 
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
-    char *cstr = mLocale.ToNewCString();
-    char *old_locale =  setlocale(LC_COLLATE, "");
-    (void) setlocale(LC_COLLATE, cstr);
+    DoSetLocale();
     // call strxfrm to generate a key 
     int len = strxfrm((char *) key, str, strlen(str));
-    (void) setlocale(LC_COLLATE, old_locale);
-    delete [] cstr;
+    DoRestoreLocale();
     *outLen = (len == -1) ? 0 : (PRUint32)len;
     PR_Free(str);
   }
 
   return res;
+}
+
+inline void nsCollationUnix::DoSetLocale()
+{
+  char *locale = setlocale(LC_COLLATE, "");
+  mSavedLocale.SetString(locale ? locale : "");
+  if (!mSavedLocale.EqualsIgnoreCase(mLocale)) {
+    char newLocale[128];
+    (void) setlocale(LC_COLLATE, mLocale.ToCString(newLocale, 128));
+  }
+}
+
+inline void nsCollationUnix::DoRestoreLocale()
+{
+  if (!mSavedLocale.EqualsIgnoreCase(mLocale)) { 
+    char oldLocale[128];
+    (void) setlocale(LC_COLLATE, mSavedLocale.ToCString(oldLocale, 128));
+  }
 }
 
