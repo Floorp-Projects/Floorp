@@ -45,19 +45,6 @@ public:
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-// XXX CONSTRUCTION
-#if 0
-  NS_IMETHOD ContentAppended(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent*     aContainer);
-
-  NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent*     aContainer,
-                             nsIContent*     aChild,
-                             PRInt32         aIndexInParent);
-#endif
-
   NS_IMETHOD  ContentDeleted(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
@@ -92,11 +79,13 @@ public:
 
   NS_IMETHOD VerifyTree() const;
 
+#if 0
   // nsContainerFrame
   virtual void PropagateContentOffsets(nsIFrame* aChild,
                                        PRInt32 aFirstContentOffset,
                                        PRInt32 aLastContentOffset,
                                        PRBool aLastContentIsComplete);
+#endif
 
 protected:
   PRBool  mIsPseudoFrame;

@@ -697,11 +697,6 @@ nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
     // Take the frame away from the next-in-flow. Update it's first
     // content offset.
     kidFrame->GetNextSibling(aNextInFlow->mFirstChild);
-    if (nsnull != aNextInFlow->mFirstChild) {
-      PRInt32 contentIndex;
-      aNextInFlow->mFirstChild->GetContentIndex(contentIndex);
-      aNextInFlow->SetFirstContentOffset(contentIndex);
-    }
   }
 
   // Now give the frame to this container
@@ -715,9 +710,6 @@ nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
   // Add the frame on our list
   if (nsnull == aLastChild) {
     mFirstChild = kidFrame;
-    PRInt32 contentIndex;
-    kidFrame->GetContentIndex(contentIndex);
-    SetFirstContentOffset(contentIndex);
   } else {
     NS_ASSERTION(IsLastChild(aLastChild), "bad last child");
     aLastChild->SetNextSibling(kidFrame);

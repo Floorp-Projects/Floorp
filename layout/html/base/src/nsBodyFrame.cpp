@@ -340,22 +340,6 @@ nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-// XXX CONSTRUCTION
-#if 0
-NS_METHOD nsBodyFrame::ContentInserted(nsIPresShell*   aShell,
-                                       nsIPresContext* aPresContext,
-                                       nsIContent*     aContainer,
-                                       nsIContent*     aChild,
-                                       PRInt32         aIndexInParent)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-inserted target");
-
-  // Pass along the notification to our pseudo frame that maps all the content
-  return mFirstChild->ContentInserted(aShell, aPresContext, aContainer,
-                                      aChild, aIndexInParent);
-}
-#endif
-
 NS_METHOD nsBodyFrame::ContentDeleted(nsIPresShell*   aShell,
                                       nsIPresContext* aPresContext,
                                       nsIContent*     aContainer,
@@ -600,30 +584,6 @@ void nsBodyFrame::AddFrame(nsIFrame* aFrame)
   lastChild->SetNextSibling(aFrame);
   aFrame->SetNextSibling(nsnull);
   mChildCount++;
-}
-
-void
-nsBodyFrame::PropagateContentOffsets(nsIFrame* aChild,
-                                     PRInt32 aFirstContentOffset,
-                                     PRInt32 aLastContentOffset,
-                                     PRBool aLastContentIsComplete)
-{
-  NS_PRECONDITION(ChildIsPseudoFrame(aChild), "not a pseudo frame");
-
-  // First update our offsets
-  if (mFirstChild == aChild) {
-    mFirstContentOffset = aFirstContentOffset;
-    mLastContentOffset = aLastContentOffset;
-    mLastContentIsComplete = aLastContentIsComplete;
-  }
-
-  // If we are a pseudo-frame then we need to update our parent
-  if (IsPseudoFrame()) {
-    nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
-    parent->PropagateContentOffsets(this, mFirstContentOffset,
-                                    mLastContentOffset,
-                                    mLastContentIsComplete);
-  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1062,10 +1022,7 @@ NS_METHOD nsBodyFrame::VerifyTree() const
   }
   NS_ASSERTION(nsnull == mOverflowList, "bad overflow list");
 
-  // Make sure our content offsets are sane
-  NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad offsets");
-
-  // Verify child content offsets
+  // Verify the child's tree is valid
   nsIFrame* child = mFirstChild;
   while (nsnull != child) {
     // Make sure that the child's tree is valid
@@ -1073,18 +1030,6 @@ NS_METHOD nsBodyFrame::VerifyTree() const
     child->GetNextSibling(child);
   }
 
-  // Make sure that our flow blocks offsets are all correct
-  if (nsnull == mPrevInFlow) {
-    PRInt32 nextOffset = NextChildOffset();
-    nsBodyFrame* nextInFlow = (nsBodyFrame*) mNextInFlow;
-    while (nsnull != nextInFlow) {
-      NS_ASSERTION(0 != nextInFlow->mChildCount, "empty next-in-flow");
-      NS_ASSERTION(nextInFlow->GetFirstContentOffset() == nextOffset,
-                    "bad next-in-flow first offset");
-      nextOffset = nextInFlow->NextChildOffset();
-      nextInFlow = (nsBodyFrame*) nextInFlow->mNextInFlow;
-    }
-  }
 #endif
   return NS_OK;
 }

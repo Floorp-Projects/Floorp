@@ -37,8 +37,7 @@
 #endif
 
 nsContainerFrame::nsContainerFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsSplittableFrame(aContent, aParent),
-    mLastContentIsComplete(PR_TRUE)
+  : nsSplittableFrame(aContent, aParent)
 {
 }
 
@@ -102,15 +101,6 @@ nsContainerFrame::PrepareContinuingFrame(nsIPresContext&   aPresContext,
 {
   // Append the continuing frame to the flow
   aContFrame->AppendToFlow(this);
-
-  // Initialize it's content offsets. Note that we assume for now that
-  // the continuingFrame will map the remainder of the content and
-  // that therefore mLastContentIsComplete will be true.
-  PRInt32 nextOffset = NextChildOffset();
-  aContFrame->mFirstContentOffset = nextOffset;
-  aContFrame->mLastContentOffset = nextOffset;
-  aContFrame->mLastContentIsComplete = PR_TRUE;
-
   aContFrame->SetStyleContext(&aPresContext, aStyleContext);
 }
 
@@ -289,72 +279,6 @@ NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Managing content mapping
-
-// Get the offset for the next child content, i.e. the child after the
-// last child that fit in us
-PRInt32 nsContainerFrame::NextChildOffset() const
-{
-  PRInt32 result;
-  if (mChildCount > 0) {
-    result = mLastContentOffset;
-    if (mLastContentIsComplete) {
-      result++;
-    }
-  }
-  else {
-    result = mFirstContentOffset;
-  }
-  return result;
-}
-
-/**
- * Sets the first content offset based on the first child frame.
- */
-void nsContainerFrame::SetFirstContentOffset(const nsIFrame* aFirstChild)
-{
-  NS_PRECONDITION(nsnull != aFirstChild, "bad argument");
-  NS_PRECONDITION(IsChild(aFirstChild), "bad geometric parent");
-
-  if (ChildIsPseudoFrame(aFirstChild)) {
-    nsContainerFrame* pseudoFrame = (nsContainerFrame*)aFirstChild;
-    mFirstContentOffset = pseudoFrame->mFirstContentOffset;
-  } else {
-    // XXX TROY Change API to pass in content index if possible...
-    aFirstChild->GetContentIndex(mFirstContentOffset);
-  }
-}
-
-/**
- * Sets the last content offset based on the last child frame. If the last
- * child is a pseudo frame then it sets mLastContentIsComplete to be the same
- * as the last child's mLastContentIsComplete
- */
-void nsContainerFrame::SetLastContentOffset(const nsIFrame* aLastChild)
-{
-  NS_PRECONDITION(nsnull != aLastChild, "bad argument");
-  NS_PRECONDITION(IsChild(aLastChild), "bad geometric parent");
-
-  if (ChildIsPseudoFrame(aLastChild)) {
-    nsContainerFrame* pseudoFrame = (nsContainerFrame*)aLastChild;
-    mLastContentOffset = pseudoFrame->mLastContentOffset;
-#ifdef NS_DEBUG
-    pseudoFrame->VerifyLastIsComplete();
-#endif
-    mLastContentIsComplete = pseudoFrame->mLastContentIsComplete;
-  } else {
-    // XXX TROY Change API to pass in content index if possible...
-    aLastChild->GetContentIndex(mLastContentOffset);
-  }
-#ifdef NS_DEBUG
-  if (mLastContentOffset < mFirstContentOffset) {
-    DumpTree();
-  }
-#endif
-  NS_ASSERTION(mLastContentOffset >= mFirstContentOffset, "unexpected content mapping");
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // Pseudo frame related
 
 // Returns true if this frame is being used a pseudo frame
@@ -487,16 +411,6 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
   // Take the next-in-flow out of the parent's child list
   if (parent->mFirstChild == nextInFlow) {
     nextInFlow->GetNextSibling(parent->mFirstChild);
-    if (nsnull != parent->mFirstChild) {
-      parent->SetFirstContentOffset(parent->mFirstChild);
-      if (parent->IsPseudoFrame()) {
-        // Tell the parent's parent to update its content offsets
-        nsContainerFrame* pp = (nsContainerFrame*) parent->mGeometricParent;
-        pp->PropagateContentOffsets(parent, parent->mFirstContentOffset,
-                                    parent->mLastContentOffset,
-                                    parent->mLastContentIsComplete);
-      }
-    }
 
     // When a parent loses it's last child and that last child is a
     // pseudo-frame then the parent's content offsets are now wrong.
@@ -536,33 +450,6 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
 
 void nsContainerFrame::WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow)
 {
-}
-
-void
-nsContainerFrame::PropagateContentOffsets(nsIFrame* aChild,
-                                          PRInt32 aFirstContentOffset,
-                                          PRInt32 aLastContentOffset,
-                                          PRBool aLastContentIsComplete)
-{
-  NS_PRECONDITION(ChildIsPseudoFrame(aChild), "not a pseudo frame");
-
-  // First update our offsets
-  if (mFirstChild == aChild) {
-    mFirstContentOffset = aFirstContentOffset;
-  }
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-  if (lastChild == aChild) {
-    mLastContentOffset = aLastContentOffset;
-    mLastContentIsComplete = aLastContentIsComplete;
-  }
-
-  // If we are a pseudo-frame then we need to update our parent
-  if (IsPseudoFrame()) {
-    nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
-    parent->PropagateContentOffsets(this, mFirstContentOffset,
-                                    mLastContentOffset,
-                                    mLastContentIsComplete);
-  }
 }
 
 /**
@@ -644,33 +531,7 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
     // Prepend the frames to our next-in-flow's child list
     lastChild->SetNextSibling(nextInFlow->mFirstChild);
     nextInFlow->mFirstChild = aFromChild;
-
-    // Update our next-in-flow's first content offset and child count
-    nextInFlow->SetFirstContentOffset(aFromChild);
-    if (0 == nextInFlow->mChildCount) {
-      nextInFlow->SetLastContentOffset(lastChild);
-      // If the child is pseudo-frame then SetLastContentOffset will
-      // have updated the next-in-flow's mLastContentIsComplete flag,
-      // otherwise we have to do it.
-      if (!nextInFlow->ChildIsPseudoFrame(lastChild)) {
-        nsIFrame* lastChildNextInFlow;
-
-        lastChild->GetNextInFlow(lastChildNextInFlow);
-        nextInFlow->mLastContentIsComplete = (nsnull == lastChildNextInFlow);
-      }
-    }
     nextInFlow->mChildCount += numChildren;
-
-    // If the next-in-flow is being used as a pseudo frame then we need
-    // to propagate the content offsets upwards to its parent frame
-    if (nextInFlow->IsPseudoFrame()) {
-      nsContainerFrame* parent = (nsContainerFrame*)
-        nextInFlow->mGeometricParent;
-      parent->PropagateContentOffsets(nextInFlow,
-                                      nextInFlow->mFirstContentOffset,
-                                      nextInFlow->mLastContentOffset,
-                                      nextInFlow->mLastContentIsComplete);
-    }
 
 #ifdef NOISY
     ListTag(stdout);
@@ -770,87 +631,6 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
       f->SetGeometricParent(this);
     }
   }
-
-  // Update our content mapping
-  if (mFirstChild == aChild) {
-    SetFirstContentOffset(mFirstChild);
-  }
-  SetLastContentOffset(lastChild);
-  if (!ChildIsPseudoFrame(lastChild)) {
-    nsIFrame* nextInFlow;
-
-    lastChild->GetNextInFlow(nextInFlow);
-    mLastContentIsComplete = (nsnull == nextInFlow);
-  }
-
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
-#endif
-}
-
-/**
- * Called after pulling-up children from the next-in-flow. Adjusts the first
- * content offset of all the empty next-in-flows
- *
- * It's an error to call this function if all of the next-in-flow frames
- * are empty.
- *
- * @return PR_TRUE if successful and PR_FALSE if all the next-in-flows are
- *           empty
- */
-void nsContainerFrame::AdjustOffsetOfEmptyNextInFlows()
-{
-  // If the first next-in-flow is not empty then the caller drained
-  // more than one next-in-flow and then pushed back into it's
-  // immediate next-in-flow.
-  nsContainerFrame* nextInFlow = (nsContainerFrame*)mNextInFlow;
-  PRInt32 nextOffset;
-  if ((nsnull != nextInFlow) && (nsnull != nextInFlow->mFirstChild)) {
-    // Use the offset from this frame's first next-in-flow (because
-    // it's not empty) to propagate into the next next-in-flow (and
-    // onward if necessary)
-    nextOffset = nextInFlow->NextChildOffset();
-
-    // Use next next-in-flow
-    nextInFlow = (nsContainerFrame*) nextInFlow->mNextInFlow;
-
-    // When this happens, there *must* be a next next-in-flow and the
-    // next next-in-flow must be empty.
-    NS_ASSERTION(nsnull != nextInFlow, "bad adjust offsets");
-    NS_ASSERTION(nsnull == nextInFlow->mFirstChild, "bad adjust offsets");
-  } else {
-    // Use our offset (since our next-in-flow is empty) to propagate
-    // into our empty next-in-flows
-    nextOffset = NextChildOffset();
-  }
-
-  while (nsnull != nextInFlow) {
-    if (nsnull == nextInFlow->mFirstChild) {
-      NS_ASSERTION(nextInFlow->IsEmpty(), "bad state");
-      nextInFlow->mFirstContentOffset = nextOffset;
-      // If the next-in-flow is a pseudo-frame then we need to have it
-      // update it's parents offsets too.
-      if (nextInFlow->IsPseudoFrame()) {
-        nsContainerFrame* parent = (nsContainerFrame*)
-          nextInFlow->mGeometricParent;
-        parent->PropagateContentOffsets(nextInFlow,
-                                        nextInFlow->mFirstContentOffset,
-                                        nextInFlow->mLastContentOffset,
-                                        nextInFlow->mLastContentIsComplete);
-      }
-    } else {
-      // We found a non-empty frame. Verify that its first content offset
-      // is correct
-      NS_ASSERTION(nextInFlow->mFirstContentOffset == nextOffset, "bad first content offset");
-      return;
-    }
-
-    nextInFlow = (nsContainerFrame*)nextInFlow->mNextInFlow;
-  }
-
-  // Make sure that all the next-in-flows weren't empty
-  NS_ASSERTION(nsnull != ((nsContainerFrame*)mNextInFlow)->mFirstChild,
-               "Every next-in-flow is empty!");
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -878,9 +658,6 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
       fprintf(out, " [view=%p]", view);
     }
 
-    // Output the first/last content offset
-    fprintf(out, "[%d,%d,%c] ", mFirstContentOffset, mLastContentOffset,
-            (mLastContentIsComplete ? 'T' : 'F'));
     if (nsnull != mPrevInFlow) {
       fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
     }
@@ -952,73 +729,6 @@ NS_METHOD nsContainerFrame::VerifyTree() const
   }
   VERIFY_ASSERT(nsnull == mOverflowList, "bad overflow list");
 
-  // Make sure our content offsets are sane
-  VERIFY_ASSERT(mFirstContentOffset <= mLastContentOffset, "bad offsets");
-
-  // Verify child content offsets and index-in-parents
-  PRInt32 offset = mFirstContentOffset;
-  nsIFrame* child = mFirstChild;
-  while (nsnull != child) {
-    // Make sure that the child's tree is valid
-    child->VerifyTree();
-
-    // Make sure child's index-in-parent is correct
-    if (ChildIsPseudoFrame(child)) {
-      nsContainerFrame* pseudo = (nsContainerFrame*) child;
-      if (pseudo == mFirstChild) {
-        VERIFY_ASSERT(pseudo->mFirstContentOffset == offset,
-                      "bad pseudo first content offset");
-      }
-      if (pseudo == lastChild) {
-        VERIFY_ASSERT(pseudo->mFirstContentOffset == offset,
-                      "bad pseudo first content offset");
-        VERIFY_ASSERT(pseudo->mLastContentOffset == mLastContentOffset,
-                      "bad pseudo last content offset");
-        VERIFY_ASSERT(pseudo->mLastContentIsComplete == mLastContentIsComplete,
-                      "bad pseudo last content is complete");
-      }
-
-      offset = pseudo->mLastContentOffset;
-      if (pseudo->mLastContentIsComplete) {
-        offset++;
-      }
-    } else {
-      PRInt32 indexInParent;
-
-      child->GetContentIndex(indexInParent);
-      VERIFY_ASSERT(offset == indexInParent, "bad child offset");
-
-      nsIFrame* nextInFlow;
-      child->GetNextInFlow(nextInFlow);
-      if (nsnull == nextInFlow) {
-        offset++;
-      }
-    }
-
-    child->GetNextSibling(child);
-  }
-
-  // Verify that our last content offset is correct
-  if (0 != mChildCount) {
-    if (mLastContentIsComplete) {
-      VERIFY_ASSERT(offset == mLastContentOffset + 1, "bad last offset");
-    } else {
-      VERIFY_ASSERT(offset == mLastContentOffset, "bad last offset");
-    }
-  }
-
-  // Make sure that our flow blocks offsets are all correct
-  if (nsnull == mPrevInFlow) {
-    PRInt32 nextOffset = NextChildOffset();
-    nsContainerFrame* nextInFlow = (nsContainerFrame*) mNextInFlow;
-    while (nsnull != nextInFlow) {
-      VERIFY_ASSERT(0 != nextInFlow->mChildCount, "empty next-in-flow");
-      VERIFY_ASSERT(nextInFlow->GetFirstContentOffset() == nextOffset,
-                    "bad next-in-flow first offset");
-      nextOffset = nextInFlow->NextChildOffset();
-      nextInFlow = (nsContainerFrame*) nextInFlow->mNextInFlow;
-    }
-  }
 #endif
   return NS_OK;
 }
@@ -1069,19 +779,6 @@ PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
     return PR_FALSE;
   }
 
-// XXX Turn back on once all frame code has been changed to always add
-// a child frame to the sibling list before reflowing the child. Right now
-// that's not true for inline and column when reflowing unmapped children...
-#if 0
-  // Check that aChild is in our sibling list
-  PRInt32 index;
-
-  IndexOf(aChild, index);
-  if (-1 == index) {
-    return PR_FALSE;
-  }
-#endif
-
   return PR_TRUE;
 }
 
@@ -1115,46 +812,6 @@ void nsContainerFrame::DumpTree() const
   }
 
   root->List();
-}
-
-void nsContainerFrame::CheckContentOffsets()
-{
-  NS_PRECONDITION(nsnull != mFirstChild, "null first child");
-
-  // Verify that our first content offset is correct
-  if (ChildIsPseudoFrame(mFirstChild)) {
-    nsContainerFrame* pseudoFrame = (nsContainerFrame*)mFirstChild;
-
-    if (pseudoFrame->GetFirstContentOffset() != mFirstContentOffset) {
-      DumpTree();
-    }
-    NS_ASSERTION(pseudoFrame->GetFirstContentOffset() == mFirstContentOffset,
-                 "bad first content offset");
-  } else {
-    PRInt32 indexInParent;
-
-    mFirstChild->GetContentIndex(indexInParent);
-    if (indexInParent != mFirstContentOffset) {
-      DumpTree();
-    }
-
-    NS_ASSERTION(indexInParent == mFirstContentOffset, "bad first content offset");
-  }
-
-  // Verify that our last content offset is correct
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-  if (ChildIsPseudoFrame(lastChild)) {
-    nsContainerFrame* pseudoFrame = (nsContainerFrame*)lastChild;
-
-    NS_ASSERTION(pseudoFrame->GetLastContentOffset() == mLastContentOffset,
-                 "bad last content offset");
-
-  } else {
-    PRInt32 indexInParent;
-
-    lastChild->GetContentIndex(indexInParent);
-    NS_ASSERTION(indexInParent == mLastContentOffset, "bad last content offset");
-  }
 }
 
 void nsContainerFrame::PreReflowCheck()
@@ -1211,98 +868,4 @@ PRBool nsContainerFrame::IsEmpty()
   return PR_FALSE;
 }
 
-void nsContainerFrame::CheckNextInFlowOffsets()
-{
-  // We have to be in a safe state before we can even consider
-  // checking our next-in-flows state.
-  if (!SafeToCheckLastContentOffset(this)) {
-    return;
-  }
-
-  PRInt32           nextOffset = NextChildOffset();
-  nsContainerFrame* nextInFlow = (nsContainerFrame*)mNextInFlow;
-  while (nsnull != nextInFlow) {
-    if (!SafeToCheckLastContentOffset(nextInFlow)) {
-      return;
-    }
-#ifdef NS_DEBUG
-    if (nextInFlow->GetFirstContentOffset() != nextOffset) {
-      DumpTree();
-    }
-#endif
-    NS_ASSERTION(nextInFlow->GetFirstContentOffset() == nextOffset,
-                 "bad next-in-flow first offset");
-    // Verify the content offsets are in sync with the first/last child
-    nextInFlow->CheckContentOffsets();
-    nextOffset = nextInFlow->NextChildOffset();
-
-    // Move to the next-in-flow
-    nextInFlow = (nsContainerFrame*)nextInFlow->mNextInFlow;
-  }
-}
-
-PRBool
-nsContainerFrame::SafeToCheckLastContentOffset(nsContainerFrame* aContainer)
-{
-  if (0 == aContainer->mChildCount) {
-    // We can't use the last content offset on an empty frame
-    return PR_FALSE;
-  }
-
-  if (nsnull != aContainer->mOverflowList) {
-    // If a frame has an overflow list then it's last content offset
-    // cannot be used for assertion checks (because it's not done
-    // being reflowed).
-    return PR_FALSE;
-  }
-
-  nsIFrame* lastChild = LastFrame(aContainer->mFirstChild);
-  if (aContainer->ChildIsPseudoFrame(lastChild)) {
-    // If the containers last child is a pseudo-frame then the
-    // containers last content offset is determined by the child. Ask
-    // the child if it's safe to use the last content offset.
-    return SafeToCheckLastContentOffset((nsContainerFrame*)lastChild);
-  }
-
-  return PR_TRUE;
-}
-
-void nsContainerFrame::VerifyLastIsComplete() const
-{
-  if (nsnull == mFirstChild) {
-    // If we have no children, our mLastContentIsComplete doesn't mean
-    // anything
-    return;
-  }
-  if (nsnull != mOverflowList) {
-    // If we can an overflow list then our mLastContentIsComplete and
-    // mLastContentOffset are un-verifyable because a reflow is in
-    // process.
-    return;
-  }
-
-  nsIFrame* lastKid = LastFrame(mFirstChild);
-  if (ChildIsPseudoFrame(lastKid)) {
-    // When my last child is a pseudo-frame it means that our
-    // mLastContentIsComplete is a copy of it's.
-    nsContainerFrame* pseudoFrame = (nsContainerFrame*) lastKid;
-    NS_ASSERTION(mLastContentIsComplete == pseudoFrame->mLastContentIsComplete,
-                 "bad mLastContentIsComplete");
-  } else {
-    // If my last child has a next-in-flow then our
-    // mLastContentIsComplete must be false (because our last child is
-    // obviously not complete)
-    nsIFrame* lastKidNextInFlow;
-     
-    lastKid->GetNextInFlow(lastKidNextInFlow);
-    if (nsnull != lastKidNextInFlow) {
-      if (mLastContentIsComplete) {
-        DumpTree();
-      }
-      NS_ASSERTION(mLastContentIsComplete == PR_FALSE, "bad mLastContentIsComplete");
-    } else {
-      // We don't know what state our mLastContentIsComplete should be in.
-    }
-  }
-}
 #endif
