@@ -341,6 +341,30 @@ NS_METHOD nsMenuButton::SetImageURLs(const nsString& aUpURL,
 }
 
 //----------------------------------------------------------------
+NS_METHOD nsMenuButton::SetImageUpURL(const nsString& aUpURL)
+{
+  return nsImageButton::SetImageUpURL(aUpURL);
+}
+
+//----------------------------------------------------------------
+NS_METHOD nsMenuButton::SetImagePressedURL(const nsString& aPressedURL)
+{
+  return nsImageButton::SetImagePressedURL(aPressedURL);
+}
+
+//----------------------------------------------------------------
+NS_METHOD nsMenuButton::SetImageDisabledURL(const nsString& aDisabledURL)
+{
+  return nsImageButton::SetImageDisabledURL(aDisabledURL);
+}
+
+//----------------------------------------------------------------
+NS_METHOD nsMenuButton::SetImageRollOverURL(const nsString& aRollOverURL)
+{
+  return nsImageButton::SetImageRollOverURL(aRollOverURL);
+}
+
+//----------------------------------------------------------------
 NS_METHOD nsMenuButton::SetShowBorder(PRBool aState)
 {
   return nsImageButton::SetShowBorder(aState);

@@ -712,6 +712,38 @@ NS_METHOD nsImageButton::SetImageURLs(const nsString& aUpURL,
 }
 
 //----------------------------------------------------------------
+NS_METHOD nsImageButton::SetImageUpURL(const nsString& aUpURL)
+{
+  CreateImageGroup();
+  mUpImageRequest = RequestImage(aUpURL);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------
+NS_METHOD nsImageButton::SetImagePressedURL(const nsString& aPressedURL)
+{
+  CreateImageGroup();
+  mPressedImageRequest = RequestImage(aPressedURL);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------
+NS_METHOD nsImageButton::SetImageDisabledURL(const nsString& aDisabledURL)
+{
+  CreateImageGroup();
+  mDisabledImageRequest = RequestImage(aDisabledURL);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------
+NS_METHOD nsImageButton::SetImageRollOverURL(const nsString& aRollOverURL)
+{
+  CreateImageGroup();
+  mRollOverImageRequest = RequestImage(aRollOverURL);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------
 NS_METHOD nsImageButton::SetShowBorder(PRBool aState)
 {
   mShowBorder = aState;

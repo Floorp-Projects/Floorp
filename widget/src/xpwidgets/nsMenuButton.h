@@ -82,6 +82,10 @@ public:
                           const nsString& aPressedURL,
                           const nsString& aDisabledURL,
                           const nsString& aRollOverURL);
+  NS_IMETHOD SetImageUpURL(const nsString& aUpURL);
+  NS_IMETHOD SetImagePressedURL(const nsString& aPressedURL);
+  NS_IMETHOD SetImageDisabledURL(const nsString& aDisabledURL);
+  NS_IMETHOD SetImageRollOverURL(const nsString& aRollOverURL);
 
   NS_IMETHOD SetShowBorder(PRBool aState);
   NS_IMETHOD SetShowButtonBorder(PRBool aState);
