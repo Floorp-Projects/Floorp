@@ -44,7 +44,9 @@
   <key id="keyset"/>
 </keyset>
 
-<html>&smtpListDesc.label;</html>
+<box align="horizontal">
+  <html flex="1">&smtpListDesc.label;</html>
+</box>
 <box align="horizontal">
   <tree id="smtpTree" onselect="onSelectionChange(event);">
     <treechildren id="smtpTreeChildren"/>

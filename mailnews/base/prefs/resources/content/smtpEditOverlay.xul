@@ -24,13 +24,16 @@
 
 -->
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/SmtpServerList.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/smtpEditOverlay.dtd">
 
 <overlay  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <box id="smtpServerEditor" align="horizontal">
-    <text value="this is the smtp server overlay"/>
+    <box align="vertical">
+      <text value="&serverName.label;"/>
+      <textedit/>
+    </box>
   </box>
 
 </overlay>
