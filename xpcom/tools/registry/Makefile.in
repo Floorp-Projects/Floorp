@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS		= regExport.cpp
+CPPSRCS		= regExport.cpp regxpcom.cpp
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
@@ -30,7 +30,14 @@ ifdef NO_LD_ARCHIVE_FLAGS
 LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo
 endif
 
-LIBS		= -lxpcom $(LOST_SYM_LIBS) $(NSPR_LIBS) $(ZLIB_LIBS)
+LIBS		+= \
+		-lxpcom \
+		-lneckoutil_s \
+		$(MOZ_TIMER_LIBS) \
+		$(TK_LIBS) \
+		$(LOST_SYM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
