@@ -42,7 +42,7 @@ var gCurrentLoadingFolderViewFlags = 0;
 var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
 var gNextMessageAfterLoad = null;
-var gNextMessageViewIndexAfterDelete = -1;
+var gNextMessageViewIndexAfterDelete = -2;
 
 var gActiveThreadPaneSortColumn = "";
 
@@ -182,7 +182,7 @@ function HandleDeleteOrMoveMsgFailed(folder)
   if(IsCurrentLoadedFolder(folder)) {
     if(gNextMessageAfterDelete) {
       gNextMessageAfterDelete = null;
-      gNextMessageViewIndexAfterDelete = -1;
+      gNextMessageViewIndexAfterDelete = -2;
     }
   }
 
@@ -192,24 +192,30 @@ function HandleDeleteOrMoveMsgFailed(folder)
 
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
-  if (IsCurrentLoadedFolder(folder)) {
-    var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-    var outlinerSelection = outlinerView.selection;
-    if (gNextMessageViewIndexAfterDelete != -1) {
-      viewSize = outlinerView.rowCount;
-      if (gNextMessageViewIndexAfterDelete >= viewSize) {
-        if (viewSize > 0)
-          gNextMessageViewIndexAfterDelete = viewSize - 1;
-        else
-          gNextMessageViewIndexAfterDelete = -1;
+  if (gNextMessageViewIndexAfterDelete != -2) 
+  {
+    if (IsCurrentLoadedFolder(folder)) 
+    {
+      var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+      var outlinerSelection = outlinerView.selection;
+      if (gNextMessageViewIndexAfterDelete != -1) 
+      {
+        viewSize = outlinerView.rowCount;
+        if (gNextMessageViewIndexAfterDelete >= viewSize) 
+        {
+          if (viewSize > 0)
+            gNextMessageViewIndexAfterDelete = viewSize - 1;
+          else
+            gNextMessageViewIndexAfterDelete = -1;
+        }
       }
-     }
 
       // if we are about to set the selection with a new element then DON'T clear
       // the selection then add the next message to select. This just generates
       // an extra round of command updating notifications that we are trying to
       // optimize away.
-      if (gNextMessageViewIndexAfterDelete != -1) {
+      if (gNextMessageViewIndexAfterDelete != -1) 
+      {
         outlinerSelection.select(gNextMessageViewIndexAfterDelete);
         // since gNextMessageViewIndexAfterDelete probably has the same value
         // as the last index we had selected, the outliner isn't generating a new
@@ -219,11 +225,14 @@ function HandleDeleteOrMoveMsgCompleted(folder)
           outlinerView.selectionChanged();
         EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
       }
-      else {
+      else 
+      {
         outlinerSelection.clearSelection(); /* clear selection in either case  */
         ClearMessagePane();
       }
-
+    }
+      gNextMessageViewIndexAfterDelete = -2;  
+     //default value after delete/move/copy is over
   }
 }
 
