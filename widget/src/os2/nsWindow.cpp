@@ -2587,8 +2587,6 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
        case WM_ACTIVATE:
-          if (WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED)
-            break;
 #ifdef DEBUG_FOCUS
           printf("[%x] WM_ACTIVATE (%d)\n", this, mWindowIdentifier);
 #endif
