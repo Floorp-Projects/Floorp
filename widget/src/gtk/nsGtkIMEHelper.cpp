@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  *   Frank Tang <ftang@netsape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsGtkIMEHelper.h"
 #include "nsIUnicodeDecoder.h"
