@@ -1,0 +1,182 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+/*#include "nsIWidget.idl"  Boy this would be nice.*/
+
+[ptr] native nsIWidget(nsIWidget);
+%{ C++
+#include "nsIWidget.h"
+%}
+
+typedef voidStar nativeWindow;
+
+/**
+ * The nsIBaseWindow describes a generic window and basic operations that 
+ * can be performed on it.  This is not to be a complete windowing interface
+ * but rather a common set that nearly all windowed objects support.    
+ */
+
+[scriptable, uuid(046BC8A0-8015-11d3-AF70-00A024FFC08C)]
+interface nsIBaseWindow : nsISupports
+{
+	/*
+	Allows a client to initialize an object implementing this interface with
+	the usually required window setup information.
+
+	@param parentNativeWindow - This allows a system to pass in the parenting
+		window as a native reference rather than relying on the calling
+		application to have created the parent window as an nsIWidget.  This 
+		value will be ignored (should be nsnull) if an nsIWidget is passed in to
+		the parentWidget parameter.  One of the two parameters however must be
+		passed.
+
+	@param parentWidget - This allows a system to pass in the parenting widget.
+		This allows some objects to optimize themselves and rely on the view
+		system for event flow rather than creating numerous native windows.  If
+		one of these is not available, nsnull should be passed and a 
+		valid native window should be passed to the parentNativeWindow parameter.
+
+	@param x - This is the x co-ordinate relative to the parent to place the
+		window.
+
+	@param y - This is the y co-ordinate relative to the parent to place the 
+		window.
+
+	@param cx - This is the width	for the window to be.
+
+	@param cy - This is the height for the window to be.
+
+	@return	NS_OK - Window Init succeeded without a problem.
+				NS_ERROR_UNEXPECTED - Call was unexpected at this time.  Most likely
+					due to you calling it after create() has been called.
+				NS_ERROR_INVALID_ARG - controls that require either a parentNativeWindow
+					or a parentWidget may return invalid arg when they do not 
+					receive what they are needing.
+	*/
+	[noscript]void initWindow(in nativeWindow parentNativeWindow, 
+		in nsIWidget parentWidget,	in long x, in long y, in long cx, in long cy);
+
+	/*
+	Tells the window that intialization and setup is complete.  When this is
+	called the window can actually create itself based on the setup
+	information handed to it.
+
+	@return	NS_OK - Creation was successfull.
+				NS_ERROR_UNEXPECTED - This call was unexpected at this time.
+					Perhaps create() had already been called or not all
+					required initialization had been done.
+	*/
+	void create();
+
+	/*
+	Tell the window that it can destroy itself.  This allows re-using the same
+	object without re-doing a lot of setup.  This is not a required call 
+	before a release.
+
+	@return	NS_OK - Everything destroyed properly.
+				NS_ERROR_NOT_IMPLEMENTED - State preservation is not supported.
+					Release the interface and create a new object.
+	*/
+	void destroy();
+
+	/*
+	Sets the current x and y coordinates of the control.  This is relative to
+	the parent window.
+	*/
+	void setPosition(in long x, in long y);
+
+	/*
+	Gets the current x and y coordinates of the control.  This is relatie to the
+	parent window.
+	*/
+	void getPosition(out long x, out long y);
+
+	/*
+	Sets the width and height of the control.
+	*/
+	void setSize(in long cx, in long cy, in boolean fRepaint);
+
+	/*
+	Gets the width and height of the control.
+	*/
+	void getSize(out long cx, out long cy);
+
+	/*
+	Convenience function combining the SetPosition and SetSize into one call.
+	*/
+	void setPositionAndSize(in long x, in long y, in long cx, in long cy, 
+		in boolean fRepaint); 
+
+	/** 
+	 * Tell the window to repaint itself
+	 * @param aForce - if true, repaint immediately
+	 *                 if false, the window may defer repainting as it sees fit.
+	 */
+	void repaint(in boolean force);
+
+	/*			  
+	This is the parenting widget for the control.  This may be null if only the
+	native window was handed in for the parent during initialization.  If this
+	is returned, it should refer to the same object as parentNativeWindow.
+
+	Setting this after Create() has been called may not be supported by some
+	implementations.
+
+	On controls that don't support widgets, setting this will return a 
+	NS_ERROR_NOT_IMPLEMENTED error.
+	*/
+	attribute nsIWidget parentWidget;
+
+	/*
+	This is the native window parent of the control.
+
+	Setting this after Create() has been called may not be supported by some
+	implementations.
+
+	On controls that don't support setting nativeWindow parents, setting this
+	will return a NS_ERROR_NOT_IMPLEMENTED error.
+	*/
+	attribute nativeWindow parentNativeWindow;
+
+	/*
+	Attribute controls the visibility of the object behind this interface.
+	Setting this attribute to false will hide the control.  Setting it to 
+	true will show it.
+	*/
+	attribute boolean visibility;
+
+	/*
+	Allows you to find out what the widget is of a given object.  Depending
+	on the object, this may return the parent widget in which this object
+	lives if it has not had to create it's own widget.
+	*/
+	readonly attribute nsIWidget mainWidget;
+	
+	/**
+	* Give the window focus.
+	*/
+	void setFocus();
+
+	attribute wstring title;
+};
