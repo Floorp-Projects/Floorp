@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.9 1998/06/16 20:23:42 jwz Exp $
+# $Id: Common.pm,v 1.10 1998/06/23 01:01:39 jwz Exp $
 
 package LXR::Common;
 
@@ -8,6 +8,7 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(&warning &fatal &abortall &fflush &urlargs 
 	     &fileref &idref &htmlquote &freetextmarkup &markupfile
+	     &markspecials &htmlquote &freetextmarkup &markupstring
 	     &init &makeheader &makefooter &expandtemplate);
 
 
@@ -151,11 +152,63 @@ sub linetag {
     $tag .= ' ' if $_[1] < 10;
     $tag .= ' ' if $_[1] < 100;
     $tag .= &fileref($_[1], $_[0], $_[1]).' ';
-    $tag =~ s/<a/<a class=n name=$_[1]/;
+    $tag =~ s/<a/<a name=$_[1]/;
 #    $_[1]++;
     return($tag);
 }
 
+# dme: Smaller version of the markupfile function meant for marking up 
+# the descriptions in source directory listings.
+sub markupstring {
+    my ($string, $virtp) = @_;
+
+    # Mark special characters so they don't get processed just yet.
+    $string =~ s/([\&\<\>])/\0$1/g;
+
+    # Look for identifiers and create links with identifier search query.
+    tie (%xref, "DB_File", $Conf->dbdir."/xref", O_RDONLY, 0664, $DB_HASH)
+        || &warning("Cannot open xref database.");
+    $string =~ s#(^|[^a-zA-Z_\#0-9\.])([a-zA-Z_~][a-zA-Z0-9_]*)\b#
+                $1.(is_linkworthy($2) ? &idref($2,$2) : $2)#ge;
+    untie(%xref);
+
+    # HTMLify the special characters we marked earlier,
+    # but not the ones in the recently added xref html links.
+    $string=~ s/\0&/&amp;/g;
+    $string=~ s/\0</&lt;/g;
+    $string=~ s/\0>/&gt;/g;
+
+    # HTMLify email addresses and urls.
+    $string=~ s#((ftp|http)://\S*[^\s.])#<a href=\"$1\">$1</a>#g;
+    $string=~ s/(&lt;(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
+
+    # HTMLify file names (assume file is in the current directory).
+    $string =~ s#([\w-_\/]+\.(c|h|cc|cp|cpp))#
+		 <a href=\"$Conf->{virtroot}/source$virtp$1\">$1</a>#g;
+
+    return($string);
+}
+
+# dme: Return true if string is in the identifier db and it seems like its
+# use in the sentence is as an identifier and its not just some word that
+# happens to have been used as a variable name somewhere. We don't want
+# words like "of", "to" and "a" to get links. The string must be long 
+# enough, and  either contain "_" or if some letter besides the first 
+# is capitalized
+sub is_linkworthy{
+    my ($string) = @_;
+
+    if  ( ($string =~ /....../) &&
+	  ( ($string =~ /_/) ||
+	    ($string =~ /.[A-Z]/)
+	  ) &&
+	  (defined($xref{$string}))
+        ){
+	return (1);
+    }else{
+	return (0);
+    }
+}
 
 sub markupfile {
     my ($INFILE, $virtp, $fname, $outfun) = @_;
@@ -171,7 +224,7 @@ sub markupfile {
 	    || &warning("Cannot open xref database.");
 
 	&$outfun(# "<pre>\n".
-		 #"<a class=n name=\"".$line++.'"></a>');
+		 #"<a name=\"".$line++.'"></a>');
 		 &linetag($virtp.$fname, $line++));
 
 	($btype, $frag) = &SimpleParse::nextfrag;
