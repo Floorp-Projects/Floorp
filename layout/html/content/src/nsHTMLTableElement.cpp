@@ -474,16 +474,16 @@ MapTableBorderInto(nsIHTMLAttributes* aAttributes,
     spacing->mBorder.SetLeft(twips);
 
     if (spacing->mBorderStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
-      spacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;
+      spacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_OUTSET;
     }
     if (spacing->mBorderStyle[1] == NS_STYLE_BORDER_STYLE_NONE) {
-      spacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_SOLID;
+      spacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_OUTSET;
     }
     if (spacing->mBorderStyle[2] == NS_STYLE_BORDER_STYLE_NONE) {
-      spacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_SOLID;
+      spacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_OUTSET;
     }
     if (spacing->mBorderStyle[3] == NS_STYLE_BORDER_STYLE_NONE) {
-      spacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
+      spacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_OUTSET;
     }
   }
 }
