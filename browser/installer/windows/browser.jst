@@ -385,6 +385,82 @@ function upgradeCleanup()
   while (true);
 }
 
+function copyFlashXPT()
+{
+  /*
+   * Check if Netscape Navigator (pre 6.0) is installed and if the
+   * flash player is installed in Netscape's plugin folder. If it is,
+   * try to copy the flashplayer.xpt file into our plugins folder to
+   * make ensure that flash is scriptable if we're using it from
+   * Netscape's plugins folder.
+   */
+
+  var winreg = getWinRegistry();
+
+  winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+  var subkey = "Software\\Netscape\\Netscape Navigator";
+  var nsver = winreg.getValueString(subkey, "CurrentVersion");
+
+  if (!nsver)
+    return;
+
+  subkey += "\\" + nsver + "\\Main";
+
+  var navPluginsDir = winreg.getValueString(subkey, "Plugins Directory");
+
+  if (!navPluginsDir)
+    return;
+
+  var navFlashXPT = getFolder("file:///", navPluginsDir + "\\flashplayer.xpt");
+
+  if (!File.exists(navFlashXPT))
+    return;
+
+  var target = getFolder("file:///", fProgram + "\\plugins\\flashplayer.xpt");
+
+  // Copy the file flashplayer.xpt from Netscape's plugin directory to
+  // Firefox's plugin directory.
+  File.copy(navFlashXPT, target);
+
+  logComment("Copied Flash xpt file from '" + navFlashXPT + "' to '" + target +
+             "'");
+}
+
+function copyQuickTimeXPT()
+{
+  /*
+   * Check if QuickTime is installed and copy
+   * nsIQTScriptablePlugin.xpt from its plugins directory into our
+   * plugins directory. If we don't do this, QuickTime will load in
+   * Firefox, but it won't be scriptable.
+   */
+
+  var winreg = getWinRegistry();
+
+  winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+  var subkey = "Software\\Apple Computer, Inc.\\QuickTime";
+  var qtdir = winreg.getValueString(subkey, "InstallDir");
+
+  if (!qtdir)
+    return;
+
+  var qtXPT = getFolder("file:///",
+                        qtdir + "\\Plugins\\nsIQTScriptablePlugin.xpt");
+
+  if (!File.exists(qtXPT))
+    return;
+
+  var target = getFolder("file:///",
+                         fProgram + "\\plugins\\nsIQTScriptablePlugin.xpt");
+
+  // Copy the file nsIQTScriptablePlugin.xpt from the QuickTime
+  // installation directory to Firefox's plugin directory.
+  File.copy(qtXPT, target);
+
+  logComment("Copied QuickTime xpt file from '" + qtXPT + "' to '" + target +
+             "'");
+}
+
 // main
 var srDest;
 var err;
@@ -488,6 +564,9 @@ if(verifyDiskSpace(fProgram, srDest))
     if(File.exists(nss)) 
       registerChrome(CONTENT | DELAYED_CHROME, nss, "content/pipnss/");
 
+    copyFlashXPT();
+    copyQuickTimeXPT();
+    
     /* Log files that are created after the installer is done, so they can be uninstalled */
     logComment("Installing: "    + fProgram + ".autoreg");
     logComment("Installing: "    + fProgram + "Xpcs Registry.dat");
