@@ -28,7 +28,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIFileWidget.h"
-#include "nsITextWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
@@ -43,7 +42,6 @@
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
-static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
@@ -142,19 +140,8 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
   if (nsnull == textView) {
     return;
   }
-  nsIWidget* widget;
-  mTextFrame->GetWidget(&widget);
-  if (!widget) {
-    return;
-  }
- 
-  nsITextWidget* textWidget;
-  nsresult result = widget->QueryInterface(kITextWidgetIID, (void**)&textWidget);
-  if (NS_OK != result) {
-    NS_RELEASE(widget);
-    return;
-  }
-  
+
+  nsresult result = NS_OK;
   nsIView*   parentView;
   textView->GetParent(parentView);
   nsIWidget* parentWidget = GetWindowTemp(parentView);
@@ -174,16 +161,13 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
 	  result = fileWidget->Show();
 
 	  if (result) {
-	    PRUint32 size;
 	    nsString fileName;
 	    fileWidget->GetFile(fileName);
-	    textWidget->SetText(fileName,size);
+      mTextFrame->SetProperty(nsHTMLAtoms::value,fileName);
 	  }
 	  NS_RELEASE(fileWidget);
   }
   NS_RELEASE(parentWidget);
-  NS_RELEASE(textWidget);
-  NS_RELEASE(widget);
 }
 
 
@@ -348,17 +332,12 @@ nsFileControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   // use our name and the text widgets value 
   aNames[0] = name;
   nsresult status = PR_FALSE;
-  nsIWidget*  widget;
-  nsITextWidget* textWidget;
-  mTextFrame->GetWidget(&widget);
-  if (widget && (NS_OK == widget->QueryInterface(kITextWidgetIID, (void**)&textWidget))) {
-    PRUint32 actualSize;
-    textWidget->GetText(aValues[0], 0, actualSize);
+
+  if (NS_SUCCEEDED(mTextFrame->GetProperty(nsHTMLAtoms::value, aValues[0]))) {
     aNumValues = 1;
-    NS_RELEASE(textWidget);
     status = PR_TRUE;
   }
-  NS_IF_RELEASE(widget);
+
   return status;
 }
 
@@ -468,11 +447,13 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
   if (HasWidget())
     return NS_OK;
 
+
   nsAutoString browse("Browse...");
   nsRect rect;
   mBrowseFrame->GetRect(rect);
   mBrowseFrame->PaintButton(aPresContext, aRenderingContext, aDirtyRect,
                             browse, rect);
+
 
   mTextFrame->PaintTextControlBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 

@@ -77,9 +77,12 @@ public:
      // nsIFormControLFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  void       SetFocus(PRBool aOn, PRBool aRepaint);
+
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);
+  
 
   //nsTextControlFrame* GetTextFrame() { return mTextFrame; }
 
@@ -87,7 +90,6 @@ public:
 
   //nsButtonControlFrame* GetBrowseFrame() { return mBrowseFrame; }
   //void           SetBrowseFrame(nsButtonControlFrame* aFrame) { mBrowseFrame = aFrame; }
-  void           SetFocus(PRBool aOn, PRBool aRepaint);
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual void   SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
   virtual void   Reset();

@@ -857,13 +857,30 @@ void nsTextControlFrame::SetTextControlFrameState(const nsString& aValue)
 
 NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
+  nsresult rv = NS_OK;
   if (nsHTMLAtoms::value == aName) {
     SetTextControlFrameState(aValue);
+  } else if (nsHTMLAtoms::select == aName) {
+    if (nsnull != mWidget) {
+      nsITextWidget *textWidget;
+      rv = mWidget->QueryInterface(kITextWidgetIID, (void**)&textWidget);
+      if (NS_SUCCEEDED(rv)) {
+        textWidget->SelectAll();
+        NS_RELEASE(textWidget);
+      } 
+
+      nsITextAreaWidget *textAreaWidget;
+      rv = mWidget->QueryInterface(kITextAreaWidgetIID, (void**)&textAreaWidget);
+      if (NS_SUCCEEDED(rv)) {
+        textAreaWidget->SelectAll();
+        NS_RELEASE(textAreaWidget);
+      }
+    }
   }
   else {
     return nsFormControlFrame::SetProperty(aName, aValue);
   }
-  return NS_OK;
+  return rv;
 }      
 
 NS_IMETHODIMP nsTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)

@@ -20,7 +20,6 @@
 
 #include "nsISupports.h"
 class nsIDOMHTMLFormElement;
-class nsIWidget;
 
 #define NS_FORM_BROWSE          0
 #define NS_FORM_BUTTON_BUTTON   1
@@ -78,8 +77,6 @@ public:
     * @return NS_OK
     */
   NS_IMETHOD GetType(PRInt32* aType) = 0;
-
-  NS_IMETHOD SetWidget(nsIWidget* aWidget) = 0;
 
   NS_IMETHOD Init() = 0;
 

@@ -299,15 +299,7 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
 	  
  	      // set our widget
 	      result = GetWidget(view, &mWidget);
-	      if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
-          nsIFormControl* formControl = nsnull;
-          result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
-          if ((NS_OK == result) && formControl) {
-            // set the content's widget, so it can get content modified by the widget
-            formControl->SetWidget(mWidget);
-            NS_RELEASE(formControl);
-          }
- 	      } else {
+	      if ((PR_FALSE == NS_SUCCEEDED(result)) || (nsnull == mWidget)) { // keep the ref on mWidget
 	        NS_ASSERTION(0, "could not get widget");
 	      }
       }

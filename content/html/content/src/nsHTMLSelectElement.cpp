@@ -30,7 +30,6 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
-#include "nsIWidget.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIFocusableContent.h"
@@ -160,7 +159,6 @@ public:
   // nsIFormControl
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
-  NS_IMETHOD SetWidget(nsIWidget* aWidget);
   NS_IMETHOD Init();
 
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
@@ -172,7 +170,6 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
-  nsIWidget*    mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
   nsIForm*      mForm;
   nsOptionList* mOptions;
 };
@@ -202,12 +199,10 @@ nsHTMLSelectElement::nsHTMLSelectElement(nsIAtom* aTag)
   mInner.Init(this, aTag);
   mOptions = nsnull;
   mForm = nsnull;
-  mWidget = nsnull;
 }
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
 {
-  NS_IF_RELEASE(mWidget);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -480,7 +475,6 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aValue)
     nsString value;
     value.Append(aValue, 10);
     formControlFrame->SetProperty(nsHTMLAtoms::selectedindex, value);
-    NS_RELEASE(formControlFrame);
   }
   return NS_OK;
 }
@@ -495,23 +489,27 @@ NS_IMPL_INT_ATTR(nsHTMLSelectElement, TabIndex, tabindex)
 NS_IMETHODIMP
 nsHTMLSelectElement::Blur() // XXX not tested
 {
-  if (nsnull != mWidget) {
-    nsIWidget *mParentWidget = mWidget->GetParent();
-    if (nsnull != mParentWidget) {
-      mParentWidget->SetFocus();
-      NS_RELEASE(mParentWidget);
-    }
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+     // Ask the frame to Deselect focus (i.e Blur).
+    formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
+    return NS_OK;
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLSelectElement::Focus()
 {
-  if (nsnull != mWidget) { // XXX not tested
-    mWidget->SetFocus();
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+    return NS_OK;
   }
-  return NS_OK;
+  return rv;
+
 }
 
 NS_IMETHODIMP
@@ -651,16 +649,6 @@ nsHTMLSelectElement::GetType(PRInt32* aType)
   }
 }
 
-NS_IMETHODIMP
-nsHTMLSelectElement::SetWidget(nsIWidget* aWidget)
-{
-  if (aWidget != mWidget) {
-	  NS_IF_RELEASE(mWidget);
-    NS_IF_ADDREF(aWidget);
-    mWidget = aWidget;
-  }
-  return NS_OK;
-}
 
 // An important assumption is that if aForm is null, the previous mForm will not be released
 // This allows nsHTMLFormElement to deal with circular references.

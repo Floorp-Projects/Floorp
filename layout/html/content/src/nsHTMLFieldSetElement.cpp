@@ -75,7 +75,6 @@ public:
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
-  NS_IMETHOD SetWidget(nsIWidget* aWidget);
   NS_IMETHOD Init() { return NS_OK; }
 
 protected:
@@ -262,12 +261,6 @@ nsHTMLFieldSetElement::GetType(PRInt32* aType)
   }
 }
 
-NS_IMETHODIMP
-nsHTMLFieldSetElement::SetWidget(nsIWidget* aWidget)
-{
-  NS_ASSERTION(0, "Fieldset has no widget");
-  return NS_FORM_NOTOK;
-}
 
 NS_IMETHODIMP
 nsHTMLFieldSetElement::GetStyleHintForAttributeChange(
