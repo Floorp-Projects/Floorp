@@ -16,7 +16,8 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsBlockFrame.h"
+#include "nsHTMLContainerFrame.h"
+#include "nsFrameReflowState.h"
 #include "nsLineLayout.h"
 #include "nsInlineReflow.h"
 #include "nsCSSLayout.h"
@@ -31,6 +32,7 @@
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
 #include "nsIRunaround.h"
+#include "nsISpaceManager.h"
 #include "nsIStyleContext.h"
 #include "nsIView.h"
 #include "nsIFontMetrics.h"
@@ -38,13 +40,23 @@
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLValue.h"
-#include "nsIHTMLContent.h"
 
 //#include "js/jsapi.h"
 //#include "nsDOMEvent.h"
 #define DOM_EVENT_INIT      0x0001
 
 #include "prprf.h"
+
+// XXX These are unfortunate dependencies
+#include "nsIHTMLContent.h"
+#include "nsHTMLTagContent.h"
+#include "nsHTMLImage.h"
+
+/* 52b33130-0b99-11d2-932e-00805f8add32 */
+#define NS_BLOCK_FRAME_CID \
+{ 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+
+const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
 // 09-15-98: make sure that the outer container of the block (e.g. the
 // body sets up the outer top margin feed in properly so that the top
@@ -101,7 +113,110 @@
 // XXX I don't want mFirstChild, mChildCount, mOverflowList,
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
+class BulletFrame;
 struct LineData;
+class nsBlockFrame;
+
+/* 52b33130-0b99-11d2-932e-00805f8add32 */
+#define NS_BLOCK_FRAME_CID \
+{ 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+
+// XXX hide this as soon as list bullet code is cleaned up
+
+struct nsBlockReflowState : public nsFrameReflowState {
+  nsBlockReflowState(nsIPresContext& aPresContext,
+                     const nsReflowState& aReflowState,
+                     const nsReflowMetrics& aMetrics,
+                     nsISpaceManager* aSpaceManager);
+
+  ~nsBlockReflowState();
+
+  /**
+   * Update the mCurrentBand data based on the current mY position.
+   */
+  void GetAvailableSpace();
+
+  void AddFloater(nsPlaceholderFrame* aPlaceholderFrame);
+
+  void PlaceFloater(nsPlaceholderFrame* aFloater);
+
+  void PlaceFloaters(nsVoidArray* aFloaters);
+
+  void ClearFloaters(PRUint8 aBreakType);
+
+  PRBool IsLeftMostChild(nsIFrame* aFrame);
+
+  nsLineLayout mLineLayout;
+  nsInlineReflow* mInlineReflow;
+
+  nsISpaceManager* mSpaceManager;
+  nsBlockFrame* mBlock;
+  nsBlockFrame* mNextInFlow;
+
+  PRBool mInlineReflowPrepared;
+
+  PRUint8 mTextAlign;
+
+  nsSize mStyleSize;
+
+  PRIntn mStyleSizeFlags;
+
+  nscoord mBottomEdge;          // maximum Y
+
+  nscoord mBulletPadding;// XXX Get rid of these
+  nscoord mLeftPadding;// XXX Get rid of these
+
+  PRBool mUnconstrainedWidth;
+  PRBool mUnconstrainedHeight;
+  nscoord mY;
+  nscoord mKidXMost;
+
+  nsIFrame* mPrevChild;
+
+  LineData* mFreeList;
+
+  nsVoidArray mPendingFloaters;
+  nscoord mSpaceManagerX, mSpaceManagerY;
+
+  LineData* mCurrentLine;
+  LineData* mPrevLine;
+
+  // The next list ordinal for counting list bullets
+  PRInt32 mNextListOrdinal;
+
+  // XXX what happens if we need more than 12 trapezoids?
+  struct BlockBandData : public nsBandData {
+    // Trapezoids used during band processing
+    nsBandTrapezoid data[12];
+
+    // Bounding rect of available space between any left and right floaters
+    nsRect          availSpace;
+
+    BlockBandData() {
+      size = 12;
+      trapezoids = data;
+    }
+
+    /**
+     * Computes the bounding rect of the available space, i.e. space
+     * between any left and right floaters Uses the current trapezoid
+     * data, see nsISpaceManager::GetBandData(). Also updates member
+     * data "availSpace".
+     */
+    void ComputeAvailSpaceRect();
+  };
+
+  BlockBandData mCurrentBand;
+};
+
+// XXX This is vile. Make it go away
+void
+nsLineLayout::AddFloater(nsPlaceholderFrame* aFrame)
+{
+  mBlockReflowState->AddFloater(aFrame);
+}
+
+//----------------------------------------------------------------------
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
@@ -183,8 +298,6 @@ public:
 
   PRBool RemoveChild(LineData* aLines, nsIFrame* aChild);
 
-  nsresult ProcessInitialReflow(nsBlockReflowState& aState);
-
   PRIntn GetSkipSides() const;
 
   PRBool IsPseudoFrame() const;
@@ -262,6 +375,8 @@ public:
 
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
 
+  void RenumberLists(nsBlockReflowState& aState);
+
 #ifdef NS_DEBUG
   PRBool IsChild(nsIFrame* aFrame);
 #endif
@@ -274,8 +389,509 @@ public:
   nsTextRun* mTextRuns;
 
   // For list-item frames, this is the bullet frame.
-  nsIFrame* mBullet;
+  BulletFrame* mBullet;
 };
+
+//----------------------------------------------------------------------
+
+/**
+ * A helper content class for bullets. The content class is needed
+ * primarily so that we can resolve style and force the display mode
+ * for the bullet to be inline
+ */
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
+{
+  nsStyleDisplay* display = (nsStyleDisplay*)
+    aContext->GetMutableStyleData(eStyleStruct_Display);
+  display->mDisplay = NS_STYLE_DISPLAY_INLINE;
+}
+
+class Bullet : public nsHTMLTagContent {
+public:
+  Bullet() {
+    mRefCnt = 1;
+  }
+
+  NS_IMETHOD IsSynthetic(PRBool& aResult)
+  {
+    aResult = PR_TRUE;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+  {
+    aMapFunc = &MapAttributesInto;
+    return NS_OK;
+  }
+
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const
+  {
+    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+    fprintf(out, "Bullet RefCnt=%d<>\n", mRefCnt);
+    return NS_OK;
+  }
+};
+
+//----------------------------------------------------------------------
+
+class BulletFrame : public nsFrame, private nsIInlineReflow {
+public:
+  BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  virtual ~BulletFrame();
+
+  // nsISupports
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  // nsIFrame
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Paint(nsIPresContext &aCX,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
+  NS_IMETHOD ListTag(FILE* out) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+
+  // nsIInlineReflow
+  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
+                          nsIReflowCommand* aReflowCommand);
+  NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
+                          nsReflowMetrics& aMetrics,
+                          const nsReflowState& aReflowState);
+
+  void SetListItemOrdinal(nsBlockReflowState& aBlockState);
+
+  void GetDesiredSize(nsIPresContext* aPresContext,
+                      const nsReflowState& aReflowState,
+                      nsReflowMetrics& aMetrics);
+
+  void GetListItemText(nsIPresContext& aCX,
+                       const nsStyleList& aMol,
+                       nsString& aResult);
+
+  PRInt32 mOrdinal;
+  nsMargin mPadding;
+  nsHTMLImageLoader mImageLoader;
+};
+
+BulletFrame::BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsFrame(aContent, aParentFrame)
+{
+}
+
+BulletFrame::~BulletFrame()
+{
+}
+
+NS_IMETHODIMP
+BulletFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIInlineReflowIID)) {
+    *aInstancePtrResult = (void*) ((nsIInlineReflow*)this);
+    return NS_OK;
+  }
+  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
+}
+
+NS_METHOD
+BulletFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+  // Release image loader first so that it's refcnt can go to zero
+  mImageLoader.DestroyLoader();
+  return nsFrame::DeleteFrame(aPresContext);
+}
+
+NS_IMETHODIMP
+BulletFrame::ListTag(FILE* out) const
+{
+  PRInt32 contentIndex;
+  GetContentIndex(contentIndex);
+  fprintf(out, "Bullet(%d)@%p", contentIndex, this);
+  return NS_OK;
+}
+
+NS_METHOD
+BulletFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  PRInt32 i;
+  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  PRInt32 contentIndex;
+  GetContentIndex(contentIndex);
+  fprintf(out, "Bullet(%d)@%p ", 
+          contentIndex, this);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+  }
+
+  out << mRect;
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+  fputs("<>\n", out);
+  return NS_OK;
+}
+
+NS_METHOD
+BulletFrame::Paint(nsIPresContext&      aCX,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect)
+{
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  nscoord width;
+
+  if (disp->mVisible) {
+    const nsStyleList* myList =
+      (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+
+    if (myList->mListStyleImage.Length() > 0) {
+      nsIImage* image = mImageLoader.GetImage();
+      if (nsnull == image) {
+        if (!mImageLoader.GetLoadImageFailed()) {
+          // No image yet
+          return NS_OK;
+        }
+      }
+      else {
+        nsRect innerArea(mPadding.left, mPadding.top,
+                         mRect.width - (mPadding.left + mPadding.right),
+                         mRect.height - (mPadding.top + mPadding.bottom));
+        aRenderingContext.DrawImage(image, innerArea);
+        return NS_OK;
+      }
+    }
+
+    const nsStyleFont* myFont =
+      (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+    const nsStyleColor* myColor =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    nsIFontMetrics* fm;
+    aRenderingContext.SetColor(myColor->mColor);
+
+    nsAutoString text;
+    switch (myList->mListStyleType) {
+    case NS_STYLE_LIST_STYLE_NONE:
+      break;
+
+    default:
+    case NS_STYLE_LIST_STYLE_BASIC:
+    case NS_STYLE_LIST_STYLE_DISC:
+      aRenderingContext.FillEllipse(mPadding.left, mPadding.top,
+                                    mRect.width - (mPadding.left + mPadding.right),
+                                    mRect.height - (mPadding.top + mPadding.bottom));
+      break;
+
+    case NS_STYLE_LIST_STYLE_CIRCLE:
+      aRenderingContext.DrawEllipse(mPadding.left, mPadding.top,
+                                    mRect.width - (mPadding.left + mPadding.right),
+                                    mRect.height - (mPadding.top + mPadding.bottom));
+      break;
+
+    case NS_STYLE_LIST_STYLE_SQUARE:
+      aRenderingContext.FillRect(mPadding.left, mPadding.top,
+                                 mRect.width - (mPadding.left + mPadding.right),
+                                 mRect.height - (mPadding.top + mPadding.bottom));
+      break;
+
+    case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+      fm = aCX.GetMetricsFor(myFont->mFont);
+      GetListItemText(aCX, *myList, text);
+      aRenderingContext.SetFont(myFont->mFont);
+      fm->GetWidth(text, width);
+      aRenderingContext.DrawString(text, mPadding.left, mPadding.top, width);
+      NS_RELEASE(fm);
+      break;
+    }
+  }
+  return NS_OK;
+}
+
+void
+BulletFrame::SetListItemOrdinal(nsBlockReflowState& aReflowState)
+{
+  // Assume that the ordinal comes from the block reflow state
+  mOrdinal = aReflowState.mNextListOrdinal;
+
+  // Try to get value directly from the list-item, if it specifies a
+  // value attribute. Note: we do this with our parent's content
+  // because our parent is the list-item.
+  nsHTMLValue value;
+  nsIContent* parentContent;
+  mContentParent->GetContent(parentContent);
+  nsIHTMLContent* hc;
+  if (NS_OK == parentContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        hc->GetAttribute(nsHTMLAtoms::value, value)) {
+      if (eHTMLUnit_Integer == value.GetUnit()) {
+        // Use ordinal specified by the value attribute
+        mOrdinal = value.GetIntValue();
+        if (mOrdinal <= 0) {
+          mOrdinal = 1;
+        }
+      }
+    }
+    NS_RELEASE(hc);
+  }
+  NS_RELEASE(parentContent);
+
+  aReflowState.mNextListOrdinal = mOrdinal + 1;
+}
+
+static const char* gLowerRomanCharsA = "ixcm";
+static const char* gUpperRomanCharsA = "IXCM";
+static const char* gLowerRomanCharsB = "vld?";
+static const char* gUpperRomanCharsB = "VLD?";
+static const char* gLowerAlphaChars  = "abcdefghijklmnopqrstuvwxyz";
+static const char* gUpperAlphaChars  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// XXX change roman/alpha to use unsigned math so that maxint and
+// maxnegint will work
+void
+BulletFrame::GetListItemText(nsIPresContext& aCX,
+                             const nsStyleList& aListStyle,
+                             nsString& result)
+{
+  PRInt32 ordinal = mOrdinal;
+  char cbuf[40];
+  switch (aListStyle.mListStyleType) {
+  case NS_STYLE_LIST_STYLE_DECIMAL:
+    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
+    result.Append(cbuf);
+    break;
+
+  case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+  case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+  {
+    if (0 == ordinal) {
+      ordinal = 1;
+    }
+    nsAutoString addOn;
+    nsAutoString decStr;
+    decStr.Append(ordinal, 10);
+    const PRUnichar* dp = decStr.GetUnicode();
+    const PRUnichar* end = dp + decStr.Length();
+
+    PRIntn           len=decStr.Length();
+    PRIntn           romanPos=len;
+    PRIntn           n;
+
+    const char* achars;
+    const char* bchars;
+    if (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ROMAN) {
+      achars = gLowerRomanCharsA;
+      bchars = gLowerRomanCharsB;
+    } else {
+      achars = gUpperRomanCharsA;
+      bchars = gUpperRomanCharsB;
+    }
+    ordinal=(ordinal < 0) ? -ordinal : ordinal;
+    if (ordinal < 0) {
+      // XXX max negative int
+      break;
+    }
+    for (; dp < end; dp++)
+    {
+      romanPos--;
+      addOn.SetLength(0);
+      switch(*dp)
+      {
+      case '3':  addOn.Append(achars[romanPos]);
+      case '2':  addOn.Append(achars[romanPos]);
+      case '1':  addOn.Append(achars[romanPos]);
+        break;
+
+      case '4':
+        addOn.Append(achars[romanPos]);
+
+      case '5': case '6':
+      case '7': case  '8':
+        addOn.Append(bchars[romanPos]);
+        for(n=0;n<(*dp-'5');n++) {
+          addOn.Append(achars[romanPos]);
+        }
+        break;
+      case '9':
+        addOn.Append(achars[romanPos]);
+        addOn.Append(achars[romanPos+1]);
+        break;
+      default:
+        break;
+      }
+      result.Append(addOn);
+    }
+  }
+  break;
+
+  case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+  case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+  {
+    PRInt32 anOffset = -1;
+    PRInt32 aBase = 26;
+    PRInt32 ndex=0;
+    PRInt32 root=1;
+    PRInt32 next=aBase;
+    PRInt32 expn=1;
+    const char* chars =
+      (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ALPHA)
+      ? gLowerAlphaChars : gUpperAlphaChars;
+
+    // must be positive here...
+    ordinal = (ordinal < 0) ? -ordinal : ordinal;
+    if (ordinal < 0) {
+      // XXX max negative int
+      break;
+    }
+    while (next<=ordinal)      // scale up in baseN; exceed current value.
+    {
+      root=next;
+      next*=aBase;
+      expn++;
+    }
+
+    while(0!=(expn--))
+    {
+      ndex = ((root<=ordinal) && (0!=root)) ? (ordinal/root): 0;
+      ordinal %= root;
+      if (root>1)
+        result.Append(chars[ndex+anOffset]);
+      else
+        result.Append(chars[ndex]);
+      root /= aBase;
+    }
+  }
+  break;
+  }
+  result.Append(".");
+}
+
+#define MIN_BULLET_SIZE 5               // from laytext.c
+
+void
+BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
+                            const nsReflowState& aReflowState,
+                            nsReflowMetrics& aMetrics)
+{
+  const nsStyleList* myList =
+    (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  nscoord ascent;
+
+  if (myList->mListStyleImage.Length() > 0) {
+    mImageLoader.SetURL(myList->mListStyleImage);
+    mImageLoader.GetDesiredSize(aCX, aReflowState, aMetrics);
+    if (!mImageLoader.GetLoadImageFailed()) {
+      nsHTMLContainerFrame::CreateViewForFrame(*aCX, this, mStyleContext,
+                                               PR_FALSE);
+      aMetrics.ascent = aMetrics.height;
+      aMetrics.descent = 0;
+      return;
+    }
+  }
+
+  const nsStyleFont* myFont =
+    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+  nsIFontMetrics* fm = aCX->GetMetricsFor(myFont->mFont);
+  nscoord bulletSize;
+  float p2t;
+  float t2p;
+
+  nsAutoString text;
+  switch (myList->mListStyleType) {
+  case NS_STYLE_LIST_STYLE_NONE:
+    aMetrics.width = 0;
+    aMetrics.height = 0;
+    aMetrics.ascent = 0;
+    aMetrics.descent = 0;
+    break;
+
+  default:
+  case NS_STYLE_LIST_STYLE_DISC:
+  case NS_STYLE_LIST_STYLE_CIRCLE:
+  case NS_STYLE_LIST_STYLE_BASIC:
+  case NS_STYLE_LIST_STYLE_SQUARE:
+    t2p = aCX->GetTwipsToPixels();
+    fm->GetMaxAscent(ascent);
+    bulletSize = NSTwipsToIntPixels((nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
+    if (bulletSize < 1) {
+      bulletSize = MIN_BULLET_SIZE;
+    }
+    p2t = aCX->GetPixelsToTwips();
+    bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
+    mPadding.bottom = ascent / 8;
+    if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
+      mPadding.right = bulletSize / 2;
+    }
+    aMetrics.width = mPadding.right + bulletSize;
+    aMetrics.height = mPadding.bottom + bulletSize;
+    aMetrics.ascent = mPadding.bottom + bulletSize;
+    aMetrics.descent = 0;
+    break;
+
+  case NS_STYLE_LIST_STYLE_DECIMAL:
+  case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+  case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+  case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+  case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+    GetListItemText(*aCX, *myList, text);
+    fm->GetHeight(aMetrics.height);
+    if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
+      // Inside bullets need some extra width to get the padding
+      // between the list item and the content that follows.
+      mPadding.right = aMetrics.height / 2;          // From old layout engine
+    }
+    
+    fm->GetWidth(text, aMetrics.width);
+    aMetrics.width += mPadding.right;
+    fm->GetMaxAscent(aMetrics.ascent);
+    fm->GetMaxDescent(aMetrics.descent);
+    break;
+  }
+  NS_RELEASE(fm);
+}
+
+NS_IMETHODIMP
+BulletFrame::InlineReflow(nsLineLayout& aLineLayout,
+                          nsReflowMetrics& aMetrics,
+                          const nsReflowState& aReflowState)
+{
+  // Get the base size
+  GetDesiredSize(&aLineLayout.mPresContext, aReflowState, aMetrics);
+
+  // Add in the border and padding; split the top/bottom between the
+  // ascent and descent to make things look nice
+  const nsStyleSpacing* space =(const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin borderPadding;
+  space->CalcBorderPaddingFor(this, borderPadding);
+  aMetrics.width += borderPadding.left + borderPadding.right;
+  aMetrics.height += borderPadding.top + borderPadding.bottom;
+  aMetrics.ascent += borderPadding.top;
+  aMetrics.descent += borderPadding.bottom;
+
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = aMetrics.width;
+    aMetrics.maxElementSize->height = aMetrics.height;
+  }
+  return NS_FRAME_COMPLETE;
+}
+
+NS_IMETHODIMP
+BulletFrame::FindTextRuns(nsLineLayout& aLineLayout,
+                          nsIReflowCommand* aReflowCommand)
+{
+  aLineLayout.EndTextRun();
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 
@@ -805,29 +1421,6 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
   mPrevChild = nsnull;
   mFreeList = nsnull;
   mPrevLine = nsnull;
-
-  // Setup initial list ordinal value
-
-  // XXX translate the starting value to a css style type and stop
-  // doing this!
-  mNextListOrdinal = -1;
-  nsIContent* blockContent;
-  mBlock->GetContent(blockContent);
-  nsIAtom* tag;
-  blockContent->GetTag(tag);
-  if ((tag == nsHTMLAtoms::ul) || (tag == nsHTMLAtoms::ol) ||
-      (tag == nsHTMLAtoms::menu) || (tag == nsHTMLAtoms::dir)) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        ((nsIHTMLContent*)blockContent)->GetAttribute(nsHTMLAtoms::start,
-                                                      value)) {
-      if (eHTMLUnit_Integer == value.GetUnit()) {
-        mNextListOrdinal = value.GetIntValue();
-      }
-    }
-  }
-  NS_IF_RELEASE(tag);
-  NS_RELEASE(blockContent);
 }
 
 nsBlockReflowState::~nsBlockReflowState()
@@ -914,7 +1507,6 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  // XXX temporary
   if (aIID.Equals(kBlockFrameCID)) {
     *aInstancePtr = (void*) (this);
     return NS_OK;
@@ -933,7 +1525,51 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
-  return AppendNewFrames(aPresContext, aChildList);
+  nsresult rv = AppendNewFrames(aPresContext, aChildList);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  // Create list bullet if this is a list-item. Note that this is done
+  // here so that RenumberLists will work (it needs the bullets to
+  // store the bullet numbers).
+  const nsStyleDisplay* styleDisplay;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
+  if ((nsnull == mPrevInFlow) &&
+      (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) &&
+      (nsnull == mBullet)) {
+    // Create synthetic bullet content object. Note that we don't add
+    // the content object to the content tree so that the DOM can't
+    // find it.
+    Bullet* bullet;
+    NS_NEWXPCOM(bullet, Bullet);
+    if (nsnull == bullet) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Create bullet frame
+    mBullet = new BulletFrame(bullet, this);
+    if (nsnull == mBullet) {
+      NS_RELEASE(bullet);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Resolve style for the bullet frame
+    nsIStyleContext* kidSC;
+    kidSC = aPresContext.ResolveStyleContextFor(bullet, this);
+    mBullet->SetStyleContext(&aPresContext, kidSC);
+    NS_RELEASE(kidSC);
+    NS_RELEASE(bullet);
+
+    // If the list bullet frame should be positioned inside then add
+    // it to the flow now.
+    const nsStyleList* styleList;
+    GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
+    if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
+      InsertNewFrame(this, mBullet, nsnull);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1105,12 +1741,12 @@ nsBlockFrame::FirstChild(nsIFrame*& aFirstChild) const
 // Reflow methods
 
 NS_IMETHODIMP
-nsBlockFrame::ReflowAround(nsIPresContext&      aPresContext,
-                              nsISpaceManager*     aSpaceManager,
-                              nsReflowMetrics&     aMetrics,
-                              const nsReflowState& aReflowState,
-                              nsRect&              aDesiredRect,
-                              nsReflowStatus&      aStatus)
+nsBlockFrame::ReflowAround(nsIPresContext& aPresContext,
+                           nsISpaceManager* aSpaceManager,
+                           nsReflowMetrics& aMetrics,
+                           const nsReflowState& aReflowState,
+                           nsRect& aDesiredRect,
+                           nsReflowStatus& aStatus)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsBlockFrame::Reflow: maxSize=%d,%d reason=%d",
@@ -1138,6 +1774,7 @@ nsBlockFrame::ReflowAround(nsIPresContext&      aPresContext,
 
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
+    RenumberLists(state);
     if (!DrainOverflowLines()) {
       rv = InitialReflow(state);
     }
@@ -1155,6 +1792,7 @@ nsBlockFrame::ReflowAround(nsIPresContext&      aPresContext,
     nsIFrame* target;
     state.reflowCommand->GetTarget(target);
     if (this == target) {
+      RenumberLists(state);
       nsIReflowCommand::ReflowType type;
       state.reflowCommand->GetType(type);
       switch (type) {
@@ -1203,47 +1841,59 @@ nsBlockFrame::ReflowAround(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-nsresult
-nsBlockFrame::ProcessInitialReflow(nsBlockReflowState& aState)
+void
+nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
 {
-  nsresult rv = NS_OK;
-
-  // Create list bullet on the first reflow
-  if ((nsnull == mPrevInFlow) &&
-      (NS_STYLE_DISPLAY_LIST_ITEM == aState.mStyleDisplay->mDisplay) &&
-      (nsnull == mBullet)) {
-    // Create synthetic bullet content object. Note that we don't add
-    // the content object to the content tree so that the DOM can't
-    // find it.
-    nsIHTMLContent* bullet;
-    nsresult rv = NS_NewHTMLBullet(&bullet);
-    if (NS_OK != rv) {
-      return rv;
+  // Setup initial list ordinal value
+  PRInt32 ordinal = 1;
+  nsIHTMLContent* hc;
+  if (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        hc->GetAttribute(nsHTMLAtoms::start, value)) {
+      if (eHTMLUnit_Integer == value.GetUnit()) {
+        ordinal = value.GetIntValue();
+        if (ordinal <= 0) {
+          ordinal = 1;
+        }
+      }
     }
-
-    // Create bullet frame
-    rv = NS_NewBulletFrame(bullet, this, mBullet);
-    if (NS_OK != rv) {
-      NS_RELEASE(bullet);
-      return rv;
-    }
-
-    // Resolve style for the bullet frame
-    nsIStyleContext* kidSC;
-    kidSC = aState.mPresContext.ResolveStyleContextFor(bullet, this);
-    mBullet->SetStyleContext(&aState.mPresContext, kidSC);
-    NS_RELEASE(kidSC);
-    NS_RELEASE(bullet);
-
-    // If the list bullet frame should be positioned inside then add
-    // it to the flow now.
-    const nsStyleList* styleList;
-    GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
-    if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
-      InsertNewFrame(this, mBullet, nsnull);
-    }
+    NS_RELEASE(hc);
   }
-  return NS_OK;
+  aState.mNextListOrdinal = ordinal;
+
+  // Get to first-in-flow
+  nsBlockFrame* block = this;
+  while (nsnull != block->mPrevInFlow) {
+    block = (nsBlockFrame*) block->mPrevInFlow;
+  }
+
+  // For each flow-block...
+  while (nsnull != block) {
+    // For each frame in the flow-block...
+    nsIFrame* frame = block->mLines ? block->mLines->mFirstChild : nsnull;
+    while (nsnull != frame) {
+      // If the frame is a list-item and the frame implements our
+      // block frame API then get it's bullet and set the list item
+      // ordinal.
+      const nsStyleDisplay* display;
+      frame->GetStyleData(eStyleStruct_Display,
+                          (const nsStyleStruct*&) display);
+      if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
+        // Make certain that the frame isa block-frame in case
+        // something foriegn has crept in.
+        nsBlockFrame* listItem;
+        if (NS_OK == frame->QueryInterface(kBlockFrameCID,
+                                           (void**) &listItem)) {
+          if (nsnull != listItem->mBullet) {
+            listItem->mBullet->SetListItemOrdinal(aState);
+          }
+        }
+      }
+      frame->GetNextSibling(frame);
+    }
+    block = (nsBlockFrame*) block->mNextInFlow;
+  }
 }
 
 void
@@ -1567,14 +2217,8 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
 nsresult
 nsBlockFrame::InitialReflow(nsBlockReflowState& aState)
 {
-  // Create synthetic content
-  nsresult rv = ProcessInitialReflow(aState);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
   // Generate text-run information
-  rv = FindTextRuns(aState);
+  nsresult rv = FindTextRuns(aState);
   if (NS_OK != rv) {
     return rv;
   }
