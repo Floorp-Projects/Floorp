@@ -60,7 +60,6 @@
 #include "nsIProgressEventSink.h"
 #include "prlog.h"
 #include "nsNetUtil.h"
-#include "nsIErrorService.h" 
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIObserverService.h"
@@ -90,7 +89,6 @@ PRLogModuleInfo* gFTPLog = nsnull;
 #define IDLE_CONNECTION_LIMIT 8 /* XXX pref me */
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 
 nsFtpProtocolHandler *gFtpHandler = nsnull;
@@ -127,15 +125,6 @@ nsresult
 nsFtpProtocolHandler::Init()
 {
     nsresult rv;
-
-    // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
-    nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_BEGIN_FTP_TRANSACTION, "BeginFTPTransaction");
-        if (NS_FAILED(rv)) return rv;
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_END_FTP_TRANSACTION, "EndFTPTransaction");
-        if (NS_FAILED(rv)) return rv;
-    }
 
     if (mIdleTimeout == -1) {
         nsCOMPtr<nsIPrefBranchInternal> branch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);

@@ -203,12 +203,6 @@ nsIOService::Init()
     nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID);
     if (errorService) {
         errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK, NECKO_MSGS_URL);
-        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_RESOLVING, "ResolvingHost");
-        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_CONNECTED_TO, "ConnectedTo");
-        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_SENDING_TO, "SendingTo");
-        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_RECEIVING_FROM, "ReceivingFrom");
-        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_CONNECTING_TO, "ConnectingTo");
-        errorService->RegisterErrorStringBundleKey(nsISocketTransport::STATUS_WAITING_FOR, "WaitingFor");
     }
     else
         NS_WARNING("failed to get error service");
