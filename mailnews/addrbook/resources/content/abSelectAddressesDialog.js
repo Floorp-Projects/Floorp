@@ -45,6 +45,7 @@ var msgCompFields = 0;
 var editCardCallback = 0;
 
 var gAddressBookBundle;
+var gPromptService = GetPromptService();
 
 var gSearchInput;
 var gSearchTimer = null;
@@ -164,6 +165,7 @@ function AddAddressFromComposeWindow(addresses, prefix)
 
 function SelectAddressOKButton()
 {
+  // Empty email checks are now done in AddAddressIntoBucket below.
   var body = document.getElementById('bucketBody');
   var item, row, cell, prefix, address, email;
   var toAddress="", ccAddress="", bccAddress="", emptyEmail="";
@@ -201,20 +203,8 @@ function SelectAddressOKButton()
               break;
           }
         }
-        if(!email)
-        {
-          if (emptyEmail)
-            emptyEmail +=", ";
-            emptyEmail += text.substring(prefixTo.length, text.length-2);
-        }
       }
     }
-  }
-  if(emptyEmail)
-  {
-    var alertText = gAddressBookBundle.getString("emptyEmailCard");
-    alert(alertText + emptyEmail);
-    return false;
   }
   // reset the UI in compose window
   msgCompFields.to = toAddress;
@@ -266,19 +256,29 @@ function AddCardIntoBucket(prefix, card)
 
 function AddAddressIntoBucket(prefix, address, email)
 {
-  var body = document.getElementById("bucketBody");
+  if (email == "")
+  {
+    if (gPromptService)
+        gPromptService.alert(window,
+                             gAddressBookBundle.getString("emptyEmailAddCardTitle"),
+                             gAddressBookBundle.getString("emptyEmailAddCard"));
+  }
+  else
+  {
+    var body = document.getElementById("bucketBody");
 
-  var item = document.createElement('treeitem');
-  var row = document.createElement('treerow');
-  var cell = document.createElement('treecell');
-  cell.setAttribute('label', prefix + address);
-  cell.setAttribute('prefix', prefix);
-  cell.setAttribute('address', address);
-  cell.setAttribute('email', email);
+    var item = document.createElement('treeitem');
+    var row = document.createElement('treerow');
+    var cell = document.createElement('treecell');
+    cell.setAttribute('label', prefix + address);
+    cell.setAttribute('prefix', prefix);
+    cell.setAttribute('address', address);
+    cell.setAttribute('email', email);
 
-  row.appendChild(cell);
-  item.appendChild(row);
-  body.appendChild(item);
+    row.appendChild(cell);
+    item.appendChild(row);
+    body.appendChild(item);
+  }
 }
 
 function RemoveSelectedFromBucket()
@@ -463,5 +463,16 @@ function DirPaneSelectionChangeMenulist()
       onEnterInSearchBar();
     else
       ChangeDirectoryByURI(abList.selectedItem.id);
+  }
+}
+
+function GetPromptService()
+{
+  try {
+    return Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                     .getService(Components.interfaces.nsIPromptService);
+  }
+  catch (e) {
+    return null;
   }
 }
