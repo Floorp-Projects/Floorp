@@ -25,7 +25,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=src
+DIRS=src mozserver
 
 ifdef ENABLE_TESTS
 DIRS += tests
