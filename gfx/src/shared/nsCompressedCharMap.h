@@ -106,7 +106,8 @@ public:
 protected:
   union {
     PRUint16 mCCMap[CCMAP_MAX_LEN];
-    ALU_TYPE dummy;
+    ALU_TYPE used_for_align; // do not use; only here to cause
+                             // alignment
   } u;
   PRUint16 mUsedLen;   // in PRUint16
   PRUint16 mAllOnesPage;
