@@ -15115,6 +15115,9 @@ EOF
     cat $_CONFIG_DEFS_H
   fi
 
+rm -f confdefs.h.save
+mv confdefs.h confdefs.h.save
+egrep -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
 # Transform confdefs.h into DEFS.
 # Protect against shell expansion while executing Makefile rules.
 # Protect against Makefile macro expansion.
@@ -15130,6 +15133,8 @@ rm -f conftest.defs
 
 MOZ_DEFINES=$DEFS
 
+rm -f confdefs.h
+mv confdefs.h.save confdefs.h
 
 . ${srcdir}/allmakefiles.sh
 echo $MAKEFILES | $my_perl $my_srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
