@@ -4045,8 +4045,13 @@ NS_IMETHODIMP DocumentViewerImpl::GetSearchable(PRBool *aSearchable)
 
 NS_IMETHODIMP DocumentViewerImpl::ClearSelection()
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+  nsCOMPtr<nsISelection> selection;
+
+  rv = GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  return selection->CollapseToStart();
 }
 
 NS_IMETHODIMP DocumentViewerImpl::SelectAll()

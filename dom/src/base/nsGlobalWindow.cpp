@@ -4358,6 +4358,7 @@ const char * const sCopyString = "cmd_copy";
 const char * const sCutString = "cmd_cut";
 const char * const sPasteString = "cmd_paste";
 const char * const sSelectAllString = "cmd_selectAll";
+const char * const sSelectNoneString = "cmd_selectNone";
 const char * const sCopyLinkString = "cmd_copyLink";
 const char * const sCopyImageLocationString = "cmd_copyImageLocation";
 const char * const sCopyImageContentsString = "cmd_copyImageContents";
@@ -4500,6 +4501,10 @@ nsDOMWindowController::IsCommandEnabled(const nsAReadableString& aCommand,
     *aResult = PR_TRUE;
     rv = NS_OK;
   }
+  else if (commandName.Equals(sSelectNoneString)) {
+    *aResult = PR_TRUE;
+    rv = NS_OK;
+  }
   else if (commandName.Equals(sCopyLinkString)) {
     rv = editInterface->GetInLink(aResult);
   }
@@ -4526,6 +4531,7 @@ nsDOMWindowController::SupportsCommand(const nsAReadableString& aCommand,
 
   if (commandName.Equals(sCopyString) ||
       commandName.Equals(sSelectAllString) ||
+      commandName.Equals(sSelectNoneString) ||
       commandName.Equals(sCutString) ||
       commandName.Equals(sPasteString) ||
       commandName.Equals(sScrollTopString) ||
@@ -4575,6 +4581,7 @@ nsDOMWindowController::DoCommand(const nsAReadableString & aCommand)
 
   if (commandName.Equals(sCopyString) ||
       commandName.Equals(sSelectAllString) ||
+      commandName.Equals(sSelectNoneString) ||
       commandName.Equals(sCutString) ||
       commandName.Equals(sPasteString) ||
       commandName.Equals(sCopyLinkString) ||
@@ -4627,6 +4634,8 @@ nsDOMWindowController::DoCommandWithEditInterface(const nsCString& aCommandName)
     rv = editInterface->CopySelection();
   else if (aCommandName.Equals(sSelectAllString))
     rv = editInterface->SelectAll();
+  else if (aCommandName.Equals(sSelectNoneString))
+    rv = editInterface->ClearSelection();
   else if (aCommandName.Equals(sCutString))
     rv = editInterface->CutSelection();
   else if (aCommandName.Equals(sPasteString))
