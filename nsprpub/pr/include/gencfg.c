@@ -43,8 +43,8 @@
 #endif
 
 #if defined(__alpha) 
-#if !(defined(_WIN32)) && !(defined(OSF1)) && !(defined(__linux))
-	error - None of OSF1, _WIN32, or __linux is defined
+#if !(defined(_WIN32)) && !(defined(OSF1)) && !(defined(__linux)) && !(defined(__FreeBSD__))
+	error - None of OSF1, _WIN32, __linux, or __FreeBSD__ is defined
 #endif
 #endif
 

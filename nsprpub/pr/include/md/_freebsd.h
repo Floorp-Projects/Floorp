@@ -25,7 +25,13 @@
 
 #define PR_LINKER_ARCH	"freebsd"
 #define _PR_SI_SYSNAME  "FREEBSD"
+#if defined(__i386__)
 #define _PR_SI_ARCHITECTURE "x86"
+#elif defined(__alpha)
+#define _PR_SI_ARCHITECTURE "alpha"
+#else
+#error "Unknown CPU architecture"
+#endif
 #if defined(__ELF__)
 #define PR_DLL_SUFFIX          ".so"
 #else
