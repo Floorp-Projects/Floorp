@@ -3440,6 +3440,7 @@ WLLT_OnSubmit(nsIContent* currentForm) {
 #ifdef AutoCapture
           PRBool OKToPrompt = PR_FALSE;
           PRInt32 passwordcount = 0;
+          PRInt32 hits = 0;
 #endif
           for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
             nsCOMPtr<nsIDOMNode> elementNode;
@@ -3505,7 +3506,6 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                           /* see if schema is in distinguished list */
                           schema.ToLowerCase();
                           wallet_MapElement * ptr;
-                          PRInt32 hits = 0;
                           PRInt32 count = LIST_COUNT(wallet_DistinguishedSchema_list);
                           /* test for at least two distinguished schemas and no passwords */
                           for (PRInt32 i=0; i<count; i++) {
