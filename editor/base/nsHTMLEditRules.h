@@ -35,7 +35,7 @@ class nsVoidArray;
 class nsIDOMElement;
 class nsIEditor;
 
-class nsHTMLEditRules : public nsIHTMLEditRules, nsTextEditRules, nsIEditActionListener
+class nsHTMLEditRules : public nsIHTMLEditRules, public nsTextEditRules, public nsIEditActionListener
 {
 public:
 

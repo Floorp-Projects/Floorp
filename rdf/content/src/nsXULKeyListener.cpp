@@ -206,7 +206,7 @@ enum eEventType {
   eKeyUp
 };
 
-class nsXULKeyBindingDeleter : nsIObserver {
+class nsXULKeyBindingDeleter : public nsIObserver {
 public:
   nsXULKeyBindingDeleter();
   virtual ~nsXULKeyBindingDeleter() { };

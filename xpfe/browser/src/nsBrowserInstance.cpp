@@ -2257,7 +2257,7 @@ FindNamedXULElement(nsIDocShell * aShell,
 // return DOM objects. And we need a dom window to bootstrap the browser
 /////////////////////////////////////////////////////////////////////////
 
-class nsBrowserContentHandler : public nsIContentHandler, nsICmdLineHandler
+class nsBrowserContentHandler : public nsIContentHandler, public nsICmdLineHandler
 {
 public:
   NS_DECL_NSICONTENTHANDLER
