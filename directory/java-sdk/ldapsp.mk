@@ -19,11 +19,15 @@
 #
 # Contributor(s): 
 #
-# Makefile for the LDAP classes
+
+
 #
-# An optimized compile is done by default. You can specify "DEBUG=1" on
-# the make line to generate debug symbols in the bytecode.
+# Makefile for the LDAPSP classes
 #
+# A debug compile (java -g) is done by default. You can specify "DEBUG=0" on
+# the make line to compile with '-O' option.
+#
+
 ARCH := $(shell uname -s)
 
 MCOM_ROOT=.
@@ -41,22 +45,19 @@ endif
 # Destination for class files and packages
 CLASS_DEST=$(BASEDIR)/dist/classes
 
-# Set up the CLASSPATH automatically,
 ifeq ($(ARCH), WINNT)
   JDK := $(subst \,/,$(JAVA_HOME))
-  JAR:=$(JDK)/bin/jar
   SEP=;
 else
   ifeq ($(ARCH), WIN95)
     JDK := $(subst \,/,$(JAVA_HOME))
-    JAR:=$(JDK)/bin/jar
     SEP=;
   else
     JDK := $(JAVA_HOME)
-    JAR:=$(JAVA_HOME)/bin/jar
     SEP=:
   endif
 endif
+
 JNDILIB:=$(BASEDIR)/ldapsp/lib/jndi.jar
 JAVACLASSPATH:=$(CLASS_DEST)$(SEP)$(BASEDIR)/ldapsp$(SEP)$(JDK)/lib/classes.zip$(SEP)$(JNDILIB)$(SEP)$(CLASSPATH)
 
@@ -65,36 +66,45 @@ DISTDIR=$(MCOM_ROOT)/dist
 CLASSDIR=$(MCOM_ROOT)/dist/classes
 CLASSPACKAGEDIR=$(DISTDIR)/packages
 DOCDIR=$(DISTDIR)/doc/ldapsp
-ifeq ($(DEBUG), full)
-BASEPACKAGENAME=ldapsp_debug.jar
-else
 BASEPACKAGENAME=ldapsp.jar
-endif
 CLASSPACKAGE=$(CLASSPACKAGEDIR)/$(PACKAGENAME)
+DOCCLASSES=com.netscape.jndi.ldap.controls
 
-ifndef JAVADOC
-  JAVADOC=javadoc -classpath "$(JAVACLASSPATH)"
-endif
-ifndef JAVAC
-  ifdef JAVA_HOME
+ifdef JAVA_HOME
     JDKBIN=$(JDK)/bin/
-  endif
+endif
+
+ifndef JAVAC
+  ifndef DEBUG
+     #defualt mode is debug (-g)
+    JAVAC=$(JDKBIN)javac -g -classpath "$(JAVACLASSPATH)"
+  else
   ifeq ($(DEBUG), 1)
     JAVAC=$(JDKBIN)javac -g -classpath "$(JAVACLASSPATH)"
   else
     JAVAC=$(JDKBIN)javac -O -classpath "$(JAVACLASSPATH)"
   endif
+  endif
 endif
 
-DOCCLASSES=com.netscape.jndi.ldap.controls
+ifndef JAR
+    JAR:=$(JDKBIN)jar
+endif
+
+ifndef JAVADOC
+  JAVADOC=$(JDKBIN)javadoc -classpath "$(JAVACLASSPATH)"
+endif
 
 all: classes 
 
-doc: $(DISTDIR) $(DOCDIR) DOCS
+doc: $(DISTDIR) $(DOCDIR)
+	$(JAVADOC) -d $(DOCDIR) $(DOCCLASSES)
 
 basics: $(DISTDIR) $(CLASSDIR)
 
 classes: JNDICLASSES 
+
+package: basepackage
 
 basepackage: $(CLASSPACKAGEDIR)
 	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvf ../packages/$(BASEPACKAGENAME) com/netscape/jndi/ldap/*.class com/netscape/jndi/ldap/common/*.class com/netscape/jndi/ldap/schema/*.class com/netscape/jndi/ldap/controls/*.class
@@ -112,9 +122,6 @@ CONTROLS: basics
 	cd ldapsp/$(SRCDIR)/controls; $(JAVAC) -d $(CLASS_DEST) *.java
 
 JNDICLASSES: COMMON CONTROLS SCHEMA MAIN
-
-DOCS:
-	$(JAVADOC) -d $(DOCDIR) $(DOCCLASSES)
 
 clean:
 	rm -rf $(DISTDIR)/classes/com/netscape/jndi/ldap
