@@ -67,7 +67,7 @@ nsURLFetcher::nsURLFetcher()
   mStillRunning = PR_TRUE;
   mCallback = nsnull;
   mOnStopRequestProcessed = PR_FALSE;
-
+  mIsFile=PR_FALSE;
   nsURLFetcherStreamConsumer *consumer = new nsURLFetcherStreamConsumer(this);
   mConverter = do_QueryInterface(consumer);
 }
@@ -128,7 +128,7 @@ nsURLFetcher::CanHandleContent(const char * aContentType,
                                 PRBool * aCanHandleContent)
 
 {
-    if (nsCRT::strcasecmp(aContentType, MESSAGE_RFC822) == 0)
+    if (!mIsFile && nsCRT::strcasecmp(aContentType, MESSAGE_RFC822) == 0)
       *aDesiredContentType = nsCRT::strdup("text/html");
 
     // since we explicilty loaded the url, we always want to handle it!
@@ -343,6 +343,9 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsILocalFile *localFile, nsIFileOutpu
   rv = Initialize(localFile, outputStream, cb, tagData);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  //check to see if aURL is a local file or not
+  aURL->SchemeIs("file", &mIsFile);
+  
   // we're about to fire a new url request so make sure the on stop request flag is cleared...
   mOnStopRequestProcessed = PR_FALSE;
 

@@ -89,10 +89,8 @@ static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);
 static NS_DEFINE_CID(kMsgCompFieldsCID,       NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 
-//
-// Hopefully, someone will write and XP call like this eventually!
-//
-#define     TPATH_LEN   1024
+// safe filename for all OSes
+#define SAFE_TMP_FILENAME "nsmime.tmp"
 
 //
 // Create a file spec for the a unique temp file
@@ -101,25 +99,52 @@ static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 nsFileSpec * 
 nsMsgCreateTempFileSpec(char *tFileName)
 {
-  //Calling nsEscape so that when Replies are forwarded - the ':' in the subject line doesnt cause problems
-  // while creating files on windows. Using url_XPAlphas in order to escape even spaces.
-  char *escapedName=nsnull;
-  if ((!tFileName) || (!*tFileName))
-    tFileName = "nsmime.tmp";
-
+  //Calling NS_MsgHashIfNecessary so that when Replies are forwarded - the ':' in the subject line doesn't cause problems
   nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
+  NS_ASSERTION(tmpSpec, "out of memory");
   if (!tmpSpec)
     return nsnull;
 
-  escapedName = nsEscape(tFileName, url_Path);
-  if (!escapedName)
-    escapedName = nsCRT::strdup(tFileName);  //if we dont get back an escaped value - then copy the filename
+  nsresult rv = NS_OK;
+  nsCAutoString tempName;
+  if ((!tFileName) || (!*tFileName)) {
+    tempName = SAFE_TMP_FILENAME;
+  }
+  else {
+    tempName = tFileName;
 
-  *tmpSpec += escapedName;
-  nsCRT::free(escapedName);
+    PRInt32 dotChar = tempName.RFindChar('.');
+    if (dotChar == kNotFound) {
+       rv = NS_MsgHashIfNecessary(tempName);
+    }
+    else {
+      // this scary code will not lose any 3 or 4 character normal extensions, like foo.eml, foo.txt, foo.html
+      // this code is to turn arbitrary attachment file names to ones that are safe for the underlying OS 
+      // eventually, this code will go away once bug #86089 is fixed
+      nsCAutoString extension;
+      tempName.Right(extension, tempName.Length() - dotChar - 1);
+      tempName.Truncate(dotChar);
+      rv = NS_MsgHashIfNecessary(tempName);
+      if (NS_SUCCEEDED(rv)) {
+        rv = NS_MsgHashIfNecessary(extension);    // should be a NOOP for normal 3 or 4 char extension
+        if (NS_SUCCEEDED(rv)) {
+          tempName += '.';
+          tempName += extension;
+          // hash the combinded string, so that filenames like "<giant string>.<giant string>" are made safe
+          rv = NS_MsgHashIfNecessary(tempName);   
+        }
+      }
+    } 
+  }
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "hash failed");
+  if (NS_FAILED(rv)) {
+    tempName = SAFE_TMP_FILENAME;
+  }
+  // we are guaranteed that tempName is safe for the underlying OS
+  *tmpSpec += tempName.get();
 
   tmpSpec->MakeUnique();
-
   return tmpSpec;
 }
 
@@ -1674,6 +1699,9 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
 
   mdd->curAttachment = newAttachment;  
   newAttachment->type =  MimeHeaders_get ( headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE );
+
+  if (PL_strstr(newAttachment->type, MESSAGE_RFC822))
+     PL_strcat(newAttachment->real_name, ".eml");      
   
   //
   // This is to handle the degenerated Apple Double attachment.

@@ -85,6 +85,7 @@ private:
   nsAttachSaveCompletionCallback  mCallback;      // Callback to call once the file is saved...
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   PRBool                          mOnStopRequestProcessed; // used to prevent calling OnStopRequest multiple times
+  PRBool                          mIsFile;        // This is used to check whether the URI is a local file.
 
   friend class nsURLFetcherStreamConsumer;
 }; 
