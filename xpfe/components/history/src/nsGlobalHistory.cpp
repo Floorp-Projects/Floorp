@@ -3940,7 +3940,7 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
   // there is no need to proceed with the search
   nsAutoString cut(searchString);
   AutoCompleteCutPrefix(cut, nsnull);
-  if (cut.Length() == 0) {
+  if (cut.IsEmpty()) {
     listener->OnAutoComplete(results, status);
     return NS_OK;
   }

@@ -385,7 +385,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 			mBuffer.Left(oneLiner, eol);
 			mBuffer.Cut(0, eol+1);
 		}
-		if (oneLiner.Length() < 1)	break;
+		if (oneLiner.IsEmpty())	break;
 
 #if 0
 		printf("RL: '%s'\n", NS_LossyConvertUCS2toASCII(oneLiner).get());
@@ -458,7 +458,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 				if (NS_SUCCEEDED(rv = gRDFService->GetAnonymousResource(getter_AddRefs(newTopic))))
 				{
 					mDataSource->Assert(newTopic, kRDF_type, kNC_RelatedLinksTopic, PR_TRUE);
-					if (title.Length() > 0)
+					if (!title.IsEmpty())
 					{
                         Unescape(title);
 
@@ -497,7 +497,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 			}
 		}
 
-		if (child.Length() > 0)
+		if (!child.IsEmpty())
 		{
 
 #if 0
@@ -511,7 +511,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 				if (NS_SUCCEEDED(rv))
 				{
 					title.Trim(" ");
-					if (title.Length() > 0)
+					if (!title.IsEmpty())
 					{
                         Unescape(title);
 

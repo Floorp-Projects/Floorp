@@ -162,7 +162,7 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
    PRBool fIs_Content = PR_FALSE;
 
    /* Special Cases */
-   if(name.Length() == 0)
+   if(name.IsEmpty())
       return NS_OK;
    if(name.EqualsIgnoreCase("_blank"))
       return NS_OK;
@@ -603,9 +603,9 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
    nsAutoString   title;
    nsAutoString   docTitle(aTitle);
 
-   if(docTitle.Length() > 0)
+   if(!docTitle.IsEmpty())
       {
-      if(mTitlePreface.Length() > 0)
+      if(!mTitlePreface.IsEmpty())
          {
          // Title will be: "Preface: Doc Title - Mozilla"
          title.Assign(mTitlePreface);

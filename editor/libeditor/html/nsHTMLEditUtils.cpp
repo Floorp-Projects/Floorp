@@ -296,7 +296,7 @@ nsHTMLEditUtils::IsLink(nsIDOMNode *aNode)
   if (anchor)
   {
     nsAutoString tmpText;
-    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.get() && tmpText.Length() != 0)
+    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && !tmpText.IsEmpty())
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -310,7 +310,7 @@ nsHTMLEditUtils::IsNamedAnchor(nsIDOMNode *aNode)
   if (anchor)
   {
     nsAutoString tmpText;
-    if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.get() && tmpText.Length() != 0)
+    if (NS_SUCCEEDED(anchor->GetName(tmpText)) && !tmpText.IsEmpty())
       return PR_TRUE;
   }
   return PR_FALSE;

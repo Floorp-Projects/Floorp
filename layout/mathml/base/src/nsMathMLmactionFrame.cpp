@@ -426,7 +426,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     }
   }
   else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) {
-    if (0 < mRestyle.Length()) {
+    if (!mRestyle.IsEmpty()) {
       nsCOMPtr<nsIDOMElement> node( do_QueryInterface(mContent) );
       if (node.get()) {
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 

@@ -147,7 +147,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
   else
     data.Truncate();
 
-  if (0 < data.Length()) {
+  if (!data.IsEmpty()) {
     mOpenChar = new nsMathMLChar;
     if (!mOpenChar) return NS_ERROR_OUT_OF_MEMORY;
     mOpenChar->SetData(aPresContext, data);
@@ -168,7 +168,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
   else
     data.Truncate();
 
-  if (0 < data.Length()) {
+  if (!data.IsEmpty()) {
     mCloseChar = new nsMathMLChar;
     if (!mCloseChar) return NS_ERROR_OUT_OF_MEMORY;
     mCloseChar->SetData(aPresContext, data);

@@ -1505,7 +1505,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     nsCAutoString buf;
     relpath = FilterString(relpath, buf);
     // Calculate the new relpath length if FilterString modified it
-    const PRInt32 relpathLen = buf.Length() != 0 ? 
+    const PRInt32 relpathLen = !buf.IsEmpty() ?
                                buf.Length() : flat.Length();
     // XXX hack hack hack
     char *p = nsnull;

@@ -788,7 +788,7 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar*
 
     char* docName = nsnull;
     nsAutoString str(aPrintToFileName);
-    if (str.Length() > 0) {
+    if (!str.IsEmpty()) {
       docName = ToNewCString(str);
     }
     docinfo.cbSize = sizeof(docinfo);

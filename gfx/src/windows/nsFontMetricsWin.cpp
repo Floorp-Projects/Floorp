@@ -3300,7 +3300,7 @@ AppendGenericFontFromPref(nsString& aFontname,
   MAKE_FONT_PREF_KEY(pref, "font.name.", generic_dot_langGroup);
   res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
   if (NS_SUCCEEDED(res)) {
-    if(aFontname.Length() > 0)
+    if(!aFontname.IsEmpty())
       aFontname.Append((PRUnichar)',');
     aFontname.Append(value);
   }
@@ -3310,7 +3310,7 @@ AppendGenericFontFromPref(nsString& aFontname,
   MAKE_FONT_PREF_KEY(pref, "font.name-list.", generic_dot_langGroup);
   res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
   if (NS_SUCCEEDED(res)) {
-    if(aFontname.Length() > 0)
+    if(!aFontname.IsEmpty())
       aFontname.Append((PRUnichar)',');
     aFontname.Append(value);
   }

@@ -140,14 +140,14 @@ PRInt32 nsOCSPResponder::CompareEntries(nsIOCSPResponder *a, nsIOCSPResponder *b
   b->GetServiceURL(getter_Copies(bURL));
   bURLAuto.Assign(bURL);
 
-  if (aURLAuto.Length() > 0 ) {
-    if (bURLAuto.Length() > 0) {
+  if (!aURLAuto.IsEmpty()) {
+    if (!bURLAuto.IsEmpty()) {
       return nsOCSPResponder::CmpCAName(a, b);
     } else {
       return -1;
     }
   } else {
-    if (bURLAuto.Length() > 0) {
+    if (!bURLAuto.IsEmpty()) {
       return 1;
     } else {
       return nsOCSPResponder::CmpCAName(a, b);

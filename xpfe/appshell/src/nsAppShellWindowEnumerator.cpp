@@ -326,7 +326,7 @@ nsWindowInfo *nsASDOMWindowEarlyToLateEnumerator::FindNext() {
 
   nsWindowInfo *info,
                *listEnd;
-  PRBool        allWindows = mType.Length() == 0;
+  PRBool        allWindows = mType.IsEmpty();
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
@@ -365,7 +365,7 @@ nsWindowInfo *nsASXULWindowEarlyToLateEnumerator::FindNext() {
 
   nsWindowInfo *info,
                *listEnd;
-  PRBool        allWindows = mType.Length() == 0;
+  PRBool        allWindows = mType.IsEmpty();
 
   /* mCurrentPosition null is assumed to mean that the enumerator has run
      its course and is now basically useless. It could also be interpreted
@@ -410,7 +410,7 @@ nsWindowInfo *nsASDOMWindowFrontToBackEnumerator::FindNext() {
 
   nsWindowInfo *info,
                *listEnd;
-  PRBool        allWindows = mType.Length() == 0;
+  PRBool        allWindows = mType.IsEmpty();
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
@@ -450,7 +450,7 @@ nsWindowInfo *nsASXULWindowFrontToBackEnumerator::FindNext() {
 
   nsWindowInfo *info,
                *listEnd;
-  PRBool        allWindows = mType.Length() == 0;
+  PRBool        allWindows = mType.IsEmpty();
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
@@ -490,7 +490,7 @@ nsWindowInfo *nsASDOMWindowBackToFrontEnumerator::FindNext() {
 
   nsWindowInfo *info,
                *listEnd;
-  PRBool        allWindows = mType.Length() == 0;
+  PRBool        allWindows = mType.IsEmpty();
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
@@ -533,7 +533,7 @@ nsWindowInfo *nsASXULWindowBackToFrontEnumerator::FindNext() {
 
   nsWindowInfo *info,
                *listEnd;
-  PRBool        allWindows = mType.Length() == 0;
+  PRBool        allWindows = mType.IsEmpty();
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)

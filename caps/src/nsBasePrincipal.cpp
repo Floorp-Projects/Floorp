@@ -301,13 +301,13 @@ nsBasePrincipal::GetPreferences(char** aPrefName, char** aID,
         capList->granted = &grantedListStr;
         capList->denied = &deniedListStr;        
         mCapabilities->Enumerate(AppendCapability, (void*)capList);
-        if (grantedListStr.Length() > 0)
+        if (!grantedListStr.IsEmpty())
         {
             grantedListStr.Truncate(grantedListStr.Length()-1);
             *aGrantedList = ToNewCString(grantedListStr);
             if (!*aGrantedList) return NS_ERROR_OUT_OF_MEMORY;
         }
-        if (deniedListStr.Length() > 0)
+        if (!deniedListStr.IsEmpty())
         {
             deniedListStr.Truncate(deniedListStr.Length()-1);
             *aDeniedList = ToNewCString(deniedListStr);

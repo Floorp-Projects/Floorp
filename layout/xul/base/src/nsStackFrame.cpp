@@ -141,7 +141,7 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
                                     (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
 
-      PRBool backgroundImage = (color->mBackgroundImage.Length() > 0);
+      PRBool backgroundImage = !color->mBackgroundImage.IsEmpty();
 
       if (!transparentBG || backgroundImage)
       {

@@ -2602,7 +2602,7 @@ nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAString &aOutColor)
     if (NS_FAILED(res)) return res;
 
     // Done if we have a color explicitly set
-    if (aOutColor.Length() > 0)
+    if (!aOutColor.IsEmpty())
       return NS_OK;
 
     // Once we hit the body, we're done
@@ -2995,7 +2995,7 @@ nsHTMLEditor::Align(const nsAString& aAlignType)
 NS_IMETHODIMP
 nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
 {
-  if (aTagName.Length() == 0 || !aReturn )
+  if (aTagName.IsEmpty() || !aReturn )
     return NS_ERROR_NULL_POINTER;
   
   nsresult res = NS_OK;
@@ -3525,7 +3525,7 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
                                                  getter_AddRefs(element));
   if (NS_FAILED(res)) return res;
 
-  PRBool setColor = (aColor.Length() > 0);
+  PRBool setColor = !aColor.IsEmpty();
 
   NS_NAMED_LITERAL_STRING(bgcolor, "bgcolor");
   if (element)
@@ -4608,7 +4608,7 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
         {
           element->GetAttribute(*aAttribute, value);
           if (outValue) *outValue = value;
-          if (value.Length())
+          if (!value.IsEmpty())
           {
             if (!aValue) {
               found = PR_TRUE;

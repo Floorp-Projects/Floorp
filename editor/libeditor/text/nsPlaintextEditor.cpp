@@ -319,7 +319,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAString & characterSet)
               return NS_ERROR_FAILURE; 
 
             // Set attributes to the created element 
-            if (resultNode && characterSet.Length() > 0) { 
+            if (resultNode && !characterSet.IsEmpty()) { 
               metaElement = do_QueryInterface(resultNode); 
               if (metaElement) { 
                 // not undoable, undo should undo CreateNode 
@@ -1266,7 +1266,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
 
   // If we have other style left, trim off any existing semicolons
   // or whitespace, then add a known semicolon-space:
-  if (styleValue.Length() > 0)
+  if (!styleValue.IsEmpty())
   {
     styleValue.Trim("; \t", PR_FALSE, PR_TRUE);
     styleValue.Append(NS_LITERAL_STRING("; "));
@@ -1451,7 +1451,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   rv = docEncoder->Init(doc, aFormatType, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aCharset.Length() != 0
+  if (!aCharset.IsEmpty()
     && !(aCharset.Equals(NS_LITERAL_STRING("null"))))
     docEncoder->SetCharset(aCharset);
 

@@ -1116,7 +1116,7 @@ InstallFileOpFileWindowsGetShortName(JSContext *cx, JSObject *obj, uintN argc, j
     return JS_TRUE;
   }
 
-  if(shortPathName.Length() != 0)
+  if(!shortPathName.IsEmpty())
     *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, shortPathName.get()), shortPathName.Length()));
 
   return JS_TRUE;

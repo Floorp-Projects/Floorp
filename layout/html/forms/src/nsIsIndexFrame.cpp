@@ -156,7 +156,7 @@ nsIsIndexFrame::UpdatePromptLabel()
       }
     }
   }
-  if (prompt.Length() == 0) {
+  if (prompt.IsEmpty()) {
     // Generate localized label.
     // We can't make any assumption as to what the default would be
     // because the value is localized for non-english platforms, thus

@@ -112,14 +112,14 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 	if (!ppanel) return PR_FALSE;
 
 	// set title
-	if (mTitle.Length() > 0) {
+	if (!mTitle.IsEmpty()) {
 		char *title_utf8 = ToNewUTF8String(mTitle);
 		ppanel->Window()->SetTitle(title_utf8);
 		Recycle(title_utf8);
 	}
 
 	// set default text
-	if (mDefault.Length() > 0) {
+	if (!mDefault.IsEmpty()) {
 		char *defaultText = ToNewUTF8String(mDefault);
 		ppanel->SetSaveText(defaultText);
 		Recycle(defaultText);
@@ -352,7 +352,7 @@ void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
 	static nsAutoString aCharset;
 	nsresult rv;
 
-	if (aCharset.Length() < 1) {
+	if (aCharset.IsEmpty()) {
 		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);

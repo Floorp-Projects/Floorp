@@ -469,7 +469,7 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
   NS_ASSERTION(aDestBreaks != eLinebreakAny, "Invalid parameter");
 
   // nothing to do
-  if (ioString.Length() == 0) return NS_OK;
+  if (ioString.IsEmpty()) return NS_OK;
   
   nsresult rv;
   

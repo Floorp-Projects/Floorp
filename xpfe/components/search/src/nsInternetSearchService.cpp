@@ -719,7 +719,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		if (NS_FAILED(rv = search->GetSearchEngineToPing(getter_AddRefs(searchURI), updateURL)))
 			return;
 		if (!searchURI)			return;
-		if (updateURL.Length() < 1)	return;
+		if (updateURL.IsEmpty())	return;
 
 		search->busyResource = searchURI;
 
@@ -2443,7 +2443,7 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	PRInt32			slashOffset = baseName.RFindChar(PRUnichar('/'));
 	if (slashOffset < 0)		return(NS_ERROR_UNEXPECTED);
 	baseName.Cut(0, slashOffset+1);
-	if (baseName.Length() < 1)	return(NS_ERROR_UNEXPECTED);
+	if (baseName.IsEmpty())	return(NS_ERROR_UNEXPECTED);
 
 	// make sure that search engines are .src files
 	PRInt32	extensionOffset;
@@ -2579,7 +2579,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 		MapEncoding(encodingStr, queryEncodingStr);
 	}
 
-	if (queryEncodingStr.Length() > 0)
+	if (!queryEncodingStr.IsEmpty())
 	{
  		// remember query charset string
  		mQueryEncodingStr = queryEncodingStr;
@@ -2618,7 +2618,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	    return(rv);
 	if (NS_FAILED(rv = GetInputs(dataUni, userVar, text, input, direction, pageNumber, whichButtons)))
 	    return(rv);
-	if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
+	if (input.IsEmpty())				return(NS_ERROR_UNEXPECTED);
 
 	// we can only handle HTTP GET
 	if (!method.EqualsIgnoreCase("get"))	return(NS_ERROR_UNEXPECTED);
@@ -2749,7 +2749,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		// look for query option which is the string the user is searching for
 		nsAutoString	userVar, inputUnused;
     if (NS_FAILED(rv = GetInputs(dataUni, userVar, nsAutoString(), inputUnused, 0, 0, 0)))  return(rv);
-		if (userVar.Length() < 1)	return(NS_RDF_NO_VALUE);
+		if (userVar.IsEmpty())	return(NS_RDF_NO_VALUE);
 
 		nsAutoString	queryStr;
 		queryStr = NS_LITERAL_STRING("?") +
@@ -2776,7 +2776,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 				searchText.Truncate(andOffset);
 			}
 		}
-		if (searchText.Length() > 0)
+		if (!searchText.IsEmpty())
 		{
  			// apply charset conversion to the search text
  			if (!mQueryEncodingStr.IsEmpty())
@@ -2845,7 +2845,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_Ref, PR_TRUE,
 			getter_AddRefs(oldNode))))
 		{
-			if (engineURI.Length() > 0)
+			if (!engineURI.IsEmpty())
 			{
 				const PRUnichar	*uriUni = engineURI.get();
 				nsCOMPtr<nsIRDFLiteral>	uriLiteral;
@@ -3113,7 +3113,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 
 	// parse up attributes
 
-	while(uri.Length() > 0)
+	while(!uri.IsEmpty())
 	{
 		nsAutoString	item;
 
@@ -3137,7 +3137,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		value = item;
 		value.Cut(0, equalOffset + 1);
 		
-		if ((attrib.Length() > 0) && (value.Length() > 0))
+		if (!attrib.IsEmpty() && !value.IsEmpty())
 		{
 			if (attrib.EqualsIgnoreCase("engine"))
 			{
@@ -3276,7 +3276,7 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 	}
 
 	// save file contents
-	if (data.Length() < 1)	return(NS_ERROR_UNEXPECTED);
+	if (data.IsEmpty())	return(NS_ERROR_UNEXPECTED);
 
 	rv = updateDataHintsInGraph(engine, data.get());
 
@@ -3448,7 +3448,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 		nsAutoString	updateStr, updateIconStr, updateCheckDaysStr;
 
 		GetData(dataUni, "browser", 0, "update", updateStr);
-		if (updateStr.Length() < 1)
+		if (updateStr.IsEmpty())
 		{
 			// fallback to trying "search"|"updateCheckDays"
 			GetData(dataUni, "search", 0, "update", updateStr);
@@ -3474,17 +3474,17 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 			// note: its OK if the "updateIcon" isn't specified
 			GetData(dataUni, "browser", 0, "updateIcon", updateIconStr);
 		}
-		if (updateStr.Length() > 0)
+		if (!updateStr.IsEmpty())
 		{
 			GetData(dataUni, "browser", 0, "updateCheckDays", updateCheckDaysStr);
-			if (updateCheckDaysStr.Length() < 1)
+			if (updateCheckDaysStr.IsEmpty())
 			{
 				// fallback to trying "search"|"updateCheckDays"
 				GetData(dataUni, "search", 0, "updateCheckDays", updateCheckDaysStr);
 			}
 		}
 
-		if ((updateStr.Length() > 0) && (updateCheckDaysStr.Length() > 0))
+		if (!updateStr.IsEmpty() && !updateCheckDaysStr.IsEmpty())
 		{
 			nsCOMPtr<nsIRDFLiteral>	updateLiteral;
 			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateStr.get(),
@@ -3508,7 +3508,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 				rv = updateAtom(mInner, engine, kNC_UpdateCheckDays, updateCheckDaysLiteral, nsnull);
 			}
 
-			if (updateIconStr.Length() > 0)
+			if (!updateIconStr.IsEmpty())
 			{
 				nsCOMPtr<nsIRDFLiteral>	updateIconLiteral;
 				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateIconStr.get(),
@@ -3828,7 +3828,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	dataLit->GetValueConst(&dataUni);
 	if (!dataUni)			return(NS_RDF_NO_VALUE);
 
-	if (fullURL.Length() > 0)
+	if (!fullURL.IsEmpty())
 	{
 		action.Assign(fullURL);
 		methodStr.Assign(NS_LITERAL_STRING("get"));
@@ -3844,14 +3844,14 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	// first look for "interpret/charset"... if that isn't specified,
 	// then fall back to looking for "interpret/resultEncoding" (a decimal)
 	GetData(dataUni, "interpret", 0, "charset", resultEncodingStr);
-	if (resultEncodingStr.Length() < 1)
+	if (resultEncodingStr.IsEmpty())
 	{
 		GetData(dataUni, "interpret", 0, "resultEncoding", encodingStr);	// decimal string values
 		MapEncoding(encodingStr, resultEncodingStr);
 	}
 	// rjc note: ignore "interpret/resultTranslationEncoding" as well as
 	// "interpret/resultTranslationFont" since we always convert results to Unicode
-	if (resultEncodingStr.Length() > 0)
+	if (!resultEncodingStr.IsEmpty())
 	{
 		nsCOMPtr <nsICharsetConverterManager2> charsetConv = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
@@ -3871,12 +3871,12 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	// then fall back to looking for "search/queryEncoding" (a decimal)
 	nsAutoString    queryEncodingStr;
 	GetData(dataUni, "search", 0, "queryCharset", queryEncodingStr);
-	if (queryEncodingStr.Length() < 1)
+	if (queryEncodingStr.IsEmpty())
 	{
 		GetData(dataUni, "search", 0, "queryEncoding", encodingStr);		// decimal string values
 		MapEncoding(encodingStr, queryEncodingStr);
 	}
-	if (queryEncodingStr.Length() > 0)
+	if (!queryEncodingStr.IsEmpty())
 	{
 		// convert from escaped-UTF_8, to unicode, and then to
 		// the charset indicated by the dataset in question
@@ -3907,13 +3907,10 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		}
 	}
 
-	if (fullURL.Length() > 0)
-	{
-	}
-	else if (methodStr.EqualsIgnoreCase("get"))
+	if (fullURL.IsEmpty() && methodStr.EqualsIgnoreCase("get"))
 	{
     if (NS_FAILED(rv = GetInputs(dataUni, userVar, textTemp, input, 0, 0, 0)))  return(rv);
-		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
+		if (input.IsEmpty())				return(NS_ERROR_UNEXPECTED);
 
 		// HTTP Get method support
 		action += NS_LITERAL_STRING("?") + input;
@@ -4412,7 +4409,7 @@ InternetSearchDataSource::GetNumInterpretSections(const PRUnichar *dataUni, PRUi
 	NS_NAMED_LITERAL_STRING(section, "<interpret");
 	PRBool		inSection = PR_FALSE;
 
-	while(buffer.Length() > 0)
+	while(!buffer.IsEmpty())
 	{
 		PRInt32 eol = buffer.FindCharInSet("\r\n", 0);
 		if (eol < 0)	break;
@@ -4422,7 +4419,7 @@ InternetSearchDataSource::GetNumInterpretSections(const PRUnichar *dataUni, PRUi
 			buffer.Left(line, eol);
 		}
 		buffer.Cut(0, eol+1);
-		if (line.Length() < 1)	continue;		// skip empty lines
+		if (line.IsEmpty())	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
 		line.Trim(" \t");
 		if (inSection == PR_FALSE)
@@ -4461,7 +4458,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 	section.Assign(NS_LITERAL_STRING("<"));
 	section.AppendWithConversion(sectionToFind);
 
-	while(buffer.Length() > 0)
+	while(!buffer.IsEmpty())
 	{
 		PRInt32 eol = buffer.FindCharInSet("\r\n", 0);
 		if (eol < 0)	break;
@@ -4471,7 +4468,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 			buffer.Left(line, eol);
 		}
 		buffer.Cut(0, eol+1);
-		if (line.Length() < 1)	continue;		// skip empty lines
+		if (line.IsEmpty())	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
 		line.Trim(" \t");
 		if (inSection == PR_FALSE)
@@ -4516,7 +4513,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 			{
 				PRUnichar quoteChar = value[0];
 				value.Cut(0,1);
-				if (value.Length() > 0)
+				if (!value.IsEmpty())
 				{
 					PRInt32 quoteEnd = value.FindChar(quoteChar);
 					if (quoteEnd >= 0)
@@ -4553,7 +4550,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 	PRBool		inSection = PR_FALSE;
   PRBool        inDirInput; // directional input: "inputnext" or "inputprev"
 
-	while(buffer.Length() > 0)
+	while(!buffer.IsEmpty())
 	{
 		PRInt32 eol = buffer.FindCharInSet("\r\n", 0);
 		if (eol < 0)	break;
@@ -4563,7 +4560,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 			buffer.Left(line, eol);
 		}
 		buffer.Cut(0, eol+1);
-		if (line.Length() < 1)	continue;		// skip empty lines
+		if (line.IsEmpty())	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
 		line.Trim(" \t");
 		if (inSection == PR_FALSE)
@@ -4647,7 +4644,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 					}
 				}
 			}
-			if (nameAttrib.Length() <= 0)	continue;
+			if (nameAttrib.IsEmpty())	continue;
 
 			// first look for value attribute
 			nsAutoString	valueAttrib;
@@ -4696,9 +4693,9 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 			if (line.RFind("mode=browser", PR_TRUE) >= 0)
 				continue;
 
-			if ((nameAttrib.Length() > 0) && (valueAttrib.Length() > 0))
+			if (!nameAttrib.IsEmpty() && !valueAttrib.IsEmpty())
 			{
-				if (input.Length() > 0)
+				if (!input.IsEmpty())
 				{
 					input.Append(NS_LITERAL_STRING("&"));
 				}
@@ -4937,7 +4934,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		// save out new search engine state data into localstore
 		PRBool			tempDirty = PR_FALSE;
 		nsCOMPtr<nsIRDFLiteral>	newValue;
-		if (lastModValue.Length() > 0)
+		if (!lastModValue.IsEmpty())
 		{
 			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(lastModValue).get(),
 				getter_AddRefs(newValue));
@@ -4948,7 +4945,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 				if (tempDirty == PR_TRUE)	updateSearchEngineFile = PR_TRUE;
 			}
 		}
-		if (contentLengthValue.Length() > 0)
+		if (!contentLengthValue.IsEmpty())
 		{
 			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(contentLengthValue).get(),
 				getter_AddRefs(newValue));

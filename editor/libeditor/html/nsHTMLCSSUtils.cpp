@@ -1069,8 +1069,8 @@ nsHTMLCSSUtils::HasClassOrID(nsIDOMElement * aElement, PRBool & aReturn)
 
   // we need to make sure that if the element has an id or a class attribute,
   // the attribute is not the empty string
-  aReturn = ((isClassSet && (0 != classVal.Length())) ||
-             (isIdSet    && (0 != idVal.Length())));
+  aReturn = ((isClassSet && !classVal.IsEmpty()) ||
+             (isIdSet    && !idVal.IsEmpty()));
   return NS_OK;
 }
 

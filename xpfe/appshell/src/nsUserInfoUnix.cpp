@@ -93,7 +93,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
     // replace ampersand with username
     if (pw->pw_name) {
         nsCAutoString username(pw->pw_name);
-        if (username.Length() > 0 && nsCRT::IsLower(username.CharAt(0)))
+        if (!username.IsEmpty() && nsCRT::IsLower(username.CharAt(0)))
             username.SetCharAt(nsCRT::ToUpper(username.CharAt(0)), 0);
             
         fullname.ReplaceSubstring("&", username.get());

@@ -273,7 +273,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
 
     // Special case: if this is a blank line, maintain a blank line
     // (retain the original paragraph breaks)
-    if (tString[posInString] == nl && aOutString.Length() > 0)
+    if (tString[posInString] == nl && !aOutString.IsEmpty())
     {
       if (aOutString.Last() != nl)
         aOutString.Append(nl);

@@ -186,7 +186,7 @@ nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
 
-    NS_ASSERTION((mKeywordURL.Length() > 0), "someone's trying to use the keyword handler even though it hasn't been init'd");
+    NS_ASSERTION(!mKeywordURL.IsEmpty(), "someone's trying to use the keyword handler even though it hasn't been init'd");
 
     nsCAutoString path;
     rv = uri->GetPath(path);

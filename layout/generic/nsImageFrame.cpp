@@ -1606,7 +1606,7 @@ nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));
     if (anchor) {
       anchor->GetHref(aHref);
-      if (aHref.Length() > 0) {
+      if (!aHref.IsEmpty()) {
         status = PR_TRUE;
       }
       anchor->GetTarget(aTarget);

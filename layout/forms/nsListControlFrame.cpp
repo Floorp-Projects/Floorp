@@ -2194,15 +2194,15 @@ nsListControlFrame::GetOptionText(PRInt32 aIndex, nsAString & aStr)
         rv = optionElement->GetLabel(text);
         // the return value is always NS_OK from DOMElements
         // it is meaningless to check for it
-        if (text.Length() > 0) { 
+        if (!text.IsEmpty()) { 
           nsAutoString compressText = text;
           compressText.CompressWhitespace(PR_TRUE, PR_TRUE);
-          if (compressText.Length() != 0) {
+          if (!compressText.IsEmpty()) {
             text = compressText;
           }
         }
 
-        if (0 == text.Length()) {
+        if (text.IsEmpty()) {
           // the return value is always NS_OK from DOMElements
           // it is meaningless to check for it
           optionElement->GetText(text);

@@ -1607,7 +1607,7 @@ void nsFT2Type8Generator::GeneratePSFont(FILE* aFile)
     return;
  
   int wmode = 0;
-  if (mSubset.Length() > 0)
+  if (!mSubset.IsEmpty())
     FT2SubsetToType8(face, mSubset.get(), mSubset.Length(), wmode, aFile);
 }
 #endif //MOZ_ENABLE_FREETYPE2

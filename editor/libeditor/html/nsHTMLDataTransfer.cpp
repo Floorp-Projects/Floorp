@@ -2073,7 +2073,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
         NS_NAMED_LITERAL_STRING(citestr, "cite");
         newElement->SetAttribute(NS_LITERAL_STRING("type"), citestr);
 
-        if (aCitation.Length() > 0)
+        if (!aCitation.IsEmpty())
           newElement->SetAttribute(citestr, aCitation);
 
         // Set the selection inside the blockquote so aQuotedText will go there:

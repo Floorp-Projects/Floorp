@@ -846,7 +846,7 @@ NS_IMETHODIMP nsTreeBodyFrame::GetKeyColumnIndex(PRInt32 *_retval)
       first = currCol->GetColIndex();
     
     currCol->GetElement()->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, attr);
-    if (attr.Length() > 0) { // Use sorted column as the primary
+    if (!attr.IsEmpty()) { // Use sorted column as the primary
       sorted = currCol->GetColIndex();
       break;
     }
@@ -1904,7 +1904,7 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
   const nsAString* imagePtr;
   nsAutoString imageSrc;
   mView->GetImageSrc(aRowIndex, aColID, imageSrc);
-  if (!aUseContext && imageSrc.Length() > 0) {
+  if (!aUseContext && !imageSrc.IsEmpty()) {
     imagePtr = &imageSrc;
     aAllowImageRegions = PR_FALSE;
   }
@@ -1912,7 +1912,7 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
     // Obtain the URL from the style context.
     aAllowImageRegions = PR_TRUE;
     const nsStyleList* myList = aStyleContext->GetStyleList();
-    if (myList->mListStyleImage.Length() > 0)
+    if (!myList->mListStyleImage.IsEmpty())
       imagePtr = &myList->mListStyleImage;
     else
       return NS_OK;

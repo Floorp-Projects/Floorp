@@ -161,7 +161,7 @@ nsMathMLmfracFrame::CalcLineThickness(nsIPresContext*  aPresContext,
   nscoord lineThickness = aDefaultRuleThickness;
   nscoord minimumThickness = onePixel;
 
-  if (0 < aThicknessAttribute.Length()) {
+  if (!aThicknessAttribute.IsEmpty()) {
     if (aThicknessAttribute.Equals(NS_LITERAL_STRING("thin"))) {
       lineThickness = NSToCoordFloor(defaultThickness * THIN_FRACTION_LINE);
       minimumThickness = onePixel * THIN_FRACTION_LINE_MINIMUM_PIXELS;

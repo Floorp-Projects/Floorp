@@ -2443,7 +2443,7 @@ nsInstall::CurrentUserNode(nsString& userRegNode)
 PRBool
 nsInstall::BadRegName(const nsString& regName)
 {
-    if ( regName.Length() == 0 )
+    if ( regName.IsEmpty() )
         return PR_TRUE;
 
     if ((regName.First() == ' ' ) || (regName.Last() == ' ' ))

@@ -324,7 +324,7 @@ void CMozillaBrowser::ShowURIPropertyDlg(const nsAString &aURI, const nsAString 
     CPPageDlg linkDlg;
     dlg.AddPage(&linkDlg);
 
-    if (aURI.Length() > 0)
+    if (!aURI.IsEmpty())
     {
         linkDlg.mType = aContentType;
         linkDlg.mURL = aURI;
@@ -844,7 +844,7 @@ LRESULT CMozillaBrowser::OnLinkOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
         anchorElement->GetHref(uri);
     }
 
-    if (uri.Length() > 0)
+    if (!uri.IsEmpty())
     {
         CComBSTR bstrURI(uri.get());
         CComVariant vFlags(0);
@@ -865,7 +865,7 @@ LRESULT CMozillaBrowser::OnLinkOpenInNewWindow(WORD wNotifyCode, WORD wID, HWND 
         anchorElement->GetHref(uri);
     }
 
-    if (uri.Length() > 0)
+    if (!uri.IsEmpty())
     {
         CComBSTR bstrURI(uri.get());
         CComVariant vFlags(navOpenInNewWindow);
@@ -886,7 +886,7 @@ LRESULT CMozillaBrowser::OnLinkCopyShortcut(WORD wNotifyCode, WORD wID, HWND hWn
         anchorElement->GetHref(uri);
     }
 
-    if (uri.Length() > 0 && OpenClipboard())
+    if (!uri.IsEmpty() && OpenClipboard())
     {
         EmptyClipboard();
 

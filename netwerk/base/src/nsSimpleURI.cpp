@@ -135,7 +135,7 @@ NS_IMETHODIMP
 nsSimpleURI::SetSpec(const nsACString &aSpec)
 {
     nsCAutoString spec;
-    if (aSpec.Length() == 0) {
+    if (aSpec.IsEmpty()) {
         mScheme.Truncate();
         mPath.Truncate();
         return NS_OK;

@@ -1608,7 +1608,7 @@ HasAttributeContent(nsStyleContext* aStyleContext,
           PRInt32 error;
           attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
           contentString.Cut(0, barIndex + 1);
-          if (contentString.Length()) {
+          if (!contentString.IsEmpty()) {
             attrName = NS_NewAtom(contentString);
           }
         }
@@ -1773,7 +1773,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         const nsStyleBackground* oldColor = oldContext->GetStyleBackground();
         const nsStyleBackground* newColor = newContext->GetStyleBackground();
 
-        if (oldColor->mBackgroundImage.Length() > 0 &&
+        if (!oldColor->mBackgroundImage.IsEmpty() &&
             oldColor->mBackgroundImage != newColor->mBackgroundImage) {
           // stop the image loading for the frame, the image has changed
           aPresContext->StopImagesFor(aFrame);

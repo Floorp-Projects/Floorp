@@ -459,7 +459,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
     
     GetProfileCount(&numProfiles);
 
-    if (profileURLStr.Length() == 0)
+    if (profileURLStr.IsEmpty())
     {
         // If this flag is TRUE, it makes the multiple profile case
         // just like the single profile case - the profile will be
@@ -515,7 +515,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
             profileURLStr = PROFILE_SELECTION_URL;
     }
 
-    if (profileURLStr.Length() != 0)
+    if (!profileURLStr.IsEmpty())
     {
         if (!canInteract) return NS_ERROR_PROFILE_REQUIRES_INTERACTION;
 
