@@ -2053,8 +2053,8 @@ SSMControlConnection_ProcessSecurityAdvsiorRequest(SSMControlConnection *ctrl,
     /* Get the request data */
     infoSecAdvisor.infoContext = request.infoContext;
     infoSecAdvisor.resID = request.resID;
-    infoSecAdvisor.hostname = (request.hostname ? strdup(request.hostname) : NULL);
- 	infoSecAdvisor.senderAddr = (request.senderAddr ? strdup(request.senderAddr) : NULL);
+    infoSecAdvisor.hostname = request.hostname;
+ 	infoSecAdvisor.senderAddr = request.senderAddr;
 	infoSecAdvisor.encryptedP7CInfo = request.encryptedP7CInfo;
 	infoSecAdvisor.signedP7CInfo = request.signedP7CInfo;
 	infoSecAdvisor.decodeError = request.decodeError;
