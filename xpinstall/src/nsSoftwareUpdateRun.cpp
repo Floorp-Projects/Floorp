@@ -377,7 +377,10 @@ bail:
         notifier->AfterJavascriptEvaluation( url.GetUnicode() );
 
     if (scriptBuffer) delete [] scriptBuffer;
-    if (jarpath) nsCRT::free(jarpath);
+    if (jarpath) {
+        PR_Delete(jarpath);
+        nsCRT::free(jarpath);
+    }
 
     softwareUpdate->SetActiveNotifier(0);
     softwareUpdate->InstallJarCallBack();
