@@ -159,14 +159,64 @@ NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACStrin
 /* [noscript] string ConvertACEtoUTF8 (in string input); */
 NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACString & _retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // RFC 3490 - 4.2 ToUnicode
+  // ToUnicode never fails.  If any step fails, then the original input
+  // sequence is returned immediately in that step.
+
+  if (!IsASCII(input)) {
+    _retval.Assign(input);
+    return NS_OK;
+  }
+  
+  PRUint32 len = 0, offset = 0;
+  nsCAutoString decodedBuf;
+
+  nsACString::const_iterator start, end;
+  input.BeginReading(start); 
+  input.EndReading(end); 
+  _retval.Truncate();
+
+  // loop and decode nodes
+  while (start != end) {
+    len++;
+    if (*start++ == '.') {
+      if (NS_FAILED(decodeACE(Substring(input, offset, len - 1), decodedBuf))) {
+        _retval.Assign(input);
+        return NS_OK;
+      }
+
+      _retval.Append(decodedBuf + NS_LITERAL_CSTRING("."));
+      offset += len;
+      len = 0;
+    }
+  }
+  // decode the last node
+  if (len) {
+    if (NS_FAILED(decodeACE(Substring(input, offset, len), decodedBuf)))
+      _retval.Assign(input);
+    else
+      _retval.Append(decodedBuf);
+  }
+
+  return NS_OK;
 }
 
 /* boolean encodedInACE (in ACString input); */
 NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, PRBool *_retval)
 {
-  *_retval = Substring(input, 0, 4).Equals(nsDependentCString(mACEPrefix, 4),
+  nsDependentCString prefix(mACEPrefix, kACEPrefixLen);
+  *_retval = Substring(input, 0, kACEPrefixLen).Equals(prefix,
                                            nsCaseInsensitiveCStringComparator());
+  // also check for the case like "www.xn--ENCODED.com"
+  // in case for this is called for an entire domain name
+  if (!*_retval) {
+      nsReadingIterator<char> begin;
+      nsReadingIterator<char> end;
+      input.BeginReading(begin);
+      input.EndReading(end);
+      *_retval = CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING(".") + prefix, 
+                                               begin, end);
+  }
 
   return NS_OK;
 }
@@ -208,10 +258,6 @@ static void utf16ToUcs4(const nsAString& in, PRUint32 *out, PRUint32 outBufLen, 
 
 static void ucs4toUtf16(const PRUint32 *in, nsAString& out)
 {
-#define H_SURROGATE(s) ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) >> 10) + (PRUnichar)0xd800)
-#define L_SURROGATE(s) ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) & 0x3ff) + (PRUnichar)0xdc00)
-#define IS_IN_BMP(ucs) ((PRUint32)ucs < 0x10000)
-
   while (*in) {
     if (!IS_IN_BMP(*in)) {
       out.Append((PRUnichar) H_SURROGATE(*in));
@@ -414,3 +460,45 @@ void nsIDNService::normalizeFullStops(nsAString& s)
   }
 }
 
+nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out)
+{
+  PRBool isAce;
+  IsACE(in, &isAce);
+  if (!isAce) {
+    out.Assign(in);
+    return NS_OK;
+  }
+
+  // RFC 3490 - 4.2 ToUnicode
+  // The ToUnicode output never contains more code points than its input.
+  punycode_uint output_length = in.Length() - kACEPrefixLen + 1;
+  punycode_uint *output = new punycode_uint[output_length];
+  NS_ENSURE_TRUE(output, NS_ERROR_OUT_OF_MEMORY);
+
+  enum punycode_status status = punycode_decode(in.Length() - kACEPrefixLen,
+                                                PromiseFlatCString(in).get() + kACEPrefixLen,
+                                                &output_length,
+                                                output,
+                                                nsnull);
+  if (status != punycode_success) {
+    delete [] output;
+    return NS_ERROR_FAILURE;
+  }
+
+  // UCS4 -> UTF8
+  output[output_length] = 0;
+  nsAutoString utf16;
+  ucs4toUtf16(output, utf16);
+  delete [] output;
+  out.Assign(NS_ConvertUCS2toUTF8(utf16));
+
+  // Validation: encode back to ACE and compare the strings
+  nsCAutoString ace;
+  nsresult rv = ConvertUTF8toACE(out, ace);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!ace.Equals(in, nsCaseInsensitiveCStringComparator()))
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}

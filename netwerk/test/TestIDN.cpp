@@ -45,12 +45,37 @@
 #include "nsString.h"
 
 int main(int argc, char **argv) {
+    // Test case from RFC 3492 (7.1 - Simplified Chinese)
+    const char plain[] =
+         "\xE4\xBB\x96\xE4\xBB\xAC\xE4\xB8\xBA\xE4\xBB\x80\xE4\xB9\x88\xE4\xB8\x8D\xE8\xAF\xB4\xE4\xB8\xAD\xE6\x96\x87";
+    const char encoded[] = "xn--ihqwcrb4cv8a8dqg056pqjye";
+
     nsCOMPtr<nsIIDNService> converter = do_GetService(NS_IDNSERVICE_CONTRACTID);
     NS_ASSERTION(converter, "idnSDK not installed!");
     if (converter) {
         nsCAutoString buf;
-        converter->ConvertUTF8toACE(NS_LITERAL_CSTRING("臺灣.公司"), buf);
-        printf("converted = %s", buf.get());
+        nsresult rv = converter->ConvertUTF8toACE(NS_LITERAL_CSTRING(plain), buf);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error ConvertUTF8toACE");
+        NS_ASSERTION(buf.Equals(NS_LITERAL_CSTRING(encoded), nsCaseInsensitiveCStringComparator()), 
+                     "encode result incorrect");
+        printf("encoded = %s\n", buf.get());
+
+        buf.Truncate();
+        rv = converter->ConvertACEtoUTF8(NS_LITERAL_CSTRING(encoded), buf);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error ConvertACEtoUTF8");
+        NS_ASSERTION(buf.Equals(NS_LITERAL_CSTRING(plain), nsCaseInsensitiveCStringComparator()), 
+                     "decode result incorrect");
+        printf("decoded = ");
+        NS_ConvertUTF8toUCS2 u(buf);
+        for (int i = 0; u[i]; i++) {
+          printf("U+%0.4X ", u[i]);
+        }
+        printf("\n");
+
+        PRBool isAce;
+        rv = converter->IsACE(NS_LITERAL_CSTRING("www.xn--ihqwcrb4cv8a8dqg056pqjye.com"), &isAce);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error IsACE");
+        NS_ASSERTION(isAce, "IsACE incorrect result");
     }
     return 0;
 }
