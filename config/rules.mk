@@ -626,7 +626,7 @@ endif
 endif
 
 $(HOST_SIMPLE_PROGRAMS): host_%$(BIN_SUFFIX): %.ho $(HOST_EXTRA_DEPS) Makefile Makefile.in
-	$(HOST_CC) -o $@ $< $(HOST_CFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_CC) -o $@ $(HOST_CFLAGS) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 
 #
 # Purify target.  Solaris/sparc only to start.
@@ -1452,6 +1452,15 @@ showbuild:
 	@echo "LIB_SUFFIX         = $(LIB_SUFFIX)"
 	@echo "DLL_SUFFIX         = $(DLL_SUFFIX)"
 	@echo "INSTALL            = $(INSTALL)"
+
+showhost:
+	@echo "HOST_CC            = $(HOST_CC)"
+	@echo "HOST_CFLAGS        = $(HOST_CFLAGS)"
+	@echo "HOST_LIBS          = $(HOST_LIBS)"
+	@echo "HOST_EXTRA_LIBS    = $(HOST_EXTRA_LIBS)"
+	@echo "HOST_EXTRA_DEPS    = $(HOST_EXTRA_DEPS)"
+	@echo "HOST_PROGRAM       = $(HOST_PROGRAM)"
+	@echo "HOST_PROGOBJS      = $(HOST_PROGOBJS)"
 
 zipmakes:
 ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
