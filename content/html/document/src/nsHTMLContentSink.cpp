@@ -4619,7 +4619,7 @@ HTMLContentSink::ResumeParsing()
 {
   nsresult result=NS_OK;
   if (mParser) {
-    result=mParser->EnableParser(PR_TRUE);
+    result=mParser->ResumeParsing();
   }
   
   return result;
@@ -4807,6 +4807,10 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
       }
       rv = mDocument->AddPrincipal(prin);
       if (NS_FAILED(rv)) return rv;
+
+      if(mParser) {
+        mParser->UnblockParser(); // make sure to unblock the parser before evaluating the script
+      }
 
       rv = EvaluateScript(jsUnicodeBuffer, mScriptURI, 1, mScriptLanguageVersion);
       if (NS_FAILED(rv)) return rv;

@@ -703,7 +703,7 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
     if (data->mParserToUnblock) {
       if (!done && data->mDidBlockParser) {
         done = PR_TRUE;
-        data->mParserToUnblock->EnableParser(PR_TRUE);  // this may result in re-entrant calls to loader
+        data->mParserToUnblock->ResumeParsing();  // this may result in re-entrant calls to loader
       }
       // To reduce the risk of leaking a parser if we leak a SheetLoadData,
       // release the parser here.
