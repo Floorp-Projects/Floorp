@@ -1902,8 +1902,11 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
                                             nsIDOMNode* aOldChild,
                                             nsIDOMNode** aReturn)
 {
-  nsIContent* content = nsnull;
   *aReturn = nsnull;
+  if (nsnull == aOldChild) {
+    return NS_OK;
+  }
+  nsIContent* content = nsnull;
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
@@ -1930,11 +1933,15 @@ nsresult
 nsGenericHTMLContainerElement::RemoveChild(nsIDOMNode* aOldChild, 
                                            nsIDOMNode** aReturn)
 {
-  nsIContent* content = nsnull;
   *aReturn = nsnull;
+  if (nsnull == aOldChild) {
+    return NS_OK;
+  }
+
+  nsIContent* content = nsnull;
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
-  if (NS_OK == res) {
+  if (NS_SUCCEEDED(res)) {
     PRInt32 pos;
     IndexOf(content, pos);
     if (pos >= 0) {
@@ -1944,12 +1951,12 @@ nsGenericHTMLContainerElement::RemoveChild(nsIDOMNode* aOldChild,
     }
     NS_RELEASE(content);
   }
-
   return res;
 }
 
 nsresult
-nsGenericHTMLContainerElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+nsGenericHTMLContainerElement::AppendChild(nsIDOMNode* aNewChild,
+                                           nsIDOMNode** aReturn)
 {
   return InsertBefore(aNewChild, nsnull, aReturn);
 }
