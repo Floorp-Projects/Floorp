@@ -3696,6 +3696,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         if (data.mCompatMode == eCompatibility_NavQuirks &&
             // global selector (but don't check .class):
             !aSelector->mTag && !aSelector->mIDList && !aSelector->mAttrList &&
+            // This (or the other way around) both make :not() asymmetric
+            // in quirks mode (and it's hard to work around since we're
+            // testing the current mNegations, not the first
+            // (unnegated)). This at least makes it closer to the spec.
+            aNegationIndex == 0 &&
             // :hover or :active
             (nsCSSPseudoClasses::active == pseudoClass->mAtom ||
              nsCSSPseudoClasses::hover == pseudoClass->mAtom) &&
@@ -4235,8 +4240,8 @@ CSSRuleProcessor::ClearRuleCascades(void)
 inline
 PRBool IsStateSelector(nsCSSSelector& aSelector)
 {
-  nsAtomStringList* pseudoClass = aSelector.mPseudoClassList;
-  while (pseudoClass) {
+  for (nsAtomStringList* pseudoClass = aSelector.mPseudoClassList;
+       pseudoClass; pseudoClass = pseudoClass->mNext) {
     if ((pseudoClass->mAtom == nsCSSPseudoClasses::active) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::checked) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozDragOver) || 
@@ -4245,7 +4250,6 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSPseudoClasses::target)) {
       return PR_TRUE;
     }
-    pseudoClass = pseudoClass->mNext;
   }
   return PR_FALSE;
 }
@@ -4262,28 +4266,40 @@ AddRule(void* aRuleInfo, void* aCascade)
   nsVoidArray* stateArray = &cascade->mStateSelectors;
   for (nsCSSSelector* selector = ruleInfo->mSelector;
            selector; selector = selector->mNext) {
-    // Build mStateSelectors.
-    if (IsStateSelector(*selector))
-      stateArray->AppendElement(selector);
+    // It's worth noting that this loop over negations isn't quite
+    // optimal for two reasons.  One, we could add something to one of
+    // these lists twice, which means we'll check it twice, but I don't
+    // think that's worth worrying about.   (We do the same for multiple
+    // attribute selectors on the same attribute.)  Two, we don't really
+    // need to check negations past the first in the current
+    // implementation (and they're rare as well), but that might change
+    // in the future if :not() is extended. 
+    for (nsCSSSelector* negation = selector; negation;
+         negation = negation->mNegations) {
+      // Build mStateSelectors.
+      if (IsStateSelector(*negation))
+        stateArray->AppendElement(selector);
 
-    // Build mAttributeSelectors.
-    if (selector->mIDList) {
-      nsVoidArray *array = cascade->AttributeListFor(nsHTMLAtoms::id);
-      if (!array)
-        return PR_FALSE;
-      array->AppendElement(selector);
-    }
-    if (selector->mClassList) {
-      nsVoidArray *array = cascade->AttributeListFor(nsHTMLAtoms::kClass);
-      if (!array)
-        return PR_FALSE;
-      array->AppendElement(selector);
-    }
-    for (nsAttrSelector *attr = selector->mAttrList; attr; attr = attr->mNext) {
-      nsVoidArray *array = cascade->AttributeListFor(attr->mAttr);
-      if (!array)
-        return PR_FALSE;
-      array->AppendElement(selector);
+      // Build mAttributeSelectors.
+      if (negation->mIDList) {
+        nsVoidArray *array = cascade->AttributeListFor(nsHTMLAtoms::id);
+        if (!array)
+          return PR_FALSE;
+        array->AppendElement(selector);
+      }
+      if (negation->mClassList) {
+        nsVoidArray *array = cascade->AttributeListFor(nsHTMLAtoms::kClass);
+        if (!array)
+          return PR_FALSE;
+        array->AppendElement(selector);
+      }
+      for (nsAttrSelector *attr = negation->mAttrList; attr;
+           attr = attr->mNext) {
+        nsVoidArray *array = cascade->AttributeListFor(attr->mAttr);
+        if (!array)
+          return PR_FALSE;
+        array->AppendElement(selector);
+      }
     }
   }
 
