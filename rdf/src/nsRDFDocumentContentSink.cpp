@@ -24,8 +24,10 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsICSSStyleSheet.h"
-#include "nsIRDFDocument.h"
 #include "nsIRDFContent.h"
+#include "nsIRDFDocument.h"
+#include "nsIRDFNode.h"
+#include "nsIRDFResourceManager.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsLayoutCID.h"
@@ -37,6 +39,7 @@ static NS_DEFINE_IID(kICSSParserIID,           NS_ICSS_PARSER_IID); // XXX grr..
 static NS_DEFINE_IID(kIDOMCommentIID,          NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 static NS_DEFINE_IID(kIScrollableViewIID,      NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIRDFDocumentIID,         NS_IRDFDOCUMENT_IID);
 
 static NS_DEFINE_CID(kCSSParserCID,            NS_CSSPARSER_CID);
 
@@ -388,27 +391,24 @@ nsRDFDocumentContentSink::OpenObject(const nsIParserNode& aNode)
         if (NS_FAILED(rv = GetIdAboutAttribute(aNode, uri)))
             return rv;
 
-        nsIRDFContent* rdfElement;
-        if (NS_FAILED(rv = NS_NewRDFElement(&rdfElement)))
+        nsIRDFNode* resource;
+        if (NS_FAILED(rv = mRDFResourceManager->GetNode(uri, resource)))
             return rv;
 
-        if (NS_FAILED(rv = rdfElement->SetDocument(mDocument, PR_FALSE))) {
-            NS_RELEASE(rdfElement);
-            return rv;
+        nsIRDFDocument* rdfDoc;
+        if (NS_SUCCEEDED(rv = mDocument->QueryInterface(kIRDFDocumentIID, (void**) &rdfDoc))) {
+            if (NS_SUCCEEDED(rv = rdfDoc->SetRootResource(resource))) {
+                mRootElement = mDocument->GetRootContent();
+            }
+            NS_RELEASE(rdfDoc);
         }
 
-        if (NS_FAILED(rv = rdfElement->SetResource(uri))) {
-            NS_RELEASE(rdfElement);
-            return rv;
-        }
-
-        mRootElement = NS_STATIC_CAST(nsIContent*,rdfElement);
-        mDocument->SetRootContent(mRootElement);
+        NS_RELEASE(resource);
 
         // don't release the rdfElement since we're keeping
         // a reference to it in mRootElement
     }
-    return NS_OK;
+    return rv;
 }
 
 

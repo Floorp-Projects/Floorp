@@ -22,7 +22,6 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME=rdf
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-
 CPP_OBJS=\
         .\$(OBJDIR)\nsBookmarkDataSource.obj      \
         .\$(OBJDIR)\nsEmptyCursor.obj             \

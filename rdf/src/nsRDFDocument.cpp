@@ -190,27 +190,6 @@ nsRDFDocument::QueryInterface(REFNSIID iid, void** result)
 NS_IMPL_ADDREF(nsRDFDocument);
 NS_IMPL_RELEASE(nsRDFDocument);
 
-nsresult
-nsRDFDocument::Init()
-{
-    nsresult rv;
-    if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
-        return rv;
-
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFSimpleDataBaseCID,
-                                                    nsnull,
-                                                    kIRDFDataBaseIID,
-                                                    (void**) &mDB)))
-        return rv;
-
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
-                                                    (nsISupports**) &mResourceMgr)))
-        return rv;
-
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////
 // nsIDocument interface
 
@@ -1124,6 +1103,43 @@ nsRDFDocument::AppendToEpilog(nsIContent* aContent)
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDocument interface
+
+NS_IMETHODIMP
+nsRDFDocument::Init(void)
+{
+    nsresult rv;
+    if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
+        return rv;
+
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFSimpleDataBaseCID,
+                                                    nsnull,
+                                                    kIRDFDataBaseIID,
+                                                    (void**) &mDB)))
+        return rv;
+
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
+                                                    kIRDFResourceManagerIID,
+                                                    (nsISupports**) &mResourceMgr)))
+        return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRDFDocument::SetRootResource(nsIRDFNode* aResource)
+{
+    nsresult rv;
+
+    nsIRDFContent* root;
+    if (NS_FAILED(rv = NS_NewRDFElement(&root)))
+        return rv;
+
+    if (NS_FAILED(rv = root->Init(this, "ROOT", aResource, PR_TRUE)))
+        return rv;
+
+    SetRootContent(NS_STATIC_CAST(nsIContent*, root));
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsRDFDocument::GetDataBase(nsIRDFDataBase*& result)

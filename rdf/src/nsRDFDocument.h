@@ -38,8 +38,6 @@ public:
     nsRDFDocument();
     virtual ~nsRDFDocument();
 
-    nsresult Init();
-
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
@@ -197,12 +195,11 @@ public:
     NS_IMETHOD AppendToEpilog(nsIContent* aContent);
 
     // nsIRDFDocument interface
+    NS_IMETHOD Init(void);
+    NS_IMETHOD SetRootResource(nsIRDFNode* resource);
     NS_IMETHOD GetDataBase(nsIRDFDataBase*& result);
-
     NS_IMETHOD CreateChildren(nsIRDFContent* element, nsISupportsArray* children);
-
     NS_IMETHOD AddTreeProperty(nsIRDFNode* resource);
-
     NS_IMETHOD RemoveTreeProperty(nsIRDFNode* resource);
 
 protected:
