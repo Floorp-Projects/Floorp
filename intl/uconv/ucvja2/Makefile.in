@@ -35,6 +35,9 @@ CPPSRCS		= \
                   nsUnicodeToISO2022JP.cpp \
                   nsUCvJa2Support.cpp \
                   nsUCVJA2Dll.cpp \
+                  nsUnicodeToJISx0201.cpp \
+                  nsUnicodeToJISx0208.cpp \
+                  nsUnicodeToJISx0212.cpp \
 		  $(NULL)
 
 EXPORTS         = \
