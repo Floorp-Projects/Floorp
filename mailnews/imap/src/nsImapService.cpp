@@ -61,6 +61,7 @@ static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
+
 static const char *sequenceString = "SEQUENCE";
 static const char *uidString = "UID";
 
@@ -2747,4 +2748,11 @@ nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
     // don't point to folders on the server.  they'll point to the one on "Local Folders"
    	*aDefaultCopiesAndFoldersPrefsToServer = PR_FALSE;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapService::BuildSubscribeDatasource(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow)
+{
+	printf("doesn't work yet.\n");
+	return NS_OK;
 } 

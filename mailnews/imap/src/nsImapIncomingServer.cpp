@@ -57,9 +57,9 @@
 #include "nsEnumeratorUtils.h"
 #include "nsIEventQueueService.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsIImapService.h"
 
 #include "nsITimer.h"
-
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -67,6 +67,7 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgLogonRedirectorServiceCID, NS_MSGLOGONREDIRECTORSERVICE_CID);
+static NS_DEFINE_CID(kImapServiceCID, NS_IMAPSERVICE_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
 NS_IMPL_RELEASE_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
@@ -1757,6 +1758,14 @@ nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 #ifdef DEBUG_sspitzer
 	printf("in PopulateSubscribeDatasource()\n");
 #endif
+
+	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!imapService) return NS_ERROR_FAILURE;
+
+    rv = imapService->BuildSubscribeDatasource(this, aMsgWindow);
+    if (NS_FAILED(rv)) return rv;
+
     return NS_OK;
 }
 

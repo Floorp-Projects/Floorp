@@ -39,6 +39,8 @@ interface nsIURI;
 interface nsIEventQueue;
 interface nsIMsgFolder;
 interface nsIMsgWindow;
+interface nsIImapIncomingServer;
+
 
 [scriptable, uuid(18236127-FA1D-11d3-98BA-001083010E9B)]
 interface nsIImapService : nsISupports
@@ -189,4 +191,6 @@ interface nsIImapService : nsISupports
   nsIURI listFolder(in nsIEventQueue aClientEventQueue, 
                     in nsIMsgFolder aMailFolder,
                     in nsIUrlListener aUrlListener);
+
+  void buildSubscribeDatasource(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow);
 };
