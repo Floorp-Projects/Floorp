@@ -291,13 +291,14 @@ HT_DropAction			uploadLFSURL (HT_Resource dropTarget, char* objURL);
 HT_DropAction			uploadRDFFileURL (HT_Resource dropTarget, char* objURL);
 HT_DropAction			esfsCopyMoveContentURL (HT_Resource dropTarget, char* objURL);
 HT_URLSiteMapAssoc *		makeNewSMP (HT_Pane htPane, char* pUrl, char* sitemapurl);
+void				RetainOldSitemaps (HT_Pane htPane, char *pUrl);
 void				populateSBProviders (HT_Pane htPane);
 SBProvider			SBProviderOfNode (HT_Resource node);
 PRBool				implicitDomainURL (char* url);
 PRBool				domainMatches (char *dom, char *url);
 void				nextDomain (char* dom, size_t *n);
 PRBool				relatedLinksEnabledURL (char* url);
-void ExitPageInt (HT_Pane htPane, char *pUrl, PRBool guessp) ;
+
 XP_END_PROTOS
 
 #endif

@@ -77,6 +77,8 @@
 #define RDM_RT 9
 #define	IM_RT	10
 #define CACHE_RT 11
+#define	ATALK_RT 12
+#define	ATALKVIRTUAL_RT 13
 #define WILDCARD_RT 15
 
 

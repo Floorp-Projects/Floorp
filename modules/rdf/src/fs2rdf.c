@@ -95,18 +95,25 @@ buildVolumeList(RDF_Resource fs)
 	char		*volName;
 	int		volNum=0;
 
-	while (volNum < 26) {
-	   if ((volName = getVolume(volNum++)) != NULL)  {
-	
-		  if ((vol = RDF_GetResource(NULL, volName, 1)) != NULL)
-		  {
-			setContainerp(vol, 1);
-			setResourceType(vol, LFS_RT);
-			remoteStoreAdd(gRemoteStore, vol, gCoreVocab->RDF_parent,
+	while (volNum < 26)
+	{
+		if ((volName = getVolume(volNum++)) != NULL)
+		{
+			if ((vol = RDF_GetResource(NULL, volName, 1)) != NULL)
+			{
+				setContainerp(vol, 1);
+				setResourceType(vol, LFS_RT);
+				remoteStoreAdd(gRemoteStore, vol, gCoreVocab->RDF_parent,
 					fs, RDF_RESOURCE_TYPE, 1);
-		  }
-	   }
+			}
+		}
 	}
+
+#ifdef	XP_MAC
+	remoteStoreAdd(gRemoteStore, gNavCenter->RDF_Appletalk,
+		gCoreVocab->RDF_parent, fs, RDF_RESOURCE_TYPE, 1);
+#endif
+
 }
 
 
@@ -114,10 +121,15 @@ buildVolumeList(RDF_Resource fs)
 PRDir *
 OpenDir(char *name)
 {
-  if (startsWith("file:///", name)) {
-    /* return PR_OpenDir(&name[FS_URL_OFFSET]); */
-    return CallPROpenDirUsingFileURL(name);
-  } else return(NULL);
+	if (startsWith("file:///", name))
+	{
+		/* return PR_OpenDir(&name[FS_URL_OFFSET]); */
+		return CallPROpenDirUsingFileURL(name);
+	}
+	else
+	{
+		return(NULL);
+	}
 }
 
 

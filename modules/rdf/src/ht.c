@@ -916,6 +916,11 @@ gNavCenterDataSources1[15] =
 	"rdf:localStore", "rdf:remoteStore", "rdf:history",
 	 /* "rdf:ldap", */
 	"rdf:esftp", "rdf:mail",
+
+#ifdef	XP_MAC
+	"rdf:appletalk",
+#endif
+
 	"rdf:lfs",  "rdf:ht",
 	"rdf:columns",  NULL
 };
@@ -4107,7 +4112,7 @@ ht_isURLReal(HT_Resource node)
 */
 	if (HT_IsContainer(node))
 	{
-		if (type == RDF_RT || type == HISTORY_RT || type == SEARCH_RT || type == PM_RT || type == IM_RT)
+		if (type == RDF_RT || type == HISTORY_RT || type == SEARCH_RT || type == PM_RT || type == IM_RT || type == ATALKVIRTUAL_RT)
 		{
 			validFlag = false;
 		}
@@ -6779,7 +6784,11 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 
 }
 
-void RetainOldSitemaps (HT_Pane htPane, char *pUrl) {
+
+
+void
+RetainOldSitemaps (HT_Pane htPane, char *pUrl)
+{
   HT_URLSiteMapAssoc	*nsmp;
   RDFT			sp;
   
@@ -6810,6 +6819,7 @@ void RetainOldSitemaps (HT_Pane htPane, char *pUrl) {
 }
 
 
+
 PR_PUBLIC_API(void)
 HT_ExitPage(HT_Pane htPane, char *pUrl)
 {
@@ -6833,6 +6843,8 @@ HT_ExitPage(HT_Pane htPane, char *pUrl)
   htPane->windowURL = NULL;
   htPane->sbp = NULL;
 }
+
+
 
 void
 populateSBProviders (HT_Pane htPane)

@@ -124,6 +124,8 @@ createNavCenterVocab () {
   gNavCenter->RDF_largeIcon  = RDF_GetResource(gCoreDB, "largeIcon", true);
   gNavCenter->RDF_HTMLURL = RDF_GetResource(gCoreDB, "htmlURL", true);
   gNavCenter->RDF_LocalFiles = RDF_GetResource(gCoreDB, "NC:LocalFiles", true);
+  gNavCenter->RDF_Appletalk = createContainer("NC:Appletalk");
+  setResourceType(gNavCenter->RDF_Appletalk, ATALKVIRTUAL_RT);
   gNavCenter->RDF_Mail = RDF_GetResource(gCoreDB, "NC:Mail", true);
   gNavCenter->RDF_Guide = RDF_GetResource(gCoreDB, "NC:Guide", true);
   gNavCenter->RDF_Password = RDF_GetResource(gCoreDB, "password", true);
