@@ -55,7 +55,6 @@ private:
 	PRBool					mInBackground;
 	nsToolkit*				mToolkit;
 	nsMacMessageSink*       mMessageSink;
-	nsIEventQueue*			mEventQueue;
 	nsMacTSMMessagePump*	mTSMMessagePump;
 
 	// CLASS METHODS
@@ -69,8 +68,6 @@ public:
 	void			DispatchEvent(PRBool aRealEvent, EventRecord *anEvent);
 	void			StartRunning() {mRunning = PR_TRUE;}
 	void			StopRunning() {mRunning = PR_FALSE;}
-
-	void			SetEventQueue(nsIEventQueue* aNewQueue);
 
 private:
 	void 			DoMouseDown(EventRecord &anEvent);
