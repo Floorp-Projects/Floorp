@@ -559,8 +559,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
     GetNextFrame(rowFrame, &rowFrame); // Get the next row
   }
 
-  // Step 2:  Now account for cells that span rows. We only do this if there are cells
-  //          that span rows. A spanning cell's height is the sum of the heights of the 
+  // Step 2:  Now account for cells that span rows. A spanning cell's height is the sum of the heights of the 
   //          rows it spans, or it's own desired height, whichever is greater.
   //          If the cell's desired height is the larger value, resize the rows and contained
   //          cells by an equal percentage of the additional space.
@@ -569,15 +568,16 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   //          row-spanning cells didn't change prior calculations. Since we are guaranteed 
   //          to have found the max height spanners the first time through, we know we only 
   //          need two passes, not an arbitrary number.
-  if (hasRowSpanningCell) {
-    nscoord deltaY = 0;
-    for (PRInt32 counter = 0; counter < 2; counter++) {
-      rowFrame = GetFirstFrame();
-      rowIndex = 0;
-      while (rowFrame) {
-        nsCOMPtr<nsIAtom> rowType;
-        rowFrame->GetFrameType(getter_AddRefs(rowType));
-        if (nsLayoutAtoms::tableRowFrame == rowType.get()) {
+  nscoord deltaY = 0;
+  nscoord lastCount = (hasRowSpanningCell) ? 2 : 1;
+  for (PRInt32 counter = 0; counter <= lastCount; counter++) {
+    rowFrame = GetFirstFrame();
+    rowIndex = 0;
+    while (rowFrame) {
+      nsCOMPtr<nsIAtom> rowType;
+      rowFrame->GetFrameType(getter_AddRefs(rowType));
+      if (nsLayoutAtoms::tableRowFrame == rowType.get()) {
+        if (hasRowSpanningCell) {
           // check this row for a cell with rowspans
           nsIFrame* cellFrame;
           rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
@@ -695,34 +695,34 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
             }
             cellFrame->GetNextSibling(&cellFrame); // Get the next row child (cell frame)
           }
-  
-          // If this is pass 2 then resize the row to its final size and move the
-          // row's position if the previous rows have caused a shift
-          if (1 == counter) {
-            PRBool movedFrame = (deltaY != 0);
-            nsRect rowBounds;
-  
-            // Move the row to the correct position
-            rowFrame->GetRect(rowBounds); // added
-            rowBounds.y += deltaY;
-  
-            // Adjust our running delta
-            nscoord rowHeight = (rowHeights[rowIndex] > 0) ? rowHeights[rowIndex] : 0;
-            deltaY += rowHeight - rowBounds.height;
-  
-            // Resize the row to its final size and position
-            rowBounds.height = rowHeight;
-            rowFrame->SetRect(aPresContext, rowBounds);
-
-            if (movedFrame) {
-              nsTableFrame::RePositionViews(aPresContext, rowFrame);
-            }
-          }
-          
-          rowIndex++;
         }
-        GetNextFrame(rowFrame, &rowFrame); // Get the next rowgroup child (row frame)
+  
+        // If this is the last pass then resize the row to its final size and move the
+        // row's position if the previous rows have caused a shift
+        if (lastCount == counter) {
+          PRBool movedFrame = (deltaY != 0);
+          nsRect rowBounds;
+  
+          // Move the row to the correct position
+          rowFrame->GetRect(rowBounds); // added
+          rowBounds.y += deltaY;
+  
+          // Adjust our running delta
+          nscoord rowHeight = (rowHeights[rowIndex] > 0) ? rowHeights[rowIndex] : 0;
+          deltaY += rowHeight - rowBounds.height;
+  
+          // Resize the row to its final size and position
+          rowBounds.height = rowHeight;
+          rowFrame->SetRect(aPresContext, rowBounds);
+
+          if (movedFrame) {
+            nsTableFrame::RePositionViews(aPresContext, rowFrame);
+          }
+        }
+          
+        rowIndex++;
       }
+      GetNextFrame(rowFrame, &rowFrame); // Get the next rowgroup child (row frame)
     }
   }
 
@@ -1401,8 +1401,8 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
   // changed). If so, just return and don't bother adjusting the rows
   // that follow
   if (!aReflowState.tableFrame->NeedsReflow(aReflowState.reflowState)) {
-    // If the row has no cells that span into or across the row, then we
-    // don't have to call CalculateRowHeights() which is quite expensive
+    // Only call CalculateRowHeights() if necessary since it can be expensive
+    PRBool needToCalcRowHeights = PR_FALSE; 
     if (IsSimpleRowFrame(aReflowState.tableFrame, aNextFrame)) {
       // See if the row changed height
       if (oldKidRect.height == desiredSize.height) {
@@ -1413,46 +1413,51 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
       } else {
         // Inform the row of its new height.
         ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
+        if (aReflowState.tableFrame->IsAutoHeight()) {
+          // Because other cells in the row may need to be be aligned differently,
+          // repaint the entire row
+          // XXX Improve this so the row knows it should bitblt (or repaint) those
+          // cells that change position...
+          Invalidate(aPresContext, kidRect);
 
-        // Because other cells in the row may need to be be aligned differently,
-        // repaint the entire row
-        // XXX Improve this so the row knows it should bitblt (or repaint) those
-        // cells that change position...
-        Invalidate(aPresContext, kidRect);
+          // Invalidate the area we're offseting. Note that we only repaint within
+          // our existing frame bounds.
+          // XXX It would be better to bitblt the row frames and not repaint,
+          // but we don't have such a view manager function yet...
+          if (kidRect.YMost() < mRect.height) {
+            nsRect  dirtyRect(0, kidRect.YMost(),
+                              mRect.width, mRect.height - kidRect.YMost());
+            Invalidate(aPresContext, dirtyRect);
+          }
 
-        // Invalidate the area we're offseting. Note that we only repaint within
-        // our existing frame bounds.
-        // XXX It would be better to bitblt the row frames and not repaint,
-        // but we don't have such a view manager function yet...
-        if (kidRect.YMost() < mRect.height) {
-          nsRect  dirtyRect(0, kidRect.YMost(),
-                            mRect.width, mRect.height - kidRect.YMost());
-          Invalidate(aPresContext, dirtyRect);
+          // Adjust the frames that follow
+          AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
+                                    desiredSize.height - oldKidRect.height);
+          aDesiredSize.height = aReflowState.y;
         }
-
-        // Adjust the frames that follow
-        AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
-                                  desiredSize.height - oldKidRect.height);
-        aDesiredSize.height = aReflowState.y;
+        else needToCalcRowHeights = PR_TRUE;
       }
     } else {
       if (desiredSize.mNothingChanged) { // mNothingChanges currently only works when a cell is the target
         // the cell frame did not change size. Just calculate our desired height
         aDesiredSize.height = GetFrameYMost(GetLastRowSibling(mFrames.FirstChild()));
-      } else {
-        // Adjust the frames that follow...
-        AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
-                                  desiredSize.height - oldKidRect.height);
+      } 
+      else needToCalcRowHeights = PR_TRUE;
+    }
+    if (needToCalcRowHeights) {
+      // Adjust the frames that follow... 
+      // XXX is this needed since CalculateRowHeights will be called?
+      //AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
+      //                          desiredSize.height - oldKidRect.height);
     
-        // Now recalculate the row heights
-        CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState);
+      // Now recalculate the row heights
+      CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState);
       
-        // Because we don't know what changed repaint everything.
-        // XXX We should change CalculateRowHeights() to return the bounding
-        // rect of what changed. Or whether anything moved or changed size...
-        nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
-        Invalidate(aPresContext, dirtyRect);
-      }
+      // Because we don't know what changed repaint everything.
+      // XXX We should change CalculateRowHeights() to return the bounding
+      // rect of what changed. Or whether anything moved or changed size...
+      nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
+      Invalidate(aPresContext, dirtyRect);
     }
   }
   

@@ -3912,6 +3912,38 @@ nsTableFrame::IsAutoWidth(PRBool* aIsPctWidth)
   return nsTableOuterFrame::IsAutoWidth(*this, aIsPctWidth);
 }
 
+PRBool 
+nsTableFrame::IsAutoHeight()
+{
+  PRBool isAuto = PR_TRUE;  // the default
+  nsCOMPtr<nsIStyleContext> styleContext;
+  GetStyleContext(getter_AddRefs(styleContext)); 
+
+  nsStylePosition* position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
+
+  switch (position->mHeight.GetUnit()) {
+    case eStyleUnit_Auto:         // specified auto width
+    case eStyleUnit_Proportional: // illegal for table, so ignored
+      break;
+    case eStyleUnit_Inherit:
+      // get width of parent and see if it is a specified value or not
+      // XXX for now, just return true
+      break;
+    case eStyleUnit_Coord:
+      isAuto = PR_FALSE;
+      break;
+    case eStyleUnit_Percent:
+      if (position->mWidth.GetPercentValue() > 0.0f) {
+        isAuto = PR_FALSE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return isAuto; 
+}
+
 nscoord 
 nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
 {
