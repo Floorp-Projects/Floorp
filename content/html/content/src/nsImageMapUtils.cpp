@@ -59,9 +59,9 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
 
   nsAutoString usemap(aUsemap);
 
-  // Strip out whitespace in the name for navigator compatibility
-  // XXX NAV QUIRK
-  usemap.StripWhitespace();
+  /* we used to strip the whitespace from the usemap value as a Quirk, but it was too quirky and
+     didn't really work correctly - see bug 87050 
+   */
 
   if (!usemap.IsEmpty() && usemap.First() == '#') {
     usemap.Cut(0, 1);
