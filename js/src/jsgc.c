@@ -507,13 +507,21 @@ retry:
             JS_ArenaCountAllocation(pool, nb);
         }
 
-        /* Consider doing a "last ditch" GC if thing couldn't be allocated. */
+        /*
+         * Consider doing a "last ditch" GC if thing couldn't be allocated.
+         *
+         * Keep rt->gcLock across the call into js_GC so we don't starve and
+         * lose to racing threads who deplete the heap just after js_GC has
+         * replenished it (or has synchronized with a racing GC that collected
+         * a bunch of garbage).  This unfair scheduling can happen on certain
+         * operating systems.  For the gory details, see Mozilla bug 162779
+         * (http://bugzilla.mozilla.org/show_bug.cgi?id=162779).
+         */
         if (!thing) {
             if (!tried_gc) {
-                JS_UNLOCK_GC(rt);
-                js_GC(cx, GC_KEEP_ATOMS);
+                rt->gcPoke = JS_TRUE;
+                js_GC(cx, GC_KEEP_ATOMS | GC_ALREADY_LOCKED);
                 tried_gc = JS_TRUE;
-                JS_LOCK_GC(rt);
                 METER(rt->gcStats.retry++);
                 goto retry;
             }
@@ -1025,7 +1033,7 @@ js_GC(JSContext *cx, uintN gcflags)
      * Don't collect garbage if the runtime is down or if GC is disabled, and
      * we're not the last context in the runtime.  The last context must force
      * a GC, and nothing should disable that final collection or there may be
-     * shutdown leaks, or runtime bloat until the next new context is created.
+     * shutdown leaks, or runtime bloat until the next context is created.
      */
     if ((rt->state != JSRTS_UP || rt->gcDisabled) &&
         !(gcflags & GC_LAST_CONTEXT)) {
@@ -1034,7 +1042,7 @@ js_GC(JSContext *cx, uintN gcflags)
 
     /*
      * Let the API user decide to defer a GC if it wants to (unless this
-     * is the last context). Call the callback regardless.
+     * is the last context).  Invoke the callback regardless.
      */
     if (rt->gcCallback) {
         if (!rt->gcCallback(cx, JSGC_BEGIN) && !(gcflags & GC_LAST_CONTEXT))
@@ -1042,15 +1050,16 @@ js_GC(JSContext *cx, uintN gcflags)
     }
 
     /* Lock out other GC allocator and collector invocations. */
-    JS_LOCK_GC(rt);
+    if (!(gcflags & GC_ALREADY_LOCKED))
+        JS_LOCK_GC(rt);
 
     /* Do nothing if no assignment has executed since the last GC. */
     if (!rt->gcPoke) {
         METER(rt->gcStats.nopoke++);
-        JS_UNLOCK_GC(rt);
+        if (!(gcflags & GC_ALREADY_LOCKED))
+            JS_UNLOCK_GC(rt);
         return;
     }
-    rt->gcPoke = JS_FALSE;
     METER(rt->gcStats.poke++);
 
 #ifdef JS_THREADSAFE
@@ -1061,7 +1070,8 @@ js_GC(JSContext *cx, uintN gcflags)
         rt->gcLevel++;
         METER(if (rt->gcLevel > rt->gcStats.maxlevel)
                   rt->gcStats.maxlevel = rt->gcLevel);
-        JS_UNLOCK_GC(rt);
+        if (!(gcflags & GC_ALREADY_LOCKED))
+            JS_UNLOCK_GC(rt);
         return;
     }
 
@@ -1113,7 +1123,8 @@ js_GC(JSContext *cx, uintN gcflags)
             JS_AWAIT_GC_DONE(rt);
         if (requestDebit)
             rt->requestCount += requestDebit;
-        JS_UNLOCK_GC(rt);
+        if (!(gcflags & GC_ALREADY_LOCKED))
+            JS_UNLOCK_GC(rt);
         return;
     }
 
@@ -1360,7 +1371,7 @@ out:
     js_EnablePropertyCache(cx);
     rt->gcLevel = 0;
     rt->gcLastBytes = rt->gcBytes;
-    rt->gcRunning = JS_FALSE;
+    rt->gcPoke = rt->gcRunning = JS_FALSE;
 
 #ifdef JS_THREADSAFE
     /* If we were invoked during a request, pay back the temporary debit. */
@@ -1368,7 +1379,8 @@ out:
         rt->requestCount += requestDebit;
     rt->gcThread = 0;
     JS_NOTIFY_GC_DONE(rt);
-    JS_UNLOCK_GC(rt);
+    if (!(gcflags & GC_ALREADY_LOCKED))
+        JS_UNLOCK_GC(rt);
 #endif
 
     if (rt->gcCallback)
