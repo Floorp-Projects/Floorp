@@ -145,6 +145,8 @@ PRIntn main(PRIntn argc, char *argv)
                 size = &ttlsize;
                 break;
             case PR_SockOpt_Broadcast:
+                value = &boolean;
+                size = &booleansize;
                 break;
             case PR_SockOpt_IpTypeOfService: /* type of service and precedence */
             case PR_SockOpt_AddMember:       /* add an IP group membership */
