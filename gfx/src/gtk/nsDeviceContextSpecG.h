@@ -21,10 +21,12 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecG.h"
+#include "nsIDeviceContextSpecPS.h"
 
 #include "nsPrintdGTK.h"
 
-class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
+class nsDeviceContextSpecGTK : public nsIDeviceContextSpec ,
+                                      nsIDeviceContextSpecPS
 {
 public:
 /**
@@ -51,9 +53,33 @@ public:
 /**
  * Closes the printmanager if it is open.
  * @update   dc 2/13/98
+ * @update   syd 3/20/99
  * @return error status
  */
+
   NS_IMETHOD ClosePrintManager();
+
+  NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
+
+  NS_IMETHOD GetFirstPageFirst ( PRBool &aFpf );     
+
+  NS_IMETHOD GetGrayscale( PRBool &aGrayscale );   
+
+  NS_IMETHOD GetSize ( int &aSize ); 
+
+  NS_IMETHOD GetTopMargin ( float &value ); 
+
+  NS_IMETHOD GetBottomMargin ( float &value ); 
+
+  NS_IMETHOD GetLeftMargin ( float &value ); 
+
+  NS_IMETHOD GetRightMargin ( float &value ); 
+
+  NS_IMETHOD GetCommand ( char **aCommand );   
+
+  NS_IMETHOD GetPath ( char **aPath );    
+
+  NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
 
 protected:
 /**

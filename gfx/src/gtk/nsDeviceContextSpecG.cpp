@@ -16,13 +16,11 @@
  * Reserved.
  */
 
-#include <glib.h>
 #include "nsDeviceContextSpecG.h"
 //#include "prmem.h"
 //#include "plstr.h"
 
-// this isn't needed since we arn't useing getenv() anymore in here (pav)
-//#include "stdlib.h"  // getenv() on Solaris/CC
+#include "stdlib.h"  // getenv() on Solaris/CC
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecGTK
@@ -40,13 +38,52 @@ nsDeviceContextSpecGTK :: nsDeviceContextSpecGTK()
  */
 nsDeviceContextSpecGTK :: ~nsDeviceContextSpecGTK()
 {
-
-
 }
 
-static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
+static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
+static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
 
+#if 0
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecGTK, kDeviceContextSpecIID)
+NS_IMPL_ADDREF(nsDeviceContextSpecGTK)
+NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
+#endif
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr)
+    return NS_ERROR_NULL_POINTER;
+
+  if (aIID.Equals(kIDeviceContextSpecIID))
+  {
+    nsIDeviceContextSpec* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIDeviceContextSpecPSIID))
+  {
+    nsIDeviceContextSpecPS* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+  if (aIID.Equals(kISupportsIID))
+  {
+    nsIDeviceContextSpec* tmp = this;
+    nsISupports* tmp2 = tmp;
+    *aInstancePtr = (void*) tmp2;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
+}
+
 NS_IMPL_ADDREF(nsDeviceContextSpecGTK)
 NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
 
@@ -57,32 +94,97 @@ NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
  */
 NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 {
-  gchar *path;
-
-  // XXX for now, neutering this per rickg until dcone can play with it
-  
-  return NS_ERROR_FAILURE;
+  char *path;
 
   // XXX these settings should eventually come out of preferences 
 
   mPrData.toPrinter = PR_TRUE;
   mPrData.fpf = PR_TRUE;
   mPrData.grayscale = PR_FALSE;
-  mPrData.size = SizeLetter;
-  mPrData.stream = (FILE *) NULL;
+  mPrData.size = NS_LETTER_SIZE;
   sprintf( mPrData.command, "lpr" );
 
   // PWD, HOME, or fail 
 
-  path = g_get_home_dir();
-  sprintf(mPrData.path, "%s/netscape.ps", path);
-  g_free(path);
+  if ( ( path = getenv( "PWD" ) ) == (char *) NULL ) 
+	if ( ( path = getenv( "HOME" ) ) == (char *) NULL )
+  		strcpy( mPrData.path, "netscape.ps" );
+  if ( path != (char *) NULL )
+	sprintf( mPrData.path, "%s/netscape.ps", path );
+  else
+	return NS_ERROR_FAILURE;
 
   ::UnixPrDialog( &mPrData );
   if ( mPrData.cancel == PR_TRUE ) 
 	return NS_ERROR_FAILURE;
   else
         return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetToPrinter( PRBool &aToPrinter )     
+{
+  aToPrinter = mPrData.toPrinter;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetFirstPageFirst ( PRBool &aFpf )      
+{
+  aFpf = mPrData.fpf;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetGrayscale ( PRBool &aGrayscale )      
+{
+  aGrayscale = mPrData.grayscale;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetSize ( int &aSize )      
+{
+  aSize = mPrData.size;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetTopMargin ( float &value )      
+{
+  value = mPrData.top;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetBottomMargin ( float &value )      
+{
+  value = mPrData.bottom;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetRightMargin ( float &value )      
+{
+  value = mPrData.right;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetLeftMargin ( float &value )      
+{
+  value = mPrData.left;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetCommand ( char **aCommand )      
+{
+  *aCommand = &mPrData.command[0];
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetPath ( char **aPath )      
+{
+  *aPath = &mPrData.path[0];
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetUserCancelled( PRBool &aCancel )     
+{
+  aCancel = mPrData.cancel;
+  return NS_OK;
 }
 
 /** -------------------------------------------------------

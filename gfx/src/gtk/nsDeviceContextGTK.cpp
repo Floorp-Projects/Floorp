@@ -64,34 +64,12 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
   mWidget = aNativeWidget;
 
-  // Compute dpi of display
-  float screenWidth = float(::gdk_screen_width());
-  float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-  nscoord dpi = nscoord(screenWidth / screenWidthIn);
-
-  // Now for some wacky heuristics. 
-  if (dpi < 84) dpi = 72;
-  else if (dpi < 108) dpi = 96;
-  else if (dpi < 132) dpi = 120;
-
-  mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
-
-#ifdef DEBUG
-  static PRBool once = PR_TRUE;
-  if (once) {
-    printf("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips);
-    once = PR_FALSE;
-  }
-#endif
-
-#if 0
-  mTwipsToPixels = ( ((float)::gdk_screen_width()) /
-                     ((float)::gdk_screen_width_mm()) * 25.4) /
+// this is used for something odd.  who knows
+  mTwipsToPixels = (((float)::gdk_screen_width()) /
+                    ((float)::gdk_screen_width_mm()) * 25.4) /
 		     (float)NSIntPointsToTwips(72);
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
-#endif
 
   vis = gdk_rgb_get_visual();
   mDepth = vis->depth;

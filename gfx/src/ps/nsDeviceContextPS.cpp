@@ -24,7 +24,7 @@
 #include "nsPostScriptObj.h"
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
+static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
@@ -263,9 +263,16 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
  */
 NS_IMETHODIMP nsDeviceContextPS::BeginDocument(void)
 {  
+  nsIDeviceContextSpecPS *psSpec;
+  nsresult res;
 
-  mPSObj = new nsPostScriptObj();
-
+  if ( nsnull != mSpec ) {
+    mPSObj = new nsPostScriptObj();  
+    res = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
+    if ( res == NS_OK ) {
+      mPSObj->Init(psSpec);
+    }
+  }
   return NS_OK;
 }
 

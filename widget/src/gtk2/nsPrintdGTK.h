@@ -18,14 +18,17 @@
 
 /* Original Code: Syd Logan (syd@netscape.com) 3/12/99 */
 
-#ifndef nsPrintdGTK_h___
-#define nsPrintdGTK_h___
-
 #include <limits.h>
 
-PR_BEGIN_EXTERN_C
+/* stolen from nsPostScriptObj.h. needs to be put somewhere else that
+   both ps and gtk can see easily */
 
-enum { SizeLetter, SizeLegal, SizeExecutive, SizeA4 };
+#ifndef NS_LEGAL_SIZE
+#define NS_LETTER_SIZE    0
+#define NS_LEGAL_SIZE     1
+#define NS_EXECUTIVE_SIZE 2
+#define NS_A4_SIZE        3
+#endif
 
 typedef struct unixprdata {
         PRBool toPrinter;          /* If PR_TRUE, print to printer */
@@ -35,11 +38,9 @@ typedef struct unixprdata {
         char command[ PATH_MAX ];   /* Print command e.g., lpr */
         char path[ PATH_MAX ];      /* If toPrinter = PR_FALSE, dest file */
 	PRBool cancel;		    /* If PR_TRUE, user cancelled */
-	FILE *stream;		    /* File or Printer */
+	float left;		    /* left margin */
+	float right;		    /* right margin */
+	float top;		    /* top margin */
+	float bottom;		    /* bottom margin */
 } UnixPrData;
 
-void UnixPrDialog(UnixPrData *prData);
-
-PR_END_EXTERN_C
-
-#endif /* nsPrintdGTK_h___ */

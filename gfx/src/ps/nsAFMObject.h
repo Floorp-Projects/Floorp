@@ -145,13 +145,13 @@ struct AFM_Single_Char_Metrics
 {
 
   PRInt32   mCharacter_Code;	// default charcode (-1 if not encoded) 
-  double    mW0x;		          // character width x in writing direction 0 
-  double    mW0y;		          // character width y in writing direction 0 
-  double    mW1x;		          // character width x in writing direction 1 
-  double    mW1y;		          // character width y in writing direction 1 
-  char      *mName;	          // character name 
-  double    mVv_x;	          // local VVector x 
-  double    mVv_y;	          // local VVector y 
+  double    mW0x;		          // character width x in writing direction 0, 
+  double    mW0y;		          // character width y in writing direction 0
+  double    mW1x;		          // character width x in writing direction 1
+  double    mW1y;		          // character width y in writing direction 1
+  //char      *mName;	          // character name ,  not using currently
+  //double    mVv_x;	          // local VVector x ,  not using currently
+  //double    mVv_y;	          // local VVector y ,  not using currently
 
   // character bounding box. 
   double    mLlx;
@@ -159,7 +159,7 @@ struct AFM_Single_Char_Metrics
   double    mUrx;
   double    mUry;
 
-  double num_ligatures;
+  //double num_ligatures;      
 
   //AFMLigature *ligatures;
 };
@@ -169,7 +169,6 @@ typedef struct AFM_Single_Char_Metrics  AFMscm;
 
 
 // Font information which we get from AFM files, this is needed for the PS output
-
 struct fontInformation
 {
   double  mFontVersion;
@@ -199,7 +198,8 @@ struct fontInformation
   double  mUnderlinePosition;
   double  mUnderlineThickness;
 
-  AFMscm *AFMCharMetrics;
+  PRInt32 mNumCharacters;
+  AFMscm *mAFMCharMetrics;
 
 };
 
@@ -227,9 +227,44 @@ public:
    * Initialize an AFMObject
    * @update 2/26/99 dwc
    * @param aFontName - A "C" string name of the font this object will get initialized to
-   * @param aFontHeight -- The font size for this object
+   * @param aFontHeight -- The initial font size, this can be changed with the SetFontSize method
+   * @return VOID
    */
-  void    Init(char *aFontName,PRInt32  aFontHeight);
+  void    Init(PRInt32  aFontHeight);
+
+
+  /** ---------------------------------------------------
+   * Read in and parse and AFM file
+   * @update 2/26/99 dwc
+   * @param aFontName -- The name of the font we want to read in
+   * @return VOID
+   */
+  PRBool AFM_ReadFile(const nsFont &aFontName);
+
+  /** ---------------------------------------------------
+   * Check to see if this font is one of our basic fonts, if so create an AFMObject from it
+   * @update 2/26/99 dwc
+   * @param aFont -- The font to be constructed (family name, weight, style)
+   * @param aPrimaryOnly -- if true, only looking for the first font name in aFontName
+   * @return -- the font index into our table if a native font was found, -1 otherwise
+   */
+  PRInt16 CheckBasicFonts(const nsFont &aFont,PRBool aPrimaryOnly=PR_FALSE);
+
+  /** ---------------------------------------------------
+   * Create a substitute Font
+   * @update 2/26/99 dwc
+   * @param aFont -- The font to create a substitute for (family name, weight, style)
+   * @return -- the font index into our table if a native font was found, -1 otherwise
+   */
+  PRInt16 CreateSubstituteFont(const nsFont &aFont);
+
+  /** ---------------------------------------------------
+   * Set the font size, which is used to calculate the distances for the font
+   * @update 3/05/99 dwc
+   * @param aFontSize - The size of the font for the calculation
+   * @return VOID
+   */
+  void    SetFontSize(PRInt32  aFontHeight) { mFontHeight = aFontHeight; }
 
 
   /** ---------------------------------------------------
@@ -238,6 +273,7 @@ public:
    * @param aString - The unicharacter string to get the width for
    * @param aWidth - Where the width of the string will be put.
    * @param aLenth - The length of the passed in string
+   * @return VOID
    */
   void    GetStringWidth(const PRUnichar *aString,nscoord& aWidth,nscoord aLength);
 
@@ -250,72 +286,96 @@ public:
    */
   void    GetStringWidth(const char *aString,nscoord& aWidth,nscoord aLength);
 
-protected:
   /** ---------------------------------------------------
-   * Read in and parse and AFM file
-   * @update 2/26/99 dwc
+   * Write out the AFMFontInformation Header from the currently parsed AFM file, this will write a ASCII file
+   * so you can use it as a head if need be.  
+   * @update 3/09/99 dwc
+   * @param aOutFile -- File to write to
+   * @return VOID
    */
-  void    AFM_ReadFile(void);
+  void    WriteFontHeaderInformation(FILE *aOutFile);
+
+  /** ---------------------------------------------------
+   * Write out the AFMFontInformation character data from the currently parsed AFM file, this will write a ASCII file
+   * so you can use it as a head if need be.  
+   * @update 3/09/99 dwc
+   * @param aOutFile -- File to write to
+   * @return VOID
+   */
+  void    WriteFontCharInformation(FILE *aOutFile);
+protected:
 
   /** ---------------------------------------------------
    * Get a Keyword in the AFM file being parsed
    * @update 2/26/99 dwc
+   * @return VOID
    */
   void    GetKey(AFMKey *aTheKey);
 
   /** ---------------------------------------------------
    * Get a token from the AFM file
    * @update 2/26/99 dwc
+   * @return -- The found token
    */
   PRInt32 GetToken(void);
 
   /** ---------------------------------------------------
    * For a given token, find the keyword it represents
    * @update 2/26/99 dwc
+   * @return -- The key found
    */
   PRInt32 MatchKey(char *aKey);
 
   /** ---------------------------------------------------
    * Get a line from the currently parsed file
    * @update 2/26/99 dwc
+   * @return -- The current line
    */
   PRInt32 GetLine(void);
 
   /** ---------------------------------------------------
    * Get a string from the currently parsed file
    * @update 2/26/99 dwc
+   * @return -- the current string
    */
   char*   GetAFMString (void);
 
   /** ---------------------------------------------------
    * Get a word from the currently parsed file
    * @update 2/26/99 dwc
+   * @return -- a string with the name
    */
   char*   GetAFMName (void); 
 
   /** ---------------------------------------------------
    * Get an integer from the currently parsed file
    * @update 2/26/99 dwc
+   * @return -- the current integer
    */
   void    GetAFMInt (PRInt32 *aInt) {GetToken();*aInt = atoi (mToken);}
 
   /** ---------------------------------------------------
    * Get a floating point number from the currently parsed file
    * @update 2/26/99 dwc
+   * @return -- the current floating point
    */
   void    GetAFMNumber (double *aFloat){GetToken();*aFloat = atof (mToken);}
 
   /** ---------------------------------------------------
    * Get a boolean from the currently parsed file
    * @update 2/26/99 dwc
+   * @param -- The current boolean found is passed back
    */
   void    GetAFMBool (PRBool *aBool);
 
   /** ---------------------------------------------------
    * Read in the AFMFontInformation from the currently parsed AFM file
    * @update 2/26/99 dwc
+   * @param aFontInfo -- The header structure to read the caracter info from
+   * @param aNumCharacters -- The number of characters to look for
    */
   void    ReadCharMetrics (AFMFontInformation *aFontInfo,PRInt32 aNumCharacters);
+
 
 public:
   AFMFontInformation  *mPSFontInfo;
@@ -331,6 +391,32 @@ protected:
 };
 
 #define NUM_KEYS (sizeof (keynames) / sizeof (struct keyname_st) - 1)
+
+/** ---------------------------------------------------
+ *  A static structure initialized with the default fonts for postscript
+ *	@update 3/12/99 dwc
+ *  @member mFontName -- string with the substitute font name
+ *  @member mFontInfo -- AFM font information header created with the AFMGen program
+ *  @member mCharInfo -- Character information created with the AFMGen program
+ *  @member mIndex -- This member field is used when substituting fonts
+ */
+struct AFM_SubstituteFonts
+{
+char*               mPSName;
+char*               mFamily;
+PRUint16            mWeight;
+PRUint8             mStyle;
+AFMFontInformation* mFontInfo;
+AFMscm*             mCharInfo;
+PRInt32             mIndex;
+};
+
+typedef struct AFM_SubstituteFonts  DefFonts;
+
+extern DefFonts gSubstituteFonts[];
+
+// number of supported default fonts
+#define NUM_AFM_FONTS 13
 
 #endif
 
