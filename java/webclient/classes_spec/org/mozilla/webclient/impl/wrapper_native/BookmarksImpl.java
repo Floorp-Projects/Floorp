@@ -120,7 +120,7 @@ public void addBookmark(BookmarkEntry mayBeNullParent,
                         BookmarkEntry bookmark)
 {
     ParameterCheck.nonNull(bookmark);
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
     
     if  (!(bookmark instanceof BookmarkEntryImpl)) {
         throw new IllegalArgumentException("Can't add bookmark unless BookmarkEntry obtained from Bookmarks.newBookmarkEntry()");
@@ -149,7 +149,7 @@ public void addBookmark(BookmarkEntry mayBeNullParent,
             
 public TreeModel getBookmarks() throws IllegalStateException
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
     if (null == bookmarksTree) {
         int nativeBookmarks;
@@ -173,8 +173,8 @@ public TreeModel getBookmarks() throws IllegalStateException
 public void removeBookmark(BookmarkEntry bookmark)
 {
     ParameterCheck.nonNull(bookmark);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     
     throw new UnimplementedException("\nUnimplementedException -----\n API Function CurrentPage::getPageInfo has not yet been implemented.\n");
 }
@@ -185,8 +185,8 @@ public BookmarkEntry newBookmarkEntry(String url)
     getBookmarks();
     int newNode;
 
-    if (-1 != (newNode = nativeNewRDFNode(nativeWebShell, url, false))) {
-        result = new BookmarkEntryImpl(nativeWebShell,
+    if (-1 != (newNode = nativeNewRDFNode(getNativeWebShell(), url, false))) {
+        result = new BookmarkEntryImpl(getNativeWebShell(),
                                        newNode, null);
         // use put instead of setProperty for jdk1.1.x compatibility.
         result.getProperties().put(BookmarkEntry.NAME, url);
@@ -212,7 +212,7 @@ public BookmarkEntry newBookmarkFolder(String name)
     BookmarkEntry result = null;
     getBookmarks();
     
-    if (null == (result = new BookmarkEntryImpl(nativeWebShell, -1, null))) {
+    if (null == (result = new BookmarkEntryImpl(getNativeWebShell(), -1, null))) {
         throw new NullPointerException("Can't create bookmark folder for: " + 
                                        name);
     }

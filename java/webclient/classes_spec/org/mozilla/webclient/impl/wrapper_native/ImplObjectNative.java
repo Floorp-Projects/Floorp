@@ -36,7 +36,6 @@ import org.mozilla.util.ParameterCheck;
 import org.mozilla.webclient.ImplObject;
 import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.BrowserControl;
-import org.mozilla.webclient.WindowControl;
 
 /**
 
@@ -67,61 +66,16 @@ public abstract class ImplObjectNative extends ImplObject
 
 // Relationship Instance Variables
 
-/**
+private WrapperFactory myFactory = null;
 
- * My ivars are public for fast access from subclasses in the wrapper_*
- * packages.
-
- */
-
-/** 
-      
- * a handle to the actual mozilla webShell, owned, allocated, and
- * released by WindowControl
-   
- */
-  
-public int nativeWebShell = -1;
-
-protected WrapperFactory myFactory = null;
+private int nativeWebShell = -1;
 
 //
 // Constructors and Initializers    
 //
 
 public ImplObjectNative(WrapperFactory yourFactory, 
-			BrowserControl yourBrowserControl)
-{
-    super(yourBrowserControl);
-    myFactory = yourFactory;
-    
-    // If we're a WindowControlImpl instance, we can't ask ourself for
-    // the nativeWebShell, since it hasn't yet been created!
-
-    if (!(this instanceof WindowControlImpl)) {
-	// save the native webshell ptr
-	try {
-	    WindowControl windowControl = (WindowControl)
-		myBrowserControl.queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
-	    nativeWebShell = windowControl.getNativeWebShell();
-	}
-	catch (Exception e) {
-	    System.out.println(e.getMessage());
-	}
-    }
-}
-
-
-/**
-
- * This constructor doesn't initialize the nativeWebshell ivar
-
- */
-
-public ImplObjectNative(WrapperFactory yourFactory, 
-			BrowserControl yourBrowserControl,
-			boolean notUsed)
-{
+                        BrowserControl yourBrowserControl) {
     super(yourBrowserControl);
     myFactory = yourFactory;
 }
@@ -129,9 +83,6 @@ public ImplObjectNative(WrapperFactory yourFactory,
 /**
 
  * Note how we call super.delete() at the end.  THIS IS VERY IMPORTANT. <P>
-
- * Also, note how we don't de-allocate nativeWebShell, that is done in
- * the class that owns the nativeWebShell reference, WindowControlImpl. <P>
 
  * ImplObjectNative subclasses that further override delete() are <P>
 
@@ -149,8 +100,7 @@ WindowControlImpl.java
 
 public void delete()
 {
-    nativeWebShell = -1;
-    System.out.println("ImplObjectNative.delete()");
+    getWrapperFactory().destroyNativeBrowserControl(getBrowserControl());
     super.delete();
 }
 
@@ -158,5 +108,19 @@ protected WrapperFactory getWrapperFactory() {
     return myFactory;
 }
 
+    /**
+
+    * <p>We do this lazily to allow for applications that don't use any
+    * per-window features.  </p>
+
+    */
+
+protected int getNativeWebShell() {
+    if (-1 == nativeWebShell) {
+        nativeWebShell = 
+            getWrapperFactory().getNativeBrowserControl(getBrowserControl());
+    }
+    return nativeWebShell;
+}
 
 } // end of class ImplObject

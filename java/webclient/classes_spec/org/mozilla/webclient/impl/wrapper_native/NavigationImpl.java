@@ -62,8 +62,7 @@ public class NavigationImpl extends ImplObjectNative implements Navigation2
 //
 
 public NavigationImpl(WrapperFactory yourFactory, 
-		      BrowserControl yourBrowserControl)
-{
+                      BrowserControl yourBrowserControl) {
     super(yourFactory, yourBrowserControl);
 }
 
@@ -82,11 +81,11 @@ public NavigationImpl(WrapperFactory yourFactory,
 public void loadURL(String absoluteURL)
 {
     ParameterCheck.nonNull(absoluteURL);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     
-    synchronized(myBrowserControl) {
-        nativeLoadURL(nativeWebShell, absoluteURL);
+    synchronized(getBrowserControl()) {
+        nativeLoadURL(getNativeWebShell(), absoluteURL);
     }
 }
 
@@ -102,11 +101,11 @@ public void loadFromStream(InputStream stream, String uri,
                                  " is out of range.  It is should be either -1 or greater than 0.");
     }
 
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     
-    synchronized(myBrowserControl) {
-        nativeLoadFromStream(nativeWebShell, stream,
+    synchronized(getBrowserControl()) {
+        nativeLoadFromStream(getNativeWebShell(), stream,
                              uri, contentType, contentLength,
                              loadInfo);
     }
@@ -115,32 +114,32 @@ public void loadFromStream(InputStream stream, String uri,
 public void refresh(long loadFlags)
 {
     ParameterCheck.noLessThan(loadFlags, 0);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     
-    synchronized(myBrowserControl) {
-        nativeRefresh(nativeWebShell, loadFlags);
+    synchronized(getBrowserControl()) {
+        nativeRefresh(getNativeWebShell(), loadFlags);
     }
 }
 
 public void stop()
 {
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     
-    synchronized(myBrowserControl) {
-        nativeStop(nativeWebShell);
+    synchronized(getBrowserControl()) {
+        nativeStop(getNativeWebShell());
     }
 }
 
 public void setPrompt(Prompt yourPrompt)
 {
     ParameterCheck.nonNull(yourPrompt);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     
-    synchronized(myBrowserControl) {
-        nativeSetPrompt(nativeWebShell, yourPrompt);
+    synchronized(getBrowserControl()) {
+        nativeSetPrompt(getNativeWebShell(), yourPrompt);
     }
 
 }
@@ -155,8 +154,8 @@ public void post(String  absoluteUrl,
                  String  postHeaders) 
 {
     ParameterCheck.nonNull(absoluteUrl);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
 
     int postDataLength = 0;
     int postHeadersLength = 0;
@@ -174,8 +173,8 @@ public void post(String  absoluteUrl,
       postHeadersLength = postHeaders.length();
     }
 
-    synchronized(myBrowserControl) {
-        nativePost(nativeWebShell, 
+    synchronized(getBrowserControl()) {
+        nativePost(getNativeWebShell(), 
                    absoluteUrl, 
                    target,
                    postDataLength, 
@@ -224,7 +223,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.1 2003/09/28 06:29:06 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.2 2004/03/05 15:34:24 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

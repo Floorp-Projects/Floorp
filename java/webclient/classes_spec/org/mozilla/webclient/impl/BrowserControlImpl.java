@@ -98,6 +98,7 @@ public BrowserControlImpl(WrapperFactory yourWrapper)
     ParameterCheck.nonNull(yourWrapper);
 
     wrapperFactory = yourWrapper;
+    Assert.assert_it(-1 != wrapperFactory.getNativeContext());
 }
 
 
@@ -168,7 +169,6 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
     ParameterCheck.nonNull(interfaceName);
     
     Assert.assert_it(null != wrapperFactory);
-    //    wrapperFactory.throwExceptionIfNotInitialized();
 
     // At some point, it has to come down to hard coded string names,
     // right?  Well, that point is here.  There is an extensibility
@@ -240,23 +240,6 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
     // extensibility mechanism: just see if wrapperFactory can make one!
     return wrapperFactory.newImpl(interfaceName, this);
 }
-
-// ----VERTIGO_TEST_START
-
-//
-// Test methods
-//
-
-public static void main(String [] args)
-{
-    Assert.setEnabled(true);
-    Log.setApplicationName("BrowserControlImpl");
-    Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.1 2003/09/28 06:29:05 edburns%acm.org Exp $");
-    
-}
-
-// ----VERTIGO_TEST_END
 
 } // end of class BrowserControlImpl
 

@@ -35,6 +35,9 @@ import org.mozilla.webclient.ImplObject;
 import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.impl.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class WrapperFactoryImpl extends Object implements WrapperFactory
 {
 //
@@ -54,6 +57,14 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory
 protected String platformCanvasClassName = null;
 protected boolean initialized = false;
 protected int nativeContext = -1;
+    /**
+     * <p>keys: BrowserControl instances</p>
+     *
+     * <p>values: the native counterpart to that BrowserControl
+     * instance, as an Integer.</p>
+     *
+     */
+protected Map nativeBrowserControls = null;
 
 // Relationship Instance Variables
 
@@ -84,6 +95,7 @@ protected ProfileManager profileManager = null;
 public WrapperFactoryImpl()
 {
     super();
+    nativeBrowserControls = new HashMap();
 }
 
 
@@ -156,21 +168,15 @@ public Object newImpl(String interfaceName,
             result = new EventRegistrationImpl(this, browserControl);
         }
         if (BrowserControl.BOOKMARKS_NAME == interfaceName) {
-            if (null == bookmarks) {
-                bookmarks = new BookmarksImpl(this);
-            }
+            Assert.assert_it(null != bookmarks);
             result = bookmarks;
         }
         if (BrowserControl.PREFERENCES_NAME == interfaceName) {
-            if (null == prefs) {
-                prefs = new PreferencesImpl(this);
-            }
+            Assert.assert_it(null != prefs);
             result = prefs;
         }
         if (BrowserControl.PROFILE_MANAGER_NAME == interfaceName) {
-            if (null == profileManager) {
-                profileManager = new ProfileManagerImpl(this);
-            }
+            Assert.assert_it(null != profileManager);
             result = profileManager;
         }
     }
@@ -251,6 +257,39 @@ public int getNativeContext() {
     return nativeContext;
 }
 
+public int getNativeBrowserControl(BrowserControl bc) {
+    verifyInitialized();
+    Integer result = null;
+
+    synchronized(this) {
+        if (null == (result = (Integer) nativeBrowserControls.get(bc))) {
+            try {
+                result = new Integer(nativeCreateBrowserControl(nativeContext));
+                nativeBrowserControls.put(bc, result);
+            }
+            catch (Exception e) {
+                result = new Integer(-1);
+            }
+        }
+    }
+    return result.intValue();
+}
+
+public void destroyNativeBrowserControl(BrowserControl bc) {
+    verifyInitialized();
+    Integer result = null;
+
+    synchronized(this) {
+        if (null != (result = (Integer) nativeBrowserControls.get(bc))) {
+            try {
+                nativeDestroyBrowserControl(nativeContext, result.intValue());
+            }
+            catch (Exception e) {
+            }
+        }
+    }
+}    
+
 //
 // helper methods
 // 
@@ -289,12 +328,12 @@ protected String getPlatformCanvasClassName()
 
 /**
 
- * This is called only once, at the very beginning of program execution.
+ * <p>This is called only once, at the very beginning of program execution.
  * This method allows the native code to handle ONE TIME initialization
- * tasks.  Per-window initialization tasks are handled in the
- * WindowControlImpl native methods.  <P>
+ * tasks.  Per-window initialization tasks are handled in
+ * {@link #nativeCreateBrowserControl}. </p>
 
- * For mozilla, this means initializing XPCOM.
+ * <p>For mozilla, this means initializing XPCOM.</p>
 
  */
 
@@ -329,5 +368,20 @@ native void nativeTerminate(int nativeContext) throws Exception;
  */
 
 native boolean nativeDoesImplement(String interfaceName);
+
+/**
+
+ * <p>The one and only entry point to do per-window initialization.</p>
+
+ */
+native int nativeCreateBrowserControl(int nativeContext) throws Exception;
+
+/*
+
+ * <p>The one and only de-allocater for the nativeBrowserControl</p>
+
+ */
+native int nativeDestroyBrowserControl(int nativeContext, 
+                                       int nativeBrowserControl) throws Exception;
 
 } // end of class WrapperFactoryImpl

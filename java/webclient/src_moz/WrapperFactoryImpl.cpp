@@ -180,10 +180,6 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppSetu
         return;
     }
 
-
-    /************* PENDING(edburns): fix this when someone replies to my
-     *  20030915 post to n.p.m.embedding
-
     // appshell
     // XXX startup appshell service?
     // XXX create offscreen window for appshell service?
@@ -218,8 +214,6 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppSetu
                                     "Failed to Spinup AppShell");
         return;
     }
-    ****/
-
 
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("WrapperFactoryImpl_nativeAppSetup: exiting\n"));
@@ -238,12 +232,15 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeTermina
     
     PR_ASSERT(wcContext);
 
-    /********* PENDING(edburns): fix this when the above appshell logic
-               is fixed
+    if (wcContext->sAppShell) {
+        rv = wcContext->sAppShell->Spindown();
+        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+               ("WrapperFactoryImpl_nativeTerminate: Spindown rv: %d\n",
+                rv));
 
-    NS_RELEASE(wcContext->sAppShell);
-    wcContext->sAppShell = nsnull;
-    ***/
+        NS_RELEASE(wcContext->sAppShell);
+        wcContext->sAppShell = nsnull;
+    }
     PR_ASSERT(nsnull == wcContext->sProfile);
     PR_ASSERT(nsnull == wcContext->sProfileInternal);
 
@@ -292,5 +289,15 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeDoesImp
     ::util_ReleaseStringUTFChars(env, interfaceName, iName);
     
     return result;
+}
+
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeCreateBrowserControl
+(JNIEnv *env, jobject obj, jint nativeContext) {
+    return -1;
+}
+
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeDestroyBrowserControl
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeBrowserControl) {
+    return -1;
 }
 

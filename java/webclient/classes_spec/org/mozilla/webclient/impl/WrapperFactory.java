@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -29,11 +29,11 @@ package org.mozilla.webclient.impl;
 import org.mozilla.webclient.BrowserControl;
 
 public interface WrapperFactory {
-
+    
     public static String IMPL_NAME = "WrapperFactoryImpl";
-
+    
     public Object newImpl(String interfaceName, 
-			  BrowserControl browserControl) throws ClassNotFoundException;
+                          BrowserControl browserControl) throws ClassNotFoundException;
 
     /**
      *
@@ -48,11 +48,23 @@ public interface WrapperFactory {
      */
 
     public void initialize(String verifiedBinDirAbsolutePath) throws SecurityException, UnsatisfiedLinkError;
-
+    
     public void verifyInitialized() throws IllegalStateException;
-
+    
     public void terminate() throws Exception;
-
+    
     public int getNativeContext();
 
+    /**
+     * <p>I would like this method to be on BrowserControl itself, but
+     * that would mean exposing native elements on the public java API.
+     * Therefore, the WrapperFactory needs to be able to return the
+     * native counterpart given a java BrowserControl.</p>
+     *
+     */
+    
+    public int getNativeBrowserControl(BrowserControl bc);
+
+    public void destroyNativeBrowserControl(BrowserControl bc);
+    
 } 

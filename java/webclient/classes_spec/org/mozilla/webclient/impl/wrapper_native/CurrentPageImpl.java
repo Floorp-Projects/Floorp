@@ -92,21 +92,21 @@ public CurrentPageImpl(WrapperFactory yourFactory,
 
 public void copyCurrentSelectionToSystemClipboard()
 {
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
 
-    synchronized(myBrowserControl) {
-        nativeCopyCurrentSelectionToSystemClipboard(nativeWebShell);
+    synchronized(getBrowserControl()) {
+        nativeCopyCurrentSelectionToSystemClipboard(getNativeWebShell());
     }
 }
 
 public Selection getSelection() {
     Selection selection = new SelectionImpl();
 
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
-    synchronized(myBrowserControl) {
-        nativeGetSelection(nativeWebShell, selection);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
+    synchronized(getBrowserControl()) {
+        nativeGetSelection(getNativeWebShell(), selection);
     }
 
     return selection;
@@ -119,55 +119,55 @@ public void highlightSelection(Selection selection) {
         int startOffset = selection.getStartOffset();
         int endOffset = selection.getEndOffset();
 
-        myFactory.verifyInitialized();
-        Assert.assert_it(-1 != nativeWebShell);
-        synchronized(myBrowserControl) {
-            nativeHighlightSelection(nativeWebShell, startContainer, endContainer, startOffset, endOffset);
+        getWrapperFactory().verifyInitialized();
+        Assert.assert_it(-1 != getNativeWebShell());
+        synchronized(getBrowserControl()) {
+            nativeHighlightSelection(getNativeWebShell(), startContainer, endContainer, startOffset, endOffset);
         }
     }
 }
 
 public void clearAllSelections() {
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
-    synchronized(myBrowserControl) {
-        nativeClearAllSelections(nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
+    synchronized(getBrowserControl()) {
+        nativeClearAllSelections(getNativeWebShell());
     }
 }
 
 public void findInPage(String stringToFind, boolean forward, boolean matchCase)
 {
     ParameterCheck.nonNull(stringToFind);
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    synchronized(myBrowserControl) {
-        nativeFindInPage(nativeWebShell, stringToFind, forward, matchCase);
+    synchronized(getBrowserControl()) {
+        nativeFindInPage(getNativeWebShell(), stringToFind, forward, matchCase);
     }
 }
 
 public void findNextInPage()
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    synchronized(myBrowserControl) {
-        nativeFindNextInPage(nativeWebShell);
+    synchronized(getBrowserControl()) {
+        nativeFindNextInPage(getNativeWebShell());
     }
 }
 
 public String getCurrentURL()
 {
     String result = null;
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    synchronized(myBrowserControl) {
-        result = nativeGetCurrentURL(nativeWebShell);
+    synchronized(getBrowserControl()) {
+        result = nativeGetCurrentURL(getNativeWebShell());
     }
     return result;
 }
 
 public Document getDOM()
 {
-    Document result = nativeGetDOM(nativeWebShell);
+    Document result = nativeGetDOM(getNativeWebShell());
     return result;
 }
 
@@ -175,8 +175,8 @@ public Properties getPageInfo()
 {
   Properties result = null;
 
-  /* synchronized(myBrowserControl) {
-        result = nativeGetPageInfo(nativeWebShell);
+  /* synchronized(getBrowserControl()) {
+        result = nativeGetPageInfo(getNativeWebShell());
     }
     return result;
     */
@@ -188,7 +188,7 @@ public Properties getPageInfo()
 
 public String getSource()
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
     String HTMLContent = new String();
     String currURL = getCurrentURL();
     System.out.println("\nThe Current URL is -- " + currURL);
@@ -219,7 +219,7 @@ public String getSource()
 public byte [] getSourceBytes()
 {
     byte [] result = null;
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
 
     String HTMLContent = new String();
@@ -251,37 +251,37 @@ public byte [] getSourceBytes()
 
 public void resetFind()
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    synchronized(myBrowserControl) {
-        nativeResetFind(nativeWebShell);
+    synchronized(getBrowserControl()) {
+        nativeResetFind(getNativeWebShell());
     }
 }
 
 public void selectAll()
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    synchronized(myBrowserControl) {
-        nativeSelectAll(nativeWebShell);
+    synchronized(getBrowserControl()) {
+        nativeSelectAll(getNativeWebShell());
     }
 }
 
 public void print()
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    synchronized(myBrowserControl) {
-        nativePrint(nativeWebShell);
+    synchronized(getBrowserControl()) {
+        nativePrint(getNativeWebShell());
     }
 }
 
 public void printPreview(boolean preview)
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    synchronized(myBrowserControl) {
-        nativePrintPreview(nativeWebShell, preview);
+    synchronized(getBrowserControl()) {
+        nativePrintPreview(getNativeWebShell(), preview);
     }
 }
 
@@ -332,7 +332,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.1 2003/09/28 06:29:06 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.2 2004/03/05 15:34:24 edburns%acm.org Exp $");
 
 }
 

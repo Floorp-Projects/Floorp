@@ -61,7 +61,7 @@ protected NativeEventThread eventThread = null;
 public WindowControlImpl(WrapperFactory yourFactory, 
 			 BrowserControl yourBrowserControl)
 {
-    super(yourFactory, yourBrowserControl, false);
+    super(yourFactory, yourBrowserControl);
 }
 
 /**
@@ -77,7 +77,6 @@ public void delete()
     Assert.assert_it(null != eventThread, "eventThread shouldn't be null at delete time");
     eventThread.delete();
     eventThread = null;
-    nativeWebShell = -1;
 }
 
 //
@@ -106,11 +105,11 @@ NativeEventThread getNativeEventThread()
 public void setBounds(Rectangle newBounds)
 {
     ParameterCheck.nonNull(newBounds);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     
-    synchronized(myBrowserControl) {
-        nativeSetBounds(nativeWebShell, newBounds.x, newBounds.y,
+    synchronized(getBrowserControl()) {
+        nativeSetBounds(getNativeWebShell(), newBounds.x, newBounds.y,
                         newBounds.width, newBounds.height);
     }
 }
@@ -119,16 +118,18 @@ public void createWindow(int nativeWindow, Rectangle bounds)
 {
     ParameterCheck.greaterThan(nativeWindow, 0);
     ParameterCheck.nonNull(bounds);
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    synchronized(myBrowserControl) {
+    synchronized(getBrowserControl()) {
         synchronized(this) {
-            nativeWebShell = nativeCreateInitContext(nativeWindow, bounds.x, 
+            /**
+            getNativeWebShell() = nativeCreateInitContext(nativeWindow, bounds.x, 
                                                      bounds.y, bounds.width, 
-                                                     bounds.height, myBrowserControl);
+                                                     bounds.height, getBrowserControl());
+            **/
             eventThread = new NativeEventThread("EventThread-" +
-                                                nativeWebShell,
-                                                myBrowserControl);
+                                                getNativeWebShell(),
+                                                getBrowserControl());
 
             // IMPORTANT: the nativeEventThread initializes all the
             // native browser stuff, then sends us notify().
@@ -146,23 +147,23 @@ public void createWindow(int nativeWindow, Rectangle bounds)
 
 public int getNativeWebShell()
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
-    return nativeWebShell;
+    return getNativeWebShell();
 }
 
 public void moveWindowTo(int x, int y)
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
     
-    synchronized(myBrowserControl) {
-        nativeMoveWindowTo(nativeWebShell, x, y);
+    synchronized(getBrowserControl()) {
+        nativeMoveWindowTo(getNativeWebShell(), x, y);
     }
 }
 
 public void removeFocus()
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
     
     throw new UnimplementedException("\nUnimplementedException -----\n API Function WindowControl::removeFocus has not yet been implemented.\n");
 
@@ -170,25 +171,25 @@ public void removeFocus()
     
 public void repaint(boolean forceRepaint)
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
     
-    synchronized(myBrowserControl) {
-        nativeRepaint(nativeWebShell, forceRepaint);
+    synchronized(getBrowserControl()) {
+        nativeRepaint(getNativeWebShell(), forceRepaint);
     }
 }
 
 public void setVisible(boolean newState)
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
     
-    synchronized(myBrowserControl) {
-        nativeSetVisible(nativeWebShell, newState);
+    synchronized(getBrowserControl()) {
+        nativeSetVisible(getNativeWebShell(), newState);
     }
 }
 
 public void setFocus()
 {
-    myFactory.verifyInitialized();
+    getWrapperFactory().verifyInitialized();
 
     throw new UnimplementedException("\nUnimplementedException -----\n API Function WindowControl::setFocus has not yet been implemented.\n");
 }
@@ -217,7 +218,7 @@ public native void nativeSetBounds(int webShellPtr, int x, int y,
  */
 
 public native int nativeCreateInitContext(int nativeWindow, 
-                                          int x, int y, int width, int height, BrowserControl myBrowserControlImpl);
+                                          int x, int y, int width, int height, BrowserControl BrowserControlImpl);
 
 public native void nativeDestroyInitContext(int nativeWindow);
 
@@ -244,7 +245,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.1 2003/09/28 06:29:07 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.2 2004/03/05 15:34:24 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

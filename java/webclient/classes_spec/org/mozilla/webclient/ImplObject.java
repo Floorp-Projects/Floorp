@@ -61,18 +61,11 @@ public abstract class ImplObject extends Object
 
 /**
 
- * My ivars are public for fast access from subclasses in the wrapper_*
- * packages.
-
- */
-
-/**
-
  * The BrowserControl to which I'm attached, used for locking and communication.
 
  */
 
-public BrowserControl myBrowserControl = null;
+private BrowserControl myBrowserControl = null;
 
 
 //
@@ -86,6 +79,10 @@ public ImplObject(BrowserControl yourBrowserControl)
     myBrowserControl = yourBrowserControl;
 }
 
+public BrowserControl getBrowserControl() {
+    return myBrowserControl;
+}
+ 
 /**
 
  * I know Java has automatic garbage collection and all, but explicitly

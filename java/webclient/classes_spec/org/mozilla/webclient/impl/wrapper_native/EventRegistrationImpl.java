@@ -78,7 +78,7 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
         // pull out the NativeEventThread from the WindowControl
     try {
         WindowControl windowControl = (WindowControl)
-            myBrowserControl.queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
+            getBrowserControl().queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
 
         if (windowControl instanceof WindowControlImpl) {
             nativeEventThread =
@@ -120,8 +120,8 @@ public void delete()
 public void addDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -132,7 +132,7 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
         throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
     }
 
-    synchronized(myBrowserControl) {
+    synchronized(getBrowserControl()) {
         nativeEventThread.addListener(listenerWrapper);
     }
 }
@@ -140,8 +140,8 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
 public void removeDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -152,7 +152,7 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
         throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
     }
 
-    synchronized(myBrowserControl) {
+    synchronized(getBrowserControl()) {
         nativeEventThread.removeListener(listenerWrapper);
     }
 }
@@ -160,8 +160,8 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
 public void addMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -185,7 +185,7 @@ public void addMouseListener(MouseListener listener)
         throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
     }
 
-    synchronized(myBrowserControl) {
+    synchronized(getBrowserControl()) {
         nativeEventThread.addListener(listenerWrapper);
     }
 }
@@ -193,8 +193,8 @@ public void addMouseListener(MouseListener listener)
 public void removeMouseListener(MouseListener listener)
 {
     ParameterCheck.nonNull(listener);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -213,7 +213,7 @@ public void removeMouseListener(MouseListener listener)
         throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
     }
 
-    synchronized(myBrowserControl) {
+    synchronized(getBrowserControl()) {
         nativeEventThread.removeListener(listenerWrapper);
     }
 }
@@ -221,8 +221,8 @@ public void removeMouseListener(MouseListener listener)
 public void addNewWindowListener(NewWindowListener listener)
 {
     ParameterCheck.nonNull(listener);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -233,7 +233,7 @@ public void addNewWindowListener(NewWindowListener listener)
         throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
     }
 
-    synchronized(myBrowserControl) {
+    synchronized(getBrowserControl()) {
         nativeEventThread.addListener(listenerWrapper);
     }
 }
@@ -241,8 +241,8 @@ public void addNewWindowListener(NewWindowListener listener)
 public void removeNewWindowListener(NewWindowListener listener)
 {
     ParameterCheck.nonNull(listener);
-    myFactory.verifyInitialized();
-    Assert.assert_it(-1 != nativeWebShell);
+    getWrapperFactory().verifyInitialized();
+    Assert.assert_it(-1 != getNativeWebShell());
     Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
@@ -253,7 +253,7 @@ public void removeNewWindowListener(NewWindowListener listener)
         throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
     }
 
-    synchronized(myBrowserControl) {
+    synchronized(getBrowserControl()) {
         nativeEventThread.removeListener(listenerWrapper);
     }
 }
@@ -271,7 +271,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.1 2003/09/28 06:29:06 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.2 2004/03/05 15:34:24 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

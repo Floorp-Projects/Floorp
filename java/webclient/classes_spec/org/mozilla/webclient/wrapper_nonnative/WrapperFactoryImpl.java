@@ -153,23 +153,4 @@ public void terminate() throws Exception
 System.out.println("\n\n\n +++++ You should Never have reached Here - in terminate +++++ \n\n\n");
 }
 
-// ----VERTIGO_TEST_START
-
-//
-// Test methods
-//
-
-public static void main(String [] args)
-{
-    Assert.setEnabled(true);
-    WrapperFactory me = new WrapperFactoryImpl();
-    Log.setApplicationName("WrapperFactoryImpl");
-    Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.1 2001/07/27 21:01:13 ashuk%eng.sun.com Exp $");
-
-    
-}
-
-// ----VERTIGO_TEST_END
-
 } // end of class WrapperFactoryImpl

@@ -150,6 +150,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
 
     PR_ASSERT(wcContext);
 
+    nsresult rv = NS_OK;
+    
+    rv = 
+        wcContext->sProfile->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("ProfileManagerImpl_nativeShutdown: ShutDownCurrentProfile: rv: %d\n", rv));
+
     NS_RELEASE(wcContext->sProfile);
     wcContext->sProfile = nsnull;
     NS_RELEASE(wcContext->sProfileInternal);
