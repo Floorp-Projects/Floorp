@@ -609,11 +609,10 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
                                                const nsHTMLReflowState& aReflowState)
 {
+  gsDebug=PR_TRUE;
   if (gsDebug) printf("TRGF CalculateRowHeights begin\n");
   // iterate children and for each row get its height
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
-  nscoord topInnerMargin = 0;
-  nscoord bottomInnerMargin = 0;
   PRInt32 numRows;
   GetRowCount(numRows);
   PRInt32 *rowHeights = new PRInt32[numRows];
@@ -635,21 +634,13 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
       nscoord maxCellTopMargin    = ((nsTableRowFrame*)rowFrame)->GetChildMaxTopMargin();
       nscoord maxCellBottomMargin = ((nsTableRowFrame*)rowFrame)->GetChildMaxBottomMargin();
       nscoord maxRowHeight = maxCellHeight + maxCellTopMargin + maxCellBottomMargin;
-      if (gsDebug) printf("TRGF SWC: for row %p, maxCellH=%d, maxCTM=%d, maxCBM=%d\n",
-                            rowFrame, maxCellHeight, maxCellTopMargin, maxCellBottomMargin);
-      if (gsDebug) printf("TRGF SWC: rowHeight=%d, rowIndex=%d\n",
-                            maxRowHeight, rowIndex);
+      if (gsDebug) printf("TRGF CalcRowH: for row %d(%p), maxCellH=%d, maxCTopMargin=%d, maxCBM=%d\n",
+                            rowIndex, rowFrame, maxCellHeight, maxCellTopMargin, maxCellBottomMargin);
+      if (gsDebug) printf("  rowHeight=%d\n", maxRowHeight);
 
       // save the row height for pass 2 below
       rowHeights[rowIndex] = maxRowHeight;
-
       // Update top and bottom inner margin if applicable
-      if (0 == rowIndex) {
-        topInnerMargin = maxCellTopMargin;
-      }
-      if ((rowIndex + 1) == numRows) {
-        bottomInnerMargin = maxCellBottomMargin;
-      }
       rowIndex++;
     }
     // Get the next row
@@ -670,7 +661,12 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
    */
   /* TODO
    * 1. optimization, if (PR_TRUE==atLeastOneRowSpanningCell) ... otherwise skip this step entirely
+   *    we can get this info trivially from the cell map
    */
+  nsTableFrame *tableFrame=nsnull;
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if (NS_FAILED(rv) || nsnull==tableFrame)
+    return;
   PRInt32 rowGroupHeight;
   for (PRInt32 counter=0; counter<2; counter++)
   {
@@ -683,7 +679,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
       rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
       if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       {
-        if (gsDebug) printf("TRGF SWC: for row %p...\n", rowFrame);
+        if (gsDebug) printf("TRGF CalcRowH: Step 2 for row %d (%p)...\n", rowIndex, rowFrame);
         // check this row for a cell with rowspans
         nsIFrame *cellFrame;
         rowFrame->FirstChild(nsnull, cellFrame);
@@ -693,30 +689,23 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
           cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
           if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
           {
-            if (gsDebug) printf("TRGF SWC:   for cell %p...\n", cellFrame);
-            nsTableFrame *tableFrame=nsnull;
-            nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-            if (NS_FAILED(rv) || nsnull==tableFrame)
-              return;
+            if (gsDebug) printf("TRGF CalcRowH:   for cell %p...\n", cellFrame);
             PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex,(nsTableCellFrame*)cellFrame);
             if (rowSpan > 1)
             { // found a cell with rowspan > 1, determine its height
-              if (gsDebug) printf("TRGF SWC:   cell %p has rowspan=%d\n", cellFrame, rowSpan);
+              if (gsDebug) printf("TRGF CalcRowH:   cell %p has rowspan=%d\n", cellFrame, rowSpan);
               nscoord heightOfRowsSpanned = 0;
               PRInt32 i;
               for ( i = 0; i < rowSpan; i++)
                 heightOfRowsSpanned += rowHeights[rowIndex + i];
-              if (gsDebug) printf("TRGF SWC:   heightOfRowsSpanned=%d\n", heightOfRowsSpanned);
+              if (gsDebug) printf("TRGF CalcRowH:   heightOfRowsSpanned=%d\n", heightOfRowsSpanned);
         
-              heightOfRowsSpanned -= topInnerMargin + bottomInnerMargin;
-              if (gsDebug) printf("TRGF SWC:   after margins, heightOfRowsSpanned=%d\n", heightOfRowsSpanned);
-
               /* if the cell height fits in the rows, expand the spanning cell's height and slap it in */
               nsSize  cellFrameSize;
               cellFrame->GetSize(cellFrameSize);
               if (heightOfRowsSpanned > cellFrameSize.height)
               {
-                if (gsDebug) printf("TRGF SWC:   cell had h=%d, set to %d\n", 
+                if (gsDebug) printf("TRGF CalcRowH:   spanning cell fits in rows spanned, had h=%d, expanded to %d\n", 
                                     cellFrameSize.height, heightOfRowsSpanned);
                 cellFrame->SizeTo(cellFrameSize.width, heightOfRowsSpanned);
                 // Realign cell content based on new height
@@ -728,27 +717,30 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
               else
               {
                 PRInt32 excessHeight = cellFrameSize.height - heightOfRowsSpanned;
-                PRInt32 excessHeightPerRow = excessHeight/rowSpan;
-                if (gsDebug) printf("TRGF SWC:   excessHeight=%d, excessHeightPerRow=%d\n", 
-                                    excessHeight, excessHeightPerRow);
-
+                if (gsDebug) printf("TRGF CalcRowH:   excessHeight=%d\n", excessHeight);
                 // for every row starting at the row with the spanning cell...
                 nsTableRowFrame *rowFrameToBeResized = (nsTableRowFrame *)rowFrame;
+                PRInt32 *excessForRow = new PRInt32[numRows];
+                nsCRT::memset (excessForRow, 0, numRows*sizeof(PRInt32));
                 for (i = rowIndex; i < numRows; i++)
                 {
-                  if (gsDebug) printf("TRGF SWC:     for row index=%d\n", i);
+                  if (gsDebug) printf("TRGF CalcRowH:     for row index=%d\n", i);
                   // if the row is within the spanned range, resize the row
                   if (i < (rowIndex + rowSpan))
                   {
+                    float percent = ((float)rowHeights[i]) / ((float)heightOfRowsSpanned);
+                    excessForRow[i] = NSToCoordRound(((float)(excessHeight)) * percent); 
+                    if (gsDebug) printf("TRGF CalcRowH:   for row %d, excessHeight=%d from percent %f\n", 
+                                        i, excessForRow[i], percent);
                     // update the row height
-                    rowHeights[i] += excessHeightPerRow;
+                    rowHeights[i] += excessForRow[i];
 
                     // adjust the height of the row
                     nsSize  rowFrameSize;
                     rowFrameToBeResized->GetSize(rowFrameSize);
                     rowFrameToBeResized->SizeTo(rowFrameSize.width, rowHeights[i]);
-                    if (gsDebug) printf("TRGF SWC:     row %p sized to %d\n", 
-                                        rowFrameToBeResized, rowHeights[i]);
+                    if (gsDebug) printf("TRGF CalcRowH:     row %d (%p) sized to %d\n", 
+                                        i, rowFrameToBeResized, rowHeights[i]);
                   }
 
                   // if we're dealing with a row below the row containing the spanning cell, 
@@ -758,17 +750,19 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                     nsRect rowRect;
                
                     rowFrameToBeResized->GetRect(rowRect);
-                    nscoord delta = excessHeightPerRow * (i - rowIndex);
+                    nscoord delta=0;
+                    for (PRInt32 j=0; j<i; j++)
+                      delta += excessForRow[j];
                     if (delta > excessHeight)
                       delta = excessHeight;
                     rowFrameToBeResized->MoveTo(rowRect.x, rowRect.y + delta);
-                    if (gsDebug) printf("TRGF SWC:     row %p moved to %d after delta %d\n", 
-                                        rowFrameToBeResized, rowRect.y + delta, delta);
+                    if (gsDebug) printf("TRGF CalcRowH:     row %d (%p) moved to %d after delta %d\n", 
+                                         i, rowFrameToBeResized, rowRect.y + delta, delta);
                   }
-
                   // Get the next row frame
                   rowFrameToBeResized->GetNextSibling((nsIFrame*&)rowFrameToBeResized);
                 }
+                delete []excessForRow;
               }
             }
           }
@@ -784,7 +778,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
     }
   }
 
-  // finally, notify the rows of their new heights
+  /* step 3: finally, notify the rows of their new heights */
   rowFrame = mFirstChild;
   while (nsnull != rowFrame)
   {
@@ -803,6 +797,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
 
   // cleanup
   delete []rowHeights;
+  gsDebug=PR_FALSE;
 }
 
 nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aPresContext,

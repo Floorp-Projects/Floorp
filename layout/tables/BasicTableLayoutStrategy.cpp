@@ -2196,7 +2196,8 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
 
 
 void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth, 
-                                                        nscoord aTableWidth, PRBool aShrinkFixedCols)
+                                                        nscoord aTableWidth, 
+                                                        PRBool  aShrinkFixedCols)
 {
   if (PR_TRUE==gsDebug)
   {
@@ -2213,6 +2214,9 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth,
   PRInt32 numFixedColumns=0;
   PRInt32 *fixedColumns=nsnull;
   mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
+  PRInt32 numAutoColumns=0;
+  PRInt32 *autoColumns=nsnull;
+  mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
   nscoord excess = aComputedWidth - aTableWidth;
   nscoord minDiff;    // the smallest non-zero delta between a column's current width and its min width
   PRInt32 * colsToShrink = new PRInt32[mNumCols];
@@ -2225,24 +2229,37 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth,
       colsToShrink[colIndex]=0;
     minDiff=0;
 
-    // determine what columns we can take remove width from
+    // determine what columns we can remove width from
     PRInt32 numColsToShrink = 0;
-    for (colIndex=0; colIndex<mNumCols; colIndex++)
+    PRBool shrinkAutoOnly=PR_TRUE;
+    PRBool keepLooking=PR_TRUE;
+    while (PR_TRUE==keepLooking)
     {
-      nscoord currentColWidth = mTableFrame->GetColumnWidth(colIndex);
-      nsTableColFrame *colFrame;
-      mTableFrame->GetColumnFrame(colIndex, colFrame);
-      nscoord minColWidth = colFrame->GetMinColWidth();
-      if (currentColWidth==minColWidth)
-        continue;
-      if ((PR_FALSE==aShrinkFixedCols) && 
-          (PR_TRUE==IsColumnInList(colIndex, fixedColumns, numFixedColumns)))
-        continue;
-      colsToShrink[numColsToShrink] = colIndex;
-      numColsToShrink++;
-      nscoord diff = currentColWidth - minColWidth;
-      if ((0==minDiff) || (diff<minDiff))
-        minDiff = diff;
+      for (colIndex=0; colIndex<mNumCols; colIndex++)
+      {
+        nscoord currentColWidth = mTableFrame->GetColumnWidth(colIndex);
+        nsTableColFrame *colFrame;
+        mTableFrame->GetColumnFrame(colIndex, colFrame);
+        nscoord minColWidth = colFrame->GetAdjustedMinColWidth();
+        if (currentColWidth==minColWidth)
+          continue;
+        if ((PR_FALSE==aShrinkFixedCols) && 
+            (PR_TRUE==IsColumnInList(colIndex, fixedColumns, numFixedColumns)))
+          continue;
+        if ((PR_TRUE==shrinkAutoOnly) && 
+            (PR_FALSE==IsColumnInList(colIndex, autoColumns, numAutoColumns)))
+          continue;
+        colsToShrink[numColsToShrink] = colIndex;
+        numColsToShrink++;
+        nscoord diff = currentColWidth - minColWidth;
+        if ((0==minDiff) || (diff<minDiff))
+          minDiff = diff;
+      }
+      if (PR_FALSE==shrinkAutoOnly)
+        keepLooking=PR_FALSE; // we've looked everywhere, so bail.  this breaks us out of the loop
+      if (0!=numColsToShrink)
+        keepLooking=PR_FALSE; // we found at least one column to shrink, so bail.  this breaks us out of the loop
+      shrinkAutoOnly=PR_FALSE;// this guarantees we'll go through this loop only one more time
     }
     // if there are no columns we can remove space from, we're done
     if (0==numColsToShrink)
