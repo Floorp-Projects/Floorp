@@ -119,9 +119,9 @@ function loadEventsFromFile()
   fp.defaultExtension = "ics";
    
   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
-  fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
   fp.appendFilter( filterXcs, "*" + extensionXcs );
   fp.appendFilter( filterOutlookCsv, "*" + extensionCsv );
+  fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
   fp.show();
   var filesToAppend = fp.files;
 
@@ -141,6 +141,7 @@ function loadEventsFromFile()
 
           switch (fp.filterIndex) {
           case 0 : // ics
+          case 3 : // vcs
             tempEventArray = parseIcalData( aDataStream );
             for (i=0; i < tempEventArray.length; i++)
               calendarEventArray[calendarEventArray.length]  = tempEventArray[i];    
@@ -560,7 +561,7 @@ function readDataFromFile( aFilePath, charset )
    }
    catch(ex)
    {
-      alert( calendarStringBundle.GetStringFromName( "unableToRead" ) + aFilePath );
+      alert( calendarStringBundle.GetStringFromName( "unableToRead" ) + aFilePath + "\n"+ex );
    }
 
    return aDataStream;
@@ -601,12 +602,12 @@ function saveEventsToFile( calendarEventArray )
    fp.defaultExtension = "ics";
 
    fp.appendFilter( filterCalendar, "*" + extensionCalendar );
-   fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
    fp.appendFilter( filterRtf, "*" + extensionRtf );
    fp.appendFilters(nsIFilePicker.filterHTML);
    fp.appendFilter( filterCsv, "*" + extensionCsv );
    fp.appendFilter( filterXcs, "*" + extensionXcs );
    fp.appendFilter( filterRdf, "*" + extensionRdf );
+   fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
 
    fp.show();
 
@@ -1297,7 +1298,7 @@ function startImport() {
         onAlarm : function( calendarEvent ) {},
         onError : function( severity, errorid, errorstring ) 
         {
-            this.errorreport=this.errorreport+errorstring+"\n";
+            this.errorreport=this.errorreport+calendarStringBundle.GetStringFromName( errorid )+"\n";
         },
         showErrors : function () {
             if( this.errorreport != "" )
