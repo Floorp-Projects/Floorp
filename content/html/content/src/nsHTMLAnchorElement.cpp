@@ -229,7 +229,6 @@ nsHTMLAnchorElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) 
   return NS_OK;
 }
 
-
 // XXX support suppress in here
 NS_IMETHODIMP
 nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
@@ -243,8 +242,13 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                        aFlags, aEventStatus);
 
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus)) {
-    switch (aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
+    // If this anchor element has an HREF then it is sensitive to
+    // mouse events (otherwise ignore them).
+    nsAutoString href;
+    nsresult result = GetAttribute(nsString("href"), href);
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      switch (aEvent->message) {
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
       {
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
@@ -255,7 +259,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       }
       break;
 
-    case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_LEFT_BUTTON_UP:
       {
         nsIEventStateManager *stateManager;
         nsIContent *activeLink;
@@ -272,41 +276,39 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
           HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
 
           if (nsEventStatus_eConsumeNoDefault != status) {
-            nsAutoString base, href, target;
+            nsAutoString base, target;
             GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-            GetAttribute(nsString("href"), href);
             GetAttribute(nsString("target"), target);
             if (target.Length() == 0) {
               GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
             }
-            mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_TRUE);
+            mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
+                               base, href, target, PR_TRUE);
             aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
         }
       }
       break;
 
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      // XXX Bring up a contextual menu provided by the application
-      break;
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+        // XXX Bring up a contextual menu provided by the application
+        break;
 
-    case NS_MOUSE_ENTER:
-      //mouse enter doesn't work yet.  Use move until then.
+      case NS_MOUSE_ENTER:
       {
-        nsAutoString base, href, target;
+        nsAutoString base, target;
         GetAttribute(nsString(NS_HTML_BASE_HREF), base);
-        GetAttribute(nsString("href"), href);
         GetAttribute(nsString("target"), target);
         if (target.Length() == 0) {
           GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
         }
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_FALSE);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
+                           base, href, target, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
 
-      // XXX this doesn't seem to do anything yet
-    case NS_MOUSE_EXIT:
+      case NS_MOUSE_EXIT:
       {
         nsAutoString empty;
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace, empty, empty, empty, PR_FALSE);
@@ -314,8 +316,9 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       }
       break;
 
-    default:
-      break;
+      default:
+        break;
+      }
     }
   }
   return ret;
