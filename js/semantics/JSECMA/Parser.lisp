@@ -79,7 +79,7 @@
        (define (double-result (d double)) value-or-exception
          (oneof normal (oneof double-value d)))
        (define (integer-result (i integer)) value-or-exception
-         (double-result (rational-to-double (integer-to-rational i))))
+         (double-result (rational-to-double i)))
        (define (string-result (s string)) value-or-exception
          (oneof normal (oneof string-value s)))
        (define (object-result (o object)) value-or-exception
@@ -112,7 +112,7 @@
          (case rv
            (value-reference (typed-oneof void-or-exception abrupt (make-error (oneof put-value-error))))
            ((place-reference r place) ((& put (& base r)) (& property r) v))
-           (virtual-reference (bottom void-or-exception))))
+           (virtual-reference (bottom))))
        
        (%section "Coercions")
        
@@ -133,8 +133,8 @@
            (null-value (oneof normal 0.0))
            ((boolean-value b boolean) (oneof normal (coerce-boolean-to-double b)))
            ((double-value d double) (oneof normal d))
-           (string-value (bottom double-or-exception))
-           (object-value (bottom double-or-exception))))
+           (string-value (bottom))
+           (object-value (bottom))))
        
        (define (coerce-to-uint32 (v value)) integer-or-exception
          (letexc (d double (coerce-to-double v))
@@ -154,9 +154,9 @@
            (undefined-value (oneof normal "undefined"))
            (null-value (oneof normal "null"))
            ((boolean-value b boolean) (if b (oneof normal "true") (oneof normal "false")))
-           (double-value (bottom string-or-exception))
+           (double-value (bottom))
            ((string-value s string) (oneof normal s))
-           (object-value (bottom string-or-exception))))
+           (object-value (bottom))))
        
        (define (coerce-to-primitive (v value) (hint default-value-hint)) value-or-exception
          (case v
@@ -170,16 +170,16 @@
        (define (coerce-to-object (v value)) object-or-exception
          (case v
            (((undefined-value null-value)) (typed-oneof object-or-exception abrupt (make-error (oneof coerce-to-object-error))))
-           (boolean-value (bottom object-or-exception))
-           (double-value (bottom object-or-exception))
-           (string-value (bottom object-or-exception))
+           (boolean-value (bottom))
+           (double-value (bottom))
+           (string-value (bottom))
            ((object-value o object) (oneof normal o))))
        
        (%section "Environments")
        
        (deftype env (tuple (this object-or-null)))
        (define (lookup-identifier (e env :unused) (id string :unused)) reference-or-exception
-         (bottom reference-or-exception))
+         (bottom))
        
        (%section "Terminal Actions")
        
