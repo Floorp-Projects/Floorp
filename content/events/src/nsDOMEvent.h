@@ -141,18 +141,20 @@ public:
   NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget);
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode);
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
-  NS_IMETHOD    InitMouseEvent(const nsAReadableString& aTypeArg,
-                               PRBool aCtrlKeyArg, PRBool aAltKeyArg,
-                               PRBool aShiftKeyArg, PRBool aMetaKeyArg,
-                               PRInt32 aScreenXArg, PRInt32 aScreenYArg,
-                               PRInt32 aClientXArg, PRInt32 aClientYArg,
-                               PRUint16 aButtonArg, PRUint16 aDetailArg);
+  NS_IMETHOD    InitMouseEvent(const nsAReadableString & aTypeArg, 
+                               PRBool aCanBubbleArg, PRBool aCancelableArg, 
+                               nsIDOMAbstractView *aViewArg, PRUint16 aDetailArg, 
+                               PRInt32 aScreenXArg, PRInt32 aDcreenYArg, 
+                               PRInt32 aClientXArg, PRInt32 aClientYArg, 
+                               PRBool aCtrlKeyArg, PRBool aAltKeyArg, 
+                               PRBool aShiftKeyArg, PRBool aMetaKeyArg, 
+                               PRUint16 aButtonArg, nsIDOMEventTarget *aRelatedTargetArg);
   NS_IMETHOD    InitKeyEvent(const nsAReadableString& aTypeArg,
                              PRBool aCanBubbleArg, PRBool aCancelableArg,
+                             nsIDOMAbstractView* aViewArg, 
                              PRBool aCtrlKeyArg, PRBool aAltKeyArg,
                              PRBool aShiftKeyArg, PRBool aMetaKeyArg,
-                             PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg,
-                             nsIDOMAbstractView* aViewArg);
+                             PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg);
 
   // nsIDOMNSUIEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);

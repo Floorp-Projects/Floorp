@@ -136,7 +136,8 @@ nsDOMMutationEvent::InitMutationEvent(const nsAReadableString& aTypeArg, PRBool 
                                       PRBool aCancelableArg, nsIDOMNode* aRelatedNodeArg, 
                                       const nsAReadableString& aPrevValueArg, 
                                       const nsAReadableString& aNewValueArg, 
-                                      const nsAReadableString& aAttrNameArg)
+                                      const nsAReadableString& aAttrNameArg,
+                                      PRUint16 aAttrChangeArg)
 {
   NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
@@ -151,9 +152,8 @@ nsDOMMutationEvent::InitMutationEvent(const nsAReadableString& aTypeArg, PRBool 
       mutation->mNewAttrValue = getter_AddRefs(NS_NewAtom(aNewValueArg));
     if (!aAttrNameArg.IsEmpty()) {
       mutation->mAttrName = getter_AddRefs(NS_NewAtom(aAttrNameArg));
-      // I guess we assume modification. Weird that this isn't specifiable.
-      mutation->mAttrChange = nsIDOMMutationEvent::MODIFICATION;
     }
+    mutation->mAttrChange = aAttrChangeArg;
   }
     
   return NS_OK;
