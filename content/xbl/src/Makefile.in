@@ -48,6 +48,7 @@ CPPSRCS		= \
     nsXBLXULHandler.cpp \
     nsXBLFormHandler.cpp \
     nsXBLScrollHandler.cpp \
+	nsXBLContextMenuHandler.cpp \
 		nsXBLService.cpp \
 		nsBindingManager.cpp \
 		nsXBLInsertionPoint.cpp \

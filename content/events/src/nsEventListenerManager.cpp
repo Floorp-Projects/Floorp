@@ -593,6 +593,10 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, nsIID& aI
     aIID = NS_GET_IID(nsIDOMMutationListener);
     *aFlags = NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
   }
+  else if (aType == nsLayoutAtoms::oncontextmenu) {
+    aIID = NS_GET_IID(nsIDOMContextMenuListener);
+    *aFlags = NS_EVENT_BITS_CONTEXT_MENU;
+  }
   else {
     return NS_ERROR_FAILURE;
   }
@@ -1123,28 +1127,28 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
         if (NS_OK == ret) {
           for (int i=0; mContextMenuListeners && i<mContextMenuListeners->Count(); i++) {
             nsListenerStruct *ls;
-            nsIDOMContextMenuListener *mContextMenuListener;
+            nsIDOMContextMenuListener *contextMenuListener;
 
             ls = (nsListenerStruct*)mContextMenuListeners->ElementAt(i);
 
             if (ls->mFlags & aFlags) {
-              if (NS_OK == ls->mListener->QueryInterface(kIDOMContextMenuListenerIID, (void**)&mContextMenuListener)) {
+              if (NS_OK == ls->mListener->QueryInterface(kIDOMContextMenuListenerIID, (void**)&contextMenuListener)) {
                 switch(aEvent->message) {
                   case NS_CONTEXTMENU:
-                    ret = mContextMenuListener->ContextMenu(*aDOMEvent);
+                    ret = contextMenuListener->ContextMenu(*aDOMEvent);
                     break;
                   default:
                     break;
                 }
-                NS_RELEASE(mContextMenuListener);
+                NS_RELEASE(contextMenuListener);
               }
               else {
                 PRBool correctSubType = PR_FALSE;
                 PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_CONTEXTMENU:
-                    subType = NS_EVENT_BITS_CONTEXTMENU;
-                    if (ls->mSubType & NS_EVENT_BITS_CONTEXTMENU) {
+                    subType = NS_EVENT_BITS_CONTEXT_MENU;
+                    if (ls->mSubType & NS_EVENT_BITS_CONTEXT_MENU) {
                       correctSubType = PR_TRUE;
                     }
                     break;

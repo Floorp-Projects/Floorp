@@ -3005,7 +3005,12 @@ PRBool  nsDocument::InternalRegisterCompileEventHandler(JSContext* aContext, jsv
           atom.get() == nsLayoutAtoms::onselect || atom.get() == nsLayoutAtoms::onload || 
           atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
           atom.get() == nsLayoutAtoms::onerror || atom.get() == nsLayoutAtoms::onpaint || 
-          atom.get() == nsLayoutAtoms::onresize || atom.get() == nsLayoutAtoms::onscroll) {
+          atom.get() == nsLayoutAtoms::onresize || atom.get() == nsLayoutAtoms::onscroll ||
+          atom.get() == nsLayoutAtoms::oncontextmenu || atom.get() == nsLayoutAtoms::onDOMAttrModified ||
+          atom.get() == nsLayoutAtoms::onDOMCharacterDataModified || atom.get() == nsLayoutAtoms::onDOMSubtreeModified ||
+          atom.get() == nsLayoutAtoms::onDOMNodeInsertedIntoDocument || atom.get() == nsLayoutAtoms::onDOMNodeRemovedFromDocument ||
+          atom.get() == nsLayoutAtoms::onDOMNodeInserted || atom.get() == nsLayoutAtoms::onDOMNodeRemoved
+          ) {
 
         nsCOMPtr<nsIEventListenerManager> manager;
         GetListenerManager(getter_AddRefs(manager));

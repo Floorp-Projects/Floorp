@@ -66,6 +66,7 @@
 #include "nsIDOMMenuListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMMutationListener.h"
+#include "nsIDOMContextMenuListener.h"
 
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -82,6 +83,7 @@
 #include "nsXBLFormHandler.h"
 #include "nsXBLDragHandler.h"
 #include "nsXBLLoadHandler.h"
+#include "nsXBLContextMenuHandler.h"
 
 #include "nsXBLBinding.h"
 
@@ -222,6 +224,8 @@ nsXBLBinding::kEventHandlerMap[] = {
     { "DOMNodeRemoved",               nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
     { "DOMNodeInsertedIntoDocument",  nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
     { "DOMNodeRemovedFromDocument",   nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
+
+    { "contextmenu", nsnull, &NS_GET_IID(nsIDOMContextMenuListener) },
 
     { nsnull,            nsnull, nsnull                                 }
 };
@@ -1000,6 +1004,12 @@ nsXBLBinding::InstallEventHandlers()
           NS_NewXBLMutationHandler(receiver, curr, &mutationHandler);
           receiver->AddEventListener(type, (nsIDOMMutationListener*)mutationHandler, useCapture);
           handler = mutationHandler;
+        }
+        else if(iid.Equals(NS_GET_IID(nsIDOMContextMenuListener))) {
+          nsXBLContextMenuHandler* menuHandler;
+          NS_NewXBLContextMenuHandler(receiver, curr, &menuHandler);
+          receiver->AddEventListener(type, (nsIDOMContextMenuListener*)menuHandler, useCapture);
+          handler = menuHandler;
         }
         else {
           NS_WARNING("***** Non-compliant XBL event listener attached! *****");
