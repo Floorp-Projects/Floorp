@@ -337,7 +337,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         rv = NS_OK;
         break;
 
-    case nsIAccessibleEventReceiver::EVENT_ATK_LINK_SELECTED:
+    case nsIAccessibleEvent::EVENT_ATK_LINK_SELECTED:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_LINK_SELECTED\n"));
         g_signal_emit_by_name(accWrap->GetAtkObject(),
                               "link_selected");
