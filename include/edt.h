@@ -304,7 +304,11 @@ XP_Bool EDT_IsDraggingTable( MWContext *pContext );
 
 void EDT_DoubleClick( MWContext *context, int32 x, int32 y );
 void EDT_SelectObject( MWContext *context, int32 x, int32 y);
-EDT_ClipboardResult EDT_ReturnKey( MWContext *context );
+EDT_ClipboardResult EDT_ReturnKey( MWContext *pContext );
+/* Indent one level after doing regular ReturnKey processing 
+ * Makes typing in lists easier
+*/
+EDT_ClipboardResult EDT_ReturnKeyAndIndent( MWContext *pContext );
 
 /* Do what the TAB key should do
  * Moves from cell to cell in Tables (in direction given by bForward)

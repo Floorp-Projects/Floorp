@@ -1195,10 +1195,17 @@ void CNetscapeEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
                 return;
 
             case VK_RETURN:
-                if (bShift)
-                    OnInsertLineBreak();
-                else if (!(GetKeyState(VK_MENU) & 0x8000))      // ALT+Enter is handled thru accelerators
-                    EDT_ReturnKey(pMWContext);
+                // Note: ALT+Enter is handled thru accelerator 
+                if (!(GetKeyState(VK_MENU) & 0x8000)) // Be sure Alt is not pressed
+                {
+                    if (bShift)
+                        OnInsertLineBreak();
+                    else if(bControl)
+                        // For easier list typing - indent one level
+                        EDT_ReturnKeyAndIndent(pMWContext);
+                    else 
+                        EDT_ReturnKey(pMWContext);
+                }
                 return;
 
             case VK_LEFT:
