@@ -39,7 +39,7 @@ OBJS =					    \
 	.\$(OBJDIR)\nsEditorMode.obj	    \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib
+LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib -I$(PUBLIC)\pref
 
 MYLIBS=                         \
  $(DIST)\lib\raptorbase.lib     \

@@ -28,6 +28,7 @@
 #include <malloc.h>
 #endif
 
+#define NS_IMPL_IDS
 #include "nsViewer.h"
 #include "resources.h"          // #defines ID's for menu items
 #include "nsIWidget.h"
@@ -68,6 +69,7 @@
 #include "nsINetContainerApplication.h"
 #include "nsIButton.h"
 #include "nsITextWidget.h"
+#include "nsIPref.h"
 #include "nsIImageObserver.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
@@ -146,6 +148,7 @@ static NS_DEFINE_IID(kIChildWidgetIID, NS_IWIDGET_IID);
 nsViewer* gTheViewer = nsnull;
 WindowData * gMainWindowData = nsnull;
 nsIAppShell *gAppShell= nsnull;
+nsIPref *gPrefs;
 static char* startURL;
 static nsVoidArray* gWindows;
 static PRBool gDoPurify;          // run in Purify auto mode
@@ -1614,8 +1617,6 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   PL_InitializeEventsLib("");
 #endif
 
-  NS_InitINetService(this);
-
   gWindows = new nsVoidArray();
 
   NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1641,9 +1642,18 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   NSRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCWebWidgetCID, WEB_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
+
+  nsresult res;
+  res=NSRepository::CreateInstance(kPrefCID, NULL, kIPrefIID, (void **) &gPrefs);
+  if (NS_OK==res)
+  {
+    gPrefs->Startup("prefs.js");
+  }
+
+  NS_InitINetService(this);
 
   // Create an application shell
-  nsresult res;
   res=NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
   if (NS_OK==res)
   {
@@ -1846,6 +1856,10 @@ void nsViewer::Destroy(WindowData* aWinData)
     }
     gWindows->RemoveElement(aWinData);
     delete aWinData;
+  }
+  if (nsnull != gPrefs) {
+    gPrefs->Shutdown();
+    gPrefs->Release();
   }
 }
 
