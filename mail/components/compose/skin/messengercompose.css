@@ -1,0 +1,243 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== messengercompose.css ===========================================
+  == Styles for the main Messenger Compose window.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar buttons ::::: */
+ 
+.toolbarbutton-1 {
+  list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
+}
+
+#button-send {
+  -moz-image-region: rect(294px 23px 315px 0px);
+}
+
+#button-send:hover {
+  -moz-image-region: rect(294px 46px 315px 23px);
+} 
+
+#button-send:hover:active {
+  -moz-image-region: rect(294px 69px 315px 46px);
+} 
+
+#button-send[disabled="true"] {
+  -moz-image-region: rect(294px 92px 315px 69px) !important;
+} 
+
+#button-address {
+  -moz-image-region: rect(231px 23px 252px 0px);
+}
+
+#button-address:hover {
+  -moz-image-region: rect(231px 46px 252px 23px);
+} 
+
+#button-address:hover:active {
+  -moz-image-region: rect(231px 69px 252px 46px);
+} 
+
+#button-address[disabled="true"] {
+  -moz-image-region: rect(231px 92px 252px 69px) !important;
+} 
+
+#button-attach {
+  -moz-image-region: rect(252px 23px 273px 0px);
+}
+
+#button-attach:hover {
+  -moz-image-region: rect(252px 46px 273px 23px);
+} 
+
+#button-attach:hover:active {
+  -moz-image-region: rect(252px 69px 273px 46px);
+} 
+
+#button-attach[disabled="true"] {
+  -moz-image-region: rect(252px 92px 273px 69px) !important;
+} 
+
+#spellingButton {
+  list-style-image: url("chrome://editor/skin/icons/btn1.gif");
+  -moz-image-region: rect(101px 23px 122px 0);
+}
+
+#spellingButton:hover {
+  -moz-image-region: rect(101px 46px 122px 23px);
+}
+
+#spellingButton:hover:active {
+  -moz-image-region: rect(122px 23px 143px 0);
+}
+
+#spellingButton[disabled="true"] {
+  -moz-image-region: rect(122px 46px 143px 23px) !important;
+}
+
+#button-save {
+  -moz-image-region: rect(273px 23px 294px 0px);
+}
+
+#button-save:hover {
+  -moz-image-region: rect(273px 46px 294px 23px);
+} 
+
+#button-save:hover:active {
+  -moz-image-region: rect(273px 69px 294px 46px);
+} 
+
+#button-save[disabled="true"] {
+  -moz-image-region: rect(273px 92px 294px 69px) !important;
+} 
+
+/* ::::: special toolbar colors ::::: */
+
+#content-frame {
+  border-left: 1px solid ThreeDDarkShadow;
+  border-right: 1px solid ThreeDLightShadow;
+}
+
+#appcontent {
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+}
+
+#attachmentbucket-sizer {
+  border-top: none;
+  border-bottom: none;
+}
+
+#compose-toolbar-sizer {
+  border-top-width: 1px;
+  border-left: none;
+  border-right: none;
+  -moz-border-top-colors: ThreeDHighlight;
+}
+
+#msgSubject {
+  margin-top: 0px;
+  margin-bottom: 4px;
+}
+
+
+/* ::::: autocomplete icons ::::: */
+
+treechildren:-moz-tree-cell-text(default-match) {
+  margin: 2px -3px 2px 15px;
+  border: none;
+}
+
+treechildren:-moz-tree-image(local-abook) {
+  margin: 2px -1px 2px 4px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/addrbook.gif");
+}
+
+treechildren:-moz-tree-image(remote-abook) {
+  margin: 2px -3px 2px 2px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook.gif");
+}
+
+treechildren:-moz-tree-image(remote-err) {
+  margin: 2px -3px 2px 2px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook-error.gif");
+}
+
+.identity-popup-item {                                                                               
+  -moz-binding: url(chrome://messenger/content/messengercompose/mailComposeBindings.xml#fromMenuitem);
+}     
+
+.composemenu-text-2 {
+  font-style: italic;
+  color: GrayText;
+}
+
+/* new stuff, for blake's compose window */
+
+#button-sendlater {
+  list-style-image: url("chrome://messenger/skin/icons/sendlater-normal.gif");
+}
+
+#button-sendlater:hover {
+  list-style-image: url("chrome://messenger/skin/icons/sendlater-hover.gif");
+}
+
+#button-sendlater:hover:active {
+  list-style-image: url("chrome://messenger/skin/icons/sendlater-select.gif");
+}
+
+#button-sendlater[disabled="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/sendlater-disabled.gif");
+}
+
+label, description {
+  color: #000000;
+}
+
+#MsgHeadersToolbar {
+  background: #F6F7CF;
+  padding: 10px 20px;
+}
+
+#FormatToolbar {
+  background: #F6F7CF;
+  padding: 2px 0px;
+}
+
+#button-more {
+  list-style-image: url("chrome://messenger/skin/icons/more-normal.gif");
+}
+ 
+#button-more:hover {
+  list-style-image: url("chrome://messenger/skin/icons/more-hover.gif");
+}
+ 
+#button-more:hover:active,
+#button-more[open] {
+  list-style-image: url("chrome://messenger/skin/icons/more-select.gif");
+}
+ 
+#button-more[disabled] {
+  list-style-image: url("chrome://messenger/skin/icons/more-disabled.gif");
+}
+
+toolbarbutton[checked="true"] {
+  background-color: transparent !important;
+  -moz-border-top-colors: #000000 #02669E !important;
+  -moz-border-right-colors: #000000 #86AEFE !important;
+  -moz-border-bottom-colors: #000000 #86AEFE !important;
+  -moz-border-left-colors: #000000 #02669E !important;
+}
+ 
+#abSplitter {
+  min-width: 13px;
+}
+
+#abResultsTree {
+  border-right: none !important;
+}

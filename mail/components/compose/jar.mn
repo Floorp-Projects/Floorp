@@ -6,3 +6,13 @@ messenger.jar:
 en-US.jar:
 +   locale/en-US/messenger/messengercompose/messengercompose.dtd               (locale/messengercompose.dtd)
 
+classic.jar:
+  skin/classic/messenger/icons/more-disabled.gif               (skin/more-disabled.gif)
+  skin/classic/messenger/icons/more-hover.gif                  (skin/more-hover.gif)
+  skin/classic/messenger/icons/more-normal.gif                 (skin/more-normal.gif)
+  skin/classic/messenger/icons/more-select.gif                 (skin/more-select.gif)
+  skin/classic/messenger/icons/sendlater-disabled.gif          (skin/sendlater-disabled.gif)
+  skin/classic/messenger/icons/sendlater-hover.gif             (skin/sendlater-hover.gif)
+  skin/classic/messenger/icons/sendlater-normal.gif            (skin/sendlater-normal.gif)
+  skin/classic/messenger/icons/sendlater-select.gif            (skin/sendlater-select.gif)
+  skin/classic/messenger/messengercompose/messengercompose.css (skin/messengercompose.css)
