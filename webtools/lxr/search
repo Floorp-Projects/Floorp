@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: search,v 1.6 1999/09/17 00:43:31 endico%mozilla.org Exp $
+# $Id: search,v 1.7 1999/09/17 01:07:34 endico%mozilla.org Exp $
 
 # search --	Freetext search
 #
@@ -33,6 +33,7 @@ sub search {
     print("<P ALIGN=CENTER>\n",
 	  "Free-text search through the source code, including comments.\n",
           "<BR>By default, this form treats all characters as literals. \n",
+          "<BR>Search strings can have a maximum of 29 characters.\n",
 	  "<BR>Read the <A HREF=\"search-help.html\">documentation</A>",
 	  " for help with glimpse's regular expression syntax,\n");
 
@@ -49,7 +50,7 @@ sub search {
     $s = $searchtext;
     $s =~ s/"/\&quot;/g;
     print("<B>Search for: </B></TD><TD><input type=text name=\"string\" ",
-	  "value=\"",$s,"\" size=32>\n",
+	  "value=\"",$s,"\" maxlength=29 size=30>\n",
 	  "<input type=submit value=\"search\"><BR>\n",
           "</TD></TR><TR><TD></TD><TD>\n",
 	  "<input type=\"checkbox\" name=\"regexp\"");
@@ -97,7 +98,7 @@ sub search {
 	    if (@glimpselines == 0) {
 		print("No matching files<br>\n");
 	    } elsif (@glimpselines[0] =~ /pattern too long/) {
-                print ("Pattern too long. Use a maximum 32 characters.\n");
+                print ("Pattern too long. Use a maximum 29 characters.\n");
 	    } else {
 		if ($numlines > $maxhits) {
 		    print("<b> Too many hits, displaying first $maxhits</b><br>\n");
