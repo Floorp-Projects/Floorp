@@ -41,7 +41,6 @@ REQUIRES = \
     plugin \
     string \
     dom \
-    caps \
     content \
     widget \
     gfx \
@@ -224,7 +223,10 @@ install-typelib: $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
 install-securitypolicy: nsAxSecurityPolicy.js
 	$(INSTALL) $< $(DIST)/bin/components
 
-libs:: install-plugin
+install-prefs: activex.js
+	$(INSTALL) $< $(DIST)/bin/defaults/pref
+
+libs:: install-plugin install-prefs
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 libs:: install-class
