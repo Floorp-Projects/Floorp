@@ -7282,7 +7282,7 @@ nsresult nsImapMockChannel::OpenCacheEntry()
   nsCAutoString urlSpec;
   m_url->GetAsciiSpec(urlSpec);
   // for now, truncate of the query part so we don't duplicate urls in the cache...
-  char * anchor = strrchr(urlSpec.get(), '?');
+  char * anchor = (char *)strrchr(urlSpec.get(), '?');
   if (anchor)
   {
     // if we were trying to read a part, we failed - fall back and look for whole msg

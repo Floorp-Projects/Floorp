@@ -3817,7 +3817,7 @@ BuildURLAttachmentData(nsIURI *url)
   url->GetSpec(spec);
   if (!spec.IsEmpty())
   {
-    theName = strrchr(spec.get(), '/');
+    theName = (char *)strrchr(spec.get(), '/');
   }
 
   if (!theName)

@@ -386,7 +386,7 @@ PRBool nsMsgCompose::IsEmbeddedObjectSafe(const char * originalScheme,
           rv = uri->GetPath(path);
           if (NS_SUCCEEDED(rv))
           {
-            char * query = strrchr(path.get(), '?');
+            const char * query = strrchr(path.get(), '?');
             if (query && nsCRT::strncasecmp(path.get(), originalPath, query - path.get()) == 0)
               return PR_TRUE; //This object is a part of the original message, we can send it safely.
           }
