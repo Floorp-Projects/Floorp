@@ -95,43 +95,23 @@ nsGenericDOMDataNode::SetNodeValue(const nsString& aNodeValue)
 nsresult
 nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
 {
+  nsresult res = NS_OK;
+
   if (nsnull != mParent) {
-    nsresult res = mParent->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+    res = mParent->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-    return res;
   }
   else if (nsnull == mDocument) {
-    // A standalone node (i.e. one without a parent or a document)
-    // implicitly has a document fragment as its parent according to
-    // the DOM.
-    nsIDOMDocumentFragment* docFrag;
-    nsIDOMNode *node, *ret;
-    // XXX If we don't have a document, how do we give the document
-    // fragment an owner document?
-    nsresult res = NS_NewDocumentFragment(&docFrag, nsnull);
-    if (NS_OK != res) {
-      return res;
-    }
-    res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
-    if (NS_OK != res) {
-      return res;
-    }
-    res = docFrag->AppendChild(node, &ret);
-    NS_RELEASE(node);
-    if (NS_OK != res) {
-      return res;
-    }
-    NS_RELEASE(ret);
-    res = docFrag->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
-    NS_RELEASE(docFrag);
-    return res;
+    *aParentNode = nsnull;
   } 
   else {
     // If we don't have a parent, but we're in the document, we must
-    // be at the top level. The DOM says that the root is the document.
-    return mDocument->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+    // be the root node of the document. The DOM says that the root
+    // is the document.
+    res = mDocument->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
   }
-  return NS_OK;
+
+  return res;
 }
 
 nsresult
