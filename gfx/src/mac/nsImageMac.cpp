@@ -200,7 +200,6 @@ PixMapPtr	destpix;
 RGBColor	rgbblack = {0x0000,0x0000,0x0000};
 RGBColor	rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
 Rect			srcrect,dstrect;
-PRUint32	*value,i,end;
 
   if (nsnull == mThePixelmap.baseAddr)
     return PR_FALSE;
