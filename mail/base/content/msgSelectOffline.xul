@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-2001 Netscape Communications Corporation. All
+# Rights Reserved.
+# 
+# Contributors:
+#     dianesun@netscape.com
+#     Håkan Waara <hwaara@chello.se>
+
+<?xml-stylesheet href="chrome://messenger/skin/msgSelectOffline.css" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/msgSynchronize.dtd" >
+
+<dialog	xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="select-offline" 
+        title="&MsgSelect.label;"
+        width="450" height="400"
+        persist="width height"
+        onload="selectOnLoad();"
+        ondialogaccept="return selectOkButton();"
+        ondialogcancel="return selectCancelButton();">
+
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+		
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgSynchronize.js"/>
+	
+  <description class="desc">&MsgSelectDesc.label;</description>
+
+  <tree id="synchronizeTree" flex="1" hidecolumnpicker="true"
+        datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" flags="dont-build-content"
+        onclick="onSynchronizeClick(event);">
+    <template>
+      <rule>
+        <conditions>
+          <content uri="?container"/>
+          <member container="?container" child="?member"/>
+          <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#SupportsOffline" object="true"/>
+        </conditions>
+
+        <bindings>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
+                   object="?folderTreeName"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
+                   object="?folderTreeNameSort"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
+                   object="?specialFolder"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsServer"
+                   object="?isServer"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsSecure"
+                   object="?isSecure"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#ServerType"
+                   object="?serverType"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#Synchronize"
+                   object="?synchronize"/>
+        </bindings>
+             
+        <action>
+          <treechildren>
+            <treeitem uri="?member">
+              <treerow>
+                <treecell label="?folderTreeName"
+                          properties="specialFolder-?specialFolder isServer-?isServer isSecure-?isSecure serverType-?serverType"/>
+                <treecell properties="synchronize-?synchronize isServer-?isServer"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </action>
+      </rule>
+    </template>
+    <treecols>
+      <treecol id="folderNameCol" flex="5" persist="hidden width" label="&MsgSelectItems.label;" primary="true"/>
+      <splitter class="tree-splitter"/>		  
+      <treecol id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;" cycler="true"/>
+    </treecols>
+  </tree>
+
+</dialog>

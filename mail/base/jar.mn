@@ -25,6 +25,7 @@ messenger.jar:
 *+  content/messenger/aboutDialog.xul               (content/aboutDialog.xul)
 *+  content/messenger/junkMail.xul                  (content/junkMail.xul)
 *+  content/messenger/junkMail.js                   (content/junkMail.js)
+*+  content/messenger/msgSelectOffline.xul          (content/msgSelectOffline.xul)
 +   content/messenger-views/contents.rdf            (content/messenger-views.rdf)
     content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
     
@@ -42,6 +43,7 @@ classic.jar:
 +   skin/classic/messenger/folderMenus.css          (skin/folderMenus.css)
 +   skin/classic/messenger/subscribe.css            (skin/subscribe.css)
 +   skin/classic/messenger/searchDialog.css         (skin/searchDialog.css)
++   skin/classic/messenger/msgSelectOffline.css     (skin/msgSelectOffline.css)
 +   skin/classic/messenger/icons/new-mail-alert.png (skin/icons/new-mail-alert.png)
     skin/classic/messenger/icons/mail-toolbar.png   (skin/icons/mail-toolbar.png)
     skin/classic/messenger/icons/mail-toolbar-small.png  (skin/icons/mail-toolbar-small.png)
