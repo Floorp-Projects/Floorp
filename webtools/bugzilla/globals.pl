@@ -1680,7 +1680,15 @@ sub GetOutputFormats {
         # Loop over each file in the sub-directory looking for format files
         # (files whose name looks like SCRIPT-FORMAT.EXT.tmpl).
         foreach my $file (@files) {
-            if ($file =~ /^\Q$script\E-(.+)\.(.+)\.(tmpl)$/) {
+            if ($file =~ /^\Q$script\E-(.+)\.(.+)\.tmpl$/) {
+                # This must be a valid file
+                # If an attacker could add a previously unused format
+                # type to trick us into running it, then they could just
+                # change an existing one...
+                # (This implies that running without a webservergroup is
+                # insecure, but that is the case anyway)
+                trick_taint($file);
+
                 $formats->{$1} = { 
                   'template'    => $file , 
                   'extension'   => $2 , 

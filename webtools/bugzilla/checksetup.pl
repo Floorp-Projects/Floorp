@@ -841,6 +841,8 @@ END
     if (-e 'data/template') {
         unless (-d 'data/template' && -e 'data/template/.lastRebuild' &&
                 (stat('data/template/.lastRebuild'))[9] >= $lastTemplateParamChange) {
+            print "Removing existing compiled templates ...\n";
+
             # If File::Path::rmtree reported errors, then I'd use that
             use File::Find;
             sub remove {
@@ -904,6 +906,8 @@ END
     }
 
     {
+        print "Precompiling templates ...\n";
+
         use File::Find;
 
         use Cwd;
@@ -1089,7 +1093,7 @@ if ($my_webservergroup) {
     my $gid = (split " ", $()[0];
     fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $gid, 022);
-    fixPerms('data/template', $<, $gid, 022, 1);
+    fixPerms('data/template', $<, $gid, 000, 1); # webserver will write to these
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
     fixPerms('data/params', $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);
