@@ -20,8 +20,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgIdentity.h" /* interface nsIMsgCompFields */
-#include "nsID.h" /* interface nsID */
-#include "rosetta.h"
+#include "nsMsgComposeBE.h"
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -39,7 +38,8 @@ class nsIMsgSendLater : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGSENDLATER_IID)
 
-  NS_IMETHOD  SendUnsentMessages(nsIMsgIdentity *identity) = 0;
+  NS_IMETHOD  SendUnsentMessages(nsIMsgIdentity *identity, nsMsgSendUnsentMessagesCallback msgCallback,
+                                 void *tagData) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
