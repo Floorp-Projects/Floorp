@@ -785,6 +785,7 @@ protected:
   nsILayoutHistoryState* mHistoryState; // [WEAK] session history owns this
   PRUint32 mUpdateCount;
   nsVoidArray mReflowCommands;
+  PRPackedBool mDocumentLoading;
   PRPackedBool mIsReflowing;
   PRPackedBool mIsDestroying;
   nsIFrame* mCurrentEventFrame;
@@ -947,6 +948,7 @@ PresShell::PresShell():mStackArena(nsnull)
 #endif
   mPendingReflowEvent = PR_FALSE;    
   mBatchReflows = PR_FALSE;
+  mDocumentLoading = PR_FALSE;
   mSubShellMap = nsnull;
 
 #ifdef MOZ_REFLOW_PERF
@@ -2191,6 +2193,7 @@ PresShell::BeginLoad(nsIDocument *aDocument)
   MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", this));
   CtlStyleWatch(kStyleWatchReset,mStyleSet);
 #endif  
+  mDocumentLoading = PR_TRUE;
   return NS_OK;
 }
 
@@ -2215,6 +2218,7 @@ PresShell::EndLoad(nsIDocument *aDocument)
   MOZ_TIMER_LOG(("Style resolution time (this=%p): ", this));
   CtlStyleWatch(kStyleWatchPrint, mStyleSet);
 #endif  
+  mDocumentLoading = PR_FALSE;
   return NS_OK;
 }
 
@@ -2300,8 +2304,9 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
   }
 
   // Kick off a reflow event if we aren't batching reflows
-  if (!mBatchReflows) {
-    PostReflowEvent();   
+  // and the document is not loading.
+  if (!mBatchReflows && !mDocumentLoading) {
+    PostReflowEvent();
   }
 
   return rv;
@@ -3700,6 +3705,9 @@ nsresult
 PresShell::DidCauseReflow()
 {    
   mViewManager->CacheWidgetChanges(PR_FALSE);
+  if (mDocumentLoading) {
+    FlushPendingNotifications();
+  }
   return NS_OK;
 }
 
