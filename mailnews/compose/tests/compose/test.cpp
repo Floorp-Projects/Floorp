@@ -51,7 +51,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsIFileLocator.h"
-
+#include "xp.h"
 #include "nsMsgTransition.h"
 #include "nsCRT.h"
 #include "prmem.h"
