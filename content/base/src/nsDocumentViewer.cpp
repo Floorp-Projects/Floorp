@@ -323,6 +323,7 @@ public:
   PrintObject *                mSelectedPO;
 
   nsCOMPtr<nsIPrintListener>  mPrintListener; // An observer for printing...
+  nsCOMPtr<nsIDOMWindowInternal> mCurrentFocusWin; // cache a pointer to the currently focused window
 
   nsVoidArray*                mPrintDocList;
   nsCOMPtr<nsIDeviceContext>  mPrintDocDC;
@@ -2957,9 +2958,6 @@ DocumentViewerImpl::EnablePOsForPrinting()
   PRINT_DEBUG_MSG1("----\n");
   PRINT_DEBUG_FLUSH
 
-  // Get the currently selected DOMWindow
-  nsCOMPtr<nsIDOMWindowInternal> curFocusDOMWin = getter_AddRefs(FindFocusedDOMWindowInternal());
-
   // ***** This is the ultimate override *****
   // if we are printing the selection (either an IFrame or selection range)
   // then set the mPrintFrameType as if it were the selected frame
@@ -3003,9 +3001,9 @@ DocumentViewerImpl::EnablePOsForPrinting()
     if (printRangeType == nsIPrintOptions::kRangeSelection) {
 
       // If the currentFocusDOMWin can'r be null if something is selected
-      if (curFocusDOMWin) {
+      if (mPrt->mCurrentFocusWin) {
         // Find the selected IFrame
-        PrintObject * po = FindPrintObjectByDOMWin(mPrt->mPrintObject, curFocusDOMWin);
+        PrintObject * po = FindPrintObjectByDOMWin(mPrt->mPrintObject, mPrt->mCurrentFocusWin);
         if (po != nsnull) {
           mPrt->mSelectedPO = po;
           // Makes sure all of its children are be printed "AsIs"
@@ -3049,9 +3047,9 @@ DocumentViewerImpl::EnablePOsForPrinting()
   // check to see if there is a selection when a FrameSet is present
   if (printRangeType == nsIPrintOptions::kRangeSelection) {
     // If the currentFocusDOMWin can'r be null if something is selected
-    if (curFocusDOMWin) {
+    if (mPrt->mCurrentFocusWin) {
       // Find the selected IFrame
-      PrintObject * po = FindPrintObjectByDOMWin(mPrt->mPrintObject, curFocusDOMWin);
+      PrintObject * po = FindPrintObjectByDOMWin(mPrt->mPrintObject, mPrt->mCurrentFocusWin);
       if (po != nsnull) {
         mPrt->mSelectedPO = po;
         // Makes sure all of its children are be printed "AsIs"
@@ -3092,8 +3090,8 @@ DocumentViewerImpl::EnablePOsForPrinting()
   // children to be printed
   if (mPrt->mPrintFrameType == nsIPrintOptions::kSelectedFrame) {
 
-    if ((mPrt->mIsParentAFrameSet && curFocusDOMWin) || mPrt->mIsIFrameSelected) {
-      PrintObject * po = FindPrintObjectByDOMWin(mPrt->mPrintObject, curFocusDOMWin);
+    if ((mPrt->mIsParentAFrameSet && mPrt->mCurrentFocusWin) || mPrt->mIsIFrameSelected) {
+      PrintObject * po = FindPrintObjectByDOMWin(mPrt->mPrintObject, mPrt->mCurrentFocusWin);
       if (po != nsnull) {
         mPrt->mSelectedPO = po;
         // Makes sure all of its children are be printed "AsIs"
@@ -3904,13 +3902,10 @@ nsresult DocumentViewerImpl::DocumentReadyForPrinting()
       imageGroup->RemoveObserver(this);
     }
 
-    // get the focused DOMWindow
-    nsCOMPtr<nsIDOMWindowInternal> curFocusDOMWin = getter_AddRefs(FindFocusedDOMWindowInternal());
-
     //
     // Send the document to the printer...
     //
-    rv = SetupToPrintContent(webContainer, mPrt->mPrintDC, curFocusDOMWin);
+    rv = SetupToPrintContent(webContainer, mPrt->mPrintDC, mPrt->mCurrentFocusWin);
     if (NS_FAILED(rv)) {
       // The print job was canceled or there was a problem
       // So remove all other documents from the print list
@@ -4245,9 +4240,13 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
     mPrt->mPrintListener = aPrintListener;
   }
 
-  // first check to see if there is a "regular" selection
-  nsCOMPtr<nsIDOMWindowInternal> curFocusDOMWin = getter_AddRefs(FindFocusedDOMWindowInternal());
-  PRBool isSelection = IsThereARangeSelection(curFocusDOMWin);
+  // Get the currently focused window and cache it
+  // because the Print Dialog will "steal" focus and later when you try
+  // to get the currently focused windows it will be NULL
+  mPrt->mCurrentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+
+  // Check to see if there is a "regular" selection
+  PRBool isSelection = IsThereARangeSelection(mPrt->mCurrentFocusWin);
 
   // Create a list for storing the WebShells that need to be printed
   if (mPrt->mPrintDocList == nsnull) {
@@ -4282,7 +4281,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
   // Get whether the doc contains a frameset 
   // Also, check to see if the currently focus webshell 
   // is a child of this webshell
-  mPrt->mIsIFrameSelected = IsThereAnIFrameSelected(webContainer, curFocusDOMWin, mPrt->mIsParentAFrameSet);
+  mPrt->mIsIFrameSelected = IsThereAnIFrameSelected(webContainer, mPrt->mCurrentFocusWin, mPrt->mIsParentAFrameSet);
 
   DUMP_DOC_LIST("\nAfter Mapping------------------------------------------");
 
@@ -4291,7 +4290,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
   NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
     if (mPrt->mIsParentAFrameSet) {
-      if (curFocusDOMWin) {
+      if (mPrt->mCurrentFocusWin) {
         printService->SetHowToEnableFrameUI(nsIPrintOptions::kFrameEnableAll);
       } else {
         printService->SetHowToEnableFrameUI(nsIPrintOptions::kFrameEnableAsIsAndEach);
