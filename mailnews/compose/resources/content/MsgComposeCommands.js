@@ -66,6 +66,7 @@ var defaultSaveOperation = "draft";
 var sendOrSaveOperationInProgress = false;
 var isOffline = false;
 var sessionAdded = false;
+var currentAutocompleteDirectory = null;
 
 var gComposeMsgsBundle;
 
@@ -654,10 +655,21 @@ function RemoveDirectoryServerObserver(prefstring)
   }
 }
 
+function AddDirectorySettingsObserver()
+{
+  prefs.addObserver(currentAutocompleteDirectory, directoryServerObserver);
+}
+
+function RemoveDirectorySettingsObserver(prefstring)
+{
+  prefs.removeObserver(prefstring, directoryServerObserver);
+}
+
 function setupLdapAutocompleteSession()
 {
     var autocompleteLdap = false;
     var autocompleteDirectory = null;
+    var prevAutocompleteDirectory = currentAutocompleteDirectory;
     
     try {
         autocompleteLdap = prefs.GetBoolPref(
@@ -672,7 +684,19 @@ function setupLdapAutocompleteSession()
     if(currentIdentity.overrideGlobalPref) {
         autocompleteDirectory = currentIdentity.directoryServer;
     }
-    if (autocompleteDirectory && !isOffline) {        
+    if (autocompleteDirectory && !isOffline) { 
+        // Add observer on the directory server we are autocompleting against
+        // only if current server is different from previous.
+        // Remove observer if current server is different from previous       
+        currentAutocompleteDirectory = autocompleteDirectory;
+        if (prevAutocompleteDirectory) {
+          if (prevAutocompleteDirectory != currentAutocompleteDirectory) { 
+            RemoveDirectorySettingsObserver(prevAutocompleteDirectory);
+            AddDirectorySettingsObserver();
+          }
+        }
+        else
+          AddDirectorySettingsObserver();
         
         if (ldapSession) {
             if (!sessionAdded) {
@@ -740,6 +764,12 @@ function setupLdapAutocompleteSession()
             }
         }
     } else {
+      if (currentAutocompleteDirectory) {
+        // Remove observer on the directory server since we are not doing Ldap
+        // autocompletion.
+        RemoveDirectorySettingsObserver(currentAutocompleteDirectory);
+        currentAutocompleteDirectory = null;
+      }
       if (ldapSession && sessionAdded) {
         for (var i=1; i <= MAX_RECIPIENTS; i++) 
           document.getElementById("msgRecipient#" + i).removeSession(ldapSession);
@@ -1113,6 +1143,8 @@ function ComposeUnload()
 	RemoveMessageComposeOfflineObserver();
     RemoveDirectoryServerObserver(null);
     RemoveDirectoryServerObserver("mail.identity." + currentIdentity.key);
+    if (currentAutocompleteDirectory)
+       RemoveDirectorySettingsObserver(currentAutocompleteDirectory);
 	msgCompose.UnregisterStateListener(stateListener);
 }
 
