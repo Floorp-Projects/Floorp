@@ -19,6 +19,7 @@
 #ifndef nsIWebShell_h___
 #define nsIWebShell_h___
 
+#include "nsweb.h"
 #include "nsIWidget.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewerContainer.h"
