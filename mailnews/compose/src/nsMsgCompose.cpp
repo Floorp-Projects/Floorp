@@ -1598,10 +1598,31 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         
         if (! followUpTo.IsEmpty())
         {
-		       if (type != nsIMsgCompType::ReplyToSender)
-			      compFields->SetNewsgroups(nsAutoCString(followUpTo));
-           if (type == nsIMsgCompType::Reply)
-            compFields->SetTo(&emptyUnichar);
+          if (followUpTo == NS_LITERAL_STRING("poster"))
+          {
+            if (!replyTo.IsEmpty())
+              compFields->SetTo(replyTo.get());
+            else
+            {
+              mHeaders->ExtractHeader(HEADER_FROM, PR_FALSE, getter_Copies(outCString));
+              if (outCString)
+              {
+                nsAutoString from;
+                mimeConverter->DecodeMimeHeader(outCString, from, charset);
+                compFields->SetTo(from.get());
+              }
+            }
+
+            if (! newgroups.IsEmpty())
+              compFields->SetNewsgroups(nsnull);
+          }
+          else
+          {
+		        if (type != nsIMsgCompType::ReplyToSender)
+			        compFields->SetNewsgroups(nsAutoCString(followUpTo));
+            if (type == nsIMsgCompType::Reply)
+              compFields->SetTo(&emptyUnichar);
+          }
         }
         
         if (! references.IsEmpty())
