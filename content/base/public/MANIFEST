@@ -10,7 +10,6 @@ nsIContent.h
 nsIContentIterator.h
 nsIContentSerializer.h
 nsIDocument.h
-nsIDocumentContainer.h
 nsIDocumentEncoder.h
 nsIDocumentObserver.h
 nsIDocumentViewer.h

@@ -39,7 +39,6 @@ nsContentErrors.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
 nsIDocument.h \
-nsIDocumentContainer.h \
 nsIDocumentEncoder.h \
 nsIDocumentObserver.h \
 nsIDocumentViewer.h \
