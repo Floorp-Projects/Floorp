@@ -59,7 +59,8 @@ const char nsPrincipal::sInvalid[] = "Invalid";
 
 
 nsPrincipal::nsPrincipal()
-  : mCapabilities(7)
+  : mCapabilities(7),
+    mSecurityPolicy(nsnull)
 {
 }
 
