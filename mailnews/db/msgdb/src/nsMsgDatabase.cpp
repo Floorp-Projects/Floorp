@@ -1109,7 +1109,7 @@ PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags)
     (void)msgHdr->GetMessageKey(&key);
 	if (m_newSet && m_newSet->IsMember(key))
 		statusFlags |= MSG_FLAG_NEW;
-	if (IsRead(key, &isRead) == NS_OK && isRead)
+	if (IsHeaderRead(msgHdr, &isRead) == NS_OK && isRead)
 		statusFlags |= MSG_FLAG_READ;
 	return statusFlags;
 }
