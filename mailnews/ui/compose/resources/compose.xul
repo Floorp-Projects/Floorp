@@ -18,13 +18,16 @@
 		left: 0;
 	}
 	#body {
-		position: fixed;
-		width: 100%;
-		height: 200px;
-		top: auto;
-		right: 0;
-		bottom: auto;
-		left: auto;
+        position: fixed;
+        width: auto;
+        height: auto;
+        top: 75px;
+        right: 0;
+        bottom: 34px;
+        left: 0;
+        overflow: auto;
+        padding: 2px .5em;
+        border: solid 0px black;
 	}
 	#footer {
 		position: fixed;
@@ -39,32 +42,65 @@
 </html:style>
 
 <html:script>
-	var appCore = null;
+	var compAppCore = null;
+	var editAppCore = null;
 
 	function startup()
 	{
 		dump("Compose: StartUp\n");
-		appCore = XPAppCoresManager.Find("ComposeAppCore");  
-		if (appCore==null) {
-			appCore = new ComposeAppCore();
-			if (appCore != null) {
+		compAppCore = XPAppCoresManager.Find("ComposeAppCore");  
+		if (compAppCore==null) {
+			compAppCore = new ComposeAppCore();
+			if (compAppCore != null) {
 				dump("ComposeAppCore was created!\n");
-				appCore.Init("ComposeAppCore");
-				appCore.SetWindow(window);
-				appCore.CompleteCallback("MessageSent();");
+				compAppCore.Init("ComposeAppCore");
+				compAppCore.SetWindow(window);
+				compAppCore.CompleteCallback("MessageSent();");
+				XPAppCoresManager.Add(compAppCore);  
 			}
 		}
+
+		editAppCore = XPAppCoresManager.Find("EditorAppCore");  
+		dump("Looking up EditorAppCore...\n");
+		if (editAppCore == null) {
+			dump("Creating EditorAppCore...\n");
+			editAppCore = new EditorAppCore();
+			if (editAppCore != null) {
+				dump("EditorAppCore has been created.\n");
+				editAppCore.Init("EditorAppCore");
+				editAppCore.setContentWindow(window.frames[0]);
+				editAppCore.setWebShellWindow(window);
+				editAppCore.setToolbarWindow(window);
+				dump("Adding EditorAppCore to AppCoreManager...\n");
+				XPAppCoresManager.Add(editAppCore);  
+			}
+		}
+		else {
+			dump("EditorAppCore has already been created! Why?\n");
+		}
 	}
+
+	function EditorGetText()
+	{
+		if (editAppCore != null) {
+			var	outputText = editAppCore.contentsAsText;
+			dump(outputText + "\n");
+			return outputText;
+		} else
+			dump("EditorAppCore has not been created!\n");
+	}
+
 
 	function SendMessage()
 	{
 		dump("SendMessage!\n");
-		if (appCore != null) {
-			appCore.SendMessage(document.getElementById('msgTo').value, 
+		if (compAppCore != null) {
+			compAppCore.SendMessage(document.getElementById('msgTo').value, 
 					   document.getElementById('msgCc').value, 
 					   document.getElementById('msgBcc').value, 
 					   document.getElementById('msgSubject').value, 
-					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
+//					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
+					   EditorGetText());
 		}
 	}
 
@@ -77,7 +113,7 @@
 		document.getElementById('msgCc').value = "";
 		document.getElementById('msgBcc').value = "";
 		document.getElementById('msgSubject').value = "";
-		window.parent.frames[0].document.forms["fbody"].elements["body"].value = "";
+//		window.parent.frames[0].document.forms["fbody"].elements["body"].value = "";
 	}
 </html:script>
 
@@ -179,11 +215,11 @@
 </html:div>
 
 <html:div id="body">
-<html:iframe src="resource:/res/samples/composeframe.html" name="browser.message.body" width="100%" height="300px"></html:iframe>
+	<html:iframe src="composebody.html" name="browser.message.body" width="100%" height="400"></html:iframe>
 </html:div>
 
 <html:div id="footer">
-<html:iframe src="status.html" name="browser.status" width="100%" height="34px" > </html:iframe>
+	<html:iframe src="status.html" name="browser.status" width="100%" height="34px" > </html:iframe>
 </html:div>
 
 </window>
