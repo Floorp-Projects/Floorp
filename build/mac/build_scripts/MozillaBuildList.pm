@@ -692,6 +692,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:embedding:base:MANIFEST_IDL",                    "$distdirectory:idl:");
     InstallFromManifest(":mozilla:embedding:browser:webbrowser:MANIFEST_IDL",      "$distdirectory:idl:");
     InstallFromManifest(":mozilla:embedding:components:windowwatcher:public:MANIFEST_IDL", "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:embedding:components:appstartup:src:MANIFEST",   "$distdirectory:embedding:components:");
 
     #WIDGET
     InstallFromManifest(":mozilla:widget:public:MANIFEST",                         "$distdirectory:widget:");
