@@ -506,30 +506,6 @@ NS_IMETHODIMP nsFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord 
 {
   mRect.x = aX;
   mRect.y = aY;
-
-  // XXX TROY
-#if 0
-  nsIView*  view;
-  GetView(aPresContext, &view);
-  if (view) {
-    // If we should keep the view position and size in sync with the frame
-    // then position the view. Don't do this if we're in the middle of reflow.
-    // Instead wait until the DidReflow() notification
-    if (NS_FRAME_SYNC_FRAME_AND_VIEW == (mState & (NS_FRAME_IN_REFLOW |
-                                                   NS_FRAME_SYNC_FRAME_AND_VIEW))) {
-      // Position view relative to its parent, not relative to our
-      // parent frame (our parent frame may not have a view).
-      nsIView* parentWithView;
-      nsPoint origin;
-      GetOffsetFromView(aPresContext, origin, &parentWithView);
-      nsIViewManager  *vm;
-      view->GetViewManager(vm);
-      vm->MoveViewTo(view, origin.x, origin.y);
-      NS_RELEASE(vm);
-    }
-  }
-#endif
-
   return NS_OK;
 }
 
@@ -537,27 +513,6 @@ NS_IMETHODIMP nsFrame::SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nsco
 {
   mRect.width = aWidth;
   mRect.height = aHeight;
-
-  // XXX TROY
-#if 0
-  // Let the view know
-  nsIView*  view;
-  GetView(aPresContext, &view);
-  if (view) {
-    // If we should keep the view position and size in sync with the frame
-    // then resize the view. Don't do this if we're in the middle of reflow.
-    // Instead wait until the DidReflow() notification
-    if (NS_FRAME_SYNC_FRAME_AND_VIEW == (mState & (NS_FRAME_IN_REFLOW |
-                                                   NS_FRAME_SYNC_FRAME_AND_VIEW))) {
-      // Resize the view to be the same size as the frame
-      nsIViewManager  *vm;
-      view->GetViewManager(vm);
-      vm->ResizeView(view, aWidth, aHeight);
-      NS_RELEASE(vm);
-    }
-  }
-#endif
-
   return NS_OK;
 }
 
@@ -1276,134 +1231,6 @@ nsFrame::DidReflow(nsIPresContext* aPresContext,
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY);
 
-    // XXX TROY
-#if 0
-    // Make sure the view is sized and positioned correctly and it's
-    // visibility, opacity, content transparency, and clip are correct
-    nsIView*  view;
-    GetView(aPresContext, &view);
-    if (view) {
-      nsIViewManager  *vm;
-      view->GetViewManager(vm);
-      
-      if (NS_FRAME_SYNC_FRAME_AND_VIEW & mState) {
-        // Position and size view relative to its parent, not relative to our
-        // parent frame (our parent frame may not have a view).
-        nsIView* parentWithView;
-        nsPoint origin;
-        GetOffsetFromView(aPresContext, origin, &parentWithView);
-        vm->ResizeView(view, mRect.width, mRect.height);
-        vm->MoveViewTo(view, origin.x, origin.y);
-      }
-
-      const nsStyleColor* color =
-        (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleDisplay* display =
-        (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-
-      // Set the view's opacity
-      vm->SetViewOpacity(view, color->mOpacity);
-      
-      // See if the view should be hidden or visible
-      PRBool  viewIsVisible = PR_TRUE;
-      PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
-                NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
-
-      if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
-        viewIsVisible = PR_FALSE;
-      }
-      else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
-        // If it has a widget, hide the view because the widget can't deal with it
-        nsIWidget* widget = nsnull;
-        view->GetWidget(widget);
-        if (widget) {
-          viewIsVisible = PR_FALSE;
-          NS_RELEASE(widget);
-        }
-        else {
-          // If it's a scroll frame, then hide the view. This means that
-          // child elements can't override their parent's visibility, but
-          // it's not practical to leave it visible in all cases because
-          // the scrollbars will be showing
-          nsIAtom*  frameType;
-          GetFrameType(&frameType);
-
-          if (frameType == nsLayoutAtoms::scrollFrame) {
-            viewIsVisible = PR_FALSE;
-
-          } else {
-            // If we're a container element, then leave the view visible, but
-            // mark it as having transparent content. The reason we need to
-            // do this is that child elements can override their parent's
-            // hidden visibility and be visible anyway
-            nsIFrame* firstChild;
-  
-            FirstChild(nsnull, &firstChild);
-            if (firstChild) {
-              // Not a left frame, so the view needs to be visible, but marked
-              // as having transparent content
-              viewHasTransparentContent = PR_TRUE;
-            } else {
-              // Leaf frame so go ahead and hide the view
-              viewIsVisible = PR_FALSE;
-            }
-          }
-          NS_IF_RELEASE(frameType);
-        }
-      }
-
-      // If we have visible content that overflows the content area, then we
-      // need the view marked as having transparent content
-      if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
-        if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
-          viewHasTransparentContent = PR_TRUE;
-        }
-      }
-
-      // Make sure visibility is correct
-      vm->SetViewVisibility(view, viewIsVisible ? nsViewVisibility_kShow :
-                            nsViewVisibility_kHide);
-      
-      // Make sure content transparency is correct
-      if (viewIsVisible) {
-        vm->SetViewContentTransparency(view, viewHasTransparentContent);
-      }
-      
-      // Clip applies to block-level and replaced elements with overflow
-      // set to other than 'visible'
-      if (display->IsBlockLevel()) {
-        if (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN) {
-          nscoord left, top, right, bottom;
-          
-          // Start with the 'auto' values and then factor in user
-          // specified values
-          left = top = 0;
-          right = mRect.width;
-          bottom = mRect.height;
-
-          if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
-            top += display->mClip.top;
-          }
-          if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
-            right -= display->mClip.right;
-          }
-          if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
-            bottom -= display->mClip.bottom;
-          }
-          if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
-            left += display->mClip.left;
-          }
-          view->SetClip(left, top, right, bottom);
-
-        } else {
-          // Make sure no clip is set
-          view->SetClip(0, 0, 0, 0);
-        }
-      }
-      NS_RELEASE(vm);
-    }
-#endif
-  }
   return NS_OK;
 }
 
