@@ -282,7 +282,8 @@ nsXFormsChoicesElement::SelectItemsByContent(nsIDOMNode *aNode)
 }
 
 NS_IMETHODIMP
-nsXFormsChoicesElement::WriteSelectedItems(nsIDOMNode *aContainer)
+nsXFormsChoicesElement::WriteSelectedItems(nsIDOMNode *aContainer, 
+                                           nsAString  &aStringBuffer)
 {
   nsCOMPtr<nsIDOMNodeList> children;
   nsresult rv = mElement->GetChildNodes(getter_AddRefs(children));
@@ -298,7 +299,7 @@ nsXFormsChoicesElement::WriteSelectedItems(nsIDOMNode *aContainer)
     children->Item(i, getter_AddRefs(childNode));
     childItem = do_QueryInterface(childNode);
     if (childItem) {
-      childItem->WriteSelectedItems(aContainer);
+      childItem->WriteSelectedItems(aContainer, aStringBuffer);
     }
   }
 

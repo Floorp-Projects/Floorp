@@ -264,74 +264,23 @@ nsXFormsItemElement::SelectItemsByContent(nsIDOMNode *aNode)
 }
 
 NS_IMETHODIMP
-nsXFormsItemElement::WriteSelectedItems(nsIDOMNode *aContainer)
+nsXFormsItemElement::WriteSelectedItems(nsIDOMNode *aContainer, 
+                                        nsAString  &aStringBuffer)
 {
   PRBool selected;
   mOption->GetSelected(&selected);
   if (!selected)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMNodeList> children;
-  nsresult rv = aContainer->GetChildNodes(getter_AddRefs(children));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 childCount;
-  children->GetLength(&childCount);
-  nsCOMPtr<nsIDOMNode> child, textNode;
-
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    children->Item(i, getter_AddRefs(child));
-
-    PRUint16 nodeType;
-    child->GetNodeType(&nodeType);
-    if (nodeType == nsIDOMNode::TEXT_NODE) {
-      textNode = child;
-      break;
-    }
-  }
-
-  if (!textNode) {
-    // No text node, so make one.
-    nsCOMPtr<nsIDOMDocument> doc;
-    aContainer->GetOwnerDocument(getter_AddRefs(doc));
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDOMText> text;
-    rv = doc->CreateTextNode(EmptyString(), getter_AddRefs(text));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aContainer->AppendChild(text, getter_AddRefs(child));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    textNode = text;
-  }
-
-  NS_ASSERTION(textNode, "We should have a text node by now");
-
   nsAutoString value;
-  rv = GetValue(value);
+  nsresult rv = GetValue(value);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIModelElementPrivate> model = nsXFormsUtils::GetModel(mElement,
-                                                                   0);
-  nsCOMPtr<nsIDOMNode> modelNode = do_QueryInterface(model);
-  NS_ENSURE_STATE(modelNode);
-
-  /// @todo beaufour: The update code should probably not be here.
-  ///       @see https://bugzilla.mozilla.org/show_bug.cgi?id=278207
-  ///       Wherever its final resting place might be, it should be shared
-  ///       with the code in nsXFormsInputElement
-
-  PRBool changed;
-  rv = model->SetNodeValue(textNode, value, &changed);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (changed) {
-    rv = nsXFormsUtils::DispatchEvent(modelNode, eEvent_Recalculate);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = nsXFormsUtils::DispatchEvent(modelNode, eEvent_Revalidate);
-    NS_ENSURE_SUCCESS(rv, rv);        
-    rv = nsXFormsUtils::DispatchEvent(modelNode, eEvent_Refresh);
-    NS_ENSURE_SUCCESS(rv, rv);        
+  if(aStringBuffer.IsEmpty()){
+    aStringBuffer.Append(value);
+  }
+  else{
+    aStringBuffer.Append(NS_LITERAL_STRING(" ") + value);
   }
 
   return NS_OK;

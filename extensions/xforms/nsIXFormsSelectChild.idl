@@ -77,13 +77,13 @@ interface nsIXFormsSelectChild : nsISupports
   void selectItemsByContent(in nsIDOMNode node);
 
   /**
-   * Instructs the item to serialize its selected elements into |container|.
+   * Instructs the item to serialize its selected elements.
    * For children that have a value child, they should append the value of
-   * any selected items to the text node child of |container|.  For children
+   * any selected items to the provided string buffer.  For children
    * that have a copy child, they should copy the instance data element into
    * |container|.
    */
-  void writeSelectedItems(in nsIDOMNode container);
+  void writeSelectedItems(in nsIDOMNode container, out AString stringBuffer);
 
   /**
    * Set the context node, position, and size to be used for XPath evaluation.

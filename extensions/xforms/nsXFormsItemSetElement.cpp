@@ -208,7 +208,8 @@ nsXFormsItemSetElement::SelectItemsByContent(nsIDOMNode *aNode)
 }
 
 NS_IMETHODIMP
-nsXFormsItemSetElement::WriteSelectedItems(nsIDOMNode *aContainer)
+nsXFormsItemSetElement::WriteSelectedItems(nsIDOMNode *aContainer, 
+                                           nsAString  &aStringBuffer)
 {
   return NS_OK;
 }

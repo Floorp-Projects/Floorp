@@ -363,7 +363,7 @@ nsXFormsSelectElement::HandleEvent(nsIDOMEvent *aEvent)
   if ((isIncremental && type.EqualsLiteral("change")) ||
       (!isIncremental && type.EqualsLiteral("blur"))) {
 
-    if (!mBoundNode)
+    if (!mBoundNode || !mModel)
       return NS_OK;
 
     // Update the instance data with our selected items.
@@ -376,12 +376,33 @@ nsXFormsSelectElement::HandleEvent(nsIDOMEvent *aEvent)
     PRUint32 childCount;
     children->GetLength(&childCount);
 
+    nsAutoString stringBuffer;
     for (PRUint32 i = 0; i < childCount; ++i) {
       children->Item(i, getter_AddRefs(child));
       childItem = do_QueryInterface(child);
       if (childItem) {
-        childItem->WriteSelectedItems(mBoundNode);
+        // This will go item by item, looking for selected nodes.  For every
+        // selected option that it finds, it will append the option's value
+        // to the string buffer (for childItems that are not xforms:itemset's).
+        childItem->WriteSelectedItems(mBoundNode, stringBuffer);
       }
+    }
+
+    PRBool changed = PR_FALSE;
+
+    rv = mModel->SetNodeValue(mBoundNode, stringBuffer, &changed);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (changed) {
+      nsCOMPtr<nsIDOMNode> modelNode = do_QueryInterface(mModel);
+      NS_ENSURE_STATE(modelNode);
+    
+      rv = nsXFormsUtils::DispatchEvent(modelNode, eEvent_Recalculate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = nsXFormsUtils::DispatchEvent(modelNode, eEvent_Revalidate);
+      NS_ENSURE_SUCCESS(rv, rv);        
+      rv = nsXFormsUtils::DispatchEvent(modelNode, eEvent_Refresh);
+      NS_ENSURE_SUCCESS(rv, rv);        
     }
   }
 
