@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.142 $ ';
+$::UtilsVersion = '$Revision: 1.143 $ ';
 
 package TinderUtils;
 
@@ -1927,7 +1927,7 @@ sub BloatTest2 {
       print_log $maxheap_string;
 
       my $allocs_testname       = "trace_malloc_allocs";
-      my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">A:" . PrintSize($newstats->{'allocs'}) . "B</a>\n\n";
+      my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">A:" . PrintSize($newstats->{'allocs'}) . "</a>\n\n";
       print_log $allocs_string;
 
       # Send results to server.
