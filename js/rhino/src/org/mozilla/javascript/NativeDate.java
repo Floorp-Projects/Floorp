@@ -1146,7 +1146,7 @@ final class NativeDate extends IdScriptable {
     }
 
     /* constants for toString, toUTCString */
-    private static String js_NaN_date_str = "Invalid Date";
+    private static final String js_NaN_date_str = "Invalid Date";
 
     private static String toLocale_helper(double t,
                                           java.text.DateFormat formatter)
